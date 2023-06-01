@@ -1,0 +1,37 @@
+{{- define "agent.config.loki" -}}
+
+// Grafana Cloud Loki
+loki.process "add_cluster_label" {
+  stage.static_labels {
+    values = {
+      cluster = local.file.cluster_name.content,
+    }
+  }
+  forward_to = [loki.write.grafana_cloud_loki.receiver]
+}
+
+local.file "loki_host" {
+  filename  = "/etc/grafana-agent-credentials/loki_host"
+}
+
+local.file "loki_username" {
+  filename  = "/etc/grafana-agent-credentials/loki_username"
+}
+
+local.file "loki_password" {
+  filename  = "/etc/grafana-agent-credentials/loki_password"
+  is_secret = true
+}
+
+loki.write "grafana_cloud_loki" {
+  endpoint {
+    url = local.file.loki_host.content 
+
+    basic_auth {
+      username = local.file.loki_username.content
+      password = local.file.loki_password.content
+    }
+  }
+}
+
+{{- end -}}

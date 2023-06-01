@@ -1,0 +1,18 @@
+{{- define "agent.config.kubelet_discovery" -}}
+
+// Kubelet
+discovery.relabel "kubelet" {
+  targets = discovery.kubernetes.services.targets
+  rule {
+    source_labels = ["__meta_kubernetes_service_name"]
+    regex = "kubelet"
+    action = "keep"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_service_port_name"]
+    regex = "https-metrics"
+    action = "keep"
+  }
+}
+
+{{- end -}}

@@ -1,0 +1,23 @@
+{{- define "agent.config.kubelet" -}}
+
+prometheus.scrape "kubelet" {
+  job_name   = "integrations/kubernetes/kubelet"
+  targets  = discovery.relabel.kubelet.output
+  scheme   = "https"
+  bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+  tls_config {
+    insecure_skip_verify = true
+  }
+  forward_to = [prometheus.relabel.kubelet.receiver]
+}
+
+prometheus.relabel "kubelet" {
+  rule {
+    source_labels = ["__name__"]
+    regex = up|{{ join "|" .Values.metrics.kubelet.allowList }}
+    action = "keep"
+  }
+  forward_to = [prometheus.relabel.add_cluster_label.receiver]
+}
+
+{{- end -}}

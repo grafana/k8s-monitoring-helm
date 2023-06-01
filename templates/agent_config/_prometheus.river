@@ -1,0 +1,37 @@
+{{- define "agent.config.prometheus" -}}
+
+// Grafana Cloud Prometheus
+prometheus.relabel "add_cluster_label" {
+  rule {
+    source_labels = ["__name__"]
+    replacement   = local.file.cluster_name.content
+    target_label  = "cluster"
+  }
+  forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
+}
+
+local.file "prometheus_host" {
+  filename  = "/etc/grafana-agent-credentials/prometheus_host"
+}
+
+local.file "prometheus_username" {
+  filename  = "/etc/grafana-agent-credentials/prometheus_username"
+}
+
+local.file "prometheus_password" {
+  filename  = "/etc/grafana-agent-credentials/prometheus_password"
+  is_secret = true
+}
+
+prometheus.remote_write "grafana_cloud_prometheus" {
+  endpoint {
+    url = local.file.prometheus_host.content + "/api/prom/push"
+    
+    basic_auth {
+      username = local.file.prometheus_username.content
+      password = local.file.prometheus_password.content
+    }
+  }
+}
+
+{{- end -}}

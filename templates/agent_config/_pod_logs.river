@@ -1,0 +1,9 @@
+{{- define "agent.config.logs.pod_logs" -}}
+
+// Pod Logs
+loki.source.kubernetes "pod_logs" {
+  targets    = discovery.kubernetes.pods.targets
+  forward_to = [loki.process.add_cluster_label.receiver]
+}
+
+{{- end -}}

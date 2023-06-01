@@ -1,0 +1,49 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-agent-config
+  namespace: {{ .Release.Namespace }}
+data:
+  cluster_name: {{ .Values.cluster.name }}
+  config.river: |-
+{{ include "agent.config.cluster_name" . | indent 4}}
+
+{{ if .Values.metrics.enable }}
+{{ include "agent.config.pods" . | indent 4}}
+{{ include "agent.config.services" . | indent 4}}
+{{ include "agent.config.agent" . | indent 4}}
+
+
+{{ if or .Values.metrics.kubelet.enable .Values.metrics.cadvisor.enable }}
+{{ include "agent.config.kubelet_discovery" . | indent 4}}
+{{ end }}
+{{ if .Values.metrics.kubelet.enable }}
+{{ include "agent.config.kubelet" . | indent 4}}
+{{ end }}
+{{ if .Values.metrics.cadvisor.enable }}
+{{ include "agent.config.cadvisor" . | indent 4}}
+{{ end }}
+
+{{ if .Values.metrics.kube_state_metrics.enable }}
+{{ include "agent.config.kube_state_metrics" . | indent 4}}
+{{ end }}
+
+{{ if .Values.metrics.node_exporter.enable }}
+{{ include "agent.config.node_exporter" . | indent 4}}
+{{ end }}
+
+{{ include "agent.config.prometheus" . | indent 4 }}
+{{ end }}
+
+{{ if .Values.logs.enable }}
+
+{{ if .Values.logs.pod_logs.enable }}
+{{ include "agent.config.logs.pod_logs" . | indent 4}}
+{{ end }}
+
+{{ if .Values.logs.cluster_events.enable }}
+{{ include "agent.config.logs.cluster_events" . | indent 4}}
+{{ end }}
+
+{{ include "agent.config.loki" . | indent 4 }}
+{{ end }}

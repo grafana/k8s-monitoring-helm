@@ -1,0 +1,25 @@
+{{- define "agent.config.cadvisor" -}}
+
+// cAdvisor
+prometheus.scrape "cadvisor" {
+  job_name   = "integrations/kubernetes/cadvisor"
+  targets    = discovery.relabel.kubelet.output
+  metrics_path = "/metrics/cadvisor"
+  scheme     = "https"
+  bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+  tls_config {
+    insecure_skip_verify = true
+  }
+  forward_to = [prometheus.relabel.cadvisor.receiver]
+}
+
+prometheus.relabel "cadvisor" {
+  rule {
+    source_labels = ["__name__"]
+    regex = "up|kube_*"
+    action = "keep"
+  }
+  forward_to = [prometheus.relabel.add_cluster_label.receiver]
+}
+
+{{- end -}}

@@ -1,0 +1,85 @@
+cluster:
+  name: my-cluster
+
+metrics:
+  enable: true
+  prometheus:
+    host: https://prom.example.com
+    username: "12345"
+    password: sdafsdfa
+
+  kube_state_metrics:
+    enable: true
+    allowList: "*"
+
+  node_exporter:
+    enable: true
+    allowList: "*"
+
+  kubelet:
+    enable: true
+    allowList:
+      - kubelet_certificate_manager_client_ttl_seconds
+      - kubelet_node_config_error
+      - kubelet_cgroup_manager_duration_seconds_count
+      - kubelet_pod_worker_duration_seconds_count
+      - kubelet_pleg_relist_interval_seconds_bucket
+      - kubelet_runtime_operations_errors_total
+      - kubelet_server_expiration_renew_errors
+      - kubelet_running_container_count
+      - kubelet_running_pod_count
+      - kubelet_volume_stats_inodes
+      - kubelet_pod_worker_duration_seconds_bucket
+      - kubelet_runtime_operations_errors_total
+      - kubelet_pleg_relist_duration_seconds_count
+      - kubelet_node_name
+      - kubelet_certificate_manager_client_expiration_renew_errors
+      - node_quantile:kubelet_pleg_relist_duration_seconds:histogram_quantile
+      - kubelet_cgroup_manager_duration_seconds_bucket
+      - kubelet_pleg_relist_duration_seconds_bucket
+      - kubelet_running_containers
+      - kubelet_running_pods
+      - kubelet_volume_stats_available_bytes
+      - kubelet_volume_stats_capacity_bytes
+      - kubelet_volume_stats_inodes_used
+      - kubelet_pod_start_duration_seconds_bucket
+      - kubelet_pod_start_duration_seconds_count
+      - kubelet_certificate_manager_server_ttl_seconds
+
+  cadvisor:
+    enable: true
+    allowList: "*"
+
+  cost:
+    enable: true
+    allowList: "*"
+
+logs:
+  enable: true
+  loki:
+    host: https://loki.example.com
+    username: "12345"
+    password: sdafsdfa
+
+  pod_logs:
+    enable: true
+
+  cluster_events:
+    enable: true
+
+grafana-agent:
+  agent:
+    configMap:
+      create: false
+      name: grafana-agent-config
+      key: config.river
+    mounts:
+      extra:
+      - name: grafana-agent-credentials
+        mountPath: /etc/grafana-agent-credentials
+  controller:
+    volumes:
+      extra:
+      - name: grafana-agent-credentials
+        secret:
+          name: grafana-agent-credentials

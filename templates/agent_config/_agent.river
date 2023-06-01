@@ -1,0 +1,33 @@
+{{- define "agent.config.agent" -}}
+
+// Grafana Agent
+discovery.relabel "agent" {
+  targets = discovery.kubernetes.services.targets
+  rule {
+    source_labels = ["__meta_kubernetes_service_name"]
+    regex = "grafana-agent"
+    action = "keep"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_service_port_name"]
+    regex = "http-metrics"
+    action = "keep"
+  }
+}
+
+prometheus.scrape "agent" {
+  job_name   = "integrations/agent"
+  targets  = discovery.relabel.agent.output
+  forward_to = [prometheus.relabel.prometheus.relabel.receiver]
+}
+
+prometheus.relabel "agent" {
+  rule {
+    source_labels = ["__name__"]
+    regex = "up|agent_build_info"
+    action = "keep"
+  }
+  forward_to = [prometheus.relabel.add_cluster_label.receiver]
+}
+
+{{- end -}}

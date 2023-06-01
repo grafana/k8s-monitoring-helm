@@ -1,0 +1,33 @@
+{{- define "agent.config.kube_state_metrics" -}}
+
+// Kube State Metrics
+discovery.relabel "ksm" {
+  targets = discovery.kubernetes.services.targets
+  rule {
+    source_labels = ["__meta_kubernetes_service_name"]
+    regex = "kube-state-metrics"
+    action = "keep"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_service_port_name"]
+    regex = "http"
+    action = "keep"
+  }
+}
+
+prometheus.scrape "ksm" {
+  job_name   = "integrations/kubernetes/kube-state-metrics"
+  targets    = discovery.relabel.ksm.output
+  forward_to = [prometheus.relabel.ksm.receiver]
+}
+
+prometheus.relabel "ksm" {
+  rule {
+    source_labels = ["__name__"]
+    regex = "up|kube_*"
+    action = "keep"
+  }
+  forward_to = [prometheus.relabel.add_cluster_label.receiver]
+}
+
+{{- end -}}
