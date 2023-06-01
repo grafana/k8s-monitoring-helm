@@ -1,5 +1,4 @@
-{{- define "agent.config.node_exporter" -}}
-
+{{ define "agent.config.node_exporter" }}
 // Node Exporter
 discovery.relabel "node_exporter" {
   targets = discovery.kubernetes.services.targets
@@ -18,7 +17,15 @@ discovery.relabel "node_exporter" {
 prometheus.scrape "node_exporter" {
   job_name   = "integrations/node_exporter"
   targets  = discovery.relabel.node_exporter.output
-  forward_to = [prometheus.relabel.add_cluster_label.receiver]
+  forward_to = [prometheus.relabel.node_exporter.receiver]
 }
 
-{{- end -}}
+prometheus.relabel "node_exporter" {
+  rule {
+    source_labels = ["__name__"]
+    regex = "up|{{ join "|" .Values.metrics.node_exporter.allowList }}"
+    action = "keep"
+  }
+  forward_to = [prometheus.relabel.add_cluster_label.receiver]
+}
+{{ end }}

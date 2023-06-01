@@ -1,5 +1,4 @@
-{{- define "agent.config.cadvisor" -}}
-
+{{ define "agent.config.cadvisor" }}
 // cAdvisor
 prometheus.scrape "cadvisor" {
   job_name   = "integrations/kubernetes/cadvisor"
@@ -16,10 +15,9 @@ prometheus.scrape "cadvisor" {
 prometheus.relabel "cadvisor" {
   rule {
     source_labels = ["__name__"]
-    regex = "up|kube_*"
+    regex = "up|{{ join "|" .Values.metrics.cadvisor.allowList }}"
     action = "keep"
   }
   forward_to = [prometheus.relabel.add_cluster_label.receiver]
 }
-
-{{- end -}}
+{{ end }}

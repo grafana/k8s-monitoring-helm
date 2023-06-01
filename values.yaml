@@ -47,6 +47,7 @@ metrics:
     enable: true
     allowList:
     - node_cpu.*
+    - node_exporter_build_info
     - node_filesystem.*
     - node_memory.*
     - node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate
@@ -191,3 +192,21 @@ grafana-agent:
       - name: grafana-agent-credentials
         secret:
           name: grafana-agent-credentials
+
+opencost:
+  opencost:
+    exporter:
+      defaultClusterId: my-cluster
+      extraEnv:
+        CLOUD_PROVIDER_API_KEY: AIzaSyD29bGxmHAVEOBYtgd8sYM2gM2ekfxQX4U
+        EMIT_KSM_V1_METRICS: "false"
+        EMIT_KSM_V1_METRICS_ONLY: "true"
+        PROM_CLUSTER_ID_LABEL: cluster
+    prometheus:
+      username: "12345"
+      password: "It's a secret to everybody"
+      external:
+        enabled: true
+        url: "https://prom.example.com/api/prom"
+      internal: { enabled: false }
+    ui: { enabled: false }

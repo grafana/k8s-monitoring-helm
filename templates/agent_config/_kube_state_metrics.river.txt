@@ -1,5 +1,4 @@
-{{- define "agent.config.kube_state_metrics" -}}
-
+{{ define "agent.config.kube_state_metrics" }}
 // Kube State Metrics
 discovery.relabel "ksm" {
   targets = discovery.kubernetes.services.targets
@@ -24,10 +23,9 @@ prometheus.scrape "ksm" {
 prometheus.relabel "ksm" {
   rule {
     source_labels = ["__name__"]
-    regex = "up|kube_*"
+    regex = "up|{{ join "|" .Values.metrics.kube_state_metrics.allowList }}"
     action = "keep"
   }
   forward_to = [prometheus.relabel.add_cluster_label.receiver]
 }
-
-{{- end -}}
+{{ end }}
