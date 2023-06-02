@@ -3,7 +3,12 @@
 discovery.relabel "agent" {
   targets = discovery.kubernetes.services.targets
   rule {
-    source_labels = ["__meta_kubernetes_service_name"]
+    source_labels = ["__meta_kubernetes_service_label_app_kubernetes_io_instance"]
+    regex = "{{ .Release.Name }}"
+    action = "keep"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_service_label_app_kubernetes_io_name"]
     regex = "grafana-agent"
     action = "keep"
   }
@@ -17,7 +22,7 @@ discovery.relabel "agent" {
 prometheus.scrape "agent" {
   job_name   = "integrations/agent"
   targets  = discovery.relabel.agent.output
-  forward_to = [prometheus.relabel.prometheus.relabel.receiver]
+  forward_to = [prometheus.relabel.agent.receiver]
 }
 
 prometheus.relabel "agent" {

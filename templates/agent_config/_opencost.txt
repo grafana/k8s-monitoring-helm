@@ -1,6 +1,6 @@
-{{ define "agent.config.node_exporter" }}
-// Node Exporter
-discovery.relabel "node_exporter" {
+{{ define "agent.config.opencost" }}
+// OpenCost
+discovery.relabel "opencost" {
   targets = discovery.kubernetes.services.targets
   rule {
     source_labels = ["__meta_kubernetes_service_label_app_kubernetes_io_instance"]
@@ -9,26 +9,26 @@ discovery.relabel "node_exporter" {
   }
   rule {
     source_labels = ["__meta_kubernetes_service_label_app_kubernetes_io_name"]
-    regex = "prometheus-node-exporter"
+    regex = "opencost"
     action = "keep"
   }
   rule {
     source_labels = ["__meta_kubernetes_service_port_name"]
-    regex = "metrics"
+    regex = "http"
     action = "keep"
   }
 }
 
-prometheus.scrape "node_exporter" {
-  job_name   = "integrations/node_exporter"
-  targets  = discovery.relabel.node_exporter.output
-  forward_to = [prometheus.relabel.node_exporter.receiver]
+prometheus.scrape "opencost" {
+  job_name   = "integrations/kubernetes/opencost"
+  targets    = discovery.relabel.opencost.output
+  forward_to = [prometheus.relabel.opencost.receiver]
 }
 
-prometheus.relabel "node_exporter" {
+prometheus.relabel "opencost" {
   rule {
     source_labels = ["__name__"]
-    regex = "up|{{ join "|" .Values.metrics.node_exporter.allowList }}"
+    regex = "up|{{ join "|" .Values.metrics.cost.allowList }}"
     action = "keep"
   }
   forward_to = [prometheus.relabel.add_cluster_label.receiver]

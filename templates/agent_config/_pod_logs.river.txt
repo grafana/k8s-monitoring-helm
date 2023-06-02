@@ -3,5 +3,20 @@
 loki.source.kubernetes "pod_logs" {
   targets    = discovery.kubernetes.pods.targets
   forward_to = [loki.process.add_cluster_label.receiver]
+
+//  forward_to = [loki.process.colorize_logs.receiver]
 }
+
+// loki.process "colorize_logs" {
+//   stage.cri {}
+//   stage.regex {
+//     expression = "(?P<level>[a-zA-Z]+):(.*)"
+//   }
+//   stage.labels {
+//     values = {
+//       level = "",
+//     }
+//   }
+//   forward_to = [loki.process.add_cluster_label.receiver]
+// }
 {{ end }}
