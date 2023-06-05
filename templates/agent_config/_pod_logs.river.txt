@@ -10,6 +10,8 @@ loki.process "pod_logs" {
     values = {
       job = "integration/kubernetes/pod_logs",
     }
+  }
+  stage.{{- .Values.logs.pod_logs.loggingFormat }} {}
   forward_to = [loki.process.add_cluster_label.receiver]
 }
 {{ end }}
