@@ -2,21 +2,14 @@
 // Pod Logs
 loki.source.kubernetes "pod_logs" {
   targets    = discovery.kubernetes.pods.targets
-  forward_to = [loki.process.add_cluster_label.receiver]
-
-//  forward_to = [loki.process.colorize_logs.receiver]
+  forward_to = [loki.process.pod_logs.receiver]
 }
 
-// loki.process "colorize_logs" {
-//   stage.cri {}
-//   stage.regex {
-//     expression = "(?P<level>[a-zA-Z]+):(.*)"
-//   }
-//   stage.labels {
-//     values = {
-//       level = "",
-//     }
-//   }
-//   forward_to = [loki.process.add_cluster_label.receiver]
-// }
+loki.process "pod_logs" {
+  stage.static_labels {
+    values = {
+      job = "integration/kubernetes/pod_logs",
+    }
+  forward_to = [loki.process.add_cluster_label.receiver]
+}
 {{ end }}
