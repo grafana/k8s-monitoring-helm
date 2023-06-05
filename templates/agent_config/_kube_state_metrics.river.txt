@@ -2,11 +2,13 @@
 // Kube State Metrics
 discovery.relabel "kube_state_metrics" {
   targets = discovery.kubernetes.services.targets
+{{- if .Values.metrics.kube_state_metrics.deploy }}
   rule {
     source_labels = ["__meta_kubernetes_service_label_app_kubernetes_io_instance"]
     regex = "{{ .Release.Name }}"
     action = "keep"
   }
+{{- end }}
   rule {
     source_labels = ["__meta_kubernetes_service_label_app_kubernetes_io_name"]
     regex = "kube-state-metrics"
@@ -14,7 +16,7 @@ discovery.relabel "kube_state_metrics" {
   }
   rule {
     source_labels = ["__meta_kubernetes_service_port_name"]
-    regex = "http"
+    regex = "{{- .Values.metrics.kube_state_metrics.service.port -}}"
     action = "keep"
   }
 }
@@ -23,6 +25,13 @@ prometheus.scrape "kube_state_metrics" {
   job_name   = "integrations/kubernetes/kube-state-metrics"
   targets    = discovery.relabel.kube_state_metrics.output
   forward_to = [prometheus.relabel.kube_state_metrics.receiver]
+{{- if .Values.metrics.kube_state_metrics.service.isTLS }}
+  scheme     = "https"
+  bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+  tls_config {
+    insecure_skip_verify = true
+  }
+{{- end }}
 }
 
 prometheus.relabel "kube_state_metrics" {
