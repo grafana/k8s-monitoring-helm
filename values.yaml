@@ -1,21 +1,36 @@
+# -- Cluster settings
 cluster:
+  # -- The name of this cluster, which will be set in all labels
   name: my-cluster
 
+# -- Settings related to capturing and forwarding metrics
 metrics:
+  # -- Capture and forward metrics
   enable: true
+
+  # -- Connection information for Prometheus
   prometheus:
+    # TODO: Add the ability to reference a pre-existing secret
+    # -- Prometheus host
     host: https://prom.example.com
+    # -- Prometheus basic auth username
     username: "12345"
+    # -- Prometheus basic auth password
     password: "It's a secret to everybody"
 
-  # https://github.com/kubernetes/kube-state-metrics/tree/main/docs#exposed-metrics
-  kube_state_metrics:
+  # -- Cluster object metrics from Kube State Metrics
+  kube-state-metrics:
+    # -- Scrape cluster object metrics
     enable: true
-    deploy: true
+
+    # -- Kube State Metrics service settings
     service:
+      # -- Name of the metrics port
       port: http
+      # -- Does this port use TLS?
       isTLS: false
 
+    # https://github.com/kubernetes/kube-state-metrics/tree/main/docs#exposed-metrics
     allowList:
     - kube_daemonset.*
     - kube_deployment_metadata_generation
@@ -48,13 +63,19 @@ metrics:
     - kube_resourcequota
     - kube_statefulset.*
 
-  node_exporter:
+  # -- Node metrics from Node Exporter
+  node-exporter:
+    # -- Scrape node metrics
     enable: true
-    deploy: true
+
+    # -- Node Exporter service settings
     service:
+      # -- Name of the metrics port
       port: http
+      # -- Does this port use TLS?
       isTLS: false
 
+    # -- The list of metrics that will be scraped by the Agent
     allowList:
     - node_cpu.*
     - node_exporter_build_info
@@ -70,9 +91,12 @@ metrics:
     - process_cpu_seconds_total
     - process_resident_memory_bytes
 
-  # https://github.com/kubernetes/kubernetes/blob/master/test/instrumentation/documentation/documentation.md
+  # -- Cluster metrics from the Kubelet
   kubelet:
+    # -- Scrape cluster metrics from the Kubelet
     enable: true
+    # -- The list of metrics that will be scraped by the Agent
+    # List of available metrics from the Kubelet: https://github.com/kubernetes/kubernetes/blob/master/test/instrumentation/documentation/documentation.md
     allowList:
     - cluster:namespace:pod_cpu:active:kube_pod_container_resource_limits
     - cluster:namespace:pod_cpu:active:kube_pod_container_resource_requests
@@ -118,9 +142,12 @@ metrics:
     - storage_operation_errors_total
     - volume_manager_total_volumes
 
-  # https://github.com/google/cadvisor/blob/master/docs/storage/prometheus.md
+  # -- Container metrics from cAdvisor
   cadvisor:
+    # -- Scrape container metrics
     enable: true
+    # -- The list of metrics that will be scraped by the Agent
+    # List of available metrics from cAdvisor: https://github.com/google/cadvisor/blob/master/docs/storage/prometheus.md
     allowList:
     - container_cpu_cfs_periods_total
     - container_cpu_cfs_throttled_periods_total
@@ -141,8 +168,12 @@ metrics:
     - container_network_transmit_packets_total
     - machine_memory_bytes
 
+  # -- Cost related metrics from OpenCost
   cost:
+    # -- Scrape cost metrics
     enable: true
+    # -- The list of metrics that will be scraped by the Agent
+    # List of available metrics from OpenCost: https://www.opencost.io/docs/prometheus#available-metrics
     allowList:
     - container_cpu_allocation
     - container_gpu_allocation
@@ -170,41 +201,75 @@ metrics:
     - service_selector_labels
     - statefulSet_match_labels
 
+# -- Settings related to capturing and forwarding logs
 logs:
+  # -- Capture and forward logs
   enable: true
+
+  # -- Connection information for Grafana Loki
   loki:
+    # TODO: Add the ability to reference a pre-existing secret
+    # -- Loki host
     host: https://loki.example.com
+    # -- Loki basic auth username
     username: "12345"
+    # -- Loki basic auth password
     password: "It's a secret to everybody"
 
+  # -- Settings for Kubernetes pod logs
   pod_logs:
+    # -- Capture and forward logs from Kubernetes pods
     enable: true
 
-    # Choose docker or cri (https://grafana.com/docs/agent/latest/flow/reference/components/loki.process/#stagecri-block)
+    # -- The log parsing format.
+    # Must be one of null, 'cri', or 'docker'
+    # See documentation: https://grafana.com/docs/agent/latest/flow/reference/components/loki.process/#stagecri-block
     loggingFormat: docker
 
+  # -- Settings for scraping cluster evenrts
   cluster_events:
     enable: true
 
-# extraConfig can be used to add additional configuration to the Grafana Agent
+# -- Extra configuration that will be added to the Grafana Agent configuration file.
 extraConfig: null
+# # An example extraConfig to discover and scrape metrics from a service:
+# # Note: "discovery.kubernetes.services" and 
+# #       "prometheus.relabel.add_cluster_label" are defined by this chart.
+# discovery.relabel "my-service" {
+#   targets = discovery.kubernetes.services.targets
+#   rule {
+#     source_labels = ["__meta_kubernetes_service_label_app_kubernetes_io_name"]
+#     regex = "my-service"
+#     action = "keep"
+#   }
+# }
+#
+# prometheus.scrape "my-service" {
+#   job_name   = "integrations/my-service"
+#   targets    = discovery.relabel.my-service.output
+#   forward_to = [prometheus.relabel.add_cluster_label.receiver]
+# }
 
-grafana-agent:
-  agent:
-    configMap:
-      create: false
-    mounts:
-      extra:
-      - name: grafana-agent-credentials
-        mountPath: /etc/grafana-agent-credentials
-  controller:
-    volumes:
-      extra:
-      - name: grafana-agent-credentials
-        secret:
-          secretName: grafana-agent-credentials
+# Settings for the Kube State Metrics deployment
+kube-state-metrics:
+  # Should this helm chart deploy Kube State Metrics to the cluster.
+  # Set this to false if your cluster already has Kube State Metrics, or if you
+  # do not want to scrape metrics from Kube State Metrics.
+  enable: true
 
+# Settings for the Node Exporter deployment
+node-exporter:
+  # Should this helm chart deploy Node Exporter to the cluster.
+  # Set this to false if your cluster already has Node Exporter, or if you do
+  # not want to scrape metrics from Node Exporter.
+  enable: true
+
+# -- Settings for the OpenCost deployment
 opencost:
+  # -- Deploys OpenCost to the cluster.
+  # Set this to false if you do not want to scrape metrics from OpenCost.
+  enabled: true
+
   opencost:
     exporter:
       defaultClusterId: my-cluster
@@ -213,11 +278,40 @@ opencost:
         EMIT_KSM_V1_METRICS: "false"
         EMIT_KSM_V1_METRICS_ONLY: "true"
         PROM_CLUSTER_ID_LABEL: cluster
+
     prometheus:
-      username: "12345"
-      password: "It's a secret to everybody"
+      secret_name: grafana-agent-credentials
+      username_key: prometheus_username
+      password_key: prometheus_password
       external:
         enabled: true
         url: "https://prom.example.com/api/prom"
       internal: { enabled: false }
     ui: { enabled: false }
+
+# -- Settings for the Grafana Agent.
+# For typical deployments, these settings can stay the way they are.
+grafana-agent:
+  agent:
+    # This chart is creating the configuration, so the grafana-agent chart does
+    # not need to.
+    configMap: { create: false }
+
+    # This chart creates the credentials for Prometheus and Loki. This section
+    # mounts those credentials into the Grafana Agent container.
+    mounts:
+      extra:
+      - name: grafana-agent-credentials
+        mountPath: /etc/grafana-agent-credentials
+  controller:
+    # -- Type of controller to use for deploying Grafana Agent in the cluster.
+    # Must be one of 'daemonset', 'deployment', or 'statefulset'.
+    type: 'daemonset'
+
+    # This chart creates the credentials for Prometheus and Loki. This section
+    # connects those credentials into the Grafana Agent pod.
+    volumes:
+      extra:
+      - name: grafana-agent-credentials
+        secret:
+          secretName: grafana-agent-credentials
