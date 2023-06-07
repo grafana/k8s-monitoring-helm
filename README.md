@@ -44,11 +44,11 @@ This Helm chart simplifies the process of deploying a complete Kubernetes metric
 metrics:
   enable: true
   kube-state-metrics:
-    deploy: false
     service:
       port: "8443"
       isTLS: true
-  node-exporter:
-    deploy: false
-    TODO: some sort of way to discover node exporter
+kube-state-metrics:
+  enable: false
+node-exporter:
+  enable: false
 ```

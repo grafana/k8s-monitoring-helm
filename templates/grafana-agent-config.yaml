@@ -8,6 +8,8 @@ data:
   config.river: |-
 {{- include "agent.config.cluster_name" . | indent 4}}
 
+{{- include "agent.config.nodes" . | indent 4}}
+
 {{- if or .Values.metrics.enable .Values.logs.pod_logs.enable }}
   {{- include "agent.config.pods" . | indent 4}}
 {{- end }}
@@ -17,10 +19,6 @@ data:
 {{- if .Values.metrics.enable }}
   {{- include "agent.config.agent" . | indent 4}}
   
-  {{- if or .Values.metrics.kubelet.enable .Values.metrics.cadvisor.enable }}
-    {{- include "agent.config.kubelet_discovery" . | indent 4}}
-  {{- end }}
-
   {{- if .Values.metrics.kubelet.enable }}
     {{- include "agent.config.kubelet" . | indent 4}}
   {{- end }}
