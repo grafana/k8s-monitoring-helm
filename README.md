@@ -36,18 +36,18 @@ A Helm chart for Kubernetes Monitoring
 | logs.enabled | bool | `true` | Capture and forward logs |
 | logs.pod_logs.enabled | bool | `true` | Capture and forward logs from Kubernetes pods |
 | logs.pod_logs.loggingFormat | string | `"docker"` | The log parsing format. Must be one of null, 'cri', or 'docker' See documentation: https://grafana.com/docs/agent/latest/flow/reference/components/loki.process/#stagecri-block |
-| metrics.cadvisor.allowList | list | See something else | The list of cAdvisor metrics that will be scraped by the Agent List of available metrics from cAdvisor: https://github.com/google/cadvisor/blob/master/docs/storage/prometheus.md |
+| metrics.cadvisor.allowList | list | See [Allow List for cAdvisor](#allow-list-for-cadvisor) | The list of cAdvisor metrics that will be scraped by the Agent |
 | metrics.cadvisor.enabled | bool | `true` | Scrape container metrics from cAdvisor |
-| metrics.cost.allowList | list | See something else | The list of OpenCost metrics that will be scraped by the Agent List of available metrics from OpenCost: https://www.opencost.io/docs/prometheus#available-metrics |
+| metrics.cost.allowList | list | See [Allow List for OpenCost](#allow-list-for-opencost) | The list of OpenCost metrics that will be scraped by the Agent |
 | metrics.cost.enabled | bool | `true` | Scrape cost metrics from OpenCost |
 | metrics.enabled | bool | `true` | Capture and forward metrics |
-| metrics.kube-state-metrics.allowList | list | See [Allow List for Kube State Metrics](#Allow List for Kube State Metrics) | The list of Kube State Metrics metrics that will be scraped by the Agent |
+| metrics.kube-state-metrics.allowList | list | See [Allow List for Kube State Metrics](#allow-list-for-kube-state-metrics) | The list of Kube State Metrics metrics that will be scraped by the Agent |
 | metrics.kube-state-metrics.enabled | bool | `true` | Scrape cluster object metrics from Kube State Metrics |
 | metrics.kube-state-metrics.service.isTLS | bool | `false` | Does this port use TLS? |
 | metrics.kube-state-metrics.service.port | string | `"http"` | Name of the metrics port |
-| metrics.kubelet.allowList | list | See something else | The list of Kubelet metrics that will be scraped by the Agent List of available metrics from the Kubelet: https://github.com/kubernetes/kubernetes/blob/master/test/instrumentation/documentation/documentation.md |
+| metrics.kubelet.allowList | list | See [Allow List for Kubelet](#allow-list-for-kubelet) | The list of Kubelet metrics that will be scraped by the Agent |
 | metrics.kubelet.enabled | bool | `true` | Scrape cluster metrics from the Kubelet |
-| metrics.node-exporter.allowList | list | See something else | The list of Node Exporter metrics that will be scraped by the Agent |
+| metrics.node-exporter.allowList | list | See [Allow List for Node Exporter](#allow-list-for-node-exporter) | The list of Node Exporter metrics that will be scraped by the Agent |
 | metrics.node-exporter.enabled | bool | `true` | Scrape node metrics |
 | metrics.podMonitors.enabled | bool | `true` | Include service discovery for PodMonitor objects |
 | metrics.serviceMonitors.enabled | bool | `true` | Include service discovery for ServiceMonitor objects |
@@ -114,6 +114,8 @@ Visit the Kube State Metrics [documentation](https://github.com/kubernetes/kube-
 
 ### Allow List for Kubelet
 
+Visit the Kubelet [documentation](https://github.com/kubernetes/kubernetes/blob/master/test/instrumentation/documentation/documentation.md) for the full list of metrics
+
 * container_cpu_usage_seconds_total
 * kubelet_certificate_manager_client_expiration_renew_errors
 * kubelet_certificate_manager_client_ttl_seconds
@@ -149,6 +151,8 @@ Visit the Kube State Metrics [documentation](https://github.com/kubernetes/kube-
 
 ### Allow List for cAdvisor
 
+Visit the cAdvisor [documentation](https://github.com/google/cadvisor/blob/master/docs/storage/prometheus.md)
+
 * container_cpu_cfs_periods_total
 * container_cpu_cfs_throttled_periods_total
 * container_cpu_usage_seconds_total
@@ -169,6 +173,8 @@ Visit the Kube State Metrics [documentation](https://github.com/kubernetes/kube-
 * machine_memory_bytes
 
 ### Allow List for OpenCost
+
+Visit the OpenCost [documentation](https://www.opencost.io/docs/prometheus#available-metrics) for the full list of metrics
 
 * container_cpu_allocation
 * container_gpu_allocation
