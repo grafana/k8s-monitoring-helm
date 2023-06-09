@@ -41,7 +41,7 @@ A Helm chart for Kubernetes Monitoring
 | metrics.cost.allowList | list | See something else | The list of OpenCost metrics that will be scraped by the Agent List of available metrics from OpenCost: https://www.opencost.io/docs/prometheus#available-metrics |
 | metrics.cost.enabled | bool | `true` | Scrape cost metrics from OpenCost |
 | metrics.enabled | bool | `true` | Capture and forward metrics |
-| metrics.kube-state-metrics.allowList | list | See something else | The list of Kube State Metrics metrics that will be scraped by the Agent https://github.com/kubernetes/kube-state-metrics/tree/main/docs#exposed-metrics |
+| metrics.kube-state-metrics.allowList | list | See [Allow List for Kube State Metrics](#Allow List for Kube State Metrics) | The list of Kube State Metrics metrics that will be scraped by the Agent |
 | metrics.kube-state-metrics.enabled | bool | `true` | Scrape cluster object metrics from Kube State Metrics |
 | metrics.kube-state-metrics.service.isTLS | bool | `false` | Does this port use TLS? |
 | metrics.kube-state-metrics.service.port | string | `"http"` | Name of the metrics port |
@@ -69,6 +69,8 @@ allowList: ["*"]
 ```
 
 ### Allow List for Kube State Metrics
+
+Visit the Kube State Metrics [documentation](https://github.com/kubernetes/kube-state-metrics/tree/main/docs#exposed-metrics) for the full list of metrics
 
 * kube_daemonset.*
 * kube_deployment_metadata_generation
@@ -193,4 +195,3 @@ allowList: ["*"]
 * pv_hourly_cost
 * service_selector_labels
 * statefulSet_match_labels
-
