@@ -201,3 +201,14 @@ Visit the OpenCost [documentation](https://www.opencost.io/docs/prometheus#avail
 * pv_hourly_cost
 * service_selector_labels
 * statefulSet_match_labels
+
+## TODO
+
+* Enforce the presence of prometheus and loki credentials, if required.
+  * Add helpers in the template to check and properly warn
+  * Add comment in the README to note that it's required
+* Update test repo
+* Finish requirements for OpenShift
+* Start investigating Tanzu
+* Start investigating Tempo and traces
+* Start investigating OTel for infrastructure metrics and logs
