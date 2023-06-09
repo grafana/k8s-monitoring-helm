@@ -14,47 +14,47 @@ data:
 
 {{- include "agent.config.services" . | indent 4}}
 
-{{- if .Values.metrics.enable }}
+{{- if .Values.metrics.enabled }}
   {{- include "agent.config.agent" . | indent 4}}
   
-  {{- if .Values.metrics.kubelet.enable }}
+  {{- if .Values.metrics.kubelet.enabled }}
     {{- include "agent.config.kubelet" . | indent 4}}
   {{- end }}
 
-  {{- if .Values.metrics.cadvisor.enable }}
+  {{- if .Values.metrics.cadvisor.enabled }}
     {{- include "agent.config.cadvisor" . | indent 4}}
   {{- end }}
 
-  {{- if (index .Values.metrics "kube-state-metrics").enable }}
+  {{- if (index .Values.metrics "kubeStateMetrics").enabled }}
     {{- include "agent.config.kube_state_metrics" . | indent 4}}
   {{- end }}
 
-  {{- if (index .Values.metrics "node-exporter").enable }}
+  {{- if (index .Values.metrics "node-exporter").enabled }}
     {{- include "agent.config.node_exporter" . | indent 4}}
   {{- end }}
 
-  {{- if .Values.metrics.cost.enable }}
+  {{- if .Values.metrics.cost.enabled }}
     {{- include "agent.config.opencost" . | indent 4}}
   {{- end }}
 
-  {{- if .Values.metrics.podMonitors.enable }}
+  {{- if .Values.metrics.podMonitors.enabled }}
     {{- include "agent.config.pod_monitors" . | indent 4}}
   {{- end }}
 
-  {{- if .Values.metrics.serviceMonitors.enable }}
+  {{- if .Values.metrics.serviceMonitors.enabled }}
     {{- include "agent.config.service_monitors" . | indent 4}}
   {{- end }}
 
   {{- include "agent.config.prometheus" . | indent 4 }}
   {{- end }}
 
-  {{- if .Values.logs.enable }}
+  {{- if .Values.logs.enabled }}
 
-  {{- if .Values.logs.pod_logs.enable }}
+  {{- if .Values.logs.pod_logs.enabled }}
     {{- include "agent.config.logs.pod_logs" . | indent 4}}
   {{- end }}
 
-  {{- if .Values.logs.cluster_events.enable }}
+  {{- if .Values.logs.cluster_events.enabled }}
     {{- include "agent.config.logs.cluster_events" . | indent 4}}
   {{- end }}
 

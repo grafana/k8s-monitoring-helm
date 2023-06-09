@@ -1,35 +1,48 @@
-# -- Cluster settings
+# Cluster settings
 cluster:
   # -- The name of this cluster, which will be set in all labels
   name: my-cluster
 
-# -- Settings related to capturing and forwarding metrics
-metrics:
-  # -- Capture and forward metrics
-  enable: true
-
-  # -- Connection information for Prometheus
+externalServices:
+  # Connection information for Prometheus
   prometheus:
     # TODO: Add the ability to reference a pre-existing secret
-    # -- Prometheus host
-    host: https://prom.example.com
-    # -- Prometheus basic auth username
-    username: "12345"
-    # -- Prometheus basic auth password
-    password: "It's a secret to everybody"
+    # -- (string) Prometheus host
+    host:
+    # -- (string) Prometheus basic auth username
+    username:
+    # -- (string) Prometheus basic auth password
+    password:
 
-  # -- Cluster object metrics from Kube State Metrics
+  # Connection information for Grafana Loki
+  loki:
+    # TODO: Add the ability to reference a pre-existing secret
+    # -- (string) Loki host
+    host:
+    # -- (string) Loki basic auth username
+    username:
+    # -- (string) Loki basic auth password
+    password:
+
+# Settings related to capturing and forwarding metrics
+metrics:
+  # -- Capture and forward metrics
+  enabled: true
+
+  # Cluster object metrics from Kube State Metrics
   kube-state-metrics:
-    # -- Scrape cluster object metrics
-    enable: true
+    # -- Scrape cluster object metrics from Kube State Metrics
+    enabled: true
 
-    # -- Kube State Metrics service settings
+    # Kube State Metrics service settings
     service:
       # -- Name of the metrics port
       port: http
       # -- Does this port use TLS?
       isTLS: false
 
+    # -- The list of Kube State Metrics metrics that will be scraped by the Agent
+    # @default -- See [Allow List for Kube State Metrics](#Allow List for Kube State Metrics)
     # https://github.com/kubernetes/kube-state-metrics/tree/main/docs#exposed-metrics
     allowList:
     - kube_daemonset.*
@@ -63,46 +76,30 @@ metrics:
     - kube_resourcequota
     - kube_statefulset.*
 
-  # -- Node metrics from Node Exporter
+  # Node metrics from Node Exporter
   node-exporter:
     # -- Scrape node metrics
-    enable: true
+    enabled: true
 
-    # -- Node Exporter service settings
-    service:
-      # -- Name of the metrics port
-      port: http
-      # -- Does this port use TLS?
-      isTLS: false
-
-    # -- The list of metrics that will be scraped by the Agent
+    # -- The list of Node Exporter metrics that will be scraped by the Agent
+    # @default -- See something else
     allowList:
     - node_cpu.*
     - node_exporter_build_info
     - node_filesystem.*
     - node_memory.*
-    - node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate
-    - node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate
-    - node_namespace_pod_container:container_memory_cache
-    - node_namespace_pod_container:container_memory_rss
-    - node_namespace_pod_container:container_memory_swap
-    - node_namespace_pod_container:container_memory_working_set_bytes
-    - node_quantile:kubelet_pleg_relist_duration_seconds:histogram_quantile
     - process_cpu_seconds_total
     - process_resident_memory_bytes
 
-  # -- Cluster metrics from the Kubelet
+  # Cluster metrics from the Kubelet
   kubelet:
     # -- Scrape cluster metrics from the Kubelet
-    enable: true
-    # -- The list of metrics that will be scraped by the Agent
+    enabled: true
+
+    # -- The list of Kubelet metrics that will be scraped by the Agent
+    # @default -- See something else
     # List of available metrics from the Kubelet: https://github.com/kubernetes/kubernetes/blob/master/test/instrumentation/documentation/documentation.md
     allowList:
-    - cluster:namespace:pod_cpu:active:kube_pod_container_resource_limits
-    - cluster:namespace:pod_cpu:active:kube_pod_container_resource_requests
-    - cluster:namespace:pod_cpu:active:kube_pod_container_resource_requests
-    - cluster:namespace:pod_memory:active:kube_pod_container_resource_limits
-    - cluster:namespace:pod_memory:active:kube_pod_container_resource_requests
     - container_cpu_usage_seconds_total
     - kubelet_certificate_manager_client_expiration_renew_errors
     - kubelet_certificate_manager_client_ttl_seconds
@@ -130,23 +127,19 @@ metrics:
     - kubelet_volume_stats_inodes
     - kubelet_volume_stats_inodes_used
     - kubernetes_build_info
-    - namespace_cpu:kube_pod_container_resource_limits:sum
-    - namespace_cpu:kube_pod_container_resource_requests:sum
-    - namespace_cpu:kube_pod_container_resource_requests:sum
-    - namespace_memory:kube_pod_container_resource_limits:sum
-    - namespace_memory:kube_pod_container_resource_requests:sum
     - namespace_workload_pod
-    - namespace_workload_pod:kube_pod_owner:relabel
     - rest_client_requests_total
     - storage_operation_duration_seconds_count
     - storage_operation_errors_total
     - volume_manager_total_volumes
 
-  # -- Container metrics from cAdvisor
+  # Container metrics from cAdvisor
   cadvisor:
-    # -- Scrape container metrics
-    enable: true
-    # -- The list of metrics that will be scraped by the Agent
+    # -- Scrape container metrics from cAdvisor
+    enabled: true
+
+    # -- The list of cAdvisor metrics that will be scraped by the Agent
+    # @default -- See something else
     # List of available metrics from cAdvisor: https://github.com/google/cadvisor/blob/master/docs/storage/prometheus.md
     allowList:
     - container_cpu_cfs_periods_total
@@ -168,11 +161,13 @@ metrics:
     - container_network_transmit_packets_total
     - machine_memory_bytes
 
-  # -- Cost related metrics from OpenCost
+  # Cost related metrics from OpenCost
   cost:
-    # -- Scrape cost metrics
-    enable: true
-    # -- The list of metrics that will be scraped by the Agent
+    # -- Scrape cost metrics from OpenCost
+    enabled: true
+
+    # -- The list of OpenCost metrics that will be scraped by the Agent
+    # @default -- See something else
     # List of available metrics from OpenCost: https://www.opencost.io/docs/prometheus#available-metrics
     allowList:
     - container_cpu_allocation
@@ -201,46 +196,40 @@ metrics:
     - service_selector_labels
     - statefulSet_match_labels
 
+
   podMonitors:
-    enable: true
+    # -- Include service discovery for PodMonitor objects
+    enabled: true
 
   serviceMonitors:
-    enable: true
+    # -- Include service discovery for ServiceMonitor objects
+    enabled: true
 
-# -- Settings related to capturing and forwarding logs
+# Settings related to capturing and forwarding logs
 logs:
   # -- Capture and forward logs
-  enable: true
+  enabled: true
 
-  # -- Connection information for Grafana Loki
-  loki:
-    # TODO: Add the ability to reference a pre-existing secret
-    # -- Loki host
-    host: https://loki.example.com
-    # -- Loki basic auth username
-    username: "12345"
-    # -- Loki basic auth password
-    password: "It's a secret to everybody"
-
-  # -- Settings for Kubernetes pod logs
+  # Settings for Kubernetes pod logs
   pod_logs:
     # -- Capture and forward logs from Kubernetes pods
-    enable: true
+    enabled: true
 
     # -- The log parsing format.
     # Must be one of null, 'cri', or 'docker'
     # See documentation: https://grafana.com/docs/agent/latest/flow/reference/components/loki.process/#stagecri-block
     loggingFormat: docker
 
-  # -- Settings for scraping cluster evenrts
+  # Settings for scraping cluster evenrts
   cluster_events:
-    enable: true
+    # -- Scrape Kubernetes cluster events
+    enabled: true
 
-# -- Extra configuration that will be added to the Grafana Agent configuration file.
-extraConfig: null
-# # An example extraConfig to discover and scrape metrics from a service:
-# # Note: "discovery.kubernetes.services" and
-# #       "prometheus.relabel.add_cluster_label" are defined by this chart.
+# -- (string) Extra configuration that will be added to the Grafana Agent configuration file.
+# <details>
+# <summary>+ Example</summary>
+# An example extraConfig to discover and scrape metrics from a service:
+# ```text
 # discovery.relabel "my-service" {
 #   targets = discovery.kubernetes.services.targets
 #   rule {
@@ -255,47 +244,71 @@ extraConfig: null
 #   targets    = discovery.relabel.my-service.output
 #   forward_to = [prometheus.relabel.add_cluster_label.receiver]
 # }
+# ```
+# Note: "discovery.kubernetes.services" and
+#       "prometheus.relabel.add_cluster_label" are pre-defined by this chart.
+# </details>
+extraConfig:
 
 # Settings for the Kube State Metrics deployment
 kube-state-metrics:
-  # Should this helm chart deploy Kube State Metrics to the cluster.
+  # -- Should this helm chart deploy Kube State Metrics to the cluster.
   # Set this to false if your cluster already has Kube State Metrics, or if you
   # do not want to scrape metrics from Kube State Metrics.
-  enable: true
+  enabled: true
 
 # Settings for the Node Exporter deployment
 node-exporter:
-  # Should this helm chart deploy Node Exporter to the cluster.
+  # -- Should this helm chart deploy Node Exporter to the cluster.
   # Set this to false if your cluster already has Node Exporter, or if you do
   # not want to scrape metrics from Node Exporter.
-  enable: true
+  enabled: true
 
-# -- Settings for the OpenCost deployment
+# Settings for the OpenCost deployment
 opencost:
-  # -- Deploys OpenCost to the cluster.
-  # Set this to false if you do not want to scrape metrics from OpenCost.
+  # -- Should this Helm chart deploy OpenCost to the cluster.
+  # Set this to false if your cluster already has OpenCost, or if you do
+  # not want to scrape metrics from OpenCost.
   enabled: true
 
   opencost:
+    # @ignored
     exporter:
+      # @ignored
       extraEnv:
+        # @ignored
         CLOUD_PROVIDER_API_KEY: AIzaSyD29bGxmHAVEOBYtgd8sYM2gM2ekfxQX4U
+        # @ignored
         EMIT_KSM_V1_METRICS: "false"
+        # @ignored
         EMIT_KSM_V1_METRICS_ONLY: "true"
+        # @ignored
         PROM_CLUSTER_ID_LABEL: cluster
 
     prometheus:
+      # @ignored
       secret_name: grafana-agent-credentials
+      # @ignored
       username_key: prometheus_username
+      # @ignored
       password_key: prometheus_password
       external:
+        # @ignored
         enabled: true
+        # -- The URL for Prometheus queries. It should match externalService.prometheus.host + "/api/prom"
         url: "https://prom.example.com/api/prom"
-      internal: {enabled: false}
-    ui: {enabled: false}
+      # @ignored
+      internal:
+        # @ignored
+        enabled: false
+    # @ignored
+    ui:
+      # @ignored
+      enabled: false
 
-# -- Settings for the Grafana Agent.
+# Settings for the Grafana Agent.
 # For typical deployments, these settings can stay the way they are.
+# @ignored
 grafana-agent:
   agent:
     # This chart is creating the configuration, so the grafana-agent chart does
