@@ -4,7 +4,7 @@ metadata:
   name: {{ include "grafana-agent.fullname" (index .Subcharts "grafana-agent") }}
   namespace: {{ .Release.Namespace }}
 data:
-  cluster_name: {{ .Values.cluster.name }}
+  cluster_name: {{ required ".Values.cluster.name is a required value. Please set it and try again." .Values.cluster.name }}
   config.river: |-
 {{- include "agent.config.cluster_name" . | indent 4}}
 
@@ -25,7 +25,7 @@ data:
     {{- include "agent.config.cadvisor" . | indent 4}}
   {{- end }}
 
-  {{- if (index .Values.metrics "kubeStateMetrics").enabled }}
+  {{- if (index .Values.metrics "kube-state-metrics").enabled }}
     {{- include "agent.config.kube_state_metrics" . | indent 4}}
   {{- end }}
 

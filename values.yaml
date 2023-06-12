@@ -1,28 +1,28 @@
 # Cluster settings
 cluster:
-  # -- The name of this cluster, which will be set in all labels
-  name: my-cluster
+  # -- (string) (required) The name of this cluster, which will be set in all labels
+  name: ""
 
 externalServices:
   # Connection information for Prometheus
   prometheus:
     # TODO: Add the ability to reference a pre-existing secret
-    # -- (string) Prometheus host
-    host:
-    # -- (string) Prometheus basic auth username
-    username:
-    # -- (string) Prometheus basic auth password
-    password:
+    # -- (string) (required) Prometheus host where metrics will be sent
+    host: ""
+    # -- (string) (required) Prometheus basic auth username
+    username: ""
+    # -- (string) (required) Prometheus basic auth password
+    password: ""
 
   # Connection information for Grafana Loki
   loki:
     # TODO: Add the ability to reference a pre-existing secret
-    # -- (string) Loki host
-    host:
-    # -- (string) Loki basic auth username
-    username:
-    # -- (string) Loki basic auth password
-    password:
+    # -- (string) (required) Loki host where logs and events will be sent
+    host: ""
+    # -- (string) (required) Loki basic auth username
+    username: ""
+    # -- (string) (required) Loki basic auth password
+    password: ""
 
 # Settings related to capturing and forwarding metrics
 metrics:
@@ -192,7 +192,6 @@ metrics:
     - service_selector_labels
     - statefulSet_match_labels
 
-
   podMonitors:
     # -- Include service discovery for PodMonitor objects
     enabled: true
@@ -254,10 +253,16 @@ kube-state-metrics:
   enabled: true
 
 # Settings for the Node Exporter deployment
-node-exporter:
+prometheus-node-exporter:
   # -- Should this helm chart deploy Node Exporter to the cluster.
   # Set this to false if your cluster already has Node Exporter, or if you do
   # not want to scrape metrics from Node Exporter.
+  enabled: true
+
+prometheus-operator-crds:
+  # -- Should this helm chart deploy the Prometheus Operator CRDs to the cluster.
+  # Set this to false if your cluster already has the CRDs, or if you do not
+  # to have the Grafana Agent scrape metrics from PodMonitors or ServiceMonitors.
   enabled: true
 
 # Settings for the OpenCost deployment
