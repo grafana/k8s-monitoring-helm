@@ -15,8 +15,8 @@ A Helm chart for Kubernetes Monitoring
 | Repository | Name | Version |
 |------------|------|---------|
 | https://grafana.github.io/helm-charts | grafana-agent | ~0.15.0 |
-| https://opencost.github.io/opencost-helm-chart | opencost | ~1.14.5 |
-| https://prometheus-community.github.io/helm-charts | kube-state-metrics | ~5.7.0 |
+| https://opencost.github.io/opencost-helm-chart | opencost | ~1.15.0 |
+| https://prometheus-community.github.io/helm-charts | kube-state-metrics | ~5.8.0 |
 | https://prometheus-community.github.io/helm-charts | prometheus-node-exporter | ~4.17.5 |
 | https://prometheus-community.github.io/helm-charts | prometheus-operator-crds | ~4.0.2 |
 
