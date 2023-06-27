@@ -14,35 +14,52 @@ on:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
+  check-for-doc-changes:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: Regenerate docs
+      run: |
+        docker run --rm \
+          -v "$(pwd)/charts/kubernetes-monitoring:/helm-docs" \
+          -u "$(id -u)" \
+          jnorwood/helm-docs
+        if ! git diff --exit-code; then
+          echo "Helm chart documentation is not up to date. Please run 'make generate-helm-docs' and commit changes!" >&2
+          exit 1
+        fi
+
   helm-test:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
+    - name: Checkout
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
 
-      - name: Set up Helm
-        uses: azure/setup-helm@v3
-        with:
-          version: v3.11.2
+    - name: Set up Helm
+      uses: azure/setup-helm@v3
+      with:
+        version: v3.11.2
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.9'
-          check-latest: true
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+        check-latest: true
 
-      - name: Set up chart-testing
-        uses: helm/chart-testing-action@v2.4.0
+    - name: Set up chart-testing
+      uses: helm/chart-testing-action@v2.4.0
 
-      - name: List changed charts
-        id: list-changed
-        run: |
-          changed=$(ct --config ./.github/configs/ct.yaml list-changed)
-          if [[ -n "$changed" ]]; then
-            echo "changed=true" >> "$GITHUB_OUTPUT"
-          fi
+    - name: List changed charts
+      id: list-changed
+      run: |
+        changed=$(ct --config ./.github/configs/ct.yaml list-changed)
+        if [[ -n "$changed" ]]; then
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+        fi
 
-      - name: Run chart-testing (lint)
-        run: ct lint --debug --config ./.github/configs/ct.yaml --lint-conf ./.github/configs/lintconf.yaml
+    - name: Run chart-testing (lint)
+      run: ct lint --debug --config ./.github/configs/ct.yaml --lint-conf ./.github/configs/lintconf.yaml
