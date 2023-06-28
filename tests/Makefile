@@ -24,6 +24,6 @@ test: test-runner.sh lint-config
 clean-outputs:
 	rm -f $(OUTPUT_FILES)
 
-generate-outputs: $(OUTPUT_FILES) lint-config
+generate-outputs: $(OUTPUT_FILES)
 
 regenerate-outputs: clean-outputs generate-outputs

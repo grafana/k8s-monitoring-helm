@@ -31,35 +31,58 @@ jobs:
           exit 1
         fi
 
-  regenerate-tests:
+  check-for-test-output-changes:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+    - name: Checkout
+      uses: actions/checkout@v3
 
-      - name: Install Helm
-        uses: azure/setup-helm@v3
-        with:
-          version: v3.10.3
+    - name: Install Helm
+      uses: azure/setup-helm@v3
+      with:
+        version: v3.10.3
 
-      # Installing the Grafana Agent because we need it to lint the generated agent config files.
-      # https://grafana.com/docs/agent/latest/static/set-up/install-agent-linux/#install-on-debian-or-ubuntu
-      - name: Install Grafana Agent
-        run: |
-          sudo mkdir -p /etc/apt/keyrings/
-          wget -q -O - https://apt.grafana.com/gpg.key | gpg --dearmor | sudo tee /etc/apt/keyrings/grafana.gpg > /dev/null
-          echo "deb [signed-by=/etc/apt/keyrings/grafana.gpg] https://apt.grafana.com stable main" | sudo tee /etc/apt/sources.list.d/grafana.list
-          sudo apt-get update
-          sudo apt-get install -y grafana-agent
+    - name: Regenerate test outputs
+      run: |
+        cd tests
+        make regenerate-outputs
+        if [ ! -z "$(git status --porcelain)" ]; then
+          echo "Helm chart tests are not up to date. Please run 'make generate-helm-tests' and commit changes!" >&2
+          exit 1
+        fi
 
-      - name: Regenerate tests
-        run: |
-          cd tests
-          make regenerate-outputs
-          if [ ! -z "$(git status --porcelain)" ]; then
-            echo "Helm chart tests are not up to date. Please run 'make generate-helm-tests' and commit changes!" >&2
-            exit 1
-          fi
+  static-test-chart:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: Install Helm
+      uses: azure/setup-helm@v3
+      with:
+        version: v3.10.3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+        check-latest: true
+
+    - name: Install yq
+      run: pip install yq
+
+    # Installing the Grafana Agent because we need it to lint the generated agent config files.
+    # https://grafana.com/docs/agent/latest/static/set-up/install-agent-linux/#install-on-debian-or-ubuntu
+    - name: Install Grafana Agent
+      run: |
+        sudo mkdir -p /etc/apt/keyrings/
+        wget -q -O - https://apt.grafana.com/gpg.key | gpg --dearmor | sudo tee /etc/apt/keyrings/grafana.gpg > /dev/null
+        echo "deb [signed-by=/etc/apt/keyrings/grafana.gpg] https://apt.grafana.com stable main" | sudo tee /etc/apt/sources.list.d/grafana.list
+        sudo apt-get update
+        sudo apt-get install -y grafana-agent
+
+    - name: Run tests
+      run: cd tests; make test
 
   lint-test:
     runs-on: ubuntu-latest
