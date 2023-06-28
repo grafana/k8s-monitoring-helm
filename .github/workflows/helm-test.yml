@@ -42,6 +42,16 @@ jobs:
         with:
           version: v3.10.3
 
+      # Installing the Grafana Agent because we need it to lint the generated agent config files.
+      # https://grafana.com/docs/agent/latest/static/set-up/install-agent-linux/#install-on-debian-or-ubuntu
+      - name: Install Grafana Agent
+        run: |
+          sudo mkdir -p /etc/apt/keyrings/
+          wget -q -O - https://apt.grafana.com/gpg.key | gpg --dearmor | sudo tee /etc/apt/keyrings/grafana.gpg > /dev/null
+          echo "deb [signed-by=/etc/apt/keyrings/grafana.gpg] https://apt.grafana.com stable main" | sudo tee /etc/apt/sources.list.d/grafana.list
+          sudo apt-get update
+          sudo apt-get install -y grafana-agent
+
       - name: Regenerate tests
         run: |
           cd tests
@@ -76,7 +86,7 @@ jobs:
     - name: List changed charts
       id: list-changed
       run: |
-        changed=$(ct list-changed --config ./operations/helm/ct.yaml)
+        changed=$(ct list-changed --config ./.github/configs/ct.yaml)
         if [[ -n "$changed" ]]; then
           echo "changed=true" >> "{$GITHUB_OUTPUT}"
         fi
