@@ -19,6 +19,11 @@ discovery.relabel "node_exporter" {
     action = "replace"
     target_label = "instance"
   }
+  rule {
+    source_labels = ["__name__"]
+    replacement   = local.file.cluster_name.content
+    target_label  = "cluster"
+  }
 }
 
 prometheus.scrape "node_exporter" {
@@ -39,6 +44,6 @@ prometheus.relabel "node_exporter" {
     regex = "up|{{ join "|" (index .Values.metrics "node-exporter").allowList }}"
     action = "keep"
   }
-  forward_to = [prometheus.relabel.add_cluster_label.receiver]
+  forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
 }
 {{ end }}

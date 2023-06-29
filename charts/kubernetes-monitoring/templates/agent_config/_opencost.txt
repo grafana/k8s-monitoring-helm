@@ -17,6 +17,11 @@ discovery.relabel "opencost" {
     regex = "http"
     action = "keep"
   }
+  rule {
+    source_labels = ["__name__"]
+    replacement   = local.file.cluster_name.content
+    target_label  = "cluster"
+  }
 }
 
 prometheus.scrape "opencost" {
@@ -31,6 +36,6 @@ prometheus.relabel "opencost" {
     regex = "up|{{ join "|" .Values.metrics.cost.allowList }}"
     action = "keep"
   }
-  forward_to = [prometheus.relabel.add_cluster_label.receiver]
+  forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
 }
 {{ end }}

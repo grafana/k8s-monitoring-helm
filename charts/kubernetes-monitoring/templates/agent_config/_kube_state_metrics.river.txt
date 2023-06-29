@@ -19,6 +19,11 @@ discovery.relabel "kube_state_metrics" {
     regex = "{{- (index .Values.metrics "kube-state-metrics").service.port -}}"
     action = "keep"
   }
+  rule {
+    source_labels = ["__name__"]
+    replacement   = local.file.cluster_name.content
+    target_label  = "cluster"
+  }
 }
 
 prometheus.scrape "kube_state_metrics" {
@@ -40,6 +45,6 @@ prometheus.relabel "kube_state_metrics" {
     regex = "up|{{ join "|" (index .Values.metrics "kube-state-metrics").allowList }}"
     action = "keep"
   }
-  forward_to = [prometheus.relabel.add_cluster_label.receiver]
+  forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
 }
 {{ end }}

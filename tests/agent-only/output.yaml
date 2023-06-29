@@ -66,6 +66,11 @@ data:
         regex = "http-metrics"
         action = "keep"
       }
+      rule {
+        source_labels = ["__name__"]
+        replacement   = local.file.cluster_name.content
+        target_label  = "cluster"
+      }
     }
     
     prometheus.scrape "agent" {
@@ -80,29 +85,20 @@ data:
         regex = "up|agent_build_info"
         action = "keep"
       }
-      forward_to = [prometheus.relabel.add_cluster_label.receiver]
+      forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
     }
         
     // PodMonitor
     prometheus.operator.podmonitors "pod_monitors" {
-      forward_to = [prometheus.relabel.add_cluster_label.receiver]
+      forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
     }
         
     // ServiceMonitor
     prometheus.operator.servicemonitors "service_monitors" {
-      forward_to = [prometheus.relabel.add_cluster_label.receiver]
+      forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
     }
         
     // Grafana Cloud Prometheus
-    prometheus.relabel "add_cluster_label" {
-      rule {
-        source_labels = ["__name__"]
-        replacement   = local.file.cluster_name.content
-        target_label  = "cluster"
-      }
-      forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
-    }
-    
     local.file "prometheus_host" {
       filename  = "/etc/grafana-agent-credentials/prometheus_host"
     }

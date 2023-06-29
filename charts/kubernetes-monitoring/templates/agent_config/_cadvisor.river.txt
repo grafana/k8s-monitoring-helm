@@ -12,6 +12,11 @@ discovery.relabel "cadvisor" {
     replacement   = "/api/v1/nodes/${1}/proxy/metrics/cadvisor"
     target_label  = "__metrics_path__"
   }
+  rule {
+    source_labels = ["__name__"]
+    replacement   = local.file.cluster_name.content
+    target_label  = "cluster"
+  }
 }
 
 prometheus.scrape "cadvisor" {
@@ -31,6 +36,6 @@ prometheus.relabel "cadvisor" {
     regex = "up|{{ join "|" .Values.metrics.cadvisor.allowList }}"
     action = "keep"
   }
-  forward_to = [prometheus.relabel.add_cluster_label.receiver]
+  forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
 }
 {{ end }}

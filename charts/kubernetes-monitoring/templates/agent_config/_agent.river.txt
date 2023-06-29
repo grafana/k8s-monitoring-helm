@@ -17,6 +17,11 @@ discovery.relabel "agent" {
     regex = "http-metrics"
     action = "keep"
   }
+  rule {
+    source_labels = ["__name__"]
+    replacement   = local.file.cluster_name.content
+    target_label  = "cluster"
+  }
 }
 
 prometheus.scrape "agent" {
@@ -31,6 +36,6 @@ prometheus.relabel "agent" {
     regex = "up|agent_build_info"
     action = "keep"
   }
-  forward_to = [prometheus.relabel.add_cluster_label.receiver]
+  forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
 }
 {{ end }}
