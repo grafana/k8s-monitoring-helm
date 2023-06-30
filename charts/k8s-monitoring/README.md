@@ -49,6 +49,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | Name | Email | Url |
 | ---- | ------ | --- |
 | petewall | <pete.wall@grafana.com> |  |
+| skl | <stephen.lang@grafana.com> |  |
 
 ## Requirements
 
