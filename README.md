@@ -16,7 +16,7 @@ Once Helm is set up properly, add the repo as follows:
 helm repo add grafana https://grafana.github.io/helm-charts
 ```
 
-See the [Chart Documentation](https://github.com/grafana/kubernetes-monitoring-chart/blob/main/charts/kubernetes-monitoring/README.md) for chart install instructions.
+See the [Chart Documentation](https://github.com/grafana/k8s-monitoring-helm/blob/main/charts/k8s-monitoring/README.md) for chart install instructions.
 
 ## Contributing
 
@@ -26,7 +26,7 @@ If you make changes to this chart, please ensure that you've done the following:
 
 * Update the chart version
 * Use [Helm Docs](https://github.com/norwoodj/helm-docs) to check for updates to the chart documentation
-  * `cd charts/kubernetes-monitoring; helm-docs`
+  * `cd charts/k8s-monitoring; helm-docs`
 * Check for updates to the test outputs
   * `cd test; make test`
   * If changes are acceptable, regenerate the outputs:

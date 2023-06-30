@@ -2,7 +2,7 @@
 SHELL := /bin/bash
 
 ifndef HELM_CHART_PATH
-override HELM_CHART_PATH = ../charts/kubernetes-monitoring
+override HELM_CHART_PATH = ../charts/k8s-monitoring
 endif
 
 INPUT_FILES = $(wildcard ./*/values.yaml)
