@@ -1,6 +1,6 @@
 # k8s-monitoring
 
-![Version: 0.0.1](https://img.shields.io/badge/Version-0.0.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.1.5](https://img.shields.io/badge/AppVersion-1.1.5-informational?style=flat-square)
+![Version: 0.0.3](https://img.shields.io/badge/Version-0.0.3-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.1.5](https://img.shields.io/badge/AppVersion-1.1.5-informational?style=flat-square)
 
 A Helm chart for Kubernetes Monitoring
 
@@ -14,11 +14,11 @@ A Helm chart for Kubernetes Monitoring
 
 | Repository | Name | Version |
 |------------|------|---------|
-| https://grafana.github.io/helm-charts | grafana-agent | ~0.15.0 |
-| https://opencost.github.io/opencost-helm-chart | opencost | ~1.15.0 |
-| https://prometheus-community.github.io/helm-charts | kube-state-metrics | ~5.8.0 |
-| https://prometheus-community.github.io/helm-charts | prometheus-node-exporter | ~4.17.5 |
-| https://prometheus-community.github.io/helm-charts | prometheus-operator-crds | ~4.0.2 |
+| https://grafana.github.io/helm-charts | grafana-agent | ~0.16.0 |
+| https://opencost.github.io/opencost-helm-chart | opencost | ~1.16.1 |
+| https://prometheus-community.github.io/helm-charts | kube-state-metrics | ~5.8.1 |
+| https://prometheus-community.github.io/helm-charts | prometheus-node-exporter | 4.18.1 |
+| https://prometheus-community.github.io/helm-charts | prometheus-operator-crds | ~5.0.0 |
 
 ## Values
 

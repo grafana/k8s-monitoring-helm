@@ -5,10 +5,10 @@ kind: ServiceAccount
 metadata:
   name: k8smon-grafana-agent
   labels:
-    helm.sh/chart: grafana-agent-0.15.0
+    helm.sh/chart: grafana-agent-0.16.0
     app.kubernetes.io/name: grafana-agent
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "v0.34.0"
+    app.kubernetes.io/version: "v0.34.2"
     app.kubernetes.io/managed-by: Helm
 ---
 # Source: k8s-monitoring/templates/credentials.yaml
@@ -51,10 +51,10 @@ kind: ClusterRole
 metadata:
   name: k8smon-grafana-agent
   labels:
-    helm.sh/chart: grafana-agent-0.15.0
+    helm.sh/chart: grafana-agent-0.16.0
     app.kubernetes.io/name: grafana-agent
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "v0.34.0"
+    app.kubernetes.io/version: "v0.34.2"
     app.kubernetes.io/managed-by: Helm
 rules:
   # Rules which allow discovery.kubernetes to function.
@@ -132,10 +132,10 @@ kind: ClusterRoleBinding
 metadata:
   name: k8smon-grafana-agent
   labels:
-    helm.sh/chart: grafana-agent-0.15.0
+    helm.sh/chart: grafana-agent-0.16.0
     app.kubernetes.io/name: grafana-agent
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "v0.34.0"
+    app.kubernetes.io/version: "v0.34.2"
     app.kubernetes.io/managed-by: Helm
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -152,10 +152,10 @@ kind: Service
 metadata:
   name: k8smon-grafana-agent
   labels:
-    helm.sh/chart: grafana-agent-0.15.0
+    helm.sh/chart: grafana-agent-0.16.0
     app.kubernetes.io/name: grafana-agent
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "v0.34.0"
+    app.kubernetes.io/version: "v0.34.2"
     app.kubernetes.io/managed-by: Helm
 spec:
   type: ClusterIP
@@ -174,10 +174,10 @@ kind: DaemonSet
 metadata:
   name: k8smon-grafana-agent
   labels:
-    helm.sh/chart: grafana-agent-0.15.0
+    helm.sh/chart: grafana-agent-0.16.0
     app.kubernetes.io/name: grafana-agent
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "v0.34.0"
+    app.kubernetes.io/version: "v0.34.2"
     app.kubernetes.io/managed-by: Helm
 spec:
   minReadySeconds: 10
@@ -194,7 +194,7 @@ spec:
       serviceAccountName: k8smon-grafana-agent
       containers:
         - name: grafana-agent
-          image: grafana/agent:v0.34.0
+          image: docker.io/grafana/agent:v0.34.2
           imagePullPolicy: IfNotPresent
           args:
             - run
@@ -224,13 +224,17 @@ spec:
               mountPath: /etc/grafana-agent-credentials
               name: grafana-agent-credentials
         - name: config-reloader
-          image: jimmidyson/configmap-reload:v0.8.0
+          image: docker.io/jimmidyson/configmap-reload:v0.8.0
           args:
             - --volume-dir=/etc/agent
             - --webhook-url=http://localhost:80/-/reload
           volumeMounts:
             - name: config
               mountPath: /etc/agent
+          resources:
+            requests:
+              cpu: 1m
+              memory: 5Mi
       dnsPolicy: ClusterFirst
       volumes:
         - name: config
