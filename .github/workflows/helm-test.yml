@@ -1,9 +1,6 @@
-# CI Workflow for OpenCost Helm chart
-name: CI
+name: Test
 
-# Controls when the workflow will run
 on:
-  # Triggers the workflow on push or pull request events but only for the "main" branch
   push:
     branches: [ "main" ]
   pull_request:
@@ -16,7 +13,6 @@ env:
   CT_CONFIGFILE: "${{ github.workspace }}/.github/configs/ct.yaml"
   LINT_CONFIGFILE: "${{ github.workspace }}/.github/configs/lintconf.yaml"
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   check-for-doc-changes:
     runs-on: ubuntu-latest
@@ -31,7 +27,7 @@ jobs:
           -u "$(id -u)" \
           jnorwood/helm-docs
         if ! git diff --exit-code; then
-          echo "Helm chart documentation is not up to date. Please run 'make generate-helm-docs' and commit changes!" >&2
+          echo "Helm chart documentation is not up to date. Please run 'helm-docs' and commit changes!" >&2
           exit 1
         fi
 
@@ -49,7 +45,7 @@ jobs:
         cd tests
         make regenerate-outputs
         if [ ! -z "$(git status --porcelain)" ]; then
-          echo "Helm chart tests are not up to date. Please run 'make generate-helm-tests' and commit changes!" >&2
+          echo "Helm chart tests are not up to date. Please run 'cd tests; make regenerate-outputs' and commit changes!" >&2
           exit 1
         fi
 
