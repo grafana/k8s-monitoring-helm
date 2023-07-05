@@ -125,16 +125,20 @@ jobs:
 
         "${CR_TOOL_PATH}/cr" package "${{ steps.parse-chart.outputs.chartpath }}" --config "${CR_CONFIGFILE}" --package-path "${CR_PACKAGE_PATH}"
 
-    - name: Create tag and check if exists on origin
-      run: |
-        cd source
-        echo "Making tag ${{ steps.parse-chart.outputs.tagname }}"
-        git tag "${{ steps.parse-chart.outputs.tagname }}"
+    - name: Make release on K8s Monitoring Helm
+      uses: softprops/action-gh-release@v1
+      with:
+        name: ${{ steps.parse-chart.outputs.tagname }}
+        repository: grafana/k8s-monitoring-helm
+        tag_name: ${{ steps.parse-chart.outputs.tagname }}
+        token: ${{ secrets.GH_BOT_ACCESS_TOKEN }}
+        files: |
+          ${{ env.CR_PACKAGE_PATH }}/${{ steps.parse-chart.outputs.packagename }}.tgz
 
     # Note that this creates a release in grafana/helm-charts with a new tag.
     # The tag name in grafana/helm-charts is <package>-<version>, while the
     # tag name for grafana/k8s-monitoring-helm is <version>.
-    - name: Make github release
+    - name: Make release on Helm Charts
       uses: softprops/action-gh-release@v1
       with:
         name: ${{ steps.parse-chart.outputs.packagename }}
@@ -149,12 +153,6 @@ jobs:
           Tag on source: https://github.com/${{ github.repository }}/releases/tag/${{ steps.parse-chart.outputs.tagname }}
         files: |
           ${{ env.CR_PACKAGE_PATH }}/${{ steps.parse-chart.outputs.packagename }}.tgz
-
-    - name: Push release tag on origin
-      run: |
-        cd source
-        echo "Pushing tag ${{ steps.parse-chart.outputs.tagname }}"
-        git push origin "${{ steps.parse-chart.outputs.tagname }}"
 
     - name: Update helm-charts index.yaml
       run: |
