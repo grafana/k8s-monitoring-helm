@@ -1,6 +1,6 @@
 # k8s-monitoring
 
-![Version: 0.0.4](https://img.shields.io/badge/Version-0.0.4-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.1.5](https://img.shields.io/badge/AppVersion-1.1.5-informational?style=flat-square)
+![Version: 0.0.5](https://img.shields.io/badge/Version-0.0.5-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.1.5](https://img.shields.io/badge/AppVersion-1.1.5-informational?style=flat-square)
 
 A Helm chart for gathering, scraping, and forwarding Kubernetes infrastructure metrics and logs to a Grafana Stack.
 
@@ -93,7 +93,7 @@ shown in the following sections.
 If you want to allow all metrics, set this in the values file:
 
 ```yaml
-allowList: ["*"]
+allowList: null
 ```
 
 ### Allow List for Kube State Metrics
@@ -229,10 +229,3 @@ Visit the OpenCost [documentation](https://www.opencost.io/docs/prometheus#avail
 * pv_hourly_cost
 * service_selector_labels
 * statefulSet_match_labels
-
-## TODO
-
-* Finish requirements for OpenShift
-* Start investigating Tanzu
-* Start investigating Tempo and traces
-* Start investigating OTel for infrastructure metrics and logs

@@ -27,8 +27,13 @@ prometheus.scrape "cadvisor" {
   tls_config {
     insecure_skip_verify = true
   }
+{{- if .Values.metrics.cadvisor.allowList }}
   forward_to = [prometheus.relabel.cadvisor.receiver]
+{{- else }}
+  forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
+{{- end }}
 }
+{{- if .Values.metrics.cadvisor.allowList }}
 
 prometheus.relabel "cadvisor" {
   rule {
@@ -38,4 +43,5 @@ prometheus.relabel "cadvisor" {
   }
   forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
 }
+{{- end }}
 {{ end }}

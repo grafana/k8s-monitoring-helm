@@ -27,8 +27,13 @@ prometheus.scrape "kubelet" {
   tls_config {
     insecure_skip_verify = true
   }
+{{- if .Values.metrics.kubelet.allowList }}
   forward_to = [prometheus.relabel.kubelet.receiver]
+{{- else }}
+  forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
+{{- end }}
 }
+{{- if .Values.metrics.kubelet.allowList }}
 
 prometheus.relabel "kubelet" {
   rule {
@@ -38,4 +43,5 @@ prometheus.relabel "kubelet" {
   }
   forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
 }
+{{- end }}
 {{ end }}

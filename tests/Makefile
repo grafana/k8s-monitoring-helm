@@ -8,7 +8,7 @@ endif
 INPUT_FILES = $(wildcard ./*/values.yaml)
 OUTPUT_FILES = $(subst values.yaml,output.yaml,$(INPUT_FILES))
 
-lint-config: $(OUTPUT_FILES)
+lint-config:
 	for file in $^; \
 	do \
 		echo "Linting Agent config in $${file}..."; \

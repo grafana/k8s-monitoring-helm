@@ -29,7 +29,11 @@ discovery.relabel "node_exporter" {
 prometheus.scrape "node_exporter" {
   job_name   = "integrations/node_exporter"
   targets  = discovery.relabel.node_exporter.output
+{{- if (index .Values.metrics "node-exporter").allowList }}
   forward_to = [prometheus.relabel.node_exporter.receiver]
+{{- else }}
+  forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
+{{- end }}
   scheme     = "https"
   bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
   tls_config {
@@ -37,6 +41,7 @@ prometheus.scrape "node_exporter" {
     insecure_skip_verify = true
   }
 }
+{{- if (index .Values.metrics "node-exporter").allowList }}
 
 prometheus.relabel "node_exporter" {
   rule {
@@ -46,4 +51,5 @@ prometheus.relabel "node_exporter" {
   }
   forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
 }
+{{- end }}
 {{ end }}

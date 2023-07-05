@@ -28,9 +28,9 @@ If you make changes to this chart, please ensure that you've done the following:
 * Use [Helm Docs](https://github.com/norwoodj/helm-docs) to check for updates to the chart documentation
   * `cd charts/k8s-monitoring; helm-docs`
 * Check for updates to the test outputs
-  * `cd test; make test`
+  * `cd tests; make test`
   * If changes are acceptable, regenerate the outputs:
-  * `cd test; make regenerate-outputs`
+  * `cd tests; make regenerate-outputs`
 
 Required tools:
 
