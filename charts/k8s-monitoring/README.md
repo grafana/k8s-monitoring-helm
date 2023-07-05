@@ -1,8 +1,32 @@
 # k8s-monitoring
 
-![Version: 0.0.3](https://img.shields.io/badge/Version-0.0.3-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.1.5](https://img.shields.io/badge/AppVersion-1.1.5-informational?style=flat-square)
+![Version: 0.0.4](https://img.shields.io/badge/Version-0.0.4-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.1.5](https://img.shields.io/badge/AppVersion-1.1.5-informational?style=flat-square)
 
-A Helm chart for Kubernetes Monitoring
+A Helm chart for gathering, scraping, and forwarding Kubernetes infrastructure metrics and logs to a Grafana Stack.
+
+## Usage
+
+### Setup Grafana chart repository
+
+```
+helm repo add grafana https://grafana.github.io/helm-charts
+helm repo update
+```
+
+### Install chart
+
+To install the chart with the release name my-release:
+
+`helm install my-release grafana/k8s-monitoring`
+
+This chart simplifies the deployment of a Kubernetes monitoring infrastructure, including the following:
+
+* [kube-state-metrics](https://github.com/kubernetes/kube-state-metrics), which gathers metrics about Kubernetes objects
+* [Node exporter](https://github.com/prometheus/node_exporter), which gathers metrics about Kubernetes nodes
+* [OpenCost](https://www.opencost.io/), which interprets the above to create cost metrics for the cluster, and
+* [Grafana Agent](https://grafana.com/docs/agent/latest/), which scrapes the above services to forward metrics to [Prometheus](https://prometheus.io/) and logs to [Loki](https://grafana.com/oss/loki/)
+
+The Prometheus and Loki services may be hosted on the same cluster, or remotely (e.g. on Grafana Cloud).
 
 ## Maintainers
 
