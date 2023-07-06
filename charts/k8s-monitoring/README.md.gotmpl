@@ -20,7 +20,23 @@ helm repo update
 
 To install the chart with the release name my-release:
 
-`helm install my-release grafana/{{ template "chart.name" . }}`
+```bash
+cat >> values.yaml << EOF
+cluster:
+  name: my-cluster
+
+externalServices:
+  prometheus:
+    host: https://prometheus.example.com
+    username: "12345"
+    password: "It's a secret to everyone"
+  loki:
+    host: https://loki.example.com
+    username: "67890"
+    password: "It's a secret to everyone"
+EOF
+helm install my-release grafana/{{ template "chart.name" . }} --values values.yaml
+``
 
 This chart simplifies the deployment of a Kubernetes monitoring infrastructure, including the following:
 
@@ -38,6 +54,48 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 {{ template "chart.requirementsSection" . }}
 
 {{ template "chart.valuesSection" . }}
+
+## Platform-specific instructions
+
+### OpenShift
+
+If your cluster is on OpenShift, this Helm chart can be configured to scrape metrics from the existing Kube State Metrics and Node exporter that are deployed by [OpenShift Container Platform monitoring](https://docs.openshift.com/container-platform/latest/monitoring/monitoring-overview.html).
+Use the following values file as a starting point for your own cluster:
+
+```yaml
+cluster:
+  name: my-openshift-cluster
+
+externalServices:
+  prometheus:
+    host: https://prometheus.example.com
+    username: "12345"
+    password: "It's a secret to everyone"
+  loki:
+    host: https://loki.example.com
+    username: "67890"
+    password: "It's a secret to everyone"
+
+metrics:
+  kube-state-metrics:
+    service:
+      port: https-main
+      isTLS: true
+
+  node-exporter:
+    labelMatchers:
+      app.kubernetes.io/name: node-exporter
+
+kube-state-metrics: # This disables the deployment of Kube State Metrics
+  enabled: false
+
+prometheus-node-exporter: # This disables the deployment of Node exporter
+  enabled: false
+
+grafana-agent:
+  agent:
+    listenPort: 8080
+```
 
 ## Allow List
 

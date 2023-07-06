@@ -38,6 +38,10 @@ metrics:
     # -- Scrape cluster object metrics from Kube State Metrics
     enabled: true
 
+    # -- Label matchers used by the Grafana Agent to select the Kube State Metrics service
+    labelMatchers:
+      app.kubernetes.io/name: kube-state-metrics
+
     # Kube State Metrics service settings
     service:
       # -- Name of the metrics port
@@ -83,6 +87,10 @@ metrics:
   node-exporter:
     # -- Scrape node metrics
     enabled: true
+
+    # -- Label matchers used by the Grafana Agent to select the Node exporter pods
+    labelMatchers:
+      app.kubernetes.io/name: prometheus-node-exporter.*
 
     # -- The list of Node Exporter metrics that will be scraped by the Agent
     # @default -- See [Allow List for Node Exporter](#allow-list-for-node-exporter)
@@ -166,6 +174,10 @@ metrics:
   cost:
     # -- Scrape cost metrics from OpenCost
     enabled: true
+
+    # -- Label matchers used by the Grafana Agent to select the OpenCost service
+    labelMatchers:
+      app.kubernetes.io/name: opencost
 
     # -- The list of OpenCost metrics that will be scraped by the Agent
     # @default -- See [Allow List for OpenCost](#allow-list-for-opencost)

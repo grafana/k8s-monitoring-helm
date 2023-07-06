@@ -1,6 +1,6 @@
 # k8s-monitoring
 
-![Version: 0.0.5](https://img.shields.io/badge/Version-0.0.5-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.1.5](https://img.shields.io/badge/AppVersion-1.1.5-informational?style=flat-square)
+![Version: 0.0.6](https://img.shields.io/badge/Version-0.0.6-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.1.5](https://img.shields.io/badge/AppVersion-1.1.5-informational?style=flat-square)
 
 A Helm chart for gathering, scraping, and forwarding Kubernetes infrastructure metrics and logs to a Grafana Stack.
 
@@ -17,7 +17,23 @@ helm repo update
 
 To install the chart with the release name my-release:
 
-`helm install my-release grafana/k8s-monitoring`
+```bash
+cat >> values.yaml << EOF
+cluster:
+  name: my-cluster
+
+externalServices:
+  prometheus:
+    host: https://prometheus.example.com
+    username: "12345"
+    password: "It's a secret to everyone"
+  loki:
+    host: https://loki.example.com
+    username: "67890"
+    password: "It's a secret to everyone"
+EOF
+helm install my-release grafana/k8s-monitoring --values values.yaml
+``
 
 This chart simplifies the deployment of a Kubernetes monitoring infrastructure, including the following:
 
@@ -67,21 +83,66 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | metrics.cadvisor.enabled | bool | `true` | Scrape container metrics from cAdvisor |
 | metrics.cost.allowList | list | See [Allow List for OpenCost](#allow-list-for-opencost) | The list of OpenCost metrics that will be scraped by the Agent |
 | metrics.cost.enabled | bool | `true` | Scrape cost metrics from OpenCost |
+| metrics.cost.labelMatchers | object | `{"app.kubernetes.io/name":"opencost"}` | Label matchers used by the Grafana Agent to select the OpenCost service |
 | metrics.enabled | bool | `true` | Capture and forward metrics |
 | metrics.kube-state-metrics.allowList | list | See [Allow List for Kube State Metrics](#allow-list-for-kube-state-metrics) | The list of Kube State Metrics metrics that will be scraped by the Agent |
 | metrics.kube-state-metrics.enabled | bool | `true` | Scrape cluster object metrics from Kube State Metrics |
+| metrics.kube-state-metrics.labelMatchers | object | `{"app.kubernetes.io/name":"kube-state-metrics"}` | Label matchers used by the Grafana Agent to select the Kube State Metrics service |
 | metrics.kube-state-metrics.service.isTLS | bool | `false` | Does this port use TLS? |
 | metrics.kube-state-metrics.service.port | string | `"http"` | Name of the metrics port |
 | metrics.kubelet.allowList | list | See [Allow List for Kubelet](#allow-list-for-kubelet) | The list of Kubelet metrics that will be scraped by the Agent |
 | metrics.kubelet.enabled | bool | `true` | Scrape cluster metrics from the Kubelet |
 | metrics.node-exporter.allowList | list | See [Allow List for Node Exporter](#allow-list-for-node-exporter) | The list of Node Exporter metrics that will be scraped by the Agent |
 | metrics.node-exporter.enabled | bool | `true` | Scrape node metrics |
+| metrics.node-exporter.labelMatchers | object | `{"app.kubernetes.io/name":"prometheus-node-exporter.*"}` | Label matchers used by the Grafana Agent to select the Node exporter pods |
 | metrics.podMonitors.enabled | bool | `true` | Include service discovery for PodMonitor objects |
 | metrics.serviceMonitors.enabled | bool | `true` | Include service discovery for ServiceMonitor objects |
 | opencost.enabled | bool | `true` | Should this Helm chart deploy OpenCost to the cluster. Set this to false if your cluster already has OpenCost, or if you do not want to scrape metrics from OpenCost. |
 | opencost.opencost.prometheus.external.url | string | `"https://prom.example.com/api/prom"` | The URL for Prometheus queries. It should match externalService.prometheus.host + "/api/prom" |
 | prometheus-node-exporter.enabled | bool | `true` | Should this helm chart deploy Node Exporter to the cluster. Set this to false if your cluster already has Node Exporter, or if you do not want to scrape metrics from Node Exporter. |
 | prometheus-operator-crds.enabled | bool | `true` | Should this helm chart deploy the Prometheus Operator CRDs to the cluster. Set this to false if your cluster already has the CRDs, or if you do not to have the Grafana Agent scrape metrics from PodMonitors or ServiceMonitors. |
+
+## Platform-specific instructions
+
+### OpenShift
+
+If your cluster is on OpenShift, this Helm chart can be configured to scrape metrics from the existing Kube State Metrics and Node exporter that are deployed by [OpenShift Container Platform monitoring](https://docs.openshift.com/container-platform/latest/monitoring/monitoring-overview.html).
+Use the following values file as a starting point for your own cluster:
+
+```yaml
+cluster:
+  name: my-openshift-cluster
+
+externalServices:
+  prometheus:
+    host: https://prometheus.example.com
+    username: "12345"
+    password: "It's a secret to everyone"
+  loki:
+    host: https://loki.example.com
+    username: "67890"
+    password: "It's a secret to everyone"
+
+metrics:
+  kube-state-metrics:
+    service:
+      port: https-main
+      isTLS: true
+
+  node-exporter:
+    labelMatchers:
+      app.kubernetes.io/name: node-exporter
+
+kube-state-metrics: # This disables the deployment of Kube State Metrics
+  enabled: false
+
+prometheus-node-exporter: # This disables the deployment of Node exporter
+  enabled: false
+
+grafana-agent:
+  agent:
+    listenPort: 8080
+```
 
 ## Allow List
 
