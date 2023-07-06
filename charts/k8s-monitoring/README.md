@@ -33,7 +33,7 @@ externalServices:
     password: "It's a secret to everyone"
 EOF
 helm install my-release grafana/k8s-monitoring --values values.yaml
-``
+```
 
 This chart simplifies the deployment of a Kubernetes monitoring infrastructure, including the following:
 
