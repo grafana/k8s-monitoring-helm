@@ -102,6 +102,48 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | prometheus-node-exporter.enabled | bool | `true` | Should this helm chart deploy Node Exporter to the cluster. Set this to false if your cluster already has Node Exporter, or if you do not want to scrape metrics from Node Exporter. |
 | prometheus-operator-crds.enabled | bool | `true` | Should this helm chart deploy the Prometheus Operator CRDs to the cluster. Set this to false if your cluster already has the CRDs, or if you do not to have the Grafana Agent scrape metrics from PodMonitors or ServiceMonitors. |
 
+## Platform-specific instructions
+
+### OpenShift
+
+If your cluster is on OpenShift, this Helm chart can be configured to scrape metrics from the existing Kube State Metrics and Node exporter that are deployed by [OpenShift Container Platform monitoring](https://docs.openshift.com/container-platform/latest/monitoring/monitoring-overview.html).
+Use the following values file as a starting point for your own cluster:
+
+```yaml
+cluster:
+  name: my-openshift-cluster
+
+externalServices:
+  prometheus:
+    host: https://prometheus.example.com
+    username: "12345"
+    password: "It's a secret to everyone"
+  loki:
+    host: https://loki.example.com
+    username: "67890"
+    password: "It's a secret to everyone"
+
+metrics:
+  kube-state-metrics:
+    service:
+      port: https-main
+      isTLS: true
+
+  node-exporter:
+    labelMatchers:
+      app.kubernetes.io/name: node-exporter
+
+kube-state-metrics: # This disables the deployment of Kube State Metrics
+  enabled: false
+
+prometheus-node-exporter: # This disables the deployment of Node exporter
+  enabled: false
+
+grafana-agent:
+  agent:
+    listenPort: 8080
+```
+
 ## Allow List
 
 Each metric source has an allow list, which is a list of metric names that will
