@@ -1,6 +1,6 @@
 # k8s-monitoring
 
-![Version: 0.0.5](https://img.shields.io/badge/Version-0.0.5-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.1.5](https://img.shields.io/badge/AppVersion-1.1.5-informational?style=flat-square)
+![Version: 0.0.6](https://img.shields.io/badge/Version-0.0.6-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.1.5](https://img.shields.io/badge/AppVersion-1.1.5-informational?style=flat-square)
 
 A Helm chart for gathering, scraping, and forwarding Kubernetes infrastructure metrics and logs to a Grafana Stack.
 
@@ -17,7 +17,23 @@ helm repo update
 
 To install the chart with the release name my-release:
 
-`helm install my-release grafana/k8s-monitoring`
+```bash
+cat >> values.yaml << EOF
+cluster:
+  name: my-cluster
+
+externalServices:
+  prometheus:
+    host: https://prometheus.example.com
+    username: "12345"
+    password: "It's a secret to everyone"
+  loki:
+    host: https://loki.example.com
+    username: "67890"
+    password: "It's a secret to everyone"
+EOF
+helm install my-release grafana/k8s-monitoring --values values.yaml
+``
 
 This chart simplifies the deployment of a Kubernetes monitoring infrastructure, including the following:
 
