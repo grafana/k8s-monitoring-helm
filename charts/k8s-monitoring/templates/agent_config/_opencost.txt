@@ -7,11 +7,13 @@ discovery.relabel "opencost" {
     regex = "{{ .Release.Name }}"
     action = "keep"
   }
+  {{- range $k, $v := .Values.metrics.cost.labelMatchers }}
   rule {
-    source_labels = ["__meta_kubernetes_service_label_app_kubernetes_io_name"]
-    regex = "opencost"
+    source_labels = ["__meta_kubernetes_service_label_{{ $k | replace "." "_" | replace "/" "_" }}"]
+    regex = "{{ $v }}"
     action = "keep"
   }
+  {{- end }}
   rule {
     source_labels = ["__meta_kubernetes_service_port_name"]
     regex = "http"
