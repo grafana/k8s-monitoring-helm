@@ -1,17 +1,45 @@
 {{ define "agent.config.logs.pod_logs" }}
 // Pod Logs
+discovery.relabel "pod_logs" {
+  targets = discovery.kubernetes.pods.targets
+
+  rule {
+    source_labels = ["__meta_kubernetes_namespace"]
+    action = "replace"
+    target_label = "namespace"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_pod_name"]
+    action = "replace"
+    target_label = "pod"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_pod_container_name"]
+    action = "replace"
+    target_label = "container"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_namespace", "__meta_kubernetes_pod_name"]
+    separator = "/"
+    action = "replace"
+    replacement = "$1"
+    target_label = "job"
+  }
+}
+
 loki.source.kubernetes "pod_logs" {
-  targets    = discovery.kubernetes.pods.targets
+  targets    = discovery.relabel.pod_logs.output
   forward_to = [loki.process.pod_logs.receiver]
 }
 
 loki.process "pod_logs" {
   stage.static_labels {
     values = {
-      job = "integration/kubernetes/pod_logs",
+      cluster = local.file.cluster_name.content,
     }
   }
+
   stage.{{- .Values.logs.pod_logs.loggingFormat }} {}
-  forward_to = [loki.process.add_cluster_label.receiver]
+  forward_to = [loki.write.grafana_cloud_loki.receiver]
 }
 {{ end }}

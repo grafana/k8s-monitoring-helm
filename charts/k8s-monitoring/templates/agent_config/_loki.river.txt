@@ -1,14 +1,5 @@
 {{ define "agent.config.loki" }}
 // Grafana Cloud Loki
-loki.process "add_cluster_label" {
-  stage.static_labels {
-    values = {
-      cluster = local.file.cluster_name.content,
-    }
-  }
-  forward_to = [loki.write.grafana_cloud_loki.receiver]
-}
-
 local.file "loki_host" {
   filename  = "/etc/grafana-agent-credentials/loki_host"
 }
