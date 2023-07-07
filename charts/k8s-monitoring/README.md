@@ -1,6 +1,6 @@
 # k8s-monitoring
 
-![Version: 0.0.7](https://img.shields.io/badge/Version-0.0.7-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.1.6](https://img.shields.io/badge/AppVersion-1.1.6-informational?style=flat-square)
+![Version: 0.0.8](https://img.shields.io/badge/Version-0.0.8-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.1.6](https://img.shields.io/badge/AppVersion-1.1.6-informational?style=flat-square)
 
 A Helm chart for gathering, scraping, and forwarding Kubernetes infrastructure metrics and logs to a Grafana Stack.
 
@@ -95,6 +95,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | metrics.node-exporter.allowList | list | See [Allow List for Node Exporter](#allow-list-for-node-exporter) | The list of Node Exporter metrics that will be scraped by the Agent |
 | metrics.node-exporter.enabled | bool | `true` | Scrape node metrics |
 | metrics.node-exporter.labelMatchers | object | `{"app.kubernetes.io/name":"prometheus-node-exporter.*"}` | Label matchers used by the Grafana Agent to select the Node exporter pods |
+| metrics.node-exporter.service.isTLS | bool | `false` | Does this port use TLS? |
 | metrics.podMonitors.enabled | bool | `true` | Include service discovery for PodMonitor objects |
 | metrics.serviceMonitors.enabled | bool | `true` | Include service discovery for ServiceMonitor objects |
 | opencost.enabled | bool | `true` | Should this Helm chart deploy OpenCost to the cluster. Set this to false if your cluster already has OpenCost, or if you do not want to scrape metrics from OpenCost. |
