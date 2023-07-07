@@ -342,37 +342,66 @@ data:
     }
         
     // Pod Logs
+    discovery.relabel "pod_logs" {
+      targets = discovery.kubernetes.pods.targets
+    
+      rule {
+        source_labels = ["__meta_kubernetes_namespace"]
+        action = "replace"
+        target_label = "namespace"
+      }
+      rule {
+        source_labels = ["__meta_kubernetes_pod_name"]
+        action = "replace"
+        target_label = "pod"
+      }
+      rule {
+        source_labels = ["__meta_kubernetes_pod_container_name"]
+        action = "replace"
+        target_label = "container"
+      }
+      rule {
+        source_labels = ["__meta_kubernetes_namespace", "__meta_kubernetes_pod_name"]
+        separator = "/"
+        action = "replace"
+        replacement = "$1"
+        target_label = "job"
+      }
+    }
+    
     loki.source.kubernetes "pod_logs" {
-      targets    = discovery.kubernetes.pods.targets
+      targets    = discovery.relabel.pod_logs.output
       forward_to = [loki.process.pod_logs.receiver]
     }
     
     loki.process "pod_logs" {
       stage.static_labels {
         values = {
-          job = "integration/kubernetes/pod_logs",
+          cluster = local.file.cluster_name.content,
         }
       }
+    
       stage.docker {}
-      forward_to = [loki.process.add_cluster_label.receiver]
+      forward_to = [loki.write.grafana_cloud_loki.receiver]
     }
         
     // Cluster Events
     loki.source.kubernetes_events "cluster_events" {
       job_name   = "integrations/kubernetes/eventhandler"
-      forward_to = [loki.process.add_cluster_label.receiver]
+      forward_to = [loki.process.cluster_events.receiver]
     }
-        
-    // Grafana Cloud Loki
-    loki.process "add_cluster_label" {
+    
+    loki.process "cluster_events" {
       stage.static_labels {
         values = {
           cluster = local.file.cluster_name.content,
         }
       }
+    
       forward_to = [loki.write.grafana_cloud_loki.receiver]
     }
-    
+        
+    // Grafana Cloud Loki
     local.file "loki_host" {
       filename  = "/etc/grafana-agent-credentials/loki_host"
     }
