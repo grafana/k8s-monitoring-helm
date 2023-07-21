@@ -4,7 +4,6 @@ on:
   push:
     branches: [ "main" ]
   pull_request:
-    branches: [ "main" ]
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -109,7 +108,12 @@ jobs:
         fi
 
     - name: Lint charts
-      run: ct lint --debug --config "${CT_CONFIGFILE}" --lint-conf "${LINT_CONFIGFILE}"
+      run: |
+        if [ "${GITHUB_HEAD_REF}" == "main" ]; then
+          ct lint --debug --config "${CT_CONFIGFILE}" --lint-conf "${LINT_CONFIGFILE}"
+        else
+          ct lint --debug --config "${CT_CONFIGFILE}" --lint-conf "${LINT_CONFIGFILE}" --check-version-increment false
+        fi
 
 # TODO: Install prometheus and loki locally, then install our chart so it's connected to those services
 #    - name: Create kind cluster
