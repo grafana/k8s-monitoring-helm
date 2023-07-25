@@ -30,7 +30,7 @@ jobs:
           exit 1
         fi
 
-  check-for-test-output-changes:
+  check-for-example-output-changes:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout
@@ -39,12 +39,12 @@ jobs:
     - name: Install Helm
       uses: azure/setup-helm@v3
 
-    - name: Regenerate test outputs
+    - name: Check for example output changes
       run: |
-        cd tests
+        cd examples
         make regenerate-outputs
         if [ ! -z "$(git status --porcelain)" ]; then
-          echo "Helm chart tests are not up to date. Please run 'cd tests; make regenerate-outputs' and commit changes!" >&2
+          echo "Helm chart examples are not up to date. Please run 'cd examples; make regenerate-outputs', examine changes, and commit changes." >&2
           exit 1
         fi
 
@@ -76,8 +76,8 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y grafana-agent
 
-    - name: Run tests
-      run: cd tests; make test
+    - name: Run tests against examples
+      run: cd examples; make test
 
   lint-test:
     runs-on: ubuntu-latest
