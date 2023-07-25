@@ -1,7 +1,5 @@
 #!/bin/bash
 
-#!/bin/bash
-
 usage() {
   echo "USAGE: test-runner.sh [--show-diffs] [--stop-on-failure] [test-dir]"
   echo ""
