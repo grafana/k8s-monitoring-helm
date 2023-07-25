@@ -9,12 +9,8 @@ INPUT_FILES = $(wildcard ./*/values.yaml)
 OUTPUT_FILES = $(subst values.yaml,output.yaml,$(INPUT_FILES))
 CONFIGMAP_NAME = k8smon-grafana-agent
 
-lint-config:
-	for file in $(OUTPUT_FILES); \
-	do \
-		echo "Linting Agent config in $${file}..."; \
-		AGENT_MODE=flow grafana-agent fmt <(yq -r 'select(.metadata.name=="$(CONFIGMAP_NAME)") | .data["config.river"] | select( . != null )' $$file) > /dev/null; \
-	done
+lint-config: lint-configs.sh
+	./lint-configs.sh $(OUTPUT_FILES)
 
 test: test-runner.sh lint-config
 	HELM_CHART_PATH=$(HELM_CHART_PATH) ./test-runner.sh --show-diffs
