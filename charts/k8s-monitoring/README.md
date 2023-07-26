@@ -1,6 +1,6 @@
 # k8s-monitoring
 
-![Version: 0.0.11](https://img.shields.io/badge/Version-0.0.11-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.1.6](https://img.shields.io/badge/AppVersion-1.1.6-informational?style=flat-square)
+![Version: 0.0.12](https://img.shields.io/badge/Version-0.0.12-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.2.0](https://img.shields.io/badge/AppVersion-1.2.0-informational?style=flat-square)
 
 A Helm chart for gathering, scraping, and forwarding Kubernetes infrastructure metrics and logs to a Grafana Stack.
 
@@ -55,11 +55,11 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 
 | Repository | Name | Version |
 |------------|------|---------|
-| https://grafana.github.io/helm-charts | grafana-agent | ~0.16.0 |
-| https://opencost.github.io/opencost-helm-chart | opencost | ~1.16.1 |
-| https://prometheus-community.github.io/helm-charts | kube-state-metrics | ~5.8.1 |
-| https://prometheus-community.github.io/helm-charts | prometheus-node-exporter | 4.18.1 |
-| https://prometheus-community.github.io/helm-charts | prometheus-operator-crds | ~5.0.0 |
+| https://grafana.github.io/helm-charts | grafana-agent | 0.18.0 |
+| https://opencost.github.io/opencost-helm-chart | opencost | 1.18.0 |
+| https://prometheus-community.github.io/helm-charts | kube-state-metrics | 5.10.1 |
+| https://prometheus-community.github.io/helm-charts | prometheus-node-exporter | 4.21.0 |
+| https://prometheus-community.github.io/helm-charts | prometheus-operator-crds | 5.0.0 |
 
 ## Values
 
