@@ -10,6 +10,9 @@ usage() {
   echo "  <test-dir>        - The test directory to test, default is to run all tests"
 }
 
+helmChartPath=charts/k8s-monitoring
+examplesPath=examples
+
 showDiffs=false
 stopOnFailure=false
 
@@ -40,18 +43,13 @@ while [ $# -gt 0 ]; do
   shift
 done
 
-if [ -z "${HELM_CHART_PATH}" ]; then
-  echo "HELM_CHART_PATH must be set to the path of the Kubernetes Monitoring Helm chart"
-  exit 1
-fi
-
-for inputFile in */values.yaml
+for inputFile in "${examplesPath}"/*/values.yaml
 do
   testDir=$(dirname "${inputFile}")
   expectedOutputFile="${testDir}/output.yaml"
 
   count=$((count+1))
-  output=$(helm template k8smon "${HELM_CHART_PATH}" -f "${inputFile}")
+  output=$(helm template k8smon "${helmChartPath}" -f "${inputFile}")
   if diffFromExpected=$(diff <(echo "${output}") "${expectedOutputFile}"); then
     passed=$((passed+1))  
     echo -ne "${GREEN}*${ENDCOLOR}"
@@ -69,7 +67,7 @@ do
   fi
 
   count=$((count+1))
-  if lintOutput=$(helm lint "${HELM_CHART_PATH}" -f "${inputFile}"); then
+  if lintOutput=$(helm lint "${helmChartPath}" -f "${inputFile}"); then
     passed=$((passed+1))
     echo -ne "${GREEN}*${ENDCOLOR}"
   else

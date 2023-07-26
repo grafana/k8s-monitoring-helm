@@ -41,10 +41,9 @@ jobs:
 
     - name: Check for example output changes
       run: |
-        cd examples
-        make regenerate-outputs
+        make regenerate-example-outputs
         if [ ! -z "$(git status --porcelain)" ]; then
-          echo "Helm chart examples are not up to date. Please run 'cd examples; make regenerate-outputs', examine changes, and commit changes." >&2
+          echo "Helm chart examples are not up to date. Please run 'make regenerate-example-outputs', examine changes, and commit changes." >&2
           exit 1
         fi
 
@@ -53,6 +52,8 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v3
+      with:
+        fetch-depth: 0  # Required for `ct lint` to work
 
     - name: Install Helm
       uses: azure/setup-helm@v3
@@ -62,6 +63,9 @@ jobs:
       with:
         python-version: '3.9'
         check-latest: true
+
+    - name: Set up chart-testing
+      uses: helm/chart-testing-action@v2.4.0
 
     - name: Install yq
       run: pip install yq
@@ -76,49 +80,44 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y grafana-agent
 
-    - name: Run tests against examples
-      run: cd examples; make test
+    - name: Run tests
+      run: make test
 
-  lint-test:
-    runs-on: ubuntu-latest
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v3
-      with:
-        fetch-depth: 0
-
-    - name: Set up Helm
-      uses: azure/setup-helm@v3
-
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.9'
-        check-latest: true
-
-    - name: Set up chart-testing
-      uses: helm/chart-testing-action@v2.4.0
-
-    - name: List changed charts
-      id: list-changed
-      run: |
-        changed=$(ct list-changed --config "${CT_CONFIGFILE}")
-        if [[ -n "$changed" ]]; then
-          echo "changed=true" >> "${GITHUB_OUTPUT}"
-        fi
-
-    - name: Lint charts
-      run: |
-        if [ "${GITHUB_HEAD_REF}" == "main" ]; then
-          ct lint --debug --config "${CT_CONFIGFILE}" --lint-conf "${LINT_CONFIGFILE}"
-        else
-          ct lint --debug --config "${CT_CONFIGFILE}" --lint-conf "${LINT_CONFIGFILE}" --check-version-increment=false
-        fi
-
-# TODO: Install prometheus and loki locally, then install our chart so it's connected to those services
+  # TODO: Install prometheus and loki locally, then install our chart so it's connected to those services
+#  test-chart:
+#    runs-on: ubuntu-latest
+#    steps:
+#    - name: Checkout
+#      uses: actions/checkout@v3
+#      with:
+#        fetch-depth: 0
+#
+#    - name: Set up Helm
+#      uses: azure/setup-helm@v3
+#
+#    - name: Set up Python
+#      uses: actions/setup-python@v4
+#      with:
+#        python-version: '3.9'
+#        check-latest: true
+#
+#    - name: Set up chart-testing
+#      uses: helm/chart-testing-action@v2.4.0
+#
+#    - name: List changed charts
+#      id: list-changed
+#      run: |
+#        changed=$(ct list-changed --config "${CT_CONFIGFILE}")
+#        if [[ -n "$changed" ]]; then
+#          echo "changed=true" >> "${GITHUB_OUTPUT}"
+#        fi
+#
 #    - name: Create kind cluster
 #      uses: helm/kind-action@v1.5.0
 #      if: steps.list-changed.outputs.changed == 'true'
+#
+#    - name: Install prometheus and loki
+#      run: TODO
 #
 #    - name: Test charts
 #      run: ct install --config ./operations/helm/ct.yaml
