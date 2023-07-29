@@ -1,0 +1,9 @@
+{{ define "otelcollector.config.loki" }}
+loki:
+  endpoint: {{ .Values.externalServices.loki.host }}{{ .Values.externalServices.loki.writeEndpoint }}
+  headers:
+    Authorization: Basic {{ tpl ("{{ .Values.externalServices.loki.basicAuth.username }}:{{ .Values.externalServices.loki.basicAuth.password }}") . | b64enc }}
+{{- if .Values.externalServices.loki.tenantId }}
+    X-Scope-OrgID: {{ .Values.externalServices.loki.tenantId | toString | b64enc | quote }}
+{{- end }}
+{{ end }}

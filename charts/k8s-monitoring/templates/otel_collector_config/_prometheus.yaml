@@ -1,0 +1,11 @@
+{{ define "otelcollector.config.prometheus" }}
+prometheusremotewrite:
+  external_labels:
+    cluster: {{ .Values.cluster.name }}
+    {{- range $k, $v := .Values.externalServices.prometheus.externalLabels }}
+    {{ $k }}: {{ $v | quote }},
+    {{- end }}
+  endpoint: {{ .Values.externalServices.prometheus.host }}{{ .Values.externalServices.prometheus.writeEndpoint }}
+  headers:
+    Authorization: Basic {{ tpl ("{{ .Values.externalServices.prometheus.basicAuth.username }}:{{ .Values.externalServices.prometheus.basicAuth.password }}") . | b64enc }}
+{{ end }}

@@ -1,0 +1,37 @@
+{{ define "otelcollector.config.cadvisor" }}
+- job_name: integrations/kubernetes/cadvisor
+  scrape_interval: {{ .Values.metrics.cadvisor.scrapeInterval | default .Values.metrics.scrapeInterval }}
+  kubernetes_sd_configs:
+    - role: node
+  relabel_configs:
+    - target_label: __address__
+      replacement: {{ .Values.cluster.kubernetesAPIService }}
+    - source_labels: ["__meta_kubernetes_node_name"]
+      regex: "(.+)"
+      replacement: "/api/v1/nodes/$${1}/proxy/metrics/cadvisor"
+      target_label: "__metrics_path__"
+{{- if .Values.metrics.extraRelabelingRules }}
+{{ .Values.metrics.extraRelabelingRules | indent 4 }}
+{{- end }}
+{{- if .Values.metrics.cadvisor.extraRelabelingRules }}
+{{ .Values.metrics.cadvisor.extraRelabelingRules | indent 4 }}
+{{- end }}
+  scheme: https
+  bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+  tls_config:
+    ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+    insecure_skip_verify: false
+    server_name: kubernetes
+  metric_relabel_configs:
+{{- if .Values.metrics.cadvisor.allowList }}
+    - action: keep
+      source_labels: ["__name__"]
+      regex: "up|{{ join "|" .Values.metrics.cadvisor.allowList }}"
+{{- end }}
+{{- if .Values.metrics.extraMetricRelabelingRules }}
+{{ .Values.metrics.extraMetricRelabelingRules | indent 4 }}
+{{- end }}
+{{- if .Values.metrics.cadvisor.extraMetricRelabelingRules }}
+{{ .Values.metrics.cadvisor.extraMetricRelabelingRules | indent 4 }}
+{{- end }}
+{{ end }}

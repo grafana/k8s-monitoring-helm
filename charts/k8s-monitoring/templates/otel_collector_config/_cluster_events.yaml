@@ -1,0 +1,25 @@
+{{ define "otelcollector.config.cluster_events_receiver" }}
+k8s_events/grafanak8smonk8sevents:
+  namespaces: {{ .Values.logs.cluster_events.namespaces | toStrings }}
+{{ end }}
+
+{{ define "otelcollector.config.cluster_events_processor" }}
+resource/grafanak8smonk8sevents:
+  attributes:
+    - action: insert
+      key: cluster
+      value: {{ .Values.cluster.name | quote }}
+    - action: insert
+      key: job
+      value: "integrations/kubernetes/eventhandler"
+    - action: insert
+      key: loki.resource.labels
+      value: job, cluster
+{{ end }}
+
+{{ define "otelcollector.config.cluster_events_pipeline" }}
+logs/grafanak8smonk8sevents:
+  receivers: [ k8s_events/grafanak8smonk8sevents ]
+  processors: [ batch, resource/grafanak8smonk8sevents ]
+  exporters: [ loki ]
+{{ end }}

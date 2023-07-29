@@ -57,6 +57,8 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 |------------|------|---------|
 | https://grafana.github.io/helm-charts | grafana-agent | 0.19.0 |
 | https://grafana.github.io/helm-charts | grafana-agent-logs(grafana-agent) | 0.19.0 |
+| https://open-telemetry.github.io/opentelemetry-helm-charts | opentelemetry-collector | 0.66.4 |
+| https://open-telemetry.github.io/opentelemetry-helm-charts | opentelemetry-collector-logs(opentelemetry-collector) | 0.66.4 |
 | https://opencost.github.io/opencost-helm-chart | opencost | 1.18.1 |
 | https://prometheus-community.github.io/helm-charts | kube-state-metrics | 5.10.1 |
 | https://prometheus-community.github.io/helm-charts | prometheus-node-exporter | 4.21.0 |
@@ -69,6 +71,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 |-----|------|---------|-------------|
 | cluster.kubernetesAPIService | string | `"kubernetes.default.svc.cluster.local:443"` | The Kubernetes service. Change this if your cluster DNS is configured differently than the default. |
 | cluster.name | string | `""` | (required) The name of this cluster, which will be set in all labels |
+| collector.type | string | `"agent"` |  |
 | externalServices.loki.basicAuth.password | string | `""` | Loki basic auth password |
 | externalServices.loki.basicAuth.username | string | `""` | Loki basic auth username |
 | externalServices.loki.externalLabels | object | `{}` | Custom labels to be added to all logs and events |

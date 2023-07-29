@@ -381,6 +381,8 @@ logs:
   cluster_events:
     # -- Scrape Kubernetes cluster events
     enabled: true
+    # -- Namespaces to watch for Events in.
+    namespaces: []
 
   # -- (string) Extra configuration that will be added to Grafana Agent Logs. See [Adding custom Flow configuration](#adding-custom-flow-configuration) for an example.  
   extraConfig:
@@ -487,6 +489,9 @@ opencost:
 # See https://github.com/grafana/agent/tree/main/operations/helm/charts/grafana-agent for available values.
 # @ignored -- This skips including these values in README.md
 grafana-agent:
+  # -- Should this Helm chart deploy the Grafana Agent to the cluster.
+  enabled: true
+
   agent:
     # This chart is creating the configuration, so the grafana-agent chart does
     # not need to.
@@ -520,6 +525,9 @@ grafana-agent:
 # See https://github.com/grafana/agent/tree/main/operations/helm/charts/grafana-agent for available values.
 # @ignored -- This skips including these values in README.md
 grafana-agent-logs:
+  # -- Should this Helm chart deploy the Grafana Agent to the cluster.
+  enabled: true
+
   agent:
     # This chart is creating the configuration, so the grafana-agent chart does
     # not need to.
@@ -551,3 +559,107 @@ grafana-agent-logs:
       - name: grafana-agent-credentials
         secret:
           secretName: grafana-agent-credentials
+
+# Settings for the OpenTelemetry Collector.
+# For typical deployments, these settings can stay the way they are.
+# @ignored
+opentelemetry-collector:
+  # -- Should this Helm chart deploy the OpenTelemetry Collector to the cluster.
+  enabled: false
+
+  mode: statefulset
+
+  configMap:
+    create: false
+
+  command:
+    extraArgs:
+      - --config=/conf/relay.yaml
+
+  extraConfigMapMounts:
+    - name: grafana-k8s-monitoring-config
+      configMap: grafana-k8s-monitoring-config
+      mountPath: /conf
+
+  clusterRole:
+    create: true
+    rules:
+      - apiGroups: [""]
+        resources: ["endpoints", "events", "namespaces", "namespaces/status", "nodes", "nodes/proxy", "nodes/spec", "pods", "pods/status", "replicationcontrollers", "replicationcontrollers/status", "resourcequotas", "services"]
+        verbs: ["get", "list", "watch"]
+      - apiGroups: ["apps"]
+        resources: ["daemonsets", "deployments", "replicasets", "statefulsets"]
+        verbs: ["get", "list", "watch"]
+      - apiGroups: ["extensions"]
+        resources: ["daemonsets", "deployments", "replicasets"]
+        verbs: ["get", "list", "watch"]
+      - apiGroups: ["batch"]
+        resources: ["jobs", "cronjobs"]
+        verbs: ["get", "list", "watch"]
+      - apiGroups: ["autoscaling"]
+        resources: ["horizontalpodautoscalers"]
+        verbs: ["get", "list", "watch"]
+      - nonResourceURLs: ["/metrics"]
+        verbs: ["get"]
+
+# Settings for the OpenTelemetry Collector.
+# For typical deployments, these settings can stay the way they are.
+# @ignored
+opentelemetry-collector-logs:
+  # -- Should this Helm chart deploy the OpenTelemetry Collector to the cluster.
+  enabled: false
+
+  mode: daemonset
+
+  configMap:
+    create: false
+
+  command:
+    extraArgs:
+      - --config=/conf/relay.yaml
+
+  extraVolumeMounts:
+    - mountPath: /var/log
+      name: varlog
+      readOnly: true
+    - mountPath: /var/lib/docker/containers
+      name: varlibdockercontainers
+      readOnly: true
+
+  extraVolumes:
+    - name: varlog
+      hostPath:
+        path: /var/log
+    - name: varlibdockercontainers
+      hostPath:
+        path: /var/lib/docker/containers
+
+  extraConfigMapMounts:
+    - name: grafana-k8s-monitoring-logs-config
+      configMap: grafana-k8s-monitoring-logs-config
+      mountPath: /conf
+
+  tolerations:
+    - effect: NoSchedule
+      operator: Exists
+
+  clusterRole:
+    create: true
+    rules:
+      - apiGroups:
+          - ''
+        resources:
+          - nodes
+          - nodes/proxy
+          - services
+          - endpoints
+          - pods
+          - events
+        verbs:
+          - get
+          - list
+          - watch
+      - nonResourceURLs:
+          - /metrics
+        verbs:
+          - get

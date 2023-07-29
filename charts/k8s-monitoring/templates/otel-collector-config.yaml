@@ -1,0 +1,70 @@
+{{- if and (index .Values "opentelemetry-collector").enabled .Values.metrics.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-k8s-monitoring-config
+  namespace: {{ .Release.Namespace }}
+data:
+  relay.yaml: |-
+    extensions:
+      # The health_check extension is mandatory.
+      # Without the health_check extension the collector will fail the readiness and liveliness probes.
+      # The health_check extension can be modified, but should never be removed.
+      health_check: {}
+    receivers:
+{{- if .Values.metrics.enabled }}
+      prometheus/grafanak8smon:
+        config:
+          scrape_configs:
+{{- include "otelcollector.config.otelcollector" . | indent 10}}
+
+{{- if .Values.metrics.kubelet.enabled }}
+{{- include "otelcollector.config.kubelet" . | indent 10}}
+{{- end }}
+
+{{- if .Values.metrics.cadvisor.enabled }}
+{{- include "otelcollector.config.cadvisor" . | indent 10}}
+{{- end }}
+
+{{- if (index .Values.metrics "kube-state-metrics").enabled }}
+{{- include "otelcollector.config.kube_state_metrics" . | indent 10}}
+{{- end }}
+
+{{- if (index .Values.metrics "node-exporter").enabled }}
+{{- include "otelcollector.config.node_exporter" . | indent 10}}
+{{- end }}
+
+{{- if .Values.metrics.cost.enabled }}
+{{- include "otelcollector.config.opencost" . | indent 10}}
+{{- end }}
+{{- end }}
+{{- if and .Values.logs.enabled .Values.logs.cluster_events.enabled }}
+{{- include "otelcollector.config.cluster_events_receiver" . | indent 6 }}
+{{- end }}
+    processors:
+      batch: {}
+{{- if and .Values.logs.enabled .Values.logs.cluster_events.enabled }}
+{{- include "otelcollector.config.cluster_events_processor" . | indent 6 }}
+{{- end }}
+    exporters:
+{{- include "otelcollector.config.prometheus" . | indent 6 }}
+{{- if and .Values.logs.enabled .Values.logs.cluster_events.enabled }}
+{{- include "otelcollector.config.loki" . | indent 6 }}
+{{- end }}
+    service:
+      extensions:
+        - health_check
+      pipelines:
+{{- if .Values.metrics.enabled }}
+        metrics/grafanak8smon:
+          receivers: [ prometheus/grafanak8smon ]
+          processors: [ batch ]
+          exporters: [ prometheusremotewrite ]
+{{- end }}
+{{- if and .Values.logs.enabled .Values.logs.cluster_events.enabled }}
+{{- include "otelcollector.config.cluster_events_pipeline" . | indent 8 }}
+{{- end }}
+      telemetry:
+        logs:
+          level: 'debug'
+{{- end }}

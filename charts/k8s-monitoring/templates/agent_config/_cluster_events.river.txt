@@ -2,6 +2,7 @@
 // Cluster Events
 loki.source.kubernetes_events "cluster_events" {
   job_name   = "integrations/kubernetes/eventhandler"
+  namespaces = {{ .Values.logs.cluster_events.namespaces | toStrings }}
   forward_to = [loki.write.grafana_cloud_loki.receiver]
 }
 {{ end }}

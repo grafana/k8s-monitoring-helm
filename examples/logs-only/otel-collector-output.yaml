@@ -1,0 +1,458 @@
+---
+# Source: k8s-monitoring/charts/opentelemetry-collector-logs/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: k8smon-opentelemetry-collector-logs
+  namespace: default
+  labels:
+    helm.sh/chart: opentelemetry-collector-logs-0.66.4
+    app.kubernetes.io/name: opentelemetry-collector-logs
+    app.kubernetes.io/instance: k8smon
+    app.kubernetes.io/version: "0.83.0"
+    app.kubernetes.io/managed-by: Helm
+---
+# Source: k8s-monitoring/charts/opentelemetry-collector/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: k8smon-opentelemetry-collector
+  namespace: default
+  labels:
+    helm.sh/chart: opentelemetry-collector-0.66.4
+    app.kubernetes.io/name: opentelemetry-collector
+    app.kubernetes.io/instance: k8smon
+    app.kubernetes.io/version: "0.83.0"
+    app.kubernetes.io/managed-by: Helm
+---
+# Source: k8s-monitoring/templates/credentials.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: grafana-agent-credentials
+  namespace: default
+type: Opaque
+data:
+  loki_host: "aHR0cHM6Ly9sb2tpLmV4YW1wbGUuY29t"
+  loki_username: "MTIzNDU="
+  loki_password: "SXQncyBhIHNlY3JldCB0byBldmVyeW9uZQ=="
+  loki_tenantId: "MjAwMA=="
+---
+# Source: k8s-monitoring/charts/opentelemetry-collector-logs/templates/clusterrole.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: k8smon-opentelemetry-collector-logs
+  labels:
+    helm.sh/chart: opentelemetry-collector-logs-0.66.4
+    app.kubernetes.io/name: opentelemetry-collector-logs
+    app.kubernetes.io/instance: k8smon
+    app.kubernetes.io/version: "0.83.0"
+    app.kubernetes.io/managed-by: Helm
+rules:
+  - apiGroups:
+    - ""
+    resources:
+    - nodes
+    - nodes/proxy
+    - services
+    - endpoints
+    - pods
+    - events
+    verbs:
+    - get
+    - list
+    - watch
+  - nonResourceURLs:
+    - /metrics
+    verbs:
+    - get
+---
+# Source: k8s-monitoring/charts/opentelemetry-collector/templates/clusterrole.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: k8smon-opentelemetry-collector
+  labels:
+    helm.sh/chart: opentelemetry-collector-0.66.4
+    app.kubernetes.io/name: opentelemetry-collector
+    app.kubernetes.io/instance: k8smon
+    app.kubernetes.io/version: "0.83.0"
+    app.kubernetes.io/managed-by: Helm
+rules:
+  - apiGroups:
+    - ""
+    resources:
+    - events
+    - namespaces
+    - namespaces/status
+    - nodes
+    - nodes/spec
+    - pods
+    - pods/status
+    - replicationcontrollers
+    - replicationcontrollers/status
+    - resourcequotas
+    - services
+    verbs:
+    - get
+    - list
+    - watch
+  - apiGroups:
+    - apps
+    resources:
+    - daemonsets
+    - deployments
+    - replicasets
+    - statefulsets
+    verbs:
+    - get
+    - list
+    - watch
+  - apiGroups:
+    - extensions
+    resources:
+    - daemonsets
+    - deployments
+    - replicasets
+    verbs:
+    - get
+    - list
+    - watch
+  - apiGroups:
+    - batch
+    resources:
+    - jobs
+    - cronjobs
+    verbs:
+    - get
+    - list
+    - watch
+  - apiGroups:
+    - autoscaling
+    resources:
+    - horizontalpodautoscalers
+    verbs:
+    - get
+    - list
+    - watch
+  - nonResourceURLs:
+    - /metrics
+    verbs:
+    - get
+---
+# Source: k8s-monitoring/charts/opentelemetry-collector-logs/templates/clusterrolebinding.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: k8smon-opentelemetry-collector-logs
+  labels:
+    helm.sh/chart: opentelemetry-collector-logs-0.66.4
+    app.kubernetes.io/name: opentelemetry-collector-logs
+    app.kubernetes.io/instance: k8smon
+    app.kubernetes.io/version: "0.83.0"
+    app.kubernetes.io/managed-by: Helm
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: k8smon-opentelemetry-collector-logs
+subjects:
+- kind: ServiceAccount
+  name: k8smon-opentelemetry-collector-logs
+  namespace: default
+---
+# Source: k8s-monitoring/charts/opentelemetry-collector/templates/clusterrolebinding.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: k8smon-opentelemetry-collector
+  labels:
+    helm.sh/chart: opentelemetry-collector-0.66.4
+    app.kubernetes.io/name: opentelemetry-collector
+    app.kubernetes.io/instance: k8smon
+    app.kubernetes.io/version: "0.83.0"
+    app.kubernetes.io/managed-by: Helm
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: k8smon-opentelemetry-collector
+subjects:
+- kind: ServiceAccount
+  name: k8smon-opentelemetry-collector
+  namespace: default
+---
+# Source: k8s-monitoring/charts/opentelemetry-collector-logs/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: k8smon-opentelemetry-collector-logs
+  namespace: default
+  labels:
+    helm.sh/chart: opentelemetry-collector-logs-0.66.4
+    app.kubernetes.io/name: opentelemetry-collector-logs
+    app.kubernetes.io/instance: k8smon
+    app.kubernetes.io/version: "0.83.0"
+    app.kubernetes.io/managed-by: Helm
+    component: standalone-collector
+spec:
+  type: ClusterIP
+  ports:
+    
+    - name: jaeger-compact
+      port: 6831
+      targetPort: 6831
+      protocol: UDP
+    - name: jaeger-grpc
+      port: 14250
+      targetPort: 14250
+      protocol: TCP
+    - name: jaeger-thrift
+      port: 14268
+      targetPort: 14268
+      protocol: TCP
+    - name: otlp
+      port: 4317
+      targetPort: 4317
+      protocol: TCP
+      appProtocol: grpc
+    - name: otlp-http
+      port: 4318
+      targetPort: 4318
+      protocol: TCP
+    - name: zipkin
+      port: 9411
+      targetPort: 9411
+      protocol: TCP
+  selector:
+    app.kubernetes.io/name: opentelemetry-collector-logs
+    app.kubernetes.io/instance: k8smon
+    component: standalone-collector
+  internalTrafficPolicy: Cluster
+---
+# Source: k8s-monitoring/charts/opentelemetry-collector/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: k8smon-opentelemetry-collector
+  namespace: default
+  labels:
+    helm.sh/chart: opentelemetry-collector-0.66.4
+    app.kubernetes.io/name: opentelemetry-collector
+    app.kubernetes.io/instance: k8smon
+    app.kubernetes.io/version: "0.83.0"
+    app.kubernetes.io/managed-by: Helm
+    component: standalone-collector
+spec:
+  type: ClusterIP
+  ports:
+    
+    - name: jaeger-compact
+      port: 6831
+      targetPort: 6831
+      protocol: UDP
+    - name: jaeger-grpc
+      port: 14250
+      targetPort: 14250
+      protocol: TCP
+    - name: jaeger-thrift
+      port: 14268
+      targetPort: 14268
+      protocol: TCP
+    - name: otlp
+      port: 4317
+      targetPort: 4317
+      protocol: TCP
+      appProtocol: grpc
+    - name: otlp-http
+      port: 4318
+      targetPort: 4318
+      protocol: TCP
+    - name: zipkin
+      port: 9411
+      targetPort: 9411
+      protocol: TCP
+  selector:
+    app.kubernetes.io/name: opentelemetry-collector
+    app.kubernetes.io/instance: k8smon
+    component: standalone-collector
+  internalTrafficPolicy: Cluster
+---
+# Source: k8s-monitoring/charts/opentelemetry-collector-logs/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: k8smon-opentelemetry-collector-logs
+  namespace: default
+  labels:
+    helm.sh/chart: opentelemetry-collector-logs-0.66.4
+    app.kubernetes.io/name: opentelemetry-collector-logs
+    app.kubernetes.io/instance: k8smon
+    app.kubernetes.io/version: "0.83.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: opentelemetry-collector-logs
+      app.kubernetes.io/instance: k8smon
+      component: standalone-collector
+  strategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      annotations:
+        checksum/config: 01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b
+        
+      labels:
+        app.kubernetes.io/name: opentelemetry-collector-logs
+        app.kubernetes.io/instance: k8smon
+        component: standalone-collector
+        
+    spec:
+      
+      serviceAccountName: k8smon-opentelemetry-collector-logs
+      securityContext:
+        {}
+      containers:
+        - name: opentelemetry-collector-logs
+          command:
+            - /otelcol-contrib
+            - --config=/conf/relay.yaml
+          securityContext:
+            {}
+          image: "otel/opentelemetry-collector-contrib:0.83.0"
+          imagePullPolicy: IfNotPresent
+          ports:
+            
+            - name: jaeger-compact
+              containerPort: 6831
+              protocol: UDP
+            - name: jaeger-grpc
+              containerPort: 14250
+              protocol: TCP
+            - name: jaeger-thrift
+              containerPort: 14268
+              protocol: TCP
+            - name: otlp
+              containerPort: 4317
+              protocol: TCP
+            - name: otlp-http
+              containerPort: 4318
+              protocol: TCP
+            - name: zipkin
+              containerPort: 9411
+              protocol: TCP
+          env:
+            - name: MY_POD_IP
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: status.podIP
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 13133
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 13133
+          volumeMounts:
+            - name: grafana-k8s-monitoring-config
+              mountPath: /conf
+              readOnly: 
+      volumes:
+        - name: grafana-k8s-monitoring-config
+          configMap:
+            name: grafana-k8s-monitoring-config
+      hostNetwork: false
+---
+# Source: k8s-monitoring/charts/opentelemetry-collector/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: k8smon-opentelemetry-collector
+  namespace: default
+  labels:
+    helm.sh/chart: opentelemetry-collector-0.66.4
+    app.kubernetes.io/name: opentelemetry-collector
+    app.kubernetes.io/instance: k8smon
+    app.kubernetes.io/version: "0.83.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: opentelemetry-collector
+      app.kubernetes.io/instance: k8smon
+      component: standalone-collector
+  strategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      annotations:
+        checksum/config: 01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b
+        
+      labels:
+        app.kubernetes.io/name: opentelemetry-collector
+        app.kubernetes.io/instance: k8smon
+        component: standalone-collector
+        
+    spec:
+      
+      serviceAccountName: k8smon-opentelemetry-collector
+      securityContext:
+        {}
+      containers:
+        - name: opentelemetry-collector
+          command:
+            - /otelcol-contrib
+            - --config=/conf/relay.yaml
+          securityContext:
+            {}
+          image: "otel/opentelemetry-collector-contrib:0.83.0"
+          imagePullPolicy: IfNotPresent
+          ports:
+            
+            - name: jaeger-compact
+              containerPort: 6831
+              protocol: UDP
+            - name: jaeger-grpc
+              containerPort: 14250
+              protocol: TCP
+            - name: jaeger-thrift
+              containerPort: 14268
+              protocol: TCP
+            - name: otlp
+              containerPort: 4317
+              protocol: TCP
+            - name: otlp-http
+              containerPort: 4318
+              protocol: TCP
+            - name: zipkin
+              containerPort: 9411
+              protocol: TCP
+          env:
+            - name: MY_POD_IP
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: status.podIP
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 13133
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 13133
+          volumeMounts:
+            - name: grafana-k8s-monitoring-config
+              mountPath: /conf
+              readOnly: 
+      volumes:
+        - name: grafana-k8s-monitoring-config
+          configMap:
+            name: grafana-k8s-monitoring-config
+      hostNetwork: false

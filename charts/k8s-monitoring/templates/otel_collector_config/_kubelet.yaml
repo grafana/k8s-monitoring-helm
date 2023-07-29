@@ -1,0 +1,37 @@
+{{ define "otelcollector.config.kubelet" }}
+- job_name: integrations/kubernetes/kubelet
+  scrape_interval: {{ .Values.metrics.kubelet.scrapeInterval | default .Values.metrics.scrapeInterval }}
+  kubernetes_sd_configs:
+    - role: node
+  relabel_configs:
+    - target_label: __address__
+      replacement: {{ .Values.cluster.kubernetesAPIService }}
+    - source_labels: ["__meta_kubernetes_node_name"]
+      regex: "(.+)"
+      replacement: "/api/v1/nodes/$${1}/proxy/metrics"
+      target_label: "__metrics_path__"
+{{- if .Values.metrics.extraRelabelingRules }}
+{{ .Values.metrics.extraRelabelingRules | indent 4 }}
+{{- end }}
+{{- if .Values.metrics.kubelet.extraRelabelingRules }}
+{{ .Values.metrics.kubelet.extraRelabelingRules | indent 4 }}
+{{- end }}
+  scheme: https
+  bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+  tls_config:
+    ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+    insecure_skip_verify: false
+    server_name: kubernetes
+  metric_relabel_configs:
+{{- if .Values.metrics.kubelet.allowList }}
+    - action: keep
+      source_labels: ["__name__"]
+      regex: "up|{{ join "|" .Values.metrics.kubelet.allowList }}"
+{{- if .Values.metrics.extraRelabelingRules }}
+{{ .Values.metrics.extraRelabelingRules | indent 4 }}
+{{- end }}
+{{- if .Values.metrics.kubelet.extraMetricRelabelingRules }}
+{{ .Values.metrics.kubelet.extraMetricRelabelingRules | indent 4 }}
+{{- end }}
+{{- end }}
+{{ end }}

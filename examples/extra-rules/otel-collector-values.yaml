@@ -1,0 +1,41 @@
+cluster:
+  name: extra-rules-test
+externalServices:
+  prometheus:
+    host: https://prometheus.example.com
+    basicAuth:
+      username: 12345
+      password: It's a secret to everyone
+    externalLabels:
+      site: northwest
+    writeRelabelConfigRules: "write_relabel_config {\n  source_labels = [\"__name__\"\
+      ]\n  regex = \"metric_to_drop|another_metric_to_drop\"\n  action = \"drop\"\n\
+      }"
+  loki:
+    host: https://loki.example.com
+    tenantId: 2000
+    basicAuth:
+      username: '12345'
+      password: It's a secret to everyone
+metrics:
+  extraRelabelingRules: "rule {\n  source_labels = [\"__meta_kubernetes_namespace\"\
+    ]\n  regex = \"private\"\n  action = \"drop\"\n}"
+  kube-state-metrics:
+    extraMetricRelabelingRules: "rule {\n  source_labels = [\"namespace\"]\n  regex\
+      \ = \"production\"\n  action = \"keep\"\n}"
+logs:
+  pod_logs:
+    extraRelabelingRules: "rule {\n  source_labels = [\"__meta_kubernetes_namespace\"\
+      ]\n  regex = \"production\"\n  action = \"keep\"\n}"
+    extraStageBlocks: "stage.logfmt {\n  payload = \"\"\n}\n\nstage.json {\n  source\
+      \ = \"payload\"\n  expressions = {\n    sku = \"id\",\n    count = \"\",\n \
+      \ }\n}\n\nstage.labels {\n  values = {\n    sku  = \"\",\n    count = \"\",\n\
+      \  }\n}"
+grafana-agent:
+  enabled: false
+grafana-agent-logs:
+  enabled: false
+opentelemetry-collector:
+  enabled: true
+opentelemetry-collector-logs:
+  enabled: true

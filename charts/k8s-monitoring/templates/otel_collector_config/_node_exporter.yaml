@@ -1,0 +1,48 @@
+{{ define "otelcollector.config.node_exporter" }}
+- job_name: integrations/node_exporter
+  scrape_interval: {{ (index .Values.metrics "node-exporter").scrapeInterval | default .Values.metrics.scrapeInterval }}
+  kubernetes_sd_configs:
+    - role: pod
+  relabel_configs:
+{{- if (index .Values "prometheus-node-exporter").enabled }}
+    - action: keep
+      source_labels: ["__meta_kubernetes_pod_label_app_kubernetes_io_instance"]
+      regex: "{{ .Release.Name }}"
+{{- end }}
+{{- range $k, $v := (index .Values.metrics "node-exporter").labelMatchers }}
+    - action: keep
+      source_labels: ["__meta_kubernetes_pod_label_{{ $k | replace "." "_" | replace "/" "_" }}"]
+      regex: "{{ $v }}"
+{{- end }}
+    - source_labels: ["__meta_kubernetes_pod_node_name"]
+      target_label: "instance"
+    - action: replace
+      source_labels: ["__meta_kubernetes_namespace"]
+      target_label: namespace
+{{- if .Values.metrics.extraRelabelingRules }}
+{{ .Values.metrics.extraRelabelingRules | indent 4 }}
+{{- end }}
+{{- if (index .Values.metrics "node-exporter").extraRelabelingRules }}
+{{ (index .Values.metrics "node-exporter").extraRelabelingRules | indent 4 }}
+{{- end }}
+{{- if (index .Values.metrics "node-exporter").service.isTLS }}
+  scheme: https
+  bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+  tls_config:
+    ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+    insecure_skip_verify: false
+    server_name: kubernetes
+{{- end }}
+  metric_relabel_configs:
+{{- if (index .Values.metrics "node-exporter").allowList }}
+    - action: keep
+      source_labels: ["__name__"]
+      regex: "up|{{ join "|" (index .Values.metrics "node-exporter").allowList }}"
+{{- if .Values.metrics.extraMetricRelabelingRules }}
+{{ .Values.metrics.extraMetricRelabelingRules | indent 4 }}
+{{- end }}
+{{- if (index .Values.metrics "node-exporter").extraMetricRelabelingRules }}
+{{ (index .Values.metrics "node-exporter").extraMetricRelabelingRules | indent 4 }}
+{{- end }}
+{{- end }}
+{{ end }}

@@ -1,0 +1,29 @@
+{{- if and (index .Values "opentelemetry-collector-logs").enabled .Values.logs.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-k8s-monitoring-logs-config
+  namespace: {{ .Release.Namespace }}
+data:
+  relay.yaml: |-
+    extensions:
+      # The health_check extension is mandatory.
+      # Without the health_check extension the collector will fail the readiness and liveliness probes.
+      # The health_check extension can be modified, but should never be removed.
+      health_check: {}
+    receivers:
+{{- include "otelcollector.config.logs.pod_logs.receiver" . | indent 6 }}
+    processors:
+      batch: {}
+{{- include "otelcollector.config.logs.pod_logs.processor" . | indent 6 }}
+    exporters:
+{{- include "otelcollector.config.loki" . | indent 6 }}
+    service:
+      extensions:
+        - health_check
+      pipelines:
+{{- include "otelcollector.config.logs.pod_logs.pipeline" . | indent 8 }}
+      telemetry:
+        logs:
+          level: 'debug'
+{{- end }}

@@ -1,0 +1,38 @@
+{{ define "otelcollector.config.opencost" }}
+- job_name: integrations/kubernetes/opencost
+  scrape_interval: {{ .Values.metrics.cost.scrapeInterval | default .Values.metrics.scrapeInterval }}
+  kubernetes_sd_configs:
+    - role: service
+  relabel_configs:
+{{- if .Values.opencost.enabled }}
+    - action: keep
+      source_labels: ["__meta_kubernetes_service_label_app_kubernetes_io_instance"]
+      regex: "{{ .Release.Name }}"
+{{- end }}
+{{- range $k, $v := .Values.metrics.cost.labelMatchers }}
+    - action: keep
+      source_labels: ["__meta_kubernetes_service_label_{{ $k | replace "." "_" | replace "/" "_" }}"]
+      regex: "{{ $v }}"
+{{- end }}
+    - action: keep
+      source_labels: ["__meta_kubernetes_service_port_name"]
+      regex: "http"
+{{- if .Values.metrics.extraRelabelingRules }}
+{{ .Values.metrics.extraRelabelingRules | indent 4 }}
+{{- end }}
+{{- if .Values.metrics.cost.extraRelabelingRules }}
+{{ .Values.metrics.cost.extraRelabelingRules | indent 4 }}
+{{- end }}
+  metric_relabel_configs:
+{{- if .Values.metrics.cost.allowList }}
+    - action: keep
+      source_labels: ["__name__"]
+      regex: "up|{{ join "|" .Values.metrics.cost.allowList }}"
+{{- if .Values.metrics.extraMetricRelabelingRules }}
+{{ .Values.metrics.extraMetricRelabelingRules | indent 4 }}
+{{- end }}
+{{- if .Values.metrics.cost.extraMetricRelabelingRules }}
+{{ .Values.metrics.cost.extraMetricRelabelingRules | indent 4 }}
+{{- end }}
+{{- end }}
+{{ end }}
