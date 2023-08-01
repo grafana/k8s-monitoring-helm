@@ -1,0 +1,76 @@
+{{ define "agent.config.windows_exporter" }}
+// Windows Exporter
+discovery.relabel "windows_exporter" {
+  targets = discovery.kubernetes.pods.targets
+{{- if (index .Values "prometheus-windows-exporter").enabled }}
+  rule {
+    source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_instance"]
+    regex = "{{ .Release.Name }}"
+    action = "keep"
+  }
+{{- end }}
+  rule {
+    source_labels = ["__meta_kubernetes_pod_container_port_name"]
+    regex = "metrics"
+    action = "keep"
+  }
+  {{- range $k, $v := (index .Values.metrics "windows-exporter").labelMatchers }}
+  rule {
+    source_labels = ["__meta_kubernetes_pod_label_{{ $k | replace "." "_" | replace "/" "_" }}"]
+    regex = "{{ $v }}"
+    action = "keep"
+  }
+  {{- end }}
+  rule {
+    source_labels = ["__meta_kubernetes_pod_node_name"]
+    action = "replace"
+    target_label = "instance"
+  }
+  rule {
+    source_labels = ["__name__"]
+    replacement   = local.file.cluster_name.content
+    target_label  = "cluster"
+  }
+}
+
+prometheus.scrape "windows_exporter" {
+  job_name   = "integrations/kubernetes/windows-exporter"
+  targets  = discovery.relabel.windows_exporter.output
+  forward_to = [prometheus.relabel.windows_exporter.receiver]
+}
+
+prometheus.relabel "windows_exporter" {
+  rule {
+    source_labels = ["__name__"]
+    regex = "windows_cpu_time_total"
+    replacement = "node_cpu_seconds_total"
+    target_label = "__name__"
+  }
+  rule {
+    source_labels = ["volume"]
+    regex = "windows_logical_disk_size_bytes"
+    replacement = "mountpoint"
+    target_label = "mountpoint"
+  }
+  rule {
+    source_labels = ["__name__"]
+    regex = "windows_logical_disk_size_bytes"
+    replacement = "node_filesystem_size_bytes"
+    target_label = "__name__"
+  }
+  rule {
+    source_labels = ["__name__"]
+    regex = "windows_logical_disk_free_bytes"
+    replacement = "node_filesystem_avail_bytes"
+    target_label = "__name__"
+  }
+{{- if (index .Values.metrics "windows-exporter").allowList }}
+  rule {
+    source_labels = ["__name__"]
+    regex = "up|{{ join "|" (index .Values.metrics "windows-exporter").allowList }}"
+    action = "keep"
+  }
+{{- end }}
+  forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
+}
+{{ end }}
