@@ -1,6 +1,6 @@
 # k8s-monitoring
 
-![Version: 0.0.12](https://img.shields.io/badge/Version-0.0.12-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.2.0](https://img.shields.io/badge/AppVersion-1.2.0-informational?style=flat-square)
+![Version: 0.0.13](https://img.shields.io/badge/Version-0.0.13-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.2.0](https://img.shields.io/badge/AppVersion-1.2.0-informational?style=flat-square)
 
 A Helm chart for gathering, scraping, and forwarding Kubernetes infrastructure metrics and logs to a Grafana Stack.
 
@@ -55,11 +55,12 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 
 | Repository | Name | Version |
 |------------|------|---------|
-| https://grafana.github.io/helm-charts | grafana-agent | 0.18.0 |
+| https://grafana.github.io/helm-charts | grafana-agent | 0.19.0 |
 | https://opencost.github.io/opencost-helm-chart | opencost | 1.18.0 |
 | https://prometheus-community.github.io/helm-charts | kube-state-metrics | 5.10.1 |
 | https://prometheus-community.github.io/helm-charts | prometheus-node-exporter | 4.21.0 |
 | https://prometheus-community.github.io/helm-charts | prometheus-operator-crds | 5.0.0 |
+| https://prometheus-community.github.io/helm-charts | prometheus-windows-exporter | 0.1.0 |
 
 ## Values
 
@@ -99,10 +100,15 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | metrics.node-exporter.service.isTLS | bool | `false` | Does this port use TLS? |
 | metrics.podMonitors.enabled | bool | `true` | Include service discovery for PodMonitor objects |
 | metrics.serviceMonitors.enabled | bool | `true` | Include service discovery for ServiceMonitor objects |
+| metrics.windows-exporter.allowList | list | See [Allow List for Windows Exporter](#allow-list-for-windows-exporter) | The list of Windows Exporter metrics that will be scraped by the Agent |
+| metrics.windows-exporter.enabled | bool | `false` | Scrape node metrics |
+| metrics.windows-exporter.labelMatchers | object | `{"app.kubernetes.io/name":"prometheus-windows-exporter.*"}` | Label matchers used by the Grafana Agent to select the Windows Exporter pods |
 | opencost.enabled | bool | `true` | Should this Helm chart deploy OpenCost to the cluster. Set this to false if your cluster already has OpenCost, or if you do not want to scrape metrics from OpenCost. |
 | opencost.opencost.prometheus.external.url | string | `"https://prom.example.com/api/prom"` | The URL for Prometheus queries. It should match externalService.prometheus.host + "/api/prom" |
 | prometheus-node-exporter.enabled | bool | `true` | Should this helm chart deploy Node Exporter to the cluster. Set this to false if your cluster already has Node Exporter, or if you do not want to scrape metrics from Node Exporter. |
 | prometheus-operator-crds.enabled | bool | `true` | Should this helm chart deploy the Prometheus Operator CRDs to the cluster. Set this to false if your cluster already has the CRDs, or if you do not to have the Grafana Agent scrape metrics from PodMonitors or ServiceMonitors. |
+| prometheus-windows-exporter.config | string | `"collectors:\n  enabled: cpu,cs,container,logical_disk,memory,net,os\ncollector:\n  service:\n    services-where: \"Name='containerd' or Name='kubelet'\""` |  |
+| prometheus-windows-exporter.enabled | bool | `false` | Should this helm chart deploy Windows Exporter to the cluster. Set this to false if your cluster already has Windows Exporter, or if you do not want to scrape metrics from Windows Exporter. |
 
 ## Customizing the configuration
 
@@ -263,6 +269,14 @@ Visit the Kube State Metrics [documentation](https://github.com/kubernetes/kube-
 * node_memory.*
 * process_cpu_seconds_total
 * process_resident_memory_bytes
+
+### Allow List for Windows Exporter
+
+* windows_.*
+* node_cpu_seconds_total
+* node_filesystem_size_bytes
+* node_filesystem_avail_bytes
+* container_cpu_usage_seconds_total
 
 ### Allow List for Kubelet
 

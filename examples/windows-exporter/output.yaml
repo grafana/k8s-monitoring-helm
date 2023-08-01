@@ -56,6 +56,21 @@ metadata:
     app.kubernetes.io/instance: k8smon
     app.kubernetes.io/version: "1.6.0"
 ---
+# Source: k8s-monitoring/charts/prometheus-windows-exporter/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: k8smon-prometheus-windows-exporter
+  namespace: default
+  labels:
+    helm.sh/chart: prometheus-windows-exporter-0.1.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: metrics
+    app.kubernetes.io/part-of: prometheus-windows-exporter
+    app.kubernetes.io/name: prometheus-windows-exporter
+    app.kubernetes.io/instance: k8smon
+    app.kubernetes.io/version: "0.22.0"
+---
 # Source: k8s-monitoring/templates/credentials.yaml
 apiVersion: v1
 kind: Secret
@@ -71,6 +86,28 @@ data:
   loki_username: "MTIzNDU="
   loki_password: "SXQncyBhIHNlY3JldCB0byBldmVyeW9uZQ=="
 ---
+# Source: k8s-monitoring/charts/prometheus-windows-exporter/templates/config.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: k8smon-prometheus-windows-exporter
+  namespace: default
+  labels:
+    helm.sh/chart: prometheus-windows-exporter-0.1.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: metrics
+    app.kubernetes.io/part-of: prometheus-windows-exporter
+    app.kubernetes.io/name: prometheus-windows-exporter
+    app.kubernetes.io/instance: k8smon
+    app.kubernetes.io/version: "0.22.0"
+data:
+  config.yml: |
+    collectors:
+      enabled: cpu,cs,container,logical_disk,memory,net,os
+    collector:
+      service:
+        services-where: "Name='containerd' or Name='kubelet'"
+---
 # Source: k8s-monitoring/templates/grafana-agent-config.yaml
 apiVersion: v1
 kind: ConfigMap
@@ -78,7 +115,7 @@ metadata:
   name: k8smon-grafana-agent
   namespace: default
 data:
-  cluster_name: custom-config-test
+  cluster_name: default-values-test
   config.river: |-    
     local.file "cluster_name" {
       filename  = "/etc/agent/cluster_name"
@@ -296,6 +333,75 @@ data:
       forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
     }
         
+    // Windows Exporter
+    discovery.relabel "windows_exporter" {
+      targets = discovery.kubernetes.pods.targets
+      rule {
+        source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_instance"]
+        regex = "k8smon"
+        action = "keep"
+      }
+      rule {
+        source_labels = ["__meta_kubernetes_pod_container_port_name"]
+        regex = "metrics"
+        action = "keep"
+      }
+      rule {
+        source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
+        regex = "prometheus-windows-exporter.*"
+        action = "keep"
+      }
+      rule {
+        source_labels = ["__meta_kubernetes_pod_node_name"]
+        action = "replace"
+        target_label = "instance"
+      }
+      rule {
+        source_labels = ["__name__"]
+        replacement   = local.file.cluster_name.content
+        target_label  = "cluster"
+      }
+    }
+    
+    prometheus.scrape "windows_exporter" {
+      job_name   = "integrations/kubernetes/windows-exporter"
+      targets  = discovery.relabel.windows_exporter.output
+      forward_to = [prometheus.relabel.windows_exporter.receiver]
+    }
+    
+    prometheus.relabel "windows_exporter" {
+      rule {
+        source_labels = ["__name__"]
+        regex = "windows_cpu_time_total"
+        replacement = "node_cpu_seconds_total"
+        target_label = "__name__"
+      }
+      rule {
+        source_labels = ["volume"]
+        regex = "windows_logical_disk_size_bytes"
+        replacement = "mountpoint"
+        target_label = "mountpoint"
+      }
+      rule {
+        source_labels = ["__name__"]
+        regex = "windows_logical_disk_size_bytes"
+        replacement = "node_filesystem_size_bytes"
+        target_label = "__name__"
+      }
+      rule {
+        source_labels = ["__name__"]
+        regex = "windows_logical_disk_free_bytes"
+        replacement = "node_filesystem_avail_bytes"
+        target_label = "__name__"
+      }
+      rule {
+        source_labels = ["__name__"]
+        regex = "up|windows_.*|node_cpu_seconds_total|node_filesystem_size_bytes|node_filesystem_avail_bytes|container_cpu_usage_seconds_total"
+        action = "keep"
+      }
+      forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
+    }
+        
     // OpenCost
     discovery.relabel "opencost" {
       targets = discovery.kubernetes.services.targets
@@ -454,31 +560,6 @@ data:
           password = local.file.loki_password.content
         }
       }
-    }
-    
-    discovery.relabel "my_webapp" {
-      targets = discovery.kubernetes.services.targets
-      rule {
-      source_labels = ["__meta_kubernetes_service_label_app"]
-      regex = "my-webapp"
-      action = "keep"
-      }
-      rule {
-      source_labels = ["__meta_kubernetes_service_name"]
-      regex = "my-webapp-metrics"
-      action = "keep"
-      }
-      rule {
-      source_labels = ["__name__"]
-      replacement   = local.file.cluster_name.content
-      target_label  = "cluster"
-      }
-    }
-    
-    prometheus.scrape "my_webapp" {
-      job_name   = "my_webapp"
-      targets    = discovery.relabel.my_webapp.output
-      forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
     }
 ---
 # Source: k8s-monitoring/charts/prometheus-operator-crds/templates/crd-alertmanagerconfigs.yaml
@@ -39988,6 +40069,34 @@ spec:
     app.kubernetes.io/name: prometheus-node-exporter
     app.kubernetes.io/instance: k8smon
 ---
+# Source: k8s-monitoring/charts/prometheus-windows-exporter/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: k8smon-prometheus-windows-exporter
+  namespace: default
+  labels:
+    helm.sh/chart: prometheus-windows-exporter-0.1.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: metrics
+    app.kubernetes.io/part-of: prometheus-windows-exporter
+    app.kubernetes.io/name: prometheus-windows-exporter
+    app.kubernetes.io/instance: k8smon
+    app.kubernetes.io/version: "0.22.0"
+  annotations:
+    prometheus.io/scrape: "true"
+spec:
+  type: ClusterIP
+  ports:
+    - port: 9182
+      targetPort: metrics
+      protocol: TCP
+      appProtocol: http
+      name: metrics
+  selector:
+    app.kubernetes.io/name: prometheus-windows-exporter
+    app.kubernetes.io/instance: k8smon
+---
 # Source: k8s-monitoring/charts/grafana-agent/templates/controllers/daemonset.yaml
 apiVersion: apps/v1
 kind: DaemonSet
@@ -40178,6 +40287,104 @@ spec:
         - name: root
           hostPath:
             path: /
+---
+# Source: k8s-monitoring/charts/prometheus-windows-exporter/templates/daemonset.yaml
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: k8smon-prometheus-windows-exporter
+  namespace: default
+  labels:
+    helm.sh/chart: prometheus-windows-exporter-0.1.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: metrics
+    app.kubernetes.io/part-of: prometheus-windows-exporter
+    app.kubernetes.io/name: prometheus-windows-exporter
+    app.kubernetes.io/instance: k8smon
+    app.kubernetes.io/version: "0.22.0"
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: prometheus-windows-exporter
+      app.kubernetes.io/instance: k8smon
+  updateStrategy:
+    rollingUpdate:
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      annotations:
+        cluster-autoscaler.kubernetes.io/safe-to-evict: "true"
+      labels:
+        helm.sh/chart: prometheus-windows-exporter-0.1.0
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/component: metrics
+        app.kubernetes.io/part-of: prometheus-windows-exporter
+        app.kubernetes.io/name: prometheus-windows-exporter
+        app.kubernetes.io/instance: k8smon
+        app.kubernetes.io/version: "0.22.0"
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        windowsOptions:
+          hostProcess: true
+          runAsUserName: NT AUTHORITY\system
+      initContainers:
+        - name: configure-firewall
+          image: ghcr.io/prometheus-community/windows-exporter:0.22.0
+          command: [ "powershell" ]
+          args: [ "New-NetFirewallRule", "-DisplayName", "'windows-exporter'", "-Direction", "inbound", "-Profile", "Any", "-Action", "Allow", "-LocalPort", "9182", "-Protocol", "TCP" ]
+      serviceAccountName: k8smon-prometheus-windows-exporter
+      containers:
+        - name: windows-exporter
+          image: ghcr.io/prometheus-community/windows-exporter:0.22.0
+          imagePullPolicy: IfNotPresent
+          args:
+            - --config.file=%CONTAINER_SANDBOX_MOUNT_POINT%/config.yml
+            - --collector.textfile.directory=%CONTAINER_SANDBOX_MOUNT_POINT%
+            - --web.listen-address=:9182
+          env:
+          ports:
+            - name: metrics
+              containerPort: 9182
+              protocol: TCP
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              httpHeaders:
+              path: /
+              port: 9182
+              scheme: HTTP
+            initialDelaySeconds: 0
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              httpHeaders:
+              path: /
+              port: 9182
+              scheme: HTTP
+            initialDelaySeconds: 0
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          volumeMounts:
+            - name: config
+              mountPath: /config.yml
+              subPath: config.yml
+      hostNetwork: true
+      hostPID: true
+      nodeSelector:
+        kubernetes.io/os: windows
+      tolerations:
+        - effect: NoSchedule
+          operator: Exists
+      volumes:
+        - name: config
+          configMap:
+            name: k8smon-prometheus-windows-exporter
 ---
 # Source: k8s-monitoring/charts/kube-state-metrics/templates/deployment.yaml
 apiVersion: apps/v1

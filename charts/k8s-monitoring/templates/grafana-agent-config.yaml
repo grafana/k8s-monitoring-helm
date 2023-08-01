@@ -33,6 +33,10 @@ data:
     {{- include "agent.config.node_exporter" . | indent 4}}
   {{- end }}
 
+  {{- if (index .Values.metrics "windows-exporter").enabled }}
+    {{- include "agent.config.windows_exporter" . | indent 4}}
+  {{- end }}
+
   {{- if .Values.metrics.cost.enabled }}
     {{- include "agent.config.opencost" . | indent 4}}
   {{- end }}
