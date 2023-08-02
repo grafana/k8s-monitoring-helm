@@ -23,7 +23,7 @@ discovery.relabel "node_exporter" {
   }
   rule {
     source_labels = ["__name__"]
-    replacement   = local.file.cluster_name.content
+    replacement   = {{ required ".Values.cluster.name is a required value. Please set it and try again." .Values.cluster.name | quote }}
     target_label  = "cluster"
   }
 }

@@ -78,12 +78,7 @@ metadata:
   name: k8smon-grafana-agent
   namespace: default
 data:
-  cluster_name: default-values-test
   config.river: |-    
-    local.file "cluster_name" {
-      filename  = "/etc/agent/cluster_name"
-    }
-        
     discovery.kubernetes "nodes" {
       role = "node"
     }
@@ -116,7 +111,7 @@ data:
       }
       rule {
         source_labels = ["__name__"]
-        replacement   = local.file.cluster_name.content
+        replacement   = "default-values-test"
         target_label  = "cluster"
       }
     }
@@ -151,7 +146,7 @@ data:
       }
       rule {
         source_labels = ["__name__"]
-        replacement   = local.file.cluster_name.content
+        replacement   = "default-values-test"
         target_label  = "cluster"
       }
     }
@@ -191,7 +186,7 @@ data:
       }
       rule {
         source_labels = ["__name__"]
-        replacement   = local.file.cluster_name.content
+        replacement   = "default-values-test"
         target_label  = "cluster"
       }
     }
@@ -236,7 +231,7 @@ data:
       }
       rule {
         source_labels = ["__name__"]
-        replacement   = local.file.cluster_name.content
+        replacement   = "default-values-test"
         target_label  = "cluster"
       }
     }
@@ -276,7 +271,7 @@ data:
       }
       rule {
         source_labels = ["__name__"]
-        replacement   = local.file.cluster_name.content
+        replacement   = "default-values-test"
         target_label  = "cluster"
       }
     }
@@ -316,7 +311,7 @@ data:
       }
       rule {
         source_labels = ["__name__"]
-        replacement   = local.file.cluster_name.content
+        replacement   = "default-values-test"
         target_label  = "cluster"
       }
     }
@@ -407,7 +402,7 @@ data:
     loki.process "pod_logs" {
       stage.static_labels {
         values = {
-          cluster = local.file.cluster_name.content,
+          cluster = "default-values-test",
         }
       }
     
@@ -424,7 +419,7 @@ data:
     loki.process "cluster_events" {
       stage.static_labels {
         values = {
-          cluster = local.file.cluster_name.content,
+          cluster = "default-values-test",
         }
       }
     
