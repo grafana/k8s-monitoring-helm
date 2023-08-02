@@ -83,27 +83,27 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | metrics.enabled | bool | `true` | Capture and forward metrics |
 | metrics.cadvisor.allowList | list | See [Allow List for cAdvisor](#allow-list-for-cadvisor) | The list of cAdvisor metrics that will be scraped by the Agent |
 | metrics.cadvisor.enabled | bool | `true` | Scrape container metrics from cAdvisor |
-| metrics.cadvisor.custom_rules | list | See [Custom rules](#custom-rules) | The extra list of rules that will be applied after scrape |
+| metrics.cadvisor.custom_rules | string | See [Custom rules](#custom-rules) | The extra list of rules that will be applied after scrape |
 | metrics.cost.allowList | list | See [Allow List for OpenCost](#allow-list-for-opencost) | The list of OpenCost metrics that will be scraped by the Agent |
 | metrics.cost.enabled | bool | `true` | Scrape cost metrics from OpenCost |
 | metrics.cost.labelMatchers | object | `{"app.kubernetes.io/name":"opencost"}` | Label matchers used by the Grafana Agent to select the OpenCost service |
-| metrics.cost.custom_rules | list | See [Custom rules](#custom-rules) | The extra list of rules that will be applied after scrape |
+| metrics.cost.custom_rules | string | See [Custom rules](#custom-rules) | The extra list of rules that will be applied after scrape |
 | metrics.kube-state-metrics.allowList | list | See [Allow List for Kube State Metrics](#allow-list-for-kube-state-metrics) | The list of Kube State Metrics metrics that will be scraped by the Agent |
 | metrics.kube-state-metrics.enabled | bool | `true` | Scrape cluster object metrics from Kube State Metrics |
 | metrics.kube-state-metrics.labelMatchers | object | `{"app.kubernetes.io/name":"kube-state-metrics"}` | Label matchers used by the Grafana Agent to select the Kube State Metrics service |
 | metrics.kube-state-metrics.service.isTLS | bool | `false` | Does this port use TLS? |
 | metrics.kube-state-metrics.service.port | string | `"http"` | Name of the metrics port |
-| metrics.kube-state-metrics.custom_rules | list | See [Custom rules](#custom-rules) | The extra list of rules that will be applied after scrape |
+| metrics.kube-state-metrics.custom_rules | string | See [Custom rules](#custom-rules) | The extra list of rules that will be applied after scrape |
 | metrics.kubelet.allowList | list | See [Allow List for Kubelet](#allow-list-for-kubelet) | The list of Kubelet metrics that will be scraped by the Agent |
 | metrics.kubelet.enabled | bool | `true` | Scrape cluster metrics from the Kubelet |
-| metrics.kubelet.custom_rules | list | See [Custom rules](#custom-rules) | The extra list of rules that will be applied after scrape |
+| metrics.kubelet.custom_rules | string | See [Custom rules](#custom-rules) | The extra list of rules that will be applied after scrape |
 | metrics.agent.allowList | list | See [Allow List for Agent](#allow-list-for-agent) | The list of Agent metrics that will be scraped by the Agent |
-| metrics.agent.custom_rules | list | See [Custom rules](#custom-rules) | The extra list of rules that will be applied after scrape |
+| metrics.agent.custom_rules | string | See [Custom rules](#custom-rules) | The extra list of rules that will be applied after scrape |
 | metrics.node-exporter.allowList | list | See [Allow List for Node Exporter](#allow-list-for-node-exporter) | The list of Node Exporter metrics that will be scraped by the Agent |
 | metrics.node-exporter.enabled | bool | `true` | Scrape node metrics |
 | metrics.node-exporter.labelMatchers | object | `{"app.kubernetes.io/name":"prometheus-node-exporter.*"}` | Label matchers used by the Grafana Agent to select the Node exporter pods |
 | metrics.node-exporter.service.isTLS | bool | `false` | Does this port use TLS? |
-| metrics.node-exporter.custom_rules | list | See [Custom rules](#custom-rules) | The extra list of rules that will be applied after scrape |
+| metrics.node-exporter.custom_rules | string | See [Custom rules](#custom-rules) | The extra list of rules that will be applied after scrape |
 | metrics.podMonitors.enabled | bool | `true` | Include service discovery for PodMonitor objects |
 | metrics.serviceMonitors.enabled | bool | `true` | Include service discovery for ServiceMonitor objects |
 | opencost.enabled | bool | `true` | Should this Helm chart deploy OpenCost to the cluster. Set this to false if your cluster already has OpenCost, or if you do not want to scrape metrics from OpenCost. |
@@ -222,7 +222,7 @@ Example:
 metrics:
   cadvisor:
     custom_rules: |
-      # drop id label from all container_cpu_usage_seconds_total metrics
+      // drop id label from all container_cpu_usage_seconds_total metrics
       rule {
         source_labels = ["__name__"]
         regex = "container_cpu_usage_seconds_total"
