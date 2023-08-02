@@ -38,9 +38,10 @@ prometheus.scrape "kubelet" {
 prometheus.relabel "kubelet" {
   rule {
     source_labels = ["__name__"]
-    regex = "up|{{ join "|" .Values.metrics.kubelet.allowList }}"
+    regex = "up|{{ join "|" (index .Values.metrics "kubelet").allowList }}"
     action = "keep"
   }
+  {{ (index .Values.metrics "kubelet").custom_rules | nindent 2 }}
   forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
 }
 {{- end }}

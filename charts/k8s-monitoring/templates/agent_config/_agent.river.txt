@@ -33,9 +33,10 @@ prometheus.scrape "agent" {
 prometheus.relabel "agent" {
   rule {
     source_labels = ["__name__"]
-    regex = "up|agent_build_info"
+    regex = "up|{{ join "|" (index .Values.metrics "agent").allowList }}"
     action = "keep"
   }
+  {{ (index .Values.metrics "agent").custom_rules | nindent 2 }}
   forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
 }
 {{ end }}

@@ -40,9 +40,10 @@ prometheus.scrape "opencost" {
 prometheus.relabel "opencost" {
   rule {
     source_labels = ["__name__"]
-    regex = "up|{{ join "|" .Values.metrics.cost.allowList }}"
+    regex = "up|{{ join "|" (index .Values.metrics "cost").allowList }}"
     action = "keep"
   }
+  {{ (index .Values.metrics "cost").custom_rules | nindent 2 }}
   forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
 }
 {{- end }}

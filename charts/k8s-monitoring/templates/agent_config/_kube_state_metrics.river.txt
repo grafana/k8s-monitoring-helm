@@ -52,6 +52,7 @@ prometheus.relabel "kube_state_metrics" {
     regex = "up|{{ join "|" (index .Values.metrics "kube-state-metrics").allowList }}"
     action = "keep"
   }
+  {{ (index .Values.metrics "kube-state-metrics").custom_rules | nindent 2 }}
   forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
 }
 {{- end }}

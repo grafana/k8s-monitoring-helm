@@ -53,6 +53,7 @@ prometheus.relabel "node_exporter" {
     regex = "up|{{ join "|" (index .Values.metrics "node-exporter").allowList }}"
     action = "keep"
   }
+  {{ (index .Values.metrics "node-exporter").custom_rules | nindent 2 }}
   forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
 }
 {{- end }}

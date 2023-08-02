@@ -38,9 +38,10 @@ prometheus.scrape "cadvisor" {
 prometheus.relabel "cadvisor" {
   rule {
     source_labels = ["__name__"]
-    regex = "up|{{ join "|" .Values.metrics.cadvisor.allowList }}"
+    regex = "up|{{ join "|" (index .Values.metrics "cadvisor").allowList }}"
     action = "keep"
   }
+  {{ (index .Values.metrics "cadvisor").custom_rules | nindent 2 }}
   forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
 }
 {{- end }}
