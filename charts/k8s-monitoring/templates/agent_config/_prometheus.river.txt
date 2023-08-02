@@ -1,26 +1,31 @@
 {{ define "agent.config.prometheus" }}
+{{- with .Values.externalServices.prometheus }}
 // Grafana Cloud Prometheus
 local.file "prometheus_host" {
   filename  = "/etc/grafana-agent-credentials/prometheus_host"
 }
-
+{{ if .basicAuth.username }}
 local.file "prometheus_username" {
   filename  = "/etc/grafana-agent-credentials/prometheus_username"
 }
-
+{{- end }}
+{{ if .basicAuth.password }}
 local.file "prometheus_password" {
   filename  = "/etc/grafana-agent-credentials/prometheus_password"
   is_secret = true
 }
+{{- end }}
 
 prometheus.remote_write "grafana_cloud_prometheus" {
   endpoint {
-    url = nonsensitive(local.file.prometheus_host.content) + "{{ .Values.externalServices.prometheus.writeEndpoint }}"
-    
+    url = nonsensitive(local.file.prometheus_host.content) + "{{ .writeEndpoint }}"
+{{ if .basicAuth }}
     basic_auth {
-      username = local.file.prometheus_username.content
-      password = local.file.prometheus_password.content
+      {{ if .basicAuth.username }}username = local.file.prometheus_username.content{{ end }}
+      {{ if .basicAuth.password }}password = local.file.prometheus_password.content{{ end }}
     }
   }
+{{- end }}
 }
+{{- end }}
 {{ end }}
