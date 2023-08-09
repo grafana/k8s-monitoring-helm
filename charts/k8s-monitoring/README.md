@@ -52,12 +52,11 @@ Each collector will follow a general set of configuration items.
 |-----|------|---------|-------------|
 | metrics.NAME.allowList | list | All | The list of NAME metrics that will be scraped by the Agent |
 | metrics.NAME.enabled | bool | All | Scrape container metrics from NAME |
-| metrics.NAME.additionalMetricRelabelingRules | string | All | The extra list of rules that will be applied after scrape |
-| metrics.NAME.scrape_interval | string | All | The extra list of rules that will be applied after scrape |
+| metrics.NAME.additionalMetricRelabelingRules | string | All | See [Custom rules](#custom-rules) |
+| metrics.NAME.scrape_interval | string | All | Extra configuration that will be added to the Grafana Agent configuration file for extra rules to apply to current metrics See https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block |
 | metrics.NAME.labelMatchers | object | Some, see below | Label matchers used by the Grafana Agent to select the NAME service |
 | metrics.NAME.service.xxx | bool | Some, see below | Specific scrape config |
 | SERVICE.enabled | bool | Some, see below | If the helm is responsible for installing the required component for NAME |
-
 
 ## Maintainers
 
@@ -96,43 +95,43 @@ Each collector will follow a general set of configuration items.
 | logs.enabled | bool | `true` | Capture and forward logs |
 | logs.pod_logs.enabled | bool | `true` | Capture and forward logs from Kubernetes pods |
 | logs.pod_logs.loggingFormat | string | `"docker"` | The log parsing format. Must be one of null, 'cri', or 'docker' See documentation: https://grafana.com/docs/agent/latest/flow/reference/components/loki.process/#stagecri-block |
-| metrics.agent.additionalMetricRelabelingRules | string | See [Custom rules](#custom-rules) | The extra list of rules that will be applied after scrape |
+| metrics.agent.additionalMetricRelabelingRules | string | `""` | Extra configuration that will be added to the Grafana Agent configuration file for extra rules to apply to current metrics See https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block |
 | metrics.agent.allowList | list | See [Allow List for Agent](#allow-list-for-agent) | The list of Agent metrics that will be scraped by the Agent |
-| metrics.agent.scrape_interval | string | See [scrape_interval](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.scrape/) | How frequent to to pull data from the targets |
-| metrics.cadvisor.additionalMetricRelabelingRules | string | See [Custom rules](#custom-rules) | The extra list of rules that will be applied after scrape |
+| metrics.agent.scrape_interval | string | `""` | How frequent to to pull data from the targets See scrape_interval in https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.scrape/ |
+| metrics.cadvisor.additionalMetricRelabelingRules | string | `""` | Extra configuration that will be added to the Grafana Agent configuration file for extra rules to apply to current metrics See https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block |
 | metrics.cadvisor.allowList | list | See [Allow List for cAdvisor](#allow-list-for-cadvisor) | The list of cAdvisor metrics that will be scraped by the Agent |
 | metrics.cadvisor.enabled | bool | `true` | Scrape container metrics from cAdvisor |
-| metrics.cadvisor.scrape_interval | string | See [scrape_interval](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.scrape/) | How frequent to to pull data from the targets |
+| metrics.cadvisor.scrape_interval | string | `""` | How frequent to to pull data from the targets See scrape_interval in https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.scrape/ |
 | metrics.cost.allowList | list | See [Allow List for OpenCost](#allow-list-for-opencost) | The list of OpenCost metrics that will be scraped by the Agent |
 | metrics.cost.enabled | bool | `true` | Scrape cost metrics from OpenCost |
 | metrics.cost.labelMatchers | object | `{"app.kubernetes.io/name":"opencost"}` | Label matchers used by the Grafana Agent to select the OpenCost service |
-| metrics.cost.additionalMetricRelabelingRules | string | See [Custom rules](#custom-rules) | The extra list of rules that will be applied after scrape |
-| metrics.cost.scrape_interval | string | See [scrape_interval](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.scrape/) | How frequent to to pull data from the targets |
+| metrics.cost.additionalMetricRelabelingRules | string | `""` | Extra configuration that will be added to the Grafana Agent configuration file for extra rules to apply to current metrics See https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block |
+| metrics.cost.scrape_interval | string | `""` | How frequent to to pull data from the targets See scrape_interval in https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.scrape/ |
 | metrics.enabled | bool | `true` | Capture and forward metrics |
-| metrics.kube-state-metrics.additionalMetricRelabelingRules | string | See [Custom rules](#custom-rules) | The extra list of rules that will be applied after scrape |
+| metrics.kube-state-metrics.additionalMetricRelabelingRules | string | `""` | Extra configuration that will be added to the Grafana Agent configuration file for extra rules to apply to current metrics See https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block |
 | metrics.kube-state-metrics.allowList | list | See [Allow List for Kube State Metrics](#allow-list-for-kube-state-metrics) | The list of Kube State Metrics metrics that will be scraped by the Agent |
 | metrics.kube-state-metrics.enabled | bool | `true` | Scrape cluster object metrics from Kube State Metrics |
 | metrics.kube-state-metrics.labelMatchers | object | `{"app.kubernetes.io/name":"kube-state-metrics"}` | Label matchers used by the Grafana Agent to select the Kube State Metrics service |
 | metrics.kube-state-metrics.service.isTLS | bool | `false` | Does this port use TLS? |
 | metrics.kube-state-metrics.service.port | string | `"http"` | Name of the metrics port |
-| metrics.kube-state-metrics.scrape_interval | string | See [scrape_interval](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.scrape/) | How frequent to to pull data from the targets |
-| metrics.kubelet.additionalMetricRelabelingRules | string | See [Custom rules](#custom-rules) | The extra list of rules that will be applied after scrape |
+| metrics.kube-state-metrics.scrape_interval | string | `""` | How frequent to to pull data from the targets See scrape_interval in https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.scrape/ |
+| metrics.kubelet.additionalMetricRelabelingRules | string | `""` | Extra configuration that will be added to the Grafana Agent configuration file for extra rules to apply to current metrics See https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block |
 | metrics.kubelet.allowList | list | See [Allow List for Kubelet](#allow-list-for-kubelet) | The list of Kubelet metrics that will be scraped by the Agent |
 | metrics.kubelet.enabled | bool | `true` | Scrape cluster metrics from the Kubelet |
-| metrics.kubelet.scrape_interval | string | See [scrape_interval](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.scrape/) | How frequent to to pull data from the targets |
-| metrics.node-exporter.additionalMetricRelabelingRules | string | See [Custom rules](#custom-rules) | The extra list of rules that will be applied after scrape |
+| metrics.kubelet.scrape_interval | string | `""` | How frequent to to pull data from the targets See scrape_interval in https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.scrape/ |
+| metrics.node-exporter.additionalMetricRelabelingRules | string | `""` | Extra configuration that will be added to the Grafana Agent configuration file for extra rules to apply to current metrics See https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block |
 | metrics.node-exporter.allowList | list | See [Allow List for Node Exporter](#allow-list-for-node-exporter) | The list of Node Exporter metrics that will be scraped by the Agent |
 | metrics.node-exporter.enabled | bool | `true` | Scrape node metrics |
 | metrics.node-exporter.labelMatchers | object | `{"app.kubernetes.io/name":"prometheus-node-exporter.*"}` | Label matchers used by the Grafana Agent to select the Node exporter pods |
 | metrics.node-exporter.service.isTLS | bool | `false` | Does this port use TLS? |
-| metrics.node-exporter.scrape_interval | string | See [scrape_interval](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.scrape/) | How frequent to to pull data from the targets |
+| metrics.node-exporter.scrape_interval | string | `""` | How frequent to to pull data from the targets See scrape_interval in https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.scrape/ |
 | metrics.podMonitors.enabled | bool | `true` | Include service discovery for PodMonitor objects |
 | metrics.serviceMonitors.enabled | bool | `true` | Include service discovery for ServiceMonitor objects |
-| metrics.windows-exporter.additionalMetricRelabelingRules | string | See [Custom rules](#custom-rules) | The extra list of rules that will be applied after scrape |
+| metrics.windows-exporter.additionalMetricRelabelingRules | string | `""` | Extra configuration that will be added to the Grafana Agent configuration file for extra rules to apply to current metrics See https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block |
 | metrics.windows-exporter.allowList | list | See [Allow List for Windows Exporter](#allow-list-for-windows-exporter) | The list of Windows Exporter metrics that will be scraped by the Agent |
 | metrics.windows-exporter.enabled | bool | `false` | Scrape node metrics |
 | metrics.windows-exporter.labelMatchers | object | `{"app.kubernetes.io/name":"prometheus-windows-exporter.*"}` | Label matchers used by the Grafana Agent to select the Windows Exporter pods |
-| metrics.windows-exporter.scrape_interval | string | See [scrape_interval](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.scrape/) | How frequent to to pull data from the targets |
+| metrics.windows-exporter.scrape_interval | string | `""` | How frequent to to pull data from the targets See scrape_interval in https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.scrape/ |
 | prometheus-windows-exporter.config | string | `"collectors:\n  enabled: cpu,cs,container,logical_disk,memory,net,os\ncollector:\n  service:\n    services-where: \"Name='containerd' or Name='kubelet'\""` |  |
 | prometheus-windows-exporter.enabled | bool | `false` | Should this helm chart deploy Windows Exporter to the cluster. Set this to false if your cluster already has Windows Exporter, or if you do not want to scrape metrics from Windows Exporter. |
 
