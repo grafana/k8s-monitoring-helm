@@ -125,6 +125,7 @@ data:
         regex = "up|agent_build_info"
         action = "keep"
       }
+      
       forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
     }
         
@@ -150,12 +151,12 @@ data:
     
     prometheus.scrape "kubelet" {
       job_name   = "integrations/kubernetes/kubelet"
-      targets  = discovery.relabel.kubelet.output
       scheme   = "https"
       bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
       tls_config {
         insecure_skip_verify = true
       }
+      targets  = discovery.relabel.kubelet.output
       forward_to = [prometheus.relabel.kubelet.receiver]
     }
     
@@ -165,6 +166,7 @@ data:
         regex = "up|kubelet_node_name|kubernetes_build_info"
         action = "keep"
       }
+      
       forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
     }
         
@@ -190,12 +192,12 @@ data:
     
     prometheus.scrape "cadvisor" {
       job_name   = "integrations/kubernetes/cadvisor"
-      targets    = discovery.relabel.cadvisor.output
       scheme     = "https"
       bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
       tls_config {
         insecure_skip_verify = true
       }
+      targets  = discovery.relabel.cadvisor.output
       forward_to = [prometheus.relabel.cadvisor.receiver]
     }
     
@@ -205,6 +207,7 @@ data:
         regex = "up|container_memory_cache|container_memory_rss|container_memory_swap"
         action = "keep"
       }
+      
       forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
     }
         
@@ -235,7 +238,7 @@ data:
     
     prometheus.scrape "kube_state_metrics" {
       job_name   = "integrations/kubernetes/kube-state-metrics"
-      targets    = discovery.relabel.kube_state_metrics.output
+      targets  = discovery.relabel.kube_state_metrics.output
       forward_to = [prometheus.relabel.kube_state_metrics.receiver]
     }
     
@@ -245,6 +248,7 @@ data:
         regex = "up|*"
         action = "keep"
       }
+      
       forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
     }
         
@@ -285,11 +289,12 @@ data:
         regex = "up|node_*"
         action = "keep"
       }
+      
       forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
     }
         
     // OpenCost
-    discovery.relabel "opencost" {
+    discovery.relabel "cost" {
       targets = discovery.kubernetes.services.targets
       rule {
         source_labels = ["__meta_kubernetes_service_label_app_kubernetes_io_instance"]
@@ -313,9 +318,14 @@ data:
       }
     }
     
-    prometheus.scrape "opencost" {
+    prometheus.scrape "cost" {
       job_name   = "integrations/kubernetes/opencost"
-      targets    = discovery.relabel.opencost.output
+      targets  = discovery.relabel.cost.output
+      forward_to = [prometheus.relabel.cost.receiver]
+    }
+    
+    prometheus.relabel "cost" {
+      
       forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
     }
         
