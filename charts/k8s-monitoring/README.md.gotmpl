@@ -47,6 +47,20 @@ This chart simplifies the deployment of a Kubernetes monitoring infrastructure, 
 
 The Prometheus and Loki services may be hosted on the same cluster, or remotely (e.g. on Grafana Cloud).
 
+## Per collection configuration
+
+Each collector will follow a general set of configuration items.
+
+| Key | Type | Targets | Description |
+|-----|------|---------|-------------|
+| metrics.NAME.allowList | list | All | The list of NAME metrics that will be scraped by the Agent |
+| metrics.NAME.enabled | bool | All | Scrape container metrics from NAME |
+| metrics.NAME.additionalMetricRelabelingRules | string | All | The extra list of rules that will be applied after scrape |
+| metrics.NAME.scrape_interval | string | All | The extra list of rules that will be applied after scrape |
+| metrics.NAME.labelMatchers | object | Some, see below | Label matchers used by the Grafana Agent to select the NAME service |
+| metrics.NAME.service.xxx | bool | Some, see below | Specific scrape config |
+| SERVICE.enabled | bool | Some, see below | If the helm is responsible for installing the required component for NAME |
+
 {{ template "chart.maintainersSection" . }}
 
 {{ template "chart.sourcesSection" . }}
@@ -155,6 +169,26 @@ grafana-agent:
 ```
 
 For an example values file and generated output, see [this example](../../examples/openshift-compatible).
+
+## Custom rules
+
+It is possible to specify custom rules for each of the metrics collected. This uses the [Rule Block Syntax](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block) to evaluate the rules.
+
+Example:
+
+```yaml
+metrics:
+  cadvisor:
+    additionalMetricRelabelingRules: |
+      // drop id label from all container_cpu_usage_seconds_total metrics
+      rule {
+        source_labels = ["__name__"]
+        regex = "container_cpu_usage_seconds_total"
+        target_label = "id"
+        replacement = ""
+      }
+
+```
 
 ## Allow List
 
@@ -312,3 +346,7 @@ Visit the OpenCost [documentation](https://www.opencost.io/docs/prometheus#avail
 * pv_hourly_cost
 * service_selector_labels
 * statefulSet_match_labels
+
+### Allow List for Agent
+
+* agent_build_info

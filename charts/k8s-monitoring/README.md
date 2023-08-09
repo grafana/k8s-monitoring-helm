@@ -286,7 +286,7 @@ Example:
 ```yaml
 metrics:
   cadvisor:
-    custom_rules: |
+    additionalMetricRelabelingRules: |
       // drop id label from all container_cpu_usage_seconds_total metrics
       rule {
         source_labels = ["__name__"]
