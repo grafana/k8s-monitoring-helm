@@ -1,6 +1,6 @@
 {{ define "agent.config.kube-state-metrics" }}
 // Kube State Metrics
-discovery.relabel "kube-state-metrics" {
+discovery.relabel "kube_state_metrics" {
   targets = discovery.kubernetes.services.targets
 {{- if (index .Values "kube-state-metrics").enabled }}
   rule {
@@ -28,7 +28,7 @@ discovery.relabel "kube-state-metrics" {
   }
 }
 
-prometheus.scrape "kube-state-metrics" {
+prometheus.scrape "kube_state_metrics" {
   job_name   = "integrations/kubernetes/kube-state-metrics"
 {{- if (index .Values.metrics "kube-state-metrics").service.isTLS }}
   scheme     = "https"
@@ -40,7 +40,7 @@ prometheus.scrape "kube-state-metrics" {
   {{- include "prometheus-collect" (dict "Values" .Values.metrics "Name" "kube-state-metrics") | nindent 2 }}
 }
 
-prometheus.relabel "kube-state-metrics" {
+prometheus.relabel "kube_state_metrics" {
   {{- include "prometheus-relabel" (dict "Values" .Values.metrics "Name" "kube-state-metrics") | nindent 2 }}
 }
 {{ end }}

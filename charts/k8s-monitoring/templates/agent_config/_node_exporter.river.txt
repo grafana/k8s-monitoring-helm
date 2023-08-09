@@ -1,6 +1,6 @@
 {{ define "agent.config.node-exporter" }}
 // Node Exporter
-discovery.relabel "node-exporter" {
+discovery.relabel "node_exporter" {
   targets = discovery.kubernetes.pods.targets
 {{- if (index .Values "prometheus-node-exporter").enabled }}
   rule {
@@ -28,7 +28,7 @@ discovery.relabel "node-exporter" {
   }
 }
 
-prometheus.scrape "node-exporter" {
+prometheus.scrape "node_exporter" {
   job_name   = "integrations/node_exporter"
 {{- if (index .Values.metrics "node-exporter").service.isTLS }}
   scheme     = "https"
@@ -41,7 +41,7 @@ prometheus.scrape "node-exporter" {
   {{- include "prometheus-collect" (dict "Values" .Values.metrics "Name" "node-exporter") | nindent 2 }}
 }
 
-prometheus.relabel "node-exporter" {
+prometheus.relabel "node_exporter" {
   {{- include "prometheus-relabel" (dict "Values" .Values.metrics "Name" "node-exporter") | nindent 2 }}
 }
 {{ end }}

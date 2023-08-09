@@ -1,6 +1,6 @@
 {{ define "agent.config.windows-exporter" }}
 // Windows Exporter
-discovery.relabel "windows-exporter" {
+discovery.relabel "windows_exporter" {
   targets = discovery.kubernetes.pods.targets
 {{- if (index .Values "prometheus-windows-exporter").enabled }}
   rule {
@@ -33,12 +33,12 @@ discovery.relabel "windows-exporter" {
   }
 }
 
-prometheus.scrape "windows-exporter" {
+prometheus.scrape "windows_exporter" {
   job_name   = "integrations/kubernetes/windows-exporter"
   {{- include "prometheus-collect" (dict "Values" .Values.metrics "Name" "windows-exporter") | nindent 2 }}
 }
 
-prometheus.relabel "windows-exporter" {
+prometheus.relabel "windows_exporter" {
   rule {
     source_labels = ["__name__"]
     regex = "windows_cpu_time_total"
