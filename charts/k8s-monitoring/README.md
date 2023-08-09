@@ -67,6 +67,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | cluster.name | string | `""` | (required) The name of this cluster, which will be set in all labels |
+| externalServices.createSecret | bool | `true` | Set to false, if you want to create the credentials secret yourself (e.g. if you use sealed secrets or secrets operator). See templates/credentials.yaml for name and fields expected |
 | externalServices.loki.basicAuth.password | string | `""` | Loki basic auth password |
 | externalServices.loki.basicAuth.username | string | `""` | Loki basic auth username |
 | externalServices.loki.host | string | `""` | (required) Loki host where logs and events will be sent |
