@@ -47,12 +47,7 @@ metadata:
   name: k8smon-grafana-agent
   namespace: default
 data:
-  cluster_name: openshift-compatible-test
   config.river: |-    
-    local.file "cluster_name" {
-      filename  = "/etc/agent/cluster_name"
-    }
-        
     discovery.kubernetes "nodes" {
       role = "node"
     }
@@ -85,7 +80,7 @@ data:
       }
       rule {
         source_labels = ["__name__"]
-        replacement   = local.file.cluster_name.content
+        replacement   = "openshift-compatible-test"
         target_label  = "cluster"
       }
     }
@@ -120,7 +115,7 @@ data:
       }
       rule {
         source_labels = ["__name__"]
-        replacement   = local.file.cluster_name.content
+        replacement   = "openshift-compatible-test"
         target_label  = "cluster"
       }
     }
@@ -160,7 +155,7 @@ data:
       }
       rule {
         source_labels = ["__name__"]
-        replacement   = local.file.cluster_name.content
+        replacement   = "openshift-compatible-test"
         target_label  = "cluster"
       }
     }
@@ -200,7 +195,7 @@ data:
       }
       rule {
         source_labels = ["__name__"]
-        replacement   = local.file.cluster_name.content
+        replacement   = "openshift-compatible-test"
         target_label  = "cluster"
       }
     }
@@ -240,7 +235,7 @@ data:
       }
       rule {
         source_labels = ["__name__"]
-        replacement   = local.file.cluster_name.content
+        replacement   = "openshift-compatible-test"
         target_label  = "cluster"
       }
     }
@@ -286,7 +281,7 @@ data:
       }
       rule {
         source_labels = ["__name__"]
-        replacement   = local.file.cluster_name.content
+        replacement   = "openshift-compatible-test"
         target_label  = "cluster"
       }
     }
@@ -333,7 +328,7 @@ data:
     prometheus.remote_write "grafana_cloud_prometheus" {
       endpoint {
         url = nonsensitive(local.file.prometheus_host.content) + "/api/prom/push"
-        
+    
         basic_auth {
           username = local.file.prometheus_username.content
           password = local.file.prometheus_password.content
@@ -377,7 +372,7 @@ data:
     loki.process "pod_logs" {
       stage.static_labels {
         values = {
-          cluster = local.file.cluster_name.content,
+          cluster = "openshift-compatible-test",
         }
       }
     
@@ -394,7 +389,7 @@ data:
     loki.process "cluster_events" {
       stage.static_labels {
         values = {
-          cluster = local.file.cluster_name.content,
+          cluster = "openshift-compatible-test",
         }
       }
     
