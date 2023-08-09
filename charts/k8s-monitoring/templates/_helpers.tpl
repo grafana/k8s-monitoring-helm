@@ -1,4 +1,4 @@
-{{ define "prometheus-relabel" }}
+{{ define "prometheus-relabel" -}}
 {{- if (index .Values .Name).allowList }}
 rule {
   source_labels = ["__name__"]
