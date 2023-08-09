@@ -1,6 +1,6 @@
 # k8s-monitoring
 
-![Version: 0.0.12](https://img.shields.io/badge/Version-0.0.12-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.2.0](https://img.shields.io/badge/AppVersion-1.2.0-informational?style=flat-square)
+![Version: 0.0.15](https://img.shields.io/badge/Version-0.0.15-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.2.0](https://img.shields.io/badge/AppVersion-1.2.0-informational?style=flat-square)
 
 A Helm chart for gathering, scraping, and forwarding Kubernetes infrastructure metrics and logs to a Grafana Stack.
 
@@ -55,24 +55,25 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 
 | Repository | Name | Version |
 |------------|------|---------|
-| https://grafana.github.io/helm-charts | grafana-agent | 0.18.0 |
+| https://grafana.github.io/helm-charts | grafana-agent | 0.19.0 |
 | https://opencost.github.io/opencost-helm-chart | opencost | 1.18.0 |
 | https://prometheus-community.github.io/helm-charts | kube-state-metrics | 5.10.1 |
 | https://prometheus-community.github.io/helm-charts | prometheus-node-exporter | 4.21.0 |
 | https://prometheus-community.github.io/helm-charts | prometheus-operator-crds | 5.0.0 |
+| https://prometheus-community.github.io/helm-charts | prometheus-windows-exporter | 0.1.0 |
 
 ## Values
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | cluster.name | string | `""` | (required) The name of this cluster, which will be set in all labels |
+| externalServices.loki.basicAuth.password | string | `""` | Loki basic auth password |
+| externalServices.loki.basicAuth.username | string | `""` | Loki basic auth username |
 | externalServices.loki.host | string | `""` | (required) Loki host where logs and events will be sent |
-| externalServices.loki.password | string | `""` | (required) Loki basic auth password |
-| externalServices.loki.username | string | `""` | (required) Loki basic auth username |
 | externalServices.loki.writeEndpoint | string | `"/loki/api/v1/push"` | Loki logs write endpoint |
+| externalServices.prometheus.basicAuth.password | string | `""` | Prometheus basic auth password |
+| externalServices.prometheus.basicAuth.username | string | `""` | Prometheus basic auth username |
 | externalServices.prometheus.host | string | `""` | (required) Prometheus host where metrics will be sent |
-| externalServices.prometheus.password | string | `""` | (required) Prometheus basic auth password |
-| externalServices.prometheus.username | string | `""` | (required) Prometheus basic auth username |
 | externalServices.prometheus.writeEndpoint | string | `"/api/prom/push"` | Prometheus metrics write endpoint |
 | extraConfig | string | `nil` | Extra configuration that will be added to the Grafana Agent configuration file. <details> <summary>+ Example</summary> An example extraConfig to discover and scrape metrics from a service: ```text discovery.relabel "my-service" {   targets = discovery.kubernetes.services.targets   rule {     source_labels = ["__meta_kubernetes_service_label_app_kubernetes_io_name"]     regex = "my-service"     action = "keep"   } }  prometheus.scrape "my-service" {   job_name   = "integrations/my-service"   targets    = discovery.relabel.my-service.output   forward_to = [prometheus.relabel.add_cluster_label.receiver] } ``` Note: "discovery.kubernetes.services" and       "prometheus.relabel.add_cluster_label" are pre-defined by this chart. </details> |
 | kube-state-metrics.enabled | bool | `true` | Should this helm chart deploy Kube State Metrics to the cluster. Set this to false if your cluster already has Kube State Metrics, or if you do not want to scrape metrics from Kube State Metrics. |
@@ -106,10 +107,15 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | metrics.node-exporter.custom_rules | string | See [Custom rules](#custom-rules) | The extra list of rules that will be applied after scrape |
 | metrics.podMonitors.enabled | bool | `true` | Include service discovery for PodMonitor objects |
 | metrics.serviceMonitors.enabled | bool | `true` | Include service discovery for ServiceMonitor objects |
+| metrics.windows-exporter.allowList | list | See [Allow List for Windows Exporter](#allow-list-for-windows-exporter) | The list of Windows Exporter metrics that will be scraped by the Agent |
+| metrics.windows-exporter.enabled | bool | `false` | Scrape node metrics |
+| metrics.windows-exporter.labelMatchers | object | `{"app.kubernetes.io/name":"prometheus-windows-exporter.*"}` | Label matchers used by the Grafana Agent to select the Windows Exporter pods |
 | opencost.enabled | bool | `true` | Should this Helm chart deploy OpenCost to the cluster. Set this to false if your cluster already has OpenCost, or if you do not want to scrape metrics from OpenCost. |
 | opencost.opencost.prometheus.external.url | string | `"https://prom.example.com/api/prom"` | The URL for Prometheus queries. It should match externalService.prometheus.host + "/api/prom" |
 | prometheus-node-exporter.enabled | bool | `true` | Should this helm chart deploy Node Exporter to the cluster. Set this to false if your cluster already has Node Exporter, or if you do not want to scrape metrics from Node Exporter. |
 | prometheus-operator-crds.enabled | bool | `true` | Should this helm chart deploy the Prometheus Operator CRDs to the cluster. Set this to false if your cluster already has the CRDs, or if you do not to have the Grafana Agent scrape metrics from PodMonitors or ServiceMonitors. |
+| prometheus-windows-exporter.config | string | `"collectors:\n  enabled: cpu,cs,container,logical_disk,memory,net,os\ncollector:\n  service:\n    services-where: \"Name='containerd' or Name='kubelet'\""` |  |
+| prometheus-windows-exporter.enabled | bool | `false` | Should this helm chart deploy Windows Exporter to the cluster. Set this to false if your cluster already has Windows Exporter, or if you do not want to scrape metrics from Windows Exporter. |
 
 ## Customizing the configuration
 
@@ -146,7 +152,7 @@ extraConfig: |-
     }
     rule {
       source_labels = ["__name__"]
-      replacement   = local.file.cluster_name.content
+      replacement   = "my-cluster"
       target_label  = "cluster"
     }
   }
@@ -290,6 +296,14 @@ Visit the Kube State Metrics [documentation](https://github.com/kubernetes/kube-
 * node_memory.*
 * process_cpu_seconds_total
 * process_resident_memory_bytes
+
+### Allow List for Windows Exporter
+
+* windows_.*
+* node_cpu_seconds_total
+* node_filesystem_size_bytes
+* node_filesystem_avail_bytes
+* container_cpu_usage_seconds_total
 
 ### Allow List for Kubelet
 

@@ -1,26 +1,31 @@
 {{ define "agent.config.loki" }}
+{{- with .Values.externalServices.loki }}
 // Grafana Cloud Loki
 local.file "loki_host" {
   filename  = "/etc/grafana-agent-credentials/loki_host"
 }
-
+{{ if .basicAuth.username }}
 local.file "loki_username" {
   filename  = "/etc/grafana-agent-credentials/loki_username"
 }
-
+{{- end }}
+{{ if .basicAuth.password }}
 local.file "loki_password" {
   filename  = "/etc/grafana-agent-credentials/loki_password"
   is_secret = true
 }
+{{- end }}
 
 loki.write "grafana_cloud_loki" {
   endpoint {
-    url = nonsensitive(local.file.loki_host.content) + "{{ .Values.externalServices.loki.writeEndpoint }}"
-
+    url = nonsensitive(local.file.loki_host.content) + "{{ .writeEndpoint }}"
+{{ if .basicAuth }}
     basic_auth {
-      username = local.file.loki_username.content
-      password = local.file.loki_password.content
+      {{ if .basicAuth.username }}username = local.file.loki_username.content{{ end }}
+      {{ if .basicAuth.password }}password = local.file.loki_password.content{{ end }}
     }
   }
+{{- end }}
 }
+{{- end }}
 {{ end }}

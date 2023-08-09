@@ -35,7 +35,7 @@ loki.source.kubernetes "pod_logs" {
 loki.process "pod_logs" {
   stage.static_labels {
     values = {
-      cluster = local.file.cluster_name.content,
+      cluster = {{ required ".Values.cluster.name is a required value. Please set it and try again." .Values.cluster.name | quote }},
     }
   }
 

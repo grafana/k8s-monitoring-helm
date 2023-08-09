@@ -4,10 +4,7 @@ metadata:
   name: {{ include "grafana-agent.fullname" (index .Subcharts "grafana-agent") }}
   namespace: {{ .Release.Namespace }}
 data:
-  cluster_name: {{ required ".Values.cluster.name is a required value. Please set it and try again." .Values.cluster.name }}
   config.river: |-
-{{- include "agent.config.cluster_name" . | indent 4}}
-
 {{- include "agent.config.nodes" . | indent 4}}
 
 {{- include "agent.config.pods" . | indent 4}}
@@ -31,6 +28,10 @@ data:
 
   {{- if (index .Values.metrics "node-exporter").enabled }}
     {{- include "agent.config.node_exporter" . | indent 4}}
+  {{- end }}
+
+  {{- if (index .Values.metrics "windows-exporter").enabled }}
+    {{- include "agent.config.windows_exporter" . | indent 4}}
   {{- end }}
 
   {{- if .Values.metrics.cost.enabled }}
