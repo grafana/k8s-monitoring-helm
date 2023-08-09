@@ -26,17 +26,10 @@ discovery.relabel "agent" {
 
 prometheus.scrape "agent" {
   job_name   = "integrations/agent"
-  targets  = discovery.relabel.agent.output
-  forward_to = [prometheus.relabel.agent.receiver]
+  {{- include "prometheus-collect" (dict "Values" .Values.metrics "Name" "agent") | nindent 2 }}
 }
 
 prometheus.relabel "agent" {
-  rule {
-    source_labels = ["__name__"]
-    regex = "up|{{ join "|" (index .Values.metrics "agent").allowList }}"
-    action = "keep"
-  }
-  {{ (index .Values.metrics "agent").custom_rules | nindent 2 }}
-  forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
+  {{- include "prometheus-relabel" (dict "Values" .Values.metrics "Name" "agent") | nindent 2 }}
 }
 {{ end }}

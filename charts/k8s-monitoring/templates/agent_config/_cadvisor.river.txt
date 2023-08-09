@@ -21,28 +21,16 @@ discovery.relabel "cadvisor" {
 
 prometheus.scrape "cadvisor" {
   job_name   = "integrations/kubernetes/cadvisor"
-  targets    = discovery.relabel.cadvisor.output
+
   scheme     = "https"
   bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
   tls_config {
     insecure_skip_verify = true
   }
-{{- if .Values.metrics.cadvisor.allowList }}
-  forward_to = [prometheus.relabel.cadvisor.receiver]
-{{- else }}
-  forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
-{{- end }}
+  {{- include "prometheus-collect" (dict "Values" .Values.metrics "Name" "cadvisor") | nindent 2 }}
 }
-{{- if .Values.metrics.cadvisor.allowList }}
 
 prometheus.relabel "cadvisor" {
-  rule {
-    source_labels = ["__name__"]
-    regex = "up|{{ join "|" (index .Values.metrics "cadvisor").allowList }}"
-    action = "keep"
-  }
-  {{ (index .Values.metrics "cadvisor").custom_rules | nindent 2 }}
-  forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
+  {{ include "prometheus-relabel" (dict "Values" .Values.metrics "Name" "cadvisor") }}
 }
-{{- end }}
 {{ end }}

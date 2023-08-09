@@ -30,12 +30,6 @@ discovery.relabel "node_exporter" {
 
 prometheus.scrape "node_exporter" {
   job_name   = "integrations/node_exporter"
-  targets  = discovery.relabel.node_exporter.output
-{{- if (index .Values.metrics "node-exporter").allowList }}
-  forward_to = [prometheus.relabel.node_exporter.receiver]
-{{- else }}
-  forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
-{{- end }}
 {{- if (index .Values.metrics "node-exporter").service.isTLS }}
   scheme     = "https"
   bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
@@ -44,17 +38,10 @@ prometheus.scrape "node_exporter" {
     insecure_skip_verify = true
   }
 {{- end }}
+  {{- include "prometheus-collect" (dict "Values" .Values.metrics "Name" "node_exporter") | nindent 2 }}
 }
-{{- if (index .Values.metrics "node-exporter").allowList }}
 
 prometheus.relabel "node_exporter" {
-  rule {
-    source_labels = ["__name__"]
-    regex = "up|{{ join "|" (index .Values.metrics "node-exporter").allowList }}"
-    action = "keep"
-  }
-  {{ (index .Values.metrics "node-exporter").custom_rules | nindent 2 }}
-  forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
+  {{- include "prometheus-relabel" (dict "Values" .Values.metrics "Name" "node_exporter") | nindent 2 }}
 }
-{{- end }}
 {{ end }}

@@ -35,8 +35,7 @@ discovery.relabel "windows_exporter" {
 
 prometheus.scrape "windows_exporter" {
   job_name   = "integrations/kubernetes/windows-exporter"
-  targets  = discovery.relabel.windows_exporter.output
-  forward_to = [prometheus.relabel.windows_exporter.receiver]
+  {{- include "prometheus-collect" (dict "Values" .Values.metrics "Name" "windows_exporter") | nindent 2 }}
 }
 
 prometheus.relabel "windows_exporter" {
@@ -64,13 +63,6 @@ prometheus.relabel "windows_exporter" {
     replacement = "node_filesystem_avail_bytes"
     target_label = "__name__"
   }
-{{- if (index .Values.metrics "windows-exporter").allowList }}
-  rule {
-    source_labels = ["__name__"]
-    regex = "up|{{ join "|" (index .Values.metrics "windows-exporter").allowList }}"
-    action = "keep"
-  }
-{{- end }}
-  forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
+  {{- include "prometheus-relabel" (dict "Values" .Values.metrics "Name" "windows_exporter") | nindent 2 }}
 }
 {{ end }}

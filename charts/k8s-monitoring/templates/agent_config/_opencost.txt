@@ -1,6 +1,6 @@
 {{ define "agent.config.opencost" }}
 // OpenCost
-discovery.relabel "opencost" {
+discovery.relabel "cost" {
   targets = discovery.kubernetes.services.targets
   rule {
     source_labels = ["__meta_kubernetes_service_label_app_kubernetes_io_instance"]
@@ -26,25 +26,12 @@ discovery.relabel "opencost" {
   }
 }
 
-prometheus.scrape "opencost" {
+prometheus.scrape "cost" {
   job_name   = "integrations/kubernetes/opencost"
-  targets    = discovery.relabel.opencost.output
-{{- if .Values.metrics.cost.allowList }}
-  forward_to = [prometheus.relabel.opencost.receiver]
-{{- else }}
-  forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
-{{- end }}
+  {{- include "prometheus-collect" (dict "Values" .Values.metrics "Name" "cost") | nindent 2 }}
 }
-{{- if .Values.metrics.cost.allowList }}
 
-prometheus.relabel "opencost" {
-  rule {
-    source_labels = ["__name__"]
-    regex = "up|{{ join "|" (index .Values.metrics "cost").allowList }}"
-    action = "keep"
-  }
-  {{ (index .Values.metrics "cost").custom_rules | nindent 2 }}
-  forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
+prometheus.relabel "cost" {
+  {{- include "prometheus-relabel" (dict "Values" .Values.metrics "Name" "cost") | nindent 2 }}
 }
-{{- end }}
 {{ end }}

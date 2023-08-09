@@ -30,12 +30,6 @@ discovery.relabel "kube_state_metrics" {
 
 prometheus.scrape "kube_state_metrics" {
   job_name   = "integrations/kubernetes/kube-state-metrics"
-  targets    = discovery.relabel.kube_state_metrics.output
-{{- if (index .Values.metrics "kube-state-metrics").allowList }}
-  forward_to = [prometheus.relabel.kube_state_metrics.receiver]
-{{- else }}
-  forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
-{{- end }}
 {{- if (index .Values.metrics "kube-state-metrics").service.isTLS }}
   scheme     = "https"
   bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
@@ -43,17 +37,10 @@ prometheus.scrape "kube_state_metrics" {
     insecure_skip_verify = true
   }
 {{- end }}
+  {{- include "prometheus-collect" (dict "Values" .Values.metrics "Name" "kube_state_metrics") | nindent 2 }}
 }
-{{- if (index .Values.metrics "kube-state-metrics").allowList }}
 
 prometheus.relabel "kube_state_metrics" {
-  rule {
-    source_labels = ["__name__"]
-    regex = "up|{{ join "|" (index .Values.metrics "kube-state-metrics").allowList }}"
-    action = "keep"
-  }
-  {{ (index .Values.metrics "kube-state-metrics").custom_rules | nindent 2 }}
-  forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
+  {{- include "prometheus-relabel" (dict "Values" .Values.metrics "Name" "kube_state_metrics") | nindent 2 }}
 }
-{{- end }}
 {{ end }}
