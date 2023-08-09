@@ -10,8 +10,7 @@ rule {
 {{- (index .Values .Name).additionalMetricRelabelingRules }}
 {{- end }}
 
-{{ define "prometheus-collect" }}
-job_name   = "integrations/{{ .Name }}"
+{{ define "prometheus-collect" -}}
 targets  = discovery.relabel.{{ .Name }}.output
 forward_to = [prometheus.relabel.{{ .Name }}.receiver]
 {{- with (index .Values .Name).scrape_interval }}
