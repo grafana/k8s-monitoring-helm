@@ -1,5 +1,5 @@
 {{ define "prometheus-relabel" -}}
-{{- if (index .Values .Name).allowList }}
+{{- if (index .Values .Name).allowList -}}
 rule {
   source_labels = ["__name__"]
   regex = "up|{{ join "|" (index .Values .Name).allowList }}"
