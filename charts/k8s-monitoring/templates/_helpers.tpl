@@ -5,7 +5,7 @@ rule {
   regex = "up|{{ join "|" (index .Values .Name).allowList }}"
   action = "keep"
 }
-{{- end }}
+{{ end }}
 {{- (index .Values .Name).additionalMetricRelabelingRules }}
 forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
 {{- end }}
