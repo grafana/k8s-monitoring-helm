@@ -11,6 +11,22 @@ metadata:
     app.kubernetes.io/version: "v0.35.2"
     app.kubernetes.io/managed-by: Helm
 ---
+# Source: k8s-monitoring/charts/kube-state-metrics/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:    
+    helm.sh/chart: kube-state-metrics-5.10.1
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: metrics
+    app.kubernetes.io/part-of: kube-state-metrics
+    app.kubernetes.io/name: kube-state-metrics
+    app.kubernetes.io/instance: k8smon
+    app.kubernetes.io/version: "2.9.2"
+  name: k8smon-kube-state-metrics
+  namespace: default
+imagePullSecrets:
+---
 # Source: k8s-monitoring/charts/opencost/templates/serviceaccount.yaml
 apiVersion: v1
 kind: ServiceAccount
@@ -25,6 +41,36 @@ metadata:
     app.kubernetes.io/managed-by: Helm
 automountServiceAccountToken: true
 ---
+# Source: k8s-monitoring/charts/prometheus-node-exporter/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: k8smon-prometheus-node-exporter
+  namespace: default
+  labels:
+    helm.sh/chart: prometheus-node-exporter-4.21.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: metrics
+    app.kubernetes.io/part-of: prometheus-node-exporter
+    app.kubernetes.io/name: prometheus-node-exporter
+    app.kubernetes.io/instance: k8smon
+    app.kubernetes.io/version: "1.6.0"
+---
+# Source: k8s-monitoring/charts/prometheus-windows-exporter/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: k8smon-prometheus-windows-exporter
+  namespace: default
+  labels:
+    helm.sh/chart: prometheus-windows-exporter-0.1.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: metrics
+    app.kubernetes.io/part-of: prometheus-windows-exporter
+    app.kubernetes.io/name: prometheus-windows-exporter
+    app.kubernetes.io/instance: k8smon
+    app.kubernetes.io/version: "0.22.0"
+---
 # Source: k8s-monitoring/templates/credentials.yaml
 apiVersion: v1
 kind: Secret
@@ -36,9 +82,31 @@ data:
   prometheus_host: "aHR0cHM6Ly9wcm9tZXRoZXVzLmV4YW1wbGUuY29t"
   prometheus_username: "MTIzNDU="
   prometheus_password: "SXQncyBhIHNlY3JldCB0byBldmVyeW9uZQ=="
-  loki_host: "aHR0cHM6Ly9wcm9tZXRoZXVzLmV4YW1wbGUuY29t"
+  loki_host: "aHR0cHM6Ly9sb2tpLmV4YW1wbGUuY29t"
   loki_username: "MTIzNDU="
   loki_password: "SXQncyBhIHNlY3JldCB0byBldmVyeW9uZQ=="
+---
+# Source: k8s-monitoring/charts/prometheus-windows-exporter/templates/config.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: k8smon-prometheus-windows-exporter
+  namespace: default
+  labels:
+    helm.sh/chart: prometheus-windows-exporter-0.1.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: metrics
+    app.kubernetes.io/part-of: prometheus-windows-exporter
+    app.kubernetes.io/name: prometheus-windows-exporter
+    app.kubernetes.io/instance: k8smon
+    app.kubernetes.io/version: "0.22.0"
+data:
+  config.yml: |
+    collectors:
+      enabled: cpu,cs,container,logical_disk,memory,net,os
+    collector:
+      service:
+        services-where: "Name='containerd' or Name='kubelet'"
 ---
 # Source: k8s-monitoring/templates/grafana-agent-config.yaml
 apiVersion: v1
@@ -80,7 +148,7 @@ data:
       }
       rule {
         source_labels = ["__name__"]
-        replacement   = "openshift-compatible-test"
+        replacement   = "default-values-test"
         target_label  = "cluster"
       }
     }
@@ -115,7 +183,7 @@ data:
       }
       rule {
         source_labels = ["__name__"]
-        replacement   = "openshift-compatible-test"
+        replacement   = "default-values-test"
         target_label  = "cluster"
       }
     }
@@ -155,7 +223,7 @@ data:
       }
       rule {
         source_labels = ["__name__"]
-        replacement   = "openshift-compatible-test"
+        replacement   = "default-values-test"
         target_label  = "cluster"
       }
     }
@@ -184,18 +252,23 @@ data:
     discovery.relabel "kube_state_metrics" {
       targets = discovery.kubernetes.services.targets
       rule {
+        source_labels = ["__meta_kubernetes_service_label_app_kubernetes_io_instance"]
+        regex = "k8smon"
+        action = "keep"
+      }
+      rule {
         source_labels = ["__meta_kubernetes_service_label_app_kubernetes_io_name"]
         regex = "kube-state-metrics"
         action = "keep"
       }
       rule {
         source_labels = ["__meta_kubernetes_service_port_name"]
-        regex = "https-main"
+        regex = "http"
         action = "keep"
       }
       rule {
         source_labels = ["__name__"]
-        replacement   = "openshift-compatible-test"
+        replacement   = "default-values-test"
         target_label  = "cluster"
       }
     }
@@ -204,11 +277,6 @@ data:
       job_name   = "integrations/kubernetes/kube-state-metrics"
       targets    = discovery.relabel.kube_state_metrics.output
       forward_to = [prometheus.relabel.kube_state_metrics.receiver]
-      scheme     = "https"
-      bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
-      tls_config {
-        insecure_skip_verify = true
-      }
     }
     
     prometheus.relabel "kube_state_metrics" {
@@ -224,8 +292,13 @@ data:
     discovery.relabel "node_exporter" {
       targets = discovery.kubernetes.pods.targets
       rule {
+        source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_instance"]
+        regex = "k8smon"
+        action = "keep"
+      }
+      rule {
         source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
-        regex = "node-exporter"
+        regex = "prometheus-node-exporter.*"
         action = "keep"
       }
       rule {
@@ -235,7 +308,7 @@ data:
       }
       rule {
         source_labels = ["__name__"]
-        replacement   = "openshift-compatible-test"
+        replacement   = "default-values-test"
         target_label  = "cluster"
       }
     }
@@ -244,18 +317,81 @@ data:
       job_name   = "integrations/node_exporter"
       targets  = discovery.relabel.node_exporter.output
       forward_to = [prometheus.relabel.node_exporter.receiver]
-      scheme     = "https"
-      bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
-      tls_config {
-        ca_file = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
-        insecure_skip_verify = true
-      }
     }
     
     prometheus.relabel "node_exporter" {
       rule {
         source_labels = ["__name__"]
         regex = "up|node_cpu.*|node_exporter_build_info|node_filesystem.*|node_memory.*|process_cpu_seconds_total|process_resident_memory_bytes"
+        action = "keep"
+      }
+      forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
+    }
+        
+    // Windows Exporter
+    discovery.relabel "windows_exporter" {
+      targets = discovery.kubernetes.pods.targets
+      rule {
+        source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_instance"]
+        regex = "k8smon"
+        action = "keep"
+      }
+      rule {
+        source_labels = ["__meta_kubernetes_pod_container_port_name"]
+        regex = "metrics"
+        action = "keep"
+      }
+      rule {
+        source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
+        regex = "prometheus-windows-exporter.*"
+        action = "keep"
+      }
+      rule {
+        source_labels = ["__meta_kubernetes_pod_node_name"]
+        action = "replace"
+        target_label = "instance"
+      }
+      rule {
+        source_labels = ["__name__"]
+        replacement   = "default-values-test"
+        target_label  = "cluster"
+      }
+    }
+    
+    prometheus.scrape "windows_exporter" {
+      job_name   = "integrations/kubernetes/windows-exporter"
+      targets  = discovery.relabel.windows_exporter.output
+      forward_to = [prometheus.relabel.windows_exporter.receiver]
+    }
+    
+    prometheus.relabel "windows_exporter" {
+      rule {
+        source_labels = ["__name__"]
+        regex = "windows_cpu_time_total"
+        replacement = "node_cpu_seconds_total"
+        target_label = "__name__"
+      }
+      rule {
+        source_labels = ["volume"]
+        regex = "windows_logical_disk_size_bytes"
+        replacement = "mountpoint"
+        target_label = "mountpoint"
+      }
+      rule {
+        source_labels = ["__name__"]
+        regex = "windows_logical_disk_size_bytes"
+        replacement = "node_filesystem_size_bytes"
+        target_label = "__name__"
+      }
+      rule {
+        source_labels = ["__name__"]
+        regex = "windows_logical_disk_free_bytes"
+        replacement = "node_filesystem_avail_bytes"
+        target_label = "__name__"
+      }
+      rule {
+        source_labels = ["__name__"]
+        regex = "up|windows_.*|node_cpu_seconds_total|node_filesystem_size_bytes|node_filesystem_avail_bytes|container_cpu_usage_seconds_total"
         action = "keep"
       }
       forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
@@ -281,7 +417,7 @@ data:
       }
       rule {
         source_labels = ["__name__"]
-        replacement   = "openshift-compatible-test"
+        replacement   = "default-values-test"
         target_label  = "cluster"
       }
     }
@@ -372,7 +508,7 @@ data:
     loki.process "pod_logs" {
       stage.static_labels {
         values = {
-          cluster = "openshift-compatible-test",
+          cluster = "default-values-test",
         }
       }
     
@@ -389,7 +525,7 @@ data:
     loki.process "cluster_events" {
       stage.static_labels {
         values = {
-          cluster = "openshift-compatible-test",
+          cluster = "default-values-test",
         }
       }
     
@@ -39524,6 +39660,161 @@ rules:
       - list
       - watch
 ---
+# Source: k8s-monitoring/charts/kube-state-metrics/templates/role.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:    
+    helm.sh/chart: kube-state-metrics-5.10.1
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: metrics
+    app.kubernetes.io/part-of: kube-state-metrics
+    app.kubernetes.io/name: kube-state-metrics
+    app.kubernetes.io/instance: k8smon
+    app.kubernetes.io/version: "2.9.2"
+  name: k8smon-kube-state-metrics
+rules:
+
+- apiGroups: ["certificates.k8s.io"]
+  resources:
+  - certificatesigningrequests
+  verbs: ["list", "watch"]
+
+- apiGroups: [""]
+  resources:
+  - configmaps
+  verbs: ["list", "watch"]
+
+- apiGroups: ["batch"]
+  resources:
+  - cronjobs
+  verbs: ["list", "watch"]
+
+- apiGroups: ["extensions", "apps"]
+  resources:
+  - daemonsets
+  verbs: ["list", "watch"]
+
+- apiGroups: ["extensions", "apps"]
+  resources:
+  - deployments
+  verbs: ["list", "watch"]
+
+- apiGroups: [""]
+  resources:
+  - endpoints
+  verbs: ["list", "watch"]
+
+- apiGroups: ["autoscaling"]
+  resources:
+  - horizontalpodautoscalers
+  verbs: ["list", "watch"]
+
+- apiGroups: ["extensions", "networking.k8s.io"]
+  resources:
+  - ingresses
+  verbs: ["list", "watch"]
+
+- apiGroups: ["batch"]
+  resources:
+  - jobs
+  verbs: ["list", "watch"]
+
+- apiGroups: ["coordination.k8s.io"]
+  resources:
+  - leases
+  verbs: ["list", "watch"]
+
+- apiGroups: [""]
+  resources:
+  - limitranges
+  verbs: ["list", "watch"]
+
+- apiGroups: ["admissionregistration.k8s.io"]
+  resources:
+    - mutatingwebhookconfigurations
+  verbs: ["list", "watch"]
+
+- apiGroups: [""]
+  resources:
+  - namespaces
+  verbs: ["list", "watch"]
+
+- apiGroups: ["networking.k8s.io"]
+  resources:
+  - networkpolicies
+  verbs: ["list", "watch"]
+
+- apiGroups: [""]
+  resources:
+  - nodes
+  verbs: ["list", "watch"]
+
+- apiGroups: [""]
+  resources:
+  - persistentvolumeclaims
+  verbs: ["list", "watch"]
+
+- apiGroups: [""]
+  resources:
+  - persistentvolumes
+  verbs: ["list", "watch"]
+
+- apiGroups: ["policy"]
+  resources:
+    - poddisruptionbudgets
+  verbs: ["list", "watch"]
+
+- apiGroups: [""]
+  resources:
+  - pods
+  verbs: ["list", "watch"]
+
+- apiGroups: ["extensions", "apps"]
+  resources:
+  - replicasets
+  verbs: ["list", "watch"]
+
+- apiGroups: [""]
+  resources:
+  - replicationcontrollers
+  verbs: ["list", "watch"]
+
+- apiGroups: [""]
+  resources:
+  - resourcequotas
+  verbs: ["list", "watch"]
+
+- apiGroups: [""]
+  resources:
+  - secrets
+  verbs: ["list", "watch"]
+
+- apiGroups: [""]
+  resources:
+  - services
+  verbs: ["list", "watch"]
+
+- apiGroups: ["apps"]
+  resources:
+  - statefulsets
+  verbs: ["list", "watch"]
+
+- apiGroups: ["storage.k8s.io"]
+  resources:
+    - storageclasses
+  verbs: ["list", "watch"]
+
+- apiGroups: ["admissionregistration.k8s.io"]
+  resources:
+    - validatingwebhookconfigurations
+  verbs: ["list", "watch"]
+
+- apiGroups: ["storage.k8s.io"]
+  resources:
+    - volumeattachments
+  verbs: ["list", "watch"]
+---
 # Source: k8s-monitoring/charts/opencost/templates/clusterrole.yaml
 # Cluster role giving opencost to get, list, watch required resources
 # No write permissions are required
@@ -39631,6 +39922,28 @@ subjects:
     name: k8smon-grafana-agent
     namespace: default
 ---
+# Source: k8s-monitoring/charts/kube-state-metrics/templates/clusterrolebinding.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  labels:    
+    helm.sh/chart: kube-state-metrics-5.10.1
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: metrics
+    app.kubernetes.io/part-of: kube-state-metrics
+    app.kubernetes.io/name: kube-state-metrics
+    app.kubernetes.io/instance: k8smon
+    app.kubernetes.io/version: "2.9.2"
+  name: k8smon-kube-state-metrics
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: k8smon-kube-state-metrics
+subjects:
+- kind: ServiceAccount
+  name: k8smon-kube-state-metrics
+  namespace: default
+---
 # Source: k8s-monitoring/charts/opencost/templates/clusterrolebinding.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -39670,9 +39983,37 @@ spec:
     app.kubernetes.io/instance: k8smon
   ports:
     - name: http-metrics
-      port: 8080
-      targetPort: 8080
+      port: 80
+      targetPort: 80
       protocol: "TCP"
+---
+# Source: k8s-monitoring/charts/kube-state-metrics/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: k8smon-kube-state-metrics
+  namespace: default
+  labels:    
+    helm.sh/chart: kube-state-metrics-5.10.1
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: metrics
+    app.kubernetes.io/part-of: kube-state-metrics
+    app.kubernetes.io/name: kube-state-metrics
+    app.kubernetes.io/instance: k8smon
+    app.kubernetes.io/version: "2.9.2"
+  annotations:
+    prometheus.io/scrape: 'true'
+spec:
+  type: "ClusterIP"
+  ports:
+  - name: "http"
+    protocol: TCP
+    port: 8080
+    targetPort: 8080
+  
+  selector:    
+    app.kubernetes.io/name: kube-state-metrics
+    app.kubernetes.io/instance: k8smon
 ---
 # Source: k8s-monitoring/charts/opencost/templates/service.yaml
 apiVersion: v1
@@ -39695,6 +40036,61 @@ spec:
     - name: http
       port: 9003
       targetPort: 9003
+---
+# Source: k8s-monitoring/charts/prometheus-node-exporter/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: k8smon-prometheus-node-exporter
+  namespace: default
+  labels:
+    helm.sh/chart: prometheus-node-exporter-4.21.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: metrics
+    app.kubernetes.io/part-of: prometheus-node-exporter
+    app.kubernetes.io/name: prometheus-node-exporter
+    app.kubernetes.io/instance: k8smon
+    app.kubernetes.io/version: "1.6.0"
+  annotations:
+    prometheus.io/scrape: "true"
+spec:
+  type: ClusterIP
+  ports:
+    - port: 9100
+      targetPort: 9100
+      protocol: TCP
+      name: metrics
+  selector:
+    app.kubernetes.io/name: prometheus-node-exporter
+    app.kubernetes.io/instance: k8smon
+---
+# Source: k8s-monitoring/charts/prometheus-windows-exporter/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: k8smon-prometheus-windows-exporter
+  namespace: default
+  labels:
+    helm.sh/chart: prometheus-windows-exporter-0.1.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: metrics
+    app.kubernetes.io/part-of: prometheus-windows-exporter
+    app.kubernetes.io/name: prometheus-windows-exporter
+    app.kubernetes.io/instance: k8smon
+    app.kubernetes.io/version: "0.22.0"
+  annotations:
+    prometheus.io/scrape: "true"
+spec:
+  type: ClusterIP
+  ports:
+    - port: 9182
+      targetPort: metrics
+      protocol: TCP
+      appProtocol: http
+      name: metrics
+  selector:
+    app.kubernetes.io/name: prometheus-windows-exporter
+    app.kubernetes.io/instance: k8smon
 ---
 # Source: k8s-monitoring/charts/grafana-agent/templates/controllers/daemonset.yaml
 apiVersion: apps/v1
@@ -39728,7 +40124,7 @@ spec:
             - run
             - /etc/agent/config.river
             - --storage.path=/tmp/agent
-            - --server.http.listen-addr=0.0.0.0:8080
+            - --server.http.listen-addr=0.0.0.0:80
           env:
             - name: AGENT_MODE
               value: flow
@@ -39737,12 +40133,12 @@ spec:
                 fieldRef:
                   fieldPath: spec.nodeName
           ports:
-            - containerPort: 8080
+            - containerPort: 80
               name: http-metrics
           readinessProbe:
             httpGet:
               path: /-/ready
-              port: 8080
+              port: 80
             initialDelaySeconds: 10
             timeoutSeconds: 1
           volumeMounts:
@@ -39755,7 +40151,7 @@ spec:
           image: docker.io/jimmidyson/configmap-reload:v0.8.0
           args:
             - --volume-dir=/etc/agent
-            - --webhook-url=http://localhost:8080/-/reload
+            - --webhook-url=http://localhost:80/-/reload
           volumeMounts:
             - name: config
               mountPath: /etc/agent
@@ -39773,6 +40169,285 @@ spec:
         - name: grafana-agent-credentials
           secret:
             secretName: grafana-agent-credentials
+---
+# Source: k8s-monitoring/charts/prometheus-node-exporter/templates/daemonset.yaml
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: k8smon-prometheus-node-exporter
+  namespace: default
+  labels:
+    helm.sh/chart: prometheus-node-exporter-4.21.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: metrics
+    app.kubernetes.io/part-of: prometheus-node-exporter
+    app.kubernetes.io/name: prometheus-node-exporter
+    app.kubernetes.io/instance: k8smon
+    app.kubernetes.io/version: "1.6.0"
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: prometheus-node-exporter
+      app.kubernetes.io/instance: k8smon
+  updateStrategy:
+    rollingUpdate:
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      annotations:
+        cluster-autoscaler.kubernetes.io/safe-to-evict: "true"
+      labels:
+        helm.sh/chart: prometheus-node-exporter-4.21.0
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/component: metrics
+        app.kubernetes.io/part-of: prometheus-node-exporter
+        app.kubernetes.io/name: prometheus-node-exporter
+        app.kubernetes.io/instance: k8smon
+        app.kubernetes.io/version: "1.6.0"
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        fsGroup: 65534
+        runAsGroup: 65534
+        runAsNonRoot: true
+        runAsUser: 65534
+      serviceAccountName: k8smon-prometheus-node-exporter
+      containers:
+        - name: node-exporter
+          image: quay.io/prometheus/node-exporter:v1.6.0
+          imagePullPolicy: IfNotPresent
+          args:
+            - --path.procfs=/host/proc
+            - --path.sysfs=/host/sys
+            - --path.rootfs=/host/root
+            - --path.udev.data=/host/root/run/udev/data
+            - --web.listen-address=[$(HOST_IP)]:9100
+          securityContext:
+            readOnlyRootFilesystem: true
+          env:
+            - name: HOST_IP
+              value: 0.0.0.0
+          ports:
+            - name: metrics
+              containerPort: 9100
+              protocol: TCP
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              httpHeaders:
+              path: /
+              port: 9100
+              scheme: HTTP
+            initialDelaySeconds: 0
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              httpHeaders:
+              path: /
+              port: 9100
+              scheme: HTTP
+            initialDelaySeconds: 0
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          volumeMounts:
+            - name: proc
+              mountPath: /host/proc
+              readOnly:  true
+            - name: sys
+              mountPath: /host/sys
+              readOnly: true
+            - name: root
+              mountPath: /host/root
+              mountPropagation: HostToContainer
+              readOnly: true
+      hostNetwork: true
+      hostPID: true
+      nodeSelector:
+        kubernetes.io/os: linux
+      tolerations:
+        - effect: NoSchedule
+          operator: Exists
+      volumes:
+        - name: proc
+          hostPath:
+            path: /proc
+        - name: sys
+          hostPath:
+            path: /sys
+        - name: root
+          hostPath:
+            path: /
+---
+# Source: k8s-monitoring/charts/prometheus-windows-exporter/templates/daemonset.yaml
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: k8smon-prometheus-windows-exporter
+  namespace: default
+  labels:
+    helm.sh/chart: prometheus-windows-exporter-0.1.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: metrics
+    app.kubernetes.io/part-of: prometheus-windows-exporter
+    app.kubernetes.io/name: prometheus-windows-exporter
+    app.kubernetes.io/instance: k8smon
+    app.kubernetes.io/version: "0.22.0"
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: prometheus-windows-exporter
+      app.kubernetes.io/instance: k8smon
+  updateStrategy:
+    rollingUpdate:
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      annotations:
+        cluster-autoscaler.kubernetes.io/safe-to-evict: "true"
+      labels:
+        helm.sh/chart: prometheus-windows-exporter-0.1.0
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/component: metrics
+        app.kubernetes.io/part-of: prometheus-windows-exporter
+        app.kubernetes.io/name: prometheus-windows-exporter
+        app.kubernetes.io/instance: k8smon
+        app.kubernetes.io/version: "0.22.0"
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        windowsOptions:
+          hostProcess: true
+          runAsUserName: NT AUTHORITY\system
+      initContainers:
+        - name: configure-firewall
+          image: ghcr.io/prometheus-community/windows-exporter:0.22.0
+          command: [ "powershell" ]
+          args: [ "New-NetFirewallRule", "-DisplayName", "'windows-exporter'", "-Direction", "inbound", "-Profile", "Any", "-Action", "Allow", "-LocalPort", "9182", "-Protocol", "TCP" ]
+      serviceAccountName: k8smon-prometheus-windows-exporter
+      containers:
+        - name: windows-exporter
+          image: ghcr.io/prometheus-community/windows-exporter:0.22.0
+          imagePullPolicy: IfNotPresent
+          args:
+            - --config.file=%CONTAINER_SANDBOX_MOUNT_POINT%/config.yml
+            - --collector.textfile.directory=%CONTAINER_SANDBOX_MOUNT_POINT%
+            - --web.listen-address=:9182
+          env:
+          ports:
+            - name: metrics
+              containerPort: 9182
+              protocol: TCP
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              httpHeaders:
+              path: /
+              port: 9182
+              scheme: HTTP
+            initialDelaySeconds: 0
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              httpHeaders:
+              path: /
+              port: 9182
+              scheme: HTTP
+            initialDelaySeconds: 0
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          volumeMounts:
+            - name: config
+              mountPath: /config.yml
+              subPath: config.yml
+      hostNetwork: true
+      hostPID: true
+      nodeSelector:
+        kubernetes.io/os: windows
+      tolerations:
+        - effect: NoSchedule
+          operator: Exists
+      volumes:
+        - name: config
+          configMap:
+            name: k8smon-prometheus-windows-exporter
+---
+# Source: k8s-monitoring/charts/kube-state-metrics/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: k8smon-kube-state-metrics
+  namespace: default
+  labels:    
+    helm.sh/chart: kube-state-metrics-5.10.1
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: metrics
+    app.kubernetes.io/part-of: kube-state-metrics
+    app.kubernetes.io/name: kube-state-metrics
+    app.kubernetes.io/instance: k8smon
+    app.kubernetes.io/version: "2.9.2"
+spec:
+  selector:
+    matchLabels:      
+      app.kubernetes.io/name: kube-state-metrics
+      app.kubernetes.io/instance: k8smon
+  replicas: 1
+  template:
+    metadata:
+      labels:        
+        helm.sh/chart: kube-state-metrics-5.10.1
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/component: metrics
+        app.kubernetes.io/part-of: kube-state-metrics
+        app.kubernetes.io/name: kube-state-metrics
+        app.kubernetes.io/instance: k8smon
+        app.kubernetes.io/version: "2.9.2"
+    spec:
+      hostNetwork: false
+      serviceAccountName: k8smon-kube-state-metrics
+      securityContext:
+        fsGroup: 65534
+        runAsGroup: 65534
+        runAsNonRoot: true
+        runAsUser: 65534
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: kube-state-metrics
+        args:
+        - --port=8080
+        - --resources=certificatesigningrequests,configmaps,cronjobs,daemonsets,deployments,endpoints,horizontalpodautoscalers,ingresses,jobs,leases,limitranges,mutatingwebhookconfigurations,namespaces,networkpolicies,nodes,persistentvolumeclaims,persistentvolumes,poddisruptionbudgets,pods,replicasets,replicationcontrollers,resourcequotas,secrets,services,statefulsets,storageclasses,validatingwebhookconfigurations,volumeattachments
+        imagePullPolicy: IfNotPresent
+        image: registry.k8s.io/kube-state-metrics/kube-state-metrics:v2.9.2
+        ports:
+        - containerPort: 8080
+          name: "http"
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8080
+          initialDelaySeconds: 5
+          timeoutSeconds: 5
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 8080
+          initialDelaySeconds: 5
+          timeoutSeconds: 5
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
 ---
 # Source: k8s-monitoring/charts/opencost/templates/deployment.yaml
 apiVersion: apps/v1

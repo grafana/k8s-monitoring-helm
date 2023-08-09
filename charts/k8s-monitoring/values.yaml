@@ -12,24 +12,30 @@ externalServices:
     # TODO: Add the ability to reference a pre-existing secret
     # -- (string) (required) Prometheus host where metrics will be sent
     host: ""
-    # -- (string) (required) Prometheus basic auth username
-    username: ""
-    # -- (string) (required) Prometheus basic auth password
-    password: ""
     # -- Prometheus metrics write endpoint
     writeEndpoint: /api/prom/push
+
+    # Authenticate to Prometheus using basic authentication
+    basicAuth:
+      # -- (string) Prometheus basic auth username
+      username: ""
+      # -- (string) Prometheus basic auth password
+      password: ""
 
   # Connection information for Grafana Loki
   loki:
     # TODO: Add the ability to reference a pre-existing secret
     # -- (string) (required) Loki host where logs and events will be sent
     host: ""
-    # -- (string) (required) Loki basic auth username
-    username: ""
-    # -- (string) (required) Loki basic auth password
-    password: ""
     # -- Loki logs write endpoint
     writeEndpoint: /loki/api/v1/push
+
+    # Authenticate to Loki using basic authentication
+    basicAuth:
+      # -- (string) Loki basic auth username
+      username: ""
+      # -- (string) Loki basic auth password
+      password: ""
 
 # Settings related to capturing and forwarding metrics
 metrics:
@@ -109,6 +115,24 @@ metrics:
     - node_memory.*
     - process_cpu_seconds_total
     - process_resident_memory_bytes
+
+  # Windows Node metrics from Windows Exporter
+  windows-exporter:
+    # -- Scrape node metrics
+    enabled: false
+
+    # -- Label matchers used by the Grafana Agent to select the Windows Exporter pods
+    labelMatchers:
+      app.kubernetes.io/name: prometheus-windows-exporter.*
+
+    # -- The list of Windows Exporter metrics that will be scraped by the Agent
+    # @default -- See [Allow List for Windows Exporter](#allow-list-for-windows-exporter)
+    allowList:
+      - windows_.*
+      - node_cpu_seconds_total
+      - node_filesystem_size_bytes
+      - node_filesystem_avail_bytes
+      - container_cpu_usage_seconds_total
 
   # Cluster metrics from the Kubelet
   kubelet:
@@ -270,6 +294,8 @@ logs:
 extraConfig:
 
 # Settings for the Kube State Metrics deployment
+# You can use this sections to make modifications to the Kube State Metrics deployment.
+# See https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-state-metrics for available values.
 kube-state-metrics:
   # -- Should this helm chart deploy Kube State Metrics to the cluster.
   # Set this to false if your cluster already has Kube State Metrics, or if you
@@ -277,12 +303,33 @@ kube-state-metrics:
   enabled: true
 
 # Settings for the Node Exporter deployment
+# You can use this sections to make modifications to the Node Exporter deployment.
+# See https://github.com/prometheus-community/helm-charts/tree/main/charts/prometheus-node-exporter for available values.
 prometheus-node-exporter:
   # -- Should this helm chart deploy Node Exporter to the cluster.
   # Set this to false if your cluster already has Node Exporter, or if you do
   # not want to scrape metrics from Node Exporter.
   enabled: true
 
+# Settings for the Windows Exporter deployment
+# You can use this sections to make modifications to the Windows Exporter deployment.
+# See https://github.com/prometheus-community/helm-charts/tree/main/charts/prometheus-windows-exporter for available values.
+prometheus-windows-exporter:
+  # -- Should this helm chart deploy Windows Exporter to the cluster.
+  # Set this to false if your cluster already has Windows Exporter, or if you do
+  # not want to scrape metrics from Windows Exporter.
+  enabled: false
+
+  config: |-
+    collectors:
+      enabled: cpu,cs,container,logical_disk,memory,net,os
+    collector:
+      service:
+        services-where: "Name='containerd' or Name='kubelet'"
+
+# Settings for the Prometheus Operator CRD deployment
+# You can use this sections to make modifications to the Prometheus Operator CRD deployment.
+# See https://github.com/prometheus-community/helm-charts/tree/main/charts/prometheus-operator-crds for available values.
 prometheus-operator-crds:
   # -- Should this helm chart deploy the Prometheus Operator CRDs to the cluster.
   # Set this to false if your cluster already has the CRDs, or if you do not
@@ -290,6 +337,8 @@ prometheus-operator-crds:
   enabled: true
 
 # Settings for the OpenCost deployment
+# You can use this sections to make modifications to the OpenCost deployment.
+# See https://github.com/opencost/opencost-helm-chart for available values.
 opencost:
   # -- Should this Helm chart deploy OpenCost to the cluster.
   # Set this to false if your cluster already has OpenCost, or if you do
@@ -331,8 +380,9 @@ opencost:
       # @ignored
       enabled: false
 
-# Settings for the Grafana Agent.
-# For typical deployments, these settings can stay the way they are.
+# Settings for the Grafana Agent deployment
+# You can use this sections to make modifications to the Grafana Agent deployment.
+# See https://github.com/grafana/agent/tree/main/operations/helm/charts/grafana-agent for available values.
 # @ignored
 grafana-agent:
   agent:
@@ -348,6 +398,9 @@ grafana-agent:
         mountPath: /etc/grafana-agent-credentials
 
   controller:
+    nodeSelector:
+      kubernetes.io/os: linux
+
     # This chart creates the credentials for Prometheus and Loki. This section
     # connects those credentials into the Grafana Agent pod.
     volumes:
