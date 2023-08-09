@@ -1,6 +1,6 @@
 {{ define "prometheus-relabel" }}
 forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
-{{- if .allowList }}
+{{- if (index .Values .Name).allowList }}
 rule {
   source_labels = ["__name__"]
   regex = "up|{{ join "|" (index .Values .Name).allowList }}"
