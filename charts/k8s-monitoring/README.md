@@ -102,10 +102,10 @@ Each collector will follow a general set of configuration items.
 | metrics.cadvisor.allowList | list | See [Allow List for cAdvisor](#allow-list-for-cadvisor) | The list of cAdvisor metrics that will be scraped by the Agent |
 | metrics.cadvisor.enabled | bool | `true` | Scrape container metrics from cAdvisor |
 | metrics.cadvisor.scrape_interval | string | `""` | How frequent to to pull data from the targets See scrape_interval in https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.scrape/ |
+| metrics.cost.additionalMetricRelabelingRules | string | `""` | Extra configuration that will be added to the Grafana Agent configuration file for extra rules to apply to current metrics See https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block |
 | metrics.cost.allowList | list | See [Allow List for OpenCost](#allow-list-for-opencost) | The list of OpenCost metrics that will be scraped by the Agent |
 | metrics.cost.enabled | bool | `true` | Scrape cost metrics from OpenCost |
 | metrics.cost.labelMatchers | object | `{"app.kubernetes.io/name":"opencost"}` | Label matchers used by the Grafana Agent to select the OpenCost service |
-| metrics.cost.additionalMetricRelabelingRules | string | `""` | Extra configuration that will be added to the Grafana Agent configuration file for extra rules to apply to current metrics See https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block |
 | metrics.cost.scrape_interval | string | `""` | How frequent to to pull data from the targets See scrape_interval in https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.scrape/ |
 | metrics.enabled | bool | `true` | Capture and forward metrics |
 | metrics.kube-state-metrics.additionalMetricRelabelingRules | string | `""` | Extra configuration that will be added to the Grafana Agent configuration file for extra rules to apply to current metrics See https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block |
@@ -131,6 +131,10 @@ Each collector will follow a general set of configuration items.
 | metrics.windows-exporter.allowList | list | See [Allow List for Windows Exporter](#allow-list-for-windows-exporter) | The list of Windows Exporter metrics that will be scraped by the Agent |
 | metrics.windows-exporter.enabled | bool | `false` | Scrape node metrics |
 | metrics.windows-exporter.labelMatchers | object | `{"app.kubernetes.io/name":"prometheus-windows-exporter.*"}` | Label matchers used by the Grafana Agent to select the Windows Exporter pods |
+| opencost.enabled | bool | `true` | Should this Helm chart deploy OpenCost to the cluster. Set this to false if your cluster already has OpenCost, or if you do not want to scrape metrics from OpenCost. |
+| opencost.opencost.prometheus.external.url | string | `"https://prom.example.com/api/prom"` | The URL for Prometheus queries. It should match externalService.prometheus.host + "/api/prom" |
+| prometheus-node-exporter.enabled | bool | `true` | Should this helm chart deploy Node Exporter to the cluster. Set this to false if your cluster already has Node Exporter, or if you do not want to scrape metrics from Node Exporter. |
+| prometheus-operator-crds.enabled | bool | `true` | Should this helm chart deploy the Prometheus Operator CRDs to the cluster. Set this to false if your cluster already has the CRDs, or if you do not to have the Grafana Agent scrape metrics from PodMonitors or ServiceMonitors. |
 | metrics.windows-exporter.scrape_interval | string | `""` | How frequent to to pull data from the targets See scrape_interval in https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.scrape/ |
 | prometheus-windows-exporter.config | string | `"collectors:\n  enabled: cpu,cs,container,logical_disk,memory,net,os\ncollector:\n  service:\n    services-where: \"Name='containerd' or Name='kubelet'\""` |  |
 | prometheus-windows-exporter.enabled | bool | `false` | Should this helm chart deploy Windows Exporter to the cluster. Set this to false if your cluster already has Windows Exporter, or if you do not want to scrape metrics from Windows Exporter. |
