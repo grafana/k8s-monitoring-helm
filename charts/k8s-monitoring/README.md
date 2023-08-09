@@ -44,6 +44,39 @@ This chart simplifies the deployment of a Kubernetes monitoring infrastructure, 
 
 The Prometheus and Loki services may be hosted on the same cluster, or remotely (e.g. on Grafana Cloud).
 
+## Per collection configuration
+
+Each collector will follow a general set of configuration items.
+
+| Key | Type | Targets | Description |
+|-----|------|---------|-------------|
+| metrics.NAME.allowList | list | All | The list of NAME metrics that will be scraped by the Agent |
+| metrics.NAME.enabled | bool | All | Scrape container metrics from NAME |
+| metrics.NAME.additionalMetricRelabelingRules | string | All | The extra list of rules that will be applied after scrape |
+| metrics.NAME.scrape_interval | string | All | The extra list of rules that will be applied after scrape |
+| metrics.NAME.labelMatchers | object | Some, see below | Label matchers used by the Grafana Agent to select the NAME service |
+| metrics.NAME.service.xxx | bool | Some, see below | Specific scrape config |
+| SERVICE.enabled | bool | Some, see below | If the helm is responsible for installing the required component for NAME |
+
+
+## Maintainers
+
+| Name | Email | Url |
+| ---- | ------ | --- |
+| petewall | <pete.wall@grafana.com> |  |
+| skl | <stephen.lang@grafana.com> |  |
+
+## Requirements
+
+| Repository | Name | Version |
+|------------|------|---------|
+| https://grafana.github.io/helm-charts | grafana-agent | 0.19.0 |
+| https://opencost.github.io/opencost-helm-chart | opencost | 1.18.0 |
+| https://prometheus-community.github.io/helm-charts | kube-state-metrics | 5.10.1 |
+| https://prometheus-community.github.io/helm-charts | prometheus-node-exporter | 4.21.0 |
+| https://prometheus-community.github.io/helm-charts | prometheus-operator-crds | 5.0.0 |
+| https://prometheus-community.github.io/helm-charts | prometheus-windows-exporter | 0.1.0 |
+
 ## Values
 
 | Key | Type | Default | Description |
@@ -63,100 +96,45 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | logs.enabled | bool | `true` | Capture and forward logs |
 | logs.pod_logs.enabled | bool | `true` | Capture and forward logs from Kubernetes pods |
 | logs.pod_logs.loggingFormat | string | `"docker"` | The log parsing format. Must be one of null, 'cri', or 'docker' See documentation: https://grafana.com/docs/agent/latest/flow/reference/components/loki.process/#stagecri-block |
-| metrics.podMonitors.enabled | bool | `true` | Include service discovery for PodMonitor objects |
-| metrics.serviceMonitors.enabled | bool | `true` | Include service discovery for ServiceMonitor objects |
-| metrics.enabled | bool | `true` | Capture and forward metrics |
-| prometheus-operator-crds.enabled | bool | `true` | Should this helm chart deploy the Prometheus Operator CRDs to the cluster. Set this to false if your cluster already has the CRDs, or if you do not to have the Grafana Agent scrape metrics from PodMonitors or ServiceMonitors. |
-
-### Per collection configuration
-
-Each collector will follow a general set of configuration items.
-
-| Key | Type | Targets | Description |
-|-----|------|---------|-------------|
-| metrics.NAME.allowList | list | All | The list of NAME metrics that will be scraped by the Agent |
-| metrics.NAME.enabled | bool | All | Scrape container metrics from NAME |
-| metrics.NAME.additionalMetricRelabelingRules | string | All | The extra list of rules that will be applied after scrape |
-| metrics.NAME.scrape_interval | string | All | The extra list of rules that will be applied after scrape |
-| metrics.NAME.labelMatchers | object | Some, see below | Label matchers used by the Grafana Agent to select the NAME service |
-| metrics.NAME.service.xxx | bool | Some, see below | Specific scrape config |
-| SERVICE.enabled | bool | Some, see below | If the helm is responsible for installing the required component for NAME |
-
-### cadvisor
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
+| metrics.agent.additionalMetricRelabelingRules | string | See [Custom rules](#custom-rules) | The extra list of rules that will be applied after scrape |
+| metrics.agent.allowList | list | See [Allow List for Agent](#allow-list-for-agent) | The list of Agent metrics that will be scraped by the Agent |
+| metrics.agent.scrape_interval | string | See [scrape_interval](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.scrape/) | How frequent to to pull data from the targets |
+| metrics.cadvisor.additionalMetricRelabelingRules | string | See [Custom rules](#custom-rules) | The extra list of rules that will be applied after scrape |
 | metrics.cadvisor.allowList | list | See [Allow List for cAdvisor](#allow-list-for-cadvisor) | The list of cAdvisor metrics that will be scraped by the Agent |
 | metrics.cadvisor.enabled | bool | `true` | Scrape container metrics from cAdvisor |
-| metrics.cadvisor.additionalMetricRelabelingRules | string | See [Custom rules](#custom-rules) | The extra list of rules that will be applied after scrape |
 | metrics.cadvisor.scrape_interval | string | See [scrape_interval](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.scrape/) | How frequent to to pull data from the targets |
-
-### cost
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
 | metrics.cost.allowList | list | See [Allow List for OpenCost](#allow-list-for-opencost) | The list of OpenCost metrics that will be scraped by the Agent |
 | metrics.cost.enabled | bool | `true` | Scrape cost metrics from OpenCost |
 | metrics.cost.labelMatchers | object | `{"app.kubernetes.io/name":"opencost"}` | Label matchers used by the Grafana Agent to select the OpenCost service |
-| metrics.cost.custom_rules | string | See [Custom rules](#custom-rules) | The extra list of rules that will be applied after scrape |
+| metrics.cost.additionalMetricRelabelingRules | string | See [Custom rules](#custom-rules) | The extra list of rules that will be applied after scrape |
 | metrics.cost.scrape_interval | string | See [scrape_interval](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.scrape/) | How frequent to to pull data from the targets |
-| opencost.enabled | bool | `true` | Should this Helm chart deploy OpenCost to the cluster. Set this to false if your cluster already has OpenCost, or if you do not want to scrape metrics from OpenCost. |
-| opencost.opencost.prometheus.external.url | string | `"https://prom.example.com/api/prom"` | The URL for Prometheus queries. It should match externalService.prometheus.host + "/api/prom" |
-
-### kube-state-metrics
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| metrics.kube-state-metrics.enabled | bool | `true` | Scrape cluster object metrics from Kube State Metrics |
+| metrics.enabled | bool | `true` | Capture and forward metrics |
+| metrics.kube-state-metrics.additionalMetricRelabelingRules | string | See [Custom rules](#custom-rules) | The extra list of rules that will be applied after scrape |
 | metrics.kube-state-metrics.allowList | list | See [Allow List for Kube State Metrics](#allow-list-for-kube-state-metrics) | The list of Kube State Metrics metrics that will be scraped by the Agent |
+| metrics.kube-state-metrics.enabled | bool | `true` | Scrape cluster object metrics from Kube State Metrics |
 | metrics.kube-state-metrics.labelMatchers | object | `{"app.kubernetes.io/name":"kube-state-metrics"}` | Label matchers used by the Grafana Agent to select the Kube State Metrics service |
 | metrics.kube-state-metrics.service.isTLS | bool | `false` | Does this port use TLS? |
 | metrics.kube-state-metrics.service.port | string | `"http"` | Name of the metrics port |
-| metrics.kube-state-metrics.additionalMetricRelabelingRules | string | See [Custom rules](#custom-rules) | The extra list of rules that will be applied after scrape |
 | metrics.kube-state-metrics.scrape_interval | string | See [scrape_interval](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.scrape/) | How frequent to to pull data from the targets |
-| kube-state-metrics.enabled | bool | `true` | Should this helm chart deploy Kube State Metrics to the cluster. Set this to false if your cluster already has Kube State Metrics, or if you do not want to scrape metrics from Kube State Metrics. |
-
-### kubelet
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| metrics.kubelet.enabled | bool | `true` | Scrape cluster metrics from the Kubelet |
-| metrics.kubelet.allowList | list | See [Allow List for Kubelet](#allow-list-for-kubelet) | The list of Kubelet metrics that will be scraped by the Agent |
 | metrics.kubelet.additionalMetricRelabelingRules | string | See [Custom rules](#custom-rules) | The extra list of rules that will be applied after scrape |
+| metrics.kubelet.allowList | list | See [Allow List for Kubelet](#allow-list-for-kubelet) | The list of Kubelet metrics that will be scraped by the Agent |
+| metrics.kubelet.enabled | bool | `true` | Scrape cluster metrics from the Kubelet |
 | metrics.kubelet.scrape_interval | string | See [scrape_interval](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.scrape/) | How frequent to to pull data from the targets |
-
-### agent
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| metrics.agent.allowList | list | See [Allow List for Agent](#allow-list-for-agent) | The list of Agent metrics that will be scraped by the Agent |
-| metrics.agent.additionalMetricRelabelingRules | string | See [Custom rules](#custom-rules) | The extra list of rules that will be applied after scrape |
-| metrics.agent.scrape_interval | string | See [scrape_interval](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.scrape/) | How frequent to to pull data from the targets |
-
-### node-exporter
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| metrics.node-exporter.enabled | bool | `true` | Scrape node metrics |
+| metrics.node-exporter.additionalMetricRelabelingRules | string | See [Custom rules](#custom-rules) | The extra list of rules that will be applied after scrape |
 | metrics.node-exporter.allowList | list | See [Allow List for Node Exporter](#allow-list-for-node-exporter) | The list of Node Exporter metrics that will be scraped by the Agent |
+| metrics.node-exporter.enabled | bool | `true` | Scrape node metrics |
 | metrics.node-exporter.labelMatchers | object | `{"app.kubernetes.io/name":"prometheus-node-exporter.*"}` | Label matchers used by the Grafana Agent to select the Node exporter pods |
 | metrics.node-exporter.service.isTLS | bool | `false` | Does this port use TLS? |
-| metrics.node-exporter.additionalMetricRelabelingRules | string | See [Custom rules](#custom-rules) | The extra list of rules that will be applied after scrape |
 | metrics.node-exporter.scrape_interval | string | See [scrape_interval](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.scrape/) | How frequent to to pull data from the targets |
-| prometheus-node-exporter.enabled | bool | `true` | Should this helm chart deploy Node Exporter to the cluster. Set this to false if your cluster already has Node Exporter, or if you do not want to scrape metrics from Node Exporter. |
-
-### windows-exporter
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-
+| metrics.podMonitors.enabled | bool | `true` | Include service discovery for PodMonitor objects |
+| metrics.serviceMonitors.enabled | bool | `true` | Include service discovery for ServiceMonitor objects |
+| metrics.windows-exporter.additionalMetricRelabelingRules | string | See [Custom rules](#custom-rules) | The extra list of rules that will be applied after scrape |
 | metrics.windows-exporter.allowList | list | See [Allow List for Windows Exporter](#allow-list-for-windows-exporter) | The list of Windows Exporter metrics that will be scraped by the Agent |
 | metrics.windows-exporter.enabled | bool | `false` | Scrape node metrics |
 | metrics.windows-exporter.labelMatchers | object | `{"app.kubernetes.io/name":"prometheus-windows-exporter.*"}` | Label matchers used by the Grafana Agent to select the Windows Exporter pods |
-| metrics.windows-exporter.additionalMetricRelabelingRules | string | See [Custom rules](#custom-rules) | The extra list of rules that will be applied after scrape |
+| metrics.windows-exporter.scrape_interval | string | See [scrape_interval](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.scrape/) | How frequent to to pull data from the targets |
 | prometheus-windows-exporter.config | string | `"collectors:\n  enabled: cpu,cs,container,logical_disk,memory,net,os\ncollector:\n  service:\n    services-where: \"Name='containerd' or Name='kubelet'\""` |  |
 | prometheus-windows-exporter.enabled | bool | `false` | Should this helm chart deploy Windows Exporter to the cluster. Set this to false if your cluster already has Windows Exporter, or if you do not want to scrape metrics from Windows Exporter. |
-
 
 ## Customizing the configuration
 
@@ -212,24 +190,6 @@ For an example values file and generated output, see [this example](../../exampl
 The default config can deploy the CRDs for Prometheus Operator, and will add support for `PodMonitor` and `ServiceMonitor` objects.
 
 Simply deploy a PodMonitor or a ServiceMonitor in the same namespace as the Grafana Agent and it will discover it and take the appropriate action.
-
-## Maintainers
-
-| Name | Email | Url |
-| ---- | ------ | --- |
-| petewall | <pete.wall@grafana.com> |  |
-| skl | <stephen.lang@grafana.com> |  |
-
-## Dependencies
-
-| Repository | Name | Version |
-|------------|------|---------|
-| https://grafana.github.io/helm-charts | grafana-agent | 0.19.0 |
-| https://opencost.github.io/opencost-helm-chart | opencost | 1.18.0 |
-| https://prometheus-community.github.io/helm-charts | kube-state-metrics | 5.10.1 |
-| https://prometheus-community.github.io/helm-charts | prometheus-node-exporter | 4.21.0 |
-| https://prometheus-community.github.io/helm-charts | prometheus-operator-crds | 5.0.0 |
-| https://prometheus-community.github.io/helm-charts | prometheus-windows-exporter | 0.1.0 |
 
 ## Platform-specific instructions
 
