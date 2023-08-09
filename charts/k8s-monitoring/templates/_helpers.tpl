@@ -1,5 +1,4 @@
 {{ define "prometheus-relabel" }}
-forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
 {{- if (index .Values .Name).allowList }}
 rule {
   source_labels = ["__name__"]
@@ -8,6 +7,7 @@ rule {
 }
 {{- end }}
 {{- (index .Values .Name).additionalMetricRelabelingRules }}
+forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
 {{- end }}
 
 {{ define "prometheus-collect" -}}
