@@ -64,6 +64,87 @@ prometheus.relabel "windows_exporter" {
     replacement = "node_filesystem_avail_bytes"
     target_label = "__name__"
   }
+  //Bug in windows_exporter: Missing pod name in metric
+  rule {
+    source_labels = ["__name__"]
+    regex = "windows_container_memory_usage_commit_peak_bytes"
+    replacement = "container_memory_rss"
+    target_label = "__name__"
+  }
+  //Bug in windows_exporter: Missing pod name in metric
+  rule {
+    source_labels = ["__name__"]
+    regex = "windows_container_memory_usage_private_working_set_bytes"
+    replacement = "container_memory_working_set_bytes"
+    target_label = "__name__"
+  }
+  //Bug in windows_exporter: Missing pod name in metric
+  rule {
+    source_labels = ["__name__"]
+    regex = "windows_container_cpu_usage_seconds_total"
+    replacement = "container_cpu_usage_seconds_total"
+    target_label = "__name__"
+  }
+  rule {
+    source_labels = ["__name__"]
+    regex = "windows_cs_hostname"
+    replacement = "kubelet_node_name"
+    target_label = "__name__"
+  }
+  rule {
+    source_labels = ["__name__"]
+    regex = "windows_memory_available_bytes"
+    replacement = "node_memory_MemFree_bytes"
+    target_label = "__name__"
+  }
+  rule {
+    source_labels = ["__name__"]
+    regex = "windows_os_physical_memory_free_bytes"
+    replacement = "node_memory_MemAvailable_bytes"
+    target_label = "__name__"
+  }
+  rule {
+    source_labels = ["__name__"]
+    regex = "windows_cs_physical_memory_bytes"
+    replacement = "node_memory_MemTotal_bytes"
+    target_label = "__name__"
+  }
+  rule {
+    source_labels = ["__name__"]
+    regex = "windows_memory_cache_bytes"
+    replacement = "node_memory_Cached_bytes"
+    target_label = "__name__"
+  }
+  rule {
+    source_labels = ["__name__"]
+    regex = "windows_memory_commit_limit"
+    replacement = "node_memory_CommitLimit_bytes"
+    target_label = "__name__"
+  }
+  rule {
+    source_labels = ["__name__"]
+    regex = "windows_memory_committed_bytes"
+    replacement = "node_memory_Committed_AS_bytes"
+    target_label = "__name__"
+  }
+  rule {
+    source_labels = ["__name__"]
+    regex = "windows_os_paging_free_bytes"
+    replacement = "node_memory_SwapFree_bytes"
+    target_label = "__name__"
+  }
+  rule {
+    source_labels = ["__name__"]
+    regex = "windows_os_paging_limit_bytes"
+    replacement = "node_memory_SwapTotal_bytes"
+    target_label = "__name__"
+  }
+  rule {
+    source_labels = ["__name__"]
+    regex = "windows_memory_modified_page_list_bytes"
+    replacement = "node_memory_Dirty_bytes"
+    target_label = "__name__"
+  }
 {{- if (index .Values.metrics "windows-exporter").allowList }}
   rule {
     source_labels = ["__name__"]
