@@ -1,4 +1,4 @@
-{{- if .Values.pod_logs.enabled }}
+{{- if and .Values.logs.enabled .Values.logs.pod_logs.enabled }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -7,6 +7,6 @@ metadata:
 data:
   config.river: |-
 {{- include "agent.config.pods" . | indent 4}}
-{{- include "agent.config.pod_logs" . | indent 4}}
+{{- include "agent.config.logs.pod_logs" . | indent 4}}
 {{- include "agent.config.loki" . | indent 4 }}
 {{- end }}

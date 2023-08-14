@@ -48,8 +48,8 @@ data:
 
   {{- include "agent.config.prometheus" . | indent 4 }}
 
-{{- if .Values.cluster_events.enabled }}
-  {{- include "agent.config.cluster_events" . | indent 4}}
+{{- if and .Values.logs.enabled .Values.logs.cluster_events.enabled }}
+  {{- include "agent.config.logs.cluster_events" . | indent 4}}
   {{- include "agent.config.loki" . | indent 4 }}
 {{- end }}
 {{- end }}
