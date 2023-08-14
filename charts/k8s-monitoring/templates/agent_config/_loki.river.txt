@@ -15,17 +15,26 @@ local.file "loki_password" {
   is_secret = true
 }
 {{- end }}
+{{ if .tenantId }}
+local.file "loki_tenantid" {
+  filename  = "/etc/grafana-agent-credentials/loki_tenantId"
+  is_secret = true
+}
+{{- end }}
 
 loki.write "grafana_cloud_loki" {
   endpoint {
     url = nonsensitive(local.file.loki_host.content) + "{{ .writeEndpoint }}"
+{{ if .tenantId }}
+    tenant_id = local.file.loki_tenantid.content
+{{- end }}
 {{ if .basicAuth }}
     basic_auth {
       {{ if .basicAuth.username }}username = local.file.loki_username.content{{ end }}
       {{ if .basicAuth.password }}password = local.file.loki_password.content{{ end }}
     }
-  }
 {{- end }}
+  }
 }
 {{- end }}
 {{ end }}

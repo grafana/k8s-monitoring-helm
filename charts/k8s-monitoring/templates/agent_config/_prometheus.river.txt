@@ -15,17 +15,26 @@ local.file "prometheus_password" {
   is_secret = true
 }
 {{- end }}
+{{ if .basicAuth.password }}
+local.file "prometheus_tenantid" {
+  filename  = "/etc/grafana-agent-credentials/prometheus_tenantId"
+  is_secret = true
+}
+{{- end }}
 
 prometheus.remote_write "grafana_cloud_prometheus" {
   endpoint {
     url = nonsensitive(local.file.prometheus_host.content) + "{{ .writeEndpoint }}"
+{{ if .tenantId }}
+    headers = { "X-Scope-OrgID" = local.file.prometheus_tenantid.content }
+{{- end }}
 {{ if .basicAuth }}
     basic_auth {
       {{ if .basicAuth.username }}username = local.file.prometheus_username.content{{ end }}
       {{ if .basicAuth.password }}password = local.file.prometheus_password.content{{ end }}
     }
-  }
 {{- end }}
+  }
 }
 {{- end }}
 {{ end }}
