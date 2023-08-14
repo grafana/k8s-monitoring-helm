@@ -430,10 +430,14 @@ grafana-agent-logs:
     nodeSelector:
       kubernetes.io/os: linux
 
+    tolerations:
+      - effect: NoSchedule
+        operator: Exists
+
     # This chart creates the credentials for Prometheus and Loki. This section
     # connects those credentials into the Grafana Agent pod.
     volumes:
       extra:
-        - name: grafana-agent-credentials
-          secret:
-            secretName: grafana-agent-credentials
+      - name: grafana-agent-credentials
+        secret:
+          secretName: grafana-agent-credentials
