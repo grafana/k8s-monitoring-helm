@@ -7,12 +7,10 @@ usage() {
 }
 
 export AGENT_MODE=flow
-configMapName=k8smon-grafana-agent
-
 for file in "$@";
 do
   echo "Linting Agent config in ${file}...";
-  if ! grafana-agent fmt <(yq -r "select(.metadata.name==\"${configMapName}\") | .data[\"config.river\"] | select( . != null )" "${file}") > /dev/null; then
+  if ! grafana-agent fmt "${file}" > /dev/null; then
     exit 1
   fi
 done
