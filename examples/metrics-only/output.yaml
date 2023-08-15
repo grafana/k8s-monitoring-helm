@@ -330,11 +330,21 @@ data:
         
     // PodMonitor
     prometheus.operator.podmonitors "pod_monitors" {
+      rule {
+        source_labels = ["__name__"]
+        replacement   = "metrics-only-test"
+        target_label  = "cluster"
+      }
       forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
     }
         
     // ServiceMonitor
     prometheus.operator.servicemonitors "service_monitors" {
+      rule {
+        source_labels = ["__name__"]
+        replacement   = "metrics-only-test"
+        target_label  = "cluster"
+      }
       forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
     }
         
