@@ -253,31 +253,21 @@ prometheus.relabel "opencost" {
     
 // PodMonitor
 prometheus.operator.podmonitors "pod_monitors" {
-  forward_to = [prometheus.relabel.pod_monitors.receiver]
-}
-
-prometheus.relabel "pod_monitors" {
   rule {
     source_labels = ["__name__"]
     replacement   = "openshift-compatible-test"
     target_label  = "cluster"
   }
-
   forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
 }
     
 // ServiceMonitor
 prometheus.operator.servicemonitors "service_monitors" {
-  forward_to = [prometheus.relabel.service_monitors.receiver]
-}
-
-prometheus.relabel "service_monitors" {
   rule {
     source_labels = ["__name__"]
     replacement   = "openshift-compatible-test"
     target_label  = "cluster"
   }
-
   forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
 }
     
