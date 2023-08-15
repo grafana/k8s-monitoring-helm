@@ -35,9 +35,11 @@ If you make changes to this chart, please ensure that you've done the following:
 
 Required tools:
 
+* [chart-testing](https://github.com/helm/chart-testing)
 * [Helm](https://helm.sh/docs/intro/install/)
 * [helm-docs](https://github.com/norwoodj/helm-docs)
 * [Grafana Agent](https://github.com/grafana/agent) (used for linting the generated config files)
+* [yamllint](https://yamllint.readthedocs.io/en/stable/index.html)
 * [yq](https://pypi.org/project/yq/)
 
 ## Links

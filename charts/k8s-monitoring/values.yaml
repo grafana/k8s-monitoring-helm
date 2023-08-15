@@ -260,7 +260,7 @@ logs:
     # See documentation: https://grafana.com/docs/agent/latest/flow/reference/components/loki.process/#stagecri-block
     loggingFormat: docker
 
-  # Settings for scraping cluster evenrts
+  # Settings for scraping Kubernetes cluster events
   cluster_events:
     # -- Scrape Kubernetes cluster events
     enabled: true
@@ -298,6 +298,9 @@ kube-state-metrics:
   # Set this to false if your cluster already has Kube State Metrics, or if you
   # do not want to scrape metrics from Kube State Metrics.
   enabled: true
+  # @ignored
+  nodeSelector:
+    kubernetes.io/os: linux
 
 # Settings for the Node Exporter deployment
 # You can use this sections to make modifications to the Node Exporter deployment.
@@ -307,6 +310,9 @@ prometheus-node-exporter:
   # Set this to false if your cluster already has Node Exporter, or if you do
   # not want to scrape metrics from Node Exporter.
   enabled: true
+  # @ignored
+  nodeSelector:
+    kubernetes.io/os: linux
 
 # Settings for the Windows Exporter deployment
 # You can use this sections to make modifications to the Windows Exporter deployment.
@@ -376,6 +382,10 @@ opencost:
     ui:
       # @ignored
       enabled: false
+    # @ignored
+    nodeSelector:
+      kubernetes.io/os: linux
+
 
 # Settings for the Grafana Agent deployment
 # You can use this sections to make modifications to the Grafana Agent deployment.
@@ -387,6 +397,9 @@ grafana-agent:
     # not need to.
     configMap: {create: false}
 
+    clustering:
+      enabled: true
+
     # This chart creates the credentials for Prometheus and Loki. This section
     # mounts those credentials into the Grafana Agent container.
     mounts:
@@ -395,8 +408,46 @@ grafana-agent:
         mountPath: /etc/grafana-agent-credentials
 
   controller:
+    type: statefulset
     nodeSelector:
       kubernetes.io/os: linux
+
+    # This chart creates the credentials for Prometheus and Loki. This section
+    # connects those credentials into the Grafana Agent pod.
+    volumes:
+      extra:
+      - name: grafana-agent-credentials
+        secret:
+          secretName: grafana-agent-credentials
+
+# Settings for the Grafana Agent deployment
+# You can use this sections to make modifications to the Grafana Agent deployment.
+# See https://github.com/grafana/agent/tree/main/operations/helm/charts/grafana-agent for available values.
+# @ignored
+grafana-agent-logs:
+  agent:
+    # This chart is creating the configuration, so the grafana-agent chart does
+    # not need to.
+    configMap:
+      create: false
+
+    # This chart creates the credentials for Prometheus and Loki. This section
+    # mounts those credentials into the Grafana Agent container.
+    mounts:
+      varlog: true
+      dockercontainers: true
+      extra:
+        - name: grafana-agent-credentials
+          mountPath: /etc/grafana-agent-credentials
+
+  controller:
+    type: daemonset
+    nodeSelector:
+      kubernetes.io/os: linux
+
+    tolerations:
+      - effect: NoSchedule
+        operator: Exists
 
     # This chart creates the credentials for Prometheus and Loki. This section
     # connects those credentials into the Grafana Agent pod.
