@@ -128,14 +128,14 @@ The flow component can re-use any of the existing components in the generated ou
 
 Example:
 
-In this example, the Agent will find a service named `my-webapp-metrics` with the label `kubernetes.service.label/app=my-webapp`, then apply the cluster label, and send those metrics to Grafana Cloud.
+In this example, the Agent will find a service named `my-webapp-metrics` with the label `app.kubernetes.io/name=my-webapp`, scrape them for Prometheus metrics, and send those metrics to Grafana Cloud.
 
 ```yaml
 extraConfig: |-
   discovery.relabel "my_webapp" {
     targets = discovery.kubernetes.services.targets
     rule {
-      source_labels = ["__meta_kubernetes_service_label_app"]
+      source_labels = ["__meta_kubernetes_service_label_app_kubernetes_io_name"]
       regex = "my-webapp"
       action = "keep"
     }
