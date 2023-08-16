@@ -49,12 +49,6 @@ loki.source.file "pod_logs" {
 }
 
 loki.process "pod_logs" {
-  stage.static_labels {
-    values = {
-      cluster = {{ required ".Values.cluster.name is a required value. Please set it and try again." .Values.cluster.name | quote }},
-    }
-  }
-
   stage.{{- .Values.logs.pod_logs.loggingFormat }} {}
   forward_to = [loki.write.grafana_cloud_loki.receiver]
 }

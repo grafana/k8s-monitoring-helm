@@ -12,11 +12,6 @@ discovery.relabel "cadvisor" {
     replacement   = "/api/v1/nodes/${1}/proxy/metrics/cadvisor"
     target_label  = "__metrics_path__"
   }
-  rule {
-    source_labels = ["__name__"]
-    replacement   = {{ required ".Values.cluster.name is a required value. Please set it and try again." .Values.cluster.name | quote }}
-    target_label  = "cluster"
-  }
 }
 
 prometheus.scrape "cadvisor" {

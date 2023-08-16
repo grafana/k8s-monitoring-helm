@@ -52,12 +52,6 @@ loki.source.file "pod_logs" {
 }
 
 loki.process "pod_logs" {
-  stage.static_labels {
-    values = {
-      cluster = "custom-config-test",
-    }
-  }
-
   stage.docker {}
   forward_to = [loki.write.grafana_cloud_loki.receiver]
 }
@@ -84,5 +78,8 @@ loki.write "grafana_cloud_loki" {
       username = local.file.loki_username.content
       password = local.file.loki_password.content
     }
+  }
+  external_labels {
+    cluster = "custom-config-test"
   }
 }

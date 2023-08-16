@@ -158,11 +158,6 @@ data:
         regex = "http-metrics"
         action = "keep"
       }
-      rule {
-        source_labels = ["__name__"]
-        replacement   = "default-values-test"
-        target_label  = "cluster"
-      }
     }
     
     prometheus.scrape "agent" {
@@ -192,11 +187,6 @@ data:
         regex         = "(.+)"
         replacement   = "/api/v1/nodes/${1}/proxy/metrics"
         target_label  = "__metrics_path__"
-      }
-      rule {
-        source_labels = ["__name__"]
-        replacement   = "default-values-test"
-        target_label  = "cluster"
       }
     }
     
@@ -232,11 +222,6 @@ data:
         regex         = "(.+)"
         replacement   = "/api/v1/nodes/${1}/proxy/metrics/cadvisor"
         target_label  = "__metrics_path__"
-      }
-      rule {
-        source_labels = ["__name__"]
-        replacement   = "default-values-test"
-        target_label  = "cluster"
       }
     }
     
@@ -278,11 +263,6 @@ data:
         regex = "http"
         action = "keep"
       }
-      rule {
-        source_labels = ["__name__"]
-        replacement   = "default-values-test"
-        target_label  = "cluster"
-      }
     }
     
     prometheus.scrape "kube_state_metrics" {
@@ -317,11 +297,6 @@ data:
         source_labels = ["__meta_kubernetes_pod_node_name"]
         action = "replace"
         target_label = "instance"
-      }
-      rule {
-        source_labels = ["__name__"]
-        replacement   = "default-values-test"
-        target_label  = "cluster"
       }
     }
     
@@ -362,11 +337,6 @@ data:
         source_labels = ["__meta_kubernetes_pod_node_name"]
         action = "replace"
         target_label = "instance"
-      }
-      rule {
-        source_labels = ["__name__"]
-        replacement   = "default-values-test"
-        target_label  = "cluster"
       }
     }
     
@@ -427,11 +397,6 @@ data:
         regex = "http"
         action = "keep"
       }
-      rule {
-        source_labels = ["__name__"]
-        replacement   = "default-values-test"
-        target_label  = "cluster"
-      }
     }
     
     prometheus.scrape "opencost" {
@@ -451,21 +416,11 @@ data:
         
     // PodMonitor
     prometheus.operator.podmonitors "pod_monitors" {
-      rule {
-        source_labels = ["__name__"]
-        replacement   = "default-values-test"
-        target_label  = "cluster"
-      }
       forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
     }
         
     // ServiceMonitor
     prometheus.operator.servicemonitors "service_monitors" {
-      rule {
-        source_labels = ["__name__"]
-        replacement   = "default-values-test"
-        target_label  = "cluster"
-      }
       forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
     }
         
@@ -492,21 +447,14 @@ data:
           password = local.file.prometheus_password.content
         }
       }
+      external_labels {
+        cluster = "default-values-test"
+      }
     }
         
     // Cluster Events
     loki.source.kubernetes_events "cluster_events" {
       job_name   = "integrations/kubernetes/eventhandler"
-      forward_to = [loki.process.cluster_events.receiver]
-    }
-    
-    loki.process "cluster_events" {
-      stage.static_labels {
-        values = {
-          cluster = "default-values-test",
-        }
-      }
-    
       forward_to = [loki.write.grafana_cloud_loki.receiver]
     }
         
@@ -532,6 +480,9 @@ data:
           username = local.file.loki_username.content
           password = local.file.loki_password.content
         }
+      }
+      external_labels {
+        cluster = "default-values-test"
       }
     }
 ---
@@ -597,12 +548,6 @@ data:
     }
     
     loki.process "pod_logs" {
-      stage.static_labels {
-        values = {
-          cluster = "default-values-test",
-        }
-      }
-    
       stage.docker {}
       forward_to = [loki.write.grafana_cloud_loki.receiver]
     }
@@ -629,6 +574,9 @@ data:
           username = local.file.loki_username.content
           password = local.file.loki_password.content
         }
+      }
+      external_labels {
+        cluster = "default-values-test"
       }
     }
 ---
