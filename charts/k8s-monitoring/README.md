@@ -67,6 +67,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
+| cluster.kubernetesAPIService | string | `"kubernetes.default.svc.cluster.local:443"` | The Kubernetes service. Change this if your cluster DNS is configured differently than the default. |
 | cluster.name | string | `""` | (required) The name of this cluster, which will be set in all labels |
 | externalServices.loki.basicAuth.password | string | `""` | Loki basic auth password |
 | externalServices.loki.basicAuth.username | string | `""` | Loki basic auth username |
