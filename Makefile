@@ -22,6 +22,9 @@ lint-config: scripts/lint-configs.sh
 test: scripts/test-runner.sh lint-chart lint-config
 	./scripts/test-runner.sh --show-diffs
 
+install-deps: scripts/install-deps.sh
+	./scripts/install-deps.sh
+
 %/output.yaml: %/values.yaml
 	helm template k8smon charts/k8s-monitoring -f $< > $@
 

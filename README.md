@@ -42,6 +42,8 @@ Required tools:
 * [yamllint](https://yamllint.readthedocs.io/en/stable/index.html)
 * [yq](https://pypi.org/project/yq/)
 
+Run `make install-deps` to install all requirements (Mac supported only at the moment using Brew).
+
 ## Links
 * [Kubernetes Monitoring on Grafana Cloud](https://grafana.com/docs/grafana-cloud/kubernetes-monitoring/)
 * [Grafana Agent](https://github.com/grafana/agent)
