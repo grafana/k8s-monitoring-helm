@@ -1,11 +1,6 @@
 {{ define "agent.config.pod_monitors" }}
 // PodMonitor
 prometheus.operator.podmonitors "pod_monitors" {
-  rule {
-    source_labels = ["__name__"]
-    replacement   = {{ required ".Values.cluster.name is a required value. Please set it and try again." .Values.cluster.name | quote }}
-    target_label  = "cluster"
-  }
   forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
 }
 {{ end }}

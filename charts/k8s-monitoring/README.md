@@ -1,6 +1,6 @@
 # k8s-monitoring
 
-![Version: 0.1.1](https://img.shields.io/badge/Version-0.1.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.2.0](https://img.shields.io/badge/AppVersion-1.2.0-informational?style=flat-square)
+![Version: 0.1.2](https://img.shields.io/badge/Version-0.1.2-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.2.0](https://img.shields.io/badge/AppVersion-1.2.0-informational?style=flat-square)
 
 A Helm chart for gathering, scraping, and forwarding Kubernetes infrastructure metrics and logs to a Grafana Stack.
 
@@ -76,7 +76,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | externalServices.prometheus.basicAuth.username | string | `""` | Prometheus basic auth username |
 | externalServices.prometheus.host | string | `""` | (required) Prometheus host where metrics will be sent |
 | externalServices.prometheus.writeEndpoint | string | `"/api/prom/push"` | Prometheus metrics write endpoint |
-| extraConfig | string | `nil` | Extra configuration that will be added to the Grafana Agent configuration file. <details> <summary>+ Example</summary> An example extraConfig to discover and scrape metrics from a service: ```text discovery.relabel "my-service" {   targets = discovery.kubernetes.services.targets   rule {     source_labels = ["__meta_kubernetes_service_label_app_kubernetes_io_name"]     regex = "my-service"     action = "keep"   } }  prometheus.scrape "my-service" {   job_name   = "integrations/my-service"   targets    = discovery.relabel.my-service.output   forward_to = [prometheus.relabel.add_cluster_label.receiver] } ``` Note: "discovery.kubernetes.services" and       "prometheus.relabel.add_cluster_label" are pre-defined by this chart. </details> |
+| extraConfig | string | `nil` | Extra configuration that will be added to the Grafana Agent configuration file. See [Adding custom Flow configuration](#adding-custom-flow-configuration) for an example. |
 | kube-state-metrics.enabled | bool | `true` | Should this helm chart deploy Kube State Metrics to the cluster. Set this to false if your cluster already has Kube State Metrics, or if you do not want to scrape metrics from Kube State Metrics. |
 | logs.cluster_events.enabled | bool | `true` | Scrape Kubernetes cluster events |
 | logs.enabled | bool | `true` | Capture and forward logs |
@@ -128,14 +128,14 @@ The flow component can re-use any of the existing components in the generated ou
 
 Example:
 
-In this example, the Agent will find a service named `my-webapp-metrics` with the label `kubernetes.service.label/app=my-webapp`, then apply the cluster label, and send those metrics to Grafana Cloud.
+In this example, the Agent will find a service named `my-webapp-metrics` with the label `app.kubernetes.io/name=my-webapp`, scrape them for Prometheus metrics, and send those metrics to Grafana Cloud.
 
 ```yaml
 extraConfig: |-
   discovery.relabel "my_webapp" {
     targets = discovery.kubernetes.services.targets
     rule {
-      source_labels = ["__meta_kubernetes_service_label_app"]
+      source_labels = ["__meta_kubernetes_service_label_app_kubernetes_io_name"]
       regex = "my-webapp"
       action = "keep"
     }
@@ -143,11 +143,6 @@ extraConfig: |-
       source_labels = ["__meta_kubernetes_service_name"]
       regex = "my-webapp-metrics"
       action = "keep"
-    }
-    rule {
-      source_labels = ["__name__"]
-      replacement   = "my-cluster"
-      target_label  = "cluster"
     }
   }
 
