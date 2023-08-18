@@ -30,8 +30,8 @@ If you make changes to this chart, please ensure that you've done the following:
   * `cd charts/k8s-monitoring; helm-docs`
 * Check for updates to the example outputs
   * `make test`
-  * If changes are acceptable, regenerate the outputs:
-  * `make regenerate-example-outputs`
+  * If changes are acceptable, regenerate the outputs and re-test:
+  * `make regenerate-example-outputs test`
 
 Required tools:
 
