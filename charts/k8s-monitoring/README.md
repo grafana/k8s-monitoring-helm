@@ -71,10 +71,12 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | cluster.name | string | `""` | (required) The name of this cluster, which will be set in all labels |
 | externalServices.loki.basicAuth.password | string | `""` | Loki basic auth password |
 | externalServices.loki.basicAuth.username | string | `""` | Loki basic auth username |
+| externalServices.loki.externalLabels | object | `{}` |  |
 | externalServices.loki.host | string | `""` | (required) Loki host where logs and events will be sent |
 | externalServices.loki.writeEndpoint | string | `"/loki/api/v1/push"` | Loki logs write endpoint |
 | externalServices.prometheus.basicAuth.password | string | `""` | Prometheus basic auth password |
 | externalServices.prometheus.basicAuth.username | string | `""` | Prometheus basic auth username |
+| externalServices.prometheus.externalLabels | object | `{}` |  |
 | externalServices.prometheus.host | string | `""` | (required) Prometheus host where metrics will be sent |
 | externalServices.prometheus.writeEndpoint | string | `"/api/prom/push"` | Prometheus metrics write endpoint |
 | extraConfig | string | `nil` | Extra configuration that will be added to the Grafana Agent configuration file. See [Adding custom Flow configuration](#adding-custom-flow-configuration) for an example. |
