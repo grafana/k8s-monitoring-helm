@@ -26,7 +26,7 @@ discovery.relabel "node_exporter" {
 prometheus.scrape "node_exporter" {
   job_name   = "integrations/node_exporter"
   targets  = discovery.relabel.node_exporter.output
-{{- if (index .Values.metrics "node-exporter").allowList }}
+{{- if or (gt (len (index .Values.metrics "node-exporter").allowList) 0) (index .Values.metrics "node-exporter").service.useFullAllowList}}
   forward_to = [prometheus.relabel.node_exporter.receiver]
 {{- else }}
   forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
@@ -40,12 +40,22 @@ prometheus.scrape "node_exporter" {
   }
 {{- end }}
 }
-{{- if (index .Values.metrics "node-exporter").allowList }}
+{{- if and (gt (len (index .Values.metrics "node-exporter").allowList) 0) (not (index .Values.metrics "node-exporter").service.useFullAllowList)}}
 
 prometheus.relabel "node_exporter" {
   rule {
     source_labels = ["__name__"]
     regex = "up|{{ join "|" (index .Values.metrics "node-exporter").allowList }}"
+    action = "keep"
+  }
+  forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
+}
+{{- else if (index .Values.metrics "node-exporter").service.useFullAllowList}}
+
+prometheus.relabel "node_exporter" {
+  rule {
+    source_labels = ["__name__"]
+    regex = "up|{{ join "|" (index .Values.metrics "node-exporter").fullAllowList }}"
     action = "keep"
   }
   forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
