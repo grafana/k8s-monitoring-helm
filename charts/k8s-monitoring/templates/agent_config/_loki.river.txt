@@ -21,11 +21,10 @@ local.file "loki_tenantid" {
   is_secret = true
 }
 {{- end }}
-
 loki.write "grafana_cloud_loki" {
   endpoint {
     url = nonsensitive(local.file.loki_host.content) + "{{ .writeEndpoint }}"
-{{ if .tenantId }}
+{{- if .tenantId }}
     tenant_id = local.file.loki_tenantid.content
 {{- end }}
 {{ if .basicAuth }}
@@ -34,6 +33,7 @@ loki.write "grafana_cloud_loki" {
       {{ if .basicAuth.password }}password = local.file.loki_password.content{{ end }}
     }
 {{- end }}
+  }
 {{- end }}
   external_labels = {
     cluster = {{ required ".Values.cluster.name is a required value. Please set it and try again." .Values.cluster.name | quote }},

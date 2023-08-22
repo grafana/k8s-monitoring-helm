@@ -70,9 +70,14 @@ local.file "loki_password" {
   is_secret = true
 }
 
+local.file "loki_tenantid" {
+  filename  = "/etc/grafana-agent-credentials/loki_tenantId"
+  is_secret = true
+}
 loki.write "grafana_cloud_loki" {
   endpoint {
     url = nonsensitive(local.file.loki_host.content) + "/loki/api/v1/push"
+    tenant_id = local.file.loki_tenantid.content
 
     basic_auth {
       username = local.file.loki_username.content
