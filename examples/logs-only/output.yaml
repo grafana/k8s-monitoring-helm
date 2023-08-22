@@ -34,6 +34,7 @@ data:
   loki_host: "aHR0cHM6Ly9sb2tpLmV4YW1wbGUuY29t"
   loki_username: "MTIzNDU="
   loki_password: "SXQncyBhIHNlY3JldCB0byBldmVyeW9uZQ=="
+  loki_tenantId: "MjAwMA=="
 ---
 # Source: k8s-monitoring/templates/grafana-agent-config.yaml
 apiVersion: v1
@@ -135,9 +136,14 @@ data:
       is_secret = true
     }
     
+    local.file "loki_tenantid" {
+      filename  = "/etc/grafana-agent-credentials/loki_tenantId"
+      is_secret = true
+    }
     loki.write "grafana_cloud_loki" {
       endpoint {
         url = nonsensitive(local.file.loki_host.content) + "/loki/api/v1/push"
+        tenant_id = local.file.loki_tenantid.content
     
         basic_auth {
           username = local.file.loki_username.content
