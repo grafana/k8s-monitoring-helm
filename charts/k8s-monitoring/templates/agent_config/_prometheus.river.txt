@@ -34,7 +34,12 @@ prometheus.remote_write "grafana_cloud_prometheus" {
       {{ if .basicAuth.password }}password = local.file.prometheus_password.content{{ end }}
     }
 {{- end }}
+{{- end }}
+  external_labels = {
+    cluster = {{ required ".Values.cluster.name is a required value. Please set it and try again." .Values.cluster.name | quote }},
+    {{- range $k, $v := .Values.externalServices.prometheus.externalLabels }}
+    {{ $k }} = {{ $v | quote }},
+    {{- end }}
   }
 }
-{{- end }}
 {{ end }}

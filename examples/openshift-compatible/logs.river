@@ -1,4 +1,7 @@
-{{ define "agent.config.logs.pod_logs" }}
+discovery.kubernetes "pods" {
+  role = "pod"
+}
+    
 // Pod Logs
 discovery.relabel "pod_logs" {
   targets = discovery.kubernetes.pods.targets
@@ -49,7 +52,34 @@ loki.source.file "pod_logs" {
 }
 
 loki.process "pod_logs" {
-  stage.{{- .Values.logs.pod_logs.loggingFormat }} {}
+  stage.docker {}
   forward_to = [loki.write.grafana_cloud_loki.receiver]
 }
-{{ end }}
+    
+// Grafana Cloud Loki
+local.file "loki_host" {
+  filename  = "/etc/grafana-agent-credentials/loki_host"
+}
+
+local.file "loki_username" {
+  filename  = "/etc/grafana-agent-credentials/loki_username"
+}
+
+local.file "loki_password" {
+  filename  = "/etc/grafana-agent-credentials/loki_password"
+  is_secret = true
+}
+
+loki.write "grafana_cloud_loki" {
+  endpoint {
+    url = nonsensitive(local.file.loki_host.content) + "/loki/api/v1/push"
+
+    basic_auth {
+      username = local.file.loki_username.content
+      password = local.file.loki_password.content
+    }
+  }
+  external_labels = {
+    cluster = "openshift-compatible-test",
+  }
+}

@@ -3,6 +3,9 @@ cluster:
   # -- (string) (required) The name of this cluster, which will be set in all labels
   name: ""
 
+  # -- (string) The Kubernetes service. Change this if your cluster DNS is configured differently than the default.
+  kubernetesAPIService: kubernetes.default.svc.cluster.local:443
+
 externalServices:
   # Connection information for Prometheus
   prometheus:
@@ -11,6 +14,8 @@ externalServices:
     host: ""
     # -- Prometheus metrics write endpoint
     writeEndpoint: /api/prom/push
+    # -- Custom labels to be added to all time series
+    externalLabels: {}
 
     # -- (string) (optional) Mimir tenant ID
     tenantId: ""
@@ -29,6 +34,8 @@ externalServices:
     host: ""
     # -- Loki logs write endpoint
     writeEndpoint: /loki/api/v1/push
+    # -- Custom labels to be added to all logs and events
+    externalLabels: {}
 
     # -- (string) (optional) Loki tenant ID
     tenantId: ""
@@ -266,34 +273,15 @@ logs:
     # See documentation: https://grafana.com/docs/agent/latest/flow/reference/components/loki.process/#stagecri-block
     loggingFormat: docker
 
-  # Settings for scraping cluster evenrts
+  # Settings for scraping Kubernetes cluster events
   cluster_events:
     # -- Scrape Kubernetes cluster events
     enabled: true
 
-# -- (string) Extra configuration that will be added to the Grafana Agent configuration file.
-# <details>
-# <summary>+ Example</summary>
-# An example extraConfig to discover and scrape metrics from a service:
-# ```text
-# discovery.relabel "my-service" {
-#   targets = discovery.kubernetes.services.targets
-#   rule {
-#     source_labels = ["__meta_kubernetes_service_label_app_kubernetes_io_name"]
-#     regex = "my-service"
-#     action = "keep"
-#   }
-# }
-#
-# prometheus.scrape "my-service" {
-#   job_name   = "integrations/my-service"
-#   targets    = discovery.relabel.my-service.output
-#   forward_to = [prometheus.relabel.add_cluster_label.receiver]
-# }
-# ```
-# Note: "discovery.kubernetes.services" and
-#       "prometheus.relabel.add_cluster_label" are pre-defined by this chart.
-# </details>
+  # -- (string) Extra configuration that will be added to Grafana Agent Logs. See [Adding custom Flow configuration](#adding-custom-flow-configuration) for an example.  
+  extraConfig:
+
+# -- (string) Extra configuration that will be added to the Grafana Agent configuration file. See [Adding custom Flow configuration](#adding-custom-flow-configuration) for an example.
 extraConfig:
 
 # Settings for the Kube State Metrics deployment
@@ -304,6 +292,9 @@ kube-state-metrics:
   # Set this to false if your cluster already has Kube State Metrics, or if you
   # do not want to scrape metrics from Kube State Metrics.
   enabled: true
+  # @ignored
+  nodeSelector:
+    kubernetes.io/os: linux
 
 # Settings for the Node Exporter deployment
 # You can use this sections to make modifications to the Node Exporter deployment.
@@ -313,6 +304,9 @@ prometheus-node-exporter:
   # Set this to false if your cluster already has Node Exporter, or if you do
   # not want to scrape metrics from Node Exporter.
   enabled: true
+  # @ignored
+  nodeSelector:
+    kubernetes.io/os: linux
 
 # Settings for the Windows Exporter deployment
 # You can use this sections to make modifications to the Windows Exporter deployment.
@@ -351,6 +345,8 @@ opencost:
   opencost:
     # @ignored
     exporter:
+      # -- Default cluster ID to use if cluster_id is not set in Prometheus metrics. It should match cluster.name.
+      defaultClusterId: "default-cluster"
       # @ignored
       extraEnv:
         # @ignored
@@ -382,6 +378,10 @@ opencost:
     ui:
       # @ignored
       enabled: false
+    # @ignored
+    nodeSelector:
+      kubernetes.io/os: linux
+
 
 # Settings for the Grafana Agent deployment
 # You can use this sections to make modifications to the Grafana Agent deployment.
@@ -393,6 +393,9 @@ grafana-agent:
     # not need to.
     configMap: {create: false}
 
+    clustering:
+      enabled: true
+
     # This chart creates the credentials for Prometheus and Loki. This section
     # mounts those credentials into the Grafana Agent container.
     mounts:
@@ -401,8 +404,46 @@ grafana-agent:
         mountPath: /etc/grafana-agent-credentials
 
   controller:
+    type: statefulset
     nodeSelector:
       kubernetes.io/os: linux
+
+    # This chart creates the credentials for Prometheus and Loki. This section
+    # connects those credentials into the Grafana Agent pod.
+    volumes:
+      extra:
+      - name: grafana-agent-credentials
+        secret:
+          secretName: grafana-agent-credentials
+
+# Settings for the Grafana Agent deployment
+# You can use this sections to make modifications to the Grafana Agent deployment.
+# See https://github.com/grafana/agent/tree/main/operations/helm/charts/grafana-agent for available values.
+# @ignored
+grafana-agent-logs:
+  agent:
+    # This chart is creating the configuration, so the grafana-agent chart does
+    # not need to.
+    configMap:
+      create: false
+
+    # This chart creates the credentials for Prometheus and Loki. This section
+    # mounts those credentials into the Grafana Agent container.
+    mounts:
+      varlog: true
+      dockercontainers: true
+      extra:
+        - name: grafana-agent-credentials
+          mountPath: /etc/grafana-agent-credentials
+
+  controller:
+    type: daemonset
+    nodeSelector:
+      kubernetes.io/os: linux
+
+    tolerations:
+      - effect: NoSchedule
+        operator: Exists
 
     # This chart creates the credentials for Prometheus and Loki. This section
     # connects those credentials into the Grafana Agent pod.

@@ -1,0 +1,15 @@
+{{- if and .Values.logs.enabled .Values.logs.pod_logs.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "grafana-agent.fullname" (index .Subcharts "grafana-agent-logs") }}
+  namespace: {{ .Release.Namespace }}
+data:
+  config.river: |-
+{{- include "agent.config.pods" . | indent 4}}
+{{- include "agent.config.logs.pod_logs" . | indent 4}}
+{{- include "agent.config.loki" . | indent 4 }}
+{{- end }}
+{{- if .Values.logs.extraConfig }}
+{{ .Values.logs.extraConfig | indent 4 }}
+{{ end }}

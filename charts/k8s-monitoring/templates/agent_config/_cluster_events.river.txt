@@ -2,16 +2,6 @@
 // Cluster Events
 loki.source.kubernetes_events "cluster_events" {
   job_name   = "integrations/kubernetes/eventhandler"
-  forward_to = [loki.process.cluster_events.receiver]
-}
-
-loki.process "cluster_events" {
-  stage.static_labels {
-    values = {
-      cluster = {{ required ".Values.cluster.name is a required value. Please set it and try again." .Values.cluster.name | quote }},
-    }
-  }
-
   forward_to = [loki.write.grafana_cloud_loki.receiver]
 }
 {{ end }}

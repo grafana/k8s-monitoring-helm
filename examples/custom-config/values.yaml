@@ -7,11 +7,17 @@ externalServices:
     basicAuth:
       username: 12345
       password: "It's a secret to everyone"
+    externalLabels:
+      region: southwest
+      tenant: widgetco
   loki:
     host: https://loki.example.com
     basicAuth:
       username: 12345
       password: "It's a secret to everyone"
+    externalLabels:
+      region: southwest
+      tenant: widgetco
 
 extraConfig: |-
   discovery.relabel "my_webapp" {
@@ -28,7 +34,7 @@ extraConfig: |-
     }
     rule {
     source_labels = ["__name__"]
-    replacement   = local.file.cluster_name.content
+    replacement   = "my-cluster"
     target_label  = "cluster"
     }
   }
@@ -38,3 +44,40 @@ extraConfig: |-
     targets    = discovery.relabel.my_webapp.output
     forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
   }
+
+logs:
+  extraConfig: |-
+    discovery.relabel "postgres_logs" {
+      targets = discovery.relabel.pod_logs.output
+      
+      rule {
+        source_labels = ["namespace"]
+        regex = "<your_postgres_namespace>"
+        action = "keep"
+      }
+      rule {
+        source_labels = ["__meta_kubernetes_pod_label_<your_postgres_selector_labelname>"]
+        regex = "<your_postgres_selector_labelvalue>"
+        action = "keep"
+      }
+    }
+
+    local.file_match "postgres_logs" {
+      path_targets = discovery.relabel.postgres_logs.output
+    }
+
+    loki.source.file "postgres_logs" {
+      targets    = local.file_match.postgres_logs.targets
+      forward_to = [loki.process.postgres_logs.receiver]
+    }
+
+    loki.process "postgres_logs" {
+      stage.cri {}
+      stage.static_labels {
+        values = {
+          job = "integrations/postgres_exporter",
+          instance = "<your_postgres_instance_name>",
+        }
+      }
+      forward_to = [loki.write.grafana_cloud_loki.receiver]
+    }

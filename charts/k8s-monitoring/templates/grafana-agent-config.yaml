@@ -47,21 +47,13 @@ data:
   {{- end }}
 
   {{- include "agent.config.prometheus" . | indent 4 }}
-  {{- end }}
 
-  {{- if .Values.logs.enabled }}
-
-  {{- if .Values.logs.pod_logs.enabled }}
-    {{- include "agent.config.logs.pod_logs" . | indent 4}}
-  {{- end }}
-
-  {{- if .Values.logs.cluster_events.enabled }}
-    {{- include "agent.config.logs.cluster_events" . | indent 4}}
-  {{- end }}
-
+{{- if and .Values.logs.enabled .Values.logs.cluster_events.enabled }}
+  {{- include "agent.config.logs.cluster_events" . | indent 4}}
   {{- include "agent.config.loki" . | indent 4 }}
 {{- end }}
-
+{{- end }}
 {{- if .Values.extraConfig }}
 {{ .Values.extraConfig | indent 4 }}
 {{ end }}
+
