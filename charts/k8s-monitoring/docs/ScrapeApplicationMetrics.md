@@ -1,6 +1,6 @@
 # Scraping Metrics from an Application
 
-If you have an application running on your Kubernetes cluster, that is exporting metrics you can easily extend the
+If you have an application running on your Kubernetes cluster that is exporting metrics, you can easily extend the
 configuration in this chart to scrape and forward those metrics.
 
 When adding new configuration, it's helpful to think of it in four phases:
@@ -22,7 +22,8 @@ This chart automatically creates three components that you can utilize:
 * `discovery.kubernetes.services` - Discovers all services in the cluster
 
 These are all [`discovery.kubernetes`](https://grafana.com/docs/agent/latest/flow/reference/components/discovery.kubernetes/)
-components, which gather all the specific resources, using the Kubernetes API. From here, we want to refine the search to just the service or the pod that we want.
+components, which gather all the specific resources, using the Kubernetes API. From here, we want to refine the search
+to just the service or the pod that we want.
 
 ### Service discovery
 
@@ -32,7 +33,9 @@ This is done by using a [`discovery.relabel`](https://grafana.com/docs/agent/lat
 component and adding one or more rules, using special meta-labels that are set automatically by the
 `discovery.kubernetes` component.
 
-Here is an example that filters to a service named "database", in the namespace "blue", with the port named "metrics":
+Here is an example component that we've named "blue_database_service". This component takes the list of all services
+from `discovery.kubernetes.services` and filters to a service named "database", in the namespace "blue", with the port
+named "metrics":
 
 ```river
 discovery.relabel "blue_database_service" {
@@ -56,10 +59,11 @@ discovery.relabel "blue_database_service" {
 ```
 
 The [documentation](https://grafana.com/docs/agent/latest/flow/reference/components/discovery.kubernetes/#service-role)
-has the list of meta labels for services. 
+has the list of meta labels for services. Note that there are different labels for port name and port number. Make sure
+you use the right label for a named port or simply the port number.
 
 This is also a good place to add any extra labels that will be scraped. For example, if you wanted to set the label
-`team="blue"`, you might use this additional rule:
+`team="blue"`, you might use this additional rule in the `blue_database_service` component we just made:
 
 ```river
   rule {
@@ -75,7 +79,8 @@ Similar to service discovery, we use a [`discovery.relabel`](https://grafana.com
 component to select the specific pod or pods that we want to scrape. The [meta labels for pods](https://grafana.com/docs/agent/latest/flow/reference/components/discovery.kubernetes/#pod-role)
 will be slightly different, but the concept is the same.
 
-Here is an example that filters to a specific set of pods that starts with name "analysis", with the label "system.component=image":
+Here is an example that filters to a specific set of pods that starts with name "analysis", with the label
+"system.component=image":
 
 ```river
 discovery.relabel "image_analysis_pods" {
@@ -94,7 +99,8 @@ discovery.relabel "image_analysis_pods" {
 ```
 
 Note that there is a unique meta label for every Kubernetes label. The labels are prefixed with
-`__meta_kubernetes_pod_label_` and the label name is normalized so all non-alphanumeric characters become underscores (`_`).
+`__meta_kubernetes_pod_label_` and the label name is normalized so all non-alphanumeric characters become underscores
+(`_`).
 
 ## Scraping
 
@@ -108,6 +114,8 @@ prometheus.scrape "processing_app" {
   forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
 }
 ```
+
+Note that we will cover the `forward_to` field in the [Delivery](#delivery) section below.
 
 This component gives a lot of flexibility to modify how things are scraped, including setting the `job` label, how
 frequently the metrics should be scraped, the path to scrape, and many more. Here is an example with lots of options:
@@ -128,9 +136,10 @@ Often, we want to do some post-scrape processing to the metrics. Some common rea
 * limiting the amount of metrics being sent up to Prometheus
 * adding labels, changing labels, or dropping labels
 
-Processing is done with the [`prometheus.relabel`](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/)
-component. It uses the same type of rules as `discovery.relabel`, but instead of filtering scrape _targets_, it filters the
-_metrics_ that were scraped.
+Processing is done with the
+[`prometheus.relabel`](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/)
+component. It uses the same type of rules as `discovery.relabel`, but instead of filtering scrape _targets_, it filters
+the _metrics_ that were scraped.
 
 Here is an example of processing that filters down the scraped metrics to only `up` and anything that starts with
 `processor` (thus, dropping all other metrics):
@@ -151,13 +160,14 @@ prometheus.relabel "processing_app" {
 }
 ```
 
-Note that the `prometheus.scrape` component needs to be adjusted to forward to this component)
+Note that the `prometheus.scrape` component needs to be adjusted to forward to this component.
 
 ## Delivery
 
-The final step is to send the metrics to a Prometheus server for storage, where it can be further processed by recording
-rules, or queried and displayed by Grafana. This is done with the [`prometheus.remote_write`](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.remote_write/)
-component.
+The `prometheus.scrape` and `prometheus.relabel` components need to send their outputs to another component. This is the
+purpose of their `forward_to` field. That can be to another `prometheus.relabel` component, but eventually, the final
+step is to send the metrics to a Prometheus server for storage, where it can be further processed by recording rules, or
+queried and displayed by Grafana. This is done with the [`prometheus.remote_write`](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.remote_write/) component.
 
 This chart automatically creates the component `prometheus.remote_write.grafana_cloud_prometheus`, configured by the
 `.externalServices.prometheus` values. You can use this component to send your metrics to the same destination as the
