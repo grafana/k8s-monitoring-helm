@@ -99,24 +99,107 @@ Note that there is a unique meta label for every Kubernetes label. The labels ar
 ## Scraping
 
 Now that we've selected the specific pod or service we want, we can scrape it for metrics. This is done with the
-[`prometheus.scrape`](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.scrape/) component.
-
-...
+[`prometheus.scrape`](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.scrape/) component. At its basic, you only need to declare what things to scrape, and where to send
+the scraped metrics. Here is an example:
 
 ```river
-prometeus.scrape "processing_app" {
+prometheus.scrape "processing_app" {
   targets = discovery.relabel.image_analysis_pods.targets
-  forward_to = ...
+  forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
 }
 ```
 
-...
+This component gives a lot of flexibility to modify how things are scraped, including setting the `job` label, how
+frequently the metrics should be scraped, the path to scrape, and many more. Here is an example with lots of options:
+
+```river
+prometheus.scrape "processing_app" {
+  targets = discovery.relabel.image_analysis_pods.targets
+  job_name = "integrations/processing"
+  scrape_interval = "120s"
+  metrics_path = "/api/v1/metrics"
+  forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
+}
+```
 
 ## Processing
 
-...
+Often, we want to do some post-scrape processing to the metrics that are scraped. Some common reasons are:
+* limiting the amount of metrics being sent up to Prometheus
+* adding labels, changing labels, or dropping labels
+
+Processing is done with the [`prometheus.relabel`](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/)
+component. It uses the same type of rules as `discovery.relabel`, but instead of filtering scrape targets, it filters the
+metrics that were scraped.
+
+Here is an example of processing that filters the scraped metrics to the `up` metric and anything that starts with
+`processor` (thus, dropping any other metrics):
+
+```river
+prometheus.scrape "processing_app" {
+  targets = discovery.relabel.image_analysis_pods.targets
+  forward_to = [prometheus.relabel.processing_app.receiver]
+}
+
+prometheus.relabel "processing_app" {
+  rule {
+    source_labels = ["__name__"]
+    regex = "up|processor.*"
+    action = "keep"
+  }
+  forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
+}
+```
+
+Note that the `prometheus.scrape` component needs to be adjusted to forward to this component)
 
 ## Delivery
 
-...
+The final step is to send the metrics to a Prometheus server for storage, where it can be further processed by recording
+rules, or queried and displayed by Grafana. This is done with the [`prometheus.remote_write`](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.remote_write/)
+component.
 
+This chart automatically creates the component `prometheus.remote_write.grafana_cloud_prometheus`, configured by the
+`.externalServices.prometheus` values. You can use this component to send your metrics to the same destination as the
+infrastructure metrics.
+
+If you want to use an alternative destination, you can create a new `prometheus.remote_write` component.
+
+## Putting it all together
+
+The easiest way to include your configuration into this chart is to save it into a file and pass it directly to the
+`helm install` command:
+
+```text
+$ ls
+processor-config.river chart-values.yaml
+$ cat processor_config.river
+discovery.relabel "image_analysis_pods" {
+  targets = discovery.kubernetes.pods.targets  // Gets all pods
+  rule {  // Keep all pods named "analysis.*"...
+    source_labels = ["__meta_kubernetes_pod_name"]
+    regex = "analysis.*"
+    action = "keep"
+  }
+  rule {  // ... with the label system.component=image
+    source_labels = ["__meta_kubernetes_pod_label_system_component"]
+    regex = "image"
+    action = "keep"
+  }
+}
+
+prometheus.scrape "processing_app" {
+  targets = discovery.relabel.image_analysis_pods.targets
+  forward_to = [prometheus.relabel.processing_app.receiver]
+}
+
+prometheus.relabel "processing_app" {
+  rule {
+    source_labels = ["__name__"]
+    regex = "up|processor.*"
+    action = "keep"
+  }
+  forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
+}
+$ helm install k8s-monitoring grafana/k8s-monitoring --values chart-values.yaml --set-file extraConfig=processor-config.river
+```
