@@ -132,8 +132,8 @@ Processing is done with the [`prometheus.relabel`](https://grafana.com/docs/agen
 component. It uses the same type of rules as `discovery.relabel`, but instead of filtering scrape targets, it filters the
 metrics that were scraped.
 
-Here is an example of processing that filters the scraped metrics to the `up` metric and anything that starts with
-`processor` (thus, dropping any other metrics):
+Here is an example of processing that filters down the scraped metrics to only `up` and anything that starts with
+`processor` (thus, dropping all other metrics):
 
 ```river
 prometheus.scrape "processing_app" {
