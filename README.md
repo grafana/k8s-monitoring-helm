@@ -44,6 +44,14 @@ Required tools:
 
 Run `make install-deps` to install all requirements (Mac supported only at the moment using Brew).
 
+
+### Bumping Dependent Chart Versions
+
+* Update the dependency's version in [Chart.yaml](charts/k8s-monitoring/Chart.yaml).
+* `cd charts/k8s-monitoring; helm dependency update`
+* Follow the steps above in [Contributing](#contributing) to update the k8s-monitoring chart version and docs.
+* Finally, take a moment to inspect the generated output for anything that might cause trouble.
+
 ## Links
 * [Kubernetes Monitoring on Grafana Cloud](https://grafana.com/docs/grafana-cloud/kubernetes-monitoring/)
 * [Grafana Agent](https://github.com/grafana/agent)
