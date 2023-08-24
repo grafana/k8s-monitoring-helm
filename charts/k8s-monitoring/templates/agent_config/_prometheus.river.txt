@@ -26,6 +26,9 @@ prometheus.remote_write "grafana_cloud_prometheus" {
 {{- if .tenantId }}
     headers = { "X-Scope-OrgID" = local.file.prometheus_tenantid.content }
 {{- end }}
+{{- if .proxyURL }}
+    proxy_url = {{ .proxyURL | quote }}
+{{- end }}
 {{ if .basicAuth }}
     basic_auth {
       {{ if .basicAuth.username }}username = local.file.prometheus_username.content{{ end }}
@@ -33,12 +36,12 @@ prometheus.remote_write "grafana_cloud_prometheus" {
     }
 {{- end }}
   }
-{{- end }}
   external_labels = {
-    cluster = {{ required ".Values.cluster.name is a required value. Please set it and try again." .Values.cluster.name | quote }},
-    {{- range $k, $v := .Values.externalServices.prometheus.externalLabels }}
+    {{- range $k, $v := .externalLabels }}
     {{ $k }} = {{ $v | quote }},
     {{- end }}
+{{- end }}
+    cluster = {{ required ".Values.cluster.name is a required value. Please set it and try again." .Values.cluster.name | quote }},
   }
 }
 {{ end }}
