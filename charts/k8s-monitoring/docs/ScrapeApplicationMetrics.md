@@ -129,8 +129,8 @@ Often, we want to do some post-scrape processing to the metrics. Some common rea
 * adding labels, changing labels, or dropping labels
 
 Processing is done with the [`prometheus.relabel`](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/)
-component. It uses the same type of rules as `discovery.relabel`, but instead of filtering scrape targets, it filters the
-metrics that were scraped.
+component. It uses the same type of rules as `discovery.relabel`, but instead of filtering scrape _targets_, it filters the
+_metrics_ that were scraped.
 
 Here is an example of processing that filters down the scraped metrics to only `up` and anything that starts with
 `processor` (thus, dropping all other metrics):
