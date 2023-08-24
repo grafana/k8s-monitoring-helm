@@ -1,6 +1,6 @@
 # Scraping Metrics from an Application
 
-If you have an application, running on your Kubernetes cluster, that is exporting metrics you can easily extend the
+If you have an application running on your Kubernetes cluster, that is exporting metrics you can easily extend the
 configuration in this chart to scrape and forward those metrics.
 
 When adding new configuration, it's helpful to think of it in four phases:
