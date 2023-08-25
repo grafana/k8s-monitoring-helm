@@ -21,6 +21,12 @@ discovery.relabel "kube_state_metrics" {
     regex = "{{- (index .Values.metrics "kube-state-metrics").service.port -}}"
     action = "keep"
   }
+{{- if .Values.metrics.extraRelabelingRules }}
+{{ .Values.metrics.extraRelabelingRules | indent 2 }}
+{{- end }}
+{{- if (index .Values.metrics "kube-state-metrics").extraRelabelingRules }}
+{{ (index .Values.metrics "kube-state-metrics").extraRelabelingRules | indent 2 }}
+{{- end }}
 }
 
 prometheus.scrape "kube_state_metrics" {
@@ -47,6 +53,12 @@ prometheus.relabel "kube_state_metrics" {
     regex = "up|{{ join "|" (index .Values.metrics "kube-state-metrics").allowList }}"
     action = "keep"
   }
+{{- if .Values.metrics.extraMetricRelabelingRules }}
+{{ .Values.metrics.extraMetricRelabelingRules | indent 2 }}
+{{- end }}
+{{- if (index .Values.metrics "kube-state-metrics").extraMetricRelabelingRules }}
+{{ (index .Values.metrics "kube-state-metrics").extraMetricRelabelingRules | indent 2 }}
+{{- end }}
   forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
 }
 {{- end }}

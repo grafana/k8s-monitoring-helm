@@ -11,9 +11,15 @@ cluster:
 externalServices:
   prometheus:
     host: https://prometheus.example.com
-    username: "12345"
-    password: "It's a secret to everyone"
+    tenantId: 1000
+    basicAuth:
+      username: "12345"
+      password: "It's a secret to everyone"
 
 logs:
-  enabled: false
+  pod_logs:
+    enabled: false
+
+  cluster_events:
+    enabled: false
 ```

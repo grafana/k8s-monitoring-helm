@@ -12,13 +12,17 @@ cluster:
 externalServices:
   prometheus:
     host: https://prometheus.example.com
-    username: "12345"
-    password: "It's a secret to everyone"
+    proxyURL: http://192.168.1.100:8080
+    basicAuth:
+      username: "12345"
+      password: "It's a secret to everyone"
 
   loki:
     host: https://prometheus.example.com
-    username: "12345"
-    password: "It's a secret to everyone"
+    proxyURL: http://192.168.1.100:8080
+    basicAuth:
+      username: "12345"
+      password: "It's a secret to everyone"
 
 metrics:
   kube-state-metrics:

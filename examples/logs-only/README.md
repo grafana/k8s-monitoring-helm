@@ -11,8 +11,10 @@ cluster:
 externalServices:
   loki:
     host: https://loki.example.com
-    username: "12345"
-    password: "It's a secret to everyone"
+    tenantId: 2000
+    basicAuth:
+      username: "12345"
+      password: "It's a secret to everyone"
 
 metrics:
   enabled: false
@@ -21,6 +23,9 @@ kube-state-metrics:
   enabled: false
 
 prometheus-node-exporter:
+  enabled: false
+
+prometheus-windows-exporter:
   enabled: false
 
 prometheus-operator-crds:

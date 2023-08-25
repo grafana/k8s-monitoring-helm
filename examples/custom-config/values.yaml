@@ -20,28 +20,23 @@ externalServices:
       tenant: widgetco
 
 extraConfig: |-
-  discovery.relabel "my_webapp" {
+  discovery.relabel "animal_service" {
     targets = discovery.kubernetes.services.targets
     rule {
-    source_labels = ["__meta_kubernetes_service_label_app"]
-    regex = "my-webapp"
-    action = "keep"
+      source_labels = ["__meta_kubernetes_service_label_app"]
+      regex = "animal-service"
+      action = "keep"
     }
     rule {
-    source_labels = ["__meta_kubernetes_service_name"]
-    regex = "my-webapp-metrics"
-    action = "keep"
-    }
-    rule {
-    source_labels = ["__name__"]
-    replacement   = "my-cluster"
-    target_label  = "cluster"
+      source_labels = ["__meta_kubernetes_service_name"]
+      regex = "animal-service-metrics"
+      action = "keep"
     }
   }
   
-  prometheus.scrape "my_webapp" {
-    job_name   = "my_webapp"
-    targets    = discovery.relabel.my_webapp.output
+  prometheus.scrape "animal_service" {
+    job_name   = "animal_service"
+    targets    = discovery.relabel.animal_service.output
     forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
   }
 
@@ -52,12 +47,12 @@ logs:
       
       rule {
         source_labels = ["namespace"]
-        regex = "<your_postgres_namespace>"
+        regex = "postgres"
         action = "keep"
       }
       rule {
-        source_labels = ["__meta_kubernetes_pod_label_<your_postgres_selector_labelname>"]
-        regex = "<your_postgres_selector_labelvalue>"
+        source_labels = ["__meta_kubernetes_pod_label_app"]
+        regex = "database"
         action = "keep"
       }
     }
@@ -76,7 +71,7 @@ logs:
       stage.static_labels {
         values = {
           job = "integrations/postgres_exporter",
-          instance = "<your_postgres_instance_name>",
+          instance = "animaldb",
         }
       }
       forward_to = [loki.write.grafana_cloud_loki.receiver]

@@ -12,6 +12,12 @@ discovery.relabel "cadvisor" {
     replacement   = "/api/v1/nodes/${1}/proxy/metrics/cadvisor"
     target_label  = "__metrics_path__"
   }
+{{- if .Values.metrics.extraRelabelingRules }}
+{{ .Values.metrics.extraRelabelingRules | indent 2 }}
+{{- end }}
+{{- if .Values.metrics.cadvisor.extraRelabelingRules }}
+{{ .Values.metrics.cadvisor.extraRelabelingRules | indent 2 }}
+{{- end }}
 }
 
 prometheus.scrape "cadvisor" {
@@ -36,6 +42,12 @@ prometheus.relabel "cadvisor" {
     regex = "up|{{ join "|" .Values.metrics.cadvisor.allowList }}"
     action = "keep"
   }
+{{- if .Values.metrics.extraMetricRelabelingRules }}
+{{ .Values.metrics.extraMetricRelabelingRules | indent 2 }}
+{{- end }}
+{{- if .Values.metrics.cadvisor.extraMetricRelabelingRules }}
+{{ .Values.metrics.cadvisor.extraMetricRelabelingRules | indent 2 }}
+{{- end }}
   forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
 }
 {{- end }}

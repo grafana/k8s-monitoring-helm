@@ -17,8 +17,9 @@ cluster:
 externalServices:
   prometheus:
     host: https://prometheus.example.com
-    username: "12345"
-    password: "It's a secret to everyone"
+    basicAuth:
+      username: "12345"
+      password: "It's a secret to everyone"
 
 metrics:
   kube-state-metrics:
@@ -28,14 +29,18 @@ metrics:
   kubelet:
     allowList: ["kubelet_node_name","kubernetes_build_info"]
   cadvisor:
-    allowList:  # Just like previous, but in YAML list format
-    - container_memory_cache
-    - container_memory_rss
-    - container_memory_swap
+    allowList:
+      - container_memory_cache
+      - container_memory_rss
+      - container_memory_swap
   cost:
     allowList: []
   enabled: true
 
 logs:
-  enabled: false
+  pod_logs:
+    enabled: false
+
+  cluster_events:
+    enabled: false
 ```

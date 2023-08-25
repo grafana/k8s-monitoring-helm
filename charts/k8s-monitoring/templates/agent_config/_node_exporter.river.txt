@@ -21,6 +21,12 @@ discovery.relabel "node_exporter" {
     action = "replace"
     target_label = "instance"
   }
+{{- if .Values.metrics.extraRelabelingRules }}
+{{ .Values.metrics.extraRelabelingRules | indent 2 }}
+{{- end }}
+{{- if (index .Values.metrics "node-exporter").extraRelabelingRules }}
+{{ (index .Values.metrics "node-exporter").extraRelabelingRules | indent 2 }}
+{{- end }}
 }
 
 prometheus.scrape "node_exporter" {
@@ -48,6 +54,12 @@ prometheus.relabel "node_exporter" {
     regex = "up|{{ join "|" (index .Values.metrics "node-exporter").allowList }}"
     action = "keep"
   }
+{{- if .Values.metrics.extraMetricRelabelingRules }}
+{{ .Values.metrics.extraMetricRelabelingRules | indent 2 }}
+{{- end }}
+{{- if (index .Values.metrics "node-exporter").extraMetricRelabelingRules }}
+{{ (index .Values.metrics "node-exporter").extraMetricRelabelingRules | indent 2 }}
+{{- end }}
   forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
 }
 {{- end }}
