@@ -91,12 +91,12 @@ discovery.relabel "postgres_logs" {
   
   rule {
     source_labels = ["namespace"]
-    regex = "<your_postgres_namespace>"
+    regex = "postgres"
     action = "keep"
   }
   rule {
-    source_labels = ["__meta_kubernetes_pod_label_<your_postgres_selector_labelname>"]
-    regex = "<your_postgres_selector_labelvalue>"
+    source_labels = ["__meta_kubernetes_pod_label_app"]
+    regex = "database"
     action = "keep"
   }
 }
@@ -115,7 +115,7 @@ loki.process "postgres_logs" {
   stage.static_labels {
     values = {
       job = "integrations/postgres_exporter",
-      instance = "<your_postgres_instance_name>",
+      instance = "animaldb",
     }
   }
   forward_to = [loki.write.grafana_cloud_loki.receiver]

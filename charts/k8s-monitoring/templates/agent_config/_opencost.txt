@@ -19,6 +19,12 @@ discovery.relabel "opencost" {
     regex = "http"
     action = "keep"
   }
+{{- if .Values.metrics.extraRelabelingRules }}
+{{ .Values.metrics.extraRelabelingRules | indent 2 }}
+{{- end }}
+{{- if .Values.metrics.cost.extraRelabelingRules }}
+{{ .Values.metrics.cost.extraRelabelingRules | indent 2 }}
+{{- end }}
 }
 
 prometheus.scrape "opencost" {
@@ -38,6 +44,12 @@ prometheus.relabel "opencost" {
     regex = "up|{{ join "|" .Values.metrics.cost.allowList }}"
     action = "keep"
   }
+{{- if .Values.metrics.extraMetricRelabelingRules }}
+{{ .Values.metrics.extraMetricRelabelingRules | indent 2 }}
+{{- end }}
+{{- if .Values.metrics.cost.extraMetricRelabelingRules }}
+{{ .Values.metrics.cost.extraMetricRelabelingRules | indent 2 }}
+{{- end }}
   forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
 }
 {{- end }}

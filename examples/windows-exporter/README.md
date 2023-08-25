@@ -10,18 +10,19 @@ The Windows Exporter is not enabled by default, so to enable it, you need to set
 
 ```yaml
 cluster:
-  name: windows-exporter-test
+  name: default-values-test
 
 externalServices:
   prometheus:
     host: https://prometheus.example.com
-    username: "12345"
-    password: "It's a secret to everyone"
-
+    basicAuth:
+      username: 12345
+      password: "It's a secret to everyone"
   loki:
-    host: https://prometheus.example.com
-    username: "12345"
-    password: "It's a secret to everyone"
+    host: https://loki.example.com
+    basicAuth:
+      username: 12345
+      password: "It's a secret to everyone"
 
 metrics:
   windows-exporter:

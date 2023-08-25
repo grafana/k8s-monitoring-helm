@@ -11,36 +11,76 @@ cluster:
 externalServices:
   prometheus:
     host: https://prometheus.example.com
-    username: 12345
-    password: "It's a secret to everyone"
+    basicAuth:
+      username: 12345
+      password: "It's a secret to everyone"
+    externalLabels:
+      region: southwest
+      tenant: widgetco
   loki:
     host: https://loki.example.com
-    username: 12345
-    password: "It's a secret to everyone"
+    basicAuth:
+      username: 12345
+      password: "It's a secret to everyone"
+    externalLabels:
+      region: southwest
+      tenant: widgetco
 
 extraConfig: |-
-  discovery.relabel "my_webapp" {
+  discovery.relabel "animal_service" {
     targets = discovery.kubernetes.services.targets
     rule {
-    source_labels = ["__meta_kubernetes_service_label_app"]
-    regex = "my-webapp"
-    action = "keep"
+      source_labels = ["__meta_kubernetes_service_label_app"]
+      regex = "animal-service"
+      action = "keep"
     }
     rule {
-    source_labels = ["__meta_kubernetes_service_name"]
-    regex = "my-webapp-metrics"
-    action = "keep"
-    }
-    rule {
-    source_labels = ["__name__"]
-    replacement   = local.file.cluster_name.content
-    target_label  = "cluster"
+      source_labels = ["__meta_kubernetes_service_name"]
+      regex = "animal-service-metrics"
+      action = "keep"
     }
   }
 
-  prometheus.scrape "my_webapp" {
-    job_name   = "my_webapp"
-    targets    = discovery.relabel.my_webapp.output
+  prometheus.scrape "animal_service" {
+    job_name   = "animal_service"
+    targets    = discovery.relabel.animal_service.output
     forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
   }
+
+logs:
+  extraConfig: |-
+    discovery.relabel "postgres_logs" {
+      targets = discovery.relabel.pod_logs.output
+
+      rule {
+        source_labels = ["namespace"]
+        regex = "postgres"
+        action = "keep"
+      }
+      rule {
+        source_labels = ["__meta_kubernetes_pod_label_app"]
+        regex = "database"
+        action = "keep"
+      }
+    }
+
+    local.file_match "postgres_logs" {
+      path_targets = discovery.relabel.postgres_logs.output
+    }
+
+    loki.source.file "postgres_logs" {
+      targets    = local.file_match.postgres_logs.targets
+      forward_to = [loki.process.postgres_logs.receiver]
+    }
+
+    loki.process "postgres_logs" {
+      stage.cri {}
+      stage.static_labels {
+        values = {
+          job = "integrations/postgres_exporter",
+          instance = "animaldb",
+        }
+      }
+      forward_to = [loki.write.grafana_cloud_loki.receiver]
+    }
 ```

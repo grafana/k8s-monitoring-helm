@@ -1,5 +1,7 @@
-{{ define "agent.config.logs.pod_logs" }}
-{{- with .Values.logs.pod_logs }}
+discovery.kubernetes "pods" {
+  role = "pod"
+}
+    
 // Pod Logs
 discovery.relabel "pod_logs" {
   targets = discovery.kubernetes.pods.targets
@@ -38,9 +40,11 @@ discovery.relabel "pod_logs" {
     replacement = "/var/log/pods/*$1/*.log"
     target_label = "__path__"
   }
-{{- if .extraRelabelingRules }}
-{{ .extraRelabelingRules | indent 2 }}
-{{- end }}
+  rule {
+    source_labels = ["__meta_kubernetes_namespace"]
+    regex = "production"
+    action = "keep"
+  }
 }
 
 local.file_match "pod_logs" {
@@ -53,11 +57,57 @@ loki.source.file "pod_logs" {
 }
 
 loki.process "pod_logs" {
-  stage.{{- .loggingFormat }} {}
-{{- if .extraStageBlocks }}
-{{ .extraStageBlocks | indent 2 }}
-{{ end }}
+  stage.docker {}
+  stage.logfmt {
+    payload = ""
+  }
+  
+  stage.json {
+    source = "payload"
+    expressions = {
+      sku = "id",
+      count = "",
+    }
+  }
+  
+  stage.labels {
+    values = {
+      sku  = "",
+      count = "",
+    }
+  }
+
   forward_to = [loki.write.grafana_cloud_loki.receiver]
 }
-{{- end }}
-{{ end }}
+    
+// Grafana Cloud Loki
+local.file "loki_host" {
+  filename  = "/etc/grafana-agent-credentials/loki_host"
+}
+
+local.file "loki_username" {
+  filename  = "/etc/grafana-agent-credentials/loki_username"
+}
+
+local.file "loki_password" {
+  filename  = "/etc/grafana-agent-credentials/loki_password"
+  is_secret = true
+}
+
+local.file "loki_tenantid" {
+  filename  = "/etc/grafana-agent-credentials/loki_tenantId"
+}
+loki.write "grafana_cloud_loki" {
+  endpoint {
+    url = nonsensitive(local.file.loki_host.content) + "/loki/api/v1/push"
+    tenant_id = local.file.loki_tenantid.content
+
+    basic_auth {
+      username = local.file.loki_username.content
+      password = local.file.loki_password.content
+    }
+  }
+  external_labels = {
+    cluster = "extra-rules-test",
+  }
+}

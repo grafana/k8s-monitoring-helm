@@ -12,6 +12,12 @@ discovery.relabel "kubelet" {
     replacement   = "/api/v1/nodes/${1}/proxy/metrics"
     target_label  = "__metrics_path__"
   }
+{{- if .Values.metrics.extraRelabelingRules }}
+{{ .Values.metrics.extraRelabelingRules | indent 2 }}
+{{- end }}
+{{- if .Values.metrics.kubelet.extraRelabelingRules }}
+{{ .Values.metrics.kubelet.extraRelabelingRules | indent 2 }}
+{{- end }}
 }
 
 prometheus.scrape "kubelet" {
@@ -36,6 +42,12 @@ prometheus.relabel "kubelet" {
     regex = "up|{{ join "|" .Values.metrics.kubelet.allowList }}"
     action = "keep"
   }
+{{- if .Values.metrics.extraRelabelingRules }}
+{{ .Values.metrics.extraRelabelingRules | indent 2 }}
+{{- end }}
+{{- if .Values.metrics.kubelet.extraMetricRelabelingRules }}
+{{ .Values.metrics.kubelet.extraMetricRelabelingRules | indent 2 }}
+{{- end }}
   forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
 }
 {{- end }}

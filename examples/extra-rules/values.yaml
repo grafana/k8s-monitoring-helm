@@ -1,0 +1,60 @@
+cluster:
+  name: extra-rules-test
+
+externalServices:
+  prometheus:
+    host: https://prometheus.example.com
+    basicAuth:
+      username: 12345
+      password: "It's a secret to everyone"
+  loki:
+    host: https://loki.example.com
+    tenantId: 2000
+    basicAuth:
+      username: "12345"
+      password: "It's a secret to everyone"
+
+metrics:
+  extraRelabelingRules: |-
+    rule {
+      action = "replace"
+      target_label = "site"
+      replacement = "northwest"
+    }
+
+  kube-state-metrics:
+    extraMetricRelabelingRules: |-
+      rule {
+        source_labels = ["namespace"]
+        regex = "production"
+        action = "keep"
+      }
+
+logs:
+  pod_logs:
+    extraRelabelingRules: |-
+      rule {
+        source_labels = ["__meta_kubernetes_namespace"]
+        regex = "production"
+        action = "keep"
+      }
+
+    extraStageBlocks: |-
+      stage.logfmt {
+        payload = ""
+      }
+      
+      stage.json {
+        source = "payload"
+        expressions = {
+          sku = "id",
+          count = "",
+        }
+      }
+      
+      stage.labels {
+        values = {
+          sku  = "",
+          count = "",
+        }
+      }

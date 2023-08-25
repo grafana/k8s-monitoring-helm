@@ -26,6 +26,12 @@ discovery.relabel "windows_exporter" {
     action = "replace"
     target_label = "instance"
   }
+{{- if .Values.metrics.extraRelabelingRules }}
+{{ .Values.metrics.extraRelabelingRules | indent 2 }}
+{{- end }}
+{{- if (index .Values.metrics "windows-exporter").extraRelabelingRules }}
+{{ (index .Values.metrics "windows-exporter").extraRelabelingRules | indent 2 }}
+{{- end }}
 }
 
 prometheus.scrape "windows_exporter" {
@@ -65,6 +71,12 @@ prometheus.relabel "windows_exporter" {
     regex = "up|{{ join "|" (index .Values.metrics "windows-exporter").allowList }}"
     action = "keep"
   }
+{{- end }}
+{{- if .Values.metrics.extraMetricRelabelingRules }}
+{{ .Values.metrics.extraMetricRelabelingRules | indent 2 }}
+{{- end }}
+{{- if (index .Values.metrics "windows-exporter").extraMetricRelabelingRules }}
+{{ (index .Values.metrics "windows-exporter").extraMetricRelabelingRules | indent 2 }}
 {{- end }}
   forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
 }
