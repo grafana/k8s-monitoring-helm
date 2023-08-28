@@ -32,6 +32,11 @@ discovery.relabel "node_exporter" {
 prometheus.scrape "node_exporter" {
   job_name   = "integrations/node_exporter"
   targets  = discovery.relabel.node_exporter.output
+{{- if (index .Values "grafana-agent").agent.clustering.enabled }}
+  clustering {
+    enabled = true
+  }
+{{- end }}
   forward_to = [prometheus.relabel.node_exporter.receiver]
 {{- if (index .Values.metrics "node-exporter").service.isTLS }}
   scheme     = "https"

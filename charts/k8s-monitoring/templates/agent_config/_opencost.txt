@@ -30,6 +30,11 @@ discovery.relabel "opencost" {
 prometheus.scrape "opencost" {
   job_name   = "integrations/kubernetes/opencost"
   targets    = discovery.relabel.opencost.output
+{{- if (index .Values "grafana-agent").agent.clustering.enabled }}
+  clustering {
+    enabled = true
+  }
+{{- end }}
   forward_to = [prometheus.relabel.opencost.receiver]
 }
 

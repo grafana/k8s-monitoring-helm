@@ -2,6 +2,11 @@
 // ServiceMonitor
 prometheus.operator.servicemonitors "service_monitors" {
   forward_to = [prometheus.relabel.servicemonitors.receiver]
+{{- if (index .Values "grafana-agent").agent.clustering.enabled }}
+  clustering {
+    enabled = true
+  }
+{{- end }}
 }
 
 prometheus.relabel "servicemonitors" {

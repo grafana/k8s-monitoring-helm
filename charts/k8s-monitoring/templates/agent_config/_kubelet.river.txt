@@ -28,6 +28,11 @@ prometheus.scrape "kubelet" {
   tls_config {
     insecure_skip_verify = true
   }
+{{- if (index .Values "grafana-agent").agent.clustering.enabled }}
+  clustering {
+    enabled = true
+  }
+{{- end }}
   forward_to = [prometheus.relabel.kubelet.receiver]
 }
 

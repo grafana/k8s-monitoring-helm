@@ -34,6 +34,9 @@ prometheus.scrape "agent" {
   job_name   = "integrations/agent"
   targets  = discovery.relabel.agent.output
   forward_to = [prometheus.relabel.agent.receiver]
+  clustering {
+    enabled = true
+  }
 }
 
 prometheus.relabel "agent" {
@@ -67,6 +70,9 @@ prometheus.scrape "kubelet" {
   bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
   tls_config {
     insecure_skip_verify = true
+  }
+  clustering {
+    enabled = true
   }
   forward_to = [prometheus.relabel.kubelet.receiver]
 }
@@ -103,6 +109,9 @@ prometheus.scrape "cadvisor" {
   tls_config {
     insecure_skip_verify = true
   }
+  clustering {
+    enabled = true
+  }
   forward_to = [prometheus.relabel.cadvisor.receiver]
 }
 
@@ -138,6 +147,9 @@ discovery.relabel "kube_state_metrics" {
 prometheus.scrape "kube_state_metrics" {
   job_name   = "integrations/kubernetes/kube-state-metrics"
   targets    = discovery.relabel.kube_state_metrics.output
+  clustering {
+    enabled = true
+  }
   forward_to = [prometheus.relabel.kube_state_metrics.receiver]
 }
 
@@ -173,6 +185,9 @@ discovery.relabel "node_exporter" {
 prometheus.scrape "node_exporter" {
   job_name   = "integrations/node_exporter"
   targets  = discovery.relabel.node_exporter.output
+  clustering {
+    enabled = true
+  }
   forward_to = [prometheus.relabel.node_exporter.receiver]
 }
 
@@ -208,6 +223,9 @@ discovery.relabel "opencost" {
 prometheus.scrape "opencost" {
   job_name   = "integrations/kubernetes/opencost"
   targets    = discovery.relabel.opencost.output
+  clustering {
+    enabled = true
+  }
   forward_to = [prometheus.relabel.opencost.receiver]
 }
 
@@ -218,6 +236,9 @@ prometheus.relabel "opencost" {
 // PodMonitor
 prometheus.operator.podmonitors "pod_monitors" {
   forward_to = [prometheus.relabel.podmonitors.receiver]
+  clustering {
+    enabled = true
+  }
 }
 
 prometheus.relabel "podmonitors" {
@@ -227,6 +248,9 @@ prometheus.relabel "podmonitors" {
 // ServiceMonitor
 prometheus.operator.servicemonitors "service_monitors" {
   forward_to = [prometheus.relabel.servicemonitors.receiver]
+  clustering {
+    enabled = true
+  }
 }
 
 prometheus.relabel "servicemonitors" {
