@@ -1,6 +1,13 @@
 {{ define "agent.config.service_monitors" }}
 // ServiceMonitor
 prometheus.operator.servicemonitors "service_monitors" {
+  forward_to = [prometheus.relabel.servicemonitors.receiver]
+}
+
+prometheus.relabel "servicemonitors" {
+{{- if .Values.metrics.extraMetricRelabelingRules }}
+{{ .Values.metrics.extraMetricRelabelingRules | indent 2 }}
+{{- end }}
   forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
 }
 {{ end }}
