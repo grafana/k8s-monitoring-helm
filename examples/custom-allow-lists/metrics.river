@@ -208,6 +208,10 @@ discovery.relabel "opencost" {
 prometheus.scrape "opencost" {
   job_name   = "integrations/kubernetes/opencost"
   targets    = discovery.relabel.opencost.output
+  forward_to = [prometheus.relabel.opencost.receiver]
+}
+
+prometheus.relabel "opencost" {
   forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
 }
     

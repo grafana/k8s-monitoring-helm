@@ -30,20 +30,17 @@ discovery.relabel "opencost" {
 prometheus.scrape "opencost" {
   job_name   = "integrations/kubernetes/opencost"
   targets    = discovery.relabel.opencost.output
-{{- if .Values.metrics.cost.allowList }}
   forward_to = [prometheus.relabel.opencost.receiver]
-{{- else }}
-  forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
-{{- end }}
 }
-{{- if .Values.metrics.cost.allowList }}
 
 prometheus.relabel "opencost" {
+{{- if .Values.metrics.cost.allowList }}
   rule {
     source_labels = ["__name__"]
     regex = "up|{{ join "|" .Values.metrics.cost.allowList }}"
     action = "keep"
   }
+{{- end }}
 {{- if .Values.metrics.extraMetricRelabelingRules }}
 {{ .Values.metrics.extraMetricRelabelingRules | indent 2 }}
 {{- end }}
@@ -52,5 +49,4 @@ prometheus.relabel "opencost" {
 {{- end }}
   forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
 }
-{{- end }}
 {{ end }}

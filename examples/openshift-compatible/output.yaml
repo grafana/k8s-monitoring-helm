@@ -195,12 +195,12 @@ data:
     prometheus.scrape "kube_state_metrics" {
       job_name   = "integrations/kubernetes/kube-state-metrics"
       targets    = discovery.relabel.kube_state_metrics.output
-      forward_to = [prometheus.relabel.kube_state_metrics.receiver]
       scheme     = "https"
       bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
       tls_config {
         insecure_skip_verify = true
       }
+      forward_to = [prometheus.relabel.kube_state_metrics.receiver]
     }
     
     prometheus.relabel "kube_state_metrics" {
