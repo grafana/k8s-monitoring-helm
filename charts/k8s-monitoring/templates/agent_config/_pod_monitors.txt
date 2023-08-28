@@ -2,6 +2,11 @@
 // PodMonitor
 prometheus.operator.podmonitors "pod_monitors" {
   forward_to = [prometheus.relabel.podmonitors.receiver]
+{{- if (index .Values "grafana-agent").agent.clustering.enabled }}
+  clustering {
+    enabled = true
+  }
+{{- end }}
 }
 
 prometheus.relabel "podmonitors" {

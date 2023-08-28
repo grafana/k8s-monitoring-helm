@@ -23,6 +23,11 @@ prometheus.scrape "agent" {
   job_name   = "integrations/agent"
   targets  = discovery.relabel.agent.output
   forward_to = [prometheus.relabel.agent.receiver]
+{{- if (index .Values "grafana-agent").agent.clustering.enabled }}
+  clustering {
+    enabled = true
+  }
+{{- end }}
 }
 
 prometheus.relabel "agent" {

@@ -37,6 +37,11 @@ discovery.relabel "windows_exporter" {
 prometheus.scrape "windows_exporter" {
   job_name   = "integrations/kubernetes/windows-exporter"
   targets  = discovery.relabel.windows_exporter.output
+{{- if (index .Values "grafana-agent").agent.clustering.enabled }}
+  clustering {
+    enabled = true
+  }
+{{- end }}
   forward_to = [prometheus.relabel.windows_exporter.receiver]
 }
 
