@@ -222,11 +222,19 @@ prometheus.relabel "opencost" {
     
 // PodMonitor
 prometheus.operator.podmonitors "pod_monitors" {
+  forward_to = [prometheus.relabel.podmonitors.receiver]
+}
+
+prometheus.relabel "podmonitors" {
   forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
 }
     
 // ServiceMonitor
 prometheus.operator.servicemonitors "service_monitors" {
+  forward_to = [prometheus.relabel.servicemonitors.receiver]
+}
+
+prometheus.relabel "servicemonitors" {
   forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
 }
     
@@ -256,6 +264,7 @@ prometheus.remote_write "grafana_cloud_prometheus" {
       username = local.file.prometheus_username.content
       password = local.file.prometheus_password.content
     }
+
   }
   external_labels = {
     cluster = "metrics-only-test",

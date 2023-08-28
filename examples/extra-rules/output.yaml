@@ -153,9 +153,9 @@ data:
         target_label  = "__metrics_path__"
       }
       rule {
-        action = "replace"
-        target_label = "site"
-        replacement = "northwest"
+        source_labels = ["__meta_kubernetes_namespace"]
+        regex = "private"
+        action = "drop"
       }
     }
     
@@ -177,9 +177,9 @@ data:
         action = "keep"
       }
       rule {
-        action = "replace"
-        target_label = "site"
-        replacement = "northwest"
+        source_labels = ["__meta_kubernetes_namespace"]
+        regex = "private"
+        action = "drop"
       }
       forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
     }
@@ -198,9 +198,9 @@ data:
         target_label  = "__metrics_path__"
       }
       rule {
-        action = "replace"
-        target_label = "site"
-        replacement = "northwest"
+        source_labels = ["__meta_kubernetes_namespace"]
+        regex = "private"
+        action = "drop"
       }
     }
     
@@ -243,9 +243,9 @@ data:
         action = "keep"
       }
       rule {
-        action = "replace"
-        target_label = "site"
-        replacement = "northwest"
+        source_labels = ["__meta_kubernetes_namespace"]
+        regex = "private"
+        action = "drop"
       }
     }
     
@@ -288,9 +288,9 @@ data:
         target_label = "instance"
       }
       rule {
-        action = "replace"
-        target_label = "site"
-        replacement = "northwest"
+        source_labels = ["__meta_kubernetes_namespace"]
+        regex = "private"
+        action = "drop"
       }
     }
     
@@ -328,9 +328,9 @@ data:
         action = "keep"
       }
       rule {
-        action = "replace"
-        target_label = "site"
-        replacement = "northwest"
+        source_labels = ["__meta_kubernetes_namespace"]
+        regex = "private"
+        action = "drop"
       }
     }
     
@@ -351,11 +351,19 @@ data:
         
     // PodMonitor
     prometheus.operator.podmonitors "pod_monitors" {
+      forward_to = [prometheus.relabel.podmonitors.receiver]
+    }
+    
+    prometheus.relabel "podmonitors" {
       forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
     }
         
     // ServiceMonitor
     prometheus.operator.servicemonitors "service_monitors" {
+      forward_to = [prometheus.relabel.servicemonitors.receiver]
+    }
+    
+    prometheus.relabel "servicemonitors" {
       forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
     }
         
@@ -381,8 +389,17 @@ data:
           username = local.file.prometheus_username.content
           password = local.file.prometheus_password.content
         }
+    
+        write_relabel_config {
+          rule {
+            source_labels = ["__name__"]
+            regex = "metric_to_drop|another_metric_to_drop"
+            action = "drop"
+          }
+        }
       }
       external_labels = {
+        site = "northwest",
         cluster = "extra-rules-test",
       }
     }

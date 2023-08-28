@@ -1,6 +1,13 @@
 {{ define "agent.config.pod_monitors" }}
 // PodMonitor
 prometheus.operator.podmonitors "pod_monitors" {
+  forward_to = [prometheus.relabel.podmonitors.receiver]
+}
+
+prometheus.relabel "podmonitors" {
+{{- if .Values.metrics.extraMetricRelabelingRules }}
+{{ .Values.metrics.extraMetricRelabelingRules | indent 2 }}
+{{- end }}
   forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
 }
 {{ end }}

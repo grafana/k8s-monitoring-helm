@@ -35,6 +35,11 @@ prometheus.remote_write "grafana_cloud_prometheus" {
       {{ if .basicAuth.password }}password = local.file.prometheus_password.content{{ end }}
     }
 {{- end }}
+{{ if .writeRelabelConfigRules }}
+    write_relabel_config {
+{{ .writeRelabelConfigRules | indent 6 }}
+    }
+{{- end }}
   }
   external_labels = {
     {{- range $k, $v := .externalLabels }}
