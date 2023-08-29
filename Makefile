@@ -10,11 +10,7 @@ CT_CONFIGFILE ?= .github/configs/ct.yaml
 LINT_CONFIGFILE ?= .github/configs/lintconf.yaml
 
 lint-chart:
-ifeq ($(GITHUB_HEAD_REF),main)
-	ct lint --debug --config "$(CT_CONFIGFILE)" --lint-conf "$(LINT_CONFIGFILE)"
-else
 	ct lint --debug --config "$(CT_CONFIGFILE)" --lint-conf "$(LINT_CONFIGFILE)" --check-version-increment=false
-endif
 
 lint-config: scripts/lint-configs.sh
 	./scripts/lint-configs.sh $(METRIC_CONFIG_FILES) $(LOG_CONFIG_FILES)

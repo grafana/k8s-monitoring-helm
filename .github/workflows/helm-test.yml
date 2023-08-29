@@ -11,6 +11,9 @@ on:
 env:
   CT_CONFIGFILE: "${{ github.workspace }}/.github/configs/ct.yaml"
   LINT_CONFIGFILE: "${{ github.workspace }}/.github/configs/lintconf.yaml"
+  MIMIR_VALUES: "${{ github.workspace }}/.github/configs/mimir.yaml"
+  LOKI_VALUES: "${{ github.workspace }}/.github/configs/loki.yaml"
+  GRAFANA_VALUES: "${{ github.workspace }}/.github/configs/grafana.yaml"
 
 jobs:
   check-for-doc-changes:
@@ -84,40 +87,59 @@ jobs:
       run: make test
 
   # TODO: Install prometheus and loki locally, then install our chart so it's connected to those services
-#  test-chart:
-#    runs-on: ubuntu-latest
-#    steps:
-#    - name: Checkout
-#      uses: actions/checkout@v3
-#      with:
-#        fetch-depth: 0
-#
-#    - name: Set up Helm
-#      uses: azure/setup-helm@v3
-#
-#    - name: Set up Python
-#      uses: actions/setup-python@v4
-#      with:
-#        python-version: '3.9'
-#        check-latest: true
-#
-#    - name: Set up chart-testing
-#      uses: helm/chart-testing-action@v2.4.0
-#
-#    - name: List changed charts
-#      id: list-changed
-#      run: |
-#        changed=$(ct list-changed --config "${CT_CONFIGFILE}")
-#        if [[ -n "$changed" ]]; then
-#          echo "changed=true" >> "${GITHUB_OUTPUT}"
-#        fi
-#
-#    - name: Create kind cluster
-#      uses: helm/kind-action@v1.5.0
-#      if: steps.list-changed.outputs.changed == 'true'
-#
-#    - name: Install prometheus and loki
-#      run: TODO
-#
-#    - name: Test charts
-#      run: ct install --config ./operations/helm/ct.yaml
+  test-chart:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+
+    - name: Set up Helm
+      uses: azure/setup-helm@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+        check-latest: true
+
+    - name: Set up chart-testing
+      uses: helm/chart-testing-action@v2.4.0
+
+    - name: List changed charts
+      id: list-changed
+      run: |
+        changed=$(ct list-changed --config "${CT_CONFIGFILE}")
+        if [[ -n "$changed" ]]; then
+          echo "changed=true" >> "${GITHUB_OUTPUT}"
+        fi
+
+    - name: Create kind cluster
+      uses: helm/kind-action@v1.5.0
+      if: steps.list-changed.outputs.changed == 'true'
+
+    - name: Set up Grafana Helm repository
+      if: steps.list-changed.outputs.changed == 'true'
+      run: |
+        helm repo add grafana https://grafana.github.io/helm-charts
+        helm repo update
+
+    - name: Deploy Mimir
+      if: steps.list-changed.outputs.changed == 'true'
+      run: |
+        helm install mimir grafana/mimir-distributed -f "${MIMIR_VALUES}" -n mimir --create-namespace
+
+    - name: Deploy Loki
+      if: steps.list-changed.outputs.changed == 'true'
+      run: |
+        helm install loki grafana/loki -f "${LOKI_VALUES}" -n loki --create-namespace
+
+    - name: Deploy Grafana
+      if: steps.list-changed.outputs.changed == 'true'
+      run: |
+        helm install grafana grafana/grafana -f "${GRAFANA_VALUES}" -n grafana --create-namespace
+
+    - name: Test chart
+      if: steps.list-changed.outputs.changed == 'true'
+      run: ct install --config "${CT_CONFIGFILE}"

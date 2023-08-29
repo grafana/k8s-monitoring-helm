@@ -1,0 +1,23 @@
+datasources:
+  datasources.yaml:
+    apiVersion: 1
+    datasources:
+      - name: Mimir
+        type: prometheus
+        url: 	http://mimir-nginx.mimir.svc:80/prometheus
+        isDefault: true
+        basicAuth: true
+        basicAuthUser: mimir
+        secureJsonData:
+          basicAuthPassword: mimirpassword
+
+      - name: Loki
+        type: loki
+        url: 	http://loki-gateway.loki.svc:80
+        basicAuth: true
+        basicAuthUser: loki
+        jsonData:
+          httpHeaderName1: X-Scope-OrgID
+        secureJsonData:
+          basicAuthPassword: lokipassword
+          httpHeaderValue1: "1"
