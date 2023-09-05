@@ -32,6 +32,7 @@ discovery.relabel "node_exporter" {
 prometheus.scrape "node_exporter" {
   job_name   = "integrations/node_exporter"
   targets  = discovery.relabel.node_exporter.output
+  scrape_interval = {{ (index .Values.metrics "node-exporter").scrapeInterval | default .Values.metrics.scrapeInterval | quote }}
 {{- if (index .Values "grafana-agent").agent.clustering.enabled }}
   clustering {
     enabled = true
