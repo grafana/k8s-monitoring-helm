@@ -67,7 +67,7 @@ prometheus.scrape "kubelet" {
   job_name   = "integrations/kubernetes/kubelet"
   targets  = discovery.relabel.kubelet.output
   scheme   = "https"
-  scrape_interval = "60s"
+  scrape_interval = "2m"
   bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
   tls_config {
     insecure_skip_verify = true
@@ -106,7 +106,7 @@ prometheus.scrape "cadvisor" {
   job_name   = "integrations/kubernetes/cadvisor"
   targets    = discovery.relabel.cadvisor.output
   scheme     = "https"
-  scrape_interval = "60s"
+  scrape_interval = "2m"
   bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
   tls_config {
     insecure_skip_verify = true
@@ -149,7 +149,7 @@ discovery.relabel "kube_state_metrics" {
 prometheus.scrape "kube_state_metrics" {
   job_name   = "integrations/kubernetes/kube-state-metrics"
   targets    = discovery.relabel.kube_state_metrics.output
-  scrape_interval = "60s"
+  scrape_interval = "30s"
   clustering {
     enabled = true
   }
@@ -227,7 +227,7 @@ discovery.relabel "opencost" {
 prometheus.scrape "opencost" {
   job_name   = "integrations/kubernetes/opencost"
   targets    = discovery.relabel.opencost.output
-  scrape_interval = "60s"
+  scrape_interval = "2m"
   clustering {
     enabled = true
   }
@@ -292,40 +292,6 @@ prometheus.remote_write "grafana_cloud_prometheus" {
 
   }
   external_labels = {
-    cluster = "default-values-test",
-  }
-}
-    
-// Cluster Events
-loki.source.kubernetes_events "cluster_events" {
-  job_name   = "integrations/kubernetes/eventhandler"
-  forward_to = [loki.write.grafana_cloud_loki.receiver]
-}
-    
-// Grafana Cloud Loki
-local.file "loki_host" {
-  filename  = "/etc/grafana-agent-credentials/loki_host"
-}
-
-local.file "loki_username" {
-  filename  = "/etc/grafana-agent-credentials/loki_username"
-}
-
-local.file "loki_password" {
-  filename  = "/etc/grafana-agent-credentials/loki_password"
-  is_secret = true
-}
-
-loki.write "grafana_cloud_loki" {
-  endpoint {
-    url = nonsensitive(local.file.loki_host.content) + "/loki/api/v1/push"
-
-    basic_auth {
-      username = local.file.loki_username.content
-      password = local.file.loki_password.content
-    }
-  }
-  external_labels = {
-    cluster = "default-values-test",
+    cluster = "custom-scrape-intervals-test",
   }
 }

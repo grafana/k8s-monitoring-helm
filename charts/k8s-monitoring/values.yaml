@@ -59,6 +59,9 @@ metrics:
   # -- Capture and forward metrics
   enabled: true
 
+  # -- (string) How frequently to scrape metrics
+  scrapeInterval: 60s
+
   # -- (string) Rule blocks to be added to the discovery.relabel component for all metric sources.
   # See https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block
   extraRelabelingRules:
@@ -71,6 +74,11 @@ metrics:
   kube-state-metrics:
     # -- Scrape cluster object metrics from Kube State Metrics
     enabled: true
+
+    # -- (string) How frequently to scrape metrics from Kube State Metrics.
+    # Overrides metrics.scrapeInterval
+    # @default -- 60s
+    scrapeInterval:
 
     # -- Label matchers used by the Grafana Agent to select the Kube State Metrics service
     labelMatchers:
@@ -130,6 +138,11 @@ metrics:
     # -- Scrape node metrics
     enabled: true
 
+    # -- (string) How frequently to scrape metrics from Node Exporter.
+    # Overrides metrics.scrapeInterval
+    # @default -- 60s
+    scrapeInterval:
+
     # -- Label matchers used by the Grafana Agent to select the Node exporter pods
     labelMatchers:
       app.kubernetes.io/name: prometheus-node-exporter.*
@@ -162,6 +175,11 @@ metrics:
     # -- Scrape node metrics
     enabled: false
 
+    # -- (string) How frequently to scrape metrics from Windows Exporter.
+    # Overrides metrics.scrapeInterval
+    # @default -- 60s
+    scrapeInterval:
+
     # -- Label matchers used by the Grafana Agent to select the Windows Exporter pods
     labelMatchers:
       app.kubernetes.io/name: prometheus-windows-exporter.*
@@ -187,6 +205,11 @@ metrics:
   kubelet:
     # -- Scrape cluster metrics from the Kubelet
     enabled: true
+
+    # -- (string) How frequently to scrape metrics from the Kubelet.
+    # Overrides metrics.scrapeInterval
+    # @default -- 60s
+    scrapeInterval:
 
     # -- (string) Rule blocks to be added to the discovery.relabel component for Kubelet.
     # See https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block
@@ -237,6 +260,11 @@ metrics:
     # -- Scrape container metrics from cAdvisor
     enabled: true
 
+    # -- (string) How frequently to scrape metrics from cAdvisor.
+    # Overrides metrics.scrapeInterval
+    # @default -- 60s
+    scrapeInterval:
+
     # -- (string) Rule blocks to be added to the discovery.relabel component for cAdvisor.
     # See https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block
     extraRelabelingRules:
@@ -271,6 +299,11 @@ metrics:
   cost:
     # -- Scrape cost metrics from OpenCost
     enabled: true
+
+    # -- (string) How frequently to scrape metrics from OpenCost.
+    # Overrides metrics.scrapeInterval
+    # @default -- 60s
+    scrapeInterval:
 
     # -- Label matchers used by the Grafana Agent to select the OpenCost service
     labelMatchers:
@@ -414,42 +447,37 @@ opencost:
   enabled: true
 
   opencost:
-    # @ignored
+    # @ignored -- This skips including these values in README.md
     exporter:
-      # -- Default cluster ID to use if cluster_id is not set in Prometheus metrics. It should match cluster.name.
+      # -- Default cluster ID to use if cluster is not set in Prometheus metrics. It should match cluster.name.
       defaultClusterId: "default-cluster"
-      # @ignored
       extraEnv:
-        # @ignored
+        # -- Trial API Key used only with GCP.
+        # See https://www.opencost.io/docs/configuration/gcp-opencost for how to set for your environment
         CLOUD_PROVIDER_API_KEY: AIzaSyD29bGxmHAVEOBYtgd8sYM2gM2ekfxQX4U
-        # @ignored
         EMIT_KSM_V1_METRICS: "false"
-        # @ignored
         EMIT_KSM_V1_METRICS_ONLY: "true"
-        # @ignored
         PROM_CLUSTER_ID_LABEL: cluster
 
     prometheus:
-      # @ignored
+      # @ignored -- This skips including these values in README.md
       secret_name: grafana-agent-credentials
-      # @ignored
+      # @ignored -- This skips including these values in README.md
       username_key: prometheus_username
-      # @ignored
+      # @ignored -- This skips including these values in README.md
       password_key: prometheus_password
       external:
-        # @ignored
+        # @ignored -- This skips including these values in README.md
         enabled: true
         # -- The URL for Prometheus queries. It should match externalService.prometheus.host + "/api/prom"
         url: "https://prom.example.com/api/prom"
-      # @ignored
+      # @ignored -- This skips including these values in README.md
       internal:
-        # @ignored
         enabled: false
-    # @ignored
+    # @ignored -- This skips including these values in README.md
     ui:
-      # @ignored
       enabled: false
-    # @ignored
+    # @ignored -- This skips including these values in README.md
     nodeSelector:
       kubernetes.io/os: linux
 
@@ -457,7 +485,7 @@ opencost:
 # Settings for the Grafana Agent deployment
 # You can use this sections to make modifications to the Grafana Agent deployment.
 # See https://github.com/grafana/agent/tree/main/operations/helm/charts/grafana-agent for available values.
-# @ignored
+# @ignored -- This skips including these values in README.md
 grafana-agent:
   agent:
     # This chart is creating the configuration, so the grafana-agent chart does
@@ -490,7 +518,7 @@ grafana-agent:
 # Settings for the Grafana Agent deployment
 # You can use this sections to make modifications to the Grafana Agent deployment.
 # See https://github.com/grafana/agent/tree/main/operations/helm/charts/grafana-agent for available values.
-# @ignored
+# @ignored -- This skips including these values in README.md
 grafana-agent-logs:
   agent:
     # This chart is creating the configuration, so the grafana-agent chart does

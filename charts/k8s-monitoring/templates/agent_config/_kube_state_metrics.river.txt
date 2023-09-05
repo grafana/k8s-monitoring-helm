@@ -32,6 +32,7 @@ discovery.relabel "kube_state_metrics" {
 prometheus.scrape "kube_state_metrics" {
   job_name   = "integrations/kubernetes/kube-state-metrics"
   targets    = discovery.relabel.kube_state_metrics.output
+  scrape_interval = {{ (index .Values.metrics "kube-state-metrics").scrapeInterval | default .Values.metrics.scrapeInterval | quote }}
 {{- if (index .Values "grafana-agent").agent.clustering.enabled }}
   clustering {
     enabled = true

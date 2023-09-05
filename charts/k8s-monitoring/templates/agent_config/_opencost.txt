@@ -30,6 +30,7 @@ discovery.relabel "opencost" {
 prometheus.scrape "opencost" {
   job_name   = "integrations/kubernetes/opencost"
   targets    = discovery.relabel.opencost.output
+  scrape_interval = {{ .Values.metrics.cost.scrapeInterval | default .Values.metrics.scrapeInterval | quote }}
 {{- if (index .Values "grafana-agent").agent.clustering.enabled }}
   clustering {
     enabled = true
