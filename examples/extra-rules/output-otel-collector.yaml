@@ -84,6 +84,7 @@ data:
   loki_host: "aHR0cHM6Ly9sb2tpLmV4YW1wbGUuY29t"
   loki_username: "MTIzNDU="
   loki_password: "SXQncyBhIHNlY3JldCB0byBldmVyeW9uZQ=="
+  loki_tenantId: "MjAwMA=="
 ---
 # Source: k8s-monitoring/templates/otel-collector-config.yaml
 apiVersion: v1
@@ -99,7 +100,7 @@ data:
       # The health_check extension can be modified, but should never be removed.
       health_check: {}
     receivers:
-      prometheus:
+      prometheus/grafanak8smon:
         config:
           scrape_configs:          
           - job_name: integrations/kubernetes/otel-collector
@@ -108,6 +109,9 @@ data:
             - targets:
               - ${env:MY_POD_IP}:8888
             relabel_configs:
+              - source_labels: ["__meta_kubernetes_namespace"]
+                regex: "private"
+                action: drop
             metric_relabel_configs:
               - action: keep
                 source_labels: ["__name__"]
@@ -124,6 +128,9 @@ data:
                 regex: "(.+)"
                 replacement: "/api/v1/nodes/$${1}/proxy/metrics"
                 target_label: "__metrics_path__"
+              - source_labels: ["__meta_kubernetes_namespace"]
+                regex: "private"
+                action: drop
             scheme: https
             bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
             tls_config:
@@ -134,6 +141,9 @@ data:
               - action: keep
                 source_labels: ["__name__"]
                 regex: "up|container_cpu_usage_seconds_total|kubelet_certificate_manager_client_expiration_renew_errors|kubelet_certificate_manager_client_ttl_seconds|kubelet_certificate_manager_server_ttl_seconds|kubelet_cgroup_manager_duration_seconds_bucket|kubelet_cgroup_manager_duration_seconds_count|kubelet_node_config_error|kubelet_node_name|kubelet_pleg_relist_duration_seconds_bucket|kubelet_pleg_relist_duration_seconds_count|kubelet_pleg_relist_interval_seconds_bucket|kubelet_pod_start_duration_seconds_bucket|kubelet_pod_start_duration_seconds_count|kubelet_pod_worker_duration_seconds_bucket|kubelet_pod_worker_duration_seconds_count|kubelet_running_container_count|kubelet_running_containers|kubelet_running_pod_count|kubelet_running_pods|kubelet_runtime_operations_errors_total|kubelet_runtime_operations_total|kubelet_server_expiration_renew_errors|kubelet_volume_stats_available_bytes|kubelet_volume_stats_capacity_bytes|kubelet_volume_stats_inodes|kubelet_volume_stats_inodes_used|kubernetes_build_info|namespace_workload_pod|rest_client_requests_total|storage_operation_duration_seconds_count|storage_operation_errors_total|volume_manager_total_volumes"
+              - source_labels: ["__meta_kubernetes_namespace"]
+                regex: "private"
+                action: drop
                     
           - job_name: integrations/kubernetes/cadvisor
             scrape_interval: 60s
@@ -146,6 +156,9 @@ data:
                 regex: "(.+)"
                 replacement: "/api/v1/nodes/$${1}/proxy/metrics/cadvisor"
                 target_label: "__metrics_path__"
+              - source_labels: ["__meta_kubernetes_namespace"]
+                regex: "private"
+                action: drop
             scheme: https
             bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
             tls_config:
@@ -174,10 +187,16 @@ data:
               - action: keep
                 regex: "http"
                 source_labels: ["__meta_kubernetes_service_port_name"]
+              - source_labels: ["__meta_kubernetes_namespace"]
+                regex: "private"
+                action: drop
             metric_relabel_configs:
               - action: keep
                 source_labels: ["__name__"]
                 regex: "up|kube_daemonset.*|kube_deployment_metadata_generation|kube_deployment_spec_replicas|kube_deployment_status_observed_generation|kube_deployment_status_replicas_available|kube_deployment_status_replicas_updated|kube_horizontalpodautoscaler_spec_max_replicas|kube_horizontalpodautoscaler_spec_min_replicas|kube_horizontalpodautoscaler_status_current_replicas|kube_horizontalpodautoscaler_status_desired_replicas|kube_job.*|kube_namespace_status_phase|kube_namespace_status_phase|kube_node.*|kube_persistentvolumeclaim_resource_requests_storage_bytes|kube_pod_container_info|kube_pod_container_resource_limits|kube_pod_container_resource_requests|kube_pod_container_status_restarts_total|kube_pod_container_status_waiting_reason|kube_pod_container_status_waiting_reason|kube_pod_info|kube_pod_owner|kube_pod_start_time|kube_pod_status_phase|kube_pod_status_phase|kube_pod_status_reason|kube_replicaset.*|kube_resourcequota|kube_statefulset.*"
+              - source_labels = ["namespace"]
+                regex: "production"
+                action: keep
                     
           - job_name: integrations/node_exporter
             scrape_interval: 60s
@@ -195,6 +214,9 @@ data:
               - action: replace
                 source_labels: ["__meta_kubernetes_namespace"]
                 target_label: namespace
+              - source_labels: ["__meta_kubernetes_namespace"]
+                regex: "private"
+                action: drop
             metric_relabel_configs:
               - action: keep
                 source_labels: ["__name__"]
@@ -214,59 +236,57 @@ data:
               - action: keep
                 source_labels: ["__meta_kubernetes_service_port_name"]
                 regex: "http"
+              - source_labels: ["__meta_kubernetes_namespace"]
+                regex: "private"
+                action: drop
             metric_relabel_configs:
               - action: keep
                 source_labels: ["__name__"]
                 regex: "up|container_cpu_allocation|container_gpu_allocation|container_memory_allocation_bytes|deployment_match_labels|kubecost_cluster_info|kubecost_cluster_management_cost|kubecost_cluster_memory_working_set_bytes|kubecost_http_requests_total|kubecost_http_response_size_bytes|kubecost_http_response_time_seconds|kubecost_load_balancer_cost|kubecost_network_internet_egress_cost|kubecost_network_region_egress_cost|kubecost_network_zone_egress_cost|kubecost_node_is_spot|node_cpu_hourly_cost|node_gpu_count|node_gpu_hourly_cost|node_ram_hourly_cost|node_total_hourly_cost|opencost_build_info|pod_pvc_allocation|pv_hourly_cost|service_selector_labels|statefulSet_match_labels"
                 
-      k8s_events:
+      k8s_events/grafanak8smonk8sevents:
         namespaces: []
       
     processors:
       batch: {}      
-      clusterevents:
+      resource/grafanak8smonk8sevents:
         attributes:
-          actions:
-            - action: insert
-              key: loki.attribute.labels
-              value: event.domain
-            - action: add
-              key: loki.attribute.labels
-              value: default-values-test
-      
-        resource:
-          attributes:
-            - action: insert
-              key: loki.resource.labels
-              value: service.name
+          - action: insert
+            key: cluster
+            value: "extra-rules-test"
+          - action: insert
+            key: job
+            value: "integrations/kubernetes/eventhandler"
+          - action: insert
+            key: loki.resource.labels
+            value: job, cluster
       
     exporters:      
       prometheusremotewrite:
         external_labels:
-          cluster: default-values-test
+          cluster: extra-rules-test
+          site: "northwest",
         endpoint: https://prometheus.example.com/api/prom/push
         headers:
           Authorization: Basic MTIzNDU6SXQncyBhIHNlY3JldCB0byBldmVyeW9uZQ==
             
       loki:
         endpoint: https://loki.example.com/loki/api/v1/push
-        default_labels_enabled:
-          job: false
         headers:
           Authorization: Basic MTIzNDU6SXQncyBhIHNlY3JldCB0byBldmVyeW9uZQ==
-          X-Scope-OrgID: ""
+          X-Scope-OrgID: "MjAwMA=="
       
     service:
       extensions:
         - health_check
       pipelines:
-        metrics/prod:
-          receivers: [ prometheus ]
+        metrics/grafanak8smon:
+          receivers: [ prometheus/grafanak8smon ]
           processors: [ batch ]
           exporters: [ prometheusremotewrite ]        
-        logs:
-          receivers: [ k8s_events ]
-          processors: [ clusterevents ]
+        logs/grafanak8smonk8sevents:
+          receivers: [ k8s_events/grafanak8smonk8sevents ]
+          processors: [ batch, resource/grafanak8smonk8sevents ]
           exporters: [ loki ]
         
       telemetry:
@@ -346,17 +366,24 @@ data:
             from: attributes.container_name
             to: resource["container"]
           - type: move
-            from: attributes.namespace
-            to: resource["namespace"]
-          - type: move
             from: attributes.pod_name
             to: resource["pod"]
+          - type: move
+            from: attributes.namespace
+            to: resource["namespace"]
           - type: add
             field: resource["cluster"]
-            value: default-values-test
+            value: "extra-rules-test"
       
     processors:
       batch: {}      
+      transform/podlogs:
+        error_mode: ignore
+        log_statements:
+          - context: resource
+            statements:
+              - set(attributes["job"], Concat([attributes["namespace"], attributes["pod"]], "/"))
+      
       resource/podlogs:
         attributes:
           - action: insert
@@ -364,24 +391,22 @@ data:
             value: raw
           - action: insert
             key: loki.resource.labels
-            value: pod, namespace, container, cluster, filename
+            value: filename, container, pod, namespace, cluster, job
       
     exporters:      
       loki:
         endpoint: https://loki.example.com/loki/api/v1/push
-        default_labels_enabled:
-          job: false
         headers:
           Authorization: Basic MTIzNDU6SXQncyBhIHNlY3JldCB0byBldmVyeW9uZQ==
-          X-Scope-OrgID: ""
+          X-Scope-OrgID: "MjAwMA=="
       
     service:
       extensions:
         - health_check
       pipelines:        
-        logs:
+        logs/podlogs:
           receivers: [ filelog/podlogs ]
-          processors: [ resource/podlogs ]
+          processors: [ batch, transform/podlogs, resource/podlogs ]
           exporters: [ loki ]
         
       telemetry:

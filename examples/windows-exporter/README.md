@@ -10,7 +10,7 @@ The Windows Exporter is not enabled by default, so to enable it, you need to set
 
 ```yaml
 cluster:
-  name: default-values-test
+  name: windows-exporter-test
 
 externalServices:
   prometheus:

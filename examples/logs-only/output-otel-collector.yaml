@@ -38,6 +38,126 @@ data:
   loki_password: "SXQncyBhIHNlY3JldCB0byBldmVyeW9uZQ=="
   loki_tenantId: "MjAwMA=="
 ---
+# Source: k8s-monitoring/templates/otel-collector-logs-config.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-k8s-monitoring-logs-config
+  namespace: default
+data:
+  relay.yaml: |-
+    extensions:
+      # The health_check extension is mandatory.
+      # Without the health_check extension the collector will fail the readiness and liveliness probes.
+      # The health_check extension can be modified, but should never be removed.
+      health_check: {}
+    receivers:      
+      filelog/podlogs:
+        include:
+          - /var/log/pods/*/*/*.log
+        start_at: beginning
+        include_file_path: true
+        include_file_name: false
+        operators:
+          # Find out which format is used by kubernetes
+          - type: router
+            id: get-format
+            routes:
+              - output: parser-docker
+                expr: 'body matches "^\\{"'
+              - output: parser-crio
+                expr: 'body matches "^[^ Z]+ "'
+              - output: parser-containerd
+                expr: 'body matches "^[^ Z]+Z"'
+          # Parse CRI-O format
+          - type: regex_parser
+            id: parser-crio
+            regex: '^(?P<time>[^ Z]+) (?P<stream>stdout|stderr) (?P<logtag>[^ ]*) ?(?P<log>.*)$'
+            output: extract_metadata_from_filepath
+            timestamp:
+              parse_from: attributes.time
+              layout_type: gotime
+              layout: '2006-01-02T15:04:05.999999999Z07:00'
+          # Parse CRI-Containerd format
+          - type: regex_parser
+            id: parser-containerd
+            regex: '^(?P<time>[^ ^Z]+Z) (?P<stream>stdout|stderr) (?P<logtag>[^ ]*) ?(?P<log>.*)$'
+            output: extract_metadata_from_filepath
+            timestamp:
+              parse_from: attributes.time
+              layout: '%Y-%m-%dT%H:%M:%S.%LZ'
+          # Parse Docker format
+          - type: json_parser
+            id: parser-docker
+            output: extract_metadata_from_filepath
+            timestamp:
+              parse_from: attributes.time
+              layout: '%Y-%m-%dT%H:%M:%S.%LZ'
+          - type: move
+            from: attributes.log
+            to: body
+          # Extract metadata from file path
+          - type: regex_parser
+            id: extract_metadata_from_filepath
+            regex: '^.*\/(?P<namespace>[^_]+)_(?P<pod_name>[^_]+)_(?P<uid>[a-f0-9\-]{36})\/(?P<container_name>[^\._]+)\/(?P<restart_count>\d+)\.log$'
+            parse_from: attributes["log.file.path"]
+            cache:
+              size: 128 # default maximum amount of Pods per Node is 110
+          # Rename attributes
+          - type: move
+            from: attributes["log.file.path"]
+            to: resource["filename"]
+          - type: move
+            from: attributes.container_name
+            to: resource["container"]
+          - type: move
+            from: attributes.pod_name
+            to: resource["pod"]
+          - type: move
+            from: attributes.namespace
+            to: resource["namespace"]
+          - type: add
+            field: resource["cluster"]
+            value: "logs-only-test"
+      
+    processors:
+      batch: {}      
+      transform/podlogs:
+        error_mode: ignore
+        log_statements:
+          - context: resource
+            statements:
+              - set(attributes["job"], Concat([attributes["namespace"], attributes["pod"]], "/"))
+      
+      resource/podlogs:
+        attributes:
+          - action: insert
+            key: loki.format
+            value: raw
+          - action: insert
+            key: loki.resource.labels
+            value: filename, container, pod, namespace, cluster, job
+      
+    exporters:      
+      loki:
+        endpoint: https://loki.example.com/loki/api/v1/push
+        headers:
+          Authorization: Basic MTIzNDU6SXQncyBhIHNlY3JldCB0byBldmVyeW9uZQ==
+          X-Scope-OrgID: "MjAwMA=="
+      
+    service:
+      extensions:
+        - health_check
+      pipelines:        
+        logs/podlogs:
+          receivers: [ filelog/podlogs ]
+          processors: [ batch, transform/podlogs, resource/podlogs ]
+          exporters: [ loki ]
+        
+      telemetry:
+        logs:
+          level: 'debug'
+---
 # Source: k8s-monitoring/charts/opentelemetry-collector-logs/templates/clusterrole.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -83,10 +203,12 @@ rules:
   - apiGroups:
     - ""
     resources:
+    - endpoints
     - events
     - namespaces
     - namespaces/status
     - nodes
+    - nodes/proxy
     - nodes/spec
     - pods
     - pods/status
@@ -181,54 +303,6 @@ subjects:
   name: k8smon-opentelemetry-collector
   namespace: default
 ---
-# Source: k8s-monitoring/charts/opentelemetry-collector-logs/templates/service.yaml
-apiVersion: v1
-kind: Service
-metadata:
-  name: k8smon-opentelemetry-collector-logs
-  namespace: default
-  labels:
-    helm.sh/chart: opentelemetry-collector-logs-0.66.4
-    app.kubernetes.io/name: opentelemetry-collector-logs
-    app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "0.83.0"
-    app.kubernetes.io/managed-by: Helm
-    component: standalone-collector
-spec:
-  type: ClusterIP
-  ports:
-    
-    - name: jaeger-compact
-      port: 6831
-      targetPort: 6831
-      protocol: UDP
-    - name: jaeger-grpc
-      port: 14250
-      targetPort: 14250
-      protocol: TCP
-    - name: jaeger-thrift
-      port: 14268
-      targetPort: 14268
-      protocol: TCP
-    - name: otlp
-      port: 4317
-      targetPort: 4317
-      protocol: TCP
-      appProtocol: grpc
-    - name: otlp-http
-      port: 4318
-      targetPort: 4318
-      protocol: TCP
-    - name: zipkin
-      port: 9411
-      targetPort: 9411
-      protocol: TCP
-  selector:
-    app.kubernetes.io/name: opentelemetry-collector-logs
-    app.kubernetes.io/instance: k8smon
-    component: standalone-collector
-  internalTrafficPolicy: Cluster
----
 # Source: k8s-monitoring/charts/opentelemetry-collector/templates/service.yaml
 apiVersion: v1
 kind: Service
@@ -241,7 +315,7 @@ metadata:
     app.kubernetes.io/instance: k8smon
     app.kubernetes.io/version: "0.83.0"
     app.kubernetes.io/managed-by: Helm
-    component: standalone-collector
+    component: statefulset-collector
 spec:
   type: ClusterIP
   ports:
@@ -274,14 +348,14 @@ spec:
   selector:
     app.kubernetes.io/name: opentelemetry-collector
     app.kubernetes.io/instance: k8smon
-    component: standalone-collector
+    component: statefulset-collector
   internalTrafficPolicy: Cluster
 ---
-# Source: k8s-monitoring/charts/opentelemetry-collector-logs/templates/deployment.yaml
+# Source: k8s-monitoring/charts/opentelemetry-collector-logs/templates/daemonset.yaml
 apiVersion: apps/v1
-kind: Deployment
+kind: DaemonSet
 metadata:
-  name: k8smon-opentelemetry-collector-logs
+  name: k8smon-opentelemetry-collector-logs-agent
   namespace: default
   labels:
     helm.sh/chart: opentelemetry-collector-logs-0.66.4
@@ -290,14 +364,12 @@ metadata:
     app.kubernetes.io/version: "0.83.0"
     app.kubernetes.io/managed-by: Helm
 spec:
-  replicas: 1
-  revisionHistoryLimit: 10
   selector:
     matchLabels:
       app.kubernetes.io/name: opentelemetry-collector-logs
       app.kubernetes.io/instance: k8smon
-      component: standalone-collector
-  strategy:
+      component: agent-collector
+  updateStrategy:
     type: RollingUpdate
   template:
     metadata:
@@ -307,7 +379,7 @@ spec:
       labels:
         app.kubernetes.io/name: opentelemetry-collector-logs
         app.kubernetes.io/instance: k8smon
-        component: standalone-collector
+        component: agent-collector
         
     spec:
       
@@ -328,21 +400,27 @@ spec:
             - name: jaeger-compact
               containerPort: 6831
               protocol: UDP
+              hostPort: 6831
             - name: jaeger-grpc
               containerPort: 14250
               protocol: TCP
+              hostPort: 14250
             - name: jaeger-thrift
               containerPort: 14268
               protocol: TCP
+              hostPort: 14268
             - name: otlp
               containerPort: 4317
               protocol: TCP
+              hostPort: 4317
             - name: otlp-http
               containerPort: 4318
               protocol: TCP
+              hostPort: 4318
             - name: zipkin
               containerPort: 9411
               protocol: TCP
+              hostPort: 9411
           env:
             - name: MY_POD_IP
               valueFrom:
@@ -358,18 +436,33 @@ spec:
               path: /
               port: 13133
           volumeMounts:
-            - name: grafana-k8s-monitoring-config
+            - name: grafana-k8s-monitoring-logs-config
               mountPath: /conf
               readOnly: 
+            - mountPath: /var/log
+              name: varlog
+              readOnly: true
+            - mountPath: /var/lib/docker/containers
+              name: varlibdockercontainers
+              readOnly: true
       volumes:
-        - name: grafana-k8s-monitoring-config
+        - name: grafana-k8s-monitoring-logs-config
           configMap:
-            name: grafana-k8s-monitoring-config
+            name: grafana-k8s-monitoring-logs-config
+        - hostPath:
+            path: /var/log
+          name: varlog
+        - hostPath:
+            path: /var/lib/docker/containers
+          name: varlibdockercontainers
+      tolerations:
+        - effect: NoSchedule
+          operator: Exists
       hostNetwork: false
 ---
-# Source: k8s-monitoring/charts/opentelemetry-collector/templates/deployment.yaml
+# Source: k8s-monitoring/charts/opentelemetry-collector/templates/statefulset.yaml
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: k8smon-opentelemetry-collector
   namespace: default
@@ -380,14 +473,15 @@ metadata:
     app.kubernetes.io/version: "0.83.0"
     app.kubernetes.io/managed-by: Helm
 spec:
+  serviceName: k8smon-opentelemetry-collector
+  podManagementPolicy: Parallel
   replicas: 1
-  revisionHistoryLimit: 10
   selector:
     matchLabels:
       app.kubernetes.io/name: opentelemetry-collector
       app.kubernetes.io/instance: k8smon
-      component: standalone-collector
-  strategy:
+      component: statefulset-collector
+  updateStrategy:
     type: RollingUpdate
   template:
     metadata:
@@ -397,7 +491,7 @@ spec:
       labels:
         app.kubernetes.io/name: opentelemetry-collector
         app.kubernetes.io/instance: k8smon
-        component: standalone-collector
+        component: statefulset-collector
         
     spec:
       

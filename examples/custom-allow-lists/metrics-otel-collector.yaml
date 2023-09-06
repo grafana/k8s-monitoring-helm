@@ -3,13 +3,20 @@ extensions:
   # Without the health_check extension the collector will fail the readiness and liveliness probes.
   # The health_check extension can be modified, but should never be removed.
   health_check: {}
-processors:
-  batch: {}
 receivers:
-  prometheus:
+  prometheus/grafanak8smon:
     config:
       scrape_configs:          
+      - job_name: integrations/kubernetes/otel-collector
+        scrape_interval: 60s
+        static_configs:
+        - targets:
+          - ${env:MY_POD_IP}:8888
+        relabel_configs:
+        metric_relabel_configs:
+                
       - job_name: integrations/kubernetes/kubelet
+        scrape_interval: 60s
         kubernetes_sd_configs:
           - role: node
         relabel_configs:
@@ -23,7 +30,7 @@ receivers:
         bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
         tls_config:
           ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
-          insecure_skip_verify: true
+          insecure_skip_verify: false
           server_name: kubernetes
         metric_relabel_configs:
           - action: keep
@@ -31,6 +38,7 @@ receivers:
             regex: "up|kubelet_node_name|kubernetes_build_info"
                 
       - job_name: integrations/kubernetes/cadvisor
+        scrape_interval: 60s
         kubernetes_sd_configs:
           - role: node
         relabel_configs:
@@ -44,7 +52,7 @@ receivers:
         bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
         tls_config:
           ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
-          insecure_skip_verify: true
+          insecure_skip_verify: false
           server_name: kubernetes
         metric_relabel_configs:
           - action: keep
@@ -52,6 +60,7 @@ receivers:
             regex: "up|container_memory_cache|container_memory_rss|container_memory_swap"
                 
       - job_name: integrations/kubernetes/kube-state-metrics
+        scrape_interval: 60s
         kubernetes_sd_configs:
           - role: service
         relabel_configs:
@@ -73,6 +82,7 @@ receivers:
             regex: "up|*"
                 
       - job_name: integrations/node_exporter
+        scrape_interval: 60s
         kubernetes_sd_configs:
           - role: pod
         relabel_configs:
@@ -93,6 +103,7 @@ receivers:
             regex: "up|node_*"
                 
       - job_name: integrations/kubernetes/opencost
+        scrape_interval: 60s
         kubernetes_sd_configs:
           - role: service
         relabel_configs:
@@ -105,7 +116,10 @@ receivers:
           - action: keep
             source_labels: ["__meta_kubernetes_service_port_name"]
             regex: "http"
+        metric_relabel_configs:
       
+processors:
+  batch: {}
 exporters:      
   prometheusremotewrite:
     external_labels:
@@ -118,8 +132,8 @@ service:
   extensions:
     - health_check
   pipelines:
-    metrics/prod:
-      receivers: [ prometheus ]
+    metrics/grafanak8smon:
+      receivers: [ prometheus/grafanak8smon ]
       processors: [ batch ]
       exporters: [ prometheusremotewrite ]
   telemetry:

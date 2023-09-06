@@ -14,6 +14,15 @@ externalServices:
     basicAuth:
       username: 12345
       password: "It's a secret to everyone"
+    externalLabels:
+      site: northwest
+    writeRelabelConfigRules: |-
+      write_relabel_config {
+        source_labels = ["__name__"]
+        regex = "metric_to_drop|another_metric_to_drop"
+        action = "drop"
+      }
+
   loki:
     host: https://loki.example.com
     tenantId: 2000
@@ -24,10 +33,11 @@ externalServices:
 metrics:
   extraRelabelingRules: |-
     rule {
-      action = "replace"
-      replacement = ""
+      source_labels = ["__meta_kubernetes_namespace"]
+      regex = "private"
+      action = "drop"
     }
-  
+
   kube-state-metrics:
     extraMetricRelabelingRules: |-
       rule {

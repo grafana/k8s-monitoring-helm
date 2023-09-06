@@ -31,9 +31,8 @@ metrics:
     scrapeInterval: 60s
 
 logs:
-  pod_logs:
-    enabled: false
+  enabled: false
 
-  cluster_events:
-    enabled: false
+grafana-agent-logs:
+  enabled: false
 ```

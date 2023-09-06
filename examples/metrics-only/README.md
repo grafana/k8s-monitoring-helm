@@ -22,4 +22,7 @@ logs:
 
   cluster_events:
     enabled: false
+
+grafana-agent-logs:
+  enabled: false
 ```

@@ -4,7 +4,7 @@ extensions:
   # The health_check extension can be modified, but should never be removed.
   health_check: {}
 receivers:
-  prometheus:
+  prometheus/grafanak8smon:
     config:
       scrape_configs:          
       - job_name: integrations/kubernetes/otel-collector
@@ -123,57 +123,25 @@ receivers:
           - action: keep
             source_labels: ["__name__"]
             regex: "up|container_cpu_allocation|container_gpu_allocation|container_memory_allocation_bytes|deployment_match_labels|kubecost_cluster_info|kubecost_cluster_management_cost|kubecost_cluster_memory_working_set_bytes|kubecost_http_requests_total|kubecost_http_response_size_bytes|kubecost_http_response_time_seconds|kubecost_load_balancer_cost|kubecost_network_internet_egress_cost|kubecost_network_region_egress_cost|kubecost_network_zone_egress_cost|kubecost_node_is_spot|node_cpu_hourly_cost|node_gpu_count|node_gpu_hourly_cost|node_ram_hourly_cost|node_total_hourly_cost|opencost_build_info|pod_pvc_allocation|pv_hourly_cost|service_selector_labels|statefulSet_match_labels"
-            
-  k8s_events:
-    namespaces: []
-  
+      
 processors:
-  batch: {}      
-  clusterevents:
-    attributes:
-      actions:
-        - action: insert
-          key: loki.attribute.labels
-          value: event.domain
-        - action: add
-          key: loki.attribute.labels
-          value: default-values-test
-  
-    resource:
-      attributes:
-        - action: insert
-          key: loki.resource.labels
-          value: service.name
-  
+  batch: {}
 exporters:      
   prometheusremotewrite:
     external_labels:
-      cluster: default-values-test
+      cluster: metrics-only-test
     endpoint: https://prometheus.example.com/api/prom/push
     headers:
       Authorization: Basic MTIzNDU6SXQncyBhIHNlY3JldCB0byBldmVyeW9uZQ==
-        
-  loki:
-    endpoint: https://loki.example.com/loki/api/v1/push
-    default_labels_enabled:
-      job: false
-    headers:
-      Authorization: Basic MTIzNDU6SXQncyBhIHNlY3JldCB0byBldmVyeW9uZQ==
-      X-Scope-OrgID: ""
   
 service:
   extensions:
     - health_check
   pipelines:
-    metrics/prod:
-      receivers: [ prometheus ]
+    metrics/grafanak8smon:
+      receivers: [ prometheus/grafanak8smon ]
       processors: [ batch ]
-      exporters: [ prometheusremotewrite ]        
-    logs:
-      receivers: [ k8s_events ]
-      processors: [ clusterevents ]
-      exporters: [ loki ]
-    
+      exporters: [ prometheusremotewrite ]
   telemetry:
     logs:
       level: 'debug'
