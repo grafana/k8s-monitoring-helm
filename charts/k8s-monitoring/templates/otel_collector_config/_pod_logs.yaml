@@ -69,6 +69,13 @@ filelog/podlogs:
 {{ end }}
 
 {{ define "otelcollector.config.logs.pod_logs.processor" }}
+transform/podlogs:
+  error_mode: ignore
+  log_statements:
+    - context: resource
+      statements:
+        - set(attributes["job"], Concat([attributes["namespace"], attributes["pod"]], "/"))
+
 resource/podlogs:
   attributes:
     - action: insert
@@ -76,12 +83,12 @@ resource/podlogs:
       value: raw
     - action: insert
       key: loki.resource.labels
-      value: filename, container, pod, namespace, cluster
+      value: filename, container, pod, namespace, cluster, job
 {{ end }}
 
 {{ define "otelcollector.config.logs.pod_logs.pipeline" }}
 logs/podlogs:
   receivers: [ filelog/podlogs ]
-  processors: [ batch, resource/podlogs ]
+  processors: [ batch, transform/podlogs, resource/podlogs ]
   exporters: [ loki ]
 {{ end }}
