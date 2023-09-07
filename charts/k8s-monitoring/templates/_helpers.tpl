@@ -5,7 +5,6 @@
   {{- range (index .Values "grafana-agent").agent.extraPorts -}}
     {{- if eq .targetPort $tracePort }}
       {{- $found = true -}}
-      {{- break -}}
     {{- end }}
   {{- end }}
   {{- if not $found }}
