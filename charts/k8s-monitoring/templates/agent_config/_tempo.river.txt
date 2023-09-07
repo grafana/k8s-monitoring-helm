@@ -1,0 +1,34 @@
+{{ define "agent.config.tempo" }}
+{{- with .Values.externalServices.tempo }}
+// Tempo
+local.file "tempo_host" {
+  filename  = "/etc/grafana-agent-credentials/tempo_host"
+}
+{{ if .basicAuth.username }}
+local.file "tempo_username" {
+  filename  = "/etc/grafana-agent-credentials/tempo_username"
+}
+{{- end }}
+{{ if .basicAuth.password }}
+local.file "tempo_password" {
+  filename  = "/etc/grafana-agent-credentials/tempo_password"
+  is_secret = true
+}
+{{- end }}
+{{ if .basicAuth }}
+otelcol.auth.basic "tempo" {
+  {{ if .basicAuth.username }}username = local.file.tempo_username.content{{ end }}
+  {{ if .basicAuth.password }}password = local.file.tempo_password.content{{ end }}
+}
+{{- end }}
+
+otelcol.exporter.otlp "tempo" {
+  client {
+    endpoint = nonsensitive(local.file.tempo_host.content)
+{{ if .basicAuth }}
+    auth = otelcol.auth.basic.tempo.handler
+{{- end }}
+  }
+}
+{{- end }}
+{{ end }}

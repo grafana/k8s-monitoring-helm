@@ -54,6 +54,18 @@ externalServices:
       # -- (string) Loki basic auth password
       password: ""
 
+  # Connection information for Grafana Tempo
+  tempo:
+    # -- (string) (required) Tempo host where traces will be sent
+    host: ""
+
+    # Authenticate to Tempo using basic authentication
+    basicAuth:
+      # -- (string) Tempo basic auth username
+      username: ""
+      # -- (string) Tempo basic auth password
+      password: ""
+
 # Settings related to capturing and forwarding metrics
 metrics:
   # -- Capture and forward metrics
@@ -384,6 +396,25 @@ logs:
 
   # -- (string) Extra configuration that will be added to Grafana Agent Logs. See [Adding custom Flow configuration](#adding-custom-flow-configuration) for an example.  
   extraConfig:
+
+# Settings related to capturing and forwarding traces
+traces:
+  # -- Capture and forward traces.
+  enabled: false
+
+  # OTLP Trace receiver settings
+  receiver:
+    # -- Which port to use for the OTLP receiver. This port needs to be opened in the grafana-agent section below.
+    port: 4317
+
+  # OTLP Trace processor settings
+  processors:
+    # Trace batch processor settings
+    batch:
+      # -- What batch size to use, in bytes
+      size: 16384
+      # -- How long before sending
+      timeout: 2s
 
 # -- (string) Extra configuration that will be added to the Grafana Agent configuration file. See [Adding custom Flow configuration](#adding-custom-flow-configuration) for an example.
 extraConfig:

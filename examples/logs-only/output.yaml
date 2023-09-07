@@ -55,6 +55,44 @@ data:
     discovery.kubernetes "services" {
       role = "service"
     }
+        
+    // Cluster Events
+    loki.source.kubernetes_events "cluster_events" {
+      job_name   = "integrations/kubernetes/eventhandler"
+      forward_to = [loki.write.grafana_cloud_loki.receiver]
+    }
+        
+    // Grafana Cloud Loki
+    local.file "loki_host" {
+      filename  = "/etc/grafana-agent-credentials/loki_host"
+    }
+    
+    local.file "loki_username" {
+      filename  = "/etc/grafana-agent-credentials/loki_username"
+    }
+    
+    local.file "loki_password" {
+      filename  = "/etc/grafana-agent-credentials/loki_password"
+      is_secret = true
+    }
+    
+    local.file "loki_tenantid" {
+      filename  = "/etc/grafana-agent-credentials/loki_tenantId"
+    }
+    loki.write "grafana_cloud_loki" {
+      endpoint {
+        url = nonsensitive(local.file.loki_host.content) + "/loki/api/v1/push"
+        tenant_id = local.file.loki_tenantid.content
+    
+        basic_auth {
+          username = local.file.loki_username.content
+          password = local.file.loki_password.content
+        }
+      }
+      external_labels = {
+        cluster = "logs-only-test",
+      }
+    }
 ---
 # Source: k8s-monitoring/templates/grafana-agent-logs-config.yaml
 apiVersion: v1
