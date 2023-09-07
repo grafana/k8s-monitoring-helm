@@ -1,0 +1,33 @@
+{{ define "agent.config.traces" }}
+{{- include "checkForTracePort" . -}}
+{{- with .Values.traces }}
+// Traces
+otelcol.receiver.otlp "trace_receiver" {
+  grpc {
+    endpoint = "0.0.0.0:{{ .receiver.port | int }}"
+  }
+  output {
+    traces = [otelcol.processor.batch.trace_batch_processor.input]
+  }
+}
+
+otelcol.processor.batch "trace_batch_processor" {
+  send_batch_size = {{ .processors.batch.size | int }}
+  timeout = {{ .processors.batch.timeout | quote}}
+  output {
+    traces = [otelcol.processor.attributes.trace_attributes_processor.input]
+  }
+}
+{{- end }}
+
+otelcol.processor.attributes "trace_attributes_processor" {
+  action {
+    key = "cluster"
+    value = {{ required ".Values.cluster.name is a required value. Please set it and try again." .Values.cluster.name | quote }}
+    action = "insert"
+  }
+  output {
+    traces = [otelcol.exporter.otlp.tempo.input]
+  }
+}
+{{ end }}
