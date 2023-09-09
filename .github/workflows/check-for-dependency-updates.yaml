@@ -22,24 +22,32 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Install Helm
-        uses: azure/setup-helm@v3
-
       - name: Install Updatecli
         uses: updatecli/updatecli-action@v2
 
       - name: Run Updatecli
-        run: "updatecli apply --config ${UPDATECLI_CONFIG_DIR}/grafana-agent.yaml"
+        id: update-grafana-agent
+        run: |
+          updatecli apply --config ${UPDATECLI_CONFIG_DIR}/grafana-agent.yaml
+          if ! git diff --exit-code > /dev/null; then
+            echo "changed=true" >> "${GITHUB_OUTPUT}"
+          fi
         env:
           UPDATECLI_GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
 
       - name: Regenerate docs
+        if: steps.update-grafana-agent.outputs.changed == 'true'
         run: docker run --rm -v "$(pwd)/charts/k8s-monitoring:/helm-docs" -u "$(id -u)" jnorwood/helm-docs
 
+      - name: Install Helm
+        uses: azure/setup-helm@v3
+
       - name: Regenerate examples
+        if: steps.update-grafana-agent.outputs.changed == 'true'
         run: make regenerate-example-outputs
 
       - name: Create pull request
+        if: steps.update-grafana-agent.outputs.changed == 'true'
         uses: peter-evans/create-pull-request@v5
         with:
           title: "[dependency] Update Grafana Agent"
@@ -59,24 +67,32 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Install Helm
-        uses: azure/setup-helm@v3
-
       - name: Install Updatecli
         uses: updatecli/updatecli-action@v2
 
       - name: Run Updatecli
-        run: "updatecli apply --config ${UPDATECLI_CONFIG_DIR}/kube-state-metrics.yaml"
+        id: update-kube-state-metrics
+        run: |
+          updatecli apply --config ${UPDATECLI_CONFIG_DIR}/kube-state-metrics.yaml
+          if ! git diff --exit-code > /dev/null; then
+            echo "changed=true" >> "${GITHUB_OUTPUT}"
+          fi
         env:
           UPDATECLI_GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
 
       - name: Regenerate docs
+        if: steps.update-kube-state-metrics.outputs.changed == 'true'
         run: docker run --rm -v "$(pwd)/charts/k8s-monitoring:/helm-docs" -u "$(id -u)" jnorwood/helm-docs
 
+      - name: Install Helm
+        uses: azure/setup-helm@v3
+
       - name: Regenerate examples
+        if: steps.update-kube-state-metrics.outputs.changed == 'true'
         run: make regenerate-example-outputs
 
       - name: Create pull request
+        if: steps.update-kube-state-metrics.outputs.changed == 'true'
         uses: peter-evans/create-pull-request@v5
         with:
           title: "[dependency] Update Kube State Metrics"
@@ -95,24 +111,32 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Install Helm
-        uses: azure/setup-helm@v3
-
       - name: Install Updatecli
         uses: updatecli/updatecli-action@v2
 
       - name: Run Updatecli
-        run: "updatecli apply --config ${UPDATECLI_CONFIG_DIR}/node-exporter.yaml"
+        id: update-node-exporter
+        run: |
+          updatecli apply --config ${UPDATECLI_CONFIG_DIR}/node-exporter.yaml
+          if ! git diff --exit-code > /dev/null; then
+            echo "changed=true" >> "${GITHUB_OUTPUT}"
+          fi
         env:
           UPDATECLI_GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
 
       - name: Regenerate docs
+        if: steps.update-node-exporter.outputs.changed == 'true'
         run: docker run --rm -v "$(pwd)/charts/k8s-monitoring:/helm-docs" -u "$(id -u)" jnorwood/helm-docs
 
+      - name: Install Helm
+        uses: azure/setup-helm@v3
+
       - name: Regenerate examples
+        if: steps.update-node-exporter.outputs.changed == 'true'
         run: make regenerate-example-outputs
 
       - name: Create pull request
+        if: steps.update-node-exporter.outputs.changed == 'true'
         uses: peter-evans/create-pull-request@v5
         with:
           title: "[dependency] Update Node Exporter"
@@ -131,24 +155,32 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Install Helm
-        uses: azure/setup-helm@v3
-
       - name: Install Updatecli
         uses: updatecli/updatecli-action@v2
 
       - name: Run Updatecli
-        run: "updatecli apply --config ${UPDATECLI_CONFIG_DIR}/opencost.yaml"
+        id: update-opencost
+        run: |
+          updatecli apply --config ${UPDATECLI_CONFIG_DIR}/opencost.yaml
+          if ! git diff --exit-code > /dev/null; then
+            echo "changed=true" >> "${GITHUB_OUTPUT}"
+          fi
         env:
           UPDATECLI_GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
 
       - name: Regenerate docs
+        if: steps.update-opencost.outputs.changed == 'true'
         run: docker run --rm -v "$(pwd)/charts/k8s-monitoring:/helm-docs" -u "$(id -u)" jnorwood/helm-docs
 
+      - name: Install Helm
+        uses: azure/setup-helm@v3
+
       - name: Regenerate examples
+        if: steps.update-opencost.outputs.changed == 'true'
         run: make regenerate-example-outputs
 
       - name: Create pull request
+        if: steps.update-opencost.outputs.changed == 'true'
         uses: peter-evans/create-pull-request@v5
         with:
           title: "[dependency] Update OpenCost"
@@ -167,24 +199,32 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Install Helm
-        uses: azure/setup-helm@v3
-
       - name: Install Updatecli
         uses: updatecli/updatecli-action@v2
 
       - name: Run Updatecli
-        run: "updatecli apply --config ${UPDATECLI_CONFIG_DIR}/prometheus-operator-crds.yaml"
+        id: update-prometheus-operator-crds
+        run: |
+          updatecli apply --config ${UPDATECLI_CONFIG_DIR}/prometheus-operator-crds.yaml
+          if ! git diff --exit-code > /dev/null; then
+            echo "changed=true" >> "${GITHUB_OUTPUT}"
+          fi
         env:
           UPDATECLI_GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
 
       - name: Regenerate docs
+        if: steps.update-prometheus-operator-crds.outputs.changed == 'true'
         run: docker run --rm -v "$(pwd)/charts/k8s-monitoring:/helm-docs" -u "$(id -u)" jnorwood/helm-docs
 
+      - name: Install Helm
+        uses: azure/setup-helm@v3
+
       - name: Regenerate examples
+        if: steps.update-prometheus-operator-crds.outputs.changed == 'true'
         run: make regenerate-example-outputs
 
       - name: Create pull request
+        if: steps.update-prometheus-operator-crds.outputs.changed == 'true'
         uses: peter-evans/create-pull-request@v5
         with:
           title: "[dependency] Update Prometheus Operator CRDs"
@@ -203,24 +243,32 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Install Helm
-        uses: azure/setup-helm@v3
-
       - name: Install Updatecli
         uses: updatecli/updatecli-action@v2
 
       - name: Run Updatecli
-        run: "updatecli apply --config ${UPDATECLI_CONFIG_DIR}/windows-exporter.yaml"
+        id: update-windows-exporter
+        run: |
+          updatecli apply --config ${UPDATECLI_CONFIG_DIR}/windows-exporter.yaml
+          if ! git diff --exit-code > /dev/null; then
+            echo "changed=true" >> "${GITHUB_OUTPUT}"
+          fi
         env:
           UPDATECLI_GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
 
       - name: Regenerate docs
+        if: steps.update-windows-exporter.outputs.changed == 'true'
         run: docker run --rm -v "$(pwd)/charts/k8s-monitoring:/helm-docs" -u "$(id -u)" jnorwood/helm-docs
 
+      - name: Install Helm
+        uses: azure/setup-helm@v3
+
       - name: Regenerate examples
+        if: steps.update-windows-exporter.outputs.changed == 'true'
         run: make regenerate-example-outputs
 
       - name: Create pull request
+        if: steps.update-windows-exporter.outputs.changed == 'true'
         uses: peter-evans/create-pull-request@v5
         with:
           title: "[dependency] Update Windows Exporter"
