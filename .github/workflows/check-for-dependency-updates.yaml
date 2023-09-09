@@ -13,6 +13,7 @@ permissions:
 
 env:
   UPDATECLI_CONFIG_DIR: "${{ github.workspace }}/.github/configs/updatecli.d"
+  UPDATECLI_GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
 
 jobs:
   updateGrafanaAgent:
@@ -32,8 +33,6 @@ jobs:
           if ! git diff --exit-code > /dev/null; then
             echo "changed=true" >> "${GITHUB_OUTPUT}"
           fi
-        env:
-          UPDATECLI_GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
 
       - name: Regenerate docs
         if: steps.update-grafana-agent.outputs.changed == 'true'
@@ -78,8 +77,6 @@ jobs:
           if ! git diff --exit-code > /dev/null; then
             echo "changed=true" >> "${GITHUB_OUTPUT}"
           fi
-        env:
-          UPDATECLI_GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
 
       - name: Regenerate docs
         if: steps.update-kube-state-metrics.outputs.changed == 'true'
@@ -123,8 +120,6 @@ jobs:
           if ! git diff --exit-code > /dev/null; then
             echo "changed=true" >> "${GITHUB_OUTPUT}"
           fi
-        env:
-          UPDATECLI_GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
 
       - name: Regenerate docs
         if: steps.update-node-exporter.outputs.changed == 'true'
@@ -168,8 +163,6 @@ jobs:
           if ! git diff --exit-code > /dev/null; then
             echo "changed=true" >> "${GITHUB_OUTPUT}"
           fi
-        env:
-          UPDATECLI_GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
 
       - name: Regenerate docs
         if: steps.update-opencost.outputs.changed == 'true'
@@ -213,8 +206,6 @@ jobs:
           if ! git diff --exit-code > /dev/null; then
             echo "changed=true" >> "${GITHUB_OUTPUT}"
           fi
-        env:
-          UPDATECLI_GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
 
       - name: Regenerate docs
         if: steps.update-prometheus-operator-crds.outputs.changed == 'true'
@@ -258,8 +249,6 @@ jobs:
           if ! git diff --exit-code > /dev/null; then
             echo "changed=true" >> "${GITHUB_OUTPUT}"
           fi
-        env:
-          UPDATECLI_GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
 
       - name: Regenerate docs
         if: steps.update-windows-exporter.outputs.changed == 'true'
