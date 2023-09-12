@@ -318,8 +318,22 @@ data:
       forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
     }
         
-    // ServiceMonitor
+    // Prometheus Operator Probe objects
+    prometheus.operator.probes "probes" {
+      namespaces = []
+      forward_to = [prometheus.relabel.probes.receiver]
+      clustering {
+        enabled = true
+      }
+    }
+    
+    prometheus.relabel "probes" {
+      forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
+    }
+        
+    // Prometheus Operator ServiceMonitor objects
     prometheus.operator.servicemonitors "service_monitors" {
+      namespaces = []
       forward_to = [prometheus.relabel.servicemonitors.receiver]
       clustering {
         enabled = true
