@@ -240,7 +240,6 @@ prometheus.relabel "opencost" {
     
 // PodMonitor
 prometheus.operator.podmonitors "pod_monitors" {
-  namespaces = []
   forward_to = [prometheus.relabel.podmonitors.receiver]
   clustering {
     enabled = true
@@ -251,7 +250,7 @@ prometheus.relabel "podmonitors" {
   forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
 }
     
-// PodMonitor
+// Prometheus Operator Probe objects
 prometheus.operator.probes "probes" {
   namespaces = []
   forward_to = [prometheus.relabel.probes.receiver]
@@ -264,7 +263,7 @@ prometheus.relabel "probes" {
   forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
 }
     
-// ServiceMonitor
+// Prometheus Operator ServiceMonitor objects
 prometheus.operator.servicemonitors "service_monitors" {
   namespaces = []
   forward_to = [prometheus.relabel.servicemonitors.receiver]
