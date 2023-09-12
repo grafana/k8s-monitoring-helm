@@ -1,0 +1,79 @@
+{{ define "agent.config.pod_log_objects" }}
+// PodMonitor
+loki.source.podlogs "pod_logs" {
+  forward_to = [loki.relabel.podmonitors.receiver]
+{{- if (index .Values "grafana-agent").agent.clustering.enabled }}
+  clustering {
+    enabled = true
+  }
+{{- end }}
+}
+
+prometheus.relabel "podmonitors" {
+{{- if .Values.metrics.extraMetricRelabelingRules }}
+{{ .Values.metrics.extraMetricRelabelingRules | indent 2 }}
+{{- end }}
+  forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
+}
+{{ end }}
+
+{{ define "agent.config.pod_monitors" }}
+// PodMonitor
+prometheus.operator.podmonitors "pod_monitors" {
+  namespaces = {{ .Values.metrics.podMonitors.namespaces | toStrings }}
+  forward_to = [prometheus.relabel.podmonitors.receiver]
+{{- if (index .Values "grafana-agent").agent.clustering.enabled }}
+  clustering {
+    enabled = true
+  }
+{{- end }}
+}
+
+prometheus.relabel "podmonitors" {
+{{- if .Values.metrics.extraMetricRelabelingRules }}
+{{ .Values.metrics.extraMetricRelabelingRules | indent 2 }}
+{{- end }}
+  forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
+}
+{{ end }}
+
+{{ define "agent.config.probes" }}
+// PodMonitor
+prometheus.operator.probes "probes" {
+  namespaces = {{ .Values.metrics.probes.namespaces | toStrings }}
+  forward_to = [prometheus.relabel.probes.receiver]
+{{- if (index .Values "grafana-agent").agent.clustering.enabled }}
+  clustering {
+    enabled = true
+  }
+{{- end }}
+}
+
+prometheus.relabel "probes" {
+{{- if .Values.metrics.extraMetricRelabelingRules }}
+{{ .Values.metrics.extraMetricRelabelingRules | indent 2 }}
+{{- end }}
+  forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
+}
+{{ end }}
+
+
+{{ define "agent.config.service_monitors" }}
+// ServiceMonitor
+prometheus.operator.servicemonitors "service_monitors" {
+  namespaces = {{ .Values.metrics.serviceMonitors.namespaces | toStrings }}
+  forward_to = [prometheus.relabel.servicemonitors.receiver]
+{{- if (index .Values "grafana-agent").agent.clustering.enabled }}
+  clustering {
+    enabled = true
+  }
+{{- end }}
+}
+
+prometheus.relabel "servicemonitors" {
+{{- if .Values.metrics.extraMetricRelabelingRules }}
+{{ .Values.metrics.extraMetricRelabelingRules | indent 2 }}
+{{- end }}
+  forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
+}
+{{ end }}

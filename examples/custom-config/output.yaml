@@ -338,6 +338,7 @@ data:
         
     // PodMonitor
     prometheus.operator.podmonitors "pod_monitors" {
+      namespaces = []
       forward_to = [prometheus.relabel.podmonitors.receiver]
       clustering {
         enabled = true
@@ -348,8 +349,22 @@ data:
       forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
     }
         
+    // PodMonitor
+    prometheus.operator.probes "probes" {
+      namespaces = []
+      forward_to = [prometheus.relabel.probes.receiver]
+      clustering {
+        enabled = true
+      }
+    }
+    
+    prometheus.relabel "probes" {
+      forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
+    }
+        
     // ServiceMonitor
     prometheus.operator.servicemonitors "service_monitors" {
+      namespaces = []
       forward_to = [prometheus.relabel.servicemonitors.receiver]
       clustering {
         enabled = true
