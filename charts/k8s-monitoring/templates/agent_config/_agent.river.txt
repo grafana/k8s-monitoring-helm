@@ -17,6 +17,12 @@ discovery.relabel "agent" {
     regex = "http-metrics"
     action = "keep"
   }
+{{- if .Values.metrics.extraRelabelingRules }}
+{{ .Values.metrics.extraRelabelingRules | indent 2 }}
+{{- end }}
+{{- if .Values.metrics.agent.extraRelabelingRules }}
+{{ .Values.metrics.agent.extraRelabelingRules | indent 2 }}
+{{- end }}
 }
 
 prometheus.scrape "agent" {
@@ -31,11 +37,19 @@ prometheus.scrape "agent" {
 }
 
 prometheus.relabel "agent" {
+{{- if .Values.metrics.agent.allowList }}
   rule {
     source_labels = ["__name__"]
-    regex = "up|agent_build_info"
+    regex = "up|{{ join "|" .Values.metrics.agent.allowList }}"
     action = "keep"
   }
+{{- end }}
+{{- if .Values.metrics.extraMetricRelabelingRules }}
+{{ .Values.metrics.extraMetricRelabelingRules | indent 2 }}
+{{- end }}
+{{- if .Values.metrics.agent.extraMetricRelabelingRules }}
+{{ .Values.metrics.agent.extraMetricRelabelingRules | indent 2 }}
+{{- end }}
   forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
 }
 {{ end }}

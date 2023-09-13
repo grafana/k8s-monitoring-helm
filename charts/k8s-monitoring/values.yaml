@@ -82,6 +82,82 @@ metrics:
   # See https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block
   extraMetricRelabelingRules:
 
+  # Metrics from Grafana Agent
+  agent:
+    # -- Scrape metrics from Grafana Agent
+    enabled: true
+
+    # -- (string) How frequently to scrape metrics from Grafana Agent.
+    # Overrides metrics.scrapeInterval
+    # @default -- 60s
+    scrapeInterval:
+
+    # -- Label matchers used by the Grafana Agent to select the Grafana Agent service
+    labelMatchers:
+      app.kubernetes.io/name: grafana-agent
+
+    # -- (string) Rule blocks to be added to the discovery.relabel component for Grafana Agent.
+    # See https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block
+    extraRelabelingRules:
+
+    # -- (string) Rule blocks to be added to the prometheus.relabel component for Grafana Agent.
+    # See https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block
+    extraMetricRelabelingRules:
+
+    # Grafana Agent service settings
+    service:
+      # -- Name of the metrics port
+      port: http
+      # -- Does this port use TLS?
+      isTLS: false
+
+    # -- The list of Grafana Agent metrics that will be scraped by the Agent
+    # @default -- See [Allow List for Grafana Agent](#allow-list-for-grafana-agent)
+    allowList:
+    - agent_build_info
+    - agent_component_controller_evaluating
+    - agent_component_controller_running_components
+    - agent_component_evaluation_seconds_bucket
+    - agent_component_evaluation_seconds_count
+    - agent_component_evaluation_seconds_sum
+    - agent_resources_machine_rx_bytes_total
+    - agent_resources_machine_tx_bytes_total
+    - agent_resources_process_cpu_seconds_total
+    - agent_resources_process_resident_memory_bytes
+    - agent_wal_samples_appended_total
+    - agent_wal_storage_active_series
+    - cluster_node_gossip_health_score
+    - cluster_node_gossip_proto_version
+    - cluster_node_gossip_received_events_total
+    - cluster_node_info
+    - cluster_node_lamport_time
+    - cluster_node_peers
+    - cluster_node_update_observers
+    - cluster_transport_rx_bytes_total
+    - cluster_transport_rx_packet_queue_length
+    - cluster_transport_rx_packets_failed_total
+    - cluster_transport_stream_rx_bytes_total
+    - cluster_transport_stream_rx_packets_failed_total
+    - cluster_transport_streams
+    - cluster_transport_stream_tx_bytes_total
+    - cluster_transport_stream_tx_packets_failed_total
+    - cluster_transport_tx_bytes_total
+    - cluster_transport_tx_packet_queue_length
+    - cluster_transport_tx_packets_failed_total
+    - go_gc_duration_seconds_count
+    - go_goroutines
+    - go_memstats_heap_inuse_bytes
+    - prometheus_remote_storage_bytes_total
+    - prometheus_remote_storage_highest_timestamp_in_seconds
+    - prometheus_remote_storage_samples_failed_total
+    - prometheus_remote_storage_samples_retried_total
+    - prometheus_remote_storage_samples_total
+    - prometheus_remote_storage_sent_batch_duration_seconds_bucket
+    - prometheus_remote_storage_sent_batch_duration_seconds_sum
+    - prometheus_remote_storage_shards
+    - prometheus_remote_storage_shards_max
+    - prometheus_remote_storage_shards_min
+
   # Cluster object metrics from Kube State Metrics
   kube-state-metrics:
     # -- Scrape cluster object metrics from Kube State Metrics
