@@ -1,7 +1,7 @@
 {{ define "agent.config.pod_monitors" }}
 // Prometheus Operator PodMonitor objects
 prometheus.operator.podmonitors "pod_monitors" {
-  namespaces = {{ .Values.metrics.podMonitors.namespaces | toStrings }}
+  namespaces = {{ .Values.metrics.podMonitors.namespaces | toJson }}
   forward_to = [prometheus.relabel.podmonitors.receiver]
 {{- if (index .Values "grafana-agent").agent.clustering.enabled }}
   clustering {
@@ -21,7 +21,7 @@ prometheus.relabel "podmonitors" {
 {{ define "agent.config.probes" }}
 // Prometheus Operator Probe objects
 prometheus.operator.probes "probes" {
-  namespaces = {{ .Values.metrics.probes.namespaces | toStrings }}
+  namespaces = {{ .Values.metrics.probes.namespaces | toJson }}
   forward_to = [prometheus.relabel.probes.receiver]
 {{- if (index .Values "grafana-agent").agent.clustering.enabled }}
   clustering {
@@ -42,7 +42,7 @@ prometheus.relabel "probes" {
 {{ define "agent.config.service_monitors" }}
 // Prometheus Operator ServiceMonitor objects
 prometheus.operator.servicemonitors "service_monitors" {
-  namespaces = {{ .Values.metrics.serviceMonitors.namespaces | toStrings }}
+  namespaces = {{ .Values.metrics.serviceMonitors.namespaces | toJson }}
   forward_to = [prometheus.relabel.servicemonitors.receiver]
 {{- if (index .Values "grafana-agent").agent.clustering.enabled }}
   clustering {
