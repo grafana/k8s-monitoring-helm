@@ -90,12 +90,14 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | extraConfig | string | `nil` | Extra configuration that will be added to the Grafana Agent configuration file. See [Adding custom Flow configuration](#adding-custom-flow-configuration) for an example. |
 | kube-state-metrics.enabled | bool | `true` | Should this helm chart deploy Kube State Metrics to the cluster. Set this to false if your cluster already has Kube State Metrics, or if you do not want to scrape metrics from Kube State Metrics. |
 | logs.cluster_events.enabled | bool | `true` | Scrape Kubernetes cluster events |
+| logs.cluster_events.namespaces | list | `[]` | List of namespaces to watch for events (empty means all namespaces) |
 | logs.enabled | bool | `true` | Capture and forward logs |
 | logs.extraConfig | string | `nil` | Extra configuration that will be added to Grafana Agent Logs. See [Adding custom Flow configuration](#adding-custom-flow-configuration) for an example.   |
 | logs.pod_logs.enabled | bool | `true` | Capture and forward logs from Kubernetes pods |
 | logs.pod_logs.extraRelabelingRules | string | `nil` | Rule blocks to be added to the discovery.relabel component for pod logs. See https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block |
 | logs.pod_logs.extraStageBlocks | string | `nil` | Stage blocks to be added to the prometheus.relabel component for pod logs. See https://grafana.com/docs/agent/latest/flow/reference/components/loki.process/#blocks |
 | logs.pod_logs.loggingFormat | string | `"docker"` | The log parsing format. Must be one of null, 'cri', or 'docker' See documentation: https://grafana.com/docs/agent/latest/flow/reference/components/loki.process/#stagecri-block |
+| logs.pod_logs.namespaces | list | `[]` | Only capture logs from pods in these namespaces (empty means all namespaces) |
 | metrics.cadvisor.allowList | list | See [Allow List for cAdvisor](#allow-list-for-cadvisor) | The list of cAdvisor metrics that will be scraped by the Agent |
 | metrics.cadvisor.enabled | bool | `true` | Scrape container metrics from cAdvisor |
 | metrics.cadvisor.extraMetricRelabelingRules | string | `nil` | Rule blocks to be added to the prometheus.relabel component for cAdvisor. See https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block |
