@@ -12,7 +12,9 @@ data:
 {{- include "agent.config.services" . | indent 4}}
 
 {{- if .Values.metrics.enabled }}
-  {{- include "agent.config.agent" . | indent 4}}
+  {{- if .Values.metrics.agent.enabled }}
+    {{- include "agent.config.agent" . | indent 4}}
+  {{- end }}
   
   {{- if .Values.metrics.kubelet.enabled }}
     {{- include "agent.config.kubelet" . | indent 4}}
