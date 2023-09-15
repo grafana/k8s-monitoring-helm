@@ -283,7 +283,7 @@ For more examples of custom allow lists, see [this example](../../examples/custo
 
 Visit the Grafana Agent Metrics [documentation](https://grafana.com/solutions/grafana-agent/monitor/) for the full list of agent metrics
 
-Visit the Grafana Agent Component Metrics [documentation](https://grafana.com/docs/agent/latest/flow/monitoring/component_metrics/) for the full list of component metrics
+Visit the Grafana Agent Controller and Component Metrics [documentation](https://grafana.com/docs/agent/latest/flow/monitoring/) for the full list of component metrics
 
 * agent_build_info
 
