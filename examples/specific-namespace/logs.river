@@ -40,6 +40,11 @@ discovery.relabel "pod_logs" {
     replacement = "/var/log/pods/*$1/*.log"
     target_label = "__path__"
   }
+  rule {
+    source_labels = ["namespace"]
+    regex = "production|staging"
+    action = "keep"
+  }
 
   // set the container runtime as a label
   rule {
@@ -120,43 +125,6 @@ loki.write "grafana_cloud_loki" {
     }
   }
   external_labels = {
-    region = "southwest",
-    tenant = "widgetco",
-    cluster = "custom-config-test",
+    cluster = "specific-namespace-test",
   }
-}
-
-discovery.relabel "postgres_logs" {
-  targets = discovery.relabel.pod_logs.output
-  
-  rule {
-    source_labels = ["namespace"]
-    regex = "postgres"
-    action = "keep"
-  }
-  rule {
-    source_labels = ["__meta_kubernetes_pod_label_app"]
-    regex = "database"
-    action = "keep"
-  }
-}
-
-local.file_match "postgres_logs" {
-  path_targets = discovery.relabel.postgres_logs.output
-}
-
-loki.source.file "postgres_logs" {
-  targets    = local.file_match.postgres_logs.targets
-  forward_to = [loki.process.postgres_logs.receiver]
-}
-
-loki.process "postgres_logs" {
-  stage.cri {}
-  stage.static_labels {
-    values = {
-      job = "integrations/postgres_exporter",
-      instance = "animaldb",
-    }
-  }
-  forward_to = [loki.write.grafana_cloud_loki.receiver]
 }
