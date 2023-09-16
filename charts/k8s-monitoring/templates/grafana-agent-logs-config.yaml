@@ -6,10 +6,5 @@ metadata:
   namespace: {{ .Release.Namespace }}
 data:
   config.river: |-
-{{- include "agent.config.pods" . | indent 4}}
-{{- include "agent.config.logs.pod_logs" . | indent 4}}
-{{- include "agent.config.loki" . | indent 4 }}
+    {{- include "agentLogsConfig" . | trim | nindent 4 }}
 {{- end }}
-{{- if .Values.logs.extraConfig }}
-{{ .Values.logs.extraConfig | indent 4 }}
-{{ end }}
