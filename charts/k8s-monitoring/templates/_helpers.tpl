@@ -24,73 +24,74 @@
 
 {{/* Grafana Agent config */}}
 {{- define "agentConfig" -}}
-{{- include "agent.config.nodes" . }}
-{{- include "agent.config.pods" . }}
-{{- include "agent.config.services" . }}
+  {{- include "agent.config.nodes" . }}
+  {{- include "agent.config.pods" . }}
+  {{- include "agent.config.services" . }}
 
-{{- if .Values.metrics.enabled }}
-  {{- include "agent.config.agent" . }}
+  {{- if .Values.metrics.enabled }}
+    {{- include "agent.config.agent" . }}
 
-  {{- if .Values.metrics.kubelet.enabled }}
-    {{- include "agent.config.kubelet" . }}
+    {{- if .Values.metrics.kubelet.enabled }}
+      {{- include "agent.config.kubelet" . }}
+    {{- end }}
+
+    {{- if .Values.metrics.cadvisor.enabled }}
+      {{- include "agent.config.cadvisor" . }}
+    {{- end }}
+
+    {{- if (index .Values.metrics "kube-state-metrics").enabled }}
+      {{- include "agent.config.kube_state_metrics" . }}
+    {{- end }}
+
+    {{- if (index .Values.metrics "node-exporter").enabled }}
+      {{- include "agent.config.node_exporter" . }}
+    {{- end }}
+
+    {{- if (index .Values.metrics "windows-exporter").enabled }}
+      {{- include "agent.config.windows_exporter" . }}
+    {{- end }}
+
+    {{- if .Values.metrics.cost.enabled }}
+      {{- include "agent.config.opencost" . }}
+    {{- end }}
+
+    {{- if .Values.metrics.podMonitors.enabled }}
+      {{- include "agent.config.pod_monitors" . }}
+    {{- end }}
+
+    {{- if .Values.metrics.probes.enabled }}
+      {{- include "agent.config.probes" . }}
+    {{- end }}
+
+    {{- if .Values.metrics.serviceMonitors.enabled }}
+      {{- include "agent.config.service_monitors" . }}
+    {{- end }}
+
+    {{- include "agent.config.prometheus" . }}
   {{- end }}
 
-  {{- if .Values.metrics.cadvisor.enabled }}
-    {{- include "agent.config.cadvisor" . }}
+  {{- if and .Values.logs.enabled .Values.logs.cluster_events.enabled }}
+    {{- include "agent.config.logs.cluster_events" . }}
+    {{- include "agent.config.loki" . }}
   {{- end }}
 
-  {{- if (index .Values.metrics "kube-state-metrics").enabled }}
-    {{- include "agent.config.kube_state_metrics" . }}
+  {{- if and .Values.traces.enabled }}
+    {{- include "agent.config.traces" . }}
+    {{- include "agent.config.tempo" . }}
   {{- end }}
 
-  {{- if (index .Values.metrics "node-exporter").enabled }}
-    {{- include "agent.config.node_exporter" . }}
+  {{- if .Values.extraConfig }}
+    {{- print "\n" .Values.extraConfig }}
   {{- end }}
-
-  {{- if (index .Values.metrics "windows-exporter").enabled }}
-    {{- include "agent.config.windows_exporter" . }}
-  {{- end }}
-
-  {{- if .Values.metrics.cost.enabled }}
-    {{- include "agent.config.opencost" . }}
-  {{- end }}
-
-  {{- if .Values.metrics.podMonitors.enabled }}
-    {{- include "agent.config.pod_monitors" . }}
-  {{- end }}
-
-  {{- if .Values.metrics.probes.enabled }}
-    {{- include "agent.config.probes" . }}
-  {{- end }}
-
-  {{- if .Values.metrics.serviceMonitors.enabled }}
-    {{- include "agent.config.service_monitors" . }}
-  {{- end }}
-
-  {{- include "agent.config.prometheus" . }}
-{{- end }}
-
-{{- if and .Values.logs.enabled .Values.logs.cluster_events.enabled }}
-  {{- include "agent.config.logs.cluster_events" . }}
-  {{- include "agent.config.loki" . }}
-{{- end }}
-
-{{- if and .Values.traces.enabled }}
-  {{- include "agent.config.traces" . }}
-  {{- include "agent.config.tempo" . }}
-{{- end }}
-
-{{- if .Values.extraConfig }}
-  {{- .Values.extraConfig }}
-{{ end }}
 {{- end -}}
 
 {{/* Grafana Agent Logs config */}}
 {{- define "agentLogsConfig" -}}
-{{- include "agent.config.pods" . }}
-{{- include "agent.config.logs.pod_logs" . }}
-{{- include "agent.config.loki" . }}
-{{- if .Values.logs.extraConfig }}
-  {{- .Values.logs.extraConfig }}
-{{ end }}
+  {{- include "agent.config.pods" . }}
+  {{- include "agent.config.logs.pod_logs" . }}
+  {{- include "agent.config.loki" . }}
+
+  {{- if .Values.logs.extraConfig }}
+    {{- print "\n" .Values.logs.extraConfig }}
+  {{- end }}
 {{- end -}}
