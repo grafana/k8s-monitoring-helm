@@ -98,9 +98,10 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | logs.pod_logs.extraStageBlocks | string | `nil` | Stage blocks to be added to the prometheus.relabel component for pod logs. See https://grafana.com/docs/agent/latest/flow/reference/components/loki.process/#blocks |
 | logs.pod_logs.namespaces | list | `[]` | Only capture logs from pods in these namespaces (`[]` means all namespaces) |
 | metrics.agent.allowList | list | See [Allow List for Grafana Agent](#allow-list-for-grafana-agent) | The list of Grafana Agent metrics that will be scraped by the Agent |
-| metrics.agent.enabled | bool | `true` | Scrape container metrics from Grafana Agent |
+| metrics.agent.enabled | bool | `true` | Scrape metrics from Grafana Agent |
 | metrics.agent.extraMetricRelabelingRules | string | `nil` | Rule blocks to be added to the prometheus.relabel component for Grafana Agent. See https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block |
 | metrics.agent.extraRelabelingRules | string | `nil` | Rule blocks to be added to the discovery.relabel component for Grafana Agent. See https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block |
+| metrics.agent.labelMatchers | object | `{"app.kubernetes.io/name":"grafana-agent.*"}` | Label matchers used by the Grafana Agent to select Grafana Agent pods |
 | metrics.agent.scrapeInterval | string | 60s | How frequently to scrape metrics from Grafana Agent. Overrides metrics.scrapeInterval |
 | metrics.cadvisor.allowList | list | See [Allow List for cAdvisor](#allow-list-for-cadvisor) | The list of cAdvisor metrics that will be scraped by the Agent |
 | metrics.cadvisor.enabled | bool | `true` | Scrape container metrics from cAdvisor |
