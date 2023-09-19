@@ -11,7 +11,7 @@ on:
 env:
   CT_CONFIGFILE: "${{ github.workspace }}/.github/configs/ct.yaml"
   LINT_CONFIGFILE: "${{ github.workspace }}/.github/configs/lintconf.yaml"
-  MIMIR_VALUES: "${{ github.workspace }}/.github/configs/mimir.yaml"
+  PROMETHEUS_VALUES: "${{ github.workspace }}/.github/configs/prometheus.yaml"
   LOKI_VALUES: "${{ github.workspace }}/.github/configs/loki.yaml"
   GRAFANA_VALUES: "${{ github.workspace }}/.github/configs/grafana.yaml"
 
@@ -119,26 +119,27 @@ jobs:
       uses: helm/kind-action@v1.5.0
       if: steps.list-changed.outputs.changed == 'true'
 
-    - name: Set up Grafana Helm repository
+    - name: Set up Helm repositories
       if: steps.list-changed.outputs.changed == 'true'
       run: |
         helm repo add grafana https://grafana.github.io/helm-charts
+        helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
         helm repo update
 
-    - name: Deploy Mimir
+    - name: Deploy Prometheus
       if: steps.list-changed.outputs.changed == 'true'
       run: |
-        helm install mimir grafana/mimir-distributed -f "${MIMIR_VALUES}" -n mimir --create-namespace
+        helm install prometheus prometheus-community/prometheus -f "${PROMETHEUS_VALUES}" -n prometheus --create-namespace --wait
 
     - name: Deploy Loki
       if: steps.list-changed.outputs.changed == 'true'
       run: |
-        helm install loki grafana/loki -f "${LOKI_VALUES}" -n loki --create-namespace
+        helm install loki grafana/loki -f "${LOKI_VALUES}" -n loki --create-namespace --wait
 
     - name: Deploy Grafana
       if: steps.list-changed.outputs.changed == 'true'
       run: |
-        helm install grafana grafana/grafana -f "${GRAFANA_VALUES}" -n grafana --create-namespace
+        helm install grafana grafana/grafana -f "${GRAFANA_VALUES}" -n grafana --create-namespace --wait
 
     - name: Test chart
       if: steps.list-changed.outputs.changed == 'true'
