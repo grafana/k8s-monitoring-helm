@@ -29,7 +29,9 @@
   {{- include "agent.config.services" . }}
 
   {{- if .Values.metrics.enabled }}
-    {{- include "agent.config.agent" . }}
+    {{- if .Values.metrics.agent.enabled }}
+      {{- include "agent.config.agent" . }}
+    {{- end }}
 
     {{- if .Values.metrics.kubelet.enabled }}
       {{- include "agent.config.kubelet" . }}
