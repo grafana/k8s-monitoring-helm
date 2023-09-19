@@ -82,6 +82,33 @@ metrics:
   # See https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block
   extraMetricRelabelingRules:
 
+  # Metrics from Grafana Agent
+  agent:
+    # -- Scrape metrics from Grafana Agent
+    enabled: true
+
+    # -- (string) How frequently to scrape metrics from Grafana Agent.
+    # Overrides metrics.scrapeInterval
+    # @default -- 60s
+    scrapeInterval:
+
+    # -- Label matchers used by the Grafana Agent to select Grafana Agent pods
+    labelMatchers:
+      app.kubernetes.io/name: grafana-agent.*
+
+    # -- (string) Rule blocks to be added to the discovery.relabel component for Grafana Agent.
+    # See https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block
+    extraRelabelingRules:
+
+    # -- (string) Rule blocks to be added to the prometheus.relabel component for Grafana Agent.
+    # See https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block
+    extraMetricRelabelingRules:
+
+    # -- The list of Grafana Agent metrics that will be scraped by the Agent
+    # @default -- See [Allow List for Grafana Agent](#allow-list-for-grafana-agent)
+    allowList:
+    - agent_build_info
+
   # Cluster object metrics from Kube State Metrics
   kube-state-metrics:
     # -- Scrape cluster object metrics from Kube State Metrics
