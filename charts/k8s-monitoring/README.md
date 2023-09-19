@@ -51,6 +51,10 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | petewall | <pete.wall@grafana.com> |  |
 | skl | <stephen.lang@grafana.com> |  |
 
+## Source Code
+
+* <https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring>
+
 ## Requirements
 
 | Repository | Name | Version |

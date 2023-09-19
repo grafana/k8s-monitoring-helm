@@ -1,21 +1,21 @@
 discovery.kubernetes "nodes" {
   role = "node"
 }
-    
+
 discovery.kubernetes "pods" {
   role = "pod"
 }
-    
+
 discovery.kubernetes "services" {
   role = "service"
 }
-    
+
 // Cluster Events
 loki.source.kubernetes_events "cluster_events" {
   job_name   = "integrations/kubernetes/eventhandler"
   forward_to = [loki.write.grafana_cloud_loki.receiver]
 }
-    
+
 // Grafana Cloud Loki
 local.file "loki_host" {
   filename  = "/etc/grafana-agent-credentials/loki_host"
