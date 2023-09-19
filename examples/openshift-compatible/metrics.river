@@ -1,15 +1,15 @@
 discovery.kubernetes "nodes" {
   role = "node"
 }
-    
+
 discovery.kubernetes "pods" {
   role = "pod"
 }
-    
+
 discovery.kubernetes "services" {
   role = "service"
 }
-    
+
 // Grafana Agent
 discovery.relabel "agent" {
   targets = discovery.kubernetes.services.targets
@@ -47,7 +47,7 @@ prometheus.relabel "agent" {
   }
   forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
 }
-    
+
 // Kubelet
 discovery.relabel "kubelet" {
   targets = discovery.kubernetes.nodes.targets
@@ -86,7 +86,7 @@ prometheus.relabel "kubelet" {
   }
   forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
 }
-    
+
 // cAdvisor
 discovery.relabel "cadvisor" {
   targets = discovery.kubernetes.nodes.targets
@@ -125,7 +125,7 @@ prometheus.relabel "cadvisor" {
   }
   forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
 }
-    
+
 // Kube State Metrics
 discovery.relabel "kube_state_metrics" {
   targets = discovery.kubernetes.services.targets
@@ -164,7 +164,7 @@ prometheus.relabel "kube_state_metrics" {
   }
   forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
 }
-    
+
 // Node Exporter
 discovery.relabel "node_exporter" {
   targets = discovery.kubernetes.pods.targets
@@ -204,7 +204,7 @@ prometheus.relabel "node_exporter" {
   }
   forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
 }
-    
+
 // OpenCost
 discovery.relabel "opencost" {
   targets = discovery.kubernetes.services.targets
@@ -243,7 +243,7 @@ prometheus.relabel "opencost" {
   }
   forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
 }
-    
+
 // PodMonitor
 prometheus.operator.podmonitors "pod_monitors" {
   forward_to = [prometheus.relabel.podmonitors.receiver]
@@ -255,7 +255,7 @@ prometheus.operator.podmonitors "pod_monitors" {
 prometheus.relabel "podmonitors" {
   forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
 }
-    
+
 // Prometheus Operator Probe objects
 prometheus.operator.probes "probes" {
   namespaces = []
@@ -268,7 +268,7 @@ prometheus.operator.probes "probes" {
 prometheus.relabel "probes" {
   forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
 }
-    
+
 // Prometheus Operator ServiceMonitor objects
 prometheus.operator.servicemonitors "service_monitors" {
   namespaces = []
@@ -281,7 +281,7 @@ prometheus.operator.servicemonitors "service_monitors" {
 prometheus.relabel "servicemonitors" {
   forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
 }
-    
+
 // Grafana Cloud Prometheus
 local.file "prometheus_host" {
   filename  = "/etc/grafana-agent-credentials/prometheus_host"
@@ -311,13 +311,13 @@ prometheus.remote_write "grafana_cloud_prometheus" {
     cluster = "openshift-compatible-test",
   }
 }
-    
+
 // Cluster Events
 loki.source.kubernetes_events "cluster_events" {
   job_name   = "integrations/kubernetes/eventhandler"
   forward_to = [loki.write.grafana_cloud_loki.receiver]
 }
-    
+
 // Grafana Cloud Loki
 local.file "loki_host" {
   filename  = "/etc/grafana-agent-credentials/loki_host"

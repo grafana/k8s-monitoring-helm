@@ -91,19 +91,19 @@ metadata:
   name: k8smon-grafana-agent
   namespace: default
 data:
-  config.river: |-    
+  config.river: |-
     discovery.kubernetes "nodes" {
       role = "node"
     }
-        
+    
     discovery.kubernetes "pods" {
       role = "pod"
     }
-        
+    
     discovery.kubernetes "services" {
       role = "service"
     }
-        
+    
     // Grafana Agent
     discovery.relabel "agent" {
       targets = discovery.kubernetes.services.targets
@@ -141,7 +141,7 @@ data:
       }
       forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
     }
-        
+    
     // Kubelet
     discovery.relabel "kubelet" {
       targets = discovery.kubernetes.nodes.targets
@@ -190,7 +190,7 @@ data:
       }
       forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
     }
-        
+    
     // cAdvisor
     discovery.relabel "cadvisor" {
       targets = discovery.kubernetes.nodes.targets
@@ -234,7 +234,7 @@ data:
       }
       forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
     }
-        
+    
     // Kube State Metrics
     discovery.relabel "kube_state_metrics" {
       targets = discovery.kubernetes.services.targets
@@ -283,7 +283,7 @@ data:
       }
       forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
     }
-        
+    
     // Node Exporter
     discovery.relabel "node_exporter" {
       targets = discovery.kubernetes.pods.targets
@@ -327,7 +327,7 @@ data:
       }
       forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
     }
-        
+    
     // OpenCost
     discovery.relabel "opencost" {
       targets = discovery.kubernetes.services.targets
@@ -371,7 +371,7 @@ data:
       }
       forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
     }
-        
+    
     // PodMonitor
     prometheus.operator.podmonitors "pod_monitors" {
       forward_to = [prometheus.relabel.podmonitors.receiver]
@@ -383,7 +383,7 @@ data:
     prometheus.relabel "podmonitors" {
       forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
     }
-        
+    
     // Prometheus Operator Probe objects
     prometheus.operator.probes "probes" {
       namespaces = []
@@ -396,7 +396,7 @@ data:
     prometheus.relabel "probes" {
       forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
     }
-        
+    
     // Prometheus Operator ServiceMonitor objects
     prometheus.operator.servicemonitors "service_monitors" {
       namespaces = []
@@ -409,7 +409,7 @@ data:
     prometheus.relabel "servicemonitors" {
       forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
     }
-        
+    
     // Grafana Cloud Prometheus
     local.file "prometheus_host" {
       filename  = "/etc/grafana-agent-credentials/prometheus_host"
@@ -444,13 +444,13 @@ data:
         cluster = "extra-rules-test",
       }
     }
-        
+    
     // Cluster Events
     loki.source.kubernetes_events "cluster_events" {
       job_name   = "integrations/kubernetes/eventhandler"
       forward_to = [loki.write.grafana_cloud_loki.receiver]
     }
-        
+    
     // Grafana Cloud Loki
     local.file "loki_host" {
       filename  = "/etc/grafana-agent-credentials/loki_host"
@@ -490,11 +490,11 @@ metadata:
   name: k8smon-grafana-agent-logs
   namespace: default
 data:
-  config.river: |-    
+  config.river: |-
     discovery.kubernetes "pods" {
       role = "pod"
     }
-        
+    
     // Pod Logs
     discovery.relabel "pod_logs" {
       targets = discovery.kubernetes.pods.targets
@@ -612,7 +612,7 @@ data:
     
       forward_to = [loki.write.grafana_cloud_loki.receiver]
     }
-        
+    
     // Grafana Cloud Loki
     local.file "loki_host" {
       filename  = "/etc/grafana-agent-credentials/loki_host"
