@@ -26,6 +26,11 @@ otelcol.processor.attributes "trace_attributes_processor" {
     value = {{ required ".Values.cluster.name is a required value. Please set it and try again." .Values.cluster.name | quote }}
     action = "insert"
   }
+
+{{- if .extraAttributes }}
+{{ .extraAttributes | indent 2 }}
+{{- end }}
+
   output {
     traces = [otelcol.exporter.otlp.tempo.input]
   }
