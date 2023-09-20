@@ -25,7 +25,6 @@ We welcome contributions and improvements! Feel free to submit PRs.
 
 If you make changes to this chart, please ensure that you've done the following:
 
-* Update the chart version
 * Use [Helm Docs](https://github.com/norwoodj/helm-docs) to check for updates to the chart documentation
   * `cd charts/k8s-monitoring; helm-docs`
 * Check for updates to the example outputs
