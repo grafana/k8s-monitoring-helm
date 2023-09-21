@@ -163,7 +163,10 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | traces.enabled | bool | `false` | Capture and forward traces. |
 | traces.processors.batch.size | int | `16384` | What batch size to use, in bytes |
 | traces.processors.batch.timeout | string | `"2s"` | How long before sending |
-| traces.receiver.port | int | `4317` | Which port to use for the OTLP receiver. This port needs to be opened in the grafana-agent section below. |
+| traces.receiver.grpc.enabled | bool | `true` |  |
+| traces.receiver.grpc.port | int | `4317` | Which port to use for the grpc receiver. This port needs to be opened in the grafana-agent section below. |
+| traces.receiver.http.enabled | bool | `true` |  |
+| traces.receiver.http.port | int | `4318` | Which port to use for the http receiver. This port needs to be opened in the grafana-agent section below. |
 
 ## Customizing the configuration
 

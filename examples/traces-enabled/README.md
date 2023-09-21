@@ -1,6 +1,6 @@
 # Traces Enabled
 
-This example contains the values required to enable receiving traces, and sending them to [Grafana Tempo](https://grafana.com/oss/tempo/).
+This example contains the values required to enable receiving traces over gRPC or HTTP, and sending them to [Grafana Tempo](https://grafana.com/oss/tempo/).
 
 ```yaml
 cluster:
@@ -29,8 +29,12 @@ traces:
 grafana-agent:
   agent:
     extraPorts:
-      - name: "otlp-traces"
+      - name: "otlp-traces-grpc"
         port: 4317
         targetPort: 4317
+        protocol: "TCP"
+      - name: "otlp-traces-http"
+        port: 4318
+        targetPort: 4318
         protocol: "TCP"
 ```

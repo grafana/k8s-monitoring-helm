@@ -455,14 +455,16 @@ data:
     
     // Traces
     otelcol.receiver.otlp "trace_receiver" {
-      grpc {
+    grpc {
         endpoint = "0.0.0.0:4317"
+      }
+    http {
+        endpoint = "0.0.0.0:4318"
       }
       output {
         traces = [otelcol.processor.batch.trace_batch_processor.input]
       }
     }
-    
     otelcol.processor.batch "trace_batch_processor" {
       send_batch_size = 16384
       timeout = "2s"
@@ -42378,9 +42380,13 @@ spec:
       port: 80
       targetPort: 80
       protocol: "TCP"
-    - name: otlp-traces
+    - name: otlp-traces-grpc
       port: 4317
       targetPort: 4317
+      protocol: TCP
+    - name: otlp-traces-http
+      port: 4318
+      targetPort: 4318
       protocol: TCP
 ---
 # Source: k8s-monitoring/charts/grafana-agent/templates/service.yaml
@@ -42404,9 +42410,13 @@ spec:
       port: 80
       targetPort: 80
       protocol: "TCP"
-    - name: otlp-traces
+    - name: otlp-traces-grpc
       port: 4317
       targetPort: 4317
+      protocol: TCP
+    - name: otlp-traces-http
+      port: 4318
+      targetPort: 4318
       protocol: TCP
 ---
 # Source: k8s-monitoring/charts/kube-state-metrics/templates/service.yaml
@@ -42900,7 +42910,10 @@ spec:
             - containerPort: 80
               name: http-metrics
             - containerPort: 4317
-              name: otlp-traces
+              name: otlp-traces-grpc
+              protocol: TCP
+            - containerPort: 4318
+              name: otlp-traces-http
               protocol: TCP
           readinessProbe:
             httpGet:

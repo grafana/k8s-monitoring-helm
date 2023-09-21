@@ -440,15 +440,25 @@ logs:
 
 # Settings related to capturing and forwarding traces
 traces:
-  # -- Capture and forward traces.
+  # -- Receive and forward traces.
   enabled: false
 
-  # OTLP Trace receiver settings
+  # Trace receiver settings
   receiver:
-    # -- Which port to use for the OTLP receiver. This port needs to be opened in the grafana-agent section below.
+    # @ignore kept for backwards compatibility. Please use grpc.port instead.
     port: 4317
+    grpc:
+      # -- Should the Grafana Agent receive traces over gRPC?
+      enabled: true
+      # -- Which port to use for the gRPC receiver. This port needs to be opened in the grafana-agent section below.
+      port: 4317
+    http:
+      # -- Should the Grafana Agent receive traces over HTTP?
+      enabled: true
+      # -- Which port to use for the HTTP receiver. This port needs to be opened in the grafana-agent section below.
+      port: 4318
 
-  # OTLP Trace processor settings
+  # Trace processor settings
   processors:
     # Trace batch processor settings
     batch:

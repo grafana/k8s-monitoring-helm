@@ -1,16 +1,26 @@
 {{ define "agent.config.traces" }}
-{{- include "checkForTracePort" . -}}
-{{- with .Values.traces }}
 // Traces
 otelcol.receiver.otlp "trace_receiver" {
+{{- if .Values.traces.receiver.grpc.enabled }}
+{{$data := dict "port" .Values.traces.receiver.grpc.port "type" "gRPC" "agent" (index .Values "grafana-agent").agent }}
+{{- include "checkforTracePort" $data -}}
   grpc {
-    endpoint = "0.0.0.0:{{ .receiver.port | int }}"
+    endpoint = "0.0.0.0:{{ $data.port | int }}"
   }
+{{- end }}
+{{- if .Values.traces.receiver.http.enabled }}
+{{$data := dict "port" .Values.traces.receiver.http.port "type" "HTTP" "agent" (index .Values "grafana-agent").agent }}
+{{- include "checkforTracePort" $data -}}
+  http {
+    endpoint = "0.0.0.0:{{ $data.port | int }}"
+  }
+{{- end }}
   output {
     traces = [otelcol.processor.batch.trace_batch_processor.input]
   }
 }
 
+{{- with .Values.traces }}
 otelcol.processor.batch "trace_batch_processor" {
   send_batch_size = {{ .processors.batch.size | int }}
   timeout = {{ .processors.batch.timeout | quote}}
