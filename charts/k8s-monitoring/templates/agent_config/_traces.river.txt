@@ -1,8 +1,12 @@
 {{ define "agent.config.traces" }}
 // Traces
 otelcol.receiver.otlp "trace_receiver" {
-{{- if .Values.traces.receiver.grpc.enabled }}
-{{$data := dict "port" .Values.traces.receiver.grpc.port "type" "gRPC" "agent" (index .Values "grafana-agent").agent }}
+{{- if not (or .Values.traces.receiver.grpc.enabled .Values.traces.receiver.http.enabled) }}
+  {{- fail "You must enable either gRPC or HTTP ports for the trace receiver" -}}
+{{- end }}
+
+{{- if or .Values.traces.receiver.port .Values.traces.receiver.grpc.enabled }}
+{{$data := dict "port" (.Values.traces.receiver.port | default .Values.traces.receiver.grpc.port) "type" "gRPC" "agent" (index .Values "grafana-agent").agent }}
 {{- include "checkforTracePort" $data -}}
   grpc {
     endpoint = "0.0.0.0:{{ $data.port | int }}"
