@@ -15,6 +15,7 @@ externalServices:
     # TODO: Add the ability to reference a pre-existing secret
     # -- (string) (required) Prometheus host where metrics will be sent
     host: ""
+    hostKey: host
     # -- (string) HTTP proxy to proxy requests to Prometheus through.
     proxyURL: ""
     # -- Prometheus metrics query endpoint. Preset for Grafana Cloud Metrics instances.
@@ -29,19 +30,28 @@ externalServices:
 
     # -- (string) (optional) Sets the X-Scope-OrgID header when sending metrics
     tenantId: ""
+    tenantIdKey: tenantId
 
     # Authenticate to Prometheus using basic authentication
     basicAuth:
       # -- (string) Prometheus basic auth username
       username: ""
+      usernameKey: username
       # -- (string) Prometheus basic auth password
       password: ""
+      passwordKey: password
+
+    secret:
+      create: true
+      name:
+      namespace:
 
   # Connection information for Grafana Loki
   loki:
     # TODO: Add the ability to reference a pre-existing secret
     # -- (string) (required) Loki host where logs and events will be sent
     host: ""
+    hostKey: host
     # -- (string) HTTP proxy to proxy requests to Loki through.
     proxyURL: ""
     # -- Loki logs write endpoint
@@ -51,25 +61,41 @@ externalServices:
 
     # -- (string) (optional) Loki tenant ID
     tenantId: ""
+    tenantIdKey: tenantId
 
     # Authenticate to Loki using basic authentication
     basicAuth:
       # -- (string) Loki basic auth username
       username: ""
+      usernameKey: username
       # -- (string) Loki basic auth password
       password: ""
+      passwordKey: password
+
+    secret:
+      create: true
+      name:
+      namespace:
 
   # Connection information for Grafana Tempo
   tempo:
     # -- (string) (required) Tempo host where traces will be sent
     host: ""
+    hostKey: host
 
     # Authenticate to Tempo using basic authentication
     basicAuth:
       # -- (string) Tempo basic auth username
       username: ""
+      usernameKey: username
       # -- (string) Tempo basic auth password
       password: ""
+      passwordKey: password
+
+    secret:
+      create: true
+      name:
+      namespace:
 
 # Settings related to capturing and forwarding metrics
 metrics:
@@ -601,8 +627,6 @@ grafana-agent:
     # mounts those credentials into the Grafana Agent container.
     mounts:
       extra:
-      - name: grafana-agent-credentials
-        mountPath: /etc/grafana-agent-credentials
       - name: kubernetes-monitoring-telemetry
         mountPath: /etc/kubernetes-monitoring-telemetry
 
@@ -615,9 +639,6 @@ grafana-agent:
     # connects those credentials into the Grafana Agent pod.
     volumes:
       extra:
-      - name: grafana-agent-credentials
-        secret:
-          secretName: grafana-agent-credentials
       - name: kubernetes-monitoring-telemetry
         configMap:
           name: kubernetes-monitoring-telemetry
@@ -637,12 +658,6 @@ grafana-agent-logs:
       # Loads /var/log as a hostPath volume to find and scrape pod logs
       varlog: true
 
-      # The k8s-monitoring chart creates the credentials for Prometheus and Loki. This section
-      # mounts those credentials into the Grafana Agent container.
-      extra:
-        - name: grafana-agent-credentials
-          mountPath: /etc/grafana-agent-credentials
-
   controller:
     type: daemonset
     nodeSelector:
@@ -651,14 +666,6 @@ grafana-agent-logs:
     tolerations:
       - effect: NoSchedule
         operator: Exists
-
-    # This chart creates the credentials for Prometheus and Loki. This section
-    # connects those credentials into the Grafana Agent pod.
-    volumes:
-      extra:
-      - name: grafana-agent-credentials
-        secret:
-          secretName: grafana-agent-credentials
 
   # The CRDs created by the agent will be done in the .grafana-agent chart. Setting this to false removes a duplicate
   # creation attempt.

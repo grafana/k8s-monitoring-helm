@@ -136,3 +136,33 @@
 {{- if index (index .Values "opencost").enabled -}}{{- $deployments = append $deployments "opencost" -}}{{- end -}}
 {{- join "," $deployments -}}
 {{- end }}
+
+{{- define "kubernetes-monitoring.prometheus.secretname" -}}
+{{- if .Values.externalServices.prometheus.secret.name }}
+{{- print .Values.externalServices.prometheus.secret.name | trunc 63 | trimSuffix "-" }}
+{{- else if contains .Chart.Name .Release.Name }}
+{{- printf "%s-prometheus" .Release.Name | trunc 63 | trimSuffix "-" }}
+{{- else }}
+{{- printf "%s-%s-prometheus" .Release.Name .Chart.Name | trunc 63 | trimSuffix "-" }}
+{{- end }}
+{{- end }}
+
+{{- define "kubernetes-monitoring.loki.secretname" -}}
+{{- if .Values.externalServices.loki.secret.name }}
+{{- print .Values.externalServices.loki.secret.name | trunc 63 | trimSuffix "-" }}
+{{- else if contains .Chart.Name .Release.Name }}
+{{- printf "%s-loki" .Release.Name | trunc 63 | trimSuffix "-" }}
+{{- else }}
+{{- printf "%s-%s-loki" .Release.Name .Chart.Name | trunc 63 | trimSuffix "-" }}
+{{- end }}
+{{- end }}
+
+{{- define "kubernetes-monitoring.tempo.secretname" -}}
+{{- if .Values.externalServices.tempo.secret.name }}
+{{- print .Values.externalServices.tempo.secret.name | trunc 63 | trimSuffix "-" }}
+{{- else if contains .Chart.Name .Release.Name }}
+{{- printf "%s-tempo" .Release.Name | trunc 63 | trimSuffix "-" }}
+{{- else }}
+{{- printf "%s-%s-tempo" .Release.Name .Chart.Name | trunc 63 | trimSuffix "-" }}
+{{- end }}
+{{- end }}

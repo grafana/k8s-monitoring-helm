@@ -377,26 +377,17 @@ prometheus.relabel "servicemonitors" {
 }
 
 // Grafana Cloud Prometheus
-local.file "prometheus_host" {
-  filename  = "/etc/grafana-agent-credentials/prometheus_host"
+remote.kubernetes.secret "prometheus_credentials" {
+  name = "k8smon-k8s-monitoring-prometheus"
+  namespace = "default"
 }
-
-local.file "prometheus_username" {
-  filename  = "/etc/grafana-agent-credentials/prometheus_username"
-}
-
-local.file "prometheus_password" {
-  filename  = "/etc/grafana-agent-credentials/prometheus_password"
-  is_secret = true
-}
-
 prometheus.remote_write "grafana_cloud_prometheus" {
   endpoint {
-    url = nonsensitive(local.file.prometheus_host.content) + "/api/prom/push"
+    url = nonsensitive(remote.kubernetes.secret.prometheus_credentials.data["host"]) + "/api/prom/push"
 
     basic_auth {
-      username = local.file.prometheus_username.content
-      password = local.file.prometheus_password.content
+      username = remote.kubernetes.secret.prometheus_credentials.data["username"]
+      password = remote.kubernetes.secret.prometheus_credentials.data["password"]
     }
 
   }
@@ -413,26 +404,17 @@ loki.source.kubernetes_events "cluster_events" {
 }
 
 // Grafana Cloud Loki
-local.file "loki_host" {
-  filename  = "/etc/grafana-agent-credentials/loki_host"
+remote.kubernetes.secret "loki_credentials" {
+  name = "k8smon-k8s-monitoring-loki"
+  namespace = "default"
 }
-
-local.file "loki_username" {
-  filename  = "/etc/grafana-agent-credentials/loki_username"
-}
-
-local.file "loki_password" {
-  filename  = "/etc/grafana-agent-credentials/loki_password"
-  is_secret = true
-}
-
 loki.write "grafana_cloud_loki" {
   endpoint {
-    url = nonsensitive(local.file.loki_host.content) + "/loki/api/v1/push"
+    url = nonsensitive(remote.kubernetes.secret.loki_credentials.data["host"]) + "/loki/api/v1/push"
 
     basic_auth {
-      username = local.file.loki_username.content
-      password = local.file.loki_password.content
+      username = remote.kubernetes.secret.loki_credentials.data["username"]
+      password = remote.kubernetes.secret.loki_credentials.data["password"]
     }
   }
   external_labels = {

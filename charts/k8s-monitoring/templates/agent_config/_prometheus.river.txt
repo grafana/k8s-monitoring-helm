@@ -1,38 +1,24 @@
 {{ define "agent.config.prometheus" }}
-{{- with .Values.externalServices.prometheus }}
 // Grafana Cloud Prometheus
-local.file "prometheus_host" {
-  filename  = "/etc/grafana-agent-credentials/prometheus_host"
+remote.kubernetes.secret "prometheus_credentials" {
+  name = {{ include "kubernetes-monitoring.prometheus.secretname" . | quote}}
+  namespace = {{ .Values.externalServices.prometheus.secret.namespace | default .Release.Namespace | quote}}
 }
-{{ if .basicAuth.username }}
-local.file "prometheus_username" {
-  filename  = "/etc/grafana-agent-credentials/prometheus_username"
-}
-{{- end }}
-{{ if .basicAuth.password }}
-local.file "prometheus_password" {
-  filename  = "/etc/grafana-agent-credentials/prometheus_password"
-  is_secret = true
-}
-{{- end }}
-{{ if .tenantId }}
-local.file "prometheus_tenantid" {
-  filename  = "/etc/grafana-agent-credentials/prometheus_tenantId"
-}
-{{- end }}
+
+{{- with .Values.externalServices.prometheus }}
 prometheus.remote_write "grafana_cloud_prometheus" {
   endpoint {
-    url = nonsensitive(local.file.prometheus_host.content) + "{{ .writeEndpoint }}"
+    url = nonsensitive(remote.kubernetes.secret.prometheus_credentials.data["{{ .hostKey }}"]) + "{{ .writeEndpoint }}"
 {{- if .tenantId }}
-    headers = { "X-Scope-OrgID" = local.file.prometheus_tenantid.content }
+    headers = { "X-Scope-OrgID" = remote.kubernetes.secret.prometheus_credentials.data["{{ .tenantIdKey }}"] }
 {{- end }}
 {{- if .proxyURL }}
     proxy_url = {{ .proxyURL | quote }}
 {{- end }}
 {{ if .basicAuth }}
     basic_auth {
-      {{ if .basicAuth.username }}username = local.file.prometheus_username.content{{ end }}
-      {{ if .basicAuth.password }}password = local.file.prometheus_password.content{{ end }}
+      {{ if .basicAuth.username }}username = nonsensitive(remote.kubernetes.secret.prometheus_credentials.data["{{ .basicAuth.usernameKey }}"]){{ end }}
+      {{ if .basicAuth.password }}password = remote.kubernetes.secret.prometheus_credentials.data["{{ .basicAuth.passwordKey }}"]{{ end }}
     }
 {{- end }}
 {{ if .writeRelabelConfigRules }}

@@ -1,30 +1,20 @@
 {{ define "agent.config.tempo" }}
-{{- with .Values.externalServices.tempo }}
 // Tempo
-local.file "tempo_host" {
-  filename  = "/etc/grafana-agent-credentials/tempo_host"
+remote.kubernetes.secret "tempo_credentials" {
+  name = {{ include "kubernetes-monitoring.tempo.secretname" . | quote}}
+  namespace = {{ .Values.externalServices.tempo.secret.namespace | default .Release.Namespace | quote}}
 }
-{{ if .basicAuth.username }}
-local.file "tempo_username" {
-  filename  = "/etc/grafana-agent-credentials/tempo_username"
-}
-{{- end }}
-{{ if .basicAuth.password }}
-local.file "tempo_password" {
-  filename  = "/etc/grafana-agent-credentials/tempo_password"
-  is_secret = true
-}
-{{- end }}
+{{- with .Values.externalServices.tempo }}
 {{ if .basicAuth }}
 otelcol.auth.basic "tempo" {
-  {{ if .basicAuth.username }}username = local.file.tempo_username.content{{ end }}
-  {{ if .basicAuth.password }}password = local.file.tempo_password.content{{ end }}
+  {{ if .basicAuth.username }}username = nonsensitive(remote.kubernetes.secret.tempo_credentials.data["{{ .basicAuth.usernameKey }}"]){{ end }}
+  {{ if .basicAuth.password }}password = remote.kubernetes.secret.tempo_credentials.data["{{ .basicAuth.passwordKey }}"]{{ end }}
 }
 {{- end }}
 
 otelcol.exporter.otlp "tempo" {
   client {
-    endpoint = nonsensitive(local.file.tempo_host.content)
+    endpoint = nonsensitive(remote.kubernetes.secret.tempo_credentials.data["{{ .hostKey }}"])
 {{ if .basicAuth }}
     auth = otelcol.auth.basic.tempo.handler
 {{- end }}

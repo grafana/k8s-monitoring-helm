@@ -102,26 +102,17 @@ loki.process "pod_logs" {
 }
 
 // Grafana Cloud Loki
-local.file "loki_host" {
-  filename  = "/etc/grafana-agent-credentials/loki_host"
+remote.kubernetes.secret "loki_credentials" {
+  name = "k8smon-k8s-monitoring-loki"
+  namespace = "default"
 }
-
-local.file "loki_username" {
-  filename  = "/etc/grafana-agent-credentials/loki_username"
-}
-
-local.file "loki_password" {
-  filename  = "/etc/grafana-agent-credentials/loki_password"
-  is_secret = true
-}
-
 loki.write "grafana_cloud_loki" {
   endpoint {
-    url = nonsensitive(local.file.loki_host.content) + "/loki/api/v1/push"
+    url = nonsensitive(remote.kubernetes.secret.loki_credentials.data["host"]) + "/loki/api/v1/push"
 
     basic_auth {
-      username = local.file.loki_username.content
-      password = local.file.loki_password.content
+      username = remote.kubernetes.secret.loki_credentials.data["username"]
+      password = remote.kubernetes.secret.loki_credentials.data["password"]
     }
   }
   external_labels = {

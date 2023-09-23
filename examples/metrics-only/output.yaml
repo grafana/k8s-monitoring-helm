@@ -60,14 +60,14 @@ metadata:
 apiVersion: v1
 kind: Secret
 metadata:
-  name: grafana-agent-credentials
+  name: k8smon-k8s-monitoring-prometheus
   namespace: default
 type: Opaque
 data:
-  prometheus_host: "aHR0cHM6Ly9wcm9tZXRoZXVzLmV4YW1wbGUuY29t"
-  prometheus_username: "MTIzNDU="
-  prometheus_password: "SXQncyBhIHNlY3JldCB0byBldmVyeW9uZQ=="
-  prometheus_tenantId: "MTAwMA=="
+  host: "aHR0cHM6Ly9wcm9tZXRoZXVzLmV4YW1wbGUuY29t"
+  username: "MTIzNDU="
+  password: "SXQncyBhIHNlY3JldCB0byBldmVyeW9uZQ=="
+  tenantId: "MTAwMA=="
 ---
 # Source: k8s-monitoring/templates/grafana-agent-config.yaml
 apiVersion: v1
@@ -411,30 +411,18 @@ data:
     }
     
     // Grafana Cloud Prometheus
-    local.file "prometheus_host" {
-      filename  = "/etc/grafana-agent-credentials/prometheus_host"
-    }
-    
-    local.file "prometheus_username" {
-      filename  = "/etc/grafana-agent-credentials/prometheus_username"
-    }
-    
-    local.file "prometheus_password" {
-      filename  = "/etc/grafana-agent-credentials/prometheus_password"
-      is_secret = true
-    }
-    
-    local.file "prometheus_tenantid" {
-      filename  = "/etc/grafana-agent-credentials/prometheus_tenantId"
+    remote.kubernetes.secret "prometheus_credentials" {
+      name = "k8smon-k8s-monitoring-prometheus"
+      namespace = "default"
     }
     prometheus.remote_write "grafana_cloud_prometheus" {
       endpoint {
-        url = nonsensitive(local.file.prometheus_host.content) + "/api/prom/push"
-        headers = { "X-Scope-OrgID" = local.file.prometheus_tenantid.content }
+        url = nonsensitive(remote.kubernetes.secret.prometheus_credentials.data["host"]) + "/api/prom/push"
+        headers = { "X-Scope-OrgID" = remote.kubernetes.secret.prometheus_credentials.data["tenantId"] }
     
         basic_auth {
-          username = local.file.prometheus_username.content
-          password = local.file.prometheus_password.content
+          username = remote.kubernetes.secret.prometheus_credentials.data["username"]
+          password = remote.kubernetes.secret.prometheus_credentials.data["password"]
         }
     
       }

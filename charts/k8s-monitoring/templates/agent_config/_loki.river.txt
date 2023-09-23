@@ -1,38 +1,24 @@
 {{ define "agent.config.loki" }}
-{{- with .Values.externalServices.loki }}
 // Grafana Cloud Loki
-local.file "loki_host" {
-  filename  = "/etc/grafana-agent-credentials/loki_host"
+remote.kubernetes.secret "loki_credentials" {
+  name = {{ include "kubernetes-monitoring.loki.secretname" . | quote}}
+  namespace = {{ .Values.externalServices.loki.secret.namespace | default .Release.Namespace | quote}}
 }
-{{ if .basicAuth.username }}
-local.file "loki_username" {
-  filename  = "/etc/grafana-agent-credentials/loki_username"
-}
-{{- end }}
-{{ if .basicAuth.password }}
-local.file "loki_password" {
-  filename  = "/etc/grafana-agent-credentials/loki_password"
-  is_secret = true
-}
-{{- end }}
-{{ if .tenantId }}
-local.file "loki_tenantid" {
-  filename  = "/etc/grafana-agent-credentials/loki_tenantId"
-}
-{{- end }}
+
+{{- with .Values.externalServices.loki }}
 loki.write "grafana_cloud_loki" {
   endpoint {
-    url = nonsensitive(local.file.loki_host.content) + "{{ .writeEndpoint }}"
+    url = nonsensitive(remote.kubernetes.secret.loki_credentials.data["{{ .hostKey }}"]) + "{{ .writeEndpoint }}"
 {{- if .tenantId }}
-    tenant_id = local.file.loki_tenantid.content
+    tenant_id = remote.kubernetes.secret.loki_credentials.data["{{ .tenantIdKey }}"]
 {{- end }}
 {{- if .proxyURL }}
     proxy_url = {{ .proxyURL | quote }}
 {{- end }}
 {{ if .basicAuth }}
     basic_auth {
-      {{ if .basicAuth.username }}username = local.file.loki_username.content{{ end }}
-      {{ if .basicAuth.password }}password = local.file.loki_password.content{{ end }}
+      {{ if .basicAuth.username }}username = nonsensitive(remote.kubernetes.secret.loki_credentials.data["{{ .basicAuth.usernameKey }}"]){{ end }}
+      {{ if .basicAuth.password }}password = remote.kubernetes.secret.loki_credentials.data["{{ .basicAuth.passwordKey }}"]{{ end }}
     }
 {{- end }}
   }
