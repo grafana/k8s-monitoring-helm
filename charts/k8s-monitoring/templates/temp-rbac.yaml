@@ -73,6 +73,21 @@ rules:
       - watch
 ---
 apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ include "grafana-agent.fullname" (index .Subcharts "grafana-agent") }}
+  labels:
+    {{- include "grafana-agent.labels" (index .Subcharts "grafana-agent") | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ include "grafana-agent.fullname" (index .Subcharts "grafana-agent") }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "grafana-agent.serviceAccountName" (index .Subcharts "grafana-agent") }}
+    namespace: {{ .Release.Namespace }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: {{ include "grafana-agent.fullname" (index .Subcharts "grafana-agent-logs") }}
@@ -144,3 +159,18 @@ rules:
       - get
       - list
       - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ include "grafana-agent.fullname" (index .Subcharts "grafana-agent-logs") }}
+  labels:
+    {{- include "grafana-agent.labels" (index .Subcharts "grafana-agent-logs") | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ include "grafana-agent.fullname" (index .Subcharts "grafana-agent-logs") }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "grafana-agent.serviceAccountName" (index .Subcharts "grafana-agent-logs") }}
+    namespace: {{ .Release.Namespace }}
