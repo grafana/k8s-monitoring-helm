@@ -359,14 +359,16 @@ loki.write "grafana_cloud_loki" {
 
 // Traces
 otelcol.receiver.otlp "trace_receiver" {
-  grpc {
+grpc {
     endpoint = "0.0.0.0:4317"
+  }
+http {
+    endpoint = "0.0.0.0:4318"
   }
   output {
     traces = [otelcol.processor.batch.trace_batch_processor.input]
   }
 }
-
 otelcol.processor.batch "trace_batch_processor" {
   send_batch_size = 16384
   timeout = "2s"

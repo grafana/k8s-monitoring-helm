@@ -8,16 +8,16 @@
 {{- end }}
 
 {{/* This template checks that the port defined in .Values.traces.receiver.port is in the targetPort list on .grafana-agent */}}
-{{- define "checkForTracePort" -}}
-  {{- $tracePort := .Values.traces.receiver.port -}}
+{{- define "checkforTracePort" -}}
+  {{- $port := .port -}}
   {{- $found := false -}}
-  {{- range (index .Values "grafana-agent").agent.extraPorts -}}
-    {{- if eq .targetPort $tracePort }}
+  {{- range .agent.extraPorts -}}
+    {{- if eq .targetPort $port }}
       {{- $found = true -}}
     {{- end }}
   {{- end }}
   {{- if not $found }}
-    {{- fail (print "Trace port not opened on the Grafana Agent.\nIn order for traces to work, the " $tracePort " port needs to be opened on the Grafana Agent. For example, set this in your values file:\ngrafana-agent:\n  agent:\n    extraPorts:\n      - name: \"otlp-traces\"\n        port: " $tracePort "\n        targetPort: " $tracePort "\n        protocol: \"TCP\"\nFor more examples, see https://github.com/grafana/k8s-monitoring-helm/tree/main/examples/traces-enabled") -}}
+    {{- fail (print .type " trace port not opened on the Grafana Agent.\nIn order for traces to work, the " .port " port needs to be opened on the Grafana Agent. For example, set this in your values file:\ngrafana-agent:\n  agent:\n    extraPorts:\n      - name: \"otlp-traces-" (lower .type) "\"\n        port: " .port "\n        targetPort: " .port "\n        protocol: \"TCP\"\nFor more examples, see https://github.com/grafana/k8s-monitoring-helm/tree/main/examples/traces-enabled") -}}
   {{- end -}}
 {{- end -}}
 
