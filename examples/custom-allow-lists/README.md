@@ -6,8 +6,8 @@ In the example values file, here are the various settings and their effect:
 
 | Allow List Value                                | Result                                      |
 |-------------------------------------------------|---------------------------------------------|
-| `["*"]` or `[]` or `null`                       | No filtering; allow all metrics             |
-| `["node_*"]`                                    | Allow only metrics that start with `node_`  |
+| `[".*"]` or `[]` or `null`                      | No filtering; allow all metrics             |
+| `["node_.*"]`                                   | Allow only metrics that start with `node_`  |
 | `["kubelet_node_name","kubernetes_build_info"]` | Allow only specific metrics                 |
 
 ```yaml
@@ -23,9 +23,9 @@ externalServices:
 
 metrics:
   kube-state-metrics:
-    allowList: ["*"]
+    allowList: [".*"]
   node-exporter:
-    allowList: ["node_*"]
+    allowList: ["node_.*"]
   kubelet:
     allowList: ["kubelet_node_name","kubernetes_build_info"]
   cadvisor:
