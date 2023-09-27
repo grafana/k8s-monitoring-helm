@@ -29,11 +29,11 @@ traces:
 grafana-agent:
   agent:
     extraPorts:
-      - name: "otlp-traces-grpc"
+      - name: "otlp-grpc"
         port: 4317
         targetPort: 4317
         protocol: "TCP"
-      - name: "otlp-traces-http"
+      - name: "otlp-http"
         port: 4318
         targetPort: 4318
         protocol: "TCP"
