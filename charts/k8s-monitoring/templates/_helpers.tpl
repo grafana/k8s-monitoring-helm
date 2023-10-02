@@ -32,6 +32,10 @@
       {{- include "agent.config.agent" . }}
     {{- end }}
 
+    {{- if .Values.metrics.kubernetesMonitoring.enabled }}
+      {{- include "agent.config.kubernetes_monitoring_telemetry" . }}
+    {{- end }}
+
     {{- if .Values.metrics.kubelet.enabled }}
       {{- include "agent.config.kubelet" . }}
     {{- end }}
@@ -96,3 +100,46 @@
     {{- print "\n" .Values.logs.extraConfig }}
   {{- end }}
 {{- end -}}
+
+{{- define "kubernetes_monitoring_telemetry.metrics" -}}
+{{- $metrics := list -}}
+{{- if .Values.metrics.enabled -}}
+  {{- $metrics = append $metrics "enabled" -}}
+  {{- if .Values.metrics.agent.enabled -}}{{- $metrics = append $metrics "agent" -}}{{- end -}}
+  {{- if index (index .Values.metrics "kube-state-metrics").enabled -}}{{- $metrics = append $metrics "kube-state-metrics" -}}{{- end -}}
+  {{- if index (index .Values.metrics "node-exporter").enabled -}}{{- $metrics = append $metrics "node-exporter" -}}{{- end -}}
+  {{- if index (index .Values.metrics "windows-exporter").enabled -}}{{- $metrics = append $metrics "windows-exporter" -}}{{- end -}}
+  {{- if .Values.metrics.kubelet.enabled -}}{{- $metrics = append $metrics "kubelet" -}}{{- end -}}
+  {{- if .Values.metrics.cadvisor.enabled -}}{{- $metrics = append $metrics "cadvisor" -}}{{- end -}}
+  {{- if .Values.metrics.cost.enabled -}}{{- $metrics = append $metrics "cost" }}{{ end -}}
+{{- else -}}
+  {{- $metrics = append $metrics "disabled" -}}
+{{- end -}}
+{{- join "," $metrics -}}
+{{- end }}
+
+{{- define "kubernetes_monitoring_telemetry.logs" -}}
+{{- $logs := list -}}
+{{- if .Values.logs.enabled -}}
+  {{- $logs = append $logs "enabled" -}}
+  {{- if .Values.logs.cluster_events.enabled }}{{- $logs = append $logs "events" -}}{{- end -}}
+  {{- if .Values.logs.pod_logs.enabled }}{{- $logs = append $logs "pod_logs" -}}{{- end -}}
+{{- else -}}
+  {{- $logs = append $logs "disabled" -}}
+{{- end -}}
+{{- join "," $logs -}}
+{{- end }}
+
+{{- define "kubernetes_monitoring_telemetry.traces" -}}
+{{- if .Values.traces.enabled }}enabled{{- else -}}disabled{{- end -}}
+{{- end }}
+
+{{- define "kubernetes_monitoring_telemetry.deployments" -}}
+{{- $deployments := list -}}
+{{- if index (index .Values "kube-state-metrics").enabled -}}{{- $deployments = append $deployments "kube-state-metrics" -}}{{- end -}}
+{{- if index (index .Values "prometheus-node-exporter").enabled -}}{{- $deployments = append $deployments "prometheus-node-exporter" -}}{{- end -}}
+{{- if index (index .Values "prometheus-windows-exporter").enabled -}}{{- $deployments = append $deployments "prometheus-windows-exporter" -}}{{- end -}}
+{{- if index (index .Values "prometheus-operator-crds").enabled -}}{{- $deployments = append $deployments "prometheus-operator-crds" -}}{{- end -}}
+{{- if index (index .Values "opencost").enabled -}}{{- $deployments = append $deployments "opencost" -}}{{- end -}}
+{{- join "," $deployments -}}
+{{- end }}

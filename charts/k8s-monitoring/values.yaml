@@ -406,6 +406,10 @@ metrics:
     # -- Which namespaces to look for ServiceMonitor objects.
     namespaces: []
 
+  kubernetesMonitoring:
+    # -- Report telemetry about this Kubernetes Monitoring chart as a metric.
+    enabled: true
+
 # Settings related to capturing and forwarding logs
 logs:
   # -- Capture and forward logs
@@ -584,6 +588,8 @@ grafana-agent:
       extra:
       - name: grafana-agent-credentials
         mountPath: /etc/grafana-agent-credentials
+      - name: kubernetes-monitoring-telemetry
+        mountPath: /etc/kubernetes-monitoring-telemetry
 
   controller:
     type: statefulset
@@ -597,6 +603,9 @@ grafana-agent:
       - name: grafana-agent-credentials
         secret:
           secretName: grafana-agent-credentials
+      - name: kubernetes-monitoring-telemetry
+        configMap:
+          name: kubernetes-monitoring-telemetry
 
 # Settings for the Grafana Agent deployment
 # You can use this sections to make modifications to the Grafana Agent deployment.

@@ -61,6 +61,28 @@ prometheus.relabel "agent" {
   forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
 }
 
+// Kubernetes Monitoring Telemetry
+prometheus.exporter.unix {
+  set_collectors = ["textfile"]
+  textfile {
+    directory = "/etc/kubernetes-monitoring-telemetry"
+  }
+}
+
+prometheus.scrape "kubernetes_monitoring_telemetry" {
+  job_name   = "integrations/kubernetes/kubernetes_monitoring_telemetry"
+  targets    = prometheus.exporter.unix.targets
+  scrape_interval = "2m"
+  clustering {
+    enabled = true
+  }
+  forward_to = [prometheus.relabel.kubernetes_monitoring_telemetry.receiver]
+}
+
+prometheus.relabel "kubernetes_monitoring_telemetry" {
+  forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
+}
+
 // Kubelet
 discovery.relabel "kubelet" {
   targets = discovery.kubernetes.nodes.targets

@@ -159,6 +159,33 @@ data:
       forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
     }
     
+    // Kubernetes Monitoring Telemetry
+    prometheus.exporter.unix {
+      set_collectors = ["textfile"]
+      textfile {
+        directory = "/etc/kubernetes-monitoring-telemetry"
+      }
+    }
+    
+    prometheus.scrape "kubernetes_monitoring_telemetry" {
+      job_name   = "integrations/kubernetes/kubernetes_monitoring_telemetry"
+      targets    = prometheus.exporter.unix.targets
+      scrape_interval = "60s"
+      clustering {
+        enabled = true
+      }
+      forward_to = [prometheus.relabel.kubernetes_monitoring_telemetry.receiver]
+    }
+    
+    prometheus.relabel "kubernetes_monitoring_telemetry" {
+      rule {
+          source_labels = ["namespace"]
+          regex = "^$|production|staging"
+          action = "keep"
+      }
+      forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
+    }
+    
     // Kubelet
     discovery.relabel "kubelet" {
       targets = discovery.kubernetes.nodes.targets
@@ -629,6 +656,18 @@ data:
         cluster = "specific-namespace-test",
       }
     }
+---
+# Source: k8s-monitoring/templates/kubernetes-monitoring-telemetry.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kubernetes-monitoring-telemetry
+  namespace: default
+data:
+  metrics.prom: |
+    # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart as well as a summary of enabled features
+    # TYPE grafana_kubernetes_monitoring_build_info gauge
+    grafana_kubernetes_monitoring_build_info{version="0.2.6", metrics="enabled,agent,kube-state-metrics,node-exporter,kubelet,cadvisor,cost", logs="enabled,events,pod_logs", traces="disabled", deployments="kube-state-metrics,prometheus-node-exporter,prometheus-operator-crds,opencost"} 1
 ---
 # Source: k8s-monitoring/charts/prometheus-operator-crds/charts/crds/templates/crd-alertmanagerconfigs.yaml
 apiVersion: apiextensions.k8s.io/v1
@@ -42891,6 +42930,9 @@ spec:
             -
               mountPath: /etc/grafana-agent-credentials
               name: grafana-agent-credentials
+            -
+              mountPath: /etc/kubernetes-monitoring-telemetry
+              name: kubernetes-monitoring-telemetry
         - name: config-reloader
           image: docker.io/jimmidyson/configmap-reload:v0.8.0
           args:
@@ -42913,6 +42955,9 @@ spec:
         - name: grafana-agent-credentials
           secret:
             secretName: grafana-agent-credentials
+        - configMap:
+            name: kubernetes-monitoring-telemetry
+          name: kubernetes-monitoring-telemetry
 ---
 # Source: k8s-monitoring/charts/prometheus-operator-crds/charts/crds/templates/crd-alertmanagerconfigs.yaml
 # https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/v0.68.0/example/prometheus-operator-crd/monitoring.coreos.com_alertmanagerconfigs.yaml
