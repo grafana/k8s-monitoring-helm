@@ -1,12 +1,3 @@
-{{/* This function checks for the minimum Helm CLI version 3.7 */}}
-{{/*   The use of .Subcharts requires 3.7 */}}
-{{/*   The use of multi-line strings (in the fail below) requires 3.6 */}}
-{{- define "checkHelmVersion" -}}
-{{ if semverCompare "<3.7" .Capabilities.HelmVersion.Version }}
-{{ fail "Helm version 3.7 or later is required for this chart" }}
-{{- end }}
-{{- end }}
-
 {{/* This template checks that the port defined in .Values.traces.receiver.port is in the targetPort list on .grafana-agent */}}
 {{- define "checkforTracePort" -}}
   {{- $port := .port -}}
