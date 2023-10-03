@@ -232,6 +232,18 @@ data:
       }
     }
 ---
+# Source: k8s-monitoring/templates/kubernetes-monitoring-telemetry.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kubernetes-monitoring-telemetry
+  namespace: default
+data:
+  metrics.prom: |
+    # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart as well as a summary of enabled features
+    # TYPE grafana_kubernetes_monitoring_build_info gauge
+    grafana_kubernetes_monitoring_build_info{version="0.2.6", metrics="disabled", logs="enabled,events,pod_logs", traces="disabled", deployments=""} 1
+---
 # Source: k8s-monitoring/charts/grafana-agent-logs/templates/rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -660,6 +672,9 @@ spec:
             -
               mountPath: /etc/grafana-agent-credentials
               name: grafana-agent-credentials
+            -
+              mountPath: /etc/kubernetes-monitoring-telemetry
+              name: kubernetes-monitoring-telemetry
         - name: config-reloader
           image: docker.io/jimmidyson/configmap-reload:v0.8.0
           args:
@@ -682,3 +697,6 @@ spec:
         - name: grafana-agent-credentials
           secret:
             secretName: grafana-agent-credentials
+        - configMap:
+            name: kubernetes-monitoring-telemetry
+          name: kubernetes-monitoring-telemetry
