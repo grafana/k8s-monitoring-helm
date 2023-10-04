@@ -45,4 +45,8 @@ prometheus-node-exporter:
 grafana-agent:
   agent:
     listenPort: 8080
+
+grafana-agent-logs:
+  agent:
+    listenPort: 8080
 ```

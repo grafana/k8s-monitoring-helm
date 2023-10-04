@@ -23,6 +23,22 @@ metadata:
     app.kubernetes.io/version: "v0.36.2"
     app.kubernetes.io/managed-by: Helm
 ---
+# Source: k8s-monitoring/charts/kube-state-metrics/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:    
+    helm.sh/chart: kube-state-metrics-5.13.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: metrics
+    app.kubernetes.io/part-of: kube-state-metrics
+    app.kubernetes.io/name: kube-state-metrics
+    app.kubernetes.io/instance: k8smon
+    app.kubernetes.io/version: "2.10.0"
+  name: k8smon-kube-state-metrics
+  namespace: default
+imagePullSecrets:
+---
 # Source: k8s-monitoring/charts/opencost/templates/serviceaccount.yaml
 apiVersion: v1
 kind: ServiceAccount
@@ -37,6 +53,21 @@ metadata:
     app.kubernetes.io/managed-by: Helm
 automountServiceAccountToken: true
 ---
+# Source: k8s-monitoring/charts/prometheus-node-exporter/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: k8smon-prometheus-node-exporter
+  namespace: default
+  labels:
+    helm.sh/chart: prometheus-node-exporter-4.23.2
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: metrics
+    app.kubernetes.io/part-of: prometheus-node-exporter
+    app.kubernetes.io/name: prometheus-node-exporter
+    app.kubernetes.io/instance: k8smon
+    app.kubernetes.io/version: "1.6.1"
+---
 # Source: k8s-monitoring/templates/credentials.yaml
 apiVersion: v1
 kind: Secret
@@ -48,7 +79,7 @@ data:
   prometheus_host: "aHR0cHM6Ly9wcm9tZXRoZXVzLmV4YW1wbGUuY29t"
   prometheus_username: "MTIzNDU="
   prometheus_password: "SXQncyBhIHNlY3JldCB0byBldmVyeW9uZQ=="
-  loki_host: "aHR0cHM6Ly9wcm9tZXRoZXVzLmV4YW1wbGUuY29t"
+  loki_host: "aHR0cHM6Ly9sb2tpLmV4YW1wbGUuY29t"
   loki_username: "MTIzNDU="
   loki_password: "SXQncyBhIHNlY3JldCB0byBldmVyeW9uZQ=="
 ---
@@ -227,13 +258,18 @@ data:
     discovery.relabel "kube_state_metrics" {
       targets = discovery.kubernetes.services.targets
       rule {
+        source_labels = ["__meta_kubernetes_service_label_app_kubernetes_io_instance"]
+        regex = "k8smon"
+        action = "keep"
+      }
+      rule {
         source_labels = ["__meta_kubernetes_service_label_app_kubernetes_io_name"]
         regex = "kube-state-metrics"
         action = "keep"
       }
       rule {
         source_labels = ["__meta_kubernetes_service_port_name"]
-        regex = "https-main"
+        regex = "http"
         action = "keep"
       }
     }
@@ -244,11 +280,6 @@ data:
       scrape_interval = "60s"
       clustering {
         enabled = true
-      }
-      scheme     = "https"
-      bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
-      tls_config {
-        insecure_skip_verify = true
       }
       forward_to = [prometheus.relabel.kube_state_metrics.receiver]
     }
@@ -266,8 +297,13 @@ data:
     discovery.relabel "node_exporter" {
       targets = discovery.kubernetes.pods.targets
       rule {
+        source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_instance"]
+        regex = "k8smon"
+        action = "keep"
+      }
+      rule {
         source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
-        regex = "node-exporter"
+        regex = "prometheus-node-exporter.*"
         action = "keep"
       }
       rule {
@@ -285,12 +321,6 @@ data:
         enabled = true
       }
       forward_to = [prometheus.relabel.node_exporter.receiver]
-      scheme     = "https"
-      bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
-      tls_config {
-        ca_file = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
-        insecure_skip_verify = true
-      }
     }
     
     prometheus.relabel "node_exporter" {
@@ -396,7 +426,6 @@ data:
     prometheus.remote_write "grafana_cloud_prometheus" {
       endpoint {
         url = nonsensitive(local.file.prometheus_host.content) + "/api/prom/push"
-        proxy_url = "http://192.168.1.100:8080"
     
         basic_auth {
           username = local.file.prometheus_username.content
@@ -405,7 +434,7 @@ data:
     
       }
       external_labels = {
-        cluster = "openshift-compatible-test",
+        cluster = "private-image-regristry-test",
       }
     }
     
@@ -432,7 +461,6 @@ data:
     loki.write "grafana_cloud_loki" {
       endpoint {
         url = nonsensitive(local.file.loki_host.content) + "/loki/api/v1/push"
-        proxy_url = "http://192.168.1.100:8080"
     
         basic_auth {
           username = local.file.loki_username.content
@@ -440,7 +468,7 @@ data:
         }
       }
       external_labels = {
-        cluster = "openshift-compatible-test",
+        cluster = "private-image-regristry-test",
       }
     }
 ---
@@ -567,7 +595,6 @@ data:
     loki.write "grafana_cloud_loki" {
       endpoint {
         url = nonsensitive(local.file.loki_host.content) + "/loki/api/v1/push"
-        proxy_url = "http://192.168.1.100:8080"
     
         basic_auth {
           username = local.file.loki_username.content
@@ -575,7 +602,7 @@ data:
         }
       }
       external_labels = {
-        cluster = "openshift-compatible-test",
+        cluster = "private-image-regristry-test",
       }
     }
 ---
@@ -589,7 +616,7 @@ data:
   metrics.prom: |
     # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart as well as a summary of enabled features
     # TYPE grafana_kubernetes_monitoring_build_info gauge
-    grafana_kubernetes_monitoring_build_info{version="0.2.7", metrics="enabled,agent,kube-state-metrics,node-exporter,kubelet,cadvisor,cost", logs="enabled,events,pod_logs", traces="disabled", deployments="prometheus-operator-crds,opencost"} 1
+    grafana_kubernetes_monitoring_build_info{version="0.2.7", metrics="enabled,agent,kube-state-metrics,node-exporter,kubelet,cadvisor,cost", logs="enabled,events,pod_logs", traces="disabled", deployments="kube-state-metrics,prometheus-node-exporter,prometheus-operator-crds,opencost"} 1
 ---
 # Source: k8s-monitoring/charts/prometheus-operator-crds/charts/crds/templates/crd-alertmanagerconfigs.yaml
 apiVersion: apiextensions.k8s.io/v1
@@ -41951,6 +41978,161 @@ rules:
       - list
       - watch
 ---
+# Source: k8s-monitoring/charts/kube-state-metrics/templates/role.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:    
+    helm.sh/chart: kube-state-metrics-5.13.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: metrics
+    app.kubernetes.io/part-of: kube-state-metrics
+    app.kubernetes.io/name: kube-state-metrics
+    app.kubernetes.io/instance: k8smon
+    app.kubernetes.io/version: "2.10.0"
+  name: k8smon-kube-state-metrics
+rules:
+
+- apiGroups: ["certificates.k8s.io"]
+  resources:
+  - certificatesigningrequests
+  verbs: ["list", "watch"]
+
+- apiGroups: [""]
+  resources:
+  - configmaps
+  verbs: ["list", "watch"]
+
+- apiGroups: ["batch"]
+  resources:
+  - cronjobs
+  verbs: ["list", "watch"]
+
+- apiGroups: ["extensions", "apps"]
+  resources:
+  - daemonsets
+  verbs: ["list", "watch"]
+
+- apiGroups: ["extensions", "apps"]
+  resources:
+  - deployments
+  verbs: ["list", "watch"]
+
+- apiGroups: [""]
+  resources:
+  - endpoints
+  verbs: ["list", "watch"]
+
+- apiGroups: ["autoscaling"]
+  resources:
+  - horizontalpodautoscalers
+  verbs: ["list", "watch"]
+
+- apiGroups: ["extensions", "networking.k8s.io"]
+  resources:
+  - ingresses
+  verbs: ["list", "watch"]
+
+- apiGroups: ["batch"]
+  resources:
+  - jobs
+  verbs: ["list", "watch"]
+
+- apiGroups: ["coordination.k8s.io"]
+  resources:
+  - leases
+  verbs: ["list", "watch"]
+
+- apiGroups: [""]
+  resources:
+  - limitranges
+  verbs: ["list", "watch"]
+
+- apiGroups: ["admissionregistration.k8s.io"]
+  resources:
+    - mutatingwebhookconfigurations
+  verbs: ["list", "watch"]
+
+- apiGroups: [""]
+  resources:
+  - namespaces
+  verbs: ["list", "watch"]
+
+- apiGroups: ["networking.k8s.io"]
+  resources:
+  - networkpolicies
+  verbs: ["list", "watch"]
+
+- apiGroups: [""]
+  resources:
+  - nodes
+  verbs: ["list", "watch"]
+
+- apiGroups: [""]
+  resources:
+  - persistentvolumeclaims
+  verbs: ["list", "watch"]
+
+- apiGroups: [""]
+  resources:
+  - persistentvolumes
+  verbs: ["list", "watch"]
+
+- apiGroups: ["policy"]
+  resources:
+    - poddisruptionbudgets
+  verbs: ["list", "watch"]
+
+- apiGroups: [""]
+  resources:
+  - pods
+  verbs: ["list", "watch"]
+
+- apiGroups: ["extensions", "apps"]
+  resources:
+  - replicasets
+  verbs: ["list", "watch"]
+
+- apiGroups: [""]
+  resources:
+  - replicationcontrollers
+  verbs: ["list", "watch"]
+
+- apiGroups: [""]
+  resources:
+  - resourcequotas
+  verbs: ["list", "watch"]
+
+- apiGroups: [""]
+  resources:
+  - secrets
+  verbs: ["list", "watch"]
+
+- apiGroups: [""]
+  resources:
+  - services
+  verbs: ["list", "watch"]
+
+- apiGroups: ["apps"]
+  resources:
+  - statefulsets
+  verbs: ["list", "watch"]
+
+- apiGroups: ["storage.k8s.io"]
+  resources:
+    - storageclasses
+  verbs: ["list", "watch"]
+
+- apiGroups: ["admissionregistration.k8s.io"]
+  resources:
+    - validatingwebhookconfigurations
+  verbs: ["list", "watch"]
+
+- apiGroups: ["storage.k8s.io"]
+  resources:
+    - volumeattachments
+  verbs: ["list", "watch"]
+---
 # Source: k8s-monitoring/charts/opencost/templates/clusterrole.yaml
 # Cluster role giving opencost to get, list, watch required resources
 # No write permissions are required
@@ -42078,6 +42260,28 @@ subjects:
     name: k8smon-grafana-agent
     namespace: default
 ---
+# Source: k8s-monitoring/charts/kube-state-metrics/templates/clusterrolebinding.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  labels:    
+    helm.sh/chart: kube-state-metrics-5.13.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: metrics
+    app.kubernetes.io/part-of: kube-state-metrics
+    app.kubernetes.io/name: kube-state-metrics
+    app.kubernetes.io/instance: k8smon
+    app.kubernetes.io/version: "2.10.0"
+  name: k8smon-kube-state-metrics
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: k8smon-kube-state-metrics
+subjects:
+- kind: ServiceAccount
+  name: k8smon-kube-state-metrics
+  namespace: default
+---
 # Source: k8s-monitoring/charts/opencost/templates/clusterrolebinding.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -42117,8 +42321,8 @@ spec:
     app.kubernetes.io/instance: k8smon
   ports:
     - name: http-metrics
-      port: 8080
-      targetPort: 8080
+      port: 80
+      targetPort: 80
       protocol: "TCP"
 ---
 # Source: k8s-monitoring/charts/grafana-agent/templates/cluster_service.yaml
@@ -42146,8 +42350,8 @@ spec:
     # This service should only be used for clustering, and not metric
     # collection.
     - name: http
-      port: 8080
-      targetPort: 8080
+      port: 80
+      targetPort: 80
       protocol: "TCP"
 ---
 # Source: k8s-monitoring/charts/grafana-agent/templates/service.yaml
@@ -42168,9 +42372,37 @@ spec:
     app.kubernetes.io/instance: k8smon
   ports:
     - name: http-metrics
-      port: 8080
-      targetPort: 8080
+      port: 80
+      targetPort: 80
       protocol: "TCP"
+---
+# Source: k8s-monitoring/charts/kube-state-metrics/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: k8smon-kube-state-metrics
+  namespace: default
+  labels:    
+    helm.sh/chart: kube-state-metrics-5.13.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: metrics
+    app.kubernetes.io/part-of: kube-state-metrics
+    app.kubernetes.io/name: kube-state-metrics
+    app.kubernetes.io/instance: k8smon
+    app.kubernetes.io/version: "2.10.0"
+  annotations:
+    prometheus.io/scrape: 'true'
+spec:
+  type: "ClusterIP"
+  ports:
+  - name: "http"
+    protocol: TCP
+    port: 8080
+    targetPort: 8080
+  
+  selector:    
+    app.kubernetes.io/name: kube-state-metrics
+    app.kubernetes.io/instance: k8smon
 ---
 # Source: k8s-monitoring/charts/opencost/templates/service.yaml
 apiVersion: v1
@@ -42193,6 +42425,33 @@ spec:
     - name: http
       port: 9003
       targetPort: 9003
+---
+# Source: k8s-monitoring/charts/prometheus-node-exporter/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: k8smon-prometheus-node-exporter
+  namespace: default
+  labels:
+    helm.sh/chart: prometheus-node-exporter-4.23.2
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: metrics
+    app.kubernetes.io/part-of: prometheus-node-exporter
+    app.kubernetes.io/name: prometheus-node-exporter
+    app.kubernetes.io/instance: k8smon
+    app.kubernetes.io/version: "1.6.1"
+  annotations:
+    prometheus.io/scrape: "true"
+spec:
+  type: ClusterIP
+  ports:
+    - port: 9100
+      targetPort: 9100
+      protocol: TCP
+      name: metrics
+  selector:
+    app.kubernetes.io/name: prometheus-node-exporter
+    app.kubernetes.io/instance: k8smon
 ---
 # Source: k8s-monitoring/charts/grafana-agent-logs/templates/controllers/daemonset.yaml
 apiVersion: apps/v1
@@ -42220,13 +42479,13 @@ spec:
       serviceAccountName: k8smon-grafana-agent-logs
       containers:
         - name: grafana-agent
-          image: docker.io/grafana/agent:v0.36.2
+          image: my.registry.com/grafana/agent:v0.36.2
           imagePullPolicy: IfNotPresent
           args:
             - run
             - /etc/agent/config.river
             - --storage.path=/tmp/agent
-            - --server.http.listen-addr=0.0.0.0:8080
+            - --server.http.listen-addr=0.0.0.0:80
           env:
             - name: AGENT_MODE
               value: flow
@@ -42235,12 +42494,12 @@ spec:
                 fieldRef:
                   fieldPath: spec.nodeName
           ports:
-            - containerPort: 8080
+            - containerPort: 80
               name: http-metrics
           readinessProbe:
             httpGet:
               path: /-/ready
-              port: 8080
+              port: 80
             initialDelaySeconds: 10
             timeoutSeconds: 1
           volumeMounts:
@@ -42256,10 +42515,10 @@ spec:
               mountPath: /etc/grafana-agent-credentials
               name: grafana-agent-credentials
         - name: config-reloader
-          image: docker.io/jimmidyson/configmap-reload:v0.8.0
+          image: my.registry.com/jimmidyson/configmap-reload:v0.8.0
           args:
             - --volume-dir=/etc/agent
-            - --webhook-url=http://localhost:8080/-/reload
+            - --webhook-url=http://localhost:80/-/reload
           volumeMounts:
             - name: config
               mountPath: /etc/agent
@@ -42286,6 +42545,193 @@ spec:
         - name: grafana-agent-credentials
           secret:
             secretName: grafana-agent-credentials
+---
+# Source: k8s-monitoring/charts/prometheus-node-exporter/templates/daemonset.yaml
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: k8smon-prometheus-node-exporter
+  namespace: default
+  labels:
+    helm.sh/chart: prometheus-node-exporter-4.23.2
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: metrics
+    app.kubernetes.io/part-of: prometheus-node-exporter
+    app.kubernetes.io/name: prometheus-node-exporter
+    app.kubernetes.io/instance: k8smon
+    app.kubernetes.io/version: "1.6.1"
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: prometheus-node-exporter
+      app.kubernetes.io/instance: k8smon
+  revisionHistoryLimit: 10
+  updateStrategy:
+    rollingUpdate:
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      annotations:
+        cluster-autoscaler.kubernetes.io/safe-to-evict: "true"
+      labels:
+        helm.sh/chart: prometheus-node-exporter-4.23.2
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/component: metrics
+        app.kubernetes.io/part-of: prometheus-node-exporter
+        app.kubernetes.io/name: prometheus-node-exporter
+        app.kubernetes.io/instance: k8smon
+        app.kubernetes.io/version: "1.6.1"
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        fsGroup: 65534
+        runAsGroup: 65534
+        runAsNonRoot: true
+        runAsUser: 65534
+      serviceAccountName: k8smon-prometheus-node-exporter
+      containers:
+        - name: node-exporter
+          image: my.registry.com/prometheus/node-exporter:v1.6.1
+          imagePullPolicy: IfNotPresent
+          args:
+            - --path.procfs=/host/proc
+            - --path.sysfs=/host/sys
+            - --path.rootfs=/host/root
+            - --path.udev.data=/host/root/run/udev/data
+            - --web.listen-address=[$(HOST_IP)]:9100
+          securityContext:
+            readOnlyRootFilesystem: true
+          env:
+            - name: HOST_IP
+              value: 0.0.0.0
+          ports:
+            - name: metrics
+              containerPort: 9100
+              protocol: TCP
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              httpHeaders:
+              path: /
+              port: 9100
+              scheme: HTTP
+            initialDelaySeconds: 0
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              httpHeaders:
+              path: /
+              port: 9100
+              scheme: HTTP
+            initialDelaySeconds: 0
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          volumeMounts:
+            - name: proc
+              mountPath: /host/proc
+              readOnly:  true
+            - name: sys
+              mountPath: /host/sys
+              readOnly: true
+            - name: root
+              mountPath: /host/root
+              mountPropagation: HostToContainer
+              readOnly: true
+      hostNetwork: true
+      hostPID: true
+      nodeSelector:
+        kubernetes.io/os: linux
+      tolerations:
+        - effect: NoSchedule
+          operator: Exists
+      volumes:
+        - name: proc
+          hostPath:
+            path: /proc
+        - name: sys
+          hostPath:
+            path: /sys
+        - name: root
+          hostPath:
+            path: /
+---
+# Source: k8s-monitoring/charts/kube-state-metrics/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: k8smon-kube-state-metrics
+  namespace: default
+  labels:    
+    helm.sh/chart: kube-state-metrics-5.13.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: metrics
+    app.kubernetes.io/part-of: kube-state-metrics
+    app.kubernetes.io/name: kube-state-metrics
+    app.kubernetes.io/instance: k8smon
+    app.kubernetes.io/version: "2.10.0"
+spec:
+  selector:
+    matchLabels:      
+      app.kubernetes.io/name: kube-state-metrics
+      app.kubernetes.io/instance: k8smon
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+  revisionHistoryLimit: 10
+  template:
+    metadata:
+      labels:        
+        helm.sh/chart: kube-state-metrics-5.13.0
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/component: metrics
+        app.kubernetes.io/part-of: kube-state-metrics
+        app.kubernetes.io/name: kube-state-metrics
+        app.kubernetes.io/instance: k8smon
+        app.kubernetes.io/version: "2.10.0"
+    spec:
+      hostNetwork: false
+      serviceAccountName: k8smon-kube-state-metrics
+      securityContext:
+        fsGroup: 65534
+        runAsGroup: 65534
+        runAsNonRoot: true
+        runAsUser: 65534
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: kube-state-metrics
+        args:
+        - --port=8080
+        - --resources=certificatesigningrequests,configmaps,cronjobs,daemonsets,deployments,endpoints,horizontalpodautoscalers,ingresses,jobs,leases,limitranges,mutatingwebhookconfigurations,namespaces,networkpolicies,nodes,persistentvolumeclaims,persistentvolumes,poddisruptionbudgets,pods,replicasets,replicationcontrollers,resourcequotas,secrets,services,statefulsets,storageclasses,validatingwebhookconfigurations,volumeattachments
+        imagePullPolicy: IfNotPresent
+        image: my.registry.com/kube-state-metrics/kube-state-metrics:v2.10.0
+        ports:
+        - containerPort: 8080
+          name: "http"
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8080
+          initialDelaySeconds: 5
+          timeoutSeconds: 5
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 8080
+          initialDelaySeconds: 5
+          timeoutSeconds: 5
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+      nodeSelector:
+        kubernetes.io/os: linux
 ---
 # Source: k8s-monitoring/charts/opencost/templates/deployment.yaml
 apiVersion: apps/v1
@@ -42321,7 +42767,7 @@ spec:
         kubernetes.io/os: linux
       containers:
         - name: k8smon-opencost
-          image: "quay.io/kubecost1/kubecost-cost-model:prod-1.106.1"
+          image: "my.registry.com/kubecost1/kubecost-cost-model:prod-1.106.1"
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 9003
@@ -42402,13 +42848,13 @@ spec:
       serviceAccountName: k8smon-grafana-agent
       containers:
         - name: grafana-agent
-          image: docker.io/grafana/agent:v0.36.2
+          image: my.registry.com/grafana/agent:v0.36.2
           imagePullPolicy: IfNotPresent
           args:
             - run
             - /etc/agent/config.river
             - --storage.path=/tmp/agent
-            - --server.http.listen-addr=0.0.0.0:8080
+            - --server.http.listen-addr=0.0.0.0:80
             - --cluster.enabled=true
             - --cluster.join-addresses=k8smon-grafana-agent-cluster
           env:
@@ -42419,12 +42865,12 @@ spec:
                 fieldRef:
                   fieldPath: spec.nodeName
           ports:
-            - containerPort: 8080
+            - containerPort: 80
               name: http-metrics
           readinessProbe:
             httpGet:
               path: /-/ready
-              port: 8080
+              port: 80
             initialDelaySeconds: 10
             timeoutSeconds: 1
           volumeMounts:
@@ -42437,10 +42883,10 @@ spec:
               mountPath: /etc/kubernetes-monitoring-telemetry
               name: kubernetes-monitoring-telemetry
         - name: config-reloader
-          image: docker.io/jimmidyson/configmap-reload:v0.8.0
+          image: my.registry.com/jimmidyson/configmap-reload:v0.8.0
           args:
             - --volume-dir=/etc/agent
-            - --webhook-url=http://localhost:8080/-/reload
+            - --webhook-url=http://localhost:80/-/reload
           volumeMounts:
             - name: config
               mountPath: /etc/agent
