@@ -3,11 +3,12 @@ cluster:
 
 externalServices:
   prometheus:
-    host: http://mimir-nginx.mimir.svc:80
+    host: http://prometheus-server.prometheus.svc:80
     basicAuth:
-      username: mimir
-      password: mimirpassword
-    writeEndpoint: /api/v1/push
+      username: promuser
+      password: prometheuspassword
+    queryEndpoint: /api/v1/query
+    writeEndpoint: /api/v1/write
   loki:
     host: http://loki.loki.svc:3100
     tenantId: 1
@@ -18,4 +19,4 @@ externalServices:
 opencost:
   prometheus:
     external:
-      url: http://mimir-nginx.mimir.svc:80/api/v1
+      url: http://prometheus-server.prometheus.svc:80/api/v1

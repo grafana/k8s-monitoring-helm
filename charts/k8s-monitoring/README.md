@@ -85,8 +85,9 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | externalServices.prometheus.externalLabels | object | `{}` | Custom labels to be added to all time series |
 | externalServices.prometheus.host | string | `""` | (required) Prometheus host where metrics will be sent |
 | externalServices.prometheus.proxyURL | string | `""` | HTTP proxy to proxy requests to Prometheus through. |
+| externalServices.prometheus.queryEndpoint | string | `"/api/prom/api/v1/query"` | Prometheus metrics query endpoint. Preset for Grafana Cloud Metrics instances. |
 | externalServices.prometheus.tenantId | string | `""` | (optional) Sets the X-Scope-OrgID header when sending metrics |
-| externalServices.prometheus.writeEndpoint | string | `"/api/prom/push"` | Prometheus metrics write endpoint |
+| externalServices.prometheus.writeEndpoint | string | `"/api/prom/push"` | Prometheus metrics write endpoint. Preset for Grafana Cloud Metrics instances. |
 | externalServices.prometheus.writeRelabelConfigRules | string | `nil` | Rule blocks to be added to the write_relabel_config block of the prometheus.remote_write component. See https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.remote_write/#write_relabel_config-block |
 | externalServices.tempo.basicAuth.password | string | `""` | Tempo basic auth password |
 | externalServices.tempo.basicAuth.username | string | `""` | Tempo basic auth username |

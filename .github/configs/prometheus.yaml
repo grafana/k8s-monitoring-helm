@@ -1,0 +1,30 @@
+server:
+  extraFlags:
+    - enable-feature=remote-write-receiver
+    - web.config.file=/etc/config/web.yml
+
+  persistentVolume:
+    enabled: false
+
+  probeHeaders:
+  - name: "Authorization"
+    value: "Basic cHJvbXVzZXI6cHJvbWV0aGV1c3Bhc3N3b3Jk"
+
+serverFiles:
+  prometheus.yml:
+    scrape_configs: []
+  web.yml:
+    basic_auth_users:
+      promuser: $2a$12$1UJsAG4QnhjjDzqcSVkZmeDxxjgIFOAmzfuVTybTuhhDnYgfuAbAq  # "prometheuspassword"
+
+alertmanager:
+  enabled: false
+
+kube-state-metrics:
+  enabled: false
+
+prometheus-node-exporter:
+  enabled: false
+
+prometheus-pushgateway:
+  enabled: false

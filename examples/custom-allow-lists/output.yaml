@@ -42533,3 +42533,527 @@ spec:
 ---
 # Source: k8s-monitoring/charts/prometheus-operator-crds/charts/crds/templates/crd-thanosrulers.yaml
 # https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/v0.68.0/example/prometheus-operator-crd/monitoring.coreos.com_thanosrulers.yaml
+---
+# Source: k8s-monitoring/templates/hooks/grafana-agent-config-test.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: k8smon-grafana-agent-test
+  namespace: default
+  labels:
+    app.kubernetes.io/managed-by: "Helm"
+    app.kubernetes.io/instance: "k8smon"
+    app.kubernetes.io/version: 1.3.2
+    helm.sh/chart: "k8s-monitoring-0.2.7"
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-weight": "-5"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+data:
+  config.river: |-
+    discovery.kubernetes "nodes" {
+      role = "node"
+    }
+    
+    discovery.kubernetes "pods" {
+      role = "pod"
+    }
+    
+    discovery.kubernetes "services" {
+      role = "service"
+    }
+    
+    // Grafana Agent
+    discovery.relabel "agent" {
+      targets = discovery.kubernetes.pods.targets
+      rule {
+        source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_instance"]
+        regex = "k8smon"
+        action = "keep"
+      }
+      rule {
+        source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
+        regex = "grafana-agent.*"
+        action = "keep"
+      }
+      rule {
+        source_labels = ["__meta_kubernetes_pod_container_port_name"]
+        regex = "http-metrics"
+        action = "keep"
+      }
+      rule {
+        source_labels = ["__meta_kubernetes_namespace"]
+        target_label  = "namespace"
+      }
+      rule {
+        source_labels = ["__meta_kubernetes_pod_name"]
+        target_label  = "pod"
+      }
+      rule {
+        source_labels = ["__meta_kubernetes_pod_container_name"]
+        target_label  = "container"
+      }
+    }
+    
+    prometheus.scrape "agent" {
+      job_name = "integrations/agent"
+      targets = discovery.relabel.agent.output
+      scrape_interval = "60s"
+      forward_to = [prometheus.relabel.agent.receiver]
+      clustering {
+        enabled = true
+      }
+    }
+    
+    prometheus.relabel "agent" {
+      rule {
+        source_labels = ["__name__"]
+        regex = "up|agent_build_info"
+        action = "keep"
+      }
+      forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
+    }
+    
+    // Kubernetes Monitoring Telemetry
+    prometheus.exporter.unix {
+      set_collectors = ["textfile"]
+      textfile {
+        directory = "/etc/kubernetes-monitoring-telemetry"
+      }
+    }
+    
+    prometheus.scrape "kubernetes_monitoring_telemetry" {
+      job_name   = "integrations/kubernetes/kubernetes_monitoring_telemetry"
+      targets    = prometheus.exporter.unix.targets
+      scrape_interval = "60s"
+      clustering {
+        enabled = true
+      }
+      forward_to = [prometheus.relabel.kubernetes_monitoring_telemetry.receiver]
+    }
+    
+    prometheus.relabel "kubernetes_monitoring_telemetry" {
+      forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
+    }
+    
+    // Kubelet
+    discovery.relabel "kubelet" {
+      targets = discovery.kubernetes.nodes.targets
+      rule {
+        target_label = "__address__"
+        replacement  = "kubernetes.default.svc.cluster.local:443"
+      }
+      rule {
+        source_labels = ["__meta_kubernetes_node_name"]
+        regex         = "(.+)"
+        replacement   = "/api/v1/nodes/${1}/proxy/metrics"
+        target_label  = "__metrics_path__"
+      }
+    }
+    
+    prometheus.scrape "kubelet" {
+      job_name   = "integrations/kubernetes/kubelet"
+      targets  = discovery.relabel.kubelet.output
+      scheme   = "https"
+      scrape_interval = "60s"
+      bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+      tls_config {
+        insecure_skip_verify = true
+      }
+      clustering {
+        enabled = true
+      }
+      forward_to = [prometheus.relabel.kubelet.receiver]
+    }
+    
+    prometheus.relabel "kubelet" {
+      rule {
+        source_labels = ["__name__"]
+        regex = "up|kubelet_node_name|kubernetes_build_info"
+        action = "keep"
+      }
+      forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
+    }
+    
+    // cAdvisor
+    discovery.relabel "cadvisor" {
+      targets = discovery.kubernetes.nodes.targets
+      rule {
+        target_label = "__address__"
+        replacement  = "kubernetes.default.svc.cluster.local:443"
+      }
+      rule {
+        source_labels = ["__meta_kubernetes_node_name"]
+        regex         = "(.+)"
+        replacement   = "/api/v1/nodes/${1}/proxy/metrics/cadvisor"
+        target_label  = "__metrics_path__"
+      }
+    }
+    
+    prometheus.scrape "cadvisor" {
+      job_name   = "integrations/kubernetes/cadvisor"
+      targets    = discovery.relabel.cadvisor.output
+      scheme     = "https"
+      scrape_interval = "60s"
+      bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+      tls_config {
+        insecure_skip_verify = true
+      }
+      clustering {
+        enabled = true
+      }
+      forward_to = [prometheus.relabel.cadvisor.receiver]
+    }
+    
+    prometheus.relabel "cadvisor" {
+      rule {
+        source_labels = ["__name__"]
+        regex = "up|container_memory_cache|container_memory_rss|container_memory_swap"
+        action = "keep"
+      }
+      forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
+    }
+    
+    // Kube State Metrics
+    discovery.relabel "kube_state_metrics" {
+      targets = discovery.kubernetes.services.targets
+      rule {
+        source_labels = ["__meta_kubernetes_service_label_app_kubernetes_io_instance"]
+        regex = "k8smon"
+        action = "keep"
+      }
+      rule {
+        source_labels = ["__meta_kubernetes_service_label_app_kubernetes_io_name"]
+        regex = "kube-state-metrics"
+        action = "keep"
+      }
+      rule {
+        source_labels = ["__meta_kubernetes_service_port_name"]
+        regex = "http"
+        action = "keep"
+      }
+    }
+    
+    prometheus.scrape "kube_state_metrics" {
+      job_name   = "integrations/kubernetes/kube-state-metrics"
+      targets    = discovery.relabel.kube_state_metrics.output
+      scrape_interval = "60s"
+      clustering {
+        enabled = true
+      }
+      forward_to = [prometheus.relabel.kube_state_metrics.receiver]
+    }
+    
+    prometheus.relabel "kube_state_metrics" {
+      rule {
+        source_labels = ["__name__"]
+        regex = "up|.*"
+        action = "keep"
+      }
+      forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
+    }
+    
+    // Node Exporter
+    discovery.relabel "node_exporter" {
+      targets = discovery.kubernetes.pods.targets
+      rule {
+        source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_instance"]
+        regex = "k8smon"
+        action = "keep"
+      }
+      rule {
+        source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
+        regex = "prometheus-node-exporter.*"
+        action = "keep"
+      }
+      rule {
+        source_labels = ["__meta_kubernetes_pod_node_name"]
+        action = "replace"
+        target_label = "instance"
+      }
+    }
+    
+    prometheus.scrape "node_exporter" {
+      job_name   = "integrations/node_exporter"
+      targets  = discovery.relabel.node_exporter.output
+      scrape_interval = "60s"
+      clustering {
+        enabled = true
+      }
+      forward_to = [prometheus.relabel.node_exporter.receiver]
+    }
+    
+    prometheus.relabel "node_exporter" {
+      rule {
+        source_labels = ["__name__"]
+        regex = "up|node_.*"
+        action = "keep"
+      }
+      forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
+    }
+    
+    // OpenCost
+    discovery.relabel "opencost" {
+      targets = discovery.kubernetes.services.targets
+      rule {
+        source_labels = ["__meta_kubernetes_service_label_app_kubernetes_io_instance"]
+        regex = "k8smon"
+        action = "keep"
+      }
+      rule {
+        source_labels = ["__meta_kubernetes_service_label_app_kubernetes_io_name"]
+        regex = "opencost"
+        action = "keep"
+      }
+      rule {
+        source_labels = ["__meta_kubernetes_service_port_name"]
+        regex = "http"
+        action = "keep"
+      }
+    }
+    
+    prometheus.scrape "opencost" {
+      job_name   = "integrations/kubernetes/opencost"
+      targets    = discovery.relabel.opencost.output
+      scrape_interval = "60s"
+      clustering {
+        enabled = true
+      }
+      forward_to = [prometheus.relabel.opencost.receiver]
+    }
+    
+    prometheus.relabel "opencost" {
+      forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
+    }
+    
+    // PodMonitor
+    prometheus.operator.podmonitors "pod_monitors" {
+      forward_to = [prometheus.relabel.podmonitors.receiver]
+      clustering {
+        enabled = true
+      }
+    }
+    
+    prometheus.relabel "podmonitors" {
+      forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
+    }
+    
+    // Prometheus Operator Probe objects
+    prometheus.operator.probes "probes" {
+      namespaces = []
+      forward_to = [prometheus.relabel.probes.receiver]
+      clustering {
+        enabled = true
+      }
+    }
+    
+    prometheus.relabel "probes" {
+      forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
+    }
+    
+    // Prometheus Operator ServiceMonitor objects
+    prometheus.operator.servicemonitors "service_monitors" {
+      namespaces = []
+      forward_to = [prometheus.relabel.servicemonitors.receiver]
+      clustering {
+        enabled = true
+      }
+    }
+    
+    prometheus.relabel "servicemonitors" {
+      forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
+    }
+    
+    // Grafana Cloud Prometheus
+    local.file "prometheus_host" {
+      filename  = "/etc/grafana-agent-credentials/prometheus_host"
+    }
+    
+    local.file "prometheus_username" {
+      filename  = "/etc/grafana-agent-credentials/prometheus_username"
+    }
+    
+    local.file "prometheus_password" {
+      filename  = "/etc/grafana-agent-credentials/prometheus_password"
+      is_secret = true
+    }
+    
+    prometheus.remote_write "grafana_cloud_prometheus" {
+      endpoint {
+        url = nonsensitive(local.file.prometheus_host.content) + "/api/prom/push"
+    
+        basic_auth {
+          username = local.file.prometheus_username.content
+          password = local.file.prometheus_password.content
+        }
+    
+      }
+      external_labels = {
+        cluster = "custom-allow-lists-test",
+      }
+    }
+---
+# Source: k8s-monitoring/templates/tests/test.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: "k8smon-test"
+  namespace: default
+  labels:
+    app.kubernetes.io/managed-by: "Helm"
+    app.kubernetes.io/instance: "k8smon"
+    app.kubernetes.io/version: 1.3.2
+    helm.sh/chart: "k8s-monitoring-0.2.7"
+  annotations:
+    "helm.sh/hook": test
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+data:
+  test.sh: |-
+    #!/bin/bash
+    set -eo pipefail
+    apt-get update && apt-get install -y curl jq
+    
+    queries=$(jq -r '.queries[].query' "$1")
+    for query in $queries; do
+      echo "Running query: ${PROMETHEUS_HOST}/api/prom/api/v1/query?query=$query..."
+      result=$(curl -sX POST -u "${PROMETHEUS_USER}:${PROMETHEUS_PASS}" "${PROMETHEUS_HOST}/api/prom/api/v1/query?query=$(jq -rn --arg x "${query}" '$x|@uri')")
+      status=$(echo $result | jq -r .status)
+      if [ "${status}" != "success" ]; then
+        echo "Query failed!"
+        echo "$result"
+        exit 1
+      fi
+    
+      resultCount=$(echo $result | jq '.data.result | length')
+      if [ "${resultCount}" -eq 0 ]; then
+        echo "Query returned no results"
+        echo "$result"
+        exit 1
+      fi
+    done
+    
+    echo "All queries passed!"
+  queries.json: |-
+    {
+      "queries": [
+        {
+          "query": "up{cluster=\"custom-allow-lists-test\"}"
+        },
+        {
+          "query": "agent_build_info{cluster=\"custom-allow-lists-test\"}"
+        },
+        {
+          "query": "kubernetes_build_info{cluster=\"custom-allow-lists-test\"}"
+        },
+        {
+          "query": "machine_memory_bytes{cluster=\"custom-allow-lists-test\"}"
+        },
+        {
+          "query": "kube_node_info{cluster=\"custom-allow-lists-test\"}"
+        },
+        {
+          "query": "node_exporter_build_info{cluster=\"custom-allow-lists-test\"}"
+        },
+        {
+          "query": "opencost_build_info{cluster=\"custom-allow-lists-test\"}"
+        },
+        {
+          "query": "grafana_kubernetes_monitoring_build_info{cluster=\"custom-allow-lists-test\"}"
+        }
+      ]
+    }
+---
+# Source: k8s-monitoring/templates/hooks/grafana-agent-config-test.yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: "k8smon-test-config"
+  namespace: default
+  labels:
+    app.kubernetes.io/managed-by: "Helm"
+    app.kubernetes.io/instance: "k8smon"
+    app.kubernetes.io/version: 1.3.2
+    helm.sh/chart: "k8s-monitoring-0.2.7"
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-weight": "-5"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  backoffLimit: 0
+  template:
+    metadata:
+      name: "k8smon-test-config"
+      labels:
+        app.kubernetes.io/managed-by: "Helm"
+        app.kubernetes.io/instance: "k8smon"
+        helm.sh/chart: "k8s-monitoring-0.2.7"
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: grafana-agent
+          image: "docker.io/grafana/agent:v0.36.2"
+          args:
+            - fmt
+            - /etc/agent/config.river
+          env:
+            - name: AGENT_MODE
+              value: flow
+          volumeMounts:
+            - name: config
+              mountPath: /etc/agent
+      volumes:
+        - name: config
+          configMap:
+            name: k8smon-grafana-agent-test
+---
+# Source: k8s-monitoring/templates/tests/test.yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: "k8smon-test"
+  namespace: default
+  labels:
+    app.kubernetes.io/managed-by: "Helm"
+    app.kubernetes.io/instance: "k8smon"
+    app.kubernetes.io/version: 1.3.2
+    helm.sh/chart: "k8s-monitoring-0.2.7"
+  annotations:
+    "helm.sh/hook": test
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  template:
+    metadata:
+      name: "k8smon-test-config"
+      labels:
+        app.kubernetes.io/managed-by: "Helm"
+        app.kubernetes.io/instance: "k8smon"
+        helm.sh/chart: "k8s-monitoring-0.2.7"
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: test-runner
+          image: ubuntu
+          command: ["bash", "-c", "bash /etc/test/test.sh /etc/test/queries.json"]
+          volumeMounts:
+            - name: test-plan
+              mountPath: /etc/test
+          env:
+            - name: PROMETHEUS_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: grafana-agent-credentials
+                  key: prometheus_host
+            - name: PROMETHEUS_USER
+              valueFrom:
+                secretKeyRef:
+                  name: grafana-agent-credentials
+                  key: prometheus_username
+            - name: PROMETHEUS_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: grafana-agent-credentials
+                  key: prometheus_password
+      volumes:
+        - name: test-plan
+          configMap:
+            name: k8smon-test
