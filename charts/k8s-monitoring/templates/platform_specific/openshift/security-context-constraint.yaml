@@ -1,0 +1,48 @@
+{{- if and (eq .Values.cluster.platform "openshift") .Values.logs.enabled .Values.logs.pod_logs.enabled }}
+apiVersion: security.openshift.io/v1
+kind: SecurityContextConstraints
+metadata:
+  name: {{ include "grafana-agent.fullname" (index .Subcharts "grafana-agent-logs") }}
+allowHostDirVolumePlugin: true
+allowHostIPC: false
+allowHostNetwork: false
+allowHostPID: false
+allowHostPorts: false
+allowPrivilegeEscalation: false
+allowPrivilegedContainer: false
+allowedCapabilities: null
+defaultAddCapabilities: null
+defaultAllowPrivilegeEscalation: false
+forbiddenSysctls:
+- '*'
+fsGroup:
+  type: RunAsAny
+groups: []
+priority: null
+readOnlyRootFilesystem: true
+requiredDropCapabilities:
+- CHOWN
+- DAC_OVERRIDE
+- FSETID
+- FOWNER
+- SETGID
+- SETUID
+- SETPCAP
+- NET_BIND_SERVICE
+- KILL
+runAsUser:
+  type: RunAsAny
+seLinuxContext:
+  type: RunAsAny
+seccompProfiles:
+  - runtime/default
+supplementalGroups:
+  type: RunAsAny
+users: []
+volumes:
+- configMap
+- emptyDir
+- hostPath
+- projected
+- secret
+{{- end }}
