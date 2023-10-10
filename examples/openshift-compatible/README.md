@@ -8,6 +8,7 @@ It also assigns a high-number port for Grafana Agent.
 ```yaml
 cluster:
   name: openshift-compatible-test
+  platform: openshift
 
 externalServices:
   prometheus:
@@ -45,8 +46,25 @@ prometheus-node-exporter:
 grafana-agent:
   agent:
     listenPort: 8080
+    securityContext:
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop: [ "ALL" ]
+      runAsNonRoot: true
+      seccompProfile:
+        type: "RuntimeDefault"
 
 grafana-agent-logs:
   agent:
     listenPort: 8080
+    securityContext:
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop: [ "ALL" ]
+      privileged: false
+      runAsUser: 0
+  global:
+    podSecurityContext:
+      seLinuxOptions:
+        type: spc_t
 ```
