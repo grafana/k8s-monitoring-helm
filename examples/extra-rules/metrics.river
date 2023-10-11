@@ -95,6 +95,11 @@ prometheus.relabel "kubernetes_monitoring_telemetry" {
     action = "replace"
     replacement = "k8smon"
   }
+  rule {
+    source_labels = ["__name__"]
+    regex = "up|grafana_kubernetes_monitoring_.*"
+    action = "keep"
+  }
   forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
 }
 

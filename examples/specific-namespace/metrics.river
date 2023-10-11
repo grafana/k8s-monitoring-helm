@@ -96,6 +96,11 @@ prometheus.relabel "kubernetes_monitoring_telemetry" {
     replacement = "k8smon"
   }
   rule {
+    source_labels = ["__name__"]
+    regex = "up|grafana_kubernetes_monitoring_.*"
+    action = "keep"
+  }
+  rule {
       source_labels = ["namespace"]
       regex = "^$|production|staging"
       action = "keep"
