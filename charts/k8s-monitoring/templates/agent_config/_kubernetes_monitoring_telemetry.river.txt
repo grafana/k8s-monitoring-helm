@@ -30,6 +30,11 @@ prometheus.relabel "kubernetes_monitoring_telemetry" {
     action = "replace"
     replacement = "{{ .Release.Name }}"
   }
+  rule {
+    source_labels = ["__name__"]
+    regex = "up|grafana_kubernetes_monitoring_.*"
+    action = "keep"
+  }
 {{- if .Values.metrics.extraMetricRelabelingRules }}
 {{ .Values.metrics.extraMetricRelabelingRules | indent 2 }}
 {{- end }}
