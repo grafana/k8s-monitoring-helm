@@ -179,6 +179,16 @@ data:
     }
     
     prometheus.relabel "kubernetes_monitoring_telemetry" {
+      rule {
+        target_label = "job"
+        action = "replace"
+        replacement = "integrations/kubernetes/kubernetes_monitoring_telemetry"
+      }
+      rule {
+        target_label = "instance"
+        action = "replace"
+        replacement = "k8smon"
+      }
       forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
     }
     
@@ -695,7 +705,7 @@ data:
   metrics.prom: |
     # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart as well as a summary of enabled features
     # TYPE grafana_kubernetes_monitoring_build_info gauge
-    grafana_kubernetes_monitoring_build_info{version="0.2.8", metrics="enabled,agent,kube-state-metrics,node-exporter,kubelet,cadvisor,cost", logs="enabled,events,pod_logs", traces="disabled", deployments="kube-state-metrics,prometheus-node-exporter,prometheus-operator-crds,opencost"} 1
+    grafana_kubernetes_monitoring_build_info{version="0.2.8", namespace="default", metrics="enabled,agent,kube-state-metrics,node-exporter,kubelet,cadvisor,cost", logs="enabled,events,pod_logs", traces="disabled", deployments="kube-state-metrics,prometheus-node-exporter,prometheus-operator-crds,opencost"} 1
 ---
 # Source: k8s-monitoring/charts/grafana-agent/charts/crds/templates/monitoring.grafana.com_podlogs.yaml
 apiVersion: apiextensions.k8s.io/v1
@@ -43326,6 +43336,16 @@ data:
     }
     
     prometheus.relabel "kubernetes_monitoring_telemetry" {
+      rule {
+        target_label = "job"
+        action = "replace"
+        replacement = "integrations/kubernetes/kubernetes_monitoring_telemetry"
+      }
+      rule {
+        target_label = "instance"
+        action = "replace"
+        replacement = "k8smon"
+      }
       forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
     }
     

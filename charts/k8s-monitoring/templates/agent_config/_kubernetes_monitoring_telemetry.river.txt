@@ -20,6 +20,16 @@ prometheus.scrape "kubernetes_monitoring_telemetry" {
 }
 
 prometheus.relabel "kubernetes_monitoring_telemetry" {
+  rule {
+    target_label = "job"
+    action = "replace"
+    replacement = "integrations/kubernetes/kubernetes_monitoring_telemetry"
+  }
+  rule {
+    target_label = "instance"
+    action = "replace"
+    replacement = "{{ .Release.Name }}"
+  }
 {{- if .Values.metrics.extraMetricRelabelingRules }}
 {{ .Values.metrics.extraMetricRelabelingRules | indent 2 }}
 {{- end }}

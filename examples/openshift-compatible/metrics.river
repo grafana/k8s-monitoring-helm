@@ -80,6 +80,16 @@ prometheus.scrape "kubernetes_monitoring_telemetry" {
 }
 
 prometheus.relabel "kubernetes_monitoring_telemetry" {
+  rule {
+    target_label = "job"
+    action = "replace"
+    replacement = "integrations/kubernetes/kubernetes_monitoring_telemetry"
+  }
+  rule {
+    target_label = "instance"
+    action = "replace"
+    replacement = "k8smon"
+  }
   forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
 }
 
