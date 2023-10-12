@@ -26,7 +26,7 @@ spec:
       restartPolicy: Never
       containers:
         - name: grafana-agent
-          image: "{{ (index .Values "grafana-agent").image.registry }}/{{ (index .Values "grafana-agent").image.repository }}{{ include "grafana-agent.imageId" (index .Subcharts "grafana-agent") }}"
+          image: "{{ (index .Values "grafana-agent").global.image.registry | default (index .Values "grafana-agent").image.registry }}/{{ (index .Values "grafana-agent").image.repository }}{{ include "grafana-agent.imageId" (index .Subcharts "grafana-agent") }}"
           args:
             - fmt
             - /etc/agent/config.river
@@ -87,7 +87,7 @@ spec:
       restartPolicy: Never
       containers:
         - name: grafana-agent
-          image: "{{ (index .Values "grafana-agent-logs").image.registry }}/{{ (index .Values "grafana-agent-logs").image.repository }}{{ include "grafana-agent.imageId" (index .Subcharts "grafana-agent-logs") }}"
+          image: "{{ (index .Values "grafana-agent").global.image.registry | default (index .Values "grafana-agent-logs").image.registry }}/{{ (index .Values "grafana-agent-logs").image.repository }}{{ include "grafana-agent.imageId" (index .Subcharts "grafana-agent-logs") }}"
           args:
             - fmt
             - /etc/agent/config.river
