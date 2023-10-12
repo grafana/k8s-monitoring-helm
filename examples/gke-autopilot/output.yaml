@@ -53,21 +53,6 @@ metadata:
     app.kubernetes.io/managed-by: Helm
 automountServiceAccountToken: true
 ---
-# Source: k8s-monitoring/charts/prometheus-node-exporter/templates/serviceaccount.yaml
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: k8smon-prometheus-node-exporter
-  namespace: default
-  labels:
-    helm.sh/chart: prometheus-node-exporter-4.23.2
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/component: metrics
-    app.kubernetes.io/part-of: prometheus-node-exporter
-    app.kubernetes.io/name: prometheus-node-exporter
-    app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.6.1"
----
 # Source: k8s-monitoring/templates/credentials.yaml
 apiVersion: v1
 kind: Secret
@@ -308,45 +293,6 @@ data:
       forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
     }
     
-    // Node Exporter
-    discovery.relabel "node_exporter" {
-      targets = discovery.kubernetes.pods.targets
-      rule {
-        source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_instance"]
-        regex = "k8smon"
-        action = "keep"
-      }
-      rule {
-        source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
-        regex = "prometheus-node-exporter.*"
-        action = "keep"
-      }
-      rule {
-        source_labels = ["__meta_kubernetes_pod_node_name"]
-        action = "replace"
-        target_label = "instance"
-      }
-    }
-    
-    prometheus.scrape "node_exporter" {
-      job_name   = "integrations/node_exporter"
-      targets  = discovery.relabel.node_exporter.output
-      scrape_interval = "60s"
-      clustering {
-        enabled = true
-      }
-      forward_to = [prometheus.relabel.node_exporter.receiver]
-    }
-    
-    prometheus.relabel "node_exporter" {
-      rule {
-        source_labels = ["__name__"]
-        regex = "up|node_cpu.*|node_exporter_build_info|node_filesystem.*|node_memory.*|process_cpu_seconds_total|process_resident_memory_bytes"
-        action = "keep"
-      }
-      forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
-    }
-    
     // OpenCost
     discovery.relabel "opencost" {
       targets = discovery.kubernetes.services.targets
@@ -449,9 +395,7 @@ data:
     
       }
       external_labels = {
-        region = "southwest",
-        tenant = "widgetco",
-        cluster = "custom-config-test",
+        cluster = "gke-autopilot-test",
       }
     }
     
@@ -485,30 +429,8 @@ data:
         }
       }
       external_labels = {
-        region = "southwest",
-        tenant = "widgetco",
-        cluster = "custom-config-test",
+        cluster = "gke-autopilot-test",
       }
-    }
-    
-    discovery.relabel "animal_service" {
-      targets = discovery.kubernetes.services.targets
-      rule {
-        source_labels = ["__meta_kubernetes_service_label_app"]
-        regex = "animal-service"
-        action = "keep"
-      }
-      rule {
-        source_labels = ["__meta_kubernetes_service_name"]
-        regex = "animal-service-metrics"
-        action = "keep"
-      }
-    }
-    
-    prometheus.scrape "animal_service" {
-      job_name   = "animal_service"
-      targets    = discovery.relabel.animal_service.output
-      forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
     }
 ---
 # Source: k8s-monitoring/templates/grafana-agent-logs-config.yaml
@@ -641,45 +563,8 @@ data:
         }
       }
       external_labels = {
-        region = "southwest",
-        tenant = "widgetco",
-        cluster = "custom-config-test",
+        cluster = "gke-autopilot-test",
       }
-    }
-    
-    discovery.relabel "postgres_logs" {
-      targets = discovery.relabel.pod_logs.output
-      
-      rule {
-        source_labels = ["namespace"]
-        regex = "postgres"
-        action = "keep"
-      }
-      rule {
-        source_labels = ["__meta_kubernetes_pod_label_app"]
-        regex = "database"
-        action = "keep"
-      }
-    }
-    
-    local.file_match "postgres_logs" {
-      path_targets = discovery.relabel.postgres_logs.output
-    }
-    
-    loki.source.file "postgres_logs" {
-      targets    = local.file_match.postgres_logs.targets
-      forward_to = [loki.process.postgres_logs.receiver]
-    }
-    
-    loki.process "postgres_logs" {
-      stage.cri {}
-      stage.static_labels {
-        values = {
-          job = "integrations/postgres_exporter",
-          instance = "animaldb",
-        }
-      }
-      forward_to = [loki.write.grafana_cloud_loki.receiver]
     }
 ---
 # Source: k8s-monitoring/templates/kubernetes-monitoring-telemetry.yaml
@@ -692,7 +577,7 @@ data:
   metrics.prom: |
     # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart as well as a summary of enabled features
     # TYPE grafana_kubernetes_monitoring_build_info gauge
-    grafana_kubernetes_monitoring_build_info{version="0.2.9", namespace="default", metrics="enabled,agent,kube-state-metrics,node-exporter,kubelet,cadvisor,cost,extraConfig", logs="enabled,events,pod_logs,extraConfig", traces="disabled", deployments="kube-state-metrics,prometheus-node-exporter,prometheus-operator-crds,opencost"} 1
+    grafana_kubernetes_monitoring_build_info{version="0.2.8", namespace="default", metrics="enabled,agent,kube-state-metrics,kubelet,cadvisor,cost", logs="enabled,events,pod_logs", traces="disabled", deployments="kube-state-metrics,prometheus-operator-crds,opencost"} 1
 ---
 # Source: k8s-monitoring/charts/grafana-agent/charts/crds/templates/monitoring.grafana.com_podlogs.yaml
 apiVersion: apiextensions.k8s.io/v1
@@ -42707,33 +42592,6 @@ spec:
       port: 9003
       targetPort: 9003
 ---
-# Source: k8s-monitoring/charts/prometheus-node-exporter/templates/service.yaml
-apiVersion: v1
-kind: Service
-metadata:
-  name: k8smon-prometheus-node-exporter
-  namespace: default
-  labels:
-    helm.sh/chart: prometheus-node-exporter-4.23.2
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/component: metrics
-    app.kubernetes.io/part-of: prometheus-node-exporter
-    app.kubernetes.io/name: prometheus-node-exporter
-    app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.6.1"
-  annotations:
-    prometheus.io/scrape: "true"
-spec:
-  type: ClusterIP
-  ports:
-    - port: 9100
-      targetPort: 9100
-      protocol: TCP
-      name: metrics
-  selector:
-    app.kubernetes.io/name: prometheus-node-exporter
-    app.kubernetes.io/instance: k8smon
----
 # Source: k8s-monitoring/charts/grafana-agent-logs/templates/controllers/daemonset.yaml
 apiVersion: apps/v1
 kind: DaemonSet
@@ -42820,120 +42678,6 @@ spec:
         - name: grafana-agent-credentials
           secret:
             secretName: grafana-agent-credentials
----
-# Source: k8s-monitoring/charts/prometheus-node-exporter/templates/daemonset.yaml
-apiVersion: apps/v1
-kind: DaemonSet
-metadata:
-  name: k8smon-prometheus-node-exporter
-  namespace: default
-  labels:
-    helm.sh/chart: prometheus-node-exporter-4.23.2
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/component: metrics
-    app.kubernetes.io/part-of: prometheus-node-exporter
-    app.kubernetes.io/name: prometheus-node-exporter
-    app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.6.1"
-spec:
-  selector:
-    matchLabels:
-      app.kubernetes.io/name: prometheus-node-exporter
-      app.kubernetes.io/instance: k8smon
-  revisionHistoryLimit: 10
-  updateStrategy:
-    rollingUpdate:
-      maxUnavailable: 1
-    type: RollingUpdate
-  template:
-    metadata:
-      annotations:
-        cluster-autoscaler.kubernetes.io/safe-to-evict: "true"
-      labels:
-        helm.sh/chart: prometheus-node-exporter-4.23.2
-        app.kubernetes.io/managed-by: Helm
-        app.kubernetes.io/component: metrics
-        app.kubernetes.io/part-of: prometheus-node-exporter
-        app.kubernetes.io/name: prometheus-node-exporter
-        app.kubernetes.io/instance: k8smon
-        app.kubernetes.io/version: "1.6.1"
-    spec:
-      automountServiceAccountToken: false
-      securityContext:
-        fsGroup: 65534
-        runAsGroup: 65534
-        runAsNonRoot: true
-        runAsUser: 65534
-      serviceAccountName: k8smon-prometheus-node-exporter
-      containers:
-        - name: node-exporter
-          image: quay.io/prometheus/node-exporter:v1.6.1
-          imagePullPolicy: IfNotPresent
-          args:
-            - --path.procfs=/host/proc
-            - --path.sysfs=/host/sys
-            - --path.rootfs=/host/root
-            - --path.udev.data=/host/root/run/udev/data
-            - --web.listen-address=[$(HOST_IP)]:9100
-          securityContext:
-            readOnlyRootFilesystem: true
-          env:
-            - name: HOST_IP
-              value: 0.0.0.0
-          ports:
-            - name: metrics
-              containerPort: 9100
-              protocol: TCP
-          livenessProbe:
-            failureThreshold: 3
-            httpGet:
-              httpHeaders:
-              path: /
-              port: 9100
-              scheme: HTTP
-            initialDelaySeconds: 0
-            periodSeconds: 10
-            successThreshold: 1
-            timeoutSeconds: 1
-          readinessProbe:
-            failureThreshold: 3
-            httpGet:
-              httpHeaders:
-              path: /
-              port: 9100
-              scheme: HTTP
-            initialDelaySeconds: 0
-            periodSeconds: 10
-            successThreshold: 1
-            timeoutSeconds: 1
-          volumeMounts:
-            - name: proc
-              mountPath: /host/proc
-              readOnly:  true
-            - name: sys
-              mountPath: /host/sys
-              readOnly: true
-            - name: root
-              mountPath: /host/root
-              mountPropagation: HostToContainer
-              readOnly: true
-      hostNetwork: true
-      hostPID: true
-      nodeSelector:
-        kubernetes.io/os: linux
-      tolerations:
-        - effect: NoSchedule
-          operator: Exists
-      volumes:
-        - name: proc
-          hostPath:
-            path: /proc
-        - name: sys
-          hostPath:
-            path: /sys
-        - name: root
-          hostPath:
-            path: /
 ---
 # Source: k8s-monitoring/charts/kube-state-metrics/templates/deployment.yaml
 apiVersion: apps/v1
@@ -43223,7 +42967,7 @@ metadata:
     app.kubernetes.io/managed-by: "Helm"
     app.kubernetes.io/instance: "k8smon"
     app.kubernetes.io/version: 1.3.2
-    helm.sh/chart: "k8s-monitoring-0.2.9"
+    helm.sh/chart: "k8s-monitoring-0.2.8"
   annotations:
     "helm.sh/hook": pre-install,pre-upgrade
     "helm.sh/hook-weight": "-5"
@@ -43447,45 +43191,6 @@ data:
       forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
     }
     
-    // Node Exporter
-    discovery.relabel "node_exporter" {
-      targets = discovery.kubernetes.pods.targets
-      rule {
-        source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_instance"]
-        regex = "k8smon"
-        action = "keep"
-      }
-      rule {
-        source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
-        regex = "prometheus-node-exporter.*"
-        action = "keep"
-      }
-      rule {
-        source_labels = ["__meta_kubernetes_pod_node_name"]
-        action = "replace"
-        target_label = "instance"
-      }
-    }
-    
-    prometheus.scrape "node_exporter" {
-      job_name   = "integrations/node_exporter"
-      targets  = discovery.relabel.node_exporter.output
-      scrape_interval = "60s"
-      clustering {
-        enabled = true
-      }
-      forward_to = [prometheus.relabel.node_exporter.receiver]
-    }
-    
-    prometheus.relabel "node_exporter" {
-      rule {
-        source_labels = ["__name__"]
-        regex = "up|node_cpu.*|node_exporter_build_info|node_filesystem.*|node_memory.*|process_cpu_seconds_total|process_resident_memory_bytes"
-        action = "keep"
-      }
-      forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
-    }
-    
     // OpenCost
     discovery.relabel "opencost" {
       targets = discovery.kubernetes.services.targets
@@ -43588,9 +43293,7 @@ data:
     
       }
       external_labels = {
-        region = "southwest",
-        tenant = "widgetco",
-        cluster = "custom-config-test",
+        cluster = "gke-autopilot-test",
       }
     }
     
@@ -43624,30 +43327,8 @@ data:
         }
       }
       external_labels = {
-        region = "southwest",
-        tenant = "widgetco",
-        cluster = "custom-config-test",
+        cluster = "gke-autopilot-test",
       }
-    }
-    
-    discovery.relabel "animal_service" {
-      targets = discovery.kubernetes.services.targets
-      rule {
-        source_labels = ["__meta_kubernetes_service_label_app"]
-        regex = "animal-service"
-        action = "keep"
-      }
-      rule {
-        source_labels = ["__meta_kubernetes_service_name"]
-        regex = "animal-service-metrics"
-        action = "keep"
-      }
-    }
-    
-    prometheus.scrape "animal_service" {
-      job_name   = "animal_service"
-      targets    = discovery.relabel.animal_service.output
-      forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
     }
 ---
 # Source: k8s-monitoring/templates/hooks/grafana-agent-config-test.yaml
@@ -43660,7 +43341,7 @@ metadata:
     app.kubernetes.io/managed-by: "Helm"
     app.kubernetes.io/instance: "k8smon"
     app.kubernetes.io/version: 1.3.2
-    helm.sh/chart: "k8s-monitoring-0.2.9"
+    helm.sh/chart: "k8s-monitoring-0.2.8"
   annotations:
     "helm.sh/hook": pre-install,pre-upgrade
     "helm.sh/hook-weight": "-5"
@@ -43789,45 +43470,8 @@ data:
         }
       }
       external_labels = {
-        region = "southwest",
-        tenant = "widgetco",
-        cluster = "custom-config-test",
+        cluster = "gke-autopilot-test",
       }
-    }
-    
-    discovery.relabel "postgres_logs" {
-      targets = discovery.relabel.pod_logs.output
-      
-      rule {
-        source_labels = ["namespace"]
-        regex = "postgres"
-        action = "keep"
-      }
-      rule {
-        source_labels = ["__meta_kubernetes_pod_label_app"]
-        regex = "database"
-        action = "keep"
-      }
-    }
-    
-    local.file_match "postgres_logs" {
-      path_targets = discovery.relabel.postgres_logs.output
-    }
-    
-    loki.source.file "postgres_logs" {
-      targets    = local.file_match.postgres_logs.targets
-      forward_to = [loki.process.postgres_logs.receiver]
-    }
-    
-    loki.process "postgres_logs" {
-      stage.cri {}
-      stage.static_labels {
-        values = {
-          job = "integrations/postgres_exporter",
-          instance = "animaldb",
-        }
-      }
-      forward_to = [loki.write.grafana_cloud_loki.receiver]
     }
 ---
 # Source: k8s-monitoring/templates/tests/test.yaml
@@ -43840,7 +43484,7 @@ metadata:
     app.kubernetes.io/managed-by: "Helm"
     app.kubernetes.io/instance: "k8smon"
     app.kubernetes.io/version: 1.3.2
-    helm.sh/chart: "k8s-monitoring-0.2.9"
+    helm.sh/chart: "k8s-monitoring-0.2.8"
   annotations:
     "helm.sh/hook": test
     "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
@@ -43874,28 +43518,25 @@ data:
     {
       "queries": [
         {
-          "query": "up{cluster=\"custom-config-test\"}"
+          "query": "up{cluster=\"gke-autopilot-test\"}"
         },
         {
-          "query": "agent_build_info{cluster=\"custom-config-test\"}"
+          "query": "agent_build_info{cluster=\"gke-autopilot-test\"}"
         },
         {
-          "query": "kubernetes_build_info{cluster=\"custom-config-test\"}"
+          "query": "kubernetes_build_info{cluster=\"gke-autopilot-test\"}"
         },
         {
-          "query": "machine_memory_bytes{cluster=\"custom-config-test\"}"
+          "query": "machine_memory_bytes{cluster=\"gke-autopilot-test\"}"
         },
         {
-          "query": "kube_node_info{cluster=\"custom-config-test\"}"
+          "query": "kube_node_info{cluster=\"gke-autopilot-test\"}"
         },
         {
-          "query": "node_exporter_build_info{cluster=\"custom-config-test\"}"
+          "query": "opencost_build_info{cluster=\"gke-autopilot-test\"}"
         },
         {
-          "query": "opencost_build_info{cluster=\"custom-config-test\"}"
-        },
-        {
-          "query": "grafana_kubernetes_monitoring_build_info{cluster=\"custom-config-test\"}"
+          "query": "grafana_kubernetes_monitoring_build_info{cluster=\"gke-autopilot-test\"}"
         }
       ]
     }
@@ -43910,7 +43551,7 @@ metadata:
     app.kubernetes.io/managed-by: "Helm"
     app.kubernetes.io/instance: "k8smon"
     app.kubernetes.io/version: 1.3.2
-    helm.sh/chart: "k8s-monitoring-0.2.9"
+    helm.sh/chart: "k8s-monitoring-0.2.8"
   annotations:
     "helm.sh/hook": pre-install,pre-upgrade
     "helm.sh/hook-weight": "-5"
@@ -43923,7 +43564,7 @@ spec:
       labels:
         app.kubernetes.io/managed-by: "Helm"
         app.kubernetes.io/instance: "k8smon"
-        helm.sh/chart: "k8s-monitoring-0.2.9"
+        helm.sh/chart: "k8s-monitoring-0.2.8"
     spec:
       restartPolicy: Never
       containers:
@@ -43953,7 +43594,7 @@ metadata:
     app.kubernetes.io/managed-by: "Helm"
     app.kubernetes.io/instance: "k8smon"
     app.kubernetes.io/version: 1.3.2
-    helm.sh/chart: "k8s-monitoring-0.2.9"
+    helm.sh/chart: "k8s-monitoring-0.2.8"
   annotations:
     "helm.sh/hook": pre-install,pre-upgrade
     "helm.sh/hook-weight": "-5"
@@ -43966,7 +43607,7 @@ spec:
       labels:
         app.kubernetes.io/managed-by: "Helm"
         app.kubernetes.io/instance: "k8smon"
-        helm.sh/chart: "k8s-monitoring-0.2.9"
+        helm.sh/chart: "k8s-monitoring-0.2.8"
     spec:
       restartPolicy: Never
       containers:
@@ -43996,7 +43637,7 @@ metadata:
     app.kubernetes.io/managed-by: "Helm"
     app.kubernetes.io/instance: "k8smon"
     app.kubernetes.io/version: 1.3.2
-    helm.sh/chart: "k8s-monitoring-0.2.9"
+    helm.sh/chart: "k8s-monitoring-0.2.8"
   annotations:
     "helm.sh/hook": test
     "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
@@ -44007,7 +43648,7 @@ spec:
       labels:
         app.kubernetes.io/managed-by: "Helm"
         app.kubernetes.io/instance: "k8smon"
-        helm.sh/chart: "k8s-monitoring-0.2.9"
+        helm.sh/chart: "k8s-monitoring-0.2.8"
     spec:
       restartPolicy: Never
       containers:

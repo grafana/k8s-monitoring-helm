@@ -620,11 +620,12 @@ grafana-agent-logs:
     configMap:
       create: false
 
-    # This chart creates the credentials for Prometheus and Loki. This section
-    # mounts those credentials into the Grafana Agent container.
     mounts:
+      # Loads /var/log as a hostPath volume to find and scrape pod logs
       varlog: true
-      dockercontainers: true
+
+      # The k8s-monitoring chart creates the credentials for Prometheus and Loki. This section
+      # mounts those credentials into the Grafana Agent container.
       extra:
         - name: grafana-agent-credentials
           mountPath: /etc/grafana-agent-credentials
