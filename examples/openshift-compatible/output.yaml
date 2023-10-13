@@ -42009,168 +42009,6 @@ spec:
     subresources:
       status: {}
 ---
-# Source: k8s-monitoring/charts/grafana-agent-logs/templates/rbac.yaml
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: k8smon-grafana-agent-logs
-  labels:
-    helm.sh/chart: grafana-agent-logs-0.26.0
-    app.kubernetes.io/name: grafana-agent-logs
-    app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "v0.37.1"
-    app.kubernetes.io/managed-by: Helm
-rules:
-  # Rules which allow discovery.kubernetes to function.
-  - apiGroups:
-      - ""
-      - "discovery.k8s.io"
-      - "networking.k8s.io"
-    resources:
-      - endpoints
-      - endpointslices
-      - ingresses
-      - nodes
-      - nodes/proxy
-      - nodes/metrics
-      - pods
-      - services
-    verbs:
-      - get
-      - list
-      - watch
-  # Rules which allow loki.source.kubernetes and loki.source.podlogs to work.
-  - apiGroups:
-      - ""
-    resources:
-      - pods
-      - pods/log
-      - namespaces
-    verbs:
-      - get
-      - list
-      - watch
-  - apiGroups:
-      - "monitoring.grafana.com"
-    resources:
-      - podlogs
-    verbs:
-      - get
-      - list
-      - watch
-  # Rules which allow mimir.rules.kubernetes to work.
-  - apiGroups: ["monitoring.coreos.com"]
-    resources:
-      - prometheusrules
-    verbs:
-      - get
-      - list
-      - watch
-  - nonResourceURLs:
-      - /metrics
-    verbs:
-      - get
-  # Rules for prometheus.kubernetes.*
-  - apiGroups: ["monitoring.coreos.com"]
-    resources:
-      - podmonitors
-      - servicemonitors
-      - probes
-    verbs:
-      - get
-      - list
-      - watch
-  # Rules which allow eventhandler to work.
-  - apiGroups:
-      - ""
-    resources:
-      - events
-    verbs:
-      - get
-      - list
-      - watch
----
-# Source: k8s-monitoring/charts/grafana-agent/templates/rbac.yaml
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: k8smon-grafana-agent
-  labels:
-    helm.sh/chart: grafana-agent-0.26.0
-    app.kubernetes.io/name: grafana-agent
-    app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "v0.37.1"
-    app.kubernetes.io/managed-by: Helm
-rules:
-  # Rules which allow discovery.kubernetes to function.
-  - apiGroups:
-      - ""
-      - "discovery.k8s.io"
-      - "networking.k8s.io"
-    resources:
-      - endpoints
-      - endpointslices
-      - ingresses
-      - nodes
-      - nodes/proxy
-      - nodes/metrics
-      - pods
-      - services
-    verbs:
-      - get
-      - list
-      - watch
-  # Rules which allow loki.source.kubernetes and loki.source.podlogs to work.
-  - apiGroups:
-      - ""
-    resources:
-      - pods
-      - pods/log
-      - namespaces
-    verbs:
-      - get
-      - list
-      - watch
-  - apiGroups:
-      - "monitoring.grafana.com"
-    resources:
-      - podlogs
-    verbs:
-      - get
-      - list
-      - watch
-  # Rules which allow mimir.rules.kubernetes to work.
-  - apiGroups: ["monitoring.coreos.com"]
-    resources:
-      - prometheusrules
-    verbs:
-      - get
-      - list
-      - watch
-  - nonResourceURLs:
-      - /metrics
-    verbs:
-      - get
-  # Rules for prometheus.kubernetes.*
-  - apiGroups: ["monitoring.coreos.com"]
-    resources:
-      - podmonitors
-      - servicemonitors
-      - probes
-    verbs:
-      - get
-      - list
-      - watch
-  # Rules which allow eventhandler to work.
-  - apiGroups:
-      - ""
-    resources:
-      - events
-    verbs:
-      - get
-      - list
-      - watch
----
 # Source: k8s-monitoring/charts/opencost/templates/clusterrole.yaml
 # Cluster role giving opencost to get, list, watch required resources
 # No write permissions are required
@@ -42258,45 +42096,163 @@ rules:
       - list
       - watch
 ---
-# Source: k8s-monitoring/charts/grafana-agent-logs/templates/rbac.yaml
+# Source: k8s-monitoring/templates/grafana-agent-logs-rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
+kind: ClusterRole
 metadata:
   name: k8smon-grafana-agent-logs
-  labels:
-    helm.sh/chart: grafana-agent-logs-0.26.0
-    app.kubernetes.io/name: grafana-agent-logs
-    app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "v0.37.1"
-    app.kubernetes.io/managed-by: Helm
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: k8smon-grafana-agent-logs
-subjects:
-  - kind: ServiceAccount
-    name: k8smon-grafana-agent-logs
-    namespace: default
+rules:
+  # Rules which allow discovery.kubernetes to function.
+  - apiGroups:
+      - ""
+      - "discovery.k8s.io"
+      - "networking.k8s.io"
+    resources:
+      - endpoints
+      - endpointslices
+      - ingresses
+      - nodes
+      - nodes/proxy
+      - nodes/metrics
+      - pods
+      - services
+    verbs:
+      - get
+      - list
+      - watch
+  # Rules which allow loki.source.kubernetes and loki.source.podlogs to work.
+  - apiGroups:
+      - ""
+    resources:
+      - pods
+      - pods/log
+      - namespaces
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - "monitoring.grafana.com"
+    resources:
+      - podlogs
+    verbs:
+      - get
+      - list
+      - watch
+  # Rules which allow mimir.rules.kubernetes to work.
+  - apiGroups: ["monitoring.coreos.com"]
+    resources:
+      - prometheusrules
+    verbs:
+      - get
+      - list
+      - watch
+  - nonResourceURLs:
+      - /metrics
+    verbs:
+      - get
+  # Rules for prometheus.kubernetes.*
+  - apiGroups: ["monitoring.coreos.com"]
+    resources:
+      - podmonitors
+      - servicemonitors
+      - probes
+    verbs:
+      - get
+      - list
+      - watch
+  # Rules which allow eventhandler to work.
+  - apiGroups:
+      - ""
+    resources:
+      - events
+    verbs:
+      - get
+      - list
+      - watch
+  - verbs:
+      - use
+    apiGroups:
+      - security.openshift.io
+    resources:
+      - securitycontextconstraints
+    resourceNames:
+      - k8smon-grafana-agent-logs
 ---
-# Source: k8s-monitoring/charts/grafana-agent/templates/rbac.yaml
+# Source: k8s-monitoring/templates/grafana-agent-rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
+kind: ClusterRole
 metadata:
   name: k8smon-grafana-agent
-  labels:
-    helm.sh/chart: grafana-agent-0.26.0
-    app.kubernetes.io/name: grafana-agent
-    app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "v0.37.1"
-    app.kubernetes.io/managed-by: Helm
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: k8smon-grafana-agent
-subjects:
-  - kind: ServiceAccount
-    name: k8smon-grafana-agent
-    namespace: default
+rules:
+  # Rules which allow discovery.kubernetes to function.
+  - apiGroups:
+      - ""
+      - "discovery.k8s.io"
+      - "networking.k8s.io"
+    resources:
+      - endpoints
+      - endpointslices
+      - ingresses
+      - nodes
+      - nodes/proxy
+      - nodes/metrics
+      - pods
+      - services
+    verbs:
+      - get
+      - list
+      - watch
+  # Rules which allow loki.source.kubernetes and loki.source.podlogs to work.
+  - apiGroups:
+      - ""
+    resources:
+      - pods
+      - pods/log
+      - namespaces
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - "monitoring.grafana.com"
+    resources:
+      - podlogs
+    verbs:
+      - get
+      - list
+      - watch
+  # Rules which allow mimir.rules.kubernetes to work.
+  - apiGroups: ["monitoring.coreos.com"]
+    resources:
+      - prometheusrules
+    verbs:
+      - get
+      - list
+      - watch
+  - nonResourceURLs:
+      - /metrics
+    verbs:
+      - get
+  # Rules for prometheus.kubernetes.*
+  - apiGroups: ["monitoring.coreos.com"]
+    resources:
+      - podmonitors
+      - servicemonitors
+      - probes
+    verbs:
+      - get
+      - list
+      - watch
+  # Rules which allow eventhandler to work.
+  - apiGroups:
+      - ""
+    resources:
+      - events
+    verbs:
+      - get
+      - list
+      - watch
 ---
 # Source: k8s-monitoring/charts/opencost/templates/clusterrolebinding.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -42317,6 +42273,34 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: k8smon-opencost
+    namespace: default
+---
+# Source: k8s-monitoring/templates/grafana-agent-logs-rbac.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: k8smon-grafana-agent-logs
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: k8smon-grafana-agent-logs
+subjects:
+  - kind: ServiceAccount
+    name: k8smon-grafana-agent-logs
+    namespace: default
+---
+# Source: k8s-monitoring/templates/grafana-agent-rbac.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: k8smon-grafana-agent
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: k8smon-grafana-agent
+subjects:
+  - kind: ServiceAccount
+    name: k8smon-grafana-agent
     namespace: default
 ---
 # Source: k8s-monitoring/charts/grafana-agent-logs/templates/service.yaml
@@ -42437,6 +42421,9 @@ spec:
         app.kubernetes.io/name: grafana-agent-logs
         app.kubernetes.io/instance: k8smon
     spec:
+      securityContext:
+        seLinuxOptions:
+          type: spc_t
       serviceAccountName: k8smon-grafana-agent-logs
       containers:
         - name: grafana-agent
@@ -42463,6 +42450,13 @@ spec:
               port: 8080
             initialDelaySeconds: 10
             timeoutSeconds: 1
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+            privileged: false
+            runAsUser: 0
           volumeMounts:
             - name: config
               mountPath: /etc/agent
@@ -42641,6 +42635,14 @@ spec:
               port: 8080
             initialDelaySeconds: 10
             timeoutSeconds: 1
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+            runAsNonRoot: true
+            seccompProfile:
+              type: RuntimeDefault
           volumeMounts:
             - name: config
               mountPath: /etc/agent
@@ -42705,6 +42707,54 @@ spec:
 ---
 # Source: k8s-monitoring/charts/prometheus-operator-crds/charts/crds/templates/crd-thanosrulers.yaml
 # https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/v0.68.0/example/prometheus-operator-crd/monitoring.coreos.com_thanosrulers.yaml
+---
+# Source: k8s-monitoring/templates/platform_specific/openshift/security-context-constraint.yaml
+apiVersion: security.openshift.io/v1
+kind: SecurityContextConstraints
+metadata:
+  name: k8smon-grafana-agent-logs
+allowHostDirVolumePlugin: true
+allowHostIPC: false
+allowHostNetwork: false
+allowHostPID: false
+allowHostPorts: false
+allowPrivilegeEscalation: false
+allowPrivilegedContainer: false
+allowedCapabilities: null
+defaultAddCapabilities: null
+defaultAllowPrivilegeEscalation: false
+forbiddenSysctls:
+- '*'
+fsGroup:
+  type: RunAsAny
+groups: []
+priority: null
+readOnlyRootFilesystem: false  # Set because the Grafana Agent needs to write to /tmp/agent
+requiredDropCapabilities:
+- CHOWN
+- DAC_OVERRIDE
+- FSETID
+- FOWNER
+- SETGID
+- SETUID
+- SETPCAP
+- NET_BIND_SERVICE
+- KILL
+runAsUser:
+  type: RunAsAny
+seLinuxContext:
+  type: RunAsAny
+seccompProfiles:
+  - runtime/default
+supplementalGroups:
+  type: RunAsAny
+users: []
+volumes:
+- configMap
+- emptyDir
+- hostPath
+- projected
+- secret
 ---
 # Source: k8s-monitoring/templates/hooks/grafana-agent-config-test.yaml
 apiVersion: v1

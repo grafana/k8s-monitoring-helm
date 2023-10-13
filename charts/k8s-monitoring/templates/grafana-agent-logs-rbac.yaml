@@ -1,0 +1,98 @@
+{{- if and .Values.logs.enabled .Values.logs.pod_logs.enabled }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "grafana-agent.fullname" (index .Subcharts "grafana-agent-logs") }}
+rules:
+  # Rules which allow discovery.kubernetes to function.
+  - apiGroups:
+      - ""
+      - "discovery.k8s.io"
+      - "networking.k8s.io"
+    resources:
+      - endpoints
+      - endpointslices
+      - ingresses
+      - nodes
+      - nodes/proxy
+      - nodes/metrics
+      - pods
+      - services
+    verbs:
+      - get
+      - list
+      - watch
+  # Rules which allow loki.source.kubernetes and loki.source.podlogs to work.
+  - apiGroups:
+      - ""
+    resources:
+      - pods
+      - pods/log
+      - namespaces
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - "monitoring.grafana.com"
+    resources:
+      - podlogs
+    verbs:
+      - get
+      - list
+      - watch
+  # Rules which allow mimir.rules.kubernetes to work.
+  - apiGroups: ["monitoring.coreos.com"]
+    resources:
+      - prometheusrules
+    verbs:
+      - get
+      - list
+      - watch
+  - nonResourceURLs:
+      - /metrics
+    verbs:
+      - get
+  # Rules for prometheus.kubernetes.*
+  - apiGroups: ["monitoring.coreos.com"]
+    resources:
+      - podmonitors
+      - servicemonitors
+      - probes
+    verbs:
+      - get
+      - list
+      - watch
+  # Rules which allow eventhandler to work.
+  - apiGroups:
+      - ""
+    resources:
+      - events
+    verbs:
+      - get
+      - list
+      - watch
+{{- if eq .Values.cluster.platform "openshift" }}
+  - verbs:
+      - use
+    apiGroups:
+      - security.openshift.io
+    resources:
+      - securitycontextconstraints
+    resourceNames:
+      - {{ include "grafana-agent.fullname" (index .Subcharts "grafana-agent-logs") }}
+{{- end }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ include "grafana-agent.fullname" (index .Subcharts "grafana-agent-logs") }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ include "grafana-agent.fullname" (index .Subcharts "grafana-agent-logs") }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "grafana-agent.serviceAccountName" (index .Subcharts "grafana-agent-logs") }}
+    namespace: {{ .Release.Namespace }}
+{{- end }}

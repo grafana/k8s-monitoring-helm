@@ -6,6 +6,9 @@ cluster:
   # -- (string) The Kubernetes service. Change this if your cluster DNS is configured differently than the default.
   kubernetesAPIService: kubernetes.default.svc.cluster.local:443
 
+  # -- (string) The specific platform for this cluster. Will enable compatibility changes for some platforms. Supported options: (empty) or "openshift".
+  platform: ""
+
 externalServices:
   # Connection information for Prometheus
   prometheus:
@@ -619,6 +622,10 @@ grafana-agent:
         configMap:
           name: kubernetes-monitoring-telemetry
 
+  # This chart creates the ClusterRole and ClusterRoleBinding for Grafana Agent
+  rbac:
+    create: false
+
 # Settings for the Grafana Agent deployment
 # You can use this sections to make modifications to the Grafana Agent deployment.
 # See https://github.com/grafana/agent/tree/main/operations/helm/charts/grafana-agent for available values.
@@ -657,5 +664,11 @@ grafana-agent-logs:
         secret:
           secretName: grafana-agent-credentials
 
+  # The CRDs created by the agent will be done in the .grafana-agent chart. Setting this to false removes a duplicate
+  # creation attempt.
   crds:
+    create: false
+
+  # This chart creates the ClusterRole and ClusterRoleBinding for Grafana Agent for logs
+  rbac:
     create: false
