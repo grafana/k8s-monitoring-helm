@@ -343,7 +343,7 @@ prometheus.remote_write "grafana_cloud_prometheus" {
     proxy_url = "http://192.168.1.100:8080"
 
     basic_auth {
-      username = remote.kubernetes.secret.prometheus_credentials.data["username"]
+      username = nonsensitive(remote.kubernetes.secret.prometheus_credentials.data["username"])
       password = remote.kubernetes.secret.prometheus_credentials.data["password"]
     }
 
@@ -370,7 +370,7 @@ loki.write "grafana_cloud_loki" {
     proxy_url = "http://192.168.1.100:8080"
 
     basic_auth {
-      username = remote.kubernetes.secret.loki_credentials.data["username"]
+      username = nonsensitive(remote.kubernetes.secret.loki_credentials.data["username"])
       password = remote.kubernetes.secret.loki_credentials.data["password"]
     }
   }

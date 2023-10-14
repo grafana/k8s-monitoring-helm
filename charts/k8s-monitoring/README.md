@@ -77,24 +77,44 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | cluster.name | string | `""` | (required) The name of this cluster, which will be set in all labels |
 | cluster.platform | string | `""` | The specific platform for this cluster. Will enable compatibility changes for some platforms. Supported options: (empty) or "openshift". |
 | externalServices.loki.basicAuth.password | string | `""` | Loki basic auth password |
+| externalServices.loki.basicAuth.passwordKey | string | `"password"` |  |
 | externalServices.loki.basicAuth.username | string | `""` | Loki basic auth username |
+| externalServices.loki.basicAuth.usernameKey | string | `"username"` |  |
 | externalServices.loki.externalLabels | object | `{}` | Custom labels to be added to all logs and events |
 | externalServices.loki.host | string | `""` | (required) Loki host where logs and events will be sent |
+| externalServices.loki.hostKey | string | `"host"` |  |
 | externalServices.loki.proxyURL | string | `""` | HTTP proxy to proxy requests to Loki through. |
+| externalServices.loki.secret.create | bool | `true` |  |
+| externalServices.loki.secret.name | string | `nil` |  |
+| externalServices.loki.secret.namespace | string | `nil` |  |
 | externalServices.loki.tenantId | string | `""` | (optional) Loki tenant ID |
+| externalServices.loki.tenantIdKey | string | `"tenantId"` |  |
 | externalServices.loki.writeEndpoint | string | `"/loki/api/v1/push"` | Loki logs write endpoint |
 | externalServices.prometheus.basicAuth.password | string | `""` | Prometheus basic auth password |
+| externalServices.prometheus.basicAuth.passwordKey | string | `"password"` |  |
 | externalServices.prometheus.basicAuth.username | string | `""` | Prometheus basic auth username |
+| externalServices.prometheus.basicAuth.usernameKey | string | `"username"` |  |
 | externalServices.prometheus.externalLabels | object | `{}` | Custom labels to be added to all time series |
 | externalServices.prometheus.host | string | `""` | (required) Prometheus host where metrics will be sent |
+| externalServices.prometheus.hostKey | string | `"host"` |  |
 | externalServices.prometheus.proxyURL | string | `""` | HTTP proxy to proxy requests to Prometheus through. |
 | externalServices.prometheus.queryEndpoint | string | `"/api/prom/api/v1/query"` | Prometheus metrics query endpoint. Preset for Grafana Cloud Metrics instances. |
+| externalServices.prometheus.secret.create | bool | `true` |  |
+| externalServices.prometheus.secret.name | string | `nil` |  |
+| externalServices.prometheus.secret.namespace | string | `nil` |  |
 | externalServices.prometheus.tenantId | string | `""` | (optional) Sets the X-Scope-OrgID header when sending metrics |
+| externalServices.prometheus.tenantIdKey | string | `"tenantId"` |  |
 | externalServices.prometheus.writeEndpoint | string | `"/api/prom/push"` | Prometheus metrics write endpoint. Preset for Grafana Cloud Metrics instances. |
 | externalServices.prometheus.writeRelabelConfigRules | string | `nil` | Rule blocks to be added to the write_relabel_config block of the prometheus.remote_write component. See https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.remote_write/#write_relabel_config-block |
 | externalServices.tempo.basicAuth.password | string | `""` | Tempo basic auth password |
+| externalServices.tempo.basicAuth.passwordKey | string | `"password"` |  |
 | externalServices.tempo.basicAuth.username | string | `""` | Tempo basic auth username |
+| externalServices.tempo.basicAuth.usernameKey | string | `"username"` |  |
 | externalServices.tempo.host | string | `""` | (required) Tempo host where traces will be sent |
+| externalServices.tempo.hostKey | string | `"host"` |  |
+| externalServices.tempo.secret.create | bool | `true` |  |
+| externalServices.tempo.secret.name | string | `nil` |  |
+| externalServices.tempo.secret.namespace | string | `nil` |  |
 | extraConfig | string | `nil` | Extra configuration that will be added to the Grafana Agent configuration file. See [Adding custom Flow configuration](#adding-custom-flow-configuration) for an example. |
 | kube-state-metrics.enabled | bool | `true` | Should this helm chart deploy Kube State Metrics to the cluster. Set this to false if your cluster already has Kube State Metrics, or if you do not want to scrape metrics from Kube State Metrics. |
 | logs.cluster_events.enabled | bool | `true` | Scrape Kubernetes cluster events |

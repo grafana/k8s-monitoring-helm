@@ -341,7 +341,7 @@ prometheus.remote_write "grafana_cloud_prometheus" {
     url = nonsensitive(remote.kubernetes.secret.prometheus_credentials.data["host"]) + "/api/prom/push"
 
     basic_auth {
-      username = remote.kubernetes.secret.prometheus_credentials.data["username"]
+      username = nonsensitive(remote.kubernetes.secret.prometheus_credentials.data["username"])
       password = remote.kubernetes.secret.prometheus_credentials.data["password"]
     }
 
@@ -367,7 +367,7 @@ loki.write "grafana_cloud_loki" {
     url = nonsensitive(remote.kubernetes.secret.loki_credentials.data["host"]) + "/loki/api/v1/push"
 
     basic_auth {
-      username = remote.kubernetes.secret.loki_credentials.data["username"]
+      username = nonsensitive(remote.kubernetes.secret.loki_credentials.data["username"])
       password = remote.kubernetes.secret.loki_credentials.data["password"]
     }
   }

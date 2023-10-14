@@ -342,7 +342,7 @@ prometheus.remote_write "grafana_cloud_prometheus" {
     headers = { "X-Scope-OrgID" = remote.kubernetes.secret.prometheus_credentials.data["tenantId"] }
 
     basic_auth {
-      username = remote.kubernetes.secret.prometheus_credentials.data["username"]
+      username = nonsensitive(remote.kubernetes.secret.prometheus_credentials.data["username"])
       password = remote.kubernetes.secret.prometheus_credentials.data["password"]
     }
 

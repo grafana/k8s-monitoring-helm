@@ -107,7 +107,7 @@ loki.write "grafana_cloud_loki" {
     tenant_id = remote.kubernetes.secret.loki_credentials.data["tenantId"]
 
     basic_auth {
-      username = remote.kubernetes.secret.loki_credentials.data["username"]
+      username = nonsensitive(remote.kubernetes.secret.loki_credentials.data["username"])
       password = remote.kubernetes.secret.loki_credentials.data["password"]
     }
   }

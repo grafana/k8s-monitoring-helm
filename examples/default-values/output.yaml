@@ -443,7 +443,7 @@ data:
         url = nonsensitive(remote.kubernetes.secret.prometheus_credentials.data["host"]) + "/api/prom/push"
     
         basic_auth {
-          username = remote.kubernetes.secret.prometheus_credentials.data["username"]
+          username = nonsensitive(remote.kubernetes.secret.prometheus_credentials.data["username"])
           password = remote.kubernetes.secret.prometheus_credentials.data["password"]
         }
     
@@ -469,7 +469,7 @@ data:
         url = nonsensitive(remote.kubernetes.secret.loki_credentials.data["host"]) + "/loki/api/v1/push"
     
         basic_auth {
-          username = remote.kubernetes.secret.loki_credentials.data["username"]
+          username = nonsensitive(remote.kubernetes.secret.loki_credentials.data["username"])
           password = remote.kubernetes.secret.loki_credentials.data["password"]
         }
       }
@@ -594,7 +594,7 @@ data:
         url = nonsensitive(remote.kubernetes.secret.loki_credentials.data["host"]) + "/loki/api/v1/push"
     
         basic_auth {
-          username = remote.kubernetes.secret.loki_credentials.data["username"]
+          username = nonsensitive(remote.kubernetes.secret.loki_credentials.data["username"])
           password = remote.kubernetes.secret.loki_credentials.data["password"]
         }
       }
@@ -42440,6 +42440,22 @@ rules:
       - list
       - watch
 ---
+# Source: k8s-monitoring/templates/temp-rbac.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: k8smon-grafana-agent-secrets
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - configmaps
+      - secrets
+    verbs:
+      - get
+      - list
+      - watch
+---
 # Source: k8s-monitoring/charts/grafana-agent-logs/templates/rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -42521,6 +42537,20 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: k8smon-opencost
+    namespace: default
+---
+# Source: k8s-monitoring/templates/temp-rbac.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: k8smon-grafana-agent-secrets
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: k8smon-grafana-agent-secrets
+subjects:
+  - kind: ServiceAccount
+    name: k8smon-grafana-agent
     namespace: default
 ---
 # Source: k8s-monitoring/charts/grafana-agent-logs/templates/service.yaml
@@ -42728,9 +42758,6 @@ spec:
             - name: varlog
               mountPath: /var/log
               readOnly: true
-            -
-              mountPath: /etc/grafana-agent-credentials
-              name: grafana-agent-credentials
         - name: config-reloader
           image: docker.io/jimmidyson/configmap-reload:v0.8.0
           args:
@@ -42756,9 +42783,6 @@ spec:
         - name: varlog
           hostPath:
             path: /var/log
-        - name: grafana-agent-credentials
-          secret:
-            secretName: grafana-agent-credentials
 ---
 # Source: k8s-monitoring/charts/prometheus-node-exporter/templates/daemonset.yaml
 apiVersion: apps/v1
@@ -43091,9 +43115,6 @@ spec:
             - name: config
               mountPath: /etc/agent
             -
-              mountPath: /etc/grafana-agent-credentials
-              name: grafana-agent-credentials
-            -
               mountPath: /etc/kubernetes-monitoring-telemetry
               name: kubernetes-monitoring-telemetry
         - name: config-reloader
@@ -43115,9 +43136,6 @@ spec:
         - name: config
           configMap:
             name: k8smon-grafana-agent
-        - name: grafana-agent-credentials
-          secret:
-            secretName: grafana-agent-credentials
         - configMap:
             name: kubernetes-monitoring-telemetry
           name: kubernetes-monitoring-telemetry
@@ -43503,26 +43521,17 @@ data:
     }
     
     // Grafana Cloud Prometheus
-    local.file "prometheus_host" {
-      filename  = "/etc/grafana-agent-credentials/prometheus_host"
+    remote.kubernetes.secret "prometheus_credentials" {
+      name = "k8smon-k8s-monitoring-prometheus"
+      namespace = "default"
     }
-    
-    local.file "prometheus_username" {
-      filename  = "/etc/grafana-agent-credentials/prometheus_username"
-    }
-    
-    local.file "prometheus_password" {
-      filename  = "/etc/grafana-agent-credentials/prometheus_password"
-      is_secret = true
-    }
-    
     prometheus.remote_write "grafana_cloud_prometheus" {
       endpoint {
-        url = nonsensitive(local.file.prometheus_host.content) + "/api/prom/push"
+        url = nonsensitive(remote.kubernetes.secret.prometheus_credentials.data["host"]) + "/api/prom/push"
     
         basic_auth {
-          username = local.file.prometheus_username.content
-          password = local.file.prometheus_password.content
+          username = nonsensitive(remote.kubernetes.secret.prometheus_credentials.data["username"])
+          password = remote.kubernetes.secret.prometheus_credentials.data["password"]
         }
     
       }
@@ -43538,26 +43547,17 @@ data:
     }
     
     // Grafana Cloud Loki
-    local.file "loki_host" {
-      filename  = "/etc/grafana-agent-credentials/loki_host"
+    remote.kubernetes.secret "loki_credentials" {
+      name = "k8smon-k8s-monitoring-loki"
+      namespace = "default"
     }
-    
-    local.file "loki_username" {
-      filename  = "/etc/grafana-agent-credentials/loki_username"
-    }
-    
-    local.file "loki_password" {
-      filename  = "/etc/grafana-agent-credentials/loki_password"
-      is_secret = true
-    }
-    
     loki.write "grafana_cloud_loki" {
       endpoint {
-        url = nonsensitive(local.file.loki_host.content) + "/loki/api/v1/push"
+        url = nonsensitive(remote.kubernetes.secret.loki_credentials.data["host"]) + "/loki/api/v1/push"
     
         basic_auth {
-          username = local.file.loki_username.content
-          password = local.file.loki_password.content
+          username = nonsensitive(remote.kubernetes.secret.loki_credentials.data["username"])
+          password = remote.kubernetes.secret.loki_credentials.data["password"]
         }
       }
       external_labels = {
@@ -43681,26 +43681,17 @@ data:
     }
     
     // Grafana Cloud Loki
-    local.file "loki_host" {
-      filename  = "/etc/grafana-agent-credentials/loki_host"
+    remote.kubernetes.secret "loki_credentials" {
+      name = "k8smon-k8s-monitoring-loki"
+      namespace = "default"
     }
-    
-    local.file "loki_username" {
-      filename  = "/etc/grafana-agent-credentials/loki_username"
-    }
-    
-    local.file "loki_password" {
-      filename  = "/etc/grafana-agent-credentials/loki_password"
-      is_secret = true
-    }
-    
     loki.write "grafana_cloud_loki" {
       endpoint {
-        url = nonsensitive(local.file.loki_host.content) + "/loki/api/v1/push"
+        url = nonsensitive(remote.kubernetes.secret.loki_credentials.data["host"]) + "/loki/api/v1/push"
     
         basic_auth {
-          username = local.file.loki_username.content
-          password = local.file.loki_password.content
+          username = nonsensitive(remote.kubernetes.secret.loki_credentials.data["username"])
+          password = remote.kubernetes.secret.loki_credentials.data["password"]
         }
       }
       external_labels = {
