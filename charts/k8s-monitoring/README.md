@@ -25,12 +25,14 @@ cluster:
 externalServices:
   prometheus:
     host: https://prometheus.example.com
-    username: "12345"
-    password: "It's a secret to everyone"
+    basicAuth:
+      username: "12345"
+      password: "It's a secret to everyone"
   loki:
     host: https://loki.example.com
-    username: "67890"
-    password: "It's a secret to everyone"
+    basicAuth:
+      username: "67890"
+      password: "It's a secret to everyone"
 EOF
 helm install my-release grafana/k8s-monitoring --values values.yaml
 ```
