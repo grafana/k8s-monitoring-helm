@@ -15,36 +15,49 @@ externalServices:
     # TODO: Add the ability to reference a pre-existing secret
     # -- (string) (required) Prometheus host where metrics will be sent
     host: ""
+    # -- (string) The key for the host property in the secret
     hostKey: host
+
     # -- (string) HTTP proxy to proxy requests to Prometheus through.
     proxyURL: ""
     # -- Prometheus metrics query endpoint. Preset for Grafana Cloud Metrics instances.
     queryEndpoint: /api/prom/api/v1/query
     # -- Prometheus metrics write endpoint. Preset for Grafana Cloud Metrics instances.
     writeEndpoint: /api/prom/push
+
     # -- Custom labels to be added to all time series
     externalLabels: {}
     # -- (string) Rule blocks to be added to the write_relabel_config block of the prometheus.remote_write component.
     # See https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.remote_write/#write_relabel_config-block
-    writeRelabelConfigRules:
+    writeRelabelConfigRules: ""
 
     # -- (string) (optional) Sets the X-Scope-OrgID header when sending metrics
     tenantId: ""
+    # -- (string) The key for the tenant ID property in the secret
     tenantIdKey: tenantId
+
+    # -- (string) one of "none", "basic"
+    authMode: basic
 
     # Authenticate to Prometheus using basic authentication
     basicAuth:
       # -- (string) Prometheus basic auth username
       username: ""
+      # -- (string) The key for the username property in the secret
       usernameKey: username
       # -- (string) Prometheus basic auth password
       password: ""
+      # -- (string) The key for the password property in the secret
       passwordKey: password
 
+    # Credential management
     secret:
+      # -- Should this Helm chart create the secret. If false, you must define the name and namespace values.
       create: true
-      name:
-      namespace:
+      # -- (string) The name of the secret.
+      name: ""
+      # -- (string) The namespace of the secret.
+      namespace: ""
 
   # Connection information for Grafana Loki
   loki:
@@ -63,6 +76,9 @@ externalServices:
     tenantId: ""
     tenantIdKey: tenantId
 
+    # -- (string) one of "none", "basic"
+    authMode: basic
+
     # Authenticate to Loki using basic authentication
     basicAuth:
       # -- (string) Loki basic auth username
@@ -72,16 +88,23 @@ externalServices:
       password: ""
       passwordKey: password
 
+    # Credential management
     secret:
+      # -- Should this Helm chart create the secret. If false, you must define the name and namespace values.
       create: true
-      name:
-      namespace:
+      # -- (string) The name of the secret.
+      name: ""
+      # -- (string) The namespace of the secret.
+      namespace: ""
 
   # Connection information for Grafana Tempo
   tempo:
     # -- (string) (required) Tempo host where traces will be sent
     host: ""
     hostKey: host
+
+    # -- (string) one of "none", "basic"
+    authMode: basic
 
     # Authenticate to Tempo using basic authentication
     basicAuth:
@@ -92,10 +115,14 @@ externalServices:
       password: ""
       passwordKey: password
 
+    # Credential management
     secret:
+      # -- Should this Helm chart create the secret. If false, you must define the name and namespace values.
       create: true
-      name:
-      namespace:
+      # -- (string) The name of the secret.
+      name: ""
+      # -- (string) The namespace of the secret.
+      namespace: ""
 
 # Settings related to capturing and forwarding metrics
 metrics:
@@ -107,11 +134,11 @@ metrics:
 
   # -- (string) Rule blocks to be added to the discovery.relabel component for all metric sources.
   # See https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block
-  extraRelabelingRules:
+  extraRelabelingRules: ""
 
   # -- (string) Rule blocks to be added to the prometheus.relabel component for all metric sources.
   # See https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block
-  extraMetricRelabelingRules:
+  extraMetricRelabelingRules: ""
 
   # Metrics from Grafana Agent
   agent:
@@ -121,7 +148,7 @@ metrics:
     # -- (string) How frequently to scrape metrics from Grafana Agent.
     # Overrides metrics.scrapeInterval
     # @default -- 60s
-    scrapeInterval:
+    scrapeInterval: ""
 
     # -- Label matchers used by the Grafana Agent to select Grafana Agent pods
     labelMatchers:
@@ -129,11 +156,11 @@ metrics:
 
     # -- (string) Rule blocks to be added to the discovery.relabel component for Grafana Agent.
     # See https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block
-    extraRelabelingRules:
+    extraRelabelingRules: ""
 
     # -- (string) Rule blocks to be added to the prometheus.relabel component for Grafana Agent.
     # See https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block
-    extraMetricRelabelingRules:
+    extraMetricRelabelingRules: ""
 
     # -- The list of Grafana Agent metrics that will be scraped by the Agent
     # @default -- See [Allow List for Grafana Agent](#allow-list-for-grafana-agent)
@@ -148,7 +175,7 @@ metrics:
     # -- (string) How frequently to scrape metrics from Kube State Metrics.
     # Overrides metrics.scrapeInterval
     # @default -- 60s
-    scrapeInterval:
+    scrapeInterval: ""
 
     # -- Label matchers used by the Grafana Agent to select the Kube State Metrics service
     labelMatchers:
@@ -156,11 +183,11 @@ metrics:
 
     # -- (string) Rule blocks to be added to the discovery.relabel component for Kube State Metrics.
     # See https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block
-    extraRelabelingRules:
+    extraRelabelingRules: ""
 
     # -- (string) Rule blocks to be added to the prometheus.relabel component for Kube State Metrics.
     # See https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block
-    extraMetricRelabelingRules:
+    extraMetricRelabelingRules: ""
 
     # Kube State Metrics service settings
     service:
@@ -211,7 +238,7 @@ metrics:
     # -- (string) How frequently to scrape metrics from Node Exporter.
     # Overrides metrics.scrapeInterval
     # @default -- 60s
-    scrapeInterval:
+    scrapeInterval: ""
 
     # -- Label matchers used by the Grafana Agent to select the Node exporter pods
     labelMatchers:
@@ -219,11 +246,11 @@ metrics:
 
     # -- (string) Rule blocks to be added to the discovery.relabel component for Node Exporter.
     # See https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block
-    extraRelabelingRules:
+    extraRelabelingRules: ""
 
     # -- (string) Rule blocks to be added to the prometheus.relabel component for Node Exporter.
     # See https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block
-    extraMetricRelabelingRules:
+    extraMetricRelabelingRules: ""
 
     # Node Exporter service settings
     service:
@@ -248,7 +275,7 @@ metrics:
     # -- (string) How frequently to scrape metrics from Windows Exporter.
     # Overrides metrics.scrapeInterval
     # @default -- 60s
-    scrapeInterval:
+    scrapeInterval: ""
 
     # -- Label matchers used by the Grafana Agent to select the Windows Exporter pods
     labelMatchers:
@@ -256,11 +283,11 @@ metrics:
 
     # -- (string) Rule blocks to be added to the discovery.relabel component for Windows Exporter.
     # See https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block
-    extraRelabelingRules:
+    extraRelabelingRules: ""
 
     # -- (string) Rule blocks to be added to the prometheus.relabel component for Windows Exporter.
     # See https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block
-    extraMetricRelabelingRules:
+    extraMetricRelabelingRules: ""
 
     # -- The list of Windows Exporter metrics that will be scraped by the Agent
     # @default -- See [Allow List for Windows Exporter](#allow-list-for-windows-exporter)
@@ -279,15 +306,15 @@ metrics:
     # -- (string) How frequently to scrape metrics from the Kubelet.
     # Overrides metrics.scrapeInterval
     # @default -- 60s
-    scrapeInterval:
+    scrapeInterval: ""
 
     # -- (string) Rule blocks to be added to the discovery.relabel component for Kubelet.
     # See https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block
-    extraRelabelingRules:
+    extraRelabelingRules: ""
 
     # -- (string) Rule blocks to be added to the prometheus.relabel component for Kubelet.
     # See https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block
-    extraMetricRelabelingRules:
+    extraMetricRelabelingRules: ""
 
     # -- The list of Kubelet metrics that will be scraped by the Agent
     # @default -- See [Allow List for Kubelet](#allow-list-for-kubelet)
@@ -333,15 +360,15 @@ metrics:
     # -- (string) How frequently to scrape metrics from cAdvisor.
     # Overrides metrics.scrapeInterval
     # @default -- 60s
-    scrapeInterval:
+    scrapeInterval: ""
 
     # -- (string) Rule blocks to be added to the discovery.relabel component for cAdvisor.
     # See https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block
-    extraRelabelingRules:
+    extraRelabelingRules: ""
 
     # -- (string) Rule blocks to be added to the prometheus.relabel component for cAdvisor.
     # See https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block
-    extraMetricRelabelingRules:
+    extraMetricRelabelingRules: ""
 
     # -- The list of cAdvisor metrics that will be scraped by the Agent
     # @default -- See [Allow List for cAdvisor](#allow-list-for-cadvisor)
@@ -373,7 +400,7 @@ metrics:
     # -- (string) How frequently to scrape metrics from OpenCost.
     # Overrides metrics.scrapeInterval
     # @default -- 60s
-    scrapeInterval:
+    scrapeInterval: ""
 
     # -- Label matchers used by the Grafana Agent to select the OpenCost service
     labelMatchers:
@@ -381,11 +408,11 @@ metrics:
 
     # -- (string) Rule blocks to be added to the discovery.relabel component for OpenCost.
     # See https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block
-    extraRelabelingRules:
+    extraRelabelingRules: ""
 
     # -- (string) Rule blocks to be added to the prometheus.relabel component for OpenCost.
     # See https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block
-    extraMetricRelabelingRules:
+    extraMetricRelabelingRules: ""
 
     # -- The list of OpenCost metrics that will be scraped by the Agent
     # @default -- See [Allow List for OpenCost](#allow-list-for-opencost)
@@ -456,11 +483,11 @@ logs:
 
     # -- (string) Rule blocks to be added to the discovery.relabel component for pod logs.
     # See https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block
-    extraRelabelingRules:
+    extraRelabelingRules: ""
 
     # -- (string) Stage blocks to be added to the prometheus.relabel component for pod logs.
     # See https://grafana.com/docs/agent/latest/flow/reference/components/loki.process/#blocks
-    extraStageBlocks:
+    extraStageBlocks: ""
 
   # Settings for scraping Kubernetes cluster events
   cluster_events:
@@ -471,7 +498,7 @@ logs:
     namespaces: []
 
   # -- (string) Extra configuration that will be added to Grafana Agent Logs. See [Adding custom Flow configuration](#adding-custom-flow-configuration) for an example.  
-  extraConfig:
+  extraConfig: ""
 
 # Settings related to capturing and forwarding traces
 traces:
@@ -504,7 +531,7 @@ traces:
       timeout: 2s
 
 # -- (string) Extra configuration that will be added to the Grafana Agent configuration file. See [Adding custom Flow configuration](#adding-custom-flow-configuration) for an example.
-extraConfig:
+extraConfig: ""
 
 # Settings for the test job, runnable by "helm test"
 test:

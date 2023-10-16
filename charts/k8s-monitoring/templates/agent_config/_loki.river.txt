@@ -9,16 +9,14 @@ remote.kubernetes.secret "loki_credentials" {
 loki.write "grafana_cloud_loki" {
   endpoint {
     url = nonsensitive(remote.kubernetes.secret.loki_credentials.data["{{ .hostKey }}"]) + "{{ .writeEndpoint }}"
-{{- if .tenantId }}
     tenant_id = remote.kubernetes.secret.loki_credentials.data["{{ .tenantIdKey }}"]
-{{- end }}
 {{- if .proxyURL }}
     proxy_url = {{ .proxyURL | quote }}
 {{- end }}
-{{ if .basicAuth }}
+{{ if eq .authMode "basic" }}
     basic_auth {
-      {{ if .basicAuth.username }}username = nonsensitive(remote.kubernetes.secret.loki_credentials.data["{{ .basicAuth.usernameKey }}"]){{ end }}
-      {{ if .basicAuth.password }}password = remote.kubernetes.secret.loki_credentials.data["{{ .basicAuth.passwordKey }}"]{{ end }}
+      username = nonsensitive(remote.kubernetes.secret.loki_credentials.data["{{ .basicAuth.usernameKey }}"])
+      password = remote.kubernetes.secret.loki_credentials.data["{{ .basicAuth.passwordKey }}"]
     }
 {{- end }}
   }

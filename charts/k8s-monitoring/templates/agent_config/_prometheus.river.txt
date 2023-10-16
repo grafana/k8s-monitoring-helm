@@ -9,16 +9,14 @@ remote.kubernetes.secret "prometheus_credentials" {
 prometheus.remote_write "grafana_cloud_prometheus" {
   endpoint {
     url = nonsensitive(remote.kubernetes.secret.prometheus_credentials.data["{{ .hostKey }}"]) + "{{ .writeEndpoint }}"
-{{- if .tenantId }}
     headers = { "X-Scope-OrgID" = remote.kubernetes.secret.prometheus_credentials.data["{{ .tenantIdKey }}"] }
-{{- end }}
 {{- if .proxyURL }}
     proxy_url = {{ .proxyURL | quote }}
 {{- end }}
-{{ if .basicAuth }}
+{{ if eq .authMode "basic" }}
     basic_auth {
-      {{ if .basicAuth.username }}username = nonsensitive(remote.kubernetes.secret.prometheus_credentials.data["{{ .basicAuth.usernameKey }}"]){{ end }}
-      {{ if .basicAuth.password }}password = remote.kubernetes.secret.prometheus_credentials.data["{{ .basicAuth.passwordKey }}"]{{ end }}
+      username = nonsensitive(remote.kubernetes.secret.prometheus_credentials.data["{{ .basicAuth.usernameKey }}"])
+      password = remote.kubernetes.secret.prometheus_credentials.data["{{ .basicAuth.passwordKey }}"]
     }
 {{- end }}
 {{ if .writeRelabelConfigRules }}

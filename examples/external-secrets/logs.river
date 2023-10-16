@@ -98,20 +98,20 @@ loki.process "pod_logs" {
 
 // Grafana Cloud Loki
 remote.kubernetes.secret "loki_credentials" {
-  name = "k8smon-k8s-monitoring-loki"
-  namespace = "default"
+  name = "shared-password"
+  namespace = "prometheus"
 }
 loki.write "grafana_cloud_loki" {
   endpoint {
-    url = nonsensitive(remote.kubernetes.secret.loki_credentials.data["host"]) + "/loki/api/v1/push"
+    url = nonsensitive(remote.kubernetes.secret.loki_credentials.data["lokiHost"]) + "/loki/api/v1/push"
     tenant_id = remote.kubernetes.secret.loki_credentials.data["tenantId"]
 
     basic_auth {
-      username = nonsensitive(remote.kubernetes.secret.loki_credentials.data["username"])
-      password = remote.kubernetes.secret.loki_credentials.data["password"]
+      username = nonsensitive(remote.kubernetes.secret.loki_credentials.data["lokiUser"])
+      password = remote.kubernetes.secret.loki_credentials.data["lokiPass"]
     }
   }
   external_labels = {
-    cluster = "gke-autopilot-test",
+    cluster = "external-secrets-test",
   }
 }

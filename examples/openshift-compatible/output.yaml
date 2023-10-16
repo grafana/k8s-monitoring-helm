@@ -411,6 +411,7 @@ data:
     prometheus.remote_write "grafana_cloud_prometheus" {
       endpoint {
         url = nonsensitive(remote.kubernetes.secret.prometheus_credentials.data["host"]) + "/api/prom/push"
+        headers = { "X-Scope-OrgID" = remote.kubernetes.secret.prometheus_credentials.data["tenantId"] }
         proxy_url = "http://192.168.1.100:8080"
     
         basic_auth {
@@ -438,6 +439,7 @@ data:
     loki.write "grafana_cloud_loki" {
       endpoint {
         url = nonsensitive(remote.kubernetes.secret.loki_credentials.data["host"]) + "/loki/api/v1/push"
+        tenant_id = remote.kubernetes.secret.loki_credentials.data["tenantId"]
         proxy_url = "http://192.168.1.100:8080"
     
         basic_auth {
@@ -564,6 +566,7 @@ data:
     loki.write "grafana_cloud_loki" {
       endpoint {
         url = nonsensitive(remote.kubernetes.secret.loki_credentials.data["host"]) + "/loki/api/v1/push"
+        tenant_id = remote.kubernetes.secret.loki_credentials.data["tenantId"]
         proxy_url = "http://192.168.1.100:8080"
     
         basic_auth {
@@ -43178,6 +43181,7 @@ data:
     prometheus.remote_write "grafana_cloud_prometheus" {
       endpoint {
         url = nonsensitive(remote.kubernetes.secret.prometheus_credentials.data["host"]) + "/api/prom/push"
+        headers = { "X-Scope-OrgID" = remote.kubernetes.secret.prometheus_credentials.data["tenantId"] }
         proxy_url = "http://192.168.1.100:8080"
     
         basic_auth {
@@ -43205,6 +43209,7 @@ data:
     loki.write "grafana_cloud_loki" {
       endpoint {
         url = nonsensitive(remote.kubernetes.secret.loki_credentials.data["host"]) + "/loki/api/v1/push"
+        tenant_id = remote.kubernetes.secret.loki_credentials.data["tenantId"]
         proxy_url = "http://192.168.1.100:8080"
     
         basic_auth {
@@ -43340,6 +43345,7 @@ data:
     loki.write "grafana_cloud_loki" {
       endpoint {
         url = nonsensitive(remote.kubernetes.secret.loki_credentials.data["host"]) + "/loki/api/v1/push"
+        tenant_id = remote.kubernetes.secret.loki_credentials.data["tenantId"]
         proxy_url = "http://192.168.1.100:8080"
     
         basic_auth {

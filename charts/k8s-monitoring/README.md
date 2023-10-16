@@ -76,6 +76,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | cluster.kubernetesAPIService | string | `"kubernetes.default.svc.cluster.local:443"` | The Kubernetes service. Change this if your cluster DNS is configured differently than the default. |
 | cluster.name | string | `""` | (required) The name of this cluster, which will be set in all labels |
 | cluster.platform | string | `""` | The specific platform for this cluster. Will enable compatibility changes for some platforms. Supported options: (empty) or "openshift". |
+| externalServices.loki.authMode | string | `"basic"` | one of "none", "basic" |
 | externalServices.loki.basicAuth.password | string | `""` | Loki basic auth password |
 | externalServices.loki.basicAuth.passwordKey | string | `"password"` |  |
 | externalServices.loki.basicAuth.username | string | `""` | Loki basic auth username |
@@ -90,22 +91,24 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | externalServices.loki.tenantId | string | `""` | (optional) Loki tenant ID |
 | externalServices.loki.tenantIdKey | string | `"tenantId"` |  |
 | externalServices.loki.writeEndpoint | string | `"/loki/api/v1/push"` | Loki logs write endpoint |
+| externalServices.prometheus.authMode | string | `"basic"` | one of "none", "basic" |
 | externalServices.prometheus.basicAuth.password | string | `""` | Prometheus basic auth password |
-| externalServices.prometheus.basicAuth.passwordKey | string | `"password"` |  |
+| externalServices.prometheus.basicAuth.passwordKey | string | `"password"` | The key for the password property in the secret |
 | externalServices.prometheus.basicAuth.username | string | `""` | Prometheus basic auth username |
-| externalServices.prometheus.basicAuth.usernameKey | string | `"username"` |  |
+| externalServices.prometheus.basicAuth.usernameKey | string | `"username"` | The key for the username property in the secret |
 | externalServices.prometheus.externalLabels | object | `{}` | Custom labels to be added to all time series |
 | externalServices.prometheus.host | string | `""` | (required) Prometheus host where metrics will be sent |
-| externalServices.prometheus.hostKey | string | `"host"` |  |
+| externalServices.prometheus.hostKey | string | `"host"` | The key for the host property in the secret |
 | externalServices.prometheus.proxyURL | string | `""` | HTTP proxy to proxy requests to Prometheus through. |
 | externalServices.prometheus.queryEndpoint | string | `"/api/prom/api/v1/query"` | Prometheus metrics query endpoint. Preset for Grafana Cloud Metrics instances. |
-| externalServices.prometheus.secret.create | bool | `true` |  |
-| externalServices.prometheus.secret.name | string | `nil` |  |
-| externalServices.prometheus.secret.namespace | string | `nil` |  |
+| externalServices.prometheus.secret.create | bool | `true` | Should this Helm chart create the secret. If false, you must define the name and namespace values. |
+| externalServices.prometheus.secret.name | string | `nil` | The name of the secret. |
+| externalServices.prometheus.secret.namespace | string | `nil` | The namespace of the secret. |
 | externalServices.prometheus.tenantId | string | `""` | (optional) Sets the X-Scope-OrgID header when sending metrics |
-| externalServices.prometheus.tenantIdKey | string | `"tenantId"` |  |
+| externalServices.prometheus.tenantIdKey | string | `"tenantId"` | The key for the tenant ID property in the secret |
 | externalServices.prometheus.writeEndpoint | string | `"/api/prom/push"` | Prometheus metrics write endpoint. Preset for Grafana Cloud Metrics instances. |
 | externalServices.prometheus.writeRelabelConfigRules | string | `nil` | Rule blocks to be added to the write_relabel_config block of the prometheus.remote_write component. See https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.remote_write/#write_relabel_config-block |
+| externalServices.tempo.authMode | string | `"basic"` | one of "none", "basic" |
 | externalServices.tempo.basicAuth.password | string | `""` | Tempo basic auth password |
 | externalServices.tempo.basicAuth.passwordKey | string | `"password"` |  |
 | externalServices.tempo.basicAuth.username | string | `""` | Tempo basic auth username |

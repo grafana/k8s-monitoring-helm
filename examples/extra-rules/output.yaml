@@ -482,6 +482,7 @@ data:
     prometheus.remote_write "grafana_cloud_prometheus" {
       endpoint {
         url = nonsensitive(remote.kubernetes.secret.prometheus_credentials.data["host"]) + "/api/prom/push"
+        headers = { "X-Scope-OrgID" = remote.kubernetes.secret.prometheus_credentials.data["tenantId"] }
     
         basic_auth {
           username = nonsensitive(remote.kubernetes.secret.prometheus_credentials.data["username"])
@@ -43641,6 +43642,7 @@ data:
     prometheus.remote_write "grafana_cloud_prometheus" {
       endpoint {
         url = nonsensitive(remote.kubernetes.secret.prometheus_credentials.data["host"]) + "/api/prom/push"
+        headers = { "X-Scope-OrgID" = remote.kubernetes.secret.prometheus_credentials.data["tenantId"] }
     
         basic_auth {
           username = nonsensitive(remote.kubernetes.secret.prometheus_credentials.data["username"])

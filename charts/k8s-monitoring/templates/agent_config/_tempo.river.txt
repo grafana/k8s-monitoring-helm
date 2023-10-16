@@ -4,18 +4,19 @@ remote.kubernetes.secret "tempo_credentials" {
   name = {{ include "kubernetes-monitoring.tempo.secretname" . | quote}}
   namespace = {{ .Values.externalServices.tempo.secret.namespace | default .Release.Namespace | quote}}
 }
+
 {{- with .Values.externalServices.tempo }}
-{{ if .basicAuth }}
+{{ if eq .authMode "basic" }}
 otelcol.auth.basic "tempo" {
-  {{ if .basicAuth.username }}username = nonsensitive(remote.kubernetes.secret.tempo_credentials.data["{{ .basicAuth.usernameKey }}"]){{ end }}
-  {{ if .basicAuth.password }}password = remote.kubernetes.secret.tempo_credentials.data["{{ .basicAuth.passwordKey }}"]{{ end }}
+  username = nonsensitive(remote.kubernetes.secret.tempo_credentials.data["{{ .basicAuth.usernameKey }}"])
+  password = remote.kubernetes.secret.tempo_credentials.data["{{ .basicAuth.passwordKey }}"]
 }
 {{- end }}
 
 otelcol.exporter.otlp "tempo" {
   client {
     endpoint = nonsensitive(remote.kubernetes.secret.tempo_credentials.data["{{ .hostKey }}"])
-{{ if .basicAuth }}
+{{- if eq .authMode "basic" }}
     auth = otelcol.auth.basic.tempo.handler
 {{- end }}
   }
