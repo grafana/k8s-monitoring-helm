@@ -110,7 +110,7 @@ the scraped metrics. Here is an example:
 
 ```river
 prometheus.scrape "processing_app" {
-  targets = discovery.relabel.image_analysis_pods.targets
+  targets = discovery.relabel.image_analysis_pods.output
   forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
 }
 ```
@@ -122,7 +122,7 @@ frequently the metrics should be scraped, the path to scrape, and many more. Her
 
 ```river
 prometheus.scrape "processing_app" {
-  targets = discovery.relabel.image_analysis_pods.targets
+  targets = discovery.relabel.image_analysis_pods.output
   job_name = "integrations/processing"
   scrape_interval = "120s"
   metrics_path = "/api/v1/metrics"
@@ -146,7 +146,7 @@ Here is an example of processing that filters down the scraped metrics to only `
 
 ```river
 prometheus.scrape "processing_app" {
-  targets = discovery.relabel.image_analysis_pods.targets
+  targets = discovery.relabel.image_analysis_pods.output
   forward_to = [prometheus.relabel.processing_app.receiver]
 }
 
@@ -199,7 +199,7 @@ discovery.relabel "image_analysis_pods" {
 }
 
 prometheus.scrape "processing_app" {
-  targets = discovery.relabel.image_analysis_pods.targets
+  targets = discovery.relabel.image_analysis_pods.output
   forward_to = [prometheus.relabel.processing_app.receiver]
 }
 
