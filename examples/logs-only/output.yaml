@@ -5,10 +5,10 @@ kind: ServiceAccount
 metadata:
   name: k8smon-grafana-agent-logs
   labels:
-    helm.sh/chart: grafana-agent-logs-0.26.0
+    helm.sh/chart: grafana-agent-logs-0.27.0
     app.kubernetes.io/name: grafana-agent-logs
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "v0.37.1"
+    app.kubernetes.io/version: "v0.37.2"
     app.kubernetes.io/managed-by: Helm
 ---
 # Source: k8s-monitoring/charts/grafana-agent/templates/serviceaccount.yaml
@@ -17,10 +17,10 @@ kind: ServiceAccount
 metadata:
   name: k8smon-grafana-agent
   labels:
-    helm.sh/chart: grafana-agent-0.26.0
+    helm.sh/chart: grafana-agent-0.27.0
     app.kubernetes.io/name: grafana-agent
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "v0.37.1"
+    app.kubernetes.io/version: "v0.37.2"
     app.kubernetes.io/managed-by: Helm
 ---
 # Source: k8s-monitoring/templates/credentials.yaml
@@ -455,10 +455,10 @@ kind: ClusterRole
 metadata:
   name: k8smon-grafana-agent-logs
   labels:
-    helm.sh/chart: grafana-agent-logs-0.26.0
+    helm.sh/chart: grafana-agent-logs-0.27.0
     app.kubernetes.io/name: grafana-agent-logs
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "v0.37.1"
+    app.kubernetes.io/version: "v0.37.2"
     app.kubernetes.io/managed-by: Helm
 rules:
   # Rules which allow discovery.kubernetes to function.
@@ -525,6 +525,15 @@ rules:
       - ""
     resources:
       - events
+    verbs:
+      - get
+      - list
+      - watch
+  # needed for remote.kubernetes.*
+  - apiGroups: [""]
+    resources:
+      - "configmaps"
+      - "secrets"
     verbs:
       - get
       - list
@@ -536,10 +545,10 @@ kind: ClusterRole
 metadata:
   name: k8smon-grafana-agent
   labels:
-    helm.sh/chart: grafana-agent-0.26.0
+    helm.sh/chart: grafana-agent-0.27.0
     app.kubernetes.io/name: grafana-agent
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "v0.37.1"
+    app.kubernetes.io/version: "v0.37.2"
     app.kubernetes.io/managed-by: Helm
 rules:
   # Rules which allow discovery.kubernetes to function.
@@ -610,6 +619,15 @@ rules:
       - get
       - list
       - watch
+  # needed for remote.kubernetes.*
+  - apiGroups: [""]
+    resources:
+      - "configmaps"
+      - "secrets"
+    verbs:
+      - get
+      - list
+      - watch
 ---
 # Source: k8s-monitoring/charts/grafana-agent-logs/templates/rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -617,10 +635,10 @@ kind: ClusterRoleBinding
 metadata:
   name: k8smon-grafana-agent-logs
   labels:
-    helm.sh/chart: grafana-agent-logs-0.26.0
+    helm.sh/chart: grafana-agent-logs-0.27.0
     app.kubernetes.io/name: grafana-agent-logs
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "v0.37.1"
+    app.kubernetes.io/version: "v0.37.2"
     app.kubernetes.io/managed-by: Helm
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -637,10 +655,10 @@ kind: ClusterRoleBinding
 metadata:
   name: k8smon-grafana-agent
   labels:
-    helm.sh/chart: grafana-agent-0.26.0
+    helm.sh/chart: grafana-agent-0.27.0
     app.kubernetes.io/name: grafana-agent
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "v0.37.1"
+    app.kubernetes.io/version: "v0.37.2"
     app.kubernetes.io/managed-by: Helm
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -657,10 +675,10 @@ kind: Service
 metadata:
   name: k8smon-grafana-agent-logs
   labels:
-    helm.sh/chart: grafana-agent-logs-0.26.0
+    helm.sh/chart: grafana-agent-logs-0.27.0
     app.kubernetes.io/name: grafana-agent-logs
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "v0.37.1"
+    app.kubernetes.io/version: "v0.37.2"
     app.kubernetes.io/managed-by: Helm
 spec:
   type: ClusterIP
@@ -679,10 +697,10 @@ kind: Service
 metadata:
   name: k8smon-grafana-agent-cluster
   labels:
-    helm.sh/chart: grafana-agent-0.26.0
+    helm.sh/chart: grafana-agent-0.27.0
     app.kubernetes.io/name: grafana-agent
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "v0.37.1"
+    app.kubernetes.io/version: "v0.37.2"
     app.kubernetes.io/managed-by: Helm
 spec:
   type: ClusterIP
@@ -708,10 +726,10 @@ kind: Service
 metadata:
   name: k8smon-grafana-agent
   labels:
-    helm.sh/chart: grafana-agent-0.26.0
+    helm.sh/chart: grafana-agent-0.27.0
     app.kubernetes.io/name: grafana-agent
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "v0.37.1"
+    app.kubernetes.io/version: "v0.37.2"
     app.kubernetes.io/managed-by: Helm
 spec:
   type: ClusterIP
@@ -730,10 +748,10 @@ kind: DaemonSet
 metadata:
   name: k8smon-grafana-agent-logs
   labels:
-    helm.sh/chart: grafana-agent-logs-0.26.0
+    helm.sh/chart: grafana-agent-logs-0.27.0
     app.kubernetes.io/name: grafana-agent-logs
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "v0.37.1"
+    app.kubernetes.io/version: "v0.37.2"
     app.kubernetes.io/managed-by: Helm
 spec:
   minReadySeconds: 10
@@ -750,7 +768,7 @@ spec:
       serviceAccountName: k8smon-grafana-agent-logs
       containers:
         - name: grafana-agent
-          image: docker.io/grafana/agent:v0.37.1
+          image: docker.io/grafana/agent:v0.37.2
           imagePullPolicy: IfNotPresent
           args:
             - run
@@ -817,10 +835,10 @@ kind: StatefulSet
 metadata:
   name: k8smon-grafana-agent
   labels:
-    helm.sh/chart: grafana-agent-0.26.0
+    helm.sh/chart: grafana-agent-0.27.0
     app.kubernetes.io/name: grafana-agent
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "v0.37.1"
+    app.kubernetes.io/version: "v0.37.2"
     app.kubernetes.io/managed-by: Helm
 spec:
   replicas: 1
@@ -840,7 +858,7 @@ spec:
       serviceAccountName: k8smon-grafana-agent
       containers:
         - name: grafana-agent
-          image: docker.io/grafana/agent:v0.37.1
+          image: docker.io/grafana/agent:v0.37.2
           imagePullPolicy: IfNotPresent
           args:
             - run
@@ -1187,7 +1205,7 @@ spec:
       restartPolicy: Never
       containers:
         - name: grafana-agent
-          image: "docker.io/grafana/agent:v0.37.1"
+          image: "docker.io/grafana/agent:v0.37.2"
           args:
             - fmt
             - /etc/agent/config.river
@@ -1230,7 +1248,7 @@ spec:
       restartPolicy: Never
       containers:
         - name: grafana-agent
-          image: "docker.io/grafana/agent:v0.37.1"
+          image: "docker.io/grafana/agent:v0.37.2"
           args:
             - fmt
             - /etc/agent/config.river
