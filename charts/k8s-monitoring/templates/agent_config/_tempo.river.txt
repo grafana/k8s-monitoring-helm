@@ -15,7 +15,7 @@ local.file "tempo_password" {
   is_secret = true
 }
 {{- end }}
-{{ if .basicAuth }}
+{{ if or (.basicAuth.username) (.basicAuth.password) }}
 otelcol.auth.basic "tempo" {
   {{ if .basicAuth.username }}username = local.file.tempo_username.content{{ end }}
   {{ if .basicAuth.password }}password = local.file.tempo_password.content{{ end }}
@@ -25,7 +25,7 @@ otelcol.auth.basic "tempo" {
 otelcol.exporter.otlp "tempo" {
   client {
     endpoint = nonsensitive(local.file.tempo_host.content)
-{{ if .basicAuth }}
+{{ if or (.basicAuth.username) (.basicAuth.password) }}
     auth = otelcol.auth.basic.tempo.handler
 {{- end }}
   }

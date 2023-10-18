@@ -29,7 +29,7 @@ loki.write "grafana_cloud_loki" {
 {{- if .proxyURL }}
     proxy_url = {{ .proxyURL | quote }}
 {{- end }}
-{{ if .basicAuth }}
+{{ if or (.basicAuth.username) (.basicAuth.password) }}
     basic_auth {
       {{ if .basicAuth.username }}username = local.file.loki_username.content{{ end }}
       {{ if .basicAuth.password }}password = local.file.loki_password.content{{ end }}
