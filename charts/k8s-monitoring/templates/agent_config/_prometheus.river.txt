@@ -29,7 +29,7 @@ prometheus.remote_write "grafana_cloud_prometheus" {
 {{- if .proxyURL }}
     proxy_url = {{ .proxyURL | quote }}
 {{- end }}
-{{ if .basicAuth }}
+{{ if or (.basicAuth.username) (.basicAuth.password) }}
     basic_auth {
       {{ if .basicAuth.username }}username = local.file.prometheus_username.content{{ end }}
       {{ if .basicAuth.password }}password = local.file.prometheus_password.content{{ end }}
