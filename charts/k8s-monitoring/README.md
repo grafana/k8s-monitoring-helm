@@ -169,7 +169,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | test.extraQueries | list | `[]` | Additional queries that will be run with `helm test`. Example: extraQueries:   - query: prometheus_metric{cluster="my-cluster-name"} |
 | test.image.image | string | `"ubuntu"` | Test job image repository |
 | test.image.registry | string | `"docker.io"` | Test job image registry |
-| test.image.tag | string | `"latest"` | Test job image tag |
+| test.image.tag | string | `"jammy"` | Test job image tag |
 | traces.enabled | bool | `false` | Receive and forward traces. |
 | traces.processors.batch.size | int | `16384` | What batch size to use, in bytes |
 | traces.processors.batch.timeout | string | `"2s"` | How long before sending |
