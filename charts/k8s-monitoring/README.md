@@ -95,6 +95,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | externalServices.tempo.basicAuth.password | string | `""` | Tempo basic auth password |
 | externalServices.tempo.basicAuth.username | string | `""` | Tempo basic auth username |
 | externalServices.tempo.host | string | `""` | (required) Tempo host where traces will be sent |
+| externalServices.tempo.tenantId | string | `""` | (optional) Tempo tenant ID |
 | extraConfig | string | `nil` | Extra configuration that will be added to the Grafana Agent configuration file. See [Adding custom Flow configuration](#adding-custom-flow-configuration) for an example. |
 | kube-state-metrics.enabled | bool | `true` | Should this helm chart deploy Kube State Metrics to the cluster. Set this to false if your cluster already has Kube State Metrics, or if you do not want to scrape metrics from Kube State Metrics. |
 | logs.cluster_events.enabled | bool | `true` | Scrape Kubernetes cluster events |

@@ -15,6 +15,11 @@ local.file "tempo_password" {
   is_secret = true
 }
 {{- end }}
+{{ if .tenantId }}
+local.file "tempo_tenantid" {
+  filename  = "/etc/grafana-agent-credentials/tempo_tenantId"
+}
+{{- end }}
 {{ if or (.basicAuth.username) (.basicAuth.password) }}
 otelcol.auth.basic "tempo" {
   {{ if .basicAuth.username }}username = local.file.tempo_username.content{{ end }}
@@ -27,6 +32,9 @@ otelcol.exporter.otlp "tempo" {
     endpoint = nonsensitive(local.file.tempo_host.content)
 {{ if or (.basicAuth.username) (.basicAuth.password) }}
     auth = otelcol.auth.basic.tempo.handler
+{{- end }}
+{{- if .tenantId }}
+    headers = { "X-Scope-OrgID" = local.file.tempo_tenantid.content }
 {{- end }}
   }
 }
