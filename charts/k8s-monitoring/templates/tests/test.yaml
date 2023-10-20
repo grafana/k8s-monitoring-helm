@@ -26,6 +26,11 @@ queries:
     {{- if .Values.metrics.kubernetesMonitoring.enabled }}
   - query: grafana_kubernetes_monitoring_build_info{cluster={{ .Values.cluster.name | quote}}}
     {{- end }}
+{{- if .Values.test.extraQueries }}
+  {{- range .Values.test.extraQueries }}
+  - query: {{ .query }}
+  {{- end }}
+{{- end }}
   {{- end }}
 {{- end -}}
 
