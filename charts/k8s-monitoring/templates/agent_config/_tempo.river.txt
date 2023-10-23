@@ -36,6 +36,11 @@ otelcol.exporter.otlp "tempo" {
 {{- if .tenantId }}
     headers = { "X-Scope-OrgID" = local.file.tempo_tenantid.content }
 {{- end }}
+{{- if .tlsOptions }}
+    tls {
+{{- .tlsOptions | indent 6 }}
+    }
+{{- end }}
   }
 }
 {{- end }}

@@ -2,18 +2,18 @@ datasources:
   datasources.yaml:
     apiVersion: 1
     datasources:
-      - name: Mimir
+      - name: Prometheus
         type: prometheus
-        url: 	http://mimir-nginx.mimir.svc:80/prometheus
+        url: http://prometheus-server.prometheus.svc:80/prometheus
         isDefault: true
         basicAuth: true
-        basicAuthUser: mimir
+        basicAuthUser: promuser
         secureJsonData:
-          basicAuthPassword: mimirpassword
+          basicAuthPassword: prometheuspassword
 
       - name: Loki
         type: loki
-        url: 	http://loki-gateway.loki.svc:80
+        url: http://loki-gateway.loki.svc:80
         basicAuth: true
         basicAuthUser: loki
         jsonData:
@@ -21,3 +21,7 @@ datasources:
         secureJsonData:
           basicAuthPassword: lokipassword
           httpHeaderValue1: "1"
+
+      - name: Tempo
+        type: tempo
+        url: http://tempo.tempo.svc:3100
