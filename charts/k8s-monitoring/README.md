@@ -177,6 +177,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | test.image.registry | string | `"docker.io"` | Test job image registry |
 | test.image.tag | string | `"jammy"` | Test job image tag |
 | traces.enabled | bool | `false` | Receive and forward traces. |
+| traces.processors.batch.maxSize | int | `0` | The upper limit of the amount of data contained in a single batch, in bytes. When set to 0, batches can be any size. |
 | traces.processors.batch.size | int | `16384` | What batch size to use, in bytes |
 | traces.processors.batch.timeout | string | `"2s"` | How long before sending |
 | traces.receiver.grpc.enabled | bool | `true` | Should the Grafana Agent receive traces over gRPC? |
