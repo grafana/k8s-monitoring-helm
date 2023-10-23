@@ -13,6 +13,7 @@ env:
   LINT_CONFIGFILE: "${{ github.workspace }}/.github/configs/lintconf.yaml"
   PROMETHEUS_VALUES: "${{ github.workspace }}/.github/configs/prometheus.yaml"
   LOKI_VALUES: "${{ github.workspace }}/.github/configs/loki.yaml"
+  TEMPO_VALUES: ""  # No values for now
   GRAFANA_VALUES: "${{ github.workspace }}/.github/configs/grafana.yaml"
 
 jobs:
@@ -135,6 +136,11 @@ jobs:
       if: steps.list-changed.outputs.changed == 'true'
       run: |
         helm install loki grafana/loki -f "${LOKI_VALUES}" -n loki --create-namespace --wait
+
+    - name: Deploy Tempo
+      if: steps.list-changed.outputs.changed == 'true'
+      run: |
+        helm install tempo grafana/tempo -n tempo --create-namespace --wait
 
     - name: Deploy Grafana
       if: steps.list-changed.outputs.changed == 'true'
