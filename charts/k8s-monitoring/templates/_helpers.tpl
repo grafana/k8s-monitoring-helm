@@ -35,6 +35,10 @@
       {{- include "agent.config.cadvisor" . }}
     {{- end }}
 
+    {{- if .Values.metrics.apiserver.enabled }}
+      {{- include "agent.config.apiserver" . }}
+    {{- end }}
+
     {{- if (index .Values.metrics "kube-state-metrics").enabled }}
       {{- include "agent.config.kube_state_metrics" . }}
     {{- end }}
