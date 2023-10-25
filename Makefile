@@ -17,6 +17,7 @@ lint-config: scripts/lint-configs.sh
 
 test: scripts/test-runner.sh lint-chart lint-config
 	./scripts/test-runner.sh --show-diffs
+	cd tests; shellspec
 
 install-deps: scripts/install-deps.sh
 	./scripts/install-deps.sh

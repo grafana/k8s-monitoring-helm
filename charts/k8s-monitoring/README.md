@@ -184,6 +184,8 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | traces.receiver.grpc.port | int | `4317` | Which port to use for the gRPC receiver. This port needs to be opened in the grafana-agent section below. |
 | traces.receiver.http.enabled | bool | `true` | Should the Grafana Agent receive traces over HTTP? |
 | traces.receiver.http.port | int | `4318` | Which port to use for the HTTP receiver. This port needs to be opened in the grafana-agent section below. |
+| traces.receiver.zipkin.enabled | bool | `true` | Should the Grafana Agent receive Zipkin traces? |
+| traces.receiver.zipkin.port | int | `9411` | Which port to use for the Zipkin receiver. This port needs to be opened in the grafana-agent section below. |
 
 ## Customizing the configuration
 

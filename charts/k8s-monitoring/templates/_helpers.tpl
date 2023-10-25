@@ -8,7 +8,7 @@
     {{- end }}
   {{- end }}
   {{- if not $found }}
-    {{- fail (print .type " trace port not opened on the Grafana Agent.\nIn order for traces to work, the " .port " port needs to be opened on the Grafana Agent. For example, set this in your values file:\ngrafana-agent:\n  agent:\n    extraPorts:\n      - name: \"otlp-traces-" (lower .type) "\"\n        port: " .port "\n        targetPort: " .port "\n        protocol: \"TCP\"\nFor more examples, see https://github.com/grafana/k8s-monitoring-helm/tree/main/examples/traces-enabled") -}}
+    {{- fail (print .type " trace port not opened on the Grafana Agent.\nIn order for traces to work, the " .port " port needs to be opened on the Grafana Agent. For example, set this in your values file:\ngrafana-agent:\n  agent:\n    extraPorts:\n      - name: \"" (lower .type | replace " " "-") "\"\n        port: " .port "\n        targetPort: " .port "\n        protocol: \"TCP\"\nFor more examples, see https://github.com/grafana/k8s-monitoring-helm/tree/main/examples/traces-enabled") -}}
   {{- end -}}
 {{- end -}}
 
