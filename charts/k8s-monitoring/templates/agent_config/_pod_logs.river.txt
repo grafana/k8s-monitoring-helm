@@ -1,8 +1,14 @@
 {{ define "agent.config.logs.pod_logs" }}
 {{- with .Values.logs.pod_logs }}
 // Pod Logs
+discovery.kubelet "pods" {
+{{- if .namespaces }}
+  namespaces = {{ .namespaces | toStrings | toJson }}
+{{- end }}
+}
+
 discovery.relabel "pod_logs" {
-  targets = discovery.kubernetes.pods.targets
+  targets = discovery.kubelet.pods.targets
 
   rule {
     source_labels = ["__meta_kubernetes_namespace"]
@@ -27,24 +33,12 @@ discovery.relabel "pod_logs" {
     target_label = "job"
   }
   rule {
-    source_labels = ["__meta_kubernetes_pod_node_name"]
-    action = "keep"
-    regex = env("HOSTNAME")
-  }
-  rule {
     source_labels = ["__meta_kubernetes_pod_uid", "__meta_kubernetes_pod_container_name"]
     separator = "/"
     action = "replace"
     replacement = "/var/log/pods/*$1/*.log"
     target_label = "__path__"
   }
-{{- if .namespaces }}
-  rule {
-    source_labels = ["namespace"]
-    regex = "{{ .namespaces | join "|" }}"
-    action = "keep"
-  }
-{{- end }}
 
   // set the container runtime as a label
   rule {
