@@ -503,6 +503,12 @@ data:
         traces = [otelcol.processor.batch.trace_batch_processor.input]
       }
     }
+    otelcol.receiver.zipkin "trace_receiver" {
+    endpoint = "0.0.0.0:9411"
+      output {
+        traces = [otelcol.processor.batch.trace_batch_processor.input]
+      }
+    }
     otelcol.processor.batch "trace_batch_processor" {
       send_batch_size = 16384
       send_batch_max_size = 0
@@ -527,7 +533,6 @@ data:
         traces = [otelcol.exporter.otlp.tempo.input]
       }
     }
-    
     // Tempo
     local.file "tempo_host" {
       filename  = "/etc/grafana-agent-credentials/tempo_host"
@@ -42668,6 +42673,10 @@ spec:
       port: 4318
       targetPort: 4318
       protocol: TCP
+    - name: otlp-zipkin
+      port: 9411
+      targetPort: 9411
+      protocol: TCP
 ---
 # Source: k8s-monitoring/charts/grafana-agent/templates/service.yaml
 apiVersion: v1
@@ -42697,6 +42706,10 @@ spec:
     - name: otlp-http
       port: 4318
       targetPort: 4318
+      protocol: TCP
+    - name: otlp-zipkin
+      port: 9411
+      targetPort: 9411
       protocol: TCP
 ---
 # Source: k8s-monitoring/charts/kube-state-metrics/templates/service.yaml
@@ -43189,6 +43202,9 @@ spec:
               protocol: TCP
             - containerPort: 4318
               name: otlp-http
+              protocol: TCP
+            - containerPort: 9411
+              name: otlp-zipkin
               protocol: TCP
           readinessProbe:
             httpGet:
@@ -43687,6 +43703,12 @@ data:
         traces = [otelcol.processor.batch.trace_batch_processor.input]
       }
     }
+    otelcol.receiver.zipkin "trace_receiver" {
+    endpoint = "0.0.0.0:9411"
+      output {
+        traces = [otelcol.processor.batch.trace_batch_processor.input]
+      }
+    }
     otelcol.processor.batch "trace_batch_processor" {
       send_batch_size = 16384
       send_batch_max_size = 0
@@ -43711,7 +43733,6 @@ data:
         traces = [otelcol.exporter.otlp.tempo.input]
       }
     }
-    
     // Tempo
     local.file "tempo_host" {
       filename  = "/etc/grafana-agent-credentials/tempo_host"

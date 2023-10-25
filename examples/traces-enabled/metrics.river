@@ -407,6 +407,12 @@ http {
     traces = [otelcol.processor.batch.trace_batch_processor.input]
   }
 }
+otelcol.receiver.zipkin "trace_receiver" {
+endpoint = "0.0.0.0:9411"
+  output {
+    traces = [otelcol.processor.batch.trace_batch_processor.input]
+  }
+}
 otelcol.processor.batch "trace_batch_processor" {
   send_batch_size = 16384
   send_batch_max_size = 0
@@ -431,7 +437,6 @@ otelcol.processor.attributes "trace_attributes_processor" {
     traces = [otelcol.exporter.otlp.tempo.input]
   }
 }
-
 // Tempo
 local.file "tempo_host" {
   filename  = "/etc/grafana-agent-credentials/tempo_host"
