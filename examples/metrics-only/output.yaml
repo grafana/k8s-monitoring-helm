@@ -42779,7 +42779,7 @@ spec:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: k8smon-grafana-agent-test
+  name: "validate-k8smon-k8s-monitoring"
   namespace: default
   labels:
     app.kubernetes.io/managed-by: "Helm"
@@ -43163,7 +43163,7 @@ data:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: "k8smon-test"
+  name: "test-k8smon-k8s-monitoring"
   namespace: default
   labels:
     app.kubernetes.io/managed-by: "Helm"
@@ -43233,7 +43233,7 @@ data:
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: "k8smon-test-config"
+  name: "validate-k8smon-k8s-monitoring"
   namespace: default
   labels:
     app.kubernetes.io/managed-by: "Helm"
@@ -43248,7 +43248,7 @@ spec:
   backoffLimit: 0
   template:
     metadata:
-      name: "k8smon-test-config"
+      name: "validate-k8smon-k8s-monitoring"
       labels:
         app.kubernetes.io/managed-by: "Helm"
         app.kubernetes.io/instance: "k8smon"
@@ -43258,9 +43258,11 @@ spec:
       containers:
         - name: grafana-agent
           image: "docker.io/grafana/agent:v0.37.2"
-          args:
-            - fmt
-            - /etc/agent/config.river
+          command:
+          - bash
+          - -c
+          - |
+            grafana-agent fmt /etc/agent/config.river
           env:
             - name: AGENT_MODE
               value: flow
@@ -43270,13 +43272,13 @@ spec:
       volumes:
         - name: config
           configMap:
-            name: k8smon-grafana-agent-test
+            name: "validate-k8smon-k8s-monitoring"
 ---
 # Source: k8s-monitoring/templates/tests/test.yaml
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: "k8smon-test"
+  name: "test-k8smon-k8s-monitoring"
   namespace: default
   labels:
     app.kubernetes.io/managed-by: "Helm"
@@ -43289,7 +43291,7 @@ metadata:
 spec:
   template:
     metadata:
-      name: "k8smon-test-config"
+      name: "test-k8smon-k8s-monitoring"
       labels:
         app.kubernetes.io/managed-by: "Helm"
         app.kubernetes.io/instance: "k8smon"
@@ -43322,4 +43324,4 @@ spec:
       volumes:
         - name: test-plan
           configMap:
-            name: k8smon-test
+            name: "test-k8smon-k8s-monitoring"

@@ -68,7 +68,7 @@ echo "All queries passed!"
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: "{{ .Release.Name }}-test"
+  name: {{ include "kubernetes-monitoring-test.fullname" . | quote }}
   namespace: {{ .Release.Namespace }}
   labels:
     app.kubernetes.io/managed-by: {{ .Release.Service | quote }}
@@ -81,7 +81,7 @@ metadata:
 spec:
   template:
     metadata:
-      name: "{{ .Release.Name }}-test-config"
+      name: {{ include "kubernetes-monitoring-test.fullname" . | quote }}
       labels:
         app.kubernetes.io/managed-by: {{ .Release.Service | quote }}
         app.kubernetes.io/instance: {{ .Release.Name | quote }}
@@ -114,12 +114,12 @@ spec:
       volumes:
         - name: test-plan
           configMap:
-            name: {{ .Release.Name }}-test
+            name: {{ include "kubernetes-monitoring-test.fullname" . | quote }}
 ---
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: "{{ .Release.Name }}-test"
+  name: {{ include "kubernetes-monitoring-test.fullname" . | quote }}
   namespace: {{ .Release.Namespace }}
   labels:
     app.kubernetes.io/managed-by: {{ .Release.Service | quote }}
