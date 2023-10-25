@@ -7,14 +7,14 @@
 otelcol.receiver.otlp "trace_receiver" {
 
 {{- if or .Values.traces.receiver.port .Values.traces.receiver.grpc.enabled }}
-{{$data := dict "port" (.Values.traces.receiver.port | default .Values.traces.receiver.grpc.port) "type" "gRPC" "agent" (index .Values "grafana-agent").agent }}
+{{$data := dict "port" (.Values.traces.receiver.port | default .Values.traces.receiver.grpc.port) "type" "OTLP gRPC" "agent" (index .Values "grafana-agent").agent }}
 {{- include "checkforTracePort" $data -}}
   grpc {
     endpoint = "0.0.0.0:{{ $data.port | int }}"
   }
 {{- end }}
 {{- if .Values.traces.receiver.http.enabled }}
-{{$data := dict "port" .Values.traces.receiver.http.port "type" "HTTP" "agent" (index .Values "grafana-agent").agent }}
+{{$data := dict "port" .Values.traces.receiver.http.port "type" "OTLP HTTP" "agent" (index .Values "grafana-agent").agent }}
 {{- include "checkforTracePort" $data -}}
   http {
     endpoint = "0.0.0.0:{{ $data.port | int }}"
