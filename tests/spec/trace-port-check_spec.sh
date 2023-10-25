@@ -1,7 +1,7 @@
 Describe 'Trace Port Check'
   Describe 'Missing Otel gRPC port'
     It 'prints a friendly error message'
-      When call helm template k8smon "${CHART_PATH}" -f "${SPEC_PATH}/missing-otel-grpc-port_values.yaml"
+      When call helm template k8smon ../charts/k8s-monitoring -f "spec/missing-otel-grpc-port_values.yaml"
       The status should be failure
       The error should equal 'Error: execution error at (k8s-monitoring/templates/hooks/grafana-agent-config-test.yaml:60:8): OTLP gRPC trace port not opened on the Grafana Agent.
 In order for traces to work, the 4317 port needs to be opened on the Grafana Agent. For example, set this in your values file:
@@ -20,7 +20,7 @@ Use --debug flag to render out invalid YAML'
 
   Describe 'Missing Otel HTTP port'
     It 'prints a friendly error message'
-      When call helm template k8smon "${CHART_PATH}" -f "${SPEC_PATH}/missing-otel-http-port_values.yaml"
+      When call helm template k8smon ../charts/k8s-monitoring -f "spec/missing-otel-http-port_values.yaml"
       The status should be failure
       The error should equal 'Error: execution error at (k8s-monitoring/templates/hooks/grafana-agent-config-test.yaml:60:8): OTLP HTTP trace port not opened on the Grafana Agent.
 In order for traces to work, the 4318 port needs to be opened on the Grafana Agent. For example, set this in your values file:
@@ -39,7 +39,7 @@ Use --debug flag to render out invalid YAML'
 
   Describe 'Missing Zipkin port'
     It 'prints a friendly error message'
-      When call helm template k8smon "${CHART_PATH}" -f "${SPEC_PATH}/missing-zipkin-port_values.yaml"
+      When call helm template k8smon ../charts/k8s-monitoring -f "spec/missing-zipkin-port_values.yaml"
       The status should be failure
       The error should equal 'Error: execution error at (k8s-monitoring/templates/hooks/grafana-agent-config-test.yaml:60:8): Zipkin trace port not opened on the Grafana Agent.
 In order for traces to work, the 9411 port needs to be opened on the Grafana Agent. For example, set this in your values file:
