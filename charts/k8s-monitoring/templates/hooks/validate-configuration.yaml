@@ -29,10 +29,12 @@ spec:
           image: "{{ (index .Values "grafana-agent").global.image.registry | default (index .Values "grafana-agent").image.registry }}/{{ (index .Values "grafana-agent").image.repository }}{{ include "grafana-agent.imageId" (index .Subcharts "grafana-agent") }}"
           command:
           - bash
-          - -c
+          - -ec
           - |
+            echo Validating config file
             grafana-agent fmt /etc/agent/config.river
 {{- if and .Values.logs.enabled .Values.logs.pod_logs.enabled }}
+            echo Validating logs config file
             grafana-agent fmt /etc/agent/logs.river
 {{- end }}
           env:
