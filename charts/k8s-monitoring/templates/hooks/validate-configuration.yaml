@@ -1,0 +1,71 @@
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "config-validator.fullname" . | quote }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/managed-by: {{ .Release.Service | quote }}
+    app.kubernetes.io/instance: {{ .Release.Name | quote }}
+    app.kubernetes.io/version: {{ .Chart.AppVersion }}
+    helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-weight": "-5"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  backoffLimit: 0
+  template:
+    metadata:
+      name: {{ include "config-validator.fullname" . | quote }}
+      labels:
+        app.kubernetes.io/managed-by: {{ .Release.Service | quote }}
+        app.kubernetes.io/instance: {{ .Release.Name | quote }}
+        helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: grafana-agent
+          image: "{{ (index .Values "grafana-agent").global.image.registry | default (index .Values "grafana-agent").image.registry }}/{{ (index .Values "grafana-agent").image.repository }}{{ include "grafana-agent.imageId" (index .Subcharts "grafana-agent") }}"
+          command:
+          - bash
+          - -ec
+          - |
+            echo Validating config file
+            grafana-agent fmt /etc/agent/config.river
+{{- if and .Values.logs.enabled .Values.logs.pod_logs.enabled }}
+            echo Validating logs config file
+            grafana-agent fmt /etc/agent/logs.river
+{{- end }}
+          env:
+            - name: AGENT_MODE
+              value: flow
+          volumeMounts:
+            - name: config
+              mountPath: /etc/agent
+      volumes:
+        - name: config
+          configMap:
+            name: {{ include "config-validator.fullname" . | quote }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "config-validator.fullname" . | quote }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/managed-by: {{ .Release.Service | quote }}
+    app.kubernetes.io/instance: {{ .Release.Name | quote }}
+    app.kubernetes.io/version: {{ .Chart.AppVersion }}
+    helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-weight": "-5"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+data:
+  config.river: |-
+    {{- include "agentConfig" . | trim | nindent 4 }}
+{{- if and .Values.logs.enabled .Values.logs.pod_logs.enabled }}
+  logs.river: |-
+    {{- include "agentLogsConfig" . | trim | nindent 4 }}
+{{- end }}
