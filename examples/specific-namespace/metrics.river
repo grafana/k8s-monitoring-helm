@@ -63,7 +63,7 @@ prometheus.relabel "agent" {
       regex = "^$|production|staging"
       action = "keep"
   }
-  forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
+  forward_to = [prometheus.relabel.metrics_service.receiver]
 }
 
 // Kubernetes Monitoring Telemetry
@@ -105,7 +105,7 @@ prometheus.relabel "kubernetes_monitoring_telemetry" {
       regex = "^$|production|staging"
       action = "keep"
   }
-  forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
+  forward_to = [prometheus.relabel.metrics_service.receiver]
 }
 
 // Kubelet
@@ -144,7 +144,7 @@ prometheus.relabel "kubelet" {
     regex = "up|container_cpu_usage_seconds_total|kubelet_certificate_manager_client_expiration_renew_errors|kubelet_certificate_manager_client_ttl_seconds|kubelet_certificate_manager_server_ttl_seconds|kubelet_cgroup_manager_duration_seconds_bucket|kubelet_cgroup_manager_duration_seconds_count|kubelet_node_config_error|kubelet_node_name|kubelet_pleg_relist_duration_seconds_bucket|kubelet_pleg_relist_duration_seconds_count|kubelet_pleg_relist_interval_seconds_bucket|kubelet_pod_start_duration_seconds_bucket|kubelet_pod_start_duration_seconds_count|kubelet_pod_worker_duration_seconds_bucket|kubelet_pod_worker_duration_seconds_count|kubelet_running_container_count|kubelet_running_containers|kubelet_running_pod_count|kubelet_running_pods|kubelet_runtime_operations_errors_total|kubelet_runtime_operations_total|kubelet_server_expiration_renew_errors|kubelet_volume_stats_available_bytes|kubelet_volume_stats_capacity_bytes|kubelet_volume_stats_inodes|kubelet_volume_stats_inodes_used|kubernetes_build_info|namespace_workload_pod|rest_client_requests_total|storage_operation_duration_seconds_count|storage_operation_errors_total|volume_manager_total_volumes"
     action = "keep"
   }
-  forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
+  forward_to = [prometheus.relabel.metrics_service.receiver]
 }
 
 // cAdvisor
@@ -188,7 +188,7 @@ prometheus.relabel "cadvisor" {
       regex = "^$|production|staging"
       action = "keep"
   }
-  forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
+  forward_to = [prometheus.relabel.metrics_service.receiver]
 }
 
 // Kube State Metrics
@@ -232,7 +232,7 @@ prometheus.relabel "kube_state_metrics" {
       regex = "^$|production|staging"
       action = "keep"
   }
-  forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
+  forward_to = [prometheus.relabel.metrics_service.receiver]
 }
 
 // Node Exporter
@@ -276,7 +276,7 @@ prometheus.relabel "node_exporter" {
       regex = "^$|production|staging"
       action = "keep"
   }
-  forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
+  forward_to = [prometheus.relabel.metrics_service.receiver]
 }
 
 // OpenCost
@@ -320,7 +320,7 @@ prometheus.relabel "opencost" {
       regex = "^$|production|staging"
       action = "keep"
   }
-  forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
+  forward_to = [prometheus.relabel.metrics_service.receiver]
 }
 
 // Prometheus Operator PodMonitor objects
@@ -338,7 +338,7 @@ prometheus.relabel "podmonitors" {
       regex = "^$|production|staging"
       action = "keep"
   }
-  forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
+  forward_to = [prometheus.relabel.metrics_service.receiver]
 }
 
 // Prometheus Operator Probe objects
@@ -356,7 +356,7 @@ prometheus.relabel "probes" {
       regex = "^$|production|staging"
       action = "keep"
   }
-  forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
+  forward_to = [prometheus.relabel.metrics_service.receiver]
 }
 
 // Prometheus Operator ServiceMonitor objects
@@ -374,10 +374,10 @@ prometheus.relabel "servicemonitors" {
       regex = "^$|production|staging"
       action = "keep"
   }
-  forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
+  forward_to = [prometheus.relabel.metrics_service.receiver]
 }
 
-// Grafana Cloud Prometheus
+// Metrics Service
 local.file "prometheus_host" {
   filename  = "/etc/grafana-agent-credentials/prometheus_host"
 }
@@ -391,7 +391,12 @@ local.file "prometheus_password" {
   is_secret = true
 }
 
-prometheus.remote_write "grafana_cloud_prometheus" {
+
+prometheus.relabel "metrics_service" {
+  forward_to = [prometheus.remote_write.metrics_service.receiver]
+}
+
+prometheus.remote_write "metrics_service" {
   endpoint {
     url = nonsensitive(local.file.prometheus_host.content) + "/api/prom/push"
 
@@ -401,6 +406,7 @@ prometheus.remote_write "grafana_cloud_prometheus" {
     }
 
   }
+
   external_labels = {
     cluster = "specific-namespace-test",
   }

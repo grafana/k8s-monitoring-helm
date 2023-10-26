@@ -1,0 +1,36 @@
+{{ define "agent.config.metricsService" }}
+// Metrics Service
+{{- with .Values.externalServices.prometheus }}
+local.file "prometheus_host" {
+  filename  = "/etc/grafana-agent-credentials/prometheus_host"
+}
+{{ if .basicAuth.username }}
+local.file "prometheus_username" {
+  filename  = "/etc/grafana-agent-credentials/prometheus_username"
+}
+{{- end }}
+{{ if .basicAuth.password }}
+local.file "prometheus_password" {
+  filename  = "/etc/grafana-agent-credentials/prometheus_password"
+  is_secret = true
+}
+{{- end }}
+{{ if .tenantId }}
+local.file "prometheus_tenantid" {
+  filename  = "/etc/grafana-agent-credentials/prometheus_tenantId"
+}
+{{- end }}
+{{ end }}
+prometheus.relabel "metrics_service" {
+{{- if eq .Values.externalServices.prometheus.protocol "remote_write" }}
+  forward_to = [prometheus.remote_write.metrics_service.receiver]
+}
+{{ include "agent.config.metricsServiceRemoteWrite" . }}
+{{- end }}
+
+{{- if or (eq .Values.externalServices.prometheus.protocol "otlp") (eq .Values.externalServices.prometheus.protocol "otlphttp") }}
+  forward_to = [otelcol.receiver.prometheus.metrics_service.receiver]
+}
+{{ include "agent.config.metricsServiceOTLP" . }}
+{{ end }}
+{{- end }}

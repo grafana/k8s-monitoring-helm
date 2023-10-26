@@ -74,7 +74,7 @@ useful ones like these:
 * `discovery.kubernetes.nodes` - Discovers all nodes in the cluster
 * `discovery.kubernetes.pods` - Discovers all pods in the cluster
 * `discovery.kubernetes.services` - Discovers all services in the cluster
-* `prometheus.remote_write.grafana_cloud_prometheus` - Sends metrics to Prometheus defined by `.externalService.prometheus`
+* `prometheus.relabel.metrics_service` - Sends metrics to the metrics service defined by `.externalService.prometheus`
 * `loki.write.grafana_cloud_loki` - Sends logs to Loki defined by `.externalService.loki`
 
 Example:
@@ -101,7 +101,7 @@ extraConfig: |-
   prometheus.scrape "my_webapp" {
     job_name   = "my_webapp"
     targets    = discovery.relabel.my_webapp.output
-    forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
+    forward_to = [prometheus.relabel.metrics_service.receiver]
   }
 ```
 

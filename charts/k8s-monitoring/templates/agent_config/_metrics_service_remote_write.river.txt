@@ -1,26 +1,6 @@
-{{ define "agent.config.prometheus" }}
+{{ define "agent.config.metricsServiceRemoteWrite" }}
 {{- with .Values.externalServices.prometheus }}
-// Grafana Cloud Prometheus
-local.file "prometheus_host" {
-  filename  = "/etc/grafana-agent-credentials/prometheus_host"
-}
-{{ if .basicAuth.username }}
-local.file "prometheus_username" {
-  filename  = "/etc/grafana-agent-credentials/prometheus_username"
-}
-{{- end }}
-{{ if .basicAuth.password }}
-local.file "prometheus_password" {
-  filename  = "/etc/grafana-agent-credentials/prometheus_password"
-  is_secret = true
-}
-{{- end }}
-{{ if .tenantId }}
-local.file "prometheus_tenantid" {
-  filename  = "/etc/grafana-agent-credentials/prometheus_tenantId"
-}
-{{- end }}
-prometheus.remote_write "grafana_cloud_prometheus" {
+prometheus.remote_write "metrics_service" {
   endpoint {
     url = nonsensitive(local.file.prometheus_host.content) + "{{ .writeEndpoint }}"
 {{- if .tenantId }}
@@ -38,7 +18,15 @@ prometheus.remote_write "grafana_cloud_prometheus" {
 {{ if .writeRelabelConfigRules }}
 {{ .writeRelabelConfigRules | indent 4 }}
 {{- end }}
+{{- if .tls }}
+    tls_config {
+    {{- range $k, $v := .tls }}
+      {{ $k }} = {{ $v | toJson }}
+    {{- end }}
+    }
+{{- end }}
   }
+
   external_labels = {
     {{- range $k, $v := .externalLabels }}
     {{ $k }} = {{ $v | quote }},

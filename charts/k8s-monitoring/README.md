@@ -87,9 +87,17 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | externalServices.prometheus.basicAuth.username | string | `""` | Prometheus basic auth username |
 | externalServices.prometheus.externalLabels | object | `{}` | Custom labels to be added to all time series |
 | externalServices.prometheus.host | string | `""` | (required) Prometheus host where metrics will be sent |
+| externalServices.prometheus.processors.batch.maxSize | int | `0` | Upper limit of a batch size. When set to 0, there is no upper limit. |
+| externalServices.prometheus.processors.batch.size | int | `8192` | Amount of data to buffer before flushing the batch. |
+| externalServices.prometheus.processors.batch.timeout | string | `"2s"` | How long to wait before flushing the batch. |
+| externalServices.prometheus.processors.memoryLimiter.checkInterval | string | `"1s"` | How often to check memory usage. |
+| externalServices.prometheus.processors.memoryLimiter.enabled | bool | `false` | Use a memory limiter. |
+| externalServices.prometheus.processors.memoryLimiter.limit | string | `"0MiB"` | Maximum amount of memory targeted to be allocated by the process heap. |
+| externalServices.prometheus.protocol | string | `"remote_write"` | The type of server protocol for writing metrics Options:   * "remote_write" will use Prometheus Remote Write   * "otlp" will use OTLP   * "otlphttp" will use OTLP HTTP |
 | externalServices.prometheus.proxyURL | string | `""` | HTTP proxy to proxy requests to Prometheus through. |
 | externalServices.prometheus.queryEndpoint | string | `"/api/prom/api/v1/query"` | Prometheus metrics query endpoint. Preset for Grafana Cloud Metrics instances. |
 | externalServices.prometheus.tenantId | string | `""` | (optional) Sets the X-Scope-OrgID header when sending metrics |
+| externalServices.prometheus.tls | object | `{}` | TLS setting to configure for the metrics service. For remoteWrite protocol, refer to https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.remote_write/#tls_config-block For otlp protocol, refer to https://grafana.com/docs/agent/latest/flow/reference/components/otelcol.exporter.otlp/#tls-block For otlphttp protocol, refer to https://grafana.com/docs/agent/latest/flow/reference/components/otelcol.exporter.otlphttp/#tls-block |
 | externalServices.prometheus.writeEndpoint | string | `"/api/prom/push"` | Prometheus metrics write endpoint. Preset for Grafana Cloud Metrics instances. |
 | externalServices.prometheus.writeRelabelConfigRules | string | `nil` | Rule blocks to be added to the write_relabel_config block of the prometheus.remote_write component. See https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.remote_write/#write_relabel_config-block |
 | externalServices.tempo.basicAuth.password | string | `""` | Tempo basic auth password |
@@ -204,7 +212,7 @@ useful ones like these:
 * `discovery.kubernetes.nodes` - Discovers all nodes in the cluster
 * `discovery.kubernetes.pods` - Discovers all pods in the cluster
 * `discovery.kubernetes.services` - Discovers all services in the cluster
-* `prometheus.remote_write.grafana_cloud_prometheus` - Sends metrics to Prometheus defined by `.externalService.prometheus`
+* `prometheus.relabel.metrics_service` - Sends metrics to the metrics service defined by `.externalService.prometheus`
 * `loki.write.grafana_cloud_loki` - Sends logs to Loki defined by `.externalService.loki`
 
 Example:
@@ -231,7 +239,7 @@ extraConfig: |-
   prometheus.scrape "my_webapp" {
     job_name   = "my_webapp"
     targets    = discovery.relabel.my_webapp.output
-    forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
+    forward_to = [prometheus.relabel.metrics_service.receiver]
   }
 ```
 

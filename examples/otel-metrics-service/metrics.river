@@ -40,11 +40,6 @@ discovery.relabel "agent" {
     source_labels = ["__meta_kubernetes_pod_container_name"]
     target_label  = "container"
   }
-  rule {
-    source_labels = ["__meta_kubernetes_namespace"]
-    regex = "private"
-    action = "drop"
-  }
 }
 
 prometheus.scrape "agent" {
@@ -116,11 +111,6 @@ discovery.relabel "kubelet" {
     replacement   = "/api/v1/nodes/${1}/proxy/metrics"
     target_label  = "__metrics_path__"
   }
-  rule {
-    source_labels = ["__meta_kubernetes_namespace"]
-    regex = "private"
-    action = "drop"
-  }
 }
 
 prometheus.scrape "kubelet" {
@@ -144,11 +134,6 @@ prometheus.relabel "kubelet" {
     regex = "up|container_cpu_usage_seconds_total|kubelet_certificate_manager_client_expiration_renew_errors|kubelet_certificate_manager_client_ttl_seconds|kubelet_certificate_manager_server_ttl_seconds|kubelet_cgroup_manager_duration_seconds_bucket|kubelet_cgroup_manager_duration_seconds_count|kubelet_node_config_error|kubelet_node_name|kubelet_pleg_relist_duration_seconds_bucket|kubelet_pleg_relist_duration_seconds_count|kubelet_pleg_relist_interval_seconds_bucket|kubelet_pod_start_duration_seconds_bucket|kubelet_pod_start_duration_seconds_count|kubelet_pod_worker_duration_seconds_bucket|kubelet_pod_worker_duration_seconds_count|kubelet_running_container_count|kubelet_running_containers|kubelet_running_pod_count|kubelet_running_pods|kubelet_runtime_operations_errors_total|kubelet_runtime_operations_total|kubelet_server_expiration_renew_errors|kubelet_volume_stats_available_bytes|kubelet_volume_stats_capacity_bytes|kubelet_volume_stats_inodes|kubelet_volume_stats_inodes_used|kubernetes_build_info|namespace_workload_pod|rest_client_requests_total|storage_operation_duration_seconds_count|storage_operation_errors_total|volume_manager_total_volumes"
     action = "keep"
   }
-  rule {
-    source_labels = ["__meta_kubernetes_namespace"]
-    regex = "private"
-    action = "drop"
-  }
   forward_to = [prometheus.relabel.metrics_service.receiver]
 }
 
@@ -164,11 +149,6 @@ discovery.relabel "cadvisor" {
     regex         = "(.+)"
     replacement   = "/api/v1/nodes/${1}/proxy/metrics/cadvisor"
     target_label  = "__metrics_path__"
-  }
-  rule {
-    source_labels = ["__meta_kubernetes_namespace"]
-    regex = "private"
-    action = "drop"
   }
 }
 
@@ -214,11 +194,6 @@ discovery.relabel "kube_state_metrics" {
     regex = "http"
     action = "keep"
   }
-  rule {
-    source_labels = ["__meta_kubernetes_namespace"]
-    regex = "private"
-    action = "drop"
-  }
 }
 
 prometheus.scrape "kube_state_metrics" {
@@ -235,11 +210,6 @@ prometheus.relabel "kube_state_metrics" {
   rule {
     source_labels = ["__name__"]
     regex = "up|kube_daemonset.*|kube_deployment_metadata_generation|kube_deployment_spec_replicas|kube_deployment_status_observed_generation|kube_deployment_status_replicas_available|kube_deployment_status_replicas_updated|kube_horizontalpodautoscaler_spec_max_replicas|kube_horizontalpodautoscaler_spec_min_replicas|kube_horizontalpodautoscaler_status_current_replicas|kube_horizontalpodautoscaler_status_desired_replicas|kube_job.*|kube_namespace_status_phase|kube_namespace_status_phase|kube_node.*|kube_persistentvolumeclaim_resource_requests_storage_bytes|kube_pod_container_info|kube_pod_container_resource_limits|kube_pod_container_resource_requests|kube_pod_container_status_restarts_total|kube_pod_container_status_waiting_reason|kube_pod_container_status_waiting_reason|kube_pod_info|kube_pod_owner|kube_pod_start_time|kube_pod_status_phase|kube_pod_status_phase|kube_pod_status_reason|kube_replicaset.*|kube_resourcequota|kube_statefulset.*"
-    action = "keep"
-  }
-  rule {
-    source_labels = ["namespace"]
-    regex = "production"
     action = "keep"
   }
   forward_to = [prometheus.relabel.metrics_service.receiver]
@@ -262,11 +232,6 @@ discovery.relabel "node_exporter" {
     source_labels = ["__meta_kubernetes_pod_node_name"]
     action = "replace"
     target_label = "instance"
-  }
-  rule {
-    source_labels = ["__meta_kubernetes_namespace"]
-    regex = "private"
-    action = "drop"
   }
 }
 
@@ -306,11 +271,6 @@ discovery.relabel "opencost" {
     source_labels = ["__meta_kubernetes_service_port_name"]
     regex = "http"
     action = "keep"
-  }
-  rule {
-    source_labels = ["__meta_kubernetes_namespace"]
-    regex = "private"
-    action = "drop"
   }
 }
 
@@ -388,30 +348,61 @@ local.file "prometheus_password" {
 
 
 prometheus.relabel "metrics_service" {
-  forward_to = [prometheus.remote_write.metrics_service.receiver]
+  forward_to = [otelcol.receiver.prometheus.metrics_service.receiver]
 }
 
-prometheus.remote_write "metrics_service" {
-  endpoint {
-    url = nonsensitive(local.file.prometheus_host.content) + "/api/prom/push"
-
-    basic_auth {
-      username = local.file.prometheus_username.content
-      password = local.file.prometheus_password.content
-    }
-
-    write_relabel_config {
-      source_labels = ["__name__"]
-      regex = "metric_to_drop|another_metric_to_drop"
-      action = "drop"
-    }
-  }
-
-  external_labels = {
-    site = "northwest",
-    cluster = "extra-rules-test",
+otelcol.receiver.prometheus "metrics_service" {
+  output {
+    metrics = [otelcol.processor.attributes.metrics_service.input]
   }
 }
+
+otelcol.processor.attributes "metrics_service" {
+  action {
+    key = "cluster"
+    value = "otel-metrics-service-test"
+    action = "insert"
+  }
+  action {
+    key = "k8s.cluster.name"
+    value = "otel-metrics-service-test"
+    action = "upsert"
+  }
+  output {
+    metrics = [otelcol.processor.batch.metrics_service.input]
+  }
+}
+
+otelcol.processor.batch "metrics_service" {
+  send_batch_size = 8192
+  send_batch_max_size = 0
+  timeout = "2s"
+  output {
+    metrics = [otelcol.processor.memory_limiter.metrics_service.input]
+  }
+}
+
+otelcol.processor.memory_limiter "metrics_service" {
+  check_interval = "1s"
+  limit = "100MiB"
+  output {
+    metrics = [otelcol.exporter.otlp.metrics_service.input]
+  }
+}
+
+otelcol.auth.basic "metrics_service" {
+  username = local.file.prometheus_username.content
+  password = local.file.prometheus_password.content
+}
+
+otelcol.exporter.otlp "metrics_service" {
+  client {
+    endpoint = nonsensitive(local.file.prometheus_host.content) + "/api/v1/otlp/v1/metrics"
+
+    auth = otelcol.auth.basic.metrics_service.handler
+  }
+}
+
 
 // Cluster Events
 loki.source.kubernetes_events "cluster_events" {
@@ -433,13 +424,9 @@ local.file "loki_password" {
   is_secret = true
 }
 
-local.file "loki_tenantid" {
-  filename  = "/etc/grafana-agent-credentials/loki_tenantId"
-}
 loki.write "grafana_cloud_loki" {
   endpoint {
     url = nonsensitive(local.file.loki_host.content) + "/loki/api/v1/push"
-    tenant_id = local.file.loki_tenantid.content
 
     basic_auth {
       username = local.file.loki_username.content
@@ -447,6 +434,6 @@ loki.write "grafana_cloud_loki" {
     }
   }
   external_labels = {
-    cluster = "extra-rules-test",
+    cluster = "otel-metrics-service-test",
   }
 }

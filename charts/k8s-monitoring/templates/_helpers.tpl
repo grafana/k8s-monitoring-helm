@@ -67,7 +67,7 @@
       {{- include "agent.config.service_monitors" . }}
     {{- end }}
 
-    {{- include "agent.config.prometheus" . }}
+    {{- include "agent.config.metricsService" . }}
   {{- end }}
 
   {{- if and .Values.logs.enabled .Values.logs.cluster_events.enabled }}

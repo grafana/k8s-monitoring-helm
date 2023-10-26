@@ -156,7 +156,7 @@ data:
           regex = "^$|production|staging"
           action = "keep"
       }
-      forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
+      forward_to = [prometheus.relabel.metrics_service.receiver]
     }
     
     // Kubernetes Monitoring Telemetry
@@ -198,7 +198,7 @@ data:
           regex = "^$|production|staging"
           action = "keep"
       }
-      forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
+      forward_to = [prometheus.relabel.metrics_service.receiver]
     }
     
     // Kubelet
@@ -237,7 +237,7 @@ data:
         regex = "up|container_cpu_usage_seconds_total|kubelet_certificate_manager_client_expiration_renew_errors|kubelet_certificate_manager_client_ttl_seconds|kubelet_certificate_manager_server_ttl_seconds|kubelet_cgroup_manager_duration_seconds_bucket|kubelet_cgroup_manager_duration_seconds_count|kubelet_node_config_error|kubelet_node_name|kubelet_pleg_relist_duration_seconds_bucket|kubelet_pleg_relist_duration_seconds_count|kubelet_pleg_relist_interval_seconds_bucket|kubelet_pod_start_duration_seconds_bucket|kubelet_pod_start_duration_seconds_count|kubelet_pod_worker_duration_seconds_bucket|kubelet_pod_worker_duration_seconds_count|kubelet_running_container_count|kubelet_running_containers|kubelet_running_pod_count|kubelet_running_pods|kubelet_runtime_operations_errors_total|kubelet_runtime_operations_total|kubelet_server_expiration_renew_errors|kubelet_volume_stats_available_bytes|kubelet_volume_stats_capacity_bytes|kubelet_volume_stats_inodes|kubelet_volume_stats_inodes_used|kubernetes_build_info|namespace_workload_pod|rest_client_requests_total|storage_operation_duration_seconds_count|storage_operation_errors_total|volume_manager_total_volumes"
         action = "keep"
       }
-      forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
+      forward_to = [prometheus.relabel.metrics_service.receiver]
     }
     
     // cAdvisor
@@ -281,7 +281,7 @@ data:
           regex = "^$|production|staging"
           action = "keep"
       }
-      forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
+      forward_to = [prometheus.relabel.metrics_service.receiver]
     }
     
     // Kube State Metrics
@@ -325,7 +325,7 @@ data:
           regex = "^$|production|staging"
           action = "keep"
       }
-      forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
+      forward_to = [prometheus.relabel.metrics_service.receiver]
     }
     
     // Node Exporter
@@ -369,7 +369,7 @@ data:
           regex = "^$|production|staging"
           action = "keep"
       }
-      forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
+      forward_to = [prometheus.relabel.metrics_service.receiver]
     }
     
     // OpenCost
@@ -413,7 +413,7 @@ data:
           regex = "^$|production|staging"
           action = "keep"
       }
-      forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
+      forward_to = [prometheus.relabel.metrics_service.receiver]
     }
     
     // Prometheus Operator PodMonitor objects
@@ -431,7 +431,7 @@ data:
           regex = "^$|production|staging"
           action = "keep"
       }
-      forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
+      forward_to = [prometheus.relabel.metrics_service.receiver]
     }
     
     // Prometheus Operator Probe objects
@@ -449,7 +449,7 @@ data:
           regex = "^$|production|staging"
           action = "keep"
       }
-      forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
+      forward_to = [prometheus.relabel.metrics_service.receiver]
     }
     
     // Prometheus Operator ServiceMonitor objects
@@ -467,10 +467,10 @@ data:
           regex = "^$|production|staging"
           action = "keep"
       }
-      forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
+      forward_to = [prometheus.relabel.metrics_service.receiver]
     }
     
-    // Grafana Cloud Prometheus
+    // Metrics Service
     local.file "prometheus_host" {
       filename  = "/etc/grafana-agent-credentials/prometheus_host"
     }
@@ -484,7 +484,12 @@ data:
       is_secret = true
     }
     
-    prometheus.remote_write "grafana_cloud_prometheus" {
+    
+    prometheus.relabel "metrics_service" {
+      forward_to = [prometheus.remote_write.metrics_service.receiver]
+    }
+    
+    prometheus.remote_write "metrics_service" {
       endpoint {
         url = nonsensitive(local.file.prometheus_host.content) + "/api/prom/push"
     
@@ -494,6 +499,7 @@ data:
         }
     
       }
+    
       external_labels = {
         cluster = "specific-namespace-test",
       }
@@ -43099,7 +43105,7 @@ data:
           regex = "^$|production|staging"
           action = "keep"
       }
-      forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
+      forward_to = [prometheus.relabel.metrics_service.receiver]
     }
     
     // Kubernetes Monitoring Telemetry
@@ -43141,7 +43147,7 @@ data:
           regex = "^$|production|staging"
           action = "keep"
       }
-      forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
+      forward_to = [prometheus.relabel.metrics_service.receiver]
     }
     
     // Kubelet
@@ -43180,7 +43186,7 @@ data:
         regex = "up|container_cpu_usage_seconds_total|kubelet_certificate_manager_client_expiration_renew_errors|kubelet_certificate_manager_client_ttl_seconds|kubelet_certificate_manager_server_ttl_seconds|kubelet_cgroup_manager_duration_seconds_bucket|kubelet_cgroup_manager_duration_seconds_count|kubelet_node_config_error|kubelet_node_name|kubelet_pleg_relist_duration_seconds_bucket|kubelet_pleg_relist_duration_seconds_count|kubelet_pleg_relist_interval_seconds_bucket|kubelet_pod_start_duration_seconds_bucket|kubelet_pod_start_duration_seconds_count|kubelet_pod_worker_duration_seconds_bucket|kubelet_pod_worker_duration_seconds_count|kubelet_running_container_count|kubelet_running_containers|kubelet_running_pod_count|kubelet_running_pods|kubelet_runtime_operations_errors_total|kubelet_runtime_operations_total|kubelet_server_expiration_renew_errors|kubelet_volume_stats_available_bytes|kubelet_volume_stats_capacity_bytes|kubelet_volume_stats_inodes|kubelet_volume_stats_inodes_used|kubernetes_build_info|namespace_workload_pod|rest_client_requests_total|storage_operation_duration_seconds_count|storage_operation_errors_total|volume_manager_total_volumes"
         action = "keep"
       }
-      forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
+      forward_to = [prometheus.relabel.metrics_service.receiver]
     }
     
     // cAdvisor
@@ -43224,7 +43230,7 @@ data:
           regex = "^$|production|staging"
           action = "keep"
       }
-      forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
+      forward_to = [prometheus.relabel.metrics_service.receiver]
     }
     
     // Kube State Metrics
@@ -43268,7 +43274,7 @@ data:
           regex = "^$|production|staging"
           action = "keep"
       }
-      forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
+      forward_to = [prometheus.relabel.metrics_service.receiver]
     }
     
     // Node Exporter
@@ -43312,7 +43318,7 @@ data:
           regex = "^$|production|staging"
           action = "keep"
       }
-      forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
+      forward_to = [prometheus.relabel.metrics_service.receiver]
     }
     
     // OpenCost
@@ -43356,7 +43362,7 @@ data:
           regex = "^$|production|staging"
           action = "keep"
       }
-      forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
+      forward_to = [prometheus.relabel.metrics_service.receiver]
     }
     
     // Prometheus Operator PodMonitor objects
@@ -43374,7 +43380,7 @@ data:
           regex = "^$|production|staging"
           action = "keep"
       }
-      forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
+      forward_to = [prometheus.relabel.metrics_service.receiver]
     }
     
     // Prometheus Operator Probe objects
@@ -43392,7 +43398,7 @@ data:
           regex = "^$|production|staging"
           action = "keep"
       }
-      forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
+      forward_to = [prometheus.relabel.metrics_service.receiver]
     }
     
     // Prometheus Operator ServiceMonitor objects
@@ -43410,10 +43416,10 @@ data:
           regex = "^$|production|staging"
           action = "keep"
       }
-      forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
+      forward_to = [prometheus.relabel.metrics_service.receiver]
     }
     
-    // Grafana Cloud Prometheus
+    // Metrics Service
     local.file "prometheus_host" {
       filename  = "/etc/grafana-agent-credentials/prometheus_host"
     }
@@ -43427,7 +43433,12 @@ data:
       is_secret = true
     }
     
-    prometheus.remote_write "grafana_cloud_prometheus" {
+    
+    prometheus.relabel "metrics_service" {
+      forward_to = [prometheus.remote_write.metrics_service.receiver]
+    }
+    
+    prometheus.remote_write "metrics_service" {
       endpoint {
         url = nonsensitive(local.file.prometheus_host.content) + "/api/prom/push"
     
@@ -43437,6 +43448,7 @@ data:
         }
     
       }
+    
       external_labels = {
         cluster = "specific-namespace-test",
       }
@@ -43630,7 +43642,7 @@ data:
     queries=$(jq -r '.queries[].query' "$1")
     for query in $queries; do
       echo "Running query: ${PROMETHEUS_HOST}/api/prom/api/v1/query?query=$query..."
-      result=$(curl -sX POST -u "${PROMETHEUS_USER}:${PROMETHEUS_PASS}" "${PROMETHEUS_HOST}/api/prom/api/v1/query?query=$(jq -rn --arg x "${query}" '$x|@uri')")
+      result=$(curl -skX POST -u "${PROMETHEUS_USER}:${PROMETHEUS_PASS}" "${PROMETHEUS_HOST}/api/prom/api/v1/query?query=$(jq -rn --arg x "${query}" '$x|@uri')")
       status=$(echo $result | jq -r .status)
       if [ "${status}" != "success" ]; then
         echo "Query failed!"
