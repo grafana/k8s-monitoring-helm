@@ -602,11 +602,16 @@ metadata:
 data:
   config.river: |-
     // Pod Logs
-    discovery.kubelet "pods" {
+    discovery.kubernetes "pods" {
+        role = "pod"
+      selectors {
+        role = "pod"
+        field = "spec.nodeName=" + env("HOSTNAME")
+      }
     }
-    
+    ``
     discovery.relabel "pod_logs" {
-      targets = discovery.kubelet.pods.targets
+      targets = discovery.kubernetes.pods.targets
     
       rule {
         source_labels = ["__meta_kubernetes_namespace"]
@@ -43880,11 +43885,16 @@ data:
     }
   logs.river: |-
     // Pod Logs
-    discovery.kubelet "pods" {
+    discovery.kubernetes "pods" {
+        role = "pod"
+      selectors {
+        role = "pod"
+        field = "spec.nodeName=" + env("HOSTNAME")
+      }
     }
-    
+    ``
     discovery.relabel "pod_logs" {
-      targets = discovery.kubelet.pods.targets
+      targets = discovery.kubernetes.pods.targets
     
       rule {
         source_labels = ["__meta_kubernetes_namespace"]

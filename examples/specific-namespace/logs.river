@@ -1,11 +1,20 @@
 // Pod Logs
-discovery.kubelet "pods" {
-  namespaces = ["production","staging"]
+discovery.kubernetes "pods" {
+    role = "pod"
+  selectors {
+    role = "pod"
+    field = "spec.nodeName=" + env("HOSTNAME")
+  }
 }
-
+``
 discovery.relabel "pod_logs" {
-  targets = discovery.kubelet.pods.targets
+  targets = discovery.kubernetes.pods.targets
 
+  rule {
+    source_labels = ["namespace"]
+    regex = "production|staging"
+    action = "keep"
+  }
   rule {
     source_labels = ["__meta_kubernetes_namespace"]
     action = "replace"

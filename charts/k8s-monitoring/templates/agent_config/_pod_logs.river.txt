@@ -1,15 +1,23 @@
 {{ define "agent.config.logs.pod_logs" }}
 {{- with .Values.logs.pod_logs }}
 // Pod Logs
-discovery.kubelet "pods" {
-{{- if .namespaces }}
-  namespaces = {{ .namespaces | toStrings | toJson }}
-{{- end }}
+discovery.kubernetes "pods" {
+    role = "pod"
+  selectors {
+    role = "pod"
+    field = "spec.nodeName=" + env("HOSTNAME")
+  }
 }
-
+``
 discovery.relabel "pod_logs" {
-  targets = discovery.kubelet.pods.targets
-
+  targets = discovery.kubernetes.pods.targets
+{{ if .namespaces }}
+  rule {
+    source_labels = ["namespace"]
+    regex = "{{ .namespaces | join "|" }}"
+    action = "keep"
+  }
+{{- end }}
   rule {
     source_labels = ["__meta_kubernetes_namespace"]
     action = "replace"
