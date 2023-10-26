@@ -42821,7 +42821,7 @@ volumes:
 - projected
 - secret
 ---
-# Source: k8s-monitoring/templates/hooks/grafana-agent-config-test.yaml
+# Source: k8s-monitoring/templates/hooks/validate-configuration.yaml
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -43435,7 +43435,7 @@ data:
       ]
     }
 ---
-# Source: k8s-monitoring/templates/hooks/grafana-agent-config-test.yaml
+# Source: k8s-monitoring/templates/hooks/validate-configuration.yaml
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -43466,9 +43466,11 @@ spec:
           image: "docker.io/grafana/agent:v0.37.2"
           command:
           - bash
-          - -c
+          - -ec
           - |
+            echo Validating config file
             grafana-agent fmt /etc/agent/config.river
+            echo Validating logs config file
             grafana-agent fmt /etc/agent/logs.river
           env:
             - name: AGENT_MODE

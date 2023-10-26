@@ -42765,7 +42765,7 @@ spec:
 # Source: k8s-monitoring/charts/prometheus-operator-crds/charts/crds/templates/crd-thanosrulers.yaml
 # https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/v0.68.0/example/prometheus-operator-crd/monitoring.coreos.com_thanosrulers.yaml
 ---
-# Source: k8s-monitoring/templates/hooks/grafana-agent-config-test.yaml
+# Source: k8s-monitoring/templates/hooks/validate-configuration.yaml
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -43210,7 +43210,7 @@ data:
       ]
     }
 ---
-# Source: k8s-monitoring/templates/hooks/grafana-agent-config-test.yaml
+# Source: k8s-monitoring/templates/hooks/validate-configuration.yaml
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -43241,8 +43241,9 @@ spec:
           image: "docker.io/grafana/agent:v0.37.2"
           command:
           - bash
-          - -c
+          - -ec
           - |
+            echo Validating config file
             grafana-agent fmt /etc/agent/config.river
           env:
             - name: AGENT_MODE
