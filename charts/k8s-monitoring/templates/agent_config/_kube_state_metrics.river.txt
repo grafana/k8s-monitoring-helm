@@ -62,6 +62,6 @@ prometheus.relabel "kube_state_metrics" {
 {{- if (index .Values.metrics "kube-state-metrics").extraMetricRelabelingRules }}
 {{ (index .Values.metrics "kube-state-metrics").extraMetricRelabelingRules | indent 2 }}
 {{- end }}
-  forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
+  forward_to = [prometheus.relabel.metrics_service.receiver]
 }
 {{ end }}

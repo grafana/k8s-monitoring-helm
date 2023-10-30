@@ -1,0 +1,27 @@
+cluster:
+  name: otlp-metrics-service-cluster
+
+externalServices:
+  prometheus:
+    host: https://prometheus-server.prometheus.svc:80
+    basicAuth:
+      username: promuser
+      password: prometheuspassword
+    queryEndpoint: /api/v1/query
+    writeEndpoint: /api/v1/otlp
+    protocol: otlphttp
+    tls:
+      insecure_skip_verify: true
+  loki:
+    host: http://loki.loki.svc:3100
+    tenantId: 1
+    basicAuth:
+      username: loki
+      password: lokipassword
+
+metrics:
+  cost:
+    enabled: false
+
+opencost:
+  enabled: false

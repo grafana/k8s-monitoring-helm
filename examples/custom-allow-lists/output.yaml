@@ -136,7 +136,7 @@ data:
         regex = "up|agent_build_info"
         action = "keep"
       }
-      forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
+      forward_to = [prometheus.relabel.metrics_service.receiver]
     }
     
     // Kubernetes Monitoring Telemetry
@@ -173,7 +173,7 @@ data:
         regex = "up|grafana_kubernetes_monitoring_.*"
         action = "keep"
       }
-      forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
+      forward_to = [prometheus.relabel.metrics_service.receiver]
     }
     
     // Kubelet
@@ -212,7 +212,7 @@ data:
         regex = "up|kubelet_node_name|kubernetes_build_info"
         action = "keep"
       }
-      forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
+      forward_to = [prometheus.relabel.metrics_service.receiver]
     }
     
     // cAdvisor
@@ -251,7 +251,7 @@ data:
         regex = "up|container_memory_cache|container_memory_rss|container_memory_swap"
         action = "keep"
       }
-      forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
+      forward_to = [prometheus.relabel.metrics_service.receiver]
     }
     
     // Kube State Metrics
@@ -290,7 +290,7 @@ data:
         regex = "up|.*"
         action = "keep"
       }
-      forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
+      forward_to = [prometheus.relabel.metrics_service.receiver]
     }
     
     // Node Exporter
@@ -329,7 +329,7 @@ data:
         regex = "up|node_.*"
         action = "keep"
       }
-      forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
+      forward_to = [prometheus.relabel.metrics_service.receiver]
     }
     
     // OpenCost
@@ -363,7 +363,7 @@ data:
     }
     
     prometheus.relabel "opencost" {
-      forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
+      forward_to = [prometheus.relabel.metrics_service.receiver]
     }
     
     // Prometheus Operator PodMonitor objects
@@ -376,7 +376,7 @@ data:
     }
     
     prometheus.relabel "podmonitors" {
-      forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
+      forward_to = [prometheus.relabel.metrics_service.receiver]
     }
     
     // Prometheus Operator Probe objects
@@ -389,7 +389,7 @@ data:
     }
     
     prometheus.relabel "probes" {
-      forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
+      forward_to = [prometheus.relabel.metrics_service.receiver]
     }
     
     // Prometheus Operator ServiceMonitor objects
@@ -402,10 +402,10 @@ data:
     }
     
     prometheus.relabel "servicemonitors" {
-      forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
+      forward_to = [prometheus.relabel.metrics_service.receiver]
     }
     
-    // Grafana Cloud Prometheus
+    // Metrics Service
     local.file "prometheus_host" {
       filename  = "/etc/grafana-agent-credentials/prometheus_host"
     }
@@ -419,7 +419,12 @@ data:
       is_secret = true
     }
     
-    prometheus.remote_write "grafana_cloud_prometheus" {
+    
+    prometheus.relabel "metrics_service" {
+      forward_to = [prometheus.remote_write.metrics_service.receiver]
+    }
+    
+    prometheus.remote_write "metrics_service" {
       endpoint {
         url = nonsensitive(local.file.prometheus_host.content) + "/api/prom/push"
     
@@ -429,6 +434,7 @@ data:
         }
     
       }
+    
       external_labels = {
         cluster = "custom-allow-lists-test",
       }
@@ -42637,7 +42643,7 @@ data:
         regex = "up|agent_build_info"
         action = "keep"
       }
-      forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
+      forward_to = [prometheus.relabel.metrics_service.receiver]
     }
     
     // Kubernetes Monitoring Telemetry
@@ -42674,7 +42680,7 @@ data:
         regex = "up|grafana_kubernetes_monitoring_.*"
         action = "keep"
       }
-      forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
+      forward_to = [prometheus.relabel.metrics_service.receiver]
     }
     
     // Kubelet
@@ -42713,7 +42719,7 @@ data:
         regex = "up|kubelet_node_name|kubernetes_build_info"
         action = "keep"
       }
-      forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
+      forward_to = [prometheus.relabel.metrics_service.receiver]
     }
     
     // cAdvisor
@@ -42752,7 +42758,7 @@ data:
         regex = "up|container_memory_cache|container_memory_rss|container_memory_swap"
         action = "keep"
       }
-      forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
+      forward_to = [prometheus.relabel.metrics_service.receiver]
     }
     
     // Kube State Metrics
@@ -42791,7 +42797,7 @@ data:
         regex = "up|.*"
         action = "keep"
       }
-      forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
+      forward_to = [prometheus.relabel.metrics_service.receiver]
     }
     
     // Node Exporter
@@ -42830,7 +42836,7 @@ data:
         regex = "up|node_.*"
         action = "keep"
       }
-      forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
+      forward_to = [prometheus.relabel.metrics_service.receiver]
     }
     
     // OpenCost
@@ -42864,7 +42870,7 @@ data:
     }
     
     prometheus.relabel "opencost" {
-      forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
+      forward_to = [prometheus.relabel.metrics_service.receiver]
     }
     
     // Prometheus Operator PodMonitor objects
@@ -42877,7 +42883,7 @@ data:
     }
     
     prometheus.relabel "podmonitors" {
-      forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
+      forward_to = [prometheus.relabel.metrics_service.receiver]
     }
     
     // Prometheus Operator Probe objects
@@ -42890,7 +42896,7 @@ data:
     }
     
     prometheus.relabel "probes" {
-      forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
+      forward_to = [prometheus.relabel.metrics_service.receiver]
     }
     
     // Prometheus Operator ServiceMonitor objects
@@ -42903,10 +42909,10 @@ data:
     }
     
     prometheus.relabel "servicemonitors" {
-      forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
+      forward_to = [prometheus.relabel.metrics_service.receiver]
     }
     
-    // Grafana Cloud Prometheus
+    // Metrics Service
     local.file "prometheus_host" {
       filename  = "/etc/grafana-agent-credentials/prometheus_host"
     }
@@ -42920,7 +42926,12 @@ data:
       is_secret = true
     }
     
-    prometheus.remote_write "grafana_cloud_prometheus" {
+    
+    prometheus.relabel "metrics_service" {
+      forward_to = [prometheus.remote_write.metrics_service.receiver]
+    }
+    
+    prometheus.remote_write "metrics_service" {
       endpoint {
         url = nonsensitive(local.file.prometheus_host.content) + "/api/prom/push"
     
@@ -42930,6 +42941,7 @@ data:
         }
     
       }
+    
       external_labels = {
         cluster = "custom-allow-lists-test",
       }
@@ -42958,7 +42970,7 @@ data:
     queries=$(jq -r '.queries[].query' "$1")
     for query in $queries; do
       echo "Running query: ${PROMETHEUS_HOST}/api/prom/api/v1/query?query=$query..."
-      result=$(curl -sX POST -u "${PROMETHEUS_USER}:${PROMETHEUS_PASS}" "${PROMETHEUS_HOST}/api/prom/api/v1/query?query=$(jq -rn --arg x "${query}" '$x|@uri')")
+      result=$(curl -skX POST -u "${PROMETHEUS_USER}:${PROMETHEUS_PASS}" "${PROMETHEUS_HOST}/api/prom/api/v1/query?query=$(jq -rn --arg x "${query}" '$x|@uri')")
       status=$(echo $result | jq -r .status)
       if [ "${status}" != "success" ]; then
         echo "Query failed!"

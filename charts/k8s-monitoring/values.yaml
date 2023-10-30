@@ -15,6 +15,13 @@ externalServices:
     # TODO: Add the ability to reference a pre-existing secret
     # -- (string) (required) Prometheus host where metrics will be sent
     host: ""
+
+    # -- (string) The type of server protocol for writing metrics
+    # Options:
+    #   * "remote_write" will use Prometheus Remote Write
+    #   * "otlp" will use OTLP
+    #   * "otlphttp" will use OTLP HTTP
+    protocol: "remote_write"
     # -- (string) HTTP proxy to proxy requests to Prometheus through.
     proxyURL: ""
     # -- Prometheus metrics query endpoint. Preset for Grafana Cloud Metrics instances.
@@ -36,6 +43,29 @@ externalServices:
       username: ""
       # -- (string) Prometheus basic auth password
       password: ""
+
+    # -- TLS setting to configure for the metrics service.
+    # For remoteWrite protocol, refer to https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.remote_write/#tls_config-block
+    # For otlp protocol, refer to https://grafana.com/docs/agent/latest/flow/reference/components/otelcol.exporter.otlp/#tls-block
+    # For otlphttp protocol, refer to https://grafana.com/docs/agent/latest/flow/reference/components/otelcol.exporter.otlphttp/#tls-block
+    tls: {}
+
+    # Metric processor settings. Only applies when protocol is "otlp" or "otlphttp"
+    processors:
+      batch:
+        # -- Amount of data to buffer before flushing the batch.
+        size: 8192
+        # -- Upper limit of a batch size. When set to 0, there is no upper limit.
+        maxSize: 0
+        # -- How long to wait before flushing the batch.
+        timeout: 2s
+      memoryLimiter:
+        # -- Use a memory limiter.
+        enabled: false
+        # -- How often to check memory usage.
+        checkInterval: 1s
+        # -- Maximum amount of memory targeted to be allocated by the process heap.
+        limit: 0MiB
 
   # Connection information for Grafana Loki
   loki:

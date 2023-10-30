@@ -46,7 +46,7 @@ apt-get update && apt-get install -y curl jq
 queries=$(jq -r '.queries[].query' "$1")
 for query in $queries; do
   echo "Running query: ${PROMETHEUS_HOST}{{ .Values.externalServices.prometheus.queryEndpoint }}?query=$query..."
-  result=$(curl -sX POST -u "${PROMETHEUS_USER}:${PROMETHEUS_PASS}" "${PROMETHEUS_HOST}{{ .Values.externalServices.prometheus.queryEndpoint }}?query=$(jq -rn --arg x "${query}" '$x|@uri')")
+  result=$(curl -skX POST -u "${PROMETHEUS_USER}:${PROMETHEUS_PASS}" "${PROMETHEUS_HOST}{{ .Values.externalServices.prometheus.queryEndpoint }}?query=$(jq -rn --arg x "${query}" '$x|@uri')")
   status=$(echo $result | jq -r .status)
   if [ "${status}" != "success" ]; then
     echo "Query failed!"

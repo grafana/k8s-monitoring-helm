@@ -111,7 +111,7 @@ the scraped metrics. Here is an example:
 ```river
 prometheus.scrape "processing_app" {
   targets = discovery.relabel.image_analysis_pods.output
-  forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
+  forward_to = [prometheus.relabel.metrics_service.receiver]
 }
 ```
 
@@ -126,7 +126,7 @@ prometheus.scrape "processing_app" {
   job_name = "integrations/processing"
   scrape_interval = "120s"
   metrics_path = "/api/v1/metrics"
-  forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
+  forward_to = [prometheus.relabel.metrics_service.receiver]
 }
 ```
 
@@ -156,7 +156,7 @@ prometheus.relabel "processing_app" {
     regex = "up|processor.*"
     action = "keep"
   }
-  forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
+  forward_to = [prometheus.relabel.metrics_service.receiver]
 }
 ```
 
@@ -169,7 +169,7 @@ purpose of their `forward_to` field. That can be to another `prometheus.relabel`
 step is to send the metrics to a Prometheus server for storage, where it can be further processed by recording rules, or
 queried and displayed by Grafana. This is done with the [`prometheus.remote_write`](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.remote_write/) component.
 
-This chart automatically creates the component `prometheus.remote_write.grafana_cloud_prometheus`, configured by the
+This chart automatically creates the component `prometheus.relabel.metrics_service`, configured by the
 `.externalServices.prometheus` values. You can use this component to send your metrics to the same destination as the
 infrastructure metrics.
 
@@ -209,7 +209,7 @@ prometheus.relabel "processing_app" {
     regex = "up|processor.*"
     action = "keep"
   }
-  forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
+  forward_to = [prometheus.relabel.metrics_service.receiver]
 }
 $ helm install k8s-monitoring grafana/k8s-monitoring --values chart-values.yaml --set-file extraConfig=processor-config.river
 ```

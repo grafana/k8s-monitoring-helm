@@ -63,6 +63,6 @@ prometheus.relabel "node_exporter" {
 {{- if (index .Values.metrics "node-exporter").extraMetricRelabelingRules }}
 {{ (index .Values.metrics "node-exporter").extraMetricRelabelingRules | indent 2 }}
 {{- end }}
-  forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
+  forward_to = [prometheus.relabel.metrics_service.receiver]
 }
 {{ end }}

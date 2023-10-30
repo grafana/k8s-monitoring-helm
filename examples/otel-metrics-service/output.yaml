@@ -1,4 +1,16 @@
 ---
+# Source: k8s-monitoring/charts/grafana-agent-logs/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: k8smon-grafana-agent-logs
+  labels:
+    helm.sh/chart: grafana-agent-logs-0.27.1
+    app.kubernetes.io/name: grafana-agent-logs
+    app.kubernetes.io/instance: k8smon
+    app.kubernetes.io/version: "v0.37.3"
+    app.kubernetes.io/managed-by: Helm
+---
 # Source: k8s-monitoring/charts/grafana-agent/templates/serviceaccount.yaml
 apiVersion: v1
 kind: ServiceAccount
@@ -64,9 +76,12 @@ metadata:
   namespace: default
 type: Opaque
 data:
-  prometheus_host: "aHR0cHM6Ly9wcm9tZXRoZXVzLmV4YW1wbGUuY29t"
+  prometheus_host: "cHJvbWV0aGV1cy5leGFtcGxlLmNvbTo0NDM="
   prometheus_username: "MTIzNDU="
   prometheus_password: "SXQncyBhIHNlY3JldCB0byBldmVyeW9uZQ=="
+  loki_host: "aHR0cHM6Ly9sb2tpLmV4YW1wbGUuY29t"
+  loki_username: "MTIzNDU="
+  loki_password: "SXQncyBhIHNlY3JldCB0byBldmVyeW9uZQ=="
 ---
 # Source: k8s-monitoring/templates/grafana-agent-config.yaml
 apiVersion: v1
@@ -123,7 +138,7 @@ data:
     prometheus.scrape "agent" {
       job_name = "integrations/agent"
       targets = discovery.relabel.agent.output
-      scrape_interval = "2m"
+      scrape_interval = "60s"
       forward_to = [prometheus.relabel.agent.receiver]
       clustering {
         enabled = true
@@ -150,7 +165,7 @@ data:
     prometheus.scrape "kubernetes_monitoring_telemetry" {
       job_name   = "integrations/kubernetes/kubernetes_monitoring_telemetry"
       targets    = prometheus.exporter.unix.kubernetes_monitoring_telemetry.targets
-      scrape_interval = "2m"
+      scrape_interval = "60s"
       clustering {
         enabled = true
       }
@@ -195,7 +210,7 @@ data:
       job_name   = "integrations/kubernetes/kubelet"
       targets  = discovery.relabel.kubelet.output
       scheme   = "https"
-      scrape_interval = "2m"
+      scrape_interval = "60s"
       bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
       tls_config {
         insecure_skip_verify = true
@@ -234,7 +249,7 @@ data:
       job_name   = "integrations/kubernetes/cadvisor"
       targets    = discovery.relabel.cadvisor.output
       scheme     = "https"
-      scrape_interval = "2m"
+      scrape_interval = "60s"
       bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
       tls_config {
         insecure_skip_verify = true
@@ -277,7 +292,7 @@ data:
     prometheus.scrape "kube_state_metrics" {
       job_name   = "integrations/kubernetes/kube-state-metrics"
       targets    = discovery.relabel.kube_state_metrics.output
-      scrape_interval = "30s"
+      scrape_interval = "60s"
       clustering {
         enabled = true
       }
@@ -355,7 +370,7 @@ data:
     prometheus.scrape "opencost" {
       job_name   = "integrations/kubernetes/opencost"
       targets    = discovery.relabel.opencost.output
-      scrape_interval = "2m"
+      scrape_interval = "60s"
       clustering {
         enabled = true
       }
@@ -426,22 +441,226 @@ data:
     
     
     prometheus.relabel "metrics_service" {
-      forward_to = [prometheus.remote_write.metrics_service.receiver]
+      forward_to = [otelcol.receiver.prometheus.metrics_service.receiver]
     }
     
-    prometheus.remote_write "metrics_service" {
+    otelcol.receiver.prometheus "metrics_service" {
+      output {
+        metrics = [otelcol.processor.attributes.metrics_service.input]
+      }
+    }
+    
+    otelcol.processor.attributes "metrics_service" {
+      action {
+        key = "cluster"
+        value = "otel-metrics-service-test"
+        action = "insert"
+      }
+      action {
+        key = "k8s.cluster.name"
+        value = "otel-metrics-service-test"
+        action = "upsert"
+      }
+      output {
+        metrics = [otelcol.processor.batch.metrics_service.input]
+      }
+    }
+    
+    otelcol.processor.batch "metrics_service" {
+      send_batch_size = 8192
+      send_batch_max_size = 0
+      timeout = "2s"
+      output {
+        metrics = [otelcol.processor.memory_limiter.metrics_service.input]
+      }
+    }
+    
+    otelcol.processor.memory_limiter "metrics_service" {
+      check_interval = "1s"
+      limit = "100MiB"
+      output {
+        metrics = [otelcol.exporter.otlp.metrics_service.input]
+      }
+    }
+    
+    otelcol.auth.basic "metrics_service" {
+      username = local.file.prometheus_username.content
+      password = local.file.prometheus_password.content
+    }
+    
+    otelcol.exporter.otlp "metrics_service" {
+      client {
+        endpoint = nonsensitive(local.file.prometheus_host.content) + "/api/v1/otlp/v1/metrics"
+    
+        auth = otelcol.auth.basic.metrics_service.handler
+      }
+    }
+    
+    
+    // Cluster Events
+    loki.source.kubernetes_events "cluster_events" {
+      job_name   = "integrations/kubernetes/eventhandler"
+      forward_to = [loki.write.grafana_cloud_loki.receiver]
+    }
+    
+    // Grafana Cloud Loki
+    local.file "loki_host" {
+      filename  = "/etc/grafana-agent-credentials/loki_host"
+    }
+    
+    local.file "loki_username" {
+      filename  = "/etc/grafana-agent-credentials/loki_username"
+    }
+    
+    local.file "loki_password" {
+      filename  = "/etc/grafana-agent-credentials/loki_password"
+      is_secret = true
+    }
+    
+    loki.write "grafana_cloud_loki" {
       endpoint {
-        url = nonsensitive(local.file.prometheus_host.content) + "/api/prom/push"
+        url = nonsensitive(local.file.loki_host.content) + "/loki/api/v1/push"
     
         basic_auth {
-          username = local.file.prometheus_username.content
-          password = local.file.prometheus_password.content
+          username = local.file.loki_username.content
+          password = local.file.loki_password.content
         }
+      }
+      external_labels = {
+        cluster = "otel-metrics-service-test",
+      }
+    }
+---
+# Source: k8s-monitoring/templates/grafana-agent-logs-config.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: k8smon-grafana-agent-logs
+  namespace: default
+data:
+  config.river: |-
+    // Pod Logs
+    discovery.kubernetes "pods" {
+        role = "pod"
+      selectors {
+        role = "pod"
+        field = "spec.nodeName=" + env("HOSTNAME")
+      }
+    }
     
+    discovery.relabel "pod_logs" {
+      targets = discovery.kubernetes.pods.targets
+    
+      rule {
+        source_labels = ["__meta_kubernetes_namespace"]
+        action = "replace"
+        target_label = "namespace"
+      }
+      rule {
+        source_labels = ["__meta_kubernetes_pod_name"]
+        action = "replace"
+        target_label = "pod"
+      }
+      rule {
+        source_labels = ["__meta_kubernetes_pod_container_name"]
+        action = "replace"
+        target_label = "container"
+      }
+      rule {
+        source_labels = ["__meta_kubernetes_namespace", "__meta_kubernetes_pod_name"]
+        separator = "/"
+        action = "replace"
+        replacement = "$1"
+        target_label = "job"
+      }
+      rule {
+        source_labels = ["__meta_kubernetes_pod_uid", "__meta_kubernetes_pod_container_name"]
+        separator = "/"
+        action = "replace"
+        replacement = "/var/log/pods/*$1/*.log"
+        target_label = "__path__"
       }
     
+      // set the container runtime as a label
+      rule {
+        action = "replace"
+        source_labels = ["__meta_kubernetes_pod_container_id"]
+        regex = "^(\\w+):\\/\\/.+$"
+        replacement = "$1"
+        target_label = "tmp_container_runtime"
+      }
+    }
+    
+    local.file_match "pod_logs" {
+      path_targets = discovery.relabel.pod_logs.output
+    }
+    
+    loki.source.file "pod_logs" {
+      targets    = local.file_match.pod_logs.targets
+      forward_to = [loki.process.pod_logs.receiver]
+    }
+    
+    loki.process "pod_logs" {
+      stage.match {
+        selector = "{tmp_container_runtime=\"containerd\"}"
+        // the cri processing stage extracts the following k/v pairs: log, stream, time, flags
+        stage.cri {}
+    
+        // Set the extract flags and stream values as labels
+        stage.labels {
+          values = {
+            flags  = "",
+            stream  = "",
+          }
+        }
+      }
+    
+      // if the label tmp_container_runtime from above is docker parse using docker
+      stage.match {
+        selector = "{tmp_container_runtime=\"docker\"}"
+        // the docker processing stage extracts the following k/v pairs: log, stream, time
+        stage.docker {}
+    
+        // Set the extract stream value as a label
+        stage.labels {
+          values = {
+            stream  = "",
+          }
+        }
+      }
+    
+      // drop the temporary container runtime label as it is no longer needed
+      stage.label_drop {
+        values = ["tmp_container_runtime"]
+      }
+      forward_to = [loki.write.grafana_cloud_loki.receiver]
+    }
+    
+    // Grafana Cloud Loki
+    local.file "loki_host" {
+      filename  = "/etc/grafana-agent-credentials/loki_host"
+    }
+    
+    local.file "loki_username" {
+      filename  = "/etc/grafana-agent-credentials/loki_username"
+    }
+    
+    local.file "loki_password" {
+      filename  = "/etc/grafana-agent-credentials/loki_password"
+      is_secret = true
+    }
+    
+    loki.write "grafana_cloud_loki" {
+      endpoint {
+        url = nonsensitive(local.file.loki_host.content) + "/loki/api/v1/push"
+    
+        basic_auth {
+          username = local.file.loki_username.content
+          password = local.file.loki_password.content
+        }
+      }
       external_labels = {
-        cluster = "custom-scrape-intervals-test",
+        cluster = "otel-metrics-service-test",
       }
     }
 ---
@@ -455,7 +674,7 @@ data:
   metrics.prom: |
     # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart as well as a summary of enabled features
     # TYPE grafana_kubernetes_monitoring_build_info gauge
-    grafana_kubernetes_monitoring_build_info{version="0.2.14", namespace="default", metrics="enabled,agent,kube-state-metrics,node-exporter,kubelet,cadvisor,cost", logs="enabled", traces="disabled", deployments="kube-state-metrics,prometheus-node-exporter,prometheus-operator-crds,opencost"} 1
+    grafana_kubernetes_monitoring_build_info{version="0.2.14", namespace="default", metrics="enabled,agent,kube-state-metrics,node-exporter,kubelet,cadvisor,cost", logs="enabled,events,pod_logs", traces="disabled", deployments="kube-state-metrics,prometheus-node-exporter,prometheus-operator-crds,opencost"} 1
 ---
 # Source: k8s-monitoring/charts/prometheus-operator-crds/charts/crds/templates/crd-alertmanagerconfigs.yaml
 apiVersion: apiextensions.k8s.io/v1
@@ -41655,6 +41874,96 @@ spec:
     subresources:
       status: {}
 ---
+# Source: k8s-monitoring/charts/grafana-agent-logs/templates/rbac.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: k8smon-grafana-agent-logs
+  labels:
+    helm.sh/chart: grafana-agent-logs-0.27.1
+    app.kubernetes.io/name: grafana-agent-logs
+    app.kubernetes.io/instance: k8smon
+    app.kubernetes.io/version: "v0.37.3"
+    app.kubernetes.io/managed-by: Helm
+rules:
+  # Rules which allow discovery.kubernetes to function.
+  - apiGroups:
+      - ""
+      - "discovery.k8s.io"
+      - "networking.k8s.io"
+    resources:
+      - endpoints
+      - endpointslices
+      - ingresses
+      - nodes
+      - nodes/proxy
+      - nodes/metrics
+      - pods
+      - services
+    verbs:
+      - get
+      - list
+      - watch
+  # Rules which allow loki.source.kubernetes and loki.source.podlogs to work.
+  - apiGroups:
+      - ""
+    resources:
+      - pods
+      - pods/log
+      - namespaces
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - "monitoring.grafana.com"
+    resources:
+      - podlogs
+    verbs:
+      - get
+      - list
+      - watch
+  # Rules which allow mimir.rules.kubernetes to work.
+  - apiGroups: ["monitoring.coreos.com"]
+    resources:
+      - prometheusrules
+    verbs:
+      - get
+      - list
+      - watch
+  - nonResourceURLs:
+      - /metrics
+    verbs:
+      - get
+  # Rules for prometheus.kubernetes.*
+  - apiGroups: ["monitoring.coreos.com"]
+    resources:
+      - podmonitors
+      - servicemonitors
+      - probes
+    verbs:
+      - get
+      - list
+      - watch
+  # Rules which allow eventhandler to work.
+  - apiGroups:
+      - ""
+    resources:
+      - events
+    verbs:
+      - get
+      - list
+      - watch
+  # needed for remote.kubernetes.*
+  - apiGroups: [""]
+    resources:
+      - "configmaps"
+      - "secrets"
+    verbs:
+      - get
+      - list
+      - watch
+---
 # Source: k8s-monitoring/charts/grafana-agent/templates/rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -41987,6 +42296,26 @@ rules:
       - list
       - watch
 ---
+# Source: k8s-monitoring/charts/grafana-agent-logs/templates/rbac.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: k8smon-grafana-agent-logs
+  labels:
+    helm.sh/chart: grafana-agent-logs-0.27.1
+    app.kubernetes.io/name: grafana-agent-logs
+    app.kubernetes.io/instance: k8smon
+    app.kubernetes.io/version: "v0.37.3"
+    app.kubernetes.io/managed-by: Helm
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: k8smon-grafana-agent-logs
+subjects:
+  - kind: ServiceAccount
+    name: k8smon-grafana-agent-logs
+    namespace: default
+---
 # Source: k8s-monitoring/charts/grafana-agent/templates/rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -42049,6 +42378,28 @@ subjects:
   - kind: ServiceAccount
     name: k8smon-opencost
     namespace: default
+---
+# Source: k8s-monitoring/charts/grafana-agent-logs/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: k8smon-grafana-agent-logs
+  labels:
+    helm.sh/chart: grafana-agent-logs-0.27.1
+    app.kubernetes.io/name: grafana-agent-logs
+    app.kubernetes.io/instance: k8smon
+    app.kubernetes.io/version: "v0.37.3"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: grafana-agent-logs
+    app.kubernetes.io/instance: k8smon
+  ports:
+    - name: http-metrics
+      port: 80
+      targetPort: 80
+      protocol: "TCP"
 ---
 # Source: k8s-monitoring/charts/grafana-agent/templates/cluster_service.yaml
 apiVersion: v1
@@ -42177,6 +42528,93 @@ spec:
   selector:
     app.kubernetes.io/name: prometheus-node-exporter
     app.kubernetes.io/instance: k8smon
+---
+# Source: k8s-monitoring/charts/grafana-agent-logs/templates/controllers/daemonset.yaml
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: k8smon-grafana-agent-logs
+  labels:
+    helm.sh/chart: grafana-agent-logs-0.27.1
+    app.kubernetes.io/name: grafana-agent-logs
+    app.kubernetes.io/instance: k8smon
+    app.kubernetes.io/version: "v0.37.3"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  minReadySeconds: 10
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: grafana-agent-logs
+      app.kubernetes.io/instance: k8smon
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: grafana-agent-logs
+        app.kubernetes.io/instance: k8smon
+    spec:
+      serviceAccountName: k8smon-grafana-agent-logs
+      containers:
+        - name: grafana-agent
+          image: docker.io/grafana/agent:v0.37.3
+          imagePullPolicy: IfNotPresent
+          args:
+            - run
+            - /etc/agent/config.river
+            - --storage.path=/tmp/agent
+            - --server.http.listen-addr=0.0.0.0:80
+          env:
+            - name: AGENT_MODE
+              value: flow
+            - name: HOSTNAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+          ports:
+            - containerPort: 80
+              name: http-metrics
+          readinessProbe:
+            httpGet:
+              path: /-/ready
+              port: 80
+            initialDelaySeconds: 10
+            timeoutSeconds: 1
+          volumeMounts:
+            - name: config
+              mountPath: /etc/agent
+            - name: varlog
+              mountPath: /var/log
+              readOnly: true
+            -
+              mountPath: /etc/grafana-agent-credentials
+              name: grafana-agent-credentials
+        - name: config-reloader
+          image: docker.io/jimmidyson/configmap-reload:v0.8.0
+          args:
+            - --volume-dir=/etc/agent
+            - --webhook-url=http://localhost:80/-/reload
+          volumeMounts:
+            - name: config
+              mountPath: /etc/agent
+          resources:
+            requests:
+              cpu: 1m
+              memory: 5Mi
+      dnsPolicy: ClusterFirst
+      nodeSelector:
+        kubernetes.io/os: linux
+      tolerations:
+        - effect: NoSchedule
+          operator: Exists
+      volumes:
+        - name: config
+          configMap:
+            name: k8smon-grafana-agent-logs
+        - name: varlog
+          hostPath:
+            path: /var/log
+        - name: grafana-agent-credentials
+          secret:
+            secretName: grafana-agent-credentials
 ---
 # Source: k8s-monitoring/charts/prometheus-node-exporter/templates/daemonset.yaml
 apiVersion: apps/v1
@@ -42635,7 +43073,7 @@ data:
     prometheus.scrape "agent" {
       job_name = "integrations/agent"
       targets = discovery.relabel.agent.output
-      scrape_interval = "2m"
+      scrape_interval = "60s"
       forward_to = [prometheus.relabel.agent.receiver]
       clustering {
         enabled = true
@@ -42662,7 +43100,7 @@ data:
     prometheus.scrape "kubernetes_monitoring_telemetry" {
       job_name   = "integrations/kubernetes/kubernetes_monitoring_telemetry"
       targets    = prometheus.exporter.unix.kubernetes_monitoring_telemetry.targets
-      scrape_interval = "2m"
+      scrape_interval = "60s"
       clustering {
         enabled = true
       }
@@ -42707,7 +43145,7 @@ data:
       job_name   = "integrations/kubernetes/kubelet"
       targets  = discovery.relabel.kubelet.output
       scheme   = "https"
-      scrape_interval = "2m"
+      scrape_interval = "60s"
       bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
       tls_config {
         insecure_skip_verify = true
@@ -42746,7 +43184,7 @@ data:
       job_name   = "integrations/kubernetes/cadvisor"
       targets    = discovery.relabel.cadvisor.output
       scheme     = "https"
-      scrape_interval = "2m"
+      scrape_interval = "60s"
       bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
       tls_config {
         insecure_skip_verify = true
@@ -42789,7 +43227,7 @@ data:
     prometheus.scrape "kube_state_metrics" {
       job_name   = "integrations/kubernetes/kube-state-metrics"
       targets    = discovery.relabel.kube_state_metrics.output
-      scrape_interval = "30s"
+      scrape_interval = "60s"
       clustering {
         enabled = true
       }
@@ -42867,7 +43305,7 @@ data:
     prometheus.scrape "opencost" {
       job_name   = "integrations/kubernetes/opencost"
       targets    = discovery.relabel.opencost.output
-      scrape_interval = "2m"
+      scrape_interval = "60s"
       clustering {
         enabled = true
       }
@@ -42938,22 +43376,218 @@ data:
     
     
     prometheus.relabel "metrics_service" {
-      forward_to = [prometheus.remote_write.metrics_service.receiver]
+      forward_to = [otelcol.receiver.prometheus.metrics_service.receiver]
     }
     
-    prometheus.remote_write "metrics_service" {
+    otelcol.receiver.prometheus "metrics_service" {
+      output {
+        metrics = [otelcol.processor.attributes.metrics_service.input]
+      }
+    }
+    
+    otelcol.processor.attributes "metrics_service" {
+      action {
+        key = "cluster"
+        value = "otel-metrics-service-test"
+        action = "insert"
+      }
+      action {
+        key = "k8s.cluster.name"
+        value = "otel-metrics-service-test"
+        action = "upsert"
+      }
+      output {
+        metrics = [otelcol.processor.batch.metrics_service.input]
+      }
+    }
+    
+    otelcol.processor.batch "metrics_service" {
+      send_batch_size = 8192
+      send_batch_max_size = 0
+      timeout = "2s"
+      output {
+        metrics = [otelcol.processor.memory_limiter.metrics_service.input]
+      }
+    }
+    
+    otelcol.processor.memory_limiter "metrics_service" {
+      check_interval = "1s"
+      limit = "100MiB"
+      output {
+        metrics = [otelcol.exporter.otlp.metrics_service.input]
+      }
+    }
+    
+    otelcol.auth.basic "metrics_service" {
+      username = local.file.prometheus_username.content
+      password = local.file.prometheus_password.content
+    }
+    
+    otelcol.exporter.otlp "metrics_service" {
+      client {
+        endpoint = nonsensitive(local.file.prometheus_host.content) + "/api/v1/otlp/v1/metrics"
+    
+        auth = otelcol.auth.basic.metrics_service.handler
+      }
+    }
+    
+    
+    // Cluster Events
+    loki.source.kubernetes_events "cluster_events" {
+      job_name   = "integrations/kubernetes/eventhandler"
+      forward_to = [loki.write.grafana_cloud_loki.receiver]
+    }
+    
+    // Grafana Cloud Loki
+    local.file "loki_host" {
+      filename  = "/etc/grafana-agent-credentials/loki_host"
+    }
+    
+    local.file "loki_username" {
+      filename  = "/etc/grafana-agent-credentials/loki_username"
+    }
+    
+    local.file "loki_password" {
+      filename  = "/etc/grafana-agent-credentials/loki_password"
+      is_secret = true
+    }
+    
+    loki.write "grafana_cloud_loki" {
       endpoint {
-        url = nonsensitive(local.file.prometheus_host.content) + "/api/prom/push"
+        url = nonsensitive(local.file.loki_host.content) + "/loki/api/v1/push"
     
         basic_auth {
-          username = local.file.prometheus_username.content
-          password = local.file.prometheus_password.content
+          username = local.file.loki_username.content
+          password = local.file.loki_password.content
         }
+      }
+      external_labels = {
+        cluster = "otel-metrics-service-test",
+      }
+    }
+  logs.river: |-
+    // Pod Logs
+    discovery.kubernetes "pods" {
+        role = "pod"
+      selectors {
+        role = "pod"
+        field = "spec.nodeName=" + env("HOSTNAME")
+      }
+    }
     
+    discovery.relabel "pod_logs" {
+      targets = discovery.kubernetes.pods.targets
+    
+      rule {
+        source_labels = ["__meta_kubernetes_namespace"]
+        action = "replace"
+        target_label = "namespace"
+      }
+      rule {
+        source_labels = ["__meta_kubernetes_pod_name"]
+        action = "replace"
+        target_label = "pod"
+      }
+      rule {
+        source_labels = ["__meta_kubernetes_pod_container_name"]
+        action = "replace"
+        target_label = "container"
+      }
+      rule {
+        source_labels = ["__meta_kubernetes_namespace", "__meta_kubernetes_pod_name"]
+        separator = "/"
+        action = "replace"
+        replacement = "$1"
+        target_label = "job"
+      }
+      rule {
+        source_labels = ["__meta_kubernetes_pod_uid", "__meta_kubernetes_pod_container_name"]
+        separator = "/"
+        action = "replace"
+        replacement = "/var/log/pods/*$1/*.log"
+        target_label = "__path__"
       }
     
+      // set the container runtime as a label
+      rule {
+        action = "replace"
+        source_labels = ["__meta_kubernetes_pod_container_id"]
+        regex = "^(\\w+):\\/\\/.+$"
+        replacement = "$1"
+        target_label = "tmp_container_runtime"
+      }
+    }
+    
+    local.file_match "pod_logs" {
+      path_targets = discovery.relabel.pod_logs.output
+    }
+    
+    loki.source.file "pod_logs" {
+      targets    = local.file_match.pod_logs.targets
+      forward_to = [loki.process.pod_logs.receiver]
+    }
+    
+    loki.process "pod_logs" {
+      stage.match {
+        selector = "{tmp_container_runtime=\"containerd\"}"
+        // the cri processing stage extracts the following k/v pairs: log, stream, time, flags
+        stage.cri {}
+    
+        // Set the extract flags and stream values as labels
+        stage.labels {
+          values = {
+            flags  = "",
+            stream  = "",
+          }
+        }
+      }
+    
+      // if the label tmp_container_runtime from above is docker parse using docker
+      stage.match {
+        selector = "{tmp_container_runtime=\"docker\"}"
+        // the docker processing stage extracts the following k/v pairs: log, stream, time
+        stage.docker {}
+    
+        // Set the extract stream value as a label
+        stage.labels {
+          values = {
+            stream  = "",
+          }
+        }
+      }
+    
+      // drop the temporary container runtime label as it is no longer needed
+      stage.label_drop {
+        values = ["tmp_container_runtime"]
+      }
+      forward_to = [loki.write.grafana_cloud_loki.receiver]
+    }
+    
+    // Grafana Cloud Loki
+    local.file "loki_host" {
+      filename  = "/etc/grafana-agent-credentials/loki_host"
+    }
+    
+    local.file "loki_username" {
+      filename  = "/etc/grafana-agent-credentials/loki_username"
+    }
+    
+    local.file "loki_password" {
+      filename  = "/etc/grafana-agent-credentials/loki_password"
+      is_secret = true
+    }
+    
+    loki.write "grafana_cloud_loki" {
+      endpoint {
+        url = nonsensitive(local.file.loki_host.content) + "/loki/api/v1/push"
+    
+        basic_auth {
+          username = local.file.loki_username.content
+          password = local.file.loki_password.content
+        }
+      }
       external_labels = {
-        cluster = "custom-scrape-intervals-test",
+        cluster = "otel-metrics-service-test",
       }
     }
 ---
@@ -43001,28 +43635,28 @@ data:
     {
       "queries": [
         {
-          "query": "up{cluster=\"custom-scrape-intervals-test\"}"
+          "query": "up{cluster=\"otel-metrics-service-test\"}"
         },
         {
-          "query": "agent_build_info{cluster=\"custom-scrape-intervals-test\"}"
+          "query": "agent_build_info{cluster=\"otel-metrics-service-test\"}"
         },
         {
-          "query": "kubernetes_build_info{cluster=\"custom-scrape-intervals-test\"}"
+          "query": "kubernetes_build_info{cluster=\"otel-metrics-service-test\"}"
         },
         {
-          "query": "machine_memory_bytes{cluster=\"custom-scrape-intervals-test\"}"
+          "query": "machine_memory_bytes{cluster=\"otel-metrics-service-test\"}"
         },
         {
-          "query": "kube_node_info{cluster=\"custom-scrape-intervals-test\"}"
+          "query": "kube_node_info{cluster=\"otel-metrics-service-test\"}"
         },
         {
-          "query": "node_exporter_build_info{cluster=\"custom-scrape-intervals-test\"}"
+          "query": "node_exporter_build_info{cluster=\"otel-metrics-service-test\"}"
         },
         {
-          "query": "opencost_build_info{cluster=\"custom-scrape-intervals-test\"}"
+          "query": "opencost_build_info{cluster=\"otel-metrics-service-test\"}"
         },
         {
-          "query": "grafana_kubernetes_monitoring_build_info{cluster=\"custom-scrape-intervals-test\"}"
+          "query": "grafana_kubernetes_monitoring_build_info{cluster=\"otel-metrics-service-test\"}"
         }
       ]
     }
@@ -43062,6 +43696,8 @@ spec:
           - |
             echo Validating config file
             grafana-agent fmt /etc/agent/config.river
+            echo Validating logs config file
+            grafana-agent fmt /etc/agent/logs.river
           env:
             - name: AGENT_MODE
               value: flow
