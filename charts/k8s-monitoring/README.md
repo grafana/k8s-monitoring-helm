@@ -83,6 +83,11 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | externalServices.loki.proxyURL | string | `""` | HTTP proxy to proxy requests to Loki through. |
 | externalServices.loki.tenantId | string | `""` | (optional) Loki tenant ID |
 | externalServices.loki.writeEndpoint | string | `"/loki/api/v1/push"` | Loki logs write endpoint |
+| externalServices.otlphttp.basicAuth.password | string | `""` | OTLP HTTP basic auth password |
+| externalServices.otlphttp.basicAuth.username | string | `""` | OTLP HTTP basic auth username |
+| externalServices.otlphttp.host | string | `""` | (required) OTLP HTTP host where traces/metrics will be sent |
+| externalServices.otlphttp.tenantId | string | `""` | (optional) OTLP HTTP tenant ID |
+| externalServices.otlphttp.tlsOptions | string | `""` | Define the TLS block. See https://grafana.com/docs/agent/latest/flow/reference/components/otelcol.exporter.otlphttp/#tls-block for options. Example: tlsOptions: insecure = true |
 | externalServices.prometheus.basicAuth.password | string | `""` | Prometheus basic auth password |
 | externalServices.prometheus.basicAuth.username | string | `""` | Prometheus basic auth username |
 | externalServices.prometheus.externalLabels | object | `{}` | Custom labels to be added to all time series |
@@ -185,6 +190,12 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | test.image.registry | string | `"docker.io"` | Test job image registry |
 | test.image.tag | string | `"jammy"` | Test job image tag |
 | traces.enabled | bool | `false` | Receive and forward traces. |
+| traces.otelMetrics.enabled | bool | `false` | Receive otel metrics from OTEL Instrumentation |
+| traces.otelMetrics.exporter.otlphttp.enabled | bool | `false` | Forward metrics via OTLP HTTP |
+| traces.otelMetrics.exporter.prometheus.enabled | bool | `true` | Forward metrics via prometheus rewrite exporter |
+| traces.otelMetrics.processors.batch.maxSize | int | `0` | The upper limit of the amount of data contained in a single batch, in bytes. When set to 0, batches can be any size. |
+| traces.otelMetrics.processors.batch.size | int | `16384` | What batch size to use, in bytes |
+| traces.otelMetrics.processors.batch.timeout | string | `"2s"` | How long before sending |
 | traces.processors.batch.maxSize | int | `0` | The upper limit of the amount of data contained in a single batch, in bytes. When set to 0, batches can be any size. |
 | traces.processors.batch.size | int | `16384` | What batch size to use, in bytes |
 | traces.processors.batch.timeout | string | `"2s"` | How long before sending |

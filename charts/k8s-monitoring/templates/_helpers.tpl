@@ -78,6 +78,9 @@
   {{- if and .Values.traces.enabled }}
     {{- include "agent.config.traces" . }}
     {{- include "agent.config.tempo" . }}
+    {{- if and .Values.traces.otelMetrics.exporter.otlphttp.enabled }}
+      {{- include "agent.config.otlphttp" . }}
+    {{- end }}
   {{- end }}
 
   {{- if .Values.extraConfig }}

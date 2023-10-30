@@ -85,6 +85,9 @@ data:
   tempo_host: "aHR0cHM6Ly90ZW1wby5leGFtcGxlLmNvbQ=="
   tempo_username: "MTIzNDU="
   tempo_password: "SXQncyBhIHNlY3JldCB0byBldmVyeW9uZQ=="
+  otlphttp_host: "aHR0cHM6Ly90ZW1wby5leGFtcGxlLmNvbS9vdGxw"
+  otlphttp_username: "MTIzNDU="
+  otlphttp_password: "SXQncyBhIHNlY3JldCB0byBldmVyeW9uZQ=="
 ---
 # Source: k8s-monitoring/templates/grafana-agent-config.yaml
 apiVersion: v1
@@ -507,6 +510,7 @@ data:
       }
       output {
         traces = [otelcol.processor.batch.trace_batch_processor.input]
+        metrics = [otelcol.processor.batch.metrics_batch_processor.input]
       }
     }
     otelcol.receiver.zipkin "trace_receiver" {
@@ -539,6 +543,38 @@ data:
         traces = [otelcol.exporter.otlp.tempo.input]
       }
     }
+    otelcol.processor.batch "metrics_batch_processor" {
+      send_batch_size = 16384
+      send_batch_max_size = 0
+      timeout = "2s"
+      output {
+        metrics = [otelcol.processor.attributes.metrics_attributes_processor.input]
+      }
+    }
+    
+    otelcol.processor.attributes "metrics_attributes_processor" {
+      action {
+        key = "cluster"
+        value = "traces-enabled-test"
+        action = "insert"
+      }
+      action {
+        key = "k8s.cluster.name"
+        value = "traces-enabled-test"
+        action = "upsert"
+      }
+      action {
+        key = "exporter.job"
+        value = "prometheus"
+        action = "upsert"
+      }
+      output {
+          metrics = [
+            prometheus.remote_write.grafana_cloud_prometheus.receiver,
+            otelcol.exporter.otlphttp.grafana_cloud_otlphttp.input,
+          ]
+      }
+    }
     // Tempo
     local.file "tempo_host" {
       filename  = "/etc/grafana-agent-credentials/tempo_host"
@@ -564,6 +600,34 @@ data:
         endpoint = nonsensitive(local.file.tempo_host.content)
     
         auth = otelcol.auth.basic.tempo.handler
+      }
+    }
+    
+    // otlphttp
+    local.file "otlphttp_host" {
+      filename  = "/etc/grafana-agent-credentials/otlphttp_host"
+    }
+    
+    local.file "otlphttp_username" {
+      filename  = "/etc/grafana-agent-credentials/otlphttp_username"
+    }
+    
+    local.file "otlphttp_password" {
+      filename  = "/etc/grafana-agent-credentials/otlphttp_password"
+      is_secret = true
+    }
+    
+    
+    otelcol.auth.basic "otlphttp" {
+      username = local.file.otlphttp_username.content
+      password = local.file.otlphttp_password.content
+    }
+    
+    otelcol.exporter.otlphttp "grafana_cloud_otlphttp" {
+      client {
+        endpoint = nonsensitive(local.file.otlphttp_host.content)
+    
+        auth = otelcol.auth.basic.otlphttp.handler
       }
     }
 ---
@@ -43508,6 +43572,7 @@ data:
       }
       output {
         traces = [otelcol.processor.batch.trace_batch_processor.input]
+        metrics = [otelcol.processor.batch.metrics_batch_processor.input]
       }
     }
     otelcol.receiver.zipkin "trace_receiver" {
@@ -43540,6 +43605,38 @@ data:
         traces = [otelcol.exporter.otlp.tempo.input]
       }
     }
+    otelcol.processor.batch "metrics_batch_processor" {
+      send_batch_size = 16384
+      send_batch_max_size = 0
+      timeout = "2s"
+      output {
+        metrics = [otelcol.processor.attributes.metrics_attributes_processor.input]
+      }
+    }
+    
+    otelcol.processor.attributes "metrics_attributes_processor" {
+      action {
+        key = "cluster"
+        value = "traces-enabled-test"
+        action = "insert"
+      }
+      action {
+        key = "k8s.cluster.name"
+        value = "traces-enabled-test"
+        action = "upsert"
+      }
+      action {
+        key = "exporter.job"
+        value = "prometheus"
+        action = "upsert"
+      }
+      output {
+          metrics = [
+            prometheus.remote_write.grafana_cloud_prometheus.receiver,
+            otelcol.exporter.otlphttp.grafana_cloud_otlphttp.input,
+          ]
+      }
+    }
     // Tempo
     local.file "tempo_host" {
       filename  = "/etc/grafana-agent-credentials/tempo_host"
@@ -43565,6 +43662,34 @@ data:
         endpoint = nonsensitive(local.file.tempo_host.content)
     
         auth = otelcol.auth.basic.tempo.handler
+      }
+    }
+    
+    // otlphttp
+    local.file "otlphttp_host" {
+      filename  = "/etc/grafana-agent-credentials/otlphttp_host"
+    }
+    
+    local.file "otlphttp_username" {
+      filename  = "/etc/grafana-agent-credentials/otlphttp_username"
+    }
+    
+    local.file "otlphttp_password" {
+      filename  = "/etc/grafana-agent-credentials/otlphttp_password"
+      is_secret = true
+    }
+    
+    
+    otelcol.auth.basic "otlphttp" {
+      username = local.file.otlphttp_username.content
+      password = local.file.otlphttp_password.content
+    }
+    
+    otelcol.exporter.otlphttp "grafana_cloud_otlphttp" {
+      client {
+        endpoint = nonsensitive(local.file.otlphttp_host.content)
+    
+        auth = otelcol.auth.basic.otlphttp.handler
       }
     }
   logs.river: |-

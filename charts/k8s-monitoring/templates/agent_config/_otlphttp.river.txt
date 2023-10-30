@@ -1,0 +1,47 @@
+{{ define "agent.config.otlphttp" }}
+{{- with .Values.externalServices.otlphttp }}
+// otlphttp
+local.file "otlphttp_host" {
+  filename  = "/etc/grafana-agent-credentials/otlphttp_host"
+}
+{{ if .basicAuth.username }}
+local.file "otlphttp_username" {
+  filename  = "/etc/grafana-agent-credentials/otlphttp_username"
+}
+{{- end }}
+{{ if .basicAuth.password }}
+local.file "otlphttp_password" {
+  filename  = "/etc/grafana-agent-credentials/otlphttp_password"
+  is_secret = true
+}
+{{- end }}
+{{ if .tenantId }}
+local.file "otlphttp_tenantid" {
+  filename  = "/etc/grafana-agent-credentials/otlphttp_tenantId"
+}
+{{- end }}
+{{ if or (.basicAuth.username) (.basicAuth.password) }}
+otelcol.auth.basic "otlphttp" {
+  {{ if .basicAuth.username }}username = local.file.otlphttp_username.content{{ end }}
+  {{ if .basicAuth.password }}password = local.file.otlphttp_password.content{{ end }}
+}
+{{- end }}
+
+otelcol.exporter.otlphttp "grafana_cloud_otlphttp" {
+  client {
+    endpoint = nonsensitive(local.file.otlphttp_host.content)
+{{ if or (.basicAuth.username) (.basicAuth.password) }}
+    auth = otelcol.auth.basic.otlphttp.handler
+{{- end }}
+{{- if .tenantId }}
+    headers = { "X-Scope-OrgID" = local.file.otlphttp_tenantid.content }
+{{- end }}
+{{- if .tlsOptions }}
+    tls {
+{{ .tlsOptions | indent 6 }}
+    }
+{{- end }}
+  }
+}
+{{- end }}
+{{ end }}

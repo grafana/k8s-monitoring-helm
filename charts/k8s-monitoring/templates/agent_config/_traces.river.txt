@@ -22,6 +22,9 @@ otelcol.receiver.otlp "trace_receiver" {
 {{- end }}
   output {
     traces = [otelcol.processor.batch.trace_batch_processor.input]
+    {{- if .Values.traces.otelMetrics.enabled }}
+    metrics = [otelcol.processor.batch.metrics_batch_processor.input]
+    {{- end }}
   }
 }
 {{- end }}
@@ -63,4 +66,63 @@ otelcol.processor.attributes "trace_attributes_processor" {
     traces = [otelcol.exporter.otlp.tempo.input]
   }
 }
+
+{{- if .Values.traces.otelMetrics.enabled }}
+{{- if not (or .Values.traces.otelMetrics.exporter.prometheus.enabled .Values.traces.otelMetrics.exporter.otlphttp.enabled) }}
+  {{- fail "You must enable either prometheus, otlphttp exporter" -}}
+{{- end }}
+
+{{- with .Values.traces.otelMetrics }}
+otelcol.processor.batch "metrics_batch_processor" {
+  send_batch_size = {{ .processors.batch.size | int }}
+  send_batch_max_size = {{ .processors.batch.maxSize | int }}
+  timeout = {{ .processors.batch.timeout | quote}}
+  output {
+    metrics = [otelcol.processor.attributes.metrics_attributes_processor.input]
+  }
+}
+{{- end }}
+
+otelcol.processor.attributes "metrics_attributes_processor" {
+  action {
+    key = "cluster"
+    value = {{ required ".Values.cluster.name is a required value. Please set it and try again." .Values.cluster.name | quote }}
+    action = "insert"
+  }
+  action {
+    key = "k8s.cluster.name"
+    value = {{ required ".Values.cluster.name is a required value. Please set it and try again." .Values.cluster.name | quote }}
+    action = "upsert"
+  }
+
+  {{- if .Values.traces.otelMetrics.exporter.prometheus.enabled }}
+  action {
+    key = "exporter.job"
+    value = "prometheus"
+    action = "upsert"
+  }
+  {{- else if .Values.traces.otelMetrics.exporter.otlphttp.enabled }}
+  action {
+    key = "exporter.job"
+    value = "otlphttp"
+    action = "upsert"
+  }
+  {{- end }}
+  output {
+
+    {{- if (and .Values.traces.otelMetrics.exporter.prometheus.enabled .Values.traces.otelMetrics.exporter.otlphttp.enabled) }}
+      metrics = [
+        prometheus.remote_write.grafana_cloud_prometheus.receiver,
+        otelcol.exporter.otlphttp.grafana_cloud_otlphttp.input,
+      ]
+    {{- else if .Values.traces.otelMetrics.exporter.prometheus.enabled }}
+      metrics = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
+    {{- else if .Values.traces.otelMetrics.exporter.otlphttp.enabled }}
+      metrics = [otelcol.exporter.otlphttp.grafana_cloud_otlphttp.input]
+    {{- end }}
+  }
+}
+
+{{- end }}
+
 {{- end }}

@@ -109,6 +109,26 @@ externalServices:
     # tlsOptions: insecure = true
     tlsOptions: ""
 
+  # Connection information for OTLP HTTP endpoint
+  otlphttp:
+    # -- (string) (required) OTLP HTTP host where traces/metrics will be sent
+    host: ""
+
+    # -- (string) (optional) OTLP HTTP tenant ID
+    tenantId: ""
+
+    # Authenticate to OTLP HTTP using basic authentication
+    basicAuth:
+      # -- (string) OTLP HTTP basic auth username
+      username: ""
+      # -- (string) OTLP HTTP basic auth password
+      password: ""
+
+    # -- (string) Define the TLS block. See https://grafana.com/docs/agent/latest/flow/reference/components/otelcol.exporter.otlphttp/#tls-block for options.
+    # Example:
+    # tlsOptions: insecure = true
+    tlsOptions: ""
+
 # Settings related to capturing and forwarding metrics
 metrics:
   # -- Capture and forward metrics
@@ -543,6 +563,26 @@ traces:
       # -- How long before sending
       timeout: 2s
 
+  # Metrics from the OTEL Instrumentation
+  otelMetrics:
+    # -- Receive otel metrics from OTEL Instrumentation
+    enabled: false
+    exporter: 
+      prometheus: 
+        # -- Forward metrics via prometheus rewrite exporter
+        enabled: true
+      otlphttp: 
+        # -- Forward metrics via OTLP HTTP
+        enabled: false
+    processors:
+      # OTLP Metrics batch processor settings
+      batch:
+        # -- What batch size to use, in bytes
+        size: 16384
+        # -- The upper limit of the amount of data contained in a single batch, in bytes. When set to 0, batches can be any size.
+        maxSize: 0
+        # -- How long before sending
+        timeout: 2s
 # -- (string) Extra configuration that will be added to the Grafana Agent configuration file. See [Adding custom Flow configuration](#adding-custom-flow-configuration) for an example.
 extraConfig:
 
