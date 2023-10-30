@@ -87,7 +87,6 @@
 
 {{/* Grafana Agent Logs config */}}
 {{- define "agentLogsConfig" -}}
-  {{- include "agent.config.pods" . }}
   {{- include "agent.config.logs.pod_logs" . }}
   {{- include "agent.config.loki" . }}
 

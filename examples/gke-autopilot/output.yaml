@@ -442,11 +442,15 @@ metadata:
   namespace: default
 data:
   config.river: |-
+    // Pod Logs
     discovery.kubernetes "pods" {
-      role = "pod"
+        role = "pod"
+      selectors {
+        role = "pod"
+        field = "spec.nodeName=" + env("HOSTNAME")
+      }
     }
     
-    // Pod Logs
     discovery.relabel "pod_logs" {
       targets = discovery.kubernetes.pods.targets
     
@@ -471,11 +475,6 @@ data:
         action = "replace"
         replacement = "$1"
         target_label = "job"
-      }
-      rule {
-        source_labels = ["__meta_kubernetes_pod_node_name"]
-        action = "keep"
-        regex = env("HOSTNAME")
       }
       rule {
         source_labels = ["__meta_kubernetes_pod_uid", "__meta_kubernetes_pod_container_name"]
@@ -43352,11 +43351,15 @@ data:
       }
     }
   logs.river: |-
+    // Pod Logs
     discovery.kubernetes "pods" {
-      role = "pod"
+        role = "pod"
+      selectors {
+        role = "pod"
+        field = "spec.nodeName=" + env("HOSTNAME")
+      }
     }
     
-    // Pod Logs
     discovery.relabel "pod_logs" {
       targets = discovery.kubernetes.pods.targets
     
@@ -43381,11 +43384,6 @@ data:
         action = "replace"
         replacement = "$1"
         target_label = "job"
-      }
-      rule {
-        source_labels = ["__meta_kubernetes_pod_node_name"]
-        action = "keep"
-        regex = env("HOSTNAME")
       }
       rule {
         source_labels = ["__meta_kubernetes_pod_uid", "__meta_kubernetes_pod_container_name"]

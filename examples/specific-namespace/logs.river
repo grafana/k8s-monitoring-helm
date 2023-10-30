@@ -1,11 +1,20 @@
+// Pod Logs
 discovery.kubernetes "pods" {
-  role = "pod"
+    role = "pod"
+  selectors {
+    role = "pod"
+    field = "spec.nodeName=" + env("HOSTNAME")
+  }
 }
 
-// Pod Logs
 discovery.relabel "pod_logs" {
   targets = discovery.kubernetes.pods.targets
 
+  rule {
+    source_labels = ["namespace"]
+    regex = "production|staging"
+    action = "keep"
+  }
   rule {
     source_labels = ["__meta_kubernetes_namespace"]
     action = "replace"
@@ -29,21 +38,11 @@ discovery.relabel "pod_logs" {
     target_label = "job"
   }
   rule {
-    source_labels = ["__meta_kubernetes_pod_node_name"]
-    action = "keep"
-    regex = env("HOSTNAME")
-  }
-  rule {
     source_labels = ["__meta_kubernetes_pod_uid", "__meta_kubernetes_pod_container_name"]
     separator = "/"
     action = "replace"
     replacement = "/var/log/pods/*$1/*.log"
     target_label = "__path__"
-  }
-  rule {
-    source_labels = ["namespace"]
-    regex = "production|staging"
-    action = "keep"
   }
 
   // set the container runtime as a label
