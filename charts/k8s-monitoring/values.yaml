@@ -664,6 +664,10 @@ grafana-agent:
         configMap:
           name: kubernetes-monitoring-telemetry
 
+  # Skip installation of the Grafana Agent CRDs, since we don't use them in this chart
+  crds:
+    create: false
+
 # Settings for the Grafana Agent deployment
 # You can use this sections to make modifications to the Grafana Agent deployment.
 # See https://github.com/grafana/agent/tree/main/operations/helm/charts/grafana-agent for available values.
@@ -702,7 +706,6 @@ grafana-agent-logs:
         secret:
           secretName: grafana-agent-credentials
 
-  # The CRDs created by the agent will be done in the .grafana-agent chart. Setting this to false removes a duplicate
-  # creation attempt.
+  # Skip installation of the Grafana Agent CRDs, since we don't use them in this chart
   crds:
     create: false
