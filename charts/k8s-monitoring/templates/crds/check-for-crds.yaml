@@ -1,6 +1,3 @@
 {{- if and .Release.IsInstall (index .Values "prometheus-operator-crds").enabled (.Capabilities.APIVersions.Has "monitoring.coreos.com/v1/ServiceMonitor") -}}
   {{- fail "This chart is attempting to deploy the Prometheus Operator CRDs, but they have already been installed on this cluster.\nPlease set:\nprometheus-operator-crds:\n  enabled: false\nand re-deploy" -}}
 {{- end -}}
-{{- if and .Release.IsInstall (index .Values "grafana-agent").crds.create (.Capabilities.APIVersions.Has "monitoring.grafana.com/v1alpha2/PodLogs") -}}
-  {{- fail "This chart is attempting to deploy the Grafana PodLogs CRD, but is has already been installed on this cluster.\nPlease set:\ngrafana-agent:\n  crds:\n    create: false\nand re-deploy" -}}
-{{- end -}}
