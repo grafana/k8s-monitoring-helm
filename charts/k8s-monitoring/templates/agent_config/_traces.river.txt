@@ -47,19 +47,20 @@ otelcol.processor.batch "trace_batch_processor" {
   }
 }
 
+{{- end }}
+
 otelcol.processor.transform "trace_transform_processor" {
   trace_statements {
     context = "resource"
     statements = [
-      // Accessing a map with a key that does not exist will return nil. 
-      "set(attributes[\"k8s.cluster.name\"], {{ required ".Values.cluster.name is a required value. Please set it and try again." .Values.cluster.name | quote }}) where attributes[\"k8s.cluster.name\"] == nil"
+      // Accessing a map with a key that does not exist will return nil.
+      "set(attributes[\"k8s.cluster.name\"], \"{{ required ".Values.cluster.name is a required value. Please set it and try again." .Values.cluster.name }}\") where attributes[\"k8s.cluster.name\"] == nil"
     ]
   }
   output {
     traces  = [otelcol.processor.attributes.trace_attributes_processor.input]
   }
 }
-{{- end }}
 
 otelcol.processor.attributes "trace_attributes_processor" {
   action {

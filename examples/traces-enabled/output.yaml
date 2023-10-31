@@ -520,7 +520,20 @@ data:
       send_batch_max_size = 0
       timeout = "2s"
       output {
-        traces = [otelcol.processor.attributes.trace_attributes_processor.input]
+        traces = [otelcol.processor.attributes.trace_transform_processor.input]
+      }
+    }
+    
+    otelcol.processor.transform "trace_transform_processor" {
+      trace_statements {
+        context = "resource"
+        statements = [
+          // Accessing a map with a key that does not exist will return nil.
+          "set(attributes[\"k8s.cluster.name\"], \"traces-enabled-test\") where attributes[\"k8s.cluster.name\"] == nil"
+        ]
+      }
+      output {
+        traces  = [otelcol.processor.attributes.trace_attributes_processor.input]
       }
     }
     
@@ -529,11 +542,6 @@ data:
         key = "cluster"
         value = "traces-enabled-test"
         action = "insert"
-      }
-      action {
-        key = "k8s.cluster.name"
-        value = "traces-enabled-test"
-        action = "upsert"
       }
       output {
         traces = [otelcol.exporter.otlp.tempo.input]
@@ -43521,7 +43529,20 @@ data:
       send_batch_max_size = 0
       timeout = "2s"
       output {
-        traces = [otelcol.processor.attributes.trace_attributes_processor.input]
+        traces = [otelcol.processor.attributes.trace_transform_processor.input]
+      }
+    }
+    
+    otelcol.processor.transform "trace_transform_processor" {
+      trace_statements {
+        context = "resource"
+        statements = [
+          // Accessing a map with a key that does not exist will return nil.
+          "set(attributes[\"k8s.cluster.name\"], \"traces-enabled-test\") where attributes[\"k8s.cluster.name\"] == nil"
+        ]
+      }
+      output {
+        traces  = [otelcol.processor.attributes.trace_attributes_processor.input]
       }
     }
     
@@ -43530,11 +43551,6 @@ data:
         key = "cluster"
         value = "traces-enabled-test"
         action = "insert"
-      }
-      action {
-        key = "k8s.cluster.name"
-        value = "traces-enabled-test"
-        action = "upsert"
       }
       output {
         traces = [otelcol.exporter.otlp.tempo.input]
