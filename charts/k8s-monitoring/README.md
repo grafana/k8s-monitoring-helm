@@ -121,7 +121,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | logs.extraConfig | string | `nil` | Extra configuration that will be added to Grafana Agent Logs. See [Adding custom Flow configuration](#adding-custom-flow-configuration) for an example.   |
 | logs.pod_logs.enabled | bool | `true` | Capture and forward logs from Kubernetes pods |
 | logs.pod_logs.extraRelabelingRules | string | `nil` | Rule blocks to be added to the discovery.relabel component for pod logs. See https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block |
-| logs.pod_logs.extraStageBlocks | string | `nil` | Stage blocks to be added to the prometheus.relabel component for pod logs. See https://grafana.com/docs/agent/latest/flow/reference/components/loki.process/#blocks |
+| logs.pod_logs.extraStageBlocks | string | `nil` | Stage blocks to be added to the loki.process component for pod logs. See https://grafana.com/docs/agent/latest/flow/reference/components/loki.process/#blocks |
 | logs.pod_logs.namespaces | list | `[]` | Only capture logs from pods in these namespaces (`[]` means all namespaces) |
 | metrics.agent.allowList | list | See [Allow List for Grafana Agent](#allow-list-for-grafana-agent) | The list of Grafana Agent metrics that will be scraped by the Agent |
 | metrics.agent.enabled | bool | `true` | Scrape metrics from Grafana Agent |
