@@ -60,7 +60,11 @@ otelcol.processor.attributes "trace_attributes_processor" {
     action = "upsert"
   }
   output {
+    {{- if eq .Values.externalServices.tempo.protocol "otlp" }}
     traces = [otelcol.exporter.otlp.tempo.input]
+    {{- else if eq .Values.externalServices.tempo.protocol "otlphttp" }}
+    traces = [otelcol.exporter.otlphttp.tempo.input]
+    {{- end }}
   }
 }
 {{- end }}

@@ -111,6 +111,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | externalServices.tempo.basicAuth.password | string | `""` | Tempo basic auth password |
 | externalServices.tempo.basicAuth.username | string | `""` | Tempo basic auth username |
 | externalServices.tempo.host | string | `""` | (required) Tempo host where traces will be sent |
+| externalServices.tempo.protocol | string | `"otlp"` | The type of server protocol for writing metrics Options:   * "otlp" will use OTLP   * "otlphttp" will use OTLP HTTP |
 | externalServices.tempo.tenantId | string | `""` | (optional) Tempo tenant ID |
 | externalServices.tempo.tlsOptions | string | `""` | Define the TLS block. See https://grafana.com/docs/agent/latest/flow/reference/components/otelcol.exporter.otlp/#tls-block for options. Example: tlsOptions: insecure = true |
 | extraConfig | string | `nil` | Extra configuration that will be added to the Grafana Agent configuration file. See [Adding custom Flow configuration](#adding-custom-flow-configuration) for an example. |

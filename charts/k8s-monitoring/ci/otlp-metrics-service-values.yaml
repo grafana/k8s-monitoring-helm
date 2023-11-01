@@ -18,10 +18,41 @@ externalServices:
     basicAuth:
       username: loki
       password: lokipassword
+  tempo:
+    host: http://tempo.tempo.svc:4318
+    protocol: otlphttp
+    tlsOptions: |-
+      insecure             = true
+      insecure_skip_verify = true
 
 metrics:
   cost:
     enabled: false
 
+traces:
+  enabled: true
+
+extraConfig: |-
+  tracing {
+    sampling_fraction = 0.1
+    write_to = [otelcol.exporter.otlphttp.tempo.input]
+  }
+
 opencost:
   enabled: false
+
+grafana-agent:
+  agent:
+    extraPorts:
+      - name: "otlp-grpc"
+        port: 4317
+        targetPort: 4317
+        protocol: "TCP"
+      - name: "otlp-http"
+        port: 4318
+        targetPort: 4318
+        protocol: "TCP"
+      - name: "zipkin"
+        port: 9411
+        targetPort: 9411
+        protocol: "TCP"
