@@ -29,7 +29,12 @@ metrics:
 
 test:
   extraQueries:
-  - query: kube_deployment_spec_replicas{cluster="ci-test-cluster"}
+  # Check for cluster events
+  - query: "{cluster=\"ci-test-cluster\", job=\"integrations/kubernetes/eventhandler\"}"
+    type: logql
+  # Check for pod logs
+  - query: "{cluster=\"ci-test-cluster\", job!=\"integrations/kubernetes/eventhandler\"}"
+    type: logql
 
 opencost:
   prometheus:
