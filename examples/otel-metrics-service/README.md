@@ -1,3 +1,9 @@
+# OpenTelemetry Metrics Service
+
+This example shows how to change the protocol for the metrics service to send metrics
+via otlp or otlphttp protocols.
+
+```yaml
 cluster:
   name: otel-metrics-service-test
 
@@ -21,3 +27,4 @@ externalServices:
     basicAuth:
       username: 12345
       password: "It's a secret to everyone"
+```
