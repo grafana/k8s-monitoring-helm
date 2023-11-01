@@ -152,3 +152,27 @@
 {{- if index (index .Values "opencost").enabled -}}{{- $deployments = append $deployments "opencost" -}}{{- end -}}
 {{- join "," $deployments -}}
 {{- end }}
+
+{{- define "kubernetes_monitoring.metrics_service.secret.name" -}}
+{{- if .Values.externalServices.prometheus.secret.name }}
+  {{- .Values.externalServices.prometheus.secret.name }}
+{{- else }}
+  {{- printf "prometheus-%s" .Chart.Name | trunc 63 | trimSuffix "-" }}
+{{- end }}
+{{- end }}
+
+{{- define "kubernetes_monitoring.logs_service.secret.name" -}}
+{{- if .Values.externalServices.loki.secret.name }}
+  {{- .Values.externalServices.loki.secret.name }}
+{{- else }}
+  {{- printf "loki-%s" .Chart.Name | trunc 63 | trimSuffix "-" }}
+{{- end }}
+{{- end }}
+
+{{- define "kubernetes_monitoring.traces_service.secret.name" -}}
+{{- if .Values.externalServices.tempo.secret.name }}
+  {{- .Values.externalServices.tempo.secret.name }}
+{{- else }}
+  {{- printf "tempo-%s" .Chart.Name | trunc 63 | trimSuffix "-" }}
+{{- end }}
+{{- end }}

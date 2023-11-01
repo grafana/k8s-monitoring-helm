@@ -113,48 +113,48 @@ spec:
             - name: PROMETHEUS_HOST
               valueFrom:
                 secretKeyRef:
-                  name: grafana-agent-credentials
-                  key: prometheus_host
+                  name: {{ include "kubernetes_monitoring.metrics_service.secret.name" . }}
+                  key: {{ .Values.externalServices.prometheus.hostKey }}
                   optional: true
             - name: PROMETHEUS_URL
               value: $(PROMETHEUS_HOST){{ .Values.externalServices.prometheus.queryEndpoint }}
             - name: PROMETHEUS_USER
               valueFrom:
                 secretKeyRef:
-                  name: grafana-agent-credentials
-                  key: prometheus_username
+                  name: {{ include "kubernetes_monitoring.metrics_service.secret.name" . }}
+                  key: {{ .Values.externalServices.prometheus.basicAuth.usernameKey }}
                   optional: true
             - name: PROMETHEUS_PASS
               valueFrom:
                 secretKeyRef:
-                  name: grafana-agent-credentials
-                  key: prometheus_password
+                  name: {{ include "kubernetes_monitoring.metrics_service.secret.name" . }}
+                  key: {{ .Values.externalServices.prometheus.basicAuth.passwordKey }}
                   optional: true
 
             - name: LOKI_HOST
               valueFrom:
                 secretKeyRef:
-                  name: grafana-agent-credentials
-                  key: loki_host
+                  name: {{ include "kubernetes_monitoring.logs_service.secret.name" . }}
+                  key: {{ .Values.externalServices.loki.hostKey }}
             - name: LOKI_URL
-              value: $(LOKI_HOST)/loki/api/v1/query
+              value: $(LOKI_HOST){{ .Values.externalServices.loki.queryEndpoint }}
             - name: LOKI_USER
               valueFrom:
                 secretKeyRef:
-                  name: grafana-agent-credentials
-                  key: loki_username
+                  name: {{ include "kubernetes_monitoring.logs_service.secret.name" . }}
+                  key: {{ .Values.externalServices.loki.basicAuth.usernameKey }}
                   optional: true
             - name: LOKI_PASS
               valueFrom:
                 secretKeyRef:
-                  name: grafana-agent-credentials
-                  key: loki_password
+                  name: {{ include "kubernetes_monitoring.logs_service.secret.name" . }}
+                  key: {{ .Values.externalServices.loki.basicAuth.passwordKey }}
                   optional: true
             - name: LOKI_TENANTID
               valueFrom:
                 secretKeyRef:
-                  name: grafana-agent-credentials
-                  key: loki_tenantId
+                  name: {{ include "kubernetes_monitoring.logs_service.secret.name" . }}
+                  key: {{ .Values.externalServices.loki.tenantIdKey }}
                   optional: true
 
       volumes:

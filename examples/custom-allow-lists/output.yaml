@@ -57,17 +57,18 @@ metadata:
     app.kubernetes.io/instance: k8smon
     app.kubernetes.io/version: "1.7.0"
 ---
-# Source: k8s-monitoring/templates/credentials.yaml
+# Source: k8s-monitoring/templates/metrics-service-credentials.yaml
 apiVersion: v1
 kind: Secret
 metadata:
-  name: grafana-agent-credentials
+  name: prometheus-k8s-monitoring
   namespace: default
 type: Opaque
 data:
-  prometheus_host: "aHR0cHM6Ly9wcm9tZXRoZXVzLmV4YW1wbGUuY29t"
-  prometheus_username: "MTIzNDU="
-  prometheus_password: "SXQncyBhIHNlY3JldCB0byBldmVyeW9uZQ=="
+
+  host: "aHR0cHM6Ly9wcm9tZXRoZXVzLmV4YW1wbGUuY29t"
+  username: "MTIzNDU="
+  password: "SXQncyBhIHNlY3JldCB0byBldmVyeW9uZQ=="
 ---
 # Source: k8s-monitoring/templates/grafana-agent-config.yaml
 apiVersion: v1
@@ -407,19 +408,10 @@ data:
     }
     
     // Metrics Service
-    local.file "prometheus_host" {
-      filename  = "/etc/grafana-agent-credentials/prometheus_host"
+    remote.kubernetes.secret "metrics_service" {
+      name = "prometheus-k8s-monitoring"
+      namespace = "default"
     }
-    
-    local.file "prometheus_username" {
-      filename  = "/etc/grafana-agent-credentials/prometheus_username"
-    }
-    
-    local.file "prometheus_password" {
-      filename  = "/etc/grafana-agent-credentials/prometheus_password"
-      is_secret = true
-    }
-    
     
     prometheus.relabel "metrics_service" {
       forward_to = [prometheus.remote_write.metrics_service.receiver]
@@ -427,11 +419,12 @@ data:
     
     prometheus.remote_write "metrics_service" {
       endpoint {
-        url = nonsensitive(local.file.prometheus_host.content) + "/api/prom/push"
+        url = nonsensitive(remote.kubernetes.secret.metrics_service.data["host"]) + "/api/prom/push"
+        headers = { "X-Scope-OrgID" = remote.kubernetes.secret.metrics_service.data["tenantId"] }
     
         basic_auth {
-          username = local.file.prometheus_username.content
-          password = local.file.prometheus_password.content
+          username = nonsensitive(remote.kubernetes.secret.metrics_service.data["username"])
+          password = remote.kubernetes.secret.metrics_service.data["password"]
         }
     
       }
@@ -43099,13 +43092,13 @@ spec:
             - name: DB_BASIC_AUTH_USERNAME
               valueFrom:
                 secretKeyRef:
-                  name: grafana-agent-credentials
-                  key: prometheus_username
+                  name: prometheus-k8s-monitoring
+                  key: username
             - name: DB_BASIC_AUTH_PW
               valueFrom:
                 secretKeyRef:
-                  name: grafana-agent-credentials
-                  key: prometheus_password
+                  name: prometheus-k8s-monitoring
+                  key: password
             # Add any additional provided variables
             - name: CLOUD_PROVIDER_API_KEY
               value: "AIzaSyD29bGxmHAVEOBYtgd8sYM2gM2ekfxQX4U"
@@ -43180,9 +43173,6 @@ spec:
             - name: config
               mountPath: /etc/agent
             -
-              mountPath: /etc/grafana-agent-credentials
-              name: grafana-agent-credentials
-            -
               mountPath: /etc/kubernetes-monitoring-telemetry
               name: kubernetes-monitoring-telemetry
         - name: config-reloader
@@ -43204,9 +43194,6 @@ spec:
         - name: config
           configMap:
             name: k8smon-grafana-agent
-        - name: grafana-agent-credentials
-          secret:
-            secretName: grafana-agent-credentials
         - configMap:
             name: kubernetes-monitoring-telemetry
           name: kubernetes-monitoring-telemetry
@@ -43588,19 +43575,10 @@ data:
     }
     
     // Metrics Service
-    local.file "prometheus_host" {
-      filename  = "/etc/grafana-agent-credentials/prometheus_host"
+    remote.kubernetes.secret "metrics_service" {
+      name = "prometheus-k8s-monitoring"
+      namespace = "default"
     }
-    
-    local.file "prometheus_username" {
-      filename  = "/etc/grafana-agent-credentials/prometheus_username"
-    }
-    
-    local.file "prometheus_password" {
-      filename  = "/etc/grafana-agent-credentials/prometheus_password"
-      is_secret = true
-    }
-    
     
     prometheus.relabel "metrics_service" {
       forward_to = [prometheus.remote_write.metrics_service.receiver]
@@ -43608,11 +43586,12 @@ data:
     
     prometheus.remote_write "metrics_service" {
       endpoint {
-        url = nonsensitive(local.file.prometheus_host.content) + "/api/prom/push"
+        url = nonsensitive(remote.kubernetes.secret.metrics_service.data["host"]) + "/api/prom/push"
+        headers = { "X-Scope-OrgID" = remote.kubernetes.secret.metrics_service.data["tenantId"] }
     
         basic_auth {
-          username = local.file.prometheus_username.content
-          password = local.file.prometheus_password.content
+          username = nonsensitive(remote.kubernetes.secret.metrics_service.data["username"])
+          password = remote.kubernetes.secret.metrics_service.data["password"]
         }
     
       }
@@ -43822,48 +43801,48 @@ spec:
             - name: PROMETHEUS_HOST
               valueFrom:
                 secretKeyRef:
-                  name: grafana-agent-credentials
-                  key: prometheus_host
+                  name: prometheus-k8s-monitoring
+                  key: host
                   optional: true
             - name: PROMETHEUS_URL
               value: $(PROMETHEUS_HOST)/api/prom/api/v1/query
             - name: PROMETHEUS_USER
               valueFrom:
                 secretKeyRef:
-                  name: grafana-agent-credentials
-                  key: prometheus_username
+                  name: prometheus-k8s-monitoring
+                  key: username
                   optional: true
             - name: PROMETHEUS_PASS
               valueFrom:
                 secretKeyRef:
-                  name: grafana-agent-credentials
-                  key: prometheus_password
+                  name: prometheus-k8s-monitoring
+                  key: password
                   optional: true
 
             - name: LOKI_HOST
               valueFrom:
                 secretKeyRef:
-                  name: grafana-agent-credentials
-                  key: loki_host
+                  name: loki-k8s-monitoring
+                  key: host
             - name: LOKI_URL
               value: $(LOKI_HOST)/loki/api/v1/query
             - name: LOKI_USER
               valueFrom:
                 secretKeyRef:
-                  name: grafana-agent-credentials
-                  key: loki_username
+                  name: loki-k8s-monitoring
+                  key: username
                   optional: true
             - name: LOKI_PASS
               valueFrom:
                 secretKeyRef:
-                  name: grafana-agent-credentials
-                  key: loki_password
+                  name: loki-k8s-monitoring
+                  key: password
                   optional: true
             - name: LOKI_TENANTID
               valueFrom:
                 secretKeyRef:
-                  name: grafana-agent-credentials
-                  key: loki_tenantId
+                  name: loki-k8s-monitoring
+                  key: tenantId
                   optional: true
 
       volumes:

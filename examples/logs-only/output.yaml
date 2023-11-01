@@ -25,18 +25,19 @@ metadata:
     app.kubernetes.io/version: v0.38.0
     app.kubernetes.io/managed-by: Helm
 ---
-# Source: k8s-monitoring/templates/credentials.yaml
+# Source: k8s-monitoring/templates/log-service-credentials.yaml
 apiVersion: v1
 kind: Secret
 metadata:
-  name: grafana-agent-credentials
+  name: loki-k8s-monitoring
   namespace: default
 type: Opaque
 data:
-  loki_host: "aHR0cHM6Ly9sb2tpLmV4YW1wbGUuY29t"
-  loki_username: "MTIzNDU="
-  loki_password: "SXQncyBhIHNlY3JldCB0byBldmVyeW9uZQ=="
-  loki_tenantId: "MjAwMA=="
+
+  host: "aHR0cHM6Ly9sb2tpLmV4YW1wbGUuY29t"
+  username: "MTIzNDU="
+  password: "SXQncyBhIHNlY3JldCB0byBldmVyeW9uZQ=="
+  tenantId: "MjAwMA=="
 ---
 # Source: k8s-monitoring/templates/grafana-agent-config.yaml
 apiVersion: v1
@@ -64,31 +65,19 @@ data:
       forward_to = [loki.write.grafana_cloud_loki.receiver]
     }
     
-    // Grafana Cloud Loki
-    local.file "loki_host" {
-      filename  = "/etc/grafana-agent-credentials/loki_host"
-    }
-    
-    local.file "loki_username" {
-      filename  = "/etc/grafana-agent-credentials/loki_username"
-    }
-    
-    local.file "loki_password" {
-      filename  = "/etc/grafana-agent-credentials/loki_password"
-      is_secret = true
-    }
-    
-    local.file "loki_tenantid" {
-      filename  = "/etc/grafana-agent-credentials/loki_tenantId"
+    // Loki
+    remote.kubernetes.secret "logs_service" {
+      name = "loki-k8s-monitoring"
+      namespace = "default"
     }
     loki.write "grafana_cloud_loki" {
       endpoint {
-        url = nonsensitive(local.file.loki_host.content) + "/loki/api/v1/push"
-        tenant_id = local.file.loki_tenantid.content
+        url = nonsensitive(remote.kubernetes.secret.logs_service.data["host"]) + "/loki/api/v1/push"
+        tenant_id = nonsensitive(remote.kubernetes.secret.logs_service.data["tenantId"])
     
         basic_auth {
-          username = local.file.loki_username.content
-          password = local.file.loki_password.content
+          username = nonsensitive(remote.kubernetes.secret.logs_service.data["username"])
+          password = remote.kubernetes.secret.logs_service.data["password"]
         }
       }
       external_labels = {
@@ -201,31 +190,19 @@ data:
       forward_to = [loki.write.grafana_cloud_loki.receiver]
     }
     
-    // Grafana Cloud Loki
-    local.file "loki_host" {
-      filename  = "/etc/grafana-agent-credentials/loki_host"
-    }
-    
-    local.file "loki_username" {
-      filename  = "/etc/grafana-agent-credentials/loki_username"
-    }
-    
-    local.file "loki_password" {
-      filename  = "/etc/grafana-agent-credentials/loki_password"
-      is_secret = true
-    }
-    
-    local.file "loki_tenantid" {
-      filename  = "/etc/grafana-agent-credentials/loki_tenantId"
+    // Loki
+    remote.kubernetes.secret "logs_service" {
+      name = "loki-k8s-monitoring"
+      namespace = "default"
     }
     loki.write "grafana_cloud_loki" {
       endpoint {
-        url = nonsensitive(local.file.loki_host.content) + "/loki/api/v1/push"
-        tenant_id = local.file.loki_tenantid.content
+        url = nonsensitive(remote.kubernetes.secret.logs_service.data["host"]) + "/loki/api/v1/push"
+        tenant_id = nonsensitive(remote.kubernetes.secret.logs_service.data["tenantId"])
     
         basic_auth {
-          username = local.file.loki_username.content
-          password = local.file.loki_password.content
+          username = nonsensitive(remote.kubernetes.secret.logs_service.data["username"])
+          password = remote.kubernetes.secret.logs_service.data["password"]
         }
       }
       external_labels = {
@@ -604,9 +581,6 @@ spec:
             - name: varlog
               mountPath: /var/log
               readOnly: true
-            -
-              mountPath: /etc/grafana-agent-credentials
-              name: grafana-agent-credentials
         - name: config-reloader
           image: docker.io/jimmidyson/configmap-reload:v0.8.0
           args:
@@ -632,9 +606,6 @@ spec:
         - name: varlog
           hostPath:
             path: /var/log
-        - name: grafana-agent-credentials
-          secret:
-            secretName: grafana-agent-credentials
 ---
 # Source: k8s-monitoring/charts/grafana-agent/templates/controllers/statefulset.yaml
 apiVersion: apps/v1
@@ -698,9 +669,6 @@ spec:
             - name: config
               mountPath: /etc/agent
             -
-              mountPath: /etc/grafana-agent-credentials
-              name: grafana-agent-credentials
-            -
               mountPath: /etc/kubernetes-monitoring-telemetry
               name: kubernetes-monitoring-telemetry
         - name: config-reloader
@@ -722,9 +690,6 @@ spec:
         - name: config
           configMap:
             name: k8smon-grafana-agent
-        - name: grafana-agent-credentials
-          secret:
-            secretName: grafana-agent-credentials
         - configMap:
             name: kubernetes-monitoring-telemetry
           name: kubernetes-monitoring-telemetry
@@ -764,31 +729,19 @@ data:
       forward_to = [loki.write.grafana_cloud_loki.receiver]
     }
     
-    // Grafana Cloud Loki
-    local.file "loki_host" {
-      filename  = "/etc/grafana-agent-credentials/loki_host"
-    }
-    
-    local.file "loki_username" {
-      filename  = "/etc/grafana-agent-credentials/loki_username"
-    }
-    
-    local.file "loki_password" {
-      filename  = "/etc/grafana-agent-credentials/loki_password"
-      is_secret = true
-    }
-    
-    local.file "loki_tenantid" {
-      filename  = "/etc/grafana-agent-credentials/loki_tenantId"
+    // Loki
+    remote.kubernetes.secret "logs_service" {
+      name = "loki-k8s-monitoring"
+      namespace = "default"
     }
     loki.write "grafana_cloud_loki" {
       endpoint {
-        url = nonsensitive(local.file.loki_host.content) + "/loki/api/v1/push"
-        tenant_id = local.file.loki_tenantid.content
+        url = nonsensitive(remote.kubernetes.secret.logs_service.data["host"]) + "/loki/api/v1/push"
+        tenant_id = nonsensitive(remote.kubernetes.secret.logs_service.data["tenantId"])
     
         basic_auth {
-          username = local.file.loki_username.content
-          password = local.file.loki_password.content
+          username = nonsensitive(remote.kubernetes.secret.logs_service.data["username"])
+          password = remote.kubernetes.secret.logs_service.data["password"]
         }
       }
       external_labels = {
@@ -893,31 +846,19 @@ data:
       forward_to = [loki.write.grafana_cloud_loki.receiver]
     }
     
-    // Grafana Cloud Loki
-    local.file "loki_host" {
-      filename  = "/etc/grafana-agent-credentials/loki_host"
-    }
-    
-    local.file "loki_username" {
-      filename  = "/etc/grafana-agent-credentials/loki_username"
-    }
-    
-    local.file "loki_password" {
-      filename  = "/etc/grafana-agent-credentials/loki_password"
-      is_secret = true
-    }
-    
-    local.file "loki_tenantid" {
-      filename  = "/etc/grafana-agent-credentials/loki_tenantId"
+    // Loki
+    remote.kubernetes.secret "logs_service" {
+      name = "loki-k8s-monitoring"
+      namespace = "default"
     }
     loki.write "grafana_cloud_loki" {
       endpoint {
-        url = nonsensitive(local.file.loki_host.content) + "/loki/api/v1/push"
-        tenant_id = local.file.loki_tenantid.content
+        url = nonsensitive(remote.kubernetes.secret.logs_service.data["host"]) + "/loki/api/v1/push"
+        tenant_id = nonsensitive(remote.kubernetes.secret.logs_service.data["tenantId"])
     
         basic_auth {
-          username = local.file.loki_username.content
-          password = local.file.loki_password.content
+          username = nonsensitive(remote.kubernetes.secret.logs_service.data["username"])
+          password = remote.kubernetes.secret.logs_service.data["password"]
         }
       }
       external_labels = {
@@ -1094,48 +1035,48 @@ spec:
             - name: PROMETHEUS_HOST
               valueFrom:
                 secretKeyRef:
-                  name: grafana-agent-credentials
-                  key: prometheus_host
+                  name: prometheus-k8s-monitoring
+                  key: host
                   optional: true
             - name: PROMETHEUS_URL
               value: $(PROMETHEUS_HOST)/api/prom/api/v1/query
             - name: PROMETHEUS_USER
               valueFrom:
                 secretKeyRef:
-                  name: grafana-agent-credentials
-                  key: prometheus_username
+                  name: prometheus-k8s-monitoring
+                  key: username
                   optional: true
             - name: PROMETHEUS_PASS
               valueFrom:
                 secretKeyRef:
-                  name: grafana-agent-credentials
-                  key: prometheus_password
+                  name: prometheus-k8s-monitoring
+                  key: password
                   optional: true
 
             - name: LOKI_HOST
               valueFrom:
                 secretKeyRef:
-                  name: grafana-agent-credentials
-                  key: loki_host
+                  name: loki-k8s-monitoring
+                  key: host
             - name: LOKI_URL
               value: $(LOKI_HOST)/loki/api/v1/query
             - name: LOKI_USER
               valueFrom:
                 secretKeyRef:
-                  name: grafana-agent-credentials
-                  key: loki_username
+                  name: loki-k8s-monitoring
+                  key: username
                   optional: true
             - name: LOKI_PASS
               valueFrom:
                 secretKeyRef:
-                  name: grafana-agent-credentials
-                  key: loki_password
+                  name: loki-k8s-monitoring
+                  key: password
                   optional: true
             - name: LOKI_TENANTID
               valueFrom:
                 secretKeyRef:
-                  name: grafana-agent-credentials
-                  key: loki_tenantId
+                  name: loki-k8s-monitoring
+                  key: tenantId
                   optional: true
 
       volumes:

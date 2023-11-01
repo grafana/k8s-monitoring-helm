@@ -1,26 +1,10 @@
 {{ define "agent.config.metricsService" }}
 // Metrics Service
-{{- with .Values.externalServices.prometheus }}
-local.file "prometheus_host" {
-  filename  = "/etc/grafana-agent-credentials/prometheus_host"
+remote.kubernetes.secret "metrics_service" {
+  name = {{ include "kubernetes_monitoring.metrics_service.secret.name" . | quote }}
+  namespace = {{ .Values.externalServices.prometheus.secret.namespace | default .Release.Namespace | quote }}
 }
-{{ if .basicAuth.username }}
-local.file "prometheus_username" {
-  filename  = "/etc/grafana-agent-credentials/prometheus_username"
-}
-{{- end }}
-{{ if .basicAuth.password }}
-local.file "prometheus_password" {
-  filename  = "/etc/grafana-agent-credentials/prometheus_password"
-  is_secret = true
-}
-{{- end }}
-{{ if .tenantId }}
-local.file "prometheus_tenantid" {
-  filename  = "/etc/grafana-agent-credentials/prometheus_tenantId"
-}
-{{- end }}
-{{ end }}
+
 prometheus.relabel "metrics_service" {
 {{- if eq .Values.externalServices.prometheus.protocol "remote_write" }}
   forward_to = [prometheus.remote_write.metrics_service.receiver]

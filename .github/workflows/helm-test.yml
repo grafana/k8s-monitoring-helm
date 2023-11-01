@@ -12,6 +12,7 @@ env:
   CT_CONFIGFILE: "${{ github.workspace }}/.github/configs/ct.yaml"
   LINT_CONFIGFILE: "${{ github.workspace }}/.github/configs/lintconf.yaml"
   PROMETHEUS_VALUES: "${{ github.workspace }}/.github/configs/prometheus.yaml"
+  PROMETHEUS_SECRET: "${{ github.workspace }}/.github/configs/prometheus-creds.yaml"
   LOKI_VALUES: "${{ github.workspace }}/.github/configs/loki.yaml"
   TEMPO_VALUES: ""  # No values for now
   GRAFANA_VALUES: "${{ github.workspace }}/.github/configs/grafana.yaml"
@@ -144,6 +145,7 @@ jobs:
     - name: Deploy Prometheus
       if: steps.list-changed.outputs.changed == 'true'
       run: |
+        kubectl apply -f "${PROMETHEUS_SECRET}"
         helm install prometheus prometheus-community/prometheus -f "${PROMETHEUS_VALUES}" -n prometheus --create-namespace --wait
 
     - name: Deploy Loki

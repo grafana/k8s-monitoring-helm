@@ -20,6 +20,7 @@ externalServices:
       password: lokipassword
   tempo:
     host: http://tempo.tempo.svc:4318
+    authMode: none
     protocol: otlphttp
     tlsOptions: |-
       insecure             = true
@@ -45,11 +46,17 @@ traces:
 extraConfig: |-
   tracing {
     sampling_fraction = 0.1
-    write_to = [otelcol.exporter.otlphttp.tempo.input]
+    write_to = [otelcol.exporter.otlphttp.traces_service.input]
   }
 
 opencost:
-  enabled: false
+  opencost:
+    exporter:
+      extraEnv:
+        INSECURE_SKIP_VERIFY: "true"
+    prometheus:
+      external:
+        url: https://prometheus-server.prometheus.svc.cluster.local:80/api/v1
 
 grafana-agent:
   agent:

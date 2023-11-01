@@ -1,44 +1,28 @@
 {{ define "agent.config.tracesService" }}
-{{- with .Values.externalServices.tempo }}
 // Tempo
-local.file "tempo_host" {
-  filename  = "/etc/grafana-agent-credentials/tempo_host"
+remote.kubernetes.secret "traces_service" {
+  name = {{ include "kubernetes_monitoring.traces_service.secret.name" . | quote }}
+  namespace = {{ .Values.externalServices.tempo.secret.namespace | default .Release.Namespace | quote }}
 }
-{{ if .basicAuth.username }}
-local.file "tempo_username" {
-  filename  = "/etc/grafana-agent-credentials/tempo_username"
-}
-{{- end }}
-{{ if .basicAuth.password }}
-local.file "tempo_password" {
-  filename  = "/etc/grafana-agent-credentials/tempo_password"
-  is_secret = true
-}
-{{- end }}
-{{ if .tenantId }}
-local.file "tempo_tenantid" {
-  filename  = "/etc/grafana-agent-credentials/tempo_tenantId"
-}
-{{- end }}
-{{ if or (.basicAuth.username) (.basicAuth.password) }}
-otelcol.auth.basic "tempo" {
-  {{ if .basicAuth.username }}username = local.file.tempo_username.content{{ end }}
-  {{ if .basicAuth.password }}password = local.file.tempo_password.content{{ end }}
+
+{{- with .Values.externalServices.tempo }}
+{{ if eq .authMode "basic" }}
+otelcol.auth.basic "traces_service" {
+  username = nonsensitive(remote.kubernetes.secret.traces_service.data[{{ .basicAuth.usernameKey | quote }}])
+  password = remote.kubernetes.secret.traces_service.data[{{ .basicAuth.passwordKey | quote }}]
 }
 {{- end }}
 {{ if eq .protocol "otlp" }}
-otelcol.exporter.otlp "tempo" {
+otelcol.exporter.otlp "traces_service" {
 {{- else if eq .protocol "otlphttp" }}
-otelcol.exporter.otlphttp "tempo" {
+otelcol.exporter.otlphttp "traces_service" {
 {{- end }}
   client {
-    endpoint = nonsensitive(local.file.tempo_host.content)
-{{ if or (.basicAuth.username) (.basicAuth.password) }}
-    auth = otelcol.auth.basic.tempo.handler
+    endpoint = nonsensitive(remote.kubernetes.secret.traces_service.data[{{ .hostKey | quote }}])
+{{ if eq .authMode "basic" }}
+    auth = otelcol.auth.basic.traces_service.handler
 {{- end }}
-{{- if .tenantId }}
-    headers = { "X-Scope-OrgID" = local.file.tempo_tenantid.content }
-{{- end }}
+    headers = { "X-Scope-OrgID" = remote.kubernetes.secret.traces_service.data[{{ .tenantIdKey | quote }}] }
 {{- if .tlsOptions }}
     tls {
 {{ .tlsOptions | indent 6 }}

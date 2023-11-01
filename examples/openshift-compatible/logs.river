@@ -95,28 +95,20 @@ loki.process "pod_logs" {
   forward_to = [loki.write.grafana_cloud_loki.receiver]
 }
 
-// Grafana Cloud Loki
-local.file "loki_host" {
-  filename  = "/etc/grafana-agent-credentials/loki_host"
+// Loki
+remote.kubernetes.secret "logs_service" {
+  name = "loki-k8s-monitoring"
+  namespace = "default"
 }
-
-local.file "loki_username" {
-  filename  = "/etc/grafana-agent-credentials/loki_username"
-}
-
-local.file "loki_password" {
-  filename  = "/etc/grafana-agent-credentials/loki_password"
-  is_secret = true
-}
-
 loki.write "grafana_cloud_loki" {
   endpoint {
-    url = nonsensitive(local.file.loki_host.content) + "/loki/api/v1/push"
+    url = nonsensitive(remote.kubernetes.secret.logs_service.data["host"]) + "/loki/api/v1/push"
+    tenant_id = nonsensitive(remote.kubernetes.secret.logs_service.data["tenantId"])
     proxy_url = "http://192.168.1.100:8080"
 
     basic_auth {
-      username = local.file.loki_username.content
-      password = local.file.loki_password.content
+      username = nonsensitive(remote.kubernetes.secret.logs_service.data["username"])
+      password = remote.kubernetes.secret.logs_service.data["password"]
     }
   }
   external_labels = {

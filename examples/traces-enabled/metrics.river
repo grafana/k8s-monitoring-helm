@@ -333,19 +333,10 @@ prometheus.relabel "servicemonitors" {
 }
 
 // Metrics Service
-local.file "prometheus_host" {
-  filename  = "/etc/grafana-agent-credentials/prometheus_host"
+remote.kubernetes.secret "metrics_service" {
+  name = "prometheus-k8s-monitoring"
+  namespace = "default"
 }
-
-local.file "prometheus_username" {
-  filename  = "/etc/grafana-agent-credentials/prometheus_username"
-}
-
-local.file "prometheus_password" {
-  filename  = "/etc/grafana-agent-credentials/prometheus_password"
-  is_secret = true
-}
-
 
 prometheus.relabel "metrics_service" {
   forward_to = [prometheus.remote_write.metrics_service.receiver]
@@ -353,11 +344,12 @@ prometheus.relabel "metrics_service" {
 
 prometheus.remote_write "metrics_service" {
   endpoint {
-    url = nonsensitive(local.file.prometheus_host.content) + "/api/prom/push"
+    url = nonsensitive(remote.kubernetes.secret.metrics_service.data["host"]) + "/api/prom/push"
+    headers = { "X-Scope-OrgID" = remote.kubernetes.secret.metrics_service.data["tenantId"] }
 
     basic_auth {
-      username = local.file.prometheus_username.content
-      password = local.file.prometheus_password.content
+      username = nonsensitive(remote.kubernetes.secret.metrics_service.data["username"])
+      password = remote.kubernetes.secret.metrics_service.data["password"]
     }
 
   }
@@ -373,27 +365,19 @@ loki.source.kubernetes_events "cluster_events" {
   forward_to = [loki.write.grafana_cloud_loki.receiver]
 }
 
-// Grafana Cloud Loki
-local.file "loki_host" {
-  filename  = "/etc/grafana-agent-credentials/loki_host"
+// Loki
+remote.kubernetes.secret "logs_service" {
+  name = "loki-k8s-monitoring"
+  namespace = "default"
 }
-
-local.file "loki_username" {
-  filename  = "/etc/grafana-agent-credentials/loki_username"
-}
-
-local.file "loki_password" {
-  filename  = "/etc/grafana-agent-credentials/loki_password"
-  is_secret = true
-}
-
 loki.write "grafana_cloud_loki" {
   endpoint {
-    url = nonsensitive(local.file.loki_host.content) + "/loki/api/v1/push"
+    url = nonsensitive(remote.kubernetes.secret.logs_service.data["host"]) + "/loki/api/v1/push"
+    tenant_id = nonsensitive(remote.kubernetes.secret.logs_service.data["tenantId"])
 
     basic_auth {
-      username = local.file.loki_username.content
-      password = local.file.loki_password.content
+      username = nonsensitive(remote.kubernetes.secret.logs_service.data["username"])
+      password = remote.kubernetes.secret.logs_service.data["password"]
     }
   }
   external_labels = {
@@ -440,33 +424,25 @@ otelcol.processor.attributes "trace_attributes_processor" {
     action = "upsert"
   }
   output {
-    traces = [otelcol.exporter.otlp.tempo.input]
+    traces = [otelcol.exporter.otlp.traces_service.input]
   }
 }
 // Tempo
-local.file "tempo_host" {
-  filename  = "/etc/grafana-agent-credentials/tempo_host"
+remote.kubernetes.secret "traces_service" {
+  name = "tempo-k8s-monitoring"
+  namespace = "default"
 }
 
-local.file "tempo_username" {
-  filename  = "/etc/grafana-agent-credentials/tempo_username"
+otelcol.auth.basic "traces_service" {
+  username = nonsensitive(remote.kubernetes.secret.traces_service.data["username"])
+  password = remote.kubernetes.secret.traces_service.data["password"]
 }
 
-local.file "tempo_password" {
-  filename  = "/etc/grafana-agent-credentials/tempo_password"
-  is_secret = true
-}
-
-
-otelcol.auth.basic "tempo" {
-  username = local.file.tempo_username.content
-  password = local.file.tempo_password.content
-}
-
-otelcol.exporter.otlp "tempo" {
+otelcol.exporter.otlp "traces_service" {
   client {
-    endpoint = nonsensitive(local.file.tempo_host.content)
+    endpoint = nonsensitive(remote.kubernetes.secret.traces_service.data["host"])
 
-    auth = otelcol.auth.basic.tempo.handler
+    auth = otelcol.auth.basic.traces_service.handler
+    headers = { "X-Scope-OrgID" = remote.kubernetes.secret.traces_service.data["tenantId"] }
   }
 }
