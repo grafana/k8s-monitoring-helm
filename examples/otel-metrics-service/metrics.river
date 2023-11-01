@@ -386,7 +386,7 @@ otelcol.processor.memory_limiter "metrics_service" {
   check_interval = "1s"
   limit = "100MiB"
   output {
-    metrics = [otelcol.exporter.otlp.metrics_service.input]
+    metrics = [otelcol.exporter.otlphttp.metrics_service.input]
   }
 }
 
@@ -395,11 +395,14 @@ otelcol.auth.basic "metrics_service" {
   password = local.file.prometheus_password.content
 }
 
-otelcol.exporter.otlp "metrics_service" {
+otelcol.exporter.otlphttp "metrics_service" {
   client {
-    endpoint = nonsensitive(local.file.prometheus_host.content) + "/api/v1/otlp/v1/metrics"
+    endpoint = nonsensitive(local.file.prometheus_host.content) + "/api/v1/otlp"
 
     auth = otelcol.auth.basic.metrics_service.handler
+    tls {
+      insecure_skip_verify = true
+    }
   }
 }
 

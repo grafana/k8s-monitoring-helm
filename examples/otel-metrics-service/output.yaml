@@ -479,7 +479,7 @@ data:
       check_interval = "1s"
       limit = "100MiB"
       output {
-        metrics = [otelcol.exporter.otlp.metrics_service.input]
+        metrics = [otelcol.exporter.otlphttp.metrics_service.input]
       }
     }
     
@@ -488,11 +488,14 @@ data:
       password = local.file.prometheus_password.content
     }
     
-    otelcol.exporter.otlp "metrics_service" {
+    otelcol.exporter.otlphttp "metrics_service" {
       client {
-        endpoint = nonsensitive(local.file.prometheus_host.content) + "/api/v1/otlp/v1/metrics"
+        endpoint = nonsensitive(local.file.prometheus_host.content) + "/api/v1/otlp"
     
         auth = otelcol.auth.basic.metrics_service.handler
+        tls {
+          insecure_skip_verify = true
+        }
       }
     }
     
@@ -43414,7 +43417,7 @@ data:
       check_interval = "1s"
       limit = "100MiB"
       output {
-        metrics = [otelcol.exporter.otlp.metrics_service.input]
+        metrics = [otelcol.exporter.otlphttp.metrics_service.input]
       }
     }
     
@@ -43423,11 +43426,14 @@ data:
       password = local.file.prometheus_password.content
     }
     
-    otelcol.exporter.otlp "metrics_service" {
+    otelcol.exporter.otlphttp "metrics_service" {
       client {
-        endpoint = nonsensitive(local.file.prometheus_host.content) + "/api/v1/otlp/v1/metrics"
+        endpoint = nonsensitive(local.file.prometheus_host.content) + "/api/v1/otlp"
     
         auth = otelcol.auth.basic.metrics_service.handler
+        tls {
+          insecure_skip_verify = true
+        }
       }
     }
     
@@ -43613,8 +43619,8 @@ data:
     
     queries=$(jq -r '.queries[].query' "$1")
     for query in $queries; do
-      echo "Running query: ${PROMETHEUS_HOST}/api/prom/api/v1/query?query=$query..."
-      result=$(curl -skX POST -u "${PROMETHEUS_USER}:${PROMETHEUS_PASS}" "${PROMETHEUS_HOST}/api/prom/api/v1/query?query=$(jq -rn --arg x "${query}" '$x|@uri')")
+      echo "Running query: ${PROMETHEUS_HOST}/api/v1/query?query=$query..."
+      result=$(curl -skX POST -u "${PROMETHEUS_USER}:${PROMETHEUS_PASS}" "${PROMETHEUS_HOST}/api/v1/query?query=$(jq -rn --arg x "${query}" '$x|@uri')")
       status=$(echo $result | jq -r .status)
       if [ "${status}" != "success" ]; then
         echo "Query failed!"
