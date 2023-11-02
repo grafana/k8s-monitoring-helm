@@ -43622,12 +43622,10 @@ data:
   test.sh: |-
     #!/bin/bash
     set -eo pipefail
-    apt-get update && apt-get install -y curl jq
     
-    queries=$(jq -r '.queries[].query' "$1")
-    for query in $queries; do
-      echo "Running query: ${PROMETHEUS_HOST}/api/prom/api/v1/query?query=$query..."
-      result=$(curl -skX POST -u "${PROMETHEUS_USER}:${PROMETHEUS_PASS}" "${PROMETHEUS_HOST}/api/prom/api/v1/query?query=$(jq -rn --arg x "${query}" '$x|@uri')")
+    function metrics_query {
+      echo "Running PromQL query: ${PROMETHEUS_URL}?query=${1}..."
+      result=$(curl -skX POST -u "${PROMETHEUS_USER}:${PROMETHEUS_PASS}" "${PROMETHEUS_URL}" --data-urlencode "query=${1}")
       status=$(echo $result | jq -r .status)
       if [ "${status}" != "success" ]; then
         echo "Query failed!"
@@ -43641,6 +43639,42 @@ data:
         echo "$result"
         exit 1
       fi
+    }
+    
+    function logs_query {
+      echo "Running LogQL query: ${LOKI_URL}?query=${1}..."
+      result=$(curl -s --get -H "X-Scope-OrgID:${LOKI_TENANTID}" -u "${LOKI_USER}:${LOKI_PASS}" "${LOKI_URL}" --data-urlencode "query=${1}")
+      status=$(echo $result | jq -r .status)
+      if [ "${status}" != "success" ]; then
+        echo "Query failed!"
+        echo "$result"
+        exit 1
+      fi
+    
+      resultCount=$(echo $result | jq '.data.result | length')
+      if [ "${resultCount}" -eq 0 ]; then
+        echo "Query returned no results"
+        echo "$result"
+        exit 1
+      fi
+    }
+    
+    count=$(jq -r ".queries | length-1" "${1}")
+    for i in $(seq 0 "${count}"); do
+      query=$(jq -r --argjson i "${i}" '.queries[$i].query' "${1}")
+      type=$(jq -r --argjson i "${i}" '.queries[$i] | .type // "promql"' "${1}")
+    
+      case "${type}" in
+        promql)
+          metrics_query "${query}"
+          ;;
+        logql)
+          logs_query "${query}"
+          ;;
+        *)
+          echo "Query type ${type} is not yet supported in this test"
+          ;;
+      esac
     done
     
     echo "All queries passed!"
@@ -43648,31 +43682,40 @@ data:
     {
       "queries": [
         {
-          "query": "up{cluster=\"control-plane-metrics-test\"}"
+          "query": "up{cluster=\"control-plane-metrics-test\"}",
+          "type": "promql"
         },
         {
-          "query": "agent_build_info{cluster=\"control-plane-metrics-test\"}"
+          "query": "agent_build_info{cluster=\"control-plane-metrics-test\"}",
+          "type": "promql"
         },
         {
-          "query": "kubernetes_build_info{cluster=\"control-plane-metrics-test\"}"
+          "query": "kubernetes_build_info{cluster=\"control-plane-metrics-test\"}",
+          "type": "promql"
         },
         {
-          "query": "machine_memory_bytes{cluster=\"control-plane-metrics-test\"}"
+          "query": "machine_memory_bytes{cluster=\"control-plane-metrics-test\"}",
+          "type": "promql"
         },
         {
-          "query": "kube_node_info{cluster=\"control-plane-metrics-test\"}"
+          "query": "kube_node_info{cluster=\"control-plane-metrics-test\"}",
+          "type": "promql"
         },
         {
-          "query": "node_exporter_build_info{cluster=\"control-plane-metrics-test\"}"
+          "query": "node_exporter_build_info{cluster=\"control-plane-metrics-test\"}",
+          "type": "promql"
         },
         {
-          "query": "apiserver_request_total{cluster=\"control-plane-metrics-test\"}"
+          "query": "apiserver_request_total{cluster=\"control-plane-metrics-test\"}",
+          "type": "promql"
         },
         {
-          "query": "opencost_build_info{cluster=\"control-plane-metrics-test\"}"
+          "query": "opencost_build_info{cluster=\"control-plane-metrics-test\"}",
+          "type": "promql"
         },
         {
-          "query": "grafana_kubernetes_monitoring_build_info{cluster=\"control-plane-metrics-test\"}"
+          "query": "grafana_kubernetes_monitoring_build_info{cluster=\"control-plane-metrics-test\"}",
+          "type": "promql"
         }
       ]
     }
@@ -43752,7 +43795,7 @@ spec:
       containers:
         - name: test-runner
           image: docker.io/ubuntu:jammy
-          command: ["bash", "-c", "bash /etc/test/test.sh /etc/test/queries.json"]
+          command: ["bash", "-c", "apt-get update && apt-get install -y -y curl jq && bash /etc/test/test.sh /etc/test/queries.json"]
           volumeMounts:
             - name: test-plan
               mountPath: /etc/test
@@ -43762,16 +43805,48 @@ spec:
                 secretKeyRef:
                   name: grafana-agent-credentials
                   key: prometheus_host
+                  optional: true
+            - name: PROMETHEUS_URL
+              value: $(PROMETHEUS_HOST)/api/prom/api/v1/query
             - name: PROMETHEUS_USER
               valueFrom:
                 secretKeyRef:
                   name: grafana-agent-credentials
                   key: prometheus_username
+                  optional: true
             - name: PROMETHEUS_PASS
               valueFrom:
                 secretKeyRef:
                   name: grafana-agent-credentials
                   key: prometheus_password
+                  optional: true
+
+            - name: LOKI_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: grafana-agent-credentials
+                  key: loki_host
+            - name: LOKI_URL
+              value: $(LOKI_HOST)/loki/api/v1/query
+            - name: LOKI_USER
+              valueFrom:
+                secretKeyRef:
+                  name: grafana-agent-credentials
+                  key: loki_username
+                  optional: true
+            - name: LOKI_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: grafana-agent-credentials
+                  key: loki_password
+                  optional: true
+            - name: LOKI_TENANTID
+              valueFrom:
+                secretKeyRef:
+                  name: grafana-agent-credentials
+                  key: loki_tenantId
+                  optional: true
+
       volumes:
         - name: test-plan
           configMap:
