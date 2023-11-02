@@ -39,6 +39,14 @@
       {{- include "agent.config.apiserver" . }}
     {{- end }}
 
+    {{- if .Values.metrics.kubeScheduler.enabled }}
+      {{- include "agent.config.kube_scheduler" . }}
+    {{- end }}
+
+    {{- if .Values.metrics.kubeProxy.enabled }}
+      {{- include "agent.config.kube_proxy" . }}
+    {{- end }}
+
     {{- if (index .Values.metrics "kube-state-metrics").enabled }}
       {{- include "agent.config.kube_state_metrics" . }}
     {{- end }}

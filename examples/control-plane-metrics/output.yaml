@@ -309,6 +309,84 @@ data:
       forward_to = [prometheus.relabel.metrics_service.receiver]
     }
     
+    // Kube Scheduler
+    discovery.relabel "kube_scheduler" {
+      targets = discovery.kubernetes.pods.targets
+      rule {
+        source_labels = ["__meta_kubernetes_namespace"]
+        regex = "kube-system"
+        action = "keep"
+      }
+      rule {
+        source_labels = ["__meta_kubernetes_pod_label_component"]
+        regex = "kube-scheduler"
+        action = "keep"
+      }
+      rule {
+        source_labels = ["__meta_kubernetes_pod_container_port_name"]
+        regex = "https-metrics"
+        action = "keep"
+      }
+    }
+    
+    prometheus.scrape "kube_scheduler" {
+      job_name   = "kube-scheduler"
+      targets    = discovery.relabel.kube_scheduler.output
+      scheme     = "https"
+      scrape_interval = "60s"
+      bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+      tls_config {
+        insecure_skip_verify = true
+      }
+      clustering {
+        enabled = true
+      }
+      forward_to = [prometheus.relabel.kube_scheduler.receiver]
+    }
+    
+    prometheus.relabel "kube_scheduler" {
+      forward_to = [prometheus.relabel.metrics_service.receiver]
+    }
+    
+    // Kube Proxy
+    discovery.relabel "kube_proxy" {
+      targets = discovery.kubernetes.pods.targets
+      rule {
+        source_labels = ["__meta_kubernetes_namespace"]
+        regex = "kube-system"
+        action = "keep"
+      }
+      rule {
+        source_labels = ["__meta_kubernetes_pod_label_k8s_app"]
+        regex = "kube-proxy"
+        action = "keep"
+      }
+      rule {
+        source_labels = ["__meta_kubernetes_pod_container_port_name"]
+        regex = "http-metrics"
+        action = "keep"
+      }
+    }
+    
+    prometheus.scrape "kube_proxy" {
+      job_name   = "integrations/kubernetes/kube-proxy"
+      targets    = discovery.relabel.kube_proxy.output
+      scheme     = "https"
+      scrape_interval = "60s"
+      bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+      tls_config {
+        insecure_skip_verify = true
+      }
+      clustering {
+        enabled = true
+      }
+      forward_to = [prometheus.relabel.kube_proxy.receiver]
+    }
+    
+    prometheus.relabel "kube_proxy" {
+      forward_to = [prometheus.relabel.metrics_service.receiver]
+    }
+    
     // Kube State Metrics
     discovery.relabel "kube_state_metrics" {
       targets = discovery.kubernetes.services.targets
@@ -43247,6 +43325,84 @@ data:
     }
     
     prometheus.relabel "apiserver" {
+      forward_to = [prometheus.relabel.metrics_service.receiver]
+    }
+    
+    // Kube Scheduler
+    discovery.relabel "kube_scheduler" {
+      targets = discovery.kubernetes.pods.targets
+      rule {
+        source_labels = ["__meta_kubernetes_namespace"]
+        regex = "kube-system"
+        action = "keep"
+      }
+      rule {
+        source_labels = ["__meta_kubernetes_pod_label_component"]
+        regex = "kube-scheduler"
+        action = "keep"
+      }
+      rule {
+        source_labels = ["__meta_kubernetes_pod_container_port_name"]
+        regex = "https-metrics"
+        action = "keep"
+      }
+    }
+    
+    prometheus.scrape "kube_scheduler" {
+      job_name   = "kube-scheduler"
+      targets    = discovery.relabel.kube_scheduler.output
+      scheme     = "https"
+      scrape_interval = "60s"
+      bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+      tls_config {
+        insecure_skip_verify = true
+      }
+      clustering {
+        enabled = true
+      }
+      forward_to = [prometheus.relabel.kube_scheduler.receiver]
+    }
+    
+    prometheus.relabel "kube_scheduler" {
+      forward_to = [prometheus.relabel.metrics_service.receiver]
+    }
+    
+    // Kube Proxy
+    discovery.relabel "kube_proxy" {
+      targets = discovery.kubernetes.pods.targets
+      rule {
+        source_labels = ["__meta_kubernetes_namespace"]
+        regex = "kube-system"
+        action = "keep"
+      }
+      rule {
+        source_labels = ["__meta_kubernetes_pod_label_k8s_app"]
+        regex = "kube-proxy"
+        action = "keep"
+      }
+      rule {
+        source_labels = ["__meta_kubernetes_pod_container_port_name"]
+        regex = "http-metrics"
+        action = "keep"
+      }
+    }
+    
+    prometheus.scrape "kube_proxy" {
+      job_name   = "integrations/kubernetes/kube-proxy"
+      targets    = discovery.relabel.kube_proxy.output
+      scheme     = "https"
+      scrape_interval = "60s"
+      bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+      tls_config {
+        insecure_skip_verify = true
+      }
+      clustering {
+        enabled = true
+      }
+      forward_to = [prometheus.relabel.kube_proxy.receiver]
+    }
+    
+    prometheus.relabel "kube_proxy" {
       forward_to = [prometheus.relabel.metrics_service.receiver]
     }
     

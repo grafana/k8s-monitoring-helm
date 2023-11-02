@@ -24,4 +24,8 @@ externalServices:
 metrics:
   apiserver:
     enabled: true
+  kubeProxy:
+    enabled: true
+  kubeScheduler:
+    enabled: true
 ```
