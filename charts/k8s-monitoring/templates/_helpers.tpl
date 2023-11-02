@@ -77,7 +77,7 @@
 
   {{- if and .Values.traces.enabled }}
     {{- include "agent.config.traces" . }}
-    {{- include "agent.config.tempo" . }}
+    {{- include "agent.config.tracesService" . }}
   {{- end }}
 
   {{- if .Values.extraConfig }}

@@ -27,6 +27,15 @@ metrics:
   apiserver:
     enabled: true
 
+traces:
+  enabled: true
+
+extraConfig: |-
+  tracing {
+    sampling_fraction = 0.1
+    write_to = [otelcol.exporter.otlp.tempo.input]
+  }
+
 test:
   extraQueries:
   # Check for cluster events
@@ -40,3 +49,19 @@ opencost:
   prometheus:
     external:
       url: http://prometheus-server.prometheus.svc:80/api/v1
+
+grafana-agent:
+  agent:
+    extraPorts:
+      - name: "otlp-grpc"
+        port: 4317
+        targetPort: 4317
+        protocol: "TCP"
+      - name: "otlp-http"
+        port: 4318
+        targetPort: 4318
+        protocol: "TCP"
+      - name: "zipkin"
+        port: 9411
+        targetPort: 9411
+        protocol: "TCP"

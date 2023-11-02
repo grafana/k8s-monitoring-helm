@@ -1,4 +1,4 @@
-{{ define "agent.config.tempo" }}
+{{ define "agent.config.tracesService" }}
 {{- with .Values.externalServices.tempo }}
 // Tempo
 local.file "tempo_host" {
@@ -26,8 +26,11 @@ otelcol.auth.basic "tempo" {
   {{ if .basicAuth.password }}password = local.file.tempo_password.content{{ end }}
 }
 {{- end }}
-
+{{ if eq .protocol "otlp" }}
 otelcol.exporter.otlp "tempo" {
+{{- else if eq .protocol "otlphttp" }}
+otelcol.exporter.otlphttp "tempo" {
+{{- end }}
   client {
     endpoint = nonsensitive(local.file.tempo_host.content)
 {{ if or (.basicAuth.username) (.basicAuth.password) }}
