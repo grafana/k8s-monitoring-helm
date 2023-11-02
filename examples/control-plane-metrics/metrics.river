@@ -215,6 +215,45 @@ prometheus.relabel "apiserver" {
   forward_to = [prometheus.relabel.metrics_service.receiver]
 }
 
+// Kube Controller Manager
+discovery.relabel "kube_controller_manager" {
+  targets = discovery.kubernetes.pods.targets
+  rule {
+    source_labels = ["__meta_kubernetes_namespace"]
+    regex = "kube-system"
+    action = "keep"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_pod_label_component"]
+    regex = "kube-controller-manager"
+    action = "keep"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_pod_container_port_name"]
+    regex = "https-metrics"
+    action = "keep"
+  }
+}
+
+prometheus.scrape "kube_controller_manager" {
+  job_name   = "kube-controller-manager"
+  targets    = discovery.relabel.kube_controller_manager.output
+  scheme     = "https"
+  scrape_interval = "60s"
+  bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+  tls_config {
+    insecure_skip_verify = true
+  }
+  clustering {
+    enabled = true
+  }
+  forward_to = [prometheus.relabel.kube_controller_manager.receiver]
+}
+
+prometheus.relabel "kube_controller_manager" {
+  forward_to = [prometheus.relabel.metrics_service.receiver]
+}
+
 // Kube Scheduler
 discovery.relabel "kube_scheduler" {
   targets = discovery.kubernetes.pods.targets

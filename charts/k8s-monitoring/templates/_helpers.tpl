@@ -39,6 +39,10 @@
       {{- include "agent.config.apiserver" . }}
     {{- end }}
 
+    {{- if .Values.metrics.kubeControllerManager.enabled }}
+      {{- include "agent.config.kube_controller_manager" . }}
+    {{- end }}
+
     {{- if .Values.metrics.kubeScheduler.enabled }}
       {{- include "agent.config.kube_scheduler" . }}
     {{- end }}
