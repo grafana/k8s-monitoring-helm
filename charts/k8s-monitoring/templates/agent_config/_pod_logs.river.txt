@@ -11,13 +11,7 @@ discovery.kubernetes "pods" {
 
 discovery.relabel "pod_logs" {
   targets = discovery.kubernetes.pods.targets
-{{ if .namespaces }}
-  rule {
-    source_labels = ["namespace"]
-    regex = "{{ .namespaces | join "|" }}"
-    action = "keep"
-  }
-{{- end }}
+
   rule {
     source_labels = ["__meta_kubernetes_namespace"]
     action = "replace"
@@ -56,6 +50,13 @@ discovery.relabel "pod_logs" {
     replacement = "$1"
     target_label = "tmp_container_runtime"
   }
+{{ if .namespaces }}
+  rule {
+    source_labels = ["namespace"]
+    regex = "{{ .namespaces | join "|" }}"
+    action = "keep"
+  }
+{{- end }}
 
 {{- if .extraRelabelingRules }}
 {{ .extraRelabelingRules | indent 2 }}
