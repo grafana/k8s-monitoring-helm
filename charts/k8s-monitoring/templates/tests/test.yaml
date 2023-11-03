@@ -70,12 +70,20 @@ spec:
         app.kubernetes.io/instance: {{ .Release.Name | quote }}
         helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
     spec:
+      {{- if or .Values.global.image.pullSecrets .Values.test.image.pullSecrets }}
+      imagePullSecrets:
+        {{- if .Values.global.image.pullSecrets }}
+        {{- toYaml .Values.global.image.pullSecrets | nindent 8 }}
+        {{- else }}
+        {{- toYaml .Values.test.image.pullSecrets | nindent 8 }}
+        {{- end }}
+      {{- end }}
       restartPolicy: Never
       nodeSelector:
         kubernetes.io/os: linux
       containers:
         - name: test-runner
-          image: {{ .Values.test.image.registry }}/{{ .Values.test.image.image }}:{{ .Values.test.image.tag }}
+          image: {{ .Values.global.image.registry | default .Values.test.image.registry }}/{{ .Values.test.image.image }}:{{ .Values.test.image.tag }}
           command: ["bash", "-c", "apt-get update && apt-get install -y curl jq && bash /etc/test/test.sh /etc/test/queries.json"]
           volumeMounts:
             - name: test-plan

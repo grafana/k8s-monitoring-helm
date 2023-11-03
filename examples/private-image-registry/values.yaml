@@ -1,5 +1,5 @@
 cluster:
-  name: private-image-regristry-test
+  name: private-image-registry-test
 
 externalServices:
   prometheus:
@@ -13,36 +13,22 @@ externalServices:
       username: 12345
       password: "It's a secret to everyone"
 
+# Dependent charts use two methods for global image registry and pull secrets
+# so we need to define it both ways.
+global:
+  image:
+    registry: my.registry.com
+    pullSecrets:
+      - name: my-registry-creds
+  imageRegistry: my.registry.com
+  imagePullSecrets:
+    - name: my-registry-creds
+
+# OpenCost does not use the global settings, so it needs to be set individually
 opencost:
+  imagePullSecrets:
+    - name: my-registry-creds
   opencost:
     exporter:
       image:
-        registry: "my.registry.com/opencost"
-
-kube-state-metrics:
-  image:
-    registry: "my.registry.com/ksm"
-
-prometheus-node-exporter:
-  image:
-    registry: "my.registry.com/ne"
-
-grafana-agent:
-  image:
-    registry: "my.registry.com/agent"
-
-  configReloader:
-    image:
-      registry: "my.registry.com/cr"
-
-grafana-agent-logs:
-  image:
-    registry: "my.registry.com/agent"
-
-  configReloader:
-    image:
-      registry: "my.registry.com/cr"
-
-test:
-  image:
-    registry: "my.registry.com/test"
+        registry: my.registry.com

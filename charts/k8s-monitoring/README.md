@@ -115,6 +115,8 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | externalServices.tempo.tenantId | string | `""` | (optional) Tempo tenant ID |
 | externalServices.tempo.tlsOptions | string | `""` | Define the TLS block. See https://grafana.com/docs/agent/latest/flow/reference/components/otelcol.exporter.otlp/#tls-block for options. Example: tlsOptions: insecure = true |
 | extraConfig | string | `nil` | Extra configuration that will be added to the Grafana Agent configuration file. See [Adding custom Flow configuration](#adding-custom-flow-configuration) for an example. |
+| global.image.pullSecrets | list | `[]` | Optional set of global image pull secrets. |
+| global.image.registry | string | `""` | Global image registry to use if it needs to be overriden for some specific use cases (e.g local registries, custom images, ...) |
 | kube-state-metrics.enabled | bool | `true` | Should this helm chart deploy Kube State Metrics to the cluster. Set this to false if your cluster already has Kube State Metrics, or if you do not want to scrape metrics from Kube State Metrics. |
 | logs.cluster_events.enabled | bool | `true` | Scrape Kubernetes cluster events |
 | logs.cluster_events.namespaces | list | `[]` | List of namespaces to watch for events (`[]` means all namespaces) |
@@ -190,9 +192,10 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | prometheus-windows-exporter.config | string | `"collectors:\n  enabled: cpu,cs,container,logical_disk,memory,net,os\ncollector:\n  service:\n    services-where: \"Name='containerd' or Name='kubelet'\""` |  |
 | prometheus-windows-exporter.enabled | bool | `false` | Should this helm chart deploy Windows Exporter to the cluster. Set this to false if your cluster already has Windows Exporter, or if you do not want to scrape metrics from Windows Exporter. |
 | test.extraQueries | list | `[]` | Additional queries that will be run with `helm test`. NOTE that this uses the host, username, and password in the externalServices section. The user account must have the ability to run queries. Example: extraQueries:   - query: prometheus_metric{cluster="my-cluster-name"}     type: [promql|logql] |
-| test.image.image | string | `"ubuntu"` | Test job image repository |
-| test.image.registry | string | `"docker.io"` | Test job image registry |
-| test.image.tag | string | `"jammy"` | Test job image tag |
+| test.image.image | string | `"ubuntu"` | Test job image repository. |
+| test.image.pullSecrets | list | `[]` | Optional set of image pull secrets. |
+| test.image.registry | string | `"docker.io"` | Test job image registry. |
+| test.image.tag | string | `"jammy"` | Test job image tag. |
 | traces.enabled | bool | `false` | Receive and forward traces. |
 | traces.processors.batch.maxSize | int | `0` | The upper limit of the amount of data contained in a single batch, in bytes. When set to 0, batches can be any size. |
 | traces.processors.batch.size | int | `16384` | What batch size to use, in bytes |

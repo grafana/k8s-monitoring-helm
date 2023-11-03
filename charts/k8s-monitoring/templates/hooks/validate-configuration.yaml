@@ -23,12 +23,20 @@ spec:
         app.kubernetes.io/instance: {{ .Release.Name | quote }}
         helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
     spec:
+      {{- if or .Values.global.image.pullSecrets (index .Values "grafana-agent").image.pullSecrets }}
+      imagePullSecrets:
+        {{- if .Values.global.image.pullSecrets }}
+        {{- toYaml .Values.global.image.pullSecrets | nindent 8 }}
+        {{- else }}
+        {{- toYaml (index .Values "grafana-agent").image.pullSecrets | nindent 8 }}
+        {{- end }}
+      {{- end }}
       restartPolicy: Never
       nodeSelector:
         kubernetes.io/os: linux
       containers:
         - name: grafana-agent
-          image: "{{ (index .Values "grafana-agent").global.image.registry | default (index .Values "grafana-agent").image.registry }}/{{ (index .Values "grafana-agent").image.repository }}{{ include "grafana-agent.imageId" (index .Subcharts "grafana-agent") }}"
+          image: "{{ .Values.global.image.registry | default (index .Values "grafana-agent").image.registry }}/{{ (index .Values "grafana-agent").image.repository }}{{ include "grafana-agent.imageId" (index .Subcharts "grafana-agent") }}"
           command:
           - bash
           - -ec
