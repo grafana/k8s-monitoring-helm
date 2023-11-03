@@ -12,6 +12,11 @@ discovery.relabel "kube_controller_manager" {
     regex = "kube-controller-manager"
     action = "keep"
   }
+  rule {
+    source_labels = ["__address__"]
+    replacement = "$1:{{ .Values.metrics.kubeControllerManager.port }}"
+    target_label = "__address__"
+  }
 {{- if .Values.metrics.extraRelabelingRules }}
 {{ .Values.metrics.extraRelabelingRules | indent 2 }}
 {{- end }}

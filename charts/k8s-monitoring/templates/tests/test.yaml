@@ -31,6 +31,18 @@ queries:
   - query: apiserver_request_total{cluster={{ .Values.cluster.name | quote}}}
     type: promql
     {{- end }}
+    {{- if .Values.metrics.kubeControllerManager.enabled }}
+  - query: job_controller_jobs_finished_total{cluster={{ .Values.cluster.name | quote}}}
+    type: promql
+    {{- end }}
+    {{- if .Values.metrics.kubeProxy.enabled }}
+  - query: kubeproxy_sync_proxy_rules_service_changes_total{cluster={{ .Values.cluster.name | quote}}}
+    type: promql
+    {{- end }}
+    {{- if .Values.metrics.kubeScheduler.enabled }}
+  - query: scheduler_unschedulable_pods{cluster={{ .Values.cluster.name | quote}}}
+    type: promql
+    {{- end }}
     {{- if .Values.metrics.cost.enabled }}
   - query: opencost_build_info{cluster={{ .Values.cluster.name | quote}}}
     type: promql

@@ -228,6 +228,11 @@ discovery.relabel "kube_controller_manager" {
     regex = "kube-controller-manager"
     action = "keep"
   }
+  rule {
+    source_labels = ["__address__"]
+    replacement = "$1:10257"
+    target_label = "__address__"
+  }
 }
 
 prometheus.scrape "kube_controller_manager" {
@@ -261,6 +266,11 @@ discovery.relabel "kube_scheduler" {
     source_labels = ["__meta_kubernetes_pod_label_component"]
     regex = "kube-scheduler"
     action = "keep"
+  }
+  rule {
+    source_labels = ["__address__"]
+    replacement = "$1:10259"
+    target_label = "__address__"
   }
 }
 
@@ -296,17 +306,17 @@ discovery.relabel "kube_proxy" {
     regex = "kube-proxy"
     action = "keep"
   }
+  rule {
+    source_labels = ["__address__"]
+    replacement = "$1:10249"
+    target_label = "__address__"
+  }
 }
 
 prometheus.scrape "kube_proxy" {
   job_name   = "integrations/kubernetes/kube-proxy"
   targets    = discovery.relabel.kube_proxy.output
-  scheme     = "https"
   scrape_interval = "60s"
-  bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
-  tls_config {
-    insecure_skip_verify = true
-  }
   clustering {
     enabled = true
   }

@@ -322,6 +322,11 @@ data:
         regex = "kube-controller-manager"
         action = "keep"
       }
+      rule {
+        source_labels = ["__address__"]
+        replacement = "$1:10257"
+        target_label = "__address__"
+      }
     }
     
     prometheus.scrape "kube_controller_manager" {
@@ -355,6 +360,11 @@ data:
         source_labels = ["__meta_kubernetes_pod_label_component"]
         regex = "kube-scheduler"
         action = "keep"
+      }
+      rule {
+        source_labels = ["__address__"]
+        replacement = "$1:10259"
+        target_label = "__address__"
       }
     }
     
@@ -390,17 +400,17 @@ data:
         regex = "kube-proxy"
         action = "keep"
       }
+      rule {
+        source_labels = ["__address__"]
+        replacement = "$1:10249"
+        target_label = "__address__"
+      }
     }
     
     prometheus.scrape "kube_proxy" {
       job_name   = "integrations/kubernetes/kube-proxy"
       targets    = discovery.relabel.kube_proxy.output
-      scheme     = "https"
       scrape_interval = "60s"
-      bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
-      tls_config {
-        insecure_skip_verify = true
-      }
       clustering {
         enabled = true
       }
@@ -43365,6 +43375,11 @@ data:
         regex = "kube-controller-manager"
         action = "keep"
       }
+      rule {
+        source_labels = ["__address__"]
+        replacement = "$1:10257"
+        target_label = "__address__"
+      }
     }
     
     prometheus.scrape "kube_controller_manager" {
@@ -43398,6 +43413,11 @@ data:
         source_labels = ["__meta_kubernetes_pod_label_component"]
         regex = "kube-scheduler"
         action = "keep"
+      }
+      rule {
+        source_labels = ["__address__"]
+        replacement = "$1:10259"
+        target_label = "__address__"
       }
     }
     
@@ -43433,17 +43453,17 @@ data:
         regex = "kube-proxy"
         action = "keep"
       }
+      rule {
+        source_labels = ["__address__"]
+        replacement = "$1:10249"
+        target_label = "__address__"
+      }
     }
     
     prometheus.scrape "kube_proxy" {
       job_name   = "integrations/kubernetes/kube-proxy"
       targets    = discovery.relabel.kube_proxy.output
-      scheme     = "https"
       scrape_interval = "60s"
-      bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
-      tls_config {
-        insecure_skip_verify = true
-      }
       clustering {
         enabled = true
       }
@@ -43911,6 +43931,18 @@ data:
         },
         {
           "query": "apiserver_request_total{cluster=\"control-plane-metrics-test\"}",
+          "type": "promql"
+        },
+        {
+          "query": "job_controller_jobs_finished_total{cluster=\"control-plane-metrics-test\"}",
+          "type": "promql"
+        },
+        {
+          "query": "kubeproxy_sync_proxy_rules_service_changes_total{cluster=\"control-plane-metrics-test\"}",
+          "type": "promql"
+        },
+        {
+          "query": "scheduler_unschedulable_pods{cluster=\"control-plane-metrics-test\"}",
           "type": "promql"
         },
         {
