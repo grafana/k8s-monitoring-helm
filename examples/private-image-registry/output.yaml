@@ -37,7 +37,8 @@ metadata:
     app.kubernetes.io/version: "2.10.0"
   name: k8smon-kube-state-metrics
   namespace: default
-imagePullSecrets:
+imagePullSecrets:  
+  - name: my-registry-creds
 ---
 # Source: k8s-monitoring/charts/opencost/templates/serviceaccount.yaml
 apiVersion: v1
@@ -67,6 +68,8 @@ metadata:
     app.kubernetes.io/name: prometheus-node-exporter
     app.kubernetes.io/instance: k8smon
     app.kubernetes.io/version: "1.6.1"
+imagePullSecrets:  
+  - name: my-registry-creds
 ---
 # Source: k8s-monitoring/templates/credentials.yaml
 apiVersion: v1
@@ -456,7 +459,7 @@ data:
       }
     
       external_labels = {
-        cluster = "private-image-regristry-test",
+        cluster = "private-image-registry-test",
       }
     }
     
@@ -490,7 +493,7 @@ data:
         }
       }
       external_labels = {
-        cluster = "private-image-regristry-test",
+        cluster = "private-image-registry-test",
       }
     }
 ---
@@ -623,7 +626,7 @@ data:
         }
       }
       external_labels = {
-        cluster = "private-image-regristry-test",
+        cluster = "private-image-registry-test",
       }
     }
 ---
@@ -42516,9 +42519,11 @@ spec:
         app.kubernetes.io/instance: k8smon
     spec:
       serviceAccountName: k8smon-grafana-agent-logs
+      imagePullSecrets:
+        - name: my-registry-creds
       containers:
         - name: grafana-agent
-          image: my.registry.com/agent/grafana/agent:v0.37.3
+          image: my.registry.com/grafana/agent:v0.37.3
           imagePullPolicy: IfNotPresent
           args:
             - run
@@ -42551,7 +42556,7 @@ spec:
               mountPath: /etc/grafana-agent-credentials
               name: grafana-agent-credentials
         - name: config-reloader
-          image: my.registry.com/cr/jimmidyson/configmap-reload:v0.8.0
+          image: my.registry.com/jimmidyson/configmap-reload:v0.8.0
           args:
             - --volume-dir=/etc/agent
             - --webhook-url=http://localhost:80/-/reload
@@ -42625,7 +42630,7 @@ spec:
       serviceAccountName: k8smon-prometheus-node-exporter
       containers:
         - name: node-exporter
-          image: my.registry.com/ne/prometheus/node-exporter:v1.6.1
+          image: my.registry.com/prometheus/node-exporter:v1.6.1
           imagePullPolicy: IfNotPresent
           args:
             - --path.procfs=/host/proc
@@ -42675,6 +42680,8 @@ spec:
               mountPath: /host/root
               mountPropagation: HostToContainer
               readOnly: true
+      imagePullSecrets:        
+        - name: my-registry-creds
       hostNetwork: true
       hostPID: true
       nodeSelector:
@@ -42742,7 +42749,7 @@ spec:
         - --port=8080
         - --resources=certificatesigningrequests,configmaps,cronjobs,daemonsets,deployments,endpoints,horizontalpodautoscalers,ingresses,jobs,leases,limitranges,mutatingwebhookconfigurations,namespaces,networkpolicies,nodes,persistentvolumeclaims,persistentvolumes,poddisruptionbudgets,pods,replicasets,replicationcontrollers,resourcequotas,secrets,services,statefulsets,storageclasses,validatingwebhookconfigurations,volumeattachments
         imagePullPolicy: IfNotPresent
-        image: my.registry.com/ksm/kube-state-metrics/kube-state-metrics:v2.10.0
+        image: my.registry.com/kube-state-metrics/kube-state-metrics:v2.10.0
         ports:
         - containerPort: 8080
           name: "http"
@@ -42763,6 +42770,8 @@ spec:
           capabilities:
             drop:
             - ALL
+      imagePullSecrets:        
+        - name: my-registry-creds
       nodeSelector:
         kubernetes.io/os: linux
 ---
@@ -42795,12 +42804,14 @@ spec:
         app.kubernetes.io/name: opencost
         app.kubernetes.io/instance: k8smon
     spec:
+      imagePullSecrets:
+        - name: my-registry-creds
       serviceAccountName: k8smon-opencost
       nodeSelector:
         kubernetes.io/os: linux
       containers:
         - name: k8smon-opencost
-          image: "my.registry.com/opencost/kubecost1/kubecost-cost-model:prod-1.106.4"
+          image: "my.registry.com/kubecost1/kubecost-cost-model:prod-1.106.4"
           imagePullPolicy: IfNotPresent
           args:
           ports:
@@ -42880,9 +42891,11 @@ spec:
         app.kubernetes.io/instance: k8smon
     spec:
       serviceAccountName: k8smon-grafana-agent
+      imagePullSecrets:
+        - name: my-registry-creds
       containers:
         - name: grafana-agent
-          image: my.registry.com/agent/grafana/agent:v0.37.3
+          image: my.registry.com/grafana/agent:v0.37.3
           imagePullPolicy: IfNotPresent
           args:
             - run
@@ -42917,7 +42930,7 @@ spec:
               mountPath: /etc/kubernetes-monitoring-telemetry
               name: kubernetes-monitoring-telemetry
         - name: config-reloader
-          image: my.registry.com/cr/jimmidyson/configmap-reload:v0.8.0
+          image: my.registry.com/jimmidyson/configmap-reload:v0.8.0
           args:
             - --volume-dir=/etc/agent
             - --webhook-url=http://localhost:80/-/reload
@@ -43354,7 +43367,7 @@ data:
       }
     
       external_labels = {
-        cluster = "private-image-regristry-test",
+        cluster = "private-image-registry-test",
       }
     }
     
@@ -43388,7 +43401,7 @@ data:
         }
       }
       external_labels = {
-        cluster = "private-image-regristry-test",
+        cluster = "private-image-registry-test",
       }
     }
   logs.river: |-
@@ -43513,7 +43526,7 @@ data:
         }
       }
       external_labels = {
-        cluster = "private-image-regristry-test",
+        cluster = "private-image-registry-test",
       }
     }
 ---
@@ -43595,35 +43608,35 @@ data:
     {
       "queries": [
         {
-          "query": "up{cluster=\"private-image-regristry-test\"}",
+          "query": "up{cluster=\"private-image-registry-test\"}",
           "type": "promql"
         },
         {
-          "query": "agent_build_info{cluster=\"private-image-regristry-test\"}",
+          "query": "agent_build_info{cluster=\"private-image-registry-test\"}",
           "type": "promql"
         },
         {
-          "query": "kubernetes_build_info{cluster=\"private-image-regristry-test\"}",
+          "query": "kubernetes_build_info{cluster=\"private-image-registry-test\"}",
           "type": "promql"
         },
         {
-          "query": "machine_memory_bytes{cluster=\"private-image-regristry-test\"}",
+          "query": "machine_memory_bytes{cluster=\"private-image-registry-test\"}",
           "type": "promql"
         },
         {
-          "query": "kube_node_info{cluster=\"private-image-regristry-test\"}",
+          "query": "kube_node_info{cluster=\"private-image-registry-test\"}",
           "type": "promql"
         },
         {
-          "query": "node_exporter_build_info{cluster=\"private-image-regristry-test\"}",
+          "query": "node_exporter_build_info{cluster=\"private-image-registry-test\"}",
           "type": "promql"
         },
         {
-          "query": "opencost_build_info{cluster=\"private-image-regristry-test\"}",
+          "query": "opencost_build_info{cluster=\"private-image-registry-test\"}",
           "type": "promql"
         },
         {
-          "query": "grafana_kubernetes_monitoring_build_info{cluster=\"private-image-regristry-test\"}",
+          "query": "grafana_kubernetes_monitoring_build_info{cluster=\"private-image-registry-test\"}",
           "type": "promql"
         }
       ]
@@ -43654,12 +43667,14 @@ spec:
         app.kubernetes.io/instance: "k8smon"
         helm.sh/chart: "k8s-monitoring-0.3.1"
     spec:
+      imagePullSecrets:
+        - name: my-registry-creds
       restartPolicy: Never
       nodeSelector:
         kubernetes.io/os: linux
       containers:
         - name: grafana-agent
-          image: "my.registry.com/agent/grafana/agent:v0.37.3"
+          image: "my.registry.com/grafana/agent:v0.37.3"
           command:
           - bash
           - -ec
@@ -43702,12 +43717,14 @@ spec:
         app.kubernetes.io/instance: "k8smon"
         helm.sh/chart: "k8s-monitoring-0.3.1"
     spec:
+      imagePullSecrets:
+        - name: my-registry-creds
       restartPolicy: Never
       nodeSelector:
         kubernetes.io/os: linux
       containers:
         - name: test-runner
-          image: my.registry.com/test/ubuntu:jammy
+          image: my.registry.com/ubuntu:jammy
           command: ["bash", "-c", "apt-get update && apt-get install -y curl jq && bash /etc/test/test.sh /etc/test/queries.json"]
           volumeMounts:
             - name: test-plan
