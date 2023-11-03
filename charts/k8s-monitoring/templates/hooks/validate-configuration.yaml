@@ -24,6 +24,8 @@ spec:
         helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
     spec:
       restartPolicy: Never
+      nodeSelector:
+        kubernetes.io/os: linux
       containers:
         - name: grafana-agent
           image: "{{ (index .Values "grafana-agent").global.image.registry | default (index .Values "grafana-agent").image.registry }}/{{ (index .Values "grafana-agent").image.repository }}{{ include "grafana-agent.imageId" (index .Subcharts "grafana-agent") }}"
