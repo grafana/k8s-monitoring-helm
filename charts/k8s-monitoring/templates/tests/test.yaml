@@ -74,6 +74,9 @@ metadata:
     "helm.sh/hook": test
     "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
 spec:
+  completions: 1
+  parallelism: 1
+  backoffLimit: {{ sub .Values.test.attempts 1 }}
   template:
     metadata:
       name: {{ include "kubernetes-monitoring-test.fullname" . | quote }}
