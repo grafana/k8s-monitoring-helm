@@ -11,7 +11,6 @@ on:
 env:
   CT_CONFIGFILE: "${{ github.workspace }}/.github/configs/ct.yaml"
   LINT_CONFIGFILE: "${{ github.workspace }}/.github/configs/lintconf.yaml"
-  CLUSTER_CONFIG:  "${{ github.workspace }}/.github/configs/cluster-config.yaml"
   PROMETHEUS_VALUES: "${{ github.workspace }}/.github/configs/prometheus.yaml"
   LOKI_VALUES: "${{ github.workspace }}/.github/configs/loki.yaml"
   TEMPO_VALUES: ""  # No values for now
@@ -126,7 +125,7 @@ jobs:
     - name: Create kind cluster
       uses: helm/kind-action@v1
       with:
-        config: "${CLUSTER_CONFIG}"
+        config: "${{ github.workspace }}/.github/configs/cluster-config.yaml"
       if: steps.list-changed.outputs.changed == 'true'
 
     - name: Create SSL Certs
