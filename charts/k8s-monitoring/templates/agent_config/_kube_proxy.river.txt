@@ -28,6 +28,7 @@ discovery.relabel "kube_proxy" {
 prometheus.scrape "kube_proxy" {
   job_name   = "integrations/kubernetes/kube-proxy"
   targets    = discovery.relabel.kube_proxy.output
+  scheme     = "http"
   scrape_interval = {{ .Values.metrics.kubeProxy.scrapeInterval | default .Values.metrics.scrapeInterval | quote }}
 {{- if (index .Values "grafana-agent").agent.clustering.enabled }}
   clustering {
