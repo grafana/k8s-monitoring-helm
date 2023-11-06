@@ -19,6 +19,10 @@
   {{- include "agent.config.services" . }}
 
   {{- if .Values.metrics.enabled }}
+    {{- if .Values.metrics.autoDiscover.enabled }}
+      {{- include "agent.config.annotationAutodiscovery" . }}
+    {{- end }}
+
     {{- if .Values.metrics.agent.enabled }}
       {{- include "agent.config.agent" . }}
     {{- end }}

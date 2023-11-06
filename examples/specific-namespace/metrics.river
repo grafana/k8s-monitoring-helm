@@ -10,6 +10,53 @@ discovery.kubernetes "services" {
   role = "service"
 }
 
+// Annotation Autodiscovery
+discovery.relabel "annotation_autodiscovery" {
+  targets = concat(discovery.kubernetes.pods.targets,discovery.kubernetes.services.targets)
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_scrape", "__meta_kubernetes_service_annotation_k8s_grafana_com_scrape"]
+    regex = ";?true;?"
+    action = "keep"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_job", "__meta_kubernetes_service_annotation_k8s_grafana_com_job"]
+    regex = ";?([^;]+);?"
+    action = "replace"
+    target_label = "job"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_instance", "__meta_kubernetes_service_annotation_k8s_grafana_com_instance"]
+    regex = ";?([^;]+);?"
+    action = "replace"
+    target_label = "instance"
+  }
+  rule {
+    source_labels = ["__address__", "__meta_kubernetes_pod_annotation_k8s_grafana_com_metrics_port", "__meta_kubernetes_service_annotation_k8s_grafana_com_metrics_port"]
+    regex = "(.+);;?([0-9]+);?"
+    action = "replace"
+    replacement = "$1:$2"
+    target_label = "__address__"
+  }
+}
+
+prometheus.scrape "annotation_autodiscovery" {
+  targets = discovery.relabel.annotation_autodiscovery.output
+  honor_labels = true
+  clustering {
+    enabled = true
+  }
+  forward_to = [prometheus.relabel.annotation_autodiscovery.receiver]
+}
+
+prometheus.relabel "annotation_autodiscovery" {
+  rule {
+      source_labels = ["namespace"]
+      regex = "^$|production|staging"
+      action = "keep"
+  }
+  forward_to = [prometheus.relabel.metrics_service.receiver]
+}
+
 // Grafana Agent
 discovery.relabel "agent" {
   targets = discovery.kubernetes.pods.targets

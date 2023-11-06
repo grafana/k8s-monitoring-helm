@@ -1,0 +1,57 @@
+{{ define "agent.config.annotationAutodiscovery" }}
+// Annotation Autodiscovery
+discovery.relabel "annotation_autodiscovery" {
+  targets = concat(discovery.kubernetes.pods.targets,discovery.kubernetes.services.targets)
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_scrape", "__meta_kubernetes_service_annotation_k8s_grafana_com_scrape"]
+    regex = ";?true;?"
+    action = "keep"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_job", "__meta_kubernetes_service_annotation_k8s_grafana_com_job"]
+    regex = ";?([^;]+);?"
+    action = "replace"
+    target_label = "job"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_instance", "__meta_kubernetes_service_annotation_k8s_grafana_com_instance"]
+    regex = ";?([^;]+);?"
+    action = "replace"
+    target_label = "instance"
+  }
+  rule {
+    source_labels = ["__address__", "__meta_kubernetes_pod_annotation_k8s_grafana_com_metrics_port", "__meta_kubernetes_service_annotation_k8s_grafana_com_metrics_port"]
+    regex = "(.+);;?([0-9]+);?"
+    action = "replace"
+    replacement = "$1:$2"
+    target_label = "__address__"
+  }
+{{- if .Values.metrics.extraRelabelingRules }}
+{{ .Values.metrics.extraRelabelingRules | indent 2 }}
+{{- end }}
+{{- if .Values.metrics.autoDiscover.extraRelabelingRules }}
+{{ .Values.metrics.autoDiscover.extraRelabelingRules | indent 2 }}
+{{- end }}
+}
+
+prometheus.scrape "annotation_autodiscovery" {
+  targets = discovery.relabel.annotation_autodiscovery.output
+  honor_labels = true
+{{- if (index .Values "grafana-agent").agent.clustering.enabled }}
+  clustering {
+    enabled = true
+  }
+{{- end }}
+  forward_to = [prometheus.relabel.annotation_autodiscovery.receiver]
+}
+
+prometheus.relabel "annotation_autodiscovery" {
+{{- if .Values.metrics.extraMetricRelabelingRules }}
+{{ .Values.metrics.extraMetricRelabelingRules | indent 2 }}
+{{- end }}
+{{- if .Values.metrics.autoDiscover.extraMetricRelabelingRules }}
+{{ .Values.metrics.autoDiscover.extraMetricRelabelingRules | indent 2 }}
+{{- end }}
+  forward_to = [prometheus.relabel.metrics_service.receiver]
+}
+{{ end }}
