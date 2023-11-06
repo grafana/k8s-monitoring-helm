@@ -11,6 +11,19 @@ discovery.kubernetes "pods" {
 
 discovery.relabel "pod_logs" {
   targets = discovery.kubernetes.pods.targets
+{{- if eq .discovery "all" }}
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_logs_autogather"]
+    regex = "skip"
+    action = "drop"
+  }
+{{- else if eq .discovery "annotation" }}
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_logs_autogather"]
+    regex = "gather"
+    action = "keep"
+  }
+{{- end }}
   rule {
     source_labels = ["__meta_kubernetes_namespace"]
     action = "replace"

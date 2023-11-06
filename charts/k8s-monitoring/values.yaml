@@ -211,6 +211,14 @@ metrics:
     # See https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block
     extraMetricRelabelingRules:
 
+    # TODO: Make these configurable in _annotation_autodiscovery.river.txt
+    annotations:
+      scrape: "k8s.grafana.com/scrape"
+      job: "k8s.grafana.com/job"
+      instance: "k8s.grafana.com/instance"
+#      metricsPath: "k8s.grafana.com/metrics.path"
+      metricsPort: "k8s.grafana.com/metrics.port"
+
   # Metrics from Grafana Agent
   agent:
     # -- Scrape metrics from Grafana Agent
@@ -638,6 +646,14 @@ logs:
   pod_logs:
     # -- Capture and forward logs from Kubernetes pods
     enabled: true
+
+    # Possible values: "all" "annotation"
+    discovery: "all"
+
+    # possible values for the annotation: "gather", "skip"
+    # in discovery mode all: gather is redundant, skip means skip
+    # in discovery mode annotation: gather means gather, skip is redundant
+    annotation: "k8s.grafana.com/logs.autogather"
 
     # -- Only capture logs from pods in these namespaces (`[]` means all namespaces)
     namespaces: []
