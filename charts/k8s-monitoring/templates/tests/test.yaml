@@ -31,6 +31,18 @@ queries:
   - query: apiserver_request_total{cluster={{ .Values.cluster.name | quote}}}
     type: promql
     {{- end }}
+    {{- if .Values.metrics.kubeControllerManager.enabled }}
+  - query: workqueue_adds_total{cluster={{ .Values.cluster.name | quote}}, job="kube-controller-manager"}
+    type: promql
+    {{- end }}
+    {{- if .Values.metrics.kubeProxy.enabled }}
+  - query: kubeproxy_sync_proxy_rules_service_changes_total{cluster={{ .Values.cluster.name | quote}}}
+    type: promql
+    {{- end }}
+    {{- if .Values.metrics.kubeScheduler.enabled }}
+  - query: scheduler_unschedulable_pods{cluster={{ .Values.cluster.name | quote}}}
+    type: promql
+    {{- end }}
     {{- if .Values.metrics.cost.enabled }}
   - query: opencost_build_info{cluster={{ .Values.cluster.name | quote}}}
     type: promql
@@ -62,6 +74,9 @@ metadata:
     "helm.sh/hook": test
     "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
 spec:
+  completions: 1
+  parallelism: 1
+  backoffLimit: {{ sub .Values.test.attempts 1 }}
   template:
     metadata:
       name: {{ include "kubernetes-monitoring-test.fullname" . | quote }}

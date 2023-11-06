@@ -159,6 +159,24 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | metrics.kube-state-metrics.scrapeInterval | string | 60s | How frequently to scrape metrics from Kube State Metrics. Overrides metrics.scrapeInterval |
 | metrics.kube-state-metrics.service.isTLS | bool | `false` | Does this port use TLS? |
 | metrics.kube-state-metrics.service.port | string | `"http"` | Name of the metrics port |
+| metrics.kubeControllerManager.allowList | list | `[]` | The list of Kube Controller Manager metrics that will be scraped by the Agent |
+| metrics.kubeControllerManager.enabled | bool | `false` | Scrape metrics from the Kube Controller Manager |
+| metrics.kubeControllerManager.extraMetricRelabelingRules | string | `nil` | Rule blocks to be added to the prometheus.relabel component for the Kube Controller Manager. See https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block |
+| metrics.kubeControllerManager.extraRelabelingRules | string | `nil` | Rule blocks to be added to the discovery.relabel component for the Kube Controller Manager. See https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block |
+| metrics.kubeControllerManager.port | int | `10257` |  |
+| metrics.kubeControllerManager.scrapeInterval | string | 60s | How frequently to scrape metrics from the Kube Controller Manager Overrides metrics.scrapeInterval |
+| metrics.kubeProxy.allowList | list | `[]` | The list of Kube Proxy metrics that will be scraped by the Agent |
+| metrics.kubeProxy.enabled | bool | `false` | Scrape metrics from the Kube Proxy |
+| metrics.kubeProxy.extraMetricRelabelingRules | string | `nil` | Rule blocks to be added to the prometheus.relabel component for the Kube Proxy. See https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block |
+| metrics.kubeProxy.extraRelabelingRules | string | `nil` | Rule blocks to be added to the discovery.relabel component for the Kube Proxy. See https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block |
+| metrics.kubeProxy.port | int | `10249` |  |
+| metrics.kubeProxy.scrapeInterval | string | 60s | How frequently to scrape metrics from the Kube Proxy Overrides metrics.scrapeInterval |
+| metrics.kubeScheduler.allowList | list | `[]` | The list of Kube Scheduler metrics that will be scraped by the Agent |
+| metrics.kubeScheduler.enabled | bool | `false` | Scrape metrics from the Kube Scheduler |
+| metrics.kubeScheduler.extraMetricRelabelingRules | string | `nil` | Rule blocks to be added to the prometheus.relabel component for the Kube Scheduler. See https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block |
+| metrics.kubeScheduler.extraRelabelingRules | string | `nil` | Rule blocks to be added to the discovery.relabel component for the Kube Scheduler. See https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block |
+| metrics.kubeScheduler.port | int | `10259` |  |
+| metrics.kubeScheduler.scrapeInterval | string | 60s | How frequently to scrape metrics from the Kube Scheduler Overrides metrics.scrapeInterval |
 | metrics.kubelet.allowList | list | See [Allow List for Kubelet](#allow-list-for-kubelet) | The list of Kubelet metrics that will be scraped by the Agent |
 | metrics.kubelet.enabled | bool | `true` | Scrape cluster metrics from the Kubelet |
 | metrics.kubelet.extraMetricRelabelingRules | string | `nil` | Rule blocks to be added to the prometheus.relabel component for Kubelet. See https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block |
@@ -191,6 +209,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | prometheus-operator-crds.enabled | bool | `true` | Should this helm chart deploy the Prometheus Operator CRDs to the cluster. Set this to false if your cluster already has the CRDs, or if you do not to have the Grafana Agent scrape metrics from PodMonitors, Probes, or ServiceMonitors. |
 | prometheus-windows-exporter.config | string | `"collectors:\n  enabled: cpu,cs,container,logical_disk,memory,net,os\ncollector:\n  service:\n    services-where: \"Name='containerd' or Name='kubelet'\""` |  |
 | prometheus-windows-exporter.enabled | bool | `false` | Should this helm chart deploy Windows Exporter to the cluster. Set this to false if your cluster already has Windows Exporter, or if you do not want to scrape metrics from Windows Exporter. |
+| test.attempts | int | `10` | How many times to attempt the test job |
 | test.extraQueries | list | `[]` | Additional queries that will be run with `helm test`. NOTE that this uses the host, username, and password in the externalServices section. The user account must have the ability to run queries. Example: extraQueries:   - query: prometheus_metric{cluster="my-cluster-name"}     type: [promql|logql] |
 | test.image.image | string | `"ubuntu"` | Test job image repository. |
 | test.image.pullSecrets | list | `[]` | Optional set of image pull secrets. |
