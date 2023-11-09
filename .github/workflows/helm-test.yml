@@ -18,6 +18,7 @@ env:
   GRAFANA_VALUES: "${{ github.workspace }}/.github/configs/grafana.yaml"
   MYSQL_VALUES: "${{ github.workspace }}/.github/configs/mysql.yaml"
   MYSQL_CONFIG_MANIFEST: "${{ github.workspace }}/.github/configs/mysql-config.yaml"
+  CERT_MANAGER_VALUES: "${{ github.workspace }}/.github/configs/cert-manager.yaml"
   SECRETGEN_CONTROLLER_MANIFEST: https://github.com/carvel-dev/secretgen-controller/releases/latest/download/release.yml
   CERTIFICATES_MANIFEST: "${{ github.workspace }}/.github/configs/certificates.yaml"
 
@@ -141,6 +142,7 @@ jobs:
       if: steps.list-changed.outputs.changed == 'true'
       run: |
         helm repo add grafana https://grafana.github.io/helm-charts
+        helm repo add jetstack https://charts.jetstack.io
         helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
         helm repo update
 
@@ -165,11 +167,12 @@ jobs:
       run: |
         helm install grafana grafana/grafana -f "${GRAFANA_VALUES}" -n grafana --create-namespace --wait
 
-    - name: Deploy MySQL
+    - name: Deploy Services for Integrations
       if: steps.list-changed.outputs.changed == 'true'
       run: |
         helm install mysql oci://registry-1.docker.io/bitnamicharts/mysql -f "${MYSQL_VALUES}" -n mysql --create-namespace --wait
         kubectl apply -f "${MYSQL_CONFIG_MANIFEST}"
+        helm install cert-manager jetstack/cert-manager -f "${CERT_MANAGER_VALUES}" -n cert-manager --create-namespace --wait
 
     - name: Test chart
       if: steps.list-changed.outputs.changed == 'true'
