@@ -11,19 +11,6 @@ discovery.kubernetes "pods" {
 
 discovery.relabel "pod_logs" {
   targets = discovery.kubernetes.pods.targets
-{{- if eq .discovery "all" }}
-  rule {
-    source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_logs_autogather"]
-    regex = "skip"
-    action = "drop"
-  }
-{{- else if eq .discovery "annotation" }}
-  rule {
-    source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_logs_autogather"]
-    regex = "gather"
-    action = "keep"
-  }
-{{- end }}
   rule {
     source_labels = ["__meta_kubernetes_namespace"]
     action = "replace"
@@ -75,8 +62,25 @@ discovery.relabel "pod_logs" {
 {{- end }}
 }
 
+discovery.relabel "filtered_pod_logs" {
+  targets = discovery.relabel.pod_logs.output
+{{- if eq .discovery "all" }}
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_logs_autogather"]
+    regex = "skip"
+    action = "drop"
+  }
+{{- else if eq .discovery "annotation" }}
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_logs_autogather"]
+    regex = "gather"
+    action = "keep"
+  }
+{{- end }}
+}
+
 local.file_match "pod_logs" {
-  path_targets = discovery.relabel.pod_logs.output
+  path_targets = discovery.relabel.filtered_pod_logs.output
 }
 
 loki.source.file "pod_logs" {
