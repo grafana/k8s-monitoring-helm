@@ -36,9 +36,9 @@ extraConfig: |
     content = remote.kubernetes.configmap.mysql_config.data["metrics.river"]
 
     arguments {
-      host = "mysql.production.svc.cluster.local"
+      host = "mysql.mysql.svc.cluster.local"
       instance = "primary"
-      namespace = "production"
+      namespace = "mysql"
       secret_name = "mysql"
       username = "root"
       password_key = "mysql-root-password"
@@ -58,7 +58,6 @@ logs:
       content = remote.kubernetes.configmap.mysql_config.data["logs.river"]
 
       arguments {
-        host = "mysql.production.svc.cluster.local"
         instance = "primary"
         all_pods = discovery.relabel.pod_logs.output
         logs_destination = loki.write.grafana_cloud_loki.receiver
