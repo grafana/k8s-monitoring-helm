@@ -637,11 +637,6 @@ data:
     discovery.relabel "pod_logs" {
       targets = discovery.kubernetes.pods.targets
       rule {
-        source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_logs_autogather"]
-        regex = "skip"
-        action = "drop"
-      }
-      rule {
         source_labels = ["__meta_kubernetes_namespace"]
         action = "replace"
         target_label = "namespace"
@@ -682,8 +677,17 @@ data:
       }
     }
     
+    discovery.relabel "filtered_pod_logs" {
+      targets = discovery.relabel.pod_logs.output
+      rule {
+        source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_logs_autogather"]
+        regex = "skip"
+        action = "drop"
+      }
+    }
+    
     local.file_match "pod_logs" {
-      path_targets = discovery.relabel.pod_logs.output
+      path_targets = discovery.relabel.filtered_pod_logs.output
     }
     
     loki.source.file "pod_logs" {
@@ -44323,11 +44327,6 @@ data:
     discovery.relabel "pod_logs" {
       targets = discovery.kubernetes.pods.targets
       rule {
-        source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_logs_autogather"]
-        regex = "skip"
-        action = "drop"
-      }
-      rule {
         source_labels = ["__meta_kubernetes_namespace"]
         action = "replace"
         target_label = "namespace"
@@ -44368,8 +44367,17 @@ data:
       }
     }
     
+    discovery.relabel "filtered_pod_logs" {
+      targets = discovery.relabel.pod_logs.output
+      rule {
+        source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_logs_autogather"]
+        regex = "skip"
+        action = "drop"
+      }
+    }
+    
     local.file_match "pod_logs" {
-      path_targets = discovery.relabel.pod_logs.output
+      path_targets = discovery.relabel.filtered_pod_logs.output
     }
     
     loki.source.file "pod_logs" {
