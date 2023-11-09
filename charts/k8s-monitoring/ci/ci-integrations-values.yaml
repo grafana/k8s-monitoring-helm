@@ -1,0 +1,78 @@
+#
+# This values file will test the following features:
+# * MySQL integration
+#
+cluster:
+  name: ci-integrations-cluster
+
+externalServices:
+  prometheus:
+    host: https://prometheus-server.prometheus.svc:80
+    basicAuth:
+      username: promuser
+      password: prometheuspassword
+    queryEndpoint: /api/v1/query
+    writeEndpoint: /api/v1/write
+    tls:
+      insecure_skip_verify: true
+  loki:
+    host: http://loki.loki.svc:3100
+    tenantId: 1
+    basicAuth:
+      username: loki
+      password: lokipassword
+
+metrics:
+  cost:
+    enabled: false
+
+extraConfig: |
+  remote.kubernetes.configmap "mysql_config" {
+    name = "mysql-monitoring"
+    namespace = "mysql"
+  }
+
+  module.string "mysql_metrics" {
+    content = remote.kubernetes.configmap.mysql_config.data["metrics.river"]
+
+    arguments {
+      host = "mysql.production.svc.cluster.local"
+      instance = "primary"
+      namespace = "production"
+      secret_name = "mysql"
+      username = "root"
+      password_key = "mysql-root-password"
+      all_services = discovery.kubernetes.services.targets
+      metrics_destination = prometheus.relabel.metrics_service.receiver
+    }
+  }
+
+logs:
+  extraConfig: |
+    remote.kubernetes.configmap "mysql_config" {
+      name = "mysql-monitoring"
+      namespace = "mysql"
+    }
+
+    module.string "mysql_logs" {
+      content = remote.kubernetes.configmap.mysql_config.data["logs.river"]
+
+      arguments {
+        host = "mysql.production.svc.cluster.local"
+        instance = "primary"
+        all_pods = discovery.relabel.pod_logs.output
+        logs_destination = loki.write.grafana_cloud_loki.receiver
+      }
+    }
+
+test:
+  extraQueries:
+  # Check for MySQL metrics
+  - query: "mysqld_exporter_build_info{cluster=\"ci-integrations-cluster\"}"
+    type: promql
+  # Check for MySQL logs
+  - query: "{cluster=\"ci-integrations-cluster\", job=\"integrations/mysql\"}"
+    type: logql
+
+opencost:
+  enabled: false
