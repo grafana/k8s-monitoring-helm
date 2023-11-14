@@ -32,8 +32,14 @@ spec:
         {{- end }}
       {{- end }}
       restartPolicy: Never
+      {{- with .Values.configValidator.nodeSelector }}
       nodeSelector:
-        kubernetes.io/os: linux
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.configValidator.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       containers:
         - name: grafana-agent
           image: "{{ .Values.global.image.registry | default (index .Values "grafana-agent").image.registry }}/{{ (index .Values "grafana-agent").image.repository }}{{ include "grafana-agent.imageId" (index .Subcharts "grafana-agent") }}"
