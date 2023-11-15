@@ -623,6 +623,16 @@ traces:
 # -- (string) Extra configuration that will be added to the Grafana Agent configuration file. See [Adding custom Flow configuration](#adding-custom-flow-configuration) for an example.
 extraConfig:
 
+# Setting for the config validator job, run as a post-install and post-upgrade hook to validate that the generated
+# configuration, including extraConfig settings are valid.
+configValidator:
+  # -- nodeSelector to apply to the config validator job.
+  nodeSelector:
+    kubernetes.io/os: linux
+
+  # -- Tolerations to apply to the config validator job.
+  tolerations: []
+
 # Settings for the test job, runnable by "helm test"
 test:
   # -- Additional queries that will be run with `helm test`.
@@ -634,8 +644,15 @@ test:
   #     type: [promql|logql]
   extraQueries: []
 
-  # -- How many times to attempt the test job
+  # -- How many times to attempt the test job.
   attempts: 10
+
+  # -- nodeSelector to apply to the test job.
+  nodeSelector:
+    kubernetes.io/os: linux
+
+  # -- Tolerations to apply to the test job.
+  tolerations: []
 
   image:
     # -- Test job image registry.
