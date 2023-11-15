@@ -1,0 +1,53 @@
+# Proxies
+
+This example shows how to use proxy URLs and TLS settings to modify how to send data to the external services.
+
+```yaml
+cluster:
+  name: proxies-test
+
+externalServices:
+  prometheus:
+    host: https://prometheus.example.com
+    proxyUrl: https://localhost:8080
+    basicAuth:
+      username: 12345
+      password: "It's a secret to everyone"
+    tls:
+      insecure_skip_verify: true
+  loki:
+    host: https://loki.example.com
+    proxyUrl: https://localhost:8080
+    basicAuth:
+      username: 12345
+      password: "It's a secret to everyone"
+    tls:
+      insecure_skip_verify: true
+  tempo:
+    host: https://tempo.example.com
+    proxyUrl: https://localhost:8080
+    basicAuth:
+      username: 12345
+      password: "It's a secret to everyone"
+    tls:
+      insecure_skip_verify: true
+
+traces:
+  enabled: true
+
+grafana-agent:
+  agent:
+    extraPorts:
+      - name: "otlp-grpc"
+        port: 4317
+        targetPort: 4317
+        protocol: "TCP"
+      - name: "otlp-http"
+        port: 4318
+        targetPort: 4318
+        protocol: "TCP"
+      - name: "zipkin"
+        port: 9411
+        targetPort: 9411
+        protocol: "TCP"
+```
