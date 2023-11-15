@@ -35,6 +35,13 @@ loki.write "grafana_cloud_loki" {
       {{ if .basicAuth.password }}password = local.file.loki_password.content{{ end }}
     }
 {{- end }}
+{{- if .tls }}
+    tls_config {
+    {{- range $k, $v := .tls }}
+      {{ $k }} = {{ $v | toJson }}
+    {{- end }}
+    }
+{{- end }}
   }
   external_labels = {
     {{- range $k, $v := .externalLabels }}

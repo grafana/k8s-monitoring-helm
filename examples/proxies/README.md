@@ -1,0 +1,26 @@
+# Proxies
+
+This example shows how to use proxy URLs and TLS settings to modify how to send data to the external services.
+
+```yaml
+cluster:
+  name: proxies-test
+
+externalServices:
+  prometheus:
+    host: https://prometheus.example.com
+    proxyURL: https://localhost:8080
+    basicAuth:
+      username: 12345
+      password: "It's a secret to everyone"
+    tls:
+      insecure_skip_verify: true
+  loki:
+    host: https://loki.example.com
+    proxyURL: https://localhost:8080
+    basicAuth:
+      username: 12345
+      password: "It's a secret to everyone"
+    tls:
+      insecure_skip_verify: true
+```
