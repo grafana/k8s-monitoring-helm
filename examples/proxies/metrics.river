@@ -354,6 +354,7 @@ prometheus.relabel "metrics_service" {
 prometheus.remote_write "metrics_service" {
   endpoint {
     url = nonsensitive(local.file.prometheus_host.content) + "/api/prom/push"
+    proxy_url = "https://localhost:8080"
 
     basic_auth {
       username = local.file.prometheus_username.content
@@ -393,6 +394,7 @@ local.file "loki_password" {
 loki.write "grafana_cloud_loki" {
   endpoint {
     url = nonsensitive(local.file.loki_host.content) + "/loki/api/v1/push"
+    proxy_url = "https://localhost:8080"
 
     basic_auth {
       username = local.file.loki_username.content
@@ -404,78 +406,5 @@ loki.write "grafana_cloud_loki" {
   }
   external_labels = {
     cluster = "proxies-test",
-  }
-}
-
-// Traces
-otelcol.receiver.otlp "trace_receiver" {
-grpc {
-    endpoint = "0.0.0.0:4317"
-  }
-http {
-    endpoint = "0.0.0.0:4318"
-  }
-  output {
-    traces = [otelcol.processor.batch.trace_batch_processor.input]
-  }
-}
-otelcol.receiver.zipkin "trace_receiver" {
-endpoint = "0.0.0.0:9411"
-  output {
-    traces = [otelcol.processor.batch.trace_batch_processor.input]
-  }
-}
-otelcol.processor.batch "trace_batch_processor" {
-  send_batch_size = 16384
-  send_batch_max_size = 0
-  timeout = "2s"
-  output {
-    traces = [otelcol.processor.attributes.trace_attributes_processor.input]
-  }
-}
-
-otelcol.processor.attributes "trace_attributes_processor" {
-  action {
-    key = "cluster"
-    value = "proxies-test"
-    action = "insert"
-  }
-  action {
-    key = "k8s.cluster.name"
-    value = "proxies-test"
-    action = "upsert"
-  }
-  output {
-    traces = [otelcol.exporter.otlp.tempo.input]
-  }
-}
-// Tempo
-local.file "tempo_host" {
-  filename  = "/etc/grafana-agent-credentials/tempo_host"
-}
-
-local.file "tempo_username" {
-  filename  = "/etc/grafana-agent-credentials/tempo_username"
-}
-
-local.file "tempo_password" {
-  filename  = "/etc/grafana-agent-credentials/tempo_password"
-  is_secret = true
-}
-
-
-otelcol.auth.basic "tempo" {
-  username = local.file.tempo_username.content
-  password = local.file.tempo_password.content
-}
-
-otelcol.exporter.otlp "tempo" {
-  client {
-    endpoint = nonsensitive(local.file.tempo_host.content)
-
-    auth = otelcol.auth.basic.tempo.handler
-    tls {
-      insecure_skip_verify = true
-    }
   }
 }

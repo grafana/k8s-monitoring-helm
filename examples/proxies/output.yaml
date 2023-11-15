@@ -82,9 +82,6 @@ data:
   loki_host: "aHR0cHM6Ly9sb2tpLmV4YW1wbGUuY29t"
   loki_username: "MTIzNDU="
   loki_password: "SXQncyBhIHNlY3JldCB0byBldmVyeW9uZQ=="
-  tempo_host: "aHR0cHM6Ly90ZW1wby5leGFtcGxlLmNvbQ=="
-  tempo_username: "MTIzNDU="
-  tempo_password: "SXQncyBhIHNlY3JldCB0byBldmVyeW9uZQ=="
 ---
 # Source: k8s-monitoring/templates/grafana-agent-config.yaml
 apiVersion: v1
@@ -450,6 +447,7 @@ data:
     prometheus.remote_write "metrics_service" {
       endpoint {
         url = nonsensitive(local.file.prometheus_host.content) + "/api/prom/push"
+        proxy_url = "https://localhost:8080"
     
         basic_auth {
           username = local.file.prometheus_username.content
@@ -489,6 +487,7 @@ data:
     loki.write "grafana_cloud_loki" {
       endpoint {
         url = nonsensitive(local.file.loki_host.content) + "/loki/api/v1/push"
+        proxy_url = "https://localhost:8080"
     
         basic_auth {
           username = local.file.loki_username.content
@@ -500,79 +499,6 @@ data:
       }
       external_labels = {
         cluster = "proxies-test",
-      }
-    }
-    
-    // Traces
-    otelcol.receiver.otlp "trace_receiver" {
-    grpc {
-        endpoint = "0.0.0.0:4317"
-      }
-    http {
-        endpoint = "0.0.0.0:4318"
-      }
-      output {
-        traces = [otelcol.processor.batch.trace_batch_processor.input]
-      }
-    }
-    otelcol.receiver.zipkin "trace_receiver" {
-    endpoint = "0.0.0.0:9411"
-      output {
-        traces = [otelcol.processor.batch.trace_batch_processor.input]
-      }
-    }
-    otelcol.processor.batch "trace_batch_processor" {
-      send_batch_size = 16384
-      send_batch_max_size = 0
-      timeout = "2s"
-      output {
-        traces = [otelcol.processor.attributes.trace_attributes_processor.input]
-      }
-    }
-    
-    otelcol.processor.attributes "trace_attributes_processor" {
-      action {
-        key = "cluster"
-        value = "proxies-test"
-        action = "insert"
-      }
-      action {
-        key = "k8s.cluster.name"
-        value = "proxies-test"
-        action = "upsert"
-      }
-      output {
-        traces = [otelcol.exporter.otlp.tempo.input]
-      }
-    }
-    // Tempo
-    local.file "tempo_host" {
-      filename  = "/etc/grafana-agent-credentials/tempo_host"
-    }
-    
-    local.file "tempo_username" {
-      filename  = "/etc/grafana-agent-credentials/tempo_username"
-    }
-    
-    local.file "tempo_password" {
-      filename  = "/etc/grafana-agent-credentials/tempo_password"
-      is_secret = true
-    }
-    
-    
-    otelcol.auth.basic "tempo" {
-      username = local.file.tempo_username.content
-      password = local.file.tempo_password.content
-    }
-    
-    otelcol.exporter.otlp "tempo" {
-      client {
-        endpoint = nonsensitive(local.file.tempo_host.content)
-    
-        auth = otelcol.auth.basic.tempo.handler
-        tls {
-          insecure_skip_verify = true
-        }
       }
     }
 ---
@@ -698,6 +624,7 @@ data:
     loki.write "grafana_cloud_loki" {
       endpoint {
         url = nonsensitive(local.file.loki_host.content) + "/loki/api/v1/push"
+        proxy_url = "https://localhost:8080"
     
         basic_auth {
           username = local.file.loki_username.content
@@ -722,7 +649,7 @@ data:
   metrics.prom: |
     # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart as well as a summary of enabled features
     # TYPE grafana_kubernetes_monitoring_build_info gauge
-    grafana_kubernetes_monitoring_build_info{version="0.4.1", namespace="default", metrics="enabled,agent,kube-state-metrics,node-exporter,kubelet,cadvisor,cost", logs="enabled,events,pod_logs", traces="enabled", deployments="kube-state-metrics,prometheus-node-exporter,prometheus-operator-crds,opencost"} 1
+    grafana_kubernetes_monitoring_build_info{version="0.4.1", namespace="default", metrics="enabled,agent,kube-state-metrics,node-exporter,kubelet,cadvisor,cost", logs="enabled,events,pod_logs", traces="disabled", deployments="kube-state-metrics,prometheus-node-exporter,prometheus-operator-crds,opencost"} 1
 ---
 # Source: k8s-monitoring/charts/prometheus-operator-crds/charts/crds/templates/crd-alertmanagerconfigs.yaml
 apiVersion: apiextensions.k8s.io/v1
@@ -42477,18 +42404,6 @@ spec:
       port: 80
       targetPort: 80
       protocol: "TCP"
-    - name: otlp-grpc
-      port: 4317
-      targetPort: 4317
-      protocol: TCP
-    - name: otlp-http
-      port: 4318
-      targetPort: 4318
-      protocol: TCP
-    - name: zipkin
-      port: 9411
-      targetPort: 9411
-      protocol: TCP
 ---
 # Source: k8s-monitoring/charts/grafana-agent/templates/service.yaml
 apiVersion: v1
@@ -42511,18 +42426,6 @@ spec:
       port: 80
       targetPort: 80
       protocol: "TCP"
-    - name: otlp-grpc
-      port: 4317
-      targetPort: 4317
-      protocol: TCP
-    - name: otlp-http
-      port: 4318
-      targetPort: 4318
-      protocol: TCP
-    - name: zipkin
-      port: 9411
-      targetPort: 9411
-      protocol: TCP
 ---
 # Source: k8s-monitoring/charts/kube-state-metrics/templates/service.yaml
 apiVersion: v1
@@ -43014,15 +42917,6 @@ spec:
           ports:
             - containerPort: 80
               name: http-metrics
-            - containerPort: 4317
-              name: otlp-grpc
-              protocol: TCP
-            - containerPort: 4318
-              name: otlp-http
-              protocol: TCP
-            - containerPort: 9411
-              name: zipkin
-              protocol: TCP
           readinessProbe:
             httpGet:
               path: /-/ready
@@ -43467,6 +43361,7 @@ data:
     prometheus.remote_write "metrics_service" {
       endpoint {
         url = nonsensitive(local.file.prometheus_host.content) + "/api/prom/push"
+        proxy_url = "https://localhost:8080"
     
         basic_auth {
           username = local.file.prometheus_username.content
@@ -43506,6 +43401,7 @@ data:
     loki.write "grafana_cloud_loki" {
       endpoint {
         url = nonsensitive(local.file.loki_host.content) + "/loki/api/v1/push"
+        proxy_url = "https://localhost:8080"
     
         basic_auth {
           username = local.file.loki_username.content
@@ -43517,79 +43413,6 @@ data:
       }
       external_labels = {
         cluster = "proxies-test",
-      }
-    }
-    
-    // Traces
-    otelcol.receiver.otlp "trace_receiver" {
-    grpc {
-        endpoint = "0.0.0.0:4317"
-      }
-    http {
-        endpoint = "0.0.0.0:4318"
-      }
-      output {
-        traces = [otelcol.processor.batch.trace_batch_processor.input]
-      }
-    }
-    otelcol.receiver.zipkin "trace_receiver" {
-    endpoint = "0.0.0.0:9411"
-      output {
-        traces = [otelcol.processor.batch.trace_batch_processor.input]
-      }
-    }
-    otelcol.processor.batch "trace_batch_processor" {
-      send_batch_size = 16384
-      send_batch_max_size = 0
-      timeout = "2s"
-      output {
-        traces = [otelcol.processor.attributes.trace_attributes_processor.input]
-      }
-    }
-    
-    otelcol.processor.attributes "trace_attributes_processor" {
-      action {
-        key = "cluster"
-        value = "proxies-test"
-        action = "insert"
-      }
-      action {
-        key = "k8s.cluster.name"
-        value = "proxies-test"
-        action = "upsert"
-      }
-      output {
-        traces = [otelcol.exporter.otlp.tempo.input]
-      }
-    }
-    // Tempo
-    local.file "tempo_host" {
-      filename  = "/etc/grafana-agent-credentials/tempo_host"
-    }
-    
-    local.file "tempo_username" {
-      filename  = "/etc/grafana-agent-credentials/tempo_username"
-    }
-    
-    local.file "tempo_password" {
-      filename  = "/etc/grafana-agent-credentials/tempo_password"
-      is_secret = true
-    }
-    
-    
-    otelcol.auth.basic "tempo" {
-      username = local.file.tempo_username.content
-      password = local.file.tempo_password.content
-    }
-    
-    otelcol.exporter.otlp "tempo" {
-      client {
-        endpoint = nonsensitive(local.file.tempo_host.content)
-    
-        auth = otelcol.auth.basic.tempo.handler
-        tls {
-          insecure_skip_verify = true
-        }
       }
     }
   logs.river: |-
@@ -43707,6 +43530,7 @@ data:
     loki.write "grafana_cloud_loki" {
       endpoint {
         url = nonsensitive(local.file.loki_host.content) + "/loki/api/v1/push"
+        proxy_url = "https://localhost:8080"
     
         basic_auth {
           username = local.file.loki_username.content
