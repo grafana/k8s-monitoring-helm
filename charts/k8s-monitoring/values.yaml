@@ -200,7 +200,10 @@ metrics:
   # See https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block
   extraMetricRelabelingRules: ""
 
+  # Annotation-based autodiscovery allows for discovering metric sources solely on their annotations and does
+  # not require adding any extra configuration.
   autoDiscover:
+    # Enable annotation-based autodiscovery
     enabled: true
 
     # -- (string) Rule blocks to be added to the discovery.relabel component for auto-discovered entities.
@@ -211,12 +214,16 @@ metrics:
     # See https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block
     extraMetricRelabelingRules:
 
-    # TODO: Make these configurable in _annotation_autodiscovery.river.txt
+    # -- Annotations that are used to discover and configure metric scraping targets. Add these annotations
+    # to your services or pods and the
     annotations:
+      # -- Annotation for enabling scraping for this service or pod. Value should be either "true" or "false"
       scrape: "k8s.grafana.com/scrape"
+      # -- Annotation for overriding the job label
       job: "k8s.grafana.com/job"
+      # -- Annotation for overriding the instance label
       instance: "k8s.grafana.com/instance"
-#      metricsPath: "k8s.grafana.com/metrics.path"
+      # -- Annotation for setting or overriding the metrics port. Helpful if the port is not exposed on the Pod
       metricsPort: "k8s.grafana.com/metrics.port"
 
   # Metrics from Grafana Agent

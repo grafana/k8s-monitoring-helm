@@ -3,24 +3,37 @@
 discovery.relabel "annotation_autodiscovery" {
   targets = concat(discovery.kubernetes.pods.targets,discovery.kubernetes.services.targets)
   rule {
-    source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_scrape", "__meta_kubernetes_service_annotation_k8s_grafana_com_scrape"]
+    source_labels = [
+      "__meta_kubernetes_pod_annotation_{{ include "escape_label" .Values.metrics.autoDiscover.annotations.scrape }}",
+      "__meta_kubernetes_service_annotation_{{ include "escape_label" .Values.metrics.autoDiscover.annotations.scrape }}",
+    ]
     regex = ";?true;?"
     action = "keep"
   }
   rule {
-    source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_job", "__meta_kubernetes_service_annotation_k8s_grafana_com_job"]
+    source_labels = [
+      "__meta_kubernetes_pod_annotation_{{ include "escape_label" .Values.metrics.autoDiscover.annotations.job }}",
+      "__meta_kubernetes_service_annotation_{{ include "escape_label" .Values.metrics.autoDiscover.annotations.job }}",
+    ]
     regex = ";?([^;]+);?"
     action = "replace"
     target_label = "job"
   }
   rule {
-    source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_instance", "__meta_kubernetes_service_annotation_k8s_grafana_com_instance"]
+    source_labels = [
+      "__meta_kubernetes_pod_annotation_{{ include "escape_label" .Values.metrics.autoDiscover.annotations.instance }}",
+      "__meta_kubernetes_service_annotation_{{ include "escape_label" .Values.metrics.autoDiscover.annotations.instance }}",
+    ]
     regex = ";?([^;]+);?"
     action = "replace"
     target_label = "instance"
   }
   rule {
-    source_labels = ["__address__", "__meta_kubernetes_pod_annotation_k8s_grafana_com_metrics_port", "__meta_kubernetes_service_annotation_k8s_grafana_com_metrics_port"]
+    source_labels = [
+      "__address__",
+      "__meta_kubernetes_pod_annotation_{{ include "escape_label" .Values.metrics.autoDiscover.annotations.metricsPort }}",
+      "__meta_kubernetes_service_annotation_{{ include "escape_label" .Values.metrics.autoDiscover.annotations.metricsPort }}",
+    ]
     regex = "(.+);;?([0-9]+);?"
     action = "replace"
     replacement = "$1:$2"

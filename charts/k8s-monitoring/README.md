@@ -168,10 +168,11 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | metrics.apiserver.extraMetricRelabelingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for the API Server. See https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block |
 | metrics.apiserver.extraRelabelingRules | string | `""` | Rule blocks to be added to the discovery.relabel component for the API Server. See https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block |
 | metrics.apiserver.scrapeInterval | string | 60s | How frequently to scrape metrics from the API Server Overrides metrics.scrapeInterval |
-| metrics.autoDiscover.annotations.instance | string | `"k8s.grafana.com/instance"` |  |
-| metrics.autoDiscover.annotations.job | string | `"k8s.grafana.com/job"` |  |
-| metrics.autoDiscover.annotations.metricsPort | string | `"k8s.grafana.com/metrics.port"` |  |
-| metrics.autoDiscover.annotations.scrape | string | `"k8s.grafana.com/scrape"` |  |
+| metrics.autoDiscover.annotations | object | `{"instance":"k8s.grafana.com/instance","job":"k8s.grafana.com/job","metricsPort":"k8s.grafana.com/metrics.port","scrape":"k8s.grafana.com/scrape"}` | Annotations that are used to discover and configure metric scraping targets. Add these annotations to your services or pods and the |
+| metrics.autoDiscover.annotations.instance | string | `"k8s.grafana.com/instance"` | Annotation for overriding the instance label |
+| metrics.autoDiscover.annotations.job | string | `"k8s.grafana.com/job"` | Annotation for overriding the job label |
+| metrics.autoDiscover.annotations.metricsPort | string | `"k8s.grafana.com/metrics.port"` | Annotation for setting or overriding the metrics port. Helpful if the port is not exposed on the Pod |
+| metrics.autoDiscover.annotations.scrape | string | `"k8s.grafana.com/scrape"` | Annotation for enabling scraping for this service or pod. Value should be either "true" or "false" |
 | metrics.autoDiscover.enabled | bool | `true` |  |
 | metrics.autoDiscover.extraMetricRelabelingRules | string | `nil` | Rule blocks to be added to the prometheus.relabel component for auto-discovered entities. See https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block |
 | metrics.autoDiscover.extraRelabelingRules | string | `nil` | Rule blocks to be added to the discovery.relabel component for auto-discovered entities. See https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block |

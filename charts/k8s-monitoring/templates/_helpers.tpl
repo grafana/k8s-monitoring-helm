@@ -180,3 +180,7 @@
   {{- printf "tempo-%s" .Chart.Name | trunc 63 | trimSuffix "-" }}
 {{- end }}
 {{- end }}
+
+{{- define "escape_label" -}}
+{{ . | replace "-" "_" | replace "." "_" | replace "/" "_" }}
+{{- end }}

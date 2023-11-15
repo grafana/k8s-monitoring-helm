@@ -11,7 +11,7 @@ discovery.relabel "kube_state_metrics" {
 {{- end }}
   {{- range $k, $v := (index .Values.metrics "kube-state-metrics").labelMatchers }}
   rule {
-    source_labels = ["__meta_kubernetes_service_label_{{ $k | replace "." "_" | replace "/" "_" }}"]
+    source_labels = ["__meta_kubernetes_service_label_{{ include "escape_label" $k }}"]
     regex = "{{ $v }}"
     action = "keep"
   }

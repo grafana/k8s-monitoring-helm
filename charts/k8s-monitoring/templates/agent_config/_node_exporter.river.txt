@@ -11,7 +11,7 @@ discovery.relabel "node_exporter" {
 {{- end }}
   {{- range $k, $v := (index .Values.metrics "node-exporter").labelMatchers }}
   rule {
-    source_labels = ["__meta_kubernetes_pod_label_{{ $k | replace "." "_" | replace "/" "_" }}"]
+    source_labels = ["__meta_kubernetes_pod_label_{{ include "escape_label" $k }}"]
     regex = "{{ $v }}"
     action = "keep"
   }
