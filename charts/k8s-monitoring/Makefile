@@ -15,7 +15,7 @@ values.schema.json: values.yaml values.schema.modifications.json
 HAS_HELM_DOCS := $(shell command -v helm-docs;)
 
 
-README.md: README.md.gotmpl values.yaml
+README.md: README.md.gotmpl values.yaml Chart.yaml
 ifdef HAS_HELM_DOCS
 	helm-docs
 else
