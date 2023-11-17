@@ -1,49 +1,69 @@
 {{ define "agent.config.annotationAutodiscovery" }}
 // Annotation Autodiscovery
-discovery.relabel "annotation_autodiscovery" {
-  targets = concat(discovery.kubernetes.pods.targets,discovery.kubernetes.services.targets)
+discovery.relabel "annotation_autodiscovery_pods" {
+  targets = discovery.kubernetes.pods.targets
   rule {
-    source_labels = [
-      "__meta_kubernetes_pod_annotation_{{ include "escape_label" .Values.metrics.autoDiscover.annotations.scrape }}",
-      "__meta_kubernetes_service_annotation_{{ include "escape_label" .Values.metrics.autoDiscover.annotations.scrape }}",
-    ]
-    regex = ";?true;?"
+    source_labels = ["__meta_kubernetes_pod_annotation_{{ include "escape_label" .Values.metrics.autoDiscover.annotations.scrape }}"]
+    regex = "true"
     action = "keep"
   }
   rule {
-    source_labels = [
-      "__meta_kubernetes_pod_annotation_{{ include "escape_label" .Values.metrics.autoDiscover.annotations.job }}",
-      "__meta_kubernetes_service_annotation_{{ include "escape_label" .Values.metrics.autoDiscover.annotations.job }}",
-    ]
-    regex = ";?([^;]+);?"
+    source_labels = ["__meta_kubernetes_pod_annotation_{{ include "escape_label" .Values.metrics.autoDiscover.annotations.job }}"]
     action = "replace"
     target_label = "job"
   }
   rule {
-    source_labels = [
-      "__meta_kubernetes_pod_annotation_{{ include "escape_label" .Values.metrics.autoDiscover.annotations.instance }}",
-      "__meta_kubernetes_service_annotation_{{ include "escape_label" .Values.metrics.autoDiscover.annotations.instance }}",
-    ]
-    regex = ";?([^;]+);?"
+    source_labels = ["__meta_kubernetes_pod_annotation_{{ include "escape_label" .Values.metrics.autoDiscover.annotations.instance }}"]
     action = "replace"
     target_label = "instance"
   }
   rule {
-    source_labels = [
-      "__meta_kubernetes_pod_annotation_{{ include "escape_label" .Values.metrics.autoDiscover.annotations.metricsPath }}",
-      "__meta_kubernetes_service_annotation_{{ include "escape_label" .Values.metrics.autoDiscover.annotations.metricsPath }}",
-    ]
-    regex = ";?([^;]+);?"
+    source_labels = ["__meta_kubernetes_pod_annotation_{{ include "escape_label" .Values.metrics.autoDiscover.annotations.metricsPath }}"]
     action = "replace"
     target_label = "__metrics_path__"
   }
   rule {
-    source_labels = [
-      "__address__",
-      "__meta_kubernetes_pod_annotation_{{ include "escape_label" .Values.metrics.autoDiscover.annotations.metricsPort }}",
-      "__meta_kubernetes_service_annotation_{{ include "escape_label" .Values.metrics.autoDiscover.annotations.metricsPort }}",
-    ]
-    regex = "(.+);;?([0-9]+);?"
+    source_labels = ["__address__", "__meta_kubernetes_pod_annotation_{{ include "escape_label" .Values.metrics.autoDiscover.annotations.metricsPort }}"]
+    separator = ";"
+    regex = "^([^:]+)(?::\\d+)?;(\\d+)$"
+    action = "replace"
+    replacement = "$1:$2"
+    target_label = "__address__"
+  }
+{{- if .Values.metrics.extraRelabelingRules }}
+{{ .Values.metrics.extraRelabelingRules | indent 2 }}
+{{- end }}
+{{- if .Values.metrics.autoDiscover.extraRelabelingRules }}
+{{ .Values.metrics.autoDiscover.extraRelabelingRules | indent 2 }}
+{{- end }}
+}
+
+discovery.relabel "annotation_autodiscovery_services" {
+  targets = discovery.kubernetes.services.targets
+  rule {
+    source_labels = ["__meta_kubernetes_service_annotation_{{ include "escape_label" .Values.metrics.autoDiscover.annotations.scrape }}"]
+    regex = "true"
+    action = "keep"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_service_annotation_{{ include "escape_label" .Values.metrics.autoDiscover.annotations.job }}"]
+    action = "replace"
+    target_label = "job"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_service_annotation_{{ include "escape_label" .Values.metrics.autoDiscover.annotations.instance }}"]
+    action = "replace"
+    target_label = "instance"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_service_annotation_{{ include "escape_label" .Values.metrics.autoDiscover.annotations.metricsPath }}"]
+    action = "replace"
+    target_label = "__metrics_path__"
+  }
+  rule {
+    source_labels = ["__address__", "__meta_kubernetes_service_annotation_{{ include "escape_label" .Values.metrics.autoDiscover.annotations.metricsPort }}"]
+    separator = ";"
+    regex = "^([^:]+)(?::\\d+)?;(\\d+)$"
     action = "replace"
     replacement = "$1:$2"
     target_label = "__address__"
@@ -57,7 +77,7 @@ discovery.relabel "annotation_autodiscovery" {
 }
 
 prometheus.scrape "annotation_autodiscovery" {
-  targets = discovery.relabel.annotation_autodiscovery.output
+  targets = concat(discovery.relabel.annotation_autodiscovery_pods.output, discovery.relabel.annotation_autodiscovery_services.output)
   honor_labels = true
 {{- if (index .Values "grafana-agent").agent.clustering.enabled }}
   clustering {
