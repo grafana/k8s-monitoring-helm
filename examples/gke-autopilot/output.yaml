@@ -132,6 +132,15 @@ data:
       }
       rule {
         source_labels = [
+          "__meta_kubernetes_pod_annotation_k8s_grafana_com_metrics_path",
+          "__meta_kubernetes_service_annotation_k8s_grafana_com_metrics_path",
+        ]
+        regex = ";?([^;]+);?"
+        action = "replace"
+        target_label = "__metrics_path__"
+      }
+      rule {
+        source_labels = [
           "__address__",
           "__meta_kubernetes_pod_annotation_k8s_grafana_com_metrics_port",
           "__meta_kubernetes_service_annotation_k8s_grafana_com_metrics_port",
@@ -43556,6 +43565,15 @@ data:
         regex = ";?([^;]+);?"
         action = "replace"
         target_label = "instance"
+      }
+      rule {
+        source_labels = [
+          "__meta_kubernetes_pod_annotation_k8s_grafana_com_metrics_path",
+          "__meta_kubernetes_service_annotation_k8s_grafana_com_metrics_path",
+        ]
+        regex = ";?([^;]+);?"
+        action = "replace"
+        target_label = "__metrics_path__"
       }
       rule {
         source_labels = [

@@ -30,6 +30,15 @@ discovery.relabel "annotation_autodiscovery" {
   }
   rule {
     source_labels = [
+      "__meta_kubernetes_pod_annotation_{{ include "escape_label" .Values.metrics.autoDiscover.annotations.metricsPath }}",
+      "__meta_kubernetes_service_annotation_{{ include "escape_label" .Values.metrics.autoDiscover.annotations.metricsPath }}",
+    ]
+    regex = ";?([^;]+);?"
+    action = "replace"
+    target_label = "__metrics_path__"
+  }
+  rule {
+    source_labels = [
       "__address__",
       "__meta_kubernetes_pod_annotation_{{ include "escape_label" .Values.metrics.autoDiscover.annotations.metricsPort }}",
       "__meta_kubernetes_service_annotation_{{ include "escape_label" .Values.metrics.autoDiscover.annotations.metricsPort }}",
