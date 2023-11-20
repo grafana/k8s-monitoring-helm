@@ -5,10 +5,11 @@ kind: ServiceAccount
 metadata:
   name: k8smon-grafana-agent-logs
   labels:
-    helm.sh/chart: grafana-agent-logs-0.27.2
+    helm.sh/chart: grafana-agent-logs-0.28.0
     app.kubernetes.io/name: grafana-agent-logs
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "v0.37.4"
+    
+    app.kubernetes.io/version: v0.38.0
     app.kubernetes.io/managed-by: Helm
 ---
 # Source: k8s-monitoring/charts/grafana-agent/templates/serviceaccount.yaml
@@ -17,10 +18,11 @@ kind: ServiceAccount
 metadata:
   name: k8smon-grafana-agent
   labels:
-    helm.sh/chart: grafana-agent-0.27.2
+    helm.sh/chart: grafana-agent-0.28.0
     app.kubernetes.io/name: grafana-agent
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "v0.37.4"
+    
+    app.kubernetes.io/version: v0.38.0
     app.kubernetes.io/managed-by: Helm
 ---
 # Source: k8s-monitoring/charts/kube-state-metrics/templates/serviceaccount.yaml
@@ -68,20 +70,31 @@ metadata:
     app.kubernetes.io/instance: k8smon
     app.kubernetes.io/version: "1.7.0"
 ---
-# Source: k8s-monitoring/templates/credentials.yaml
+# Source: k8s-monitoring/templates/log-service-credentials.yaml
 apiVersion: v1
 kind: Secret
 metadata:
-  name: grafana-agent-credentials
+  name: loki-k8s-monitoring
   namespace: default
 type: Opaque
 data:
-  prometheus_host: "aHR0cHM6Ly9wcm9tZXRoZXVzLmV4YW1wbGUuY29t"
-  prometheus_username: "MTIzNDU="
-  prometheus_password: "SXQncyBhIHNlY3JldCB0byBldmVyeW9uZQ=="
-  loki_host: "aHR0cHM6Ly9sb2tpLmV4YW1wbGUuY29t"
-  loki_username: "MTIzNDU="
-  loki_password: "SXQncyBhIHNlY3JldCB0byBldmVyeW9uZQ=="
+
+  host: "aHR0cHM6Ly9sb2tpLmV4YW1wbGUuY29t"
+  username: "MTIzNDU="
+  password: "SXQncyBhIHNlY3JldCB0byBldmVyeW9uZQ=="
+---
+# Source: k8s-monitoring/templates/metrics-service-credentials.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: prometheus-k8s-monitoring
+  namespace: default
+type: Opaque
+data:
+
+  host: "aHR0cHM6Ly9wcm9tZXRoZXVzLmV4YW1wbGUuY29t"
+  username: "MTIzNDU="
+  password: "SXQncyBhIHNlY3JldCB0byBldmVyeW9uZQ=="
 ---
 # Source: k8s-monitoring/templates/grafana-agent-config.yaml
 apiVersion: v1
@@ -426,7 +439,7 @@ data:
     prometheus.relabel "kube_state_metrics" {
       rule {
         source_labels = ["__name__"]
-        regex = "up|kube_daemonset.*|kube_deployment_metadata_generation|kube_deployment_spec_replicas|kube_deployment_status_observed_generation|kube_deployment_status_replicas_available|kube_deployment_status_replicas_updated|kube_horizontalpodautoscaler_spec_max_replicas|kube_horizontalpodautoscaler_spec_min_replicas|kube_horizontalpodautoscaler_status_current_replicas|kube_horizontalpodautoscaler_status_desired_replicas|kube_job.*|kube_namespace_status_phase|kube_namespace_status_phase|kube_node.*|kube_persistentvolumeclaim_resource_requests_storage_bytes|kube_pod_container_info|kube_pod_container_resource_limits|kube_pod_container_resource_requests|kube_pod_container_status_restarts_total|kube_pod_container_status_waiting_reason|kube_pod_container_status_waiting_reason|kube_pod_info|kube_pod_owner|kube_pod_start_time|kube_pod_status_phase|kube_pod_status_reason|kube_replicaset.*|kube_resourcequota|kube_statefulset.*"
+        regex = "up|kube_daemonset.*|kube_deployment_metadata_generation|kube_deployment_spec_replicas|kube_deployment_status_observed_generation|kube_deployment_status_replicas_available|kube_deployment_status_replicas_updated|kube_horizontalpodautoscaler_spec_max_replicas|kube_horizontalpodautoscaler_spec_min_replicas|kube_horizontalpodautoscaler_status_current_replicas|kube_horizontalpodautoscaler_status_desired_replicas|kube_job.*|kube_namespace_status_phase|kube_node.*|kube_persistentvolumeclaim_resource_requests_storage_bytes|kube_pod_container_info|kube_pod_container_resource_limits|kube_pod_container_resource_requests|kube_pod_container_status_restarts_total|kube_pod_container_status_waiting_reason|kube_pod_info|kube_pod_owner|kube_pod_start_time|kube_pod_status_phase|kube_pod_status_reason|kube_replicaset.*|kube_resourcequota|kube_statefulset.*"
         action = "keep"
       }
       forward_to = [prometheus.relabel.metrics_service.receiver]
@@ -550,19 +563,10 @@ data:
     }
     
     // Metrics Service
-    local.file "prometheus_host" {
-      filename  = "/etc/grafana-agent-credentials/prometheus_host"
+    remote.kubernetes.secret "metrics_service" {
+      name = "prometheus-k8s-monitoring"
+      namespace = "default"
     }
-    
-    local.file "prometheus_username" {
-      filename  = "/etc/grafana-agent-credentials/prometheus_username"
-    }
-    
-    local.file "prometheus_password" {
-      filename  = "/etc/grafana-agent-credentials/prometheus_password"
-      is_secret = true
-    }
-    
     
     prometheus.relabel "metrics_service" {
       forward_to = [prometheus.remote_write.metrics_service.receiver]
@@ -570,11 +574,12 @@ data:
     
     prometheus.remote_write "metrics_service" {
       endpoint {
-        url = nonsensitive(local.file.prometheus_host.content) + "/api/prom/push"
+        url = nonsensitive(remote.kubernetes.secret.metrics_service.data["host"]) + "/api/prom/push"
+        headers = { "X-Scope-OrgID" = nonsensitive(remote.kubernetes.secret.metrics_service.data["tenantId"]) }
     
         basic_auth {
-          username = local.file.prometheus_username.content
-          password = local.file.prometheus_password.content
+          username = nonsensitive(remote.kubernetes.secret.metrics_service.data["username"])
+          password = remote.kubernetes.secret.metrics_service.data["password"]
         }
     
       }
@@ -590,27 +595,19 @@ data:
       forward_to = [loki.write.grafana_cloud_loki.receiver]
     }
     
-    // Grafana Cloud Loki
-    local.file "loki_host" {
-      filename  = "/etc/grafana-agent-credentials/loki_host"
+    // Loki
+    remote.kubernetes.secret "logs_service" {
+      name = "loki-k8s-monitoring"
+      namespace = "default"
     }
-    
-    local.file "loki_username" {
-      filename  = "/etc/grafana-agent-credentials/loki_username"
-    }
-    
-    local.file "loki_password" {
-      filename  = "/etc/grafana-agent-credentials/loki_password"
-      is_secret = true
-    }
-    
     loki.write "grafana_cloud_loki" {
       endpoint {
-        url = nonsensitive(local.file.loki_host.content) + "/loki/api/v1/push"
+        url = nonsensitive(remote.kubernetes.secret.logs_service.data["host"]) + "/loki/api/v1/push"
+        tenant_id = nonsensitive(remote.kubernetes.secret.logs_service.data["tenantId"])
     
         basic_auth {
-          username = local.file.loki_username.content
-          password = local.file.loki_password.content
+          username = nonsensitive(remote.kubernetes.secret.logs_service.data["username"])
+          password = remote.kubernetes.secret.logs_service.data["password"]
         }
       }
       external_labels = {
@@ -752,27 +749,19 @@ data:
       forward_to = [loki.write.grafana_cloud_loki.receiver]
     }
     
-    // Grafana Cloud Loki
-    local.file "loki_host" {
-      filename  = "/etc/grafana-agent-credentials/loki_host"
+    // Loki
+    remote.kubernetes.secret "logs_service" {
+      name = "loki-k8s-monitoring"
+      namespace = "default"
     }
-    
-    local.file "loki_username" {
-      filename  = "/etc/grafana-agent-credentials/loki_username"
-    }
-    
-    local.file "loki_password" {
-      filename  = "/etc/grafana-agent-credentials/loki_password"
-      is_secret = true
-    }
-    
     loki.write "grafana_cloud_loki" {
       endpoint {
-        url = nonsensitive(local.file.loki_host.content) + "/loki/api/v1/push"
+        url = nonsensitive(remote.kubernetes.secret.logs_service.data["host"]) + "/loki/api/v1/push"
+        tenant_id = nonsensitive(remote.kubernetes.secret.logs_service.data["tenantId"])
     
         basic_auth {
-          username = local.file.loki_username.content
-          password = local.file.loki_password.content
+          username = nonsensitive(remote.kubernetes.secret.logs_service.data["username"])
+          password = remote.kubernetes.secret.logs_service.data["password"]
         }
       }
       external_labels = {
@@ -805,7 +794,7 @@ data:
   metrics.prom: |
     # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart as well as a summary of enabled features
     # TYPE grafana_kubernetes_monitoring_build_info gauge
-    grafana_kubernetes_monitoring_build_info{version="0.4.2", namespace="default", metrics="enabled,agent,kube-state-metrics,node-exporter,kubelet,cadvisor,cost,extraConfig", logs="enabled,events,pod_logs,extraConfig", traces="disabled", deployments="kube-state-metrics,prometheus-node-exporter,prometheus-operator-crds,opencost"} 1
+    grafana_kubernetes_monitoring_build_info{version="0.5.2", namespace="default", metrics="enabled,agent,autoDiscover,kube-state-metrics,node-exporter,kubelet,cadvisor,cost,extraConfig", logs="enabled,events,pod_logs,extraConfig", traces="disabled", deployments="kube-state-metrics,prometheus-node-exporter,prometheus-operator-crds,opencost"} 1
 ---
 # Source: k8s-monitoring/charts/prometheus-operator-crds/charts/crds/templates/crd-alertmanagerconfigs.yaml
 apiVersion: apiextensions.k8s.io/v1
@@ -42675,10 +42664,11 @@ kind: ClusterRole
 metadata:
   name: k8smon-grafana-agent-logs
   labels:
-    helm.sh/chart: grafana-agent-logs-0.27.2
+    helm.sh/chart: grafana-agent-logs-0.28.0
     app.kubernetes.io/name: grafana-agent-logs
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "v0.37.4"
+    
+    app.kubernetes.io/version: v0.38.0
     app.kubernetes.io/managed-by: Helm
 rules:
   # Rules which allow discovery.kubernetes to function.
@@ -42765,10 +42755,11 @@ kind: ClusterRole
 metadata:
   name: k8smon-grafana-agent
   labels:
-    helm.sh/chart: grafana-agent-0.27.2
+    helm.sh/chart: grafana-agent-0.28.0
     app.kubernetes.io/name: grafana-agent
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "v0.37.4"
+    
+    app.kubernetes.io/version: v0.38.0
     app.kubernetes.io/managed-by: Helm
 rules:
   # Rules which allow discovery.kubernetes to function.
@@ -43097,10 +43088,11 @@ kind: ClusterRoleBinding
 metadata:
   name: k8smon-grafana-agent-logs
   labels:
-    helm.sh/chart: grafana-agent-logs-0.27.2
+    helm.sh/chart: grafana-agent-logs-0.28.0
     app.kubernetes.io/name: grafana-agent-logs
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "v0.37.4"
+    
+    app.kubernetes.io/version: v0.38.0
     app.kubernetes.io/managed-by: Helm
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -43117,10 +43109,11 @@ kind: ClusterRoleBinding
 metadata:
   name: k8smon-grafana-agent
   labels:
-    helm.sh/chart: grafana-agent-0.27.2
+    helm.sh/chart: grafana-agent-0.28.0
     app.kubernetes.io/name: grafana-agent
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "v0.37.4"
+    
+    app.kubernetes.io/version: v0.38.0
     app.kubernetes.io/managed-by: Helm
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -43180,10 +43173,11 @@ kind: Service
 metadata:
   name: k8smon-grafana-agent-logs
   labels:
-    helm.sh/chart: grafana-agent-logs-0.27.2
+    helm.sh/chart: grafana-agent-logs-0.28.0
     app.kubernetes.io/name: grafana-agent-logs
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "v0.37.4"
+    
+    app.kubernetes.io/version: v0.38.0
     app.kubernetes.io/managed-by: Helm
 spec:
   type: ClusterIP
@@ -43202,10 +43196,11 @@ kind: Service
 metadata:
   name: k8smon-grafana-agent-cluster
   labels:
-    helm.sh/chart: grafana-agent-0.27.2
+    helm.sh/chart: grafana-agent-0.28.0
     app.kubernetes.io/name: grafana-agent
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "v0.37.4"
+    
+    app.kubernetes.io/version: v0.38.0
     app.kubernetes.io/managed-by: Helm
 spec:
   type: ClusterIP
@@ -43231,10 +43226,11 @@ kind: Service
 metadata:
   name: k8smon-grafana-agent
   labels:
-    helm.sh/chart: grafana-agent-0.27.2
+    helm.sh/chart: grafana-agent-0.28.0
     app.kubernetes.io/name: grafana-agent
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "v0.37.4"
+    
+    app.kubernetes.io/version: v0.38.0
     app.kubernetes.io/managed-by: Helm
 spec:
   type: ClusterIP
@@ -43330,10 +43326,11 @@ kind: DaemonSet
 metadata:
   name: k8smon-grafana-agent-logs
   labels:
-    helm.sh/chart: grafana-agent-logs-0.27.2
+    helm.sh/chart: grafana-agent-logs-0.28.0
     app.kubernetes.io/name: grafana-agent-logs
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "v0.37.4"
+    
+    app.kubernetes.io/version: v0.38.0
     app.kubernetes.io/managed-by: Helm
 spec:
   minReadySeconds: 10
@@ -43350,7 +43347,7 @@ spec:
       serviceAccountName: k8smon-grafana-agent-logs
       containers:
         - name: grafana-agent
-          image: docker.io/grafana/agent:v0.37.4
+          image: docker.io/grafana/agent:v0.38.0
           imagePullPolicy: IfNotPresent
           args:
             - run
@@ -43361,6 +43358,8 @@ spec:
           env:
             - name: AGENT_MODE
               value: flow
+            - name: AGENT_DEPLOY_MODE
+              value: "helm"
             - name: HOSTNAME
               valueFrom:
                 fieldRef:
@@ -43380,9 +43379,6 @@ spec:
             - name: varlog
               mountPath: /var/log
               readOnly: true
-            -
-              mountPath: /etc/grafana-agent-credentials
-              name: grafana-agent-credentials
         - name: config-reloader
           image: docker.io/jimmidyson/configmap-reload:v0.8.0
           args:
@@ -43408,9 +43404,6 @@ spec:
         - name: varlog
           hostPath:
             path: /var/log
-        - name: grafana-agent-credentials
-          secret:
-            secretName: grafana-agent-credentials
 ---
 # Source: k8s-monitoring/charts/prometheus-node-exporter/templates/daemonset.yaml
 apiVersion: apps/v1
@@ -43669,13 +43662,13 @@ spec:
             - name: DB_BASIC_AUTH_USERNAME
               valueFrom:
                 secretKeyRef:
-                  name: grafana-agent-credentials
-                  key: prometheus_username
+                  name: prometheus-k8s-monitoring
+                  key: username
             - name: DB_BASIC_AUTH_PW
               valueFrom:
                 secretKeyRef:
-                  name: grafana-agent-credentials
-                  key: prometheus_password
+                  name: prometheus-k8s-monitoring
+                  key: password
             # Add any additional provided variables
             - name: CLOUD_PROVIDER_API_KEY
               value: "AIzaSyD29bGxmHAVEOBYtgd8sYM2gM2ekfxQX4U"
@@ -43694,10 +43687,11 @@ kind: StatefulSet
 metadata:
   name: k8smon-grafana-agent
   labels:
-    helm.sh/chart: grafana-agent-0.27.2
+    helm.sh/chart: grafana-agent-0.28.0
     app.kubernetes.io/name: grafana-agent
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "v0.37.4"
+    
+    app.kubernetes.io/version: v0.38.0
     app.kubernetes.io/managed-by: Helm
 spec:
   replicas: 1
@@ -43717,7 +43711,7 @@ spec:
       serviceAccountName: k8smon-grafana-agent
       containers:
         - name: grafana-agent
-          image: docker.io/grafana/agent:v0.37.4
+          image: docker.io/grafana/agent:v0.38.0
           imagePullPolicy: IfNotPresent
           args:
             - run
@@ -43730,6 +43724,8 @@ spec:
           env:
             - name: AGENT_MODE
               value: flow
+            - name: AGENT_DEPLOY_MODE
+              value: "helm"
             - name: HOSTNAME
               valueFrom:
                 fieldRef:
@@ -43746,9 +43742,6 @@ spec:
           volumeMounts:
             - name: config
               mountPath: /etc/agent
-            -
-              mountPath: /etc/grafana-agent-credentials
-              name: grafana-agent-credentials
             -
               mountPath: /etc/kubernetes-monitoring-telemetry
               name: kubernetes-monitoring-telemetry
@@ -43771,9 +43764,6 @@ spec:
         - name: config
           configMap:
             name: k8smon-grafana-agent
-        - name: grafana-agent-credentials
-          secret:
-            secretName: grafana-agent-credentials
         - configMap:
             name: kubernetes-monitoring-telemetry
           name: kubernetes-monitoring-telemetry
@@ -43817,8 +43807,8 @@ metadata:
   labels:
     app.kubernetes.io/managed-by: "Helm"
     app.kubernetes.io/instance: "k8smon"
-    app.kubernetes.io/version: 1.3.7
-    helm.sh/chart: "k8s-monitoring-0.4.2"
+    app.kubernetes.io/version: 1.4.1
+    helm.sh/chart: "k8s-monitoring-0.5.2"
   annotations:
     "helm.sh/hook": pre-install,pre-upgrade
     "helm.sh/hook-weight": "-5"
@@ -44160,7 +44150,7 @@ data:
     prometheus.relabel "kube_state_metrics" {
       rule {
         source_labels = ["__name__"]
-        regex = "up|kube_daemonset.*|kube_deployment_metadata_generation|kube_deployment_spec_replicas|kube_deployment_status_observed_generation|kube_deployment_status_replicas_available|kube_deployment_status_replicas_updated|kube_horizontalpodautoscaler_spec_max_replicas|kube_horizontalpodautoscaler_spec_min_replicas|kube_horizontalpodautoscaler_status_current_replicas|kube_horizontalpodautoscaler_status_desired_replicas|kube_job.*|kube_namespace_status_phase|kube_namespace_status_phase|kube_node.*|kube_persistentvolumeclaim_resource_requests_storage_bytes|kube_pod_container_info|kube_pod_container_resource_limits|kube_pod_container_resource_requests|kube_pod_container_status_restarts_total|kube_pod_container_status_waiting_reason|kube_pod_container_status_waiting_reason|kube_pod_info|kube_pod_owner|kube_pod_start_time|kube_pod_status_phase|kube_pod_status_reason|kube_replicaset.*|kube_resourcequota|kube_statefulset.*"
+        regex = "up|kube_daemonset.*|kube_deployment_metadata_generation|kube_deployment_spec_replicas|kube_deployment_status_observed_generation|kube_deployment_status_replicas_available|kube_deployment_status_replicas_updated|kube_horizontalpodautoscaler_spec_max_replicas|kube_horizontalpodautoscaler_spec_min_replicas|kube_horizontalpodautoscaler_status_current_replicas|kube_horizontalpodautoscaler_status_desired_replicas|kube_job.*|kube_namespace_status_phase|kube_node.*|kube_persistentvolumeclaim_resource_requests_storage_bytes|kube_pod_container_info|kube_pod_container_resource_limits|kube_pod_container_resource_requests|kube_pod_container_status_restarts_total|kube_pod_container_status_waiting_reason|kube_pod_info|kube_pod_owner|kube_pod_start_time|kube_pod_status_phase|kube_pod_status_reason|kube_replicaset.*|kube_resourcequota|kube_statefulset.*"
         action = "keep"
       }
       forward_to = [prometheus.relabel.metrics_service.receiver]
@@ -44284,19 +44274,10 @@ data:
     }
     
     // Metrics Service
-    local.file "prometheus_host" {
-      filename  = "/etc/grafana-agent-credentials/prometheus_host"
+    remote.kubernetes.secret "metrics_service" {
+      name = "prometheus-k8s-monitoring"
+      namespace = "default"
     }
-    
-    local.file "prometheus_username" {
-      filename  = "/etc/grafana-agent-credentials/prometheus_username"
-    }
-    
-    local.file "prometheus_password" {
-      filename  = "/etc/grafana-agent-credentials/prometheus_password"
-      is_secret = true
-    }
-    
     
     prometheus.relabel "metrics_service" {
       forward_to = [prometheus.remote_write.metrics_service.receiver]
@@ -44304,11 +44285,12 @@ data:
     
     prometheus.remote_write "metrics_service" {
       endpoint {
-        url = nonsensitive(local.file.prometheus_host.content) + "/api/prom/push"
+        url = nonsensitive(remote.kubernetes.secret.metrics_service.data["host"]) + "/api/prom/push"
+        headers = { "X-Scope-OrgID" = nonsensitive(remote.kubernetes.secret.metrics_service.data["tenantId"]) }
     
         basic_auth {
-          username = local.file.prometheus_username.content
-          password = local.file.prometheus_password.content
+          username = nonsensitive(remote.kubernetes.secret.metrics_service.data["username"])
+          password = remote.kubernetes.secret.metrics_service.data["password"]
         }
     
       }
@@ -44324,27 +44306,19 @@ data:
       forward_to = [loki.write.grafana_cloud_loki.receiver]
     }
     
-    // Grafana Cloud Loki
-    local.file "loki_host" {
-      filename  = "/etc/grafana-agent-credentials/loki_host"
+    // Loki
+    remote.kubernetes.secret "logs_service" {
+      name = "loki-k8s-monitoring"
+      namespace = "default"
     }
-    
-    local.file "loki_username" {
-      filename  = "/etc/grafana-agent-credentials/loki_username"
-    }
-    
-    local.file "loki_password" {
-      filename  = "/etc/grafana-agent-credentials/loki_password"
-      is_secret = true
-    }
-    
     loki.write "grafana_cloud_loki" {
       endpoint {
-        url = nonsensitive(local.file.loki_host.content) + "/loki/api/v1/push"
+        url = nonsensitive(remote.kubernetes.secret.logs_service.data["host"]) + "/loki/api/v1/push"
+        tenant_id = nonsensitive(remote.kubernetes.secret.logs_service.data["tenantId"])
     
         basic_auth {
-          username = local.file.loki_username.content
-          password = local.file.loki_password.content
+          username = nonsensitive(remote.kubernetes.secret.logs_service.data["username"])
+          password = remote.kubernetes.secret.logs_service.data["password"]
         }
       }
       external_labels = {
@@ -44478,27 +44452,19 @@ data:
       forward_to = [loki.write.grafana_cloud_loki.receiver]
     }
     
-    // Grafana Cloud Loki
-    local.file "loki_host" {
-      filename  = "/etc/grafana-agent-credentials/loki_host"
+    // Loki
+    remote.kubernetes.secret "logs_service" {
+      name = "loki-k8s-monitoring"
+      namespace = "default"
     }
-    
-    local.file "loki_username" {
-      filename  = "/etc/grafana-agent-credentials/loki_username"
-    }
-    
-    local.file "loki_password" {
-      filename  = "/etc/grafana-agent-credentials/loki_password"
-      is_secret = true
-    }
-    
     loki.write "grafana_cloud_loki" {
       endpoint {
-        url = nonsensitive(local.file.loki_host.content) + "/loki/api/v1/push"
+        url = nonsensitive(remote.kubernetes.secret.logs_service.data["host"]) + "/loki/api/v1/push"
+        tenant_id = nonsensitive(remote.kubernetes.secret.logs_service.data["tenantId"])
     
         basic_auth {
-          username = local.file.loki_username.content
-          password = local.file.loki_password.content
+          username = nonsensitive(remote.kubernetes.secret.logs_service.data["username"])
+          password = remote.kubernetes.secret.logs_service.data["password"]
         }
       }
       external_labels = {
@@ -44530,8 +44496,8 @@ metadata:
   labels:
     app.kubernetes.io/managed-by: "Helm"
     app.kubernetes.io/instance: "k8smon"
-    app.kubernetes.io/version: 1.3.7
-    helm.sh/chart: "k8s-monitoring-0.4.2"
+    app.kubernetes.io/version: 1.4.1
+    helm.sh/chart: "k8s-monitoring-0.5.2"
   annotations:
     "helm.sh/hook": test
     "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
@@ -44654,8 +44620,8 @@ metadata:
   labels:
     app.kubernetes.io/managed-by: "Helm"
     app.kubernetes.io/instance: "k8smon"
-    app.kubernetes.io/version: 1.3.7
-    helm.sh/chart: "k8s-monitoring-0.4.2"
+    app.kubernetes.io/version: 1.4.1
+    helm.sh/chart: "k8s-monitoring-0.5.2"
   annotations:
     "helm.sh/hook": pre-install,pre-upgrade
     "helm.sh/hook-weight": "-5"
@@ -44668,14 +44634,14 @@ spec:
       labels:
         app.kubernetes.io/managed-by: "Helm"
         app.kubernetes.io/instance: "k8smon"
-        helm.sh/chart: "k8s-monitoring-0.4.2"
+        helm.sh/chart: "k8s-monitoring-0.5.2"
     spec:
       restartPolicy: Never
       nodeSelector:
         kubernetes.io/os: linux
       containers:
         - name: grafana-agent
-          image: "docker.io/grafana/agent:v0.37.4"
+          image: "docker.io/grafana/agent:v0.38.0"
           command:
           - bash
           - -ec
@@ -44704,8 +44670,8 @@ metadata:
   labels:
     app.kubernetes.io/managed-by: "Helm"
     app.kubernetes.io/instance: "k8smon"
-    app.kubernetes.io/version: 1.3.7
-    helm.sh/chart: "k8s-monitoring-0.4.2"
+    app.kubernetes.io/version: 1.4.1
+    helm.sh/chart: "k8s-monitoring-0.5.2"
   annotations:
     "helm.sh/hook": test
     "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
@@ -44719,7 +44685,7 @@ spec:
       labels:
         app.kubernetes.io/managed-by: "Helm"
         app.kubernetes.io/instance: "k8smon"
-        helm.sh/chart: "k8s-monitoring-0.4.2"
+        helm.sh/chart: "k8s-monitoring-0.5.2"
     spec:
       restartPolicy: Never
       nodeSelector:
@@ -44735,48 +44701,48 @@ spec:
             - name: PROMETHEUS_HOST
               valueFrom:
                 secretKeyRef:
-                  name: grafana-agent-credentials
-                  key: prometheus_host
+                  name: prometheus-k8s-monitoring
+                  key: host
                   optional: true
             - name: PROMETHEUS_URL
               value: $(PROMETHEUS_HOST)/api/prom/api/v1/query
             - name: PROMETHEUS_USER
               valueFrom:
                 secretKeyRef:
-                  name: grafana-agent-credentials
-                  key: prometheus_username
+                  name: prometheus-k8s-monitoring
+                  key: username
                   optional: true
             - name: PROMETHEUS_PASS
               valueFrom:
                 secretKeyRef:
-                  name: grafana-agent-credentials
-                  key: prometheus_password
+                  name: prometheus-k8s-monitoring
+                  key: password
                   optional: true
 
             - name: LOKI_HOST
               valueFrom:
                 secretKeyRef:
-                  name: grafana-agent-credentials
-                  key: loki_host
+                  name: loki-k8s-monitoring
+                  key: host
             - name: LOKI_URL
               value: $(LOKI_HOST)/loki/api/v1/query
             - name: LOKI_USER
               valueFrom:
                 secretKeyRef:
-                  name: grafana-agent-credentials
-                  key: loki_username
+                  name: loki-k8s-monitoring
+                  key: username
                   optional: true
             - name: LOKI_PASS
               valueFrom:
                 secretKeyRef:
-                  name: grafana-agent-credentials
-                  key: loki_password
+                  name: loki-k8s-monitoring
+                  key: password
                   optional: true
             - name: LOKI_TENANTID
               valueFrom:
                 secretKeyRef:
-                  name: grafana-agent-credentials
-                  key: loki_tenantId
+                  name: loki-k8s-monitoring
+                  key: tenantId
                   optional: true
 
       volumes:
