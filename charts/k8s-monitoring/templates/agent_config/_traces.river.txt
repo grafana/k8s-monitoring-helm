@@ -59,6 +59,16 @@ otelcol.processor.attributes "trace_attributes_processor" {
     value = {{ required ".Values.cluster.name is a required value. Please set it and try again." .Values.cluster.name | quote }}
     action = "upsert"
   }
+  {{- with .Values.traces.processors }}
+  {{- range $k, $v := .k8sattributes }}
+  action {
+    key = {{ $k | quote }}
+    value = {{ $v | quote }}
+    action = "upsert"
+  }
+  {{- end }}
+  {{- end }}
+
   output {
     {{- if eq .Values.externalServices.tempo.protocol "otlp" }}
     traces = [otelcol.exporter.otlp.tempo.input]
