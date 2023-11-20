@@ -22,13 +22,36 @@ discovery.relabel "annotation_autodiscovery_pods" {
     action = "replace"
     target_label = "__metrics_path__"
   }
+
+  // Choose the pod port
   rule {
-    source_labels = ["__address__", "__meta_kubernetes_pod_annotation_{{ include "escape_label" .Values.metrics.autoDiscover.annotations.metricsPort }}"]
-    separator = ";"
-    regex = "^([^:]+)(?::\\d+)?;(\\d+)$"
-    action = "replace"
-    replacement = "$1:$2"
-    target_label = "__address__"
+    source_labels = ["__meta_kubernetes_pod_container_port_name"]
+    target_label = "__tmp_port"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_{{ include "escape_label" .Values.metrics.autoDiscover.annotations.metricsPortName }}"]
+    regex = "(.+)"
+    target_label = "__tmp_port"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_pod_container_port_name"]
+    action = "keepequal"
+    target_label = "__tmp_port"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_container_port_number"]
+    target_label = "__tmp_port"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_{{ include "escape_label" .Values.metrics.autoDiscover.annotations.metricsPortNumber }}"]
+    regex = "(.+)"
+    target_label = "__tmp_port"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_pod_container_port_number"]
+    action = "keepequal"
+    target_label = "__tmp_port"
   }
 {{- if .Values.metrics.extraRelabelingRules }}
 {{ .Values.metrics.extraRelabelingRules | indent 2 }}
@@ -60,14 +83,38 @@ discovery.relabel "annotation_autodiscovery_services" {
     action = "replace"
     target_label = "__metrics_path__"
   }
+
+  // Choose the service port
   rule {
-    source_labels = ["__address__", "__meta_kubernetes_service_annotation_{{ include "escape_label" .Values.metrics.autoDiscover.annotations.metricsPort }}"]
-    separator = ";"
-    regex = "^([^:]+)(?::\\d+)?;(\\d+)$"
-    action = "replace"
-    replacement = "$1:$2"
-    target_label = "__address__"
+    source_labels = ["__meta_kubernetes_service_port_name"]
+    target_label = "__tmp_port"
   }
+  rule {
+    source_labels = ["__meta_kubernetes_service_annotation_{{ include "escape_label" .Values.metrics.autoDiscover.annotations.metricsPortName }}"]
+    regex = "(.+)"
+    target_label = "__tmp_port"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_service_port_name"]
+    action = "keepequal"
+    target_label = "__tmp_port"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_service_port_number"]
+    target_label = "__tmp_port"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_service_annotation_{{ include "escape_label" .Values.metrics.autoDiscover.annotations.metricsPortNumber }}"]
+    regex = "(.+)"
+    target_label = "__tmp_port"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_service_port_number"]
+    action = "keepequal"
+    target_label = "__tmp_port"
+  }
+
 {{- if .Values.metrics.extraRelabelingRules }}
 {{ .Values.metrics.extraRelabelingRules | indent 2 }}
 {{- end }}
