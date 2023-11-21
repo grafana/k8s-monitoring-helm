@@ -297,6 +297,10 @@ take the appropriate action.
 If your cluster is on OpenShift, this Helm chart can be configured to scrape metrics from the existing Kube State Metrics and Node Exporter that are deployed by [OpenShift Container Platform monitoring](https://docs.openshift.com/container-platform/latest/monitoring/monitoring-overview.html).
 For the specific modifications, see the [OpenShift Compatible example](../../examples/openshift-compatible).
 
+## Troubleshooting
+
+If you're encountering issues deploying or using this chart, check the [Troubleshooting doc](./docs/Troubleshooting.md).
+
 ## Allow List
 
 Each metric source has an allow list, which is a list of metric names that will
