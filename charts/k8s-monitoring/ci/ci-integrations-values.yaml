@@ -7,20 +7,28 @@ cluster:
 
 externalServices:
   prometheus:
-    host: https://prometheus-server.prometheus.svc:80
+    hostKey: prom-host
     basicAuth:
-      username: promuser
-      password: prometheuspassword
+      usernameKey: prom-username
+      passwordKey: prom-password
     queryEndpoint: /api/v1/query
     writeEndpoint: /api/v1/write
+    secret:
+      create: false
+      name: combined
+      namespace: monitoring
     tls:
       insecure_skip_verify: true
   loki:
-    host: http://loki.loki.svc:3100
-    tenantId: 1
+    hostKey: loki-host
+    tenantIdKey: loki-tenantId
     basicAuth:
-      username: loki
-      password: lokipassword
+      usernameKey: loki-username
+      passwordKey: loki-password
+    secret:
+      create: false
+      name: combined
+      namespace: monitoring
 
 metrics:
   cost:
