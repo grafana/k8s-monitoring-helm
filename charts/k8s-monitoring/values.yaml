@@ -12,9 +12,10 @@ cluster:
 externalServices:
   # Connection information for Prometheus
   prometheus:
-    # TODO: Add the ability to reference a pre-existing secret
     # -- (string) (required) Prometheus host where metrics will be sent
     host: ""
+    # -- (string) The key for the host property in the secret
+    hostKey: host
 
     # -- (string) The type of server protocol for writing metrics
     # Options:
@@ -36,13 +37,31 @@ externalServices:
 
     # -- (string) (optional) Sets the X-Scope-OrgID header when sending metrics
     tenantId: ""
+    # -- (string) The key for the tenant ID property in the secret
+    tenantIdKey: tenantId
+
+    # -- (string) one of "none", "basic"
+    authMode: basic
 
     # Authenticate to Prometheus using basic authentication
     basicAuth:
       # -- (string) Prometheus basic auth username
       username: ""
+      # -- (string) The key for the username property in the secret
+      usernameKey: username
       # -- (string) Prometheus basic auth password
       password: ""
+      # -- (string) The key for the password property in the secret
+      passwordKey: password
+
+    # Credential management
+    secret:
+      # -- Should this Helm chart create the secret. If false, you must define the name and namespace values.
+      create: true
+      # -- (string) The name of the secret.
+      name: ""
+      # -- (string) The namespace of the secret. Only used if secret.create = "false"
+      namespace: ""
 
     # -- TLS setting to configure for the metrics service.
     # For remoteWrite protocol, refer to https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.remote_write/#tls_config-block
@@ -69,25 +88,46 @@ externalServices:
 
   # Connection information for Grafana Loki
   loki:
-    # TODO: Add the ability to reference a pre-existing secret
     # -- (string) (required) Loki host where logs and events will be sent
     host: ""
+    # -- (string) The key for the host property in the secret
+    hostKey: host
     # -- (string) HTTP proxy to proxy requests to Loki through.
     proxyURL: ""
-    # -- Loki logs write endpoint
+    # -- Loki logs query endpoint.
+    queryEndpoint: /loki/api/v1/query
+    # -- Loki logs write endpoint.
     writeEndpoint: /loki/api/v1/push
     # -- Custom labels to be added to all logs and events
     externalLabels: {}
 
     # -- (string) (optional) Loki tenant ID
     tenantId: ""
+    # -- (string) The key for the tenant ID property in the secret
+    tenantIdKey: tenantId
+
+    # -- (string) one of "none", "basic"
+    authMode: basic
 
     # Authenticate to Loki using basic authentication
     basicAuth:
       # -- (string) Loki basic auth username
       username: ""
+      # -- (string) The key for the username property in the secret
+      usernameKey: username
       # -- (string) Loki basic auth password
       password: ""
+      # -- (string) The key for the password property in the secret
+      passwordKey: password
+
+    # Credential management
+    secret:
+      # -- Should this Helm chart create the secret. If false, you must define the name and namespace values.
+      create: true
+      # -- (string) The name of the secret.
+      name: ""
+      # -- (string) The namespace of the secret.
+      namespace: ""
 
     # -- TLS setting to configure for the logs service.
     # Refer to https://grafana.com/docs/agent/latest/flow/reference/components/loki.write/#tls_config-block
@@ -97,6 +137,8 @@ externalServices:
   tempo:
     # -- (string) (required) Tempo host where traces will be sent
     host: ""
+    # -- (string) The key for the host property in the secret
+    hostKey: host
 
     # -- (string) The type of server protocol for writing metrics
     # Options:
@@ -106,13 +148,31 @@ externalServices:
 
     # -- (string) (optional) Tempo tenant ID
     tenantId: ""
+    # -- (string) The key for the tenant ID property in the secret
+    tenantIdKey: tenantId
+
+    # -- (string) one of "none", "basic"
+    authMode: basic
 
     # Authenticate to Tempo using basic authentication
     basicAuth:
       # -- (string) Tempo basic auth username
       username: ""
+      # -- (string) The key for the username property in the secret
+      usernameKey: username
       # -- (string) Tempo basic auth password
       password: ""
+      # -- (string) The key for the password property in the secret
+      passwordKey: password
+
+    # Credential management
+    secret:
+      # -- Should this Helm chart create the secret. If false, you must define the name and namespace values.
+      create: true
+      # -- (string) The name of the secret.
+      name: ""
+      # -- (string) The namespace of the secret.
+      namespace: ""
 
     # -- TLS setting to configure for the traces service.
     # Refer to https://grafana.com/docs/agent/latest/flow/reference/components/otelcol.exporter.otlp/#tls-block
@@ -757,11 +817,11 @@ opencost:
 
     prometheus:
       # @ignored -- This skips including these values in README.md
-      secret_name: grafana-agent-credentials
+      secret_name: prometheus-k8s-monitoring
       # @ignored -- This skips including these values in README.md
-      username_key: prometheus_username
+      username_key: username
       # @ignored -- This skips including these values in README.md
-      password_key: prometheus_password
+      password_key: password
       external:
         # @ignored -- This skips including these values in README.md
         enabled: true
@@ -784,19 +844,16 @@ opencost:
 # @ignored -- This skips including these values in README.md
 grafana-agent:
   agent:
+    clustering: {enabled: true}
+
     # This chart is creating the configuration, so the grafana-agent chart does
     # not need to.
     configMap: {create: false}
-
-    clustering:
-      enabled: true
 
     # This chart creates the credentials for Prometheus and Loki. This section
     # mounts those credentials into the Grafana Agent container.
     mounts:
       extra:
-      - name: grafana-agent-credentials
-        mountPath: /etc/grafana-agent-credentials
       - name: kubernetes-monitoring-telemetry
         mountPath: /etc/kubernetes-monitoring-telemetry
 
@@ -809,16 +866,12 @@ grafana-agent:
     # connects those credentials into the Grafana Agent pod.
     volumes:
       extra:
-      - name: grafana-agent-credentials
-        secret:
-          secretName: grafana-agent-credentials
       - name: kubernetes-monitoring-telemetry
         configMap:
           name: kubernetes-monitoring-telemetry
 
   # Skip installation of the Grafana Agent CRDs, since we don't use them in this chart
-  crds:
-    create: false
+  crds: {create: false}
 
 # Settings for the Grafana Agent deployment
 # You can use this sections to make modifications to the Grafana Agent deployment.
@@ -828,18 +881,11 @@ grafana-agent-logs:
   agent:
     # This chart is creating the configuration, so the grafana-agent chart does
     # not need to.
-    configMap:
-      create: false
+    configMap: {create: false}
 
     mounts:
       # Loads /var/log as a hostPath volume to find and scrape pod logs
       varlog: true
-
-      # The k8s-monitoring chart creates the credentials for Prometheus and Loki. This section
-      # mounts those credentials into the Grafana Agent container.
-      extra:
-        - name: grafana-agent-credentials
-          mountPath: /etc/grafana-agent-credentials
 
   controller:
     type: daemonset
@@ -850,14 +896,5 @@ grafana-agent-logs:
       - effect: NoSchedule
         operator: Exists
 
-    # This chart creates the credentials for Prometheus and Loki. This section
-    # connects those credentials into the Grafana Agent pod.
-    volumes:
-      extra:
-      - name: grafana-agent-credentials
-        secret:
-          secretName: grafana-agent-credentials
-
   # Skip installation of the Grafana Agent CRDs, since we don't use them in this chart
-  crds:
-    create: false
+  crds: {create: false}

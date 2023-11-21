@@ -3,10 +3,9 @@ cluster:
 
 externalServices:
   prometheus:
-    host: https://prometheus-server.prometheus.svc:80
-    basicAuth:
-      username: promuser
-      password: prometheuspassword
+    secret:
+      create: false
+      name: prometheus
     queryEndpoint: /api/v1/query
     writeEndpoint: /api/v1/write
     tls:
@@ -19,6 +18,7 @@ externalServices:
       password: lokipassword
   tempo:
     host: tempo.tempo.svc:4317
+    authMode: none
     tlsOptions: |-
       insecure             = true
       insecure_skip_verify = true
@@ -39,7 +39,7 @@ traces:
 extraConfig: |-
   tracing {
     sampling_fraction = 0.1
-    write_to = [otelcol.exporter.otlp.tempo.input]
+    write_to = [otelcol.exporter.otlp.traces_service.input]
   }
 
 test:
@@ -53,9 +53,15 @@ test:
 
 opencost:
   opencost:
+    exporter:
+      extraEnv:
+        INSECURE_SKIP_VERIFY: "true"
     prometheus:
+      secret_name: prometheus
+      username_key: username
+      password_key: password
       external:
-        url: http://prometheus-server.prometheus.svc:80/api/v1
+        url: https://prometheus-server.prometheus.svc.cluster.local:80
 
 grafana-agent:
   agent:

@@ -333,21 +333,9 @@ prometheus.relabel "servicemonitors" {
 }
 
 // Metrics Service
-local.file "prometheus_host" {
-  filename  = "/etc/grafana-agent-credentials/prometheus_host"
-}
-
-local.file "prometheus_username" {
-  filename  = "/etc/grafana-agent-credentials/prometheus_username"
-}
-
-local.file "prometheus_password" {
-  filename  = "/etc/grafana-agent-credentials/prometheus_password"
-  is_secret = true
-}
-
-local.file "prometheus_tenantid" {
-  filename  = "/etc/grafana-agent-credentials/prometheus_tenantId"
+remote.kubernetes.secret "metrics_service" {
+  name = "prometheus-k8s-monitoring"
+  namespace = "default"
 }
 
 prometheus.relabel "metrics_service" {
@@ -356,12 +344,12 @@ prometheus.relabel "metrics_service" {
 
 prometheus.remote_write "metrics_service" {
   endpoint {
-    url = nonsensitive(local.file.prometheus_host.content) + "/api/prom/push"
-    headers = { "X-Scope-OrgID" = local.file.prometheus_tenantid.content }
+    url = nonsensitive(remote.kubernetes.secret.metrics_service.data["host"]) + "/api/prom/push"
+    headers = { "X-Scope-OrgID" = remote.kubernetes.secret.metrics_service.data["tenantId"] }
 
     basic_auth {
-      username = local.file.prometheus_username.content
-      password = local.file.prometheus_password.content
+      username = nonsensitive(remote.kubernetes.secret.metrics_service.data["username"])
+      password = remote.kubernetes.secret.metrics_service.data["password"]
     }
 
   }

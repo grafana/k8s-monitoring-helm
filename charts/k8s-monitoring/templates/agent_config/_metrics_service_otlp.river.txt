@@ -44,10 +44,10 @@ otelcol.processor.memory_limiter "metrics_service" {
 {{- end }}
   }
 }
-{{ if or (.basicAuth.username) (.basicAuth.password) }}
+{{ if eq .authMode "basic" }}
 otelcol.auth.basic "metrics_service" {
-  {{ if .basicAuth.username }}username = local.file.prometheus_username.content{{ end }}
-  {{ if .basicAuth.password }}password = local.file.prometheus_password.content{{ end }}
+  username = nonsensitive(remote.kubernetes.secret.metrics_service.data[{{ .basicAuth.usernameKey | quote }}])
+  password = remote.kubernetes.secret.metrics_service.data[{{ .basicAuth.passwordKey | quote }}]
 }
 {{- end }}
 {{ if eq .protocol "otlp" }}
@@ -57,12 +57,12 @@ otelcol.exporter.otlp "metrics_service" {
 otelcol.exporter.otlphttp "metrics_service" {
 {{- end }}
   client {
-    endpoint = nonsensitive(local.file.prometheus_host.content) + "{{ .writeEndpoint }}"
+    endpoint = nonsensitive(remote.kubernetes.secret.metrics_service.data[{{ .hostKey | quote }}]) + "{{ .writeEndpoint }}"
 {{ if or (.basicAuth.username) (.basicAuth.password) }}
     auth = otelcol.auth.basic.metrics_service.handler
 {{- end }}
 {{- if .tenantId }}
-    headers = { "X-Scope-OrgID" = local.file.prometheus_tenantid.content }
+    headers = { "X-Scope-OrgID" = remote.kubernetes.secret.metrics_service.data[{{ .tenantIdKey | quote }}] }
 {{- end }}
 {{- if .tls }}
     tls {
