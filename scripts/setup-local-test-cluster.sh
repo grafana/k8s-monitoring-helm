@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 CLUSTER_CONFIG="./.github/configs/cluster-config.yaml"
 PROMETHEUS_VALUES="./.github/configs/prometheus.yaml"
 PROMETHEUS_SECRET="./.github/configs/prometheus-creds.yaml"
