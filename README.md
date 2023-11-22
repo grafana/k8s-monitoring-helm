@@ -38,6 +38,7 @@ Required tools:
 * [Helm](https://helm.sh/docs/intro/install/)
 * [helm-docs](https://github.com/norwoodj/helm-docs)
 * [Grafana Agent](https://github.com/grafana/agent) (used for linting the generated config files)
+* [shellspec](https://github.com/shellspec/shellspec)
 * [yamllint](https://yamllint.readthedocs.io/en/stable/index.html)
 * [yq](https://pypi.org/project/yq/)
 

@@ -62,7 +62,7 @@ otelcol.exporter.otlphttp "metrics_service" {
     auth = otelcol.auth.basic.metrics_service.handler
 {{- end }}
 {{- if .tenantId }}
-    headers = { "X-Scope-OrgID" = remote.kubernetes.secret.metrics_service.data[{{ .tenantIdKey | quote }}] }
+    headers = { "X-Scope-OrgID" = nonsensitive(remote.kubernetes.secret.metrics_service.data[{{ .tenantIdKey | quote }}]) }
 {{- end }}
 {{- if .tls }}
     tls {
