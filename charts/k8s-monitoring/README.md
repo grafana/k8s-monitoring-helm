@@ -250,10 +250,13 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | traces.processors.batch.maxSize | int | `0` | The upper limit of the amount of data contained in a single batch, in bytes. When set to 0, batches can be any size. |
 | traces.processors.batch.size | int | `16384` | What batch size to use, in bytes |
 | traces.processors.batch.timeout | string | `"2s"` | How long before sending |
+| traces.receiver.grpc.disable_debug_metrics | bool | `true` | It removes attributes which could cause high cardinality metrics. For example, attributes with IP addresses and port numbers in metrics about HTTP and gRPC connections will be removed. |
 | traces.receiver.grpc.enabled | bool | `true` | Should the Grafana Agent receive traces over gRPC? |
 | traces.receiver.grpc.port | int | `4317` | Which port to use for the gRPC receiver. This port needs to be opened in the grafana-agent section below. |
+| traces.receiver.http.disable_debug_metrics | bool | `true` | It removes attributes which could cause high cardinality metrics. For example, attributes with IP addresses and port numbers in metrics about HTTP and gRPC connections will be removed. |
 | traces.receiver.http.enabled | bool | `true` | Should the Grafana Agent receive traces over HTTP? |
 | traces.receiver.http.port | int | `4318` | Which port to use for the HTTP receiver. This port needs to be opened in the grafana-agent section below. |
+| traces.receiver.zipkin.disable_debug_metrics | bool | `true` | It removes attributes which could cause high cardinality metrics. For example, attributes with IP addresses and port numbers in metrics about HTTP and gRPC connections will be removed. |
 | traces.receiver.zipkin.enabled | bool | `true` | Should the Grafana Agent receive Zipkin traces? |
 | traces.receiver.zipkin.port | int | `9411` | Which port to use for the Zipkin receiver. This port needs to be opened in the grafana-agent section below. |
 
