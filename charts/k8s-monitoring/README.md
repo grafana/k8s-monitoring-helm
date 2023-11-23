@@ -1,6 +1,6 @@
 # k8s-monitoring
 
-![Version: 0.5.2](https://img.shields.io/badge/Version-0.5.2-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.4.1](https://img.shields.io/badge/AppVersion-1.4.1-informational?style=flat-square)
+![Version: 0.5.1](https://img.shields.io/badge/Version-0.5.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.4.1](https://img.shields.io/badge/AppVersion-1.4.1-informational?style=flat-square)
 
 A Helm chart for gathering, scraping, and forwarding Kubernetes infrastructure metrics and logs to a Grafana Stack.
 
@@ -250,7 +250,6 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | traces.processors.batch.maxSize | int | `0` | The upper limit of the amount of data contained in a single batch, in bytes. When set to 0, batches can be any size. |
 | traces.processors.batch.size | int | `16384` | What batch size to use, in bytes |
 | traces.processors.batch.timeout | string | `"2s"` | How long before sending |
-| traces.receiver.disable_debug_metrics | bool | `true` | It removes attributes which could cause high cardinality metrics. For example, attributes with IP addresses and port numbers in metrics about HTTP and gRPC connections will be removed. |
 | traces.receiver.grpc.enabled | bool | `true` | Should the Grafana Agent receive traces over gRPC? |
 | traces.receiver.grpc.port | int | `4317` | Which port to use for the gRPC receiver. This port needs to be opened in the grafana-agent section below. |
 | traces.receiver.http.enabled | bool | `true` | Should the Grafana Agent receive traces over HTTP? |
