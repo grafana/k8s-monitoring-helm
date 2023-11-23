@@ -6,7 +6,7 @@
 {{- if (or .Values.traces.receiver.grpc.enabled .Values.traces.receiver.http.enabled) }}
 otelcol.receiver.otlp "trace_receiver" {
 
-{{- if .Values.traces.receiver.disable_debug_metrics }}
+{{- if or .Values.traces.receiver.grpc.disable_debug_metrics .Values.traces.receiver.http.disable_debug_metrics }}
   debug_metrics {
     disable_high_cardinality_metrics = true
   }
@@ -34,13 +34,13 @@ otelcol.receiver.otlp "trace_receiver" {
 
 {{- if .Values.traces.receiver.zipkin.enabled }}
 otelcol.receiver.zipkin "trace_receiver" {
-{{$data := dict "port" .Values.traces.receiver.zipkin.port "type" "Zipkin" "agent" (index .Values "grafana-agent").agent }}
-
-{{- if .Values.traces.receiver.disable_debug_metrics }}
+{{- if .Values.traces.receiver.zipkin.disable_debug_metrics }}
   debug_metrics {
     disable_high_cardinality_metrics = true
   }
 {{- end }}
+
+{{$data := dict "port" .Values.traces.receiver.zipkin.port "type" "Zipkin" "agent" (index .Values "grafana-agent").agent }}
 
 {{- include "checkforTracePort" $data -}}
   endpoint = "0.0.0.0:{{ $data.port | int }}"
