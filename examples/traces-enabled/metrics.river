@@ -403,7 +403,10 @@ otelcol.receiver.otlp "trace_receiver" {
   }
 }
 otelcol.receiver.zipkin "trace_receiver" {
-endpoint = "0.0.0.0:9411"
+
+  debug_metrics {
+    disable_high_cardinality_metrics = true
+  }endpoint = "0.0.0.0:9411"
   output {
     traces = [otelcol.processor.batch.trace_batch_processor.input]
   }
