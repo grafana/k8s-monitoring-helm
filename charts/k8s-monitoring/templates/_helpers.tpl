@@ -19,6 +19,10 @@
   {{- include "agent.config.services" . }}
 
   {{- if .Values.metrics.enabled }}
+    {{- if .Values.metrics.autoDiscover.enabled }}
+      {{- include "agent.config.annotationAutodiscovery" . }}
+    {{- end }}
+
     {{- if .Values.metrics.agent.enabled }}
       {{- include "agent.config.agent" . }}
     {{- end }}
@@ -112,6 +116,7 @@
 {{- if .Values.metrics.enabled -}}
   {{- $metrics = append $metrics "enabled" -}}
   {{- if .Values.metrics.agent.enabled -}}{{- $metrics = append $metrics "agent" -}}{{- end -}}
+  {{- if .Values.metrics.autoDiscover.enabled -}}{{- $metrics = append $metrics "autoDiscover" -}}{{- end -}}
   {{- if index (index .Values.metrics "kube-state-metrics").enabled -}}{{- $metrics = append $metrics "kube-state-metrics" -}}{{- end -}}
   {{- if index (index .Values.metrics "node-exporter").enabled -}}{{- $metrics = append $metrics "node-exporter" -}}{{- end -}}
   {{- if index (index .Values.metrics "windows-exporter").enabled -}}{{- $metrics = append $metrics "windows-exporter" -}}{{- end -}}
@@ -175,4 +180,8 @@
 {{- else }}
   {{- printf "tempo-%s" .Chart.Name | trunc 63 | trimSuffix "-" }}
 {{- end }}
+{{- end }}
+
+{{- define "escape_label" -}}
+{{ . | replace "-" "_" | replace "." "_" | replace "/" "_" }}
 {{- end }}

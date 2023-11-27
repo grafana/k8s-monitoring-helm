@@ -151,6 +151,8 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | logs.cluster_events.namespaces | list | `[]` | List of namespaces to watch for events (`[]` means all namespaces) |
 | logs.enabled | bool | `true` | Capture and forward logs |
 | logs.extraConfig | string | `""` | Extra configuration that will be added to Grafana Agent Logs. See [Adding custom Flow configuration](#adding-custom-flow-configuration) for an example.   |
+| logs.pod_logs.annotation | string | `"k8s.grafana.com/logs.autogather"` |  |
+| logs.pod_logs.discovery | string | `"all"` |  |
 | logs.pod_logs.enabled | bool | `true` | Capture and forward logs from Kubernetes pods |
 | logs.pod_logs.extraRelabelingRules | string | `""` | Rule blocks to be added to the discovery.relabel component for pod logs. See https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block |
 | logs.pod_logs.extraStageBlocks | string | `""` | Stage blocks to be added to the loki.process component for pod logs. See https://grafana.com/docs/agent/latest/flow/reference/components/loki.process/#blocks |
@@ -166,6 +168,16 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | metrics.apiserver.extraMetricRelabelingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for the API Server. See https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block |
 | metrics.apiserver.extraRelabelingRules | string | `""` | Rule blocks to be added to the discovery.relabel component for the API Server. See https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block |
 | metrics.apiserver.scrapeInterval | string | 60s | How frequently to scrape metrics from the API Server Overrides metrics.scrapeInterval |
+| metrics.autoDiscover.annotations | object | `{"instance":"k8s.grafana.com/instance","job":"k8s.grafana.com/job","metricsPath":"k8s.grafana.com/metrics.path","metricsPortName":"k8s.grafana.com/metrics.portName","metricsPortNumber":"k8s.grafana.com/metrics.portNumber","scrape":"k8s.grafana.com/scrape"}` | Annotations that are used to discover and configure metric scraping targets. Add these annotations to your services or pods to control how autodiscovery will find and scrape metrics from your service or pod. |
+| metrics.autoDiscover.annotations.instance | string | `"k8s.grafana.com/instance"` | Annotation for overriding the instance label |
+| metrics.autoDiscover.annotations.job | string | `"k8s.grafana.com/job"` | Annotation for overriding the job label |
+| metrics.autoDiscover.annotations.metricsPath | string | `"k8s.grafana.com/metrics.path"` | Annotation for setting or overriding the metrics path. If not set, it defaults to /metrics |
+| metrics.autoDiscover.annotations.metricsPortName | string | `"k8s.grafana.com/metrics.portName"` | Annotation for setting the metrics port by name. |
+| metrics.autoDiscover.annotations.metricsPortNumber | string | `"k8s.grafana.com/metrics.portNumber"` | Annotation for setting the metrics port by number. |
+| metrics.autoDiscover.annotations.scrape | string | `"k8s.grafana.com/scrape"` | Annotation for enabling scraping for this service or pod. Value should be either "true" or "false" |
+| metrics.autoDiscover.enabled | bool | `true` |  |
+| metrics.autoDiscover.extraMetricRelabelingRules | string | `nil` | Rule blocks to be added to the prometheus.relabel component for auto-discovered entities. See https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block |
+| metrics.autoDiscover.extraRelabelingRules | string | `nil` | Rule blocks to be added to the discovery.relabel component for auto-discovered entities. See https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block |
 | metrics.cadvisor.allowList | list | See [Allow List for cAdvisor](#allow-list-for-cadvisor) | The list of cAdvisor metrics that will be scraped by the Agent |
 | metrics.cadvisor.enabled | bool | `true` | Scrape container metrics from cAdvisor |
 | metrics.cadvisor.extraMetricRelabelingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for cAdvisor. See https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block |

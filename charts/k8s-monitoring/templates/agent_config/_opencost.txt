@@ -9,7 +9,7 @@ discovery.relabel "opencost" {
   }
   {{- range $k, $v := .Values.metrics.cost.labelMatchers }}
   rule {
-    source_labels = ["__meta_kubernetes_service_label_{{ $k | replace "." "_" | replace "/" "_" }}"]
+    source_labels = ["__meta_kubernetes_service_label_{{ include "escape_label" $k }}"]
     regex = "{{ $v }}"
     action = "keep"
   }

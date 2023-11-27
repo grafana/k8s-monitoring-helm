@@ -1,0 +1,88 @@
+#
+# This values file will test the following features:
+# * MySQL integration
+#
+cluster:
+  name: ci-integrations-cluster
+
+externalServices:
+  prometheus:
+    hostKey: prom-host
+    basicAuth:
+      usernameKey: prom-username
+      passwordKey: prom-password
+    queryEndpoint: /api/v1/query
+    writeEndpoint: /api/v1/write
+    secret:
+      create: false
+      name: combined
+      namespace: monitoring
+    tls:
+      insecure_skip_verify: true
+  loki:
+    hostKey: loki-host
+    tenantIdKey: loki-tenantId
+    basicAuth:
+      usernameKey: loki-username
+      passwordKey: loki-password
+    secret:
+      create: false
+      name: combined
+      namespace: monitoring
+
+metrics:
+  cost:
+    enabled: false
+
+extraConfig: |
+  remote.kubernetes.configmap "mysql_config" {
+    name = "mysql-monitoring"
+    namespace = "mysql"
+  }
+
+  module.string "mysql_metrics" {
+    content = remote.kubernetes.configmap.mysql_config.data["metrics.river"]
+
+    arguments {
+      host = "mysql.mysql.svc.cluster.local"
+      instance = "primary"
+      namespace = "mysql"
+      secret_name = "mysql"
+      username = "root"
+      password_key = "mysql-root-password"
+      all_services = discovery.kubernetes.services.targets
+      metrics_destination = prometheus.relabel.metrics_service.receiver
+    }
+  }
+
+logs:
+  extraConfig: |
+    remote.kubernetes.configmap "mysql_config" {
+      name = "mysql-monitoring"
+      namespace = "mysql"
+    }
+
+    module.string "mysql_logs" {
+      content = remote.kubernetes.configmap.mysql_config.data["logs.river"]
+
+      arguments {
+        instance = "primary"
+        all_pods = discovery.relabel.pod_logs.output
+        logs_destination = loki.write.grafana_cloud_loki.receiver
+      }
+    }
+
+test:
+  extraQueries:
+  # Check for CertManager metrics
+  - query: "certmanager_clock_time_seconds{cluster=\"ci-integrations-cluster\"}"
+    type: promql
+  # Check for MySQL metrics
+  - query: "mysqld_exporter_build_info{cluster=\"ci-integrations-cluster\"}"
+    type: promql
+  # Check for MySQL logs
+  - query: "{cluster=\"ci-integrations-cluster\", job=\"integrations/mysql\"}"
+    type: logql
+
+opencost:
+  enabled: false

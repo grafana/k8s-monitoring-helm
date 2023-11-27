@@ -10,6 +10,130 @@ discovery.kubernetes "services" {
   role = "service"
 }
 
+// Annotation Autodiscovery
+discovery.relabel "annotation_autodiscovery_pods" {
+  targets = discovery.kubernetes.pods.targets
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_scrape"]
+    regex = "true"
+    action = "keep"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_job"]
+    action = "replace"
+    target_label = "job"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_instance"]
+    action = "replace"
+    target_label = "instance"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_metrics_path"]
+    action = "replace"
+    target_label = "__metrics_path__"
+  }
+
+  // Choose the pod port
+  rule {
+    source_labels = ["__meta_kubernetes_pod_container_port_name"]
+    target_label = "__tmp_port"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_metrics_portName"]
+    regex = "(.+)"
+    target_label = "__tmp_port"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_pod_container_port_name"]
+    action = "keepequal"
+    target_label = "__tmp_port"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_container_port_number"]
+    target_label = "__tmp_port"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_metrics_portNumber"]
+    regex = "(.+)"
+    target_label = "__tmp_port"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_pod_container_port_number"]
+    action = "keepequal"
+    target_label = "__tmp_port"
+  }
+}
+
+discovery.relabel "annotation_autodiscovery_services" {
+  targets = discovery.kubernetes.services.targets
+  rule {
+    source_labels = ["__meta_kubernetes_service_annotation_k8s_grafana_com_scrape"]
+    regex = "true"
+    action = "keep"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_service_annotation_k8s_grafana_com_job"]
+    action = "replace"
+    target_label = "job"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_service_annotation_k8s_grafana_com_instance"]
+    action = "replace"
+    target_label = "instance"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_service_annotation_k8s_grafana_com_metrics_path"]
+    action = "replace"
+    target_label = "__metrics_path__"
+  }
+
+  // Choose the service port
+  rule {
+    source_labels = ["__meta_kubernetes_service_port_name"]
+    target_label = "__tmp_port"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_service_annotation_k8s_grafana_com_metrics_portName"]
+    regex = "(.+)"
+    target_label = "__tmp_port"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_service_port_name"]
+    action = "keepequal"
+    target_label = "__tmp_port"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_service_port_number"]
+    target_label = "__tmp_port"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_service_annotation_k8s_grafana_com_metrics_portNumber"]
+    regex = "(.+)"
+    target_label = "__tmp_port"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_service_port_number"]
+    action = "keepequal"
+    target_label = "__tmp_port"
+  }
+}
+
+prometheus.scrape "annotation_autodiscovery" {
+  targets = concat(discovery.relabel.annotation_autodiscovery_pods.output, discovery.relabel.annotation_autodiscovery_services.output)
+  honor_labels = true
+  clustering {
+    enabled = true
+  }
+  forward_to = [prometheus.relabel.annotation_autodiscovery.receiver]
+}
+
+prometheus.relabel "annotation_autodiscovery" {
+  forward_to = [prometheus.relabel.metrics_service.receiver]
+}
+
 // Grafana Agent
 discovery.relabel "agent" {
   targets = discovery.kubernetes.pods.targets

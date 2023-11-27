@@ -1,3 +1,7 @@
+#
+# This values file will test the following features:
+# * Control plane metrics
+#
 cluster:
   name: ci-test-cluster
 
@@ -41,15 +45,6 @@ extraConfig: |-
     sampling_fraction = 0.1
     write_to = [otelcol.exporter.otlp.traces_service.input]
   }
-
-test:
-  extraQueries:
-  # Check for cluster events
-  - query: "{cluster=\"ci-test-cluster\", job=\"integrations/kubernetes/eventhandler\"}"
-    type: logql
-  # Check for pod logs
-  - query: "{cluster=\"ci-test-cluster\", job!=\"integrations/kubernetes/eventhandler\"}"
-    type: logql
 
 opencost:
   opencost:

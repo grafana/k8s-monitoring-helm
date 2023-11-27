@@ -200,6 +200,36 @@ metrics:
   # See https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block
   extraMetricRelabelingRules: ""
 
+  # Annotation-based autodiscovery allows for discovering metric sources solely on their annotations and does
+  # not require adding any extra configuration.
+  autoDiscover:
+    # Enable annotation-based autodiscovery
+    enabled: true
+
+    # -- (string) Rule blocks to be added to the discovery.relabel component for auto-discovered entities.
+    # See https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block
+    extraRelabelingRules:
+
+    # -- (string) Rule blocks to be added to the prometheus.relabel component for auto-discovered entities.
+    # See https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block
+    extraMetricRelabelingRules:
+
+    # -- Annotations that are used to discover and configure metric scraping targets. Add these annotations
+    # to your services or pods to control how autodiscovery will find and scrape metrics from your service or pod.
+    annotations:
+      # -- Annotation for enabling scraping for this service or pod. Value should be either "true" or "false"
+      scrape: "k8s.grafana.com/scrape"
+      # -- Annotation for overriding the job label
+      job: "k8s.grafana.com/job"
+      # -- Annotation for overriding the instance label
+      instance: "k8s.grafana.com/instance"
+      # -- Annotation for setting or overriding the metrics path. If not set, it defaults to /metrics
+      metricsPath: "k8s.grafana.com/metrics.path"
+      # -- Annotation for setting the metrics port by name.
+      metricsPortName: "k8s.grafana.com/metrics.portName"
+      # -- Annotation for setting the metrics port by number.
+      metricsPortNumber: "k8s.grafana.com/metrics.portNumber"
+
   # Metrics from Grafana Agent
   agent:
     # -- Scrape metrics from Grafana Agent
@@ -627,6 +657,17 @@ logs:
   pod_logs:
     # -- Capture and forward logs from Kubernetes pods
     enabled: true
+
+    # Controls the behavior of gathering pod logs.
+    # When set to "all", every pod (filtered by the namespaces list below) will have their logs gathered, but you can
+    # use the annotation to remove a pod from that list.
+    # When set to "annotation", only pods with the annotation set to true will be gathered.
+    # Possible values: "all" "annotation"
+    discovery: "all"
+
+    # The annotation to control the behavior of gathering logs from this pod. If you put this annotation on to your pod,
+    # it will either enable or disable auto gathering of logs from this pod.
+    annotation: "k8s.grafana.com/logs.autogather"
 
     # -- Only capture logs from pods in these namespaces (`[]` means all namespaces)
     namespaces: []

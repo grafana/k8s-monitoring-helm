@@ -9,7 +9,7 @@ discovery.relabel "agent" {
   }
   {{- range $k, $v := .Values.metrics.agent.labelMatchers }}
   rule {
-    source_labels = ["__meta_kubernetes_pod_label_{{ $k | replace "." "_" | replace "/" "_" }}"]
+    source_labels = ["__meta_kubernetes_pod_label_{{ include "escape_label" $k }}"]
     regex = "{{ $v }}"
     action = "keep"
   }
