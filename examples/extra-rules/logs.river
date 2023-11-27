@@ -93,9 +93,11 @@ loki.process "pod_logs" {
     }
   }
 
-  // drop the temporary container runtime label as it is no longer needed
+  // Drop the filename label, since it's not really useful in the context of Kubernetes, where we already have
+  // cluster, namespace, pod, and container labels.
+  // Also drop the temporary container runtime label as it is no longer needed.
   stage.label_drop {
-    values = ["tmp_container_runtime"]
+    values = ["filename", "tmp_container_runtime"]
   }
   stage.logfmt {
     payload = ""
