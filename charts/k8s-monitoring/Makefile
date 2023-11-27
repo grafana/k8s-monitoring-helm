@@ -21,3 +21,32 @@ ifdef HAS_HELM_DOCS
 else
 	docker run --rm --volume "$(shell pwd):/helm-docs" -u $(shell id -u) jnorwood/helm-docs:latest
 endif
+
+docs/RBAC.md:
+	echo "# RBAC Rules for the Kubernetes Monitoring Helm Chart" > docs/RBAC.md
+	echo "Several components have specialized RBAC rules to perform their work. This document will list the components, and their RBAC definitions." >> docs/RBAC.md
+	echo "Several components have specialized RBAC rules to perform their work. This document will list the components, and their RBAC definitions" >> docs/RBAC.md
+
+	echo "## Grafana Agent" >> docs/RBAC.md
+	echo '```yaml' >> docs/RBAC.md
+	yq -y 'select(.metadata.name=="k8smon-grafana-agent") | select(.kind=="ClusterRole") | .rules' ../../examples/default-values/output.yaml >> docs/RBAC.md
+	echo '```' >> docs/RBAC.md
+
+	echo "## Grafana Agent Logs" >> docs/RBAC.md
+	echo '```yaml' >> docs/RBAC.md
+	yq -y 'select(.metadata.name=="k8smon-grafana-agent-logs") | select(.kind=="ClusterRole") | .rules' ../../examples/default-values/output.yaml >> docs/RBAC.md
+	echo '```' >> docs/RBAC.md
+	echo "When deploying to an OpenShift cluster, these extra rules are added to enable access to special a SecurityContextConstraint:" >> docs/RBAC.md
+	echo '```yaml' >> docs/RBAC.md
+	yq -y 'select(.metadata.name=="k8smon-grafana-agent-logs-scc") | select(.kind=="ClusterRole") | .rules' ../../examples/openshift-compatible/output.yaml >> docs/RBAC.md
+	echo '```' >> docs/RBAC.md
+
+	echo "## Kube State Metrics" >> docs/RBAC.md
+	echo '```yaml' >> docs/RBAC.md
+	yq -y 'select(.metadata.name=="k8smon-kube-state-metrics") | select(.kind=="ClusterRole") | .rules' ../../examples/default-values/output.yaml >> docs/RBAC.md
+	echo '```' >> docs/RBAC.md
+
+	echo "## OpenCost" >> docs/RBAC.md
+	echo '```yaml' >> docs/RBAC.md
+	yq -y 'select(.metadata.name=="k8smon-opencost") | select(.kind=="ClusterRole") | .rules' ../../examples/default-values/output.yaml >> docs/RBAC.md
+	echo '```' >> docs/RBAC.md
