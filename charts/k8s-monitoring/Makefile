@@ -22,7 +22,7 @@ else
 	docker run --rm --volume "$(shell pwd):/helm-docs" -u $(shell id -u) jnorwood/helm-docs:latest
 endif
 
-docs/RBAC.md:
+docs/RBAC.md: ../../examples/default-values/output.yaml ../../examples/openshift-compatible/output.yaml
 	echo "# RBAC Rules for the Kubernetes Monitoring Helm Chart" > docs/RBAC.md
 	echo "Several components have specialized RBAC rules to perform their work. This document will list the components, and their RBAC definitions." >> docs/RBAC.md
 

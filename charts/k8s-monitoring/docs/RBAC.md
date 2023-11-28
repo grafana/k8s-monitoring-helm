@@ -1,6 +1,5 @@
 # RBAC Rules for the Kubernetes Monitoring Helm Chart
 Several components have specialized RBAC rules to perform their work. This document will list the components, and their RBAC definitions.
-Several components have specialized RBAC rules to perform their work. This document will list the components, and their RBAC definitions
 ## Grafana Agent
 ```yaml
 - apiGroups:
@@ -155,7 +154,7 @@ Several components have specialized RBAC rules to perform their work. This docum
     - list
     - watch
 ```
-When deploying to an OpenShift cluster, these extra rules are added to enable access to special a SecurityContextConstraint
+When deploying to an OpenShift cluster, these extra rules are added to enable access to special a SecurityContextConstraint:
 ```yaml
 - verbs:
     - use
