@@ -116,6 +116,32 @@ data:
       role = "service"
     }
     
+    // Receivers
+    otelcol.receiver.otlp "receiver" {
+      debug_metrics {
+        disable_high_cardinality_metrics = true
+      }
+    
+      grpc {
+        endpoint = "0.0.0.0:4317"
+      }
+    
+      http {
+        endpoint = "0.0.0.0:4318"
+      }
+      output {
+        metrics = [otelcol.exporter.prometheus.otel_to_prom_converter.input]
+        logs = [otelcol.exporter.loki.otel_to_loki_converter.input]
+      }
+    }
+    prometheus.receive_http "receiver" {
+    http {
+        listen_address = "0.0.0.0"
+        listen_port = 9999
+      }
+      forward_to = [prometheus.relabel.metrics_service.receiver]
+    }
+    
     // Annotation Autodiscovery
     discovery.relabel "annotation_autodiscovery_pods" {
       targets = discovery.kubernetes.pods.targets
@@ -568,7 +594,17 @@ data:
       namespace = "default"
     }
     
+    otelcol.exporter.prometheus "otel_to_prom_converter" {
+      forward_to = [prometheus.relabel.metrics_service.receiver]
+    }
+    
     prometheus.relabel "metrics_service" {
+      rule {
+        source_labels = ["cluster"]
+        regex = ""
+        replacement = "default-values-test"
+        target_label = "cluster"
+      }
       forward_to = [prometheus.remote_write.metrics_service.receiver]
     }
     
@@ -585,7 +621,6 @@ data:
       }
     
       external_labels = {
-        cluster = "default-values-test",
       }
     }
     
@@ -599,6 +634,10 @@ data:
     remote.kubernetes.secret "logs_service" {
       name = "loki-k8s-monitoring"
       namespace = "default"
+    }
+    
+    otelcol.exporter.loki "otel_to_loki_converter" {
+      forward_to = [loki.write.grafana_cloud_loki.receiver]
     }
     loki.write "grafana_cloud_loki" {
       endpoint {
@@ -735,6 +774,10 @@ data:
     remote.kubernetes.secret "logs_service" {
       name = "loki-k8s-monitoring"
       namespace = "default"
+    }
+    
+    otelcol.exporter.loki "otel_to_loki_converter" {
+      forward_to = [loki.write.grafana_cloud_loki.receiver]
     }
     loki.write "grafana_cloud_loki" {
       endpoint {
@@ -43595,6 +43638,22 @@ spec:
       port: 80
       targetPort: 80
       protocol: "TCP"
+    - name: otlp-grpc
+      port: 4317
+      targetPort: 4317
+      protocol: TCP
+    - name: otlp-http
+      port: 4318
+      targetPort: 4318
+      protocol: TCP
+    - name: prometheus
+      port: 9999
+      targetPort: 9999
+      protocol: TCP
+    - name: zipkin
+      port: 9411
+      targetPort: 9411
+      protocol: TCP
 ---
 # Source: k8s-monitoring/charts/grafana-agent/templates/service.yaml
 apiVersion: v1
@@ -43618,6 +43677,22 @@ spec:
       port: 80
       targetPort: 80
       protocol: "TCP"
+    - name: otlp-grpc
+      port: 4317
+      targetPort: 4317
+      protocol: TCP
+    - name: otlp-http
+      port: 4318
+      targetPort: 4318
+      protocol: TCP
+    - name: prometheus
+      port: 9999
+      targetPort: 9999
+      protocol: TCP
+    - name: zipkin
+      port: 9411
+      targetPort: 9411
+      protocol: TCP
 ---
 # Source: k8s-monitoring/charts/kube-state-metrics/templates/service.yaml
 apiVersion: v1
@@ -44121,6 +44196,18 @@ spec:
           ports:
             - containerPort: 80
               name: http-metrics
+            - containerPort: 4317
+              name: otlp-grpc
+              protocol: TCP
+            - containerPort: 4318
+              name: otlp-http
+              protocol: TCP
+            - containerPort: 9999
+              name: prometheus
+              protocol: TCP
+            - containerPort: 9411
+              name: zipkin
+              protocol: TCP
           readinessProbe:
             httpGet:
               path: /-/ready
@@ -44213,6 +44300,32 @@ data:
     
     discovery.kubernetes "services" {
       role = "service"
+    }
+    
+    // Receivers
+    otelcol.receiver.otlp "receiver" {
+      debug_metrics {
+        disable_high_cardinality_metrics = true
+      }
+    
+      grpc {
+        endpoint = "0.0.0.0:4317"
+      }
+    
+      http {
+        endpoint = "0.0.0.0:4318"
+      }
+      output {
+        metrics = [otelcol.exporter.prometheus.otel_to_prom_converter.input]
+        logs = [otelcol.exporter.loki.otel_to_loki_converter.input]
+      }
+    }
+    prometheus.receive_http "receiver" {
+    http {
+        listen_address = "0.0.0.0"
+        listen_port = 9999
+      }
+      forward_to = [prometheus.relabel.metrics_service.receiver]
     }
     
     // Annotation Autodiscovery
@@ -44667,7 +44780,17 @@ data:
       namespace = "default"
     }
     
+    otelcol.exporter.prometheus "otel_to_prom_converter" {
+      forward_to = [prometheus.relabel.metrics_service.receiver]
+    }
+    
     prometheus.relabel "metrics_service" {
+      rule {
+        source_labels = ["cluster"]
+        regex = ""
+        replacement = "default-values-test"
+        target_label = "cluster"
+      }
       forward_to = [prometheus.remote_write.metrics_service.receiver]
     }
     
@@ -44684,7 +44807,6 @@ data:
       }
     
       external_labels = {
-        cluster = "default-values-test",
       }
     }
     
@@ -44698,6 +44820,10 @@ data:
     remote.kubernetes.secret "logs_service" {
       name = "loki-k8s-monitoring"
       namespace = "default"
+    }
+    
+    otelcol.exporter.loki "otel_to_loki_converter" {
+      forward_to = [loki.write.grafana_cloud_loki.receiver]
     }
     loki.write "grafana_cloud_loki" {
       endpoint {
@@ -44826,6 +44952,10 @@ data:
     remote.kubernetes.secret "logs_service" {
       name = "loki-k8s-monitoring"
       namespace = "default"
+    }
+    
+    otelcol.exporter.loki "otel_to_loki_converter" {
+      forward_to = [loki.write.grafana_cloud_loki.receiver]
     }
     loki.write "grafana_cloud_loki" {
       endpoint {
@@ -45042,7 +45172,6 @@ spec:
                   name: prometheus-k8s-monitoring
                   key: password
                   optional: true
-
             - name: LOKI_HOST
               valueFrom:
                 secretKeyRef:
@@ -45067,6 +45196,26 @@ spec:
                 secretKeyRef:
                   name: loki-k8s-monitoring
                   key: tenantId
+                  optional: true
+            - name: TEMPO_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: tempo-k8s-monitoring
+                  key: host
+                  optional: true
+            - name: TEMPO_URL
+              value: $(TEMPO_HOST)/api/search
+            - name: TEMPO_USER
+              valueFrom:
+                secretKeyRef:
+                  name: tempo-k8s-monitoring
+                  key: username
+                  optional: true
+            - name: TEMPO_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: tempo-k8s-monitoring
+                  key: password
                   optional: true
 
       volumes:

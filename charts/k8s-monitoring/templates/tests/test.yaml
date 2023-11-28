@@ -188,6 +188,10 @@ spec:
             - name: test-files
               mountPath: /etc/test
           env:
+{{- if .Values.test.envOverrides.PROMETHEUS_URL }}
+            - name: PROMETHEUS_URL
+              value: {{ .Values.test.envOverrides.PROMETHEUS_URL | quote }}
+{{- else }}
             - name: PROMETHEUS_HOST
               valueFrom:
                 secretKeyRef:
@@ -196,6 +200,7 @@ spec:
                   optional: true
             - name: PROMETHEUS_URL
               value: $(PROMETHEUS_HOST){{ .Values.externalServices.prometheus.queryEndpoint }}
+{{- end }}
             - name: PROMETHEUS_USER
               valueFrom:
                 secretKeyRef:
@@ -209,6 +214,10 @@ spec:
                   key: {{ .Values.externalServices.prometheus.basicAuth.passwordKey }}
                   optional: true
 
+{{- if .Values.test.envOverrides.LOKI_URL }}
+            - name: LOKI_URL
+              value: {{ .Values.test.envOverrides.LOKI_URL | quote }}
+{{- else }}
             - name: LOKI_HOST
               valueFrom:
                 secretKeyRef:
@@ -216,6 +225,7 @@ spec:
                   key: {{ .Values.externalServices.loki.hostKey }}
             - name: LOKI_URL
               value: $(LOKI_HOST){{ .Values.externalServices.loki.queryEndpoint }}
+{{- end }}
             - name: LOKI_USER
               valueFrom:
                 secretKeyRef:
@@ -233,6 +243,32 @@ spec:
                 secretKeyRef:
                   name: {{ include "kubernetes_monitoring.logs_service.secret.name" . }}
                   key: {{ .Values.externalServices.loki.tenantIdKey }}
+                  optional: true
+
+{{- if .Values.test.envOverrides.TEMPO_URL }}
+            - name: TEMPO_URL
+              value: {{ .Values.test.envOverrides.TEMPO_URL | quote }}
+{{- else }}
+            - name: TEMPO_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "kubernetes_monitoring.traces_service.secret.name" . }}
+                  key: {{ .Values.externalServices.tempo.hostKey }}
+                  optional: true
+            - name: TEMPO_URL
+              value: $(TEMPO_HOST){{ .Values.externalServices.tempo.searchEndpoint }}
+{{- end }}
+            - name: TEMPO_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "kubernetes_monitoring.traces_service.secret.name" . }}
+                  key: {{ .Values.externalServices.tempo.basicAuth.usernameKey }}
+                  optional: true
+            - name: TEMPO_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "kubernetes_monitoring.traces_service.secret.name" . }}
+                  key: {{ .Values.externalServices.tempo.basicAuth.passwordKey }}
                   optional: true
 
       volumes:

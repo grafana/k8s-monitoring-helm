@@ -1,8 +1,9 @@
 #
 # This values file will test the following features:
-# * Sending metrics via OTLP
+# * Sending metrics via OTLP HTTP
+# * Sending traces via OTLP HTTP
 # * Filtering pod logs by namespace
-# * Custom test queries, including LogQL queries
+# * Custom test queries, including LogQL and TraceQL queries
 #
 cluster:
   name: ci-test-cluster-2
@@ -64,6 +65,15 @@ test:
   # Check for pod logs
   - query: "{cluster=\"ci-test-cluster-2\", job!=\"integrations/kubernetes/eventhandler\"}"
     type: logql
+  - query: "{span.cluster=\"ci-test-cluster-2\"}"
+    type: traceql
+  # These two check for metrics and traces that are being sent directly to this agent via the receivers
+  - query: "agent_build_info{cluster=\"some-other-cluster\"}"
+    type: promql
+  - query: "{span.cluster=\"some-other-cluster\"}"
+    type: traceql
+  envOverrides:
+    TEMPO_URL: http://tempo.tempo.svc:3100
 
 opencost:
   opencost:
@@ -73,19 +83,3 @@ opencost:
     prometheus:
       external:
         url: https://prometheus-server.prometheus.svc.cluster.local:80
-
-grafana-agent:
-  agent:
-    extraPorts:
-      - name: "otlp-grpc"
-        port: 4317
-        targetPort: 4317
-        protocol: "TCP"
-      - name: "otlp-http"
-        port: 4318
-        targetPort: 4318
-        protocol: "TCP"
-      - name: "zipkin"
-        port: 9411
-        targetPort: 9411
-        protocol: "TCP"

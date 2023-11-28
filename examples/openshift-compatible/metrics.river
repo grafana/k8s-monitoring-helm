@@ -10,6 +10,32 @@ discovery.kubernetes "services" {
   role = "service"
 }
 
+// Receivers
+otelcol.receiver.otlp "receiver" {
+  debug_metrics {
+    disable_high_cardinality_metrics = true
+  }
+
+  grpc {
+    endpoint = "0.0.0.0:4317"
+  }
+
+  http {
+    endpoint = "0.0.0.0:4318"
+  }
+  output {
+    metrics = [otelcol.exporter.prometheus.otel_to_prom_converter.input]
+    logs = [otelcol.exporter.loki.otel_to_loki_converter.input]
+  }
+}
+prometheus.receive_http "receiver" {
+http {
+    listen_address = "0.0.0.0"
+    listen_port = 9999
+  }
+  forward_to = [prometheus.relabel.metrics_service.receiver]
+}
+
 // Annotation Autodiscovery
 discovery.relabel "annotation_autodiscovery_pods" {
   targets = discovery.kubernetes.pods.targets
@@ -463,7 +489,17 @@ remote.kubernetes.secret "metrics_service" {
   namespace = "default"
 }
 
+otelcol.exporter.prometheus "otel_to_prom_converter" {
+  forward_to = [prometheus.relabel.metrics_service.receiver]
+}
+
 prometheus.relabel "metrics_service" {
+  rule {
+    source_labels = ["cluster"]
+    regex = ""
+    replacement = "openshift-compatible-test"
+    target_label = "cluster"
+  }
   forward_to = [prometheus.remote_write.metrics_service.receiver]
 }
 
@@ -481,7 +517,6 @@ prometheus.remote_write "metrics_service" {
   }
 
   external_labels = {
-    cluster = "openshift-compatible-test",
   }
 }
 
@@ -495,6 +530,10 @@ loki.source.kubernetes_events "cluster_events" {
 remote.kubernetes.secret "logs_service" {
   name = "loki-k8s-monitoring"
   namespace = "default"
+}
+
+otelcol.exporter.loki "otel_to_loki_converter" {
+  forward_to = [loki.write.grafana_cloud_loki.receiver]
 }
 loki.write "grafana_cloud_loki" {
   endpoint {
