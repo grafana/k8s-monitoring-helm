@@ -25,7 +25,6 @@ endif
 docs/RBAC.md:
 	echo "# RBAC Rules for the Kubernetes Monitoring Helm Chart" > docs/RBAC.md
 	echo "Several components have specialized RBAC rules to perform their work. This document will list the components, and their RBAC definitions." >> docs/RBAC.md
-	echo "Several components have specialized RBAC rules to perform their work. This document will list the components, and their RBAC definitions" >> docs/RBAC.md
 
 	echo "## Grafana Agent" >> docs/RBAC.md
 	echo '```yaml' >> docs/RBAC.md
