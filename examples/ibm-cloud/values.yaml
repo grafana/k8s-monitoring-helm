@@ -1,0 +1,28 @@
+cluster:
+  name: ibm-cloud-test
+
+externalServices:
+  prometheus:
+    host: https://prometheus.example.com
+    basicAuth:
+      username: 12345
+      password: "It's a secret to everyone"
+  loki:
+    host: https://loki.example.com
+    basicAuth:
+      username: 12345
+      password: "It's a secret to everyone"
+
+grafana-agent-logs:
+  agent:
+    mounts:
+      extra:
+        - name: vardata
+          mountPath: /var/data
+  controller:
+    volumes:
+      extra:
+        - name: vardata
+          hostPath:
+            path: /var/data
+
