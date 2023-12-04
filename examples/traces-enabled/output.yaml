@@ -47,10 +47,10 @@ kind: ServiceAccount
 metadata:
   name: k8smon-opencost
   labels:
-    helm.sh/chart: opencost-1.22.3
+    helm.sh/chart: opencost-1.27.0
     app.kubernetes.io/name: opencost
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.106.4"
+    app.kubernetes.io/version: "1.107.1"
     app.kubernetes.io/part-of: opencost
     app.kubernetes.io/managed-by: Helm
 automountServiceAccountToken: true
@@ -43054,10 +43054,10 @@ kind: ClusterRole
 metadata:
   name: k8smon-opencost
   labels:
-    helm.sh/chart: opencost-1.22.3
+    helm.sh/chart: opencost-1.27.0
     app.kubernetes.io/name: opencost
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.106.4"
+    app.kubernetes.io/version: "1.107.1"
     app.kubernetes.io/part-of: opencost
     app.kubernetes.io/managed-by: Helm
 rules:
@@ -43203,10 +43203,10 @@ kind: ClusterRoleBinding
 metadata:
   name: k8smon-opencost
   labels:
-    helm.sh/chart: opencost-1.22.3
+    helm.sh/chart: opencost-1.27.0
     app.kubernetes.io/name: opencost
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.106.4"
+    app.kubernetes.io/version: "1.107.1"
     app.kubernetes.io/part-of: opencost
     app.kubernetes.io/managed-by: Helm
 roleRef:
@@ -43352,10 +43352,10 @@ kind: Service
 metadata:
   name: k8smon-opencost
   labels:
-    helm.sh/chart: opencost-1.22.3
+    helm.sh/chart: opencost-1.27.0
     app.kubernetes.io/name: opencost
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.106.4"
+    app.kubernetes.io/version: "1.107.1"
     app.kubernetes.io/part-of: opencost
     app.kubernetes.io/managed-by: Helm
 spec:
@@ -43673,10 +43673,10 @@ kind: Deployment
 metadata:
   name: k8smon-opencost
   labels:
-    helm.sh/chart: opencost-1.22.3
+    helm.sh/chart: opencost-1.27.0
     app.kubernetes.io/name: opencost
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.106.4"
+    app.kubernetes.io/version: "1.107.1"
     app.kubernetes.io/part-of: opencost
     app.kubernetes.io/managed-by: Helm
 spec:
@@ -43701,7 +43701,7 @@ spec:
         kubernetes.io/os: linux
       containers:
         - name: k8smon-opencost
-          image: "quay.io/kubecost1/kubecost-cost-model:prod-1.106.4"
+          image: "quay.io/kubecost1/kubecost-cost-model:latest"
           imagePullPolicy: IfNotPresent
           args:
           ports:
@@ -43744,6 +43744,18 @@ spec:
                 secretKeyRef:
                   name: prometheus-k8s-monitoring
                   key: password
+            - name: DATA_RETENTION_DAILY_RESOLUTION_DAYS
+              value: "15"
+            - name: CLOUD_COST_ENABLED
+              value: "false"
+            - name: CLOUD_COST_MONTH_TO_DATE_INTERVAL
+              value: "6"
+            - name: CLOUD_COST_REFRESH_RATE_HOURS
+              value: "6"
+            - name: CLOUD_COST_QUERY_WINDOW_DAYS
+              value: "7"
+            - name: CLOUD_COST_RUN_WINDOW_DAYS
+              value: "3"
             # Add any additional provided variables
             - name: CLOUD_PROVIDER_API_KEY
               value: "AIzaSyD29bGxmHAVEOBYtgd8sYM2gM2ekfxQX4U"
