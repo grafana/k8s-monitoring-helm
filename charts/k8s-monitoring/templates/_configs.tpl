@@ -65,6 +65,10 @@
       {{- include "agent.config.opencost" . }}
     {{- end }}
 
+    {{- if .Values.metrics.trivy.enabled }}
+      {{- include "agent.config.trivy" . }}
+    {{- end }}
+
     {{- if .Values.metrics.podMonitors.enabled }}
       {{- include "agent.config.pod_monitors" . }}
     {{- end }}

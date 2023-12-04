@@ -641,6 +641,32 @@ metrics:
       metric: []
       datapoint: []
 
+  trivy:
+    # -- Scrape cost metrics from OpenCost
+    enabled: true
+
+    # -- (string) How frequently to scrape metrics from OpenCost.
+    # Overrides metrics.scrapeInterval
+    # @default -- 60s
+    scrapeInterval: ""
+
+    # -- Label matchers used by the Grafana Agent to select the OpenCost service
+    labelMatchers:
+      app.kubernetes.io/name: trivy-operator
+
+    # -- (string) Rule blocks to be added to the discovery.relabel component for OpenCost.
+    # See https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block
+    extraRelabelingRules: ""
+
+    # -- (string) Rule blocks to be added to the prometheus.relabel component for OpenCost.
+    # See https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block
+    extraMetricRelabelingRules: ""
+
+    # -- The list of OpenCost metrics that will be scraped by the Agent
+    # @default -- See [Allow List for OpenCost](#allow-list-for-opencost)
+    allowList:
+      - trivy_.*
+
 # Settings related to capturing and forwarding logs
 logs:
   # -- Capture and forward logs
@@ -1118,3 +1144,12 @@ extraObjects: []
 #     dataFrom:
 #     - extract:
 #         key: mysecret
+
+trivy-operator:
+  enabled: true
+  trivy:
+    ignoreUnfixed: true
+  service:
+    metricsPort: 8080
+  operator:
+    metricsVulnIdEnabled: true

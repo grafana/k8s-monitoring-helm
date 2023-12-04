@@ -1,0 +1,58 @@
+{{ define "agent.config.trivy" }}
+// Trivy
+discovery.relabel "trivy" {
+  targets = discovery.kubernetes.services.targets
+  rule {
+    source_labels = ["__meta_kubernetes_service_label_app_kubernetes_io_instance"]
+    regex = "{{ .Release.Name }}"
+    action = "keep"
+  }
+  {{- range $k, $v := .Values.metrics.trivy.labelMatchers }}
+  rule {
+    source_labels = ["__meta_kubernetes_service_label_{{ include "escape_label" $k }}"]
+    regex = "{{ $v }}"
+    action = "keep"
+  }
+  {{- end }}
+  rule {
+    source_labels = ["__meta_kubernetes_service_port_name"]
+    regex = "metrics"
+    action = "keep"
+  }
+{{- if .Values.metrics.extraRelabelingRules }}
+{{ .Values.metrics.extraRelabelingRules | indent 2 }}
+{{- end }}
+{{- if .Values.metrics.trivy.extraRelabelingRules }}
+{{ .Values.metrics.trivy.extraRelabelingRules | indent 2 }}
+{{- end }}
+}
+
+prometheus.scrape "trivy" {
+  job_name   = "integrations/trivy"
+  targets    = discovery.relabel.trivy.output
+  scrape_interval = {{ .Values.metrics.trivy.scrapeInterval | default .Values.metrics.scrapeInterval | quote }}
+{{- if (index .Values "grafana-agent").agent.clustering.enabled }}
+  clustering {
+    enabled = true
+  }
+{{- end }}
+  forward_to = [prometheus.relabel.trivy.receiver]
+}
+
+prometheus.relabel "trivy" {
+{{- if .Values.metrics.trivy.allowList }}
+  rule {
+    source_labels = ["__name__"]
+    regex = "up|{{ join "|" .Values.metrics.trivy.allowList }}"
+    action = "keep"
+  }
+{{- end }}
+{{- if .Values.metrics.extraMetricRelabelingRules }}
+{{ .Values.metrics.extraMetricRelabelingRules | indent 2 }}
+{{- end }}
+{{- if .Values.metrics.trivy.extraMetricRelabelingRules }}
+{{ .Values.metrics.trivy.extraMetricRelabelingRules | indent 2 }}
+{{- end }}
+  forward_to = [prometheus.relabel.metrics_service.receiver]
+}
+{{ end }}
