@@ -824,9 +824,8 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.11.1
-    operator.prometheus.io/version: 0.69.1
-  creationTimestamp: null
+    controller-gen.kubebuilder.io/version: v0.13.0
+    operator.prometheus.io/version: 0.70.0
   name: alertmanagerconfigs.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -1061,6 +1060,7 @@ spec:
                             required:
                             - key
                             type: object
+                            x-kubernetes-map-type: atomic
                           httpConfig:
                             description: HTTP client configuration.
                             properties:
@@ -1105,8 +1105,8 @@ spec:
                                   BasicAuth takes precedence.
                                 properties:
                                   password:
-                                    description: The secret in the service monitor
-                                      namespace that contains the password for authentication.
+                                    description: '`password` specifies a key of a
+                                      Secret containing the password for authentication.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -1127,8 +1127,8 @@ spec:
                                     type: object
                                     x-kubernetes-map-type: atomic
                                   username:
-                                    description: The secret in the service monitor
-                                      namespace that contains the username for authentication.
+                                    description: '`username` specifies a key of a
+                                      Secret containing the username for authentication.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -1173,6 +1173,7 @@ spec:
                                 required:
                                 - key
                                 type: object
+                                x-kubernetes-map-type: atomic
                               followRedirects:
                                 description: FollowRedirects specifies whether the
                                   client should follow HTTP 3xx redirects.
@@ -1182,8 +1183,9 @@ spec:
                                   a token for the targets.
                                 properties:
                                   clientId:
-                                    description: The secret or configmap containing
-                                      the OAuth2 client id
+                                    description: '`clientId` specifies a key of a
+                                      Secret or ConfigMap containing the OAuth2 client''s
+                                      ID.'
                                     properties:
                                       configMap:
                                         description: ConfigMap containing data to
@@ -1231,8 +1233,8 @@ spec:
                                         x-kubernetes-map-type: atomic
                                     type: object
                                   clientSecret:
-                                    description: The secret containing the OAuth2
-                                      client secret
+                                    description: '`clientSecret` specifies a key of
+                                      a Secret containing the OAuth2 client''s secret.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -1255,17 +1257,18 @@ spec:
                                   endpointParams:
                                     additionalProperties:
                                       type: string
-                                    description: Parameters to append to the token
-                                      URL
+                                    description: '`endpointParams` configures the
+                                      HTTP parameters to append to the token URL.'
                                     type: object
                                   scopes:
-                                    description: OAuth2 scopes used for the token
-                                      request
+                                    description: '`scopes` defines the OAuth2 scopes
+                                      used for the token request.'
                                     items:
                                       type: string
                                     type: array
                                   tokenUrl:
-                                    description: The URL to fetch the token from
+                                    description: '`tokenURL` configures the URL to
+                                      fetch the token from.'
                                     minLength: 1
                                     type: string
                                 required:
@@ -1451,6 +1454,7 @@ spec:
                             required:
                             - key
                             type: object
+                            x-kubernetes-map-type: atomic
                           authSecret:
                             description: The secret's key that contains the CRAM-MD5
                               secret. The secret needs to be in the same namespace
@@ -1473,6 +1477,7 @@ spec:
                             required:
                             - key
                             type: object
+                            x-kubernetes-map-type: atomic
                           authUsername:
                             description: The username to use for authentication.
                             type: string
@@ -1702,8 +1707,8 @@ spec:
                                   BasicAuth takes precedence.
                                 properties:
                                   password:
-                                    description: The secret in the service monitor
-                                      namespace that contains the password for authentication.
+                                    description: '`password` specifies a key of a
+                                      Secret containing the password for authentication.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -1724,8 +1729,8 @@ spec:
                                     type: object
                                     x-kubernetes-map-type: atomic
                                   username:
-                                    description: The secret in the service monitor
-                                      namespace that contains the username for authentication.
+                                    description: '`username` specifies a key of a
+                                      Secret containing the username for authentication.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -1770,6 +1775,7 @@ spec:
                                 required:
                                 - key
                                 type: object
+                                x-kubernetes-map-type: atomic
                               followRedirects:
                                 description: FollowRedirects specifies whether the
                                   client should follow HTTP 3xx redirects.
@@ -1779,8 +1785,9 @@ spec:
                                   a token for the targets.
                                 properties:
                                   clientId:
-                                    description: The secret or configmap containing
-                                      the OAuth2 client id
+                                    description: '`clientId` specifies a key of a
+                                      Secret or ConfigMap containing the OAuth2 client''s
+                                      ID.'
                                     properties:
                                       configMap:
                                         description: ConfigMap containing data to
@@ -1828,8 +1835,8 @@ spec:
                                         x-kubernetes-map-type: atomic
                                     type: object
                                   clientSecret:
-                                    description: The secret containing the OAuth2
-                                      client secret
+                                    description: '`clientSecret` specifies a key of
+                                      a Secret containing the OAuth2 client''s secret.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -1852,17 +1859,18 @@ spec:
                                   endpointParams:
                                     additionalProperties:
                                       type: string
-                                    description: Parameters to append to the token
-                                      URL
+                                    description: '`endpointParams` configures the
+                                      HTTP parameters to append to the token URL.'
                                     type: object
                                   scopes:
-                                    description: OAuth2 scopes used for the token
-                                      request
+                                    description: '`scopes` defines the OAuth2 scopes
+                                      used for the token request.'
                                     items:
                                       type: string
                                     type: array
                                   tokenUrl:
-                                    description: The URL to fetch the token from
+                                    description: '`tokenURL` configures the URL to
+                                      fetch the token from.'
                                     minLength: 1
                                     type: string
                                 required:
@@ -2033,6 +2041,7 @@ spec:
                             required:
                             - key
                             type: object
+                            x-kubernetes-map-type: atomic
                         required:
                         - webhookUrl
                         type: object
@@ -2074,6 +2083,7 @@ spec:
                             required:
                             - key
                             type: object
+                            x-kubernetes-map-type: atomic
                           apiURL:
                             description: The URL to send OpsGenie API requests to.
                             type: string
@@ -2146,8 +2156,8 @@ spec:
                                   BasicAuth takes precedence.
                                 properties:
                                   password:
-                                    description: The secret in the service monitor
-                                      namespace that contains the password for authentication.
+                                    description: '`password` specifies a key of a
+                                      Secret containing the password for authentication.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -2168,8 +2178,8 @@ spec:
                                     type: object
                                     x-kubernetes-map-type: atomic
                                   username:
-                                    description: The secret in the service monitor
-                                      namespace that contains the username for authentication.
+                                    description: '`username` specifies a key of a
+                                      Secret containing the username for authentication.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -2214,6 +2224,7 @@ spec:
                                 required:
                                 - key
                                 type: object
+                                x-kubernetes-map-type: atomic
                               followRedirects:
                                 description: FollowRedirects specifies whether the
                                   client should follow HTTP 3xx redirects.
@@ -2223,8 +2234,9 @@ spec:
                                   a token for the targets.
                                 properties:
                                   clientId:
-                                    description: The secret or configmap containing
-                                      the OAuth2 client id
+                                    description: '`clientId` specifies a key of a
+                                      Secret or ConfigMap containing the OAuth2 client''s
+                                      ID.'
                                     properties:
                                       configMap:
                                         description: ConfigMap containing data to
@@ -2272,8 +2284,8 @@ spec:
                                         x-kubernetes-map-type: atomic
                                     type: object
                                   clientSecret:
-                                    description: The secret containing the OAuth2
-                                      client secret
+                                    description: '`clientSecret` specifies a key of
+                                      a Secret containing the OAuth2 client''s secret.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -2296,17 +2308,18 @@ spec:
                                   endpointParams:
                                     additionalProperties:
                                       type: string
-                                    description: Parameters to append to the token
-                                      URL
+                                    description: '`endpointParams` configures the
+                                      HTTP parameters to append to the token URL.'
                                     type: object
                                   scopes:
-                                    description: OAuth2 scopes used for the token
-                                      request
+                                    description: '`scopes` defines the OAuth2 scopes
+                                      used for the token request.'
                                     items:
                                       type: string
                                     type: array
                                   tokenUrl:
-                                    description: The URL to fetch the token from
+                                    description: '`tokenURL` configures the URL to
+                                      fetch the token from.'
                                     minLength: 1
                                     type: string
                                 required:
@@ -2594,8 +2607,8 @@ spec:
                                   BasicAuth takes precedence.
                                 properties:
                                   password:
-                                    description: The secret in the service monitor
-                                      namespace that contains the password for authentication.
+                                    description: '`password` specifies a key of a
+                                      Secret containing the password for authentication.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -2616,8 +2629,8 @@ spec:
                                     type: object
                                     x-kubernetes-map-type: atomic
                                   username:
-                                    description: The secret in the service monitor
-                                      namespace that contains the username for authentication.
+                                    description: '`username` specifies a key of a
+                                      Secret containing the username for authentication.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -2662,6 +2675,7 @@ spec:
                                 required:
                                 - key
                                 type: object
+                                x-kubernetes-map-type: atomic
                               followRedirects:
                                 description: FollowRedirects specifies whether the
                                   client should follow HTTP 3xx redirects.
@@ -2671,8 +2685,9 @@ spec:
                                   a token for the targets.
                                 properties:
                                   clientId:
-                                    description: The secret or configmap containing
-                                      the OAuth2 client id
+                                    description: '`clientId` specifies a key of a
+                                      Secret or ConfigMap containing the OAuth2 client''s
+                                      ID.'
                                     properties:
                                       configMap:
                                         description: ConfigMap containing data to
@@ -2720,8 +2735,8 @@ spec:
                                         x-kubernetes-map-type: atomic
                                     type: object
                                   clientSecret:
-                                    description: The secret containing the OAuth2
-                                      client secret
+                                    description: '`clientSecret` specifies a key of
+                                      a Secret containing the OAuth2 client''s secret.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -2744,17 +2759,18 @@ spec:
                                   endpointParams:
                                     additionalProperties:
                                       type: string
-                                    description: Parameters to append to the token
-                                      URL
+                                    description: '`endpointParams` configures the
+                                      HTTP parameters to append to the token URL.'
                                     type: object
                                   scopes:
-                                    description: OAuth2 scopes used for the token
-                                      request
+                                    description: '`scopes` defines the OAuth2 scopes
+                                      used for the token request.'
                                     items:
                                       type: string
                                     type: array
                                   tokenUrl:
-                                    description: The URL to fetch the token from
+                                    description: '`tokenURL` configures the URL to
+                                      fetch the token from.'
                                     minLength: 1
                                     type: string
                                 required:
@@ -2957,6 +2973,7 @@ spec:
                             required:
                             - key
                             type: object
+                            x-kubernetes-map-type: atomic
                           sendResolved:
                             description: Whether or not to notify about resolved alerts.
                             type: boolean
@@ -2984,6 +3001,7 @@ spec:
                             required:
                             - key
                             type: object
+                            x-kubernetes-map-type: atomic
                           severity:
                             description: Severity of the incident.
                             type: string
@@ -2998,6 +3016,10 @@ spec:
                         description: PushoverConfig configures notifications via Pushover.
                           See https://prometheus.io/docs/alerting/latest/configuration/#pushover_config
                         properties:
+                          device:
+                            description: The name of a device to send the notification
+                              to
+                            type: string
                           expire:
                             description: How long your notification will continue
                               to be retried for, unless the user acknowledges the
@@ -3052,8 +3074,8 @@ spec:
                                   BasicAuth takes precedence.
                                 properties:
                                   password:
-                                    description: The secret in the service monitor
-                                      namespace that contains the password for authentication.
+                                    description: '`password` specifies a key of a
+                                      Secret containing the password for authentication.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -3074,8 +3096,8 @@ spec:
                                     type: object
                                     x-kubernetes-map-type: atomic
                                   username:
-                                    description: The secret in the service monitor
-                                      namespace that contains the username for authentication.
+                                    description: '`username` specifies a key of a
+                                      Secret containing the username for authentication.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -3120,6 +3142,7 @@ spec:
                                 required:
                                 - key
                                 type: object
+                                x-kubernetes-map-type: atomic
                               followRedirects:
                                 description: FollowRedirects specifies whether the
                                   client should follow HTTP 3xx redirects.
@@ -3129,8 +3152,9 @@ spec:
                                   a token for the targets.
                                 properties:
                                   clientId:
-                                    description: The secret or configmap containing
-                                      the OAuth2 client id
+                                    description: '`clientId` specifies a key of a
+                                      Secret or ConfigMap containing the OAuth2 client''s
+                                      ID.'
                                     properties:
                                       configMap:
                                         description: ConfigMap containing data to
@@ -3178,8 +3202,8 @@ spec:
                                         x-kubernetes-map-type: atomic
                                     type: object
                                   clientSecret:
-                                    description: The secret containing the OAuth2
-                                      client secret
+                                    description: '`clientSecret` specifies a key of
+                                      a Secret containing the OAuth2 client''s secret.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -3202,17 +3226,18 @@ spec:
                                   endpointParams:
                                     additionalProperties:
                                       type: string
-                                    description: Parameters to append to the token
-                                      URL
+                                    description: '`endpointParams` configures the
+                                      HTTP parameters to append to the token URL.'
                                     type: object
                                   scopes:
-                                    description: OAuth2 scopes used for the token
-                                      request
+                                    description: '`scopes` defines the OAuth2 scopes
+                                      used for the token request.'
                                     items:
                                       type: string
                                     type: array
                                   tokenUrl:
-                                    description: The URL to fetch the token from
+                                    description: '`tokenURL` configures the URL to
+                                      fetch the token from.'
                                     minLength: 1
                                     type: string
                                 required:
@@ -3401,6 +3426,7 @@ spec:
                             required:
                             - key
                             type: object
+                            x-kubernetes-map-type: atomic
                           tokenFile:
                             description: The token file that contains the registered
                               application's API token, see https://pushover.net/apps.
@@ -3437,6 +3463,7 @@ spec:
                             required:
                             - key
                             type: object
+                            x-kubernetes-map-type: atomic
                           userKeyFile:
                             description: The user key file that contains the recipient
                               user's user key. Either `userKey` or `userKeyFile` is
@@ -3519,6 +3546,7 @@ spec:
                             required:
                             - key
                             type: object
+                            x-kubernetes-map-type: atomic
                           callbackId:
                             type: string
                           channel:
@@ -3600,8 +3628,8 @@ spec:
                                   BasicAuth takes precedence.
                                 properties:
                                   password:
-                                    description: The secret in the service monitor
-                                      namespace that contains the password for authentication.
+                                    description: '`password` specifies a key of a
+                                      Secret containing the password for authentication.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -3622,8 +3650,8 @@ spec:
                                     type: object
                                     x-kubernetes-map-type: atomic
                                   username:
-                                    description: The secret in the service monitor
-                                      namespace that contains the username for authentication.
+                                    description: '`username` specifies a key of a
+                                      Secret containing the username for authentication.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -3668,6 +3696,7 @@ spec:
                                 required:
                                 - key
                                 type: object
+                                x-kubernetes-map-type: atomic
                               followRedirects:
                                 description: FollowRedirects specifies whether the
                                   client should follow HTTP 3xx redirects.
@@ -3677,8 +3706,9 @@ spec:
                                   a token for the targets.
                                 properties:
                                   clientId:
-                                    description: The secret or configmap containing
-                                      the OAuth2 client id
+                                    description: '`clientId` specifies a key of a
+                                      Secret or ConfigMap containing the OAuth2 client''s
+                                      ID.'
                                     properties:
                                       configMap:
                                         description: ConfigMap containing data to
@@ -3726,8 +3756,8 @@ spec:
                                         x-kubernetes-map-type: atomic
                                     type: object
                                   clientSecret:
-                                    description: The secret containing the OAuth2
-                                      client secret
+                                    description: '`clientSecret` specifies a key of
+                                      a Secret containing the OAuth2 client''s secret.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -3750,17 +3780,18 @@ spec:
                                   endpointParams:
                                     additionalProperties:
                                       type: string
-                                    description: Parameters to append to the token
-                                      URL
+                                    description: '`endpointParams` configures the
+                                      HTTP parameters to append to the token URL.'
                                     type: object
                                   scopes:
-                                    description: OAuth2 scopes used for the token
-                                      request
+                                    description: '`scopes` defines the OAuth2 scopes
+                                      used for the token request.'
                                     items:
                                       type: string
                                     type: array
                                   tokenUrl:
-                                    description: The URL to fetch the token from
+                                    description: '`tokenURL` configures the URL to
+                                      fetch the token from.'
                                     minLength: 1
                                     type: string
                                 required:
@@ -3994,8 +4025,8 @@ spec:
                                   BasicAuth takes precedence.
                                 properties:
                                   password:
-                                    description: The secret in the service monitor
-                                      namespace that contains the password for authentication.
+                                    description: '`password` specifies a key of a
+                                      Secret containing the password for authentication.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -4016,8 +4047,8 @@ spec:
                                     type: object
                                     x-kubernetes-map-type: atomic
                                   username:
-                                    description: The secret in the service monitor
-                                      namespace that contains the username for authentication.
+                                    description: '`username` specifies a key of a
+                                      Secret containing the username for authentication.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -4062,6 +4093,7 @@ spec:
                                 required:
                                 - key
                                 type: object
+                                x-kubernetes-map-type: atomic
                               followRedirects:
                                 description: FollowRedirects specifies whether the
                                   client should follow HTTP 3xx redirects.
@@ -4071,8 +4103,9 @@ spec:
                                   a token for the targets.
                                 properties:
                                   clientId:
-                                    description: The secret or configmap containing
-                                      the OAuth2 client id
+                                    description: '`clientId` specifies a key of a
+                                      Secret or ConfigMap containing the OAuth2 client''s
+                                      ID.'
                                     properties:
                                       configMap:
                                         description: ConfigMap containing data to
@@ -4120,8 +4153,8 @@ spec:
                                         x-kubernetes-map-type: atomic
                                     type: object
                                   clientSecret:
-                                    description: The secret containing the OAuth2
-                                      client secret
+                                    description: '`clientSecret` specifies a key of
+                                      a Secret containing the OAuth2 client''s secret.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -4144,17 +4177,18 @@ spec:
                                   endpointParams:
                                     additionalProperties:
                                       type: string
-                                    description: Parameters to append to the token
-                                      URL
+                                    description: '`endpointParams` configures the
+                                      HTTP parameters to append to the token URL.'
                                     type: object
                                   scopes:
-                                    description: OAuth2 scopes used for the token
-                                      request
+                                    description: '`scopes` defines the OAuth2 scopes
+                                      used for the token request.'
                                     items:
                                       type: string
                                     type: array
                                   tokenUrl:
-                                    description: The URL to fetch the token from
+                                    description: '`tokenURL` configures the URL to
+                                      fetch the token from.'
                                     minLength: 1
                                     type: string
                                 required:
@@ -4421,6 +4455,7 @@ spec:
                             required:
                             - key
                             type: object
+                            x-kubernetes-map-type: atomic
                           botTokenFile:
                             description: "File to read the Telegram bot token from.
                               It is mutually exclusive with `botToken`. Either `botToken`
@@ -4478,8 +4513,8 @@ spec:
                                   BasicAuth takes precedence.
                                 properties:
                                   password:
-                                    description: The secret in the service monitor
-                                      namespace that contains the password for authentication.
+                                    description: '`password` specifies a key of a
+                                      Secret containing the password for authentication.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -4500,8 +4535,8 @@ spec:
                                     type: object
                                     x-kubernetes-map-type: atomic
                                   username:
-                                    description: The secret in the service monitor
-                                      namespace that contains the username for authentication.
+                                    description: '`username` specifies a key of a
+                                      Secret containing the username for authentication.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -4546,6 +4581,7 @@ spec:
                                 required:
                                 - key
                                 type: object
+                                x-kubernetes-map-type: atomic
                               followRedirects:
                                 description: FollowRedirects specifies whether the
                                   client should follow HTTP 3xx redirects.
@@ -4555,8 +4591,9 @@ spec:
                                   a token for the targets.
                                 properties:
                                   clientId:
-                                    description: The secret or configmap containing
-                                      the OAuth2 client id
+                                    description: '`clientId` specifies a key of a
+                                      Secret or ConfigMap containing the OAuth2 client''s
+                                      ID.'
                                     properties:
                                       configMap:
                                         description: ConfigMap containing data to
@@ -4604,8 +4641,8 @@ spec:
                                         x-kubernetes-map-type: atomic
                                     type: object
                                   clientSecret:
-                                    description: The secret containing the OAuth2
-                                      client secret
+                                    description: '`clientSecret` specifies a key of
+                                      a Secret containing the OAuth2 client''s secret.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -4628,17 +4665,18 @@ spec:
                                   endpointParams:
                                     additionalProperties:
                                       type: string
-                                    description: Parameters to append to the token
-                                      URL
+                                    description: '`endpointParams` configures the
+                                      HTTP parameters to append to the token URL.'
                                     type: object
                                   scopes:
-                                    description: OAuth2 scopes used for the token
-                                      request
+                                    description: '`scopes` defines the OAuth2 scopes
+                                      used for the token request.'
                                     items:
                                       type: string
                                     type: array
                                   tokenUrl:
-                                    description: The URL to fetch the token from
+                                    description: '`tokenURL` configures the URL to
+                                      fetch the token from.'
                                     minLength: 1
                                     type: string
                                 required:
@@ -4824,6 +4862,7 @@ spec:
                             required:
                             - key
                             type: object
+                            x-kubernetes-map-type: atomic
                           apiUrl:
                             description: The VictorOps API URL.
                             type: string
@@ -4891,8 +4930,8 @@ spec:
                                   BasicAuth takes precedence.
                                 properties:
                                   password:
-                                    description: The secret in the service monitor
-                                      namespace that contains the password for authentication.
+                                    description: '`password` specifies a key of a
+                                      Secret containing the password for authentication.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -4913,8 +4952,8 @@ spec:
                                     type: object
                                     x-kubernetes-map-type: atomic
                                   username:
-                                    description: The secret in the service monitor
-                                      namespace that contains the username for authentication.
+                                    description: '`username` specifies a key of a
+                                      Secret containing the username for authentication.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -4959,6 +4998,7 @@ spec:
                                 required:
                                 - key
                                 type: object
+                                x-kubernetes-map-type: atomic
                               followRedirects:
                                 description: FollowRedirects specifies whether the
                                   client should follow HTTP 3xx redirects.
@@ -4968,8 +5008,9 @@ spec:
                                   a token for the targets.
                                 properties:
                                   clientId:
-                                    description: The secret or configmap containing
-                                      the OAuth2 client id
+                                    description: '`clientId` specifies a key of a
+                                      Secret or ConfigMap containing the OAuth2 client''s
+                                      ID.'
                                     properties:
                                       configMap:
                                         description: ConfigMap containing data to
@@ -5017,8 +5058,8 @@ spec:
                                         x-kubernetes-map-type: atomic
                                     type: object
                                   clientSecret:
-                                    description: The secret containing the OAuth2
-                                      client secret
+                                    description: '`clientSecret` specifies a key of
+                                      a Secret containing the OAuth2 client''s secret.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -5041,17 +5082,18 @@ spec:
                                   endpointParams:
                                     additionalProperties:
                                       type: string
-                                    description: Parameters to append to the token
-                                      URL
+                                    description: '`endpointParams` configures the
+                                      HTTP parameters to append to the token URL.'
                                     type: object
                                   scopes:
-                                    description: OAuth2 scopes used for the token
-                                      request
+                                    description: '`scopes` defines the OAuth2 scopes
+                                      used for the token request.'
                                     items:
                                       type: string
                                     type: array
                                   tokenUrl:
-                                    description: The URL to fetch the token from
+                                    description: '`tokenURL` configures the URL to
+                                      fetch the token from.'
                                     minLength: 1
                                     type: string
                                 required:
@@ -5271,8 +5313,8 @@ spec:
                                   BasicAuth takes precedence.
                                 properties:
                                   password:
-                                    description: The secret in the service monitor
-                                      namespace that contains the password for authentication.
+                                    description: '`password` specifies a key of a
+                                      Secret containing the password for authentication.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -5293,8 +5335,8 @@ spec:
                                     type: object
                                     x-kubernetes-map-type: atomic
                                   username:
-                                    description: The secret in the service monitor
-                                      namespace that contains the username for authentication.
+                                    description: '`username` specifies a key of a
+                                      Secret containing the username for authentication.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -5339,6 +5381,7 @@ spec:
                                 required:
                                 - key
                                 type: object
+                                x-kubernetes-map-type: atomic
                               followRedirects:
                                 description: FollowRedirects specifies whether the
                                   client should follow HTTP 3xx redirects.
@@ -5348,8 +5391,9 @@ spec:
                                   a token for the targets.
                                 properties:
                                   clientId:
-                                    description: The secret or configmap containing
-                                      the OAuth2 client id
+                                    description: '`clientId` specifies a key of a
+                                      Secret or ConfigMap containing the OAuth2 client''s
+                                      ID.'
                                     properties:
                                       configMap:
                                         description: ConfigMap containing data to
@@ -5397,8 +5441,8 @@ spec:
                                         x-kubernetes-map-type: atomic
                                     type: object
                                   clientSecret:
-                                    description: The secret containing the OAuth2
-                                      client secret
+                                    description: '`clientSecret` specifies a key of
+                                      a Secret containing the OAuth2 client''s secret.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -5421,17 +5465,18 @@ spec:
                                   endpointParams:
                                     additionalProperties:
                                       type: string
-                                    description: Parameters to append to the token
-                                      URL
+                                    description: '`endpointParams` configures the
+                                      HTTP parameters to append to the token URL.'
                                     type: object
                                   scopes:
-                                    description: OAuth2 scopes used for the token
-                                      request
+                                    description: '`scopes` defines the OAuth2 scopes
+                                      used for the token request.'
                                     items:
                                       type: string
                                     type: array
                                   tokenUrl:
-                                    description: The URL to fetch the token from
+                                    description: '`tokenURL` configures the URL to
+                                      fetch the token from.'
                                     minLength: 1
                                     type: string
                                 required:
@@ -5639,8 +5684,8 @@ spec:
                                   BasicAuth takes precedence.
                                 properties:
                                   password:
-                                    description: The secret in the service monitor
-                                      namespace that contains the password for authentication.
+                                    description: '`password` specifies a key of a
+                                      Secret containing the password for authentication.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -5661,8 +5706,8 @@ spec:
                                     type: object
                                     x-kubernetes-map-type: atomic
                                   username:
-                                    description: The secret in the service monitor
-                                      namespace that contains the username for authentication.
+                                    description: '`username` specifies a key of a
+                                      Secret containing the username for authentication.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -5707,6 +5752,7 @@ spec:
                                 required:
                                 - key
                                 type: object
+                                x-kubernetes-map-type: atomic
                               followRedirects:
                                 description: FollowRedirects specifies whether the
                                   client should follow HTTP 3xx redirects.
@@ -5716,8 +5762,9 @@ spec:
                                   a token for the targets.
                                 properties:
                                   clientId:
-                                    description: The secret or configmap containing
-                                      the OAuth2 client id
+                                    description: '`clientId` specifies a key of a
+                                      Secret or ConfigMap containing the OAuth2 client''s
+                                      ID.'
                                     properties:
                                       configMap:
                                         description: ConfigMap containing data to
@@ -5765,8 +5812,8 @@ spec:
                                         x-kubernetes-map-type: atomic
                                     type: object
                                   clientSecret:
-                                    description: The secret containing the OAuth2
-                                      client secret
+                                    description: '`clientSecret` specifies a key of
+                                      a Secret containing the OAuth2 client''s secret.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -5789,17 +5836,18 @@ spec:
                                   endpointParams:
                                     additionalProperties:
                                       type: string
-                                    description: Parameters to append to the token
-                                      URL
+                                    description: '`endpointParams` configures the
+                                      HTTP parameters to append to the token URL.'
                                     type: object
                                   scopes:
-                                    description: OAuth2 scopes used for the token
-                                      request
+                                    description: '`scopes` defines the OAuth2 scopes
+                                      used for the token request.'
                                     items:
                                       type: string
                                     type: array
                                   tokenUrl:
-                                    description: The URL to fetch the token from
+                                    description: '`tokenURL` configures the URL to
+                                      fetch the token from.'
                                     minLength: 1
                                     type: string
                                 required:
@@ -5980,6 +6028,7 @@ spec:
                             required:
                             - key
                             type: object
+                            x-kubernetes-map-type: atomic
                         type: object
                       type: array
                     wechatConfigs:
@@ -6012,6 +6061,7 @@ spec:
                             required:
                             - key
                             type: object
+                            x-kubernetes-map-type: atomic
                           apiURL:
                             description: The WeChat API URL.
                             type: string
@@ -6062,8 +6112,8 @@ spec:
                                   BasicAuth takes precedence.
                                 properties:
                                   password:
-                                    description: The secret in the service monitor
-                                      namespace that contains the password for authentication.
+                                    description: '`password` specifies a key of a
+                                      Secret containing the password for authentication.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -6084,8 +6134,8 @@ spec:
                                     type: object
                                     x-kubernetes-map-type: atomic
                                   username:
-                                    description: The secret in the service monitor
-                                      namespace that contains the username for authentication.
+                                    description: '`username` specifies a key of a
+                                      Secret containing the username for authentication.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -6130,6 +6180,7 @@ spec:
                                 required:
                                 - key
                                 type: object
+                                x-kubernetes-map-type: atomic
                               followRedirects:
                                 description: FollowRedirects specifies whether the
                                   client should follow HTTP 3xx redirects.
@@ -6139,8 +6190,9 @@ spec:
                                   a token for the targets.
                                 properties:
                                   clientId:
-                                    description: The secret or configmap containing
-                                      the OAuth2 client id
+                                    description: '`clientId` specifies a key of a
+                                      Secret or ConfigMap containing the OAuth2 client''s
+                                      ID.'
                                     properties:
                                       configMap:
                                         description: ConfigMap containing data to
@@ -6188,8 +6240,8 @@ spec:
                                         x-kubernetes-map-type: atomic
                                     type: object
                                   clientSecret:
-                                    description: The secret containing the OAuth2
-                                      client secret
+                                    description: '`clientSecret` specifies a key of
+                                      a Secret containing the OAuth2 client''s secret.'
                                     properties:
                                       key:
                                         description: The key of the secret to select
@@ -6212,17 +6264,18 @@ spec:
                                   endpointParams:
                                     additionalProperties:
                                       type: string
-                                    description: Parameters to append to the token
-                                      URL
+                                    description: '`endpointParams` configures the
+                                      HTTP parameters to append to the token URL.'
                                     type: object
                                   scopes:
-                                    description: OAuth2 scopes used for the token
-                                      request
+                                    description: '`scopes` defines the OAuth2 scopes
+                                      used for the token request.'
                                     items:
                                       type: string
                                     type: array
                                   tokenUrl:
-                                    description: The URL to fetch the token from
+                                    description: '`tokenURL` configures the URL to
+                                      fetch the token from.'
                                     minLength: 1
                                     type: string
                                 required:
@@ -6493,9 +6546,8 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.11.1
-    operator.prometheus.io/version: 0.69.1
-  creationTimestamp: null
+    controller-gen.kubebuilder.io/version: v0.13.0
+    operator.prometheus.io/version: 0.70.0
   name: alertmanagers.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -7551,8 +7603,8 @@ spec:
                               takes precedence.
                             properties:
                               password:
-                                description: The secret in the service monitor namespace
-                                  that contains the password for authentication.
+                                description: '`password` specifies a key of a Secret
+                                  containing the password for authentication.'
                                 properties:
                                   key:
                                     description: The key of the secret to select from.  Must
@@ -7573,8 +7625,8 @@ spec:
                                 type: object
                                 x-kubernetes-map-type: atomic
                               username:
-                                description: The secret in the service monitor namespace
-                                  that contains the username for authentication.
+                                description: '`username` specifies a key of a Secret
+                                  containing the username for authentication.'
                                 properties:
                                   key:
                                     description: The key of the secret to select from.  Must
@@ -7627,8 +7679,8 @@ spec:
                               token for the targets.
                             properties:
                               clientId:
-                                description: The secret or configmap containing the
-                                  OAuth2 client id
+                                description: '`clientId` specifies a key of a Secret
+                                  or ConfigMap containing the OAuth2 client''s ID.'
                                 properties:
                                   configMap:
                                     description: ConfigMap containing data to use
@@ -7675,8 +7727,8 @@ spec:
                                     x-kubernetes-map-type: atomic
                                 type: object
                               clientSecret:
-                                description: The secret containing the OAuth2 client
-                                  secret
+                                description: '`clientSecret` specifies a key of a
+                                  Secret containing the OAuth2 client''s secret.'
                                 properties:
                                   key:
                                     description: The key of the secret to select from.  Must
@@ -7699,15 +7751,18 @@ spec:
                               endpointParams:
                                 additionalProperties:
                                   type: string
-                                description: Parameters to append to the token URL
+                                description: '`endpointParams` configures the HTTP
+                                  parameters to append to the token URL.'
                                 type: object
                               scopes:
-                                description: OAuth2 scopes used for the token request
+                                description: '`scopes` defines the OAuth2 scopes used
+                                  for the token request.'
                                 items:
                                   type: string
                                 type: array
                               tokenUrl:
-                                description: The URL to fetch the token from
+                                description: '`tokenURL` configures the URL to fetch
+                                  the token from.'
                                 minLength: 1
                                 type: string
                             required:
@@ -13912,9 +13967,8 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.11.1
-    operator.prometheus.io/version: 0.69.1
-  creationTimestamp: null
+    controller-gen.kubebuilder.io/version: v0.13.0
+    operator.prometheus.io/version: 0.70.0
   name: podmonitors.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -13951,16 +14005,23 @@ spec:
               by Prometheus.
             properties:
               attachMetadata:
-                description: Attaches node metadata to discovered targets. Requires
-                  Prometheus v2.35.0 and above.
+                description: "`attachMetadata` defines additional metadata which is
+                  added to the discovered targets. \n It requires Prometheus >= v2.37.0."
                 properties:
                   node:
-                    description: When set to true, Prometheus must have permissions
-                      to get Nodes.
+                    description: When set to true, Prometheus must have the `get`
+                      permission on the `Nodes` objects.
                     type: boolean
                 type: object
               jobLabel:
-                description: The label to use to retrieve the job name from.
+                description: "The label to use to retrieve the job name from. `jobLabel`
+                  selects the label from the associated Kubernetes `Pod` object which
+                  will be used as the `job` label for all metrics. \n For example
+                  if `jobLabel` is set to `foo` and the Kubernetes `Pod` object is
+                  labeled with `foo: bar`, then Prometheus adds the `job=\"bar\"`
+                  label to all ingested metrics. \n If the value of this field is
+                  empty, the `job` label of the metrics defaults to the namespace
+                  and name of the PodMonitor object (e.g. `<namespace>/<name>`)."
                 type: string
               keepDroppedTargets:
                 description: "Per-scrape limit on the number of targets dropped by
@@ -13969,25 +14030,23 @@ spec:
                 format: int64
                 type: integer
               labelLimit:
-                description: Per-scrape limit on number of labels that will be accepted
-                  for a sample. Only valid in Prometheus versions 2.27.0 and newer.
+                description: "Per-scrape limit on number of labels that will be accepted
+                  for a sample. \n It requires Prometheus >= v2.27.0."
                 format: int64
                 type: integer
               labelNameLengthLimit:
-                description: Per-scrape limit on length of labels name that will be
-                  accepted for a sample. Only valid in Prometheus versions 2.27.0
-                  and newer.
+                description: "Per-scrape limit on length of labels name that will
+                  be accepted for a sample. \n It requires Prometheus >= v2.27.0."
                 format: int64
                 type: integer
               labelValueLengthLimit:
-                description: Per-scrape limit on length of labels value that will
-                  be accepted for a sample. Only valid in Prometheus versions 2.27.0
-                  and newer.
+                description: "Per-scrape limit on length of labels value that will
+                  be accepted for a sample. \n It requires Prometheus >= v2.27.0."
                 format: int64
                 type: integer
               namespaceSelector:
-                description: Selector to select which namespaces the Endpoints objects
-                  are discovered from.
+                description: Selector to select which namespaces the Kubernetes `Pods`
+                  objects are discovered from.
                 properties:
                   any:
                     description: Boolean describing whether all namespaces are selected
@@ -14000,13 +14059,15 @@ spec:
                     type: array
                 type: object
               podMetricsEndpoints:
-                description: A list of endpoints allowed as part of this PodMonitor.
+                description: List of endpoints part of this PodMonitor.
                 items:
-                  description: PodMetricsEndpoint defines a scrapeable endpoint of
-                    a Kubernetes Pod serving Prometheus metrics.
+                  description: PodMetricsEndpoint defines an endpoint serving Prometheus
+                    metrics to be scraped by Prometheus.
                   properties:
                     authorization:
-                      description: Authorization section for this endpoint
+                      description: "`authorization` configures the Authorization header
+                        credentials to use when scraping the target. \n Cannot be
+                        set at the same time as `basicAuth`, or `oauth2`."
                       properties:
                         credentials:
                           description: Selects a key of a Secret in the namespace
@@ -14035,12 +14096,13 @@ spec:
                           type: string
                       type: object
                     basicAuth:
-                      description: 'BasicAuth allow an endpoint to authenticate over
-                        basic authentication. More info: https://prometheus.io/docs/operating/configuration/#endpoint'
+                      description: "`basicAuth` configures the Basic Authentication
+                        credentials to use when scraping the target. \n Cannot be
+                        set at the same time as `authorization`, or `oauth2`."
                       properties:
                         password:
-                          description: The secret in the service monitor namespace
-                            that contains the password for authentication.
+                          description: '`password` specifies a key of a Secret containing
+                            the password for authentication.'
                           properties:
                             key:
                               description: The key of the secret to select from.  Must
@@ -14059,8 +14121,8 @@ spec:
                           type: object
                           x-kubernetes-map-type: atomic
                         username:
-                          description: The secret in the service monitor namespace
-                            that contains the username for authentication.
+                          description: '`username` specifies a key of a Secret containing
+                            the username for authentication.'
                           properties:
                             key:
                               description: The key of the secret to select from.  Must
@@ -14080,9 +14142,11 @@ spec:
                           x-kubernetes-map-type: atomic
                       type: object
                     bearerTokenSecret:
-                      description: Secret to mount to read bearer token for scraping
-                        targets. The secret needs to be in the same namespace as the
-                        pod monitor and accessible by the Prometheus Operator.
+                      description: "`bearerTokenSecret` specifies a key of a Secret
+                        containing the bearer token for scraping targets. The secret
+                        needs to be in the same namespace as the PodMonitor object
+                        and readable by the Prometheus Operator. \n Deprecated: use
+                        `authorization` instead."
                       properties:
                         key:
                           description: The key of the secret to select from.  Must
@@ -14101,32 +14165,36 @@ spec:
                       type: object
                       x-kubernetes-map-type: atomic
                     enableHttp2:
-                      description: Whether to enable HTTP2.
+                      description: '`enableHttp2` can be used to disable HTTP2 when
+                        scraping the target.'
                       type: boolean
                     filterRunning:
-                      description: 'Drop pods that are not running. (Failed, Succeeded).
-                        Enabled by default. More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-phase'
+                      description: "When true, the pods which are not running (e.g.
+                        either in Failed or Succeeded state) are dropped during the
+                        target discovery. \n If unset, the filtering is enabled. \n
+                        More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-phase"
                       type: boolean
                     followRedirects:
-                      description: FollowRedirects configures whether scrape requests
-                        follow HTTP 3xx redirects.
+                      description: '`followRedirects` defines whether the scrape requests
+                        should follow HTTP 3xx redirects.'
                       type: boolean
                     honorLabels:
-                      description: HonorLabels chooses the metric's labels on collisions
-                        with target labels.
+                      description: When true, `honorLabels` preserves the metric's
+                        labels when they collide with the target's labels.
                       type: boolean
                     honorTimestamps:
-                      description: HonorTimestamps controls whether Prometheus respects
-                        the timestamps present in scraped data.
+                      description: '`honorTimestamps` controls whether Prometheus
+                        preserves the timestamps when exposed by the target.'
                       type: boolean
                     interval:
-                      description: Interval at which metrics should be scraped If
-                        not specified Prometheus' global scrape interval is used.
+                      description: "Interval at which Prometheus scrapes the metrics
+                        from the target. \n If empty, Prometheus uses the global scrape
+                        interval."
                       pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                       type: string
                     metricRelabelings:
-                      description: MetricRelabelConfigs to apply to samples before
-                        ingestion.
+                      description: '`metricRelabelings` configures the relabeling
+                        rules to apply to the samples before ingestion.'
                       items:
                         description: "RelabelConfig allows dynamic rewriting of the
                           label set for targets, alerts, scraped samples and remote
@@ -14202,12 +14270,13 @@ spec:
                         type: object
                       type: array
                     oauth2:
-                      description: OAuth2 for the URL. Only valid in Prometheus versions
-                        2.27.0 and newer.
+                      description: "`oauth2` configures the OAuth2 settings to use
+                        when scraping the target. \n It requires Prometheus >= 2.27.0.
+                        \n Cannot be set at the same time as `authorization`, or `basicAuth`."
                       properties:
                         clientId:
-                          description: The secret or configmap containing the OAuth2
-                            client id
+                          description: '`clientId` specifies a key of a Secret or
+                            ConfigMap containing the OAuth2 client''s ID.'
                           properties:
                             configMap:
                               description: ConfigMap containing data to use for the
@@ -14251,7 +14320,8 @@ spec:
                               x-kubernetes-map-type: atomic
                           type: object
                         clientSecret:
-                          description: The secret containing the OAuth2 client secret
+                          description: '`clientSecret` specifies a key of a Secret
+                            containing the OAuth2 client''s secret.'
                           properties:
                             key:
                               description: The key of the secret to select from.  Must
@@ -14272,15 +14342,18 @@ spec:
                         endpointParams:
                           additionalProperties:
                             type: string
-                          description: Parameters to append to the token URL
+                          description: '`endpointParams` configures the HTTP parameters
+                            to append to the token URL.'
                           type: object
                         scopes:
-                          description: OAuth2 scopes used for the token request
+                          description: '`scopes` defines the OAuth2 scopes used for
+                            the token request.'
                           items:
                             type: string
                           type: array
                         tokenUrl:
-                          description: The URL to fetch the token from
+                          description: '`tokenURL` configures the URL to fetch the
+                            token from.'
                           minLength: 1
                           type: string
                       required:
@@ -14293,26 +14366,27 @@ spec:
                         items:
                           type: string
                         type: array
-                      description: Optional HTTP URL parameters
+                      description: '`params` define optional HTTP URL parameters.'
                       type: object
                     path:
-                      description: HTTP path to scrape for metrics. If empty, Prometheus
-                        uses the default value (e.g. `/metrics`).
+                      description: "HTTP path from which to scrape for metrics. \n
+                        If empty, Prometheus uses the default value (e.g. `/metrics`)."
                       type: string
                     port:
-                      description: Name of the pod port this endpoint refers to. Mutually
-                        exclusive with targetPort.
+                      description: "Name of the Pod port which this endpoint refers
+                        to. \n It takes precedence over `targetPort`."
                       type: string
                     proxyUrl:
-                      description: ProxyURL eg http://proxyserver:2195 Directs scrapes
-                        to proxy through this endpoint.
+                      description: '`proxyURL` configures the HTTP Proxy URL (e.g.
+                        "http://proxyserver:2195") to go through when scraping the
+                        target.'
                       type: string
                     relabelings:
-                      description: 'RelabelConfigs to apply to samples before scraping.
-                        Prometheus Operator automatically adds relabelings for a few
-                        standard Kubernetes fields. The original scrape job''s name
-                        is available via the `__tmp_prometheus_job_name` label. More
-                        info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config'
+                      description: "`relabelings` configures the relabeling rules
+                        to apply the target's metadata labels. \n The Operator automatically
+                        adds relabelings for a few standard Kubernetes fields. \n
+                        The original scrape job's name is available via the `__tmp_prometheus_job_name`
+                        label. \n More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config"
                       items:
                         description: "RelabelConfig allows dynamic rewriting of the
                           label set for targets, alerts, scraped samples and remote
@@ -14388,27 +14462,31 @@ spec:
                         type: object
                       type: array
                     scheme:
-                      description: HTTP scheme to use for scraping. `http` and `https`
-                        are the expected values unless you rewrite the `__scheme__`
-                        label via relabeling. If empty, Prometheus uses the default
-                        value `http`.
+                      description: "HTTP scheme to use for scraping. \n `http` and
+                        `https` are the expected values unless you rewrite the `__scheme__`
+                        label via relabeling. \n If empty, Prometheus uses the default
+                        value `http`."
                       enum:
                       - http
                       - https
                       type: string
                     scrapeTimeout:
-                      description: Timeout after which the scrape is ended If not
-                        specified, the Prometheus global scrape interval is used.
+                      description: "Timeout after which Prometheus considers the scrape
+                        to be failed. \n If empty, Prometheus uses the global scrape
+                        timeout unless it is less than the target's scrape interval
+                        value in which the latter is used."
                       pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                       type: string
                     targetPort:
                       anyOf:
                       - type: integer
                       - type: string
-                      description: 'Deprecated: Use ''port'' instead.'
+                      description: "Name or number of the target port of the `Pod`
+                        object behind the Service, the port must be specified with
+                        container port property. \n Deprecated: use 'port' instead."
                       x-kubernetes-int-or-string: true
                     tlsConfig:
-                      description: TLS configuration to use when scraping the endpoint.
+                      description: TLS configuration to use when scraping the target.
                       properties:
                         ca:
                           description: Certificate authority used when verifying server
@@ -14526,21 +14604,27 @@ spec:
                           description: Used to verify the hostname for the targets.
                           type: string
                       type: object
+                    trackTimestampsStaleness:
+                      description: "`trackTimestampsStaleness` defines whether Prometheus
+                        tracks staleness of the metrics that have an explicit timestamp
+                        present in scraped data. Has no effect if `honorTimestamps`
+                        is false. \n It requires Prometheus >= v2.48.0."
+                      type: boolean
                   type: object
                 type: array
               podTargetLabels:
-                description: PodTargetLabels transfers labels on the Kubernetes Pod
-                  onto the target.
+                description: '`podTargetLabels` defines the labels which are transferred
+                  from the associated Kubernetes `Pod` object onto the ingested metrics.'
                 items:
                   type: string
                 type: array
               sampleLimit:
-                description: SampleLimit defines per-scrape limit on number of scraped
-                  samples that will be accepted.
+                description: '`sampleLimit` defines a per-scrape limit on the number
+                  of scraped samples that will be accepted.'
                 format: int64
                 type: integer
               selector:
-                description: Selector to select Pod objects.
+                description: Label selector to select the Kubernetes `Pod` objects.
                 properties:
                   matchExpressions:
                     description: matchExpressions is a list of label selector requirements.
@@ -14585,12 +14669,11 @@ spec:
                 type: object
                 x-kubernetes-map-type: atomic
               targetLimit:
-                description: TargetLimit defines a limit on the number of scraped
-                  targets that will be accepted.
+                description: '`targetLimit` defines a limit on the number of scraped
+                  targets that will be accepted.'
                 format: int64
                 type: integer
             required:
-            - podMetricsEndpoints
             - selector
             type: object
         required:
@@ -14604,9 +14687,8 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.11.1
-    operator.prometheus.io/version: 0.69.1
-  creationTimestamp: null
+    controller-gen.kubebuilder.io/version: v0.13.0
+    operator.prometheus.io/version: 0.70.0
   name: probes.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -14675,8 +14757,8 @@ spec:
                   authentication. More info: https://prometheus.io/docs/operating/configuration/#endpoint'
                 properties:
                   password:
-                    description: The secret in the service monitor namespace that
-                      contains the password for authentication.
+                    description: '`password` specifies a key of a Secret containing
+                      the password for authentication.'
                     properties:
                       key:
                         description: The key of the secret to select from.  Must be
@@ -14695,8 +14777,8 @@ spec:
                     type: object
                     x-kubernetes-map-type: atomic
                   username:
-                    description: The secret in the service monitor namespace that
-                      contains the username for authentication.
+                    description: '`username` specifies a key of a Secret containing
+                      the username for authentication.'
                     properties:
                       key:
                         description: The key of the secret to select from.  Must be
@@ -14848,8 +14930,8 @@ spec:
                   2.27.0 and newer.
                 properties:
                   clientId:
-                    description: The secret or configmap containing the OAuth2 client
-                      id
+                    description: '`clientId` specifies a key of a Secret or ConfigMap
+                      containing the OAuth2 client''s ID.'
                     properties:
                       configMap:
                         description: ConfigMap containing data to use for the targets.
@@ -14890,7 +14972,8 @@ spec:
                         x-kubernetes-map-type: atomic
                     type: object
                   clientSecret:
-                    description: The secret containing the OAuth2 client secret
+                    description: '`clientSecret` specifies a key of a Secret containing
+                      the OAuth2 client''s secret.'
                     properties:
                       key:
                         description: The key of the secret to select from.  Must be
@@ -14911,15 +14994,18 @@ spec:
                   endpointParams:
                     additionalProperties:
                       type: string
-                    description: Parameters to append to the token URL
+                    description: '`endpointParams` configures the HTTP parameters
+                      to append to the token URL.'
                     type: object
                   scopes:
-                    description: OAuth2 scopes used for the token request
+                    description: '`scopes` defines the OAuth2 scopes used for the
+                      token request.'
                     items:
                       type: string
                     type: array
                   tokenUrl:
-                    description: The URL to fetch the token from
+                    description: '`tokenURL` configures the URL to fetch the token
+                      from.'
                     minLength: 1
                     type: string
                 required:
@@ -15338,9 +15424,8 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.11.1
-    operator.prometheus.io/version: 0.69.1
-  creationTimestamp: null
+    controller-gen.kubebuilder.io/version: v0.13.0
+    operator.prometheus.io/version: 0.70.0
   name: prometheusagents.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -16330,8 +16415,8 @@ spec:
                       `bearerTokenFile`."
                     properties:
                       password:
-                        description: The secret in the service monitor namespace that
-                          contains the password for authentication.
+                        description: '`password` specifies a key of a Secret containing
+                          the password for authentication.'
                         properties:
                           key:
                             description: The key of the secret to select from.  Must
@@ -16350,8 +16435,8 @@ spec:
                         type: object
                         x-kubernetes-map-type: atomic
                       username:
-                        description: The secret in the service monitor namespace that
-                          contains the username for authentication.
+                        description: '`username` specifies a key of a Secret containing
+                          the username for authentication.'
                         properties:
                           key:
                             description: The key of the secret to select from.  Must
@@ -19420,6 +19505,28 @@ spec:
                 description: When a Prometheus deployment is paused, no actions except
                   for deletion will be performed on the underlying objects.
                 type: boolean
+              persistentVolumeClaimRetentionPolicy:
+                description: The field controls if and how PVCs are deleted during
+                  the lifecycle of a StatefulSet. The default behavior is all PVCs
+                  are retained. This is an alpha field from kubernetes 1.23 until
+                  1.26 and a beta field from 1.26. It requires enabling the StatefulSetAutoDeletePVC
+                  feature gate.
+                properties:
+                  whenDeleted:
+                    description: WhenDeleted specifies what happens to PVCs created
+                      from StatefulSet VolumeClaimTemplates when the StatefulSet is
+                      deleted. The default policy of `Retain` causes PVCs to not be
+                      affected by StatefulSet deletion. The `Delete` policy causes
+                      those PVCs to be deleted.
+                    type: string
+                  whenScaled:
+                    description: WhenScaled specifies what happens to PVCs created
+                      from StatefulSet VolumeClaimTemplates when the StatefulSet is
+                      scaled down. The default policy of `Retain` causes PVCs to not
+                      be affected by a scaledown. The `Delete` policy causes the associated
+                      PVCs for any excess pods above the replica count to be deleted.
+                    type: string
+                type: object
               podMetadata:
                 description: "PodMetadata configures labels and annotations which
                   are propagated to the Prometheus pods. \n The following items are
@@ -19681,6 +19788,14 @@ spec:
                   when the field is set to the empty string (`\"\"`). \n Default:
                   \"prometheus\""
                 type: string
+              reloadStrategy:
+                description: Defines the strategy used to reload the Prometheus configuration.
+                  If not specified, the configuration is reloaded using the /-/reload
+                  HTTP endpoint.
+                enum:
+                - HTTP
+                - ProcessSignal
+                type: string
               remoteWrite:
                 description: Defines the list of remote write configurations.
                 items:
@@ -19737,7 +19852,7 @@ spec:
                           type: string
                         managedIdentity:
                           description: ManagedIdentity defines the Azure User-assigned
-                            Managed identity.
+                            Managed identity. Cannot be set at the same time as `oauth`.
                           properties:
                             clientId:
                               description: The client id
@@ -19745,8 +19860,51 @@ spec:
                           required:
                           - clientId
                           type: object
-                      required:
-                      - managedIdentity
+                        oauth:
+                          description: "OAuth defines the oauth config that is being
+                            used to authenticate. Cannot be set at the same time as
+                            `managedIdentity`. \n It requires Prometheus >= v2.48.0."
+                          properties:
+                            clientId:
+                              description: '`clientID` is the clientId of the Azure
+                                Active Directory application that is being used to
+                                authenticate.'
+                              minLength: 1
+                              type: string
+                            clientSecret:
+                              description: '`clientSecret` specifies a key of a Secret
+                                containing the client secret of the Azure Active Directory
+                                application that is being used to authenticate.'
+                              properties:
+                                key:
+                                  description: The key of the secret to select from.  Must
+                                    be a valid secret key.
+                                  type: string
+                                name:
+                                  description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                    TODO: Add other useful fields. apiVersion, kind,
+                                    uid?'
+                                  type: string
+                                optional:
+                                  description: Specify whether the Secret or its key
+                                    must be defined
+                                  type: boolean
+                              required:
+                              - key
+                              type: object
+                              x-kubernetes-map-type: atomic
+                            tenantId:
+                              description: '`tenantID` is the tenant ID of the Azure
+                                Active Directory application that is being used to
+                                authenticate.'
+                              minLength: 1
+                              pattern: ^[0-9a-zA-Z-.]+$
+                              type: string
+                          required:
+                          - clientId
+                          - clientSecret
+                          - tenantId
+                          type: object
                       type: object
                     basicAuth:
                       description: "BasicAuth configuration for the URL. \n Cannot
@@ -19754,8 +19912,8 @@ spec:
                         or `azureAd`."
                       properties:
                         password:
-                          description: The secret in the service monitor namespace
-                            that contains the password for authentication.
+                          description: '`password` specifies a key of a Secret containing
+                            the password for authentication.'
                           properties:
                             key:
                               description: The key of the secret to select from.  Must
@@ -19774,8 +19932,8 @@ spec:
                           type: object
                           x-kubernetes-map-type: atomic
                         username:
-                          description: The secret in the service monitor namespace
-                            that contains the username for authentication.
+                          description: '`username` specifies a key of a Secret containing
+                            the username for authentication.'
                           properties:
                             key:
                               description: The key of the secret to select from.  Must
@@ -19838,8 +19996,8 @@ spec:
                         `sigv4`, `authorization`, `basicAuth`, or `azureAd`."
                       properties:
                         clientId:
-                          description: The secret or configmap containing the OAuth2
-                            client id
+                          description: '`clientId` specifies a key of a Secret or
+                            ConfigMap containing the OAuth2 client''s ID.'
                           properties:
                             configMap:
                               description: ConfigMap containing data to use for the
@@ -19883,7 +20041,8 @@ spec:
                               x-kubernetes-map-type: atomic
                           type: object
                         clientSecret:
-                          description: The secret containing the OAuth2 client secret
+                          description: '`clientSecret` specifies a key of a Secret
+                            containing the OAuth2 client''s secret.'
                           properties:
                             key:
                               description: The key of the secret to select from.  Must
@@ -19904,15 +20063,18 @@ spec:
                         endpointParams:
                           additionalProperties:
                             type: string
-                          description: Parameters to append to the token URL
+                          description: '`endpointParams` configures the HTTP parameters
+                            to append to the token URL.'
                           type: object
                         scopes:
-                          description: OAuth2 scopes used for the token request
+                          description: '`scopes` defines the OAuth2 scopes used for
+                            the token request.'
                           items:
                             type: string
                           type: array
                         tokenUrl:
-                          description: The URL to fetch the token from
+                          description: '`tokenURL` configures the URL to fetch the
+                            token from.'
                           minLength: 1
                           type: string
                       required:
@@ -23780,9 +23942,8 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.11.1
-    operator.prometheus.io/version: 0.69.1
-  creationTimestamp: null
+    controller-gen.kubebuilder.io/version: v0.13.0
+    operator.prometheus.io/version: 0.70.0
   name: prometheuses.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -24833,8 +24994,8 @@ spec:
                             `authorization` or `sigv4`."
                           properties:
                             password:
-                              description: The secret in the service monitor namespace
-                                that contains the password for authentication.
+                              description: '`password` specifies a key of a Secret
+                                containing the password for authentication.'
                               properties:
                                 key:
                                   description: The key of the secret to select from.  Must
@@ -24854,8 +25015,8 @@ spec:
                               type: object
                               x-kubernetes-map-type: atomic
                             username:
-                              description: The secret in the service monitor namespace
-                                that contains the username for authentication.
+                              description: '`username` specifies a key of a Secret
+                                containing the username for authentication.'
                               properties:
                                 key:
                                   description: The key of the secret to select from.  Must
@@ -25170,8 +25331,8 @@ spec:
                       `bearerTokenFile`."
                     properties:
                       password:
-                        description: The secret in the service monitor namespace that
-                          contains the password for authentication.
+                        description: '`password` specifies a key of a Secret containing
+                          the password for authentication.'
                         properties:
                           key:
                             description: The key of the secret to select from.  Must
@@ -25190,8 +25351,8 @@ spec:
                         type: object
                         x-kubernetes-map-type: atomic
                       username:
-                        description: The secret in the service monitor namespace that
-                          contains the username for authentication.
+                        description: '`username` specifies a key of a Secret containing
+                          the username for authentication.'
                         properties:
                           key:
                             description: The key of the secret to select from.  Must
@@ -28293,6 +28454,28 @@ spec:
                 description: When a Prometheus deployment is paused, no actions except
                   for deletion will be performed on the underlying objects.
                 type: boolean
+              persistentVolumeClaimRetentionPolicy:
+                description: The field controls if and how PVCs are deleted during
+                  the lifecycle of a StatefulSet. The default behavior is all PVCs
+                  are retained. This is an alpha field from kubernetes 1.23 until
+                  1.26 and a beta field from 1.26. It requires enabling the StatefulSetAutoDeletePVC
+                  feature gate.
+                properties:
+                  whenDeleted:
+                    description: WhenDeleted specifies what happens to PVCs created
+                      from StatefulSet VolumeClaimTemplates when the StatefulSet is
+                      deleted. The default policy of `Retain` causes PVCs to not be
+                      affected by StatefulSet deletion. The `Delete` policy causes
+                      those PVCs to be deleted.
+                    type: string
+                  whenScaled:
+                    description: WhenScaled specifies what happens to PVCs created
+                      from StatefulSet VolumeClaimTemplates when the StatefulSet is
+                      scaled down. The default policy of `Retain` causes PVCs to not
+                      be affected by a scaledown. The `Delete` policy causes the associated
+                      PVCs for any excess pods above the replica count to be deleted.
+                    type: string
+                type: object
               podMetadata:
                 description: "PodMetadata configures labels and annotations which
                   are propagated to the Prometheus pods. \n The following items are
@@ -28611,6 +28794,14 @@ spec:
                   can be set to a standard I/O stream, e.g. `/dev/stdout`, to log
                   query information to the default Prometheus log stream."
                 type: string
+              reloadStrategy:
+                description: Defines the strategy used to reload the Prometheus configuration.
+                  If not specified, the configuration is reloaded using the /-/reload
+                  HTTP endpoint.
+                enum:
+                - HTTP
+                - ProcessSignal
+                type: string
               remoteRead:
                 description: Defines the list of remote read configurations.
                 items:
@@ -28657,8 +28848,8 @@ spec:
                         be set at the same time as `authorization`, or `oauth2`."
                       properties:
                         password:
-                          description: The secret in the service monitor namespace
-                            that contains the password for authentication.
+                          description: '`password` specifies a key of a Secret containing
+                            the password for authentication.'
                           properties:
                             key:
                               description: The key of the secret to select from.  Must
@@ -28677,8 +28868,8 @@ spec:
                           type: object
                           x-kubernetes-map-type: atomic
                         username:
-                          description: The secret in the service monitor namespace
-                            that contains the username for authentication.
+                          description: '`username` specifies a key of a Secret containing
+                            the username for authentication.'
                           properties:
                             key:
                               description: The key of the secret to select from.  Must
@@ -28736,8 +28927,8 @@ spec:
                         `authorization`, or `basicAuth`."
                       properties:
                         clientId:
-                          description: The secret or configmap containing the OAuth2
-                            client id
+                          description: '`clientId` specifies a key of a Secret or
+                            ConfigMap containing the OAuth2 client''s ID.'
                           properties:
                             configMap:
                               description: ConfigMap containing data to use for the
@@ -28781,7 +28972,8 @@ spec:
                               x-kubernetes-map-type: atomic
                           type: object
                         clientSecret:
-                          description: The secret containing the OAuth2 client secret
+                          description: '`clientSecret` specifies a key of a Secret
+                            containing the OAuth2 client''s secret.'
                           properties:
                             key:
                               description: The key of the secret to select from.  Must
@@ -28802,15 +28994,18 @@ spec:
                         endpointParams:
                           additionalProperties:
                             type: string
-                          description: Parameters to append to the token URL
+                          description: '`endpointParams` configures the HTTP parameters
+                            to append to the token URL.'
                           type: object
                         scopes:
-                          description: OAuth2 scopes used for the token request
+                          description: '`scopes` defines the OAuth2 scopes used for
+                            the token request.'
                           items:
                             type: string
                           type: array
                         tokenUrl:
-                          description: The URL to fetch the token from
+                          description: '`tokenURL` configures the URL to fetch the
+                            token from.'
                           minLength: 1
                           type: string
                       required:
@@ -29029,7 +29224,7 @@ spec:
                           type: string
                         managedIdentity:
                           description: ManagedIdentity defines the Azure User-assigned
-                            Managed identity.
+                            Managed identity. Cannot be set at the same time as `oauth`.
                           properties:
                             clientId:
                               description: The client id
@@ -29037,8 +29232,51 @@ spec:
                           required:
                           - clientId
                           type: object
-                      required:
-                      - managedIdentity
+                        oauth:
+                          description: "OAuth defines the oauth config that is being
+                            used to authenticate. Cannot be set at the same time as
+                            `managedIdentity`. \n It requires Prometheus >= v2.48.0."
+                          properties:
+                            clientId:
+                              description: '`clientID` is the clientId of the Azure
+                                Active Directory application that is being used to
+                                authenticate.'
+                              minLength: 1
+                              type: string
+                            clientSecret:
+                              description: '`clientSecret` specifies a key of a Secret
+                                containing the client secret of the Azure Active Directory
+                                application that is being used to authenticate.'
+                              properties:
+                                key:
+                                  description: The key of the secret to select from.  Must
+                                    be a valid secret key.
+                                  type: string
+                                name:
+                                  description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                    TODO: Add other useful fields. apiVersion, kind,
+                                    uid?'
+                                  type: string
+                                optional:
+                                  description: Specify whether the Secret or its key
+                                    must be defined
+                                  type: boolean
+                              required:
+                              - key
+                              type: object
+                              x-kubernetes-map-type: atomic
+                            tenantId:
+                              description: '`tenantID` is the tenant ID of the Azure
+                                Active Directory application that is being used to
+                                authenticate.'
+                              minLength: 1
+                              pattern: ^[0-9a-zA-Z-.]+$
+                              type: string
+                          required:
+                          - clientId
+                          - clientSecret
+                          - tenantId
+                          type: object
                       type: object
                     basicAuth:
                       description: "BasicAuth configuration for the URL. \n Cannot
@@ -29046,8 +29284,8 @@ spec:
                         or `azureAd`."
                       properties:
                         password:
-                          description: The secret in the service monitor namespace
-                            that contains the password for authentication.
+                          description: '`password` specifies a key of a Secret containing
+                            the password for authentication.'
                           properties:
                             key:
                               description: The key of the secret to select from.  Must
@@ -29066,8 +29304,8 @@ spec:
                           type: object
                           x-kubernetes-map-type: atomic
                         username:
-                          description: The secret in the service monitor namespace
-                            that contains the username for authentication.
+                          description: '`username` specifies a key of a Secret containing
+                            the username for authentication.'
                           properties:
                             key:
                               description: The key of the secret to select from.  Must
@@ -29130,8 +29368,8 @@ spec:
                         `sigv4`, `authorization`, `basicAuth`, or `azureAd`."
                       properties:
                         clientId:
-                          description: The secret or configmap containing the OAuth2
-                            client id
+                          description: '`clientId` specifies a key of a Secret or
+                            ConfigMap containing the OAuth2 client''s ID.'
                           properties:
                             configMap:
                               description: ConfigMap containing data to use for the
@@ -29175,7 +29413,8 @@ spec:
                               x-kubernetes-map-type: atomic
                           type: object
                         clientSecret:
-                          description: The secret containing the OAuth2 client secret
+                          description: '`clientSecret` specifies a key of a Secret
+                            containing the OAuth2 client''s secret.'
                           properties:
                             key:
                               description: The key of the secret to select from.  Must
@@ -29196,15 +29435,18 @@ spec:
                         endpointParams:
                           additionalProperties:
                             type: string
-                          description: Parameters to append to the token URL
+                          description: '`endpointParams` configures the HTTP parameters
+                            to append to the token URL.'
                           type: object
                         scopes:
-                          description: OAuth2 scopes used for the token request
+                          description: '`scopes` defines the OAuth2 scopes used for
+                            the token request.'
                           items:
                             type: string
                           type: array
                         tokenUrl:
-                          description: The URL to fetch the token from
+                          description: '`tokenURL` configures the URL to fetch the
+                            token from.'
                           minLength: 1
                           type: string
                       required:
@@ -33621,9 +33863,8 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.11.1
-    operator.prometheus.io/version: 0.69.1
-  creationTimestamp: null
+    controller-gen.kubebuilder.io/version: v0.13.0
+    operator.prometheus.io/version: 0.70.0
   name: prometheusrules.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -33753,9 +33994,8 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.11.1
-    operator.prometheus.io/version: 0.69.1
-  creationTimestamp: null
+    controller-gen.kubebuilder.io/version: v0.13.0
+    operator.prometheus.io/version: 0.70.0
   name: scrapeconfigs.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -33820,12 +34060,79 @@ spec:
                       \n \"Basic\" is not a supported value. \n Default: \"Bearer\""
                     type: string
                 type: object
+              azureSDConfigs:
+                description: AzureSDConfigs defines a list of Azure service discovery
+                  configurations.
+                items:
+                  description: AzureSDConfig allow retrieving scrape targets from
+                    Azure VMs. See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#azure_sd_config
+                  properties:
+                    authenticationMethod:
+                      description: '# The authentication method, either OAuth or ManagedIdentity.
+                        See https://docs.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/overview'
+                      enum:
+                      - OAuth
+                      - ManagedIdentity
+                      type: string
+                    clientID:
+                      description: Optional client ID. Only required with the OAuth
+                        authentication method.
+                      type: string
+                    clientSecret:
+                      description: Optional client secret. Only required with the
+                        OAuth authentication method.
+                      properties:
+                        key:
+                          description: The key of the secret to select from.  Must
+                            be a valid secret key.
+                          type: string
+                        name:
+                          description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                            TODO: Add other useful fields. apiVersion, kind, uid?'
+                          type: string
+                        optional:
+                          description: Specify whether the Secret or its key must
+                            be defined
+                          type: boolean
+                      required:
+                      - key
+                      type: object
+                      x-kubernetes-map-type: atomic
+                    environment:
+                      description: The Azure environment.
+                      type: string
+                    port:
+                      description: The port to scrape metrics from. If using the public
+                        IP address, this must instead be specified in the relabeling
+                        rule.
+                      type: integer
+                    refreshInterval:
+                      description: RefreshInterval configures the refresh interval
+                        at which Prometheus will re-read the instance list.
+                      pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
+                      type: string
+                    resourceGroup:
+                      description: Optional resource group name. Limits discovery
+                        to this resource group.
+                      type: string
+                    subscriptionID:
+                      description: The subscription ID. Always required.
+                      minLength: 1
+                      type: string
+                    tenantID:
+                      description: Optional tenant ID. Only required with the OAuth
+                        authentication method.
+                      type: string
+                  required:
+                  - subscriptionID
+                  type: object
+                type: array
               basicAuth:
                 description: BasicAuth information to use on every scrape request.
                 properties:
                   password:
-                    description: The secret in the service monitor namespace that
-                      contains the password for authentication.
+                    description: '`password` specifies a key of a Secret containing
+                      the password for authentication.'
                     properties:
                       key:
                         description: The key of the secret to select from.  Must be
@@ -33844,8 +34151,8 @@ spec:
                     type: object
                     x-kubernetes-map-type: atomic
                   username:
-                    description: The secret in the service monitor namespace that
-                      contains the username for authentication.
+                    description: '`username` specifies a key of a Secret containing
+                      the username for authentication.'
                     properties:
                       key:
                         description: The key of the secret to select from.  Must be
@@ -33871,7 +34178,7 @@ spec:
                   description: ConsulSDConfig defines a Consul service discovery configuration
                     See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#consul_sd_config
                   properties:
-                    allow_stale:
+                    allowStale:
                       description: Allow stale Consul results (see https://www.consul.io/api/features/consistency.html).
                         Will reduce load on Consul. If unset, Prometheus uses its
                         default value.
@@ -33911,8 +34218,8 @@ spec:
                         the Consul Server. More info: https://prometheus.io/docs/operating/configuration/#endpoints'
                       properties:
                         password:
-                          description: The secret in the service monitor namespace
-                            that contains the password for authentication.
+                          description: '`password` specifies a key of a Secret containing
+                            the password for authentication.'
                           properties:
                             key:
                               description: The key of the secret to select from.  Must
@@ -33931,8 +34238,8 @@ spec:
                           type: object
                           x-kubernetes-map-type: atomic
                         username:
-                          description: The secret in the service monitor namespace
-                            that contains the username for authentication.
+                          description: '`username` specifies a key of a Secret containing
+                            the username for authentication.'
                           properties:
                             key:
                               description: The key of the secret to select from.  Must
@@ -33955,23 +34262,23 @@ spec:
                       description: Consul Datacenter name, if not provided it will
                         use the local Consul Agent Datacenter.
                       type: string
-                    enable_http2:
+                    enableHTTP2:
                       description: Whether to enable HTTP2. If unset, Prometheus uses
                         its default value.
                       type: boolean
-                    follow_redirects:
+                    followRedirects:
                       description: Configure whether HTTP requests follow HTTP 3xx
                         redirects. If unset, Prometheus uses its default value.
                       type: boolean
                     namespace:
                       description: Namespaces are only supported in Consul Enterprise.
                       type: string
-                    no_proxy:
+                    noProxy:
                       description: Comma-separated string that can contain IPs, CIDR
                         notation, domain names that should be excluded from proxying.
                         IP and domain names can contain port numbers.
                       type: string
-                    node_meta:
+                    nodeMeta:
                       additionalProperties:
                         type: string
                       description: Node metadata key/value pairs to filter nodes for
@@ -33982,8 +34289,8 @@ spec:
                       description: Optional OAuth 2.0 configuration.
                       properties:
                         clientId:
-                          description: The secret or configmap containing the OAuth2
-                            client id
+                          description: '`clientId` specifies a key of a Secret or
+                            ConfigMap containing the OAuth2 client''s ID.'
                           properties:
                             configMap:
                               description: ConfigMap containing data to use for the
@@ -34027,7 +34334,8 @@ spec:
                               x-kubernetes-map-type: atomic
                           type: object
                         clientSecret:
-                          description: The secret containing the OAuth2 client secret
+                          description: '`clientSecret` specifies a key of a Secret
+                            containing the OAuth2 client''s secret.'
                           properties:
                             key:
                               description: The key of the secret to select from.  Must
@@ -34048,15 +34356,18 @@ spec:
                         endpointParams:
                           additionalProperties:
                             type: string
-                          description: Parameters to append to the token URL
+                          description: '`endpointParams` configures the HTTP parameters
+                            to append to the token URL.'
                           type: object
                         scopes:
-                          description: OAuth2 scopes used for the token request
+                          description: '`scopes` defines the OAuth2 scopes used for
+                            the token request.'
                           items:
                             type: string
                           type: array
                         tokenUrl:
-                          description: The URL to fetch the token from
+                          description: '`tokenURL` configures the URL to fetch the
+                            token from.'
                           minLength: 1
                           type: string
                       required:
@@ -34067,7 +34378,7 @@ spec:
                     partition:
                       description: Admin Partitions are only supported in Consul Enterprise.
                       type: string
-                    proxy_connect_header:
+                    proxyConnectHeader:
                       additionalProperties:
                         description: SecretKeySelector selects a key of a Secret.
                         properties:
@@ -34086,19 +34397,20 @@ spec:
                         required:
                         - key
                         type: object
+                        x-kubernetes-map-type: atomic
                       description: Specifies headers to send to proxies during CONNECT
                         requests.
                       type: object
                       x-kubernetes-map-type: atomic
-                    proxy_from_environment:
+                    proxyFromEnvironment:
                       description: Use proxy URL indicated by environment variables
                         (HTTP_PROXY, https_proxy, HTTPs_PROXY, https_proxy, and no_proxy)
                         If unset, Prometheus uses its default value.
                       type: boolean
-                    proxy_url:
+                    proxyUrl:
                       description: Optional proxy URL.
                       type: string
-                    refresh_interval:
+                    refreshInterval:
                       description: The time after which the provided names are refreshed.
                         On large setup it might be a good idea to increase this value
                         because the catalog will change all the time. If unset, Prometheus
@@ -34123,7 +34435,7 @@ spec:
                         type: string
                       type: array
                       x-kubernetes-list-type: atomic
-                    tag_separator:
+                    tagSeparator:
                       description: The string by which Consul tags are joined into
                         the tag label. If unset, Prometheus uses its default value.
                       type: string
@@ -34272,6 +34584,7 @@ spec:
                       required:
                       - key
                       type: object
+                      x-kubernetes-map-type: atomic
                   required:
                   - server
                   type: object
@@ -34342,6 +34655,7 @@ spec:
                       required:
                       - key
                       type: object
+                      x-kubernetes-map-type: atomic
                     filters:
                       description: 'Filters can be used optionally to filter the instance
                         list by other criteria. Available filter criteria can be found
@@ -34396,6 +34710,7 @@ spec:
                       required:
                       - key
                       type: object
+                      x-kubernetes-map-type: atomic
                   type: object
                 type: array
               fileSDConfigs:
@@ -34424,6 +34739,55 @@ spec:
                       type: string
                   required:
                   - files
+                  type: object
+                type: array
+              gceSDConfigs:
+                description: GCESDConfigs defines a list of GCE service discovery
+                  configurations.
+                items:
+                  description: "GCESDConfig configures scrape targets from GCP GCE
+                    instances. The private IP address is used by default, but may
+                    be changed to the public IP address with relabeling. See https://prometheus.io/docs/prometheus/latest/configuration/configuration/#gce_sd_config
+                    \n The GCE service discovery will load the Google Cloud credentials
+                    from the file specified by the GOOGLE_APPLICATION_CREDENTIALS
+                    environment variable. See https://cloud.google.com/kubernetes-engine/docs/tutorials/authenticating-to-cloud-platform
+                    \n A pre-requisite for using GCESDConfig is that a Secret containing
+                    valid Google Cloud credentials is mounted into the Prometheus
+                    or PrometheusAgent pod via the `.spec.secrets` field and that
+                    the GOOGLE_APPLICATION_CREDENTIALS environment variable is set
+                    to /etc/prometheus/secrets/<secret-name>/<credentials-filename.json>."
+                  properties:
+                    filter:
+                      description: 'Filter can be used optionally to filter the instance
+                        list by other criteria Syntax of this filter is described
+                        in the filter query parameter section: https://cloud.google.com/compute/docs/reference/latest/instances/list'
+                      type: string
+                    port:
+                      description: The port to scrape metrics from. If using the public
+                        IP address, this must instead be specified in the relabeling
+                        rule.
+                      type: integer
+                    project:
+                      description: The Google Cloud Project ID
+                      minLength: 1
+                      type: string
+                    refreshInterval:
+                      description: RefreshInterval configures the refresh interval
+                        at which Prometheus will re-read the instance list.
+                      pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
+                      type: string
+                    tagSeparator:
+                      description: The tag separator is used to separate the tags
+                        on concatenation
+                      type: string
+                    zone:
+                      description: The zone of the scrape targets. If you need multiple
+                        zones use multiple GCESDConfigs.
+                      minLength: 1
+                      type: string
+                  required:
+                  - project
+                  - zone
                   type: object
                 type: array
               honorLabels:
@@ -34476,8 +34840,8 @@ spec:
                         the target HTTP endpoint. More info: https://prometheus.io/docs/operating/configuration/#endpoints'
                       properties:
                         password:
-                          description: The secret in the service monitor namespace
-                            that contains the password for authentication.
+                          description: '`password` specifies a key of a Secret containing
+                            the password for authentication.'
                           properties:
                             key:
                               description: The key of the secret to select from.  Must
@@ -34496,8 +34860,8 @@ spec:
                           type: object
                           x-kubernetes-map-type: atomic
                         username:
-                          description: The secret in the service monitor namespace
-                            that contains the username for authentication.
+                          description: '`username` specifies a key of a Secret containing
+                            the username for authentication.'
                           properties:
                             key:
                               description: The key of the secret to select from.  Must
@@ -34669,6 +35033,16 @@ spec:
                       enum:
                       - Node
                       - node
+                      - Service
+                      - service
+                      - Pod
+                      - pod
+                      - Endpoints
+                      - endpoints
+                      - EndpointSlice
+                      - endpointslice
+                      - Ingress
+                      - ingress
                       type: string
                     selectors:
                       description: Selector to select objects.
@@ -34680,11 +35054,20 @@ spec:
                           label:
                             type: string
                           role:
-                            description: K8SRole is role of the service in Kubernetes.
-                              Currently the only supported role is "Node".
+                            description: Role is role of the service in Kubernetes.
                             enum:
                             - Node
                             - node
+                            - Service
+                            - service
+                            - Pod
+                            - pod
+                            - Endpoints
+                            - endpoints
+                            - EndpointSlice
+                            - endpointslice
+                            - Ingress
+                            - ingress
                             type: string
                         required:
                         - role
@@ -35035,6 +35418,12 @@ spec:
                     description: Used to verify the hostname for the targets.
                     type: string
                 type: object
+              trackTimestampsStaleness:
+                description: TrackTimestampsStaleness whether Prometheus tracks staleness
+                  of the metrics that have an explicit timestamp present in scraped
+                  data. Has no effect if `honorTimestamps` is false. It requires Prometheus
+                  >= v2.48.0.
+                type: boolean
             type: object
         required:
         - spec
@@ -35047,9 +35436,8 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.11.1
-    operator.prometheus.io/version: 0.69.1
-  creationTimestamp: null
+    controller-gen.kubebuilder.io/version: v0.13.0
+    operator.prometheus.io/version: 0.70.0
   name: servicemonitors.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -35086,22 +35474,24 @@ spec:
               by Prometheus.
             properties:
               attachMetadata:
-                description: Attaches node metadata to discovered targets. Requires
-                  Prometheus v2.37.0 and above.
+                description: "`attachMetadata` defines additional metadata which is
+                  added to the discovered targets. \n It requires Prometheus >= v2.37.0."
                 properties:
                   node:
-                    description: When set to true, Prometheus must have permissions
-                      to get Nodes.
+                    description: When set to true, Prometheus must have the `get`
+                      permission on the `Nodes` objects.
                     type: boolean
                 type: object
               endpoints:
-                description: A list of endpoints allowed as part of this ServiceMonitor.
+                description: List of endpoints part of this ServiceMonitor.
                 items:
-                  description: Endpoint defines a scrapeable endpoint serving Prometheus
-                    metrics.
+                  description: Endpoint defines an endpoint serving Prometheus metrics
+                    to be scraped by Prometheus.
                   properties:
                     authorization:
-                      description: Authorization section for this endpoint
+                      description: "`authorization` configures the Authorization header
+                        credentials to use when scraping the target. \n Cannot be
+                        set at the same time as `basicAuth`, or `oauth2`."
                       properties:
                         credentials:
                           description: Selects a key of a Secret in the namespace
@@ -35130,12 +35520,13 @@ spec:
                           type: string
                       type: object
                     basicAuth:
-                      description: 'BasicAuth allow an endpoint to authenticate over
-                        basic authentication More info: https://prometheus.io/docs/operating/configuration/#endpoints'
+                      description: "`basicAuth` configures the Basic Authentication
+                        credentials to use when scraping the target. \n Cannot be
+                        set at the same time as `authorization`, or `oauth2`."
                       properties:
                         password:
-                          description: The secret in the service monitor namespace
-                            that contains the password for authentication.
+                          description: '`password` specifies a key of a Secret containing
+                            the password for authentication.'
                           properties:
                             key:
                               description: The key of the secret to select from.  Must
@@ -35154,8 +35545,8 @@ spec:
                           type: object
                           x-kubernetes-map-type: atomic
                         username:
-                          description: The secret in the service monitor namespace
-                            that contains the username for authentication.
+                          description: '`username` specifies a key of a Secret containing
+                            the username for authentication.'
                           properties:
                             key:
                               description: The key of the secret to select from.  Must
@@ -35175,12 +35566,15 @@ spec:
                           x-kubernetes-map-type: atomic
                       type: object
                     bearerTokenFile:
-                      description: File to read bearer token for scraping targets.
+                      description: "File to read bearer token for scraping the target.
+                        \n Deprecated: use `authorization` instead."
                       type: string
                     bearerTokenSecret:
-                      description: Secret to mount to read bearer token for scraping
-                        targets. The secret needs to be in the same namespace as the
-                        service monitor and accessible by the Prometheus Operator.
+                      description: "`bearerTokenSecret` specifies a key of a Secret
+                        containing the bearer token for scraping targets. The secret
+                        needs to be in the same namespace as the ServiceMonitor object
+                        and readable by the Prometheus Operator. \n Deprecated: use
+                        `authorization` instead."
                       properties:
                         key:
                           description: The key of the secret to select from.  Must
@@ -35199,32 +35593,36 @@ spec:
                       type: object
                       x-kubernetes-map-type: atomic
                     enableHttp2:
-                      description: Whether to enable HTTP2.
+                      description: '`enableHttp2` can be used to disable HTTP2 when
+                        scraping the target.'
                       type: boolean
                     filterRunning:
-                      description: 'Drop pods that are not running. (Failed, Succeeded).
-                        Enabled by default. More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-phase'
+                      description: "When true, the pods which are not running (e.g.
+                        either in Failed or Succeeded state) are dropped during the
+                        target discovery. \n If unset, the filtering is enabled. \n
+                        More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-phase"
                       type: boolean
                     followRedirects:
-                      description: FollowRedirects configures whether scrape requests
-                        follow HTTP 3xx redirects.
+                      description: '`followRedirects` defines whether the scrape requests
+                        should follow HTTP 3xx redirects.'
                       type: boolean
                     honorLabels:
-                      description: HonorLabels chooses the metric's labels on collisions
-                        with target labels.
+                      description: When true, `honorLabels` preserves the metric's
+                        labels when they collide with the target's labels.
                       type: boolean
                     honorTimestamps:
-                      description: HonorTimestamps controls whether Prometheus respects
-                        the timestamps present in scraped data.
+                      description: '`honorTimestamps` controls whether Prometheus
+                        preserves the timestamps when exposed by the target.'
                       type: boolean
                     interval:
-                      description: Interval at which metrics should be scraped If
-                        not specified Prometheus' global scrape interval is used.
+                      description: "Interval at which Prometheus scrapes the metrics
+                        from the target. \n If empty, Prometheus uses the global scrape
+                        interval."
                       pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                       type: string
                     metricRelabelings:
-                      description: MetricRelabelConfigs to apply to samples before
-                        ingestion.
+                      description: '`metricRelabelings` configures the relabeling
+                        rules to apply to the samples before ingestion.'
                       items:
                         description: "RelabelConfig allows dynamic rewriting of the
                           label set for targets, alerts, scraped samples and remote
@@ -35300,12 +35698,13 @@ spec:
                         type: object
                       type: array
                     oauth2:
-                      description: OAuth2 for the URL. Only valid in Prometheus versions
-                        2.27.0 and newer.
+                      description: "`oauth2` configures the OAuth2 settings to use
+                        when scraping the target. \n It requires Prometheus >= 2.27.0.
+                        \n Cannot be set at the same time as `authorization`, or `basicAuth`."
                       properties:
                         clientId:
-                          description: The secret or configmap containing the OAuth2
-                            client id
+                          description: '`clientId` specifies a key of a Secret or
+                            ConfigMap containing the OAuth2 client''s ID.'
                           properties:
                             configMap:
                               description: ConfigMap containing data to use for the
@@ -35349,7 +35748,8 @@ spec:
                               x-kubernetes-map-type: atomic
                           type: object
                         clientSecret:
-                          description: The secret containing the OAuth2 client secret
+                          description: '`clientSecret` specifies a key of a Secret
+                            containing the OAuth2 client''s secret.'
                           properties:
                             key:
                               description: The key of the secret to select from.  Must
@@ -35370,15 +35770,18 @@ spec:
                         endpointParams:
                           additionalProperties:
                             type: string
-                          description: Parameters to append to the token URL
+                          description: '`endpointParams` configures the HTTP parameters
+                            to append to the token URL.'
                           type: object
                         scopes:
-                          description: OAuth2 scopes used for the token request
+                          description: '`scopes` defines the OAuth2 scopes used for
+                            the token request.'
                           items:
                             type: string
                           type: array
                         tokenUrl:
-                          description: The URL to fetch the token from
+                          description: '`tokenURL` configures the URL to fetch the
+                            token from.'
                           minLength: 1
                           type: string
                       required:
@@ -35391,26 +35794,27 @@ spec:
                         items:
                           type: string
                         type: array
-                      description: Optional HTTP URL parameters
+                      description: params define optional HTTP URL parameters.
                       type: object
                     path:
-                      description: HTTP path to scrape for metrics. If empty, Prometheus
-                        uses the default value (e.g. `/metrics`).
+                      description: "HTTP path from which to scrape for metrics. \n
+                        If empty, Prometheus uses the default value (e.g. `/metrics`)."
                       type: string
                     port:
-                      description: Name of the service port this endpoint refers to.
-                        Mutually exclusive with targetPort.
+                      description: "Name of the Service port which this endpoint refers
+                        to. \n It takes precedence over `targetPort`."
                       type: string
                     proxyUrl:
-                      description: ProxyURL eg http://proxyserver:2195 Directs scrapes
-                        to proxy through this endpoint.
+                      description: '`proxyURL` configures the HTTP Proxy URL (e.g.
+                        "http://proxyserver:2195") to go through when scraping the
+                        target.'
                       type: string
                     relabelings:
-                      description: 'RelabelConfigs to apply to samples before scraping.
-                        Prometheus Operator automatically adds relabelings for a few
-                        standard Kubernetes fields. The original scrape job''s name
-                        is available via the `__tmp_prometheus_job_name` label. More
-                        info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config'
+                      description: "`relabelings` configures the relabeling rules
+                        to apply the target's metadata labels. \n The Operator automatically
+                        adds relabelings for a few standard Kubernetes fields. \n
+                        The original scrape job's name is available via the `__tmp_prometheus_job_name`
+                        label. \n More info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config"
                       items:
                         description: "RelabelConfig allows dynamic rewriting of the
                           label set for targets, alerts, scraped samples and remote
@@ -35486,30 +35890,31 @@ spec:
                         type: object
                       type: array
                     scheme:
-                      description: HTTP scheme to use for scraping. `http` and `https`
-                        are the expected values unless you rewrite the `__scheme__`
-                        label via relabeling. If empty, Prometheus uses the default
-                        value `http`.
+                      description: "HTTP scheme to use for scraping. \n `http` and
+                        `https` are the expected values unless you rewrite the `__scheme__`
+                        label via relabeling. \n If empty, Prometheus uses the default
+                        value `http`."
                       enum:
                       - http
                       - https
                       type: string
                     scrapeTimeout:
-                      description: Timeout after which the scrape is ended If not
-                        specified, the Prometheus global scrape timeout is used unless
-                        it is less than `Interval` in which the latter is used.
+                      description: "Timeout after which Prometheus considers the scrape
+                        to be failed. \n If empty, Prometheus uses the global scrape
+                        timeout unless it is less than the target's scrape interval
+                        value in which the latter is used."
                       pattern: ^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$
                       type: string
                     targetPort:
                       anyOf:
                       - type: integer
                       - type: string
-                      description: Name or number of the target port of the Pod behind
-                        the Service, the port must be specified with container port
-                        property. Mutually exclusive with port.
+                      description: "Name or number of the target port of the `Pod`
+                        object behind the Service, the port must be specified with
+                        container port property. \n Deprecated: use `port` instead."
                       x-kubernetes-int-or-string: true
                     tlsConfig:
-                      description: TLS configuration to use when scraping the endpoint
+                      description: TLS configuration to use when scraping the target.
                       properties:
                         ca:
                           description: Certificate authority used when verifying server
@@ -35639,16 +36044,23 @@ spec:
                           description: Used to verify the hostname for the targets.
                           type: string
                       type: object
+                    trackTimestampsStaleness:
+                      description: "`trackTimestampsStaleness` defines whether Prometheus
+                        tracks staleness of the metrics that have an explicit timestamp
+                        present in scraped data. Has no effect if `honorTimestamps`
+                        is false. \n It requires Prometheus >= v2.48.0."
+                      type: boolean
                   type: object
                 type: array
               jobLabel:
-                description: "JobLabel selects the label from the associated Kubernetes
-                  service which will be used as the `job` label for all metrics. \n
-                  For example: If in `ServiceMonitor.spec.jobLabel: foo` and in `Service.metadata.labels.foo:
-                  bar`, then the `job=\"bar\"` label is added to all metrics. \n If
-                  the value of this field is empty or if the label doesn't exist for
-                  the given Service, the `job` label of the metrics defaults to the
-                  name of the Kubernetes Service."
+                description: "`jobLabel` selects the label from the associated Kubernetes
+                  `Service` object which will be used as the `job` label for all metrics.
+                  \n For example if `jobLabel` is set to `foo` and the Kubernetes
+                  `Service` object is labeled with `foo: bar`, then Prometheus adds
+                  the `job=\"bar\"` label to all ingested metrics. \n If the value
+                  of this field is empty or if the label doesn't exist for the given
+                  Service, the `job` label of the metrics defaults to the name of
+                  the associated Kubernetes `Service`."
                 type: string
               keepDroppedTargets:
                 description: "Per-scrape limit on the number of targets dropped by
@@ -35657,24 +36069,22 @@ spec:
                 format: int64
                 type: integer
               labelLimit:
-                description: Per-scrape limit on number of labels that will be accepted
-                  for a sample. Only valid in Prometheus versions 2.27.0 and newer.
+                description: "Per-scrape limit on number of labels that will be accepted
+                  for a sample. \n It requires Prometheus >= v2.27.0."
                 format: int64
                 type: integer
               labelNameLengthLimit:
-                description: Per-scrape limit on length of labels name that will be
-                  accepted for a sample. Only valid in Prometheus versions 2.27.0
-                  and newer.
+                description: "Per-scrape limit on length of labels name that will
+                  be accepted for a sample. \n It requires Prometheus >= v2.27.0."
                 format: int64
                 type: integer
               labelValueLengthLimit:
-                description: Per-scrape limit on length of labels value that will
-                  be accepted for a sample. Only valid in Prometheus versions 2.27.0
-                  and newer.
+                description: "Per-scrape limit on length of labels value that will
+                  be accepted for a sample. \n It requires Prometheus >= v2.27.0."
                 format: int64
                 type: integer
               namespaceSelector:
-                description: Selector to select which namespaces the Kubernetes Endpoints
+                description: Selector to select which namespaces the Kubernetes `Endpoints`
                   objects are discovered from.
                 properties:
                   any:
@@ -35688,18 +36098,18 @@ spec:
                     type: array
                 type: object
               podTargetLabels:
-                description: PodTargetLabels transfers labels on the Kubernetes `Pod`
-                  onto the created metrics.
+                description: '`podTargetLabels` defines the labels which are transferred
+                  from the associated Kubernetes `Pod` object onto the ingested metrics.'
                 items:
                   type: string
                 type: array
               sampleLimit:
-                description: SampleLimit defines per-scrape limit on number of scraped
-                  samples that will be accepted.
+                description: '`sampleLimit` defines a per-scrape limit on the number
+                  of scraped samples that will be accepted.'
                 format: int64
                 type: integer
               selector:
-                description: Selector to select Endpoints objects.
+                description: Label selector to select the Kubernetes `Endpoints` objects.
                 properties:
                   matchExpressions:
                     description: matchExpressions is a list of label selector requirements.
@@ -35744,18 +36154,18 @@ spec:
                 type: object
                 x-kubernetes-map-type: atomic
               targetLabels:
-                description: TargetLabels transfers labels from the Kubernetes `Service`
-                  onto the created metrics.
+                description: '`targetLabels` defines the labels which are transferred
+                  from the associated Kubernetes `Service` object onto the ingested
+                  metrics.'
                 items:
                   type: string
                 type: array
               targetLimit:
-                description: TargetLimit defines a limit on the number of scraped
-                  targets that will be accepted.
+                description: '`targetLimit` defines a limit on the number of scraped
+                  targets that will be accepted.'
                 format: int64
                 type: integer
             required:
-            - endpoints
             - selector
             type: object
         required:
@@ -35769,9 +36179,8 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.11.1
-    operator.prometheus.io/version: 0.69.1
-  creationTimestamp: null
+    controller-gen.kubebuilder.io/version: v0.13.0
+    operator.prometheus.io/version: 0.70.0
   name: thanosrulers.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -43804,34 +44213,34 @@ spec:
           name: kubernetes-monitoring-telemetry
 ---
 # Source: k8s-monitoring/charts/prometheus-operator-crds/charts/crds/templates/crd-alertmanagerconfigs.yaml
-# https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/v0.69.1/example/prometheus-operator-crd/monitoring.coreos.com_alertmanagerconfigs.yaml
+# https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/v0.70.0/example/prometheus-operator-crd/monitoring.coreos.com_alertmanagerconfigs.yaml
 ---
 # Source: k8s-monitoring/charts/prometheus-operator-crds/charts/crds/templates/crd-alertmanagers.yaml
-# https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/v0.69.1/example/prometheus-operator-crd/monitoring.coreos.com_alertmanagers.yaml
+# https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/v0.70.0/example/prometheus-operator-crd/monitoring.coreos.com_alertmanagers.yaml
 ---
 # Source: k8s-monitoring/charts/prometheus-operator-crds/charts/crds/templates/crd-podmonitors.yaml
-# https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/v0.69.1/example/prometheus-operator-crd/monitoring.coreos.com_podmonitors.yaml
+# https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/v0.70.0/example/prometheus-operator-crd/monitoring.coreos.com_podmonitors.yaml
 ---
 # Source: k8s-monitoring/charts/prometheus-operator-crds/charts/crds/templates/crd-probes.yaml
-# https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/v0.69.1/example/prometheus-operator-crd/monitoring.coreos.com_probes.yaml
+# https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/v0.70.0/example/prometheus-operator-crd/monitoring.coreos.com_probes.yaml
 ---
 # Source: k8s-monitoring/charts/prometheus-operator-crds/charts/crds/templates/crd-prometheusagents.yaml
-# https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/v0.69.1/example/prometheus-operator-crd/monitoring.coreos.com_prometheusagents.yaml
+# https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/v0.70.0/example/prometheus-operator-crd/monitoring.coreos.com_prometheusagents.yaml
 ---
 # Source: k8s-monitoring/charts/prometheus-operator-crds/charts/crds/templates/crd-prometheuses.yaml
-# https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/v0.69.1/example/prometheus-operator-crd/monitoring.coreos.com_prometheuses.yaml
+# https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/v0.70.0/example/prometheus-operator-crd/monitoring.coreos.com_prometheuses.yaml
 ---
 # Source: k8s-monitoring/charts/prometheus-operator-crds/charts/crds/templates/crd-prometheusrules.yaml
-# https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/v0.69.1/example/prometheus-operator-crd/monitoring.coreos.com_prometheusrules.yaml
+# https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/v0.70.0/example/prometheus-operator-crd/monitoring.coreos.com_prometheusrules.yaml
 ---
 # Source: k8s-monitoring/charts/prometheus-operator-crds/charts/crds/templates/crd-scrapeconfigs.yaml
-# https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/v0.69.1/example/prometheus-operator-crd/monitoring.coreos.com_scrapeconfigs.yaml
+# https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/v0.70.0/example/prometheus-operator-crd/monitoring.coreos.com_scrapeconfigs.yaml
 ---
 # Source: k8s-monitoring/charts/prometheus-operator-crds/charts/crds/templates/crd-servicemonitors.yaml
-# https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/v0.69.1/example/prometheus-operator-crd/monitoring.coreos.com_servicemonitors.yaml
+# https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/v0.70.0/example/prometheus-operator-crd/monitoring.coreos.com_servicemonitors.yaml
 ---
 # Source: k8s-monitoring/charts/prometheus-operator-crds/charts/crds/templates/crd-thanosrulers.yaml
-# https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/v0.69.1/example/prometheus-operator-crd/monitoring.coreos.com_thanosrulers.yaml
+# https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/v0.70.0/example/prometheus-operator-crd/monitoring.coreos.com_thanosrulers.yaml
 ---
 # Source: k8s-monitoring/templates/hooks/validate-configuration.yaml
 apiVersion: v1
