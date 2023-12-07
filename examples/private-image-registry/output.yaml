@@ -44869,67 +44869,9 @@ metadata:
   annotations:
     "helm.sh/hook": test
     "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+    "helm.sh/hook-weight": "-1"
 data:
-  test.sh: |-
-    #!/bin/bash
-    set -eo pipefail
-    
-    function metrics_query {
-      echo "Running PromQL query: ${PROMETHEUS_URL}?query=${1}..."
-      result=$(curl -skX POST -u "${PROMETHEUS_USER}:${PROMETHEUS_PASS}" "${PROMETHEUS_URL}" --data-urlencode "query=${1}")
-      status=$(echo $result | jq -r .status)
-      if [ "${status}" != "success" ]; then
-        echo "Query failed!"
-        echo "$result"
-        exit 1
-      fi
-    
-      resultCount=$(echo $result | jq '.data.result | length')
-      if [ "${resultCount}" -eq 0 ]; then
-        echo "Query returned no results"
-        echo "$result"
-        exit 1
-      fi
-    }
-    
-    function logs_query {
-      echo "Running LogQL query: ${LOKI_URL}?query=${1}..."
-      result=$(curl -s --get -H "X-Scope-OrgID:${LOKI_TENANTID}" -u "${LOKI_USER}:${LOKI_PASS}" "${LOKI_URL}" --data-urlencode "query=${1}")
-      status=$(echo $result | jq -r .status)
-      if [ "${status}" != "success" ]; then
-        echo "Query failed!"
-        echo "$result"
-        exit 1
-      fi
-    
-      resultCount=$(echo $result | jq '.data.result | length')
-      if [ "${resultCount}" -eq 0 ]; then
-        echo "Query returned no results"
-        echo "$result"
-        exit 1
-      fi
-    }
-    
-    count=$(jq -r ".queries | length-1" "${1}")
-    for i in $(seq 0 "${count}"); do
-      query=$(jq -r --argjson i "${i}" '.queries[$i].query' "${1}")
-      type=$(jq -r --argjson i "${i}" '.queries[$i] | .type // "promql"' "${1}")
-    
-      case "${type}" in
-        promql)
-          metrics_query "${query}"
-          ;;
-        logql)
-          logs_query "${query}"
-          ;;
-        *)
-          echo "Query type ${type} is not yet supported in this test"
-          ;;
-      esac
-    done
-    
-    echo "All queries passed!"
-  queries.json: |-
+  testQueries.json: |-
     {
       "queries": [
         {
@@ -44966,6 +44908,59 @@ data:
         }
       ]
     }
+  configComponents.json: |-
+    [
+      {
+        "components": [
+          "discovery.relabel.kube_state_metrics",
+          "prometheus.scrape.kube_state_metrics"
+        ],
+        "name": "Kube State Metrics"
+      },
+      {
+        "components": [
+          "discovery.relabel.node_exporter",
+          "prometheus.scrape.node_exporter"
+        ],
+        "name": "Node Exporter"
+      },
+      {
+        "components": [
+          "discovery.relabel.cadvisor",
+          "prometheus.scrape.cadvisor"
+        ],
+        "name": "cAdvisor"
+      },
+      {
+        "components": [
+          "discovery.relabel.kubelet",
+          "prometheus.scrape.kubelet"
+        ],
+        "name": "Kubelet"
+      },
+      {
+        "components": [
+          "discovery.relabel.agent",
+          "prometheus.scrape.agent"
+        ],
+        "name": "Agent"
+      },
+      {
+        "components": [
+          "discovery.relabel.opencost",
+          "prometheus.scrape.opencost"
+        ],
+        "name": "OpenCost"
+      },
+      {
+        "components": [
+          "discovery.relabel.annotation_autodiscovery_pods",
+          "discovery.relabel.annotation_autodiscovery_services",
+          "prometheus.scrape.annotation_autodiscovery"
+        ],
+        "name": "Annotation-based AutoDiscovery"
+      }
+    ]
 ---
 # Source: k8s-monitoring/templates/hooks/validate-configuration.yaml
 apiVersion: batch/v1
@@ -45023,6 +45018,53 @@ spec:
 apiVersion: batch/v1
 kind: Job
 metadata:
+  name: "analyze-k8smon-k8s-monitoring"
+  namespace: default
+  labels:
+    app.kubernetes.io/managed-by: "Helm"
+    app.kubernetes.io/instance: "k8smon"
+    app.kubernetes.io/version: 1.5.0
+    helm.sh/chart: "k8s-monitoring-0.6.1"
+  annotations:
+    "helm.sh/hook": test
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+    "helm.sh/hook-weight": "0"
+spec:
+  completions: 1
+  parallelism: 1
+  backoffLimit: 9
+  template:
+    metadata:
+      name: "analyze-k8smon-k8s-monitoring"
+      labels:
+        app.kubernetes.io/managed-by: "Helm"
+        app.kubernetes.io/instance: "k8smon"
+        helm.sh/chart: "k8s-monitoring-0.6.1"
+    spec:
+      imagePullSecrets:
+        - name: my-registry-creds
+      restartPolicy: Never
+      nodeSelector:
+        kubernetes.io/os: linux
+      containers:
+        - name: config-analysis
+          image: my.registry.com/grafana/k8s-monitoring-test:0.6.1
+          command: ["bash", "-c", "/etc/bin/config-analysis.sh /etc/test/configComponents.json"]
+          volumeMounts:
+            - name: test-files
+              mountPath: /etc/test
+          env:
+            - name: AGENT_HOST
+              value: k8smon-grafana-agent.default.svc
+      volumes:
+        - name: test-files
+          configMap:
+            name: "test-k8smon-k8s-monitoring"
+---
+# Source: k8s-monitoring/templates/tests/test.yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
   name: "test-k8smon-k8s-monitoring"
   namespace: default
   labels:
@@ -45033,6 +45075,7 @@ metadata:
   annotations:
     "helm.sh/hook": test
     "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+    "helm.sh/hook-weight": "0"
 spec:
   completions: 1
   parallelism: 1
@@ -45051,11 +45094,11 @@ spec:
       nodeSelector:
         kubernetes.io/os: linux
       containers:
-        - name: test-runner
-          image: my.registry.com/ubuntu:jammy
-          command: ["bash", "-c", "apt-get update && apt-get install -y curl jq && bash /etc/test/test.sh /etc/test/queries.json"]
+        - name: query-test
+          image: my.registry.com/grafana/k8s-monitoring-test:0.6.1
+          command: ["bash", "-c", "/etc/bin/query-test.sh /etc/test/testQueries.json"]
           volumeMounts:
-            - name: test-plan
+            - name: test-files
               mountPath: /etc/test
           env:
             - name: PROMETHEUS_HOST
@@ -45106,6 +45149,6 @@ spec:
                   optional: true
 
       volumes:
-        - name: test-plan
+        - name: test-files
           configMap:
             name: "test-k8smon-k8s-monitoring"
