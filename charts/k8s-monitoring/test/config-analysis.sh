@@ -6,7 +6,7 @@ AGENT_HOST="${AGENT_HOST:-http://localhost:8080}"
 sources=$1
 
 function discoveryRelabel() {
-    component=$1
+    local component=$1
     echo "  Discovery phase:"
     details=$(curl --get --silent --show-error "${AGENT_HOST}/api/v0/web/components/${component}")
     echo "    Component: ${component}"
@@ -15,7 +15,7 @@ function discoveryRelabel() {
 }
 
 function prometheusScrape() {
-    component=$1
+    local component=$1
     echo "  Scrape phase:"
     details=$(curl --get --silent --show-error "${AGENT_HOST}/api/v0/web/components/${component}")
     echo "    Component: ${component}"
@@ -39,6 +39,11 @@ function prometheusScrape() {
         done
     fi
 }
+
+if [ -z "${AGENT_HOST}" ]; then
+    echo "AGENT_HOST is not defined. Please set AGENT_HOST to the Grafana Agent host."
+    exit 1
+fi
 
 if ! curl --get --silent --show-error "${AGENT_HOST}/api/v0/web/components" > /dev/null; then
     echo "Failed to send a request to the Agent. Check that AGENT_HOST is set correctly."
