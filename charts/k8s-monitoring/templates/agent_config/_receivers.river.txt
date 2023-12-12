@@ -26,8 +26,60 @@ otelcol.receiver.otlp "receiver" {
 {{- end }}
   output {
 {{- if .Values.metrics.enabled }}
-    metrics = [otelcol.exporter.prometheus.otel_to_prom_converter.input]
+    metrics = [otelcol.processor.transform.add_metric_attributes.input]
 {{- end }}
+{{- if .Values.logs.enabled }}
+    logs = [otelcol.processor.k8sattributes.default.input]
+{{- end }}
+{{- if .Values.traces.enabled }}
+    traces = [otelcol.processor.k8sattributes.default.input]
+{{- end }}
+  }
+}
+
+{{- if or .Values.logs.enabled .Values.traces.enabled }}
+otelcol.processor.k8sattributes "default" {
+  extract {
+    metadata = [
+      "k8s.namespace.name",
+      "k8s.pod.name",
+      "k8s.deployment.name",
+      "k8s.statefulset.name",
+      "k8s.daemonset.name",
+      "k8s.cronjob.name",
+      "k8s.job.name",
+      "k8s.node.name",
+      "k8s.pod.uid",
+      "k8s.pod.start_time",
+    ]
+  }
+  pod_association {
+    source {
+      from = "connection"
+    }
+  }
+
+  output {
+{{- if .Values.logs.enabled }}
+    logs    = [otelcol.processor.transform.add_attributes.input]
+{{- end }}
+{{- if .Values.traces.enabled }}
+    traces  = [otelcol.processor.transform.add_attributes.input]
+{{- end }}
+  }
+}
+otelcol.processor.transform "add_attributes" {
+  // Grafana Cloud Kubernetes monitoring expects Loki labels `cluster`, `pod`, and `namespace`
+  error_mode = "ignore"
+  log_statements {
+    context = "resource"
+    statements = [
+      "set(attributes[\"pod\"], attributes[\"k8s.pod.name\"])",
+      "set(attributes[\"namespace\"], attributes[\"k8s.namespace.name\"])",
+      "set(attributes[\"loki.resource.labels\"], \"pod, namespace, cluster, job\")",
+    ]
+  }
+  output {
 {{- if .Values.logs.enabled }}
     logs = [otelcol.exporter.loki.otel_to_loki_converter.input]
 {{- end }}
@@ -38,6 +90,22 @@ otelcol.receiver.otlp "receiver" {
 }
 {{- end }}
 
+{{- if .Values.metrics.enabled }}
+otelcol.processor.transform "add_metric_attributes" {
+  error_mode = "ignore"
+  metric_statements {
+    context = "datapoint"
+    statements = [
+      "set(attributes[\"deployment.environment\"], resource.attributes[\"deployment.environment\"])",
+      "set(attributes[\"service.version\"], resource.attributes[\"service.version\"])",
+    ]
+  }
+  output {
+    metrics = [otelcol.exporter.prometheus.otel_to_prom_converter.input]
+  }
+}
+{{- end }}
+{{- end }}
 
 {{- if and .Values.receivers.prometheus.enabled .Values.metrics.enabled }}
 prometheus.receive_http "receiver" {
@@ -51,7 +119,6 @@ prometheus.receive_http "receiver" {
   forward_to = [prometheus.relabel.metrics_service.receiver]
 }
 {{- end }}
-
 
 {{- if and .Values.receivers.zipkin.enabled .Values.traces.enabled }}
 otelcol.receiver.zipkin "receiver" {

@@ -262,7 +262,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | receivers.prometheus.enabled | bool | `true` | Receive Prometheus metrics |
 | receivers.prometheus.port | int | `9999` | Which port to use for the Prometheus receiver. This port needs to be opened in the grafana-agent section below. |
 | receivers.zipkin.disable_debug_metrics | bool | `true` | It removes attributes which could cause high cardinality metrics. For example, attributes with IP addresses and port numbers in metrics about HTTP and gRPC connections will be removed. |
-| receivers.zipkin.enabled | bool | `true` | Receive Zipkin traces |
+| receivers.zipkin.enabled | bool | `false` | Receive Zipkin traces |
 | receivers.zipkin.port | int | `9411` | Which port to use for the Zipkin receiver. This port needs to be opened in the grafana-agent section below. |
 | test.attempts | int | `10` | How many times to attempt the test job. |
 | test.envOverrides | object | `{"LOKI_URL":"","PROMETHEUS_URL":"","TEMPO_URL":""}` | Overrides the URLs for various data sources |
