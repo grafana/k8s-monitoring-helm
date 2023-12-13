@@ -31,16 +31,7 @@ install-deps: scripts/install-deps.sh
 %/logs.river: %/output.yaml
 	yq -r "select(.metadata.name==\"k8smon-grafana-agent-logs\") | .data[\"config.river\"] | select( . != null )" $< > $@
 
-clean-example-outputs:
-	rm -f $(METRIC_CONFIG_FILES) $(LOG_CONFIG_FILES)
+clean::
+	rm -f $(OUTPUT_FILES) $(METRIC_CONFIG_FILES) $(LOG_CONFIG_FILES)
 
-generate-agent-configs: $(METRIC_CONFIG_FILES) $(LOG_CONFIG_FILES)
-
-regenerate-agent-configs: clean-example-outputs generate-agent-configs
-
-clean-example-outputs:
-	rm -f $(OUTPUT_FILES)
-
-generate-example-outputs: $(OUTPUT_FILES)
-
-regenerate-example-outputs: clean-example-outputs generate-example-outputs regenerate-agent-configs
+regenerate-example-outputs:: clean $(OUTPUT_FILES) $(METRIC_CONFIG_FILES) $(LOG_CONFIG_FILES)
