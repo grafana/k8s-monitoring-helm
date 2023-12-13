@@ -107,9 +107,6 @@ spec:
         - name: config-analysis
           image: {{ .Values.global.image.registry | default .Values.test.image.registry }}/{{ .Values.test.image.image }}:{{ .Values.test.image.tag | default .Chart.Version }}
           command: [/etc/bin/config-analysis.sh]
-          volumeMounts:
-            - name: test-files
-              mountPath: /etc/test
           env:
             - name: AGENT_HOST
               value: {{ include "grafana-agent.fullname" (index .Subcharts "grafana-agent") }}.{{ .Release.Namespace }}.svc
