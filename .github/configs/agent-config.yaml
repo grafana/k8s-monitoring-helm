@@ -1,3 +1,5 @@
+# This config is for a stand-alone Grafana Agent that will generate metrics, logs, and traces and send them to the
+# k8s monitoring-deployed Grafana Agent via its receivers.
 agent:
   configMap:
     content: |-
@@ -14,7 +16,7 @@ agent:
           action = "keep"
         }
         rule {
-          replacement = "some-other-cluster"
+          replacement = "from-the-other-agent"
           target_label = "cluster"
         }
 
@@ -35,12 +37,12 @@ agent:
       otelcol.processor.attributes "trace_attributes_processor" {
         action {
           key = "cluster"
-          value = "test-cluster"
+          value = "from-the-other-agent"
           action = "insert"
         }
         action {
           key = "k8s.cluster.name"
-          value = "some-other-cluster"
+          value = "from-the-other-agent"
           action = "upsert"
         }
         output {

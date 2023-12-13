@@ -67,10 +67,11 @@ test:
     type: logql
   - query: "{span.cluster=\"ci-test-cluster-2\"}"
     type: traceql
-  # These two check for metrics and traces that are being sent directly to this agent via the receivers
-  - query: "agent_build_info{cluster=\"ci-test-cluster-2\"}"
+
+  # These checks for metrics and traces that are being sent directly to this agent via the receivers
+  - query: "agent_build_info{cluster=\"from-the-other-agent\"}"
     type: promql
-  - query: "{span.cluster=\"ci-test-cluster-2\"}"
+  - query: "{span.cluster=\"from-the-other-agent\"}"
     type: traceql
   envOverrides:
     TEMPO_URL: http://tempo.tempo.svc:3100
