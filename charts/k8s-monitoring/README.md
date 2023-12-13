@@ -252,10 +252,10 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | prometheus-windows-exporter.enabled | bool | `false` | Should this helm chart deploy Windows Exporter to the cluster. Set this to false if your cluster already has Windows Exporter, or if you do not want to scrape metrics from Windows Exporter. |
 | test.attempts | int | `10` | How many times to attempt the test job. |
 | test.extraQueries | list | `[]` | Additional queries that will be run with `helm test`. NOTE that this uses the host, username, and password in the externalServices section. The user account must have the ability to run queries. Example: extraQueries:   - query: prometheus_metric{cluster="my-cluster-name"}     type: [promql|logql] |
-| test.image.image | string | `"ubuntu"` | Test job image repository. |
+| test.image.image | string | `"grafana/k8s-monitoring-test"` | Test job image repository. |
 | test.image.pullSecrets | list | `[]` | Optional set of image pull secrets. |
-| test.image.registry | string | `"docker.io"` | Test job image registry. |
-| test.image.tag | string | `"jammy"` | Test job image tag. |
+| test.image.registry | string | `"ghcr.io"` | Test job image registry. |
+| test.image.tag | string | `""` | Test job image tag. Default is the chart version. |
 | test.nodeSelector | object | `{"kubernetes.io/os":"linux"}` | nodeSelector to apply to the test job. |
 | test.tolerations | list | `[]` | Tolerations to apply to the test job. |
 | traces.enabled | bool | `false` | Receive and forward traces. |

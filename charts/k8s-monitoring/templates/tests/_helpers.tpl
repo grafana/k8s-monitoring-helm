@@ -10,3 +10,11 @@ If release name contains chart name it will be used as a full name.
     {{- printf "test-%s-%s" .Release.Name .Chart.Name | trunc 63 | trimSuffix "-" }}
   {{- end }}
 {{- end }}
+
+{{- define "kubernetes-monitoring-config-analysis.fullname" -}}
+  {{- if contains .Chart.Name .Release.Name }}
+    {{- printf "analyze-%s" .Release.Name | trunc 63 | trimSuffix "-" }}
+  {{- else }}
+    {{- printf "analyze-%s-%s" .Release.Name .Chart.Name | trunc 63 | trimSuffix "-" }}
+  {{- end }}
+{{- end }}
