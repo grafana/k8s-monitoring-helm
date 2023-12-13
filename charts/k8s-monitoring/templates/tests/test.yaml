@@ -1,79 +1,3 @@
-{{- define "test.configComponents" -}}
-{{- if (index .Values.metrics "kube-state-metrics").enabled }}
-- name: Kube State Metrics
-  components:
-  - discovery.relabel.kube_state_metrics
-  - prometheus.scrape.kube_state_metrics
-{{- end }}
-{{- if (index .Values.metrics "node-exporter").enabled }}
-- name: Node Exporter
-  components:
-  - discovery.relabel.node_exporter
-  - prometheus.scrape.node_exporter
-{{- end }}
-{{ if .Values.metrics.cadvisor.enabled }}
-- name: cAdvisor
-  components:
-  - discovery.relabel.cadvisor
-  - prometheus.scrape.cadvisor
-{{- end }}
-{{ if .Values.metrics.kubelet.enabled }}
-- name: Kubelet
-  components:
-  - discovery.relabel.kubelet
-  - prometheus.scrape.kubelet
-{{- end }}
-{{ if .Values.metrics.agent.enabled }}
-- name: Agent
-  components:
-  - discovery.relabel.agent
-  - prometheus.scrape.agent
-{{- end }}
-{{ if .Values.metrics.cost.enabled }}
-- name: OpenCost
-  components:
-  - discovery.relabel.opencost
-  - prometheus.scrape.opencost
-{{- end }}
-{{- if (index .Values.metrics "windows-exporter").enabled }}
-- name: Windows Exporter
-  components:
-    - discovery.relabel.windows_exporter
-    - prometheus.scrape.windows_exporter
-{{- end }}
-{{- if .Values.metrics.apiserver.enabled }}
-- name: Kube API Server
-  components:
-    - discovery.relabel.apiserver
-    - prometheus.scrape.apiserver
-{{- end }}
-{{- if .Values.metrics.kubeControllerManager.enabled }}
-- name: KubeControllerManager
-  components:
-    - discovery.relabel.kube_controller_manager
-    - prometheus.scrape.kube_controller_manager
-{{- end }}
-{{- if .Values.metrics.kubeProxy.enabled }}
-- name: KubeProxy
-  components:
-    - discovery.relabel.kube_proxy
-    - prometheus.scrape.kube_proxy
-{{- end }}
-{{- if .Values.metrics.kubeScheduler.enabled }}
-- name: KubeScheduler
-  components:
-    - discovery.relabel.kube_scheduler
-    - prometheus.scrape.kube_scheduler
-{{- end }}
-{{ if .Values.metrics.autoDiscover.enabled }}
-- name: Annotation-based AutoDiscovery
-  components:
-  - discovery.relabel.annotation_autodiscovery_pods
-  - discovery.relabel.annotation_autodiscovery_services
-  - prometheus.scrape.annotation_autodiscovery
-{{- end }}
-{{- end -}}
-
 {{- define "test.queryList" -}}
 queries:
   {{- if .Values.metrics.enabled }}
@@ -182,17 +106,13 @@ spec:
       containers:
         - name: config-analysis
           image: {{ .Values.global.image.registry | default .Values.test.image.registry }}/{{ .Values.test.image.image }}:{{ .Values.test.image.tag | default .Chart.Version }}
-          command: ["bash", "-c", "/etc/bin/config-analysis.sh /etc/test/configComponents.json"]
+          command: ["bash", "-c", "/etc/bin/config-analysis.sh"]
           volumeMounts:
             - name: test-files
               mountPath: /etc/test
           env:
             - name: AGENT_HOST
               value: {{ include "grafana-agent.fullname" (index .Subcharts "grafana-agent") }}.{{ .Release.Namespace }}.svc
-      volumes:
-        - name: test-files
-          configMap:
-            name: {{ include "kubernetes-monitoring-test.fullname" . | quote }}
 ---
 apiVersion: batch/v1
 kind: Job
@@ -314,5 +234,3 @@ metadata:
 data:
   testQueries.json: |-
 {{- include "test.queryList" . | fromYaml | toPrettyJson | nindent 4 }}
-  configComponents.json: |-
-{{- include "test.configComponents" . | fromYamlArray | toPrettyJson | nindent 4 }}

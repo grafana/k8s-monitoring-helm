@@ -44908,59 +44908,6 @@ data:
         }
       ]
     }
-  configComponents.json: |-
-    [
-      {
-        "components": [
-          "discovery.relabel.kube_state_metrics",
-          "prometheus.scrape.kube_state_metrics"
-        ],
-        "name": "Kube State Metrics"
-      },
-      {
-        "components": [
-          "discovery.relabel.node_exporter",
-          "prometheus.scrape.node_exporter"
-        ],
-        "name": "Node Exporter"
-      },
-      {
-        "components": [
-          "discovery.relabel.cadvisor",
-          "prometheus.scrape.cadvisor"
-        ],
-        "name": "cAdvisor"
-      },
-      {
-        "components": [
-          "discovery.relabel.kubelet",
-          "prometheus.scrape.kubelet"
-        ],
-        "name": "Kubelet"
-      },
-      {
-        "components": [
-          "discovery.relabel.agent",
-          "prometheus.scrape.agent"
-        ],
-        "name": "Agent"
-      },
-      {
-        "components": [
-          "discovery.relabel.opencost",
-          "prometheus.scrape.opencost"
-        ],
-        "name": "OpenCost"
-      },
-      {
-        "components": [
-          "discovery.relabel.annotation_autodiscovery_pods",
-          "discovery.relabel.annotation_autodiscovery_services",
-          "prometheus.scrape.annotation_autodiscovery"
-        ],
-        "name": "Annotation-based AutoDiscovery"
-      }
-    ]
 ---
 # Source: k8s-monitoring/templates/hooks/validate-configuration.yaml
 apiVersion: batch/v1
@@ -45049,17 +44996,13 @@ spec:
       containers:
         - name: config-analysis
           image: my.registry.com/grafana/k8s-monitoring-test:0.6.1
-          command: ["bash", "-c", "/etc/bin/config-analysis.sh /etc/test/configComponents.json"]
+          command: ["bash", "-c", "/etc/bin/config-analysis.sh"]
           volumeMounts:
             - name: test-files
               mountPath: /etc/test
           env:
             - name: AGENT_HOST
               value: k8smon-grafana-agent.default.svc
-      volumes:
-        - name: test-files
-          configMap:
-            name: "test-k8smon-k8s-monitoring"
 ---
 # Source: k8s-monitoring/templates/tests/test.yaml
 apiVersion: batch/v1
