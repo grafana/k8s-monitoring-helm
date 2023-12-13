@@ -70,10 +70,16 @@ metadata:
     app.kubernetes.io/instance: {{ .Release.Name | quote }}
     app.kubernetes.io/version: {{ .Chart.AppVersion }}
     helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    {{- range $key, $val := .Values.test.extraLabels }}
+    {{ $key }}: {{ $val | quote }}
+    {{- end}}
   annotations:
     "helm.sh/hook": test
     "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
     "helm.sh/hook-weight": "0"
+    {{- range $key, $val := .Values.test.extraAnnotations }}
+    {{ $key }}: {{ $val | quote }}
+    {{- end}}
 spec:
   completions: 1
   parallelism: 1
@@ -85,6 +91,13 @@ spec:
         app.kubernetes.io/managed-by: {{ .Release.Service | quote }}
         app.kubernetes.io/instance: {{ .Release.Name | quote }}
         helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+        {{- range $key, $val := .Values.test.extraLabels }}
+        {{ $key }}: {{ $val | quote }}
+        {{- end}}
+      {{- with .Values.test.extraAnnotations }}
+      annotations:
+        {{- . | toYaml | nindent 8 }}
+      {{- end }}
     spec:
       {{- if or .Values.global.image.pullSecrets .Values.test.image.pullSecrets }}
       imagePullSecrets:
@@ -121,10 +134,16 @@ metadata:
     app.kubernetes.io/instance: {{ .Release.Name | quote }}
     app.kubernetes.io/version: {{ .Chart.AppVersion }}
     helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    {{- range $key, $val := .Values.test.extraLabels }}
+    {{ $key }}: {{ $val | quote }}
+    {{- end}}
   annotations:
     "helm.sh/hook": test
     "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
     "helm.sh/hook-weight": "0"
+    {{- range $key, $val := .Values.test.extraAnnotations }}
+    {{ $key }}: {{ $val | quote }}
+    {{- end}}
 spec:
   completions: 1
   parallelism: 1
@@ -136,6 +155,13 @@ spec:
         app.kubernetes.io/managed-by: {{ .Release.Service | quote }}
         app.kubernetes.io/instance: {{ .Release.Name | quote }}
         helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+        {{- range $key, $val := .Values.test.extraLabels }}
+        {{ $key }}: {{ $val | quote }}
+        {{- end}}
+      {{- with .Values.test.extraAnnotations }}
+      annotations:
+        {{- . | toYaml | nindent 8 }}
+      {{- end }}
     spec:
       {{- if or .Values.global.image.pullSecrets .Values.test.image.pullSecrets }}
       imagePullSecrets:
