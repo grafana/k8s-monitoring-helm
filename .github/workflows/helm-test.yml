@@ -12,6 +12,7 @@ env:
   CT_CONFIGFILE: "${{ github.workspace }}/.github/configs/ct.yaml"
   LINT_CONFIGFILE: "${{ github.workspace }}/.github/configs/lintconf.yaml"
   GRAFANA_AGENT_VALUES: "${{ github.workspace }}/.github/configs/agent-config.yaml"
+  GRAFANA_AGENT_RECEIVER_SERVICE: "${{ github.workspace }}/.github/configs/receiver-service.yaml"
   PROMETHEUS_VALUES: "${{ github.workspace }}/.github/configs/prometheus.yaml"
   CREDENTIALS: "${{ github.workspace }}/.github/configs/credentials.yaml"
   LOKI_VALUES: "${{ github.workspace }}/.github/configs/loki.yaml"
@@ -160,6 +161,7 @@ jobs:
 
         # This agent is only used for generating metrics, logs, and traces that'll get
         # sent to the K8s Monitoring Grafana Agent to test ingesting MLT from receivers.
+        kubectl apply -f "${GRAFANA_AGENT_RECEIVER_SERVICE}"
         helm install agent grafana/grafana-agent -f "${GRAFANA_AGENT_VALUES}" -n agent --create-namespace --wait
 
     - name: Deploy Prometheus
