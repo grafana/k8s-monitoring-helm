@@ -14,6 +14,7 @@ env:
   GRAFANA_AGENT_VALUES: "${{ github.workspace }}/.github/configs/agent-config.yaml"
   GRAFANA_AGENT_RECEIVER_SERVICE: "${{ github.workspace }}/.github/configs/receiver-service.yaml"
   PROMETHEUS_VALUES: "${{ github.workspace }}/.github/configs/prometheus.yaml"
+  PROMETHEUS_WORKLOAD_VALUES: "${{ github.workspace }}/.github/configs/prometheus-workload.yaml"
   CREDENTIALS: "${{ github.workspace }}/.github/configs/credentials.yaml"
   LOKI_VALUES: "${{ github.workspace }}/.github/configs/loki.yaml"
   TEMPO_VALUES: ""  # No values for now
@@ -156,13 +157,16 @@ jobs:
         helm install mysql oci://registry-1.docker.io/bitnamicharts/mysql -f "${MYSQL_VALUES}" -n mysql --create-namespace --wait
         kubectl apply -f "${MYSQL_CONFIG_MANIFEST}"
         
-        # Cert Manager for integration testing
+        # Cert Manager for integration testing (service annotations)
         helm install cert-manager jetstack/cert-manager -f "${CERT_MANAGER_VALUES}" -n cert-manager --create-namespace --wait
 
         # This agent is only used for generating metrics, logs, and traces that'll get
         # sent to the K8s Monitoring Grafana Agent to test ingesting MLT from receivers.
         kubectl apply -f "${GRAFANA_AGENT_RECEIVER_SERVICE}"
         helm install agent grafana/grafana-agent -f "${GRAFANA_AGENT_VALUES}" -n agent --create-namespace --wait
+
+        # This prometheus instance is used pod annotation testing with https
+        helm install prometheus-workload prometheus-community/prometheus -f "${PROMETHEUS_WORKLOAD_VALUES}" -n prometheus --create-namespace --wait
 
     - name: Deploy Prometheus
       if: steps.list-changed.outputs.changed == 'true'
