@@ -266,7 +266,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | receivers.http.disable_debug_metrics | bool | `true` | It removes attributes which could cause high cardinality metrics. For example, attributes with IP addresses and port numbers in metrics about HTTP and gRPC connections will be removed. |
 | receivers.http.enabled | bool | `true` | Receive telemetry data over HTTP? |
 | receivers.http.port | int | `4318` | Which port to use for the HTTP receiver. This port needs to be opened in the grafana-agent section below. |
-| receivers.prometheus.enabled | bool | `true` | Receive Prometheus metrics |
+| receivers.prometheus.enabled | bool | `false` | Receive Prometheus metrics |
 | receivers.prometheus.port | int | `9999` | Which port to use for the Prometheus receiver. This port needs to be opened in the grafana-agent section below. |
 | receivers.zipkin.disable_debug_metrics | bool | `true` | It removes attributes which could cause high cardinality metrics. For example, attributes with IP addresses and port numbers in metrics about HTTP and gRPC connections will be removed. |
 | receivers.zipkin.enabled | bool | `false` | Receive Zipkin traces |
