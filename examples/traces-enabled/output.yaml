@@ -129,6 +129,88 @@ data:
       role = "service"
     }
     
+    // Receivers
+    otelcol.receiver.otlp "receiver" {
+      debug_metrics {
+        disable_high_cardinality_metrics = true
+      }
+    
+      grpc {
+        endpoint = "0.0.0.0:4317"
+      }
+    
+      http {
+        endpoint = "0.0.0.0:4318"
+      }
+      output {
+        metrics = [otelcol.processor.transform.add_metric_attributes.input]
+        logs = [otelcol.processor.k8sattributes.default.input]
+        traces = [otelcol.processor.k8sattributes.default.input]
+      }
+    }
+    otelcol.processor.k8sattributes "default" {
+      extract {
+        metadata = [
+          "k8s.namespace.name",
+          "k8s.pod.name",
+          "k8s.deployment.name",
+          "k8s.statefulset.name",
+          "k8s.daemonset.name",
+          "k8s.cronjob.name",
+          "k8s.job.name",
+          "k8s.node.name",
+          "k8s.pod.uid",
+          "k8s.pod.start_time",
+        ]
+      }
+      pod_association {
+        source {
+          from = "connection"
+        }
+      }
+    
+      output {
+        logs    = [otelcol.processor.transform.add_attributes.input]
+        traces  = [otelcol.processor.transform.add_attributes.input]
+      }
+    }
+    otelcol.processor.transform "add_attributes" {
+      // Grafana Cloud Kubernetes monitoring expects Loki labels `cluster`, `pod`, and `namespace`
+      error_mode = "ignore"
+      log_statements {
+        context = "resource"
+        statements = [
+          "set(attributes[\"pod\"], attributes[\"k8s.pod.name\"])",
+          "set(attributes[\"namespace\"], attributes[\"k8s.namespace.name\"])",
+          "set(attributes[\"loki.resource.labels\"], \"pod, namespace, cluster, job\")",
+        ]
+      }
+      output {
+        logs = [otelcol.exporter.loki.otel_to_loki_converter.input]
+        traces = [otelcol.processor.batch.trace_batch_processor.input]
+      }
+    }
+    otelcol.processor.transform "add_metric_attributes" {
+      error_mode = "ignore"
+      metric_statements {
+        context = "datapoint"
+        statements = [
+          "set(attributes[\"deployment.environment\"], resource.attributes[\"deployment.environment\"])",
+          "set(attributes[\"service.version\"], resource.attributes[\"service.version\"])",
+        ]
+      }
+      output {
+        metrics = [otelcol.exporter.prometheus.otel_to_prom_converter.input]
+      }
+    }
+    prometheus.receive_http "receiver" {
+    http {
+        listen_address = "0.0.0.0"
+        listen_port = 9999
+      }
+      forward_to = [prometheus.relabel.metrics_service.receiver]
+    }
+    
     // Annotation Autodiscovery
     discovery.relabel "annotation_autodiscovery_pods" {
       targets = discovery.kubernetes.pods.targets
@@ -581,7 +663,17 @@ data:
       namespace = "default"
     }
     
+    otelcol.exporter.prometheus "otel_to_prom_converter" {
+      forward_to = [prometheus.relabel.metrics_service.receiver]
+    }
+    
     prometheus.relabel "metrics_service" {
+      rule {
+        source_labels = ["cluster"]
+        regex = ""
+        replacement = "traces-enabled-test"
+        target_label = "cluster"
+      }
       forward_to = [prometheus.remote_write.metrics_service.receiver]
     }
     
@@ -598,7 +690,6 @@ data:
       }
     
       external_labels = {
-        cluster = "traces-enabled-test",
       }
     }
     
@@ -612,6 +703,10 @@ data:
     remote.kubernetes.secret "logs_service" {
       name = "loki-k8s-monitoring"
       namespace = "default"
+    }
+    
+    otelcol.exporter.loki "otel_to_loki_converter" {
+      forward_to = [loki.write.grafana_cloud_loki.receiver]
     }
     loki.write "grafana_cloud_loki" {
       endpoint {
@@ -629,32 +724,6 @@ data:
     }
     
     // Traces
-    otelcol.receiver.otlp "trace_receiver" {
-      debug_metrics {
-        disable_high_cardinality_metrics = true
-      }
-    
-      grpc {
-        endpoint = "0.0.0.0:4317"
-      }
-    
-      http {
-        endpoint = "0.0.0.0:4318"
-      }
-      output {
-        traces = [otelcol.processor.batch.trace_batch_processor.input]
-      }
-    }
-    otelcol.receiver.zipkin "trace_receiver" {
-      debug_metrics {
-        disable_high_cardinality_metrics = true
-      }
-    
-    endpoint = "0.0.0.0:9411"
-      output {
-        traces = [otelcol.processor.batch.trace_batch_processor.input]
-      }
-    }
     otelcol.processor.batch "trace_batch_processor" {
       send_batch_size = 16384
       send_batch_max_size = 0
@@ -820,6 +889,10 @@ data:
       name = "loki-k8s-monitoring"
       namespace = "default"
     }
+    
+    otelcol.exporter.loki "otel_to_loki_converter" {
+      forward_to = [loki.write.grafana_cloud_loki.receiver]
+    }
     loki.write "grafana_cloud_loki" {
       endpoint {
         url = nonsensitive(remote.kubernetes.secret.logs_service.data["host"]) + "/loki/api/v1/push"
@@ -845,7 +918,7 @@ data:
   metrics.prom: |
     # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart as well as a summary of enabled features
     # TYPE grafana_kubernetes_monitoring_build_info gauge
-    grafana_kubernetes_monitoring_build_info{version="0.6.2", namespace="default", metrics="enabled,agent,autoDiscover,kube-state-metrics,node-exporter,kubelet,cadvisor,cost", logs="enabled,events,pod_logs", traces="enabled", deployments="kube-state-metrics,prometheus-node-exporter,prometheus-operator-crds,opencost"} 1
+    grafana_kubernetes_monitoring_build_info{version="0.7.0", namespace="default", metrics="enabled,agent,autoDiscover,kube-state-metrics,node-exporter,kubelet,cadvisor,cost", logs="enabled,events,pod_logs", traces="enabled", deployments="kube-state-metrics,prometheus-node-exporter,prometheus-operator-crds,opencost"} 1
 ---
 # Source: k8s-monitoring/charts/prometheus-operator-crds/charts/crds/templates/crd-alertmanagerconfigs.yaml
 apiVersion: apiextensions.k8s.io/v1
@@ -43687,6 +43760,10 @@ spec:
       port: 4318
       targetPort: 4318
       protocol: TCP
+    - name: prometheus
+      port: 9999
+      targetPort: 9999
+      protocol: TCP
     - name: zipkin
       port: 9411
       targetPort: 9411
@@ -43721,6 +43798,10 @@ spec:
     - name: otlp-http
       port: 4318
       targetPort: 4318
+      protocol: TCP
+    - name: prometheus
+      port: 9999
+      targetPort: 9999
       protocol: TCP
     - name: zipkin
       port: 9411
@@ -44235,6 +44316,9 @@ spec:
             - containerPort: 4318
               name: otlp-http
               protocol: TCP
+            - containerPort: 9999
+              name: prometheus
+              protocol: TCP
             - containerPort: 9411
               name: zipkin
               protocol: TCP
@@ -44313,7 +44397,7 @@ metadata:
     app.kubernetes.io/managed-by: "Helm"
     app.kubernetes.io/instance: "k8smon"
     app.kubernetes.io/version: 1.5.0
-    helm.sh/chart: "k8s-monitoring-0.6.2"
+    helm.sh/chart: "k8s-monitoring-0.7.0"
   annotations:
     "helm.sh/hook": pre-install,pre-upgrade
     "helm.sh/hook-weight": "-5"
@@ -44330,6 +44414,88 @@ data:
     
     discovery.kubernetes "services" {
       role = "service"
+    }
+    
+    // Receivers
+    otelcol.receiver.otlp "receiver" {
+      debug_metrics {
+        disable_high_cardinality_metrics = true
+      }
+    
+      grpc {
+        endpoint = "0.0.0.0:4317"
+      }
+    
+      http {
+        endpoint = "0.0.0.0:4318"
+      }
+      output {
+        metrics = [otelcol.processor.transform.add_metric_attributes.input]
+        logs = [otelcol.processor.k8sattributes.default.input]
+        traces = [otelcol.processor.k8sattributes.default.input]
+      }
+    }
+    otelcol.processor.k8sattributes "default" {
+      extract {
+        metadata = [
+          "k8s.namespace.name",
+          "k8s.pod.name",
+          "k8s.deployment.name",
+          "k8s.statefulset.name",
+          "k8s.daemonset.name",
+          "k8s.cronjob.name",
+          "k8s.job.name",
+          "k8s.node.name",
+          "k8s.pod.uid",
+          "k8s.pod.start_time",
+        ]
+      }
+      pod_association {
+        source {
+          from = "connection"
+        }
+      }
+    
+      output {
+        logs    = [otelcol.processor.transform.add_attributes.input]
+        traces  = [otelcol.processor.transform.add_attributes.input]
+      }
+    }
+    otelcol.processor.transform "add_attributes" {
+      // Grafana Cloud Kubernetes monitoring expects Loki labels `cluster`, `pod`, and `namespace`
+      error_mode = "ignore"
+      log_statements {
+        context = "resource"
+        statements = [
+          "set(attributes[\"pod\"], attributes[\"k8s.pod.name\"])",
+          "set(attributes[\"namespace\"], attributes[\"k8s.namespace.name\"])",
+          "set(attributes[\"loki.resource.labels\"], \"pod, namespace, cluster, job\")",
+        ]
+      }
+      output {
+        logs = [otelcol.exporter.loki.otel_to_loki_converter.input]
+        traces = [otelcol.processor.batch.trace_batch_processor.input]
+      }
+    }
+    otelcol.processor.transform "add_metric_attributes" {
+      error_mode = "ignore"
+      metric_statements {
+        context = "datapoint"
+        statements = [
+          "set(attributes[\"deployment.environment\"], resource.attributes[\"deployment.environment\"])",
+          "set(attributes[\"service.version\"], resource.attributes[\"service.version\"])",
+        ]
+      }
+      output {
+        metrics = [otelcol.exporter.prometheus.otel_to_prom_converter.input]
+      }
+    }
+    prometheus.receive_http "receiver" {
+    http {
+        listen_address = "0.0.0.0"
+        listen_port = 9999
+      }
+      forward_to = [prometheus.relabel.metrics_service.receiver]
     }
     
     // Annotation Autodiscovery
@@ -44784,7 +44950,17 @@ data:
       namespace = "default"
     }
     
+    otelcol.exporter.prometheus "otel_to_prom_converter" {
+      forward_to = [prometheus.relabel.metrics_service.receiver]
+    }
+    
     prometheus.relabel "metrics_service" {
+      rule {
+        source_labels = ["cluster"]
+        regex = ""
+        replacement = "traces-enabled-test"
+        target_label = "cluster"
+      }
       forward_to = [prometheus.remote_write.metrics_service.receiver]
     }
     
@@ -44801,7 +44977,6 @@ data:
       }
     
       external_labels = {
-        cluster = "traces-enabled-test",
       }
     }
     
@@ -44815,6 +44990,10 @@ data:
     remote.kubernetes.secret "logs_service" {
       name = "loki-k8s-monitoring"
       namespace = "default"
+    }
+    
+    otelcol.exporter.loki "otel_to_loki_converter" {
+      forward_to = [loki.write.grafana_cloud_loki.receiver]
     }
     loki.write "grafana_cloud_loki" {
       endpoint {
@@ -44832,32 +45011,6 @@ data:
     }
     
     // Traces
-    otelcol.receiver.otlp "trace_receiver" {
-      debug_metrics {
-        disable_high_cardinality_metrics = true
-      }
-    
-      grpc {
-        endpoint = "0.0.0.0:4317"
-      }
-    
-      http {
-        endpoint = "0.0.0.0:4318"
-      }
-      output {
-        traces = [otelcol.processor.batch.trace_batch_processor.input]
-      }
-    }
-    otelcol.receiver.zipkin "trace_receiver" {
-      debug_metrics {
-        disable_high_cardinality_metrics = true
-      }
-    
-    endpoint = "0.0.0.0:9411"
-      output {
-        traces = [otelcol.processor.batch.trace_batch_processor.input]
-      }
-    }
     otelcol.processor.batch "trace_batch_processor" {
       send_batch_size = 16384
       send_batch_max_size = 0
@@ -45015,6 +45168,10 @@ data:
       name = "loki-k8s-monitoring"
       namespace = "default"
     }
+    
+    otelcol.exporter.loki "otel_to_loki_converter" {
+      forward_to = [loki.write.grafana_cloud_loki.receiver]
+    }
     loki.write "grafana_cloud_loki" {
       endpoint {
         url = nonsensitive(remote.kubernetes.secret.logs_service.data["host"]) + "/loki/api/v1/push"
@@ -45040,7 +45197,7 @@ metadata:
     app.kubernetes.io/managed-by: "Helm"
     app.kubernetes.io/instance: "k8smon"
     app.kubernetes.io/version: 1.5.0
-    helm.sh/chart: "k8s-monitoring-0.6.2"
+    helm.sh/chart: "k8s-monitoring-0.7.0"
   annotations:
     "helm.sh/hook": test
     "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
@@ -45094,7 +45251,7 @@ metadata:
     app.kubernetes.io/managed-by: "Helm"
     app.kubernetes.io/instance: "k8smon"
     app.kubernetes.io/version: 1.5.0
-    helm.sh/chart: "k8s-monitoring-0.6.2"
+    helm.sh/chart: "k8s-monitoring-0.7.0"
   annotations:
     "helm.sh/hook": pre-install,pre-upgrade
     "helm.sh/hook-weight": "-5"
@@ -45107,7 +45264,7 @@ spec:
       labels:
         app.kubernetes.io/managed-by: "Helm"
         app.kubernetes.io/instance: "k8smon"
-        helm.sh/chart: "k8s-monitoring-0.6.2"
+        helm.sh/chart: "k8s-monitoring-0.7.0"
     spec:
       restartPolicy: Never
       nodeSelector:
@@ -45144,7 +45301,7 @@ metadata:
     app.kubernetes.io/managed-by: "Helm"
     app.kubernetes.io/instance: "k8smon"
     app.kubernetes.io/version: 1.5.0
-    helm.sh/chart: "k8s-monitoring-0.6.2"
+    helm.sh/chart: "k8s-monitoring-0.7.0"
   annotations:
     "helm.sh/hook": test
     "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
@@ -45159,14 +45316,14 @@ spec:
       labels:
         app.kubernetes.io/managed-by: "Helm"
         app.kubernetes.io/instance: "k8smon"
-        helm.sh/chart: "k8s-monitoring-0.6.2"
+        helm.sh/chart: "k8s-monitoring-0.7.0"
     spec:
       restartPolicy: Never
       nodeSelector:
         kubernetes.io/os: linux
       containers:
         - name: config-analysis
-          image: ghcr.io/grafana/k8s-monitoring-test:0.6.2
+          image: ghcr.io/grafana/k8s-monitoring-test:0.7.0
           command: [/etc/bin/config-analysis.sh]
           env:
             - name: AGENT_HOST
@@ -45182,7 +45339,7 @@ metadata:
     app.kubernetes.io/managed-by: "Helm"
     app.kubernetes.io/instance: "k8smon"
     app.kubernetes.io/version: 1.5.0
-    helm.sh/chart: "k8s-monitoring-0.6.2"
+    helm.sh/chart: "k8s-monitoring-0.7.0"
   annotations:
     "helm.sh/hook": test
     "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
@@ -45197,14 +45354,14 @@ spec:
       labels:
         app.kubernetes.io/managed-by: "Helm"
         app.kubernetes.io/instance: "k8smon"
-        helm.sh/chart: "k8s-monitoring-0.6.2"
+        helm.sh/chart: "k8s-monitoring-0.7.0"
     spec:
       restartPolicy: Never
       nodeSelector:
         kubernetes.io/os: linux
       containers:
         - name: query-test
-          image: ghcr.io/grafana/k8s-monitoring-test:0.6.2
+          image: ghcr.io/grafana/k8s-monitoring-test:0.7.0
           command: ["bash", "-c", "/etc/bin/query-test.sh /etc/test/testQueries.json"]
           volumeMounts:
             - name: test-files
@@ -45230,7 +45387,6 @@ spec:
                   name: prometheus-k8s-monitoring
                   key: password
                   optional: true
-
             - name: LOKI_HOST
               valueFrom:
                 secretKeyRef:
@@ -45255,6 +45411,26 @@ spec:
                 secretKeyRef:
                   name: loki-k8s-monitoring
                   key: tenantId
+                  optional: true
+            - name: TEMPO_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: tempo-k8s-monitoring
+                  key: host
+                  optional: true
+            - name: TEMPO_URL
+              value: $(TEMPO_HOST)/api/search
+            - name: TEMPO_USER
+              valueFrom:
+                secretKeyRef:
+                  name: tempo-k8s-monitoring
+                  key: username
+                  optional: true
+            - name: TEMPO_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: tempo-k8s-monitoring
+                  key: password
                   optional: true
 
       volumes:

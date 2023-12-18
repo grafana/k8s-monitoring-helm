@@ -11,6 +11,8 @@ on:
 env:
   CT_CONFIGFILE: "${{ github.workspace }}/.github/configs/ct.yaml"
   LINT_CONFIGFILE: "${{ github.workspace }}/.github/configs/lintconf.yaml"
+  GRAFANA_AGENT_VALUES: "${{ github.workspace }}/.github/configs/agent-config.yaml"
+  GRAFANA_AGENT_RECEIVER_SERVICE: "${{ github.workspace }}/.github/configs/receiver-service.yaml"
   PROMETHEUS_VALUES: "${{ github.workspace }}/.github/configs/prometheus.yaml"
   CREDENTIALS: "${{ github.workspace }}/.github/configs/credentials.yaml"
   LOKI_VALUES: "${{ github.workspace }}/.github/configs/loki.yaml"
@@ -147,6 +149,21 @@ jobs:
         helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
         helm repo update
 
+    - name: Deploy Services for Test Data
+      if: steps.list-changed.outputs.changed == 'true'
+      run: |
+        # MySQL for integration testing
+        helm install mysql oci://registry-1.docker.io/bitnamicharts/mysql -f "${MYSQL_VALUES}" -n mysql --create-namespace --wait
+        kubectl apply -f "${MYSQL_CONFIG_MANIFEST}"
+        
+        # Cert Manager for integration testing
+        helm install cert-manager jetstack/cert-manager -f "${CERT_MANAGER_VALUES}" -n cert-manager --create-namespace --wait
+
+        # This agent is only used for generating metrics, logs, and traces that'll get
+        # sent to the K8s Monitoring Grafana Agent to test ingesting MLT from receivers.
+        kubectl apply -f "${GRAFANA_AGENT_RECEIVER_SERVICE}"
+        helm install agent grafana/grafana-agent -f "${GRAFANA_AGENT_VALUES}" -n agent --create-namespace --wait
+
     - name: Deploy Prometheus
       if: steps.list-changed.outputs.changed == 'true'
       run: |
@@ -166,13 +183,6 @@ jobs:
       if: steps.list-changed.outputs.changed == 'true'
       run: |
         helm install grafana grafana/grafana -f "${GRAFANA_VALUES}" -n grafana --create-namespace --wait
-
-    - name: Deploy Services for Integrations
-      if: steps.list-changed.outputs.changed == 'true'
-      run: |
-        helm install mysql oci://registry-1.docker.io/bitnamicharts/mysql -f "${MYSQL_VALUES}" -n mysql --create-namespace --wait
-        kubectl apply -f "${MYSQL_CONFIG_MANIFEST}"
-        helm install cert-manager jetstack/cert-manager -f "${CERT_MANAGER_VALUES}" -n cert-manager --create-namespace --wait
 
     - name: Test chart
       if: steps.list-changed.outputs.changed == 'true'

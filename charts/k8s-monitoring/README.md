@@ -1,12 +1,19 @@
 # k8s-monitoring
 
-![Version: 0.6.2](https://img.shields.io/badge/Version-0.6.2-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.5.0](https://img.shields.io/badge/AppVersion-1.5.0-informational?style=flat-square)
+![Version: 0.7.0](https://img.shields.io/badge/Version-0.7.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.5.0](https://img.shields.io/badge/AppVersion-1.5.0-informational?style=flat-square)
 
 A Helm chart for gathering, scraping, and forwarding Kubernetes infrastructure metrics and logs to a Grafana Stack.
 
 ## Breaking change announcements
 
-* **v0.3.0**
+### **v0.7.0**
+
+  The OTLP, OTLPHTTP, and Zipkin receiver definitions under `traces.receivers` has been moved up a level to `receivers`.
+  This is because receivers will be able to ingest more than just traces going forward.
+  Also, receivers are enabled by default, so you will likely not need to make changes to your values file other than
+  removing `.traces.receivers`.
+
+### **v0.3.0**
 
   The component `prometheus.remote_write.grafana_cloud_prometheus` has been renamed.
   When forwarding metrics to be sent to your metrics service endpoint, please use `prometheus.relabel.metrics_service` instead.
@@ -138,6 +145,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | externalServices.tempo.host | string | `""` | (required) Tempo host where traces will be sent |
 | externalServices.tempo.hostKey | string | `"host"` | The key for the host property in the secret |
 | externalServices.tempo.protocol | string | `"otlp"` | The type of server protocol for writing metrics Options:   * "otlp" will use OTLP   * "otlphttp" will use OTLP HTTP |
+| externalServices.tempo.searchEndpoint | string | `"/api/search"` | Tempo search endpoint. |
 | externalServices.tempo.secret.create | bool | `true` | Should this Helm chart create the secret. If false, you must define the name and namespace values. |
 | externalServices.tempo.secret.name | string | `""` | The name of the secret. |
 | externalServices.tempo.secret.namespace | string | `""` | The namespace of the secret. |
@@ -252,7 +260,19 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | prometheus-operator-crds.enabled | bool | `true` | Should this helm chart deploy the Prometheus Operator CRDs to the cluster. Set this to false if your cluster already has the CRDs, or if you do not to have the Grafana Agent scrape metrics from PodMonitors, Probes, or ServiceMonitors. |
 | prometheus-windows-exporter.config | string | `"collectors:\n  enabled: cpu,cs,container,logical_disk,memory,net,os\ncollector:\n  service:\n    services-where: \"Name='containerd' or Name='kubelet'\""` |  |
 | prometheus-windows-exporter.enabled | bool | `false` | Should this helm chart deploy Windows Exporter to the cluster. Set this to false if your cluster already has Windows Exporter, or if you do not want to scrape metrics from Windows Exporter. |
+| receivers.grpc.disable_debug_metrics | bool | `true` | It removes attributes which could cause high cardinality metrics. For example, attributes with IP addresses and port numbers in metrics about HTTP and gRPC connections will be removed. |
+| receivers.grpc.enabled | bool | `true` | Receive telemetry data over gRPC? |
+| receivers.grpc.port | int | `4317` | Which port to use for the gRPC receiver. This port needs to be opened in the grafana-agent section below. |
+| receivers.http.disable_debug_metrics | bool | `true` | It removes attributes which could cause high cardinality metrics. For example, attributes with IP addresses and port numbers in metrics about HTTP and gRPC connections will be removed. |
+| receivers.http.enabled | bool | `true` | Receive telemetry data over HTTP? |
+| receivers.http.port | int | `4318` | Which port to use for the HTTP receiver. This port needs to be opened in the grafana-agent section below. |
+| receivers.prometheus.enabled | bool | `true` | Receive Prometheus metrics |
+| receivers.prometheus.port | int | `9999` | Which port to use for the Prometheus receiver. This port needs to be opened in the grafana-agent section below. |
+| receivers.zipkin.disable_debug_metrics | bool | `true` | It removes attributes which could cause high cardinality metrics. For example, attributes with IP addresses and port numbers in metrics about HTTP and gRPC connections will be removed. |
+| receivers.zipkin.enabled | bool | `false` | Receive Zipkin traces |
+| receivers.zipkin.port | int | `9411` | Which port to use for the Zipkin receiver. This port needs to be opened in the grafana-agent section below. |
 | test.attempts | int | `10` | How many times to attempt the test job. |
+| test.envOverrides | object | `{"LOKI_URL":"","PROMETHEUS_URL":"","TEMPO_URL":""}` | Overrides the URLs for various data sources |
 | test.extraAnnotations | object | `{}` | Extra annotations to add to the test jobs. |
 | test.extraLabels | object | `{}` | Extra labels to add to the test jobs. |
 | test.extraQueries | list | `[]` | Additional queries that will be run with `helm test`. NOTE that this uses the host, username, and password in the externalServices section. The user account must have the ability to run queries. Example: extraQueries:   - query: prometheus_metric{cluster="my-cluster-name"}     type: [promql|logql] |
@@ -266,15 +286,6 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | traces.processors.batch.maxSize | int | `0` | The upper limit of the amount of data contained in a single batch, in bytes. When set to 0, batches can be any size. |
 | traces.processors.batch.size | int | `16384` | What batch size to use, in bytes |
 | traces.processors.batch.timeout | string | `"2s"` | How long before sending |
-| traces.receiver.grpc.disable_debug_metrics | bool | `true` | It removes attributes which could cause high cardinality metrics. For example, attributes with IP addresses and port numbers in metrics about HTTP and gRPC connections will be removed. |
-| traces.receiver.grpc.enabled | bool | `true` | Should the Grafana Agent receive traces over gRPC? |
-| traces.receiver.grpc.port | int | `4317` | Which port to use for the gRPC receiver. This port needs to be opened in the grafana-agent section below. |
-| traces.receiver.http.disable_debug_metrics | bool | `true` | It removes attributes which could cause high cardinality metrics. For example, attributes with IP addresses and port numbers in metrics about HTTP and gRPC connections will be removed. |
-| traces.receiver.http.enabled | bool | `true` | Should the Grafana Agent receive traces over HTTP? |
-| traces.receiver.http.port | int | `4318` | Which port to use for the HTTP receiver. This port needs to be opened in the grafana-agent section below. |
-| traces.receiver.zipkin.disable_debug_metrics | bool | `true` | It removes attributes which could cause high cardinality metrics. For example, attributes with IP addresses and port numbers in metrics about HTTP and gRPC connections will be removed. |
-| traces.receiver.zipkin.enabled | bool | `true` | Should the Grafana Agent receive Zipkin traces? |
-| traces.receiver.zipkin.port | int | `9411` | Which port to use for the Zipkin receiver. This port needs to be opened in the grafana-agent section below. |
 
 ## Customizing the configuration
 

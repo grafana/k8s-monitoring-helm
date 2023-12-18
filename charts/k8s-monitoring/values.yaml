@@ -140,6 +140,9 @@ externalServices:
     # -- (string) The key for the host property in the secret
     hostKey: host
 
+    # -- Tempo search endpoint.
+    searchEndpoint: /api/search
+
     # -- (string) The type of server protocol for writing metrics
     # Options:
     #   * "otlp" will use OTLP
@@ -699,33 +702,6 @@ traces:
   # -- Receive and forward traces.
   enabled: false
 
-  # Trace receiver settings
-  receiver:
-    grpc:
-      # -- Should the Grafana Agent receive traces over gRPC?
-      enabled: true
-      # -- Which port to use for the gRPC receiver. This port needs to be opened in the grafana-agent section below.
-      port: 4317
-      # -- It removes attributes which could cause high cardinality metrics. For example, attributes with IP addresses and port numbers in metrics about HTTP and gRPC connections will be removed.
-      disable_debug_metrics: true
-    http:
-      # -- Should the Grafana Agent receive traces over HTTP?
-      enabled: true
-      # -- Which port to use for the HTTP receiver. This port needs to be opened in the grafana-agent section below.
-      port: 4318
-      # -- It removes attributes which could cause high cardinality metrics. For example, attributes with IP addresses and port numbers in metrics about HTTP and gRPC connections will be removed.
-      disable_debug_metrics: true
-    zipkin:
-      # -- Should the Grafana Agent receive Zipkin traces?
-      enabled: true
-      # -- Which port to use for the Zipkin receiver. This port needs to be opened in the grafana-agent section below.
-      port: 9411
-      # -- It removes attributes which could cause high cardinality metrics. For example, attributes with IP addresses and port numbers in metrics about HTTP and gRPC connections will be removed.
-      disable_debug_metrics: true
-
-    # @ignore -- (number) kept for backwards compatibility. Please use grpc.port instead.
-    port:
-
   # Trace processor settings
   processors:
     # Trace batch processor settings
@@ -736,6 +712,38 @@ traces:
       maxSize: 0
       # -- How long before sending
       timeout: 2s
+
+# Telemetry data receiver settings
+receivers:
+  grpc:
+    # -- Receive telemetry data over gRPC?
+    enabled: true
+    # -- Which port to use for the gRPC receiver. This port needs to be opened in the grafana-agent section below.
+    port: 4317
+    # -- It removes attributes which could cause high cardinality metrics. For example, attributes with IP addresses and port numbers in metrics about HTTP and gRPC connections will be removed.
+    disable_debug_metrics: true
+
+  http:
+    # -- Receive telemetry data over HTTP?
+    enabled: true
+    # -- Which port to use for the HTTP receiver. This port needs to be opened in the grafana-agent section below.
+    port: 4318
+    # -- It removes attributes which could cause high cardinality metrics. For example, attributes with IP addresses and port numbers in metrics about HTTP and gRPC connections will be removed.
+    disable_debug_metrics: true
+
+  prometheus:
+    # -- Receive Prometheus metrics
+    enabled: true
+    # -- Which port to use for the Prometheus receiver. This port needs to be opened in the grafana-agent section below.
+    port: 9999
+
+  zipkin:
+    # -- Receive Zipkin traces
+    enabled: false
+    # -- Which port to use for the Zipkin receiver. This port needs to be opened in the grafana-agent section below.
+    port: 9411
+    # -- It removes attributes which could cause high cardinality metrics. For example, attributes with IP addresses and port numbers in metrics about HTTP and gRPC connections will be removed.
+    disable_debug_metrics: true
 
 # -- Extra configuration that will be added to Grafana Agent configuration file.
 # This cannot be used to modify the generated configuration values, only append new components.
@@ -784,6 +792,12 @@ test:
 
   # -- Tolerations to apply to the test job.
   tolerations: []
+
+  # -- Overrides the URLs for various data sources
+  envOverrides:
+    PROMETHEUS_URL: ""
+    LOKI_URL: ""
+    TEMPO_URL: ""
 
   image:
     # -- Test job image registry.
@@ -911,6 +925,24 @@ grafana-agent:
     # This chart is creating the configuration, so the grafana-agent chart does
     # not need to.
     configMap: {create: false}
+
+    extraPorts:
+      - name: "otlp-grpc"
+        port: 4317
+        targetPort: 4317
+        protocol: "TCP"
+      - name: "otlp-http"
+        port: 4318
+        targetPort: 4318
+        protocol: "TCP"
+      - name: "prometheus"
+        port: 9999
+        targetPort: 9999
+        protocol: "TCP"
+      - name: "zipkin"
+        port: 9411
+        targetPort: 9411
+        protocol: "TCP"
 
     # This chart creates the credentials for Prometheus and Loki. This section
     # mounts those credentials into the Grafana Agent container.

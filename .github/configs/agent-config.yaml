@@ -1,0 +1,60 @@
+# This config is for a stand-alone Grafana Agent that will generate metrics, logs, and traces and send them to the
+# k8s monitoring-deployed Grafana Agent via its receivers.
+agent:
+  configMap:
+    content: |-
+      prometheus.scrape "myself" {
+        job_name = "integrations/agent"
+        targets = [{"__address__" = "localhost:80"}]
+        forward_to = [prometheus.relabel.agent.receiver]
+      }
+
+      prometheus.relabel "agent" {
+        rule {
+          source_labels = ["__name__"]
+          regex = "up|agent_build_info"
+          action = "keep"
+        }
+        rule {
+          replacement = "from-the-other-agent"
+          target_label = "cluster"
+        }
+
+        forward_to = [prometheus.remote_write.k8s_monitoring_agent.receiver]
+      }
+
+      prometheus.remote_write "k8s_monitoring_agent" {
+        endpoint {
+          url = "http://agent-receiver.monitoring.svc:9999/api/v1/metrics/write"
+        }
+      }
+      
+      tracing {
+        sampling_fraction = 0.1
+        write_to = [otelcol.processor.attributes.trace_attributes_processor.input]
+      }
+      
+      otelcol.processor.attributes "trace_attributes_processor" {
+        action {
+          key = "cluster"
+          value = "from-the-other-agent"
+          action = "insert"
+        }
+        action {
+          key = "k8s.cluster.name"
+          value = "from-the-other-agent"
+          action = "upsert"
+        }
+        output {
+          traces = [otelcol.exporter.otlp.k8s_monitoring_agent.input]
+        }
+      }
+  
+      otelcol.exporter.otlp "k8s_monitoring_agent" {
+        client {
+          endpoint = "agent-receiver.monitoring.svc:4317"
+          tls {
+            insecure = true
+          }
+        }
+      }

@@ -1,5 +1,5 @@
-{{/* This template checks that the port defined in .Values.traces.receiver.port is in the targetPort list on .grafana-agent */}}
-{{- define "checkforTracePort" -}}
+{{/* This template checks that the port defined in .Values.receivers.<protocol>.port is in the targetPort list on .grafana-agent */}}
+{{- define "checkforAgentPort" -}}
   {{- $port := .port -}}
   {{- $found := false -}}
   {{- range .agent.extraPorts -}}
@@ -8,7 +8,7 @@
     {{- end }}
   {{- end }}
   {{- if not $found }}
-    {{- fail (print .type " trace port not opened on the Grafana Agent.\nIn order for traces to work, the " .port " port needs to be opened on the Grafana Agent. For example, set this in your values file:\ngrafana-agent:\n  agent:\n    extraPorts:\n      - name: \"" (lower .type | replace " " "-") "\"\n        port: " .port "\n        targetPort: " .port "\n        protocol: \"TCP\"\nFor more examples, see https://github.com/grafana/k8s-monitoring-helm/tree/main/examples/traces-enabled") -}}
+    {{- fail (print .type " port not opened on the Grafana Agent.\nIn order to receive data over this protocol, the " .port " port needs to be opened on the Grafana Agent. For example, set this in your values file:\ngrafana-agent:\n  agent:\n    extraPorts:\n      - name: \"" (lower .type | replace " " "-") "\"\n        port: " .port "\n        targetPort: " .port "\n        protocol: \"TCP\"\nFor more examples, see https://github.com/grafana/k8s-monitoring-helm/tree/main/examples/traces-enabled") -}}
   {{- end -}}
 {{- end -}}
 
@@ -17,6 +17,7 @@
   {{- include "agent.config.nodes" . }}
   {{- include "agent.config.pods" . }}
   {{- include "agent.config.services" . }}
+  {{- include "agent.config.receivers" . }}
 
   {{- if .Values.metrics.enabled }}
     {{- if .Values.metrics.autoDiscover.enabled }}
@@ -88,6 +89,8 @@
 
   {{- if and .Values.logs.enabled .Values.logs.cluster_events.enabled }}
     {{- include "agent.config.logs.cluster_events" . }}
+  {{- end }}
+  {{- if .Values.logs.enabled }}
     {{- include "agent.config.loki" . }}
   {{- end }}
 

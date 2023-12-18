@@ -21,6 +21,16 @@ externalServices:
 traces:
   enabled: true
 
+receivers:
+  grpc:
+    enabled: true
+  http:
+    enabled: true
+  prometheus:
+    enabled: true
+  zipkin:
+    enabled: true
+
 grafana-agent:
   agent:
     extraPorts:
@@ -31,6 +41,10 @@ grafana-agent:
       - name: "otlp-http"
         port: 4318
         targetPort: 4318
+        protocol: "TCP"
+      - name: "prometheus"
+        port: 9999
+        targetPort: 9999
         protocol: "TCP"
 #      - name: "zipkin"
 #        port: 9411

@@ -10,6 +10,85 @@ discovery.kubernetes "services" {
   role = "service"
 }
 
+// Receivers
+otelcol.receiver.otlp "receiver" {
+  debug_metrics {
+    disable_high_cardinality_metrics = true
+  }
+
+  grpc {
+    endpoint = "0.0.0.0:4317"
+  }
+
+  http {
+    endpoint = "0.0.0.0:4318"
+  }
+  output {
+    metrics = [otelcol.processor.transform.add_metric_attributes.input]
+    logs = [otelcol.processor.k8sattributes.default.input]
+  }
+}
+otelcol.processor.k8sattributes "default" {
+  extract {
+    metadata = [
+      "k8s.namespace.name",
+      "k8s.pod.name",
+      "k8s.deployment.name",
+      "k8s.statefulset.name",
+      "k8s.daemonset.name",
+      "k8s.cronjob.name",
+      "k8s.job.name",
+      "k8s.node.name",
+      "k8s.pod.uid",
+      "k8s.pod.start_time",
+    ]
+  }
+  pod_association {
+    source {
+      from = "connection"
+    }
+  }
+
+  output {
+    logs    = [otelcol.processor.transform.add_attributes.input]
+  }
+}
+otelcol.processor.transform "add_attributes" {
+  // Grafana Cloud Kubernetes monitoring expects Loki labels `cluster`, `pod`, and `namespace`
+  error_mode = "ignore"
+  log_statements {
+    context = "resource"
+    statements = [
+      "set(attributes[\"pod\"], attributes[\"k8s.pod.name\"])",
+      "set(attributes[\"namespace\"], attributes[\"k8s.namespace.name\"])",
+      "set(attributes[\"loki.resource.labels\"], \"pod, namespace, cluster, job\")",
+    ]
+  }
+  output {
+    logs = [otelcol.exporter.loki.otel_to_loki_converter.input]
+  }
+}
+otelcol.processor.transform "add_metric_attributes" {
+  error_mode = "ignore"
+  metric_statements {
+    context = "datapoint"
+    statements = [
+      "set(attributes[\"deployment.environment\"], resource.attributes[\"deployment.environment\"])",
+      "set(attributes[\"service.version\"], resource.attributes[\"service.version\"])",
+    ]
+  }
+  output {
+    metrics = [otelcol.exporter.prometheus.otel_to_prom_converter.input]
+  }
+}
+prometheus.receive_http "receiver" {
+http {
+    listen_address = "0.0.0.0"
+    listen_port = 9999
+  }
+  forward_to = [prometheus.relabel.metrics_service.receiver]
+}
+
 // Annotation Autodiscovery
 discovery.relabel "annotation_autodiscovery_pods" {
   targets = discovery.kubernetes.pods.targets
@@ -512,7 +591,17 @@ remote.kubernetes.secret "metrics_service" {
   namespace = "default"
 }
 
+otelcol.exporter.prometheus "otel_to_prom_converter" {
+  forward_to = [prometheus.relabel.metrics_service.receiver]
+}
+
 prometheus.relabel "metrics_service" {
+  rule {
+    source_labels = ["cluster"]
+    regex = ""
+    replacement = "specific-namespace-test"
+    target_label = "cluster"
+  }
   forward_to = [prometheus.remote_write.metrics_service.receiver]
 }
 
@@ -529,7 +618,6 @@ prometheus.remote_write "metrics_service" {
   }
 
   external_labels = {
-    cluster = "specific-namespace-test",
   }
 }
 
@@ -544,6 +632,10 @@ loki.source.kubernetes_events "cluster_events" {
 remote.kubernetes.secret "logs_service" {
   name = "loki-k8s-monitoring"
   namespace = "default"
+}
+
+otelcol.exporter.loki "otel_to_loki_converter" {
+  forward_to = [loki.write.grafana_cloud_loki.receiver]
 }
 loki.write "grafana_cloud_loki" {
   endpoint {
