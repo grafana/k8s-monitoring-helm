@@ -1,5 +1,6 @@
 #
 # This values file will test the following features:
+# * Pod & service annotation autodiscovery
 # * MySQL integration
 #
 cluster:
@@ -75,13 +76,19 @@ logs:
 test:
   attempts: 20
   extraQueries:
-  # Check for CertManager metrics
-  - query: "certmanager_clock_time_seconds{cluster=\"ci-integrations-cluster\"}"
+  # Check for CertManager metrics, discovered by service annotations
+  - query: "certmanager_clock_time_seconds{cluster=\"ci-integrations-cluster\", job=\"integrations/cert-manager\"}"
     type: promql
-  # Check for MySQL metrics
+
+  # Check for Prometheus metrics, discovered by https pod annotations
+  - query: "prometheus_build_info{job=\"integrations/prometheus\"}"
+    type: promql
+
+  # Check for MySQL metrics, discovered by the module loaded above in .extraConfig
   - query: "mysqld_exporter_build_info{cluster=\"ci-integrations-cluster\"}"
     type: promql
-  # Check for MySQL logs
+
+  # Check for MySQL logs, discovered by the module loaded above in .logs.extraConfig
   - query: "{cluster=\"ci-integrations-cluster\", job=\"integrations/mysql\"}"
     type: logql
 

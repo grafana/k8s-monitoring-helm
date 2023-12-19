@@ -243,6 +243,12 @@ data:
         action = "keepequal"
         target_label = "__tmp_port"
       }
+    
+      rule {
+        source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_metrics_scheme"]
+        action = "replace"
+        target_label = "__scheme__"
+      }
     }
     
     discovery.relabel "annotation_autodiscovery_services" {
@@ -298,11 +304,48 @@ data:
         action = "keepequal"
         target_label = "__tmp_port"
       }
+    
+      rule {
+        source_labels = ["__meta_kubernetes_service_annotation_k8s_grafana_com_metrics_scheme"]
+        action = "replace"
+        target_label = "__scheme__"
+      }
     }
     
-    prometheus.scrape "annotation_autodiscovery" {
+    discovery.relabel "annotation_autodiscovery_http" {
       targets = concat(discovery.relabel.annotation_autodiscovery_pods.output, discovery.relabel.annotation_autodiscovery_services.output)
+      rule {
+        source_labels = ["__scheme__"]
+        regex = "https"
+        action = "drop"
+      }
+    }
+    
+    discovery.relabel "annotation_autodiscovery_https" {
+      targets = concat(discovery.relabel.annotation_autodiscovery_pods.output, discovery.relabel.annotation_autodiscovery_services.output)
+      rule {
+        source_labels = ["__scheme__"]
+        regex = "https"
+        action = "keep"
+      }
+    }
+    
+    prometheus.scrape "annotation_autodiscovery_http" {
+      targets = discovery.relabel.annotation_autodiscovery_http.output
       honor_labels = true
+      clustering {
+        enabled = true
+      }
+      forward_to = [prometheus.relabel.annotation_autodiscovery.receiver]
+    }
+    
+    prometheus.scrape "annotation_autodiscovery_https" {
+      targets = discovery.relabel.annotation_autodiscovery_https.output
+      honor_labels = true
+      bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+      tls_config {
+        insecure_skip_verify = true
+      }
       clustering {
         enabled = true
       }
@@ -44627,6 +44670,12 @@ data:
         action = "keepequal"
         target_label = "__tmp_port"
       }
+    
+      rule {
+        source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_metrics_scheme"]
+        action = "replace"
+        target_label = "__scheme__"
+      }
     }
     
     discovery.relabel "annotation_autodiscovery_services" {
@@ -44682,11 +44731,48 @@ data:
         action = "keepequal"
         target_label = "__tmp_port"
       }
+    
+      rule {
+        source_labels = ["__meta_kubernetes_service_annotation_k8s_grafana_com_metrics_scheme"]
+        action = "replace"
+        target_label = "__scheme__"
+      }
     }
     
-    prometheus.scrape "annotation_autodiscovery" {
+    discovery.relabel "annotation_autodiscovery_http" {
       targets = concat(discovery.relabel.annotation_autodiscovery_pods.output, discovery.relabel.annotation_autodiscovery_services.output)
+      rule {
+        source_labels = ["__scheme__"]
+        regex = "https"
+        action = "drop"
+      }
+    }
+    
+    discovery.relabel "annotation_autodiscovery_https" {
+      targets = concat(discovery.relabel.annotation_autodiscovery_pods.output, discovery.relabel.annotation_autodiscovery_services.output)
+      rule {
+        source_labels = ["__scheme__"]
+        regex = "https"
+        action = "keep"
+      }
+    }
+    
+    prometheus.scrape "annotation_autodiscovery_http" {
+      targets = discovery.relabel.annotation_autodiscovery_http.output
       honor_labels = true
+      clustering {
+        enabled = true
+      }
+      forward_to = [prometheus.relabel.annotation_autodiscovery.receiver]
+    }
+    
+    prometheus.scrape "annotation_autodiscovery_https" {
+      targets = discovery.relabel.annotation_autodiscovery_https.output
+      honor_labels = true
+      bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+      tls_config {
+        insecure_skip_verify = true
+      }
       clustering {
         enabled = true
       }
