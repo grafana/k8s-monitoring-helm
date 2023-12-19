@@ -11,11 +11,19 @@ otelcol.processor.attributes "metrics_service" {
     value = {{ required ".Values.cluster.name is a required value. Please set it and try again." .Values.cluster.name | quote }}
     action = "upsert"
   }
+{{ with .Values.externalServices.prometheus }}
+  {{- range $key, $value := .externalLabels }}
+  action {
+    key = {{ $key | quote }}
+    value = {{ $value | quote }}
+    action = "upsert"
+  }
+  {{- end }}
   output {
     metrics = [otelcol.processor.batch.metrics_service.input]
   }
 }
-{{ with .Values.externalServices.prometheus }}
+
 otelcol.processor.batch "metrics_service" {
   send_batch_size = {{ .processors.batch.size | int }}
   send_batch_max_size = {{ .processors.batch.maxSize | int }}

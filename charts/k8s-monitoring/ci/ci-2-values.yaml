@@ -19,6 +19,8 @@ externalServices:
     protocol: otlphttp
     tls:
       insecure_skip_verify: true
+    externalLabels:
+      color: blue
   loki:
     host: http://loki.loki.svc:3100
     tenantId: 1
@@ -63,6 +65,10 @@ extraConfig: |-
 test:
   attempts: 20
   extraQueries:
+  # Check that the external label is properly being set
+  - query: "kube_node_info{cluster=\"ci-test-cluster-2\", color=\"blue\"}"
+    type: promql
+
   # Check for cluster events
   - query: "{cluster=\"ci-test-cluster-2\", job=\"integrations/kubernetes/eventhandler\"}"
     type: logql

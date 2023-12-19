@@ -1,6 +1,7 @@
 #
 # This values file will test the following features:
 # * Control plane metrics
+# * External Labels
 #
 cluster:
   name: ci-test-cluster
@@ -14,6 +15,8 @@ externalServices:
     writeEndpoint: /api/v1/write
     tls:
       insecure_skip_verify: true
+    externalLabels:
+      color: red
   loki:
     host: http://loki.loki.svc:3100
     tenantId: 1
@@ -42,6 +45,10 @@ traces:
 
 test:
   attempts: 20
+  extraQueries:
+    # Check that the external label is properly being set
+    - query: "kube_node_info{cluster=\"ci-test-cluster\", color=\"red\"}"
+      type: promql
 
 extraConfig: |-
   tracing {
