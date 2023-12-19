@@ -4,7 +4,7 @@ Any files that are named `*-values.yaml` will be used for testing.
 
 * `ci-values.yaml`
   * Default tests
-  * Control plan metrics
+  * Control plane metrics
   * Extra test queries
 * `ci-2-values.yaml`
   * Sending metrics via OTLP HTTP
