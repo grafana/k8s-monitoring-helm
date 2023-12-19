@@ -60,11 +60,15 @@ spec:
           - bash
           - -ec
           - |
-            echo Validating config file
-            grafana-agent fmt /etc/agent/config.river
+            echo Validating Grafana Agent config file
+            if grafana-agent fmt /etc/agent/config.river > /dev/null; then
+              echo "Grafana Agent config file is valid"
+            fi
 {{- if and .Values.logs.enabled .Values.logs.pod_logs.enabled }}
-            echo Validating logs config file
-            grafana-agent fmt /etc/agent/logs.river
+            echo Validating Grafana Agent for Logs config file
+            if grafana-agent fmt /etc/agent/logs.river > /dev/null; then
+              echo "Grafana Agent for Logs config file is valid"
+            fi
 {{- end }}
           env:
             - name: AGENT_MODE

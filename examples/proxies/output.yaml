@@ -45228,6 +45228,131 @@ data:
       ]
     }
 ---
+# Source: k8s-monitoring/templates/tests/test.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "analyze-k8smon-k8s-monitoring"
+  namespace: default
+  labels:
+    app.kubernetes.io/managed-by: "Helm"
+    app.kubernetes.io/instance: "k8smon"
+    app.kubernetes.io/version: 1.5.0
+    helm.sh/chart: "k8s-monitoring-0.7.1"
+  annotations:
+    "helm.sh/hook": test
+    "helm.sh/hook-delete-policy": before-hook-creation
+    "helm.sh/hook-weight": "0"
+spec:
+  restartPolicy: OnFailure
+  nodeSelector:
+        kubernetes.io/os: linux
+  containers:
+    - name: config-analysis
+      image: ghcr.io/grafana/k8s-monitoring-test:0.7.1
+      command: [/etc/bin/config-analysis.sh]
+      env:
+        - name: AGENT_HOST
+          value: k8smon-grafana-agent.default.svc
+---
+# Source: k8s-monitoring/templates/tests/test.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "test-k8smon-k8s-monitoring"
+  namespace: default
+  labels:
+    app.kubernetes.io/managed-by: "Helm"
+    app.kubernetes.io/instance: "k8smon"
+    app.kubernetes.io/version: 1.5.0
+    helm.sh/chart: "k8s-monitoring-0.7.1"
+  annotations:
+    "helm.sh/hook": test
+    "helm.sh/hook-delete-policy": before-hook-creation
+    "helm.sh/hook-weight": "0"
+spec:
+  restartPolicy: OnFailure
+  nodeSelector:
+        kubernetes.io/os: linux
+  containers:
+    - name: query-test
+      image: ghcr.io/grafana/k8s-monitoring-test:0.7.1
+      command: ["bash", "-c", "/etc/bin/query-test.sh /etc/test/testQueries.json"]
+      volumeMounts:
+        - name: test-files
+          mountPath: /etc/test
+      env:
+        - name: PROMETHEUS_HOST
+          valueFrom:
+            secretKeyRef:
+              name: prometheus-k8s-monitoring
+              key: host
+              optional: true
+        - name: PROMETHEUS_URL
+          value: $(PROMETHEUS_HOST)/api/prom/api/v1/query
+        - name: PROMETHEUS_USER
+          valueFrom:
+            secretKeyRef:
+              name: prometheus-k8s-monitoring
+              key: username
+              optional: true
+        - name: PROMETHEUS_PASS
+          valueFrom:
+            secretKeyRef:
+              name: prometheus-k8s-monitoring
+              key: password
+              optional: true
+        - name: LOKI_HOST
+          valueFrom:
+            secretKeyRef:
+              name: loki-k8s-monitoring
+              key: host
+        - name: LOKI_URL
+          value: $(LOKI_HOST)/loki/api/v1/query
+        - name: LOKI_USER
+          valueFrom:
+            secretKeyRef:
+              name: loki-k8s-monitoring
+              key: username
+              optional: true
+        - name: LOKI_PASS
+          valueFrom:
+            secretKeyRef:
+              name: loki-k8s-monitoring
+              key: password
+              optional: true
+        - name: LOKI_TENANTID
+          valueFrom:
+            secretKeyRef:
+              name: loki-k8s-monitoring
+              key: tenantId
+              optional: true
+        - name: TEMPO_HOST
+          valueFrom:
+            secretKeyRef:
+              name: tempo-k8s-monitoring
+              key: host
+              optional: true
+        - name: TEMPO_URL
+          value: $(TEMPO_HOST)/api/search
+        - name: TEMPO_USER
+          valueFrom:
+            secretKeyRef:
+              name: tempo-k8s-monitoring
+              key: username
+              optional: true
+        - name: TEMPO_PASS
+          valueFrom:
+            secretKeyRef:
+              name: tempo-k8s-monitoring
+              key: password
+              optional: true
+
+  volumes:
+    - name: test-files
+      configMap:
+        name: "test-k8smon-k8s-monitoring"
+---
 # Source: k8s-monitoring/templates/hooks/validate-configuration.yaml
 apiVersion: batch/v1
 kind: Job
@@ -45263,10 +45388,14 @@ spec:
           - bash
           - -ec
           - |
-            echo Validating config file
-            grafana-agent fmt /etc/agent/config.river
-            echo Validating logs config file
-            grafana-agent fmt /etc/agent/logs.river
+            echo Validating Grafana Agent config file
+            if grafana-agent fmt /etc/agent/config.river > /dev/null; then
+              echo "Grafana Agent config file is valid"
+            fi
+            echo Validating Grafana Agent for Logs config file
+            if grafana-agent fmt /etc/agent/logs.river > /dev/null; then
+              echo "Grafana Agent for Logs config file is valid"
+            fi
           env:
             - name: AGENT_MODE
               value: flow
@@ -45277,150 +45406,3 @@ spec:
         - name: config
           configMap:
             name: "validate-k8smon-k8s-monitoring"
----
-# Source: k8s-monitoring/templates/tests/test.yaml
-apiVersion: batch/v1
-kind: Job
-metadata:
-  name: "analyze-k8smon-k8s-monitoring"
-  namespace: default
-  labels:
-    app.kubernetes.io/managed-by: "Helm"
-    app.kubernetes.io/instance: "k8smon"
-    app.kubernetes.io/version: 1.5.0
-    helm.sh/chart: "k8s-monitoring-0.7.1"
-  annotations:
-    "helm.sh/hook": test
-    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
-    "helm.sh/hook-weight": "0"
-spec:
-  completions: 1
-  parallelism: 1
-  backoffLimit: 9
-  template:
-    metadata:
-      name: "analyze-k8smon-k8s-monitoring"
-      labels:
-        app.kubernetes.io/managed-by: "Helm"
-        app.kubernetes.io/instance: "k8smon"
-        helm.sh/chart: "k8s-monitoring-0.7.1"
-    spec:
-      restartPolicy: Never
-      nodeSelector:
-        kubernetes.io/os: linux
-      containers:
-        - name: config-analysis
-          image: ghcr.io/grafana/k8s-monitoring-test:0.7.1
-          command: [/etc/bin/config-analysis.sh]
-          env:
-            - name: AGENT_HOST
-              value: k8smon-grafana-agent.default.svc
----
-# Source: k8s-monitoring/templates/tests/test.yaml
-apiVersion: batch/v1
-kind: Job
-metadata:
-  name: "test-k8smon-k8s-monitoring"
-  namespace: default
-  labels:
-    app.kubernetes.io/managed-by: "Helm"
-    app.kubernetes.io/instance: "k8smon"
-    app.kubernetes.io/version: 1.5.0
-    helm.sh/chart: "k8s-monitoring-0.7.1"
-  annotations:
-    "helm.sh/hook": test
-    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
-    "helm.sh/hook-weight": "0"
-spec:
-  completions: 1
-  parallelism: 1
-  backoffLimit: 9
-  template:
-    metadata:
-      name: "test-k8smon-k8s-monitoring"
-      labels:
-        app.kubernetes.io/managed-by: "Helm"
-        app.kubernetes.io/instance: "k8smon"
-        helm.sh/chart: "k8s-monitoring-0.7.1"
-    spec:
-      restartPolicy: Never
-      nodeSelector:
-        kubernetes.io/os: linux
-      containers:
-        - name: query-test
-          image: ghcr.io/grafana/k8s-monitoring-test:0.7.1
-          command: ["bash", "-c", "/etc/bin/query-test.sh /etc/test/testQueries.json"]
-          volumeMounts:
-            - name: test-files
-              mountPath: /etc/test
-          env:
-            - name: PROMETHEUS_HOST
-              valueFrom:
-                secretKeyRef:
-                  name: prometheus-k8s-monitoring
-                  key: host
-                  optional: true
-            - name: PROMETHEUS_URL
-              value: $(PROMETHEUS_HOST)/api/prom/api/v1/query
-            - name: PROMETHEUS_USER
-              valueFrom:
-                secretKeyRef:
-                  name: prometheus-k8s-monitoring
-                  key: username
-                  optional: true
-            - name: PROMETHEUS_PASS
-              valueFrom:
-                secretKeyRef:
-                  name: prometheus-k8s-monitoring
-                  key: password
-                  optional: true
-            - name: LOKI_HOST
-              valueFrom:
-                secretKeyRef:
-                  name: loki-k8s-monitoring
-                  key: host
-            - name: LOKI_URL
-              value: $(LOKI_HOST)/loki/api/v1/query
-            - name: LOKI_USER
-              valueFrom:
-                secretKeyRef:
-                  name: loki-k8s-monitoring
-                  key: username
-                  optional: true
-            - name: LOKI_PASS
-              valueFrom:
-                secretKeyRef:
-                  name: loki-k8s-monitoring
-                  key: password
-                  optional: true
-            - name: LOKI_TENANTID
-              valueFrom:
-                secretKeyRef:
-                  name: loki-k8s-monitoring
-                  key: tenantId
-                  optional: true
-            - name: TEMPO_HOST
-              valueFrom:
-                secretKeyRef:
-                  name: tempo-k8s-monitoring
-                  key: host
-                  optional: true
-            - name: TEMPO_URL
-              value: $(TEMPO_HOST)/api/search
-            - name: TEMPO_USER
-              valueFrom:
-                secretKeyRef:
-                  name: tempo-k8s-monitoring
-                  key: username
-                  optional: true
-            - name: TEMPO_PASS
-              valueFrom:
-                secretKeyRef:
-                  name: tempo-k8s-monitoring
-                  key: password
-                  optional: true
-
-      volumes:
-        - name: test-files
-          configMap:
-            name: "test-k8smon-k8s-monitoring"

@@ -1,7 +1,6 @@
 #!/bin/bash
 
 CLUSTER_NAME="k8s-mon-test-cluster"
-
 CLUSTER_CONFIG="./.github/configs/cluster-config.yaml"
 PROMETHEUS_VALUES="./.github/configs/prometheus.yaml"
 CREDENTIALS="./.github/configs/credentials.yaml"
