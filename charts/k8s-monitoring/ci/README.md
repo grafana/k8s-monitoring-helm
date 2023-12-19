@@ -34,5 +34,5 @@ The CI/CD test environment is deployed out like this:
   * Prometheus
   * Loki
   * Tempo
-* Data vizualization
+* Data visualization
   * Grafana
