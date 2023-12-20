@@ -15,8 +15,9 @@
 {{/* Grafana Agent config */}}
 {{- define "agentConfig" -}}
   {{- include "agent.config.nodes" . }}
-  {{- include "agent.config.pods" . }}
   {{- include "agent.config.services" . }}
+  {{- include "agent.config.endpoints" . }}
+  {{- include "agent.config.pods" . }}
   {{- include "agent.config.receivers" . }}
 
   {{- if .Values.metrics.enabled }}
