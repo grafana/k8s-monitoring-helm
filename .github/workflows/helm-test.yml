@@ -124,7 +124,8 @@ jobs:
     - name: List changed charts
       id: list-changed
       run: |
-        changed=$(ct list-changed --config "${CT_CONFIGFILE}")
+        latestRelease=$(git describe --abbrev=0 --tags)
+        changed=$(ct list-changed --config "${CT_CONFIGFILE}" --since "${latestRelease}")
         if [[ -n "$changed" ]]; then
           echo "changed=true" >> "${GITHUB_OUTPUT}"
         fi
