@@ -18,8 +18,9 @@ The discovery phase is about finding the specific pod or service that needs to b
 This chart automatically creates three components that you can utilize:
 
 * `discovery.kubernetes.nodes` - Discovers all nodes in the cluster
-* `discovery.kubernetes.pods` - Discovers all pods in the cluster
 * `discovery.kubernetes.services` - Discovers all services in the cluster
+* `discovery.kubernetes.endpoints` - Discovers all service endpoints in the cluster
+* `discovery.kubernetes.pods` - Discovers all pods in the cluster
 
 These are all [`discovery.kubernetes`](https://grafana.com/docs/agent/latest/flow/reference/components/discovery.kubernetes/)
 components, which gather all the specific resources, using the Kubernetes API. From here, we want to refine the search
