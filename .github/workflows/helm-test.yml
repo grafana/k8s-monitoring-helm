@@ -191,4 +191,6 @@ jobs:
 
     - name: Test chart
       if: steps.list-changed.outputs.changed == 'true'
-      run: ct install --config "${CT_CONFIGFILE}"
+      run: |
+        latestRelease=$(git describe --abbrev=0 --tags)
+        ct install --config "${CT_CONFIGFILE}" --since "${latestRelease}"
