@@ -8,6 +8,9 @@ prometheus.operator.podmonitors "pod_monitors" {
     enabled = true
   }
 {{- end }}
+  scrape {
+    default_scrape_interval = {{ .Values.metrics.podMonitors.scrapeInterval | default .Values.metrics.scrapeInterval | quote }}
+  }
 }
 
 prometheus.relabel "podmonitors" {
@@ -28,6 +31,9 @@ prometheus.operator.probes "probes" {
     enabled = true
   }
 {{- end }}
+  scrape {
+    default_scrape_interval = {{ .Values.metrics.probes.scrapeInterval | default .Values.metrics.scrapeInterval | quote }}
+  }
 }
 
 prometheus.relabel "probes" {
@@ -49,6 +55,9 @@ prometheus.operator.servicemonitors "service_monitors" {
     enabled = true
   }
 {{- end }}
+  scrape {
+    default_scrape_interval = {{ .Values.metrics.serviceMonitors.scrapeInterval | default .Values.metrics.scrapeInterval | quote }}
+  }
 }
 
 prometheus.relabel "servicemonitors" {
