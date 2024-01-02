@@ -6,7 +6,7 @@ The Kubernetes Monitoring chart deploys the [Prometheus Operator custom resource
 
 If those CRDs already exist on your cluster, you may see an error message like this when attempting to install:
 
-```
+```text
 Error: INSTALLATION FAILED: Unable to continue with install: CustomResourceDefinition "alertmanagerconfigs.monitoring.coreos.com" in namespace "" exists and cannot be imported into the current release: ..."
 ```
 
@@ -18,3 +18,23 @@ To fix this problem, you can either:
     prometheus-operator-crds:
       enabled: false
     ```
+
+## Pod log files in `/var/lib/docker/containers`
+
+On certain Kubernetes clusters, pod logs are stored inside of `/var/lib/docker/containers` with `/var/log/pods` being symlinked to that directory, but the Grafana Agent doesn't mount it by default.
+If your cluster works this way, you'll likely see errors in the Grafana Agent for Logs pods like this:
+
+```text
+ts=2023-12-26T20:23:33.462127486Z level=error msg="error getting os stat" component=local.file_match.pod_logs path=/var/log/pods/prod_simulation-assignment-797d7f7d85-hdnfn_ce3f8946-0fe9-44c4-9ffb-7f28b51ce39f/simulation-assignment-service/0.log err="stat /var/log/pods/prod_simulation-assignment-797d7f7d85-hdnfn_ce3f8946-0fe9-44c4-9ffb-7f28b51ce39f/simulation-assignment-service/0.log: no such file or directory"
+```
+
+If this is the case, add this to your values file and re-deploy:
+
+```yaml
+grafana-agent-logs:
+  agent:
+    mounts:
+      dockercontainers: true
+```
+
+([source](https://github.com/grafana/k8s-monitoring-helm/issues/309))
