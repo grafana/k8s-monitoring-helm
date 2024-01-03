@@ -5,7 +5,9 @@ values.schema.json: values.yaml values.schema.modifications.json
 	jq --indent 4 -s '.[0] * .[1] \
 		| del(.properties["grafana-agent"]) \
 		| del(.properties["grafana-agent-logs"]) \
+		| del(.properties["kube-state-metrics"].properties.autosharding) \
 		| del(.properties["kube-state-metrics"].properties.nodeSelector) \
+		| del(.properties["kube-state-metrics"].properties.updateStrategy) \
 		| del(.properties["prometheus-node-exporter"].properties.nodeSelector) \
 		| del(.properties["prometheus-windows-exporter"].properties.config) \
 		| del(.properties.opencost.properties.opencost) \

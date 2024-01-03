@@ -92,7 +92,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | cluster.kubernetesAPIService | string | `"kubernetes.default.svc.cluster.local:443"` | The Kubernetes service. Change this if your cluster DNS is configured differently than the default. |
-| cluster.name | string | `""` | (required) The name of this cluster, which will be set in all labels |
+| cluster.name | string | `""` | The name of this cluster, which will be set in all labels. Required. |
 | cluster.platform | string | `""` | The specific platform for this cluster. Will enable compatibility changes for some platforms. Supported options: (empty) or "openshift". |
 | configValidator.extraAnnotations | object | `{}` | Extra annotations to add to the test config validator job. |
 | configValidator.extraLabels | object | `{}` | Extra labels to add to the test config validator job. |
@@ -104,14 +104,14 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | externalServices.loki.basicAuth.username | string | `""` | Loki basic auth username |
 | externalServices.loki.basicAuth.usernameKey | string | `"username"` | The key for the username property in the secret |
 | externalServices.loki.externalLabels | object | `{}` | Custom labels to be added to all logs and events |
-| externalServices.loki.host | string | `""` | (required) Loki host where logs and events will be sent |
+| externalServices.loki.host | string | `""` | Loki host where logs and events will be sent |
 | externalServices.loki.hostKey | string | `"host"` | The key for the host property in the secret |
 | externalServices.loki.proxyURL | string | `""` | HTTP proxy to proxy requests to Loki through. |
 | externalServices.loki.queryEndpoint | string | `"/loki/api/v1/query"` | Loki logs query endpoint. |
 | externalServices.loki.secret.create | bool | `true` | Should this Helm chart create the secret. If false, you must define the name and namespace values. |
 | externalServices.loki.secret.name | string | `""` | The name of the secret. |
 | externalServices.loki.secret.namespace | string | `""` | The namespace of the secret. |
-| externalServices.loki.tenantId | string | `""` | (optional) Loki tenant ID |
+| externalServices.loki.tenantId | string | `""` | Loki tenant ID |
 | externalServices.loki.tenantIdKey | string | `"tenantId"` | The key for the tenant ID property in the secret |
 | externalServices.loki.tls | object | `{}` | TLS setting to configure for the logs service. Refer to https://grafana.com/docs/agent/latest/flow/reference/components/loki.write/#tls_config-block |
 | externalServices.loki.writeEndpoint | string | `"/loki/api/v1/push"` | Loki logs write endpoint. |
@@ -121,7 +121,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | externalServices.prometheus.basicAuth.username | string | `""` | Prometheus basic auth username |
 | externalServices.prometheus.basicAuth.usernameKey | string | `"username"` | The key for the username property in the secret |
 | externalServices.prometheus.externalLabels | object | `{}` | Custom labels to be added to all time series |
-| externalServices.prometheus.host | string | `""` | (required) Prometheus host where metrics will be sent |
+| externalServices.prometheus.host | string | `""` | Prometheus host where metrics will be sent |
 | externalServices.prometheus.hostKey | string | `"host"` | The key for the host property in the secret |
 | externalServices.prometheus.processors.batch.maxSize | int | `0` | Upper limit of a batch size. When set to 0, there is no upper limit. |
 | externalServices.prometheus.processors.batch.size | int | `8192` | Amount of data to buffer before flushing the batch. |
@@ -135,7 +135,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | externalServices.prometheus.secret.create | bool | `true` | Should this Helm chart create the secret. If false, you must define the name and namespace values. |
 | externalServices.prometheus.secret.name | string | `""` | The name of the secret. |
 | externalServices.prometheus.secret.namespace | string | `""` | The namespace of the secret. Only used if secret.create = "false" |
-| externalServices.prometheus.tenantId | string | `""` | (optional) Sets the X-Scope-OrgID header when sending metrics |
+| externalServices.prometheus.tenantId | string | `""` | Sets the X-Scope-OrgID header when sending metrics |
 | externalServices.prometheus.tenantIdKey | string | `"tenantId"` | The key for the tenant ID property in the secret |
 | externalServices.prometheus.tls | object | `{}` | TLS setting to configure for the metrics service. For remoteWrite protocol, refer to https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.remote_write/#tls_config-block For otlp protocol, refer to https://grafana.com/docs/agent/latest/flow/reference/components/otelcol.exporter.otlp/#tls-block For otlphttp protocol, refer to https://grafana.com/docs/agent/latest/flow/reference/components/otelcol.exporter.otlphttp/#tls-block |
 | externalServices.prometheus.writeEndpoint | string | `"/api/prom/push"` | Prometheus metrics write endpoint. Preset for Grafana Cloud Metrics instances. |
@@ -145,14 +145,14 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | externalServices.tempo.basicAuth.passwordKey | string | `"password"` | The key for the password property in the secret |
 | externalServices.tempo.basicAuth.username | string | `""` | Tempo basic auth username |
 | externalServices.tempo.basicAuth.usernameKey | string | `"username"` | The key for the username property in the secret |
-| externalServices.tempo.host | string | `""` | (required) Tempo host where traces will be sent |
+| externalServices.tempo.host | string | `""` | Tempo host where traces will be sent |
 | externalServices.tempo.hostKey | string | `"host"` | The key for the host property in the secret |
 | externalServices.tempo.protocol | string | `"otlp"` | The type of server protocol for writing metrics Options:   * "otlp" will use OTLP   * "otlphttp" will use OTLP HTTP |
 | externalServices.tempo.searchEndpoint | string | `"/api/search"` | Tempo search endpoint. |
 | externalServices.tempo.secret.create | bool | `true` | Should this Helm chart create the secret. If false, you must define the name and namespace values. |
 | externalServices.tempo.secret.name | string | `""` | The name of the secret. |
 | externalServices.tempo.secret.namespace | string | `""` | The namespace of the secret. |
-| externalServices.tempo.tenantId | string | `""` | (optional) Tempo tenant ID |
+| externalServices.tempo.tenantId | string | `""` | Tempo tenant ID |
 | externalServices.tempo.tenantIdKey | string | `"tenantId"` | The key for the tenant ID property in the secret |
 | externalServices.tempo.tls | object | `{}` | TLS setting to configure for the traces service. Refer to https://grafana.com/docs/agent/latest/flow/reference/components/otelcol.exporter.otlp/#tls-block |
 | externalServices.tempo.tlsOptions | string | `""` | Define the TLS block. See https://grafana.com/docs/agent/latest/flow/reference/components/otelcol.exporter.otlp/#tls-block for options. Example: tlsOptions: insecure = true This option will be deprecated and removed soon. Please switch to `tls` and use yaml format. |
@@ -246,13 +246,16 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | metrics.node-exporter.scrapeInterval | string | 60s | How frequently to scrape metrics from Node Exporter. Overrides metrics.scrapeInterval |
 | metrics.node-exporter.service.isTLS | bool | `false` | Does this port use TLS? |
 | metrics.podMonitors.enabled | bool | `true` | Include service discovery for PodMonitor objects |
+| metrics.podMonitors.extraMetricRelabelingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for the Kube Controller Manager. See https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block |
 | metrics.podMonitors.namespaces | list | `[]` | Which namespaces to look for PodMonitor objects. |
 | metrics.podMonitors.scrapeInterval | string | 60s | How frequently to scrape metrics from PodMonitor objects. Only used if the PodMonitor does not specify the scrape interval. Overrides metrics.scrapeInterval |
 | metrics.probes.enabled | bool | `true` | Include service discovery for Probe objects. |
+| metrics.probes.extraMetricRelabelingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for the Kube Controller Manager. See https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block |
 | metrics.probes.namespaces | list | `[]` | Which namespaces to look for Probe objects. |
 | metrics.probes.scrapeInterval | string | 60s | How frequently to scrape metrics from Probe objects. Only used if the Probe does not specify the scrape interval. Overrides metrics.scrapeInterval |
 | metrics.scrapeInterval | string | `"60s"` | How frequently to scrape metrics |
 | metrics.serviceMonitors.enabled | bool | `true` | Include service discovery for ServiceMonitor objects |
+| metrics.serviceMonitors.extraMetricRelabelingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for the Kube Controller Manager. See https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block |
 | metrics.serviceMonitors.namespaces | list | `[]` | Which namespaces to look for ServiceMonitor objects. |
 | metrics.serviceMonitors.scrapeInterval | string | 60s | How frequently to scrape metrics from ServiceMonitor objects. Only used if the ServiceMonitor does not specify the scrape interval. Overrides metrics.scrapeInterval |
 | metrics.windows-exporter.allowList | list | See [Allow List for Windows Exporter](#allow-list-for-windows-exporter) | The list of Windows Exporter metrics that will be scraped by the Agent |
