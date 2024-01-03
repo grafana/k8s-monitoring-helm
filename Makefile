@@ -5,6 +5,7 @@ CHART_FILES = $(shell find charts/k8s-monitoring -type f)
 INPUT_FILES = $(wildcard examples/*/values.yaml)
 OUTPUT_FILES = $(subst values.yaml,output.yaml,$(INPUT_FILES))
 METRIC_CONFIG_FILES = $(subst values.yaml,metrics.river,$(INPUT_FILES))
+EVENT_CONFIG_FILES = $(subst values.yaml,events.river,$(INPUT_FILES))
 LOG_CONFIG_FILES = $(subst values.yaml,logs.river,$(INPUT_FILES))
 
 CT_CONFIGFILE ?= .github/configs/ct.yaml
@@ -29,12 +30,15 @@ install-deps: scripts/install-deps.sh
 %/metrics.river: %/output.yaml
 	yq -r "select(.metadata.name==\"k8smon-grafana-agent\") | .data[\"config.river\"] | select( . != null )" $< > $@
 
+%/events.river: %/output.yaml
+	yq -r "select(.metadata.name==\"k8smon-grafana-agent-events\") | .data[\"config.river\"] | select( . != null )" $< > $@
+
 %/logs.river: %/output.yaml
 	yq -r "select(.metadata.name==\"k8smon-grafana-agent-logs\") | .data[\"config.river\"] | select( . != null )" $< > $@
 
 clean:
 	rm -f $(OUTPUT_FILES) $(METRIC_CONFIG_FILES) $(LOG_CONFIG_FILES)
 
-generate-example-outputs: $(OUTPUT_FILES) $(METRIC_CONFIG_FILES) $(LOG_CONFIG_FILES)
+generate-example-outputs: $(OUTPUT_FILES) $(METRIC_CONFIG_FILES) $(EVENT_CONFIG_FILES) $(LOG_CONFIG_FILES)
 
 regenerate-example-outputs: clean generate-example-outputs
