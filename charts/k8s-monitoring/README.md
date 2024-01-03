@@ -60,7 +60,7 @@ This chart simplifies the deployment of a Kubernetes monitoring infrastructure, 
 * [kube-state-metrics](https://github.com/kubernetes/kube-state-metrics), which gathers metrics about Kubernetes objects
 * [Node exporter](https://github.com/prometheus/node_exporter), which gathers metrics about Kubernetes nodes
 * [OpenCost](https://www.opencost.io/), which interprets the above to create cost metrics for the cluster, and
-* [Grafana Agent](https://grafana.com/docs/agent/latest/), which scrapes the above services to forward metrics to [Prometheus](https://prometheus.io/) and logs to [Loki](https://grafana.com/oss/loki/)
+* [Grafana Agent](https://grafana.com/docs/agent/latest/), which scrapes the above services to forward metrics to [Prometheus](https://prometheus.io/), logs and events to [Loki](https://grafana.com/oss/loki/), and traces to [Tempo](https://grafana.com/oss/tempo/).
 
 The Prometheus and Loki services may be hosted on the same cluster, or remotely (e.g. on Grafana Cloud).
 
