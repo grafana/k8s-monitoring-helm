@@ -40,6 +40,36 @@ function prometheusScrape() {
     echo
 }
 
+function prometheusOperatorServiceMonitors() {
+    local component=$1
+    details=$(curl --get --silent --show-error "${AGENT_HOST}/api/v0/web/components/${component}")
+    echo "${component}"
+
+    inputs=$(jq -r '[.debugInfo[] | select(.name == "crds")]' <(echo "${details}"))
+    inputCount=$(jq length <(echo "${inputs}"))
+    echo "  Discovered: ${inputCount}"
+    if [ "${inputCount}" -gt 0 ]; then
+        for i in $(seq 1 "${inputCount}"); do
+            name=$(jq -r --argjson i "${i}" '.[$i-1].body[] | select(.name == "name") | .value.value' <(echo "${inputs}"))
+            namespace=$(jq -r --argjson i "${i}" '.[$i-1].body[] | select(.name == "namespace") | .value.value' <(echo "${inputs}"))
+            echo "  - ServiceMonitor: ${namespace}/${name}"
+        done
+    fi
+
+    scrapes=$(jq -r '[.debugInfo[] | select(.name == "targets")]' <(echo "${details}"))
+    scrapeCount=$(jq length <(echo "${scrapes}"))
+    echo "  Scrapes: ${scrapeCount}"
+    if [ "${scrapeCount}" -gt 0 ]; then
+        for i in $(seq 1 "${scrapeCount}"); do
+            jq -r --argjson i "${i}" '"  - URL: \(.[$i-1].body[] | select(.name == "url") | .value.value)"' <(echo "${scrapes}")
+            jq -r --argjson i "${i}" '"    Health: \(.[$i-1].body[] | select(.name == "health") | .value.value)"' <(echo "${scrapes}")
+            jq -r --argjson i "${i}" '"    Last scrape: \(.[$i-1].body[] | select(.name == "last_scrape") | .value.value) (\(.[0].body[] | select(.name == "last_scrape_duration") | .value.value))"' <(echo "${scrapes}")
+            jq -r --argjson i "${i}" '"    Scrape error: \(.[$i-1].body[] | select(.name == "last_error") | .value.value)"' <(echo "${scrapes}")
+        done
+    fi
+    echo
+}
+
 if [ -z "${AGENT_HOST}" ]; then
     echo "AGENT_HOST is not defined. Please set AGENT_HOST to the Grafana Agent host."
     exit 1
@@ -57,5 +87,8 @@ while IFS= read -r component; do
     fi
     if [[ "${component}" == prometheus.scrape.* ]]; then
         prometheusScrape "${component}"
+    fi
+    if [[ "${component}" == prometheus.operator.servicemonitors.* ]]; then
+        prometheusOperatorServiceMonitors "${component}"
     fi
 done <<< "${components}"
