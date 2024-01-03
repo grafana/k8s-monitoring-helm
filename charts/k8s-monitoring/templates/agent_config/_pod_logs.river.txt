@@ -1,12 +1,13 @@
 {{ define "agent.config.logs.pod_logs" }}
-{{- with .Values.logs.pod_logs }}
 // Pod Logs
 discovery.kubernetes "pods" {
     role = "pod"
+{{- if eq .Values.logs.pod_logs.gatherMethod "volumes" }}
   selectors {
     role = "pod"
     field = "spec.nodeName=" + env("HOSTNAME")
   }
+{{- end }}
 }
 
 discovery.relabel "pod_logs" {
@@ -16,13 +17,13 @@ discovery.relabel "pod_logs" {
     action = "replace"
     target_label = "namespace"
   }
-{{ if .namespaces }}
+{{ if .Values.logs.pod_logs.namespaces }}
   rule {
     source_labels = ["namespace"]
-    regex = "{{ .namespaces | join "|" }}"
+    regex = "{{ .Values.logs.pod_logs.namespaces | join "|" }}"
     action = "keep"
   }
-{{- end }}
+{{-  end }}
   rule {
     source_labels = ["__meta_kubernetes_pod_name"]
     action = "replace"
@@ -40,6 +41,7 @@ discovery.relabel "pod_logs" {
     replacement = "$1"
     target_label = "job"
   }
+  {{- if eq .Values.logs.pod_logs.gatherMethod "volumes" }}
   rule {
     source_labels = ["__meta_kubernetes_pod_uid", "__meta_kubernetes_pod_container_name"]
     separator = "/"
@@ -47,6 +49,7 @@ discovery.relabel "pod_logs" {
     replacement = "/var/log/pods/*$1/*.log"
     target_label = "__path__"
   }
+  {{- end }}
 
   // set the container runtime as a label
   rule {
@@ -57,20 +60,20 @@ discovery.relabel "pod_logs" {
     target_label = "tmp_container_runtime"
   }
 
-{{- if .extraRelabelingRules }}
-{{ .extraRelabelingRules | indent 2 }}
+{{- if .Values.logs.pod_logs.extraRelabelingRules }}
+{{ .Values.logs.pod_logs.extraRelabelingRules | indent 2 }}
 {{- end }}
 }
 
 discovery.relabel "filtered_pod_logs" {
   targets = discovery.relabel.pod_logs.output
-{{- if eq .discovery "all" }}
+{{- if eq .Values.logs.pod_logs.discovery "all" }}
   rule {
     source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_logs_autogather"]
     regex = "skip"
     action = "drop"
   }
-{{- else if eq .discovery "annotation" }}
+{{- else if eq .Values.logs.pod_logs.discovery "annotation" }}
   rule {
     source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_logs_autogather"]
     regex = "gather"
@@ -78,7 +81,7 @@ discovery.relabel "filtered_pod_logs" {
   }
 {{- end }}
 }
-
+{{ if eq .Values.logs.pod_logs.gatherMethod "volumes" }}
 local.file_match "pod_logs" {
   path_targets = discovery.relabel.filtered_pod_logs.output
 }
@@ -87,7 +90,17 @@ loki.source.file "pod_logs" {
   targets    = local.file_match.pod_logs.targets
   forward_to = [loki.process.pod_logs.receiver]
 }
-
+{{ else if eq .Values.logs.pod_logs.gatherMethod "api" }}
+loki.source.kubernetes "pod_logs" {
+  targets = discovery.relabel.filtered_pod_logs.output
+  forward_to = [loki.process.pod_logs.receiver]
+{{- if (index .Values "grafana-agent-logs").agent.clustering.enabled }}
+  clustering {
+    enabled = true
+  }
+{{- end }}
+}
+{{- end }}
 loki.process "pod_logs" {
   stage.match {
     selector = "{tmp_container_runtime=\"containerd\"}"
@@ -124,10 +137,9 @@ loki.process "pod_logs" {
     values = ["filename", "tmp_container_runtime"]
   }
 
-{{- if .extraStageBlocks }}
-{{ .extraStageBlocks | indent 2 }}
+{{- if .Values.logs.pod_logs.extraStageBlocks }}
+{{ .Values.logs.pod_logs.extraStageBlocks | indent 2 }}
 {{ end }}
   forward_to = [loki.write.grafana_cloud_loki.receiver]
 }
-{{- end }}
 {{ end }}

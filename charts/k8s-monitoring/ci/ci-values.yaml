@@ -2,6 +2,8 @@
 # This values file will test the following features:
 # * Control plane metrics
 # * External Labels
+# * Pod logs (via volumes)
+# * Cluster Events
 #
 cluster:
   name: ci-test-cluster
@@ -49,6 +51,12 @@ test:
     # Check that the external label is properly being set
     - query: "kube_node_info{cluster=\"ci-test-cluster\", color=\"red\"}"
       type: promql
+    # Check for cluster events
+    - query: "{cluster=\"ci-test-cluster\", job=\"integrations/kubernetes/eventhandler\"}"
+      type: logql
+    # Check for pod logs
+    - query: "{cluster=\"ci-test-cluster\", job!=\"integrations/kubernetes/eventhandler\"}"
+      type: logql
 
 extraConfig: |-
   tracing {

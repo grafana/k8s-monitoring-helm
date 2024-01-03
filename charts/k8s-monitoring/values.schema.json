@@ -189,7 +189,12 @@
                             }
                         },
                         "protocol": {
-                            "type": "string"
+                            "type": "string",
+                            "enum": [
+                                "remote_write",
+                                "otlp",
+                                "otlphttp"
+                            ]
                         },
                         "proxyURL": {
                             "type": "string"
@@ -321,6 +326,48 @@
                 }
             }
         },
+        "grafana-agent-events": {
+            "type": "object",
+            "properties": {
+                "agent": {
+                    "type": "object",
+                    "properties": {
+                        "configMap": {
+                            "type": "object",
+                            "properties": {
+                                "create": {
+                                    "type": "boolean"
+                                }
+                            }
+                        }
+                    }
+                },
+                "controller": {
+                    "type": "object",
+                    "properties": {
+                        "nodeSelector": {
+                            "type": "object",
+                            "properties": {
+                                "kubernetes.io/os": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "type": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "crds": {
+                    "type": "object",
+                    "properties": {
+                        "create": {
+                            "type": "boolean"
+                        }
+                    }
+                }
+            }
+        },
         "kube-state-metrics": {
             "type": "object",
             "properties": {
@@ -370,6 +417,13 @@
                         },
                         "extraStageBlocks": {
                             "type": "string"
+                        },
+                        "gatherMethod": {
+                            "type": "string",
+                            "enum": [
+                                "volumes",
+                                "api"
+                            ]
                         },
                         "namespaces": {
                             "type": "array"
