@@ -1,0 +1,10 @@
+{{- if and .Values.logs.enabled .Values.logs.cluster_events.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "grafana-agent.fullname" (index .Subcharts "grafana-agent-events") }}
+  namespace: {{ .Release.Namespace }}
+data:
+  config.river: |-
+    {{- include "agentEventsConfig" . | trim | nindent 4 }}
+{{- end }}
