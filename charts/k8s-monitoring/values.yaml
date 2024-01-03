@@ -1002,8 +1002,11 @@ grafana-agent-logs:
     configMap: {create: false}
 
     mounts:
-      # Loads /var/log as a hostPath volume to find and scrape pod logs
+      # -- Mount /var/log from the host into the container for log collection.
       varlog: true
+      # -- Mount /var/lib/docker/containers from the host into the container for log
+      # collection. Set to true if your cluster puts log files inside this directory.
+      dockercontainers: false
 
   controller:
     type: daemonset
