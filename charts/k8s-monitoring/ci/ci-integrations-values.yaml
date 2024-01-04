@@ -2,6 +2,7 @@
 # This values file will test the following features:
 # * Pod & service annotation autodiscovery
 # * MySQL integration
+# * ServiceMonitor detection, scraping, and processing
 #
 cluster:
   name: ci-integrations-cluster
@@ -32,6 +33,18 @@ externalServices:
       namespace: monitoring
 
 metrics:
+  serviceMonitors:
+    extraMetricRelabelingRules: |-
+      rule {
+        source_labels = ["__name__"]
+        action = "keep"
+        regex = "loki.*"
+      }
+      rule {
+        target_label = "source"
+        action = "replace"
+        replacement = "service-monitor"
+      }
   cost:
     enabled: false
 
@@ -88,9 +101,17 @@ test:
   - query: "mysqld_exporter_build_info{cluster=\"ci-integrations-cluster\"}"
     type: promql
 
+  # Check for LOki metrics, discovered by its ServiceMonitor object
+  - query: "loki_build_info{source=\"service-monitor\"}"
+    type: promql
+
   # Check for MySQL logs, discovered by the module loaded above in .logs.extraConfig
   - query: "{cluster=\"ci-integrations-cluster\", job=\"integrations/mysql\"}"
     type: logql
 
 opencost:
+  enabled: false
+
+# Prometheus Operator CRDs are pre-installed in the CI environment
+prometheus-operator-crds:
   enabled: false

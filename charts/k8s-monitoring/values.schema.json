@@ -26,6 +26,12 @@
         "configValidator": {
             "type": "object",
             "properties": {
+                "extraAnnotations": {
+                    "type": "object"
+                },
+                "extraLabels": {
+                    "type": "object"
+                },
                 "nodeSelector": {
                     "type": "object",
                     "properties": {
@@ -260,6 +266,9 @@
                         "protocol": {
                             "type": "string"
                         },
+                        "searchEndpoint": {
+                            "type": "string"
+                        },
                         "secret": {
                             "type": "object",
                             "properties": {
@@ -442,6 +451,9 @@
                                     "type": "string"
                                 },
                                 "metricsPortNumber": {
+                                    "type": "string"
+                                },
+                                "metricsScheme": {
                                     "type": "string"
                                 },
                                 "scrape": {
@@ -710,8 +722,14 @@
                         "enabled": {
                             "type": "boolean"
                         },
+                        "extraMetricRelabelingRules": {
+                            "type": "string"
+                        },
                         "namespaces": {
                             "type": "array"
+                        },
+                        "scrapeInterval": {
+                            "type": "string"
                         }
                     }
                 },
@@ -721,8 +739,14 @@
                         "enabled": {
                             "type": "boolean"
                         },
+                        "extraMetricRelabelingRules": {
+                            "type": "string"
+                        },
                         "namespaces": {
                             "type": "array"
+                        },
+                        "scrapeInterval": {
+                            "type": "string"
                         }
                     }
                 },
@@ -735,8 +759,14 @@
                         "enabled": {
                             "type": "boolean"
                         },
+                        "extraMetricRelabelingRules": {
+                            "type": "string"
+                        },
                         "namespaces": {
                             "type": "array"
+                        },
+                        "scrapeInterval": {
+                            "type": "string"
                         }
                     }
                 },
@@ -805,11 +835,89 @@
                 }
             }
         },
+        "receivers": {
+            "type": "object",
+            "properties": {
+                "grpc": {
+                    "type": "object",
+                    "properties": {
+                        "disable_debug_metrics": {
+                            "type": "boolean"
+                        },
+                        "enabled": {
+                            "type": "boolean"
+                        },
+                        "port": {
+                            "type": "integer"
+                        }
+                    }
+                },
+                "http": {
+                    "type": "object",
+                    "properties": {
+                        "disable_debug_metrics": {
+                            "type": "boolean"
+                        },
+                        "enabled": {
+                            "type": "boolean"
+                        },
+                        "port": {
+                            "type": "integer"
+                        }
+                    }
+                },
+                "prometheus": {
+                    "type": "object",
+                    "properties": {
+                        "enabled": {
+                            "type": "boolean"
+                        },
+                        "port": {
+                            "type": "integer"
+                        }
+                    }
+                },
+                "zipkin": {
+                    "type": "object",
+                    "properties": {
+                        "disable_debug_metrics": {
+                            "type": "boolean"
+                        },
+                        "enabled": {
+                            "type": "boolean"
+                        },
+                        "port": {
+                            "type": "integer"
+                        }
+                    }
+                }
+            }
+        },
         "test": {
             "type": "object",
             "properties": {
                 "attempts": {
                     "type": "integer"
+                },
+                "envOverrides": {
+                    "type": "object",
+                    "properties": {
+                        "LOKI_URL": {
+                            "type": "string"
+                        },
+                        "PROMETHEUS_URL": {
+                            "type": "string"
+                        },
+                        "TEMPO_URL": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "extraAnnotations": {
+                    "type": "object"
+                },
+                "extraLabels": {
+                    "type": "object"
                 },
                 "extraQueries": {
                     "type": "array"
@@ -864,56 +972,6 @@
                                 },
                                 "timeout": {
                                     "type": "string"
-                                }
-                            }
-                        }
-                    }
-                },
-                "receiver": {
-                    "type": "object",
-                    "properties": {
-                        "grpc": {
-                            "type": "object",
-                            "properties": {
-                                "disable_debug_metrics": {
-                                    "type": "boolean"
-                                },
-                                "enabled": {
-                                    "type": "boolean"
-                                },
-                                "port": {
-                                    "type": "integer"
-                                }
-                            }
-                        },
-                        "http": {
-                            "type": "object",
-                            "properties": {
-                                "disable_debug_metrics": {
-                                    "type": "boolean"
-                                },
-                                "enabled": {
-                                    "type": "boolean"
-                                },
-                                "port": {
-                                    "type": "integer"
-                                }
-                            }
-                        },
-                        "port": {
-                            "type": "null"
-                        },
-                        "zipkin": {
-                            "type": "object",
-                            "properties": {
-                                "disable_debug_metrics": {
-                                    "type": "boolean"
-                                },
-                                "enabled": {
-                                    "type": "boolean"
-                                },
-                                "port": {
-                                    "type": "integer"
                                 }
                             }
                         }

@@ -14,6 +14,9 @@ prometheus.operator.podmonitors "pod_monitors" {
 }
 
 prometheus.relabel "podmonitors" {
+{{- if .Values.metrics.podMonitors.extraMetricRelabelingRules }}
+{{ .Values.metrics.podMonitors.extraMetricRelabelingRules | indent 2 }}
+{{- end }}
 {{- if .Values.metrics.extraMetricRelabelingRules }}
 {{ .Values.metrics.extraMetricRelabelingRules | indent 2 }}
 {{- end }}
@@ -37,6 +40,9 @@ prometheus.operator.probes "probes" {
 }
 
 prometheus.relabel "probes" {
+{{- if .Values.metrics.probes.extraMetricRelabelingRules }}
+{{ .Values.metrics.probes.extraMetricRelabelingRules | indent 2 }}
+{{- end }}
 {{- if .Values.metrics.extraMetricRelabelingRules }}
 {{ .Values.metrics.extraMetricRelabelingRules | indent 2 }}
 {{- end }}
@@ -61,6 +67,9 @@ prometheus.operator.servicemonitors "service_monitors" {
 }
 
 prometheus.relabel "servicemonitors" {
+{{- if .Values.metrics.serviceMonitors.extraMetricRelabelingRules }}
+{{ .Values.metrics.serviceMonitors.extraMetricRelabelingRules | indent 2 }}
+{{- end }}
 {{- if .Values.metrics.extraMetricRelabelingRules }}
 {{ .Values.metrics.extraMetricRelabelingRules | indent 2 }}
 {{- end }}

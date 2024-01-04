@@ -27,6 +27,7 @@ The CI/CD test environment is deployed out like this:
   * Grafana Agent, used for pushing metrics and traces using receivers
   * MySQL, used for testing module integrations
   * Prometheus, used for testing discovery using pod annotations and https
+  * Loki, used for testing discovery using ServiceMonitor objects
   * The rest of Kubernetes
 * Subject under test
   * k8s-monitoring helm chart, which deploys its own set of Grafana Agents
