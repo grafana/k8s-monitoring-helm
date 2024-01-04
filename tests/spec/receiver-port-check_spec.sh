@@ -1,7 +1,7 @@
 Describe 'Receiver Port Check'
   Describe 'Missing Otel gRPC port'
     It 'prints a friendly error message'
-      When call helm template k8smon ../charts/k8s-monitoring -f "spec/missing-otel-grpc-port_values.yaml"
+      When call helm template k8smon ../charts/k8s-monitoring -f "spec/fixtures/missing-otel-grpc-port_values.yaml"
       The status should be failure
       The error should include 'OTLP gRPC port not opened on the Grafana Agent.
 In order to receive data over this protocol, the 4317 port needs to be opened on the Grafana Agent. For example, set this in your values file:
@@ -20,7 +20,7 @@ Use --debug flag to render out invalid YAML'
 
   Describe 'Missing Otel HTTP port'
     It 'prints a friendly error message'
-      When call helm template k8smon ../charts/k8s-monitoring -f "spec/missing-otel-http-port_values.yaml"
+      When call helm template k8smon ../charts/k8s-monitoring -f "spec/fixtures/missing-otel-http-port_values.yaml"
       The status should be failure
       The error should include 'OTLP HTTP port not opened on the Grafana Agent.
 In order to receive data over this protocol, the 4318 port needs to be opened on the Grafana Agent. For example, set this in your values file:
@@ -39,7 +39,7 @@ Use --debug flag to render out invalid YAML'
 
   Describe 'Missing Prometheus port'
     It 'prints a friendly error message'
-      When call helm template k8smon ../charts/k8s-monitoring -f "spec/missing-prometheus-port_values.yaml"
+      When call helm template k8smon ../charts/k8s-monitoring -f "spec/fixtures/missing-prometheus-port_values.yaml"
       The status should be failure
       The error should include 'Prometheus port not opened on the Grafana Agent.
 In order to receive data over this protocol, the 9999 port needs to be opened on the Grafana Agent. For example, set this in your values file:
@@ -58,7 +58,7 @@ Use --debug flag to render out invalid YAML'
 
   Describe 'Missing Zipkin port'
     It 'prints a friendly error message'
-      When call helm template k8smon ../charts/k8s-monitoring -f "spec/missing-zipkin-port_values.yaml"
+      When call helm template k8smon ../charts/k8s-monitoring -f "spec/fixtures/missing-zipkin-port_values.yaml"
       The status should be failure
       The error should include 'Zipkin port not opened on the Grafana Agent.
 In order to receive data over this protocol, the 9411 port needs to be opened on the Grafana Agent. For example, set this in your values file:
@@ -77,7 +77,7 @@ Use --debug flag to render out invalid YAML'
 
   Describe 'Error message works with alternative ports'
     It 'prints a friendly error message'
-      When call helm template k8smon ../charts/k8s-monitoring -f "spec/missing-alternative-port_values.yaml"
+      When call helm template k8smon ../charts/k8s-monitoring -f "spec/fixtures/missing-alternative-port_values.yaml"
       The status should be failure
       The error should include 'OTLP HTTP port not opened on the Grafana Agent.
 In order to receive data over this protocol, the 8080 port needs to be opened on the Grafana Agent. For example, set this in your values file:

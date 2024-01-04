@@ -41,6 +41,7 @@ metrics:
 
 logs:
   pod_logs:
+    gatherMethod: api
     namespaces:
       - default
       - loki
@@ -72,7 +73,7 @@ test:
   # Check for cluster events
   - query: "{cluster=\"ci-test-cluster-2\", job=\"integrations/kubernetes/eventhandler\"}"
     type: logql
-  # Check for pod logs
+  # Check for pod logs (gathered via API)
   - query: "{cluster=\"ci-test-cluster-2\", job!=\"integrations/kubernetes/eventhandler\"}"
     type: logql
   - query: "{span.cluster=\"ci-test-cluster-2\"}"
@@ -99,6 +100,15 @@ grafana-agent:
   controller:
     podLabels:
       capabilities: telemetry-receiver
+
+grafana-agent-logs:
+  agent:
+    clustering: {enabled: true}
+    mounts:
+      varlog: false
+  controller:
+    replicas: 2
+    type: deployment
 
 # Prometheus Operator CRDs are pre-installed in the CI environment
 prometheus-operator-crds:

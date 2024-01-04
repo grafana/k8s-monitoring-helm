@@ -2,15 +2,16 @@
 
 AWS EKS Fargate Kubernetes clusters have a fully managed control plane, which reduce the management needs of the user,
 but need special consideration because they often have special restrictions around DaemonSets and node access. This
-prevents services like Node Exporter and the Grafana Agent for capturing pod logs from working properly.
+prevents services like Node Exporter from working properly. It also has implications for how Pod logs are gathered,
+since the typical method is to deploy Grafana Agent as a Daemonset with HostPath volume mounts to gather the log files.
+Consequently, the agent must be deployed to use the
+[Kubernetes API log gathering](https://grafana.com/docs/agent/latest/flow/reference/components/loki.source.kubernetes/)
+method instead.
 
 Missing Node Exporter metrics is likely fine, because users of these clusters should not need concern themselves with
 the health of the nodes. That's the responsibility of the cloud provider.
 
-Missing pod logs could be addressed by accessing cluster logs from
-[CloudWatch to Loki](https://grafana.com/docs/loki/latest/send-data/lambda-promtail/).
-
-This example shows how to disable Node Exporter and Pod logs to enable metrics and cluster events:
+This example shows how to disable Node Exporter and gather Pod logs via the Kubernetes API:
 
 ```yaml
 cluster:
@@ -34,8 +35,17 @@ metrics:
 
 logs:
   pod_logs:
-    enabled: false
+    gatherMethod: api
 
 prometheus-node-exporter:
   enabled: false
+
+grafana-agent-logs:
+  agent:
+    clustering: {enabled: true}
+    mounts:
+      varlog: false
+  controller:
+    replicas: 2
+    type: deployment
 ```
