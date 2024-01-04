@@ -33,6 +33,11 @@ docs/RBAC.md: ../../examples/default-values/output.yaml ../../examples/openshift
 	yq -y 'select(.metadata.name=="k8smon-grafana-agent") | select(.kind=="ClusterRole") | .rules' ../../examples/default-values/output.yaml >> docs/RBAC.md
 	echo '```' >> docs/RBAC.md
 
+	echo "## Grafana Agent Events" >> docs/RBAC.md
+	echo '```yaml' >> docs/RBAC.md
+	yq -y 'select(.metadata.name=="k8smon-grafana-agent-events") | select(.kind=="ClusterRole") | .rules' ../../examples/default-values/output.yaml >> docs/RBAC.md
+	echo '```' >> docs/RBAC.md
+
 	echo "## Grafana Agent Logs" >> docs/RBAC.md
 	echo '```yaml' >> docs/RBAC.md
 	yq -y 'select(.metadata.name=="k8smon-grafana-agent-logs") | select(.kind=="ClusterRole") | .rules' ../../examples/default-values/output.yaml >> docs/RBAC.md
