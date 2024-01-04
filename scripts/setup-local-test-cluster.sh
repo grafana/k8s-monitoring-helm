@@ -9,7 +9,7 @@ GRAFANA_VALUES="./.github/configs/grafana.yaml"
 SECRETGEN_CONTROLLER_MANIFEST=https://github.com/carvel-dev/secretgen-controller/releases/latest/download/release.yml
 CERTIFICATES_MANIFEST="./.github/configs/certificates.yaml"
 
-if ! kind get nodes --name "${CLUSTER_NAME}" > /dev/null 2>&1; then
+if ! kind get nodes --name "${CLUSTER_NAME}" | grep "No kind nodes found for cluster \"${CLUSTER_NAME}\"" > /dev/null 2>&1; then
   echo "Creating cluster..."
   kind create cluster --config "${CLUSTER_CONFIG}" --name "${CLUSTER_NAME}"
 fi

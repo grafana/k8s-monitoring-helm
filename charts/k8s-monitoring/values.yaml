@@ -1007,6 +1007,24 @@ grafana-agent:
 # You can use this sections to make modifications to the Grafana Agent deployment.
 # See https://github.com/grafana/agent/tree/main/operations/helm/charts/grafana-agent for available values.
 # @ignored -- This skips including these values in README.md
+grafana-agent-events:
+  agent:
+    # This chart is creating the configuration, so the grafana-agent chart does
+    # not need to.
+    configMap: {create: false}
+
+  controller:
+    type: deployment
+    nodeSelector:
+      kubernetes.io/os: linux
+
+  # Skip installation of the Grafana Agent CRDs, since we don't use them in this chart
+  crds: {create: false}
+
+# Settings for the Grafana Agent deployment
+# You can use this sections to make modifications to the Grafana Agent deployment.
+# See https://github.com/grafana/agent/tree/main/operations/helm/charts/grafana-agent for available values.
+# @ignored -- This skips including these values in README.md
 grafana-agent-logs:
   agent:
     # This chart is creating the configuration, so the grafana-agent chart does

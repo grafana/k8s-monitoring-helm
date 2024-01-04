@@ -77,6 +77,83 @@ Several components have specialized RBAC rules to perform their work. This docum
     - list
     - watch
 ```
+## Grafana Agent Events
+```yaml
+- apiGroups:
+    - ''
+    - discovery.k8s.io
+    - networking.k8s.io
+  resources:
+    - endpoints
+    - endpointslices
+    - ingresses
+    - nodes
+    - nodes/proxy
+    - nodes/metrics
+    - pods
+    - services
+  verbs:
+    - get
+    - list
+    - watch
+- apiGroups:
+    - ''
+  resources:
+    - pods
+    - pods/log
+    - namespaces
+  verbs:
+    - get
+    - list
+    - watch
+- apiGroups:
+    - monitoring.grafana.com
+  resources:
+    - podlogs
+  verbs:
+    - get
+    - list
+    - watch
+- apiGroups:
+    - monitoring.coreos.com
+  resources:
+    - prometheusrules
+  verbs:
+    - get
+    - list
+    - watch
+- nonResourceURLs:
+    - /metrics
+  verbs:
+    - get
+- apiGroups:
+    - monitoring.coreos.com
+  resources:
+    - podmonitors
+    - servicemonitors
+    - probes
+  verbs:
+    - get
+    - list
+    - watch
+- apiGroups:
+    - ''
+  resources:
+    - events
+  verbs:
+    - get
+    - list
+    - watch
+- apiGroups:
+    - ''
+  resources:
+    - configmaps
+    - secrets
+  verbs:
+    - get
+    - list
+    - watch
+```
 ## Grafana Agent Logs
 ```yaml
 - apiGroups:
