@@ -37,7 +37,7 @@ install-deps: scripts/install-deps.sh
 	yq -r "select(.metadata.name==\"k8smon-grafana-agent-logs\") | .data[\"config.river\"] | select( . != null )" $< > $@
 
 clean:
-	rm -f $(OUTPUT_FILES) $(METRIC_CONFIG_FILES) $(LOG_CONFIG_FILES)
+	rm -f $(OUTPUT_FILES) $(METRIC_CONFIG_FILES) $(EVENT_CONFIG_FILES) $(LOG_CONFIG_FILES)
 
 generate-example-outputs: $(OUTPUT_FILES) $(METRIC_CONFIG_FILES) $(EVENT_CONFIG_FILES) $(LOG_CONFIG_FILES)
 
