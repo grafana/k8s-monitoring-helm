@@ -57,6 +57,15 @@ prometheus.relabel "node_exporter" {
     action = "keep"
   }
 {{- end }}
+{{- if (index .Values.metrics "node-exporter").cardinalityImprovements.dropTempFSMetrics }}
+  // Drop metrics from
+  rule {
+    source_labels = ["__name__", "fstype"]
+    separator = "@"
+    regex = "node_filesystem.*@tmpfs"
+    action = "drop"
+  }
+{{- end }}
 {{- if .Values.metrics.extraMetricRelabelingRules }}
 {{ .Values.metrics.extraMetricRelabelingRules | indent 2 }}
 {{- end }}

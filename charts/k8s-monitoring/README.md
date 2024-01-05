@@ -199,10 +199,11 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | metrics.autoDiscover.enabled | bool | `true` |  |
 | metrics.autoDiscover.extraMetricRelabelingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for auto-discovered entities. See https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block |
 | metrics.autoDiscover.extraRelabelingRules | string | `""` | Rule blocks to be added to the discovery.relabel component for auto-discovered entities. See https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block |
-| metrics.cadvisor.allowList | list | See [Allow List for cAdvisor](#allow-list-for-cadvisor) | The list of cAdvisor metrics that will be scraped by the Agent |
+| metrics.cadvisor.allowList | list | See [Allow List for cAdvisor](#allow-list-for-cadvisor) | The list of cAdvisor metrics that will be scraped by the Agent. |
 | metrics.cadvisor.enabled | bool | `true` | Scrape container metrics from cAdvisor |
 | metrics.cadvisor.extraMetricRelabelingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for cAdvisor. See https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block |
 | metrics.cadvisor.extraRelabelingRules | string | `""` | Rule blocks to be added to the discovery.relabel component for cAdvisor. See https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block |
+| metrics.cadvisor.includeCardinalityImprovements | bool | `true` | Should some aggressive cardinality improvements be included? This will remove metrics and labels that are not typically necessary for Kubernetes cluster infrastructure monitoring, but it may have implications for dashboards or alerts that use them. |
 | metrics.cadvisor.scrapeInterval | string | 60s | How frequently to scrape metrics from cAdvisor. Overrides metrics.scrapeInterval |
 | metrics.cost.allowList | list | See [Allow List for OpenCost](#allow-list-for-opencost) | The list of OpenCost metrics that will be scraped by the Agent |
 | metrics.cost.enabled | bool | `true` | Scrape cost metrics from OpenCost |
@@ -246,6 +247,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | metrics.kubelet.scrapeInterval | string | 60s | How frequently to scrape metrics from the Kubelet. Overrides metrics.scrapeInterval |
 | metrics.kubernetesMonitoring.enabled | bool | `true` | Report telemetry about this Kubernetes Monitoring chart as a metric. |
 | metrics.node-exporter.allowList | list | See [Allow List for Node Exporter](#allow-list-for-node-exporter) | The list of Node Exporter metrics that will be scraped by the Agent |
+| metrics.node-exporter.cardinalityImprovements | object | `{"dropTempFSMetrics":true}` | Should some aggressive cardinality improvements be included? This will remove metrics and labels that are not typically necessary for Kubernetes cluster infrastructure monitoring, but it may have implications for dashboards or alerts that use them. |
 | metrics.node-exporter.enabled | bool | `true` | Scrape node metrics |
 | metrics.node-exporter.extraMetricRelabelingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for Node Exporter. See https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block |
 | metrics.node-exporter.extraRelabelingRules | string | `""` | Rule blocks to be added to the discovery.relabel component for Node Exporter. See https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block |

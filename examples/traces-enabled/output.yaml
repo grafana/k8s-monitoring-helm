@@ -562,6 +562,92 @@ data:
         regex = "up|container_cpu_cfs_periods_total|container_cpu_cfs_throttled_periods_total|container_cpu_usage_seconds_total|container_fs_reads_bytes_total|container_fs_reads_total|container_fs_writes_bytes_total|container_fs_writes_total|container_memory_cache|container_memory_rss|container_memory_swap|container_memory_working_set_bytes|container_network_receive_bytes_total|container_network_receive_packets_dropped_total|container_network_receive_packets_total|container_network_transmit_bytes_total|container_network_transmit_packets_dropped_total|container_network_transmit_packets_total|machine_memory_bytes"
         action = "keep"
       }
+      // Drop empty image and container labels, addressing https://github.com/google/cadvisor/issues/2688
+      rule {
+        source_labels = ["__name__","image"]
+        separator = "@"
+        regex = "(container_cpu_.*|container_fs_.*|container_memory_.*|container_network_.*)@"
+        action = "drop"
+      }
+      rule {
+        source_labels = ["__name__","container"]
+        separator = "@"
+        regex = "(container_cpu_.*|container_fs_.*|container_memory_.*)@"
+        action = "drop"
+      }
+    
+      // Normalizing unimportant labels (not deleting to continue satisfying <label>!="" checks)
+      rule {
+        source_labels = ["__name__"]
+        regex = "container_cpu_.*|container_fs_.*|container_memory_.*|container_network_.*"
+        target_label = "id"
+        replacement = "NA"
+      }
+      rule {
+        source_labels = ["__name__"]
+        regex = "container_cpu_.*|container_fs_.*|container_memory_.*|container_network_.*"
+        target_label = "image"
+        replacement = "NA"
+      }
+      rule {
+        source_labels = ["__name__"]
+        regex = "container_cpu_.*|container_fs_.*|container_memory_.*|container_network_.*"
+        target_label = "name"
+        replacement = "NA"
+      }
+      rule {
+        source_labels = ["__name__"]
+        regex = "machine_memory_bytes"
+        target_label = "boot_id"
+        replacement = "NA"
+      }
+      rule {
+        source_labels = ["__name__"]
+        regex = "machine_memory_bytes"
+        target_label = "system_uuid"
+        replacement = "NA"
+      }
+    
+      // Filter out non-physical devices/interfaces
+      rule {
+        source_labels = ["__name__", "device"]
+        separator = "@"
+        regex = "container_fs_.*@(/dev/)?(mmcblk.p.+|nvme.+|rbd.+|sd.+|vd.+|xvd.+|dasd.+)"
+        target_label = "__keepme"
+        replacement = "1"
+      }
+      rule {
+        source_labels = ["__name__", "__keepme"]
+        separator = "@"
+        regex = "container_fs_.*@"
+        action = "drop"
+      }
+      rule {
+        source_labels = ["__name__"]
+        regex = "container_fs_.*"
+        target_label = "__keepme"
+        replacement = ""
+      }
+    
+      rule {
+        source_labels = ["__name__", "interface"]
+        separator = "@"
+        regex = "container_network_.*@(en[ospx]|wlan|eth)[0-9].*"
+        target_label = "__keepme"
+        replacement = "1"
+      }
+      rule {
+        source_labels = ["__name__", "__keepme"]
+        separator = "@"
+        regex = "container_network_.*@"
+        action = "drop"
+      }
+      rule {
+        source_labels = ["__name__"]
+        regex = "container_network_.*"
+        target_label = "__keepme"
+        replacement = ""
+      }
       forward_to = [prometheus.relabel.metrics_service.receiver]
     }
     
@@ -639,6 +725,13 @@ data:
         source_labels = ["__name__"]
         regex = "up|node_cpu.*|node_exporter_build_info|node_filesystem.*|node_memory.*|process_cpu_seconds_total|process_resident_memory_bytes"
         action = "keep"
+      }
+      // Drop metrics from
+      rule {
+        source_labels = ["__name__", "fstype"]
+        separator = "@"
+        regex = "node_filesystem.*@tmpfs"
+        action = "drop"
       }
       forward_to = [prometheus.relabel.metrics_service.receiver]
     }
@@ -45188,6 +45281,92 @@ data:
         regex = "up|container_cpu_cfs_periods_total|container_cpu_cfs_throttled_periods_total|container_cpu_usage_seconds_total|container_fs_reads_bytes_total|container_fs_reads_total|container_fs_writes_bytes_total|container_fs_writes_total|container_memory_cache|container_memory_rss|container_memory_swap|container_memory_working_set_bytes|container_network_receive_bytes_total|container_network_receive_packets_dropped_total|container_network_receive_packets_total|container_network_transmit_bytes_total|container_network_transmit_packets_dropped_total|container_network_transmit_packets_total|machine_memory_bytes"
         action = "keep"
       }
+      // Drop empty image and container labels, addressing https://github.com/google/cadvisor/issues/2688
+      rule {
+        source_labels = ["__name__","image"]
+        separator = "@"
+        regex = "(container_cpu_.*|container_fs_.*|container_memory_.*|container_network_.*)@"
+        action = "drop"
+      }
+      rule {
+        source_labels = ["__name__","container"]
+        separator = "@"
+        regex = "(container_cpu_.*|container_fs_.*|container_memory_.*)@"
+        action = "drop"
+      }
+    
+      // Normalizing unimportant labels (not deleting to continue satisfying <label>!="" checks)
+      rule {
+        source_labels = ["__name__"]
+        regex = "container_cpu_.*|container_fs_.*|container_memory_.*|container_network_.*"
+        target_label = "id"
+        replacement = "NA"
+      }
+      rule {
+        source_labels = ["__name__"]
+        regex = "container_cpu_.*|container_fs_.*|container_memory_.*|container_network_.*"
+        target_label = "image"
+        replacement = "NA"
+      }
+      rule {
+        source_labels = ["__name__"]
+        regex = "container_cpu_.*|container_fs_.*|container_memory_.*|container_network_.*"
+        target_label = "name"
+        replacement = "NA"
+      }
+      rule {
+        source_labels = ["__name__"]
+        regex = "machine_memory_bytes"
+        target_label = "boot_id"
+        replacement = "NA"
+      }
+      rule {
+        source_labels = ["__name__"]
+        regex = "machine_memory_bytes"
+        target_label = "system_uuid"
+        replacement = "NA"
+      }
+    
+      // Filter out non-physical devices/interfaces
+      rule {
+        source_labels = ["__name__", "device"]
+        separator = "@"
+        regex = "container_fs_.*@(/dev/)?(mmcblk.p.+|nvme.+|rbd.+|sd.+|vd.+|xvd.+|dasd.+)"
+        target_label = "__keepme"
+        replacement = "1"
+      }
+      rule {
+        source_labels = ["__name__", "__keepme"]
+        separator = "@"
+        regex = "container_fs_.*@"
+        action = "drop"
+      }
+      rule {
+        source_labels = ["__name__"]
+        regex = "container_fs_.*"
+        target_label = "__keepme"
+        replacement = ""
+      }
+    
+      rule {
+        source_labels = ["__name__", "interface"]
+        separator = "@"
+        regex = "container_network_.*@(en[ospx]|wlan|eth)[0-9].*"
+        target_label = "__keepme"
+        replacement = "1"
+      }
+      rule {
+        source_labels = ["__name__", "__keepme"]
+        separator = "@"
+        regex = "container_network_.*@"
+        action = "drop"
+      }
+      rule {
+        source_labels = ["__name__"]
+        regex = "container_network_.*"
+        target_label = "__keepme"
+        replacement = ""
+      }
       forward_to = [prometheus.relabel.metrics_service.receiver]
     }
     
@@ -45265,6 +45444,13 @@ data:
         source_labels = ["__name__"]
         regex = "up|node_cpu.*|node_exporter_build_info|node_filesystem.*|node_memory.*|process_cpu_seconds_total|process_resident_memory_bytes"
         action = "keep"
+      }
+      // Drop metrics from
+      rule {
+        source_labels = ["__name__", "fstype"]
+        separator = "@"
+        regex = "node_filesystem.*@tmpfs"
+        action = "drop"
       }
       forward_to = [prometheus.relabel.metrics_service.receiver]
     }

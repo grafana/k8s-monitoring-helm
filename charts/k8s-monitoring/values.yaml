@@ -372,6 +372,12 @@ metrics:
     - process_cpu_seconds_total
     - process_resident_memory_bytes
 
+    # -- Should some aggressive cardinality improvements be included? This will remove metrics and labels that are not
+    # typically necessary for Kubernetes cluster infrastructure monitoring, but it may have implications for dashboards
+    # or alerts that use them.
+    cardinalityImprovements:
+      dropTempFSMetrics: true
+
   # Windows Node metrics from Windows Exporter
   windows-exporter:
     # -- Scrape node metrics
@@ -475,7 +481,7 @@ metrics:
     # See https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block
     extraMetricRelabelingRules: ""
 
-    # -- The list of cAdvisor metrics that will be scraped by the Agent
+    # -- The list of cAdvisor metrics that will be scraped by the Agent.
     # @default -- See [Allow List for cAdvisor](#allow-list-for-cadvisor)
     allowList:
     - container_cpu_cfs_periods_total
@@ -496,6 +502,11 @@ metrics:
     - container_network_transmit_packets_dropped_total
     - container_network_transmit_packets_total
     - machine_memory_bytes
+
+    # -- Should some aggressive cardinality improvements be included? This will remove metrics and labels that are not
+    # typically necessary for Kubernetes cluster infrastructure monitoring, but it may have implications for dashboards
+    # or alerts that use them.
+    includeCardinalityImprovements: true
 
   # Metrics from the API Server
   apiserver:
