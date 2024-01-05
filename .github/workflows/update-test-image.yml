@@ -1,4 +1,4 @@
-name: update-test-image
+name: Build and Push Test Image
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
       - main
 
 jobs:
-  docker:
+  build-and-push-test-image:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -14,7 +14,7 @@ jobs:
 
       - name: Get Version
         id: get-version
-        run: yq -r '"version=\(.version)"' source/charts/k8s-monitoring/Chart.yaml >> $GITHUB_OUTPUT
+        run: yq -r '"version=\(.version)"' $GITHUB_WORKSPACE/charts/k8s-monitoring/Chart.yaml >> $GITHUB_OUTPUT
 
       - name: Docker meta
         id: meta
@@ -35,5 +35,6 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v5
         with:
+          context: $GITHUB_WORKSPACE/charts/k8s-monitoring/test
           push: true
           tags: ${{ steps.meta.outputs.tags }}
