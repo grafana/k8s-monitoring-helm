@@ -14,7 +14,9 @@ jobs:
 
       - name: Get Version
         id: get-version
-        run: yq -r '"version=\(.version)"' $GITHUB_WORKSPACE/charts/k8s-monitoring/Chart.yaml >> $GITHUB_OUTPUT
+        run: |
+          version=$(yq -r '.version' $GITHUB_WORKSPACE/charts/k8s-monitoring/Chart.yaml)
+          echo "version=${version}" >> $GITHUB_OUTPUT
 
       - name: Docker meta
         id: meta
