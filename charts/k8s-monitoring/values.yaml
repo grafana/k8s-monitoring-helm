@@ -506,7 +506,16 @@ metrics:
     # -- Should some aggressive cardinality improvements be included? This will remove metrics and labels that are not
     # typically necessary for Kubernetes cluster infrastructure monitoring, but it may have implications for dashboards
     # or alerts that use them.
-    includeCardinalityImprovements: true
+    cardinalityImprovements:
+      dropEmptyContainerLabels: true
+      dropEmptyImageLabels: true
+      normalizeLabels:
+        - metric: "container_cpu_.*|container_fs_.*|container_memory_.*|container_network_.*"
+          labels: ["id", "name", "image"]
+        - metric: "machine_memory_bytes"
+          labels: ["boot_id", "system_uuid"]
+      keepPhysicalFilesystemDevices: ["mmcblk.p.+", "nvme.+", "rbd.+", "sd.+", "vd.+", "xvd.+", "dasd.+"]
+      keepPhysicalNetworkDevices: ["en[ospx][0-9].*", "wlan[0-9].*", "eth[0-9].*"]
 
   # Metrics from the API Server
   apiserver:

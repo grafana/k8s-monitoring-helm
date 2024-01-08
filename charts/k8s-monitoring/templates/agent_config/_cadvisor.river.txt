@@ -45,58 +45,43 @@ prometheus.relabel "cadvisor" {
     action = "keep"
   }
 {{- end }}
-{{- if .Values.metrics.cadvisor.includeCardinalityImprovements }}
-  // Drop empty image and container labels, addressing https://github.com/google/cadvisor/issues/2688
-  rule {
-    source_labels = ["__name__","image"]
-    separator = "@"
-    regex = "(container_cpu_.*|container_fs_.*|container_memory_.*|container_network_.*)@"
-    action = "drop"
-  }
+{{- if .Values.metrics.cadvisor.cardinalityImprovements.dropEmptyContainerLabels }}
+  // Drop empty container labels, addressing https://github.com/google/cadvisor/issues/2688
   rule {
     source_labels = ["__name__","container"]
     separator = "@"
     regex = "(container_cpu_.*|container_fs_.*|container_memory_.*)@"
     action = "drop"
   }
-
+{{- end }}
+{{- if .Values.metrics.cadvisor.cardinalityImprovements.dropEmptyImageLabels }}
+  // Drop empty image labels, addressing https://github.com/google/cadvisor/issues/2688
+  rule {
+    source_labels = ["__name__","image"]
+    separator = "@"
+    regex = "(container_cpu_.*|container_fs_.*|container_memory_.*|container_network_.*)@"
+    action = "drop"
+  }
+{{- end }}
+{{- if .Values.metrics.cadvisor.cardinalityImprovements.normalizeLabels }}
   // Normalizing unimportant labels (not deleting to continue satisfying <label>!="" checks)
+  {{- range $i := .Values.metrics.cadvisor.cardinalityImprovements.normalizeLabels }}
+  {{- range $label := $i.labels }}
   rule {
     source_labels = ["__name__"]
-    regex = "container_cpu_.*|container_fs_.*|container_memory_.*|container_network_.*"
-    target_label = "id"
+    regex = "{{ $i.metric }}"
+    target_label = "{{ $label }}"
     replacement = "NA"
   }
-  rule {
-    source_labels = ["__name__"]
-    regex = "container_cpu_.*|container_fs_.*|container_memory_.*|container_network_.*"
-    target_label = "image"
-    replacement = "NA"
-  }
-  rule {
-    source_labels = ["__name__"]
-    regex = "container_cpu_.*|container_fs_.*|container_memory_.*|container_network_.*"
-    target_label = "name"
-    replacement = "NA"
-  }
-  rule {
-    source_labels = ["__name__"]
-    regex = "machine_memory_bytes"
-    target_label = "boot_id"
-    replacement = "NA"
-  }
-  rule {
-    source_labels = ["__name__"]
-    regex = "machine_memory_bytes"
-    target_label = "system_uuid"
-    replacement = "NA"
-  }
-
+  {{- end }}
+  {{- end }}
+{{- end }}
+{{- if .Values.metrics.cadvisor.cardinalityImprovements.keepPhysicalFilesystemDevices }}
   // Filter out non-physical devices/interfaces
   rule {
     source_labels = ["__name__", "device"]
     separator = "@"
-    regex = "container_fs_.*@(/dev/)?(mmcblk.p.+|nvme.+|rbd.+|sd.+|vd.+|xvd.+|dasd.+)"
+    regex = "container_fs_.*@(/dev/)?({{ join "|" .Values.metrics.cadvisor.cardinalityImprovements.keepPhysicalFilesystemDevices }})"
     target_label = "__keepme"
     replacement = "1"
   }
@@ -112,11 +97,12 @@ prometheus.relabel "cadvisor" {
     target_label = "__keepme"
     replacement = ""
   }
-
+{{- end }}
+{{- if .Values.metrics.cadvisor.cardinalityImprovements.keepPhysicalNetworkDevices }}
   rule {
     source_labels = ["__name__", "interface"]
     separator = "@"
-    regex = "container_network_.*@(en[ospx]|wlan|eth)[0-9].*"
+    regex = "container_network_.*@({{ join "|" .Values.metrics.cadvisor.cardinalityImprovements.keepPhysicalNetworkDevices }})"
     target_label = "__keepme"
     replacement = "1"
   }
