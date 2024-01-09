@@ -335,6 +335,17 @@ metrics:
     - kube_resourcequota
     - kube_statefulset.*
 
+    cardinalityImprovements:
+      # -- Normalize labels to the same value for the given metric and label pairs
+      normalizeUnnecessaryLabels:
+        - labels: ["image", "image_id", "image_spec", "uid"]
+        - metric: "kube_pod_info|kube_pod_owner"
+          labels: ["created_by_name"]
+        - metric: "kube_pod_container_info"
+          labels: ["container_id"]
+        - metric: "kube_pod_info"
+          labels: ["host_ip", "pod_ip"]
+
   # Node metrics from Node Exporter
   node-exporter:
     # -- Scrape node metrics
@@ -372,10 +383,8 @@ metrics:
     - process_cpu_seconds_total
     - process_resident_memory_bytes
 
-    # -- Should some aggressive cardinality improvements be included? This will remove metrics and labels that are not
-    # typically necessary for Kubernetes cluster infrastructure monitoring, but it may have implications for dashboards
-    # or alerts that use them.
     cardinalityImprovements:
+      # -- Drop node filesystem metrics with tempfs
       dropTempFSMetrics: true
 
   # Windows Node metrics from Windows Exporter
@@ -503,18 +512,20 @@ metrics:
     - container_network_transmit_packets_total
     - machine_memory_bytes
 
-    # -- Should some aggressive cardinality improvements be included? This will remove metrics and labels that are not
-    # typically necessary for Kubernetes cluster infrastructure monitoring, but it may have implications for dashboards
-    # or alerts that use them.
     cardinalityImprovements:
+      # -- Drop metrics that have an empty container label
       dropEmptyContainerLabels: true
+      # -- Drop metrics that have an empty image label
       dropEmptyImageLabels: true
-      normalizeLabels:
+      # -- Normalize labels to the same value for the given metric and label pairs
+      normalizeUnnecessaryLabels:
         - metric: "container_cpu_.*|container_fs_.*|container_memory_.*|container_network_.*"
           labels: ["id", "name", "image"]
         - metric: "machine_memory_bytes"
           labels: ["boot_id", "system_uuid"]
+      # -- Only keep filesystem metrics that use the following physical devices
       keepPhysicalFilesystemDevices: ["mmcblk.p.+", "nvme.+", "rbd.+", "sd.+", "vd.+", "xvd.+", "dasd.+"]
+      # -- Only keep network metrics that use the following physical devices
       keepPhysicalNetworkDevices: ["en[ospx][0-9].*", "wlan[0-9].*", "eth[0-9].*"]
 
   # Metrics from the API Server

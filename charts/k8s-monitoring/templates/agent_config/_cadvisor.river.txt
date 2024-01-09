@@ -63,9 +63,9 @@ prometheus.relabel "cadvisor" {
     action = "drop"
   }
 {{- end }}
-{{- if .Values.metrics.cadvisor.cardinalityImprovements.normalizeLabels }}
+{{- if .Values.metrics.cadvisor.cardinalityImprovements.normalizeUnnecessaryLabels }}
   // Normalizing unimportant labels (not deleting to continue satisfying <label>!="" checks)
-  {{- range $i := .Values.metrics.cadvisor.cardinalityImprovements.normalizeLabels }}
+  {{- range $i := .Values.metrics.cadvisor.cardinalityImprovements.normalizeUnnecessaryLabels }}
   {{- range $label := $i.labels }}
   rule {
     source_labels = ["__name__"]

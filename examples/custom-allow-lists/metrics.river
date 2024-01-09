@@ -548,6 +548,51 @@ prometheus.relabel "kube_state_metrics" {
     regex = "up|.*"
     action = "keep"
   }
+  // Normalizing unimportant labels (not deleting to continue satisfying <label>!="" checks)
+  rule {
+    source_labels = ["__name__"]
+    target_label = "image"
+    replacement = "NA"
+  }
+  rule {
+    source_labels = ["__name__"]
+    target_label = "image_id"
+    replacement = "NA"
+  }
+  rule {
+    source_labels = ["__name__"]
+    target_label = "image_spec"
+    replacement = "NA"
+  }
+  rule {
+    source_labels = ["__name__"]
+    target_label = "uid"
+    replacement = "NA"
+  }
+  rule {
+    source_labels = ["__name__"]
+    regex = "kube_pod_info|kube_pod_owner"
+    target_label = "created_by_name"
+    replacement = "NA"
+  }
+  rule {
+    source_labels = ["__name__"]
+    regex = "kube_pod_container_info"
+    target_label = "container_id"
+    replacement = "NA"
+  }
+  rule {
+    source_labels = ["__name__"]
+    regex = "kube_pod_info"
+    target_label = "host_ip"
+    replacement = "NA"
+  }
+  rule {
+    source_labels = ["__name__"]
+    regex = "kube_pod_info"
+    target_label = "pod_ip"
+    replacement = "NA"
+  }
   forward_to = [prometheus.relabel.metrics_service.receiver]
 }
 

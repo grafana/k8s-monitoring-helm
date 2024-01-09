@@ -548,6 +548,51 @@ prometheus.relabel "kube_state_metrics" {
     regex = "up|kube_daemonset.*|kube_deployment_metadata_generation|kube_deployment_spec_replicas|kube_deployment_status_observed_generation|kube_deployment_status_replicas_available|kube_deployment_status_replicas_updated|kube_horizontalpodautoscaler_spec_max_replicas|kube_horizontalpodautoscaler_spec_min_replicas|kube_horizontalpodautoscaler_status_current_replicas|kube_horizontalpodautoscaler_status_desired_replicas|kube_job.*|kube_namespace_status_phase|kube_node.*|kube_persistentvolumeclaim_resource_requests_storage_bytes|kube_pod_container_info|kube_pod_container_resource_limits|kube_pod_container_resource_requests|kube_pod_container_status_last_terminated_reason|kube_pod_container_status_restarts_total|kube_pod_container_status_waiting_reason|kube_pod_info|kube_pod_owner|kube_pod_start_time|kube_pod_status_phase|kube_pod_status_reason|kube_replicaset.*|kube_resourcequota|kube_statefulset.*"
     action = "keep"
   }
+  // Normalizing unimportant labels (not deleting to continue satisfying <label>!="" checks)
+  rule {
+    source_labels = ["__name__"]
+    target_label = "image"
+    replacement = "NA"
+  }
+  rule {
+    source_labels = ["__name__"]
+    target_label = "image_id"
+    replacement = "NA"
+  }
+  rule {
+    source_labels = ["__name__"]
+    target_label = "image_spec"
+    replacement = "NA"
+  }
+  rule {
+    source_labels = ["__name__"]
+    target_label = "uid"
+    replacement = "NA"
+  }
+  rule {
+    source_labels = ["__name__"]
+    regex = "kube_pod_info|kube_pod_owner"
+    target_label = "created_by_name"
+    replacement = "NA"
+  }
+  rule {
+    source_labels = ["__name__"]
+    regex = "kube_pod_container_info"
+    target_label = "container_id"
+    replacement = "NA"
+  }
+  rule {
+    source_labels = ["__name__"]
+    regex = "kube_pod_info"
+    target_label = "host_ip"
+    replacement = "NA"
+  }
+  rule {
+    source_labels = ["__name__"]
+    regex = "kube_pod_info"
+    target_label = "pod_ip"
+    replacement = "NA"
+  }
   forward_to = [prometheus.relabel.metrics_service.receiver]
 }
 
