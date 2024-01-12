@@ -218,8 +218,10 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | metrics.enabled | bool | `true` | Capture and forward metrics |
 | metrics.extraMetricRelabelingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for all metric sources. See https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block |
 | metrics.extraRelabelingRules | string | `""` | Rule blocks to be added to the discovery.relabel component for all metric sources. See https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block |
-| metrics.kube-state-metrics.allowList | list | See [Allow List for Kube State Metrics](#allow-list-for-kube-state-metrics) | The list of Kube State Metrics metrics that will be scraped by the Agent |
+| metrics.kube-state-metrics.cardinalityImprovements.excludeMetrics | list | `[]` | Metrics to be dropped |
+| metrics.kube-state-metrics.cardinalityImprovements.includeMetrics | list | `[]` | Metrics to be kept |
 | metrics.kube-state-metrics.cardinalityImprovements.normalizeUnnecessaryLabels | list | `[{"labels":["image","image_id","image_spec","uid"]},{"labels":["created_by_name"],"metric":"kube_pod_info|kube_pod_owner"},{"labels":["container_id"],"metric":"kube_pod_container_info"},{"labels":["host_ip","pod_ip"],"metric":"kube_pod_info"}]` | Normalize labels to the same value for the given metric and label pairs |
+| metrics.kube-state-metrics.cardinalityImprovements.useAllowList | bool | `true` | Filter the list of metrics from Kube State Metrics to a useful, minimal set. See [Allow List for Kube State Metrics](#allow-list-for-kube-state-metrics) |
 | metrics.kube-state-metrics.enabled | bool | `true` | Scrape cluster object metrics from Kube State Metrics |
 | metrics.kube-state-metrics.extraMetricRelabelingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for Kube State Metrics. See https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block |
 | metrics.kube-state-metrics.extraRelabelingRules | string | `""` | Rule blocks to be added to the discovery.relabel component for Kube State Metrics. See https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block |
