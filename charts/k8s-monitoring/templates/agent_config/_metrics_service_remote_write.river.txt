@@ -25,6 +25,12 @@ prometheus.remote_write "metrics_service" {
 {{- end }}
   }
 
+  wal {
+    truncate_frequency = {{ .wal.truncateFrequency | quote }}
+    min_keepalive_time = {{ .wal.minKeepaliveTime | quote }}
+    max_keepalive_time = {{ .wal.maxKeepaliveTime | quote }}
+  }
+
   external_labels = {
   {{- range $key, $value := .externalLabels }}
     {{ $key }} = {{ $value | quote }},
