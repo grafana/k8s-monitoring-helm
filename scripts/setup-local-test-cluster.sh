@@ -33,6 +33,7 @@ helm install mysql oci://registry-1.docker.io/bitnamicharts/mysql -f "${MYSQL_VA
 kubectl apply -f "${MYSQL_CONFIG_MANIFEST}"
 
 # Cert Manager for integration testing (service annotations)
+helm repo add jetstack https://charts.jetstack.io
 helm install cert-manager jetstack/cert-manager -f "${CERT_MANAGER_VALUES}" -n cert-manager --create-namespace --wait
 
 # This agent is only used for generating metrics, logs, and traces that'll get
