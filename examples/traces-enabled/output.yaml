@@ -204,6 +204,13 @@ data:
           "set(attributes[\"loki.resource.labels\"], \"pod, namespace, cluster, job\")",
         ]
       }
+      trace_statements {
+        context = "resource"
+        statements = [
+          // Accessing a map with a key that does not exist will return nil.
+          "set(attributes[\"k8s.cluster.name\"], \"traces-enabled-test\") where attributes[\"k8s.cluster.name\"] == nil",
+        ]
+      }
       output {
         logs = [otelcol.exporter.loki.otel_to_loki_converter.input]
         traces = [otelcol.processor.batch.trace_batch_processor.input]
@@ -802,11 +809,6 @@ data:
         key = "cluster"
         value = "traces-enabled-test"
         action = "insert"
-      }
-      action {
-        key = "k8s.cluster.name"
-        value = "traces-enabled-test"
-        action = "upsert"
       }
       output {
         traces = [otelcol.exporter.otlp.traces_service.input]
@@ -44814,6 +44816,13 @@ data:
           "set(attributes[\"loki.resource.labels\"], \"pod, namespace, cluster, job\")",
         ]
       }
+      trace_statements {
+        context = "resource"
+        statements = [
+          // Accessing a map with a key that does not exist will return nil.
+          "set(attributes[\"k8s.cluster.name\"], \"traces-enabled-test\") where attributes[\"k8s.cluster.name\"] == nil",
+        ]
+      }
       output {
         logs = [otelcol.exporter.loki.otel_to_loki_converter.input]
         traces = [otelcol.processor.batch.trace_batch_processor.input]
@@ -45412,11 +45421,6 @@ data:
         key = "cluster"
         value = "traces-enabled-test"
         action = "insert"
-      }
-      action {
-        key = "k8s.cluster.name"
-        value = "traces-enabled-test"
-        action = "upsert"
       }
       output {
         traces = [otelcol.exporter.otlp.traces_service.input]
