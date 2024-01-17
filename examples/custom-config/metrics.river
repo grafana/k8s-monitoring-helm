@@ -68,13 +68,6 @@ otelcol.processor.transform "add_attributes" {
       "set(attributes[\"loki.resource.labels\"], \"pod, namespace, cluster, job\")",
     ]
   }
-  trace_statements {
-    context = "resource"
-    statements = [
-      // Accessing a map with a key that does not exist will return nil.
-      "set(attributes[\"k8s.cluster.name\"], \"custom-config-test\") where attributes[\"k8s.cluster.name\"] == nil",
-    ]
-  }
   output {
     logs = [otelcol.exporter.loki.otel_to_loki_converter.input]
   }
