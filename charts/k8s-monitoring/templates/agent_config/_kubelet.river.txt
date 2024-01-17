@@ -1,3 +1,43 @@
+{{ define "agent.config.kubelet.allowList" }}
+{{ if .Values.metrics.kubelet.cardinalityImprovements.useAllowList }}
+- container_cpu_usage_seconds_total
+- kubelet_certificate_manager_client_expiration_renew_errors
+- kubelet_certificate_manager_client_ttl_seconds
+- kubelet_certificate_manager_server_ttl_seconds
+- kubelet_cgroup_manager_duration_seconds_bucket
+- kubelet_cgroup_manager_duration_seconds_count
+- kubelet_node_config_error
+- kubelet_node_name
+- kubelet_pleg_relist_duration_seconds_bucket
+- kubelet_pleg_relist_duration_seconds_count
+- kubelet_pleg_relist_interval_seconds_bucket
+- kubelet_pod_start_duration_seconds_bucket
+- kubelet_pod_start_duration_seconds_count
+- kubelet_pod_worker_duration_seconds_bucket
+- kubelet_pod_worker_duration_seconds_count
+- kubelet_running_container_count
+- kubelet_running_containers
+- kubelet_running_pod_count
+- kubelet_running_pods
+- kubelet_runtime_operations_errors_total
+- kubelet_runtime_operations_total
+- kubelet_server_expiration_renew_errors
+- kubelet_volume_stats_available_bytes
+- kubelet_volume_stats_capacity_bytes
+- kubelet_volume_stats_inodes
+- kubelet_volume_stats_inodes_used
+- kubernetes_build_info
+- namespace_workload_pod
+- rest_client_requests_total
+- storage_operation_duration_seconds_count
+- storage_operation_errors_total
+- volume_manager_total_volumes
+{{ end }}
+{{ if .Values.metrics.kubelet.cardinalityImprovements.includeMetrics }}
+{{ .Values.metrics.kubelet.cardinalityImprovements.includeMetrics | toYaml }}
+{{ end }}
+{{ end }}
+
 {{ define "agent.config.kubelet" }}
 // Kubelet
 discovery.relabel "kubelet" {
@@ -38,11 +78,18 @@ prometheus.scrape "kubelet" {
 }
 
 prometheus.relabel "kubelet" {
-{{- if .Values.metrics.kubelet.allowList }}
+{{- if or .Values.metrics.kubelet.cardinalityImprovements.useAllowList .Values.metrics.kubelet.cardinalityImprovements.includeMetrics }}
   rule {
     source_labels = ["__name__"]
-    regex = "up|{{ join "|" .Values.metrics.kubelet.allowList }}"
+    regex = "up|{{ join "|" (include "agent.config.kubelet.allowList" . | fromYamlArray) }}"
     action = "keep"
+  }
+{{- end }}
+{{- if .Values.metrics.kubelet.cardinalityImprovements.excludeMetrics }}
+  rule {
+    source_labels = ["__name__"]
+    regex = {{ join "|" .Values.metrics.kubelet.cardinalityImprovements.excludeMetrics | quote }}
+    action = "drop"
   }
 {{- end }}
 {{- if .Values.metrics.extraRelabelingRules }}

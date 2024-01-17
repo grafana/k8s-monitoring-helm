@@ -1,3 +1,16 @@
+{{ define "agent.config.windows_exporter.allowList" }}
+{{ if (index .Values.metrics "windows-exporter").cardinalityImprovements.useAllowList }}
+- windows_.*
+- node_cpu_seconds_total
+- node_filesystem_size_bytes
+- node_filesystem_avail_bytes
+- container_cpu_usage_seconds_total
+{{ end }}
+{{ if (index .Values.metrics "windows-exporter").cardinalityImprovements.includeMetrics }}
+{{ (index .Values.metrics "windows-exporter").cardinalityImprovements.includeMetrics | toYaml }}
+{{ end }}
+{{ end }}
+
 {{ define "agent.config.windows_exporter" }}
 // Windows Exporter
 discovery.relabel "windows_exporter" {
@@ -71,11 +84,18 @@ prometheus.relabel "windows_exporter" {
     replacement = "node_filesystem_avail_bytes"
     target_label = "__name__"
   }
-{{- if (index .Values.metrics "windows-exporter").allowList }}
+{{- if or (index .Values.metrics "windows-exporter").cardinalityImprovements.useAllowList (index .Values.metrics "windows-exporter").cardinalityImprovements.includeMetrics }}
   rule {
     source_labels = ["__name__"]
-    regex = "up|{{ join "|" (index .Values.metrics "windows-exporter").allowList }}"
+    regex = "up|{{ join "|" (include "agent.config.windows_exporter.allowList" . | fromYamlArray) }}"
     action = "keep"
+  }
+{{- end }}
+{{- if (index .Values.metrics "windows-exporter").cardinalityImprovements.excludeMetrics }}
+  rule {
+    source_labels = ["__name__"]
+    regex = {{ join "|" (index .Values.metrics "windows-exporter").cardinalityImprovements.excludeMetrics | quote }}
+    action = "drop"
   }
 {{- end }}
 {{- if .Values.metrics.extraMetricRelabelingRules }}

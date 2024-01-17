@@ -177,13 +177,18 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | logs.pod_logs.extraStageBlocks | string | `""` | Stage blocks to be added to the loki.process component for pod logs. See https://grafana.com/docs/agent/latest/flow/reference/components/loki.process/#blocks |
 | logs.pod_logs.gatherMethod | string | `"volumes"` | Controls the behavior of gathering pod logs. When set to "volumes", the Grafana Agent will use HostPath volume mounts on the cluster nodes to access the pod log files directly. When set to "api", the Grafana Agent will access pod logs via the API server. This method may be preferable if your cluster prevents DaemonSets, HostPath volume mounts, or for other reasons. |
 | logs.pod_logs.namespaces | list | `[]` | Only capture logs from pods in these namespaces (`[]` means all namespaces) |
-| metrics.agent.allowList | list | See [Allow List for Grafana Agent](#allow-list-for-grafana-agent) | The list of Grafana Agent metrics that will be scraped by the Agent |
+| metrics.agent.cardinalityImprovements.excludeMetrics | list | `[]` | Metrics to be dropped |
+| metrics.agent.cardinalityImprovements.includeMetrics | list | `[]` | Metrics to be kept |
+| metrics.agent.cardinalityImprovements.useAllowList | bool | `true` | Filter the list of metrics from the Grafana Agent to the minimal set required for Kubernetes Monitoring. See [Allow List for Grafana Agent](#allow-list-for-grafana-agent) |
+| metrics.agent.cardinalityImprovements.useIntegrationAllowList | bool | `false` | Filter the list of metrics from the Grafana Agent to the minimal set required for Kubernetes Monitoring and the Grafana Agent integration. |
 | metrics.agent.enabled | bool | `true` | Scrape metrics from Grafana Agent |
 | metrics.agent.extraMetricRelabelingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for Grafana Agent. See https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block |
 | metrics.agent.extraRelabelingRules | string | `""` | Rule blocks to be added to the discovery.relabel component for Grafana Agent. See https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block |
 | metrics.agent.labelMatchers | object | `{"app.kubernetes.io/name":"grafana-agent.*"}` | Label matchers used by the Grafana Agent to select Grafana Agent pods |
 | metrics.agent.scrapeInterval | string | 60s | How frequently to scrape metrics from Grafana Agent. Overrides metrics.scrapeInterval |
-| metrics.apiserver.allowList | list | `[]` | The list of API Server metrics that will be scraped by the Agent |
+| metrics.apiserver.cardinalityImprovements | object | `{"excludeMetrics":[],"includeMetrics":[]}` | The list of API Server metrics that will be scraped by the Agent |
+| metrics.apiserver.cardinalityImprovements.excludeMetrics | list | `[]` | Metrics to be dropped |
+| metrics.apiserver.cardinalityImprovements.includeMetrics | list | `[]` | Metrics to be kept |
 | metrics.apiserver.enabled | bool | `false` | Scrape metrics from the API Server |
 | metrics.apiserver.extraMetricRelabelingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for the API Server. See https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block |
 | metrics.apiserver.extraRelabelingRules | string | `""` | Rule blocks to be added to the discovery.relabel component for the API Server. See https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block |
@@ -196,20 +201,27 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | metrics.autoDiscover.annotations.metricsPortNumber | string | `"k8s.grafana.com/metrics.portNumber"` | Annotation for setting the metrics port by number. |
 | metrics.autoDiscover.annotations.metricsScheme | string | `"k8s.grafana.com/metrics.scheme"` | Annotation for setting the metrics scheme, default: http. |
 | metrics.autoDiscover.annotations.scrape | string | `"k8s.grafana.com/scrape"` | Annotation for enabling scraping for this service or pod. Value should be either "true" or "false" |
+| metrics.autoDiscover.cardinalityImprovements.excludeMetrics | list | `[]` | Metrics to be dropped |
+| metrics.autoDiscover.cardinalityImprovements.includeMetrics | list | `[]` | Metrics to be kept |
 | metrics.autoDiscover.enabled | bool | `true` |  |
 | metrics.autoDiscover.extraMetricRelabelingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for auto-discovered entities. See https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block |
 | metrics.autoDiscover.extraRelabelingRules | string | `""` | Rule blocks to be added to the discovery.relabel component for auto-discovered entities. See https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block |
-| metrics.cadvisor.allowList | list | See [Allow List for cAdvisor](#allow-list-for-cadvisor) | The list of cAdvisor metrics that will be scraped by the Agent. |
 | metrics.cadvisor.cardinalityImprovements.dropEmptyContainerLabels | bool | `true` | Drop metrics that have an empty container label |
 | metrics.cadvisor.cardinalityImprovements.dropEmptyImageLabels | bool | `true` | Drop metrics that have an empty image label |
+| metrics.cadvisor.cardinalityImprovements.excludeMetrics | list | `[]` | Metrics to be dropped |
+| metrics.cadvisor.cardinalityImprovements.includeMetrics | list | `[]` | Metrics to be kept |
 | metrics.cadvisor.cardinalityImprovements.keepPhysicalFilesystemDevices | list | `["mmcblk.p.+","nvme.+","rbd.+","sd.+","vd.+","xvd.+","dasd.+"]` | Only keep filesystem metrics that use the following physical devices |
 | metrics.cadvisor.cardinalityImprovements.keepPhysicalNetworkDevices | list | `["en[ospx][0-9].*","wlan[0-9].*","eth[0-9].*"]` | Only keep network metrics that use the following physical devices |
 | metrics.cadvisor.cardinalityImprovements.normalizeUnnecessaryLabels | list | `[{"labels":["id","name","image"],"metric":"container_cpu_.*|container_fs_.*|container_memory_.*|container_network_.*"},{"labels":["boot_id","system_uuid"],"metric":"machine_memory_bytes"}]` | Normalize labels to the same value for the given metric and label pairs |
+| metrics.cadvisor.cardinalityImprovements.useAllowList | bool | `true` | Filter the list of metrics from cAdvisor to the minimal set required for Kubernetes Monitoring. See [Allow List for cAdvisor](#allow-list-for-cadvisor) |
 | metrics.cadvisor.enabled | bool | `true` | Scrape container metrics from cAdvisor |
 | metrics.cadvisor.extraMetricRelabelingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for cAdvisor. See https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block |
 | metrics.cadvisor.extraRelabelingRules | string | `""` | Rule blocks to be added to the discovery.relabel component for cAdvisor. See https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block |
 | metrics.cadvisor.scrapeInterval | string | 60s | How frequently to scrape metrics from cAdvisor. Overrides metrics.scrapeInterval |
-| metrics.cost.allowList | list | See [Allow List for OpenCost](#allow-list-for-opencost) | The list of OpenCost metrics that will be scraped by the Agent |
+| metrics.cost.cardinalityImprovements | object | `{"excludeMetrics":[],"includeMetrics":[],"useAllowList":true}` | The list of API Server metrics that will be scraped by the Agent |
+| metrics.cost.cardinalityImprovements.excludeMetrics | list | `[]` | Metrics to be dropped |
+| metrics.cost.cardinalityImprovements.includeMetrics | list | `[]` | Metrics to be kept |
+| metrics.cost.cardinalityImprovements.useAllowList | bool | `true` | Filter the list of metrics from OpenCost to the minimal set required for Kubernetes Monitoring. See [Allow List for OpenCost](#allow-list-for-opencost) |
 | metrics.cost.enabled | bool | `true` | Scrape cost metrics from OpenCost |
 | metrics.cost.extraMetricRelabelingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for OpenCost. See https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block |
 | metrics.cost.extraRelabelingRules | string | `""` | Rule blocks to be added to the discovery.relabel component for OpenCost. See https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block |
@@ -229,25 +241,33 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | metrics.kube-state-metrics.scrapeInterval | string | 60s | How frequently to scrape metrics from Kube State Metrics. Overrides metrics.scrapeInterval |
 | metrics.kube-state-metrics.service.isTLS | bool | `false` | Does this port use TLS? |
 | metrics.kube-state-metrics.service.port | string | `"http"` | Name of the metrics port |
-| metrics.kubeControllerManager.allowList | list | `[]` | The list of Kube Controller Manager metrics that will be scraped by the Agent |
+| metrics.kubeControllerManager.cardinalityImprovements | object | `{"excludeMetrics":[],"includeMetrics":[]}` | The list of API Server metrics that will be scraped by the Agent |
+| metrics.kubeControllerManager.cardinalityImprovements.excludeMetrics | list | `[]` | Metrics to be dropped |
+| metrics.kubeControllerManager.cardinalityImprovements.includeMetrics | list | `[]` | Metrics to be kept |
 | metrics.kubeControllerManager.enabled | bool | `false` | Scrape metrics from the Kube Controller Manager |
 | metrics.kubeControllerManager.extraMetricRelabelingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for the Kube Controller Manager. See https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block |
 | metrics.kubeControllerManager.extraRelabelingRules | string | `""` | Rule blocks to be added to the discovery.relabel component for the Kube Controller Manager. See https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block |
 | metrics.kubeControllerManager.port | int | `10257` |  |
 | metrics.kubeControllerManager.scrapeInterval | string | 60s | How frequently to scrape metrics from the Kube Controller Manager Overrides metrics.scrapeInterval |
-| metrics.kubeProxy.allowList | list | `[]` | The list of Kube Proxy metrics that will be scraped by the Agent |
+| metrics.kubeProxy.cardinalityImprovements | object | `{"excludeMetrics":[],"includeMetrics":[]}` | The list of API Server metrics that will be scraped by the Agent |
+| metrics.kubeProxy.cardinalityImprovements.excludeMetrics | list | `[]` | Metrics to be dropped |
+| metrics.kubeProxy.cardinalityImprovements.includeMetrics | list | `[]` | Metrics to be kept |
 | metrics.kubeProxy.enabled | bool | `false` | Scrape metrics from the Kube Proxy |
 | metrics.kubeProxy.extraMetricRelabelingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for the Kube Proxy. See https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block |
 | metrics.kubeProxy.extraRelabelingRules | string | `""` | Rule blocks to be added to the discovery.relabel component for the Kube Proxy. See https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block |
 | metrics.kubeProxy.port | int | `10249` |  |
 | metrics.kubeProxy.scrapeInterval | string | 60s | How frequently to scrape metrics from the Kube Proxy Overrides metrics.scrapeInterval |
-| metrics.kubeScheduler.allowList | list | `[]` | The list of Kube Scheduler metrics that will be scraped by the Agent |
+| metrics.kubeScheduler.cardinalityImprovements | object | `{"excludeMetrics":[],"includeMetrics":[]}` | The list of API Server metrics that will be scraped by the Agent |
+| metrics.kubeScheduler.cardinalityImprovements.excludeMetrics | list | `[]` | Metrics to be dropped |
+| metrics.kubeScheduler.cardinalityImprovements.includeMetrics | list | `[]` | Metrics to be kept |
 | metrics.kubeScheduler.enabled | bool | `false` | Scrape metrics from the Kube Scheduler |
 | metrics.kubeScheduler.extraMetricRelabelingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for the Kube Scheduler. See https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block |
 | metrics.kubeScheduler.extraRelabelingRules | string | `""` | Rule blocks to be added to the discovery.relabel component for the Kube Scheduler. See https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block |
 | metrics.kubeScheduler.port | int | `10259` |  |
 | metrics.kubeScheduler.scrapeInterval | string | 60s | How frequently to scrape metrics from the Kube Scheduler Overrides metrics.scrapeInterval |
-| metrics.kubelet.allowList | list | See [Allow List for Kubelet](#allow-list-for-kubelet) | The list of Kubelet metrics that will be scraped by the Agent |
+| metrics.kubelet.cardinalityImprovements.excludeMetrics | list | `[]` | Metrics to be dropped |
+| metrics.kubelet.cardinalityImprovements.includeMetrics | list | `[]` | Metrics to be kept |
+| metrics.kubelet.cardinalityImprovements.useAllowList | bool | `true` | Filter the list of metrics from the Kubelet to the minimal set required for Kubernetes Monitoring. See [Allow List for Kubelet](#allow-list-for-kubelet) |
 | metrics.kubelet.enabled | bool | `true` | Scrape cluster metrics from the Kubelet |
 | metrics.kubelet.extraMetricRelabelingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for Kubelet. See https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block |
 | metrics.kubelet.extraRelabelingRules | string | `""` | Rule blocks to be added to the discovery.relabel component for Kubelet. See https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block |
@@ -277,7 +297,9 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | metrics.serviceMonitors.extraMetricRelabelingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for ServiceMonitor objects. See https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block |
 | metrics.serviceMonitors.namespaces | list | `[]` | Which namespaces to look for ServiceMonitor objects. |
 | metrics.serviceMonitors.scrapeInterval | string | 60s | How frequently to scrape metrics from ServiceMonitor objects. Only used if the ServiceMonitor does not specify the scrape interval. Overrides metrics.scrapeInterval |
-| metrics.windows-exporter.allowList | list | See [Allow List for Windows Exporter](#allow-list-for-windows-exporter) | The list of Windows Exporter metrics that will be scraped by the Agent |
+| metrics.windows-exporter.cardinalityImprovements.excludeMetrics | list | `[]` | Metrics to be dropped |
+| metrics.windows-exporter.cardinalityImprovements.includeMetrics | list | `[]` | Metrics to be kept |
+| metrics.windows-exporter.cardinalityImprovements.useAllowList | bool | `true` | Filter the list of metrics from Windows Exporter to the minimal set required for Kubernetes Monitoring. See [Allow List for Windows Exporter](#allow-list-for-windows-exporter) |
 | metrics.windows-exporter.enabled | bool | `false` | Scrape node metrics |
 | metrics.windows-exporter.extraMetricRelabelingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for Windows Exporter. See https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block |
 | metrics.windows-exporter.extraRelabelingRules | string | `""` | Rule blocks to be added to the discovery.relabel component for Windows Exporter. See https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block |

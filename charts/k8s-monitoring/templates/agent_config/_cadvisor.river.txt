@@ -1,3 +1,29 @@
+{{ define "agent.config.cadvisor.allowList" }}
+{{ if .Values.metrics.cadvisor.cardinalityImprovements.useAllowList }}
+- container_cpu_cfs_periods_total
+- container_cpu_cfs_throttled_periods_total
+- container_cpu_usage_seconds_total
+- container_fs_reads_bytes_total
+- container_fs_reads_total
+- container_fs_writes_bytes_total
+- container_fs_writes_total
+- container_memory_cache
+- container_memory_rss
+- container_memory_swap
+- container_memory_working_set_bytes
+- container_network_receive_bytes_total
+- container_network_receive_packets_dropped_total
+- container_network_receive_packets_total
+- container_network_transmit_bytes_total
+- container_network_transmit_packets_dropped_total
+- container_network_transmit_packets_total
+- machine_memory_bytes
+{{ end }}
+{{ if .Values.metrics.cadvisor.cardinalityImprovements.includeMetrics }}
+{{ .Values.metrics.cadvisor.cardinalityImprovements.includeMetrics | toYaml }}
+{{ end }}
+{{ end }}
+
 {{ define "agent.config.cadvisor" }}
 // cAdvisor
 discovery.relabel "cadvisor" {
@@ -38,11 +64,18 @@ prometheus.scrape "cadvisor" {
 }
 
 prometheus.relabel "cadvisor" {
-{{- if .Values.metrics.cadvisor.allowList }}
+{{- if or .Values.metrics.cadvisor.cardinalityImprovements.useAllowList .Values.metrics.cadvisor.cardinalityImprovements.includeMetrics }}
   rule {
     source_labels = ["__name__"]
-    regex = "up|{{ join "|" .Values.metrics.cadvisor.allowList }}"
+    regex = "up|{{ join "|" (include "agent.config.cadvisor.allowList" . | fromYamlArray) }}"
     action = "keep"
+  }
+{{- end }}
+{{- if .Values.metrics.cadvisor.cardinalityImprovements.excludeMetrics }}
+  rule {
+    source_labels = ["__name__"]
+    regex = {{ join "|" .Values.metrics.cadvisor.cardinalityImprovements.excludeMetrics | quote }}
+    action = "drop"
   }
 {{- end }}
 {{- if .Values.metrics.cadvisor.cardinalityImprovements.dropEmptyContainerLabels }}

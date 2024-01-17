@@ -1,3 +1,12 @@
+{{ define "agent.config.agent.allowList" }}
+{{ if .Values.metrics.agent.cardinalityImprovements.useAllowList }}
+- agent_build_info
+{{ end }}
+{{ if .Values.metrics.agent.cardinalityImprovements.includeMetrics }}
+{{ .Values.metrics.agent.cardinalityImprovements.includeMetrics | toYaml }}
+{{ end }}
+{{ end }}
+
 {{ define "agent.config.agent" }}
 // Grafana Agent
 discovery.relabel "agent" {
@@ -52,11 +61,18 @@ prometheus.scrape "agent" {
 }
 
 prometheus.relabel "agent" {
-{{- if .Values.metrics.agent.allowList }}
+{{- if or .Values.metrics.agent.cardinalityImprovements.useAllowList .Values.metrics.agent.cardinalityImprovements.includeMetrics }}
   rule {
     source_labels = ["__name__"]
-    regex = "up|{{ join "|" .Values.metrics.agent.allowList }}"
+    regex = "up|{{ join "|" (include "agent.config.agent.allowList" . | fromYamlArray) }}"
     action = "keep"
+  }
+{{- end }}
+{{- if .Values.metrics.agent.cardinalityImprovements.excludeMetrics }}
+  rule {
+    source_labels = ["__name__"]
+    regex = {{ join "|" .Values.metrics.agent.cardinalityImprovements.excludeMetrics | quote }}
+    action = "drop"
   }
 {{- end }}
 {{- if .Values.metrics.extraMetricRelabelingRules }}

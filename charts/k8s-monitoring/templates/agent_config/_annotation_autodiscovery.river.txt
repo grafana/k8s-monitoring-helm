@@ -179,6 +179,20 @@ prometheus.scrape "annotation_autodiscovery_https" {
 }
 
 prometheus.relabel "annotation_autodiscovery" {
+{{- if .Values.metrics.autoDiscover.cardinalityImprovements.includeMetrics }}
+  rule {
+    source_labels = ["__name__"]
+    regex = "up|{{ join "|" .Values.metrics.autoDiscover.cardinalityImprovements.includeMetrics }}"
+    action = "keep"
+  }
+{{- end }}
+{{- if .Values.metrics.autoDiscover.cardinalityImprovements.excludeMetrics }}
+  rule {
+    source_labels = ["__name__"]
+    regex = {{ join "|" .Values.metrics.autoDiscover.cardinalityImprovements.excludeMetrics | quote }}
+    action = "drop"
+  }
+{{- end }}
 {{- if .Values.metrics.extraMetricRelabelingRules }}
 {{ .Values.metrics.extraMetricRelabelingRules | indent 2 }}
 {{- end }}

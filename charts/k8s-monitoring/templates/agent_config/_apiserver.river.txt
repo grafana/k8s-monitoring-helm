@@ -43,11 +43,18 @@ prometheus.scrape "apiserver" {
 }
 
 prometheus.relabel "apiserver" {
-{{- if .Values.metrics.apiserver.allowList }}
+{{- if .Values.metrics.apiserver.cardinalityImprovements.includeMetrics }}
   rule {
     source_labels = ["__name__"]
-    regex = "up|{{ join "|" .Values.metrics.apiserver.allowList }}"
+    regex = "up|{{ join "|" .Values.metrics.apiserver.cardinalityImprovements.includeMetrics }}"
     action = "keep"
+  }
+{{- end }}
+{{- if .Values.metrics.apiserver.cardinalityImprovements.excludeMetrics }}
+  rule {
+    source_labels = ["__name__"]
+    regex = {{ join "|" .Values.metrics.apiserver.cardinalityImprovements.excludeMetrics | quote }}
+    action = "drop"
   }
 {{- end }}
 {{- if .Values.metrics.extraMetricRelabelingRules }}

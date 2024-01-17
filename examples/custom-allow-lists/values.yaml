@@ -9,21 +9,29 @@ externalServices:
       password: "It's a secret to everyone"
 
 metrics:
+  agent:
+    cardinalityImprovements:
+      useIntegrationAllowList: true
   kube-state-metrics:
     cardinalityImprovements:
       useAllowList: false
   node-exporter:
     cardinalityImprovements:
-      includeMetrics: ["node_.*"]
+      useIntegrationAllowList: true
   kubelet:
-    allowList: ["kubelet_node_name","kubernetes_build_info"]
+    cardinalityImprovements:
+      useAllowList: false
+      includeMetrics: ["kubelet_node_name","kubernetes_build_info"]
   cadvisor:
-    allowList:
-    - container_memory_cache
-    - container_memory_rss
-    - container_memory_swap
+    cardinalityImprovements:
+      useAllowList: false
+      includeMetrics:
+        - container_memory_cache
+        - container_memory_rss
+        - container_memory_swap
   cost:
-    allowList: []
+    cardinalityImprovements:
+      useAllowList: false
   enabled: true
 
 logs:

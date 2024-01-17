@@ -43,11 +43,18 @@ prometheus.scrape "kube_controller_manager" {
 }
 
 prometheus.relabel "kube_controller_manager" {
-{{- if .Values.metrics.kubeControllerManager.allowList }}
+{{- if .Values.metrics.kubeControllerManager.cardinalityImprovements.includeMetrics }}
   rule {
     source_labels = ["__name__"]
-    regex = "up|{{ join "|" .Values.metrics.kubeControllerManager.allowList }}"
+    regex = "up|{{ join "|" .Values.metrics.kubeControllerManager.cardinalityImprovements.includeMetrics }}"
     action = "keep"
+  }
+{{- end }}
+{{- if .Values.metrics.kubeControllerManager.cardinalityImprovements.excludeMetrics }}
+  rule {
+    source_labels = ["__name__"]
+    regex = {{ join "|" .Values.metrics.kubeControllerManager.cardinalityImprovements.excludeMetrics | quote }}
+    action = "drop"
   }
 {{- end }}
 {{- if .Values.metrics.extraMetricRelabelingRules }}
