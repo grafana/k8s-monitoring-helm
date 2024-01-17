@@ -793,21 +793,28 @@ data:
       send_batch_max_size = 0
       timeout = "2s"
       output {
-        traces = [otelcol.processor.attributes.trace_attributes_processor.input]
+        traces = [otelcol.processor.transform.trace_transform_processor.input]
       }
     }
     
-    otelcol.processor.attributes "trace_attributes_processor" {
-      action {
-        key = "cluster"
-        value = "traces-enabled-test"
-        action = "insert"
+    otelcol.processor.transform "trace_transform_processor" {
+      error_mode = "ignore"
+    
+      trace_statements {
+        context = "resource"
+        statements = [
+          // Accessing a map with a key that does not exist will return nil.
+          "set(attributes[\"k8s.cluster.name\"], \"traces-enabled-test\") where attributes[\"k8s.cluster.name\"] == nil",
+        ]
       }
-      action {
-        key = "k8s.cluster.name"
-        value = "traces-enabled-test"
-        action = "upsert"
+    
+      trace_statements {
+        context = "span"
+        statements = [
+          "set(attributes[\"cluster\"], \"traces-enabled-test\")",
+        ]
       }
+    
       output {
         traces = [otelcol.exporter.otlp.traces_service.input]
       }
@@ -45403,21 +45410,28 @@ data:
       send_batch_max_size = 0
       timeout = "2s"
       output {
-        traces = [otelcol.processor.attributes.trace_attributes_processor.input]
+        traces = [otelcol.processor.transform.trace_transform_processor.input]
       }
     }
     
-    otelcol.processor.attributes "trace_attributes_processor" {
-      action {
-        key = "cluster"
-        value = "traces-enabled-test"
-        action = "insert"
+    otelcol.processor.transform "trace_transform_processor" {
+      error_mode = "ignore"
+    
+      trace_statements {
+        context = "resource"
+        statements = [
+          // Accessing a map with a key that does not exist will return nil.
+          "set(attributes[\"k8s.cluster.name\"], \"traces-enabled-test\") where attributes[\"k8s.cluster.name\"] == nil",
+        ]
       }
-      action {
-        key = "k8s.cluster.name"
-        value = "traces-enabled-test"
-        action = "upsert"
+    
+      trace_statements {
+        context = "span"
+        statements = [
+          "set(attributes[\"cluster\"], \"traces-enabled-test\")",
+        ]
       }
+    
       output {
         traces = [otelcol.exporter.otlp.traces_service.input]
       }

@@ -6,22 +6,29 @@ otelcol.processor.batch "trace_batch_processor" {
   send_batch_max_size = {{ .processors.batch.maxSize | int }}
   timeout = {{ .processors.batch.timeout | quote}}
   output {
-    traces = [otelcol.processor.attributes.trace_attributes_processor.input]
+    traces = [otelcol.processor.transform.trace_transform_processor.input]
   }
 }
 {{- end }}
 
-otelcol.processor.attributes "trace_attributes_processor" {
-  action {
-    key = "cluster"
-    value = {{ required ".Values.cluster.name is a required value. Please set it and try again." .Values.cluster.name | quote }}
-    action = "insert"
+otelcol.processor.transform "trace_transform_processor" {
+  error_mode = "ignore"
+
+  trace_statements {
+    context = "resource"
+    statements = [
+      // Accessing a map with a key that does not exist will return nil.
+      "set(attributes[\"k8s.cluster.name\"], \"{{ required ".Values.cluster.name is a required value. Please set it and try again." .Values.cluster.name }}\") where attributes[\"k8s.cluster.name\"] == nil",
+    ]
   }
-  action {
-    key = "k8s.cluster.name"
-    value = {{ required ".Values.cluster.name is a required value. Please set it and try again." .Values.cluster.name | quote }}
-    action = "upsert"
+
+  trace_statements {
+    context = "span"
+    statements = [
+      "set(attributes[\"cluster\"], \"{{ required ".Values.cluster.name is a required value. Please set it and try again." .Values.cluster.name }}\")",
+    ]
   }
+
   output {
     {{- if eq .Values.externalServices.tempo.protocol "otlp" }}
     traces = [otelcol.exporter.otlp.traces_service.input]
@@ -30,4 +37,5 @@ otelcol.processor.attributes "trace_attributes_processor" {
     {{- end }}
   }
 }
+
 {{- end }}
