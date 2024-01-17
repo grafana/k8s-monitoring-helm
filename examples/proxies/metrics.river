@@ -66,6 +66,8 @@ otelcol.processor.transform "add_attributes" {
       "set(attributes[\"pod\"], attributes[\"k8s.pod.name\"])",
       "set(attributes[\"namespace\"], attributes[\"k8s.namespace.name\"])",
       "set(attributes[\"loki.resource.labels\"], \"pod, namespace, cluster, job\")",
+      // Accessing a map with a key that does not exist will return nil.
+      "set(attributes[\"k8s.cluster.name\"], \"proxies-test\") where attributes[\"k8s.cluster.name\"] == nil",
     ]
   }
   output {
@@ -79,6 +81,13 @@ otelcol.processor.transform "add_metric_attributes" {
     statements = [
       "set(attributes[\"deployment.environment\"], resource.attributes[\"deployment.environment\"])",
       "set(attributes[\"service.version\"], resource.attributes[\"service.version\"])",
+    ]
+  }
+  metric_statements {
+    context = "resource"
+    statements = [
+      // Accessing a map with a key that does not exist will return nil.
+      "set(attributes[\"k8s.cluster.name\"], \"proxies-test\") where attributes[\"k8s.cluster.name\"] == nil",
     ]
   }
   output {
