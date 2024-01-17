@@ -253,8 +253,10 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | metrics.kubelet.extraRelabelingRules | string | `""` | Rule blocks to be added to the discovery.relabel component for Kubelet. See https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block |
 | metrics.kubelet.scrapeInterval | string | 60s | How frequently to scrape metrics from the Kubelet. Overrides metrics.scrapeInterval |
 | metrics.kubernetesMonitoring.enabled | bool | `true` | Report telemetry about this Kubernetes Monitoring chart as a metric. |
-| metrics.node-exporter.allowList | list | See [Allow List for Node Exporter](#allow-list-for-node-exporter) | The list of Node Exporter metrics that will be scraped by the Agent |
-| metrics.node-exporter.cardinalityImprovements.dropTempFSMetrics | bool | `true` | Drop node filesystem metrics with tempfs |
+| metrics.node-exporter.cardinalityImprovements.dropMetricsForFilesystem | list | `["tempfs"]` | Drop metrics for the given filesystem types |
+| metrics.node-exporter.cardinalityImprovements.excludeMetrics | list | `[]` | Metrics to be dropped |
+| metrics.node-exporter.cardinalityImprovements.includeMetrics | list | `[]` | Metrics to be kept |
+| metrics.node-exporter.cardinalityImprovements.useAllowList | bool | `true` | Filter the list of metrics from Node Exporter to a useful, minimal set. See [Allow List for Node Exporter](#allow-list-for-node-exporter) |
 | metrics.node-exporter.enabled | bool | `true` | Scrape node metrics |
 | metrics.node-exporter.extraMetricRelabelingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for Node Exporter. See https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block |
 | metrics.node-exporter.extraRelabelingRules | string | `""` | Rule blocks to be added to the discovery.relabel component for Node Exporter. See https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block |

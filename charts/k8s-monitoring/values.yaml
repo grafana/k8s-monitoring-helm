@@ -347,19 +347,15 @@ metrics:
       # -- Does this port use TLS?
       isTLS: false
 
-    # -- The list of Node Exporter metrics that will be scraped by the Agent
-    # @default -- See [Allow List for Node Exporter](#allow-list-for-node-exporter)
-    allowList:
-    - node_cpu.*
-    - node_exporter_build_info
-    - node_filesystem.*
-    - node_memory.*
-    - process_cpu_seconds_total
-    - process_resident_memory_bytes
-
     cardinalityImprovements:
-      # -- Drop node filesystem metrics with tempfs
-      dropTempFSMetrics: true
+      # -- Filter the list of metrics from Node Exporter to a useful, minimal set. See [Allow List for Node Exporter](#allow-list-for-node-exporter)
+      useAllowList: true
+      # -- Metrics to be kept
+      includeMetrics: []
+      # -- Metrics to be dropped
+      excludeMetrics: []
+      # -- Drop metrics for the given filesystem types
+      dropMetricsForFilesystem: [tempfs]
 
   # Windows Node metrics from Windows Exporter
   windows-exporter:

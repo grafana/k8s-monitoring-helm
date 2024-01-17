@@ -753,11 +753,11 @@ data:
         regex = "up|node_cpu.*|node_exporter_build_info|node_filesystem.*|node_memory.*|process_cpu_seconds_total|process_resident_memory_bytes"
         action = "keep"
       }
-      // Drop metrics from
+      // Drop metrics for certain file systems
       rule {
         source_labels = ["__name__", "fstype"]
         separator = "@"
-        regex = "node_filesystem.*@tmpfs"
+        regex = "node_filesystem.*@(tempfs)"
         action = "drop"
       }
       forward_to = [prometheus.relabel.metrics_service.receiver]
@@ -45472,11 +45472,11 @@ data:
         regex = "up|node_cpu.*|node_exporter_build_info|node_filesystem.*|node_memory.*|process_cpu_seconds_total|process_resident_memory_bytes"
         action = "keep"
       }
-      // Drop metrics from
+      // Drop metrics for certain file systems
       rule {
         source_labels = ["__name__", "fstype"]
         separator = "@"
-        regex = "node_filesystem.*@tmpfs"
+        regex = "node_filesystem.*@(tempfs)"
         action = "drop"
       }
       forward_to = [prometheus.relabel.metrics_service.receiver]

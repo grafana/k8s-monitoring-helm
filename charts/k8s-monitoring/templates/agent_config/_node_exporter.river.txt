@@ -1,3 +1,18 @@
+{{ define "agent.config.node_exporter.allowList" }}
+{{ if (index .Values.metrics "node-exporter").cardinalityImprovements.useAllowList }}
+    - node_cpu.*
+    - node_exporter_build_info
+    - node_filesystem.*
+    - node_memory.*
+    - process_cpu_seconds_total
+    - process_resident_memory_bytes
+
+{{ end }}
+{{ if (index .Values.metrics "node-exporter").cardinalityImprovements.includeMetrics }}
+{{ (index .Values.metrics "node-exporter").cardinalityImprovements.includeMetrics | toYaml }}
+{{ end }}
+{{ end }}
+
 {{ define "agent.config.node_exporter" }}
 // Node Exporter
 discovery.relabel "node_exporter" {
@@ -50,19 +65,26 @@ prometheus.scrape "node_exporter" {
 }
 
 prometheus.relabel "node_exporter" {
-{{- if (index .Values.metrics "node-exporter").allowList }}
+{{- if or (index .Values.metrics "node-exporter").cardinalityImprovements.useAllowList (index .Values.metrics "kube-state-metrics").cardinalityImprovements.includeMetrics }}
   rule {
     source_labels = ["__name__"]
-    regex = "up|{{ join "|" (index .Values.metrics "node-exporter").allowList }}"
+    regex = "up|{{ join "|" (include "agent.config.node_exporter.allowList" . | fromYamlArray) }}"
     action = "keep"
   }
 {{- end }}
-{{- if (index .Values.metrics "node-exporter").cardinalityImprovements.dropTempFSMetrics }}
-  // Drop metrics from
+{{- if (index .Values.metrics "node-exporter").cardinalityImprovements.excludeMetrics }}
+  rule {
+    source_labels = ["__name__"]
+    regex = {{ join "|" (index .Values.metrics "node-exporter").cardinalityImprovements.excludeMetrics | quote }}
+    action = "drop"
+  }
+{{- end }}
+{{- if (index .Values.metrics "node-exporter").cardinalityImprovements.dropMetricsForFilesystem }}
+  // Drop metrics for certain file systems
   rule {
     source_labels = ["__name__", "fstype"]
     separator = "@"
-    regex = "node_filesystem.*@tmpfs"
+    regex = "node_filesystem.*@({{ join "|" (index .Values.metrics "node-exporter").cardinalityImprovements.dropMetricsForFilesystem }})"
     action = "drop"
   }
 {{- end }}

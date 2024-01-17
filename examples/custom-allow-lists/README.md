@@ -23,9 +23,11 @@ externalServices:
 
 metrics:
   kube-state-metrics:
-    allowList: [".*"]
+    cardinalityImprovements:
+      useAllowList: false
   node-exporter:
-    allowList: ["node_.*"]
+    cardinalityImprovements:
+      includeMetrics: ["node_.*"]
   kubelet:
     allowList: ["kubelet_node_name","kubernetes_build_info"]
   cadvisor:
