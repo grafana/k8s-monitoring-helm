@@ -76,13 +76,13 @@ test:
   # Check for pod logs (gathered via API)
   - query: "{cluster=\"ci-test-cluster-2\", job!=\"integrations/kubernetes/eventhandler\"}"
     type: logql
-  - query: "{span.cluster=\"ci-test-cluster-2\"}"
+  - query: "{.k8s.cluster.name=\"ci-test-cluster-2\"}"
     type: traceql
 
   # These checks for metrics and traces that are being sent directly to this agent via the receivers
   - query: "agent_build_info{cluster=\"from-the-other-agent\"}"
     type: promql
-  - query: "{span.cluster=\"from-the-other-agent\"}"
+  - query: "{.k8s.cluster.name=\"from-the-other-agent\"}"
     type: traceql
   envOverrides:
     TEMPO_URL: http://tempo.tempo.svc:3100/api/search
