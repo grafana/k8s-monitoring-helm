@@ -1,9 +1,9 @@
 {{ define "agent.config.agent.allowList" }}
-{{ if .Values.metrics.agent.cardinalityImprovements.useAllowList }}
+{{ if .Values.metrics.agent.metricsTuning.useAllowList }}
 - agent_build_info
 {{ end }}
-{{ if .Values.metrics.agent.cardinalityImprovements.includeMetrics }}
-{{ .Values.metrics.agent.cardinalityImprovements.includeMetrics | toYaml }}
+{{ if .Values.metrics.agent.metricsTuning.includeMetrics }}
+{{ .Values.metrics.agent.metricsTuning.includeMetrics | toYaml }}
 {{ end }}
 {{ end }}
 
@@ -61,17 +61,17 @@ prometheus.scrape "agent" {
 }
 
 prometheus.relabel "agent" {
-{{- if or .Values.metrics.agent.cardinalityImprovements.useAllowList .Values.metrics.agent.cardinalityImprovements.includeMetrics }}
+{{- if or .Values.metrics.agent.metricsTuning.useAllowList .Values.metrics.agent.metricsTuning.includeMetrics }}
   rule {
     source_labels = ["__name__"]
     regex = "up|{{ join "|" (include "agent.config.agent.allowList" . | fromYamlArray) }}"
     action = "keep"
   }
 {{- end }}
-{{- if .Values.metrics.agent.cardinalityImprovements.excludeMetrics }}
+{{- if .Values.metrics.agent.metricsTuning.excludeMetrics }}
   rule {
     source_labels = ["__name__"]
-    regex = {{ join "|" .Values.metrics.agent.cardinalityImprovements.excludeMetrics | quote }}
+    regex = {{ join "|" .Values.metrics.agent.metricsTuning.excludeMetrics | quote }}
     action = "drop"
   }
 {{- end }}

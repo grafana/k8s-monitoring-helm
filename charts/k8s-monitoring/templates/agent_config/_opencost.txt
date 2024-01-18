@@ -1,5 +1,5 @@
 {{ define "agent.config.opencost.allowList" }}
-{{ if .Values.metrics.cost.cardinalityImprovements.useAllowList }}
+{{ if .Values.metrics.cost.metricsTuning.useAllowList }}
 - container_cpu_allocation
 - container_gpu_allocation
 - container_memory_allocation_bytes
@@ -26,8 +26,8 @@
 - service_selector_labels
 - statefulSet_match_labels
 {{ end }}
-{{ if .Values.metrics.cost.cardinalityImprovements.includeMetrics }}
-{{ .Values.metrics.cost.cardinalityImprovements.includeMetrics | toYaml }}
+{{ if .Values.metrics.cost.metricsTuning.includeMetrics }}
+{{ .Values.metrics.cost.metricsTuning.includeMetrics | toYaml }}
 {{ end }}
 {{ end }}
 
@@ -73,17 +73,17 @@ prometheus.scrape "opencost" {
 }
 
 prometheus.relabel "opencost" {
-{{- if or .Values.metrics.cost.cardinalityImprovements.useAllowList .Values.metrics.cost.cardinalityImprovements.includeMetrics }}
+{{- if or .Values.metrics.cost.metricsTuning.useAllowList .Values.metrics.cost.metricsTuning.includeMetrics }}
   rule {
     source_labels = ["__name__"]
     regex = "up|{{ join "|" (include "agent.config.opencost.allowList" . | fromYamlArray) }}"
     action = "keep"
   }
 {{- end }}
-{{- if .Values.metrics.cost.cardinalityImprovements.excludeMetrics }}
+{{- if .Values.metrics.cost.metricsTuning.excludeMetrics }}
   rule {
     source_labels = ["__name__"]
-    regex = {{ join "|" .Values.metrics.cost.cardinalityImprovements.excludeMetrics | quote }}
+    regex = {{ join "|" .Values.metrics.cost.metricsTuning.excludeMetrics | quote }}
     action = "drop"
   }
 {{- end }}

@@ -43,17 +43,17 @@ prometheus.scrape "kube_scheduler" {
 }
 
 prometheus.relabel "kube_scheduler" {
-{{- if .Values.metrics.kubeScheduler.cardinalityImprovements.includeMetrics }}
+{{- if .Values.metrics.kubeScheduler.metricsTuning.includeMetrics }}
   rule {
     source_labels = ["__name__"]
-    regex = "up|{{ join "|" .Values.metrics.kubeScheduler.cardinalityImprovements.includeMetrics }}"
+    regex = "up|{{ join "|" .Values.metrics.kubeScheduler.metricsTuning.includeMetrics }}"
     action = "keep"
   }
 {{- end }}
-{{- if .Values.metrics.kubeScheduler.cardinalityImprovements.excludeMetrics }}
+{{- if .Values.metrics.kubeScheduler.metricsTuning.excludeMetrics }}
   rule {
     source_labels = ["__name__"]
-    regex = {{ join "|" .Values.metrics.kubeScheduler.cardinalityImprovements.excludeMetrics | quote }}
+    regex = {{ join "|" .Values.metrics.kubeScheduler.metricsTuning.excludeMetrics | quote }}
     action = "drop"
   }
 {{- end }}

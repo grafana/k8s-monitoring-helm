@@ -1,5 +1,5 @@
 {{ define "agent.config.cadvisor.allowList" }}
-{{ if .Values.metrics.cadvisor.cardinalityImprovements.useAllowList }}
+{{ if .Values.metrics.cadvisor.metricsTuning.useAllowList }}
 - container_cpu_cfs_periods_total
 - container_cpu_cfs_throttled_periods_total
 - container_cpu_usage_seconds_total
@@ -19,8 +19,8 @@
 - container_network_transmit_packets_total
 - machine_memory_bytes
 {{ end }}
-{{ if .Values.metrics.cadvisor.cardinalityImprovements.includeMetrics }}
-{{ .Values.metrics.cadvisor.cardinalityImprovements.includeMetrics | toYaml }}
+{{ if .Values.metrics.cadvisor.metricsTuning.includeMetrics }}
+{{ .Values.metrics.cadvisor.metricsTuning.includeMetrics | toYaml }}
 {{ end }}
 {{ end }}
 
@@ -64,21 +64,21 @@ prometheus.scrape "cadvisor" {
 }
 
 prometheus.relabel "cadvisor" {
-{{- if or .Values.metrics.cadvisor.cardinalityImprovements.useAllowList .Values.metrics.cadvisor.cardinalityImprovements.includeMetrics }}
+{{- if or .Values.metrics.cadvisor.metricsTuning.useAllowList .Values.metrics.cadvisor.metricsTuning.includeMetrics }}
   rule {
     source_labels = ["__name__"]
     regex = "up|{{ join "|" (include "agent.config.cadvisor.allowList" . | fromYamlArray) }}"
     action = "keep"
   }
 {{- end }}
-{{- if .Values.metrics.cadvisor.cardinalityImprovements.excludeMetrics }}
+{{- if .Values.metrics.cadvisor.metricsTuning.excludeMetrics }}
   rule {
     source_labels = ["__name__"]
-    regex = {{ join "|" .Values.metrics.cadvisor.cardinalityImprovements.excludeMetrics | quote }}
+    regex = {{ join "|" .Values.metrics.cadvisor.metricsTuning.excludeMetrics | quote }}
     action = "drop"
   }
 {{- end }}
-{{- if .Values.metrics.cadvisor.cardinalityImprovements.dropEmptyContainerLabels }}
+{{- if .Values.metrics.cadvisor.metricsTuning.dropEmptyContainerLabels }}
   // Drop empty container labels, addressing https://github.com/google/cadvisor/issues/2688
   rule {
     source_labels = ["__name__","container"]
@@ -87,7 +87,7 @@ prometheus.relabel "cadvisor" {
     action = "drop"
   }
 {{- end }}
-{{- if .Values.metrics.cadvisor.cardinalityImprovements.dropEmptyImageLabels }}
+{{- if .Values.metrics.cadvisor.metricsTuning.dropEmptyImageLabels }}
   // Drop empty image labels, addressing https://github.com/google/cadvisor/issues/2688
   rule {
     source_labels = ["__name__","image"]
@@ -96,9 +96,9 @@ prometheus.relabel "cadvisor" {
     action = "drop"
   }
 {{- end }}
-{{- if .Values.metrics.cadvisor.cardinalityImprovements.normalizeUnnecessaryLabels }}
+{{- if .Values.metrics.cadvisor.metricsTuning.normalizeUnnecessaryLabels }}
   // Normalizing unimportant labels (not deleting to continue satisfying <label>!="" checks)
-  {{- range $i := .Values.metrics.cadvisor.cardinalityImprovements.normalizeUnnecessaryLabels }}
+  {{- range $i := .Values.metrics.cadvisor.metricsTuning.normalizeUnnecessaryLabels }}
   {{- range $label := $i.labels }}
   rule {
     source_labels = ["__name__"]
@@ -109,12 +109,12 @@ prometheus.relabel "cadvisor" {
   {{- end }}
   {{- end }}
 {{- end }}
-{{- if .Values.metrics.cadvisor.cardinalityImprovements.keepPhysicalFilesystemDevices }}
+{{- if .Values.metrics.cadvisor.metricsTuning.keepPhysicalFilesystemDevices }}
   // Filter out non-physical devices/interfaces
   rule {
     source_labels = ["__name__", "device"]
     separator = "@"
-    regex = "container_fs_.*@(/dev/)?({{ join "|" .Values.metrics.cadvisor.cardinalityImprovements.keepPhysicalFilesystemDevices }})"
+    regex = "container_fs_.*@(/dev/)?({{ join "|" .Values.metrics.cadvisor.metricsTuning.keepPhysicalFilesystemDevices }})"
     target_label = "__keepme"
     replacement = "1"
   }
@@ -131,11 +131,11 @@ prometheus.relabel "cadvisor" {
     replacement = ""
   }
 {{- end }}
-{{- if .Values.metrics.cadvisor.cardinalityImprovements.keepPhysicalNetworkDevices }}
+{{- if .Values.metrics.cadvisor.metricsTuning.keepPhysicalNetworkDevices }}
   rule {
     source_labels = ["__name__", "interface"]
     separator = "@"
-    regex = "container_network_.*@({{ join "|" .Values.metrics.cadvisor.cardinalityImprovements.keepPhysicalNetworkDevices }})"
+    regex = "container_network_.*@({{ join "|" .Values.metrics.cadvisor.metricsTuning.keepPhysicalNetworkDevices }})"
     target_label = "__keepme"
     replacement = "1"
   }

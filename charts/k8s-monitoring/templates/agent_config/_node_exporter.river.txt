@@ -1,5 +1,5 @@
 {{ define "agent.config.node_exporter.allowList" }}
-{{ if or (index .Values.metrics "node-exporter").cardinalityImprovements.useAllowList (index .Values.metrics "node-exporter").cardinalityImprovements.useIntegrationAllowList }}
+{{ if or (index .Values.metrics "node-exporter").metricsTuning.useAllowList (index .Values.metrics "node-exporter").metricsTuning.useIntegrationAllowList }}
     - node_cpu.*
     - node_exporter_build_info
     - node_filesystem.*
@@ -7,7 +7,7 @@
     - process_cpu_seconds_total
     - process_resident_memory_bytes
 {{ end }}
-{{ if (index .Values.metrics "node-exporter").cardinalityImprovements.useIntegrationAllowList }}
+{{ if (index .Values.metrics "node-exporter").metricsTuning.useIntegrationAllowList }}
     - node_arp_entries
     - node_boot_time_seconds
     - node_context_switches_total
@@ -119,8 +119,8 @@
     - process_open_fds
 {{ end }}
 
-{{ if (index .Values.metrics "node-exporter").cardinalityImprovements.includeMetrics }}
-{{ (index .Values.metrics "node-exporter").cardinalityImprovements.includeMetrics | toYaml }}
+{{ if (index .Values.metrics "node-exporter").metricsTuning.includeMetrics }}
+{{ (index .Values.metrics "node-exporter").metricsTuning.includeMetrics | toYaml }}
 {{ end }}
 {{ end }}
 
@@ -176,26 +176,26 @@ prometheus.scrape "node_exporter" {
 }
 
 prometheus.relabel "node_exporter" {
-{{- if or (index .Values.metrics "node-exporter").cardinalityImprovements.useAllowList (index .Values.metrics "kube-state-metrics").cardinalityImprovements.includeMetrics }}
+{{- if or (index .Values.metrics "node-exporter").metricsTuning.useAllowList (index .Values.metrics "kube-state-metrics").metricsTuning.includeMetrics }}
   rule {
     source_labels = ["__name__"]
     regex = "up|{{ join "|" (include "agent.config.node_exporter.allowList" . | fromYamlArray) }}"
     action = "keep"
   }
 {{- end }}
-{{- if (index .Values.metrics "node-exporter").cardinalityImprovements.excludeMetrics }}
+{{- if (index .Values.metrics "node-exporter").metricsTuning.excludeMetrics }}
   rule {
     source_labels = ["__name__"]
-    regex = {{ join "|" (index .Values.metrics "node-exporter").cardinalityImprovements.excludeMetrics | quote }}
+    regex = {{ join "|" (index .Values.metrics "node-exporter").metricsTuning.excludeMetrics | quote }}
     action = "drop"
   }
 {{- end }}
-{{- if (index .Values.metrics "node-exporter").cardinalityImprovements.dropMetricsForFilesystem }}
+{{- if (index .Values.metrics "node-exporter").metricsTuning.dropMetricsForFilesystem }}
   // Drop metrics for certain file systems
   rule {
     source_labels = ["__name__", "fstype"]
     separator = "@"
-    regex = "node_filesystem.*@({{ join "|" (index .Values.metrics "node-exporter").cardinalityImprovements.dropMetricsForFilesystem }})"
+    regex = "node_filesystem.*@({{ join "|" (index .Values.metrics "node-exporter").metricsTuning.dropMetricsForFilesystem }})"
     action = "drop"
   }
 {{- end }}

@@ -1,5 +1,5 @@
 {{ define "agent.config.kube_state_metrics.allowList" }}
-{{ if (index .Values.metrics "kube-state-metrics").cardinalityImprovements.useAllowList }}
+{{ if (index .Values.metrics "kube-state-metrics").metricsTuning.useAllowList }}
 - kube_daemonset.*
 - kube_deployment_metadata_generation
 - kube_deployment_spec_replicas
@@ -29,8 +29,8 @@
 - kube_resourcequota
 - kube_statefulset.*
 {{ end }}
-{{ if (index .Values.metrics "kube-state-metrics").cardinalityImprovements.includeMetrics }}
-{{ (index .Values.metrics "kube-state-metrics").cardinalityImprovements.includeMetrics | toYaml }}
+{{ if (index .Values.metrics "kube-state-metrics").metricsTuning.includeMetrics }}
+{{ (index .Values.metrics "kube-state-metrics").metricsTuning.includeMetrics | toYaml }}
 {{ end }}
 {{ end }}
 
@@ -85,22 +85,22 @@ prometheus.scrape "kube_state_metrics" {
 }
 
 prometheus.relabel "kube_state_metrics" {
-{{- if or (index .Values.metrics "kube-state-metrics").cardinalityImprovements.useAllowList (index .Values.metrics "kube-state-metrics").cardinalityImprovements.includeMetrics }}
+{{- if or (index .Values.metrics "kube-state-metrics").metricsTuning.useAllowList (index .Values.metrics "kube-state-metrics").metricsTuning.includeMetrics }}
   rule {
     source_labels = ["__name__"]
     regex = "up|{{ join "|" (include "agent.config.kube_state_metrics.allowList" . | fromYamlArray) }}"
     action = "keep"
   }
 {{- end }}
-{{- if (index .Values.metrics "kube-state-metrics").cardinalityImprovements.excludeMetrics }}
+{{- if (index .Values.metrics "kube-state-metrics").metricsTuning.excludeMetrics }}
   rule {
     source_labels = ["__name__"]
-    regex = {{ join "|" (index .Values.metrics "kube-state-metrics").cardinalityImprovements.excludeMetrics | quote }}
+    regex = {{ join "|" (index .Values.metrics "kube-state-metrics").metricsTuning.excludeMetrics | quote }}
     action = "drop"
   }
-{{- end }}{{- if (index .Values.metrics "kube-state-metrics").cardinalityImprovements.normalizeUnnecessaryLabels }}
+{{- end }}{{- if (index .Values.metrics "kube-state-metrics").metricsTuning.normalizeUnnecessaryLabels }}
   // Normalizing unimportant labels (not deleting to continue satisfying <label>!="" checks)
-  {{- range $i := (index .Values.metrics "kube-state-metrics").cardinalityImprovements.normalizeUnnecessaryLabels }}
+  {{- range $i := (index .Values.metrics "kube-state-metrics").metricsTuning.normalizeUnnecessaryLabels }}
   {{- range $label := $i.labels }}
   rule {
     source_labels = ["__name__"]

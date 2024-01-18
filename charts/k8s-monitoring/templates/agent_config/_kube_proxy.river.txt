@@ -39,17 +39,17 @@ prometheus.scrape "kube_proxy" {
 }
 
 prometheus.relabel "kube_proxy" {
-{{- if .Values.metrics.kubeProxy.cardinalityImprovements.includeMetrics }}
+{{- if .Values.metrics.kubeProxy.metricsTuning.includeMetrics }}
   rule {
     source_labels = ["__name__"]
-    regex = "up|{{ join "|" .Values.metrics.kubeProxy.cardinalityImprovements.includeMetrics }}"
+    regex = "up|{{ join "|" .Values.metrics.kubeProxy.metricsTuning.includeMetrics }}"
     action = "keep"
   }
 {{- end }}
-{{- if .Values.metrics.kubeProxy.cardinalityImprovements.excludeMetrics }}
+{{- if .Values.metrics.kubeProxy.metricsTuning.excludeMetrics }}
   rule {
     source_labels = ["__name__"]
-    regex = {{ join "|" .Values.metrics.kubeProxy.cardinalityImprovements.excludeMetrics | quote }}
+    regex = {{ join "|" .Values.metrics.kubeProxy.metricsTuning.excludeMetrics | quote }}
     action = "drop"
   }
 {{- end }}
