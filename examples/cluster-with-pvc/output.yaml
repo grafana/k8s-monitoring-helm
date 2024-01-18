@@ -187,6 +187,8 @@ data:
           "set(attributes[\"pod\"], attributes[\"k8s.pod.name\"])",
           "set(attributes[\"namespace\"], attributes[\"k8s.namespace.name\"])",
           "set(attributes[\"loki.resource.labels\"], \"pod, namespace, cluster, job\")",
+          // Accessing a map with a key that does not exist will return nil.
+          "set(attributes[\"k8s.cluster.name\"], \"cluster-with-pvc-test\") where attributes[\"k8s.cluster.name\"] == nil",
         ]
       }
       output {
@@ -200,6 +202,13 @@ data:
         statements = [
           "set(attributes[\"deployment.environment\"], resource.attributes[\"deployment.environment\"])",
           "set(attributes[\"service.version\"], resource.attributes[\"service.version\"])",
+        ]
+      }
+      metric_statements {
+        context = "resource"
+        statements = [
+          // Accessing a map with a key that does not exist will return nil.
+          "set(attributes[\"k8s.cluster.name\"], \"cluster-with-pvc-test\") where attributes[\"k8s.cluster.name\"] == nil",
         ]
       }
       output {
@@ -44804,6 +44813,8 @@ data:
           "set(attributes[\"pod\"], attributes[\"k8s.pod.name\"])",
           "set(attributes[\"namespace\"], attributes[\"k8s.namespace.name\"])",
           "set(attributes[\"loki.resource.labels\"], \"pod, namespace, cluster, job\")",
+          // Accessing a map with a key that does not exist will return nil.
+          "set(attributes[\"k8s.cluster.name\"], \"cluster-with-pvc-test\") where attributes[\"k8s.cluster.name\"] == nil",
         ]
       }
       output {
@@ -44817,6 +44828,13 @@ data:
         statements = [
           "set(attributes[\"deployment.environment\"], resource.attributes[\"deployment.environment\"])",
           "set(attributes[\"service.version\"], resource.attributes[\"service.version\"])",
+        ]
+      }
+      metric_statements {
+        context = "resource"
+        statements = [
+          // Accessing a map with a key that does not exist will return nil.
+          "set(attributes[\"k8s.cluster.name\"], \"cluster-with-pvc-test\") where attributes[\"k8s.cluster.name\"] == nil",
         ]
       }
       output {

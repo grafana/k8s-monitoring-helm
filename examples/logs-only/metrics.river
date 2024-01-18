@@ -65,6 +65,8 @@ otelcol.processor.transform "add_attributes" {
       "set(attributes[\"pod\"], attributes[\"k8s.pod.name\"])",
       "set(attributes[\"namespace\"], attributes[\"k8s.namespace.name\"])",
       "set(attributes[\"loki.resource.labels\"], \"pod, namespace, cluster, job\")",
+      // Accessing a map with a key that does not exist will return nil.
+      "set(attributes[\"k8s.cluster.name\"], \"logs-only-test\") where attributes[\"k8s.cluster.name\"] == nil",
     ]
   }
   output {
