@@ -234,7 +234,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | metrics.kube-state-metrics.labelMatchers | object | `{"app.kubernetes.io/name":"kube-state-metrics"}` | Label matchers used by the Grafana Agent to select the Kube State Metrics service |
 | metrics.kube-state-metrics.metricsTuning.excludeMetrics | list | `[]` | Metrics to drop. Can use regex. |
 | metrics.kube-state-metrics.metricsTuning.includeMetrics | list | `[]` | Metrics to keep. Can use regex. |
-| metrics.kube-state-metrics.metricsTuning.normalizeUnnecessaryLabels | list | `[{"labels":["image","image_id","image_spec","uid"]},{"labels":["created_by_name"],"metric":"kube_pod_info|kube_pod_owner"},{"labels":["container_id"],"metric":"kube_pod_container_info"},{"labels":["host_ip","pod_ip"],"metric":"kube_pod_info"}]` | Normalize labels to the same value for the given metric and label pairs |
+| metrics.kube-state-metrics.metricsTuning.normalizeUnnecessaryLabels | list | `[{"labels":["image","image_id","image_spec"]},{"labels":["created_by_name"],"metric":"kube_pod_info|kube_pod_owner"},{"labels":["container_id"],"metric":"kube_pod_container_info"},{"labels":["host_ip","pod_ip"],"metric":"kube_pod_info"}]` | Normalize labels to the same value for the given metric and label pairs |
 | metrics.kube-state-metrics.metricsTuning.useDefaultAllowList | bool | `true` | Filter the list of metrics from Kube State Metrics to a useful, minimal set. See [Allow List for Kube State Metrics](#allow-list-for-kube-state-metrics) |
 | metrics.kube-state-metrics.scrapeInterval | string | 60s | How frequently to scrape metrics from Kube State Metrics. Overrides metrics.scrapeInterval |
 | metrics.kube-state-metrics.service.isTLS | bool | `false` | Does this port use TLS? |
