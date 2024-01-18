@@ -183,7 +183,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | metrics.agent.labelMatchers | object | `{"app.kubernetes.io/name":"grafana-agent.*"}` | Label matchers used by the Grafana Agent to select Grafana Agent pods |
 | metrics.agent.metricsTuning.excludeMetrics | list | `[]` | Metrics to drop. Can use regex. |
 | metrics.agent.metricsTuning.includeMetrics | list | `[]` | Metrics to keep. Can use regex. |
-| metrics.agent.metricsTuning.useAllowList | bool | `true` | Filter the list of metrics from the Grafana Agent to the minimal set required for Kubernetes Monitoring. See [Allow List for Grafana Agent](#allow-list-for-grafana-agent) |
+| metrics.agent.metricsTuning.useDefaultAllowList | bool | `true` | Filter the list of metrics from the Grafana Agent to the minimal set required for Kubernetes Monitoring. See [Allow List for Grafana Agent](#allow-list-for-grafana-agent) |
 | metrics.agent.metricsTuning.useIntegrationAllowList | bool | `false` | Filter the list of metrics from the Grafana Agent to the minimal set required for Kubernetes Monitoring as well as the Grafana Agent integration. |
 | metrics.agent.scrapeInterval | string | 60s | How frequently to scrape metrics from Grafana Agent. Overrides metrics.scrapeInterval |
 | metrics.apiserver.enabled | bool | `false` | Scrape metrics from the API Server |
@@ -215,7 +215,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | metrics.cadvisor.metricsTuning.keepPhysicalFilesystemDevices | list | `["mmcblk.p.+","nvme.+","rbd.+","sd.+","vd.+","xvd.+","dasd.+"]` | Only keep filesystem metrics that use the following physical devices |
 | metrics.cadvisor.metricsTuning.keepPhysicalNetworkDevices | list | `["en[ospx][0-9].*","wlan[0-9].*","eth[0-9].*"]` | Only keep network metrics that use the following physical devices |
 | metrics.cadvisor.metricsTuning.normalizeUnnecessaryLabels | list | `[{"labels":["id","name","image"],"metric":"container_cpu_.*|container_fs_.*|container_memory_.*|container_network_.*"},{"labels":["boot_id","system_uuid"],"metric":"machine_memory_bytes"}]` | Normalize labels to the same value for the given metric and label pairs |
-| metrics.cadvisor.metricsTuning.useAllowList | bool | `true` | Filter the list of metrics from cAdvisor to the minimal set required for Kubernetes Monitoring. See [Allow List for cAdvisor](#allow-list-for-cadvisor) |
+| metrics.cadvisor.metricsTuning.useDefaultAllowList | bool | `true` | Filter the list of metrics from cAdvisor to the minimal set required for Kubernetes Monitoring. See [Allow List for cAdvisor](#allow-list-for-cadvisor) |
 | metrics.cadvisor.scrapeInterval | string | 60s | How frequently to scrape metrics from cAdvisor. Overrides metrics.scrapeInterval |
 | metrics.cost.enabled | bool | `true` | Scrape cost metrics from OpenCost |
 | metrics.cost.extraMetricRelabelingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for OpenCost. See https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block |
@@ -223,7 +223,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | metrics.cost.labelMatchers | object | `{"app.kubernetes.io/name":"opencost"}` | Label matchers used by the Grafana Agent to select the OpenCost service |
 | metrics.cost.metricsTuning.excludeMetrics | list | `[]` | Metrics to drop. Can use regex. |
 | metrics.cost.metricsTuning.includeMetrics | list | `[]` | Metrics to keep. Can use regex. |
-| metrics.cost.metricsTuning.useAllowList | bool | `true` | Filter the list of metrics from OpenCost to the minimal set required for Kubernetes Monitoring. See [Allow List for OpenCost](#allow-list-for-opencost) |
+| metrics.cost.metricsTuning.useDefaultAllowList | bool | `true` | Filter the list of metrics from OpenCost to the minimal set required for Kubernetes Monitoring. See [Allow List for OpenCost](#allow-list-for-opencost) |
 | metrics.cost.scrapeInterval | string | 60s | How frequently to scrape metrics from OpenCost. Overrides metrics.scrapeInterval |
 | metrics.enabled | bool | `true` | Capture and forward metrics |
 | metrics.extraMetricRelabelingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for all metric sources. See https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block |
@@ -235,7 +235,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | metrics.kube-state-metrics.metricsTuning.excludeMetrics | list | `[]` | Metrics to drop. Can use regex. |
 | metrics.kube-state-metrics.metricsTuning.includeMetrics | list | `[]` | Metrics to keep. Can use regex. |
 | metrics.kube-state-metrics.metricsTuning.normalizeUnnecessaryLabels | list | `[{"labels":["image","image_id","image_spec","uid"]},{"labels":["created_by_name"],"metric":"kube_pod_info|kube_pod_owner"},{"labels":["container_id"],"metric":"kube_pod_container_info"},{"labels":["host_ip","pod_ip"],"metric":"kube_pod_info"}]` | Normalize labels to the same value for the given metric and label pairs |
-| metrics.kube-state-metrics.metricsTuning.useAllowList | bool | `true` | Filter the list of metrics from Kube State Metrics to a useful, minimal set. See [Allow List for Kube State Metrics](#allow-list-for-kube-state-metrics) |
+| metrics.kube-state-metrics.metricsTuning.useDefaultAllowList | bool | `true` | Filter the list of metrics from Kube State Metrics to a useful, minimal set. See [Allow List for Kube State Metrics](#allow-list-for-kube-state-metrics) |
 | metrics.kube-state-metrics.scrapeInterval | string | 60s | How frequently to scrape metrics from Kube State Metrics. Overrides metrics.scrapeInterval |
 | metrics.kube-state-metrics.service.isTLS | bool | `false` | Does this port use TLS? |
 | metrics.kube-state-metrics.service.port | string | `"http"` | Name of the metrics port |
@@ -265,7 +265,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | metrics.kubelet.extraRelabelingRules | string | `""` | Rule blocks to be added to the discovery.relabel component for Kubelet. See https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block |
 | metrics.kubelet.metricsTuning.excludeMetrics | list | `[]` | Metrics to drop. Can use regex. |
 | metrics.kubelet.metricsTuning.includeMetrics | list | `[]` | Metrics to keep. Can use regex. |
-| metrics.kubelet.metricsTuning.useAllowList | bool | `true` | Filter the list of metrics from the Kubelet to the minimal set required for Kubernetes Monitoring. See [Allow List for Kubelet](#allow-list-for-kubelet) |
+| metrics.kubelet.metricsTuning.useDefaultAllowList | bool | `true` | Filter the list of metrics from the Kubelet to the minimal set required for Kubernetes Monitoring. See [Allow List for Kubelet](#allow-list-for-kubelet) |
 | metrics.kubelet.scrapeInterval | string | 60s | How frequently to scrape metrics from the Kubelet. Overrides metrics.scrapeInterval |
 | metrics.kubernetesMonitoring.enabled | bool | `true` | Report telemetry about this Kubernetes Monitoring chart as a metric. |
 | metrics.node-exporter.enabled | bool | `true` | Scrape node metrics |
@@ -275,7 +275,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | metrics.node-exporter.metricsTuning.dropMetricsForFilesystem | list | `["tempfs"]` | Drop metrics for the given filesystem types |
 | metrics.node-exporter.metricsTuning.excludeMetrics | list | `[]` | Metrics to drop. Can use regex. |
 | metrics.node-exporter.metricsTuning.includeMetrics | list | `[]` | Metrics to keep. Can use regex. |
-| metrics.node-exporter.metricsTuning.useAllowList | bool | `true` | Filter the list of metrics from Node Exporter to the minimal set required for Kubernetes Monitoring. See [Allow List for Node Exporter](#allow-list-for-node-exporter) |
+| metrics.node-exporter.metricsTuning.useDefaultAllowList | bool | `true` | Filter the list of metrics from Node Exporter to the minimal set required for Kubernetes Monitoring. See [Allow List for Node Exporter](#allow-list-for-node-exporter) |
 | metrics.node-exporter.metricsTuning.useIntegrationAllowList | bool | `false` | Filter the list of metrics from Node Exporter to the minimal set required for Kubernetes Monitoring as well as the Node Exporter integration. |
 | metrics.node-exporter.scrapeInterval | string | 60s | How frequently to scrape metrics from Node Exporter. Overrides metrics.scrapeInterval |
 | metrics.node-exporter.service.isTLS | bool | `false` | Does this port use TLS? |
@@ -298,7 +298,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | metrics.windows-exporter.labelMatchers | object | `{"app.kubernetes.io/name":"prometheus-windows-exporter.*"}` | Label matchers used by the Grafana Agent to select the Windows Exporter pods |
 | metrics.windows-exporter.metricsTuning.excludeMetrics | list | `[]` | Metrics to drop. Can use regex. |
 | metrics.windows-exporter.metricsTuning.includeMetrics | list | `[]` | Metrics to keep. Can use regex. |
-| metrics.windows-exporter.metricsTuning.useAllowList | bool | `true` | Filter the list of metrics from Windows Exporter to the minimal set required for Kubernetes Monitoring. See [Allow List for Windows Exporter](#allow-list-for-windows-exporter) |
+| metrics.windows-exporter.metricsTuning.useDefaultAllowList | bool | `true` | Filter the list of metrics from Windows Exporter to the minimal set required for Kubernetes Monitoring. See [Allow List for Windows Exporter](#allow-list-for-windows-exporter) |
 | metrics.windows-exporter.scrapeInterval | string | 60s | How frequently to scrape metrics from Windows Exporter. Overrides metrics.scrapeInterval |
 | opencost.enabled | bool | `true` | Should this Helm chart deploy OpenCost to the cluster. Set this to false if your cluster already has OpenCost, or if you do not want to scrape metrics from OpenCost. |
 | opencost.opencost.prometheus.external.url | string | `"https://prom.example.com/api/prom"` | The URL for Prometheus queries. It should match externalService.prometheus.host + "/api/prom" |

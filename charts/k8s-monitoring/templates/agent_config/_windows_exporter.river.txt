@@ -1,5 +1,5 @@
 {{ define "agent.config.windows_exporter.allowList" }}
-{{ if (index .Values.metrics "windows-exporter").metricsTuning.useAllowList }}
+{{ if (index .Values.metrics "windows-exporter").metricsTuning.useDefaultAllowList }}
 - windows_.*
 - node_cpu_seconds_total
 - node_filesystem_size_bytes
@@ -84,7 +84,7 @@ prometheus.relabel "windows_exporter" {
     replacement = "node_filesystem_avail_bytes"
     target_label = "__name__"
   }
-{{- if or (index .Values.metrics "windows-exporter").metricsTuning.useAllowList (index .Values.metrics "windows-exporter").metricsTuning.includeMetrics }}
+{{- if or (index .Values.metrics "windows-exporter").metricsTuning.useDefaultAllowList (index .Values.metrics "windows-exporter").metricsTuning.includeMetrics }}
   rule {
     source_labels = ["__name__"]
     regex = "up|{{ join "|" (include "agent.config.windows_exporter.allowList" . | fromYamlArray) }}"

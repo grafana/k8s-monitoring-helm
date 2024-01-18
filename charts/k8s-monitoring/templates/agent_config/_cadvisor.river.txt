@@ -1,5 +1,5 @@
 {{ define "agent.config.cadvisor.allowList" }}
-{{ if .Values.metrics.cadvisor.metricsTuning.useAllowList }}
+{{ if .Values.metrics.cadvisor.metricsTuning.useDefaultAllowList }}
 - container_cpu_cfs_periods_total
 - container_cpu_cfs_throttled_periods_total
 - container_cpu_usage_seconds_total
@@ -64,7 +64,7 @@ prometheus.scrape "cadvisor" {
 }
 
 prometheus.relabel "cadvisor" {
-{{- if or .Values.metrics.cadvisor.metricsTuning.useAllowList .Values.metrics.cadvisor.metricsTuning.includeMetrics }}
+{{- if or .Values.metrics.cadvisor.metricsTuning.useDefaultAllowList .Values.metrics.cadvisor.metricsTuning.includeMetrics }}
   rule {
     source_labels = ["__name__"]
     regex = "up|{{ join "|" (include "agent.config.cadvisor.allowList" . | fromYamlArray) }}"

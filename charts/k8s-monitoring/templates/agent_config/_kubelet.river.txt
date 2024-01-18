@@ -1,5 +1,5 @@
 {{ define "agent.config.kubelet.allowList" }}
-{{ if .Values.metrics.kubelet.metricsTuning.useAllowList }}
+{{ if .Values.metrics.kubelet.metricsTuning.useDefaultAllowList }}
 - container_cpu_usage_seconds_total
 - kubelet_certificate_manager_client_expiration_renew_errors
 - kubelet_certificate_manager_client_ttl_seconds
@@ -78,7 +78,7 @@ prometheus.scrape "kubelet" {
 }
 
 prometheus.relabel "kubelet" {
-{{- if or .Values.metrics.kubelet.metricsTuning.useAllowList .Values.metrics.kubelet.metricsTuning.includeMetrics }}
+{{- if or .Values.metrics.kubelet.metricsTuning.useDefaultAllowList .Values.metrics.kubelet.metricsTuning.includeMetrics }}
   rule {
     source_labels = ["__name__"]
     regex = "up|{{ join "|" (include "agent.config.kubelet.allowList" . | fromYamlArray) }}"

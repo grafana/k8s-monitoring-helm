@@ -1,5 +1,5 @@
 {{ define "agent.config.kube_state_metrics.allowList" }}
-{{ if (index .Values.metrics "kube-state-metrics").metricsTuning.useAllowList }}
+{{ if (index .Values.metrics "kube-state-metrics").metricsTuning.useDefaultAllowList }}
 - kube_daemonset.*
 - kube_deployment_metadata_generation
 - kube_deployment_spec_replicas
@@ -85,7 +85,7 @@ prometheus.scrape "kube_state_metrics" {
 }
 
 prometheus.relabel "kube_state_metrics" {
-{{- if or (index .Values.metrics "kube-state-metrics").metricsTuning.useAllowList (index .Values.metrics "kube-state-metrics").metricsTuning.includeMetrics }}
+{{- if or (index .Values.metrics "kube-state-metrics").metricsTuning.useDefaultAllowList (index .Values.metrics "kube-state-metrics").metricsTuning.includeMetrics }}
   rule {
     source_labels = ["__name__"]
     regex = "up|{{ join "|" (include "agent.config.kube_state_metrics.allowList" . | fromYamlArray) }}"

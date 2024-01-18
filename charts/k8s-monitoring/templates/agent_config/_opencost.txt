@@ -1,5 +1,5 @@
 {{ define "agent.config.opencost.allowList" }}
-{{ if .Values.metrics.cost.metricsTuning.useAllowList }}
+{{ if .Values.metrics.cost.metricsTuning.useDefaultAllowList }}
 - container_cpu_allocation
 - container_gpu_allocation
 - container_memory_allocation_bytes
@@ -73,7 +73,7 @@ prometheus.scrape "opencost" {
 }
 
 prometheus.relabel "opencost" {
-{{- if or .Values.metrics.cost.metricsTuning.useAllowList .Values.metrics.cost.metricsTuning.includeMetrics }}
+{{- if or .Values.metrics.cost.metricsTuning.useDefaultAllowList .Values.metrics.cost.metricsTuning.includeMetrics }}
   rule {
     source_labels = ["__name__"]
     regex = "up|{{ join "|" (include "agent.config.opencost.allowList" . | fromYamlArray) }}"
