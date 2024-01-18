@@ -63,6 +63,8 @@ tune the performance of metrics uploads.
 
 * `extraServices.prometheus.processors` - These processors will control the batch and memory size of metrics to bundle
   before sending them to the service. Only applies to metrics services using the OTLP or OTLPHTTP protocols.
+* `extraServices.prometheus.wal` - This controls the behavior of the Write Ahead Log that's used in the remote_write
+  component.
 
 ## Logs
 
@@ -78,21 +80,35 @@ but this can easily be adjusted.
 
 ### Gathering customizations
 
-* `logs.pod_logs.gatherMethod`
+Customizing this field controls how pod logs are actually gathered from the cluster.
+
+* `logs.pod_logs.gatherMethod` - The default method, "volumes", means that the Grafana Agent for Logs will gather logs
+  by mounting hostPath volumes to the pod log location on each Kubernetes Cluster Node. The other method, "api", means
+  that the Agent will gather logs by streaming them from the Kubernetes API Server.
 
 ### Processing customizations
 
-* `logs.pod_logs.extraRelabelingRules`
+* `logs.pod_logs.extraStageBlocks` - Processing logs is done in stages, and this field allows for additional stages to
+  be set. Stages set here will be used to populate a
+  [loki.process](https://grafana.com/docs/agent/latest/flow/reference/components/loki.process/) component.
 
 ## Events
 
 ### Discovery customizations
 
-`logs.cluster_events.namespaces` - Specify which namespaces to gather cluster events from.
+This field controls which namespaces to gather Cluster Events from.
+
+* `logs.cluster_events.namespaces` - Only gather Cluster Events from the given list of namespaces.
+
+### Processing customizations
+
+* `logs.cluster_events.log_format` - Specify the format of the cluster events. Default is `logfmt`, but can also specify
+  `json`.
 
 ## Additional Configuration
 
+In addition to customizing the generated configuration, the Kubernetes Monitoring Helm chart has the ability to add new
+components to define your own extra configuration.
 
-
-* `extraConfig`
-* `logs.extraConfig`
+* `extraConfig` - Config put here will be added to the config for the Grafana Agent StatefulSet that scraps metrics.
+* `logs.extraConfig` - Config put here will be added to the config for the Grafana Agent for Logs.
