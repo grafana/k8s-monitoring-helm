@@ -98,20 +98,6 @@ prometheus.relabel "kube_state_metrics" {
     regex = {{ join "|" (index .Values.metrics "kube-state-metrics").metricsTuning.excludeMetrics | quote }}
     action = "drop"
   }
-{{- end }}{{- if (index .Values.metrics "kube-state-metrics").metricsTuning.normalizeUnnecessaryLabels }}
-  // Normalizing unimportant labels (not deleting to continue satisfying <label>!="" checks)
-  {{- range $i := (index .Values.metrics "kube-state-metrics").metricsTuning.normalizeUnnecessaryLabels }}
-  {{- range $label := $i.labels }}
-  rule {
-    source_labels = ["__name__"]
-{{- if $i.metric }}
-    regex = "{{ $i.metric }}"
-{{- end }}
-    target_label = "{{ $label }}"
-    replacement = "NA"
-  }
-  {{- end }}
-  {{- end }}
 {{- end }}
 
 {{- if .Values.metrics.extraMetricRelabelingRules }}

@@ -324,15 +324,6 @@ metrics:
       includeMetrics: []
       # -- Metrics to drop. Can use regex.
       excludeMetrics: []
-      # -- Normalize labels to the same value for the given metric and label pairs
-      normalizeUnnecessaryLabels:
-        - labels: ["image", "image_id", "image_spec"]
-        - metric: "kube_pod_info|kube_pod_owner"
-          labels: ["created_by_name"]
-        - metric: "kube_pod_container_info"
-          labels: ["container_id"]
-        - metric: "kube_pod_info"
-          labels: ["host_ip", "pod_ip"]
 
   # Node metrics from Node Exporter
   node-exporter:
@@ -464,8 +455,6 @@ metrics:
       dropEmptyImageLabels: true
       # -- Normalize labels to the same value for the given metric and label pairs
       normalizeUnnecessaryLabels:
-        - metric: "container_cpu_.*|container_fs_.*|container_memory_.*|container_network_.*"
-          labels: ["id", "name", "image"]
         - metric: "machine_memory_bytes"
           labels: ["boot_id", "system_uuid"]
       # -- Only keep filesystem metrics that use the following physical devices

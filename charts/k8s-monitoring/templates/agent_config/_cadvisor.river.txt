@@ -101,9 +101,10 @@ prometheus.relabel "cadvisor" {
   {{- range $i := .Values.metrics.cadvisor.metricsTuning.normalizeUnnecessaryLabels }}
   {{- range $label := $i.labels }}
   rule {
-    source_labels = ["__name__"]
-    regex = "{{ $i.metric }}"
-    target_label = "{{ $label }}"
+    source_labels = ["__name__", {{ $label | quote }}]
+    separator = "@"
+    regex = "{{ $i.metric }}@.*"
+    target_label = {{ $label | quote }}
     replacement = "NA"
   }
   {{- end }}
