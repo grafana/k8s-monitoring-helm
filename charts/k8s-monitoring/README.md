@@ -228,7 +228,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | metrics.cadvisor.metricsTuning.includeMetrics | list | `[]` | Metrics to keep. Can use regex. |
 | metrics.cadvisor.metricsTuning.keepPhysicalFilesystemDevices | list | `["mmcblk.p.+","nvme.+","rbd.+","sd.+","vd.+","xvd.+","dasd.+"]` | Only keep filesystem metrics that use the following physical devices |
 | metrics.cadvisor.metricsTuning.keepPhysicalNetworkDevices | list | `["en[ospx][0-9].*","wlan[0-9].*","eth[0-9].*"]` | Only keep network metrics that use the following physical devices |
-| metrics.cadvisor.metricsTuning.normalizeUnnecessaryLabels | list | `[{"labels":["id","name","image"],"metric":"container_cpu_.*|container_fs_.*|container_memory_.*|container_network_.*"},{"labels":["boot_id","system_uuid"],"metric":"machine_memory_bytes"}]` | Normalize labels to the same value for the given metric and label pairs |
+| metrics.cadvisor.metricsTuning.normalizeUnnecessaryLabels | list | `[{"labels":["boot_id","system_uuid"],"metric":"machine_memory_bytes"}]` | Normalize labels to the same value for the given metric and label pairs |
 | metrics.cadvisor.metricsTuning.useDefaultAllowList | bool | `true` | Filter the list of metrics from cAdvisor to the minimal set required for Kubernetes Monitoring. See [Allow List for cAdvisor](#allow-list-for-cadvisor) |
 | metrics.cadvisor.scrapeInterval | string | 60s | How frequently to scrape metrics from cAdvisor. Overrides metrics.scrapeInterval |
 | metrics.cost.enabled | bool | `true` | Scrape cost metrics from OpenCost |
@@ -248,7 +248,6 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | metrics.kube-state-metrics.labelMatchers | object | `{"app.kubernetes.io/name":"kube-state-metrics"}` | Label matchers used by the Grafana Agent to select the Kube State Metrics service |
 | metrics.kube-state-metrics.metricsTuning.excludeMetrics | list | `[]` | Metrics to drop. Can use regex. |
 | metrics.kube-state-metrics.metricsTuning.includeMetrics | list | `[]` | Metrics to keep. Can use regex. |
-| metrics.kube-state-metrics.metricsTuning.normalizeUnnecessaryLabels | list | `[{"labels":["image","image_id","image_spec"]},{"labels":["created_by_name"],"metric":"kube_pod_info|kube_pod_owner"},{"labels":["container_id"],"metric":"kube_pod_container_info"},{"labels":["host_ip","pod_ip"],"metric":"kube_pod_info"}]` | Normalize labels to the same value for the given metric and label pairs |
 | metrics.kube-state-metrics.metricsTuning.useDefaultAllowList | bool | `true` | Filter the list of metrics from Kube State Metrics to a useful, minimal set. See [Allow List for Kube State Metrics](#allow-list-for-kube-state-metrics) |
 | metrics.kube-state-metrics.scrapeInterval | string | 60s | How frequently to scrape metrics from Kube State Metrics. Overrides metrics.scrapeInterval |
 | metrics.kube-state-metrics.service.isTLS | bool | `false` | Does this port use TLS? |

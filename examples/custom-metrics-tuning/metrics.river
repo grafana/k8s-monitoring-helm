@@ -441,32 +441,16 @@ prometheus.relabel "cadvisor" {
   }
   // Normalizing unimportant labels (not deleting to continue satisfying <label>!="" checks)
   rule {
-    source_labels = ["__name__"]
-    regex = "container_cpu_.*|container_fs_.*|container_memory_.*|container_network_.*"
-    target_label = "id"
-    replacement = "NA"
-  }
-  rule {
-    source_labels = ["__name__"]
-    regex = "container_cpu_.*|container_fs_.*|container_memory_.*|container_network_.*"
-    target_label = "name"
-    replacement = "NA"
-  }
-  rule {
-    source_labels = ["__name__"]
-    regex = "container_cpu_.*|container_fs_.*|container_memory_.*|container_network_.*"
-    target_label = "image"
-    replacement = "NA"
-  }
-  rule {
-    source_labels = ["__name__"]
-    regex = "machine_memory_bytes"
+    source_labels = ["__name__", "boot_id"]
+    separator = "@"
+    regex = "machine_memory_bytes@.*"
     target_label = "boot_id"
     replacement = "NA"
   }
   rule {
-    source_labels = ["__name__"]
-    regex = "machine_memory_bytes"
+    source_labels = ["__name__", "system_uuid"]
+    separator = "@"
+    regex = "machine_memory_bytes@.*"
     target_label = "system_uuid"
     replacement = "NA"
   }
@@ -543,46 +527,6 @@ prometheus.scrape "kube_state_metrics" {
 }
 
 prometheus.relabel "kube_state_metrics" {
-  // Normalizing unimportant labels (not deleting to continue satisfying <label>!="" checks)
-  rule {
-    source_labels = ["__name__"]
-    target_label = "image"
-    replacement = "NA"
-  }
-  rule {
-    source_labels = ["__name__"]
-    target_label = "image_id"
-    replacement = "NA"
-  }
-  rule {
-    source_labels = ["__name__"]
-    target_label = "image_spec"
-    replacement = "NA"
-  }
-  rule {
-    source_labels = ["__name__"]
-    regex = "kube_pod_info|kube_pod_owner"
-    target_label = "created_by_name"
-    replacement = "NA"
-  }
-  rule {
-    source_labels = ["__name__"]
-    regex = "kube_pod_container_info"
-    target_label = "container_id"
-    replacement = "NA"
-  }
-  rule {
-    source_labels = ["__name__"]
-    regex = "kube_pod_info"
-    target_label = "host_ip"
-    replacement = "NA"
-  }
-  rule {
-    source_labels = ["__name__"]
-    regex = "kube_pod_info"
-    target_label = "pod_ip"
-    replacement = "NA"
-  }
   forward_to = [prometheus.relabel.metrics_service.receiver]
 }
 
