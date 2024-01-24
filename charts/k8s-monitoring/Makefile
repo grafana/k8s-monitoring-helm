@@ -1,17 +1,24 @@
-values.schema.json: values.yaml values.schema.modifications.json
+SHELL := /bin/bash
+
+values.schema.json: values.yaml schema-mods/enums-and-types.json schema-mods/required-values.json
 	docker run -it --rm --platform linux/amd64 -v "$(shell pwd):/chart" --entrypoint sh alpine/helm \
 		--command -c 'helm plugin install https://github.com/karuppiah7890/helm-schema-gen.git && \
 			helm schema-gen /chart/values.yaml > /chart/values.schema.generated.json'
-	jq --indent 4 -s '.[0] * .[1] \
-		| del(.properties["grafana-agent"]) \
-		| del(.properties["grafana-agent-logs"]) \
-		| del(.properties["kube-state-metrics"].properties.autosharding) \
-		| del(.properties["kube-state-metrics"].properties.nodeSelector) \
-		| del(.properties["kube-state-metrics"].properties.updateStrategy) \
-		| del(.properties["prometheus-node-exporter"].properties.nodeSelector) \
-		| del(.properties["prometheus-windows-exporter"].properties.config) \
-		| del(.properties.opencost.properties.opencost) \
-' values.schema.generated.json values.schema.modifications.json > values.schema.json
+
+	jq --indent 4 -s '.[0] * .[1] * .[2]' \
+		<(jq --indent 4 'del(.properties["grafana-agent"]) \
+			| del(.properties["grafana-agent-events"]) \
+			| del(.properties["grafana-agent-logs"]) \
+			| del(.properties["kube-state-metrics"].properties.autosharding) \
+			| del(.properties["kube-state-metrics"].properties.nodeSelector) \
+			| del(.properties["kube-state-metrics"].properties.updateStrategy) \
+			| del(.properties["prometheus-node-exporter"].properties.nodeSelector) \
+			| del(.properties["prometheus-windows-exporter"].properties.config) \
+			| del(.properties.opencost.properties.opencost)' values.schema.generated.json) \
+		schema-mods/enums-and-types.json \
+		schema-mods/required-values.json \
+		> values.schema.json
+
 	rm values.schema.generated.json
 
 HAS_HELM_DOCS := $(shell command -v helm-docs;)
