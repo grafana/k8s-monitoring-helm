@@ -884,9 +884,9 @@ data:
     
     discovery.relabel "filtered_pod_logs" {
       targets = discovery.relabel.pod_logs.output
-      rule {
+      rule {  // Drop anything with a "falsy" annotation value
         source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_logs_autogather"]
-        regex = "skip"
+        regex = "(false|no|skip)"
         action = "drop"
       }
     }
@@ -45347,9 +45347,9 @@ data:
     
     discovery.relabel "filtered_pod_logs" {
       targets = discovery.relabel.pod_logs.output
-      rule {
+      rule {  // Drop anything with a "falsy" annotation value
         source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_logs_autogather"]
-        regex = "skip"
+        regex = "(false|no|skip)"
         action = "drop"
       }
     }
