@@ -19,9 +19,9 @@ Metrics are typically gathered using Prometheus-style scraping.
 
 These fields affect how metric targets are discovered. Typically, you'll make changes to these values if the Grafana Agent is not detecting the target.
 
-* `metrics.<source>.extraRelabelingRules` - These rules are used to filter from all nodes, services, endpoints, or pods on the
-  cluster to a specific one that has the metrics. They're used to populate the rules section of a
-  [discovery.relabel](https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/) component.
+* `metrics.<source>.extraRelabelingRules` - These rules are used to populate the rules section of a
+  [discovery.relabel](https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/) component. They filter from all Nodes, services, endpoints, or Pods on the
+Cluster to a specific one that has the metrics. 
   Use these rules to target a specific service.
 * `metrics.extraRelabelingRules` - Same as above, but these rules are applied to all metric sources.
 * `metrics.<source>.labelMatchers` - This section is used to define what Kubernetes labels need to match on the target.
