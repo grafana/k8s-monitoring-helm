@@ -19,8 +19,7 @@ Metrics are typically gathered using Prometheus-style scraping.
 
 ### Discovery customizations
 
-These fields in the Helm chart's values affect how metric targets are discovered. Typically, you'll make changes here if
-the Grafana Agent is not detecting the target.
+These fields affect how metric targets are discovered. Typically, you'll make changes to these values if the Grafana Agent is not detecting the target.
 
 * `metrics.<source>.extraRelabelingRules` - These rules are used to filter from all nodes, services, endpoints, or pods on the
   cluster to a specific one that has the metrics. They're used to populate the rules section of a
