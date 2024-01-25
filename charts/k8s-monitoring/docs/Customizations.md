@@ -52,7 +52,7 @@ By default, we already use an "allow list" to filter to a specific set of metric
 
 ### Delivery customizations
 
-These fields adjust how metrics are actually delivered to the metrics service. Tyipcally, these will be changed only to
+These fields adjust how metrics are delivered to the metrics service. Typically, change these only to
 tune the performance of metrics uploads.
 
 * `extraServices.prometheus.processors` - These processors control the batch and memory size of metrics to bundle
