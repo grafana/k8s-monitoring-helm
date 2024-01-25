@@ -82,7 +82,7 @@ but you can easily adjust this setting.
 
 This field controls how Pod logs are gathered from the Cluster.
 
-* `logs.pod_logs.gatherMethod` - The default method, "volumes", means that the Grafana Agent for Logs will gather logs
+* `logs.pod_logs.gatherMethod` - The default method, "volumes", means that the Grafana Agent for logs will gather logs
   by mounting hostPath volumes to the pod log location on each Kubernetes Cluster Node. The other method, "api", means
   that the Agent will gather logs by streaming them from the Kubernetes API Server.
 
