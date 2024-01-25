@@ -40,9 +40,9 @@ you want to change something about how often to scrape or which target to scrape
 
 By default, we already use an "allow list" to filter to a specific set of metrics, meaning the list drops metrics that are not useful for monitoring Kubernetes Clusters. The following fields allow for more customizations of the metrics after they have been scraped, but before being sent to the external metric service for storage. Typical changes that you might want to do here include setting, modifying, or dropping metric labels.
 
-* `metrics.<source>.extraMetricsRelabelingRules` - These rules are used to modify metrics and will populate the rules
+* `metrics.<source>.extraMetricsRelabelingRules` - Rules that modify metrics and will populate the rules
   section of a [prometheus.relabel](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/)
-  component. Use these rules to do arbitrary modifications to metrics or metric labels.
+  component. Use these rules to perform arbitrary modifications to metrics or metric labels.
 * `metrics.extraMetricsRelabelingRules` - Same as above, but the rules are applied to metrics from all metric sources.
 * `metrics.<source>.allowList` - Sets a list of metrics that will be kept, dropping any metrics that don't match.
 * `extraServices.prometheus.externalLabels` - A key-value set that defines labels and values to be set for all metrics
