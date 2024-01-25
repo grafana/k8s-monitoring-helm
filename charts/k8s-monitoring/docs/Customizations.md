@@ -85,7 +85,7 @@ This field controls how Pod logs are gathered from the Cluster.
 
 ### Processing customizations
 
-* `logs.pod_logs.extraStageBlocks` - Processing logs is done in stages, and this field allows for additional stages to
+* `logs.pod_logs.extraStageBlocks` - Processing logs is done in stages. This field allows for additional stages to
   be set. Stages set here will be used to populate a
   [loki.process](https://grafana.com/docs/agent/latest/flow/reference/components/loki.process/) component.
 
