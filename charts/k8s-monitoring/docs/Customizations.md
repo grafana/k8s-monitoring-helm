@@ -29,8 +29,8 @@ These fields affect how metric targets are discovered. Typically, you'll make ch
 
 ### Scraping customizations
 
-These fields in the Helm chart's values affect how metric targets are scraped. Typically, you'll make changes here if 
-you want to change something about how 
+These fields affect how metric targets are scraped. Typically, you'll make changes here if 
+you want to change something about how often to scrape or which target to scrape.
 
 * `metrics.<source>.scrapeInterval` - How often to scrape metrics from a target.
 * `metrics.scrapeInterval` - Same as above, but changes the global default.
