@@ -231,13 +231,13 @@
                         "wal": {
                             "type": "object",
                             "properties": {
-                                "truncateFrequency": {
+                                "maxKeepaliveTime": {
                                     "type": "string"
                                 },
                                 "minKeepaliveTime": {
                                     "type": "string"
                                 },
-                                "maxKeepaliveTime": {
+                                "truncateFrequency": {
                                     "type": "string"
                                 }
                             }
@@ -324,6 +324,9 @@
         "extraConfig": {
             "type": "string"
         },
+        "extraObjects": {
+            "type": "array"
+        },
         "global": {
             "type": "object",
             "properties": {
@@ -335,48 +338,6 @@
                         },
                         "registry": {
                             "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "grafana-agent-events": {
-            "type": "object",
-            "properties": {
-                "agent": {
-                    "type": "object",
-                    "properties": {
-                        "configMap": {
-                            "type": "object",
-                            "properties": {
-                                "create": {
-                                    "type": "boolean"
-                                }
-                            }
-                        }
-                    }
-                },
-                "controller": {
-                    "type": "object",
-                    "properties": {
-                        "nodeSelector": {
-                            "type": "object",
-                            "properties": {
-                                "kubernetes.io/os": {
-                                    "type": "string"
-                                }
-                            }
-                        },
-                        "type": {
-                            "type": "string"
-                        }
-                    }
-                },
-                "crds": {
-                    "type": "object",
-                    "properties": {
-                        "create": {
-                            "type": "boolean"
                         }
                     }
                 }
@@ -459,12 +420,6 @@
                 "agent": {
                     "type": "object",
                     "properties": {
-                        "allowList": {
-                            "type": "array",
-                            "items": {
-                                "type": "string"
-                            }
-                        },
                         "enabled": {
                             "type": "boolean"
                         },
@@ -482,6 +437,29 @@
                                 }
                             }
                         },
+                        "metricsTuning": {
+                            "type": "object",
+                            "properties": {
+                                "excludeMetrics": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                },
+                                "includeMetrics": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                },
+                                "useDefaultAllowList": {
+                                    "type": "boolean"
+                                },
+                                "useIntegrationAllowList": {
+                                    "type": "boolean"
+                                }
+                            }
+                        },
                         "scrapeInterval": {
                             "type": "string"
                         }
@@ -490,9 +468,6 @@
                 "apiserver": {
                     "type": "object",
                     "properties": {
-                        "allowList": {
-                            "type": "array"
-                        },
                         "enabled": {
                             "type": "boolean"
                         },
@@ -501,6 +476,23 @@
                         },
                         "extraRelabelingRules": {
                             "type": "string"
+                        },
+                        "metricsTuning": {
+                            "type": "object",
+                            "properties": {
+                                "excludeMetrics": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                },
+                                "includeMetrics": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
                         },
                         "scrapeInterval": {
                             "type": "string"
@@ -544,18 +536,29 @@
                         },
                         "extraRelabelingRules": {
                             "type": "string"
+                        },
+                        "metricsTuning": {
+                            "type": "object",
+                            "properties": {
+                                "excludeMetrics": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                },
+                                "includeMetrics": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
                         }
                     }
                 },
                 "cadvisor": {
                     "type": "object",
                     "properties": {
-                        "allowList": {
-                            "type": "array",
-                            "items": {
-                                "type": "string"
-                            }
-                        },
                         "enabled": {
                             "type": "boolean"
                         },
@@ -565,6 +568,61 @@
                         "extraRelabelingRules": {
                             "type": "string"
                         },
+                        "metricsTuning": {
+                            "type": "object",
+                            "properties": {
+                                "dropEmptyContainerLabels": {
+                                    "type": "boolean"
+                                },
+                                "dropEmptyImageLabels": {
+                                    "type": "boolean"
+                                },
+                                "excludeMetrics": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                },
+                                "includeMetrics": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                },
+                                "keepPhysicalFilesystemDevices": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                },
+                                "keepPhysicalNetworkDevices": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                },
+                                "normalizeUnnecessaryLabels": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "labels": {
+                                                "type": "array",
+                                                "items": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "metric": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    }
+                                },
+                                "useDefaultAllowList": {
+                                    "type": "boolean"
+                                }
+                            }
+                        },
                         "scrapeInterval": {
                             "type": "string"
                         }
@@ -573,12 +631,6 @@
                 "cost": {
                     "type": "object",
                     "properties": {
-                        "allowList": {
-                            "type": "array",
-                            "items": {
-                                "type": "string"
-                            }
-                        },
                         "enabled": {
                             "type": "boolean"
                         },
@@ -593,6 +645,26 @@
                             "properties": {
                                 "app.kubernetes.io/name": {
                                     "type": "string"
+                                }
+                            }
+                        },
+                        "metricsTuning": {
+                            "type": "object",
+                            "properties": {
+                                "excludeMetrics": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                },
+                                "includeMetrics": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                },
+                                "useDefaultAllowList": {
+                                    "type": "boolean"
                                 }
                             }
                         },
@@ -613,12 +685,6 @@
                 "kube-state-metrics": {
                     "type": "object",
                     "properties": {
-                        "allowList": {
-                            "type": "array",
-                            "items": {
-                                "type": "string"
-                            }
-                        },
                         "enabled": {
                             "type": "boolean"
                         },
@@ -633,6 +699,26 @@
                             "properties": {
                                 "app.kubernetes.io/name": {
                                     "type": "string"
+                                }
+                            }
+                        },
+                        "metricsTuning": {
+                            "type": "object",
+                            "properties": {
+                                "excludeMetrics": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                },
+                                "includeMetrics": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                },
+                                "useDefaultAllowList": {
+                                    "type": "boolean"
                                 }
                             }
                         },
@@ -655,9 +741,6 @@
                 "kubeControllerManager": {
                     "type": "object",
                     "properties": {
-                        "allowList": {
-                            "type": "array"
-                        },
                         "enabled": {
                             "type": "boolean"
                         },
@@ -666,6 +749,23 @@
                         },
                         "extraRelabelingRules": {
                             "type": "string"
+                        },
+                        "metricsTuning": {
+                            "type": "object",
+                            "properties": {
+                                "excludeMetrics": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                },
+                                "includeMetrics": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
                         },
                         "port": {
                             "type": "integer"
@@ -678,9 +778,6 @@
                 "kubeProxy": {
                     "type": "object",
                     "properties": {
-                        "allowList": {
-                            "type": "array"
-                        },
                         "enabled": {
                             "type": "boolean"
                         },
@@ -689,6 +786,23 @@
                         },
                         "extraRelabelingRules": {
                             "type": "string"
+                        },
+                        "metricsTuning": {
+                            "type": "object",
+                            "properties": {
+                                "excludeMetrics": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                },
+                                "includeMetrics": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
                         },
                         "port": {
                             "type": "integer"
@@ -701,9 +815,6 @@
                 "kubeScheduler": {
                     "type": "object",
                     "properties": {
-                        "allowList": {
-                            "type": "array"
-                        },
                         "enabled": {
                             "type": "boolean"
                         },
@@ -712,6 +823,23 @@
                         },
                         "extraRelabelingRules": {
                             "type": "string"
+                        },
+                        "metricsTuning": {
+                            "type": "object",
+                            "properties": {
+                                "excludeMetrics": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                },
+                                "includeMetrics": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
                         },
                         "port": {
                             "type": "integer"
@@ -724,12 +852,6 @@
                 "kubelet": {
                     "type": "object",
                     "properties": {
-                        "allowList": {
-                            "type": "array",
-                            "items": {
-                                "type": "string"
-                            }
-                        },
                         "enabled": {
                             "type": "boolean"
                         },
@@ -738,6 +860,26 @@
                         },
                         "extraRelabelingRules": {
                             "type": "string"
+                        },
+                        "metricsTuning": {
+                            "type": "object",
+                            "properties": {
+                                "excludeMetrics": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                },
+                                "includeMetrics": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                },
+                                "useDefaultAllowList": {
+                                    "type": "boolean"
+                                }
+                            }
                         },
                         "scrapeInterval": {
                             "type": "string"
@@ -755,12 +897,6 @@
                 "node-exporter": {
                     "type": "object",
                     "properties": {
-                        "allowList": {
-                            "type": "array",
-                            "items": {
-                                "type": "string"
-                            }
-                        },
                         "enabled": {
                             "type": "boolean"
                         },
@@ -775,6 +911,35 @@
                             "properties": {
                                 "app.kubernetes.io/name": {
                                     "type": "string"
+                                }
+                            }
+                        },
+                        "metricsTuning": {
+                            "type": "object",
+                            "properties": {
+                                "dropMetricsForFilesystem": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                },
+                                "excludeMetrics": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                },
+                                "includeMetrics": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                },
+                                "useDefaultAllowList": {
+                                    "type": "boolean"
+                                },
+                                "useIntegrationAllowList": {
+                                    "type": "boolean"
                                 }
                             }
                         },
@@ -848,12 +1013,6 @@
                 "windows-exporter": {
                     "type": "object",
                     "properties": {
-                        "allowList": {
-                            "type": "array",
-                            "items": {
-                                "type": "string"
-                            }
-                        },
                         "enabled": {
                             "type": "boolean"
                         },
@@ -868,6 +1027,26 @@
                             "properties": {
                                 "app.kubernetes.io/name": {
                                     "type": "string"
+                                }
+                            }
+                        },
+                        "metricsTuning": {
+                            "type": "object",
+                            "properties": {
+                                "excludeMetrics": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                },
+                                "includeMetrics": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                },
+                                "useDefaultAllowList": {
+                                    "type": "boolean"
                                 }
                             }
                         },

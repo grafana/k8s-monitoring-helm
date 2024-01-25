@@ -12,6 +12,22 @@
 
 ## Breaking change announcements
 
+### **v0.9.0**
+
+  Additional metric tuning rules have been made available for all metric sources. This means the removal of the
+  `.allowList` fields from each metric source. If you have set custom allow lists for a metric source, you will need to
+  make those changes in the new `.metricsTuning` section.
+
+  The default allow list remains in place, but it's toggled with `.metricsTuning.useDefaultAllowList`.
+
+  If you've added more metrics to the default allow list, put those additional metrics in the
+  `.metricsTuning.includeMetrics` section.
+
+  If you've removed metrics from the default allow list, put the *metrics to remove* in the
+  `.metricsTuning.excludeMetrics` section.
+
+  For more information, see [this example](../../examples/custom-metrics-tuning).
+
 ### **v0.7.0**
 
   The OTLP, OTLPHTTP, and Zipkin receiver definitions under `traces.receivers` has been moved up a level to `receivers`.
@@ -146,20 +162,25 @@ For the specific modifications, see the [OpenShift Compatible example](../../exa
 
 If you're encountering issues deploying or using this chart, check the [Troubleshooting doc](./docs/Troubleshooting.md).
 
-## Allow List
+## Metrics Tuning and Allow Lists
 
-Each metric source has an allow list, which is a list of metric names that will
-be forwarded by the Grafana Agent to Prometheus. Any metric not on that list
-will be ignored. Defaults have been supplied for the specific services and are
-shown in the following sections.
+Each metric source has the ability to adjust the amount of metrics being scraped and their labels. This can be useful to
+limit the sheer number of metrics. Many of the metric sources have an allow list, which is a set of metric names that
+will be kept, while any metrics not on the list will be dropped. The allow lists are tuned to return a useful, but
+minimal set of metrics for Kubernetes Monitoring.
 
 If you want to allow all metrics, set this in the values file:
 
 ```yaml
-allowList: null
+metrics:
+  <metric source>:
+    metricsTuning:
+      useDefaultAllowList: false
 ```
 
-For more examples of custom allow lists, see [this example](../../examples/custom-allow-lists).
+The following sections contain the allow lists that are defined for the associated metric sources.
+
+For more examples of metrics tuning, such as including or excluding metrics, see [this example](../../examples/custom-metrics-tuning).
 
 ### Allow List for Grafana Agent
 

@@ -1,3 +1,39 @@
+{{ define "agent.config.kube_state_metrics.allowList" }}
+{{ if (index .Values.metrics "kube-state-metrics").metricsTuning.useDefaultAllowList }}
+- kube_daemonset.*
+- kube_deployment_metadata_generation
+- kube_deployment_spec_replicas
+- kube_deployment_status_observed_generation
+- kube_deployment_status_replicas_available
+- kube_deployment_status_replicas_updated
+- kube_horizontalpodautoscaler_spec_max_replicas
+- kube_horizontalpodautoscaler_spec_min_replicas
+- kube_horizontalpodautoscaler_status_current_replicas
+- kube_horizontalpodautoscaler_status_desired_replicas
+- kube_job.*
+- kube_namespace_status_phase
+- kube_node.*
+- kube_persistentvolumeclaim_resource_requests_storage_bytes
+- kube_pod_container_info
+- kube_pod_container_resource_limits
+- kube_pod_container_resource_requests
+- kube_pod_container_status_last_terminated_reason
+- kube_pod_container_status_restarts_total
+- kube_pod_container_status_waiting_reason
+- kube_pod_info
+- kube_pod_owner
+- kube_pod_start_time
+- kube_pod_status_phase
+- kube_pod_status_reason
+- kube_replicaset.*
+- kube_resourcequota
+- kube_statefulset.*
+{{ end }}
+{{ if (index .Values.metrics "kube-state-metrics").metricsTuning.includeMetrics }}
+{{ (index .Values.metrics "kube-state-metrics").metricsTuning.includeMetrics | toYaml }}
+{{ end }}
+{{ end }}
+
 {{ define "agent.config.kube_state_metrics" }}
 // Kube State Metrics
 discovery.relabel "kube_state_metrics" {
@@ -49,13 +85,21 @@ prometheus.scrape "kube_state_metrics" {
 }
 
 prometheus.relabel "kube_state_metrics" {
-{{- if (index .Values.metrics "kube-state-metrics").allowList }}
+{{- if or (index .Values.metrics "kube-state-metrics").metricsTuning.useDefaultAllowList (index .Values.metrics "kube-state-metrics").metricsTuning.includeMetrics }}
   rule {
     source_labels = ["__name__"]
-    regex = "up|{{ join "|" (index .Values.metrics "kube-state-metrics").allowList }}"
+    regex = "up|{{ join "|" (include "agent.config.kube_state_metrics.allowList" . | fromYamlArray) }}"
     action = "keep"
   }
 {{- end }}
+{{- if (index .Values.metrics "kube-state-metrics").metricsTuning.excludeMetrics }}
+  rule {
+    source_labels = ["__name__"]
+    regex = {{ join "|" (index .Values.metrics "kube-state-metrics").metricsTuning.excludeMetrics | quote }}
+    action = "drop"
+  }
+{{- end }}
+
 {{- if .Values.metrics.extraMetricRelabelingRules }}
 {{ .Values.metrics.extraMetricRelabelingRules | indent 2 }}
 {{- end }}
