@@ -70,7 +70,7 @@ tune the performance of metrics uploads.
 
 ### Discovery customizations
 
-Customizing the discovery of logs will affect which Pods to gather logs from. The default is all pods in all namespaces,
+When you customize the discovery of logs, it will affect which Pods to gather logs from. The default is all Pods in all namespaces,
 but this can easily be adjusted.
 
 * `logs.pod_logs.namespaces` - Only gather logs from pods in the given list of namespaces.
