@@ -34,7 +34,7 @@ you want to change something about how often to scrape or which target to scrape
 
 * `metrics.<source>.scrapeInterval` - How often to scrape metrics from a target.
 * `metrics.scrapeInterval` - Same as above, but changes the global default.
-* `metrics.<source>.service.isTLS` - Should the Agent use HTTPS and TLS to scrape the target instead of HTTP?
+* `metrics.<source>.service.isTLS` - Determines whether the Agent use HTTPS and TLS to scrape the target instead of HTTP.
 
 ### Processing customizations
 
