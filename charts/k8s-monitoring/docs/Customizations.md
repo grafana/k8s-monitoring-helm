@@ -99,7 +99,7 @@ This field controls which namespaces to gather Cluster Events from.
 
 ### Processing customizations
 
-* `logs.cluster_events.log_format` - Specify the format of the cluster events. Default is `logfmt`, but can also specify
+* `logs.cluster_events.log_format` - Specifies the format of the Cluster events. Default is `logfmt`, but can also specify
   `json`.
 
 ## Additional Configuration
