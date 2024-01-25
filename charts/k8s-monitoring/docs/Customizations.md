@@ -57,7 +57,7 @@ tune the performance of metrics uploads.
 
 * `extraServices.prometheus.processors` - These processors control the batch and memory size of metrics to bundle
   before sending them to the service. Only applies to metrics services using the OTLP or OTLPHTTP protocols.
-* `extraServices.prometheus.wal` - This controls the behavior of the Write Ahead Log that's used in the remote_write
+* `extraServices.prometheus.wal` - Controls the behavior of the Write Ahead Log that's used in the remote_write
   component.
 
 ## Logs
