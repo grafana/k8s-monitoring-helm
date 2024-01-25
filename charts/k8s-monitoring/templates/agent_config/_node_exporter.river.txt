@@ -176,7 +176,7 @@ prometheus.scrape "node_exporter" {
 }
 
 prometheus.relabel "node_exporter" {
-{{- if or (index .Values.metrics "node-exporter").metricsTuning.useDefaultAllowList (index .Values.metrics "kube-state-metrics").metricsTuning.includeMetrics }}
+{{- if or (index .Values.metrics "node-exporter").metricsTuning.useDefaultAllowList (index .Values.metrics "node-exporter").metricsTuning.includeMetrics }}
   rule {
     source_labels = ["__name__"]
     regex = "up|{{ join "|" (include "agent.config.node_exporter.allowList" . | fromYamlArray) }}"
