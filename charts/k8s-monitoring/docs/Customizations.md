@@ -1,8 +1,6 @@
 # Customizing the Configuration
 
-By default, this chart provides a very capable configuration for Kubernetes Cluster infrastructure monitoring. However
-there will be circumstances where you might want to customize the configuration. This document will describe the various
-ways to provide those customizations and what affect they will have.
+While this chart provides a capable configuration for Kubernetes Cluster infrastructure monitoring, you can use this document to customize your configuration and understand how these customizations affect it.
 
 ## Overview
 
