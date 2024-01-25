@@ -71,7 +71,7 @@ tune the performance of metrics uploads.
 ### Discovery customizations
 
 When you customize the discovery of logs, it will affect which Pods to gather logs from. The default is all Pods in all namespaces,
-but this can easily be adjusted.
+but you can easily adjust this setting.
 
 * `logs.pod_logs.namespaces` - Only gather logs from pods in the given list of namespaces.
 * `logs.pod_logs.extraRelabelingRules` - These rules are used to filter from all pods on the cluster to the specific set
