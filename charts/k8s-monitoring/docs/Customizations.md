@@ -104,8 +104,7 @@ This field controls which namespaces to gather Cluster Events from.
 
 ## Additional Configuration
 
-In addition to customizing the generated configuration, the Kubernetes Monitoring Helm chart has the ability to add new
-components to define your own extra configuration.
+In addition to customizing the generated configuration, you can add new components to the the Kubernetes Monitoring Helm chart to define your own extra configuration.
 
 * `extraConfig` - Config put here will be added to the config for the Grafana Agent StatefulSet that scraps metrics.
 * `logs.extraConfig` - Config put here will be added to the config for the Grafana Agent for Logs.
