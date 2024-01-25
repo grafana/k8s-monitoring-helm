@@ -73,7 +73,7 @@ tune the performance of metrics uploads.
 When you customize the discovery of logs, it will affect which Pods to gather logs from. The default is all Pods in all namespaces,
 but you can easily adjust this setting.
 
-* `logs.pod_logs.namespaces` - Only gather logs from pods in the given list of namespaces.
+* `logs.pod_logs.namespaces` - Only gathers logs from Pods in the given list of namespaces.
 * `logs.pod_logs.extraRelabelingRules` - These rules are used to filter from all pods on the cluster to the specific set
   that will be used for gathering logs. They're used to populate the rules section of a
   [discovery.relabel](https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/) component.
