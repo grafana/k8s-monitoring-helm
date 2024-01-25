@@ -24,7 +24,7 @@ These fields affect how metric targets are discovered. Typically, you'll make ch
 Cluster to a specific one that has the metrics. 
   Use these rules to target a specific service.
 * `metrics.extraRelabelingRules` - Same as above, but these rules are applied to all metric sources.
-* `metrics.<source>.labelMatchers` - This section is used to define what Kubernetes labels need to match on the target.
+* `metrics.<source>.labelMatchers` - Defines what Kubernetes labels need to match on the target.
 * `metrics.<source>.service.port` - This section defines the name of the port that has the metrics endpoint. 
 
 ### Scraping customizations
