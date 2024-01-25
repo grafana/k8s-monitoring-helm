@@ -217,7 +217,7 @@ metrics:
   # Annotation-based autodiscovery allows for discovering metric sources solely on their annotations and does
   # not require adding any extra configuration.
   autoDiscover:
-    # Enable annotation-based autodiscovery
+    # -- Enable annotation-based autodiscovery
     enabled: true
 
     # -- Rule blocks to be added to the discovery.relabel component for auto-discovered entities.
@@ -664,15 +664,18 @@ logs:
     # -- Capture and forward logs from Kubernetes pods
     enabled: true
 
-    # Controls the behavior of discovering pods for logs.
     # When set to "all", every pod (filtered by the namespaces list below) will have their logs gathered, but you can
     # use the annotation to remove a pod from that list.
-    # When set to "annotation", only pods with the annotation set to true will be gathered.
+    # e.g. Pods with the annotation k8s.grafana.com/logs.autogather: false will not have their logs gathered.
+    # When set to "annotation", only pods with the annotation set to something other than "false", "no" or "skip" will
+    # have their logs gathered.
     # Possible values: "all" "annotation"
+    # -- Controls the behavior of discovering pods for logs.
     discovery: "all"
 
-    # The annotation to control the behavior of gathering logs from this pod. If you put this annotation on to your pod,
-    # it will either enable or disable auto gathering of logs from this pod.
+    # The annotation to control the behavior of gathering logs from this pod. If a pod has this annotation, it will
+    # either enable or disable gathering of logs.
+    # -- Pod annotation to use for controlling log discovery.
     annotation: "k8s.grafana.com/logs.autogather"
 
     # -- Only capture logs from pods in these namespaces (`[]` means all namespaces)
@@ -870,6 +873,7 @@ prometheus-windows-exporter:
   # not want to scrape metrics from Windows Exporter.
   enabled: false
 
+  # -- Windows Exporter configuration
   config: |-
     collectors:
       enabled: cpu,cs,container,logical_disk,memory,net,os
