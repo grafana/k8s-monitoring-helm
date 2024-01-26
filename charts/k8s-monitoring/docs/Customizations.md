@@ -27,7 +27,7 @@ Cluster to a specific one that has the metrics.
 * `metrics.<source>.labelMatchers` - Defines what Kubernetes labels need to match on the target.
 * `metrics.<source>.service.port` - Defines the name of the port that has the metrics endpoint. 
 
-### Scraping customizations
+### Customize how to collect the data
 
 These fields affect how metric targets are scraped. Typically, you'll make changes here if 
 you want to change something about how often to scrape or which target to scrape.
