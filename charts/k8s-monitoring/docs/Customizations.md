@@ -17,7 +17,7 @@ Metrics are usually gathered using Prometheus-style scraping.
 
 ### Discovery customizations
 
-These fields affect how metric targets are discovered. Typically, you'll make changes to these values if the Grafana Agent is not detecting the target.
+These fields affect how metric targets are discovered. If the Grafana Agent is not detecting the target, make changes to these values.
 
 * `metrics.<source>.extraRelabelingRules` - These rules are used to populate the rules section of a
   [discovery.relabel](https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/) component. They filter from all Nodes, services, endpoints, or Pods on the
