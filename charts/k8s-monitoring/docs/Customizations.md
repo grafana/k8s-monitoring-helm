@@ -64,8 +64,7 @@ tune the performance of metrics uploads.
 
 ### Customize which logs to gather
 
-When you customize the discovery of logs, it will affect which Pods to gather logs from. The default is all Pods in all namespaces,
-but you can easily adjust this setting.
+The default for the Helm chart is to gather logs from all Pods in all namespaces. Use these settings to set which Pods you want logs collected from.
 
 * `logs.pod_logs.namespaces` - Only gathers logs from Pods in the given list of namespaces.
 * `logs.pod_logs.extraRelabelingRules` - Rules that filter from all Pods on the Cluster to the specific set
