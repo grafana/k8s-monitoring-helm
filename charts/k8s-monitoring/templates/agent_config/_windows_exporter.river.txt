@@ -1,10 +1,6 @@
 {{ define "agent.config.windows_exporter.allowList" }}
 {{ if (index .Values.metrics "windows-exporter").metricsTuning.useDefaultAllowList }}
-- windows_.*
-- node_cpu_seconds_total
-- node_filesystem_size_bytes
-- node_filesystem_avail_bytes
-- container_cpu_usage_seconds_total
+{{ "default_allow_lists/windows_exporter.yaml" | .Files.Get }}
 {{ end }}
 {{ if (index .Values.metrics "windows-exporter").metricsTuning.includeMetrics }}
 {{ (index .Values.metrics "windows-exporter").metricsTuning.includeMetrics | toYaml }}
