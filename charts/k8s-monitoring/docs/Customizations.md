@@ -15,7 +15,7 @@ Each telemetry data source (e.g. metrics, logs, events, traces) typically goes t
 
 Metrics are usually gathered using Prometheus-style scraping.
 
-### Discovery customizations
+###  Customize where to find the data
 
 These fields affect how metric targets are discovered. If the Grafana Agent is not detecting the target, make changes to these values.
 
