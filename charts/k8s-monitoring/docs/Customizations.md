@@ -13,7 +13,7 @@ Each telemetry data source (e.g. metrics, logs, events, traces) typically goes t
 
 ## Metrics
 
-Metrics are typically gathered using Prometheus-style scraping.
+Metrics are usually gathered using Prometheus-style scraping.
 
 ### Discovery customizations
 
