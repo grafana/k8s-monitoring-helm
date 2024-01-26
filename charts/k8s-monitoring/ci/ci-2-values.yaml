@@ -67,8 +67,11 @@ test:
   attempts: 20
   extraQueries:
   # Check that the external label is properly being set
-  - query: "kube_node_info{cluster=\"ci-test-cluster-2\", color=\"blue\"}"
+  - query: "count(kube_pod_info{cluster=\"ci-test-cluster-2\", color=\"blue\"})"
     type: promql
+    expect:
+      operator: >
+      value: 1
 
   # Check for cluster events
   - query: "{cluster=\"ci-test-cluster-2\", job=\"integrations/kubernetes/eventhandler\"}"
