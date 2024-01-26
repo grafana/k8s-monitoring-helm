@@ -80,7 +80,7 @@ This field controls how Pod logs are gathered from the Cluster.
   by mounting hostPath volumes to the Pod log location on each Kubernetes Cluster Node. The other method, "api", means
   that the Agent will gather logs by streaming them from the Kubernetes API Server.
 
-### Processing customizations
+### Customize how logs are processed
 
 * `logs.pod_logs.extraStageBlocks` - Processing logs is done in stages. This field allows for additional stages to
   be set. Stages set here will be used to populate a
