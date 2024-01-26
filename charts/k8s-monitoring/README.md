@@ -186,8 +186,8 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | logs.cluster_events.namespaces | list | `[]` | List of namespaces to watch for events (`[]` means all namespaces) |
 | logs.enabled | bool | `true` | Capture and forward logs |
 | logs.extraConfig | string | `""` | Extra configuration that will be added to Grafana Agent Logs configuration file. This cannot be used to modify the generated configuration values, only append new components. See [Adding custom Flow configuration](#adding-custom-flow-configuration) for an example. |
-| logs.pod_logs.annotation | string | `"k8s.grafana.com/logs.autogather"` |  |
-| logs.pod_logs.discovery | string | `"all"` |  |
+| logs.pod_logs.annotation | string | `"k8s.grafana.com/logs.autogather"` | Pod annotation to use for controlling log discovery. |
+| logs.pod_logs.discovery | string | `"all"` | Controls the behavior of discovering pods for logs. |
 | logs.pod_logs.enabled | bool | `true` | Capture and forward logs from Kubernetes pods |
 | logs.pod_logs.extraRelabelingRules | string | `""` | Rule blocks to be added to the discovery.relabel component for pod logs. See https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block |
 | logs.pod_logs.extraStageBlocks | string | `""` | Stage blocks to be added to the loki.process component for pod logs. See https://grafana.com/docs/agent/latest/flow/reference/components/loki.process/#blocks |
@@ -216,7 +216,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | metrics.autoDiscover.annotations.metricsPortNumber | string | `"k8s.grafana.com/metrics.portNumber"` | Annotation for setting the metrics port by number. |
 | metrics.autoDiscover.annotations.metricsScheme | string | `"k8s.grafana.com/metrics.scheme"` | Annotation for setting the metrics scheme, default: http. |
 | metrics.autoDiscover.annotations.scrape | string | `"k8s.grafana.com/scrape"` | Annotation for enabling scraping for this service or pod. Value should be either "true" or "false" |
-| metrics.autoDiscover.enabled | bool | `true` |  |
+| metrics.autoDiscover.enabled | bool | `true` | Enable annotation-based autodiscovery |
 | metrics.autoDiscover.extraMetricRelabelingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for auto-discovered entities. See https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block |
 | metrics.autoDiscover.extraRelabelingRules | string | `""` | Rule blocks to be added to the discovery.relabel component for auto-discovered entities. See https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block |
 | metrics.autoDiscover.metricsTuning.excludeMetrics | list | `[]` | Metrics to drop. Can use regex. |
@@ -322,7 +322,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | opencost.opencost.prometheus.username_key | string | `"username"` | The key for the username property in the secret. |
 | prometheus-node-exporter.enabled | bool | `true` | Should this helm chart deploy Node Exporter to the cluster. Set this to false if your cluster already has Node Exporter, or if you do not want to scrape metrics from Node Exporter. |
 | prometheus-operator-crds.enabled | bool | `true` | Should this helm chart deploy the Prometheus Operator CRDs to the cluster. Set this to false if your cluster already has the CRDs, or if you do not to have the Grafana Agent scrape metrics from PodMonitors, Probes, or ServiceMonitors. |
-| prometheus-windows-exporter.config | string | `"collectors:\n  enabled: cpu,cs,container,logical_disk,memory,net,os\ncollector:\n  service:\n    services-where: \"Name='containerd' or Name='kubelet'\""` |  |
+| prometheus-windows-exporter.config | string | `"collectors:\n  enabled: cpu,cs,container,logical_disk,memory,net,os\ncollector:\n  service:\n    services-where: \"Name='containerd' or Name='kubelet'\""` | Windows Exporter configuration |
 | prometheus-windows-exporter.enabled | bool | `false` | Should this helm chart deploy Windows Exporter to the cluster. Set this to false if your cluster already has Windows Exporter, or if you do not want to scrape metrics from Windows Exporter. |
 | receivers.grpc.disable_debug_metrics | bool | `true` | It removes attributes which could cause high cardinality metrics. For example, attributes with IP addresses and port numbers in metrics about HTTP and gRPC connections will be removed. |
 | receivers.grpc.enabled | bool | `true` | Receive telemetry data over gRPC? |
