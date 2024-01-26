@@ -50,7 +50,7 @@ By default, we already use an "allow list" to filter to a specific set of metric
   [prometheus.remote_write](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.remote_write/#arguments)
   component.
 
-### Delivery customizations
+### Customize how metrics are uploaded
 
 These fields adjust how metrics are delivered to the metrics service. Typically, change these only to
 tune the performance of metrics uploads.
