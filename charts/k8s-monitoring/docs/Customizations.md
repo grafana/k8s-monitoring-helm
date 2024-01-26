@@ -4,7 +4,7 @@ Use the following to customize your configuration and understand how these custo
 
 ## Overview
 
-Each telemetry data source (e.g. metrics, logs, events, traces) typically goes through the same process:
+Each telemetry data source (e.g. metrics, logs, events, traces) typically goes through each of these phases:
 
 1. Discovery - How does the collector find the data source?
 2. Scraping - How should the data get gathered?
