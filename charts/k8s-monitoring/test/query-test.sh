@@ -47,6 +47,7 @@ function check_value {
   "<")  operator="-lt" ;;
   "<=") operator="-le" ;;
   "=")  operator="-eq" ;;
+  "==")  operator="-eq" ;;
   "!=") operator="-ne" ;;
   ">=") operator="-ge" ;;
   ">")  operator="-gt" ;;
@@ -83,8 +84,9 @@ function metrics_query {
 
   resultCount=$(echo "${result}" | jq '.data.result | length')
   if [ -n "${expectedCount}" ]; then
+    echo "  Expected ${expectedCount} results. Found ${resultCount} results."
     if [ "${resultCount}" -ne "${expectedCount}" ]; then
-      echo "Expected query to return ${expectedCount} result, but returned ${resultCount}"
+      echo "  Unexpected number of results returned!"
       echo "Result: ${result}"
       return 1
     fi
