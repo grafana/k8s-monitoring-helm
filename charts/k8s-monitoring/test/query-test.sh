@@ -1,8 +1,80 @@
 #!/bin/bash
 
+if [ -z "${1}" ] || [ "${1}" == "-h" ]; then
+  echo "USAGE: query-test.sh queries.json"
+  echo "Run a set of queries against Prometheus, Loki, or Tempo"
+  echo
+  echo "Required environment variables:"
+  echo "  If using any PromQL queries:"
+  echo "  PROMETHEUS_URL - The query URL for your Prometheus service (e.g. localhost:9090/api/v1/query"
+  echo "  PROMETHEUS_USER - The username for running PromQL queries"
+  echo "  PROMETHEUS_PASS - The password for running PromQL queries"
+  echo
+  echo "  If using any LogQL queries:"
+  echo "  LOKI_URL - The query URL for your Loki service (e.g. localhost:9090/api/v1/query"
+  echo "  LOKI_USER - The username for running LogQL queries"
+  echo "  LOKI_PASS - The password for running LogQL queries"
+  echo
+  echo "  If using any TraceQL queries:"
+  echo "  TEMPO_URL - The query URL for your Tempo service (e.g. localhost:9090/api/v1/query"
+  echo "  TEMPO_USER - The username for running TraceQL queries"
+  echo "  TEMPO_PASS - The password for running TraceQL queries"
+  echo
+  echo "queries.json is the queries file, and should be in the format:"
+  echo '{"queries": [<query>]}'
+  echo
+  echo "Each query has this format:"
+  echo '{'
+  echo '  "query": "<query string>",'
+  echo '  "type": "[promql (default)|logql|traceql]",'
+  echo '}'
+  echo
+  echo 'You can add an "expect" section to the query to validate the returned value'
+  echo '  "expect": {'
+  echo '    "operator": "[<, <=, ==, !=, =>, >]",'
+  echo '    "value": <expected value>'
+  echo '  }'
+fi
+
+function check_value {
+  local actualValue=$1
+  local expectedValue=$2
+  local operator=$3
+
+  echo "  Expected (${expectedValue}), Operator (${operator}), Actual (${actualValue})"
+
+  case "${operator}" in
+  "<")  operator="-lt" ;;
+  "<=") operator="-le" ;;
+  "=")  operator="-eq" ;;
+  "==")  operator="-eq" ;;
+  "!=") operator="-ne" ;;
+  ">=") operator="-ge" ;;
+  ">")  operator="-gt" ;;
+  *)
+    echo "  Unsupported operator: \"${operator}\""
+    return 1
+  esac
+  if test ! "${actualValue}" "${operator}" "${expectedValue}"; then
+    echo "  Unexpected query result!"
+    return 1
+  fi
+  return 0
+}
+
 function metrics_query {
-  echo "Running PromQL query: ${PROMETHEUS_URL}?query=${1}..."
-  result=$(curl -skX POST -u "${PROMETHEUS_USER}:${PROMETHEUS_PASS}" "${PROMETHEUS_URL}" --data-urlencode "query=${1}")
+  local query="${1}"
+  local expectedCount="${2}"
+  local expectedValue="${3}"
+  local expectedOperator="${4}"
+
+  if [ -z "${PROMETHEUS_URL}" ]; then
+    echo "PROMETHEUS_URL is not defined. Unable to run PromQL queries!"
+    return 1
+  fi
+
+  echo "Running PromQL query: ${PROMETHEUS_URL}?query=${query}..."
+  result=$(curl -skX POST -u "${PROMETHEUS_USER}:${PROMETHEUS_PASS}" "${PROMETHEUS_URL}" --data-urlencode "query=${query}")
   status=$(echo "${result}" | jq -r .status)
   if [ "${status}" != "success" ]; then
     echo "Query failed!"
@@ -11,11 +83,25 @@ function metrics_query {
   fi
 
   resultCount=$(echo "${result}" | jq '.data.result | length')
-  if [ "${resultCount}" -eq 0 ]; then
-    echo "Query returned no results"
-    echo "Result: ${result}"
-    return 1
+  if [ -n "${expectedCount}" ]; then
+    echo "  Expected ${expectedCount} results. Found ${resultCount} results."
+    if [ "${resultCount}" -ne "${expectedCount}" ]; then
+      echo "  Unexpected number of results returned!"
+      echo "Result: ${result}"
+      return 1
+    fi
+  else
+    if [ "${resultCount}" -eq 0 ]; then
+      echo "Query returned no results"
+      echo "Result: ${result}"
+      return 1
+    fi
+
+    if [ -n "${expectedValue}" ]; then
+      check_value "$(echo "${result}" | jq -r '.data.result[0].value[1] | tostring')" "${expectedValue}" "${expectedOperator}"
+    fi
   fi
+
 }
 
 function logs_query {
@@ -51,10 +137,13 @@ count=$(jq -r ".queries | length-1" "${1}")
 for i in $(seq 0 "${count}"); do
   query=$(jq -r --argjson i "${i}" '.queries[$i].query' "${1}")
   type=$(jq -r --argjson i "${i}" '.queries[$i] | .type // "promql"' "${1}")
+  expectedCount=$(jq -r --argjson i "${i}" '.queries[$i].expect.count // empty | tostring' "${1}")
+  expectedValue=$(jq -r --argjson i "${i}" '.queries[$i].expect.value // empty | tostring' "${1}")
+  expectedOperator=$(jq -r --argjson i "${i}" '.queries[$i].expect | .operator // "=="' "${1}")
 
   case "${type}" in
     promql)
-      if ! metrics_query "${query}"; then
+      if ! metrics_query "${query}" "${expectedCount}" "${expectedValue}" "${expectedOperator}"; then
         exit 1
       fi
       ;;

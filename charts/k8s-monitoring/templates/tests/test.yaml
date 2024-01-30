@@ -51,12 +51,9 @@ queries:
   - query: grafana_kubernetes_monitoring_build_info{cluster={{ .Values.cluster.name | quote}}}
     type: promql
     {{- end }}
-{{- if .Values.test.extraQueries }}
-  {{- range .Values.test.extraQueries }}
-  - query: {{ .query | quote }}
-    type: {{ .type | default "promql" }}
-  {{- end }}
-{{- end }}
+    {{- if .Values.test.extraQueries }}
+{{ .Values.test.extraQueries | toYaml | indent 2 }}
+    {{- end }}
   {{- end }}
 {{- end -}}
 ---
