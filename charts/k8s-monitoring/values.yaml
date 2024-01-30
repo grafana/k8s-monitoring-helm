@@ -859,6 +859,9 @@ kube-state-metrics:
   # @ignored - Recreate on update, eliminates the potential for duplicate metrics
   updateStrategy: Recreate
 
+  # @ignored - Disable prometheus.io/scrape annotation
+  prometheusScrape: false
+
 # Settings for the Node Exporter deployment
 # You can use this sections to make modifications to the Node Exporter deployment.
 # See https://github.com/prometheus-community/helm-charts/tree/main/charts/prometheus-node-exporter for available values.
@@ -870,6 +873,11 @@ prometheus-node-exporter:
   # @ignored
   nodeSelector:
     kubernetes.io/os: linux
+
+  # @ignored - Disable prometheus.io/scrape annotation
+  service:
+    annotations:
+      prometheus.io/scrape: null
 
 # Settings for the Windows Exporter deployment
 # You can use this sections to make modifications to the Windows Exporter deployment.
