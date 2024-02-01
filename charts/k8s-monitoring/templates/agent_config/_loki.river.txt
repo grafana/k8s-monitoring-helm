@@ -5,10 +5,6 @@ remote.kubernetes.secret "logs_service" {
   namespace = {{ .Values.externalServices.loki.secret.namespace | default .Release.Namespace | quote }}
 }
 
-otelcol.exporter.loki "otel_to_loki_converter" {
-  forward_to = [loki.write.grafana_cloud_loki.receiver]
-}
-
 {{- with .Values.externalServices.loki }}
 loki.write "grafana_cloud_loki" {
   endpoint {
