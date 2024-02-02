@@ -278,6 +278,8 @@ data:
       }
     
       // Choose the pod port
+      // The discovery generates a target for each declared container port of the pod.
+      // If the metricsPortName annotation has value, keep only the target where the port name matches the one of the annotation.
       rule {
         source_labels = ["__meta_kubernetes_pod_container_port_name"]
         target_label = "__tmp_port"
@@ -293,19 +295,19 @@ data:
         target_label = "__tmp_port"
       }
     
+      // If the metricsPortNumber annotation has value, override the target address to use it,
+      // independently from the declared container ports of the pod.
       rule {
-        source_labels = ["__meta_kubernetes_pod_container_port_number"]
-        target_label = "__tmp_port"
+        source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_metrics_portNumber", "__meta_kubernetes_pod_ip"]
+        regex = "(\\d+);(([A-Fa-f0-9]{1,4}::?){1,7}[A-Fa-f0-9]{1,4})"
+        replacement = "[$2]:$1" // IPv6
+        target_label = "__address__"
       }
       rule {
-        source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_metrics_portNumber"]
-        regex = "(.+)"
-        target_label = "__tmp_port"
-      }
-      rule {
-        source_labels = ["__meta_kubernetes_pod_container_port_number"]
-        action = "keepequal"
-        target_label = "__tmp_port"
+        source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_metrics_portNumber", "__meta_kubernetes_pod_ip"]
+        regex = "(\\d+);((([0-9]+?)(\\.|$)){4})" // IPv4, takes priority over IPv6 when both exists
+        replacement = "$2:$1"
+        target_label = "__address__"
       }
     
       rule {
@@ -45121,6 +45123,8 @@ data:
       }
     
       // Choose the pod port
+      // The discovery generates a target for each declared container port of the pod.
+      // If the metricsPortName annotation has value, keep only the target where the port name matches the one of the annotation.
       rule {
         source_labels = ["__meta_kubernetes_pod_container_port_name"]
         target_label = "__tmp_port"
@@ -45136,19 +45140,19 @@ data:
         target_label = "__tmp_port"
       }
     
+      // If the metricsPortNumber annotation has value, override the target address to use it,
+      // independently from the declared container ports of the pod.
       rule {
-        source_labels = ["__meta_kubernetes_pod_container_port_number"]
-        target_label = "__tmp_port"
+        source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_metrics_portNumber", "__meta_kubernetes_pod_ip"]
+        regex = "(\\d+);(([A-Fa-f0-9]{1,4}::?){1,7}[A-Fa-f0-9]{1,4})"
+        replacement = "[$2]:$1" // IPv6
+        target_label = "__address__"
       }
       rule {
-        source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_metrics_portNumber"]
-        regex = "(.+)"
-        target_label = "__tmp_port"
-      }
-      rule {
-        source_labels = ["__meta_kubernetes_pod_container_port_number"]
-        action = "keepequal"
-        target_label = "__tmp_port"
+        source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_metrics_portNumber", "__meta_kubernetes_pod_ip"]
+        regex = "(\\d+);((([0-9]+?)(\\.|$)){4})" // IPv4, takes priority over IPv6 when both exists
+        replacement = "$2:$1"
+        target_label = "__address__"
       }
     
       rule {
