@@ -35,9 +35,6 @@ prometheus.relabel "kubernetes_monitoring_telemetry" {
     regex = "up|grafana_kubernetes_monitoring_.*"
     action = "keep"
   }
-{{- if .Values.metrics.extraMetricRelabelingRules }}
-{{ .Values.metrics.extraMetricRelabelingRules | indent 2 }}
-{{- end }}
   forward_to = [prometheus.relabel.metrics_service.receiver]
 }
 {{ end }}

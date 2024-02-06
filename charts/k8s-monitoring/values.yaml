@@ -661,6 +661,14 @@ metrics:
     # -- Report telemetry about this Kubernetes Monitoring chart as a metric.
     enabled: true
 
+  # Settings related to metrics ingested via receivers
+  receiver:
+    # -- Apply a filter to metrics received via the OTLP or OTLP HTTP receivers.
+    # See https://grafana.com/docs/agent/latest/flow/reference/components/otelcol.processor.filter/ for details.
+    filters:
+      metric: []
+      datapoint: []
+
 # Settings related to capturing and forwarding logs
 logs:
   # -- Capture and forward logs
@@ -714,6 +722,13 @@ logs:
     # -- List of namespaces to watch for events (`[]` means all namespaces)
     namespaces: []
 
+  # Settings related to logs ingested via receivers
+  receiver:
+    # -- Apply a filter to logs received via the OTLP or OTLP HTTP receivers.
+    # See https://grafana.com/docs/agent/latest/flow/reference/components/otelcol.processor.filter/ for details.
+    filters:
+      log_record: []
+
   # -- Extra configuration that will be added to Grafana Agent Logs configuration file.
   # This cannot be used to modify the generated configuration values, only append new components.
   # See [Adding custom Flow configuration](#adding-custom-flow-configuration) for an example.
@@ -724,16 +739,13 @@ traces:
   # -- Receive and forward traces.
   enabled: false
 
-  # Trace processor settings
-  processors:
-    # Trace batch processor settings
-    batch:
-      # -- What batch size to use, in bytes
-      size: 16384
-      # -- The upper limit of the amount of data contained in a single batch, in bytes. When set to 0, batches can be any size.
-      maxSize: 0
-      # -- How long before sending
-      timeout: 2s
+  # Settings related to traces ingested via receivers
+  receiver:
+    # -- Apply a filter to traces received via the OTLP or OTLP HTTP receivers.
+    # See https://grafana.com/docs/agent/latest/flow/reference/components/otelcol.processor.filter/ for details.
+    filters:
+      span: []
+      spanevent: []
 
 # Telemetry data receiver settings
 receivers:
@@ -752,6 +764,16 @@ receivers:
     port: 4318
     # -- It removes attributes which could cause high cardinality metrics. For example, attributes with IP addresses and port numbers in metrics about HTTP and gRPC connections will be removed.
     disable_debug_metrics: true
+
+  processors:
+    # Batch processor settings for OTLP or OTLP HTTP receivers
+    batch:
+      # -- What batch size to use, in bytes
+      size: 16384
+      # -- The upper limit of the amount of data contained in a single batch, in bytes. When set to 0, batches can be any size.
+      maxSize: 0
+      # -- How long before sending
+      timeout: 2s
 
   prometheus:
     # -- Receive Prometheus metrics

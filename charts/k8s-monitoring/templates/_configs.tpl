@@ -4,7 +4,9 @@
   {{- include "agent.config.services" . }}
   {{- include "agent.config.endpoints" . }}
   {{- include "agent.config.pods" . }}
+
   {{- include "agent.config.receivers" . }}
+  {{- include "agent.config.processors" . }}
 
   {{- if .Values.metrics.enabled }}
     {{- if .Values.metrics.autoDiscover.enabled }}
@@ -74,12 +76,12 @@
     {{- include "agent.config.metricsService" . }}
   {{- end }}
 
-  {{- if .Values.logs.enabled }}
+  {{- if and .Values.logs.enabled .Values.logs.pod_logs.enabled }}
+    {{- include "agent.config.logs.pod_logs_processor" . }}
     {{- include "agent.config.loki" . }}
   {{- end }}
 
   {{- if and .Values.traces.enabled }}
-    {{- include "agent.config.traces" . }}
     {{- include "agent.config.tracesService" . }}
   {{- end }}
 
@@ -96,7 +98,8 @@
 
 {{/* Grafana Agent Logs config */}}
 {{- define "agentLogsConfig" -}}
-  {{- include "agent.config.logs.pod_logs" . }}
+  {{- include "agent.config.logs.pod_logs_discovery" . }}
+  {{- include "agent.config.logs.pod_logs_processor" . }}
   {{- include "agent.config.loki" . }}
 
   {{- if .Values.logs.extraConfig }}

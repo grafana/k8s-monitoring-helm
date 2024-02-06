@@ -31,7 +31,7 @@ discovery.relabel "pod_logs" {
     target_label = "container"
   }
   rule {
-    source_labels = ["__meta_kubernetes_namespace", "__meta_kubernetes_pod_name"]
+    source_labels = ["__meta_kubernetes_namespace", "__meta_kubernetes_pod_container_name"]
     separator = "/"
     action = "replace"
     replacement = "$1"
@@ -115,10 +115,6 @@ loki.process "pod_logs" {
 remote.kubernetes.secret "logs_service" {
   name = "loki-k8s-monitoring"
   namespace = "default"
-}
-
-otelcol.exporter.loki "otel_to_loki_converter" {
-  forward_to = [loki.write.grafana_cloud_loki.receiver]
 }
 loki.write "grafana_cloud_loki" {
   endpoint {

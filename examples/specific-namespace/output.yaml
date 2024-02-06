@@ -149,10 +149,27 @@ data:
         endpoint = "0.0.0.0:4318"
       }
       output {
-        metrics = [otelcol.processor.transform.add_metric_attributes.input]
+        metrics = [otelcol.processor.transform.add_metric_datapoint_attributes.input]
         logs = [otelcol.processor.k8sattributes.default.input]
       }
     }
+    
+    // Processors
+    otelcol.processor.transform "add_metric_datapoint_attributes" {
+      // Grafana Cloud Kubernetes monitoring expects Loki labels `cluster`, `pod`, and `namespace`
+      error_mode = "ignore"
+      metric_statements {
+        context = "datapoint"
+        statements = [
+          "set(attributes[\"deployment.environment\"], resource.attributes[\"deployment.environment\"])",
+          "set(attributes[\"service.version\"], resource.attributes[\"service.version\"])",
+        ]
+      }
+      output {
+        metrics = [otelcol.processor.k8sattributes.default.input]
+      }
+    }
+    
     otelcol.processor.k8sattributes "default" {
       extract {
         metadata = [
@@ -175,47 +192,59 @@ data:
       }
     
       output {
-        logs    = [otelcol.processor.transform.add_attributes.input]
+        metrics = [otelcol.processor.transform.add_resource_attributes.input]
+        logs    = [otelcol.processor.transform.add_resource_attributes.input]
       }
     }
-    otelcol.processor.transform "add_attributes" {
+    
+    otelcol.processor.transform "add_resource_attributes" {
       // Grafana Cloud Kubernetes monitoring expects Loki labels `cluster`, `pod`, and `namespace`
       error_mode = "ignore"
+      metric_statements {
+        context = "resource"
+        statements = [
+          "set(attributes[\"k8s.cluster.name\"], \"specific-namespace-test\") where attributes[\"k8s.cluster.name\"] == nil",
+        ]
+      }
       log_statements {
         context = "resource"
         statements = [
           "set(attributes[\"pod\"], attributes[\"k8s.pod.name\"])",
           "set(attributes[\"namespace\"], attributes[\"k8s.namespace.name\"])",
           "set(attributes[\"loki.resource.labels\"], \"pod, namespace, cluster, job\")",
-          // Accessing a map with a key that does not exist will return nil.
           "set(attributes[\"k8s.cluster.name\"], \"specific-namespace-test\") where attributes[\"k8s.cluster.name\"] == nil",
         ]
       }
       output {
-        logs = [otelcol.exporter.loki.otel_to_loki_converter.input]
-      }
-    }
-    otelcol.processor.transform "add_metric_attributes" {
-      error_mode = "ignore"
-      metric_statements {
-        context = "datapoint"
-        statements = [
-          "set(attributes[\"deployment.environment\"], resource.attributes[\"deployment.environment\"])",
-          "set(attributes[\"service.version\"], resource.attributes[\"service.version\"])",
-        ]
-      }
-      metric_statements {
-        context = "resource"
-        statements = [
-          // Accessing a map with a key that does not exist will return nil.
-          "set(attributes[\"k8s.cluster.name\"], \"specific-namespace-test\") where attributes[\"k8s.cluster.name\"] == nil",
-        ]
-      }
-      output {
-        metrics = [otelcol.exporter.prometheus.otel_to_prom_converter.input]
+        metrics = [otelcol.processor.filter.default.input]
+        logs = [otelcol.processor.filter.default.input]
       }
     }
     
+    otelcol.processor.filter "default" {
+      error_mode = "ignore"
+    
+      output {
+        metrics = [otelcol.processor.batch.batch_processor.input]
+        logs = [otelcol.processor.batch.batch_processor.input]
+      }
+    }
+    
+    otelcol.processor.batch "batch_processor" {
+      send_batch_size = 16384
+      send_batch_max_size = 0
+      timeout = "2s"
+      output {
+        metrics = [otelcol.exporter.prometheus.metrics_converter.input]
+        logs = [otelcol.exporter.loki.logs_converter.input]
+      }
+    }
+    otelcol.exporter.prometheus "metrics_converter" {
+      forward_to = [prometheus.relabel.metrics_service.receiver]
+    }
+    otelcol.exporter.loki "logs_converter" {
+      forward_to = [loki.process.pod_logs.receiver]
+    }
     // Annotation Autodiscovery
     discovery.relabel "annotation_autodiscovery_pods" {
       targets = discovery.kubernetes.pods.targets
@@ -382,11 +411,6 @@ data:
     }
     
     prometheus.relabel "annotation_autodiscovery" {
-      rule {
-          source_labels = ["namespace"]
-          regex = "^$|production|staging"
-          action = "keep"
-      }
       forward_to = [prometheus.relabel.metrics_service.receiver]
     }
     
@@ -438,11 +462,6 @@ data:
         regex = "up|agent_build_info"
         action = "keep"
       }
-      rule {
-          source_labels = ["namespace"]
-          regex = "^$|production|staging"
-          action = "keep"
-      }
       forward_to = [prometheus.relabel.metrics_service.receiver]
     }
     
@@ -479,11 +498,6 @@ data:
         source_labels = ["__name__"]
         regex = "up|grafana_kubernetes_monitoring_.*"
         action = "keep"
-      }
-      rule {
-          source_labels = ["namespace"]
-          regex = "^$|production|staging"
-          action = "keep"
       }
       forward_to = [prometheus.relabel.metrics_service.receiver]
     }
@@ -631,11 +645,6 @@ data:
         target_label = "__keepme"
         replacement = ""
       }
-      rule {
-          source_labels = ["namespace"]
-          regex = "^$|production|staging"
-          action = "keep"
-      }
       forward_to = [prometheus.relabel.metrics_service.receiver]
     }
     
@@ -674,11 +683,6 @@ data:
         source_labels = ["__name__"]
         regex = "up|kube_daemonset.*|kube_deployment_metadata_generation|kube_deployment_spec_replicas|kube_deployment_status_observed_generation|kube_deployment_status_replicas_available|kube_deployment_status_replicas_updated|kube_horizontalpodautoscaler_spec_max_replicas|kube_horizontalpodautoscaler_spec_min_replicas|kube_horizontalpodautoscaler_status_current_replicas|kube_horizontalpodautoscaler_status_desired_replicas|kube_job.*|kube_namespace_status_phase|kube_node.*|kube_persistentvolumeclaim_resource_requests_storage_bytes|kube_pod_container_info|kube_pod_container_resource_limits|kube_pod_container_resource_requests|kube_pod_container_status_last_terminated_reason|kube_pod_container_status_restarts_total|kube_pod_container_status_waiting_reason|kube_pod_info|kube_pod_owner|kube_pod_start_time|kube_pod_status_phase|kube_pod_status_reason|kube_replicaset.*|kube_resourcequota|kube_statefulset.*"
         action = "keep"
-      }
-      rule {
-          source_labels = ["namespace"]
-          regex = "^$|production|staging"
-          action = "keep"
       }
       forward_to = [prometheus.relabel.metrics_service.receiver]
     }
@@ -726,11 +730,6 @@ data:
         regex = "node_filesystem.*@(tempfs)"
         action = "drop"
       }
-      rule {
-          source_labels = ["namespace"]
-          regex = "^$|production|staging"
-          action = "keep"
-      }
       forward_to = [prometheus.relabel.metrics_service.receiver]
     }
     
@@ -770,11 +769,6 @@ data:
         regex = "up|container_cpu_allocation|container_gpu_allocation|container_memory_allocation_bytes|deployment_match_labels|kubecost_cluster_info|kubecost_cluster_management_cost|kubecost_cluster_memory_working_set_bytes|kubecost_http_requests_total|kubecost_http_response_size_bytes|kubecost_http_response_time_seconds|kubecost_load_balancer_cost|kubecost_network_internet_egress_cost|kubecost_network_region_egress_cost|kubecost_network_zone_egress_cost|kubecost_node_is_spot|node_cpu_hourly_cost|node_gpu_count|node_gpu_hourly_cost|node_ram_hourly_cost|node_total_hourly_cost|opencost_build_info|pod_pvc_allocation|pv_hourly_cost|service_selector_labels|statefulSet_match_labels"
         action = "keep"
       }
-      rule {
-          source_labels = ["namespace"]
-          regex = "^$|production|staging"
-          action = "keep"
-      }
       forward_to = [prometheus.relabel.metrics_service.receiver]
     }
     
@@ -791,11 +785,6 @@ data:
     }
     
     prometheus.relabel "podmonitors" {
-      rule {
-          source_labels = ["namespace"]
-          regex = "^$|production|staging"
-          action = "keep"
-      }
       forward_to = [prometheus.relabel.metrics_service.receiver]
     }
     
@@ -812,11 +801,6 @@ data:
     }
     
     prometheus.relabel "probes" {
-      rule {
-          source_labels = ["namespace"]
-          regex = "^$|production|staging"
-          action = "keep"
-      }
       forward_to = [prometheus.relabel.metrics_service.receiver]
     }
     
@@ -833,11 +817,6 @@ data:
     }
     
     prometheus.relabel "servicemonitors" {
-      rule {
-          source_labels = ["namespace"]
-          regex = "^$|production|staging"
-          action = "keep"
-      }
       forward_to = [prometheus.relabel.metrics_service.receiver]
     }
     
@@ -847,16 +826,17 @@ data:
       namespace = "default"
     }
     
-    otelcol.exporter.prometheus "otel_to_prom_converter" {
-      forward_to = [prometheus.relabel.metrics_service.receiver]
-    }
-    
     prometheus.relabel "metrics_service" {
       rule {
         source_labels = ["cluster"]
         regex = ""
         replacement = "specific-namespace-test"
         target_label = "cluster"
+      }
+      rule {
+          source_labels = ["namespace"]
+          regex = "^$|production|staging"
+          action = "keep"
       }
       forward_to = [prometheus.remote_write.metrics_service.receiver]
     }
@@ -883,14 +863,48 @@ data:
       }
     }
     
+    loki.process "pod_logs" {
+      stage.match {
+        selector = "{tmp_container_runtime=\"containerd\"}"
+        // the cri processing stage extracts the following k/v pairs: log, stream, time, flags
+        stage.cri {}
+    
+        // Set the extract flags and stream values as labels
+        stage.labels {
+          values = {
+            flags  = "",
+            stream  = "",
+          }
+        }
+      }
+    
+      // if the label tmp_container_runtime from above is docker parse using docker
+      stage.match {
+        selector = "{tmp_container_runtime=\"docker\"}"
+        // the docker processing stage extracts the following k/v pairs: log, stream, time
+        stage.docker {}
+    
+        // Set the extract stream value as a label
+        stage.labels {
+          values = {
+            stream  = "",
+          }
+        }
+      }
+    
+      // Drop the filename label, since it's not really useful in the context of Kubernetes, where we already have
+      // cluster, namespace, pod, and container labels.
+      // Also drop the temporary container runtime label as it is no longer needed.
+      stage.label_drop {
+        values = ["filename", "tmp_container_runtime"]
+      }
+      forward_to = [loki.write.grafana_cloud_loki.receiver]
+    }
+    
     // Loki
     remote.kubernetes.secret "logs_service" {
       name = "loki-k8s-monitoring"
       namespace = "default"
-    }
-    
-    otelcol.exporter.loki "otel_to_loki_converter" {
-      forward_to = [loki.write.grafana_cloud_loki.receiver]
     }
     loki.write "grafana_cloud_loki" {
       endpoint {
@@ -927,10 +941,6 @@ data:
     remote.kubernetes.secret "logs_service" {
       name = "loki-k8s-monitoring"
       namespace = "default"
-    }
-    
-    otelcol.exporter.loki "otel_to_loki_converter" {
-      forward_to = [loki.write.grafana_cloud_loki.receiver]
     }
     loki.write "grafana_cloud_loki" {
       endpoint {
@@ -988,7 +998,7 @@ data:
         target_label = "container"
       }
       rule {
-        source_labels = ["__meta_kubernetes_namespace", "__meta_kubernetes_pod_name"]
+        source_labels = ["__meta_kubernetes_namespace", "__meta_kubernetes_pod_container_name"]
         separator = "/"
         action = "replace"
         replacement = "$1"
@@ -1072,10 +1082,6 @@ data:
     remote.kubernetes.secret "logs_service" {
       name = "loki-k8s-monitoring"
       namespace = "default"
-    }
-    
-    otelcol.exporter.loki "otel_to_loki_converter" {
-      forward_to = [loki.write.grafana_cloud_loki.receiver]
     }
     loki.write "grafana_cloud_loki" {
       endpoint {
@@ -44897,10 +44903,27 @@ data:
         endpoint = "0.0.0.0:4318"
       }
       output {
-        metrics = [otelcol.processor.transform.add_metric_attributes.input]
+        metrics = [otelcol.processor.transform.add_metric_datapoint_attributes.input]
         logs = [otelcol.processor.k8sattributes.default.input]
       }
     }
+    
+    // Processors
+    otelcol.processor.transform "add_metric_datapoint_attributes" {
+      // Grafana Cloud Kubernetes monitoring expects Loki labels `cluster`, `pod`, and `namespace`
+      error_mode = "ignore"
+      metric_statements {
+        context = "datapoint"
+        statements = [
+          "set(attributes[\"deployment.environment\"], resource.attributes[\"deployment.environment\"])",
+          "set(attributes[\"service.version\"], resource.attributes[\"service.version\"])",
+        ]
+      }
+      output {
+        metrics = [otelcol.processor.k8sattributes.default.input]
+      }
+    }
+    
     otelcol.processor.k8sattributes "default" {
       extract {
         metadata = [
@@ -44923,47 +44946,59 @@ data:
       }
     
       output {
-        logs    = [otelcol.processor.transform.add_attributes.input]
+        metrics = [otelcol.processor.transform.add_resource_attributes.input]
+        logs    = [otelcol.processor.transform.add_resource_attributes.input]
       }
     }
-    otelcol.processor.transform "add_attributes" {
+    
+    otelcol.processor.transform "add_resource_attributes" {
       // Grafana Cloud Kubernetes monitoring expects Loki labels `cluster`, `pod`, and `namespace`
       error_mode = "ignore"
+      metric_statements {
+        context = "resource"
+        statements = [
+          "set(attributes[\"k8s.cluster.name\"], \"specific-namespace-test\") where attributes[\"k8s.cluster.name\"] == nil",
+        ]
+      }
       log_statements {
         context = "resource"
         statements = [
           "set(attributes[\"pod\"], attributes[\"k8s.pod.name\"])",
           "set(attributes[\"namespace\"], attributes[\"k8s.namespace.name\"])",
           "set(attributes[\"loki.resource.labels\"], \"pod, namespace, cluster, job\")",
-          // Accessing a map with a key that does not exist will return nil.
           "set(attributes[\"k8s.cluster.name\"], \"specific-namespace-test\") where attributes[\"k8s.cluster.name\"] == nil",
         ]
       }
       output {
-        logs = [otelcol.exporter.loki.otel_to_loki_converter.input]
-      }
-    }
-    otelcol.processor.transform "add_metric_attributes" {
-      error_mode = "ignore"
-      metric_statements {
-        context = "datapoint"
-        statements = [
-          "set(attributes[\"deployment.environment\"], resource.attributes[\"deployment.environment\"])",
-          "set(attributes[\"service.version\"], resource.attributes[\"service.version\"])",
-        ]
-      }
-      metric_statements {
-        context = "resource"
-        statements = [
-          // Accessing a map with a key that does not exist will return nil.
-          "set(attributes[\"k8s.cluster.name\"], \"specific-namespace-test\") where attributes[\"k8s.cluster.name\"] == nil",
-        ]
-      }
-      output {
-        metrics = [otelcol.exporter.prometheus.otel_to_prom_converter.input]
+        metrics = [otelcol.processor.filter.default.input]
+        logs = [otelcol.processor.filter.default.input]
       }
     }
     
+    otelcol.processor.filter "default" {
+      error_mode = "ignore"
+    
+      output {
+        metrics = [otelcol.processor.batch.batch_processor.input]
+        logs = [otelcol.processor.batch.batch_processor.input]
+      }
+    }
+    
+    otelcol.processor.batch "batch_processor" {
+      send_batch_size = 16384
+      send_batch_max_size = 0
+      timeout = "2s"
+      output {
+        metrics = [otelcol.exporter.prometheus.metrics_converter.input]
+        logs = [otelcol.exporter.loki.logs_converter.input]
+      }
+    }
+    otelcol.exporter.prometheus "metrics_converter" {
+      forward_to = [prometheus.relabel.metrics_service.receiver]
+    }
+    otelcol.exporter.loki "logs_converter" {
+      forward_to = [loki.process.pod_logs.receiver]
+    }
     // Annotation Autodiscovery
     discovery.relabel "annotation_autodiscovery_pods" {
       targets = discovery.kubernetes.pods.targets
@@ -45130,11 +45165,6 @@ data:
     }
     
     prometheus.relabel "annotation_autodiscovery" {
-      rule {
-          source_labels = ["namespace"]
-          regex = "^$|production|staging"
-          action = "keep"
-      }
       forward_to = [prometheus.relabel.metrics_service.receiver]
     }
     
@@ -45186,11 +45216,6 @@ data:
         regex = "up|agent_build_info"
         action = "keep"
       }
-      rule {
-          source_labels = ["namespace"]
-          regex = "^$|production|staging"
-          action = "keep"
-      }
       forward_to = [prometheus.relabel.metrics_service.receiver]
     }
     
@@ -45227,11 +45252,6 @@ data:
         source_labels = ["__name__"]
         regex = "up|grafana_kubernetes_monitoring_.*"
         action = "keep"
-      }
-      rule {
-          source_labels = ["namespace"]
-          regex = "^$|production|staging"
-          action = "keep"
       }
       forward_to = [prometheus.relabel.metrics_service.receiver]
     }
@@ -45379,11 +45399,6 @@ data:
         target_label = "__keepme"
         replacement = ""
       }
-      rule {
-          source_labels = ["namespace"]
-          regex = "^$|production|staging"
-          action = "keep"
-      }
       forward_to = [prometheus.relabel.metrics_service.receiver]
     }
     
@@ -45422,11 +45437,6 @@ data:
         source_labels = ["__name__"]
         regex = "up|kube_daemonset.*|kube_deployment_metadata_generation|kube_deployment_spec_replicas|kube_deployment_status_observed_generation|kube_deployment_status_replicas_available|kube_deployment_status_replicas_updated|kube_horizontalpodautoscaler_spec_max_replicas|kube_horizontalpodautoscaler_spec_min_replicas|kube_horizontalpodautoscaler_status_current_replicas|kube_horizontalpodautoscaler_status_desired_replicas|kube_job.*|kube_namespace_status_phase|kube_node.*|kube_persistentvolumeclaim_resource_requests_storage_bytes|kube_pod_container_info|kube_pod_container_resource_limits|kube_pod_container_resource_requests|kube_pod_container_status_last_terminated_reason|kube_pod_container_status_restarts_total|kube_pod_container_status_waiting_reason|kube_pod_info|kube_pod_owner|kube_pod_start_time|kube_pod_status_phase|kube_pod_status_reason|kube_replicaset.*|kube_resourcequota|kube_statefulset.*"
         action = "keep"
-      }
-      rule {
-          source_labels = ["namespace"]
-          regex = "^$|production|staging"
-          action = "keep"
       }
       forward_to = [prometheus.relabel.metrics_service.receiver]
     }
@@ -45474,11 +45484,6 @@ data:
         regex = "node_filesystem.*@(tempfs)"
         action = "drop"
       }
-      rule {
-          source_labels = ["namespace"]
-          regex = "^$|production|staging"
-          action = "keep"
-      }
       forward_to = [prometheus.relabel.metrics_service.receiver]
     }
     
@@ -45518,11 +45523,6 @@ data:
         regex = "up|container_cpu_allocation|container_gpu_allocation|container_memory_allocation_bytes|deployment_match_labels|kubecost_cluster_info|kubecost_cluster_management_cost|kubecost_cluster_memory_working_set_bytes|kubecost_http_requests_total|kubecost_http_response_size_bytes|kubecost_http_response_time_seconds|kubecost_load_balancer_cost|kubecost_network_internet_egress_cost|kubecost_network_region_egress_cost|kubecost_network_zone_egress_cost|kubecost_node_is_spot|node_cpu_hourly_cost|node_gpu_count|node_gpu_hourly_cost|node_ram_hourly_cost|node_total_hourly_cost|opencost_build_info|pod_pvc_allocation|pv_hourly_cost|service_selector_labels|statefulSet_match_labels"
         action = "keep"
       }
-      rule {
-          source_labels = ["namespace"]
-          regex = "^$|production|staging"
-          action = "keep"
-      }
       forward_to = [prometheus.relabel.metrics_service.receiver]
     }
     
@@ -45539,11 +45539,6 @@ data:
     }
     
     prometheus.relabel "podmonitors" {
-      rule {
-          source_labels = ["namespace"]
-          regex = "^$|production|staging"
-          action = "keep"
-      }
       forward_to = [prometheus.relabel.metrics_service.receiver]
     }
     
@@ -45560,11 +45555,6 @@ data:
     }
     
     prometheus.relabel "probes" {
-      rule {
-          source_labels = ["namespace"]
-          regex = "^$|production|staging"
-          action = "keep"
-      }
       forward_to = [prometheus.relabel.metrics_service.receiver]
     }
     
@@ -45581,11 +45571,6 @@ data:
     }
     
     prometheus.relabel "servicemonitors" {
-      rule {
-          source_labels = ["namespace"]
-          regex = "^$|production|staging"
-          action = "keep"
-      }
       forward_to = [prometheus.relabel.metrics_service.receiver]
     }
     
@@ -45595,16 +45580,17 @@ data:
       namespace = "default"
     }
     
-    otelcol.exporter.prometheus "otel_to_prom_converter" {
-      forward_to = [prometheus.relabel.metrics_service.receiver]
-    }
-    
     prometheus.relabel "metrics_service" {
       rule {
         source_labels = ["cluster"]
         regex = ""
         replacement = "specific-namespace-test"
         target_label = "cluster"
+      }
+      rule {
+          source_labels = ["namespace"]
+          regex = "^$|production|staging"
+          action = "keep"
       }
       forward_to = [prometheus.remote_write.metrics_service.receiver]
     }
@@ -45631,14 +45617,48 @@ data:
       }
     }
     
+    loki.process "pod_logs" {
+      stage.match {
+        selector = "{tmp_container_runtime=\"containerd\"}"
+        // the cri processing stage extracts the following k/v pairs: log, stream, time, flags
+        stage.cri {}
+    
+        // Set the extract flags and stream values as labels
+        stage.labels {
+          values = {
+            flags  = "",
+            stream  = "",
+          }
+        }
+      }
+    
+      // if the label tmp_container_runtime from above is docker parse using docker
+      stage.match {
+        selector = "{tmp_container_runtime=\"docker\"}"
+        // the docker processing stage extracts the following k/v pairs: log, stream, time
+        stage.docker {}
+    
+        // Set the extract stream value as a label
+        stage.labels {
+          values = {
+            stream  = "",
+          }
+        }
+      }
+    
+      // Drop the filename label, since it's not really useful in the context of Kubernetes, where we already have
+      // cluster, namespace, pod, and container labels.
+      // Also drop the temporary container runtime label as it is no longer needed.
+      stage.label_drop {
+        values = ["filename", "tmp_container_runtime"]
+      }
+      forward_to = [loki.write.grafana_cloud_loki.receiver]
+    }
+    
     // Loki
     remote.kubernetes.secret "logs_service" {
       name = "loki-k8s-monitoring"
       namespace = "default"
-    }
-    
-    otelcol.exporter.loki "otel_to_loki_converter" {
-      forward_to = [loki.write.grafana_cloud_loki.receiver]
     }
     loki.write "grafana_cloud_loki" {
       endpoint {
@@ -45667,10 +45687,6 @@ data:
     remote.kubernetes.secret "logs_service" {
       name = "loki-k8s-monitoring"
       namespace = "default"
-    }
-    
-    otelcol.exporter.loki "otel_to_loki_converter" {
-      forward_to = [loki.write.grafana_cloud_loki.receiver]
     }
     loki.write "grafana_cloud_loki" {
       endpoint {
@@ -45720,7 +45736,7 @@ data:
         target_label = "container"
       }
       rule {
-        source_labels = ["__meta_kubernetes_namespace", "__meta_kubernetes_pod_name"]
+        source_labels = ["__meta_kubernetes_namespace", "__meta_kubernetes_pod_container_name"]
         separator = "/"
         action = "replace"
         replacement = "$1"
@@ -45804,10 +45820,6 @@ data:
     remote.kubernetes.secret "logs_service" {
       name = "loki-k8s-monitoring"
       namespace = "default"
-    }
-    
-    otelcol.exporter.loki "otel_to_loki_converter" {
-      forward_to = [loki.write.grafana_cloud_loki.receiver]
     }
     loki.write "grafana_cloud_loki" {
       endpoint {

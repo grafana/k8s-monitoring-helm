@@ -108,10 +108,27 @@ data:
         endpoint = "0.0.0.0:4318"
       }
       output {
-        metrics = [otelcol.processor.transform.add_metric_attributes.input]
+        metrics = [otelcol.processor.transform.add_metric_datapoint_attributes.input]
         logs = [otelcol.processor.k8sattributes.default.input]
       }
     }
+    
+    // Processors
+    otelcol.processor.transform "add_metric_datapoint_attributes" {
+      // Grafana Cloud Kubernetes monitoring expects Loki labels `cluster`, `pod`, and `namespace`
+      error_mode = "ignore"
+      metric_statements {
+        context = "datapoint"
+        statements = [
+          "set(attributes[\"deployment.environment\"], resource.attributes[\"deployment.environment\"])",
+          "set(attributes[\"service.version\"], resource.attributes[\"service.version\"])",
+        ]
+      }
+      output {
+        metrics = [otelcol.processor.k8sattributes.default.input]
+      }
+    }
+    
     otelcol.processor.k8sattributes "default" {
       extract {
         metadata = [
@@ -134,47 +151,59 @@ data:
       }
     
       output {
-        logs    = [otelcol.processor.transform.add_attributes.input]
+        metrics = [otelcol.processor.transform.add_resource_attributes.input]
+        logs    = [otelcol.processor.transform.add_resource_attributes.input]
       }
     }
-    otelcol.processor.transform "add_attributes" {
+    
+    otelcol.processor.transform "add_resource_attributes" {
       // Grafana Cloud Kubernetes monitoring expects Loki labels `cluster`, `pod`, and `namespace`
       error_mode = "ignore"
+      metric_statements {
+        context = "resource"
+        statements = [
+          "set(attributes[\"k8s.cluster.name\"], \"custom-scrape-intervals-test\") where attributes[\"k8s.cluster.name\"] == nil",
+        ]
+      }
       log_statements {
         context = "resource"
         statements = [
           "set(attributes[\"pod\"], attributes[\"k8s.pod.name\"])",
           "set(attributes[\"namespace\"], attributes[\"k8s.namespace.name\"])",
           "set(attributes[\"loki.resource.labels\"], \"pod, namespace, cluster, job\")",
-          // Accessing a map with a key that does not exist will return nil.
           "set(attributes[\"k8s.cluster.name\"], \"custom-scrape-intervals-test\") where attributes[\"k8s.cluster.name\"] == nil",
         ]
       }
       output {
-        logs = [otelcol.exporter.loki.otel_to_loki_converter.input]
-      }
-    }
-    otelcol.processor.transform "add_metric_attributes" {
-      error_mode = "ignore"
-      metric_statements {
-        context = "datapoint"
-        statements = [
-          "set(attributes[\"deployment.environment\"], resource.attributes[\"deployment.environment\"])",
-          "set(attributes[\"service.version\"], resource.attributes[\"service.version\"])",
-        ]
-      }
-      metric_statements {
-        context = "resource"
-        statements = [
-          // Accessing a map with a key that does not exist will return nil.
-          "set(attributes[\"k8s.cluster.name\"], \"custom-scrape-intervals-test\") where attributes[\"k8s.cluster.name\"] == nil",
-        ]
-      }
-      output {
-        metrics = [otelcol.exporter.prometheus.otel_to_prom_converter.input]
+        metrics = [otelcol.processor.filter.default.input]
+        logs = [otelcol.processor.filter.default.input]
       }
     }
     
+    otelcol.processor.filter "default" {
+      error_mode = "ignore"
+    
+      output {
+        metrics = [otelcol.processor.batch.batch_processor.input]
+        logs = [otelcol.processor.batch.batch_processor.input]
+      }
+    }
+    
+    otelcol.processor.batch "batch_processor" {
+      send_batch_size = 16384
+      send_batch_max_size = 0
+      timeout = "2s"
+      output {
+        metrics = [otelcol.exporter.prometheus.metrics_converter.input]
+        logs = [otelcol.exporter.loki.logs_converter.input]
+      }
+    }
+    otelcol.exporter.prometheus "metrics_converter" {
+      forward_to = [prometheus.relabel.metrics_service.receiver]
+    }
+    otelcol.exporter.loki "logs_converter" {
+      forward_to = [loki.process.pod_logs.receiver]
+    }
     // Annotation Autodiscovery
     discovery.relabel "annotation_autodiscovery_pods" {
       targets = discovery.kubernetes.pods.targets
@@ -756,10 +785,6 @@ data:
       namespace = "default"
     }
     
-    otelcol.exporter.prometheus "otel_to_prom_converter" {
-      forward_to = [prometheus.relabel.metrics_service.receiver]
-    }
-    
     prometheus.relabel "metrics_service" {
       rule {
         source_labels = ["cluster"]
@@ -789,30 +814,6 @@ data:
       }
     
       external_labels = {
-      }
-    }
-    
-    // Loki
-    remote.kubernetes.secret "logs_service" {
-      name = "loki-k8s-monitoring"
-      namespace = "default"
-    }
-    
-    otelcol.exporter.loki "otel_to_loki_converter" {
-      forward_to = [loki.write.grafana_cloud_loki.receiver]
-    }
-    loki.write "grafana_cloud_loki" {
-      endpoint {
-        url = nonsensitive(remote.kubernetes.secret.logs_service.data["host"]) + "/loki/api/v1/push"
-        tenant_id = nonsensitive(remote.kubernetes.secret.logs_service.data["tenantId"])
-    
-        basic_auth {
-          username = nonsensitive(remote.kubernetes.secret.logs_service.data["username"])
-          password = remote.kubernetes.secret.logs_service.data["password"]
-        }
-      }
-      external_labels = {
-        cluster = "custom-scrape-intervals-test",
       }
     }
 ---
@@ -44139,10 +44140,27 @@ data:
         endpoint = "0.0.0.0:4318"
       }
       output {
-        metrics = [otelcol.processor.transform.add_metric_attributes.input]
+        metrics = [otelcol.processor.transform.add_metric_datapoint_attributes.input]
         logs = [otelcol.processor.k8sattributes.default.input]
       }
     }
+    
+    // Processors
+    otelcol.processor.transform "add_metric_datapoint_attributes" {
+      // Grafana Cloud Kubernetes monitoring expects Loki labels `cluster`, `pod`, and `namespace`
+      error_mode = "ignore"
+      metric_statements {
+        context = "datapoint"
+        statements = [
+          "set(attributes[\"deployment.environment\"], resource.attributes[\"deployment.environment\"])",
+          "set(attributes[\"service.version\"], resource.attributes[\"service.version\"])",
+        ]
+      }
+      output {
+        metrics = [otelcol.processor.k8sattributes.default.input]
+      }
+    }
+    
     otelcol.processor.k8sattributes "default" {
       extract {
         metadata = [
@@ -44165,47 +44183,59 @@ data:
       }
     
       output {
-        logs    = [otelcol.processor.transform.add_attributes.input]
+        metrics = [otelcol.processor.transform.add_resource_attributes.input]
+        logs    = [otelcol.processor.transform.add_resource_attributes.input]
       }
     }
-    otelcol.processor.transform "add_attributes" {
+    
+    otelcol.processor.transform "add_resource_attributes" {
       // Grafana Cloud Kubernetes monitoring expects Loki labels `cluster`, `pod`, and `namespace`
       error_mode = "ignore"
+      metric_statements {
+        context = "resource"
+        statements = [
+          "set(attributes[\"k8s.cluster.name\"], \"custom-scrape-intervals-test\") where attributes[\"k8s.cluster.name\"] == nil",
+        ]
+      }
       log_statements {
         context = "resource"
         statements = [
           "set(attributes[\"pod\"], attributes[\"k8s.pod.name\"])",
           "set(attributes[\"namespace\"], attributes[\"k8s.namespace.name\"])",
           "set(attributes[\"loki.resource.labels\"], \"pod, namespace, cluster, job\")",
-          // Accessing a map with a key that does not exist will return nil.
           "set(attributes[\"k8s.cluster.name\"], \"custom-scrape-intervals-test\") where attributes[\"k8s.cluster.name\"] == nil",
         ]
       }
       output {
-        logs = [otelcol.exporter.loki.otel_to_loki_converter.input]
-      }
-    }
-    otelcol.processor.transform "add_metric_attributes" {
-      error_mode = "ignore"
-      metric_statements {
-        context = "datapoint"
-        statements = [
-          "set(attributes[\"deployment.environment\"], resource.attributes[\"deployment.environment\"])",
-          "set(attributes[\"service.version\"], resource.attributes[\"service.version\"])",
-        ]
-      }
-      metric_statements {
-        context = "resource"
-        statements = [
-          // Accessing a map with a key that does not exist will return nil.
-          "set(attributes[\"k8s.cluster.name\"], \"custom-scrape-intervals-test\") where attributes[\"k8s.cluster.name\"] == nil",
-        ]
-      }
-      output {
-        metrics = [otelcol.exporter.prometheus.otel_to_prom_converter.input]
+        metrics = [otelcol.processor.filter.default.input]
+        logs = [otelcol.processor.filter.default.input]
       }
     }
     
+    otelcol.processor.filter "default" {
+      error_mode = "ignore"
+    
+      output {
+        metrics = [otelcol.processor.batch.batch_processor.input]
+        logs = [otelcol.processor.batch.batch_processor.input]
+      }
+    }
+    
+    otelcol.processor.batch "batch_processor" {
+      send_batch_size = 16384
+      send_batch_max_size = 0
+      timeout = "2s"
+      output {
+        metrics = [otelcol.exporter.prometheus.metrics_converter.input]
+        logs = [otelcol.exporter.loki.logs_converter.input]
+      }
+    }
+    otelcol.exporter.prometheus "metrics_converter" {
+      forward_to = [prometheus.relabel.metrics_service.receiver]
+    }
+    otelcol.exporter.loki "logs_converter" {
+      forward_to = [loki.process.pod_logs.receiver]
+    }
     // Annotation Autodiscovery
     discovery.relabel "annotation_autodiscovery_pods" {
       targets = discovery.kubernetes.pods.targets
@@ -44787,10 +44817,6 @@ data:
       namespace = "default"
     }
     
-    otelcol.exporter.prometheus "otel_to_prom_converter" {
-      forward_to = [prometheus.relabel.metrics_service.receiver]
-    }
-    
     prometheus.relabel "metrics_service" {
       rule {
         source_labels = ["cluster"]
@@ -44820,30 +44846,6 @@ data:
       }
     
       external_labels = {
-      }
-    }
-    
-    // Loki
-    remote.kubernetes.secret "logs_service" {
-      name = "loki-k8s-monitoring"
-      namespace = "default"
-    }
-    
-    otelcol.exporter.loki "otel_to_loki_converter" {
-      forward_to = [loki.write.grafana_cloud_loki.receiver]
-    }
-    loki.write "grafana_cloud_loki" {
-      endpoint {
-        url = nonsensitive(remote.kubernetes.secret.logs_service.data["host"]) + "/loki/api/v1/push"
-        tenant_id = nonsensitive(remote.kubernetes.secret.logs_service.data["tenantId"])
-    
-        basic_auth {
-          username = nonsensitive(remote.kubernetes.secret.logs_service.data["username"])
-          password = remote.kubernetes.secret.logs_service.data["password"]
-        }
-      }
-      external_labels = {
-        cluster = "custom-scrape-intervals-test",
       }
     }
 ---

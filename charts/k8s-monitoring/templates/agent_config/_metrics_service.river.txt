@@ -5,10 +5,6 @@ remote.kubernetes.secret "metrics_service" {
   namespace = {{ .Values.externalServices.prometheus.secret.namespace | default .Release.Namespace | quote }}
 }
 
-otelcol.exporter.prometheus "otel_to_prom_converter" {
-  forward_to = [prometheus.relabel.metrics_service.receiver]
-}
-
 prometheus.relabel "metrics_service" {
   rule {
     source_labels = ["cluster"]
@@ -16,6 +12,10 @@ prometheus.relabel "metrics_service" {
     replacement = {{ required ".Values.cluster.name is a required value. Please set it and try again." .Values.cluster.name | quote }}
     target_label = "cluster"
   }
+
+{{- if .Values.metrics.extraMetricRelabelingRules }}
+{{ .Values.metrics.extraMetricRelabelingRules | indent 2 }}
+{{- end }}
 
 {{- if eq .Values.externalServices.prometheus.protocol "remote_write" }}
   forward_to = [prometheus.remote_write.metrics_service.receiver]
