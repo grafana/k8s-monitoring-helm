@@ -870,9 +870,19 @@ prometheus-node-exporter:
   # Set this to false if your cluster already has Node Exporter, or if you do
   # not want to scrape metrics from Node Exporter.
   enabled: true
-  # @ignored
+  # @ignored - Only select Linux nodes
   nodeSelector:
     kubernetes.io/os: linux
+
+  # @ignored - Do not attempt to deploy on EKS Fargate nodes
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: eks.amazonaws.com/compute-type
+                operator: NotIn
+                values: [fargate]
 
   # @ignored - Disable prometheus.io/scrape annotation
   service:
@@ -1032,10 +1042,13 @@ grafana-agent-logs:
     # not need to.
     configMap: {create: false}
 
+    # Enable clustering by default to make it simpler when using API-based log gathering.
+    clustering: {enabled: true}
+
     mounts:
-      # -- Mount /var/log from the host into the container for log collection.
+      # Mount /var/log from the host into the container for log collection.
       varlog: true
-      # -- Mount /var/lib/docker/containers from the host into the container for log
+      # Mount /var/lib/docker/containers from the host into the container for log
       # collection. Set to true if your cluster puts log files inside this directory.
       dockercontainers: false
 
