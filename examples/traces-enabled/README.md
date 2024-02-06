@@ -25,20 +25,4 @@ externalServices:
 
 traces:
   enabled: true
-
-grafana-agent:
-  agent:
-    extraPorts:
-      - name: "otlp-grpc"
-        port: 4317
-        targetPort: 4317
-        protocol: "TCP"
-      - name: "otlp-http"
-        port: 4318
-        targetPort: 4318
-        protocol: "TCP"
-      - name: "zipkin"
-        port: 9411
-        targetPort: 9411
-        protocol: "TCP"
 ```
