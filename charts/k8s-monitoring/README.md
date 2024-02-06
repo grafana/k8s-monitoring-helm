@@ -352,7 +352,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | test.nodeSelector | object | `{"kubernetes.io/os":"linux"}` | nodeSelector to apply to the test job. |
 | test.tolerations | list | `[]` | Tolerations to apply to the test job. |
 | traces.enabled | bool | `false` | Receive and forward traces. |
-| traces.filters | object | `{"span":[],"spanevent":[]}` | Apply a filter to traces received via the OTLP or OTLP HTTP receivers. See https://grafana.com/docs/agent/latest/flow/reference/components/otelcol.processor.filter/ for details. |
+| traces.receiver.filters | object | `{"span":[],"spanevent":[]}` | Apply a filter to traces received via the OTLP or OTLP HTTP receivers. See https://grafana.com/docs/agent/latest/flow/reference/components/otelcol.processor.filter/ for details. |
 
 ## Customizing the configuration
 
