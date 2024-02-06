@@ -193,7 +193,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | logs.pod_logs.extraStageBlocks | string | `""` | Stage blocks to be added to the loki.process component for pod logs. See https://grafana.com/docs/agent/latest/flow/reference/components/loki.process/#blocks |
 | logs.pod_logs.gatherMethod | string | `"volumes"` | Controls the behavior of gathering pod logs. When set to "volumes", the Grafana Agent will use HostPath volume mounts on the cluster nodes to access the pod log files directly. When set to "api", the Grafana Agent will access pod logs via the API server. This method may be preferable if your cluster prevents DaemonSets, HostPath volume mounts, or for other reasons. |
 | logs.pod_logs.namespaces | list | `[]` | Only capture logs from pods in these namespaces (`[]` means all namespaces) |
-| logs.receiver.filters.log_record | list | `[]` |  |
+| logs.receiver.filters | object | `{"log_record":[]}` | Apply a filter to logs received via the OTLP or OTLP HTTP receivers. See https://grafana.com/docs/agent/latest/flow/reference/components/otelcol.processor.filter/ for details. |
 | metrics.agent.enabled | bool | `true` | Scrape metrics from Grafana Agent |
 | metrics.agent.extraMetricRelabelingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for Grafana Agent. See https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block |
 | metrics.agent.extraRelabelingRules | string | `""` | Rule blocks to be added to the discovery.relabel component for Grafana Agent. See https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block |
@@ -303,8 +303,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | metrics.probes.extraMetricRelabelingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for Probe objects. See https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block |
 | metrics.probes.namespaces | list | `[]` | Which namespaces to look for Probe objects. |
 | metrics.probes.scrapeInterval | string | 60s | How frequently to scrape metrics from Probe objects. Only used if the Probe does not specify the scrape interval. Overrides metrics.scrapeInterval |
-| metrics.receiver.filters.datapoint | list | `[]` |  |
-| metrics.receiver.filters.metric | list | `[]` |  |
+| metrics.receiver.filters | object | `{"datapoint":[],"metric":[]}` | Apply a filter to metrics received via the OTLP or OTLP HTTP receivers. See https://grafana.com/docs/agent/latest/flow/reference/components/otelcol.processor.filter/ for details. |
 | metrics.scrapeInterval | string | `"60s"` | How frequently to scrape metrics |
 | metrics.serviceMonitors.enabled | bool | `true` | Include service discovery for ServiceMonitor objects |
 | metrics.serviceMonitors.extraMetricRelabelingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for ServiceMonitor objects. See https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block |
@@ -353,8 +352,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | test.nodeSelector | object | `{"kubernetes.io/os":"linux"}` | nodeSelector to apply to the test job. |
 | test.tolerations | list | `[]` | Tolerations to apply to the test job. |
 | traces.enabled | bool | `false` | Receive and forward traces. |
-| traces.filters.span | list | `[]` |  |
-| traces.filters.spanevent | list | `[]` |  |
+| traces.filters | object | `{"span":[],"spanevent":[]}` | Apply a filter to traces received via the OTLP or OTLP HTTP receivers. See https://grafana.com/docs/agent/latest/flow/reference/components/otelcol.processor.filter/ for details. |
 
 ## Customizing the configuration
 
