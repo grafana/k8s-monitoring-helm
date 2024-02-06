@@ -845,7 +845,7 @@ data:
   config.river: |-
     // Pod Logs
     discovery.kubernetes "pods" {
-        role = "pod"
+      role = "pod"
       selectors {
         role = "pod"
         field = "spec.nodeName=" + env("HOSTNAME")
@@ -43923,6 +43923,36 @@ spec:
       targetPort: 80
       protocol: "TCP"
 ---
+# Source: k8s-monitoring/charts/grafana-agent-logs/templates/cluster_service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: k8smon-grafana-agent-logs-cluster
+  labels:
+    helm.sh/chart: grafana-agent-logs-0.31.1
+    app.kubernetes.io/name: grafana-agent-logs
+    app.kubernetes.io/instance: k8smon
+    
+    app.kubernetes.io/version: "v0.39.1"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  type: ClusterIP
+  clusterIP: 'None'
+  selector:
+    app.kubernetes.io/name: grafana-agent-logs
+    app.kubernetes.io/instance: k8smon
+  ports:
+    # Do not include the -metrics suffix in the port name, otherwise metrics
+    # can be double-collected with the non-headless Service if it's also
+    # enabled.
+    #
+    # This service should only be used for clustering, and not metric
+    # collection.
+    - name: http
+      port: 80
+      targetPort: 80
+      protocol: "TCP"
+---
 # Source: k8s-monitoring/charts/grafana-agent-logs/templates/service.yaml
 apiVersion: v1
 kind: Service
@@ -44117,6 +44147,8 @@ spec:
             - --storage.path=/tmp/agent
             - --server.http.listen-addr=0.0.0.0:80
             - --server.http.ui-path-prefix=/
+            - --cluster.enabled=true
+            - --cluster.join-addresses=k8smon-grafana-agent-logs-cluster
           env:
             - name: AGENT_MODE
               value: flow
@@ -45295,7 +45327,7 @@ data:
   logs.river: |-
     // Pod Logs
     discovery.kubernetes "pods" {
-        role = "pod"
+      role = "pod"
       selectors {
         role = "pod"
         field = "spec.nodeName=" + env("HOSTNAME")
