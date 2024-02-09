@@ -135,7 +135,7 @@ data:
       role = "pod"
     }
     
-    // Receivers
+    // OTLP Receivers
     otelcol.receiver.otlp "receiver" {
       debug_metrics {
         disable_high_cardinality_metrics = true
@@ -153,6 +153,12 @@ data:
         logs = [otelcol.processor.k8sattributes.default.input]
       }
     }
+    
+    // Jaeger Receiver
+    
+    // Zipkin Receiver
+    
+    // Prometheus Remote Write Receiver
     
     // Processors
     otelcol.processor.transform "add_metric_datapoint_attributes" {
@@ -44164,6 +44170,22 @@ spec:
       port: 9999
       targetPort: 9999
       protocol: TCP
+    - name: jaeger-grpc
+      port: 14250
+      targetPort: 14250
+      protocol: TCP
+    - name: jaeger-binary
+      port: 6832
+      targetPort: 6832
+      protocol: TCP
+    - name: jaeger-compact
+      port: 6831
+      targetPort: 6831
+      protocol: TCP
+    - name: jaeger-http
+      port: 14268
+      targetPort: 14268
+      protocol: TCP
     - name: zipkin
       port: 9411
       targetPort: 9411
@@ -44202,6 +44224,22 @@ spec:
     - name: prometheus
       port: 9999
       targetPort: 9999
+      protocol: TCP
+    - name: jaeger-grpc
+      port: 14250
+      targetPort: 14250
+      protocol: TCP
+    - name: jaeger-binary
+      port: 6832
+      targetPort: 6832
+      protocol: TCP
+    - name: jaeger-compact
+      port: 6831
+      targetPort: 6831
+      protocol: TCP
+    - name: jaeger-http
+      port: 14268
+      targetPort: 14268
       protocol: TCP
     - name: zipkin
       port: 9411
@@ -44812,6 +44850,18 @@ spec:
             - containerPort: 9999
               name: prometheus
               protocol: TCP
+            - containerPort: 14250
+              name: jaeger-grpc
+              protocol: TCP
+            - containerPort: 6832
+              name: jaeger-binary
+              protocol: TCP
+            - containerPort: 6831
+              name: jaeger-compact
+              protocol: TCP
+            - containerPort: 14268
+              name: jaeger-http
+              protocol: TCP
             - containerPort: 9411
               name: zipkin
               protocol: TCP
@@ -44913,7 +44963,7 @@ data:
       role = "pod"
     }
     
-    // Receivers
+    // OTLP Receivers
     otelcol.receiver.otlp "receiver" {
       debug_metrics {
         disable_high_cardinality_metrics = true
@@ -44931,6 +44981,12 @@ data:
         logs = [otelcol.processor.k8sattributes.default.input]
       }
     }
+    
+    // Jaeger Receiver
+    
+    // Zipkin Receiver
+    
+    // Prometheus Remote Write Receiver
     
     // Processors
     otelcol.processor.transform "add_metric_datapoint_attributes" {

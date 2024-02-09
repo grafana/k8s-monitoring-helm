@@ -781,6 +781,34 @@ receivers:
     # -- Which port to use for the Prometheus receiver. This port needs to be opened in the grafana-agent section below.
     port: 9999
 
+  jaeger:
+    grpc:
+      # -- Receive Jaeger traces via gRPC protocol.
+      enabled: false
+      # -- Which port to use for the Jaeger gRPC receiver. This port needs to be opened in the grafana-agent section below.
+      port: 14250
+
+    thriftBinary:
+      # -- Receive Jaeger traces via Thrift binary protocol.
+      enabled: false
+      # -- Which port to use for the Jaeger gRPC receiver. This port needs to be opened in the grafana-agent section below.
+      port: 6832
+
+    thriftCompact:
+      # -- Receive Jaeger traces via Thrift compact protocol.
+      enabled: false
+      # -- Which port to use for the Jaeger gRPC receiver. This port needs to be opened in the grafana-agent section below.
+      port: 6831
+
+    thriftHttp:
+      # -- Receive Jaeger traces via Thrift HTTP protocol.
+      enabled: false
+      # -- Which port to use for the Jaeger gRPC receiver. This port needs to be opened in the grafana-agent section below.
+      port: 14268
+
+    # -- It removes attributes which could cause high cardinality metrics. For example, attributes with IP addresses and port numbers in metrics about HTTP and gRPC connections will be removed.
+    disable_debug_metrics: true
+
   zipkin:
     # -- Receive Zipkin traces
     enabled: false
@@ -1007,6 +1035,22 @@ grafana-agent:
       - name: "prometheus"
         port: 9999
         targetPort: 9999
+        protocol: "TCP"
+      - name: "jaeger-grpc"
+        port: 14250
+        targetPort: 14250
+        protocol: "TCP"
+      - name: "jaeger-binary"
+        port: 6832
+        targetPort: 6832
+        protocol: "TCP"
+      - name: "jaeger-compact"
+        port: 6831
+        targetPort: 6831
+        protocol: "TCP"
+      - name: "jaeger-http"
+        port: 14268
+        targetPort: 14268
         protocol: "TCP"
       - name: "zipkin"
         port: 9411

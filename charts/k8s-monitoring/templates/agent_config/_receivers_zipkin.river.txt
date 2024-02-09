@@ -1,0 +1,17 @@
+{{ define "agent.config.receivers.zipkin" }}
+// Zipkin Receiver
+{{- if and .Values.receivers.zipkin.enabled .Values.traces.enabled }}
+otelcol.receiver.zipkin "receiver" {
+  debug_metrics {
+    disable_high_cardinality_metrics = {{ .Values.receivers.zipkin.disable_debug_metrics }}
+  }
+
+{{$data := dict "port" .Values.receivers.zipkin.port "type" "Zipkin" "agent" (index .Values "grafana-agent").agent }}
+{{- include "checkforAgentPort" $data -}}
+  endpoint = "0.0.0.0:{{ $data.port | int }}"
+  output {
+    traces = [otelcol.processor.k8sattributes.default.input]
+  }
+}
+{{- end }}
+{{ end }}

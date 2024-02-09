@@ -14,7 +14,7 @@ discovery.kubernetes "pods" {
   role = "pod"
 }
 
-// Receivers
+// OTLP Receivers
 otelcol.receiver.otlp "receiver" {
   debug_metrics {
     disable_high_cardinality_metrics = true
@@ -33,6 +33,46 @@ otelcol.receiver.otlp "receiver" {
     traces = [otelcol.processor.k8sattributes.default.input]
   }
 }
+
+// Jaeger Receiver
+otelcol.receiver.jaeger "receiver" {
+  protocols {
+grpc {
+      endpoint = ""0.0.0.0:14250"
+    }
+thrift_binary {
+      endpoint = ""0.0.0.0:6832"
+    }
+thrift_compact {
+      endpoint = ""0.0.0.0:6831"
+    }
+thrift_http {
+      endpoint = ""0.0.0.0:14268"
+    }
+  }
+
+  debug_metrics {
+    disable_high_cardinality_metrics = true
+  }
+
+  output {
+    traces = [otelcol.processor.k8sattributes.default.input]
+  }
+}
+
+// Zipkin Receiver
+otelcol.receiver.zipkin "receiver" {
+  debug_metrics {
+    disable_high_cardinality_metrics = true
+  }
+
+endpoint = "0.0.0.0:9411"
+  output {
+    traces = [otelcol.processor.k8sattributes.default.input]
+  }
+}
+
+// Prometheus Remote Write Receiver
 
 // Processors
 otelcol.processor.transform "add_metric_datapoint_attributes" {

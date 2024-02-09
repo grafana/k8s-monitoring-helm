@@ -1,6 +1,6 @@
-{{ define "agent.config.receivers" }}
-// Receivers
+{{ define "agent.config.receivers.otlp" }}
 {{- if (or .Values.receivers.grpc.enabled .Values.receivers.http.enabled) }}
+// OTLP Receivers
 otelcol.receiver.otlp "receiver" {
   debug_metrics {
     {{- if or .Values.receivers.grpc.disable_debug_metrics .Values.receivers.http.disable_debug_metrics }}
@@ -34,34 +34,6 @@ otelcol.receiver.otlp "receiver" {
 {{- if .Values.traces.enabled }}
     traces = [otelcol.processor.k8sattributes.default.input]
 {{- end }}
-  }
-}
-{{- end }}
-
-{{- if and .Values.receivers.prometheus.enabled .Values.metrics.enabled }}
-prometheus.receive_http "receiver" {
-{{$data := dict "port" .Values.receivers.prometheus.port "type" "Prometheus" "agent" (index .Values "grafana-agent").agent }}
-{{- include "checkforAgentPort" $data -}}
-
-  http {
-    listen_address = "0.0.0.0"
-    listen_port = {{ .Values.receivers.prometheus.port }}
-  }
-  forward_to = [prometheus.relabel.metrics_service.receiver]
-}
-{{- end }}
-
-{{- if and .Values.receivers.zipkin.enabled .Values.traces.enabled }}
-otelcol.receiver.zipkin "receiver" {
-  debug_metrics {
-    disable_high_cardinality_metrics = {{ .Values.receivers.zipkin.disable_debug_metrics }}
-  }
-
-{{$data := dict "port" .Values.receivers.zipkin.port "type" "Zipkin" "agent" (index .Values "grafana-agent").agent }}
-{{- include "checkforAgentPort" $data -}}
-  endpoint = "0.0.0.0:{{ $data.port | int }}"
-  output {
-    traces = [otelcol.processor.k8sattributes.default.input]
   }
 }
 {{- end }}
