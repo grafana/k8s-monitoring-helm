@@ -76,7 +76,7 @@
     {{- include "agent.config.metricsService" . }}
   {{- end }}
 
-  {{- if and .Values.logs.enabled .Values.logs.pod_logs.enabled }}
+  {{- if and .Values.logs.enabled (or .Values.receivers.grpc.enabled .Values.receivers.http.enabled .Values.receivers.zipkin.enabled) }}
     {{- include "agent.config.logs.pod_logs_processor" . }}
     {{- include "agent.config.loki" . }}
   {{- end }}
