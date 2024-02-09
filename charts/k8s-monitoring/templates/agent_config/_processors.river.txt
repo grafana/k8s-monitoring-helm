@@ -1,6 +1,6 @@
 {{ define "agent.config.processors" }}
 // Processors
-{{- if (or .Values.receivers.grpc.enabled .Values.receivers.http.enabled) }}
+{{- if or .Values.receivers.grpc.enabled .Values.receivers.http.enabled .Values.receivers.zipkin.enabled }}
 {{- if .Values.metrics.enabled }}
 otelcol.processor.transform "add_metric_datapoint_attributes" {
   // Grafana Cloud Kubernetes monitoring expects Loki labels `cluster`, `pod`, and `namespace`
@@ -177,18 +177,16 @@ otelcol.processor.batch "batch_processor" {
 {{- end }}
   }
 }
-{{- end }}
 
 {{- if .Values.metrics.enabled }}
 otelcol.exporter.prometheus "metrics_converter" {
   forward_to = [prometheus.relabel.metrics_service.receiver]
 }
 {{- end }}
-
 {{- if .Values.logs.enabled }}
 otelcol.exporter.loki "logs_converter" {
   forward_to = [loki.process.pod_logs.receiver]
 }
 {{- end }}
-
+{{- end }}
 {{- end }}
