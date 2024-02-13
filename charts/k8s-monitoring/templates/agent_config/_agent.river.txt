@@ -1,7 +1,11 @@
 {{ define "agent.config.agent.allowList" }}
-{{ if .Values.metrics.agent.metricsTuning.useDefaultAllowList }}
+{{ if or (index .Values.metrics "agent").metricsTuning.useDefaultAllowList (index .Values.metrics "agent").metricsTuning.useIntegrationAllowList }}
 {{ "default_allow_lists/agent.yaml" | .Files.Get }}
 {{ end }}
+{{ if (index .Values.metrics "agent").metricsTuning.useIntegrationAllowList }}
+{{ "default_allow_lists/agent_integration.yaml" | .Files.Get }}
+{{ end }}
+
 {{ if .Values.metrics.agent.metricsTuning.includeMetrics }}
 {{ .Values.metrics.agent.metricsTuning.includeMetrics | toYaml }}
 {{ end }}
