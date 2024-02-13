@@ -76,6 +76,22 @@ Several components have specialized RBAC rules to perform their work. This docum
     - get
     - list
     - watch
+- apiGroups:
+    - apps
+  resources:
+    - replicasets
+  verbs:
+    - get
+    - list
+    - watch
+- apiGroups:
+    - extensions
+  resources:
+    - replicasets
+  verbs:
+    - get
+    - list
+    - watch
 ```
 ## Grafana Agent Events
 ```yaml
@@ -153,6 +169,22 @@ Several components have specialized RBAC rules to perform their work. This docum
     - get
     - list
     - watch
+- apiGroups:
+    - apps
+  resources:
+    - replicasets
+  verbs:
+    - get
+    - list
+    - watch
+- apiGroups:
+    - extensions
+  resources:
+    - replicasets
+  verbs:
+    - get
+    - list
+    - watch
 ```
 ## Grafana Agent Logs
 ```yaml
@@ -226,6 +258,22 @@ Several components have specialized RBAC rules to perform their work. This docum
   resources:
     - configmaps
     - secrets
+  verbs:
+    - get
+    - list
+    - watch
+- apiGroups:
+    - apps
+  resources:
+    - replicasets
+  verbs:
+    - get
+    - list
+    - watch
+- apiGroups:
+    - extensions
+  resources:
+    - replicasets
   verbs:
     - get
     - list
