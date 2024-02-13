@@ -9,20 +9,22 @@
 
 {{ define "agent.config.agent" }}
 // Grafana Agent
-discovery.relabel "agent" {
-  targets = discovery.kubernetes.pods.targets
-  rule {
-    source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_instance"]
-    regex = "{{ .Release.Name }}"
-    action = "keep"
+discovery.kubernetes "agent_pods" {
+  role = "pod"
+  selectors {
+    role = "pod"
+    label = "app.kubernetes.io/instance={{ .Release.Name }}"
   }
-  {{- range $k, $v := .Values.metrics.agent.labelMatchers }}
-  rule {
-    source_labels = ["__meta_kubernetes_pod_label_{{ include "escape_label" $k }}"]
-    regex = "{{ $v }}"
-    action = "keep"
+  {{- range $label, $value := .Values.metrics.agent.labelMatchers }}
+  selectors {
+    role = "pod"
+    label = "{{ $label }}={{ $value }}"
   }
   {{- end }}
+}
+
+discovery.relabel "agent" {
+  targets = discovery.kubernetes.pods.targets
   rule {
     source_labels = ["__meta_kubernetes_pod_container_port_name"]
     regex = "http-metrics"
