@@ -439,6 +439,10 @@ prometheus.relabel "kubelet" {
 discovery.relabel "cadvisor" {
   targets = discovery.kubernetes.nodes.targets
   rule {
+    replacement   = "/metrics/cadvisor"
+    target_label  = "__metrics_path__"
+  }
+  rule {
     source_labels = ["__meta_kubernetes_namespace"]
     regex = "private"
     action = "drop"
