@@ -11,6 +11,7 @@
 // cAdvisor
 discovery.relabel "cadvisor" {
   targets = discovery.kubernetes.nodes.targets
+{{- if eq .Values.metrics.cadvisor.nodeAddressFormat "proxy" }}
   rule {
     target_label = "__address__"
     replacement  = "{{ .Values.cluster.kubernetesAPIService }}"
@@ -21,6 +22,7 @@ discovery.relabel "cadvisor" {
     replacement   = "/api/v1/nodes/${1}/proxy/metrics/cadvisor"
     target_label  = "__metrics_path__"
   }
+{{- end }}
 {{- if .Values.metrics.extraRelabelingRules }}
 {{ .Values.metrics.extraRelabelingRules | indent 2 }}
 {{- end }}

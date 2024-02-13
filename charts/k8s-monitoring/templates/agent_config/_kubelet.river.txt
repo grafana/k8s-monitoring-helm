@@ -11,6 +11,7 @@
 // Kubelet
 discovery.relabel "kubelet" {
   targets = discovery.kubernetes.nodes.targets
+{{- if eq .Values.metrics.kubelet.nodeAddressFormat "proxy" }}
   rule {
     target_label = "__address__"
     replacement  = "{{ .Values.cluster.kubernetesAPIService }}"
@@ -21,6 +22,7 @@ discovery.relabel "kubelet" {
     replacement   = "/api/v1/nodes/${1}/proxy/metrics"
     target_label  = "__metrics_path__"
   }
+{{- end }}
 {{- if .Values.metrics.extraRelabelingRules }}
 {{ .Values.metrics.extraRelabelingRules | indent 2 }}
 {{- end }}
