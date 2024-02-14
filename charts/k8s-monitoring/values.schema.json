@@ -411,6 +411,19 @@
                             "type": "array"
                         }
                     }
+                },
+                "receiver": {
+                    "type": "object",
+                    "properties": {
+                        "filters": {
+                            "type": "object",
+                            "properties": {
+                                "log_record": {
+                                    "type": "array"
+                                }
+                            }
+                        }
+                    }
                 }
             }
         },
@@ -990,6 +1003,22 @@
                         }
                     }
                 },
+                "receiver": {
+                    "type": "object",
+                    "properties": {
+                        "filters": {
+                            "type": "object",
+                            "properties": {
+                                "datapoint": {
+                                    "type": "array"
+                                },
+                                "metric": {
+                                    "type": "array"
+                                }
+                            }
+                        }
+                    }
+                },
                 "scrapeInterval": {
                     "type": "string"
                 },
@@ -1068,6 +1097,49 @@
         "prometheus-node-exporter": {
             "type": "object",
             "properties": {
+                "affinity": {
+                    "type": "object",
+                    "properties": {
+                        "nodeAffinity": {
+                            "type": "object",
+                            "properties": {
+                                "requiredDuringSchedulingIgnoredDuringExecution": {
+                                    "type": "object",
+                                    "properties": {
+                                        "nodeSelectorTerms": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "matchExpressions": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "key": {
+                                                                    "type": "string"
+                                                                },
+                                                                "operator": {
+                                                                    "type": "string"
+                                                                },
+                                                                "values": {
+                                                                    "type": "array",
+                                                                    "items": {
+                                                                        "type": "string"
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
                 "enabled": {
                     "type": "boolean"
                 }
@@ -1117,6 +1189,25 @@
                         },
                         "port": {
                             "type": "integer"
+                        }
+                    }
+                },
+                "processors": {
+                    "type": "object",
+                    "properties": {
+                        "batch": {
+                            "type": "object",
+                            "properties": {
+                                "maxSize": {
+                                    "type": "integer"
+                                },
+                                "size": {
+                                    "type": "integer"
+                                },
+                                "timeout": {
+                                    "type": "string"
+                                }
+                            }
                         }
                     }
                 },
@@ -1212,20 +1303,17 @@
                 "enabled": {
                     "type": "boolean"
                 },
-                "processors": {
+                "receiver": {
                     "type": "object",
                     "properties": {
-                        "batch": {
+                        "filters": {
                             "type": "object",
                             "properties": {
-                                "maxSize": {
-                                    "type": "integer"
+                                "span": {
+                                    "type": "array"
                                 },
-                                "size": {
-                                    "type": "integer"
-                                },
-                                "timeout": {
-                                    "type": "string"
+                                "spanevent": {
+                                    "type": "array"
                                 }
                             }
                         }

@@ -6,7 +6,7 @@ cluster:
   # -- The Kubernetes service. Change this if your cluster DNS is configured differently than the default.
   kubernetesAPIService: kubernetes.default.svc.cluster.local:443
 
-  # -- The specific platform for this cluster. Will enable compatibility changes for some platforms. Supported options: (empty) or "openshift".
+  # -- The specific platform for this cluster. Will enable compatibility for some platforms. Supported options: (empty) or "openshift".
   platform: ""
 
 externalServices:
@@ -17,11 +17,10 @@ externalServices:
     # -- The key for the host property in the secret
     hostKey: host
 
-    # -- The type of server protocol for writing metrics
-    # Options:
-    #   * "remote_write" will use Prometheus Remote Write
-    #   * "otlp" will use OTLP
-    #   * "otlphttp" will use OTLP HTTP
+    # -- The type of server protocol for writing metrics. Valid options:
+    #  "remote_write" will use Prometheus Remote Write,
+    #  "otlp" will use OTLP,
+    #  "otlphttp" will use OTLP HTTP
     protocol: "remote_write"
     # -- HTTP proxy to proxy requests to Prometheus through.
     proxyURL: ""
@@ -31,11 +30,10 @@ externalServices:
     writeEndpoint: /api/prom/push
     # -- Custom labels to be added to all time series
     externalLabels: {}
-    # -- Rule blocks to be added to the write_relabel_config block of the prometheus.remote_write component.
-    # See https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.remote_write/#write_relabel_config-block
+    # -- Rule blocks to be added to the [write_relabel_config block](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.remote_write/#write_relabel_config-block) of the prometheus.remote_write component.
     writeRelabelConfigRules: ""
 
-    # -- Sets the X-Scope-OrgID header when sending metrics
+    # -- Sets the `X-Scope-OrgID` header when sending metrics
     tenantId: ""
     # -- The key for the tenant ID property in the secret
     tenantIdKey: tenantId
@@ -63,10 +61,10 @@ externalServices:
       # -- The namespace of the secret. Only used if secret.create = "false"
       namespace: ""
 
-    # -- TLS setting to configure for the metrics service.
-    # For remoteWrite protocol, refer to https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.remote_write/#tls_config-block
-    # For otlp protocol, refer to https://grafana.com/docs/agent/latest/flow/reference/components/otelcol.exporter.otlp/#tls-block
-    # For otlphttp protocol, refer to https://grafana.com/docs/agent/latest/flow/reference/components/otelcol.exporter.otlphttp/#tls-block
+    # -- TLS settings to configure for the metrics service, compatible with
+    # [remoteWrite protocol](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.remote_write/#tls_config-block),
+    # [otlp](https://grafana.com/docs/agent/latest/flow/reference/components/otelcol.exporter.otlp/#tls-block), or
+    # [otlphttp](https://grafana.com/docs/agent/latest/flow/reference/components/otelcol.exporter.otlphttp/#tls-block) protocols
     tls: {}
 
     # Metric processor settings. Only applies when protocol is "otlp" or "otlphttp"
@@ -140,8 +138,7 @@ externalServices:
       # -- The namespace of the secret.
       namespace: ""
 
-    # -- TLS setting to configure for the logs service.
-    # Refer to https://grafana.com/docs/agent/latest/flow/reference/components/loki.write/#tls_config-block
+    # -- [TLS settings](https://grafana.com/docs/agent/latest/flow/reference/components/loki.write/#tls_config-block) to configure for the logs service.
     tls: {}
 
   # Connection information for Grafana Tempo
@@ -188,13 +185,12 @@ externalServices:
       # -- The namespace of the secret.
       namespace: ""
 
-    # -- TLS setting to configure for the traces service.
-    # Refer to https://grafana.com/docs/agent/latest/flow/reference/components/otelcol.exporter.otlp/#tls-block
+    # -- [TLS settings](https://grafana.com/docs/agent/latest/flow/reference/components/otelcol.exporter.otlp/#tls-block) to configure for the traces service.
     tls: {}
 
-    # -- Define the TLS block. See https://grafana.com/docs/agent/latest/flow/reference/components/otelcol.exporter.otlp/#tls-block for options.
+    # -- Define the [TLS block](https://grafana.com/docs/agent/latest/flow/reference/components/otelcol.exporter.otlp/#tls-block).
     # Example:
-    # tlsOptions: insecure = true
+    # `tlsOptions: insecure = true`
     # This option will be deprecated and removed soon. Please switch to `tls` and use yaml format.
     tlsOptions: ""
 
@@ -206,12 +202,10 @@ metrics:
   # -- How frequently to scrape metrics
   scrapeInterval: 60s
 
-  # -- Rule blocks to be added to the discovery.relabel component for all metric sources.
-  # See https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block
+  # -- Rule blocks to be added to the discovery.relabel component for all metric sources. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block))
   extraRelabelingRules: ""
 
-  # -- Rule blocks to be added to the prometheus.relabel component for all metric sources.
-  # See https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block
+  # -- Rule blocks to be added to the prometheus.relabel component for all metric sources. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block))
   extraMetricRelabelingRules: ""
 
   # Annotation-based autodiscovery allows for discovering metric sources solely on their annotations and does
@@ -220,12 +214,10 @@ metrics:
     # -- Enable annotation-based autodiscovery
     enabled: true
 
-    # -- Rule blocks to be added to the discovery.relabel component for auto-discovered entities.
-    # See https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block
+    # -- Rule blocks to be added to the discovery.relabel component for auto-discovered entities. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block))
     extraRelabelingRules: ""
 
-    # -- Rule blocks to be added to the prometheus.relabel component for auto-discovered entities.
-    # See https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block
+    # -- Rule blocks to be added to the prometheus.relabel component for auto-discovered entities. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block))
     extraMetricRelabelingRules: ""
 
     # Adjustments to the scraped metrics to filter the amount of data sent to storage.
@@ -235,7 +227,7 @@ metrics:
       # -- Metrics to drop. Can use regex.
       excludeMetrics: []
 
-    # -- Annotations that are used to discover and configure metric scraping targets. Add these annotations
+    # Annotations that are used to discover and configure metric scraping targets. Add these annotations
     # to your services or pods to control how autodiscovery will find and scrape metrics from your service or pod.
     annotations:
       # -- Annotation for enabling scraping for this service or pod. Value should be either "true" or "false"
@@ -268,12 +260,10 @@ metrics:
     labelMatchers:
       app.kubernetes.io/name: grafana-agent.*
 
-    # -- Rule blocks to be added to the discovery.relabel component for Grafana Agent.
-    # See https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block
+    # -- Rule blocks to be added to the discovery.relabel component for Grafana Agent. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block))
     extraRelabelingRules: ""
 
-    # -- Rule blocks to be added to the prometheus.relabel component for Grafana Agent.
-    # See https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block
+    # -- Rule blocks to be added to the prometheus.relabel component for Grafana Agent. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block))
     extraMetricRelabelingRules: ""
 
     # Adjustments to the scraped metrics to filter the amount of data sent to storage.
@@ -302,12 +292,10 @@ metrics:
     labelMatchers:
       app.kubernetes.io/name: kube-state-metrics
 
-    # -- Rule blocks to be added to the discovery.relabel component for Kube State Metrics.
-    # See https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block
+    # -- Rule blocks to be added to the discovery.relabel component for Kube State Metrics. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block))
     extraRelabelingRules: ""
 
-    # -- Rule blocks to be added to the prometheus.relabel component for Kube State Metrics.
-    # See https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block
+    # -- Rule blocks to be added to the prometheus.relabel component for Kube State Metrics. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block))
     extraMetricRelabelingRules: ""
 
     # Kube State Metrics service settings
@@ -341,12 +329,10 @@ metrics:
     labelMatchers:
       app.kubernetes.io/name: prometheus-node-exporter.*
 
-    # -- Rule blocks to be added to the discovery.relabel component for Node Exporter.
-    # See https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block
+    # -- Rule blocks to be added to the discovery.relabel component for Node Exporter. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block))
     extraRelabelingRules: ""
 
-    # -- Rule blocks to be added to the prometheus.relabel component for Node Exporter.
-    # See https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block
+    # -- Rule blocks to be added to the prometheus.relabel component for Node Exporter. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block))
     extraMetricRelabelingRules: ""
 
     # Node Exporter service settings
@@ -382,12 +368,10 @@ metrics:
     labelMatchers:
       app.kubernetes.io/name: prometheus-windows-exporter.*
 
-    # -- Rule blocks to be added to the discovery.relabel component for Windows Exporter.
-    # See https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block
+    # -- Rule blocks to be added to the discovery.relabel component for Windows Exporter. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block))
     extraRelabelingRules: ""
 
-    # -- Rule blocks to be added to the prometheus.relabel component for Windows Exporter.
-    # See https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block
+    # -- Rule blocks to be added to the prometheus.relabel component for Windows Exporter. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block))
     extraMetricRelabelingRules: ""
 
     # Adjustments to the scraped metrics to filter the amount of data sent to storage.
@@ -410,12 +394,10 @@ metrics:
     # @default -- 60s
     scrapeInterval: ""
 
-    # -- Rule blocks to be added to the discovery.relabel component for Kubelet.
-    # See https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block
+    # -- Rule blocks to be added to the discovery.relabel component for Kubelet. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block))
     extraRelabelingRules: ""
 
-    # -- Rule blocks to be added to the prometheus.relabel component for Kubelet.
-    # See https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block
+    # -- Rule blocks to be added to the prometheus.relabel component for Kubelet. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block))
     extraMetricRelabelingRules: ""
 
     # Adjustments to the scraped metrics to filter the amount of data sent to storage.
@@ -438,12 +420,10 @@ metrics:
     # @default -- 60s
     scrapeInterval: ""
 
-    # -- Rule blocks to be added to the discovery.relabel component for cAdvisor.
-    # See https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block
+    # -- Rule blocks to be added to the discovery.relabel component for cAdvisor. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block))
     extraRelabelingRules: ""
 
-    # -- Rule blocks to be added to the prometheus.relabel component for cAdvisor.
-    # See https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block
+    # -- Rule blocks to be added to the prometheus.relabel component for cAdvisor. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block))
     extraMetricRelabelingRules: ""
 
     # Adjustments to the scraped metrics to filter the amount of data sent to storage.
@@ -478,12 +458,10 @@ metrics:
     # @default -- 60s
     scrapeInterval: ""
 
-    # -- Rule blocks to be added to the discovery.relabel component for the API Server.
-    # See https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block
+    # -- Rule blocks to be added to the discovery.relabel component for the API Server. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block))
     extraRelabelingRules: ""
 
-    # -- Rule blocks to be added to the prometheus.relabel component for the API Server.
-    # See https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block
+    # -- Rule blocks to be added to the prometheus.relabel component for the API Server. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block))
     extraMetricRelabelingRules: ""
 
     # Adjustments to the scraped metrics to filter the amount of data sent to storage.
@@ -506,12 +484,10 @@ metrics:
     # @default -- 60s
     scrapeInterval: ""
 
-    # -- Rule blocks to be added to the discovery.relabel component for the Kube Controller Manager.
-    # See https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block
+    # -- Rule blocks to be added to the discovery.relabel component for the Kube Controller Manager. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block))
     extraRelabelingRules: ""
 
-    # -- Rule blocks to be added to the prometheus.relabel component for the Kube Controller Manager.
-    # See https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block
+    # -- Rule blocks to be added to the prometheus.relabel component for the Kube Controller Manager. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block))
     extraMetricRelabelingRules: ""
 
     # Adjustments to the scraped metrics to filter the amount of data sent to storage.
@@ -534,12 +510,10 @@ metrics:
     # @default -- 60s
     scrapeInterval: ""
 
-    # -- Rule blocks to be added to the discovery.relabel component for the Kube Proxy.
-    # See https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block
+    # -- Rule blocks to be added to the discovery.relabel component for the Kube Proxy. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block))
     extraRelabelingRules: ""
 
-    # -- Rule blocks to be added to the prometheus.relabel component for the Kube Proxy.
-    # See https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block
+    # -- Rule blocks to be added to the prometheus.relabel component for the Kube Proxy. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block))
     extraMetricRelabelingRules: ""
 
     # Adjustments to the scraped metrics to filter the amount of data sent to storage.
@@ -562,12 +536,10 @@ metrics:
     # @default -- 60s
     scrapeInterval: ""
 
-    # -- Rule blocks to be added to the discovery.relabel component for the Kube Scheduler.
-    # See https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block
+    # -- Rule blocks to be added to the discovery.relabel component for the Kube Scheduler. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block))
     extraRelabelingRules: ""
 
-    # -- Rule blocks to be added to the prometheus.relabel component for the Kube Scheduler.
-    # See https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block
+    # -- Rule blocks to be added to the prometheus.relabel component for the Kube Scheduler. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block))
     extraMetricRelabelingRules: ""
 
     # Adjustments to the scraped metrics to filter the amount of data sent to storage.
@@ -591,12 +563,10 @@ metrics:
     labelMatchers:
       app.kubernetes.io/name: opencost
 
-    # -- Rule blocks to be added to the discovery.relabel component for OpenCost.
-    # See https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block
+    # -- Rule blocks to be added to the discovery.relabel component for OpenCost. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block))
     extraRelabelingRules: ""
 
-    # -- Rule blocks to be added to the prometheus.relabel component for OpenCost.
-    # See https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block
+    # -- Rule blocks to be added to the prometheus.relabel component for OpenCost. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block))
     extraMetricRelabelingRules: ""
 
     # Adjustments to the scraped metrics to filter the amount of data sent to storage.
@@ -621,8 +591,7 @@ metrics:
     # @default -- 60s
     scrapeInterval: ""
 
-    # -- Rule blocks to be added to the prometheus.relabel component for PodMonitor objects.
-    # See https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block
+    # -- Rule blocks to be added to the prometheus.relabel component for PodMonitor objects. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block))
     extraMetricRelabelingRules: ""
 
   probes:
@@ -637,8 +606,7 @@ metrics:
     # @default -- 60s
     scrapeInterval: ""
 
-    # -- Rule blocks to be added to the prometheus.relabel component for Probe objects.
-    # See https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block
+    # -- Rule blocks to be added to the prometheus.relabel component for Probe objects. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block))
     extraMetricRelabelingRules: ""
 
   serviceMonitors:
@@ -653,8 +621,7 @@ metrics:
     # @default -- 60s
     scrapeInterval: ""
 
-    # -- Rule blocks to be added to the prometheus.relabel component for ServiceMonitor objects.
-    # See https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block
+    # -- Rule blocks to be added to the prometheus.relabel component for ServiceMonitor objects. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block))
     extraMetricRelabelingRules: ""
 
   kubernetesMonitoring:
@@ -663,8 +630,7 @@ metrics:
 
   # Settings related to metrics ingested via receivers
   receiver:
-    # -- Apply a filter to metrics received via the OTLP or OTLP HTTP receivers.
-    # See https://grafana.com/docs/agent/latest/flow/reference/components/otelcol.processor.filter/ for details.
+    # -- Apply a filter to metrics received via the OTLP or OTLP HTTP receivers. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/otelcol.processor.filter/))
     filters:
       metric: []
       datapoint: []
@@ -696,8 +662,7 @@ logs:
     # -- Only capture logs from pods in these namespaces (`[]` means all namespaces)
     namespaces: []
 
-    # -- Rule blocks to be added to the discovery.relabel component for pod logs.
-    # See https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block
+    # -- Rule blocks to be added to the discovery.relabel component for pod logs. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block))
     extraRelabelingRules: ""
 
     # -- Controls the behavior of gathering pod logs.
@@ -707,8 +672,7 @@ logs:
     # your cluster prevents DaemonSets, HostPath volume mounts, or for other reasons.
     gatherMethod: "volumes"
 
-    # -- Stage blocks to be added to the loki.process component for pod logs.
-    # See https://grafana.com/docs/agent/latest/flow/reference/components/loki.process/#blocks
+    # -- Stage blocks to be added to the loki.process component for pod logs. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/loki.process/#blocks))
     extraStageBlocks: ""
 
   # Settings for scraping Kubernetes cluster events
@@ -724,8 +688,7 @@ logs:
 
   # Settings related to logs ingested via receivers
   receiver:
-    # -- Apply a filter to logs received via the OTLP or OTLP HTTP receivers.
-    # See https://grafana.com/docs/agent/latest/flow/reference/components/otelcol.processor.filter/ for details.
+    # -- Apply a filter to logs received via the OTLP or OTLP HTTP receivers. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/otelcol.processor.filter/))
     filters:
       log_record: []
 
@@ -741,8 +704,7 @@ traces:
 
   # Settings related to traces ingested via receivers
   receiver:
-    # -- Apply a filter to traces received via the OTLP or OTLP HTTP receivers.
-    # See https://grafana.com/docs/agent/latest/flow/reference/components/otelcol.processor.filter/ for details.
+    # -- Apply a filter to traces received via the OTLP or OTLP HTTP receivers. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/otelcol.processor.filter/))
     filters:
       span: []
       spanevent: []
