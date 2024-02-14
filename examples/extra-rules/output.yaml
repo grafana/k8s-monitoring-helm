@@ -522,16 +522,6 @@ data:
     discovery.relabel "kubelet" {
       targets = discovery.kubernetes.nodes.targets
       rule {
-        target_label = "__address__"
-        replacement  = "kubernetes.default.svc.cluster.local:443"
-      }
-      rule {
-        source_labels = ["__meta_kubernetes_node_name"]
-        regex         = "(.+)"
-        replacement   = "/api/v1/nodes/${1}/proxy/metrics"
-        target_label  = "__metrics_path__"
-      }
-      rule {
         source_labels = ["__meta_kubernetes_namespace"]
         regex = "private"
         action = "drop"
@@ -571,13 +561,7 @@ data:
     discovery.relabel "cadvisor" {
       targets = discovery.kubernetes.nodes.targets
       rule {
-        target_label = "__address__"
-        replacement  = "kubernetes.default.svc.cluster.local:443"
-      }
-      rule {
-        source_labels = ["__meta_kubernetes_node_name"]
-        regex         = "(.+)"
-        replacement   = "/api/v1/nodes/${1}/proxy/metrics/cadvisor"
+        replacement   = "/metrics/cadvisor"
         target_label  = "__metrics_path__"
       }
       rule {
@@ -45364,16 +45348,6 @@ data:
     discovery.relabel "kubelet" {
       targets = discovery.kubernetes.nodes.targets
       rule {
-        target_label = "__address__"
-        replacement  = "kubernetes.default.svc.cluster.local:443"
-      }
-      rule {
-        source_labels = ["__meta_kubernetes_node_name"]
-        regex         = "(.+)"
-        replacement   = "/api/v1/nodes/${1}/proxy/metrics"
-        target_label  = "__metrics_path__"
-      }
-      rule {
         source_labels = ["__meta_kubernetes_namespace"]
         regex = "private"
         action = "drop"
@@ -45413,13 +45387,7 @@ data:
     discovery.relabel "cadvisor" {
       targets = discovery.kubernetes.nodes.targets
       rule {
-        target_label = "__address__"
-        replacement  = "kubernetes.default.svc.cluster.local:443"
-      }
-      rule {
-        source_labels = ["__meta_kubernetes_node_name"]
-        regex         = "(.+)"
-        replacement   = "/api/v1/nodes/${1}/proxy/metrics/cadvisor"
+        replacement   = "/metrics/cadvisor"
         target_label  = "__metrics_path__"
       }
       rule {
