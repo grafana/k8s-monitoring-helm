@@ -718,36 +718,54 @@ traces:
 # Telemetry data receiver settings
 receivers:
   grpc:
-    # -- Receive telemetry data over gRPC?
+    # -- Receive OpenTelemetry signals over OTLP/gRPC?
     enabled: true
-    # -- Which port to use for the gRPC receiver. This port needs to be opened in the grafana-agent section below.
+    # -- Which port to use for the OTLP/gRPC receiver. This port needs to be opened in the grafana-agent section below.
     port: 4317
     # -- It removes attributes which could cause high cardinality metrics. For example, attributes with IP addresses and port numbers in metrics about HTTP and gRPC connections will be removed.
     disable_debug_metrics: true
 
   http:
-    # -- Receive telemetry data over HTTP?
+    # -- Receive OpenTelemetry signals over OTLP/HTTP?
     enabled: true
-    # -- Which port to use for the HTTP receiver. This port needs to be opened in the grafana-agent section below.
+    # -- Which port to use for the OTLP/HTTP receiver. This port needs to be opened in the grafana-agent section below.
     port: 4318
     # -- It removes attributes which could cause high cardinality metrics. For example, attributes with IP addresses and port numbers in metrics about HTTP and gRPC connections will be removed.
     disable_debug_metrics: true
-
-  processors:
-    # Batch processor settings for OTLP or OTLP HTTP receivers
-    batch:
-      # -- What batch size to use, in bytes
-      size: 16384
-      # -- The upper limit of the amount of data contained in a single batch, in bytes. When set to 0, batches can be any size.
-      maxSize: 0
-      # -- How long before sending
-      timeout: 2s
 
   prometheus:
     # -- Receive Prometheus metrics
     enabled: false
     # -- Which port to use for the Prometheus receiver. This port needs to be opened in the grafana-agent section below.
     port: 9999
+
+  jaeger:
+    grpc:
+      # -- Receive Jaeger signals via gRPC protocol.
+      enabled: false
+      # -- Which port to use for the Jaeger gRPC receiver. This port needs to be opened in the grafana-agent section below.
+      port: 14250
+
+    thriftBinary:
+      # -- Receive Jaeger signals via Thrift binary protocol.
+      enabled: false
+      # -- Which port to use for the Thrift binary receiver. This port needs to be opened in the grafana-agent section below.
+      port: 6832
+
+    thriftCompact:
+      # -- Receive Jaeger signals via Thrift compact protocol.
+      enabled: false
+      # -- Which port to use for the Thrift compact receiver. This port needs to be opened in the grafana-agent section below.
+      port: 6831
+
+    thriftHttp:
+      # -- Receive Jaeger signals via Thrift HTTP protocol.
+      enabled: false
+      # -- Which port to use for the Thrift HTTP receiver. This port needs to be opened in the grafana-agent section below.
+      port: 14268
+
+    # -- It removes attributes which could cause high cardinality metrics. For example, attributes with IP addresses and port numbers in metrics about HTTP and gRPC connections will be removed.
+    disable_debug_metrics: true
 
   zipkin:
     # -- Receive Zipkin traces
@@ -756,6 +774,16 @@ receivers:
     port: 9411
     # -- It removes attributes which could cause high cardinality metrics. For example, attributes with IP addresses and port numbers in metrics about HTTP and gRPC connections will be removed.
     disable_debug_metrics: true
+
+  processors:
+    # Batch processor settings for OTLP/gRPC, OTLP/HTTP, Jaeger, or Zipkin receivers
+    batch:
+      # -- What batch size to use, in bytes
+      size: 16384
+      # -- The upper limit of the amount of data contained in a single batch, in bytes. When set to 0, batches can be any size.
+      maxSize: 0
+      # -- How long before sending
+      timeout: 2s
 
 # -- Extra configuration that will be added to Grafana Agent configuration file.
 # This cannot be used to modify the generated configuration values, only append new components.
@@ -975,6 +1003,22 @@ grafana-agent:
       - name: "prometheus"
         port: 9999
         targetPort: 9999
+        protocol: "TCP"
+      - name: "jaeger-grpc"
+        port: 14250
+        targetPort: 14250
+        protocol: "TCP"
+      - name: "jaeger-binary"
+        port: 6832
+        targetPort: 6832
+        protocol: "TCP"
+      - name: "jaeger-compact"
+        port: 6831
+        targetPort: 6831
+        protocol: "TCP"
+      - name: "jaeger-http"
+        port: 14268
+        targetPort: 14268
         protocol: "TCP"
       - name: "zipkin"
         port: 9411

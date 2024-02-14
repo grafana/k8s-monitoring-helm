@@ -1,0 +1,15 @@
+{{ define "agent.config.receivers.remote_write" }}
+// Prometheus Remote Write Receiver
+{{- if and .Values.receivers.prometheus.enabled .Values.metrics.enabled }}
+prometheus.receive_http "receiver" {
+{{$data := dict "port" .Values.receivers.prometheus.port "type" "Prometheus" "agent" (index .Values "grafana-agent").agent }}
+{{- include "checkforAgentPort" $data -}}
+
+  http {
+    listen_address = "0.0.0.0"
+    listen_port = {{ .Values.receivers.prometheus.port }}
+  }
+  forward_to = [prometheus.relabel.metrics_service.receiver]
+}
+{{- end }}
+{{ end }}

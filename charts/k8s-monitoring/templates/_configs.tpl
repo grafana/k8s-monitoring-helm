@@ -5,7 +5,11 @@
   {{- include "agent.config.endpoints" . }}
   {{- include "agent.config.pods" . }}
 
-  {{- include "agent.config.receivers" . }}
+  {{- include "agent.config.receivers.otlp" . }}
+  {{- include "agent.config.receivers.jaeger" . }}
+  {{- include "agent.config.receivers.zipkin" . }}
+  {{- include "agent.config.receivers.remote_write" . }}
+
   {{- include "agent.config.processors" . }}
 
   {{- if .Values.metrics.enabled }}
