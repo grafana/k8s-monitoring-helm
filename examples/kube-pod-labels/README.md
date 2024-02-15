@@ -4,7 +4,7 @@ This example shows how to include Pod labels as metrics.
 
 Labels and annotations on Kubernetes objects are not set as metric labels on metrics like [kube_pod_info](https://github.com/kubernetes/kube-state-metrics/blob/main/docs/pod-metrics.md). This is
 because it would greatly increase metric cardinality, which can get costly. [kube-state-metrics](https://github.com/kubernetes/kube-state-metrics)
-can optionally create additional metrics, like `kube_pod_labels` that create label metrics that can then be joined to
+can optionally create additional metrics. For example, `kube_pod_labels` create label metrics that can then be joined to
 other pod metrics. This option is not enabled by default.
 
 In the values file below, this section tells the kube-state-metrics deployment to generate the `kube_pod_labels` metric:
