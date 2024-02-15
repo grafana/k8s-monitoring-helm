@@ -22,7 +22,7 @@ metrics:
 ```
 
 Additional fields can be added to `metricLabelsAllowlist` to get label metrics for other objects, such as Namespaces, Nodes, etc.
-Also, kube-state-metrics can also generate metrics for annotations with `metricAnnotationsAllowList`.
+Also, kube-state-metrics can generate metrics for annotations with `metricAnnotationsAllowList`.
 See the [kube-state-metrics documentation](https://github.com/kubernetes/kube-state-metrics) and
 [Helm chart documentation](https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-state-metrics) for more information.
 
