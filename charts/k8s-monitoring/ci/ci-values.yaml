@@ -56,7 +56,7 @@ test:
     - query: "count(kube_node_info{cluster=\"ci-test-cluster\", color=\"red\"})"
       type: promql
       expect:
-        value: 1
+        value: 2
     # Check that the metrics exclusion list is working
     - query: "kube_pod_info{cluster=\"ci-test-cluster\"}"
       type: promql
@@ -68,6 +68,12 @@ test:
     # Check for pod logs
     - query: "{cluster=\"ci-test-cluster\", job!=\"integrations/kubernetes/eventhandler\"}"
       type: logql
+
+    - query: "avg(count_over_time(scrape_samples_scraped{cluster=\"ci-test-cluster\"}[1m]))"
+      type: promql
+      expect:
+        value: 1
+        operator: ==
 
 extraConfig: |-
   tracing {

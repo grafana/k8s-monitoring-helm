@@ -117,6 +117,12 @@ test:
   - query: "{cluster=\"ci-integrations-cluster\", job=\"loki/loki\"}"
     type: logql
 
+  - query: "avg(count_over_time(scrape_samples_scraped{cluster=\"ci-integrations-cluster\"}[1m]))"
+    type: promql
+    expect:
+      value: 1
+      operator: ==
+
 opencost:
   enabled: false
 

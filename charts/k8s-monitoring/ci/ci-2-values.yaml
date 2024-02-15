@@ -93,6 +93,13 @@ test:
     type: promql
   - query: "{.k8s.cluster.name=\"from-the-other-agent\"}"
     type: traceql
+
+  - query: "avg(count_over_time(scrape_samples_scraped{cluster=~\"ci-test-cluster-2|from-the-other-agent\"}[1m]))"
+    type: promql
+    expect:
+      value: 1
+      operator: ==
+
   envOverrides:
     TEMPO_URL: http://tempo.tempo.svc:3100/api/search
 
