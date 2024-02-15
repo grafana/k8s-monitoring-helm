@@ -1,0 +1,28 @@
+cluster:
+  name: kube-pod-labels-test
+
+externalServices:
+  prometheus:
+    host: https://prometheus.example.com
+    basicAuth:
+      username: 12345
+      password: "It's a secret to everyone"
+  loki:
+    host: https://loki.example.com
+    basicAuth:
+      username: 12345
+      password: "It's a secret to everyone"
+
+metrics:
+  kube-state-metrics:
+    metricsTuning:
+      includeMetrics: [kube_pod_labels]
+
+test:
+  extraQueries:
+    - query: "kube_pod_labels{cluster=\"kube-pod-labels-test\"}"
+      type: promql
+
+kube-state-metrics:
+  metricLabelsAllowlist:
+    - pods=[*]
