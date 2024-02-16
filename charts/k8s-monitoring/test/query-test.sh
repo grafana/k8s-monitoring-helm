@@ -56,7 +56,13 @@ function check_value {
     echo "  Unsupported operator: \"${operator}\""
     return 1
   esac
-  if [ "$(bc -e "${expectedValue} ${operator} ${actualValue}")" -ne "1" ]; then
+  local result
+
+  if ! result=$(echo "${expectedValue} ${operator} ${actualValue}" | bc); then
+    echo "  An error occurred while checking the result: ${result}"
+    return 1
+  fi
+  if [ "${result}" -ne "1" ]; then
     echo "  Unexpected query result!"
     return 1
   fi
