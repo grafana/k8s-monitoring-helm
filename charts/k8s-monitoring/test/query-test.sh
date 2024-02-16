@@ -34,6 +34,7 @@ if [ -z "${1}" ] || [ "${1}" == "-h" ]; then
   echo '    "operator": "[<, <=, ==, !=, =>, >]",'
   echo '    "value": <expected value>'
   echo '  }'
+  exit 0
 fi
 
 function check_value {
@@ -44,18 +45,24 @@ function check_value {
   echo "  Expected (${expectedValue}), Operator (${operator}), Actual (${actualValue})"
 
   case "${operator}" in
-  "<")  operator="-lt" ;;
-  "<=") operator="-le" ;;
-  "=")  operator="-eq" ;;
-  "==")  operator="-eq" ;;
-  "!=") operator="-ne" ;;
-  ">=") operator="-ge" ;;
-  ">")  operator="-gt" ;;
+  "<")  operator="<" ;;
+  "<=") operator="<=" ;;
+  "=")  operator="==" ;;
+  "==")  operator="==" ;;
+  "!=") operator="!=" ;;
+  ">=") operator=">=" ;;
+  ">")  operator=">" ;;
   *)
     echo "  Unsupported operator: \"${operator}\""
     return 1
   esac
-  if test ! "${actualValue}" "${operator}" "${expectedValue}"; then
+  local result
+
+  if ! result=$(echo "${expectedValue} ${operator} ${actualValue}" | bc); then
+    echo "  An error occurred while checking the result: ${result}"
+    return 1
+  fi
+  if [ "${result}" -ne "1" ]; then
     echo "  Unexpected query result!"
     return 1
   fi

@@ -117,8 +117,19 @@ test:
   - query: "{cluster=\"ci-integrations-cluster\", job=\"loki/loki\"}"
     type: logql
 
+  # DPM check
+  - query: "avg(count_over_time(scrape_samples_scraped{cluster=\"ci-integrations-cluster\"}[1m]))"
+    type: promql
+    expect:
+      value: 1
+      operator: ==
+
 opencost:
   enabled: false
+
+grafana-agent:
+  controller:
+    replicas: 2
 
 # Prometheus Operator CRDs are pre-installed in the CI environment
 prometheus-operator-crds:
