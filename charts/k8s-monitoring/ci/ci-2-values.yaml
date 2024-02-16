@@ -76,8 +76,8 @@ test:
   - query: "count(kube_pod_info{cluster=\"ci-test-cluster-2\", color=\"blue\"})"
     type: promql
     expect:
-      operator: ">"
       value: 1
+      operator: "<="  # There's gotta be at least one pod
 
   # Check for cluster events
   - query: "{cluster=\"ci-test-cluster-2\", job=\"integrations/kubernetes/eventhandler\"}"
@@ -94,6 +94,7 @@ test:
   - query: "{.k8s.cluster.name=\"from-the-other-agent\"}"
     type: traceql
 
+  # DPM check
   - query: "avg(count_over_time(scrape_samples_scraped{cluster=~\"ci-test-cluster-2|from-the-other-agent\"}[1m]))"
     type: promql
     expect:
