@@ -95,9 +95,9 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 
 | Repository | Name | Version |
 |------------|------|---------|
-| https://grafana.github.io/helm-charts | grafana-agent | 0.32.0 |
-| https://grafana.github.io/helm-charts | grafana-agent-events(grafana-agent) | 0.32.0 |
-| https://grafana.github.io/helm-charts | grafana-agent-logs(grafana-agent) | 0.32.0 |
+| https://grafana.github.io/helm-charts | grafana-agent | 0.33.0 |
+| https://grafana.github.io/helm-charts | grafana-agent-events(grafana-agent) | 0.33.0 |
+| https://grafana.github.io/helm-charts | grafana-agent-logs(grafana-agent) | 0.33.0 |
 | https://opencost.github.io/opencost-helm-chart | opencost | 1.28.0 |
 | https://prometheus-community.github.io/helm-charts | kube-state-metrics | 5.15.3 |
 | https://prometheus-community.github.io/helm-charts | prometheus-node-exporter | 4.25.0 |
