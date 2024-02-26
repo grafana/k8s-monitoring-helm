@@ -3,6 +3,11 @@
 prometheus.operator.podmonitors "pod_monitors" {
   namespaces = {{ .Values.metrics.podMonitors.namespaces | toJson }}
   forward_to = [prometheus.relabel.podmonitors.receiver]
+{{- if .Values.metrics.podMonitors.selector }}
+  selector {
+{{ .Values.metrics.podMonitors.selector | indent 4 }}
+  }
+{{- end }}
 {{- if (index .Values "grafana-agent").agent.clustering.enabled }}
   clustering {
     enabled = true
@@ -26,6 +31,11 @@ prometheus.relabel "podmonitors" {
 prometheus.operator.probes "probes" {
   namespaces = {{ .Values.metrics.probes.namespaces | toJson }}
   forward_to = [prometheus.relabel.probes.receiver]
+{{- if .Values.metrics.probes.selector }}
+  selector {
+{{ .Values.metrics.probes.selector | indent 4 }}
+  }
+{{- end }}
 {{- if (index .Values "grafana-agent").agent.clustering.enabled }}
   clustering {
     enabled = true
@@ -50,6 +60,11 @@ prometheus.relabel "probes" {
 prometheus.operator.servicemonitors "service_monitors" {
   namespaces = {{ .Values.metrics.serviceMonitors.namespaces | toJson }}
   forward_to = [prometheus.relabel.servicemonitors.receiver]
+{{- if .Values.metrics.serviceMonitors.selector }}
+  selector {
+{{ .Values.metrics.serviceMonitors.selector | indent 4 }}
+  }
+{{- end }}
 {{- if (index .Values "grafana-agent").agent.clustering.enabled }}
   clustering {
     enabled = true
