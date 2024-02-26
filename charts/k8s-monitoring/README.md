@@ -300,16 +300,19 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | metrics.podMonitors.extraMetricRelabelingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for PodMonitor objects. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block)) |
 | metrics.podMonitors.namespaces | list | `[]` | Which namespaces to look for PodMonitor objects. |
 | metrics.podMonitors.scrapeInterval | string | 60s | How frequently to scrape metrics from PodMonitor objects. Only used if the PodMonitor does not specify the scrape interval. Overrides metrics.scrapeInterval |
+| metrics.podMonitors.selector | string | `""` | Which podMonitor objects to select |
 | metrics.probes.enabled | bool | `true` | Include service discovery for Probe objects. |
 | metrics.probes.extraMetricRelabelingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for Probe objects. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block)) |
 | metrics.probes.namespaces | list | `[]` | Which namespaces to look for Probe objects. |
 | metrics.probes.scrapeInterval | string | 60s | How frequently to scrape metrics from Probe objects. Only used if the Probe does not specify the scrape interval. Overrides metrics.scrapeInterval |
+| metrics.probes.selector | string | `""` | Which probe objects to select |
 | metrics.receiver.filters | object | `{"datapoint":[],"metric":[]}` | Apply a filter to metrics received via the OTLP or OTLP HTTP receivers. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/otelcol.processor.filter/)) |
 | metrics.scrapeInterval | string | `"60s"` | How frequently to scrape metrics |
 | metrics.serviceMonitors.enabled | bool | `true` | Include service discovery for ServiceMonitor objects |
 | metrics.serviceMonitors.extraMetricRelabelingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for ServiceMonitor objects. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block)) |
 | metrics.serviceMonitors.namespaces | list | `[]` | Which namespaces to look for ServiceMonitor objects. |
 | metrics.serviceMonitors.scrapeInterval | string | 60s | How frequently to scrape metrics from ServiceMonitor objects. Only used if the ServiceMonitor does not specify the scrape interval. Overrides metrics.scrapeInterval |
+| metrics.serviceMonitors.selector | string | `""` | Which serviceMonitors objects to select |
 | metrics.windows-exporter.enabled | bool | `false` | Scrape node metrics |
 | metrics.windows-exporter.extraMetricRelabelingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for Windows Exporter. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block)) |
 | metrics.windows-exporter.extraRelabelingRules | string | `""` | Rule blocks to be added to the discovery.relabel component for Windows Exporter. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block)) |
@@ -418,11 +421,30 @@ For an example values file and generated output, see [this example](../../exampl
 
 ### Using Prometheus Operator CRDs
 
-The default config can deploy the CRDs for Prometheus Operator, and will add support for `PodMonitor` and
-`ServiceMonitor` objects.
+The default config can deploy the CRDs for Prometheus Operator, and will add support for `PodMonitor`,
+`ServiceMonitor` and `Probe` objects.
 
 Simply deploy a PodMonitor or a ServiceMonitor in the same namespace as the Grafana Agent and it will discover it and
 take the appropriate action.
+
+Use a selector to limit the discovered objects
+
+Example:
+
+In this example, the Agent will find `ServiceMonitor` objects labeld with
+`example.com/environment=production`, scrape them for Prometheus metrics, and send those metrics to Grafana Cloud.
+
+```yaml
+serviceMonitors:
+  enabled: true
+  selector: |-
+    match_expression {
+      key = "example.com/environment"
+      operator = "In"
+      values = ["production"]
+    }
+
+```
 
 ## Platform-specific instructions
 

@@ -145,11 +145,30 @@ For an example values file and generated output, see [this example](../../exampl
 
 ### Using Prometheus Operator CRDs
 
-The default config can deploy the CRDs for Prometheus Operator, and will add support for `PodMonitor` and
-`ServiceMonitor` objects.
+The default config can deploy the CRDs for Prometheus Operator, and will add support for `PodMonitor`, 
+`ServiceMonitor` and `Probe` objects.
 
 Simply deploy a PodMonitor or a ServiceMonitor in the same namespace as the Grafana Agent and it will discover it and
 take the appropriate action.
+
+Use a selector to limit the discovered objects
+
+Example: 
+
+In this example, the Agent will find `ServiceMonitor` objects labeld with
+`example.com/environment=production`, scrape them for Prometheus metrics, and send those metrics to Grafana Cloud.
+
+```yaml
+serviceMonitors:
+  enabled: true
+  selector: |-
+    match_expression {
+      key = "example.com/environment"
+      operator = "In"
+      values = ["production"]
+    }
+
+```
 
 ## Platform-specific instructions
 
