@@ -1,7 +1,74 @@
 # Scraping Metrics from an Application
 
-If you have an application running on your Kubernetes cluster that is exporting metrics, you can easily extend the
-configuration in this chart to scrape and forward those metrics.
+If you have an application running on your Kubernetes cluster that is exporting metrics, you may want to use this chart
+to scrape those metrics and send them to your datastore. This chart provides plenty of options for doing just that.
+
+## Options
+
+1. Use the `k8s.grafana.com/scrape` annotation on your pods or services
+2. Use Prometheus Operator CRDs, like ServiceMonitors, PodMonitors, or Probes.
+3. Make custom Grafana Agent Flow configuration
+
+
+## Annotations
+
+This chart configures the Grafana Agent to look for Pods and Services that have the `k8s.grafana.com/scrape` annotation
+set. When set, the Agent scrapes them for metrics.
+
+Extra annotations can also be set to control the behavior of the discovery and scraping of the metrics:
+
+* `k8s.grafana.com/job` - Sets the job label.
+* `k8s.grafana.com/instance` - Sets the instance label.
+* `k8s.grafana.com/metrics.path` - Sets the metrics path. Required if the metrics path is not the default of `/metrics`.
+* `k8s.grafana.com/metrics.portName` - Specifies the port to scrape, by name.
+* `k8s.grafana.com/metrics.portNumber` - Specifies to port to scrape, by number.
+* `k8s.grafana.com/metrics.scheme` - Sets the scheme to use. Required if the scheme is not HTTP.
+
+The chart itself provides additional options:
+
+* `metrics.autoDiscover.extraRelabelingRules` - Use relabeling rules to filter the pods or services to scrape.
+* `metrics.autoDiscover.metricsTuning` - Specify which metrics to keep or drop.
+* `metrics.autoDiscover.extraMetricRelabelingRules` - Use relabeling rules to process the metrics after scraping them.
+
+## Prometheus Operator CRDs
+
+By default, this chart configures the Grafana Agent to detect and utilize ServiceMonitors, PodMonitors, and Probes. If
+any of those objects are detected on your cluster, the Agent will utilize them to extend its configuration.
+
+For more information about creating and configuring these options, see the [Prometheus Operator Documentation](https://github.com/prometheus-operator/prometheus-operator).
+
+This chart provides ways to customize how the Agent handles these objects.
+
+### Controlling discovery
+
+These options in the Helm chart allow for changing how Prometheus Operator objects are discovered: 
+
+* `metrics.serviceMonitors.enabled` - If this is set to true, the Agent will look and consume ServiceMonitors
+* `metrics.serviceMonitors.namespaces` - Only use ServiceMonitors that exist in these namespaces.
+* `metrics.serviceMonitors.selector` - Use a [selector](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.operator.servicemonitors/#selector-block) block to provide more fine-grained selection of objects.
+
+The same options are present for `metrics.podmonitors` and `metrics.probes`
+
+### Controlling scraping
+
+Most of the scrape configuration is embedded in the Prometheus Operator object itself.
+
+* `metrics.serviceMonitors.scrapeInterval` - Sets the scrape interval, if one was not specified in the object 
+
+The same option is present for `metrics.podmonitors` and `metrics.probes`
+
+### Controlling processing
+
+This chart can set metrics relabeling rules for processing the metrics after scraping them.
+
+* `metrics.serviceMonitors.extraMetricRelabelingRules` - Sets post-scraping rules for a [prometheus.relabel](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/) configuration component.
+
+The same option is present for `metrics.podmonitors` and `metrics.probes`
+
+
+## Custom Agent Config
+
+This option allows for the greatest amount of flexibility and utility.
 
 When adding new configuration, it's helpful to think of it in four phases:
 1. Discovery - How should the collector find my service?
