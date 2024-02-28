@@ -63,10 +63,10 @@ test:
       expect:
         count: 0
     # Check for cluster events
-    - query: "{cluster=\"ci-test-cluster\", job=\"integrations/kubernetes/eventhandler\"}"
+    - query: "count_over_time({cluster=\"ci-test-cluster\", job=\"integrations/kubernetes/eventhandler\"}[1h])"
       type: logql
     # Check for pod logs
-    - query: "{cluster=\"ci-test-cluster\", job!=\"integrations/kubernetes/eventhandler\"}"
+    - query: "count_over_time({cluster=\"ci-test-cluster\", job!=\"integrations/kubernetes/eventhandler\"}[1h])"
       type: logql
 
     # DPM check

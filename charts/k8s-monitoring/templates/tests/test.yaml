@@ -56,6 +56,8 @@ queries:
     {{- end }}
   {{- end }}
 {{- end -}}
+
+{{- if .Values.configAnalysis.enabled }}
 ---
 apiVersion: v1
 kind: Pod
@@ -67,44 +69,46 @@ metadata:
     app.kubernetes.io/instance: {{ .Release.Name | quote }}
     app.kubernetes.io/version: {{ .Chart.AppVersion }}
     helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
-    {{- range $key, $val := .Values.test.extraLabels }}
+    {{- range $key, $val := .Values.configAnalysis.extraLabels }}
     {{ $key }}: {{ $val | quote }}
     {{- end}}
   annotations:
     "helm.sh/hook": test
     "helm.sh/hook-delete-policy": before-hook-creation
     "helm.sh/hook-weight": "0"
-    {{- range $key, $val := .Values.test.extraAnnotations }}
+    {{- range $key, $val := .Values.configAnalysis.extraAnnotations }}
     {{ $key }}: {{ $val | quote }}
     {{- end}}
 spec:
-  {{- if or .Values.global.image.pullSecrets .Values.test.image.pullSecrets }}
+  {{- if or .Values.global.image.pullSecrets .Values.configAnalysis.image.pullSecrets }}
   imagePullSecrets:
     {{- if .Values.global.image.pullSecrets }}
     {{- toYaml .Values.global.image.pullSecrets | nindent 8 }}
     {{- else }}
-    {{- toYaml .Values.test.image.pullSecrets | nindent 8 }}
+    {{- toYaml .Values.configAnalysis.image.pullSecrets | nindent 8 }}
     {{- end }}
   {{- end }}
   restartPolicy: OnFailure
-  {{- with .Values.test.nodeSelector }}
+  {{- with .Values.configAnalysis.nodeSelector }}
   nodeSelector:
     {{- toYaml . | nindent 8 }}
   {{- end }}
-  {{- with .Values.test.tolerations }}
+  {{- with .Values.configAnalysis.tolerations }}
   tolerations:
     {{- toYaml . | nindent 8 }}
   {{- end }}
   containers:
     - name: config-analysis
-      image: {{ .Values.global.image.registry | default .Values.test.image.registry }}/{{ .Values.test.image.image }}:{{ .Values.test.image.tag | default .Chart.Version }}
+      image: {{ .Values.global.image.registry | default .Values.configAnalysis.image.registry }}/{{ .Values.configAnalysis.image.image }}:{{ .Values.configAnalysis.image.tag | default .Chart.Version }}
       command: [/etc/bin/config-analysis.sh]
       env:
         - name: AGENT_HOST
           value: {{ include "grafana-agent.fullname" (index .Subcharts "grafana-agent") }}.{{ .Release.Namespace }}.svc
+{{- end -}}
+{{- if .Values.test.enabled }}
 ---
-apiVersion: v1
-kind: Pod
+apiVersion: batch/v1
+kind: Job
 metadata:
   name: {{ include "kubernetes-monitoring-test.fullname" . | quote }}
   namespace: {{ .Release.Namespace }}
@@ -124,118 +128,139 @@ metadata:
     {{ $key }}: {{ $val | quote }}
     {{- end}}
 spec:
-  {{- if or .Values.global.image.pullSecrets .Values.test.image.pullSecrets }}
-  imagePullSecrets:
-    {{- if .Values.global.image.pullSecrets }}
-    {{- toYaml .Values.global.image.pullSecrets | nindent 8 }}
+  completions: 1
+  parallelism: 1
+  backoffLimit: {{ sub .Values.test.attempts 1 }}
+  template:
+    metadata:
+      name: {{ include "kubernetes-monitoring-test.fullname" . | quote }}
+      namespace: {{ .Release.Namespace }}
+      labels:
+        app.kubernetes.io/managed-by: {{ .Release.Service | quote }}
+        app.kubernetes.io/instance: {{ .Release.Name | quote }}
+        helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+        {{- range $key, $val := .Values.test.extraLabels }}
+        {{ $key }}: {{ $val | quote }}
+        {{- end}}
+      {{- with .Values.test.extraAnnotations }}
+      annotations:
+        {{- . | toYaml | nindent 8 }}
+      {{- end }}
+    spec:
+      {{- if or .Values.global.image.pullSecrets .Values.test.image.pullSecrets }}
+      imagePullSecrets:
+        {{- if .Values.global.image.pullSecrets }}
+        {{- toYaml .Values.global.image.pullSecrets | nindent 8 }}
+        {{- else }}
+        {{- toYaml .Values.test.image.pullSecrets | nindent 8 }}
+        {{- end }}
+      {{- end }}
+      restartPolicy: Never
+      {{- with .Values.test.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.test.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: query-test
+          image: {{ .Values.global.image.registry | default .Values.test.image.registry }}/{{ .Values.test.image.image }}:{{ .Values.test.image.tag | default .Chart.Version }}
+          command: ["bash", "-c", "/etc/bin/query-test.sh /etc/test/testQueries.json"]
+          volumeMounts:
+            - name: test-files
+              mountPath: /etc/test
+          env:
+            - name: SINCE
+              value: {{ .Values.test.queryRange }}
+    {{- if .Values.test.envOverrides.PROMETHEUS_URL }}
+            - name: PROMETHEUS_URL
+              value: {{ .Values.test.envOverrides.PROMETHEUS_URL | quote }}
     {{- else }}
-    {{- toYaml .Values.test.image.pullSecrets | nindent 8 }}
+            - name: PROMETHEUS_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "kubernetes_monitoring.metrics_service.secret.name" . }}
+                  key: {{ .Values.externalServices.prometheus.hostKey }}
+                  optional: true
+            - name: PROMETHEUS_URL
+              value: $(PROMETHEUS_HOST){{ .Values.externalServices.prometheus.queryEndpoint }}
     {{- end }}
-  {{- end }}
-  restartPolicy: OnFailure
-  {{- with .Values.test.nodeSelector }}
-  nodeSelector:
-    {{- toYaml . | nindent 8 }}
-  {{- end }}
-  {{- with .Values.test.tolerations }}
-  tolerations:
-    {{- toYaml . | nindent 8 }}
-  {{- end }}
-  containers:
-    - name: query-test
-      image: {{ .Values.global.image.registry | default .Values.test.image.registry }}/{{ .Values.test.image.image }}:{{ .Values.test.image.tag | default .Chart.Version }}
-      command: ["bash", "-c", "/etc/bin/query-test.sh /etc/test/testQueries.json"]
-      volumeMounts:
+            - name: PROMETHEUS_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "kubernetes_monitoring.metrics_service.secret.name" . }}
+                  key: {{ .Values.externalServices.prometheus.basicAuth.usernameKey }}
+                  optional: true
+            - name: PROMETHEUS_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "kubernetes_monitoring.metrics_service.secret.name" . }}
+                  key: {{ .Values.externalServices.prometheus.basicAuth.passwordKey }}
+                  optional: true
+
+    {{- if .Values.test.envOverrides.LOKI_URL }}
+            - name: LOKI_URL
+              value: {{ .Values.test.envOverrides.LOKI_URL | quote }}
+    {{- else }}
+            - name: LOKI_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "kubernetes_monitoring.logs_service.secret.name" . }}
+                  key: {{ .Values.externalServices.loki.hostKey }}
+            - name: LOKI_URL
+              value: $(LOKI_HOST){{ .Values.externalServices.loki.queryEndpoint }}
+    {{- end }}
+            - name: LOKI_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "kubernetes_monitoring.logs_service.secret.name" . }}
+                  key: {{ .Values.externalServices.loki.basicAuth.usernameKey }}
+                  optional: true
+            - name: LOKI_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "kubernetes_monitoring.logs_service.secret.name" . }}
+                  key: {{ .Values.externalServices.loki.basicAuth.passwordKey }}
+                  optional: true
+            - name: LOKI_TENANTID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "kubernetes_monitoring.logs_service.secret.name" . }}
+                  key: {{ .Values.externalServices.loki.tenantIdKey }}
+                  optional: true
+
+    {{- if .Values.test.envOverrides.TEMPO_URL }}
+            - name: TEMPO_URL
+              value: {{ .Values.test.envOverrides.TEMPO_URL | quote }}
+    {{- else }}
+            - name: TEMPO_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "kubernetes_monitoring.traces_service.secret.name" . }}
+                  key: {{ .Values.externalServices.tempo.hostKey }}
+                  optional: true
+            - name: TEMPO_URL
+              value: $(TEMPO_HOST){{ .Values.externalServices.tempo.searchEndpoint }}
+    {{- end }}
+            - name: TEMPO_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "kubernetes_monitoring.traces_service.secret.name" . }}
+                  key: {{ .Values.externalServices.tempo.basicAuth.usernameKey }}
+                  optional: true
+            - name: TEMPO_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "kubernetes_monitoring.traces_service.secret.name" . }}
+                  key: {{ .Values.externalServices.tempo.basicAuth.passwordKey }}
+                  optional: true
+
+      volumes:
         - name: test-files
-          mountPath: /etc/test
-      env:
-{{- if .Values.test.envOverrides.PROMETHEUS_URL }}
-        - name: PROMETHEUS_URL
-          value: {{ .Values.test.envOverrides.PROMETHEUS_URL | quote }}
-{{- else }}
-        - name: PROMETHEUS_HOST
-          valueFrom:
-            secretKeyRef:
-              name: {{ include "kubernetes_monitoring.metrics_service.secret.name" . }}
-              key: {{ .Values.externalServices.prometheus.hostKey }}
-              optional: true
-        - name: PROMETHEUS_URL
-          value: $(PROMETHEUS_HOST){{ .Values.externalServices.prometheus.queryEndpoint }}
-{{- end }}
-        - name: PROMETHEUS_USER
-          valueFrom:
-            secretKeyRef:
-              name: {{ include "kubernetes_monitoring.metrics_service.secret.name" . }}
-              key: {{ .Values.externalServices.prometheus.basicAuth.usernameKey }}
-              optional: true
-        - name: PROMETHEUS_PASS
-          valueFrom:
-            secretKeyRef:
-              name: {{ include "kubernetes_monitoring.metrics_service.secret.name" . }}
-              key: {{ .Values.externalServices.prometheus.basicAuth.passwordKey }}
-              optional: true
-
-{{- if .Values.test.envOverrides.LOKI_URL }}
-        - name: LOKI_URL
-          value: {{ .Values.test.envOverrides.LOKI_URL | quote }}
-{{- else }}
-        - name: LOKI_HOST
-          valueFrom:
-            secretKeyRef:
-              name: {{ include "kubernetes_monitoring.logs_service.secret.name" . }}
-              key: {{ .Values.externalServices.loki.hostKey }}
-        - name: LOKI_URL
-          value: $(LOKI_HOST){{ .Values.externalServices.loki.queryEndpoint }}
-{{- end }}
-        - name: LOKI_USER
-          valueFrom:
-            secretKeyRef:
-              name: {{ include "kubernetes_monitoring.logs_service.secret.name" . }}
-              key: {{ .Values.externalServices.loki.basicAuth.usernameKey }}
-              optional: true
-        - name: LOKI_PASS
-          valueFrom:
-            secretKeyRef:
-              name: {{ include "kubernetes_monitoring.logs_service.secret.name" . }}
-              key: {{ .Values.externalServices.loki.basicAuth.passwordKey }}
-              optional: true
-        - name: LOKI_TENANTID
-          valueFrom:
-            secretKeyRef:
-              name: {{ include "kubernetes_monitoring.logs_service.secret.name" . }}
-              key: {{ .Values.externalServices.loki.tenantIdKey }}
-              optional: true
-
-{{- if .Values.test.envOverrides.TEMPO_URL }}
-        - name: TEMPO_URL
-          value: {{ .Values.test.envOverrides.TEMPO_URL | quote }}
-{{- else }}
-        - name: TEMPO_HOST
-          valueFrom:
-            secretKeyRef:
-              name: {{ include "kubernetes_monitoring.traces_service.secret.name" . }}
-              key: {{ .Values.externalServices.tempo.hostKey }}
-              optional: true
-        - name: TEMPO_URL
-          value: $(TEMPO_HOST){{ .Values.externalServices.tempo.searchEndpoint }}
-{{- end }}
-        - name: TEMPO_USER
-          valueFrom:
-            secretKeyRef:
-              name: {{ include "kubernetes_monitoring.traces_service.secret.name" . }}
-              key: {{ .Values.externalServices.tempo.basicAuth.usernameKey }}
-              optional: true
-        - name: TEMPO_PASS
-          valueFrom:
-            secretKeyRef:
-              name: {{ include "kubernetes_monitoring.traces_service.secret.name" . }}
-              key: {{ .Values.externalServices.tempo.basicAuth.passwordKey }}
-              optional: true
-
-  volumes:
-    - name: test-files
-      configMap:
-        name: {{ include "kubernetes-monitoring-test.fullname" . | quote }}
+          configMap:
+            name: {{ include "kubernetes-monitoring-test.fullname" . | quote }}
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -254,3 +279,4 @@ metadata:
 data:
   testQueries.json: |-
 {{- include "test.queryList" . | fromYaml | toPrettyJson | nindent 4 }}
+{{- end -}}
