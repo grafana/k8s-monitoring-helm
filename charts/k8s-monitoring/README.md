@@ -146,6 +146,8 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | externalServices.prometheus.processors.memoryLimiter.checkInterval | string | `"1s"` | How often to check memory usage. |
 | externalServices.prometheus.processors.memoryLimiter.enabled | bool | `false` | Use a memory limiter. |
 | externalServices.prometheus.processors.memoryLimiter.limit | string | `"0MiB"` | Maximum amount of memory targeted to be allocated by the process heap. |
+| externalServices.prometheus.processors.transform.loki_resource_labels | string | `"pod, namespace, cluster, job"` | Comma-separated list of labels to be added to the Loki resource label set. |
+| externalServices.prometheus.processors.transform.custom_log_statements | list   | `[]` | Custom log statements to be added to the Loki resource label set. |
 | externalServices.prometheus.protocol | string | `"remote_write"` | The type of server protocol for writing metrics. Valid options:  "remote_write" will use Prometheus Remote Write,  "otlp" will use OTLP,  "otlphttp" will use OTLP HTTP |
 | externalServices.prometheus.proxyURL | string | `""` | HTTP proxy to proxy requests to Prometheus through. |
 | externalServices.prometheus.queryEndpoint | string | `"/api/prom/api/v1/query"` | Prometheus metrics query endpoint. Preset for Grafana Cloud Metrics instances. |
