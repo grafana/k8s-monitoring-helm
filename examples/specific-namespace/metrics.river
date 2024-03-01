@@ -296,6 +296,11 @@ prometheus.scrape "annotation_autodiscovery_https" {
 }
 
 prometheus.relabel "annotation_autodiscovery" {
+  rule {
+      source_labels = ["namespace"]
+      regex = "^$|production|staging"
+      action = "keep"
+  }
   forward_to = [prometheus.relabel.metrics_service.receiver]
 }
 
@@ -346,6 +351,11 @@ prometheus.relabel "agent" {
     source_labels = ["__name__"]
     regex = "up|agent_build_info"
     action = "keep"
+  }
+  rule {
+      source_labels = ["namespace"]
+      regex = "^$|production|staging"
+      action = "keep"
   }
   forward_to = [prometheus.relabel.metrics_service.receiver]
 }
@@ -412,6 +422,11 @@ prometheus.relabel "kubelet" {
     source_labels = ["__name__"]
     regex = "up|container_cpu_usage_seconds_total|kubelet_certificate_manager_client_expiration_renew_errors|kubelet_certificate_manager_client_ttl_seconds|kubelet_certificate_manager_server_ttl_seconds|kubelet_cgroup_manager_duration_seconds_bucket|kubelet_cgroup_manager_duration_seconds_count|kubelet_node_config_error|kubelet_node_name|kubelet_pleg_relist_duration_seconds_bucket|kubelet_pleg_relist_duration_seconds_count|kubelet_pleg_relist_interval_seconds_bucket|kubelet_pod_start_duration_seconds_bucket|kubelet_pod_start_duration_seconds_count|kubelet_pod_worker_duration_seconds_bucket|kubelet_pod_worker_duration_seconds_count|kubelet_running_container_count|kubelet_running_containers|kubelet_running_pod_count|kubelet_running_pods|kubelet_runtime_operations_errors_total|kubelet_runtime_operations_total|kubelet_server_expiration_renew_errors|kubelet_volume_stats_available_bytes|kubelet_volume_stats_capacity_bytes|kubelet_volume_stats_inodes|kubelet_volume_stats_inodes_used|kubernetes_build_info|namespace_workload_pod|rest_client_requests_total|storage_operation_duration_seconds_count|storage_operation_errors_total|volume_manager_total_volumes"
     action = "keep"
+  }
+  rule {
+      source_labels = ["namespace"]
+      regex = "^$|production|staging"
+      action = "keep"
   }
   forward_to = [prometheus.relabel.metrics_service.receiver]
 }
@@ -514,6 +529,11 @@ prometheus.relabel "cadvisor" {
     target_label = "__keepme"
     replacement = ""
   }
+  rule {
+      source_labels = ["namespace"]
+      regex = "^$|production|staging"
+      action = "keep"
+  }
   forward_to = [prometheus.relabel.metrics_service.receiver]
 }
 
@@ -552,6 +572,11 @@ prometheus.relabel "kube_state_metrics" {
     source_labels = ["__name__"]
     regex = "up|kube_daemonset.*|kube_deployment_metadata_generation|kube_deployment_spec_replicas|kube_deployment_status_observed_generation|kube_deployment_status_replicas_available|kube_deployment_status_replicas_updated|kube_horizontalpodautoscaler_spec_max_replicas|kube_horizontalpodautoscaler_spec_min_replicas|kube_horizontalpodautoscaler_status_current_replicas|kube_horizontalpodautoscaler_status_desired_replicas|kube_job.*|kube_namespace_status_phase|kube_node.*|kube_persistentvolumeclaim_resource_requests_storage_bytes|kube_pod_container_info|kube_pod_container_resource_limits|kube_pod_container_resource_requests|kube_pod_container_status_last_terminated_reason|kube_pod_container_status_restarts_total|kube_pod_container_status_waiting_reason|kube_pod_info|kube_pod_owner|kube_pod_start_time|kube_pod_status_phase|kube_pod_status_reason|kube_replicaset.*|kube_resourcequota|kube_statefulset.*"
     action = "keep"
+  }
+  rule {
+      source_labels = ["namespace"]
+      regex = "^$|production|staging"
+      action = "keep"
   }
   forward_to = [prometheus.relabel.metrics_service.receiver]
 }
@@ -599,6 +624,11 @@ prometheus.relabel "node_exporter" {
     regex = "node_filesystem.*@(tempfs)"
     action = "drop"
   }
+  rule {
+      source_labels = ["namespace"]
+      regex = "^$|production|staging"
+      action = "keep"
+  }
   forward_to = [prometheus.relabel.metrics_service.receiver]
 }
 
@@ -638,6 +668,11 @@ prometheus.relabel "opencost" {
     regex = "up|container_cpu_allocation|container_gpu_allocation|container_memory_allocation_bytes|deployment_match_labels|kubecost_cluster_info|kubecost_cluster_management_cost|kubecost_cluster_memory_working_set_bytes|kubecost_http_requests_total|kubecost_http_response_size_bytes|kubecost_http_response_time_seconds|kubecost_load_balancer_cost|kubecost_network_internet_egress_cost|kubecost_network_region_egress_cost|kubecost_network_zone_egress_cost|kubecost_node_is_spot|node_cpu_hourly_cost|node_gpu_count|node_gpu_hourly_cost|node_ram_hourly_cost|node_total_hourly_cost|opencost_build_info|pod_pvc_allocation|pv_hourly_cost|service_selector_labels|statefulSet_match_labels"
     action = "keep"
   }
+  rule {
+      source_labels = ["namespace"]
+      regex = "^$|production|staging"
+      action = "keep"
+  }
   forward_to = [prometheus.relabel.metrics_service.receiver]
 }
 
@@ -654,6 +689,11 @@ prometheus.operator.podmonitors "pod_monitors" {
 }
 
 prometheus.relabel "podmonitors" {
+  rule {
+      source_labels = ["namespace"]
+      regex = "^$|production|staging"
+      action = "keep"
+  }
   forward_to = [prometheus.relabel.metrics_service.receiver]
 }
 
@@ -670,6 +710,11 @@ prometheus.operator.probes "probes" {
 }
 
 prometheus.relabel "probes" {
+  rule {
+      source_labels = ["namespace"]
+      regex = "^$|production|staging"
+      action = "keep"
+  }
   forward_to = [prometheus.relabel.metrics_service.receiver]
 }
 
@@ -686,6 +731,11 @@ prometheus.operator.servicemonitors "service_monitors" {
 }
 
 prometheus.relabel "servicemonitors" {
+  rule {
+      source_labels = ["namespace"]
+      regex = "^$|production|staging"
+      action = "keep"
+  }
   forward_to = [prometheus.relabel.metrics_service.receiver]
 }
 
