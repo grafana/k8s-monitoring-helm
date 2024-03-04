@@ -1,7 +1,9 @@
 {{ define "agent.config.pod_monitors" }}
 // Prometheus Operator PodMonitor objects
 prometheus.operator.podmonitors "pod_monitors" {
+{{- if .Values.metrics.podMonitors.namespaces }}
   namespaces = {{ .Values.metrics.podMonitors.namespaces | toJson }}
+{{- end }}
   forward_to = [prometheus.relabel.podmonitors.receiver]
 {{- if .Values.metrics.podMonitors.selector }}
   selector {
@@ -29,7 +31,9 @@ prometheus.relabel "podmonitors" {
 {{ define "agent.config.probes" }}
 // Prometheus Operator Probe objects
 prometheus.operator.probes "probes" {
+{{- if .Values.metrics.probes.namespaces }}
   namespaces = {{ .Values.metrics.probes.namespaces | toJson }}
+{{- end }}
   forward_to = [prometheus.relabel.probes.receiver]
 {{- if .Values.metrics.probes.selector }}
   selector {
@@ -58,7 +62,9 @@ prometheus.relabel "probes" {
 {{ define "agent.config.service_monitors" }}
 // Prometheus Operator ServiceMonitor objects
 prometheus.operator.servicemonitors "service_monitors" {
+{{- if .Values.metrics.serviceMonitors.namespaces }}
   namespaces = {{ .Values.metrics.serviceMonitors.namespaces | toJson }}
+{{- end }}
   forward_to = [prometheus.relabel.servicemonitors.receiver]
 {{- if .Values.metrics.serviceMonitors.selector }}
   selector {
