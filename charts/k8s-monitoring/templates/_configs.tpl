@@ -90,7 +90,8 @@
   {{- end }}
 
   {{- if .Values.extraConfig }}
-    {{- print "\n" .Values.extraConfig }}
+    {{- print "\n" }}
+    {{- tpl .Values.extraConfig . }}
   {{- end }}
 {{- end -}}
 
@@ -107,6 +108,7 @@
   {{- include "agent.config.loki" . }}
 
   {{- if .Values.logs.extraConfig }}
-    {{- print "\n" .Values.logs.extraConfig }}
+    {{- print "\n" }}
+    {{- tpl .Values.logs.extraConfig . }}
   {{- end }}
 {{- end -}}

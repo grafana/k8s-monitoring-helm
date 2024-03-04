@@ -4,7 +4,7 @@ This example shows how custom [Grafana Agent Flow](https://grafana.com/docs/agen
 
 This can be very useful for adding new scrape targets. For more information about how to create these components, see this document on [scraping application metrics](../../charts/k8s-monitoring/docs/ScrapeApplicationMetrics.md).
 
-In the example below, note that the `discovery.relabel.my_webapp` component uses the `discovery.kubernetes.services` component that already exists in the generated configuration.
+In the example below, note that the `discovery.relabel.animal_service` component uses the `discovery.kubernetes.services` component that already exists in the generated configuration. Both of the `extraConfig` values are evaluated as templates when rendering the final configuration, so that you can use any of the helm objects or functions in them, as shown in one of the added labels in `loki.process.postgres_logs` component.
 
 ```yaml
 cluster:
@@ -81,6 +81,7 @@ logs:
         values = {
           job = "integrations/postgres_exporter",
           instance = "animaldb",
+          helm_release = {{ .Release.Name | quote }},
         }
       }
       forward_to = [loki.write.grafana_cloud_loki.receiver]

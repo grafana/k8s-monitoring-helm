@@ -186,7 +186,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | externalServices.tempo.tenantIdKey | string | `"tenantId"` | The key for the tenant ID property in the secret |
 | externalServices.tempo.tls | object | `{}` | [TLS settings](https://grafana.com/docs/agent/latest/flow/reference/components/otelcol.exporter.otlp/#tls-block) to configure for the traces service. |
 | externalServices.tempo.tlsOptions | string | `""` | Define the [TLS block](https://grafana.com/docs/agent/latest/flow/reference/components/otelcol.exporter.otlp/#tls-block). Example: `tlsOptions: insecure = true` This option will be deprecated and removed soon. Please switch to `tls` and use yaml format. |
-| extraConfig | string | `""` | Extra configuration that will be added to Grafana Agent configuration file. This cannot be used to modify the generated configuration values, only append new components. See [Adding custom Flow configuration](#adding-custom-flow-configuration) for an example. |
+| extraConfig | string | `""` | Extra configuration that will be added to Grafana Agent configuration file. This value is templated so that you can refer to other values from this file. This cannot be used to modify the generated configuration values, only append new components. See [Adding custom Flow configuration](#adding-custom-flow-configuration) for an example. |
 | extraObjects | list | `[]` | Deploy additional manifest objects |
 | global.image.pullSecrets | list | `[]` | Optional set of global image pull secrets. |
 | global.image.registry | string | `""` | Global image registry to use if it needs to be overriden for some specific use cases (e.g local registries, custom images, ...) |
@@ -195,7 +195,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | logs.cluster_events.logFormat | string | `"logfmt"` | Log format used to forward cluster events. Allowed values: `logfmt` (default), `json`. |
 | logs.cluster_events.namespaces | list | `[]` | List of namespaces to watch for events (`[]` means all namespaces) |
 | logs.enabled | bool | `true` | Capture and forward logs |
-| logs.extraConfig | string | `""` | Extra configuration that will be added to Grafana Agent Logs configuration file. This cannot be used to modify the generated configuration values, only append new components. See [Adding custom Flow configuration](#adding-custom-flow-configuration) for an example. |
+| logs.extraConfig | string | `""` | Extra configuration that will be added to Grafana Agent Logs configuration file. This value is templated so that you can refer to other values from this file. This cannot be used to modify the generated configuration values, only append new components. See [Adding custom Flow configuration](#adding-custom-flow-configuration) for an example. |
 | logs.pod_logs.annotation | string | `"k8s.grafana.com/logs.autogather"` | Pod annotation to use for controlling log discovery. |
 | logs.pod_logs.discovery | string | `"all"` | Controls the behavior of discovering pods for logs. |
 | logs.pod_logs.enabled | bool | `true` | Capture and forward logs from Kubernetes pods |
@@ -386,7 +386,7 @@ same Kubernetes cluster.
 
 ### Adding custom Flow configuration
 
-Any value supplied to the `.extraConfig` or `.logs.extraConfig` values will be appended to the generated config file.
+Any value supplied to the `.extraConfig` or `.logs.extraConfig` values will be appended to the generated config file after being templated with helm, so that you can refer to any values from this chart.
 This can be used to add more Grafana Agent Flow components to provide extra functionality to the agent.
 
 NOTE: This cannot be used to modify existing configuration values.
