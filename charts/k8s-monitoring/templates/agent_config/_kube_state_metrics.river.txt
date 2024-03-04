@@ -73,6 +73,9 @@ prometheus.relabel "kube_state_metrics" {
   }
 {{- end }}
 
+{{- if .Values.metrics.extraMetricRelabelingRules }}
+{{ .Values.metrics.extraMetricRelabelingRules | indent 2 }}
+{{- end }}
 {{- if (index .Values.metrics "kube-state-metrics").extraMetricRelabelingRules }}
 {{ (index .Values.metrics "kube-state-metrics").extraMetricRelabelingRules | indent 2 }}
 {{- end }}

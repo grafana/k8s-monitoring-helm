@@ -53,6 +53,9 @@ prometheus.relabel "kube_proxy" {
     action = "drop"
   }
 {{- end }}
+{{- if .Values.metrics.extraMetricRelabelingRules }}
+{{ .Values.metrics.extraMetricRelabelingRules | indent 2 }}
+{{- end }}
 {{- if .Values.metrics.kubeProxy.extraMetricRelabelingRules }}
 {{ .Values.metrics.kubeProxy.extraMetricRelabelingRules | indent 2 }}
 {{- end }}
