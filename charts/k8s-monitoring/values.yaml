@@ -801,9 +801,12 @@ receivers:
 # See [Adding custom Flow configuration](#adding-custom-flow-configuration) for an example.
 extraConfig: ""
 
-# Setting for the config validator job, run as a post-install and post-upgrade hook to validate that the generated
+# Setting for the config validator job, run as a pre-install and pre-upgrade hook to validate that the generated
 # configuration, including extraConfig settings are valid.
 configValidator:
+  # -- Should config validation be run?
+  enabled: true
+
   # -- nodeSelector to apply to the config validator job.
   nodeSelector:
     kubernetes.io/os: linux
@@ -817,15 +820,26 @@ configValidator:
   # -- Tolerations to apply to the config validator job.
   tolerations: []
 
-# Settings for the test job, runnable by "helm test"
+# Settings for the test job, which runs queries against Prometheus, Loki, and/or Tempo to check for data that should be
+# available based on the current configuration. Runnable by "helm test"
 test:
-  # -- Additional queries that will be run with `helm test`.
+  # -- Should `helm test` run the test job?
+  enabled: true
+
+  # -- Additional queries to run during the test.
   # NOTE that this uses the host, username, and password in the externalServices section.
   # The user account must have the ability to run queries.
   # Example:
   # extraQueries:
   #   - query: prometheus_metric{cluster="my-cluster-name"}
-  #     type: [promql|logql]
+  #     type: promql
+  #
+  # Can optionally provide expectations:
+  # - query: "avg(count_over_time(scrape_samples_scraped{cluster=~\"ci-test-cluster-2|from-the-other-agent\"}[1m]))"
+  #   type: promql
+  #   expect:
+  #     value: 1
+  #     operator: ==
   extraQueries: []
 
   # -- How many times to attempt the test job.
@@ -835,10 +849,10 @@ test:
   nodeSelector:
     kubernetes.io/os: linux
 
-  # -- Extra annotations to add to the test jobs.
+  # -- Extra annotations to add to the test job.
   extraAnnotations: {}
 
-  # -- Extra labels to add to the test jobs.
+  # -- Extra labels to add to the test job.
   extraLabels: {}
 
   # -- Tolerations to apply to the test job.
@@ -859,6 +873,36 @@ test:
     tag: ""
     # -- Optional set of image pull secrets.
     pullSecrets: []
+
+# Settings for the config analysis pod, which asks the Grafana Agent for an analysis of expected metric discoveries and
+# scrapes. Runnable by "helm test"
+configAnalysis:
+  # -- Should `helm test` run the config analysis pod?
+  enabled: true
+
+  # -- nodeSelector to apply to the config analysis pod.
+  nodeSelector:
+    kubernetes.io/os: linux
+
+  # -- Extra annotations to add to the config analysis pod.
+  extraAnnotations: {}
+
+  # -- Extra labels to add to the config analysis pod.
+  extraLabels: {}
+
+  # -- Tolerations to apply to the config analysis pod.
+  tolerations: []
+
+  image:
+    # -- Config Analysis image registry.
+    registry: ghcr.io
+    # -- Config Analysis image repository.
+    image: grafana/k8s-monitoring-test
+    # -- Config Analysis image tag. Default is the chart version.
+    tag: ""
+    # -- Optional set of image pull secrets.
+    pullSecrets: []
+
 
 ## Global properties for image pulling override the values defined under `image.registry` and `configReloader.image.registry`.
 ## If you want to override only one image registry, use the specific fields but if you want to override them all, use `global.image.registry`

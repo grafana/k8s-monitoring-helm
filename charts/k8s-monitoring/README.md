@@ -95,9 +95,9 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 
 | Repository | Name | Version |
 |------------|------|---------|
-| https://grafana.github.io/helm-charts | grafana-agent | 0.33.0 |
-| https://grafana.github.io/helm-charts | grafana-agent-events(grafana-agent) | 0.33.0 |
-| https://grafana.github.io/helm-charts | grafana-agent-logs(grafana-agent) | 0.33.0 |
+| https://grafana.github.io/helm-charts | grafana-agent | 0.35.0 |
+| https://grafana.github.io/helm-charts | grafana-agent-events(grafana-agent) | 0.35.0 |
+| https://grafana.github.io/helm-charts | grafana-agent-logs(grafana-agent) | 0.35.0 |
 | https://opencost.github.io/opencost-helm-chart | opencost | 1.28.0 |
 | https://prometheus-community.github.io/helm-charts | kube-state-metrics | 5.15.3 |
 | https://prometheus-community.github.io/helm-charts | prometheus-node-exporter | 4.25.0 |
@@ -111,6 +111,16 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | cluster.kubernetesAPIService | string | `"kubernetes.default.svc.cluster.local:443"` | The Kubernetes service. Change this if your cluster DNS is configured differently than the default. |
 | cluster.name | string | `""` | The name of this cluster, which will be set in all labels. Required. |
 | cluster.platform | string | `""` | The specific platform for this cluster. Will enable compatibility for some platforms. Supported options: (empty) or "openshift". |
+| configAnalysis.enabled | bool | `true` | Should `helm test` run the config analysis pod? |
+| configAnalysis.extraAnnotations | object | `{}` | Extra annotations to add to the config analysis pod. |
+| configAnalysis.extraLabels | object | `{}` | Extra labels to add to the config analysis pod. |
+| configAnalysis.image.image | string | `"grafana/k8s-monitoring-test"` | Config Analysis image repository. |
+| configAnalysis.image.pullSecrets | list | `[]` | Optional set of image pull secrets. |
+| configAnalysis.image.registry | string | `"ghcr.io"` | Config Analysis image registry. |
+| configAnalysis.image.tag | string | `""` | Config Analysis image tag. Default is the chart version. |
+| configAnalysis.nodeSelector | object | `{"kubernetes.io/os":"linux"}` | nodeSelector to apply to the config analysis pod. |
+| configAnalysis.tolerations | list | `[]` | Tolerations to apply to the config analysis pod. |
+| configValidator.enabled | bool | `true` | Should config validation be run? |
 | configValidator.extraAnnotations | object | `{}` | Extra annotations to add to the test config validator job. |
 | configValidator.extraLabels | object | `{}` | Extra labels to add to the test config validator job. |
 | configValidator.nodeSelector | object | `{"kubernetes.io/os":"linux"}` | nodeSelector to apply to the config validator job. |
@@ -354,10 +364,11 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | receivers.zipkin.enabled | bool | `false` | Receive Zipkin traces |
 | receivers.zipkin.port | int | `9411` | Which port to use for the Zipkin receiver. This port needs to be opened in the grafana-agent section below. |
 | test.attempts | int | `10` | How many times to attempt the test job. |
+| test.enabled | bool | `true` | Should `helm test` run the test job? |
 | test.envOverrides | object | `{"LOKI_URL":"","PROMETHEUS_URL":"","TEMPO_URL":""}` | Overrides the URLs for various data sources |
-| test.extraAnnotations | object | `{}` | Extra annotations to add to the test jobs. |
-| test.extraLabels | object | `{}` | Extra labels to add to the test jobs. |
-| test.extraQueries | list | `[]` | Additional queries that will be run with `helm test`. NOTE that this uses the host, username, and password in the externalServices section. The user account must have the ability to run queries. Example: extraQueries:   - query: prometheus_metric{cluster="my-cluster-name"}     type: [promql|logql] |
+| test.extraAnnotations | object | `{}` | Extra annotations to add to the test job. |
+| test.extraLabels | object | `{}` | Extra labels to add to the test job. |
+| test.extraQueries | list | `[]` | Additional queries to run during the test. NOTE that this uses the host, username, and password in the externalServices section. The user account must have the ability to run queries. Example: extraQueries:   - query: prometheus_metric{cluster="my-cluster-name"}     type: promql  Can optionally provide expectations: - query: "avg(count_over_time(scrape_samples_scraped{cluster=~\"ci-test-cluster-2|from-the-other-agent\"}[1m]))"   type: promql   expect:     value: 1     operator: == |
 | test.image.image | string | `"grafana/k8s-monitoring-test"` | Test job image repository. |
 | test.image.pullSecrets | list | `[]` | Optional set of image pull secrets. |
 | test.image.registry | string | `"ghcr.io"` | Test job image registry. |
