@@ -207,6 +207,14 @@ data:
       }
     }
     
+    otelcol.connector.host_info "default" {
+      // https://grafana.com/docs/agent/latest/flow/reference/components/otelcol.connector.host_info/
+      host_identifiers = [ "k8s.node.name" ]
+      output {
+        metrics = [otelcol.processor.batch.batch_processor.input]
+      }
+    }
+    
     otelcol.processor.transform "add_resource_attributes" {
       // Grafana Cloud Kubernetes monitoring expects Loki labels `cluster`, `pod`, and `namespace`
       error_mode = "ignore"
@@ -44996,6 +45004,14 @@ data:
       output {
         metrics = [otelcol.processor.transform.add_resource_attributes.input]
         logs    = [otelcol.processor.transform.add_resource_attributes.input]
+      }
+    }
+    
+    otelcol.connector.host_info "default" {
+      // https://grafana.com/docs/agent/latest/flow/reference/components/otelcol.connector.host_info/
+      host_identifiers = [ "k8s.node.name" ]
+      output {
+        metrics = [otelcol.processor.batch.batch_processor.input]
       }
     }
     
