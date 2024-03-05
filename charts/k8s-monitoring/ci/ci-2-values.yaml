@@ -3,6 +3,7 @@
 # * Sending metrics via OTLP HTTP
 # * Sending traces via OTLP HTTP
 # * Access kubelet and cadvisor metrics using the proxy
+# * Pod logs gathered via K8s API and PodLogs objects
 # * Filtering pod logs by namespace
 # * Custom test queries, including LogQL and TraceQL queries
 #
@@ -52,9 +53,17 @@ logs:
       - default
       - loki
       - prometheus
-      - grafana
       - tempo
       - monitoring
+  podLogsObjects:
+    enabled: true
+    namespaces: [grafana]
+    extraStageBlocks: |
+      stage.static_labels {
+        values = {
+          source = "podlogs_object",
+        }
+      }
 
 traces:
   enabled: true
@@ -83,11 +92,15 @@ test:
   - query: "count_over_time({cluster=\"ci-test-cluster-2\", job=\"integrations/kubernetes/eventhandler\"}[1h])"
     type: logql
 
-  # Check for pod logs (gathered via API)
+    # Check for pod logs (gathered via API)
   - query: "count_over_time({cluster=\"ci-test-cluster-2\", job!=\"integrations/kubernetes/eventhandler\"}[1h])"
     type: logql
 
-  # Check for traces
+    # Check for pod logs (gathered via PodLogs)
+  - query: "count_over_time({cluster=\"ci-test-cluster-2\", job=\"grafana/test-podlogs-object\", source=\"podlogs_object\"}[1h])"
+    type: logql
+
+    # Check for traces
   - query: "{.k8s.cluster.name=\"ci-test-cluster-2\"}"
     type: traceql
 

@@ -586,11 +586,14 @@ metrics:
       excludeMetrics: []
 
   podMonitors:
-    # -- Include service discovery for PodMonitor objects
+    # -- Enable discovery of Prometheus Operator PodMonitor objects.
     enabled: true
 
     # -- Which namespaces to look for PodMonitor objects.
     namespaces: []
+
+    # -- Selector to filter which PodMonitor objects to use.
+    selector: ""
 
     # -- How frequently to scrape metrics from PodMonitor objects. Only used if the PodMonitor does not specify the scrape interval.
     # Overrides metrics.scrapeInterval
@@ -600,15 +603,15 @@ metrics:
     # -- Rule blocks to be added to the prometheus.relabel component for PodMonitor objects. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block))
     extraMetricRelabelingRules: ""
 
-    # -- Which podMonitor objects to select
-    selector: ""
-
   probes:
-    # -- Include service discovery for Probe objects.
+    # -- Enable discovery of Prometheus Operator Probe objects.
     enabled: true
 
     # -- Which namespaces to look for Probe objects.
     namespaces: []
+
+    # -- Selector to filter which Probes objects to use.
+    selector: ""
 
     # -- How frequently to scrape metrics from Probe objects. Only used if the Probe does not specify the scrape interval.
     # Overrides metrics.scrapeInterval
@@ -618,15 +621,15 @@ metrics:
     # -- Rule blocks to be added to the prometheus.relabel component for Probe objects. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block))
     extraMetricRelabelingRules: ""
 
-    # -- Which probe objects to select
-    selector: ""
-
   serviceMonitors:
-    # -- Include service discovery for ServiceMonitor objects
+    # -- Enable discovery of Prometheus Operator ServiceMonitor objects.
     enabled: true
 
     # -- Which namespaces to look for ServiceMonitor objects.
     namespaces: []
+
+    # -- Selector to filter which ServiceMonitor objects to use.
+    selector: ""
 
     # -- How frequently to scrape metrics from ServiceMonitor objects. Only used if the ServiceMonitor does not specify the scrape interval.
     # Overrides metrics.scrapeInterval
@@ -636,8 +639,6 @@ metrics:
     # -- Rule blocks to be added to the prometheus.relabel component for ServiceMonitor objects. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block))
     extraMetricRelabelingRules: ""
 
-    # -- Which serviceMonitors objects to select
-    selector: ""
 
   kubernetesMonitoring:
     # -- Report telemetry about this Kubernetes Monitoring chart as a metric.
@@ -688,6 +689,19 @@ logs:
     gatherMethod: "volumes"
 
     # -- Stage blocks to be added to the loki.process component for pod logs. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/loki.process/#blocks))
+    extraStageBlocks: ""
+
+  podLogsObjects:
+    # -- Enable discovery of Grafana Agent PodLogs objects.
+    enabled: false
+
+    # -- Which namespaces to look for PodLogs objects.
+    namespaces: []
+
+    # -- Selector to filter which PodLogs objects to use.
+    selector: ""
+
+    # -- Stage blocks to be added to the loki.process component for logs gathered via PodLogs objects. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/loki.process/#blocks))
     extraStageBlocks: ""
 
   # Settings for scraping Kubernetes cluster events

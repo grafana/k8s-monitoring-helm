@@ -9,6 +9,7 @@ Any files that are named `*-values.yaml` will be used for testing.
 * `ci-2-values.yaml`
   * Sending metrics via OTLP HTTP
   * Sending traces via OTLP HTTP
+  * Pod logs gathered via K8s API and PodLogs objects
   * Filtering pod logs by namespace
   * Custom test queries, including LogQL and TraceQL queries
 * `ci-integrations-values.yaml`

@@ -105,6 +105,10 @@
 {{- define "agentLogsConfig" -}}
   {{- include "agent.config.logs.pod_logs_discovery" . }}
   {{- include "agent.config.logs.pod_logs_processor" . }}
+  {{- if .Values.logs.podLogsObjects.enabled }}
+    {{- include "agent.config.pod_log_objects" . }}
+  {{- end }}
+
   {{- include "agent.config.loki" . }}
 
   {{- if .Values.logs.extraConfig }}
