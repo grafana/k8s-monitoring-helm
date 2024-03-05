@@ -19,6 +19,7 @@ env:
   LOKI_VALUES: "${{ github.workspace }}/.github/configs/loki.yaml"
   TEMPO_VALUES: ""  # No values for now
   GRAFANA_VALUES: "${{ github.workspace }}/.github/configs/grafana.yaml"
+  PODLOGS_OBJECTS: "${{ github.workspace }}/.github/configs/podlogs.yaml"
   MYSQL_VALUES: "${{ github.workspace }}/.github/configs/mysql.yaml"
   MYSQL_CONFIG_MANIFEST: "${{ github.workspace }}/.github/configs/mysql-config.yaml"
   CERT_MANAGER_VALUES: "${{ github.workspace }}/.github/configs/cert-manager.yaml"
@@ -196,6 +197,7 @@ jobs:
       if: steps.list-changed.outputs.changed == 'true'
       run: |
         helm install grafana grafana/grafana -f "${GRAFANA_VALUES}" -n grafana --create-namespace --wait
+        kubectl apply -f "${PODLOGS_OBJECTS}"
 
     - name: Test chart
       if: steps.list-changed.outputs.changed == 'true'
