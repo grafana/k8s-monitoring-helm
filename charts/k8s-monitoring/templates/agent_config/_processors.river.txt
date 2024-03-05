@@ -47,18 +47,24 @@ otelcol.processor.k8sattributes "default" {
     logs    = [otelcol.processor.transform.add_resource_attributes.input]
 {{- end }}
 {{- if .Values.traces.enabled }}
-    traces  = [otelcol.processor.transform.add_resource_attributes.input, otelcol.connector.host_info.default.input]
+    traces  = [
+      otelcol.processor.transform.add_resource_attributes.input, 
+    {{- if .Values.metrics.enabled }}
+      otelcol.connector.host_info.default.input,
+    {{- end }}
+    ]
 {{- end }}
   }
 }
 
+{{- if and .Values.metrics.enabled .Values.traces.enabled }}
 otelcol.connector.host_info "default" {
-  // https://grafana.com/docs/agent/latest/flow/reference/components/otelcol.connector.host_info/
   host_identifiers = [ "k8s.node.name" ]
   output {
     metrics = [otelcol.processor.batch.batch_processor.input]
   }
 }
+{{- end }}
 
 otelcol.processor.transform "add_resource_attributes" {
   // Grafana Cloud Kubernetes monitoring expects Loki labels `cluster`, `pod`, and `namespace`
