@@ -10,6 +10,7 @@ CREDENTIALS="./.github/configs/credentials.yaml"
 LOKI_VALUES="./.github/configs/loki.yaml"
 #TEMPO_VALUES=""  # No values for now
 GRAFANA_VALUES="./.github/configs/grafana.yaml"
+PODLOGS_OBJECTS="./.github/configs/podlogs.yaml"
 MYSQL_VALUES="./.github/configs/mysql.yaml"
 MYSQL_CONFIG_MANIFEST="./.github/configs/mysql-config.yaml"
 CERT_MANAGER_VALUES="./.github/configs/cert-manager.yaml"
@@ -61,6 +62,7 @@ helm upgrade --install tempo grafana/tempo -n tempo --create-namespace --wait
 
 echo "Deploying Grafana..."
 helm upgrade --install grafana grafana/grafana -f "${GRAFANA_VALUES}" -n grafana --create-namespace --wait
+kubectl apply -f "${PODLOGS_OBJECTS}"
 
 if [ -n "${K8SMON_VALUES}" ]; then
   helm upgrade --install k8smon "${K8SMON_CHART_PATH}" -f "${K8SMON_VALUES}" -n monitoring --create-namespace --wait

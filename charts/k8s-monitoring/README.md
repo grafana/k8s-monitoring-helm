@@ -196,6 +196,10 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | logs.cluster_events.namespaces | list | `[]` | List of namespaces to watch for events (`[]` means all namespaces) |
 | logs.enabled | bool | `true` | Capture and forward logs |
 | logs.extraConfig | string | `""` | Extra configuration that will be added to Grafana Agent Logs configuration file. This value is templated so that you can refer to other values from this file. This cannot be used to modify the generated configuration values, only append new components. See [Adding custom Flow configuration](#adding-custom-flow-configuration) for an example. |
+| logs.podLogsObjects.enabled | bool | `false` | Enable discovery of Grafana Agent PodLogs objects. |
+| logs.podLogsObjects.extraStageBlocks | string | `""` | Stage blocks to be added to the loki.process component for logs gathered via PodLogs objects. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/loki.process/#blocks)) |
+| logs.podLogsObjects.namespaces | list | `[]` | Which namespaces to look for PodLogs objects. |
+| logs.podLogsObjects.selector | string | `""` | Selector to filter which PodLogs objects to use. |
 | logs.pod_logs.annotation | string | `"k8s.grafana.com/logs.autogather"` | Pod annotation to use for controlling log discovery. |
 | logs.pod_logs.discovery | string | `"all"` | Controls the behavior of discovering pods for logs. |
 | logs.pod_logs.enabled | bool | `true` | Capture and forward logs from Kubernetes pods |
@@ -306,23 +310,23 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | metrics.node-exporter.metricsTuning.useIntegrationAllowList | bool | `false` | Filter the list of metrics from Node Exporter to the minimal set required for Kubernetes Monitoring as well as the Node Exporter integration. |
 | metrics.node-exporter.scrapeInterval | string | 60s | How frequently to scrape metrics from Node Exporter. Overrides metrics.scrapeInterval |
 | metrics.node-exporter.service.isTLS | bool | `false` | Does this port use TLS? |
-| metrics.podMonitors.enabled | bool | `true` | Include service discovery for PodMonitor objects |
+| metrics.podMonitors.enabled | bool | `true` | Enable discovery of Prometheus Operator PodMonitor objects. |
 | metrics.podMonitors.extraMetricRelabelingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for PodMonitor objects. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block)) |
 | metrics.podMonitors.namespaces | list | `[]` | Which namespaces to look for PodMonitor objects. |
 | metrics.podMonitors.scrapeInterval | string | 60s | How frequently to scrape metrics from PodMonitor objects. Only used if the PodMonitor does not specify the scrape interval. Overrides metrics.scrapeInterval |
-| metrics.podMonitors.selector | string | `""` | Which podMonitor objects to select |
-| metrics.probes.enabled | bool | `true` | Include service discovery for Probe objects. |
+| metrics.podMonitors.selector | string | `""` | Selector to filter which PodMonitor objects to use. |
+| metrics.probes.enabled | bool | `true` | Enable discovery of Prometheus Operator Probe objects. |
 | metrics.probes.extraMetricRelabelingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for Probe objects. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block)) |
 | metrics.probes.namespaces | list | `[]` | Which namespaces to look for Probe objects. |
 | metrics.probes.scrapeInterval | string | 60s | How frequently to scrape metrics from Probe objects. Only used if the Probe does not specify the scrape interval. Overrides metrics.scrapeInterval |
-| metrics.probes.selector | string | `""` | Which probe objects to select |
+| metrics.probes.selector | string | `""` | Selector to filter which Probes objects to use. |
 | metrics.receiver.filters | object | `{"datapoint":[],"metric":[]}` | Apply a filter to metrics received via the OTLP or OTLP HTTP receivers. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/otelcol.processor.filter/)) |
 | metrics.scrapeInterval | string | `"60s"` | How frequently to scrape metrics |
-| metrics.serviceMonitors.enabled | bool | `true` | Include service discovery for ServiceMonitor objects |
+| metrics.serviceMonitors.enabled | bool | `true` | Enable discovery of Prometheus Operator ServiceMonitor objects. |
 | metrics.serviceMonitors.extraMetricRelabelingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for ServiceMonitor objects. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block)) |
 | metrics.serviceMonitors.namespaces | list | `[]` | Which namespaces to look for ServiceMonitor objects. |
 | metrics.serviceMonitors.scrapeInterval | string | 60s | How frequently to scrape metrics from ServiceMonitor objects. Only used if the ServiceMonitor does not specify the scrape interval. Overrides metrics.scrapeInterval |
-| metrics.serviceMonitors.selector | string | `""` | Which serviceMonitors objects to select |
+| metrics.serviceMonitors.selector | string | `""` | Selector to filter which ServiceMonitor objects to use. |
 | metrics.windows-exporter.enabled | bool | `false` | Scrape node metrics |
 | metrics.windows-exporter.extraMetricRelabelingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for Windows Exporter. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block)) |
 | metrics.windows-exporter.extraRelabelingRules | string | `""` | Rule blocks to be added to the discovery.relabel component for Windows Exporter. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block)) |
