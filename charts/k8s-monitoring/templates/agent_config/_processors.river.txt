@@ -67,19 +67,20 @@ otelcol.connector.host_info "default" {
 
 otelcol.processor.batch "host_info_batch" {
   output {
+  {{- if or (eq .Values.externalServices.prometheus.protocol "otlp") (eq .Values.externalServices.prometheus.protocol "otlphttp") }}
+    metrics = [otelcol.processor.batch.metrics_service.input]
+  }
+}
+  {{- end }}
+  {{- if eq .Values.externalServices.prometheus.protocol "remote_write" }}
     metrics = [otelcol.exporter.prometheus.host_info_metrics.input]
   }
 }
 
 otelcol.exporter.prometheus "host_info_metrics" {
   add_metric_suffixes = false
-  {{- if eq .Values.externalServices.prometheus.protocol "remote_write" }}
-    forward_to = [prometheus.remote_write.metrics_service.receiver]
-  }
-  {{- end }}
-  {{- if or (eq .Values.externalServices.prometheus.protocol "otlp") (eq .Values.externalServices.prometheus.protocol "otlphttp") }}
-    forward_to = [otelcol.receiver.prometheus.metrics_service.receiver]
-  }
+  forward_to = [prometheus.remote_write.metrics_service.receiver]
+}
   {{- end }}
 {{- end }}
 
