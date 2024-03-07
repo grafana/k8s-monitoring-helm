@@ -47,10 +47,42 @@ otelcol.processor.k8sattributes "default" {
     logs    = [otelcol.processor.transform.add_resource_attributes.input]
 {{- end }}
 {{- if .Values.traces.enabled }}
-    traces  = [otelcol.processor.transform.add_resource_attributes.input]
+    traces  = [
+      otelcol.processor.transform.add_resource_attributes.input, 
+    {{- if .Values.metrics.enabled }}
+      otelcol.connector.host_info.default.input,
+    {{- end }}
+    ]
 {{- end }}
   }
 }
+
+{{- if and .Values.metrics.enabled .Values.traces.enabled }}
+otelcol.connector.host_info "default" {
+  host_identifiers = [ "k8s.node.name" ]
+  output {
+    metrics = [otelcol.processor.batch.host_info_batch.input]
+  }
+}
+
+otelcol.processor.batch "host_info_batch" {
+  output {
+  {{- if or (eq .Values.externalServices.prometheus.protocol "otlp") (eq .Values.externalServices.prometheus.protocol "otlphttp") }}
+    metrics = [otelcol.processor.batch.metrics_service.input]
+  }
+}
+  {{- end }}
+  {{- if eq .Values.externalServices.prometheus.protocol "remote_write" }}
+    metrics = [otelcol.exporter.prometheus.host_info_metrics.input]
+  }
+}
+
+otelcol.exporter.prometheus "host_info_metrics" {
+  add_metric_suffixes = false
+  forward_to = [prometheus.remote_write.metrics_service.receiver]
+}
+  {{- end }}
+{{- end }}
 
 otelcol.processor.transform "add_resource_attributes" {
   // Grafana Cloud Kubernetes monitoring expects Loki labels `cluster`, `pod`, and `namespace`
