@@ -133,6 +133,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | externalServices.loki.externalLabels | object | `{}` | Custom labels to be added to all logs and events |
 | externalServices.loki.host | string | `""` | Loki host where logs and events will be sent |
 | externalServices.loki.hostKey | string | `"host"` | The key for the host property in the secret |
+| externalServices.loki.protocol | string | `"loki"` | The type of server protocol for writing metrics. Valid options:  "loki" will use Loki's HTTP API,  "otlp" will use OTLP,  "otlphttp" will use OTLP HTTP |
 | externalServices.loki.proxyURL | string | `""` | HTTP proxy to proxy requests to Loki through. |
 | externalServices.loki.queryEndpoint | string | `"/loki/api/v1/query"` | Loki logs query endpoint. |
 | externalServices.loki.secret.create | bool | `true` | Should this Helm chart create the secret. If false, you must define the name and namespace values. |

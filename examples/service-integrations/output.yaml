@@ -880,15 +880,21 @@ data:
       stage.label_drop {
         values = ["filename", "tmp_container_runtime"]
       }
-      forward_to = [loki.write.grafana_cloud_loki.receiver]
+      forward_to = [loki.process.logs_service.receiver]
     }
     
-    // Loki
+    // Logs Service
     remote.kubernetes.secret "logs_service" {
       name = "loki-k8s-monitoring"
       namespace = "default"
     }
-    loki.write "grafana_cloud_loki" {
+    
+    loki.process "logs_service" {
+      forward_to = [loki.write.logs_service.receiver]
+    }
+    
+    // Loki
+    loki.write "logs_service" {
       endpoint {
         url = nonsensitive(remote.kubernetes.secret.logs_service.data["host"]) + "/loki/api/v1/push"
         tenant_id = nonsensitive(remote.kubernetes.secret.logs_service.data["tenantId"])
@@ -902,6 +908,7 @@ data:
         cluster = "service-integrations-test",
       }
     }
+    
     
     remote.kubernetes.configmap "mysql_config" {
       name = "mysql-monitoring"
@@ -935,15 +942,21 @@ data:
     loki.source.kubernetes_events "cluster_events" {
       job_name   = "integrations/kubernetes/eventhandler"
       log_format = "logfmt"
-      forward_to = [loki.write.grafana_cloud_loki.receiver]
+      forward_to = [loki.process.logs_service.receiver]
     }
     
-    // Loki
+    // Logs Service
     remote.kubernetes.secret "logs_service" {
       name = "loki-k8s-monitoring"
       namespace = "default"
     }
-    loki.write "grafana_cloud_loki" {
+    
+    loki.process "logs_service" {
+      forward_to = [loki.write.logs_service.receiver]
+    }
+    
+    // Loki
+    loki.write "logs_service" {
       endpoint {
         url = nonsensitive(remote.kubernetes.secret.logs_service.data["host"]) + "/loki/api/v1/push"
         tenant_id = nonsensitive(remote.kubernetes.secret.logs_service.data["tenantId"])
@@ -1071,15 +1084,21 @@ data:
       stage.label_drop {
         values = ["filename", "tmp_container_runtime"]
       }
-      forward_to = [loki.write.grafana_cloud_loki.receiver]
+      forward_to = [loki.process.logs_service.receiver]
     }
     
-    // Loki
+    // Logs Service
     remote.kubernetes.secret "logs_service" {
       name = "loki-k8s-monitoring"
       namespace = "default"
     }
-    loki.write "grafana_cloud_loki" {
+    
+    loki.process "logs_service" {
+      forward_to = [loki.write.logs_service.receiver]
+    }
+    
+    // Loki
+    loki.write "logs_service" {
       endpoint {
         url = nonsensitive(remote.kubernetes.secret.logs_service.data["host"]) + "/loki/api/v1/push"
         tenant_id = nonsensitive(remote.kubernetes.secret.logs_service.data["tenantId"])
@@ -1094,6 +1113,7 @@ data:
       }
     }
     
+    
     remote.kubernetes.configmap "mysql_config" {
       name = "mysql-monitoring"
       namespace = "mysql"
@@ -1105,7 +1125,7 @@ data:
       arguments {
         instance = "primary"
         all_pods = discovery.relabel.pod_logs.output
-        logs_destination = loki.write.grafana_cloud_loki.receiver
+        logs_destination = loki.process.logs_service.receiver
       }
     }
 ---
@@ -45695,15 +45715,21 @@ data:
       stage.label_drop {
         values = ["filename", "tmp_container_runtime"]
       }
-      forward_to = [loki.write.grafana_cloud_loki.receiver]
+      forward_to = [loki.process.logs_service.receiver]
     }
     
-    // Loki
+    // Logs Service
     remote.kubernetes.secret "logs_service" {
       name = "loki-k8s-monitoring"
       namespace = "default"
     }
-    loki.write "grafana_cloud_loki" {
+    
+    loki.process "logs_service" {
+      forward_to = [loki.write.logs_service.receiver]
+    }
+    
+    // Loki
+    loki.write "logs_service" {
       endpoint {
         url = nonsensitive(remote.kubernetes.secret.logs_service.data["host"]) + "/loki/api/v1/push"
         tenant_id = nonsensitive(remote.kubernetes.secret.logs_service.data["tenantId"])
@@ -45717,6 +45743,7 @@ data:
         cluster = "service-integrations-test",
       }
     }
+    
     
     remote.kubernetes.configmap "mysql_config" {
       name = "mysql-monitoring"
@@ -45742,15 +45769,21 @@ data:
     loki.source.kubernetes_events "cluster_events" {
       job_name   = "integrations/kubernetes/eventhandler"
       log_format = "logfmt"
-      forward_to = [loki.write.grafana_cloud_loki.receiver]
+      forward_to = [loki.process.logs_service.receiver]
     }
     
-    // Loki
+    // Logs Service
     remote.kubernetes.secret "logs_service" {
       name = "loki-k8s-monitoring"
       namespace = "default"
     }
-    loki.write "grafana_cloud_loki" {
+    
+    loki.process "logs_service" {
+      forward_to = [loki.write.logs_service.receiver]
+    }
+    
+    // Loki
+    loki.write "logs_service" {
       endpoint {
         url = nonsensitive(remote.kubernetes.secret.logs_service.data["host"]) + "/loki/api/v1/push"
         tenant_id = nonsensitive(remote.kubernetes.secret.logs_service.data["tenantId"])
@@ -45870,15 +45903,21 @@ data:
       stage.label_drop {
         values = ["filename", "tmp_container_runtime"]
       }
-      forward_to = [loki.write.grafana_cloud_loki.receiver]
+      forward_to = [loki.process.logs_service.receiver]
     }
     
-    // Loki
+    // Logs Service
     remote.kubernetes.secret "logs_service" {
       name = "loki-k8s-monitoring"
       namespace = "default"
     }
-    loki.write "grafana_cloud_loki" {
+    
+    loki.process "logs_service" {
+      forward_to = [loki.write.logs_service.receiver]
+    }
+    
+    // Loki
+    loki.write "logs_service" {
       endpoint {
         url = nonsensitive(remote.kubernetes.secret.logs_service.data["host"]) + "/loki/api/v1/push"
         tenant_id = nonsensitive(remote.kubernetes.secret.logs_service.data["tenantId"])
@@ -45893,6 +45932,7 @@ data:
       }
     }
     
+    
     remote.kubernetes.configmap "mysql_config" {
       name = "mysql-monitoring"
       namespace = "mysql"
@@ -45904,7 +45944,7 @@ data:
       arguments {
         instance = "primary"
         all_pods = discovery.relabel.pod_logs.output
-        logs_destination = loki.write.grafana_cloud_loki.receiver
+        logs_destination = loki.process.logs_service.receiver
       }
     }
 ---

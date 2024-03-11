@@ -1,0 +1,20 @@
+{{ define "agent.config.logsService" }}
+// Logs Service
+remote.kubernetes.secret "logs_service" {
+  name = {{ include "kubernetes_monitoring.logs_service.secret.name" . | quote}}
+  namespace = {{ .Values.externalServices.loki.secret.namespace | default .Release.Namespace | quote }}
+}
+
+loki.process "logs_service" {
+{{- if eq .Values.externalServices.loki.protocol "loki" }}
+  forward_to = [loki.write.logs_service.receiver]
+}
+{{ include "agent.config.logsServiceLoki" . }}
+{{- end }}
+
+{{- if or (eq .Values.externalServices.loki.protocol "otlp") (eq .Values.externalServices.loki.protocol "otlphttp") }}
+  forward_to = [otelcol.receiver.loki.logs_service.receiver]
+}
+{{ include "agent.config.logsServiceOTLP" . }}
+{{ end }}
+{{ end }}
