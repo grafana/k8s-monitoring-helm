@@ -1,0 +1,51 @@
+# This config is for a stand-alone Grafana Agent that will receive OTLP logs and translate them before sending to Loki.
+agent:
+  extraPorts:
+    - name: "otlp-grpc"
+      port: 4317
+      targetPort: 4317
+      protocol: "TCP"
+    - name: "otlp-http"
+      port: 4318
+      targetPort: 4318
+      protocol: "TCP"
+
+  configMap:
+    content: |-
+      otelcol.receiver.otlp "default" {
+        http {}
+        grpc {}
+      
+        output {
+          logs = [otelcol.processor.batch.default.input]
+        }
+      }
+      
+      otelcol.processor.batch "default" {
+        output {
+          logs = [otelcol.exporter.loki.default.input]
+        }
+      }
+
+      otelcol.exporter.loki "default" {
+        forward_to = [loki.write.default.receiver]
+      }
+
+      remote.kubernetes.secret "loki" {
+        name = "loki-k8s-monitoring"
+        namespace = "monitoring"
+      }
+
+      loki.write "default" {
+        endpoint {
+          url = "http://loki.loki.svc:3100/loki/api/v1/push"
+          tenant_id = nonsensitive(remote.kubernetes.secret.loki.data["tenantId"])
+          basic_auth {
+            username = nonsensitive(remote.kubernetes.secret.loki.data["username"])
+            password = remote.kubernetes.secret.loki.data["password"]
+          }
+        }
+      }
+
+crds:
+  create: false
