@@ -773,6 +773,11 @@ remote.kubernetes.secret "logs_service" {
 }
 
 loki.process "logs_service" {
+  stage.static_labels {
+      values = {
+        cluster = "proxies-test",
+      }
+  }
   forward_to = [loki.write.logs_service.receiver]
 }
 
@@ -790,8 +795,5 @@ loki.write "logs_service" {
     tls_config {
       insecure_skip_verify = true
     }
-  }
-  external_labels = {
-    cluster = "proxies-test",
   }
 }

@@ -113,6 +113,11 @@ remote.kubernetes.secret "logs_service" {
 }
 
 loki.process "logs_service" {
+  stage.static_labels {
+      values = {
+        cluster = "cluster-with-pvc-test",
+      }
+  }
   forward_to = [loki.write.logs_service.receiver]
 }
 
@@ -130,6 +135,5 @@ loki.write "logs_service" {
   external_labels = {
     region = "southwest",
     tenant = "widgetco",
-    cluster = "cluster-with-pvc-test",
   }
 }

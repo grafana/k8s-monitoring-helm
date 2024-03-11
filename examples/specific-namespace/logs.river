@@ -118,6 +118,11 @@ remote.kubernetes.secret "logs_service" {
 }
 
 loki.process "logs_service" {
+  stage.static_labels {
+      values = {
+        cluster = "specific-namespace-test",
+      }
+  }
   forward_to = [loki.write.logs_service.receiver]
 }
 
@@ -131,8 +136,5 @@ loki.write "logs_service" {
       username = nonsensitive(remote.kubernetes.secret.logs_service.data["username"])
       password = remote.kubernetes.secret.logs_service.data["password"]
     }
-  }
-  external_labels = {
-    cluster = "specific-namespace-test",
   }
 }
