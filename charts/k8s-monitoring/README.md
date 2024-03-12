@@ -409,7 +409,7 @@ useful ones like these:
 * `discovery.kubernetes.pods` - Discovers all pods in the cluster
 * `discovery.kubernetes.services` - Discovers all services in the cluster
 * `prometheus.relabel.metrics_service` - Sends metrics to the metrics service defined by `.externalService.prometheus`
-* `loki.write.grafana_cloud_loki` - Sends logs to Loki defined by `.externalService.loki`
+* `loki.process.logs_service` - Sends logs to the logs service defined by `.externalService.loki`
 
 Example:
 
