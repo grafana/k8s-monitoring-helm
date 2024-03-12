@@ -147,6 +147,23 @@ externalServices:
     # -- [TLS settings](https://grafana.com/docs/agent/latest/flow/reference/components/loki.write/#tls_config-block) to configure for the logs service.
     tls: {}
 
+    # Log processor settings. Only applies when protocol is "otlp" or "otlphttp"
+    processors:
+      batch:
+        # -- Amount of data to buffer before flushing the batch.
+        size: 8192
+        # -- Upper limit of a batch size. When set to 0, there is no upper limit.
+        maxSize: 0
+        # -- How long to wait before flushing the batch.
+        timeout: 2s
+      memoryLimiter:
+        # -- Use a memory limiter.
+        enabled: false
+        # -- How often to check memory usage.
+        checkInterval: 1s
+        # -- Maximum amount of memory targeted to be allocated by the process heap.
+        limit: 0MiB
+
   # Connection information for Grafana Tempo
   tempo:
     # -- Tempo host where traces will be sent

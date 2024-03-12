@@ -1,7 +1,44 @@
 {{ define "agent.config.logsServiceOTLP" }}
-{{ with .Values.externalServices.loki }}
 otelcol.receiver.loki "logs_service" {
   output {
+    logs = [otelcol.processor.attributes.logs_service.input]
+  }
+}
+
+otelcol.processor.attributes "logs_service" {
+  action {
+    key = "k8s.cluster.name"
+    value = {{ required ".Values.cluster.name is a required value. Please set it and try again." .Values.cluster.name | quote }}
+    action = "upsert"
+  }
+{{ with .Values.externalServices.loki }}
+  {{- range $key, $value := .externalLabels }}
+  action {
+    key = {{ $key | quote }}
+    value = {{ $value | quote }}
+    action = "upsert"
+  }
+  {{- end }}
+  output {
+    logs = [otelcol.processor.batch.logs_service.input]
+  }
+}
+
+otelcol.processor.batch "logs_service" {
+  send_batch_size = {{ .processors.batch.size | int }}
+  send_batch_max_size = {{ .processors.batch.maxSize | int }}
+  timeout = {{ .processors.batch.timeout | quote}}
+  output {
+{{- if .processors.memoryLimiter.enabled }}
+    logs = [otelcol.processor.memory_limiter.logs_service.input]
+  }
+}
+
+otelcol.processor.memory_limiter "logs_service" {
+  check_interval = {{ .processors.memoryLimiter.checkInterval | quote }}
+  limit = {{ .processors.memoryLimiter.limit | quote }}
+  output {
+{{- end }}
 {{- if eq .protocol "otlp" }}
     logs = [otelcol.exporter.otlp.logs_service.input]
 {{- end }}
@@ -10,7 +47,6 @@ otelcol.receiver.loki "logs_service" {
 {{- end }}
   }
 }
-
 {{ if eq .authMode "basic" }}
 otelcol.auth.basic "logs_service" {
   username = nonsensitive(remote.kubernetes.secret.logs_service.data[{{ .basicAuth.usernameKey | quote }}])
