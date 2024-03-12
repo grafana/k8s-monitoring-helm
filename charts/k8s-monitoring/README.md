@@ -139,6 +139,12 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | externalServices.loki.externalLabels | object | `{}` | Custom labels to be added to all logs and events |
 | externalServices.loki.host | string | `""` | Loki host where logs and events will be sent |
 | externalServices.loki.hostKey | string | `"host"` | The key for the host property in the secret |
+| externalServices.loki.processors.batch.maxSize | int | `0` | Upper limit of a batch size. When set to 0, there is no upper limit. |
+| externalServices.loki.processors.batch.size | int | `8192` | Amount of data to buffer before flushing the batch. |
+| externalServices.loki.processors.batch.timeout | string | `"2s"` | How long to wait before flushing the batch. |
+| externalServices.loki.processors.memoryLimiter.checkInterval | string | `"1s"` | How often to check memory usage. |
+| externalServices.loki.processors.memoryLimiter.enabled | bool | `false` | Use a memory limiter. |
+| externalServices.loki.processors.memoryLimiter.limit | string | `"0MiB"` | Maximum amount of memory targeted to be allocated by the process heap. |
 | externalServices.loki.protocol | string | `"loki"` | The type of server protocol for writing metrics. Valid options:  "loki" will use Loki's HTTP API,  "otlp" will use OTLP,  "otlphttp" will use OTLP HTTP |
 | externalServices.loki.proxyURL | string | `""` | HTTP proxy to proxy requests to Loki through. |
 | externalServices.loki.queryEndpoint | string | `"/loki/api/v1/query"` | Loki logs query endpoint. |
