@@ -12,6 +12,7 @@ env:
   CT_CONFIGFILE: "${{ github.workspace }}/.github/configs/ct.yaml"
   LINT_CONFIGFILE: "${{ github.workspace }}/.github/configs/lintconf.yaml"
   GRAFANA_AGENT_VALUES: "${{ github.workspace }}/.github/configs/agent-config.yaml"
+  GRAFANA_AGENT_LOKI_OTLP_VALUES: "${{ github.workspace }}/.github/configs/agent-config-loki-otlp.yaml"
   GRAFANA_AGENT_RECEIVER_SERVICE: "${{ github.workspace }}/.github/configs/receiver-service.yaml"
   PROMETHEUS_VALUES: "${{ github.workspace }}/.github/configs/prometheus.yaml"
   PROMETHEUS_WORKLOAD_VALUES: "${{ github.workspace }}/.github/configs/prometheus-workload.yaml"
@@ -187,6 +188,7 @@ jobs:
       if: steps.list-changed.outputs.changed == 'true'
       run: |
         helm install loki grafana/loki -f "${LOKI_VALUES}" -n loki --create-namespace --wait
+        helm install loki-otlp grafana/grafana-agent -f "${GRAFANA_AGENT_LOKI_OTLP_VALUES}" -n loki --wait
 
     - name: Deploy Tempo
       if: steps.list-changed.outputs.changed == 'true'

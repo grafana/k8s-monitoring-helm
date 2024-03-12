@@ -1,7 +1,6 @@
 #
 # This values file will test the following features:
-# * Sending metrics via OTLP HTTP
-# * Sending traces via OTLP HTTP
+# * Sending metrics, logs, and traces via OTLP HTTP
 # * Access kubelet and cadvisor metrics using the proxy
 # * Pod logs gathered via K8s API and PodLogs objects
 # * Filtering pod logs by namespace
@@ -24,8 +23,10 @@ externalServices:
     externalLabels:
       color: blue
   loki:
-    host: http://loki.loki.svc:3100
+    host: http://loki-otlp-grafana-agent.loki.svc:4318
     tenantId: 1
+    protocol: otlphttp
+    writeEndpoint: /
     basicAuth:
       username: loki
       password: lokipassword
@@ -122,6 +123,7 @@ test:
     type: promql
 
   envOverrides:
+    LOKI_URL: http://loki.loki.svc:3100/loki/api/v1/query
     TEMPO_URL: http://tempo.tempo.svc:3100/api/search
 
 opencost:

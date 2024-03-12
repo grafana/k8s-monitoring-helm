@@ -84,6 +84,6 @@ logs:
           helm_release = {{ .Release.Name | quote }},
         }
       }
-      forward_to = [loki.write.grafana_cloud_loki.receiver]
+      forward_to = [loki.process.logs_service.receiver]
     }
 ```

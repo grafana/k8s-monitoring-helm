@@ -82,7 +82,7 @@
 
   {{- if and .Values.logs.enabled (or .Values.receivers.grpc.enabled .Values.receivers.http.enabled .Values.receivers.zipkin.enabled) }}
     {{- include "agent.config.logs.pod_logs_processor" . }}
-    {{- include "agent.config.loki" . }}
+    {{- include "agent.config.logsService" . }}
   {{- end }}
 
   {{- if and .Values.traces.enabled }}
@@ -98,7 +98,7 @@
 {{/* Grafana Agent Events config */}}
 {{- define "agentEventsConfig" -}}
   {{- include "agent.config.logs.cluster_events" . }}
-  {{- include "agent.config.loki" . }}
+  {{- include "agent.config.logsService" . }}
 {{- end -}}
 
 {{/* Grafana Agent Logs config */}}
@@ -109,7 +109,7 @@
     {{- include "agent.config.pod_log_objects" . }}
   {{- end }}
 
-  {{- include "agent.config.loki" . }}
+  {{- include "agent.config.logsService" . }}
 
   {{- if .Values.logs.extraConfig }}
     {{- print "\n" }}

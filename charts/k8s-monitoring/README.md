@@ -9,6 +9,12 @@ A Helm chart for gathering, scraping, and forwarding Kubernetes infrastructure m
 
 ## Breaking change announcements
 
+### **v0.12.0**
+
+  The component `loki.write.grafana_cloud_loki` has been renamed.
+  When forwarding logs to be sent to your logs service endpoint, please use `loki.process.logs_service` instead.
+  This component will deliver logs, no matter which protocol is used for your logs service.
+
 ### **v0.9.0**
 
   Additional metric tuning rules have been made available for all metric sources. This means the removal of the
@@ -133,6 +139,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | externalServices.loki.externalLabels | object | `{}` | Custom labels to be added to all logs and events |
 | externalServices.loki.host | string | `""` | Loki host where logs and events will be sent |
 | externalServices.loki.hostKey | string | `"host"` | The key for the host property in the secret |
+| externalServices.loki.protocol | string | `"loki"` | The type of server protocol for writing metrics. Valid options:  "loki" will use Loki's HTTP API,  "otlp" will use OTLP,  "otlphttp" will use OTLP HTTP |
 | externalServices.loki.proxyURL | string | `""` | HTTP proxy to proxy requests to Loki through. |
 | externalServices.loki.queryEndpoint | string | `"/loki/api/v1/query"` | Loki logs query endpoint. |
 | externalServices.loki.secret.create | bool | `true` | Should this Helm chart create the secret. If false, you must define the name and namespace values. |
@@ -402,7 +409,7 @@ useful ones like these:
 * `discovery.kubernetes.pods` - Discovers all pods in the cluster
 * `discovery.kubernetes.services` - Discovers all services in the cluster
 * `prometheus.relabel.metrics_service` - Sends metrics to the metrics service defined by `.externalService.prometheus`
-* `loki.write.grafana_cloud_loki` - Sends logs to Loki defined by `.externalService.loki`
+* `loki.process.logs_service` - Sends logs to the logs service defined by `.externalService.loki`
 
 Example:
 

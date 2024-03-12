@@ -1,12 +1,7 @@
-{{ define "agent.config.loki" }}
-// Loki
-remote.kubernetes.secret "logs_service" {
-  name = {{ include "kubernetes_monitoring.logs_service.secret.name" . | quote}}
-  namespace = {{ .Values.externalServices.loki.secret.namespace | default .Release.Namespace | quote }}
-}
-
+{{ define "agent.config.logsServiceLoki" }}
 {{- with .Values.externalServices.loki }}
-loki.write "grafana_cloud_loki" {
+// Loki
+loki.write "logs_service" {
   endpoint {
     url = nonsensitive(remote.kubernetes.secret.logs_service.data[{{ .hostKey | quote }}]) + "{{ .writeEndpoint }}"
     tenant_id = nonsensitive(remote.kubernetes.secret.logs_service.data[{{ .tenantIdKey | quote }}])
@@ -27,12 +22,13 @@ loki.write "grafana_cloud_loki" {
     }
 {{- end }}
   }
+{{- if .externalLabels }}
   external_labels = {
     {{- range $k, $v := .externalLabels }}
     {{ $k }} = {{ $v | quote }},
     {{- end }}
-{{- end }}
-    cluster = {{ required ".Values.cluster.name is a required value. Please set it and try again." .Values.cluster.name | quote }},
   }
+{{- end }}
+{{- end }}
 }
 {{ end }}

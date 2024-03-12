@@ -3,6 +3,7 @@
 CLUSTER_NAME="k8s-mon-test-cluster"
 CLUSTER_CONFIG="./.github/configs/cluster-config.yaml"
 GRAFANA_AGENT_VALUES="./.github/configs/agent-config.yaml"
+GRAFANA_AGENT_LOKI_OTLP_VALUES="./.github/configs/agent-config-loki-otlp.yaml"
 GRAFANA_AGENT_RECEIVER_SERVICE="./.github/configs/receiver-service.yaml"
 PROMETHEUS_VALUES="./.github/configs/prometheus.yaml"
 PROMETHEUS_WORKLOAD_VALUES="./.github/configs/prometheus-workload.yaml"
@@ -56,6 +57,7 @@ helm upgrade --install prometheus prometheus-community/prometheus -f "${PROMETHE
 
 echo "Deploying Loki..."
 helm upgrade --install loki grafana/loki -f "${LOKI_VALUES}" -n loki --create-namespace --wait
+helm upgrade --install loki-otlp grafana/grafana-agent -f "${GRAFANA_AGENT_LOKI_OTLP_VALUES}" -n loki --wait
 
 echo "Deploying Tempo..."
 helm upgrade --install tempo grafana/tempo -n tempo --create-namespace --wait
