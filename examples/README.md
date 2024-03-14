@@ -14,23 +14,33 @@ Then, we extract the Grafana Agent configuration files from the ConfigMap object
 
 ## Index of examples
 
-* [Default values](./default-values) - The most basic example
+* [Default values](./default-values) - The most basic example.
 
 ### Enabling or disabling features
 
-* [Logs Only](./logs-only) - Only gather and send logs
-* [Metrics Only](./metrics-only) - Only scrape and send metrics
-* [Traces Enabled](./traces-enabled) - Enable the OpenTelemetry receiver for traces and send then to Grafana Tempo
-* [Windows Exporter](./windows-exporter) - Enable deployment and scraping of the Windows Exporter for Windows nodes
+* [Control Plane Metrics](./control-plane-metrics) - Enable gathering metrics from the Kubernetes Control Plane.
+* [Logs Only](./logs-only) - Only gather and send logs.
+* [Metrics Only](./metrics-only) - Only scrape and send metrics.
+* [Service Integrations](./service-integrations) - A few methods for gathering telemetry data from other services.
+* [Traces Enabled](./traces-enabled) - Enable the OpenTelemetry receiver for traces and send then to Grafana Tempo.
+* [Windows Exporter](./windows-exporter) - Enable deployment and scraping of the Windows Exporter for Windows nodes.
 
 ### Customizing behavior
 
-* [Custom Allow Lists](./custom-allow-lists) - Change which metrics are send to Prometheus
-* [Custom Configs](./custom-config) - Add arbitrary Grafana Agent Flow components to the configuration
-* [Extra Rules](./extra-rules) - Add extra rules and stages for discovering and processing metrics and logs
-* [Scrape Intervals](./scrape-intervals) - Customize how often to scrape metrics
-* [Specific Namespace](./specific-namespace) - Only gather metrics and logs from workloads in specific namespaces
+* [Agent Autoscaling and Storage](./agent-autoscaling-and-storage) - Enable Autoscaling and storage for the Grafana Agent.
+* [Custom Metrics Tuning](./custom-metrics-tuning) - Change which metrics are send to Prometheus.
+* [Custom Configs](./custom-config) - Add arbitrary Grafana Agent Flow components to the configuration.
+* [Kube Pod Labels](./kube-pod-labels) - Change configuring kube-state-metrics deployment and scraping config to allow Pod label metrics.
+* [Extra Rules](./extra-rules) - Add extra rules and stages for discovering and processing metrics and logs.
+* [OpenTelemetry services](./otel-metrics-service) - Change the delivery of metrics to use the OTLP or OTLPHTTP protocol.
+* [Private Image Registries](./private-image-registry) - Utilize other image registries for the images deployed by this Helm chart. 
+* [Proxies](./proxies) - Using Proxies to access the external services.
+* [Scrape Intervals](./scrape-intervals) - Customize how often to scrape metrics.
+* [Specific Namespace](./specific-namespace) - Only gather metrics and logs from workloads in specific namespaces.
 
 ### Specific platform examples
 
-* [OpenShift Compatible](./openshift-compatible) - What changes from the default to deploy successfully to OpenShift
+* [EKS on Fargate](./eks-fargate) - Compatible with AWS EKS on Fargate clusters.
+* [GKE Autopilot](./gke-autopilot) - Compatible with Google GKE Autopilot clusters.
+* [IBM Cloud](./ibm-cloud) - Compatible with IBM Cloud clusters.
+* [OpenShift Compatible](./openshift-compatible) - Compatible with OpenShift clusters.

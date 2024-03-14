@@ -1,5 +1,5 @@
 cluster:
-  name: cluster-with-pvc-test
+  name: agent-autoscaling-and-storage-test
 
 externalServices:
   prometheus:
@@ -21,7 +21,7 @@ externalServices:
 
 grafana-agent:
   agent:
-    resources: 
+    resources:
       requests:
         cpu: "1m"
         memory: "500Mi"
@@ -39,9 +39,8 @@ grafana-agent:
       maxReplicas: 10
       targetCPUUtilizationPercentage: 0
       targetMemoryUtilizationPercentage: 80
-# Ensure Helm 0.8.3 of k8s-monitoring, K8s > 1.23
     enableStatefulSetAutoDeletePVC: true
-    volumeClaimTemplates: 
+    volumeClaimTemplates:
       - metadata:
           name: agent-wal
         spec:

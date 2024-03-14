@@ -124,11 +124,8 @@ data:
       }
     }
     
-    // Jaeger Receiver
     
-    // Zipkin Receiver
     
-    // Prometheus Remote Write Receiver
     
     // Processors
     otelcol.processor.transform "add_metric_datapoint_attributes" {
@@ -43870,8 +43867,8 @@ spec:
   internalTrafficPolicy: Cluster
   ports:
     - name: http-metrics
-      port: 80
-      targetPort: 80
+      port: 8080
+      targetPort: 8080
       protocol: "TCP"
 ---
 # Source: k8s-monitoring/charts/grafana-agent-logs/templates/cluster_service.yaml
@@ -44204,7 +44201,7 @@ spec:
             - run
             - /etc/agent/config.river
             - --storage.path=/tmp/agent
-            - --server.http.listen-addr=0.0.0.0:80
+            - --server.http.listen-addr=0.0.0.0:8080
             - --server.http.ui-path-prefix=/
           env:
             - name: AGENT_MODE
@@ -44216,15 +44213,23 @@ spec:
                 fieldRef:
                   fieldPath: spec.nodeName
           ports:
-            - containerPort: 80
+            - containerPort: 8080
               name: http-metrics
           readinessProbe:
             httpGet:
               path: /-/ready
-              port: 80
+              port: 8080
               scheme: HTTP
             initialDelaySeconds: 10
             timeoutSeconds: 1
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+            runAsNonRoot: true
+            seccompProfile:
+              type: RuntimeDefault
           volumeMounts:
             - name: config
               mountPath: /etc/agent
@@ -44232,7 +44237,7 @@ spec:
           image: ghcr.io/jimmidyson/configmap-reload:v0.12.0
           args:
             - --volume-dir=/etc/agent
-            - --webhook-url=http://localhost:80/-/reload
+            - --webhook-url=http://localhost:8080/-/reload
           volumeMounts:
             - name: config
               mountPath: /etc/agent
@@ -44603,11 +44608,8 @@ data:
       }
     }
     
-    // Jaeger Receiver
     
-    // Zipkin Receiver
     
-    // Prometheus Remote Write Receiver
     
     // Processors
     otelcol.processor.transform "add_metric_datapoint_attributes" {

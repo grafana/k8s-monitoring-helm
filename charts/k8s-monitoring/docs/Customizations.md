@@ -15,30 +15,36 @@ Each telemetry data source (e.g. metrics, logs, events, traces) typically goes t
 
 Metrics are usually gathered using Prometheus-style scraping.
 
-###  Customize where to find the data
+### Customize where to find the data
 
-These fields affect how metric targets are discovered. If the Grafana Agent is not detecting the target, make changes to these values.
+These fields affect how metric targets are discovered. If the Grafana Agent is not detecting the target, make changes to
+these values.
 
 * `metrics.<source>.extraRelabelingRules` - These rules are used to populate the rules section of a
-  [discovery.relabel](https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/) component. They filter from all Nodes, services, endpoints, or Pods on the
-Cluster to a specific one that has the metrics. 
+  [discovery.relabel](https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/) component.
+  They filter from all Nodes, services, endpoints, or Pods on the
+  Cluster to a specific one that has the metrics.
   Use these rules to target a specific service.
 * `metrics.extraRelabelingRules` - Same as above, but these rules are applied to all metric sources.
 * `metrics.<source>.labelMatchers` - Defines what Kubernetes labels need to match on the target.
-* `metrics.<source>.service.port` - Defines the name of the port that has the metrics endpoint. 
+* `metrics.<source>.service.port` - Defines the name of the port that has the metrics endpoint.
 
 ### Customize how to collect the data
 
-These fields affect how metric targets are scraped. Typically, you'll make changes here if 
+These fields affect how metric targets are scraped. Typically, you'll make changes here if
 you want to change something about how often to scrape or which target to scrape.
 
 * `metrics.<source>.scrapeInterval` - How often to scrape metrics from a target.
 * `metrics.scrapeInterval` - Same as above, but changes the global default.
-* `metrics.<source>.service.isTLS` - Determines whether the Agent use HTTPS and TLS to scrape the target instead of HTTP.
+* `metrics.<source>.service.isTLS` - Determines whether the Agent use HTTPS and TLS to scrape the target instead of
+  HTTP.
 
 ### Processing customizations
 
-By default, we already use an "allow list" to filter to a specific set of metrics, meaning the list drops metrics that are not useful for monitoring Kubernetes Clusters. The following fields allow for more customizations of the metrics after they have been scraped, but before being sent to the external metric service for storage. Typical changes that you might want to do here include setting, modifying, or dropping metric labels.
+By default, we already use an "allow list" to filter to a specific set of metrics, meaning the list drops metrics that
+are not useful for monitoring Kubernetes Clusters. The following fields allow for more customizations of the metrics
+after they have been scraped, but before being sent to the external metric service for storage. Typical changes that you
+might want to do here include setting, modifying, or dropping metric labels.
 
 * `metrics.<source>.extraMetricRelabelingRules` - Rules that modify metrics and will populate the rules
   section of a [prometheus.relabel](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/)
@@ -64,7 +70,8 @@ tune the performance of metrics uploads.
 
 ### Customize which logs to gather
 
-The default for the Helm chart is to gather logs from all Pods in all namespaces. Use these settings to set which Pods you want logs collected from.
+The default for the Helm chart is to gather logs from all Pods in all namespaces. Use these settings to set which Pods
+you want logs collected from.
 
 * `logs.pod_logs.namespaces` - Only gathers logs from Pods in the given list of namespaces.
 * `logs.pod_logs.extraRelabelingRules` - Rules that filter from all Pods on the Cluster to the specific set
@@ -95,12 +102,14 @@ This field controls which namespaces to gather Cluster Events from.
 
 ### Processing customizations
 
-* `logs.cluster_events.log_format` - Specifies the format of the Cluster events. Default is `logfmt`, but can also specify
+* `logs.cluster_events.log_format` - Specifies the format of the Cluster events. Default is `logfmt`, but can also
+  specify
   `json`.
 
 ## Additional Configuration
 
-In addition to customizing the generated configuration, you can add new components to the the Kubernetes Monitoring Helm chart to define your own extra configuration.
+In addition to customizing the generated configuration, you can add new components to the the Kubernetes Monitoring Helm
+chart to define your own extra configuration.
 
 * `extraConfig` - Config put here will be added to the config for the Grafana Agent StatefulSet that scraps metrics.
 * `logs.extraConfig` - Config put here will be added to the config for the Grafana Agent for Logs.

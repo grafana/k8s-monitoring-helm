@@ -1,8 +1,20 @@
 # Troubleshooting
 
+## Instructions for specific Cluster platform providers.
+
+Certain Kubernetes Cluster platforms require some specific configurations for this Helm chart. If your cluster is
+running on one of these platforms, see the example for the changes required to run this Helm chart:
+
+* [AWS EKS on Fargate](../../../examples/eks-fargate)
+* [Google GKE Autopilot](../../../examples/gke-autopilot)
+* [IBM Cloud](../../../examples/ibm-cloud)
+* [OpenShift](../../../examples/openshift-compatible)
+
 ## CustomResourceDefinition conflicts
 
-The Kubernetes Monitoring chart deploys the [Prometheus Operator custom resource definitions](https://github.com/prometheus-community/helm-charts/tree/main/charts/prometheus-operator-crds) by default.
+The Kubernetes Monitoring chart deploys
+the [Prometheus Operator custom resource definitions](https://github.com/prometheus-community/helm-charts/tree/main/charts/prometheus-operator-crds)
+by default.
 
 If those CRDs already exist on your cluster, you may see an error message like this when attempting to install:
 
@@ -11,6 +23,7 @@ Error: INSTALLATION FAILED: Unable to continue with install: CustomResourceDefin
 ```
 
 To fix this problem, you can either:
+
 1. Remove the CRDs and let this chart deploy them
 2. Disable the deployment of the CRDs in this chart by adding this to the values file:
 
@@ -21,7 +34,8 @@ To fix this problem, you can either:
 
 ## Pod log files in `/var/lib/docker/containers`
 
-On certain Kubernetes clusters, pod logs are stored inside of `/var/lib/docker/containers` with `/var/log/pods` being symlinked to that directory, but the Grafana Agent doesn't mount it by default.
+On certain Kubernetes clusters, pod logs are stored inside of `/var/lib/docker/containers` with `/var/log/pods` being
+symlinked to that directory, but the Grafana Agent doesn't mount it by default.
 If your cluster works this way, you'll likely see errors in the Grafana Agent for Logs pods like this:
 
 ```text
