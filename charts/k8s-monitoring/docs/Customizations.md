@@ -41,7 +41,7 @@ you want to change something about how often to scrape or which target to scrape
 
 ### Processing customizations
 
-By default, we already use an "allow list" to filter to a specific set of metrics, meaning the list drops metrics that
+By default, we already use an allow list to filter to a specific set of metrics, meaning the list drops metrics that
 are not useful for monitoring Kubernetes Clusters. The following fields allow for more customizations of the metrics
 after they have been scraped, but before being sent to the external metric service for storage. Typical changes that you
 might want to do here include setting, modifying, or dropping metric labels.
