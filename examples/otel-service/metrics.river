@@ -30,12 +30,47 @@ otelcol.receiver.otlp "receiver" {
   output {
     metrics = [otelcol.processor.transform.add_metric_datapoint_attributes.input]
     logs = [otelcol.processor.k8sattributes.default.input]
+    traces = [otelcol.processor.k8sattributes.default.input]
   }
 }
 
 // Jaeger Receiver
+otelcol.receiver.jaeger "receiver" {
+  protocols {
+grpc {
+      endpoint = "0.0.0.0:14250"
+    }
+thrift_binary {
+      endpoint = "0.0.0.0:6832"
+    }
+thrift_compact {
+      endpoint = "0.0.0.0:6831"
+    }
+thrift_http {
+      endpoint = "0.0.0.0:14268"
+    }
+  }
+
+  debug_metrics {
+    disable_high_cardinality_metrics = true
+  }
+
+  output {
+    traces = [otelcol.processor.k8sattributes.default.input]
+  }
+}
 
 // Zipkin Receiver
+otelcol.receiver.zipkin "receiver" {
+  debug_metrics {
+    disable_high_cardinality_metrics = true
+  }
+
+endpoint = "0.0.0.0:9411"
+  output {
+    traces = [otelcol.processor.k8sattributes.default.input]
+  }
+}
 
 // Prometheus Remote Write Receiver
 
@@ -79,6 +114,22 @@ otelcol.processor.k8sattributes "default" {
   output {
     metrics = [otelcol.processor.transform.add_resource_attributes.input]
     logs    = [otelcol.processor.transform.add_resource_attributes.input]
+    traces  = [
+      otelcol.processor.transform.add_resource_attributes.input,
+      otelcol.connector.host_info.default.input,
+    ]
+  }
+}
+otelcol.connector.host_info "default" {
+  host_identifiers = [ "k8s.node.name" ]
+  output {
+    metrics = [otelcol.processor.batch.host_info_batch.input]
+  }
+}
+
+otelcol.processor.batch "host_info_batch" {
+  output {
+    metrics = [otelcol.processor.batch.metrics_service.input]
   }
 }
 
@@ -88,7 +139,7 @@ otelcol.processor.transform "add_resource_attributes" {
   metric_statements {
     context = "resource"
     statements = [
-      "set(attributes[\"k8s.cluster.name\"], \"otel-metrics-service-test\") where attributes[\"k8s.cluster.name\"] == nil",
+      "set(attributes[\"k8s.cluster.name\"], \"otel-service-test\") where attributes[\"k8s.cluster.name\"] == nil",
     ]
   }
   log_statements {
@@ -97,12 +148,19 @@ otelcol.processor.transform "add_resource_attributes" {
       "set(attributes[\"pod\"], attributes[\"k8s.pod.name\"])",
       "set(attributes[\"namespace\"], attributes[\"k8s.namespace.name\"])",
       "set(attributes[\"loki.resource.labels\"], \"pod, namespace, cluster, job\")",
-      "set(attributes[\"k8s.cluster.name\"], \"otel-metrics-service-test\") where attributes[\"k8s.cluster.name\"] == nil",
+      "set(attributes[\"k8s.cluster.name\"], \"otel-service-test\") where attributes[\"k8s.cluster.name\"] == nil",
+    ]
+  }
+  trace_statements {
+    context = "resource"
+    statements = [
+      "set(attributes[\"k8s.cluster.name\"], \"otel-service-test\") where attributes[\"k8s.cluster.name\"] == nil",
     ]
   }
   output {
     metrics = [otelcol.processor.filter.default.input]
     logs = [otelcol.processor.filter.default.input]
+    traces = [otelcol.processor.filter.default.input]
   }
 }
 
@@ -112,6 +170,7 @@ otelcol.processor.filter "default" {
   output {
     metrics = [otelcol.processor.batch.batch_processor.input]
     logs = [otelcol.processor.batch.batch_processor.input]
+    traces = [otelcol.processor.batch.batch_processor.input]
   }
 }
 
@@ -122,6 +181,7 @@ otelcol.processor.batch "batch_processor" {
   output {
     metrics = [otelcol.exporter.prometheus.metrics_converter.input]
     logs = [otelcol.exporter.loki.logs_converter.input]
+    traces = [otelcol.exporter.otlphttp.traces_service.input]
   }
 }
 otelcol.exporter.prometheus "metrics_converter" {
@@ -696,7 +756,7 @@ prometheus.relabel "metrics_service" {
   rule {
     source_labels = ["cluster"]
     regex = ""
-    replacement = "otel-metrics-service-test"
+    replacement = "otel-service-test"
     target_label = "cluster"
   }
   forward_to = [otelcol.receiver.prometheus.metrics_service.receiver]
@@ -711,7 +771,7 @@ otelcol.receiver.prometheus "metrics_service" {
 otelcol.processor.attributes "metrics_service" {
   action {
     key = "k8s.cluster.name"
-    value = "otel-metrics-service-test"
+    value = "otel-service-test"
     action = "upsert"
   }
 
@@ -801,21 +861,70 @@ remote.kubernetes.secret "logs_service" {
 loki.process "logs_service" {
   stage.static_labels {
       values = {
-        cluster = "otel-metrics-service-test",
+        cluster = "otel-service-test",
       }
   }
-  forward_to = [loki.write.logs_service.receiver]
+  forward_to = [otelcol.receiver.loki.logs_service.receiver]
 }
 
-// Loki
-loki.write "logs_service" {
-  endpoint {
-    url = nonsensitive(remote.kubernetes.secret.logs_service.data["host"]) + "/loki/api/v1/push"
-    tenant_id = nonsensitive(remote.kubernetes.secret.logs_service.data["tenantId"])
+otelcol.receiver.loki "logs_service" {
+  output {
+    logs = [otelcol.processor.attributes.logs_service.input]
+  }
+}
 
-    basic_auth {
-      username = nonsensitive(remote.kubernetes.secret.logs_service.data["username"])
-      password = remote.kubernetes.secret.logs_service.data["password"]
-    }
+otelcol.processor.attributes "logs_service" {
+  action {
+    key = "k8s.cluster.name"
+    value = "otel-service-test"
+    action = "upsert"
+  }
+
+  output {
+    logs = [otelcol.processor.batch.logs_service.input]
+  }
+}
+
+otelcol.processor.batch "logs_service" {
+  send_batch_size = 8192
+  send_batch_max_size = 0
+  timeout = "2s"
+  output {
+    logs = [otelcol.exporter.otlphttp.logs_service.input]
+  }
+}
+
+otelcol.auth.basic "logs_service" {
+  username = nonsensitive(remote.kubernetes.secret.logs_service.data["username"])
+  password = remote.kubernetes.secret.logs_service.data["password"]
+}
+
+otelcol.exporter.otlphttp "logs_service" {
+  client {
+    endpoint = nonsensitive(remote.kubernetes.secret.logs_service.data["host"]) + "/loki/api/v1/push"
+
+    auth = otelcol.auth.basic.logs_service.handler
+  }
+}
+
+
+
+// Tempo
+remote.kubernetes.secret "traces_service" {
+  name = "tempo-k8s-monitoring"
+  namespace = "default"
+}
+
+otelcol.auth.basic "traces_service" {
+  username = nonsensitive(remote.kubernetes.secret.traces_service.data["username"])
+  password = remote.kubernetes.secret.traces_service.data["password"]
+}
+
+otelcol.exporter.otlphttp "traces_service" {
+  client {
+    endpoint = nonsensitive(remote.kubernetes.secret.traces_service.data["host"])
+
+    auth = otelcol.auth.basic.traces_service.handler
+    headers = { "X-Scope-OrgID" = nonsensitive(remote.kubernetes.secret.traces_service.data["tenantId"]) }
   }
 }

@@ -115,21 +115,48 @@ remote.kubernetes.secret "logs_service" {
 loki.process "logs_service" {
   stage.static_labels {
       values = {
-        cluster = "otel-metrics-service-test",
+        cluster = "otel-service-test",
       }
   }
-  forward_to = [loki.write.logs_service.receiver]
+  forward_to = [otelcol.receiver.loki.logs_service.receiver]
 }
 
-// Loki
-loki.write "logs_service" {
-  endpoint {
-    url = nonsensitive(remote.kubernetes.secret.logs_service.data["host"]) + "/loki/api/v1/push"
-    tenant_id = nonsensitive(remote.kubernetes.secret.logs_service.data["tenantId"])
+otelcol.receiver.loki "logs_service" {
+  output {
+    logs = [otelcol.processor.attributes.logs_service.input]
+  }
+}
 
-    basic_auth {
-      username = nonsensitive(remote.kubernetes.secret.logs_service.data["username"])
-      password = remote.kubernetes.secret.logs_service.data["password"]
-    }
+otelcol.processor.attributes "logs_service" {
+  action {
+    key = "k8s.cluster.name"
+    value = "otel-service-test"
+    action = "upsert"
+  }
+
+  output {
+    logs = [otelcol.processor.batch.logs_service.input]
+  }
+}
+
+otelcol.processor.batch "logs_service" {
+  send_batch_size = 8192
+  send_batch_max_size = 0
+  timeout = "2s"
+  output {
+    logs = [otelcol.exporter.otlphttp.logs_service.input]
+  }
+}
+
+otelcol.auth.basic "logs_service" {
+  username = nonsensitive(remote.kubernetes.secret.logs_service.data["username"])
+  password = remote.kubernetes.secret.logs_service.data["password"]
+}
+
+otelcol.exporter.otlphttp "logs_service" {
+  client {
+    endpoint = nonsensitive(remote.kubernetes.secret.logs_service.data["host"]) + "/loki/api/v1/push"
+
+    auth = otelcol.auth.basic.logs_service.handler
   }
 }
