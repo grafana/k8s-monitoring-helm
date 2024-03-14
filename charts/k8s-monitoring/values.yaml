@@ -29,7 +29,7 @@ externalServices:
     # -- Prometheus metrics write endpoint. Preset for Grafana Cloud Metrics instances.
     writeEndpoint: /api/prom/push
     # -- Custom labels to be added to all time series
-    externalLabels: { }
+    externalLabels: {}
     # -- Rule blocks to be added to the [write_relabel_config block](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.remote_write/#write_relabel_config-block) of the prometheus.remote_write component.
     writeRelabelConfigRules: ""
 
@@ -65,7 +65,7 @@ externalServices:
     # [remoteWrite protocol](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.remote_write/#tls_config-block),
     # [otlp](https://grafana.com/docs/agent/latest/flow/reference/components/otelcol.exporter.otlp/#tls-block), or
     # [otlphttp](https://grafana.com/docs/agent/latest/flow/reference/components/otelcol.exporter.otlphttp/#tls-block) protocols
-    tls: { }
+    tls: {}
 
     # Metric processor settings. Only applies when protocol is "otlp" or "otlphttp"
     processors:
@@ -114,7 +114,7 @@ externalServices:
     # -- Loki logs write endpoint.
     writeEndpoint: /loki/api/v1/push
     # -- Custom labels to be added to all logs and events
-    externalLabels: { }
+    externalLabels: {}
 
     # -- Loki tenant ID
     tenantId: ""
@@ -145,7 +145,7 @@ externalServices:
       namespace: ""
 
     # -- [TLS settings](https://grafana.com/docs/agent/latest/flow/reference/components/loki.write/#tls_config-block) to configure for the logs service.
-    tls: { }
+    tls: {}
 
     # Log processor settings. Only applies when protocol is "otlp" or "otlphttp"
     processors:
@@ -209,7 +209,7 @@ externalServices:
       namespace: ""
 
     # -- [TLS settings](https://grafana.com/docs/agent/latest/flow/reference/components/otelcol.exporter.otlp/#tls-block) to configure for the traces service.
-    tls: { }
+    tls: {}
 
     # -- Define the [TLS block](https://grafana.com/docs/agent/latest/flow/reference/components/otelcol.exporter.otlp/#tls-block).
     # Example:
@@ -246,9 +246,9 @@ metrics:
     # Adjustments to the scraped metrics to filter the amount of data sent to storage.
     metricsTuning:
       # -- Metrics to keep. Can use regex. An empty list means keep all.
-      includeMetrics: [ ]
+      includeMetrics: []
       # -- Metrics to drop. Can use regex.
-      excludeMetrics: [ ]
+      excludeMetrics: []
 
     # Annotations that are used to discover and configure metric scraping targets. Add these annotations
     # to your services or pods to control how autodiscovery will find and scrape metrics from your service or pod.
@@ -297,9 +297,9 @@ metrics:
       # -- Filter the list of metrics from the Grafana Agent to the minimal set required for Kubernetes Monitoring as well as the Grafana Agent integration.
       useIntegrationAllowList: false
       # -- Metrics to keep. Can use regex.
-      includeMetrics: [ ]
+      includeMetrics: []
       # -- Metrics to drop. Can use regex.
-      excludeMetrics: [ ]
+      excludeMetrics: []
 
   # Cluster object metrics from Kube State Metrics
   kube-state-metrics:
@@ -334,9 +334,9 @@ metrics:
       # See [Allow List for Kube State Metrics](#allow-list-for-kube-state-metrics)
       useDefaultAllowList: true
       # -- Metrics to keep. Can use regex.
-      includeMetrics: [ ]
+      includeMetrics: []
       # -- Metrics to drop. Can use regex.
-      excludeMetrics: [ ]
+      excludeMetrics: []
 
   # Node metrics from Node Exporter
   node-exporter:
@@ -371,11 +371,11 @@ metrics:
       # -- Filter the list of metrics from Node Exporter to the minimal set required for Kubernetes Monitoring as well as the Node Exporter integration.
       useIntegrationAllowList: false
       # -- Metrics to keep. Can use regex.
-      includeMetrics: [ ]
+      includeMetrics: []
       # -- Metrics to drop. Can use regex.
-      excludeMetrics: [ ]
+      excludeMetrics: []
       # -- Drop metrics for the given filesystem types
-      dropMetricsForFilesystem: [ tempfs ]
+      dropMetricsForFilesystem: [tempfs]
 
   # Windows Node metrics from Windows Exporter
   windows-exporter:
@@ -403,9 +403,9 @@ metrics:
       # See [Allow List for Windows Exporter](#allow-list-for-windows-exporter)
       useDefaultAllowList: true
       # -- Metrics to keep. Can use regex.
-      includeMetrics: [ ]
+      includeMetrics: []
       # -- Metrics to drop. Can use regex.
-      excludeMetrics: [ ]
+      excludeMetrics: []
 
   # Cluster metrics from the Kubelet
   kubelet:
@@ -432,9 +432,9 @@ metrics:
       # See [Allow List for Kubelet](#allow-list-for-kubelet)
       useDefaultAllowList: true
       # -- Metrics to keep. Can use regex.
-      includeMetrics: [ ]
+      includeMetrics: []
       # -- Metrics to drop. Can use regex.
-      excludeMetrics: [ ]
+      excludeMetrics: []
 
   # Container metrics from cAdvisor
   cadvisor:
@@ -461,9 +461,9 @@ metrics:
       # See [Allow List for cAdvisor](#allow-list-for-cadvisor)
       useDefaultAllowList: true
       # -- Metrics to keep. Can use regex.
-      includeMetrics: [ ]
+      includeMetrics: []
       # -- Metrics to drop. Can use regex.
-      excludeMetrics: [ ]
+      excludeMetrics: []
       # -- Drop metrics that have an empty container label
       dropEmptyContainerLabels: true
       # -- Drop metrics that have an empty image label
@@ -471,11 +471,11 @@ metrics:
       # -- Normalize labels to the same value for the given metric and label pairs
       normalizeUnnecessaryLabels:
         - metric: "machine_memory_bytes"
-          labels: [ "boot_id", "system_uuid" ]
+          labels: ["boot_id", "system_uuid"]
       # -- Only keep filesystem metrics that use the following physical devices
-      keepPhysicalFilesystemDevices: [ "mmcblk.p.+", "nvme.+", "rbd.+", "sd.+", "vd.+", "xvd.+", "dasd.+" ]
+      keepPhysicalFilesystemDevices: ["mmcblk.p.+", "nvme.+", "rbd.+", "sd.+", "vd.+", "xvd.+", "dasd.+"]
       # -- Only keep network metrics that use the following physical devices
-      keepPhysicalNetworkDevices: [ "en[ospx][0-9].*", "wlan[0-9].*", "eth[0-9].*" ]
+      keepPhysicalNetworkDevices: ["en[ospx][0-9].*", "wlan[0-9].*", "eth[0-9].*"]
 
   # Metrics from the API Server
   apiserver:
@@ -496,9 +496,9 @@ metrics:
     # Adjustments to the scraped metrics to filter the amount of data sent to storage.
     metricsTuning:
       # -- Metrics to keep. Can use regex. An empty list means keep all.
-      includeMetrics: [ ]
+      includeMetrics: []
       # -- Metrics to drop. Can use regex.
-      excludeMetrics: [ ]
+      excludeMetrics: []
 
   # Metrics from the Kube Controller Manager
   kubeControllerManager:
@@ -522,9 +522,9 @@ metrics:
     # Adjustments to the scraped metrics to filter the amount of data sent to storage.
     metricsTuning:
       # -- Metrics to keep. Can use regex. An empty list means keep all.
-      includeMetrics: [ ]
+      includeMetrics: []
       # -- Metrics to drop. Can use regex.
-      excludeMetrics: [ ]
+      excludeMetrics: []
 
   # Metrics from the Kube Proxy
   kubeProxy:
@@ -548,9 +548,9 @@ metrics:
     # Adjustments to the scraped metrics to filter the amount of data sent to storage.
     metricsTuning:
       # -- Metrics to keep. Can use regex. An empty list means keep all.
-      includeMetrics: [ ]
+      includeMetrics: []
       # -- Metrics to drop. Can use regex.
-      excludeMetrics: [ ]
+      excludeMetrics: []
 
   # Metrics from the Kube Scheduler
   kubeScheduler:
@@ -574,9 +574,9 @@ metrics:
     # Adjustments to the scraped metrics to filter the amount of data sent to storage.
     metricsTuning:
       # -- Metrics to keep. Can use regex. An empty list means keep all.
-      includeMetrics: [ ]
+      includeMetrics: []
       # -- Metrics to drop. Can use regex.
-      excludeMetrics: [ ]
+      excludeMetrics: []
 
   # Cost related metrics from OpenCost
   cost:
@@ -604,16 +604,16 @@ metrics:
       # See [Allow List for OpenCost](#allow-list-for-opencost)
       useDefaultAllowList: true
       # -- Metrics to keep. Can use regex.
-      includeMetrics: [ ]
+      includeMetrics: []
       # -- Metrics to drop. Can use regex.
-      excludeMetrics: [ ]
+      excludeMetrics: []
 
   podMonitors:
     # -- Enable discovery of Prometheus Operator PodMonitor objects.
     enabled: true
 
     # -- Which namespaces to look for PodMonitor objects.
-    namespaces: [ ]
+    namespaces: []
 
     # -- Selector to filter which PodMonitor objects to use.
     selector: ""
@@ -631,7 +631,7 @@ metrics:
     enabled: true
 
     # -- Which namespaces to look for Probe objects.
-    namespaces: [ ]
+    namespaces: []
 
     # -- Selector to filter which Probes objects to use.
     selector: ""
@@ -649,7 +649,7 @@ metrics:
     enabled: true
 
     # -- Which namespaces to look for ServiceMonitor objects.
-    namespaces: [ ]
+    namespaces: []
 
     # -- Selector to filter which ServiceMonitor objects to use.
     selector: ""
@@ -671,8 +671,8 @@ metrics:
   receiver:
     # -- Apply a filter to metrics received via the OTLP or OTLP HTTP receivers. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/otelcol.processor.filter/))
     filters:
-      metric: [ ]
-      datapoint: [ ]
+      metric: []
+      datapoint: []
 
 # Settings related to capturing and forwarding logs
 logs:
@@ -699,7 +699,7 @@ logs:
     annotation: "k8s.grafana.com/logs.autogather"
 
     # -- Only capture logs from pods in these namespaces (`[]` means all namespaces)
-    namespaces: [ ]
+    namespaces: []
 
     # -- Rule blocks to be added to the discovery.relabel component for pod logs. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block))
     extraRelabelingRules: ""
@@ -719,7 +719,7 @@ logs:
     enabled: false
 
     # -- Which namespaces to look for PodLogs objects.
-    namespaces: [ ]
+    namespaces: []
 
     # -- Selector to filter which PodLogs objects to use.
     selector: ""
@@ -736,13 +736,13 @@ logs:
     logFormat: "logfmt"
 
     # -- List of namespaces to watch for events (`[]` means all namespaces)
-    namespaces: [ ]
+    namespaces: []
 
   # Settings related to logs ingested via receivers
   receiver:
     # -- Apply a filter to logs received via the OTLP or OTLP HTTP receivers. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/otelcol.processor.filter/))
     filters:
-      log_record: [ ]
+      log_record: []
 
   # -- Extra configuration that will be added to Grafana Agent Logs configuration file.
   # This value is templated so that you can refer to other values from this file.
@@ -759,8 +759,8 @@ traces:
   receiver:
     # -- Apply a filter to traces received via the OTLP or OTLP HTTP receivers. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/otelcol.processor.filter/))
     filters:
-      span: [ ]
-      spanevent: [ ]
+      span: []
+      spanevent: []
 
 # Telemetry data receiver settings
 receivers:
@@ -849,13 +849,13 @@ configValidator:
     kubernetes.io/os: linux
 
   # -- Extra annotations to add to the test config validator job.
-  extraAnnotations: { }
+  extraAnnotations: {}
 
   # -- Extra labels to add to the test config validator job.
-  extraLabels: { }
+  extraLabels: {}
 
   # -- Tolerations to apply to the config validator job.
-  tolerations: [ ]
+  tolerations: []
 
 # Settings for the test job, which runs queries against Prometheus, Loki, and/or Tempo to check for data that should be
 # available based on the current configuration. Runnable by "helm test"
@@ -877,7 +877,7 @@ test:
   #   expect:
   #     value: 1
   #     operator: ==
-  extraQueries: [ ]
+  extraQueries: []
 
   # -- How many times to attempt the test job.
   attempts: 10
@@ -887,13 +887,13 @@ test:
     kubernetes.io/os: linux
 
   # -- Extra annotations to add to the test job.
-  extraAnnotations: { }
+  extraAnnotations: {}
 
   # -- Extra labels to add to the test job.
-  extraLabels: { }
+  extraLabels: {}
 
   # -- Tolerations to apply to the test job.
-  tolerations: [ ]
+  tolerations: []
 
   # -- Overrides the URLs for various data sources
   envOverrides:
@@ -909,7 +909,7 @@ test:
     # -- Test job image tag. Default is the chart version.
     tag: ""
     # -- Optional set of image pull secrets.
-    pullSecrets: [ ]
+    pullSecrets: []
 
 # Settings for the config analysis pod, which asks the Grafana Agent for an analysis of expected metric discoveries and
 # scrapes. Runnable by "helm test"
@@ -922,13 +922,13 @@ configAnalysis:
     kubernetes.io/os: linux
 
   # -- Extra annotations to add to the config analysis pod.
-  extraAnnotations: { }
+  extraAnnotations: {}
 
   # -- Extra labels to add to the config analysis pod.
-  extraLabels: { }
+  extraLabels: {}
 
   # -- Tolerations to apply to the config analysis pod.
-  tolerations: [ ]
+  tolerations: []
 
   image:
     # -- Config Analysis image registry.
@@ -938,7 +938,7 @@ configAnalysis:
     # -- Config Analysis image tag. Default is the chart version.
     tag: ""
     # -- Optional set of image pull secrets.
-    pullSecrets: [ ]
+    pullSecrets: []
 
 
 ## Global properties for image pulling override the values defined under `image.registry` and `configReloader.image.registry`.
@@ -949,7 +949,7 @@ global:
     registry: ""
 
     # -- Optional set of global image pull secrets.
-    pullSecrets: [ ]
+    pullSecrets: []
 
 # Settings for the Kube State Metrics deployment
 # You can use this sections to make modifications to the Kube State Metrics deployment.
@@ -992,7 +992,7 @@ prometheus-node-exporter:
           - matchExpressions:
               - key: eks.amazonaws.com/compute-type
                 operator: NotIn
-                values: [ fargate ]
+                values: [fargate]
 
   # @ignored - Disable prometheus.io/scrape annotation
   service:
@@ -1077,11 +1077,11 @@ opencost:
 # @ignored -- This skips including these values in README.md
 grafana-agent:
   agent:
-    clustering: { enabled: true }
+    clustering: {enabled: true}
 
     # This chart is creating the configuration, so the grafana-agent chart does
     # not need to.
-    configMap: { create: false }
+    configMap: {create: false}
 
     extraPorts:
       - name: "otlp-grpc"
@@ -1138,7 +1138,7 @@ grafana-agent:
             name: kubernetes-monitoring-telemetry
 
   # Skip installation of the Grafana Agent CRDs, since we don't use them in this chart
-  crds: { create: false }
+  crds: {create: false}
 
 # Settings for the Grafana Agent deployment
 # You can use this sections to make modifications to the Grafana Agent deployment.
@@ -1148,7 +1148,7 @@ grafana-agent-events:
   agent:
     # This chart is creating the configuration, so the grafana-agent chart does
     # not need to.
-    configMap: { create: false }
+    configMap: {create: false}
 
   controller:
     type: deployment
@@ -1157,7 +1157,7 @@ grafana-agent-events:
       kubernetes.io/os: linux
 
   # Skip installation of the Grafana Agent CRDs, since we don't use them in this chart
-  crds: { create: false }
+  crds: {create: false}
 
 # Settings for the Grafana Agent deployment
 # You can use this sections to make modifications to the Grafana Agent deployment.
@@ -1167,10 +1167,10 @@ grafana-agent-logs:
   agent:
     # This chart is creating the configuration, so the grafana-agent chart does
     # not need to.
-    configMap: { create: false }
+    configMap: {create: false}
 
     # Enable clustering by default to make it simpler when using API-based log gathering.
-    clustering: { enabled: true }
+    clustering: {enabled: true}
 
     mounts:
       # Mount /var/log from the host into the container for log collection.
@@ -1189,10 +1189,10 @@ grafana-agent-logs:
         operator: Exists
 
   # Skip installation of the Grafana Agent CRDs, since we don't use them in this chart
-  crds: { create: false }
+  crds: {create: false}
 
 # -- Deploy additional manifest objects
-extraObjects: [ ]
+extraObjects: []
 # - apiVersion: external-secrets.io/v1beta1
 #   kind: ExternalSecret
 #   metadata:
