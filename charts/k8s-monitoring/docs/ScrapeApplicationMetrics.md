@@ -1,6 +1,6 @@
 # Scraping Additional Metrics
 
-If you have an application or a service running on your Kubernetes cluster that is exporting metrics, you may want to
+If you have an application or a service running on your Kubernetes Cluster that is exporting metrics, you can  
 use this chart to scrape those metrics and send them to your datastore. This chart provides plenty of options for doing
 just that.
 
