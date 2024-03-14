@@ -1,0 +1,61 @@
+// Cluster Events
+loki.source.kubernetes_events "cluster_events" {
+  job_name   = "integrations/kubernetes/eventhandler"
+  log_format = "logfmt"
+  forward_to = [loki.process.logs_service.receiver]
+}
+
+// Logs Service
+remote.kubernetes.secret "logs_service" {
+  name = "loki-k8s-monitoring"
+  namespace = "default"
+}
+
+loki.process "logs_service" {
+  stage.static_labels {
+      values = {
+        cluster = "otel-service-test",
+      }
+  }
+  forward_to = [otelcol.receiver.loki.logs_service.receiver]
+}
+
+otelcol.receiver.loki "logs_service" {
+  output {
+    logs = [otelcol.processor.attributes.logs_service.input]
+  }
+}
+
+otelcol.processor.attributes "logs_service" {
+  action {
+    key = "k8s.cluster.name"
+    value = "otel-service-test"
+    action = "upsert"
+  }
+
+  output {
+    logs = [otelcol.processor.batch.logs_service.input]
+  }
+}
+
+otelcol.processor.batch "logs_service" {
+  send_batch_size = 8192
+  send_batch_max_size = 0
+  timeout = "2s"
+  output {
+    logs = [otelcol.exporter.otlphttp.logs_service.input]
+  }
+}
+
+otelcol.auth.basic "logs_service" {
+  username = nonsensitive(remote.kubernetes.secret.logs_service.data["username"])
+  password = remote.kubernetes.secret.logs_service.data["password"]
+}
+
+otelcol.exporter.otlphttp "logs_service" {
+  client {
+    endpoint = nonsensitive(remote.kubernetes.secret.logs_service.data["host"]) + "/loki/api/v1/push"
+
+    auth = otelcol.auth.basic.logs_service.handler
+  }
+}
