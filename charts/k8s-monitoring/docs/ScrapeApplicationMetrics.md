@@ -28,7 +28,7 @@ Extra annotations can also be set to control the behavior of the discovery and s
 
 The chart itself provides additional options:
 
-* `metrics.autoDiscover.extraRelabelingRules` - Use relabeling rules to filter the pods or services to scrape.
+* `metrics.autoDiscover.extraRelabelingRules` - Use relabeling rules to filter the Pods or services to scrape.
 * `metrics.autoDiscover.metricsTuning` - Specify which metrics to keep or drop.
 * `metrics.autoDiscover.extraMetricRelabelingRules` - Use relabeling rules to process the metrics after scraping them.
 
