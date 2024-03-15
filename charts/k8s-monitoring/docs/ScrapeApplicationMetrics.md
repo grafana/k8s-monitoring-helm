@@ -6,7 +6,7 @@ just that.
 
 ## Options
 
-1. Use the `k8s.grafana.com/scrape` annotation on your pods or services
+1. Use the `k8s.grafana.com/scrape` annotation on your Pods or services.
 2. Use Prometheus Operator CRDs, like ServiceMonitors, PodMonitors, or Probes.
 3. Make custom Grafana Agent Flow configuration
 
