@@ -248,7 +248,7 @@ Note that the `prometheus.scrape` component needs to be adjusted to forward to t
 ## Delivery
 
 The `prometheus.scrape` and `prometheus.relabel` components need to send their outputs to another component. This is the
-purpose of their `forward_to` field. That can be to another `prometheus.relabel` component, but eventually, the final
+purpose of their `forward_to` field. Forwarding can be to another `prometheus.relabel` component, but eventually, the final
 step is to send the metrics to a Prometheus server for storage, where it can be further processed by recording rules, or
 queried and displayed by Grafana. For this, use 
 the [`prometheus.remote_write`](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.remote_write/)
