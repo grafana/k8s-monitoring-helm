@@ -37,7 +37,7 @@ These values apply to all discovered Pods and services.
 ## Prometheus Operator CRDs
 
 By default, this chart configures the Grafana Agent to detect and utilize ServiceMonitors, PodMonitors, and Probes. If
-any of those objects are detected on your cluster, the Agent will utilize them to extend its configuration.
+any of those objects are detected on your Cluster, the Agent will utilize them to extend its configuration.
 
 For more information about creating and configuring these options, see
 the [Prometheus Operator Documentation](https://github.com/prometheus-operator/prometheus-operator).
