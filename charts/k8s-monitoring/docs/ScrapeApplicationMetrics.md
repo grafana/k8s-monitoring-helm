@@ -52,7 +52,7 @@ These options in the Helm chart allow for changing how Prometheus Operator objec
 * `metrics.serviceMonitors.namespaces` - Only use ServiceMonitors that exist in these namespaces.
 * `metrics.serviceMonitors.selector` - Use
   a [selector](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.operator.servicemonitors/#selector-block)
-  block to provide more fine-grained selection of objects.
+  block to provide a more refined selection of objects.
 
 The same options are present for `metrics.podmonitors` and `metrics.probes`
 
