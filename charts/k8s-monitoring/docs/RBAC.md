@@ -1,6 +1,6 @@
 # RBAC Rules for the Kubernetes Monitoring Helm Chart
 
-Several components have specialized RBAC rules to perform their work. This document will list the components, and their
+Several components have specialized RBAC rules to perform their work. This document will list the components and their
 RBAC definitions.
 
 ## Grafana Agent
