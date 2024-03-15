@@ -24,7 +24,7 @@ Error: INSTALLATION FAILED: Unable to continue with install: CustomResourceDefin
 
 To fix this problem, you can either:
 
-1. Remove the CRDs and let this chart deploy them
+1. Remove the CRDs and let this chart deploy them.
 2. Disable the deployment of the CRDs in this chart by adding this to the values file:
 
     ```yaml
