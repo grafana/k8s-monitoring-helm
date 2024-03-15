@@ -60,7 +60,7 @@ The same options are present for `metrics.podmonitors` and `metrics.probes`.
 
 Most of the scrape configuration is embedded in the Prometheus Operator object itself.
 
-* `metrics.serviceMonitors.scrapeInterval` - Sets the scrape interval, if one was not specified in the object
+* `metrics.serviceMonitors.scrapeInterval` - Sets the scrape interval, if one was not specified in the object.
 
 The same option is present for `metrics.podmonitors` and `metrics.probes`
 
