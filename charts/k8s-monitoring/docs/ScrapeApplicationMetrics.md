@@ -100,7 +100,7 @@ This chart automatically creates three components that you can utilize:
 
 These are
 all [`discovery.kubernetes`](https://grafana.com/docs/agent/latest/flow/reference/components/discovery.kubernetes/)
-components, which gather all the specific resources, using the Kubernetes API. From here, we want to refine the search
+components which gather all the specific resources using the Kubernetes API. From here, you want to refine the search
 to just the service or the pod that we want.
 
 ### Service discovery
