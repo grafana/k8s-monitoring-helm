@@ -105,7 +105,7 @@ to just the service or the pod that we want.
 
 ### Service discovery
 
-Since you don't want to scrape every service in your cluster, you will use rules to select your specific service based
+Since you don't want to scrape every service in your Cluster, use rules to select your specific service based
 on its name, namespace, labels, port names or numbers, and many other variables.
 To do so, use 
 a [`discovery.relabel`](https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/)
