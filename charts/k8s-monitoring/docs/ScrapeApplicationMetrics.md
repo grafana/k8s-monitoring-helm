@@ -48,7 +48,7 @@ This chart provides ways to customize how the Agent handles these objects.
 
 These options in the Helm chart allow for changing how Prometheus Operator objects are discovered:
 
-* `metrics.serviceMonitors.enabled` - If this is set to true, the Agent will look and consume ServiceMonitors
+* `metrics.serviceMonitors.enabled` - If set to true, the Agent looks for and consumes ServiceMonitors.
 * `metrics.serviceMonitors.namespaces` - Only use ServiceMonitors that exist in these namespaces.
 * `metrics.serviceMonitors.selector` - Use
   a [selector](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.operator.servicemonitors/#selector-block)
