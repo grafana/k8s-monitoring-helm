@@ -154,7 +154,7 @@ This is also a good place to add any extra labels that will be scraped. For exam
 
 ### Pod discovery
 
-Similar to service discovery, we use
+Similar to service discovery, use
 a [`discovery.relabel`](https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/)
 component to select the specific pod or pods that we want to scrape.
 The [meta labels for pods](https://grafana.com/docs/agent/latest/flow/reference/components/discovery.kubernetes/#pod-role)
