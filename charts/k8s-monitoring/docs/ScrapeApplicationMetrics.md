@@ -160,7 +160,7 @@ component to select the specific pod or pods that we want to scrape.
 The [meta labels for pods](https://grafana.com/docs/agent/latest/flow/reference/components/discovery.kubernetes/#pod-role)
 will be slightly different, but the concept is the same.
 
-Here is an example that filters to a specific set of pods that starts with name "analysis", with the label
+Here is an example that filters to a specific set of Pods that starts with name "analysis", with the label
 "system.component=image":
 
 ```river
