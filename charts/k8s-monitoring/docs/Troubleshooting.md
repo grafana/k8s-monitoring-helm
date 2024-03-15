@@ -2,7 +2,7 @@
 
 ## Instructions for specific Cluster platform providers.
 
-Certain Kubernetes Cluster platforms require some specific configurations for this Helm chart. If your cluster is
+Certain Kubernetes Cluster platforms require some specific configurations for this Helm chart. If your Cluster is
 running on one of these platforms, see the example for the changes required to run this Helm chart:
 
 * [AWS EKS on Fargate](../../../examples/eks-fargate)
