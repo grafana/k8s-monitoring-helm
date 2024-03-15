@@ -1,7 +1,7 @@
 {{- if .Values.configValidator.enabled }}
 ---
-apiVersion: batch/v1
-kind: Job
+apiVersion: v1
+kind: Pod
 metadata:
   name: {{ include "config-validator.fullname" . | quote }}
   namespace: {{ .Release.Namespace }}
@@ -21,72 +21,78 @@ metadata:
     {{ $key }}: {{ $val | quote }}
     {{- end}}
 spec:
-  backoffLimit: 0
-  template:
-    metadata:
-      name: {{ include "config-validator.fullname" . | quote }}
-      labels:
-        app.kubernetes.io/managed-by: {{ .Release.Service | quote }}
-        app.kubernetes.io/instance: {{ .Release.Name | quote }}
-        helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
-        {{- range $key, $val := .Values.configValidator.extraLabels }}
-        {{ $key }}: {{ $val | quote }}
-        {{- end}}
-      {{- with .Values.configValidator.extraAnnotations }}
-      annotations:
-        {{- . | toYaml | nindent 8 }}
-      {{- end }}
-    spec:
-      {{- if or .Values.global.image.pullSecrets (index .Values "grafana-agent").image.pullSecrets }}
-      imagePullSecrets:
-        {{- if .Values.global.image.pullSecrets }}
-        {{- toYaml .Values.global.image.pullSecrets | nindent 8 }}
-        {{- else }}
-        {{- toYaml (index .Values "grafana-agent").image.pullSecrets | nindent 8 }}
-        {{- end }}
-      {{- end }}
-      restartPolicy: Never
-      {{- with .Values.configValidator.nodeSelector }}
-      nodeSelector:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with .Values.configValidator.tolerations }}
-      tolerations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      containers:
-        - name: grafana-agent
-          image: "{{ .Values.global.image.registry | default (index .Values "grafana-agent").image.registry }}/{{ (index .Values "grafana-agent").image.repository }}{{ include "grafana-agent.imageId" (index .Subcharts "grafana-agent") }}"
-          command:
-          - bash
-          - -ec
-          - |
-            echo Validating Grafana Agent config file
-            if grafana-agent fmt /etc/agent/config.river > /dev/null; then
-              echo "Grafana Agent config file is valid"
-            fi
+  {{- if or .Values.global.image.pullSecrets (index .Values "grafana-agent").image.pullSecrets }}
+  imagePullSecrets:
+    {{- if .Values.global.image.pullSecrets }}
+    {{- toYaml .Values.global.image.pullSecrets | nindent 8 }}
+    {{- else }}
+    {{- toYaml (index .Values "grafana-agent").image.pullSecrets | nindent 8 }}
+    {{- end }}
+  {{- end }}
+  restartPolicy: Never
+  {{- with .Values.configValidator.nodeSelector }}
+  nodeSelector:
+    {{- toYaml . | nindent 8 }}
+  {{- end }}
+  {{- with .Values.configValidator.tolerations }}
+  tolerations:
+    {{- toYaml . | nindent 8 }}
+  {{- end }}
+  containers:
+    - name: grafana-agent
+      image: "{{ .Values.global.image.registry | default (index .Values "grafana-agent").image.registry }}/{{ (index .Values "grafana-agent").image.repository }}{{ include "grafana-agent.imageId" (index .Subcharts "grafana-agent") }}"
+      command:
+      - bash
+      - -c
+      - |
+        echo Validating Grafana Agent config file
+        if ! grafana-agent fmt /etc/agent/config.river > /dev/null; then
+          exit 1
+        fi
+        output=$(grafana-agent run "/etc/agent/config.river" 2>&1)
+        if ! echo "${output}" | grep "KUBERNETES_SERVICE_HOST and KUBERNETES_SERVICE_PORT must be defined" >/dev/null; then
+          echo "${output}"
+          exit 1
+        fi
+        echo "Grafana Agent config file is valid"
 {{- if and .Values.logs.enabled .Values.logs.cluster_events.enabled }}
-            echo Validating Grafana Agent for Events config file
-            if grafana-agent fmt /etc/agent/events.river > /dev/null; then
-              echo "Grafana Agent for Events config file is valid"
-            fi
+        echo Validating Grafana Agent for Events config file
+        if ! grafana-agent fmt /etc/agent/events.river > /dev/null; then
+          exit 1
+        fi
+        output=$(grafana-agent run "/etc/agent/events.river" 2>&1)
+        if ! echo "${output}" | grep "KUBERNETES_SERVICE_HOST and KUBERNETES_SERVICE_PORT must be defined" >/dev/null; then
+          echo "${output}"
+          exit 1
+        fi
+        echo "Grafana Agent for Events config file is valid"
 {{- end }}
 {{- if and .Values.logs.enabled .Values.logs.pod_logs.enabled }}
-            echo Validating Grafana Agent for Logs config file
-            if grafana-agent fmt /etc/agent/logs.river > /dev/null; then
-              echo "Grafana Agent for Logs config file is valid"
-            fi
+        echo Validating Grafana Agent for Logs config file
+        if ! grafana-agent fmt /etc/agent/logs.river > /dev/null; then
+          exit 1
+        fi
+        output=$(grafana-agent run "/etc/agent/logs.river" 2>&1)
+        if ! echo "${output}" | grep "KUBERNETES_SERVICE_HOST and KUBERNETES_SERVICE_PORT must be defined" >/dev/null; then
+          echo "${output}"
+          exit 1
+        fi
+        echo "Grafana Agent for Logs config file is valid"
 {{- end }}
-          env:
-            - name: AGENT_MODE
-              value: flow
-          volumeMounts:
-            - name: config
-              mountPath: /etc/agent
-      volumes:
+      env:
+        - name: AGENT_MODE
+          value: flow
+        - name: KUBERNETES_SERVICE_HOST  # Intentionally disable its connection to Kubernetes to make it fail in a known way
+          value: ""
+        - name: KUBERNETES_SERVICE_PORT  # Intentionally disable its connection to Kubernetes to make it fail in a known way
+          value: ""
+      volumeMounts:
         - name: config
-          configMap:
-            name: {{ include "config-validator.fullname" . | quote }}
+          mountPath: /etc/agent
+  volumes:
+    - name: config
+      configMap:
+        name: {{ include "config-validator.fullname" . | quote }}
 ---
 apiVersion: v1
 kind: ConfigMap
