@@ -217,7 +217,7 @@ prometheus.scrape "processing_app" {
 Often, you want to perform some post-scrape processing to the metrics. Some common reasons are to:
 
 * limiting the amount of metrics being sent up to Prometheus
-* adding labels, changing labels, or dropping labels
+* Add, change, or drop labels.
 
 Processing is done with the
 [`prometheus.relabel`](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/)
