@@ -109,7 +109,7 @@ Since you don't want to scrape every service in your cluster, you will use rules
 on its name, namespace, labels, port names or numbers, and many other variables.
 This is done by using
 a [`discovery.relabel`](https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/)
-component and adding one or more rules, using special meta-labels that are set automatically by the
+component and add one or more rules, using special meta-labels that are set automatically by the
 `discovery.kubernetes` component.
 
 Here is an example component that we've named "blue_database_service". This component takes the list of all services
