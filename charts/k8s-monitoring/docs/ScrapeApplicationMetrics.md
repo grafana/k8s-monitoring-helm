@@ -216,7 +216,7 @@ prometheus.scrape "processing_app" {
 
 Often, you want to perform some post-scrape processing to the metrics. Some common reasons are to:
 
-* limiting the amount of metrics being sent up to Prometheus
+* Limit the amount of metrics being sent up to Prometheus.
 * Add, change, or drop labels.
 
 Processing is done with the
