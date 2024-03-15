@@ -44,7 +44,7 @@ controls it.
 
 | Name                           | Associated values                | Description                                                                                   |
 |--------------------------------|----------------------------------|-----------------------------------------------------------------------------------------------|
-| Annotation-based Autodiscovery | `.metrics.autoDiscover`          | Controls how pods and services are automatically discovered, based on their annotations.      |
+| Annotation-based Autodiscovery | `.metrics.autoDiscover`          | Controls how Pods and services are automatically discovered, based on their annotations.      |
 | Grafana Agent                  | `.metrics.agent`                 | Controls how to scrape metrics from the Grafana Agents being deployed by this Helm chart.     |
 | kube-state-metrics             | `.metrics.kube-state-metrics`    | Controls how metrics from kube-state-metrics are discovered, scraped, and processed.          |
 | Node Exporter                  | `.metrics.node-exporter`         | Controls how metrics from Node Exporter are discovered, scraped, and processed.               |
