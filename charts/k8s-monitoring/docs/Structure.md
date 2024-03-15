@@ -1,6 +1,6 @@
 # Structure
 
-The Kubernetes Monitoring Helm chart contains many software packages and builds a comprehensive set of configuration and
+The Kubernetes Monitoring Helm chart contains many software packages, and builds a comprehensive set of configuration and
 secrets for those packages.
 This document aims to describe and explain the structure of the Helm chart.
 
