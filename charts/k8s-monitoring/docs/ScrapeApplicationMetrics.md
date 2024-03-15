@@ -72,7 +72,7 @@ This chart can set metrics relabeling rules for processing the metrics after scr
   a [prometheus.relabel](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/)
   configuration component.
 
-The same option is present for `metrics.podmonitors` and `metrics.probes`
+The same option is present for `metrics.podmonitors` and `metrics.probes`.
 
 ## Custom Agent Config
 
