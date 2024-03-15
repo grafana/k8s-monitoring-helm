@@ -32,7 +32,7 @@ The chart itself provides additional options:
 * `metrics.autoDiscover.metricsTuning` - Specify which metrics to keep or drop.
 * `metrics.autoDiscover.extraMetricRelabelingRules` - Use relabeling rules to process the metrics after scraping them.
 
-These values will apply to all discovered pods and services.
+These values apply to all discovered Pods and services.
 
 ## Prometheus Operator CRDs
 
