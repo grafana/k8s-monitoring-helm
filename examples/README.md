@@ -41,6 +41,6 @@ Then, we extract the Grafana Agent configuration files from the ConfigMap object
 ### Specific platform examples
 
 * [EKS on Fargate](./eks-fargate) - Compatible with AWS EKS on Fargate clusters.
-* [GKE Autopilot](./gke-autopilot) - Compatible with Google GKE Autopilot clusters.
-* [IBM Cloud](./ibm-cloud) - Compatible with IBM Cloud clusters.
-* [OpenShift Compatible](./openshift-compatible) - Compatible with OpenShift clusters.
+* [GKE Autopilot](./gke-autopilot) - Compatible with Google GKE Autopilot Clusters.
+* [IBM Cloud](./ibm-cloud) - Compatible with IBM Cloud Clusters.
+* [OpenShift Compatible](./openshift-compatible) - Compatible with OpenShift Clusters.
