@@ -1121,8 +1121,8 @@ grafana-agent:
     # mounts those credentials into the Grafana Agent container.
     mounts:
       extra:
-      - name: kubernetes-monitoring-telemetry
-        mountPath: /etc/kubernetes-monitoring-telemetry
+        - name: kubernetes-monitoring-telemetry
+          mountPath: /etc/kubernetes-monitoring-telemetry
 
   controller:
     type: statefulset
@@ -1133,9 +1133,9 @@ grafana-agent:
     # connects those credentials into the Grafana Agent pod.
     volumes:
       extra:
-      - name: kubernetes-monitoring-telemetry
-        configMap:
-          name: kubernetes-monitoring-telemetry
+        - name: kubernetes-monitoring-telemetry
+          configMap:
+            name: kubernetes-monitoring-telemetry
 
   # Skip installation of the Grafana Agent CRDs, since we don't use them in this chart
   crds: {create: false}
@@ -1152,6 +1152,7 @@ grafana-agent-events:
 
   controller:
     type: deployment
+    replicas: 1  # Only one replica should be used, otherwise multiple copies of cluster events might get sent to Loki.
     nodeSelector:
       kubernetes.io/os: linux
 

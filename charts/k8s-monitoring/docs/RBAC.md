@@ -1,6 +1,10 @@
 # RBAC Rules for the Kubernetes Monitoring Helm Chart
-Several components have specialized RBAC rules to perform their work. This document will list the components, and their RBAC definitions.
+
+Several components have specialized RBAC rules to perform their work. This document will list the components and their
+RBAC definitions.
+
 ## Grafana Agent
+
 ```yaml
 - apiGroups:
     - ''
@@ -93,7 +97,9 @@ Several components have specialized RBAC rules to perform their work. This docum
     - list
     - watch
 ```
+
 ## Grafana Agent Events
+
 ```yaml
 - apiGroups:
     - ''
@@ -186,7 +192,9 @@ Several components have specialized RBAC rules to perform their work. This docum
     - list
     - watch
 ```
+
 ## Grafana Agent Logs
+
 ```yaml
 - apiGroups:
     - ''
@@ -279,7 +287,10 @@ Several components have specialized RBAC rules to perform their work. This docum
     - list
     - watch
 ```
-When deploying to an OpenShift cluster, these extra rules are added to enable access to special a SecurityContextConstraint:
+
+When deploying to an OpenShift cluster, a SecurityContextConstraint object is created that allows the Agent to read logs
+from the Node's file system. These additional RBAC rules enable access to the SecurityContextConstraint:
+
 ```yaml
 - verbs:
     - use
@@ -290,7 +301,9 @@ When deploying to an OpenShift cluster, these extra rules are added to enable ac
   resourceNames:
     - k8smon-grafana-agent-logs
 ```
+
 ## Kube State Metrics
+
 ```yaml
 - apiGroups:
     - certificates.k8s.io
@@ -493,7 +506,9 @@ When deploying to an OpenShift cluster, these extra rules are added to enable ac
     - list
     - watch
 ```
+
 ## OpenCost
+
 ```yaml
 - apiGroups:
     - ''

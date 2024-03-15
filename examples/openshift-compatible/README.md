@@ -74,4 +74,15 @@ grafana-agent-logs:
     podSecurityContext:
       seLinuxOptions:
         type: spc_t
+
+grafana-agent-events:
+  agent:
+    listenPort: 8080
+    securityContext:
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop: [ "ALL" ]
+      runAsNonRoot: true
+      seccompProfile:
+        type: "RuntimeDefault"
 ```

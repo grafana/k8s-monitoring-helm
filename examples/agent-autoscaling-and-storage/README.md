@@ -1,8 +1,6 @@
-# Cluster with pvc
+# Agent Autoscaling and Storage
 
 This example shows how autoscaling can be setup with [Grafana Agent Flow](https://grafana.com/docs/agent/latest/flow/) and this Helm chart.
-
-Note, Clustering is BETA as of 2024/01/11.  
 
 The configuration is specific to GKE, especially storageClassName. This chart also assumes that HPA is configured correctly. 
 
@@ -11,7 +9,7 @@ For more information, see [clustering documentation](https://grafana.com/docs/ag
 
 ```yaml
 cluster:
-  name: cluster-with-pvc-test
+  name: agent-autoscaling-and-storage-test
 
 externalServices:
   prometheus:
@@ -51,7 +49,6 @@ grafana-agent:
       maxReplicas: 10
       targetCPUUtilizationPercentage: 0
       targetMemoryUtilizationPercentage: 80
-# Ensure Helm 0.8.3 of k8s-monitoring, K8s > 1.23
     enableStatefulSetAutoDeletePVC: true
     volumeClaimTemplates: 
       - metadata:

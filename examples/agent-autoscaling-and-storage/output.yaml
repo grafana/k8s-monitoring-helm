@@ -154,11 +154,8 @@ data:
       }
     }
     
-    // Jaeger Receiver
     
-    // Zipkin Receiver
     
-    // Prometheus Remote Write Receiver
     
     // Processors
     otelcol.processor.transform "add_metric_datapoint_attributes" {
@@ -209,7 +206,7 @@ data:
       metric_statements {
         context = "resource"
         statements = [
-          "set(attributes[\"k8s.cluster.name\"], \"cluster-with-pvc-test\") where attributes[\"k8s.cluster.name\"] == nil",
+          "set(attributes[\"k8s.cluster.name\"], \"agent-autoscaling-and-storage-test\") where attributes[\"k8s.cluster.name\"] == nil",
         ]
       }
       log_statements {
@@ -218,7 +215,7 @@ data:
           "set(attributes[\"pod\"], attributes[\"k8s.pod.name\"])",
           "set(attributes[\"namespace\"], attributes[\"k8s.namespace.name\"])",
           "set(attributes[\"loki.resource.labels\"], \"pod, namespace, cluster, job\")",
-          "set(attributes[\"k8s.cluster.name\"], \"cluster-with-pvc-test\") where attributes[\"k8s.cluster.name\"] == nil",
+          "set(attributes[\"k8s.cluster.name\"], \"agent-autoscaling-and-storage-test\") where attributes[\"k8s.cluster.name\"] == nil",
         ]
       }
       output {
@@ -293,8 +290,8 @@ data:
         target_label = "__tmp_port"
       }
     
-      // If the metricsPortNumber annotation has value, override the target address to use it,
-      // independently from the declared container ports of the pod.
+      // If the metrics port number annotation has a value, override the target address to use it, regardless of if it is
+      // one of the declared ports on that pod.
       rule {
         source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_metrics_portNumber", "__meta_kubernetes_pod_ip"]
         regex = "(\\d+);(([A-Fa-f0-9]{1,4}::?){1,7}[A-Fa-f0-9]{1,4})"
@@ -817,7 +814,7 @@ data:
       rule {
         source_labels = ["cluster"]
         regex = ""
-        replacement = "cluster-with-pvc-test"
+        replacement = "agent-autoscaling-and-storage-test"
         target_label = "cluster"
       }
       forward_to = [prometheus.remote_write.metrics_service.receiver]
@@ -894,7 +891,7 @@ data:
     loki.process "logs_service" {
       stage.static_labels {
           values = {
-            cluster = "cluster-with-pvc-test",
+            cluster = "agent-autoscaling-and-storage-test",
           }
       }
       forward_to = [loki.write.logs_service.receiver]
@@ -941,7 +938,7 @@ data:
     loki.process "logs_service" {
       stage.static_labels {
           values = {
-            cluster = "cluster-with-pvc-test",
+            cluster = "agent-autoscaling-and-storage-test",
           }
       }
       forward_to = [loki.write.logs_service.receiver]
@@ -1089,7 +1086,7 @@ data:
     loki.process "logs_service" {
       stage.static_labels {
           values = {
-            cluster = "cluster-with-pvc-test",
+            cluster = "agent-autoscaling-and-storage-test",
           }
       }
       forward_to = [loki.write.logs_service.receiver]
@@ -45024,11 +45021,8 @@ data:
       }
     }
     
-    // Jaeger Receiver
     
-    // Zipkin Receiver
     
-    // Prometheus Remote Write Receiver
     
     // Processors
     otelcol.processor.transform "add_metric_datapoint_attributes" {
@@ -45079,7 +45073,7 @@ data:
       metric_statements {
         context = "resource"
         statements = [
-          "set(attributes[\"k8s.cluster.name\"], \"cluster-with-pvc-test\") where attributes[\"k8s.cluster.name\"] == nil",
+          "set(attributes[\"k8s.cluster.name\"], \"agent-autoscaling-and-storage-test\") where attributes[\"k8s.cluster.name\"] == nil",
         ]
       }
       log_statements {
@@ -45088,7 +45082,7 @@ data:
           "set(attributes[\"pod\"], attributes[\"k8s.pod.name\"])",
           "set(attributes[\"namespace\"], attributes[\"k8s.namespace.name\"])",
           "set(attributes[\"loki.resource.labels\"], \"pod, namespace, cluster, job\")",
-          "set(attributes[\"k8s.cluster.name\"], \"cluster-with-pvc-test\") where attributes[\"k8s.cluster.name\"] == nil",
+          "set(attributes[\"k8s.cluster.name\"], \"agent-autoscaling-and-storage-test\") where attributes[\"k8s.cluster.name\"] == nil",
         ]
       }
       output {
@@ -45163,8 +45157,8 @@ data:
         target_label = "__tmp_port"
       }
     
-      // If the metricsPortNumber annotation has value, override the target address to use it,
-      // independently from the declared container ports of the pod.
+      // If the metrics port number annotation has a value, override the target address to use it, regardless of if it is
+      // one of the declared ports on that pod.
       rule {
         source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_metrics_portNumber", "__meta_kubernetes_pod_ip"]
         regex = "(\\d+);(([A-Fa-f0-9]{1,4}::?){1,7}[A-Fa-f0-9]{1,4})"
@@ -45687,7 +45681,7 @@ data:
       rule {
         source_labels = ["cluster"]
         regex = ""
-        replacement = "cluster-with-pvc-test"
+        replacement = "agent-autoscaling-and-storage-test"
         target_label = "cluster"
       }
       forward_to = [prometheus.remote_write.metrics_service.receiver]
@@ -45764,7 +45758,7 @@ data:
     loki.process "logs_service" {
       stage.static_labels {
           values = {
-            cluster = "cluster-with-pvc-test",
+            cluster = "agent-autoscaling-and-storage-test",
           }
       }
       forward_to = [loki.write.logs_service.receiver]
@@ -45803,7 +45797,7 @@ data:
     loki.process "logs_service" {
       stage.static_labels {
           values = {
-            cluster = "cluster-with-pvc-test",
+            cluster = "agent-autoscaling-and-storage-test",
           }
       }
       forward_to = [loki.write.logs_service.receiver]
@@ -45943,7 +45937,7 @@ data:
     loki.process "logs_service" {
       stage.static_labels {
           values = {
-            cluster = "cluster-with-pvc-test",
+            cluster = "agent-autoscaling-and-storage-test",
           }
       }
       forward_to = [loki.write.logs_service.receiver]
@@ -45986,35 +45980,35 @@ data:
     {
       "queries": [
         {
-          "query": "up{cluster=\"cluster-with-pvc-test\"}",
+          "query": "up{cluster=\"agent-autoscaling-and-storage-test\"}",
           "type": "promql"
         },
         {
-          "query": "agent_build_info{cluster=\"cluster-with-pvc-test\"}",
+          "query": "agent_build_info{cluster=\"agent-autoscaling-and-storage-test\"}",
           "type": "promql"
         },
         {
-          "query": "kubernetes_build_info{cluster=\"cluster-with-pvc-test\"}",
+          "query": "kubernetes_build_info{cluster=\"agent-autoscaling-and-storage-test\"}",
           "type": "promql"
         },
         {
-          "query": "machine_memory_bytes{cluster=\"cluster-with-pvc-test\"}",
+          "query": "machine_memory_bytes{cluster=\"agent-autoscaling-and-storage-test\"}",
           "type": "promql"
         },
         {
-          "query": "kube_node_info{cluster=\"cluster-with-pvc-test\"}",
+          "query": "kube_node_info{cluster=\"agent-autoscaling-and-storage-test\"}",
           "type": "promql"
         },
         {
-          "query": "node_exporter_build_info{cluster=\"cluster-with-pvc-test\"}",
+          "query": "node_exporter_build_info{cluster=\"agent-autoscaling-and-storage-test\"}",
           "type": "promql"
         },
         {
-          "query": "opencost_build_info{cluster=\"cluster-with-pvc-test\"}",
+          "query": "opencost_build_info{cluster=\"agent-autoscaling-and-storage-test\"}",
           "type": "promql"
         },
         {
-          "query": "grafana_kubernetes_monitoring_build_info{cluster=\"cluster-with-pvc-test\"}",
+          "query": "grafana_kubernetes_monitoring_build_info{cluster=\"agent-autoscaling-and-storage-test\"}",
           "type": "promql"
         }
       ]

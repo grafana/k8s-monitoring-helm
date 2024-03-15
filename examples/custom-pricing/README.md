@@ -1,0 +1,44 @@
+# Custom Pricing
+
+This example shows how to enable custom pricing for the OpenCost deployment. See the
+OpenCost [documentation](https://www.opencost.io/docs/configuration/on-prem#custom-pricing-using-the-opencost-helm-chart)
+for more information.
+
+```yaml
+cluster:
+  name: custom-pricing-test
+
+externalServices:
+  prometheus:
+    host: https://prometheus.example.com
+    basicAuth:
+      username: 12345
+      password: "It's a secret to everyone"
+  loki:
+    host: https://loki.example.com
+    basicAuth:
+      username: 12345
+      password: "It's a secret to everyone"
+
+opencost:
+  opencost:
+    customPricing:
+      enabled: true
+      createConfigmap: true
+      costModel:
+        description: Custom pricing configuration.
+        CPU: 1.5
+        spotCPU: 0.007
+        RAM: 0.40
+        spotRAM: 0.0008
+        GPU: 0.99
+        storage: 0.20
+        zoneNetworkEgress: 0.01
+        regionNetworkEgress: 0.01
+        internetNetworkEgress: 0.12
+    exporter:
+      defaultClusterId: custom-pricing-test
+    prometheus:
+      external:
+        url: https://prometheus.example.com/api/prom
+```

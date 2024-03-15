@@ -70,6 +70,21 @@ metadata:
     app.kubernetes.io/managed-by: Helm
 automountServiceAccountToken: true
 ---
+# Source: k8s-monitoring/charts/prometheus-node-exporter/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: k8smon-prometheus-node-exporter
+  namespace: default
+  labels:
+    helm.sh/chart: prometheus-node-exporter-4.25.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: metrics
+    app.kubernetes.io/part-of: prometheus-node-exporter
+    app.kubernetes.io/name: prometheus-node-exporter
+    app.kubernetes.io/instance: k8smon
+    app.kubernetes.io/version: "1.7.0"
+---
 # Source: k8s-monitoring/templates/log-service-credentials.yaml
 apiVersion: v1
 kind: Secret
@@ -95,6 +110,27 @@ data:
   host: "aHR0cHM6Ly9wcm9tZXRoZXVzLmV4YW1wbGUuY29t"
   username: "MTIzNDU="
   password: "SXQncyBhIHNlY3JldCB0byBldmVyeW9uZQ=="
+---
+# Source: k8s-monitoring/charts/opencost/templates/configmap-custom-pricing.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: custom-pricing-model
+data:
+  default.json: |-
+    {
+      "CPU": "1.5",
+      "GPU": "0.99",
+      "RAM": "0.4",
+      "description": "Custom pricing configuration.",
+      "internetNetworkEgress": "0.12",
+      "regionNetworkEgress": "0.01",
+      "spotCPU": "0.007",
+      "spotRAM": "0.0008",
+      "storage": "0.2",
+      "zoneNetworkEgress": "0.01",
+      "provider" : "custom"
+    }
 ---
 # Source: k8s-monitoring/templates/grafana-agent-config.yaml
 apiVersion: v1
@@ -191,7 +227,7 @@ data:
       metric_statements {
         context = "resource"
         statements = [
-          "set(attributes[\"k8s.cluster.name\"], \"eks-fargate-test\") where attributes[\"k8s.cluster.name\"] == nil",
+          "set(attributes[\"k8s.cluster.name\"], \"custom-pricing-test\") where attributes[\"k8s.cluster.name\"] == nil",
         ]
       }
       log_statements {
@@ -200,7 +236,7 @@ data:
           "set(attributes[\"pod\"], attributes[\"k8s.pod.name\"])",
           "set(attributes[\"namespace\"], attributes[\"k8s.namespace.name\"])",
           "set(attributes[\"loki.resource.labels\"], \"pod, namespace, cluster, job\")",
-          "set(attributes[\"k8s.cluster.name\"], \"eks-fargate-test\") where attributes[\"k8s.cluster.name\"] == nil",
+          "set(attributes[\"k8s.cluster.name\"], \"custom-pricing-test\") where attributes[\"k8s.cluster.name\"] == nil",
         ]
       }
       output {
@@ -659,6 +695,52 @@ data:
       forward_to = [prometheus.relabel.metrics_service.receiver]
     }
     
+    // Node Exporter
+    discovery.relabel "node_exporter" {
+      targets = discovery.kubernetes.pods.targets
+      rule {
+        source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_instance"]
+        regex = "k8smon"
+        action = "keep"
+      }
+      rule {
+        source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
+        regex = "prometheus-node-exporter.*"
+        action = "keep"
+      }
+      rule {
+        source_labels = ["__meta_kubernetes_pod_node_name"]
+        action = "replace"
+        target_label = "instance"
+      }
+    }
+    
+    prometheus.scrape "node_exporter" {
+      job_name   = "integrations/node_exporter"
+      targets  = discovery.relabel.node_exporter.output
+      scrape_interval = "60s"
+      clustering {
+        enabled = true
+      }
+      forward_to = [prometheus.relabel.node_exporter.receiver]
+    }
+    
+    prometheus.relabel "node_exporter" {
+      rule {
+        source_labels = ["__name__"]
+        regex = "up|node_cpu.*|node_exporter_build_info|node_filesystem.*|node_memory.*|process_cpu_seconds_total|process_resident_memory_bytes"
+        action = "keep"
+      }
+      // Drop metrics for certain file systems
+      rule {
+        source_labels = ["__name__", "fstype"]
+        separator = "@"
+        regex = "node_filesystem.*@(tempfs)"
+        action = "drop"
+      }
+      forward_to = [prometheus.relabel.metrics_service.receiver]
+    }
+    
     // OpenCost
     discovery.relabel "opencost" {
       targets = discovery.kubernetes.services.targets
@@ -753,7 +835,7 @@ data:
       rule {
         source_labels = ["cluster"]
         regex = ""
-        replacement = "eks-fargate-test"
+        replacement = "custom-pricing-test"
         target_label = "cluster"
       }
       forward_to = [prometheus.remote_write.metrics_service.receiver]
@@ -828,7 +910,7 @@ data:
     loki.process "logs_service" {
       stage.static_labels {
           values = {
-            cluster = "eks-fargate-test",
+            cluster = "custom-pricing-test",
           }
       }
       forward_to = [loki.write.logs_service.receiver]
@@ -871,7 +953,7 @@ data:
     loki.process "logs_service" {
       stage.static_labels {
           values = {
-            cluster = "eks-fargate-test",
+            cluster = "custom-pricing-test",
           }
       }
       forward_to = [loki.write.logs_service.receiver]
@@ -901,6 +983,10 @@ data:
     // Pod Logs
     discovery.kubernetes "pods" {
       role = "pod"
+      selectors {
+        role = "pod"
+        field = "spec.nodeName=" + env("HOSTNAME")
+      }
     }
     
     discovery.relabel "pod_logs" {
@@ -928,6 +1014,13 @@ data:
         replacement = "$1"
         target_label = "job"
       }
+      rule {
+        source_labels = ["__meta_kubernetes_pod_uid", "__meta_kubernetes_pod_container_name"]
+        separator = "/"
+        action = "replace"
+        replacement = "/var/log/pods/*$1/*.log"
+        target_label = "__path__"
+      }
     
       // set the container runtime as a label
       rule {
@@ -948,13 +1041,15 @@ data:
       }
     }
     
-    loki.source.kubernetes "pod_logs" {
-      targets = discovery.relabel.filtered_pod_logs.output
-      forward_to = [loki.process.pod_logs.receiver]
-      clustering {
-        enabled = true
-      }
+    local.file_match "pod_logs" {
+      path_targets = discovery.relabel.filtered_pod_logs.output
     }
+    
+    loki.source.file "pod_logs" {
+      targets    = local.file_match.pod_logs.targets
+      forward_to = [loki.process.pod_logs.receiver]
+    }
+    
     loki.process "pod_logs" {
       stage.match {
         selector = "{tmp_container_runtime=\"containerd\"}"
@@ -1002,7 +1097,7 @@ data:
     loki.process "logs_service" {
       stage.static_labels {
           values = {
-            cluster = "eks-fargate-test",
+            cluster = "custom-pricing-test",
           }
       }
       forward_to = [loki.write.logs_service.receiver]
@@ -1031,7 +1126,7 @@ data:
   metrics.prom: |
     # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart as well as a summary of enabled features
     # TYPE grafana_kubernetes_monitoring_build_info gauge
-    grafana_kubernetes_monitoring_build_info{version="0.12.0", namespace="default", metrics="enabled,agent,autoDiscover,kube-state-metrics,kubelet,cadvisor,cost", logs="enabled,events,pod_logs", traces="disabled", deployments="kube-state-metrics,prometheus-operator-crds,opencost"} 1
+    grafana_kubernetes_monitoring_build_info{version="0.12.0", namespace="default", metrics="enabled,agent,autoDiscover,kube-state-metrics,node-exporter,kubelet,cadvisor,cost", logs="enabled,events,pod_logs", traces="disabled", deployments="kube-state-metrics,prometheus-node-exporter,prometheus-operator-crds,opencost"} 1
 ---
 # Source: k8s-monitoring/charts/prometheus-operator-crds/charts/crds/templates/crd-alertmanagerconfigs.yaml
 apiVersion: apiextensions.k8s.io/v1
@@ -44191,6 +44286,244 @@ spec:
       port: 9003
       targetPort: 9003
 ---
+# Source: k8s-monitoring/charts/prometheus-node-exporter/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: k8smon-prometheus-node-exporter
+  namespace: default
+  labels:
+    helm.sh/chart: prometheus-node-exporter-4.25.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: metrics
+    app.kubernetes.io/part-of: prometheus-node-exporter
+    app.kubernetes.io/name: prometheus-node-exporter
+    app.kubernetes.io/instance: k8smon
+    app.kubernetes.io/version: "1.7.0"
+spec:
+  type: ClusterIP
+  ports:
+    - port: 9100
+      targetPort: 9100
+      protocol: TCP
+      name: metrics
+  selector:
+    app.kubernetes.io/name: prometheus-node-exporter
+    app.kubernetes.io/instance: k8smon
+---
+# Source: k8s-monitoring/charts/grafana-agent-logs/templates/controllers/daemonset.yaml
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: k8smon-grafana-agent-logs
+  labels:
+    helm.sh/chart: grafana-agent-logs-0.36.0
+    app.kubernetes.io/name: grafana-agent-logs
+    app.kubernetes.io/instance: k8smon
+    
+    app.kubernetes.io/version: "v0.40.2"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  minReadySeconds: 10
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: grafana-agent-logs
+      app.kubernetes.io/instance: k8smon
+  template:
+    metadata:
+      annotations:
+        kubectl.kubernetes.io/default-container: grafana-agent
+      labels:
+        app.kubernetes.io/name: grafana-agent-logs
+        app.kubernetes.io/instance: k8smon
+    spec:
+      serviceAccountName: k8smon-grafana-agent-logs
+      containers:
+        - name: grafana-agent
+          image: docker.io/grafana/agent:v0.40.2
+          imagePullPolicy: IfNotPresent
+          args:
+            - run
+            - /etc/agent/config.river
+            - --storage.path=/tmp/agent
+            - --server.http.listen-addr=0.0.0.0:80
+            - --server.http.ui-path-prefix=/
+            - --cluster.enabled=true
+            - --cluster.join-addresses=k8smon-grafana-agent-logs-cluster
+          env:
+            - name: AGENT_MODE
+              value: flow
+            - name: AGENT_DEPLOY_MODE
+              value: "helm"
+            - name: HOSTNAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+          ports:
+            - containerPort: 80
+              name: http-metrics
+          readinessProbe:
+            httpGet:
+              path: /-/ready
+              port: 80
+              scheme: HTTP
+            initialDelaySeconds: 10
+            timeoutSeconds: 1
+          volumeMounts:
+            - name: config
+              mountPath: /etc/agent
+            - name: varlog
+              mountPath: /var/log
+              readOnly: true
+        - name: config-reloader
+          image: ghcr.io/jimmidyson/configmap-reload:v0.12.0
+          args:
+            - --volume-dir=/etc/agent
+            - --webhook-url=http://localhost:80/-/reload
+          volumeMounts:
+            - name: config
+              mountPath: /etc/agent
+          resources:
+            requests:
+              cpu: 1m
+              memory: 5Mi
+      dnsPolicy: ClusterFirst
+      nodeSelector:
+        kubernetes.io/os: linux
+      tolerations:
+        - effect: NoSchedule
+          operator: Exists
+      volumes:
+        - name: config
+          configMap:
+            name: k8smon-grafana-agent-logs
+        - name: varlog
+          hostPath:
+            path: /var/log
+---
+# Source: k8s-monitoring/charts/prometheus-node-exporter/templates/daemonset.yaml
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: k8smon-prometheus-node-exporter
+  namespace: default
+  labels:
+    helm.sh/chart: prometheus-node-exporter-4.25.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: metrics
+    app.kubernetes.io/part-of: prometheus-node-exporter
+    app.kubernetes.io/name: prometheus-node-exporter
+    app.kubernetes.io/instance: k8smon
+    app.kubernetes.io/version: "1.7.0"
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: prometheus-node-exporter
+      app.kubernetes.io/instance: k8smon
+  revisionHistoryLimit: 10
+  updateStrategy:
+    rollingUpdate:
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      annotations:
+        cluster-autoscaler.kubernetes.io/safe-to-evict: "true"
+      labels:
+        helm.sh/chart: prometheus-node-exporter-4.25.0
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/component: metrics
+        app.kubernetes.io/part-of: prometheus-node-exporter
+        app.kubernetes.io/name: prometheus-node-exporter
+        app.kubernetes.io/instance: k8smon
+        app.kubernetes.io/version: "1.7.0"
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        fsGroup: 65534
+        runAsGroup: 65534
+        runAsNonRoot: true
+        runAsUser: 65534
+      serviceAccountName: k8smon-prometheus-node-exporter
+      containers:
+        - name: node-exporter
+          image: quay.io/prometheus/node-exporter:v1.7.0
+          imagePullPolicy: IfNotPresent
+          args:
+            - --path.procfs=/host/proc
+            - --path.sysfs=/host/sys
+            - --path.rootfs=/host/root
+            - --path.udev.data=/host/root/run/udev/data
+            - --web.listen-address=[$(HOST_IP)]:9100
+          securityContext:
+            readOnlyRootFilesystem: true
+          env:
+            - name: HOST_IP
+              value: 0.0.0.0
+          ports:
+            - name: metrics
+              containerPort: 9100
+              protocol: TCP
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              httpHeaders:
+              path: /
+              port: 9100
+              scheme: HTTP
+            initialDelaySeconds: 0
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              httpHeaders:
+              path: /
+              port: 9100
+              scheme: HTTP
+            initialDelaySeconds: 0
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          volumeMounts:
+            - name: proc
+              mountPath: /host/proc
+              readOnly:  true
+            - name: sys
+              mountPath: /host/sys
+              readOnly: true
+            - name: root
+              mountPath: /host/root
+              mountPropagation: HostToContainer
+              readOnly: true
+      hostNetwork: true
+      hostPID: true
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: eks.amazonaws.com/compute-type
+                operator: NotIn
+                values:
+                - fargate
+      nodeSelector:
+        kubernetes.io/os: linux
+      tolerations:
+        - effect: NoSchedule
+          operator: Exists
+      volumes:
+        - name: proc
+          hostPath:
+            path: /proc
+        - name: sys
+          hostPath:
+            path: /sys
+        - name: root
+          hostPath:
+            path: /
+---
 # Source: k8s-monitoring/charts/grafana-agent-events/templates/controllers/deployment.yaml
 apiVersion: apps/v1
 kind: Deployment
@@ -44270,91 +44603,6 @@ spec:
         - name: config
           configMap:
             name: k8smon-grafana-agent-events
----
-# Source: k8s-monitoring/charts/grafana-agent-logs/templates/controllers/deployment.yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: k8smon-grafana-agent-logs
-  labels:
-    helm.sh/chart: grafana-agent-logs-0.36.0
-    app.kubernetes.io/name: grafana-agent-logs
-    app.kubernetes.io/instance: k8smon
-    
-    app.kubernetes.io/version: "v0.40.2"
-    app.kubernetes.io/managed-by: Helm
-spec:
-  replicas: 2
-  minReadySeconds: 10
-  selector:
-    matchLabels:
-      app.kubernetes.io/name: grafana-agent-logs
-      app.kubernetes.io/instance: k8smon
-  template:
-    metadata:
-      annotations:
-        kubectl.kubernetes.io/default-container: grafana-agent
-      labels:
-        app.kubernetes.io/name: grafana-agent-logs
-        app.kubernetes.io/instance: k8smon
-    spec:
-      serviceAccountName: k8smon-grafana-agent-logs
-      containers:
-        - name: grafana-agent
-          image: docker.io/grafana/agent:v0.40.2
-          imagePullPolicy: IfNotPresent
-          args:
-            - run
-            - /etc/agent/config.river
-            - --storage.path=/tmp/agent
-            - --server.http.listen-addr=0.0.0.0:80
-            - --server.http.ui-path-prefix=/
-            - --cluster.enabled=true
-            - --cluster.join-addresses=k8smon-grafana-agent-logs-cluster
-          env:
-            - name: AGENT_MODE
-              value: flow
-            - name: AGENT_DEPLOY_MODE
-              value: "helm"
-            - name: HOSTNAME
-              valueFrom:
-                fieldRef:
-                  fieldPath: spec.nodeName
-          ports:
-            - containerPort: 80
-              name: http-metrics
-          readinessProbe:
-            httpGet:
-              path: /-/ready
-              port: 80
-              scheme: HTTP
-            initialDelaySeconds: 10
-            timeoutSeconds: 1
-          volumeMounts:
-            - name: config
-              mountPath: /etc/agent
-        - name: config-reloader
-          image: ghcr.io/jimmidyson/configmap-reload:v0.12.0
-          args:
-            - --volume-dir=/etc/agent
-            - --webhook-url=http://localhost:80/-/reload
-          volumeMounts:
-            - name: config
-              mountPath: /etc/agent
-          resources:
-            requests:
-              cpu: 1m
-              memory: 5Mi
-      dnsPolicy: ClusterFirst
-      nodeSelector:
-        kubernetes.io/os: linux
-      tolerations:
-        - effect: NoSchedule
-          operator: Exists
-      volumes:
-        - name: config
-          configMap:
-            name: k8smon-grafana-agent-logs
 ---
 # Source: k8s-monitoring/charts/kube-state-metrics/templates/deployment.yaml
 apiVersion: apps/v1
@@ -44494,9 +44742,9 @@ spec:
             - name: API_PORT
               value: "9003"
             - name: PROMETHEUS_SERVER_ENDPOINT
-              value: "https://prom.example.com/api/prom"
+              value: "https://prometheus.example.com/api/prom"
             - name: CLUSTER_ID
-              value: "default-cluster"
+              value: "custom-pricing-test"
             # If username, password or bearer_token are defined, pull from secrets
             - name: DB_BASIC_AUTH_USERNAME
               valueFrom:
@@ -44508,6 +44756,8 @@ spec:
                 secretKeyRef:
                   name: prometheus-k8s-monitoring
                   key: password
+            - name: CONFIG_PATH
+              value: "/tmp/custom-config"
             - name: DATA_RETENTION_DAILY_RESOLUTION_DAYS
               value: "15"
             - name: CLOUD_COST_ENABLED
@@ -44531,6 +44781,14 @@ spec:
               value: "true"
             - name: PROM_CLUSTER_ID_LABEL
               value: "cluster"
+          volumeMounts:
+            - mountPath: /tmp/custom-config
+              name: custom-configs
+              readOnly: true
+      volumes:
+        - name: custom-configs
+          configMap:
+            name: custom-pricing-model
 ---
 # Source: k8s-monitoring/charts/grafana-agent/templates/controllers/statefulset.yaml
 apiVersion: apps/v1
@@ -44780,7 +45038,7 @@ data:
       metric_statements {
         context = "resource"
         statements = [
-          "set(attributes[\"k8s.cluster.name\"], \"eks-fargate-test\") where attributes[\"k8s.cluster.name\"] == nil",
+          "set(attributes[\"k8s.cluster.name\"], \"custom-pricing-test\") where attributes[\"k8s.cluster.name\"] == nil",
         ]
       }
       log_statements {
@@ -44789,7 +45047,7 @@ data:
           "set(attributes[\"pod\"], attributes[\"k8s.pod.name\"])",
           "set(attributes[\"namespace\"], attributes[\"k8s.namespace.name\"])",
           "set(attributes[\"loki.resource.labels\"], \"pod, namespace, cluster, job\")",
-          "set(attributes[\"k8s.cluster.name\"], \"eks-fargate-test\") where attributes[\"k8s.cluster.name\"] == nil",
+          "set(attributes[\"k8s.cluster.name\"], \"custom-pricing-test\") where attributes[\"k8s.cluster.name\"] == nil",
         ]
       }
       output {
@@ -45248,6 +45506,52 @@ data:
       forward_to = [prometheus.relabel.metrics_service.receiver]
     }
     
+    // Node Exporter
+    discovery.relabel "node_exporter" {
+      targets = discovery.kubernetes.pods.targets
+      rule {
+        source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_instance"]
+        regex = "k8smon"
+        action = "keep"
+      }
+      rule {
+        source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
+        regex = "prometheus-node-exporter.*"
+        action = "keep"
+      }
+      rule {
+        source_labels = ["__meta_kubernetes_pod_node_name"]
+        action = "replace"
+        target_label = "instance"
+      }
+    }
+    
+    prometheus.scrape "node_exporter" {
+      job_name   = "integrations/node_exporter"
+      targets  = discovery.relabel.node_exporter.output
+      scrape_interval = "60s"
+      clustering {
+        enabled = true
+      }
+      forward_to = [prometheus.relabel.node_exporter.receiver]
+    }
+    
+    prometheus.relabel "node_exporter" {
+      rule {
+        source_labels = ["__name__"]
+        regex = "up|node_cpu.*|node_exporter_build_info|node_filesystem.*|node_memory.*|process_cpu_seconds_total|process_resident_memory_bytes"
+        action = "keep"
+      }
+      // Drop metrics for certain file systems
+      rule {
+        source_labels = ["__name__", "fstype"]
+        separator = "@"
+        regex = "node_filesystem.*@(tempfs)"
+        action = "drop"
+      }
+      forward_to = [prometheus.relabel.metrics_service.receiver]
+    }
+    
     // OpenCost
     discovery.relabel "opencost" {
       targets = discovery.kubernetes.services.targets
@@ -45342,7 +45646,7 @@ data:
       rule {
         source_labels = ["cluster"]
         regex = ""
-        replacement = "eks-fargate-test"
+        replacement = "custom-pricing-test"
         target_label = "cluster"
       }
       forward_to = [prometheus.remote_write.metrics_service.receiver]
@@ -45417,7 +45721,7 @@ data:
     loki.process "logs_service" {
       stage.static_labels {
           values = {
-            cluster = "eks-fargate-test",
+            cluster = "custom-pricing-test",
           }
       }
       forward_to = [loki.write.logs_service.receiver]
@@ -45452,7 +45756,7 @@ data:
     loki.process "logs_service" {
       stage.static_labels {
           values = {
-            cluster = "eks-fargate-test",
+            cluster = "custom-pricing-test",
           }
       }
       forward_to = [loki.write.logs_service.receiver]
@@ -45474,6 +45778,10 @@ data:
     // Pod Logs
     discovery.kubernetes "pods" {
       role = "pod"
+      selectors {
+        role = "pod"
+        field = "spec.nodeName=" + env("HOSTNAME")
+      }
     }
     
     discovery.relabel "pod_logs" {
@@ -45501,6 +45809,13 @@ data:
         replacement = "$1"
         target_label = "job"
       }
+      rule {
+        source_labels = ["__meta_kubernetes_pod_uid", "__meta_kubernetes_pod_container_name"]
+        separator = "/"
+        action = "replace"
+        replacement = "/var/log/pods/*$1/*.log"
+        target_label = "__path__"
+      }
     
       // set the container runtime as a label
       rule {
@@ -45521,13 +45836,15 @@ data:
       }
     }
     
-    loki.source.kubernetes "pod_logs" {
-      targets = discovery.relabel.filtered_pod_logs.output
-      forward_to = [loki.process.pod_logs.receiver]
-      clustering {
-        enabled = true
-      }
+    local.file_match "pod_logs" {
+      path_targets = discovery.relabel.filtered_pod_logs.output
     }
+    
+    loki.source.file "pod_logs" {
+      targets    = local.file_match.pod_logs.targets
+      forward_to = [loki.process.pod_logs.receiver]
+    }
+    
     loki.process "pod_logs" {
       stage.match {
         selector = "{tmp_container_runtime=\"containerd\"}"
@@ -45575,7 +45892,7 @@ data:
     loki.process "logs_service" {
       stage.static_labels {
           values = {
-            cluster = "eks-fargate-test",
+            cluster = "custom-pricing-test",
           }
       }
       forward_to = [loki.write.logs_service.receiver]
@@ -45614,31 +45931,35 @@ data:
     {
       "queries": [
         {
-          "query": "up{cluster=\"eks-fargate-test\"}",
+          "query": "up{cluster=\"custom-pricing-test\"}",
           "type": "promql"
         },
         {
-          "query": "agent_build_info{cluster=\"eks-fargate-test\"}",
+          "query": "agent_build_info{cluster=\"custom-pricing-test\"}",
           "type": "promql"
         },
         {
-          "query": "kubernetes_build_info{cluster=\"eks-fargate-test\"}",
+          "query": "kubernetes_build_info{cluster=\"custom-pricing-test\"}",
           "type": "promql"
         },
         {
-          "query": "machine_memory_bytes{cluster=\"eks-fargate-test\"}",
+          "query": "machine_memory_bytes{cluster=\"custom-pricing-test\"}",
           "type": "promql"
         },
         {
-          "query": "kube_node_info{cluster=\"eks-fargate-test\"}",
+          "query": "kube_node_info{cluster=\"custom-pricing-test\"}",
           "type": "promql"
         },
         {
-          "query": "opencost_build_info{cluster=\"eks-fargate-test\"}",
+          "query": "node_exporter_build_info{cluster=\"custom-pricing-test\"}",
           "type": "promql"
         },
         {
-          "query": "grafana_kubernetes_monitoring_build_info{cluster=\"eks-fargate-test\"}",
+          "query": "opencost_build_info{cluster=\"custom-pricing-test\"}",
+          "type": "promql"
+        },
+        {
+          "query": "grafana_kubernetes_monitoring_build_info{cluster=\"custom-pricing-test\"}",
           "type": "promql"
         }
       ]
