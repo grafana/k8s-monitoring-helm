@@ -93,7 +93,7 @@ data:
         endpoint = "0.0.0.0:4318"
       }
       output {
-        logs = [otelcol.processor.k8sattributes.default.input]
+        logs = [otelcol.processor.resourcedetection.default.input]
       }
     }
     
@@ -101,6 +101,17 @@ data:
     
     
     // Processors
+    
+    otelcol.processor.resourcedetection "default" {
+      detectors = ["env", "system"]
+    
+    	system {
+    		hostname_sources = ["os"]
+    	}
+    
+    	output {
+    		logs    = [otelcol.processor.k8sattributes.default.input]
+    }
     
     otelcol.processor.k8sattributes "default" {
       extract {
@@ -1313,7 +1324,7 @@ data:
         endpoint = "0.0.0.0:4318"
       }
       output {
-        logs = [otelcol.processor.k8sattributes.default.input]
+        logs = [otelcol.processor.resourcedetection.default.input]
       }
     }
     
@@ -1321,6 +1332,17 @@ data:
     
     
     // Processors
+    
+    otelcol.processor.resourcedetection "default" {
+      detectors = ["env", "system"]
+    
+    	system {
+    		hostname_sources = ["os"]
+    	}
+    
+    	output {
+    		logs    = [otelcol.processor.k8sattributes.default.input]
+    }
     
     otelcol.processor.k8sattributes "default" {
       extract {
