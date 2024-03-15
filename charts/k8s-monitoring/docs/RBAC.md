@@ -288,8 +288,8 @@ RBAC definitions.
     - watch
 ```
 
-When deploying to an OpenShift cluster, these extra rules are added to enable access to special a
-SecurityContextConstraint:
+When deploying to an OpenShift cluster, a SecurityContextConstraint object is created that allows the Agent to read logs
+from the Node's file system. These additional RBAC rules enable access to the SecurityContextConstraint:
 
 ```yaml
 - verbs:
