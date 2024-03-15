@@ -34,7 +34,7 @@ To fix this problem, you can either:
 
 ## Pod log files in `/var/lib/docker/containers`
 
-On certain Kubernetes clusters, pod logs are stored inside of `/var/lib/docker/containers` with `/var/log/pods` being
+On certain Kubernetes Clusters, Pod logs are stored inside of `/var/lib/docker/containers` with `/var/log/pods` being
 symlinked to that directory, but the Grafana Agent doesn't mount it by default.
 If your cluster works this way, you'll likely see errors in the Grafana Agent for Logs pods like this:
 
