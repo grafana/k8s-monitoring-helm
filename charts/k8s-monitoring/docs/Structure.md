@@ -31,7 +31,7 @@ HostPath volume mounts. This requires it to be deployed as a DaemonSet. The Graf
 deployed as a StatefulSet, which allows it to be scaled (optionally with a HorizontalPodAutoscaler) based on load. If it
 was combined with the Agent for Logs, it would lose its ability to scale.
 
-Also, the Grafana Agent for Events cannot be scaled beyond 1 replica, because that would result in duplicate events
+Also, the Grafana Agent for Events cannot be scaled beyond one replica, because that would result in duplicate events
 being sent to the logs service.
 
 ## Configuration Created
