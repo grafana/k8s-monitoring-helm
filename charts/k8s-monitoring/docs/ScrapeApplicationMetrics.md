@@ -185,7 +185,7 @@ Note that there is a unique meta label for every Kubernetes label. The labels ar
 
 ## Scraping
 
-Now that we've selected the specific pod or service we want, we can scrape it for metrics. This is done with the
+Now that you've selected the specific pod or service you want, you can scrape it for metrics. Do this with the
 [`prometheus.scrape`](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.scrape/) component. At
 its basic, you only need to declare what things to scrape, and where to send
 the scraped metrics. Here is an example:
