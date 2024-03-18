@@ -31,6 +31,8 @@ This is the values file for Kubernetes Monitoring, and it only differs from the 
 `.logs.extraConfig` sections to load the configuration stored in the MySQL ConfigMap. Also, additional tests to the
 `helm test` command will verify that telemetry data from the two services are discovered, scraped, and stored properly.
 
+For more information about using the `extraConfig` values, see [the documentation](../../charts/k8s-monitoring/docs/UsingExtraConfig.md).
+
 Note that no reference to the Cert Manager service is stored here, because it is discovered and scraped automatically.
 
 ```yaml
