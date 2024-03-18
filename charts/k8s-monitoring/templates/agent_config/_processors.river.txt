@@ -18,6 +18,26 @@ otelcol.processor.transform "add_metric_datapoint_attributes" {
 }
 {{- end }}
 
+otelcol.processor.resourcedetection "default" {
+  detectors = ["env", "system"]
+
+	system {
+		hostname_sources = ["os"]
+	}
+
+	output {
+{{- if .Values.metrics.enabled }}
+		metrics = [otelcol.processor.transform.add_metric_datapoint_attributes.input]
+{{- end }}
+{{- if .Values.logs.enabled }}
+		logs    = [otelcol.processor.k8sattributes.default.input]
+{{- end }}
+{{- if .Values.traces.enabled }}
+		traces  = [otelcol.processor.k8sattributes.default.input]
+{{- end }}
+  }
+}
+
 otelcol.processor.k8sattributes "default" {
   extract {
     metadata = [
