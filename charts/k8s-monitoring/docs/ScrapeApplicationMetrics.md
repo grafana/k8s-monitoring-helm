@@ -298,3 +298,5 @@ prometheus.relabel "processing_app" {
 }
 $ helm install k8s-monitoring grafana/k8s-monitoring --values chart-values.yaml --set-file extraConfig=processor-config.river
 ```
+
+For more information about using the `extraConfig` values, see [the documentation](UsingExtraConfig.md).
