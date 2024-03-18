@@ -1,11 +1,12 @@
 # Agent Autoscaling and Storage
 
-This example shows how autoscaling can be setup with [Grafana Agent Flow](https://grafana.com/docs/agent/latest/flow/) and this Helm chart.
+This example shows how autoscaling and WAL storage can be set up
+with [Grafana Agent Flow](https://grafana.com/docs/agent/latest/flow/) and this Helm chart.
 
-The configuration is specific to GKE, especially storageClassName. This chart also assumes that HPA is configured correctly. 
+The example uses a storage volume of 5Gi per agent instance, but this may need to be adjusted based on the number of
+active series the agents are expected to scrape.
 
 For more information, see [clustering documentation](https://grafana.com/docs/agent/latest/flow/concepts/clustering/).
-
 
 ```yaml
 cluster:
@@ -17,26 +18,19 @@ externalServices:
     basicAuth:
       username: 12345
       password: "It's a secret to everyone"
-    externalLabels:
-      region: southwest
-      tenant: widgetco
   loki:
     host: https://loki.example.com
     basicAuth:
       username: 12345
       password: "It's a secret to everyone"
-    externalLabels:
-      region: southwest
-      tenant: widgetco
 
 grafana-agent:
   agent:
-    resources: 
+    resources:
       requests:
         cpu: "1m"
         memory: "500Mi"
-    clustering:
-      enabled: true
+
     storagePath: /var/lib/agent
     mounts:
       extra:
@@ -49,14 +43,15 @@ grafana-agent:
       maxReplicas: 10
       targetCPUUtilizationPercentage: 0
       targetMemoryUtilizationPercentage: 80
+
     enableStatefulSetAutoDeletePVC: true
-    volumeClaimTemplates: 
+    volumeClaimTemplates:
       - metadata:
           name: agent-wal
         spec:
-          accessModes: [ "ReadWriteOnce" ]
+          accessModes: ["ReadWriteOnce"]
           storageClassName: "standard"
           resources:
             requests:
-              storage: 1Gi
+              storage: 5Gi
 ```
