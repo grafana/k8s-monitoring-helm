@@ -1,5 +1,5 @@
 cluster:
-  name: using-allowList
+  name: using-grafana-cloud-prometheus-component
 
 externalServices:
   prometheus:
@@ -12,12 +12,9 @@ externalServices:
     basicAuth:
       username: 12345
       password: "It's a secret to everyone"
-  tempo:
-    host: https://tempo.example.com
-    basicAuth:
-      username: 12345
-      password: "It's a secret to everyone"
 
-metrics:
-  kube-state-metrics:
-    allowList: [a, b, c]
+extraConfig: |
+  prometheus.scrape "processing_app" {
+    targets = discovery.kubernetes.pods.targets
+    forward_to = [prometheus.remote_write.grafana_cloud_prometheus.receiver]
+  }
