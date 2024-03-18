@@ -44897,6 +44897,57 @@ data:
       ]
     }
 ---
+# Source: k8s-monitoring/templates/hooks/validate-configuration.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "validate-k8smon-k8s-monitoring"
+  namespace: default
+  labels:
+    app.kubernetes.io/managed-by: "Helm"
+    app.kubernetes.io/instance: "k8smon"
+    app.kubernetes.io/version: 2.0.2
+    helm.sh/chart: "k8s-monitoring-0.12.0"
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-weight": "-5"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  restartPolicy: Never
+  nodeSelector:
+        kubernetes.io/os: linux
+  containers:
+    - name: grafana-agent
+      image: "docker.io/grafana/agent:v0.40.3"
+      command:
+      - bash
+      - -c
+      - |
+        echo Validating Grafana Agent config file
+        if ! grafana-agent fmt /etc/agent/config.river > /dev/null; then
+          exit 1
+        fi
+        output=$(grafana-agent run "/etc/agent/config.river" 2>&1)
+        if ! echo "${output}" | grep "KUBERNETES_SERVICE_HOST and KUBERNETES_SERVICE_PORT must be defined" >/dev/null; then
+          echo "${output}"
+          exit 1
+        fi
+        echo "Grafana Agent config file is valid"
+      env:
+        - name: AGENT_MODE
+          value: flow
+        - name: KUBERNETES_SERVICE_HOST  # Intentionally disable its connection to Kubernetes to make it fail in a known way
+          value: ""
+        - name: KUBERNETES_SERVICE_PORT  # Intentionally disable its connection to Kubernetes to make it fail in a known way
+          value: ""
+      volumeMounts:
+        - name: config
+          mountPath: /etc/agent
+  volumes:
+    - name: config
+      configMap:
+        name: "validate-k8smon-k8s-monitoring"
+---
 # Source: k8s-monitoring/templates/tests/test.yaml
 apiVersion: v1
 kind: Pod
@@ -44923,56 +44974,6 @@ spec:
       env:
         - name: AGENT_HOST
           value: k8smon-grafana-agent.default.svc
----
-# Source: k8s-monitoring/templates/hooks/validate-configuration.yaml
-apiVersion: batch/v1
-kind: Job
-metadata:
-  name: "validate-k8smon-k8s-monitoring"
-  namespace: default
-  labels:
-    app.kubernetes.io/managed-by: "Helm"
-    app.kubernetes.io/instance: "k8smon"
-    app.kubernetes.io/version: 2.0.2
-    helm.sh/chart: "k8s-monitoring-0.12.0"
-  annotations:
-    "helm.sh/hook": pre-install,pre-upgrade
-    "helm.sh/hook-weight": "-5"
-    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
-spec:
-  backoffLimit: 0
-  template:
-    metadata:
-      name: "validate-k8smon-k8s-monitoring"
-      labels:
-        app.kubernetes.io/managed-by: "Helm"
-        app.kubernetes.io/instance: "k8smon"
-        helm.sh/chart: "k8s-monitoring-0.12.0"
-    spec:
-      restartPolicy: Never
-      nodeSelector:
-        kubernetes.io/os: linux
-      containers:
-        - name: grafana-agent
-          image: "docker.io/grafana/agent:v0.40.3"
-          command:
-          - bash
-          - -ec
-          - |
-            echo Validating Grafana Agent config file
-            if grafana-agent fmt /etc/agent/config.river > /dev/null; then
-              echo "Grafana Agent config file is valid"
-            fi
-          env:
-            - name: AGENT_MODE
-              value: flow
-          volumeMounts:
-            - name: config
-              mountPath: /etc/agent
-      volumes:
-        - name: config
-          configMap:
-            name: "validate-k8smon-k8s-monitoring"
 ---
 # Source: k8s-monitoring/templates/tests/test.yaml
 apiVersion: batch/v1
