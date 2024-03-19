@@ -40,7 +40,7 @@ logs:
       level  = "debug"
     }
 ...
-$ helm upgrade grafana-k8s-monitoring grafana/k8s-monitoring --values values.yaml
+$ helm upgrade grafana-k8s-monitoring --atomic --timeout 300s grafana/k8s-monitoring --values values.yaml
 ```
 
 For another example, see [Service Integrations](../../../examples/service-integrations).
@@ -52,7 +52,7 @@ You can save the contents of your extra configuration as files and use Helm's `-
 ```shell
 $ ls
 values.yaml  metricsConfig.river  logsConfig.river
-$ helm upgrade grafana-k8s-monitoring grafana/k8s-monitoring \
+$ helm upgrade grafana-k8s-monitoring --atomic --timeout 300s grafana/k8s-monitoring \
     --values values.yaml \
     --set-file extraConfig=metricsConfig.river
     --set-file logs.extraConfig=logsConfig.river
