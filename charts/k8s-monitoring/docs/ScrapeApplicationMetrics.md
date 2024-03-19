@@ -296,7 +296,7 @@ prometheus.relabel "processing_app" {
   }
   forward_to = [prometheus.relabel.metrics_service.receiver]
 }
-$ helm install k8s-monitoring grafana/k8s-monitoring --values chart-values.yaml --set-file extraConfig=processor-config.river
+$ helm upgrade --install grafana-k8s-monitoring --atomic --timeout 300s grafana/k8s-monitoring --values chart-values.yaml --set-file extraConfig=processor-config.river
 ```
 
 For more information about using the `extraConfig` values, see [the documentation](UsingExtraConfig.md).
