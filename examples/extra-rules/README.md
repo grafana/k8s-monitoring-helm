@@ -1,8 +1,7 @@
 # Extra Rules
 
-This example shows a deployment that only gathers pod logs and Kubernetes cluster events, but no metrics.
-
-It differs from the [default](../default-values) by not requiring a Prometheus service, disabling the deployment of metric sources (i.e. Kube State Metrics), and disabling the metrics section.
+This example shows several ways to provide addtional labels and rules. The `logs.pod_logs.extraStageBlocks` even
+supports template values.
 
 ```yaml
 cluster:
@@ -14,6 +13,15 @@ externalServices:
     basicAuth:
       username: 12345
       password: "It's a secret to everyone"
+    externalLabels:
+      site: northwest
+    writeRelabelConfigRules: |-
+      write_relabel_config {
+        source_labels = ["__name__"]
+        regex = "metric_to_drop|another_metric_to_drop"
+        action = "drop"
+      }
+
   loki:
     host: https://loki.example.com
     tenantId: 2000
@@ -24,10 +32,11 @@ externalServices:
 metrics:
   extraRelabelingRules: |-
     rule {
-      action = "replace"
-      replacement = ""
+      source_labels = ["__meta_kubernetes_namespace"]
+      regex = "private"
+      action = "drop"
     }
-  
+
   kube-state-metrics:
     extraMetricRelabelingRules: |-
       rule {
@@ -55,6 +64,12 @@ logs:
         expressions = {
           sku = "id",
           count = "",
+        }
+      }
+
+      stage.static {
+        values = {
+          site = {{ .Values.externalServices.prometheus.externalLabels.site | quote }},
         }
       }
 
