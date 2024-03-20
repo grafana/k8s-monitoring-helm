@@ -151,7 +151,7 @@ otelcol.processor.filter "default" {
   error_mode = "ignore"
 
 {{- if and .Values.metrics.enabled (or .Values.metrics.receiver.filters.metric .Values.metrics.receiver.filters.datapoint) }}
-  metrics = {
+  metrics {
 {{- if .Values.metrics.receiver.filters.metric }}
     metric = [
 {{- range $filter := .Values.metrics.receiver.filters.metric }}
@@ -167,16 +167,18 @@ otelcol.processor.filter "default" {
     ]
 {{- end }}
   }
-{{- end }}{{- if and .Values.logs.enabled .Values.logs.receiver.filters.log_record }}
-  logs = {
+{{- end }}
+{{- if and .Values.logs.enabled .Values.logs.receiver.filters.log_record }}
+  logs {
     log_record = [
 {{- range $filter := .Values.logs.receiver.filters.log_record }}
   {{ $filter | indent 6 }}
 {{- end }}
     ]
+  }
 {{- end }}
 {{- if and .Values.traces.enabled (or .Values.traces.receiver.filters.span .Values.traces.receiver.filters.spanevent) }}
-  traces = {
+  traces {
 {{- if .Values.traces.receiver.filters.span }}
     span = [
 {{- range $filter := .Values.traces.receiver.filters.span }}
