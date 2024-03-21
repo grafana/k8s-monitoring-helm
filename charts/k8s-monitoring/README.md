@@ -210,14 +210,14 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | logs.enabled | bool | `true` | Capture and forward logs |
 | logs.extraConfig | string | `""` | Extra configuration that will be added to Grafana Agent Logs configuration file. This value is templated so that you can refer to other values from this file. This cannot be used to modify the generated configuration values, only append new components. See [Adding custom Flow configuration](#adding-custom-flow-configuration) for an example. |
 | logs.podLogsObjects.enabled | bool | `false` | Enable discovery of Grafana Agent PodLogs objects. |
-| logs.podLogsObjects.extraStageBlocks | string | `""` | Stage blocks to be added to the loki.process component for logs gathered via PodLogs objects. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/loki.process/#blocks)) |
+| logs.podLogsObjects.extraStageBlocks | string | `""` | Stage blocks to be added to the loki.process component for logs gathered via PodLogs objects. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/loki.process/#blocks)) This value is templated so that you can refer to other values from this file. |
 | logs.podLogsObjects.namespaces | list | `[]` | Which namespaces to look for PodLogs objects. |
 | logs.podLogsObjects.selector | string | `""` | Selector to filter which PodLogs objects to use. |
 | logs.pod_logs.annotation | string | `"k8s.grafana.com/logs.autogather"` | Pod annotation to use for controlling log discovery. |
 | logs.pod_logs.discovery | string | `"all"` | Controls the behavior of discovering pods for logs. |
 | logs.pod_logs.enabled | bool | `true` | Capture and forward logs from Kubernetes pods |
 | logs.pod_logs.extraRelabelingRules | string | `""` | Rule blocks to be added to the discovery.relabel component for pod logs. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block)) |
-| logs.pod_logs.extraStageBlocks | string | `""` | Stage blocks to be added to the loki.process component for pod logs. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/loki.process/#blocks)) |
+| logs.pod_logs.extraStageBlocks | string | `""` | Stage blocks to be added to the loki.process component for pod logs. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/loki.process/#blocks)) This value is templated so that you can refer to other values from this file. |
 | logs.pod_logs.gatherMethod | string | `"volumes"` | Controls the behavior of gathering pod logs. When set to "volumes", the Grafana Agent will use HostPath volume mounts on the cluster nodes to access the pod log files directly. When set to "api", the Grafana Agent will access pod logs via the API server. This method may be preferable if your cluster prevents DaemonSets, HostPath volume mounts, or for other reasons. |
 | logs.pod_logs.namespaces | list | `[]` | Only capture logs from pods in these namespaces (`[]` means all namespaces) |
 | logs.receiver.filters | object | `{"log_record":[]}` | Apply a filter to logs received via the OTLP or OTLP HTTP receivers. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/otelcol.processor.filter/)) |

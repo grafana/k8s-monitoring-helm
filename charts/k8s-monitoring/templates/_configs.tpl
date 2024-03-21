@@ -90,8 +90,7 @@
   {{- end }}
 
   {{- if .Values.extraConfig }}
-    {{- print "\n" }}
-    {{- tpl .Values.extraConfig . }}
+    {{- tpl .Values.extraConfig . | indent 0 }}
   {{- end }}
 {{- end -}}
 
@@ -112,7 +111,6 @@
   {{- include "agent.config.logsService" . }}
 
   {{- if .Values.logs.extraConfig }}
-    {{- print "\n" }}
-    {{- tpl .Values.logs.extraConfig . }}
+    {{- tpl .Values.logs.extraConfig . | indent 0 }}
   {{- end }}
 {{- end -}}
