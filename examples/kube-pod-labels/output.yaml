@@ -61,11 +61,12 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: k8smon-opencost
+  namespace: default
   labels:
-    helm.sh/chart: opencost-1.28.0
+    helm.sh/chart: opencost-1.32.0
     app.kubernetes.io/name: opencost
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.108.0"
+    app.kubernetes.io/version: "1.109.0"
     app.kubernetes.io/part-of: opencost
     app.kubernetes.io/managed-by: Helm
 automountServiceAccountToken: true
@@ -43848,10 +43849,10 @@ kind: ClusterRole
 metadata:
   name: k8smon-opencost
   labels:
-    helm.sh/chart: opencost-1.28.0
+    helm.sh/chart: opencost-1.32.0
     app.kubernetes.io/name: opencost
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.108.0"
+    app.kubernetes.io/version: "1.109.0"
     app.kubernetes.io/part-of: opencost
     app.kubernetes.io/managed-by: Helm
 rules:
@@ -44018,10 +44019,10 @@ kind: ClusterRoleBinding
 metadata:
   name: k8smon-opencost
   labels:
-    helm.sh/chart: opencost-1.28.0
+    helm.sh/chart: opencost-1.32.0
     app.kubernetes.io/name: opencost
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.108.0"
+    app.kubernetes.io/version: "1.109.0"
     app.kubernetes.io/part-of: opencost
     app.kubernetes.io/managed-by: Helm
 roleRef:
@@ -44261,11 +44262,12 @@ apiVersion: v1
 kind: Service
 metadata:
   name: k8smon-opencost
+  namespace: default
   labels:
-    helm.sh/chart: opencost-1.28.0
+    helm.sh/chart: opencost-1.32.0
     app.kubernetes.io/name: opencost
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.108.0"
+    app.kubernetes.io/version: "1.109.0"
     app.kubernetes.io/part-of: opencost
     app.kubernetes.io/managed-by: Helm
 spec:
@@ -44675,11 +44677,12 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: k8smon-opencost
+  namespace: default
   labels:
-    helm.sh/chart: opencost-1.28.0
+    helm.sh/chart: opencost-1.32.0
     app.kubernetes.io/name: opencost
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.108.0"
+    app.kubernetes.io/version: "1.109.0"
     app.kubernetes.io/part-of: opencost
     app.kubernetes.io/managed-by: Helm
 spec:
@@ -44704,7 +44707,7 @@ spec:
         kubernetes.io/os: linux
       containers:
         - name: k8smon-opencost
-          image: "quay.io/kubecost1/kubecost-cost-model:prod-1.108.0"
+          image: "ghcr.io/opencost/opencost:1.109.0"
           imagePullPolicy: IfNotPresent
           args:
           ports:
@@ -44717,21 +44720,32 @@ spec:
             requests:
               cpu: 10m
               memory: 55Mi
+          startupProbe:
+            httpGet:
+              path: /healthz
+              port: 9003
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            failureThreshold: 30
           livenessProbe:
             httpGet:
               path: /healthz
               port: 9003
-            initialDelaySeconds: 120
-            periodSeconds: 10
+            initialDelaySeconds: 10
+            periodSeconds: 20
             failureThreshold: 3
           readinessProbe:
             httpGet:
               path: /healthz
               port: 9003
-            initialDelaySeconds: 120
+            initialDelaySeconds: 10
             periodSeconds: 10
             failureThreshold: 3
           env:
+            - name: LOG_LEVEL
+              value: info
+            - name: CUSTOM_COST_ENABLED
+              value: "false"
             - name: API_PORT
               value: "9003"
             - name: PROMETHEUS_SERVER_ENDPOINT
