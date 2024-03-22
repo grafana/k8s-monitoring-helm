@@ -184,6 +184,13 @@ otelcol.processor.transform "add_resource_attributes" {
 
 otelcol.processor.filter "default" {
   error_mode = "ignore"
+  traces {
+    span = [
+      "attributes[\"http.route\"] == \"/live\"",
+      "attributes[\"http.route\"] == \"/healthy\"",
+      "attributes[\"http.route\"] == \"/ready\"",
+    ]
+  }
 
   output {
     metrics = [otelcol.processor.batch.batch_processor.input]
