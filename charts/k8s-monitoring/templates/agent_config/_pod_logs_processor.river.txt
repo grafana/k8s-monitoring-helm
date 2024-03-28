@@ -34,10 +34,100 @@ loki.process "pod_logs" {
   stage.label_drop {
     values = ["filename", "tmp_container_runtime"]
   }
+  stage.static_labels {
+    values = {
+      exporter = "OTLP",
+    }
 
 {{- if .Values.logs.pod_logs.extraStageBlocks }}
 {{ tpl .Values.logs.pod_logs.extraStageBlocks . | indent 2 }}
 {{ end }}
-  forward_to = [loki.process.logs_service.receiver]
+  forward_to = [otelcol.receiver.loki.pod_logs.receiver]
 }
 {{ end }}
+
+
+otelcol.receiver.loki "pod_logs" {
+  output {
+    logs = [otelcol.processor.transform.k8s_pod.input]
+  }
+}
+
+otelcol.processor.transform "k8s_pod" {
+  // https://grafana.com/docs/agent/latest/flow/reference/components/otelcol.processor.transform/
+  error_mode = "ignore"
+  log_statements {
+    context = "log"
+    statements = [
+      "set(resource.attributes[\"k8s.pod.name\"], attributes[\"pod\"])",
+      "set(resource.attributes[\"k8s.namespace.name\"], attributes[\"namespace\"])",
+    ]
+  }
+  output {
+    logs = [otelcol.processor.k8sattributes.default.input]
+  }
+}
+
+otelcol.processor.k8sattributes "default" {
+  // https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/processor/k8sattributesprocessor#as-an-agent
+  filter {
+    node = env("HOSTNAME")
+  }
+  extract {
+    metadata = [
+      "k8s.namespace.name",
+      "k8s.pod.name",
+      "k8s.deployment.name",
+      "k8s.statefulset.name",
+      "k8s.daemonset.name",
+      "k8s.cronjob.name",
+      "k8s.job.name",
+      "k8s.node.name",
+      "k8s.pod.uid",
+      "k8s.pod.start_time",
+    ]
+  }
+  pod_association {
+    source {
+      from = "resource_attribute"
+      name = "k8s.pod.name"
+    }
+    source {
+      from = "resource_attribute"
+      name = "k8s.namespace.name"
+    }
+  }
+
+  output {
+    logs    = [otelcol.processor.transform.add_k8s_attributes.input]
+  }
+}
+
+otelcol.processor.transform "add_k8s_attributes" {
+  // https://grafana.com/docs/agent/latest/flow/reference/components/otelcol.processor.transform/
+  // Grafana Cloud Kubernetes monitoring expects Loki labels `cluster`, `pod`, and `namespace`
+  error_mode = "ignore"
+  log_statements {
+    context = "resource"
+    statements = [
+      "set(attributes[\"pod\"], attributes[\"k8s.pod.name\"])",
+      "set(attributes[\"namespace\"], attributes[\"k8s.namespace.name\"])",
+      "set(attributes[\"loki.resource.labels\"], \"pod, namespace, cluster, job\")",
+    ]
+  }
+  output {
+    logs    = [otelcol.processor.batch.default.input]
+  }
+}
+
+otelcol.processor.batch "default" {
+  // https://grafana.com/docs/agent/latest/flow/reference/components/otelcol.processor.batch/
+  output {
+    logs    = [otelcol.exporter.loki.grafana_cloud_loki.input]
+  }
+}
+
+otelcol.exporter.loki "grafana_cloud_loki" {
+  // https://grafana.com/docs/agent/latest/flow/reference/components/otelcol.exporter.loki/
+  forward_to = [loki.process.logs_service.receiver]
+}
