@@ -260,10 +260,10 @@ data:
       }
     
       output {
-        metrics = [otelcol.processor.transform.add_resource_attributes.input]
-        logs    = [otelcol.processor.transform.add_resource_attributes.input]
+        metrics = [otelcol.processor.transform.default.input]
+        logs    = [otelcol.processor.transform.default.input]
         traces  = [
-          otelcol.processor.transform.add_resource_attributes.input,
+          otelcol.processor.transform.default.input,
           otelcol.connector.host_info.default.input,
         ]
       }
@@ -286,7 +286,7 @@ data:
       forward_to = [prometheus.remote_write.metrics_service.receiver]
     }
     
-    otelcol.processor.transform "add_resource_attributes" {
+    otelcol.processor.transform "default" {
       // Grafana Cloud Kubernetes monitoring expects Loki labels `cluster`, `pod`, and `namespace`
       error_mode = "ignore"
       metric_statements {
@@ -307,7 +307,16 @@ data:
       trace_statements {
         context = "resource"
         statements = [
+          "limit(attributes, 100, [])",
+          "truncate_all(attributes, 4096)",
           "set(attributes[\"k8s.cluster.name\"], \"traces-enabled-test\") where attributes[\"k8s.cluster.name\"] == nil",
+        ]
+      }
+      trace_statements {
+        context = "span"
+        statements = [
+          "limit(attributes, 100, [])",
+          "truncate_all(attributes, 4096)",
         ]
       }
       output {
@@ -48005,10 +48014,10 @@ data:
       }
     
       output {
-        metrics = [otelcol.processor.transform.add_resource_attributes.input]
-        logs    = [otelcol.processor.transform.add_resource_attributes.input]
+        metrics = [otelcol.processor.transform.default.input]
+        logs    = [otelcol.processor.transform.default.input]
         traces  = [
-          otelcol.processor.transform.add_resource_attributes.input,
+          otelcol.processor.transform.default.input,
           otelcol.connector.host_info.default.input,
         ]
       }
@@ -48031,7 +48040,7 @@ data:
       forward_to = [prometheus.remote_write.metrics_service.receiver]
     }
     
-    otelcol.processor.transform "add_resource_attributes" {
+    otelcol.processor.transform "default" {
       // Grafana Cloud Kubernetes monitoring expects Loki labels `cluster`, `pod`, and `namespace`
       error_mode = "ignore"
       metric_statements {
@@ -48052,7 +48061,16 @@ data:
       trace_statements {
         context = "resource"
         statements = [
+          "limit(attributes, 100, [])",
+          "truncate_all(attributes, 4096)",
           "set(attributes[\"k8s.cluster.name\"], \"traces-enabled-test\") where attributes[\"k8s.cluster.name\"] == nil",
+        ]
+      }
+      trace_statements {
+        context = "span"
+        statements = [
+          "limit(attributes, 100, [])",
+          "truncate_all(attributes, 4096)",
         ]
       }
       output {

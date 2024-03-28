@@ -61,14 +61,14 @@ otelcol.processor.k8sattributes "default" {
 
   output {
 {{- if .Values.metrics.enabled }}
-    metrics = [otelcol.processor.transform.add_resource_attributes.input]
+    metrics = [otelcol.processor.transform.default.input]
 {{- end }}
 {{- if .Values.logs.enabled }}
-    logs    = [otelcol.processor.transform.add_resource_attributes.input]
+    logs    = [otelcol.processor.transform.default.input]
 {{- end }}
 {{- if .Values.traces.enabled }}
     traces  = [
-      otelcol.processor.transform.add_resource_attributes.input, 
+      otelcol.processor.transform.default.input, 
     {{- if .Values.metrics.enabled }}
       otelcol.connector.host_info.default.input,
     {{- end }}
@@ -104,35 +104,100 @@ otelcol.exporter.prometheus "host_info_metrics" {
   {{- end }}
 {{- end }}
 
-otelcol.processor.transform "add_resource_attributes" {
+otelcol.processor.transform "default" {
   // Grafana Cloud Kubernetes monitoring expects Loki labels `cluster`, `pod`, and `namespace`
   error_mode = "ignore"
 {{- if .Values.metrics.enabled }}
   metric_statements {
     context = "resource"
     statements = [
+{{- if .Values.metrics.receiver.transforms.resource }}
+{{- range $transform := .Values.metrics.receiver.transforms.resource }}
+{{ $transform | quote | indent 6 }},
+{{- end }}
+{{- end }}
       "set(attributes[\"k8s.cluster.name\"], \"{{ required ".Values.cluster.name is a required value. Please set it and try again." .Values.cluster.name }}\") where attributes[\"k8s.cluster.name\"] == nil",
     ]
   }
+{{- if .Values.metrics.receiver.transforms.metric }}
+  metric_statements {
+    context = "metric"
+    statements = [
+{{- range $transform := .Values.metrics.receiver.transforms.metric }}
+{{ $transform | quote | indent 6 }},
+{{- end }}
+    ]
+  }
+{{- end }}
+{{- if .Values.metrics.receiver.transforms.datapoint }}
+  metric_statements {
+    context = "datapoint"
+    statements = [
+{{- range $transform := .Values.metrics.receiver.transforms.datapoint }}
+{{ $transform | quote | indent 6 }},
+{{- end }}
+    ]
+  }
+{{- end }}
 {{- end }}
 {{- if .Values.logs.enabled }}
   log_statements {
     context = "resource"
     statements = [
+{{- if .Values.logs.receiver.transforms.resource }}
+{{- range $transform := .Values.logs.receiver.transforms.resource }}
+{{ $transform | quote | indent 6 }},
+{{- end }}
+{{- end }}
       "set(attributes[\"pod\"], attributes[\"k8s.pod.name\"])",
       "set(attributes[\"namespace\"], attributes[\"k8s.namespace.name\"])",
       "set(attributes[\"loki.resource.labels\"], \"pod, namespace, cluster, job\")",
       "set(attributes[\"k8s.cluster.name\"], \"{{ required ".Values.cluster.name is a required value. Please set it and try again." .Values.cluster.name }}\") where attributes[\"k8s.cluster.name\"] == nil",
     ]
   }
+{{- if .Values.logs.receiver.transforms.log }}
+  log_statements {
+    context = "log"
+    statements = [
+{{- range $transform := .Values.logs.receiver.transforms.log }}
+{{ $transform | quote | indent 6 }},
+{{- end }}
+    ]
+  }
+{{- end }}
 {{- end }}
 {{- if .Values.traces.enabled }}
   trace_statements {
     context = "resource"
     statements = [
+{{- if .Values.traces.receiver.transforms.resource }}
+{{- range $transform := .Values.traces.receiver.transforms.resource }}
+{{ $transform | quote | indent 6 }},
+{{- end }}
+{{- end }}
       "set(attributes[\"k8s.cluster.name\"], \"{{ required ".Values.cluster.name is a required value. Please set it and try again." .Values.cluster.name }}\") where attributes[\"k8s.cluster.name\"] == nil",
     ]
   }
+{{- if .Values.traces.receiver.transforms.span }}
+  trace_statements {
+    context = "span"
+    statements = [
+{{- range $transform := .Values.traces.receiver.transforms.span }}
+{{ $transform | quote | indent 6 }},
+{{- end }}
+    ]
+  }
+{{- end }}
+{{- if .Values.traces.receiver.transforms.spanevent }}
+  trace_statements {
+    context = "spanevent"
+    statements = [
+{{- range $transform := .Values.traces.receiver.transforms.spanevent }}
+{{ $transform | quote | indent 6 }},
+{{- end }}
+    ]
+  }
+{{- end }}
 {{- end }}
   output {
 {{- if .Values.metrics.enabled }}
