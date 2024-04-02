@@ -117,7 +117,8 @@
 
 {{/* Grafana Agent Profiles config */}}
 {{- define "agentProfilesConfig" -}}
-  {{- include "agent.config.profiles" . }}
+  {{- include "agent.config.profilesEbpf" . }}
+  {{- include "agent.config.profilesPprof" . }}
 
   {{- include "agent.config.profilesService" . }}
 {{- end -}}

@@ -148,7 +148,7 @@ function traces_query {
 function profiles_query {
     echo "Running profiles query: ${1}..."
     result=$(profilecli query series --query="${1}")
-    resultCount=$(echo "${result}" | jq 'length')
+    resultCount=$(echo "${result}" 2>/dev/null | jq --slurp 'length')
     if [ "${resultCount}" -eq 0 ]; then
       echo "Query returned no results"
       echo "Result: ${result}"

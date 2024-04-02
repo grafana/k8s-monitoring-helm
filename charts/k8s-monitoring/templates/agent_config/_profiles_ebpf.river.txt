@@ -1,4 +1,4 @@
-{{ define "agent.config.profiles" }}
+{{ define "agent.config.profilesEbpf" }}
 // Profiles
 {{- if .Values.profiles.ebpf.enabled }}
 discovery.kubernetes "ebpf_pods" {
@@ -56,8 +56,8 @@ discovery.relabel "ebpf_pods" {
 }
 
 pyroscope.ebpf "ebpf_pods" {
-    targets = discovery.relabel.ebpf_pods.output
-    forward_to = [pyroscope.write.profiles_service.receiver]
+  targets = discovery.relabel.ebpf_pods.output
+  forward_to = [pyroscope.write.profiles_service.receiver]
 }
 {{- end }}
 {{- end }}

@@ -374,8 +374,11 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | opencost.opencost.prometheus.username_key | string | `"username"` | The key for the username property in the secret. |
 | profiles.ebpf.enabled | bool | `true` | Gather profiles using eBPF |
 | profiles.ebpf.extraRelabelingRules | string | `""` | Rule blocks to be added to the discovery.relabel component for eBPF profile sources. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block)) |
-| profiles.ebpf.namespaces | list | `[]` | Which namespaces to look for pods with profiles objects. |
+| profiles.ebpf.namespaces | list | `[]` | Which namespaces to look for pods with profiles. |
 | profiles.enabled | bool | `false` | Receive and forward profiles. |
+| profiles.pprof.enabled | bool | `true` | Gather profiles using pprof |
+| profiles.pprof.namespaces | list | `[]` | Which namespaces to look for pods with profiles. |
+| profiles.pprof.types | list | `["memory","cpu","goroutine","block","mutex","fgprof"]` | Profile types to gather |
 | prometheus-node-exporter.enabled | bool | `true` | Should this helm chart deploy Node Exporter to the cluster. Set this to false if your cluster already has Node Exporter, or if you do not want to scrape metrics from Node Exporter. |
 | prometheus-operator-crds.enabled | bool | `true` | Should this helm chart deploy the Prometheus Operator CRDs to the cluster. Set this to false if your cluster already has the CRDs, or if you do not to have the Grafana Agent scrape metrics from PodMonitors, Probes, or ServiceMonitors. |
 | prometheus-windows-exporter.config | string | `"collectors:\n  enabled: cpu,cs,container,logical_disk,memory,net,os\ncollector:\n  service:\n    services-where: \"Name='containerd' or Name='kubelet'\""` | Windows Exporter configuration |
@@ -405,7 +408,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | receivers.zipkin.port | int | `9411` | Which port to use for the Zipkin receiver. This port needs to be opened in the grafana-agent section below. |
 | test.attempts | int | `10` | How many times to attempt the test job. |
 | test.enabled | bool | `true` | Should `helm test` run the test job? |
-| test.envOverrides | object | `{"LOKI_URL":"","PROMETHEUS_URL":"","TEMPO_URL":""}` | Overrides the URLs for various data sources |
+| test.envOverrides | object | `{"LOKI_URL":"","PROFILECLI_URL":"","PROMETHEUS_URL":"","TEMPO_URL":""}` | Overrides the URLs for various data sources |
 | test.extraAnnotations | object | `{}` | Extra annotations to add to the test job. |
 | test.extraLabels | object | `{}` | Extra labels to add to the test job. |
 | test.extraQueries | list | `[]` | Additional queries to run during the test. NOTE that this uses the host, username, and password in the externalServices section. The user account must have the ability to run queries. Example: extraQueries:   - query: prometheus_metric{cluster="my-cluster-name"}     type: promql  Can optionally provide expectations: - query: "avg(count_over_time(scrape_samples_scraped{cluster=~\"ci-test-cluster-2|from-the-other-agent\"}[1m]))"   type: promql   expect:     value: 1     operator: == |

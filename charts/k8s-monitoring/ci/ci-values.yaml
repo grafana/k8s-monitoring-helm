@@ -4,6 +4,7 @@
 # * External Labels
 # * Pod logs (via volumes)
 # * Cluster Events
+# * Profiles
 #
 cluster:
   name: ci-test-cluster
@@ -34,9 +35,7 @@ externalServices:
   pyroscope:
     host: http://pyroscope.pyroscope.svc:4040
     authMode: none
-    tlsOptions: |-
-      insecure             = true
-      insecure_skip_verify = true
+    tenantId: 1
 
 metrics:
   apiserver:
@@ -77,6 +76,10 @@ test:
     # Check for pod logs
     - query: "count_over_time({cluster=\"ci-test-cluster\", job!=\"integrations/kubernetes/eventhandler\"}[1h])"
       type: logql
+
+    # Check for profiles
+    - query: '{cluster="ci-test-cluster"}'
+      type: profiles
 
     # DPM check
     - query: "avg(count_over_time(scrape_samples_scraped{cluster=\"ci-test-cluster\"}[1m]))"
