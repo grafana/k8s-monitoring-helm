@@ -1,0 +1,70 @@
+// Profiles
+discovery.kubernetes "ebpf_pods" {
+  selectors {
+    role = "pod"
+    field = "spec.nodeName=" + env("HOSTNAME")
+  }
+  role = "pod"
+}
+
+discovery.relabel "ebpf_pods" {
+  targets = discovery.kubernetes.ebpf_pods.targets
+  rule {
+    action = "drop"
+    regex = "Succeeded|Failed|Completed"
+    source_labels = ["__meta_kubernetes_pod_phase"]
+  }
+  rule {
+    action = "replace"
+    source_labels = ["__meta_kubernetes_namespace"]
+    target_label = "namespace"
+  }
+  rule {
+    action = "replace"
+    source_labels = ["__meta_kubernetes_pod_name"]
+    target_label = "pod"
+  }
+  rule {
+    action = "replace"
+    source_labels = ["__meta_kubernetes_pod_node_name"]
+    target_label = "node"
+  }
+  rule {
+    action = "replace"
+    source_labels = ["__meta_kubernetes_pod_container_name"]
+    target_label = "container"
+  }
+  // provide arbitrary service_name label, otherwise it will be set to {__meta_kubernetes_namespace}/{__meta_kubernetes_pod_container_name}
+  rule {
+    action = "replace"
+    regex = "(.*)@(.*)"
+    replacement = "ebpf/k8s/${1}/${2}"
+    separator = "@"
+    source_labels = ["__meta_kubernetes_namespace", "__meta_kubernetes_pod_container_name"]
+    target_label = "service_name"
+  }
+}
+
+pyroscope.ebpf "ebpf_pods" {
+    targets = discovery.relabel.ebpf_pods.output
+    forward_to = [pyroscope.write.profiles_service.receiver]
+}
+// Pyroscope
+remote.kubernetes.secret "profiles_service" {
+  name = "pyroscope-k8s-monitoring"
+  namespace = "default"
+}
+pyroscope.write "profiles_service" {
+  endpoint {
+    url = nonsensitive(remote.kubernetes.secret.profiles_service.data["host"])
+    headers = { "X-Scope-OrgID" = nonsensitive(remote.kubernetes.secret.profiles_service.data["tenantId"]) }
+  }
+
+  basic_auth {
+    username = nonsensitive(remote.kubernetes.secret.metrics_service.data["username"])
+    password = remote.kubernetes.secret.metrics_service.data["password"]
+  }
+  external_labels = {
+    cluster = "default-values-test",
+  }
+}

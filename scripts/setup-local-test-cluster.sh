@@ -10,6 +10,7 @@ PROMETHEUS_WORKLOAD_VALUES="./.github/configs/prometheus-workload.yaml"
 CREDENTIALS="./.github/configs/credentials.yaml"
 LOKI_VALUES="./.github/configs/loki.yaml"
 #TEMPO_VALUES=""  # No values for now
+PYROSCOPE_VALUES="./.github/configs/pyroscope.yaml"
 GRAFANA_VALUES="./.github/configs/grafana.yaml"
 PODLOGS_OBJECTS="./.github/configs/podlogs.yaml"
 MYSQL_VALUES="./.github/configs/mysql.yaml"
@@ -61,6 +62,9 @@ helm upgrade --install loki-otlp grafana/grafana-agent -f "${GRAFANA_AGENT_LOKI_
 
 echo "Deploying Tempo..."
 helm upgrade --install tempo grafana/tempo -n tempo --create-namespace --wait
+
+echo "Deploying Pyroscope..."
+helm upgrade --install pyroscope grafana/pyroscope -f "${PYROSCOPE_VALUES}" -n pyroscope --create-namespace --wait
 
 echo "Deploying Grafana..."
 helm upgrade --install grafana grafana/grafana -f "${GRAFANA_VALUES}" -n grafana --create-namespace --wait

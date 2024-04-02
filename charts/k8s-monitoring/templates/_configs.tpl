@@ -114,3 +114,10 @@
     {{- tpl .Values.logs.extraConfig . | indent 0 }}
   {{- end }}
 {{- end -}}
+
+{{/* Grafana Agent Profiles config */}}
+{{- define "agentProfilesConfig" -}}
+  {{- include "agent.config.profiles" . }}
+
+  {{- include "agent.config.profilesService" . }}
+{{- end -}}

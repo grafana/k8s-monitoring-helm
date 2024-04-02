@@ -9,6 +9,7 @@ values.schema.json: values.yaml schema-mods/enums-and-types.json schema-mods/req
 		<(jq --indent 4 'del(.properties["grafana-agent"]) \
 			| del(.properties["grafana-agent-events"]) \
 			| del(.properties["grafana-agent-logs"]) \
+			| del(.properties["grafana-agent-profiles"]) \
 			| del(.properties["kube-state-metrics"].properties.autosharding) \
 			| del(.properties["kube-state-metrics"].properties.nodeSelector) \
 			| del(.properties["kube-state-metrics"].properties.prometheusScrape) \
