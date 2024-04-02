@@ -21,6 +21,7 @@ Then, we extract the Grafana Agent configuration files from the ConfigMap object
 * [Control Plane Metrics](./control-plane-metrics) - Enable gathering metrics from the Kubernetes Control Plane.
 * [Logs Only](./logs-only) - Only gather and send logs.
 * [Metrics Only](./metrics-only) - Only scrape and send metrics.
+* [Profiles Enabled](./profiles-enabled) - Enable gathering and delivery of profiles to Pyroscope.
 * [Service Integrations](./service-integrations) - A few methods for gathering telemetry data from other services.
 * [Traces Enabled](./traces-enabled) - Enable the OpenTelemetry receiver for traces and send then to Grafana Tempo.
 * [Windows Exporter](./windows-exporter) - Enable deployment and scraping of the Windows Exporter for Windows nodes.

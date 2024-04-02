@@ -98,7 +98,7 @@ otelcol.processor.transform "default" {
   metric_statements {
     context = "resource"
     statements = [
-      "set(attributes[\"k8s.cluster.name\"], \"default-values-test\") where attributes[\"k8s.cluster.name\"] == nil",
+      "set(attributes[\"k8s.cluster.name\"], \"profiles-enabled-test\") where attributes[\"k8s.cluster.name\"] == nil",
     ]
   }
   log_statements {
@@ -107,7 +107,7 @@ otelcol.processor.transform "default" {
       "set(attributes[\"pod\"], attributes[\"k8s.pod.name\"])",
       "set(attributes[\"namespace\"], attributes[\"k8s.namespace.name\"])",
       "set(attributes[\"loki.resource.labels\"], \"pod, namespace, cluster, job\")",
-      "set(attributes[\"k8s.cluster.name\"], \"default-values-test\") where attributes[\"k8s.cluster.name\"] == nil",
+      "set(attributes[\"k8s.cluster.name\"], \"profiles-enabled-test\") where attributes[\"k8s.cluster.name\"] == nil",
     ]
   }
   output {
@@ -706,7 +706,7 @@ prometheus.relabel "metrics_service" {
   rule {
     source_labels = ["cluster"]
     regex = ""
-    replacement = "default-values-test"
+    replacement = "profiles-enabled-test"
     target_label = "cluster"
   }
   forward_to = [prometheus.remote_write.metrics_service.receiver]
@@ -782,7 +782,7 @@ remote.kubernetes.secret "logs_service" {
 loki.process "logs_service" {
   stage.static_labels {
       values = {
-        cluster = "default-values-test",
+        cluster = "profiles-enabled-test",
       }
   }
   forward_to = [loki.write.logs_service.receiver]
