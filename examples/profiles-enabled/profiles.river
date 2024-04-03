@@ -38,7 +38,7 @@ discovery.relabel "ebpf_pods" {
   rule {
     action = "replace"
     regex = "(.*)@(.*)"
-    replacement = "ebpf/k8s/${1}/${2}"
+    replacement = "ebpf/${1}/${2}"
     separator = "@"
     source_labels = ["__meta_kubernetes_namespace", "__meta_kubernetes_pod_container_name"]
     target_label = "service_name"
@@ -211,7 +211,6 @@ pyroscope.scrape "pyroscope_scrape_memory" {
 
   forward_to = [pyroscope.write.profiles_service.receiver]
 }
-
 discovery.relabel "pprof_pods_cpu_default_name" {
   targets = concat(discovery.relabel.pprof_pods.output)
 
@@ -332,7 +331,6 @@ pyroscope.scrape "pyroscope_scrape_cpu" {
 
   forward_to = [pyroscope.write.profiles_service.receiver]
 }
-
 discovery.relabel "pprof_pods_goroutine_default_name" {
   targets = concat(discovery.relabel.pprof_pods.output)
 
@@ -453,7 +451,6 @@ pyroscope.scrape "pyroscope_scrape_goroutine" {
 
   forward_to = [pyroscope.write.profiles_service.receiver]
 }
-
 discovery.relabel "pprof_pods_block_default_name" {
   targets = concat(discovery.relabel.pprof_pods.output)
 
@@ -574,7 +571,6 @@ pyroscope.scrape "pyroscope_scrape_block" {
 
   forward_to = [pyroscope.write.profiles_service.receiver]
 }
-
 discovery.relabel "pprof_pods_mutex_default_name" {
   targets = concat(discovery.relabel.pprof_pods.output)
 
@@ -695,7 +691,6 @@ pyroscope.scrape "pyroscope_scrape_mutex" {
 
   forward_to = [pyroscope.write.profiles_service.receiver]
 }
-
 discovery.relabel "pprof_pods_fgprof_default_name" {
   targets = concat(discovery.relabel.pprof_pods.output)
 
@@ -828,8 +823,8 @@ pyroscope.write "profiles_service" {
   }
 
   basic_auth {
-    username = nonsensitive(remote.kubernetes.secret.metrics_service.data["username"])
-    password = remote.kubernetes.secret.metrics_service.data["password"]
+    username = nonsensitive(remote.kubernetes.secret.profiles_service.data["username"])
+    password = remote.kubernetes.secret.profiles_service.data["password"]
   }
   external_labels = {
     cluster = "profiles-enabled-test",

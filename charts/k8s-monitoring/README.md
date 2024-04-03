@@ -376,7 +376,8 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | profiles.ebpf.extraRelabelingRules | string | `""` | Rule blocks to be added to the discovery.relabel component for eBPF profile sources. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block)) |
 | profiles.ebpf.namespaces | list | `[]` | Which namespaces to look for pods with profiles. |
 | profiles.enabled | bool | `false` | Receive and forward profiles. |
-| profiles.pprof.enabled | bool | `true` | Gather profiles using pprof |
+| profiles.pprof.enabled | bool | `true` | Gather profiles by scraping pprof HTTP endpoints |
+| profiles.pprof.extraRelabelingRules | string | `""` | Rule blocks to be added to the discovery.relabel component for eBPF profile sources. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block)) |
 | profiles.pprof.namespaces | list | `[]` | Which namespaces to look for pods with profiles. |
 | profiles.pprof.types | list | `["memory","cpu","goroutine","block","mutex","fgprof"]` | Profile types to gather |
 | prometheus-node-exporter.enabled | bool | `true` | Should this helm chart deploy Node Exporter to the cluster. Set this to false if your cluster already has Node Exporter, or if you do not want to scrape metrics from Node Exporter. |

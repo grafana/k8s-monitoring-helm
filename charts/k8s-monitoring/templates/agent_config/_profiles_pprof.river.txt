@@ -45,10 +45,13 @@ discovery.relabel "pprof_pods" {
     source_labels = ["__meta_kubernetes_pod_container_name"]
     target_label  = "container"
   }
+{{- if .Values.profiles.pprof.extraRelabelingRules }}
+{{ .Values.profiles.pprof.extraRelabelingRules | indent 2 }}
+{{- end }}
 }
-{{- $profileTypes := .Values.profiles.pprof.types }}
-{{- range $profileTypes }}
 
+{{- $profileTypes := .Values.profiles.pprof.types }}
+{{ range $profileTypes }}
 discovery.relabel "pprof_pods_{{.}}_default_name" {
   targets = concat(discovery.relabel.pprof_pods.output)
 

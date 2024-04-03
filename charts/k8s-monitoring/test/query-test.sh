@@ -180,7 +180,7 @@ for i in $(seq 0 "${count}"); do
         exit 1
       fi
       ;;
-    profiles)
+    pyroql)
       if ! profiles_query "${query}"; then
         exit 1
       fi
