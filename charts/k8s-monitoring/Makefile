@@ -68,7 +68,7 @@ docs/RBAC.md: ../../examples/default-values/output.yaml ../../examples/openshift
 	echo '```' >> docs/RBAC.md
 
 build-image: test/Dockerfile test/config-analysis.sh test/query-test.sh
-	docker build --tag ghcr.io/grafana/k8s-monitoring-test:$(shell yq -r '.version' Chart.yaml) test
+	docker build --platform linux/amd64 --tag ghcr.io/grafana/k8s-monitoring-test:$(shell yq -r '.version' Chart.yaml) test
 
 push-image:
 	docker push ghcr.io/grafana/k8s-monitoring-test:$(shell yq -r '.version' Chart.yaml)
