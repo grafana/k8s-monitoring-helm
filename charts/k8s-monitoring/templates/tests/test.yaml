@@ -257,6 +257,36 @@ spec:
                   key: {{ .Values.externalServices.tempo.basicAuth.passwordKey }}
                   optional: true
 
+    {{- if .Values.test.envOverrides.PROFILECLI_URL }}
+            - name: PROFILECLI_URL
+              value: {{ .Values.test.envOverrides.PROFILECLI_URL | quote }}
+    {{- else }}
+            - name: PROFILECLI_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "kubernetes_monitoring.profiles_service.secret.name" . }}
+                  key: {{ .Values.externalServices.pyroscope.hostKey }}
+                  optional: true
+    {{- end }}
+            - name: PROFILECLI_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "kubernetes_monitoring.profiles_service.secret.name" . }}
+                  key: {{ .Values.externalServices.pyroscope.basicAuth.usernameKey }}
+                  optional: true
+            - name: PROFILECLI_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "kubernetes_monitoring.profiles_service.secret.name" . }}
+                  key: {{ .Values.externalServices.pyroscope.basicAuth.passwordKey }}
+                  optional: true
+            - name: PROFILECLI_TENANT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "kubernetes_monitoring.profiles_service.secret.name" . }}
+                  key: {{ .Values.externalServices.pyroscope.tenantIdKey }}
+                  optional: true
+
       volumes:
         - name: test-files
           configMap:

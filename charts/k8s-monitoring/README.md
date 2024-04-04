@@ -3,9 +3,9 @@
 
 # k8s-monitoring
 
-![Version: 0.12.5](https://img.shields.io/badge/Version-0.12.5-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 2.1.2](https://img.shields.io/badge/AppVersion-2.1.2-informational?style=flat-square)
+![Version: 0.13.0](https://img.shields.io/badge/Version-0.13.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 2.1.2](https://img.shields.io/badge/AppVersion-2.1.2-informational?style=flat-square)
 
-A Helm chart for gathering, scraping, and forwarding Kubernetes infrastructure metrics and logs to a Grafana Stack.
+A Helm chart for gathering, scraping, and forwarding Kubernetes telemetry data to a Grafana Stack.
 
 ## Breaking change announcements
 
@@ -104,6 +104,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | https://grafana.github.io/helm-charts | grafana-agent | 0.37.0 |
 | https://grafana.github.io/helm-charts | grafana-agent-events(grafana-agent) | 0.37.0 |
 | https://grafana.github.io/helm-charts | grafana-agent-logs(grafana-agent) | 0.37.0 |
+| https://grafana.github.io/helm-charts | grafana-agent-profiles(grafana-agent) | 0.37.0 |
 | https://opencost.github.io/opencost-helm-chart | opencost | 1.33.1 |
 | https://prometheus-community.github.io/helm-charts | kube-state-metrics | 5.18.0 |
 | https://prometheus-community.github.io/helm-charts | prometheus-node-exporter | 4.32.0 |
@@ -184,6 +185,21 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | externalServices.prometheus.wal.truncateFrequency | string | `"2h"` | How frequently to clean up the WAL. |
 | externalServices.prometheus.writeEndpoint | string | `"/api/prom/push"` | Prometheus metrics write endpoint. Preset for Grafana Cloud Metrics instances. |
 | externalServices.prometheus.writeRelabelConfigRules | string | `""` | Rule blocks to be added to the [write_relabel_config block](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.remote_write/#write_relabel_config-block) of the prometheus.remote_write component. |
+| externalServices.pyroscope.authMode | string | `"basic"` | one of "none", "basic" |
+| externalServices.pyroscope.basicAuth.password | string | `""` | Pyroscope basic auth password |
+| externalServices.pyroscope.basicAuth.passwordKey | string | `"password"` | The key for the password property in the secret |
+| externalServices.pyroscope.basicAuth.username | string | `""` | Pyroscope basic auth username |
+| externalServices.pyroscope.basicAuth.usernameKey | string | `"username"` | The key for the username property in the secret |
+| externalServices.pyroscope.externalLabels | object | `{}` | Custom labels to be added to all profiles |
+| externalServices.pyroscope.host | string | `""` | Pyroscope host where profiles will be sent |
+| externalServices.pyroscope.hostKey | string | `"host"` | The key for the host property in the secret |
+| externalServices.pyroscope.proxyURL | string | `""` | HTTP proxy to proxy requests to Pyroscope through. |
+| externalServices.pyroscope.secret.create | bool | `true` | Should this Helm chart create the secret. If false, you must define the name and namespace values. |
+| externalServices.pyroscope.secret.name | string | `""` | The name of the secret. |
+| externalServices.pyroscope.secret.namespace | string | `""` | The namespace of the secret. |
+| externalServices.pyroscope.tenantId | string | `""` | Pyroscope tenant ID |
+| externalServices.pyroscope.tenantIdKey | string | `"tenantId"` | The key for the tenant ID property in the secret |
+| externalServices.pyroscope.tls | object | `{}` | [TLS settings](https://grafana.com/docs/agent/latest/flow/reference/components/pyroscope.write/#tls_config-block) to configure for the profiles service. |
 | externalServices.tempo.authMode | string | `"basic"` | one of "none", "basic" |
 | externalServices.tempo.basicAuth.password | string | `""` | Tempo basic auth password |
 | externalServices.tempo.basicAuth.passwordKey | string | `"password"` | The key for the password property in the secret |
@@ -356,6 +372,15 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | opencost.opencost.prometheus.password_key | string | `"password"` | The key for the password property in the secret. |
 | opencost.opencost.prometheus.secret_name | string | `"prometheus-k8s-monitoring"` | The name of the secret containing the username and password for the metrics service. This must be in the same namespace as the OpenCost deployment. |
 | opencost.opencost.prometheus.username_key | string | `"username"` | The key for the username property in the secret. |
+| profiles.ebpf.demangle | string | `"none"` | C++ demangle mode. Available options are: none, simplified, templates, full |
+| profiles.ebpf.enabled | bool | `true` | Gather profiles using eBPF |
+| profiles.ebpf.extraRelabelingRules | string | `""` | Rule blocks to be added to the discovery.relabel component for eBPF profile sources. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block)) |
+| profiles.ebpf.namespaces | list | `[]` | Which namespaces to look for pods with profiles. |
+| profiles.enabled | bool | `false` | Receive and forward profiles. |
+| profiles.pprof.enabled | bool | `true` | Gather profiles by scraping pprof HTTP endpoints |
+| profiles.pprof.extraRelabelingRules | string | `""` | Rule blocks to be added to the discovery.relabel component for eBPF profile sources. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block)) |
+| profiles.pprof.namespaces | list | `[]` | Which namespaces to look for pods with profiles. |
+| profiles.pprof.types | list | `["memory","cpu","goroutine","block","mutex","fgprof"]` | Profile types to gather |
 | prometheus-node-exporter.enabled | bool | `true` | Should this helm chart deploy Node Exporter to the cluster. Set this to false if your cluster already has Node Exporter, or if you do not want to scrape metrics from Node Exporter. |
 | prometheus-operator-crds.enabled | bool | `true` | Should this helm chart deploy the Prometheus Operator CRDs to the cluster. Set this to false if your cluster already has the CRDs, or if you do not to have the Grafana Agent scrape metrics from PodMonitors, Probes, or ServiceMonitors. |
 | prometheus-windows-exporter.config | string | `"collectors:\n  enabled: cpu,cs,container,logical_disk,memory,net,os\ncollector:\n  service:\n    services-where: \"Name='containerd' or Name='kubelet'\""` | Windows Exporter configuration |
@@ -385,7 +410,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | receivers.zipkin.port | int | `9411` | Which port to use for the Zipkin receiver. This port needs to be opened in the grafana-agent section below. |
 | test.attempts | int | `10` | How many times to attempt the test job. |
 | test.enabled | bool | `true` | Should `helm test` run the test job? |
-| test.envOverrides | object | `{"LOKI_URL":"","PROMETHEUS_URL":"","TEMPO_URL":""}` | Overrides the URLs for various data sources |
+| test.envOverrides | object | `{"LOKI_URL":"","PROFILECLI_URL":"","PROMETHEUS_URL":"","TEMPO_URL":""}` | Overrides the URLs for various data sources |
 | test.extraAnnotations | object | `{}` | Extra annotations to add to the test job. |
 | test.extraLabels | object | `{}` | Extra labels to add to the test job. |
 | test.extraQueries | list | `[]` | Additional queries to run during the test. NOTE that this uses the host, username, and password in the externalServices section. The user account must have the ability to run queries. Example: extraQueries:   - query: prometheus_metric{cluster="my-cluster-name"}     type: promql  Can optionally provide expectations: - query: "avg(count_over_time(scrape_samples_scraped{cluster=~\"ci-test-cluster-2|from-the-other-agent\"}[1m]))"   type: promql   expect:     value: 1     operator: == |

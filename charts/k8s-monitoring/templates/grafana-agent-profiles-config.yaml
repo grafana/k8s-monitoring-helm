@@ -1,0 +1,10 @@
+{{- if .Values.profiles.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "grafana-agent.fullname" (index .Subcharts "grafana-agent-profiles") }}
+  namespace: {{ .Release.Namespace }}
+data:
+  config.river: |-
+    {{- include "agentProfilesConfig" . | trim | nindent 4 }}
+{{- end }}

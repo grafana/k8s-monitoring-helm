@@ -1,0 +1,64 @@
+{{ define "agent.config.profilesEbpf" }}
+// Profiles
+{{- if .Values.profiles.ebpf.enabled }}
+discovery.kubernetes "ebpf_pods" {
+  selectors {
+    role = "pod"
+    field = "spec.nodeName=" + env("HOSTNAME")
+  }
+{{- if .Values.profiles.ebpf.namespaces }}
+  namespaces {
+    names = {{ .Values.profiles.ebpf.namespaces | toJson }}
+  }
+{{- end }}
+  role = "pod"
+}
+
+discovery.relabel "ebpf_pods" {
+  targets = discovery.kubernetes.ebpf_pods.targets
+  rule {
+    action = "drop"
+    regex = "Succeeded|Failed|Completed"
+    source_labels = ["__meta_kubernetes_pod_phase"]
+  }
+  rule {
+    action = "replace"
+    source_labels = ["__meta_kubernetes_namespace"]
+    target_label = "namespace"
+  }
+  rule {
+    action = "replace"
+    source_labels = ["__meta_kubernetes_pod_name"]
+    target_label = "pod"
+  }
+  rule {
+    action = "replace"
+    source_labels = ["__meta_kubernetes_pod_node_name"]
+    target_label = "node"
+  }
+  rule {
+    action = "replace"
+    source_labels = ["__meta_kubernetes_pod_container_name"]
+    target_label = "container"
+  }
+  // provide arbitrary service_name label, otherwise it will be set to {__meta_kubernetes_namespace}/{__meta_kubernetes_pod_container_name}
+  rule {
+    action = "replace"
+    regex = "(.*)@(.*)"
+    replacement = "ebpf/${1}/${2}"
+    separator = "@"
+    source_labels = ["__meta_kubernetes_namespace", "__meta_kubernetes_pod_container_name"]
+    target_label = "service_name"
+  }
+{{- if .Values.profiles.ebpf.extraRelabelingRules }}
+{{ .Values.profiles.ebpf.extraRelabelingRules | indent 2 }}
+{{- end }}
+}
+
+pyroscope.ebpf "ebpf_pods" {
+  targets = discovery.relabel.ebpf_pods.output
+  forward_to = [pyroscope.write.profiles_service.receiver]
+  demangle = {{ .Values.profiles.ebpf.demangle | quote }}
+}
+{{- end }}
+{{- end }}

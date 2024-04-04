@@ -16,9 +16,14 @@ if [ -z "${1}" ] || [ "${1}" == "-h" ]; then
   echo "  LOKI_PASS - The password for running LogQL queries"
   echo
   echo "  If using any TraceQL queries:"
-  echo "  TEMPO_URL - The query URL for your Tempo service (e.g. localhost:9090/api/v1/query"
+  echo "  TEMPO_URL - The search URL for your Tempo service (e.g. localhost:9090/api/search"
   echo "  TEMPO_USER - The username for running TraceQL queries"
   echo "  TEMPO_PASS - The password for running TraceQL queries"
+  echo
+  echo "  If using any profile queries:"
+  echo "  PROFILECLI_URL - The URL for your Pyroscope service (e.g. localhost:4040"
+  echo "  PROFILECLI_USERNAME - The username for running Pyroscope queries"
+  echo "  PROFILECLI_PASSWORD - The password for running Pyroscope queries"
   echo
   echo "queries.json is the queries file, and should be in the format:"
   echo '{"queries": [<query>]}'
@@ -140,6 +145,17 @@ function traces_query {
   fi
 }
 
+function profiles_query {
+    echo "Running profiles query: ${1}..."
+    result=$(profilecli query series --query="${1}")
+    resultCount=$(echo "${result}" 2>/dev/null | jq --slurp 'length')
+    if [ "${resultCount}" -eq 0 ]; then
+      echo "Query returned no results"
+      echo "Result: ${result}"
+      return 1
+    fi
+}
+
 count=$(jq -r ".queries | length-1" "${1}")
 for i in $(seq 0 "${count}"); do
   query=$(jq -r --argjson i "${i}" '.queries[$i].query' "${1}")
@@ -161,6 +177,11 @@ for i in $(seq 0 "${count}"); do
       ;;
     traceql)
       if ! traces_query "${query}"; then
+        exit 1
+      fi
+      ;;
+    pyroql)
+      if ! profiles_query "${query}"; then
         exit 1
       fi
       ;;

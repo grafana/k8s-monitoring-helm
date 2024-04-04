@@ -1,8 +1,8 @@
 apiVersion: v2
 name: k8s-monitoring
-description: A Helm chart for gathering, scraping, and forwarding Kubernetes infrastructure metrics and logs to a Grafana Stack.
+description: A Helm chart for gathering, scraping, and forwarding Kubernetes telemetry data to a Grafana Stack.
 type: application
-version: 0.12.5
+version: 0.13.0
 appVersion: 2.1.2
 icon: https://raw.githubusercontent.com/grafana/grafana/main/public/img/grafana_icon.svg
 sources:
@@ -26,6 +26,11 @@ dependencies:
   version: 0.37.0
   repository: https://grafana.github.io/helm-charts
   condition: logs.pod_logs.enabled
+- alias: grafana-agent-profiles
+  name: grafana-agent
+  version: 0.37.0
+  repository: https://grafana.github.io/helm-charts
+  condition: profiles.enabled
 - name: kube-state-metrics
   version: 5.18.0
   repository: https://prometheus-community.github.io/helm-charts

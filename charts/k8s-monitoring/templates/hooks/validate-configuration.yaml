@@ -79,6 +79,18 @@ spec:
         fi
         echo "Grafana Agent for Logs config file is valid"
 {{- end }}
+{{- if .Values.profiles.enabled }}
+        echo Validating Grafana Agent for Profiles config file
+        if ! grafana-agent fmt /etc/agent/profiles.river > /dev/null; then
+          exit 1
+        fi
+        output=$(grafana-agent run "/etc/agent/profiles.river" 2>&1)
+        if ! echo "${output}" | grep "KUBERNETES_SERVICE_HOST and KUBERNETES_SERVICE_PORT must be defined" >/dev/null; then
+          echo "${output}"
+          exit 1
+        fi
+        echo "Grafana Agent for Profiles config file is valid"
+{{- end }}
       env:
         - name: AGENT_MODE
           value: flow
@@ -118,5 +130,9 @@ data:
 {{- if and .Values.logs.enabled .Values.logs.pod_logs.enabled }}
   logs.river: |-
     {{- include "agentLogsConfig" . | trim | nindent 4 }}
+{{- end }}
+{{- if .Values.profiles.enabled }}
+  profiles.river: |-
+    {{- include "agentProfilesConfig" . | trim | nindent 4 }}
 {{- end }}
 {{- end -}}

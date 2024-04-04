@@ -19,6 +19,7 @@ env:
   CREDENTIALS: "${{ github.workspace }}/.github/configs/credentials.yaml"
   LOKI_VALUES: "${{ github.workspace }}/.github/configs/loki.yaml"
   TEMPO_VALUES: ""  # No values for now
+  PYROSCOPE_VALUES: "${{ github.workspace }}/.github/configs/pyroscope.yaml"
   GRAFANA_VALUES: "${{ github.workspace }}/.github/configs/grafana.yaml"
   PODLOGS_OBJECTS: "${{ github.workspace }}/.github/configs/podlogs.yaml"
   MYSQL_VALUES: "${{ github.workspace }}/.github/configs/mysql.yaml"
@@ -194,6 +195,11 @@ jobs:
       if: steps.list-changed.outputs.changed == 'true'
       run: |
         helm install tempo grafana/tempo -n tempo --create-namespace --wait
+
+    - name: Deploy Pyroscope
+      if: steps.list-changed.outputs.changed == 'true'
+      run: |
+        helm install pyroscope grafana/pyroscope -f "${PYROSCOPE_VALUES}" -n pyroscope --create-namespace --wait
 
     - name: Deploy Grafana
       if: steps.list-changed.outputs.changed == 'true'

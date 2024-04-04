@@ -1,0 +1,35 @@
+{{ define "agent.config.profilesService" }}
+// Pyroscope
+remote.kubernetes.secret "profiles_service" {
+  name = {{ include "kubernetes_monitoring.profiles_service.secret.name" . | quote }}
+  namespace = {{ .Values.externalServices.pyroscope.secret.namespace | default .Release.Namespace | quote }}
+}
+
+{{- with .Values.externalServices.pyroscope }}
+pyroscope.write "profiles_service" {
+  endpoint {
+    url = nonsensitive(remote.kubernetes.secret.profiles_service.data[{{ .hostKey | quote }}])
+    headers = { "X-Scope-OrgID" = nonsensitive(remote.kubernetes.secret.profiles_service.data[{{ .tenantIdKey | quote }}]) }
+{{ if eq .authMode "basic" }}
+    basic_auth {
+      username = nonsensitive(remote.kubernetes.secret.profiles_service.data[{{ .basicAuth.usernameKey | quote }}])
+      password = remote.kubernetes.secret.profiles_service.data[{{ .basicAuth.passwordKey | quote }}]
+    }
+{{- end }}
+{{- if .tls }}
+    tls_config {
+    {{- range $k, $v := .tls }}
+      {{ $k }} = {{ $v | toJson }}
+    {{- end }}
+    }
+{{- end }}
+  }
+  external_labels = {
+  {{- range $key, $value := .externalLabels }}
+    {{ $key }} = {{ $value | quote }},
+  {{- end }}
+{{- end }}
+    cluster = {{ required ".Values.cluster.name is a required value. Please set it and try again." .Values.cluster.name | quote }},
+  }
+}
+{{ end }}

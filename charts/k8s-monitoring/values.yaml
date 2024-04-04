@@ -220,6 +220,50 @@ externalServices:
     # This option will be deprecated and removed soon. Please switch to `tls` and use yaml format.
     tlsOptions: ""
 
+  # Connection information for Grafana Pyroscope
+  pyroscope:
+    # -- Pyroscope host where profiles will be sent
+    host: ""
+    # -- The key for the host property in the secret
+    hostKey: host
+
+    # -- HTTP proxy to proxy requests to Pyroscope through.
+    proxyURL: ""
+
+    # -- Custom labels to be added to all profiles
+    externalLabels: {}
+
+    # -- Pyroscope tenant ID
+    tenantId: ""
+    # -- The key for the tenant ID property in the secret
+    tenantIdKey: tenantId
+
+    # -- one of "none", "basic"
+    authMode: basic
+
+    # Authenticate to Pyroscope using basic authentication
+    basicAuth:
+      # -- Pyroscope basic auth username
+      username: ""
+      # -- The key for the username property in the secret
+      usernameKey: username
+      # -- Pyroscope basic auth password
+      password: ""
+      # -- The key for the password property in the secret
+      passwordKey: password
+
+    # Credential management
+    secret:
+      # -- Should this Helm chart create the secret. If false, you must define the name and namespace values.
+      create: true
+      # -- The name of the secret.
+      name: ""
+      # -- The namespace of the secret.
+      namespace: ""
+
+    # -- [TLS settings](https://grafana.com/docs/agent/latest/flow/reference/components/pyroscope.write/#tls_config-block) to configure for the profiles service.
+    tls: {}
+
 # Settings related to capturing and forwarding metrics
 metrics:
   # -- Capture and forward metrics
@@ -784,6 +828,48 @@ traces:
       span: []
       spanevent: []
 
+# Settings related to capturing and forwarding profiles
+profiles:
+  # -- Receive and forward profiles.
+  enabled: false
+
+  # Settings for gathering profiles using eBPF
+  ebpf:
+    # -- Gather profiles using eBPF
+    enabled: true
+    # -- Which namespaces to look for pods with profiles.
+    namespaces: []
+
+    # -- Rule blocks to be added to the discovery.relabel component for eBPF profile sources. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block))
+    extraRelabelingRules: ""
+
+    # -- C++ demangle mode. Available options are: none, simplified, templates, full
+    demangle: none
+
+  # TBD
+  # java:
+  #  enabled: true
+  #  namespaces: []
+  #  # -- Rule blocks to be added to the discovery.relabel component for Java profile sources. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block))
+  #  extraRelabelingRules: ""
+
+
+  pprof:
+    # -- Gather profiles by scraping pprof HTTP endpoints
+    enabled: true
+    # -- Which namespaces to look for pods with profiles.
+    namespaces: []
+    # -- Rule blocks to be added to the discovery.relabel component for eBPF profile sources. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block))
+    extraRelabelingRules: ""
+    # -- Profile types to gather
+    types:
+      - memory
+      - cpu
+      - goroutine
+      - block
+      - mutex
+      - fgprof
+
 # Telemetry data receiver settings
 receivers:
   grpc:
@@ -922,6 +1008,7 @@ test:
     PROMETHEUS_URL: ""
     LOKI_URL: ""
     TEMPO_URL: ""
+    PROFILECLI_URL: ""
 
   image:
     # -- Test job image registry.
@@ -1093,7 +1180,7 @@ opencost:
       kubernetes.io/os: linux
 
 
-# Settings for the Grafana Agent deployment
+# Settings for the Grafana Agent deployment that gathers metrics, and opens receivers for application data.
 # You can use this sections to make modifications to the Grafana Agent deployment.
 # See https://github.com/grafana/agent/tree/main/operations/helm/charts/grafana-agent for available values.
 # @ignored -- This skips including these values in README.md
@@ -1162,7 +1249,7 @@ grafana-agent:
   # Skip installation of the Grafana Agent CRDs, since we don't use them in this chart
   crds: {create: false}
 
-# Settings for the Grafana Agent deployment
+# Settings for the Grafana Agent deployment that gathers Cluster events.
 # You can use this sections to make modifications to the Grafana Agent deployment.
 # See https://github.com/grafana/agent/tree/main/operations/helm/charts/grafana-agent for available values.
 # @ignored -- This skips including these values in README.md
@@ -1181,7 +1268,7 @@ grafana-agent-events:
   # Skip installation of the Grafana Agent CRDs, since we don't use them in this chart
   crds: {create: false}
 
-# Settings for the Grafana Agent deployment
+# Settings for the Grafana Agent deployment that gathers pod logs.
 # You can use this sections to make modifications to the Grafana Agent deployment.
 # See https://github.com/grafana/agent/tree/main/operations/helm/charts/grafana-agent for available values.
 # @ignored -- This skips including these values in README.md
@@ -1203,6 +1290,36 @@ grafana-agent-logs:
 
   controller:
     type: daemonset
+    nodeSelector:
+      kubernetes.io/os: linux
+
+    tolerations:
+      - effect: NoSchedule
+        operator: Exists
+
+  # Skip installation of the Grafana Agent CRDs, since we don't use them in this chart
+  crds: {create: false}
+
+
+# Settings for the Grafana Agent deployment that gathers profiles.
+# You can use this sections to make modifications to the Grafana Agent deployment.
+# See https://github.com/grafana/agent/tree/main/operations/helm/charts/grafana-agent for available values.
+# @ignored -- This skips including these values in README.md
+grafana-agent-profiles:
+  agent:
+    # This chart is creating the configuration, so the grafana-agent chart does
+    # not need to.
+    configMap: {create: false}
+    clustering: {enabled: true}
+
+    securityContext:
+      privileged: true
+      runAsGroup: 0
+      runAsUser: 0
+
+  controller:
+    type: daemonset
+    hostPID: true
     nodeSelector:
       kubernetes.io/os: linux
 
