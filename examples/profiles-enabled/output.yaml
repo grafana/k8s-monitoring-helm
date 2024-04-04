@@ -1195,6 +1195,7 @@ data:
     pyroscope.ebpf "ebpf_pods" {
       targets = discovery.relabel.ebpf_pods.output
       forward_to = [pyroscope.write.profiles_service.receiver]
+      demangle = "none"
     }
     // Profiles
     discovery.kubernetes "pprof_pods" {
@@ -1967,11 +1968,11 @@ data:
       endpoint {
         url = nonsensitive(remote.kubernetes.secret.profiles_service.data["host"])
         headers = { "X-Scope-OrgID" = nonsensitive(remote.kubernetes.secret.profiles_service.data["tenantId"]) }
-      }
     
-      basic_auth {
-        username = nonsensitive(remote.kubernetes.secret.profiles_service.data["username"])
-        password = remote.kubernetes.secret.profiles_service.data["password"]
+        basic_auth {
+          username = nonsensitive(remote.kubernetes.secret.profiles_service.data["username"])
+          password = remote.kubernetes.secret.profiles_service.data["password"]
+        }
       }
       external_labels = {
         cluster = "profiles-enabled-test",
@@ -48322,6 +48323,7 @@ spec:
             requests:
               cpu: 1m
               memory: 5Mi
+      hostPID: true
       dnsPolicy: ClusterFirst
       nodeSelector:
         kubernetes.io/os: linux
@@ -49922,6 +49924,7 @@ data:
     pyroscope.ebpf "ebpf_pods" {
       targets = discovery.relabel.ebpf_pods.output
       forward_to = [pyroscope.write.profiles_service.receiver]
+      demangle = "none"
     }
     // Profiles
     discovery.kubernetes "pprof_pods" {
@@ -50694,11 +50697,11 @@ data:
       endpoint {
         url = nonsensitive(remote.kubernetes.secret.profiles_service.data["host"])
         headers = { "X-Scope-OrgID" = nonsensitive(remote.kubernetes.secret.profiles_service.data["tenantId"]) }
-      }
     
-      basic_auth {
-        username = nonsensitive(remote.kubernetes.secret.profiles_service.data["username"])
-        password = remote.kubernetes.secret.profiles_service.data["password"]
+        basic_auth {
+          username = nonsensitive(remote.kubernetes.secret.profiles_service.data["username"])
+          password = remote.kubernetes.secret.profiles_service.data["password"]
+        }
       }
       external_labels = {
         cluster = "profiles-enabled-test",

@@ -48,6 +48,7 @@ discovery.relabel "ebpf_pods" {
 pyroscope.ebpf "ebpf_pods" {
   targets = discovery.relabel.ebpf_pods.output
   forward_to = [pyroscope.write.profiles_service.receiver]
+  demangle = "none"
 }
 // Profiles
 discovery.kubernetes "pprof_pods" {
@@ -820,11 +821,11 @@ pyroscope.write "profiles_service" {
   endpoint {
     url = nonsensitive(remote.kubernetes.secret.profiles_service.data["host"])
     headers = { "X-Scope-OrgID" = nonsensitive(remote.kubernetes.secret.profiles_service.data["tenantId"]) }
-  }
 
-  basic_auth {
-    username = nonsensitive(remote.kubernetes.secret.profiles_service.data["username"])
-    password = remote.kubernetes.secret.profiles_service.data["password"]
+    basic_auth {
+      username = nonsensitive(remote.kubernetes.secret.profiles_service.data["username"])
+      password = remote.kubernetes.secret.profiles_service.data["password"]
+    }
   }
   external_labels = {
     cluster = "profiles-enabled-test",
