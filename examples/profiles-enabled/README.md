@@ -1,4 +1,4 @@
-# Traces Enabled
+# Profiles Enabled
 
 This example contains the values required to enable gathering profile data, and sending them
 to [Grafana Pyroscope](https://grafana.com/oss/pyroscope/).
