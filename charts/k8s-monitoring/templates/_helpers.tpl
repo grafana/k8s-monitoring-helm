@@ -94,3 +94,16 @@
 {{- define "escape_label" -}}
 {{ . | replace "-" "_" | replace "." "_" | replace "/" "_" }}
 {{- end }}
+
+{{- define "grafana-agent.fullname" -}}
+{{- if (index .Values "grafana-agent").fullnameOverride }}
+{{- (index .Values "grafana-agent").fullnameOverride | trunc 63 | trimSuffix "-" }}
+{{- else }}
+{{- $name := default "grafana-agent" (index .Values "grafana-agent").nameOverride }}
+{{- if contains $name .Release.Name }}
+{{- .Release.Name | trunc 63 | trimSuffix "-" }}
+{{- else }}
+{{- printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" }}
+{{- end }}
+{{- end }}
+{{- end }}

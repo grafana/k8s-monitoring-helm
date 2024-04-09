@@ -48350,6 +48350,62 @@ spec:
     app.kubernetes.io/name: prometheus-node-exporter
     app.kubernetes.io/instance: k8smon
 ---
+# Source: k8s-monitoring/templates/grafana-agent-receiver-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: k8smon-grafana-agent
+  labels:
+    helm.sh/chart: alloy-0.1.0
+    app.kubernetes.io/name: alloy
+    app.kubernetes.io/instance: k8smon
+    
+    app.kubernetes.io/version: "v1.0.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: alloy
+    app.kubernetes.io/instance: k8smon
+  internalTrafficPolicy: Cluster
+  ports:
+    - name: http-metrics
+      port: 12345
+      targetPort: 12345
+      protocol: "TCP"
+    - name: otlp-grpc
+      port: 4317
+      targetPort: 4317
+      protocol: TCP
+    - name: otlp-http
+      port: 4318
+      targetPort: 4318
+      protocol: TCP
+    - name: prometheus
+      port: 9999
+      targetPort: 9999
+      protocol: TCP
+    - name: jaeger-grpc
+      port: 14250
+      targetPort: 14250
+      protocol: TCP
+    - name: jaeger-binary
+      port: 6832
+      targetPort: 6832
+      protocol: TCP
+    - name: jaeger-compact
+      port: 6831
+      targetPort: 6831
+      protocol: TCP
+    - name: jaeger-http
+      port: 14268
+      targetPort: 14268
+      protocol: TCP
+    - name: zipkin
+      port: 9411
+      targetPort: 9411
+      protocol: TCP
+---
 # Source: k8s-monitoring/charts/prometheus-node-exporter/templates/daemonset.yaml
 apiVersion: apps/v1
 kind: DaemonSet
