@@ -54,7 +54,7 @@ $ ls
 values.yaml  metricsConfig.alloy  logsConfig.alloy
 $ helm upgrade grafana-k8s-monitoring --atomic --timeout 300s grafana/k8s-monitoring \
     --values values.yaml \
-    --set-file extraConfig=metricsConfig.alloy
+    --set-file extraConfig=metricsConfig.alloy \
     --set-file logs.extraConfig=logsConfig.alloy
 ```
 
