@@ -1,4 +1,4 @@
-{{ define "agent.config.kube_controller_manager" }}
+{{ define "alloy.config.kube_controller_manager" }}
 // Kube Controller Manager
 discovery.relabel "kube_controller_manager" {
   targets = discovery.kubernetes.pods.targets
@@ -34,7 +34,7 @@ prometheus.scrape "kube_controller_manager" {
   tls_config {
     insecure_skip_verify = true
   }
-{{- if (index .Values "grafana-agent").agent.clustering.enabled }}
+{{- if .Values.alloy.alloy.clustering.enabled }}
   clustering {
     enabled = true
   }

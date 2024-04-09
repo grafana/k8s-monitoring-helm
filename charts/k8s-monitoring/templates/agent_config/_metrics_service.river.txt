@@ -1,4 +1,4 @@
-{{ define "agent.config.metricsService" }}
+{{ define "alloy.config.metricsService" }}
 // Metrics Service
 remote.kubernetes.secret "metrics_service" {
   name = {{ include "kubernetes_monitoring.metrics_service.secret.name" . | quote }}
@@ -20,12 +20,12 @@ prometheus.relabel "metrics_service" {
 {{- if eq .Values.externalServices.prometheus.protocol "remote_write" }}
   forward_to = [prometheus.remote_write.metrics_service.receiver]
 }
-{{ include "agent.config.metricsServiceRemoteWrite" . }}
+{{ include "alloy.config.metricsServiceRemoteWrite" . }}
 {{- end }}
 
 {{- if or (eq .Values.externalServices.prometheus.protocol "otlp") (eq .Values.externalServices.prometheus.protocol "otlphttp") }}
   forward_to = [otelcol.receiver.prometheus.metrics_service.receiver]
 }
-{{ include "agent.config.metricsServiceOTLP" . }}
+{{ include "alloy.config.metricsServiceOTLP" . }}
 {{ end }}
 {{- end }}

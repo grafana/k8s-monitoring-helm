@@ -3,7 +3,7 @@
 apiVersion: security.openshift.io/v1
 kind: SecurityContextConstraints
 metadata:
-  name: {{ include "grafana-agent.fullname" (index .Subcharts "grafana-agent-logs") }}
+  name: {{ include "alloy.fullname" (index .Subcharts "alloy-logs") }}
 allowHostDirVolumePlugin: true
 allowHostIPC: false
 allowHostNetwork: false
@@ -20,7 +20,7 @@ fsGroup:
   type: RunAsAny
 groups: []
 priority: null
-readOnlyRootFilesystem: false  # Set because the Grafana Agent needs to write to /tmp/agent
+readOnlyRootFilesystem: false  # Set because Grafana Alloy needs to write to /tmp/alloy
 requiredDropCapabilities:
 - CHOWN
 - DAC_OVERRIDE
@@ -50,7 +50,7 @@ volumes:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: {{ include "grafana-agent.fullname" (index .Subcharts "grafana-agent-logs") }}-scc
+  name: {{ include "alloy.fullname" (index .Subcharts "alloy-logs") }}-scc
 rules:
 - verbs:
   - use
@@ -59,18 +59,18 @@ rules:
   resources:
   - securitycontextconstraints
   resourceNames:
-  - {{ include "grafana-agent.fullname" (index .Subcharts "grafana-agent-logs") }}
+  - {{ include "alloy.fullname" (index .Subcharts "alloy-logs") }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: {{ include "grafana-agent.fullname" (index .Subcharts "grafana-agent-logs") }}-scc
+  name: {{ include "alloy.fullname" (index .Subcharts "alloy-logs") }}-scc
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: {{ include "grafana-agent.fullname" (index .Subcharts "grafana-agent-logs") }}-scc
+  name: {{ include "alloy.fullname" (index .Subcharts "alloy-logs") }}-scc
 subjects:
 - kind: ServiceAccount
-  name: {{ include "grafana-agent.serviceAccountName" (index .Subcharts "grafana-agent-logs") }}
+  name: {{ include "alloy.serviceAccountName" (index .Subcharts "alloy-logs") }}
   namespace: {{ .Release.Namespace }}
 {{- end }}

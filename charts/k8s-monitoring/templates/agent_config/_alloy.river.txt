@@ -1,0 +1,90 @@
+{{ define "alloy.config.alloy.allowList" }}
+{{ if or .Values.metrics.alloy.metricsTuning.useDefaultAllowList .Values.metrics.alloy.metricsTuning.useIntegrationAllowList }}
+{{ "default_allow_lists/alloy.yaml" | .Files.Get }}
+{{ end }}
+{{ if .Values.metrics.alloy.metricsTuning.useIntegrationAllowList }}
+{{ "default_allow_lists/alloy_integration.yaml" | .Files.Get }}
+{{ end }}
+
+{{ if .Values.metrics.alloy.metricsTuning.includeMetrics }}
+{{ .Values.metrics.alloy.metricsTuning.includeMetrics | toYaml }}
+{{ end }}
+{{ end }}
+
+{{ define "alloy.config.alloy" }}
+// Grafana Alloy
+discovery.relabel "alloy" {
+  targets = discovery.kubernetes.pods.targets
+  rule {
+    source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_instance"]
+    regex = "{{ .Release.Name }}"
+    action = "keep"
+  }
+  {{- range $k, $v := .Values.metrics.alloy.labelMatchers }}
+  rule {
+    source_labels = ["__meta_kubernetes_pod_label_{{ include "escape_label" $k }}"]
+    regex = "{{ $v }}"
+    action = "keep"
+  }
+  {{- end }}
+  rule {
+    source_labels = ["__meta_kubernetes_pod_container_port_name"]
+    regex = "http-metrics"
+    action = "keep"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_namespace"]
+    target_label  = "namespace"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_pod_name"]
+    target_label  = "pod"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_pod_container_name"]
+    target_label  = "container"
+  }
+{{- if .Values.metrics.extraRelabelingRules }}
+{{ .Values.metrics.extraRelabelingRules | indent 2 }}
+{{- end }}
+{{- if .Values.metrics.alloy.extraRelabelingRules }}
+{{ .Values.metrics.alloy.extraRelabelingRules | indent 2 }}
+{{- end }}
+}
+
+prometheus.scrape "alloy" {
+  job_name = "integrations/alloy"
+  targets = discovery.relabel.alloy.output
+  scrape_interval = {{ .Values.metrics.alloy.scrapeInterval | default .Values.metrics.scrapeInterval | quote }}
+  forward_to = [prometheus.relabel.alloy.receiver]
+{{- if .Values.alloy.alloy.clustering.enabled }}
+  clustering {
+    enabled = true
+  }
+{{- end }}
+}
+
+prometheus.relabel "alloy" {
+{{- if or .Values.metrics.alloy.metricsTuning.useDefaultAllowList .Values.metrics.alloy.metricsTuning.includeMetrics }}
+  rule {
+    source_labels = ["__name__"]
+    regex = "up|{{ join "|" (include "alloy.config.alloy.allowList" . | fromYamlArray) }}"
+    action = "keep"
+  }
+{{- end }}
+{{- if .Values.metrics.alloy.metricsTuning.excludeMetrics }}
+  rule {
+    source_labels = ["__name__"]
+    regex = {{ join "|" .Values.metrics.alloy.metricsTuning.excludeMetrics | quote }}
+    action = "drop"
+  }
+{{- end }}
+{{- if .Values.metrics.extraMetricRelabelingRules }}
+{{ .Values.metrics.extraMetricRelabelingRules | indent 2 }}
+{{- end }}
+{{- if .Values.metrics.alloy.extraMetricRelabelingRules }}
+{{ .Values.metrics.alloy.extraMetricRelabelingRules | indent 2 }}
+{{- end }}
+  forward_to = [prometheus.relabel.metrics_service.receiver]
+}
+{{ end }}

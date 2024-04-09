@@ -1,4 +1,4 @@
-{{ define "agent.config.annotationAutodiscovery" }}
+{{ define "alloy.config.annotationAutodiscovery" }}
 // Annotation Autodiscovery
 discovery.relabel "annotation_autodiscovery_pods" {
   targets = discovery.kubernetes.pods.targets
@@ -157,7 +157,7 @@ discovery.relabel "annotation_autodiscovery_https" {
 prometheus.scrape "annotation_autodiscovery_http" {
   targets = discovery.relabel.annotation_autodiscovery_http.output
   honor_labels = true
-{{- if (index .Values "grafana-agent").agent.clustering.enabled }}
+{{- if .Values.alloy.alloy.clustering.enabled }}
   clustering {
     enabled = true
   }
@@ -172,7 +172,7 @@ prometheus.scrape "annotation_autodiscovery_https" {
   tls_config {
     insecure_skip_verify = true
   }
-{{- if (index .Values "grafana-agent").agent.clustering.enabled }}
+{{- if .Values.alloy.alloy.clustering.enabled }}
   clustering {
     enabled = true
   }

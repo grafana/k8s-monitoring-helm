@@ -1,4 +1,4 @@
-{{ define "agent.config.pod_monitors" }}
+{{ define "alloy.config.pod_monitors" }}
 // Prometheus Operator PodMonitor objects
 prometheus.operator.podmonitors "pod_monitors" {
 {{- if .Values.metrics.podMonitors.namespaces }}
@@ -9,7 +9,7 @@ prometheus.operator.podmonitors "pod_monitors" {
 {{ .Values.metrics.podMonitors.selector | indent 4 }}
   }
 {{- end }}
-{{- if (index .Values "grafana-agent").agent.clustering.enabled }}
+{{- if .Values.alloy.alloy.clustering.enabled }}
   clustering {
     enabled = true
   }
@@ -31,7 +31,7 @@ prometheus.relabel "podmonitors" {
 }
 {{ end }}
 
-{{ define "agent.config.probes" }}
+{{ define "alloy.config.probes" }}
 // Prometheus Operator Probe objects
 prometheus.operator.probes "probes" {
 {{- if .Values.metrics.probes.namespaces }}
@@ -42,7 +42,7 @@ prometheus.operator.probes "probes" {
 {{ .Values.metrics.probes.selector | indent 4 }}
   }
 {{- end }}
-{{- if (index .Values "grafana-agent").agent.clustering.enabled }}
+{{- if .Values.alloy.alloy.clustering.enabled }}
   clustering {
     enabled = true
   }
@@ -65,7 +65,7 @@ prometheus.relabel "probes" {
 {{ end }}
 
 
-{{ define "agent.config.service_monitors" }}
+{{ define "alloy.config.service_monitors" }}
 // Prometheus Operator ServiceMonitor objects
 prometheus.operator.servicemonitors "service_monitors" {
 {{- if .Values.metrics.serviceMonitors.namespaces }}
@@ -76,7 +76,7 @@ prometheus.operator.servicemonitors "service_monitors" {
 {{ .Values.metrics.serviceMonitors.selector | indent 4 }}
   }
 {{- end }}
-{{- if (index .Values "grafana-agent").agent.clustering.enabled }}
+{{- if .Values.alloy.alloy.clustering.enabled }}
   clustering {
     enabled = true
   }
@@ -99,8 +99,8 @@ prometheus.relabel "servicemonitors" {
 {{ end }}
 
 
-{{ define "agent.config.pod_log_objects" }}
-// Grafana Agent PodLogs objects
+{{ define "alloy.config.pod_log_objects" }}
+// Grafana Alloy PodLogs objects
 loki.source.podlogs "podlogs_objects" {
 {{- if .Values.logs.podLogsObjects.namespaces }}
   namespace_selector {
@@ -116,7 +116,7 @@ loki.source.podlogs "podlogs_objects" {
 {{ .Values.logs.podLogsObjects.selector | indent 4 }}
   }
 {{- end }}
-{{- if (index .Values "grafana-agent-logs").agent.clustering.enabled }}
+{{- if (index .Values "alloy-logs").alloy.clustering.enabled }}
   clustering {
     enabled = true
   }

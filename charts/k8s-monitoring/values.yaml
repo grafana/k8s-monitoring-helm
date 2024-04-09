@@ -30,7 +30,7 @@ externalServices:
     writeEndpoint: /api/prom/push
     # -- Custom labels to be added to all time series
     externalLabels: {}
-    # -- Rule blocks to be added to the [write_relabel_config block](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.remote_write/#write_relabel_config-block) of the prometheus.remote_write component.
+    # -- Rule blocks to be added to the [write_relabel_config block](https://grafana.com/docs/alloy/latest/reference/components/prometheus.remote_write/#write_relabel_config-block) of the prometheus.remote_write component.
     writeRelabelConfigRules: ""
 
     # -- Sets the `X-Scope-OrgID` header when sending metrics
@@ -62,9 +62,9 @@ externalServices:
       namespace: ""
 
     # -- TLS settings to configure for the metrics service, compatible with
-    # [remoteWrite protocol](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.remote_write/#tls_config-block),
-    # [otlp](https://grafana.com/docs/agent/latest/flow/reference/components/otelcol.exporter.otlp/#tls-block), or
-    # [otlphttp](https://grafana.com/docs/agent/latest/flow/reference/components/otelcol.exporter.otlphttp/#tls-block) protocols
+    # [remoteWrite protocol](https://grafana.com/docs/alloy/latest/reference/components/prometheus.remote_write/#tls_config-block),
+    # [otlp](https://grafana.com/docs/alloy/latest/reference/components/otelcol.exporter.otlp/#tls-block), or
+    # [otlphttp](https://grafana.com/docs/alloy/latest/reference/components/otelcol.exporter.otlphttp/#tls-block) protocols
     tls: {}
 
     # Metric processor settings. Only applies when protocol is "otlp" or "otlphttp"
@@ -147,7 +147,7 @@ externalServices:
       # -- The namespace of the secret.
       namespace: ""
 
-    # -- [TLS settings](https://grafana.com/docs/agent/latest/flow/reference/components/loki.write/#tls_config-block) to configure for the logs service.
+    # -- [TLS settings](https://grafana.com/docs/alloy/latest/reference/components/loki.write/#tls_config-block) to configure for the logs service.
     tls: {}
 
     # Log processor settings. Only applies when protocol is "otlp" or "otlphttp"
@@ -211,10 +211,10 @@ externalServices:
       # -- The namespace of the secret.
       namespace: ""
 
-    # -- [TLS settings](https://grafana.com/docs/agent/latest/flow/reference/components/otelcol.exporter.otlp/#tls-block) to configure for the traces service.
+    # -- [TLS settings](https://grafana.com/docs/alloy/latest/reference/components/otelcol.exporter.otlp/#tls-block) to configure for the traces service.
     tls: {}
 
-    # -- Define the [TLS block](https://grafana.com/docs/agent/latest/flow/reference/components/otelcol.exporter.otlp/#tls-block).
+    # -- Define the [TLS block](https://grafana.com/docs/alloy/latest/reference/components/otelcol.exporter.otlp/#tls-block).
     # Example:
     # `tlsOptions: insecure = true`
     # This option will be deprecated and removed soon. Please switch to `tls` and use yaml format.
@@ -261,7 +261,7 @@ externalServices:
       # -- The namespace of the secret.
       namespace: ""
 
-    # -- [TLS settings](https://grafana.com/docs/agent/latest/flow/reference/components/pyroscope.write/#tls_config-block) to configure for the profiles service.
+    # -- [TLS settings](https://grafana.com/docs/alloy/latest/reference/components/pyroscope.write/#tls_config-block) to configure for the profiles service.
     tls: {}
 
 # Settings related to capturing and forwarding metrics
@@ -272,10 +272,10 @@ metrics:
   # -- How frequently to scrape metrics
   scrapeInterval: 60s
 
-  # -- Rule blocks to be added to the discovery.relabel component for all metric sources. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block))
+  # -- Rule blocks to be added to the discovery.relabel component for all metric sources. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery.relabel/#rule-block))
   extraRelabelingRules: ""
 
-  # -- Rule blocks to be added to the prometheus.relabel component for all metric sources. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block))
+  # -- Rule blocks to be added to the prometheus.relabel component for all metric sources. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#rule-block))
   extraMetricRelabelingRules: ""
 
   # Annotation-based autodiscovery allows for discovering metric sources solely on their annotations and does
@@ -284,10 +284,10 @@ metrics:
     # -- Enable annotation-based autodiscovery
     enabled: true
 
-    # -- Rule blocks to be added to the discovery.relabel component for auto-discovered entities. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block))
+    # -- Rule blocks to be added to the discovery.relabel component for auto-discovered entities. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery.relabel/#rule-block))
     extraRelabelingRules: ""
 
-    # -- Rule blocks to be added to the prometheus.relabel component for auto-discovered entities. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block))
+    # -- Rule blocks to be added to the prometheus.relabel component for auto-discovered entities. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#rule-block))
     extraMetricRelabelingRules: ""
 
     # Adjustments to the scraped metrics to filter the amount of data sent to storage.
@@ -316,32 +316,32 @@ metrics:
       metricsScheme: "k8s.grafana.com/metrics.scheme"
 
 
-  # Metrics from Grafana Agent
-  agent:
-    # -- Scrape metrics from Grafana Agent
+  # Metrics from Grafana Alloy
+  alloy:
+    # -- Scrape metrics from Grafana Alloy
     enabled: true
 
-    # -- How frequently to scrape metrics from Grafana Agent.
+    # -- How frequently to scrape metrics from Grafana Alloy.
     # Overrides metrics.scrapeInterval
     # @default -- 60s
     scrapeInterval: ""
 
-    # -- Label matchers used by the Grafana Agent to select Grafana Agent pods
+    # -- Label matchers used by Grafana Alloy to select Grafana Alloy pods
     labelMatchers:
-      app.kubernetes.io/name: grafana-agent.*
+      app.kubernetes.io/name: grafana-alloy.*
 
-    # -- Rule blocks to be added to the discovery.relabel component for Grafana Agent. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block))
+    # -- Rule blocks to be added to the discovery.relabel component for Grafana Alloy. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery.relabel/#rule-block))
     extraRelabelingRules: ""
 
-    # -- Rule blocks to be added to the prometheus.relabel component for Grafana Agent. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block))
+    # -- Rule blocks to be added to the prometheus.relabel component for Grafana Alloy. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#rule-block))
     extraMetricRelabelingRules: ""
 
     # Adjustments to the scraped metrics to filter the amount of data sent to storage.
     metricsTuning:
-      # -- Filter the list of metrics from the Grafana Agent to the minimal set required for Kubernetes Monitoring.
-      # See [Allow List for Grafana Agent](#allow-list-for-grafana-agent)
+      # -- Filter the list of metrics from Grafana Alloy to the minimal set required for Kubernetes Monitoring.
+      # See [Allow List for Grafana Alloy](#allow-list-for-grafana-alloy)
       useDefaultAllowList: true
-      # -- Filter the list of metrics from the Grafana Agent to the minimal set required for Kubernetes Monitoring as well as the Grafana Agent integration.
+      # -- Filter the list of metrics from Grafana Alloy to the minimal set required for Kubernetes Monitoring as well as the Grafana Alloy integration.
       useIntegrationAllowList: false
       # -- Metrics to keep. Can use regex.
       includeMetrics: []
@@ -358,14 +358,14 @@ metrics:
     # @default -- 60s
     scrapeInterval: ""
 
-    # -- Label matchers used by the Grafana Agent to select the Kube State Metrics service
+    # -- Label matchers used by Grafana Alloy to select the Kube State Metrics service
     labelMatchers:
       app.kubernetes.io/name: kube-state-metrics
 
-    # -- Rule blocks to be added to the discovery.relabel component for Kube State Metrics. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block))
+    # -- Rule blocks to be added to the discovery.relabel component for Kube State Metrics. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery.relabel/#rule-block))
     extraRelabelingRules: ""
 
-    # -- Rule blocks to be added to the prometheus.relabel component for Kube State Metrics. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block))
+    # -- Rule blocks to be added to the prometheus.relabel component for Kube State Metrics. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#rule-block))
     extraMetricRelabelingRules: ""
 
     # Kube State Metrics service settings
@@ -395,14 +395,14 @@ metrics:
     # @default -- 60s
     scrapeInterval: ""
 
-    # -- Label matchers used by the Grafana Agent to select the Node exporter pods
+    # -- Label matchers used to select the Node exporter pods
     labelMatchers:
       app.kubernetes.io/name: prometheus-node-exporter.*
 
-    # -- Rule blocks to be added to the discovery.relabel component for Node Exporter. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block))
+    # -- Rule blocks to be added to the discovery.relabel component for Node Exporter. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery.relabel/#rule-block))
     extraRelabelingRules: ""
 
-    # -- Rule blocks to be added to the prometheus.relabel component for Node Exporter. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block))
+    # -- Rule blocks to be added to the prometheus.relabel component for Node Exporter. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#rule-block))
     extraMetricRelabelingRules: ""
 
     # Node Exporter service settings
@@ -434,14 +434,14 @@ metrics:
     # @default -- 60s
     scrapeInterval: ""
 
-    # -- Label matchers used by the Grafana Agent to select the Windows Exporter pods
+    # -- Label matchers used to select the Windows Exporter pods
     labelMatchers:
       app.kubernetes.io/name: prometheus-windows-exporter.*
 
-    # -- Rule blocks to be added to the discovery.relabel component for Windows Exporter. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block))
+    # -- Rule blocks to be added to the discovery.relabel component for Windows Exporter. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery.relabel/#rule-block))
     extraRelabelingRules: ""
 
-    # -- Rule blocks to be added to the prometheus.relabel component for Windows Exporter. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block))
+    # -- Rule blocks to be added to the prometheus.relabel component for Windows Exporter. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#rule-block))
     extraMetricRelabelingRules: ""
 
     # Adjustments to the scraped metrics to filter the amount of data sent to storage.
@@ -467,10 +467,10 @@ metrics:
     # @default -- 60s
     scrapeInterval: ""
 
-    # -- Rule blocks to be added to the discovery.relabel component for Kubelet. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block))
+    # -- Rule blocks to be added to the discovery.relabel component for Kubelet. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery.relabel/#rule-block))
     extraRelabelingRules: ""
 
-    # -- Rule blocks to be added to the prometheus.relabel component for Kubelet. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block))
+    # -- Rule blocks to be added to the prometheus.relabel component for Kubelet. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#rule-block))
     extraMetricRelabelingRules: ""
 
     # Adjustments to the scraped metrics to filter the amount of data sent to storage.
@@ -496,10 +496,10 @@ metrics:
     # @default -- 60s
     scrapeInterval: ""
 
-    # -- Rule blocks to be added to the discovery.relabel component for cAdvisor. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block))
+    # -- Rule blocks to be added to the discovery.relabel component for cAdvisor. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery.relabel/#rule-block))
     extraRelabelingRules: ""
 
-    # -- Rule blocks to be added to the prometheus.relabel component for cAdvisor. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block))
+    # -- Rule blocks to be added to the prometheus.relabel component for cAdvisor. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#rule-block))
     extraMetricRelabelingRules: ""
 
     # Adjustments to the scraped metrics to filter the amount of data sent to storage.
@@ -534,10 +534,10 @@ metrics:
     # @default -- 60s
     scrapeInterval: ""
 
-    # -- Rule blocks to be added to the discovery.relabel component for the API Server. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block))
+    # -- Rule blocks to be added to the discovery.relabel component for the API Server. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery.relabel/#rule-block))
     extraRelabelingRules: ""
 
-    # -- Rule blocks to be added to the prometheus.relabel component for the API Server. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block))
+    # -- Rule blocks to be added to the prometheus.relabel component for the API Server. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#rule-block))
     extraMetricRelabelingRules: ""
 
     # Adjustments to the scraped metrics to filter the amount of data sent to storage.
@@ -560,10 +560,10 @@ metrics:
     # @default -- 60s
     scrapeInterval: ""
 
-    # -- Rule blocks to be added to the discovery.relabel component for the Kube Controller Manager. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block))
+    # -- Rule blocks to be added to the discovery.relabel component for the Kube Controller Manager. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery.relabel/#rule-block))
     extraRelabelingRules: ""
 
-    # -- Rule blocks to be added to the prometheus.relabel component for the Kube Controller Manager. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block))
+    # -- Rule blocks to be added to the prometheus.relabel component for the Kube Controller Manager. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#rule-block))
     extraMetricRelabelingRules: ""
 
     # Adjustments to the scraped metrics to filter the amount of data sent to storage.
@@ -586,10 +586,10 @@ metrics:
     # @default -- 60s
     scrapeInterval: ""
 
-    # -- Rule blocks to be added to the discovery.relabel component for the Kube Proxy. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block))
+    # -- Rule blocks to be added to the discovery.relabel component for the Kube Proxy. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery.relabel/#rule-block))
     extraRelabelingRules: ""
 
-    # -- Rule blocks to be added to the prometheus.relabel component for the Kube Proxy. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block))
+    # -- Rule blocks to be added to the prometheus.relabel component for the Kube Proxy. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#rule-block))
     extraMetricRelabelingRules: ""
 
     # Adjustments to the scraped metrics to filter the amount of data sent to storage.
@@ -612,10 +612,10 @@ metrics:
     # @default -- 60s
     scrapeInterval: ""
 
-    # -- Rule blocks to be added to the discovery.relabel component for the Kube Scheduler. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block))
+    # -- Rule blocks to be added to the discovery.relabel component for the Kube Scheduler. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery.relabel/#rule-block))
     extraRelabelingRules: ""
 
-    # -- Rule blocks to be added to the prometheus.relabel component for the Kube Scheduler. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block))
+    # -- Rule blocks to be added to the prometheus.relabel component for the Kube Scheduler. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#rule-block))
     extraMetricRelabelingRules: ""
 
     # Adjustments to the scraped metrics to filter the amount of data sent to storage.
@@ -635,14 +635,14 @@ metrics:
     # @default -- 60s
     scrapeInterval: ""
 
-    # -- Label matchers used by the Grafana Agent to select the OpenCost service
+    # -- Label matchers used to select the OpenCost service
     labelMatchers:
       app.kubernetes.io/name: opencost
 
-    # -- Rule blocks to be added to the discovery.relabel component for OpenCost. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block))
+    # -- Rule blocks to be added to the discovery.relabel component for OpenCost. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery.relabel/#rule-block))
     extraRelabelingRules: ""
 
-    # -- Rule blocks to be added to the prometheus.relabel component for OpenCost. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block))
+    # -- Rule blocks to be added to the prometheus.relabel component for OpenCost. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#rule-block))
     extraMetricRelabelingRules: ""
 
     # Adjustments to the scraped metrics to filter the amount of data sent to storage.
@@ -670,7 +670,7 @@ metrics:
     # @default -- 60s
     scrapeInterval: ""
 
-    # -- Rule blocks to be added to the prometheus.relabel component for PodMonitor objects. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block))
+    # -- Rule blocks to be added to the prometheus.relabel component for PodMonitor objects. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#rule-block))
     extraMetricRelabelingRules: ""
 
   probes:
@@ -688,7 +688,7 @@ metrics:
     # @default -- 60s
     scrapeInterval: ""
 
-    # -- Rule blocks to be added to the prometheus.relabel component for Probe objects. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block))
+    # -- Rule blocks to be added to the prometheus.relabel component for Probe objects. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#rule-block))
     extraMetricRelabelingRules: ""
 
   serviceMonitors:
@@ -706,7 +706,7 @@ metrics:
     # @default -- 60s
     scrapeInterval: ""
 
-    # -- Rule blocks to be added to the prometheus.relabel component for ServiceMonitor objects. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block))
+    # -- Rule blocks to be added to the prometheus.relabel component for ServiceMonitor objects. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#rule-block))
     extraMetricRelabelingRules: ""
 
 
@@ -716,11 +716,11 @@ metrics:
 
   # Settings related to metrics ingested via receivers
   receiver:
-    # -- Apply a filter to metrics received via the OTLP or OTLP HTTP receivers. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/otelcol.processor.filter/))
+    # -- Apply a filter to metrics received via the OTLP or OTLP HTTP receivers. ([docs](https://grafana.com/docs/alloy/latest/reference/components/otelcol.processor.filter/))
     filters:
       metric: []
       datapoint: []
-    # -- Apply a transformation to metrics received via the OTLP or OTLP HTTP receivers. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/otelcol.processor.transform/))
+    # -- Apply a transformation to metrics received via the OTLP or OTLP HTTP receivers. ([docs](https://grafana.com/docs/alloy/latest/reference/components/otelcol.processor.transform/))
     transforms:
       resource: []
       metric: []
@@ -754,23 +754,23 @@ logs:
     namespaces: []
 
     # -- Rule blocks to be added to the discovery.relabel component for pod logs.
-    # ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block))
+    # ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery.relabel/#rule-block))
     extraRelabelingRules: ""
 
     # -- Controls the behavior of gathering pod logs.
-    # When set to "volumes", the Grafana Agent will use HostPath volume mounts on the cluster nodes to access the pod
+    # When set to "volumes", Grafana Alloy will use HostPath volume mounts on the cluster nodes to access the pod
     # log files directly.
-    # When set to "api", the Grafana Agent will access pod logs via the API server. This method may be preferable if
+    # When set to "api", Grafana Alloy will access pod logs via the API server. This method may be preferable if
     # your cluster prevents DaemonSets, HostPath volume mounts, or for other reasons.
     gatherMethod: "volumes"
 
     # -- Stage blocks to be added to the loki.process component for pod logs.
-    # ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/loki.process/#blocks))
+    # ([docs](https://grafana.com/docs/alloy/latest/reference/components/loki.process/#blocks))
     # This value is templated so that you can refer to other values from this file.
     extraStageBlocks: ""
 
   podLogsObjects:
-    # -- Enable discovery of Grafana Agent PodLogs objects.
+    # -- Enable discovery of Grafana Alloy PodLogs objects.
     enabled: false
 
     # -- Which namespaces to look for PodLogs objects.
@@ -780,7 +780,7 @@ logs:
     selector: ""
 
     # -- Stage blocks to be added to the loki.process component for logs gathered via PodLogs objects.
-    # ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/loki.process/#blocks))
+    # ([docs](https://grafana.com/docs/alloy/latest/reference/components/loki.process/#blocks))
     # This value is templated so that you can refer to other values from this file.
     extraStageBlocks: ""
 
@@ -797,15 +797,15 @@ logs:
 
   # Settings related to logs ingested via receivers
   receiver:
-    # -- Apply a filter to logs received via the OTLP or OTLP HTTP receivers. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/otelcol.processor.filter/))
+    # -- Apply a filter to logs received via the OTLP or OTLP HTTP receivers. ([docs](https://grafana.com/docs/alloy/latest/reference/components/otelcol.processor.filter/))
     filters:
       log_record: []
-    # -- Apply a transformation to logs received via the OTLP or OTLP HTTP receivers. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/otelcol.processor.transform/))
+    # -- Apply a transformation to logs received via the OTLP or OTLP HTTP receivers. ([docs](https://grafana.com/docs/alloy/latest/reference/components/otelcol.processor.transform/))
     transforms:
       resource: []
       log: []
 
-  # -- Extra configuration that will be added to Grafana Agent Logs configuration file.
+  # -- Extra configuration that will be added to Grafana Alloy Logs configuration file.
   # This value is templated so that you can refer to other values from this file.
   # This cannot be used to modify the generated configuration values, only append new components.
   # See [Adding custom Flow configuration](#adding-custom-flow-configuration) for an example.
@@ -818,11 +818,11 @@ traces:
 
   # Settings related to traces ingested via receivers
   receiver:
-    # -- Apply a filter to traces received via the OTLP or OTLP HTTP receivers. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/otelcol.processor.filter/))
+    # -- Apply a filter to traces received via the OTLP or OTLP HTTP receivers. ([docs](https://grafana.com/docs/alloy/latest/reference/components/otelcol.processor.filter/))
     filters:
       span: []
       spanevent: []
-    # -- Apply a transformation to traces received via the OTLP or OTLP HTTP receivers. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/otelcol.processor.transform/))
+    # -- Apply a transformation to traces received via the OTLP or OTLP HTTP receivers. ([docs](https://grafana.com/docs/alloy/latest/reference/components/otelcol.processor.transform/))
     transforms:
       resource: []
       span: []
@@ -840,7 +840,7 @@ profiles:
     # -- Which namespaces to look for pods with profiles.
     namespaces: []
 
-    # -- Rule blocks to be added to the discovery.relabel component for eBPF profile sources. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block))
+    # -- Rule blocks to be added to the discovery.relabel component for eBPF profile sources. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery.relabel/#rule-block))
     extraRelabelingRules: ""
 
     # -- C++ demangle mode. Available options are: none, simplified, templates, full
@@ -850,7 +850,7 @@ profiles:
   # java:
   #  enabled: true
   #  namespaces: []
-  #  # -- Rule blocks to be added to the discovery.relabel component for Java profile sources. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block))
+  #  # -- Rule blocks to be added to the discovery.relabel component for Java profile sources. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery.relabel/#rule-block))
   #  extraRelabelingRules: ""
 
 
@@ -859,7 +859,7 @@ profiles:
     enabled: true
     # -- Which namespaces to look for pods with profiles.
     namespaces: []
-    # -- Rule blocks to be added to the discovery.relabel component for eBPF profile sources. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block))
+    # -- Rule blocks to be added to the discovery.relabel component for eBPF profile sources. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery.relabel/#rule-block))
     extraRelabelingRules: ""
     # -- Profile types to gather
     types:
@@ -875,7 +875,7 @@ receivers:
   grpc:
     # -- Receive OpenTelemetry signals over OTLP/gRPC?
     enabled: true
-    # -- Which port to use for the OTLP/gRPC receiver. This port needs to be opened in the grafana-agent section below.
+    # -- Which port to use for the OTLP/gRPC receiver. This port needs to be opened in the alloy section below.
     port: 4317
     # -- It removes attributes which could cause high cardinality metrics. For example, attributes with IP addresses and port numbers in metrics about HTTP and gRPC connections will be removed.
     disable_debug_metrics: true
@@ -883,7 +883,7 @@ receivers:
   http:
     # -- Receive OpenTelemetry signals over OTLP/HTTP?
     enabled: true
-    # -- Which port to use for the OTLP/HTTP receiver. This port needs to be opened in the grafana-agent section below.
+    # -- Which port to use for the OTLP/HTTP receiver. This port needs to be opened in the alloy section below.
     port: 4318
     # -- It removes attributes which could cause high cardinality metrics. For example, attributes with IP addresses and port numbers in metrics about HTTP and gRPC connections will be removed.
     disable_debug_metrics: true
@@ -891,32 +891,32 @@ receivers:
   prometheus:
     # -- Receive Prometheus metrics
     enabled: false
-    # -- Which port to use for the Prometheus receiver. This port needs to be opened in the grafana-agent section below.
+    # -- Which port to use for the Prometheus receiver. This port needs to be opened in the alloy section below.
     port: 9999
 
   jaeger:
     grpc:
       # -- Receive Jaeger signals via gRPC protocol.
       enabled: false
-      # -- Which port to use for the Jaeger gRPC receiver. This port needs to be opened in the grafana-agent section below.
+      # -- Which port to use for the Jaeger gRPC receiver. This port needs to be opened in the alloy section below.
       port: 14250
 
     thriftBinary:
       # -- Receive Jaeger signals via Thrift binary protocol.
       enabled: false
-      # -- Which port to use for the Thrift binary receiver. This port needs to be opened in the grafana-agent section below.
+      # -- Which port to use for the Thrift binary receiver. This port needs to be opened in the alloy section below.
       port: 6832
 
     thriftCompact:
       # -- Receive Jaeger signals via Thrift compact protocol.
       enabled: false
-      # -- Which port to use for the Thrift compact receiver. This port needs to be opened in the grafana-agent section below.
+      # -- Which port to use for the Thrift compact receiver. This port needs to be opened in the alloy section below.
       port: 6831
 
     thriftHttp:
       # -- Receive Jaeger signals via Thrift HTTP protocol.
       enabled: false
-      # -- Which port to use for the Thrift HTTP receiver. This port needs to be opened in the grafana-agent section below.
+      # -- Which port to use for the Thrift HTTP receiver. This port needs to be opened in the alloy section below.
       port: 14268
 
     # -- It removes attributes which could cause high cardinality metrics. For example, attributes with IP addresses and port numbers in metrics about HTTP and gRPC connections will be removed.
@@ -925,7 +925,7 @@ receivers:
   zipkin:
     # -- Receive Zipkin traces
     enabled: false
-    # -- Which port to use for the Zipkin receiver. This port needs to be opened in the grafana-agent section below.
+    # -- Which port to use for the Zipkin receiver. This port needs to be opened in the alloy section below.
     port: 9411
     # -- It removes attributes which could cause high cardinality metrics. For example, attributes with IP addresses and port numbers in metrics about HTTP and gRPC connections will be removed.
     disable_debug_metrics: true
@@ -940,7 +940,7 @@ receivers:
       # -- How long before sending
       timeout: 2s
 
-# -- Extra configuration that will be added to Grafana Agent configuration file.
+# -- Extra configuration that will be added to Grafana Alloy configuration file.
 # This value is templated so that you can refer to other values from this file.
 # This cannot be used to modify the generated configuration values, only append new components.
 # See [Adding custom Flow configuration](#adding-custom-flow-configuration) for an example.
@@ -980,7 +980,7 @@ test:
   #     type: promql
   #
   # Can optionally provide expectations:
-  # - query: "avg(count_over_time(scrape_samples_scraped{cluster=~\"ci-test-cluster-2|from-the-other-agent\"}[1m]))"
+  # - query: "avg(count_over_time(scrape_samples_scraped{cluster=~\"ci-test-cluster-2|from-the-other-alloy\"}[1m]))"
   #   type: promql
   #   expect:
   #     value: 1
@@ -1020,7 +1020,7 @@ test:
     # -- Optional set of image pull secrets.
     pullSecrets: []
 
-# Settings for the config analysis pod, which asks the Grafana Agent for an analysis of expected metric discoveries and
+# Settings for the config analysis pod, which asks Grafana Alloy for an analysis of expected metric discoveries and
 # scrapes. Runnable by "helm test"
 configAnalysis:
   # -- Should `helm test` run the config analysis pod?
@@ -1131,7 +1131,7 @@ prometheus-windows-exporter:
 prometheus-operator-crds:
   # -- Should this helm chart deploy the Prometheus Operator CRDs to the cluster.
   # Set this to false if your cluster already has the CRDs, or if you do not
-  # to have the Grafana Agent scrape metrics from PodMonitors, Probes, or ServiceMonitors.
+  # to have Grafana Alloy scrape metrics from PodMonitors, Probes, or ServiceMonitors.
   enabled: true
 
 # Settings for the OpenCost deployment
@@ -1180,15 +1180,14 @@ opencost:
       kubernetes.io/os: linux
 
 
-# Settings for the Grafana Agent deployment that gathers metrics, and opens receivers for application data.
-# You can use this sections to make modifications to the Grafana Agent deployment.
-# See https://github.com/grafana/agent/tree/main/operations/helm/charts/grafana-agent for available values.
+# Settings for the Grafana Alloy instance that gathers metrics, and opens receivers for application data.
+# See https://github.com/grafana/alloy/tree/main/operations/helm/charts/alloy for available values.
 # @ignored -- This skips including these values in README.md
-grafana-agent:
-  agent:
+alloy:
+  alloy:
     clustering: {enabled: true}
 
-    # This chart is creating the configuration, so the grafana-agent chart does not need to.
+    # This chart is creating the configuration, so the alloy chart does not need to.
     configMap: {create: false}
 
     extraPorts:
@@ -1226,7 +1225,7 @@ grafana-agent:
         protocol: "TCP"
 
     # This chart creates the credentials for Prometheus and Loki. This section
-    # mounts those credentials into the Grafana Agent container.
+    # mounts those credentials into the Grafana Alloy container.
     mounts:
       extra:
         - name: kubernetes-monitoring-telemetry
@@ -1238,23 +1237,22 @@ grafana-agent:
       kubernetes.io/os: linux
 
     # This chart creates the credentials for Prometheus and Loki. This section
-    # connects those credentials into the Grafana Agent pod.
+    # connects those credentials into the Grafana Alloy pod.
     volumes:
       extra:
         - name: kubernetes-monitoring-telemetry
           configMap:
             name: kubernetes-monitoring-telemetry
 
-  # Skip installation of the Grafana Agent CRDs, since we don't use them in this chart
+  # Skip installation of the Grafana Alloy CRDs, since we don't use them in this chart
   crds: {create: false}
 
-# Settings for the Grafana Agent deployment that gathers Cluster events.
-# You can use this sections to make modifications to the Grafana Agent deployment.
-# See https://github.com/grafana/agent/tree/main/operations/helm/charts/grafana-agent for available values.
+# Settings for the Grafana Alloy instance that gathers Cluster events.
+# See https://github.com/grafana/alloy/tree/main/operations/helm/charts/alloy for available values.
 # @ignored -- This skips including these values in README.md
-grafana-agent-events:
-  agent:
-    # This chart is creating the configuration, so the grafana-agent chart does not need to.
+alloy-events:
+  alloy:
+    # This chart is creating the configuration, so the alloy chart does not need to.
     configMap: {create: false}
 
   controller:
@@ -1263,16 +1261,15 @@ grafana-agent-events:
     nodeSelector:
       kubernetes.io/os: linux
 
-  # Skip installation of the Grafana Agent CRDs, since we don't use them in this chart
+  # Skip installation of the Grafana Alloy CRDs, since we don't use them in this chart
   crds: {create: false}
 
-# Settings for the Grafana Agent deployment that gathers pod logs.
-# You can use this sections to make modifications to the Grafana Agent deployment.
-# See https://github.com/grafana/agent/tree/main/operations/helm/charts/grafana-agent for available values.
+# Settings for the Grafana Alloy instance that gathers pod logs.
+# See https://github.com/grafana/alloy/tree/main/operations/helm/charts/alloy for available values.
 # @ignored -- This skips including these values in README.md
-grafana-agent-logs:
-  agent:
-    # This chart is creating the configuration, so the grafana-agent chart does not need to.
+alloy-logs:
+  alloy:
+    # This chart is creating the configuration, so the alloy chart does not need to.
     configMap: {create: false}
 
     # Enable clustering by default to make it simpler when using API-based log gathering.
@@ -1294,17 +1291,16 @@ grafana-agent-logs:
       - effect: NoSchedule
         operator: Exists
 
-  # Skip installation of the Grafana Agent CRDs, since we don't use them in this chart
+  # Skip installation of the Grafana Alloy CRDs, since we don't use them in this chart
   crds: {create: false}
 
 
-# Settings for the Grafana Agent deployment that gathers profiles.
-# You can use this sections to make modifications to the Grafana Agent deployment.
-# See https://github.com/grafana/agent/tree/main/operations/helm/charts/grafana-agent for available values.
+# Settings for the Grafana Alloy instance that gathers profiles.
+# See https://github.com/grafana/alloy/tree/main/operations/helm/charts/alloy for available values.
 # @ignored -- This skips including these values in README.md
-grafana-agent-profiles:
-  agent:
-    # This chart is creating the configuration, so the grafana-agent chart does not need to.
+alloy-profiles:
+  alloy:
+    # This chart is creating the configuration, so the alloy chart does  not need to.
     configMap: {create: false}
 
     # Disabling clustering because each instance will gather profiles for the workloads on the same node.
@@ -1325,7 +1321,7 @@ grafana-agent-profiles:
       - effect: NoSchedule
         operator: Exists
 
-  # Skip installation of the Grafana Agent CRDs, since we don't use them in this chart
+  # Skip installation of the Grafana Alloy CRDs, since we don't use them in this chart
   crds: {create: false}
 
 # -- Deploy additional manifest objects

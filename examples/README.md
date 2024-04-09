@@ -7,8 +7,8 @@ In each example, there is a values.yaml file, which serves as the input for the 
 Then, `helm template` is used to render the chart to produce `output.yaml`, which is what would be deployed to the
 Kubernetes cluster, given that values file.
 
-Then, we extract the Grafana Agent configuration files from the ConfigMap objects and save them as `metrics.river` and
-`logs.river`.
+Then, we extract the Grafana Alloy configuration files from the ConfigMap objects and save them as `metrics.alloy`,
+`events.alloy`, `logs.alloy`, and `profiles.alloy`.
 
 ![Process for generating example files](process.png)
 
@@ -28,9 +28,9 @@ Then, we extract the Grafana Agent configuration files from the ConfigMap object
 
 ### Customizing behavior
 
-* [Agent Autoscaling and Storage](./agent-autoscaling-and-storage) - Enable Autoscaling and storage for the Grafana Agent.
+* [Alloy Autoscaling and Storage](./alloy-autoscaling-and-storage) - Enable Autoscaling and storage for Grafana Alloy.
 * [Custom Metrics Tuning](./custom-metrics-tuning) - Change which metrics are send to Prometheus.
-* [Custom Configs](./custom-config) - Add arbitrary Grafana Agent Flow components to the configuration.
+* [Custom Configs](./custom-config) - Add arbitrary Grafana Alloy components to the configuration.
 * [Kube Pod Labels](./kube-pod-labels) - Change configuring kube-state-metrics deployment and scraping config to allow Pod label metrics.
 * [Extra Rules](./extra-rules) - Add extra rules and stages for discovering and processing metrics and logs.
 * [OpenTelemetry services](./otel-metrics-service) - Change the delivery of metrics to use the OTLP or OTLPHTTP protocol.

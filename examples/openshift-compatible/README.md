@@ -3,14 +3,14 @@
 This example shows the modifications from the [default](../default-values) to deploy Kubernetes Monitoring on an OpenShift cluster.
 
 These modifications prevent deploying Kube State Metrics and Node Exporter, since they will already be present on the
-cluster, and adjust the configuration to the Grafana Agent to find those existing components.
-It also modifies the Grafana Agent to lock down security and permissions, and assigns a high-number port. 
+cluster, and adjust the configuration to Grafana Alloy to find those existing components.
+It also modifies Grafana Alloy to lock down security and permissions, and assigns a high-number port. 
 
 The `platform: openshift` switch also creates a SecurityContextConstraints object that modifies the permissions for the
-Grafana Agent for logs. This is required because of its use of hostPath volume mounts to detect and capture pod logs.
+Grafana Alloy for logs. This is required because of its use of hostPath volume mounts to detect and capture pod logs.
 
-Note that these agent pods cannot enable `readOnlyRootFilesystem` because they require being able to write to their
-storage path, which defaults to `/tmp/agent`.
+Note that these alloy pods cannot enable `readOnlyRootFilesystem` because they require being able to write to their
+storage path, which defaults to `/tmp/alloy`.
 
 ```yaml
 cluster:
@@ -50,8 +50,8 @@ kube-state-metrics:
 prometheus-node-exporter:
   enabled: false
 
-grafana-agent:
-  agent:
+alloy:
+  alloy:
     listenPort: 8080
     securityContext:
       allowPrivilegeEscalation: false
@@ -61,8 +61,8 @@ grafana-agent:
       seccompProfile:
         type: "RuntimeDefault"
 
-grafana-agent-logs:
-  agent:
+alloy-logs:
+  alloy:
     listenPort: 8080
     securityContext:
       allowPrivilegeEscalation: false
@@ -75,8 +75,8 @@ grafana-agent-logs:
       seLinuxOptions:
         type: spc_t
 
-grafana-agent-events:
-  agent:
+alloy-events:
+  alloy:
     listenPort: 8080
     securityContext:
       allowPrivilegeEscalation: false

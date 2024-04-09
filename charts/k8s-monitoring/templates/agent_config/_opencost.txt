@@ -1,4 +1,4 @@
-{{ define "agent.config.opencost.allowList" }}
+{{ define "alloy.config.opencost.allowList" }}
 {{ if .Values.metrics.cost.metricsTuning.useDefaultAllowList }}
 {{ "default_allow_lists/opencost.yaml" | .Files.Get }}
 {{ end }}
@@ -7,7 +7,7 @@
 {{ end }}
 {{ end }}
 
-{{ define "agent.config.opencost" }}
+{{ define "alloy.config.opencost" }}
 // OpenCost
 discovery.relabel "opencost" {
   targets = discovery.kubernetes.services.targets
@@ -40,7 +40,7 @@ prometheus.scrape "opencost" {
   job_name   = "integrations/kubernetes/opencost"
   targets    = discovery.relabel.opencost.output
   scrape_interval = {{ .Values.metrics.cost.scrapeInterval | default .Values.metrics.scrapeInterval | quote }}
-{{- if (index .Values "grafana-agent").agent.clustering.enabled }}
+{{- if .Values.alloy.alloy.clustering.enabled }}
   clustering {
     enabled = true
   }
@@ -52,7 +52,7 @@ prometheus.relabel "opencost" {
 {{- if or .Values.metrics.cost.metricsTuning.useDefaultAllowList .Values.metrics.cost.metricsTuning.includeMetrics }}
   rule {
     source_labels = ["__name__"]
-    regex = "up|{{ join "|" (include "agent.config.opencost.allowList" . | fromYamlArray) }}"
+    regex = "up|{{ join "|" (include "alloy.config.opencost.allowList" . | fromYamlArray) }}"
     action = "keep"
   }
 {{- end }}

@@ -42,8 +42,8 @@ To fix this problem, you can either:
 ## Pod log files in `/var/lib/docker/containers`
 
 On certain Kubernetes Clusters, Pod logs are stored inside of `/var/lib/docker/containers` with `/var/log/pods` being
-symlinked to that directory, but the Grafana Agent doesn't mount it by default.
-If your Cluster works this way, you'll likely see errors in the Grafana Agent for Logs pods like this:
+symlinked to that directory, but the Grafana Alloy doesn't mount it by default.
+If your Cluster works this way, you'll likely see errors in the Grafana Alloy for Logs pods like this:
 
 ```text
 ts=2023-12-26T20:23:33.462127486Z level=error msg="error getting os stat" component=local.file_match.pod_logs path=/var/log/pods/prod_simulation-assignment-797d7f7d85-hdnfn_ce3f8946-0fe9-44c4-9ffb-7f28b51ce39f/simulation-assignment-service/0.log err="stat /var/log/pods/prod_simulation-assignment-797d7f7d85-hdnfn_ce3f8946-0fe9-44c4-9ffb-7f28b51ce39f/simulation-assignment-service/0.log: no such file or directory"
@@ -52,8 +52,8 @@ ts=2023-12-26T20:23:33.462127486Z level=error msg="error getting os stat" compon
 If this is the case, add this to your values file and re-deploy:
 
 ```yaml
-grafana-agent-logs:
-  agent:
+alloy-logs:
+  alloy:
     mounts:
       dockercontainers: true
 ```

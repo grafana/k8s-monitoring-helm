@@ -1,4 +1,4 @@
-{{ define "agent.config.cadvisor.allowList" }}
+{{ define "alloy.config.cadvisor.allowList" }}
 {{ if .Values.metrics.cadvisor.metricsTuning.useDefaultAllowList }}
 {{ "default_allow_lists/cadvisor.yaml" | .Files.Get }}
 {{ end }}
@@ -7,7 +7,7 @@
 {{ end }}
 {{ end }}
 
-{{ define "agent.config.cadvisor" }}
+{{ define "alloy.config.cadvisor" }}
 // cAdvisor
 discovery.relabel "cadvisor" {
   targets = discovery.kubernetes.nodes.targets
@@ -45,7 +45,7 @@ prometheus.scrape "cadvisor" {
   tls_config {
     insecure_skip_verify = true
   }
-{{- if (index .Values "grafana-agent").agent.clustering.enabled }}
+{{- if .Values.alloy.alloy.clustering.enabled }}
   clustering {
     enabled = true
   }
@@ -57,7 +57,7 @@ prometheus.relabel "cadvisor" {
 {{- if or .Values.metrics.cadvisor.metricsTuning.useDefaultAllowList .Values.metrics.cadvisor.metricsTuning.includeMetrics }}
   rule {
     source_labels = ["__name__"]
-    regex = "up|{{ join "|" (include "agent.config.cadvisor.allowList" . | fromYamlArray) }}"
+    regex = "up|{{ join "|" (include "alloy.config.cadvisor.allowList" . | fromYamlArray) }}"
     action = "keep"
   }
 {{- end }}

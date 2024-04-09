@@ -24,18 +24,18 @@ The CI/CD test environment is deployed out like this:
 
 * Telemetry Sources
   * Cert Manager, used for testing discovery using service annotations
-  * Grafana Agent, used for pushing metrics and traces using receivers
+  * Grafana Alloy, used for pushing metrics and traces using receivers
   * MySQL, used for testing module integrations
   * Prometheus, used for testing discovery using pod annotations and https
   * Loki, used for testing discovery using ServiceMonitor objects
   * Grafana, used for gathering logs via a PodLogs object
   * The rest of Kubernetes
 * Subject under test
-  * k8s-monitoring helm chart, which deploys its own set of Grafana Agents
+  * k8s-monitoring helm chart, which deploys its own set of Grafana Alloy instances
 * Data storage
   * Prometheus
   * Loki
-    * Another Grafana Agent, which accepts logs via OTLP, translates to Loki and writes to this Loki service
+    * Another Grafana Alloy instance, which accepts logs via OTLP, translates to Loki and writes to this Loki service
   * Tempo
 * Data visualization
   * Grafana

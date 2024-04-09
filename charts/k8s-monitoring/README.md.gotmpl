@@ -85,7 +85,9 @@ This chart simplifies the deployment of a Kubernetes monitoring infrastructure, 
 * [kube-state-metrics](https://github.com/kubernetes/kube-state-metrics), which gathers metrics about Kubernetes objects
 * [Node exporter](https://github.com/prometheus/node_exporter), which gathers metrics about Kubernetes nodes
 * [OpenCost](https://www.opencost.io/), which interprets the above to create cost metrics for the cluster, and
-* [Grafana Agent](https://grafana.com/docs/agent/latest/), which scrapes the above services to forward metrics to [Prometheus](https://prometheus.io/), logs and events to [Loki](https://grafana.com/oss/loki/), and traces to [Tempo](https://grafana.com/oss/tempo/).
+* [Grafana Alloy](https://grafana.com/docs/alloy/latest/), which scrapes the above services to forward metrics to
+  [Prometheus](https://prometheus.io/), logs and events to [Loki](https://grafana.com/oss/loki/), traces to
+  [Tempo](https://grafana.com/oss/tempo/), and profiles to [Pyroscope](https://grafana.com/docs/pyroscope/).
 
 The Prometheus and Loki services may be hosted on the same cluster, or remotely (e.g. on Grafana Cloud).
 
@@ -105,8 +107,9 @@ same Kubernetes cluster.
 
 ### Adding custom Flow configuration
 
-Any value supplied to the `.extraConfig` or `.logs.extraConfig` values will be appended to the generated config file after being templated with helm, so that you can refer to any values from this chart.
-This can be used to add more Grafana Agent Flow components to provide extra functionality to the agent.
+Any value supplied to the `.extraConfig` or `.logs.extraConfig` values will be appended to the generated config file
+after being templated with helm, so that you can refer to any values from this chart. This can be used to add more
+Grafana Alloy components to provide extra functionality to the Alloy instance.
 
 NOTE: This cannot be used to modify existing configuration values.
 
@@ -121,8 +124,8 @@ useful ones like these:
 
 Example:
 
-In this example, the Agent will find a service named `my-webapp-metrics` with the label
-`app.kubernetes.io/name=my-webapp`, scrape them for Prometheus metrics, and send those metrics to Grafana Cloud.
+In this example, Alloy will find a service named `my-webapp-metrics` with the label `app.kubernetes.io/name=my-webapp`,
+scrape them for Prometheus metrics, and send those metrics to Grafana Cloud.
 
 ```yaml
 extraConfig: |-
@@ -154,15 +157,15 @@ For an example values file and generated output, see [this example](../../exampl
 The default config can deploy the CRDs for Prometheus Operator, and will add support for `PodMonitor`, 
 `ServiceMonitor` and `Probe` objects.
 
-Simply deploy a PodMonitor or a ServiceMonitor in the same namespace as the Grafana Agent and it will discover it and
-take the appropriate action.
+Simply deploy a PodMonitor or a ServiceMonitor in the same namespace as Alloy and it will discover it and take the
+appropriate action.
 
-Use a selector to limit the discovered objects
+Use a selector to limit the discovered objects.
 
 Example: 
 
-In this example, the Agent will find `ServiceMonitor` objects labeld with
-`example.com/environment=production`, scrape them for Prometheus metrics, and send those metrics to Grafana Cloud.
+In this example, Alloy will find `ServiceMonitor` objects labeled with `example.com/environment=production`, scrape them
+for Prometheus metrics, and send those metrics to Grafana Cloud.
 
 ```yaml
 serviceMonitors:
@@ -198,15 +201,19 @@ metrics:
 
 The following sections contain the allow lists that are defined for the associated metric sources.
 
-For more examples of metrics tuning, such as including or excluding metrics, see [this example](../../examples/custom-metrics-tuning).
+For more examples of metrics tuning, such as including or excluding metrics, see
+[this example](../../examples/custom-metrics-tuning).
 
-### Allow List for Grafana Agent
+### Allow List for Grafana Alloy
 
-Visit the Grafana Agent Metrics [documentation](https://grafana.com/solutions/grafana-agent/monitor/) for the full list of agent metrics
+<!-- TODO: Update this when the new integration is available
+Visit the Grafana Alloy Metrics [documentation](https://grafana.com/solutions/grafana-agent/monitor/) for the full list
+of agent metrics -->
 
-Visit the Grafana Agent Controller and Component Metrics [documentation](https://grafana.com/docs/agent/latest/flow/monitoring/) for the full list of component metrics
+Visit the Grafana Alloy Controller and Component Metrics
+[documentation](https://grafana.com/docs/alloy/latest/tasks/monitor/) for the full list of component metrics
 
-* agent_build_info
+* alloy_build_info
 
 ### Allow List for Kube State Metrics
 

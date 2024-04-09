@@ -1,4 +1,4 @@
-{{ define "agent.config.logs.pod_logs_discovery" }}
+{{ define "alloy.config.logs.pod_logs_discovery" }}
 // Pod Logs
 discovery.kubernetes "pods" {
   role = "pod"
@@ -93,7 +93,7 @@ loki.source.file "pod_logs" {
 loki.source.kubernetes "pod_logs" {
   targets = discovery.relabel.filtered_pod_logs.output
   forward_to = [loki.process.pod_logs.receiver]
-{{- if (index .Values "grafana-agent-logs").agent.clustering.enabled }}
+{{- if (index .Values "alloy-logs").alloy.clustering.enabled }}
   clustering {
     enabled = true
   }

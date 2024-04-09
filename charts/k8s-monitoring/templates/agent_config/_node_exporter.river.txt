@@ -1,4 +1,4 @@
-{{ define "agent.config.node_exporter.allowList" }}
+{{ define "alloy.config.node_exporter.allowList" }}
 {{ if or (index .Values.metrics "node-exporter").metricsTuning.useDefaultAllowList (index .Values.metrics "node-exporter").metricsTuning.useIntegrationAllowList }}
 {{ "default_allow_lists/node_exporter.yaml" | .Files.Get }}
 {{ end }}
@@ -11,7 +11,7 @@
 {{ end }}
 {{ end }}
 
-{{ define "agent.config.node_exporter" }}
+{{ define "alloy.config.node_exporter" }}
 // Node Exporter
 discovery.relabel "node_exporter" {
   targets = discovery.kubernetes.pods.targets
@@ -46,7 +46,7 @@ prometheus.scrape "node_exporter" {
   job_name   = "integrations/node_exporter"
   targets  = discovery.relabel.node_exporter.output
   scrape_interval = {{ (index .Values.metrics "node-exporter").scrapeInterval | default .Values.metrics.scrapeInterval | quote }}
-{{- if (index .Values "grafana-agent").agent.clustering.enabled }}
+{{- if .Values.alloy.alloy.clustering.enabled }}
   clustering {
     enabled = true
   }
@@ -66,7 +66,7 @@ prometheus.relabel "node_exporter" {
 {{- if or (index .Values.metrics "node-exporter").metricsTuning.useDefaultAllowList (index .Values.metrics "node-exporter").metricsTuning.includeMetrics }}
   rule {
     source_labels = ["__name__"]
-    regex = "up|{{ join "|" (include "agent.config.node_exporter.allowList" . | fromYamlArray) }}"
+    regex = "up|{{ join "|" (include "alloy.config.node_exporter.allowList" . | fromYamlArray) }}"
     action = "keep"
   }
 {{- end }}

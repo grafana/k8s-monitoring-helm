@@ -1,0 +1,10 @@
+{{- if .Values.profiles.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "alloy.fullname" (index .Subcharts "alloy-profiles") }}
+  namespace: {{ .Release.Namespace }}
+data:
+  config.alloy: |-
+    {{- include "alloyProfilesConfig" . | trim | nindent 4 }}
+{{- end }}

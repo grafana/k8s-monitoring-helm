@@ -2,9 +2,9 @@
 
 CLUSTER_NAME="k8s-mon-test-cluster"
 CLUSTER_CONFIG="./.github/configs/cluster-config.yaml"
-GRAFANA_AGENT_VALUES="./.github/configs/agent-config.yaml"
-GRAFANA_AGENT_LOKI_OTLP_VALUES="./.github/configs/agent-config-loki-otlp.yaml"
-GRAFANA_AGENT_RECEIVER_SERVICE="./.github/configs/receiver-service.yaml"
+GRAFANA_ALLOY_VALUES="./.github/configs/alloy-config.yaml"
+GRAFANA_ALLOY_LOKI_OTLP_VALUES="./.github/configs/alloy-config-loki-otlp.yaml"
+GRAFANA_ALLOY_RECEIVER_SERVICE="./.github/configs/receiver-service.yaml"
 PROMETHEUS_VALUES="./.github/configs/prometheus.yaml"
 PROMETHEUS_WORKLOAD_VALUES="./.github/configs/prometheus-workload.yaml"
 CREDENTIALS="./.github/configs/credentials.yaml"
@@ -42,10 +42,10 @@ kubectl apply -f "${MYSQL_CONFIG_MANIFEST}"
 helm repo add jetstack https://charts.jetstack.io
 helm upgrade --install cert-manager jetstack/cert-manager -f "${CERT_MANAGER_VALUES}" -n cert-manager --create-namespace --wait
 
-# This agent is only used for generating metrics, logs, and traces that'll get
-# sent to the K8s Monitoring Grafana Agent to test ingesting MLT from receivers.
-kubectl apply -f "${GRAFANA_AGENT_RECEIVER_SERVICE}"
-helm upgrade --install agent grafana/grafana-agent -f "${GRAFANA_AGENT_VALUES}" -n agent --create-namespace --wait
+# This alloy instance is only used for generating metrics, logs, and traces that'll get
+# sent to the K8s Monitoring Alloy to test ingesting MLT from receivers.
+kubectl apply -f "${GRAFANA_ALLOY_RECEIVER_SERVICE}"
+helm upgrade --install alloy grafana/alloy -f "${GRAFANA_ALLOY_VALUES}" -n alloy --create-namespace --wait
 
 # This prometheus instance is used pod annotation testing with https
 helm upgrade --install prometheus-workload prometheus-community/prometheus -f "${PROMETHEUS_WORKLOAD_VALUES}" -n prometheus --create-namespace --wait
@@ -58,7 +58,7 @@ helm upgrade --install prometheus prometheus-community/prometheus -f "${PROMETHE
 
 echo "Deploying Loki..."
 helm upgrade --install loki grafana/loki -f "${LOKI_VALUES}" --version ^5.0.0 -n loki --create-namespace --wait
-helm upgrade --install loki-otlp grafana/grafana-agent -f "${GRAFANA_AGENT_LOKI_OTLP_VALUES}" -n loki --wait
+helm upgrade --install loki-otlp grafana/alloy -f "${GRAFANA_ALLOY_LOKI_OTLP_VALUES}" -n loki --wait
 
 echo "Deploying Tempo..."
 helm upgrade --install tempo grafana/tempo -n tempo --create-namespace --wait

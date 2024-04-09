@@ -1,4 +1,4 @@
-{{ define "agent.config.windows_exporter.allowList" }}
+{{ define "alloy.config.windows_exporter.allowList" }}
 {{ if (index .Values.metrics "windows-exporter").metricsTuning.useDefaultAllowList }}
 {{ "default_allow_lists/windows_exporter.yaml" | .Files.Get }}
 {{ end }}
@@ -7,7 +7,7 @@
 {{ end }}
 {{ end }}
 
-{{ define "agent.config.windows_exporter" }}
+{{ define "alloy.config.windows_exporter" }}
 // Windows Exporter
 discovery.relabel "windows_exporter" {
   targets = discovery.kubernetes.pods.targets
@@ -47,7 +47,7 @@ prometheus.scrape "windows_exporter" {
   job_name   = "integrations/kubernetes/windows-exporter"
   targets  = discovery.relabel.windows_exporter.output
   scrape_interval = {{ (index .Values.metrics "windows-exporter").scrapeInterval | default .Values.metrics.scrapeInterval | quote }}
-{{- if (index .Values "grafana-agent").agent.clustering.enabled }}
+{{- if .Values.alloy.alloy.clustering.enabled }}
   clustering {
     enabled = true
   }
@@ -83,7 +83,7 @@ prometheus.relabel "windows_exporter" {
 {{- if or (index .Values.metrics "windows-exporter").metricsTuning.useDefaultAllowList (index .Values.metrics "windows-exporter").metricsTuning.includeMetrics }}
   rule {
     source_labels = ["__name__"]
-    regex = "up|{{ join "|" (include "agent.config.windows_exporter.allowList" . | fromYamlArray) }}"
+    regex = "up|{{ join "|" (include "alloy.config.windows_exporter.allowList" . | fromYamlArray) }}"
     action = "keep"
   }
 {{- end }}

@@ -11,7 +11,7 @@
 
 {{/* v0.9.0: allowLists replaced by metricsTuning */}}
 {{- if or
-  (index .Values.metrics.agent "allowList")
+  ((index .Values.metrics "agent").allowList)
   ((index .Values.metrics "kube-state-metrics").allowList)
   ((index .Values.metrics "node-exporter").allowList)
   ((index .Values.metrics "windows-exporter").allowList)

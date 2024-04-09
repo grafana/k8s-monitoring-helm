@@ -1,4 +1,4 @@
-{{ define "agent.config.receivers.otlp" }}
+{{ define "alloy.config.receivers.otlp" }}
 {{- if (or .Values.receivers.grpc.enabled .Values.receivers.http.enabled) }}
 // OTLP Receivers
 otelcol.receiver.otlp "receiver" {
@@ -11,15 +11,15 @@ otelcol.receiver.otlp "receiver" {
   }
 
 {{- if or .Values.receivers.port .Values.receivers.grpc.enabled }}
-{{$data := dict "port" (.Values.receivers.port | default .Values.receivers.grpc.port) "type" "OTLP gRPC" "agent" (index .Values "grafana-agent").agent }}
-{{- include "checkforAgentPort" $data }}
+{{$data := dict "port" (.Values.receivers.port | default .Values.receivers.grpc.port) "type" "OTLP gRPC" "alloy" .Values.alloy.alloy }}
+{{- include "checkforAlloyPort" $data }}
   grpc {
     endpoint = "0.0.0.0:{{ $data.port | int }}"
   }
 {{- end }}
 {{- if .Values.receivers.http.enabled }}
-{{$data := dict "port" .Values.receivers.http.port "type" "OTLP HTTP" "agent" (index .Values "grafana-agent").agent }}
-{{- include "checkforAgentPort" $data }}
+{{$data := dict "port" .Values.receivers.http.port "type" "OTLP HTTP" "alloy" .Values.alloy.alloy }}
+{{- include "checkforAlloyPort" $data }}
   http {
     endpoint = "0.0.0.0:{{ $data.port | int }}"
   }

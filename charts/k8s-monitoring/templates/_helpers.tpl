@@ -1,14 +1,14 @@
-{{/* This template checks that the port defined in .Values.receivers.<protocol>.port is in the targetPort list on .grafana-agent */}}
-{{- define "checkforAgentPort" -}}
+{{/* This template checks that the port defined in .Values.receivers.<protocol>.port is in the targetPort list on .alloy */}}
+{{- define "checkforAlloyPort" -}}
   {{- $port := .port -}}
   {{- $found := false -}}
-  {{- range .agent.extraPorts -}}
+  {{- range .alloy.extraPorts -}}
     {{- if eq .targetPort $port }}
       {{- $found = true -}}
     {{- end }}
   {{- end }}
   {{- if not $found }}
-    {{- fail (print .type " port not opened on the Grafana Agent.\nIn order to receive data over this protocol, the " .port " port needs to be opened on the Grafana Agent. For example, set this in your values file:\ngrafana-agent:\n  agent:\n    extraPorts:\n      - name: \"" (lower .type | replace " " "-") "\"\n        port: " .port "\n        targetPort: " .port "\n        protocol: \"TCP\"\nFor more examples, see https://github.com/grafana/k8s-monitoring-helm/tree/main/examples/traces-enabled") -}}
+    {{- fail (print .type " port not opened on Grafana Alloy.\nIn order to receive data over this protocol, port " .port " needs to be opened on Alloy. For example, set this in your values file:\nalloy:\n  alloy:\n    extraPorts:\n      - name: \"" (lower .type | replace " " "-") "\"\n        port: " .port "\n        targetPort: " .port "\n        protocol: \"TCP\"\nFor more examples, see https://github.com/grafana/k8s-monitoring-helm/tree/main/examples/traces-enabled") -}}
   {{- end -}}
 {{- end -}}
 
@@ -16,7 +16,7 @@
 {{- $metrics := list -}}
 {{- if .Values.metrics.enabled -}}
   {{- $metrics = append $metrics "enabled" -}}
-  {{- if .Values.metrics.agent.enabled -}}{{- $metrics = append $metrics "agent" -}}{{- end -}}
+  {{- if .Values.metrics.alloy.enabled -}}{{- $metrics = append $metrics "alloy" -}}{{- end -}}
   {{- if .Values.metrics.autoDiscover.enabled -}}{{- $metrics = append $metrics "autoDiscover" -}}{{- end -}}
   {{- if index (index .Values.metrics "kube-state-metrics").enabled -}}{{- $metrics = append $metrics "kube-state-metrics" -}}{{- end -}}
   {{- if index (index .Values.metrics "node-exporter").enabled -}}{{- $metrics = append $metrics "node-exporter" -}}{{- end -}}

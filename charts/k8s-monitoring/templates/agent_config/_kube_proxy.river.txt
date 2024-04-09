@@ -1,4 +1,4 @@
-{{ define "agent.config.kube_proxy" }}
+{{ define "alloy.config.kube_proxy" }}
 // Kube Proxy
 discovery.relabel "kube_proxy" {
   targets = discovery.kubernetes.pods.targets
@@ -30,7 +30,7 @@ prometheus.scrape "kube_proxy" {
   targets    = discovery.relabel.kube_proxy.output
   scheme     = "http"
   scrape_interval = {{ .Values.metrics.kubeProxy.scrapeInterval | default .Values.metrics.scrapeInterval | quote }}
-{{- if (index .Values "grafana-agent").agent.clustering.enabled }}
+{{- if .Values.alloy.alloy.clustering.enabled }}
   clustering {
     enabled = true
   }

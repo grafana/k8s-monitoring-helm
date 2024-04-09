@@ -4,10 +4,10 @@ SHELL := /bin/bash
 CHART_FILES = $(shell find charts/k8s-monitoring -type f)
 INPUT_FILES = $(wildcard examples/*/values.yaml)
 OUTPUT_FILES = $(subst values.yaml,output.yaml,$(INPUT_FILES))
-METRICS_CONFIG_FILES = $(subst values.yaml,metrics.river,$(INPUT_FILES))
-EVENTS_CONFIG_FILES = $(subst values.yaml,events.river,$(INPUT_FILES))
-LOGS_CONFIG_FILES = $(subst values.yaml,logs.river,$(INPUT_FILES))
-PROFILES_CONFIG_FILES = $(subst values.yaml,profiles.river,$(INPUT_FILES))
+METRICS_CONFIG_FILES = $(subst values.yaml,metrics.alloy,$(INPUT_FILES))
+EVENTS_CONFIG_FILES = $(subst values.yaml,events.alloy,$(INPUT_FILES))
+LOGS_CONFIG_FILES = $(subst values.yaml,logs.alloy,$(INPUT_FILES))
+PROFILES_CONFIG_FILES = $(subst values.yaml,profiles.alloy,$(INPUT_FILES))
 
 CT_CONFIGFILE ?= .github/configs/ct.yaml
 LINT_CONFIGFILE ?= .github/configs/lintconf.yaml
@@ -28,17 +28,17 @@ install-deps: scripts/install-deps.sh
 %/output.yaml: %/values.yaml $(CHART_FILES)
 	helm template k8smon charts/k8s-monitoring -f $< > $@
 
-%/metrics.river: %/output.yaml
-	yq -r "select(.metadata.name==\"k8smon-grafana-agent\") | .data[\"config.river\"] | select( . != null )" $< > $@
+%/metrics.alloy: %/output.yaml
+	yq -r "select(.metadata.name==\"k8smon-alloy\") | .data[\"config.alloy\"] | select( . != null )" $< > $@
 
-%/events.river: %/output.yaml
-	yq -r "select(.metadata.name==\"k8smon-grafana-agent-events\") | .data[\"config.river\"] | select( . != null )" $< > $@
+%/events.alloy: %/output.yaml
+	yq -r "select(.metadata.name==\"k8smon-alloy-events\") | .data[\"config.alloy\"] | select( . != null )" $< > $@
 
-%/logs.river: %/output.yaml
-	yq -r "select(.metadata.name==\"k8smon-grafana-agent-logs\") | .data[\"config.river\"] | select( . != null )" $< > $@
+%/logs.alloy: %/output.yaml
+	yq -r "select(.metadata.name==\"k8smon-alloy-logs\") | .data[\"config.alloy\"] | select( . != null )" $< > $@
 
-%/profiles.river: %/output.yaml
-	yq -r "select(.metadata.name==\"k8smon-grafana-agent-profiles\") | .data[\"config.river\"] | select( . != null )" $< > $@
+%/profiles.alloy: %/output.yaml
+	yq -r "select(.metadata.name==\"k8smon-alloy-profiles\") | .data[\"config.alloy\"] | select( . != null )" $< > $@
 
 clean:
 	rm -f $(OUTPUT_FILES) $(METRIC_CONFIG_FILES) $(EVENT_CONFIG_FILES) $(LOG_CONFIG_FILES)

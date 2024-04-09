@@ -1,4 +1,4 @@
-{{ define "agent.config.kubelet.allowList" }}
+{{ define "alloy.config.kubelet.allowList" }}
 {{ if .Values.metrics.kubelet.metricsTuning.useDefaultAllowList }}
 {{ "default_allow_lists/kubelet.yaml" | .Files.Get }}
 {{ end }}
@@ -7,7 +7,7 @@
 {{ end }}
 {{ end }}
 
-{{ define "agent.config.kubelet" }}
+{{ define "alloy.config.kubelet" }}
 // Kubelet
 discovery.relabel "kubelet" {
   targets = discovery.kubernetes.nodes.targets
@@ -40,7 +40,7 @@ prometheus.scrape "kubelet" {
   tls_config {
     insecure_skip_verify = true
   }
-{{- if (index .Values "grafana-agent").agent.clustering.enabled }}
+{{- if .Values.alloy.alloy.clustering.enabled }}
   clustering {
     enabled = true
   }
@@ -52,7 +52,7 @@ prometheus.relabel "kubelet" {
 {{- if or .Values.metrics.kubelet.metricsTuning.useDefaultAllowList .Values.metrics.kubelet.metricsTuning.includeMetrics }}
   rule {
     source_labels = ["__name__"]
-    regex = "up|{{ join "|" (include "agent.config.kubelet.allowList" . | fromYamlArray) }}"
+    regex = "up|{{ join "|" (include "alloy.config.kubelet.allowList" . | fromYamlArray) }}"
     action = "keep"
   }
 {{- end }}

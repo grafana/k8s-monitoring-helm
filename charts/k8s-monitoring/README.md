@@ -82,7 +82,9 @@ This chart simplifies the deployment of a Kubernetes monitoring infrastructure, 
 * [kube-state-metrics](https://github.com/kubernetes/kube-state-metrics), which gathers metrics about Kubernetes objects
 * [Node exporter](https://github.com/prometheus/node_exporter), which gathers metrics about Kubernetes nodes
 * [OpenCost](https://www.opencost.io/), which interprets the above to create cost metrics for the cluster, and
-* [Grafana Agent](https://grafana.com/docs/agent/latest/), which scrapes the above services to forward metrics to [Prometheus](https://prometheus.io/), logs and events to [Loki](https://grafana.com/oss/loki/), and traces to [Tempo](https://grafana.com/oss/tempo/).
+* [Grafana Alloy](https://grafana.com/docs/alloy/latest/), which scrapes the above services to forward metrics to
+  [Prometheus](https://prometheus.io/), logs and events to [Loki](https://grafana.com/oss/loki/), traces to
+  [Tempo](https://grafana.com/oss/tempo/), and profiles to [Pyroscope](https://grafana.com/docs/pyroscope/).
 
 The Prometheus and Loki services may be hosted on the same cluster, or remotely (e.g. on Grafana Cloud).
 
@@ -101,10 +103,10 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 
 | Repository | Name | Version |
 |------------|------|---------|
-| https://grafana.github.io/helm-charts | grafana-agent | 0.38.0 |
-| https://grafana.github.io/helm-charts | grafana-agent-events(grafana-agent) | 0.38.0 |
-| https://grafana.github.io/helm-charts | grafana-agent-logs(grafana-agent) | 0.38.0 |
-| https://grafana.github.io/helm-charts | grafana-agent-profiles(grafana-agent) | 0.38.0 |
+| https://grafana.github.io/helm-charts | alloy | 0.1.0 |
+| https://grafana.github.io/helm-charts | alloy-events(alloy) | 0.1.0 |
+| https://grafana.github.io/helm-charts | alloy-logs(alloy) | 0.1.0 |
+| https://grafana.github.io/helm-charts | alloy-profiles(alloy) | 0.1.0 |
 | https://opencost.github.io/opencost-helm-chart | opencost | 1.33.3 |
 | https://prometheus-community.github.io/helm-charts | kube-state-metrics | 5.18.1 |
 | https://prometheus-community.github.io/helm-charts | prometheus-node-exporter | 4.32.0 |
@@ -154,7 +156,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | externalServices.loki.secret.namespace | string | `""` | The namespace of the secret. |
 | externalServices.loki.tenantId | string | `""` | Loki tenant ID |
 | externalServices.loki.tenantIdKey | string | `"tenantId"` | The key for the tenant ID property in the secret |
-| externalServices.loki.tls | object | `{}` | [TLS settings](https://grafana.com/docs/agent/latest/flow/reference/components/loki.write/#tls_config-block) to configure for the logs service. |
+| externalServices.loki.tls | object | `{}` | [TLS settings](https://grafana.com/docs/alloy/latest/reference/components/loki.write/#tls_config-block) to configure for the logs service. |
 | externalServices.loki.writeEndpoint | string | `"/loki/api/v1/push"` | Loki logs write endpoint. |
 | externalServices.prometheus.authMode | string | `"basic"` | one of "none", "basic" |
 | externalServices.prometheus.basicAuth.password | string | `""` | Prometheus basic auth password |
@@ -179,12 +181,12 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | externalServices.prometheus.sendNativeHistograms | bool | `false` | Whether native histograms should be sent. Only applies when protocol is "remote_write". |
 | externalServices.prometheus.tenantId | string | `""` | Sets the `X-Scope-OrgID` header when sending metrics |
 | externalServices.prometheus.tenantIdKey | string | `"tenantId"` | The key for the tenant ID property in the secret |
-| externalServices.prometheus.tls | object | `{}` | TLS settings to configure for the metrics service, compatible with [remoteWrite protocol](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.remote_write/#tls_config-block), [otlp](https://grafana.com/docs/agent/latest/flow/reference/components/otelcol.exporter.otlp/#tls-block), or [otlphttp](https://grafana.com/docs/agent/latest/flow/reference/components/otelcol.exporter.otlphttp/#tls-block) protocols |
+| externalServices.prometheus.tls | object | `{}` | TLS settings to configure for the metrics service, compatible with [remoteWrite protocol](https://grafana.com/docs/alloy/latest/reference/components/prometheus.remote_write/#tls_config-block), [otlp](https://grafana.com/docs/alloy/latest/reference/components/otelcol.exporter.otlp/#tls-block), or [otlphttp](https://grafana.com/docs/alloy/latest/reference/components/otelcol.exporter.otlphttp/#tls-block) protocols |
 | externalServices.prometheus.wal.maxKeepaliveTime | string | `"8h"` | Maximum time to keep data in the WAL before removing it. |
 | externalServices.prometheus.wal.minKeepaliveTime | string | `"5m"` | Minimum time to keep data in the WAL before it can be removed. |
 | externalServices.prometheus.wal.truncateFrequency | string | `"2h"` | How frequently to clean up the WAL. |
 | externalServices.prometheus.writeEndpoint | string | `"/api/prom/push"` | Prometheus metrics write endpoint. Preset for Grafana Cloud Metrics instances. |
-| externalServices.prometheus.writeRelabelConfigRules | string | `""` | Rule blocks to be added to the [write_relabel_config block](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.remote_write/#write_relabel_config-block) of the prometheus.remote_write component. |
+| externalServices.prometheus.writeRelabelConfigRules | string | `""` | Rule blocks to be added to the [write_relabel_config block](https://grafana.com/docs/alloy/latest/reference/components/prometheus.remote_write/#write_relabel_config-block) of the prometheus.remote_write component. |
 | externalServices.pyroscope.authMode | string | `"basic"` | one of "none", "basic" |
 | externalServices.pyroscope.basicAuth.password | string | `""` | Pyroscope basic auth password |
 | externalServices.pyroscope.basicAuth.passwordKey | string | `"password"` | The key for the password property in the secret |
@@ -199,7 +201,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | externalServices.pyroscope.secret.namespace | string | `""` | The namespace of the secret. |
 | externalServices.pyroscope.tenantId | string | `""` | Pyroscope tenant ID |
 | externalServices.pyroscope.tenantIdKey | string | `"tenantId"` | The key for the tenant ID property in the secret |
-| externalServices.pyroscope.tls | object | `{}` | [TLS settings](https://grafana.com/docs/agent/latest/flow/reference/components/pyroscope.write/#tls_config-block) to configure for the profiles service. |
+| externalServices.pyroscope.tls | object | `{}` | [TLS settings](https://grafana.com/docs/alloy/latest/reference/components/pyroscope.write/#tls_config-block) to configure for the profiles service. |
 | externalServices.tempo.authMode | string | `"basic"` | one of "none", "basic" |
 | externalServices.tempo.basicAuth.password | string | `""` | Tempo basic auth password |
 | externalServices.tempo.basicAuth.passwordKey | string | `"password"` | The key for the password property in the secret |
@@ -214,9 +216,9 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | externalServices.tempo.secret.namespace | string | `""` | The namespace of the secret. |
 | externalServices.tempo.tenantId | string | `""` | Tempo tenant ID |
 | externalServices.tempo.tenantIdKey | string | `"tenantId"` | The key for the tenant ID property in the secret |
-| externalServices.tempo.tls | object | `{}` | [TLS settings](https://grafana.com/docs/agent/latest/flow/reference/components/otelcol.exporter.otlp/#tls-block) to configure for the traces service. |
-| externalServices.tempo.tlsOptions | string | `""` | Define the [TLS block](https://grafana.com/docs/agent/latest/flow/reference/components/otelcol.exporter.otlp/#tls-block). Example: `tlsOptions: insecure = true` This option will be deprecated and removed soon. Please switch to `tls` and use yaml format. |
-| extraConfig | string | `""` | Extra configuration that will be added to Grafana Agent configuration file. This value is templated so that you can refer to other values from this file. This cannot be used to modify the generated configuration values, only append new components. See [Adding custom Flow configuration](#adding-custom-flow-configuration) for an example. |
+| externalServices.tempo.tls | object | `{}` | [TLS settings](https://grafana.com/docs/alloy/latest/reference/components/otelcol.exporter.otlp/#tls-block) to configure for the traces service. |
+| externalServices.tempo.tlsOptions | string | `""` | Define the [TLS block](https://grafana.com/docs/alloy/latest/reference/components/otelcol.exporter.otlp/#tls-block). Example: `tlsOptions: insecure = true` This option will be deprecated and removed soon. Please switch to `tls` and use yaml format. |
+| extraConfig | string | `""` | Extra configuration that will be added to Grafana Alloy configuration file. This value is templated so that you can refer to other values from this file. This cannot be used to modify the generated configuration values, only append new components. See [Adding custom Flow configuration](#adding-custom-flow-configuration) for an example. |
 | extraObjects | list | `[]` | Deploy additional manifest objects |
 | global.image.pullSecrets | list | `[]` | Optional set of global image pull secrets. |
 | global.image.registry | string | `""` | Global image registry to use if it needs to be overriden for some specific use cases (e.g local registries, custom images, ...) |
@@ -225,32 +227,32 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | logs.cluster_events.logFormat | string | `"logfmt"` | Log format used to forward cluster events. Allowed values: `logfmt` (default), `json`. |
 | logs.cluster_events.namespaces | list | `[]` | List of namespaces to watch for events (`[]` means all namespaces) |
 | logs.enabled | bool | `true` | Capture and forward logs |
-| logs.extraConfig | string | `""` | Extra configuration that will be added to Grafana Agent Logs configuration file. This value is templated so that you can refer to other values from this file. This cannot be used to modify the generated configuration values, only append new components. See [Adding custom Flow configuration](#adding-custom-flow-configuration) for an example. |
-| logs.podLogsObjects.enabled | bool | `false` | Enable discovery of Grafana Agent PodLogs objects. |
-| logs.podLogsObjects.extraStageBlocks | string | `""` | Stage blocks to be added to the loki.process component for logs gathered via PodLogs objects. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/loki.process/#blocks)) This value is templated so that you can refer to other values from this file. |
+| logs.extraConfig | string | `""` | Extra configuration that will be added to Grafana Alloy Logs configuration file. This value is templated so that you can refer to other values from this file. This cannot be used to modify the generated configuration values, only append new components. See [Adding custom Flow configuration](#adding-custom-flow-configuration) for an example. |
+| logs.podLogsObjects.enabled | bool | `false` | Enable discovery of Grafana Alloy PodLogs objects. |
+| logs.podLogsObjects.extraStageBlocks | string | `""` | Stage blocks to be added to the loki.process component for logs gathered via PodLogs objects. ([docs](https://grafana.com/docs/alloy/latest/reference/components/loki.process/#blocks)) This value is templated so that you can refer to other values from this file. |
 | logs.podLogsObjects.namespaces | list | `[]` | Which namespaces to look for PodLogs objects. |
 | logs.podLogsObjects.selector | string | `""` | Selector to filter which PodLogs objects to use. |
 | logs.pod_logs.annotation | string | `"k8s.grafana.com/logs.autogather"` | Pod annotation to use for controlling log discovery. |
 | logs.pod_logs.discovery | string | `"all"` | Controls the behavior of discovering pods for logs. |
 | logs.pod_logs.enabled | bool | `true` | Capture and forward logs from Kubernetes pods |
-| logs.pod_logs.extraRelabelingRules | string | `""` | Rule blocks to be added to the discovery.relabel component for pod logs. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block)) |
-| logs.pod_logs.extraStageBlocks | string | `""` | Stage blocks to be added to the loki.process component for pod logs. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/loki.process/#blocks)) This value is templated so that you can refer to other values from this file. |
-| logs.pod_logs.gatherMethod | string | `"volumes"` | Controls the behavior of gathering pod logs. When set to "volumes", the Grafana Agent will use HostPath volume mounts on the cluster nodes to access the pod log files directly. When set to "api", the Grafana Agent will access pod logs via the API server. This method may be preferable if your cluster prevents DaemonSets, HostPath volume mounts, or for other reasons. |
+| logs.pod_logs.extraRelabelingRules | string | `""` | Rule blocks to be added to the discovery.relabel component for pod logs. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery.relabel/#rule-block)) |
+| logs.pod_logs.extraStageBlocks | string | `""` | Stage blocks to be added to the loki.process component for pod logs. ([docs](https://grafana.com/docs/alloy/latest/reference/components/loki.process/#blocks)) This value is templated so that you can refer to other values from this file. |
+| logs.pod_logs.gatherMethod | string | `"volumes"` | Controls the behavior of gathering pod logs. When set to "volumes", Grafana Alloy will use HostPath volume mounts on the cluster nodes to access the pod log files directly. When set to "api", Grafana Alloy will access pod logs via the API server. This method may be preferable if your cluster prevents DaemonSets, HostPath volume mounts, or for other reasons. |
 | logs.pod_logs.namespaces | list | `[]` | Only capture logs from pods in these namespaces (`[]` means all namespaces) |
-| logs.receiver.filters | object | `{"log_record":[]}` | Apply a filter to logs received via the OTLP or OTLP HTTP receivers. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/otelcol.processor.filter/)) |
-| logs.receiver.transforms | object | `{"log":[],"resource":[]}` | Apply a transformation to logs received via the OTLP or OTLP HTTP receivers. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/otelcol.processor.transform/)) |
-| metrics.agent.enabled | bool | `true` | Scrape metrics from Grafana Agent |
-| metrics.agent.extraMetricRelabelingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for Grafana Agent. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block)) |
-| metrics.agent.extraRelabelingRules | string | `""` | Rule blocks to be added to the discovery.relabel component for Grafana Agent. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block)) |
-| metrics.agent.labelMatchers | object | `{"app.kubernetes.io/name":"grafana-agent.*"}` | Label matchers used by the Grafana Agent to select Grafana Agent pods |
-| metrics.agent.metricsTuning.excludeMetrics | list | `[]` | Metrics to drop. Can use regex. |
-| metrics.agent.metricsTuning.includeMetrics | list | `[]` | Metrics to keep. Can use regex. |
-| metrics.agent.metricsTuning.useDefaultAllowList | bool | `true` | Filter the list of metrics from the Grafana Agent to the minimal set required for Kubernetes Monitoring. See [Allow List for Grafana Agent](#allow-list-for-grafana-agent) |
-| metrics.agent.metricsTuning.useIntegrationAllowList | bool | `false` | Filter the list of metrics from the Grafana Agent to the minimal set required for Kubernetes Monitoring as well as the Grafana Agent integration. |
-| metrics.agent.scrapeInterval | string | 60s | How frequently to scrape metrics from Grafana Agent. Overrides metrics.scrapeInterval |
+| logs.receiver.filters | object | `{"log_record":[]}` | Apply a filter to logs received via the OTLP or OTLP HTTP receivers. ([docs](https://grafana.com/docs/alloy/latest/reference/components/otelcol.processor.filter/)) |
+| logs.receiver.transforms | object | `{"log":[],"resource":[]}` | Apply a transformation to logs received via the OTLP or OTLP HTTP receivers. ([docs](https://grafana.com/docs/alloy/latest/reference/components/otelcol.processor.transform/)) |
+| metrics.alloy.enabled | bool | `true` | Scrape metrics from Grafana Alloy |
+| metrics.alloy.extraMetricRelabelingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for Grafana Alloy. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#rule-block)) |
+| metrics.alloy.extraRelabelingRules | string | `""` | Rule blocks to be added to the discovery.relabel component for Grafana Alloy. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery.relabel/#rule-block)) |
+| metrics.alloy.labelMatchers | object | `{"app.kubernetes.io/name":"grafana-alloy.*"}` | Label matchers used by Grafana Alloy to select Grafana Alloy pods |
+| metrics.alloy.metricsTuning.excludeMetrics | list | `[]` | Metrics to drop. Can use regex. |
+| metrics.alloy.metricsTuning.includeMetrics | list | `[]` | Metrics to keep. Can use regex. |
+| metrics.alloy.metricsTuning.useDefaultAllowList | bool | `true` | Filter the list of metrics from Grafana Alloy to the minimal set required for Kubernetes Monitoring. See [Allow List for Grafana Alloy](#allow-list-for-grafana-alloy) |
+| metrics.alloy.metricsTuning.useIntegrationAllowList | bool | `false` | Filter the list of metrics from Grafana Alloy to the minimal set required for Kubernetes Monitoring as well as the Grafana Alloy integration. |
+| metrics.alloy.scrapeInterval | string | 60s | How frequently to scrape metrics from Grafana Alloy. Overrides metrics.scrapeInterval |
 | metrics.apiserver.enabled | bool | `false` | Scrape metrics from the API Server |
-| metrics.apiserver.extraMetricRelabelingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for the API Server. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block)) |
-| metrics.apiserver.extraRelabelingRules | string | `""` | Rule blocks to be added to the discovery.relabel component for the API Server. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block)) |
+| metrics.apiserver.extraMetricRelabelingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for the API Server. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#rule-block)) |
+| metrics.apiserver.extraRelabelingRules | string | `""` | Rule blocks to be added to the discovery.relabel component for the API Server. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery.relabel/#rule-block)) |
 | metrics.apiserver.metricsTuning.excludeMetrics | list | `[]` | Metrics to drop. Can use regex. |
 | metrics.apiserver.metricsTuning.includeMetrics | list | `[]` | Metrics to keep. Can use regex. An empty list means keep all. |
 | metrics.apiserver.scrapeInterval | string | 60s | How frequently to scrape metrics from the API Server Overrides metrics.scrapeInterval |
@@ -262,13 +264,13 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | metrics.autoDiscover.annotations.metricsScheme | string | `"k8s.grafana.com/metrics.scheme"` | Annotation for setting the metrics scheme, default: http. |
 | metrics.autoDiscover.annotations.scrape | string | `"k8s.grafana.com/scrape"` | Annotation for enabling scraping for this service or pod. Value should be either "true" or "false" |
 | metrics.autoDiscover.enabled | bool | `true` | Enable annotation-based autodiscovery |
-| metrics.autoDiscover.extraMetricRelabelingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for auto-discovered entities. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block)) |
-| metrics.autoDiscover.extraRelabelingRules | string | `""` | Rule blocks to be added to the discovery.relabel component for auto-discovered entities. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block)) |
+| metrics.autoDiscover.extraMetricRelabelingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for auto-discovered entities. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#rule-block)) |
+| metrics.autoDiscover.extraRelabelingRules | string | `""` | Rule blocks to be added to the discovery.relabel component for auto-discovered entities. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery.relabel/#rule-block)) |
 | metrics.autoDiscover.metricsTuning.excludeMetrics | list | `[]` | Metrics to drop. Can use regex. |
 | metrics.autoDiscover.metricsTuning.includeMetrics | list | `[]` | Metrics to keep. Can use regex. An empty list means keep all. |
 | metrics.cadvisor.enabled | bool | `true` | Scrape container metrics from cAdvisor |
-| metrics.cadvisor.extraMetricRelabelingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for cAdvisor. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block)) |
-| metrics.cadvisor.extraRelabelingRules | string | `""` | Rule blocks to be added to the discovery.relabel component for cAdvisor. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block)) |
+| metrics.cadvisor.extraMetricRelabelingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for cAdvisor. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#rule-block)) |
+| metrics.cadvisor.extraRelabelingRules | string | `""` | Rule blocks to be added to the discovery.relabel component for cAdvisor. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery.relabel/#rule-block)) |
 | metrics.cadvisor.metricsTuning.dropEmptyContainerLabels | bool | `true` | Drop metrics that have an empty container label |
 | metrics.cadvisor.metricsTuning.dropEmptyImageLabels | bool | `true` | Drop metrics that have an empty image label |
 | metrics.cadvisor.metricsTuning.excludeMetrics | list | `[]` | Metrics to drop. Can use regex. |
@@ -280,20 +282,20 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | metrics.cadvisor.nodeAddressFormat | string | `"direct"` | How to access the node services, either direct (use node IP, requires nodes/metrics) or via proxy (requires nodes/proxy) |
 | metrics.cadvisor.scrapeInterval | string | 60s | How frequently to scrape metrics from cAdvisor. Overrides metrics.scrapeInterval |
 | metrics.cost.enabled | bool | `true` | Scrape cost metrics from OpenCost |
-| metrics.cost.extraMetricRelabelingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for OpenCost. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block)) |
-| metrics.cost.extraRelabelingRules | string | `""` | Rule blocks to be added to the discovery.relabel component for OpenCost. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block)) |
-| metrics.cost.labelMatchers | object | `{"app.kubernetes.io/name":"opencost"}` | Label matchers used by the Grafana Agent to select the OpenCost service |
+| metrics.cost.extraMetricRelabelingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for OpenCost. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#rule-block)) |
+| metrics.cost.extraRelabelingRules | string | `""` | Rule blocks to be added to the discovery.relabel component for OpenCost. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery.relabel/#rule-block)) |
+| metrics.cost.labelMatchers | object | `{"app.kubernetes.io/name":"opencost"}` | Label matchers used to select the OpenCost service |
 | metrics.cost.metricsTuning.excludeMetrics | list | `[]` | Metrics to drop. Can use regex. |
 | metrics.cost.metricsTuning.includeMetrics | list | `[]` | Metrics to keep. Can use regex. |
 | metrics.cost.metricsTuning.useDefaultAllowList | bool | `true` | Filter the list of metrics from OpenCost to the minimal set required for Kubernetes Monitoring. See [Allow List for OpenCost](#allow-list-for-opencost) |
 | metrics.cost.scrapeInterval | string | 60s | How frequently to scrape metrics from OpenCost. Overrides metrics.scrapeInterval |
 | metrics.enabled | bool | `true` | Capture and forward metrics |
-| metrics.extraMetricRelabelingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for all metric sources. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block)) |
-| metrics.extraRelabelingRules | string | `""` | Rule blocks to be added to the discovery.relabel component for all metric sources. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block)) |
+| metrics.extraMetricRelabelingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for all metric sources. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#rule-block)) |
+| metrics.extraRelabelingRules | string | `""` | Rule blocks to be added to the discovery.relabel component for all metric sources. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery.relabel/#rule-block)) |
 | metrics.kube-state-metrics.enabled | bool | `true` | Scrape cluster object metrics from Kube State Metrics |
-| metrics.kube-state-metrics.extraMetricRelabelingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for Kube State Metrics. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block)) |
-| metrics.kube-state-metrics.extraRelabelingRules | string | `""` | Rule blocks to be added to the discovery.relabel component for Kube State Metrics. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block)) |
-| metrics.kube-state-metrics.labelMatchers | object | `{"app.kubernetes.io/name":"kube-state-metrics"}` | Label matchers used by the Grafana Agent to select the Kube State Metrics service |
+| metrics.kube-state-metrics.extraMetricRelabelingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for Kube State Metrics. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#rule-block)) |
+| metrics.kube-state-metrics.extraRelabelingRules | string | `""` | Rule blocks to be added to the discovery.relabel component for Kube State Metrics. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery.relabel/#rule-block)) |
+| metrics.kube-state-metrics.labelMatchers | object | `{"app.kubernetes.io/name":"kube-state-metrics"}` | Label matchers used by Grafana Alloy to select the Kube State Metrics service |
 | metrics.kube-state-metrics.metricsTuning.excludeMetrics | list | `[]` | Metrics to drop. Can use regex. |
 | metrics.kube-state-metrics.metricsTuning.includeMetrics | list | `[]` | Metrics to keep. Can use regex. |
 | metrics.kube-state-metrics.metricsTuning.useDefaultAllowList | bool | `true` | Filter the list of metrics from Kube State Metrics to a useful, minimal set. See [Allow List for Kube State Metrics](#allow-list-for-kube-state-metrics) |
@@ -301,29 +303,29 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | metrics.kube-state-metrics.service.isTLS | bool | `false` | Does this port use TLS? |
 | metrics.kube-state-metrics.service.port | string | `"http"` | Name of the metrics port |
 | metrics.kubeControllerManager.enabled | bool | `false` | Scrape metrics from the Kube Controller Manager |
-| metrics.kubeControllerManager.extraMetricRelabelingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for the Kube Controller Manager. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block)) |
-| metrics.kubeControllerManager.extraRelabelingRules | string | `""` | Rule blocks to be added to the discovery.relabel component for the Kube Controller Manager. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block)) |
+| metrics.kubeControllerManager.extraMetricRelabelingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for the Kube Controller Manager. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#rule-block)) |
+| metrics.kubeControllerManager.extraRelabelingRules | string | `""` | Rule blocks to be added to the discovery.relabel component for the Kube Controller Manager. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery.relabel/#rule-block)) |
 | metrics.kubeControllerManager.metricsTuning.excludeMetrics | list | `[]` | Metrics to drop. Can use regex. |
 | metrics.kubeControllerManager.metricsTuning.includeMetrics | list | `[]` | Metrics to keep. Can use regex. An empty list means keep all. |
 | metrics.kubeControllerManager.port | int | `10257` |  |
 | metrics.kubeControllerManager.scrapeInterval | string | 60s | How frequently to scrape metrics from the Kube Controller Manager Overrides metrics.scrapeInterval |
 | metrics.kubeProxy.enabled | bool | `false` | Scrape metrics from the Kube Proxy |
-| metrics.kubeProxy.extraMetricRelabelingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for the Kube Proxy. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block)) |
-| metrics.kubeProxy.extraRelabelingRules | string | `""` | Rule blocks to be added to the discovery.relabel component for the Kube Proxy. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block)) |
+| metrics.kubeProxy.extraMetricRelabelingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for the Kube Proxy. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#rule-block)) |
+| metrics.kubeProxy.extraRelabelingRules | string | `""` | Rule blocks to be added to the discovery.relabel component for the Kube Proxy. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery.relabel/#rule-block)) |
 | metrics.kubeProxy.metricsTuning.excludeMetrics | list | `[]` | Metrics to drop. Can use regex. |
 | metrics.kubeProxy.metricsTuning.includeMetrics | list | `[]` | Metrics to keep. Can use regex. An empty list means keep all. |
 | metrics.kubeProxy.port | int | `10249` |  |
 | metrics.kubeProxy.scrapeInterval | string | 60s | How frequently to scrape metrics from the Kube Proxy Overrides metrics.scrapeInterval |
 | metrics.kubeScheduler.enabled | bool | `false` | Scrape metrics from the Kube Scheduler |
-| metrics.kubeScheduler.extraMetricRelabelingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for the Kube Scheduler. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block)) |
-| metrics.kubeScheduler.extraRelabelingRules | string | `""` | Rule blocks to be added to the discovery.relabel component for the Kube Scheduler. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block)) |
+| metrics.kubeScheduler.extraMetricRelabelingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for the Kube Scheduler. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#rule-block)) |
+| metrics.kubeScheduler.extraRelabelingRules | string | `""` | Rule blocks to be added to the discovery.relabel component for the Kube Scheduler. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery.relabel/#rule-block)) |
 | metrics.kubeScheduler.metricsTuning.excludeMetrics | list | `[]` | Metrics to drop. Can use regex. |
 | metrics.kubeScheduler.metricsTuning.includeMetrics | list | `[]` | Metrics to keep. Can use regex. An empty list means keep all. |
 | metrics.kubeScheduler.port | int | `10259` |  |
 | metrics.kubeScheduler.scrapeInterval | string | 60s | How frequently to scrape metrics from the Kube Scheduler Overrides metrics.scrapeInterval |
 | metrics.kubelet.enabled | bool | `true` | Scrape cluster metrics from the Kubelet |
-| metrics.kubelet.extraMetricRelabelingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for Kubelet. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block)) |
-| metrics.kubelet.extraRelabelingRules | string | `""` | Rule blocks to be added to the discovery.relabel component for Kubelet. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block)) |
+| metrics.kubelet.extraMetricRelabelingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for Kubelet. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#rule-block)) |
+| metrics.kubelet.extraRelabelingRules | string | `""` | Rule blocks to be added to the discovery.relabel component for Kubelet. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery.relabel/#rule-block)) |
 | metrics.kubelet.metricsTuning.excludeMetrics | list | `[]` | Metrics to drop. Can use regex. |
 | metrics.kubelet.metricsTuning.includeMetrics | list | `[]` | Metrics to keep. Can use regex. |
 | metrics.kubelet.metricsTuning.useDefaultAllowList | bool | `true` | Filter the list of metrics from the Kubelet to the minimal set required for Kubernetes Monitoring. See [Allow List for Kubelet](#allow-list-for-kubelet) |
@@ -331,9 +333,9 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | metrics.kubelet.scrapeInterval | string | 60s | How frequently to scrape metrics from the Kubelet. Overrides metrics.scrapeInterval |
 | metrics.kubernetesMonitoring.enabled | bool | `true` | Report telemetry about this Kubernetes Monitoring chart as a metric. |
 | metrics.node-exporter.enabled | bool | `true` | Scrape node metrics |
-| metrics.node-exporter.extraMetricRelabelingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for Node Exporter. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block)) |
-| metrics.node-exporter.extraRelabelingRules | string | `""` | Rule blocks to be added to the discovery.relabel component for Node Exporter. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block)) |
-| metrics.node-exporter.labelMatchers | object | `{"app.kubernetes.io/name":"prometheus-node-exporter.*"}` | Label matchers used by the Grafana Agent to select the Node exporter pods |
+| metrics.node-exporter.extraMetricRelabelingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for Node Exporter. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#rule-block)) |
+| metrics.node-exporter.extraRelabelingRules | string | `""` | Rule blocks to be added to the discovery.relabel component for Node Exporter. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery.relabel/#rule-block)) |
+| metrics.node-exporter.labelMatchers | object | `{"app.kubernetes.io/name":"prometheus-node-exporter.*"}` | Label matchers used to select the Node exporter pods |
 | metrics.node-exporter.metricsTuning.dropMetricsForFilesystem | list | `["tempfs"]` | Drop metrics for the given filesystem types |
 | metrics.node-exporter.metricsTuning.excludeMetrics | list | `[]` | Metrics to drop. Can use regex. |
 | metrics.node-exporter.metricsTuning.includeMetrics | list | `[]` | Metrics to keep. Can use regex. |
@@ -342,27 +344,27 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | metrics.node-exporter.scrapeInterval | string | 60s | How frequently to scrape metrics from Node Exporter. Overrides metrics.scrapeInterval |
 | metrics.node-exporter.service.isTLS | bool | `false` | Does this port use TLS? |
 | metrics.podMonitors.enabled | bool | `true` | Enable discovery of Prometheus Operator PodMonitor objects. |
-| metrics.podMonitors.extraMetricRelabelingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for PodMonitor objects. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block)) |
+| metrics.podMonitors.extraMetricRelabelingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for PodMonitor objects. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#rule-block)) |
 | metrics.podMonitors.namespaces | list | `[]` | Which namespaces to look for PodMonitor objects. |
 | metrics.podMonitors.scrapeInterval | string | 60s | How frequently to scrape metrics from PodMonitor objects. Only used if the PodMonitor does not specify the scrape interval. Overrides metrics.scrapeInterval |
 | metrics.podMonitors.selector | string | `""` | Selector to filter which PodMonitor objects to use. |
 | metrics.probes.enabled | bool | `true` | Enable discovery of Prometheus Operator Probe objects. |
-| metrics.probes.extraMetricRelabelingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for Probe objects. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block)) |
+| metrics.probes.extraMetricRelabelingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for Probe objects. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#rule-block)) |
 | metrics.probes.namespaces | list | `[]` | Which namespaces to look for Probe objects. |
 | metrics.probes.scrapeInterval | string | 60s | How frequently to scrape metrics from Probe objects. Only used if the Probe does not specify the scrape interval. Overrides metrics.scrapeInterval |
 | metrics.probes.selector | string | `""` | Selector to filter which Probes objects to use. |
-| metrics.receiver.filters | object | `{"datapoint":[],"metric":[]}` | Apply a filter to metrics received via the OTLP or OTLP HTTP receivers. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/otelcol.processor.filter/)) |
-| metrics.receiver.transforms | object | `{"datapoint":[],"metric":[],"resource":[]}` | Apply a transformation to metrics received via the OTLP or OTLP HTTP receivers. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/otelcol.processor.transform/)) |
+| metrics.receiver.filters | object | `{"datapoint":[],"metric":[]}` | Apply a filter to metrics received via the OTLP or OTLP HTTP receivers. ([docs](https://grafana.com/docs/alloy/latest/reference/components/otelcol.processor.filter/)) |
+| metrics.receiver.transforms | object | `{"datapoint":[],"metric":[],"resource":[]}` | Apply a transformation to metrics received via the OTLP or OTLP HTTP receivers. ([docs](https://grafana.com/docs/alloy/latest/reference/components/otelcol.processor.transform/)) |
 | metrics.scrapeInterval | string | `"60s"` | How frequently to scrape metrics |
 | metrics.serviceMonitors.enabled | bool | `true` | Enable discovery of Prometheus Operator ServiceMonitor objects. |
-| metrics.serviceMonitors.extraMetricRelabelingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for ServiceMonitor objects. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block)) |
+| metrics.serviceMonitors.extraMetricRelabelingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for ServiceMonitor objects. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#rule-block)) |
 | metrics.serviceMonitors.namespaces | list | `[]` | Which namespaces to look for ServiceMonitor objects. |
 | metrics.serviceMonitors.scrapeInterval | string | 60s | How frequently to scrape metrics from ServiceMonitor objects. Only used if the ServiceMonitor does not specify the scrape interval. Overrides metrics.scrapeInterval |
 | metrics.serviceMonitors.selector | string | `""` | Selector to filter which ServiceMonitor objects to use. |
 | metrics.windows-exporter.enabled | bool | `false` | Scrape node metrics |
-| metrics.windows-exporter.extraMetricRelabelingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for Windows Exporter. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/#rule-block)) |
-| metrics.windows-exporter.extraRelabelingRules | string | `""` | Rule blocks to be added to the discovery.relabel component for Windows Exporter. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block)) |
-| metrics.windows-exporter.labelMatchers | object | `{"app.kubernetes.io/name":"prometheus-windows-exporter.*"}` | Label matchers used by the Grafana Agent to select the Windows Exporter pods |
+| metrics.windows-exporter.extraMetricRelabelingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for Windows Exporter. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#rule-block)) |
+| metrics.windows-exporter.extraRelabelingRules | string | `""` | Rule blocks to be added to the discovery.relabel component for Windows Exporter. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery.relabel/#rule-block)) |
+| metrics.windows-exporter.labelMatchers | object | `{"app.kubernetes.io/name":"prometheus-windows-exporter.*"}` | Label matchers used to select the Windows Exporter pods |
 | metrics.windows-exporter.metricsTuning.excludeMetrics | list | `[]` | Metrics to drop. Can use regex. |
 | metrics.windows-exporter.metricsTuning.includeMetrics | list | `[]` | Metrics to keep. Can use regex. |
 | metrics.windows-exporter.metricsTuning.useDefaultAllowList | bool | `true` | Filter the list of metrics from Windows Exporter to the minimal set required for Kubernetes Monitoring. See [Allow List for Windows Exporter](#allow-list-for-windows-exporter) |
@@ -374,46 +376,46 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | opencost.opencost.prometheus.username_key | string | `"username"` | The key for the username property in the secret. |
 | profiles.ebpf.demangle | string | `"none"` | C++ demangle mode. Available options are: none, simplified, templates, full |
 | profiles.ebpf.enabled | bool | `true` | Gather profiles using eBPF |
-| profiles.ebpf.extraRelabelingRules | string | `""` | Rule blocks to be added to the discovery.relabel component for eBPF profile sources. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block)) |
+| profiles.ebpf.extraRelabelingRules | string | `""` | Rule blocks to be added to the discovery.relabel component for eBPF profile sources. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery.relabel/#rule-block)) |
 | profiles.ebpf.namespaces | list | `[]` | Which namespaces to look for pods with profiles. |
 | profiles.enabled | bool | `false` | Receive and forward profiles. |
 | profiles.pprof.enabled | bool | `true` | Gather profiles by scraping pprof HTTP endpoints |
-| profiles.pprof.extraRelabelingRules | string | `""` | Rule blocks to be added to the discovery.relabel component for eBPF profile sources. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/#rule-block)) |
+| profiles.pprof.extraRelabelingRules | string | `""` | Rule blocks to be added to the discovery.relabel component for eBPF profile sources. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery.relabel/#rule-block)) |
 | profiles.pprof.namespaces | list | `[]` | Which namespaces to look for pods with profiles. |
 | profiles.pprof.types | list | `["memory","cpu","goroutine","block","mutex","fgprof"]` | Profile types to gather |
 | prometheus-node-exporter.enabled | bool | `true` | Should this helm chart deploy Node Exporter to the cluster. Set this to false if your cluster already has Node Exporter, or if you do not want to scrape metrics from Node Exporter. |
-| prometheus-operator-crds.enabled | bool | `true` | Should this helm chart deploy the Prometheus Operator CRDs to the cluster. Set this to false if your cluster already has the CRDs, or if you do not to have the Grafana Agent scrape metrics from PodMonitors, Probes, or ServiceMonitors. |
+| prometheus-operator-crds.enabled | bool | `true` | Should this helm chart deploy the Prometheus Operator CRDs to the cluster. Set this to false if your cluster already has the CRDs, or if you do not to have Grafana Alloy scrape metrics from PodMonitors, Probes, or ServiceMonitors. |
 | prometheus-windows-exporter.config | string | `"collectors:\n  enabled: cpu,cs,container,logical_disk,memory,net,os\ncollector:\n  service:\n    services-where: \"Name='containerd' or Name='kubelet'\""` | Windows Exporter configuration |
 | prometheus-windows-exporter.enabled | bool | `false` | Should this helm chart deploy Windows Exporter to the cluster. Set this to false if your cluster already has Windows Exporter, or if you do not want to scrape metrics from Windows Exporter. |
 | receivers.grpc.disable_debug_metrics | bool | `true` | It removes attributes which could cause high cardinality metrics. For example, attributes with IP addresses and port numbers in metrics about HTTP and gRPC connections will be removed. |
 | receivers.grpc.enabled | bool | `true` | Receive OpenTelemetry signals over OTLP/gRPC? |
-| receivers.grpc.port | int | `4317` | Which port to use for the OTLP/gRPC receiver. This port needs to be opened in the grafana-agent section below. |
+| receivers.grpc.port | int | `4317` | Which port to use for the OTLP/gRPC receiver. This port needs to be opened in the alloy section below. |
 | receivers.http.disable_debug_metrics | bool | `true` | It removes attributes which could cause high cardinality metrics. For example, attributes with IP addresses and port numbers in metrics about HTTP and gRPC connections will be removed. |
 | receivers.http.enabled | bool | `true` | Receive OpenTelemetry signals over OTLP/HTTP? |
-| receivers.http.port | int | `4318` | Which port to use for the OTLP/HTTP receiver. This port needs to be opened in the grafana-agent section below. |
+| receivers.http.port | int | `4318` | Which port to use for the OTLP/HTTP receiver. This port needs to be opened in the alloy section below. |
 | receivers.jaeger.disable_debug_metrics | bool | `true` | It removes attributes which could cause high cardinality metrics. For example, attributes with IP addresses and port numbers in metrics about HTTP and gRPC connections will be removed. |
 | receivers.jaeger.grpc.enabled | bool | `false` | Receive Jaeger signals via gRPC protocol. |
-| receivers.jaeger.grpc.port | int | `14250` | Which port to use for the Jaeger gRPC receiver. This port needs to be opened in the grafana-agent section below. |
+| receivers.jaeger.grpc.port | int | `14250` | Which port to use for the Jaeger gRPC receiver. This port needs to be opened in the alloy section below. |
 | receivers.jaeger.thriftBinary.enabled | bool | `false` | Receive Jaeger signals via Thrift binary protocol. |
-| receivers.jaeger.thriftBinary.port | int | `6832` | Which port to use for the Thrift binary receiver. This port needs to be opened in the grafana-agent section below. |
+| receivers.jaeger.thriftBinary.port | int | `6832` | Which port to use for the Thrift binary receiver. This port needs to be opened in the alloy section below. |
 | receivers.jaeger.thriftCompact.enabled | bool | `false` | Receive Jaeger signals via Thrift compact protocol. |
-| receivers.jaeger.thriftCompact.port | int | `6831` | Which port to use for the Thrift compact receiver. This port needs to be opened in the grafana-agent section below. |
+| receivers.jaeger.thriftCompact.port | int | `6831` | Which port to use for the Thrift compact receiver. This port needs to be opened in the alloy section below. |
 | receivers.jaeger.thriftHttp.enabled | bool | `false` | Receive Jaeger signals via Thrift HTTP protocol. |
-| receivers.jaeger.thriftHttp.port | int | `14268` | Which port to use for the Thrift HTTP receiver. This port needs to be opened in the grafana-agent section below. |
+| receivers.jaeger.thriftHttp.port | int | `14268` | Which port to use for the Thrift HTTP receiver. This port needs to be opened in the alloy section below. |
 | receivers.processors.batch.maxSize | int | `0` | The upper limit of the amount of data contained in a single batch, in bytes. When set to 0, batches can be any size. |
 | receivers.processors.batch.size | int | `16384` | What batch size to use, in bytes |
 | receivers.processors.batch.timeout | string | `"2s"` | How long before sending |
 | receivers.prometheus.enabled | bool | `false` | Receive Prometheus metrics |
-| receivers.prometheus.port | int | `9999` | Which port to use for the Prometheus receiver. This port needs to be opened in the grafana-agent section below. |
+| receivers.prometheus.port | int | `9999` | Which port to use for the Prometheus receiver. This port needs to be opened in the alloy section below. |
 | receivers.zipkin.disable_debug_metrics | bool | `true` | It removes attributes which could cause high cardinality metrics. For example, attributes with IP addresses and port numbers in metrics about HTTP and gRPC connections will be removed. |
 | receivers.zipkin.enabled | bool | `false` | Receive Zipkin traces |
-| receivers.zipkin.port | int | `9411` | Which port to use for the Zipkin receiver. This port needs to be opened in the grafana-agent section below. |
+| receivers.zipkin.port | int | `9411` | Which port to use for the Zipkin receiver. This port needs to be opened in the alloy section below. |
 | test.attempts | int | `10` | How many times to attempt the test job. |
 | test.enabled | bool | `true` | Should `helm test` run the test job? |
 | test.envOverrides | object | `{"LOKI_URL":"","PROFILECLI_URL":"","PROMETHEUS_URL":"","TEMPO_URL":""}` | Overrides the URLs for various data sources |
 | test.extraAnnotations | object | `{}` | Extra annotations to add to the test job. |
 | test.extraLabels | object | `{}` | Extra labels to add to the test job. |
-| test.extraQueries | list | `[]` | Additional queries to run during the test. NOTE that this uses the host, username, and password in the externalServices section. The user account must have the ability to run queries. Example: extraQueries:   - query: prometheus_metric{cluster="my-cluster-name"}     type: promql  Can optionally provide expectations: - query: "avg(count_over_time(scrape_samples_scraped{cluster=~\"ci-test-cluster-2|from-the-other-agent\"}[1m]))"   type: promql   expect:     value: 1     operator: == |
+| test.extraQueries | list | `[]` | Additional queries to run during the test. NOTE that this uses the host, username, and password in the externalServices section. The user account must have the ability to run queries. Example: extraQueries:   - query: prometheus_metric{cluster="my-cluster-name"}     type: promql  Can optionally provide expectations: - query: "avg(count_over_time(scrape_samples_scraped{cluster=~\"ci-test-cluster-2|from-the-other-alloy\"}[1m]))"   type: promql   expect:     value: 1     operator: == |
 | test.image.image | string | `"grafana/k8s-monitoring-test"` | Test job image repository. |
 | test.image.pullSecrets | list | `[]` | Optional set of image pull secrets. |
 | test.image.registry | string | `"ghcr.io"` | Test job image registry. |
@@ -421,8 +423,8 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | test.nodeSelector | object | `{"kubernetes.io/os":"linux"}` | nodeSelector to apply to the test job. |
 | test.tolerations | list | `[]` | Tolerations to apply to the test job. |
 | traces.enabled | bool | `false` | Receive and forward traces. |
-| traces.receiver.filters | object | `{"span":[],"spanevent":[]}` | Apply a filter to traces received via the OTLP or OTLP HTTP receivers. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/otelcol.processor.filter/)) |
-| traces.receiver.transforms | object | `{"resource":[],"span":[],"spanevent":[]}` | Apply a transformation to traces received via the OTLP or OTLP HTTP receivers. ([docs](https://grafana.com/docs/agent/latest/flow/reference/components/otelcol.processor.transform/)) |
+| traces.receiver.filters | object | `{"span":[],"spanevent":[]}` | Apply a filter to traces received via the OTLP or OTLP HTTP receivers. ([docs](https://grafana.com/docs/alloy/latest/reference/components/otelcol.processor.filter/)) |
+| traces.receiver.transforms | object | `{"resource":[],"span":[],"spanevent":[]}` | Apply a transformation to traces received via the OTLP or OTLP HTTP receivers. ([docs](https://grafana.com/docs/alloy/latest/reference/components/otelcol.processor.transform/)) |
 
 ## Customizing the configuration
 
@@ -432,8 +434,9 @@ same Kubernetes cluster.
 
 ### Adding custom Flow configuration
 
-Any value supplied to the `.extraConfig` or `.logs.extraConfig` values will be appended to the generated config file after being templated with helm, so that you can refer to any values from this chart.
-This can be used to add more Grafana Agent Flow components to provide extra functionality to the agent.
+Any value supplied to the `.extraConfig` or `.logs.extraConfig` values will be appended to the generated config file
+after being templated with helm, so that you can refer to any values from this chart. This can be used to add more
+Grafana Alloy components to provide extra functionality to the Alloy instance.
 
 NOTE: This cannot be used to modify existing configuration values.
 
@@ -448,8 +451,8 @@ useful ones like these:
 
 Example:
 
-In this example, the Agent will find a service named `my-webapp-metrics` with the label
-`app.kubernetes.io/name=my-webapp`, scrape them for Prometheus metrics, and send those metrics to Grafana Cloud.
+In this example, Alloy will find a service named `my-webapp-metrics` with the label `app.kubernetes.io/name=my-webapp`,
+scrape them for Prometheus metrics, and send those metrics to Grafana Cloud.
 
 ```yaml
 extraConfig: |-
@@ -481,15 +484,15 @@ For an example values file and generated output, see [this example](../../exampl
 The default config can deploy the CRDs for Prometheus Operator, and will add support for `PodMonitor`,
 `ServiceMonitor` and `Probe` objects.
 
-Simply deploy a PodMonitor or a ServiceMonitor in the same namespace as the Grafana Agent and it will discover it and
-take the appropriate action.
+Simply deploy a PodMonitor or a ServiceMonitor in the same namespace as Alloy and it will discover it and take the
+appropriate action.
 
-Use a selector to limit the discovered objects
+Use a selector to limit the discovered objects.
 
 Example:
 
-In this example, the Agent will find `ServiceMonitor` objects labeld with
-`example.com/environment=production`, scrape them for Prometheus metrics, and send those metrics to Grafana Cloud.
+In this example, Alloy will find `ServiceMonitor` objects labeled with `example.com/environment=production`, scrape them
+for Prometheus metrics, and send those metrics to Grafana Cloud.
 
 ```yaml
 serviceMonitors:
@@ -525,15 +528,19 @@ metrics:
 
 The following sections contain the allow lists that are defined for the associated metric sources.
 
-For more examples of metrics tuning, such as including or excluding metrics, see [this example](../../examples/custom-metrics-tuning).
+For more examples of metrics tuning, such as including or excluding metrics, see
+[this example](../../examples/custom-metrics-tuning).
 
-### Allow List for Grafana Agent
+### Allow List for Grafana Alloy
 
-Visit the Grafana Agent Metrics [documentation](https://grafana.com/solutions/grafana-agent/monitor/) for the full list of agent metrics
+<!-- TODO: Update this when the new integration is available
+Visit the Grafana Alloy Metrics [documentation](https://grafana.com/solutions/grafana-agent/monitor/) for the full list
+of agent metrics -->
 
-Visit the Grafana Agent Controller and Component Metrics [documentation](https://grafana.com/docs/agent/latest/flow/monitoring/) for the full list of component metrics
+Visit the Grafana Alloy Controller and Component Metrics
+[documentation](https://grafana.com/docs/alloy/latest/tasks/monitor/) for the full list of component metrics
 
-* agent_build_info
+* alloy_build_info
 
 ### Allow List for Kube State Metrics
 

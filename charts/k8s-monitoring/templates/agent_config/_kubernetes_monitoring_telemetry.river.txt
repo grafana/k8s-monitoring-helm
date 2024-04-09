@@ -1,4 +1,4 @@
-{{ define "agent.config.kubernetes_monitoring_telemetry" }}
+{{ define "alloy.config.kubernetes_monitoring_telemetry" }}
 // Kubernetes Monitoring Telemetry
 prometheus.exporter.unix "kubernetes_monitoring_telemetry" {
   set_collectors = ["textfile"]
@@ -11,7 +11,7 @@ prometheus.scrape "kubernetes_monitoring_telemetry" {
   job_name   = "integrations/kubernetes/kubernetes_monitoring_telemetry"
   targets    = prometheus.exporter.unix.kubernetes_monitoring_telemetry.targets
   scrape_interval = {{ .Values.metrics.scrapeInterval | quote }}
-{{- if (index .Values "grafana-agent").agent.clustering.enabled }}
+{{- if .Values.alloy.alloy.clustering.enabled }}
   clustering {
     enabled = true
   }
