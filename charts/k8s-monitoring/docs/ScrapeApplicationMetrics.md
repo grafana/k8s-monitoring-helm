@@ -116,7 +116,7 @@ Here is an example component that we've named "blue_database_service". This comp
 from `discovery.kubernetes.services` and filters to a service named "database", in the namespace "blue", with the port
 named "metrics":
 
-```alloy
+```grafana-alloy
 discovery.relabel "blue_database_service" {
   targets = discovery.kubernetes.services.targets  // Gets all services
   rule {  // Keep all services named "database"...
@@ -144,7 +144,7 @@ you use the right label for a named port or simply the port number.
 This is also a good place to add any extra labels that will be scraped. For example, if you wanted to set the label
 `team="blue"`, you might use this additional rule in the `blue_database_service` component we just made:
 
-```alloy
+```grafana-alloy
   rule {
     target_label = "team"
     action = "replace"
@@ -163,7 +163,7 @@ will be slightly different, but the concept is the same.
 Here is an example that filters to a specific set of Pods that starts with name "analysis", with the label
 "system.component=image":
 
-```alloy
+```grafana-alloy
 discovery.relabel "image_analysis_pods" {
   targets = discovery.kubernetes.pods.targets  // Gets all pods
   rule {  // Keep all pods named "analysis.*"...
@@ -191,7 +191,7 @@ Essentially,
 you only need to declare what things to scrape and where to send
 the scraped metrics. Here is an example:
 
-```alloy
+```grafana-alloy
 prometheus.scrape "processing_app" {
   targets = discovery.relabel.image_analysis_pods.output
   forward_to = [prometheus.relabel.metrics_service.receiver]
@@ -203,7 +203,7 @@ Note that we will cover the `forward_to` field in the [Delivery](#delivery) sect
 This component gives a lot of flexibility to modify how things are scraped, including setting the `job` label, how
 frequently the metrics should be scraped, the path to scrape, and many more. Here is an example with lots of options:
 
-```alloy
+```grafana-alloy
 prometheus.scrape "processing_app" {
   targets = discovery.relabel.image_analysis_pods.output
   job_name = "integrations/processing"
@@ -228,7 +228,7 @@ the _metrics_ that were scraped.
 Here is an example of processing that filters down the scraped metrics to only `up` and anything that starts with
 `processor` (thus, dropping all other metrics):
 
-```alloy
+```grafana-alloy
 prometheus.scrape "processing_app" {
   targets = discovery.relabel.image_analysis_pods.output
   forward_to = [prometheus.relabel.processing_app.receiver]
