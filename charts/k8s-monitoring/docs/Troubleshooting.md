@@ -42,7 +42,7 @@ To fix this problem, you can either:
 ## Pod log files in `/var/lib/docker/containers`
 
 On certain Kubernetes Clusters, Pod logs are stored inside of `/var/lib/docker/containers` with `/var/log/pods` being
-symlinked to that directory, but the Grafana Alloy doesn't mount it by default.
+symlinked to that directory, but the Grafana Alloy instance doesn't mount it by default.
 If your Cluster works this way, you'll likely see errors in the Grafana Alloy for Logs pods like this:
 
 ```text
