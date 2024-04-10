@@ -435,7 +435,7 @@ same Kubernetes cluster.
 ### Adding custom Flow configuration
 
 Any value supplied to the `.extraConfig` or `.logs.extraConfig` values will be appended to the generated config file
-after being templated with helm, so that you can refer to any values from this chart. This can be used to add more
+after being templated with Helm, so that you can refer to any values from this chart. This can be used to add more
 Grafana Alloy components to provide extra functionality to the Alloy instance.
 
 NOTE: This cannot be used to modify existing configuration values.

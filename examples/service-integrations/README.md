@@ -57,7 +57,7 @@ extraConfig: |
     namespace = "mysql"
   }
 
-  module.string "mysql_metrics" {
+  import.string "mysql_metrics" {
     content = remote.kubernetes.configmap.mysql_config.data["metrics.alloy"]
 
     arguments {
@@ -79,7 +79,7 @@ logs:
       namespace = "mysql"
     }
 
-    module.string "mysql_logs" {
+    import.string "mysql_logs" {
       content = remote.kubernetes.configmap.mysql_config.data["logs.alloy"]
 
       arguments {
