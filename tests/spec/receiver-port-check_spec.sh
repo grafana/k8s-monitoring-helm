@@ -80,7 +80,7 @@ Use --debug flag to render out invalid YAML'
       When call helm template k8smon ../charts/k8s-monitoring -f "spec/fixtures/missing-alternative-port_values.yaml"
       The status should be failure
       The error should include 'OTLP HTTP port not opened on Grafana Alloy.
-In order to receive data over this protocol, port 8080 needs to be opened on Alloy. For example, set this in your values file:
+To receive data over this protocol, open port 8080 on Alloy. For example, set this in your values file:
 alloy:
   alloy:
     extraPorts:
