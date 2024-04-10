@@ -8,7 +8,7 @@ just that.
 
 1. Use the `k8s.grafana.com/scrape` annotation on your Pods or services.
 2. Use Prometheus Operator CRDs, like ServiceMonitors, PodMonitors, or Probes.
-3. Make custom Grafana Alloy configuration.
+3. Make a custom Grafana Alloy configuration.
 
 ## Annotations
 
