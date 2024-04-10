@@ -27,21 +27,21 @@ scope, or create new tokens with that scope.
 
 These queries are added by default and are used if their respective metric source is enabled:
 
-| Metric Source             | Query                                                                      | Condition                                                                |
-|---------------------------|----------------------------------------------------------------------------|--------------------------------------------------------------------------|
-|                           | `up`                                                                       | `metrics.enabled: true`                                                  |
-| Grafana Agent             | `agent_build_info{cluster="<clusterName>"}                                 | `metrics.enabled: true`<br>`metrics.agent.enabled: true`                 |
-| Kubelet                   | `kubernetes_build_info{cluster="<clusterName>"}                            | `metrics.enabled: true`<br>`metrics.kubelet.enabled: true`               |
-| cAdvisor                  | `machine_memory_bytes{cluster="<clusterName>"}                             | `metrics.enabled: true`<br>`metrics.cadvisor.enabled: true`              |
-| kube-state-metrics        | `kube_node_info{cluster="<clusterName>"}                                   | `metrics.enabled: true`<br>`metrics.kube-state-metrics.enabled: true`    |
-| Node Exporter             | `node_exporter_build_info{cluster="<clusterName>"}                         | `metrics.enabled: true`<br>`metrics.node-exporter.enabled: true`         |
-| Windows Exporter          | `windows_exporter_build_info{cluster="<clusterName>"}                      | `metrics.enabled: true`<br>`metrics.windows-exporter.enabled: true`      |
-| API Server                | `apiserver_request_total{cluster="<clusterName>"}                          | `metrics.enabled: true`<br>`metrics.apiserver.enabled: true`             |
-| Kube Controller Manager   | `workqueue_adds_total{cluster="<clusterName>"}                             | `metrics.enabled: true`<br>`metrics.kubeControllerManager.enabled: true` |
-| Kube Proxy                | `kubeproxy_sync_proxy_rules_service_changes_total{cluster="<clusterName>"} | `metrics.enabled: true`<br>`metrics.kubeProxy.enabled: true`             |
-| Kube Scheduler            | `scheduler_unschedulable_pods{cluster="<clusterName>"}                     | `metrics.enabled: true`<br>`metrics.kubeScheduler.enabled: true`         |
-| OpenCost                  | `opencost_build_info{cluster="<clusterName>"}                              | `metrics.enabled: true`<br>`metrics.cost.enabled: true`                  |
-| Helm Chart self-reporting | `grafana_kubernetes_monitoring_build_info{cluster="<clusterName>"}         | `metrics.enabled: true`<br>`metrics.kubernetesMonitoring.enabled: true`  |
+| Metric Source             | Query                                                                       | Condition                                                                |
+|---------------------------|-----------------------------------------------------------------------------|--------------------------------------------------------------------------|
+|                           | `up`                                                                        | `metrics.enabled: true`                                                  |
+| Grafana Agent             | `agent_build_info{cluster="<clusterName>"}`                                 | `metrics.enabled: true`<br>`metrics.agent.enabled: true`                 |
+| Kubelet                   | `kubernetes_build_info{cluster="<clusterName>"}`                            | `metrics.enabled: true`<br>`metrics.kubelet.enabled: true`               |
+| cAdvisor                  | `machine_memory_bytes{cluster="<clusterName>"}`                             | `metrics.enabled: true`<br>`metrics.cadvisor.enabled: true`              |
+| kube-state-metrics        | `kube_node_info{cluster="<clusterName>"}`                                   | `metrics.enabled: true`<br>`metrics.kube-state-metrics.enabled: true`    |
+| Node Exporter             | `node_exporter_build_info{cluster="<clusterName>"}`                         | `metrics.enabled: true`<br>`metrics.node-exporter.enabled: true`         |
+| Windows Exporter          | `windows_exporter_build_info{cluster="<clusterName>"}`                      | `metrics.enabled: true`<br>`metrics.windows-exporter.enabled: true`      |
+| API Server                | `apiserver_request_total{cluster="<clusterName>"}`                          | `metrics.enabled: true`<br>`metrics.apiserver.enabled: true`             |
+| Kube Controller Manager   | `workqueue_adds_total{cluster="<clusterName>"}`                             | `metrics.enabled: true`<br>`metrics.kubeControllerManager.enabled: true` |
+| Kube Proxy                | `kubeproxy_sync_proxy_rules_service_changes_total{cluster="<clusterName>"}` | `metrics.enabled: true`<br>`metrics.kubeProxy.enabled: true`             |
+| Kube Scheduler            | `scheduler_unschedulable_pods{cluster="<clusterName>"}`                     | `metrics.enabled: true`<br>`metrics.kubeScheduler.enabled: true`         |
+| OpenCost                  | `opencost_build_info{cluster="<clusterName>"}`                              | `metrics.enabled: true`<br>`metrics.cost.enabled: true`                  |
+| Helm Chart self-reporting | `grafana_kubernetes_monitoring_build_info{cluster="<clusterName>"}`         | `metrics.enabled: true`<br>`metrics.kubernetesMonitoring.enabled: true`  |
 
 #### Extra Queries
 
