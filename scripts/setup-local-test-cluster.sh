@@ -42,7 +42,7 @@ kubectl apply -f "${MYSQL_CONFIG_MANIFEST}"
 helm repo add jetstack https://charts.jetstack.io
 helm upgrade --install cert-manager jetstack/cert-manager -f "${CERT_MANAGER_VALUES}" -n cert-manager --create-namespace --wait
 
-# This alloy instance is only used for generating metrics, logs, and traces that'll get
+# This Alloy instance is only used for generating metrics, logs, and traces that'll get
 # sent to the K8s Monitoring Alloy to test ingesting MLT from receivers.
 kubectl apply -f "${GRAFANA_ALLOY_RECEIVER_SERVICE}"
 helm upgrade --install alloy grafana/alloy -f "${GRAFANA_ALLOY_VALUES}" -n alloy --create-namespace --wait
