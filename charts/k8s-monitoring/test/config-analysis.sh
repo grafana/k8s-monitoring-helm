@@ -2,7 +2,7 @@
 
 set -eo pipefail
 
-ALLOY_HOST="${ALLOY_HOST:-http://localhost:8080}"
+ALLOY_HOST="${ALLOY_HOST:-http://localhost:12345}"
 
 function discoveryRelabel() {
     local component=$1
