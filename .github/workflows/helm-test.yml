@@ -188,7 +188,7 @@ jobs:
     - name: Deploy Loki
       if: steps.list-changed.outputs.changed == 'true'
       run: |
-        helm install loki grafana/loki -f "${LOKI_VALUES}" -n loki --create-namespace --wait
+        helm install loki grafana/loki -f "${LOKI_VALUES}" --version ^5.0.0 -n loki --create-namespace --wait
         helm install loki-otlp grafana/grafana-agent -f "${GRAFANA_AGENT_LOKI_OTLP_VALUES}" -n loki --wait
 
     - name: Deploy Tempo
