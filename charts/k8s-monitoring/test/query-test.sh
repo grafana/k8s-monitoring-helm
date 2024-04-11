@@ -31,7 +31,7 @@ if [ -z "${1}" ] || [ "${1}" == "-h" ]; then
   echo "Each query has this format:"
   echo '{'
   echo '  "query": "<query string>",'
-  echo '  "type": "[promql (default)|logql|traceql]",'
+  echo '  "type": "[promql (default)|logql|traceql]|[pyroql]",'
   echo '}'
   echo
   echo 'You can add an "expect" section to the query to validate the returned value'
