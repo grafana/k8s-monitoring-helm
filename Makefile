@@ -16,7 +16,7 @@ lint-chart:
 	ct lint --debug --config "$(CT_CONFIGFILE)" --lint-conf "$(LINT_CONFIGFILE)" --check-version-increment=false
 
 lint-config: scripts/lint-configs.sh
-	./scripts/lint-configs.sh $(METRIC_CONFIG_FILES) $(LOG_CONFIG_FILES)
+	./scripts/lint-configs.sh $(METRICS_CONFIG_FILES) $(EVENTS_CONFIG_FILES) $(LOGS_CONFIG_FILES) --public-preview $(PROFILES_CONFIG_FILES)
 
 test: scripts/test-runner.sh lint-chart lint-config
 	./scripts/test-runner.sh --show-diffs
