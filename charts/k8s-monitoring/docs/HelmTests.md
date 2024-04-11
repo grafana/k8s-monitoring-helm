@@ -86,8 +86,8 @@ that metric sources are not being duplicated or double-scraped:
 ## Configuration Analysis
 
 Also when `helm test` is run, a Pod is created that builds a report of how the configuration is performing on the
-cluster. For example, for all of the `discovery.relabel` components, how many objects were input and how many remain
-after the rules were applied.? For `prometheus.scrape` components, was the scrape successful? This report can be helpful
+Cluster. For example, for all of the `discovery.relabel` components, how many objects were input and how many remain
+after the rules were applied? For `prometheus.scrape` components, was the scrape successful? This report can be helpful
 for diagnosing missing or duplicate metrics, because it will show if a relabel filter is removing the desired object, or
 if the metrics scrape failed.
 
