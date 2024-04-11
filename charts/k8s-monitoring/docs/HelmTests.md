@@ -100,7 +100,7 @@ discovery.relabel.kube_state_metrics
   Outputs: prometheus.scrape.kube_state_metrics (1)
 ```
 
-Here is the report for the `prometheus.scrape` component that scrapes metrics from the discvered `kube-state-metrics`
+Here is the report for the `prometheus.scrape` component that scrapes metrics from the discovered `kube-state-metrics`
 service:
 
 ```text
