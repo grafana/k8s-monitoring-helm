@@ -5,7 +5,7 @@ describes how you can interact and modify them.
 
 ## Pre-install, pre-upgrade validation
 
-Before every install or upgrade, the chart deploys a Pod with the Grafana Agent and a ConfigMap with the generated
+Before every install or upgrade, the chart deploys a Pod with Grafana Alloy and a ConfigMap with the generated
 configurations. The Pod inspects the configuration files, and validates their syntax and some internal structure. If the
 configuration is found to be invalid, the install or upgrade is stopped.
 
@@ -29,7 +29,7 @@ These queries are added by default and are used if their respective metric sourc
 | Metric Source             | Query                                                                       | Condition                                                                |
 |---------------------------|-----------------------------------------------------------------------------|--------------------------------------------------------------------------|
 |                           | `up`                                                                        | `metrics.enabled: true`                                                  |
-| Grafana Agent             | `agent_build_info{cluster="<clusterName>"}`                                 | `metrics.enabled: true`<br>`metrics.agent.enabled: true`                 |
+| Grafana Alloy             | `alloy_build_info{cluster="<clusterName>"}`                                 | `metrics.enabled: true`<br>`metrics.alloy.enabled: true`                 |
 | Kubelet                   | `kubernetes_build_info{cluster="<clusterName>"}`                            | `metrics.enabled: true`<br>`metrics.kubelet.enabled: true`               |
 | cAdvisor                  | `machine_memory_bytes{cluster="<clusterName>"}`                             | `metrics.enabled: true`<br>`metrics.cadvisor.enabled: true`              |
 | kube-state-metrics        | `kube_node_info{cluster="<clusterName>"}`                                   | `metrics.enabled: true`<br>`metrics.kube-state-metrics.enabled: true`    |

@@ -70,7 +70,7 @@ example `metrics:write` permits writing metrics.
 If sending data to Grafana Cloud, this Helm chart uses the `<data>:write` scopes for delivering data. It can optionally
 use the `<data>:read` scopes when running the [Data Test Job](./HelmTests.md#data-test).
 
-If your token does not have the correct scope, you will see errors in the Grafanaa Agent logs. For example, when trying
+If your token does not have the correct scope, you will see errors in the Grafanaa Alloy logs. For example, when trying
 to deliver profiles to Pyroscrope without the `profiles:write` scope:
 
 ```text
