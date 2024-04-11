@@ -3,7 +3,7 @@
 This Helm chart contains a number of tests to ensure that things are working correctly. This document explains them and
 describes how you can interact and modify them.
 
-## Pre-install, Pre-upgrade validation
+## Pre-install, pre-upgrade validation
 
 Before every install or upgrade, the chart will deploy a Pod with the Grafana Agent and a ConfigMap with the generated
 configurations. The Pod will inspect the configuration files and validate their syntax and some internal structure. If
