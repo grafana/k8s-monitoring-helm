@@ -45,7 +45,7 @@ These queries are added by default and are used if their respective metric sourc
 
 #### Extra Queries
 
-Additonal queries can be added using the `test.extraQueries` section. An extra query can have this format:
+You can add additonal queries using the `test.extraQueries` section. An extra query can have this format:
 
 ```yaml
 query: "<query string>",
