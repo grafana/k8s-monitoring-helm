@@ -57,19 +57,19 @@ extraConfig: |
     namespace = "mysql"
   }
 
-  import.string "mysql_metrics" {
+  import.string "mysql" {
     content = remote.kubernetes.configmap.mysql_config.data["metrics.alloy"]
+  }
 
-    arguments {
-      host = "mysql.mysql.svc.cluster.local"
-      instance = "primary"
-      namespace = "mysql"
-      secret_name = "mysql"
-      username = "root"
-      password_key = "mysql-root-password"
-      all_services = discovery.kubernetes.services.targets
-      metrics_destination = prometheus.relabel.metrics_service.receiver
-    }
+  mysql.metrics "primary" {
+    host = "mysql.mysql.svc.cluster.local"
+    instance = "primary"
+    namespace = "mysql"
+    secret_name = "mysql"
+    username = "root"
+    password_key = "mysql-root-password"
+    all_services = discovery.kubernetes.services.targets
+    metrics_destination = prometheus.relabel.metrics_service.receiver
   }
 
 logs:
@@ -79,14 +79,14 @@ logs:
       namespace = "mysql"
     }
 
-    import.string "mysql_logs" {
+    import.string "mysql" {
       content = remote.kubernetes.configmap.mysql_config.data["logs.alloy"]
+    }
 
-      arguments {
-        instance = "primary"
-        all_pods = discovery.relabel.pod_logs.output
-        logs_destination = loki.process.logs_service.receiver
-      }
+    mysql.logs "primary" {
+      instance = "primary"
+      all_pods = discovery.relabel.pod_logs.output
+      logs_destination = loki.process.logs_service.receiver
     }
 
 test:

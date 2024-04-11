@@ -139,12 +139,12 @@ remote.kubernetes.configmap "mysql_config" {
   namespace = "mysql"
 }
 
-import.string "mysql_logs" {
+import.string "mysql" {
   content = remote.kubernetes.configmap.mysql_config.data["logs.alloy"]
+}
 
-  arguments {
-    instance = "primary"
-    all_pods = discovery.relabel.pod_logs.output
-    logs_destination = loki.process.logs_service.receiver
-  }
+mysql.logs "primary" {
+  instance = "primary"
+  all_pods = discovery.relabel.pod_logs.output
+  logs_destination = loki.process.logs_service.receiver
 }
