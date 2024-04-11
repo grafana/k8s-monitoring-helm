@@ -5,11 +5,11 @@ describes how you can interact and modify them.
 
 ## Pre-install, pre-upgrade validation
 
-Before every install or upgrade, the chart will deploy a Pod with the Grafana Agent and a ConfigMap with the generated
-configurations. The Pod will inspect the configuration files and validate their syntax and some internal structure. If
-the configuration is found to be invalid, the install or upgrade will be stopped.
+Before every install or upgrade, the chart deploys a Pod with the Grafana Agent and a ConfigMap with the generated
+configurations. The Pod inspects the configuration files, and validates their syntax and some internal structure. If
+the configuration is found to be invalid, the install or upgrade is stopped.
 
-Settings for this validation can be changed in the `configValidator` section of the values file.
+Change the settings for this validation in the `configValidator` section of the values file.
 
 ## Data Test
 
