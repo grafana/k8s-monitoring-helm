@@ -1,4 +1,4 @@
-# Helm Tests
+# Helm tests
 
 This Helm chart contains a number of tests to ensure that things are working correctly. This document explains them and
 describes how you can interact and modify them.
