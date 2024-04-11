@@ -127,5 +127,5 @@ prometheus.operator.servicemonitors.service_monitors
 
 ## Deprecation checks
 
-Internally, the Helm chart will check for deprecated values and will provide a suggestion for resolving. The list of
+Internally, the Helm chart checks for deprecated values and provides a suggestion for resolution. The list of
 deprecations can be found in the [main README](../README.md).
