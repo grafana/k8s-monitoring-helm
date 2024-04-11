@@ -63,7 +63,7 @@ For PromQL queries, you can add an "expect" section to the query to validate the
 
 #### Examples
 
-Here is an example that validates that the number of nodes detected matches the expected number of nodes in the cluster.
+Here is an example that validates that the number of nodes detected matches the expected number of nodes in the Cluster.
 
 ```yaml
 - query: count(kube_node_info{cluster="my-cluster"})
