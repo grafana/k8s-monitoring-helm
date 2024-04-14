@@ -50,6 +50,7 @@ discovery.relabel "pprof_pods" {
 {{- end }}
 }
 
+{{- $allProfileTypes := list "memory" "cpu" "goroutine" "block" "mutex" "fgprof" }}
 {{- $profileTypes := .Values.profiles.pprof.types }}
 {{ range $profileTypes }}
 discovery.relabel "pprof_pods_{{.}}_default_name" {
@@ -140,17 +141,13 @@ discovery.relabel "pprof_pods_{{.}}_custom_name" {
 
 pyroscope.scrape "pyroscope_scrape_{{.}}" {
   targets = concat(discovery.relabel.pprof_pods_{{.}}_default_name.output, discovery.relabel.pprof_pods_{{.}}_custom_name.output)
-  clustering {
-    enabled = true
-  }
 
   profiling_config {
     {{- $currentType := . -}}
-    {{- range $profileTypes }}
+    {{- range $allProfileTypes }}
     profile.{{if eq . "cpu"}}process_cpu{{else}}{{.}}{{end}} {
       enabled = {{if eq . $currentType}}true{{else}}false{{end}}
     }
-    {{- if ne . (last $profileTypes) }}{{ printf "\n" }}{{ end }}
     {{- end }}
   }
 

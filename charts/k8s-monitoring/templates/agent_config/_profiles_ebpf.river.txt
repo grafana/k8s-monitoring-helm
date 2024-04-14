@@ -57,8 +57,10 @@ discovery.relabel "ebpf_pods" {
 
 pyroscope.ebpf "ebpf_pods" {
   targets = discovery.relabel.ebpf_pods.output
-  forward_to = [pyroscope.write.profiles_service.receiver]
+
   demangle = {{ .Values.profiles.ebpf.demangle | quote }}
+
+  forward_to = [pyroscope.write.profiles_service.receiver]
 }
 {{- end }}
 {{- end }}
