@@ -1,0 +1,10 @@
+{{- if and .Values.logs.enabled .Values.logs.cluster_events.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "alloy.fullname" (index .Subcharts "alloy-events") }}
+  namespace: {{ .Release.Namespace }}
+data:
+  config.alloy: |-
+    {{- include "alloyEventsConfig" . | trim | nindent 4 }}
+{{- end }}

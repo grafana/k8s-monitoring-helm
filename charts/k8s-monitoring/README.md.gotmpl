@@ -12,40 +12,69 @@
 
 ## Breaking change announcements
 
+### **v1.0.0**
+
+Grafana Agent has been replaced with [Grafana Alloy](https://grafana.com/oss/alloy-opentelemetry-collector/)!
+
+These sections in your values file will need to be renamed:
+
+| Old                      | New              | Purpose                                                          |
+|--------------------------|------------------|------------------------------------------------------------------|
+| `grafana-agent`          | `alloy`          | Settings for the Alloy instance for metrics and application data |
+| `grafana-agent-events`   | `alloy-events`   | Settings for the Alloy instance for Cluster events               |
+| `grafana-agent-logs`     | `alloy-logs`     | Settings for the Alloy instance for Pod logs                     |
+| `grafana-agent-profiles` | `alloy-profiles` | Settings for the Alloy instance for profiles                     |
+| `metrics.agent`          | `metrics.alloy`  | Settings for scraping metrics from Alloy instances               |
+
+For example, if you have something like this:
+```yaml
+grafana-agent:
+  controller:
+    replicas: 2
+```
+
+you will need to change it to this:
+
+```yaml
+alloy:
+  controller:
+    replicas: 2
+`````
+
 ### **v0.12.0**
 
-  The component `loki.write.grafana_cloud_loki` has been renamed.
-  When forwarding logs to be sent to your logs service endpoint, please use `loki.process.logs_service` instead.
-  This component will deliver logs, no matter which protocol is used for your logs service.
+The component `loki.write.grafana_cloud_loki` has been renamed.
+When forwarding logs to be sent to your logs service endpoint, please use `loki.process.logs_service` instead.
+This component will deliver logs, no matter which protocol is used for your logs service.
 
 ### **v0.9.0**
 
-  Additional metric tuning rules have been made available for all metric sources. This means the removal of the
-  `.allowList` fields from each metric source. If you have set custom allow lists for a metric source, you will need to
-  make those changes in the new `.metricsTuning` section.
+Additional metric tuning rules have been made available for all metric sources. This means the removal of the
+`.allowList` fields from each metric source. If you have set custom allow lists for a metric source, you will need to
+make those changes in the new `.metricsTuning` section.
 
-  The default allow list remains in place, but it's toggled with `.metricsTuning.useDefaultAllowList`.
+The default allow list remains in place, but it's toggled with `.metricsTuning.useDefaultAllowList`.
 
-  If you've added more metrics to the default allow list, put those additional metrics in the
-  `.metricsTuning.includeMetrics` section.
+If you've added more metrics to the default allow list, put those additional metrics in the
+`.metricsTuning.includeMetrics` section.
 
-  If you've removed metrics from the default allow list, put the *metrics to remove* in the
-  `.metricsTuning.excludeMetrics` section.
+If you've removed metrics from the default allow list, put the *metrics to remove* in the
+`.metricsTuning.excludeMetrics` section.
 
-  For more information, see [this example](../../examples/custom-metrics-tuning).
+For more information, see [this example](../../examples/custom-metrics-tuning).
 
 ### **v0.7.0**
 
-  The OTLP, OTLPHTTP, and Zipkin receiver definitions under `traces.receivers` has been moved up a level to `receivers`.
-  This is because receivers will be able to ingest more than just traces going forward.
-  Also, receivers are enabled by default, so you will likely not need to make changes to your values file other than
-  removing `.traces.receivers`.
+The OTLP, OTLPHTTP, and Zipkin receiver definitions under `traces.receivers` has been moved up a level to `receivers`.
+This is because receivers will be able to ingest more than just traces going forward.
+Also, receivers are enabled by default, so you will likely not need to make changes to your values file other than
+removing `.traces.receivers`.
 
 ### **v0.3.0**
 
-  The component `prometheus.remote_write.grafana_cloud_prometheus` has been renamed.
-  When forwarding metrics to be sent to your metrics service endpoint, please use `prometheus.relabel.metrics_service` instead.
-  This component will "fan-in" all of the metric sources to the correct metrics service.
+The component `prometheus.remote_write.grafana_cloud_prometheus` has been renamed.
+When forwarding metrics to be sent to your metrics service endpoint, please use `prometheus.relabel.metrics_service` instead.
+This component will "fan-in" all of the metric sources to the correct metrics service.
 
 ## Usage
 
@@ -85,7 +114,9 @@ This chart simplifies the deployment of a Kubernetes monitoring infrastructure, 
 * [kube-state-metrics](https://github.com/kubernetes/kube-state-metrics), which gathers metrics about Kubernetes objects
 * [Node exporter](https://github.com/prometheus/node_exporter), which gathers metrics about Kubernetes nodes
 * [OpenCost](https://www.opencost.io/), which interprets the above to create cost metrics for the cluster, and
-* [Grafana Agent](https://grafana.com/docs/agent/latest/), which scrapes the above services to forward metrics to [Prometheus](https://prometheus.io/), logs and events to [Loki](https://grafana.com/oss/loki/), and traces to [Tempo](https://grafana.com/oss/tempo/).
+* [Grafana Alloy](https://grafana.com/docs/alloy/latest/), which scrapes the above services to forward metrics to
+  [Prometheus](https://prometheus.io/), logs and events to [Loki](https://grafana.com/oss/loki/), traces to
+  [Tempo](https://grafana.com/oss/tempo/), and profiles to [Pyroscope](https://grafana.com/docs/pyroscope/).
 
 The Prometheus and Loki services may be hosted on the same cluster, or remotely (e.g. on Grafana Cloud).
 
@@ -105,8 +136,9 @@ same Kubernetes cluster.
 
 ### Adding custom Flow configuration
 
-Any value supplied to the `.extraConfig` or `.logs.extraConfig` values will be appended to the generated config file after being templated with helm, so that you can refer to any values from this chart.
-This can be used to add more Grafana Agent Flow components to provide extra functionality to the agent.
+Any value supplied to the `.extraConfig` or `.logs.extraConfig` values will be appended to the generated config file
+after being templated with Helm, so that you can refer to any values from this chart. This can be used to add more
+Grafana Alloy components to provide extra functionality to the Alloy instance.
 
 NOTE: This cannot be used to modify existing configuration values.
 
@@ -121,8 +153,8 @@ useful ones like these:
 
 Example:
 
-In this example, the Agent will find a service named `my-webapp-metrics` with the label
-`app.kubernetes.io/name=my-webapp`, scrape them for Prometheus metrics, and send those metrics to Grafana Cloud.
+In this example, Alloy will find a service named `my-webapp-metrics` with the label `app.kubernetes.io/name=my-webapp`,
+scrape them for Prometheus metrics, and send those metrics to Grafana Cloud.
 
 ```yaml
 extraConfig: |-
@@ -154,15 +186,15 @@ For an example values file and generated output, see [this example](../../exampl
 The default config can deploy the CRDs for Prometheus Operator, and will add support for `PodMonitor`, 
 `ServiceMonitor` and `Probe` objects.
 
-Simply deploy a PodMonitor or a ServiceMonitor in the same namespace as the Grafana Agent and it will discover it and
-take the appropriate action.
+Simply deploy a PodMonitor or a ServiceMonitor in the same namespace as Alloy and it will discover it and take the
+appropriate action.
 
-Use a selector to limit the discovered objects
+Use a selector to limit the discovered objects.
 
 Example: 
 
-In this example, the Agent will find `ServiceMonitor` objects labeld with
-`example.com/environment=production`, scrape them for Prometheus metrics, and send those metrics to Grafana Cloud.
+In this example, Alloy will find `ServiceMonitor` objects labeled with `example.com/environment=production`, scrape them
+for Prometheus metrics, and send those metrics to Grafana Cloud.
 
 ```yaml
 serviceMonitors:
@@ -198,15 +230,19 @@ metrics:
 
 The following sections contain the allow lists that are defined for the associated metric sources.
 
-For more examples of metrics tuning, such as including or excluding metrics, see [this example](../../examples/custom-metrics-tuning).
+For more examples of metrics tuning, such as including or excluding metrics, see
+[this example](../../examples/custom-metrics-tuning).
 
-### Allow List for Grafana Agent
+### Allow List for Grafana Alloy
 
-Visit the Grafana Agent Metrics [documentation](https://grafana.com/solutions/grafana-agent/monitor/) for the full list of agent metrics
+<!-- TODO: Update this when the new integration is available
+Visit the Grafana Alloy Metrics [documentation](https://grafana.com/solutions/grafana-agent/monitor/) for the full list
+of agent metrics -->
 
-Visit the Grafana Agent Controller and Component Metrics [documentation](https://grafana.com/docs/agent/latest/flow/monitoring/) for the full list of component metrics
+Visit the Grafana Alloy Controller and Component Metrics
+[documentation](https://grafana.com/docs/alloy/latest/tasks/monitor/) for the full list of component metrics
 
-* agent_build_info
+* alloy_build_info
 
 ### Allow List for Kube State Metrics
 

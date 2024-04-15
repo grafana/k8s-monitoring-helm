@@ -1,92 +1,92 @@
-{{/* Grafana Agent config */}}
-{{- define "agentConfig" -}}
-  {{- include "agent.config.nodes" . }}
-  {{- include "agent.config.services" . }}
-  {{- include "agent.config.endpoints" . }}
-  {{- include "agent.config.pods" . }}
+{{/* Grafana Alloy config */}}
+{{- define "alloyConfig" -}}
+  {{- include "alloy.config.nodes" . }}
+  {{- include "alloy.config.services" . }}
+  {{- include "alloy.config.endpoints" . }}
+  {{- include "alloy.config.pods" . }}
 
-  {{- include "agent.config.receivers.otlp" . }}
-  {{- include "agent.config.receivers.jaeger" . }}
-  {{- include "agent.config.receivers.zipkin" . }}
-  {{- include "agent.config.receivers.remote_write" . }}
+  {{- include "alloy.config.receivers.otlp" . }}
+  {{- include "alloy.config.receivers.jaeger" . }}
+  {{- include "alloy.config.receivers.zipkin" . }}
+  {{- include "alloy.config.receivers.remote_write" . }}
 
-  {{- include "agent.config.processors" . }}
+  {{- include "alloy.config.processors" . }}
 
   {{- if .Values.metrics.enabled }}
     {{- if .Values.metrics.autoDiscover.enabled }}
-      {{- include "agent.config.annotationAutodiscovery" . }}
+      {{- include "alloy.config.annotationAutodiscovery" . }}
     {{- end }}
 
-    {{- if .Values.metrics.agent.enabled }}
-      {{- include "agent.config.agent" . }}
+    {{- if .Values.metrics.alloy.enabled }}
+      {{- include "alloy.config.alloy" . }}
     {{- end }}
 
     {{- if .Values.metrics.kubernetesMonitoring.enabled }}
-      {{- include "agent.config.kubernetes_monitoring_telemetry" . }}
+      {{- include "alloy.config.kubernetes_monitoring_telemetry" . }}
     {{- end }}
 
     {{- if .Values.metrics.kubelet.enabled }}
-      {{- include "agent.config.kubelet" . }}
+      {{- include "alloy.config.kubelet" . }}
     {{- end }}
 
     {{- if .Values.metrics.cadvisor.enabled }}
-      {{- include "agent.config.cadvisor" . }}
+      {{- include "alloy.config.cadvisor" . }}
     {{- end }}
 
     {{- if .Values.metrics.apiserver.enabled }}
-      {{- include "agent.config.apiserver" . }}
+      {{- include "alloy.config.apiserver" . }}
     {{- end }}
 
     {{- if .Values.metrics.kubeControllerManager.enabled }}
-      {{- include "agent.config.kube_controller_manager" . }}
+      {{- include "alloy.config.kube_controller_manager" . }}
     {{- end }}
 
     {{- if .Values.metrics.kubeScheduler.enabled }}
-      {{- include "agent.config.kube_scheduler" . }}
+      {{- include "alloy.config.kube_scheduler" . }}
     {{- end }}
 
     {{- if .Values.metrics.kubeProxy.enabled }}
-      {{- include "agent.config.kube_proxy" . }}
+      {{- include "alloy.config.kube_proxy" . }}
     {{- end }}
 
     {{- if (index .Values.metrics "kube-state-metrics").enabled }}
-      {{- include "agent.config.kube_state_metrics" . }}
+      {{- include "alloy.config.kube_state_metrics" . }}
     {{- end }}
 
     {{- if (index .Values.metrics "node-exporter").enabled }}
-      {{- include "agent.config.node_exporter" . }}
+      {{- include "alloy.config.node_exporter" . }}
     {{- end }}
 
     {{- if (index .Values.metrics "windows-exporter").enabled }}
-      {{- include "agent.config.windows_exporter" . }}
+      {{- include "alloy.config.windows_exporter" . }}
     {{- end }}
 
     {{- if .Values.metrics.cost.enabled }}
-      {{- include "agent.config.opencost" . }}
+      {{- include "alloy.config.opencost" . }}
     {{- end }}
 
     {{- if .Values.metrics.podMonitors.enabled }}
-      {{- include "agent.config.pod_monitors" . }}
+      {{- include "alloy.config.pod_monitors" . }}
     {{- end }}
 
     {{- if .Values.metrics.probes.enabled }}
-      {{- include "agent.config.probes" . }}
+      {{- include "alloy.config.probes" . }}
     {{- end }}
 
     {{- if .Values.metrics.serviceMonitors.enabled }}
-      {{- include "agent.config.service_monitors" . }}
+      {{- include "alloy.config.service_monitors" . }}
     {{- end }}
 
-    {{- include "agent.config.metricsService" . }}
+    {{- include "alloy.config.metricsService" . }}
   {{- end }}
 
   {{- if and .Values.logs.enabled (or .Values.receivers.grpc.enabled .Values.receivers.http.enabled .Values.receivers.zipkin.enabled) }}
-    {{- include "agent.config.logs.pod_logs_processor" . }}
-    {{- include "agent.config.logsService" . }}
+    {{- include "alloy.config.logs.pod_logs_processor" . }}
+    {{- include "alloy.config.logsService" . }}
   {{- end }}
 
   {{- if and .Values.traces.enabled }}
-    {{- include "agent.config.tracesService" . }}
+    {{- include "alloy.config.tracesService" . }}
   {{- end }}
 
   {{- if .Values.extraConfig }}
@@ -94,31 +94,31 @@
   {{- end }}
 {{- end -}}
 
-{{/* Grafana Agent Events config */}}
-{{- define "agentEventsConfig" -}}
-  {{- include "agent.config.logs.cluster_events" . }}
-  {{- include "agent.config.logsService" . }}
+{{/* Grafana Alloy for Events config */}}
+{{- define "alloyEventsConfig" -}}
+  {{- include "alloy.config.logs.cluster_events" . }}
+  {{- include "alloy.config.logsService" . }}
 {{- end -}}
 
-{{/* Grafana Agent Logs config */}}
-{{- define "agentLogsConfig" -}}
-  {{- include "agent.config.logs.pod_logs_discovery" . }}
-  {{- include "agent.config.logs.pod_logs_processor" . }}
+{{/* Grafana Allyo for Logs config */}}
+{{- define "alloyLogsConfig" -}}
+  {{- include "alloy.config.logs.pod_logs_discovery" . }}
+  {{- include "alloy.config.logs.pod_logs_processor" . }}
   {{- if .Values.logs.podLogsObjects.enabled }}
-    {{- include "agent.config.pod_log_objects" . }}
+    {{- include "alloy.config.pod_log_objects" . }}
   {{- end }}
 
-  {{- include "agent.config.logsService" . }}
+  {{- include "alloy.config.logsService" . }}
 
   {{- if .Values.logs.extraConfig }}
     {{- tpl .Values.logs.extraConfig . | indent 0 }}
   {{- end }}
 {{- end -}}
 
-{{/* Grafana Agent Profiles config */}}
-{{- define "agentProfilesConfig" -}}
-  {{- include "agent.config.profilesEbpf" . }}
-  {{- include "agent.config.profilesPprof" . }}
+{{/* Grafana Alloy for Profiles config */}}
+{{- define "alloyProfilesConfig" -}}
+  {{- include "alloy.config.profilesEbpf" . }}
+  {{- include "alloy.config.profilesPprof" . }}
 
-  {{- include "agent.config.profilesService" . }}
+  {{- include "alloy.config.profilesService" . }}
 {{- end -}}

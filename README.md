@@ -37,7 +37,7 @@ Required tools:
 * [chart-testing](https://github.com/helm/chart-testing)
 * [Helm](https://helm.sh/docs/intro/install/)
 * [helm-docs](https://github.com/norwoodj/helm-docs)
-* [Grafana Agent](https://github.com/grafana/agent) (used for linting the generated config files)
+* [Grafana Alloy](https://github.com/grafana/alloy) (used for linting the generated config files)
 * [shellspec](https://github.com/shellspec/shellspec)
 * [yamllint](https://yamllint.readthedocs.io/en/stable/index.html)
 * [yq](https://pypi.org/project/yq/)
@@ -54,7 +54,7 @@ Run `make install-deps` to install all requirements (Mac supported only at the m
 
 ## Links
 * [Kubernetes Monitoring on Grafana Cloud](https://grafana.com/docs/grafana-cloud/kubernetes-monitoring/)
-* [Grafana Agent](https://github.com/grafana/agent)
+* [Grafana Alloy](https://github.com/grafana/alloy)
 * [Kube State Metrics](https://github.com/kubernetes/kube-state-metrics)
 * [Node Exporter](https://github.com/prometheus/node_exporter)
 * [OpenCost](https://github.com/opencost/opencost)

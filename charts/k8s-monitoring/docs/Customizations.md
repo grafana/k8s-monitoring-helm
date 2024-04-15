@@ -17,11 +17,11 @@ Metrics are usually gathered using Prometheus-style scraping.
 
 ### Customize where to find the data
 
-These fields affect how metric targets are discovered. If the Grafana Agent is not detecting the target, make changes to
+These fields affect how metric targets are discovered. If Grafana Alloy is not detecting the target, make changes to
 these values.
 
 * `metrics.<source>.extraRelabelingRules` - These rules are used to populate the rules section of a
-  [discovery.relabel](https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/) component.
+  [discovery.relabel](https://grafana.com/docs/alloy/latest/reference/components/discovery.relabel/) component.
   They filter from all Nodes, services, endpoints, or Pods on the
   Cluster to a specific one that has the metrics.
   Use these rules to target a specific service.
@@ -36,8 +36,7 @@ you want to change something about how often to scrape or which target to scrape
 
 * `metrics.<source>.scrapeInterval` - How often to scrape metrics from a target.
 * `metrics.scrapeInterval` - Same as above, but changes the global default.
-* `metrics.<source>.service.isTLS` - Determines whether the Agent use HTTPS and TLS to scrape the target instead of
-  HTTP.
+* `metrics.<source>.service.isTLS` - Determines whether Alloy uses HTTPS and TLS to scrape the target instead of HTTP.
 
 ### Processing customizations
 
@@ -47,13 +46,13 @@ after they have been scraped, but before being sent to the external metric servi
 might want to do here include setting, modifying, or dropping metric labels.
 
 * `metrics.<source>.extraMetricRelabelingRules` - Rules that modify metrics and will populate the rules
-  section of a [prometheus.relabel](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/)
+  section of a [prometheus.relabel](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/)
   component. Use these rules to perform arbitrary modifications to metrics or metric labels.
 * `metrics.extraMetricRelabelingRules` - Same as above, but the rules are applied to metrics from all metric sources.
 * `metrics.<source>.allowList` - Sets a list of metrics that will be kept, dropping any metrics that don't match.
 * `extraServices.prometheus.externalLabels` - A key-value set that defines labels and values to be set for all metrics
   being sent. It sets the `external_labels` section of
-  [prometheus.remote_write](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.remote_write/#arguments)
+  [prometheus.remote_write](https://grafana.com/docs/alloy/latest/reference/components/prometheus.remote_write/#arguments)
   component.
 
 ### Customize how metrics are uploaded
@@ -76,21 +75,21 @@ you want logs collected from.
 * `logs.pod_logs.namespaces` - Only gathers logs from Pods in the given list of namespaces.
 * `logs.pod_logs.extraRelabelingRules` - Rules that filter from all Pods on the Cluster to the specific set
   that will be used for gathering logs. They're used to populate the rules section of a
-  [discovery.relabel](https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/) component.
+  [discovery.relabel](https://grafana.com/docs/alloy/latest/reference/components/discovery.relabel/) component.
 
 ### Gathering customizations
 
 This field controls how Pod logs are gathered from the Cluster.
 
-* `logs.pod_logs.gatherMethod` - The default method, "volumes", means that the Grafana Agent for logs will gather logs
-  by mounting hostPath volumes to the Pod log location on each Kubernetes Cluster Node. The other method, "api", means
-  that the Agent will gather logs by streaming them from the Kubernetes API Server.
+* `logs.pod_logs.gatherMethod` - The default method, "volumes", means that the Grafana Alloy instance for logs will
+  gather logs by mounting hostPath volumes to the Pod log location on each Kubernetes Cluster Node. The other method,
+  "api", means that Alloy will gather logs by streaming them from the Kubernetes API Server.
 
 ### Customize how logs are processed
 
 * `logs.pod_logs.extraStageBlocks` - Processing logs is done in stages. This field allows for additional stages to
   be set. Stages set here will be used to populate a
-  [loki.process](https://grafana.com/docs/agent/latest/flow/reference/components/loki.process/) component.
+  [loki.process](https://grafana.com/docs/alloy/latest/reference/components/loki.process/) component.
 
 ## Events
 
@@ -111,5 +110,5 @@ This field controls which namespaces to gather Cluster Events from.
 In addition to customizing the generated configuration, you can add new components to the the Kubernetes Monitoring Helm
 chart to define your own extra configuration.
 
-* `extraConfig` - Config put here will be added to the config for the Grafana Agent StatefulSet that scraps metrics.
-* `logs.extraConfig` - Config put here will be added to the config for the Grafana Agent for Logs.
+* `extraConfig` - Config put here will be added to the config for the Grafana Alloy instance that scraps metrics.
+* `logs.extraConfig` - Config put here will be added to the config for the Grafana Alloy instance for Logs.

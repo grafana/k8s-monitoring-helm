@@ -39,4 +39,36 @@ Please change your configurations to direct log data to the "loki.process.logs_s
 For more information, see https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring#breaking-change-announcements'
     End
   End
+
+  Describe 'Grafana Agent modification in values file'
+    It 'prints a friendly error message'
+      When call helm template k8smon ../charts/k8s-monitoring -f "spec/fixtures/deprecated-grafana_agent-values.yaml"
+      The status should be failure
+      The error should include 'As of k8s-monitoring Chart version 1.0, Grafana Agent has been replaced with Grafana Alloy.
+These sections in your values file will need to be renamed:
+  grafana-agent          --> alloy
+  grafana-agent-events   --> alloy-events
+  grafana-agent-logs     --> alloy-logs
+  grafana-agent-profiles --> alloy-profiles
+  metrics.agent          --> metrics.alloy
+
+For more information, see https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring#breaking-change-announcements'
+    End
+  End
+
+  Describe 'Agent metric modification in values file'
+    It 'prints a friendly error message'
+      When call helm template k8smon ../charts/k8s-monitoring -f "spec/fixtures/deprecated-agent_metrics-values.yaml"
+      The status should be failure
+      The error should include 'As of k8s-monitoring Chart version 1.0, Grafana Agent has been replaced with Grafana Alloy.
+These sections in your values file will need to be renamed:
+  grafana-agent          --> alloy
+  grafana-agent-events   --> alloy-events
+  grafana-agent-logs     --> alloy-logs
+  grafana-agent-profiles --> alloy-profiles
+  metrics.agent          --> metrics.alloy
+
+For more information, see https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring#breaking-change-announcements'
+    End
+  End
 End

@@ -3,10 +3,10 @@ Describe 'Invalid logs configurations'
     It 'prints a friendly error message'
       When call helm template k8smon ../charts/k8s-monitoring -f "spec/fixtures/invalid-logs-config-daemonset-and-api_values.yaml"
       The status should be failure
-      The error should include 'Invalid configuration for gathering pod logs! When using logs.pod_logs.gatherMethod: "api" and the Grafana Agent for Logs is a Daemonset, you must enable clustering. Otherwise, log files may be duplicated!
+      The error should include 'Invalid configuration for gathering pod logs! When using logs.pod_logs.gatherMethod: "api" and the Grafana Alloy for Logs is a Daemonset, you must enable clustering. Otherwise, log files may be duplicated!
 Please set:
-grafana-agent-logs:
-  agent:
+alloy-logs:
+  alloy:
     clustering:
       enabled: true'
     End
@@ -16,10 +16,10 @@ grafana-agent-logs:
     It 'prints a friendly error message'
       When call helm template k8smon ../charts/k8s-monitoring -f "spec/fixtures/invalid-logs-config-multiple-replicas-and-api_values.yaml"
       The status should be failure
-      The error should include 'Invalid configuration for gathering pod logs! When using logs.pod_logs.gatherMethod: "api" and the Grafana Agent for Logs has multiple replicas, you must enable clustering. Otherwise, log files will be duplicated!
+      The error should include 'Invalid configuration for gathering pod logs! When using logs.pod_logs.gatherMethod: "api" and the Grafana Alloy for Logs has multiple replicas, you must enable clustering. Otherwise, log files will be duplicated!
 Please set:
-grafana-agent-logs:
-  agent:
+alloy-logs:
+  alloy:
     clustering:
       enabled: true'
     End
@@ -29,13 +29,13 @@ grafana-agent-logs:
     It 'prints a friendly error message'
       When call helm template k8smon ../charts/k8s-monitoring -f "spec/fixtures/invalid-logs-config-non-daemonset-and-volumes_values.yaml"
       The status should be failure
-      The error should include 'Invalid configuration for gathering pod logs! When using logs.pod_logs.gatherMethod: "volumes", Grafana Agent for Logs must be a Daemonset. Otherwise, logs will be missing!
+      The error should include 'Invalid configuration for gathering pod logs! When using logs.pod_logs.gatherMethod: "volumes", Grafana Alloy for Logs must be a Daemonset. Otherwise, logs will be missing!
 Please set:
 logs:
   pod_logs:
     gatherMethod: api
   or
-grafana-agent-logs:
+alloy-logs:
   controller:
     type: daemonset'
     End

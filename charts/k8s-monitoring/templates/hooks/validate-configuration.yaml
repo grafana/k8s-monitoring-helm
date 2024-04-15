@@ -21,12 +21,12 @@ metadata:
     {{ $key }}: {{ $val | quote }}
     {{- end}}
 spec:
-  {{- if or .Values.global.image.pullSecrets (index .Values "grafana-agent").image.pullSecrets }}
+  {{- if or .Values.global.image.pullSecrets .Values.alloy.image.pullSecrets }}
   imagePullSecrets:
     {{- if .Values.global.image.pullSecrets }}
     {{- toYaml .Values.global.image.pullSecrets | nindent 8 }}
     {{- else }}
-    {{- toYaml (index .Values "grafana-agent").image.pullSecrets | nindent 8 }}
+    {{- toYaml .Values.alloy.image.pullSecrets | nindent 8 }}
     {{- end }}
   {{- end }}
   restartPolicy: Never
@@ -39,68 +39,66 @@ spec:
     {{- toYaml . | nindent 8 }}
   {{- end }}
   containers:
-    - name: grafana-agent
-      image: "{{ .Values.global.image.registry | default (index .Values "grafana-agent").image.registry }}/{{ (index .Values "grafana-agent").image.repository }}{{ include "grafana-agent.imageId" (index .Subcharts "grafana-agent") }}"
+    - name: alloy
+      image: "{{ .Values.global.image.registry | default .Values.alloy.image.registry }}/{{ .Values.alloy.image.repository }}{{ include "alloy.imageId" .Subcharts.alloy }}"
       command:
       - bash
       - -c
       - |
-        echo Validating Grafana Agent config file
-        if ! grafana-agent fmt /etc/agent/config.river > /dev/null; then
+        echo Validating Grafana Alloy config file
+        if ! alloy fmt /etc/alloy/config.alloy > /dev/null; then
           exit 1
         fi
-        output=$(grafana-agent run "/etc/agent/config.river" 2>&1)
+        output=$(alloy run "/etc/alloy/config.alloy" 2>&1)
         if ! echo "${output}" | grep "KUBERNETES_SERVICE_HOST and KUBERNETES_SERVICE_PORT must be defined" >/dev/null; then
           echo "${output}"
           exit 1
         fi
-        echo "Grafana Agent config file is valid"
+        echo "Grafana Alloy config file is valid"
 {{- if and .Values.logs.enabled .Values.logs.cluster_events.enabled }}
-        echo Validating Grafana Agent for Events config file
-        if ! grafana-agent fmt /etc/agent/events.river > /dev/null; then
+        echo Validating Grafana Alloy for Events config file
+        if ! alloy fmt /etc/alloy/events.alloy > /dev/null; then
           exit 1
         fi
-        output=$(grafana-agent run "/etc/agent/events.river" 2>&1)
+        output=$(alloy run "/etc/alloy/events.alloy" 2>&1)
         if ! echo "${output}" | grep "KUBERNETES_SERVICE_HOST and KUBERNETES_SERVICE_PORT must be defined" >/dev/null; then
           echo "${output}"
           exit 1
         fi
-        echo "Grafana Agent for Events config file is valid"
+        echo "Grafana Alloy for Events config file is valid"
 {{- end }}
 {{- if and .Values.logs.enabled .Values.logs.pod_logs.enabled }}
-        echo Validating Grafana Agent for Logs config file
-        if ! grafana-agent fmt /etc/agent/logs.river > /dev/null; then
+        echo Validating Grafana Alloy for Logs config file
+        if ! alloy fmt /etc/alloy/logs.alloy > /dev/null; then
           exit 1
         fi
-        output=$(grafana-agent run "/etc/agent/logs.river" 2>&1)
+        output=$(alloy run "/etc/alloy/logs.alloy" 2>&1)
         if ! echo "${output}" | grep "KUBERNETES_SERVICE_HOST and KUBERNETES_SERVICE_PORT must be defined" >/dev/null; then
           echo "${output}"
           exit 1
         fi
-        echo "Grafana Agent for Logs config file is valid"
+        echo "Grafana Alloy for Logs config file is valid"
 {{- end }}
 {{- if .Values.profiles.enabled }}
-        echo Validating Grafana Agent for Profiles config file
-        if ! grafana-agent fmt /etc/agent/profiles.river > /dev/null; then
+        echo Validating Grafana Alloy for Profiles config file
+        if ! alloy fmt /etc/alloy/profiles.alloy > /dev/null; then
           exit 1
         fi
-        output=$(grafana-agent run "/etc/agent/profiles.river" 2>&1)
+        output=$(alloy run --stability.level public-preview "/etc/alloy/profiles.alloy" 2>&1)
         if ! echo "${output}" | grep "KUBERNETES_SERVICE_HOST and KUBERNETES_SERVICE_PORT must be defined" >/dev/null; then
           echo "${output}"
           exit 1
         fi
-        echo "Grafana Agent for Profiles config file is valid"
+        echo "Grafana Alloy for Profiles config file is valid"
 {{- end }}
       env:
-        - name: AGENT_MODE
-          value: flow
         - name: KUBERNETES_SERVICE_HOST  # Intentionally disable its connection to Kubernetes to make it fail in a known way
           value: ""
         - name: KUBERNETES_SERVICE_PORT  # Intentionally disable its connection to Kubernetes to make it fail in a known way
           value: ""
       volumeMounts:
         - name: config
-          mountPath: /etc/agent
+          mountPath: /etc/alloy
   volumes:
     - name: config
       configMap:
@@ -121,18 +119,18 @@ metadata:
     "helm.sh/hook-weight": "-5"
     "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
 data:
-  config.river: |-
-    {{- include "agentConfig" . | trim | nindent 4 }}
+  config.alloy: |-
+    {{- include "alloyConfig" . | trim | nindent 4 }}
 {{- if and .Values.logs.enabled .Values.logs.cluster_events.enabled }}
-  events.river: |-
-    {{- include "agentEventsConfig" . | trim | nindent 4 }}
+  events.alloy: |-
+    {{- include "alloyEventsConfig" . | trim | nindent 4 }}
 {{- end }}
 {{- if and .Values.logs.enabled .Values.logs.pod_logs.enabled }}
-  logs.river: |-
-    {{- include "agentLogsConfig" . | trim | nindent 4 }}
+  logs.alloy: |-
+    {{- include "alloyLogsConfig" . | trim | nindent 4 }}
 {{- end }}
 {{- if .Values.profiles.enabled }}
-  profiles.river: |-
-    {{- include "agentProfilesConfig" . | trim | nindent 4 }}
+  profiles.alloy: |-
+    {{- include "alloyProfilesConfig" . | trim | nindent 4 }}
 {{- end }}
 {{- end -}}

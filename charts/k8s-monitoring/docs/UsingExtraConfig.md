@@ -1,6 +1,6 @@
 # Additional Configuration with `extraConfig`
 
-The Kubernetes Monitoring Helm chart has the ability to supply additional configuration to the Grafana Agent instances
+The Kubernetes Monitoring Helm chart has the ability to supply additional configuration to the Grafana Alloy instances
 using the `extraConfig` sections. Anything put in these sections are added to the existing configuration that is created
 by this chart. There are a few methods to use these sections that will be explored in this document.
 
@@ -8,8 +8,8 @@ by this chart. There are a few methods to use these sections that will be explor
 
 There are two `extraConfig` sections that you can use:
 
-* `.extraConfig` Inserts configuration for the Grafana Agent that scrapes metrics and opens receivers.
-* `.logs.extraConfig` Inserts configuration for the Grafana Agent that gathers logs.
+* `.extraConfig` Inserts configuration for the Grafana Alloy instance that scrapes metrics and opens receivers.
+* `.logs.extraConfig` Inserts configuration for the Grafana Alloy instance that gathers logs.
 
 ## How to use
 
@@ -51,11 +51,11 @@ You can save the contents of your extra configuration as files and use Helm's `-
 
 ```shell
 $ ls
-values.yaml  metricsConfig.river  logsConfig.river
+values.yaml  metricsConfig.alloy  logsConfig.alloy
 $ helm upgrade grafana-k8s-monitoring --atomic --timeout 300s grafana/k8s-monitoring \
     --values values.yaml \
-    --set-file extraConfig=metricsConfig.river
-    --set-file logs.extraConfig=logsConfig.river
+    --set-file extraConfig=metricsConfig.alloy \
+    --set-file logs.extraConfig=logsConfig.alloy
 ```
 
 This can be beneficial once your extra configuration grows to a certain size.

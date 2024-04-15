@@ -6,10 +6,10 @@ values.schema.json: values.yaml schema-mods/enums-and-types.json schema-mods/req
 			helm schema-gen /chart/values.yaml > /chart/values.schema.generated.json'
 
 	jq --indent 4 -s '.[0] * .[1] * .[2]' \
-		<(jq --indent 4 'del(.properties["grafana-agent"]) \
-			| del(.properties["grafana-agent-events"]) \
-			| del(.properties["grafana-agent-logs"]) \
-			| del(.properties["grafana-agent-profiles"]) \
+		<(jq --indent 4 'del(.properties["alloy"]) \
+			| del(.properties["alloy-events"]) \
+			| del(.properties["alloy-logs"]) \
+			| del(.properties["alloy-profiles"]) \
 			| del(.properties["kube-state-metrics"].properties.autosharding) \
 			| del(.properties["kube-state-metrics"].properties.nodeSelector) \
 			| del(.properties["kube-state-metrics"].properties.prometheusScrape) \
@@ -38,23 +38,28 @@ docs/RBAC.md: ../../examples/default-values/output.yaml ../../examples/openshift
 	echo "# RBAC Rules for the Kubernetes Monitoring Helm Chart" > docs/RBAC.md
 	echo "Several components have specialized RBAC rules to perform their work. This document will list the components, and their RBAC definitions." >> docs/RBAC.md
 
-	echo "## Grafana Agent" >> docs/RBAC.md
+	echo "## Grafana Alloy" >> docs/RBAC.md
 	echo '```yaml' >> docs/RBAC.md
-	yq 'select(.metadata.name=="k8smon-grafana-agent") | select(.kind=="ClusterRole") | .rules' ../../examples/default-values/output.yaml >> docs/RBAC.md
+	yq 'select(.metadata.name=="k8smon-alloy") | select(.kind=="ClusterRole") | .rules' ../../examples/default-values/output.yaml >> docs/RBAC.md
 	echo '```' >> docs/RBAC.md
 
-	echo "## Grafana Agent Events" >> docs/RBAC.md
+	echo "## Grafana Alloy Events" >> docs/RBAC.md
 	echo '```yaml' >> docs/RBAC.md
-	yq 'select(.metadata.name=="k8smon-grafana-agent-events") | select(.kind=="ClusterRole") | .rules' ../../examples/default-values/output.yaml >> docs/RBAC.md
+	yq 'select(.metadata.name=="k8smon-alloy-events") | select(.kind=="ClusterRole") | .rules' ../../examples/default-values/output.yaml >> docs/RBAC.md
 	echo '```' >> docs/RBAC.md
 
-	echo "## Grafana Agent Logs" >> docs/RBAC.md
+	echo "## Grafana Alloy Logs" >> docs/RBAC.md
 	echo '```yaml' >> docs/RBAC.md
-	yq 'select(.metadata.name=="k8smon-grafana-agent-logs") | select(.kind=="ClusterRole") | .rules' ../../examples/default-values/output.yaml >> docs/RBAC.md
+	yq 'select(.metadata.name=="k8smon-alloy-logs") | select(.kind=="ClusterRole") | .rules' ../../examples/default-values/output.yaml >> docs/RBAC.md
 	echo '```' >> docs/RBAC.md
 	echo "When deploying to an OpenShift cluster, these extra rules are added to enable access to special a SecurityContextConstraint:" >> docs/RBAC.md
 	echo '```yaml' >> docs/RBAC.md
-	yq 'select(.metadata.name=="k8smon-grafana-agent-logs-scc") | select(.kind=="ClusterRole") | .rules' ../../examples/openshift-compatible/output.yaml >> docs/RBAC.md
+	yq 'select(.metadata.name=="k8smon-alloy-logs-scc") | select(.kind=="ClusterRole") | .rules' ../../examples/openshift-compatible/output.yaml >> docs/RBAC.md
+	echo '```' >> docs/RBAC.md
+
+	echo "## Grafana Alloy Profiles" >> docs/RBAC.md
+	echo '```yaml' >> docs/RBAC.md
+	yq 'select(.metadata.name=="k8smon-alloy-profiles") | select(.kind=="ClusterRole") | .rules' ../../examples/profiles-enabled/output.yaml >> docs/RBAC.md
 	echo '```' >> docs/RBAC.md
 
 	echo "## Kube State Metrics" >> docs/RBAC.md

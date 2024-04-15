@@ -27,8 +27,8 @@ externalServices:
       password: "It's a secret to everyone"
 
 metrics:
-  agent:
-    metricsTuning: # Will filter to the metrics that will populate the Grafana Agent integration: https://grafana.com/docs/grafana-cloud/monitor-infrastructure/integrations/integration-reference/integration-grafana-agent/
+  alloy:
+    metricsTuning: # Will filter to the metrics that will populate the Grafana Alloy integration
       useIntegrationAllowList: true
   kube-state-metrics:
     metricsTuning: # No filtering, keep all metrics
@@ -54,6 +54,7 @@ metrics:
   enabled: true
 
 logs:
+  enabled: false
   pod_logs:
     enabled: false
 

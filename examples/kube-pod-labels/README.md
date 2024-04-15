@@ -13,7 +13,7 @@ kube-state-metrics:
   metricLabelsAllowlist:
     - pods=[*]
 ```
-And this section tells the Grafana Agent to include that metric in the set that gets sent to Prometheus for storage:
+And this section tells Alloy to include that metric in the set that gets sent to Prometheus for storage:
 ```yaml
 metrics:
   kube-state-metrics:

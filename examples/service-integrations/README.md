@@ -4,13 +4,13 @@ This example shows how to augment your Kubernetes Monitoring deployment to gathe
 
 In this example, there are two styles of integrations that are made possible:
 * Automatic discovery via Kubernetes annotations
-* Direct integration via Agent modules
+* Direct integration via [Alloy modules](https://grafana.com/docs/alloy/latest/concepts/modules/)
 
 ## Cert Manager
 
 Cert Manager is installed via its [Helm chart](https://cert-manager.io/docs/installation/helm/), and by using the
 following values file, the Cert Manager Service will be annotated in such a way that it will be automatically discovered
-by the Grafana Agent and scraped for metrics.
+by Grafana Alloy and scraped for metrics.
 
 ```yaml
 installCRDs: true
@@ -22,8 +22,8 @@ serviceAnnotations:
 ## MySQL
 
 Scraping the metrics from a MySQL database requires a different tactic, since it requires a username and password, and
-cannot be determined by annotations alone. Instead, we create [a ConfigMap](./mysql-config.yaml) with custom Agent configuration, and then tell
-the Agent to load that config.
+cannot be determined by annotations alone. Instead, we create [a ConfigMap](./mysql-config.yaml) with custom Alloy configuration, and
+then tell Alloy to load that config.
 
 ## Kubernetes Monitoring
 
@@ -57,19 +57,19 @@ extraConfig: |
     namespace = "mysql"
   }
 
-  module.string "mysql_metrics" {
-    content = remote.kubernetes.configmap.mysql_config.data["metrics.river"]
+  import.string "mysql" {
+    content = remote.kubernetes.configmap.mysql_config.data["metrics.alloy"]
+  }
 
-    arguments {
-      host = "mysql.mysql.svc.cluster.local"
-      instance = "primary"
-      namespace = "mysql"
-      secret_name = "mysql"
-      username = "root"
-      password_key = "mysql-root-password"
-      all_services = discovery.kubernetes.services.targets
-      metrics_destination = prometheus.relabel.metrics_service.receiver
-    }
+  mysql.metrics "primary" {
+    host = "mysql.mysql.svc.cluster.local"
+    instance = "primary"
+    namespace = "mysql"
+    secret_name = "mysql"
+    username = "root"
+    password_key = "mysql-root-password"
+    all_services = discovery.kubernetes.services.targets
+    metrics_destination = prometheus.relabel.metrics_service.receiver
   }
 
 logs:
@@ -79,14 +79,14 @@ logs:
       namespace = "mysql"
     }
 
-    module.string "mysql_logs" {
-      content = remote.kubernetes.configmap.mysql_config.data["logs.river"]
+    import.string "mysql" {
+      content = remote.kubernetes.configmap.mysql_config.data["logs.alloy"]
+    }
 
-      arguments {
-        instance = "primary"
-        all_pods = discovery.relabel.pod_logs.output
-        logs_destination = loki.process.logs_service.receiver
-      }
+    mysql.logs "primary" {
+      instance = "primary"
+      all_pods = discovery.relabel.pod_logs.output
+      logs_destination = loki.process.logs_service.receiver
     }
 
 test:

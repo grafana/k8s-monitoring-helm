@@ -1,0 +1,10 @@
+{{- if and .Values.logs.enabled .Values.logs.pod_logs.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "alloy.fullname" (index .Subcharts "alloy-logs") }}
+  namespace: {{ .Release.Namespace }}
+data:
+  config.alloy: |-
+    {{- include "alloyLogsConfig" . | trim | nindent 4 }}
+{{- end }}

@@ -8,12 +8,12 @@ just that.
 
 1. Use the `k8s.grafana.com/scrape` annotation on your Pods or services.
 2. Use Prometheus Operator CRDs, like ServiceMonitors, PodMonitors, or Probes.
-3. Make a custom Grafana Agent Flow configuration.
+3. Make a custom Grafana Alloy configuration.
 
 ## Annotations
 
-This chart configures the Grafana Agent to look for Pods and Services that have the `k8s.grafana.com/scrape` annotation
-set. When set, the Agent scrapes them for metrics.
+This chart configures Grafana Alloy to look for Pods and Services that have the `k8s.grafana.com/scrape` annotation set.
+When set, the Alloy instance scrapes them for metrics.
 
 Extra annotations can also be set to control the behavior of the discovery and scraping of the metrics:
 
@@ -36,22 +36,22 @@ These values apply to all discovered Pods and services.
 
 ## Prometheus Operator CRDs
 
-By default, this chart configures the Grafana Agent to detect and utilize ServiceMonitors, PodMonitors, and Probes. If
-any of those objects are detected on your Cluster, the Agent will utilize them to extend its configuration.
+By default, this chart configures Grafana Alloy to detect and utilize ServiceMonitors, PodMonitors, and Probes. If any
+of those objects are detected on your Cluster, Alloy will utilize them to extend its configuration.
 
 For more information about creating and configuring these options, refer to
 the [Prometheus Operator Documentation](https://github.com/prometheus-operator/prometheus-operator).
 
-This chart provides ways to customize how the Agent handles these objects.
+This chart provides ways to customize how Alloy handles these objects.
 
 ### Controlling discovery
 
 These options in the Helm chart allow for changing how Prometheus Operator objects are discovered:
 
-* `metrics.serviceMonitors.enabled` - If set to true, the Agent looks for and consumes ServiceMonitors.
+* `metrics.serviceMonitors.enabled` - If set to true, Alloy looks for and consumes ServiceMonitors.
 * `metrics.serviceMonitors.namespaces` - Only use ServiceMonitors that exist in these namespaces.
 * `metrics.serviceMonitors.selector` - Use
-  a [selector](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.operator.servicemonitors/#selector-block)
+  a [selector](https://grafana.com/docs/alloy/latest/reference/components/prometheus.operator.servicemonitors/#selector-block)
   block to provide a more refined selection of objects.
 
 The same options are present for `metrics.podmonitors` and `metrics.probes`.
@@ -69,12 +69,12 @@ The same option is present for `metrics.podmonitors` and `metrics.probes`.
 This chart can set metrics relabeling rules for processing the metrics after scraping them.
 
 * `metrics.serviceMonitors.extraMetricRelabelingRules` - Sets post-scraping rules for
-  a [prometheus.relabel](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/)
+  a [prometheus.relabel](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/)
   configuration component.
 
 The same option is present for `metrics.podmonitors` and `metrics.probes`.
 
-## Custom Agent Config
+## Custom Alloy Config
 
 This option allows for the greatest amount of flexibility and utility.
 
@@ -99,7 +99,7 @@ This chart automatically creates three components that you can utilize:
 * `discovery.kubernetes.pods` - Discovers all pods in the cluster
 
 These are
-all [`discovery.kubernetes`](https://grafana.com/docs/agent/latest/flow/reference/components/discovery.kubernetes/)
+all [`discovery.kubernetes`](https://grafana.com/docs/alloy/latest/reference/components/discovery.kubernetes/)
 components which gather all the specific resources using the Kubernetes API. From here, you want to refine the search
 to the service or the Pod that you want.
 
@@ -107,8 +107,8 @@ to the service or the Pod that you want.
 
 Since you don't want to scrape every service in your Cluster, use rules to select your specific service based
 on its name, namespace, labels, port names or numbers, and many other variables.
-To do so, use 
-a [`discovery.relabel`](https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/)
+To do so, use
+a [`discovery.relabel`](https://grafana.com/docs/alloy/latest/reference/components/discovery.relabel/)
 component and add one or more rules, using special meta-labels that are set automatically by the
 `discovery.kubernetes` component.
 
@@ -116,7 +116,7 @@ Here is an example component that we've named "blue_database_service". This comp
 from `discovery.kubernetes.services` and filters to a service named "database", in the namespace "blue", with the port
 named "metrics":
 
-```river
+```grafana-alloy
 discovery.relabel "blue_database_service" {
   targets = discovery.kubernetes.services.targets  // Gets all services
   rule {  // Keep all services named "database"...
@@ -137,14 +137,14 @@ discovery.relabel "blue_database_service" {
 }
 ```
 
-The [documentation](https://grafana.com/docs/agent/latest/flow/reference/components/discovery.kubernetes/#service-role)
+The [documentation](https://grafana.com/docs/alloy/latest/reference/components/discovery.kubernetes/#service-role)
 has the list of meta labels for services. Note that there are different labels for port name and port number. Make sure
 you use the right label for a named port or simply the port number.
 
 This is also a good place to add any extra labels that will be scraped. For example, if you wanted to set the label
 `team="blue"`, you might use this additional rule in the `blue_database_service` component we just made:
 
-```river
+```grafana-alloy
   rule {
     target_label = "team"
     action = "replace"
@@ -155,15 +155,15 @@ This is also a good place to add any extra labels that will be scraped. For exam
 ### Pod discovery
 
 Similar to service discovery, use
-a [`discovery.relabel`](https://grafana.com/docs/agent/latest/flow/reference/components/discovery.relabel/)
+a [`discovery.relabel`](https://grafana.com/docs/alloy/latest/reference/components/discovery.relabel/)
 component to select the specific Pod you want to scrape.
-The [meta labels for pods](https://grafana.com/docs/agent/latest/flow/reference/components/discovery.kubernetes/#pod-role)
+The [meta labels for pods](https://grafana.com/docs/alloy/latest/reference/components/discovery.kubernetes/#pod-role)
 will be slightly different, but the concept is the same.
 
 Here is an example that filters to a specific set of Pods that starts with name "analysis", with the label
 "system.component=image":
 
-```river
+```grafana-alloy
 discovery.relabel "image_analysis_pods" {
   targets = discovery.kubernetes.pods.targets  // Gets all pods
   rule {  // Keep all pods named "analysis.*"...
@@ -186,11 +186,12 @@ Note that there is a unique meta label for every Kubernetes label. The labels ar
 ## Scraping
 
 Now that you've selected the specific pod or service you want, you can scrape it for metrics. Do this with the
-[`prometheus.scrape`](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.scrape/) component. Essentially,
- you only need to declare what things to scrape and where to send
+[`prometheus.scrape`](https://grafana.com/docs/alloy/latest/reference/components/prometheus.scrape/) component.
+Essentially,
+you only need to declare what things to scrape and where to send
 the scraped metrics. Here is an example:
 
-```river
+```grafana-alloy
 prometheus.scrape "processing_app" {
   targets = discovery.relabel.image_analysis_pods.output
   forward_to = [prometheus.relabel.metrics_service.receiver]
@@ -202,7 +203,7 @@ Note that we will cover the `forward_to` field in the [Delivery](#delivery) sect
 This component gives a lot of flexibility to modify how things are scraped, including setting the `job` label, how
 frequently the metrics should be scraped, the path to scrape, and many more. Here is an example with lots of options:
 
-```river
+```grafana-alloy
 prometheus.scrape "processing_app" {
   targets = discovery.relabel.image_analysis_pods.output
   job_name = "integrations/processing"
@@ -220,14 +221,14 @@ Often, you want to perform some post-scrape processing to the metrics. Some comm
 * Add, change, or drop labels.
 
 Processing is done with the
-[`prometheus.relabel`](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.relabel/)
+[`prometheus.relabel`](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/)
 component. It uses the same type of rules as `discovery.relabel`, but instead of filtering scrape _targets_, it filters
 the _metrics_ that were scraped.
 
 Here is an example of processing that filters down the scraped metrics to only `up` and anything that starts with
 `processor` (thus, dropping all other metrics):
 
-```river
+```grafana-alloy
 prometheus.scrape "processing_app" {
   targets = discovery.relabel.image_analysis_pods.output
   forward_to = [prometheus.relabel.processing_app.receiver]
@@ -248,10 +249,11 @@ Note that the `prometheus.scrape` component needs to be adjusted to forward to t
 ## Delivery
 
 The `prometheus.scrape` and `prometheus.relabel` components need to send their outputs to another component. This is the
-purpose of their `forward_to` field. Forwarding can be to another `prometheus.relabel` component, but eventually, the final
+purpose of their `forward_to` field. Forwarding can be to another `prometheus.relabel` component, but eventually, the
+final
 step is to send the metrics to a Prometheus server for storage, where it can be further processed by recording rules, or
-queried and displayed by Grafana. For this, use 
-the [`prometheus.remote_write`](https://grafana.com/docs/agent/latest/flow/reference/components/prometheus.remote_write/)
+queried and displayed by Grafana. For this, use
+the [`prometheus.remote_write`](https://grafana.com/docs/alloy/latest/reference/components/prometheus.remote_write/)
 component.
 
 This chart automatically creates the component `prometheus.relabel.metrics_service`, configured by the
@@ -267,8 +269,8 @@ The easiest way to include your configuration into this chart is to save it into
 
 ```text
 $ ls
-processor-config.river chart-values.yaml
-$ cat processor_config.river
+processor-config.alloy chart-values.yaml
+$ cat processor_config.alloy
 discovery.relabel "image_analysis_pods" {
   targets = discovery.kubernetes.pods.targets  // Gets all pods
   rule {  // Keep all pods named "analysis.*"...
@@ -296,7 +298,7 @@ prometheus.relabel "processing_app" {
   }
   forward_to = [prometheus.relabel.metrics_service.receiver]
 }
-$ helm upgrade --install grafana-k8s-monitoring --atomic --timeout 300s grafana/k8s-monitoring --values chart-values.yaml --set-file extraConfig=processor-config.river
+$ helm upgrade --install grafana-k8s-monitoring --atomic --timeout 300s grafana/k8s-monitoring --values chart-values.yaml --set-file extraConfig=processor-config.alloy
 ```
 
 For more information about using the `extraConfig` values, see [the documentation](UsingExtraConfig.md).

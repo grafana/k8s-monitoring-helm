@@ -11,7 +11,7 @@ cluster:
 
 externalServices:
   prometheus:
-    host: https://prometheus-server.prometheus.svc:80
+    host: https://prometheus-server.prometheus.svc:9090
     basicAuth:
       username: promuser
       password: prometheuspassword
@@ -23,7 +23,7 @@ externalServices:
     externalLabels:
       color: blue
   loki:
-    host: http://loki-otlp-grafana-agent.loki.svc:4318
+    host: http://loki-otlp-interface.loki.svc:4318
     tenantId: 1
     protocol: otlphttp
     writeEndpoint: /
@@ -105,14 +105,14 @@ test:
   - query: "{.k8s.cluster.name=\"ci-test-cluster-2\"}"
     type: traceql
 
-  # These checks for metrics and traces that are being sent directly to this agent via the receivers
-  - query: "agent_build_info{cluster=\"from-the-other-agent\"}"
+  # These checks for metrics and traces that are being sent directly to this alloy via the receivers
+  - query: "alloy_build_info{cluster=\"from-the-other-alloy\"}"
     type: promql
-  - query: "{.k8s.cluster.name=\"from-the-other-agent\"}"
+  - query: "{.k8s.cluster.name=\"from-the-other-alloy\"}"
     type: traceql
 
   # DPM check
-  - query: "avg(count_over_time(scrape_samples_scraped{cluster=~\"ci-test-cluster-2|from-the-other-agent\"}[1m]))"
+  - query: "avg(count_over_time(scrape_samples_scraped{cluster=~\"ci-test-cluster-2|from-the-other-alloy\"}[1m]))"
     type: promql
     expect:
       value: 1
@@ -133,16 +133,16 @@ opencost:
         INSECURE_SKIP_VERIFY: "true"
     prometheus:
       external:
-        url: https://prometheus-server.prometheus.svc.cluster.local:80
+        url: https://prometheus-server.prometheus.svc.cluster.local:9090
 
-grafana-agent:
+alloy:
   controller:
     replicas: 2
     podLabels:
       capabilities: telemetry-receiver
 
-grafana-agent-logs:
-  agent:
+alloy-logs:
+  alloy:
     clustering: {enabled: true}
     mounts:
       varlog: false

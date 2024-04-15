@@ -2,11 +2,11 @@
 
 set -eo pipefail
 
-AGENT_HOST="${AGENT_HOST:-http://localhost:8080}"
+ALLOY_HOST="${ALLOY_HOST:-http://localhost:12345}"
 
 function discoveryRelabel() {
     local component=$1
-    details=$(curl --get --silent --show-error "${AGENT_HOST}/api/v0/web/components/${component}")
+    details=$(curl --get --silent --show-error "${ALLOY_HOST}/api/v0/web/components/${component}")
     echo "${component}"
 
     jq -r '"  Inputs: \(.referencesTo[0]) (\(.arguments[0].value.value | length))"' <(echo "${details}")
@@ -16,7 +16,7 @@ function discoveryRelabel() {
 
 function prometheusScrape() {
     local component=$1
-    details=$(curl --get --silent --show-error "${AGENT_HOST}/api/v0/web/components/${component}")
+    details=$(curl --get --silent --show-error "${ALLOY_HOST}/api/v0/web/components/${component}")
     echo "${component}"
 
     inputCount=$(jq -r '.arguments[] | select(.name == "targets") | .value.value | length' <(echo "${details}"))
@@ -42,7 +42,7 @@ function prometheusScrape() {
 
 function prometheusOperatorServiceMonitors() {
     local component=$1
-    details=$(curl --get --silent --show-error "${AGENT_HOST}/api/v0/web/components/${component}")
+    details=$(curl --get --silent --show-error "${ALLOY_HOST}/api/v0/web/components/${component}")
     echo "${component}"
 
     inputs=$(jq -r '[.debugInfo[] | select(.name == "crds")]' <(echo "${details}"))
@@ -70,17 +70,17 @@ function prometheusOperatorServiceMonitors() {
     echo
 }
 
-if [ -z "${AGENT_HOST}" ]; then
-    echo "AGENT_HOST is not defined. Please set AGENT_HOST to the Grafana Agent host."
+if [ -z "${ALLOY_HOST}" ]; then
+    echo "ALLOY_HOST is not defined. Please set ALLOY_HOST to the Grafana Alloy host."
     exit 1
 fi
 
-if ! curl --get --silent --show-error "${AGENT_HOST}/api/v0/web/components" > /dev/null; then
-    echo "Failed to send a request to the Agent. Check that AGENT_HOST is set correctly."
+if ! curl --get --silent --show-error "${ALLOY_HOST}/api/v0/web/components" > /dev/null; then
+    echo "Failed to send a request to Alloy. Check that ALLOY_HOST is set correctly."
     exit 1
 fi
 
-components=$(curl --get --silent --show-error "${AGENT_HOST}/api/v0/web/components" | jq -r '.[].localID' | sort)
+components=$(curl --get --silent --show-error "${ALLOY_HOST}/api/v0/web/components" | jq -r '.[].localID' | sort)
 while IFS= read -r component; do
     if [[ "${component}" == discovery.relabel.* ]]; then
         discoveryRelabel "${component}"

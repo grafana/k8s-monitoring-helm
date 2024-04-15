@@ -16,8 +16,8 @@ env:
   UPDATECLI_GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
 
 jobs:
-  updateGrafanaAgent:
-    name: Update Grafana Agent
+  updateGrafanaAlloy:
+    name: Update Grafana Alloy
     runs-on: "ubuntu-latest"
     steps:
       - name: Checkout
@@ -27,39 +27,39 @@ jobs:
         uses: updatecli/updatecli-action@v2
 
       - name: Run Updatecli
-        id: update-grafana-agent
+        id: update-alloy
         run: |
-          updatecli apply --config ${UPDATECLI_CONFIG_DIR}/grafana-agent.yaml
+          updatecli apply --config ${UPDATECLI_CONFIG_DIR}/alloy.yaml
           if ! git diff --exit-code > /dev/null; then
             echo "changed=true" >> "${GITHUB_OUTPUT}"
           fi
 
       - name: Regenerate docs
-        if: steps.update-grafana-agent.outputs.changed == 'true'
+        if: steps.update-alloy.outputs.changed == 'true'
         run: docker run --rm -v "$(pwd)/charts/k8s-monitoring:/helm-docs" -u "$(id -u)" jnorwood/helm-docs
 
       - name: Install Helm
-        if: steps.update-grafana-agent.outputs.changed == 'true'
+        if: steps.update-alloy.outputs.changed == 'true'
         uses: azure/setup-helm@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Regenerate examples
-        if: steps.update-grafana-agent.outputs.changed == 'true'
+        if: steps.update-alloy.outputs.changed == 'true'
         run: make regenerate-example-outputs
 
       - name: Create pull request
-        if: steps.update-grafana-agent.outputs.changed == 'true'
+        if: steps.update-alloy.outputs.changed == 'true'
         uses: peter-evans/create-pull-request@v6
         with:
-          title: "[dependency] Update Grafana Agent"
-          body: "Updates the Grafana Agent subchart"
+          title: "[dependency] Update Grafana Alloy"
+          body: "Updates the Grafana Alloy subchart"
           base: main
           author: "${{ github.actor }} <${{ github.actor }}@users.noreply.github.com>"
           committer: "GitHub <noreply@github.com>"
-          commit-message: Update Grafana Agent
+          commit-message: Update Grafana Alloy
           labels: dependencies
-          branch: chore/update-grafana-agent
+          branch: chore/update-grafana-alloy
           delete-branch: true
 
   updateKubeStateMetrics:

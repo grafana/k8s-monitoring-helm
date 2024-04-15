@@ -1,0 +1,159 @@
+{{ define "alloy.config.profilesPprof" }}
+// Profiles
+{{- if .Values.profiles.pprof.enabled }}
+discovery.kubernetes "pprof_pods" {
+  selectors {
+    role = "pod"
+    field = "spec.nodeName=" + env("HOSTNAME")
+  }
+{{- if .Values.profiles.pprof.namespaces }}
+  namespaces {
+    names = {{ .Values.profiles.pprof.namespaces | toJson }}
+  }
+{{- end }}
+  role = "pod"
+}
+
+discovery.relabel "pprof_pods" {
+  targets = concat(discovery.kubernetes.pprof_pods.targets)
+
+  rule {
+    action        = "drop"
+    source_labels = ["__meta_kubernetes_pod_phase"]
+    regex         = "Pending|Succeeded|Failed|Completed"
+  }
+
+  rule {
+    action = "labelmap"
+    regex  = "__meta_kubernetes_pod_label_(.+)"
+  }
+
+  rule {
+    action        = "replace"
+    source_labels = ["__meta_kubernetes_namespace"]
+    target_label  = "namespace"
+  }
+
+  rule {
+    action        = "replace"
+    source_labels = ["__meta_kubernetes_pod_name"]
+    target_label  = "pod"
+  }
+
+  rule {
+    action        = "replace"
+    source_labels = ["__meta_kubernetes_pod_container_name"]
+    target_label  = "container"
+  }
+{{- if .Values.profiles.pprof.extraRelabelingRules }}
+{{ .Values.profiles.pprof.extraRelabelingRules | indent 2 }}
+{{- end }}
+}
+
+{{- $allProfileTypes := list "memory" "cpu" "goroutine" "block" "mutex" "fgprof" }}
+{{- $profileTypes := .Values.profiles.pprof.types }}
+{{ range $profileTypes }}
+discovery.relabel "pprof_pods_{{.}}_default_name" {
+  targets = concat(discovery.relabel.pprof_pods.output)
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_{{.}}_scrape"]
+    action        = "keep"
+    regex         = "true"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_{{.}}_port_name"]
+    action        = "keep"
+    regex         = ""
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_{{.}}_scheme"]
+    action        = "replace"
+    regex         = "(https?)"
+    target_label  = "__scheme__"
+    replacement   = "$1"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_{{.}}_path"]
+    action        = "replace"
+    regex         = "(.+)"
+    target_label  = "__profile_path__"
+    replacement   = "$1"
+  }
+
+  rule {
+    source_labels = ["__address__", "__meta_kubernetes_pod_annotation_profiles_grafana_com_{{.}}_port"]
+    action        = "replace"
+    regex         = "(.+?)(?::\\d+)?;(\\d+)"
+    target_label  = "__address__"
+    replacement   = "$1:$2"
+  }
+}
+
+discovery.relabel "pprof_pods_{{.}}_custom_name" {
+  targets = concat(discovery.relabel.pprof_pods.output)
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_{{.}}_scrape"]
+    action        = "keep"
+    regex         = "true"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_{{.}}_port_name"]
+    action        = "drop"
+    regex         = ""
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_container_port_name"]
+    target_label  = "__meta_kubernetes_pod_annotation_profiles_grafana_com_{{.}}_port_name"
+    action        = "keepequal"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_{{.}}_scheme"]
+    action        = "replace"
+    regex         = "(https?)"
+    target_label  = "__scheme__"
+    replacement   = "$1"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_{{.}}_path"]
+    action        = "replace"
+    regex         = "(.+)"
+    target_label  = "__profile_path__"
+    replacement   = "$1"
+  }
+
+  rule {
+    source_labels = ["__address__", "__meta_kubernetes_pod_annotation_profiles_grafana_com_{{.}}_port"]
+    action        = "replace"
+    regex         = "(.+?)(?::\\d+)?;(\\d+)"
+    target_label  = "__address__"
+    replacement   = "$1:$2"
+  }
+}
+
+pyroscope.scrape "pyroscope_scrape_{{.}}" {
+  targets = concat(discovery.relabel.pprof_pods_{{.}}_default_name.output, discovery.relabel.pprof_pods_{{.}}_custom_name.output)
+
+  profiling_config {
+    {{- $currentType := . -}}
+    {{- range $allProfileTypes }}
+    profile.{{if eq . "cpu"}}process_cpu{{else}}{{.}}{{end}} {
+      enabled = {{if eq . $currentType}}true{{else}}false{{end}}
+    }
+    {{- end }}
+  }
+
+  forward_to = [pyroscope.write.profiles_service.receiver]
+}
+{{- end }}
+
+{{- end }}
+{{- end }}

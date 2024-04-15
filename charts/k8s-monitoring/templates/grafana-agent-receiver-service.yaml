@@ -1,0 +1,34 @@
+{{- if .Values.alloy.service.enabled -}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "grafana-agent.fullname" . }}
+  labels:
+    {{- include "alloy.labels" .Subcharts.alloy | nindent 4 }}
+  {{- with .Values.alloy.service.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  type: {{ .Values.alloy.service.type }}
+  {{- if .Values.alloy.service.clusterIP }}
+  clusterIP: {{ .Values.alloy.service.clusterIP }}
+  {{- end }}
+  selector:
+    {{- include "alloy.selectorLabels" .Subcharts.alloy | nindent 4 }}
+  internalTrafficPolicy: {{.Values.alloy.service.internalTrafficPolicy}}
+  ports:
+    - name: http-metrics
+      {{- if eq .Values.alloy.service.type "NodePort" }}
+      nodePort: {{ .Values.alloy.service.nodePort }}
+      {{- end }}
+      port: {{ .Values.alloy.alloy.listenPort }}
+      targetPort: {{ .Values.alloy.alloy.listenPort }}
+      protocol: "TCP"
+{{- range $portMap := .Values.alloy.alloy.extraPorts }}
+    - name: {{ $portMap.name }}
+      port: {{ $portMap.port }}
+      targetPort: {{ $portMap.targetPort }}
+      protocol: {{ coalesce $portMap.protocol "TCP" }}
+{{- end }}
+{{- end }}

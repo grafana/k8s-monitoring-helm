@@ -3,8 +3,8 @@ queries:
   {{- if .Values.metrics.enabled }}
   - query: up{cluster={{ .Values.cluster.name | quote}}}
     type: promql
-    {{- if .Values.metrics.agent.enabled }}
-  - query: agent_build_info{cluster={{ .Values.cluster.name | quote}}}
+    {{- if .Values.metrics.alloy.enabled }}
+  - query: alloy_build_info{cluster={{ .Values.cluster.name | quote}}}
     type: promql
     {{- end }}
     {{- if .Values.metrics.kubelet.enabled }}
@@ -102,8 +102,8 @@ spec:
       image: {{ .Values.global.image.registry | default .Values.configAnalysis.image.registry }}/{{ .Values.configAnalysis.image.image }}:{{ .Values.configAnalysis.image.tag | default .Chart.Version }}
       command: [/etc/bin/config-analysis.sh]
       env:
-        - name: AGENT_HOST
-          value: {{ include "grafana-agent.fullname" (index .Subcharts "grafana-agent") }}.{{ .Release.Namespace }}.svc
+        - name: ALLOY_HOST
+          value: {{ include "alloy.fullname" .Subcharts.alloy }}.{{ .Release.Namespace }}.svc:{{ .Values.alloy.alloy.listenPort }}
 {{- end -}}
 {{- if .Values.test.enabled }}
 ---
