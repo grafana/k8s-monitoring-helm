@@ -1194,8 +1194,10 @@ data:
     
     pyroscope.ebpf "ebpf_pods" {
       targets = discovery.relabel.ebpf_pods.output
-      forward_to = [pyroscope.write.profiles_service.receiver]
+    
       demangle = "none"
+    
+      forward_to = [pyroscope.write.profiles_service.receiver]
     }
     // Profiles
     discovery.kubernetes "pprof_pods" {
@@ -1327,31 +1329,23 @@ data:
     
     pyroscope.scrape "pyroscope_scrape_memory" {
       targets = concat(discovery.relabel.pprof_pods_memory_default_name.output, discovery.relabel.pprof_pods_memory_custom_name.output)
-      clustering {
-        enabled = true
-      }
     
       profiling_config {
         profile.memory {
           enabled = true
         }
-    
         profile.process_cpu {
           enabled = false
         }
-    
         profile.goroutine {
           enabled = false
         }
-    
         profile.block {
           enabled = false
         }
-    
         profile.mutex {
           enabled = false
         }
-    
         profile.fgprof {
           enabled = false
         }
@@ -1447,31 +1441,23 @@ data:
     
     pyroscope.scrape "pyroscope_scrape_cpu" {
       targets = concat(discovery.relabel.pprof_pods_cpu_default_name.output, discovery.relabel.pprof_pods_cpu_custom_name.output)
-      clustering {
-        enabled = true
-      }
     
       profiling_config {
         profile.memory {
           enabled = false
         }
-    
         profile.process_cpu {
           enabled = true
         }
-    
         profile.goroutine {
           enabled = false
         }
-    
         profile.block {
           enabled = false
         }
-    
         profile.mutex {
           enabled = false
         }
-    
         profile.fgprof {
           enabled = false
         }
@@ -1567,31 +1553,23 @@ data:
     
     pyroscope.scrape "pyroscope_scrape_goroutine" {
       targets = concat(discovery.relabel.pprof_pods_goroutine_default_name.output, discovery.relabel.pprof_pods_goroutine_custom_name.output)
-      clustering {
-        enabled = true
-      }
     
       profiling_config {
         profile.memory {
           enabled = false
         }
-    
         profile.process_cpu {
           enabled = false
         }
-    
         profile.goroutine {
           enabled = true
         }
-    
         profile.block {
           enabled = false
         }
-    
         profile.mutex {
           enabled = false
         }
-    
         profile.fgprof {
           enabled = false
         }
@@ -1687,31 +1665,23 @@ data:
     
     pyroscope.scrape "pyroscope_scrape_block" {
       targets = concat(discovery.relabel.pprof_pods_block_default_name.output, discovery.relabel.pprof_pods_block_custom_name.output)
-      clustering {
-        enabled = true
-      }
     
       profiling_config {
         profile.memory {
           enabled = false
         }
-    
         profile.process_cpu {
           enabled = false
         }
-    
         profile.goroutine {
           enabled = false
         }
-    
         profile.block {
           enabled = true
         }
-    
         profile.mutex {
           enabled = false
         }
-    
         profile.fgprof {
           enabled = false
         }
@@ -1807,31 +1777,23 @@ data:
     
     pyroscope.scrape "pyroscope_scrape_mutex" {
       targets = concat(discovery.relabel.pprof_pods_mutex_default_name.output, discovery.relabel.pprof_pods_mutex_custom_name.output)
-      clustering {
-        enabled = true
-      }
     
       profiling_config {
         profile.memory {
           enabled = false
         }
-    
         profile.process_cpu {
           enabled = false
         }
-    
         profile.goroutine {
           enabled = false
         }
-    
         profile.block {
           enabled = false
         }
-    
         profile.mutex {
           enabled = true
         }
-    
         profile.fgprof {
           enabled = false
         }
@@ -1927,31 +1889,23 @@ data:
     
     pyroscope.scrape "pyroscope_scrape_fgprof" {
       targets = concat(discovery.relabel.pprof_pods_fgprof_default_name.output, discovery.relabel.pprof_pods_fgprof_custom_name.output)
-      clustering {
-        enabled = true
-      }
     
       profiling_config {
         profile.memory {
           enabled = false
         }
-    
         profile.process_cpu {
           enabled = false
         }
-    
         profile.goroutine {
           enabled = false
         }
-    
         profile.block {
           enabled = false
         }
-    
         profile.mutex {
           enabled = false
         }
-    
         profile.fgprof {
           enabled = true
         }
@@ -47909,36 +47863,6 @@ spec:
       targetPort: 80
       protocol: "TCP"
 ---
-# Source: k8s-monitoring/charts/grafana-agent-profiles/templates/cluster_service.yaml
-apiVersion: v1
-kind: Service
-metadata:
-  name: k8smon-grafana-agent-profiles-cluster
-  labels:
-    helm.sh/chart: grafana-agent-profiles-0.37.0
-    app.kubernetes.io/name: grafana-agent-profiles
-    app.kubernetes.io/instance: k8smon
-    
-    app.kubernetes.io/version: "v0.40.3"
-    app.kubernetes.io/managed-by: Helm
-spec:
-  type: ClusterIP
-  clusterIP: 'None'
-  selector:
-    app.kubernetes.io/name: grafana-agent-profiles
-    app.kubernetes.io/instance: k8smon
-  ports:
-    # Do not include the -metrics suffix in the port name, otherwise metrics
-    # can be double-collected with the non-headless Service if it's also
-    # enabled.
-    #
-    # This service should only be used for clustering, and not metric
-    # collection.
-    - name: http
-      port: 80
-      targetPort: 80
-      protocol: "TCP"
----
 # Source: k8s-monitoring/charts/grafana-agent-profiles/templates/service.yaml
 apiVersion: v1
 kind: Service
@@ -48283,8 +48207,6 @@ spec:
             - --storage.path=/tmp/agent
             - --server.http.listen-addr=0.0.0.0:80
             - --server.http.ui-path-prefix=/
-            - --cluster.enabled=true
-            - --cluster.join-addresses=k8smon-grafana-agent-profiles-cluster
           env:
             - name: AGENT_MODE
               value: flow
@@ -49923,8 +49845,10 @@ data:
     
     pyroscope.ebpf "ebpf_pods" {
       targets = discovery.relabel.ebpf_pods.output
-      forward_to = [pyroscope.write.profiles_service.receiver]
+    
       demangle = "none"
+    
+      forward_to = [pyroscope.write.profiles_service.receiver]
     }
     // Profiles
     discovery.kubernetes "pprof_pods" {
@@ -50056,31 +49980,23 @@ data:
     
     pyroscope.scrape "pyroscope_scrape_memory" {
       targets = concat(discovery.relabel.pprof_pods_memory_default_name.output, discovery.relabel.pprof_pods_memory_custom_name.output)
-      clustering {
-        enabled = true
-      }
     
       profiling_config {
         profile.memory {
           enabled = true
         }
-    
         profile.process_cpu {
           enabled = false
         }
-    
         profile.goroutine {
           enabled = false
         }
-    
         profile.block {
           enabled = false
         }
-    
         profile.mutex {
           enabled = false
         }
-    
         profile.fgprof {
           enabled = false
         }
@@ -50176,31 +50092,23 @@ data:
     
     pyroscope.scrape "pyroscope_scrape_cpu" {
       targets = concat(discovery.relabel.pprof_pods_cpu_default_name.output, discovery.relabel.pprof_pods_cpu_custom_name.output)
-      clustering {
-        enabled = true
-      }
     
       profiling_config {
         profile.memory {
           enabled = false
         }
-    
         profile.process_cpu {
           enabled = true
         }
-    
         profile.goroutine {
           enabled = false
         }
-    
         profile.block {
           enabled = false
         }
-    
         profile.mutex {
           enabled = false
         }
-    
         profile.fgprof {
           enabled = false
         }
@@ -50296,31 +50204,23 @@ data:
     
     pyroscope.scrape "pyroscope_scrape_goroutine" {
       targets = concat(discovery.relabel.pprof_pods_goroutine_default_name.output, discovery.relabel.pprof_pods_goroutine_custom_name.output)
-      clustering {
-        enabled = true
-      }
     
       profiling_config {
         profile.memory {
           enabled = false
         }
-    
         profile.process_cpu {
           enabled = false
         }
-    
         profile.goroutine {
           enabled = true
         }
-    
         profile.block {
           enabled = false
         }
-    
         profile.mutex {
           enabled = false
         }
-    
         profile.fgprof {
           enabled = false
         }
@@ -50416,31 +50316,23 @@ data:
     
     pyroscope.scrape "pyroscope_scrape_block" {
       targets = concat(discovery.relabel.pprof_pods_block_default_name.output, discovery.relabel.pprof_pods_block_custom_name.output)
-      clustering {
-        enabled = true
-      }
     
       profiling_config {
         profile.memory {
           enabled = false
         }
-    
         profile.process_cpu {
           enabled = false
         }
-    
         profile.goroutine {
           enabled = false
         }
-    
         profile.block {
           enabled = true
         }
-    
         profile.mutex {
           enabled = false
         }
-    
         profile.fgprof {
           enabled = false
         }
@@ -50536,31 +50428,23 @@ data:
     
     pyroscope.scrape "pyroscope_scrape_mutex" {
       targets = concat(discovery.relabel.pprof_pods_mutex_default_name.output, discovery.relabel.pprof_pods_mutex_custom_name.output)
-      clustering {
-        enabled = true
-      }
     
       profiling_config {
         profile.memory {
           enabled = false
         }
-    
         profile.process_cpu {
           enabled = false
         }
-    
         profile.goroutine {
           enabled = false
         }
-    
         profile.block {
           enabled = false
         }
-    
         profile.mutex {
           enabled = true
         }
-    
         profile.fgprof {
           enabled = false
         }
@@ -50656,31 +50540,23 @@ data:
     
     pyroscope.scrape "pyroscope_scrape_fgprof" {
       targets = concat(discovery.relabel.pprof_pods_fgprof_default_name.output, discovery.relabel.pprof_pods_fgprof_custom_name.output)
-      clustering {
-        enabled = true
-      }
     
       profiling_config {
         profile.memory {
           enabled = false
         }
-    
         profile.process_cpu {
           enabled = false
         }
-    
         profile.goroutine {
           enabled = false
         }
-    
         profile.block {
           enabled = false
         }
-    
         profile.mutex {
           enabled = false
         }
-    
         profile.fgprof {
           enabled = true
         }
