@@ -21,36 +21,7 @@ See the [Chart Documentation](https://github.com/grafana/k8s-monitoring-helm/blo
 
 ## Contributing
 
-We welcome contributions and improvements! Feel free to submit PRs.
-
-If you make changes to this chart, please ensure that you've done the following:
-
-* Use [Helm Docs](https://github.com/norwoodj/helm-docs) to check for updates to the chart documentation
-  * `cd charts/k8s-monitoring; helm-docs`
-* Check for updates to the example outputs
-  * `make test`
-  * If changes are acceptable, regenerate the outputs and re-test:
-  * `make regenerate-example-outputs test`
-
-Required tools:
-
-* [chart-testing](https://github.com/helm/chart-testing)
-* [Helm](https://helm.sh/docs/intro/install/)
-* [helm-docs](https://github.com/norwoodj/helm-docs)
-* [Grafana Alloy](https://github.com/grafana/alloy) (used for linting the generated config files)
-* [shellspec](https://github.com/shellspec/shellspec)
-* [yamllint](https://yamllint.readthedocs.io/en/stable/index.html)
-* [yq](https://pypi.org/project/yq/)
-
-Run `make install-deps` to install all requirements (Mac supported only at the moment using Brew).
-
-
-### Bumping Dependent Chart Versions
-
-* Update the dependency's version in [Chart.yaml](charts/k8s-monitoring/Chart.yaml).
-* `cd charts/k8s-monitoring; helm dependency update`
-* Follow the steps above in [Contributing](#contributing) to update the k8s-monitoring chart version and docs.
-* Finally, take a moment to inspect the generated output for anything that might cause trouble.
+See our [Contributing Guide](./CONTRIBUTING.md) for more information.
 
 ## Links
 * [Kubernetes Monitoring on Grafana Cloud](https://grafana.com/docs/grafana-cloud/kubernetes-monitoring/)

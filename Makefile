@@ -1,5 +1,6 @@
 .PHONY: test lint-chart lint-config clean-example-outputs generate-example-outputs regenerate-example-outputs
 SHELL := /bin/bash
+UNAME := $(shell uname)
 
 CHART_FILES = $(shell find charts/k8s-monitoring -type f)
 INPUT_FILES = $(wildcard examples/*/values.yaml)
@@ -22,8 +23,13 @@ test: scripts/test-runner.sh lint-chart lint-config
 	./scripts/test-runner.sh --show-diffs
 	cd tests; shellspec
 
-install-deps: scripts/install-deps.sh
-	./scripts/install-deps.sh
+install-deps:
+ifeq ($(UNAME), Darwin)
+	brew install chart-testing grafana/grafana/alloy helm norwoodj/tap/helm-docs kind shellspec yamllint yq
+else
+	echo "Not on MacOS, you'll have to just install things manually for now."
+	exit 1
+endif
 
 %/output.yaml: %/values.yaml $(CHART_FILES)
 	helm template k8smon charts/k8s-monitoring -f $< > $@

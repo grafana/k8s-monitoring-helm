@@ -23,6 +23,5 @@ CHART_FILE=charts/k8s-monitoring/Chart.yaml
 yq e ".version = \"${VERSION}\"" "${CHART_FILE}" > "${CHART_FILE}.new" && mv "${CHART_FILE}.new" "${CHART_FILE}"
 yq e ".appVersion = \"${PLUGIN_VERSION}\"" "${CHART_FILE}" > "${CHART_FILE}.new" && mv "${CHART_FILE}.new" "${CHART_FILE}"
 
-helm-docs
 make regenerate-example-outputs
 make --directory charts/k8s-monitoring README.md docs/RBAC.md values.schema.json
