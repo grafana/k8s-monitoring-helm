@@ -1,6 +1,7 @@
 #!/bin/bash
 
 VERSION=$1
+PLUGIN_VERSION=$2
 
 if [ -z "${VERSION}" ] || [ "${VERSION}" == "-h" ] || [ "${VERSION}" == "--help" ]; then
   echo "set-version.sh <version> [<appVersion>] - Update the chart version and regenerate generated content"
@@ -9,7 +10,13 @@ if [ -z "${VERSION}" ] || [ "${VERSION}" == "-h" ] || [ "${VERSION}" == "--help"
   echo "  <appVersion> The app version number to use for the chart (default to latest release)."
 fi
 
-PLUGIN_VERSION=$(gh release list --repo grafana/grafana-k8s-plugin --limit 1 --json name --jq '.[].name')
+if [ -z "${PLUGIN_VERSION}" ]; then
+  PLUGIN_VERSION=$(gh release list --repo grafana/grafana-k8s-plugin --limit 1 --json name --jq '.[].name')
+  if [ $? -ne 0 ]; then
+    echo "Failed to get latest Grafana Kubernetes plugin version. This functionality is only available for Grafana Labs employees."
+    exit 1
+  fi
+fi
 
 CHART_FILE=charts/k8s-monitoring/Chart.yaml
 
