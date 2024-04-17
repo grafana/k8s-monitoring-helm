@@ -80,7 +80,11 @@
     {{- include "alloy.config.metricsService" . }}
   {{- end }}
 
-  {{- if and .Values.logs.enabled (or .Values.receivers.grpc.enabled .Values.receivers.http.enabled .Values.receivers.zipkin.enabled) }}
+  {{- if and .Values.logs.enabled (or .Values.logs.podLogsObjects.enabled .Values.receivers.grpc.enabled .Values.receivers.http.enabled) }}
+    {{- if .Values.logs.podLogsObjects.enabled }}
+      {{- include "alloy.config.pod_log_objects" . }}
+    {{- end }}
+
     {{- include "alloy.config.logs.pod_logs_processor" . }}
     {{- include "alloy.config.logsService" . }}
   {{- end }}
@@ -100,14 +104,10 @@
   {{- include "alloy.config.logsService" . }}
 {{- end -}}
 
-{{/* Grafana Allyo for Logs config */}}
+{{/* Grafana Alloy for Logs config */}}
 {{- define "alloyLogsConfig" -}}
   {{- include "alloy.config.logs.pod_logs_discovery" . }}
   {{- include "alloy.config.logs.pod_logs_processor" . }}
-  {{- if .Values.logs.podLogsObjects.enabled }}
-    {{- include "alloy.config.pod_log_objects" . }}
-  {{- end }}
-
   {{- include "alloy.config.logsService" . }}
 
   {{- if .Values.logs.extraConfig }}
