@@ -23,5 +23,6 @@ CHART_FILE=charts/k8s-monitoring/Chart.yaml
 yq e ".version = \"${VERSION}\"" "${CHART_FILE}" > "${CHART_FILE}.new" && mv "${CHART_FILE}.new" "${CHART_FILE}"
 yq e ".appVersion = \"${PLUGIN_VERSION}\"" "${CHART_FILE}" > "${CHART_FILE}.new" && mv "${CHART_FILE}.new" "${CHART_FILE}"
 
-make regenerate-example-outputs
+NUM_EXAMPLES=$(find examples -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d ' ')
+make -j "${NUM_EXAMPLES}" generate-example-outputs
 make --directory charts/k8s-monitoring README.md docs/RBAC.md values.schema.json
