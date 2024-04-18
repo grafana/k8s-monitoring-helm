@@ -12,6 +12,19 @@ alloy-logs:
     End
   End
 
+  Describe 'Using volume log gathering and clustering'
+    It 'prints a friendly error message'
+      When call helm template k8smon ../charts/k8s-monitoring -f "spec/fixtures/invalid-logs-config-volumes-and-clustering-values.yaml"
+      The status should be failure
+      The error should include 'Invalid configuration for gathering pod logs! When using logs.pod_logs.gatherMethod: "volumes", Grafana Alloy for Logs should not utilize clustering. Otherwise, performance will suffer!
+Please set:
+alloy-logs:
+  alloy:
+    clustering:
+      enabled: false'
+    End
+  End
+
   Describe 'Using multiple replicas with API log gathering and no clustering'
     It 'prints a friendly error message'
       When call helm template k8smon ../charts/k8s-monitoring -f "spec/fixtures/invalid-logs-config-multiple-replicas-and-api_values.yaml"

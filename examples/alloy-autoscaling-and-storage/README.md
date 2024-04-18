@@ -54,4 +54,24 @@ alloy:
           resources:
             requests:
               storage: 5Gi
+
+alloy-logs:
+  alloy:
+    storagePath: /var/lib/alloy
+    mounts:
+      extra:
+        - mountPath: /var/lib/alloy
+          name: alloy-log-positions
+
+  controller:
+    enableStatefulSetAutoDeletePVC: true
+    volumeClaimTemplates:
+      - metadata:
+          name: alloy-log-positions
+        spec:
+          accessModes: ["ReadWriteOnce"]
+          storageClassName: "standard"
+          resources:
+            requests:
+              storage: 100Mi
 ```

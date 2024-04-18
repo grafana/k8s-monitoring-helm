@@ -48765,36 +48765,6 @@ spec:
       targetPort: 12345
       protocol: "TCP"
 ---
-# Source: k8s-monitoring/charts/alloy-logs/templates/cluster_service.yaml
-apiVersion: v1
-kind: Service
-metadata:
-  name: k8smon-alloy-logs-cluster
-  labels:
-    helm.sh/chart: alloy-logs-0.1.1
-    app.kubernetes.io/name: alloy-logs
-    app.kubernetes.io/instance: k8smon
-    
-    app.kubernetes.io/version: "v1.0.0"
-    app.kubernetes.io/managed-by: Helm
-spec:
-  type: ClusterIP
-  clusterIP: 'None'
-  selector:
-    app.kubernetes.io/name: alloy-logs
-    app.kubernetes.io/instance: k8smon
-  ports:
-    # Do not include the -metrics suffix in the port name, otherwise metrics
-    # can be double-collected with the non-headless Service if it's also
-    # enabled.
-    #
-    # This service should only be used for clustering, and not metric
-    # collection.
-    - name: http
-      port: 12345
-      targetPort: 12345
-      protocol: "TCP"
----
 # Source: k8s-monitoring/charts/alloy-logs/templates/service.yaml
 apiVersion: v1
 kind: Service
@@ -49105,8 +49075,6 @@ spec:
             - --storage.path=/tmp/alloy
             - --server.http.listen-addr=0.0.0.0:12345
             - --server.http.ui-path-prefix=/
-            - --cluster.enabled=true
-            - --cluster.join-addresses=k8smon-alloy-logs-cluster
             - --stability.level=generally-available
           env:
             - name: ALLOY_DEPLOY_MODE
