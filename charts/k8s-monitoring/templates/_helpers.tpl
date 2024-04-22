@@ -84,8 +84,8 @@
 {{- end }}
 
 {{- define "kubernetes_monitoring.profiles_service.secret.name" -}}
-{{- if .Values.externalServices.tempo.secret.name }}
-  {{- .Values.externalServices.tempo.secret.name }}
+{{- if .Values.externalServices.pyroscope.secret.name }}
+  {{- .Values.externalServices.pyroscope.secret.name }}
 {{- else }}
   {{- printf "pyroscope-%s" .Chart.Name | trunc 63 | trimSuffix "-" }}
 {{- end }}
