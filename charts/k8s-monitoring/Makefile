@@ -6,10 +6,19 @@ values.schema.json: values.yaml schema-mods/enums-and-types.json schema-mods/req
 			helm schema-gen /chart/values.yaml > /chart/values.schema.generated.json'
 
 	jq --indent 4 -s '.[0] * .[1] * .[2]' \
-		<(jq --indent 4 'del(.properties["alloy"]) \
-			| del(.properties["alloy-events"]) \
-			| del(.properties["alloy-logs"]) \
-			| del(.properties["alloy-profiles"]) \
+		<(jq --indent 4 \
+			'del(.properties["alloy"].properties.alloy) \
+			| del(.properties["alloy"].properties.controller) \
+			| del(.properties["alloy"].properties.crds) \
+			| del(.properties["alloy-events"].properties.alloy) \
+			| del(.properties["alloy-events"].properties.controller) \
+			| del(.properties["alloy-events"].properties.crds) \
+			| del(.properties["alloy-logs"].properties.alloy) \
+			| del(.properties["alloy-logs"].properties.controller) \
+			| del(.properties["alloy-logs"].properties.crds) \
+			| del(.properties["alloy-profiles"].properties.alloy) \
+			| del(.properties["alloy-profiles"].properties.controller) \
+			| del(.properties["alloy-profiles"].properties.crds) \
 			| del(.properties["kube-state-metrics"].properties.autosharding) \
 			| del(.properties["kube-state-metrics"].properties.nodeSelector) \
 			| del(.properties["kube-state-metrics"].properties.prometheusScrape) \

@@ -93,6 +93,8 @@
     {{- include "alloy.config.tracesService" . }}
   {{- end }}
 
+  {{- include "alloy.config.logging" .Values.alloy.logging}}
+
   {{- if .Values.extraConfig }}
     {{- tpl .Values.extraConfig . | indent 0 }}
   {{- end }}
@@ -102,6 +104,7 @@
 {{- define "alloyEventsConfig" -}}
   {{- include "alloy.config.logs.cluster_events" . }}
   {{- include "alloy.config.logsService" . }}
+  {{- include "alloy.config.logging" (index .Values "alloy-events").logging }}
 {{- end -}}
 
 {{/* Grafana Alloy for Logs config */}}
@@ -109,6 +112,8 @@
   {{- include "alloy.config.logs.pod_logs_discovery" . }}
   {{- include "alloy.config.logs.pod_logs_processor" . }}
   {{- include "alloy.config.logsService" . }}
+
+  {{- include "alloy.config.logging" (index .Values "alloy-logs").logging }}
 
   {{- if .Values.logs.extraConfig }}
     {{- tpl .Values.logs.extraConfig . | indent 0 }}
@@ -121,4 +126,5 @@
   {{- include "alloy.config.profilesPprof" . }}
 
   {{- include "alloy.config.profilesService" . }}
+  {{- include "alloy.config.logging" (index .Values "alloy-profiles").logging }}
 {{- end -}}
