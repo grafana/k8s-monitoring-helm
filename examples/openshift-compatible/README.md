@@ -1,7 +1,5 @@
 # OpenShift Compatible
 
-TODO THESE PARAGRAPHS NEED UPDATING
-
 This example shows the modifications from the [default](../default-values) to deploy Kubernetes Monitoring on an OpenShift cluster.
 
 These modifications skip the deployment of kube-state-metrics and Node Exporter, since they will already be present on
