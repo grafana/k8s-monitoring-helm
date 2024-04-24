@@ -1,17 +1,31 @@
-{{- if and (eq .Values.cluster.platform "openshift") .Values.logs.enabled .Values.logs.pod_logs.enabled }}
+{{- define "alloySecurityContextConstraintTemplate" -}}
 ---
 apiVersion: security.openshift.io/v1
 kind: SecurityContextConstraints
 metadata:
-  name: {{ include "alloy.fullname" (index .Subcharts "alloy-logs") }}
-allowHostDirVolumePlugin: true
+  name: {{ .name }}
+allowHostDirVolumePlugin: {{ .hostpath }}
 allowHostIPC: false
 allowHostNetwork: false
 allowHostPID: false
 allowHostPorts: false
 allowPrivilegeEscalation: false
 allowPrivilegedContainer: false
-allowedCapabilities: null
+allowedCapabilities:
+- CHOWN
+- DAC_OVERRIDE
+- FOWNER
+- FSETID
+- KILL
+- SETGID
+- SETUID
+- SETPCAP
+- NET_BIND_SERVICE
+- NET_RAW
+- SYS_CHROOT
+- MKNOD
+- AUDIT_WRITE
+- SETFCAP
 defaultAddCapabilities: null
 defaultAllowPrivilegeEscalation: false
 forbiddenSysctls:
@@ -21,16 +35,7 @@ fsGroup:
 groups: []
 priority: null
 readOnlyRootFilesystem: false  # Set because Grafana Alloy needs to write to /tmp/alloy
-requiredDropCapabilities:
-- CHOWN
-- DAC_OVERRIDE
-- FSETID
-- FOWNER
-- SETGID
-- SETUID
-- SETPCAP
-- NET_BIND_SERVICE
-- KILL
+requiredDropCapabilities: null
 runAsUser:
   type: RunAsAny
 seLinuxContext:
@@ -43,34 +48,54 @@ users: []
 volumes:
 - configMap
 - emptyDir
+{{- if .hostpath }}
 - hostPath
+{{- end }}
 - projected
 - secret
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: {{ include "alloy.fullname" (index .Subcharts "alloy-logs") }}-scc
+  name: {{ .name }}-scc
 rules:
 - verbs:
-  - use
+    - use
   apiGroups:
-  - security.openshift.io
+    - security.openshift.io
   resources:
-  - securitycontextconstraints
+    - securitycontextconstraints
   resourceNames:
-  - {{ include "alloy.fullname" (index .Subcharts "alloy-logs") }}
+    - {{ .name }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: {{ include "alloy.fullname" (index .Subcharts "alloy-logs") }}-scc
+  name: {{ .name }}-scc
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: {{ include "alloy.fullname" (index .Subcharts "alloy-logs") }}-scc
+  name: {{ .name }}-scc
 subjects:
 - kind: ServiceAccount
-  name: {{ include "alloy.serviceAccountName" (index .Subcharts "alloy-logs") }}
-  namespace: {{ .Release.Namespace }}
+  name: {{ .name }}
+  namespace: {{ .namespace }}
+{{- end -}}
+
+{{- if eq .Values.cluster.platform "openshift" }}
+{{/* Create the SecurityContextConstraints for the main Alloy instance */}}
+{{$data := dict "name" (include "alloy.fullname" (index .Subcharts "alloy")) "namespace" .Release.Namespace "hostpath" false }}
+{{- include "alloySecurityContextConstraintTemplate" $data }}
+
+{{/* Create the SecurityContextConstraints for the Alloy for Cluster Events instance */}}
+{{- if and .Values.logs.enabled .Values.logs.cluster_events.enabled }}
+{{$data := dict "name" (include "alloy.fullname" (index .Subcharts "alloy-events")) "namespace" .Release.Namespace "hostpath" false }}
+{{- include "alloySecurityContextConstraintTemplate" $data }}
+{{- end }}
+
+{{/* Create the SecurityContextConstraints for the Alloy for Logs instance */}}
+{{- if and .Values.logs.enabled .Values.logs.pod_logs.enabled }}
+{{$data := dict "name" (include "alloy.fullname" (index .Subcharts "alloy-logs")) "namespace" .Release.Namespace "hostpath" (eq .Values.logs.pod_logs.gatherMethod "volumes") }}
+{{- include "alloySecurityContextConstraintTemplate" $data }}
+{{- end }}
 {{- end }}
