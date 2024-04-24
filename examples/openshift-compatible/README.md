@@ -1,5 +1,7 @@
 # OpenShift Compatible
 
+TODO THESE PARAGRAPHS NEED UPDATING
+
 This example shows the modifications from the [default](../default-values) to deploy Kubernetes Monitoring on an OpenShift cluster.
 
 These modifications prevent deploying Kube State Metrics and Node Exporter, since they will already be present on the
@@ -52,22 +54,52 @@ prometheus-node-exporter:
 
 alloy:
   alloy:
-    listenPort: 8080
     securityContext:
+      runAsUser: 473
+      runAsGroup: 473
       allowPrivilegeEscalation: false
       capabilities:
-        drop: [ "ALL" ]
+        drop: ["ALL"]
+        add:
+          - CHOWN
+          # - DAC_OVERRIDE
+          - FOWNER
+          - FSETID
+          # - KILL
+          - SETGID
+          - SETUID
+          - SETPCAP
+          - NET_BIND_SERVICE
+          - NET_RAW
+          - SYS_CHROOT
+          # - MKNOD
+          # - AUDIT_WRITE
+          - SETFCAP
       runAsNonRoot: true
       seccompProfile:
         type: "RuntimeDefault"
 
 alloy-logs:
   alloy:
-    listenPort: 8080
     securityContext:
       allowPrivilegeEscalation: false
       capabilities:
-        drop: [ "ALL" ]
+        drop: ["ALL"]
+        add:
+          - CHOWN
+          # - DAC_OVERRIDE
+          - FOWNER
+          - FSETID
+          # - KILL
+          - SETGID
+          - SETUID
+          - SETPCAP
+          - NET_BIND_SERVICE
+          - NET_RAW
+          - SYS_CHROOT
+          # - MKNOD
+          # - AUDIT_WRITE
+          - SETFCAP
       privileged: false
       runAsUser: 0
   global:
@@ -77,11 +109,27 @@ alloy-logs:
 
 alloy-events:
   alloy:
-    listenPort: 8080
     securityContext:
+      runAsUser: 473
+      runAsGroup: 473
       allowPrivilegeEscalation: false
       capabilities:
-        drop: [ "ALL" ]
+        drop: ["ALL"]
+        add:
+          - CHOWN
+          # - DAC_OVERRIDE
+          - FOWNER
+          - FSETID
+          # - KILL
+          - SETGID
+          - SETUID
+          - SETPCAP
+          - NET_BIND_SERVICE
+          - NET_RAW
+          - SYS_CHROOT
+          # - MKNOD
+          # - AUDIT_WRITE
+          - SETFCAP
       runAsNonRoot: true
       seccompProfile:
         type: "RuntimeDefault"
