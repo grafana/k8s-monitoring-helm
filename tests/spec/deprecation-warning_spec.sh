@@ -71,4 +71,24 @@ These sections in your values file will need to be renamed:
 For more information, see https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring#breaking-change-announcements'
     End
   End
+
+  Describe 'Using older OpenCost secret_name in values file'
+    It 'prints a friendly error message'
+      When call helm template k8smon ../charts/k8s-monitoring -f "spec/fixtures/deprecated-opencost-secret_values.yaml"
+      The status should be failure
+      The error should include 'As of k8s-monitoring Chart version 1.0.1, OpenCost changed how to reference an external secret.
+Please rename:
+opencost:
+  opencost:
+    prometheus:
+      secret_name: prometheus-k8s-monitoring
+To:
+opencost:
+  opencost:
+    prometheus:
+      existingSecretName: prometheus-k8s-monitoring
+
+For more information, see https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring#breaking-change-announcements'
+    End
+  End
 End

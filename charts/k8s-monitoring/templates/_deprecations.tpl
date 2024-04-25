@@ -76,4 +76,25 @@ For more information, see https://github.com/grafana/k8s-monitoring-helm/tree/ma
   (index .Values.metrics "agent") }}
   {{ fail "\n\nAs of k8s-monitoring Chart version 1.0, Grafana Agent has been replaced with Grafana Alloy.\nThese sections in your values file will need to be renamed:\n  grafana-agent          --> alloy\n  grafana-agent-events   --> alloy-events\n  grafana-agent-logs     --> alloy-logs\n  grafana-agent-profiles --> alloy-profiles\n  metrics.agent          --> metrics.alloy\n\nFor more information, see https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring#breaking-change-announcements" }}
 {{- end -}}
+
+{{/*
+v1.0.1: OpenCost changed how to reference an external secret
+
+As of k8s-monitoring Chart version 1.0.1, OpenCost changed how to reference an external secret.
+Please rename:
+opencost:
+  opencost:
+    prometheus:
+      secret_name: prometheus-k8s-monitoring
+To:
+opencost:
+  opencost:
+    prometheus:
+      existingSecretName: prometheus-k8s-monitoring
+
+For more information, see https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring#breaking-change-announcements
+*/}}
+{{- if .Values.opencost.opencost.prometheus.secret_name }}
+  {{ fail "\n\nAs of k8s-monitoring Chart version 1.0.1, OpenCost changed how to reference an external secret.\nPlease rename:\nopencost:\n  opencost:\n    prometheus:\n      secret_name: prometheus-k8s-monitoring\nTo:\nopencost:\n  opencost:\n    prometheus:\n      existingSecretName: prometheus-k8s-monitoring\n\nFor more information, see https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring#breaking-change-announcements" }}
+{{- end -}}
 {{- end -}}
