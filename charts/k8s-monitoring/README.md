@@ -401,7 +401,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | opencost.enabled | bool | `true` | Should this Helm chart deploy OpenCost to the cluster. Set this to false if your cluster already has OpenCost, or if you do not want to scrape metrics from OpenCost. |
 | opencost.opencost.prometheus.external.url | string | `"https://prom.example.com/api/prom"` | The URL for Prometheus queries. It should match externalService.prometheus.host + "/api/prom" |
 | opencost.opencost.prometheus.password_key | string | `"password"` | The key for the password property in the secret. |
-| opencost.opencost.prometheus.secret_name | string | `"prometheus-k8s-monitoring"` | The name of the secret containing the username and password for the metrics service. This must be in the same namespace as the OpenCost deployment. |
+| opencost.opencost.prometheus.existingSecretName | string | `"prometheus-k8s-monitoring"` | The name of the secret containing the username and password for the metrics service. This must be in the same namespace as the OpenCost deployment. |
 | opencost.opencost.prometheus.username_key | string | `"username"` | The key for the username property in the secret. |
 | profiles.ebpf.demangle | string | `"none"` | C++ demangle mode. Available options are: none, simplified, templates, full |
 | profiles.ebpf.enabled | bool | `true` | Gather profiles using eBPF |
