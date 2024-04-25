@@ -1154,7 +1154,7 @@ data:
   metrics.prom: |
     # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart as well as a summary of enabled features
     # TYPE grafana_kubernetes_monitoring_build_info gauge
-    grafana_kubernetes_monitoring_build_info{version="1.0.3", namespace="default", metrics="enabled,alloy,autoDiscover,kube-state-metrics,node-exporter,kubelet,cadvisor,cost", logs="enabled,events,pod_logs", traces="disabled", deployments="kube-state-metrics,prometheus-node-exporter,prometheus-operator-crds,opencost"} 1
+    grafana_kubernetes_monitoring_build_info{version="1.0.4", namespace="default", metrics="enabled,alloy,autoDiscover,kube-state-metrics,node-exporter,kubelet,cadvisor,cost", logs="enabled,events,pod_logs", traces="disabled", deployments="kube-state-metrics,prometheus-node-exporter,prometheus-operator-crds,opencost"} 1
 ---
 # Source: k8s-monitoring/charts/prometheus-operator-crds/charts/crds/templates/crd-alertmanagerconfigs.yaml
 apiVersion: apiextensions.k8s.io/v1
@@ -49498,6 +49498,16 @@ spec:
               value: "https://prom.example.com/api/prom"
             - name: CLUSTER_ID
               value: "default-cluster"
+            - name: DB_BASIC_AUTH_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: prometheus-k8s-monitoring
+                  key: username
+            - name: DB_BASIC_AUTH_PW
+              valueFrom:
+                secretKeyRef:
+                  name: prometheus-k8s-monitoring
+                  key: password
             - name: DATA_RETENTION_DAILY_RESOLUTION_DAYS
               value: "15"
             - name: CLOUD_COST_ENABLED
@@ -49675,7 +49685,7 @@ metadata:
     app.kubernetes.io/managed-by: "Helm"
     app.kubernetes.io/instance: "k8smon"
     app.kubernetes.io/version: 2.2.4
-    helm.sh/chart: "k8s-monitoring-1.0.3"
+    helm.sh/chart: "k8s-monitoring-1.0.4"
   annotations:
     "helm.sh/hook": pre-install,pre-upgrade
     "helm.sh/hook-weight": "-5"
@@ -50700,7 +50710,7 @@ metadata:
     app.kubernetes.io/managed-by: "Helm"
     app.kubernetes.io/instance: "k8smon"
     app.kubernetes.io/version: 2.2.4
-    helm.sh/chart: "k8s-monitoring-1.0.3"
+    helm.sh/chart: "k8s-monitoring-1.0.4"
   annotations:
     "helm.sh/hook": test
     "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
@@ -50754,7 +50764,7 @@ metadata:
     app.kubernetes.io/managed-by: "Helm"
     app.kubernetes.io/instance: "k8smon"
     app.kubernetes.io/version: 2.2.4
-    helm.sh/chart: "k8s-monitoring-1.0.3"
+    helm.sh/chart: "k8s-monitoring-1.0.4"
   annotations:
     "helm.sh/hook": pre-install,pre-upgrade
     "helm.sh/hook-weight": "-5"
@@ -50823,7 +50833,7 @@ metadata:
     app.kubernetes.io/managed-by: "Helm"
     app.kubernetes.io/instance: "k8smon"
     app.kubernetes.io/version: 2.2.4
-    helm.sh/chart: "k8s-monitoring-1.0.3"
+    helm.sh/chart: "k8s-monitoring-1.0.4"
   annotations:
     "helm.sh/hook": test
     "helm.sh/hook-delete-policy": before-hook-creation
@@ -50834,7 +50844,7 @@ spec:
         kubernetes.io/os: linux
   containers:
     - name: config-analysis
-      image: ghcr.io/grafana/k8s-monitoring-test:1.0.3
+      image: ghcr.io/grafana/k8s-monitoring-test:1.0.4
       command: [/etc/bin/config-analysis.sh]
       env:
         - name: ALLOY_HOST
@@ -50850,7 +50860,7 @@ metadata:
     app.kubernetes.io/managed-by: "Helm"
     app.kubernetes.io/instance: "k8smon"
     app.kubernetes.io/version: 2.2.4
-    helm.sh/chart: "k8s-monitoring-1.0.3"
+    helm.sh/chart: "k8s-monitoring-1.0.4"
   annotations:
     "helm.sh/hook": test
     "helm.sh/hook-delete-policy": before-hook-creation
@@ -50866,14 +50876,14 @@ spec:
       labels:
         app.kubernetes.io/managed-by: "Helm"
         app.kubernetes.io/instance: "k8smon"
-        helm.sh/chart: "k8s-monitoring-1.0.3"
+        helm.sh/chart: "k8s-monitoring-1.0.4"
     spec:
       restartPolicy: Never
       nodeSelector:
         kubernetes.io/os: linux
       containers:
         - name: query-test
-          image: ghcr.io/grafana/k8s-monitoring-test:1.0.3
+          image: ghcr.io/grafana/k8s-monitoring-test:1.0.4
           command: ["bash", "-c", "/etc/bin/query-test.sh /etc/test/testQueries.json"]
           volumeMounts:
             - name: test-files
