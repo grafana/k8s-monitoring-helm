@@ -47,6 +47,8 @@ spec:
       - |
         echo Validating Grafana Alloy config file
         if ! alloy fmt /etc/alloy/config.alloy > /dev/null; then
+          echo Generated Config with Errors
+          cat /etc/alloy/config.alloy
           exit 1
         fi
         output=$(alloy run "/etc/alloy/config.alloy" 2>&1)
@@ -58,6 +60,8 @@ spec:
 {{- if and .Values.logs.enabled .Values.logs.cluster_events.enabled }}
         echo Validating Grafana Alloy for Events config file
         if ! alloy fmt /etc/alloy/events.alloy > /dev/null; then
+          echo Generated Config with Errors
+          cat /etc/alloy/events.alloy
           exit 1
         fi
         output=$(alloy run "/etc/alloy/events.alloy" 2>&1)
@@ -70,6 +74,8 @@ spec:
 {{- if and .Values.logs.enabled .Values.logs.pod_logs.enabled }}
         echo Validating Grafana Alloy for Logs config file
         if ! alloy fmt /etc/alloy/logs.alloy > /dev/null; then
+          echo Generated Config with Errors
+          cat /etc/alloy/logs.alloy
           exit 1
         fi
         output=$(alloy run "/etc/alloy/logs.alloy" 2>&1)
@@ -82,6 +88,8 @@ spec:
 {{- if .Values.profiles.enabled }}
         echo Validating Grafana Alloy for Profiles config file
         if ! alloy fmt /etc/alloy/profiles.alloy > /dev/null; then
+          echo Generated Config with Errors
+          cat /etc/alloy/profiles.alloy
           exit 1
         fi
         output=$(alloy run --stability.level public-preview "/etc/alloy/profiles.alloy" 2>&1)
