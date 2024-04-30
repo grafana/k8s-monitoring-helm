@@ -121,8 +121,26 @@ otelcol.processor.k8sattributes "default" {
     logs    = [otelcol.processor.transform.default.input]
     traces  = [
       otelcol.processor.transform.default.input,
+      otelcol.connector.host_info.default.input,
     ]
   }
+}
+otelcol.connector.host_info "default" {
+  host_identifiers = [ "k8s.node.name" ]
+  output {
+    metrics = [otelcol.processor.batch.host_info_batch.input]
+  }
+}
+
+otelcol.processor.batch "host_info_batch" {
+  output {
+    metrics = [otelcol.exporter.prometheus.host_info_metrics.input]
+  }
+}
+
+otelcol.exporter.prometheus "host_info_metrics" {
+  add_metric_suffixes = false
+  forward_to = [prometheus.remote_write.metrics_service.receiver]
 }
 
 otelcol.processor.transform "default" {
