@@ -288,6 +288,7 @@ prometheus.scrape "annotation_autodiscovery_https" {
 }
 
 prometheus.relabel "annotation_autodiscovery" {
+  max_cache_size = 100000
   forward_to = [prometheus.relabel.metrics_service.receiver]
 }
 
@@ -334,6 +335,7 @@ prometheus.scrape "alloy" {
 }
 
 prometheus.relabel "alloy" {
+  max_cache_size = 100000
   rule {
     source_labels = ["__name__"]
     regex = "up|alloy_build_info|alloy_tcp_connections|alloy_wal_samples_appended_total|alloy_wal_storage_active_series|go_gc_duration_seconds_count|go_goroutines|go_memstats_heap_inuse_bytes|process_cpu_seconds_total|process_start_time_seconds|prometheus_remote_storage_enqueue_retries_total|prometheus_remote_storage_highest_timestamp_in_seconds|prometheus_remote_storage_queue_highest_sent_timestamp_seconds|prometheus_remote_storage_samples_dropped_total|prometheus_remote_storage_samples_failed_total|prometheus_remote_storage_samples_pending|prometheus_remote_storage_samples_retried_total|prometheus_remote_storage_samples_total|prometheus_remote_storage_sent_batch_duration_seconds_bucket|prometheus_remote_storage_sent_batch_duration_seconds_count|prometheus_remote_storage_sent_batch_duration_seconds_sum|prometheus_remote_storage_shard_capacity|prometheus_remote_storage_shards|prometheus_remote_storage_shards_desired|prometheus_remote_storage_shards_max|prometheus_remote_storage_shards_min|prometheus_remote_storage_succeeded_samples_total|prometheus_sd_discovered_targets|prometheus_target_interval_length_seconds_count|prometheus_target_interval_length_seconds_sum|prometheus_target_scrapes_exceeded_sample_limit_total|prometheus_target_scrapes_sample_duplicate_timestamp_total|prometheus_target_scrapes_sample_out_of_bounds_total|prometheus_target_scrapes_sample_out_of_order_total|prometheus_target_sync_length_seconds_sum|prometheus_wal_watcher_current_segment|traces_exporter_send_failed_spans|traces_exporter_sent_spans|traces_loadbalancer_backend_outcome|traces_loadbalancer_num_backends|traces_receiver_accepted_spans|traces_receiver_refused_spans"
@@ -361,6 +363,7 @@ prometheus.scrape "kubernetes_monitoring_telemetry" {
 }
 
 prometheus.relabel "kubernetes_monitoring_telemetry" {
+  max_cache_size = 100000
   rule {
     target_label = "job"
     action = "replace"
@@ -400,6 +403,7 @@ prometheus.scrape "kubelet" {
 }
 
 prometheus.relabel "kubelet" {
+  max_cache_size = 100000
   rule {
     source_labels = ["__name__"]
     regex = "up|kubelet_node_name|kubernetes_build_info"
@@ -433,6 +437,7 @@ prometheus.scrape "cadvisor" {
 }
 
 prometheus.relabel "cadvisor" {
+  max_cache_size = 100000
   rule {
     source_labels = ["__name__"]
     regex = "up|container_cpu_cfs_periods_total|container_cpu_cfs_throttled_periods_total|container_cpu_usage_seconds_total|container_fs_reads_bytes_total|container_fs_reads_total|container_fs_writes_bytes_total|container_fs_writes_total|container_memory_cache|container_memory_rss|container_memory_swap|container_memory_working_set_bytes|container_network_receive_bytes_total|container_network_receive_packets_dropped_total|container_network_receive_packets_total|container_network_transmit_bytes_total|container_network_transmit_packets_dropped_total|container_network_transmit_packets_total|machine_memory_bytes|container_memory_cache|container_memory_rss|container_memory_swap"
@@ -540,6 +545,7 @@ prometheus.scrape "kube_state_metrics" {
 }
 
 prometheus.relabel "kube_state_metrics" {
+  max_cache_size = 100000
   forward_to = [prometheus.relabel.metrics_service.receiver]
 }
 
@@ -574,6 +580,7 @@ prometheus.scrape "node_exporter" {
 }
 
 prometheus.relabel "node_exporter" {
+  max_cache_size = 100000
   rule {
     source_labels = ["__name__"]
     regex = "up|node_cpu.*|node_exporter_build_info|node_filesystem.*|node_memory.*|process_cpu_seconds_total|process_resident_memory_bytes|node_arp_entries|node_boot_time_seconds|node_context_switches_total|node_disk_io_time_seconds_total|node_disk_io_time_weighted_seconds_total|node_disk_read_bytes_total|node_disk_read_time_seconds_total|node_disk_reads_completed_total|node_disk_write_time_seconds_total|node_disk_writes_completed_total|node_disk_written_bytes_total|node_filefd_allocated|node_filefd_maximum|node_intr_total|node_load1|node_load15|node_load5|node_md_disks|node_md_disks_required|node_netstat_Icmp6_InErrors|node_netstat_Icmp6_InMsgs|node_netstat_Icmp6_OutMsgs|node_netstat_Icmp_InErrors|node_netstat_Icmp_InMsgs|node_netstat_Icmp_OutMsgs|node_netstat_IpExt_InOctets|node_netstat_IpExt_OutOctets|node_netstat_TcpExt_ListenDrops|node_netstat_TcpExt_ListenOverflows|node_netstat_TcpExt_TCPSynRetrans|node_netstat_Tcp_InErrs|node_netstat_Tcp_InSegs|node_netstat_Tcp_OutRsts|node_netstat_Tcp_OutSegs|node_netstat_Tcp_RetransSegs|node_netstat_Udp6_InDatagrams|node_netstat_Udp6_InErrors|node_netstat_Udp6_NoPorts|node_netstat_Udp6_OutDatagrams|node_netstat_Udp6_RcvbufErrors|node_netstat_Udp6_SndbufErrors|node_netstat_UdpLite_InErrors|node_netstat_Udp_InDatagrams|node_netstat_Udp_InErrors|node_netstat_Udp_NoPorts|node_netstat_Udp_OutDatagrams|node_netstat_Udp_RcvbufErrors|node_netstat_Udp_SndbufErrors|node_network_carrier|node_network_info|node_network_mtu_bytes|node_network_receive_bytes_total|node_network_receive_compressed_total|node_network_receive_drop_total|node_network_receive_errs_total|node_network_receive_fifo_total|node_network_receive_multicast_total|node_network_receive_packets_total|node_network_speed_bytes|node_network_transmit_bytes_total|node_network_transmit_compressed_total|node_network_transmit_drop_total|node_network_transmit_errs_total|node_network_transmit_fifo_total|node_network_transmit_multicast_total|node_network_transmit_packets_total|node_network_transmit_queue_length|node_network_up|node_nf_conntrack_entries|node_nf_conntrack_entries_limit|node_os_info|node_sockstat_FRAG6_inuse|node_sockstat_FRAG_inuse|node_sockstat_RAW6_inuse|node_sockstat_RAW_inuse|node_sockstat_TCP6_inuse|node_sockstat_TCP_alloc|node_sockstat_TCP_inuse|node_sockstat_TCP_mem|node_sockstat_TCP_mem_bytes|node_sockstat_TCP_orphan|node_sockstat_TCP_tw|node_sockstat_UDP6_inuse|node_sockstat_UDPLITE6_inuse|node_sockstat_UDPLITE_inuse|node_sockstat_UDP_inuse|node_sockstat_UDP_mem|node_sockstat_UDP_mem_bytes|node_sockstat_sockets_used|node_softnet_dropped_total|node_softnet_processed_total|node_softnet_times_squeezed_total|node_systemd_unit_state|node_textfile_scrape_error|node_time_zone_offset_seconds|node_timex_estimated_error_seconds|node_timex_maxerror_seconds|node_timex_offset_seconds|node_timex_sync_status|node_uname_info|node_vmstat_oom_kill|node_vmstat_pgfault|node_vmstat_pgmajfault|node_vmstat_pgpgin|node_vmstat_pgpgout|node_vmstat_pswpin|node_vmstat_pswpout|process_max_fds|process_open_fds"
@@ -620,6 +627,7 @@ prometheus.scrape "opencost" {
 }
 
 prometheus.relabel "opencost" {
+  max_cache_size = 100000
   rule {
     source_labels = ["__name__"]
     regex = "go_*"
@@ -640,6 +648,7 @@ prometheus.operator.podmonitors "pod_monitors" {
 }
 
 prometheus.relabel "podmonitors" {
+  max_cache_size = 100000
   forward_to = [prometheus.relabel.metrics_service.receiver]
 }
 
@@ -655,6 +664,7 @@ prometheus.operator.probes "probes" {
 }
 
 prometheus.relabel "probes" {
+  max_cache_size = 100000
   forward_to = [prometheus.relabel.metrics_service.receiver]
 }
 
@@ -670,6 +680,7 @@ prometheus.operator.servicemonitors "service_monitors" {
 }
 
 prometheus.relabel "servicemonitors" {
+  max_cache_size = 100000
   forward_to = [prometheus.relabel.metrics_service.receiver]
 }
 
@@ -680,6 +691,7 @@ remote.kubernetes.secret "metrics_service" {
 }
 
 prometheus.relabel "metrics_service" {
+  max_cache_size = 100000
   rule {
     source_labels = ["cluster"]
     regex = ""
