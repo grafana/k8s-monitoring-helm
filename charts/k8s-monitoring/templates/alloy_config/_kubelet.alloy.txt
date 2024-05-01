@@ -49,6 +49,7 @@ prometheus.scrape "kubelet" {
 }
 
 prometheus.relabel "kubelet" {
+  max_cache_size = {{ .Values.metrics.maxCacheSize }}
 {{- if or .Values.metrics.kubelet.metricsTuning.useDefaultAllowList .Values.metrics.kubelet.metricsTuning.includeMetrics }}
   rule {
     source_labels = ["__name__"]
