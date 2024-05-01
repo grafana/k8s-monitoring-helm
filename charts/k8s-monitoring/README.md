@@ -542,8 +542,8 @@ If you're encountering issues deploying or using this chart, check the [Troubles
 
 ## Metrics Tuning and Allow Lists
 
-Each metric source has the ability to adjust the amount of metrics being scraped and their labels. This can be useful to
-limit the sheer number of metrics. Many of the metric sources have an allow list, which is a set of metric names that
+Most metric sources have the ability to adjust the amount of metrics being scraped and their labels. This can be useful to
+limit the number of metrics. Many of the metric sources have an allow list, which is a set of metric names that
 will be kept, while any metrics not on the list will be dropped. The allow lists are tuned to return a useful, but
 minimal set of metrics for Kubernetes Monitoring.
 
