@@ -1,18 +1,26 @@
 # Default Allow Lists
 
-Most metric sources have the ability to adjust the amount of metrics being scraped and their labels. This can be useful to
+Most metric sources have the ability to adjust the amount of metrics being scraped and their labels. This can be useful
+to
 limit the number of metrics. Many of the metric sources have an allow list, which is a set of metric names that
 will be kept, while any metrics not on the list will be dropped. The allow lists are tuned to return a useful, but
 minimal set of metrics for [Kubernetes Monitoring](https://grafana.com/solutions/kubernetes/).
 
-If you want to allow all metrics, set this in the values file:
+You can control the use of these allow lists by using these fields in the values file:
 
 ```yaml
 metrics:
   <metric source>:
     metricsTuning:
-      useDefaultAllowList: false
+      useDefaultAllowList: <boolean>
+      useIntegrationAllowList: <boolean>
 ```
+
+The `metricsTuning` section also offers more fine-grained control of the allowed metrics, including or excluding metrics
+by name or by regex. You can learn more in [this example](../../../examples/custom-metrics-tuning).
+
+You can also use the `extraMetricRelabelingRules` section to add arbitrary relabeling rules that can be used to take any
+action on the metric list, including filtering based on label or other actions.
 
 | Metric Source      | Allow List                                                         | Purpose                   |
 |--------------------|--------------------------------------------------------------------|---------------------------|
