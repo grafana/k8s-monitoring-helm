@@ -34,8 +34,8 @@ alloy:
     storagePath: /var/lib/alloy
     mounts:
       extra:
-        - mountPath: /var/lib/alloy
-          name: alloy-wal
+        - name: alloy-wal
+          mountPath: /var/lib/alloy
   controller:
     autoscaling:
       enabled: true
@@ -60,18 +60,13 @@ alloy-logs:
     storagePath: /var/lib/alloy
     mounts:
       extra:
-        - mountPath: /var/lib/alloy
-          name: alloy-log-positions
-
+        - name: alloy-log-positions
+          mountPath: /var/lib/alloy
   controller:
-    enableStatefulSetAutoDeletePVC: true
-    volumeClaimTemplates:
-      - metadata:
-          name: alloy-log-positions
-        spec:
-          accessModes: ["ReadWriteOnce"]
-          storageClassName: "standard"
-          resources:
-            requests:
-              storage: 100Mi
+    volumes:
+      extra:
+        - name: alloy-log-positions
+          hostPath:
+            path: /var/alloy-log-storage
+            type: DirectoryOrCreate
 ```
