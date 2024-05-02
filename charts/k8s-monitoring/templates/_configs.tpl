@@ -105,6 +105,10 @@
   {{- include "alloy.config.logs.cluster_events" . }}
   {{- include "alloy.config.logsService" . }}
   {{- include "alloy.config.logging" (index .Values "alloy-events").logging }}
+
+  {{- if .Values.logs.cluster_events.extraConfig }}
+    {{- tpl .Values.logs.cluster_events.extraConfig . | indent 0 }}
+  {{- end }}
 {{- end -}}
 
 {{/* Grafana Alloy for Logs config */}}
