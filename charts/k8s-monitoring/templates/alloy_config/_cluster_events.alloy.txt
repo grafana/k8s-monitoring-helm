@@ -7,7 +7,15 @@ loki.source.kubernetes_events "cluster_events" {
 {{- if .namespaces }}
   namespaces = {{ .namespaces | toJson }}
 {{- end }}
-  forward_to = [loki.process.logs_service.receiver]
+  forward_to = [
+    loki.process.logs_service.receiver,
+{{- if .logToStdout }}
+    loki.echo.cluster_events.receiver,
+{{- end }}
+  ]
 }
+{{- if .logToStdout }}
+loki.echo "cluster_events" {}
+{{- end }}
 {{- end }}
 {{ end }}
