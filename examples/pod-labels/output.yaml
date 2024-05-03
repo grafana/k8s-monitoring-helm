@@ -220,7 +220,7 @@ data:
       metric_statements {
         context = "resource"
         statements = [
-          "set(attributes[\"k8s.cluster.name\"], \"kube-pod-labels-test\") where attributes[\"k8s.cluster.name\"] == nil",
+          "set(attributes[\"k8s.cluster.name\"], \"pod-labels-test\") where attributes[\"k8s.cluster.name\"] == nil",
         ]
       }
       log_statements {
@@ -229,7 +229,7 @@ data:
           "set(attributes[\"pod\"], attributes[\"k8s.pod.name\"])",
           "set(attributes[\"namespace\"], attributes[\"k8s.namespace.name\"])",
           "set(attributes[\"loki.resource.labels\"], \"pod, namespace, cluster, job\")",
-          "set(attributes[\"k8s.cluster.name\"], \"kube-pod-labels-test\") where attributes[\"k8s.cluster.name\"] == nil",
+          "set(attributes[\"k8s.cluster.name\"], \"pod-labels-test\") where attributes[\"k8s.cluster.name\"] == nil",
         ]
       }
       output {
@@ -841,7 +841,7 @@ data:
       rule {
         source_labels = ["cluster"]
         regex = ""
-        replacement = "kube-pod-labels-test"
+        replacement = "pod-labels-test"
         target_label = "cluster"
       }
       forward_to = [prometheus.remote_write.metrics_service.receiver]
@@ -931,7 +931,7 @@ data:
     loki.process "logs_service" {
       stage.static_labels {
           values = {
-            cluster = "kube-pod-labels-test",
+            cluster = "pod-labels-test",
           }
       }
       forward_to = [loki.write.logs_service.receiver]
@@ -982,7 +982,7 @@ data:
     loki.process "logs_service" {
       stage.static_labels {
           values = {
-            cluster = "kube-pod-labels-test",
+            cluster = "pod-labels-test",
           }
       }
       forward_to = [loki.write.logs_service.receiver]
@@ -1065,6 +1065,12 @@ data:
         replacement = "$1"
         target_label = "tmp_container_runtime"
       }
+      rule {
+        source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_instance"]
+        action = "replace"
+        target_label = "instance"
+      }
+      
     }
     
     discovery.relabel "filtered_pod_logs" {
@@ -1146,7 +1152,7 @@ data:
     loki.process "logs_service" {
       stage.static_labels {
           values = {
-            cluster = "kube-pod-labels-test",
+            cluster = "pod-labels-test",
           }
       }
       forward_to = [loki.write.logs_service.receiver]
@@ -49820,7 +49826,7 @@ data:
       metric_statements {
         context = "resource"
         statements = [
-          "set(attributes[\"k8s.cluster.name\"], \"kube-pod-labels-test\") where attributes[\"k8s.cluster.name\"] == nil",
+          "set(attributes[\"k8s.cluster.name\"], \"pod-labels-test\") where attributes[\"k8s.cluster.name\"] == nil",
         ]
       }
       log_statements {
@@ -49829,7 +49835,7 @@ data:
           "set(attributes[\"pod\"], attributes[\"k8s.pod.name\"])",
           "set(attributes[\"namespace\"], attributes[\"k8s.namespace.name\"])",
           "set(attributes[\"loki.resource.labels\"], \"pod, namespace, cluster, job\")",
-          "set(attributes[\"k8s.cluster.name\"], \"kube-pod-labels-test\") where attributes[\"k8s.cluster.name\"] == nil",
+          "set(attributes[\"k8s.cluster.name\"], \"pod-labels-test\") where attributes[\"k8s.cluster.name\"] == nil",
         ]
       }
       output {
@@ -50441,7 +50447,7 @@ data:
       rule {
         source_labels = ["cluster"]
         regex = ""
-        replacement = "kube-pod-labels-test"
+        replacement = "pod-labels-test"
         target_label = "cluster"
       }
       forward_to = [prometheus.remote_write.metrics_service.receiver]
@@ -50531,7 +50537,7 @@ data:
     loki.process "logs_service" {
       stage.static_labels {
           values = {
-            cluster = "kube-pod-labels-test",
+            cluster = "pod-labels-test",
           }
       }
       forward_to = [loki.write.logs_service.receiver]
@@ -50574,7 +50580,7 @@ data:
     loki.process "logs_service" {
       stage.static_labels {
           values = {
-            cluster = "kube-pod-labels-test",
+            cluster = "pod-labels-test",
           }
       }
       forward_to = [loki.write.logs_service.receiver]
@@ -50649,6 +50655,12 @@ data:
         replacement = "$1"
         target_label = "tmp_container_runtime"
       }
+      rule {
+        source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_instance"]
+        action = "replace"
+        target_label = "instance"
+      }
+      
     }
     
     discovery.relabel "filtered_pod_logs" {
@@ -50730,7 +50742,7 @@ data:
     loki.process "logs_service" {
       stage.static_labels {
           values = {
-            cluster = "kube-pod-labels-test",
+            cluster = "pod-labels-test",
           }
       }
       forward_to = [loki.write.logs_service.receiver]
@@ -50775,35 +50787,35 @@ data:
     {
       "queries": [
         {
-          "query": "up{cluster=\"kube-pod-labels-test\"}",
+          "query": "up{cluster=\"pod-labels-test\"}",
           "type": "promql"
         },
         {
-          "query": "alloy_build_info{cluster=\"kube-pod-labels-test\"}",
+          "query": "alloy_build_info{cluster=\"pod-labels-test\"}",
           "type": "promql"
         },
         {
-          "query": "kubernetes_build_info{cluster=\"kube-pod-labels-test\"}",
+          "query": "kubernetes_build_info{cluster=\"pod-labels-test\"}",
           "type": "promql"
         },
         {
-          "query": "machine_memory_bytes{cluster=\"kube-pod-labels-test\"}",
+          "query": "machine_memory_bytes{cluster=\"pod-labels-test\"}",
           "type": "promql"
         },
         {
-          "query": "kube_node_info{cluster=\"kube-pod-labels-test\"}",
+          "query": "kube_node_info{cluster=\"pod-labels-test\"}",
           "type": "promql"
         },
         {
-          "query": "node_exporter_build_info{cluster=\"kube-pod-labels-test\"}",
+          "query": "node_exporter_build_info{cluster=\"pod-labels-test\"}",
           "type": "promql"
         },
         {
-          "query": "opencost_build_info{cluster=\"kube-pod-labels-test\"}",
+          "query": "opencost_build_info{cluster=\"pod-labels-test\"}",
           "type": "promql"
         },
         {
-          "query": "grafana_kubernetes_monitoring_build_info{cluster=\"kube-pod-labels-test\"}",
+          "query": "grafana_kubernetes_monitoring_build_info{cluster=\"pod-labels-test\"}",
           "type": "promql"
         },
         {

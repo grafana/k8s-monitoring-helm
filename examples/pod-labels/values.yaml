@@ -1,5 +1,5 @@
 cluster:
-  name: kube-pod-labels-test
+  name: pod-labels-test
 
 externalServices:
   prometheus:
@@ -17,6 +17,15 @@ metrics:
   kube-state-metrics:
     metricsTuning:
       includeMetrics: [kube_pod_labels]
+
+logs:
+  pod_logs:
+    extraRelabelingRules: |
+      rule {
+        source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_instance"]
+        action = "replace"
+        target_label = "instance"
+      }
 
 test:
   extraQueries:
