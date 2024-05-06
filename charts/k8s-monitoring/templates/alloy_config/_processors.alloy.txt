@@ -233,8 +233,13 @@ otelcol.processor.tail_sampling "default" {
         {{ $value }},
       {{- end }}
       ]
-      enabled_regex_matching = {{ $policy.stringAttribute.enabledRegexMatching | default true }}
-      invert_match = {{ $policy.stringAttribute.invertMatch | default false }}
+
+      {{- if $policy.stringAttribute.enabledRegexMatching }}
+      enabled_regex_matching = {{ $policy.stringAttribute.enabledRegexMatching }}
+      {{- end }}
+      {{- if $policy.stringAttribute.invertMatch }}
+      invert_match = {{ $policy.stringAttribute.invertMatch }}
+      {{- end }}
     }
   {{- end }}
   }
