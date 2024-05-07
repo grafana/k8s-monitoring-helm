@@ -19,6 +19,7 @@ values.schema.json: values.yaml schema-mods/enums-and-types.json schema-mods/req
 			| del(.properties["alloy-profiles"].properties.alloy) \
 			| del(.properties["alloy-profiles"].properties.controller) \
 			| del(.properties["alloy-profiles"].properties.crds) \
+			| del(.properties["kepler"].properties.canMount) \
 			| del(.properties["kube-state-metrics"].properties.autosharding) \
 			| del(.properties["kube-state-metrics"].properties.nodeSelector) \
 			| del(.properties["kube-state-metrics"].properties.prometheusScrape) \
