@@ -48,6 +48,12 @@ discovery.relabel "pod_logs" {
     replacement = "$1"
     target_label = "tmp_container_runtime"
   }
+  rule {
+    source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_instance"]
+    action = "replace"
+    target_label = "instance"
+  }
+  
 }
 
 discovery.relabel "filtered_pod_logs" {
@@ -129,7 +135,7 @@ remote.kubernetes.secret "logs_service" {
 loki.process "logs_service" {
   stage.static_labels {
       values = {
-        cluster = "kube-pod-labels-test",
+        cluster = "pod-labels-test",
       }
   }
   forward_to = [loki.write.logs_service.receiver]
