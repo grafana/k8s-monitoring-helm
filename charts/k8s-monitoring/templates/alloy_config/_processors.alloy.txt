@@ -213,7 +213,7 @@ otelcol.processor.transform "default" {
 }
 
 
-{{- if and .Values.traces.enabled .Values.traces.receiver.tailsampling.policies }}
+{{- if and .Values.traces.enabled (and .Values.traces.receiver.tailsampling .Values.traces.receiver.tailsampling.policies) }}
 otelcol.processor.tail_sampling "default" {
   {{- range $policy := .Values.traces.receiver.tailsampling.policies }}
   policy {
