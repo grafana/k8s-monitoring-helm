@@ -57,7 +57,7 @@ echo "Deploying Prometheus..."
 helm upgrade --install prometheus prometheus-community/prometheus -f "${PROMETHEUS_VALUES}" -n prometheus --create-namespace --wait
 
 echo "Deploying Loki..."
-helm upgrade --install loki grafana/loki -f "${LOKI_VALUES}" --version ^5.0.0 -n loki --create-namespace --wait
+helm upgrade --install loki grafana/loki -f "${LOKI_VALUES}" -n loki --create-namespace --wait
 helm upgrade --install loki-otlp grafana/alloy -f "${GRAFANA_ALLOY_LOKI_OTLP_VALUES}" -n loki --wait
 
 echo "Deploying Tempo..."
