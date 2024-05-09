@@ -23,7 +23,14 @@ discovery.relabel "pod_logs" {
     regex = "{{ .Values.logs.pod_logs.namespaces | join "|" }}"
     action = "keep"
   }
-{{-  end }}
+{{- end }}
+{{- if .Values.logs.pod_logs.excludeNamespaces }}
+  rule {
+    source_labels = ["namespace"]
+    regex = "{{ .Values.logs.pod_logs.excludeNamespaces | join "|" }}"
+    action = "drop"
+  }
+{{- end }}
   rule {
     source_labels = ["__meta_kubernetes_pod_name"]
     action = "replace"
