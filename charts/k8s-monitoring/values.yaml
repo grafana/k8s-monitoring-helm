@@ -83,7 +83,7 @@ externalServices:
         checkInterval: 1s
         # -- Maximum amount of memory targeted to be allocated by the process heap.
         limit: 0MiB
-    
+
     # Write-Ahead Log (WAL) settings. Only applies when protocol is "remote_write"
     wal:
       # -- How frequently to clean up the WAL.
@@ -273,6 +273,7 @@ metrics:
   scrapeInterval: 60s
 
   # -- Sets the max_cache_size for every prometheus.relabel component. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#arguments))
+  # This should be at least 2x-5x your largest scrape target or samples appended rate.
   maxCacheSize: 100000
 
   # -- Rule blocks to be added to the discovery.relabel component for all metric sources. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery.relabel/#rule-block))
@@ -318,6 +319,9 @@ metrics:
       # -- Annotation for setting the metrics scheme, default: http.
       metricsScheme: "k8s.grafana.com/metrics.scheme"
 
+    # -- Sets the max_cache_size for cadvisor prometheus.relabel component. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#arguments))
+    # This should be at least 2x-5x your largest scrape target or samples appended rate.
+    maxCacheSize: 100000
 
   # Metrics from Grafana Alloy
   alloy:
@@ -350,6 +354,10 @@ metrics:
       includeMetrics: []
       # -- Metrics to drop. Can use regex.
       excludeMetrics: []
+
+    # -- Sets the max_cache_size for alloy prometheus.relabel component. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#arguments))
+    # This should be at least 2x-5x your largest scrape target or samples appended rate.
+    maxCacheSize: 100000
 
   # Cluster object metrics from Kube State Metrics
   kube-state-metrics:
@@ -387,6 +395,10 @@ metrics:
       includeMetrics: []
       # -- Metrics to drop. Can use regex.
       excludeMetrics: []
+
+    # -- Sets the max_cache_size for kube-state-metrics prometheus.relabel component. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#arguments))
+    # This should be at least 2x-5x your largest scrape target or samples appended rate.
+    maxCacheSize: 100000
 
   # Node metrics from Node Exporter
   node-exporter:
@@ -427,6 +439,10 @@ metrics:
       # -- Drop metrics for the given filesystem types
       dropMetricsForFilesystem: [tempfs]
 
+    # -- Sets the max_cache_size for node exporter prometheus.relabel component. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#arguments))
+    # This should be at least 2x-5x your largest scrape target or samples appended rate.
+    maxCacheSize: 100000
+
   # Windows Node metrics from Windows Exporter
   windows-exporter:
     # -- Scrape node metrics
@@ -457,6 +473,10 @@ metrics:
       # -- Metrics to drop. Can use regex.
       excludeMetrics: []
 
+    # -- Sets the max_cache_size for windows exporter prometheus.relabel component. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#arguments))
+    # This should be at least 2x-5x your largest scrape target or samples appended rate.
+    maxCacheSize: 100000
+
   # Cluster metrics from the Kubelet
   kubelet:
     # -- Scrape cluster metrics from the Kubelet
@@ -485,6 +505,10 @@ metrics:
       includeMetrics: []
       # -- Metrics to drop. Can use regex.
       excludeMetrics: []
+
+    # -- Sets the max_cache_size for kubelet prometheus.relabel component. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#arguments))
+    # This should be at least 2x-5x your largest scrape target or samples appended rate.
+    maxCacheSize: 100000
 
   # Container metrics from cAdvisor
   cadvisor:
@@ -527,6 +551,10 @@ metrics:
       # -- Only keep network metrics that use the following physical devices
       keepPhysicalNetworkDevices: ["en[ospx][0-9].*", "wlan[0-9].*", "eth[0-9].*"]
 
+    # -- Sets the max_cache_size for cadvisor prometheus.relabel component. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#arguments))
+    # This should be at least 2x-5x your largest scrape target or samples appended rate.
+    maxCacheSize: 100000
+
   # Metrics from the API Server
   apiserver:
     # -- Scrape metrics from the API Server
@@ -549,6 +577,10 @@ metrics:
       includeMetrics: []
       # -- Metrics to drop. Can use regex.
       excludeMetrics: []
+
+    # -- Sets the max_cache_size for apiserver prometheus.relabel component. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#arguments))
+    # This should be at least 2x-5x your largest scrape target or samples appended rate.
+    maxCacheSize: 100000
 
   # Metrics from the Kube Controller Manager
   kubeControllerManager:
@@ -576,6 +608,10 @@ metrics:
       # -- Metrics to drop. Can use regex.
       excludeMetrics: []
 
+    # -- Sets the max_cache_size for kube controller manager prometheus.relabel component. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#arguments))
+    # This should be at least 2x-5x your largest scrape target or samples appended rate.
+    maxCacheSize: 100000
+
   # Metrics from the Kube Proxy
   kubeProxy:
     # -- Scrape metrics from the Kube Proxy
@@ -602,6 +638,10 @@ metrics:
       # -- Metrics to drop. Can use regex.
       excludeMetrics: []
 
+    # -- Sets the max_cache_size for kube-proxy prometheus.relabel component. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#arguments))
+    # This should be at least 2x-5x your largest scrape target or samples appended rate.
+    maxCacheSize: 100000
+
   # Metrics from the Kube Scheduler
   kubeScheduler:
     # -- Scrape metrics from the Kube Scheduler
@@ -627,6 +667,10 @@ metrics:
       includeMetrics: []
       # -- Metrics to drop. Can use regex.
       excludeMetrics: []
+
+    # -- Sets the max_cache_size for kube-scheduler prometheus.relabel component. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#arguments))
+    # This should be at least 2x-5x your largest scrape target or samples appended rate.
+    maxCacheSize: 100000
 
   # Cost related metrics from OpenCost
   cost:
@@ -658,6 +702,10 @@ metrics:
       # -- Metrics to drop. Can use regex.
       excludeMetrics: []
 
+    # -- Sets the max_cache_size for opencost prometheus.relabel component. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#arguments))
+    # This should be at least 2x-5x your largest scrape target or samples appended rate.
+    maxCacheSize: 100000
+
   podMonitors:
     # -- Enable discovery of Prometheus Operator PodMonitor objects.
     enabled: true
@@ -675,6 +723,10 @@ metrics:
 
     # -- Rule blocks to be added to the prometheus.relabel component for PodMonitor objects. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#rule-block))
     extraMetricRelabelingRules: ""
+
+    # -- Sets the max_cache_size for podmonitors prometheus.relabel component. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#arguments))
+    # This should be at least 2x-5x your largest scrape target or samples appended rate.
+    maxCacheSize: 100000
 
   probes:
     # -- Enable discovery of Prometheus Operator Probe objects.
@@ -694,6 +746,10 @@ metrics:
     # -- Rule blocks to be added to the prometheus.relabel component for Probe objects. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#rule-block))
     extraMetricRelabelingRules: ""
 
+    # -- Sets the max_cache_size for probes prometheus.relabel component. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#arguments))
+    # This should be at least 2x-5x your largest scrape target or samples appended rate.
+    maxCacheSize: 100000
+
   serviceMonitors:
     # -- Enable discovery of Prometheus Operator ServiceMonitor objects.
     enabled: true
@@ -712,6 +768,9 @@ metrics:
     # -- Rule blocks to be added to the prometheus.relabel component for ServiceMonitor objects. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#rule-block))
     extraMetricRelabelingRules: ""
 
+    # -- Sets the max_cache_size for serviceMonitors prometheus.relabel component. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#arguments))
+    # This should be at least 2x-5x your largest scrape target or samples appended rate.
+    maxCacheSize: 100000
 
   kubernetesMonitoring:
     # -- Report telemetry about this Kubernetes Monitoring chart as a metric.

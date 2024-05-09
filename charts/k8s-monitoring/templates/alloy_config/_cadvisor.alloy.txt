@@ -54,7 +54,7 @@ prometheus.scrape "cadvisor" {
 }
 
 prometheus.relabel "cadvisor" {
-  max_cache_size = {{ .Values.metrics.maxCacheSize }}
+  max_cache_size = {{ .Values.metrics.cadvisor.maxCacheSize | default .Values.metrics.maxCacheSize }}
 {{- if or .Values.metrics.cadvisor.metricsTuning.useDefaultAllowList .Values.metrics.cadvisor.metricsTuning.includeMetrics }}
   rule {
     source_labels = ["__name__"]
