@@ -63,7 +63,7 @@ prometheus.scrape "node_exporter" {
 }
 
 prometheus.relabel "node_exporter" {
-  max_cache_size = {{ (index .Values.metrics "node-exporter").maxCacheSize | default .Values.metrics.maxCacheSize }}
+  max_cache_size = {{ (index .Values.metrics "node-exporter").maxCacheSize | default .Values.metrics.maxCacheSize | int }}
 {{- if or (index .Values.metrics "node-exporter").metricsTuning.useDefaultAllowList (index .Values.metrics "node-exporter").metricsTuning.includeMetrics }}
   rule {
     source_labels = ["__name__"]

@@ -58,7 +58,7 @@ prometheus.scrape "kube_state_metrics" {
 }
 
 prometheus.relabel "kube_state_metrics" {
-  max_cache_size = {{ (index .Values.metrics "kube-state-metrics").maxCacheSize | default .Values.metrics.maxCacheSize }}
+  max_cache_size = {{ (index .Values.metrics "kube-state-metrics").maxCacheSize | default .Values.metrics.maxCacheSize | int }}
 {{- if or (index .Values.metrics "kube-state-metrics").metricsTuning.useDefaultAllowList (index .Values.metrics "kube-state-metrics").metricsTuning.includeMetrics }}
   rule {
     source_labels = ["__name__"]

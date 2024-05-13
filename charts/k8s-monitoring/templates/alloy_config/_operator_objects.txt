@@ -21,7 +21,7 @@ prometheus.operator.podmonitors "pod_monitors" {
 }
 
 prometheus.relabel "podmonitors" {
-  max_cache_size = {{ .Values.metrics.podMonitors.maxCacheSize | default .Values.metrics.maxCacheSize }}
+  max_cache_size = {{ .Values.metrics.podMonitors.maxCacheSize | default .Values.metrics.maxCacheSize | int }}
 {{- if .Values.metrics.extraMetricRelabelingRules }}
 {{ .Values.metrics.extraMetricRelabelingRules | indent 2 }}
 {{- end }}
@@ -55,7 +55,7 @@ prometheus.operator.probes "probes" {
 }
 
 prometheus.relabel "probes" {
-  max_cache_size = {{ .Values.metrics.probes.maxCacheSize | default .Values.metrics.maxCacheSize }}
+  max_cache_size = {{ .Values.metrics.probes.maxCacheSize | default .Values.metrics.maxCacheSize | int }}
 {{- if .Values.metrics.extraMetricRelabelingRules }}
 {{ .Values.metrics.extraMetricRelabelingRules | indent 2 }}
 {{- end }}
@@ -90,7 +90,7 @@ prometheus.operator.servicemonitors "service_monitors" {
 }
 
 prometheus.relabel "servicemonitors" {
-  max_cache_size = {{ .Values.metrics.serviceMonitors.maxCacheSize | default .Values.metrics.maxCacheSize }}
+  max_cache_size = {{ .Values.metrics.serviceMonitors.maxCacheSize | default .Values.metrics.maxCacheSize | int }}
 {{- if .Values.metrics.extraMetricRelabelingRules }}
 {{ .Values.metrics.extraMetricRelabelingRules | indent 2 }}
 {{- end }}

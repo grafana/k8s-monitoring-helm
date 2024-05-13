@@ -56,7 +56,7 @@ prometheus.scrape "windows_exporter" {
 }
 
 prometheus.relabel "windows_exporter" {
-  max_cache_size = {{ (index .Values.metrics "windows-exporter").maxCacheSize | default .Values.metrics.maxCacheSize }}
+  max_cache_size = {{ (index .Values.metrics "windows-exporter").maxCacheSize | default .Values.metrics.maxCacheSize | int }}
   rule {
     source_labels = ["__name__"]
     regex = "windows_cpu_time_total"
