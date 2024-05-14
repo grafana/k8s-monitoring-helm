@@ -161,3 +161,42 @@ jobs:
         run: |
           npx textlint --format checkstyle --config "${dir}/.textlintrc" --ignore-path "${dir}/.textlintignore" ./*.md ./**/*.md | \
             reviewdog -f=checkstyle -name="textlint" -reporter=github-check -level=info
+
+  alloy:
+    name: runner / alloy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: reviewdog/action-setup@v1
+      - run: |
+          GITHUB_ORG="grafana" && \
+          GITHUB_REPO="alloy" && \
+          ARCHIVE="alloy" && \
+          BINARY="alloy" && \
+          BIN_PATH="/usr/local/bin" && \
+          TMP_PATH="/tmp" && \
+          ALLOY_VERSION=$(wget -q -O - "https://api.github.com/repos/$GITHUB_ORG/$GITHUB_REPO/releases/latest" \
+              | grep -m 1 tag_name \
+              | cut -d '"' -f 4 | cut -c2-) && \
+          HOST_OS=$(uname -a | awk '{print tolower($1)}') && \
+          HOST_ARCH=$(arch | sed 's/x86_64/amd64/') && \
+          DOWNLOAD_URL="https://github.com/$GITHUB_ORG/$GITHUB_REPO/releases/download" && \
+          DOWNLOAD_URL="$DOWNLOAD_URL/v$ALLOY_VERSION/$ARCHIVE-$HOST_OS-$HOST_ARCH.zip"
+              echo "Downloading $DOWNLOAD_URL to $TMP_PATH/$ARCHIVE.zip" && \
+              wget -q -O "$TMP_PATH/$ARCHIVE.zip" "$DOWNLOAD_URL" && \
+              echo "Unzipping: $TMP_PATH/$ARCHIVE.zip" && \
+              ( cd "$TMP_PATH" || exit ; unzip -qq -o -d "$TMP_PATH" "$TMP_PATH/$BINARY.zip" ) && \
+              rm -rf "$TMP_PATH/$ARCHIVE.zip" && \
+              chmod a+x "$TMP_PATH/$BINARY-$HOST_OS-$HOST_ARCH" &&
+              echo "Moving: $TMP_PATH/$ARCHIVE-$HOST_OS-$HOST_ARCH/$BINARY to $BIN_PATH/$BINARY" && \
+              sudo mv "$TMP_PATH/$BINARY-$HOST_OS-$HOST_ARCH" "$BIN_PATH/$BINARY" && \
+              rm -rf "$TMP_PATH/$ARCHIVE-$HOST_OS-$HOST_ARCH"
+
+          echo ""
+          # shellcheck disable=SC2034
+          alloy --help
+      - env:
+          REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ./tools/lint-alloy.sh --format=checkstyle | \
+            reviewdog -f=checkstyle -name="alloy" -reporter=github-pr-check

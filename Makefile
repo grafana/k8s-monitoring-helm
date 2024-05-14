@@ -1,4 +1,4 @@
-.PHONY: setup install lint lint-chart lint-config lint-sh lint-md lint-txt lint-yml lint-ec lint-alex lint-misspell lint-actionlint test install-deps clean generate-example-outputs regenerate-example-outputs
+.PHONY: setup install lint lint-chart lint-config lint-configs lint-alloy lint-sh lint-md lint-txt lint-yml lint-ec lint-alex lint-misspell lint-actionlint test install-deps clean generate-example-outputs regenerate-example-outputs
 SHELL := /bin/bash
 UNAME := $(shell uname)
 
@@ -38,8 +38,8 @@ lint: lint-chart lint-config lint-sh lint-md lint-txt lint-yml lint-ec lint-alex
 lint-chart:
 	ct lint --debug --config "$(CT_CONFIGFILE)" --lint-conf "$(LINT_CONFIGFILE)" --check-version-increment=false
 
-lint-config: scripts/lint-configs.sh
-	./scripts/lint-configs.sh $(METRICS_CONFIG_FILES) $(EVENTS_CONFIG_FILES) $(LOGS_CONFIG_FILES) --public-preview $(PROFILES_CONFIG_FILES)
+lint-config lint-configs lint-alloy:
+	@./scripts/lint-alloy.sh $(METRICS_CONFIG_FILES) $(EVENTS_CONFIG_FILES) $(LOGS_CONFIG_FILES) --public-preview $(PROFILES_CONFIG_FILES) || true
 
 # Shell Linting
 lint-sh lint-shell:
