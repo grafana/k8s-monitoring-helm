@@ -1,8 +1,9 @@
+---
 name: Test
-
+# yamllint disable-line rule:truthy
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
 
   # Allows you to run this workflow manually from the Actions tab
@@ -32,177 +33,177 @@ jobs:
   check-for-doc-changes:
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout
-      uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-    - name: Regenerate docs
-      run: |
-        docker run --rm \
-          -v "$(pwd)/charts/k8s-monitoring:/helm-docs" \
-          -u "$(id -u)" \
-          jnorwood/helm-docs
-        if ! git diff --exit-code; then
-          echo "Helm chart documentation is not up to date. Please run 'helm-docs' and commit changes!" >&2
-          exit 1
-        fi
+      - name: Regenerate docs
+        run: |
+          docker run --rm \
+            -v "$(pwd)/charts/k8s-monitoring:/helm-docs" \
+            -u "$(id -u)" \
+            jnorwood/helm-docs
+          if ! git diff --exit-code; then
+            echo "Helm chart documentation is not up to date. Please run 'helm-docs' and commit changes!" >&2
+            exit 1
+          fi
 
   check-for-example-output-changes:
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout
-      uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-    - name: Install Helm
-      uses: azure/setup-helm@v4
+      - name: Install Helm
+        uses: azure/setup-helm@v4
 
-    - name: Check for example output changes
-      run: |
-        make regenerate-example-outputs
-        if [[ -n "$(git status --porcelain)" ]]; then
-          echo "Helm chart examples are not up to date. Please run 'make regenerate-example-outputs', examine changes, and commit changes." >&2
-          exit 1
-        fi
+      - name: Check for example output changes
+        run: |
+          make regenerate-example-outputs
+          if [[ -n "$(git status --porcelain)" ]]; then
+            echo "Helm chart examples are not up to date. Please run 'make regenerate-example-outputs', examine changes, and commit changes." >&2
+            exit 1
+          fi
 
   static-test-chart:
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0  # Required for `ct lint` to work
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Required for `ct lint` to work
 
-    - name: Install Helm
-      uses: azure/setup-helm@v4
+      - name: Install Helm
+        uses: azure/setup-helm@v4
 
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.9'
-        check-latest: true
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+          check-latest: true
 
-    - name: Set up chart-testing
-      uses: helm/chart-testing-action@v2
+      - name: Set up chart-testing
+        uses: helm/chart-testing-action@v2
 
-    - name: Install yq
-      run: pip install yq
+      - name: Install yq
+        run: pip install yq
 
-    - name: Install ShellSpec
-      run: |
-        curl -fsSL https://git.io/shellspec | sh -s -- --yes
+      - name: Install ShellSpec
+        run: |
+          curl -fsSL https://git.io/shellspec | sh -s -- --yes
 
-    # Installing Grafana Alloy because we need it to lint the generated alloy config files.
-    # https://grafana.com/docs/alloy/latest/get-started/install/linux/
-    - name: Install Grafana Alloy
-      run: |
-        sudo mkdir -p /etc/apt/keyrings/
-        wget -q -O - https://apt.grafana.com/gpg.key | gpg --dearmor | sudo tee /etc/apt/keyrings/grafana.gpg > /dev/null
-        echo "deb [signed-by=/etc/apt/keyrings/grafana.gpg] https://apt.grafana.com stable main" | sudo tee /etc/apt/sources.list.d/grafana.list
-        sudo apt-get update
-        sudo apt-get install -y alloy
+      # Installing Grafana Alloy because we need it to lint the generated alloy config files.
+      # https://grafana.com/docs/alloy/latest/get-started/install/linux/
+      - name: Install Grafana Alloy
+        run: |
+          sudo mkdir -p /etc/apt/keyrings/
+          wget -q -O - https://apt.grafana.com/gpg.key | gpg --dearmor | sudo tee /etc/apt/keyrings/grafana.gpg > /dev/null
+          echo "deb [signed-by=/etc/apt/keyrings/grafana.gpg] https://apt.grafana.com stable main" | sudo tee /etc/apt/sources.list.d/grafana.list
+          sudo apt-get update
+          sudo apt-get install -y alloy
 
-    - name: Run tests
-      run: make test
+      - name: Run tests
+        run: make test
 
   test-chart:
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-    - name: Set up Helm
-      uses: azure/setup-helm@v4
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
 
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.9'
-        check-latest: true
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+          check-latest: true
 
-    - name: Set up chart-testing
-      uses: helm/chart-testing-action@v2
+      - name: Set up chart-testing
+        uses: helm/chart-testing-action@v2
 
-    - name: List changed charts
-      id: list-changed
-      run: |
-        latestRelease=$(git describe --abbrev=0 --tags)
-        changed=$(ct list-changed --config "${CT_CONFIGFILE}" --since "${latestRelease}")
-        if [[ -n "$changed" ]]; then
-          echo "changed=true" >> "${GITHUB_OUTPUT}"
-        fi
+      - name: List changed charts
+        id: list-changed
+        run: |
+          latestRelease=$(git describe --abbrev=0 --tags)
+          changed=$(ct list-changed --config "${CT_CONFIGFILE}" --since "${latestRelease}")
+          if [[ -n "$changed" ]]; then
+            echo "changed=true" >> "${GITHUB_OUTPUT}"
+          fi
 
-    - name: Create kind cluster
-      uses: helm/kind-action@v1
-      if: (steps.list-changed.outputs.changed == 'true') || (contains(github.event.pull_request.labels.*.name, 'full_test_required'))
-      with:
-        config: "${{ github.workspace }}/.github/configs/cluster-config.yaml"
+      - name: Create kind cluster
+        uses: helm/kind-action@v1
+        if: (steps.list-changed.outputs.changed == 'true') || (contains(github.event.pull_request.labels.*.name, 'full_test_required'))
+        with:
+          config: "${{ github.workspace }}/.github/configs/cluster-config.yaml"
 
-    - name: Create Certs and Credentials
-      if: (steps.list-changed.outputs.changed == 'true') || (contains(github.event.pull_request.labels.*.name, 'full_test_required'))
-      run: |
-        kubectl apply -f "${SECRETGEN_CONTROLLER_MANIFEST}"
-        kubectl apply -f "${CERTIFICATES_MANIFEST}"
-        kubectl apply -f "${CREDENTIALS}"
+      - name: Create Certs and Credentials
+        if: (steps.list-changed.outputs.changed == 'true') || (contains(github.event.pull_request.labels.*.name, 'full_test_required'))
+        run: |
+          kubectl apply -f "${SECRETGEN_CONTROLLER_MANIFEST}"
+          kubectl apply -f "${CERTIFICATES_MANIFEST}"
+          kubectl apply -f "${CREDENTIALS}"
 
-    - name: Set up Helm repositories
-      if: (steps.list-changed.outputs.changed == 'true') || (contains(github.event.pull_request.labels.*.name, 'full_test_required'))
-      run: |
-        helm repo add grafana https://grafana.github.io/helm-charts
-        helm repo add jetstack https://charts.jetstack.io
-        helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
-        helm repo update
+      - name: Set up Helm repositories
+        if: (steps.list-changed.outputs.changed == 'true') || (contains(github.event.pull_request.labels.*.name, 'full_test_required'))
+        run: |
+          helm repo add grafana https://grafana.github.io/helm-charts
+          helm repo add jetstack https://charts.jetstack.io
+          helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+          helm repo update
 
-    - name: Deploy Services for Test Data
-      if: (steps.list-changed.outputs.changed == 'true') || (contains(github.event.pull_request.labels.*.name, 'full_test_required'))
-      run: |
-        # MySQL for integration testing
-        helm install mysql oci://registry-1.docker.io/bitnamicharts/mysql -f "${MYSQL_VALUES}" -n mysql --create-namespace --wait
-        kubectl apply -f "${MYSQL_CONFIG_MANIFEST}"
+      - name: Deploy Services for Test Data
+        if: (steps.list-changed.outputs.changed == 'true') || (contains(github.event.pull_request.labels.*.name, 'full_test_required'))
+        run: |
+          # MySQL for integration testing
+          helm install mysql oci://registry-1.docker.io/bitnamicharts/mysql -f "${MYSQL_VALUES}" -n mysql --create-namespace --wait
+          kubectl apply -f "${MYSQL_CONFIG_MANIFEST}"
 
-        # Cert Manager for integration testing (service annotations)
-        helm install cert-manager jetstack/cert-manager -f "${CERT_MANAGER_VALUES}" -n cert-manager --create-namespace --wait
+          # Cert Manager for integration testing (service annotations)
+          helm install cert-manager jetstack/cert-manager -f "${CERT_MANAGER_VALUES}" -n cert-manager --create-namespace --wait
 
-        # This alloy instance is only used for generating metrics, logs, and traces that'll get
-        # sent to the K8s Monitoring Alloy to test ingesting MLT from receivers.
-        kubectl apply -f "${GRAFANA_ALLOY_RECEIVER_SERVICE}"
-        helm install alloy grafana/alloy -f "${GRAFANA_ALLOY_VALUES}" -n alloy --create-namespace --wait
+          # This alloy instance is only used for generating metrics, logs, and traces that'll get
+          # sent to the K8s Monitoring Alloy to test ingesting MLT from receivers.
+          kubectl apply -f "${GRAFANA_ALLOY_RECEIVER_SERVICE}"
+          helm install alloy grafana/alloy -f "${GRAFANA_ALLOY_VALUES}" -n alloy --create-namespace --wait
 
-        # This prometheus instance is used pod annotation testing with https
-        helm install prometheus-workload prometheus-community/prometheus -f "${PROMETHEUS_WORKLOAD_VALUES}" -n prometheus --create-namespace --wait
+          # This prometheus instance is used pod annotation testing with https
+          helm install prometheus-workload prometheus-community/prometheus -f "${PROMETHEUS_WORKLOAD_VALUES}" -n prometheus --create-namespace --wait
 
-        # Deploy the Prometheus Operator CRDs, since we want to deploy Loki with a ServiceMonitor later
-        helm install prom-crds prometheus-community/prometheus-operator-crds --wait
+          # Deploy the Prometheus Operator CRDs, since we want to deploy Loki with a ServiceMonitor later
+          helm install prom-crds prometheus-community/prometheus-operator-crds --wait
 
-    - name: Deploy Prometheus
-      if: (steps.list-changed.outputs.changed == 'true') || (contains(github.event.pull_request.labels.*.name, 'full_test_required'))
-      run: |
-        helm install prometheus prometheus-community/prometheus -f "${PROMETHEUS_VALUES}" -n prometheus --create-namespace --wait
+      - name: Deploy Prometheus
+        if: (steps.list-changed.outputs.changed == 'true') || (contains(github.event.pull_request.labels.*.name, 'full_test_required'))
+        run: |
+          helm install prometheus prometheus-community/prometheus -f "${PROMETHEUS_VALUES}" -n prometheus --create-namespace --wait
 
-    - name: Deploy Loki
-      if: (steps.list-changed.outputs.changed == 'true') || (contains(github.event.pull_request.labels.*.name, 'full_test_required'))
-      run: |
-        helm install loki grafana/loki -f "${LOKI_VALUES}" -n loki --create-namespace --wait
-        helm install loki-otlp grafana/alloy -f "${GRAFANA_ALLOY_LOKI_OTLP_VALUES}" -n loki --wait
+      - name: Deploy Loki
+        if: (steps.list-changed.outputs.changed == 'true') || (contains(github.event.pull_request.labels.*.name, 'full_test_required'))
+        run: |
+          helm install loki grafana/loki -f "${LOKI_VALUES}" -n loki --create-namespace --wait
+          helm install loki-otlp grafana/alloy -f "${GRAFANA_ALLOY_LOKI_OTLP_VALUES}" -n loki --wait
 
-    - name: Deploy Tempo
-      if: (steps.list-changed.outputs.changed == 'true') || (contains(github.event.pull_request.labels.*.name, 'full_test_required'))
-      run: |
-        helm install tempo grafana/tempo -n tempo --create-namespace --wait
+      - name: Deploy Tempo
+        if: (steps.list-changed.outputs.changed == 'true') || (contains(github.event.pull_request.labels.*.name, 'full_test_required'))
+        run: |
+          helm install tempo grafana/tempo -n tempo --create-namespace --wait
 
-    - name: Deploy Pyroscope
-      if: (steps.list-changed.outputs.changed == 'true') || (contains(github.event.pull_request.labels.*.name, 'full_test_required'))
-      run: |
-        helm install pyroscope grafana/pyroscope -f "${PYROSCOPE_VALUES}" -n pyroscope --create-namespace --wait
+      - name: Deploy Pyroscope
+        if: (steps.list-changed.outputs.changed == 'true') || (contains(github.event.pull_request.labels.*.name, 'full_test_required'))
+        run: |
+          helm install pyroscope grafana/pyroscope -f "${PYROSCOPE_VALUES}" -n pyroscope --create-namespace --wait
 
-    - name: Deploy Grafana
-      if: (steps.list-changed.outputs.changed == 'true') || (contains(github.event.pull_request.labels.*.name, 'full_test_required'))
-      run: |
-        helm install grafana grafana/grafana -f "${GRAFANA_VALUES}" -n grafana --create-namespace --wait
-        kubectl apply -f "${PODLOGS_OBJECTS}"
+      - name: Deploy Grafana
+        if: (steps.list-changed.outputs.changed == 'true') || (contains(github.event.pull_request.labels.*.name, 'full_test_required'))
+        run: |
+          helm install grafana grafana/grafana -f "${GRAFANA_VALUES}" -n grafana --create-namespace --wait
+          kubectl apply -f "${PODLOGS_OBJECTS}"
 
-    - name: Test chart
-      if: (steps.list-changed.outputs.changed == 'true') || (contains(github.event.pull_request.labels.*.name, 'full_test_required'))
-      run: |
-        latestRelease=$(git describe --abbrev=0 --tags)
-        ct install --all --config "${CT_CONFIGFILE}" --since "${latestRelease}" --helm-extra-args "--timeout 10m"
+      - name: Test chart
+        if: (steps.list-changed.outputs.changed == 'true') || (contains(github.event.pull_request.labels.*.name, 'full_test_required'))
+        run: |
+          latestRelease=$(git describe --abbrev=0 --tags)
+          ct install --all --config "${CT_CONFIGFILE}" --since "${latestRelease}" --helm-extra-args "--timeout 10m"

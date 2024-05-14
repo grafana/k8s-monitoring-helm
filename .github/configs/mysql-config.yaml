@@ -1,3 +1,4 @@
+---
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -38,12 +39,12 @@ data:
       }
       argument "all_services" {}
       argument "metrics_destination" {}
-  
+
       remote.kubernetes.secret "mysql" {
         name = argument.secret_name.value
         namespace = argument.namespace.value
       }
-  
+
       // Metrics
       discovery.relabel "mysql_service" {
         targets = argument.all_services.value
@@ -53,11 +54,11 @@ data:
           action = "keep"
         }
       }
-  
+
       prometheus.exporter.mysql "mysql" {
         data_source_name = argument.username.value + ":" + nonsensitive(remote.kubernetes.secret.mysql.data[argument.password_key.value]) + "@(" + argument.host.value + ")/"
       }
-  
+
       prometheus.scrape "mysql" {
         targets      = prometheus.exporter.mysql.mysql.targets
         job_name     = "integrations/mysql"
@@ -66,7 +67,7 @@ data:
         }
         forward_to   = [prometheus.relabel.mysql.receiver]
       }
-  
+
       prometheus.relabel "mysql" {
         rule {
           replacement = argument.instance.value
@@ -84,7 +85,7 @@ data:
       }
       argument "all_pods" {}
       argument "logs_destination" {}
-  
+
       // Logs
       discovery.relabel "mysql_pods" {
         targets = argument.all_pods.value
@@ -94,16 +95,16 @@ data:
           action = "keep"
         }
       }
-  
+
       local.file_match "mysql_logs" {
         path_targets = discovery.relabel.mysql_pods.output
       }
-  
+
       loki.source.file "mysql_logs" {
         targets    = local.file_match.mysql_logs.targets
         forward_to = [loki.process.mysql_logs.receiver]
       }
-  
+
       loki.process "mysql_logs" {
         // If you're using docker, replace `cri` with `docker` below.
         stage.cri {}
