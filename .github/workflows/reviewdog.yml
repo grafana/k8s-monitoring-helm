@@ -1,0 +1,228 @@
+---
+name: ReviewDog
+# yamllint disable-line rule:truthy
+on:
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  markdownlint:
+    name: runner / markdownlint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: markdownlint
+        uses: reviewdog/action-markdownlint@v0
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          reporter: github-check
+      - name: Github Context
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+        run: |
+          echo "$GITHUB_CONTEXT" | jq -r '.'
+
+  misspell:
+    name: runner / misspell
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: reviewdog/action-misspell@v1
+        with:
+          github_token: ${{ secrets.github_token }}
+          locale: US
+          reporter: github-check
+          level: warning
+          path: |
+            ./
+          pattern: |
+            *.md
+      - name: Github Context
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+        run: |
+          echo "$GITHUB_CONTEXT" | jq -r '.'
+
+  languagetool:
+    name: runner / languagetool
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: reviewdog/action-languagetool@v1
+        with:
+          github_token: ${{ secrets.github_token }}
+          reporter: github-check
+          level: info
+          patterns: |
+            **/*.md
+            !**/testdata/**
+      - name: Github Context
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+        run: |
+          echo "$GITHUB_CONTEXT" | jq -r '.'
+
+  alex:
+    name: runner / alex
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: reviewdog/action-alex@v1
+        with:
+          github_token: ${{ secrets.github_token }}
+          reporter: github-check
+          # GitHub Status Check won't become failure with warning.
+          level: warning
+      - name: Github Context
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+        run: |
+          echo "$GITHUB_CONTEXT" | jq -r '.'
+
+  shellcheck:
+    name: runner / shellcheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: reviewdog/action-shellcheck@v1
+        with:
+          github_token: ${{ secrets.github_token }}
+          reporter: github-check
+      - name: Github Context
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+        run: |
+          echo "$GITHUB_CONTEXT" | jq -r '.'
+
+  tflint:
+    name: runner / tflint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: reviewdog/action-tflint@v1
+        with:
+          github_token: ${{ secrets.github_token }}
+          reporter: github-check
+      - name: Github Context
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+        run: |
+          echo "$GITHUB_CONTEXT" | jq -r '.'
+
+  yamllint:
+    name: runner / yamllint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: reviewdog/action-yamllint@v1
+        with:
+          github_token: ${{ secrets.github_token }}
+          reporter: github-check
+      - name: Github Context
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+        run: |
+          echo "$GITHUB_CONTEXT" | jq -r '.'
+
+  gitleaks:
+    name: runner / gitleaks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: reviewdog/action-gitleaks@v1
+        with:
+          github_token: ${{ secrets.github_token }}
+          reporter: github-check
+      - name: Github Context
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+        run: |
+          echo "$GITHUB_CONTEXT" | jq -r '.'
+
+  tfsec:
+    name: runner / tfsec
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: reviewdog/action-tfsec@master
+        with:
+          github_token: ${{ secrets.github_token }}
+          level: info
+          reporter: github-check
+          filter_mode: nofilter
+          fail_on_error: true
+      - name: Github Context
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+        run: |
+          echo "$GITHUB_CONTEXT" | jq -r '.'
+
+  actionlint:
+    name: runner / actionlint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: reviewdog/action-actionlint@v1
+        with:
+          github_token: ${{ secrets.github_token }}
+          reporter: github-check
+      - name: Github Context
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+        run: |
+          echo "$GITHUB_CONTEXT" | jq -r '.'
+
+  eclint:
+    name: runner / eclint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: reviewdog/action-eclint@v1
+        with:
+          github_token: ${{ secrets.github_token }}
+          reporter: github-check
+      - name: Github Context
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+        run: |
+          echo "$GITHUB_CONTEXT" | jq -r '.'
+
+  textlint:
+    name: runner / textlint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: reviewdog/action-setup@v1
+      - run: npm install
+      - env:
+          REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          npx textlint --format checkstyle --config "${dir}/.textlintrc" --ignore-path "${dir}/.textlintignore" ./*.md ./**/*.md | \
+            reviewdog -f=checkstyle -name="textlint" -reporter=github-check -level=info
+      - name: Github Context
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+        run: |
+          echo "$GITHUB_CONTEXT" | jq -r '.'
+
+  comment-pr:
+    name: runner / textlint
+    runs-on: ubuntu-latest
+    needs:
+      - misspell
+      - languagetool
+      - alex
+      - shellcheck
+      - tflint
+      - yamllint
+      - gitleaks
+      - tfsec
+      - actionlint
+      - eclint
+      - textlint
+    steps:
+      - name: Github Context
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+        run: |
+          echo "$GITHUB_CONTEXT" | jq -r '.'
