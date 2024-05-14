@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
 
 source "./scripts/includes/utils.sh"
-
-source "$(pwd)/tools/includes/logging.sh"
+source "./scripts/includes/logging.sh"
 
 # output the heading
 heading "K8s Monitoring Helm" "Performing Setup Checks"

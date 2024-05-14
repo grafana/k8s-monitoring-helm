@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 
 source "./scripts/includes/utils.sh"
-
 source "./scripts/includes/logging.sh"
 
 # output the heading
@@ -16,24 +15,18 @@ fi
 (return 0 2>/dev/null) && sourced=1 || sourced=0
 
 statusCode=0
-while read -r file; do
-  shellcheck \
-    --external-sources \
-    --shell bash \
-    --source-path "$(dirname "${file}")" \
-    "${file}"
-  currentCode="$?"
-  # if the current code is 0, output the file name for logging purposes
-  if [[ "${currentCode}" == 0 ]]; then
-    echo -e "\\x1b[32m${file}\\x1b[0m: no issues found"
-  else
-    echo ""
-  fi
-  # only override the statusCode if it is 0
-  if [[ "${statusCode}" == 0 ]]; then
-    statusCode="${currentCode}"
-  fi
-done < <(find . -type f -name "*.sh" -not -path "./node_modules/*" -not -path "./.git/*" || true)
+
+# shellcheck disable=SC2046 disable=SC2312
+shellcheck --rcfile="$(pwd)/.shellcheckrc" $(
+    comm -23 <(
+      find . -type f -name "*.sh" -not \( -path "./node_modules/*" -o -path "./data-alloy/*" -o -path "./.git/*" -o -path "./tests/spec/*" \) | \
+        sort
+      ) <(
+      find . -type f -name "*.sh"  -not \( -path "./node_modules/*" -o -path "./data-alloy/*" -o -path "./.git/*" -o -path "./tests/spec/*" \) | \
+        git check-ignore --stdin | \
+        sort
+      )
+    )
 
 echo ""
 echo ""

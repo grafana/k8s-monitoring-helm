@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 
 source "./scripts/includes/utils.sh"
-
 source "./scripts/includes/logging.sh"
 
 # check to see if alloy is installed

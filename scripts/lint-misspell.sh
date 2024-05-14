@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 
 source "./scripts/includes/utils.sh"
-
 source "./scripts/includes/logging.sh"
 
 # output the heading
@@ -17,13 +16,13 @@ fi
 
 statusCode=0
 
-# shellcheck disable=SC2046
+# shellcheck disable=SC2046 disable=SC2312
 misspell --error --locale US $(
     comm -23 <(
       find . -type f -not \( -path "./node_modules/*" -o -path "./data-alloy/*" -o -path "./.git/*" -o -name output.yaml -o -name .textlintrc \) | \
         sort
       ) <(
-      find . -type f -not \( -path "./node_modules/*" -o -path "./data-alloy/*" -o -path "./.git/*" -o -name output.yaml -o -name .textlintrc  \) | \
+      find . -type f -not \( -path "./node_modules/*" -o -path "./data-alloy/*" -o -path "./.git/*" -o -name output.yaml -o -name .textlintrc \) | \
         git check-ignore --stdin | \
         sort
       )
