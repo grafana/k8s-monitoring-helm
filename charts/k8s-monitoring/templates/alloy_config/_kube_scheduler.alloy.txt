@@ -43,7 +43,7 @@ prometheus.scrape "kube_scheduler" {
 }
 
 prometheus.relabel "kube_scheduler" {
-  max_cache_size = {{ .Values.metrics.maxCacheSize }}
+  max_cache_size = {{ .Values.metrics.kubeScheduler.maxCacheSize | default .Values.metrics.maxCacheSize | int }}
 {{- if .Values.metrics.kubeScheduler.metricsTuning.includeMetrics }}
   rule {
     source_labels = ["__name__"]

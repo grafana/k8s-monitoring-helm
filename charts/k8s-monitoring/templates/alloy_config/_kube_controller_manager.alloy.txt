@@ -43,7 +43,7 @@ prometheus.scrape "kube_controller_manager" {
 }
 
 prometheus.relabel "kube_controller_manager" {
-  max_cache_size = {{ .Values.metrics.maxCacheSize }}
+  max_cache_size = {{ .Values.metrics.kubeControllerManager.maxCacheSize | default .Values.metrics.maxCacheSize | int }}
 {{- if .Values.metrics.kubeControllerManager.metricsTuning.includeMetrics }}
   rule {
     source_labels = ["__name__"]

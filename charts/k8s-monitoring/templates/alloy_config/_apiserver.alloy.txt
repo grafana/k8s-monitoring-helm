@@ -43,7 +43,7 @@ prometheus.scrape "apiserver" {
 }
 
 prometheus.relabel "apiserver" {
-  max_cache_size = {{ .Values.metrics.maxCacheSize }}
+  max_cache_size = {{ .Values.metrics.apiserver.maxCacheSize | default .Values.metrics.maxCacheSize | int }}
 {{- if .Values.metrics.apiserver.metricsTuning.includeMetrics }}
   rule {
     source_labels = ["__name__"]

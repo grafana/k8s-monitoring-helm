@@ -181,7 +181,7 @@ prometheus.scrape "annotation_autodiscovery_https" {
 }
 
 prometheus.relabel "annotation_autodiscovery" {
-  max_cache_size = {{ .Values.metrics.maxCacheSize }}
+  max_cache_size = {{ .Values.metrics.autoDiscover.maxCacheSize | default .Values.metrics.maxCacheSize | int }}
 {{- if .Values.metrics.autoDiscover.metricsTuning.includeMetrics }}
   rule {
     source_labels = ["__name__"]

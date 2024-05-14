@@ -50,7 +50,7 @@ prometheus.scrape "opencost" {
 }
 
 prometheus.relabel "opencost" {
-  max_cache_size = {{ .Values.metrics.maxCacheSize }}
+  max_cache_size = {{ .Values.metrics.cost.maxCacheSize | default .Values.metrics.maxCacheSize | int }}
 {{- if or .Values.metrics.cost.metricsTuning.useDefaultAllowList .Values.metrics.cost.metricsTuning.includeMetrics }}
   rule {
     source_labels = ["__name__"]
