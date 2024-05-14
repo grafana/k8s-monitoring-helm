@@ -1,4 +1,4 @@
-#
+---
 # This values file will test the following features:
 # * Sending metrics, logs, and traces via OTLP HTTP
 # * Access kubelet and cadvisor metrics using the proxy
@@ -82,45 +82,45 @@ extraConfig: |-
 test:
   attempts: 20
   extraQueries:
-  # Check that the external label is properly being set
-  - query: "count(kube_pod_info{cluster=\"ci-test-cluster-2\", color=\"blue\"})"
-    type: promql
-    expect:
-      value: 1
-      operator: "<="  # There's gotta be at least one pod
+    # Check that the external label is properly being set
+    - query: "count(kube_pod_info{cluster=\"ci-test-cluster-2\", color=\"blue\"})"
+      type: promql
+      expect:
+        value: 1
+        operator: "<="  # There's gotta be at least one pod
 
-  # Check for cluster events
-  - query: "count_over_time({cluster=\"ci-test-cluster-2\", job=\"integrations/kubernetes/eventhandler\"}[1h])"
-    type: logql
+    # Check for cluster events
+    - query: "count_over_time({cluster=\"ci-test-cluster-2\", job=\"integrations/kubernetes/eventhandler\"}[1h])"
+      type: logql
 
-    # Check for pod logs (gathered via API)
-  - query: "count_over_time({cluster=\"ci-test-cluster-2\", job!=\"integrations/kubernetes/eventhandler\"}[1h])"
-    type: logql
+      # Check for pod logs (gathered via API)
+    - query: "count_over_time({cluster=\"ci-test-cluster-2\", job!=\"integrations/kubernetes/eventhandler\"}[1h])"
+      type: logql
 
-    # Check for pod logs (gathered via PodLogs)
-  - query: "count_over_time({cluster=\"ci-test-cluster-2\", job=\"grafana/test-podlogs-object\", source=\"podlogs_object\"}[1h])"
-    type: logql
+      # Check for pod logs (gathered via PodLogs)
+    - query: "count_over_time({cluster=\"ci-test-cluster-2\", job=\"grafana/test-podlogs-object\", source=\"podlogs_object\"}[1h])"
+      type: logql
 
-    # Check for traces
-  - query: "{.k8s.cluster.name=\"ci-test-cluster-2\"}"
-    type: traceql
+      # Check for traces
+    - query: "{.k8s.cluster.name=\"ci-test-cluster-2\"}"
+      type: traceql
 
-  # These checks for metrics and traces that are being sent directly to this alloy via the receivers
-  - query: "alloy_build_info{cluster=\"from-the-other-alloy\"}"
-    type: promql
-  - query: "{.k8s.cluster.name=\"from-the-other-alloy\"}"
-    type: traceql
+    # These checks for metrics and traces that are being sent directly to this alloy via the receivers
+    - query: "alloy_build_info{cluster=\"from-the-other-alloy\"}"
+      type: promql
+    - query: "{.k8s.cluster.name=\"from-the-other-alloy\"}"
+      type: traceql
 
-  # DPM check
-  - query: "avg(count_over_time(scrape_samples_scraped{cluster=~\"ci-test-cluster-2|from-the-other-alloy\"}[1m]))"
-    type: promql
-    expect:
-      value: 1
-      operator: ==
+    # DPM check
+    - query: "avg(count_over_time(scrape_samples_scraped{cluster=~\"ci-test-cluster-2|from-the-other-alloy\"}[1m]))"
+      type: promql
+      expect:
+        value: 1
+        operator: ==
 
-  # hostinfo connector check
-  - query: "traces_host_info"
-    type: promql
+    # hostinfo connector check
+    - query: "traces_host_info"
+      type: promql
 
   envOverrides:
     LOKI_URL: http://loki.loki.svc:3100/loki/api/v1/query

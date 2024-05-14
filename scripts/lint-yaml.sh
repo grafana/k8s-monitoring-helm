@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
-source "$(pwd)/tools/includes/utils.sh"
+source "./scripts/includes/utils.sh"
 
-source "./tools/includes/logging.sh"
+source "./scripts/includes/logging.sh"
 
 # output the heading
 heading "Kubernetes Monitoring Helm" "Onboarding - Performing YAML Linting using yamllint"

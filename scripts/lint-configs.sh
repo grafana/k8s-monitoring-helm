@@ -11,12 +11,12 @@ STABILITY_LEVEL=generally-available
 
 for file in "$@";
 do
-  if [ "${file}" == "--public-preview" ]; then
+  if [[ "${file}" == "--public-preview" ]]; then
     STABILITY_LEVEL=public-preview
   fi
 
   # Skip missing or empty files
-  if [ ! -s "${file}" ]; then
+  if [[ ! -s "${file}" ]]; then
     continue
   fi
 
