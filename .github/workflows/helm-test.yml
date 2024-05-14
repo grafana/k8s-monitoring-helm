@@ -54,13 +54,11 @@ jobs:
 
     - name: Install Helm
       uses: azure/setup-helm@v4
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Check for example output changes
       run: |
         make regenerate-example-outputs
-        if [ ! -z "$(git status --porcelain)" ]; then
+        if [[ -n "$(git status --porcelain)" ]]; then
           echo "Helm chart examples are not up to date. Please run 'make regenerate-example-outputs', examine changes, and commit changes." >&2
           exit 1
         fi
@@ -75,8 +73,6 @@ jobs:
 
     - name: Install Helm
       uses: azure/setup-helm@v4
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Set up Python
       uses: actions/setup-python@v5
@@ -117,8 +113,6 @@ jobs:
 
     - name: Set up Helm
       uses: azure/setup-helm@v4
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Set up Python
       uses: actions/setup-python@v5
@@ -165,7 +159,7 @@ jobs:
         # MySQL for integration testing
         helm install mysql oci://registry-1.docker.io/bitnamicharts/mysql -f "${MYSQL_VALUES}" -n mysql --create-namespace --wait
         kubectl apply -f "${MYSQL_CONFIG_MANIFEST}"
-        
+
         # Cert Manager for integration testing (service annotations)
         helm install cert-manager jetstack/cert-manager -f "${CERT_MANAGER_VALUES}" -n cert-manager --create-namespace --wait
 
@@ -176,7 +170,7 @@ jobs:
 
         # This prometheus instance is used pod annotation testing with https
         helm install prometheus-workload prometheus-community/prometheus -f "${PROMETHEUS_WORKLOAD_VALUES}" -n prometheus --create-namespace --wait
-        
+
         # Deploy the Prometheus Operator CRDs, since we want to deploy Loki with a ServiceMonitor later
         helm install prom-crds prometheus-community/prometheus-operator-crds --wait
 

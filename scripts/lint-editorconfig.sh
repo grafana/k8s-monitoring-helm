@@ -17,7 +17,7 @@ fi
 (return 0 2>/dev/null) && sourced=1 || sourced=0
 
 statusCode=0
-./node_modules/.bin/editorconfig-checker -config="${dir}/.editorconfig"
+./node_modules/.bin/editorconfig-checker -config="${dir}/.ecrc"
 currentCode="$?"
 # only override the statusCode if it is 0
 if [[ "${statusCode}" == 0 ]]; then

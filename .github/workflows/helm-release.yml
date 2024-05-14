@@ -31,31 +31,34 @@ jobs:
 
         latest_tag=$( if ! git describe --tags --abbrev=0 --match='helm-chart/*' 2> /dev/null ; then git rev-list --max-parents=0 --first-parent HEAD; fi )
 
-        echo "Running: ct list-changed --config ${CT_CONFIGFILE} --since ${latest_tag} --target-branch ${{ github.ref_name }}"
+        echo "Running: ct list-changed --config \"${CT_CONFIGFILE}\" --since \"${latest_tag}\" --target-branch ${{ github.ref_name }}"
         changed=$(ct list-changed --config "${CT_CONFIGFILE}" --since "${latest_tag}" --target-branch "${{ github.ref_name }}")
         echo "${changed}"
 
-        num_changed=$(wc -l <<< ${changed})
+        num_changed=$(wc -l <<< "${changed}")
         if [[ "${num_changed}" -gt "1" ]] ; then
           echo "More than one chart changed, exiting"
           exit 1
         fi
         if [[ -n "${changed}" ]]; then
-          name=$(yq ".name" < ${changed}/Chart.yaml)
-          version=$(yq ".version" < ${changed}/Chart.yaml)
+          name=$(yq ".name" < "${changed}/Chart.yaml")
+          version=$(yq ".version" < "${changed}/Chart.yaml")
+          echo "Chart name: ${name}"
+          echo "Chart version: ${version}"
+
           tagname="v${version}"
 
-          if [ $(git tag -l "${tagname}") ]; then
+          if [[ $(git tag -l "${tagname}") ]]; then
             echo "Tag ${tagname} already exists, skipping release"
-            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "changed=false" >> "${GITHUB_OUTPUT}"
           else
             echo "Releasing ${changed}"
-            echo "changed=true" >> $GITHUB_OUTPUT
-            echo "chartpath=${changed}" >> $GITHUB_OUTPUT
+            echo "changed=true" >> "${GITHUB_OUTPUT}"
+            echo "chartpath=${changed}" >> "${GITHUB_OUTPUT}"
           fi
         else
           echo "No charts have changed, skipping release"
-          echo "changed=false" >> $GITHUB_OUTPUT
+          echo "changed=false" >> "${GITHUB_OUTPUT}"
         fi
 
   release:
@@ -91,8 +94,6 @@ jobs:
 
     - name: Set up Helm
       uses: azure/setup-helm@v4
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Parse Chart.yaml
       id: parse-chart
@@ -103,10 +104,11 @@ jobs:
         name=$(yq ".name" < ${changed}/Chart.yaml)
         version=$(yq ".version" < ${changed}/Chart.yaml)
 
-        echo "chartpath=${changed}" >> $GITHUB_OUTPUT
-        echo "desc=${description}" >> $GITHUB_OUTPUT
-        echo "tagname=v${version}" >> $GITHUB_OUTPUT
-        echo "packagename=${name}-${version}" >> $GITHUB_OUTPUT
+        # shellcheck disable=SC2129
+        echo "chartpath=${changed}" >> "${GITHUB_OUTPUT}"
+        echo "desc=${description}" >> "${GITHUB_OUTPUT}"
+        echo "tagname=v${version}" >> "${GITHUB_OUTPUT}"
+        echo "packagename=${name}-${version}" >> "${GITHUB_OUTPUT}"
 
     - name: Install CR tool
       run: |
