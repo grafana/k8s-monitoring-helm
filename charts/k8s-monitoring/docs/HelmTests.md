@@ -57,7 +57,6 @@ For PromQL queries, you can add an "expect" section to the query to validate the
   expect:
     operator": "[<, <=, ==, !=, =>, >]"
     value": <expected value>
-}
 ```
 
 #### Examples

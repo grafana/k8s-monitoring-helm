@@ -7,14 +7,14 @@ of the chart. When you make changes, they will likely involve changes to some of
 
 Required tools:
 
-* [chart-testing](https://github.com/helm/chart-testing)
-* [Helm](https://helm.sh/docs/intro/install/)
-* [helm-docs](https://github.com/norwoodj/helm-docs)
-* [kind](https://kind.sigs.k8s.io/)
-* [Grafana Alloy](https://github.com/grafana/alloy) (used for linting the generated config files)
-* [shellspec](https://github.com/shellspec/shellspec)
-* [yamllint](https://yamllint.readthedocs.io/en/stable/index.html)
-* [yq](https://github.com/mikefarah/yq/)
+-   [chart-testing](https://github.com/helm/chart-testing)
+-   [Helm](https://helm.sh/docs/intro/install/)
+-   [helm-docs](https://github.com/norwoodj/helm-docs)
+-   [kind](https://kind.sigs.k8s.io/)
+-   [Grafana Alloy](https://github.com/grafana/alloy) (used for linting the generated config files)
+-   [shellspec](https://github.com/shellspec/shellspec)
+-   [yamllint](https://yamllint.readthedocs.io/en/stable/index.html)
+-   [yq](https://github.com/mikefarah/yq/)
 
 Run `make install-deps` to install all requirements (Mac supported only at the moment using Brew).
 
@@ -23,21 +23,21 @@ Run `make install-deps` to install all requirements (Mac supported only at the m
 After you have made your changes, ensure that you build the automatically generated files in this chart, by doing the
 following:
 
-* Use [Helm Docs](https://github.com/norwoodj/helm-docs) to check for updates to the chart documentation
-    * `helm-docs` OR `cd charts/k8s-monitoring; make README.md`
-* Check for updates to the example outputs
-    * `make test`
-    * If changes are acceptable, regenerate the outputs and re-test:
-    * `make regenerate-example-outputs test`
+-   Use [Helm Docs](https://github.com/norwoodj/helm-docs) to check for updates to the chart documentation
+    -   `helm-docs` OR `cd charts/k8s-monitoring; make README.md`
+-   Check for updates to the example outputs
+    -   `make test`
+    -   If changes are acceptable, regenerate the outputs and re-test:
+    -   `make regenerate-example-outputs test`
 
 ## Bumping Dependent Chart Versions
 
 Chart dependencies are automatically updated via PRs, but if you want to manually set a chart dependency version:
 
-* Set the dependency's version in [Chart.yaml](charts/k8s-monitoring/Chart.yaml).
-* Update the Chart.lock file by running `cd charts/k8s-monitoring; helm dependency update`
-* Follow the steps above in [Building generated files](#building-generated-files) to update the examples and docs.
-* Finally, take a moment to inspect the generated output for anything that might cause trouble.
+-   Set the dependency's version in [Chart.yaml](charts/k8s-monitoring/Chart.yaml).
+-   Update the Chart.lock file by running `cd charts/k8s-monitoring; helm dependency update`
+-   Follow the steps above in [Building generated files](#building-generated-files) to update the examples and docs.
+-   Finally, take a moment to inspect the generated output for anything that might cause trouble.
 
 ## Testing
 
@@ -54,9 +54,9 @@ Creating new releases is typically only done by maintainers, most often Grafana 
 
 The process for creating a new release is:
 
-1. Update the chart version and push to main
-2. Ensure the CI tests on main are successful
-3. Run [release.sh](./scripts/release.sh) to start the Release workflow.
+1.  Update the chart version and push to main
+2.  Ensure the CI tests on main are successful
+3.  Run [release.sh](./scripts/release.sh) to start the Release workflow.
 
 ### Updating the chart version
 

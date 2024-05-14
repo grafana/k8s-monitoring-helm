@@ -4,7 +4,7 @@ Kubernetes Clusters with fully managed control planes like [GKE Autopilot](https
 need special consideration because they often have special restrictions around DaemonSets and node access. This prevents
 services like Node Exporter from working properly.
 
-This example shows how to disable Node Exporter. Obviously, you won't see node metrics, 
+This example shows how to disable Node Exporter. Obviously, you won't see node metrics,
 
 ```yaml
 cluster:

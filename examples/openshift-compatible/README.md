@@ -4,7 +4,7 @@ This example shows the modifications from the [default](../default-values) to de
 
 These modifications skip the deployment of kube-state-metrics and Node Exporter, since they will already be present on
 the cluster, and adjust the configuration to Grafana Alloy to find those existing components.
-It also modifies Grafana Alloy to lock down security and permissions. 
+It also modifies Grafana Alloy to lock down security and permissions.
 
 The `platform: openshift` switch also creates SecurityContextConstraints objects that modifies the permissions for the
 Grafana Alloy.

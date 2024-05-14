@@ -1,5 +1,7 @@
-[comment]: <> (NOTE: Do not edit README.md directly. It is a generated file!)
-[comment]: <> (      To make changes, please modify README.md.gotmpl and run `helm-docs`)
+<!--
+(NOTE: Do not edit README.md directly. It is a generated file!)
+(      To make changes, please modify README.md.gotmpl and run `helm-docs`)
+-->
 
 # k8s-monitoring
 
@@ -24,6 +26,7 @@ These sections in your values file will need to be renamed:
 | `metrics.agent`          | `metrics.alloy`  | Settings for scraping metrics from Alloy instances               |
 
 For example, if you have something like this:
+
 ```yaml
 grafana-agent:
   controller:
@@ -77,7 +80,7 @@ This component will "fan-in" all of the metric sources to the correct metrics se
 
 ### Setup Grafana chart repository
 
-```
+```shell
 helm repo add grafana https://grafana.github.io/helm-charts
 helm repo update
 ```
@@ -108,12 +111,12 @@ helm install grafana-k8s-monitoring --atomic --timeout 300s  grafana/k8s-monitor
 
 This chart simplifies the deployment of a Kubernetes monitoring infrastructure, including the following:
 
-* [kube-state-metrics](https://github.com/kubernetes/kube-state-metrics), which gathers metrics about Kubernetes objects
-* [Node exporter](https://github.com/prometheus/node_exporter), which gathers metrics about Kubernetes nodes
-* [OpenCost](https://www.opencost.io/), which interprets the above to create cost metrics for the cluster, and
-* [Grafana Alloy](https://grafana.com/docs/alloy/latest/), which scrapes the above services to forward metrics to
-  [Prometheus](https://prometheus.io/), logs and events to [Loki](https://grafana.com/oss/loki/), traces to
-  [Tempo](https://grafana.com/oss/tempo/), and profiles to [Pyroscope](https://grafana.com/docs/pyroscope/).
+-   [kube-state-metrics](https://github.com/kubernetes/kube-state-metrics), which gathers metrics about Kubernetes objects
+-   [Node exporter](https://github.com/prometheus/node_exporter), which gathers metrics about Kubernetes nodes
+-   [OpenCost](https://www.opencost.io/), which interprets the above to create cost metrics for the cluster, and
+-   [Grafana Alloy](https://grafana.com/docs/alloy/latest/), which scrapes the above services to forward metrics to
+    [Prometheus](https://prometheus.io/), logs and events to [Loki](https://grafana.com/oss/loki/), traces to
+    [Tempo](https://grafana.com/oss/tempo/), and profiles to [Pyroscope](https://grafana.com/docs/pyroscope/).
 
 The Prometheus and Loki services may be hosted on the same cluster, or remotely (e.g. on Grafana Cloud).
 
@@ -476,11 +479,11 @@ NOTE: This cannot be used to modify existing configuration values.
 Extra flow components can re-use any of the existing components in the generated configuration, which includes several
 useful ones like these:
 
-* `discovery.kubernetes.nodes` - Discovers all nodes in the cluster
-* `discovery.kubernetes.pods` - Discovers all pods in the cluster
-* `discovery.kubernetes.services` - Discovers all services in the cluster
-* `prometheus.relabel.metrics_service` - Sends metrics to the metrics service defined by `.externalService.prometheus`
-* `loki.process.logs_service` - Sends logs to the logs service defined by `.externalService.loki`
+-   `discovery.kubernetes.nodes` - Discovers all nodes in the cluster
+-   `discovery.kubernetes.pods` - Discovers all pods in the cluster
+-   `discovery.kubernetes.services` - Discovers all services in the cluster
+-   `prometheus.relabel.metrics_service` - Sends metrics to the metrics service defined by `.externalService.prometheus`
+-   `loki.process.logs_service` - Sends logs to the logs service defined by `.externalService.loki`
 
 Example:
 

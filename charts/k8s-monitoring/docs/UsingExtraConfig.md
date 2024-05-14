@@ -8,8 +8,8 @@ by this chart. There are a few methods to use these sections that will be explor
 
 There are two `extraConfig` sections that you can use:
 
-* `.extraConfig` Inserts configuration for the Grafana Alloy instance that scrapes metrics and opens receivers.
-* `.logs.extraConfig` Inserts configuration for the Grafana Alloy instance that gathers logs.
+-   `.extraConfig` Inserts configuration for the Grafana Alloy instance that scrapes metrics and opens receivers.
+-   `.logs.extraConfig` Inserts configuration for the Grafana Alloy instance that gathers logs.
 
 ## How to use
 

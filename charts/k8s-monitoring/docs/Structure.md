@@ -14,7 +14,7 @@ This Helm chart deploys several packages to generate and capture the telemetry d
 corresponds to the list of dependencies in this chart's Chart.yaml file. For each package, there is an associated
 section inside the Helm chart's values.yaml file that controls how it is configured.
 
-| Name                                                                                   | Type                      | Associated values             | Description                                                                                                                                                                                                                   | 
+| Name                                                                                   | Type                      | Associated values             | Description                                                                                                                                                                                                                   |
 |----------------------------------------------------------------------------------------|---------------------------|-------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | [Grafana Alloy](https://grafana.com/oss/alloy/)                                        | StatefulSet               | `alloy`                       | The Grafana Alloy instance that is responsible for scraping metrics, and accepting metrics, logs, and traces via receivers.                                                                                                   |
 | Grafana Alloy for Logs                                                                 | DaemonSet                 | `alloy-logs`                  | The Grafana Alloy instance that gathers Pod logs. By default, it uses HostPath volume mounts to read Pod log files directly from the nodes. It can alternatively get logs via the API server and be deployed as a Deployment. |
@@ -75,7 +75,6 @@ controls it.
 |----------------|------------------------|-------------------------------------------|
 | Cluster Events | `.logs.cluster_events` | Controls how cluster events are gathered. |
 
-
 ### Grafana Alloy for Logs Configuration
 
 | Name                     | Associated values      | Description                                                                  |
@@ -89,4 +88,3 @@ controls it.
 | Name           | Associated values | Description                         |
 |----------------|-------------------|-------------------------------------|
 | Cluster Events | `.profiles`       | Controls how profiles are gathered. |
-
