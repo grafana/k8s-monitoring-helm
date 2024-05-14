@@ -5,7 +5,7 @@ source "./scripts/includes/utils.sh"
 source "./scripts/includes/logging.sh"
 
 # output the heading
-heading "Kubernetes Monitoring Helm" "Performing Shell Linting using misspell"
+heading "Kubernetes Monitoring Helm" "Performing Misspell Linting using misspell"
 
 # check to see if misspell is installed
 if [[ "$(command -v misspell || true)" = "" ]]; then
@@ -16,7 +16,19 @@ fi
 (return 0 2>/dev/null) && sourced=1 || sourced=0
 
 statusCode=0
-misspell --locale US ./*.md ./**[!node_modules]/*.md ./**[!node_modules]/**/*.md ./**[!node_modules]/**/**/*.md
+
+# shellcheck disable=SC2046
+misspell --error --locale US $(
+    comm -23 <(
+      find . -type f -not \( -path "./node_modules/*" -o -path "./data-alloy/*" -o -path "./.git/*" -o -name output.yaml -o -name .textlintrc \) | \
+        sort
+      ) <(
+      find . -type f -not \( -path "./node_modules/*" -o -path "./data-alloy/*" -o -path "./.git/*" -o -name output.yaml -o -name .textlintrc  \) | \
+        git check-ignore --stdin | \
+        sort
+      )
+    )
+
 currentCode="$?"
 # only override the statusCode if it is 0
 if [[ "${statusCode}" == 0 ]]; then
