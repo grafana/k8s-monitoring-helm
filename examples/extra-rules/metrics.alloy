@@ -714,6 +714,11 @@ prometheus.operator.podmonitors "pod_monitors" {
     default_scrape_interval = "60s"
   }
   forward_to = [prometheus.relabel.podmonitors.receiver]
+  rule {
+    source_labels = ["__meta_kubernetes_namespace"]
+    regex = "private"
+    action = "drop"
+  }
 }
 
 prometheus.relabel "podmonitors" {
@@ -730,6 +735,11 @@ prometheus.operator.probes "probes" {
     default_scrape_interval = "60s"
   }
   forward_to = [prometheus.relabel.probes.receiver]
+  rule {
+    source_labels = ["__meta_kubernetes_namespace"]
+    regex = "private"
+    action = "drop"
+  }
 }
 
 prometheus.relabel "probes" {
@@ -746,6 +756,11 @@ prometheus.operator.servicemonitors "service_monitors" {
     default_scrape_interval = "60s"
   }
   forward_to = [prometheus.relabel.servicemonitors.receiver]
+  rule {
+    source_labels = ["__meta_kubernetes_namespace"]
+    regex = "private"
+    action = "drop"
+  }
 }
 
 prometheus.relabel "servicemonitors" {
