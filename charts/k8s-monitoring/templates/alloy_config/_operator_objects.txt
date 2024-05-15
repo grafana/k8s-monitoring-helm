@@ -18,6 +18,13 @@ prometheus.operator.podmonitors "pod_monitors" {
     default_scrape_interval = {{ .Values.metrics.podMonitors.scrapeInterval | default .Values.metrics.scrapeInterval | quote }}
   }
   forward_to = [prometheus.relabel.podmonitors.receiver]
+
+{{- if .Values.metrics.extraRelabelingRules }}
+{{ .Values.metrics.extraRelabelingRules | indent 2 }}
+{{- end }}
+{{- if .Values.metrics.podMonitors.extraRelabelingRules }}
+{{ .Values.metrics.podMonitors.extraRelabelingRules | indent 2 }}
+{{- end }}
 }
 
 prometheus.relabel "podmonitors" {
@@ -52,6 +59,13 @@ prometheus.operator.probes "probes" {
     default_scrape_interval = {{ .Values.metrics.probes.scrapeInterval | default .Values.metrics.scrapeInterval | quote }}
   }
   forward_to = [prometheus.relabel.probes.receiver]
+
+{{- if .Values.metrics.extraRelabelingRules }}
+{{ .Values.metrics.extraRelabelingRules | indent 2 }}
+{{- end }}
+{{- if .Values.metrics.probes.extraRelabelingRules }}
+{{ .Values.metrics.probes.extraRelabelingRules | indent 2 }}
+{{- end }}
 }
 
 prometheus.relabel "probes" {
@@ -65,7 +79,6 @@ prometheus.relabel "probes" {
   forward_to = [prometheus.relabel.metrics_service.receiver]
 }
 {{ end }}
-
 
 {{ define "alloy.config.service_monitors" }}
 // Prometheus Operator ServiceMonitor objects
@@ -87,6 +100,13 @@ prometheus.operator.servicemonitors "service_monitors" {
     default_scrape_interval = {{ .Values.metrics.serviceMonitors.scrapeInterval | default .Values.metrics.scrapeInterval | quote }}
   }
   forward_to = [prometheus.relabel.servicemonitors.receiver]
+
+{{- if .Values.metrics.extraRelabelingRules }}
+{{ .Values.metrics.extraRelabelingRules | indent 2 }}
+{{- end }}
+{{- if .Values.metrics.serviceMonitors.extraRelabelingRules }}
+{{ .Values.metrics.serviceMonitors.extraRelabelingRules | indent 2 }}
+{{- end }}
 }
 
 prometheus.relabel "servicemonitors" {
