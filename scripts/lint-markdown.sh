@@ -15,7 +15,7 @@ fi
 (return 0 2>/dev/null) && sourced=1 || sourced=0
 
 statusCode=0
-./node_modules/.bin/markdownlint-cli2 "**/*.md" "#node_modules" "#charts/**/README.md"
+./node_modules/.bin/markdownlint-cli2 ./*.md ./**/*.md "#node_modules" "#charts/**/README.md"
 currentCode="$?"
 # only override the statusCode if it is 0
 if [[ "${statusCode}" == 0 ]]; then
