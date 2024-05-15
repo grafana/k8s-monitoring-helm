@@ -13,6 +13,11 @@ externalServices:
     basicAuth:
       username: 12345
       password: "It's a secret to everyone"
+  tempo:
+    host: https://tempo.example.com
+    basicAuth:
+      username: 12345
+      password: "It's a secret to everyone"
 
 metrics:
   kube-state-metrics:
@@ -27,6 +32,17 @@ logs:
         action = "replace"
         target_label = "instance"
       }
+
+traces:
+  enabled: true
+
+receivers:
+  processors:
+    k8sattributes:
+      labels:
+        - from: pod
+          key_regex: "kubernetes.io/(.*)"
+          tag_name: "$1"
 
 test:
   extraQueries:
