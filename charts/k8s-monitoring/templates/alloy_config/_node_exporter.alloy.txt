@@ -1,15 +1,18 @@
-{{ define "alloy.config.node_exporter.allowList" }}
-{{ if or (index .Values.metrics "node-exporter").metricsTuning.useDefaultAllowList (index .Values.metrics "node-exporter").metricsTuning.useIntegrationAllowList }}
-{{ "default_allow_lists/node_exporter.yaml" | .Files.Get }}
-{{ end }}
-{{ if (index .Values.metrics "node-exporter").metricsTuning.useIntegrationAllowList }}
-{{ "default_allow_lists/node_exporter_integration.yaml" | .Files.Get }}
-{{ end }}
+{{- define "alloy.config.node_exporter.allowList" -}}
+up
+{{- if (index .Values.metrics "node-exporter").metricsTuning.useDefaultAllowList -}}
+  |{{- join "|" ("default_allow_lists/node_exporter.yaml" | .Files.Get | fromYamlArray) -}}
+{{- end -}}
 
-{{ if (index .Values.metrics "node-exporter").metricsTuning.includeMetrics }}
-{{ (index .Values.metrics "node-exporter").metricsTuning.includeMetrics | toYaml }}
-{{ end }}
-{{ end }}
+{{- if (index .Values.metrics "node-exporter").metricsTuning.useIntegrationAllowList -}}
+  |{{- join "|" ("default_allow_lists/node_exporter_integration.yaml" | .Files.Get | fromYamlArray) -}}
+{{- end -}}
+
+{{- if (index .Values.metrics "node-exporter").metricsTuning.includeMetrics -}}
+  |{{- join "|" ((index .Values.metrics "node-exporter").metricsTuning.includeMetrics) -}}
+{{- end -}}
+
+{{- end -}}
 
 {{ define "alloy.config.node_exporter" }}
 // Node Exporter
@@ -67,7 +70,7 @@ prometheus.relabel "node_exporter" {
 {{- if or (index .Values.metrics "node-exporter").metricsTuning.useDefaultAllowList (index .Values.metrics "node-exporter").metricsTuning.includeMetrics }}
   rule {
     source_labels = ["__name__"]
-    regex = "up|{{ join "|" (include "alloy.config.node_exporter.allowList" . | fromYamlArray) }}"
+    regex = "{{- (include "alloy.config.node_exporter.allowList" .) -}}"
     action = "keep"
   }
 {{- end }}
