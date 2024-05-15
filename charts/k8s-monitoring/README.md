@@ -1,5 +1,7 @@
-[comment]: <> (NOTE: Do not edit README.md directly. It is a generated file!)
-[comment]: <> (      To make changes, please modify README.md.gotmpl and run `helm-docs`)
+<!--
+(NOTE: Do not edit README.md directly. It is a generated file!)
+(      To make changes, please modify README.md.gotmpl and run `helm-docs`)
+-->
 
 # k8s-monitoring
 
@@ -24,6 +26,7 @@ These sections in your values file will need to be renamed:
 | `metrics.agent`          | `metrics.alloy`  | Settings for scraping metrics from Alloy instances               |
 
 For example, if you have something like this:
+
 ```yaml
 grafana-agent:
   controller:
@@ -77,7 +80,7 @@ This component will "fan-in" all of the metric sources to the correct metrics se
 
 ### Setup Grafana chart repository
 
-```
+```shell
 helm repo add grafana https://grafana.github.io/helm-charts
 helm repo update
 ```
@@ -108,12 +111,12 @@ helm install grafana-k8s-monitoring --atomic --timeout 300s  grafana/k8s-monitor
 
 This chart simplifies the deployment of a Kubernetes monitoring infrastructure, including the following:
 
-* [kube-state-metrics](https://github.com/kubernetes/kube-state-metrics), which gathers metrics about Kubernetes objects
-* [Node exporter](https://github.com/prometheus/node_exporter), which gathers metrics about Kubernetes nodes
-* [OpenCost](https://www.opencost.io/), which interprets the above to create cost metrics for the cluster, and
-* [Grafana Alloy](https://grafana.com/docs/alloy/latest/), which scrapes the above services to forward metrics to
-  [Prometheus](https://prometheus.io/), logs and events to [Loki](https://grafana.com/oss/loki/), traces to
-  [Tempo](https://grafana.com/oss/tempo/), and profiles to [Pyroscope](https://grafana.com/docs/pyroscope/).
+-   [kube-state-metrics](https://github.com/kubernetes/kube-state-metrics), which gathers metrics about Kubernetes objects
+-   [Node exporter](https://github.com/prometheus/node_exporter), which gathers metrics about Kubernetes nodes
+-   [OpenCost](https://www.opencost.io/), which interprets the above to create cost metrics for the cluster, and
+-   [Grafana Alloy](https://grafana.com/docs/alloy/latest/), which scrapes the above services to forward metrics to
+    [Prometheus](https://prometheus.io/), logs and events to [Loki](https://grafana.com/oss/loki/), traces to
+    [Tempo](https://grafana.com/oss/tempo/), and profiles to [Pyroscope](https://grafana.com/docs/pyroscope/).
 
 The Prometheus and Loki services may be hosted on the same cluster, or remotely (e.g. on Grafana Cloud).
 
@@ -250,7 +253,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | extraConfig | string | `""` | Extra configuration that will be added to the Grafana Alloy configuration file. This value is templated so that you can refer to other values from this file. This cannot be used to modify the generated configuration values, only append new components. See [Adding custom Flow configuration](#adding-custom-flow-configuration) for an example. |
 | extraObjects | list | `[]` | Deploy additional manifest objects |
 | global.image.pullSecrets | list | `[]` | Optional set of global image pull secrets. |
-| global.image.registry | string | `""` | Global image registry to use if it needs to be overriden for some specific use cases (e.g local registries, custom images, ...) |
+| global.image.registry | string | `""` | Global image registry to use if it needs to be overridden for some specific use cases (e.g local registries, custom images, ...) |
 | kube-state-metrics.enabled | bool | `true` | Should this helm chart deploy Kube State Metrics to the cluster. Set this to false if your cluster already has Kube State Metrics, or if you do not want to scrape metrics from Kube State Metrics. |
 | logs.cluster_events.enabled | bool | `true` | Scrape Kubernetes cluster events |
 | logs.cluster_events.extraConfig | string | `""` | Extra configuration that will be added to the Grafana Alloy for Cluster Events configuration file. This value is templated so that you can refer to other values from this file. This cannot be used to modify the generated configuration values, only append new components. See [Adding custom Flow configuration](#adding-custom-flow-configuration) for an example. |
@@ -341,7 +344,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | metrics.kube-state-metrics.service.isTLS | bool | `false` | Does this port use TLS? |
 | metrics.kube-state-metrics.service.port | string | `"http"` | Name of the metrics port |
 | metrics.kubeControllerManager.enabled | bool | `false` | Scrape metrics from the Kube Controller Manager |
-| metrics.kubeControllerManager.extraMetricRelabelingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for the Kube Controller Manager. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#rule-block)) These relabeling rules are applied post-scrape against the metrics returned from the scraped target, no __meta* labels are present. |
+| metrics.kubeControllerManager.extraMetricRelabelingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for the Kube Controller Manager. These relabeling rules are applied post-scrape against the metrics returned from the scraped target, no __meta* labels are present. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#rule-block)) |
 | metrics.kubeControllerManager.extraRelabelingRules | string | `""` | Rule blocks to be added to the discovery.relabel component for the Kube Controller Manager. These relabeling rules are applied pre-scrape against the targets from service discovery. Before the scrape, any remaining target labels that start with __ (i.e. __meta_kubernetes*) are dropped. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery.relabel/#rule-block)) |
 | metrics.kubeControllerManager.maxCacheSize | string | 100000 | Sets the max_cache_size for cadvisor prometheus.relabel component. This should be at least 2x-5x your largest scrape target or samples appended rate. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#arguments)) Overrides metrics.maxCacheSize |
 | metrics.kubeControllerManager.metricsTuning.excludeMetrics | list | `[]` | Metrics to drop. Can use regex. |
@@ -492,11 +495,11 @@ NOTE: This cannot be used to modify existing configuration values.
 Extra flow components can re-use any of the existing components in the generated configuration, which includes several
 useful ones like these:
 
-* `discovery.kubernetes.nodes` - Discovers all nodes in the cluster
-* `discovery.kubernetes.pods` - Discovers all pods in the cluster
-* `discovery.kubernetes.services` - Discovers all services in the cluster
-* `prometheus.relabel.metrics_service` - Sends metrics to the metrics service defined by `.externalService.prometheus`
-* `loki.process.logs_service` - Sends logs to the logs service defined by `.externalService.loki`
+-   `discovery.kubernetes.nodes` - Discovers all nodes in the cluster
+-   `discovery.kubernetes.pods` - Discovers all pods in the cluster
+-   `discovery.kubernetes.services` - Discovers all services in the cluster
+-   `prometheus.relabel.metrics_service` - Sends metrics to the metrics service defined by `.externalService.prometheus`
+-   `loki.process.logs_service` - Sends logs to the logs service defined by `.externalService.loki`
 
 Example:
 

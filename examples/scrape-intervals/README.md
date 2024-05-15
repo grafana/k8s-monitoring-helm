@@ -4,8 +4,8 @@ This example shows how to modify the default scrape interval for metrics. The de
 [Grafana Alloy](https://grafana.com/docs/alloy/latest/reference/components/prometheus.scrape/#arguments) is `60s`,
 and this chart does not deviate from this. But there are methods for overriding that scrape interval.
 
-* `metrics.scrapeInterval` sets the scrape interval for all metric sources.
-* `metrics.<source>.scrapeInterval` sets the scrape interval for a specific metric source.
+-   `metrics.scrapeInterval` sets the scrape interval for all metric sources.
+-   `metrics.<source>.scrapeInterval` sets the scrape interval for a specific metric source.
 
 Setting the first will set it for all metric sources (e.g. it changes the default), while setting the second will
 override the first for that specific metric source.

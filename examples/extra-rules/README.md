@@ -1,6 +1,6 @@
 # Extra Rules
 
-This example shows several ways to provide addtional labels and rules. The `logs.pod_logs.extraStageBlocks` even
+This example shows several ways to provide additional labels and rules. The `logs.pod_logs.extraStageBlocks` even
 supports template values.
 
 ```yaml

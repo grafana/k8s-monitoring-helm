@@ -1,30 +1,31 @@
+---
 name: Bump dependency "opencost" for Helm chart "k8s-monitoring"
 sources:
-    opencost:
-        name: Get latest "opencost" Helm chart version
-        kind: helmchart
-        spec:
-            name: opencost
-            url: https://opencost.github.io/opencost-helm-chart
-            versionfilter:
-                kind: semver
-                pattern: '*'
+  opencost:
+    name: Get latest "opencost" Helm chart version
+    kind: helmchart
+    spec:
+      name: opencost
+      url: https://opencost.github.io/opencost-helm-chart
+      versionfilter:
+        kind: semver
+        pattern: '*'
 conditions:
-    opencost:
-        name: Ensure Helm chart dependency "opencost" is specified
-        kind: yaml
-        spec:
-            file: charts/k8s-monitoring/Chart.yaml
-            key: $.dependencies[8].name
-            value: opencost
-        disablesourceinput: true
+  opencost:
+    name: Ensure Helm chart dependency "opencost" is specified
+    kind: yaml
+    spec:
+      file: charts/k8s-monitoring/Chart.yaml
+      key: $.dependencies[8].name
+      value: opencost
+    disablesourceinput: true
 targets:
-    opencost:
-        name: Bump Helm chart dependency "opencost" for Helm chart "k8s-monitoring"
-        kind: helmchart
-        spec:
-            file: Chart.yaml
-            key: $.dependencies[8].version
-            name: charts/k8s-monitoring
-            versionincrement: none
-        sourceid: opencost
+  opencost:
+    name: Bump Helm chart dependency "opencost" for Helm chart "k8s-monitoring"
+    kind: helmchart
+    spec:
+      file: Chart.yaml
+      key: $.dependencies[8].version
+      name: charts/k8s-monitoring
+      versionincrement: none
+    sourceid: opencost

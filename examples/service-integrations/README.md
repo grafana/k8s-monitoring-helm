@@ -3,8 +3,9 @@
 This example shows how to augment your Kubernetes Monitoring deployment to gather telemetry data from 3rd party services.
 
 In this example, there are two styles of integrations that are made possible:
-* Automatic discovery via Kubernetes annotations
-* Direct integration via [Alloy modules](https://grafana.com/docs/alloy/latest/concepts/modules/)
+
+-   Automatic discovery via Kubernetes annotations
+-   Direct integration via [Alloy modules](https://grafana.com/docs/alloy/latest/concepts/modules/)
 
 ## Cert Manager
 

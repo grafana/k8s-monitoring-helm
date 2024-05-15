@@ -1,6 +1,9 @@
 # RBAC Rules for the Kubernetes Monitoring Helm Chart
+
 Several components have specialized RBAC rules to perform their work. This document will list the components, and their RBAC definitions.
+
 ## Grafana Alloy
+
 ```yaml
 # Rules which allow discovery.kubernetes to function.
 - apiGroups:
@@ -87,7 +90,9 @@ Several components have specialized RBAC rules to perform their work. This docum
   resources: ["replicasets"]
   verbs: ["get", "list", "watch"]
 ```
+
 ## Grafana Alloy Events
+
 ```yaml
 # Rules which allow discovery.kubernetes to function.
 - apiGroups:
@@ -174,7 +179,9 @@ Several components have specialized RBAC rules to perform their work. This docum
   resources: ["replicasets"]
   verbs: ["get", "list", "watch"]
 ```
+
 ## Grafana Alloy Logs
+
 ```yaml
 # Rules which allow discovery.kubernetes to function.
 - apiGroups:
@@ -261,7 +268,9 @@ Several components have specialized RBAC rules to perform their work. This docum
   resources: ["replicasets"]
   verbs: ["get", "list", "watch"]
 ```
+
 When deploying to an OpenShift cluster, these extra rules are added to enable access to special a SecurityContextConstraint:
+
 ```yaml
 - verbs:
     - use
@@ -272,7 +281,9 @@ When deploying to an OpenShift cluster, these extra rules are added to enable ac
   resourceNames:
     - k8smon-alloy-logs
 ```
+
 ## Grafana Alloy Profiles
+
 ```yaml
 # Rules which allow discovery.kubernetes to function.
 - apiGroups:
@@ -359,7 +370,9 @@ When deploying to an OpenShift cluster, these extra rules are added to enable ac
   resources: ["replicasets"]
   verbs: ["get", "list", "watch"]
 ```
+
 ## Kube State Metrics
+
 ```yaml
 - apiGroups: ["certificates.k8s.io"]
   resources:
@@ -474,7 +487,9 @@ When deploying to an OpenShift cluster, these extra rules are added to enable ac
     - volumeattachments
   verbs: ["list", "watch"]
 ```
+
 ## OpenCost
+
 ```yaml
 - apiGroups: [""]
   resources:

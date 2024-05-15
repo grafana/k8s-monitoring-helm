@@ -1,14 +1,14 @@
 # Scraping Additional Metrics
 
-If you have an application or a service running on your Kubernetes Cluster that is exporting metrics, you can  
+If you have an application or a service running on your Kubernetes Cluster that is exporting metrics, you can
 use this chart to scrape those metrics and send them to your datastore. This chart provides plenty of options for doing
 just that.
 
 ## Options
 
-1. Use the `k8s.grafana.com/scrape` annotation on your Pods or services.
-2. Use Prometheus Operator CRDs, like ServiceMonitors, PodMonitors, or Probes.
-3. Make a custom Grafana Alloy configuration.
+1.  Use the `k8s.grafana.com/scrape` annotation on your Pods or services.
+2.  Use Prometheus Operator CRDs, like ServiceMonitors, PodMonitors, or Probes.
+3.  Make a custom Grafana Alloy configuration.
 
 ## Annotations
 
@@ -17,20 +17,20 @@ When set, the Alloy instance scrapes them for metrics.
 
 Extra annotations can also be set to control the behavior of the discovery and scraping of the metrics:
 
-* `k8s.grafana.com/job: <string>` - Sets the job label.
-* `k8s.grafana.com/instance: <string>` - Sets the instance label.
-* `k8s.grafana.com/metrics.path: <string>` - Sets the metrics path. Required if the metrics path is not the default
+-   `k8s.grafana.com/job: <string>` - Sets the job label.
+-   `k8s.grafana.com/instance: <string>` - Sets the instance label.
+-   `k8s.grafana.com/metrics.path: <string>` - Sets the metrics path. Required if the metrics path is not the default
   of `/metrics`.
-* `k8s.grafana.com/metrics.portName: <string>` - Specifies the port to scrape, by name. This named port must exist on
+-   `k8s.grafana.com/metrics.portName: <string>` - Specifies the port to scrape, by name. This named port must exist on
   the pod or service.
-* `k8s.grafana.com/metrics.portNumber: <number>` - Specifies to port to scrape, by number.
-* `k8s.grafana.com/metrics.scheme: [http|https]` - Sets the scheme to use. Required if the scheme is not HTTP.
+-   `k8s.grafana.com/metrics.portNumber: <number>` - Specifies to port to scrape, by number.
+-   `k8s.grafana.com/metrics.scheme: [http|https]` - Sets the scheme to use. Required if the scheme is not HTTP.
 
 The chart itself provides additional options:
 
-* `metrics.autoDiscover.extraRelabelingRules` - Use relabeling rules to filter the Pods or services to scrape.
-* `metrics.autoDiscover.metricsTuning` - Specify which metrics to keep or drop.
-* `metrics.autoDiscover.extraMetricRelabelingRules` - Use relabeling rules to process the metrics after scraping them.
+-   `metrics.autoDiscover.extraRelabelingRules` - Use relabeling rules to filter the Pods or services to scrape.
+-   `metrics.autoDiscover.metricsTuning` - Specify which metrics to keep or drop.
+-   `metrics.autoDiscover.extraMetricRelabelingRules` - Use relabeling rules to process the metrics after scraping them.
 
 These values apply to all discovered Pods and services.
 
@@ -48,9 +48,9 @@ This chart provides ways to customize how Alloy handles these objects.
 
 These options in the Helm chart allow for changing how Prometheus Operator objects are discovered:
 
-* `metrics.serviceMonitors.enabled` - If set to true, Alloy looks for and consumes ServiceMonitors.
-* `metrics.serviceMonitors.namespaces` - Only use ServiceMonitors that exist in these namespaces.
-* `metrics.serviceMonitors.selector` - Use
+-   `metrics.serviceMonitors.enabled` - If set to true, Alloy looks for and consumes ServiceMonitors.
+-   `metrics.serviceMonitors.namespaces` - Only use ServiceMonitors that exist in these namespaces.
+-   `metrics.serviceMonitors.selector` - Use
   a [selector](https://grafana.com/docs/alloy/latest/reference/components/prometheus.operator.servicemonitors/#selector-block)
   block to provide a more refined selection of objects.
 
@@ -60,7 +60,7 @@ The same options are present for `metrics.podmonitors` and `metrics.probes`.
 
 Most of the scrape configuration is embedded in the Prometheus Operator object itself.
 
-* `metrics.serviceMonitors.scrapeInterval` - Sets the scrape interval, if one was not specified in the object.
+-   `metrics.serviceMonitors.scrapeInterval` - Sets the scrape interval, if one was not specified in the object.
 
 The same option is present for `metrics.podmonitors` and `metrics.probes`.
 
@@ -68,7 +68,7 @@ The same option is present for `metrics.podmonitors` and `metrics.probes`.
 
 This chart can set metrics relabeling rules for processing the metrics after scraping them.
 
-* `metrics.serviceMonitors.extraMetricRelabelingRules` - Sets post-scraping rules for
+-   `metrics.serviceMonitors.extraMetricRelabelingRules` - Sets post-scraping rules for
   a [prometheus.relabel](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/)
   configuration component.
 
@@ -80,10 +80,10 @@ This option allows for the greatest amount of flexibility and utility.
 
 When adding new configuration, it's helpful to think of it in four phases:
 
-1. Discovery - How should the collector find my service?
-2. Scraping - How should metrics get scraped from my service?
-3. Processing - Is there any work that needs to be done to these metrics?
-4. Delivery - Where should these metrics be sent?
+1.  Discovery - How should the collector find my service?
+2.  Scraping - How should metrics get scraped from my service?
+3.  Processing - Is there any work that needs to be done to these metrics?
+4.  Delivery - Where should these metrics be sent?
 
 We will go deeper into each phase below.
 
@@ -93,10 +93,10 @@ The discovery phase is about finding the specific pod or service that needs to b
 
 This chart automatically creates three components that you can utilize:
 
-* `discovery.kubernetes.nodes` - Discovers all nodes in the cluster
-* `discovery.kubernetes.services` - Discovers all services in the cluster
-* `discovery.kubernetes.endpoints` - Discovers all service endpoints in the cluster
-* `discovery.kubernetes.pods` - Discovers all pods in the cluster
+-   `discovery.kubernetes.nodes` - Discovers all nodes in the cluster
+-   `discovery.kubernetes.services` - Discovers all services in the cluster
+-   `discovery.kubernetes.endpoints` - Discovers all service endpoints in the cluster
+-   `discovery.kubernetes.pods` - Discovers all pods in the cluster
 
 These are
 all [`discovery.kubernetes`](https://grafana.com/docs/alloy/latest/reference/components/discovery.kubernetes/)
@@ -217,8 +217,8 @@ prometheus.scrape "processing_app" {
 
 Often, you want to perform some post-scrape processing to the metrics. Some common reasons are to:
 
-* Limit the amount of metrics being sent up to Prometheus.
-* Add, change, or drop labels.
+-   Limit the amount of metrics being sent up to Prometheus.
+-   Add, change, or drop labels.
 
 Processing is done with the
 [`prometheus.relabel`](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/)

@@ -1,15 +1,18 @@
-{{ define "alloy.config.alloy.allowList" }}
-{{ if or .Values.metrics.alloy.metricsTuning.useDefaultAllowList .Values.metrics.alloy.metricsTuning.useIntegrationAllowList }}
-{{ "default_allow_lists/alloy.yaml" | .Files.Get }}
-{{ end }}
-{{ if .Values.metrics.alloy.metricsTuning.useIntegrationAllowList }}
-{{ "default_allow_lists/alloy_integration.yaml" | .Files.Get }}
-{{ end }}
+{{- define "alloy.config.alloy.allowList" -}}
+up
+{{- if .Values.metrics.alloy.metricsTuning.useDefaultAllowList -}}
+|{{- join "|" ("default_allow_lists/alloy.yaml" | .Files.Get | fromYamlArray) -}}
+{{- end -}}
 
-{{ if .Values.metrics.alloy.metricsTuning.includeMetrics }}
-{{ .Values.metrics.alloy.metricsTuning.includeMetrics | toYaml }}
-{{ end }}
-{{ end }}
+{{- if .Values.metrics.alloy.metricsTuning.useIntegrationAllowList -}}
+  |{{- join "|" ("default_allow_lists/alloy_integration.yaml" | .Files.Get | fromYamlArray) -}}
+{{- end -}}
+
+{{- if .Values.metrics.alloy.metricsTuning.includeMetrics -}}
+  |{{- join "|" (.Values.metrics.alloy.metricsTuning.includeMetrics) -}}
+{{- end -}}
+
+{{- end -}}
 
 {{ define "alloy.config.alloy" }}
 // Grafana Alloy
@@ -69,7 +72,7 @@ prometheus.relabel "alloy" {
 {{- if or .Values.metrics.alloy.metricsTuning.useDefaultAllowList .Values.metrics.alloy.metricsTuning.includeMetrics }}
   rule {
     source_labels = ["__name__"]
-    regex = "up|{{ join "|" (include "alloy.config.alloy.allowList" . | fromYamlArray) }}"
+    regex = "{{- (include "alloy.config.alloy.allowList" .) -}}"
     action = "keep"
   }
 {{- end }}

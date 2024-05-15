@@ -2,20 +2,21 @@
 
 This document contains some information about frequently encountered issues and how to resolve them.
 
-* [Instructions for specific Cluster platform providers](#instructions-for-specific-cluster-platform-providers)
-* [CustomResourceDefinition conflicts](#customresourcedefinition-conflicts)
-* [Pod log files in /var/lib/docker/containers](#pod-log-files-in-varlibdockercontainers)
-* [Authentication error: invalid scope requested](#authentication-error-invalid-scope-requested)
+-   [Troubleshooting](#troubleshooting)
+    -   [Instructions for specific Cluster platform providers](#instructions-for-specific-cluster-platform-providers)
+    -   [CustomResourceDefinition conflicts](#customresourcedefinition-conflicts)
+    -   [Pod log files in `/var/lib/docker/containers`](#pod-log-files-in-varlibdockercontainers)
+    -   [Authentication error: invalid scope requested](#authentication-error-invalid-scope-requested)
 
 ## Instructions for specific Cluster platform providers
 
 Certain Kubernetes Cluster platforms require some specific configurations for this Helm chart. If your Cluster is
 running on one of these platforms, see the example for the changes required to run this Helm chart:
 
-* [AWS EKS on Fargate](../../../examples/eks-fargate)
-* [Google GKE Autopilot](../../../examples/gke-autopilot)
-* [IBM Cloud](../../../examples/ibm-cloud)
-* [OpenShift](../../../examples/openshift-compatible)
+-   [AWS EKS on Fargate](../../../examples/eks-fargate)
+-   [Google GKE Autopilot](../../../examples/gke-autopilot)
+-   [IBM Cloud](../../../examples/ibm-cloud)
+-   [OpenShift](../../../examples/openshift-compatible)
 
 ## CustomResourceDefinition conflicts
 
@@ -31,8 +32,8 @@ Error: INSTALLATION FAILED: Unable to continue with install: CustomResourceDefin
 
 To fix this problem, you can either:
 
-1. Remove the CRDs and let this chart deploy them.
-2. Disable the deployment of the CRDs in this chart by adding this to the values file:
+1.  Remove the CRDs and let this chart deploy them.
+2.  Disable the deployment of the CRDs in this chart by adding this to the values file:
 
     ```yaml
     prometheus-operator-crds:
