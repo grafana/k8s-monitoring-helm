@@ -1,5 +1,13 @@
 # Kubernetes Monitoring Helm Charts
 
+[![Grafana](https://img.shields.io/badge/grafana-%23F46800.svg?style=for-the-badge&logo=grafana&logoColor=white)](https://grafana.com)
+[![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/grafana)](https://artifacthub.io/packages/search?org=grafana)
+[![Helm Chart](https://img.shields.io/badge/helm-chart-blue?logo=helm)](https://img.shields.io/endpoint?url=https://artifacthub.io/packages/helm/grafana/k8s-monitoring)
+![GitHub Release](https://img.shields.io/github/v/release/grafana/k8s-monitoring-helm)
+![GitHub License](https://img.shields.io/github/license/grafana/k8s-monitoring-helm)
+[![Test Charts](https://github.com/grafana/k8s-monitoring-helm/workflows/Test/badge.svg?branch=main)](https://github.com/grafana/k8s-monitoring-helm/actions/workflows/helm-test.yml?query=branch%3Amain)
+[![Release Charts](https://github.com/grafana/k8s-monitoring-helm/workflows/Release%20Helm%20chart/badge.svg?branch=main)](https://github.com/grafana/k8s-monitoring-helm/actions/workflows/helm-release.yml?query=branch%3Amain)
+
 ## Maintainers
 
 | Name | Email | Url |
