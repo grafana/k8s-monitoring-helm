@@ -6,11 +6,11 @@ metadata:
   name: k8smon-alloy-events
   namespace: default
   labels:
-    helm.sh/chart: alloy-events-0.2.0
+    helm.sh/chart: alloy-events-0.3.0
     app.kubernetes.io/name: alloy-events
     app.kubernetes.io/instance: k8smon
     
-    app.kubernetes.io/version: "v1.0.0"
+    app.kubernetes.io/version: "v1.1.0"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
     app.kubernetes.io/component: rbac
@@ -22,11 +22,11 @@ metadata:
   name: k8smon-alloy-logs
   namespace: default
   labels:
-    helm.sh/chart: alloy-logs-0.2.0
+    helm.sh/chart: alloy-logs-0.3.0
     app.kubernetes.io/name: alloy-logs
     app.kubernetes.io/instance: k8smon
     
-    app.kubernetes.io/version: "v1.0.0"
+    app.kubernetes.io/version: "v1.1.0"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
     app.kubernetes.io/component: rbac
@@ -38,11 +38,11 @@ metadata:
   name: k8smon-alloy
   namespace: default
   labels:
-    helm.sh/chart: alloy-0.2.0
+    helm.sh/chart: alloy-0.3.0
     app.kubernetes.io/name: alloy
     app.kubernetes.io/instance: k8smon
     
-    app.kubernetes.io/version: "v1.0.0"
+    app.kubernetes.io/version: "v1.1.0"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
     app.kubernetes.io/component: rbac
@@ -196,18 +196,7 @@ data:
     
     otelcol.processor.k8sattributes "default" {
       extract {
-        metadata = [
-          "k8s.namespace.name",
-          "k8s.pod.name",
-          "k8s.deployment.name",
-          "k8s.statefulset.name",
-          "k8s.daemonset.name",
-          "k8s.cronjob.name",
-          "k8s.job.name",
-          "k8s.node.name",
-          "k8s.pod.uid",
-          "k8s.pod.start_time",
-        ]
+        metadata = ["k8s.namespace.name","k8s.pod.name","k8s.deployment.name","k8s.statefulset.name","k8s.daemonset.name","k8s.cronjob.name","k8s.job.name","k8s.node.name","k8s.pod.uid","k8s.pod.start_time"]
       }
       pod_association {
         source {
@@ -235,7 +224,7 @@ data:
         statements = [
           "set(attributes[\"pod\"], attributes[\"k8s.pod.name\"])",
           "set(attributes[\"namespace\"], attributes[\"k8s.namespace.name\"])",
-          "set(attributes[\"loki.resource.labels\"], \"pod, namespace, cluster, job\")",
+          "set(attributes[\"loki.resource.labels\"], \"cluster, namespace, job, pod\")",
           "set(attributes[\"k8s.cluster.name\"], \"extra-rules-test\") where attributes[\"k8s.cluster.name\"] == nil",
         ]
       }
@@ -1309,7 +1298,7 @@ data:
   metrics.prom: |
     # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart as well as a summary of enabled features
     # TYPE grafana_kubernetes_monitoring_build_info gauge
-    grafana_kubernetes_monitoring_build_info{version="1.0.10", namespace="default", metrics="enabled,alloy,autoDiscover,kube-state-metrics,node-exporter,kubelet,cadvisor,cost", logs="enabled,events,pod_logs", traces="disabled", deployments="kube-state-metrics,prometheus-node-exporter,prometheus-operator-crds,opencost"} 1
+    grafana_kubernetes_monitoring_build_info{version="1.0.11", namespace="default", metrics="enabled,alloy,autoDiscover,kube-state-metrics,node-exporter,kubelet,cadvisor,cost", logs="enabled,events,pod_logs", traces="disabled", deployments="kube-state-metrics,prometheus-node-exporter,prometheus-operator-crds,opencost"} 1
 ---
 # Source: k8s-monitoring/charts/prometheus-operator-crds/charts/crds/templates/crd-alertmanagerconfigs.yaml
 apiVersion: apiextensions.k8s.io/v1
@@ -48265,11 +48254,11 @@ kind: ClusterRole
 metadata:
   name: k8smon-alloy-events
   labels:
-    helm.sh/chart: alloy-events-0.2.0
+    helm.sh/chart: alloy-events-0.3.0
     app.kubernetes.io/name: alloy-events
     app.kubernetes.io/instance: k8smon
     
-    app.kubernetes.io/version: "v1.0.0"
+    app.kubernetes.io/version: "v1.1.0"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
     app.kubernetes.io/component: rbac
@@ -48365,11 +48354,11 @@ kind: ClusterRole
 metadata:
   name: k8smon-alloy-logs
   labels:
-    helm.sh/chart: alloy-logs-0.2.0
+    helm.sh/chart: alloy-logs-0.3.0
     app.kubernetes.io/name: alloy-logs
     app.kubernetes.io/instance: k8smon
     
-    app.kubernetes.io/version: "v1.0.0"
+    app.kubernetes.io/version: "v1.1.0"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
     app.kubernetes.io/component: rbac
@@ -48465,11 +48454,11 @@ kind: ClusterRole
 metadata:
   name: k8smon-alloy
   labels:
-    helm.sh/chart: alloy-0.2.0
+    helm.sh/chart: alloy-0.3.0
     app.kubernetes.io/name: alloy
     app.kubernetes.io/instance: k8smon
     
-    app.kubernetes.io/version: "v1.0.0"
+    app.kubernetes.io/version: "v1.1.0"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
     app.kubernetes.io/component: rbac
@@ -48807,11 +48796,11 @@ kind: ClusterRoleBinding
 metadata:
   name: k8smon-alloy-events
   labels:
-    helm.sh/chart: alloy-events-0.2.0
+    helm.sh/chart: alloy-events-0.3.0
     app.kubernetes.io/name: alloy-events
     app.kubernetes.io/instance: k8smon
     
-    app.kubernetes.io/version: "v1.0.0"
+    app.kubernetes.io/version: "v1.1.0"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
     app.kubernetes.io/component: rbac
@@ -48830,11 +48819,11 @@ kind: ClusterRoleBinding
 metadata:
   name: k8smon-alloy-logs
   labels:
-    helm.sh/chart: alloy-logs-0.2.0
+    helm.sh/chart: alloy-logs-0.3.0
     app.kubernetes.io/name: alloy-logs
     app.kubernetes.io/instance: k8smon
     
-    app.kubernetes.io/version: "v1.0.0"
+    app.kubernetes.io/version: "v1.1.0"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
     app.kubernetes.io/component: rbac
@@ -48853,11 +48842,11 @@ kind: ClusterRoleBinding
 metadata:
   name: k8smon-alloy
   labels:
-    helm.sh/chart: alloy-0.2.0
+    helm.sh/chart: alloy-0.3.0
     app.kubernetes.io/name: alloy
     app.kubernetes.io/instance: k8smon
     
-    app.kubernetes.io/version: "v1.0.0"
+    app.kubernetes.io/version: "v1.1.0"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
     app.kubernetes.io/component: rbac
@@ -48919,11 +48908,11 @@ kind: Service
 metadata:
   name: k8smon-alloy-events
   labels:
-    helm.sh/chart: alloy-events-0.2.0
+    helm.sh/chart: alloy-events-0.3.0
     app.kubernetes.io/name: alloy-events
     app.kubernetes.io/instance: k8smon
     
-    app.kubernetes.io/version: "v1.0.0"
+    app.kubernetes.io/version: "v1.1.0"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
     app.kubernetes.io/component: networking
@@ -48945,11 +48934,11 @@ kind: Service
 metadata:
   name: k8smon-alloy-logs
   labels:
-    helm.sh/chart: alloy-logs-0.2.0
+    helm.sh/chart: alloy-logs-0.3.0
     app.kubernetes.io/name: alloy-logs
     app.kubernetes.io/instance: k8smon
     
-    app.kubernetes.io/version: "v1.0.0"
+    app.kubernetes.io/version: "v1.1.0"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
     app.kubernetes.io/component: networking
@@ -48971,11 +48960,11 @@ kind: Service
 metadata:
   name: k8smon-alloy-cluster
   labels:
-    helm.sh/chart: alloy-0.2.0
+    helm.sh/chart: alloy-0.3.0
     app.kubernetes.io/name: alloy
     app.kubernetes.io/instance: k8smon
     
-    app.kubernetes.io/version: "v1.0.0"
+    app.kubernetes.io/version: "v1.1.0"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
     app.kubernetes.io/component: networking
@@ -49035,11 +49024,11 @@ kind: Service
 metadata:
   name: k8smon-alloy
   labels:
-    helm.sh/chart: alloy-0.2.0
+    helm.sh/chart: alloy-0.3.0
     app.kubernetes.io/name: alloy
     app.kubernetes.io/instance: k8smon
     
-    app.kubernetes.io/version: "v1.0.0"
+    app.kubernetes.io/version: "v1.1.0"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
     app.kubernetes.io/component: networking
@@ -49168,11 +49157,11 @@ kind: Service
 metadata:
   name: k8smon-grafana-agent
   labels:
-    helm.sh/chart: alloy-0.2.0
+    helm.sh/chart: alloy-0.3.0
     app.kubernetes.io/name: alloy
     app.kubernetes.io/instance: k8smon
     
-    app.kubernetes.io/version: "v1.0.0"
+    app.kubernetes.io/version: "v1.1.0"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
 spec:
@@ -49225,11 +49214,11 @@ kind: DaemonSet
 metadata:
   name: k8smon-alloy-logs
   labels:
-    helm.sh/chart: alloy-logs-0.2.0
+    helm.sh/chart: alloy-logs-0.3.0
     app.kubernetes.io/name: alloy-logs
     app.kubernetes.io/instance: k8smon
     
-    app.kubernetes.io/version: "v1.0.0"
+    app.kubernetes.io/version: "v1.1.0"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
 spec:
@@ -49249,7 +49238,7 @@ spec:
       serviceAccountName: k8smon-alloy-logs
       containers:
         - name: alloy
-          image: docker.io/grafana/alloy:v1.0.0
+          image: docker.io/grafana/alloy:v1.1.0
           imagePullPolicy: IfNotPresent
           args:
             - run
@@ -49436,11 +49425,11 @@ kind: Deployment
 metadata:
   name: k8smon-alloy-events
   labels:
-    helm.sh/chart: alloy-events-0.2.0
+    helm.sh/chart: alloy-events-0.3.0
     app.kubernetes.io/name: alloy-events
     app.kubernetes.io/instance: k8smon
     
-    app.kubernetes.io/version: "v1.0.0"
+    app.kubernetes.io/version: "v1.1.0"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
 spec:
@@ -49461,7 +49450,7 @@ spec:
       serviceAccountName: k8smon-alloy-events
       containers:
         - name: alloy
-          image: docker.io/grafana/alloy:v1.0.0
+          image: docker.io/grafana/alloy:v1.1.0
           imagePullPolicy: IfNotPresent
           args:
             - run
@@ -49716,11 +49705,11 @@ kind: StatefulSet
 metadata:
   name: k8smon-alloy
   labels:
-    helm.sh/chart: alloy-0.2.0
+    helm.sh/chart: alloy-0.3.0
     app.kubernetes.io/name: alloy
     app.kubernetes.io/instance: k8smon
     
-    app.kubernetes.io/version: "v1.0.0"
+    app.kubernetes.io/version: "v1.1.0"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
 spec:
@@ -49743,7 +49732,7 @@ spec:
       serviceAccountName: k8smon-alloy
       containers:
         - name: alloy
-          image: docker.io/grafana/alloy:v1.0.0
+          image: docker.io/grafana/alloy:v1.1.0
           imagePullPolicy: IfNotPresent
           args:
             - run
@@ -49864,7 +49853,7 @@ metadata:
     app.kubernetes.io/managed-by: "Helm"
     app.kubernetes.io/instance: "k8smon"
     app.kubernetes.io/version: 2.3.0
-    helm.sh/chart: "k8s-monitoring-1.0.10"
+    helm.sh/chart: "k8s-monitoring-1.0.11"
   annotations:
     "helm.sh/hook": pre-install,pre-upgrade
     "helm.sh/hook-weight": "-5"
@@ -49940,18 +49929,7 @@ data:
     
     otelcol.processor.k8sattributes "default" {
       extract {
-        metadata = [
-          "k8s.namespace.name",
-          "k8s.pod.name",
-          "k8s.deployment.name",
-          "k8s.statefulset.name",
-          "k8s.daemonset.name",
-          "k8s.cronjob.name",
-          "k8s.job.name",
-          "k8s.node.name",
-          "k8s.pod.uid",
-          "k8s.pod.start_time",
-        ]
+        metadata = ["k8s.namespace.name","k8s.pod.name","k8s.deployment.name","k8s.statefulset.name","k8s.daemonset.name","k8s.cronjob.name","k8s.job.name","k8s.node.name","k8s.pod.uid","k8s.pod.start_time"]
       }
       pod_association {
         source {
@@ -49979,7 +49957,7 @@ data:
         statements = [
           "set(attributes[\"pod\"], attributes[\"k8s.pod.name\"])",
           "set(attributes[\"namespace\"], attributes[\"k8s.namespace.name\"])",
-          "set(attributes[\"loki.resource.labels\"], \"pod, namespace, cluster, job\")",
+          "set(attributes[\"loki.resource.labels\"], \"cluster, namespace, job, pod\")",
           "set(attributes[\"k8s.cluster.name\"], \"extra-rules-test\") where attributes[\"k8s.cluster.name\"] == nil",
         ]
       }
@@ -51037,7 +51015,7 @@ metadata:
     app.kubernetes.io/managed-by: "Helm"
     app.kubernetes.io/instance: "k8smon"
     app.kubernetes.io/version: 2.3.0
-    helm.sh/chart: "k8s-monitoring-1.0.10"
+    helm.sh/chart: "k8s-monitoring-1.0.11"
   annotations:
     "helm.sh/hook": test
     "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
@@ -51091,7 +51069,7 @@ metadata:
     app.kubernetes.io/managed-by: "Helm"
     app.kubernetes.io/instance: "k8smon"
     app.kubernetes.io/version: 2.3.0
-    helm.sh/chart: "k8s-monitoring-1.0.10"
+    helm.sh/chart: "k8s-monitoring-1.0.11"
   annotations:
     "helm.sh/hook": pre-install,pre-upgrade
     "helm.sh/hook-weight": "-5"
@@ -51102,7 +51080,7 @@ spec:
         kubernetes.io/os: linux
   containers:
     - name: alloy
-      image: "docker.io/grafana/alloy:v1.0.0"
+      image: "docker.io/grafana/alloy:v1.1.0"
       command:
       - bash
       - -c
@@ -51160,7 +51138,7 @@ metadata:
     app.kubernetes.io/managed-by: "Helm"
     app.kubernetes.io/instance: "k8smon"
     app.kubernetes.io/version: 2.3.0
-    helm.sh/chart: "k8s-monitoring-1.0.10"
+    helm.sh/chart: "k8s-monitoring-1.0.11"
   annotations:
     "helm.sh/hook": test
     "helm.sh/hook-delete-policy": before-hook-creation
@@ -51171,7 +51149,7 @@ spec:
         kubernetes.io/os: linux
   containers:
     - name: config-analysis
-      image: ghcr.io/grafana/k8s-monitoring-test:1.0.10
+      image: ghcr.io/grafana/k8s-monitoring-test:1.0.11
       command: [/etc/bin/config-analysis.sh]
       env:
         - name: ALLOY_HOST
@@ -51187,7 +51165,7 @@ metadata:
     app.kubernetes.io/managed-by: "Helm"
     app.kubernetes.io/instance: "k8smon"
     app.kubernetes.io/version: 2.3.0
-    helm.sh/chart: "k8s-monitoring-1.0.10"
+    helm.sh/chart: "k8s-monitoring-1.0.11"
   annotations:
     "helm.sh/hook": test
     "helm.sh/hook-delete-policy": before-hook-creation
@@ -51203,14 +51181,14 @@ spec:
       labels:
         app.kubernetes.io/managed-by: "Helm"
         app.kubernetes.io/instance: "k8smon"
-        helm.sh/chart: "k8s-monitoring-1.0.10"
+        helm.sh/chart: "k8s-monitoring-1.0.11"
     spec:
       restartPolicy: Never
       nodeSelector:
         kubernetes.io/os: linux
       containers:
         - name: query-test
-          image: ghcr.io/grafana/k8s-monitoring-test:1.0.10
+          image: ghcr.io/grafana/k8s-monitoring-test:1.0.11
           command: ["bash", "-c", "/etc/bin/query-test.sh /etc/test/testQueries.json"]
           volumeMounts:
             - name: test-files

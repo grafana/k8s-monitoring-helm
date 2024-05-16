@@ -5,7 +5,7 @@
 
 # k8s-monitoring
 
-![Version: 1.0.10](https://img.shields.io/badge/Version-1.0.10-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 2.3.0](https://img.shields.io/badge/AppVersion-2.3.0-informational?style=flat-square)
+![Version: 1.0.11](https://img.shields.io/badge/Version-1.0.11-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 2.3.0](https://img.shields.io/badge/AppVersion-2.3.0-informational?style=flat-square)
 
 A Helm chart for gathering, scraping, and forwarding Kubernetes telemetry data to a Grafana Stack.
 
@@ -131,19 +131,21 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 
 * <https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring>
 
+<!-- markdownlint-disable no-bare-urls -->
 ## Requirements
 
 | Repository | Name | Version |
 |------------|------|---------|
-| https://grafana.github.io/helm-charts | alloy | 0.2.0 |
-| https://grafana.github.io/helm-charts | alloy-events(alloy) | 0.2.0 |
-| https://grafana.github.io/helm-charts | alloy-logs(alloy) | 0.2.0 |
-| https://grafana.github.io/helm-charts | alloy-profiles(alloy) | 0.2.0 |
+| https://grafana.github.io/helm-charts | alloy | 0.3.0 |
+| https://grafana.github.io/helm-charts | alloy-events(alloy) | 0.3.0 |
+| https://grafana.github.io/helm-charts | alloy-logs(alloy) | 0.3.0 |
+| https://grafana.github.io/helm-charts | alloy-profiles(alloy) | 0.3.0 |
 | https://opencost.github.io/opencost-helm-chart | opencost | 1.35.0 |
 | https://prometheus-community.github.io/helm-charts | kube-state-metrics | 5.19.0 |
 | https://prometheus-community.github.io/helm-charts | prometheus-node-exporter | 4.34.0 |
 | https://prometheus-community.github.io/helm-charts | prometheus-operator-crds | 11.0.0 |
 | https://prometheus-community.github.io/helm-charts | prometheus-windows-exporter | 0.3.1 |
+<!-- markdownlint-enable no-bare-urls -->
 
 ## Values
 
@@ -275,7 +277,10 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | logs.pod_logs.gatherMethod | string | `"volumes"` | Controls the behavior of gathering pod logs. When set to "volumes", Grafana Alloy will use HostPath volume mounts on the cluster nodes to access the pod log files directly. When set to "api", Grafana Alloy will access pod logs via the API server. This method may be preferable if your cluster prevents DaemonSets, HostPath volume mounts, or for other reasons. |
 | logs.pod_logs.namespaces | list | `[]` | Only capture logs from pods in these namespaces (`[]` means all namespaces). |
 | logs.receiver.filters | object | `{"log_record":[]}` | Apply a filter to logs received via the OTLP or OTLP HTTP receivers. ([docs](https://grafana.com/docs/alloy/latest/reference/components/otelcol.processor.filter/)) |
-| logs.receiver.transforms | object | `{"log":[],"resource":[]}` | Apply a transformation to logs received via the OTLP or OTLP HTTP receivers. ([docs](https://grafana.com/docs/alloy/latest/reference/components/otelcol.processor.transform/)) |
+| logs.receiver.transforms | object | `{"labels":["cluster","namespace","job","pod"],"log":[],"resource":[]}` | Apply a transformation to logs received via the OTLP or OTLP HTTP receivers. ([docs](https://grafana.com/docs/alloy/latest/reference/components/otelcol.processor.transform/)) |
+| logs.receiver.transforms.labels | list | `["cluster","namespace","job","pod"]` | The list of labels to set in the Loki log stream. |
+| logs.receiver.transforms.log | list | `[]` | Log transformation rules. |
+| logs.receiver.transforms.resource | list | `[]` | Resource transformation rules. |
 | metrics.alloy.enabled | bool | `true` | Scrape metrics from Grafana Alloy |
 | metrics.alloy.extraMetricRelabelingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for Grafana Alloy. These relabeling rules are applied post-scrape against the metrics returned from the scraped target, no `__meta*` labels are present. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#rule-block)) |
 | metrics.alloy.extraRelabelingRules | string | `""` | Rule blocks to be added to the discovery.relabel component for Grafana Alloy. These relabeling rules are applied pre-scrape against the targets from service discovery. Before the scrape, any remaining target labels that start with `__` (i.e. `__meta_kubernetes*`) are dropped. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery.relabel/#rule-block)) |
@@ -460,6 +465,9 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | receivers.processors.batch.maxSize | int | `0` | The upper limit of the amount of data contained in a single batch, in bytes. When set to 0, batches can be any size. |
 | receivers.processors.batch.size | int | `16384` | What batch size to use, in bytes |
 | receivers.processors.batch.timeout | string | `"2s"` | How long before sending |
+| receivers.processors.k8sattributes.annotations | list | `[]` | Kubernetes annotations to extract and add to the attributes of the received telemetry data. |
+| receivers.processors.k8sattributes.labels | list | `[]` | Kubernetes labels to extract and add to the attributes of the received telemetry data. |
+| receivers.processors.k8sattributes.metadata | list | `["k8s.namespace.name","k8s.pod.name","k8s.deployment.name","k8s.statefulset.name","k8s.daemonset.name","k8s.cronjob.name","k8s.job.name","k8s.node.name","k8s.pod.uid","k8s.pod.start_time"]` | Kubernetes metadata to extract and add to the attributes of the received telemetry data. |
 | receivers.prometheus.enabled | bool | `false` | Receive Prometheus metrics |
 | receivers.prometheus.port | int | `9999` | Which port to use for the Prometheus receiver. This port needs to be opened in the alloy section below. |
 | receivers.zipkin.disable_debug_metrics | bool | `true` | It removes attributes which could cause high cardinality metrics. For example, attributes with IP addresses and port numbers in metrics about HTTP and gRPC connections will be removed. |

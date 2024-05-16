@@ -1021,8 +1021,12 @@ logs:
     # -- Apply a transformation to logs received via the OTLP or OTLP HTTP receivers.
     # ([docs](https://grafana.com/docs/alloy/latest/reference/components/otelcol.processor.transform/))
     transforms:
+      # -- Resource transformation rules.
       resource: []
+      # -- Log transformation rules.
       log: []
+      # -- The list of labels to set in the Loki log stream.
+      labels: ["cluster", "namespace", "job", "pod"]
 
   # -- Extra configuration that will be added to the Grafana Alloy for Logs configuration file.
   # This value is templated so that you can refer to other values from this file.
@@ -1168,6 +1172,28 @@ receivers:
       maxSize: 0
       # -- How long before sending
       timeout: 2s
+
+    # Attribute processor for OTLP/gRPC, OTLP/HTTP, Jaeger, or Zipkin receivers
+    k8sattributes:
+      # -- Kubernetes metadata to extract and add to the attributes of the received telemetry data.
+      metadata:
+        - k8s.namespace.name
+        - k8s.pod.name
+        - k8s.deployment.name
+        - k8s.statefulset.name
+        - k8s.daemonset.name
+        - k8s.cronjob.name
+        - k8s.job.name
+        - k8s.node.name
+        - k8s.pod.uid
+        - k8s.pod.start_time
+
+      # -- Kubernetes labels to extract and add to the attributes of the received telemetry data.
+      labels: []
+
+      # -- Kubernetes annotations to extract and add to the attributes of the received telemetry data.
+      annotations: []
+
 
   # -- Deploy a service named for Grafana Agent that matches the Alloy service. This is useful for applications that are
   # configured to send telemetry to a service named "grafana-agent" and not yet updated to send to "alloy".
