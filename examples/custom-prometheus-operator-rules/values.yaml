@@ -1,0 +1,61 @@
+---
+cluster:
+  name: custom-prometheus-operator-rules
+
+externalServices:
+  prometheus:
+    host: https://prometheus.example.com
+    basicAuth:
+      username: "12345"
+      password: "It's a secret to everyone"
+
+metrics:
+  enabled: true
+  extraRelabelingRules: |-
+    rule {
+      source_labels = ["__meta_kubernetes_namespace"]
+      regex = "private"
+      action = "drop"
+    }
+
+  podMonitors:
+    enabled: true
+    extraRelabelingRules: |-
+      rule {
+        action = "replace"
+        source_labels = ["__meta_kubernetes_pod_label_team"]
+        target_label = "team"
+      }
+
+  probes:
+    enabled: true
+    extraRelabelingRules: |-
+      rule {
+        action = "replace"
+        source_labels = ["__meta_kubernetes_ingress_label_team"]
+        target_label = "team"
+      }
+
+  serviceMonitors:
+    enabled: true
+    extraRelabelingRules: |-
+      // add a team label
+      rule {
+        action = "replace"
+        source_labels = [
+          "__meta_kubernetes_service_label_team",
+          "__meta_kubernetes_endpoints_label_team",
+          "__meta_kubernetes_pod_label_team",
+        ]
+        regex = "^(?:;*)?([^;]+).*$"
+        replacement = "$1"
+        target_label = "team"
+      }
+
+logs:
+  enabled: false
+  pod_logs:
+    enabled: false
+
+  cluster_events:
+    enabled: false
