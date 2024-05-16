@@ -31,6 +31,7 @@ Then, we extract the Grafana Alloy configuration files from the ConfigMap object
 -   [Alloy Autoscaling and Storage](./alloy-autoscaling-and-storage) - Enable Autoscaling and storage for Grafana Alloy.
 -   [Custom Metrics Tuning](./custom-metrics-tuning) - Change which metrics are send to Prometheus.
 -   [Custom Configs](./custom-config) - Add arbitrary Grafana Alloy components to the configuration.
+-   [Custom Prometheus Operator Rules](./custom-prometheus-operator-rules) - Add discovery relabelings to PodMonitors, Probes and ServiceMonitors.
 -   [Extra Rules](./extra-rules) - Add extra rules and stages for discovering and processing metrics and logs.
 -   [OpenTelemetry services](./otel-metrics-service) - Change the delivery of metrics to use the OTLP or OTLPHTTP protocol.
 -   [Pod Labels](./pod-labels) - Capture Kubernetes Pod labels as metrics and in logs.
