@@ -2,353 +2,464 @@
 # Cluster settings
 cluster:
   # -- The name of this cluster, which will be set in all labels. Required.
+  # @section -- Cluster Settings
   name: ""
 
   # -- The Kubernetes service. Change this if your cluster DNS is configured differently than the default.
+  # @section -- Cluster Settings
   kubernetesAPIService: kubernetes.default.svc.cluster.local:443
 
   # -- The specific platform for this cluster. Will enable compatibility for some platforms. Supported options: (empty) or "openshift".
+  # @section -- Cluster Settings
   platform: ""
 
+# Configuration for External Services
 externalServices:
   # Connection information for Prometheus
   prometheus:
     # -- Prometheus host where metrics will be sent
+    # @section -- External Services (Prometheus)
     host: ""
     # -- The key for the host property in the secret
+    # @section -- External Services (Prometheus)
     hostKey: host
 
     # -- The type of server protocol for writing metrics. Valid options:
     #  "remote_write" will use Prometheus Remote Write,
     #  "otlp" will use OTLP,
     #  "otlphttp" will use OTLP HTTP
+    # @section -- External Services (Prometheus)
     protocol: "remote_write"
     # -- HTTP proxy to proxy requests to Prometheus through.
+    # @section -- External Services (Prometheus)
     proxyURL: ""
     # -- Prometheus metrics query endpoint. Preset for Grafana Cloud Metrics instances.
+    # @section -- External Services (Prometheus)
     queryEndpoint: /api/prom/api/v1/query
     # -- Prometheus metrics write endpoint. Preset for Grafana Cloud Metrics instances.
+    # @section -- External Services (Prometheus)
     writeEndpoint: /api/prom/push
     # -- Custom labels to be added to all time series
+    # @section -- External Services (Prometheus)
     externalLabels: {}
     # -- Rule blocks to be added to the [write_relabel_config block](https://grafana.com/docs/alloy/latest/reference/components/prometheus.remote_write/#write_relabel_config-block)
     # of the prometheus.remote_write component.
+    # @section -- External Services (Prometheus)
     writeRelabelConfigRules: ""
 
     # -- Sets the `X-Scope-OrgID` header when sending metrics
+    # @section -- External Services (Prometheus)
     tenantId: ""
     # -- The key for the tenant ID property in the secret
+    # @section -- External Services (Prometheus)
     tenantIdKey: tenantId
 
     # -- one of "none", "basic"
+    # @section -- External Services (Prometheus)
     authMode: basic
 
     # Authenticate to Prometheus using basic authentication
+    # @section -- External Services (Prometheus)
     basicAuth:
       # -- Prometheus basic auth username
+      # @section -- External Services (Prometheus)
       username: ""
       # -- The key for the username property in the secret
+      # @section -- External Services (Prometheus)
       usernameKey: username
       # -- Prometheus basic auth password
+      # @section -- External Services (Prometheus)
       password: ""
       # -- The key for the password property in the secret
+      # @section -- External Services (Prometheus)
       passwordKey: password
 
     # Credential management
     secret:
       # -- Should this Helm chart create the secret. If false, you must define the name and namespace values.
+      # @section -- External Services (Prometheus)
       create: true
       # -- The name of the secret.
+      # @section -- External Services (Prometheus)
       name: ""
       # -- The namespace of the secret. Only used if secret.create = "false"
+      # @section -- External Services (Prometheus)
       namespace: ""
 
     # -- TLS settings to configure for the metrics service, compatible with
     # [remoteWrite protocol](https://grafana.com/docs/alloy/latest/reference/components/prometheus.remote_write/#tls_config-block),
     # [otlp](https://grafana.com/docs/alloy/latest/reference/components/otelcol.exporter.otlp/#tls-block), or
     # [otlphttp](https://grafana.com/docs/alloy/latest/reference/components/otelcol.exporter.otlphttp/#tls-block) protocols
+    # @section -- External Services (Prometheus)
     tls: {}
 
     # Metric processor settings. Only applies when protocol is "otlp" or "otlphttp"
     processors:
       batch:
         # -- Amount of data to buffer before flushing the batch.
+        # @section -- External Services (Prometheus)
         size: 8192
         # -- Upper limit of a batch size. When set to 0, there is no upper limit.
+        # @section -- External Services (Prometheus)
         maxSize: 0
         # -- How long to wait before flushing the batch.
+        # @section -- External Services (Prometheus)
         timeout: 2s
       memoryLimiter:
         # -- Use a memory limiter.
+        # @section -- External Services (Prometheus)
         enabled: false
         # -- How often to check memory usage.
+        # @section -- External Services (Prometheus)
         checkInterval: 1s
         # -- Maximum amount of memory targeted to be allocated by the process heap.
+        # @section -- External Services (Prometheus)
         limit: 0MiB
 
     # Write-Ahead Log (WAL) settings. Only applies when protocol is "remote_write"
     wal:
       # -- How frequently to clean up the WAL.
+      # @section -- External Services (Prometheus)
       truncateFrequency: 2h
 
       # -- Minimum time to keep data in the WAL before it can be removed.
+      # @section -- External Services (Prometheus)
       minKeepaliveTime: 5m
 
       # -- Maximum time to keep data in the WAL before removing it.
+      # @section -- External Services (Prometheus)
       maxKeepaliveTime: 8h
 
     # -- Whether native histograms should be sent. Only applies when protocol is "remote_write".
+    # @section -- External Services (Prometheus)
     sendNativeHistograms: false
 
   # Connection information for Grafana Loki
   loki:
     # -- Loki host where logs and events will be sent
+    # @section -- External Services (Loki)
     host: ""
     # -- The key for the host property in the secret
+    # @section -- External Services (Loki)
     hostKey: host
 
     # -- The type of server protocol for writing metrics. Valid options:
     #  "loki" will use Loki's HTTP API,
     #  "otlp" will use OTLP,
     #  "otlphttp" will use OTLP HTTP
+    # @section -- External Services (Loki)
     protocol: "loki"
     # -- HTTP proxy to proxy requests to Loki through.
+    # @section -- External Services (Loki)
     proxyURL: ""
     # -- Loki logs query endpoint.
+    # @section -- External Services (Loki)
     queryEndpoint: /loki/api/v1/query
     # -- Loki logs write endpoint.
+    # @section -- External Services (Loki)
     writeEndpoint: /loki/api/v1/push
     # -- Custom labels to be added to all logs and events
+    # @section -- External Services (Loki)
     externalLabels: {}
 
     # -- Loki tenant ID
+    # @section -- External Services (Loki)
     tenantId: ""
     # -- The key for the tenant ID property in the secret
+    # @section -- External Services (Loki)
     tenantIdKey: tenantId
 
     # -- one of "none", "basic"
+    # @section -- External Services (Loki)
     authMode: basic
 
     # Authenticate to Loki using basic authentication
     basicAuth:
       # -- Loki basic auth username
+      # @section -- External Services (Loki)
       username: ""
       # -- The key for the username property in the secret
+      # @section -- External Services (Loki)
       usernameKey: username
       # -- Loki basic auth password
+      # @section -- External Services (Loki)
       password: ""
       # -- The key for the password property in the secret
+      # @section -- External Services (Loki)
       passwordKey: password
 
     # Credential management
     secret:
       # -- Should this Helm chart create the secret. If false, you must define the name and namespace values.
+      # @section -- External Services (Loki)
       create: true
       # -- The name of the secret.
+      # @section -- External Services (Loki)
       name: ""
       # -- The namespace of the secret.
+      # @section -- External Services (Loki)
       namespace: ""
 
     # -- [TLS settings](https://grafana.com/docs/alloy/latest/reference/components/loki.write/#tls_config-block) to configure for the logs service.
+    # @section -- External Services (Loki)
     tls: {}
 
     # Log processor settings. Only applies when protocol is "otlp" or "otlphttp"
     processors:
       batch:
         # -- Amount of data to buffer before flushing the batch.
+        # @section -- External Services (Loki)
         size: 8192
         # -- Upper limit of a batch size. When set to 0, there is no upper limit.
+        # @section -- External Services (Loki)
         maxSize: 0
         # -- How long to wait before flushing the batch.
+        # @section -- External Services (Loki)
         timeout: 2s
       memoryLimiter:
         # -- Use a memory limiter.
+        # @section -- External Services (Loki)
         enabled: false
         # -- How often to check memory usage.
+        # @section -- External Services (Loki)
         checkInterval: 1s
         # -- Maximum amount of memory targeted to be allocated by the process heap.
+        # @section -- External Services (Loki)
         limit: 0MiB
 
   # Connection information for Grafana Tempo
   tempo:
     # -- Tempo host where traces will be sent
+    # @section -- External Services (Tempo)
     host: ""
     # -- The key for the host property in the secret
+    # @section -- External Services (Tempo)
     hostKey: host
 
     # -- Tempo search endpoint.
+    # @section -- External Services (Tempo)
     searchEndpoint: /api/search
 
     # -- The type of server protocol for writing metrics
     # Options:
     #   * "otlp" will use OTLP
     #   * "otlphttp" will use OTLP HTTP
+    # @section -- External Services (Tempo)
     protocol: "otlp"
 
     # -- Tempo tenant ID
+    # @section -- External Services (Tempo)
     tenantId: ""
     # -- The key for the tenant ID property in the secret
+    # @section -- External Services (Tempo)
     tenantIdKey: tenantId
 
     # -- one of "none", "basic"
+    # @section -- External Services (Tempo)
     authMode: basic
 
     # Authenticate to Tempo using basic authentication
     basicAuth:
       # -- Tempo basic auth username
+      # @section -- External Services (Tempo)
       username: ""
       # -- The key for the username property in the secret
+      # @section -- External Services (Tempo)
       usernameKey: username
       # -- Tempo basic auth password
+      # @section -- External Services (Tempo)
       password: ""
       # -- The key for the password property in the secret
+      # @section -- External Services (Tempo)
       passwordKey: password
 
     # Credential management
     secret:
       # -- Should this Helm chart create the secret. If false, you must define the name and namespace values.
+      # @section -- External Services (Tempo)
       create: true
       # -- The name of the secret.
+      # @section -- External Services (Tempo)
       name: ""
       # -- The namespace of the secret.
+      # @section -- External Services (Tempo)
       namespace: ""
 
     # -- [TLS settings](https://grafana.com/docs/alloy/latest/reference/components/otelcol.exporter.otlp/#tls-block) to configure for the traces service.
+    # @section -- External Services (Tempo)
     tls: {}
 
     # -- Define the [TLS block](https://grafana.com/docs/alloy/latest/reference/components/otelcol.exporter.otlp/#tls-block).
     # Example:
     # `tlsOptions: insecure = true`
     # This option will be deprecated and removed soon. Please switch to `tls` and use yaml format.
+    # @section -- External Services (Tempo)
     tlsOptions: ""
 
   # Connection information for Grafana Pyroscope
   pyroscope:
     # -- Pyroscope host where profiles will be sent
+    # @section -- External Services (Pyroscope)
     host: ""
     # -- The key for the host property in the secret
+    # @section -- External Services (Pyroscope)
     hostKey: host
 
     # -- HTTP proxy to proxy requests to Pyroscope through.
+    # @section -- External Services (Pyroscope)
     proxyURL: ""
 
     # -- Custom labels to be added to all profiles
+    # @section -- External Services (Pyroscope)
     externalLabels: {}
 
     # -- Pyroscope tenant ID
+    # @section -- External Services (Pyroscope)
     tenantId: ""
     # -- The key for the tenant ID property in the secret
+    # @section -- External Services (Pyroscope)
     tenantIdKey: tenantId
 
     # -- one of "none", "basic"
+    # @section -- External Services (Pyroscope)
     authMode: basic
 
     # Authenticate to Pyroscope using basic authentication
     basicAuth:
       # -- Pyroscope basic auth username
+      # @section -- External Services (Pyroscope)
       username: ""
       # -- The key for the username property in the secret
+      # @section -- External Services (Pyroscope)
       usernameKey: username
       # -- Pyroscope basic auth password
+      # @section -- External Services (Pyroscope)
       password: ""
       # -- The key for the password property in the secret
+      # @section -- External Services (Pyroscope)
       passwordKey: password
 
     # Credential management
     secret:
       # -- Should this Helm chart create the secret. If false, you must define the name and namespace values.
+      # @section -- External Services (Pyroscope)
       create: true
       # -- The name of the secret.
+      # @section -- External Services (Pyroscope)
       name: ""
       # -- The namespace of the secret.
+      # @section -- External Services (Pyroscope)
       namespace: ""
 
     # -- [TLS settings](https://grafana.com/docs/alloy/latest/reference/components/pyroscope.write/#tls_config-block) to configure for the profiles service.
+    # @section -- External Services (Pyroscope)
     tls: {}
 
 # Settings related to capturing and forwarding metrics
 metrics:
   # -- Capture and forward metrics
+  # @section -- Metrics Global Settings
   enabled: true
 
   # -- How frequently to scrape metrics
+  # @section -- Metrics Global Settings
   scrapeInterval: 60s
 
   # -- Sets the max_cache_size for every prometheus.relabel component. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#arguments))
   # This should be at least 2x-5x your largest scrape target or samples appended rate.
+  # @section -- Metrics Global Settings
   maxCacheSize: 100000
 
   # -- Rule blocks to be added to the discovery.relabel component for all metric sources.
   # These relabeling rules are applied pre-scrape against the targets from service discovery.
   # Before the scrape, any remaining target labels that start with `__` (i.e. `__meta_kubernetes*`) are dropped.
   # ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery.relabel/#rule-block))
+  # @section -- Metrics Global Settings
   extraRelabelingRules: ""
 
   # -- Rule blocks to be added to the prometheus.relabel component for all metric sources.
   # These relabeling rules are applied post-scrape against the metrics returned from the scraped target, no `__meta*` labels are present.
   # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#rule-block))
+  # @section -- Metrics Global Settings
   extraMetricRelabelingRules: ""
 
-  # Annotation-based autodiscovery allows for discovering metric sources solely on their annotations and does
+  # Annotation-based auto-discovery allows for discovering metric sources solely on their annotations and does
   # not require adding any extra configuration.
   autoDiscover:
-    # -- Enable annotation-based autodiscovery
+    # -- Enable annotation-based auto-discovery
+    # @section -- Metrics Job: Auto-Discovery
     enabled: true
 
     # -- Rule blocks to be added to the discovery.relabel component for auto-discovered entities.
     # These relabeling rules are applied pre-scrape against the targets from service discovery.
     # Before the scrape, any remaining target labels that start with `__` (i.e. `__meta_kubernetes*`) are dropped.
     # ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery.relabel/#rule-block))
+    # @section -- Metrics Job: Auto-Discovery
     extraRelabelingRules: ""
 
     # -- Rule blocks to be added to the prometheus.relabel component for auto-discovered entities.
     # These relabeling rules are applied post-scrape against the metrics returned from the scraped target, no `__meta*` labels are present.
     # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#rule-block))
+    # @section -- Metrics Job: Auto-Discovery
     extraMetricRelabelingRules: ""
 
     # Adjustments to the scraped metrics to filter the amount of data sent to storage.
     metricsTuning:
       # -- Metrics to keep. Can use regex. An empty list means keep all.
+      # @section -- Metrics Job: Auto-Discovery
       includeMetrics: []
       # -- Metrics to drop. Can use regex.
+      # @section -- Metrics Job: Auto-Discovery
       excludeMetrics: []
 
     # Annotations that are used to discover and configure metric scraping targets. Add these annotations
     # to your services or pods to control how autodiscovery will find and scrape metrics from your service or pod.
     annotations:
       # -- Annotation for enabling scraping for this service or pod. Value should be either "true" or "false"
+      # @section -- Metrics Job: Auto-Discovery
       scrape: "k8s.grafana.com/scrape"
       # -- Annotation for overriding the job label
+      # @section -- Metrics Job: Auto-Discovery
       job: "k8s.grafana.com/job"
       # -- Annotation for overriding the instance label
+      # @section -- Metrics Job: Auto-Discovery
       instance: "k8s.grafana.com/instance"
       # -- Annotation for setting or overriding the metrics path. If not set, it defaults to /metrics
+      # @section -- Metrics Job: Auto-Discovery
       metricsPath: "k8s.grafana.com/metrics.path"
       # -- Annotation for setting the metrics port by name.
+      # @section -- Metrics Job: Auto-Discovery
       metricsPortName: "k8s.grafana.com/metrics.portName"
       # -- Annotation for setting the metrics port by number.
+      # @section -- Metrics Job: Auto-Discovery
       metricsPortNumber: "k8s.grafana.com/metrics.portNumber"
       # -- Annotation for setting the metrics scheme, default: http.
+      # @section -- Metrics Job: Auto-Discovery
       metricsScheme: "k8s.grafana.com/metrics.scheme"
 
     # -- Sets the max_cache_size for cadvisor prometheus.relabel component.
     # This should be at least 2x-5x your largest scrape target or samples appended rate.
     # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#arguments))
     # Overrides metrics.maxCacheSize
-    # @default -- 100000
+    # @raw
+    # @section -- Metrics Job: Auto-Discovery
     maxCacheSize:
 
   # Metrics from Grafana Alloy
+  # @section -- Metrics -> Alloy Job
   alloy:
     # -- Scrape metrics from Grafana Alloy
+    # @section -- Metrics Job: Alloy
     enabled: true
 
     # -- How frequently to scrape metrics from Grafana Alloy.
     # Overrides metrics.scrapeInterval
     # @default -- 60s
+    # @section -- Metrics Job: Alloy
     scrapeInterval: ""
 
     # -- Label matchers used by Grafana Alloy to select Grafana Alloy pods
+    # @section -- Metrics Job: Alloy
     labelMatchers:
       app.kubernetes.io/name: alloy.*
 
@@ -356,43 +467,53 @@ metrics:
     # These relabeling rules are applied pre-scrape against the targets from service discovery.
     # Before the scrape, any remaining target labels that start with `__` (i.e. `__meta_kubernetes*`) are dropped.
     # ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery.relabel/#rule-block))
+    # @section -- Metrics Job: Alloy
     extraRelabelingRules: ""
 
     # -- Rule blocks to be added to the prometheus.relabel component for Grafana Alloy.
     # These relabeling rules are applied post-scrape against the metrics returned from the scraped target, no `__meta*` labels are present.
     # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#rule-block))
+    # @section -- Metrics Job: Alloy
     extraMetricRelabelingRules: ""
 
     # Adjustments to the scraped metrics to filter the amount of data sent to storage.
     metricsTuning:
       # -- Filter the list of metrics from Grafana Alloy to the minimal set required for Kubernetes Monitoring.
       # See [Allow List for Grafana Alloy](#allow-list-for-grafana-alloy)
+      # @section -- Metrics Job: Alloy
       useDefaultAllowList: true
       # -- Filter the list of metrics from Grafana Alloy to the minimal set required for Kubernetes Monitoring as well as the Grafana Alloy integration.
+      # @section -- Metrics Job: Alloy
       useIntegrationAllowList: false
       # -- Metrics to keep. Can use regex.
+      # @section -- Metrics Job: Alloy
       includeMetrics: []
       # -- Metrics to drop. Can use regex.
+      # @section -- Metrics Job: Alloy
       excludeMetrics: []
 
     # -- Sets the max_cache_size for cadvisor prometheus.relabel component.
     # This should be at least 2x-5x your largest scrape target or samples appended rate.
     # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#arguments))
     # Overrides metrics.maxCacheSize
-    # @default -- 100000
+    # @raw
+    # @section -- Metrics Job: Alloy
     maxCacheSize:
 
   # Cluster object metrics from Kube State Metrics
   kube-state-metrics:
     # -- Scrape cluster object metrics from Kube State Metrics
+    # @section -- Metrics Job: Kube State Metrics
     enabled: true
 
     # -- How frequently to scrape metrics from Kube State Metrics.
     # Overrides metrics.scrapeInterval
     # @default -- 60s
+    # @section -- Metrics Job: Kube State Metrics
     scrapeInterval: ""
 
     # -- Label matchers used by Grafana Alloy to select the Kube State Metrics service
+    # @section -- Metrics Job: Kube State Metrics
     labelMatchers:
       app.kubernetes.io/name: kube-state-metrics
 
@@ -400,48 +521,60 @@ metrics:
     # These relabeling rules are applied pre-scrape against the targets from service discovery.
     # Before the scrape, any remaining target labels that start with `__` (i.e. `__meta_kubernetes*`) are dropped.
     # ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery.relabel/#rule-block))
+    # @section -- Metrics Job: Kube State Metrics
     extraRelabelingRules: ""
 
     # -- Rule blocks to be added to the prometheus.relabel component for Kube State Metrics.
     # These relabeling rules are applied post-scrape against the metrics returned from the scraped target, no `__meta*` labels are present.
     # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#rule-block))
+    # @section -- Metrics Job: Kube State Metrics
     extraMetricRelabelingRules: ""
 
     # Kube State Metrics service settings
     service:
       # -- Name of the metrics port
+      # @section -- Metrics Job: Kube State Metrics
       port: http
       # -- Does this port use TLS?
+      # @section -- Metrics Job: Kube State Metrics
       isTLS: false
 
     # Adjustments to the scraped metrics to filter the amount of data sent to storage.
     metricsTuning:
       # -- Filter the list of metrics from Kube State Metrics to a useful, minimal set.
       # See [Allow List for Kube State Metrics](#allow-list-for-kube-state-metrics)
+      # @section -- Metrics Job: Kube State Metrics
       useDefaultAllowList: true
       # -- Metrics to keep. Can use regex.
+      # @section -- Metrics Job: Kube State Metrics
       includeMetrics: []
       # -- Metrics to drop. Can use regex.
+      # @section -- Metrics Job: Kube State Metrics
       excludeMetrics: []
 
     # -- Sets the max_cache_size for cadvisor prometheus.relabel component.
     # This should be at least 2x-5x your largest scrape target or samples appended rate.
     # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#arguments))
     # Overrides metrics.maxCacheSize
-    # @default -- 100000
+    # @raw
+    # @section -- Metrics Job: Kube State Metrics
     maxCacheSize:
 
   # Node metrics from Node Exporter
+  # @section -- Metrics -> Node Exporter Job
   node-exporter:
     # -- Scrape node metrics
+    # @section -- Metrics Job: Node Exporter
     enabled: true
 
     # -- How frequently to scrape metrics from Node Exporter.
     # Overrides metrics.scrapeInterval
     # @default -- 60s
+    # @section -- Metrics Job: Node Exporter
     scrapeInterval: ""
 
     # -- Label matchers used to select the Node exporter pods
+    # @section -- Metrics Job: Node Exporter
     labelMatchers:
       app.kubernetes.io/name: prometheus-node-exporter.*
 
@@ -449,50 +582,62 @@ metrics:
     # These relabeling rules are applied pre-scrape against the targets from service discovery.
     # Before the scrape, any remaining target labels that start with `__` (i.e. `__meta_kubernetes*`) are dropped.
     # ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery.relabel/#rule-block))
+    # @section -- Metrics Job: Node Exporter
     extraRelabelingRules: ""
 
     # -- Rule blocks to be added to the prometheus.relabel component for Node Exporter.
     # These relabeling rules are applied post-scrape against the metrics returned from the scraped target, no `__meta*` labels are present.
     # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#rule-block))
+    # @section -- Metrics Job: Node Exporter
     extraMetricRelabelingRules: ""
 
     # Node Exporter service settings
     service:
       # -- Does this port use TLS?
+      # @section -- Metrics Job: Node Exporter
       isTLS: false
 
     # Adjustments to the scraped metrics to filter the amount of data sent to storage.
     metricsTuning:
       # -- Filter the list of metrics from Node Exporter to the minimal set required for Kubernetes Monitoring.
       # See [Allow List for Node Exporter](#allow-list-for-node-exporter)
+      # @section -- Metrics Job: Node Exporter
       useDefaultAllowList: true
       # -- Filter the list of metrics from Node Exporter to the minimal set required for Kubernetes Monitoring as well as the Node Exporter integration.
+      # @section -- Metrics Job: Node Exporter
       useIntegrationAllowList: false
       # -- Metrics to keep. Can use regex.
+      # @section -- Metrics Job: Node Exporter
       includeMetrics: []
       # -- Metrics to drop. Can use regex.
+      # @section -- Metrics Job: Node Exporter
       excludeMetrics: []
       # -- Drop metrics for the given filesystem types
+      # @section -- Metrics Job: Node Exporter
       dropMetricsForFilesystem: [tempfs]
 
     # -- Sets the max_cache_size for cadvisor prometheus.relabel component.
     # This should be at least 2x-5x your largest scrape target or samples appended rate.
     # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#arguments))
     # Overrides metrics.maxCacheSize
-    # @default -- 100000
+    # @raw
+    # @section -- Metrics Job: Node Exporter
     maxCacheSize:
 
   # Windows Node metrics from Windows Exporter
   windows-exporter:
     # -- Scrape node metrics
+    # @section -- Metrics Job: Windows Exporter
     enabled: false
 
     # -- How frequently to scrape metrics from Windows Exporter.
     # Overrides metrics.scrapeInterval
     # @default -- 60s
+    # @section -- Metrics Job: Windows Exporter
     scrapeInterval: ""
 
     # -- Label matchers used to select the Windows Exporter pods
+    # @section -- Metrics Job: Windows Exporter
     labelMatchers:
       app.kubernetes.io/name: prometheus-windows-exporter.*
 
@@ -500,168 +645,208 @@ metrics:
     # These relabeling rules are applied pre-scrape against the targets from service discovery.
     # Before the scrape, any remaining target labels that start with `__` (i.e. `__meta_kubernetes*`) are dropped.
     # ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery.relabel/#rule-block))
+    # @section -- Metrics Job: Windows Exporter
     extraRelabelingRules: ""
 
     # -- Rule blocks to be added to the prometheus.relabel component for Windows Exporter.
     # These relabeling rules are applied post-scrape against the metrics returned from the scraped target, no `__meta*` labels are present.
     # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#rule-block))
+    # @section -- Metrics Job: Windows Exporter
     extraMetricRelabelingRules: ""
 
     # Adjustments to the scraped metrics to filter the amount of data sent to storage.
     metricsTuning:
       # -- Filter the list of metrics from Windows Exporter to the minimal set required for Kubernetes Monitoring.
       # See [Allow List for Windows Exporter](#allow-list-for-windows-exporter)
+      # @section -- Metrics Job: Windows Exporter
       useDefaultAllowList: true
       # -- Metrics to keep. Can use regex.
+      # @section -- Metrics Job: Windows Exporter
       includeMetrics: []
       # -- Metrics to drop. Can use regex.
+      # @section -- Metrics Job: Windows Exporter
       excludeMetrics: []
 
     # -- Sets the max_cache_size for cadvisor prometheus.relabel component.
     # This should be at least 2x-5x your largest scrape target or samples appended rate.
     # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#arguments))
     # Overrides metrics.maxCacheSize
-    # @default -- 100000
+    # @raw
+    # @section -- Metrics Job: Windows Exporter
     maxCacheSize:
 
   # Cluster metrics from the Kubelet
   kubelet:
     # -- Scrape cluster metrics from the Kubelet
+    # @section -- Metrics Job: Kubelet
     enabled: true
 
     # -- How to access the node services, either direct (use node IP, requires nodes/metrics) or via proxy (requires nodes/proxy)
+    # @section -- Metrics Job: Kubelet
     nodeAddressFormat: direct
 
     # -- How frequently to scrape metrics from the Kubelet.
     # Overrides metrics.scrapeInterval
     # @default -- 60s
+    # @section -- Metrics Job: Kubelet
     scrapeInterval: ""
 
     # -- Rule blocks to be added to the discovery.relabel component for Kubelet.
     # These relabeling rules are applied pre-scrape against the targets from service discovery.
     # Before the scrape, any remaining target labels that start with `__` (i.e. `__meta_kubernetes*`) are dropped.
     # ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery.relabel/#rule-block))
+    # @section -- Metrics Job: Kubelet
     extraRelabelingRules: ""
 
     # -- Rule blocks to be added to the prometheus.relabel component for Kubelet.
     # These relabeling rules are applied post-scrape against the metrics returned from the scraped target, no `__meta*` labels are present.
     # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#rule-block))
+    # @section -- Metrics Job: Kubelet
     extraMetricRelabelingRules: ""
 
     # Adjustments to the scraped metrics to filter the amount of data sent to storage.
     metricsTuning:
       # -- Filter the list of metrics from the Kubelet to the minimal set required for Kubernetes Monitoring.
       # See [Allow List for Kubelet](#allow-list-for-kubelet)
+      # @section -- Metrics Job: Kubelet
       useDefaultAllowList: true
       # -- Metrics to keep. Can use regex.
+      # @section -- Metrics Job: Kubelet
       includeMetrics: []
       # -- Metrics to drop. Can use regex.
+      # @section -- Metrics Job: Kubelet
       excludeMetrics: []
 
     # -- Sets the max_cache_size for cadvisor prometheus.relabel component.
     # This should be at least 2x-5x your largest scrape target or samples appended rate.
     # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#arguments))
     # Overrides metrics.maxCacheSize
-    # @default -- 100000
+    # @raw
+    # @section -- Metrics Job: Kubelet
     maxCacheSize:
 
   # Container metrics from cAdvisor
   cadvisor:
     # -- Scrape container metrics from cAdvisor
+    # @section -- Metrics Job: cAdvisor
     enabled: true
 
     # -- How to access the node services, either direct (use node IP, requires nodes/metrics) or via proxy (requires nodes/proxy)
+    # @section -- Metrics Job: cAdvisor
     nodeAddressFormat: direct
 
     # -- How frequently to scrape metrics from cAdvisor.
     # Overrides metrics.scrapeInterval
     # @default -- 60s
+    # @section -- Metrics Job: cAdvisor
     scrapeInterval: ""
 
     # -- Rule blocks to be added to the discovery.relabel component for cAdvisor.
     # These relabeling rules are applied pre-scrape against the targets from service discovery.
     # Before the scrape, any remaining target labels that start with `__` (i.e. `__meta_kubernetes*`) are dropped.
     # ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery.relabel/#rule-block))
+    # @section -- Metrics Job: cAdvisor
     extraRelabelingRules: ""
 
     # -- Rule blocks to be added to the prometheus.relabel component for cAdvisor.
     # These relabeling rules are applied post-scrape against the metrics returned from the scraped target, no `__meta*` labels are present.
-    #
+    # # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#rule-block))
+    # @section -- Metrics Job: cAdvisor
     extraMetricRelabelingRules: ""
 
     # Adjustments to the scraped metrics to filter the amount of data sent to storage.
     metricsTuning:
       # -- Filter the list of metrics from cAdvisor to the minimal set required for Kubernetes Monitoring.
+      # @section -- Metrics Job: cAdvisor
       # See [Allow List for cAdvisor](#allow-list-for-cadvisor)
       useDefaultAllowList: true
       # -- Metrics to keep. Can use regex.
+      # @section -- Metrics Job: cAdvisor
       includeMetrics: []
       # -- Metrics to drop. Can use regex.
+      # @section -- Metrics Job: cAdvisor
       excludeMetrics: []
       # -- Drop metrics that have an empty container label
+      # @section -- Metrics Job: cAdvisor
       dropEmptyContainerLabels: true
       # -- Drop metrics that have an empty image label
+      # @section -- Metrics Job: cAdvisor
       dropEmptyImageLabels: true
       # -- Normalize labels to the same value for the given metric and label pairs
+      # @section -- Metrics Job: cAdvisor
       normalizeUnnecessaryLabels:
         - metric: "machine_memory_bytes"
           labels: ["boot_id", "system_uuid"]
       # -- Only keep filesystem metrics that use the following physical devices
+      # @section -- Metrics Job: cAdvisor
       keepPhysicalFilesystemDevices: ["mmcblk.p.+", "nvme.+", "rbd.+", "sd.+", "vd.+", "xvd.+", "dasd.+"]
       # -- Only keep network metrics that use the following physical devices
+      # @section -- Metrics Job: cAdvisor
       keepPhysicalNetworkDevices: ["en[ospx][0-9].*", "wlan[0-9].*", "eth[0-9].*"]
 
     # -- Sets the max_cache_size for cadvisor prometheus.relabel component.
     # This should be at least 2x-5x your largest scrape target or samples appended rate.
     # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#arguments))
     # Overrides metrics.maxCacheSize
-    # @default -- 100000
+    # @raw
+    # @section -- Metrics Job: cAdvisor
     maxCacheSize:
 
   # Metrics from the API Server
   apiserver:
     # -- Scrape metrics from the API Server
+    # @section -- Metrics Job: ApiServer
     enabled: false
 
     # -- How frequently to scrape metrics from the API Server
     # Overrides metrics.scrapeInterval
     # @default -- 60s
+    # @section -- Metrics Job: ApiServer
     scrapeInterval: ""
 
     # -- Rule blocks to be added to the discovery.relabel component for the API Server.
     # These relabeling rules are applied pre-scrape against the targets from service discovery.
     # Before the scrape, any remaining target labels that start with `__` (i.e. `__meta_kubernetes*`) are dropped.
     # ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery.relabel/#rule-block))
+    # @section -- Metrics Job: ApiServer
     extraRelabelingRules: ""
 
     # -- Rule blocks to be added to the prometheus.relabel component for the API Server.
     # These relabeling rules are applied post-scrape against the metrics returned from the scraped target, no `__meta*` labels are present.
     # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#rule-block))
+    # @section -- Metrics Job: ApiServer
     extraMetricRelabelingRules: ""
 
     # Adjustments to the scraped metrics to filter the amount of data sent to storage.
     metricsTuning:
       # -- Metrics to keep. Can use regex. An empty list means keep all.
+      # @section -- Metrics Job: ApiServer
       includeMetrics: []
       # -- Metrics to drop. Can use regex.
+      # @section -- Metrics Job: ApiServer
       excludeMetrics: []
 
     # -- Sets the max_cache_size for cadvisor prometheus.relabel component.
     # This should be at least 2x-5x your largest scrape target or samples appended rate.
     # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#arguments))
     # Overrides metrics.maxCacheSize
-    # @default -- 100000
+    # @raw
+    # @section -- Metrics Job: ApiServer
     maxCacheSize:
 
   # Metrics from the Kube Controller Manager
+  # @section - Metrics -> Kube Controller Manager Job
   kubeControllerManager:
     # -- Scrape metrics from the Kube Controller Manager
+    # @section -- Metrics Job: Kube Controller Manager
     enabled: false
 
-    # -- Port number used by the Kube Controller Manager, set by --secure-port.
+    # -- Port number used by the Kube Controller Manager, set by `--secure-port.`
+    # @section -- Metrics Job: Kube Controller Manager
     port: 10257
 
     # -- How frequently to scrape metrics from the Kube Controller Manager
+    # @section -- Metrics Job: Kube Controller Manager
     # Overrides metrics.scrapeInterval
     # @default -- 60s
     scrapeInterval: ""
@@ -670,114 +855,141 @@ metrics:
     # These relabeling rules are applied pre-scrape against the targets from service discovery.
     # Before the scrape, any remaining target labels that start with `__` (i.e. `__meta_kubernetes*`) are dropped.
     # ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery.relabel/#rule-block))
+    # @section -- Metrics Job: Kube Controller Manager
     extraRelabelingRules: ""
 
     # -- Rule blocks to be added to the prometheus.relabel component for the Kube Controller Manager.
     # These relabeling rules are applied post-scrape against the metrics returned from the scraped target, no `__meta*` labels are present.
     # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#rule-block))
+    # @section -- Metrics Job: Kube Controller Manager
     extraMetricRelabelingRules: ""
 
     # Adjustments to the scraped metrics to filter the amount of data sent to storage.
     metricsTuning:
       # -- Metrics to keep. Can use regex. An empty list means keep all.
+      # @section -- Metrics Job: Kube Controller Manager
       includeMetrics: []
       # -- Metrics to drop. Can use regex.
+      # @section -- Metrics Job: Kube Controller Manager
       excludeMetrics: []
 
     # -- Sets the max_cache_size for cadvisor prometheus.relabel component.
     # This should be at least 2x-5x your largest scrape target or samples appended rate.
     # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#arguments))
     # Overrides metrics.maxCacheSize
-    # @default -- 100000
+    # @raw
+    # @section -- Metrics Job: Kube Controller Manager
     maxCacheSize:
 
   # Metrics from the Kube Proxy
+  # @section -- Metrics -> Kube Proxy Job
   kubeProxy:
     # -- Scrape metrics from the Kube Proxy
+    # @section -- Metrics Job: Kube Proxy
     enabled: false
 
-    # -- Port number used by the Kube Proxy, set in --metrics-bind-address.
+    # -- Port number used by the Kube Proxy, set in `--metrics-bind-address`.
+    # @section -- Metrics Job: Kube Proxy
     port: 10249
 
     # -- How frequently to scrape metrics from the Kube Proxy
     # Overrides metrics.scrapeInterval
     # @default -- 60s
+    # @section -- Metrics Job: Kube Proxy
     scrapeInterval: ""
 
     # -- Rule blocks to be added to the discovery.relabel component for the Kube Proxy.
     # These relabeling rules are applied pre-scrape against the targets from service discovery.
     # Before the scrape, any remaining target labels that start with `__` (i.e. `__meta_kubernetes*`) are dropped.
     # ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery.relabel/#rule-block))
+    # @section -- Metrics Job: Kube Proxy
     extraRelabelingRules: ""
 
     # -- Rule blocks to be added to the prometheus.relabel component for the Kube Proxy.
     # These relabeling rules are applied post-scrape against the metrics returned from the scraped target, no `__meta*` labels are present.
     # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#rule-block))
+    # @section -- Metrics Job: Kube Proxy
     extraMetricRelabelingRules: ""
 
     # Adjustments to the scraped metrics to filter the amount of data sent to storage.
     metricsTuning:
       # -- Metrics to keep. Can use regex. An empty list means keep all.
+      # @section -- Metrics Job: Kube Proxy
       includeMetrics: []
       # -- Metrics to drop. Can use regex.
+      # @section -- Metrics Job: Kube Proxy
       excludeMetrics: []
 
     # -- Sets the max_cache_size for cadvisor prometheus.relabel component.
     # This should be at least 2x-5x your largest scrape target or samples appended rate.
     # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#arguments))
     # Overrides metrics.maxCacheSize
-    # @default -- 100000
+    # @raw
+    # @section -- Metrics Job: Kube Proxy
     maxCacheSize:
 
   # Metrics from the Kube Scheduler
+  # @section -- Metrics -> Kube Scheduler Job
   kubeScheduler:
     # -- Scrape metrics from the Kube Scheduler
+    # @section -- Metrics Job: Kube Scheduler
     enabled: false
 
-    # -- Port number used by the Kube Scheduler, set by --secure-port.
+    # -- Port number used by the Kube Scheduler, set by `--secure-port`.
+    # @section -- Metrics Job: Kube Scheduler
     port: 10259
 
     # -- How frequently to scrape metrics from the Kube Scheduler
     # Overrides metrics.scrapeInterval
     # @default -- 60s
+    # @section -- Metrics Job: Kube Scheduler
     scrapeInterval: ""
 
     # -- Rule blocks to be added to the discovery.relabel component for the Kube Scheduler.
     # These relabeling rules are applied pre-scrape against the targets from service discovery.
     # Before the scrape, any remaining target labels that start with `__` (i.e. `__meta_kubernetes*`) are dropped.
     # ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery.relabel/#rule-block))
+    # @section -- Metrics Job: Kube Scheduler
     extraRelabelingRules: ""
 
     # -- Rule blocks to be added to the prometheus.relabel component for the Kube Scheduler.
     # These relabeling rules are applied post-scrape against the metrics returned from the scraped target, no `__meta*` labels are present.
     # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#rule-block))
+    # @section -- Metrics Job: Kube Scheduler
     extraMetricRelabelingRules: ""
 
     # Adjustments to the scraped metrics to filter the amount of data sent to storage.
     metricsTuning:
       # -- Metrics to keep. Can use regex. An empty list means keep all.
+      # @section -- Metrics Job: Kube Scheduler
       includeMetrics: []
       # -- Metrics to drop. Can use regex.
+      # @section -- Metrics Job: Kube Scheduler
       excludeMetrics: []
 
     # -- Sets the max_cache_size for cadvisor prometheus.relabel component.
     # This should be at least 2x-5x your largest scrape target or samples appended rate.
     # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#arguments))
     # Overrides metrics.maxCacheSize
-    # @default -- 100000
+    # @raw
+    # @section -- Metrics Job: Kube Scheduler
     maxCacheSize:
 
   # Cost related metrics from OpenCost
+  # @section -- Metrics -> OpenCost Job
   cost:
     # -- Scrape cost metrics from OpenCost
+    # @section -- Metrics Job: OpenCost
     enabled: true
 
     # -- How frequently to scrape metrics from OpenCost.
     # Overrides metrics.scrapeInterval
     # @default -- 60s
+    # @section -- Metrics Job: OpenCost
     scrapeInterval: ""
 
     # -- Label matchers used to select the OpenCost service
+    # @section -- Metrics Job: OpenCost
     labelMatchers:
       app.kubernetes.io/name: opencost
 
@@ -785,43 +997,54 @@ metrics:
     # These relabeling rules are applied pre-scrape against the targets from service discovery.
     # Before the scrape, any remaining target labels that start with `__` (i.e. `__meta_kubernetes*`) are dropped.
     # ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery.relabel/#rule-block))
+    # @section -- Metrics Job: OpenCost
     extraRelabelingRules: ""
 
     # -- Rule blocks to be added to the prometheus.relabel component for OpenCost.
     # These relabeling rules are applied post-scrape against the metrics returned from the scraped target, no `__meta*` labels are present.
     # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#rule-block))
+    # @section -- Metrics Job: OpenCost
     extraMetricRelabelingRules: ""
 
     # Adjustments to the scraped metrics to filter the amount of data sent to storage.
     metricsTuning:
       # -- Filter the list of metrics from OpenCost to the minimal set required for Kubernetes Monitoring.
       # See [Allow List for OpenCost](#allow-list-for-opencost)
+      # @section -- Metrics Job: OpenCost
       useDefaultAllowList: true
       # -- Metrics to keep. Can use regex.
+      # @section -- Metrics Job: OpenCost
       includeMetrics: []
       # -- Metrics to drop. Can use regex.
+      # @section -- Metrics Job: OpenCost
       excludeMetrics: []
 
     # -- Sets the max_cache_size for cadvisor prometheus.relabel component.
     # This should be at least 2x-5x your largest scrape target or samples appended rate.
     # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#arguments))
     # Overrides metrics.maxCacheSize
-    # @default -- 100000
+    # @raw
+    # @section -- Metrics Job: OpenCost
     maxCacheSize:
 
+  # Prometheus Operator PodMonitors
   podMonitors:
     # -- Enable discovery of Prometheus Operator PodMonitor objects.
+    # @section -- Metrics Job: Prometheus Operator (PodMonitors)
     enabled: true
 
     # -- Which namespaces to look for PodMonitor objects.
+    # @section -- Metrics Job: Prometheus Operator (PodMonitors)
     namespaces: []
 
     # -- Selector to filter which PodMonitor objects to use.
+    # @section -- Metrics Job: Prometheus Operator (PodMonitors)
     selector: ""
 
     # -- How frequently to scrape metrics from PodMonitor objects. Only used if the PodMonitor does not specify the scrape interval.
     # Overrides metrics.scrapeInterval
     # @default -- 60s
+    # @section -- Metrics Job: Prometheus Operator (PodMonitors)
     scrapeInterval: ""
 
     # -- Rule blocks to be added to the prometheus.operator.podmonitors component for PodMonitors.
@@ -829,33 +1052,41 @@ metrics:
     # The relabelings defined in the PodMonitor object are applied first, then these relabelings are applied.
     # Before the scrape, any remaining target labels that start with `__` (i.e. `__meta_kubernetes*`) are dropped.
     # ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery.relabel/#rule-block))
+    # @section -- Metrics Job: Prometheus Operator (PodMonitors)
     extraRelabelingRules: ""
 
     # -- Rule blocks to be added to the prometheus.relabel component for PodMonitor objects.
     # These relabeling rules are applied post-scrape against the metrics returned from the scraped target, no `__meta*` labels are present.
     # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#rule-block))
+    # @section -- Metrics Job: Prometheus Operator (PodMonitors)
     extraMetricRelabelingRules: ""
 
     # -- Sets the max_cache_size for cadvisor prometheus.relabel component.
     # This should be at least 2x-5x your largest scrape target or samples appended rate.
     # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#arguments))
     # Overrides metrics.maxCacheSize
-    # @default -- 100000
+    # @raw
+    # @section -- Metrics Job: Prometheus Operator (PodMonitors)
     maxCacheSize:
 
+  # Prometheus Operator Probes
   probes:
     # -- Enable discovery of Prometheus Operator Probe objects.
+    # @section -- Metrics Job: Prometheus Operator (Probes)
     enabled: true
 
     # -- Which namespaces to look for Probe objects.
+    # @section -- Metrics Job: Prometheus Operator (Probes)
     namespaces: []
 
     # -- Selector to filter which Probes objects to use.
+    # @section -- Metrics Job: Prometheus Operator (Probes)
     selector: ""
 
     # -- How frequently to scrape metrics from Probe objects. Only used if the Probe does not specify the scrape interval.
     # Overrides metrics.scrapeInterval
     # @default -- 60s
+    # @section -- Metrics Job: Prometheus Operator (Probes)
     scrapeInterval: ""
 
     # -- Rule blocks to be added to the prometheus.operator.probes component for Probes.
@@ -863,33 +1094,41 @@ metrics:
     # The relabelings defined in the PodMonitor object are applied first, then these relabelings are applied.
     # Before the scrape, any remaining target labels that start with `__` (i.e. `__meta_kubernetes*`) are dropped.
     # ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery.relabel/#rule-block))
+    # @section -- Metrics Job: Prometheus Operator (Probes)
     extraRelabelingRules: ""
 
     # -- Rule blocks to be added to the prometheus.relabel component for Probe objects.
     # These relabeling rules are applied post-scrape against the metrics returned from the scraped target, no `__meta*` labels are present.
     # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#rule-block))
+    # @section -- Metrics Job: Prometheus Operator (Probes)
     extraMetricRelabelingRules: ""
 
     # -- Sets the max_cache_size for cadvisor prometheus.relabel component.
     # This should be at least 2x-5x your largest scrape target or samples appended rate.
     # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#arguments))
     # Overrides metrics.maxCacheSize
-    # @default -- 100000
+    # @raw
+    # @section -- Metrics Job: Prometheus Operator (Probes)
     maxCacheSize:
 
+  # Prometheus Operator ServiceMonitors
   serviceMonitors:
     # -- Enable discovery of Prometheus Operator ServiceMonitor objects.
+    # @section -- Metrics Job: Prometheus Operator (ServiceMonitors)
     enabled: true
 
     # -- Which namespaces to look for ServiceMonitor objects.
+    # @section -- Metrics Job: Prometheus Operator (ServiceMonitors)
     namespaces: []
 
     # -- Selector to filter which ServiceMonitor objects to use.
+    # @section -- Metrics Job: Prometheus Operator (ServiceMonitors)
     selector: ""
 
     # -- How frequently to scrape metrics from ServiceMonitor objects. Only used if the ServiceMonitor does not specify the scrape interval.
     # Overrides metrics.scrapeInterval
     # @default -- 60s
+    # @section -- Metrics Job: Prometheus Operator (ServiceMonitors)
     scrapeInterval: ""
 
     # -- Rule blocks to be added to the prometheus.operator.probes component for Probes.
@@ -897,46 +1136,60 @@ metrics:
     # The relabelings defined in the PodMonitor object are applied first, then these relabelings are applied.
     # Before the scrape, any remaining target labels that start with `__` (i.e. `__meta_kubernetes*`) are dropped.
     # ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery.relabel/#rule-block))
+    # @section -- Metrics Job: Prometheus Operator (ServiceMonitors)
     extraRelabelingRules: ""
 
     # -- Rule blocks to be added to the prometheus.relabel component for ServiceMonitor objects.
     # These relabeling rules are applied post-scrape against the metrics returned from the scraped target, no `__meta*` labels are present.
     # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#rule-block))
+    # @section -- Metrics Job: Prometheus Operator (ServiceMonitors)
     extraMetricRelabelingRules: ""
 
     # -- Sets the max_cache_size for cadvisor prometheus.relabel component.
     # This should be at least 2x-5x your largest scrape target or samples appended rate.
     # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#arguments))
     # Overrides metrics.maxCacheSize
-    # @default -- 100000
+    # @raw
+    # @section -- Metrics Job: Prometheus Operator (ServiceMonitors)
     maxCacheSize:
 
   kubernetesMonitoring:
     # -- Report telemetry about this Kubernetes Monitoring chart as a metric.
+    # @section -- Metrics Job: Kubernetes Monitoring Telemetry
     enabled: true
 
   # Settings related to metrics ingested via receivers
+  # @section -- Metrics -> OTEL Receivers
   receiver:
     # -- Apply a filter to metrics received via the OTLP or OTLP HTTP receivers.
     # ([docs](https://grafana.com/docs/alloy/latest/reference/components/otelcol.processor.filter/))
+    # @section -- Metrics Receivers
     filters:
+      # @section -- Metrics Receivers
       metric: []
+      # @section -- Metrics Receivers
       datapoint: []
     # -- Apply a transformation to metrics received via the OTLP or OTLP HTTP receivers.
     # ([docs](https://grafana.com/docs/alloy/latest/reference/components/otelcol.processor.transform/))
+    # @section -- Metrics Receivers
     transforms:
+      # @section -- Metrics Receivers
       resource: []
+      # @section -- Metrics Receivers
       metric: []
+      # @section -- Metrics Receivers
       datapoint: []
 
 # Settings related to capturing and forwarding logs
 logs:
   # -- Capture and forward logs
+  # @section -- Logs Global
   enabled: true
 
-  # Settings for Kubernetes pod logs
+  # Settings for Kubernetes pod logs from the worker
   pod_logs:
     # -- Capture and forward logs from Kubernetes pods
+    # @section -- Logs Scrape: Pod Logs
     enabled: true
 
     # When set to "all", every pod (filtered by the namespaces list below) will have their logs gathered, but you can
@@ -946,23 +1199,28 @@ logs:
     # have their logs gathered.
     # Possible values: "all" "annotation"
     # -- Controls the behavior of discovering pods for logs.
+    # @section -- Logs Scrape: Pod Logs
     discovery: "all"
 
     # The annotation to control the behavior of gathering logs from this pod. If a pod has this annotation, it will
     # either enable or disable gathering of logs.
     # -- Pod annotation to use for controlling log discovery.
+    # @section -- Logs Scrape: Pod Logs
     annotation: "k8s.grafana.com/logs.autogather"
 
     # -- Only capture logs from pods in these namespaces (`[]` means all namespaces).
+    # @section -- Logs Scrape: Pod Logs
     namespaces: []
 
     # -- Do not capture logs from any pods in these namespaces.
+    # @section -- Logs Scrape: Pod Logs
     excludeNamespaces: []
 
     # -- Rule blocks to be added to the discovery.relabel component for pod logs.
     # These relabeling rules are applied pre-scrape against the targets from service discovery.
     # Before the scrape, any remaining target labels that start with `__` (i.e. `__meta_kubernetes*`) are dropped.
     # ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery.relabel/#rule-block))
+    # @section -- Logs Scrape: Pod Logs
     extraRelabelingRules: ""
 
     # -- Controls the behavior of gathering pod logs.
@@ -970,37 +1228,47 @@ logs:
     # log files directly.
     # When set to "api", Grafana Alloy will access pod logs via the API server. This method may be preferable if
     # your cluster prevents DaemonSets, HostPath volume mounts, or for other reasons.
+    # @section -- Logs Scrape: Pod Logs
     gatherMethod: "volumes"
 
     # -- Stage blocks to be added to the loki.process component for pod logs.
     # ([docs](https://grafana.com/docs/alloy/latest/reference/components/loki.process/#blocks))
     # This value is templated so that you can refer to other values from this file.
+    # @section -- Logs Scrape: Pod Logs
     extraStageBlocks: ""
 
+  # PodLog Objects
   podLogsObjects:
     # -- Enable discovery of Grafana Alloy PodLogs objects.
+    # @section -- Logs Scrape: PodLog Objects
     enabled: false
 
     # -- Which namespaces to look for PodLogs objects.
+    # @section -- Logs Scrape: PodLog Objects
     namespaces: []
 
     # -- Selector to filter which PodLogs objects to use.
+    # @section -- Logs Scrape: PodLog Objects
     selector: ""
 
     # -- Stage blocks to be added to the loki.process component for logs gathered via PodLogs objects.
     # ([docs](https://grafana.com/docs/alloy/latest/reference/components/loki.process/#blocks))
     # This value is templated so that you can refer to other values from this file.
+    # @section -- Logs Scrape: PodLog Objects
     extraStageBlocks: ""
 
   # Settings for scraping Kubernetes cluster events
   cluster_events:
     # -- Scrape Kubernetes cluster events
+    # @section -- Logs Scrape: Cluster Events
     enabled: true
 
     # -- Log format used to forward cluster events. Allowed values: `logfmt` (default), `json`.
+    # @section -- Logs Scrape: Cluster Events
     logFormat: "logfmt"
 
     # -- List of namespaces to watch for events (`[]` means all namespaces)
+    # @section -- Logs Scrape: Cluster Events
     namespaces: []
 
     # -- Stage blocks to be added to the loki.process component for cluster events.
@@ -1009,75 +1277,99 @@ logs:
     extraStageBlocks: ""
 
     # -- Logs the cluster events to stdout. Useful for debugging.
+    # @section -- Logs Scrape: Cluster Events
     logToStdout: false
 
     # -- Extra configuration that will be added to the Grafana Alloy for Cluster Events configuration file.
     # This value is templated so that you can refer to other values from this file.
     # This cannot be used to modify the generated configuration values, only append new components.
     # See [Adding custom Flow configuration](#adding-custom-flow-configuration) for an example.
+    # @section -- Logs Scrape: Cluster Events
     extraConfig: ""
 
   # Settings related to logs ingested via receivers
+  # @section -- Logs -> OTEL Receiver
   receiver:
     # -- Apply a filter to logs received via the OTLP or OTLP HTTP receivers.
     # ([docs](https://grafana.com/docs/alloy/latest/reference/components/otelcol.processor.filter/))
+    # @section -- Logs Receiver
     filters:
+      # @section -- Logs Receiver
       log_record: []
     # -- Apply a transformation to logs received via the OTLP or OTLP HTTP receivers.
     # ([docs](https://grafana.com/docs/alloy/latest/reference/components/otelcol.processor.transform/))
+    # @section -- Logs Receiver
     transforms:
       # -- Resource transformation rules.
+      # @section -- Logs Receiver
       resource: []
       # -- Log transformation rules.
+      # @section -- Logs Receiver
       log: []
       # -- The list of labels to set in the Loki log stream.
+      # @section -- Logs Receiver
       labels: ["cluster", "namespace", "job", "pod"]
 
   # -- Extra configuration that will be added to the Grafana Alloy for Logs configuration file.
   # This value is templated so that you can refer to other values from this file.
   # This cannot be used to modify the generated configuration values, only append new components.
   # See [Adding custom Flow configuration](#adding-custom-flow-configuration) for an example.
+  # @section -- Logs Global
   extraConfig: ""
 
 # Settings related to capturing and forwarding traces
 traces:
   # -- Receive and forward traces.
+  # @section -- Traces
   enabled: false
 
   # Settings related to traces ingested via receivers
   receiver:
     # -- Apply a filter to traces received via the OTLP or OTLP HTTP receivers.
     # ([docs](https://grafana.com/docs/alloy/latest/reference/components/otelcol.processor.filter/))
+    # @section -- Traces
     filters:
+      # @section -- Traces
       span: []
+      # @section -- Traces
       spanevent: []
     # -- Apply a transformation to traces received via the OTLP or OTLP HTTP receivers.
     # ([docs](https://grafana.com/docs/alloy/latest/reference/components/otelcol.processor.transform/))
+    # @section -- Traces
     transforms:
+      # @section -- Traces
       resource: []
+      # @section -- Traces
       span: []
+      # @section -- Traces
       spanevent: []
 
 # Settings related to capturing and forwarding profiles
 profiles:
   # -- Receive and forward profiles.
+  # @section -- Profiles
   enabled: false
 
   # Settings for gathering profiles using eBPF
+  # @section -- Profiles (eBPF)
   ebpf:
     # -- Gather profiles using eBPF
+    # @section -- Profiles (eBPF)
     enabled: true
 
     # -- Which namespaces to look for pods with profiles.
+    # @section -- Profiles (eBPF)
     namespaces: []
 
     # -- Rule blocks to be added to the discovery.relabel component for eBPF profile sources.
     # These relabeling rules are applied pre-scrape against the targets from service discovery.
     # Before the scrape, any remaining target labels that start with `__` (i.e. `__meta_kubernetes*`) are dropped.
     # ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery.relabel/#rule-block))
+    # @section -- Profiles (eBPF)
     extraRelabelingRules: ""
 
     # -- C++ demangle mode. Available options are: none, simplified, templates, full
+    # @section -- Profiles (eBPF)
     demangle: none
 
   # TBD
@@ -1088,18 +1380,21 @@ profiles:
   # ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery.relabel/#rule-block))
   #  extraRelabelingRules: ""
 
-
   pprof:
     # -- Gather profiles by scraping pprof HTTP endpoints
+    # @section -- Profiles (pprof)
     enabled: true
     # -- Which namespaces to look for pods with profiles.
+    # @section -- Profiles (pprof)
     namespaces: []
     # -- Rule blocks to be added to the discovery.relabel component for eBPF profile sources.
     # These relabeling rules are applied pre-scrape against the targets from service discovery.
     # Before the scrape, any remaining target labels that start with `__` (i.e. `__meta_kubernetes*`) are dropped.
     # ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery.relabel/#rule-block))
+    # @section -- Profiles (pprof)
     extraRelabelingRules: ""
     # -- Profile types to gather
+    # @section -- Profiles (pprof)
     types:
       - memory
       - cpu
@@ -1112,75 +1407,101 @@ profiles:
 receivers:
   grpc:
     # -- Receive OpenTelemetry signals over OTLP/gRPC?
+    # @section -- OTEL Receivers (gRPC)
     enabled: true
     # -- Which port to use for the OTLP/gRPC receiver. This port needs to be opened in the alloy section below.
+    # @section -- OTEL Receivers (gRPC)
     port: 4317
     # -- It removes attributes which could cause high cardinality metrics. For example, attributes with IP addresses and port numbers in metrics about HTTP and gRPC connections will be removed.
+    # @section -- OTEL Receivers (gRPC)
     disable_debug_metrics: true
 
   http:
     # -- Receive OpenTelemetry signals over OTLP/HTTP?
+    # @section -- OTEL Receivers (HTTP)
     enabled: true
     # -- Which port to use for the OTLP/HTTP receiver. This port needs to be opened in the alloy section below.
+    # @section -- OTEL Receivers (HTTP)
     port: 4318
     # -- It removes attributes which could cause high cardinality metrics. For example, attributes with IP addresses and port numbers in metrics about HTTP and gRPC connections will be removed.
+    # @section -- OTEL Receivers (HTTP)
     disable_debug_metrics: true
 
   prometheus:
     # -- Receive Prometheus metrics
+    # @section -- OTEL Receivers (Prometheus)
     enabled: false
     # -- Which port to use for the Prometheus receiver. This port needs to be opened in the alloy section below.
+    # @section -- OTEL Receivers (Prometheus)
     port: 9999
 
   jaeger:
     grpc:
       # -- Receive Jaeger signals via gRPC protocol.
+      # @section -- OTEL Receivers (Jaeger)
       enabled: false
       # -- Which port to use for the Jaeger gRPC receiver. This port needs to be opened in the alloy section below.
+      # @section -- OTEL Receivers (Jaeger)
       port: 14250
 
     thriftBinary:
       # -- Receive Jaeger signals via Thrift binary protocol.
+      # @section -- OTEL Receivers (Jaeger)
       enabled: false
       # -- Which port to use for the Thrift binary receiver. This port needs to be opened in the alloy section below.
+      # @section -- OTEL Receivers (Jaeger)
       port: 6832
 
     thriftCompact:
       # -- Receive Jaeger signals via Thrift compact protocol.
+      # @section -- OTEL Receivers (Jaeger)
       enabled: false
       # -- Which port to use for the Thrift compact receiver. This port needs to be opened in the alloy section below.
+      # @section -- OTEL Receivers (Jaeger)
       port: 6831
 
     thriftHttp:
       # -- Receive Jaeger signals via Thrift HTTP protocol.
+      # @section -- OTEL Receivers (Jaeger)
       enabled: false
       # -- Which port to use for the Thrift HTTP receiver. This port needs to be opened in the alloy section below.
+      # @section -- OTEL Receivers (Jaeger)
       port: 14268
 
     # -- It removes attributes which could cause high cardinality metrics. For example, attributes with IP addresses and port numbers in metrics about HTTP and gRPC connections will be removed.
+    # @section -- OTEL Receivers (Jaeger)
     disable_debug_metrics: true
 
   zipkin:
     # -- Receive Zipkin traces
+    # @section -- OTEL Receivers (Zipkin)
     enabled: false
     # -- Which port to use for the Zipkin receiver. This port needs to be opened in the alloy section below.
+    # @section -- OTEL Receivers (Zipkin)
     port: 9411
     # -- It removes attributes which could cause high cardinality metrics. For example, attributes with IP addresses and port numbers in metrics about HTTP and gRPC connections will be removed.
+    # @section -- OTEL Receivers (Zipkin)
     disable_debug_metrics: true
 
   processors:
     # Batch processor settings for OTLP/gRPC, OTLP/HTTP, Jaeger, or Zipkin receivers
+    # @section -- OTEL Receivers (Processors)
     batch:
       # -- What batch size to use, in bytes
+      # @section -- OTEL Receivers (Processors)
       size: 16384
       # -- The upper limit of the amount of data contained in a single batch, in bytes. When set to 0, batches can be any size.
+      # @section -- OTEL Receivers (Processors)
       maxSize: 0
-      # -- How long before sending
+      # -- How long before sending (Processors)
+      # @section -- OTEL Receivers (Processors)
       timeout: 2s
 
     # Attribute processor for OTLP/gRPC, OTLP/HTTP, Jaeger, or Zipkin receivers
+    # @section -- OTEL Receivers (Processors)
     k8sattributes:
       # -- Kubernetes metadata to extract and add to the attributes of the received telemetry data.
+      # @section -- OTEL Receivers (Processors)
       metadata:
         - k8s.namespace.name
         - k8s.pod.name
@@ -1194,45 +1515,55 @@ receivers:
         - k8s.pod.start_time
 
       # -- Kubernetes labels to extract and add to the attributes of the received telemetry data.
+      # @section -- OTEL Receivers (Processors)
       labels: []
 
       # -- Kubernetes annotations to extract and add to the attributes of the received telemetry data.
+      # @section -- OTEL Receivers (Processors)
       annotations: []
 
 
   # -- Deploy a service named for Grafana Agent that matches the Alloy service. This is useful for applications that are
   # configured to send telemetry to a service named "grafana-agent" and not yet updated to send to "alloy".
+  # @section -- OTEL Receivers
   deployGrafanaAgentService: true
 
 # -- Extra configuration that will be added to the Grafana Alloy configuration file.
 # This value is templated so that you can refer to other values from this file.
 # This cannot be used to modify the generated configuration values, only append new components.
 # See [Adding custom Flow configuration](#adding-custom-flow-configuration) for an example.
+# @section -- Metrics Global
 extraConfig: ""
 
 # Setting for the config validator job, run as a pre-install and pre-upgrade hook to validate that the generated
 # configuration, including extraConfig settings are valid.
 configValidator:
   # -- Should config validation be run?
+  # @section -- Config Validator Job
   enabled: true
 
   # -- nodeSelector to apply to the config validator job.
+  # @section -- Config Validator Job
   nodeSelector:
     kubernetes.io/os: linux
 
   # -- Extra annotations to add to the test config validator job.
+  # @section -- Config Validator Job
   extraAnnotations: {}
 
   # -- Extra labels to add to the test config validator job.
+  # @section -- Config Validator Job
   extraLabels: {}
 
   # -- Tolerations to apply to the config validator job.
+  # @section -- Config Validator Job
   tolerations: []
 
 # Settings for the test job, which runs queries against Prometheus, Loki, and/or Tempo to check for data that should be
 # available based on the current configuration. Runnable by "helm test"
 test:
   # -- Should `helm test` run the test job?
+  # @section -- Test Job
   enabled: true
 
   # -- Additional queries to run during the test.
@@ -1249,25 +1580,32 @@ test:
   #   expect:
   #     value: 1
   #     operator: ==
+  # @section -- Test Job
   extraQueries: []
 
   # -- How many times to attempt the test job.
+  # @section -- Test Job
   attempts: 10
 
   # -- nodeSelector to apply to the test job.
+  # @section -- Test Job
   nodeSelector:
     kubernetes.io/os: linux
 
   # -- Extra annotations to add to the test job.
+  # @section -- Test Job
   extraAnnotations: {}
 
   # -- Extra labels to add to the test job.
+  # @section -- Test Job
   extraLabels: {}
 
   # -- Tolerations to apply to the test job.
+  # @section -- Test Job
   tolerations: []
 
   # -- Overrides the URLs for various data sources
+  # @section -- Test Job
   envOverrides:
     PROMETHEUS_URL: ""
     LOKI_URL: ""
@@ -1276,61 +1614,77 @@ test:
 
   image:
     # -- Test job image registry.
+    # @section -- Test Job
     registry: ghcr.io
     # -- Test job image repository.
+    # @section -- Test Job
     image: grafana/k8s-monitoring-test
     # -- Test job image tag. Default is the chart version.
+    # @section -- Test Job
     tag: ""
     # -- Optional set of image pull secrets.
+    # @section -- Test Job
     pullSecrets: []
 
 # Settings for the config analysis pod, which asks Grafana Alloy for an analysis of expected metric discoveries and
 # scrapes. Runnable by "helm test"
 configAnalysis:
   # -- Should `helm test` run the config analysis pod?
+  # @section -- Config Analysis Job
   enabled: true
 
   # -- nodeSelector to apply to the config analysis pod.
+  # @section -- Config Analysis Job
   nodeSelector:
     kubernetes.io/os: linux
 
   # -- Extra annotations to add to the config analysis pod.
+  # @section -- Config Analysis Job
   extraAnnotations: {}
 
   # -- Extra labels to add to the config analysis pod.
+  # @section -- Config Analysis Job
   extraLabels: {}
 
   # -- Tolerations to apply to the config analysis pod.
+  # @section -- Config Analysis Job
   tolerations: []
 
   image:
     # -- Config Analysis image registry.
+    # @section -- Config Analysis Job
     registry: ghcr.io
     # -- Config Analysis image repository.
+    # @section -- Config Analysis Job
     image: grafana/k8s-monitoring-test
     # -- Config Analysis image tag. Default is the chart version.
+    # @section -- Config Analysis Job
     tag: ""
     # -- Optional set of image pull secrets.
+    # @section -- Config Analysis Job
     pullSecrets: []
-
 
 ## Global properties for image pulling override the values defined under `image.registry` and `configReloader.image.registry`.
 ## If you want to override only one image registry, use the specific fields but if you want to override them all, use `global.image.registry`
 global:
   image:
     # -- Global image registry to use if it needs to be overridden for some specific use cases (e.g local registries, custom images, ...)
+    # @section -- Chart
     registry: ""
 
     # -- Optional set of global image pull secrets.
+    # @section -- Chart
     pullSecrets: []
 
 # Settings for the Kube State Metrics deployment
 # You can use this sections to make modifications to the Kube State Metrics deployment.
 # See https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-state-metrics for available values.
+# @section -- [Kube State Metrics](https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-state-metrics) Chart Values
 kube-state-metrics:
   # -- Should this helm chart deploy Kube State Metrics to the cluster.
   # Set this to false if your cluster already has Kube State Metrics, or if you
   # do not want to scrape metrics from Kube State Metrics.
+  # @section -- Chart
   enabled: true
   # @ignored
   nodeSelector:
@@ -1348,10 +1702,12 @@ kube-state-metrics:
 # Settings for the Node Exporter deployment
 # You can use this sections to make modifications to the Node Exporter deployment.
 # See https://github.com/prometheus-community/helm-charts/tree/main/charts/prometheus-node-exporter for available values.
+# @section -- [Prometheus Node Exporter](https://github.com/prometheus-community/helm-charts/tree/main/charts/prometheus-node-exporter) Chart Values
 prometheus-node-exporter:
   # -- Should this helm chart deploy Node Exporter to the cluster.
   # Set this to false if your cluster already has Node Exporter, or if you do
   # not want to scrape metrics from Node Exporter.
+  # @section -- Chart
   enabled: true
   # @ignored - Only select Linux nodes
   nodeSelector:
@@ -1375,13 +1731,16 @@ prometheus-node-exporter:
 # Settings for the Windows Exporter deployment
 # You can use this sections to make modifications to the Windows Exporter deployment.
 # See https://github.com/prometheus-community/helm-charts/tree/main/charts/prometheus-windows-exporter for available values.
+# @section -- [Prometheus Windows Exporter](https://github.com/prometheus-community/helm-charts/tree/main/charts/prometheus-windows-exporter) Chart Values
 prometheus-windows-exporter:
   # -- Should this helm chart deploy Windows Exporter to the cluster.
   # Set this to false if your cluster already has Windows Exporter, or if you do
   # not want to scrape metrics from Windows Exporter.
+  # @section -- Chart
   enabled: false
 
   # -- Windows Exporter configuration
+  # @ignored
   config: |-
     collectors:
       enabled: cpu,cs,container,logical_disk,memory,net,os
@@ -1392,29 +1751,35 @@ prometheus-windows-exporter:
 # Settings for the Prometheus Operator CRD deployment
 # You can use this sections to make modifications to the Prometheus Operator CRD deployment.
 # See https://github.com/prometheus-community/helm-charts/tree/main/charts/prometheus-operator-crds for available values.
+# @section -- [Prometheus Operator CRDs](https://github.com/prometheus-community/helm-charts/tree/main/charts/prometheus-operator-crds)
 prometheus-operator-crds:
   # -- Should this helm chart deploy the Prometheus Operator CRDs to the cluster.
   # Set this to false if your cluster already has the CRDs, or if you do not
   # to have Grafana Alloy scrape metrics from PodMonitors, Probes, or ServiceMonitors.
+  # @section -- Chart
   enabled: true
 
 # Settings for the OpenCost deployment
 # You can use this sections to make modifications to the OpenCost deployment.
 # See https://github.com/opencost/opencost-helm-chart for available values.
+# @section -- [OpenCost](https://github.com/opencost/opencost-helm-chart) Chart Values
 opencost:
   # -- Should this Helm chart deploy OpenCost to the cluster.
   # Set this to false if your cluster already has OpenCost, or if you do
   # not want to scrape metrics from OpenCost.
+  # @section -- Chart
   enabled: true
 
   opencost:
     # @ignored -- This skips including these values in README.md
     exporter:
       # -- Default cluster ID to use if cluster is not set in Prometheus metrics. It should match cluster.name.
+      # @section -- Chart
       defaultClusterId: "default-cluster"
       extraEnv:
         # -- Trial API Key used only with GCP.
         # See https://www.opencost.io/docs/configuration/gcp-opencost for how to set for your environment
+        # @section -- Chart
         CLOUD_PROVIDER_API_KEY: AIzaSyD29bGxmHAVEOBYtgd8sYM2gM2ekfxQX4U
         CURRENT_CLUSTER_ID_FILTER_ENABLED: "true"
         EMIT_KSM_V1_METRICS: "false"
@@ -1423,15 +1788,19 @@ opencost:
 
     prometheus:
       # -- The name of the secret containing the username and password for the metrics service. This must be in the same namespace as the OpenCost deployment.
+      # @section -- Chart
       existingSecretName: prometheus-k8s-monitoring
       # -- The key for the username property in the secret.
+      # @section -- Chart
       username_key: username
       # -- The key for the password property in the secret.
+      # @section -- Chart
       password_key: password
       external:
         # @ignored -- This skips including these values in README.md
         enabled: true
         # -- The URL for Prometheus queries. It should match externalService.prometheus.host + "/api/prom"
+        # @section -- Chart
         url: "https://prom.example.com/api/prom"
       # @ignored -- This skips including these values in README.md
       internal:
@@ -1450,16 +1819,22 @@ opencost:
 alloy:
   logging:
     # -- Level at which Alloy log lines should be written.
+    # @section -- Chart
     level: info
     # -- Format to use for writing Alloy log lines.
+    # @section -- Chart
     format: logfmt
 
   alloy:
+    # -- Whether to enable clsuter or not for the Alloy Metrics Statefulset
+    # @section -- Chart
     clustering: {enabled: true}
 
     # This chart is creating the configuration, so the alloy chart does not need to.
+    # @ignored
     configMap: {create: false}
 
+    # ignored
     extraPorts:
       - name: "otlp-grpc"
         port: 4317
@@ -1496,18 +1871,22 @@ alloy:
 
     # This chart creates the credentials for Prometheus and Loki. This section
     # mounts those credentials into the Grafana Alloy container.
+    # @ignored
     mounts:
       extra:
         - name: kubernetes-monitoring-telemetry
           mountPath: /etc/kubernetes-monitoring-telemetry
 
   controller:
+    # @ignored
     type: statefulset
+    # @ignored
     nodeSelector:
       kubernetes.io/os: linux
 
     # This chart creates the credentials for Prometheus and Loki. This section
     # connects those credentials into the Grafana Alloy pod.
+    # @ignored
     volumes:
       extra:
         - name: kubernetes-monitoring-telemetry
@@ -1515,6 +1894,7 @@ alloy:
             name: kubernetes-monitoring-telemetry
 
   # Skip installation of the Grafana Alloy CRDs, since we don't use them in this chart
+  # @ignored
   crds: {create: false}
 
 # Settings for the Grafana Alloy instance that gathers Cluster events.
@@ -1523,21 +1903,28 @@ alloy:
 alloy-events:
   logging:
     # -- Level at which Alloy log lines should be written.
+    # @section -- Chart
     level: info
     # -- Format to use for writing Alloy log lines.
+    # @section -- Chart
     format: logfmt
 
   alloy:
     # This chart is creating the configuration, so the alloy chart does not need to.
+    # @ignored
     configMap: {create: false}
 
   controller:
+    # @ignored
     type: deployment
+    # @ignored
     replicas: 1  # Only one replica should be used, otherwise multiple copies of cluster events might get sent to Loki.
+    # @ignored
     nodeSelector:
       kubernetes.io/os: linux
 
   # Skip installation of the Grafana Alloy CRDs, since we don't use them in this chart
+  # @ignored
   crds: {create: false}
 
 # Settings for the Grafana Alloy instance that gathers pod logs.
@@ -1546,26 +1933,34 @@ alloy-events:
 alloy-logs:
   logging:
     # -- Level at which Alloy log lines should be written.
+    # @section -- Chart
     level: info
     # -- Format to use for writing Alloy log lines.
+    # @section -- Chart
     format: logfmt
 
   alloy:
     # This chart is creating the configuration, so the alloy chart does not need to.
+    # @ignored
     configMap: {create: false}
 
     # Disabling clustering by default, because the default log gathering format does not require clusters.
+    # @ignored
     clustering: {enabled: false}
 
     mounts:
       # Mount /var/log from the host into the container for log collection.
+      # @ignored
       varlog: true
       # Mount /var/lib/docker/containers from the host into the container for log
       # collection. Set to true if your cluster puts log files inside this directory.
+      # @ignored
       dockercontainers: false
 
   controller:
+    # @ignored
     type: daemonset
+    # @ignored
     nodeSelector:
       kubernetes.io/os: linux
 
@@ -1574,8 +1969,8 @@ alloy-logs:
         operator: Exists
 
   # Skip installation of the Grafana Alloy CRDs, since we don't use them in this chart
+  # @ignored
   crds: {create: false}
-
 
 # Settings for the Grafana Alloy instance that gathers profiles.
 # See https://github.com/grafana/alloy/tree/main/operations/helm/charts/alloy for available values.
@@ -1616,6 +2011,7 @@ alloy-profiles:
   crds: {create: false}
 
 # -- Deploy additional manifest objects
+# @section -- Chart
 extraObjects: []
 # - apiVersion: external-secrets.io/v1beta1
 #   kind: ExternalSecret
