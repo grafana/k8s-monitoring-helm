@@ -386,6 +386,13 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | metrics.alloy.metricsTuning.useIntegrationAllowList | bool | `false` | Filter the list of metrics from Grafana Alloy to the minimal set required for Kubernetes Monitoring as well as the Grafana Alloy integration. |
 | metrics.alloy.scrapeInterval | string | 60s | How frequently to scrape metrics from Grafana Alloy. Overrides metrics.scrapeInterval |
 
+### Metrics Job: Alloy Modules
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| metrics.alloyModules.connections | list | `[]` | List of connection configurations used by modules.  Configures the import.git component ([docs](https://grafana.com/docs/alloy/latest/reference/components/import.git/) <br>-   `alias: ""` the alias of the connection <br>-   `repository: ""` URL of the Git repository containing the module. <br>-   `revision: ""` Branch, tag, or commit to be checked out. <br>-   `pull_frequency: 15m` How often the module should check for updates. <br>-   `default: true` If true, this connection is used as the default when none is specified. <br>-   `basic_auth: {}` Credentials for basic authentication if needed. ([docs](https://grafana.com/docs/alloy/latest/reference/config-blocks/import.git/#basic_auth-block)) <br>-   `ssh_key: {}` Provides SSH key details for secure connections. ([docs](https://grafana.com/docs/alloy/latest/reference/config-blocks/import.git/#ssh_key-block)) |
+| metrics.alloyModules.modules | list | `[]` | List of Modules to import.  Each module is expected to have a "kubernetes" module and a "scrape" component. Each module can have the following properties: <br>-   `path: ""` the path to the alloy module <br>-   `connection: ""` (optional) the alias of the connection to use, if not specified the default connection is used <br>-   `targets: {}` (optional) Additional arguments to be passed to the modules kubernetes component <br>-   `scrape: {}` (optional) Additional arguments to be passed to the modules scrape component <br>-   `extraRelabelingRules: ""` additional relabeling rules for the discovery.relabel component <br>-   `extraMetricRelabelingRules:` additional relabeling rules for the prometheus.relabel component |
+
 ### Metrics Job: ApiServer
 
 | Key | Type | Default | Description |
