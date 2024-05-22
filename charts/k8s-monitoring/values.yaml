@@ -1287,6 +1287,57 @@ logs:
     # @section -- Logs Scrape: Cluster Events
     extraConfig: ""
 
+  # Settings for scraping Kubernetes Worker journal logs
+  journal:
+    # -- Scrape Kubernetes Worker Journal Logs event
+    # @section -- Logs Scrape: Journal
+    enabled: false
+
+    # -- The path to the journal logs on the worker node
+    # @section -- Logs Scrape: Journal
+    path: "/var/log/journal"
+
+    # -- The path to the journal logs on the worker node
+    # @section -- Logs Scrape: Journal
+    maxAge: "8h"
+
+    # -- The value for the job label for journal logs
+    # @section -- Logs Scrape: Journal
+    jobLabel: "integrations/kubernetes/journal"
+
+    # -- Whether to forward the original journal entry as JSON.
+    # @section -- Logs Scrape: Journal
+    formatAsJson: false
+
+    # -- The list of systemd units to keep scraped logs from.  If empty, all units are scraped.
+    # @section -- Logs Scrape: Journal
+    units: []
+    #  - kubelet.service
+    #  - docker.service
+    #  - containerd.service
+
+    # -- Stage blocks to be added to the loki.process component for journal logs.
+    # ([docs](https://grafana.com/docs/alloy/latest/reference/components/loki.process/#blocks))
+    # This value is templated so that you can refer to other values from this file.
+    # @section -- Logs Scrape: Journal
+    extraStageBlocks: ""
+
+    # -- Rule blocks to be added used with the loki.source.journal component for journal logs.
+    # These relabeling rules are applied pre-scrape against the targets from service discovery.
+    # Before the scrape, any remaining target labels that start with `__` (i.e. `__meta_kubernetes*`) are dropped.
+    # ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery.relabel/#rule-block))
+    # **Note: **Many field names from journald start with an `_`, such as `_systemd_unit`. The final internal label name would
+    # be `__journal__systemd_unit`, with two underscores between `__journal` and `systemd_unit`.
+    # @section -- Logs Scrape: Pod Logs
+    extraRelabelingRules: ""
+
+    # -- Extra configuration that will be added to the Grafana Alloy for Journal configuration file.
+    # This value is templated so that you can refer to other values from this file.
+    # This cannot be used to modify the generated configuration values, only append new components.
+    # See [Adding custom Flow configuration](#adding-custom-flow-configuration) for an example.
+    # @section -- Logs Scrape: Journal
+    extraConfig: ""
+
   # Settings related to logs ingested via receivers
   # @section -- Logs -> OTEL Receiver
   receiver:

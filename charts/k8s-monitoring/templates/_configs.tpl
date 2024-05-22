@@ -124,6 +124,14 @@
   {{- end }}
 {{- end -}}
 
+{{/* Grafana Alloy for Journal Logs config */}}
+{{- define "alloyJournalLogsConfig" -}}
+  {{- if .Values.logs.journal.enabled }}
+    {{- include "alloy.config.logs.journal_logs_discovery" . }}
+    {{- include "alloy.config.logs.journal_logs_processor" . }}
+  {{- end }}
+{{- end -}}
+
 {{/* Grafana Alloy for Profiles config */}}
 {{- define "alloyProfilesConfig" -}}
   {{- include "alloy.config.profilesEbpf" . }}

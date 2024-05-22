@@ -38,6 +38,7 @@
   {{- $logs = append $logs "enabled" -}}
   {{- if .Values.logs.cluster_events.enabled }}{{- $logs = append $logs "events" -}}{{- end -}}
   {{- if .Values.logs.pod_logs.enabled }}{{- $logs = append $logs "pod_logs" -}}{{- end -}}
+  {{- if .Values.logs.journal.enabled }}{{- $logs = append $logs "journal" -}}{{- end -}}
   {{- if .Values.logs.extraConfig -}}{{- $logs = append $logs "extraConfig" }}{{ end -}}
 {{- else -}}
   {{- $logs = append $logs "disabled" -}}
