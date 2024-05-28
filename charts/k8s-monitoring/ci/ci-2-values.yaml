@@ -73,6 +73,15 @@ logs:
         }
       }
 
+  journal:
+    enabled: true
+    extraStageBlocks: |
+      stage.static_labels {
+        values = {
+          source = "journal",
+        }
+      }
+
 traces:
   enabled: true
 
@@ -106,6 +115,10 @@ test:
 
       # Check for pod logs (gathered via PodLogs)
     - query: "count_over_time({cluster=\"ci-test-cluster-2\", job=\"grafana/test-podlogs-object\", source=\"podlogs_object\"}[1h])"
+      type: logql
+
+    # Check for journal logs
+    - query: "count_over_time({cluster=\"ci-test-cluster-2\",job=\"integrations/kubernetes/journal\"}[1h])"
       type: logql
 
       # Check for traces
