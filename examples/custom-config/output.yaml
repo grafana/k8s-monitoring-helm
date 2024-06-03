@@ -864,6 +864,8 @@ data:
       external_labels = {
         region = "southwest",
         tenant = "widgetco",
+        env = remote.kubernetes.configmap.cluster_info.data["env"],
+        region = remote.kubernetes.configmap.cluster_info.data["region"],
       }
     }
     
@@ -948,6 +950,8 @@ data:
       external_labels = {
         region = "southwest",
         tenant = "widgetco",
+        env = remote.kubernetes.configmap.cluster_info.data["env"],
+        region = remote.kubernetes.configmap.cluster_info.data["region"],
       }
     }
     
@@ -974,6 +978,11 @@ data:
       job_name   = "animal_service"
       targets    = discovery.relabel.animal_service.output
       forward_to = [prometheus.relabel.metrics_service.receiver]
+    }
+    
+    remote.kubernetes.configmap "cluster_info" {
+      name = "cluster_info"
+      namespace = "default"
     }
 ---
 # Source: k8s-monitoring/templates/alloy-events-config.yaml
@@ -1028,6 +1037,8 @@ data:
       external_labels = {
         region = "southwest",
         tenant = "widgetco",
+        env = remote.kubernetes.configmap.cluster_info.data["env"],
+        region = remote.kubernetes.configmap.cluster_info.data["region"],
       }
     }
     
@@ -1035,6 +1046,10 @@ data:
     logging {
       level  = "info"
       format = "logfmt"
+    }
+    remote.kubernetes.configmap "cluster_info" {
+      name = "cluster_info"
+      namespace = "default"
     }
 ---
 # Source: k8s-monitoring/templates/alloy-logs-config.yaml
@@ -1196,6 +1211,8 @@ data:
       external_labels = {
         region = "southwest",
         tenant = "widgetco",
+        env = remote.kubernetes.configmap.cluster_info.data["env"],
+        region = remote.kubernetes.configmap.cluster_info.data["region"],
       }
     }
     
@@ -1238,6 +1255,11 @@ data:
         }
       }
       forward_to = [loki.process.logs_service.receiver]
+    }
+    
+    remote.kubernetes.configmap "cluster_info" {
+      name = "cluster_info"
+      namespace = "default"
     }
 ---
 # Source: k8s-monitoring/templates/kubernetes-monitoring-telemetry.yaml
@@ -50550,6 +50572,8 @@ data:
       external_labels = {
         region = "southwest",
         tenant = "widgetco",
+        env = remote.kubernetes.configmap.cluster_info.data["env"],
+        region = remote.kubernetes.configmap.cluster_info.data["region"],
       }
     }
     
@@ -50634,6 +50658,8 @@ data:
       external_labels = {
         region = "southwest",
         tenant = "widgetco",
+        env = remote.kubernetes.configmap.cluster_info.data["env"],
+        region = remote.kubernetes.configmap.cluster_info.data["region"],
       }
     }
     
@@ -50660,6 +50686,11 @@ data:
       job_name   = "animal_service"
       targets    = discovery.relabel.animal_service.output
       forward_to = [prometheus.relabel.metrics_service.receiver]
+    }
+    
+    remote.kubernetes.configmap "cluster_info" {
+      name = "cluster_info"
+      namespace = "default"
     }
   events.alloy: |-
     // Cluster Events
@@ -50706,6 +50737,8 @@ data:
       external_labels = {
         region = "southwest",
         tenant = "widgetco",
+        env = remote.kubernetes.configmap.cluster_info.data["env"],
+        region = remote.kubernetes.configmap.cluster_info.data["region"],
       }
     }
     
@@ -50713,6 +50746,10 @@ data:
     logging {
       level  = "info"
       format = "logfmt"
+    }
+    remote.kubernetes.configmap "cluster_info" {
+      name = "cluster_info"
+      namespace = "default"
     }
   logs.alloy: |-
     // Pod Logs
@@ -50866,6 +50903,8 @@ data:
       external_labels = {
         region = "southwest",
         tenant = "widgetco",
+        env = remote.kubernetes.configmap.cluster_info.data["env"],
+        region = remote.kubernetes.configmap.cluster_info.data["region"],
       }
     }
     
@@ -50908,6 +50947,11 @@ data:
         }
       }
       forward_to = [loki.process.logs_service.receiver]
+    }
+    
+    remote.kubernetes.configmap "cluster_info" {
+      name = "cluster_info"
+      namespace = "default"
     }
 ---
 # Source: k8s-monitoring/templates/tests/test.yaml

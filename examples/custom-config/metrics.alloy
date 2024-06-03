@@ -736,6 +736,8 @@ prometheus.remote_write "metrics_service" {
   external_labels = {
     region = "southwest",
     tenant = "widgetco",
+    env = remote.kubernetes.configmap.cluster_info.data["env"],
+    region = remote.kubernetes.configmap.cluster_info.data["region"],
   }
 }
 
@@ -820,6 +822,8 @@ loki.write "logs_service" {
   external_labels = {
     region = "southwest",
     tenant = "widgetco",
+    env = remote.kubernetes.configmap.cluster_info.data["env"],
+    region = remote.kubernetes.configmap.cluster_info.data["region"],
   }
 }
 
@@ -846,4 +850,9 @@ prometheus.scrape "animal_service" {
   job_name   = "animal_service"
   targets    = discovery.relabel.animal_service.output
   forward_to = [prometheus.relabel.metrics_service.receiver]
+}
+
+remote.kubernetes.configmap "cluster_info" {
+  name = "cluster_info"
+  namespace = "default"
 }

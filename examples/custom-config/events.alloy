@@ -42,6 +42,8 @@ loki.write "logs_service" {
   external_labels = {
     region = "southwest",
     tenant = "widgetco",
+    env = remote.kubernetes.configmap.cluster_info.data["env"],
+    region = remote.kubernetes.configmap.cluster_info.data["region"],
   }
 }
 
@@ -49,4 +51,8 @@ loki.write "logs_service" {
 logging {
   level  = "info"
   format = "logfmt"
+}
+remote.kubernetes.configmap "cluster_info" {
+  name = "cluster_info"
+  namespace = "default"
 }

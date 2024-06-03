@@ -149,6 +149,8 @@ loki.write "logs_service" {
   external_labels = {
     region = "southwest",
     tenant = "widgetco",
+    env = remote.kubernetes.configmap.cluster_info.data["env"],
+    region = remote.kubernetes.configmap.cluster_info.data["region"],
   }
 }
 
@@ -191,4 +193,9 @@ loki.process "postgres_logs" {
     }
   }
   forward_to = [loki.process.logs_service.receiver]
+}
+
+remote.kubernetes.configmap "cluster_info" {
+  name = "cluster_info"
+  namespace = "default"
 }
