@@ -13,11 +13,13 @@ loki.source.kubernetes_events "cluster_events" {
 }
 
 loki.process "cluster_events" {
-{{- if .extraStageBlocks }}
-{{ tpl .extraStageBlocks . | indent 2 }}
+{{- end }}{{/* Avoid calling tpl inside of a with block, makes for better backwards compatibility */}}
+{{- if .Values.logs.cluster_events.extraStageBlocks }}
+{{ tpl .Values.logs.cluster_events.extraStageBlocks $ | indent 2 }}
 {{- end }}
   forward_to = [
     loki.process.logs_service.receiver,
+{{- with .Values.logs.cluster_events }}
 {{- if .logToStdout }}
     loki.echo.cluster_events.receiver,
 {{- end }}
