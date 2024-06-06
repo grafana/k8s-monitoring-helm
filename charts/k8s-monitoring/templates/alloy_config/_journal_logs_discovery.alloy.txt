@@ -1,0 +1,38 @@
+{{ define "alloy.config.logs.journal_logs_discovery" }}
+// Journal Logs
+loki.relabel "journal" {
+  // no forward_to is used, the defined rules are used below by the loki.source.journal component
+  forward_to = []
+
+  {{- if len .Values.logs.journal.units }}
+  // only keep certain unit logs
+  rule {
+    action = "keep"
+    source_labels = ["__journal__systemd_unit"]
+    regex = "{{ join "|" .Values.logs.journal.units }}"
+  }
+  {{- end }}
+
+  // set the name of the systemd unit
+  rule {
+    action = "replace"
+    source_labels = ["__journal__systemd_unit"]
+    replacement = "$1"
+    target_label = "unit"
+  }
+{{- if .Values.logs.journal.extraRelabelingRules }}
+{{ .Values.logs.journal.extraRelabelingRules | indent 2 }}
+{{- end }}
+}
+
+loki.source.journal "worker" {
+  max_age = {{ .Values.logs.journal.maxAge | default "8h" | quote }}
+  path = {{ .Values.logs.journal.path | default "/var/logs/journal" | quote }}
+  relabel_rules = loki.relabel.journal.rules
+  labels = {
+    job = {{ .Values.logs.journal.jobLabel | default "integrations/kubernetes/journal" | quote }},
+    instance = env("HOSTNAME"),
+  }
+  forward_to = [loki.process.journal_logs.receiver]
+}
+{{- end }}

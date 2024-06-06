@@ -1,0 +1,8 @@
+{{ define "alloy.config.logs.journal_logs_processor" }}
+loki.process "journal_logs" {
+{{- if .Values.logs.journal.extraStageBlocks }}
+{{ tpl .Values.logs.journal.extraStageBlocks . | indent 2 }}
+{{ end }}
+  forward_to = [loki.process.logs_service.receiver]
+}
+{{ end }}
