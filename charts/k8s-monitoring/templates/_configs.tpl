@@ -96,7 +96,7 @@
   {{- include "alloy.config.logging" .Values.alloy.logging}}
 
   {{- if .Values.extraConfig }}
-    {{- tpl .Values.extraConfig . | indent 0 }}
+    {{- tpl .Values.extraConfig $ | indent 0 }}
   {{- end }}
 {{- end -}}
 
@@ -107,7 +107,7 @@
   {{- include "alloy.config.logging" (index .Values "alloy-events").logging }}
 
   {{- if .Values.logs.cluster_events.extraConfig }}
-    {{- tpl .Values.logs.cluster_events.extraConfig . | indent 0 }}
+    {{- tpl .Values.logs.cluster_events.extraConfig $ | indent 0 }}
   {{- end }}
 {{- end -}}
 
@@ -120,7 +120,7 @@
   {{- include "alloy.config.logging" (index .Values "alloy-logs").logging }}
 
   {{- if .Values.logs.extraConfig }}
-    {{- tpl .Values.logs.extraConfig . | indent 0 }}
+    {{- tpl .Values.logs.extraConfig $ | indent 0 }}
   {{- end }}
 {{- end -}}
 
