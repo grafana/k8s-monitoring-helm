@@ -191,7 +191,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | externalServices.loki.basicAuth.username | string | `""` | Loki basic auth username |
 | externalServices.loki.basicAuth.usernameKey | string | `"username"` | The key for the username property in the secret |
 | externalServices.loki.externalLabels | object | `{}` | Custom labels to be added to all logs and events, all values are treated as strings and automatically quoted. |
-| externalServices.loki.externalLabelsDynamic | object | `{}` | Custom labels to be added to all logs and events through a dynamic reference, all values are treated as raw strings and not quoted. |
+| externalServices.loki.externalLabelsFrom | object | `{}` | Custom labels to be added to all logs and events through a dynamic reference, all values are treated as raw strings and not quoted. |
 | externalServices.loki.host | string | `""` | Loki host where logs and events will be sent |
 | externalServices.loki.hostKey | string | `"host"` | The key for the host property in the secret |
 | externalServices.loki.processors.batch.maxSize | int | `0` | Upper limit of a batch size. When set to 0, there is no upper limit. |
@@ -221,7 +221,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | externalServices.prometheus.basicAuth.username | string | `""` | Prometheus basic auth username |
 | externalServices.prometheus.basicAuth.usernameKey | string | `"username"` | The key for the username property in the secret |
 | externalServices.prometheus.externalLabels | object | `{}` | Custom labels to be added to all time series, all values are treated as strings and automatically quoted. |
-| externalServices.prometheus.externalLabelsDynamic | object | `{}` | Custom labels to be added to all time series through a dynamic reference, all values are treated as raw strings and not quoted. |
+| externalServices.prometheus.externalLabelsFrom | object | `{}` | Custom labels to be added to all time series through a dynamic reference, all values are treated as raw strings and not quoted. |
 | externalServices.prometheus.host | string | `""` | Prometheus host where metrics will be sent |
 | externalServices.prometheus.hostKey | string | `"host"` | The key for the host property in the secret |
 | externalServices.prometheus.processors.batch.maxSize | int | `0` | Upper limit of a batch size. When set to 0, there is no upper limit. |
@@ -256,7 +256,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | externalServices.pyroscope.basicAuth.username | string | `""` | Pyroscope basic auth username |
 | externalServices.pyroscope.basicAuth.usernameKey | string | `"username"` | The key for the username property in the secret |
 | externalServices.pyroscope.externalLabels | object | `{}` | Custom labels to be added to all profiles, all values are treated as strings and automatically quoted. |
-| externalServices.pyroscope.externalLabelsDynamic | object | `{}` | Custom labels to be added to all profiles through a dynamic reference, all values are treated as raw strings and not quoted. |
+| externalServices.pyroscope.externalLabelsFrom | object | `{}` | Custom labels to be added to all profiles through a dynamic reference, all values are treated as raw strings and not quoted. |
 | externalServices.pyroscope.host | string | `""` | Pyroscope host where profiles will be sent |
 | externalServices.pyroscope.hostKey | string | `"host"` | The key for the host property in the secret |
 | externalServices.pyroscope.proxyURL | string | `""` | HTTP proxy to proxy requests to Pyroscope through. |
