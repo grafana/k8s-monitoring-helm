@@ -12,6 +12,7 @@ the `extraConfig` values are evaluated as templates when rendering the final con
 the helm objects or functions in them, as shown in one of the added labels in `loki.process.postgres_logs` component.
 
 ```yaml
+---
 cluster:
   name: custom-config-test
 
@@ -24,6 +25,9 @@ externalServices:
     externalLabels:
       region: southwest
       tenant: widgetco
+    externalLabelsFrom:
+      env: remote.kubernetes.configmap.cluster_info.data["env"]
+      region: remote.kubernetes.configmap.cluster_info.data["region"]
   loki:
     host: https://loki.example.com
     basicAuth:
@@ -32,6 +36,9 @@ externalServices:
     externalLabels:
       region: southwest
       tenant: widgetco
+    externalLabelsFrom:
+      env: remote.kubernetes.configmap.cluster_info.data["env"]
+      region: remote.kubernetes.configmap.cluster_info.data["region"]
 
 extraConfig: |-
   discovery.relabel "animal_service" {
@@ -52,6 +59,11 @@ extraConfig: |-
     job_name   = "animal_service"
     targets    = discovery.relabel.animal_service.output
     forward_to = [prometheus.relabel.metrics_service.receiver]
+  }
+
+  remote.kubernetes.configmap "cluster_info" {
+    name = "cluster_info"
+    namespace = {{ .Release.Namespace | quote }}
   }
 
 logs:
@@ -91,4 +103,17 @@ logs:
       }
       forward_to = [loki.process.logs_service.receiver]
     }
+
+    remote.kubernetes.configmap "cluster_info" {
+      name = "cluster_info"
+      namespace = {{ .Release.Namespace | quote }}
+    }
+
+  cluster_events:
+    extraConfig: |-
+      remote.kubernetes.configmap "cluster_info" {
+        name = "cluster_info"
+        namespace = {{ .Release.Namespace | quote }}
+      }
+
 ```
