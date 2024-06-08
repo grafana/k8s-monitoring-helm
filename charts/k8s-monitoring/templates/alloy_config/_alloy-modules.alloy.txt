@@ -1,0 +1,103 @@
+{{ define "alloy.config.alloyMetricModules" }}
+// Alloy Modules
+{{- $connections := .Values.metrics.alloyModules.connections }}
+{{- /* Determine the default connection */}}
+{{- $defaultConnection := dict }}
+{{- range $connections }}
+  {{- if .default }}
+    {{- $defaultConnection = . }}
+  {{- end }}
+{{- end }}
+{{- $extraRelabelingRules := .Values.metrics.extraRelabelingRules | default "" }}
+{{- $extraMetricRelabelingRules := .Values.metrics.extraMetricRelabelingRules | default "" }}
+{{- $defaultMaxCacheSize := .Values.metrics.maxCacheSize }}
+{{- $defaultScrapeInterval := .Values.metrics.scrapeInterval }}
+{{- $clustering := .Values.alloy.alloy.clustering.enabled }}
+
+{{- range $module := .Values.metrics.alloyModules.modules }}
+  {{- $moduleName := $module.name }}
+  {{- /* Find the connection for the module or use the default */}}
+  {{- $moduleConnection := $defaultConnection }}
+  {{- range $conn := $connections }}
+    {{- if and $module.connection (eq $conn.alias $module.connection) }}
+      {{- $moduleConnection = $conn }}
+    {{- end }}
+  {{- end }}
+
+// {{ $moduleName }}: import the module
+import.git "module_{{ $moduleName }}" {
+  repository = "{{ $moduleConnection.repository }}"
+  revision = "{{ $moduleConnection.revision }}"
+  path = "{{ $module.path }}"
+  pull_frequency = "{{ $moduleConnection.pull_frequency }}"
+
+  {{- with $moduleConnection.basic_auth }}
+  basic_auth {
+    {{ if .username }}username = "{{ .username }}"{{ end }}
+    {{ if .password }}password = "{{ .password }}"{{ end }}
+    {{ if .password_file }}password_file = "{{ .password_file }}"{{ end }}
+  }
+  {{- end }}
+
+  {{- with $moduleConnection.ssh_key }}
+  ssh_key {
+    {{ if .username }}username = "{{ .username }}"{{ end }}
+    {{ if .key }}key = "{{ .key }}"{{ end }}
+    {{ if .key_file }}key_file = "{{ .key_file }}"{{ end }}
+    {{ if .passphrase }}passphrase = "{{ .passphrase }}"{{ end }}
+  }
+  {{- end }}
+}
+
+// {{ $moduleName }}: call the targets component
+module_{{ $moduleName }}.kubernetes "targets" {
+  {{- if $module.targets }}
+    {{- range $key, $value := $module.targets }}
+    {{ $key }} = {{ if kindIs "slice" $value }}[{{ range $index, $item := $value }}"{{ $item }}"{{ if lt $index (sub (len $value) 1) }}, {{ end }}{{ end }}]{{ else }}"{{ $value }}"{{ end }}
+    {{- end }}
+  {{- end }}
+}
+
+// {{ $moduleName }}: additional service discovery relabelings
+discovery.relabel "module_{{ $moduleName }}" {
+  targets = module_{{ $moduleName }}.kubernetes.targets.output
+  // global discovery relabelings
+  {{- if $extraRelabelingRules }}
+  {{ $extraRelabelingRules | indent 2 }}
+  {{- end }}
+  // {{ $moduleName }}: additional discovery relabelings
+  {{- if $module.extraRelabelingRules }}
+  {{ $module.extraRelabelingRules | indent 2 }}
+  {{- end }}
+}
+
+// {{ $moduleName }}: call the scrape component
+module_{{ $moduleName }}.scrape "metrics" {
+  targets = discovery.relabel.module_{{ $moduleName }}.output
+  forward_to = [prometheus.relabel.module_{{ $moduleName }}.receiver]
+  clustering = {{ $clustering }}
+  scrape_interval = "{{ if and (hasKey $module "scrape") (hasKey $module.scrape "scrape_interval") }}{{ index $module.scrape "scrape_interval" }}{{- else }}{{ $defaultScrapeInterval }}{{- end }}"
+  {{- if $module.scrape }}
+    {{- range $key, $value := $module.scrape }}
+      {{- if not (eq $key "scrape_interval") }}
+      {{ $key }} = {{ if kindIs "slice" $value }}[{{ range $index, $item := $value }}"{{ $item }}"{{ if lt $index (sub (len $value) 1) }}, {{ end }}{{ end }}]{{ else }}"{{ $value }}"{{ end }}
+      {{- end }}
+    {{- end }}
+  {{- end }}
+}
+
+// {{ $moduleName }}: additional metric relabelings
+prometheus.relabel "module_{{ $moduleName }}" {
+  max_cache_size = {{ if and (hasKey $module "scrape") (hasKey $module.scrape "max_cache_size") }}{{ index $module.scrape "max_cache_size" | int }}{{- else }}{{ $defaultMaxCacheSize | int }}{{- end }}
+  // global metric relabelings
+  {{- if $extraMetricRelabelingRules }}
+  {{ $extraMetricRelabelingRules | indent 2 }}
+  {{- end }}
+  // additional {{ $moduleName }} module specific metric relabelings
+  {{- if $module.extraMetricRelabelingRules }}
+  {{ $module.extraMetricRelabelingRules | indent 2 }}
+  {{- end }}
+  forward_to = [prometheus.relabel.metrics_service.receiver]
+}
+{{- end }}
+{{ end }}
