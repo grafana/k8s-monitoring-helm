@@ -1158,6 +1158,42 @@ metrics:
     # @section -- Metrics Job: Kubernetes Monitoring Telemetry
     enabled: true
 
+  # Alloy Modules
+  # Modules can be invoked using metrics.extraConfig, this block is consuming opinionated modules from the grafana/alloy-modules repository
+  # or any other repository that follows the same module structure.  Each module is expected to have a "kubernetes" module and a "scrape" module.
+  alloyModules:
+    # -- List of connection configurations used by modules.  Configures the import.git component
+    # ([docs](https://grafana.com/docs/alloy/latest/reference/components/import.git/)
+    # <br>-   `alias: ""` the alias of the connection
+    # <br>-   `repository: ""` URL of the Git repository containing the module.
+    # <br>-   `revision: ""` Branch, tag, or commit to be checked out.
+    # <br>-   `pull_frequency: 15m` How often the module should check for updates.
+    # <br>-   `default: true` If true, this connection is used as the default when none is specified.
+    # <br>-   `basic_auth: {}` Credentials for basic authentication if needed. ([docs](https://grafana.com/docs/alloy/latest/reference/config-blocks/import.git/#basic_auth-block))
+    # <br>-   `ssh_key: {}` Provides SSH key details for secure connections. ([docs](https://grafana.com/docs/alloy/latest/reference/config-blocks/import.git/#ssh_key-block))
+    # @section -- Metrics Job: Alloy Modules
+    connections: []
+    # - alias: grafana
+    #   repository: https://github.com/grafana/alloy-modules.git
+    #   revision: main
+    #   pull_frequency: 15m
+    #   default: true
+
+    # -- List of Modules to import.  Each module is expected to have a "kubernetes" module and a "scrape" component.
+    # Each module can have the following properties:
+    # <br>-   `name: ""` the name to use for the module. *note:* this is automatically prefixed with module_ to avoid conflicts with core components
+    # <br>-   `path: ""` the path to the alloy module
+    # <br>-   `connection: ""` (optional) the alias of the connection to use, if not specified the default connection is used
+    # <br>-   `targets: {}` (optional) Additional arguments to be passed to the modules kubernetes component
+    # <br>-   `scrape: {}` (optional) Additional arguments to be passed to the modules scrape component
+    # <br>-   `extraRelabelingRules: ""` additional relabeling rules for the discovery.relabel component
+    # <br>-   `extraMetricRelabelingRules:` additional relabeling rules for the prometheus.relabel component
+    # @section -- Metrics Job: Alloy Modules
+    modules: []
+    # - name: memcached
+    #   path: modules/databases/kv/memcached/metrics.alloy
+
+
   # Settings related to metrics ingested via receivers
   # @section -- Metrics -> OTEL Receivers
   receiver:
@@ -1274,6 +1310,7 @@ logs:
     # -- Stage blocks to be added to the loki.process component for cluster events.
     # ([docs](https://grafana.com/docs/alloy/latest/reference/components/loki.process/#blocks))
     # This value is templated so that you can refer to other values from this file.
+    # @section -- Logs Scrape: Cluster Events
     extraStageBlocks: ""
 
     # -- Logs the cluster events to stdout. Useful for debugging.

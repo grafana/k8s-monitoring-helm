@@ -77,6 +77,10 @@
       {{- include "alloy.config.service_monitors" . }}
     {{- end }}
 
+    {{- if len  .Values.metrics.alloyModules.modules }}
+      {{- include "alloy.config.alloyMetricModules" . }}
+    {{- end }}
+
     {{- include "alloy.config.metricsService" . }}
   {{- end }}
 

@@ -233,6 +233,121 @@
               "type": ["string", "integer", "null"]
             }
           }
+        },
+        "alloyModules": {
+          "type": "object",
+          "properties": {
+            "connections": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "alias": {
+                    "type": "string",
+                    "description": "The alias of the connection"
+                  },
+                  "repository": {
+                    "type": "string",
+                    "description": "URL of the Git repository containing the module"
+                  },
+                  "revision": {
+                    "type": "string",
+                    "description": "Branch, tag, or commit to be checked out"
+                  },
+                  "pull_frequency": {
+                    "type": "string",
+                    "description": "The frequency to pull the repository for updates in duration format."
+                  },
+                  "default": {
+                    "type": "boolean",
+                    "description": "If true, this connection is used as the default when none is specified"
+                  },
+                  "basic_auth": {
+                    "type": "object",
+                    "description": "Credentials for basic authentication if needed",
+                    "properties": {
+                      "username": {
+                        "type": "string",
+                        "description": "Username for basic authentication"
+                      },
+                      "password": {
+                        "type": "string",
+                        "description": "Password for basic authentication"
+                      },
+                      "password_file": {
+                        "type": "string",
+                        "description": "Path to a file containing the password"
+                      }
+                    }
+                  },
+                  "ssh_key": {
+                    "type": "object",
+                    "description": "Provides SSH key details for secure connections",
+                    "properties": {
+                      "username": {
+                        "type": "string",
+                        "description": "SSH username"
+                      },
+                      "key": {
+                        "type": "string",
+                        "description": "SSH private key"
+                      },
+                      "key_file": {
+                        "type": "string",
+                        "description": "Path to the SSH private key file"
+                      },
+                      "passphrase": {
+                        "type": "string",
+                        "description": "Passphrase for the SSH private key"
+                      }
+                    },
+                    "required": ["username"]
+                  }
+                },
+                "required": ["alias", "repository"]
+              }
+            },
+            "modules": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "The name to use for the module"
+                  },
+                  "path": {
+                    "type": "string",
+                    "description": "The path in the repository where the module is stored."
+                  },
+                  "connection": {
+                    "type": "string",
+                    "description": "The alias of the connection to use, if not specified the default connection is used"
+                  },
+                  "targets": {
+                    "type": "object",
+                    "description": "Additional arguments to be passed to the module's Kubernetes component",
+                    "additionalProperties": true
+                  },
+                  "scrape": {
+                    "type": "object",
+                    "description": "Additional arguments to be passed to the module's scrape component",
+                    "additionalProperties": true
+                  },
+                  "extraRelabelingRules": {
+                    "type": "string",
+                    "description": "Additional relabeling rules for the modules discovery.relabel component"
+                  },
+                  "extraMetricRelabelingRules": {
+                    "type": "string",
+                    "description": "Additional relabeling rules for the modules prometheus.relabel component"
+                  }
+                },
+                "required": ["name", "path"]
+              }
+            }
+          },
+          "required": ["connections", "modules"]
         }
       }
     },
