@@ -1017,6 +1017,7 @@ data:
     prometheus.remote_write "metrics_service" {
       endpoint {
         url = nonsensitive(remote.kubernetes.secret.metrics_service.data["host"]) + "/api/prom/push"
+        headers = { "X-Scope-OrgID" = nonsensitive(coalesce(remote.kubernetes.secret.metrics_service.data["tenantId"], "")) }
     
         basic_auth {
           username = nonsensitive(remote.kubernetes.secret.metrics_service.data["username"])
@@ -60055,6 +60056,7 @@ data:
     prometheus.remote_write "metrics_service" {
       endpoint {
         url = nonsensitive(remote.kubernetes.secret.metrics_service.data["host"]) + "/api/prom/push"
+        headers = { "X-Scope-OrgID" = nonsensitive(coalesce(remote.kubernetes.secret.metrics_service.data["tenantId"], "")) }
     
         basic_auth {
           username = nonsensitive(remote.kubernetes.secret.metrics_service.data["username"])

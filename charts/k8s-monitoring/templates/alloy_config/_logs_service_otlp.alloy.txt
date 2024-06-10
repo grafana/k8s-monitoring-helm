@@ -85,7 +85,7 @@ otelcol.exporter.otlphttp "logs_service" {
 {{- end }}
 {{- if .tenantIdFrom }}
     headers = { "X-Scope-OrgID" = coalesce({{ .tenantIdFrom }}, "") }
-{{- else if or (and (eq .secret.create true) (.tenantId) (eq .secret.create false) ) }}
+{{- else if or (and (eq .secret.create true) (.tenantId)) (eq .secret.create false) }}
     headers = { "X-Scope-OrgID" = nonsensitive(coalesce(remote.kubernetes.secret.logs_service.data[{{ .tenantIdKey | quote }}], "")) }
 {{- end }}
 {{- if .tls }}

@@ -28,6 +28,7 @@ loki.process "logs_service" {
 loki.write "logs_service" {
   endpoint {
     url = remote.kubernetes.secret.grafana_cloud.data["loki-host"] + "/loki/api/v1/push"
+    headers = { "X-Scope-OrgID" = coalesce(remote.kubernetes.secret.grafana_cloud.data["loki-tenant"], "") }
 
     basic_auth {
       username = remote.kubernetes.secret.grafana_cloud.data["loki-username"]

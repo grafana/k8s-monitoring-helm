@@ -1,6 +1,6 @@
 {{ define "alloy.config.profilesService" }}
 // Pyroscope
-{{- if not (or .Values.externalServices.pyroscope.hostFrom .Values.externalServices.pyroscope.basicAuth.usernameFrom .Values.externalServices.pyroscope.basicAuth.passwordFrom )}}
+{{- if not (and .Values.externalServices.pyroscope.hostFrom .Values.externalServices.pyroscope.basicAuth.usernameFrom .Values.externalServices.pyroscope.basicAuth.passwordFrom .Values.externalServices.pyroscope.tenantIdFrom )}}
 remote.kubernetes.secret "profiles_service" {
   name = {{ include "kubernetes_monitoring.profiles_service.secret.name" . | quote }}
   namespace = {{ .Values.externalServices.pyroscope.secret.namespace | default .Release.Namespace | quote }}
@@ -17,7 +17,7 @@ pyroscope.write "profiles_service" {
     {{- end }}
     {{- if .tenantIdFrom }}
     headers = { "X-Scope-OrgID" = coalesce({{ .tenantIdFrom }}, "") }
-    {{- else if or (and (eq .secret.create true) (.tenantId) (eq .secret.create false) ) }}
+    {{- else if or (and (eq .secret.create true) (.tenantId)) (eq .secret.create false) }}
     headers = { "X-Scope-OrgID" = nonsensitive(coalesce(remote.kubernetes.secret.profiles_service.data[{{ .tenantIdKey | quote }}], "")) }
     {{- end }}
 {{ if eq .authMode "basic" }}

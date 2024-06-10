@@ -115,15 +115,19 @@ apiVersion: v1
 data:
   loki-host: aHR0cHM6Ly9sb2tpLmV4YW1wbGUuY29t
   loki-password: SXQncyBhIHNlY3JldCB0byBldmVyeW9uZQ==
+  loki-tenantId: ""
   loki-username: MTIzNDU=
   prometheus-host: aHR0cHM6Ly9wcm9tZXRoZXVzLmV4YW1wbGUuY29t
   prometheus-password: SXQncyBhIHNlY3JldCB0byBldmVyeW9uZQ==
+  prometheus-tenantId: ""
   prometheus-username: MTIzNDU=
   pyroscope-host: aHR0cHM6Ly9weXJvc2NvcGUuZXhhbXBsZS5jb20=
   pyroscope-password: SXQncyBhIHNlY3JldCB0byBldmVyeW9uZQ==
+  pyroscope-tenantId: ""
   pyroscope-username: MTIzNDU=
   tempo-host: aHR0cHM6Ly90ZW1wby5leGFtcGxlLmNvbQ==
   tempo-password: SXQncyBhIHNlY3JldCB0byBldmVyeW9uZQ==
+  tempo-tenantId: ""
   tempo-username: MTIzNDU=
 kind: Secret
 metadata:
@@ -898,6 +902,7 @@ data:
     prometheus.remote_write "metrics_service" {
       endpoint {
         url = remote.kubernetes.secret.grafana_cloud.data["prometheus-host"] + "/api/prom/push"
+        headers = { "X-Scope-OrgID" = coalesce(remote.kubernetes.secret.grafana_cloud.data["prometheus-tenant"], "") }
     
         basic_auth {
           username = remote.kubernetes.secret.grafana_cloud.data["prometheus-username"]
@@ -996,6 +1001,7 @@ data:
     loki.write "logs_service" {
       endpoint {
         url = remote.kubernetes.secret.grafana_cloud.data["loki-host"] + "/loki/api/v1/push"
+        headers = { "X-Scope-OrgID" = coalesce(remote.kubernetes.secret.grafana_cloud.data["loki-tenant"], "") }
     
         basic_auth {
           username = remote.kubernetes.secret.grafana_cloud.data["loki-username"]
@@ -1006,6 +1012,10 @@ data:
     
     
     // Tempo
+    remote.kubernetes.secret "traces_service" {
+      name = "tempo-k8s-monitoring"
+      namespace = "default"
+    }
     
     otelcol.auth.basic "traces_service" {
       username = remote.kubernetes.secret.grafana_cloud.data["tempo-username"]
@@ -1017,6 +1027,7 @@ data:
         endpoint = remote.kubernetes.secret.grafana_cloud.data["tempo-host"]
     
         auth = otelcol.auth.basic.traces_service.handler
+        headers = { "X-Scope-OrgID" = coalesce(remote.kubernetes.secret.grafana_cloud.data["tempo-tenant"], "") }
       }
     }
     
@@ -1067,6 +1078,7 @@ data:
     loki.write "logs_service" {
       endpoint {
         url = remote.kubernetes.secret.grafana_cloud.data["loki-host"] + "/loki/api/v1/push"
+        headers = { "X-Scope-OrgID" = coalesce(remote.kubernetes.secret.grafana_cloud.data["loki-tenant"], "") }
     
         basic_auth {
           username = remote.kubernetes.secret.grafana_cloud.data["loki-username"]
@@ -1230,6 +1242,7 @@ data:
     loki.write "logs_service" {
       endpoint {
         url = remote.kubernetes.secret.grafana_cloud.data["loki-host"] + "/loki/api/v1/push"
+        headers = { "X-Scope-OrgID" = coalesce(remote.kubernetes.secret.grafana_cloud.data["loki-tenant"], "") }
     
         basic_auth {
           username = remote.kubernetes.secret.grafana_cloud.data["loki-username"]
@@ -2121,6 +2134,7 @@ data:
     pyroscope.write "profiles_service" {
       endpoint {
         url = remote.kubernetes.secret.grafana_cloud.data["pyroscope-host"]
+        headers = { "X-Scope-OrgID" = coalesce(remote.kubernetes.secret.grafana_cloud.data["pyroscope-tenant"], "") }
     
         basic_auth {
           username = remote.kubernetes.secret.grafana_cloud.data["pyroscope-username"]
@@ -60947,6 +60961,7 @@ data:
     prometheus.remote_write "metrics_service" {
       endpoint {
         url = remote.kubernetes.secret.grafana_cloud.data["prometheus-host"] + "/api/prom/push"
+        headers = { "X-Scope-OrgID" = coalesce(remote.kubernetes.secret.grafana_cloud.data["prometheus-tenant"], "") }
     
         basic_auth {
           username = remote.kubernetes.secret.grafana_cloud.data["prometheus-username"]
@@ -61045,6 +61060,7 @@ data:
     loki.write "logs_service" {
       endpoint {
         url = remote.kubernetes.secret.grafana_cloud.data["loki-host"] + "/loki/api/v1/push"
+        headers = { "X-Scope-OrgID" = coalesce(remote.kubernetes.secret.grafana_cloud.data["loki-tenant"], "") }
     
         basic_auth {
           username = remote.kubernetes.secret.grafana_cloud.data["loki-username"]
@@ -61055,6 +61071,10 @@ data:
     
     
     // Tempo
+    remote.kubernetes.secret "traces_service" {
+      name = "tempo-k8s-monitoring"
+      namespace = "default"
+    }
     
     otelcol.auth.basic "traces_service" {
       username = remote.kubernetes.secret.grafana_cloud.data["tempo-username"]
@@ -61066,6 +61086,7 @@ data:
         endpoint = remote.kubernetes.secret.grafana_cloud.data["tempo-host"]
     
         auth = otelcol.auth.basic.traces_service.handler
+        headers = { "X-Scope-OrgID" = coalesce(remote.kubernetes.secret.grafana_cloud.data["tempo-tenant"], "") }
       }
     }
     
@@ -61108,6 +61129,7 @@ data:
     loki.write "logs_service" {
       endpoint {
         url = remote.kubernetes.secret.grafana_cloud.data["loki-host"] + "/loki/api/v1/push"
+        headers = { "X-Scope-OrgID" = coalesce(remote.kubernetes.secret.grafana_cloud.data["loki-tenant"], "") }
     
         basic_auth {
           username = remote.kubernetes.secret.grafana_cloud.data["loki-username"]
@@ -61263,6 +61285,7 @@ data:
     loki.write "logs_service" {
       endpoint {
         url = remote.kubernetes.secret.grafana_cloud.data["loki-host"] + "/loki/api/v1/push"
+        headers = { "X-Scope-OrgID" = coalesce(remote.kubernetes.secret.grafana_cloud.data["loki-tenant"], "") }
     
         basic_auth {
           username = remote.kubernetes.secret.grafana_cloud.data["loki-username"]
@@ -62119,6 +62142,7 @@ data:
     pyroscope.write "profiles_service" {
       endpoint {
         url = remote.kubernetes.secret.grafana_cloud.data["pyroscope-host"]
+        headers = { "X-Scope-OrgID" = coalesce(remote.kubernetes.secret.grafana_cloud.data["pyroscope-tenant"], "") }
     
         basic_auth {
           username = remote.kubernetes.secret.grafana_cloud.data["pyroscope-username"]
