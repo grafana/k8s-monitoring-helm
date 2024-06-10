@@ -108,7 +108,7 @@ otelcol.processor.transform "default" {
   metric_statements {
     context = "resource"
     statements = [
-      "set(attributes[\"k8s.cluster.name\"], \"credentials-from-test\") where attributes[\"k8s.cluster.name\"] == nil",
+      "set(attributes[\"k8s.cluster.name\"], \"credentials-auto-configure\") where attributes[\"k8s.cluster.name\"] == nil",
     ]
   }
   log_statements {
@@ -117,13 +117,13 @@ otelcol.processor.transform "default" {
       "set(attributes[\"pod\"], attributes[\"k8s.pod.name\"])",
       "set(attributes[\"namespace\"], attributes[\"k8s.namespace.name\"])",
       "set(attributes[\"loki.resource.labels\"], \"cluster, namespace, job, pod\")",
-      "set(attributes[\"k8s.cluster.name\"], \"credentials-from-test\") where attributes[\"k8s.cluster.name\"] == nil",
+      "set(attributes[\"k8s.cluster.name\"], \"credentials-auto-configure\") where attributes[\"k8s.cluster.name\"] == nil",
     ]
   }
   trace_statements {
     context = "resource"
     statements = [
-      "set(attributes[\"k8s.cluster.name\"], \"credentials-from-test\") where attributes[\"k8s.cluster.name\"] == nil",
+      "set(attributes[\"k8s.cluster.name\"], \"credentials-auto-configure\") where attributes[\"k8s.cluster.name\"] == nil",
     ]
   }
   output {
@@ -749,7 +749,7 @@ prometheus.relabel "metrics_service" {
   rule {
     source_labels = ["cluster"]
     regex = ""
-    replacement = "credentials-from-test"
+    replacement = "credentials-auto-configure"
     target_label = "cluster"
   }
   forward_to = [prometheus.remote_write.metrics_service.receiver]
@@ -757,11 +757,11 @@ prometheus.relabel "metrics_service" {
 
 prometheus.remote_write "metrics_service" {
   endpoint {
-    url = remote.kubernetes.secret.grafana_cloud.data["prometheus-host"] + "/api/prom/push"
+    url = json_decode(remote.http.grafana_cloud.content)["hmInstancePromUrl"] + "/api/prom/push" + "/api/prom/push"
 
     basic_auth {
-      username = remote.kubernetes.secret.grafana_cloud.data["prometheus-username"]
-      password = remote.kubernetes.secret.grafana_cloud.data["prometheus-password"]
+      username = json_decode(remote.http.grafana_cloud.content)["hmInstancePromId"]
+      password = remote.kubernetes.secret.grafana_cloud.data["token"]
     }
 
     send_native_histograms = false
@@ -846,7 +846,7 @@ loki.process "pod_logs" {
 loki.process "logs_service" {
   stage.static_labels {
       values = {
-        cluster = "credentials-from-test",
+        cluster = "credentials-auto-configure",
       }
   }
   forward_to = [loki.write.logs_service.receiver]
@@ -855,11 +855,11 @@ loki.process "logs_service" {
 // Loki
 loki.write "logs_service" {
   endpoint {
-    url = remote.kubernetes.secret.grafana_cloud.data["loki-host"] + "/loki/api/v1/push"
+    url = json_decode(remote.http.grafana_cloud.content)["hlInstanceUrl"] + "/loki/api/v1/push" + "/loki/api/v1/push"
 
     basic_auth {
-      username = remote.kubernetes.secret.grafana_cloud.data["loki-username"]
-      password = remote.kubernetes.secret.grafana_cloud.data["loki-password"]
+      username = json_decode(remote.http.grafana_cloud.content)["hlInstanceId"]
+      password = remote.kubernetes.secret.grafana_cloud.data["token"]
     }
   }
 }
@@ -868,13 +868,13 @@ loki.write "logs_service" {
 // Tempo
 
 otelcol.auth.basic "traces_service" {
-  username = remote.kubernetes.secret.grafana_cloud.data["tempo-username"]
-  password = remote.kubernetes.secret.grafana_cloud.data["tempo-password"]
+  username = json_decode(remote.http.grafana_cloud.content)["htInstanceId"]
+  password = remote.kubernetes.secret.grafana_cloud.data["token"]
 }
 
 otelcol.exporter.otlp "traces_service" {
   client {
-    endpoint = remote.kubernetes.secret.grafana_cloud.data["tempo-host"]
+    endpoint = json_decode(remote.http.grafana_cloud.content)["htInstanceUrl"] + ":443"
 
     auth = otelcol.auth.basic.traces_service.handler
   }
@@ -885,6 +885,15 @@ logging {
   format = "logfmt"
 }
 remote.kubernetes.secret "grafana_cloud" {
-  namespace = "default"
+  namespace = "meta"
   name = "grafana-cloud-credentials"
+}
+remote.http "grafana_cloud" {
+  // replace YOURSTACKNAME with the name of your stack name
+  // The API Token must have the stacks:read
+  url = "https://grafana.com/api/instances/proserv"
+  client {
+    bearer_token = remote.kubernetes.secret.grafana_cloud.data["token"]
+  }
+  poll_frequency = "24h"
 }

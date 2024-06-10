@@ -1,42 +1,50 @@
 ---
 cluster:
-  name: credentials-from-test
+  name: credentials-auto-configure
 
 externalServices:
   prometheus:
-    hostFrom: remote.kubernetes.secret.grafana_cloud.data["prometheus-host"]
+    hostFrom: json_decode(remote.http.grafana_cloud.content)["hmInstancePromUrl"] + "/api/prom/push"
     basicAuth:
-      usernameFrom: remote.kubernetes.secret.grafana_cloud.data["prometheus-username"]
-      passwordFrom: remote.kubernetes.secret.grafana_cloud.data["prometheus-password"]
+      usernameFrom: json_decode(remote.http.grafana_cloud.content)["hmInstancePromId"]
+      passwordFrom: remote.kubernetes.secret.grafana_cloud.data["token"]
     secret:
       create: false
   loki:
-    hostFrom: remote.kubernetes.secret.grafana_cloud.data["loki-host"]
+    hostFrom: json_decode(remote.http.grafana_cloud.content)["hlInstanceUrl"] + "/loki/api/v1/push"
     basicAuth:
-      usernameFrom: remote.kubernetes.secret.grafana_cloud.data["loki-username"]
-      passwordFrom: remote.kubernetes.secret.grafana_cloud.data["loki-password"]
+      usernameFrom: json_decode(remote.http.grafana_cloud.content)["hlInstanceId"]
+      passwordFrom: remote.kubernetes.secret.grafana_cloud.data["token"]
     secret:
       create: false
   tempo:
-    hostFrom: remote.kubernetes.secret.grafana_cloud.data["tempo-host"]
+    hostFrom: json_decode(remote.http.grafana_cloud.content)["htInstanceUrl"] + ":443"
     basicAuth:
-      usernameFrom: remote.kubernetes.secret.grafana_cloud.data["tempo-username"]
-      passwordFrom: remote.kubernetes.secret.grafana_cloud.data["tempo-password"]
+      usernameFrom: json_decode(remote.http.grafana_cloud.content)["htInstanceId"]
+      passwordFrom: remote.kubernetes.secret.grafana_cloud.data["token"]
     secret:
       create: false
   pyroscope:
-    hostFrom: remote.kubernetes.secret.grafana_cloud.data["pyroscope-host"]
+    hostFrom: json_decode(remote.http.grafana_cloud.content)["hpInstanceUrl"]
     basicAuth:
-      usernameFrom: remote.kubernetes.secret.grafana_cloud.data["pyroscope-username"]
-      passwordFrom: remote.kubernetes.secret.grafana_cloud.data["pyroscope-password"]
+      usernameFrom: json_decode(remote.http.grafana_cloud.content)["hpInstanceId"]
+      passwordFrom: remote.kubernetes.secret.grafana_cloud.data["token"]
     secret:
       create: false
-
 global:
   extraConfig: |-
     remote.kubernetes.secret "grafana_cloud" {
-      namespace = "default"
+      namespace = "meta"
       name = "grafana-cloud-credentials"
+    }
+    remote.http "grafana_cloud" {
+      // replace YOURSTACKNAME with the name of your stack name
+      // The API Token must have the stacks:read
+      url = "https://grafana.com/api/instances/proserv"
+      client {
+        bearer_token = remote.kubernetes.secret.grafana_cloud.data["token"]
+      }
+      poll_frequency = "24h"
     }
 
 logs:
@@ -61,15 +69,4 @@ extraObjects:
       name: grafana-cloud-credentials
     type: Opaque
     data:
-      prometheus-host: aHR0cHM6Ly9wcm9tZXRoZXVzLmV4YW1wbGUuY29t
-      prometheus-username: MTIzNDU=
-      prometheus-password: SXQncyBhIHNlY3JldCB0byBldmVyeW9uZQ==
-      loki-host: aHR0cHM6Ly9sb2tpLmV4YW1wbGUuY29t
-      loki-username: MTIzNDU=
-      loki-password: SXQncyBhIHNlY3JldCB0byBldmVyeW9uZQ==
-      tempo-host: aHR0cHM6Ly90ZW1wby5leGFtcGxlLmNvbQ==
-      tempo-username: MTIzNDU=
-      tempo-password: SXQncyBhIHNlY3JldCB0byBldmVyeW9uZQ==
-      pyroscope-host: aHR0cHM6Ly9weXJvc2NvcGUuZXhhbXBsZS5jb20=
-      pyroscope-username: MTIzNDU=
-      pyroscope-password: SXQncyBhIHNlY3JldCB0byBldmVyeW9uZQ==
+      token: Z2xjX2V5SnZJam9pTkRZek5URXpJaXdpYmlJNkluQnliM05sY25ZdGRHOXZiR2x1WnkxaFlYSnZiaTFpWlc1MGIyNGlMQ0pySWpvaVpsTnNOREpwTlRsRFZtSlVNMGxNTURCUk9EaHJNbXhSSWl3aWJTSTZleUp5SWpvaWNISnZaQzExY3kxbFlYTjBMVEFpZlgwPQ==

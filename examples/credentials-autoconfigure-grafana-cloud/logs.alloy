@@ -125,7 +125,7 @@ loki.process "pod_logs" {
 loki.process "logs_service" {
   stage.static_labels {
       values = {
-        cluster = "credentials-from-test",
+        cluster = "credentials-auto-configure",
       }
   }
   forward_to = [loki.write.logs_service.receiver]
@@ -134,11 +134,11 @@ loki.process "logs_service" {
 // Loki
 loki.write "logs_service" {
   endpoint {
-    url = remote.kubernetes.secret.grafana_cloud.data["loki-host"] + "/loki/api/v1/push"
+    url = json_decode(remote.http.grafana_cloud.content)["hlInstanceUrl"] + "/loki/api/v1/push" + "/loki/api/v1/push"
 
     basic_auth {
-      username = remote.kubernetes.secret.grafana_cloud.data["loki-username"]
-      password = remote.kubernetes.secret.grafana_cloud.data["loki-password"]
+      username = json_decode(remote.http.grafana_cloud.content)["hlInstanceId"]
+      password = remote.kubernetes.secret.grafana_cloud.data["token"]
     }
   }
 }
@@ -149,8 +149,17 @@ logging {
   format = "logfmt"
 }
 remote.kubernetes.secret "grafana_cloud" {
-  namespace = "default"
+  namespace = "meta"
   name = "grafana-cloud-credentials"
+}
+remote.http "grafana_cloud" {
+  // replace YOURSTACKNAME with the name of your stack name
+  // The API Token must have the stacks:read
+  url = "https://grafana.com/api/instances/proserv"
+  client {
+    bearer_token = remote.kubernetes.secret.grafana_cloud.data["token"]
+  }
+  poll_frequency = "24h"
 }
 // Journal Logs
 loki.relabel "journal" {
