@@ -1,0 +1,61 @@
+---
+cluster:
+  name: rules-sync
+
+externalServices:
+  prometheus:
+    host: https://prometheus.example.com
+    basicAuth:
+      username: 12345
+      password: "It's a secret to everyone"
+  loki:
+    host: https://loki.example.com
+    basicAuth:
+      username: 12345
+      password: "It's a secret to everyone"
+
+rules:
+  enabled: true
+  mimir:
+    rule_selectors:
+      rule_type: mimir
+  loki:
+    rule_selectors:
+      rule_type: loki
+
+extraObjects:
+  # example Mimir Rule
+  - apiVersion: monitoring.coreos.com/v1
+    kind: PrometheusRule
+    metadata:
+      labels:
+        rule_type: mimir
+      name: example-node-exporter-rules
+    spec:
+      groups:
+        - name: node-exporter
+          rules:
+            - alert: NodeCPUHighUsage
+              annotations:
+                summary: High CPU usage.
+                description: |-
+                  CPU usage at {{`{{ $labels.instance }}`}} has been above 90% for the last 15 minutes, is currently at {{`{{ printf "%.2f" $value }}`}}%.
+              expr: |-
+                sum without(mode) (avg without (cpu) (rate(node_cpu_seconds_total{job=~"integrations/(node_exporter|unix)", mode!="idle"}[2m]))) * 100 > 90
+              for: 15m
+              labels:
+                severity: warning
+  # example Loki Rule
+  - apiVersion: monitoring.coreos.com/v1
+    kind: PrometheusRule
+    metadata:
+      labels:
+        rule_type: loki
+      name: example-log-rules
+    spec:
+      groups:
+        - name: logs
+          rules:
+            - record: log_errors:count1m
+              expr: |-
+                count_over_time({level="error"}[1m])

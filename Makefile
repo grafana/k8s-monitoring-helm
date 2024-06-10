@@ -9,6 +9,7 @@ METRICS_CONFIG_FILES = $(subst values.yaml,metrics.alloy,$(INPUT_FILES))
 EVENTS_CONFIG_FILES = $(subst values.yaml,events.alloy,$(INPUT_FILES))
 LOGS_CONFIG_FILES = $(subst values.yaml,logs.alloy,$(INPUT_FILES))
 PROFILES_CONFIG_FILES = $(subst values.yaml,profiles.alloy,$(INPUT_FILES))
+RULES_CONFIG_FILES = $(subst values.yaml,rules.alloy,$(INPUT_FILES))
 
 CT_CONFIGFILE ?= .github/configs/ct.yaml
 LINT_CONFIGFILE ?= .github/configs/lintconf.yaml
@@ -39,7 +40,7 @@ lint-chart:
 	ct lint --debug --config "$(CT_CONFIGFILE)" --lint-conf "$(LINT_CONFIGFILE)" --check-version-increment=false
 
 lint-config lint-configs lint-alloy:
-	@./scripts/lint-alloy.sh $(METRICS_CONFIG_FILES) $(EVENTS_CONFIG_FILES) $(LOGS_CONFIG_FILES) --public-preview $(PROFILES_CONFIG_FILES)
+	@./scripts/lint-alloy.sh $(METRICS_CONFIG_FILES) $(EVENTS_CONFIG_FILES) $(LOGS_CONFIG_FILES) $(RULES_CONFIG_FILES) --public-preview $(PROFILES_CONFIG_FILES)
 
 # Shell Linting
 lint-sh lint-shell:
@@ -98,7 +99,9 @@ test: scripts/test-runner.sh lint-chart lint-config
 %/profiles.alloy: %/output.yaml
 	yq -r "select(.metadata.name==\"k8smon-alloy-profiles\") | .data[\"config.alloy\"] | select( . != null )" $< > $@
 
+%/rules.alloy: %/output.yaml
+	yq -r "select(.metadata.name==\"k8smon-alloy-rules\") | .data[\"config.alloy\"] | select( . != null )" $< > $@
 
-generate-example-outputs: $(OUTPUT_FILES) $(METRICS_CONFIG_FILES) $(EVENTS_CONFIG_FILES) $(LOGS_CONFIG_FILES) $(PROFILES_CONFIG_FILES)
+generate-example-outputs: $(OUTPUT_FILES) $(METRICS_CONFIG_FILES) $(EVENTS_CONFIG_FILES) $(LOGS_CONFIG_FILES) $(PROFILES_CONFIG_FILES) $(RULES_CONFIG_FILES)
 
 regenerate-example-outputs: clean generate-example-outputs
