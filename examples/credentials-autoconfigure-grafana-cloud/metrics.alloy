@@ -16,16 +16,14 @@ discovery.kubernetes "pods" {
 
 // OTLP Receivers
 otelcol.receiver.otlp "receiver" {
-  debug_metrics {
-    disable_high_cardinality_metrics = true
-  }
-
   grpc {
     endpoint = "0.0.0.0:4317"
   }
-
   http {
     endpoint = "0.0.0.0:4318"
+  }
+  debug_metrics {
+    disable_high_cardinality_metrics = true
   }
   output {
     metrics = [otelcol.processor.resourcedetection.default.input]
@@ -223,6 +221,12 @@ discovery.relabel "annotation_autodiscovery_pods" {
     action = "replace"
     target_label = "__scheme__"
   }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_metrics_scrapeInterval"]
+    action = "replace"
+    target_label = "__scrape_interval__"
+  }
 }
 
 discovery.relabel "annotation_autodiscovery_services" {
@@ -284,6 +288,12 @@ discovery.relabel "annotation_autodiscovery_services" {
     action = "replace"
     target_label = "__scheme__"
   }
+
+  rule {
+    source_labels = ["__meta_kubernetes_service_annotation_k8s_grafana_com_metrics_scrapeInterval"]
+    action = "replace"
+    target_label = "__scrape_interval__"
+  }
 }
 
 discovery.relabel "annotation_autodiscovery_http" {
@@ -306,7 +316,9 @@ discovery.relabel "annotation_autodiscovery_https" {
 
 prometheus.scrape "annotation_autodiscovery_http" {
   targets = discovery.relabel.annotation_autodiscovery_http.output
+  scrape_interval = "60s"
   honor_labels = true
+  bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
   clustering {
     enabled = true
   }
@@ -315,6 +327,7 @@ prometheus.scrape "annotation_autodiscovery_http" {
 
 prometheus.scrape "annotation_autodiscovery_https" {
   targets = discovery.relabel.annotation_autodiscovery_https.output
+  scrape_interval = "60s"
   honor_labels = true
   bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
   tls_config {
@@ -627,7 +640,7 @@ prometheus.relabel "node_exporter" {
   max_cache_size = 100000
   rule {
     source_labels = ["__name__"]
-    regex = "up|node_cpu.*|node_exporter_build_info|node_filesystem.*|node_memory.*|process_cpu_seconds_total|process_resident_memory_bytes"
+    regex = "up|node_cpu.*|node_exporter_build_info|node_filesystem.*|node_memory.*|node_network_receive_bytes_total|node_network_receive_drop_total|node_network_transmit_bytes_total|node_network_transmit_drop_total|process_cpu_seconds_total|process_resident_memory_bytes"
     action = "keep"
   }
   // Drop metrics for certain file systems
@@ -752,6 +765,18 @@ prometheus.remote_write "metrics_service" {
     }
 
     send_native_histograms = false
+
+    queue_config {
+      capacity = 10000
+      min_shards = 1
+      max_shards = 50
+      max_samples_per_send = 2000
+      batch_send_deadline = "5s"
+      min_backoff = "30ms"
+      max_backoff = "5s"
+      retry_on_http_429 = true
+      sample_age_limit = "0s"
+    }
   }
 
   wal {
