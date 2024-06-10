@@ -14,15 +14,11 @@ loki.process "cluster_events" {
 }
 
 // Logs Service
-remote.kubernetes.secret "logs_service" {
-  name = "loki-k8s-monitoring"
-  namespace = "default"
-}
 
 loki.process "logs_service" {
   stage.static_labels {
       values = {
-        cluster = "service-integrations-test",
+        cluster = "credentials-from-test",
       }
   }
   forward_to = [loki.write.logs_service.receiver]
@@ -31,11 +27,11 @@ loki.process "logs_service" {
 // Loki
 loki.write "logs_service" {
   endpoint {
-    url = nonsensitive(remote.kubernetes.secret.logs_service.data["host"]) + "/loki/api/v1/push"
+    url = remote.kubernetes.secret.grafana_cloud_logs.data["loki-host"] + "/loki/api/v1/push"
 
     basic_auth {
-      username = nonsensitive(remote.kubernetes.secret.logs_service.data["username"])
-      password = remote.kubernetes.secret.logs_service.data["password"]
+      username = remote.kubernetes.secret.grafana_cloud_logs.data["loki-username"]
+      password = remote.kubernetes.secret.grafana_cloud_logs.data["loki-password"]
     }
   }
 }
@@ -44,4 +40,8 @@ loki.write "logs_service" {
 logging {
   level  = "info"
   format = "logfmt"
+}
+remote.kubernetes.secret "grafana_cloud_logs" {
+  namespace = "default"
+  name = "grafana-cloud-credentials"
 }

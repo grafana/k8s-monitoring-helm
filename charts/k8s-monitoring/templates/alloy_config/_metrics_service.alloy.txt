@@ -1,9 +1,11 @@
 {{ define "alloy.config.metricsService" }}
 // Metrics Service
+{{- if not (or .Values.externalServices.prometheus.hostFrom .Values.externalServices.prometheus.basicAuth.usernameFrom .Values.externalServices.prometheus.basicAuth.passwordFrom )}}
 remote.kubernetes.secret "metrics_service" {
   name = {{ include "kubernetes_monitoring.metrics_service.secret.name" . | quote }}
   namespace = {{ .Values.externalServices.prometheus.secret.namespace | default .Release.Namespace | quote }}
 }
+{{- end }}
 
 prometheus.relabel "metrics_service" {
   max_cache_size = {{ .Values.metrics.maxCacheSize | int }}

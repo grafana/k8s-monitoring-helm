@@ -1,19 +1,37 @@
 {{ define "alloy.config.profilesService" }}
 // Pyroscope
+{{- if not (or .Values.externalServices.pyroscope.hostFrom .Values.externalServices.pyroscope.basicAuth.usernameFrom .Values.externalServices.pyroscope.basicAuth.passwordFrom )}}
 remote.kubernetes.secret "profiles_service" {
   name = {{ include "kubernetes_monitoring.profiles_service.secret.name" . | quote }}
   namespace = {{ .Values.externalServices.pyroscope.secret.namespace | default .Release.Namespace | quote }}
 }
+{{- end }}
 
 {{- with .Values.externalServices.pyroscope }}
 pyroscope.write "profiles_service" {
   endpoint {
+    {{- if .hostFrom }}
+    url = {{ .hostFrom }}
+    {{- else }}
     url = nonsensitive(remote.kubernetes.secret.profiles_service.data[{{ .hostKey | quote }}])
-    headers = { "X-Scope-OrgID" = nonsensitive(remote.kubernetes.secret.profiles_service.data[{{ .tenantIdKey | quote }}]) }
+    {{- end }}
+    {{- if .tenantIdFrom }}
+    headers = { "X-Scope-OrgID" = coalesce({{ .tenantIdFrom }}, "") }
+    {{- else if or (and (eq .secret.create true) (.tenantId) (eq .secret.create false) ) }}
+    headers = { "X-Scope-OrgID" = nonsensitive(coalesce(remote.kubernetes.secret.profiles_service.data[{{ .tenantIdKey | quote }}], "")) }
+    {{- end }}
 {{ if eq .authMode "basic" }}
     basic_auth {
+      {{- if .basicAuth.usernameFrom }}
+      username = {{ .basicAuth.usernameFrom }}
+      {{- else }}
       username = nonsensitive(remote.kubernetes.secret.profiles_service.data[{{ .basicAuth.usernameKey | quote }}])
+      {{- end }}
+      {{- if .basicAuth.passwordFrom }}
+      password = {{ .basicAuth.passwordFrom }}
+      {{- else }}
       password = remote.kubernetes.secret.profiles_service.data[{{ .basicAuth.passwordKey | quote }}]
+      {{- end }}
     }
 {{- end }}
 {{- if .tls }}

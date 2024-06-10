@@ -1,15 +1,25 @@
 {{ define "alloy.config.tracesService" }}
 // Tempo
+{{- if not (or .Values.externalServices.tempo.hostFrom .Values.externalServices.tempo.basicAuth.usernameFrom .Values.externalServices.tempo.basicAuth.passwordFrom )}}
 remote.kubernetes.secret "traces_service" {
   name = {{ include "kubernetes_monitoring.traces_service.secret.name" . | quote }}
   namespace = {{ .Values.externalServices.tempo.secret.namespace | default .Release.Namespace | quote }}
 }
+{{- end }}
 
 {{- with .Values.externalServices.tempo }}
 {{ if eq .authMode "basic" }}
 otelcol.auth.basic "traces_service" {
+  {{- if .basicAuth.usernameFrom }}
+  username = {{ .basicAuth.usernameFrom }}
+  {{- else }}
   username = nonsensitive(remote.kubernetes.secret.traces_service.data[{{ .basicAuth.usernameKey | quote }}])
+  {{- end }}
+  {{- if .basicAuth.passwordFrom }}
+  password = {{ .basicAuth.passwordFrom }}
+  {{- else }}
   password = remote.kubernetes.secret.traces_service.data[{{ .basicAuth.passwordKey | quote }}]
+  {{- end }}
 }
 {{- end }}
 {{ if eq .protocol "otlp" }}
@@ -18,11 +28,19 @@ otelcol.exporter.otlp "traces_service" {
 otelcol.exporter.otlphttp "traces_service" {
 {{- end }}
   client {
+    {{- if .hostFrom }}
+    endpoint = {{ .hostFrom }}
+    {{- else }}
     endpoint = nonsensitive(remote.kubernetes.secret.traces_service.data[{{ .hostKey | quote }}])
+    {{- end }}
 {{ if eq .authMode "basic" }}
     auth = otelcol.auth.basic.traces_service.handler
 {{- end }}
-    headers = { "X-Scope-OrgID" = nonsensitive(remote.kubernetes.secret.traces_service.data[{{ .tenantIdKey | quote }}]) }
+    {{- if .tenantIdFrom }}
+    headers = { "X-Scope-OrgID" = coalesce({{ .tenantIdFrom }}, "") }
+    {{- else if or (and (eq .secret.create true) (.tenantId) (eq .secret.create false) ) }}
+    headers = { "X-Scope-OrgID" = nonsensitive(coalesce(remote.kubernetes.secret.traces_service.data[{{ .tenantIdKey | quote }}], "")) }
+    {{- end }}
 {{- if .tlsOptions }}
     tls {
 {{ .tlsOptions | indent 6 }}

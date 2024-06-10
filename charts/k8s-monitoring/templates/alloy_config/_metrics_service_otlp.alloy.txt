@@ -56,8 +56,16 @@ otelcol.processor.memory_limiter "metrics_service" {
 }
 {{ if eq .authMode "basic" }}
 otelcol.auth.basic "metrics_service" {
+  {{- if .basicAuth.usernameFrom }}
+  username = {{ .basicAuth.usernameFrom }}
+  {{- else }}
   username = nonsensitive(remote.kubernetes.secret.metrics_service.data[{{ .basicAuth.usernameKey | quote }}])
+  {{- end }}
+  {{- if .basicAuth.passwordFrom }}
+  password = {{ .basicAuth.passwordFrom }}
+  {{- else }}
   password = remote.kubernetes.secret.metrics_service.data[{{ .basicAuth.passwordKey | quote }}]
+  {{- end }}
 }
 {{- end }}
 {{ if eq .protocol "otlp" }}
@@ -67,12 +75,18 @@ otelcol.exporter.otlp "metrics_service" {
 otelcol.exporter.otlphttp "metrics_service" {
 {{- end }}
   client {
+    {{- if .hostFrom }}
+    endpoint = {{ .hostFrom }} + "{{ .writeEndpoint }}"
+    {{- else }}
     endpoint = nonsensitive(remote.kubernetes.secret.metrics_service.data[{{ .hostKey | quote }}]) + "{{ .writeEndpoint }}"
+    {{- end }}
 {{ if or (.basicAuth.username) (.basicAuth.password) }}
     auth = otelcol.auth.basic.metrics_service.handler
 {{- end }}
-{{- if .tenantId }}
-    headers = { "X-Scope-OrgID" = nonsensitive(remote.kubernetes.secret.metrics_service.data[{{ .tenantIdKey | quote }}]) }
+{{- if .tenantIdFrom }}
+    headers = { "X-Scope-OrgID" = coalesce({{ .tenantIdFrom }}, "") }
+{{- else if or (and (eq .secret.create true) (.tenantId) (eq .secret.create false) ) }}
+    headers = { "X-Scope-OrgID" = nonsensitive(coalesce(remote.kubernetes.secret.metrics_service.data[{{ .tenantIdKey | quote }}], "")) }
 {{- end }}
 {{- if .tls }}
     tls {

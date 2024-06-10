@@ -1,4 +1,4 @@
-// Profiles: eBPF
+// Profiles
 discovery.kubernetes "ebpf_pods" {
   selectors {
     role = "pod"
@@ -52,65 +52,7 @@ pyroscope.ebpf "ebpf_pods" {
 
   forward_to = [pyroscope.write.profiles_service.receiver]
 }
-// Profiles: Java
-discovery.kubernetes "java_pods" {
-  selectors {
-    role = "pod"
-    field = "spec.nodeName=" + env("HOSTNAME")
-  }
-  role = "pod"
-}
-
-discovery.process "java_pods" {
-  join = discovery.kubernetes.java_pods.targets
-}
-
-discovery.relabel "java_pods" {
-  targets = discovery.process.java_pods.targets
-  rule {
-    action = "drop"
-    regex = "Succeeded|Failed|Completed"
-    source_labels = ["__meta_kubernetes_pod_phase"]
-  }
-  rule {
-    source_labels = ["__meta_process_exe"]
-    action = "keep"
-    regex = ".*/java$"
-  }
-  rule {
-    action = "replace"
-    source_labels = ["__meta_kubernetes_namespace"]
-    target_label = "namespace"
-  }
-  rule {
-    action = "replace"
-    source_labels = ["__meta_kubernetes_pod_name"]
-    target_label = "pod"
-  }
-  rule {
-    action = "replace"
-    source_labels = ["__meta_kubernetes_pod_node_name"]
-    target_label = "node"
-  }
-  rule {
-    action = "replace"
-    source_labels = ["__meta_kubernetes_pod_container_name"]
-    target_label = "container"
-  }
-}
-
-pyroscope.java "java_pods" {
-  targets = discovery.relabel.java_pods.output
-  profiling_config {
-    interval = "60s"
-    alloc = "512k"
-    cpu = true
-    sample_rate = 100
-    lock = "10ms"
-  }
-  forward_to = [pyroscope.write.profiles_service.receiver]
-}
-// Profiles: pprof
+// Profiles
 discovery.kubernetes "pprof_pods" {
   selectors {
     role = "pod"
@@ -241,34 +183,23 @@ discovery.relabel "pprof_pods_memory_custom_name" {
 pyroscope.scrape "pyroscope_scrape_memory" {
   targets = concat(discovery.relabel.pprof_pods_memory_default_name.output, discovery.relabel.pprof_pods_memory_custom_name.output)
 
-  bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
-
   profiling_config {
     profile.memory {
       enabled = true
     }
-    profile.block {
+    profile.process_cpu {
       enabled = false
     }
     profile.goroutine {
       enabled = false
     }
+    profile.block {
+      enabled = false
+    }
     profile.mutex {
       enabled = false
     }
-    profile.process_cpu {
-      enabled = false
-    }
     profile.fgprof {
-      enabled = false
-    }
-    profile.godeltaprof_memory {
-      enabled = false
-    }
-    profile.godeltaprof_mutex {
-      enabled = false
-    }
-    profile.godeltaprof_block {
       enabled = false
     }
   }
@@ -364,34 +295,23 @@ discovery.relabel "pprof_pods_cpu_custom_name" {
 pyroscope.scrape "pyroscope_scrape_cpu" {
   targets = concat(discovery.relabel.pprof_pods_cpu_default_name.output, discovery.relabel.pprof_pods_cpu_custom_name.output)
 
-  bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
-
   profiling_config {
     profile.memory {
-      enabled = false
-    }
-    profile.block {
-      enabled = false
-    }
-    profile.goroutine {
-      enabled = false
-    }
-    profile.mutex {
       enabled = false
     }
     profile.process_cpu {
       enabled = true
     }
+    profile.goroutine {
+      enabled = false
+    }
+    profile.block {
+      enabled = false
+    }
+    profile.mutex {
+      enabled = false
+    }
     profile.fgprof {
-      enabled = false
-    }
-    profile.godeltaprof_memory {
-      enabled = false
-    }
-    profile.godeltaprof_mutex {
-      enabled = false
-    }
-    profile.godeltaprof_block {
       enabled = false
     }
   }
@@ -487,34 +407,23 @@ discovery.relabel "pprof_pods_goroutine_custom_name" {
 pyroscope.scrape "pyroscope_scrape_goroutine" {
   targets = concat(discovery.relabel.pprof_pods_goroutine_default_name.output, discovery.relabel.pprof_pods_goroutine_custom_name.output)
 
-  bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
-
   profiling_config {
     profile.memory {
-      enabled = false
-    }
-    profile.block {
-      enabled = false
-    }
-    profile.goroutine {
-      enabled = true
-    }
-    profile.mutex {
       enabled = false
     }
     profile.process_cpu {
       enabled = false
     }
+    profile.goroutine {
+      enabled = true
+    }
+    profile.block {
+      enabled = false
+    }
+    profile.mutex {
+      enabled = false
+    }
     profile.fgprof {
-      enabled = false
-    }
-    profile.godeltaprof_memory {
-      enabled = false
-    }
-    profile.godeltaprof_mutex {
-      enabled = false
-    }
-    profile.godeltaprof_block {
       enabled = false
     }
   }
@@ -610,34 +519,23 @@ discovery.relabel "pprof_pods_block_custom_name" {
 pyroscope.scrape "pyroscope_scrape_block" {
   targets = concat(discovery.relabel.pprof_pods_block_default_name.output, discovery.relabel.pprof_pods_block_custom_name.output)
 
-  bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
-
   profiling_config {
     profile.memory {
-      enabled = false
-    }
-    profile.block {
-      enabled = true
-    }
-    profile.goroutine {
-      enabled = false
-    }
-    profile.mutex {
       enabled = false
     }
     profile.process_cpu {
       enabled = false
     }
+    profile.goroutine {
+      enabled = false
+    }
+    profile.block {
+      enabled = true
+    }
+    profile.mutex {
+      enabled = false
+    }
     profile.fgprof {
-      enabled = false
-    }
-    profile.godeltaprof_memory {
-      enabled = false
-    }
-    profile.godeltaprof_mutex {
-      enabled = false
-    }
-    profile.godeltaprof_block {
       enabled = false
     }
   }
@@ -733,34 +631,23 @@ discovery.relabel "pprof_pods_mutex_custom_name" {
 pyroscope.scrape "pyroscope_scrape_mutex" {
   targets = concat(discovery.relabel.pprof_pods_mutex_default_name.output, discovery.relabel.pprof_pods_mutex_custom_name.output)
 
-  bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
-
   profiling_config {
     profile.memory {
       enabled = false
     }
-    profile.block {
+    profile.process_cpu {
       enabled = false
     }
     profile.goroutine {
       enabled = false
     }
+    profile.block {
+      enabled = false
+    }
     profile.mutex {
       enabled = true
     }
-    profile.process_cpu {
-      enabled = false
-    }
     profile.fgprof {
-      enabled = false
-    }
-    profile.godeltaprof_memory {
-      enabled = false
-    }
-    profile.godeltaprof_mutex {
-      enabled = false
-    }
-    profile.godeltaprof_block {
       enabled = false
     }
   }
@@ -856,60 +743,49 @@ discovery.relabel "pprof_pods_fgprof_custom_name" {
 pyroscope.scrape "pyroscope_scrape_fgprof" {
   targets = concat(discovery.relabel.pprof_pods_fgprof_default_name.output, discovery.relabel.pprof_pods_fgprof_custom_name.output)
 
-  bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
-
   profiling_config {
     profile.memory {
-      enabled = false
-    }
-    profile.block {
-      enabled = false
-    }
-    profile.goroutine {
-      enabled = false
-    }
-    profile.mutex {
       enabled = false
     }
     profile.process_cpu {
       enabled = false
     }
+    profile.goroutine {
+      enabled = false
+    }
+    profile.block {
+      enabled = false
+    }
+    profile.mutex {
+      enabled = false
+    }
     profile.fgprof {
       enabled = true
-    }
-    profile.godeltaprof_memory {
-      enabled = false
-    }
-    profile.godeltaprof_mutex {
-      enabled = false
-    }
-    profile.godeltaprof_block {
-      enabled = false
     }
   }
 
   forward_to = [pyroscope.write.profiles_service.receiver]
 }
 // Pyroscope
-remote.kubernetes.secret "profiles_service" {
-  name = "pyroscope-k8s-monitoring"
-  namespace = "default"
-}
 pyroscope.write "profiles_service" {
   endpoint {
-    url = nonsensitive(remote.kubernetes.secret.profiles_service.data["host"])
+    url = remote.kubernetes.secret.grafana_cloud_profiles.data["pyroscope-host"]
 
     basic_auth {
-      username = nonsensitive(remote.kubernetes.secret.profiles_service.data["username"])
-      password = remote.kubernetes.secret.profiles_service.data["password"]
+      username = remote.kubernetes.secret.grafana_cloud_profiles.data["pyroscope-username"]
+      password = remote.kubernetes.secret.grafana_cloud_profiles.data["pyroscope-password"]
     }
   }
   external_labels = {
-    cluster = "profiles-enabled-test",
+    cluster = "credentials-from-test",
   }
 }
 
 logging {
   level  = "info"
   format = "logfmt"
+}
+remote.kubernetes.secret "grafana_cloud_profiles" {
+  namespace = "default"
+  name = "grafana-cloud-credentials"
 }

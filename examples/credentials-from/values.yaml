@@ -1,0 +1,98 @@
+---
+cluster:
+  name: credentials-from-test
+
+externalServices:
+  prometheus:
+    hostFrom: remote.kubernetes.secret.grafana_cloud_metrics.data["prometheus-host"]
+    basicAuth:
+      usernameFrom: remote.kubernetes.secret.grafana_cloud_metrics.data["prometheus-username"]
+      passwordFrom: remote.kubernetes.secret.grafana_cloud_metrics.data["prometheus-password"]
+    secret:
+      create: false
+  loki:
+    hostFrom: remote.kubernetes.secret.grafana_cloud_logs.data["loki-host"]
+    basicAuth:
+      usernameFrom: remote.kubernetes.secret.grafana_cloud_logs.data["loki-username"]
+      passwordFrom: remote.kubernetes.secret.grafana_cloud_logs.data["loki-password"]
+    secret:
+      create: false
+  tempo:
+    hostFrom: remote.kubernetes.secret.grafana_cloud_traces.data["tempo-host"]
+    basicAuth:
+      usernameFrom: remote.kubernetes.secret.grafana_cloud_traces.data["tempo-username"]
+      passwordFrom: remote.kubernetes.secret.grafana_cloud_traces.data["tempo-password"]
+    secret:
+      create: false
+  pyroscope:
+    hostFrom: remote.kubernetes.secret.grafana_cloud_profiles.data["pyroscope-host"]
+    basicAuth:
+      usernameFrom: remote.kubernetes.secret.grafana_cloud_profiles.data["pyroscope-username"]
+      passwordFrom: remote.kubernetes.secret.grafana_cloud_profiles.data["pyroscope-password"]
+    secret:
+      create: false
+extraConfig: |-
+  remote.kubernetes.secret "grafana_cloud_metrics" {
+    namespace = "default"
+    name = "grafana-cloud-credentials"
+  }
+  remote.kubernetes.secret "grafana_cloud_logs" {
+    namespace = "default"
+    name = "grafana-cloud-credentials"
+  }
+
+logs:
+  extraConfig: |-
+    remote.kubernetes.secret "grafana_cloud_logs" {
+      namespace = "default"
+      name = "grafana-cloud-credentials"
+    }
+  cluster_events:
+    extraConfig: |-
+      remote.kubernetes.secret "grafana_cloud_logs" {
+        namespace = "default"
+        name = "grafana-cloud-credentials"
+      }
+  journal:
+    enabled: true
+    extraConfig: |-
+      remote.kubernetes.secret "grafana_cloud_logs" {
+        namespace = "default"
+        name = "grafana-cloud-credentials"
+      }
+
+traces:
+  enabled: true
+  extraConfig: |-
+    remote.kubernetes.secret "grafana_cloud_traces" {
+      namespace = "default"
+      name = "grafana-cloud-credentials"
+    }
+
+profiles:
+  enabled: true
+  extraConfig: |-
+    remote.kubernetes.secret "grafana_cloud_profiles" {
+      namespace = "default"
+      name = "grafana-cloud-credentials"
+    }
+
+extraObjects:
+  - apiVersion: v1
+    kind: Secret
+    metadata:
+      name: grafana-cloud-credentials
+    type: Opaque
+    data:
+      prometheus-host: aHR0cHM6Ly9wcm9tZXRoZXVzLmV4YW1wbGUuY29t
+      prometheus-username: MTIzNDU=
+      prometheus-password: SXQncyBhIHNlY3JldCB0byBldmVyeW9uZQ==
+      loki-host: aHR0cHM6Ly9sb2tpLmV4YW1wbGUuY29t
+      loki-username: MTIzNDU=
+      loki-password: SXQncyBhIHNlY3JldCB0byBldmVyeW9uZQ==
+      tempo-host: aHR0cHM6Ly90ZW1wby5leGFtcGxlLmNvbQ==
+      tempo-username: MTIzNDU=
+      tempo-password: SXQncyBhIHNlY3JldCB0byBldmVyeW9uZQ==
+      pyroscope-host: aHR0cHM6Ly9weXJvc2NvcGUuZXhhbXBsZS5jb20=
+      pyroscope-username: MTIzNDU=
+      pyroscope-password: SXQncyBhIHNlY3JldCB0byBldmVyeW9uZQ==

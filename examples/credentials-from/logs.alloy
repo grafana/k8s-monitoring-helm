@@ -33,11 +33,6 @@ discovery.relabel "pod_logs" {
     target_label = "job"
   }
   rule {
-    source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
-    target_label  = "app_kubernetes_io_name"
-  }
-
-  rule {
     source_labels = ["__meta_kubernetes_pod_uid", "__meta_kubernetes_pod_container_name"]
     separator = "/"
     action = "replace"
@@ -126,15 +121,11 @@ loki.process "pod_logs" {
 }
 
 // Logs Service
-remote.kubernetes.secret "logs_service" {
-  name = "loki-k8s-monitoring"
-  namespace = "default"
-}
 
 loki.process "logs_service" {
   stage.static_labels {
       values = {
-        cluster = "alloy-autoscaling-and-storage-test",
+        cluster = "credentials-from-test",
       }
   }
   forward_to = [loki.write.logs_service.receiver]
@@ -143,11 +134,11 @@ loki.process "logs_service" {
 // Loki
 loki.write "logs_service" {
   endpoint {
-    url = nonsensitive(remote.kubernetes.secret.logs_service.data["host"]) + "/loki/api/v1/push"
+    url = remote.kubernetes.secret.grafana_cloud_logs.data["loki-host"] + "/loki/api/v1/push"
 
     basic_auth {
-      username = nonsensitive(remote.kubernetes.secret.logs_service.data["username"])
-      password = remote.kubernetes.secret.logs_service.data["password"]
+      username = remote.kubernetes.secret.grafana_cloud_logs.data["loki-username"]
+      password = remote.kubernetes.secret.grafana_cloud_logs.data["loki-password"]
     }
   }
 }
@@ -156,4 +147,35 @@ loki.write "logs_service" {
 logging {
   level  = "info"
   format = "logfmt"
+}
+remote.kubernetes.secret "grafana_cloud_logs" {
+  namespace = "default"
+  name = "grafana-cloud-credentials"
+}
+// Journal Logs
+loki.relabel "journal" {
+  // no forward_to is used, the defined rules are used below by the loki.source.journal component
+  forward_to = []
+
+  // set the name of the systemd unit
+  rule {
+    action = "replace"
+    source_labels = ["__journal__systemd_unit"]
+    replacement = "$1"
+    target_label = "unit"
+  }
+}
+
+loki.source.journal "worker" {
+  max_age = "8h"
+  path = "/var/log/journal"
+  relabel_rules = loki.relabel.journal.rules
+  labels = {
+    job = "integrations/kubernetes/journal",
+    instance = env("HOSTNAME"),
+  }
+  forward_to = [loki.process.journal_logs.receiver]
+}
+loki.process "journal_logs" {
+  forward_to = [loki.process.logs_service.receiver]
 }

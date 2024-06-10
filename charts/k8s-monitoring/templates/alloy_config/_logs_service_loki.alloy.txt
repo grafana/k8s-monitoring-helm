@@ -3,15 +3,31 @@
 // Loki
 loki.write "logs_service" {
   endpoint {
+    {{- if .hostFrom }}
+    url = {{ .hostFrom }} + "{{ .writeEndpoint }}"
+    {{- else }}
     url = nonsensitive(remote.kubernetes.secret.logs_service.data[{{ .hostKey | quote }}]) + "{{ .writeEndpoint }}"
-    tenant_id = nonsensitive(remote.kubernetes.secret.logs_service.data[{{ .tenantIdKey | quote }}])
+    {{- end }}
+    {{- if .tenantIdFrom }}
+    headers = { "X-Scope-OrgID" = coalesce({{ .tenantIdFrom }}, "") }
+    {{- else if or (and (eq .secret.create true) (.tenantId) (eq .secret.create false) ) }}
+    headers = { "X-Scope-OrgID" = nonsensitive(coalesce(remote.kubernetes.secret.logs_service.data[{{ .tenantIdKey | quote }}], "")) }
+    {{- end }}
 {{- if .proxyURL }}
     proxy_url = {{ .proxyURL | quote }}
 {{- end }}
 {{ if eq .authMode "basic" }}
     basic_auth {
+      {{- if .basicAuth.usernameFrom }}
+      username = {{ .basicAuth.usernameFrom }}
+      {{- else }}
       username = nonsensitive(remote.kubernetes.secret.logs_service.data[{{ .basicAuth.usernameKey | quote }}])
+      {{- end }}
+      {{- if .basicAuth.passwordFrom }}
+      password = {{ .basicAuth.passwordFrom }}
+      {{- else }}
       password = remote.kubernetes.secret.logs_service.data[{{ .basicAuth.passwordKey | quote }}]
+      {{- end }}
     }
 {{- end }}
 {{- if .tls }}

@@ -16,18 +16,21 @@ discovery.kubernetes "pods" {
 
 // OTLP Receivers
 otelcol.receiver.otlp "receiver" {
+  debug_metrics {
+    disable_high_cardinality_metrics = true
+  }
+
   grpc {
     endpoint = "0.0.0.0:4317"
   }
+
   http {
     endpoint = "0.0.0.0:4318"
-  }
-  debug_metrics {
-    disable_high_cardinality_metrics = true
   }
   output {
     metrics = [otelcol.processor.resourcedetection.default.input]
     logs = [otelcol.processor.resourcedetection.default.input]
+    traces = [otelcol.processor.resourcedetection.default.input]
   }
 }
 
@@ -60,6 +63,7 @@ otelcol.processor.resourcedetection "default" {
   output {
     metrics = [otelcol.processor.transform.add_metric_datapoint_attributes.input]
     logs    = [otelcol.processor.k8sattributes.default.input]
+    traces  = [otelcol.processor.k8sattributes.default.input]
   }
 }
 
@@ -76,7 +80,28 @@ otelcol.processor.k8sattributes "default" {
   output {
     metrics = [otelcol.processor.transform.default.input]
     logs    = [otelcol.processor.transform.default.input]
+    traces  = [
+      otelcol.processor.transform.default.input,
+      otelcol.connector.host_info.default.input,
+    ]
   }
+}
+otelcol.connector.host_info "default" {
+  host_identifiers = [ "k8s.node.name" ]
+  output {
+    metrics = [otelcol.processor.batch.host_info_batch.input]
+  }
+}
+
+otelcol.processor.batch "host_info_batch" {
+  output {
+    metrics = [otelcol.exporter.prometheus.host_info_metrics.input]
+  }
+}
+
+otelcol.exporter.prometheus "host_info_metrics" {
+  add_metric_suffixes = false
+  forward_to = [prometheus.remote_write.metrics_service.receiver]
 }
 
 otelcol.processor.transform "default" {
@@ -85,7 +110,7 @@ otelcol.processor.transform "default" {
   metric_statements {
     context = "resource"
     statements = [
-      "set(attributes[\"k8s.cluster.name\"], \"metric-module-imports\") where attributes[\"k8s.cluster.name\"] == nil",
+      "set(attributes[\"k8s.cluster.name\"], \"credentials-from-test\") where attributes[\"k8s.cluster.name\"] == nil",
     ]
   }
   log_statements {
@@ -94,12 +119,19 @@ otelcol.processor.transform "default" {
       "set(attributes[\"pod\"], attributes[\"k8s.pod.name\"])",
       "set(attributes[\"namespace\"], attributes[\"k8s.namespace.name\"])",
       "set(attributes[\"loki.resource.labels\"], \"cluster, namespace, job, pod\")",
-      "set(attributes[\"k8s.cluster.name\"], \"metric-module-imports\") where attributes[\"k8s.cluster.name\"] == nil",
+      "set(attributes[\"k8s.cluster.name\"], \"credentials-from-test\") where attributes[\"k8s.cluster.name\"] == nil",
+    ]
+  }
+  trace_statements {
+    context = "resource"
+    statements = [
+      "set(attributes[\"k8s.cluster.name\"], \"credentials-from-test\") where attributes[\"k8s.cluster.name\"] == nil",
     ]
   }
   output {
     metrics = [otelcol.processor.filter.default.input]
     logs = [otelcol.processor.filter.default.input]
+    traces = [otelcol.processor.filter.default.input]
   }
 }
 
@@ -109,6 +141,7 @@ otelcol.processor.filter "default" {
   output {
     metrics = [otelcol.processor.batch.batch_processor.input]
     logs = [otelcol.processor.batch.batch_processor.input]
+    traces = [otelcol.processor.batch.batch_processor.input]
   }
 }
 
@@ -119,6 +152,7 @@ otelcol.processor.batch "batch_processor" {
   output {
     metrics = [otelcol.exporter.prometheus.metrics_converter.input]
     logs = [otelcol.exporter.loki.logs_converter.input]
+    traces = [otelcol.exporter.otlp.traces_service.input]
   }
 }
 otelcol.exporter.prometheus "metrics_converter" {
@@ -189,12 +223,6 @@ discovery.relabel "annotation_autodiscovery_pods" {
     action = "replace"
     target_label = "__scheme__"
   }
-
-  rule {
-    source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_metrics_scrapeInterval"]
-    action = "replace"
-    target_label = "__scrape_interval__"
-  }
 }
 
 discovery.relabel "annotation_autodiscovery_services" {
@@ -256,12 +284,6 @@ discovery.relabel "annotation_autodiscovery_services" {
     action = "replace"
     target_label = "__scheme__"
   }
-
-  rule {
-    source_labels = ["__meta_kubernetes_service_annotation_k8s_grafana_com_metrics_scrapeInterval"]
-    action = "replace"
-    target_label = "__scrape_interval__"
-  }
 }
 
 discovery.relabel "annotation_autodiscovery_http" {
@@ -284,9 +306,7 @@ discovery.relabel "annotation_autodiscovery_https" {
 
 prometheus.scrape "annotation_autodiscovery_http" {
   targets = discovery.relabel.annotation_autodiscovery_http.output
-  scrape_interval = "60s"
   honor_labels = true
-  bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
   clustering {
     enabled = true
   }
@@ -295,7 +315,6 @@ prometheus.scrape "annotation_autodiscovery_http" {
 
 prometheus.scrape "annotation_autodiscovery_https" {
   targets = discovery.relabel.annotation_autodiscovery_https.output
-  scrape_interval = "60s"
   honor_labels = true
   bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
   tls_config {
@@ -608,7 +627,7 @@ prometheus.relabel "node_exporter" {
   max_cache_size = 100000
   rule {
     source_labels = ["__name__"]
-    regex = "up|node_cpu.*|node_exporter_build_info|node_filesystem.*|node_memory.*|node_network_receive_bytes_total|node_network_receive_drop_total|node_network_transmit_bytes_total|node_network_transmit_drop_total|process_cpu_seconds_total|process_resident_memory_bytes"
+    regex = "up|node_cpu.*|node_exporter_build_info|node_filesystem.*|node_memory.*|process_cpu_seconds_total|process_resident_memory_bytes"
     action = "keep"
   }
   // Drop metrics for certain file systems
@@ -710,195 +729,14 @@ prometheus.relabel "servicemonitors" {
   forward_to = [prometheus.relabel.metrics_service.receiver]
 }
 
-// Alloy Modules
-
-// memcached: import the module
-import.git "module_memcached" {
-  repository = "https://github.com/grafana/alloy-modules.git"
-  revision = "main"
-  path = "modules/databases/kv/memcached/metrics.alloy"
-  pull_frequency = "15m"
-}
-
-// memcached: call the targets component
-module_memcached.kubernetes "targets" {
-}
-
-// memcached: additional service discovery relabelings
-discovery.relabel "module_memcached" {
-  targets = module_memcached.kubernetes.targets.output
-  // global discovery relabelings
-  // memcached: additional discovery relabelings
-}
-
-// memcached: call the scrape component
-module_memcached.scrape "metrics" {
-  targets = discovery.relabel.module_memcached.output
-  forward_to = [prometheus.relabel.module_memcached.receiver]
-  clustering = true
-  scrape_interval = "60s"
-}
-
-// memcached: additional metric relabelings
-prometheus.relabel "module_memcached" {
-  max_cache_size = 100000
-  // global metric relabelings
-  // additional memcached module specific metric relabelings
-  forward_to = [prometheus.relabel.metrics_service.receiver]
-}
-
-// loki: import the module
-import.git "module_loki" {
-  repository = "https://github.com/grafana/alloy-modules.git"
-  revision = "main"
-  path = "modules/databases/timeseries/loki/metrics.alloy"
-  pull_frequency = "15m"
-}
-
-// loki: call the targets component
-module_loki.kubernetes "targets" {
-}
-
-// loki: additional service discovery relabelings
-discovery.relabel "module_loki" {
-  targets = module_loki.kubernetes.targets.output
-  // global discovery relabelings
-  // loki: additional discovery relabelings
-}
-
-// loki: call the scrape component
-module_loki.scrape "metrics" {
-  targets = discovery.relabel.module_loki.output
-  forward_to = [prometheus.relabel.module_loki.receiver]
-  clustering = true
-  scrape_interval = "60s"
-}
-
-// loki: additional metric relabelings
-prometheus.relabel "module_loki" {
-  max_cache_size = 100000
-  // global metric relabelings
-  // additional loki module specific metric relabelings
-  forward_to = [prometheus.relabel.metrics_service.receiver]
-}
-
-// mimir: import the module
-import.git "module_mimir" {
-  repository = "https://github.com/grafana/alloy-modules.git"
-  revision = "main"
-  path = "modules/databases/timeseries/mimir/metrics.alloy"
-  pull_frequency = "15m"
-}
-
-// mimir: call the targets component
-module_mimir.kubernetes "targets" {
-}
-
-// mimir: additional service discovery relabelings
-discovery.relabel "module_mimir" {
-  targets = module_mimir.kubernetes.targets.output
-  // global discovery relabelings
-  // mimir: additional discovery relabelings
-}
-
-// mimir: call the scrape component
-module_mimir.scrape "metrics" {
-  targets = discovery.relabel.module_mimir.output
-  forward_to = [prometheus.relabel.module_mimir.receiver]
-  clustering = true
-  scrape_interval = "60s"
-}
-
-// mimir: additional metric relabelings
-prometheus.relabel "module_mimir" {
-  max_cache_size = 100000
-  // global metric relabelings
-  // additional mimir module specific metric relabelings
-  forward_to = [prometheus.relabel.metrics_service.receiver]
-}
-
-// tempo: import the module
-import.git "module_tempo" {
-  repository = "https://github.com/grafana/alloy-modules.git"
-  revision = "main"
-  path = "modules/databases/timeseries/tempo/metrics.alloy"
-  pull_frequency = "15m"
-}
-
-// tempo: call the targets component
-module_tempo.kubernetes "targets" {
-}
-
-// tempo: additional service discovery relabelings
-discovery.relabel "module_tempo" {
-  targets = module_tempo.kubernetes.targets.output
-  // global discovery relabelings
-  // tempo: additional discovery relabelings
-}
-
-// tempo: call the scrape component
-module_tempo.scrape "metrics" {
-  targets = discovery.relabel.module_tempo.output
-  forward_to = [prometheus.relabel.module_tempo.receiver]
-  clustering = true
-  scrape_interval = "60s"
-}
-
-// tempo: additional metric relabelings
-prometheus.relabel "module_tempo" {
-  max_cache_size = 100000
-  // global metric relabelings
-  // additional tempo module specific metric relabelings
-  forward_to = [prometheus.relabel.metrics_service.receiver]
-}
-
-// grafana: import the module
-import.git "module_grafana" {
-  repository = "https://github.com/grafana/alloy-modules.git"
-  revision = "main"
-  path = "modules/ui/grafana/metrics.alloy"
-  pull_frequency = "15m"
-}
-
-// grafana: call the targets component
-module_grafana.kubernetes "targets" {
-}
-
-// grafana: additional service discovery relabelings
-discovery.relabel "module_grafana" {
-  targets = module_grafana.kubernetes.targets.output
-  // global discovery relabelings
-  // grafana: additional discovery relabelings
-}
-
-// grafana: call the scrape component
-module_grafana.scrape "metrics" {
-  targets = discovery.relabel.module_grafana.output
-  forward_to = [prometheus.relabel.module_grafana.receiver]
-  clustering = true
-  scrape_interval = "60s"
-}
-
-// grafana: additional metric relabelings
-prometheus.relabel "module_grafana" {
-  max_cache_size = 100000
-  // global metric relabelings
-  // additional grafana module specific metric relabelings
-  forward_to = [prometheus.relabel.metrics_service.receiver]
-}
-
 // Metrics Service
-remote.kubernetes.secret "metrics_service" {
-  name = "prometheus-k8s-monitoring"
-  namespace = "default"
-}
 
 prometheus.relabel "metrics_service" {
   max_cache_size = 100000
   rule {
     source_labels = ["cluster"]
     regex = ""
-    replacement = "metric-module-imports"
+    replacement = "credentials-from-test"
     target_label = "cluster"
   }
   forward_to = [prometheus.remote_write.metrics_service.receiver]
@@ -906,26 +744,14 @@ prometheus.relabel "metrics_service" {
 
 prometheus.remote_write "metrics_service" {
   endpoint {
-    url = nonsensitive(remote.kubernetes.secret.metrics_service.data["host"]) + "/api/prom/push"
+    url = remote.kubernetes.secret.grafana_cloud_metrics.data["prometheus-host"] + "/api/prom/push"
 
     basic_auth {
-      username = nonsensitive(remote.kubernetes.secret.metrics_service.data["username"])
-      password = remote.kubernetes.secret.metrics_service.data["password"]
+      username = remote.kubernetes.secret.grafana_cloud_metrics.data["prometheus-username"]
+      password = remote.kubernetes.secret.grafana_cloud_metrics.data["prometheus-password"]
     }
 
     send_native_histograms = false
-
-    queue_config {
-      capacity = 10000
-      min_shards = 1
-      max_shards = 50
-      max_samples_per_send = 2000
-      batch_send_deadline = "5s"
-      min_backoff = "30ms"
-      max_backoff = "5s"
-      retry_on_http_429 = true
-      sample_age_limit = "0s"
-    }
   }
 
   wal {
@@ -991,15 +817,11 @@ loki.process "pod_logs" {
 }
 
 // Logs Service
-remote.kubernetes.secret "logs_service" {
-  name = "loki-k8s-monitoring"
-  namespace = "default"
-}
 
 loki.process "logs_service" {
   stage.static_labels {
       values = {
-        cluster = "metric-module-imports",
+        cluster = "credentials-from-test",
       }
   }
   forward_to = [loki.write.logs_service.receiver]
@@ -1008,17 +830,43 @@ loki.process "logs_service" {
 // Loki
 loki.write "logs_service" {
   endpoint {
-    url = nonsensitive(remote.kubernetes.secret.logs_service.data["host"]) + "/loki/api/v1/push"
+    url = remote.kubernetes.secret.grafana_cloud_logs.data["loki-host"] + "/loki/api/v1/push"
 
     basic_auth {
-      username = nonsensitive(remote.kubernetes.secret.logs_service.data["username"])
-      password = remote.kubernetes.secret.logs_service.data["password"]
+      username = remote.kubernetes.secret.grafana_cloud_logs.data["loki-username"]
+      password = remote.kubernetes.secret.grafana_cloud_logs.data["loki-password"]
     }
   }
 }
 
 
+// Tempo
+
+otelcol.auth.basic "traces_service" {
+  username = remote.kubernetes.secret.grafana_cloud_traces.data["tempo-username"]
+  password = remote.kubernetes.secret.grafana_cloud_traces.data["tempo-password"]
+}
+
+otelcol.exporter.otlp "traces_service" {
+  client {
+    endpoint = remote.kubernetes.secret.grafana_cloud_traces.data["tempo-host"]
+
+    auth = otelcol.auth.basic.traces_service.handler
+  }
+}
+remote.kubernetes.secret "grafana_cloud_traces" {
+  namespace = "default"
+  name = "grafana-cloud-credentials"
+}
 logging {
   level  = "info"
   format = "logfmt"
+}
+remote.kubernetes.secret "grafana_cloud_metrics" {
+  namespace = "default"
+  name = "grafana-cloud-credentials"
+}
+remote.kubernetes.secret "grafana_cloud_logs" {
+  namespace = "default"
+  name = "grafana-cloud-credentials"
 }
