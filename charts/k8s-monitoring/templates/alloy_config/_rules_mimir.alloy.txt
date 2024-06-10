@@ -1,0 +1,75 @@
+{{ define "alloy.config.rulesMimir" }}
+{{- if .Values.rules.mimir.enabled }}
+// Metrics Service
+remote.kubernetes.secret "metrics_service" {
+  name = {{ include "kubernetes_monitoring.metrics_service.secret.name" . | quote }}
+  namespace = {{ .Values.externalServices.prometheus.secret.namespace | default .Release.Namespace | quote }}
+}
+// Rules
+mimir.rules.kubernetes "rules_service" {
+  address = nonsensitive(remote.kubernetes.secret.metrics_service.data[{{ .Values.externalServices.prometheus.hostKey | quote }}])
+  {{- if or (and (eq .Values.externalServices.prometheus.secret.create true) (.Values.externalServices.prometheus.tenantId) (eq .Values.externalServices.prometheus.secret.create false) ) }}
+  headers = nonsensitive(coalesce(remote.kubernetes.secret.metrics_service.data[{{ .Values.externalServices.prometheus.tenantIdKey | quote }}], ""))
+  {{- end }}
+  sync_interval = {{ .Values.rules.mimir.sync_interval | quote }}
+  prometheus_http_prefix = {{ .Values.rules.mimir.prometheus_http_prefix | quote }}
+  mimir_namespace_prefix = {{ .Values.rules.mimir.prefix | quote }}
+{{- if .Values.externalServices.prometheus.proxyURL }}
+    proxy_url = {{ .Values.externalServices.prometheus.proxyURL | quote }}
+{{- end }}
+{{ if eq .Values.externalServices.prometheus.authMode "basic" }}
+    basic_auth {
+      username = nonsensitive(remote.kubernetes.secret.metrics_service.data[{{ .Values.externalServices.prometheus.basicAuth.usernameKey | quote }}])
+      password = remote.kubernetes.secret.metrics_service.data[{{ .Values.externalServices.prometheus.basicAuth.passwordKey | quote }}]
+    }
+{{- end }}
+  rule_namespace_selector {
+    {{- if .Values.rules.mimir.namespace.label_selectors }}
+    match_labels = {
+      {{- range $key, $value := .Values.rules.mimir.namespace.label_selectors }}
+      {{ $key }} = "{{ $value }}",
+      {{- end }}
+    }
+    {{- end }}
+
+    {{- if .Values.rules.mimir.namespace.label_expressions }}
+    {{- range $expr := .Values.rules.mimir.namespace.label_expressions }}
+    match_expression {
+      key = "{{ $expr.key }}"
+      operator = "{{ $expr.operator }}"
+      values = [
+        {{- range $index, $value := $expr.values }}
+        {{- if $index }}, {{ end }}"{{ $value }}"
+        {{- end }}
+      ]
+    }
+    {{- end }}
+    {{- end }}
+  }
+
+  rule_selector {
+    {{- if .Values.rules.mimir.rule.label_selectors }}
+    match_labels = {
+      {{- range $key, $value := .Values.rules.mimir.rule.label_selectors }}
+      {{ $key }} = "{{ $value }}",
+      {{- end }}
+    }
+    {{- end }}
+
+    {{- if .Values.rules.mimir.rule.label_expressions }}
+    {{- range $expr := .Values.rules.mimir.rule.label_expressions }}
+    match_expression {
+      key = "{{ $expr.key }}"
+      operator = "{{ $expr.operator }}"
+      values = [
+        {{- range $index, $value := $expr.values }}
+        {{- if $index }}, {{ end }}"{{ $value }}"
+        {{- end }}
+      ]
+    }
+    {{- end }}
+    {{- end }}
+  }
+}
+{{- end }}
+{{- end }}

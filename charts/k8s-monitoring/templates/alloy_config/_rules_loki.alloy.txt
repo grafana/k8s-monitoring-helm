@@ -1,0 +1,74 @@
+{{ define "alloy.config.rulesLoki" }}
+{{- if .Values.rules.loki.enabled }}
+// Logs Service
+remote.kubernetes.secret "logs_service" {
+  name = {{ include "kubernetes_monitoring.logs_service.secret.name" . | quote}}
+  namespace = {{ .Values.externalServices.loki.secret.namespace | default .Release.Namespace | quote }}
+}
+// Rules
+loki.rules.kubernetes "rules_service" {
+  address = nonsensitive(remote.kubernetes.secret.logs_service.data[{{ .Values.externalServices.loki.hostKey | quote }}])
+  {{- if or (and (eq .Values.externalServices.loki.secret.create true) (.Values.externalServices.loki.tenantId) (eq .Values.externalServices.loki.secret.create false) ) }}
+  headers = nonsensitive(coalesce(remote.kubernetes.secret.logs_service.data[{{ .Values.externalServices.loki.tenantIdKey | quote }}], ""))
+  {{- end }}
+  sync_interval = {{ .Values.rules.loki.sync_interval | quote }}
+  loki_namespace_prefix = {{ .Values.rules.loki.prefix | quote }}
+{{- if .Values.externalServices.loki.proxyURL }}
+    proxy_url = {{ .Values.externalServices.loki.proxyURL | quote }}
+{{- end }}
+{{ if eq .Values.externalServices.loki.authMode "basic" }}
+    basic_auth {
+      username = nonsensitive(remote.kubernetes.secret.logs_service.data[{{ .Values.externalServices.loki.basicAuth.usernameKey | quote }}])
+      password = remote.kubernetes.secret.logs_service.data[{{ .Values.externalServices.loki.basicAuth.passwordKey | quote }}]
+    }
+{{- end }}
+  rule_namespace_selector {
+    {{- if .Values.rules.loki.namespace.label_selectors }}
+    match_labels = {
+      {{- range $key, $value := .Values.rules.loki.namespace.label_selectors }}
+      {{ $key }} = "{{ $value }}",
+      {{- end }}
+    }
+    {{- end }}
+
+    {{- if .Values.rules.loki.namespace.label_expressions }}
+    {{- range $expr := .Values.rules.loki.namespace.label_expressions }}
+    match_expression {
+      key = "{{ $expr.key }}"
+      operator = "{{ $expr.operator }}"
+      values = [
+        {{- range $index, $value := $expr.values }}
+        {{- if $index }}, {{ end }}"{{ $value }}"
+        {{- end }}
+      ]
+    }
+    {{- end }}
+    {{- end }}
+  }
+
+  rule_selector {
+    {{- if .Values.rules.loki.rule.label_selectors }}
+    match_labels = {
+      {{- range $key, $value := .Values.rules.loki.rule.label_selectors }}
+      {{ $key }} = "{{ $value }}",
+      {{- end }}
+    }
+    {{- end }}
+
+    {{- if .Values.rules.loki.rule.label_expressions }}
+    {{- range $expr := .Values.rules.loki.rule.label_expressions }}
+    match_expression {
+      key = "{{ $expr.key }}"
+      operator = "{{ $expr.operator }}"
+      values = [
+        {{- range $index, $value := $expr.values }}
+        {{- if $index }}, {{ end }}"{{ $value }}"
+        {{- end }}
+      ]
+    }
+    {{- end }}
+    {{- end }}
+  }
+}
+{{- end }}
+{{- end }}

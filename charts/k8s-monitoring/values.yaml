@@ -1709,6 +1709,91 @@ profiles:
       - mutex
       - fgprof
 
+# Settings related to the Rule syncing
+rules:
+  # -- Whether or not to enable the rules synchronization
+  # @section -- Rules
+  enabled: false
+
+  # Settings for Mimir rules, see: https://grafana.com/docs/alloy/latest/reference/components/mimir.rules.kubernetes/
+  mimir:
+    # -- Whether or not to enable the Mimir rules synchronization
+    # @section -- Rules (Mimir)
+    enabled: true
+    # -- Amount of time between reconciliations with Mimir.
+    # @default -- 5m
+    sync_interval: 5m
+    # -- Path prefix for Mimir’s Prometheus endpoint (gem-path-prefix).
+    # @default -- /api/prom
+    prometheus_http_prefix: /api/prom
+    # -- Prefix to be added to the rule namespace, used to differentiate multiple Alloy deployments added.
+    # @default -- alloy
+    prefix: alloy
+    # Namespace selectors for Mimir rules.
+    namespace:
+      # -- Label selector for Namespace resources.
+      label_selectors: {}
+      # -- Label expressions for Namespace resources.
+      label_expressions: []
+    # Selector for PrometheusRule resources.
+    rule:
+      # -- Label selectors for PrometheusRule resources as key/pair values.
+      # Example:
+      # ```alloy
+      # label_selectors:
+      #   rule_type: mimir
+      #   sync: "true"
+      #   mimir: "true"
+      # ```
+      label_selectors:
+        rule_type: mimir
+      # -- Label expressions for PrometheusRule resources.
+      # Example:
+      # ```alloy
+      # - key: team
+      #   operator: In
+      #   values: ["ops"]
+      # ```
+      label_expressions: []
+
+  # Settings for Loki rules, see: https://grafana.com/docs/alloy/latest/reference/components/loki.rules.kubernetes/
+  loki:
+    # -- Whether or not to enable the Mimir rules synchronization
+    # @section -- Rules (Loki)
+    enabled: true
+    # -- Amount of time between reconciliations with Mimir.
+    # @default -- 5m
+    sync_interval: 5m
+    # -- Prefix to be added to the rule namespace, used to differentiate multiple Alloy deployments added.
+    # @default -- alloy
+    prefix: alloy
+    # Namespace selectors for Loki rules.
+    namespace:
+      # -- Label selector for Namespace resources.
+      label_selectors: {}
+      # -- Label expressions for Namespace resources.
+      label_expressions: []
+    # Selector for PrometheusRule resources.
+    rule:
+      # -- Label selectors for PrometheusRule resources as key/pair values.
+      # Example:
+      # ```alloy
+      # label_selectors:
+      #   rule_type: loki
+      #   sync: "true"
+      #   loki: "true"
+      # ```
+      label_selectors:
+        rule_type: loki
+      # -- Label expressions for PrometheusRule resources.
+      # Example:
+      # ```alloy
+      # - key: team
+      #   operator: In
+      #   values: ["ops"]
+      # ```
+      label_expressions: []
+
 # Telemetry data receiver settings
 receivers:
   grpc:
@@ -2399,6 +2484,43 @@ alloy-profiles:
 
     podAnnotations:
       k8s.grafana.com/logs.job: integrations/alloy
+
+  # Skip installation of the Grafana Alloy CRDs, since we don't use them in this chart
+  # @ignored
+  crds: {create: false}
+
+
+# Settings for the Grafana Alloy instance that syncs PrometheusRules to Mimir and Loki
+# See https://github.com/grafana/alloy/tree/main/operations/helm/charts/alloy for available values.
+# @ignored -- This skips including these values in README.md
+alloy-rules:
+  logging:
+    # -- Level at which Alloy log lines should be written.
+    # @section -- Chart
+    level: info
+    # -- Format to use for writing Alloy log lines.
+    # @section -- Chart
+    format: logfmt
+
+  alloy:
+    # This chart is creating the configuration, so the alloy chart does not need to.
+    # @ignored
+    configMap: {create: false}
+
+    # Disabling clustering by default, because the default log gathering format does not require clusters.
+    # @ignored
+    clustering: {enabled: false}
+
+  controller:
+    # @ignored
+    type: statefulset
+    # @ignored
+    nodeSelector:
+      kubernetes.io/os: linux
+
+    tolerations:
+      - effect: NoSchedule
+        operator: Exists
 
   # Skip installation of the Grafana Alloy CRDs, since we don't use them in this chart
   # @ignored
