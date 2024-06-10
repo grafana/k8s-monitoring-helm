@@ -894,15 +894,15 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | rules.loki.namespace.label_expressions | list | `[]` | Label expressions for Namespace resources. |
 | rules.loki.namespace.label_selectors | object | `{}` | Label selector for Namespace resources. |
 | rules.loki.prefix | string | alloy | Prefix to be added to the rule namespace, used to differentiate multiple Alloy deployments added. |
-| rules.loki.rule.label_expressions | list | `[]` | Label expressions for PrometheusRule resources. Example: ```alloy - key: team   operator: In   values: ["ops"] ``` |
-| rules.loki.rule.label_selectors | object | `{"rule_type":"loki"}` | Label selectors for PrometheusRule resources as key/pair values. Example: ```alloy label_selectors:   rule_type: loki   sync: "true"   loki: "true" ``` |
+| rules.loki.rule.label_expressions | list | `[]` | Label expressions for PrometheusRule resources. |
+| rules.loki.rule.label_selectors | object | `{"rule_type":"loki"}` | Label selectors for PrometheusRule resources as key/pair values. |
 | rules.loki.sync_interval | string | 5m | Amount of time between reconciliations with Mimir. |
 | rules.mimir.namespace.label_expressions | list | `[]` | Label expressions for Namespace resources. |
 | rules.mimir.namespace.label_selectors | object | `{}` | Label selector for Namespace resources. |
 | rules.mimir.prefix | string | alloy | Prefix to be added to the rule namespace, used to differentiate multiple Alloy deployments added. |
 | rules.mimir.prometheus_http_prefix | string | /api/prom | Path prefix for Mimir’s Prometheus endpoint (gem-path-prefix). |
-| rules.mimir.rule.label_expressions | list | `[]` | Label expressions for PrometheusRule resources. Example: ```alloy - key: team   operator: In   values: ["ops"] ``` |
-| rules.mimir.rule.label_selectors | object | `{"rule_type":"mimir"}` | Label selectors for PrometheusRule resources as key/pair values. Example: ```alloy label_selectors:   rule_type: mimir   sync: "true"   mimir: "true" ``` |
+| rules.mimir.rule.label_expressions | list | `[]` | Label expressions for PrometheusRule resources. |
+| rules.mimir.rule.label_selectors | object | `{"rule_type":"mimir"}` | Label selectors for PrometheusRule resources as key/pair values. |
 | rules.mimir.sync_interval | string | 5m | Amount of time between reconciliations with Mimir. |
 
 ## Customizing the configuration
