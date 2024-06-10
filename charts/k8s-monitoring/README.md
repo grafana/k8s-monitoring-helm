@@ -658,6 +658,18 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 |-----|------|---------|-------------|
 | receivers.deployGrafanaAgentService | bool | `true` | Deploy a service named for Grafana Agent that matches the Alloy service. This is useful for applications that are configured to send telemetry to a service named "grafana-agent" and not yet updated to send to "alloy". |
 
+### OTEL Receivers (Processors)
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| receivers.grafanaCloudMetrics.enabled | bool | `true` | Generate host info metrics from trace data, used in Application Observability in Grafana Cloud. |
+| receivers.processors.batch.maxSize | int | `0` | The upper limit of the amount of data contained in a single batch, in bytes. When set to 0, batches can be any size. |
+| receivers.processors.batch.size | int | `16384` | What batch size to use, in bytes |
+| receivers.processors.batch.timeout | string | `"2s"` | How long before sending (Processors) |
+| receivers.processors.k8sattributes.annotations | list | `[]` | Kubernetes annotations to extract and add to the attributes of the received telemetry data. |
+| receivers.processors.k8sattributes.labels | list | `[]` | Kubernetes labels to extract and add to the attributes of the received telemetry data. |
+| receivers.processors.k8sattributes.metadata | list | `["k8s.namespace.name","k8s.pod.name","k8s.deployment.name","k8s.statefulset.name","k8s.daemonset.name","k8s.cronjob.name","k8s.job.name","k8s.node.name","k8s.pod.uid","k8s.pod.start_time"]` | Kubernetes metadata to extract and add to the attributes of the received telemetry data. |
+
 ### OTEL Receivers (gRPC)
 
 | Key | Type | Default | Description |
@@ -687,17 +699,6 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | receivers.jaeger.thriftCompact.port | int | `6831` | Which port to use for the Thrift compact receiver. This port needs to be opened in the alloy section below. |
 | receivers.jaeger.thriftHttp.enabled | bool | `false` | Receive Jaeger signals via Thrift HTTP protocol. |
 | receivers.jaeger.thriftHttp.port | int | `14268` | Which port to use for the Thrift HTTP receiver. This port needs to be opened in the alloy section below. |
-
-### OTEL Receivers (Processors)
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| receivers.processors.batch.maxSize | int | `0` | The upper limit of the amount of data contained in a single batch, in bytes. When set to 0, batches can be any size. |
-| receivers.processors.batch.size | int | `16384` | What batch size to use, in bytes |
-| receivers.processors.batch.timeout | string | `"2s"` | How long before sending (Processors) |
-| receivers.processors.k8sattributes.annotations | list | `[]` | Kubernetes annotations to extract and add to the attributes of the received telemetry data. |
-| receivers.processors.k8sattributes.labels | list | `[]` | Kubernetes labels to extract and add to the attributes of the received telemetry data. |
-| receivers.processors.k8sattributes.metadata | list | `["k8s.namespace.name","k8s.pod.name","k8s.deployment.name","k8s.statefulset.name","k8s.daemonset.name","k8s.cronjob.name","k8s.job.name","k8s.node.name","k8s.pod.uid","k8s.pod.start_time"]` | Kubernetes metadata to extract and add to the attributes of the received telemetry data. |
 
 ### OTEL Receivers (Prometheus)
 
@@ -736,7 +737,6 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | traces.enabled | bool | `false` | Receive and forward traces. |
-| traces.grafanaCloudMetrics.enabled | bool | `true` | Generate host info metrics from trace data, used in Application Observability in Grafana Cloud. |
 | traces.receiver.filters | object | `{"span":[],"spanevent":[]}` | Apply a filter to traces received via the OTLP or OTLP HTTP receivers. ([docs](https://grafana.com/docs/alloy/latest/reference/components/otelcol.processor.filter/)) |
 | traces.receiver.transforms | object | `{"resource":[],"span":[],"spanevent":[]}` | Apply a transformation to traces received via the OTLP or OTLP HTTP receivers. ([docs](https://grafana.com/docs/alloy/latest/reference/components/otelcol.processor.transform/)) |
 
