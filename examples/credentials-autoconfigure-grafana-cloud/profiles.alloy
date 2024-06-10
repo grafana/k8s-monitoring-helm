@@ -835,15 +835,15 @@ pyroscope.scrape "pyroscope_scrape_fgprof" {
 // Pyroscope
 pyroscope.write "profiles_service" {
   endpoint {
-    url = json_decode(remote.http.grafana_cloud.content)["hpInstanceUrl"]
+    url = remote.kubernetes.secret.grafana_cloud.data["pyroscope-host"]
 
     basic_auth {
-      username = json_decode(remote.http.grafana_cloud.content)["hpInstanceId"]
-      password = remote.kubernetes.secret.grafana_cloud.data["token"]
+      username = remote.kubernetes.secret.grafana_cloud.data["pyroscope-username"]
+      password = remote.kubernetes.secret.grafana_cloud.data["pyroscope-password"]
     }
   }
   external_labels = {
-    cluster = "credentials-auto-configure",
+    cluster = "credentials-from-test",
   }
 }
 
@@ -852,15 +852,6 @@ logging {
   format = "logfmt"
 }
 remote.kubernetes.secret "grafana_cloud" {
-  namespace = "meta"
+  namespace = "default"
   name = "grafana-cloud-credentials"
-}
-remote.http "grafana_cloud" {
-  // replace YOURSTACKNAME with the name of your stack name
-  // The API Token must have the stacks:read
-  url = "https://grafana.com/api/instances/proserv"
-  client {
-    bearer_token = remote.kubernetes.secret.grafana_cloud.data["token"]
-  }
-  poll_frequency = "24h"
 }
