@@ -744,11 +744,11 @@ prometheus.relabel "metrics_service" {
 
 prometheus.remote_write "metrics_service" {
   endpoint {
-    url = remote.kubernetes.secret.grafana_cloud_metrics.data["prometheus-host"] + "/api/prom/push"
+    url = remote.kubernetes.secret.grafana_cloud.data["prometheus-host"] + "/api/prom/push"
 
     basic_auth {
-      username = remote.kubernetes.secret.grafana_cloud_metrics.data["prometheus-username"]
-      password = remote.kubernetes.secret.grafana_cloud_metrics.data["prometheus-password"]
+      username = remote.kubernetes.secret.grafana_cloud.data["prometheus-username"]
+      password = remote.kubernetes.secret.grafana_cloud.data["prometheus-password"]
     }
 
     send_native_histograms = false
@@ -830,11 +830,11 @@ loki.process "logs_service" {
 // Loki
 loki.write "logs_service" {
   endpoint {
-    url = remote.kubernetes.secret.grafana_cloud_logs.data["loki-host"] + "/loki/api/v1/push"
+    url = remote.kubernetes.secret.grafana_cloud.data["loki-host"] + "/loki/api/v1/push"
 
     basic_auth {
-      username = remote.kubernetes.secret.grafana_cloud_logs.data["loki-username"]
-      password = remote.kubernetes.secret.grafana_cloud_logs.data["loki-password"]
+      username = remote.kubernetes.secret.grafana_cloud.data["loki-username"]
+      password = remote.kubernetes.secret.grafana_cloud.data["loki-password"]
     }
   }
 }
@@ -843,30 +843,23 @@ loki.write "logs_service" {
 // Tempo
 
 otelcol.auth.basic "traces_service" {
-  username = remote.kubernetes.secret.grafana_cloud_traces.data["tempo-username"]
-  password = remote.kubernetes.secret.grafana_cloud_traces.data["tempo-password"]
+  username = remote.kubernetes.secret.grafana_cloud.data["tempo-username"]
+  password = remote.kubernetes.secret.grafana_cloud.data["tempo-password"]
 }
 
 otelcol.exporter.otlp "traces_service" {
   client {
-    endpoint = remote.kubernetes.secret.grafana_cloud_traces.data["tempo-host"]
+    endpoint = remote.kubernetes.secret.grafana_cloud.data["tempo-host"]
 
     auth = otelcol.auth.basic.traces_service.handler
   }
 }
-remote.kubernetes.secret "grafana_cloud_traces" {
-  namespace = "default"
-  name = "grafana-cloud-credentials"
-}
+
 logging {
   level  = "info"
   format = "logfmt"
 }
-remote.kubernetes.secret "grafana_cloud_metrics" {
-  namespace = "default"
-  name = "grafana-cloud-credentials"
-}
-remote.kubernetes.secret "grafana_cloud_logs" {
+remote.kubernetes.secret "grafana_cloud" {
   namespace = "default"
   name = "grafana-cloud-credentials"
 }

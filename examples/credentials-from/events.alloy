@@ -27,11 +27,11 @@ loki.process "logs_service" {
 // Loki
 loki.write "logs_service" {
   endpoint {
-    url = remote.kubernetes.secret.grafana_cloud_logs.data["loki-host"] + "/loki/api/v1/push"
+    url = remote.kubernetes.secret.grafana_cloud.data["loki-host"] + "/loki/api/v1/push"
 
     basic_auth {
-      username = remote.kubernetes.secret.grafana_cloud_logs.data["loki-username"]
-      password = remote.kubernetes.secret.grafana_cloud_logs.data["loki-password"]
+      username = remote.kubernetes.secret.grafana_cloud.data["loki-username"]
+      password = remote.kubernetes.secret.grafana_cloud.data["loki-password"]
     }
   }
 }
@@ -41,7 +41,7 @@ logging {
   level  = "info"
   format = "logfmt"
 }
-remote.kubernetes.secret "grafana_cloud_logs" {
+remote.kubernetes.secret "grafana_cloud" {
   namespace = "default"
   name = "grafana-cloud-credentials"
 }

@@ -110,6 +110,11 @@
 
   {{- if .Values.extraConfig }}
     {{- tpl .Values.extraConfig $ | indent 0 }}
+  {{- else if .Values.metrics.extraConfig }}
+    {{- tpl .Values.metrics.extraConfig $ | indent 0 }}
+  {{- end }}
+  {{- if .Values.global.extraConfig }}
+    {{- tpl .Values.global.extraConfig $ | indent 0 }}
   {{- end }}
 {{- end -}}
 
@@ -122,6 +127,9 @@
 
   {{- if .Values.logs.cluster_events.extraConfig }}
     {{- tpl .Values.logs.cluster_events.extraConfig $ | indent 0 }}
+  {{- end }}
+  {{- if .Values.global.extraConfig }}
+    {{- tpl .Values.global.extraConfig $ | indent 0 }}
   {{- end }}
 {{- end -}}
 
@@ -136,6 +144,9 @@
 
   {{- if .Values.logs.extraConfig }}
     {{- tpl .Values.logs.extraConfig $ | indent 0 }}
+  {{- end }}
+  {{- if .Values.global.extraConfig }}
+    {{- tpl .Values.global.extraConfig $ | indent 0 }}
   {{- end }}
 {{- end -}}
 
@@ -159,5 +170,8 @@
 
   {{- if .Values.profiles.extraConfig }}
     {{- tpl .Values.profiles.extraConfig $ | indent 0 }}
+  {{- end }}
+  {{- if .Values.global.extraConfig }}
+    {{- tpl .Values.global.extraConfig $ | indent 0 }}
   {{- end }}
 {{- end -}}

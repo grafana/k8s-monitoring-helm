@@ -769,11 +769,11 @@ pyroscope.scrape "pyroscope_scrape_fgprof" {
 // Pyroscope
 pyroscope.write "profiles_service" {
   endpoint {
-    url = remote.kubernetes.secret.grafana_cloud_profiles.data["pyroscope-host"]
+    url = remote.kubernetes.secret.grafana_cloud.data["pyroscope-host"]
 
     basic_auth {
-      username = remote.kubernetes.secret.grafana_cloud_profiles.data["pyroscope-username"]
-      password = remote.kubernetes.secret.grafana_cloud_profiles.data["pyroscope-password"]
+      username = remote.kubernetes.secret.grafana_cloud.data["pyroscope-username"]
+      password = remote.kubernetes.secret.grafana_cloud.data["pyroscope-password"]
     }
   }
   external_labels = {
@@ -785,7 +785,7 @@ logging {
   level  = "info"
   format = "logfmt"
 }
-remote.kubernetes.secret "grafana_cloud_profiles" {
+remote.kubernetes.secret "grafana_cloud" {
   namespace = "default"
   name = "grafana-cloud-credentials"
 }

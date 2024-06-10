@@ -882,11 +882,11 @@ data:
     
     prometheus.remote_write "metrics_service" {
       endpoint {
-        url = remote.kubernetes.secret.grafana_cloud_metrics.data["prometheus-host"] + "/api/prom/push"
+        url = remote.kubernetes.secret.grafana_cloud.data["prometheus-host"] + "/api/prom/push"
     
         basic_auth {
-          username = remote.kubernetes.secret.grafana_cloud_metrics.data["prometheus-username"]
-          password = remote.kubernetes.secret.grafana_cloud_metrics.data["prometheus-password"]
+          username = remote.kubernetes.secret.grafana_cloud.data["prometheus-username"]
+          password = remote.kubernetes.secret.grafana_cloud.data["prometheus-password"]
         }
     
         send_native_histograms = false
@@ -968,11 +968,11 @@ data:
     // Loki
     loki.write "logs_service" {
       endpoint {
-        url = remote.kubernetes.secret.grafana_cloud_logs.data["loki-host"] + "/loki/api/v1/push"
+        url = remote.kubernetes.secret.grafana_cloud.data["loki-host"] + "/loki/api/v1/push"
     
         basic_auth {
-          username = remote.kubernetes.secret.grafana_cloud_logs.data["loki-username"]
-          password = remote.kubernetes.secret.grafana_cloud_logs.data["loki-password"]
+          username = remote.kubernetes.secret.grafana_cloud.data["loki-username"]
+          password = remote.kubernetes.secret.grafana_cloud.data["loki-password"]
         }
       }
     }
@@ -981,30 +981,23 @@ data:
     // Tempo
     
     otelcol.auth.basic "traces_service" {
-      username = remote.kubernetes.secret.grafana_cloud_traces.data["tempo-username"]
-      password = remote.kubernetes.secret.grafana_cloud_traces.data["tempo-password"]
+      username = remote.kubernetes.secret.grafana_cloud.data["tempo-username"]
+      password = remote.kubernetes.secret.grafana_cloud.data["tempo-password"]
     }
     
     otelcol.exporter.otlp "traces_service" {
       client {
-        endpoint = remote.kubernetes.secret.grafana_cloud_traces.data["tempo-host"]
+        endpoint = remote.kubernetes.secret.grafana_cloud.data["tempo-host"]
     
         auth = otelcol.auth.basic.traces_service.handler
       }
     }
-    remote.kubernetes.secret "grafana_cloud_traces" {
-      namespace = "default"
-      name = "grafana-cloud-credentials"
-    }
+    
     logging {
       level  = "info"
       format = "logfmt"
     }
-    remote.kubernetes.secret "grafana_cloud_metrics" {
-      namespace = "default"
-      name = "grafana-cloud-credentials"
-    }
-    remote.kubernetes.secret "grafana_cloud_logs" {
+    remote.kubernetes.secret "grafana_cloud" {
       namespace = "default"
       name = "grafana-cloud-credentials"
     }
@@ -1046,11 +1039,11 @@ data:
     // Loki
     loki.write "logs_service" {
       endpoint {
-        url = remote.kubernetes.secret.grafana_cloud_logs.data["loki-host"] + "/loki/api/v1/push"
+        url = remote.kubernetes.secret.grafana_cloud.data["loki-host"] + "/loki/api/v1/push"
     
         basic_auth {
-          username = remote.kubernetes.secret.grafana_cloud_logs.data["loki-username"]
-          password = remote.kubernetes.secret.grafana_cloud_logs.data["loki-password"]
+          username = remote.kubernetes.secret.grafana_cloud.data["loki-username"]
+          password = remote.kubernetes.secret.grafana_cloud.data["loki-password"]
         }
       }
     }
@@ -1060,7 +1053,7 @@ data:
       level  = "info"
       format = "logfmt"
     }
-    remote.kubernetes.secret "grafana_cloud_logs" {
+    remote.kubernetes.secret "grafana_cloud" {
       namespace = "default"
       name = "grafana-cloud-credentials"
     }
@@ -1209,11 +1202,11 @@ data:
     // Loki
     loki.write "logs_service" {
       endpoint {
-        url = remote.kubernetes.secret.grafana_cloud_logs.data["loki-host"] + "/loki/api/v1/push"
+        url = remote.kubernetes.secret.grafana_cloud.data["loki-host"] + "/loki/api/v1/push"
     
         basic_auth {
-          username = remote.kubernetes.secret.grafana_cloud_logs.data["loki-username"]
-          password = remote.kubernetes.secret.grafana_cloud_logs.data["loki-password"]
+          username = remote.kubernetes.secret.grafana_cloud.data["loki-username"]
+          password = remote.kubernetes.secret.grafana_cloud.data["loki-password"]
         }
       }
     }
@@ -1223,7 +1216,7 @@ data:
       level  = "info"
       format = "logfmt"
     }
-    remote.kubernetes.secret "grafana_cloud_logs" {
+    remote.kubernetes.secret "grafana_cloud" {
       namespace = "default"
       name = "grafana-cloud-credentials"
     }
@@ -2034,11 +2027,11 @@ data:
     // Pyroscope
     pyroscope.write "profiles_service" {
       endpoint {
-        url = remote.kubernetes.secret.grafana_cloud_profiles.data["pyroscope-host"]
+        url = remote.kubernetes.secret.grafana_cloud.data["pyroscope-host"]
     
         basic_auth {
-          username = remote.kubernetes.secret.grafana_cloud_profiles.data["pyroscope-username"]
-          password = remote.kubernetes.secret.grafana_cloud_profiles.data["pyroscope-password"]
+          username = remote.kubernetes.secret.grafana_cloud.data["pyroscope-username"]
+          password = remote.kubernetes.secret.grafana_cloud.data["pyroscope-password"]
         }
       }
       external_labels = {
@@ -2050,7 +2043,7 @@ data:
       level  = "info"
       format = "logfmt"
     }
-    remote.kubernetes.secret "grafana_cloud_profiles" {
+    remote.kubernetes.secret "grafana_cloud" {
       namespace = "default"
       name = "grafana-cloud-credentials"
     }
@@ -2065,7 +2058,7 @@ data:
   metrics.prom: |
     # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart as well as a summary of enabled features
     # TYPE grafana_kubernetes_monitoring_build_info gauge
-    grafana_kubernetes_monitoring_build_info{version="1.0.13", namespace="default", metrics="enabled,alloy,autoDiscover,kube-state-metrics,node-exporter,kubelet,cadvisor,cost,extraConfig", logs="enabled,events,pod_logs,journal,extraConfig", traces="enabled", deployments="kube-state-metrics,prometheus-node-exporter,prometheus-operator-crds,opencost"} 1
+    grafana_kubernetes_monitoring_build_info{version="1.0.13", namespace="default", metrics="enabled,alloy,autoDiscover,kube-state-metrics,node-exporter,kubelet,cadvisor,cost", logs="enabled,events,pod_logs,journal", traces="enabled", deployments="kube-state-metrics,prometheus-node-exporter,prometheus-operator-crds,opencost"} 1
 ---
 # Source: k8s-monitoring/charts/prometheus-operator-crds/charts/crds/templates/crd-alertmanagerconfigs.yaml
 apiVersion: apiextensions.k8s.io/v1
@@ -54423,11 +54416,11 @@ data:
     
     prometheus.remote_write "metrics_service" {
       endpoint {
-        url = remote.kubernetes.secret.grafana_cloud_metrics.data["prometheus-host"] + "/api/prom/push"
+        url = remote.kubernetes.secret.grafana_cloud.data["prometheus-host"] + "/api/prom/push"
     
         basic_auth {
-          username = remote.kubernetes.secret.grafana_cloud_metrics.data["prometheus-username"]
-          password = remote.kubernetes.secret.grafana_cloud_metrics.data["prometheus-password"]
+          username = remote.kubernetes.secret.grafana_cloud.data["prometheus-username"]
+          password = remote.kubernetes.secret.grafana_cloud.data["prometheus-password"]
         }
     
         send_native_histograms = false
@@ -54509,11 +54502,11 @@ data:
     // Loki
     loki.write "logs_service" {
       endpoint {
-        url = remote.kubernetes.secret.grafana_cloud_logs.data["loki-host"] + "/loki/api/v1/push"
+        url = remote.kubernetes.secret.grafana_cloud.data["loki-host"] + "/loki/api/v1/push"
     
         basic_auth {
-          username = remote.kubernetes.secret.grafana_cloud_logs.data["loki-username"]
-          password = remote.kubernetes.secret.grafana_cloud_logs.data["loki-password"]
+          username = remote.kubernetes.secret.grafana_cloud.data["loki-username"]
+          password = remote.kubernetes.secret.grafana_cloud.data["loki-password"]
         }
       }
     }
@@ -54522,30 +54515,23 @@ data:
     // Tempo
     
     otelcol.auth.basic "traces_service" {
-      username = remote.kubernetes.secret.grafana_cloud_traces.data["tempo-username"]
-      password = remote.kubernetes.secret.grafana_cloud_traces.data["tempo-password"]
+      username = remote.kubernetes.secret.grafana_cloud.data["tempo-username"]
+      password = remote.kubernetes.secret.grafana_cloud.data["tempo-password"]
     }
     
     otelcol.exporter.otlp "traces_service" {
       client {
-        endpoint = remote.kubernetes.secret.grafana_cloud_traces.data["tempo-host"]
+        endpoint = remote.kubernetes.secret.grafana_cloud.data["tempo-host"]
     
         auth = otelcol.auth.basic.traces_service.handler
       }
     }
-    remote.kubernetes.secret "grafana_cloud_traces" {
-      namespace = "default"
-      name = "grafana-cloud-credentials"
-    }
+    
     logging {
       level  = "info"
       format = "logfmt"
     }
-    remote.kubernetes.secret "grafana_cloud_metrics" {
-      namespace = "default"
-      name = "grafana-cloud-credentials"
-    }
-    remote.kubernetes.secret "grafana_cloud_logs" {
+    remote.kubernetes.secret "grafana_cloud" {
       namespace = "default"
       name = "grafana-cloud-credentials"
     }
@@ -54579,11 +54565,11 @@ data:
     // Loki
     loki.write "logs_service" {
       endpoint {
-        url = remote.kubernetes.secret.grafana_cloud_logs.data["loki-host"] + "/loki/api/v1/push"
+        url = remote.kubernetes.secret.grafana_cloud.data["loki-host"] + "/loki/api/v1/push"
     
         basic_auth {
-          username = remote.kubernetes.secret.grafana_cloud_logs.data["loki-username"]
-          password = remote.kubernetes.secret.grafana_cloud_logs.data["loki-password"]
+          username = remote.kubernetes.secret.grafana_cloud.data["loki-username"]
+          password = remote.kubernetes.secret.grafana_cloud.data["loki-password"]
         }
       }
     }
@@ -54593,7 +54579,7 @@ data:
       level  = "info"
       format = "logfmt"
     }
-    remote.kubernetes.secret "grafana_cloud_logs" {
+    remote.kubernetes.secret "grafana_cloud" {
       namespace = "default"
       name = "grafana-cloud-credentials"
     }
@@ -54734,11 +54720,11 @@ data:
     // Loki
     loki.write "logs_service" {
       endpoint {
-        url = remote.kubernetes.secret.grafana_cloud_logs.data["loki-host"] + "/loki/api/v1/push"
+        url = remote.kubernetes.secret.grafana_cloud.data["loki-host"] + "/loki/api/v1/push"
     
         basic_auth {
-          username = remote.kubernetes.secret.grafana_cloud_logs.data["loki-username"]
-          password = remote.kubernetes.secret.grafana_cloud_logs.data["loki-password"]
+          username = remote.kubernetes.secret.grafana_cloud.data["loki-username"]
+          password = remote.kubernetes.secret.grafana_cloud.data["loki-password"]
         }
       }
     }
@@ -54748,7 +54734,7 @@ data:
       level  = "info"
       format = "logfmt"
     }
-    remote.kubernetes.secret "grafana_cloud_logs" {
+    remote.kubernetes.secret "grafana_cloud" {
       namespace = "default"
       name = "grafana-cloud-credentials"
     }
@@ -55524,11 +55510,11 @@ data:
     // Pyroscope
     pyroscope.write "profiles_service" {
       endpoint {
-        url = remote.kubernetes.secret.grafana_cloud_profiles.data["pyroscope-host"]
+        url = remote.kubernetes.secret.grafana_cloud.data["pyroscope-host"]
     
         basic_auth {
-          username = remote.kubernetes.secret.grafana_cloud_profiles.data["pyroscope-username"]
-          password = remote.kubernetes.secret.grafana_cloud_profiles.data["pyroscope-password"]
+          username = remote.kubernetes.secret.grafana_cloud.data["pyroscope-username"]
+          password = remote.kubernetes.secret.grafana_cloud.data["pyroscope-password"]
         }
       }
       external_labels = {
@@ -55540,7 +55526,7 @@ data:
       level  = "info"
       format = "logfmt"
     }
-    remote.kubernetes.secret "grafana_cloud_profiles" {
+    remote.kubernetes.secret "grafana_cloud" {
       namespace = "default"
       name = "grafana-cloud-credentials"
     }
