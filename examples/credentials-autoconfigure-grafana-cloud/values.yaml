@@ -1,0 +1,75 @@
+---
+cluster:
+  name: credentials-from-test
+
+externalServices:
+  prometheus:
+    hostFrom: remote.kubernetes.secret.grafana_cloud.data["prometheus-host"]
+    basicAuth:
+      usernameFrom: remote.kubernetes.secret.grafana_cloud.data["prometheus-username"]
+      passwordFrom: remote.kubernetes.secret.grafana_cloud.data["prometheus-password"]
+    secret:
+      create: false
+  loki:
+    hostFrom: remote.kubernetes.secret.grafana_cloud.data["loki-host"]
+    basicAuth:
+      usernameFrom: remote.kubernetes.secret.grafana_cloud.data["loki-username"]
+      passwordFrom: remote.kubernetes.secret.grafana_cloud.data["loki-password"]
+    secret:
+      create: false
+  tempo:
+    hostFrom: remote.kubernetes.secret.grafana_cloud.data["tempo-host"]
+    basicAuth:
+      usernameFrom: remote.kubernetes.secret.grafana_cloud.data["tempo-username"]
+      passwordFrom: remote.kubernetes.secret.grafana_cloud.data["tempo-password"]
+    secret:
+      create: false
+  pyroscope:
+    hostFrom: remote.kubernetes.secret.grafana_cloud.data["pyroscope-host"]
+    basicAuth:
+      usernameFrom: remote.kubernetes.secret.grafana_cloud.data["pyroscope-username"]
+      passwordFrom: remote.kubernetes.secret.grafana_cloud.data["pyroscope-password"]
+    secret:
+      create: false
+
+global:
+  extraConfig: |-
+    remote.kubernetes.secret "grafana_cloud" {
+      namespace = "default"
+      name = "grafana-cloud-credentials"
+    }
+
+logs:
+  enabled: true
+  pod_logs:
+    enabled: true
+  cluster_events:
+    enabled: true
+  journal:
+    enabled: true
+
+traces:
+  enabled: true
+
+profiles:
+  enabled: true
+
+extraObjects:
+  - apiVersion: v1
+    kind: Secret
+    metadata:
+      name: grafana-cloud-credentials
+    type: Opaque
+    data:
+      prometheus-host: aHR0cHM6Ly9wcm9tZXRoZXVzLmV4YW1wbGUuY29t
+      prometheus-username: MTIzNDU=
+      prometheus-password: SXQncyBhIHNlY3JldCB0byBldmVyeW9uZQ==
+      loki-host: aHR0cHM6Ly9sb2tpLmV4YW1wbGUuY29t
+      loki-username: MTIzNDU=
+      loki-password: SXQncyBhIHNlY3JldCB0byBldmVyeW9uZQ==
+      tempo-host: aHR0cHM6Ly90ZW1wby5leGFtcGxlLmNvbQ==
+      tempo-username: MTIzNDU=
+      tempo-password: SXQncyBhIHNlY3JldCB0byBldmVyeW9uZQ==
+      pyroscope-host: aHR0cHM6Ly9weXJvc2NvcGUuZXhhbXBsZS5jb20=
+      pyroscope-username: MTIzNDU=
+      pyroscope-password: SXQncyBhIHNlY3JldCB0byBldmVyeW9uZQ==

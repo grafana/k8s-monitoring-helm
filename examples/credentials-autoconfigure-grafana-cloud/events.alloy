@@ -1,0 +1,47 @@
+// Cluster Events
+loki.source.kubernetes_events "cluster_events" {
+  job_name   = "integrations/kubernetes/eventhandler"
+  log_format = "logfmt"
+  forward_to = [
+    loki.process.cluster_events.receiver,
+  ]
+}
+
+loki.process "cluster_events" {
+  forward_to = [
+    loki.process.logs_service.receiver,
+  ]
+}
+
+// Logs Service
+
+loki.process "logs_service" {
+  stage.static_labels {
+      values = {
+        cluster = "credentials-from-test",
+      }
+  }
+  forward_to = [loki.write.logs_service.receiver]
+}
+
+// Loki
+loki.write "logs_service" {
+  endpoint {
+    url = remote.kubernetes.secret.grafana_cloud.data["loki-host"] + "/loki/api/v1/push"
+
+    basic_auth {
+      username = remote.kubernetes.secret.grafana_cloud.data["loki-username"]
+      password = remote.kubernetes.secret.grafana_cloud.data["loki-password"]
+    }
+  }
+}
+
+
+logging {
+  level  = "info"
+  format = "logfmt"
+}
+remote.kubernetes.secret "grafana_cloud" {
+  namespace = "default"
+  name = "grafana-cloud-credentials"
+}
