@@ -245,15 +245,10 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | externalServices.loki.secret.name | string | `""` | The name of the secret. |
 | externalServices.loki.secret.namespace | string | `""` | The namespace of the secret. |
 | externalServices.loki.tenantId | string | `""` | Loki tenant ID |
+| externalServices.loki.tenantIdFrom | string | `""` | Sets the `X-Scope-OrgID` header when sending logs, set from an remote.* component, environment variable, or some other |
 | externalServices.loki.tenantIdKey | string | `"tenantId"` | The key for the tenant ID property in the secret |
 | externalServices.loki.tls | object | `{}` | [TLS settings](https://grafana.com/docs/alloy/latest/reference/components/loki.write/#tls_config-block) to configure for the logs service. |
 | externalServices.loki.writeEndpoint | string | `"/loki/api/v1/push"` | Loki logs write endpoint. |
-
-### External Services (Loki), set from an remote.* component, environment variable, or some other
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| externalServices.loki.tenantIdFrom | string | `""` | Sets the `X-Scope-OrgID` header when sending logs |
 
 ### External Services (Prometheus)
 
@@ -294,6 +289,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | externalServices.prometheus.secret.namespace | string | `""` | The namespace of the secret. Only used if secret.create = "false" |
 | externalServices.prometheus.sendNativeHistograms | bool | `false` | Whether native histograms should be sent. Only applies when protocol is "remote_write". |
 | externalServices.prometheus.tenantId | string | `""` | Sets the `X-Scope-OrgID` header when sending metrics |
+| externalServices.prometheus.tenantIdFrom | string | `""` | Sets the `X-Scope-OrgID` header when sending metrics, set from an remote.* component, environment variable, or some other |
 | externalServices.prometheus.tenantIdKey | string | `"tenantId"` | The key for the tenant ID property in the secret |
 | externalServices.prometheus.tls | object | `{}` | TLS settings to configure for the metrics service, compatible with [remoteWrite protocol](https://grafana.com/docs/alloy/latest/reference/components/prometheus.remote_write/#tls_config-block), [otlp](https://grafana.com/docs/alloy/latest/reference/components/otelcol.exporter.otlp/#tls-block), or [otlphttp](https://grafana.com/docs/alloy/latest/reference/components/otelcol.exporter.otlphttp/#tls-block) protocols |
 | externalServices.prometheus.wal.maxKeepaliveTime | string | `"8h"` | Maximum time to keep data in the WAL before removing it. |
@@ -301,12 +297,6 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | externalServices.prometheus.wal.truncateFrequency | string | `"2h"` | How frequently to clean up the WAL. |
 | externalServices.prometheus.writeEndpoint | string | `"/api/prom/push"` | Prometheus metrics write endpoint. Preset for Grafana Cloud Metrics instances. |
 | externalServices.prometheus.writeRelabelConfigRules | string | `""` | Rule blocks to be added to the [write_relabel_config block](https://grafana.com/docs/alloy/latest/reference/components/prometheus.remote_write/#write_relabel_config-block) of the prometheus.remote_write component. |
-
-### External Services (Prometheus), set from an remote.* component, environment variable, or some other
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| externalServices.prometheus.tenantIdFrom | string | `""` | Sets the `X-Scope-OrgID` header when sending metrics |
 
 ### External Services (Pyroscope)
 
@@ -329,14 +319,9 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | externalServices.pyroscope.secret.name | string | `""` | The name of the secret. |
 | externalServices.pyroscope.secret.namespace | string | `""` | The namespace of the secret. |
 | externalServices.pyroscope.tenantId | string | `""` | Pyroscope tenant ID |
+| externalServices.pyroscope.tenantIdFrom | string | `""` | Sets the `X-Scope-OrgID` header when sending profiles, set from an remote.* component, environment variable, or some other |
 | externalServices.pyroscope.tenantIdKey | string | `"tenantId"` | The key for the tenant ID property in the secret |
 | externalServices.pyroscope.tls | object | `{}` | [TLS settings](https://grafana.com/docs/alloy/latest/reference/components/pyroscope.write/#tls_config-block) to configure for the profiles service. |
-
-### External Services (Pyroscope), set from an remote.* component, environment variable, or some other
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| externalServices.pyroscope.tenantIdFrom | string | `""` | Sets the `X-Scope-OrgID` header when sending profiles |
 
 ### External Services (Tempo)
 
@@ -358,15 +343,10 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | externalServices.tempo.secret.name | string | `""` | The name of the secret. |
 | externalServices.tempo.secret.namespace | string | `""` | The namespace of the secret. |
 | externalServices.tempo.tenantId | string | `""` | Tempo tenant ID |
+| externalServices.tempo.tenantIdFrom | string | `""` | Sets the `X-Scope-OrgID` header when sending traces, set from an remote.* component, environment variable, or some other |
 | externalServices.tempo.tenantIdKey | string | `"tenantId"` | The key for the tenant ID property in the secret |
 | externalServices.tempo.tls | object | `{}` | [TLS settings](https://grafana.com/docs/alloy/latest/reference/components/otelcol.exporter.otlp/#tls-block) to configure for the traces service. |
 | externalServices.tempo.tlsOptions | string | `""` | Define the [TLS block](https://grafana.com/docs/alloy/latest/reference/components/otelcol.exporter.otlp/#tls-block). Example: `tlsOptions: insecure = true` This option will be deprecated and removed soon. Please switch to `tls` and use yaml format. |
-
-### External Services (Tempo), set from an remote.* component, environment variable, or some other
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| externalServices.tempo.tenantIdFrom | string | `""` | Sets the `X-Scope-OrgID` header when sending traces |
 
 ### Metrics Global
 
