@@ -77,6 +77,46 @@ externalServices:
       # @section -- External Services (Prometheus)
       passwordKey: password
 
+    # Configure the Prometheus Remote Write Queue
+    # [docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.remote_write/#queue_config-block)
+    queue_config:
+      # -- Number of samples to buffer per shard.
+      # @default -- 10000
+      # @section -- External Services (Prometheus)
+      capacity: 10000
+      # -- Minimum amount of concurrent shards sending samples to the endpoint.
+      # @default -- 1
+      # @section -- External Services (Prometheus)
+      min_shards: 1
+      # -- Maximum number of concurrent shards sending samples to the endpoint.
+      # @default -- 50
+      # @section -- External Services (Prometheus)
+      max_shards: 50
+      # -- Maximum number of samples per send.
+      # @default -- 2000
+      # @section -- External Services (Prometheus)
+      max_samples_per_send: 2000
+      # -- Maximum time samples will wait in the buffer before sending.
+      # @default -- 5s
+      # @section -- External Services (Prometheus)
+      batch_send_deadline: 5s
+      # -- Initial retry delay. The backoff time gets doubled for each retry.
+      # @default -- 30ms
+      # @section -- External Services (Prometheus)
+      min_backoff: 30ms
+      # -- Maximum retry delay.
+      # @default -- 5s
+      # @section -- External Services (Prometheus)
+      max_backoff: 5s
+      # -- Retry when an HTTP 429 status code is received.
+      # @default -- true
+      # @section -- External Services (Prometheus)
+      retry_on_http_429: true
+      # -- Maximum age of samples to send.
+      # @default -- 0s
+      # @section -- External Services (Prometheus)
+      sample_age_limit: 0s
+
     # Credential management
     secret:
       # -- Should this Helm chart create the secret. If false, you must define the name and namespace values.

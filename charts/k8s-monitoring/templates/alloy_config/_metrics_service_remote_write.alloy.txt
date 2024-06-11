@@ -24,6 +24,18 @@ prometheus.remote_write "metrics_service" {
     }
 {{- end }}
     send_native_histograms = {{ .sendNativeHistograms }}
+
+    queue_config {
+      capacity = {{ .queue_config.capacity }}
+      min_shards = {{ .queue_config.min_shards }}
+      max_shards = {{ .queue_config.max_shards }}
+      max_samples_per_send = {{ .queue_config.max_samples_per_send }}
+      batch_send_deadline = {{ .queue_config.batch_send_deadline | quote }}
+      min_backoff = {{ .queue_config.min_backoff | quote }}
+      max_backoff = {{ .queue_config.max_backoff | quote }}
+      retry_on_http_429 = {{ .queue_config.retry_on_http_429 }}
+      sample_age_limit = {{ .queue_config.sample_age_limit | quote }}
+    }
   }
 
   wal {

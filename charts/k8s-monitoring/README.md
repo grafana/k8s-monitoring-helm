@@ -233,6 +233,15 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | externalServices.prometheus.protocol | string | `"remote_write"` | The type of server protocol for writing metrics. Valid options:  "remote_write" will use Prometheus Remote Write,  "otlp" will use OTLP,  "otlphttp" will use OTLP HTTP |
 | externalServices.prometheus.proxyURL | string | `""` | HTTP proxy to proxy requests to Prometheus through. |
 | externalServices.prometheus.queryEndpoint | string | `"/api/prom/api/v1/query"` | Prometheus metrics query endpoint. Preset for Grafana Cloud Metrics instances. |
+| externalServices.prometheus.queue_config.batch_send_deadline | string | 5s | Maximum time samples will wait in the buffer before sending. |
+| externalServices.prometheus.queue_config.capacity | int | 10000 | Number of samples to buffer per shard. |
+| externalServices.prometheus.queue_config.max_backoff | string | 5s | Maximum retry delay. |
+| externalServices.prometheus.queue_config.max_samples_per_send | int | 2000 | Maximum number of samples per send. |
+| externalServices.prometheus.queue_config.max_shards | int | 50 | Maximum number of concurrent shards sending samples to the endpoint. |
+| externalServices.prometheus.queue_config.min_backoff | string | 30ms | Initial retry delay. The backoff time gets doubled for each retry. |
+| externalServices.prometheus.queue_config.min_shards | int | 1 | Minimum amount of concurrent shards sending samples to the endpoint. |
+| externalServices.prometheus.queue_config.retry_on_http_429 | bool | true | Retry when an HTTP 429 status code is received. |
+| externalServices.prometheus.queue_config.sample_age_limit | string | 0s | Maximum age of samples to send. |
 | externalServices.prometheus.secret.create | bool | `true` | Should this Helm chart create the secret. If false, you must define the name and namespace values. |
 | externalServices.prometheus.secret.name | string | `""` | The name of the secret. |
 | externalServices.prometheus.secret.namespace | string | `""` | The namespace of the secret. Only used if secret.create = "false" |
