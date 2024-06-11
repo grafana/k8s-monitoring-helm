@@ -19,6 +19,13 @@ otelcol.processor.attributes "metrics_service" {
     action = "upsert"
   }
   {{- end }}
+  {{- range $key, $value := .externalLabelsFrom }}
+  action {
+    key = {{ $key | quote }}
+    value = {{ $value }}
+    action = "upsert"
+  }
+  {{- end }}
   output {
     metrics = [otelcol.processor.batch.metrics_service.input]
   }

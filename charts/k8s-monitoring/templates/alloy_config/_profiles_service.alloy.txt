@@ -28,6 +28,9 @@ pyroscope.write "profiles_service" {
   {{- range $key, $value := .externalLabels }}
     {{ $key }} = {{ $value | quote }},
   {{- end }}
+  {{- range $key, $value := .externalLabelsFrom }}
+    {{ $key }} = {{ $value }},
+  {{- end }}
 {{- end }}
     cluster = {{ required ".Values.cluster.name is a required value. Please set it and try again." .Values.cluster.name | quote }},
   }

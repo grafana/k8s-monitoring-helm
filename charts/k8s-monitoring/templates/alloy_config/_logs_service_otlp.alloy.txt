@@ -19,6 +19,13 @@ otelcol.processor.attributes "logs_service" {
     action = "upsert"
   }
   {{- end }}
+  {{- range $key, $value := .externalLabelsFrom }}
+  action {
+    key = {{ $key | quote }}
+    value = {{ $value }}
+    action = "upsert"
+  }
+  {{- end }}
   output {
     logs = [otelcol.processor.batch.logs_service.input]
   }

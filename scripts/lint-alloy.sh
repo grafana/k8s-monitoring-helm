@@ -55,7 +55,7 @@ do
   fmt_output=$(alloy fmt "${file}" 2>&1)
   currentCode="$?"
   fmt_output=$(echo "${fmt_output}" | grep -v "Error: encountered errors during formatting")
-
+  run_output=""
   # Attempt to run with the config file.
   run_code=0
   file_is_empty=$(grep -cve '^\s*$' "${file}" || true)
@@ -88,8 +88,8 @@ do
         # Process each line here
         line=$(echo "${row}" | awk -F ':' '{print $2}')
         column=$(echo "${row}" | awk -F ':' '{print $3}')
-        error=$(echo "${row}" | cut -d':' -f4- | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' | sed -e 's/"/\&quot;/g' | xargs)
-        checkstyle="${checkstyle}<error line=\"${line}\" column=\"${column}\" severity=\"error\" fmt_output=\"${error}\" source=\"alloy\"/>"
+        error=$(echo "${row}" | cut -d':' -f4- | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' | sed -e 's/"/\&quot;/g' | xargs || true)
+        checkstyle="${checkstyle}<error line=\"${line}\" column=\"${column}\" severity=\"error\" message=\"${error}\" source=\"alloy\"/>"
         # output to console only if the format is console
         if [[ "${FORMAT}" == "console" ]]; then
           echo "  - ${row}"
@@ -99,11 +99,20 @@ do
 
     # output alloy run errors
     if [[ "${run_code}" != 0 ]]; then
-      checkstyle="${checkstyle}<error line=\"0\" column=\"0\" severity=\"error\" fmt_output=\"Config failed alloy run\" source=\"alloy\"/>"
-      # output to console only if the format is console
-      if [[ "${FORMAT}" == "console" ]]; then
-        echo "  - ${row}"
-      fi
+      # loop each found issue
+      while IFS= read -r row; do
+        if [[ "${row}" =~ "Error: " ]]; then
+          # Process each line here
+          line=$(echo "${row}" | awk -F ':' '{print $2}')
+          column=$(echo "${row}" | awk -F ':' '{print $3}')
+          error=$(echo "${row}" | cut -d':' -f5- | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' | sed -e 's/"/\&quot;/g' | xargs || true)
+          checkstyle="${checkstyle}<error line=\"${line}\" column=\"${column}\" severity=\"error\" message=\"${error}\" source=\"alloy\"/>"
+          # output to console only if the format is console
+          if [[ "${FORMAT}" == "console" ]]; then
+            echo "  - ${row}"
+          fi
+        fi
+      done <<< "${run_output}"
     fi
 
     checkstyle="${checkstyle}</file>"

@@ -22,11 +22,18 @@ loki.write "logs_service" {
     }
 {{- end }}
   }
-{{- if .externalLabels }}
+{{- if or .externalLabels .externalLabelsFrom }}
   external_labels = {
+{{- if .externalLabels }}
     {{- range $k, $v := .externalLabels }}
     {{ $k }} = {{ $v | quote }},
     {{- end }}
+{{- end }}
+{{- if .externalLabelsFrom }}
+    {{- range $k, $v := .externalLabelsFrom }}
+    {{ $k }} = {{ $v }},
+    {{- end }}
+{{- end }}
   }
 {{- end }}
 {{- end }}

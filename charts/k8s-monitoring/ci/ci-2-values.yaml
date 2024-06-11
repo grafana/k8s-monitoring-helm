@@ -22,6 +22,8 @@ externalServices:
       insecure_skip_verify: true
     externalLabels:
       color: blue
+    externalLabelsFrom:
+      magic_word: env("MAGIC_WORD")
   loki:
     host: http://loki-otlp-interface.loki.svc:4318
     tenantId: 1
@@ -95,6 +97,12 @@ test:
       expect:
         value: 1
         operator: "<="  # There's gotta be at least one pod
+    # check that externalLabelsFrom is working
+    - query: "count(alloy_build_info{magic_word=\"abracadabra\"})"
+      type: promql
+      expect:
+        value: 1
+        operator: "<="
 
     # Check for cluster events
     - query: "count_over_time({cluster=\"ci-test-cluster-2\", job=\"integrations/kubernetes/eventhandler\", color=\"red\"}[1h])"
@@ -143,6 +151,10 @@ opencost:
         url: https://prometheus-server.prometheus.svc.cluster.local:9090
 
 alloy:
+  alloy:
+    extraEnv:
+      - name: MAGIC_WORD
+        value: abracadabra
   controller:
     replicas: 2
     podLabels:
