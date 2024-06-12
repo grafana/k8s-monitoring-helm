@@ -144,3 +144,11 @@
   {{- include "alloy.config.profilesService" . }}
   {{- include "alloy.config.logging" (index .Values "alloy-profiles").logging }}
 {{- end -}}
+
+{{/* Grafana Alloy for Rules config */}}
+{{- define "alloyRulesConfig" -}}
+  {{- include "alloy.config.rulesMimir" . }}
+  {{- include "alloy.config.rulesLoki" . }}
+
+  {{- include "alloy.config.logging" (index .Values "alloy-rules").logging }}
+{{- end -}}
