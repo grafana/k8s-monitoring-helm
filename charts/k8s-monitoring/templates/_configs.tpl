@@ -84,7 +84,7 @@
     {{- include "alloy.config.metricsService" . }}
   {{- end }}
 
-  {{- if and .Values.logs.enabled (or .Values.logs.podLogsObjects.enabled .Values.receivers.grpc.enabled .Values.receivers.http.enabled) }}
+  {{- if .Values.logs.enabled }}
     {{- if .Values.logs.podLogsObjects.enabled }}
       {{- include "alloy.config.pod_log_objects" . }}
     {{- end }}
