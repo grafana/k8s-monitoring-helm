@@ -313,7 +313,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | kube-state-metrics.enabled | bool | `true` | Should this helm chart deploy Kube State Metrics to the cluster. Set this to false if your cluster already has Kube State Metrics, or if you do not want to scrape metrics from Kube State Metrics. |
 | opencost.enabled | bool | `true` | Should this Helm chart deploy OpenCost to the cluster. Set this to false if your cluster already has OpenCost, or if you do not want to scrape metrics from OpenCost. |
 | opencost.opencost.prometheus.existingSecretName | string | `"prometheus-k8s-monitoring"` | The name of the secret containing the username and password for the metrics service. This must be in the same namespace as the OpenCost deployment. |
-| opencost.opencost.prometheus.external.url | string | `"https://prom.example.com/api/prom"` | The URL for Prometheus queries. It should match externalService.prometheus.host + "/api/prom" |
+| opencost.opencost.prometheus.external.url | string | `"https://prom.example.com/api/prom"` | The URL for Prometheus queries. It should match externalServices.prometheus.host + "/api/prom" |
 | opencost.opencost.prometheus.password_key | string | `"password"` | The key for the password property in the secret. |
 | opencost.opencost.prometheus.username_key | string | `"username"` | The key for the username property in the secret. |
 | prometheus-node-exporter.enabled | bool | `true` | Should this helm chart deploy Node Exporter to the cluster. Set this to false if your cluster already has Node Exporter, or if you do not want to scrape metrics from Node Exporter. |
@@ -760,8 +760,8 @@ useful ones like these:
 -   `discovery.kubernetes.nodes` - Discovers all nodes in the cluster
 -   `discovery.kubernetes.pods` - Discovers all pods in the cluster
 -   `discovery.kubernetes.services` - Discovers all services in the cluster
--   `prometheus.relabel.metrics_service` - Sends metrics to the metrics service defined by `.externalService.prometheus`
--   `loki.process.logs_service` - Sends logs to the logs service defined by `.externalService.loki`
+-   `prometheus.relabel.metrics_service` - Sends metrics to the metrics service defined by `.externalServices.prometheus`
+-   `loki.process.logs_service` - Sends logs to the logs service defined by `.externalServices.loki`
 
 Example:
 
