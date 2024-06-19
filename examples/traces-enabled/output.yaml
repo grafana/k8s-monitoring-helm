@@ -157,16 +157,14 @@ data:
     
     // OTLP Receivers
     otelcol.receiver.otlp "receiver" {
-      debug_metrics {
-        disable_high_cardinality_metrics = true
-      }
-    
       grpc {
         endpoint = "0.0.0.0:4317"
       }
-    
       http {
         endpoint = "0.0.0.0:4318"
+      }
+      debug_metrics {
+        disable_high_cardinality_metrics = true
       }
       output {
         metrics = [otelcol.processor.resourcedetection.default.input]
@@ -181,24 +179,19 @@ data:
         grpc {
           endpoint = "0.0.0.0:14250"
         }
-    
         thrift_binary {
           endpoint = "0.0.0.0:6832"
         }
-    
         thrift_compact {
           endpoint = "0.0.0.0:6831"
         }
-    
         thrift_http {
           endpoint = "0.0.0.0:14268"
         }
       }
-    
       debug_metrics {
         disable_high_cardinality_metrics = true
       }
-    
       output {
         traces = [otelcol.processor.k8sattributes.default.input]
       }
@@ -206,11 +199,15 @@ data:
     
     // Zipkin Receiver
     otelcol.receiver.zipkin "receiver" {
+      endpoint = "0.0.0.0:9411"
+      tls = {
+        ca_pem = "-----BEGIN CERTIFICATE-----\nExample CA certificate\n-----END CERTIFICATE-----\n"
+        cert_pem = "-----BEGIN CERTIFICATE-----\nExample server certificate\n-----END CERTIFICATE-----\n"
+        key_pem = "-----BEGIN CERTIFICATE-----\nExample server key\n-----END CERTIFICATE-----\n"
+      }
       debug_metrics {
         disable_high_cardinality_metrics = true
       }
-    
-    endpoint = "0.0.0.0:9411"
       output {
         traces = [otelcol.processor.k8sattributes.default.input]
       }
@@ -52708,16 +52705,14 @@ data:
     
     // OTLP Receivers
     otelcol.receiver.otlp "receiver" {
-      debug_metrics {
-        disable_high_cardinality_metrics = true
-      }
-    
       grpc {
         endpoint = "0.0.0.0:4317"
       }
-    
       http {
         endpoint = "0.0.0.0:4318"
+      }
+      debug_metrics {
+        disable_high_cardinality_metrics = true
       }
       output {
         metrics = [otelcol.processor.resourcedetection.default.input]
@@ -52732,24 +52727,19 @@ data:
         grpc {
           endpoint = "0.0.0.0:14250"
         }
-    
         thrift_binary {
           endpoint = "0.0.0.0:6832"
         }
-    
         thrift_compact {
           endpoint = "0.0.0.0:6831"
         }
-    
         thrift_http {
           endpoint = "0.0.0.0:14268"
         }
       }
-    
       debug_metrics {
         disable_high_cardinality_metrics = true
       }
-    
       output {
         traces = [otelcol.processor.k8sattributes.default.input]
       }
@@ -52757,11 +52747,15 @@ data:
     
     // Zipkin Receiver
     otelcol.receiver.zipkin "receiver" {
+      endpoint = "0.0.0.0:9411"
+      tls = {
+        ca_pem = "-----BEGIN CERTIFICATE-----\nExample CA certificate\n-----END CERTIFICATE-----\n"
+        cert_pem = "-----BEGIN CERTIFICATE-----\nExample server certificate\n-----END CERTIFICATE-----\n"
+        key_pem = "-----BEGIN CERTIFICATE-----\nExample server key\n-----END CERTIFICATE-----\n"
+      }
       debug_metrics {
         disable_high_cardinality_metrics = true
       }
-    
-    endpoint = "0.0.0.0:9411"
       output {
         traces = [otelcol.processor.k8sattributes.default.input]
       }
