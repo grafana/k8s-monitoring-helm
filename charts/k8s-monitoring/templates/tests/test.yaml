@@ -80,6 +80,9 @@ metadata:
     {{ $key }}: {{ $val | quote }}
     {{- end}}
 spec:
+  {{- if .Values.configAnalysis.serviceAccount.name }}
+  serviceAccountName: {{ .Values.configAnalysis.serviceAccount.name }}
+  {{- end }}
   {{- if or .Values.global.image.pullSecrets .Values.configAnalysis.image.pullSecrets }}
   imagePullSecrets:
     {{- if .Values.global.image.pullSecrets }}
@@ -147,6 +150,9 @@ spec:
         {{- . | toYaml | nindent 8 }}
       {{- end }}
     spec:
+      {{- if .Values.test.serviceAccount.name }}
+      serviceAccountName: {{ .Values.test.serviceAccount.name }}
+      {{- end }}
       {{- if or .Values.global.image.pullSecrets .Values.test.image.pullSecrets }}
       imagePullSecrets:
         {{- if .Values.global.image.pullSecrets }}

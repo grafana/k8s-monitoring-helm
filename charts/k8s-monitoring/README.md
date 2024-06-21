@@ -169,6 +169,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | configAnalysis.image.registry | string | `"ghcr.io"` | Config Analysis image registry. |
 | configAnalysis.image.tag | string | `""` | Config Analysis image tag. Default is the chart version. |
 | configAnalysis.nodeSelector | object | `{"kubernetes.io/os":"linux"}` | nodeSelector to apply to the config analysis pod. |
+| configAnalysis.serviceAccount | object | `{"name":""}` | Service Account to use for the config analysis pod. |
 | configAnalysis.tolerations | list | `[]` | Tolerations to apply to the config analysis pod. |
 
 ### Config Validator Job
@@ -179,6 +180,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | configValidator.extraAnnotations | object | `{}` | Extra annotations to add to the test config validator job. |
 | configValidator.extraLabels | object | `{}` | Extra labels to add to the test config validator job. |
 | configValidator.nodeSelector | object | `{"kubernetes.io/os":"linux"}` | nodeSelector to apply to the config validator job. |
+| configValidator.serviceAccount | object | `{"name":""}` | Service Account to use for the config validator job. |
 | configValidator.tolerations | list | `[]` | Tolerations to apply to the config validator job. |
 
 ### External Services (Loki)
@@ -734,6 +736,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | test.image.registry | string | `"ghcr.io"` | Test job image registry. |
 | test.image.tag | string | `""` | Test job image tag. Default is the chart version. |
 | test.nodeSelector | object | `{"kubernetes.io/os":"linux"}` | nodeSelector to apply to the test job. |
+| test.serviceAccount | object | `{"name":""}` | Service Account to use for the test job. |
 | test.tolerations | list | `[]` | Tolerations to apply to the test job. |
 
 ### Traces
