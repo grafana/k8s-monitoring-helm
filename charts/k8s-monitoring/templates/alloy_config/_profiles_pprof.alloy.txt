@@ -1,5 +1,6 @@
 {{ define "alloy.config.profilesPprof" }}
 // Profiles
+{{- $allProfileTypes := list "memory" "block" "goroutine" "mutex" "cpu" "fgprof" "godeltaprof_memory"  "godeltaprof_mutex"  "godeltaprof_block" }}
 {{- if .Values.profiles.pprof.enabled }}
 discovery.kubernetes "pprof_pods" {
   selectors {
@@ -50,7 +51,6 @@ discovery.relabel "pprof_pods" {
 {{- end }}
 }
 
-{{- $allProfileTypes := list "memory" "cpu" "goroutine" "block" "mutex" "fgprof" }}
 {{- $profileTypes := .Values.profiles.pprof.types }}
 {{ range $profileTypes }}
 discovery.relabel "pprof_pods_{{.}}_default_name" {

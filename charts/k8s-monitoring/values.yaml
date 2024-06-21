@@ -1508,27 +1508,45 @@ profiles:
     # @section -- Profiles (eBPF)
     demangle: none
 
-  # TBD
-  # java:
-  #  enabled: true
-  #  namespaces: []
-  #  # -- Rule blocks to be added to the discovery.relabel component for Java profile sources.
-  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery.relabel/#rule-block))
-  #  extraRelabelingRules: ""
+  java:
+    # -- Gather profiles by scraping java HTTP endpoints
+    # @section -- Profiles (java)
+    enabled: true
+
+    # -- Which namespaces to look for pods with profiles.
+    # @section -- Profiles (java)
+    namespaces: []
+
+    # -- Rule blocks to be added to the discovery.relabel component for Java profile sources.
+    # ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery.relabel/#rule-block))
+    # @section -- Profiles (java)
+    extraRelabelingRules: ""
+
+    # -- Configuration for the async-profiler
+    # @section -- Profiles (java)
+    profilingConfig:
+      interval: 60s
+      cpu: true
+      sampleRate: 100
+      alloc: 512k
+      lock: 10ms
 
   pprof:
     # -- Gather profiles by scraping pprof HTTP endpoints
     # @section -- Profiles (pprof)
     enabled: true
+
     # -- Which namespaces to look for pods with profiles.
     # @section -- Profiles (pprof)
     namespaces: []
+
     # -- Rule blocks to be added to the discovery.relabel component for eBPF profile sources.
     # These relabeling rules are applied pre-scrape against the targets from service discovery.
     # Before the scrape, any remaining target labels that start with `__` (i.e. `__meta_kubernetes*`) are dropped.
     # ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery.relabel/#rule-block))
     # @section -- Profiles (pprof)
     extraRelabelingRules: ""
+
     # -- Profile types to gather
     # @section -- Profiles (pprof)
     types:
