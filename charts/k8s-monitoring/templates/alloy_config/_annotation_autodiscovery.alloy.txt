@@ -61,6 +61,12 @@ discovery.relabel "annotation_autodiscovery_pods" {
     action = "replace"
     target_label = "__scheme__"
   }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_{{ include "escape_label" .Values.metrics.autoDiscover.annotations.metricsScrapeInterval }}"]
+    action = "replace"
+    target_label = "__scrape_interval__"
+  }
 {{- if .Values.metrics.extraRelabelingRules }}
 {{ .Values.metrics.extraRelabelingRules | indent 2 }}
 {{- end }}
@@ -127,6 +133,12 @@ discovery.relabel "annotation_autodiscovery_services" {
     source_labels = ["__meta_kubernetes_service_annotation_{{ include "escape_label" .Values.metrics.autoDiscover.annotations.metricsScheme }}"]
     action = "replace"
     target_label = "__scheme__"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_service_annotation_{{ include "escape_label" .Values.metrics.autoDiscover.annotations.metricsScrapeInterval }}"]
+    action = "replace"
+    target_label = "__scrape_interval__"
   }
 {{- if .Values.metrics.extraRelabelingRules }}
 {{ .Values.metrics.extraRelabelingRules | indent 2 }}
