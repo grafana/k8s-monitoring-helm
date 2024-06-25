@@ -25,6 +25,7 @@
   {{- if .Values.metrics.cadvisor.enabled -}}{{- $metrics = append $metrics "cadvisor" -}}{{- end -}}
   {{- if .Values.metrics.apiserver.enabled -}}{{- $metrics = append $metrics "apiserver" }}{{ end -}}
   {{- if .Values.metrics.cost.enabled -}}{{- $metrics = append $metrics "cost" }}{{ end -}}
+  {{- if .Values.metrics.kepler.enabled -}}{{- $metrics = append $metrics "kepler" }}{{ end -}}
   {{- if .Values.extraConfig -}}{{- $metrics = append $metrics "extraConfig" }}{{ end -}}
 {{- else -}}
   {{- $metrics = append $metrics "disabled" -}}

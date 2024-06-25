@@ -1075,6 +1075,47 @@ metrics:
     # @section -- Metrics Job: OpenCost
     maxCacheSize:
 
+  # Cost related metrics from Kepler
+  kepler:
+    # -- Scrape energy metrics from Kepler
+    enabled: false
+
+    # -- How frequently to scrape metrics from Kepler.
+    # Overrides metrics.scrapeInterval
+    # @default -- 60s
+    scrapeInterval: ""
+
+    # -- Label matchers used to select the Kepler pods
+    labelMatchers:
+      app.kubernetes.io/name: kepler
+
+    # -- Rule blocks to be added to the discovery.relabel component for Kepler.
+    # These relabeling rules are applied pre-scrape against the targets from service discovery.
+    # Before the scrape, any remaining target labels that start with __ (i.e. __meta_kubernetes*) are dropped.
+    # ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery.relabel/#rule-block))
+    extraRelabelingRules: ""
+
+    # -- Rule blocks to be added to the prometheus.relabel component for Kepler. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#rule-block))
+    # These relabeling rules are applied post-scrape against the metrics returned from the scraped target, no __meta* labels are present.
+    extraMetricRelabelingRules: ""
+
+    # Adjustments to the scraped metrics to filter the amount of data sent to storage.
+    metricsTuning:
+      # -- Filter the list of metrics from Kepler to the minimal set required for Kubernetes Monitoring.
+      # See [Allow List for Kepler](#allow-list-for-kepler)
+      useDefaultAllowList: true
+      # -- Metrics to keep. Can use regex.
+      includeMetrics: []
+      # -- Metrics to drop. Can use regex.
+      excludeMetrics: []
+
+    # -- Sets the max_cache_size for the prometheus.relabel component for Kepler.
+    # This should be at least 2x-5x your largest scrape target or samples appended rate.
+    # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#arguments))
+    # Overrides metrics.maxCacheSize
+    # @default -- 100000
+    maxCacheSize:
+
   # Prometheus Operator PodMonitors
   podMonitors:
     # -- Enable discovery of Prometheus Operator PodMonitor objects.
@@ -1989,6 +2030,17 @@ opencost:
     nodeSelector:
       kubernetes.io/os: linux
 
+# Settings for the Kepler deployment
+# You can use this sections to make modifications to the Kepler deployment.
+# See https://github.com/sustainable-computing-io/kepler-helm-chart/tree/main/chart/kepler for available values.
+kepler:
+  # -- Should this Helm chart deploy Kepler to the cluster.
+  # Set this to false if your cluster already has Kepler, or if you do not want to scrape metrics from Kepler.
+  enabled: false
+
+  # @ignored -- This skips including these values in README.md
+  canMount:
+    usrSrc: false
 
 # Settings for the Grafana Alloy instance that gathers metrics, and opens receivers for application data.
 # See https://github.com/grafana/alloy/tree/main/operations/helm/charts/alloy for available values.

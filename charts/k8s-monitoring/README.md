@@ -145,6 +145,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | https://prometheus-community.github.io/helm-charts | prometheus-node-exporter | 4.36.0 |
 | https://prometheus-community.github.io/helm-charts | prometheus-operator-crds | 12.0.0 |
 | https://prometheus-community.github.io/helm-charts | prometheus-windows-exporter | 0.3.1 |
+| https://sustainable-computing-io.github.io/kepler-helm-chart | kepler | 0.5.6 |
 <!-- markdownlint-enable no-bare-urls -->
 
 ## Values
@@ -746,6 +747,21 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | traces.enabled | bool | `false` | Receive and forward traces. |
 | traces.receiver.filters | object | `{"span":[],"spanevent":[]}` | Apply a filter to traces received via the OTLP or OTLP HTTP receivers. ([docs](https://grafana.com/docs/alloy/latest/reference/components/otelcol.processor.filter/)) |
 | traces.receiver.transforms | object | `{"resource":[],"span":[],"spanevent":[]}` | Apply a transformation to traces received via the OTLP or OTLP HTTP receivers. ([docs](https://grafana.com/docs/alloy/latest/reference/components/otelcol.processor.transform/)) |
+
+### Other Values
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| kepler.enabled | bool | `false` | Should this Helm chart deploy Kepler to the cluster. Set this to false if your cluster already has Kepler, or if you do not want to scrape metrics from Kepler. |
+| metrics.kepler.enabled | bool | `false` | Scrape energy metrics from Kepler |
+| metrics.kepler.extraMetricRelabelingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for Kepler. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#rule-block)) These relabeling rules are applied post-scrape against the metrics returned from the scraped target, no __meta* labels are present. |
+| metrics.kepler.extraRelabelingRules | string | `""` | Rule blocks to be added to the discovery.relabel component for Kepler. These relabeling rules are applied pre-scrape against the targets from service discovery. Before the scrape, any remaining target labels that start with __ (i.e. __meta_kubernetes*) are dropped. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery.relabel/#rule-block)) |
+| metrics.kepler.labelMatchers | object | `{"app.kubernetes.io/name":"kepler"}` | Label matchers used to select the Kepler pods |
+| metrics.kepler.maxCacheSize | string | 100000 | Sets the max_cache_size for the prometheus.relabel component for Kepler. This should be at least 2x-5x your largest scrape target or samples appended rate. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#arguments)) Overrides metrics.maxCacheSize |
+| metrics.kepler.metricsTuning.excludeMetrics | list | `[]` | Metrics to drop. Can use regex. |
+| metrics.kepler.metricsTuning.includeMetrics | list | `[]` | Metrics to keep. Can use regex. |
+| metrics.kepler.metricsTuning.useDefaultAllowList | bool | `true` | Filter the list of metrics from Kepler to the minimal set required for Kubernetes Monitoring. See [Allow List for Kepler](#allow-list-for-kepler) |
+| metrics.kepler.scrapeInterval | string | 60s | How frequently to scrape metrics from Kepler. Overrides metrics.scrapeInterval |
 
 ## Customizing the configuration
 

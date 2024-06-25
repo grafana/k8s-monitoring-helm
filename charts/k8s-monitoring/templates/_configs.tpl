@@ -65,6 +65,10 @@
       {{- include "alloy.config.opencost" . }}
     {{- end }}
 
+    {{- if .Values.metrics.kepler.enabled }}
+      {{- include "alloy.config.kepler" . }}
+    {{- end }}
+
     {{- if .Values.metrics.podMonitors.enabled }}
       {{- include "alloy.config.pod_monitors" . }}
     {{- end }}

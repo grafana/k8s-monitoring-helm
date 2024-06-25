@@ -1,0 +1,71 @@
+{{ define "alloy.config.kepler.allowList" }}
+{{ if .Values.metrics.kepler.metricsTuning.useDefaultAllowList }}
+{{ "default_allow_lists/kepler.yaml" | .Files.Get }}
+{{ end }}
+{{ if .Values.metrics.kepler.metricsTuning.includeMetrics }}
+{{ .Values.metrics.kepler.metricsTuning.includeMetrics | toYaml }}
+{{ end }}
+{{ end }}
+
+{{ define "alloy.config.kepler" }}
+// Kepler
+discovery.relabel "kepler" {
+  targets = discovery.kubernetes.pods.targets
+{{- range $k, $v := .Values.metrics.kepler.labelMatchers }}
+  rule {
+    source_labels = ["__meta_kubernetes_pod_label_{{ include "escape_label" $k }}"]
+    regex = "{{ $v }}"
+    action = "keep"
+  }
+{{- end }}
+  rule {
+    source_labels = ["__meta_kubernetes_pod_node_name"]
+    action = "replace"
+    target_label = "instance"
+  }
+{{- if .Values.metrics.extraRelabelingRules }}
+{{ .Values.metrics.extraRelabelingRules | indent 2 }}
+{{- end }}
+{{- if .Values.metrics.kepler.extraRelabelingRules }}
+{{ .Values.metrics.kepler.extraRelabelingRules | indent 2 }}
+{{- end }}
+}
+
+prometheus.scrape "kepler" {
+  targets    = discovery.relabel.kepler.output
+  job_name   = "integrations/kepler"
+  honor_labels = true
+  scrape_interval = {{ .Values.metrics.kepler.scrapeInterval | default .Values.metrics.scrapeInterval | quote }}
+{{- if .Values.alloy.alloy.clustering.enabled }}
+  clustering {
+    enabled = true
+  }
+{{- end }}
+  forward_to = [prometheus.relabel.kepler.receiver]
+}
+
+prometheus.relabel "kepler" {
+  max_cache_size = {{ .Values.metrics.kepler.maxCacheSize | default .Values.metrics.maxCacheSize | int }}
+{{- if or .Values.metrics.kepler.metricsTuning.useDefaultAllowList .Values.metrics.kepler.metricsTuning.includeMetrics }}
+  rule {
+    source_labels = ["__name__"]
+    regex = "up|{{ join "|" (include "alloy.config.kepler.allowList" . | fromYamlArray) }}"
+    action = "keep"
+  }
+{{- end }}
+{{- if .Values.metrics.kepler.metricsTuning.excludeMetrics }}
+  rule {
+    source_labels = ["__name__"]
+    regex = {{ join "|" .Values.metrics.kepler.metricsTuning.excludeMetrics | quote }}
+    action = "drop"
+  }
+{{- end }}
+{{- if .Values.metrics.extraMetricRelabelingRules }}
+{{ .Values.metrics.extraMetricRelabelingRules | indent 2 }}
+{{- end }}
+{{- if .Values.metrics.kepler.extraMetricRelabelingRules }}
+{{ .Values.metrics.kepler.extraMetricRelabelingRules | indent 2 }}
+{{- end }}
+  forward_to = [prometheus.relabel.metrics_service.receiver]
+}
+{{ end }}
