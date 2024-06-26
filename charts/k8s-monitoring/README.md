@@ -136,10 +136,10 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 
 | Repository | Name | Version |
 |------------|------|---------|
-| https://grafana.github.io/helm-charts | alloy | 0.3.2 |
-| https://grafana.github.io/helm-charts | alloy-events(alloy) | 0.3.2 |
-| https://grafana.github.io/helm-charts | alloy-logs(alloy) | 0.3.2 |
-| https://grafana.github.io/helm-charts | alloy-profiles(alloy) | 0.3.2 |
+| https://grafana.github.io/helm-charts | alloy | 0.4.0 |
+| https://grafana.github.io/helm-charts | alloy-events(alloy) | 0.4.0 |
+| https://grafana.github.io/helm-charts | alloy-logs(alloy) | 0.4.0 |
+| https://grafana.github.io/helm-charts | alloy-profiles(alloy) | 0.4.0 |
 | https://opencost.github.io/opencost-helm-chart | opencost | 1.39.0 |
 | https://prometheus-community.github.io/helm-charts | kube-state-metrics | 5.20.1 |
 | https://prometheus-community.github.io/helm-charts | prometheus-node-exporter | 4.36.0 |
