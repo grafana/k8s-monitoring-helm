@@ -61,6 +61,12 @@ discovery.relabel "annotation_autodiscovery_pods" {
     action = "replace"
     target_label = "__scheme__"
   }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_{{ include "escape_label" .Values.metrics.autoDiscover.annotations.metricsScrapeInterval }}"]
+    action = "replace"
+    target_label = "__scrape_interval__"
+  }
 {{- if .Values.metrics.extraRelabelingRules }}
 {{ .Values.metrics.extraRelabelingRules | indent 2 }}
 {{- end }}
@@ -128,6 +134,12 @@ discovery.relabel "annotation_autodiscovery_services" {
     action = "replace"
     target_label = "__scheme__"
   }
+
+  rule {
+    source_labels = ["__meta_kubernetes_service_annotation_{{ include "escape_label" .Values.metrics.autoDiscover.annotations.metricsScrapeInterval }}"]
+    action = "replace"
+    target_label = "__scrape_interval__"
+  }
 {{- if .Values.metrics.extraRelabelingRules }}
 {{ .Values.metrics.extraRelabelingRules | indent 2 }}
 {{- end }}
@@ -156,6 +168,7 @@ discovery.relabel "annotation_autodiscovery_https" {
 
 prometheus.scrape "annotation_autodiscovery_http" {
   targets = discovery.relabel.annotation_autodiscovery_http.output
+  scrape_interval = {{ .Values.metrics.autoDiscover.scrapeInterval | default .Values.metrics.scrapeInterval | quote }}
   honor_labels = true
 {{- if .Values.alloy.alloy.clustering.enabled }}
   clustering {
@@ -167,6 +180,7 @@ prometheus.scrape "annotation_autodiscovery_http" {
 
 prometheus.scrape "annotation_autodiscovery_https" {
   targets = discovery.relabel.annotation_autodiscovery_https.output
+  scrape_interval = {{ .Values.metrics.autoDiscover.scrapeInterval | default .Values.metrics.scrapeInterval | quote }}
   honor_labels = true
   bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
   tls_config {
