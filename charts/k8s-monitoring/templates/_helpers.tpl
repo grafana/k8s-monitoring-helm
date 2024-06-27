@@ -96,11 +96,11 @@
 {{ . | replace "-" "_" | replace "." "_" | replace "/" "_" }}
 {{- end }}
 
-{{- define "grafana-agent.fullname" -}}
-{{- if (index .Values "grafana-agent").fullnameOverride }}
-{{- (index .Values "grafana-agent").fullnameOverride | trunc 63 | trimSuffix "-" }}
+{{- define "alloy.fullname" -}}
+{{- if (index .Values "alloy").fullnameOverride }}
+{{- (index .Values "alloy").fullnameOverride | trunc 63 | trimSuffix "-" }}
 {{- else }}
-{{- $name := default "grafana-agent" (index .Values "grafana-agent").nameOverride }}
+{{- $name := default "alloy" (index .Values "alloy").nameOverride }}
 {{- if contains $name .Release.Name }}
 {{- .Release.Name | trunc 63 | trimSuffix "-" }}
 {{- else }}
