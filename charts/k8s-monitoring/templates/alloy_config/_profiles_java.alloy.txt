@@ -14,12 +14,21 @@ discovery.kubernetes "java_pods" {
   role = "pod"
 }
 
+discovery.process "java_pods" {
+  join = discovery.kubernetes.java_pods.targets
+}
+
 discovery.relabel "java_pods" {
-  targets = discovery.kubernetes.java_pods.targets
+  targets = discovery.process.java_pods.targets
   rule {
     action = "drop"
     regex = "Succeeded|Failed|Completed"
     source_labels = ["__meta_kubernetes_pod_phase"]
+  }
+  rule {
+    source_labels = ["__meta_process_exe"]
+    action = "keep"
+    regex = ".*/java$"
   }
   rule {
     action = "replace"
