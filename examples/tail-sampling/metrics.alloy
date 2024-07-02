@@ -1,0 +1,880 @@
+discovery.kubernetes "nodes" {
+  role = "node"
+}
+
+discovery.kubernetes "services" {
+  role = "service"
+}
+
+discovery.kubernetes "endpoints" {
+  role = "endpoints"
+}
+
+discovery.kubernetes "pods" {
+  role = "pod"
+}
+
+// OTLP Receivers
+otelcol.receiver.otlp "receiver" {
+  debug_metrics {
+    disable_high_cardinality_metrics = true
+  }
+
+  grpc {
+    endpoint = "0.0.0.0:4317"
+  }
+
+  http {
+    endpoint = "0.0.0.0:4318"
+  }
+  output {
+    metrics = [otelcol.processor.resourcedetection.default.input]
+    logs = [otelcol.processor.resourcedetection.default.input]
+    traces = [otelcol.processor.resourcedetection.default.input]
+  }
+}
+
+
+
+
+// Processors
+otelcol.processor.transform "add_metric_datapoint_attributes" {
+  // Grafana Cloud Kubernetes monitoring expects Loki labels `cluster`, `pod`, and `namespace`
+  error_mode = "ignore"
+  metric_statements {
+    context = "datapoint"
+    statements = [
+      "set(attributes[\"deployment.environment\"], resource.attributes[\"deployment.environment\"])",
+      "set(attributes[\"service.version\"], resource.attributes[\"service.version\"])",
+    ]
+  }
+  output {
+    metrics = [otelcol.processor.k8sattributes.default.input]
+  }
+}
+
+otelcol.processor.resourcedetection "default" {
+  detectors = ["env", "system"]
+
+	system {
+		hostname_sources = ["os"]
+	}
+
+	output {
+		metrics = [otelcol.processor.transform.add_metric_datapoint_attributes.input]
+		logs    = [otelcol.processor.k8sattributes.default.input]
+		traces  = [otelcol.processor.k8sattributes.default.input]
+  }
+}
+
+otelcol.processor.k8sattributes "default" {
+  extract {
+    metadata = [
+      "k8s.namespace.name",
+      "k8s.pod.name",
+      "k8s.deployment.name",
+      "k8s.statefulset.name",
+      "k8s.daemonset.name",
+      "k8s.cronjob.name",
+      "k8s.job.name",
+      "k8s.node.name",
+      "k8s.pod.uid",
+      "k8s.pod.start_time",
+    ]
+  }
+  pod_association {
+    source {
+      from = "connection"
+    }
+  }
+
+  output {
+    metrics = [otelcol.processor.transform.default.input]
+    logs    = [otelcol.processor.transform.default.input]
+    traces  = [
+      otelcol.processor.transform.default.input,
+      otelcol.connector.host_info.default.input,
+    ]
+  }
+}
+otelcol.connector.host_info "default" {
+  host_identifiers = [ "k8s.node.name" ]
+  output {
+    metrics = [otelcol.processor.batch.host_info_batch.input]
+  }
+}
+
+otelcol.processor.batch "host_info_batch" {
+  output {
+    metrics = [otelcol.exporter.prometheus.host_info_metrics.input]
+  }
+}
+
+otelcol.exporter.prometheus "host_info_metrics" {
+  add_metric_suffixes = false
+  forward_to = [prometheus.remote_write.metrics_service.receiver]
+}
+
+otelcol.processor.transform "default" {
+  // Grafana Cloud Kubernetes monitoring expects Loki labels `cluster`, `pod`, and `namespace`
+  error_mode = "ignore"
+  metric_statements {
+    context = "resource"
+    statements = [
+      "set(attributes[\"k8s.cluster.name\"], \"tail-sampling-test\") where attributes[\"k8s.cluster.name\"] == nil",
+    ]
+  }
+  log_statements {
+    context = "resource"
+    statements = [
+      "set(attributes[\"pod\"], attributes[\"k8s.pod.name\"])",
+      "set(attributes[\"namespace\"], attributes[\"k8s.namespace.name\"])",
+      "set(attributes[\"loki.resource.labels\"], \"pod, namespace, cluster, job\")",
+      "set(attributes[\"k8s.cluster.name\"], \"tail-sampling-test\") where attributes[\"k8s.cluster.name\"] == nil",
+    ]
+  }
+  trace_statements {
+    context = "resource"
+    statements = [
+      "set(attributes[\"k8s.cluster.name\"], \"tail-sampling-test\") where attributes[\"k8s.cluster.name\"] == nil",
+    ]
+  }
+  output {
+    metrics = [otelcol.processor.filter.default.input]
+    logs = [otelcol.processor.filter.default.input]
+    traces = [otelcol.processor.filter.default.input]
+  }
+}
+otelcol.processor.tail_sampling "default" {
+  policy {
+    name    = "all_traces_above_500"
+    type    = "latency"
+    latency = {
+      threshold_ms = 500,
+    }
+  }
+  policy {
+    name    = "drop_probes"
+    type    = "string_attribute"
+    stringAttribute = {
+      key = "http.url"
+      values = [
+        /healthz,
+        /livez,
+        /readyz,
+      ]
+    }
+  }
+
+	output {
+		traces = [otelcol.processor.batch.batch_processor.input]
+	}
+}
+
+otelcol.processor.filter "default" {
+  error_mode = "ignore"
+
+  output {
+    metrics = [otelcol.processor.batch.batch_processor.input]
+    logs = [otelcol.processor.batch.batch_processor.input]
+    traces = [otelcol.processor.batch.batch_processor.input]
+  }
+}
+
+otelcol.processor.batch "batch_processor" {
+  send_batch_size = 16384
+  send_batch_max_size = 0
+  timeout = "2s"
+  output {
+    metrics = [otelcol.exporter.prometheus.metrics_converter.input]
+    logs = [otelcol.exporter.loki.logs_converter.input]
+    traces = [otelcol.exporter.otlp.traces_service.input]
+  }
+}
+otelcol.exporter.prometheus "metrics_converter" {
+  forward_to = [prometheus.relabel.metrics_service.receiver]
+}
+otelcol.exporter.loki "logs_converter" {
+  forward_to = [loki.process.pod_logs.receiver]
+}
+// Annotation Autodiscovery
+discovery.relabel "annotation_autodiscovery_pods" {
+  targets = discovery.kubernetes.pods.targets
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_scrape"]
+    regex = "true"
+    action = "keep"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_job"]
+    action = "replace"
+    target_label = "job"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_instance"]
+    action = "replace"
+    target_label = "instance"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_metrics_path"]
+    action = "replace"
+    target_label = "__metrics_path__"
+  }
+
+  // Choose the pod port
+  // The discovery generates a target for each declared container port of the pod.
+  // If the metricsPortName annotation has value, keep only the target where the port name matches the one of the annotation.
+  rule {
+    source_labels = ["__meta_kubernetes_pod_container_port_name"]
+    target_label = "__tmp_port"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_metrics_portName"]
+    regex = "(.+)"
+    target_label = "__tmp_port"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_pod_container_port_name"]
+    action = "keepequal"
+    target_label = "__tmp_port"
+  }
+
+  // If the metrics port number annotation has a value, override the target address to use it, regardless whether it is
+  // one of the declared ports on that Pod.
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_metrics_portNumber", "__meta_kubernetes_pod_ip"]
+    regex = "(\\d+);(([A-Fa-f0-9]{1,4}::?){1,7}[A-Fa-f0-9]{1,4})"
+    replacement = "[$2]:$1" // IPv6
+    target_label = "__address__"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_metrics_portNumber", "__meta_kubernetes_pod_ip"]
+    regex = "(\\d+);((([0-9]+?)(\\.|$)){4})" // IPv4, takes priority over IPv6 when both exists
+    replacement = "$2:$1"
+    target_label = "__address__"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_metrics_scheme"]
+    action = "replace"
+    target_label = "__scheme__"
+  }
+}
+
+discovery.relabel "annotation_autodiscovery_services" {
+  targets = discovery.kubernetes.services.targets
+  rule {
+    source_labels = ["__meta_kubernetes_service_annotation_k8s_grafana_com_scrape"]
+    regex = "true"
+    action = "keep"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_service_annotation_k8s_grafana_com_job"]
+    action = "replace"
+    target_label = "job"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_service_annotation_k8s_grafana_com_instance"]
+    action = "replace"
+    target_label = "instance"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_service_annotation_k8s_grafana_com_metrics_path"]
+    action = "replace"
+    target_label = "__metrics_path__"
+  }
+
+  // Choose the service port
+  rule {
+    source_labels = ["__meta_kubernetes_service_port_name"]
+    target_label = "__tmp_port"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_service_annotation_k8s_grafana_com_metrics_portName"]
+    regex = "(.+)"
+    target_label = "__tmp_port"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_service_port_name"]
+    action = "keepequal"
+    target_label = "__tmp_port"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_service_port_number"]
+    target_label = "__tmp_port"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_service_annotation_k8s_grafana_com_metrics_portNumber"]
+    regex = "(.+)"
+    target_label = "__tmp_port"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_service_port_number"]
+    action = "keepequal"
+    target_label = "__tmp_port"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_service_annotation_k8s_grafana_com_metrics_scheme"]
+    action = "replace"
+    target_label = "__scheme__"
+  }
+}
+
+discovery.relabel "annotation_autodiscovery_http" {
+  targets = concat(discovery.relabel.annotation_autodiscovery_pods.output, discovery.relabel.annotation_autodiscovery_services.output)
+  rule {
+    source_labels = ["__scheme__"]
+    regex = "https"
+    action = "drop"
+  }
+}
+
+discovery.relabel "annotation_autodiscovery_https" {
+  targets = concat(discovery.relabel.annotation_autodiscovery_pods.output, discovery.relabel.annotation_autodiscovery_services.output)
+  rule {
+    source_labels = ["__scheme__"]
+    regex = "https"
+    action = "keep"
+  }
+}
+
+prometheus.scrape "annotation_autodiscovery_http" {
+  targets = discovery.relabel.annotation_autodiscovery_http.output
+  honor_labels = true
+  clustering {
+    enabled = true
+  }
+  forward_to = [prometheus.relabel.annotation_autodiscovery.receiver]
+}
+
+prometheus.scrape "annotation_autodiscovery_https" {
+  targets = discovery.relabel.annotation_autodiscovery_https.output
+  honor_labels = true
+  bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+  tls_config {
+    insecure_skip_verify = true
+  }
+  clustering {
+    enabled = true
+  }
+  forward_to = [prometheus.relabel.annotation_autodiscovery.receiver]
+}
+
+prometheus.relabel "annotation_autodiscovery" {
+  forward_to = [prometheus.relabel.metrics_service.receiver]
+}
+
+// Grafana Alloy
+discovery.relabel "alloy" {
+  targets = discovery.kubernetes.pods.targets
+  rule {
+    source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_instance"]
+    regex = "k8smon"
+    action = "keep"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
+    regex = "alloy.*"
+    action = "keep"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_pod_container_port_name"]
+    regex = "http-metrics"
+    action = "keep"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_namespace"]
+    target_label  = "namespace"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_pod_name"]
+    target_label  = "pod"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_pod_container_name"]
+    target_label  = "container"
+  }
+}
+
+prometheus.scrape "alloy" {
+  job_name = "integrations/alloy"
+  targets = discovery.relabel.alloy.output
+  scrape_interval = "60s"
+  forward_to = [prometheus.relabel.alloy.receiver]
+  clustering {
+    enabled = true
+  }
+}
+
+prometheus.relabel "alloy" {
+  rule {
+    source_labels = ["__name__"]
+    regex = "up|alloy_build_info"
+    action = "keep"
+  }
+  forward_to = [prometheus.relabel.metrics_service.receiver]
+}
+
+// Kubernetes Monitoring Telemetry
+prometheus.exporter.unix "kubernetes_monitoring_telemetry" {
+  set_collectors = ["textfile"]
+  textfile {
+    directory = "/etc/kubernetes-monitoring-telemetry"
+  }
+}
+
+prometheus.scrape "kubernetes_monitoring_telemetry" {
+  job_name   = "integrations/kubernetes/kubernetes_monitoring_telemetry"
+  targets    = prometheus.exporter.unix.kubernetes_monitoring_telemetry.targets
+  scrape_interval = "60s"
+  clustering {
+    enabled = true
+  }
+  forward_to = [prometheus.relabel.kubernetes_monitoring_telemetry.receiver]
+}
+
+prometheus.relabel "kubernetes_monitoring_telemetry" {
+  rule {
+    target_label = "job"
+    action = "replace"
+    replacement = "integrations/kubernetes/kubernetes_monitoring_telemetry"
+  }
+  rule {
+    target_label = "instance"
+    action = "replace"
+    replacement = "k8smon"
+  }
+  rule {
+    source_labels = ["__name__"]
+    regex = "up|grafana_kubernetes_monitoring_.*"
+    action = "keep"
+  }
+  forward_to = [prometheus.relabel.metrics_service.receiver]
+}
+
+// Kubelet
+discovery.relabel "kubelet" {
+  targets = discovery.kubernetes.nodes.targets
+}
+
+prometheus.scrape "kubelet" {
+  job_name   = "integrations/kubernetes/kubelet"
+  targets  = discovery.relabel.kubelet.output
+  scheme   = "https"
+  scrape_interval = "60s"
+  bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+  tls_config {
+    insecure_skip_verify = true
+  }
+  clustering {
+    enabled = true
+  }
+  forward_to = [prometheus.relabel.kubelet.receiver]
+}
+
+prometheus.relabel "kubelet" {
+  rule {
+    source_labels = ["__name__"]
+    regex = "up|container_cpu_usage_seconds_total|kubelet_certificate_manager_client_expiration_renew_errors|kubelet_certificate_manager_client_ttl_seconds|kubelet_certificate_manager_server_ttl_seconds|kubelet_cgroup_manager_duration_seconds_bucket|kubelet_cgroup_manager_duration_seconds_count|kubelet_node_config_error|kubelet_node_name|kubelet_pleg_relist_duration_seconds_bucket|kubelet_pleg_relist_duration_seconds_count|kubelet_pleg_relist_interval_seconds_bucket|kubelet_pod_start_duration_seconds_bucket|kubelet_pod_start_duration_seconds_count|kubelet_pod_worker_duration_seconds_bucket|kubelet_pod_worker_duration_seconds_count|kubelet_running_container_count|kubelet_running_containers|kubelet_running_pod_count|kubelet_running_pods|kubelet_runtime_operations_errors_total|kubelet_runtime_operations_total|kubelet_server_expiration_renew_errors|kubelet_volume_stats_available_bytes|kubelet_volume_stats_capacity_bytes|kubelet_volume_stats_inodes|kubelet_volume_stats_inodes_used|kubernetes_build_info|namespace_workload_pod|rest_client_requests_total|storage_operation_duration_seconds_count|storage_operation_errors_total|volume_manager_total_volumes"
+    action = "keep"
+  }
+  forward_to = [prometheus.relabel.metrics_service.receiver]
+}
+
+// cAdvisor
+discovery.relabel "cadvisor" {
+  targets = discovery.kubernetes.nodes.targets
+  rule {
+    replacement   = "/metrics/cadvisor"
+    target_label  = "__metrics_path__"
+  }
+}
+
+prometheus.scrape "cadvisor" {
+  job_name   = "integrations/kubernetes/cadvisor"
+  targets    = discovery.relabel.cadvisor.output
+  scheme     = "https"
+  scrape_interval = "60s"
+  bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+  tls_config {
+    insecure_skip_verify = true
+  }
+  clustering {
+    enabled = true
+  }
+  forward_to = [prometheus.relabel.cadvisor.receiver]
+}
+
+prometheus.relabel "cadvisor" {
+  rule {
+    source_labels = ["__name__"]
+    regex = "up|container_cpu_cfs_periods_total|container_cpu_cfs_throttled_periods_total|container_cpu_usage_seconds_total|container_fs_reads_bytes_total|container_fs_reads_total|container_fs_writes_bytes_total|container_fs_writes_total|container_memory_cache|container_memory_rss|container_memory_swap|container_memory_working_set_bytes|container_network_receive_bytes_total|container_network_receive_packets_dropped_total|container_network_receive_packets_total|container_network_transmit_bytes_total|container_network_transmit_packets_dropped_total|container_network_transmit_packets_total|machine_memory_bytes"
+    action = "keep"
+  }
+  // Drop empty container labels, addressing https://github.com/google/cadvisor/issues/2688
+  rule {
+    source_labels = ["__name__","container"]
+    separator = "@"
+    regex = "(container_cpu_.*|container_fs_.*|container_memory_.*)@"
+    action = "drop"
+  }
+  // Drop empty image labels, addressing https://github.com/google/cadvisor/issues/2688
+  rule {
+    source_labels = ["__name__","image"]
+    separator = "@"
+    regex = "(container_cpu_.*|container_fs_.*|container_memory_.*|container_network_.*)@"
+    action = "drop"
+  }
+  // Normalizing unimportant labels (not deleting to continue satisfying <label>!="" checks)
+  rule {
+    source_labels = ["__name__", "boot_id"]
+    separator = "@"
+    regex = "machine_memory_bytes@.*"
+    target_label = "boot_id"
+    replacement = "NA"
+  }
+  rule {
+    source_labels = ["__name__", "system_uuid"]
+    separator = "@"
+    regex = "machine_memory_bytes@.*"
+    target_label = "system_uuid"
+    replacement = "NA"
+  }
+  // Filter out non-physical devices/interfaces
+  rule {
+    source_labels = ["__name__", "device"]
+    separator = "@"
+    regex = "container_fs_.*@(/dev/)?(mmcblk.p.+|nvme.+|rbd.+|sd.+|vd.+|xvd.+|dasd.+)"
+    target_label = "__keepme"
+    replacement = "1"
+  }
+  rule {
+    source_labels = ["__name__", "__keepme"]
+    separator = "@"
+    regex = "container_fs_.*@"
+    action = "drop"
+  }
+  rule {
+    source_labels = ["__name__"]
+    regex = "container_fs_.*"
+    target_label = "__keepme"
+    replacement = ""
+  }
+  rule {
+    source_labels = ["__name__", "interface"]
+    separator = "@"
+    regex = "container_network_.*@(en[ospx][0-9].*|wlan[0-9].*|eth[0-9].*)"
+    target_label = "__keepme"
+    replacement = "1"
+  }
+  rule {
+    source_labels = ["__name__", "__keepme"]
+    separator = "@"
+    regex = "container_network_.*@"
+    action = "drop"
+  }
+  rule {
+    source_labels = ["__name__"]
+    regex = "container_network_.*"
+    target_label = "__keepme"
+    replacement = ""
+  }
+  forward_to = [prometheus.relabel.metrics_service.receiver]
+}
+
+// Kube State Metrics
+discovery.relabel "kube_state_metrics" {
+  targets = discovery.kubernetes.services.targets
+  rule {
+    source_labels = ["__meta_kubernetes_service_label_app_kubernetes_io_instance"]
+    regex = "k8smon"
+    action = "keep"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_service_label_app_kubernetes_io_name"]
+    regex = "kube-state-metrics"
+    action = "keep"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_service_port_name"]
+    regex = "http"
+    action = "keep"
+  }
+}
+
+prometheus.scrape "kube_state_metrics" {
+  job_name   = "integrations/kubernetes/kube-state-metrics"
+  targets    = discovery.relabel.kube_state_metrics.output
+  scrape_interval = "60s"
+  clustering {
+    enabled = true
+  }
+  forward_to = [prometheus.relabel.kube_state_metrics.receiver]
+}
+
+prometheus.relabel "kube_state_metrics" {
+  rule {
+    source_labels = ["__name__"]
+    regex = "up|kube_daemonset.*|kube_deployment_metadata_generation|kube_deployment_spec_replicas|kube_deployment_status_observed_generation|kube_deployment_status_replicas_available|kube_deployment_status_replicas_updated|kube_horizontalpodautoscaler_spec_max_replicas|kube_horizontalpodautoscaler_spec_min_replicas|kube_horizontalpodautoscaler_status_current_replicas|kube_horizontalpodautoscaler_status_desired_replicas|kube_job.*|kube_namespace_status_phase|kube_node.*|kube_persistentvolumeclaim_resource_requests_storage_bytes|kube_pod_container_info|kube_pod_container_resource_limits|kube_pod_container_resource_requests|kube_pod_container_status_last_terminated_reason|kube_pod_container_status_restarts_total|kube_pod_container_status_waiting_reason|kube_pod_info|kube_pod_owner|kube_pod_start_time|kube_pod_status_phase|kube_pod_status_reason|kube_replicaset.*|kube_resourcequota|kube_statefulset.*"
+    action = "keep"
+  }
+  forward_to = [prometheus.relabel.metrics_service.receiver]
+}
+
+// Node Exporter
+discovery.relabel "node_exporter" {
+  targets = discovery.kubernetes.pods.targets
+  rule {
+    source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_instance"]
+    regex = "k8smon"
+    action = "keep"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
+    regex = "prometheus-node-exporter.*"
+    action = "keep"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_pod_node_name"]
+    action = "replace"
+    target_label = "instance"
+  }
+}
+
+prometheus.scrape "node_exporter" {
+  job_name   = "integrations/node_exporter"
+  targets  = discovery.relabel.node_exporter.output
+  scrape_interval = "60s"
+  clustering {
+    enabled = true
+  }
+  forward_to = [prometheus.relabel.node_exporter.receiver]
+}
+
+prometheus.relabel "node_exporter" {
+  rule {
+    source_labels = ["__name__"]
+    regex = "up|node_cpu.*|node_exporter_build_info|node_filesystem.*|node_memory.*|process_cpu_seconds_total|process_resident_memory_bytes"
+    action = "keep"
+  }
+  // Drop metrics for certain file systems
+  rule {
+    source_labels = ["__name__", "fstype"]
+    separator = "@"
+    regex = "node_filesystem.*@(tempfs)"
+    action = "drop"
+  }
+  forward_to = [prometheus.relabel.metrics_service.receiver]
+}
+
+// OpenCost
+discovery.relabel "opencost" {
+  targets = discovery.kubernetes.services.targets
+  rule {
+    source_labels = ["__meta_kubernetes_service_label_app_kubernetes_io_instance"]
+    regex = "k8smon"
+    action = "keep"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_service_label_app_kubernetes_io_name"]
+    regex = "opencost"
+    action = "keep"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_service_port_name"]
+    regex = "http"
+    action = "keep"
+  }
+}
+
+prometheus.scrape "opencost" {
+  job_name   = "integrations/kubernetes/opencost"
+  targets    = discovery.relabel.opencost.output
+  scrape_interval = "60s"
+  clustering {
+    enabled = true
+  }
+  forward_to = [prometheus.relabel.opencost.receiver]
+}
+
+prometheus.relabel "opencost" {
+  rule {
+    source_labels = ["__name__"]
+    regex = "up|container_cpu_allocation|container_gpu_allocation|container_memory_allocation_bytes|deployment_match_labels|kubecost_cluster_info|kubecost_cluster_management_cost|kubecost_cluster_memory_working_set_bytes|kubecost_http_requests_total|kubecost_http_response_size_bytes|kubecost_http_response_time_seconds|kubecost_load_balancer_cost|kubecost_network_internet_egress_cost|kubecost_network_region_egress_cost|kubecost_network_zone_egress_cost|kubecost_node_is_spot|node_cpu_hourly_cost|node_gpu_count|node_gpu_hourly_cost|node_ram_hourly_cost|node_total_hourly_cost|opencost_build_info|pod_pvc_allocation|pv_hourly_cost|service_selector_labels|statefulSet_match_labels"
+    action = "keep"
+  }
+  forward_to = [prometheus.relabel.metrics_service.receiver]
+}
+
+// Prometheus Operator PodMonitor objects
+prometheus.operator.podmonitors "pod_monitors" {
+  clustering {
+    enabled = true
+  }
+  scrape {
+    default_scrape_interval = "60s"
+  }
+  forward_to = [prometheus.relabel.podmonitors.receiver]
+}
+
+prometheus.relabel "podmonitors" {
+  forward_to = [prometheus.relabel.metrics_service.receiver]
+}
+
+// Prometheus Operator Probe objects
+prometheus.operator.probes "probes" {
+  clustering {
+    enabled = true
+  }
+  scrape {
+    default_scrape_interval = "60s"
+  }
+  forward_to = [prometheus.relabel.probes.receiver]
+}
+
+prometheus.relabel "probes" {
+  forward_to = [prometheus.relabel.metrics_service.receiver]
+}
+
+// Prometheus Operator ServiceMonitor objects
+prometheus.operator.servicemonitors "service_monitors" {
+  clustering {
+    enabled = true
+  }
+  scrape {
+    default_scrape_interval = "60s"
+  }
+  forward_to = [prometheus.relabel.servicemonitors.receiver]
+}
+
+prometheus.relabel "servicemonitors" {
+  forward_to = [prometheus.relabel.metrics_service.receiver]
+}
+
+// Metrics Service
+remote.kubernetes.secret "metrics_service" {
+  name = "prometheus-k8s-monitoring"
+  namespace = "default"
+}
+
+prometheus.relabel "metrics_service" {
+  rule {
+    source_labels = ["cluster"]
+    regex = ""
+    replacement = "tail-sampling-test"
+    target_label = "cluster"
+  }
+  forward_to = [prometheus.remote_write.metrics_service.receiver]
+}
+
+prometheus.remote_write "metrics_service" {
+  endpoint {
+    url = nonsensitive(remote.kubernetes.secret.metrics_service.data["host"]) + "/api/prom/push"
+    headers = { "X-Scope-OrgID" = nonsensitive(remote.kubernetes.secret.metrics_service.data["tenantId"]) }
+
+    basic_auth {
+      username = nonsensitive(remote.kubernetes.secret.metrics_service.data["username"])
+      password = remote.kubernetes.secret.metrics_service.data["password"]
+    }
+
+    send_native_histograms = false
+  }
+
+  wal {
+    truncate_frequency = "2h"
+    min_keepalive_time = "5m"
+    max_keepalive_time = "8h"
+  }
+
+  external_labels = {
+  }
+}
+
+loki.process "pod_logs" {
+  stage.match {
+    selector = "{tmp_container_runtime=\"containerd\"}"
+    // the cri processing stage extracts the following k/v pairs: log, stream, time, flags
+    stage.cri {}
+
+    // Set the extract flags and stream values as labels
+    stage.labels {
+      values = {
+        flags  = "",
+        stream  = "",
+      }
+    }
+  }
+
+  // if the label tmp_container_runtime from above is docker parse using docker
+  stage.match {
+    selector = "{tmp_container_runtime=\"docker\"}"
+    // the docker processing stage extracts the following k/v pairs: log, stream, time
+    stage.docker {}
+
+    // Set the extract stream value as a label
+    stage.labels {
+      values = {
+        stream  = "",
+      }
+    }
+  }
+
+  // Drop the filename label, since it's not really useful in the context of Kubernetes, where we already have
+  // cluster, namespace, pod, and container labels.
+  // Also drop the temporary container runtime label as it is no longer needed.
+  stage.label_drop {
+    values = ["filename", "tmp_container_runtime"]
+  }
+  forward_to = [loki.process.logs_service.receiver]
+}
+
+// Logs Service
+remote.kubernetes.secret "logs_service" {
+  name = "loki-k8s-monitoring"
+  namespace = "default"
+}
+
+loki.process "logs_service" {
+  stage.static_labels {
+      values = {
+        cluster = "tail-sampling-test",
+      }
+  }
+  forward_to = [loki.write.logs_service.receiver]
+}
+
+// Loki
+loki.write "logs_service" {
+  endpoint {
+    url = nonsensitive(remote.kubernetes.secret.logs_service.data["host"]) + "/loki/api/v1/push"
+    tenant_id = nonsensitive(remote.kubernetes.secret.logs_service.data["tenantId"])
+
+    basic_auth {
+      username = nonsensitive(remote.kubernetes.secret.logs_service.data["username"])
+      password = remote.kubernetes.secret.logs_service.data["password"]
+    }
+  }
+}
+
+
+// Tempo
+remote.kubernetes.secret "traces_service" {
+  name = "tempo-k8s-monitoring"
+  namespace = "default"
+}
+
+otelcol.auth.basic "traces_service" {
+  username = nonsensitive(remote.kubernetes.secret.traces_service.data["username"])
+  password = remote.kubernetes.secret.traces_service.data["password"]
+}
+
+otelcol.exporter.otlp "traces_service" {
+  client {
+    endpoint = nonsensitive(remote.kubernetes.secret.traces_service.data["host"])
+
+    auth = otelcol.auth.basic.traces_service.handler
+    headers = { "X-Scope-OrgID" = nonsensitive(remote.kubernetes.secret.traces_service.data["tenantId"]) }
+  }
+}
