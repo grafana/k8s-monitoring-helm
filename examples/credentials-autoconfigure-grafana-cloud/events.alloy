@@ -1,0 +1,57 @@
+// Cluster Events
+loki.source.kubernetes_events "cluster_events" {
+  job_name   = "integrations/kubernetes/eventhandler"
+  log_format = "logfmt"
+  forward_to = [
+    loki.process.cluster_events.receiver,
+  ]
+}
+
+loki.process "cluster_events" {
+  forward_to = [
+    loki.process.logs_service.receiver,
+  ]
+}
+
+// Logs Service
+
+loki.process "logs_service" {
+  stage.static_labels {
+      values = {
+        cluster = "credentials-auto-configure",
+      }
+  }
+  forward_to = [loki.write.logs_service.receiver]
+}
+
+// Loki
+loki.write "logs_service" {
+  endpoint {
+    url = json_decode(remote.http.grafana_cloud.content)["hlInstanceUrl"] + "/loki/api/v1/push" + "/loki/api/v1/push"
+    headers = { "X-Scope-OrgID" = coalesce(json_decode(remote.http.grafana_cloud.content)["hlInstanceId"], "") }
+
+    basic_auth {
+      username = json_decode(remote.http.grafana_cloud.content)["hlInstanceId"]
+      password = remote.kubernetes.secret.grafana_cloud.data["token"]
+    }
+  }
+}
+
+
+logging {
+  level  = "info"
+  format = "logfmt"
+}
+remote.kubernetes.secret "grafana_cloud" {
+  namespace = "default"
+  name = "grafana-cloud-credentials"
+}
+remote.http "grafana_cloud" {
+  // replace YOURSTACKNAME with the name of your stack name
+  // The API Token must have the stacks:read
+  url = "https://grafana.com/api/instances/YOURSTACKNAME"
+  client {
+    bearer_token = remote.kubernetes.secret.grafana_cloud.data["token"]
+  }
+  poll_frequency = "24h"
+}
