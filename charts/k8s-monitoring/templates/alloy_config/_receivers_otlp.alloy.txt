@@ -2,6 +2,34 @@
 {{- if (or .Values.receivers.grpc.enabled .Values.receivers.http.enabled) }}
 // OTLP Receivers
 otelcol.receiver.otlp "receiver" {
+{{- if or .Values.receivers.port .Values.receivers.grpc.enabled }}
+{{- $data := dict "port" (.Values.receivers.port | default .Values.receivers.grpc.port) "type" "OTLP gRPC" "alloy" .Values.alloy.alloy }}
+{{- include "checkforAlloyPort" $data }}
+  grpc {
+    endpoint = "0.0.0.0:{{ $data.port | int }}"
+  {{- if .Values.receivers.grpc.tls }}
+    tls = {
+    {{- range $k, $v := .Values.receivers.grpc.tls }}
+      {{ $k }} = {{ $v | toJson }}
+    {{- end }}
+    }
+  {{- end }}
+  }
+{{- end }}
+{{- if .Values.receivers.http.enabled }}
+{{- $data := dict "port" .Values.receivers.http.port "type" "OTLP HTTP" "alloy" .Values.alloy.alloy }}
+{{- include "checkforAlloyPort" $data }}
+  http {
+    endpoint = "0.0.0.0:{{ $data.port | int }}"
+  {{- if .Values.receivers.http.tls }}
+    tls = {
+    {{- range $k, $v := .Values.receivers.http.tls }}
+      {{ $k }} = {{ $v | toJson }}
+    {{- end }}
+    }
+  {{- end }}
+  }
+{{- end }}
   debug_metrics {
     {{- if or .Values.receivers.grpc.disable_debug_metrics .Values.receivers.http.disable_debug_metrics }}
     disable_high_cardinality_metrics = true
@@ -9,21 +37,6 @@ otelcol.receiver.otlp "receiver" {
     disable_high_cardinality_metrics = false
     {{- end }}
   }
-
-{{- if or .Values.receivers.port .Values.receivers.grpc.enabled }}
-{{$data := dict "port" (.Values.receivers.port | default .Values.receivers.grpc.port) "type" "OTLP gRPC" "alloy" .Values.alloy.alloy }}
-{{- include "checkforAlloyPort" $data }}
-  grpc {
-    endpoint = "0.0.0.0:{{ $data.port | int }}"
-  }
-{{- end }}
-{{- if .Values.receivers.http.enabled }}
-{{$data := dict "port" .Values.receivers.http.port "type" "OTLP HTTP" "alloy" .Values.alloy.alloy }}
-{{- include "checkforAlloyPort" $data }}
-  http {
-    endpoint = "0.0.0.0:{{ $data.port | int }}"
-  }
-{{- end }}
   output {
 {{- if .Values.metrics.enabled }}
     metrics = [otelcol.processor.resourcedetection.default.input]

@@ -5,6 +5,7 @@ to [Grafana Tempo](https://grafana.com/oss/tempo/). It also shows how to utilize
 triggered by readiness and liveness probes.
 
 ```yaml
+---
 cluster:
   name: traces-enabled-test
 
@@ -33,8 +34,19 @@ traces:
         - attributes["http.route"] == "/live"
         - attributes["http.route"] == "/healthy"
         - attributes["http.route"] == "/ready"
+    transforms:
+      resource:
+        - limit(attributes, 100, [])
+        - truncate_all(attributes, 4096)
+      span:
+        - limit(attributes, 100, [])
+        - truncate_all(attributes, 4096)
 
 receivers:
+  grpc:
+    enabled: true
+  http:
+    enabled: true
   jaeger:
     grpc:
       enabled: true
@@ -46,4 +58,17 @@ receivers:
       enabled: true
   zipkin:
     enabled: true
+    tls:
+      ca_pem: |
+        -----BEGIN CERTIFICATE-----
+        Example CA certificate
+        -----END CERTIFICATE-----
+      cert_pem: |
+        -----BEGIN CERTIFICATE-----
+        Example server certificate
+        -----END CERTIFICATE-----
+      key_pem: |
+        -----BEGIN CERTIFICATE-----
+        Example server key
+        -----END CERTIFICATE-----
 ```

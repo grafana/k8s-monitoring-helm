@@ -6,11 +6,11 @@ metadata:
   name: k8smon-alloy
   namespace: default
   labels:
-    helm.sh/chart: alloy-0.3.2
+    helm.sh/chart: alloy-0.4.0
     app.kubernetes.io/name: alloy
     app.kubernetes.io/instance: k8smon
     
-    app.kubernetes.io/version: "v1.1.1"
+    app.kubernetes.io/version: "v1.2.0"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
     app.kubernetes.io/component: rbac
@@ -20,7 +20,7 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   labels:    
-    helm.sh/chart: kube-state-metrics-5.20.0
+    helm.sh/chart: kube-state-metrics-5.20.1
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: kube-state-metrics
@@ -37,7 +37,7 @@ metadata:
   name: k8smon-opencost
   namespace: default
   labels:
-    helm.sh/chart: opencost-1.38.1
+    helm.sh/chart: opencost-1.39.0
     app.kubernetes.io/name: opencost
     app.kubernetes.io/instance: k8smon
     app.kubernetes.io/version: "1.110.0"
@@ -99,16 +99,14 @@ data:
     
     // OTLP Receivers
     otelcol.receiver.otlp "receiver" {
-      debug_metrics {
-        disable_high_cardinality_metrics = true
-      }
-    
       grpc {
         endpoint = "0.0.0.0:4317"
       }
-    
       http {
         endpoint = "0.0.0.0:4318"
+      }
+      debug_metrics {
+        disable_high_cardinality_metrics = true
       }
       output {
         metrics = [otelcol.processor.resourcedetection.default.input]
@@ -256,6 +254,12 @@ data:
         action = "replace"
         target_label = "__scheme__"
       }
+    
+      rule {
+        source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_metrics_scrapeInterval"]
+        action = "replace"
+        target_label = "__scrape_interval__"
+      }
     }
     
     discovery.relabel "annotation_autodiscovery_services" {
@@ -317,6 +321,12 @@ data:
         action = "replace"
         target_label = "__scheme__"
       }
+    
+      rule {
+        source_labels = ["__meta_kubernetes_service_annotation_k8s_grafana_com_metrics_scrapeInterval"]
+        action = "replace"
+        target_label = "__scrape_interval__"
+      }
     }
     
     discovery.relabel "annotation_autodiscovery_http" {
@@ -339,6 +349,7 @@ data:
     
     prometheus.scrape "annotation_autodiscovery_http" {
       targets = discovery.relabel.annotation_autodiscovery_http.output
+      scrape_interval = "60s"
       honor_labels = true
       bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
       clustering {
@@ -349,6 +360,7 @@ data:
     
     prometheus.scrape "annotation_autodiscovery_https" {
       targets = discovery.relabel.annotation_autodiscovery_https.output
+      scrape_interval = "60s"
       honor_labels = true
       bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
       tls_config {
@@ -411,7 +423,7 @@ data:
       max_cache_size = 100000
       rule {
         source_labels = ["__name__"]
-        regex = "up|alloy_build_info|alloy_tcp_connections|alloy_wal_samples_appended_total|alloy_wal_storage_active_series|go_gc_duration_seconds_count|go_goroutines|go_memstats_heap_inuse_bytes|loki_write_batch_retries_total|loki_write_dropped_bytes_total|loki_write_dropped_entries_total|loki_write_encoded_bytes_total|loki_write_mutated_bytes_total|loki_write_mutated_entries_total|loki_write_request_duration_seconds_bucket|loki_write_sent_bytes_total|loki_write_sent_entries_total|process_cpu_seconds_total|process_start_time_seconds|prometheus_remote_storage_enqueue_retries_total|prometheus_remote_storage_highest_timestamp_in_seconds|prometheus_remote_storage_queue_highest_sent_timestamp_seconds|prometheus_remote_storage_samples_dropped_total|prometheus_remote_storage_samples_failed_total|prometheus_remote_storage_samples_pending|prometheus_remote_storage_samples_retried_total|prometheus_remote_storage_samples_total|prometheus_remote_storage_sent_batch_duration_seconds_bucket|prometheus_remote_storage_sent_batch_duration_seconds_count|prometheus_remote_storage_sent_batch_duration_seconds_sum|prometheus_remote_storage_shard_capacity|prometheus_remote_storage_shards|prometheus_remote_storage_shards_desired|prometheus_remote_storage_shards_max|prometheus_remote_storage_shards_min|prometheus_remote_storage_succeeded_samples_total|prometheus_remote_write_wal_samples_appended_total|prometheus_sd_discovered_targets|prometheus_target_interval_length_seconds_count|prometheus_target_interval_length_seconds_sum|prometheus_target_scrapes_exceeded_sample_limit_total|prometheus_target_scrapes_sample_duplicate_timestamp_total|prometheus_target_scrapes_sample_out_of_bounds_total|prometheus_target_scrapes_sample_out_of_order_total|prometheus_target_sync_length_seconds_sum|prometheus_wal_watcher_current_segment|traces_exporter_send_failed_spans|traces_exporter_send_failed_spans_total|traces_exporter_sent_spans|traces_exporter_sent_spans_total|traces_loadbalancer_backend_outcome|traces_loadbalancer_num_backends|traces_receiver_accepted_spans|traces_receiver_accepted_spans_total|traces_receiver_refused_spans|traces_receiver_refused_spans_total"
+        regex = "up|alloy_build_info|alloy_tcp_connections|alloy_wal_samples_appended_total|alloy_wal_storage_active_series|go_gc_duration_seconds_count|go_goroutines|go_memstats_heap_inuse_bytes|loki_process_dropped_lines_total|loki_write_batch_retries_total|loki_write_dropped_bytes_total|loki_write_dropped_entries_total|loki_write_encoded_bytes_total|loki_write_mutated_bytes_total|loki_write_mutated_entries_total|loki_write_request_duration_seconds_bucket|loki_write_sent_bytes_total|loki_write_sent_entries_total|process_cpu_seconds_total|process_start_time_seconds|prometheus_remote_storage_enqueue_retries_total|prometheus_remote_storage_highest_timestamp_in_seconds|prometheus_remote_storage_queue_highest_sent_timestamp_seconds|prometheus_remote_storage_samples_dropped_total|prometheus_remote_storage_samples_failed_total|prometheus_remote_storage_samples_pending|prometheus_remote_storage_samples_retried_total|prometheus_remote_storage_samples_total|prometheus_remote_storage_sent_batch_duration_seconds_bucket|prometheus_remote_storage_sent_batch_duration_seconds_count|prometheus_remote_storage_sent_batch_duration_seconds_sum|prometheus_remote_storage_shard_capacity|prometheus_remote_storage_shards|prometheus_remote_storage_shards_desired|prometheus_remote_storage_shards_max|prometheus_remote_storage_shards_min|prometheus_remote_storage_succeeded_samples_total|prometheus_remote_write_wal_samples_appended_total|prometheus_sd_discovered_targets|prometheus_target_interval_length_seconds_count|prometheus_target_interval_length_seconds_sum|prometheus_target_scrapes_exceeded_sample_limit_total|prometheus_target_scrapes_sample_duplicate_timestamp_total|prometheus_target_scrapes_sample_out_of_bounds_total|prometheus_target_scrapes_sample_out_of_order_total|prometheus_target_sync_length_seconds_sum|prometheus_wal_watcher_current_segment|traces_exporter_send_failed_spans|traces_exporter_send_failed_spans_total|traces_exporter_sent_spans|traces_exporter_sent_spans_total|traces_loadbalancer_backend_outcome|traces_loadbalancer_num_backends|traces_receiver_accepted_spans|traces_receiver_accepted_spans_total|traces_receiver_refused_spans|traces_receiver_refused_spans_total"
         action = "keep"
       }
       forward_to = [prometheus.relabel.metrics_service.receiver]
@@ -656,7 +668,7 @@ data:
       max_cache_size = 100000
       rule {
         source_labels = ["__name__"]
-        regex = "up|node_cpu.*|node_exporter_build_info|node_filesystem.*|node_memory.*|process_cpu_seconds_total|process_resident_memory_bytes|node_arp_entries|node_boot_time_seconds|node_context_switches_total|node_disk_io_time_seconds_total|node_disk_io_time_weighted_seconds_total|node_disk_read_bytes_total|node_disk_read_time_seconds_total|node_disk_reads_completed_total|node_disk_write_time_seconds_total|node_disk_writes_completed_total|node_disk_written_bytes_total|node_filefd_allocated|node_filefd_maximum|node_intr_total|node_load1|node_load15|node_load5|node_md_disks|node_md_disks_required|node_netstat_Icmp6_InErrors|node_netstat_Icmp6_InMsgs|node_netstat_Icmp6_OutMsgs|node_netstat_Icmp_InErrors|node_netstat_Icmp_InMsgs|node_netstat_Icmp_OutMsgs|node_netstat_IpExt_InOctets|node_netstat_IpExt_OutOctets|node_netstat_TcpExt_ListenDrops|node_netstat_TcpExt_ListenOverflows|node_netstat_TcpExt_TCPSynRetrans|node_netstat_Tcp_InErrs|node_netstat_Tcp_InSegs|node_netstat_Tcp_OutRsts|node_netstat_Tcp_OutSegs|node_netstat_Tcp_RetransSegs|node_netstat_Udp6_InDatagrams|node_netstat_Udp6_InErrors|node_netstat_Udp6_NoPorts|node_netstat_Udp6_OutDatagrams|node_netstat_Udp6_RcvbufErrors|node_netstat_Udp6_SndbufErrors|node_netstat_UdpLite_InErrors|node_netstat_Udp_InDatagrams|node_netstat_Udp_InErrors|node_netstat_Udp_NoPorts|node_netstat_Udp_OutDatagrams|node_netstat_Udp_RcvbufErrors|node_netstat_Udp_SndbufErrors|node_network_carrier|node_network_info|node_network_mtu_bytes|node_network_receive_bytes_total|node_network_receive_compressed_total|node_network_receive_drop_total|node_network_receive_errs_total|node_network_receive_fifo_total|node_network_receive_multicast_total|node_network_receive_packets_total|node_network_speed_bytes|node_network_transmit_bytes_total|node_network_transmit_compressed_total|node_network_transmit_drop_total|node_network_transmit_errs_total|node_network_transmit_fifo_total|node_network_transmit_multicast_total|node_network_transmit_packets_total|node_network_transmit_queue_length|node_network_up|node_nf_conntrack_entries|node_nf_conntrack_entries_limit|node_os_info|node_sockstat_FRAG6_inuse|node_sockstat_FRAG_inuse|node_sockstat_RAW6_inuse|node_sockstat_RAW_inuse|node_sockstat_TCP6_inuse|node_sockstat_TCP_alloc|node_sockstat_TCP_inuse|node_sockstat_TCP_mem|node_sockstat_TCP_mem_bytes|node_sockstat_TCP_orphan|node_sockstat_TCP_tw|node_sockstat_UDP6_inuse|node_sockstat_UDPLITE6_inuse|node_sockstat_UDPLITE_inuse|node_sockstat_UDP_inuse|node_sockstat_UDP_mem|node_sockstat_UDP_mem_bytes|node_sockstat_sockets_used|node_softnet_dropped_total|node_softnet_processed_total|node_softnet_times_squeezed_total|node_systemd_unit_state|node_textfile_scrape_error|node_time_zone_offset_seconds|node_timex_estimated_error_seconds|node_timex_maxerror_seconds|node_timex_offset_seconds|node_timex_sync_status|node_uname_info|node_vmstat_oom_kill|node_vmstat_pgfault|node_vmstat_pgmajfault|node_vmstat_pgpgin|node_vmstat_pgpgout|node_vmstat_pswpin|node_vmstat_pswpout|process_max_fds|process_open_fds"
+        regex = "up|node_cpu.*|node_exporter_build_info|node_filesystem.*|node_memory.*|node_network_receive_bytes_total|node_network_receive_drop_total|node_network_transmit_bytes_total|node_network_transmit_drop_total|process_cpu_seconds_total|process_resident_memory_bytes|node_arp_entries|node_boot_time_seconds|node_context_switches_total|node_disk_io_time_seconds_total|node_disk_io_time_weighted_seconds_total|node_disk_read_bytes_total|node_disk_read_time_seconds_total|node_disk_reads_completed_total|node_disk_write_time_seconds_total|node_disk_writes_completed_total|node_disk_written_bytes_total|node_filefd_allocated|node_filefd_maximum|node_intr_total|node_load1|node_load15|node_load5|node_md_disks|node_md_disks_required|node_netstat_Icmp6_InErrors|node_netstat_Icmp6_InMsgs|node_netstat_Icmp6_OutMsgs|node_netstat_Icmp_InErrors|node_netstat_Icmp_InMsgs|node_netstat_Icmp_OutMsgs|node_netstat_IpExt_InOctets|node_netstat_IpExt_OutOctets|node_netstat_TcpExt_ListenDrops|node_netstat_TcpExt_ListenOverflows|node_netstat_TcpExt_TCPSynRetrans|node_netstat_Tcp_InErrs|node_netstat_Tcp_InSegs|node_netstat_Tcp_OutRsts|node_netstat_Tcp_OutSegs|node_netstat_Tcp_RetransSegs|node_netstat_Udp6_InDatagrams|node_netstat_Udp6_InErrors|node_netstat_Udp6_NoPorts|node_netstat_Udp6_OutDatagrams|node_netstat_Udp6_RcvbufErrors|node_netstat_Udp6_SndbufErrors|node_netstat_UdpLite_InErrors|node_netstat_Udp_InDatagrams|node_netstat_Udp_InErrors|node_netstat_Udp_NoPorts|node_netstat_Udp_OutDatagrams|node_netstat_Udp_RcvbufErrors|node_netstat_Udp_SndbufErrors|node_network_carrier|node_network_info|node_network_mtu_bytes|node_network_receive_bytes_total|node_network_receive_compressed_total|node_network_receive_drop_total|node_network_receive_errs_total|node_network_receive_fifo_total|node_network_receive_multicast_total|node_network_receive_packets_total|node_network_speed_bytes|node_network_transmit_bytes_total|node_network_transmit_compressed_total|node_network_transmit_drop_total|node_network_transmit_errs_total|node_network_transmit_fifo_total|node_network_transmit_multicast_total|node_network_transmit_packets_total|node_network_transmit_queue_length|node_network_up|node_nf_conntrack_entries|node_nf_conntrack_entries_limit|node_os_info|node_sockstat_FRAG6_inuse|node_sockstat_FRAG_inuse|node_sockstat_RAW6_inuse|node_sockstat_RAW_inuse|node_sockstat_TCP6_inuse|node_sockstat_TCP_alloc|node_sockstat_TCP_inuse|node_sockstat_TCP_mem|node_sockstat_TCP_mem_bytes|node_sockstat_TCP_orphan|node_sockstat_TCP_tw|node_sockstat_UDP6_inuse|node_sockstat_UDPLITE6_inuse|node_sockstat_UDPLITE_inuse|node_sockstat_UDP_inuse|node_sockstat_UDP_mem|node_sockstat_UDP_mem_bytes|node_sockstat_sockets_used|node_softnet_dropped_total|node_softnet_processed_total|node_softnet_times_squeezed_total|node_systemd_unit_state|node_textfile_scrape_error|node_time_zone_offset_seconds|node_timex_estimated_error_seconds|node_timex_maxerror_seconds|node_timex_offset_seconds|node_timex_sync_status|node_uname_info|node_vmstat_oom_kill|node_vmstat_pgfault|node_vmstat_pgmajfault|node_vmstat_pgpgin|node_vmstat_pgpgout|node_vmstat_pswpin|node_vmstat_pswpout|process_max_fds|process_open_fds"
         action = "keep"
       }
       // Drop metrics for certain file systems
@@ -825,7 +837,7 @@ data:
   metrics.prom: |
     # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart as well as a summary of enabled features
     # TYPE grafana_kubernetes_monitoring_build_info gauge
-    grafana_kubernetes_monitoring_build_info{version="1.1.1", namespace="default", metrics="enabled,alloy,autoDiscover,kube-state-metrics,node-exporter,kubelet,cadvisor,cost", logs="disabled", traces="disabled", deployments="kube-state-metrics,prometheus-node-exporter,prometheus-operator-crds,opencost"} 1
+    grafana_kubernetes_monitoring_build_info{version="1.2.1", namespace="default", metrics="enabled,alloy,autoDiscover,kube-state-metrics,node-exporter,kubelet,cadvisor,cost", logs="disabled", traces="disabled", deployments="kube-state-metrics,prometheus-node-exporter,prometheus-operator-crds,opencost"} 1
 ---
 # Source: k8s-monitoring/charts/prometheus-operator-crds/charts/crds/templates/crd-alertmanagerconfigs.yaml
 apiVersion: apiextensions.k8s.io/v1
@@ -50595,11 +50607,11 @@ kind: ClusterRole
 metadata:
   name: k8smon-alloy
   labels:
-    helm.sh/chart: alloy-0.3.2
+    helm.sh/chart: alloy-0.4.0
     app.kubernetes.io/name: alloy
     app.kubernetes.io/instance: k8smon
     
-    app.kubernetes.io/version: "v1.1.1"
+    app.kubernetes.io/version: "v1.2.0"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
     app.kubernetes.io/component: rbac
@@ -50694,7 +50706,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   labels:    
-    helm.sh/chart: kube-state-metrics-5.20.0
+    helm.sh/chart: kube-state-metrics-5.20.1
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: kube-state-metrics
@@ -50852,7 +50864,7 @@ kind: ClusterRole
 metadata:
   name: k8smon-opencost
   labels:
-    helm.sh/chart: opencost-1.38.1
+    helm.sh/chart: opencost-1.39.0
     app.kubernetes.io/name: opencost
     app.kubernetes.io/instance: k8smon
     app.kubernetes.io/version: "1.110.0"
@@ -50937,11 +50949,11 @@ kind: ClusterRoleBinding
 metadata:
   name: k8smon-alloy
   labels:
-    helm.sh/chart: alloy-0.3.2
+    helm.sh/chart: alloy-0.4.0
     app.kubernetes.io/name: alloy
     app.kubernetes.io/instance: k8smon
     
-    app.kubernetes.io/version: "v1.1.1"
+    app.kubernetes.io/version: "v1.2.0"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
     app.kubernetes.io/component: rbac
@@ -50959,7 +50971,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   labels:    
-    helm.sh/chart: kube-state-metrics-5.20.0
+    helm.sh/chart: kube-state-metrics-5.20.1
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: kube-state-metrics
@@ -50982,7 +50994,7 @@ kind: ClusterRoleBinding
 metadata:
   name: k8smon-opencost
   labels:
-    helm.sh/chart: opencost-1.38.1
+    helm.sh/chart: opencost-1.39.0
     app.kubernetes.io/name: opencost
     app.kubernetes.io/instance: k8smon
     app.kubernetes.io/version: "1.110.0"
@@ -51003,11 +51015,11 @@ kind: Service
 metadata:
   name: k8smon-alloy-cluster
   labels:
-    helm.sh/chart: alloy-0.3.2
+    helm.sh/chart: alloy-0.4.0
     app.kubernetes.io/name: alloy
     app.kubernetes.io/instance: k8smon
     
-    app.kubernetes.io/version: "v1.1.1"
+    app.kubernetes.io/version: "v1.2.0"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
     app.kubernetes.io/component: networking
@@ -51067,11 +51079,11 @@ kind: Service
 metadata:
   name: k8smon-alloy
   labels:
-    helm.sh/chart: alloy-0.3.2
+    helm.sh/chart: alloy-0.4.0
     app.kubernetes.io/name: alloy
     app.kubernetes.io/instance: k8smon
     
-    app.kubernetes.io/version: "v1.1.1"
+    app.kubernetes.io/version: "v1.2.0"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
     app.kubernetes.io/component: networking
@@ -51126,7 +51138,7 @@ metadata:
   name: k8smon-kube-state-metrics
   namespace: default
   labels:    
-    helm.sh/chart: kube-state-metrics-5.20.0
+    helm.sh/chart: kube-state-metrics-5.20.1
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: kube-state-metrics
@@ -51153,7 +51165,7 @@ metadata:
   name: k8smon-opencost
   namespace: default
   labels:
-    helm.sh/chart: opencost-1.38.1
+    helm.sh/chart: opencost-1.39.0
     app.kubernetes.io/name: opencost
     app.kubernetes.io/instance: k8smon
     app.kubernetes.io/version: "1.110.0"
@@ -51200,11 +51212,11 @@ kind: Service
 metadata:
   name: k8smon-grafana-agent
   labels:
-    helm.sh/chart: alloy-0.3.2
+    helm.sh/chart: alloy-0.4.0
     app.kubernetes.io/name: alloy
     app.kubernetes.io/instance: k8smon
     
-    app.kubernetes.io/version: "v1.1.1"
+    app.kubernetes.io/version: "v1.2.0"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
 spec:
@@ -51381,7 +51393,7 @@ metadata:
   name: k8smon-kube-state-metrics
   namespace: default
   labels:    
-    helm.sh/chart: kube-state-metrics-5.20.0
+    helm.sh/chart: kube-state-metrics-5.20.1
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: kube-state-metrics
@@ -51400,7 +51412,7 @@ spec:
   template:
     metadata:
       labels:        
-        helm.sh/chart: kube-state-metrics-5.20.0
+        helm.sh/chart: kube-state-metrics-5.20.1
         app.kubernetes.io/managed-by: Helm
         app.kubernetes.io/component: metrics
         app.kubernetes.io/part-of: kube-state-metrics
@@ -51449,6 +51461,8 @@ spec:
           periodSeconds: 10
           successThreshold: 1
           timeoutSeconds: 5
+        resources:
+          {}
         securityContext:
           allowPrivilegeEscalation: false
           capabilities:
@@ -51465,7 +51479,7 @@ metadata:
   name: k8smon-opencost
   namespace: default
   labels:
-    helm.sh/chart: opencost-1.38.1
+    helm.sh/chart: opencost-1.39.0
     app.kubernetes.io/name: opencost
     app.kubernetes.io/instance: k8smon
     app.kubernetes.io/version: "1.110.0"
@@ -51493,7 +51507,7 @@ spec:
         kubernetes.io/os: linux
       containers:
         - name: k8smon-opencost
-          image: "ghcr.io/opencost/opencost:1.110.0"
+          image: "ghcr.io/opencost/opencost:1.109.0"
           imagePullPolicy: IfNotPresent
           args:
           ports:
@@ -51562,14 +51576,14 @@ spec:
               value: "7"
             - name: CLOUD_COST_RUN_WINDOW_DAYS
               value: "3"
+            - name: EMIT_KSM_V1_METRICS
+              value: "false"
+            - name: EMIT_KSM_V1_METRICS_ONLY
+              value: "true"
             # Add any additional provided variables
             - name: CLOUD_PROVIDER_API_KEY
               value: "AIzaSyD29bGxmHAVEOBYtgd8sYM2gM2ekfxQX4U"
             - name: CURRENT_CLUSTER_ID_FILTER_ENABLED
-              value: "true"
-            - name: EMIT_KSM_V1_METRICS
-              value: "false"
-            - name: EMIT_KSM_V1_METRICS_ONLY
               value: "true"
             - name: PROM_CLUSTER_ID_LABEL
               value: "cluster"
@@ -51580,11 +51594,11 @@ kind: StatefulSet
 metadata:
   name: k8smon-alloy
   labels:
-    helm.sh/chart: alloy-0.3.2
+    helm.sh/chart: alloy-0.4.0
     app.kubernetes.io/name: alloy
     app.kubernetes.io/instance: k8smon
     
-    app.kubernetes.io/version: "v1.1.1"
+    app.kubernetes.io/version: "v1.2.0"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
 spec:
@@ -51607,7 +51621,7 @@ spec:
       serviceAccountName: k8smon-alloy
       containers:
         - name: alloy
-          image: docker.io/grafana/alloy:v1.1.1
+          image: docker.io/grafana/alloy:v1.2.0
           imagePullPolicy: IfNotPresent
           args:
             - run
@@ -51727,8 +51741,8 @@ metadata:
   labels:
     app.kubernetes.io/managed-by: "Helm"
     app.kubernetes.io/instance: "k8smon"
-    app.kubernetes.io/version: 2.3.5
-    helm.sh/chart: "k8s-monitoring-1.1.1"
+    app.kubernetes.io/version: 2.5.0
+    helm.sh/chart: "k8s-monitoring-1.2.1"
   annotations:
     "helm.sh/hook": pre-install,pre-upgrade
     "helm.sh/hook-weight": "-5"
@@ -51753,16 +51767,14 @@ data:
     
     // OTLP Receivers
     otelcol.receiver.otlp "receiver" {
-      debug_metrics {
-        disable_high_cardinality_metrics = true
-      }
-    
       grpc {
         endpoint = "0.0.0.0:4317"
       }
-    
       http {
         endpoint = "0.0.0.0:4318"
+      }
+      debug_metrics {
+        disable_high_cardinality_metrics = true
       }
       output {
         metrics = [otelcol.processor.resourcedetection.default.input]
@@ -51910,6 +51922,12 @@ data:
         action = "replace"
         target_label = "__scheme__"
       }
+    
+      rule {
+        source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_metrics_scrapeInterval"]
+        action = "replace"
+        target_label = "__scrape_interval__"
+      }
     }
     
     discovery.relabel "annotation_autodiscovery_services" {
@@ -51971,6 +51989,12 @@ data:
         action = "replace"
         target_label = "__scheme__"
       }
+    
+      rule {
+        source_labels = ["__meta_kubernetes_service_annotation_k8s_grafana_com_metrics_scrapeInterval"]
+        action = "replace"
+        target_label = "__scrape_interval__"
+      }
     }
     
     discovery.relabel "annotation_autodiscovery_http" {
@@ -51993,6 +52017,7 @@ data:
     
     prometheus.scrape "annotation_autodiscovery_http" {
       targets = discovery.relabel.annotation_autodiscovery_http.output
+      scrape_interval = "60s"
       honor_labels = true
       bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
       clustering {
@@ -52003,6 +52028,7 @@ data:
     
     prometheus.scrape "annotation_autodiscovery_https" {
       targets = discovery.relabel.annotation_autodiscovery_https.output
+      scrape_interval = "60s"
       honor_labels = true
       bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
       tls_config {
@@ -52065,7 +52091,7 @@ data:
       max_cache_size = 100000
       rule {
         source_labels = ["__name__"]
-        regex = "up|alloy_build_info|alloy_tcp_connections|alloy_wal_samples_appended_total|alloy_wal_storage_active_series|go_gc_duration_seconds_count|go_goroutines|go_memstats_heap_inuse_bytes|loki_write_batch_retries_total|loki_write_dropped_bytes_total|loki_write_dropped_entries_total|loki_write_encoded_bytes_total|loki_write_mutated_bytes_total|loki_write_mutated_entries_total|loki_write_request_duration_seconds_bucket|loki_write_sent_bytes_total|loki_write_sent_entries_total|process_cpu_seconds_total|process_start_time_seconds|prometheus_remote_storage_enqueue_retries_total|prometheus_remote_storage_highest_timestamp_in_seconds|prometheus_remote_storage_queue_highest_sent_timestamp_seconds|prometheus_remote_storage_samples_dropped_total|prometheus_remote_storage_samples_failed_total|prometheus_remote_storage_samples_pending|prometheus_remote_storage_samples_retried_total|prometheus_remote_storage_samples_total|prometheus_remote_storage_sent_batch_duration_seconds_bucket|prometheus_remote_storage_sent_batch_duration_seconds_count|prometheus_remote_storage_sent_batch_duration_seconds_sum|prometheus_remote_storage_shard_capacity|prometheus_remote_storage_shards|prometheus_remote_storage_shards_desired|prometheus_remote_storage_shards_max|prometheus_remote_storage_shards_min|prometheus_remote_storage_succeeded_samples_total|prometheus_remote_write_wal_samples_appended_total|prometheus_sd_discovered_targets|prometheus_target_interval_length_seconds_count|prometheus_target_interval_length_seconds_sum|prometheus_target_scrapes_exceeded_sample_limit_total|prometheus_target_scrapes_sample_duplicate_timestamp_total|prometheus_target_scrapes_sample_out_of_bounds_total|prometheus_target_scrapes_sample_out_of_order_total|prometheus_target_sync_length_seconds_sum|prometheus_wal_watcher_current_segment|traces_exporter_send_failed_spans|traces_exporter_send_failed_spans_total|traces_exporter_sent_spans|traces_exporter_sent_spans_total|traces_loadbalancer_backend_outcome|traces_loadbalancer_num_backends|traces_receiver_accepted_spans|traces_receiver_accepted_spans_total|traces_receiver_refused_spans|traces_receiver_refused_spans_total"
+        regex = "up|alloy_build_info|alloy_tcp_connections|alloy_wal_samples_appended_total|alloy_wal_storage_active_series|go_gc_duration_seconds_count|go_goroutines|go_memstats_heap_inuse_bytes|loki_process_dropped_lines_total|loki_write_batch_retries_total|loki_write_dropped_bytes_total|loki_write_dropped_entries_total|loki_write_encoded_bytes_total|loki_write_mutated_bytes_total|loki_write_mutated_entries_total|loki_write_request_duration_seconds_bucket|loki_write_sent_bytes_total|loki_write_sent_entries_total|process_cpu_seconds_total|process_start_time_seconds|prometheus_remote_storage_enqueue_retries_total|prometheus_remote_storage_highest_timestamp_in_seconds|prometheus_remote_storage_queue_highest_sent_timestamp_seconds|prometheus_remote_storage_samples_dropped_total|prometheus_remote_storage_samples_failed_total|prometheus_remote_storage_samples_pending|prometheus_remote_storage_samples_retried_total|prometheus_remote_storage_samples_total|prometheus_remote_storage_sent_batch_duration_seconds_bucket|prometheus_remote_storage_sent_batch_duration_seconds_count|prometheus_remote_storage_sent_batch_duration_seconds_sum|prometheus_remote_storage_shard_capacity|prometheus_remote_storage_shards|prometheus_remote_storage_shards_desired|prometheus_remote_storage_shards_max|prometheus_remote_storage_shards_min|prometheus_remote_storage_succeeded_samples_total|prometheus_remote_write_wal_samples_appended_total|prometheus_sd_discovered_targets|prometheus_target_interval_length_seconds_count|prometheus_target_interval_length_seconds_sum|prometheus_target_scrapes_exceeded_sample_limit_total|prometheus_target_scrapes_sample_duplicate_timestamp_total|prometheus_target_scrapes_sample_out_of_bounds_total|prometheus_target_scrapes_sample_out_of_order_total|prometheus_target_sync_length_seconds_sum|prometheus_wal_watcher_current_segment|traces_exporter_send_failed_spans|traces_exporter_send_failed_spans_total|traces_exporter_sent_spans|traces_exporter_sent_spans_total|traces_loadbalancer_backend_outcome|traces_loadbalancer_num_backends|traces_receiver_accepted_spans|traces_receiver_accepted_spans_total|traces_receiver_refused_spans|traces_receiver_refused_spans_total"
         action = "keep"
       }
       forward_to = [prometheus.relabel.metrics_service.receiver]
@@ -52310,7 +52336,7 @@ data:
       max_cache_size = 100000
       rule {
         source_labels = ["__name__"]
-        regex = "up|node_cpu.*|node_exporter_build_info|node_filesystem.*|node_memory.*|process_cpu_seconds_total|process_resident_memory_bytes|node_arp_entries|node_boot_time_seconds|node_context_switches_total|node_disk_io_time_seconds_total|node_disk_io_time_weighted_seconds_total|node_disk_read_bytes_total|node_disk_read_time_seconds_total|node_disk_reads_completed_total|node_disk_write_time_seconds_total|node_disk_writes_completed_total|node_disk_written_bytes_total|node_filefd_allocated|node_filefd_maximum|node_intr_total|node_load1|node_load15|node_load5|node_md_disks|node_md_disks_required|node_netstat_Icmp6_InErrors|node_netstat_Icmp6_InMsgs|node_netstat_Icmp6_OutMsgs|node_netstat_Icmp_InErrors|node_netstat_Icmp_InMsgs|node_netstat_Icmp_OutMsgs|node_netstat_IpExt_InOctets|node_netstat_IpExt_OutOctets|node_netstat_TcpExt_ListenDrops|node_netstat_TcpExt_ListenOverflows|node_netstat_TcpExt_TCPSynRetrans|node_netstat_Tcp_InErrs|node_netstat_Tcp_InSegs|node_netstat_Tcp_OutRsts|node_netstat_Tcp_OutSegs|node_netstat_Tcp_RetransSegs|node_netstat_Udp6_InDatagrams|node_netstat_Udp6_InErrors|node_netstat_Udp6_NoPorts|node_netstat_Udp6_OutDatagrams|node_netstat_Udp6_RcvbufErrors|node_netstat_Udp6_SndbufErrors|node_netstat_UdpLite_InErrors|node_netstat_Udp_InDatagrams|node_netstat_Udp_InErrors|node_netstat_Udp_NoPorts|node_netstat_Udp_OutDatagrams|node_netstat_Udp_RcvbufErrors|node_netstat_Udp_SndbufErrors|node_network_carrier|node_network_info|node_network_mtu_bytes|node_network_receive_bytes_total|node_network_receive_compressed_total|node_network_receive_drop_total|node_network_receive_errs_total|node_network_receive_fifo_total|node_network_receive_multicast_total|node_network_receive_packets_total|node_network_speed_bytes|node_network_transmit_bytes_total|node_network_transmit_compressed_total|node_network_transmit_drop_total|node_network_transmit_errs_total|node_network_transmit_fifo_total|node_network_transmit_multicast_total|node_network_transmit_packets_total|node_network_transmit_queue_length|node_network_up|node_nf_conntrack_entries|node_nf_conntrack_entries_limit|node_os_info|node_sockstat_FRAG6_inuse|node_sockstat_FRAG_inuse|node_sockstat_RAW6_inuse|node_sockstat_RAW_inuse|node_sockstat_TCP6_inuse|node_sockstat_TCP_alloc|node_sockstat_TCP_inuse|node_sockstat_TCP_mem|node_sockstat_TCP_mem_bytes|node_sockstat_TCP_orphan|node_sockstat_TCP_tw|node_sockstat_UDP6_inuse|node_sockstat_UDPLITE6_inuse|node_sockstat_UDPLITE_inuse|node_sockstat_UDP_inuse|node_sockstat_UDP_mem|node_sockstat_UDP_mem_bytes|node_sockstat_sockets_used|node_softnet_dropped_total|node_softnet_processed_total|node_softnet_times_squeezed_total|node_systemd_unit_state|node_textfile_scrape_error|node_time_zone_offset_seconds|node_timex_estimated_error_seconds|node_timex_maxerror_seconds|node_timex_offset_seconds|node_timex_sync_status|node_uname_info|node_vmstat_oom_kill|node_vmstat_pgfault|node_vmstat_pgmajfault|node_vmstat_pgpgin|node_vmstat_pgpgout|node_vmstat_pswpin|node_vmstat_pswpout|process_max_fds|process_open_fds"
+        regex = "up|node_cpu.*|node_exporter_build_info|node_filesystem.*|node_memory.*|node_network_receive_bytes_total|node_network_receive_drop_total|node_network_transmit_bytes_total|node_network_transmit_drop_total|process_cpu_seconds_total|process_resident_memory_bytes|node_arp_entries|node_boot_time_seconds|node_context_switches_total|node_disk_io_time_seconds_total|node_disk_io_time_weighted_seconds_total|node_disk_read_bytes_total|node_disk_read_time_seconds_total|node_disk_reads_completed_total|node_disk_write_time_seconds_total|node_disk_writes_completed_total|node_disk_written_bytes_total|node_filefd_allocated|node_filefd_maximum|node_intr_total|node_load1|node_load15|node_load5|node_md_disks|node_md_disks_required|node_netstat_Icmp6_InErrors|node_netstat_Icmp6_InMsgs|node_netstat_Icmp6_OutMsgs|node_netstat_Icmp_InErrors|node_netstat_Icmp_InMsgs|node_netstat_Icmp_OutMsgs|node_netstat_IpExt_InOctets|node_netstat_IpExt_OutOctets|node_netstat_TcpExt_ListenDrops|node_netstat_TcpExt_ListenOverflows|node_netstat_TcpExt_TCPSynRetrans|node_netstat_Tcp_InErrs|node_netstat_Tcp_InSegs|node_netstat_Tcp_OutRsts|node_netstat_Tcp_OutSegs|node_netstat_Tcp_RetransSegs|node_netstat_Udp6_InDatagrams|node_netstat_Udp6_InErrors|node_netstat_Udp6_NoPorts|node_netstat_Udp6_OutDatagrams|node_netstat_Udp6_RcvbufErrors|node_netstat_Udp6_SndbufErrors|node_netstat_UdpLite_InErrors|node_netstat_Udp_InDatagrams|node_netstat_Udp_InErrors|node_netstat_Udp_NoPorts|node_netstat_Udp_OutDatagrams|node_netstat_Udp_RcvbufErrors|node_netstat_Udp_SndbufErrors|node_network_carrier|node_network_info|node_network_mtu_bytes|node_network_receive_bytes_total|node_network_receive_compressed_total|node_network_receive_drop_total|node_network_receive_errs_total|node_network_receive_fifo_total|node_network_receive_multicast_total|node_network_receive_packets_total|node_network_speed_bytes|node_network_transmit_bytes_total|node_network_transmit_compressed_total|node_network_transmit_drop_total|node_network_transmit_errs_total|node_network_transmit_fifo_total|node_network_transmit_multicast_total|node_network_transmit_packets_total|node_network_transmit_queue_length|node_network_up|node_nf_conntrack_entries|node_nf_conntrack_entries_limit|node_os_info|node_sockstat_FRAG6_inuse|node_sockstat_FRAG_inuse|node_sockstat_RAW6_inuse|node_sockstat_RAW_inuse|node_sockstat_TCP6_inuse|node_sockstat_TCP_alloc|node_sockstat_TCP_inuse|node_sockstat_TCP_mem|node_sockstat_TCP_mem_bytes|node_sockstat_TCP_orphan|node_sockstat_TCP_tw|node_sockstat_UDP6_inuse|node_sockstat_UDPLITE6_inuse|node_sockstat_UDPLITE_inuse|node_sockstat_UDP_inuse|node_sockstat_UDP_mem|node_sockstat_UDP_mem_bytes|node_sockstat_sockets_used|node_softnet_dropped_total|node_softnet_processed_total|node_softnet_times_squeezed_total|node_systemd_unit_state|node_textfile_scrape_error|node_time_zone_offset_seconds|node_timex_estimated_error_seconds|node_timex_maxerror_seconds|node_timex_offset_seconds|node_timex_sync_status|node_uname_info|node_vmstat_oom_kill|node_vmstat_pgfault|node_vmstat_pgmajfault|node_vmstat_pgpgin|node_vmstat_pgpgout|node_vmstat_pswpin|node_vmstat_pswpout|process_max_fds|process_open_fds"
         action = "keep"
       }
       // Drop metrics for certain file systems
@@ -52478,8 +52504,8 @@ metadata:
   labels:
     app.kubernetes.io/managed-by: "Helm"
     app.kubernetes.io/instance: "k8smon"
-    app.kubernetes.io/version: 2.3.5
-    helm.sh/chart: "k8s-monitoring-1.1.1"
+    app.kubernetes.io/version: 2.5.0
+    helm.sh/chart: "k8s-monitoring-1.2.1"
   annotations:
     "helm.sh/hook": test
     "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
@@ -52532,8 +52558,8 @@ metadata:
   labels:
     app.kubernetes.io/managed-by: "Helm"
     app.kubernetes.io/instance: "k8smon"
-    app.kubernetes.io/version: 2.3.5
-    helm.sh/chart: "k8s-monitoring-1.1.1"
+    app.kubernetes.io/version: 2.5.0
+    helm.sh/chart: "k8s-monitoring-1.2.1"
   annotations:
     "helm.sh/hook": pre-install,pre-upgrade
     "helm.sh/hook-weight": "-5"
@@ -52544,7 +52570,7 @@ spec:
         kubernetes.io/os: linux
   containers:
     - name: alloy
-      image: "docker.io/grafana/alloy:v1.1.1"
+      image: "docker.io/grafana/alloy:v1.2.0"
       command:
       - bash
       - -c
@@ -52581,8 +52607,8 @@ metadata:
   labels:
     app.kubernetes.io/managed-by: "Helm"
     app.kubernetes.io/instance: "k8smon"
-    app.kubernetes.io/version: 2.3.5
-    helm.sh/chart: "k8s-monitoring-1.1.1"
+    app.kubernetes.io/version: 2.5.0
+    helm.sh/chart: "k8s-monitoring-1.2.1"
   annotations:
     "helm.sh/hook": test
     "helm.sh/hook-delete-policy": before-hook-creation
@@ -52593,7 +52619,7 @@ spec:
         kubernetes.io/os: linux
   containers:
     - name: config-analysis
-      image: ghcr.io/grafana/k8s-monitoring-test:1.1.1
+      image: ghcr.io/grafana/k8s-monitoring-test:1.2.1
       command: [/etc/bin/config-analysis.sh]
       env:
         - name: ALLOY_HOST
@@ -52608,8 +52634,8 @@ metadata:
   labels:
     app.kubernetes.io/managed-by: "Helm"
     app.kubernetes.io/instance: "k8smon"
-    app.kubernetes.io/version: 2.3.5
-    helm.sh/chart: "k8s-monitoring-1.1.1"
+    app.kubernetes.io/version: 2.5.0
+    helm.sh/chart: "k8s-monitoring-1.2.1"
   annotations:
     "helm.sh/hook": test
     "helm.sh/hook-delete-policy": before-hook-creation
@@ -52625,14 +52651,14 @@ spec:
       labels:
         app.kubernetes.io/managed-by: "Helm"
         app.kubernetes.io/instance: "k8smon"
-        helm.sh/chart: "k8s-monitoring-1.1.1"
+        helm.sh/chart: "k8s-monitoring-1.2.1"
     spec:
       restartPolicy: Never
       nodeSelector:
         kubernetes.io/os: linux
       containers:
         - name: query-test
-          image: ghcr.io/grafana/k8s-monitoring-test:1.1.1
+          image: ghcr.io/grafana/k8s-monitoring-test:1.2.1
           command: ["bash", "-c", "/etc/bin/query-test.sh /etc/test/testQueries.json"]
           volumeMounts:
             - name: test-files

@@ -5,7 +5,7 @@
 
 # k8s-monitoring
 
-![Version: 1.1.1](https://img.shields.io/badge/Version-1.1.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 2.3.5](https://img.shields.io/badge/AppVersion-2.3.5-informational?style=flat-square)
+![Version: 1.2.1](https://img.shields.io/badge/Version-1.2.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 2.5.0](https://img.shields.io/badge/AppVersion-2.5.0-informational?style=flat-square)
 
 A Helm chart for gathering, scraping, and forwarding Kubernetes telemetry data to a Grafana Stack.
 
@@ -136,12 +136,12 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 
 | Repository | Name | Version |
 |------------|------|---------|
-| https://grafana.github.io/helm-charts | alloy | 0.3.2 |
-| https://grafana.github.io/helm-charts | alloy-events(alloy) | 0.3.2 |
-| https://grafana.github.io/helm-charts | alloy-logs(alloy) | 0.3.2 |
-| https://grafana.github.io/helm-charts | alloy-profiles(alloy) | 0.3.2 |
-| https://opencost.github.io/opencost-helm-chart | opencost | 1.38.1 |
-| https://prometheus-community.github.io/helm-charts | kube-state-metrics | 5.20.0 |
+| https://grafana.github.io/helm-charts | alloy | 0.4.0 |
+| https://grafana.github.io/helm-charts | alloy-events(alloy) | 0.4.0 |
+| https://grafana.github.io/helm-charts | alloy-logs(alloy) | 0.4.0 |
+| https://grafana.github.io/helm-charts | alloy-profiles(alloy) | 0.4.0 |
+| https://opencost.github.io/opencost-helm-chart | opencost | 1.39.0 |
+| https://prometheus-community.github.io/helm-charts | kube-state-metrics | 5.20.1 |
 | https://prometheus-community.github.io/helm-charts | prometheus-node-exporter | 4.36.0 |
 | https://prometheus-community.github.io/helm-charts | prometheus-operator-crds | 12.0.0 |
 | https://prometheus-community.github.io/helm-charts | prometheus-windows-exporter | 0.3.1 |
@@ -169,6 +169,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | configAnalysis.image.registry | string | `"ghcr.io"` | Config Analysis image registry. |
 | configAnalysis.image.tag | string | `""` | Config Analysis image tag. Default is the chart version. |
 | configAnalysis.nodeSelector | object | `{"kubernetes.io/os":"linux"}` | nodeSelector to apply to the config analysis pod. |
+| configAnalysis.serviceAccount | object | `{"name":""}` | Service Account to use for the config analysis pod. |
 | configAnalysis.tolerations | list | `[]` | Tolerations to apply to the config analysis pod. |
 
 ### Config Validator Job
@@ -179,6 +180,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | configValidator.extraAnnotations | object | `{}` | Extra annotations to add to the test config validator job. |
 | configValidator.extraLabels | object | `{}` | Extra labels to add to the test config validator job. |
 | configValidator.nodeSelector | object | `{"kubernetes.io/os":"linux"}` | nodeSelector to apply to the config validator job. |
+| configValidator.serviceAccount | object | `{"name":""}` | Service Account to use for the config validator job. |
 | configValidator.tolerations | list | `[]` | Tolerations to apply to the config validator job. |
 
 ### External Services (Loki)
@@ -395,7 +397,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | metrics.alloy.maxCacheSize | string | `nil` | Sets the max_cache_size for cadvisor prometheus.relabel component. This should be at least 2x-5x your largest scrape target or samples appended rate. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#arguments)) Overrides metrics.maxCacheSize |
 | metrics.alloy.metricsTuning.excludeMetrics | list | `[]` | Metrics to drop. Can use regex. |
 | metrics.alloy.metricsTuning.includeMetrics | list | `[]` | Metrics to keep. Can use regex. |
-| metrics.alloy.metricsTuning.useDefaultAllowList | bool | `true` | Filter the list of metrics from Grafana Alloy to the minimal set required for Kubernetes Monitoring. See [Allow List for Grafana Alloy](#allow-list-for-grafana-alloy) |
+| metrics.alloy.metricsTuning.useDefaultAllowList | bool | `true` | Filter the list of metrics from Grafana Alloy to the minimal set required for Kubernetes Monitoring. See [Metrics Tuning and Allow Lists](#metrics-tuning-and-allow-lists) |
 | metrics.alloy.metricsTuning.useIntegrationAllowList | bool | `false` | Filter the list of metrics from Grafana Alloy to the minimal set required for Kubernetes Monitoring as well as the Grafana Alloy integration. |
 | metrics.alloy.scrapeInterval | string | 60s | How frequently to scrape metrics from Grafana Alloy. Overrides metrics.scrapeInterval |
 
@@ -428,6 +430,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | metrics.autoDiscover.annotations.metricsPortName | string | `"k8s.grafana.com/metrics.portName"` | Annotation for setting the metrics port by name. |
 | metrics.autoDiscover.annotations.metricsPortNumber | string | `"k8s.grafana.com/metrics.portNumber"` | Annotation for setting the metrics port by number. |
 | metrics.autoDiscover.annotations.metricsScheme | string | `"k8s.grafana.com/metrics.scheme"` | Annotation for setting the metrics scheme, default: http. |
+| metrics.autoDiscover.annotations.metricsScrapeInterval | string | `"k8s.grafana.com/metrics.scrapeInterval"` | Annotation for overriding the scrape interval for this service or pod. Value should be a duration like "15s, 1m". Overrides metrics.autoDiscover.scrapeInterval |
 | metrics.autoDiscover.annotations.scrape | string | `"k8s.grafana.com/scrape"` | Annotation for enabling scraping for this service or pod. Value should be either "true" or "false" |
 | metrics.autoDiscover.enabled | bool | `true` | Enable annotation-based auto-discovery |
 | metrics.autoDiscover.extraMetricRelabelingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for auto-discovered entities. These relabeling rules are applied post-scrape against the metrics returned from the scraped target, no `__meta*` labels are present. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#rule-block)) |
@@ -435,6 +438,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | metrics.autoDiscover.maxCacheSize | string | `nil` | Sets the max_cache_size for cadvisor prometheus.relabel component. This should be at least 2x-5x your largest scrape target or samples appended rate. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#arguments)) Overrides metrics.maxCacheSize |
 | metrics.autoDiscover.metricsTuning.excludeMetrics | list | `[]` | Metrics to drop. Can use regex. |
 | metrics.autoDiscover.metricsTuning.includeMetrics | list | `[]` | Metrics to keep. Can use regex. An empty list means keep all. |
+| metrics.autoDiscover.scrapeInterval | string | 60s | How frequently to scrape metrics from auto-discovered entities. Overrides metrics.scrapeInterval |
 
 ### Metrics Job: cAdvisor
 
@@ -451,7 +455,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | metrics.cadvisor.metricsTuning.keepPhysicalFilesystemDevices | list | `["mmcblk.p.+","nvme.+","rbd.+","sd.+","vd.+","xvd.+","dasd.+"]` | Only keep filesystem metrics that use the following physical devices |
 | metrics.cadvisor.metricsTuning.keepPhysicalNetworkDevices | list | `["en[ospx][0-9].*","wlan[0-9].*","eth[0-9].*"]` | Only keep network metrics that use the following physical devices |
 | metrics.cadvisor.metricsTuning.normalizeUnnecessaryLabels | list | `[{"labels":["boot_id","system_uuid"],"metric":"machine_memory_bytes"}]` | Normalize labels to the same value for the given metric and label pairs |
-| metrics.cadvisor.metricsTuning.useDefaultAllowList | bool | `true` | Filter the list of metrics from cAdvisor to the minimal set required for Kubernetes Monitoring. See [Allow List for cAdvisor](#allow-list-for-cadvisor) |
+| metrics.cadvisor.metricsTuning.useDefaultAllowList | bool | `true` | Filter the list of metrics from cAdvisor to the minimal set required for Kubernetes Monitoring. See [Metrics Tuning and Allow Lists](#metrics-tuning-and-allow-lists) |
 | metrics.cadvisor.nodeAddressFormat | string | `"direct"` | How to access the node services, either direct (use node IP, requires nodes/metrics) or via proxy (requires nodes/proxy) |
 | metrics.cadvisor.scrapeInterval | string | 60s | How frequently to scrape metrics from cAdvisor. Overrides metrics.scrapeInterval |
 
@@ -466,7 +470,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | metrics.cost.maxCacheSize | string | `nil` | Sets the max_cache_size for cadvisor prometheus.relabel component. This should be at least 2x-5x your largest scrape target or samples appended rate. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#arguments)) Overrides metrics.maxCacheSize |
 | metrics.cost.metricsTuning.excludeMetrics | list | `[]` | Metrics to drop. Can use regex. |
 | metrics.cost.metricsTuning.includeMetrics | list | `[]` | Metrics to keep. Can use regex. |
-| metrics.cost.metricsTuning.useDefaultAllowList | bool | `true` | Filter the list of metrics from OpenCost to the minimal set required for Kubernetes Monitoring. See [Allow List for OpenCost](#allow-list-for-opencost) |
+| metrics.cost.metricsTuning.useDefaultAllowList | bool | `true` | Filter the list of metrics from OpenCost to the minimal set required for Kubernetes Monitoring. See [Metrics Tuning and Allow Lists](#metrics-tuning-and-allow-lists) |
 | metrics.cost.scrapeInterval | string | 60s | How frequently to scrape metrics from OpenCost. Overrides metrics.scrapeInterval |
 
 ### Metrics Global Settings
@@ -490,7 +494,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | metrics.kube-state-metrics.maxCacheSize | string | `nil` | Sets the max_cache_size for cadvisor prometheus.relabel component. This should be at least 2x-5x your largest scrape target or samples appended rate. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#arguments)) Overrides metrics.maxCacheSize |
 | metrics.kube-state-metrics.metricsTuning.excludeMetrics | list | `[]` | Metrics to drop. Can use regex. |
 | metrics.kube-state-metrics.metricsTuning.includeMetrics | list | `[]` | Metrics to keep. Can use regex. |
-| metrics.kube-state-metrics.metricsTuning.useDefaultAllowList | bool | `true` | Filter the list of metrics from Kube State Metrics to a useful, minimal set. See [Allow List for Kube State Metrics](#allow-list-for-kube-state-metrics) |
+| metrics.kube-state-metrics.metricsTuning.useDefaultAllowList | bool | `true` | Filter the list of metrics from Kube State Metrics to a useful, minimal set. See [Metrics Tuning and Allow Lists](#metrics-tuning-and-allow-lists) |
 | metrics.kube-state-metrics.scrapeInterval | string | 60s | How frequently to scrape metrics from Kube State Metrics. Overrides metrics.scrapeInterval |
 | metrics.kube-state-metrics.service.isTLS | bool | `false` | Does this port use TLS? |
 | metrics.kube-state-metrics.service.port | string | `"http"` | Name of the metrics port |
@@ -544,7 +548,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | metrics.kubelet.maxCacheSize | string | `nil` | Sets the max_cache_size for cadvisor prometheus.relabel component. This should be at least 2x-5x your largest scrape target or samples appended rate. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#arguments)) Overrides metrics.maxCacheSize |
 | metrics.kubelet.metricsTuning.excludeMetrics | list | `[]` | Metrics to drop. Can use regex. |
 | metrics.kubelet.metricsTuning.includeMetrics | list | `[]` | Metrics to keep. Can use regex. |
-| metrics.kubelet.metricsTuning.useDefaultAllowList | bool | `true` | Filter the list of metrics from the Kubelet to the minimal set required for Kubernetes Monitoring. See [Allow List for Kubelet](#allow-list-for-kubelet) |
+| metrics.kubelet.metricsTuning.useDefaultAllowList | bool | `true` | Filter the list of metrics from the Kubelet to the minimal set required for Kubernetes Monitoring. See [Metrics Tuning and Allow Lists](#metrics-tuning-and-allow-lists) |
 | metrics.kubelet.nodeAddressFormat | string | `"direct"` | How to access the node services, either direct (use node IP, requires nodes/metrics) or via proxy (requires nodes/proxy) |
 | metrics.kubelet.scrapeInterval | string | 60s | How frequently to scrape metrics from the Kubelet. Overrides metrics.scrapeInterval |
 
@@ -566,7 +570,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | metrics.node-exporter.metricsTuning.dropMetricsForFilesystem | list | `["tempfs"]` | Drop metrics for the given filesystem types |
 | metrics.node-exporter.metricsTuning.excludeMetrics | list | `[]` | Metrics to drop. Can use regex. |
 | metrics.node-exporter.metricsTuning.includeMetrics | list | `[]` | Metrics to keep. Can use regex. |
-| metrics.node-exporter.metricsTuning.useDefaultAllowList | bool | `true` | Filter the list of metrics from Node Exporter to the minimal set required for Kubernetes Monitoring. See [Allow List for Node Exporter](#allow-list-for-node-exporter) |
+| metrics.node-exporter.metricsTuning.useDefaultAllowList | bool | `true` | Filter the list of metrics from Node Exporter to the minimal set required for Kubernetes Monitoring. See [Metrics Tuning and Allow Lists](#metrics-tuning-and-allow-lists) |
 | metrics.node-exporter.metricsTuning.useIntegrationAllowList | bool | `false` | Filter the list of metrics from Node Exporter to the minimal set required for Kubernetes Monitoring as well as the Node Exporter integration. |
 | metrics.node-exporter.scrapeInterval | string | 60s | How frequently to scrape metrics from Node Exporter. Overrides metrics.scrapeInterval |
 | metrics.node-exporter.service.isTLS | bool | `false` | Does this port use TLS? |
@@ -625,7 +629,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | metrics.windows-exporter.maxCacheSize | string | `nil` | Sets the max_cache_size for cadvisor prometheus.relabel component. This should be at least 2x-5x your largest scrape target or samples appended rate. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#arguments)) Overrides metrics.maxCacheSize |
 | metrics.windows-exporter.metricsTuning.excludeMetrics | list | `[]` | Metrics to drop. Can use regex. |
 | metrics.windows-exporter.metricsTuning.includeMetrics | list | `[]` | Metrics to keep. Can use regex. |
-| metrics.windows-exporter.metricsTuning.useDefaultAllowList | bool | `true` | Filter the list of metrics from Windows Exporter to the minimal set required for Kubernetes Monitoring. See [Allow List for Windows Exporter](#allow-list-for-windows-exporter) |
+| metrics.windows-exporter.metricsTuning.useDefaultAllowList | bool | `true` | Filter the list of metrics from Windows Exporter to the minimal set required for Kubernetes Monitoring. See [Metrics Tuning and Allow Lists](#metrics-tuning-and-allow-lists) |
 | metrics.windows-exporter.scrapeInterval | string | 60s | How frequently to scrape metrics from Windows Exporter. Overrides metrics.scrapeInterval |
 
 ### Profiles (eBPF)
@@ -677,6 +681,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | receivers.grpc.disable_debug_metrics | bool | `true` | It removes attributes which could cause high cardinality metrics. For example, attributes with IP addresses and port numbers in metrics about HTTP and gRPC connections will be removed. |
 | receivers.grpc.enabled | bool | `true` | Receive OpenTelemetry signals over OTLP/gRPC? |
 | receivers.grpc.port | int | `4317` | Which port to use for the OTLP/gRPC receiver. This port needs to be opened in the alloy section below. |
+| receivers.grpc.tls | object | `{}` | [TLS settings](https://grafana.com/docs/alloy/latest/reference/components/otelcol.receiver.otlp/#tls-block) to configure for the OTLP/gRPC receiver. |
 
 ### OTEL Receivers (HTTP)
 
@@ -685,6 +690,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | receivers.http.disable_debug_metrics | bool | `true` | It removes attributes which could cause high cardinality metrics. For example, attributes with IP addresses and port numbers in metrics about HTTP and gRPC connections will be removed. |
 | receivers.http.enabled | bool | `true` | Receive OpenTelemetry signals over OTLP/HTTP? |
 | receivers.http.port | int | `4318` | Which port to use for the OTLP/HTTP receiver. This port needs to be opened in the alloy section below. |
+| receivers.http.tls | object | `{}` | [TLS settings](https://grafana.com/docs/alloy/latest/reference/components/otelcol.receiver.otlp/#tls-block) to configure for the OTLP/HTTP receiver. |
 
 ### OTEL Receivers (Jaeger)
 
@@ -699,6 +705,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | receivers.jaeger.thriftCompact.port | int | `6831` | Which port to use for the Thrift compact receiver. This port needs to be opened in the alloy section below. |
 | receivers.jaeger.thriftHttp.enabled | bool | `false` | Receive Jaeger signals via Thrift HTTP protocol. |
 | receivers.jaeger.thriftHttp.port | int | `14268` | Which port to use for the Thrift HTTP receiver. This port needs to be opened in the alloy section below. |
+| receivers.jaeger.tls | object | `{}` | [TLS settings](https://grafana.com/docs/alloy/latest/reference/components/otelcol.receiver.jaeger/#tls-block) to configure for the Jaeger receiver. |
 
 ### OTEL Receivers (Prometheus)
 
@@ -714,6 +721,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | receivers.zipkin.disable_debug_metrics | bool | `true` | It removes attributes which could cause high cardinality metrics. For example, attributes with IP addresses and port numbers in metrics about HTTP and gRPC connections will be removed. |
 | receivers.zipkin.enabled | bool | `false` | Receive Zipkin traces |
 | receivers.zipkin.port | int | `9411` | Which port to use for the Zipkin receiver. This port needs to be opened in the alloy section below. |
+| receivers.zipkin.tls | object | `{}` | [TLS settings](https://grafana.com/docs/alloy/latest/reference/components/otelcol.receiver.zipkin/#tls-block) to configure for the Zipkin receiver. |
 
 ### Test Job
 
@@ -730,6 +738,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | test.image.registry | string | `"ghcr.io"` | Test job image registry. |
 | test.image.tag | string | `""` | Test job image tag. Default is the chart version. |
 | test.nodeSelector | object | `{"kubernetes.io/os":"linux"}` | nodeSelector to apply to the test job. |
+| test.serviceAccount | object | `{"name":""}` | Service Account to use for the test job. |
 | test.tolerations | list | `[]` | Tolerations to apply to the test job. |
 
 ### Traces
@@ -827,4 +836,4 @@ If you're encountering issues deploying or using this chart, check the [Troubles
 ## Metrics Tuning and Allow Lists
 
 This chart has the ability to easy control the amount of metrics, using pre-defined "allow lists".
-[This document](./charts/k8s-monitoring/default_allow_lists) explains the allow lists and shows their contents.
+[This document](./default_allow_lists) explains the allow lists and shows their contents.

@@ -21,6 +21,9 @@ metadata:
     {{ $key }}: {{ $val | quote }}
     {{- end}}
 spec:
+  {{- if .Values.configValidator.serviceAccount.name }}
+  serviceAccountName: {{ .Values.configValidator.serviceAccount.name }}
+  {{- end }}
   {{- if or .Values.global.image.pullSecrets .Values.alloy.image.pullSecrets }}
   imagePullSecrets:
     {{- if .Values.global.image.pullSecrets }}
