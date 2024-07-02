@@ -1,0 +1,70 @@
+{{ define "alloy.config.profilesJava" }}
+// Profiles
+{{- if .Values.profiles.java.enabled }}
+discovery.kubernetes "java_pods" {
+  selectors {
+    role = "pod"
+    field = "spec.nodeName=" + env("HOSTNAME")
+  }
+{{- if .Values.profiles.java.namespaces }}
+  namespaces {
+    names = {{ .Values.profiles.java.namespaces | toJson }}
+  }
+{{- end }}
+  role = "pod"
+}
+
+discovery.process "java_pods" {
+  join = discovery.kubernetes.java_pods.targets
+}
+
+discovery.relabel "java_pods" {
+  targets = discovery.process.java_pods.targets
+  rule {
+    action = "drop"
+    regex = "Succeeded|Failed|Completed"
+    source_labels = ["__meta_kubernetes_pod_phase"]
+  }
+  rule {
+    source_labels = ["__meta_process_exe"]
+    action = "keep"
+    regex = ".*/java$"
+  }
+  rule {
+    action = "replace"
+    source_labels = ["__meta_kubernetes_namespace"]
+    target_label = "namespace"
+  }
+  rule {
+    action = "replace"
+    source_labels = ["__meta_kubernetes_pod_name"]
+    target_label = "pod"
+  }
+  rule {
+    action = "replace"
+    source_labels = ["__meta_kubernetes_pod_node_name"]
+    target_label = "node"
+  }
+  rule {
+    action = "replace"
+    source_labels = ["__meta_kubernetes_pod_container_name"]
+    target_label = "container"
+  }
+{{- if .Values.profiles.java.extraRelabelingRules }}
+{{ .Values.profiles.java.extraRelabelingRules | indent 2 }}
+{{- end }}
+}
+
+pyroscope.java "java_pods" {
+  targets = discovery.relabel.java_pods.output
+  profiling_config {
+    interval = {{ .Values.profiles.java.profilingConfig.interval | quote }}
+    alloc = {{ .Values.profiles.java.profilingConfig.alloc | quote }}
+    cpu = {{ .Values.profiles.java.profilingConfig.cpu }}
+    sample_rate = {{ .Values.profiles.java.profilingConfig.sampleRate }}
+    lock = {{ .Values.profiles.java.profilingConfig.lock | quote }}
+  }
+  forward_to = [pyroscope.write.profiles_service.receiver]
+}
+{{- end }}
+{{- end }}
