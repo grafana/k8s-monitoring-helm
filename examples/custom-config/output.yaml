@@ -4,7 +4,7 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: k8smon-alloy-events
-  namespace: default
+  namespace: alloy-kube
   labels:
     helm.sh/chart: alloy-events-0.4.0
     app.kubernetes.io/name: alloy-events
@@ -20,7 +20,7 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: k8smon-alloy-logs
-  namespace: default
+  namespace: alloy-kube
   labels:
     helm.sh/chart: alloy-logs-0.4.0
     app.kubernetes.io/name: alloy-logs
@@ -36,7 +36,7 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: k8smon-alloy
-  namespace: default
+  namespace: alloy-kube
   labels:
     helm.sh/chart: alloy-0.4.0
     app.kubernetes.io/name: alloy
@@ -61,14 +61,14 @@ metadata:
     app.kubernetes.io/instance: k8smon
     app.kubernetes.io/version: "2.12.0"
   name: k8smon-kube-state-metrics
-  namespace: default
+  namespace: alloy-kube
 ---
 # Source: k8s-monitoring/charts/opencost/templates/serviceaccount.yaml
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: k8smon-opencost
-  namespace: default
+  namespace: alloy-kube
   labels:
     helm.sh/chart: opencost-1.40.0
     app.kubernetes.io/name: opencost
@@ -83,7 +83,7 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: k8smon-prometheus-node-exporter
-  namespace: default
+  namespace: alloy-kube
   labels:
     helm.sh/chart: prometheus-node-exporter-4.37.0
     app.kubernetes.io/managed-by: Helm
@@ -99,7 +99,7 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: loki-k8s-monitoring
-  namespace: default
+  namespace: alloy-kube
 type: Opaque
 data:
 
@@ -112,7 +112,7 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: prometheus-k8s-monitoring
-  namespace: default
+  namespace: alloy-kube
 type: Opaque
 data:
 
@@ -125,7 +125,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: k8smon-alloy
-  namespace: default
+  namespace: alloy-kube
 data:
   config.alloy: |-
     discovery.kubernetes "nodes" {
@@ -843,7 +843,7 @@ data:
     // Metrics Service
     remote.kubernetes.secret "metrics_service" {
       name = "prometheus-k8s-monitoring"
-      namespace = "default"
+      namespace = "alloy-kube"
     }
     
     prometheus.relabel "metrics_service" {
@@ -952,7 +952,7 @@ data:
     // Logs Service
     remote.kubernetes.secret "logs_service" {
       name = "loki-k8s-monitoring"
-      namespace = "default"
+      namespace = "alloy-kube"
     }
     
     loki.process "logs_service" {
@@ -1010,7 +1010,7 @@ data:
     
     remote.kubernetes.configmap "cluster_info" {
       name = "cluster_info"
-      namespace = "default"
+      namespace = "alloy-kube"
     }
 ---
 # Source: k8s-monitoring/templates/alloy-events-config.yaml
@@ -1018,7 +1018,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: k8smon-alloy-events
-  namespace: default
+  namespace: alloy-kube
 data:
   config.alloy: |-
     // Cluster Events
@@ -1039,7 +1039,7 @@ data:
     // Logs Service
     remote.kubernetes.secret "logs_service" {
       name = "loki-k8s-monitoring"
-      namespace = "default"
+      namespace = "alloy-kube"
     }
     
     loki.process "logs_service" {
@@ -1077,7 +1077,7 @@ data:
     }
     remote.kubernetes.configmap "cluster_info" {
       name = "cluster_info"
-      namespace = "default"
+      namespace = "alloy-kube"
     }
 ---
 # Source: k8s-monitoring/templates/alloy-logs-config.yaml
@@ -1085,7 +1085,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: k8smon-alloy-logs
-  namespace: default
+  namespace: alloy-kube
 data:
   config.alloy: |-
     // Pod Logs
@@ -1213,7 +1213,7 @@ data:
     // Logs Service
     remote.kubernetes.secret "logs_service" {
       name = "loki-k8s-monitoring"
-      namespace = "default"
+      namespace = "alloy-kube"
     }
     
     loki.process "logs_service" {
@@ -1287,7 +1287,7 @@ data:
     
     remote.kubernetes.configmap "cluster_info" {
       name = "cluster_info"
-      namespace = "default"
+      namespace = "alloy-kube"
     }
 ---
 # Source: k8s-monitoring/templates/kubernetes-monitoring-telemetry.yaml
@@ -1295,12 +1295,12 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: kubernetes-monitoring-telemetry
-  namespace: default
+  namespace: alloy-kube
 data:
   metrics.prom: |
     # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart as well as a summary of enabled features
     # TYPE grafana_kubernetes_monitoring_build_info gauge
-    grafana_kubernetes_monitoring_build_info{version="1.3.0", namespace="default", metrics="enabled,alloy,autoDiscover,kube-state-metrics,node-exporter,kubelet,cadvisor,cost,extraConfig", logs="enabled,events,pod_logs,extraConfig", traces="disabled", deployments="kube-state-metrics,prometheus-node-exporter,prometheus-operator-crds,opencost"} 1
+    grafana_kubernetes_monitoring_build_info{version="1.3.0", namespace="alloy-kube", metrics="enabled,alloy,autoDiscover,kube-state-metrics,node-exporter,kubelet,cadvisor,cost,extraConfig", logs="enabled,events,pod_logs,extraConfig", traces="disabled", deployments="kube-state-metrics,prometheus-node-exporter,prometheus-operator-crds,opencost"} 1
 ---
 # Source: k8s-monitoring/charts/prometheus-operator-crds/charts/crds/templates/crd-alertmanagerconfigs.yaml
 apiVersion: apiextensions.k8s.io/v1
@@ -58048,7 +58048,7 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: k8smon-alloy-events
-    namespace: default
+    namespace: alloy-kube
 ---
 # Source: k8s-monitoring/charts/alloy-logs/templates/rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -58071,7 +58071,7 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: k8smon-alloy-logs
-    namespace: default
+    namespace: alloy-kube
 ---
 # Source: k8s-monitoring/charts/alloy/templates/rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -58094,7 +58094,7 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: k8smon-alloy
-    namespace: default
+    namespace: alloy-kube
 ---
 # Source: k8s-monitoring/charts/kube-state-metrics/templates/clusterrolebinding.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -58116,7 +58116,7 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: k8smon-kube-state-metrics
-  namespace: default
+  namespace: alloy-kube
 ---
 # Source: k8s-monitoring/charts/opencost/templates/clusterrolebinding.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -58137,7 +58137,7 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: k8smon-opencost
-    namespace: default
+    namespace: alloy-kube
 ---
 # Source: k8s-monitoring/charts/alloy-events/templates/service.yaml
 apiVersion: v1
@@ -58318,7 +58318,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: k8smon-kube-state-metrics
-  namespace: default
+  namespace: alloy-kube
   labels:    
     helm.sh/chart: kube-state-metrics-5.21.0
     app.kubernetes.io/managed-by: Helm
@@ -58345,7 +58345,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: k8smon-opencost
-  namespace: default
+  namespace: alloy-kube
   labels:
     helm.sh/chart: opencost-1.40.0
     app.kubernetes.io/name: opencost
@@ -58368,7 +58368,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: k8smon-prometheus-node-exporter
-  namespace: default
+  namespace: alloy-kube
   labels:
     helm.sh/chart: prometheus-node-exporter-4.37.0
     app.kubernetes.io/managed-by: Helm
@@ -58540,7 +58540,7 @@ apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   name: k8smon-prometheus-node-exporter
-  namespace: default
+  namespace: alloy-kube
   labels:
     helm.sh/chart: prometheus-node-exporter-4.37.0
     app.kubernetes.io/managed-by: Helm
@@ -58743,7 +58743,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: k8smon-kube-state-metrics
-  namespace: default
+  namespace: alloy-kube
   labels:    
     helm.sh/chart: kube-state-metrics-5.21.0
     app.kubernetes.io/managed-by: Helm
@@ -58830,7 +58830,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: k8smon-opencost
-  namespace: default
+  namespace: alloy-kube
   labels:
     helm.sh/chart: opencost-1.40.0
     app.kubernetes.io/name: opencost
@@ -58900,7 +58900,7 @@ spec:
             - name: CUSTOM_COST_ENABLED
               value: "false"
             - name: KUBECOST_NAMESPACE
-              value: default
+              value: alloy-kube
             - name: API_PORT
               value: "9003"
             - name: PROMETHEUS_SERVER_ENDPOINT
@@ -59090,7 +59090,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: "validate-k8smon-k8s-monitoring"
-  namespace: default
+  namespace: alloy-kube
   labels:
     app.kubernetes.io/managed-by: "Helm"
     app.kubernetes.io/instance: "k8smon"
@@ -59817,7 +59817,7 @@ data:
     // Metrics Service
     remote.kubernetes.secret "metrics_service" {
       name = "prometheus-k8s-monitoring"
-      namespace = "default"
+      namespace = "alloy-kube"
     }
     
     prometheus.relabel "metrics_service" {
@@ -59926,7 +59926,7 @@ data:
     // Logs Service
     remote.kubernetes.secret "logs_service" {
       name = "loki-k8s-monitoring"
-      namespace = "default"
+      namespace = "alloy-kube"
     }
     
     loki.process "logs_service" {
@@ -59984,7 +59984,7 @@ data:
     
     remote.kubernetes.configmap "cluster_info" {
       name = "cluster_info"
-      namespace = "default"
+      namespace = "alloy-kube"
     }
   events.alloy: |-
     // Cluster Events
@@ -60005,7 +60005,7 @@ data:
     // Logs Service
     remote.kubernetes.secret "logs_service" {
       name = "loki-k8s-monitoring"
-      namespace = "default"
+      namespace = "alloy-kube"
     }
     
     loki.process "logs_service" {
@@ -60043,7 +60043,7 @@ data:
     }
     remote.kubernetes.configmap "cluster_info" {
       name = "cluster_info"
-      namespace = "default"
+      namespace = "alloy-kube"
     }
   logs.alloy: |-
     // Pod Logs
@@ -60171,7 +60171,7 @@ data:
     // Logs Service
     remote.kubernetes.secret "logs_service" {
       name = "loki-k8s-monitoring"
-      namespace = "default"
+      namespace = "alloy-kube"
     }
     
     loki.process "logs_service" {
@@ -60245,7 +60245,7 @@ data:
     
     remote.kubernetes.configmap "cluster_info" {
       name = "cluster_info"
-      namespace = "default"
+      namespace = "alloy-kube"
     }
 ---
 # Source: k8s-monitoring/templates/tests/test.yaml
@@ -60253,7 +60253,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: "test-k8smon-k8s-monitoring"
-  namespace: default
+  namespace: alloy-kube
   labels:
     app.kubernetes.io/managed-by: "Helm"
     app.kubernetes.io/instance: "k8smon"
@@ -60307,7 +60307,7 @@ apiVersion: v1
 kind: Pod
 metadata:
   name: "validate-k8smon-k8s-monitoring"
-  namespace: default
+  namespace: alloy-kube
   labels:
     app.kubernetes.io/managed-by: "Helm"
     app.kubernetes.io/instance: "k8smon"
@@ -60376,7 +60376,7 @@ apiVersion: v1
 kind: Pod
 metadata:
   name: "analyze-k8smon-k8s-monitoring"
-  namespace: default
+  namespace: alloy-kube
   labels:
     app.kubernetes.io/managed-by: "Helm"
     app.kubernetes.io/instance: "k8smon"
@@ -60396,14 +60396,14 @@ spec:
       command: [/etc/bin/config-analysis.sh]
       env:
         - name: ALLOY_HOST
-          value: k8smon-alloy.default.svc:12345
+          value: k8smon-alloy.alloy-kube.svc:12345
 ---
 # Source: k8s-monitoring/templates/tests/test.yaml
 apiVersion: batch/v1
 kind: Job
 metadata:
   name: "test-k8smon-k8s-monitoring"
-  namespace: default
+  namespace: alloy-kube
   labels:
     app.kubernetes.io/managed-by: "Helm"
     app.kubernetes.io/instance: "k8smon"
@@ -60420,7 +60420,7 @@ spec:
   template:
     metadata:
       name: "test-k8smon-k8s-monitoring"
-      namespace: default
+      namespace: alloy-kube
       labels:
         app.kubernetes.io/managed-by: "Helm"
         app.kubernetes.io/instance: "k8smon"
