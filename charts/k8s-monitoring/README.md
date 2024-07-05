@@ -217,7 +217,8 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| externalServices.prometheus.authMode | string | `"basic"` | one of "none", "basic" |
+| externalServices.prometheus.authMode | string | `"basic"` | one of "none", "basic", "bearer_token" |
+| externalServices.prometheus.bearerToken | string | `""` | Prometheus Bearer token |
 | externalServices.prometheus.basicAuth.password | string | `""` | Prometheus basic auth password |
 | externalServices.prometheus.basicAuth.passwordKey | string | `"password"` | The key for the password property in the secret |
 | externalServices.prometheus.basicAuth.username | string | `""` | Prometheus basic auth username |

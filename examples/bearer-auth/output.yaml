@@ -117,8 +117,7 @@ type: Opaque
 data:
 
   host: "aHR0cHM6Ly9wcm9tZXRoZXVzLmV4YW1wbGUuY29t"
-  username: "MTIzNDU="
-  password: "SXQncyBhIHNlY3JldCB0byBldmVyeW9uZQ=="
+  its a secret token to everyone: "aXRzIGEgc2VjcmV0IHRva2VuIHRvIGV2ZXJ5b25l"
 ---
 # Source: k8s-monitoring/templates/alloy-config.yaml
 apiVersion: v1
@@ -215,7 +214,7 @@ data:
       metric_statements {
         context = "resource"
         statements = [
-          "set(attributes[\"k8s.cluster.name\"], \"ibm-cloud-test\") where attributes[\"k8s.cluster.name\"] == nil",
+          "set(attributes[\"k8s.cluster.name\"], \"default-values-test\") where attributes[\"k8s.cluster.name\"] == nil",
         ]
       }
       log_statements {
@@ -224,7 +223,7 @@ data:
           "set(attributes[\"pod\"], attributes[\"k8s.pod.name\"])",
           "set(attributes[\"namespace\"], attributes[\"k8s.namespace.name\"])",
           "set(attributes[\"loki.resource.labels\"], \"cluster, namespace, job, pod\")",
-          "set(attributes[\"k8s.cluster.name\"], \"ibm-cloud-test\") where attributes[\"k8s.cluster.name\"] == nil",
+          "set(attributes[\"k8s.cluster.name\"], \"default-values-test\") where attributes[\"k8s.cluster.name\"] == nil",
         ]
       }
       output {
@@ -851,7 +850,7 @@ data:
       rule {
         source_labels = ["cluster"]
         regex = ""
-        replacement = "ibm-cloud-test"
+        replacement = "default-values-test"
         target_label = "cluster"
       }
       forward_to = [prometheus.remote_write.metrics_service.receiver]
@@ -862,10 +861,6 @@ data:
         url = nonsensitive(remote.kubernetes.secret.metrics_service.data["host"]) + "/api/prom/push"
         headers = { "X-Scope-OrgID" = nonsensitive(remote.kubernetes.secret.metrics_service.data["tenantId"]) }
     
-        basic_auth {
-          username = nonsensitive(remote.kubernetes.secret.metrics_service.data["username"])
-          password = remote.kubernetes.secret.metrics_service.data["password"]
-        }
     
     
         send_native_histograms = false
@@ -954,7 +949,7 @@ data:
     loki.process "logs_service" {
       stage.static_labels {
           values = {
-            cluster = "ibm-cloud-test",
+            cluster = "default-values-test",
           }
       }
       forward_to = [loki.write.logs_service.receiver]
@@ -1011,7 +1006,7 @@ data:
     loki.process "logs_service" {
       stage.static_labels {
           values = {
-            cluster = "ibm-cloud-test",
+            cluster = "default-values-test",
           }
       }
       forward_to = [loki.write.logs_service.receiver]
@@ -1175,7 +1170,7 @@ data:
     loki.process "logs_service" {
       stage.static_labels {
           values = {
-            cluster = "ibm-cloud-test",
+            cluster = "default-values-test",
           }
       }
       forward_to = [loki.write.logs_service.receiver]
@@ -58419,9 +58414,6 @@ spec:
             - name: varlog
               mountPath: /var/log
               readOnly: true
-            -
-              mountPath: /var/data
-              name: vardata
         - name: config-reloader
           image: ghcr.io/jimmidyson/configmap-reload:v0.12.0
           args:
@@ -58447,9 +58439,6 @@ spec:
         - name: varlog
           hostPath:
             path: /var/log
-        - hostPath:
-            path: /var/data
-          name: vardata
 ---
 # Source: k8s-monitoring/charts/prometheus-node-exporter/templates/daemonset.yaml
 apiVersion: apps/v1
@@ -59105,7 +59094,7 @@ data:
       metric_statements {
         context = "resource"
         statements = [
-          "set(attributes[\"k8s.cluster.name\"], \"ibm-cloud-test\") where attributes[\"k8s.cluster.name\"] == nil",
+          "set(attributes[\"k8s.cluster.name\"], \"default-values-test\") where attributes[\"k8s.cluster.name\"] == nil",
         ]
       }
       log_statements {
@@ -59114,7 +59103,7 @@ data:
           "set(attributes[\"pod\"], attributes[\"k8s.pod.name\"])",
           "set(attributes[\"namespace\"], attributes[\"k8s.namespace.name\"])",
           "set(attributes[\"loki.resource.labels\"], \"cluster, namespace, job, pod\")",
-          "set(attributes[\"k8s.cluster.name\"], \"ibm-cloud-test\") where attributes[\"k8s.cluster.name\"] == nil",
+          "set(attributes[\"k8s.cluster.name\"], \"default-values-test\") where attributes[\"k8s.cluster.name\"] == nil",
         ]
       }
       output {
@@ -59741,7 +59730,7 @@ data:
       rule {
         source_labels = ["cluster"]
         regex = ""
-        replacement = "ibm-cloud-test"
+        replacement = "default-values-test"
         target_label = "cluster"
       }
       forward_to = [prometheus.remote_write.metrics_service.receiver]
@@ -59752,10 +59741,6 @@ data:
         url = nonsensitive(remote.kubernetes.secret.metrics_service.data["host"]) + "/api/prom/push"
         headers = { "X-Scope-OrgID" = nonsensitive(remote.kubernetes.secret.metrics_service.data["tenantId"]) }
     
-        basic_auth {
-          username = nonsensitive(remote.kubernetes.secret.metrics_service.data["username"])
-          password = remote.kubernetes.secret.metrics_service.data["password"]
-        }
     
     
         send_native_histograms = false
@@ -59844,7 +59829,7 @@ data:
     loki.process "logs_service" {
       stage.static_labels {
           values = {
-            cluster = "ibm-cloud-test",
+            cluster = "default-values-test",
           }
       }
       forward_to = [loki.write.logs_service.receiver]
@@ -59893,7 +59878,7 @@ data:
     loki.process "logs_service" {
       stage.static_labels {
           values = {
-            cluster = "ibm-cloud-test",
+            cluster = "default-values-test",
           }
       }
       forward_to = [loki.write.logs_service.receiver]
@@ -60049,7 +60034,7 @@ data:
     loki.process "logs_service" {
       stage.static_labels {
           values = {
-            cluster = "ibm-cloud-test",
+            cluster = "default-values-test",
           }
       }
       forward_to = [loki.write.logs_service.receiver]
@@ -60094,35 +60079,35 @@ data:
     {
       "queries": [
         {
-          "query": "up{cluster=\"ibm-cloud-test\"}",
+          "query": "up{cluster=\"default-values-test\"}",
           "type": "promql"
         },
         {
-          "query": "alloy_build_info{cluster=\"ibm-cloud-test\"}",
+          "query": "alloy_build_info{cluster=\"default-values-test\"}",
           "type": "promql"
         },
         {
-          "query": "kubernetes_build_info{cluster=\"ibm-cloud-test\"}",
+          "query": "kubernetes_build_info{cluster=\"default-values-test\"}",
           "type": "promql"
         },
         {
-          "query": "machine_memory_bytes{cluster=\"ibm-cloud-test\"}",
+          "query": "machine_memory_bytes{cluster=\"default-values-test\"}",
           "type": "promql"
         },
         {
-          "query": "kube_node_info{cluster=\"ibm-cloud-test\"}",
+          "query": "kube_node_info{cluster=\"default-values-test\"}",
           "type": "promql"
         },
         {
-          "query": "node_exporter_build_info{cluster=\"ibm-cloud-test\"}",
+          "query": "node_exporter_build_info{cluster=\"default-values-test\"}",
           "type": "promql"
         },
         {
-          "query": "opencost_build_info{cluster=\"ibm-cloud-test\"}",
+          "query": "opencost_build_info{cluster=\"default-values-test\"}",
           "type": "promql"
         },
         {
-          "query": "grafana_kubernetes_monitoring_build_info{cluster=\"ibm-cloud-test\"}",
+          "query": "grafana_kubernetes_monitoring_build_info{cluster=\"default-values-test\"}",
           "type": "promql"
         }
       ]
