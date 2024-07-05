@@ -1,6 +1,6 @@
 {{ define "alloy.config.tracesService" }}
 // Tempo
-{{- if not (and .Values.externalServices.tempo.hostFrom .Values.externalServices.tempo.basicAuth.usernameFrom .Values.externalServices.tempo.basicAuth.passwordFrom .Values.externalServices.tempo.basicAuth.tenantIdFrom )}}
+{{- if not (and .Values.externalServices.tempo.hostFrom .Values.externalServices.tempo.basicAuth.usernameFrom .Values.externalServices.tempo.basicAuth.passwordFrom (or (not .Values.externalServices.tempo.tenantId) .Values.externalServices.tempo.tenantIdFrom) )}}
 remote.kubernetes.secret "traces_service" {
   name = {{ include "kubernetes_monitoring.traces_service.secret.name" . | quote }}
   namespace = {{ .Values.externalServices.tempo.secret.namespace | default .Release.Namespace | quote }}

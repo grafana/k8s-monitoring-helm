@@ -1,6 +1,6 @@
 {{ define "alloy.config.metricsService" }}
 // Metrics Service
-{{- if not (and .Values.externalServices.prometheus.hostFrom .Values.externalServices.prometheus.basicAuth.usernameFrom .Values.externalServices.prometheus.basicAuth.passwordFrom .Values.externalServices.prometheus.tenantIdFrom )}}
+{{- if not (and .Values.externalServices.prometheus.hostFrom .Values.externalServices.prometheus.basicAuth.usernameFrom .Values.externalServices.prometheus.basicAuth.passwordFrom (or (not .Values.externalServices.prometheus.tenantId) .Values.externalServices.prometheus.tenantIdFrom) )}}
 remote.kubernetes.secret "metrics_service" {
   name = {{ include "kubernetes_monitoring.metrics_service.secret.name" . | quote }}
   namespace = {{ .Values.externalServices.prometheus.secret.namespace | default .Release.Namespace | quote }}

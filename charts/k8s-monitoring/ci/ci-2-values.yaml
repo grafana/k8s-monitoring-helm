@@ -11,9 +11,10 @@ cluster:
 
 externalServices:
   prometheus:
-    hostFrom: remote.kubernetes.secret.creds.data["prom-host"]
+    hostFrom: nonsensitive(remote.kubernetes.secret.creds.data["prom-host"])
+    tenantIdFrom: '""'
     basicAuth:
-      usernameFrom: remote.kubernetes.secret.creds.data["prom-username"]
+      usernameFrom: nonsensitive(remote.kubernetes.secret.creds.data["prom-username"])
       passwordFrom: remote.kubernetes.secret.creds.data["prom-password"]
     secret:
       create: false
@@ -27,18 +28,21 @@ externalServices:
     externalLabelsFrom:
       magic_word: env("MAGIC_WORD")
   loki:
-    hostFrom: remote.kubernetes.secret.grafana_cloud.data["loki-host"]
-    tenantIdFrom: remote.kubernetes.secret.grafana_cloud.data["loki-tenantId"]
+    hostFrom: nonsensitive(remote.kubernetes.secret.creds.data["loki-host"])
+    tenantIdFrom: nonsensitive(remote.kubernetes.secret.creds.data["loki-tenantId"])
     basicAuth:
-      usernameFrom: remote.kubernetes.secret.grafana_cloud.data["loki-username"]
-      passwordFrom: remote.kubernetes.secret.grafana_cloud.data["loki-password"]
+      usernameFrom: nonsensitive(remote.kubernetes.secret.creds.data["loki-username"])
+      passwordFrom: remote.kubernetes.secret.creds.data["loki-password"]
     secret:
       create: false
     protocol: otlphttp
     writeEndpoint: /
   tempo:
-    hostFrom: remote.kubernetes.secret.grafana_cloud.data["tempo-host"]
-    authMode: none
+    hostFrom: nonsensitive(remote.kubernetes.secret.creds.data["tempo-host"])
+    tenantIdFrom: '""'
+    basicAuth:
+      usernameFrom: '""'
+      passwordFrom: '""'
     secret:
       create: false
     protocol: otlphttp
@@ -162,6 +166,9 @@ opencost:
     prometheus:
       external:
         url: https://prometheus-server.prometheus.svc.cluster.local:9090
+      existingSecretName: combined
+      username_key: prom-username
+      password_key: prom-password
 
 alloy:
   alloy:
