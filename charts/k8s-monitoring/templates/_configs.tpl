@@ -99,10 +99,6 @@
 
   {{- if and .Values.traces.enabled }}
     {{- include "alloy.config.tracesService" . }}
-
-    {{- if .Values.traces.extraConfig }}
-      {{- tpl .Values.traces.extraConfig $ | indent 0 }}
-    {{- end }}
   {{- end }}
 
   {{- include "alloy.config.logging" .Values.alloy.logging}}
@@ -110,8 +106,6 @@
 
   {{- if .Values.extraConfig }}
     {{- tpl .Values.extraConfig $ | indent 0 }}
-  {{- else if .Values.metrics.extraConfig }}
-    {{- tpl .Values.metrics.extraConfig $ | indent 0 }}
   {{- end }}
   {{- if .Values.global.extraConfig }}
     {{- tpl .Values.global.extraConfig $ | indent 0 }}

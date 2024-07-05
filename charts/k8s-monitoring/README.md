@@ -348,11 +348,11 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | externalServices.tempo.tls | object | `{}` | [TLS settings](https://grafana.com/docs/alloy/latest/reference/components/otelcol.exporter.otlp/#tls-block) to configure for the traces service. |
 | externalServices.tempo.tlsOptions | string | `""` | Define the [TLS block](https://grafana.com/docs/alloy/latest/reference/components/otelcol.exporter.otlp/#tls-block). Example: `tlsOptions: insecure = true` This option will be deprecated and removed soon. Please switch to `tls` and use yaml format. |
 
-### Metrics Global
+### Metrics
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| extraConfig | deprecated | `""` | Use metrics.extraConfig instead. |
+| extraConfig | string | `""` | Extra configuration that will be added to the Grafana Alloy configuration file. This value is templated so that you can refer to other values from this file. This cannot be used to modify the generated configuration values, only append new components. See [Adding custom Flow configuration](#adding-custom-flow-configuration) for an example. |
 
 ### Deployment: Kepler
 
@@ -857,12 +857,6 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | traces.enabled | bool | `false` | Receive and forward traces. |
 | traces.receiver.filters | object | `{"span":[],"spanevent":[]}` | Apply a filter to traces received via the OTLP or OTLP HTTP receivers. ([docs](https://grafana.com/docs/alloy/latest/reference/components/otelcol.processor.filter/)) |
 | traces.receiver.transforms | object | `{"resource":[],"span":[],"spanevent":[]}` | Apply a transformation to traces received via the OTLP or OTLP HTTP receivers. ([docs](https://grafana.com/docs/alloy/latest/reference/components/otelcol.processor.transform/)) |
-
-### Traces Global
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| traces.extraConfig | string | `""` | Extra configuration that will be added to the Grafana Alloy for Traces configuration file. This value is templated so that you can refer to other values from this file. This cannot be used to modify the generated configuration values, only append new components. See [Adding custom Flow configuration](#adding-custom-flow-configuration) for an example. |
 
 ### Other Values
 
