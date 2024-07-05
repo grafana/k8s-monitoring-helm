@@ -1085,6 +1085,57 @@ metrics:
     # @section -- Metrics Job: OpenCost
     maxCacheSize:
 
+  # Energy related metrics from Kepler
+  kepler:
+    # -- Scrape energy metrics from Kepler
+    # @section -- Metrics Job: Kepler
+    enabled: false
+
+    # -- How frequently to scrape metrics from Kepler.
+    # Overrides metrics.scrapeInterval
+    # @default -- 60s
+    # @section -- Metrics Job: Kepler
+    scrapeInterval: ""
+
+    # -- Label matchers used to select the Kepler pods
+    # @section -- Metrics Job: Kepler
+    labelMatchers:
+      app.kubernetes.io/name: kepler
+
+    # -- Rule blocks to be added to the discovery.relabel component for Kepler.
+    # These relabeling rules are applied pre-scrape against the targets from service discovery.
+    # Before the scrape, any remaining target labels that start with __ (i.e. __meta_kubernetes*) are dropped.
+    # ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery.relabel/#rule-block))
+    # @section -- Metrics Job: Kepler
+    extraRelabelingRules: ""
+
+    # -- Rule blocks to be added to the prometheus.relabel component for Kepler. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#rule-block))
+    # These relabeling rules are applied post-scrape against the metrics returned from the scraped target, no __meta* labels are present.
+    # @section -- Metrics Job: Kepler
+    extraMetricRelabelingRules: ""
+
+    # Adjustments to the scraped metrics to filter the amount of data sent to storage.
+    # @section -- Metrics Job: Kepler
+    metricsTuning:
+      # -- Filter the list of metrics from Kepler to the minimal set required for Kubernetes Monitoring.
+      # See [Metrics Tuning and Allow Lists](#metrics-tuning-and-allow-lists)
+      # @section -- Metrics Job: Kepler
+      useDefaultAllowList: true
+      # -- Metrics to keep. Can use regex.
+      # @section -- Metrics Job: Kepler
+      includeMetrics: []
+      # -- Metrics to drop. Can use regex.
+      # @section -- Metrics Job: Kepler
+      excludeMetrics: []
+
+    # -- Sets the max_cache_size for the prometheus.relabel component for Kepler.
+    # This should be at least 2x-5x your largest scrape target or samples appended rate.
+    # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#arguments))
+    # Overrides metrics.maxCacheSize
+    # @default -- 100000
+    # @section -- Metrics Job: Kepler
+    maxCacheSize:
+
   # Prometheus Operator PodMonitors
   podMonitors:
     # -- Enable discovery of Prometheus Operator PodMonitor objects.
@@ -1874,11 +1925,11 @@ configAnalysis:
 global:
   image:
     # -- Global image registry to use if it needs to be overridden for some specific use cases (e.g local registries, custom images, ...)
-    # @section -- Chart
+    # @section -- Image Registry
     registry: ""
 
     # -- Optional set of global image pull secrets.
-    # @section -- Chart
+    # @section -- Image Registry
     pullSecrets: []
 
 # Settings for the Kube State Metrics deployment
@@ -2029,6 +2080,22 @@ opencost:
     nodeSelector:
       kubernetes.io/os: linux
 
+# Settings for the Kepler deployment
+# You can use this sections to make modifications to the Kepler deployment.
+# See https://github.com/sustainable-computing-io/kepler-helm-chart/tree/main/chart/kepler for available values.
+kepler:
+  # -- Should this Helm chart deploy Kepler to the cluster.
+  # Set this to false if your cluster already has Kepler, or if you do not want to scrape metrics from Kepler.
+  # @section -- Chart
+  enabled: false
+
+  # @ignored -- This skips including these values in README.md
+  canMount:
+    usrSrc: false
+
+  # @ignored -- This skips including these values in README.md
+  extraEnvVars:
+    EXPOSE_ESTIMATED_IDLE_POWER_METRICS: "true"
 
 # Settings for the Grafana Alloy instance that gathers metrics, and opens receivers for application data.
 # See https://github.com/grafana/alloy/tree/main/operations/helm/charts/alloy for available values.
@@ -2228,7 +2295,6 @@ alloy-profiles:
   crds: {create: false}
 
 # -- Deploy additional manifest objects
-# @section -- Chart
 extraObjects: []
 # - apiVersion: external-secrets.io/v1beta1
 #   kind: ExternalSecret

@@ -29,7 +29,7 @@ jobs:
       - name: Run Updatecli
         id: update-alloy
         run: |
-          updatecli apply --config ${UPDATECLI_CONFIG_DIR}/alloy.yaml
+          updatecli apply --config "${UPDATECLI_CONFIG_DIR}/alloy.yaml"
           if ! git diff --exit-code > /dev/null; then
             echo "changed=true" >> "${GITHUB_OUTPUT}"
           fi
@@ -62,6 +62,52 @@ jobs:
           branch: chore/update-grafana-alloy
           delete-branch: true
 
+  updateKepler:
+    name: Update Kepler
+    runs-on: "ubuntu-latest"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Updatecli
+        uses: updatecli/updatecli-action@v2
+
+      - name: Run Updatecli
+        id: update-kepler
+        run: |
+          updatecli apply --config "${UPDATECLI_CONFIG_DIR}/kepler.yaml"
+          if ! git diff --exit-code > /dev/null; then
+            echo "changed=true" >> "${GITHUB_OUTPUT}"
+          fi
+
+      - name: Regenerate docs
+        if: steps.update-kepler.outputs.changed == 'true'
+        run: docker run --rm -v "$(pwd)/charts/k8s-monitoring:/helm-docs" -u "$(id -u)" jnorwood/helm-docs
+
+      - name: Install Helm
+        if: steps.update-kepler.outputs.changed == 'true'
+        uses: azure/setup-helm@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Regenerate examples
+        if: steps.update-kepler.outputs.changed == 'true'
+        run: make regenerate-example-outputs
+
+      - name: Create pull request
+        if: steps.update-kepler.outputs.changed == 'true'
+        uses: peter-evans/create-pull-request@v6
+        with:
+          title: "[dependency] Update Kepler"
+          body: "Updates the Kepler subchart"
+          base: main
+          author: "${{ github.actor }} <${{ github.actor }}@users.noreply.github.com>"
+          committer: "GitHub <noreply@github.com>"
+          commit-message: Update Kepler
+          labels: dependencies
+          branch: chore/update-kepler
+          delete-branch: true
+
   updateKubeStateMetrics:
     name: Update Kube State Metrics
     runs-on: "ubuntu-latest"
@@ -75,7 +121,7 @@ jobs:
       - name: Run Updatecli
         id: update-kube-state-metrics
         run: |
-          updatecli apply --config ${UPDATECLI_CONFIG_DIR}/kube-state-metrics.yaml
+          updatecli apply --config "${UPDATECLI_CONFIG_DIR}/kube-state-metrics.yaml"
           if ! git diff --exit-code > /dev/null; then
             echo "changed=true" >> "${GITHUB_OUTPUT}"
           fi
@@ -121,7 +167,7 @@ jobs:
       - name: Run Updatecli
         id: update-node-exporter
         run: |
-          updatecli apply --config ${UPDATECLI_CONFIG_DIR}/node-exporter.yaml
+          updatecli apply --config "${UPDATECLI_CONFIG_DIR}/node-exporter.yaml"
           if ! git diff --exit-code > /dev/null; then
             echo "changed=true" >> "${GITHUB_OUTPUT}"
           fi
@@ -167,7 +213,7 @@ jobs:
       - name: Run Updatecli
         id: update-opencost
         run: |
-          updatecli apply --config ${UPDATECLI_CONFIG_DIR}/opencost.yaml
+          updatecli apply --config "${UPDATECLI_CONFIG_DIR}/opencost.yaml"
           if ! git diff --exit-code > /dev/null; then
             echo "changed=true" >> "${GITHUB_OUTPUT}"
           fi
@@ -213,7 +259,7 @@ jobs:
       - name: Run Updatecli
         id: update-prometheus-operator-crds
         run: |
-          updatecli apply --config ${UPDATECLI_CONFIG_DIR}/prometheus-operator-crds.yaml
+          updatecli apply --config "${UPDATECLI_CONFIG_DIR}/prometheus-operator-crds.yaml"
           if ! git diff --exit-code > /dev/null; then
             echo "changed=true" >> "${GITHUB_OUTPUT}"
           fi
@@ -259,7 +305,7 @@ jobs:
       - name: Run Updatecli
         id: update-windows-exporter
         run: |
-          updatecli apply --config ${UPDATECLI_CONFIG_DIR}/windows-exporter.yaml
+          updatecli apply --config "${UPDATECLI_CONFIG_DIR}/windows-exporter.yaml"
           if ! git diff --exit-code > /dev/null; then
             echo "changed=true" >> "${GITHUB_OUTPUT}"
           fi
