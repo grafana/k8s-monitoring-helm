@@ -105,10 +105,10 @@
   {{- include "alloy.config.liveDebugging" .Values.alloy.liveDebugging}}
 
   {{- if .Values.extraConfig }}
-    {{- tpl .Values.extraConfig $ | indent 0 }}
+    {{- tpl .Values.extraConfig $ | nindent 0 }}
   {{- end }}
   {{- if .Values.global.extraConfig }}
-    {{- tpl .Values.global.extraConfig $ | indent 0 }}
+    {{- tpl .Values.global.extraConfig $ | nindent 0 }}
   {{- end }}
 {{- end -}}
 
@@ -120,10 +120,10 @@
   {{- include "alloy.config.liveDebugging" (index .Values "alloy-events").liveDebugging}}
 
   {{- if .Values.logs.cluster_events.extraConfig }}
-    {{- tpl .Values.logs.cluster_events.extraConfig $ | indent 0 }}
+    {{- tpl .Values.logs.cluster_events.extraConfig $ | nindent 0 }}
   {{- end }}
   {{- if .Values.global.extraConfig }}
-    {{- tpl .Values.global.extraConfig $ | indent 0 }}
+    {{- tpl .Values.global.extraConfig $ | nindent 0 }}
   {{- end }}
 {{- end -}}
 
@@ -137,10 +137,10 @@
   {{- include "alloy.config.liveDebugging" (index .Values "alloy-logs").liveDebugging}}
 
   {{- if .Values.logs.extraConfig }}
-    {{- tpl .Values.logs.extraConfig $ | indent 0 }}
+    {{- tpl .Values.logs.extraConfig $ | nindent 0 }}
   {{- end }}
   {{- if .Values.global.extraConfig }}
-    {{- tpl .Values.global.extraConfig $ | indent 0 }}
+    {{- tpl .Values.global.extraConfig $ | nindent 0 }}
   {{- end }}
 {{- end -}}
 
@@ -163,9 +163,9 @@
   {{- include "alloy.config.liveDebugging" (index .Values "alloy-profiles").liveDebugging}}
 
   {{- if .Values.profiles.extraConfig }}
-    {{- tpl .Values.profiles.extraConfig $ | indent 0 }}
+    {{- tpl .Values.profiles.extraConfig $ | nindent 0 }}
   {{- end }}
   {{- if .Values.global.extraConfig }}
-    {{- tpl .Values.global.extraConfig $ | indent 0 }}
+    {{- tpl .Values.global.extraConfig $ | nindent 0 }}
   {{- end }}
 {{- end -}}
