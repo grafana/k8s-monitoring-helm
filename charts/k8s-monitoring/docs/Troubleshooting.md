@@ -3,11 +3,13 @@
 This document contains some information about frequently encountered issues and how to resolve them.
 
 -   [General Tips](#general-tips)
+    -   [Alloy Web UI](#alloy-web-ui)
 -   [Instructions for specific Cluster platform providers](#instructions-for-specific-cluster-platform-providers)
 -   [Frequently seen problems](#frequently-seen-problems)
     -   [CustomResourceDefinition conflicts](#customresourcedefinition-conflicts)
     -   [Pod log files in `/var/lib/docker/containers`](#pod-log-files-in-varlibdockercontainers)
     -   [Authentication error: invalid scope requested](#authentication-error-invalid-scope-requested)
+    -   [Kepler pods crashing on AWS Graviton nodes](#kepler-pods-crashing-on-aws-graviton-nodes)
 
 ## General tips
 
@@ -102,3 +104,14 @@ The table below shows the scopes required for various actions done by this chart
 | Logs & Cluster Events | Grafana Cloud Logs (Loki)                   | `logs:write`      | `logs:read`       |
 | Traces                | Grafana Cloud Trace (Tempo)                 | `traces:write`    | `traces:read`     |
 | Profiles              | Grafana Cloud Profiles (Pyroscope)          | `profiles:write`  | `profiles:read`   |
+
+### Kepler pods crashing on AWS Graviton nodes
+
+Kepler [cannot run](https://github.com/sustainable-computing-io/kepler/issues/1556) on AWS Graviton nodes and pods on
+those nodes will crash. To prevent this, you can add a node selector to the Kepler deployment:
+
+```yaml
+kepler:
+  nodeSelector:
+    kubernetes.io/arch: amd64
+```
