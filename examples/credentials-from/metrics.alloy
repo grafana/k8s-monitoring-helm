@@ -868,10 +868,6 @@ loki.write "logs_service" {
 
 
 // Tempo
-remote.kubernetes.secret "traces_service" {
-  name = "tempo-k8s-monitoring"
-  namespace = "default"
-}
 
 otelcol.auth.basic "traces_service" {
   username = remote.kubernetes.secret.grafana_cloud.data["tempo-username"]
@@ -891,6 +887,7 @@ logging {
   level  = "info"
   format = "logfmt"
 }
+
 
 remote.kubernetes.secret "grafana_cloud" {
   namespace = "default"
