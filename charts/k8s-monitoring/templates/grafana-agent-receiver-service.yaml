@@ -16,7 +16,9 @@ spec:
   {{- end }}
   selector:
     {{- include "alloy.selectorLabels" .Subcharts.alloy | nindent 4 }}
+  {{- if semverCompare ">=1.26-0" .Capabilities.KubeVersion.Version }}
   internalTrafficPolicy: {{.Values.alloy.service.internalTrafficPolicy}}
+  {{- end }}
   ports:
     - name: http-metrics
       {{- if eq .Values.alloy.service.type "NodePort" }}
