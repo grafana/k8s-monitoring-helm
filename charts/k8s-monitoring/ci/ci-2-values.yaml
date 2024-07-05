@@ -15,6 +15,8 @@ externalServices:
     basicAuth:
       usernameFrom: remote.kubernetes.secret.creds.data["prom-username"]
       passwordFrom: remote.kubernetes.secret.creds.data["prom-password"]
+    secret:
+      create: false
     queryEndpoint: /api/v1/query
     writeEndpoint: /api/v1/otlp
     protocol: otlphttp
@@ -30,11 +32,15 @@ externalServices:
     basicAuth:
       usernameFrom: remote.kubernetes.secret.grafana_cloud.data["loki-username"]
       passwordFrom: remote.kubernetes.secret.grafana_cloud.data["loki-password"]
+    secret:
+      create: false
     protocol: otlphttp
     writeEndpoint: /
   tempo:
     hostFrom: remote.kubernetes.secret.grafana_cloud.data["tempo-host"]
     authMode: none
+    secret:
+      create: false
     protocol: otlphttp
     tlsOptions: |-
       insecure             = true
