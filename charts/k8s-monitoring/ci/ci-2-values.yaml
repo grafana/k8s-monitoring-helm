@@ -11,10 +11,10 @@ cluster:
 
 externalServices:
   prometheus:
-    host: https://prometheus-server.prometheus.svc:9090
+    hostFrom: remote.kubernetes.secret.creds.data["prom-host"]
     basicAuth:
-      username: promuser
-      password: prometheuspassword
+      usernameFrom: remote.kubernetes.secret.creds.data["prom-username"]
+      passwordFrom: remote.kubernetes.secret.creds.data["prom-password"]
     queryEndpoint: /api/v1/query
     writeEndpoint: /api/v1/otlp
     protocol: otlphttp
@@ -25,15 +25,15 @@ externalServices:
     externalLabelsFrom:
       magic_word: env("MAGIC_WORD")
   loki:
-    host: http://loki-otlp-interface.loki.svc:4318
-    tenantId: 1
+    hostFrom: remote.kubernetes.secret.grafana_cloud.data["loki-host"]
+    tenantIdFrom: remote.kubernetes.secret.grafana_cloud.data["loki-tenantId"]
+    basicAuth:
+      usernameFrom: remote.kubernetes.secret.grafana_cloud.data["loki-username"]
+      passwordFrom: remote.kubernetes.secret.grafana_cloud.data["loki-password"]
     protocol: otlphttp
     writeEndpoint: /
-    basicAuth:
-      username: loki
-      password: lokipassword
   tempo:
-    host: http://tempo.tempo.svc:4318
+    hostFrom: remote.kubernetes.secret.grafana_cloud.data["tempo-host"]
     authMode: none
     protocol: otlphttp
     tlsOptions: |-
@@ -87,6 +87,13 @@ extraConfig: |-
     sampling_fraction = 0.1
     write_to = [otelcol.processor.k8sattributes.default.input]
   }
+
+global:
+  extraConfig: |-
+    remote.kubernetes.secret "creds" {
+      name = "combined"
+      namespace = "monitoring"
+    }
 
 test:
   attempts: 20
