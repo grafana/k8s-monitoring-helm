@@ -83,7 +83,7 @@ This field controls how Pod logs are gathered from the Cluster.
 
 -   `logs.pod_logs.gatherMethod` - The default method, "volumes", means that the Grafana Alloy instance for logs will
   gather logs by mounting hostPath volumes to the Pod log location on each Kubernetes Cluster Node. The other method,
-  "api", means that Alloy will gather logs by streaming them from the Kubernetes API Server.
+  `api`, means that Alloy will gather logs by streaming them from the Kubernetes API Server.
 
 ### Customize how logs are processed
 

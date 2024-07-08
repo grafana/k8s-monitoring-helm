@@ -17,7 +17,7 @@ metrics:
 ```
 
 The `metricsTuning` section also offers more fine-grained control of the allowed metrics, including or excluding metrics
-by name or by regex. You can learn more in [this example](../../../examples/custom-metrics-tuning).
+by name or by regular expression. You can learn more in [this example](../../../examples/custom-metrics-tuning).
 
 You can also use the `extraMetricRelabelingRules` section to add arbitrary relabeling rules that can be used to take any
 action on the metric list, including filtering based on label or other actions.
