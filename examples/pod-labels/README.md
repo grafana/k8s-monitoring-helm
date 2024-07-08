@@ -39,7 +39,7 @@ for more information.
 
 ## Logs
 
-Also, the Pod logs gathered and sent to Loki do not have their Pod's Kubernetes labels attached. This is easily enabled
+Also, the Pod logs gathered and sent to Loki do not have their Pod's Kubernetes labels attached. This is enabled
 with a relabeling rule. In the example below, the `app.kubernetes.io/instance` Kubernetes label (discovered by
 the [discovery.kubernetes component](https://grafana.com/docs/alloy/latest/reference/components/discovery.kubernetes/#pod-role))
 is set to the `instance` label on the log message:

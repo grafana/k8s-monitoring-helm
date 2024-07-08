@@ -1,7 +1,7 @@
 # Terraform Deployment
 
 Some may want to use [Terraform](https://www.terraform.io/) to deploy the Kubernetes Monitoring Helm chart. This is
-easily accomplished with the use of
+accomplished with the use of
 the [Helm provider](https://registry.terraform.io/providers/hashicorp/helm/latest/docs), and
 its [helm_release](https://registry.terraform.io/providers/hashicorp/helm/latest/docs/resources/release#create_namespace)
 resource. To use this, adapt the provider to connect to your own Kubernetes cluster and modify the `vars.tf` file to the
@@ -178,7 +178,7 @@ variable "tempo-password" {
 
 ## Deploying
 
-Simply run `terraform init` and `terraform apply` to deploy this Helm chart to your cluster.
+Run `terraform init` and `terraform apply` to deploy this Helm chart to your cluster.
 
 ```shell
 $ terraform init

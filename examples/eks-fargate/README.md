@@ -1,9 +1,9 @@
 # EKS Fargate
 
 AWS EKS Fargate Kubernetes clusters have a fully managed control plane, which reduce the management needs of the user,
-but need special consideration because they often have special restrictions around DaemonSets and node access. This
-prevents services like Node Exporter from working properly. It also has implications for how Pod logs are gathered,
-since the typical method is to deploy Grafana Alloy as a Daemonset with HostPath volume mounts to gather the log files.
+but need extra consideration because they often have restrictions around DaemonSets and node access. This prevents
+services like Node Exporter from working properly. It also has implications for how Pod logs are gathered, since the
+typical method is to deploy Grafana Alloy as a Daemonset with HostPath volume mounts to gather the log files.
 Consequently, Alloy must be deployed to use the
 [Kubernetes API log gathering](https://grafana.com/docs/alloy/latest/reference/components/loki.source.kubernetes/)
 method instead.
