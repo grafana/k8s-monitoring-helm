@@ -49,14 +49,12 @@ discovery.relabel "pod_logs" {
     target_label = "job"
   }
 
+{{- range $lokiLabel, $podLabel := .Values.logs.pod_logs.labels }}
   rule {
-    source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
-    target_label  = "name"
+    source_labels = ["__meta_kubernetes_pod_label_{{ include "escape_label" $podLabel }}"]
+    target_label  = {{ $lokiLabel | quote }}
   }
-  rule {
-    source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_component"]
-    target_label  = "component"
-  }
+{{ end }}
 
   {{- if eq .Values.logs.pod_logs.gatherMethod "volumes" }}
   rule {
