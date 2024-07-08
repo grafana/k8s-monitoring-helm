@@ -150,6 +150,38 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 
 ## Values
 
+### Deployment: [Alloy](https://github.com/grafana/alloy/tree/main/operations/helm/charts/alloy) for Cluster Events Deployment
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| alloy-events.liveDebugging.enabled | bool | `false` | Enable live debugging for the Alloy instance. |
+| alloy-events.logging.format | string | `"logfmt"` | Format to use for writing Alloy log lines. |
+| alloy-events.logging.level | string | `"info"` | Level at which Alloy log lines should be written. |
+
+### Deployment: [Alloy](https://github.com/grafana/alloy/tree/main/operations/helm/charts/alloy) for Logs Deployment
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| alloy-logs.liveDebugging.enabled | bool | `false` | Enable live debugging for the Alloy instance. |
+| alloy-logs.logging.format | string | `"logfmt"` | Format to use for writing Alloy log lines. |
+| alloy-logs.logging.level | string | `"info"` | Level at which Alloy log lines should be written. |
+
+### Deployment: [Alloy](https://github.com/grafana/alloy/tree/main/operations/helm/charts/alloy) for Profiles Deployment
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| alloy-profiles.liveDebugging.enabled | bool | `false` | Enable live debugging for the Alloy instance. |
+| alloy-profiles.logging.format | string | `"logfmt"` | Format to use for writing Alloy log lines. |
+| alloy-profiles.logging.level | string | `"info"` | Level at which Alloy log lines should be written. |
+
+### Deployment: [Alloy](https://github.com/grafana/alloy/tree/main/operations/helm/charts/alloy)
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| alloy.liveDebugging.enabled | bool | `false` | Enable live debugging for the Alloy instance. |
+| alloy.logging.format | string | `"logfmt"` | Format to use for writing Alloy log lines. |
+| alloy.logging.level | string | `"info"` | Level at which Alloy log lines should be written. |
+
 ### Cluster Settings
 
 | Key | Type | Default | Description |
@@ -313,20 +345,17 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | global.image.pullSecrets | list | `[]` | Optional set of global image pull secrets. |
 | global.image.registry | string | `""` | Global image registry to use if it needs to be overridden for some specific use cases (e.g local registries, custom images, ...) |
 
-### Chart
+### Deployment: Kepler
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | kepler.enabled | bool | `false` | Should this Helm chart deploy Kepler to the cluster. Set this to false if your cluster already has Kepler, or if you do not want to scrape metrics from Kepler. |
+
+### Deployment: [Kube State Metrics](https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-state-metrics)
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
 | kube-state-metrics.enabled | bool | `true` | Should this helm chart deploy Kube State Metrics to the cluster. Set this to false if your cluster already has Kube State Metrics, or if you do not want to scrape metrics from Kube State Metrics. |
-| opencost.enabled | bool | `true` | Should this Helm chart deploy OpenCost to the cluster. Set this to false if your cluster already has OpenCost, or if you do not want to scrape metrics from OpenCost. |
-| opencost.opencost.prometheus.existingSecretName | string | `"prometheus-k8s-monitoring"` | The name of the secret containing the username and password for the metrics service. This must be in the same namespace as the OpenCost deployment. |
-| opencost.opencost.prometheus.external.url | string | `"https://prom.example.com/api/prom"` | The URL for Prometheus queries. It should match externalServices.prometheus.host + "/api/prom" |
-| opencost.opencost.prometheus.password_key | string | `"password"` | The key for the password property in the secret. |
-| opencost.opencost.prometheus.username_key | string | `"username"` | The key for the username property in the secret. |
-| prometheus-node-exporter.enabled | bool | `true` | Should this helm chart deploy Node Exporter to the cluster. Set this to false if your cluster already has Node Exporter, or if you do not want to scrape metrics from Node Exporter. |
-| prometheus-operator-crds.enabled | bool | `true` | Should this helm chart deploy the Prometheus Operator CRDs to the cluster. Set this to false if your cluster already has the CRDs, or if you do not to have Grafana Alloy scrape metrics from PodMonitors, Probes, or ServiceMonitors. |
-| prometheus-windows-exporter.enabled | bool | `false` | Should this helm chart deploy Windows Exporter to the cluster. Set this to false if your cluster already has Windows Exporter, or if you do not want to scrape metrics from Windows Exporter. |
 
 ### Logs Scrape: Cluster Events
 
@@ -652,6 +681,21 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | metrics.windows-exporter.metricsTuning.useDefaultAllowList | bool | `true` | Filter the list of metrics from Windows Exporter to the minimal set required for Kubernetes Monitoring. See [Metrics Tuning and Allow Lists](#metrics-tuning-and-allow-lists) |
 | metrics.windows-exporter.scrapeInterval | string | 60s | How frequently to scrape metrics from Windows Exporter. Overrides metrics.scrapeInterval |
 
+### Deployment: [OpenCost](https://github.com/opencost/opencost-helm-chart)
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| opencost.enabled | bool | `true` | Should this Helm chart deploy OpenCost to the cluster. Set this to false if your cluster already has OpenCost, or if you do not want to scrape metrics from OpenCost. |
+| opencost.opencost.prometheus.existingSecretName | string | `"prometheus-k8s-monitoring"` | The name of the secret containing the username and password for the metrics service. This must be in the same namespace as the OpenCost deployment. |
+| opencost.opencost.prometheus.password_key | string | `"password"` | The key for the password property in the secret. |
+| opencost.opencost.prometheus.username_key | string | `"username"` | The key for the username property in the secret. |
+
+### Deployment: [OpenCost](https://github.com/opencost/opencost-helm-chart)3
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| opencost.opencost.prometheus.external.url | string | `"https://prom.example.com/api/prom"` | The URL for Prometheus queries. It should match externalServices.prometheus.host + "/api/prom" |
+
 ### Profiles (eBPF)
 
 | Key | Type | Default | Description |
@@ -684,6 +728,24 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | profiles.pprof.extraRelabelingRules | string | `""` | Rule blocks to be added to the discovery.relabel component for eBPF profile sources. These relabeling rules are applied pre-scrape against the targets from service discovery. Before the scrape, any remaining target labels that start with `__` (i.e. `__meta_kubernetes*`) are dropped. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery.relabel/#rule-block)) |
 | profiles.pprof.namespaces | list | `[]` | Which namespaces to look for pods with profiles. |
 | profiles.pprof.types | list | `["memory","cpu","goroutine","block","mutex","fgprof"]` | Profile types to gather |
+
+### Deployment: [Prometheus Node Exporter](https://github.com/prometheus-community/helm-charts/tree/main/charts/prometheus-node-exporter)
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| prometheus-node-exporter.enabled | bool | `true` | Should this helm chart deploy Node Exporter to the cluster. Set this to false if your cluster already has Node Exporter, or if you do not want to scrape metrics from Node Exporter. |
+
+### Deployment: [Prometheus Operator CRDs](https://github.com/prometheus-community/helm-charts/tree/main/charts/prometheus-operator-crds)
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| prometheus-operator-crds.enabled | bool | `true` | Should this helm chart deploy the Prometheus Operator CRDs to the cluster. Set this to false if your cluster already has the CRDs, or if you do not to have Grafana Alloy scrape metrics from PodMonitors, Probes, or ServiceMonitors. |
+
+### Deployment: [Prometheus Windows Exporter](https://github.com/prometheus-community/helm-charts/tree/main/charts/prometheus-windows-exporter)
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| prometheus-windows-exporter.enabled | bool | `false` | Should this helm chart deploy Windows Exporter to the cluster. Set this to false if your cluster already has Windows Exporter, or if you do not want to scrape metrics from Windows Exporter. |
 
 ### OTEL Receivers
 
