@@ -27,6 +27,7 @@ values.schema.json: values.yaml schema-mods/enums-and-types.json schema-mods/req
 			| del(.properties["prometheus-node-exporter"].properties.nodeSelector) \
 			| del(.properties["prometheus-node-exporter"].properties.service) \
 			| del(.properties["prometheus-windows-exporter"].properties.config) \
+			| del(.properties.logs.properties.pod_logs.properties.labels.properties) \
 			| del(.properties.opencost.properties.opencost)' values.schema.generated.json) \
 		schema-mods/enums-and-types.json \
 		schema-mods/required-values.json \
