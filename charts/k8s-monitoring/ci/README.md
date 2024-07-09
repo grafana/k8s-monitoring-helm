@@ -13,7 +13,7 @@ Any files that are named `*-values.yaml` will be used for testing.
     -   Custom test queries, including LogQL and TraceQL queries
 -   `ci-integrations-values.yaml`
     -   Loading integrations via modules
-    -   Loading integrations via Pod annotations (and over https)
+    -   Loading integrations via Pod annotations (and over HTTPS)
     -   Loading integrations via Service annotations
 
 ## Architecture
@@ -26,7 +26,7 @@ The CI/CD test environment is deployed out like this:
     -   Cert Manager, used for testing discovery using service annotations
     -   Grafana Alloy, used for pushing metrics and traces using receivers
     -   MySQL, used for testing module integrations
-    -   Prometheus, used for testing discovery using pod annotations and https
+    -   Prometheus, used for testing discovery using pod annotations and HTTPS
     -   Loki, used for testing discovery using ServiceMonitor objects
     -   Grafana, used for gathering logs via a PodLogs object
     -   The rest of Kubernetes

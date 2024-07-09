@@ -1,8 +1,8 @@
 # Scraping Additional Metrics
 
 If you have an application or a service running on your Kubernetes Cluster that is exporting metrics, you can
-use this chart to scrape those metrics and send them to your datastore. This chart provides plenty of options for doing
-just that.
+use this chart to scrape those metrics and send them to your datastore. This document explains several options to
+accomplish this.
 
 ## Options
 
@@ -109,8 +109,8 @@ Since you don't want to scrape every service in your Cluster, use rules to selec
 on its name, namespace, labels, port names or numbers, and many other variables.
 To do so, use
 a [`discovery.relabel`](https://grafana.com/docs/alloy/latest/reference/components/discovery.relabel/)
-component and add one or more rules, using special meta-labels that are set automatically by the
-`discovery.kubernetes` component.
+component and add one or more rules, using meta-labels that are set automatically by the
+`discovery.kubernetes` component and always start with `__`.
 
 Here is an example component that we've named "blue_database_service". This component takes the list of all services
 from `discovery.kubernetes.services` and filters to a service named "database", in the namespace "blue", with the port
@@ -139,10 +139,10 @@ discovery.relabel "blue_database_service" {
 
 The [documentation](https://grafana.com/docs/alloy/latest/reference/components/discovery.kubernetes/#service-role)
 has the list of meta labels for services. Note that there are different labels for port name and port number. Make sure
-you use the right label for a named port or simply the port number.
+you use the right label for a named port or the port number.
 
 This is also a good place to add any extra labels that will be scraped. For example, if you wanted to set the label
-`team="blue"`, you might use this additional rule in the `blue_database_service` component we just made:
+`team="blue"`, you might use this additional rule in the `blue_database_service` component:
 
 ```grafana-alloy
   rule {

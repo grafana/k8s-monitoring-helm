@@ -17,7 +17,7 @@ fi
 (return 0 2>/dev/null) && sourced=1 || sourced=0
 
 statusCode=0
-"${dir}"/node_modules/.bin/textlint --config "${dir}/.textlintrc" --ignore-path "${dir}/.textlintignore" ./*.md ./**/*.md
+"${dir}"/node_modules/.bin/textlint --config "${dir}/.textlintrc" --ignore-path "${dir}/.textlintignore" $(find . -type f -name "*.md" -not \( -path "./node_modules/*" -o -path "./data-alloy/*" \))
 currentCode="$?"
 # only override the statusCode if it is 0
 if [[ "${statusCode}" == 0 ]]; then

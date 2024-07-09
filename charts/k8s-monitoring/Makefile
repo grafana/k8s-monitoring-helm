@@ -70,7 +70,7 @@ docs/RBAC.md: ../../examples/default-values/output.yaml ../../examples/openshift
 	yq 'select(.metadata.name=="k8smon-alloy-logs") | select(.kind=="ClusterRole") | .rules' ../../examples/default-values/output.yaml >> docs/RBAC.md
 	echo '```' >> docs/RBAC.md
 	echo >> docs/RBAC.md
-	echo "When deploying to an OpenShift cluster, these extra rules are added to enable access to special a SecurityContextConstraint:" >> docs/RBAC.md
+	echo "When deploying to an OpenShift cluster, these extra rules are added to enable access to a SecurityContextConstraint for the Alloy deployment for gathering Pod Logs:" >> docs/RBAC.md
 	echo >> docs/RBAC.md
 	echo '```yaml' >> docs/RBAC.md
 	yq 'select(.metadata.name=="k8smon-alloy-logs-scc") | select(.kind=="ClusterRole") | .rules' ../../examples/openshift-compatible/output.yaml >> docs/RBAC.md

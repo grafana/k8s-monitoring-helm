@@ -137,7 +137,7 @@ jobs:
       - env:
           REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          npx textlint --format checkstyle --config ./.textlintrc --ignore-path ./.textlintignore ./*.md ./**/*.md ./**/**/*.md | \
+          npx textlint --format checkstyle --config ./.textlintrc --ignore-path ./.textlintignore $(find . -type f -name "*.md" -not \( -path "./node_modules/*" -o -path "./data-alloy/*" \)) | \
             reviewdog -f=checkstyle -name="textlint" -reporter=github-check -level=info
 
   alloy:
