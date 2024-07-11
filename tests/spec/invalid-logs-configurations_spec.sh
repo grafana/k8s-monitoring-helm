@@ -53,4 +53,16 @@ alloy-logs:
     type: daemonset'
     End
   End
+
+  Describe 'Using non-daemonset with journal log gathering'
+    It 'prints a friendly error message'
+      When call helm template k8smon ../charts/k8s-monitoring -f "spec/fixtures/invalid-logs-config-non-daemonset-and-journal-logs_values.yaml"
+      The status should be failure
+      The error should include 'Invalid configuration for gathering journal logs! Grafana Alloy for Logs must be a Daemonset. Otherwise, journal logs will be missing!
+Please set:
+alloy-logs:
+  controller:
+    type: daemonset'
+    End
+  End
 End

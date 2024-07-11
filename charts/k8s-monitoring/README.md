@@ -380,7 +380,6 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | logs.journal.enabled | bool | `false` | Scrape Kubernetes Worker Journal Logs event |
-| logs.journal.extraConfig | string | `""` | Extra configuration that will be added to the Grafana Alloy for Journal configuration file. This value is templated so that you can refer to other values from this file. This cannot be used to modify the generated configuration values, only append new components. See [Adding custom Flow configuration](#adding-custom-flow-configuration) for an example. |
 | logs.journal.extraStageBlocks | string | `""` | Stage blocks to be added to the loki.process component for journal logs. ([docs](https://grafana.com/docs/alloy/latest/reference/components/loki.process/#blocks)) This value is templated so that you can refer to other values from this file. |
 | logs.journal.formatAsJson | bool | `false` | Whether to forward the original journal entry as JSON. |
 | logs.journal.jobLabel | string | `"integrations/kubernetes/journal"` | The value for the job label for journal logs |
