@@ -26,8 +26,9 @@ loki.relabel "journal" {
 }
 
 loki.source.journal "worker" {
-  max_age = {{ .Values.logs.journal.maxAge | default "8h" | quote }}
   path = {{ .Values.logs.journal.path | default "/var/logs/journal" | quote }}
+  format_as_json = {{ .Values.logs.journal.formatAsJson | quote }}
+  max_age = {{ .Values.logs.journal.maxAge | default "8h" | quote }}
   relabel_rules = loki.relabel.journal.rules
   labels = {
     job = {{ .Values.logs.journal.jobLabel | default "integrations/kubernetes/journal" | quote }},

@@ -56,9 +56,17 @@ alloy-logs:
     {{- end -}}
   {{- end -}}
 {{- end -}}
+
+{{- if and .Values.logs.enabled .Values.logs.journal.enabled }}
+  {{- if ne (index .Values "alloy-logs").controller.type "daemonset" }}
+{{/*
+Invalid configuration for gathering journal logs! Grafana Alloy for Logs must be a Daemonset. Otherwise, journal logs will be missing!
+Please set:
+alloy-logs:
+  controller:
+    type: daemonset
+*/}}
+      {{ fail "Invalid configuration for gathering journal logs! Grafana Alloy for Logs must be a Daemonset. Otherwise, journal logs will be missing!\nPlease set:\nalloy-logs:\n  controller:\n    type: daemonset"}}
+  {{- end }}
 {{- end -}}
-
-
-
-
-
+{{- end -}}
