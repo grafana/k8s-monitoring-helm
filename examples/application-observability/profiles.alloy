@@ -1,4 +1,4 @@
-// Profiles
+// Profiles: eBPF
 discovery.kubernetes "ebpf_pods" {
   selectors {
     role = "pod"
@@ -52,7 +52,65 @@ pyroscope.ebpf "ebpf_pods" {
 
   forward_to = [pyroscope.write.profiles_service.receiver]
 }
-// Profiles
+// Profiles: Java
+discovery.kubernetes "java_pods" {
+  selectors {
+    role = "pod"
+    field = "spec.nodeName=" + env("HOSTNAME")
+  }
+  role = "pod"
+}
+
+discovery.process "java_pods" {
+  join = discovery.kubernetes.java_pods.targets
+}
+
+discovery.relabel "java_pods" {
+  targets = discovery.process.java_pods.targets
+  rule {
+    action = "drop"
+    regex = "Succeeded|Failed|Completed"
+    source_labels = ["__meta_kubernetes_pod_phase"]
+  }
+  rule {
+    source_labels = ["__meta_process_exe"]
+    action = "keep"
+    regex = ".*/java$"
+  }
+  rule {
+    action = "replace"
+    source_labels = ["__meta_kubernetes_namespace"]
+    target_label = "namespace"
+  }
+  rule {
+    action = "replace"
+    source_labels = ["__meta_kubernetes_pod_name"]
+    target_label = "pod"
+  }
+  rule {
+    action = "replace"
+    source_labels = ["__meta_kubernetes_pod_node_name"]
+    target_label = "node"
+  }
+  rule {
+    action = "replace"
+    source_labels = ["__meta_kubernetes_pod_container_name"]
+    target_label = "container"
+  }
+}
+
+pyroscope.java "java_pods" {
+  targets = discovery.relabel.java_pods.output
+  profiling_config {
+    interval = "60s"
+    alloc = "512k"
+    cpu = true
+    sample_rate = 100
+    lock = "10ms"
+  }
+  forward_to = [pyroscope.write.profiles_service.receiver]
+}
+// Profiles: pprof
 discovery.kubernetes "pprof_pods" {
   selectors {
     role = "pod"

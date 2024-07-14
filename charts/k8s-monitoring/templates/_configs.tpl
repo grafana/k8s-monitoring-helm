@@ -146,6 +146,7 @@
 {{/* Grafana Alloy for Profiles config */}}
 {{- define "alloyProfilesConfig" -}}
   {{- include "alloy.config.profilesEbpf" . }}
+  {{- include "alloy.config.profilesJava" . }}
   {{- include "alloy.config.profilesPprof" . }}
 
   {{- include "alloy.config.profilesService" . }}
