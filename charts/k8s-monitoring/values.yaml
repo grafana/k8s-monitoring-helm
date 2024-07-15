@@ -177,6 +177,10 @@ externalServices:
     # @section -- External Services (Prometheus)
     sendNativeHistograms: false
 
+    # -- Extra outputs configured in Alloy to send metics to at the end on the pipeline. When the protocol is "remote_write" the output is in the Prometheus format, while if the protocol is "otlp" or "otlphttp" it is the OTel format.
+    # @section -- External Services (Prometheus)
+    extraOutputs: []
+
   # Connection information for Grafana Loki
   loki:
     # -- Loki host where logs and events will be sent
@@ -271,6 +275,10 @@ externalServices:
         # -- Maximum amount of memory targeted to be allocated by the process heap.
         # @section -- External Services (Loki)
         limit: 0MiB
+
+    # -- Extra outputs configured in Alloy to send logs to at the end on the pipeline. When the protocol is "loki" the output is in the Loki format, while if the protocol is "otlp" or "otlphttp" it is the OTel format.
+    # @section -- External Services (Loki)
+    extraOutputs: []
 
   # Connection information for Grafana Tempo
   tempo:
@@ -1732,6 +1740,19 @@ receivers:
       # -- How long before sending (Processors)
       # @section -- OTEL Receivers (Processors)
       timeout: 2s
+
+      # Extra outputs to send the batched data to.
+      # @section -- OTEL Receivers (Processors)
+      output:
+        # -- Extra outputs to send the batched metrics to.
+        # @section -- OTEL Receivers (Processors)
+        metrics: []
+        # -- Extra outputs to send the batched logs to.
+        # @section -- OTEL Receivers (Processors)
+        logs: []
+        # -- Extra outputs to send the batched traces to.
+        # @section -- OTEL Receivers (Processors)
+        traces: []
 
     # Attribute processor for OTLP/gRPC, OTLP/HTTP, Jaeger, or Zipkin receivers
     # @section -- OTEL Receivers (Processors)

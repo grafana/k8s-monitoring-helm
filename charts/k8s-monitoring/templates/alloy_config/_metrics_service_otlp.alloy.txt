@@ -47,10 +47,10 @@ otelcol.processor.memory_limiter "metrics_service" {
   output {
 {{- end }}
 {{- if eq .protocol "otlp" }}
-    metrics = [otelcol.exporter.otlp.metrics_service.input]
+    metrics = [{{ append (.Values.externalServices.prometheus.extraOutputs | default (list)) "otelcol.exporter.otlp.metrics_service.input" | join "," }}]
 {{- end }}
 {{- if eq .protocol "otlphttp" }}
-    metrics = [otelcol.exporter.otlphttp.metrics_service.input]
+    metrics = [{{ append (.Values.externalServices.prometheus.extraOutputs | default (list)) "otelcol.exporter.otlphttp.metrics_service.input" | join "," }}]
 {{- end }}
   }
 }

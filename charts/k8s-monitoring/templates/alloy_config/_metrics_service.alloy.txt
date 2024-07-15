@@ -19,7 +19,7 @@ prometheus.relabel "metrics_service" {
 {{- end }}
 
 {{- if eq .Values.externalServices.prometheus.protocol "remote_write" }}
-  forward_to = [prometheus.remote_write.metrics_service.receiver]
+  forward_to = [{{ append (.Values.externalServices.prometheus.extraOutputs | default (list)) "prometheus.remote_write.metrics_service.receiver" | join "," }}]
 }
 {{ include "alloy.config.metricsServiceRemoteWrite" . }}
 {{- end }}
