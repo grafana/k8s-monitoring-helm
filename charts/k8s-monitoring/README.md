@@ -168,7 +168,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| alloy-events.extraConfig | string | `""` | Extra configuration that will be added to the Grafana Alloy for Cluster Events configuration file. |
+| alloy-events.extraConfig | string | `""` | Extra configuration that will be added to the Grafana Alloy for Cluster Events configuration file. This value is templated so that you can refer to other values from this file. This cannot be used to modify the generated configuration values, only append new components. See [Adding custom Flow configuration](#adding-custom-flow-configuration) for an example. |
 | alloy-events.liveDebugging.enabled | bool | `false` | Enable live debugging for the Alloy instance. |
 | alloy-events.logging.format | string | `"logfmt"` | Format to use for writing Alloy log lines. |
 | alloy-events.logging.level | string | `"info"` | Level at which Alloy log lines should be written. |
@@ -177,7 +177,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| alloy-logs.extraConfig | string | `""` | Extra configuration that will be added to the Grafana Alloy for Logs configuration file. |
+| alloy-logs.extraConfig | string | `""` | Extra configuration that will be added to the Grafana Alloy for Logs configuration file. This value is templated so that you can refer to other values from this file. This cannot be used to modify the generated configuration values, only append new components. See [Adding custom Flow configuration](#adding-custom-flow-configuration) for an example. |
 | alloy-logs.liveDebugging.enabled | bool | `false` | Enable live debugging for the Alloy instance. |
 | alloy-logs.logging.format | string | `"logfmt"` | Format to use for writing Alloy log lines. |
 | alloy-logs.logging.level | string | `"info"` | Level at which Alloy log lines should be written. |
@@ -186,7 +186,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| alloy-profiles.extraConfig | string | `""` | Extra configuration that will be added to the Grafana Alloy for Profiles configuration file. |
+| alloy-profiles.extraConfig | string | `""` | Extra configuration that will be added to the Grafana Alloy for Profiles configuration file. This value is templated so that you can refer to other values from this file. This cannot be used to modify the generated configuration values, only append new components. See [Adding custom Flow configuration](#adding-custom-flow-configuration) for an example. |
 | alloy-profiles.liveDebugging.enabled | bool | `false` | Enable live debugging for the Alloy instance. |
 | alloy-profiles.logging.format | string | `"logfmt"` | Format to use for writing Alloy log lines. |
 | alloy-profiles.logging.level | string | `"info"` | Level at which Alloy log lines should be written. |
@@ -195,7 +195,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| alloy.extraConfig | string | `""` | Extra configuration that will be added to the Grafana Alloy configuration file. |
+| alloy.extraConfig | string | `""` | Extra configuration that will be added to the Grafana Alloy configuration file. This value is templated so that you can refer to other values from this file. This cannot be used to modify the generated configuration values, only append new components. See [Adding custom Flow configuration](#adding-custom-flow-configuration) for an example. |
 | alloy.liveDebugging.enabled | bool | `false` | Enable live debugging for the Alloy instance. |
 | alloy.logging.format | string | `"logfmt"` | Format to use for writing Alloy log lines. |
 | alloy.logging.level | string | `"info"` | Level at which Alloy log lines should be written. |
@@ -354,7 +354,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| extraConfig | string | `""` | Extra configuration that will be added to the Grafana Alloy configuration file. This value is templated so that you can refer to other values from this file. This cannot be used to modify the generated configuration values, only append new components. See [Adding custom Flow configuration](#adding-custom-flow-configuration) for an example. |
+| extraConfig | string | `""` | Extra configuration that will be added to the Grafana Alloy configuration file. This value is templated so that you can refer to other values from this file. This cannot be used to modify the generated configuration values, only append new components. See [Adding custom Flow configuration](#adding-custom-flow-configuration) for an example. This value will be deprecated in an upcoming release. Please use .alloy.extraConfig instead. |
 
 ### Image Registry
 
@@ -380,7 +380,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | logs.cluster_events.enabled | bool | `true` | Scrape Kubernetes cluster events |
-| logs.cluster_events.extraConfig | string | `""` | Extra configuration that will be added to the Grafana Alloy for Cluster Events configuration file. This value is templated so that you can refer to other values from this file. This cannot be used to modify the generated configuration values, only append new components. See [Adding custom Flow configuration](#adding-custom-flow-configuration) for an example. |
+| logs.cluster_events.extraConfig | string | `""` | Extra configuration that will be added to the Grafana Alloy for Cluster Events configuration file. This value is templated so that you can refer to other values from this file. This cannot be used to modify the generated configuration values, only append new components. See [Adding custom Flow configuration](#adding-custom-flow-configuration) for an example. This value will be deprecated in an upcoming release. Please use .alloy-events.extraConfig instead. |
 | logs.cluster_events.extraStageBlocks | string | `""` | Stage blocks to be added to the loki.process component for cluster events. ([docs](https://grafana.com/docs/alloy/latest/reference/components/loki.process/#blocks)) This value is templated so that you can refer to other values from this file. |
 | logs.cluster_events.logFormat | string | `"logfmt"` | Log format used to forward cluster events. Allowed values: `logfmt` (default), `json`. |
 | logs.cluster_events.logToStdout | bool | `false` | Logs the cluster events to stdout. Useful for debugging. |
@@ -391,7 +391,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | logs.enabled | bool | `true` | Capture and forward logs |
-| logs.extraConfig | string | `""` | Extra configuration that will be added to the Grafana Alloy for Logs configuration file. This value is templated so that you can refer to other values from this file. This cannot be used to modify the generated configuration values, only append new components. See [Adding custom Flow configuration](#adding-custom-flow-configuration) for an example. |
+| logs.extraConfig | string | `""` | Extra configuration that will be added to the Grafana Alloy for Logs configuration file. This value is templated so that you can refer to other values from this file. This cannot be used to modify the generated configuration values, only append new components. See [Adding custom Flow configuration](#adding-custom-flow-configuration) for an example. This value will be deprecated in an upcoming release. Please use .alloy-logs.extraConfig instead. |
 
 ### Logs Scrape: Journal
 
