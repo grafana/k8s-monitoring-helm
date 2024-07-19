@@ -82,12 +82,6 @@ receivers:
   prometheus:
     enabled: true
 
-extraConfig: |-
-  tracing {
-    sampling_fraction = 0.1
-    write_to = [otelcol.processor.k8sattributes.default.input]
-  }
-
 test:
   attempts: 20
   extraQueries:
@@ -151,6 +145,11 @@ opencost:
         url: https://prometheus-server.prometheus.svc.cluster.local:9090
 
 alloy:
+  extraConfig: |-
+    tracing {
+      sampling_fraction = 0.1
+      write_to = [otelcol.processor.k8sattributes.default.input]
+    }
   alloy:
     extraEnv:
       - name: MAGIC_WORD

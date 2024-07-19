@@ -8,7 +8,9 @@ The Windows Exporter is not enabled by default, so to enable it, you need to set
 -   `.prometheus-windows-exporter.enabled: true` - This will enable deployment of the Windows Exporter DaemonSet to all Windows nodes.
 -   `.metrics.windows-exporter.enabled: true` - This generates the configuration for scraping the metrics emitted from Windows Exporter.
 
+<!-- values file start -->
 ```yaml
+---
 cluster:
   name: default-values-test
 
@@ -31,3 +33,4 @@ metrics:
 prometheus-windows-exporter:
   enabled: true
 ```
+<!-- values file end -->

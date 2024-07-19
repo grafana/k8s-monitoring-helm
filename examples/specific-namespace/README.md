@@ -9,7 +9,9 @@ Metrics and logs can both be adjusted to filter to a specific namespace.
 -   Logs: This is done with a list of namespaces, which translates into a log processing filter
 -   Cluster Events: This is done with a list of namespaces, which is sent to the cluster event discovery object itself.
 
+<!-- values file start -->
 ```yaml
+---
 cluster:
   name: specific-namespace-test
 
@@ -51,3 +53,4 @@ logs:
       - production
       - staging
 ```
+<!-- values file end -->

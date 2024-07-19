@@ -3,7 +3,9 @@
 This example contains the values required to enable gathering profile data, and sending them
 to [Grafana Pyroscope](https://grafana.com/oss/pyroscope/).
 
+<!-- values file start -->
 ```yaml
+---
 cluster:
   name: profiles-enabled-test
 
@@ -27,3 +29,4 @@ externalServices:
 profiles:
   enabled: true
 ```
+<!-- values file end -->

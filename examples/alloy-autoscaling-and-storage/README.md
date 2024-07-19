@@ -8,7 +8,9 @@ active series the Alloy instances are expected to scrape.
 
 For more information, see [clustering documentation](https://grafana.com/docs/alloy/latest/concepts/clustering/).
 
+<!-- values file start -->
 ```yaml
+---
 cluster:
   name: alloy-autoscaling-and-storage-test
 
@@ -70,3 +72,4 @@ alloy-logs:
             path: /var/alloy-log-storage
             type: DirectoryOrCreate
 ```
+<!-- values file end -->

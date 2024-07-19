@@ -4,7 +4,9 @@ This example shows a deployment that only gathers pod logs and Kubernetes cluste
 
 It differs from the [default](../default-values) by not requiring a Prometheus service, disabling the deployment of metric sources (i.e. Kube State Metrics), and disabling the metrics section.
 
+<!-- values file start -->
 ```yaml
+---
 cluster:
   name: logs-only-test
 
@@ -34,3 +36,4 @@ prometheus-operator-crds:
 opencost:
   enabled: false
 ```
+<!-- values file end -->

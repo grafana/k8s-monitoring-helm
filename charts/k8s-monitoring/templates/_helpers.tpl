@@ -26,7 +26,7 @@
   {{- if .Values.metrics.apiserver.enabled -}}{{- $metrics = append $metrics "apiserver" }}{{ end -}}
   {{- if .Values.metrics.cost.enabled -}}{{- $metrics = append $metrics "cost" }}{{ end -}}
   {{- if .Values.metrics.kepler.enabled -}}{{- $metrics = append $metrics "kepler" }}{{ end -}}
-  {{- if .Values.extraConfig -}}{{- $metrics = append $metrics "extraConfig" }}{{ end -}}
+  {{- if or .Values.alloy.extraConfig .Values.extraConfig -}}{{- $metrics = append $metrics "extraConfig" }}{{ end -}}
 {{- else -}}
   {{- $metrics = append $metrics "disabled" -}}
 {{- end -}}
@@ -40,7 +40,8 @@
   {{- if .Values.logs.cluster_events.enabled }}{{- $logs = append $logs "events" -}}{{- end -}}
   {{- if .Values.logs.pod_logs.enabled }}{{- $logs = append $logs "pod_logs" -}}{{- end -}}
   {{- if .Values.logs.journal.enabled }}{{- $logs = append $logs "journal" -}}{{- end -}}
-  {{- if .Values.logs.extraConfig -}}{{- $logs = append $logs "extraConfig" }}{{ end -}}
+  {{- if or .Values.logs.extraConfig (index .Values "alloy-logs").extraConfig }}{{- $logs = append $logs "extraConfig" }}{{ end -}}
+  {{- if or .Values.logs.cluster_events.extraConfig (index .Values "alloy-events").extraConfig }}{{- $logs = append $logs "eventsExtraConfig" }}{{ end -}}
 {{- else -}}
   {{- $logs = append $logs "disabled" -}}
 {{- end -}}
@@ -49,6 +50,17 @@
 
 {{- define "kubernetes_monitoring_telemetry.traces" -}}
 {{- if .Values.traces.enabled }}enabled{{- else -}}disabled{{- end -}}
+{{- end }}
+
+{{- define "kubernetes_monitoring_telemetry.profiles" -}}
+{{- $profiles := list -}}
+{{- if .Values.profiles.enabled -}}
+  {{- $profiles = append $profiles "enabled" -}}
+  {{- if (index .Values "alloy-profiles").extraConfig }}{{- $profiles = append $profiles "extraConfig" }}{{ end -}}
+{{- else -}}
+  {{- $profiles = append $profiles "disabled" -}}
+{{- end -}}
+{{- join "," $profiles -}}
 {{- end }}
 
 {{- define "kubernetes_monitoring_telemetry.deployments" -}}

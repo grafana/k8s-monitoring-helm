@@ -71,7 +71,9 @@ logs:
 
 ## values.yaml
 
+<!-- values file start -->
 ```yaml
+---
 cluster:
   name: pod-labels-test
 
@@ -83,6 +85,11 @@ externalServices:
       password: "It's a secret to everyone"
   loki:
     host: https://loki.example.com
+    basicAuth:
+      username: 12345
+      password: "It's a secret to everyone"
+  tempo:
+    host: https://tempo.example.com
     basicAuth:
       username: 12345
       password: "It's a secret to everyone"
@@ -101,6 +108,16 @@ logs:
         target_label = "instance"
       }
 
+traces:
+  enabled: true
+
+receivers:
+  processors:
+    k8sattributes:
+      labels:
+        - from: pod
+          key_regex: "kubernetes.io/(.*)"
+          tag_name: "$1"
 test:
   extraQueries:
     - query: "kube_pod_labels{cluster=\"kube-pod-labels-test\"}"
@@ -110,3 +127,4 @@ kube-state-metrics:
   metricLabelsAllowlist:
     - pods=[*]
 ```
+<!-- values file end -->

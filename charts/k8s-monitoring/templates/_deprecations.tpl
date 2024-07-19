@@ -97,4 +97,22 @@ For more information, see https://github.com/grafana/k8s-monitoring-helm/tree/ma
 {{- if .Values.opencost.opencost.prometheus.secret_name }}
   {{ fail "\n\nAs of k8s-monitoring Chart version 1.0.1, OpenCost changed how to reference an external secret.\nPlease rename:\nopencost:\n  opencost:\n    prometheus:\n      secret_name: prometheus-k8s-monitoring\nTo:\nopencost:\n  opencost:\n    prometheus:\n      existingSecretName: prometheus-k8s-monitoring\n\nFor more information, see https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring#breaking-change-announcements" }}
 {{- end -}}
+
+{{/*
+v1.5.0: Upcoming deprecation of extraConfigs
+
+An upcoming version of the Kubernetes Monitoring Helm chart will deprecate .extraConfig
+Please use the .alloy.extraConfig section instead.
+
+For more information, see https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring#breaking-change-announcements
+*/}}
+{{- if .Values.extraConfig }}
+  {{ fail "\n\nAn upcoming version of the Kubernetes Monitoring Helm chart will deprecate .extraConfig\nPlease use the .alloy.extraConfig section instead.\n\nFor more information, see https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring#breaking-change-announcements" }}
+{{- end -}}
+{{- if .Values.logs.extraConfig }}
+  {{ fail "\n\nAn upcoming version of the Kubernetes Monitoring Helm chart will deprecate .logs.extraConfig\nPlease use the .alloy-logs.extraConfig section instead.\n\nFor more information, see https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring#breaking-change-announcements" }}
+{{- end -}}
+{{- if .Values.logs.cluster_events.extraConfig }}
+  {{ fail "\n\nAn upcoming version of the Kubernetes Monitoring Helm chart will deprecate .logs.cluster_events.extraConfig\nPlease use the .alloy-events.extraConfig section instead.\n\nFor more information, see https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring#breaking-change-announcements" }}
+{{- end -}}
 {{- end -}}

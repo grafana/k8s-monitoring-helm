@@ -50,44 +50,6 @@ metrics:
   kepler:
     enabled: true
 
-extraConfig: |
-  remote.kubernetes.configmap "mysql_config" {
-    name = "mysql-monitoring"
-    namespace = "mysql"
-  }
-
-  import.string "mysql" {
-    content = remote.kubernetes.configmap.mysql_config.data["metrics.alloy"]
-  }
-
-  mysql.metrics "primary" {
-    host = "mysql.mysql.svc.cluster.local"
-    instance = "primary"
-    namespace = "mysql"
-    secret_name = "mysql"
-    username = "root"
-    password_key = "mysql-root-password"
-    all_services = discovery.kubernetes.services.targets
-    metrics_destination = prometheus.relabel.metrics_service.receiver
-  }
-
-logs:
-  extraConfig: |
-    remote.kubernetes.configmap "mysql_config" {
-      name = "mysql-monitoring"
-      namespace = "mysql"
-    }
-
-    import.string "mysql" {
-      content = remote.kubernetes.configmap.mysql_config.data["logs.alloy"]
-    }
-
-    mysql.logs "primary" {
-      instance = "primary"
-      all_pods = discovery.relabel.pod_logs.output
-      logs_destination = loki.process.logs_service.receiver
-    }
-
 test:
   attempts: 20
   extraQueries:
@@ -136,10 +98,48 @@ opencost:
 kepler:
   enabled: true
 
+# Prometheus Operator CRDs are pre-installed in the CI environment
+prometheus-operator-crds:
+  enabled: false
+
 alloy:
   controller:
     replicas: 2
 
-# Prometheus Operator CRDs are pre-installed in the CI environment
-prometheus-operator-crds:
-  enabled: false
+  extraConfig: |
+    remote.kubernetes.configmap "mysql_config" {
+      name = "mysql-monitoring"
+      namespace = "mysql"
+    }
+
+    import.string "mysql" {
+      content = remote.kubernetes.configmap.mysql_config.data["metrics.alloy"]
+    }
+
+    mysql.metrics "primary" {
+      host = "mysql.mysql.svc.cluster.local"
+      instance = "primary"
+      namespace = "mysql"
+      secret_name = "mysql"
+      username = "root"
+      password_key = "mysql-root-password"
+      all_services = discovery.kubernetes.services.targets
+      metrics_destination = prometheus.relabel.metrics_service.receiver
+    }
+
+alloy-logs:
+  extraConfig: |
+    remote.kubernetes.configmap "mysql_config" {
+      name = "mysql-monitoring"
+      namespace = "mysql"
+    }
+
+    import.string "mysql" {
+      content = remote.kubernetes.configmap.mysql_config.data["logs.alloy"]
+    }
+
+    mysql.logs "primary" {
+      instance = "primary"
+      all_pods = discovery.relabel.pod_logs.output
+      logs_destination = loki.process.logs_service.receiver
+    }

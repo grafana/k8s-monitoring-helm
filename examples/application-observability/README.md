@@ -7,6 +7,7 @@ Applications can be configured to send data to the OTLP receiver opened on
 Grafana Alloy. In addition, [Grafana Beyla](https://grafana.com/oss/beyla-ebpf/)
 can be deployed to the cluster and configured to send its data to Alloy.
 
+<!-- values file start -->
 ```yaml
 ---
 cluster:
@@ -34,11 +35,14 @@ externalServices:
       username: 12345
       password: "It's a secret to everyone"
 
-traces:
-  enabled: true
+receivers:
   grafanaCloudMetrics:
     enabled: true
+
+traces:
+  enabled: true
 
 profiles:
   enabled: true
 ```
+<!-- values file end -->

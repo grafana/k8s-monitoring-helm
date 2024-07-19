@@ -12,7 +12,9 @@ override the first for that specific metric source.
 
 In the example values file, here are the various settings and their effect:
 
+<!-- values file start -->
 ```yaml
+---
 cluster:
   name: custom-scrape-intervals-test
 
@@ -31,9 +33,11 @@ metrics:
     scrapeInterval: 60s
 
 logs:
+  enabled: false
   pod_logs:
     enabled: false
 
   cluster_events:
     enabled: false
 ```
+<!-- values file end -->

@@ -36,7 +36,9 @@ For more information about using the `extraConfig` values, see [the documentatio
 
 Note that no reference to the Cert Manager service is stored here, because it is discovered and scraped automatically.
 
+<!-- values file start -->
 ```yaml
+---
 cluster:
   name: service-integrations-test
 
@@ -52,29 +54,30 @@ externalServices:
       username: 12345
       password: "It's a secret to everyone"
 
-extraConfig: |
-  remote.kubernetes.configmap "mysql_config" {
-    name = "mysql-monitoring"
-    namespace = "mysql"
-  }
+alloy:
+  extraConfig: |-
+    remote.kubernetes.configmap "mysql_config" {
+      name = "mysql-monitoring"
+      namespace = "mysql"
+    }
+  
+    import.string "mysql" {
+      content = remote.kubernetes.configmap.mysql_config.data["metrics.alloy"]
+    }
+  
+    mysql.metrics "primary" {
+      host = "mysql.mysql.svc.cluster.local"
+      instance = "primary"
+      namespace = "mysql"
+      secret_name = "mysql"
+      username = "root"
+      password_key = "mysql-root-password"
+      all_services = discovery.kubernetes.services.targets
+      metrics_destination = prometheus.relabel.metrics_service.receiver
+    }
 
-  import.string "mysql" {
-    content = remote.kubernetes.configmap.mysql_config.data["metrics.alloy"]
-  }
-
-  mysql.metrics "primary" {
-    host = "mysql.mysql.svc.cluster.local"
-    instance = "primary"
-    namespace = "mysql"
-    secret_name = "mysql"
-    username = "root"
-    password_key = "mysql-root-password"
-    all_services = discovery.kubernetes.services.targets
-    metrics_destination = prometheus.relabel.metrics_service.receiver
-  }
-
-logs:
-  extraConfig: |
+alloy-logs:
+  extraConfig: |-
     remote.kubernetes.configmap "mysql_config" {
       name = "mysql-monitoring"
       namespace = "mysql"
@@ -102,3 +105,4 @@ test:
     - query: "{cluster=\"ci-integrations-cluster\", job=\"integrations/mysql\"}"
       type: logql
 ```
+<!-- values file end -->

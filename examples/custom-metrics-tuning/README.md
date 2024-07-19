@@ -15,7 +15,9 @@ In the example values file, here are the various settings and their effect:
 | true               | `[my_metric_.*]` | `[other_metric_.*]`      | Use the default metric filter, and keep anything starting with `my_metric_`, but remove anything starting with `other_metric_` |
 | false              | `[my_metric_.*]` | `[my_metric_not_needed]` | *Only* keep metrics that start with `my_metric_`, but remove any that are named `my_metric_not_needed`                         |
 
+<!-- values file start -->
 ```yaml
+---
 cluster:
   name: custom-allow-lists-test
 
@@ -27,30 +29,44 @@ externalServices:
       password: "It's a secret to everyone"
 
 metrics:
+  # Will filter to the metrics that will populate the Grafana Alloy integration
   alloy:
-    metricsTuning: # Will filter to the metrics that will populate the Grafana Alloy integration
+    metricsTuning:
       useIntegrationAllowList: true
+
+  # No filtering, keep all metrics from kube-state-metrics
   kube-state-metrics:
-    metricsTuning: # No filtering, keep all metrics
+    metricsTuning:
       useDefaultAllowList: false
+
+  # Will filter the Node Exporter metrics that will populate the Linux node integration
+  # See https://grafana.com/docs/grafana-cloud/monitor-infrastructure/integrations/integration-reference/integration-linux-node/
   node-exporter:
-    metricsTuning: # Will filter to the metrics that will populate the Linux node integration: https://grafana.com/docs/grafana-cloud/monitor-infrastructure/integrations/integration-reference/integration-linux-node/
+    metricsTuning:
       useIntegrationAllowList: true
+
+  # Will only keep these two kubelet metrics
   kubelet:
-    metricsTuning: # Will only keep these two metrics
+    metricsTuning:
       useDefaultAllowList: false
-      includeMetrics: [ "kubelet_node_name","kubernetes_build_info" ]
+      includeMetrics:
+        - kubelet_node_name
+        - kubernetes_build_info
+
+  # Will keep the default set of cAdvisor metrics and also include these three more
   cadvisor:
-    metricsTuning: # Will keep the default set of metrics and also include these three more
+    metricsTuning:
       useDefaultAllowList: true
       includeMetrics:
         - container_memory_cache
         - container_memory_rss
         - container_memory_swap
+
+  # Will keep all cost metrics except those that start with "go_*"
   cost:
-    metricsTuning: # Will keep all metrics except those that start with "go_*"
+    metricsTuning:
       useDefaultAllowList: false
-      excludeMetrics: [ "go_*" ]
+      excludeMetrics: ["go_*"]
   enabled: true
 
 logs:
@@ -61,3 +77,4 @@ logs:
   cluster_events:
     enabled: false
 ```
+<!-- values file end -->
