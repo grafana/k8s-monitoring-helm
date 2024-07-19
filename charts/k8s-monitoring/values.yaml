@@ -1388,6 +1388,12 @@ logs:
     labels:
       app_kubernetes_io_name: app.kubernetes.io/name
 
+    # -- Loki labels to set with values copied from the Kubernetes Pod annotations.
+    # Format: `<loki_label>: <kubernetes_annotation>`.
+    # @section -- Logs Scrape: Pod Logs
+    annotations:
+      job: k8s.grafana.com/logs.job
+
   # PodLog Objects
   podLogsObjects:
     # -- Enable discovery of Grafana Alloy PodLogs objects.
@@ -1963,6 +1969,10 @@ prometheus-node-exporter:
                 operator: NotIn
                 values: [fargate]
 
+  # @ignored - Set annotation to override the job label
+  podAnnotations:
+    k8s.grafana.com/logs.job: integrations/node_exporter
+
   # @ignored - Disable prometheus.io/scrape annotation
   service:
     annotations:
@@ -1986,6 +1996,10 @@ prometheus-windows-exporter:
     collector:
       service:
         services-where: "Name='containerd' or Name='kubelet'"
+
+  # @ignored - Set annotation to override the job label
+  podAnnotations:
+    k8s.grafana.com/logs.job: integrations/windows_exporter
 
 # Settings for the Prometheus Operator CRD deployment
 # You can use this sections to make modifications to the Prometheus Operator CRD deployment.
@@ -2151,6 +2165,9 @@ alloy:
     nodeSelector:
       kubernetes.io/os: linux
 
+    podAnnotations:
+      k8s.grafana.com/logs.job: integrations/alloy
+
     # This chart creates the credentials for Prometheus and Loki. This section
     # connects those credentials into the Grafana Alloy pod.
     # @ignored
@@ -2191,6 +2208,9 @@ alloy-events:
     replicas: 1  # Only one replica should be used, otherwise multiple copies of cluster events might get sent to Loki.
     nodeSelector:
       kubernetes.io/os: linux
+
+    podAnnotations:
+      k8s.grafana.com/logs.job: integrations/alloy
 
   # Skip installation of the Grafana Alloy CRDs, since we don't use them in this chart
   # @ignored
@@ -2238,6 +2258,9 @@ alloy-logs:
       - effect: NoSchedule
         operator: Exists
 
+    podAnnotations:
+      k8s.grafana.com/logs.job: integrations/alloy
+
   # Skip installation of the Grafana Alloy CRDs, since we don't use them in this chart
   # @ignored
   crds: {create: false}
@@ -2284,6 +2307,9 @@ alloy-profiles:
     tolerations:
       - effect: NoSchedule
         operator: Exists
+
+    podAnnotations:
+      k8s.grafana.com/logs.job: integrations/alloy
 
   # Skip installation of the Grafana Alloy CRDs, since we don't use them in this chart
   # @ignored

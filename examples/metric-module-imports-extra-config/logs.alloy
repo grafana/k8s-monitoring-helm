@@ -38,6 +38,11 @@ discovery.relabel "pod_logs" {
   }
 
   rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_logs_job"]
+    target_label  = "job"
+  }
+
+  rule {
     source_labels = ["__meta_kubernetes_pod_uid", "__meta_kubernetes_pod_container_name"]
     separator = "/"
     action = "replace"

@@ -814,7 +814,7 @@ data:
     }
     
     prometheus.scrape "windows_exporter" {
-      job_name   = "integrations/kubernetes/windows-exporter"
+      job_name   = "integrations/windows-exporter"
       targets  = discovery.relabel.windows_exporter.output
       scrape_interval = "60s"
       clustering {
@@ -1186,6 +1186,11 @@ data:
       rule {
         source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
         target_label  = "app_kubernetes_io_name"
+      }
+    
+      rule {
+        source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_logs_job"]
+        target_label  = "job"
       }
     
       rule {
@@ -58516,6 +58521,7 @@ spec:
     metadata:
       annotations:
         kubectl.kubernetes.io/default-container: alloy
+        k8s.grafana.com/logs.job: integrations/alloy
       labels:
         app.kubernetes.io/name: alloy-logs
         app.kubernetes.io/instance: k8smon
@@ -58609,6 +58615,7 @@ spec:
     metadata:
       annotations:
         cluster-autoscaler.kubernetes.io/safe-to-evict: "true"
+        k8s.grafana.com/logs.job: integrations/node_exporter
       labels:
         helm.sh/chart: prometheus-node-exporter-4.37.0
         app.kubernetes.io/managed-by: Helm
@@ -58731,6 +58738,7 @@ spec:
     metadata:
       annotations:
         cluster-autoscaler.kubernetes.io/safe-to-evict: "true"
+        k8s.grafana.com/logs.job: integrations/windows_exporter
       labels:
         helm.sh/chart: prometheus-windows-exporter-0.3.1
         app.kubernetes.io/managed-by: Helm
@@ -58826,6 +58834,7 @@ spec:
     metadata:
       annotations:
         kubectl.kubernetes.io/default-container: alloy
+        k8s.grafana.com/logs.job: integrations/alloy
       labels:
         app.kubernetes.io/name: alloy-events
         app.kubernetes.io/instance: k8smon
@@ -59111,6 +59120,7 @@ spec:
     metadata:
       annotations:
         kubectl.kubernetes.io/default-container: alloy
+        k8s.grafana.com/logs.job: integrations/alloy
       labels:
         app.kubernetes.io/name: alloy
         app.kubernetes.io/instance: k8smon
@@ -59895,7 +59905,7 @@ data:
     }
     
     prometheus.scrape "windows_exporter" {
-      job_name   = "integrations/kubernetes/windows-exporter"
+      job_name   = "integrations/windows-exporter"
       targets  = discovery.relabel.windows_exporter.output
       scrape_interval = "60s"
       clustering {
@@ -60251,6 +60261,11 @@ data:
       rule {
         source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
         target_label  = "app_kubernetes_io_name"
+      }
+    
+      rule {
+        source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_logs_job"]
+        target_label  = "job"
       }
     
       rule {
