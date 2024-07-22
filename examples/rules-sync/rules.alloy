@@ -1,0 +1,53 @@
+// Metrics Service
+remote.kubernetes.secret "metrics_service" {
+  name = "prometheus-k8s-monitoring"
+  namespace = "default"
+}
+// Rules
+mimir.rules.kubernetes "rules_service" {
+  address = nonsensitive(remote.kubernetes.secret.metrics_service.data["host"])
+  sync_interval = "5m"
+  prometheus_http_prefix = "/api/prom"
+  mimir_namespace_prefix = "alloy"
+
+    basic_auth {
+      username = nonsensitive(remote.kubernetes.secret.metrics_service.data["username"])
+      password = remote.kubernetes.secret.metrics_service.data["password"]
+    }
+  rule_namespace_selector {
+  }
+
+  rule_selector {
+    match_labels = {
+      rule_type = "mimir",
+    }
+  }
+}
+// Logs Service
+remote.kubernetes.secret "logs_service" {
+  name = "loki-k8s-monitoring"
+  namespace = "default"
+}
+// Rules
+loki.rules.kubernetes "rules_service" {
+  address = nonsensitive(remote.kubernetes.secret.logs_service.data["host"])
+  sync_interval = "5m"
+  loki_namespace_prefix = "alloy"
+
+    basic_auth {
+      username = nonsensitive(remote.kubernetes.secret.logs_service.data["username"])
+      password = remote.kubernetes.secret.logs_service.data["password"]
+    }
+  rule_namespace_selector {
+  }
+
+  rule_selector {
+    match_labels = {
+      rule_type = "loki",
+    }
+  }
+}
+logging {
+  level  = "info"
+  format = "logfmt"
+}
