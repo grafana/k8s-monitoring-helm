@@ -52,6 +52,14 @@ discovery.relabel "pod_logs" {
 {{- range $lokiLabel, $podLabel := .Values.logs.pod_logs.labels }}
   rule {
     source_labels = ["__meta_kubernetes_pod_label_{{ include "escape_label" $podLabel }}"]
+    regex         = "(.+)"
+    target_label  = {{ $lokiLabel | quote }}
+  }
+{{ end }}
+{{- range $lokiLabel, $podAnnotation := .Values.logs.pod_logs.annotations }}
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_{{ include "escape_label" $podAnnotation }}"]
+    regex         = "(.+)"
     target_label  = {{ $lokiLabel | quote }}
   }
 {{ end }}
