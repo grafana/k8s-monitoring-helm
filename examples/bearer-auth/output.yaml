@@ -6,7 +6,7 @@ metadata:
   name: k8smon-alloy-events
   namespace: default
   labels:
-    helm.sh/chart: alloy-events-0.5.0
+    helm.sh/chart: alloy-events-0.4.0
     app.kubernetes.io/name: alloy-events
     app.kubernetes.io/instance: k8smon
     
@@ -22,7 +22,7 @@ metadata:
   name: k8smon-alloy-logs
   namespace: default
   labels:
-    helm.sh/chart: alloy-logs-0.5.0
+    helm.sh/chart: alloy-logs-0.4.0
     app.kubernetes.io/name: alloy-logs
     app.kubernetes.io/instance: k8smon
     
@@ -38,7 +38,7 @@ metadata:
   name: k8smon-alloy
   namespace: default
   labels:
-    helm.sh/chart: alloy-0.5.0
+    helm.sh/chart: alloy-0.4.0
     app.kubernetes.io/name: alloy
     app.kubernetes.io/instance: k8smon
     
@@ -117,8 +117,7 @@ type: Opaque
 data:
 
   host: "aHR0cHM6Ly9wcm9tZXRoZXVzLmV4YW1wbGUuY29t"
-  username: "MTIzNDU="
-  password: "SXQncyBhIHNlY3JldCB0byBldmVyeW9uZQ=="
+  its a secret token to everyone: "aXRzIGEgc2VjcmV0IHRva2VuIHRvIGV2ZXJ5b25l"
 ---
 # Source: k8s-monitoring/templates/alloy-config.yaml
 apiVersion: v1
@@ -862,10 +861,6 @@ data:
         url = nonsensitive(remote.kubernetes.secret.metrics_service.data["host"]) + "/api/prom/push"
         headers = { "X-Scope-OrgID" = nonsensitive(remote.kubernetes.secret.metrics_service.data["tenantId"]) }
     
-        basic_auth {
-          username = nonsensitive(remote.kubernetes.secret.metrics_service.data["username"])
-          password = remote.kubernetes.secret.metrics_service.data["password"]
-        }
     
     
         send_native_histograms = false
@@ -1079,18 +1074,6 @@ data:
         target_label = "job"
       }
       rule {
-        source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
-        regex         = "(.+)"
-        target_label  = "app_kubernetes_io_name"
-      }
-    
-      rule {
-        source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_logs_job"]
-        regex         = "(.+)"
-        target_label  = "job"
-      }
-    
-      rule {
         source_labels = ["__meta_kubernetes_pod_uid", "__meta_kubernetes_pod_container_name"]
         separator = "/"
         action = "replace"
@@ -1222,7 +1205,7 @@ data:
   metrics.prom: |
     # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart as well as a summary of enabled features
     # TYPE grafana_kubernetes_monitoring_build_info gauge
-    grafana_kubernetes_monitoring_build_info{version="1.4.2", namespace="default", metrics="enabled,alloy,autoDiscover,kube-state-metrics,node-exporter,kubelet,cadvisor,cost", logs="enabled,events,pod_logs", traces="disabled", deployments="kube-state-metrics,prometheus-node-exporter,prometheus-operator-crds,opencost"} 1
+    grafana_kubernetes_monitoring_build_info{version="1.3.0", namespace="default", metrics="enabled,alloy,autoDiscover,kube-state-metrics,node-exporter,kubelet,cadvisor,cost", logs="enabled,events,pod_logs", traces="disabled", deployments="kube-state-metrics,prometheus-node-exporter,prometheus-operator-crds,opencost"} 1
 ---
 # Source: k8s-monitoring/charts/prometheus-operator-crds/charts/crds/templates/crd-alertmanagerconfigs.yaml
 apiVersion: apiextensions.k8s.io/v1
@@ -57413,7 +57396,7 @@ kind: ClusterRole
 metadata:
   name: k8smon-alloy-events
   labels:
-    helm.sh/chart: alloy-events-0.5.0
+    helm.sh/chart: alloy-events-0.4.0
     app.kubernetes.io/name: alloy-events
     app.kubernetes.io/instance: k8smon
     
@@ -57513,7 +57496,7 @@ kind: ClusterRole
 metadata:
   name: k8smon-alloy-logs
   labels:
-    helm.sh/chart: alloy-logs-0.5.0
+    helm.sh/chart: alloy-logs-0.4.0
     app.kubernetes.io/name: alloy-logs
     app.kubernetes.io/instance: k8smon
     
@@ -57613,7 +57596,7 @@ kind: ClusterRole
 metadata:
   name: k8smon-alloy
   labels:
-    helm.sh/chart: alloy-0.5.0
+    helm.sh/chart: alloy-0.4.0
     app.kubernetes.io/name: alloy
     app.kubernetes.io/instance: k8smon
     
@@ -57955,7 +57938,7 @@ kind: ClusterRoleBinding
 metadata:
   name: k8smon-alloy-events
   labels:
-    helm.sh/chart: alloy-events-0.5.0
+    helm.sh/chart: alloy-events-0.4.0
     app.kubernetes.io/name: alloy-events
     app.kubernetes.io/instance: k8smon
     
@@ -57978,7 +57961,7 @@ kind: ClusterRoleBinding
 metadata:
   name: k8smon-alloy-logs
   labels:
-    helm.sh/chart: alloy-logs-0.5.0
+    helm.sh/chart: alloy-logs-0.4.0
     app.kubernetes.io/name: alloy-logs
     app.kubernetes.io/instance: k8smon
     
@@ -58001,7 +57984,7 @@ kind: ClusterRoleBinding
 metadata:
   name: k8smon-alloy
   labels:
-    helm.sh/chart: alloy-0.5.0
+    helm.sh/chart: alloy-0.4.0
     app.kubernetes.io/name: alloy
     app.kubernetes.io/instance: k8smon
     
@@ -58067,7 +58050,7 @@ kind: Service
 metadata:
   name: k8smon-alloy-events
   labels:
-    helm.sh/chart: alloy-events-0.5.0
+    helm.sh/chart: alloy-events-0.4.0
     app.kubernetes.io/name: alloy-events
     app.kubernetes.io/instance: k8smon
     
@@ -58093,7 +58076,7 @@ kind: Service
 metadata:
   name: k8smon-alloy-logs
   labels:
-    helm.sh/chart: alloy-logs-0.5.0
+    helm.sh/chart: alloy-logs-0.4.0
     app.kubernetes.io/name: alloy-logs
     app.kubernetes.io/instance: k8smon
     
@@ -58119,7 +58102,7 @@ kind: Service
 metadata:
   name: k8smon-alloy-cluster
   labels:
-    helm.sh/chart: alloy-0.5.0
+    helm.sh/chart: alloy-0.4.0
     app.kubernetes.io/name: alloy
     app.kubernetes.io/instance: k8smon
     
@@ -58183,7 +58166,7 @@ kind: Service
 metadata:
   name: k8smon-alloy
   labels:
-    helm.sh/chart: alloy-0.5.0
+    helm.sh/chart: alloy-0.4.0
     app.kubernetes.io/name: alloy
     app.kubernetes.io/instance: k8smon
     
@@ -58318,7 +58301,7 @@ kind: Service
 metadata:
   name: k8smon-grafana-agent
   labels:
-    helm.sh/chart: alloy-0.5.0
+    helm.sh/chart: alloy-0.4.0
     app.kubernetes.io/name: alloy
     app.kubernetes.io/instance: k8smon
     
@@ -58375,7 +58358,7 @@ kind: DaemonSet
 metadata:
   name: k8smon-alloy-logs
   labels:
-    helm.sh/chart: alloy-logs-0.5.0
+    helm.sh/chart: alloy-logs-0.4.0
     app.kubernetes.io/name: alloy-logs
     app.kubernetes.io/instance: k8smon
     
@@ -58392,7 +58375,6 @@ spec:
     metadata:
       annotations:
         kubectl.kubernetes.io/default-container: alloy
-        k8s.grafana.com/logs.job: integrations/alloy
       labels:
         app.kubernetes.io/name: alloy-logs
         app.kubernetes.io/instance: k8smon
@@ -58486,7 +58468,6 @@ spec:
     metadata:
       annotations:
         cluster-autoscaler.kubernetes.io/safe-to-evict: "true"
-        k8s.grafana.com/logs.job: integrations/node_exporter
       labels:
         helm.sh/chart: prometheus-node-exporter-4.37.0
         app.kubernetes.io/managed-by: Helm
@@ -58588,7 +58569,7 @@ kind: Deployment
 metadata:
   name: k8smon-alloy-events
   labels:
-    helm.sh/chart: alloy-events-0.5.0
+    helm.sh/chart: alloy-events-0.4.0
     app.kubernetes.io/name: alloy-events
     app.kubernetes.io/instance: k8smon
     
@@ -58606,7 +58587,6 @@ spec:
     metadata:
       annotations:
         kubectl.kubernetes.io/default-container: alloy
-        k8s.grafana.com/logs.job: integrations/alloy
       labels:
         app.kubernetes.io/name: alloy-events
         app.kubernetes.io/instance: k8smon
@@ -58872,7 +58852,7 @@ kind: StatefulSet
 metadata:
   name: k8smon-alloy
   labels:
-    helm.sh/chart: alloy-0.5.0
+    helm.sh/chart: alloy-0.4.0
     app.kubernetes.io/name: alloy
     app.kubernetes.io/instance: k8smon
     
@@ -58892,7 +58872,6 @@ spec:
     metadata:
       annotations:
         kubectl.kubernetes.io/default-container: alloy
-        k8s.grafana.com/logs.job: integrations/alloy
       labels:
         app.kubernetes.io/name: alloy
         app.kubernetes.io/instance: k8smon
@@ -59020,8 +58999,8 @@ metadata:
   labels:
     app.kubernetes.io/managed-by: "Helm"
     app.kubernetes.io/instance: "k8smon"
-    app.kubernetes.io/version: 2.6.0
-    helm.sh/chart: "k8s-monitoring-1.4.2"
+    app.kubernetes.io/version: 2.5.0
+    helm.sh/chart: "k8s-monitoring-1.3.0"
   annotations:
     "helm.sh/hook": pre-install,pre-upgrade
     "helm.sh/hook-weight": "-5"
@@ -59762,10 +59741,6 @@ data:
         url = nonsensitive(remote.kubernetes.secret.metrics_service.data["host"]) + "/api/prom/push"
         headers = { "X-Scope-OrgID" = nonsensitive(remote.kubernetes.secret.metrics_service.data["tenantId"]) }
     
-        basic_auth {
-          username = nonsensitive(remote.kubernetes.secret.metrics_service.data["username"])
-          password = remote.kubernetes.secret.metrics_service.data["password"]
-        }
     
     
         send_native_histograms = false
@@ -59963,18 +59938,6 @@ data:
         target_label = "job"
       }
       rule {
-        source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
-        regex         = "(.+)"
-        target_label  = "app_kubernetes_io_name"
-      }
-    
-      rule {
-        source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_logs_job"]
-        regex         = "(.+)"
-        target_label  = "job"
-      }
-    
-      rule {
         source_labels = ["__meta_kubernetes_pod_uid", "__meta_kubernetes_pod_container_name"]
         separator = "/"
         action = "replace"
@@ -60105,8 +60068,8 @@ metadata:
   labels:
     app.kubernetes.io/managed-by: "Helm"
     app.kubernetes.io/instance: "k8smon"
-    app.kubernetes.io/version: 2.6.0
-    helm.sh/chart: "k8s-monitoring-1.4.2"
+    app.kubernetes.io/version: 2.5.0
+    helm.sh/chart: "k8s-monitoring-1.3.0"
   annotations:
     "helm.sh/hook": test
     "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
@@ -60159,8 +60122,8 @@ metadata:
   labels:
     app.kubernetes.io/managed-by: "Helm"
     app.kubernetes.io/instance: "k8smon"
-    app.kubernetes.io/version: 2.6.0
-    helm.sh/chart: "k8s-monitoring-1.4.2"
+    app.kubernetes.io/version: 2.5.0
+    helm.sh/chart: "k8s-monitoring-1.3.0"
   annotations:
     "helm.sh/hook": pre-install,pre-upgrade
     "helm.sh/hook-weight": "-5"
@@ -60228,8 +60191,8 @@ metadata:
   labels:
     app.kubernetes.io/managed-by: "Helm"
     app.kubernetes.io/instance: "k8smon"
-    app.kubernetes.io/version: 2.6.0
-    helm.sh/chart: "k8s-monitoring-1.4.2"
+    app.kubernetes.io/version: 2.5.0
+    helm.sh/chart: "k8s-monitoring-1.3.0"
   annotations:
     "helm.sh/hook": test
     "helm.sh/hook-delete-policy": before-hook-creation
@@ -60240,7 +60203,7 @@ spec:
         kubernetes.io/os: linux
   containers:
     - name: config-analysis
-      image: ghcr.io/grafana/k8s-monitoring-test:1.4.2
+      image: ghcr.io/grafana/k8s-monitoring-test:1.3.0
       command: [/etc/bin/config-analysis.sh]
       env:
         - name: ALLOY_HOST
@@ -60255,8 +60218,8 @@ metadata:
   labels:
     app.kubernetes.io/managed-by: "Helm"
     app.kubernetes.io/instance: "k8smon"
-    app.kubernetes.io/version: 2.6.0
-    helm.sh/chart: "k8s-monitoring-1.4.2"
+    app.kubernetes.io/version: 2.5.0
+    helm.sh/chart: "k8s-monitoring-1.3.0"
   annotations:
     "helm.sh/hook": test
     "helm.sh/hook-delete-policy": before-hook-creation
@@ -60272,14 +60235,14 @@ spec:
       labels:
         app.kubernetes.io/managed-by: "Helm"
         app.kubernetes.io/instance: "k8smon"
-        helm.sh/chart: "k8s-monitoring-1.4.2"
+        helm.sh/chart: "k8s-monitoring-1.3.0"
     spec:
       restartPolicy: Never
       nodeSelector:
         kubernetes.io/os: linux
       containers:
         - name: query-test
-          image: ghcr.io/grafana/k8s-monitoring-test:1.4.2
+          image: ghcr.io/grafana/k8s-monitoring-test:1.3.0
           command: ["bash", "-c", "/etc/bin/query-test.sh /etc/test/testQueries.json"]
           volumeMounts:
             - name: test-files

@@ -85,7 +85,7 @@ otelcol.processor.transform "default" {
   metric_statements {
     context = "resource"
     statements = [
-      "set(attributes[\"k8s.cluster.name\"], \"private-image-registry-test\") where attributes[\"k8s.cluster.name\"] == nil",
+      "set(attributes[\"k8s.cluster.name\"], \"default-values-test\") where attributes[\"k8s.cluster.name\"] == nil",
     ]
   }
   log_statements {
@@ -94,7 +94,7 @@ otelcol.processor.transform "default" {
       "set(attributes[\"pod\"], attributes[\"k8s.pod.name\"])",
       "set(attributes[\"namespace\"], attributes[\"k8s.namespace.name\"])",
       "set(attributes[\"loki.resource.labels\"], \"cluster, namespace, job, pod\")",
-      "set(attributes[\"k8s.cluster.name\"], \"private-image-registry-test\") where attributes[\"k8s.cluster.name\"] == nil",
+      "set(attributes[\"k8s.cluster.name\"], \"default-values-test\") where attributes[\"k8s.cluster.name\"] == nil",
     ]
   }
   output {
@@ -721,7 +721,7 @@ prometheus.relabel "metrics_service" {
   rule {
     source_labels = ["cluster"]
     regex = ""
-    replacement = "private-image-registry-test"
+    replacement = "default-values-test"
     target_label = "cluster"
   }
   forward_to = [prometheus.remote_write.metrics_service.receiver]
@@ -732,10 +732,6 @@ prometheus.remote_write "metrics_service" {
     url = nonsensitive(remote.kubernetes.secret.metrics_service.data["host"]) + "/api/prom/push"
     headers = { "X-Scope-OrgID" = nonsensitive(remote.kubernetes.secret.metrics_service.data["tenantId"]) }
 
-    basic_auth {
-      username = nonsensitive(remote.kubernetes.secret.metrics_service.data["username"])
-      password = remote.kubernetes.secret.metrics_service.data["password"]
-    }
 
 
     send_native_histograms = false
@@ -824,7 +820,7 @@ remote.kubernetes.secret "logs_service" {
 loki.process "logs_service" {
   stage.static_labels {
       values = {
-        cluster = "private-image-registry-test",
+        cluster = "default-values-test",
       }
   }
   forward_to = [loki.write.logs_service.receiver]
