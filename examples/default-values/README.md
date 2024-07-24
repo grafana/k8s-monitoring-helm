@@ -2,7 +2,9 @@
 
 This example contains the bare minimum to deploy the Kubernetes Monitoring Helm chart.
 
+<!-- values file start -->
 ```yaml
+---
 cluster:
   name: default-values-test
 
@@ -18,3 +20,4 @@ externalServices:
       username: 12345
       password: "It's a secret to everyone"
 ```
+<!-- values file end -->

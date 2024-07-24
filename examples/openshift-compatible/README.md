@@ -12,7 +12,9 @@ Grafana Alloy.
 Note that these alloy pods cannot enable `readOnlyRootFilesystem` because they require being able to write to their
 storage path, which defaults to `/tmp/alloy`.
 
+<!-- values file start -->
 ```yaml
+---
 cluster:
   name: openshift-compatible-test
   platform: openshift
@@ -84,3 +86,4 @@ alloy-events:
       seccompProfile:
         type: "RuntimeDefault"
 ```
+<!-- values file end -->

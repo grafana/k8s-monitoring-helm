@@ -4,6 +4,7 @@ This example contains the values required to enable receiving traces over gRPC o
 to [Grafana Tempo](https://grafana.com/oss/tempo/). It also shows how to utilize the span filter to remove traces
 triggered by readiness and liveness probes.
 
+<!-- values file start -->
 ```yaml
 ---
 cluster:
@@ -72,3 +73,4 @@ receivers:
         Example server key
         -----END CERTIFICATE-----
 ```
+<!-- values file end -->

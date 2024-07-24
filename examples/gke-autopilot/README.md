@@ -9,7 +9,9 @@ This example shows how to disable Node Exporter.
 Missing Node Exporter metrics is likely fine, because users of these clusters should not need concern themselves with
 the health of the nodes. That's the responsibility of the cloud provider.
 
+<!-- values file start -->
 ```yaml
+---
 cluster:
   name: gke-autopilot-test
 
@@ -32,3 +34,4 @@ metrics:
 prometheus-node-exporter:
   enabled: false
 ```
+<!-- values file end -->

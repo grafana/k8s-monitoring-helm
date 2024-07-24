@@ -7,7 +7,9 @@ to `/var/data/kubeletlogs/`.
 
 Adding the mount for `/var/data` is sufficient to detect and gather the log files.
 
+<!-- values file start -->
 ```yaml
+---
 cluster:
   name: ibm-cloud-test
 
@@ -36,3 +38,4 @@ alloy-logs:
           hostPath:
             path: /var/data
 ```
+<!-- values file end -->

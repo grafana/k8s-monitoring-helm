@@ -2,7 +2,9 @@
 
 This example shows how to use proxy URLs and TLS settings to modify how to send data to the external services.
 
+<!-- values file start -->
 ```yaml
+---
 cluster:
   name: proxies-test
 
@@ -24,3 +26,4 @@ externalServices:
     tls:
       insecure_skip_verify: true
 ```
+<!-- values file end -->

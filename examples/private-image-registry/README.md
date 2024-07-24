@@ -8,7 +8,9 @@ use different methods, even within the global objects, so it needs to be defined
 
 If you do not want to use the `global` object, registry and pull secrets can be set on each subchart individually.
 
+<!-- values file start -->
 ```yaml
+---
 cluster:
   name: private-image-registry-test
 
@@ -44,3 +46,4 @@ opencost:
       image:
         registry: my.registry.com
 ```
+<!-- values file end -->

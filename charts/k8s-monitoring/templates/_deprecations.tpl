@@ -6,7 +6,16 @@ As of k8s-monitoring Chart version 0.3, the component "prometheus.remote_write.g
 Please change your configurations to direct metric data to the "prometheus.relabel.metrics_service" component instead.
 For more information, see https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring#breaking-change-announcements
 */}}
-{{- if or (contains "prometheus.remote_write.grafana_cloud_prometheus" .Values.extraConfig) (contains "prometheus.remote_write.grafana_cloud_prometheus" .Values.logs.extraConfig) }}
+{{- if contains "prometheus.remote_write.grafana_cloud_prometheus" ((index .Values "alloy").extraConfig | default .Values.extraConfig) }}
+  {{ fail "\n\nAs of k8s-monitoring Chart version 0.3, the component \"prometheus.remote_write.grafana_cloud_prometheus\" has been renamed.\nPlease change your configurations to direct metric data to the \"prometheus.relabel.metrics_service\" component instead.\nFor more information, see https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring#breaking-change-announcements"}}
+{{- end -}}
+{{- if contains "prometheus.remote_write.grafana_cloud_prometheus" ((index .Values "alloy-logs").extraConfig | default .Values.logs.extraConfig) }}
+  {{ fail "\n\nAs of k8s-monitoring Chart version 0.3, the component \"prometheus.remote_write.grafana_cloud_prometheus\" has been renamed.\nPlease change your configurations to direct metric data to the \"prometheus.relabel.metrics_service\" component instead.\nFor more information, see https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring#breaking-change-announcements"}}
+{{- end -}}
+{{- if contains "prometheus.remote_write.grafana_cloud_prometheus" ((index .Values "alloy-events").extraConfig | default .Values.logs.cluster_events.extraConfig) }}
+  {{ fail "\n\nAs of k8s-monitoring Chart version 0.3, the component \"prometheus.remote_write.grafana_cloud_prometheus\" has been renamed.\nPlease change your configurations to direct metric data to the \"prometheus.relabel.metrics_service\" component instead.\nFor more information, see https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring#breaking-change-announcements"}}
+{{- end -}}
+{{- if or (contains "prometheus.remote_write.grafana_cloud_prometheus" (index .Values "alloy-profiles").extraConfig) }}
   {{ fail "\n\nAs of k8s-monitoring Chart version 0.3, the component \"prometheus.remote_write.grafana_cloud_prometheus\" has been renamed.\nPlease change your configurations to direct metric data to the \"prometheus.relabel.metrics_service\" component instead.\nFor more information, see https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring#breaking-change-announcements"}}
 {{- end -}}
 
@@ -51,7 +60,16 @@ As of k8s-monitoring Chart version 0.12, the component "loki.write.grafana_cloud
 Please change your configurations to direct log data to the "loki.process.logs_service" component instead.
 For more information, see https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring#breaking-change-announcements
 */}}
-{{- if or (contains "loki.write.grafana_cloud_loki" .Values.extraConfig) (contains "loki.write.grafana_cloud_loki" .Values.logs.extraConfig) }}
+{{- if contains "loki.write.grafana_cloud_loki" ((index .Values "alloy").extraConfig | default .Values.extraConfig) }}
+  {{ fail "\n\nAs of k8s-monitoring Chart version 0.12, the component \"loki.write.grafana_cloud_loki\" has been renamed.\nPlease change your configurations to direct log data to the \"loki.process.logs_service\" component instead.\nFor more information, see https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring#breaking-change-announcements"}}
+{{- end -}}
+{{- if contains "loki.write.grafana_cloud_loki" ((index .Values "alloy-logs").extraConfig | default .Values.logs.extraConfig) }}
+  {{ fail "\n\nAs of k8s-monitoring Chart version 0.12, the component \"loki.write.grafana_cloud_loki\" has been renamed.\nPlease change your configurations to direct log data to the \"loki.process.logs_service\" component instead.\nFor more information, see https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring#breaking-change-announcements"}}
+{{- end -}}
+{{- if contains "loki.write.grafana_cloud_loki" ((index .Values "alloy-events").extraConfig | default .Values.logs.cluster_events.extraConfig) }}
+  {{ fail "\n\nAs of k8s-monitoring Chart version 0.12, the component \"loki.write.grafana_cloud_loki\" has been renamed.\nPlease change your configurations to direct log data to the \"loki.process.logs_service\" component instead.\nFor more information, see https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring#breaking-change-announcements"}}
+{{- end -}}
+{{- if or (contains "loki.write.grafana_cloud_loki" (index .Values "alloy-profiles").extraConfig) }}
   {{ fail "\n\nAs of k8s-monitoring Chart version 0.12, the component \"loki.write.grafana_cloud_loki\" has been renamed.\nPlease change your configurations to direct log data to the \"loki.process.logs_service\" component instead.\nFor more information, see https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring#breaking-change-announcements"}}
 {{- end -}}
 

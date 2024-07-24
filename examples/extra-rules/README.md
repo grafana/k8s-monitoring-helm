@@ -3,7 +3,9 @@
 This example shows several ways to provide additional labels and rules. The `logs.pod_logs.extraStageBlocks` even
 supports template values.
 
+<!-- values file start -->
 ```yaml
+---
 cluster:
   name: extra-rules-test
 
@@ -80,3 +82,4 @@ logs:
         }
       }
 ```
+<!-- values file end -->

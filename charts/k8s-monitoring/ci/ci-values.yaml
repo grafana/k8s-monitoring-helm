@@ -92,12 +92,6 @@ test:
         value: 1
         operator: ==
 
-extraConfig: |-
-  tracing {
-    sampling_fraction = 0.1
-    write_to = [otelcol.processor.k8sattributes.default.input]
-  }
-
 opencost:
   opencost:
     defaultClusterId: ci-test-cluster
@@ -114,6 +108,12 @@ opencost:
 alloy:
   controller:
     replicas: 2
+
+  extraConfig: |-
+    tracing {
+      sampling_fraction = 0.1
+      write_to = [otelcol.processor.k8sattributes.default.input]
+    }
 
 # Prometheus Operator CRDs are pre-installed in the CI environment
 prometheus-operator-crds:

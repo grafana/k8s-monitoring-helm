@@ -13,7 +13,9 @@ the health of the nodes. That's the responsibility of the cloud provider.
 
 This example shows how to disable Node Exporter and gather Pod logs via the Kubernetes API:
 
+<!-- values file start -->
 ```yaml
+---
 cluster:
   name: eks-fargate-test
 
@@ -49,3 +51,4 @@ alloy-logs:
     replicas: 2
     type: deployment
 ```
+<!-- values file end -->

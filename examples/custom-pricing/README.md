@@ -4,7 +4,9 @@ This example shows how to enable custom pricing for the OpenCost deployment. See
 OpenCost [documentation](https://www.opencost.io/docs/configuration/on-prem#custom-pricing-using-the-opencost-helm-chart)
 for more information.
 
+<!-- values file start -->
 ```yaml
+---
 cluster:
   name: custom-pricing-test
 
@@ -42,3 +44,4 @@ opencost:
       external:
         url: https://prometheus.example.com/api/prom
 ```
+<!-- values file end -->

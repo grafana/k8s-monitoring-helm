@@ -11,6 +11,7 @@ the `discovery.kubernetes.services` component that already exists in the generat
 the `extraConfig` values are evaluated as templates when rendering the final configuration, so that you can use any of
 the helm objects or functions in them, as shown in one of the added labels in `loki.process.postgres_logs` component.
 
+<!-- values file start -->
 ```yaml
 ---
 cluster:
@@ -40,33 +41,34 @@ externalServices:
       env: remote.kubernetes.configmap.cluster_info.data["env"]
       region: remote.kubernetes.configmap.cluster_info.data["region"]
 
-extraConfig: |-
-  discovery.relabel "animal_service" {
-    targets = discovery.kubernetes.services.targets
-    rule {
-      source_labels = ["__meta_kubernetes_service_label_app"]
-      regex = "animal-service"
-      action = "keep"
+alloy:
+  extraConfig: |-
+    discovery.relabel "animal_service" {
+      targets = discovery.kubernetes.services.targets
+      rule {
+        source_labels = ["__meta_kubernetes_service_label_app"]
+        regex = "animal-service"
+        action = "keep"
+      }
+      rule {
+        source_labels = ["__meta_kubernetes_service_name"]
+        regex = "animal-service-metrics"
+        action = "keep"
+      }
     }
-    rule {
-      source_labels = ["__meta_kubernetes_service_name"]
-      regex = "animal-service-metrics"
-      action = "keep"
+  
+    prometheus.scrape "animal_service" {
+      job_name   = "animal_service"
+      targets    = discovery.relabel.animal_service.output
+      forward_to = [prometheus.relabel.metrics_service.receiver]
     }
-  }
+  
+    remote.kubernetes.configmap "cluster_info" {
+      name = "cluster_info"
+      namespace = {{ .Release.Namespace | quote }}
+    }
 
-  prometheus.scrape "animal_service" {
-    job_name   = "animal_service"
-    targets    = discovery.relabel.animal_service.output
-    forward_to = [prometheus.relabel.metrics_service.receiver]
-  }
-
-  remote.kubernetes.configmap "cluster_info" {
-    name = "cluster_info"
-    namespace = {{ .Release.Namespace | quote }}
-  }
-
-logs:
+alloy-logs:
   extraConfig: |-
     discovery.relabel "postgres_logs" {
       targets = discovery.relabel.pod_logs.output
@@ -109,11 +111,11 @@ logs:
       namespace = {{ .Release.Namespace | quote }}
     }
 
-  cluster_events:
-    extraConfig: |-
-      remote.kubernetes.configmap "cluster_info" {
-        name = "cluster_info"
-        namespace = {{ .Release.Namespace | quote }}
-      }
-
+alloy-events:
+  extraConfig: |-
+    remote.kubernetes.configmap "cluster_info" {
+      name = "cluster_info"
+      namespace = {{ .Release.Namespace | quote }}
+    }
 ```
+<!-- values file end -->

@@ -4,7 +4,9 @@ This example shows a deployment that only gathers Prometheus metrics, and does n
 
 It differs from the [default](../default-values) by not requiring a Loki service and disabling the logs section.
 
+<!-- values file start -->
 ```yaml
+---
 cluster:
   name: metrics-only-test
 
@@ -17,9 +19,11 @@ externalServices:
       password: "It's a secret to everyone"
 
 logs:
+  enabled: false
   pod_logs:
     enabled: false
 
   cluster_events:
     enabled: false
 ```
+<!-- values file end -->

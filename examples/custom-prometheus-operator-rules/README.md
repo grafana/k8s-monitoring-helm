@@ -2,6 +2,7 @@
 
 This example shows how discovery relabelings can be added to PodMonitors, Probes and ServiceMonitors.
 
+<!-- values file start -->
 ```yaml
 ---
 cluster:
@@ -65,3 +66,4 @@ logs:
   cluster_events:
     enabled: false
 ```
+<!-- values file end -->

@@ -11,7 +11,9 @@ Metric sources available:
 -   Kube Proxy
 -   Kube Scheduler
 
+<!-- values file start -->
 ```yaml
+---
 cluster:
   name: control-plane-metrics-test
 
@@ -38,3 +40,4 @@ metrics:
   kubeScheduler:
     enabled: true
 ```
+<!-- values file end -->

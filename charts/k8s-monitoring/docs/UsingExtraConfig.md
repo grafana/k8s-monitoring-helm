@@ -6,10 +6,12 @@ by this chart. There are a few methods to use these sections that will be explor
 
 ## Different sections
 
-There are two `extraConfig` sections that you can use:
+There are four `extraConfig` sections that you can use:
 
--   `.extraConfig` Inserts configuration for the Grafana Alloy instance that scrapes metrics and opens receivers.
--   `.logs.extraConfig` Inserts configuration for the Grafana Alloy instance that gathers logs.
+-   `.alloy.extraConfig` Inserts configuration for the Grafana Alloy instance that scrapes metrics and opens receivers.
+-   `.alloy-events.extraConfig` Inserts configuration for the Grafana Alloy instance that gathers Cluster Events.
+-   `.alloy-logs.extraConfig` Inserts configuration for the Grafana Alloy instance that gathers Pod logs.
+-   `.alloy-profiles.extraConfig` Inserts configuration for the Grafana Alloy instance that gathers application profiles.
 
 ## How to use
 
@@ -28,14 +30,15 @@ $ cat values.yaml
 cluster:
   name: my-cluster
 ...
-extraConfig: |
-  logging {
-    level  = "debug"
-  }
+alloy:
+  extraConfig: |-
+    logging {
+      level  = "debug"
+    }
 ...
-logs:
+alloy-logs:
 ...
-  extraConfig: |
+  extraConfig: |-
     logging {
       level  = "debug"
     }
@@ -54,8 +57,8 @@ $ ls
 values.yaml  metricsConfig.alloy  logsConfig.alloy
 $ helm upgrade grafana-k8s-monitoring --atomic --timeout 300s grafana/k8s-monitoring \
     --values values.yaml \
-    --set-file extraConfig=metricsConfig.alloy \
-    --set-file logs.extraConfig=logsConfig.alloy
+    --set-file alloy.extraConfig=metricsConfig.alloy \
+    --set-file alloy-logs.extraConfig=logsConfig.alloy
 ```
 
 This can be beneficial once your extra configuration grows to a certain size.
