@@ -78,6 +78,11 @@ discovery.relabel "java_pods" {
     regex = ".*/java$"
   }
   rule {
+    source_labels = ["__meta_kubernetes_pod_name"]
+    regex = ".+"
+    action = "keep"
+  }
+  rule {
     action = "replace"
     source_labels = ["__meta_kubernetes_namespace"]
     target_label = "namespace"
