@@ -69,4 +69,19 @@ alloy-logs:
       {{ fail "Invalid configuration for gathering journal logs! Grafana Alloy for Logs must be a Daemonset. Otherwise, journal logs will be missing!\nPlease set:\nalloy-logs:\n  controller:\n    type: daemonset"}}
   {{- end }}
 {{- end -}}
+
+{{- $Values := .Values }}
+{{- range $alloy := tuple "alloy" "alloy-events" "alloy-logs" "alloy-profiles"}}
+  {{- with (index $Values $alloy) }}
+    {{- if and .liveDebugging.enabled (not (or (eq .alloy.stabilityLevel "public-preview") (eq .alloy.stabilityLevel "experimental"))) }}
+{{/*
+To enable Alloy live debugging, you must set the stabilityLevel to "public-preview":
+alloy-logs:
+  alloy:
+    stabilityLevel: public-preview
+*/}}
+      {{ fail (printf "To enable Alloy live debugging, you must set the stabilityLevel to \"public-preview\":\n%s:\n  alloy:\n    stabilityLevel: public-preview" $alloy) }}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
 {{- end -}}
