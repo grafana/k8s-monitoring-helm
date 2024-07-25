@@ -35,13 +35,6 @@ discovery.relabel "java_pods" {
     regex = ".+"
     action = "keep"
   }
-{{- if .Values.profiles.java.namespaces }}
-  rule {
-    source_labels = ["__meta_kubernetes_namespace"]
-    regex = "({{ join "|" .Values.profiles.java.namespaces }})"
-    action = "keep"
-  }
-{{- end }}
   rule {
     action = "replace"
     source_labels = ["__meta_kubernetes_namespace"]
