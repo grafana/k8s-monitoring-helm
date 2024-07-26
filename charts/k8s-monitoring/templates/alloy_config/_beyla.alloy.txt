@@ -1,0 +1,67 @@
+{{ define "alloy.config.beyla" }}
+beyla.ebpf "default" {
+	// Enable Kubernetes decoration
+	attributes {
+		kubernetes {
+			enable = "true"
+		}
+	}
+
+{{- if .Values.beyla.debug }}
+	debug = true
+{{- end }}
+
+	discovery {
+		services {
+			kubernetes {
+        namespace = "{{ join "|" .Values.namespaces }}"
+				deployment_name = "."
+			}		
+		}	
+		services {
+			kubernetes {
+				namespace = "{{ join "|" .Values.namespaces }}"
+				daemonset_name = "."
+			}
+		}
+		services {
+			kubernetes {
+				namespace = "{{ join "|" .Values.namespaces }}"
+				statefulset_name = "."
+			}
+		}    
+	}
+
+	metrics {
+		features = [
+			"application",
+{{- if .Values.beyla.application }}          
+			"application_service_graph",
+			"application_span",
+{{- end }}
+{{- if .Values.beyla.network }}
+			"network", 
+{{- end }}
+{{- if .Values.beyla.process }}
+			"application_process",
+{{- end }}
+		]
+{{- if .Values.beyla.network }}
+		// Enable the network montoring
+		network {
+			enable = true
+		}
+{{- end }}		
+  	}
+{{- if .Values.beyla.traces }}
+  output {
+    traces = [otelcol.processor.k8sattributes.default.input]
+  }
+{{- end }}
+}
+prometheus.scrape "beyla" {
+  targets = beyla.ebpf.default.targets
+  honor_labels = true
+  forward_to = [prometheus.relabel.metrics_service.receiver]
+}
+{{- end }}

@@ -25,6 +25,7 @@ Then, we extract the Grafana Alloy configuration files from the ConfigMap object
 -   [Service Integrations](./service-integrations) - A few methods for gathering telemetry data from other services.
 -   [Traces Enabled](./traces-enabled) - Enable the OpenTelemetry receiver for traces and send then to Grafana Tempo.
 -   [Windows Exporter](./windows-exporter) - Enable deployment and scraping of the Windows Exporter for Windows nodes.
+-   [Beyla Enabled](./beyla-enabled) - Enable Grafana Beyla for automatic instrumentation of deployed services using eBPF.
 
 ### Customizing behavior
 

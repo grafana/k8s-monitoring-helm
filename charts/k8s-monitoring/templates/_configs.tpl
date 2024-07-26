@@ -69,6 +69,10 @@
       {{- include "alloy.config.kepler" . }}
     {{- end }}
 
+    {{- if .Values.beyla.enabled }}
+      {{- include "alloy.config.beyla" . }}
+    {{- end }}
+
     {{- if .Values.metrics.podMonitors.enabled }}
       {{- include "alloy.config.pod_monitors" . }}
     {{- end }}
