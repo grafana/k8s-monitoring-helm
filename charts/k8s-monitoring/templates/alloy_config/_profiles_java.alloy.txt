@@ -21,9 +21,14 @@ discovery.process "java_pods" {
 discovery.relabel "java_pods" {
   targets = discovery.process.java_pods.targets
   rule {
-    action = "drop"
-    regex = "Succeeded|Failed|Completed"
     source_labels = ["__meta_kubernetes_pod_phase"]
+    regex = "Succeeded|Failed|Completed"
+    action = "drop"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_pod_name"]
+    regex = "^$"
+    action = "drop"
   }
   rule {
     source_labels = ["__meta_process_exe"]
@@ -31,23 +36,23 @@ discovery.relabel "java_pods" {
     regex = ".*/java$"
   }
   rule {
-    action = "replace"
     source_labels = ["__meta_kubernetes_namespace"]
+    action = "replace"
     target_label = "namespace"
   }
   rule {
-    action = "replace"
     source_labels = ["__meta_kubernetes_pod_name"]
+    action = "replace"
     target_label = "pod"
   }
   rule {
-    action = "replace"
     source_labels = ["__meta_kubernetes_pod_node_name"]
+    action = "replace"
     target_label = "node"
   }
   rule {
-    action = "replace"
     source_labels = ["__meta_kubernetes_pod_container_name"]
+    action = "replace"
     target_label = "container"
   }
 {{- if .Values.profiles.java.extraRelabelingRules }}
