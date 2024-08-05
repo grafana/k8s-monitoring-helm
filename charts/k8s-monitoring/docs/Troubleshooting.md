@@ -10,6 +10,7 @@ This document contains some information about frequently encountered issues and 
     -   [Pod log files in `/var/lib/docker/containers`](#pod-log-files-in-varlibdockercontainers)
     -   [Authentication error: invalid scope requested](#authentication-error-invalid-scope-requested)
     -   [Kepler pods crashing on AWS Graviton nodes](#kepler-pods-crashing-on-aws-graviton-nodes)
+    -   [ConfigMaps show `\n` and not newlines](#configmaps-show-n-and-not-newlines)
 
 ## General tips
 
@@ -114,4 +115,27 @@ those nodes will crash. To prevent this, you can add a node selector to the Kepl
 kepler:
   nodeSelector:
     kubernetes.io/arch: amd64
+```
+
+### ConfigMaps show `\n` and not newlines
+
+If you see `\n` in the ConfigMaps instead of newlines, it's likely due to extra newlines in the config file. See
+[this issue](https://github.com/kubernetes/kubernetes/issues/36222) for details. An example:
+
+```yaml
+apiVersion: v1
+data:
+  config.alloy: "discovery.kubernetes \"nodes\" {\n  role = \"node\"\n}\n\ndiscovery.kubernetes
+    \"services\" {\n  role = \"service\"\n}\n\ndiscovery.kubernetes \"endpoints\"
+    {\n  role = \"endpoints\"\n}\n\ndiscovery.kubernetes \"pods\" {\n  role = \"pod\"\n}\n\n//
+    OTLP Receivers\notelcol.receiver.otlp \"receiver\" {\n  grpc {\n    endpoint =
+```
+
+To fix this, ensure that any multi-line configuration blocks in your values file use `|-` instead of `|`. For example:
+
+```yaml
+metrics:
+  kube-state-metrics:
+    extraMetricRelabelingRules: |-     # Make sure to use |- here
+      rule {...}
 ```
