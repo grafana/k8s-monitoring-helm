@@ -13,7 +13,7 @@ loki.write "logs_service" {
       username = nonsensitive(remote.kubernetes.secret.logs_service.data[{{ .basicAuth.usernameKey | quote }}])
       password = remote.kubernetes.secret.logs_service.data[{{ .basicAuth.passwordKey | quote }}]
     }
-{{ else if eq .authMode "oauth2" }}
+{{- else if eq .authMode "oauth2" }}
     oauth2 {
       client_id = nonsensitive(remote.kubernetes.secret.logs_service.data[{{ .oauth2.clientIdKey | quote }}])
       {{- if eq .oauth2.clientSecretFile "" }}
