@@ -287,14 +287,14 @@ otelcol.processor.batch "batch_processor" {
 {{- end }}
   output {
 {{- if .Values.metrics.enabled }}
-    metrics = [otelcol.exporter.prometheus.metrics_converter.input]
+    metrics = [{{ append ((.Values.receivers.processors.batch.output).metrics | default (list)) "otelcol.exporter.prometheus.metrics_converter.input" | join "," }}]
 {{- end }}
 {{- if .Values.logs.enabled }}
-    logs = [otelcol.exporter.loki.logs_converter.input]
+    logs = [{{ append ((.Values.receivers.processors.batch.output).logs | default (list)) "otelcol.exporter.loki.logs_converter.input" | join "," }}]
 {{- end }}
 {{- if .Values.traces.enabled }}
 {{- if eq .Values.externalServices.tempo.protocol "otlp" }}
-    traces = [otelcol.exporter.otlp.traces_service.input]
+    traces = [{{ append ((.Values.receivers.processors.batch.output).traces | default (list)) "otelcol.exporter.otlp.traces_service.input" | join "," }}]
 {{- else if eq .Values.externalServices.tempo.protocol "otlphttp" }}
     traces = [otelcol.exporter.otlphttp.traces_service.input]
 {{- end }}
