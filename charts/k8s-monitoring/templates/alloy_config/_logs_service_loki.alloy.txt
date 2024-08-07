@@ -22,7 +22,11 @@ loki.write "logs_service" {
       client_secret_file = {{ .oauth2.clientSecretFile | quote }}
       {{- end }}
       {{- if .oauth2.endpointParams }}
-      endpoint_params = {{ .oauth2.endpointParams | toJson }}
+      endpoint_params = {
+      {{- range $k, $v := .oauth2.endpointParams }}
+        {{ $k }} = {{ $v | quote }},
+      {{- end }}
+      }
       {{- end }}
       {{- if .oauth2.proxyURL }}
       proxy_url = {{ .oauth2.proxyURL | quote }}
