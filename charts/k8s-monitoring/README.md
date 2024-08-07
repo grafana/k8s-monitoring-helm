@@ -220,7 +220,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| externalServices.loki.authMode | string | `"basic"` | one of "none", "basic" |
+| externalServices.loki.authMode | string | `"basic"` | one of "none", "basic", "oauth2" |
 | externalServices.loki.basicAuth.password | string | `""` | Loki basic auth password |
 | externalServices.loki.basicAuth.passwordKey | string | `"password"` | The key for the password property in the secret |
 | externalServices.loki.basicAuth.username | string | `""` | Loki basic auth username |
@@ -229,6 +229,18 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | externalServices.loki.externalLabelsFrom | object | `{}` | Custom labels to be added to all logs and events through a dynamic reference, all values are treated as raw strings and not quoted. |
 | externalServices.loki.host | string | `""` | Loki host where logs and events will be sent |
 | externalServices.loki.hostKey | string | `"host"` | The key for the host property in the secret |
+| externalServices.loki.oauth2.clientId | string | `""` | Loki OAuth2 client ID |
+| externalServices.loki.oauth2.clientIdKey | string | `"id"` | The key for the client ID property in the secret |
+| externalServices.loki.oauth2.clientSecret | string | `""` | Loki OAuth2 client secret |
+| externalServices.loki.oauth2.clientSecretFile | string | `""` | File containing the OAuth2 client secret. |
+| externalServices.loki.oauth2.clientSecretKey | string | `"secret"` | The key for the client secret property in the secret |
+| externalServices.loki.oauth2.endpointParams | object | `{}` | Loki OAuth2 endpoint parameters |
+| externalServices.loki.oauth2.noProxy | string | `""` | Comma-separated list of IP addresses, CIDR notations, and domain names to exclude from proxying. |
+| externalServices.loki.oauth2.proxyConnectHeader | object | `{}` | Specifies headers to send to proxies during CONNECT requests. |
+| externalServices.loki.oauth2.proxyFromEnvironment | bool | `false` | Use the proxy URL indicated by environment variables. |
+| externalServices.loki.oauth2.proxyURL | string | `""` | HTTP proxy to send requests through. |
+| externalServices.loki.oauth2.scopes | list | `[]` | List of scopes to authenticate with. |
+| externalServices.loki.oauth2.tokenURL | string | `""` | URL to fetch the token from. |
 | externalServices.loki.processors.batch.maxSize | int | `0` | Upper limit of a batch size. When set to 0, there is no upper limit. |
 | externalServices.loki.processors.batch.size | int | `8192` | Amount of data to buffer before flushing the batch. |
 | externalServices.loki.processors.batch.timeout | string | `"2s"` | How long to wait before flushing the batch. |
@@ -250,7 +262,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| externalServices.prometheus.authMode | string | `"basic"` | one of "none", "basic" |
+| externalServices.prometheus.authMode | string | `"basic"` | one of "none", "basic", "oauth2" |
 | externalServices.prometheus.basicAuth.password | string | `""` | Prometheus basic auth password |
 | externalServices.prometheus.basicAuth.passwordKey | string | `"password"` | The key for the password property in the secret |
 | externalServices.prometheus.basicAuth.username | string | `""` | Prometheus basic auth username |
@@ -259,6 +271,18 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | externalServices.prometheus.externalLabelsFrom | object | `{}` | Custom labels to be added to all time series through a dynamic reference, all values are treated as raw strings and not quoted. |
 | externalServices.prometheus.host | string | `""` | Prometheus host where metrics will be sent |
 | externalServices.prometheus.hostKey | string | `"host"` | The key for the host property in the secret |
+| externalServices.prometheus.oauth2.clientId | string | `""` | Prometheus OAuth2 client ID |
+| externalServices.prometheus.oauth2.clientIdKey | string | `"id"` | The key for the client ID property in the secret |
+| externalServices.prometheus.oauth2.clientSecret | string | `""` | Prometheus OAuth2 client secret |
+| externalServices.prometheus.oauth2.clientSecretFile | string | `""` | File containing the OAuth2 client secret. |
+| externalServices.prometheus.oauth2.clientSecretKey | string | `"secret"` | The key for the client secret property in the secret |
+| externalServices.prometheus.oauth2.endpointParams | object | `{}` | Prometheus OAuth2 endpoint parameters |
+| externalServices.prometheus.oauth2.noProxy | string | `""` | Comma-separated list of IP addresses, CIDR notations, and domain names to exclude from proxying. |
+| externalServices.prometheus.oauth2.proxyConnectHeader | object | `{}` | Specifies headers to send to proxies during CONNECT requests. |
+| externalServices.prometheus.oauth2.proxyFromEnvironment | bool | `false` | Use the proxy URL indicated by environment variables. |
+| externalServices.prometheus.oauth2.proxyURL | string | `""` | HTTP proxy to send requests through. |
+| externalServices.prometheus.oauth2.scopes | list | `[]` | List of scopes to authenticate with. |
+| externalServices.prometheus.oauth2.tokenURL | string | `""` | URL to fetch the token from. |
 | externalServices.prometheus.processors.batch.maxSize | int | `0` | Upper limit of a batch size. When set to 0, there is no upper limit. |
 | externalServices.prometheus.processors.batch.size | int | `8192` | Amount of data to buffer before flushing the batch. |
 | externalServices.prometheus.processors.batch.timeout | string | `"2s"` | How long to wait before flushing the batch. |
