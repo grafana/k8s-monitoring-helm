@@ -227,6 +227,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | externalServices.loki.basicAuth.usernameKey | string | `"username"` | The key for the username property in the secret |
 | externalServices.loki.externalLabels | object | `{}` | Custom labels to be added to all logs and events, all values are treated as strings and automatically quoted. |
 | externalServices.loki.externalLabelsFrom | object | `{}` | Custom labels to be added to all logs and events through a dynamic reference, all values are treated as raw strings and not quoted. |
+| externalServices.loki.extraOutputs | list | `[]` | Extra outputs configured in Alloy to send logs to at the end on the pipeline. When the protocol is "loki" the output is in the Loki format, while if the protocol is "otlp" or "otlphttp" it is the OTel format. |
 | externalServices.loki.host | string | `""` | Loki host where logs and events will be sent |
 | externalServices.loki.hostKey | string | `"host"` | The key for the host property in the secret |
 | externalServices.loki.oauth2.clientId | string | `""` | Loki OAuth2 client ID |
@@ -269,6 +270,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | externalServices.prometheus.basicAuth.usernameKey | string | `"username"` | The key for the username property in the secret |
 | externalServices.prometheus.externalLabels | object | `{}` | Custom labels to be added to all time series, all values are treated as strings and automatically quoted. |
 | externalServices.prometheus.externalLabelsFrom | object | `{}` | Custom labels to be added to all time series through a dynamic reference, all values are treated as raw strings and not quoted. |
+| externalServices.prometheus.extraOutputs | list | `[]` | Extra outputs configured in Alloy to send metics to at the end on the pipeline. When the protocol is "remote_write" the output is in the Prometheus format, while if the protocol is "otlp" or "otlphttp" it is the OTel format. |
 | externalServices.prometheus.host | string | `""` | Prometheus host where metrics will be sent |
 | externalServices.prometheus.hostKey | string | `"host"` | The key for the host property in the secret |
 | externalServices.prometheus.oauth2.clientId | string | `""` | Prometheus OAuth2 client ID |
@@ -785,6 +787,9 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 |-----|------|---------|-------------|
 | receivers.grafanaCloudMetrics.enabled | bool | `true` | Generate host info metrics from telemetry data, used in Application Observability in Grafana Cloud. |
 | receivers.processors.batch.maxSize | int | `0` | The upper limit of the amount of data contained in a single batch, in bytes. When set to 0, batches can be any size. |
+| receivers.processors.batch.output.logs | list | `[]` | Extra outputs to send the batched logs to. |
+| receivers.processors.batch.output.metrics | list | `[]` | Extra outputs to send the batched metrics to. |
+| receivers.processors.batch.output.traces | list | `[]` | Extra outputs to send the batched traces to. |
 | receivers.processors.batch.size | int | `16384` | What batch size to use, in bytes |
 | receivers.processors.batch.timeout | string | `"2s"` | How long before sending (Processors) |
 | receivers.processors.k8sattributes.annotations | list | `[]` | Kubernetes annotations to extract and add to the attributes of the received telemetry data. |
