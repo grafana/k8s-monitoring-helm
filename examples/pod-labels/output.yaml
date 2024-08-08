@@ -180,7 +180,6 @@ data:
     
     // Processors
     otelcol.processor.transform "add_metric_datapoint_attributes" {
-      // Grafana Cloud Kubernetes monitoring expects Loki labels `cluster`, `pod`, and `namespace`
       error_mode = "ignore"
       metric_statements {
         context = "datapoint"
@@ -283,6 +282,13 @@ data:
     
     otelcol.processor.filter "default" {
       error_mode = "ignore"
+      traces {
+        span = [
+          "attributes[\"http.route\"] == \"/live\"",
+          "attributes[\"http.route\"] == \"/healthy\"",
+          "attributes[\"http.route\"] == \"/ready\"",
+        ]
+      }
     
       output {
         metrics = [otelcol.processor.batch.batch_processor.input]
@@ -59118,7 +59124,6 @@ data:
     
     // Processors
     otelcol.processor.transform "add_metric_datapoint_attributes" {
-      // Grafana Cloud Kubernetes monitoring expects Loki labels `cluster`, `pod`, and `namespace`
       error_mode = "ignore"
       metric_statements {
         context = "datapoint"
@@ -59221,6 +59226,13 @@ data:
     
     otelcol.processor.filter "default" {
       error_mode = "ignore"
+      traces {
+        span = [
+          "attributes[\"http.route\"] == \"/live\"",
+          "attributes[\"http.route\"] == \"/healthy\"",
+          "attributes[\"http.route\"] == \"/ready\"",
+        ]
+      }
     
       output {
         metrics = [otelcol.processor.batch.batch_processor.input]
