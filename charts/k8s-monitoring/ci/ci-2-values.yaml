@@ -11,10 +11,13 @@ cluster:
 
 externalServices:
   prometheus:
-    host: https://prometheus-server.prometheus.svc:9090
+    hostFrom: nonsensitive(remote.kubernetes.secret.creds.data["prom-host"])
+    tenantIdFrom: '""'
     basicAuth:
-      username: promuser
-      password: prometheuspassword
+      usernameFrom: nonsensitive(remote.kubernetes.secret.creds.data["prom-username"])
+      passwordFrom: remote.kubernetes.secret.creds.data["prom-password"]
+    secret:
+      create: false
     queryEndpoint: /api/v1/query
     writeEndpoint: /api/v1/otlp
     protocol: otlphttp
@@ -25,16 +28,23 @@ externalServices:
     externalLabelsFrom:
       magic_word: env("MAGIC_WORD")
   loki:
-    host: http://loki-otlp-interface.loki.svc:4318
-    tenantId: 1
+    hostFrom: nonsensitive(remote.kubernetes.secret.creds.data["loki-host"])
+    tenantIdFrom: nonsensitive(remote.kubernetes.secret.creds.data["loki-tenantId"])
+    basicAuth:
+      usernameFrom: nonsensitive(remote.kubernetes.secret.creds.data["loki-username"])
+      passwordFrom: remote.kubernetes.secret.creds.data["loki-password"]
+    secret:
+      create: false
     protocol: otlphttp
     writeEndpoint: /
-    basicAuth:
-      username: loki
-      password: lokipassword
   tempo:
-    host: http://tempo.tempo.svc:4318
-    authMode: none
+    hostFrom: nonsensitive(remote.kubernetes.secret.creds.data["tempo-host"])
+    tenantIdFrom: '""'
+    basicAuth:
+      usernameFrom: '""'
+      passwordFrom: '""'
+    secret:
+      create: false
     protocol: otlphttp
     tlsOptions: |-
       insecure             = true
@@ -87,6 +97,13 @@ extraConfig: |-
     sampling_fraction = 0.1
     write_to = [otelcol.processor.k8sattributes.default.input]
   }
+
+global:
+  extraConfig: |-
+    remote.kubernetes.secret "creds" {
+      name = "combined"
+      namespace = "monitoring"
+    }
 
 test:
   attempts: 20
@@ -149,6 +166,9 @@ opencost:
     prometheus:
       external:
         url: https://prometheus-server.prometheus.svc.cluster.local:9090
+      existingSecretName: combined
+      username_key: prom-username
+      password_key: prom-password
 
 alloy:
   alloy:
