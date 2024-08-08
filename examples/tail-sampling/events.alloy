@@ -1,0 +1,34 @@
+// Cluster Events
+loki.source.kubernetes_events "cluster_events" {
+  job_name   = "integrations/kubernetes/eventhandler"
+  log_format = "logfmt"
+  forward_to = [loki.process.logs_service.receiver]
+}
+
+// Logs Service
+remote.kubernetes.secret "logs_service" {
+  name = "loki-k8s-monitoring"
+  namespace = "default"
+}
+
+loki.process "logs_service" {
+  stage.static_labels {
+      values = {
+        cluster = "tail-sampling-test",
+      }
+  }
+  forward_to = [loki.write.logs_service.receiver]
+}
+
+// Loki
+loki.write "logs_service" {
+  endpoint {
+    url = nonsensitive(remote.kubernetes.secret.logs_service.data["host"]) + "/loki/api/v1/push"
+    tenant_id = nonsensitive(remote.kubernetes.secret.logs_service.data["tenantId"])
+
+    basic_auth {
+      username = nonsensitive(remote.kubernetes.secret.logs_service.data["username"])
+      password = remote.kubernetes.secret.logs_service.data["password"]
+    }
+  }
+}

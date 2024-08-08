@@ -1,0 +1,39 @@
+cluster:
+  name: tail-sampling-test
+
+externalServices:
+  prometheus:
+    host: https://prometheus.example.com
+    basicAuth:
+      username: 12345
+      password: "It's a secret to everyone"
+  loki:
+    host: https://loki.example.com
+    basicAuth:
+      username: 12345
+      password: "It's a secret to everyone"
+  tempo:
+    host: https://tempo.example.com
+    basicAuth:
+      username: 12345
+      password: "It's a secret to everyone"
+  
+traces:
+  enabled: true
+  receiver:
+    tailsampling:
+      policies:
+        - name: all_traces_above_500
+          type: latency
+          latency:
+            thresholdMs: 500
+        - name: drop_probes
+          type: string_attribute
+          stringAttribute:
+            key: http.url
+            values:
+              - /healthz
+              - /livez
+              - /readyz
+            enabled_regex_matching: true
+            invert_match: true

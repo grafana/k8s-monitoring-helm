@@ -217,6 +217,45 @@ otelcol.processor.transform "default" {
   }
 }
 
+
+{{- if and .Values.traces.enabled (and .Values.traces.receiver.tailsampling .Values.traces.receiver.tailsampling.policies) }}
+otelcol.processor.tail_sampling "default" {
+  {{- range $policy := .Values.traces.receiver.tailsampling.policies }}
+  policy {
+    name    = {{ $policy.name | quote }}
+    type    = {{ $policy.type | quote }}
+  {{- if and (eq $policy.type "latency") (hasKey $policy "latency") }}
+    latency = {
+      threshold_ms = {{ $policy.latency.thresholdMs | int }},
+    }
+  {{- end }}
+
+  {{- if and (eq $policy.type "string_attribute") (hasKey $policy "stringAttribute") }}
+    stringAttribute = {
+      key = {{ $policy.stringAttribute.key | quote }}
+      values = [
+      {{- range $value := $policy.stringAttribute.values }}
+        {{ $value }},
+      {{- end }}
+      ]
+
+      {{- if $policy.stringAttribute.enabledRegexMatching }}
+      enabled_regex_matching = {{ $policy.stringAttribute.enabledRegexMatching }}
+      {{- end }}
+      {{- if $policy.stringAttribute.invertMatch }}
+      invert_match = {{ $policy.stringAttribute.invertMatch }}
+      {{- end }}
+    }
+  {{- end }}
+  }
+  {{- end }}
+
+	output {
+		traces = [otelcol.processor.batch.batch_processor.input]
+	}
+}
+{{- end }}
+
 otelcol.processor.filter "default" {
   error_mode = "ignore"
 
