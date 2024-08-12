@@ -170,7 +170,9 @@ prometheus.scrape "annotation_autodiscovery_http" {
   targets = discovery.relabel.annotation_autodiscovery_http.output
   scrape_interval = {{ .Values.metrics.autoDiscover.scrapeInterval | default .Values.metrics.scrapeInterval | quote }}
   honor_labels = true
+{{- if .Values.metrics.autoDiscover.BearerToken }}
   bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+{{- end }}
 {{- if .Values.alloy.alloy.clustering.enabled }}
   clustering {
     enabled = true
@@ -183,7 +185,9 @@ prometheus.scrape "annotation_autodiscovery_https" {
   targets = discovery.relabel.annotation_autodiscovery_https.output
   scrape_interval = {{ .Values.metrics.autoDiscover.scrapeInterval | default .Values.metrics.scrapeInterval | quote }}
   honor_labels = true
+{{- if .Values.metrics.autoDiscover.BearerToken }}
   bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+{{- end }}
   tls_config {
     insecure_skip_verify = true
   }
