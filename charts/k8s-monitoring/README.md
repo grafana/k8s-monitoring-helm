@@ -500,7 +500,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | metrics.autoDiscover.metricsTuning.excludeMetrics | list | `[]` | Metrics to drop. Can use regular expressions. |
 | metrics.autoDiscover.metricsTuning.includeMetrics | list | `[]` | Metrics to keep. Can use regular expressions. An empty list means keep all. |
 | metrics.autoDiscover.scrapeInterval | string | 60s | How frequently to scrape metrics from auto-discovered entities. Overrides metrics.scrapeInterval |
-| metrics.autoDiscover.bearerToken | bool | `true` | Sets bearer_token_file line in the prometheus.scrape annotation_autodiscovery.|
+| metrics.autoDiscover.bearerToken.enabled | bool | `true` | Sets bearer_token_file line in the prometheus.scrape annotation_autodiscovery.|
 
 ### Metrics Job: cAdvisor
 
