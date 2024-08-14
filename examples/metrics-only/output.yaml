@@ -436,7 +436,7 @@ data:
     prometheus.exporter.unix "kubernetes_monitoring_telemetry" {
       set_collectors = ["textfile"]
       textfile {
-        directory = "/etc/kubernetes-monitoring-telemetry"
+        directory = "/etc/alloy"
       }
     }
     
@@ -834,15 +834,7 @@ data:
       level  = "info"
       format = "logfmt"
     }
----
-# Source: k8s-monitoring/templates/kubernetes-monitoring-telemetry.yaml
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: kubernetes-monitoring-telemetry
-  namespace: default
-data:
-  metrics.prom: |
+  k8s-monitoring-build-info-metric.prom: |
     # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart as well as a summary of enabled features
     # TYPE grafana_kubernetes_monitoring_build_info gauge
     grafana_kubernetes_monitoring_build_info{version="1.4.6", namespace="default", metrics="enabled,alloy,autoDiscover,kube-state-metrics,node-exporter,kubelet,cadvisor,cost", logs="disabled", traces="disabled", deployments="kube-state-metrics,prometheus-node-exporter,prometheus-operator-crds,opencost"} 1
@@ -58110,9 +58102,6 @@ spec:
           volumeMounts:
             - name: config
               mountPath: /etc/alloy
-            -
-              mountPath: /etc/kubernetes-monitoring-telemetry
-              name: kubernetes-monitoring-telemetry
         - name: config-reloader
           image: ghcr.io/jimmidyson/configmap-reload:v0.12.0
           args:
@@ -58132,9 +58121,6 @@ spec:
         - name: config
           configMap:
             name: k8smon-alloy
-        - configMap:
-            name: kubernetes-monitoring-telemetry
-          name: kubernetes-monitoring-telemetry
 ---
 # Source: k8s-monitoring/charts/prometheus-operator-crds/charts/crds/templates/crd-alertmanagerconfigs.yaml
 # https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/v0.75.2/example/prometheus-operator-crd/monitoring.coreos.com_alertmanagerconfigs.yaml
@@ -58535,7 +58521,7 @@ data:
     prometheus.exporter.unix "kubernetes_monitoring_telemetry" {
       set_collectors = ["textfile"]
       textfile {
-        directory = "/etc/kubernetes-monitoring-telemetry"
+        directory = "/etc/alloy"
       }
     }
     
