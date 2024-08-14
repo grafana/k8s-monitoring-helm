@@ -101,13 +101,13 @@ metadata:
   name: k8smon-prometheus-windows-exporter
   namespace: default
   labels:
-    helm.sh/chart: prometheus-windows-exporter-0.4.0
+    helm.sh/chart: prometheus-windows-exporter-0.3.1
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: prometheus-windows-exporter
     app.kubernetes.io/name: prometheus-windows-exporter
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "0.26.1"
+    app.kubernetes.io/version: "0.25.1"
 ---
 # Source: k8s-monitoring/templates/log-service-credentials.yaml
 apiVersion: v1
@@ -142,13 +142,13 @@ metadata:
   name: k8smon-prometheus-windows-exporter
   namespace: default
   labels:
-    helm.sh/chart: prometheus-windows-exporter-0.4.0
+    helm.sh/chart: prometheus-windows-exporter-0.3.1
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: prometheus-windows-exporter
     app.kubernetes.io/name: prometheus-windows-exporter
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "0.26.1"
+    app.kubernetes.io/version: "0.25.1"
 data:
   config.yml: |
     collectors:
@@ -1074,7 +1074,7 @@ data:
   k8s-monitoring-build-info-metric.prom: |
     # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart as well as a summary of enabled features
     # TYPE grafana_kubernetes_monitoring_build_info gauge
-    grafana_kubernetes_monitoring_build_info{version="1.4.6", namespace="default", metrics="enabled,alloy,autoDiscover,kube-state-metrics,node-exporter,windows-exporter,kubelet,cadvisor,cost", logs="enabled,events,pod_logs", traces="disabled", deployments="kube-state-metrics,prometheus-node-exporter,prometheus-windows-exporter,prometheus-operator-crds,opencost"} 1
+    grafana_kubernetes_monitoring_build_info{version="1.4.7", namespace="default", metrics="enabled,alloy,autoDiscover,kube-state-metrics,node-exporter,windows-exporter,kubelet,cadvisor,cost", logs="enabled,events,pod_logs", traces="disabled", deployments="kube-state-metrics,prometheus-node-exporter,prometheus-windows-exporter,prometheus-operator-crds,opencost"} 1
 ---
 # Source: k8s-monitoring/templates/alloy-events-config.yaml
 apiVersion: v1
@@ -58391,13 +58391,13 @@ metadata:
   name: k8smon-prometheus-windows-exporter
   namespace: default
   labels:
-    helm.sh/chart: prometheus-windows-exporter-0.4.0
+    helm.sh/chart: prometheus-windows-exporter-0.3.1
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: prometheus-windows-exporter
     app.kubernetes.io/name: prometheus-windows-exporter
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "0.26.1"
+    app.kubernetes.io/version: "0.25.1"
   annotations:
     prometheus.io/scrape: "true"
 spec:
@@ -58690,13 +58690,13 @@ metadata:
   name: k8smon-prometheus-windows-exporter
   namespace: default
   labels:
-    helm.sh/chart: prometheus-windows-exporter-0.4.0
+    helm.sh/chart: prometheus-windows-exporter-0.3.1
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: prometheus-windows-exporter
     app.kubernetes.io/name: prometheus-windows-exporter
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "0.26.1"
+    app.kubernetes.io/version: "0.25.1"
 spec:
   selector:
     matchLabels:
@@ -58712,13 +58712,13 @@ spec:
         cluster-autoscaler.kubernetes.io/safe-to-evict: "true"
         k8s.grafana.com/logs.job: integrations/windows_exporter
       labels:
-        helm.sh/chart: prometheus-windows-exporter-0.4.0
+        helm.sh/chart: prometheus-windows-exporter-0.3.1
         app.kubernetes.io/managed-by: Helm
         app.kubernetes.io/component: metrics
         app.kubernetes.io/part-of: prometheus-windows-exporter
         app.kubernetes.io/name: prometheus-windows-exporter
         app.kubernetes.io/instance: k8smon
-        app.kubernetes.io/version: "0.26.1"
+        app.kubernetes.io/version: "0.25.1"
     spec:
       automountServiceAccountToken: false
       securityContext:
@@ -58727,13 +58727,13 @@ spec:
           runAsUserName: NT AUTHORITY\system
       initContainers:
         - name: configure-firewall
-          image: ghcr.io/prometheus-community/windows-exporter:0.26.1
+          image: ghcr.io/prometheus-community/windows-exporter:0.25.1
           command: [ "powershell" ]
           args: [ "New-NetFirewallRule", "-DisplayName", "'windows-exporter'", "-Direction", "inbound", "-Profile", "Any", "-Action", "Allow", "-LocalPort", "9182", "-Protocol", "TCP" ]
       serviceAccountName: k8smon-prometheus-windows-exporter
       containers:
         - name: windows-exporter
-          image: ghcr.io/prometheus-community/windows-exporter:0.26.1
+          image: ghcr.io/prometheus-community/windows-exporter:0.25.1
           imagePullPolicy: IfNotPresent
           args:
             - --config.file=%CONTAINER_SANDBOX_MOUNT_POINT%/config.yml
@@ -59216,7 +59216,7 @@ metadata:
     app.kubernetes.io/managed-by: "Helm"
     app.kubernetes.io/instance: "k8smon"
     app.kubernetes.io/version: 2.8.0
-    helm.sh/chart: "k8s-monitoring-1.4.6"
+    helm.sh/chart: "k8s-monitoring-1.4.7"
   annotations:
     "helm.sh/hook": pre-install,pre-upgrade
     "helm.sh/hook-weight": "-5"
@@ -60345,7 +60345,7 @@ metadata:
     app.kubernetes.io/managed-by: "Helm"
     app.kubernetes.io/instance: "k8smon"
     app.kubernetes.io/version: 2.8.0
-    helm.sh/chart: "k8s-monitoring-1.4.6"
+    helm.sh/chart: "k8s-monitoring-1.4.7"
   annotations:
     "helm.sh/hook": test
     "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
@@ -60403,7 +60403,7 @@ metadata:
     app.kubernetes.io/managed-by: "Helm"
     app.kubernetes.io/instance: "k8smon"
     app.kubernetes.io/version: 2.8.0
-    helm.sh/chart: "k8s-monitoring-1.4.6"
+    helm.sh/chart: "k8s-monitoring-1.4.7"
   annotations:
     "helm.sh/hook": pre-install,pre-upgrade
     "helm.sh/hook-weight": "-5"
@@ -60472,7 +60472,7 @@ metadata:
     app.kubernetes.io/managed-by: "Helm"
     app.kubernetes.io/instance: "k8smon"
     app.kubernetes.io/version: 2.8.0
-    helm.sh/chart: "k8s-monitoring-1.4.6"
+    helm.sh/chart: "k8s-monitoring-1.4.7"
   annotations:
     "helm.sh/hook": test
     "helm.sh/hook-delete-policy": before-hook-creation
@@ -60483,7 +60483,7 @@ spec:
         kubernetes.io/os: linux
   containers:
     - name: config-analysis
-      image: ghcr.io/grafana/k8s-monitoring-test:1.4.6
+      image: ghcr.io/grafana/k8s-monitoring-test:1.4.7
       command: [/etc/bin/config-analysis.sh]
       env:
         - name: ALLOY_HOST
@@ -60499,7 +60499,7 @@ metadata:
     app.kubernetes.io/managed-by: "Helm"
     app.kubernetes.io/instance: "k8smon"
     app.kubernetes.io/version: 2.8.0
-    helm.sh/chart: "k8s-monitoring-1.4.6"
+    helm.sh/chart: "k8s-monitoring-1.4.7"
   annotations:
     "helm.sh/hook": test
     "helm.sh/hook-delete-policy": before-hook-creation
@@ -60515,14 +60515,14 @@ spec:
       labels:
         app.kubernetes.io/managed-by: "Helm"
         app.kubernetes.io/instance: "k8smon"
-        helm.sh/chart: "k8s-monitoring-1.4.6"
+        helm.sh/chart: "k8s-monitoring-1.4.7"
     spec:
       restartPolicy: Never
       nodeSelector:
         kubernetes.io/os: linux
       containers:
         - name: query-test
-          image: ghcr.io/grafana/k8s-monitoring-test:1.4.6
+          image: ghcr.io/grafana/k8s-monitoring-test:1.4.7
           command: ["bash", "-c", "/etc/bin/query-test.sh /etc/test/testQueries.json"]
           volumeMounts:
             - name: test-files
