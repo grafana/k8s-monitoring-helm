@@ -167,11 +167,11 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | beyla.application | bool | `true` | Enable application observability for Beyla. Required for Application Observability. @section -- Beyla |
 | beyla.debug | bool | `false` | Enable debug mode for Beyla @section -- Beyla |
 | beyla.enabled | bool | `false` | Enable Beyla for automatic instrumentation eBPF in the cluster. @section -- Beyla |
-| beyla.metrics | bool | `true` | Export Prometheus metrics. @section -- Beyla   |
+| beyla.metrics | bool | `true` | Export Prometheus metrics. @section -- Beyla |
 | beyla.namespaces | list | `[]` | Which namespaces to look to instrument services in Deployments, DaemonSets and StatefulSets. @section -- Beyla |
 | beyla.network | bool | `false` | Enable network observability for Beyla. Required for Asserts. @section -- Beyla |
 | beyla.process | bool | `false` | Enable process performance signals from instrumented services. @section -- Beyla |
-| beyla.traces | bool | `false` | Export OTEL traces. @section -- Beyla   |
+| beyla.traces | bool | `false` | Export OTEL traces. @section -- Beyla |
 | cluster.kubernetesAPIService | string | `"kubernetes.default.svc.cluster.local:443"` | The Kubernetes service. Change this if your cluster DNS is configured differently than the default. @section -- Cluster Settings |
 | cluster.name | string | `""` | The name of this cluster, which will be set in all labels. Required. @section -- Cluster Settings |
 | cluster.platform | string | `""` | The specific platform for this cluster. Will enable compatibility for some platforms. Supported options: (empty) or "openshift". @section -- Cluster Settings |
