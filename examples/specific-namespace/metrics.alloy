@@ -321,11 +321,6 @@ prometheus.relabel "annotation_autodiscovery" {
 discovery.relabel "alloy" {
   targets = discovery.kubernetes.pods.targets
   rule {
-    source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_instance"]
-    regex = "k8smon"
-    action = "keep"
-  }
-  rule {
     source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
     regex = "alloy.*"
     action = "keep"
@@ -654,11 +649,6 @@ prometheus.relabel "node_exporter" {
 // OpenCost
 discovery.relabel "opencost" {
   targets = discovery.kubernetes.services.targets
-  rule {
-    source_labels = ["__meta_kubernetes_service_label_app_kubernetes_io_instance"]
-    regex = "k8smon"
-    action = "keep"
-  }
   rule {
     source_labels = ["__meta_kubernetes_service_label_app_kubernetes_io_name"]
     regex = "opencost"
