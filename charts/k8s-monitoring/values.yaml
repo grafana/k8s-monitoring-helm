@@ -2032,6 +2032,11 @@ kube-state-metrics:
   # @ignored - Disable prometheus.io/scrape annotation
   prometheusScrape: false
 
+  # -- `kube_<resource>_labels` metrics to generate.
+  # @section -- Deployment: [Kube State Metrics](https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-state-metrics)
+  metricLabelsAllowlist:
+    - nodes=[*]
+
 # Settings for the Node Exporter deployment
 # You can use this sections to make modifications to the Node Exporter deployment.
 # See https://github.com/prometheus-community/helm-charts/tree/main/charts/prometheus-node-exporter for available values.
@@ -2239,13 +2244,6 @@ alloy:
         targetPort: 9411
         protocol: "TCP"
 
-    # This chart creates the credentials for Prometheus and Loki. This section
-    # mounts those credentials into the Grafana Alloy container.
-    mounts:
-      extra:
-        - name: kubernetes-monitoring-telemetry
-          mountPath: /etc/kubernetes-monitoring-telemetry
-
   # @ignored
   controller:
     type: statefulset
@@ -2254,15 +2252,6 @@ alloy:
 
     podAnnotations:
       k8s.grafana.com/logs.job: integrations/alloy
-
-    # This chart creates the credentials for Prometheus and Loki. This section
-    # connects those credentials into the Grafana Alloy pod.
-    # @ignored
-    volumes:
-      extra:
-        - name: kubernetes-monitoring-telemetry
-          configMap:
-            name: kubernetes-monitoring-telemetry
 
   # Skip installation of the Grafana Alloy CRDs, since we don't use them in this chart
   # @ignored

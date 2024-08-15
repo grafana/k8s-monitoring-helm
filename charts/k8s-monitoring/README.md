@@ -5,7 +5,7 @@
 
 # k8s-monitoring
 
-![Version: 1.4.6](https://img.shields.io/badge/Version-1.4.6-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 2.8.0](https://img.shields.io/badge/AppVersion-2.8.0-informational?style=flat-square)
+![Version: 1.4.7](https://img.shields.io/badge/Version-1.4.7-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 2.8.0](https://img.shields.io/badge/AppVersion-2.8.0-informational?style=flat-square)
 
 A Helm chart for gathering, scraping, and forwarding Kubernetes telemetry data to a Grafana Stack.
 
@@ -142,9 +142,9 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | https://grafana.github.io/helm-charts | alloy-profiles(alloy) | 0.6.0 |
 | https://opencost.github.io/opencost-helm-chart | opencost | 1.41.0 |
 | https://prometheus-community.github.io/helm-charts | kube-state-metrics | 5.25.1 |
-| https://prometheus-community.github.io/helm-charts | prometheus-node-exporter | 4.37.1 |
+| https://prometheus-community.github.io/helm-charts | prometheus-node-exporter | 4.38.0 |
 | https://prometheus-community.github.io/helm-charts | prometheus-operator-crds | 13.0.2 |
-| https://prometheus-community.github.io/helm-charts | prometheus-windows-exporter | 0.4.0 |
+| https://prometheus-community.github.io/helm-charts | prometheus-windows-exporter | 0.3.1 |
 | https://sustainable-computing-io.github.io/kepler-helm-chart | kepler | 0.5.9 |
 <!-- markdownlint-enable no-bare-urls -->
 
@@ -317,6 +317,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | global.image.registry | string | `""` | Global image registry to use if it needs to be overridden for some specific use cases (e.g local registries, custom images, ...) @section -- Image Registry |
 | kepler.enabled | bool | `false` | Should this Helm chart deploy Kepler to the cluster. Set this to false if your cluster already has Kepler, or if you do not want to scrape metrics from Kepler. @section -- Deployment: Kepler |
 | kube-state-metrics.enabled | bool | `true` | Should this helm chart deploy Kube State Metrics to the cluster. Set this to false if your cluster already has Kube State Metrics, or if you do not want to scrape metrics from Kube State Metrics. @section -- Deployment: [Kube State Metrics](https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-state-metrics) |
+| kube-state-metrics.metricLabelsAllowlist | list | `["nodes=[*]"]` | `kube_<resource>_labels` metrics to generate. @section -- Deployment: [Kube State Metrics](https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-state-metrics) |
 | logs.cluster_events.enabled | bool | `true` | Scrape Kubernetes cluster events @section -- Logs Scrape: Cluster Events |
 | logs.cluster_events.extraConfig | string | `""` | Extra configuration that will be added to the Grafana Alloy for Cluster Events configuration file. This value is templated so that you can refer to other values from this file. This cannot be used to modify the generated configuration values, only append new components. See [Adding custom Flow configuration](#adding-custom-flow-configuration) for an example. @section -- Logs Scrape: Cluster Events |
 | logs.cluster_events.extraStageBlocks | string | `""` | Stage blocks to be added to the loki.process component for cluster events. ([docs](https://grafana.com/docs/alloy/latest/reference/components/loki.process/#blocks)) This value is templated so that you can refer to other values from this file. @section -- Logs Scrape: Cluster Events |

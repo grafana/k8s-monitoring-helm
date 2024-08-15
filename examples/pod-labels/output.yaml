@@ -85,7 +85,7 @@ metadata:
   name: k8smon-prometheus-node-exporter
   namespace: default
   labels:
-    helm.sh/chart: prometheus-node-exporter-4.37.1
+    helm.sh/chart: prometheus-node-exporter-4.38.0
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: prometheus-node-exporter
@@ -548,7 +548,7 @@ data:
     prometheus.exporter.unix "kubernetes_monitoring_telemetry" {
       set_collectors = ["textfile"]
       textfile {
-        directory = "/etc/kubernetes-monitoring-telemetry"
+        directory = "/etc/alloy"
       }
     }
     
@@ -1035,6 +1035,10 @@ data:
       level  = "info"
       format = "logfmt"
     }
+  k8s-monitoring-build-info-metric.prom: |
+    # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart as well as a summary of enabled features
+    # TYPE grafana_kubernetes_monitoring_build_info gauge
+    grafana_kubernetes_monitoring_build_info{version="1.4.7", namespace="default", metrics="enabled,alloy,autoDiscover,kube-state-metrics,node-exporter,kubelet,cadvisor,cost", logs="enabled,events,pod_logs", traces="enabled", deployments="kube-state-metrics,prometheus-node-exporter,prometheus-operator-crds,opencost"} 1
 ---
 # Source: k8s-monitoring/templates/alloy-events-config.yaml
 apiVersion: v1
@@ -1262,18 +1266,6 @@ data:
       level  = "info"
       format = "logfmt"
     }
----
-# Source: k8s-monitoring/templates/kubernetes-monitoring-telemetry.yaml
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: kubernetes-monitoring-telemetry
-  namespace: default
-data:
-  metrics.prom: |
-    # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart as well as a summary of enabled features
-    # TYPE grafana_kubernetes_monitoring_build_info gauge
-    grafana_kubernetes_monitoring_build_info{version="1.4.6", namespace="default", metrics="enabled,alloy,autoDiscover,kube-state-metrics,node-exporter,kubelet,cadvisor,cost", logs="enabled,events,pod_logs", traces="enabled", deployments="kube-state-metrics,prometheus-node-exporter,prometheus-operator-crds,opencost"} 1
 ---
 # Source: k8s-monitoring/charts/prometheus-operator-crds/charts/crds/templates/crd-alertmanagerconfigs.yaml
 apiVersion: apiextensions.k8s.io/v1
@@ -58344,7 +58336,7 @@ metadata:
   name: k8smon-prometheus-node-exporter
   namespace: default
   labels:
-    helm.sh/chart: prometheus-node-exporter-4.37.1
+    helm.sh/chart: prometheus-node-exporter-4.38.0
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: prometheus-node-exporter
@@ -58515,7 +58507,7 @@ metadata:
   name: k8smon-prometheus-node-exporter
   namespace: default
   labels:
-    helm.sh/chart: prometheus-node-exporter-4.37.1
+    helm.sh/chart: prometheus-node-exporter-4.38.0
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: prometheus-node-exporter
@@ -58538,7 +58530,7 @@ spec:
         cluster-autoscaler.kubernetes.io/safe-to-evict: "true"
         k8s.grafana.com/logs.job: integrations/node_exporter
       labels:
-        helm.sh/chart: prometheus-node-exporter-4.37.1
+        helm.sh/chart: prometheus-node-exporter-4.38.0
         app.kubernetes.io/managed-by: Helm
         app.kubernetes.io/component: metrics
         app.kubernetes.io/part-of: prometheus-node-exporter
@@ -58607,6 +58599,7 @@ spec:
               readOnly: true
       hostNetwork: true
       hostPID: true
+      hostIPC: false
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
@@ -59006,9 +58999,6 @@ spec:
           volumeMounts:
             - name: config
               mountPath: /etc/alloy
-            -
-              mountPath: /etc/kubernetes-monitoring-telemetry
-              name: kubernetes-monitoring-telemetry
         - name: config-reloader
           image: ghcr.io/jimmidyson/configmap-reload:v0.12.0
           args:
@@ -59028,9 +59018,6 @@ spec:
         - name: config
           configMap:
             name: k8smon-alloy
-        - configMap:
-            name: kubernetes-monitoring-telemetry
-          name: kubernetes-monitoring-telemetry
 ---
 # Source: k8s-monitoring/charts/prometheus-operator-crds/charts/crds/templates/crd-alertmanagerconfigs.yaml
 # https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/v0.75.2/example/prometheus-operator-crd/monitoring.coreos.com_alertmanagerconfigs.yaml
@@ -59072,7 +59059,7 @@ metadata:
     app.kubernetes.io/managed-by: "Helm"
     app.kubernetes.io/instance: "k8smon"
     app.kubernetes.io/version: 2.8.0
-    helm.sh/chart: "k8s-monitoring-1.4.6"
+    helm.sh/chart: "k8s-monitoring-1.4.7"
   annotations:
     "helm.sh/hook": pre-install,pre-upgrade
     "helm.sh/hook-weight": "-5"
@@ -59486,7 +59473,7 @@ data:
     prometheus.exporter.unix "kubernetes_monitoring_telemetry" {
       set_collectors = ["textfile"]
       textfile {
-        directory = "/etc/kubernetes-monitoring-telemetry"
+        directory = "/etc/alloy"
       }
     }
     
@@ -60195,7 +60182,7 @@ metadata:
     app.kubernetes.io/managed-by: "Helm"
     app.kubernetes.io/instance: "k8smon"
     app.kubernetes.io/version: 2.8.0
-    helm.sh/chart: "k8s-monitoring-1.4.6"
+    helm.sh/chart: "k8s-monitoring-1.4.7"
   annotations:
     "helm.sh/hook": test
     "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
@@ -60253,7 +60240,7 @@ metadata:
     app.kubernetes.io/managed-by: "Helm"
     app.kubernetes.io/instance: "k8smon"
     app.kubernetes.io/version: 2.8.0
-    helm.sh/chart: "k8s-monitoring-1.4.6"
+    helm.sh/chart: "k8s-monitoring-1.4.7"
   annotations:
     "helm.sh/hook": pre-install,pre-upgrade
     "helm.sh/hook-weight": "-5"
@@ -60322,7 +60309,7 @@ metadata:
     app.kubernetes.io/managed-by: "Helm"
     app.kubernetes.io/instance: "k8smon"
     app.kubernetes.io/version: 2.8.0
-    helm.sh/chart: "k8s-monitoring-1.4.6"
+    helm.sh/chart: "k8s-monitoring-1.4.7"
   annotations:
     "helm.sh/hook": test
     "helm.sh/hook-delete-policy": before-hook-creation
@@ -60333,7 +60320,7 @@ spec:
         kubernetes.io/os: linux
   containers:
     - name: config-analysis
-      image: ghcr.io/grafana/k8s-monitoring-test:1.4.6
+      image: ghcr.io/grafana/k8s-monitoring-test:1.4.7
       command: [/etc/bin/config-analysis.sh]
       env:
         - name: ALLOY_HOST
@@ -60349,7 +60336,7 @@ metadata:
     app.kubernetes.io/managed-by: "Helm"
     app.kubernetes.io/instance: "k8smon"
     app.kubernetes.io/version: 2.8.0
-    helm.sh/chart: "k8s-monitoring-1.4.6"
+    helm.sh/chart: "k8s-monitoring-1.4.7"
   annotations:
     "helm.sh/hook": test
     "helm.sh/hook-delete-policy": before-hook-creation
@@ -60365,14 +60352,14 @@ spec:
       labels:
         app.kubernetes.io/managed-by: "Helm"
         app.kubernetes.io/instance: "k8smon"
-        helm.sh/chart: "k8s-monitoring-1.4.6"
+        helm.sh/chart: "k8s-monitoring-1.4.7"
     spec:
       restartPolicy: Never
       nodeSelector:
         kubernetes.io/os: linux
       containers:
         - name: query-test
-          image: ghcr.io/grafana/k8s-monitoring-test:1.4.6
+          image: ghcr.io/grafana/k8s-monitoring-test:1.4.7
           command: ["bash", "-c", "/etc/bin/query-test.sh /etc/test/testQueries.json"]
           volumeMounts:
             - name: test-files
