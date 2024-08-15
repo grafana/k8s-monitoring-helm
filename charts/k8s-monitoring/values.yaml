@@ -2019,9 +2019,13 @@ kube-state-metrics:
   # do not want to scrape metrics from Kube State Metrics.
   # @section -- Deployment: [Kube State Metrics](https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-state-metrics)
   enabled: true
+
   # @ignored
   nodeSelector:
     kubernetes.io/os: linux
+
+  # @ignored - Enable the release label
+  releaseLabel: true
 
   # @ignored - Disable autosharding
   autosharding:
@@ -2060,6 +2064,9 @@ prometheus-node-exporter:
                 operator: NotIn
                 values: [fargate]
 
+  # @ignored - Enable the release label
+  releaseLabel: true
+
   # @ignored - Set annotation to override the job label
   podAnnotations:
     k8s.grafana.com/logs.job: integrations/node_exporter
@@ -2087,6 +2094,9 @@ prometheus-windows-exporter:
     collector:
       service:
         services-where: "Name='containerd' or Name='kubelet'"
+
+  # @ignored - Enable the release label
+  releaseLabel: true
 
   # @ignored - Set annotation to override the job label
   podAnnotations:

@@ -18,11 +18,6 @@ up
 // Grafana Alloy
 discovery.relabel "alloy" {
   targets = discovery.kubernetes.pods.targets
-  rule {
-    source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_instance"]
-    regex = "{{ .Release.Name }}"
-    action = "keep"
-  }
   {{- range $k, $v := .Values.metrics.alloy.labelMatchers }}
   rule {
     source_labels = ["__meta_kubernetes_pod_label_{{ include "escape_label" $k }}"]
