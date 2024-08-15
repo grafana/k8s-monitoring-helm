@@ -28,6 +28,7 @@ metadata:
     app.kubernetes.io/name: kube-state-metrics
     app.kubernetes.io/instance: k8smon
     app.kubernetes.io/version: "2.13.0"
+    release: k8smon
   name: k8smon-kube-state-metrics
   namespace: default
 ---
@@ -60,6 +61,7 @@ metadata:
     app.kubernetes.io/name: prometheus-node-exporter
     app.kubernetes.io/instance: k8smon
     app.kubernetes.io/version: "1.8.2"
+    release: k8smon
 automountServiceAccountToken: false
 ---
 # Source: k8s-monitoring/templates/metrics-service-credentials.yaml
@@ -606,7 +608,7 @@ data:
     discovery.relabel "kube_state_metrics" {
       targets = discovery.kubernetes.services.targets
       rule {
-        source_labels = ["__meta_kubernetes_service_label_app_kubernetes_io_instance"]
+        source_labels = ["__meta_kubernetes_service_label_release"]
         regex = "k8smon"
         action = "keep"
       }
@@ -646,7 +648,7 @@ data:
     discovery.relabel "node_exporter" {
       targets = discovery.kubernetes.pods.targets
       rule {
-        source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_instance"]
+        source_labels = ["__meta_kubernetes_pod_label_release"]
         regex = "k8smon"
         action = "keep"
       }
@@ -57134,6 +57136,7 @@ metadata:
     app.kubernetes.io/name: kube-state-metrics
     app.kubernetes.io/instance: k8smon
     app.kubernetes.io/version: "2.13.0"
+    release: k8smon
   name: k8smon-kube-state-metrics
 rules:
 
@@ -57399,6 +57402,7 @@ metadata:
     app.kubernetes.io/name: kube-state-metrics
     app.kubernetes.io/instance: k8smon
     app.kubernetes.io/version: "2.13.0"
+    release: k8smon
   name: k8smon-kube-state-metrics
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -57567,6 +57571,7 @@ metadata:
     app.kubernetes.io/name: kube-state-metrics
     app.kubernetes.io/instance: k8smon
     app.kubernetes.io/version: "2.13.0"
+    release: k8smon
   annotations:
 spec:
   type: "ClusterIP"
@@ -57617,6 +57622,7 @@ metadata:
     app.kubernetes.io/name: prometheus-node-exporter
     app.kubernetes.io/instance: k8smon
     app.kubernetes.io/version: "1.8.2"
+    release: k8smon
 spec:
   type: ClusterIP
   ports:
@@ -57699,6 +57705,7 @@ metadata:
     app.kubernetes.io/name: prometheus-node-exporter
     app.kubernetes.io/instance: k8smon
     app.kubernetes.io/version: "1.8.2"
+    release: k8smon
 spec:
   selector:
     matchLabels:
@@ -57722,6 +57729,7 @@ spec:
         app.kubernetes.io/name: prometheus-node-exporter
         app.kubernetes.io/instance: k8smon
         app.kubernetes.io/version: "1.8.2"
+        release: k8smon
     spec:
       automountServiceAccountToken: false
       securityContext:
@@ -57824,6 +57832,7 @@ metadata:
     app.kubernetes.io/name: kube-state-metrics
     app.kubernetes.io/instance: k8smon
     app.kubernetes.io/version: "2.13.0"
+    release: k8smon
 spec:
   selector:
     matchLabels:      
@@ -57843,6 +57852,7 @@ spec:
         app.kubernetes.io/name: kube-state-metrics
         app.kubernetes.io/instance: k8smon
         app.kubernetes.io/version: "2.13.0"
+        release: k8smon
     spec:
       automountServiceAccountToken: true
       hostNetwork: false
@@ -58692,7 +58702,7 @@ data:
     discovery.relabel "kube_state_metrics" {
       targets = discovery.kubernetes.services.targets
       rule {
-        source_labels = ["__meta_kubernetes_service_label_app_kubernetes_io_instance"]
+        source_labels = ["__meta_kubernetes_service_label_release"]
         regex = "k8smon"
         action = "keep"
       }
@@ -58732,7 +58742,7 @@ data:
     discovery.relabel "node_exporter" {
       targets = discovery.kubernetes.pods.targets
       rule {
-        source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_instance"]
+        source_labels = ["__meta_kubernetes_pod_label_release"]
         regex = "k8smon"
         action = "keep"
       }
