@@ -13,9 +13,6 @@ prometheus.remote_write "metrics_service" {
       password = remote.kubernetes.secret.metrics_service.data[{{ .basicAuth.passwordKey | quote }}]
     }
 {{- end }}
-{{ if eq .authMode "bearer_token" }}
-    bearer_token = remote.kubernetes.secret.metrics_service.data[{{ .bearerToken | quote }}]
-{{- end }}
 {{ if .writeRelabelConfigRules }}
 {{ .writeRelabelConfigRules | indent 4 }}
 {{- end }}
