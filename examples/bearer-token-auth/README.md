@@ -1,6 +1,6 @@
 # Default Values
 
-This example contains the bare minimum to deploy the Kubernetes Monitoring Helm chart.
+This example contains how to deploy the Kubernetes Monitoring Helm chart.
 
 ```yaml
 cluster:
