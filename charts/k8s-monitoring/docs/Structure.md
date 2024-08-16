@@ -20,6 +20,7 @@ section inside the Helm chart's values.yaml file that controls how it is configu
 | Grafana Alloy for Logs                                                                 | DaemonSet                 | `alloy-logs`                  | The Grafana Alloy instance that gathers Pod logs. By default, it uses HostPath volume mounts to read Pod log files directly from the nodes. It can alternatively get logs via the API server and be deployed as a Deployment. |
 | Grafana Alloy for Events                                                               | Deployment                | `alloy-events`                | The Grafana Alloy instance that is responsible for gathering Cluster events from the API server. This does not support clustering, so only one instance should be used.                                                       |
 | Grafana Alloy for Profiles                                                             | Deployment                | `alloy-events`                | The Grafana Alloy instance that is responsible for gathering profiles.                                                                                                                                                        |
+| Grafana Alloy for Rules                                                                | Deployment                | `alloy-rules`                 | The Grafana Alloy instance that is responsible for synchronizing PrometheusRule objects to either Mimir or Loki.                                                                                                              |
 | [kube-state-metrics](https://github.com/kubernetes/kube-state-metrics)                 | Deployment                | `kube-state-metrics`          | A service for generating metrics about the state of the objects inside the Cluster.                                                                                                                                           |
 | [Node Exporter](https://github.com/prometheus/node_exporter)                           | DaemonSet                 | `prometheus-node-exporter`    | An exporter used for gathering hardware and OS metrics for *NIX nodes of the Cluster.                                                                                                                                         |
 | [Windows Exporter](https://github.com/prometheus-community/windows_exporter)           | DaemonSet                 | `prometheus-windows-exporter` | An exporter used for gathering hardware and OS metrics for Windows nodes of the Cluster. Not deployed by default.                                                                                                             |
@@ -28,7 +29,7 @@ section inside the Helm chart's values.yaml file that controls how it is configu
 
 ### Grafana Alloy instances
 
-You may wonder why there are four instances of Grafana Alloy, rather than combining them. The reason is a balance
+You may wonder why there are five instances of Grafana Alloy, rather than combining them. The reason is a balance
 between functionality and scalability. The default functionality of the Grafana Alloy for Logs is to gather logs via
 HostPath volume mounts. This requires it to be deployed as a DaemonSet. The Grafana Alloy for metrics and receivers is
 deployed as a StatefulSet, which allows it to be scaled (optionally with a HorizontalPodAutoscaler) based on load. If it
@@ -85,6 +86,12 @@ controls it.
 
 ### Grafana Alloy for Profiles Configuration
 
-| Name           | Associated values | Description                         |
-|----------------|-------------------|-------------------------------------|
-| Cluster Events | `.profiles`       | Controls how profiles are gathered. |
+| Name     | Associated values | Description                         |
+|----------|-------------------|-------------------------------------|
+| Profiles | `.profiles`       | Controls how profiles are gathered. |
+
+### Grafana Alloy for Rules
+
+| Name  | Associated values | Description                                                          |
+|-------|-------------------|----------------------------------------------------------------------|
+| Rules | `.rules`          | Controls how PrometheusRule objects are discovered and synchronized. |
