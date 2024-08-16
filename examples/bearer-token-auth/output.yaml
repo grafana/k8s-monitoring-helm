@@ -4,7 +4,7 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: k8smon-alloy-events
-  namespace: default
+  namespace: cortex-3
   labels:
     helm.sh/chart: alloy-events-0.6.0
     app.kubernetes.io/name: alloy-events
@@ -20,7 +20,7 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: k8smon-alloy-logs
-  namespace: default
+  namespace: cortex-3
   labels:
     helm.sh/chart: alloy-logs-0.6.0
     app.kubernetes.io/name: alloy-logs
@@ -36,7 +36,7 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: k8smon-alloy
-  namespace: default
+  namespace: cortex-3
   labels:
     helm.sh/chart: alloy-0.6.0
     app.kubernetes.io/name: alloy
@@ -62,14 +62,14 @@ metadata:
     app.kubernetes.io/version: "2.13.0"
     release: k8smon
   name: k8smon-kube-state-metrics
-  namespace: default
+  namespace: cortex-3
 ---
 # Source: k8s-monitoring/charts/opencost/templates/serviceaccount.yaml
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: k8smon-opencost
-  namespace: default
+  namespace: cortex-3
   labels:
     helm.sh/chart: opencost-1.41.0
     app.kubernetes.io/name: opencost
@@ -84,7 +84,7 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: k8smon-prometheus-node-exporter
-  namespace: default
+  namespace: cortex-3
   labels:
     helm.sh/chart: prometheus-node-exporter-4.38.0
     app.kubernetes.io/managed-by: Helm
@@ -101,7 +101,7 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: loki-k8s-monitoring
-  namespace: default
+  namespace: cortex-3
 type: Opaque
 data:
 
@@ -114,7 +114,7 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: prometheus-k8s-monitoring
-  namespace: default
+  namespace: cortex-3
 type: Opaque
 data:
 
@@ -125,7 +125,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: k8smon-alloy
-  namespace: default
+  namespace: cortex-3
 data:
   config.alloy: |-
     discovery.kubernetes "nodes" {
@@ -833,7 +833,7 @@ data:
     // Metrics Service
     remote.kubernetes.secret "metrics_service" {
       name = "prometheus-k8s-monitoring"
-      namespace = "default"
+      namespace = "cortex-3"
     }
     
     prometheus.relabel "metrics_service" {
@@ -852,9 +852,7 @@ data:
         url = nonsensitive(remote.kubernetes.secret.metrics_service.data["host"]) + "/api/prom/push"
         headers = { "X-Scope-OrgID" = nonsensitive(remote.kubernetes.secret.metrics_service.data["tenantId"]) }
     
-      bearerToken {
-          token = remote.kubernetes.secret.metrics_service.data["sample-bearer-token"]
-      }
+        bearer_token = "sample-bearer-token"
     
         send_native_histograms = false
     
@@ -924,7 +922,7 @@ data:
     // Logs Service
     remote.kubernetes.secret "logs_service" {
       name = "loki-k8s-monitoring"
-      namespace = "default"
+      namespace = "cortex-3"
     }
     
     loki.process "logs_service" {
@@ -957,14 +955,14 @@ data:
   k8s-monitoring-build-info-metric.prom: |
     # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart as well as a summary of enabled features
     # TYPE grafana_kubernetes_monitoring_build_info gauge
-    grafana_kubernetes_monitoring_build_info{version="1.4.8", namespace="default", metrics="enabled,alloy,autoDiscover,kube-state-metrics,node-exporter,kubelet,cadvisor,cost", logs="enabled,events,pod_logs", traces="disabled", deployments="kube-state-metrics,prometheus-node-exporter,prometheus-operator-crds,opencost"} 1
+    grafana_kubernetes_monitoring_build_info{version="1.4.8", namespace="cortex-3", metrics="enabled,alloy,autoDiscover,kube-state-metrics,node-exporter,kubelet,cadvisor,cost", logs="enabled,events,pod_logs", traces="disabled", deployments="kube-state-metrics,prometheus-node-exporter,prometheus-operator-crds,opencost"} 1
 ---
 # Source: k8s-monitoring/templates/alloy-events-config.yaml
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: k8smon-alloy-events
-  namespace: default
+  namespace: cortex-3
 data:
   config.alloy: |-
     // Cluster Events
@@ -985,7 +983,7 @@ data:
     // Logs Service
     remote.kubernetes.secret "logs_service" {
       name = "loki-k8s-monitoring"
-      namespace = "default"
+      namespace = "cortex-3"
     }
     
     loki.process "logs_service" {
@@ -1021,7 +1019,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: k8smon-alloy-logs
-  namespace: default
+  namespace: cortex-3
 data:
   config.alloy: |-
     // Pod Logs
@@ -1149,7 +1147,7 @@ data:
     // Logs Service
     remote.kubernetes.secret "logs_service" {
       name = "loki-k8s-monitoring"
-      namespace = "default"
+      namespace = "cortex-3"
     }
     
     loki.process "logs_service" {
@@ -57927,7 +57925,7 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: k8smon-alloy-events
-    namespace: default
+    namespace: cortex-3
 ---
 # Source: k8s-monitoring/charts/alloy-logs/templates/rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -57950,7 +57948,7 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: k8smon-alloy-logs
-    namespace: default
+    namespace: cortex-3
 ---
 # Source: k8s-monitoring/charts/alloy/templates/rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -57973,7 +57971,7 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: k8smon-alloy
-    namespace: default
+    namespace: cortex-3
 ---
 # Source: k8s-monitoring/charts/kube-state-metrics/templates/clusterrolebinding.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -57996,7 +57994,7 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: k8smon-kube-state-metrics
-  namespace: default
+  namespace: cortex-3
 ---
 # Source: k8s-monitoring/charts/opencost/templates/clusterrolebinding.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -58017,7 +58015,7 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: k8smon-opencost
-    namespace: default
+    namespace: cortex-3
 ---
 # Source: k8s-monitoring/charts/alloy-events/templates/service.yaml
 apiVersion: v1
@@ -58199,7 +58197,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: k8smon-kube-state-metrics
-  namespace: default
+  namespace: cortex-3
   labels:    
     helm.sh/chart: kube-state-metrics-5.25.1
     app.kubernetes.io/managed-by: Helm
@@ -58227,7 +58225,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: k8smon-opencost
-  namespace: default
+  namespace: cortex-3
   labels:
     helm.sh/chart: opencost-1.41.0
     app.kubernetes.io/name: opencost
@@ -58250,7 +58248,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: k8smon-prometheus-node-exporter
-  namespace: default
+  namespace: cortex-3
   labels:
     helm.sh/chart: prometheus-node-exporter-4.38.0
     app.kubernetes.io/managed-by: Helm
@@ -58424,7 +58422,7 @@ apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   name: k8smon-prometheus-node-exporter
-  namespace: default
+  namespace: cortex-3
   labels:
     helm.sh/chart: prometheus-node-exporter-4.38.0
     app.kubernetes.io/managed-by: Helm
@@ -58632,7 +58630,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: k8smon-kube-state-metrics
-  namespace: default
+  namespace: cortex-3
   labels:    
     helm.sh/chart: kube-state-metrics-5.25.1
     app.kubernetes.io/managed-by: Helm
@@ -58722,7 +58720,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: k8smon-opencost
-  namespace: default
+  namespace: cortex-3
   labels:
     helm.sh/chart: opencost-1.41.0
     app.kubernetes.io/name: opencost
@@ -58792,7 +58790,7 @@ spec:
             - name: CUSTOM_COST_ENABLED
               value: "false"
             - name: KUBECOST_NAMESPACE
-              value: default
+              value: cortex-3
             - name: API_PORT
               value: "9003"
             - name: PROMETHEUS_SERVER_ENDPOINT
@@ -58977,7 +58975,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: "validate-k8smon-k8s-monitoring"
-  namespace: default
+  namespace: cortex-3
   labels:
     app.kubernetes.io/managed-by: "Helm"
     app.kubernetes.io/instance: "k8smon"
@@ -59694,7 +59692,7 @@ data:
     // Metrics Service
     remote.kubernetes.secret "metrics_service" {
       name = "prometheus-k8s-monitoring"
-      namespace = "default"
+      namespace = "cortex-3"
     }
     
     prometheus.relabel "metrics_service" {
@@ -59713,9 +59711,7 @@ data:
         url = nonsensitive(remote.kubernetes.secret.metrics_service.data["host"]) + "/api/prom/push"
         headers = { "X-Scope-OrgID" = nonsensitive(remote.kubernetes.secret.metrics_service.data["tenantId"]) }
     
-      bearerToken {
-          token = remote.kubernetes.secret.metrics_service.data["sample-bearer-token"]
-      }
+        bearer_token = "sample-bearer-token"
     
         send_native_histograms = false
     
@@ -59785,7 +59781,7 @@ data:
     // Logs Service
     remote.kubernetes.secret "logs_service" {
       name = "loki-k8s-monitoring"
-      namespace = "default"
+      namespace = "cortex-3"
     }
     
     loki.process "logs_service" {
@@ -59834,7 +59830,7 @@ data:
     // Logs Service
     remote.kubernetes.secret "logs_service" {
       name = "loki-k8s-monitoring"
-      namespace = "default"
+      namespace = "cortex-3"
     }
     
     loki.process "logs_service" {
@@ -59990,7 +59986,7 @@ data:
     // Logs Service
     remote.kubernetes.secret "logs_service" {
       name = "loki-k8s-monitoring"
-      namespace = "default"
+      namespace = "cortex-3"
     }
     
     loki.process "logs_service" {
@@ -60026,7 +60022,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: "test-k8smon-k8s-monitoring"
-  namespace: default
+  namespace: cortex-3
   labels:
     app.kubernetes.io/managed-by: "Helm"
     app.kubernetes.io/instance: "k8smon"
@@ -60080,7 +60076,7 @@ apiVersion: v1
 kind: Pod
 metadata:
   name: "validate-k8smon-k8s-monitoring"
-  namespace: default
+  namespace: cortex-3
   labels:
     app.kubernetes.io/managed-by: "Helm"
     app.kubernetes.io/instance: "k8smon"
@@ -60149,7 +60145,7 @@ apiVersion: v1
 kind: Pod
 metadata:
   name: "analyze-k8smon-k8s-monitoring"
-  namespace: default
+  namespace: cortex-3
   labels:
     app.kubernetes.io/managed-by: "Helm"
     app.kubernetes.io/instance: "k8smon"
@@ -60169,14 +60165,14 @@ spec:
       command: [/etc/bin/config-analysis.sh]
       env:
         - name: ALLOY_HOST
-          value: k8smon-alloy.default.svc:12345
+          value: k8smon-alloy.cortex-3.svc:12345
 ---
 # Source: k8s-monitoring/templates/tests/test.yaml
 apiVersion: batch/v1
 kind: Job
 metadata:
   name: "test-k8smon-k8s-monitoring"
-  namespace: default
+  namespace: cortex-3
   labels:
     app.kubernetes.io/managed-by: "Helm"
     app.kubernetes.io/instance: "k8smon"
@@ -60193,7 +60189,7 @@ spec:
   template:
     metadata:
       name: "test-k8smon-k8s-monitoring"
-      namespace: default
+      namespace: cortex-3
       labels:
         app.kubernetes.io/managed-by: "Helm"
         app.kubernetes.io/instance: "k8smon"
