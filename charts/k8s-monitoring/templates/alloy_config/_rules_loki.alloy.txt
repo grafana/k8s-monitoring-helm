@@ -1,11 +1,5 @@
 {{ define "alloy.config.rulesLoki" }}
-{{- if .Values.rules.loki.enabled }}
-// Logs Service
-remote.kubernetes.secret "logs_service" {
-  name = {{ include "kubernetes_monitoring.logs_service.secret.name" . | quote}}
-  namespace = {{ .Values.externalServices.loki.secret.namespace | default .Release.Namespace | quote }}
-}
-// Rules
+// Loki Rules
 loki.rules.kubernetes "rules_service" {
   address = nonsensitive(remote.kubernetes.secret.logs_service.data[{{ .Values.externalServices.loki.hostKey | quote }}])
   {{- if or (and (eq .Values.externalServices.loki.secret.create true) (.Values.externalServices.loki.tenantId) (eq .Values.externalServices.loki.secret.create false) ) }}
@@ -71,4 +65,4 @@ loki.rules.kubernetes "rules_service" {
   }
 }
 {{- end }}
-{{- end }}
+

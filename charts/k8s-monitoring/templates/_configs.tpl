@@ -156,8 +156,19 @@
 
 {{/* Grafana Alloy for Rules config */}}
 {{- define "alloyRulesConfig" -}}
-  {{- include "alloy.config.rulesMimir" . }}
-  {{- include "alloy.config.rulesLoki" . }}
+  {{- if .Values.rules.mimir.enabled }}
+    {{- include "alloy.config.metricsServiceSecret" . }}
+    {{ include "alloy.config.rulesMimir" . }}
+  {{ end }}
+
+  {{- if .Values.rules.loki.enabled }}
+    {{- include "alloy.config.logsServiceSecret" . }}
+    {{ include "alloy.config.rulesLoki" . }}
+  {{ end }}
 
   {{- include "alloy.config.logging" (index .Values "alloy-rules").logging }}
+  {{- include "alloy.config.liveDebugging" (index .Values "alloy-rules").liveDebugging}}
+  {{- if .Values.logs.extraConfig }}
+    {{- tpl .Values.logs.extraConfig $ | indent 0 }}
+  {{- end }}
 {{- end -}}

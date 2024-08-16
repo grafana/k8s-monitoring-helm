@@ -1711,30 +1711,40 @@ profiles:
 
 # Settings related to the Rule syncing
 rules:
-  # -- Whether or not to enable the rules synchronization
+  # -- Enable rules synchronization.
   # @section -- Rules
   enabled: false
 
   # Settings for Mimir rules, see: https://grafana.com/docs/alloy/latest/reference/components/mimir.rules.kubernetes/
   mimir:
-    # -- Whether or not to enable the Mimir rules synchronization
+    # -- Enable Mimir rules synchronization
     # @section -- Rules (Mimir)
     enabled: true
+
     # -- Amount of time between reconciliations with Mimir.
     # @default -- 5m
+    # @section -- Rules (Mimir)
     sync_interval: 5m
+
     # -- Path prefix for Mimir’s Prometheus endpoint (gem-path-prefix).
     # @default -- /api/prom
+    # @section -- Rules (Mimir)
     prometheus_http_prefix: /api/prom
+
     # -- Prefix to be added to the rule namespace, used to differentiate multiple Alloy deployments added.
     # @default -- alloy
+    # @section -- Rules (Mimir)
     prefix: alloy
+
     # Namespace selectors for Mimir rules.
     namespace:
       # -- Label selector for Namespace resources.
+      # @section -- Rules (Mimir)
       label_selectors: {}
       # -- Label expressions for Namespace resources.
+      # @section -- Rules (Mimir)
       label_expressions: []
+
     # Selector for PrometheusRule resources.
     rule:
       # Example:
@@ -1745,8 +1755,10 @@ rules:
       #   mimir: "true"
       # ```
       # -- Label selectors for PrometheusRule resources as key/pair values.
+      # @section -- Rules (Mimir)
       label_selectors:
         rule_type: mimir
+
       # Example:
       # ```alloy
       # - key: team
@@ -1754,25 +1766,34 @@ rules:
       #   values: ["ops"]
       # ```
       # -- Label expressions for PrometheusRule resources.
+      # @section -- Rules (Mimir)
       label_expressions: []
 
   # Settings for Loki rules, see: https://grafana.com/docs/alloy/latest/reference/components/loki.rules.kubernetes/
   loki:
-    # -- Whether or not to enable the Mimir rules synchronization
+    # -- Enable Loki rules synchronization
     # @section -- Rules (Loki)
     enabled: true
+
     # -- Amount of time between reconciliations with Mimir.
     # @default -- 5m
+    # @section -- Rules (Loki)
     sync_interval: 5m
+
     # -- Prefix to be added to the rule namespace, used to differentiate multiple Alloy deployments added.
     # @default -- alloy
+    # @section -- Rules (Loki)
     prefix: alloy
+
     # Namespace selectors for Loki rules.
     namespace:
       # -- Label selector for Namespace resources.
+      # @section -- Rules (Loki)
       label_selectors: {}
       # -- Label expressions for Namespace resources.
+      # @section -- Rules (Loki)
       label_expressions: []
+
     # Selector for PrometheusRule resources.
     rule:
       # Example:
@@ -1783,6 +1804,7 @@ rules:
       #   loki: "true"
       # ```
       # -- Label selectors for PrometheusRule resources as key/pair values.
+      # @section -- Rules (Loki)
       label_selectors:
         rule_type: loki
       # Example:
@@ -1792,6 +1814,7 @@ rules:
       #   values: ["ops"]
       # ```
       # -- Label expressions for PrometheusRule resources.
+      # @section -- Rules (Loki)
       label_expressions: []
 
 # Telemetry data receiver settings
@@ -2496,31 +2519,36 @@ alloy-profiles:
 alloy-rules:
   logging:
     # -- Level at which Alloy log lines should be written.
-    # @section -- Chart
+    # @section -- Deployment: [Alloy](https://github.com/grafana/alloy/tree/main/operations/helm/charts/alloy) for Rules
     level: info
     # -- Format to use for writing Alloy log lines.
-    # @section -- Chart
+    # @section -- Deployment: [Alloy](https://github.com/grafana/alloy/tree/main/operations/helm/charts/alloy) for Rules
     format: logfmt
+
+  liveDebugging:
+    # -- Enable live debugging for the Alloy instance.
+    # Requires stability level to be set to "experimental".
+    # @section -- Deployment: [Alloy](https://github.com/grafana/alloy/tree/main/operations/helm/charts/alloy) for Rules
+    enabled: false
 
   alloy:
     # This chart is creating the configuration, so the alloy chart does not need to.
     # @ignored
     configMap: {create: false}
 
-    # Disabling clustering by default, because the default log gathering format does not require clusters.
+    # Disabling clustering by default, because rule synchronization not support clustering.
     # @ignored
     clustering: {enabled: false}
 
+  # @ignored
   controller:
-    # @ignored
-    type: statefulset
-    # @ignored
+    type: deployment
+    replicas: 1  # Only one replica should be used, otherwise rules will be synchronized multiple times.
     nodeSelector:
       kubernetes.io/os: linux
 
-    tolerations:
-      - effect: NoSchedule
-        operator: Exists
+    podAnnotations:
+      k8s.grafana.com/logs.job: integrations/alloy
 
   # Skip installation of the Grafana Alloy CRDs, since we don't use them in this chart
   # @ignored

@@ -1,9 +1,6 @@
 {{ define "alloy.config.logsService" }}
 // Logs Service
-remote.kubernetes.secret "logs_service" {
-  name = {{ include "kubernetes_monitoring.logs_service.secret.name" . | quote}}
-  namespace = {{ .Values.externalServices.loki.secret.namespace | default .Release.Namespace | quote }}
-}
+{{- include "alloy.config.logsServiceSecret" . }}
 
 loki.process "logs_service" {
   stage.static_labels {
