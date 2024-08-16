@@ -9,6 +9,7 @@ PROMETHEUS_VALUES="./.github/configs/prometheus.yaml"
 PROMETHEUS_WORKLOAD_VALUES="./.github/configs/prometheus-workload.yaml"
 CREDENTIALS="./.github/configs/credentials.yaml"
 LOKI_VALUES="./.github/configs/loki.yaml"
+LOKI_RULE_OBJECT="./.github/configs/lokiRule.yaml"
 #TEMPO_VALUES=""  # No values for now
 PYROSCOPE_VALUES="./.github/configs/pyroscope.yaml"
 GRAFANA_VALUES="./.github/configs/grafana.yaml"
@@ -59,6 +60,7 @@ helm upgrade --install prometheus prometheus-community/prometheus -f "${PROMETHE
 echo "Deploying Loki..."
 helm upgrade --install loki grafana/loki -f "${LOKI_VALUES}" -n loki --create-namespace --wait
 helm upgrade --install loki-otlp grafana/alloy -f "${GRAFANA_ALLOY_LOKI_OTLP_VALUES}" -n loki --wait
+kubectl apply -f "${LOKI_RULE_OBJECT}"
 
 echo "Deploying Tempo..."
 helm upgrade --install tempo grafana/tempo -n tempo --create-namespace --wait

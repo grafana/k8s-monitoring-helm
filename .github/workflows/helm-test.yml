@@ -19,6 +19,7 @@ env:
   PROMETHEUS_WORKLOAD_VALUES: "${{ github.workspace }}/.github/configs/prometheus-workload.yaml"
   CREDENTIALS: "${{ github.workspace }}/.github/configs/credentials.yaml"
   LOKI_VALUES: "${{ github.workspace }}/.github/configs/loki.yaml"
+  LOKI_RULE_OBJECT: "${{ github.workspace }}/.github/configs/lokiRule.yaml"
   TEMPO_VALUES: ""  # No values for now
   PYROSCOPE_VALUES: "${{ github.workspace }}/.github/configs/pyroscope.yaml"
   GRAFANA_VALUES: "${{ github.workspace }}/.github/configs/grafana.yaml"
@@ -185,6 +186,7 @@ jobs:
         run: |
           helm install loki grafana/loki -f "${LOKI_VALUES}" -n loki --create-namespace --wait
           helm install loki-otlp grafana/alloy -f "${GRAFANA_ALLOY_LOKI_OTLP_VALUES}" -n loki --wait
+          kubectl apply -f "${LOKI_RULE_OBJECT}"
 
       - name: Deploy Tempo
         if: (steps.list-changed.outputs.changed == 'true') || (contains(github.event.pull_request.labels.*.name, 'full_test_required'))

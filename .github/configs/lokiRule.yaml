@@ -1,0 +1,12 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: example-log-rules
+  labels:
+    rule_type: loki
+spec:
+  groups:
+    - name: logs
+      rules:
+        - record: log_errors:count1m
+          expr: count_over_time({level="error"}[1m])
