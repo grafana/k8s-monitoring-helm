@@ -1,22 +1,66 @@
 {{ define "alloy.config.rulesMimir" }}
 // Mimir Rules
 mimir.rules.kubernetes "rules_service" {
-  address = nonsensitive(remote.kubernetes.secret.metrics_service.data[{{ .Values.externalServices.prometheus.hostKey | quote }}])
-  {{- if or (and (eq .Values.externalServices.prometheus.secret.create true) (.Values.externalServices.prometheus.tenantId) (eq .Values.externalServices.prometheus.secret.create false) ) }}
-  headers = nonsensitive(coalesce(remote.kubernetes.secret.metrics_service.data[{{ .Values.externalServices.prometheus.tenantIdKey | quote }}], ""))
+{{- with .Values.externalServices.prometheus }}
+  address = nonsensitive(remote.kubernetes.secret.metrics_service.data[{{ .hostKey | quote }}])
+  tenant_id = nonsensitive(remote.kubernetes.secret.metrics_service.data[{{ .tenantIdKey | quote }}])
+{{- if .proxyURL }}
+  proxy_url = {{ .proxyURL | quote }}
+{{- end }}
+{{ if eq .authMode "basic" }}
+  basic_auth {
+    username = nonsensitive(remote.kubernetes.secret.metrics_service.data[{{ .basicAuth.usernameKey | quote }}])
+    password = remote.kubernetes.secret.metrics_service.data[{{ .basicAuth.passwordKey | quote }}]
+  }
+{{- else if eq .authMode "oauth2" }}
+  oauth2 {
+    client_id = nonsensitive(remote.kubernetes.secret.metrics_service.data[{{ .oauth2.clientIdKey | quote }}])
+    {{- if eq .oauth2.clientSecretFile "" }}
+    client_secret = remote.kubernetes.secret.metrics_service.data[{{ .oauth2.clientSecretKey | quote }}]
+    {{- else }}
+    client_secret_file = {{ .oauth2.clientSecretFile | quote }}
+    {{- end }}
+    {{- if .oauth2.endpointParams }}
+    endpoint_params = {
+    {{- range $k, $v := .oauth2.endpointParams }}
+      {{ $k }} = {{ $v | quote }},
+    {{- end }}
+    }
+    {{- end }}
+    {{- if .oauth2.proxyURL }}
+    proxy_url = {{ .oauth2.proxyURL | quote }}
+    {{- end }}
+    {{- if .oauth2.noProxy }}
+    no_proxy = {{ .oauth2.noProxy | quote }}
+    {{- end }}
+    {{- if .oauth2.proxyFromEnvironment }}
+    proxyFromEnvironment = {{ .oauth2.proxyFromEnvironment }}
+    {{- end }}
+    {{- if .oauth2.proxyConnectHeader }}
+    proxy_connect_header = {{ .oauth2.proxyConnectHeader | toJson }}
+    {{- end }}
+    {{- if .oauth2.scopes }}
+    scopes = {{ .oauth2.scopes | toJson }}
+    {{- end }}
+    {{- if .oauth2.tokenURL }}
+    token_url = {{ .oauth2.tokenURL | quote }}
+    {{- end }}
+  }
+{{- end }}
+{{- if .tls }}
+  tls_config {
+  {{- range $k, $v := .tls }}
+    {{ $k }} = {{ $v | toJson }}
   {{- end }}
+  }
+{{- end }}
+
+{{- end }}
+
   sync_interval = {{ .Values.rules.mimir.sync_interval | quote }}
   prometheus_http_prefix = {{ .Values.rules.mimir.prometheus_http_prefix | quote }}
   mimir_namespace_prefix = {{ .Values.rules.mimir.prefix | quote }}
-{{- if .Values.externalServices.prometheus.proxyURL }}
-    proxy_url = {{ .Values.externalServices.prometheus.proxyURL | quote }}
-{{- end }}
-{{ if eq .Values.externalServices.prometheus.authMode "basic" }}
-    basic_auth {
-      username = nonsensitive(remote.kubernetes.secret.metrics_service.data[{{ .Values.externalServices.prometheus.basicAuth.usernameKey | quote }}])
-      password = remote.kubernetes.secret.metrics_service.data[{{ .Values.externalServices.prometheus.basicAuth.passwordKey | quote }}]
-    }
-{{- end }}
+
   {{- if or .Values.rules.mimir.namespace.label_selectors .Values.rules.mimir.namespace.label_expressions }}
   rule_namespace_selector {
     {{- if .Values.rules.mimir.namespace.label_selectors }}
@@ -40,9 +84,10 @@ mimir.rules.kubernetes "rules_service" {
     }
     {{- end }}
     {{- end }}
-    {{- end }}
   }
+  {{- end }}
 
+  {{- if or .Values.rules.mimir.rule.label_selectors .Values.rules.mimir.rule.label_expressions }}
   rule_selector {
     {{- if .Values.rules.mimir.rule.label_selectors }}
     match_labels = {
@@ -66,5 +111,6 @@ mimir.rules.kubernetes "rules_service" {
     {{- end }}
     {{- end }}
   }
+  {{- end }}
 }
 {{- end }}
