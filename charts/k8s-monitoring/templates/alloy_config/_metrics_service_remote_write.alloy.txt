@@ -12,6 +12,14 @@ prometheus.remote_write "metrics_service" {
       username = nonsensitive(remote.kubernetes.secret.metrics_service.data[{{ .basicAuth.usernameKey | quote }}])
       password = remote.kubernetes.secret.metrics_service.data[{{ .basicAuth.passwordKey | quote }}]
     }
+{{- else if eq .authMode "bearerToken" }}
+  bearerToken {
+    {{- if .bearerToken.token }}
+      token = remote.kubernetes.secret.metrics_service.data[{{ .bearerToken.token | quote }}]
+    {{- else if .bearerToken.tokenFile }}
+      tokenFile = {{  .bearerToken.tokenFile | quote  }}
+    {{- end }}
+  }
 {{- else if eq .authMode "oauth2" }}
     oauth2 {
       client_id = nonsensitive(remote.kubernetes.secret.metrics_service.data[{{ .oauth2.clientIdKey | quote }}])
