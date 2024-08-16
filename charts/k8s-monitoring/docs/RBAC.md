@@ -269,7 +269,7 @@ Several components have specialized RBAC rules to perform their work. This docum
   verbs: ["get", "list", "watch"]
 ```
 
-When deploying to an OpenShift cluster, these extra rules are added to enable access to special a SecurityContextConstraint:
+When deploying to an OpenShift cluster, these extra rules are added to enable access to a SecurityContextConstraint for the Alloy deployment for gathering Pod Logs:
 
 ```yaml
 - verbs:

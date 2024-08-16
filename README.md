@@ -16,16 +16,16 @@
 
 ## Maintainers
 
-| Name | Email | Url |
-| ---- | ------ | --- |
-| petewall | <pete.wall@grafana.com> |  |
-| skl | <stephen.lang@grafana.com> |  |
+| Name | Email | URL |
+| ---- | ------ |-----|
+| petewall | <pete.wall@grafana.com> |     |
+| skl | <stephen.lang@grafana.com> |     |
 
 ## Usage
 
 [Helm](https://helm.sh/) must be installed to use the chart. Please refer to Helm's [documentation](https://helm.sh/docs/) to get started.
 
-Once Helm is set up properly, add the repo as follows:
+Once Helm is set up properly, add the repository as follows:
 
 ```console
 helm repo add grafana https://grafana.github.io/helm-charts

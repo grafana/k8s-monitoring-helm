@@ -57,7 +57,7 @@ externalServices:
     # @section -- External Services (Prometheus)
     tenantIdKey: tenantId
 
-    # -- one of "none", "basic"
+    # -- one of "none", "basic", "oauth2"
     # @section -- External Services (Prometheus)
     authMode: basic
 
@@ -76,6 +76,46 @@ externalServices:
       # -- The key for the password property in the secret
       # @section -- External Services (Prometheus)
       passwordKey: password
+
+    # Authenticate to Prometheus using OAuth2
+    # @section -- External Services (Prometheus)
+    oauth2:
+      # -- Prometheus OAuth2 client ID
+      # @section -- External Services (Prometheus)
+      clientId: ""
+      # -- The key for the client ID property in the secret
+      # @section -- External Services (Prometheus)
+      clientIdKey: id
+      # -- Prometheus OAuth2 client secret
+      # @section -- External Services (Prometheus)
+      clientSecret: ""
+      # -- The key for the client secret property in the secret
+      # @section -- External Services (Prometheus)
+      clientSecretKey: secret
+      # -- File containing the OAuth2 client secret.
+      # @section -- External Services (Prometheus)
+      clientSecretFile: ""
+      # -- Prometheus OAuth2 endpoint parameters
+      # @section -- External Services (Prometheus)
+      endpointParams: {}
+      # -- HTTP proxy to send requests through.
+      # @section -- External Services (Prometheus)
+      proxyURL: ""
+      # -- Comma-separated list of IP addresses, CIDR notations, and domain names to exclude from proxying.
+      # @section -- External Services (Prometheus)
+      noProxy: ""
+      # -- Use the proxy URL indicated by environment variables.
+      # @section -- External Services (Prometheus)
+      proxyFromEnvironment: false
+      # -- Specifies headers to send to proxies during CONNECT requests.
+      # @section -- External Services (Prometheus)
+      proxyConnectHeader: {}
+      # -- List of scopes to authenticate with.
+      # @section -- External Services (Prometheus)
+      scopes: []
+      # -- URL to fetch the token from.
+      # @section -- External Services (Prometheus)
+      tokenURL: ""
 
     # Configure the Prometheus Remote Write Queue
     # [docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.remote_write/#queue_config-block)
@@ -187,9 +227,9 @@ externalServices:
     hostKey: host
 
     # -- The type of server protocol for writing metrics. Valid options:
-    #  "loki" will use Loki's HTTP API,
-    #  "otlp" will use OTLP,
-    #  "otlphttp" will use OTLP HTTP
+    #  `loki` will use Loki's HTTP API,
+    #  `otlp` will use OTLP,
+    #  `otlphttp` will use OTLP HTTP
     # @section -- External Services (Loki)
     protocol: "loki"
     # -- HTTP proxy to proxy requests to Loki through.
@@ -214,7 +254,7 @@ externalServices:
     # @section -- External Services (Loki)
     tenantIdKey: tenantId
 
-    # -- one of "none", "basic"
+    # -- one of "none", "basic", "oauth2"
     # @section -- External Services (Loki)
     authMode: basic
 
@@ -232,6 +272,46 @@ externalServices:
       # -- The key for the password property in the secret
       # @section -- External Services (Loki)
       passwordKey: password
+
+    # Authenticate to Loki using OAuth2
+    # @section -- External Services (Loki)
+    oauth2:
+      # -- Loki OAuth2 client ID
+      # @section -- External Services (Loki)
+      clientId: ""
+      # -- The key for the client ID property in the secret
+      # @section -- External Services (Loki)
+      clientIdKey: id
+      # -- Loki OAuth2 client secret
+      # @section -- External Services (Loki)
+      clientSecret: ""
+      # -- The key for the client secret property in the secret
+      # @section -- External Services (Loki)
+      clientSecretKey: secret
+      # -- File containing the OAuth2 client secret.
+      # @section -- External Services (Loki)
+      clientSecretFile: ""
+      # -- Loki OAuth2 endpoint parameters
+      # @section -- External Services (Loki)
+      endpointParams: {}
+      # -- HTTP proxy to send requests through.
+      # @section -- External Services (Loki)
+      proxyURL: ""
+      # -- Comma-separated list of IP addresses, CIDR notations, and domain names to exclude from proxying.
+      # @section -- External Services (Loki)
+      noProxy: ""
+      # -- Use the proxy URL indicated by environment variables.
+      # @section -- External Services (Loki)
+      proxyFromEnvironment: false
+      # -- Specifies headers to send to proxies during CONNECT requests.
+      # @section -- External Services (Loki)
+      proxyConnectHeader: {}
+      # -- List of scopes to authenticate with.
+      # @section -- External Services (Loki)
+      scopes: []
+      # -- URL to fetch the token from.
+      # @section -- External Services (Loki)
+      tokenURL: ""
 
     # Credential management
     secret:
@@ -459,10 +539,10 @@ metrics:
 
     # Adjustments to the scraped metrics to filter the amount of data sent to storage.
     metricsTuning:
-      # -- Metrics to keep. Can use regex. An empty list means keep all.
+      # -- Metrics to keep. Can use regular expressions. An empty list means keep all.
       # @section -- Metrics Job: Auto-Discovery
       includeMetrics: []
-      # -- Metrics to drop. Can use regex.
+      # -- Metrics to drop. Can use regular expressions.
       # @section -- Metrics Job: Auto-Discovery
       excludeMetrics: []
 
@@ -543,10 +623,10 @@ metrics:
       # -- Filter the list of metrics from Grafana Alloy to the minimal set required for Kubernetes Monitoring as well as the Grafana Alloy integration.
       # @section -- Metrics Job: Alloy
       useIntegrationAllowList: false
-      # -- Metrics to keep. Can use regex.
+      # -- Metrics to keep. Can use regular expressions.
       # @section -- Metrics Job: Alloy
       includeMetrics: []
-      # -- Metrics to drop. Can use regex.
+      # -- Metrics to drop. Can use regular expressions.
       # @section -- Metrics Job: Alloy
       excludeMetrics: []
 
@@ -603,10 +683,10 @@ metrics:
       # See [Metrics Tuning and Allow Lists](#metrics-tuning-and-allow-lists)
       # @section -- Metrics Job: Kube State Metrics
       useDefaultAllowList: true
-      # -- Metrics to keep. Can use regex.
+      # -- Metrics to keep. Can use regular expressions.
       # @section -- Metrics Job: Kube State Metrics
       includeMetrics: []
-      # -- Metrics to drop. Can use regex.
+      # -- Metrics to drop. Can use regular expressions.
       # @section -- Metrics Job: Kube State Metrics
       excludeMetrics: []
 
@@ -664,10 +744,10 @@ metrics:
       # -- Filter the list of metrics from Node Exporter to the minimal set required for Kubernetes Monitoring as well as the Node Exporter integration.
       # @section -- Metrics Job: Node Exporter
       useIntegrationAllowList: false
-      # -- Metrics to keep. Can use regex.
+      # -- Metrics to keep. Can use regular expressions.
       # @section -- Metrics Job: Node Exporter
       includeMetrics: []
-      # -- Metrics to drop. Can use regex.
+      # -- Metrics to drop. Can use regular expressions.
       # @section -- Metrics Job: Node Exporter
       excludeMetrics: []
       # -- Drop metrics for the given filesystem types
@@ -718,10 +798,10 @@ metrics:
       # See [Metrics Tuning and Allow Lists](#metrics-tuning-and-allow-lists)
       # @section -- Metrics Job: Windows Exporter
       useDefaultAllowList: true
-      # -- Metrics to keep. Can use regex.
+      # -- Metrics to keep. Can use regular expressions.
       # @section -- Metrics Job: Windows Exporter
       includeMetrics: []
-      # -- Metrics to drop. Can use regex.
+      # -- Metrics to drop. Can use regular expressions.
       # @section -- Metrics Job: Windows Exporter
       excludeMetrics: []
 
@@ -768,10 +848,10 @@ metrics:
       # See [Metrics Tuning and Allow Lists](#metrics-tuning-and-allow-lists)
       # @section -- Metrics Job: Kubelet
       useDefaultAllowList: true
-      # -- Metrics to keep. Can use regex.
+      # -- Metrics to keep. Can use regular expressions.
       # @section -- Metrics Job: Kubelet
       includeMetrics: []
-      # -- Metrics to drop. Can use regex.
+      # -- Metrics to drop. Can use regular expressions.
       # @section -- Metrics Job: Kubelet
       excludeMetrics: []
 
@@ -818,10 +898,10 @@ metrics:
       # @section -- Metrics Job: cAdvisor
       # See [Metrics Tuning and Allow Lists](#metrics-tuning-and-allow-lists)
       useDefaultAllowList: true
-      # -- Metrics to keep. Can use regex.
+      # -- Metrics to keep. Can use regular expressions.
       # @section -- Metrics Job: cAdvisor
       includeMetrics: []
-      # -- Metrics to drop. Can use regex.
+      # -- Metrics to drop. Can use regular expressions.
       # @section -- Metrics Job: cAdvisor
       excludeMetrics: []
       # -- Drop metrics that have an empty container label
@@ -877,10 +957,10 @@ metrics:
 
     # Adjustments to the scraped metrics to filter the amount of data sent to storage.
     metricsTuning:
-      # -- Metrics to keep. Can use regex. An empty list means keep all.
+      # -- Metrics to keep. Can use regular expressions. An empty list means keep all.
       # @section -- Metrics Job: ApiServer
       includeMetrics: []
-      # -- Metrics to drop. Can use regex.
+      # -- Metrics to drop. Can use regular expressions.
       # @section -- Metrics Job: ApiServer
       excludeMetrics: []
 
@@ -924,10 +1004,10 @@ metrics:
 
     # Adjustments to the scraped metrics to filter the amount of data sent to storage.
     metricsTuning:
-      # -- Metrics to keep. Can use regex. An empty list means keep all.
+      # -- Metrics to keep. Can use regular expressions. An empty list means keep all.
       # @section -- Metrics Job: Kube Controller Manager
       includeMetrics: []
-      # -- Metrics to drop. Can use regex.
+      # -- Metrics to drop. Can use regular expressions.
       # @section -- Metrics Job: Kube Controller Manager
       excludeMetrics: []
 
@@ -971,10 +1051,10 @@ metrics:
 
     # Adjustments to the scraped metrics to filter the amount of data sent to storage.
     metricsTuning:
-      # -- Metrics to keep. Can use regex. An empty list means keep all.
+      # -- Metrics to keep. Can use regular expressions. An empty list means keep all.
       # @section -- Metrics Job: Kube Proxy
       includeMetrics: []
-      # -- Metrics to drop. Can use regex.
+      # -- Metrics to drop. Can use regular expressions.
       # @section -- Metrics Job: Kube Proxy
       excludeMetrics: []
 
@@ -1018,10 +1098,10 @@ metrics:
 
     # Adjustments to the scraped metrics to filter the amount of data sent to storage.
     metricsTuning:
-      # -- Metrics to keep. Can use regex. An empty list means keep all.
+      # -- Metrics to keep. Can use regular expressions. An empty list means keep all.
       # @section -- Metrics Job: Kube Scheduler
       includeMetrics: []
-      # -- Metrics to drop. Can use regex.
+      # -- Metrics to drop. Can use regular expressions.
       # @section -- Metrics Job: Kube Scheduler
       excludeMetrics: []
 
@@ -1070,10 +1150,10 @@ metrics:
       # See [Metrics Tuning and Allow Lists](#metrics-tuning-and-allow-lists)
       # @section -- Metrics Job: OpenCost
       useDefaultAllowList: true
-      # -- Metrics to keep. Can use regex.
+      # -- Metrics to keep. Can use regular expressions.
       # @section -- Metrics Job: OpenCost
       includeMetrics: []
-      # -- Metrics to drop. Can use regex.
+      # -- Metrics to drop. Can use regular expressions.
       # @section -- Metrics Job: OpenCost
       excludeMetrics: []
 
@@ -1083,6 +1163,57 @@ metrics:
     # Overrides metrics.maxCacheSize
     # @raw
     # @section -- Metrics Job: OpenCost
+    maxCacheSize:
+
+  # Energy related metrics from Kepler
+  kepler:
+    # -- Scrape energy metrics from Kepler
+    # @section -- Metrics Job: Kepler
+    enabled: false
+
+    # -- How frequently to scrape metrics from Kepler.
+    # Overrides metrics.scrapeInterval
+    # @default -- 60s
+    # @section -- Metrics Job: Kepler
+    scrapeInterval: ""
+
+    # -- Label matchers used to select the Kepler pods
+    # @section -- Metrics Job: Kepler
+    labelMatchers:
+      app.kubernetes.io/name: kepler
+
+    # -- Rule blocks to be added to the discovery.relabel component for Kepler.
+    # These relabeling rules are applied pre-scrape against the targets from service discovery.
+    # Before the scrape, any remaining target labels that start with __ (i.e. __meta_kubernetes*) are dropped.
+    # ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery.relabel/#rule-block))
+    # @section -- Metrics Job: Kepler
+    extraRelabelingRules: ""
+
+    # -- Rule blocks to be added to the prometheus.relabel component for Kepler. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#rule-block))
+    # These relabeling rules are applied post-scrape against the metrics returned from the scraped target, no __meta* labels are present.
+    # @section -- Metrics Job: Kepler
+    extraMetricRelabelingRules: ""
+
+    # Adjustments to the scraped metrics to filter the amount of data sent to storage.
+    # @section -- Metrics Job: Kepler
+    metricsTuning:
+      # -- Filter the list of metrics from Kepler to the minimal set required for Kubernetes Monitoring.
+      # See [Metrics Tuning and Allow Lists](#metrics-tuning-and-allow-lists)
+      # @section -- Metrics Job: Kepler
+      useDefaultAllowList: true
+      # -- Metrics to keep. Can use regular expressions.
+      # @section -- Metrics Job: Kepler
+      includeMetrics: []
+      # -- Metrics to drop. Can use regular expressions.
+      # @section -- Metrics Job: Kepler
+      excludeMetrics: []
+
+    # -- Sets the max_cache_size for the prometheus.relabel component for Kepler.
+    # This should be at least 2x-5x your largest scrape target or samples appended rate.
+    # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#arguments))
+    # Overrides metrics.maxCacheSize
+    # @default -- 100000
+    # @section -- Metrics Job: Kepler
     maxCacheSize:
 
   # Prometheus Operator PodMonitors
@@ -1318,9 +1449,9 @@ logs:
     extraRelabelingRules: ""
 
     # -- Controls the behavior of gathering pod logs.
-    # When set to "volumes", Grafana Alloy will use HostPath volume mounts on the cluster nodes to access the pod
+    # When set to `volumes`, Grafana Alloy will use HostPath volume mounts on the cluster nodes to access the pod
     # log files directly.
-    # When set to "api", Grafana Alloy will access pod logs via the API server. This method may be preferable if
+    # When set to `api`, Grafana Alloy will access pod logs via the API server. This method may be preferable if
     # your cluster prevents DaemonSets, HostPath volume mounts, or for other reasons.
     # @section -- Logs Scrape: Pod Logs
     gatherMethod: "volumes"
@@ -1330,6 +1461,24 @@ logs:
     # This value is templated so that you can refer to other values from this file.
     # @section -- Logs Scrape: Pod Logs
     extraStageBlocks: ""
+
+    # -- Loki labels to set with values copied from the Kubernetes Pod labels.
+    # Format: `<loki_label>: <kubernetes_label>`.
+    # @section -- Logs Scrape: Pod Logs
+    labels:
+      app_kubernetes_io_name: app.kubernetes.io/name
+
+    # -- Loki labels to set with values copied from the Kubernetes Pod annotations.
+    # Format: `<loki_label>: <kubernetes_annotation>`.
+    # @section -- Logs Scrape: Pod Logs
+    annotations:
+      job: k8s.grafana.com/logs.job
+
+    # -- List of labels to turn into structured metadata.
+    # If your Loki instance does not support structured metadata, leave this empty.
+    # Format: `<structured metadata>: <Loki label>`.
+    # @section -- Logs Scrape: Pod Logs
+    structuredMetadata: {}
 
   # PodLog Objects
   podLogsObjects:
@@ -1425,13 +1574,6 @@ logs:
     # be `__journal__systemd_unit`, with two underscores between `__journal` and `systemd_unit`.
     # @section -- Logs Scrape: Pod Logs
     extraRelabelingRules: ""
-
-    # -- Extra configuration that will be added to the Grafana Alloy for Journal configuration file.
-    # This value is templated so that you can refer to other values from this file.
-    # This cannot be used to modify the generated configuration values, only append new components.
-    # See [Adding custom Flow configuration](#adding-custom-flow-configuration) for an example.
-    # @section -- Logs Scrape: Journal
-    extraConfig: ""
 
   # Settings related to logs ingested via receivers
   # @section -- Logs -> OTEL Receiver
@@ -1761,20 +1903,7 @@ test:
   # @section -- Test Job
   enabled: true
 
-  # -- Additional queries to run during the test.
-  # NOTE that this uses the host, username, and password in the externalServices section.
-  # The user account must have the ability to run queries.
-  # Example:
-  # extraQueries:
-  #   - query: prometheus_metric{cluster="my-cluster-name"}
-  #     type: promql
-  #
-  # Can optionally provide expectations:
-  # - query: "avg(count_over_time(scrape_samples_scraped{cluster=~\"ci-test-cluster-2|from-the-other-alloy\"}[1m]))"
-  #   type: promql
-  #   expect:
-  #     value: 1
-  #     operator: ==
+  # -- Additional queries to run during the test. See the [Helm tests docs](./docs/HelmTests.md) for more information.
   # @section -- Test Job
   extraQueries: []
 
@@ -1874,26 +2003,29 @@ configAnalysis:
 global:
   image:
     # -- Global image registry to use if it needs to be overridden for some specific use cases (e.g local registries, custom images, ...)
-    # @section -- Chart
+    # @section -- Image Registry
     registry: ""
 
     # -- Optional set of global image pull secrets.
-    # @section -- Chart
+    # @section -- Image Registry
     pullSecrets: []
 
 # Settings for the Kube State Metrics deployment
 # You can use this sections to make modifications to the Kube State Metrics deployment.
 # See https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-state-metrics for available values.
-# @section -- [Kube State Metrics](https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-state-metrics) Chart Values
 kube-state-metrics:
   # -- Should this helm chart deploy Kube State Metrics to the cluster.
   # Set this to false if your cluster already has Kube State Metrics, or if you
   # do not want to scrape metrics from Kube State Metrics.
-  # @section -- Chart
+  # @section -- Deployment: [Kube State Metrics](https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-state-metrics)
   enabled: true
+
   # @ignored
   nodeSelector:
     kubernetes.io/os: linux
+
+  # @ignored - Enable the release label
+  releaseLabel: true
 
   # @ignored - Disable autosharding
   autosharding:
@@ -1904,15 +2036,19 @@ kube-state-metrics:
   # @ignored - Disable prometheus.io/scrape annotation
   prometheusScrape: false
 
+  # -- `kube_<resource>_labels` metrics to generate.
+  # @section -- Deployment: [Kube State Metrics](https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-state-metrics)
+  metricLabelsAllowlist:
+    - nodes=[*]
+
 # Settings for the Node Exporter deployment
 # You can use this sections to make modifications to the Node Exporter deployment.
 # See https://github.com/prometheus-community/helm-charts/tree/main/charts/prometheus-node-exporter for available values.
-# @section -- [Prometheus Node Exporter](https://github.com/prometheus-community/helm-charts/tree/main/charts/prometheus-node-exporter) Chart Values
 prometheus-node-exporter:
   # -- Should this helm chart deploy Node Exporter to the cluster.
   # Set this to false if your cluster already has Node Exporter, or if you do
   # not want to scrape metrics from Node Exporter.
-  # @section -- Chart
+  # @section -- Deployment: [Prometheus Node Exporter](https://github.com/prometheus-community/helm-charts/tree/main/charts/prometheus-node-exporter)
   enabled: true
   # @ignored - Only select Linux nodes
   nodeSelector:
@@ -1928,6 +2064,13 @@ prometheus-node-exporter:
                 operator: NotIn
                 values: [fargate]
 
+  # @ignored - Enable the release label
+  releaseLabel: true
+
+  # @ignored - Set annotation to override the job label
+  podAnnotations:
+    k8s.grafana.com/logs.job: integrations/node_exporter
+
   # @ignored - Disable prometheus.io/scrape annotation
   service:
     annotations:
@@ -1936,12 +2079,11 @@ prometheus-node-exporter:
 # Settings for the Windows Exporter deployment
 # You can use this sections to make modifications to the Windows Exporter deployment.
 # See https://github.com/prometheus-community/helm-charts/tree/main/charts/prometheus-windows-exporter for available values.
-# @section -- [Prometheus Windows Exporter](https://github.com/prometheus-community/helm-charts/tree/main/charts/prometheus-windows-exporter) Chart Values
 prometheus-windows-exporter:
   # -- Should this helm chart deploy Windows Exporter to the cluster.
   # Set this to false if your cluster already has Windows Exporter, or if you do
   # not want to scrape metrics from Windows Exporter.
-  # @section -- Chart
+  # @section -- Deployment: [Prometheus Windows Exporter](https://github.com/prometheus-community/helm-charts/tree/main/charts/prometheus-windows-exporter)
   enabled: false
 
   # -- Windows Exporter configuration
@@ -1953,38 +2095,44 @@ prometheus-windows-exporter:
       service:
         services-where: "Name='containerd' or Name='kubelet'"
 
+  # @ignored - Enable the release label
+  releaseLabel: true
+
+  # @ignored - Set annotation to override the job label
+  podAnnotations:
+    k8s.grafana.com/logs.job: integrations/windows_exporter
+
 # Settings for the Prometheus Operator CRD deployment
 # You can use this sections to make modifications to the Prometheus Operator CRD deployment.
 # See https://github.com/prometheus-community/helm-charts/tree/main/charts/prometheus-operator-crds for available values.
-# @section -- [Prometheus Operator CRDs](https://github.com/prometheus-community/helm-charts/tree/main/charts/prometheus-operator-crds)
 prometheus-operator-crds:
   # -- Should this helm chart deploy the Prometheus Operator CRDs to the cluster.
   # Set this to false if your cluster already has the CRDs, or if you do not
   # to have Grafana Alloy scrape metrics from PodMonitors, Probes, or ServiceMonitors.
-  # @section -- Chart
+  # @section -- Deployment: [Prometheus Operator CRDs](https://github.com/prometheus-community/helm-charts/tree/main/charts/prometheus-operator-crds)
   enabled: true
 
 # Settings for the OpenCost deployment
 # You can use this sections to make modifications to the OpenCost deployment.
 # See https://github.com/opencost/opencost-helm-chart for available values.
-# @section -- [OpenCost](https://github.com/opencost/opencost-helm-chart) Chart Values
+# @section -- Deployment: [OpenCost](https://github.com/opencost/opencost-helm-chart)
 opencost:
   # -- Should this Helm chart deploy OpenCost to the cluster.
   # Set this to false if your cluster already has OpenCost, or if you do
   # not want to scrape metrics from OpenCost.
-  # @section -- Chart
+  # @section -- Deployment: [OpenCost](https://github.com/opencost/opencost-helm-chart)
   enabled: true
 
   opencost:
     # @ignored -- This skips including these values in README.md
     exporter:
       # -- Default cluster ID to use if cluster is not set in Prometheus metrics. It should match cluster.name.
-      # @section -- Chart
+      # @section -- Deployment: [OpenCost](https://github.com/opencost/opencost-helm-chart)
       defaultClusterId: "default-cluster"
       extraEnv:
         # -- Trial API Key used only with GCP.
         # See https://www.opencost.io/docs/configuration/gcp-opencost for how to set for your environment
-        # @section -- Chart
+        # @section -- Deployment: [OpenCost](https://github.com/opencost/opencost-helm-chart)
         CLOUD_PROVIDER_API_KEY: AIzaSyD29bGxmHAVEOBYtgd8sYM2gM2ekfxQX4U
         CURRENT_CLUSTER_ID_FILTER_ENABLED: "true"
         PROM_CLUSTER_ID_LABEL: cluster
@@ -2005,19 +2153,19 @@ opencost:
 
     prometheus:
       # -- The name of the secret containing the username and password for the metrics service. This must be in the same namespace as the OpenCost deployment.
-      # @section -- Chart
+      # @section -- Deployment: [OpenCost](https://github.com/opencost/opencost-helm-chart)
       existingSecretName: prometheus-k8s-monitoring
       # -- The key for the username property in the secret.
-      # @section -- Chart
+      # @section -- Deployment: [OpenCost](https://github.com/opencost/opencost-helm-chart)
       username_key: username
       # -- The key for the password property in the secret.
-      # @section -- Chart
+      # @section -- Deployment: [OpenCost](https://github.com/opencost/opencost-helm-chart)
       password_key: password
       external:
         # @ignored -- This skips including these values in README.md
         enabled: true
         # -- The URL for Prometheus queries. It should match externalServices.prometheus.host + "/api/prom"
-        # @section -- Chart
+        # @section -- Deployment: [OpenCost](https://github.com/opencost/opencost-helm-chart)3
         url: "https://prom.example.com/api/prom"
       # @ignored -- This skips including these values in README.md
       internal:
@@ -2029,29 +2177,49 @@ opencost:
     nodeSelector:
       kubernetes.io/os: linux
 
+# Settings for the Kepler deployment
+# You can use this sections to make modifications to the Kepler deployment.
+# See https://github.com/sustainable-computing-io/kepler-helm-chart/tree/main/chart/kepler for available values.
+kepler:
+  # -- Should this Helm chart deploy Kepler to the cluster.
+  # Set this to false if your cluster already has Kepler, or if you do not want to scrape metrics from Kepler.
+  # @section -- Deployment: Kepler
+  enabled: false
+
+  # @ignored -- This skips including these values in README.md
+  canMount:
+    usrSrc: false
+
+  # @ignored -- This skips including these values in README.md
+  extraEnvVars:
+    EXPOSE_ESTIMATED_IDLE_POWER_METRICS: "true"
 
 # Settings for the Grafana Alloy instance that gathers metrics, and opens receivers for application data.
 # See https://github.com/grafana/alloy/tree/main/operations/helm/charts/alloy for available values.
-# @ignored -- This skips including these values in README.md
 alloy:
   logging:
     # -- Level at which Alloy log lines should be written.
-    # @section -- Chart
+    # @section -- Deployment: [Alloy](https://github.com/grafana/alloy/tree/main/operations/helm/charts/alloy)
     level: info
     # -- Format to use for writing Alloy log lines.
-    # @section -- Chart
+    # @section -- Deployment: [Alloy](https://github.com/grafana/alloy/tree/main/operations/helm/charts/alloy)
     format: logfmt
 
+  liveDebugging:
+    # -- Enable live debugging for the Alloy instance.
+    # Requires stability level to be set to "experimental".
+    # @section -- Deployment: [Alloy](https://github.com/grafana/alloy/tree/main/operations/helm/charts/alloy)
+    enabled: false
+
+  # @ignored
   alloy:
-    # -- Whether to enable clsuter or not for the Alloy Metrics Statefulset
-    # @section -- Chart
+    # -- Enabling clustering for metrics load distribution.
     clustering: {enabled: true}
 
     # This chart is creating the configuration, so the alloy chart does not need to.
-    # @ignored
     configMap: {create: false}
 
-    # ignored
+    # Default opened receiver ports
     extraPorts:
       - name: "otlp-grpc"
         port: 4317
@@ -2086,29 +2254,14 @@ alloy:
         targetPort: 9411
         protocol: "TCP"
 
-    # This chart creates the credentials for Prometheus and Loki. This section
-    # mounts those credentials into the Grafana Alloy container.
-    # @ignored
-    mounts:
-      extra:
-        - name: kubernetes-monitoring-telemetry
-          mountPath: /etc/kubernetes-monitoring-telemetry
-
+  # @ignored
   controller:
-    # @ignored
     type: statefulset
-    # @ignored
     nodeSelector:
       kubernetes.io/os: linux
 
-    # This chart creates the credentials for Prometheus and Loki. This section
-    # connects those credentials into the Grafana Alloy pod.
-    # @ignored
-    volumes:
-      extra:
-        - name: kubernetes-monitoring-telemetry
-          configMap:
-            name: kubernetes-monitoring-telemetry
+    podAnnotations:
+      k8s.grafana.com/logs.job: integrations/alloy
 
   # Skip installation of the Grafana Alloy CRDs, since we don't use them in this chart
   # @ignored
@@ -2116,29 +2269,35 @@ alloy:
 
 # Settings for the Grafana Alloy instance that gathers Cluster events.
 # See https://github.com/grafana/alloy/tree/main/operations/helm/charts/alloy for available values.
-# @ignored -- This skips including these values in README.md
 alloy-events:
   logging:
     # -- Level at which Alloy log lines should be written.
-    # @section -- Chart
+    # @section -- Deployment: [Alloy](https://github.com/grafana/alloy/tree/main/operations/helm/charts/alloy) for Cluster Events Deployment
     level: info
     # -- Format to use for writing Alloy log lines.
-    # @section -- Chart
+    # @section -- Deployment: [Alloy](https://github.com/grafana/alloy/tree/main/operations/helm/charts/alloy) for Cluster Events Deployment
     format: logfmt
 
+  liveDebugging:
+    # -- Enable live debugging for the Alloy instance.
+    # Requires stability level to be set to "experimental".
+    # @section -- Deployment: [Alloy](https://github.com/grafana/alloy/tree/main/operations/helm/charts/alloy) for Cluster Events Deployment
+    enabled: false
+
+  # @ignored
   alloy:
     # This chart is creating the configuration, so the alloy chart does not need to.
-    # @ignored
     configMap: {create: false}
 
+  # @ignored
   controller:
-    # @ignored
     type: deployment
-    # @ignored
     replicas: 1  # Only one replica should be used, otherwise multiple copies of cluster events might get sent to Loki.
-    # @ignored
     nodeSelector:
       kubernetes.io/os: linux
+
+    podAnnotations:
+      k8s.grafana.com/logs.job: integrations/alloy
 
   # Skip installation of the Grafana Alloy CRDs, since we don't use them in this chart
   # @ignored
@@ -2146,38 +2305,40 @@ alloy-events:
 
 # Settings for the Grafana Alloy instance that gathers pod logs.
 # See https://github.com/grafana/alloy/tree/main/operations/helm/charts/alloy for available values.
-# @ignored -- This skips including these values in README.md
 alloy-logs:
   logging:
     # -- Level at which Alloy log lines should be written.
-    # @section -- Chart
+    # @section -- Deployment: [Alloy](https://github.com/grafana/alloy/tree/main/operations/helm/charts/alloy) for Logs Deployment
     level: info
     # -- Format to use for writing Alloy log lines.
-    # @section -- Chart
+    # @section -- Deployment: [Alloy](https://github.com/grafana/alloy/tree/main/operations/helm/charts/alloy) for Logs Deployment
     format: logfmt
 
+  liveDebugging:
+    # -- Enable live debugging for the Alloy instance.
+    # Requires stability level to be set to "experimental".
+    # @section -- Deployment: [Alloy](https://github.com/grafana/alloy/tree/main/operations/helm/charts/alloy) for Logs Deployment
+    enabled: false
+
+  # @ignored
   alloy:
     # This chart is creating the configuration, so the alloy chart does not need to.
-    # @ignored
     configMap: {create: false}
 
     # Disabling clustering by default, because the default log gathering format does not require clusters.
-    # @ignored
     clustering: {enabled: false}
 
+    # @ignored
     mounts:
       # Mount /var/log from the host into the container for log collection.
-      # @ignored
       varlog: true
       # Mount /var/lib/docker/containers from the host into the container for log
       # collection. Set to true if your cluster puts log files inside this directory.
-      # @ignored
       dockercontainers: false
 
+  # @ignored
   controller:
-    # @ignored
     type: daemonset
-    # @ignored
     nodeSelector:
       kubernetes.io/os: linux
 
@@ -2185,20 +2346,31 @@ alloy-logs:
       - effect: NoSchedule
         operator: Exists
 
+    podAnnotations:
+      k8s.grafana.com/logs.job: integrations/alloy
+
   # Skip installation of the Grafana Alloy CRDs, since we don't use them in this chart
   # @ignored
   crds: {create: false}
 
 # Settings for the Grafana Alloy instance that gathers profiles.
 # See https://github.com/grafana/alloy/tree/main/operations/helm/charts/alloy for available values.
-# @ignored -- This skips including these values in README.md
 alloy-profiles:
   logging:
     # -- Level at which Alloy log lines should be written.
+    # @section -- Deployment: [Alloy](https://github.com/grafana/alloy/tree/main/operations/helm/charts/alloy) for Profiles Deployment
     level: info
     # -- Format to use for writing Alloy log lines.
+    # @section -- Deployment: [Alloy](https://github.com/grafana/alloy/tree/main/operations/helm/charts/alloy) for Profiles Deployment
     format: logfmt
 
+  liveDebugging:
+    # -- Enable live debugging for the Alloy instance.
+    # Requires stability level to be set to "experimental".
+    # @section -- Deployment: [Alloy](https://github.com/grafana/alloy/tree/main/operations/helm/charts/alloy) for Profiles Deployment
+    enabled: false
+
+  # @ignored
   alloy:
     # Pyroscope components are currently in public preview
     stabilityLevel: public-preview
@@ -2214,6 +2386,7 @@ alloy-profiles:
       runAsGroup: 0
       runAsUser: 0
 
+  # @ignored
   controller:
     type: daemonset
     hostPID: true
@@ -2224,11 +2397,14 @@ alloy-profiles:
       - effect: NoSchedule
         operator: Exists
 
+    podAnnotations:
+      k8s.grafana.com/logs.job: integrations/alloy
+
   # Skip installation of the Grafana Alloy CRDs, since we don't use them in this chart
+  # @ignored
   crds: {create: false}
 
 # -- Deploy additional manifest objects
-# @section -- Chart
 extraObjects: []
 # - apiVersion: external-secrets.io/v1beta1
 #   kind: ExternalSecret

@@ -6,8 +6,8 @@ describes how you can interact and modify them.
 ## Pre-install, pre-upgrade validation
 
 Before every install or upgrade, the chart deploys a Pod with Grafana Alloy and a ConfigMap with the generated
-configurations. The Pod inspects the configuration files, and validates their syntax and some internal structure. If the
-configuration is found to be invalid, the install or upgrade is stopped.
+configurations. The Pod inspects the configuration files, and validates their syntax and some internal structure. If
+there are problems found in the configuration, the installation or upgrade is stopped.
 
 Change the settings for this validation in the `configValidator` section of the values file.
 
@@ -87,9 +87,9 @@ Also when `helm test` is run, a Pod is created that builds a report of how the c
 Cluster. For example, for all of the `discovery.relabel` components, how many objects were input and how many remain
 after the rules were applied? For `prometheus.scrape` components, was the scrape successful? This report can be helpful
 for diagnosing missing or duplicate metrics, because it will show if a relabel filter is removing the desired object, or
-if the metrics scrape failed.
+if there was a problem scraping metrics.
 
-Here is the report of the `discovery.relabel` component that filters from all Services to just the one for
+Here is the report of the `discovery.relabel` component that filters from all Services on the Cluster to the one for
 kube-state-metrics:
 
 ```text

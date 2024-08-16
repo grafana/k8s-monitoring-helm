@@ -6,11 +6,11 @@ metadata:
   name: k8smon-alloy
   namespace: default
   labels:
-    helm.sh/chart: alloy-0.4.0
+    helm.sh/chart: alloy-0.6.0
     app.kubernetes.io/name: alloy
     app.kubernetes.io/instance: k8smon
     
-    app.kubernetes.io/version: "v1.2.0"
+    app.kubernetes.io/version: "v1.3.0"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
     app.kubernetes.io/component: rbac
@@ -21,13 +21,14 @@ kind: ServiceAccount
 automountServiceAccountToken: true
 metadata:
   labels:    
-    helm.sh/chart: kube-state-metrics-5.21.0
+    helm.sh/chart: kube-state-metrics-5.25.1
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: kube-state-metrics
     app.kubernetes.io/name: kube-state-metrics
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "2.12.0"
+    app.kubernetes.io/version: "2.13.0"
+    release: k8smon
   name: k8smon-kube-state-metrics
   namespace: default
 ---
@@ -38,7 +39,7 @@ metadata:
   name: k8smon-opencost
   namespace: default
   labels:
-    helm.sh/chart: opencost-1.40.0
+    helm.sh/chart: opencost-1.41.0
     app.kubernetes.io/name: opencost
     app.kubernetes.io/instance: k8smon
     app.kubernetes.io/version: "1.111.0"
@@ -53,13 +54,14 @@ metadata:
   name: k8smon-prometheus-node-exporter
   namespace: default
   labels:
-    helm.sh/chart: prometheus-node-exporter-4.37.0
+    helm.sh/chart: prometheus-node-exporter-4.38.0
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: prometheus-node-exporter
     app.kubernetes.io/name: prometheus-node-exporter
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.8.1"
+    app.kubernetes.io/version: "1.8.2"
+    release: k8smon
 automountServiceAccountToken: false
 ---
 # Source: k8s-monitoring/templates/metrics-service-credentials.yaml
@@ -383,11 +385,6 @@ data:
     discovery.relabel "alloy" {
       targets = discovery.kubernetes.pods.targets
       rule {
-        source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_instance"]
-        regex = "k8smon"
-        action = "keep"
-      }
-      rule {
         source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
         regex = "alloy.*"
         action = "keep"
@@ -425,7 +422,7 @@ data:
       max_cache_size = 100000
       rule {
         source_labels = ["__name__"]
-        regex = "up|alloy_build_info|alloy_tcp_connections|alloy_wal_samples_appended_total|alloy_wal_storage_active_series|go_gc_duration_seconds_count|go_goroutines|go_memstats_heap_inuse_bytes|loki_process_dropped_lines_total|loki_write_batch_retries_total|loki_write_dropped_bytes_total|loki_write_dropped_entries_total|loki_write_encoded_bytes_total|loki_write_mutated_bytes_total|loki_write_mutated_entries_total|loki_write_request_duration_seconds_bucket|loki_write_sent_bytes_total|loki_write_sent_entries_total|process_cpu_seconds_total|process_start_time_seconds|prometheus_remote_storage_enqueue_retries_total|prometheus_remote_storage_highest_timestamp_in_seconds|prometheus_remote_storage_queue_highest_sent_timestamp_seconds|prometheus_remote_storage_samples_dropped_total|prometheus_remote_storage_samples_failed_total|prometheus_remote_storage_samples_pending|prometheus_remote_storage_samples_retried_total|prometheus_remote_storage_samples_total|prometheus_remote_storage_sent_batch_duration_seconds_bucket|prometheus_remote_storage_sent_batch_duration_seconds_count|prometheus_remote_storage_sent_batch_duration_seconds_sum|prometheus_remote_storage_shard_capacity|prometheus_remote_storage_shards|prometheus_remote_storage_shards_desired|prometheus_remote_storage_shards_max|prometheus_remote_storage_shards_min|prometheus_remote_storage_succeeded_samples_total|prometheus_remote_write_wal_samples_appended_total|prometheus_sd_discovered_targets|prometheus_target_interval_length_seconds_count|prometheus_target_interval_length_seconds_sum|prometheus_target_scrapes_exceeded_sample_limit_total|prometheus_target_scrapes_sample_duplicate_timestamp_total|prometheus_target_scrapes_sample_out_of_bounds_total|prometheus_target_scrapes_sample_out_of_order_total|prometheus_target_sync_length_seconds_sum|prometheus_wal_watcher_current_segment|traces_exporter_send_failed_spans|traces_exporter_send_failed_spans_total|traces_exporter_sent_spans|traces_exporter_sent_spans_total|traces_loadbalancer_backend_outcome|traces_loadbalancer_num_backends|traces_receiver_accepted_spans|traces_receiver_accepted_spans_total|traces_receiver_refused_spans|traces_receiver_refused_spans_total"
+        regex = "up|alloy_build_info|alloy_build_info|alloy_component_controller_running_components|alloy_component_dependencies_wait_seconds|alloy_component_dependencies_wait_seconds_bucket|alloy_component_evaluation_seconds|alloy_component_evaluation_seconds_bucket|alloy_component_evaluation_seconds_count|alloy_component_evaluation_seconds_sum|alloy_component_evaluation_slow_seconds|alloy_config_hash|alloy_resources_machine_rx_bytes_total|alloy_resources_machine_tx_bytes_total|alloy_resources_process_cpu_seconds_total|alloy_resources_process_resident_memory_bytes|alloy_tcp_connections|alloy_wal_samples_appended_total|alloy_wal_storage_active_series|cluster_node_gossip_health_score|cluster_node_gossip_proto_version|cluster_node_gossip_received_events_total|cluster_node_info|cluster_node_lamport_time|cluster_node_peers|cluster_node_update_observers|cluster_transport_rx_bytes_total|cluster_transport_rx_packet_queue_length|cluster_transport_rx_packets_failed_total|cluster_transport_rx_packets_total|cluster_transport_stream_rx_bytes_total|cluster_transport_stream_rx_packets_failed_total|cluster_transport_stream_rx_packets_total|cluster_transport_stream_tx_bytes_total|cluster_transport_stream_tx_packets_failed_total|cluster_transport_stream_tx_packets_total|cluster_transport_streams|cluster_transport_tx_bytes_total|cluster_transport_tx_packet_queue_length|cluster_transport_tx_packets_failed_total|cluster_transport_tx_packets_total|exporter_send_failed_spans_ratio_total|exporter_sent_spans_ratio_total|go_gc_duration_seconds_count|go_goroutines|go_memstats_heap_inuse_bytes|loki_process_dropped_lines_total|loki_write_batch_retries_total|loki_write_dropped_bytes_total|loki_write_dropped_entries_total|loki_write_encoded_bytes_total|loki_write_mutated_bytes_total|loki_write_mutated_entries_total|loki_write_request_duration_seconds_bucket|loki_write_sent_bytes_total|loki_write_sent_entries_total|process_cpu_seconds_total|process_start_time_seconds|processor_batch_batch_send_size_ratio_bucket|processor_batch_metadata_cardinality_ratio|processor_batch_timeout_trigger_send_ratio_total|prometheus_remote_storage_bytes_total|prometheus_remote_storage_enqueue_retries_total|prometheus_remote_storage_highest_timestamp_in_seconds|prometheus_remote_storage_metadata_bytes_total|prometheus_remote_storage_queue_highest_sent_timestamp_seconds|prometheus_remote_storage_samples_dropped_total|prometheus_remote_storage_samples_failed_total|prometheus_remote_storage_samples_pending|prometheus_remote_storage_samples_retried_total|prometheus_remote_storage_samples_total|prometheus_remote_storage_sent_batch_duration_seconds_bucket|prometheus_remote_storage_sent_batch_duration_seconds_count|prometheus_remote_storage_sent_batch_duration_seconds_sum|prometheus_remote_storage_shard_capacity|prometheus_remote_storage_shards|prometheus_remote_storage_shards_desired|prometheus_remote_storage_shards_max|prometheus_remote_storage_shards_min|prometheus_remote_storage_succeeded_samples_total|prometheus_remote_write_wal_samples_appended_total|prometheus_remote_write_wal_storage_active_series|prometheus_sd_discovered_targets|prometheus_target_interval_length_seconds_count|prometheus_target_interval_length_seconds_sum|prometheus_target_scrapes_exceeded_sample_limit_total|prometheus_target_scrapes_sample_duplicate_timestamp_total|prometheus_target_scrapes_sample_out_of_bounds_total|prometheus_target_scrapes_sample_out_of_order_total|prometheus_target_sync_length_seconds_sum|prometheus_wal_watcher_current_segment|receiver_accepted_spans_ratio_total|receiver_refused_spans_ratio_total|rpc_server_duration_milliseconds_bucket|scrape_duration_seconds|traces_exporter_send_failed_spans|traces_exporter_send_failed_spans_total|traces_exporter_sent_spans|traces_exporter_sent_spans_total|traces_loadbalancer_backend_outcome|traces_loadbalancer_num_backends|traces_receiver_accepted_spans|traces_receiver_accepted_spans_total|traces_receiver_refused_spans|traces_receiver_refused_spans_total"
         action = "keep"
       }
       forward_to = [prometheus.relabel.metrics_service.receiver]
@@ -435,7 +432,7 @@ data:
     prometheus.exporter.unix "kubernetes_monitoring_telemetry" {
       set_collectors = ["textfile"]
       textfile {
-        directory = "/etc/kubernetes-monitoring-telemetry"
+        directory = "/etc/alloy"
       }
     }
     
@@ -605,7 +602,7 @@ data:
     discovery.relabel "kube_state_metrics" {
       targets = discovery.kubernetes.services.targets
       rule {
-        source_labels = ["__meta_kubernetes_service_label_app_kubernetes_io_instance"]
+        source_labels = ["__meta_kubernetes_service_label_release"]
         regex = "k8smon"
         action = "keep"
       }
@@ -640,7 +637,7 @@ data:
     discovery.relabel "node_exporter" {
       targets = discovery.kubernetes.pods.targets
       rule {
-        source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_instance"]
+        source_labels = ["__meta_kubernetes_pod_label_release"]
         regex = "k8smon"
         action = "keep"
       }
@@ -686,11 +683,6 @@ data:
     // OpenCost
     discovery.relabel "opencost" {
       targets = discovery.kubernetes.services.targets
-      rule {
-        source_labels = ["__meta_kubernetes_service_label_app_kubernetes_io_instance"]
-        regex = "k8smon"
-        action = "keep"
-      }
       rule {
         source_labels = ["__meta_kubernetes_service_label_app_kubernetes_io_name"]
         regex = "opencost"
@@ -828,18 +820,10 @@ data:
       level  = "info"
       format = "logfmt"
     }
----
-# Source: k8s-monitoring/templates/kubernetes-monitoring-telemetry.yaml
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: kubernetes-monitoring-telemetry
-  namespace: default
-data:
-  metrics.prom: |
+  k8s-monitoring-build-info-metric.prom: |
     # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart as well as a summary of enabled features
     # TYPE grafana_kubernetes_monitoring_build_info gauge
-    grafana_kubernetes_monitoring_build_info{version="1.3.0", namespace="default", metrics="enabled,alloy,autoDiscover,kube-state-metrics,node-exporter,kubelet,cadvisor,cost", logs="disabled", traces="disabled", deployments="kube-state-metrics,prometheus-node-exporter,prometheus-operator-crds,opencost"} 1
+    grafana_kubernetes_monitoring_build_info{version="1.4.8", namespace="default", metrics="enabled,alloy,autoDiscover,kube-state-metrics,node-exporter,kubelet,cadvisor,cost", logs="disabled", traces="disabled", deployments="kube-state-metrics,prometheus-node-exporter,prometheus-operator-crds,opencost"} 1
 ---
 # Source: k8s-monitoring/charts/prometheus-operator-crds/charts/crds/templates/crd-alertmanagerconfigs.yaml
 apiVersion: apiextensions.k8s.io/v1
@@ -847,7 +831,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.15.0
-    operator.prometheus.io/version: 0.75.0
+    operator.prometheus.io/version: 0.75.2
   name: alertmanagerconfigs.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -7546,7 +7530,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.15.0
-    operator.prometheus.io/version: 0.75.0
+    operator.prometheus.io/version: 0.75.2
   name: alertmanagers.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -15865,7 +15849,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.15.0
-    operator.prometheus.io/version: 0.75.0
+    operator.prometheus.io/version: 0.75.2
   name: podmonitors.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -16832,7 +16816,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.15.0
-    operator.prometheus.io/version: 0.75.0
+    operator.prometheus.io/version: 0.75.2
   name: probes.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -17775,7 +17759,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.15.0
-    operator.prometheus.io/version: 0.75.0
+    operator.prometheus.io/version: 0.75.2
   name: prometheusagents.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -28120,7 +28104,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.15.0
-    operator.prometheus.io/version: 0.75.0
+    operator.prometheus.io/version: 0.75.2
   name: prometheuses.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -40489,7 +40473,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.15.0
-    operator.prometheus.io/version: 0.75.0
+    operator.prometheus.io/version: 0.75.2
   name: prometheusrules.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -40629,7 +40613,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.15.0
-    operator.prometheus.io/version: 0.75.0
+    operator.prometheus.io/version: 0.75.2
   name: scrapeconfigs.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -48081,7 +48065,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.15.0
-    operator.prometheus.io/version: 0.75.0
+    operator.prometheus.io/version: 0.75.2
   name: servicemonitors.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -49072,7 +49056,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.15.0
-    operator.prometheus.io/version: 0.75.0
+    operator.prometheus.io/version: 0.75.2
   name: thanosrulers.monitoring.coreos.com
 spec:
   group: monitoring.coreos.com
@@ -57030,11 +57014,11 @@ kind: ClusterRole
 metadata:
   name: k8smon-alloy
   labels:
-    helm.sh/chart: alloy-0.4.0
+    helm.sh/chart: alloy-0.6.0
     app.kubernetes.io/name: alloy
     app.kubernetes.io/instance: k8smon
     
-    app.kubernetes.io/version: "v1.2.0"
+    app.kubernetes.io/version: "v1.3.0"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
     app.kubernetes.io/component: rbac
@@ -57129,13 +57113,14 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   labels:    
-    helm.sh/chart: kube-state-metrics-5.21.0
+    helm.sh/chart: kube-state-metrics-5.25.1
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: kube-state-metrics
     app.kubernetes.io/name: kube-state-metrics
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "2.12.0"
+    app.kubernetes.io/version: "2.13.0"
+    release: k8smon
   name: k8smon-kube-state-metrics
 rules:
 
@@ -57287,7 +57272,7 @@ kind: ClusterRole
 metadata:
   name: k8smon-opencost
   labels:
-    helm.sh/chart: opencost-1.40.0
+    helm.sh/chart: opencost-1.41.0
     app.kubernetes.io/name: opencost
     app.kubernetes.io/instance: k8smon
     app.kubernetes.io/version: "1.111.0"
@@ -57372,11 +57357,11 @@ kind: ClusterRoleBinding
 metadata:
   name: k8smon-alloy
   labels:
-    helm.sh/chart: alloy-0.4.0
+    helm.sh/chart: alloy-0.6.0
     app.kubernetes.io/name: alloy
     app.kubernetes.io/instance: k8smon
     
-    app.kubernetes.io/version: "v1.2.0"
+    app.kubernetes.io/version: "v1.3.0"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
     app.kubernetes.io/component: rbac
@@ -57394,13 +57379,14 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   labels:    
-    helm.sh/chart: kube-state-metrics-5.21.0
+    helm.sh/chart: kube-state-metrics-5.25.1
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: kube-state-metrics
     app.kubernetes.io/name: kube-state-metrics
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "2.12.0"
+    app.kubernetes.io/version: "2.13.0"
+    release: k8smon
   name: k8smon-kube-state-metrics
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -57417,7 +57403,7 @@ kind: ClusterRoleBinding
 metadata:
   name: k8smon-opencost
   labels:
-    helm.sh/chart: opencost-1.40.0
+    helm.sh/chart: opencost-1.41.0
     app.kubernetes.io/name: opencost
     app.kubernetes.io/instance: k8smon
     app.kubernetes.io/version: "1.111.0"
@@ -57438,17 +57424,18 @@ kind: Service
 metadata:
   name: k8smon-alloy-cluster
   labels:
-    helm.sh/chart: alloy-0.4.0
+    helm.sh/chart: alloy-0.6.0
     app.kubernetes.io/name: alloy
     app.kubernetes.io/instance: k8smon
     
-    app.kubernetes.io/version: "v1.2.0"
+    app.kubernetes.io/version: "v1.3.0"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
     app.kubernetes.io/component: networking
 spec:
   type: ClusterIP
   clusterIP: 'None'
+  publishNotReadyAddresses: true
   selector:
     app.kubernetes.io/name: alloy
     app.kubernetes.io/instance: k8smon
@@ -57502,11 +57489,11 @@ kind: Service
 metadata:
   name: k8smon-alloy
   labels:
-    helm.sh/chart: alloy-0.4.0
+    helm.sh/chart: alloy-0.6.0
     app.kubernetes.io/name: alloy
     app.kubernetes.io/instance: k8smon
     
-    app.kubernetes.io/version: "v1.2.0"
+    app.kubernetes.io/version: "v1.3.0"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
     app.kubernetes.io/component: networking
@@ -57561,13 +57548,14 @@ metadata:
   name: k8smon-kube-state-metrics
   namespace: default
   labels:    
-    helm.sh/chart: kube-state-metrics-5.21.0
+    helm.sh/chart: kube-state-metrics-5.25.1
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: kube-state-metrics
     app.kubernetes.io/name: kube-state-metrics
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "2.12.0"
+    app.kubernetes.io/version: "2.13.0"
+    release: k8smon
   annotations:
 spec:
   type: "ClusterIP"
@@ -57588,7 +57576,7 @@ metadata:
   name: k8smon-opencost
   namespace: default
   labels:
-    helm.sh/chart: opencost-1.40.0
+    helm.sh/chart: opencost-1.41.0
     app.kubernetes.io/name: opencost
     app.kubernetes.io/instance: k8smon
     app.kubernetes.io/version: "1.111.0"
@@ -57611,13 +57599,14 @@ metadata:
   name: k8smon-prometheus-node-exporter
   namespace: default
   labels:
-    helm.sh/chart: prometheus-node-exporter-4.37.0
+    helm.sh/chart: prometheus-node-exporter-4.38.0
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: prometheus-node-exporter
     app.kubernetes.io/name: prometheus-node-exporter
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.8.1"
+    app.kubernetes.io/version: "1.8.2"
+    release: k8smon
 spec:
   type: ClusterIP
   ports:
@@ -57635,11 +57624,11 @@ kind: Service
 metadata:
   name: k8smon-grafana-agent
   labels:
-    helm.sh/chart: alloy-0.4.0
+    helm.sh/chart: alloy-0.6.0
     app.kubernetes.io/name: alloy
     app.kubernetes.io/instance: k8smon
     
-    app.kubernetes.io/version: "v1.2.0"
+    app.kubernetes.io/version: "v1.3.0"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
 spec:
@@ -57693,13 +57682,14 @@ metadata:
   name: k8smon-prometheus-node-exporter
   namespace: default
   labels:
-    helm.sh/chart: prometheus-node-exporter-4.37.0
+    helm.sh/chart: prometheus-node-exporter-4.38.0
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: prometheus-node-exporter
     app.kubernetes.io/name: prometheus-node-exporter
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.8.1"
+    app.kubernetes.io/version: "1.8.2"
+    release: k8smon
 spec:
   selector:
     matchLabels:
@@ -57714,14 +57704,16 @@ spec:
     metadata:
       annotations:
         cluster-autoscaler.kubernetes.io/safe-to-evict: "true"
+        k8s.grafana.com/logs.job: integrations/node_exporter
       labels:
-        helm.sh/chart: prometheus-node-exporter-4.37.0
+        helm.sh/chart: prometheus-node-exporter-4.38.0
         app.kubernetes.io/managed-by: Helm
         app.kubernetes.io/component: metrics
         app.kubernetes.io/part-of: prometheus-node-exporter
         app.kubernetes.io/name: prometheus-node-exporter
         app.kubernetes.io/instance: k8smon
-        app.kubernetes.io/version: "1.8.1"
+        app.kubernetes.io/version: "1.8.2"
+        release: k8smon
     spec:
       automountServiceAccountToken: false
       securityContext:
@@ -57732,7 +57724,7 @@ spec:
       serviceAccountName: k8smon-prometheus-node-exporter
       containers:
         - name: node-exporter
-          image: quay.io/prometheus/node-exporter:v1.8.1
+          image: quay.io/prometheus/node-exporter:v1.8.2
           imagePullPolicy: IfNotPresent
           args:
             - --path.procfs=/host/proc
@@ -57784,6 +57776,7 @@ spec:
               readOnly: true
       hostNetwork: true
       hostPID: true
+      hostIPC: false
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
@@ -57816,13 +57809,14 @@ metadata:
   name: k8smon-kube-state-metrics
   namespace: default
   labels:    
-    helm.sh/chart: kube-state-metrics-5.21.0
+    helm.sh/chart: kube-state-metrics-5.25.1
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: kube-state-metrics
     app.kubernetes.io/name: kube-state-metrics
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "2.12.0"
+    app.kubernetes.io/version: "2.13.0"
+    release: k8smon
 spec:
   selector:
     matchLabels:      
@@ -57835,13 +57829,14 @@ spec:
   template:
     metadata:
       labels:        
-        helm.sh/chart: kube-state-metrics-5.21.0
+        helm.sh/chart: kube-state-metrics-5.25.1
         app.kubernetes.io/managed-by: Helm
         app.kubernetes.io/component: metrics
         app.kubernetes.io/part-of: kube-state-metrics
         app.kubernetes.io/name: kube-state-metrics
         app.kubernetes.io/instance: k8smon
-        app.kubernetes.io/version: "2.12.0"
+        app.kubernetes.io/version: "2.13.0"
+        release: k8smon
     spec:
       automountServiceAccountToken: true
       hostNetwork: false
@@ -57858,8 +57853,9 @@ spec:
         args:
         - --port=8080
         - --resources=certificatesigningrequests,configmaps,cronjobs,daemonsets,deployments,endpoints,horizontalpodautoscalers,ingresses,jobs,leases,limitranges,mutatingwebhookconfigurations,namespaces,networkpolicies,nodes,persistentvolumeclaims,persistentvolumes,poddisruptionbudgets,pods,replicasets,replicationcontrollers,resourcequotas,secrets,services,statefulsets,storageclasses,validatingwebhookconfigurations,volumeattachments
+        - --metric-labels-allowlist=nodes=[*]
         imagePullPolicy: IfNotPresent
-        image: registry.k8s.io/kube-state-metrics/kube-state-metrics:v2.12.0
+        image: registry.k8s.io/kube-state-metrics/kube-state-metrics:v2.13.0
         ports:
         - containerPort: 8080
           name: "http"
@@ -57867,7 +57863,7 @@ spec:
           failureThreshold: 3
           httpGet:
             httpHeaders:
-            path: /healthz
+            path: /livez
             port: 8080
             scheme: HTTP
           initialDelaySeconds: 5
@@ -57878,7 +57874,7 @@ spec:
           failureThreshold: 3
           httpGet:
             httpHeaders:
-            path: /
+            path: /readyz
             port: 8080
             scheme: HTTP
           initialDelaySeconds: 5
@@ -57903,7 +57899,7 @@ metadata:
   name: k8smon-opencost
   namespace: default
   labels:
-    helm.sh/chart: opencost-1.40.0
+    helm.sh/chart: opencost-1.41.0
     app.kubernetes.io/name: opencost
     app.kubernetes.io/instance: k8smon
     app.kubernetes.io/version: "1.111.0"
@@ -57931,7 +57927,7 @@ spec:
         kubernetes.io/os: linux
       containers:
         - name: k8smon-opencost
-          image: "ghcr.io/opencost/opencost:1.111.0"
+          image: ghcr.io/opencost/opencost:1.111.0@sha256:6aa68e52a24b14ba41f23db08d1b9db1429a1c0300f4c0381ecc2c61fc311a97
           imagePullPolicy: IfNotPresent
           args:
           ports:
@@ -58018,11 +58014,11 @@ kind: StatefulSet
 metadata:
   name: k8smon-alloy
   labels:
-    helm.sh/chart: alloy-0.4.0
+    helm.sh/chart: alloy-0.6.0
     app.kubernetes.io/name: alloy
     app.kubernetes.io/instance: k8smon
     
-    app.kubernetes.io/version: "v1.2.0"
+    app.kubernetes.io/version: "v1.3.0"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
 spec:
@@ -58038,6 +58034,7 @@ spec:
     metadata:
       annotations:
         kubectl.kubernetes.io/default-container: alloy
+        k8s.grafana.com/logs.job: integrations/alloy
       labels:
         app.kubernetes.io/name: alloy
         app.kubernetes.io/instance: k8smon
@@ -58045,7 +58042,7 @@ spec:
       serviceAccountName: k8smon-alloy
       containers:
         - name: alloy
-          image: docker.io/grafana/alloy:v1.2.0
+          image: docker.io/grafana/alloy:v1.3.0
           imagePullPolicy: IfNotPresent
           args:
             - run
@@ -58100,9 +58097,6 @@ spec:
           volumeMounts:
             - name: config
               mountPath: /etc/alloy
-            -
-              mountPath: /etc/kubernetes-monitoring-telemetry
-              name: kubernetes-monitoring-telemetry
         - name: config-reloader
           image: ghcr.io/jimmidyson/configmap-reload:v0.12.0
           args:
@@ -58122,39 +58116,36 @@ spec:
         - name: config
           configMap:
             name: k8smon-alloy
-        - configMap:
-            name: kubernetes-monitoring-telemetry
-          name: kubernetes-monitoring-telemetry
 ---
 # Source: k8s-monitoring/charts/prometheus-operator-crds/charts/crds/templates/crd-alertmanagerconfigs.yaml
-# https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/v0.75.0/example/prometheus-operator-crd/monitoring.coreos.com_alertmanagerconfigs.yaml
+# https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/v0.75.2/example/prometheus-operator-crd/monitoring.coreos.com_alertmanagerconfigs.yaml
 ---
 # Source: k8s-monitoring/charts/prometheus-operator-crds/charts/crds/templates/crd-alertmanagers.yaml
-# https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/v0.75.0/example/prometheus-operator-crd/monitoring.coreos.com_alertmanagers.yaml
+# https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/v0.75.2/example/prometheus-operator-crd/monitoring.coreos.com_alertmanagers.yaml
 ---
 # Source: k8s-monitoring/charts/prometheus-operator-crds/charts/crds/templates/crd-podmonitors.yaml
-# https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/v0.75.0/example/prometheus-operator-crd/monitoring.coreos.com_podmonitors.yaml
+# https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/v0.75.2/example/prometheus-operator-crd/monitoring.coreos.com_podmonitors.yaml
 ---
 # Source: k8s-monitoring/charts/prometheus-operator-crds/charts/crds/templates/crd-probes.yaml
-# https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/v0.75.0/example/prometheus-operator-crd/monitoring.coreos.com_probes.yaml
+# https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/v0.75.2/example/prometheus-operator-crd/monitoring.coreos.com_probes.yaml
 ---
 # Source: k8s-monitoring/charts/prometheus-operator-crds/charts/crds/templates/crd-prometheusagents.yaml
-# https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/v0.75.0/example/prometheus-operator-crd/monitoring.coreos.com_prometheusagents.yaml
+# https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/v0.75.2/example/prometheus-operator-crd/monitoring.coreos.com_prometheusagents.yaml
 ---
 # Source: k8s-monitoring/charts/prometheus-operator-crds/charts/crds/templates/crd-prometheuses.yaml
-# https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/v0.75.0/example/prometheus-operator-crd/monitoring.coreos.com_prometheuses.yaml
+# https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/v0.75.2/example/prometheus-operator-crd/monitoring.coreos.com_prometheuses.yaml
 ---
 # Source: k8s-monitoring/charts/prometheus-operator-crds/charts/crds/templates/crd-prometheusrules.yaml
-# https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/v0.75.0/example/prometheus-operator-crd/monitoring.coreos.com_prometheusrules.yaml
+# https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/v0.75.2/example/prometheus-operator-crd/monitoring.coreos.com_prometheusrules.yaml
 ---
 # Source: k8s-monitoring/charts/prometheus-operator-crds/charts/crds/templates/crd-scrapeconfigs.yaml
-# https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/v0.75.0/example/prometheus-operator-crd/monitoring.coreos.com_scrapeconfigs.yaml
+# https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/v0.75.2/example/prometheus-operator-crd/monitoring.coreos.com_scrapeconfigs.yaml
 ---
 # Source: k8s-monitoring/charts/prometheus-operator-crds/charts/crds/templates/crd-servicemonitors.yaml
-# https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/v0.75.0/example/prometheus-operator-crd/monitoring.coreos.com_servicemonitors.yaml
+# https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/v0.75.2/example/prometheus-operator-crd/monitoring.coreos.com_servicemonitors.yaml
 ---
 # Source: k8s-monitoring/charts/prometheus-operator-crds/charts/crds/templates/crd-thanosrulers.yaml
-# https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/v0.75.0/example/prometheus-operator-crd/monitoring.coreos.com_thanosrulers.yaml
+# https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/v0.75.2/example/prometheus-operator-crd/monitoring.coreos.com_thanosrulers.yaml
 ---
 # Source: k8s-monitoring/templates/hooks/validate-configuration.yaml
 apiVersion: v1
@@ -58165,8 +58156,8 @@ metadata:
   labels:
     app.kubernetes.io/managed-by: "Helm"
     app.kubernetes.io/instance: "k8smon"
-    app.kubernetes.io/version: 2.5.0
-    helm.sh/chart: "k8s-monitoring-1.3.0"
+    app.kubernetes.io/version: 2.8.0
+    helm.sh/chart: "k8s-monitoring-1.4.8"
   annotations:
     "helm.sh/hook": pre-install,pre-upgrade
     "helm.sh/hook-weight": "-5"
@@ -58473,11 +58464,6 @@ data:
     discovery.relabel "alloy" {
       targets = discovery.kubernetes.pods.targets
       rule {
-        source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_instance"]
-        regex = "k8smon"
-        action = "keep"
-      }
-      rule {
         source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
         regex = "alloy.*"
         action = "keep"
@@ -58515,7 +58501,7 @@ data:
       max_cache_size = 100000
       rule {
         source_labels = ["__name__"]
-        regex = "up|alloy_build_info|alloy_tcp_connections|alloy_wal_samples_appended_total|alloy_wal_storage_active_series|go_gc_duration_seconds_count|go_goroutines|go_memstats_heap_inuse_bytes|loki_process_dropped_lines_total|loki_write_batch_retries_total|loki_write_dropped_bytes_total|loki_write_dropped_entries_total|loki_write_encoded_bytes_total|loki_write_mutated_bytes_total|loki_write_mutated_entries_total|loki_write_request_duration_seconds_bucket|loki_write_sent_bytes_total|loki_write_sent_entries_total|process_cpu_seconds_total|process_start_time_seconds|prometheus_remote_storage_enqueue_retries_total|prometheus_remote_storage_highest_timestamp_in_seconds|prometheus_remote_storage_queue_highest_sent_timestamp_seconds|prometheus_remote_storage_samples_dropped_total|prometheus_remote_storage_samples_failed_total|prometheus_remote_storage_samples_pending|prometheus_remote_storage_samples_retried_total|prometheus_remote_storage_samples_total|prometheus_remote_storage_sent_batch_duration_seconds_bucket|prometheus_remote_storage_sent_batch_duration_seconds_count|prometheus_remote_storage_sent_batch_duration_seconds_sum|prometheus_remote_storage_shard_capacity|prometheus_remote_storage_shards|prometheus_remote_storage_shards_desired|prometheus_remote_storage_shards_max|prometheus_remote_storage_shards_min|prometheus_remote_storage_succeeded_samples_total|prometheus_remote_write_wal_samples_appended_total|prometheus_sd_discovered_targets|prometheus_target_interval_length_seconds_count|prometheus_target_interval_length_seconds_sum|prometheus_target_scrapes_exceeded_sample_limit_total|prometheus_target_scrapes_sample_duplicate_timestamp_total|prometheus_target_scrapes_sample_out_of_bounds_total|prometheus_target_scrapes_sample_out_of_order_total|prometheus_target_sync_length_seconds_sum|prometheus_wal_watcher_current_segment|traces_exporter_send_failed_spans|traces_exporter_send_failed_spans_total|traces_exporter_sent_spans|traces_exporter_sent_spans_total|traces_loadbalancer_backend_outcome|traces_loadbalancer_num_backends|traces_receiver_accepted_spans|traces_receiver_accepted_spans_total|traces_receiver_refused_spans|traces_receiver_refused_spans_total"
+        regex = "up|alloy_build_info|alloy_build_info|alloy_component_controller_running_components|alloy_component_dependencies_wait_seconds|alloy_component_dependencies_wait_seconds_bucket|alloy_component_evaluation_seconds|alloy_component_evaluation_seconds_bucket|alloy_component_evaluation_seconds_count|alloy_component_evaluation_seconds_sum|alloy_component_evaluation_slow_seconds|alloy_config_hash|alloy_resources_machine_rx_bytes_total|alloy_resources_machine_tx_bytes_total|alloy_resources_process_cpu_seconds_total|alloy_resources_process_resident_memory_bytes|alloy_tcp_connections|alloy_wal_samples_appended_total|alloy_wal_storage_active_series|cluster_node_gossip_health_score|cluster_node_gossip_proto_version|cluster_node_gossip_received_events_total|cluster_node_info|cluster_node_lamport_time|cluster_node_peers|cluster_node_update_observers|cluster_transport_rx_bytes_total|cluster_transport_rx_packet_queue_length|cluster_transport_rx_packets_failed_total|cluster_transport_rx_packets_total|cluster_transport_stream_rx_bytes_total|cluster_transport_stream_rx_packets_failed_total|cluster_transport_stream_rx_packets_total|cluster_transport_stream_tx_bytes_total|cluster_transport_stream_tx_packets_failed_total|cluster_transport_stream_tx_packets_total|cluster_transport_streams|cluster_transport_tx_bytes_total|cluster_transport_tx_packet_queue_length|cluster_transport_tx_packets_failed_total|cluster_transport_tx_packets_total|exporter_send_failed_spans_ratio_total|exporter_sent_spans_ratio_total|go_gc_duration_seconds_count|go_goroutines|go_memstats_heap_inuse_bytes|loki_process_dropped_lines_total|loki_write_batch_retries_total|loki_write_dropped_bytes_total|loki_write_dropped_entries_total|loki_write_encoded_bytes_total|loki_write_mutated_bytes_total|loki_write_mutated_entries_total|loki_write_request_duration_seconds_bucket|loki_write_sent_bytes_total|loki_write_sent_entries_total|process_cpu_seconds_total|process_start_time_seconds|processor_batch_batch_send_size_ratio_bucket|processor_batch_metadata_cardinality_ratio|processor_batch_timeout_trigger_send_ratio_total|prometheus_remote_storage_bytes_total|prometheus_remote_storage_enqueue_retries_total|prometheus_remote_storage_highest_timestamp_in_seconds|prometheus_remote_storage_metadata_bytes_total|prometheus_remote_storage_queue_highest_sent_timestamp_seconds|prometheus_remote_storage_samples_dropped_total|prometheus_remote_storage_samples_failed_total|prometheus_remote_storage_samples_pending|prometheus_remote_storage_samples_retried_total|prometheus_remote_storage_samples_total|prometheus_remote_storage_sent_batch_duration_seconds_bucket|prometheus_remote_storage_sent_batch_duration_seconds_count|prometheus_remote_storage_sent_batch_duration_seconds_sum|prometheus_remote_storage_shard_capacity|prometheus_remote_storage_shards|prometheus_remote_storage_shards_desired|prometheus_remote_storage_shards_max|prometheus_remote_storage_shards_min|prometheus_remote_storage_succeeded_samples_total|prometheus_remote_write_wal_samples_appended_total|prometheus_remote_write_wal_storage_active_series|prometheus_sd_discovered_targets|prometheus_target_interval_length_seconds_count|prometheus_target_interval_length_seconds_sum|prometheus_target_scrapes_exceeded_sample_limit_total|prometheus_target_scrapes_sample_duplicate_timestamp_total|prometheus_target_scrapes_sample_out_of_bounds_total|prometheus_target_scrapes_sample_out_of_order_total|prometheus_target_sync_length_seconds_sum|prometheus_wal_watcher_current_segment|receiver_accepted_spans_ratio_total|receiver_refused_spans_ratio_total|rpc_server_duration_milliseconds_bucket|scrape_duration_seconds|traces_exporter_send_failed_spans|traces_exporter_send_failed_spans_total|traces_exporter_sent_spans|traces_exporter_sent_spans_total|traces_loadbalancer_backend_outcome|traces_loadbalancer_num_backends|traces_receiver_accepted_spans|traces_receiver_accepted_spans_total|traces_receiver_refused_spans|traces_receiver_refused_spans_total"
         action = "keep"
       }
       forward_to = [prometheus.relabel.metrics_service.receiver]
@@ -58525,7 +58511,7 @@ data:
     prometheus.exporter.unix "kubernetes_monitoring_telemetry" {
       set_collectors = ["textfile"]
       textfile {
-        directory = "/etc/kubernetes-monitoring-telemetry"
+        directory = "/etc/alloy"
       }
     }
     
@@ -58695,7 +58681,7 @@ data:
     discovery.relabel "kube_state_metrics" {
       targets = discovery.kubernetes.services.targets
       rule {
-        source_labels = ["__meta_kubernetes_service_label_app_kubernetes_io_instance"]
+        source_labels = ["__meta_kubernetes_service_label_release"]
         regex = "k8smon"
         action = "keep"
       }
@@ -58730,7 +58716,7 @@ data:
     discovery.relabel "node_exporter" {
       targets = discovery.kubernetes.pods.targets
       rule {
-        source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_instance"]
+        source_labels = ["__meta_kubernetes_pod_label_release"]
         regex = "k8smon"
         action = "keep"
       }
@@ -58776,11 +58762,6 @@ data:
     // OpenCost
     discovery.relabel "opencost" {
       targets = discovery.kubernetes.services.targets
-      rule {
-        source_labels = ["__meta_kubernetes_service_label_app_kubernetes_io_instance"]
-        regex = "k8smon"
-        action = "keep"
-      }
       rule {
         source_labels = ["__meta_kubernetes_service_label_app_kubernetes_io_name"]
         regex = "opencost"
@@ -58928,8 +58909,8 @@ metadata:
   labels:
     app.kubernetes.io/managed-by: "Helm"
     app.kubernetes.io/instance: "k8smon"
-    app.kubernetes.io/version: 2.5.0
-    helm.sh/chart: "k8s-monitoring-1.3.0"
+    app.kubernetes.io/version: 2.8.0
+    helm.sh/chart: "k8s-monitoring-1.4.8"
   annotations:
     "helm.sh/hook": test
     "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
@@ -58982,8 +58963,8 @@ metadata:
   labels:
     app.kubernetes.io/managed-by: "Helm"
     app.kubernetes.io/instance: "k8smon"
-    app.kubernetes.io/version: 2.5.0
-    helm.sh/chart: "k8s-monitoring-1.3.0"
+    app.kubernetes.io/version: 2.8.0
+    helm.sh/chart: "k8s-monitoring-1.4.8"
   annotations:
     "helm.sh/hook": pre-install,pre-upgrade
     "helm.sh/hook-weight": "-5"
@@ -58994,7 +58975,7 @@ spec:
         kubernetes.io/os: linux
   containers:
     - name: alloy
-      image: "docker.io/grafana/alloy:v1.2.0"
+      image: "docker.io/grafana/alloy:v1.3.0"
       command:
       - bash
       - -c
@@ -59003,7 +58984,7 @@ spec:
         if ! alloy fmt /etc/alloy/config.alloy > /dev/null; then
           exit 1
         fi
-        output=$(alloy run "/etc/alloy/config.alloy" 2>&1)
+        output=$(alloy run --stability.level generally-available "/etc/alloy/config.alloy" 2>&1)
         if ! echo "${output}" | grep "KUBERNETES_SERVICE_HOST and KUBERNETES_SERVICE_PORT must be defined" >/dev/null; then
           echo "${output}"
           exit 1
@@ -59031,8 +59012,8 @@ metadata:
   labels:
     app.kubernetes.io/managed-by: "Helm"
     app.kubernetes.io/instance: "k8smon"
-    app.kubernetes.io/version: 2.5.0
-    helm.sh/chart: "k8s-monitoring-1.3.0"
+    app.kubernetes.io/version: 2.8.0
+    helm.sh/chart: "k8s-monitoring-1.4.8"
   annotations:
     "helm.sh/hook": test
     "helm.sh/hook-delete-policy": before-hook-creation
@@ -59043,7 +59024,7 @@ spec:
         kubernetes.io/os: linux
   containers:
     - name: config-analysis
-      image: ghcr.io/grafana/k8s-monitoring-test:1.3.0
+      image: ghcr.io/grafana/k8s-monitoring-test:1.4.8
       command: [/etc/bin/config-analysis.sh]
       env:
         - name: ALLOY_HOST
@@ -59058,8 +59039,8 @@ metadata:
   labels:
     app.kubernetes.io/managed-by: "Helm"
     app.kubernetes.io/instance: "k8smon"
-    app.kubernetes.io/version: 2.5.0
-    helm.sh/chart: "k8s-monitoring-1.3.0"
+    app.kubernetes.io/version: 2.8.0
+    helm.sh/chart: "k8s-monitoring-1.4.8"
   annotations:
     "helm.sh/hook": test
     "helm.sh/hook-delete-policy": before-hook-creation
@@ -59075,14 +59056,14 @@ spec:
       labels:
         app.kubernetes.io/managed-by: "Helm"
         app.kubernetes.io/instance: "k8smon"
-        helm.sh/chart: "k8s-monitoring-1.3.0"
+        helm.sh/chart: "k8s-monitoring-1.4.8"
     spec:
       restartPolicy: Never
       nodeSelector:
         kubernetes.io/os: linux
       containers:
         - name: query-test
-          image: ghcr.io/grafana/k8s-monitoring-test:1.3.0
+          image: ghcr.io/grafana/k8s-monitoring-test:1.4.8
           command: ["bash", "-c", "/etc/bin/query-test.sh /etc/test/testQueries.json"]
           volumeMounts:
             - name: test-files
