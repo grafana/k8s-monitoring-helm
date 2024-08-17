@@ -284,6 +284,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | externalServices.prometheus.oauth2.scopes | list | `[]` | List of scopes to authenticate with. |
 | externalServices.prometheus.oauth2.tokenURL | string | `""` | URL to fetch the token from. |
 | externalServices.prometheus.bearerToken.token | string | `""` | Prometheus Bearer token |
+| externalServices.prometheus.bearerToken.tokenKey | string | `""` | The key for Prometheus Bearer token |
 | externalServices.prometheus.bearerToken.tokenFile | string | `""` | Prometheus Bearer token secret file |
 | externalServices.prometheus.processors.batch.maxSize | int | `0` | Upper limit of a batch size. When set to 0, there is no upper limit. |
 | externalServices.prometheus.processors.batch.size | int | `8192` | Amount of data to buffer before flushing the batch. |

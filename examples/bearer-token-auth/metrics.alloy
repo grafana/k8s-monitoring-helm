@@ -703,7 +703,7 @@ prometheus.relabel "servicemonitors" {
 // Metrics Service
 remote.kubernetes.secret "metrics_service" {
   name = "prometheus-k8s-monitoring"
-  namespace = "cortex-3"
+  namespace = "default"
 }
 
 prometheus.relabel "metrics_service" {
@@ -722,7 +722,7 @@ prometheus.remote_write "metrics_service" {
     url = nonsensitive(remote.kubernetes.secret.metrics_service.data["host"]) + "/api/prom/push"
     headers = { "X-Scope-OrgID" = nonsensitive(remote.kubernetes.secret.metrics_service.data["tenantId"]) }
 
-    bearer_token = "sample-bearer-token"
+    bearer_token = remote.kubernetes.secret.metrics_service.data["bearerTokenKey"]
 
     send_native_histograms = false
 
@@ -792,7 +792,7 @@ loki.process "pod_logs" {
 // Logs Service
 remote.kubernetes.secret "logs_service" {
   name = "loki-k8s-monitoring"
-  namespace = "cortex-3"
+  namespace = "default"
 }
 
 loki.process "logs_service" {

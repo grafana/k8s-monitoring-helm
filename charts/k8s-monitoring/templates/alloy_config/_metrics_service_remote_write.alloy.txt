@@ -14,7 +14,7 @@ prometheus.remote_write "metrics_service" {
     }
 {{- else if eq .authMode "bearerToken" }}
   {{- if .bearerToken.token }}
-    bearer_token = {{  .bearerToken.token | quote  }}
+    bearer_token = remote.kubernetes.secret.metrics_service.data[{{ .bearerToken.tokenKey | quote }}]
   {{- else if .bearerToken.tokenFile }}
     bearer_token_file = {{  .bearerToken.tokenFile | quote  }}
   {{- end }}
