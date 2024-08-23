@@ -30,6 +30,7 @@ Then open a browser to `http://localhost:12345`
 Certain Kubernetes Cluster platforms require some specific configurations for this Helm chart. If your Cluster is
 running on one of these platforms, see the example for the changes required to run this Helm chart:
 
+-   [Azure AKS](../../../examples/azure-aks)
 -   [AWS EKS on Fargate](../../../examples/eks-fargate)
 -   [Google GKE Autopilot](../../../examples/gke-autopilot)
 -   [IBM Cloud](../../../examples/ibm-cloud)

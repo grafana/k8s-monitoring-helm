@@ -42,7 +42,8 @@ Then, we extract the Grafana Alloy configuration files from the ConfigMap object
 
 ### Specific platform examples
 
--   [EKS on Fargate](./eks-fargate) - Compatible with AWS EKS on Fargate Clusters.
+-   [Azure AKS](./azure-aks) - Compatible with Azure AKS Clusters.
+-   [EKS on Fargate](./eks-fargate) - Compatible with AWS EKS Cluster with Fargate Nodes.
 -   [GKE Autopilot](./gke-autopilot) - Compatible with Google GKE Autopilot Clusters.
 -   [IBM Cloud](./ibm-cloud) - Compatible with IBM Cloud Clusters.
 -   [OpenShift Compatible](./openshift-compatible) - Compatible with OpenShift Clusters.
