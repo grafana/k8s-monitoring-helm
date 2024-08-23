@@ -13,7 +13,7 @@ loki.process "logs_service" {
   }
 
 {{- if eq .Values.externalServices.loki.protocol "loki" }}
-  forward_to = [loki.write.logs_service.receiver]
+  forward_to = [{{ append (.Values.externalServices.loki.extraOutputs | default (list)) "loki.write.logs_service.receiver" | join "," }}]
 }
 {{ include "alloy.config.logsServiceLoki" . }}
 {{- end }}
