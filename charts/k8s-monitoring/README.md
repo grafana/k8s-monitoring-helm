@@ -222,12 +222,15 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 |-----|------|---------|-------------|
 | externalServices.loki.authMode | string | `"basic"` | one of "none", "basic", "oauth2" |
 | externalServices.loki.basicAuth.password | string | `""` | Loki basic auth password |
+| externalServices.loki.basicAuth.passwordFrom | string | `""` | Loki basic auth password, set from an remote.* component, environment variable, or some other means. |
 | externalServices.loki.basicAuth.passwordKey | string | `"password"` | The key for the password property in the secret |
 | externalServices.loki.basicAuth.username | string | `""` | Loki basic auth username |
+| externalServices.loki.basicAuth.usernameFrom | string | `""` | Loki basic auth username, set from an remote.* component, environment variable, or some other means. |
 | externalServices.loki.basicAuth.usernameKey | string | `"username"` | The key for the username property in the secret |
 | externalServices.loki.externalLabels | object | `{}` | Custom labels to be added to all logs and events, all values are treated as strings and automatically quoted. |
 | externalServices.loki.externalLabelsFrom | object | `{}` | Custom labels to be added to all logs and events through a dynamic reference, all values are treated as raw strings and not quoted. |
 | externalServices.loki.host | string | `""` | Loki host where logs and events will be sent |
+| externalServices.loki.hostFrom | string | `""` | Loki host where logs and events will be sent, set from an remote.* component, environment variable, or some other means. |
 | externalServices.loki.hostKey | string | `"host"` | The key for the host property in the secret |
 | externalServices.loki.oauth2.clientId | string | `""` | Loki OAuth2 client ID |
 | externalServices.loki.oauth2.clientIdKey | string | `"id"` | The key for the client ID property in the secret |
@@ -254,6 +257,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | externalServices.loki.secret.name | string | `""` | The name of the secret. |
 | externalServices.loki.secret.namespace | string | `""` | The namespace of the secret. |
 | externalServices.loki.tenantId | string | `""` | Loki tenant ID |
+| externalServices.loki.tenantIdFrom | string | `""` | Sets the `X-Scope-OrgID` header when sending logs, set from a remote.* component, environment variable, or some other |
 | externalServices.loki.tenantIdKey | string | `"tenantId"` | The key for the tenant ID property in the secret |
 | externalServices.loki.tls | object | `{}` | [TLS settings](https://grafana.com/docs/alloy/latest/reference/components/loki.write/#tls_config-block) to configure for the logs service. |
 | externalServices.loki.writeEndpoint | string | `"/loki/api/v1/push"` | Loki logs write endpoint. |
@@ -264,12 +268,15 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 |-----|------|---------|-------------|
 | externalServices.prometheus.authMode | string | `"basic"` | one of "none", "basic", "oauth2" |
 | externalServices.prometheus.basicAuth.password | string | `""` | Prometheus basic auth password |
+| externalServices.prometheus.basicAuth.passwordFrom | string | `""` | Prometheus basic auth password, set from an remote.* component, environment variable, or some other means. |
 | externalServices.prometheus.basicAuth.passwordKey | string | `"password"` | The key for the password property in the secret |
 | externalServices.prometheus.basicAuth.username | string | `""` | Prometheus basic auth username |
+| externalServices.prometheus.basicAuth.usernameFrom | string | `""` | Prometheus basic auth username, set from an remote.* component, environment variable, or some other means. |
 | externalServices.prometheus.basicAuth.usernameKey | string | `"username"` | The key for the username property in the secret |
 | externalServices.prometheus.externalLabels | object | `{}` | Custom labels to be added to all time series, all values are treated as strings and automatically quoted. |
 | externalServices.prometheus.externalLabelsFrom | object | `{}` | Custom labels to be added to all time series through a dynamic reference, all values are treated as raw strings and not quoted. |
 | externalServices.prometheus.host | string | `""` | Prometheus host where metrics will be sent |
+| externalServices.prometheus.hostFrom | string | `""` | Prometheus host where metrics will be sent, set from an remote.* component, environment variable, or some other means. |
 | externalServices.prometheus.hostKey | string | `"host"` | The key for the host property in the secret |
 | externalServices.prometheus.oauth2.clientId | string | `""` | Prometheus OAuth2 client ID |
 | externalServices.prometheus.oauth2.clientIdKey | string | `"id"` | The key for the client ID property in the secret |
@@ -306,6 +313,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | externalServices.prometheus.secret.namespace | string | `""` | The namespace of the secret. Only used if secret.create = "false" |
 | externalServices.prometheus.sendNativeHistograms | bool | `false` | Whether native histograms should be sent. Only applies when protocol is "remote_write". |
 | externalServices.prometheus.tenantId | string | `""` | Sets the `X-Scope-OrgID` header when sending metrics |
+| externalServices.prometheus.tenantIdFrom | string | `""` | Sets the `X-Scope-OrgID` header when sending metrics, set from a remote.* component, environment variable, or some other |
 | externalServices.prometheus.tenantIdKey | string | `"tenantId"` | The key for the tenant ID property in the secret |
 | externalServices.prometheus.tls | object | `{}` | TLS settings to configure for the metrics service, compatible with [remoteWrite protocol](https://grafana.com/docs/alloy/latest/reference/components/prometheus.remote_write/#tls_config-block), [otlp](https://grafana.com/docs/alloy/latest/reference/components/otelcol.exporter.otlp/#tls-block), or [otlphttp](https://grafana.com/docs/alloy/latest/reference/components/otelcol.exporter.otlphttp/#tls-block) protocols |
 | externalServices.prometheus.wal.maxKeepaliveTime | string | `"8h"` | Maximum time to keep data in the WAL before removing it. |
@@ -320,18 +328,22 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 |-----|------|---------|-------------|
 | externalServices.pyroscope.authMode | string | `"basic"` | one of "none", "basic" |
 | externalServices.pyroscope.basicAuth.password | string | `""` | Pyroscope basic auth password |
+| externalServices.pyroscope.basicAuth.passwordFrom | string | `""` | Pyroscope basic auth password, set from an remote.* component, environment variable, or some other means. |
 | externalServices.pyroscope.basicAuth.passwordKey | string | `"password"` | The key for the password property in the secret |
 | externalServices.pyroscope.basicAuth.username | string | `""` | Pyroscope basic auth username |
+| externalServices.pyroscope.basicAuth.usernameFrom | string | `""` | Pyroscope basic auth username, set from an remote.* component, environment variable, or some other means. |
 | externalServices.pyroscope.basicAuth.usernameKey | string | `"username"` | The key for the username property in the secret |
 | externalServices.pyroscope.externalLabels | object | `{}` | Custom labels to be added to all profiles, all values are treated as strings and automatically quoted. |
 | externalServices.pyroscope.externalLabelsFrom | object | `{}` | Custom labels to be added to all profiles through a dynamic reference, all values are treated as raw strings and not quoted. |
 | externalServices.pyroscope.host | string | `""` | Pyroscope host where profiles will be sent |
+| externalServices.pyroscope.hostFrom | string | `""` | Pyroscope host where profiles will be sent, set from an remote.* component, environment variable, or some other means. |
 | externalServices.pyroscope.hostKey | string | `"host"` | The key for the host property in the secret |
 | externalServices.pyroscope.proxyURL | string | `""` | HTTP proxy to proxy requests to Pyroscope through. |
 | externalServices.pyroscope.secret.create | bool | `true` | Should this Helm chart create the secret. If false, you must define the name and namespace values. |
 | externalServices.pyroscope.secret.name | string | `""` | The name of the secret. |
 | externalServices.pyroscope.secret.namespace | string | `""` | The namespace of the secret. |
 | externalServices.pyroscope.tenantId | string | `""` | Pyroscope tenant ID |
+| externalServices.pyroscope.tenantIdFrom | string | `""` | Sets the `X-Scope-OrgID` header when sending profiles, set from a remote.* component, environment variable, or some other |
 | externalServices.pyroscope.tenantIdKey | string | `"tenantId"` | The key for the tenant ID property in the secret |
 | externalServices.pyroscope.tls | object | `{}` | [TLS settings](https://grafana.com/docs/alloy/latest/reference/components/pyroscope.write/#tls_config-block) to configure for the profiles service. |
 
@@ -341,10 +353,13 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 |-----|------|---------|-------------|
 | externalServices.tempo.authMode | string | `"basic"` | one of "none", "basic" |
 | externalServices.tempo.basicAuth.password | string | `""` | Tempo basic auth password |
+| externalServices.tempo.basicAuth.passwordFrom | string | `""` | Tempo basic auth password, set from an remote.* component, environment variable, or some other means. |
 | externalServices.tempo.basicAuth.passwordKey | string | `"password"` | The key for the password property in the secret |
 | externalServices.tempo.basicAuth.username | string | `""` | Tempo basic auth username |
+| externalServices.tempo.basicAuth.usernameFrom | string | `""` | Tempo basic auth username, set from an remote.* component, environment variable, or some other means. |
 | externalServices.tempo.basicAuth.usernameKey | string | `"username"` | The key for the username property in the secret |
 | externalServices.tempo.host | string | `""` | Tempo host where traces will be sent |
+| externalServices.tempo.hostFrom | string | `""` | Tempo host where traces will be sent, set from an remote.* component, environment variable, or some other means. |
 | externalServices.tempo.hostKey | string | `"host"` | The key for the host property in the secret |
 | externalServices.tempo.protocol | string | `"otlp"` | The type of server protocol for writing metrics Options:   * "otlp" will use OTLP   * "otlphttp" will use OTLP HTTP |
 | externalServices.tempo.searchEndpoint | string | `"/api/search"` | Tempo search endpoint. |
@@ -352,15 +367,22 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | externalServices.tempo.secret.name | string | `""` | The name of the secret. |
 | externalServices.tempo.secret.namespace | string | `""` | The namespace of the secret. |
 | externalServices.tempo.tenantId | string | `""` | Tempo tenant ID |
+| externalServices.tempo.tenantIdFrom | string | `""` | Sets the `X-Scope-OrgID` header when sending traces, set from a remote.* component, environment variable, or some other |
 | externalServices.tempo.tenantIdKey | string | `"tenantId"` | The key for the tenant ID property in the secret |
 | externalServices.tempo.tls | object | `{}` | [TLS settings](https://grafana.com/docs/alloy/latest/reference/components/otelcol.exporter.otlp/#tls-block) to configure for the traces service. |
 | externalServices.tempo.tlsOptions | string | `""` | Define the [TLS block](https://grafana.com/docs/alloy/latest/reference/components/otelcol.exporter.otlp/#tls-block). Example: `tlsOptions: insecure = true` This option will be deprecated and removed soon. Please switch to `tls` and use yaml format. |
 
-### Metrics Global
+### Metrics
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | extraConfig | string | `""` | Extra configuration that will be added to the Grafana Alloy configuration file. This value is templated so that you can refer to other values from this file. This cannot be used to modify the generated configuration values, only append new components. See [Adding custom Flow configuration](#adding-custom-flow-configuration) for an example. |
+
+### Chart
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| global.extraConfig | string | `""` | Extra configuration that will be added to all Grafana Alloy configuration files. This value is templated so that you can refer to other values from this file. This cannot be used to modify the generated configuration values, only append new components. See [Adding custom Flow configuration](#adding-custom-flow-configuration) for an example. |
 
 ### Image Registry
 
@@ -399,6 +421,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 |-----|------|---------|-------------|
 | logs.enabled | bool | `true` | Capture and forward logs |
 | logs.extraConfig | string | `""` | Extra configuration that will be added to the Grafana Alloy for Logs configuration file. This value is templated so that you can refer to other values from this file. This cannot be used to modify the generated configuration values, only append new components. See [Adding custom Flow configuration](#adding-custom-flow-configuration) for an example. |
+| profiles.extraConfig | string | `""` | Extra configuration that will be added to the Grafana Alloy for Profile configuration file. This value is templated so that you can refer to other values from this file. This cannot be used to modify the generated configuration values, only append new components. See [Adding custom Flow configuration](#adding-custom-flow-configuration) for an example. |
 
 ### Logs Scrape: Journal
 

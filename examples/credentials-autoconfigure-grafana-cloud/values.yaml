@@ -1,0 +1,76 @@
+---
+cluster:
+  name: credentials-auto-configure
+
+externalServices:
+  prometheus:
+    hostFrom: json_decode(remote.http.grafana_cloud.content)["hmInstancePromUrl"] + "/api/prom/push"
+    tenantIdFrom: json_decode(remote.http.grafana_cloud.content)["hmInstancePromId"]
+    basicAuth:
+      usernameFrom: json_decode(remote.http.grafana_cloud.content)["hmInstancePromId"]
+      passwordFrom: remote.kubernetes.secret.grafana_cloud.data["token"]
+    secret:
+      create: false
+  loki:
+    hostFrom: json_decode(remote.http.grafana_cloud.content)["hlInstanceUrl"] + "/loki/api/v1/push"
+    tenantIdFrom: json_decode(remote.http.grafana_cloud.content)["hlInstanceId"]
+    basicAuth:
+      usernameFrom: json_decode(remote.http.grafana_cloud.content)["hlInstanceId"]
+      passwordFrom: remote.kubernetes.secret.grafana_cloud.data["token"]
+    secret:
+      create: false
+  tempo:
+    hostFrom: json_decode(remote.http.grafana_cloud.content)["htInstanceUrl"] + ":443"
+    tenantIdFrom: json_decode(remote.http.grafana_cloud.content)["htInstanceId"]
+    basicAuth:
+      usernameFrom: json_decode(remote.http.grafana_cloud.content)["htInstanceId"]
+      passwordFrom: remote.kubernetes.secret.grafana_cloud.data["token"]
+    secret:
+      create: false
+  pyroscope:
+    hostFrom: json_decode(remote.http.grafana_cloud.content)["hpInstanceUrl"]
+    tenantIdFrom: json_decode(remote.http.grafana_cloud.content)["hpInstanceId"]
+    basicAuth:
+      usernameFrom: json_decode(remote.http.grafana_cloud.content)["hpInstanceId"]
+      passwordFrom: remote.kubernetes.secret.grafana_cloud.data["token"]
+    secret:
+      create: false
+global:
+  extraConfig: |-
+    remote.kubernetes.secret "grafana_cloud" {
+      namespace = "default"
+      name = "grafana-cloud-credentials"
+    }
+    remote.http "grafana_cloud" {
+      // replace YOURSTACKNAME with the name of your stack name
+      // The API Token must have the stacks:read
+      url = "https://grafana.com/api/instances/YOURSTACKNAME"
+      client {
+        bearer_token = remote.kubernetes.secret.grafana_cloud.data["token"]
+      }
+      poll_frequency = "24h"
+    }
+
+logs:
+  enabled: true
+  pod_logs:
+    enabled: true
+  cluster_events:
+    enabled: true
+  journal:
+    enabled: true
+
+traces:
+  enabled: true
+
+profiles:
+  enabled: true
+
+extraObjects:
+  - apiVersion: v1
+    kind: Secret
+    metadata:
+      name: grafana-cloud-credentials
+    type: Opaque
+    data:
+      token: SXQncyBhIHNlY3JldCB0byBldmVyeW9uZQ==
