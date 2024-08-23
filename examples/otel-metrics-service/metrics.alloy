@@ -762,6 +762,9 @@ otelcol.exporter.otlphttp "metrics_service" {
     endpoint = nonsensitive(remote.kubernetes.secret.metrics_service.data["host"]) + "/api/v1/otlp"
 
     auth = otelcol.auth.basic.metrics_service.handler
+    headers = {
+      "X-Scope-OrgID" = nonsensitive(remote.kubernetes.secret.metrics_service.data["tenantId"]),
+    }
     tls {
       insecure_skip_verify = true
     }
