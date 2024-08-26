@@ -264,11 +264,14 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| externalServices.prometheus.authMode | string | `"basic"` | one of "none", "basic", "oauth2" "bearerToken"|
+| externalServices.prometheus.authMode | string | `"basic"` | one of "none", "basic", "oauth2", "bearerToken" |
 | externalServices.prometheus.basicAuth.password | string | `""` | Prometheus basic auth password |
 | externalServices.prometheus.basicAuth.passwordKey | string | `"password"` | The key for the password property in the secret |
 | externalServices.prometheus.basicAuth.username | string | `""` | Prometheus basic auth username |
 | externalServices.prometheus.basicAuth.usernameKey | string | `"username"` | The key for the username property in the secret |
+| externalServices.prometheus.bearerToken.token | string | `""` | Configure the Prometheus Remote Write Bearer Token |
+| externalServices.prometheus.bearerToken.tokenFile | string | `""` | Configure the Prometheus Remote Write Bearer Token file |
+| externalServices.prometheus.bearerToken.tokenKey | string | `"bearerToken"` | Configure the Key for Prometheus Remote Write Bearer Token secret |
 | externalServices.prometheus.externalLabels | object | `{}` | Custom labels to be added to all time series. All values are treated as strings and automatically quoted. |
 | externalServices.prometheus.externalLabelsFrom | object | `{}` | Custom labels to be added to all time series through a dynamic reference. All values are treated as raw strings and not quoted. |
 | externalServices.prometheus.extraHeaders | object | `{}` | Extra headers to be set when sending metrics. All values are treated as strings and automatically quoted. |
@@ -287,9 +290,6 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | externalServices.prometheus.oauth2.proxyURL | string | `""` | HTTP proxy to send requests through. |
 | externalServices.prometheus.oauth2.scopes | list | `[]` | List of scopes to authenticate with. |
 | externalServices.prometheus.oauth2.tokenURL | string | `""` | URL to fetch the token from. |
-| externalServices.prometheus.bearerToken.token | string | `""` | Prometheus Bearer token |
-| externalServices.prometheus.bearerToken.tokenKey | string | `""` | The key for Prometheus Bearer token |
-| externalServices.prometheus.bearerToken.tokenFile | string | `""` | Prometheus Bearer token secret file |
 | externalServices.prometheus.processors.batch.maxSize | int | `0` | Upper limit of a batch size. When set to 0, there is no upper limit. |
 | externalServices.prometheus.processors.batch.size | int | `8192` | Amount of data to buffer before flushing the batch. |
 | externalServices.prometheus.processors.batch.timeout | string | `"2s"` | How long to wait before flushing the batch. |

@@ -851,7 +851,9 @@ data:
     prometheus.remote_write "metrics_service" {
       endpoint {
         url = nonsensitive(remote.kubernetes.secret.metrics_service.data["host"]) + "/api/prom/push"
-        headers = { "X-Scope-OrgID" = nonsensitive(remote.kubernetes.secret.metrics_service.data["tenantId"]) }
+        headers = {
+          "X-Scope-OrgID" = nonsensitive(remote.kubernetes.secret.metrics_service.data["tenantId"]),
+        }
     
         bearer_token = remote.kubernetes.secret.metrics_service.data["bearerTokenKey"]
     
@@ -58259,8 +58261,6 @@ metadata:
     app.kubernetes.io/instance: k8smon
     app.kubernetes.io/version: "1.8.2"
     release: k8smon
-  annotations:
-    prometheus.io/scrape: "true"
 spec:
   type: ClusterIP
   ports:
@@ -59710,7 +59710,9 @@ data:
     prometheus.remote_write "metrics_service" {
       endpoint {
         url = nonsensitive(remote.kubernetes.secret.metrics_service.data["host"]) + "/api/prom/push"
-        headers = { "X-Scope-OrgID" = nonsensitive(remote.kubernetes.secret.metrics_service.data["tenantId"]) }
+        headers = {
+          "X-Scope-OrgID" = nonsensitive(remote.kubernetes.secret.metrics_service.data["tenantId"]),
+        }
     
         bearer_token = remote.kubernetes.secret.metrics_service.data["bearerTokenKey"]
     
