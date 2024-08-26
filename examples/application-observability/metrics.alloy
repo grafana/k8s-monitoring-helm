@@ -752,7 +752,9 @@ prometheus.relabel "metrics_service" {
 prometheus.remote_write "metrics_service" {
   endpoint {
     url = nonsensitive(remote.kubernetes.secret.metrics_service.data["host"]) + "/api/prom/push"
-    headers = { "X-Scope-OrgID" = nonsensitive(remote.kubernetes.secret.metrics_service.data["tenantId"]) }
+    headers = {
+      "X-Scope-OrgID" = nonsensitive(remote.kubernetes.secret.metrics_service.data["tenantId"]),
+    }
 
     basic_auth {
       username = nonsensitive(remote.kubernetes.secret.metrics_service.data["username"])
@@ -869,7 +871,9 @@ otelcol.exporter.otlp "traces_service" {
     endpoint = nonsensitive(remote.kubernetes.secret.traces_service.data["host"])
 
     auth = otelcol.auth.basic.traces_service.handler
-    headers = { "X-Scope-OrgID" = nonsensitive(remote.kubernetes.secret.traces_service.data["tenantId"]) }
+    headers = {
+      "X-Scope-OrgID" = nonsensitive(remote.kubernetes.secret.metrics_service.data["tenantId"]),
+    }
   }
 }
 
