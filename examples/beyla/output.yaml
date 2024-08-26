@@ -102,7 +102,7 @@ metadata:
   name: k8smon-prometheus-node-exporter
   namespace: default
   labels:
-    helm.sh/chart: prometheus-node-exporter-4.38.0
+    helm.sh/chart: prometheus-node-exporter-4.39.0
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: prometheus-node-exporter
@@ -913,7 +913,9 @@ data:
     prometheus.remote_write "metrics_service" {
       endpoint {
         url = nonsensitive(remote.kubernetes.secret.metrics_service.data["host"]) + "/api/prom/push"
-        headers = { "X-Scope-OrgID" = nonsensitive(remote.kubernetes.secret.metrics_service.data["tenantId"]) }
+        headers = {
+          "X-Scope-OrgID" = nonsensitive(remote.kubernetes.secret.metrics_service.data["tenantId"]),
+        }
     
         basic_auth {
           username = nonsensitive(remote.kubernetes.secret.metrics_service.data["username"])
@@ -1030,7 +1032,9 @@ data:
         endpoint = nonsensitive(remote.kubernetes.secret.traces_service.data["host"])
     
         auth = otelcol.auth.basic.traces_service.handler
-        headers = { "X-Scope-OrgID" = nonsensitive(remote.kubernetes.secret.traces_service.data["tenantId"]) }
+        headers = {
+          "X-Scope-OrgID" = nonsensitive(remote.kubernetes.secret.metrics_service.data["tenantId"]),
+        }
       }
     }
     
@@ -58407,7 +58411,7 @@ metadata:
   name: k8smon-prometheus-node-exporter
   namespace: default
   labels:
-    helm.sh/chart: prometheus-node-exporter-4.38.0
+    helm.sh/chart: prometheus-node-exporter-4.39.0
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: prometheus-node-exporter
@@ -58637,7 +58641,7 @@ metadata:
   name: k8smon-prometheus-node-exporter
   namespace: default
   labels:
-    helm.sh/chart: prometheus-node-exporter-4.38.0
+    helm.sh/chart: prometheus-node-exporter-4.39.0
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: prometheus-node-exporter
@@ -58661,7 +58665,7 @@ spec:
         cluster-autoscaler.kubernetes.io/safe-to-evict: "true"
         k8s.grafana.com/logs.job: integrations/node_exporter
       labels:
-        helm.sh/chart: prometheus-node-exporter-4.38.0
+        helm.sh/chart: prometheus-node-exporter-4.39.0
         app.kubernetes.io/managed-by: Helm
         app.kubernetes.io/component: metrics
         app.kubernetes.io/part-of: prometheus-node-exporter
@@ -59954,7 +59958,9 @@ data:
     prometheus.remote_write "metrics_service" {
       endpoint {
         url = nonsensitive(remote.kubernetes.secret.metrics_service.data["host"]) + "/api/prom/push"
-        headers = { "X-Scope-OrgID" = nonsensitive(remote.kubernetes.secret.metrics_service.data["tenantId"]) }
+        headers = {
+          "X-Scope-OrgID" = nonsensitive(remote.kubernetes.secret.metrics_service.data["tenantId"]),
+        }
     
         basic_auth {
           username = nonsensitive(remote.kubernetes.secret.metrics_service.data["username"])
@@ -60071,7 +60077,9 @@ data:
         endpoint = nonsensitive(remote.kubernetes.secret.traces_service.data["host"])
     
         auth = otelcol.auth.basic.traces_service.handler
-        headers = { "X-Scope-OrgID" = nonsensitive(remote.kubernetes.secret.traces_service.data["tenantId"]) }
+        headers = {
+          "X-Scope-OrgID" = nonsensitive(remote.kubernetes.secret.metrics_service.data["tenantId"]),
+        }
       }
     }
     
