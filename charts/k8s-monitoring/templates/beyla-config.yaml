@@ -1,0 +1,39 @@
+{{- if .Values.beyla.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "beyla.fullname" .Subcharts.beyla }}
+  namespace: {{ include "beyla.namespace" .Subcharts.beyla }}
+  labels:
+    {{- include "beyla.labels" .Subcharts.beyla | nindent 4 }}
+    app.kubernetes.io/component: config
+  {{- with .Values.beyla.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+data:
+  beyla-config.yml: |
+{{- if dig "otel_traces_export" "endpoint" .Values.beyla.config.data }}
+{{- if .Values.receivers.grpc.enabled }}
+    otel_traces_export:
+      endpoint: {{ include "kubernetes_monitoring.receiver.grpc" . | trim | quote }}
+{{- else if .Values.receivers.http.enabled }}
+    otel_traces_export:
+      endpoint: {{ include "kubernetes_monitoring.receiver.http" . | trim | quote }}
+{{- end }}
+{{- end }}
+    {{- if eq .Values.beyla.preset "network" }}
+    {{- if not .Values.beyla.config.data.network }}
+    network:
+      enable: true
+    {{- end }}
+    {{- end }}
+    {{- if eq .Values.beyla.preset "application" }}
+    {{- if not .Values.beyla.config.data.discovery }}
+    discovery:
+      services:
+        - k8s_namespace: .
+    {{- end }}
+    {{- end }}
+  {{- toYaml .Values.beyla.config.data | nindent 4}}
+{{- end }}
