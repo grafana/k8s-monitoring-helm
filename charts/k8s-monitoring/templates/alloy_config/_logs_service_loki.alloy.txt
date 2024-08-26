@@ -6,7 +6,7 @@ loki.write "logs_service" {
     url = nonsensitive(remote.kubernetes.secret.logs_service.data[{{ .hostKey | quote }}]) + "{{ .writeEndpoint }}"
     tenant_id = nonsensitive(remote.kubernetes.secret.logs_service.data[{{ .tenantIdKey | quote }}])
 {{- if or .extraHeaders .extraHeadersFrom }}
-    headers {
+    headers = {
 {{- range $key, $value := .extraHeaders }}
       {{ $key | quote }} = {{ $value | quote }},
 {{- end }}
