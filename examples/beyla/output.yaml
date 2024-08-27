@@ -1283,15 +1283,16 @@ metadata:
     app.kubernetes.io/part-of: beyla
     app.kubernetes.io/component: config
 data:
-  beyla-config.yml: |
-    otel_traces_export:
-      endpoint: "k8smon-alloy.default.svc.cluster.local:4317"
-    discovery:
-      services:
-        - k8s_namespace: .
+  beyla-config.yml: |-
     attributes:
       kubernetes:
+        cluster_name: beyla-test
         enable: true
+    discovery:
+      services:
+      - k8s_namespace: .
+    otel_traces_export:
+      endpoint: k8smon-alloy.default.svc.cluster.local:4317
     prometheus_export:
       features:
       - application

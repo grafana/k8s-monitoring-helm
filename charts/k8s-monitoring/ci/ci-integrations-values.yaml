@@ -101,6 +101,10 @@ test:
     - query: "kepler_container_joules_total{cluster=\"ci-integrations-cluster\"}"
       type: promql
 
+    # Check for Beyla metrics
+    - query: "beyla_network_flow_bytes_total{k8s_cluster_name=\"ci-integrations-cluster\", cluster=\"ci-integrations-cluster\"}"
+      type: promql
+
     # Check for CertManager metrics, discovered by service annotations
     - query: "certmanager_clock_time_seconds{cluster=\"ci-integrations-cluster\", job=\"integrations/cert-manager\"}"
       type: promql
@@ -144,6 +148,7 @@ kepler:
 
 beyla:
   enabled: true
+  preset: application
 
 alloy:
   controller:
