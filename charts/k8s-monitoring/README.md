@@ -187,6 +187,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
+| beyla.config.data | object | `{"attributes":{"kubernetes":{"enable":true}},"prometheus_export":{"features":["application","network","application_service_graph","application_span"],"path":"/metrics","port":9090}}` | The Configuration for Beyla |
 | beyla.enabled | bool | `false` | Should this Helm chart deploy Grafana Beyla to the cluster. |
 
 ### Cluster Settings
@@ -532,7 +533,6 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | metrics.beyla.maxCacheSize | string | 100000 | Sets the max_cache_size for the prometheus.relabel component for Beyla. This should be at least 2x-5x your largest scrape target or samples appended rate. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#arguments)) Overrides metrics.maxCacheSize |
 | metrics.beyla.metricsTuning.excludeMetrics | list | `[]` | Metrics to drop. Can use regular expressions. |
 | metrics.beyla.metricsTuning.includeMetrics | list | `[]` | Metrics to keep. Can use regular expressions. |
-| metrics.beyla.metricsTuning.useDefaultAllowList | bool | `true` | Filter the list of metrics from Beyla to the minimal set required for Kubernetes Monitoring. See [Metrics Tuning and Allow Lists](#metrics-tuning-and-allow-lists) |
 | metrics.beyla.scrapeInterval | string | 60s | How frequently to scrape metrics from Beyla. Overrides metrics.scrapeInterval |
 
 ### Metrics Job: cAdvisor

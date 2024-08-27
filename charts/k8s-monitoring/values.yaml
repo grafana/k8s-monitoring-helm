@@ -1312,10 +1312,6 @@ metrics:
     # Adjustments to the scraped metrics to filter the amount of data sent to storage.
     # @section -- Metrics Job: Beyla
     metricsTuning:
-      # -- Filter the list of metrics from Beyla to the minimal set required for Kubernetes Monitoring.
-      # See [Metrics Tuning and Allow Lists](#metrics-tuning-and-allow-lists)
-      # @section -- Metrics Job: Beyla
-      useDefaultAllowList: true
       # -- Metrics to keep. Can use regular expressions.
       # @section -- Metrics Job: Beyla
       includeMetrics: []
@@ -2314,10 +2310,13 @@ beyla:
   # @section -- Deployment: Beyla
   enabled: false
 
-  # @ignored
   config:
+    # @ignored -- This allows this chart to use the default Beyla ConfigMap name
     name: null
+    # @ignored -- This allows this chart to create the Beyla ConfigMap with required modifications
     create: false
+    # -- The Configuration for Beyla
+    # @section -- Deployment: Beyla
     data:
       attributes:
         kubernetes:
@@ -2330,7 +2329,7 @@ beyla:
           - network
           - application_service_graph
           - application_span
-          - application_process
+#          - application_process
 
   # @ignored
   podAnnotations:
