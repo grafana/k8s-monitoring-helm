@@ -684,6 +684,48 @@ prometheus.relabel "opencost" {
   forward_to = [prometheus.relabel.metrics_service.receiver]
 }
 
+// beyla
+discovery.relabel "beyla" {
+  targets = discovery.kubernetes.pods.targets
+  rule {
+    source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
+    regex = "beyla"
+    action = "keep"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_pod_node_name"]
+    action = "replace"
+    target_label = "instance"
+  }
+}
+
+prometheus.scrape "beyla_applications" {
+  targets         = discovery.relabel.beyla.output
+  honor_labels    = true
+  scrape_interval = "60s"
+  clustering {
+    enabled = true
+  }
+  forward_to = [prometheus.relabel.beyla.receiver]
+}
+
+prometheus.scrape "beyla_internal" {
+  targets         = discovery.relabel.beyla.output
+  metrics_path    = "/internal/metrics"
+  job_name        = "integrations/beyla"
+  honor_labels    = true
+  scrape_interval = "60s"
+  clustering {
+    enabled = true
+  }
+  forward_to = [prometheus.relabel.beyla.receiver]
+}
+
+prometheus.relabel "beyla" {
+  max_cache_size = 100000
+  forward_to = [prometheus.relabel.metrics_service.receiver]
+}
+
 // Prometheus Operator PodMonitor objects
 prometheus.operator.podmonitors "pod_monitors" {
   clustering {
