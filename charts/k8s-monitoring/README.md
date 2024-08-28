@@ -140,6 +140,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | https://grafana.github.io/helm-charts | alloy-events(alloy) | 0.6.0 |
 | https://grafana.github.io/helm-charts | alloy-logs(alloy) | 0.6.0 |
 | https://grafana.github.io/helm-charts | alloy-profiles(alloy) | 0.6.0 |
+| https://grafana.github.io/helm-charts | beyla | 1.3.0 |
 | https://opencost.github.io/opencost-helm-chart | opencost | 1.42.0 |
 | https://prometheus-community.github.io/helm-charts | kube-state-metrics | 5.25.1 |
 | https://prometheus-community.github.io/helm-charts | prometheus-node-exporter | 4.39.0 |
@@ -181,6 +182,13 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | alloy.liveDebugging.enabled | bool | `false` | Enable live debugging for the Alloy instance. Requires stability level to be set to "experimental". |
 | alloy.logging.format | string | `"logfmt"` | Format to use for writing Alloy log lines. |
 | alloy.logging.level | string | `"info"` | Level at which Alloy log lines should be written. |
+
+### Deployment: Beyla
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| beyla.config.data | object | `{"attributes":{"kubernetes":{"enable":true}},"internal_metrics":{"prometheus":{"path":"/internal/metrics","port":9090}},"prometheus_export":{"features":["application","network","application_service_graph","application_span"],"path":"/metrics","port":9090}}` | The Configuration for Beyla |
+| beyla.enabled | bool | `false` | Should this Helm chart deploy Grafana Beyla to the cluster. |
 
 ### Cluster Settings
 
@@ -513,6 +521,19 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | metrics.autoDiscover.metricsTuning.excludeMetrics | list | `[]` | Metrics to drop. Can use regular expressions. |
 | metrics.autoDiscover.metricsTuning.includeMetrics | list | `[]` | Metrics to keep. Can use regular expressions. An empty list means keep all. |
 | metrics.autoDiscover.scrapeInterval | string | 60s | How frequently to scrape metrics from auto-discovered entities. Overrides metrics.scrapeInterval |
+
+### Metrics Job: Beyla
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| metrics.beyla.enabled | bool | `false` | Scrape auto-instrumentation metrics from Beyla |
+| metrics.beyla.extraMetricRelabelingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for Beyla. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#rule-block)) These relabeling rules are applied post-scrape against the metrics returned from the scraped target, no __meta* labels are present. |
+| metrics.beyla.extraRelabelingRules | string | `""` | Rule blocks to be added to the discovery.relabel component for Beyla. These relabeling rules are applied pre-scrape against the targets from service discovery. Before the scrape, any remaining target labels that start with __ (i.e. __meta_kubernetes*) are dropped. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery.relabel/#rule-block)) |
+| metrics.beyla.labelMatchers | object | `{"app.kubernetes.io/name":"beyla"}` | Label matchers used to select the Beyla pods |
+| metrics.beyla.maxCacheSize | string | 100000 | Sets the max_cache_size for the prometheus.relabel component for Beyla. This should be at least 2x-5x your largest scrape target or samples appended rate. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#arguments)) Overrides metrics.maxCacheSize |
+| metrics.beyla.metricsTuning.excludeMetrics | list | `[]` | Metrics to drop. Can use regular expressions. |
+| metrics.beyla.metricsTuning.includeMetrics | list | `[]` | Metrics to keep. Can use regular expressions. |
+| metrics.beyla.scrapeInterval | string | 60s | How frequently to scrape metrics from Beyla. Overrides metrics.scrapeInterval |
 
 ### Metrics Job: cAdvisor
 

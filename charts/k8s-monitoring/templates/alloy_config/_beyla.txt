@@ -1,0 +1,75 @@
+{{ define "alloy.config.beyla" }}
+// beyla
+discovery.relabel "beyla" {
+  targets = discovery.kubernetes.pods.targets
+{{- range $k, $v := .Values.metrics.beyla.labelMatchers }}
+  rule {
+    source_labels = ["__meta_kubernetes_pod_label_{{ include "escape_label" $k }}"]
+    regex = "{{ $v }}"
+    action = "keep"
+  }
+{{- end }}
+  rule {
+    source_labels = ["__meta_kubernetes_pod_node_name"]
+    action = "replace"
+    target_label = "instance"
+  }
+{{- if .Values.metrics.extraRelabelingRules }}
+{{ .Values.metrics.extraRelabelingRules | indent 2 }}
+{{- end }}
+{{- if .Values.metrics.beyla.extraRelabelingRules }}
+{{ .Values.metrics.beyla.extraRelabelingRules | indent 2 }}
+{{- end }}
+}
+
+prometheus.scrape "beyla_applications" {
+  targets         = discovery.relabel.beyla.output
+  honor_labels    = true
+  scrape_interval = {{ .Values.metrics.beyla.scrapeInterval | default .Values.metrics.scrapeInterval | quote }}
+{{- if .Values.alloy.alloy.clustering.enabled }}
+  clustering {
+    enabled = true
+  }
+{{- end }}
+  forward_to = [prometheus.relabel.beyla.receiver]
+}
+
+prometheus.scrape "beyla_internal" {
+  targets         = discovery.relabel.beyla.output
+  metrics_path    = "/internal/metrics"
+  job_name        = "integrations/beyla"
+  honor_labels    = true
+  scrape_interval = {{ .Values.metrics.beyla.scrapeInterval | default .Values.metrics.scrapeInterval | quote }}
+{{- if .Values.alloy.alloy.clustering.enabled }}
+  clustering {
+    enabled = true
+  }
+{{- end }}
+  forward_to = [prometheus.relabel.beyla.receiver]
+}
+
+prometheus.relabel "beyla" {
+  max_cache_size = {{ .Values.metrics.beyla.maxCacheSize | default .Values.metrics.maxCacheSize | int }}
+{{- if .Values.metrics.beyla.metricsTuning.includeMetrics }}
+  rule {
+    source_labels = ["__name__"]
+    regex = "up|{{ .Values.metrics.beyla.metricsTuning.includeMetrics | join "|" }}"
+    action = "keep"
+  }
+{{- end }}
+{{- if .Values.metrics.beyla.metricsTuning.excludeMetrics }}
+  rule {
+    source_labels = ["__name__"]
+    regex = {{ join "|" .Values.metrics.beyla.metricsTuning.excludeMetrics | quote }}
+    action = "drop"
+  }
+{{- end }}
+{{- if .Values.metrics.extraMetricRelabelingRules }}
+{{ .Values.metrics.extraMetricRelabelingRules | indent 2 }}
+{{- end }}
+{{- if .Values.metrics.beyla.extraMetricRelabelingRules }}
+{{ .Values.metrics.beyla.extraMetricRelabelingRules | indent 2 }}
+{{- end }}
+  forward_to = [prometheus.relabel.metrics_service.receiver]
+}
+{{ end }}

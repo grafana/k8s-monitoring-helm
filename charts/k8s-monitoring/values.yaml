@@ -1281,6 +1281,52 @@ metrics:
     # @section -- Metrics Job: Kepler
     maxCacheSize:
 
+  beyla:
+    # -- Scrape auto-instrumentation metrics from Beyla
+    # @section -- Metrics Job: Beyla
+    enabled: false
+
+    # -- How frequently to scrape metrics from Beyla.
+    # Overrides metrics.scrapeInterval
+    # @default -- 60s
+    # @section -- Metrics Job: Beyla
+    scrapeInterval: ""
+
+    # -- Label matchers used to select the Beyla pods
+    # @section -- Metrics Job: Beyla
+    labelMatchers:
+      app.kubernetes.io/name: beyla
+
+    # -- Rule blocks to be added to the discovery.relabel component for Beyla.
+    # These relabeling rules are applied pre-scrape against the targets from service discovery.
+    # Before the scrape, any remaining target labels that start with __ (i.e. __meta_kubernetes*) are dropped.
+    # ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery.relabel/#rule-block))
+    # @section -- Metrics Job: Beyla
+    extraRelabelingRules: ""
+
+    # -- Rule blocks to be added to the prometheus.relabel component for Beyla. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#rule-block))
+    # These relabeling rules are applied post-scrape against the metrics returned from the scraped target, no __meta* labels are present.
+    # @section -- Metrics Job: Beyla
+    extraMetricRelabelingRules: ""
+
+    # Adjustments to the scraped metrics to filter the amount of data sent to storage.
+    # @section -- Metrics Job: Beyla
+    metricsTuning:
+      # -- Metrics to keep. Can use regular expressions.
+      # @section -- Metrics Job: Beyla
+      includeMetrics: []
+      # -- Metrics to drop. Can use regular expressions.
+      # @section -- Metrics Job: Beyla
+      excludeMetrics: []
+
+    # -- Sets the max_cache_size for the prometheus.relabel component for Beyla.
+    # This should be at least 2x-5x your largest scrape target or samples appended rate.
+    # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#arguments))
+    # Overrides metrics.maxCacheSize
+    # @default -- 100000
+    # @section -- Metrics Job: Beyla
+    maxCacheSize:
+
   # Prometheus Operator PodMonitors
   podMonitors:
     # -- Enable discovery of Prometheus Operator PodMonitor objects.
@@ -2258,6 +2304,39 @@ kepler:
   # @ignored -- This skips including these values in README.md
   extraEnvVars:
     EXPOSE_ESTIMATED_IDLE_POWER_METRICS: "true"
+
+beyla:
+  # -- Should this Helm chart deploy Grafana Beyla to the cluster.
+  # @section -- Deployment: Beyla
+  enabled: false
+
+  config:
+    # @ignored -- This allows this chart to use the default Beyla ConfigMap name
+    name: null
+    # @ignored -- This allows this chart to create the Beyla ConfigMap with required modifications
+    create: false
+    # -- The Configuration for Beyla
+    # @section -- Deployment: Beyla
+    data:
+      attributes:
+        kubernetes:
+          enable: true
+      prometheus_export:
+        port: 9090
+        path: /metrics
+        features:
+          - application
+          - network
+          - application_service_graph
+          - application_span
+      internal_metrics:
+        prometheus:
+          port: 9090
+          path: /internal/metrics
+
+  # @ignored
+  podAnnotations:
+    k8s.grafana.com/logs.job: integrations/beyla
 
 # Settings for the Grafana Alloy instance that gathers metrics, and opens receivers for application data.
 # See https://github.com/grafana/alloy/tree/main/operations/helm/charts/alloy for available values.

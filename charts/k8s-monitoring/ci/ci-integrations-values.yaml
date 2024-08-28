@@ -49,6 +49,8 @@ metrics:
     enabled: false
   kepler:
     enabled: true
+  beyla:
+    enabled: true
 
 extraConfig: |
   remote.kubernetes.configmap "mysql_config" {
@@ -99,6 +101,10 @@ test:
     - query: "kepler_container_joules_total{cluster=\"ci-integrations-cluster\"}"
       type: promql
 
+    # Check for Beyla metrics
+    - query: "beyla_build_info{cluster=\"ci-integrations-cluster\"}"
+      type: promql
+
     # Check for CertManager metrics, discovered by service annotations
     - query: "certmanager_clock_time_seconds{cluster=\"ci-integrations-cluster\", job=\"integrations/cert-manager\"}"
       type: promql
@@ -139,6 +145,10 @@ opencost:
 
 kepler:
   enabled: true
+
+beyla:
+  enabled: true
+  preset: application
 
 alloy:
   controller:

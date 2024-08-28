@@ -1,0 +1,35 @@
+{{- define "kubernetes_monitoring.beyla.config" }}
+{{- $clusterName := dict "attributes"  (dict "kubernetes" (dict "cluster_name" .Values.cluster.name)) }}
+{{- $endpoint := dict }}
+{{- if .Values.receivers.grpc.enabled }}
+  {{- $endpoint = dict "otel_traces_export" (dict "endpoint" (include "kubernetes_monitoring.receiver.grpc" . | trim))}}
+{{- else if .Values.receivers.http.enabled }}
+  {{- $endpoint = dict "otel_traces_export" (dict "endpoint" (include "kubernetes_monitoring.receiver.http" . | trim))}}
+{{- end }}
+{{- $preset := dict }}
+{{- if and (eq .Values.beyla.preset "network") (not .Values.beyla.config.data.network) }}
+  {{- $preset = dict "network" (dict "enable" true)}}
+{{- end }}
+{{- if and (eq .Values.beyla.preset "application") (not .Values.beyla.config.data.discovery) }}
+  {{- $preset = dict "discovery" (dict "services" (list (dict "k8s_namespace" ".")))}}
+{{- end }}
+{{- merge .Values.beyla.config.data $clusterName $endpoint $preset | toYaml }}
+{{- end }}
+
+{{- if .Values.beyla.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "beyla.fullname" .Subcharts.beyla }}
+  namespace: {{ include "beyla.namespace" .Subcharts.beyla }}
+  labels:
+    {{- include "beyla.labels" .Subcharts.beyla | nindent 4 }}
+    app.kubernetes.io/component: config
+  {{- with .Values.beyla.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+data:
+  beyla-config.yml: |-
+    {{- include "kubernetes_monitoring.beyla.config" . | nindent 4 }}
+{{- end }}

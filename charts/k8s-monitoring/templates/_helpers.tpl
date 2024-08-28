@@ -98,6 +98,13 @@
 {{ . | replace "-" "_" | replace "." "_" | replace "/" "_" }}
 {{- end }}
 
+{{- define "kubernetes_monitoring.receiver.grpc" }}
+http://{{ include "alloy.fullname" .Subcharts.alloy }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.receivers.grpc.port }}
+{{- end }}
+{{- define "kubernetes_monitoring.receiver.http" }}
+http://{{ include "alloy.fullname" .Subcharts.alloy }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.receivers.http.port }}
+{{- end }}
+
 {{- define "grafana-agent.fullname" -}}
 {{- if (index .Values "grafana-agent").fullnameOverride }}
 {{- (index .Values "grafana-agent").fullnameOverride | trunc 63 | trimSuffix "-" }}
