@@ -22,10 +22,23 @@ discovery.relabel "beyla" {
 {{- end }}
 }
 
-prometheus.scrape "beyla" {
-  targets    = discovery.relabel.beyla.output
-  job_name   = "integrations/beyla"
-  honor_labels = true
+prometheus.scrape "beyla_applications" {
+  targets         = discovery.relabel.beyla.output
+  honor_labels    = true
+  scrape_interval = {{ .Values.metrics.beyla.scrapeInterval | default .Values.metrics.scrapeInterval | quote }}
+{{- if .Values.alloy.alloy.clustering.enabled }}
+  clustering {
+    enabled = true
+  }
+{{- end }}
+  forward_to = [prometheus.relabel.beyla.receiver]
+}
+
+prometheus.scrape "beyla_internal" {
+  targets         = discovery.relabel.beyla.output
+  metrics_path    = "/internal/metrics"
+  job_name        = "integrations/beyla"
+  honor_labels    = true
   scrape_interval = {{ .Values.metrics.beyla.scrapeInterval | default .Values.metrics.scrapeInterval | quote }}
 {{- if .Values.alloy.alloy.clustering.enabled }}
   clustering {
@@ -37,7 +50,7 @@ prometheus.scrape "beyla" {
 
 prometheus.relabel "beyla" {
   max_cache_size = {{ .Values.metrics.beyla.maxCacheSize | default .Values.metrics.maxCacheSize | int }}
-{{- if or .Values.metrics.beyla.metricsTuning.useDefaultAllowList .Values.metrics.beyla.metricsTuning.includeMetrics }}
+{{- if .Values.metrics.beyla.metricsTuning.includeMetrics }}
   rule {
     source_labels = ["__name__"]
     regex = "up|{{ .Values.metrics.beyla.metricsTuning.includeMetrics | join "|" }}"

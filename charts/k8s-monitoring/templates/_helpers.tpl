@@ -99,7 +99,7 @@
 {{- end }}
 
 {{- define "kubernetes_monitoring.receiver.grpc" }}
-{{ include "alloy.fullname" .Subcharts.alloy }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.receivers.grpc.port }}
+http://{{ include "alloy.fullname" .Subcharts.alloy }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.receivers.grpc.port }}
 {{- end }}
 {{- define "kubernetes_monitoring.receiver.http" }}
 http://{{ include "alloy.fullname" .Subcharts.alloy }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.receivers.http.port }}

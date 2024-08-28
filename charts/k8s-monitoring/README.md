@@ -187,7 +187,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| beyla.config.data | object | `{"attributes":{"kubernetes":{"enable":true}},"prometheus_export":{"features":["application","network","application_service_graph","application_span"],"path":"/metrics","port":9090}}` | The Configuration for Beyla |
+| beyla.config.data | object | `{"attributes":{"kubernetes":{"enable":true}},"internal_metrics":{"prometheus":{"path":"/internal/metrics","port":9090}},"prometheus_export":{"features":["application","network","application_service_graph","application_span"],"path":"/metrics","port":9090}}` | The Configuration for Beyla |
 | beyla.enabled | bool | `false` | Should this Helm chart deploy Grafana Beyla to the cluster. |
 
 ### Cluster Settings
