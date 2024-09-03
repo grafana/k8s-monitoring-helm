@@ -179,6 +179,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
+| alloy.enabled | bool | `true` | Deploy this Alloy instance. Only set this to false if you are not using metrics or any receivers. |
 | alloy.liveDebugging.enabled | bool | `false` | Enable live debugging for the Alloy instance. Requires stability level to be set to "experimental". |
 | alloy.logging.format | string | `"logfmt"` | Format to use for writing Alloy log lines. |
 | alloy.logging.level | string | `"info"` | Level at which Alloy log lines should be written. |
