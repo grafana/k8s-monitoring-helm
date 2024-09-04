@@ -84,8 +84,10 @@ subjects:
 
 {{- if eq .Values.cluster.platform "openshift" }}
 {{/* Create the SecurityContextConstraints for the main Alloy instance */}}
+{{- if .Values.alloy.enabled }}
 {{$data := dict "name" (include "alloy.fullname" (index .Subcharts "alloy")) "namespace" .Release.Namespace "hostpath" false }}
 {{- include "alloySecurityContextConstraintTemplate" $data }}
+{{- end }}
 
 {{/* Create the SecurityContextConstraints for the Alloy for Cluster Events instance */}}
 {{- if and .Values.logs.enabled .Values.logs.cluster_events.enabled }}

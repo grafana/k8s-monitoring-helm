@@ -1,4 +1,5 @@
 {{- if .Values.configValidator.enabled }}
+{{- $enabledAlloy := include "getEnabledAlloy" . }}
 ---
 apiVersion: v1
 kind: Pod
@@ -24,12 +25,12 @@ spec:
   {{- if .Values.configValidator.serviceAccount.name }}
   serviceAccountName: {{ .Values.configValidator.serviceAccount.name }}
   {{- end }}
-  {{- if or .Values.global.image.pullSecrets .Values.alloy.image.pullSecrets }}
+  {{- if or .Values.global.image.pullSecrets (index .Values $enabledAlloy).image.pullSecrets }}
   imagePullSecrets:
     {{- if .Values.global.image.pullSecrets }}
     {{- toYaml .Values.global.image.pullSecrets | nindent 8 }}
     {{- else }}
-    {{- toYaml .Values.alloy.image.pullSecrets | nindent 8 }}
+    {{- toYaml (index .Values $enabledAlloy).image.pullSecrets | nindent 8 }}
     {{- end }}
   {{- end }}
   restartPolicy: Never
@@ -43,7 +44,7 @@ spec:
   {{- end }}
   containers:
     - name: alloy
-      image: "{{ .Values.global.image.registry | default .Values.alloy.image.registry }}/{{ .Values.alloy.image.repository }}{{ include "alloy.imageId" .Subcharts.alloy }}"
+      image: "{{ .Values.global.image.registry | default (index .Values $enabledAlloy).image.registry }}/{{ (index .Values $enabledAlloy).image.repository }}{{ include "alloy.imageId" .Subcharts.alloy }}"
       command:
       - bash
       - -c
@@ -52,7 +53,7 @@ spec:
         if ! alloy fmt /etc/alloy/config.alloy > /dev/null; then
           exit 1
         fi
-        output=$(alloy run --stability.level {{ .Values.alloy.alloy.stabilityLevel | default "generally-available" }} "/etc/alloy/config.alloy" 2>&1)
+        output=$(alloy run --stability.level {{ (index .Values $enabledAlloy).alloy.stabilityLevel | default "generally-available" }} "/etc/alloy/config.alloy" 2>&1)
         if ! echo "${output}" | grep "KUBERNETES_SERVICE_HOST and KUBERNETES_SERVICE_PORT must be defined" >/dev/null; then
           echo "${output}"
           exit 1

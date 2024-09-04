@@ -12,6 +12,15 @@
   {{- end -}}
 {{- end -}}
 
+{{/* This returns the first enabled alloy instance */}}
+{{- define "getEnabledAlloy" -}}
+{{- if .Values.alloy.enabled }}alloy
+{{- else if (and .Values.logs.enabled .Values.logs.cluster_events.enabled) }}alloy-events
+{{- else if (and .Values.logs.enabled .Values.logs.pod_logs.enabled) }}alloy-logs
+{{- else if .Values.profiles.enabled }}alloy-profiles
+{{- end -}}
+{{- end -}}
+
 {{- define "kubernetes_monitoring_telemetry.metrics" -}}
 {{- $metrics := list -}}
 {{- if .Values.metrics.enabled -}}
