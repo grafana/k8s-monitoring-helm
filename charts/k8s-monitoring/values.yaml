@@ -1990,6 +1990,14 @@ configValidator:
   nodeSelector:
     kubernetes.io/os: linux
 
+  # -- Tolerations to apply to the config validator job.
+  # @section -- Config Validator Job
+  tolerations:
+    - key: "kubernetes.io/arch"
+      operator: "Equal"
+      value: "arm64"
+      effect: "NoSchedule"
+
   # -- Extra annotations to add to the test config validator job.
   # @section -- Config Validator Job
   extraAnnotations: {}
@@ -1997,10 +2005,6 @@ configValidator:
   # -- Extra labels to add to the test config validator job.
   # @section -- Config Validator Job
   extraLabels: {}
-
-  # -- Tolerations to apply to the config validator job.
-  # @section -- Config Validator Job
-  tolerations: []
 
   # -- Service Account to use for the config validator job.
   # @section -- Config Validator Job
@@ -2134,6 +2138,13 @@ kube-state-metrics:
   # @ignored
   nodeSelector:
     kubernetes.io/os: linux
+
+  # @ignored
+  tolerations:
+    - key: "kubernetes.io/arch"
+      operator: "Equal"
+      value: "arm64"
+      effect: "NoSchedule"
 
   # @ignored - Enable the release label
   releaseLabel: true
@@ -2288,6 +2299,13 @@ opencost:
     nodeSelector:
       kubernetes.io/os: linux
 
+    # @ignored -- This skips including these values in README.md
+    tolerations:
+      - key: "kubernetes.io/arch"
+        operator: "Equal"
+        value: "arm64"
+        effect: "NoSchedule"
+
 # Settings for the Kepler deployment
 # You can use this sections to make modifications to the Kepler deployment.
 # See https://github.com/sustainable-computing-io/kepler-helm-chart/tree/main/chart/kepler for available values.
@@ -2407,8 +2425,15 @@ alloy:
   # @ignored
   controller:
     type: statefulset
+
     nodeSelector:
       kubernetes.io/os: linux
+
+    tolerations:
+      - key: "kubernetes.io/arch"
+        operator: "Equal"
+        value: "arm64"
+        effect: "NoSchedule"
 
     podAnnotations:
       k8s.grafana.com/logs.job: integrations/alloy
@@ -2448,6 +2473,12 @@ alloy-events:
     replicas: 1  # Only one replica should be used, otherwise multiple copies of cluster events might get sent to Loki.
     nodeSelector:
       kubernetes.io/os: linux
+
+    tolerations:
+      - key: "kubernetes.io/arch"
+        operator: "Equal"
+        value: "arm64"
+        effect: "NoSchedule"
 
     podAnnotations:
       k8s.grafana.com/logs.job: integrations/alloy
