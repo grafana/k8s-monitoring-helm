@@ -223,7 +223,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | configValidator.extraLabels | object | `{}` | Extra labels to add to the test config validator job. |
 | configValidator.nodeSelector | object | `{"kubernetes.io/os":"linux"}` | nodeSelector to apply to the config validator job. |
 | configValidator.serviceAccount | object | `{"name":""}` | Service Account to use for the config validator job. |
-| configValidator.tolerations | list | `[]` | Tolerations to apply to the config validator job. |
+| configValidator.tolerations | list | `[{"effect":"NoSchedule","key":"kubernetes.io/arch","operator":"Equal","value":"arm64"}]` | Tolerations to apply to the config validator job. |
 
 ### External Services (Loki)
 
