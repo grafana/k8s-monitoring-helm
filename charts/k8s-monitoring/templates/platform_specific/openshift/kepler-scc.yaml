@@ -1,0 +1,66 @@
+{{- if and (eq .Values.cluster.platform "openshift") .Values.kepler.enabled }}
+---
+apiVersion: security.openshift.io/v1
+kind: SecurityContextConstraints
+metadata:
+  name: {{ include "kepler.fullname" .Subcharts.kepler }}
+allowHostDirVolumePlugin: true
+allowHostIPC: false
+allowHostNetwork: true
+allowHostPID: false
+allowHostPorts: true
+allowPrivilegeEscalation: true
+allowPrivilegedContainer: true
+allowedCapabilities: []
+defaultAddCapabilities: null
+defaultAllowPrivilegeEscalation: false
+forbiddenSysctls:
+- '*'
+fsGroup:
+  type: RunAsAny
+groups: []
+priority: null
+readOnlyRootFilesystem: true
+requiredDropCapabilities: null
+runAsUser:
+  type: RunAsAny
+seLinuxContext:
+  type: RunAsAny
+seccompProfiles:
+  - runtime/default
+supplementalGroups:
+  type: RunAsAny
+users:
+  - system:serviceaccount:{{ .Release.Namespace }}:{{ include "kepler.fullname" .Subcharts.kepler }}
+volumes:
+- configMap
+- hostPath
+- projected
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "kepler.fullname" .Subcharts.kepler }}-scc
+rules:
+- verbs:
+    - use
+  apiGroups:
+    - security.openshift.io
+  resources:
+    - securitycontextconstraints
+  resourceNames:
+    - {{ include "kepler.fullname" .Subcharts.kepler }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ include "kepler.fullname" .Subcharts.kepler }}-scc
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ include "kepler.fullname" .Subcharts.kepler }}-scc
+subjects:
+- kind: ServiceAccount
+  name: {{ include "kepler.fullname" .Subcharts.kepler }}
+  namespace: {{ .Release.Namespace }}
+{{- end -}}
