@@ -60,6 +60,24 @@ prometheus.remote_write "metrics_service" {
       token_url = {{ .oauth2.tokenURL | quote }}
       {{- end }}
     }
+{{- else if eq .authMode "sigv4" }}
+    sigv4 {
+      {{- if .sigv4.access_key }}
+      access_key = {{ .sigv4.access_key | quote }}
+      {{- end }}
+      {{- if .sigv4.profile }}
+      profile = {{ .sigv4.profile | quote }}
+      {{- end }}
+      {{- if .sigv4.region }}
+      region = {{ .sigv4.region | quote }}
+      {{- end }}
+      {{- if .sigv4.role_arn }}
+      role_arn = {{ .sigv4.role_arn | quote }}
+      {{- end }}
+      {{- if .sigv4.secret_key }}
+      secret_key = {{ .sigv4.secret_key | quote }}
+      {{- end }}
+    }
 {{- end }}
 {{ if .writeRelabelConfigRules }}
 {{ .writeRelabelConfigRules | indent 4 }}
