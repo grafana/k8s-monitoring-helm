@@ -140,7 +140,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | https://grafana.github.io/helm-charts | alloy-events(alloy) | 0.7.0 |
 | https://grafana.github.io/helm-charts | alloy-logs(alloy) | 0.7.0 |
 | https://grafana.github.io/helm-charts | alloy-profiles(alloy) | 0.7.0 |
-| https://grafana.github.io/helm-charts | beyla | 1.3.0 |
+| https://grafana.github.io/helm-charts | beyla | 1.4.0 |
 | https://opencost.github.io/opencost-helm-chart | opencost | 1.42.0 |
 | https://prometheus-community.github.io/helm-charts | kube-state-metrics | 5.25.1 |
 | https://prometheus-community.github.io/helm-charts | prometheus-node-exporter | 4.39.0 |
