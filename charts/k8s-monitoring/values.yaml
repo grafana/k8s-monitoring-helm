@@ -63,14 +63,14 @@ externalServices:
     # @section -- External Services (Prometheus)
     writeRelabelConfigRules: ""
 
-    # -- Sets the `X-Scope-OrgID` header when sending metrics
+    # -- Sets the `X-Scope-OrgID` header when sending metrics unless authMode is sigv4
     # @section -- External Services (Prometheus)
     tenantId: ""
     # -- The key for the tenant ID property in the secret
     # @section -- External Services (Prometheus)
     tenantIdKey: tenantId
 
-    # -- one of "none", "basic", "oauth2", "bearerToken"
+    # -- one of "none", "basic", "oauth2", "bearerToken", "sigv4"
     # @section -- External Services (Prometheus)
     authMode: basic
 
@@ -130,7 +130,6 @@ externalServices:
       # @section -- External Services (Prometheus)
       tokenURL: ""
 
-    
     # Authenticate to Prometheus using bearerToken or bearerTokenFile
     bearerToken: 
       # -- Configure the Prometheus Remote Write Bearer Token
@@ -142,6 +141,31 @@ externalServices:
       # -- Configure the Prometheus Remote Write Bearer Token file
       # @section -- External Services (Prometheus)
       tokenFile: ""
+      
+    # Authenticate to Prometheus using AWS Signature Version 4 (SigV4)
+    # @section -- External Services (Prometheus)
+    sigv4:
+      # -- Configure the Prometheus Remote Write SigV4 Access Key
+      # @section -- External Services (Prometheus)
+      accessKey: ""
+      # -- Configure the Key for Prometheus Remote Write SigV4 Access Key secret
+      # @section -- External Services (Prometheus)
+      accessKeyKey: "accessKey"
+      # -- Configure the Prometheus Remote Write SigV4 Profile
+      # @section -- External Services (Prometheus)
+      profile: ""
+      # -- Configure the Prometheus Remote Write SigV4 Region, must be specified if it cannot be inferred from the default credentials chain
+      # @section -- External Services (Prometheus)
+      region: ""
+      # -- Configure the Prometheus Remote Write SigV4 Role ARN
+      # @section -- External Services (Prometheus)
+      roleArn: ""
+      # -- Configure the Prometheus Remote Write SigV4 Secret Key
+      # @section -- External Services (Prometheus)
+      secretKey: ""
+      # -- Configure the Key for Prometheus Remote Write SigV4 Secret Key secret
+      # @section -- External Services (Prometheus)
+      secretKeyKey: "secretKey"
     # Configure the Prometheus Remote Write Queue
     # [docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.remote_write/#queue_config-block)
     queue_config:
