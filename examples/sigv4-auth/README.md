@@ -1,0 +1,20 @@
+# Default Values
+
+Example to deploy the Kubernetes Monitoring Helm chart.
+
+```yaml
+cluster:
+  name: default-values-test
+
+externalServices:
+  prometheus:
+    host: https://prometheus.example.com
+    authMode: "sigv4"
+    sigv4:
+      region: us-east-2
+  loki:
+    host: https://loki.example.com
+    basicAuth:
+      username: 12345
+      password: "It's a secret to everyone"
+```

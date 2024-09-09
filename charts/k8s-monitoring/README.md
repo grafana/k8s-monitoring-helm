@@ -273,7 +273,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| externalServices.prometheus.authMode | string | `"basic"` | one of "none", "basic", "oauth2", "bearerToken", "sigv4" |
+| externalServices.prometheus.authMode | string | `"basic"` | one of "none", "basic", "oauth2", "bearerToken" |
 | externalServices.prometheus.basicAuth.password | string | `""` | Prometheus basic auth password |
 | externalServices.prometheus.basicAuth.passwordKey | string | `"password"` | The key for the password property in the secret |
 | externalServices.prometheus.basicAuth.username | string | `""` | Prometheus basic auth username |
@@ -321,11 +321,6 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | externalServices.prometheus.secret.name | string | `""` | The name of the secret. |
 | externalServices.prometheus.secret.namespace | string | `""` | The namespace of the secret. Only used if secret.create = "false" |
 | externalServices.prometheus.sendNativeHistograms | bool | `false` | Whether native histograms should be sent. Only applies when protocol is "remote_write". |
-| externalServices.prometheus.sigv4.access_key | string | `""` | AWS API access key for SigV4 authenticating |
-| externalServices.prometheus.sigv4.profile | string | `""` | AWS profile for SigV4 authenticating |
-| externalServices.prometheus.sigv4.region | string | `""` | AWS region for SigV4 authenticating |
-| externalServices.prometheus.sigv4.role_arn | string | `""` | AWS Role ARN for SigV4 authenticating (alternative to API keys) |
-| externalServices.prometheus.sigv4.secret_key | string | `""` | AWS API secret key for for SigV4 authenticating |
 | externalServices.prometheus.tenantId | string | `""` | Sets the `X-Scope-OrgID` header when sending metrics |
 | externalServices.prometheus.tenantIdKey | string | `"tenantId"` | The key for the tenant ID property in the secret |
 | externalServices.prometheus.tls | object | `{}` | TLS settings to configure for the metrics service, compatible with [remoteWrite protocol](https://grafana.com/docs/alloy/latest/reference/components/prometheus.remote_write/#tls_config-block), [otlp](https://grafana.com/docs/alloy/latest/reference/components/otelcol.exporter.otlp/#tls-block), or [otlphttp](https://grafana.com/docs/alloy/latest/reference/components/otelcol.exporter.otlphttp/#tls-block) protocols |
