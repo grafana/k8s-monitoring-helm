@@ -7,35 +7,29 @@ prometheus.exporter.unix "kubernetes_monitoring_telemetry" {
   }
 }
 
-prometheus.scrape "kubernetes_monitoring_telemetry" {
-  job_name   = "integrations/kubernetes/kubernetes_monitoring_telemetry"
-  targets    = prometheus.exporter.unix.kubernetes_monitoring_telemetry.targets
-  scrape_interval = {{ .Values.metrics.scrapeInterval | quote }}
-{{- if .Values.alloy.alloy.clustering.enabled }}
-  clustering {
-    enabled = true
-  }
-{{- end }}
-  forward_to = [prometheus.relabel.kubernetes_monitoring_telemetry.receiver]
-}
-
-prometheus.relabel "kubernetes_monitoring_telemetry" {
-  max_cache_size = {{ .Values.metrics.maxCacheSize | int }}
-  rule {
-    target_label = "job"
-    action = "replace"
-    replacement = "integrations/kubernetes/kubernetes_monitoring_telemetry"
-  }
+discovery.relabel "kubernetes_monitoring_telemetry" {
+  targets = prometheus.exporter.unix.kubernetes_monitoring_telemetry.targets
   rule {
     target_label = "instance"
     action = "replace"
     replacement = "{{ .Release.Name }}"
   }
   rule {
-    source_labels = ["__name__"]
-    regex = "up|grafana_kubernetes_monitoring_.*"
-    action = "keep"
+    target_label = "job"
+    action = "replace"
+    replacement = "integrations/kubernetes/kubernetes_monitoring_telemetry"
   }
+}
+
+prometheus.scrape "kubernetes_monitoring_telemetry" {
+  job_name   = "integrations/kubernetes/kubernetes_monitoring_telemetry"
+  targets    = discovery.relabel.kubernetes_monitoring_telemetry.output
+  scrape_interval = {{ .Values.metrics.kubernetesMonitoring.scrapeInterval | default .Values.metrics.scrapeInterval | quote }}
+{{- if .Values.alloy.alloy.clustering.enabled }}
+  clustering {
+    enabled = true
+  }
+{{- end }}
   forward_to = [prometheus.relabel.metrics_service.receiver]
 }
 {{ end }}
