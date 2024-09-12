@@ -667,6 +667,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | metrics.kubernetesMonitoring.enabled | bool | `true` | Report telemetry about this Kubernetes Monitoring chart as a metric. |
+| metrics.kubernetesMonitoring.scrapeInterval | string | 60s | How frequently to scrape the telemetry report metric. Overrides metrics.scrapeInterval |
 
 ### Metrics Job: Node Exporter
 
