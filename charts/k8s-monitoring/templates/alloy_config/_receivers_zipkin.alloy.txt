@@ -6,9 +6,9 @@ otelcol.receiver.zipkin "receiver" {
 {{- include "checkforAlloyPort" $data }}
   endpoint = "0.0.0.0:{{ $data.port | int }}"
 {{- if .Values.receivers.zipkin.tls }}
-  tls = {
+  tls {
   {{- range $k, $v := .Values.receivers.zipkin.tls }}
-    {{ $k }} = {{ $v | toJson }},
+    {{ $k }} = {{ $v | quote }}
   {{- end }}
   }
 {{- end }}
