@@ -8,7 +8,7 @@ otelcol.receiver.otlp "receiver" {
   grpc {
     endpoint = "0.0.0.0:{{ $data.port | int }}"
   {{- if .Values.receivers.grpc.tls }}
-    tls = {
+    tls {
     {{- range $k, $v := .Values.receivers.grpc.tls }}
       {{ $k }} = {{ $v | toJson }}
     {{- end }}
@@ -22,9 +22,9 @@ otelcol.receiver.otlp "receiver" {
   http {
     endpoint = "0.0.0.0:{{ $data.port | int }}"
   {{- if .Values.receivers.http.tls }}
-    tls = {
+    tls {
     {{- range $k, $v := .Values.receivers.http.tls }}
-      {{ $k }} = {{ $v | toJson }}
+      {{ $k }} = {{ $v | quote }}
     {{- end }}
     }
   {{- end }}
