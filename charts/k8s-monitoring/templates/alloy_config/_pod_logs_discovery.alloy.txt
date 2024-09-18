@@ -91,13 +91,13 @@ discovery.relabel "pod_logs" {
 discovery.relabel "filtered_pod_logs" {
   targets = discovery.relabel.pod_logs.output
   rule {  // Drop anything with a "falsy" annotation value
-    source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_logs_autogather"]
+    source_labels = ["__meta_kubernetes_pod_annotation_{{ include "escape_label" .Values.logs.pod_logs.annotation }}"]
     regex = "(false|no|skip)"
     action = "drop"
   }
 {{- if eq .Values.logs.pod_logs.discovery "annotation" }}
   rule {  // If discovering via annotation, then only keep pods with annotation values
-    source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_logs_autogather"]
+    source_labels = ["__meta_kubernetes_pod_annotation_{{ include "escape_label" .Values.logs.pod_logs.annotation }}"]
     regex = ".+"
     action = "keep"
   }
