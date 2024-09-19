@@ -25,6 +25,7 @@ externalServices:
     basicAuth:
       username: 12345
       password: "It's a secret to everyone"
+    writeBufferSize: "1024KiB"
 
 traces:
   enabled: true

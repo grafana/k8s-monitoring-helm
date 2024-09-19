@@ -31,6 +31,12 @@ otelcol.exporter.otlphttp "traces_service" {
       {{ $key | quote }} = {{ $value }},
 {{- end }}
     }
+{{- if .readBufferSize }}
+    read_buffer_size = {{ .readBufferSize | quote }}
+{{- end }}
+{{- if .writeBufferSize }}
+    write_buffer_size = {{ .writeBufferSize | quote }}
+{{- end }}
 {{- if .tlsOptions }}
     tls {
 {{ .tlsOptions | indent 6 }}
