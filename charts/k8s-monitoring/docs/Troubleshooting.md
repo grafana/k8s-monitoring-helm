@@ -11,6 +11,7 @@ This document contains some information about frequently encountered issues and 
     -   [Authentication error: invalid scope requested](#authentication-error-invalid-scope-requested)
     -   [Kepler pods crashing on AWS Graviton nodes](#kepler-pods-crashing-on-aws-graviton-nodes)
     -   [ConfigMaps show `\n` and not newlines](#configmaps-show-n-and-not-newlines)
+    -   [ResourceExhausted Error when Sending Traces](#resourceexhausted-error-when-sending-traces)
 
 ## General tips
 
@@ -140,3 +141,23 @@ metrics:
     extraMetricRelabelingRules: |-     # Make sure to use |- here
       rule {...}
 ```
+
+### ResourceExhausted Error when Sending Traces
+
+If you have traces enabled, and you see log entries in your `alloy` instance that looks like this:
+
+```text
+Permanent error: rpc error: code = ResourceExhausted desc = grpc: received message after decompression larger than max (5268750 vs. 4194304)" dropped_items=11226
+ts=2024-09-19T19:52:35.16668052Z level=info msg="rejoining peers" service=cluster peers_count=1 peers=6436336134343433.grafana-k8s-monitoring-alloy-cluster.default.svc.cluster.local.:12345
+```
+
+It's likely due to the span size being too large. You can fix this by adjusting the batch size:
+
+```yaml
+receivers:
+  processors:
+    batch:
+      maxSize: 2000
+```
+
+Start with 2000 and adjust as needed.
