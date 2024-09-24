@@ -59,7 +59,7 @@ spec:
           exit 1
         fi
         echo "Grafana Alloy config file is valid"
-{{- if and .Values.logs.enabled .Values.logs.cluster_events.enabled }}
+{{- if .Values.logs.cluster_events.enabled }}
         echo Validating Grafana Alloy for Events config file
         if ! alloy fmt /etc/alloy/events.alloy > /dev/null; then
           exit 1
@@ -71,7 +71,7 @@ spec:
         fi
         echo "Grafana Alloy for Events config file is valid"
 {{- end }}
-{{- if and .Values.logs.enabled .Values.logs.pod_logs.enabled }}
+{{- if .Values.logs.pod_logs.enabled }}
         echo Validating Grafana Alloy for Logs config file
         if ! alloy fmt /etc/alloy/logs.alloy > /dev/null; then
           exit 1
@@ -125,11 +125,11 @@ metadata:
 data:
   config.alloy: |-
     {{- include "alloyConfig" . | trim | nindent 4 }}
-{{- if and .Values.logs.enabled .Values.logs.cluster_events.enabled }}
+{{- if .Values.logs.cluster_events.enabled }}
   events.alloy: |-
     {{- include "alloyEventsConfig" . | trim | nindent 4 }}
 {{- end }}
-{{- if and .Values.logs.enabled .Values.logs.pod_logs.enabled }}
+{{- if .Values.logs.pod_logs.enabled }}
   logs.alloy: |-
     {{- include "alloyLogsConfig" . | trim | nindent 4 }}
 {{- end }}

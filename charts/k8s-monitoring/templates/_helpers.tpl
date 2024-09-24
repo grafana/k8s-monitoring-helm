@@ -15,8 +15,8 @@
 {{/* This returns the first enabled alloy instance */}}
 {{- define "getEnabledAlloy" -}}
 {{- if .Values.alloy.enabled }}alloy
-{{- else if (and .Values.logs.enabled .Values.logs.cluster_events.enabled) }}alloy-events
-{{- else if (and .Values.logs.enabled .Values.logs.pod_logs.enabled) }}alloy-logs
+{{- else if .Values.logs.cluster_events.enabled }}alloy-events
+{{- else if .Values.logs.pod_logs.enabled }}alloy-logs
 {{- else if .Values.profiles.enabled }}alloy-profiles
 {{- end -}}
 {{- end -}}
@@ -44,16 +44,12 @@
 
 {{- define "kubernetes_monitoring_telemetry.logs" -}}
 {{- $logs := list -}}
-{{- if .Values.logs.enabled -}}
-  {{- $logs = append $logs "enabled" -}}
-  {{- if .Values.logs.cluster_events.enabled }}{{- $logs = append $logs "events" -}}{{- end -}}
-  {{- if .Values.logs.pod_logs.enabled }}{{- $logs = append $logs "pod_logs" -}}{{- end -}}
-  {{- if .Values.logs.journal.enabled }}{{- $logs = append $logs "journal" -}}{{- end -}}
-  {{- if .Values.logs.extraConfig -}}{{- $logs = append $logs "extraConfig" }}{{ end -}}
-{{- else -}}
-  {{- $logs = append $logs "disabled" -}}
-{{- end -}}
-{{- join "," $logs -}}
+{{- $logs = append $logs (.Values.logs.enabled | ternary "enabled" "disabled") -}}
+{{- if .Values.logs.cluster_events.enabled }}{{- $logs = append $logs "events" -}}{{- end -}}
+{{- if .Values.logs.pod_logs.enabled }}{{- $logs = append $logs "pod_logs" -}}{{- end -}}
+{{- if .Values.logs.journal.enabled }}{{- $logs = append $logs "journal" -}}{{- end -}}
+{{- if .Values.logs.extraConfig -}}{{- $logs = append $logs "extraConfig" }}{{ end -}}
+{{- join "," $logs }}
 {{- end }}
 
 {{- define "kubernetes_monitoring_telemetry.traces" -}}
