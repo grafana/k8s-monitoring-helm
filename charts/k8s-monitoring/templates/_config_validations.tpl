@@ -1,5 +1,5 @@
 {{- define "checkForValidConfiguration" -}}
-{{- if and .Values.logs.enabled .Values.logs.pod_logs.enabled }}
+{{- if .Values.logs.pod_logs.enabled }}
   {{- if eq .Values.logs.pod_logs.gatherMethod "volumes" }}
     {{- if ne (index .Values "alloy-logs").controller.type "daemonset" }}
 {{/*
@@ -57,7 +57,7 @@ alloy-logs:
   {{- end -}}
 {{- end -}}
 
-{{- if and .Values.logs.enabled .Values.logs.journal.enabled }}
+{{- if and .Values.logs.pod_logs.enabled .Values.logs.journal.enabled }}
   {{- if ne (index .Values "alloy-logs").controller.type "daemonset" }}
 {{/*
 Invalid configuration for gathering journal logs! Grafana Alloy for Logs must be a Daemonset. Otherwise, journal logs will be missing!

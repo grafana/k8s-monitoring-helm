@@ -90,13 +90,13 @@ subjects:
 {{- end }}
 
 {{/* Create the SecurityContextConstraints for the Alloy for Cluster Events instance */}}
-{{- if and .Values.logs.enabled .Values.logs.cluster_events.enabled }}
+{{- if .Values.logs.cluster_events.enabled }}
 {{$data := dict "name" (include "alloy.fullname" (index .Subcharts "alloy-events")) "namespace" .Release.Namespace "hostpath" false }}
 {{- include "alloySecurityContextConstraintTemplate" $data }}
 {{- end }}
 
 {{/* Create the SecurityContextConstraints for the Alloy for Logs instance */}}
-{{- if and .Values.logs.enabled .Values.logs.pod_logs.enabled }}
+{{- if .Values.logs.pod_logs.enabled }}
 {{$data := dict "name" (include "alloy.fullname" (index .Subcharts "alloy-logs")) "namespace" .Release.Namespace "hostpath" (eq .Values.logs.pod_logs.gatherMethod "volumes") }}
 {{- include "alloySecurityContextConstraintTemplate" $data }}
 {{- end }}
