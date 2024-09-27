@@ -17,12 +17,28 @@ otelcol.processor.transform "add_metric_datapoint_attributes" {
 }
 {{- end }}
 
+{{- $enabledDetectors := list }}
 otelcol.processor.resourcedetection "default" {
-  detectors = ["env", "system"]
-
+{{- if .Values.receivers.processors.resourcedetection.env.enabled }}
+  {{- $enabledDetectors = append $enabledDetectors "env" }}
+{{- end }}
+{{- if .Values.receivers.processors.resourcedetection.system.enabled }}
+  {{- $enabledDetectors = append $enabledDetectors "system" }}
   system {
-    hostname_sources = ["os"]
+    {{- if .Values.receivers.processors.resourcedetection.system.hostnameSources }}
+    hostname_sources = {{ .Values.receivers.processors.resourcedetection.system.hostnameSources | toJson }}
+    {{- end }}
+    {{- if .Values.receivers.processors.resourcedetection.system.resourceAttributes }}
+    resource_attributes = {
+    {{- range $k, $v := .Values.receivers.processors.resourcedetection.system.resourceAttributes }}
+      {{ $k }} = { enabled = {{ $v }} }
+    {{- end }}
+    }
+    {{- end }}
   }
+{{- end }}
+
+  detectors = {{ $enabledDetectors | toJson }}
 
   output {
 {{- if .Values.metrics.enabled }}
