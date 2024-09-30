@@ -11,7 +11,7 @@ endif
 
 Chart.lock: Chart.yaml
 	helm dependency update .
-	touch Chart.lock # Ensure the timestamp is updated
+	@touch Chart.lock # Ensure the timestamp is updated
 
 values.schema.json: values.yaml $$(wildcard schema-mods/*)
 	../../utilities/schema-gen.sh .
