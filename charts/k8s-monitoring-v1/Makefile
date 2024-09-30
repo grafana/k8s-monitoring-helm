@@ -138,7 +138,7 @@ alloy_configs = $(shell \
 	DIR="$(shell dirname $(1))/" yq e 'with_entries(select(.key == "alloy*")) | select(.[].enabled == true) | to_entries | env(DIR) + .[].key + ".alloy"' $(1) \
 )
 
-%/output.yaml: %/values.yaml Chart.yaml Chart.lock values.yaml values.schema.json $(CHART_TEMPLATE_FILES) $(CHART_YAML_FILES)
+%/output.yaml: %/values.yaml Chart.yaml Chart.lock values.yaml $(CHART_TEMPLATE_FILES) $(CHART_YAML_FILES)
 	helm template $(EXAMPLE_RELEASE_NAME) . -f $< > $@
 
 %/metrics.alloy: %/output.yaml
