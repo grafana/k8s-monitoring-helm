@@ -1,5 +1,8 @@
 SHELL := /bin/bash
 
+CHART_TEMPLATE_FILES = $(shell find templates -name "*.tpl")
+CHART_YAML_FILES = $(shell find templates -name "*.yaml")
+
 values.schema.json: values.yaml schema-mods/enums-and-types.json schema-mods/required-values.json
 	docker run -it --rm --platform linux/amd64 -v "$(shell pwd):/chart" --entrypoint sh alpine/helm \
 		--command -c 'helm plugin install https://github.com/karuppiah7890/helm-schema-gen.git && \
@@ -51,7 +54,7 @@ else
 	docker run --rm --volume "$(shell pwd):/helm-docs" -u $(shell id -u) jnorwood/helm-docs:latest
 endif
 
-docs/RBAC.md: ../../examples/default-values/output.yaml ../../examples/openshift-compatible/output.yaml
+docs/RBAC.md: docs/default-values/output.yaml docs/openshift-compatible/output.yaml
 	echo "# RBAC Rules for the Kubernetes Monitoring Helm Chart" > docs/RBAC.md
 	echo >> docs/RBAC.md
 	echo "Several components have specialized RBAC rules to perform their work. This document will list the components, and their RBAC definitions." >> docs/RBAC.md
@@ -60,48 +63,48 @@ docs/RBAC.md: ../../examples/default-values/output.yaml ../../examples/openshift
 	echo "## Grafana Alloy" >> docs/RBAC.md
 	echo >> docs/RBAC.md
 	echo '```yaml' >> docs/RBAC.md
-	yq 'select(.metadata.name=="k8smon-alloy") | select(.kind=="ClusterRole") | .rules' ../../examples/default-values/output.yaml >> docs/RBAC.md
+	yq 'select(.metadata.name=="k8smon-alloy") | select(.kind=="ClusterRole") | .rules' docs/examples/default-values/output.yaml >> docs/RBAC.md
 	echo '```' >> docs/RBAC.md
 	echo >> docs/RBAC.md
 
 	echo "## Grafana Alloy Events" >> docs/RBAC.md
 	echo >> docs/RBAC.md
 	echo '```yaml' >> docs/RBAC.md
-	yq 'select(.metadata.name=="k8smon-alloy-events") | select(.kind=="ClusterRole") | .rules' ../../examples/default-values/output.yaml >> docs/RBAC.md
+	yq 'select(.metadata.name=="k8smon-alloy-events") | select(.kind=="ClusterRole") | .rules' docs/default-values/output.yaml >> docs/RBAC.md
 	echo '```' >> docs/RBAC.md
 	echo >> docs/RBAC.md
 
 	echo "## Grafana Alloy Logs" >> docs/RBAC.md
 	echo >> docs/RBAC.md
 	echo '```yaml' >> docs/RBAC.md
-	yq 'select(.metadata.name=="k8smon-alloy-logs") | select(.kind=="ClusterRole") | .rules' ../../examples/default-values/output.yaml >> docs/RBAC.md
+	yq 'select(.metadata.name=="k8smon-alloy-logs") | select(.kind=="ClusterRole") | .rules' docs/default-values/output.yaml >> docs/RBAC.md
 	echo '```' >> docs/RBAC.md
 	echo >> docs/RBAC.md
 	echo "When deploying to an OpenShift cluster, these extra rules are added to enable access to a SecurityContextConstraint for the Alloy deployment for gathering Pod Logs:" >> docs/RBAC.md
 	echo >> docs/RBAC.md
 	echo '```yaml' >> docs/RBAC.md
-	yq 'select(.metadata.name=="k8smon-alloy-logs-scc") | select(.kind=="ClusterRole") | .rules' ../../examples/openshift-compatible/output.yaml >> docs/RBAC.md
+	yq 'select(.metadata.name=="k8smon-alloy-logs-scc") | select(.kind=="ClusterRole") | .rules' docs/openshift-compatible/output.yaml >> docs/RBAC.md
 	echo '```' >> docs/RBAC.md
 	echo >> docs/RBAC.md
 
 	echo "## Grafana Alloy Profiles" >> docs/RBAC.md
 	echo >> docs/RBAC.md
 	echo '```yaml' >> docs/RBAC.md
-	yq 'select(.metadata.name=="k8smon-alloy-profiles") | select(.kind=="ClusterRole") | .rules' ../../examples/profiles-enabled/output.yaml >> docs/RBAC.md
+	yq 'select(.metadata.name=="k8smon-alloy-profiles") | select(.kind=="ClusterRole") | .rules' docs/profiles-enabled/output.yaml >> docs/RBAC.md
 	echo '```' >> docs/RBAC.md
 	echo >> docs/RBAC.md
 
 	echo "## Kube State Metrics" >> docs/RBAC.md
 	echo >> docs/RBAC.md
 	echo '```yaml' >> docs/RBAC.md
-	yq 'select(.metadata.name=="k8smon-kube-state-metrics") | select(.kind=="ClusterRole") | .rules' ../../examples/default-values/output.yaml >> docs/RBAC.md
+	yq 'select(.metadata.name=="k8smon-kube-state-metrics") | select(.kind=="ClusterRole") | .rules' docs/default-values/output.yaml >> docs/RBAC.md
 	echo '```' >> docs/RBAC.md
 
 	echo >> docs/RBAC.md
 	echo "## OpenCost" >> docs/RBAC.md
 	echo >> docs/RBAC.md
 	echo '```yaml' >> docs/RBAC.md
-	yq 'select(.metadata.name=="k8smon-opencost") | select(.kind=="ClusterRole") | .rules' ../../examples/default-values/output.yaml >> docs/RBAC.md
+	yq 'select(.metadata.name=="k8smon-opencost") | select(.kind=="ClusterRole") | .rules' docs/default-values/output.yaml >> docs/RBAC.md
 	echo '```' >> docs/RBAC.md
 
 build-image: test/Dockerfile test/config-analysis.sh test/query-test.sh
@@ -109,3 +112,49 @@ build-image: test/Dockerfile test/config-analysis.sh test/query-test.sh
 
 push-image:
 	docker push ghcr.io/grafana/k8s-monitoring-test:$(shell yq -r '.version' Chart.yaml)
+
+
+#
+# Test targets
+#
+.PHONY: test
+test: tests/test-runner.sh
+	./tests/test-runner.sh --show-diffs
+	cd tests; shellspec
+
+#
+# Example targets
+#
+EXAMPLE_RELEASE_NAME=k8smon
+EXAMPLE_VALUES_FILES = $(shell find docs/examples -name values.yaml)
+EXAMPLE_OUTPUT_FILES = $(EXAMPLE_VALUES_FILES:values.yaml=output.yaml)
+METRICS_CONFIG_FILES = $(subst values.yaml,metrics.alloy,$(EXAMPLE_VALUES_FILES))
+EVENTS_CONFIG_FILES = $(subst values.yaml,events.alloy,$(EXAMPLE_VALUES_FILES))
+LOGS_CONFIG_FILES = $(subst values.yaml,logs.alloy,$(EXAMPLE_VALUES_FILES))
+PROFILES_CONFIG_FILES = $(subst values.yaml,profiles.alloy,$(EXAMPLE_VALUES_FILES))
+EXAMPLE_ALLOY_FILES = $(METRICS_CONFIG_FILES) $(EVENTS_CONFIG_FILES) $(LOGS_CONFIG_FILES) $(PROFILES_CONFIG_FILES)
+
+alloy_configs = $(shell \
+	DIR="$(shell dirname $(1))/" yq e 'with_entries(select(.key == "alloy*")) | select(.[].enabled == true) | to_entries | env(DIR) + .[].key + ".alloy"' $(1) \
+)
+
+%/output.yaml: %/values.yaml Chart.yaml Chart.lock values.yaml values.schema.json $(CHART_TEMPLATE_FILES) $(CHART_YAML_FILES)
+	helm template $(EXAMPLE_RELEASE_NAME) . -f $< > $@
+
+%/metrics.alloy: %/output.yaml
+	yq 'select(.kind=="ConfigMap" and .metadata.name=="$(EXAMPLE_RELEASE_NAME)-alloy") | .data["config.alloy"]' $< > $@
+
+%/events.alloy: %/output.yaml
+	yq 'select(.kind=="ConfigMap" and .metadata.name=="$(EXAMPLE_RELEASE_NAME)-alloy-events") | .data["config.alloy"]' $< > $@
+
+%/logs.alloy: %/output.yaml
+	yq 'select(.kind=="ConfigMap" and .metadata.name=="$(EXAMPLE_RELEASE_NAME)-alloy-logs") | .data["config.alloy"]' $< > $@
+
+%/profiles.alloy: %/output.yaml
+	yq 'select(.kind=="ConfigMap" and .metadata.name=="$(EXAMPLE_RELEASE_NAME)-alloy-profiles") | .data["config.alloy"]' $< > $@
+
+.PHONY: examples clean-examples
+examples: $(EXAMPLE_OUTPUT_FILES) $(EXAMPLE_ALLOY_FILES)
+
+clean-examples:
+	rm -f $(EXAMPLE_OUTPUT_FILES) $(EXAMPLE_ALLOY_FILES)

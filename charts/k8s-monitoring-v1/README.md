@@ -61,7 +61,7 @@ If you've added more metrics to the default allow list, put those additional met
 If you've removed metrics from the default allow list, put the *metrics to remove* in the
 `.metricsTuning.excludeMetrics` section.
 
-For more information, see [this example](../../examples/custom-metrics-tuning).
+For more information, see [this example](docs/examples/custom-metrics-tuning).
 
 ### **v0.7.0**
 
@@ -129,7 +129,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 
 ## Source Code
 
-* <https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring>
+* <https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring-v1>
 
 <!-- markdownlint-disable no-bare-urls -->
 ## Requirements
@@ -968,7 +968,7 @@ extraConfig: |-
   }
 ```
 
-For an example values file and generated output, see [this example](../../examples/custom-config).
+For an example values file and generated output, see [this example](docs/examples/custom-config).
 
 ### Using Prometheus Operator CRDs
 

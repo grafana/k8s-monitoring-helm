@@ -10,8 +10,8 @@ usage() {
   echo "  <test-dir>        - The test directory to test, default is to run all tests"
 }
 
-helmChartPath=charts/k8s-monitoring
-examplesPath=examples
+helmChartPath=.
+examplesPath=${helmChartPath}/docs/examples
 
 showDiffs=false
 stopOnFailure=false

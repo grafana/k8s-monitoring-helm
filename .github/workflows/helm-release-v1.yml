@@ -1,5 +1,5 @@
 ---
-name: Release Helm chart
+name: Release Helm chart v1
 # yamllint disable-line rule:truthy
 on:
   workflow_dispatch:
@@ -33,7 +33,7 @@ jobs:
 
           latest_tag=$( if ! git describe --tags --abbrev=0 --match='helm-chart/*' 2> /dev/null ; then git rev-list --max-parents=0 --first-parent HEAD; fi )
 
-          echo "Running: ct list-changed --config \"${CT_CONFIGFILE}\" --since \"${latest_tag}\" --target-branch ${{ github.ref_name }}"
+          echo "Running: ct list-changed --chart-dirs charts/k8s-monitoring-v1 --config \"${CT_CONFIGFILE}\" --since \"${latest_tag}\" --target-branch ${{ github.ref_name }}"
           changed=$(ct list-changed --config "${CT_CONFIGFILE}" --since "${latest_tag}" --target-branch "${{ github.ref_name }}")
           echo "${changed}"
 

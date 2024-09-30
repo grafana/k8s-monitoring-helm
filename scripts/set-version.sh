@@ -19,7 +19,7 @@ if [[ -z "${PLUGIN_VERSION}" ]]; then
   fi
 fi
 
-CHART_FILE=charts/k8s-monitoring/Chart.yaml
+CHART_FILE=charts/k8s-monitoring-v1/Chart.yaml
 
 yq e ".version = \"${VERSION}\"" "${CHART_FILE}" > "${CHART_FILE}.new" && mv "${CHART_FILE}.new" "${CHART_FILE}"
 yq e ".appVersion = \"${PLUGIN_VERSION}\"" "${CHART_FILE}" > "${CHART_FILE}.new" && mv "${CHART_FILE}.new" "${CHART_FILE}"
@@ -27,4 +27,4 @@ yq e ".appVersion = \"${PLUGIN_VERSION}\"" "${CHART_FILE}" > "${CHART_FILE}.new"
 # shellcheck disable=SC2046 disable=SC2312
 NUM_EXAMPLES=$(find examples -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d ' ')
 make -j "${NUM_EXAMPLES}" generate-example-outputs
-make --directory charts/k8s-monitoring README.md docs/RBAC.md values.schema.json
+make --directory charts/k8s-monitoring-v1 README.md docs/RBAC.md values.schema.json

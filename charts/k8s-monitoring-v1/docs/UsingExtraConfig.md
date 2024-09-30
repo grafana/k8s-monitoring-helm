@@ -43,7 +43,7 @@ logs:
 $ helm upgrade grafana-k8s-monitoring --atomic --timeout 300s grafana/k8s-monitoring --values values.yaml
 ```
 
-For another example, see [Service Integrations](../../../examples/service-integrations).
+For another example, see [Service Integrations](examples/service-integrations).
 
 ### Set as files
 

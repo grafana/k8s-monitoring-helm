@@ -2,7 +2,7 @@
 
 We welcome contributions and improvements! Feel free to submit PRs.
 
-The [examples](./examples) directory contains examples of using this Helm chart, and are built from the current state
+The [examples](charts/k8s-monitoring-v1/docs/examples) directory contains examples of using this Helm chart, and are built from the current state
 of the chart. When you make changes, they will likely involve changes to some of those examples.
 
 Required tools:
@@ -24,7 +24,7 @@ After you have made your changes, ensure that you build the automatically genera
 following:
 
 -   Use [Helm Docs](https://github.com/norwoodj/helm-docs) to check for updates to the chart documentation
-    -   `helm-docs` OR `cd charts/k8s-monitoring; make README.md`
+    -   `helm-docs` OR `cd charts/k8s-monitoring-v1 make README.md`
 -   Check for updates to the example outputs
     -   `make test`
     -   If changes are acceptable, regenerate the outputs and re-test:
@@ -34,8 +34,8 @@ following:
 
 Chart dependencies are automatically updated via PRs, but if you want to manually set a chart dependency version:
 
--   Set the dependency's version in [Chart.yaml](charts/k8s-monitoring/Chart.yaml).
--   Update the Chart.lock file by running `cd charts/k8s-monitoring; helm dependency update`
+-   Set the dependency's version in [Chart.yaml](charts/k8s-monitoring-v1/Chart.yaml).
+-   Update the Chart.lock file by running `cd charts/k8s-monitoring-v1 helm dependency update`
 -   Follow the steps above in [Building generated files](#building-generated-files) to update the examples and docs.
 -   Finally, take a moment to inspect the generated output for anything that might cause trouble.
 
@@ -43,7 +43,7 @@ Chart dependencies are automatically updated via PRs, but if you want to manuall
 
 You can test your changes with a similar platform to what is used in the CI/CD pipelines.
 
-To build the cluster, use the [setup-local-test-cluster.sh](./scripts/setup-local-test-cluster.sh) script to build a
+To build the cluster, use the [setup-local-test-cluster.sh](charts/k8s-monitoring-v1/tests/setup-local-test-cluster.sh) script to build a
 Kubernetes cluster using [kind](https://kind.sigs.k8s.io/) and deploy the telemetry data sources, data stores and
 Grafana. If you provide a values file as an argument to that script (i.e. `setup-local-test-cluster.sh values.yaml`), it
 installs the k8s-monitoring Helm chart and runs `helm test` as well.
@@ -77,7 +77,7 @@ the GitHub repository, you can set the App version in the second argument to the
 
 ### Starting the release workflow
 
-The [helm-release.yml](./.github/workflows/helm-release.yml) GitHub workflow handles the details of packaging the Chart,
+The [helm-release.yml](./.github/workflows/helm-release-v1.yml) GitHub workflow handles the details of packaging the Chart,
 creating the release on this repository, creating a release on
 the [grafana/helm-charts](https://github.com/grafana/helm-charts) repository, and finally updating the Helm chart
 repository.

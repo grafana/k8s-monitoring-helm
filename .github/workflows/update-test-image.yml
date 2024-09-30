@@ -4,6 +4,8 @@ name: Build and Push Test Image
 on:
   push:
     branches: [main]
+    paths:
+      - 'charts/k8s-monitoring-v1'
 
 permissions:
   packages: write
@@ -24,7 +26,7 @@ jobs:
       - name: Get Version
         id: get-version
         run: |
-          version=$(yq -r '.version' "${GITHUB_WORKSPACE}/charts/k8s-monitoring/Chart.yaml")
+          version=$(yq -r '.version' "${GITHUB_WORKSPACE}/charts/k8s-monitoring-v1/Chart.yaml")
           echo "version=${version}" >> "${GITHUB_OUTPUT}"
 
       - name: Docker meta
@@ -46,7 +48,7 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
-          context: charts/k8s-monitoring/test
+          context: charts/k8s-monitoring-v1/test
           platforms: linux/amd64,linux/arm64
           push: true
           tags: ${{ steps.meta.outputs.tags }}

@@ -23,7 +23,7 @@ serviceAnnotations:
 ## MySQL
 
 Scraping the metrics from a MySQL database requires a different tactic, since it requires a username and password, and
-cannot be determined by annotations alone. Instead, we create [a ConfigMap](./mysql-config.yaml) with custom Alloy configuration, and
+cannot be determined by annotations alone. Instead, we create [a ConfigMap](mysql-config.yaml) with custom Alloy configuration, and
 then tell Alloy to load that config.
 
 ## Kubernetes Monitoring
@@ -32,7 +32,7 @@ This is the values file for Kubernetes Monitoring, and it only differs from the 
 `.logs.extraConfig` sections to load the configuration stored in the MySQL ConfigMap. Also, additional tests to the
 `helm test` command will verify that telemetry data from the two services are discovered, scraped, and stored properly.
 
-For more information about using the `extraConfig` values, see [the documentation](../../charts/k8s-monitoring/docs/UsingExtraConfig.md).
+For more information about using the `extraConfig` values, see [the documentation](../../UsingExtraConfig.md).
 
 Note that no reference to the Cert Manager service is stored here, because it is discovered and scraped automatically.
 

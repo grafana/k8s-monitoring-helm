@@ -19,7 +19,7 @@ CERT_MANAGER_VALUES="./.github/configs/cert-manager.yaml"
 SECRETGEN_CONTROLLER_MANIFEST=https://github.com/carvel-dev/secretgen-controller/releases/latest/download/release.yml
 CERTIFICATES_MANIFEST="./.github/configs/certificates.yaml"
 
-K8SMON_CHART_PATH="charts/k8s-monitoring"
+K8SMON_CHART_PATH="charts/k8s-monitoring-v1"
 K8SMON_VALUES=$1
 
 if ! kind get nodes --name "${CLUSTER_NAME}" | grep "No kind nodes found for cluster \"${CLUSTER_NAME}\"" > /dev/null 2>&1; then
