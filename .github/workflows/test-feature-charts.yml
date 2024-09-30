@@ -1,0 +1,88 @@
+---
+name: Test Feature Chart
+# yamllint disable-line rule:truthy
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - 'charts/**'
+      - '!charts/k8s-monitoring/**'
+      - '!charts/k8s-monitoring-v1/**'
+  pull_request:
+    paths:
+      - 'charts/**'
+      - '!charts/k8s-monitoring/**'
+      - '!charts/k8s-monitoring-v1/**'
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+
+jobs:
+  detect-changed-charts:
+    name: Detect Changed Feature Charts
+    runs-on: ubuntu-latest
+    outputs:
+      changed_dirs: ${{ steps.changed_dirs.outputs.changed_dirs }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Detect Changed Subdirectories
+        id: changed_charts
+        run: |
+          changed_charts=$(git diff --name-only HEAD^ HEAD -- 'charts/*' | grep "^charts/" | cut -d "/" -f2 | sort -u)
+          if [ -z "$changed_charts" ]; then
+            echo "No changes detected"
+            changed_charts="none"
+          fi
+          echo "::set-output name=changed_charts::$changed_charts"
+
+  run-tests:
+    name: Run Tests
+    needs: detect-changed-charts
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        dir: ${{ fromJson(needs.detect-changes.outputs.changed_charts) }}
+      fail-fast: false
+    if: ${{ needs.detect-changes.outputs.changed_charts != 'none' }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Run Tests in Changed Directories
+        run: |
+          echo "Testing ${{ matrix.dir }}"
+          cd ${{ matrix.dir }}
+          make test
+
+  check-generated-files:
+    name: Check Generated Files
+    needs: detect-changes
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        dir: ${{ fromJson(needs.detect-changes.outputs.changed_charts) }}
+      fail-fast: false
+    if: ${{ needs.detect-changes.outputs.changed_charts != 'none' }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Run make all to regenerate files
+        run: |
+          echo "Running make all in charts/${{ matrix.dir }}"
+          cd charts/${{ matrix.dir }}
+          make all
+
+      - name: Check for changes in generated files
+        run: |
+          cd charts/${{ matrix.dir }}
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "Generated files in charts/${{ matrix.dir }} are not up to date. Please run 'make all' and commit the changes."
+            git diff
+            exit 1
+          else
+            echo "Generated files in charts/${{ matrix.dir }} are up to date."
+          fi
