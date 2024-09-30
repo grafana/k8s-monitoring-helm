@@ -61,7 +61,7 @@ If you've added more metrics to the default allow list, put those additional met
 If you've removed metrics from the default allow list, put the *metrics to remove* in the
 `.metricsTuning.excludeMetrics` section.
 
-For more information, see [this example](docs/examples/custom-metrics-tuning).
+For more information, see [this example](../../examples/custom-metrics-tuning).
 
 ### **v0.7.0**
 
@@ -968,7 +968,7 @@ extraConfig: |-
   }
 ```
 
-For an example values file and generated output, see [this example](docs/examples/custom-config).
+For an example values file and generated output, see [this example](../../examples/custom-config).
 
 ### Using Prometheus Operator CRDs
 
