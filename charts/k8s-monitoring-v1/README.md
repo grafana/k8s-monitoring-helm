@@ -835,6 +835,8 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | receivers.processors.k8sattributes.annotations | list | `[]` | Kubernetes annotations to extract and add to the attributes of the received telemetry data. |
 | receivers.processors.k8sattributes.labels | list | `[]` | Kubernetes labels to extract and add to the attributes of the received telemetry data. |
 | receivers.processors.k8sattributes.metadata | list | `["k8s.namespace.name","k8s.pod.name","k8s.deployment.name","k8s.statefulset.name","k8s.daemonset.name","k8s.cronjob.name","k8s.job.name","k8s.node.name","k8s.pod.uid","k8s.pod.start_time"]` | Kubernetes metadata to extract and add to the attributes of the received telemetry data. |
+| receivers.processors.resourcedetection.env | object | `{"enabled":true}` | Read resource information from the OTEL_RESOURCE_ATTRIBUTES environment variable. |
+| receivers.processors.resourcedetection.system | object | `{"enabled":true,"hostnameSources":["os"],"resourceAttributes":{}}` | Query the host machine to retrieve various resource attributes. |
 
 ### OTEL Receivers (gRPC)
 
@@ -908,7 +910,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | traces.enabled | bool | `false` | Receive and forward traces. |
-| traces.receiver.filters | object | `{"span":[],"spanevent":[]}` | Apply a filter to traces received via the OTLP or OTLP HTTP receivers. ([docs](https://grafana.com/docs/alloy/latest/reference/components/otelcol.processor.filter/)) |
+| traces.receiver.filters | object | `{"span":["attributes[\"http.route\"] == \"/live\"","attributes[\"http.route\"] == \"/healthy\"","attributes[\"http.route\"] == \"/ready\""],"spanevent":[]}` | Apply a filter to traces received via the OTLP or OTLP HTTP receivers. ([docs](https://grafana.com/docs/alloy/latest/reference/components/otelcol.processor.filter/)) |
 | traces.receiver.transforms | object | `{"resource":[],"span":[],"spanevent":[]}` | Apply a transformation to traces received via the OTLP or OTLP HTTP receivers. ([docs](https://grafana.com/docs/alloy/latest/reference/components/otelcol.processor.transform/)) |
 
 ### Other Values

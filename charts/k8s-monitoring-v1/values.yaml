@@ -131,7 +131,7 @@ externalServices:
       tokenURL: ""
 
     # Authenticate to Prometheus using bearerToken or bearerTokenFile
-    bearerToken: 
+    bearerToken:
       # -- Configure the Prometheus Remote Write Bearer Token
       # @section -- External Services (Prometheus)
       token: ""
@@ -141,7 +141,7 @@ externalServices:
       # -- Configure the Prometheus Remote Write Bearer Token file
       # @section -- External Services (Prometheus)
       tokenFile: ""
-      
+
     # Authenticate to Prometheus using AWS Signature Version 4 (SigV4)
     # @section -- External Services (Prometheus)
     sigv4:
@@ -1767,7 +1767,10 @@ traces:
     # @section -- Traces
     filters:
       # @section -- Traces
-      span: []
+      span:
+        - attributes["http.route"] == "/live"
+        - attributes["http.route"] == "/healthy"
+        - attributes["http.route"] == "/ready"
       # @section -- Traces
       spanevent: []
     # -- Apply a transformation to traces received via the OTLP or OTLP HTTP receivers.
@@ -1998,6 +2001,21 @@ receivers:
       # -- Kubernetes annotations to extract and add to the attributes of the received telemetry data.
       # @section -- OTEL Receivers (Processors)
       annotations: []
+
+    # Resource detection processor for OTLP/gRPC, OTLP/HTTP, Jaeger, or Zipkin receivers
+    resourcedetection:
+      # -- Read resource information from the OTEL_RESOURCE_ATTRIBUTES environment variable.
+      # @section -- OTEL Receivers (Processors)
+      env:
+        enabled: true
+
+      # -- Query the host machine to retrieve various resource attributes.
+      # @section -- OTEL Receivers (Processors)
+      system:
+        enabled: true
+        hostnameSources:
+          - os
+        resourceAttributes: {}
 
   grafanaCloudMetrics:
     # -- Generate host info metrics from telemetry data, used in Application Observability in Grafana Cloud.
