@@ -69,7 +69,7 @@ jobs:
           echo "changed_charts=$(echo "$changed_charts" | jq --raw-input --slurp --compact-output 'split("\n") | map(select(. != ""))')" >> ${GITHUB_OUTPUT}
 
   run-tests:
-    name: Run Tests
+    name: Testing
     needs: detect-changed-charts
     runs-on: ubuntu-latest
     strategy:
@@ -81,7 +81,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Run Tests in Changed Directories
+      - name: Run tests
         run: |
           echo "Testing ${{ matrix.dir }}"
           cd charts/${{ matrix.dir }}
@@ -100,7 +100,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Run make all to regenerate files
+      - name: Regenerate files
         run: |
           echo "Running make all in charts/${{ matrix.dir }}"
           cd charts/${{ matrix.dir }}

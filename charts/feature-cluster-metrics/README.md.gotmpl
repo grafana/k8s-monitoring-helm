@@ -1,0 +1,139 @@
+<!--
+(NOTE: Do not edit README.md directly. It is a generated file!)
+(      To make changes, please modify README.md.gotmpl and run `helm-docs`)
+-->
+
+{{ template "chart.header" . }}
+{{ template "chart.deprecationWarning" . }}
+
+{{ template "chart.badgesSection" . }}
+
+{{ template "chart.description" . }}
+
+{{ template "chart.homepageLine" . }}
+
+This chart deploys the Cluster Metrics feature of the Kubernetes Observability Helm chart. It includes the ability to
+collect metrics from the Kubernetes Cluster itself, from sources like the Kubelet and cAdvisor, from common supporting
+services like [kube-state-metrics](https://github.com/kubernetes/kube-state-metrics) and
+[Node Exporter](https://github.com/prometheus/node_exporter), and from systems to capture additional data like Kepler.
+
+## Metric systems
+
+The Cluster Metrics feature of the Kubernetes Observability Helm chart includes the following metric systems:
+
+* Kubelet
+* cAdvisor
+* API Server
+* Kube Controller Manager
+* Kube Proxy
+* Kube Scheduler
+* kube-state-metrics
+* Node Exporter
+* Windows Exporter
+* Kepler
+
+### Kubelet
+
+Kubelet metrics gather information about Kubernetes information on each node.
+
+The kubelet metric source uses an [allow list](#metrics-tuning--allow-lists),
+[default-allow-lists/kubelet.yaml](./default-allow-lists/kubelet.yaml).
+
+### cAdvisor
+
+[cAdvisor](https://github.com/google/cadvisor) metrics gather information about containers on each node.
+
+The cAdvisor metric source uses an [allow list](#metrics-tuning--allow-lists),
+[default-allow-lists/cadvisor.yaml](./default-allow-lists/cadvisor.yaml).
+
+### API Server
+
+API Server metrics gather information about the Kubernetes API Server.
+
+### Kube Controller Manager
+
+Kube Controller Manager metrics gather information about the Kubernetes Controller Manager.
+
+### Kube Proxy
+
+Kube Proxy metrics gather information about the Kubernetes Proxy.
+
+### Kube Scheduler
+
+Kube Scheduler metrics gather information about the Kubernetes Scheduler.
+
+### kube-state-metrics
+
+[kube-state-metrics](https://github.com/kubernetes/kube-state-metrics) metrics gather information about Kubernetes
+resources inside the cluster.
+
+The kube-state-metrics metric source uses an [allow list](#metrics-tuning--allow-lists),
+[default-allow-lists/kube-state-metrics.yaml](./default-allow-lists/kube-state-metrics.yaml).
+
+### Node Exporter
+
+[Node Exporter](https://github.com/prometheus/node_exporter) metrics gather information about Linux Kubernetes Nodes.
+
+The Node Exporter metric source uses an [allow list](#metrics-tuning--allow-lists),
+[default-allow-lists/node-exporter.yaml](./default-allow-lists/node-exporter.yaml), and has an integration allow list,
+[default-allow-lists/node-exporter-integration.yaml](./default-allow-lists/node-exporter-integration.yaml).
+
+### Windows Exporter
+
+[Windows Exporter](https://github.com/prometheus-community/windows_exporter) metrics gather information about Windows
+Kubernetes Nodes.
+
+The Windows Exporter metric source uses an [allow list](#metrics-tuning--allow-lists),
+[default-allow-lists/windows-exporter.yaml](./default-allow-lists/windows-exporter.yaml).
+
+### Kepler
+
+[Kepler](https://sustainable-computing.io/) metrics gather information about the Kubernetes cluster.
+
+The Kepler metric source uses an [allow list](#metrics-tuning--allow-lists),
+[default-allow-lists/kepler.yaml](./default-allow-lists/kepler.yaml).
+
+## Metrics Tuning & Allow Lists
+
+All metric sources have the ability to adjust the amount of metrics being scraped and their labels. This can be useful
+to limit the number of metrics delivered to your destinations. Many of the metric sources also have an allow list, which
+is a set of metric names that will be kept, while any metrics not on the list will be dropped. The allow lists are tuned
+to return a useful, but minimal set of metrics for typical use cases. Some sources have an "integration allow list",
+which contains even more metrics for diving into the details of the source itself.
+
+To control these settings, use the `metricsTuning` section in the values file.
+
+```yaml
+<metric source>:
+  metricsTuning:
+    useDefaultAllowList: <boolean>      # Use the allow list for this metric source
+    useIntegrationAllowList: <boolean>  # Use the integration allow list for this metric source
+    includeMetrics: [<string>]          # Metrics to be kept
+    excludeMetrics: [<string>]          # Metrics to be dropped
+```
+
+The behavior of the combination of these settings is shown in this table:
+
+| Allow List | includeMetrics   | excludeMetrics           | Result                                                                                                                                  |
+|------------|------------------|--------------------------|-----------------------------------------------------------------------------------------------------------------------------------------|
+| true       | `[]`             | `[]`                     | Use the allow list metric list                                                                                                          |
+| false      | `[]`             | `[]`                     | No filter, keep all metrics                                                                                                             |
+| true       | `[my_metric]`    | `[]`                     | Use the allow list metric list with an additional metric                                                                                |
+| false      | `[my_metric_.*]` | `[]`                     | *Only* keep metrics that start with `my_metric_`                                                                                        |
+| true       | `[]`             | `[my_metric_.*]`         | Use the allow list metric filter, but exclude anything that starts with `my_metric_`                                                    |
+| false      | `[]`             | `[my_metric_.*]`         | Keep all metrics except anything that starts with `my_metric_`                                                                          |
+| true       | `[my_metric_.*]` | `[other_metric_.*]`      | Use the allow list metric filter, and keep anything that starts with `my_metric_`, but remove anything that starts with `other_metric_` |
+| false      | `[my_metric_.*]` | `[my_metric_not_needed]` | *Only* keep metrics that start with `my_metric_`, but remove any that are named `my_metric_not_needed`                                  |
+
+In addition to all fo this, you can also use the `extraMetricProcessingRules` section to add arbitrary relabeling rules that can be used to take any
+action on the metric list, including filtering based on label or other actions.
+
+{{ template "chart.maintainersSection" . }}
+
+{{ template "chart.sourcesSection" . }}
+
+<!-- markdownlint-disable no-bare-urls -->
+{{ template "chart.requirementsSection" . }}
+<!-- markdownlint-enable no-bare-urls -->
+
+{{ template "chart.valuesSection" . }}

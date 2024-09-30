@@ -1,0 +1,33 @@
+suite: Test OpenShift platform
+templates:
+  - platform_specific/openshift/kepler-scc.yaml
+tests:
+  - it: should create a SecurityContextConstraints object for Kepler
+    set:
+      deployAsConfigMap: true
+      global:
+        platform: openshift
+      kepler:
+        enabled: true
+    documentSelector:
+      path: kind
+      value: SecurityContextConstraints
+    asserts:
+      - containsDocument:
+          apiVersion: security.openshift.io/v1
+          kind: SecurityContextConstraints
+          name: RELEASE-NAME-kepler
+      - equal:
+          path: allowHostNetwork
+          value: true
+
+  - it: should not create a SecurityContextConstraints when not on OpenShift
+    set:
+      deployAsConfigMap: true
+      kepler:
+        enabled: true
+    documentSelector:
+      skipEmptyTemplates: true
+    asserts:
+      - hasDocuments:
+          count: 0

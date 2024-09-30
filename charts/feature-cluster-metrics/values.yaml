@@ -1,0 +1,602 @@
+# -- Name override
+# @section -- General settings
+nameOverride: ""
+
+# -- Full name override
+# @section -- General settings
+fullnameOverride: ""
+
+global:
+  # -- The specific platform for this cluster. Will enable compatibility for some platforms. Supported options: (empty) or "openshift".
+  # @section -- Global Settings
+  platform: ""
+
+  # -- How frequently to scrape metrics.
+  # @section -- Global Settings
+  scrapeInterval: 60s
+
+  # -- Sets the max_cache_size for every prometheus.relabel component. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#arguments))
+  # This should be at least 2x-5x your largest scrape target or samples appended rate.
+  # @section -- Global Settings
+  maxCacheSize: 100000
+
+
+controlPlane:
+  # -- enable all Kubernetes Control Plane metrics sources. This includes api-server, kube-scheduler,
+  # kube-controller-manager, and etcd.
+  # @section -- Control Plane
+  enabled: false
+
+
+#
+# Built-in metrics sources
+#
+
+# Kubelet metrics gather information about Kubernetes information on each node.
+kubelet:
+  # -- Scrape metrics from kubelet.
+  # @section -- Kubelet
+  enabled: true
+
+  # -- Rule blocks to be added to the discovery.relabel component for Kubelet entities.
+  # These relabeling rules are applied pre-scrape against the targets from service discovery.
+  # Before the scrape, any remaining target labels that start with `__` (i.e. `__meta_kubernetes*`) are dropped.
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery.relabel/#rule-block))
+  # @section -- Kubelet
+  extraDiscoveryRules: ""
+
+  # -- Rule blocks to be added to the prometheus.relabel component for Kubelet metrics.
+  # These relabeling rules are applied post-scrape against the metrics returned from the scraped target, no `__meta*` labels are present.
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#rule-block))
+  # @section -- Kubelet
+  extraMetricProcessingRules: ""
+
+  # Adjustments to the scraped metrics to filter the amount of data sent to storage.
+  metricsTuning:
+    # -- Filter the list of metrics from the Kubelet to the minimal set required for Kubernetes Monitoring.
+    # See [Metrics Tuning and Allow Lists](#metrics-tuning-and-allow-lists)
+    # @section -- Kubelet
+    useDefaultAllowList: true
+    # -- Metrics to keep. Can use regular expressions.
+    # @section -- Kubelet
+    includeMetrics: []
+    # -- Metrics to drop. Can use regular expressions.
+    # @section -- Kubelet
+    excludeMetrics: []
+
+  # -- Sets the max_cache_size for cadvisor prometheus.relabel component.
+  # This should be at least 2x-5x your largest scrape target or samples appended rate.
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#arguments))
+  # Overrides global.maxCacheSize
+  # @default -- `100000`
+  # @section -- Kubelet
+  maxCacheSize:
+
+  # -- How frequently to scrape Kubelet metrics.
+  # @default -- `60s`
+  # @section -- Kubelet
+  scrapeInterval: ""
+
+# cAdvisor metrics gather information about containers on each node.
+cadvisor:
+  # -- Scrape metrics from cAdvisor.
+  # @section -- cAdvisor
+  enabled: true
+
+  # -- Rule blocks to be added to the discovery.relabel component for cAdvisor entities.
+  # These relabeling rules are applied pre-scrape against the targets from service discovery.
+  # Before the scrape, any remaining target labels that start with `__` (i.e. `__meta_kubernetes*`) are dropped.
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery.relabel/#rule-block))
+  # @section -- cAdvisor
+  extraDiscoveryRules: ""
+
+  # -- Rule blocks to be added to the prometheus.relabel component for cAdvisor metrics.
+  # These relabeling rules are applied post-scrape against the metrics returned from the scraped target, no `__meta*` labels are present.
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#rule-block))
+  # @section -- cAdvisor
+  extraMetricProcessingRules: ""
+
+  # Adjustments to the scraped metrics to filter the amount of data sent to storage.
+  metricsTuning:
+    # -- Filter the list of metrics from cAdvisor to the minimal set required for Kubernetes Monitoring.
+    # @section -- cAdvisor
+    # See [Metrics Tuning and Allow Lists](#metrics-tuning-and-allow-lists)
+    useDefaultAllowList: true
+    # -- Metrics to keep. Can use regular expressions.
+    # @section -- cAdvisor
+    includeMetrics: []
+    # -- Metrics to drop. Can use regular expressions.
+    # @section -- cAdvisor
+    excludeMetrics: []
+    # -- Drop metrics that have an empty container label
+    # @section -- cAdvisor
+    dropEmptyContainerLabels: true
+    # -- Drop metrics that have an empty image label
+    # @section -- cAdvisor
+    dropEmptyImageLabels: true
+    # -- Normalize labels to the same value for the given metric and label pairs
+    # @section -- cAdvisor
+    normalizeUnnecessaryLabels:
+      - metric: "machine_memory_bytes"
+        labels: ["boot_id", "system_uuid"]
+    # -- Only keep filesystem metrics that use the following physical devices
+    # @section -- cAdvisor
+    keepPhysicalFilesystemDevices: ["mmcblk.p.+", "nvme.+", "rbd.+", "sd.+", "vd.+", "xvd.+", "dasd.+"]
+    # -- Only keep network metrics that use the following physical devices
+    # @section -- cAdvisor
+    keepPhysicalNetworkDevices: ["en[ospx][0-9].*", "wlan[0-9].*", "eth[0-9].*"]
+
+  # -- How frequently to scrape cAdvisor metrics.
+  # @default -- `60s`
+  # @section -- cadvisor
+  scrapeInterval: ""
+
+  # -- Sets the max_cache_size for cadvisor prometheus.relabel component.
+  # This should be at least 2x-5x your largest scrape target or samples appended rate.
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#arguments))
+  # Overrides global.maxCacheSize
+  # @default -- `100000`
+  # @section -- cAdvisor
+  maxCacheSize:
+
+# API Server metrics gather information about the Kubernetes API Server.
+apiServer:
+  # -- Scrape metrics from the API Server
+  # @default -- false
+  # @section -- API Server
+  enabled: 
+  
+  # -- How frequently to scrape metrics from the API Server
+  # Overrides metrics.scrapeInterval
+  # @default -- 60s
+  # @section -- API Server
+  scrapeInterval: ""
+  
+  # -- Rule blocks to be added to the discovery.relabel component for the API Server.
+  # These relabeling rules are applied pre-scrape against the targets from service discovery.
+  # Before the scrape, any remaining target labels that start with `__` (i.e. `__meta_kubernetes*`) are dropped.
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery.relabel/#rule-block))
+  # @section -- API Server
+  extraDiscoveryRules: ""
+  
+  # -- Rule blocks to be added to the prometheus.relabel component for the API Server.
+  # These relabeling rules are applied post-scrape against the metrics returned from the scraped target, no `__meta*` labels are present.
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#rule-block))
+  # @section -- API Server
+  extraMetricProcessingRules: ""
+  
+  # Adjustments to the scraped metrics to filter the amount of data sent to storage.
+  metricsTuning:
+    # -- Metrics to keep. Can use regular expressions. An empty list means keep all.
+    # @section -- API Server
+    includeMetrics: []
+    # -- Metrics to drop. Can use regular expressions.
+    # @section -- API Server
+    excludeMetrics: []
+  
+  # -- Sets the max_cache_size for cadvisor prometheus.relabel component.
+  # This should be at least 2x-5x your largest scrape target or samples appended rate.
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#arguments))
+  # Overrides metrics.maxCacheSize
+  # @raw
+  # @section -- API Server
+  maxCacheSize:
+
+# Metrics from the Kube Controller Manager
+kubeControllerManager:
+  # -- Scrape metrics from the Kube Controller Manager
+  # @default -- false
+  # @section -- Kube Controller Manager
+  enabled:
+
+  # -- Port number used by the Kube Controller Manager, set by `--secure-port.`
+  # @section -- Kube Controller Manager
+  port: 10257
+
+  # -- How frequently to scrape metrics from the Kube Controller Manager
+  # @section -- Kube Controller Manager
+  # Overrides metrics.scrapeInterval
+  # @default -- 60s
+  scrapeInterval: ""
+
+  # -- Rule blocks to be added to the discovery.relabel component for the Kube Controller Manager.
+  # These relabeling rules are applied pre-scrape against the targets from service discovery.
+  # Before the scrape, any remaining target labels that start with `__` (i.e. `__meta_kubernetes*`) are dropped.
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery.relabel/#rule-block))
+  # @section -- Kube Controller Manager
+  extraDiscoveryRules: ""
+
+  # -- Rule blocks to be added to the prometheus.relabel component for the Kube Controller Manager.
+  # These relabeling rules are applied post-scrape against the metrics returned from the scraped target, no `__meta*` labels are present.
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#rule-block))
+  # @section -- Kube Controller Manager
+  extraMetricProcessingRules: ""
+
+  # Adjustments to the scraped metrics to filter the amount of data sent to storage.
+  metricsTuning:
+    # -- Metrics to keep. Can use regular expressions. An empty list means keep all.
+    # @section -- Kube Controller Manager
+    includeMetrics: []
+    # -- Metrics to drop. Can use regular expressions.
+    # @section -- Kube Controller Manager
+    excludeMetrics: []
+
+  # -- Sets the max_cache_size for cadvisor prometheus.relabel component.
+  # This should be at least 2x-5x your largest scrape target or samples appended rate.
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#arguments))
+  # Overrides metrics.maxCacheSize
+  # @raw
+  # @section -- Kube Controller Manager
+  maxCacheSize:
+
+# Metrics from the Kube Proxy
+kubeProxy:
+  # -- Scrape metrics from the Kube Proxy
+  # @default -- false
+  # @section -- Kube Proxy
+  enabled:
+
+  # -- Port number used by the Kube Proxy, set in `--metrics-bind-address`.
+  # @section -- Kube Proxy
+  port: 10249
+
+  # -- How frequently to scrape metrics from the Kube Proxy
+  # Overrides metrics.scrapeInterval
+  # @default -- 60s
+  # @section -- Kube Proxy
+  scrapeInterval: ""
+
+  # -- Rule blocks to be added to the discovery.relabel component for the Kube Proxy.
+  # These relabeling rules are applied pre-scrape against the targets from service discovery.
+  # Before the scrape, any remaining target labels that start with `__` (i.e. `__meta_kubernetes*`) are dropped.
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery.relabel/#rule-block))
+  # @section -- Kube Proxy
+  extraDiscoveryRules: ""
+
+  # -- Rule blocks to be added to the prometheus.relabel component for the Kube Proxy.
+  # These relabeling rules are applied post-scrape against the metrics returned from the scraped target, no `__meta*` labels are present.
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#rule-block))
+  # @section -- Kube Proxy
+  extraMetricProcessingRules: ""
+
+  # Adjustments to the scraped metrics to filter the amount of data sent to storage.
+  metricsTuning:
+    # -- Metrics to keep. Can use regular expressions. An empty list means keep all.
+    # @section -- Kube Proxy
+    includeMetrics: []
+    # -- Metrics to drop. Can use regular expressions.
+    # @section -- Kube Proxy
+    excludeMetrics: []
+
+  # -- Sets the max_cache_size for cadvisor prometheus.relabel component.
+  # This should be at least 2x-5x your largest scrape target or samples appended rate.
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#arguments))
+  # Overrides metrics.maxCacheSize
+  # @raw
+  # @section -- Kube Proxy
+  maxCacheSize:
+
+# Metrics from the Kube Scheduler
+kubeScheduler:
+  # -- Scrape metrics from the Kube Scheduler
+  # @default -- false
+  # @section -- Kube Scheduler
+  enabled:
+
+  # -- Port number used by the Kube Scheduler, set by `--secure-port`.
+  # @section -- Kube Scheduler
+  port: 10259
+
+  # -- How frequently to scrape metrics from the Kube Scheduler
+  # Overrides metrics.scrapeInterval
+  # @default -- 60s
+  # @section -- Kube Scheduler
+  scrapeInterval: ""
+
+  # -- Rule blocks to be added to the discovery.relabel component for the Kube Scheduler.
+  # These relabeling rules are applied pre-scrape against the targets from service discovery.
+  # Before the scrape, any remaining target labels that start with `__` (i.e. `__meta_kubernetes*`) are dropped.
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery.relabel/#rule-block))
+  # @section -- Kube Scheduler
+  extraDiscoveryRules: ""
+
+  # -- Rule blocks to be added to the prometheus.relabel component for the Kube Scheduler.
+  # These relabeling rules are applied post-scrape against the metrics returned from the scraped target, no `__meta*` labels are present.
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#rule-block))
+  # @section -- Kube Scheduler
+  extraMetricProcessingRules: ""
+
+  # Adjustments to the scraped metrics to filter the amount of data sent to storage.
+  metricsTuning:
+    # -- Metrics to keep. Can use regular expressions. An empty list means keep all.
+    # @section -- Kube Scheduler
+    includeMetrics: []
+    # -- Metrics to drop. Can use regular expressions.
+    # @section -- Kube Scheduler
+    excludeMetrics: []
+
+  # -- Sets the max_cache_size for cadvisor prometheus.relabel component.
+  # This should be at least 2x-5x your largest scrape target or samples appended rate.
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#arguments))
+  # Overrides metrics.maxCacheSize
+  # @raw
+  # @section -- Kube Scheduler
+  maxCacheSize:
+
+#
+# Metric sources from additional systems
+#
+
+# kube-state-metrics metrics gather information about Kubernetes resources.
+kube-state-metrics:
+  # -- Scrape metrics from kube-state-metrics.
+  # @section -- kube-state-metrics
+  enabled: true
+
+  # -- Labels used to select the kube-state-metrics service.
+  # @section -- kube-state-metrics
+  labelMatchers:
+    app.kubernetes.io/name: kube-state-metrics
+
+  # -- Rule blocks to be added to the prometheus.relabel component for kube-state-metrics metrics.
+  # These relabeling rules are applied post-scrape against the metrics returned from the scraped target, no `__meta*` labels are present.
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#rule-block))
+  # @section -- kube-state-metrics
+  extraMetricProcessingRules: ""
+
+  # Adjustments to the scraped metrics to filter the amount of data sent to storage.
+  metricsTuning:
+    # -- Filter the list of metrics from Kube State Metrics to a useful, minimal set.
+    # See [Metrics Tuning and Allow Lists](#metrics-tuning-and-allow-lists)
+    # @section -- kube-state-metrics
+    useDefaultAllowList: true
+    # -- Metrics to keep. Can use regular expressions.
+    # @section -- kube-state-metrics
+    includeMetrics: []
+    # -- Metrics to drop. Can use regular expressions.
+    # @section -- kube-state-metrics
+    excludeMetrics: []
+
+  # -- How frequently to scrape kube-state-metrics metrics.
+  # @default -- `60s`
+  # @section -- kube-state-metrics
+  scrapeInterval: ""
+
+  # -- Sets the max_cache_size for cadvisor prometheus.relabel component.
+  # This should be at least 2x-5x your largest scrape target or samples appended rate.
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#arguments))
+  # Overrides global.maxCacheSize
+  # @default -- `100000`
+  # @section -- kube-state-metrics
+  maxCacheSize:
+
+  # -- Deploy kube-state-metrics. Set to false if your cluster already has kube-state-metrics deployed.
+  # @section -- kube-state-metrics
+  deploy: true
+
+  # -- `kube_<resource>_labels` metrics to generate.
+  # @section -- kube-state-metrics
+  metricLabelsAllowlist:
+    - nodes=[*]
+
+  # @ignored
+  nodeSelector:
+    kubernetes.io/os: linux
+
+  # @ignored - Enable the release label
+  releaseLabel: true
+
+  # @ignored - Disable autosharding
+  autosharding:
+    enabled: false
+  # @ignored - Recreate on update, eliminates the potential for duplicate metrics
+  updateStrategy: Recreate
+
+  # @ignored - Disable prometheus.io/scrape annotation
+  prometheusScrape: false
+
+# Node Exporter metrics gathers hardware information about Linux nodes.
+node-exporter:
+  # -- Scrape metrics from Node Exporter.
+  # @section -- Node Exporter
+  enabled: true
+
+  # -- Labels used to select the Node Exporter pods.
+  # @section -- Node Exporter
+  labelMatchers:
+    app.kubernetes.io/name: node-exporter
+
+  # -- Rule blocks to be added to the prometheus.relabel component for Node Exporter metrics.
+  # These relabeling rules are applied post-scrape against the metrics returned from the scraped target, no `__meta*` labels are present.
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#rule-block))
+  # @section -- Node Exporter
+  extraMetricProcessingRules: ""
+
+  # Adjustments to the scraped metrics to filter the amount of data sent to storage.
+  metricsTuning:
+    # -- Filter the list of metrics from Node Exporter to the minimal set required for Kubernetes Monitoring.
+    # See [Metrics Tuning and Allow Lists](#metrics-tuning-and-allow-lists)
+    # @section -- Node Exporter
+    useDefaultAllowList: true
+    # -- Filter the list of metrics from Node Exporter to the minimal set required for Kubernetes Monitoring as well as the Node Exporter integration.
+    # @section -- Node Exporter
+    useIntegrationAllowList: false
+    # -- Metrics to keep. Can use regular expressions.
+    # @section -- Node Exporter
+    includeMetrics: []
+    # -- Metrics to drop. Can use regular expressions.
+    # @section -- Node Exporter
+    excludeMetrics: []
+    # -- Drop metrics for the given filesystem types
+    # @section -- Node Exporter
+    dropMetricsForFilesystem: [tempfs]
+
+  # -- How frequently to scrape Node Exporter metrics.
+  # @default -- `60s`
+  # @section -- Node Exporter
+  scrapeInterval: ""
+
+  # -- Sets the max_cache_size for cadvisor prometheus.relabel component.
+  # This should be at least 2x-5x your largest scrape target or samples appended rate.
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#arguments))
+  # Overrides global.maxCacheSize
+  # @default -- `100000`
+  # @section -- Node Exporter
+  maxCacheSize:
+
+  # -- Deploy Node Exporter. Set to false if your cluster already has Node Exporter deployed.
+  # @section -- Node Exporter - Deployment settings
+  deploy: true
+
+  # @ignored
+  nodeSelector:
+    kubernetes.io/os: linux
+
+  # @ignored
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: eks.amazonaws.com/compute-type
+                operator: NotIn
+                values: [fargate]
+
+  # @ignored - Enable the release label
+  releaseLabel: true
+
+  # @ignored
+  podAnnotations:
+    k8s.grafana.com/logs.job: integrations/node_exporter
+
+  # @ignored
+  service:
+    annotations:
+      prometheus.io/scrape: null
+
+# Windows Exporter metrics gathers hardware information about Windows nodes.
+windows-exporter:
+  # -- Scrape node metrics
+  # @section -- Windows Exporter
+  enabled: true
+
+  # -- Labels used to select the Windows Exporter pods.
+  # @section -- Windows Exporter
+  labelMatchers:
+    app.kubernetes.io/name: windows-exporter
+
+  # -- Rule blocks to be added to the prometheus.relabel component for Windows Exporter metrics.
+  # These relabeling rules are applied post-scrape against the metrics returned from the scraped target, no `__meta*` labels are present.
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#rule-block))
+  # @section -- Windows Exporter
+  extraMetricProcessingRules: ""
+  
+  # Adjustments to the scraped metrics to filter the amount of data sent to storage.
+  metricsTuning:
+    # -- Filter the list of metrics from Windows Exporter to the minimal set required for Kubernetes Monitoring.
+    # See [Metrics Tuning and Allow Lists](#metrics-tuning-and-allow-lists)
+    # @section -- Windows Exporter
+    useDefaultAllowList: true
+    # -- Metrics to keep. Can use regular expressions.
+    # @section -- Windows Exporter
+    includeMetrics: []
+    # -- Metrics to drop. Can use regular expressions.
+    # @section -- Windows Exporter
+    excludeMetrics: []
+
+  # -- How frequently to scrape metrics from Windows Exporter.
+  # @default -- `60s`
+  # @section -- Windows Exporter
+  scrapeInterval: ""
+
+  # -- Sets the max_cache_size for cadvisor prometheus.relabel component.
+  # This should be at least 2x-5x your largest scrape target or samples appended rate.
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#arguments))
+  # Overrides global.maxCacheSize
+  # @default -- `100000`
+  # @section -- Windows Exporter
+  maxCacheSize:
+
+  # -- Deploy Windows Exporter. Set to false if your cluster already has Windows Exporter deployed.
+  # @section -- Windows Exporter - Deployment settings
+  deploy: true
+
+  # -- Windows Exporter configuration
+  # @ignored
+  config: |-
+    collectors:
+      enabled: cpu,cs,container,logical_disk,memory,net,os
+    collector:
+      service:
+        services-where: "Name='containerd' or Name='kubelet'"
+
+  # @ignored - Enable the release label
+  releaseLabel: true
+
+  # @ignored - Set annotation to override the job label
+  podAnnotations:
+    k8s.grafana.com/logs.job: integrations/windows_exporter
+
+
+# Kepler gathers energy metrics for the Kubernetes Cluster and the objects running inside.
+kepler:
+  # -- Deploy and scrape Kepler metrics.
+  # @section -- Kepler
+  enabled: false
+
+  # -- Label matchers used to select the Kepler pods
+  # @section -- Kepler
+  labelMatchers:
+    app.kubernetes.io/name: kepler
+
+  # -- Rule blocks to be added to the discovery.relabel component for Kepler.
+  # These relabeling rules are applied pre-scrape against the targets from service discovery.
+  # Before the scrape, any remaining target labels that start with __ (i.e. __meta_kubernetes*) are dropped.
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery.relabel/#rule-block))
+  # @section -- Kepler
+  extraDiscoveryRules: ""
+
+  # -- Rule blocks to be added to the prometheus.relabel component for Kepler. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#rule-block))
+  # These relabeling rules are applied post-scrape against the metrics returned from the scraped target, no __meta* labels are present.
+  # @section -- Kepler
+  extraMetricProcessingRules: ""
+
+  # Adjustments to the scraped metrics to filter the amount of data sent to storage.
+  # @section -- Kepler
+  metricsTuning:
+    # -- Filter the list of metrics from Kepler to the minimal set required for Kubernetes Monitoring.
+    # See [Metrics Tuning and Allow Lists](#metrics-tuning-and-allow-lists)
+    # @section -- Kepler
+    useDefaultAllowList: true
+    # -- Metrics to keep. Can use regular expressions.
+    # @section -- Kepler
+    includeMetrics: []
+    # -- Metrics to drop. Can use regular expressions.
+    # @section -- Kepler
+    excludeMetrics: []
+
+  # -- How frequently to scrape metrics from Kepler.
+  # Overrides global.scrapeInterval.
+  # @default -- `60s`
+  # @section -- Kepler
+  scrapeInterval: ""
+
+  # -- Sets the max_cache_size for the prometheus.relabel component for Kepler.
+  # This should be at least 2x-5x your largest scrape target or samples appended rate.
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#arguments))
+  # Overrides global.maxCacheSize
+  # @default -- `100000`
+  # @section -- Kepler
+  maxCacheSize:
+
+  # @ignored
+  canMount: { usrSrc: false }
+  # @ignored
+  extraEnvVars:
+    EXPOSE_ESTIMATED_IDLE_POWER_METRICS: "true"
+  # @ignored
+  podAnnotations:
+    k8s.grafana.com/logs.job: integrations/kepler
+
+# @ignore
+deployAsConfigMap: false
