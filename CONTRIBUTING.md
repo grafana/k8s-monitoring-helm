@@ -43,7 +43,7 @@ Chart dependencies are automatically updated via PRs, but if you want to manuall
 
 You can test your changes with a similar platform to what is used in the CI/CD pipelines.
 
-To build the cluster, use the [setup-local-test-cluster.sh](charts/k8s-monitoring-v1/tests/setup-local-test-cluster.sh) script to build a
+To build the cluster, use the [setup-local-test-cluster.sh](charts/k8s-monitoring-v1/test/setup-local-test-cluster.sh) script to build a
 Kubernetes cluster using [kind](https://kind.sigs.k8s.io/) and deploy the telemetry data sources, data stores and
 Grafana. If you provide a values file as an argument to that script (i.e. `setup-local-test-cluster.sh values.yaml`), it
 installs the k8s-monitoring Helm chart and runs `helm test` as well.

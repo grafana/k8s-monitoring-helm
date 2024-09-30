@@ -118,9 +118,9 @@ push-image:
 # Test targets
 #
 .PHONY: test
-test: tests/test-runner.sh
-	./tests/test-runner.sh --show-diffs
-	cd tests; shellspec
+test: test/test-runner.sh
+	./test/test-runner.sh --show-diffs
+	cd test; shellspec
 
 #
 # Example targets
@@ -153,8 +153,8 @@ alloy_configs = $(shell \
 %/profiles.alloy: %/output.yaml
 	yq 'select(.kind=="ConfigMap" and .metadata.name=="$(EXAMPLE_RELEASE_NAME)-alloy-profiles") | .data["config.alloy"]' $< > $@
 
-.PHONY: examples clean-examples
+.PHONY: examples clean
 examples: $(EXAMPLE_OUTPUT_FILES) $(EXAMPLE_ALLOY_FILES)
 
-clean-examples:
+clean:
 	rm -f $(EXAMPLE_OUTPUT_FILES) $(EXAMPLE_ALLOY_FILES)

@@ -61,10 +61,11 @@ jobs:
         uses: azure/setup-helm@v4
 
       - name: Check for example output changes
+        working-directory: charts/k8s-monitoring-v1
         run: |
-          make regenerate-example-outputs
+          make clean examples
           if [[ -n "$(git status --porcelain)" ]]; then
-            echo "Helm chart examples are not up to date. Please run 'make regenerate-example-outputs', examine changes, and commit changes." >&2
+            echo "k8s-monitoring Helm chart v1 examples are not up to date. Please run 'make clean examples', examine changes, and commit changes." >&2
             exit 1
           fi
 
