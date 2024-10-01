@@ -7,9 +7,9 @@ FEATURE_CHARTS = $(shell ls charts | grep -v k8s-monitoring)
 build:
 	set -e && \
 	for chart in $(FEATURE_CHARTS); do \
-		make -C charts/$$chart all; \
+		make -C charts/$$chart build; \
 	done
-	#make -C charts/k8s-monitoring all
+	#make -C charts/k8s-monitoring build
 
 .PHONY: test
 test: build

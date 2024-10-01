@@ -16,11 +16,15 @@ Chart.lock: Chart.yaml
 values.schema.json: values.yaml $$(wildcard schema-mods/*)
 	../../scripts/schema-gen.sh .
 
-.PHONY: all
-all: README.md Chart.lock values.schema.json
+.PHONY: clean
+clean:
+	rm -f README.md Chart.lock values.schema.json
+
+.PHONY: build
+build: README.md Chart.lock values.schema.json
 
 .PHONY: test
-test: all
+test: build
 	helm lint .
 ifdef HAS_HELM_UNITTEST
 	helm unittest .
