@@ -1,0 +1,11 @@
+{{- if .Values.deployAsConfigMap }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "feature.podLogs.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+data:
+  module.alloy: |-
+    {{- include "feature.podLogs.module" . | indent 4 }}
+{{- end }}
