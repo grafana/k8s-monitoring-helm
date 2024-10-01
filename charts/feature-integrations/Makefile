@@ -86,6 +86,7 @@ build: README.md Chart.lock values.schema.json templates/_integration_types.tpl 
 .PHONY: test
 test: build
 	helm lint .
+	ct lint --lint-conf ../../.configs/lintconf.yaml --check-version-increment=false --charts .
 ifdef HAS_HELM_UNITTEST
 	helm unittest .
 else

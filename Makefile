@@ -46,7 +46,7 @@ clean:
 lint: lint-chart lint-sh lint-md lint-txt lint-yml lint-ec lint-alex lint-misspell lint-actionlint
 
 lint-chart:
-	ct lint --debug --config .github/configs/ct.yaml --lint-conf .github/configs/lintconf.yaml --check-version-increment=false
+	ct lint --debug --lint-conf .configs/lintconf.yaml --check-version-increment=false
 
 # Shell Linting
 lint-sh lint-shell:

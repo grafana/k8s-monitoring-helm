@@ -40,6 +40,9 @@ fi
 statusCode=0
 checkstyle='<?xml version="1.0" encoding="utf-8"?><checkstyle version="4.3">'
 
+# Inject a component that utilizes Kubernetes discovery, so we know that the config will fail in a predictable way.
+k8sDiscovery='discovery.kubernetes "lint_config_component" { role = "nodes" }'
+
 for file in "$@";
 do
   if [[ "${file}" == "--public-preview" ]]; then
@@ -54,15 +57,15 @@ do
   # add file to checkstyle output
   checkstyle="${checkstyle}<file name=\"${file}\">"
   fmt_output=$(alloy fmt "${file}" 2>&1)
-  currentCode="$?"
+  fmtCode="$?"
   fmt_output=$(echo "${fmt_output}" | grep -v "Error: encountered errors during formatting")
-  run_output=""
   # Attempt to run with the config file.
   run_code=0
+  run_output=""
   file_is_empty=$(grep -cve '^\s*$' "${file}" || true)
   # make sure the file is not empty, otherwise alloy will actually run and not exit
   if [[ "${file_is_empty}" != 0 ]]; then
-    run_output=$(alloy run --stability.level "${STABILITY_LEVEL}" "${file}" 2>&1)
+    run_output=$(alloy run --stability.level "${STABILITY_LEVEL}" <(cat "${file}"; echo "${k8sDiscovery}") 2>&1)
     # A "successful" attempt will fail because we're not running in Kubernetes
     if ! echo "${run_output}" | grep "KUBERNETES_SERVICE_HOST and KUBERNETES_SERVICE_PORT must be defined" >/dev/null; then
       run_code=1
@@ -70,7 +73,7 @@ do
   fi
 
   # if the current code is 0, output the file name for logging purposes
-  if [[ "${currentCode}" == 0 ]] && [[ "${run_code}" == 0 ]]; then
+  if [[ "${fmtCode}" == 0 ]] && [[ "${run_code}" == 0 ]]; then
     # output to console only if the format is console
     if [[ "${FORMAT}" == "console" ]]; then
       echo -e "\\x1b[32m${file}\\x1b[0m: no issues found"
@@ -83,7 +86,7 @@ do
     fi
 
     # output alloy fmt errors
-    if [[ "${currentCode}" != 0 ]]; then
+    if [[ "${fmtCode}" != 0 ]]; then
       # loop each found issue
       while IFS= read -r row; do
         # Process each line here
@@ -120,7 +123,7 @@ do
   fi
   # only override the statusCode if it is 0
   if [[ "${statusCode}" == 0 ]]; then
-    statusCode="${currentCode}"
+    statusCode="${fmtCode}"
   fi
 done
 
