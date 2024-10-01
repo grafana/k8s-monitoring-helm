@@ -4,7 +4,7 @@ HAS_HELM_UNITTEST := $(shell helm plugin list | grep unittest 2> /dev/null)
 SCHEMA_MODS_JSON_FILES = $(shell find schema-mods -name "*.json")
 SCHEMA_MODS_JQ_FILES = $(shell find schema-mods -name "*.jq")
 
-INTEGRATION_VALUES_FILES = $(shell find integrations -name "*-values.yaml")
+INTEGRATION_VALUES_FILES = $(shell find integrations -name "*-values.yaml" | sort -u)
 INTEGRATION_DOCS_FILES = $(INTEGRATION_VALUES_FILES:integrations/%-values.yaml=./docs/integrations/%.md)
 INTEGRATION_SCHEMA_FILES = $(INTEGRATION_VALUES_FILES:integrations/%-values.yaml=./schema-mods/definitions/%-integration.schema.json)
 
