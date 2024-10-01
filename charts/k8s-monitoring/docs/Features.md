@@ -2,15 +2,15 @@
 
 These are the current features supported in this Helm chart:
 
-- [Cluster Metrics](#cluster-metrics)
-- [Cluster Events](#cluster-events)
-- [Application Observability](#application-observability)
-- [Annotation Autodisocvery](#annotation-autodiscovery)
-- [Prometheus Operator Objects](#prometheus-operator-objects)
-- [Pod Logs](#pod-logs)
-- [Service Integrations](#service-integrations)
-- [Profiling](#profiling)
-- [Frontend Observability](#frontend-observability)
+-   [Cluster Metrics](#cluster-metrics)
+-   [Cluster Events](#cluster-events)
+-   [Application Observability](#application-observability)
+-   [Annotation Autodisocvery](#annotation-autodiscovery)
+-   [Prometheus Operator Objects](#prometheus-operator-objects)
+-   [Pod Logs](#pod-logs)
+-   [Service Integrations](#service-integrations)
+-   [Profiling](#profiling)
+-   [Frontend Observability](#frontend-observability)
 
 ## Cluster Metrics
 

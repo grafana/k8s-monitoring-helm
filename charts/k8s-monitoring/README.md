@@ -105,6 +105,12 @@ podLogs:
   enabled: true
 ```
 
+## Maintainers
+
+| Name | Email | Url |
+| ---- | ------ | --- |
+| petewall | <pete.wall@grafana.com> |  |
+
 ## Source Code
 
 * <https://github.com/grafana/grafana-telemetry-collector-helm/tree/main/charts/kubernetes-observability>

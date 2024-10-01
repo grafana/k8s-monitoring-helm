@@ -37,7 +37,7 @@ This defines the options for defining a destination for metrics that use the Pro
 | extraHeadersFrom | object | `{}` | Extra headers to be set when sending data using a dynamic reference. All values are treated as raw strings and not quoted. |
 | extraLabels | object | `{}` | Extra labels to be added to all metrics before delivering to the destination. All values are treated as strings and automatically quoted. |
 | extraLabelsFrom | object | `{}` | Extra labels to be added to all metrics using a dynamic reference before delivering to the destination. All values are treated as raw strings and not quoted. |
-| metricProcessingRules | string | `""` | Rule blocks to apply to all metrics. Uses the [write_relabel_config block](https://grafana.com/docs/alloy/latest/reference/components/prometheus.remote_write/#write_relabel_config-block) of the prometheus.remote_write component. Format: write_relabel_config {   <rule body> } |
+| metricProcessingRules | string | `""` | Rule blocks to apply to all metrics. Uses the [write_relabel_config block](https://grafana.com/docs/alloy/latest/reference/components/prometheus.remote_write/#write_relabel_config-block) of the prometheus.remote_write component. Format: write_relabel_config {   source_labels = ["..."]   action = "..."   ... } |
 | name | string | `""` | The name for this Prometheus destination. |
 | proxyURL | string | `""` | The Proxy URL for the Prometheus destination. |
 | sendNativeHistograms | bool | `false` | Whether native histograms should be sent. |

@@ -50,7 +50,7 @@ templates/destinations/_destination_types.tpl: $(DESTINATION_VALUES_FILES)
 	echo '{{- end -}}' >> $@
 
 values.schema.json: values.yaml $(DESTINATION_SCHEMA_FILES) $(SCHEMA_MODS_JSON_FILES) $(SCHEMA_MODS_JQ_FILES) schema-mods/destination-list.json
-	../../utilities/schema-gen.sh .
+	../../scripts/schema-gen.sh .
 
 README.md: README.md.gotmpl values.yaml Chart.yaml
 ifdef HAS_HELM_DOCS

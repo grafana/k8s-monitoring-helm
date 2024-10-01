@@ -9,7 +9,7 @@ build:
 	for chart in $(FEATURE_CHARTS); do \
 		make -C charts/$$chart build; \
 	done
-	#make -C charts/k8s-monitoring build
+	make -C charts/k8s-monitoring build
 
 .PHONY: test
 test: build
@@ -17,7 +17,7 @@ test: build
 	for chart in $(FEATURE_CHARTS); do \
 		make -C charts/$$chart test; \
 	done
-	#make -C charts/k8s-monitoring test
+	make -C charts/k8s-monitoring test
 
 ####################################################################
 #                   Installation / Setup                           #
