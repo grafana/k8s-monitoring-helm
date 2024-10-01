@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-
-source "./scripts/includes/utils.sh"
-source "./scripts/includes/logging.sh"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "${SCRIPT_DIR}/includes/utils.sh"
+source "${SCRIPT_DIR}/includes/logging.sh"
 
 # output the heading
 heading "Kubernetes Monitoring Helm" "Performing Misspell Linting using misspell"

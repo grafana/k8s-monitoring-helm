@@ -43,17 +43,18 @@ jobs:
           elif [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
             # In manual trigger, run for all feature charts
             echo "Manual dispatch detected, running tests for all feature charts"
-            echo "changed_charts=$(ls charts | grep -v "k8s-monitoring" | sort -u)" >> ${GITHUB_OUTPUT}
+            # shellcheck disable=SC2010
+            echo "changed_charts=$(ls charts | grep -v "k8s-monitoring" | sort -u)" >> "${GITHUB_OUTPUT}"
             exit 0
           fi
 
           # Check if base commit exists, fallback to empty tree if none
-          if ! git rev-parse --verify $base_commit >/dev/null 2>&1; then
+          if ! git rev-parse --verify "$base_commit" >/dev/null 2>&1; then
             base_commit=$(git hash-object -t tree /dev/null)
           fi
 
           # Detect modified files
-          modified_charts=$(git diff --name-only $base_commit HEAD -- 'charts/*' | grep "^charts/" | cut -d "/" -f2 | sort -u)
+          modified_charts=$(git diff --name-only "$base_commit" HEAD -- 'charts/*' | grep "^charts/" | cut -d "/" -f2 | sort -u)
 
           # Detect newly added files (untracked files)
           added_charts=$(git ls-files --others --exclude-standard -- 'charts/*' | grep "^charts/" | cut -d "/" -f2 | sort -u)
@@ -66,7 +67,7 @@ jobs:
             changed_charts="none"
           fi
           echo "Changed feature charts: $changed_charts"
-          echo "changed_charts=$(echo "$changed_charts" | jq --raw-input --slurp --compact-output 'split("\n") | map(select(. != ""))')" >> ${GITHUB_OUTPUT}
+          echo "changed_charts=$(echo "$changed_charts" | jq --raw-input --slurp --compact-output 'split("\n") | map(select(. != ""))')" >> "${GITHUB_OUTPUT}"
 
   run-tests:
     name: Testing

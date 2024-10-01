@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-source "./scripts/includes/utils.sh"
-source "./scripts/includes/logging.sh"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "${SCRIPT_DIR}/includes/utils.sh"
+source "${SCRIPT_DIR}/includes/logging.sh"
 
 usage() {
   echo "USAGE: lint-configs.sh [--public-preview] output.alloy [output2.alloy...]"

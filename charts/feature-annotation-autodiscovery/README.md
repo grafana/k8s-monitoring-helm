@@ -4,6 +4,12 @@
 
 Gathers metrics automatically based on Kubernetes Pod and Service annotations
 
+## Maintainers
+
+| Name | Email | Url |
+| ---- | ------ | --- |
+| petewall | <pete.wall@grafana.com> |  |
+
 ## Values
 
 ### Annotations

@@ -14,7 +14,7 @@ Chart.lock: Chart.yaml
 	@touch Chart.lock # Ensure the timestamp is updated
 
 values.schema.json: values.yaml $$(wildcard schema-mods/*)
-	../../utilities/schema-gen.sh .
+	../../scripts/schema-gen.sh .
 
 .PHONY: all
 all: README.md Chart.lock values.schema.json

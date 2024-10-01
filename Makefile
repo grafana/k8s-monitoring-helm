@@ -1,13 +1,28 @@
-.PHONY: setup install lint lint-chart lint-config lint-configs lint-alloy lint-sh lint-md lint-txt lint-yml lint-ec lint-alex lint-misspell lint-actionlint test install-deps clean
 SHELL := /bin/bash
 UNAME := $(shell uname)
 
-CT_CONFIGFILE ?= .github/configs/ct.yaml
-LINT_CONFIGFILE ?= .github/configs/lintconf.yaml
+FEATURE_CHARTS = $(shell ls charts | grep -v k8s-monitoring)
+
+.PHONY: build
+build:
+	set -e && \
+	for chart in $(FEATURE_CHARTS); do \
+		make -C charts/$$chart all; \
+	done
+	#make -C charts/k8s-monitoring all
+
+.PHONY: test
+test: build
+	set -e && \
+	for chart in $(FEATURE_CHARTS); do \
+		make -C charts/$$chart test; \
+	done
+	#make -C charts/k8s-monitoring test
 
 ####################################################################
 #                   Installation / Setup                           #
 ####################################################################
+.PHONY: setup install-deps
 setup install-deps:
 ifeq ($(UNAME), Darwin)
 	@./scripts/setup.sh
@@ -16,22 +31,22 @@ else
 	exit 1
 endif
 
+.PHONY: install
 install:
 	yarn install
 
+.PHONY: clean
 clean:
 	rm -rf node_modules
 
 ####################################################################
 #                           Linting                                #
 ####################################################################
-lint: lint-chart lint-config lint-sh lint-md lint-txt lint-yml lint-ec lint-alex lint-misspell lint-actionlint
+.PHONY: lint lint-chart lint-sh lint-md lint-txt lint-yml lint-ec lint-alex lint-misspell lint-actionlint
+lint: lint-chart lint-sh lint-md lint-txt lint-yml lint-ec lint-alex lint-misspell lint-actionlint
 
 lint-chart:
-	ct lint --debug --config "$(CT_CONFIGFILE)" --lint-conf "$(LINT_CONFIGFILE)" --check-version-increment=false
-
-lint-config lint-configs lint-alloy:
-	@./scripts/lint-alloy.sh $(METRICS_CONFIG_FILES) $(EVENTS_CONFIG_FILES) $(LOGS_CONFIG_FILES) --public-preview $(PROFILES_CONFIG_FILES)
+	ct lint --debug --config .github/configs/ct.yaml --lint-conf .github/configs/lintconf.yaml --check-version-increment=false
 
 # Shell Linting
 lint-sh lint-shell:

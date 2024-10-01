@@ -4,6 +4,12 @@
 
 Gathers Kubernetes Events
 
+## Maintainers
+
+| Name | Email | Url |
+| ---- | ------ | --- |
+| petewall | <pete.wall@grafana.com> |  |
+
 ## Values
 
 ### Processing settings

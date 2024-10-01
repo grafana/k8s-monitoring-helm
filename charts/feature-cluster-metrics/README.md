@@ -125,6 +125,12 @@ The behavior of the combination of these settings is shown in this table:
 In addition to all fo this, you can also use the `extraMetricProcessingRules` section to add arbitrary relabeling rules that can be used to take any
 action on the metric list, including filtering based on label or other actions.
 
+## Maintainers
+
+| Name | Email | Url |
+| ---- | ------ | --- |
+| petewall | <pete.wall@grafana.com> |  |
+
 <!-- markdownlint-disable no-bare-urls -->
 ## Requirements
 
