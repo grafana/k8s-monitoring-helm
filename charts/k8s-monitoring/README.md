@@ -43,6 +43,7 @@ Here is more detail about the different sections:
 #### Cluster
 
 This section defines the name of your cluster, which will be set as labels to all telemetry data.
+
 ```yaml
 cluster:
   name: my-cluster
@@ -111,11 +112,13 @@ podLogs:
 | ---- | ------ | --- |
 | petewall | <pete.wall@grafana.com> |  |
 
+<!-- markdownlint-disable no-bare-urls -->
+<!-- markdownlint-disable list-marker-space -->
 ## Source Code
 
-* <https://github.com/grafana/grafana-telemetry-collector-helm/tree/main/charts/kubernetes-observability>
+* <https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring>
+<!-- markdownlint-enable list-marker-space -->
 
-<!-- markdownlint-disable no-bare-urls -->
 ## Requirements
 
 | Repository | Name | Version |
@@ -269,7 +272,7 @@ podLogs:
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| profiling | object | Disabled | Profiling enables gathering profiles from applications. Requires a destination that supports profiles. To see the valid options, please see the [Profiling feature documentation]](https://github.com/grafana/grafana-telemetry-collector-helm/tree/main/charts/profiling). |
+| profiling | object | Disabled | Profiling enables gathering profiles from applications. Requires a destination that supports profiles. To see the valid options, please see the [Profiling feature documentation](https://github.com/grafana/grafana-telemetry-collector-helm/tree/main/charts/profiling). |
 | profiling.destinations | list | `[]` | The destinations where profiles will be sent. If empty, all profiles-capable destinations will be used. |
 | profiling.enabled | bool | `false` | Enable gathering profiles from applications. |
 
