@@ -1,0 +1,43 @@
+# Prometheus Destination
+
+This defines the options for defining a destination for metrics that use the Prometheus remote write protocol.
+
+{{ template "chart.valuesSection" . }}
+
+## Examples
+
+### Local Prometheus
+
+```yaml
+destinations:
+- name: localPrometheus
+  type: prometheus
+  url: http://prometheus.monitoring.svc.cluster.local:9090
+```
+
+### Prometheus with Basic Auth
+
+```yaml
+destinations:
+- name: CloudHostedMetrics
+  type: prometheus
+  url: https://prometheus.example.com/api/prom/push
+  auth:
+    type: basic
+    username: "my-username"
+    password: "my-password"
+```
+
+### Prometheus with embedded Bearer Token
+
+```yaml
+destinations:
+- name: promWithBearerToken
+  type: prometheus
+  url: https://prometheus.example.com/api/prom/push
+  auth:
+    type: bearerToken
+    bearerToken: my-token
+  secret:
+    embed: true
+```

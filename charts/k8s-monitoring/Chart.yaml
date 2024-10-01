@@ -1,0 +1,96 @@
+---
+apiVersion: v2
+name: k8s-monitoring
+description: Capture all telemetry data from your Kubernetes cluster.
+type: application
+icon: https://raw.githubusercontent.com/grafana/grafana/main/public/img/grafana_icon.svg
+sources:
+  - https://github.com/grafana/grafana-telemetry-collector-helm/tree/main/charts/kubernetes-observability
+
+version: 2.0.0-alpha.1
+appVersion: 2.0.0
+
+dependencies:
+  - alias: annotationAutodiscovery
+    name: k8s-monitoring-feature-annotation-autodiscovery
+    repository: file://../feature-annotation-autodiscovery
+    version: 1.0.0
+    condition: annotationAutodiscovery.enabled
+
+  - alias: applicationObservability
+    name: k8s-monitoring-feature-application-observability
+    repository: file://../feature-application-observability
+    version: 1.0.0
+    condition: applicationObservability.enabled
+
+  - alias: clusterEvents
+    name: k8s-monitoring-feature-cluster-events
+    repository: file://../feature-cluster-events
+    version: 1.0.0
+    condition: clusterEvents.enabled
+
+  - alias: clusterMetrics
+    name: k8s-monitoring-feature-cluster-metrics
+    repository: file://../feature-cluster-metrics
+    version: 1.0.0
+    condition: clusterMetrics.enabled
+
+  - alias: frontendObservability
+    name: k8s-monitoring-feature-frontend-observability
+    repository: file://../feature-frontend-observability
+    version: 1.0.0
+    condition: frontendObservability.enabled
+
+  - alias: integrations
+    name: k8s-monitoring-feature-integrations
+    repository: file://../feature-integrations
+    version: 1.0.0
+    condition: integrations.enabled
+
+  - alias: podLogs
+    name: k8s-monitoring-feature-pod-logs
+    repository: file://../feature-pod-logs
+    version: 1.0.0
+    condition: podLogs.enabled
+
+  - alias: profiling
+    name: k8s-monitoring-feature-profiling
+    repository: file://../feature-profiling
+    version: 1.0.0
+    condition: profiling.enabled
+
+  - alias: prometheusOperatorObjects
+    name: k8s-monitoring-feature-prometheus-operator-objects
+    repository: file://../feature-prometheus-operator-objects
+    version: 1.0.0
+    condition: prometheusOperatorObjects.enabled
+
+  - alias: alloy-metrics
+    name: alloy
+    version: 0.7.0
+    repository: https://grafana.github.io/helm-charts
+    condition: alloy-metrics.enabled
+
+  - alias: alloy-singleton
+    name: alloy
+    version: 0.7.0
+    repository: https://grafana.github.io/helm-charts
+    condition: alloy-singleton.enabled
+
+  - alias: alloy-logs
+    name: alloy
+    version: 0.7.0
+    repository: https://grafana.github.io/helm-charts
+    condition: alloy-logs.enabled
+
+  - alias: alloy-receiver
+    name: alloy
+    version: 0.7.0
+    repository: https://grafana.github.io/helm-charts
+    condition: alloy-receiver.enabled
+
+  - alias: alloy-profiles
+    name: alloy
+    version: 0.7.0
+    repository: https://grafana.github.io/helm-charts
+    condition: alloy-profiles.enabled

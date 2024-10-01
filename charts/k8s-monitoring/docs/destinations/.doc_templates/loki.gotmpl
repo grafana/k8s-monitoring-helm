@@ -1,0 +1,43 @@
+# Loki Destination
+
+This defines the options for defining a destination for logs that use the Loki protocol.
+
+{{ template "chart.valuesSection" . }}
+
+## Examples
+
+### Local Loki
+
+```yaml
+destinations:
+- name: localLoki
+  type: loki
+  url: http://loki.monitoring.svc.cluster.local:3100
+```
+
+### Loki with Basic Auth
+
+```yaml
+destinations:
+- name: CloudHostedLogs
+  type: loki
+  url: https://prometheus.example.com/loki/api/v1/push
+  auth:
+    type: basic
+    username: "my-username"
+    password: "my-password"
+```
+
+### Loki with embedded Bearer Token
+
+```yaml
+destinations:
+- name: lokiWithBearerToken
+  type: loki
+  url: https://loki.example.com/loki/api/v1/push
+  auth:
+    type: bearerToken
+    bearerToken: my-token
+  secret:
+    embed: true
+```

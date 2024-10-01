@@ -1,0 +1,165 @@
+# -- The name for this Prometheus destination.
+# @section -- General
+name: ""
+
+# -- The URL for the Prometheus destination.
+# @section -- General
+url: ""
+
+# -- The Proxy URL for the Prometheus destination.
+# @section -- General
+proxyURL: ""
+
+# -- The tenant ID for the Prometheus destination.
+# @section -- General
+tenantId: ""
+# -- The key for storing the tenant ID in the secret.
+# @section -- General
+tenantIdKey: "tenantId"
+# -- Raw config for accessing the tenant ID.
+# @section -- General
+tenantIdFrom: ""
+
+# -- Extra headers to be set when sending data.
+# All values are treated as strings and automatically quoted.
+# @section -- General
+extraHeaders: {}
+# -- Extra headers to be set when sending data using a dynamic reference.
+# All values are treated as raw strings and not quoted.
+# @section -- General
+extraHeadersFrom: {}
+
+# -- Extra labels to be added to all metrics before delivering to the destination.
+# All values are treated as strings and automatically quoted.
+# @section -- General
+extraLabels: {}
+# -- Extra labels to be added to all metrics using a dynamic reference before delivering to the destination.
+# All values are treated as raw strings and not quoted.
+# @section -- General
+extraLabelsFrom: {}
+# -- Rule blocks to apply to all metrics. Uses the [write_relabel_config block](https://grafana.com/docs/alloy/latest/reference/components/prometheus.remote_write/#write_relabel_config-block)
+# of the prometheus.remote_write component. Format:
+# write_relabel_config {
+#   <rule body>
+# }
+# @section -- General
+metricProcessingRules: ""
+
+auth:
+  # -- The type of authentication to do.
+  # Options are "none" (default), "basic", "bearerToken".
+  # @default -- none
+  # @section -- Authentication
+  type: "none"
+
+  # -- The username for basic authentication.
+  # @section -- Authentication - Basic
+  username: ""
+  # -- The key for storing the username in the secret.
+  # @section -- Authentication - Basic
+  usernameKey: "username"
+  # -- Raw config for accessing the username.
+  # @section -- Authentication - Basic
+  usernameFrom: ""
+
+  # -- The password for basic authentication.
+  # @section -- Authentication - Basic
+  password: ""
+  # -- The key for storing the password in the secret.
+  # @section -- Authentication - Basic
+  passwordKey: "password"
+  # -- Raw config for accessing the password.
+  # @section -- Authentication - Basic
+  passwordFrom: ""
+
+  # -- The bearer token for bearer token authentication.
+  # @section -- Authentication - Bearer Token
+  bearerToken: ""
+  # -- The key for storing the bearer token in the secret.
+  # @section -- Authentication - Bearer Token
+  bearerTokenKey: "bearerToken"
+  # -- Raw config for accessing the bearer token.
+  # @section -- Authentication - Bearer Token
+  bearerTokenFrom: ""
+
+secret:
+  # -- Whether to create a secret for this Prometheus destination.
+  # @section -- Secret
+  create: true
+  # -- If true, skip secret creation and embed the credentials directly into the configuration.
+  # @section -- Secret
+  embed: false
+  # -- The name of the secret to create.
+  # @section -- Secret
+  name: ""
+  # -- The namespace for the secret.
+  # @section -- Secret
+  namespace: ""
+
+tls:
+  # -- Disables validation of the server certificate.
+  # @section -- TLS
+  insecureSkipVerify: false
+
+  # -- The CA certificate for the server (as a string).
+  # @section -- TLS
+  ca: ""
+  # -- The CA certificate for the server (as a path to a file).
+  # @section -- TLS
+  caFile: ""
+  # -- Raw config for accessing the server CA certificate.
+  # @section -- TLS
+  caFrom: ""
+
+  # -- The client certificate for the server (as a string).
+  # @section -- TLS
+  cert: ""
+  # -- The client certificate for the server (as a path to a file).
+  # @section -- TLS
+  certFile: ""
+  # -- Raw config for accessing the client certificate.
+  # @section -- TLS
+  certFrom: ""
+
+  # -- The client key for the server (as a string).
+  # @section -- TLS
+  key: ""
+  # -- The client key for the server (as a path to a file).
+  # @section -- TLS
+  keyFile: ""
+  # -- Raw config for accessing the client key.
+  # @section -- TLS
+  keyFrom: ""
+
+# -- Whether native histograms should be sent.
+# @section -- General
+sendNativeHistograms: false
+
+queueConfig:
+  # -- Number of samples to buffer per shard.
+  # @section -- Queue Configuration
+  capacity: 10000
+  # -- Minimum amount of concurrent shards sending samples to the endpoint.
+  # @section -- Queue Configuration
+  minShards: 1
+  # -- Maximum amount of concurrent shards sending samples to the endpoint.
+  # @section -- Queue Configuration
+  maxShards: 50
+  # -- Maximum number of samples per send.
+  # @section -- Queue Configuration
+  maxSamplesPerSend: 2000
+  # -- Maximum time samples will wait in the buffer before sending.
+  # @section -- Queue Configuration
+  batchSendDeadline: 5s
+  # -- Initial retry delay. The backoff time gets doubled for each retry.
+  # @section -- Queue Configuration
+  minBackoff: 30ms
+  # -- Maximum retry delay.
+  # @section -- Queue Configuration
+  maxBackoff: 5s
+  # -- Retry when an HTTP 429 status code is received.
+  # @section -- Queue Configuration
+  retryOnHttp429: true
+  # -- Maximum age of samples to send.
+  # @section -- Queue Configuration
+  sampleAgeLimit: 0s

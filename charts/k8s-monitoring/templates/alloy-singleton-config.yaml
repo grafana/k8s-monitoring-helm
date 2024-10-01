@@ -1,0 +1,18 @@
+{{- if (index .Values "alloy-singleton").enabled }}
+{{- $destinations := include "features.clusterEvents.destinations" . | fromYamlArray }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "alloy.fullname" (index .Subcharts "alloy-singleton") }}
+  namespace: {{ $.Release.Namespace }}
+data:
+  config.alloy: |-
+    {{- include "destinations.alloy.config" (dict "destinations" $.Values.destinations "names" $destinations "clusterName" $.Values.cluster.name "Release" $.Release "Chart" $.Chart "Files" $.Files) | trim | nindent 4 }}
+
+    {{- include "features.clusterEvents.include" . | nindent 4 }}
+
+    {{- if (index .Values "alloy-singleton").extraConfig }}
+      {{ (index .Values "alloy-singleton").extraConfig | nindent 4 }}
+    {{- end }}
+{{- end }}
