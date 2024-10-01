@@ -110,9 +110,8 @@ jobs:
       - name: Check for changes in generated files
         run: |
           cd charts/${{ matrix.dir }}
-          if [ -n "$(git status --porcelain)" ]; then
+          if ! git diff --exit-code .; then
             echo "Generated files in charts/${{ matrix.dir }} are not up to date. Please run 'make all' and commit the changes."
-            git diff
             exit 1
           else
             echo "Generated files in charts/${{ matrix.dir }} are up to date."
