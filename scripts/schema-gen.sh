@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "${SCRIPT_DIR}/includes/utils.sh"
-source "${SCRIPT_DIR}/includes/logging.sh"
+PARENT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+source "${PARENT_DIR}/scripts/includes/utils.sh"
+source "${PARENT_DIR}/scripts/includes/logging.sh"
 
 # output the heading
 heading "Kubernetes Monitoring Helm" "Generating JSON Schema for Helm Charts"
