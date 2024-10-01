@@ -22,7 +22,7 @@ set -eo pipefail  # Exit immediately if a command fails.
 shopt -s nullglob # Required when a chart does not use mod files.
 
 # Generate base schema from the values file.
-docker run -it --rm \
+docker run --rm \
   --platform linux/amd64 \
   --volume "$(pwd)/${CHART_DIR}:/chart" \
   --entrypoint sh alpine/helm \
