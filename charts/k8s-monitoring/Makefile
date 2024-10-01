@@ -109,7 +109,7 @@ lint-configs: $(EXAMPLE_ALLOY_FILES)
 
 lint-helm: build
 	helm lint .
-	ct lint --lint-conf ../../.configs/lintconf.yaml --check-version-increment=false --charts .
+	ct lint --config .ct.yaml --lint-conf ../../.configs/lintconf.yaml --check-version-increment=false --charts .
 
 unittest: build
 ifdef HAS_HELM_UNITTEST
