@@ -18,16 +18,16 @@ services like [kube-state-metrics](https://github.com/kubernetes/kube-state-metr
 
 The Cluster Metrics feature of the Kubernetes Observability Helm chart includes the following metric systems:
 
-* Kubelet
-* cAdvisor
-* API Server
-* Kube Controller Manager
-* Kube Proxy
-* Kube Scheduler
-* kube-state-metrics
-* Node Exporter
-* Windows Exporter
-* Kepler
+*   Kubelet
+*   cAdvisor
+*   API Server
+*   Kube Controller Manager
+*   Kube Proxy
+*   Kube Scheduler
+*   kube-state-metrics
+*   Node Exporter
+*   Windows Exporter
+*   Kepler
 
 ### Kubelet
 
