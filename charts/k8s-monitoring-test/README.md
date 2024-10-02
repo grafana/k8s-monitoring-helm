@@ -12,6 +12,20 @@ A Helm chart for testing the Kubernetes Monitoring Helm chart
 
 ## Values
 
+### General settings
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| fullnameOverride | string | `""` | Full name override |
+| nameOverride | string | `""` | Name override |
+
+### Image Registry
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| global.image.pullSecrets | list | `[]` | Optional set of global image pull secrets. |
+| global.image.registry | string | `""` | Global image registry to use if it needs to be overridden for some specific use cases (e.g local registries, custom images, ...) |
+
 ### Image settings
 
 | Key | Type | Default | Description |
