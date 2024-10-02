@@ -72,13 +72,14 @@ for ((i=0; i<prerequisiteCount; i++)); do
   namespace=$(yq -r .prerequisites[$i].namespace "${testManifest}")
   if [ "${prerequisiteType}" == "helm" ]; then
     prereqName=$(yq -r .prerequisites[$i].name "${testManifest}")
+    prereqRepo=$(yq -r .prerequisites[$i].repo "${testManifest}")
     prereqChart=$(yq -r .prerequisites[$i].chart "${testManifest}")
     prereqValuesFile="${PARENT_DIR}/$(yq -r .prerequisites[$i].valuesFile "${testManifest}")"
 
     if [ -z "${prereqValuesFile}" ]; then
-      helm upgrade --install "${prereqName}" --namespace "${namespace}" --create-namespace "${prereqChart}" --hide-notes --wait
+      helm upgrade --install "${prereqName}" --namespace "${namespace}" --create-namespace --repo "${prereqRepo}" "${prereqChart}" --hide-notes --wait
     else
-      helm upgrade --install "${prereqName}" --namespace "${namespace}" --create-namespace "${prereqChart}" -f "${prereqValuesFile}" --hide-notes --wait
+      helm upgrade --install "${prereqName}" --namespace "${namespace}" --create-namespace --repo "${prereqRepo}" "${prereqChart}" -f "${prereqValuesFile}" --hide-notes --wait
     fi
   fi
 done
