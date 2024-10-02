@@ -76,6 +76,15 @@ prerequisiteCount=$(yq -r '.prerequisites | length' "${testManifest}")
 for ((i=0; i<prerequisiteCount; i++)); do
   prerequisiteType=$(yq -r .prerequisites[$i].type "${testManifest}")
   namespace=$(yq -r .prerequisites[$i].namespace "${testManifest}")
+  if [ -n "${namespace}" ]; then
+    namespaceArg="--namespace ${namespace}"
+  fi
+
+  if [ "${prerequisiteType}" == "manifest" ]; then
+    prereqFile="${PARENT_DIR}/$(yq -r .prerequisites[$i].file "${testManifest}")"
+    runAndEcho kubectl apply -f "${prereqFile}" "${namespaceArg}"
+  fi
+
   if [ "${prerequisiteType}" == "helm" ]; then
     prereqName=$(yq -r .prerequisites[$i].name "${testManifest}")
     prereqRepo=$(yq -r .prerequisites[$i].repo "${testManifest}")
@@ -83,9 +92,9 @@ for ((i=0; i<prerequisiteCount; i++)); do
     prereqValuesFile="${PARENT_DIR}/$(yq -r .prerequisites[$i].valuesFile "${testManifest}")"
 
     if [ -z "${prereqValuesFile}" ]; then
-      runAndEcho helm upgrade --install "${prereqName}" --namespace "${namespace}" --create-namespace --repo "${prereqRepo}" "${prereqChart}" --hide-notes --wait
+      runAndEcho helm upgrade --install "${prereqName}" "${namespaceArg}" --create-namespace --repo "${prereqRepo}" "${prereqChart}" --hide-notes --wait
     else
-      runAndEcho helm upgrade --install "${prereqName}" --namespace "${namespace}" --create-namespace --repo "${prereqRepo}" "${prereqChart}" -f "${prereqValuesFile}" --hide-notes --wait
+      runAndEcho helm upgrade --install "${prereqName}" "${namespaceArg}" --create-namespace --repo "${prereqRepo}" "${prereqChart}" -f "${prereqValuesFile}" --hide-notes --wait
     fi
   fi
 done
