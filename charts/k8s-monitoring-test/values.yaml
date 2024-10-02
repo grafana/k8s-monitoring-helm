@@ -1,0 +1,65 @@
+---
+# -- Name override
+# @section -- General settings
+nameOverride: ""
+
+# -- Full name override
+# @section -- General settings
+fullnameOverride: ""
+
+# -- The tests to run
+# @section -- Tests
+tests: []
+
+job:
+  # -- How many times to attempt the test job.
+  # @section -- Job settings
+  attempts: 10
+
+  # -- nodeSelector to apply to the test job.
+  # @section -- Job settings
+  nodeSelector:
+    kubernetes.io/os: linux
+
+  # -- Extra annotations to add to the test job.
+  # @section -- Job settings
+  extraAnnotations: {}
+
+  # -- Extra labels to add to the test job.
+  # @section -- Job settings
+  extraLabels: {}
+
+  # -- Tolerations to apply to the test job.
+  # @section -- Job settings
+  tolerations: []
+
+  # -- Service Account to use for the test job.
+  # @section -- Job settings
+  serviceAccount:
+    name: ""
+
+image:
+  # -- Test job image registry.
+  # @section -- Image settings
+  registry: ghcr.io
+  # -- Test job image repository.
+  # @section -- Image settings
+  image: grafana/k8s-monitoring-test
+  # -- Test job image tag. Default is the chart version.
+  # @section -- Image settings
+  tag: ""
+  # -- Optional set of image pull secrets.
+  # @section -- Image settings
+  pullSecrets: []
+
+## Global properties for image pulling override the values defined under `image.registry` and `configReloader.image.registry`.
+## If you want to override only one image registry, use the specific fields but if you want to override them all, use `global.image.registry`
+global:
+  image:
+    # -- Global image registry to use if it needs to be overridden for some specific use cases (e.g local registries, custom images, ...)
+    # @section -- Image Registry
+    registry: ""
+
+    # -- Optional set of global image pull secrets.
+    # @section -- Image Registry
+    pullSecrets: []

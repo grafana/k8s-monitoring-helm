@@ -1,0 +1,52 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Single test
+templates:
+  - configmap.yaml
+  - secret.yaml
+  - tests/test-job.yaml
+tests:
+  - it: creates a single test Job with a ConfigMap and a Secret
+    set:
+      tests:
+        - env:
+            PROMETHEUS_URL: http://prometheus.monitoring.svc.cluster.local:9090
+            PROMETHEUS_USER: prometheus
+            PROMETHEUS_PASSWORD: prompassword
+          queries:
+            - query: kube_node_info
+              type: promql
+    asserts:
+      - template: configmap.yaml
+        isKind:
+          of: ConfigMap
+      - template: configmap.yaml
+        equal:
+          path: data["queries.json"]
+          value: |-
+            {
+              "queries":
+              [
+                {
+                  "query": "kube_node_info",
+                  "type": "promql"
+                }
+              ]
+            }
+      - template: secret.yaml
+        isKind:
+          of: Secret
+      - template: secret.yaml
+        equal:
+          path: stringData["PROMETHEUS_URL"]
+          value: http://prometheus.monitoring.svc.cluster.local:9090
+      - template: secret.yaml
+        equal:
+          path: stringData["PROMETHEUS_USER"]
+          value: prometheus
+      - template: secret.yaml
+        equal:
+          path: stringData["PROMETHEUS_PASSWORD"]
+          value: prompassword
+      - template: tests/test-job.yaml
+        hasDocuments:
+          count: 1

@@ -32,7 +32,7 @@ loki.write {{ include "helper.alloy_name" .name | quote }} {
   }
   external_labels = {
     cluster = {{ $.clusterName | quote }},
-    "k8s.cluster.name" = {{ $.clusterName | quote }},
+    "k8s_cluster_name" = {{ $.clusterName | quote }},
 {{- if .externalLabels }}
   {{- range $k, $v := .externalLabels }}
     {{ $k }} = {{ $v | quote }},

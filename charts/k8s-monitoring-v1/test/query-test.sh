@@ -12,6 +12,7 @@ if [ -z "${1}" ] || [ "${1}" == "-h" ]; then
   echo
   echo "  If using any LogQL queries:"
   echo "  LOKI_URL - The query URL for your Loki service (e.g. localhost:9090/api/v1/query"
+  echo "  LOKI_TENANTID - The tenant ID for running LogQL queries"
   echo "  LOKI_USER - The username for running LogQL queries"
   echo "  LOKI_PASS - The password for running LogQL queries"
   echo
@@ -40,6 +41,13 @@ if [ -z "${1}" ] || [ "${1}" == "-h" ]; then
   echo '    "value": <expected value>'
   echo '  }'
   exit 0
+fi
+
+QUERIES_FILE="${1}"
+if [ ! -f "${QUERIES_FILE}" ]; then
+  echo "Queries file not found: ${QUERIES_FILE}"
+  usage
+  exit 1
 fi
 
 function check_value {
@@ -156,13 +164,13 @@ function profiles_query {
     fi
 }
 
-count=$(jq -r ".queries | length-1" "${1}")
+count=$(jq -r ".queries | length-1" "${QUERIES_FILE}")
 for i in $(seq 0 "${count}"); do
-  query=$(jq -r --argjson i "${i}" '.queries[$i].query' "${1}")
-  type=$(jq -r --argjson i "${i}" '.queries[$i] | .type // "promql"' "${1}")
-  expectedCount=$(jq -r --argjson i "${i}" '.queries[$i].expect.count // empty | tostring' "${1}")
-  expectedValue=$(jq -r --argjson i "${i}" '.queries[$i].expect.value // empty | tostring' "${1}")
-  expectedOperator=$(jq -r --argjson i "${i}" '.queries[$i].expect | .operator // "=="' "${1}")
+  query=$(jq -r --argjson i "${i}" '.queries[$i].query' "${QUERIES_FILE}")
+  type=$(jq -r --argjson i "${i}" '.queries[$i] | .type // "promql"' "${QUERIES_FILE}")
+  expectedCount=$(jq -r --argjson i "${i}" '.queries[$i].expect.count // empty | tostring' "${QUERIES_FILE}")
+  expectedValue=$(jq -r --argjson i "${i}" '.queries[$i].expect.value // empty | tostring' "${QUERIES_FILE}")
+  expectedOperator=$(jq -r --argjson i "${i}" '.queries[$i].expect | .operator // "=="' "${QUERIES_FILE}")
 
   case "${type}" in
     promql)
