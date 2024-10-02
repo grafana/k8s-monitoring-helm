@@ -76,24 +76,24 @@ for ((i=0; i<prerequisiteCount; i++)); do
     prereqChart=$(yq -r .prerequisites[$i].chart "${testManifest}")
     prereqValuesFile="${PARENT_DIR}/$(yq -r .prerequisites[$i].valuesFile "${testManifest}")"
 
-    helmCommand=helm upgrade --install "${prereqName}" --namespace "${namespace}" --create-namespace --repo "${prereqRepo}" "${prereqChart}" --hide-notes --wait
-    if [ -n "${prereqValuesFile}" ]; then
-      helmCommand="${helmCommand} -f ${prereqValuesFile}"
+    if [ -z "${prereqValuesFile}" ]; then
+      runAndEcho helm upgrade --install "${prereqName}" --namespace "${namespace}" --create-namespace --repo "${prereqRepo}" "${prereqChart}" --hide-notes --wait
+    else
+      runAndEcho helm upgrade --install "${prereqName}" --namespace "${namespace}" --create-namespace --repo "${prereqRepo}" "${prereqChart}" -f "${prereqValuesFile}" --hide-notes --wait
     fi
-    echo "${helmCommand}"
-    ${helmCommand}
   fi
 done
 
 echo "Deploying chart..."
-echo helm upgrade --install k8smon "${PARENT_DIR}/charts/k8s-monitoring" -f "${valuesFile}" --wait
 helm upgrade --install k8smon "${PARENT_DIR}/charts/k8s-monitoring" -f "${valuesFile}" --wait
 
 if [ -f "${testValuesFile}" ]; then
   echo "Deploying test chart..."
-  echo helm upgrade --install k8smon-test "${PARENT_DIR}/charts/k8s-monitoring-test" -f "${testValuesFile}" --wait
-  helm upgrade --install k8smon-test "${PARENT_DIR}/charts/k8s-monitoring-test" -f "${testValuesFile}" --wait
-
-  echo helm test k8smon-test --logs
-  helm test k8smon-test --logs
+  runAndEcho helm upgrade --install k8smon-test "${PARENT_DIR}/charts/k8s-monitoring-test" -f "${testValuesFile}" --wait
+  runAndEcho helm test k8smon-test --logs
 fi
+
+runAndEcho() {
+  echo "$@"
+  "$@"
+}
