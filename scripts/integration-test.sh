@@ -59,7 +59,7 @@ trap cleanup EXIT
 
 runAndEcho() {
   echo "$@"
-  "$@"
+  eval "$@"
 }
 
 if [ "${CREATE_CLUSTER}" == "true" ]; then
@@ -75,17 +75,23 @@ echo "Deploying prerequisites..."
 prerequisiteCount=$(yq -r '.prerequisites | length' "${testManifest}")
 for ((i=0; i<prerequisiteCount; i++)); do
   prerequisiteType=$(yq -r .prerequisites[$i].type "${testManifest}")
-  namespace=$(yq -r .prerequisites[$i].namespace "${testManifest}")
+  namespace=$(yq -r ".prerequisites[$i].namespace // \"\"" "${testManifest}")
   if [ -n "${namespace}" ]; then
     namespaceArg="--namespace ${namespace}"
   fi
 
   if [ "${prerequisiteType}" == "manifest" ]; then
-    prereqFile="${PARENT_DIR}/$(yq -r .prerequisites[$i].file "${testManifest}")"
-    runAndEcho kubectl apply -f "${prereqFile}" "${namespaceArg}"
-  fi
-
-  if [ "${prerequisiteType}" == "helm" ]; then
+    prereqUrl=$(yq -r ".prerequisites[$i].url // \"\"" "${testManifest}")
+    prereqFile=$(yq -r ".prerequisites[$i].file // \"\"" "${testManifest}")
+    if [ -n "${prereqUrl}" ]; then
+      runAndEcho kubectl apply -f "${prereqUrl}" "${namespaceArg}"
+    elif [ -n "${prereqFile}" ]; then
+      runAndEcho kubectl apply -f "${PARENT_DIR}/${prereqFile}" "${namespaceArg}"
+    else
+      echo "No URL or file specified for manifest prerequisite"
+      exit 1
+    fi
+  elif [ "${prerequisiteType}" == "helm" ]; then
     prereqName=$(yq -r .prerequisites[$i].name "${testManifest}")
     prereqRepo=$(yq -r .prerequisites[$i].repo "${testManifest}")
     prereqChart=$(yq -r .prerequisites[$i].chart "${testManifest}")
@@ -96,6 +102,9 @@ for ((i=0; i<prerequisiteCount; i++)); do
     else
       runAndEcho helm upgrade --install "${prereqName}" "${namespaceArg}" --create-namespace --repo "${prereqRepo}" "${prereqChart}" -f "${prereqValuesFile}" --hide-notes --wait
     fi
+  else
+    echo "Unknown prerequisite type: ${prerequisiteType}"
+    exit 1
   fi
 done
 
