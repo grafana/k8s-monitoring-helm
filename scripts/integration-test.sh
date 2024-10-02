@@ -48,9 +48,10 @@ set -eo pipefail  # Exit immediately if a command fails.
 clusterName=$(yq -r .cluster.name "${valuesFile}")
 
 DELETE_CLUSTER=${DELETE_CLUSTER:-true}
-DEPLOY_CLUSTER=${DEPLOY_CLUSTER:-true}
+CREATE_CLUSTER=${CREATE_CLUSTER:-true}
 cleanup() {
-  if [ "${DEPLOY_CLUSTER}" == "true" ] && [ "${DELETE_CLUSTER}" == "true" ]; then
+  helm ls -A || true
+  if [ "${CREATE_CLUSTER}" == "true" ] && [ "${DELETE_CLUSTER}" == "true" ]; then
     kind delete cluster --name "${clusterName}" || true
   fi
 }
@@ -61,7 +62,7 @@ runAndEcho() {
   "$@"
 }
 
-if [ "${DEPLOY_CLUSTER}" == "true" ]; then
+if [ "${CREATE_CLUSTER}" == "true" ]; then
   echo "Creating cluster..."
   if [ ! -f "${clusterConfig}" ]; then
     kind create cluster --name "${clusterName}"
