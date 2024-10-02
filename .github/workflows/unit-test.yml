@@ -83,6 +83,16 @@ jobs:
       - name: Set up chart-testing
         uses: helm/chart-testing-action@v2
 
+      # Installing Grafana Alloy because we need it to lint the generated alloy config files.
+      # https://grafana.com/docs/alloy/latest/get-started/install/linux/
+      - name: Install Grafana Alloy
+        run: |
+          sudo mkdir -p /etc/apt/keyrings/
+          wget -q -O - https://apt.grafana.com/gpg.key | gpg --dearmor | sudo tee /etc/apt/keyrings/grafana.gpg > /dev/null
+          echo "deb [signed-by=/etc/apt/keyrings/grafana.gpg] https://apt.grafana.com stable main" | sudo tee /etc/apt/sources.list.d/grafana.list
+          sudo apt-get update
+          sudo apt-get install -y alloy
+
       - name: Run tests
         run: |
           echo "Testing ${{ matrix.dir }}"
