@@ -56,6 +56,11 @@ cleanup() {
 }
 trap cleanup EXIT
 
+runAndEcho() {
+  echo "$@"
+  "$@"
+}
+
 if [ "${DEPLOY_CLUSTER}" == "true" ]; then
   echo "Creating cluster..."
   if [ ! -f "${clusterConfig}" ]; then
@@ -92,8 +97,3 @@ if [ -f "${testValuesFile}" ]; then
   runAndEcho helm upgrade --install k8smon-test "${PARENT_DIR}/charts/k8s-monitoring-test" -f "${testValuesFile}" --wait
   runAndEcho helm test k8smon-test --logs
 fi
-
-runAndEcho() {
-  echo "$@"
-  "$@"
-}
