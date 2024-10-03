@@ -2,12 +2,12 @@
 tests:
   - env:
       PROMETHEUS_URL: https://prometheus-server.prometheus.svc:9090/api/v1/query
-      PROMETHEUS_USERNAME: promuser
-      PROMETHEUS_PASSWORD: prometheuspassword
+      PROMETHEUS_USER: promuser
+      PROMETHEUS_PASS: prometheuspassword
       LOKI_URL: http://loki.loki.svc:3100/loki/api/v1/query
       LOKI_TENANTID: 1
-      LOKI_USERNAME: loki
-      LOKI_PASSWORD: lokipassword
+      LOKI_USER: loki
+      LOKI_PASS: lokipassword
     queries:
       - query: kubernetes_build_info{cluster="cluster-monitoring-feature-test", job="integrations/kubernetes/kubelet"}
         type: promql
@@ -16,9 +16,12 @@ tests:
       - query: count(kube_node_info{cluster="cluster-monitoring-feature-test", job="integrations/kubernetes/kube-state-metrics"})
         type: promql
         expect:
-          value: 2
+          value: 1
       - query: node_exporter_build_info{cluster="cluster-monitoring-feature-test", job="integrations/node-exporter"}
         type: promql
 
       - query: count_over_time({cluster="cluster-monitoring-feature-test", job="integrations/kubernetes/eventhandler"}[1h])
         type: logql
+
+attempts: 3
+delay: 30

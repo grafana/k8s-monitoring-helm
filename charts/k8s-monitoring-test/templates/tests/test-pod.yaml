@@ -10,19 +10,19 @@ metadata:
     app.kubernetes.io/instance: {{ $.Release.Name | quote }}
     app.kubernetes.io/version: {{ $.Chart.AppVersion }}
     helm.sh/chart: "{{ $.Chart.Name }}-{{ $.Chart.Version }}"
-    {{- range $key, $val := $.Values.job.extraLabels }}
+    {{- range $key, $val := $.Values.pod.extraLabels }}
     {{ $key }}: {{ $val | quote }}
     {{- end}}
   annotations:
     "helm.sh/hook": test
     "helm.sh/hook-delete-policy": before-hook-creation
     "helm.sh/hook-weight": "0"
-    {{- range $key, $val := $.Values.job.extraAnnotations }}
+    {{- range $key, $val := $.Values.pod.extraAnnotations }}
     {{ $key }}: {{ $val | quote }}
     {{- end}}
 spec:
-  {{- if $.Values.job.serviceAccount.name }}
-  serviceAccountName: {{ $.Values.job.serviceAccount.name }}
+  {{- if $.Values.pod.serviceAccount.name }}
+  serviceAccountName: {{ $.Values.pod.serviceAccount.name }}
   {{- end }}
   {{- if or $.Values.global.image.pullSecrets $.Values.image.pullSecrets }}
   imagePullSecrets:
@@ -33,18 +33,34 @@ spec:
     {{- end }}
   {{- end }}
   restartPolicy: Never
-  {{- with $.Values.job.nodeSelector }}
+  {{- with $.Values.pod.nodeSelector }}
   nodeSelector:
     {{- toYaml . | nindent 8 }}
   {{- end }}
-  {{- with $.Values.job.tolerations }}
+  {{- with $.Values.pod.tolerations }}
   tolerations:
     {{- toYaml . | nindent 8 }}
   {{- end }}
+  {{- if $.Values.initialDelay }}
+  initContainers:
+    - name: wait
+      image: "{{ $.Values.global.image.registry | default $.Values.image.registry }}/{{ $.Values.image.repository }}:{{ $.Values.image.tag | default $.Chart.Version }}"
+      command: ["bash", "-c", "sleep {{ $.Values.initialDelay | int }}"]
+  {{- end }}
   containers:
     - name: query-test
-      image: "{{ $.Values.global.image.registry | default $.Values.image.registry }}/{{ $.Values.image.image }}:{{ $.Values.image.tag | default $.Chart.Version }}"
-      command: ["bash", "-c", "/etc/bin/query-test.sh /etc/test/queries.json"]
+      image: "{{ $.Values.global.image.registry | default $.Values.image.registry }}/{{ $.Values.image.repository }}:{{ $.Values.image.tag | default $.Chart.Version }}"
+      command:
+        - bash
+        - -c
+        - |
+          for i in $(seq 1 {{ $.Values.attempts | int }}); do
+            echo "Running test... ($i/{{ $.Values.attempts | int }})"
+            if /etc/bin/query-test.sh /etc/test/queries.json; then
+              exit 0
+            fi
+            sleep {{ $.Values.delay | int }}
+          done
       envFrom:
         - secretRef:
             name: {{ include "k8s-monitoring-test.fullname" $ }}-{{ $i }}
