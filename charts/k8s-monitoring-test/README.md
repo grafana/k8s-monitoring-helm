@@ -28,7 +28,7 @@ tests:
         type: promql
 ```
 
-Each query will be executed sequentially, and the test will fail if any of the queries return an error or does not have
+Each query will be run sequentially, and the test will fail if any of the queries return an error or does not have
 the expected output.
 
 In order to specify different destinations of the same type, you can use multiple tests:

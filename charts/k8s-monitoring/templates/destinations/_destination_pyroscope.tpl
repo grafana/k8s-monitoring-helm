@@ -24,9 +24,8 @@ pyroscope.write {{ include "helper.alloy_name" .name | quote }} {
 {{- else if eq (include "destinations.auth.type" .) "bearerToken" }}
     bearer_token = {{ include "destinations.secret.read" (dict "destination" . "key" "auth.bearerToken") }}
 {{- end }}
-  }
 
-  {{- if .tls }}
+{{- if .tls }}
     tls_config {
       insecure_skip_verify = {{ .tls.insecureSkipVerify | default false }}
       {{- if eq (include "destinations.secret.uses_secret" (dict "destination" . "key" "tls.ca")) "true" }}
@@ -40,6 +39,7 @@ pyroscope.write {{ include "helper.alloy_name" .name | quote }} {
       {{- end }}
     }
 {{- end }}
+  }
 
   external_labels = {
     cluster = {{ $.clusterName | quote }},
