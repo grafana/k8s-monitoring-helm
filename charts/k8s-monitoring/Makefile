@@ -69,7 +69,9 @@ alloy_configs = $(shell \
 	DIR="$(shell dirname $(1))/" yq e 'with_entries(select(.key == "alloy-*")) | select(.[].enabled == true) | to_entries | env(DIR) + .[].key + ".alloy"' $(1) \
 )
 
-# TODO: make this dependent on
+# TODO: Ideally, this shouldn't result in "modified" files if the subchart content is the same.
+# 	    The issue is that tar and gz include things like timestamps in their headers, which will
+#	    result in different hashes for the same content. Not great for Makefiles or modified file checks.
 Chart.lock: Chart.yaml
 	helm dependency update .
 

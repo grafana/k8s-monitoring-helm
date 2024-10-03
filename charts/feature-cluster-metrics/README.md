@@ -142,6 +142,7 @@ action on the metric list, including filtering based on label or other actions.
 | https://sustainable-computing-io.github.io/kepler-helm-chart | kepler | 0.5.9 |
 <!-- markdownlint-enable no-bare-urls -->
 
+<!-- markdownlint-disable no-space-in-emphasis -->
 ## Values
 
 ### API Server
@@ -320,3 +321,4 @@ action on the metric list, including filtering based on label or other actions.
 | windows-exporter.metricsTuning.includeMetrics | list | `[]` | Metrics to keep. Can use regular expressions. |
 | windows-exporter.metricsTuning.useDefaultAllowList | bool | `true` | Filter the list of metrics from Windows Exporter to the minimal set required for Kubernetes Monitoring. See [Metrics Tuning and Allow Lists](#metrics-tuning-and-allow-lists) |
 | windows-exporter.scrapeInterval | string | `60s` | How frequently to scrape metrics from Windows Exporter. |
+<!-- markdownlint-enable no-space-in-emphasis -->

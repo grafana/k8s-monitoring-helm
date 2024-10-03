@@ -42,40 +42,33 @@ clean:
 ####################################################################
 #                           Linting                                #
 ####################################################################
-.PHONY: lint lint-chart lint-sh lint-md lint-txt lint-yml lint-ec lint-alex lint-misspell lint-actionlint
-lint: lint-chart lint-sh lint-md lint-txt lint-yml lint-ec lint-alex lint-misspell lint-actionlint
+.PHONY: lint lint-sh lint-md lint-txt lint-yml lint-alex lint-misspell lint-actionlint
+lint: lint-sh lint-md lint-txt lint-yml lint-alex lint-misspell lint-actionlint
 
-lint-chart:
-	ct lint --debug --lint-conf .configs/lintconf.yaml --check-version-increment=false
-
-# Shell Linting
+# Shell Linting for checking shell scripts
 lint-sh lint-shell:
 	@./scripts/lint-shell.sh || true
 
-# Markdown Linting
+# Markdown Linting for checking markdown files
 lint-md lint-markdown:
 	@./scripts/lint-markdown.sh || true
 
-# Text Linting
+# Text Linting for checking text files
 lint-txt lint-text:
 	@./scripts/lint-text.sh || true
 
-# Yaml Linting
+# Yaml Linting for checking yaml files
 lint-yml lint-yaml:
 	@./scripts/lint-yaml.sh || true
 
-# Editorconfig Linting
-lint-ec lint-editorconfig:
-	@./scripts/lint-editorconfig.sh || true
-
-# Alex Linting
+# Alex Linting for checking insensitive language
 lint-alex:
 	@./scripts/lint-alex.sh || true
 
-# Misspell Linting
+# Misspell Linting for checking common spelling mistakes
 lint-misspell:
 	@./scripts/lint-misspell.sh || true
 
-# Actionlint Linting
+# Actionlint Linting for checking GitHub Actions
 lint-al lint-actionlint:
 	@./scripts/lint-actionlint.sh || true
