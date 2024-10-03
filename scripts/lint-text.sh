@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-
-source "./scripts/includes/utils.sh"
-source "./scripts/includes/logging.sh"
+PARENT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+source "${PARENT_DIR}/scripts/includes/utils.sh"
+source "${PARENT_DIR}/scripts/includes/logging.sh"
 
 # output the heading
 heading "Kubernetes Monitoring Helm" "Performing Text Linting using textlint"
@@ -17,7 +17,7 @@ fi
 (return 0 2>/dev/null) && sourced=1 || sourced=0
 
 statusCode=0
-"${dir}"/node_modules/.bin/textlint --config "${dir}/.textlintrc" --ignore-path "${dir}/.textlintignore" $(find . -type f -name "*.md" -not \( -path "./node_modules/*" -o -path "./data-alloy/*" \))
+"${dir}"/node_modules/.bin/textlint --config "${dir}/.textlintrc" --ignore-path "${dir}/.textlintignore" "$(find . -type f -name "*.md" -not \( -path "./node_modules/*" -o -path "./data-alloy/*" \))"
 currentCode="$?"
 # only override the statusCode if it is 0
 if [[ "${statusCode}" == 0 ]]; then

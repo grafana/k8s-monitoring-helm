@@ -1,0 +1,11 @@
+{{- if .Values.deployAsConfigMap }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "feature.profiling.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+data:
+  module.alloy: |-
+    {{- include "feature.profiling.module" . | indent 4 }}
+{{- end }}

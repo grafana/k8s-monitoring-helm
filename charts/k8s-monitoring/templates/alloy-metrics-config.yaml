@@ -1,0 +1,28 @@
+{{- $collectorName := "alloy-metrics" }}
+{{- if (index .Values $collectorName).enabled }}
+{{- $destinations := list }}
+{{- $destinations = concat $destinations ((include "features.clusterMetrics.destinations" .) | fromYamlArray) }}
+{{- $destinations = concat $destinations ((include "features.annotationAutodiscovery.destinations" .) | fromYamlArray) }}
+{{- $destinations = concat $destinations ((include "features.prometheusOperatorObjects.destinations" .) | fromYamlArray) }}
+{{- $destinations = concat $destinations ((include "features.integrations.destinations.metrics" .) | fromYamlArray) }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "alloy.fullname" (index .Subcharts $collectorName) }}
+  namespace: {{ $.Release.Namespace }}
+data:
+  config.alloy: |-
+    {{- include "destinations.alloy.config" (dict "destinations" $.Values.destinations "names" $destinations "clusterName" $.Values.cluster.name "Release" $.Release "Chart" $.Chart "Files" $.Files) | trim | nindent 4 }}
+
+    {{- include "features.clusterMetrics.include" . | trim | nindent 4 }}
+    {{- include "features.annotationAutodiscovery.include" . | trim | nindent 4 }}
+    {{- include "features.prometheusOperatorObjects.include" . | trim | nindent 4 }}
+    {{- include "features.integrations.metrics.include" . | trim | nindent 4 }}
+
+    {{- include "collectors.logging.alloy" (dict "Values" .Values "collectorName" $collectorName) | trim | nindent 4 }}
+    {{- include "collectors.liveDebugging.alloy" (dict "Values" .Values "collectorName" $collectorName) | trim | nindent 4 }}
+    {{- if (index .Values $collectorName).extraConfig }}
+      {{ (index .Values $collectorName).extraConfig | trim | nindent 4 }}
+    {{- end }}
+{{- end }}

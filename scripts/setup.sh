@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-
-source "./scripts/includes/utils.sh"
-source "./scripts/includes/logging.sh"
+PARENT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+source "${PARENT_DIR}/scripts/includes/utils.sh"
+source "${PARENT_DIR}/scripts/includes/logging.sh"
 
 # output the heading
 heading "K8s Monitoring Helm" "Performing Setup Checks"

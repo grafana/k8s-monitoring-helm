@@ -1,0 +1,94 @@
+---
+# -- Name override
+# @section -- General settings
+nameOverride: ""
+
+# -- Full name override
+# @section -- General settings
+fullnameOverride: ""
+
+global:
+  # -- How frequently to scrape metrics.
+  # @section -- Global Settings
+  scrapeInterval: 60s
+
+  # -- Sets the max_cache_size for every prometheus.relabel component. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#arguments))
+  # This should be at least 2x-5x your largest scrape target or samples appended rate.
+  # @section -- Global Settings
+  maxCacheSize: 100000
+
+# Annotations that are used to discover and configure metric scraping targets. Add these annotations
+# to your services or pods to control how autodiscovery will find and scrape metrics from your service or pod.
+annotations:
+  # -- Annotation for enabling scraping for this service or pod. Value should be either "true" or "false"
+  # @section -- Annotations
+  scrape: "k8s.grafana.com/scrape"
+  # -- Annotation for overriding the job label
+  # @section -- Annotations
+  job: "k8s.grafana.com/job"
+  # -- Annotation for overriding the instance label
+  # @section -- Annotations
+  instance: "k8s.grafana.com/instance"
+  # -- Annotation for setting or overriding the metrics path. If not set, it defaults to /metrics
+  # @section -- Annotations
+  metricsPath: "k8s.grafana.com/metrics.path"
+  # -- Annotation for setting the metrics port by name.
+  # @section -- Annotations
+  metricsPortName: "k8s.grafana.com/metrics.portName"
+  # -- Annotation for setting the metrics port by number.
+  # @section -- Annotations
+  metricsPortNumber: "k8s.grafana.com/metrics.portNumber"
+  # -- Annotation for setting the metrics scheme, default: http.
+  # @section -- Annotations
+  metricsScheme: "k8s.grafana.com/metrics.scheme"
+  # -- Annotation for overriding the scrape interval for this service or pod. Value should be a duration like "15s, 1m".
+  # Overrides metrics.autoDiscover.scrapeInterval
+  # @section -- Annotations
+  metricsScrapeInterval: "k8s.grafana.com/metrics.scrapeInterval"
+
+# -- Rule blocks to be added to the prometheus.operator.podmonitors component for PodMonitors.
+# These relabeling rules are applied pre-scrape against the targets from service discovery.
+# The relabelings defined in the PodMonitor object are applied first, then these relabelings are applied.
+# Before the scrape, any remaining target labels that start with `__` (i.e. `__meta_kubernetes*`) are dropped.
+# ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery.relabel/#rule-block))
+# @section -- Discovery Settings
+extraDiscoveryRules: ""
+
+# -- How frequently to scrape metrics from PodMonitor objects. Only used if the PodMonitor does not specify the scrape interval.
+# Overrides global.scrapeInterval
+# @default -- 60s
+# @section -- Scrape Settings
+scrapeInterval: ""
+
+# Adjustments to the scraped metrics to filter the amount of metrics sent to storage.
+# @section -- Metric Processing Settings
+metricsTuning:
+  # -- Metrics to keep. Can use regular expressions.
+  # @section -- Metric Processing Settings
+  includeMetrics: []
+  # -- Metrics to drop. Can use regular expressions.
+  # @section -- Metric Processing Settings
+  excludeMetrics: []
+
+# -- Rule blocks to be added to the prometheus.relabel component for PodMonitor objects.
+# These relabeling rules are applied post-scrape against the metrics returned from the scraped target, no `__meta*` labels are present.
+# ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#rule-block))
+# @section -- Metric Processing Settings
+extraMetricProcessingRules: ""
+
+# -- Sets the max_cache_size for cadvisor prometheus.relabel component.
+# This should be at least 2x-5x your largest scrape target or samples appended rate.
+# ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#arguments))
+# Overrides global.maxCacheSize
+# @raw
+# @section -- Metric Processing Settings
+maxCacheSize:
+
+# -- Sets bearer_token_file line in the prometheus.scrape annotation_autodiscovery.
+# @section -- Scrape Settings
+bearerToken:
+  enabled: true
+  token: /var/run/secrets/kubernetes.io/serviceaccount/token
+
+# @ignore
+deployAsConfigMap: false

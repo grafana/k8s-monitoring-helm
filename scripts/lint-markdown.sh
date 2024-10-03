@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-
-source "./scripts/includes/utils.sh"
-source "./scripts/includes/logging.sh"
+PARENT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+source "${PARENT_DIR}/scripts/includes/utils.sh"
+source "${PARENT_DIR}/scripts/includes/logging.sh"
 
 # output the heading
 heading "Kubernetes Monitoring Helm" "Performing Markdown Linting using markdownlint"
@@ -15,7 +15,7 @@ fi
 (return 0 2>/dev/null) && sourced=1 || sourced=0
 
 statusCode=0
-./node_modules/.bin/markdownlint-cli2 ./*.md ./**/*.md "#node_modules" "#charts/**/README.md"
+./node_modules/.bin/markdownlint-cli2 ./*.md ./**/*.md "#node_modules" "#data-alloy" "#charts/**/data-alloy"
 currentCode="$?"
 # only override the statusCode if it is 0
 if [[ "${statusCode}" == 0 ]]; then

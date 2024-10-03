@@ -1,0 +1,15 @@
+{{- if .Values.deployAsConfigMap }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "integrations.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+data:
+  metrics.alloy: |-
+{{- range $type := (include "integrations.types" . | fromYamlArray) }}
+  {{- if (index $.Values $type).instances }}
+    {{- include (printf "integrations.%s.module.metrics" $type) (dict "Values" $.Values "Files" $.Files) | indent 4 }}
+  {{- end }}
+{{- end }}
+{{- end }}

@@ -1,13 +1,28 @@
-.PHONY: setup install lint lint-chart lint-config lint-configs lint-alloy lint-sh lint-md lint-txt lint-yml lint-ec lint-alex lint-misspell lint-actionlint test install-deps clean
 SHELL := /bin/bash
 UNAME := $(shell uname)
 
-CT_CONFIGFILE ?= .github/configs/ct.yaml
-LINT_CONFIGFILE ?= .github/configs/lintconf.yaml
+FEATURE_CHARTS = $(shell ls charts | grep -v k8s-monitoring)
+
+.PHONY: build
+build:
+	set -e && \
+	for chart in $(FEATURE_CHARTS); do \
+		make -C charts/$$chart build; \
+	done
+	make -C charts/k8s-monitoring build
+
+.PHONY: test
+test: build
+	set -e && \
+	for chart in $(FEATURE_CHARTS); do \
+		make -C charts/$$chart test; \
+	done
+	make -C charts/k8s-monitoring test
 
 ####################################################################
 #                   Installation / Setup                           #
 ####################################################################
+.PHONY: setup install-deps
 setup install-deps:
 ifeq ($(UNAME), Darwin)
 	@./scripts/setup.sh
@@ -16,51 +31,44 @@ else
 	exit 1
 endif
 
+.PHONY: install
 install:
 	yarn install
 
+.PHONY: clean
 clean:
 	rm -rf node_modules
 
 ####################################################################
 #                           Linting                                #
 ####################################################################
-lint: lint-chart lint-config lint-sh lint-md lint-txt lint-yml lint-ec lint-alex lint-misspell lint-actionlint
+.PHONY: lint lint-sh lint-md lint-txt lint-yml lint-alex lint-misspell lint-actionlint
+lint: lint-sh lint-md lint-txt lint-yml lint-alex lint-misspell lint-actionlint
 
-lint-chart:
-	ct lint --debug --config "$(CT_CONFIGFILE)" --lint-conf "$(LINT_CONFIGFILE)" --check-version-increment=false
-
-lint-config lint-configs lint-alloy:
-	@./scripts/lint-alloy.sh $(METRICS_CONFIG_FILES) $(EVENTS_CONFIG_FILES) $(LOGS_CONFIG_FILES) --public-preview $(PROFILES_CONFIG_FILES)
-
-# Shell Linting
+# Shell Linting for checking shell scripts
 lint-sh lint-shell:
 	@./scripts/lint-shell.sh || true
 
-# Markdown Linting
+# Markdown Linting for checking markdown files
 lint-md lint-markdown:
 	@./scripts/lint-markdown.sh || true
 
-# Text Linting
+# Text Linting for checking text files
 lint-txt lint-text:
 	@./scripts/lint-text.sh || true
 
-# Yaml Linting
+# Yaml Linting for checking yaml files
 lint-yml lint-yaml:
 	@./scripts/lint-yaml.sh || true
 
-# Editorconfig Linting
-lint-ec lint-editorconfig:
-	@./scripts/lint-editorconfig.sh || true
-
-# Alex Linting
+# Alex Linting for checking insensitive language
 lint-alex:
 	@./scripts/lint-alex.sh || true
 
-# Misspell Linting
+# Misspell Linting for checking common spelling mistakes
 lint-misspell:
 	@./scripts/lint-misspell.sh || true
 
-# Actionlint Linting
+# Actionlint Linting for checking GitHub Actions
 lint-al lint-actionlint:
 	@./scripts/lint-actionlint.sh || true

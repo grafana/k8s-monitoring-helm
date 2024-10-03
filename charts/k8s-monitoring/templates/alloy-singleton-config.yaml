@@ -1,0 +1,21 @@
+{{- $collectorName := "alloy-singleton" }}
+{{- if (index .Values $collectorName).enabled }}
+{{- $destinations := include "features.clusterEvents.destinations" . | fromYamlArray }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "alloy.fullname" (index .Subcharts $collectorName) }}
+  namespace: {{ $.Release.Namespace }}
+data:
+  config.alloy: |-
+    {{- include "destinations.alloy.config" (dict "destinations" $.Values.destinations "names" $destinations "clusterName" $.Values.cluster.name "Release" $.Release "Chart" $.Chart "Files" $.Files) | trim | nindent 4 }}
+
+    {{- include "features.clusterEvents.include" . | nindent 4 }}
+
+    {{- include "collectors.logging.alloy" (dict "Values" .Values "collectorName" $collectorName) | trim | nindent 4 }}
+    {{- include "collectors.liveDebugging.alloy" (dict "Values" .Values "collectorName" $collectorName) | trim | nindent 4 }}
+    {{- if (index .Values $collectorName).extraConfig }}
+      {{ (index .Values $collectorName).extraConfig | trim | nindent 4 }}
+    {{- end }}
+{{- end }}

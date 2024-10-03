@@ -28,7 +28,7 @@ externalServices:
       passwordKey: password
 ```
 
-here is the secret object itself: 
+here is the secret object itself:
 
 ```yaml
 apiVersion: v1

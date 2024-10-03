@@ -1,0 +1,85 @@
+---
+# -- Name override
+# @section -- General settings
+nameOverride: ""
+
+# -- Full name override
+# @section -- General settings
+fullnameOverride: ""
+
+# Settings for gathering profiles using eBPF
+# @section -- eBPF
+ebpf:
+  # -- Gather profiles using eBPF
+  # @section -- eBPF
+  enabled: true
+
+  # -- Which namespaces to look for pods with profiles.
+  # @section -- eBPF
+  namespaces: []
+
+  # -- Rule blocks to be added to the discovery.relabel component for eBPF profile sources.
+  # These relabeling rules are applied pre-scrape against the targets from service discovery.
+  # Before the scrape, any remaining target labels that start with `__` (i.e. `__meta_kubernetes*`) are dropped.
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery.relabel/#rule-block))
+  # @section -- eBPF
+  extraDiscoveryRules: ""
+
+  # -- C++ demangle mode. Available options are: none, simplified, templates, full
+  # @section -- eBPF
+  demangle: none
+
+java:
+  # -- Gather profiles by scraping java HTTP endpoints
+  # @section -- Java
+  enabled: true
+
+  # -- Which namespaces to look for pods with profiles.
+  # @section -- Java
+  namespaces: []
+
+  # -- Rule blocks to be added to the discovery.relabel component for Java profile sources.
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery.relabel/#rule-block))
+  # @section -- Java
+  extraDiscoveryRules: ""
+
+  # -- Configuration for the async-profiler
+  # @section -- Java
+  profilingConfig:
+    interval: 60s
+    cpu: true
+    sampleRate: 100
+    alloc: 512k
+    lock: 10ms
+
+pprof:
+  # -- Gather profiles by scraping pprof HTTP endpoints
+  # @section -- pprof
+  enabled: true
+
+  # -- Which namespaces to look for pods with profiles.
+  # @section -- pprof
+  namespaces: []
+
+  # -- Rule blocks to be added to the discovery.relabel component for eBPF profile sources.
+  # These relabeling rules are applied pre-scrape against the targets from service discovery.
+  # Before the scrape, any remaining target labels that start with `__` (i.e. `__meta_kubernetes*`) are dropped.
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery.relabel/#rule-block))
+  # @section -- pprof
+  extraDiscoveryRules: ""
+
+  # -- Profile types to gather
+  # @section -- pprof
+  types:
+    memory: true
+    block: true
+    goroutine: true
+    mutex: true
+    cpu: true
+    fgprof: true
+    godeltaprof_memory: false
+    godeltaprof_mutex: false
+    godeltaprof_block: false
+
+# @ignore
+deployAsConfigMap: false

@@ -1,0 +1,120 @@
+---
+# -- Name override
+# @section -- General settings
+nameOverride: ""
+
+# -- Full name override
+# @section -- General settings
+fullnameOverride: ""
+
+receivers:
+  grpc:
+    enabled: false
+    port: 4317
+    include_debug_metrics: false
+  http:
+    enabled: false
+    port: 4318
+    include_debug_metrics: false
+  zipkin:
+    enabled: false
+    port: 9411
+    include_debug_metrics: false
+
+processors:
+  grafanaCloudMetrics:
+    # -- Generate host info metrics from telemetry data, used in Application Observability in Grafana Cloud.
+    # @section -- Processors: Grafana Cloud Host Info
+    enabled: true
+
+  batch:
+    # -- What batch size to use, in bytes
+    # @section -- Processors: Batch
+    size: 16384
+    # -- The upper limit of the amount of data contained in a single batch, in bytes. When set to 0, batches can be any size.
+    # @section -- Processors: Batch
+    maxSize: 0
+    # -- How long before sending (Processors)
+    # @section -- Processors: Batch
+    timeout: 2s
+
+  k8sattributes:
+    # -- Kubernetes metadata to extract and add to the attributes of the received telemetry data.
+    # @section -- Processors: K8s Attributes
+    metadata:
+      - k8s.namespace.name
+      - k8s.pod.name
+      - k8s.deployment.name
+      - k8s.statefulset.name
+      - k8s.daemonset.name
+      - k8s.cronjob.name
+      - k8s.job.name
+      - k8s.node.name
+      - k8s.pod.uid
+      - k8s.pod.start_time
+
+    # -- Kubernetes labels to extract and add to the attributes of the received telemetry data.
+    # @section -- Processors: K8s Attributes
+    labels: []
+
+    # -- Kubernetes annotations to extract and add to the attributes of the received telemetry data.
+    # @section -- Processors: K8s Attributes
+    annotations: []
+
+  memoryLimiter:
+    # -- Use a memory limiter.
+    # @section -- Processors: Memory Limiter
+    enabled: false
+    # -- How often to check memory usage.
+    # @section -- Processors: Memory Limiter
+    checkInterval: 1s
+    # -- Maximum amount of memory targeted to be allocated by the process heap.
+    # @section -- Processors: Memory Limiter
+    limit: 0MiB
+
+metrics:
+  enabled: true
+  # -- Apply a filter to metrics received via the OTLP or OTLP HTTP receivers.
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/otelcol.processor.filter/))
+  filters:
+    metric: []
+    datapoint: []
+  # -- Apply a transformation to metrics received via the OTLP or OTLP HTTP receivers.
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/otelcol.processor.transform/))
+  transforms:
+    resource: []
+    metric: []
+    datapoint: []
+
+logs:
+  enabled: true
+  # -- Apply a filter to logs received via receivers.
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/otelcol.processor.filter/))
+  filters:
+    log_record: []
+  # -- Apply a transformation to logs received via the OTLP or OTLP HTTP receivers.
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/otelcol.processor.transform/))
+  transforms:
+    # -- Resource transformation rules.
+    resource: []
+    # -- Log transformation rules.
+    log: []
+    # -- The list of labels to set in the log stream.
+    labels: ["cluster", "namespace", "job", "pod"]
+
+traces:
+  enabled: true
+  # -- Apply a filter to traces received via the OTLP or OTLP HTTP receivers.
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/otelcol.processor.filter/))
+  filters:
+    span: []
+    spanevent: []
+  # -- Apply a transformation to traces received via the OTLP or OTLP HTTP receivers.
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/otelcol.processor.transform/))
+  transforms:
+    resource: []
+    span: []
+    spanevent: []
+
+# @ignore
+deployAsConfigMap: false

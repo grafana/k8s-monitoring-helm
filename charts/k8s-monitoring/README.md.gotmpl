@@ -1,0 +1,122 @@
+<!--
+(NOTE: Do not edit README.md directly. It is a generated file!)
+(      To make changes, please modify README.md.gotmpl and run `helm-docs`)
+-->
+
+{{ template "chart.header" . }}
+{{ template "chart.deprecationWarning" . }}
+
+{{ template "chart.badgesSection" . }}
+
+{{ template "chart.description" . }}
+
+{{ template "chart.homepageLine" . }}
+
+## Usage
+
+### Setup Grafana chart repository
+
+```shell
+helm repo add grafana https://grafana.github.io/helm-charts
+helm repo update
+```
+
+### Build your values
+
+There are some required values that will need to be used with this chart. The basic structure of the values file is:
+
+```yaml
+cluster: {} # Cluster configuration, including the cluster name
+
+destinations: [] # List of destinations where telemetry data will be sent
+
+# Features to enable, which determines what data to collect
+clusterMetrics: {}
+clusterEvents: {}
+# etc...
+...
+
+# Telemetry collector definitions
+alloy-metrics: {}
+alloy-singleton: {}
+```
+
+Here is more detail about the different sections:
+
+#### Cluster
+
+This section defines the name of your cluster, which will be set as labels to all telemetry data.
+
+```yaml
+cluster:
+  name: my-cluster
+```
+
+#### Destinations
+
+([Documentation](./docs/destinations/README.md))
+
+This section defines the destinations for your telemetry data. You can configure multiple destinations for logs,
+metrics, and traces. Here are the supported destination types:
+
+| Type         | Protocol         | Telemetry Data        | Docs                                      |
+|--------------|------------------|-----------------------|-------------------------------------------|
+| `prometheus` | Remote Write     | Metrics               | [Docs](./docs/destinations/prometheus.md) |
+| `loki`       | Loki             | Logs                  | [Docs](./docs/destinations/loki.md)       |
+| `otlp`       | OTLP or OTLPHTTP | Metrics, Logs, Traces | [Docs](./docs/destinations/otlp.md)       |
+| `pyroscope`  | Pyroscope        | Profiles              | [Docs](./docs/destinations/pyroscope.md)  |
+
+Here is an example of a destinations section:
+
+```yaml
+destinations:
+  - name: hostedMetrics
+    type: prometheus
+    url: https://prometheus.example.com/api/prom/push
+    auth:
+      type: basic
+      username: "my-username"
+      password: "my-password"
+  - name: localPrometheus
+    type: prometheus
+    url: http://prometheus.monitoring.svc.cluster.local:9090
+  - name: hostedLogs
+    type: loki
+    url: https://loki.example.com/loki/api/v1/push
+    auth:
+      type: basic
+      username: "my-username"
+      password: "my-password"
+      tenantIdFrom: env("LOKI_TENANT_ID")
+```
+
+#### Features
+
+([Documentation](./docs/Features.md))
+
+This section is where you define which features you want to enable with this chart.
+
+Here is an example of enabling some features:
+
+```yaml
+clusterMetrics:
+  enabled: true
+
+clusterEvents:
+  enabled: true
+
+podLogs:
+  enabled: true
+```
+
+{{ template "chart.maintainersSection" . }}
+
+<!-- markdownlint-disable no-bare-urls -->
+<!-- markdownlint-disable list-marker-space -->
+{{ template "chart.sourcesSection" . }}
+<!-- markdownlint-enable list-marker-space -->
+
+{{ template "chart.requirementsSection" . }}
+<!-- markdownlint-enable no-bare-urls -->
+
+{{ template "chart.valuesSection" . }}

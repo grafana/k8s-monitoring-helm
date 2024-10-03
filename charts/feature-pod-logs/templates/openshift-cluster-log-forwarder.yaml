@@ -1,0 +1,28 @@
+{{- if eq .Values.gatherMethod "OpenShiftClusterLogForwarder" }}
+{{/*https://docs.openshift.com/container-platform/4.16/observability/logging/log_collection_forwarding/configuring-log-forwarding.html#cluster-logging-collector-log-forward-project_configuring-log-forwarding*/}}
+---
+apiVersion: logging.openshift.io/v1
+kind: ClusterLogForwarder
+metadata:
+  name: {{ include "feature.podLogs.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  serviceAccountName: <service_account_name>
+{{- if .Values.namespaces }}
+  inputs:
+    - name: application-from-namespaces
+      application:
+        namespaces: {{ .Values.namespaces | toYaml | nindent 10 }}
+{{- end }}
+  outputs:
+    - name: {{ include "feature.podLogs.fullname" . }}
+      type: "loki"
+      url: http://{{ include "feature.podLogs.fullname" . }}:3100
+  pipelines:
+    - name: application-logs
+      inputRefs:
+        - {{ if .Values.namespaces }}application-from-namespaces{{ else }}application{{ end }}
+        - infrastructure
+      outputRefs:
+        - {{ include "feature.podLogs.fullname" . }}
+{{- end }}

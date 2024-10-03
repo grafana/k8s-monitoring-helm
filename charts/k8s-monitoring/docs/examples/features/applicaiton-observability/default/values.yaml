@@ -1,0 +1,26 @@
+---
+cluster:
+  name: applications-cluster
+
+destinations:
+  - name: otlp-gateway
+    type: otlp
+    url: http://otlp-gateway.example.com
+    metrics: {enabled: true}
+    logs: {enabled: true}
+    traces: {enabled: true}
+
+applicationObservability:
+  enabled: true
+  receivers:
+    grpc:
+      enabled: true
+
+alloy-receiver:
+  enabled: true
+  alloy:
+    extraPorts:
+      - name: otlp-grpc
+        port: 4317
+        targetPort: 4317
+        protocol: TCP

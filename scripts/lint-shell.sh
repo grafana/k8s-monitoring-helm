@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-
-source "./scripts/includes/utils.sh"
-source "./scripts/includes/logging.sh"
+PARENT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+source "${PARENT_DIR}/scripts/includes/utils.sh"
+source "${PARENT_DIR}/scripts/includes/logging.sh"
 
 # output the heading
 heading "Kubernetes Monitoring Helm" "Performing Shell Linting using shellcheck"
@@ -19,10 +19,10 @@ statusCode=0
 # shellcheck disable=SC2046 disable=SC2312
 shellcheck --rcfile="$(pwd)/.shellcheckrc" $(
     comm -23 <(
-      find . -type f -name "*.sh" -not \( -path "./node_modules/*" -o -path "./data-alloy/*" -o -path "./.git/*" -o -path "./tests/spec/*" \) | \
+      find . -type f -name "*.sh" -not \( -path "./node_modules/*" -o -path "./data-alloy/*" -o -path "./.git/*" -o -path "./charts/k8s-monitoring-v1/test/spec/*" \) | \
         sort
       ) <(
-      find . -type f -name "*.sh"  -not \( -path "./node_modules/*" -o -path "./data-alloy/*" -o -path "./.git/*" -o -path "./tests/spec/*" \) | \
+      find . -type f -name "*.sh"  -not \( -path "./node_modules/*" -o -path "./data-alloy/*" -o -path "./.git/*" -o -path "./charts/k8s-monitoring-v1/test/spec/*" \) | \
         git check-ignore --stdin | \
         sort
       )

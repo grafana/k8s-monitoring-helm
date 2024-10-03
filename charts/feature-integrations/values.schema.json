@@ -1,0 +1,203 @@
+{
+    "$schema": "http://json-schema.org/schema#",
+    "type": "object",
+    "properties": {
+        "alloy": {
+            "type": "object",
+            "properties": {
+                "instances": {
+                    "type": "array"
+                }
+            }
+        },
+        "cert-manager": {
+            "type": "object",
+            "properties": {
+                "instances": {
+                    "type": "array"
+                }
+            }
+        },
+        "deployAsConfigMap": {
+            "type": "boolean"
+        },
+        "etcd": {
+            "type": "object",
+            "properties": {
+                "instances": {
+                    "type": "array"
+                }
+            }
+        },
+        "fullnameOverride": {
+            "type": "string"
+        },
+        "global": {
+            "type": "object",
+            "properties": {
+                "maxCacheSize": {
+                    "type": "integer"
+                },
+                "scrapeInterval": {
+                    "type": "string"
+                }
+            }
+        },
+        "nameOverride": {
+            "type": "string"
+        }
+    },
+    "definitions": {
+        "alloy-integration": {
+            "type": "object",
+            "properties": {
+                "labelSelectors": {
+                    "type": "object",
+                    "properties": {
+                        "app.kubernetes.io/name": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "maxCacheSize": {
+                    "type": "null"
+                },
+                "metricsTuning": {
+                    "type": "object",
+                    "properties": {
+                        "excludeMetrics": {
+                            "type": "array"
+                        },
+                        "includeMetrics": {
+                            "type": "array"
+                        },
+                        "useDefaultAllowList": {
+                            "type": "boolean"
+                        },
+                        "useIntegrationAllowList": {
+                            "type": "boolean"
+                        }
+                    }
+                },
+                "name": {
+                    "type": "string"
+                },
+                "scrapeInterval": {
+                    "type": "null"
+                },
+                "type": {
+                    "type": "string",
+                    "const": "alloy"
+                }
+            }
+        },
+        "cert-manager-integration": {
+            "type": "object",
+            "properties": {
+                "field_selectors": {
+                    "type": "array"
+                },
+                "labelSelectors": {
+                    "type": "object",
+                    "properties": {
+                        "app.kubernetes.io/name": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "maxCacheSize": {
+                    "type": "null"
+                },
+                "metricsTuning": {
+                    "type": "object",
+                    "properties": {
+                        "excludeMetrics": {
+                            "type": "array"
+                        },
+                        "includeMetrics": {
+                            "type": "array"
+                        }
+                    }
+                },
+                "name": {
+                    "type": "string"
+                },
+                "namespaces": {
+                    "type": "array"
+                },
+                "portName": {
+                    "type": "string"
+                },
+                "scrapeInterval": {
+                    "type": "null"
+                },
+                "type": {
+                    "type": "string",
+                    "const": "cert-manager"
+                }
+            }
+        },
+        "etcd-integration": {
+            "type": "object",
+            "properties": {
+                "field_selectors": {
+                    "type": "array"
+                },
+                "labelSelectors": {
+                    "type": "object",
+                    "properties": {
+                        "app.kubernetes.io/component": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "maxCacheSize": {
+                    "type": "null"
+                },
+                "metricsTuning": {
+                    "type": "object",
+                    "properties": {
+                        "excludeMetrics": {
+                            "type": "array"
+                        },
+                        "includeMetrics": {
+                            "type": "array"
+                        }
+                    }
+                },
+                "name": {
+                    "type": "string"
+                },
+                "namespaces": {
+                    "type": "array"
+                },
+                "portName": {
+                    "type": "string"
+                },
+                "scrapeInterval": {
+                    "type": "null"
+                },
+                "type": {
+                    "type": "string",
+                    "const": "etcd"
+                }
+            }
+        },
+        "integration-list": {
+            "type": "array",
+            "items": {
+                "anyOf": [
+                    {
+                        "$ref": "#/definitions/alloy-integration"
+                    },
+                    {
+                        "$ref": "#/definitions/cert-manager-integration"
+                    },
+                    {
+                        "$ref": "#/definitions/etcd-integration"
+                    }
+                ]
+            }
+        }
+    }
+}

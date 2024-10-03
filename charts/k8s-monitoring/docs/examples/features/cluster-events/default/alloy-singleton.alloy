@@ -1,0 +1,32 @@
+// Destination: loki (loki)
+otelcol.exporter.loki "loki" {
+  forward_to = [loki.write.loki.receiver]
+}
+
+loki.write "loki" {
+  endpoint {
+    url = "http://loki.loki.svc:3100/api/push"
+  }
+  external_labels = {
+    cluster = "cluster-events-cluster",
+    "k8s_cluster_name" = "cluster-events-cluster",
+  }
+}
+
+// Feature: Cluster Events
+declare "cluster_events" {
+  argument "logs_destinations" {
+    comment = "Must be a list of log destinations where collected logs should be forwarded to"
+  }
+
+  loki.source.kubernetes_events "cluster_events" {
+    job_name   = "integrations/kubernetes/eventhandler"
+    log_format = "logfmt"
+    forward_to = argument.logs_destinations.value
+  }
+}
+cluster_events "feature" {
+  logs_destinations = [
+    loki.write.loki.receiver,
+  ]
+}

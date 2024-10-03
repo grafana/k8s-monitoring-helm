@@ -15,7 +15,7 @@ on:
 
 env:
   CT_CONFIGFILE: "${{ github.workspace }}/.github/configs/ct.yaml"
-  LINT_CONFIGFILE: "${{ github.workspace }}/.github/configs/lintconf.yaml"
+  LINT_CONFIGFILE: "${{ github.workspace }}/.configs/lintconf.yaml"
   GRAFANA_ALLOY_VALUES: "${{ github.workspace }}/.github/configs/alloy-config.yaml"
   GRAFANA_ALLOY_LOKI_OTLP_VALUES: "${{ github.workspace }}/.github/configs/alloy-config-loki-otlp.yaml"
   GRAFANA_ALLOY_RECEIVER_SERVICE: "${{ github.workspace }}/.github/configs/receiver-service.yaml"
@@ -212,4 +212,4 @@ jobs:
         if: (steps.list-changed.outputs.changed == 'true') || (contains(github.event.pull_request.labels.*.name, 'full_test_required'))
         run: |
           latestRelease=$(git describe --abbrev=0 --tags)
-          ct install --all --config "${CT_CONFIGFILE}" --since "${latestRelease}" --helm-extra-args "--timeout 10m"
+          ct install --config "${CT_CONFIGFILE}" --since "${latestRelease}" --helm-extra-args "--timeout 10m" --charts charts/k8s-monitoring-v1

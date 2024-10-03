@@ -1,5 +1,5 @@
 FROM quay.io/curl/curl:latest AS profilecli-downloader
-ARG PROFILECLI_VERSION=1.5.0
+ARG PROFILECLI_VERSION=1.8.0
 ARG TARGETARCH
 
 # Download profilecli for Pyroscope queries

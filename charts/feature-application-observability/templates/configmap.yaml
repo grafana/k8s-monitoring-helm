@@ -1,0 +1,12 @@
+{{- if .Values.deployAsConfigMap }}
+{{- include "feature.applicationObservability.validate" . }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "feature.applicationObservability.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+data:
+  module.alloy: |-
+    {{- include "feature.applicationObservability.module" . | indent 4 }}
+{{- end }}

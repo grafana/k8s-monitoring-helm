@@ -111,10 +111,10 @@ helm install grafana-k8s-monitoring --atomic --timeout 300s  grafana/k8s-monitor
 
 This chart simplifies the deployment of a Kubernetes monitoring infrastructure, including the following:
 
--   [kube-state-metrics](https://github.com/kubernetes/kube-state-metrics), which gathers metrics about Kubernetes objects
--   [Node exporter](https://github.com/prometheus/node_exporter), which gathers metrics about Kubernetes nodes
--   [OpenCost](https://www.opencost.io/), which interprets the above to create cost metrics for the cluster, and
--   [Grafana Alloy](https://grafana.com/docs/alloy/latest/), which scrapes the above services to forward metrics to
+*   [kube-state-metrics](https://github.com/kubernetes/kube-state-metrics), which gathers metrics about Kubernetes objects
+*   [Node exporter](https://github.com/prometheus/node_exporter), which gathers metrics about Kubernetes nodes
+*   [OpenCost](https://www.opencost.io/), which interprets the above to create cost metrics for the cluster, and
+*   [Grafana Alloy](https://grafana.com/docs/alloy/latest/), which scrapes the above services to forward metrics to
     [Prometheus](https://prometheus.io/), logs and events to [Loki](https://grafana.com/oss/loki/), traces to
     [Tempo](https://grafana.com/oss/tempo/), and profiles to [Pyroscope](https://grafana.com/docs/pyroscope/).
 
@@ -127,11 +127,13 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | petewall | <pete.wall@grafana.com> |  |
 | skl | <stephen.lang@grafana.com> |  |
 
+<!-- markdownlint-disable no-bare-urls -->
+<!-- markdownlint-disable list-marker-space -->
 ## Source Code
 
 * <https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring-v1>
+<!-- markdownlint-enable list-marker-space -->
 
-<!-- markdownlint-disable no-bare-urls -->
 ## Requirements
 
 | Repository | Name | Version |
@@ -149,6 +151,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | https://sustainable-computing-io.github.io/kepler-helm-chart | kepler | 0.5.9 |
 <!-- markdownlint-enable no-bare-urls -->
 
+<!-- markdownlint-disable no-space-in-emphasis -->
 ## Values
 
 ### Deployment: [Alloy](https://github.com/grafana/alloy/tree/main/operations/helm/charts/alloy) for Cluster Events Deployment
@@ -918,6 +921,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | extraObjects | list | `[]` | Deploy additional manifest objects |
+<!-- markdownlint-enable no-space-in-emphasis -->
 
 ## Customizing the configuration
 
@@ -936,11 +940,11 @@ NOTE: This cannot be used to modify existing configuration values.
 Extra flow components can re-use any of the existing components in the generated configuration, which includes several
 useful ones like these:
 
--   `discovery.kubernetes.nodes` - Discovers all nodes in the cluster
--   `discovery.kubernetes.pods` - Discovers all pods in the cluster
--   `discovery.kubernetes.services` - Discovers all services in the cluster
--   `prometheus.relabel.metrics_service` - Sends metrics to the metrics service defined by `.externalServices.prometheus`
--   `loki.process.logs_service` - Sends logs to the logs service defined by `.externalServices.loki`
+*   `discovery.kubernetes.nodes` - Discovers all nodes in the cluster
+*   `discovery.kubernetes.pods` - Discovers all pods in the cluster
+*   `discovery.kubernetes.services` - Discovers all services in the cluster
+*   `prometheus.relabel.metrics_service` - Sends metrics to the metrics service defined by `.externalServices.prometheus`
+*   `loki.process.logs_service` - Sends logs to the logs service defined by `.externalServices.loki`
 
 Example:
 
