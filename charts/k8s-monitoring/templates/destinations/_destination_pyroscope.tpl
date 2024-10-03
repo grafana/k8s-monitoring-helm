@@ -61,4 +61,4 @@ pyroscope.write {{ include "helper.alloy_name" .name | quote }} {
 {{- define "destinations.pyroscope.supports_logs" }}false{{ end -}}
 {{- define "destinations.pyroscope.supports_traces" }}false{{ end -}}
 {{- define "destinations.pyroscope.supports_profiles" }}true{{ end -}}
-{{- define "destinations.prometheus.ecosystem" }}pyroscope{{ end -}}
+{{- define "destinations.pyroscope.ecosystem" }}pyroscope{{ end -}}

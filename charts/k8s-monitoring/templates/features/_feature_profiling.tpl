@@ -3,7 +3,7 @@
 {{- if .Values.profiling.enabled -}}
 {{- $destinations := include "features.profiling.destinations" . | fromYamlArray }}
 // Feature: Profiling
-{{- include "feature.profiling.module" (dict "Values" $.Values.clusterEvents "Files" $.Subcharts.profiling.Files) }}
+{{- include "feature.profiling.module" (dict "Values" $.Values.profiling "Files" $.Subcharts.profiling.Files) }}
 profiling "feature" {
   profiles_destinations = [
     {{ include "destinations.alloy.targets" (dict "destinations" $.Values.destinations "names" $destinations "type" "profiles" "ecosystem" "pyroscope") | indent 4 | trim }}
