@@ -26,7 +26,7 @@ build: README.md Chart.lock values.schema.json
 .PHONY: test
 test: build
 	helm lint .
-	ct lint --config .ct.yaml --lint-conf ../../.configs/lintconf.yaml --check-version-increment=false --charts .
+	ct lint --lint-conf ../../.configs/lintconf.yaml --check-version-increment=false --helm-dependency-extra-args=--skip-refresh --charts .
 ifdef HAS_HELM_UNITTEST
 	helm unittest .
 else

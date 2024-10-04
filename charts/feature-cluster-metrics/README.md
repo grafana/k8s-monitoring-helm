@@ -132,6 +132,12 @@ action on the metric list, including filtering based on label or other actions.
 | petewall | <pete.wall@grafana.com> |  |
 
 <!-- markdownlint-disable no-bare-urls -->
+<!-- markdownlint-disable list-marker-space -->
+## Source Code
+
+* <https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/feature-cluster-metrics>
+<!-- markdownlint-enable list-marker-space -->
+
 ## Requirements
 
 | Repository | Name | Version |
