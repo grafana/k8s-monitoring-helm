@@ -95,8 +95,7 @@ remote.kubernetes.secret.{{ include "helper.alloy_name" .destination.name }}.dat
 {{/*Determines if the destination will reference a Kubernetes secret*/}}
 {{/*Inputs: . (destination definition)*/}}
 {{- define "destinations.secret.uses_k8s_secret" -}}
-{{- if eq (include "destinations.auth.type" .) "none" }}false
-{{- else if eq (include "destinations.secret.type" .) "embedded" -}}false
+{{- if eq (include "destinations.secret.type" .) "embedded" -}}false
 {{- else -}}
   {{- $hasSecretDefined := false }}
   {{- $secrets := include (printf "destinations.%s.secrets" .type) . | fromYamlArray }}
