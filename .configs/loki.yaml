@@ -6,11 +6,11 @@ loki:
     configs:
       - from: 2024-04-01
         store: tsdb
-        object_store: s3
         schema: v13
         index:
           prefix: loki_index_
           period: 24h
+        object_store: filesystem # we're storing on filesystem so there's no real persistence here.
   ingester:
     chunk_encoding: snappy
   querier:
@@ -46,9 +46,6 @@ singleBinary:
 #    - name: GOMEMLIMIT
 #      value: 3750MiB
 
-# Enable minio for storage
-minio:
-  enabled: true
 
 # Zero out replica counts of other deployment modes
 backend:
@@ -79,6 +76,8 @@ bloomGateway:
 resultsCache:
   enabled: false
 chunksCache:
+  enabled: false
+minio:
   enabled: false
 
 monitoring:
