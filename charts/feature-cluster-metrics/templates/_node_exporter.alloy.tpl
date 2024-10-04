@@ -35,7 +35,7 @@ node_exporter.kubernetes "targets" {
 
 node_exporter.scrape "metrics" {
   targets = node_exporter.kubernetes.targets.output
-  job_name = "integrations/node_exporter"
+  job_label = "integrations/node_exporter"
   clustering = true
 {{- if $metricAllowList }}
   keep_metrics = "up|{{ $metricAllowList | fromYamlArray | join "|" }}"

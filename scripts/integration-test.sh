@@ -52,6 +52,7 @@ DELETE_CLUSTER=${DELETE_CLUSTER:-true}
 CREATE_CLUSTER=${CREATE_CLUSTER:-true}
 cleanup() {
   helm ls -A || true
+
   if [ "${CREATE_CLUSTER}" == "true" ] && [ "${DELETE_CLUSTER}" == "true" ]; then
     kind delete cluster --name "${clusterName}" || true
   fi

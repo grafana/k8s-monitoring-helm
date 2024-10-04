@@ -8,7 +8,7 @@
 ![Version: 1.0.0](https://img.shields.io/badge/Version-1.0.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.0.0](https://img.shields.io/badge/AppVersion-1.0.0-informational?style=flat-square)
 A Helm chart for testing the Kubernetes Monitoring Helm chart
 
-This chart is intended for testing the [k8s-monitoring](https://github.com/grafana/k8s-monitoring-helm/blob/main/charts/k8s-monitoring/README.md) chart.
+This chart is intended for testing the [k8s-monitoring](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring) chart.
 
 It allows for a way to encode queries that will be used to ensure that telemetry data collected by the k8s-monitoring
 chart is actually delivered to the desired destinations.

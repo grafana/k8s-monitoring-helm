@@ -3,7 +3,7 @@
 {{- if empty .destinations }}
 {{- $msg := list "" (printf "No destinations found that can accept %s from %s" .type .feature) }}
 {{- $msg = append $msg (printf "Please add a destination with %s support." .type) }}
-{{- $msg = append $msg "See https://github.com/grafana/grafana-telemetry-collector-helm/blob/main/charts/kubernetes-observability/docs/destinations.md for more details." }}
+{{- $msg = append $msg "See https://github.com/grafana/k8s-monitoring-helm/blob/main/charts/k8s-monitoring/docs/destinations/README.md for more details." }}
 {{- fail (join "\n" $msg) }}
 {{- end }}
 {{- end }}

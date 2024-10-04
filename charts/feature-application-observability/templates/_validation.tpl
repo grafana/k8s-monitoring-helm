@@ -7,7 +7,7 @@
   {{- $msg = append $msg "  receivers:" }}
   {{- $msg = append $msg "    grpc:" }}
   {{- $msg = append $msg "      enabled: true" }}
-  {{- $msg = append $msg "See https://github.com/grafana/k8s-monitoring-helm/blob/main/charts/feature-application-observability for more details." }}
+  {{- $msg = append $msg "See https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/feature-application-observability for more details." }}
   {{- fail (join "\n" $msg) }}
 {{- end }}
 {{- end }}
