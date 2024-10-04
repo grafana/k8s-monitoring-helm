@@ -67,6 +67,9 @@ jobs:
           config: charts/k8s-monitoring/tests/integration/${{ matrix.test }}/cluster.yaml
 
       - name: Run test
+        env:
+          CREATE_CLUSTER: "false"
+          DEPLOY_GRAFANA: "false"
         run: |
           echo "Testing ${{ matrix.test }}"
-          CREATE_CLUSTER=false ./scripts/integration-test.sh "charts/k8s-monitoring/tests/integration/${{ matrix.test }}"
+          ./scripts/integration-test.sh "charts/k8s-monitoring/tests/integration/${{ matrix.test }}"

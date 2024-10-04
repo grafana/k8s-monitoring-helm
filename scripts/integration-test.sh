@@ -47,6 +47,7 @@ set -eo pipefail  # Exit immediately if a command fails.
 
 clusterName=$(yq -r .cluster.name "${valuesFile}")
 
+DEPLOY_GRAFANA=${DEPLOY_GRAFANA:-true}
 DELETE_CLUSTER=${DELETE_CLUSTER:-true}
 CREATE_CLUSTER=${CREATE_CLUSTER:-true}
 cleanup() {
@@ -74,13 +75,18 @@ fi
 echo "Deploying prerequisites..."
 prerequisiteCount=$(yq -r '.prerequisites | length' "${testManifest}")
 for ((i=0; i<prerequisiteCount; i++)); do
-  prerequisiteType=$(yq -r .prerequisites[$i].type "${testManifest}")
+  prereqName=$(yq -r .prerequisites[$i].name "${testManifest}")
+  if [ "${prereqName}" == "grafana" ] && [ "${DEPLOY_GRAFANA}" == "false" ]; then
+    continue
+  fi
+
+  prereqType=$(yq -r .prerequisites[$i].type "${testManifest}")
   namespace=$(yq -r ".prerequisites[$i].namespace // \"\"" "${testManifest}")
   if [ -n "${namespace}" ]; then
     namespaceArg="--namespace ${namespace}"
   fi
 
-  if [ "${prerequisiteType}" == "manifest" ]; then
+  if [ "${prereqType}" == "manifest" ]; then
     prereqUrl=$(yq -r ".prerequisites[$i].url // \"\"" "${testManifest}")
     prereqFile=$(yq -r ".prerequisites[$i].file // \"\"" "${testManifest}")
     if [ -n "${prereqUrl}" ]; then
@@ -91,19 +97,23 @@ for ((i=0; i<prerequisiteCount; i++)); do
       echo "No URL or file specified for manifest prerequisite"
       exit 1
     fi
-  elif [ "${prerequisiteType}" == "helm" ]; then
-    prereqName=$(yq -r .prerequisites[$i].name "${testManifest}")
+  elif [ "${prereqType}" == "helm" ]; then
     prereqRepo=$(yq -r .prerequisites[$i].repo "${testManifest}")
     prereqChart=$(yq -r .prerequisites[$i].chart "${testManifest}")
-    prereqValuesFile="${PARENT_DIR}/$(yq -r .prerequisites[$i].valuesFile "${testManifest}")"
+    prereqValues="$(yq -r ".prerequisites[$i].values // \"\"" "${testManifest}")"
+    prereqValuesFile="$(yq -r ".prerequisites[$i].valuesFile // \"\"" "${testManifest}")"
 
-    if [ -z "${prereqValuesFile}" ]; then
-      runAndEcho helm upgrade --install "${prereqName}" "${namespaceArg}" --create-namespace --repo "${prereqRepo}" "${prereqChart}" --hide-notes --wait
+    if [ -n "${prereqValuesFile}" ]; then
+      runAndEcho helm upgrade --install "${prereqName}" "${namespaceArg}" --create-namespace --repo "${prereqRepo}" "${prereqChart}" -f "${PARENT_DIR}/${prereqValuesFile}" --hide-notes --wait
+    elif [ -n "${prereqChart}" ]; then
+      echo "${prereqValues}" > temp-values.yaml
+      runAndEcho helm upgrade --install "${prereqName}" "${namespaceArg}" --create-namespace --repo "${prereqRepo}" "${prereqChart}" -f temp-values.yaml --hide-notes --wait
+      rm temp-values.yaml
     else
-      runAndEcho helm upgrade --install "${prereqName}" "${namespaceArg}" --create-namespace --repo "${prereqRepo}" "${prereqChart}" -f "${prereqValuesFile}" --hide-notes --wait
+      runAndEcho helm upgrade --install "${prereqName}" "${namespaceArg}" --create-namespace --repo "${prereqRepo}" "${prereqChart}" --hide-notes --wait
     fi
   else
-    echo "Unknown prerequisite type: ${prerequisiteType}"
+    echo "Unknown prerequisite type: ${prereqType}"
     exit 1
   fi
 done
