@@ -131,6 +131,7 @@ lint-configs: $(EXAMPLE_ALLOY_FILES)
 	../../scripts/lint-alloy.sh $(EXAMPLE_ALLOY_FILES)
 
 lint-helm: build
+	helm repo add grafana https://grafana.github.io/helm-charts
 	helm lint .
 	ct lint --config .ct.yaml --lint-conf ../../.configs/lintconf.yaml --check-version-increment=false --charts .
 

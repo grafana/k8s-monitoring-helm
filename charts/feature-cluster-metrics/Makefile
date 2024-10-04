@@ -25,6 +25,9 @@ build: README.md Chart.lock values.schema.json
 
 .PHONY: test
 test: build
+	helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+	helm repo add kepler https://sustainable-computing-io.github.io/kepler-helm-chart
+
 	helm lint .
 	ct lint --lint-conf ../../.configs/lintconf.yaml --check-version-increment=false --helm-dependency-extra-args=--skip-refresh --charts .
 ifdef HAS_HELM_UNITTEST
