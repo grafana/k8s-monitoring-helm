@@ -51,17 +51,17 @@ jobs:
         id: check-cluster-config
         run: |
           if [ -f "charts/k8s-monitoring/tests/integration/${{ matrix.test }}/cluster.yaml" ]; then
-            echo "has-cluster-config=true" >> "${GITHUB_ENV}"
+            echo "has-cluster-config=true" >> "${GITHUB_OUTPUT}"
           else
-            echo "has-cluster-config=false" >> "${GITHUB_ENV}"
+            echo "has-cluster-config=false" >> "${GITHUB_OUTPUT}"
           fi
 
       - name: Create kind cluster
-        if: steps.check-cluster-config.outputs.has-cluster-config == false
+        if: ${{ steps.check-cluster-config.outputs.has-cluster-config == 'false' }}
         uses: helm/kind-action@v1
 
       - name: Create kind cluster with special config
-        if: steps.check-cluster-config.outputs.has-cluster-config == true
+        if: ${{ steps.check-cluster-config.outputs.has-cluster-config == 'true' }}
         uses: helm/kind-action@v1
         with:
           config: charts/k8s-monitoring/tests/integration/${{ matrix.test }}/cluster.yaml
