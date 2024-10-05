@@ -49,6 +49,7 @@ if [ -f "${INPUT_TEMPLATE}" ]; then
   cp "${INPUT_TEMPLATE}" README.md.gotmpl
 else
   echo "# ${NAME}" > README.md.gotmpl
+  echo "" >> README.md.gotmpl
   echo '{{ template "chart.valuesSection" . }}' >> README.md.gotmpl
 fi
 

@@ -1,0 +1,38 @@
+---
+prerequisites:
+  - type: helm
+    name: prometheus
+    repo: https://prometheus-community.github.io/helm-charts
+    chart: prometheus
+    namespace: prometheus
+    valuesFile: charts/k8s-monitoring/tests/integration/control-plane-monitoring/prometheus.yaml
+  - type: helm
+    name: loki
+    repo: https://grafana.github.io/helm-charts
+    chart: loki
+    namespace: loki
+    valuesFile: .configs/loki.yaml
+  - type: helm
+    name: grafana
+    repo: https://grafana.github.io/helm-charts
+    chart: grafana
+    namespace: grafana
+    values:
+      datasources:
+        datasources.yaml:
+          apiVersion: 1
+          datasources:
+            - name: Prometheus
+              type: prometheus
+              url: http://prometheus-server.prometheus.svc:9090
+              isDefault: true
+            - name: Loki
+              type: loki
+              url: http://loki-gateway.loki.svc:8080
+              basicAuth: true
+              basicAuthUser: loki
+              jsonData:
+                httpHeaderName1: X-Scope-OrgID
+              secureJsonData:
+                basicAuthPassword: lokipassword
+                httpHeaderValue1: "1"

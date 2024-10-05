@@ -135,7 +135,7 @@ pyroscope.scrape "pyroscope_scrape_{{ $currentType }}" {
     {{- end }}
   }
 
-  forward_to = [pyroscope.write.profiles_service.receiver]
+  forward_to = argument.profiles_destinations.value
 }
 {{- end }}
 {{- end }}

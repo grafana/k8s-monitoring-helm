@@ -1,0 +1,57 @@
+<!--
+(NOTE: Do not edit README.md directly. It is a generated file!)
+(      To make changes, please modify README.md.gotmpl and run `helm-docs`)
+-->
+
+{{ template "chart.header" . }}
+{{ template "chart.deprecationWarning" . }}
+{{ template "chart.badgesSection" . }}
+{{ template "chart.description" . }}
+{{ template "chart.homepageLine" . }}
+
+The Integrations feature builds in configuration for many common applications and services.
+
+The current integrations that are available from this feature are:
+
+| Integration | Description | Data Types | Docs |
+| --- | --- | --- | --- |
+| [Grafana Alloy](https://grafana.com/docs/alloy) | Telemetry data collector | Metrics | [Docs](./docs/integrations/alloy.md) |
+| [cert-manager](https://cert-manager.io/) | x.509 certificate management for Kubernetes | Metrics | [Docs](./docs/integrations/cert-manager.md) |
+| [etcd](https://etcd.io/) | Distributed key-value store | Metrics | [Docs](./docs/integrations/etcd.md) |
+
+## Usage
+
+To enable an integration, create an instance of it, with any configuration to aid in service discovery. For example:
+
+```yaml
+cert-manager:
+  instances:
+    - name: cert-manager
+      namespace: kube-system
+      labelSelectors:
+        app.kubernetes.io/name: cert-manager
+```
+
+You can specify multiple instances of the same integration to match multiple instances of that service. For example:
+
+```yaml
+alloy:
+  instances:
+    - name: alloy-metrics
+      labelSelectors:
+        app.kubernetes.io/name: alloy-metrics
+    - name: alloy-receivers
+      labelSelectors:
+        app.kubernetes.io/name: alloy-receivers
+```
+
+For all possible values for a specific integration, see the [documentation](./docs) page for that integration.
+
+{{ template "chart.maintainersSection" . }}
+<!-- markdownlint-disable no-bare-urls -->
+<!-- markdownlint-disable list-marker-space -->
+{{ template "chart.sourcesSection" . }}
+<!-- markdownlint-enable list-marker-space -->
+<!-- markdownlint-enable no-bare-urls -->
+{{ template "chart.requirementsSection" . }}
+{{ template "chart.valuesSection" . }}

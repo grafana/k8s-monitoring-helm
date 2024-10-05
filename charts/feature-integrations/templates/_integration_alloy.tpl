@@ -5,10 +5,10 @@
 {{/* Inputs: integration (Alloy integration definition) Files (Files object) */}}
 {{- define "integrations.alloy.allowList" }}
 {{- if .integration.metricsTuning.useDefaultAllowList }}
-{{ "integrations/default-allow-lists/alloy.yaml" | .Files.Get }}
+{{ "default-allow-lists/alloy.yaml" | .Files.Get }}
 {{- end }}
 {{- if .integration.metricsTuning.useIntegrationAllowList }}
-{{ "integrations/default-allow-lists/alloy-integration.yaml" | .Files.Get }}
+{{ "default-allow-lists/alloy-integration.yaml" | .Files.Get }}
 {{- end }}
 {{- if .integration.metricsTuning.includeMetrics }}
 {{ .integration.metricsTuning.includeMetrics | toYaml }}

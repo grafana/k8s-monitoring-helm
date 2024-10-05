@@ -13,6 +13,7 @@ build:
 
 .PHONY: test
 test: build
+	helm repo update
 	set -e && \
 	for chart in $(FEATURE_CHARTS); do \
 		make -C charts/$$chart test; \

@@ -47,10 +47,29 @@ jobs:
       - name: Set up Helm
         uses: azure/setup-helm@v4
 
+      - name: Check for cluster config
+        id: check-cluster-config
+        run: |
+          if [ -f "charts/k8s-monitoring/tests/integration/${{ matrix.test }}/cluster.yaml" ]; then
+            echo "has-cluster-config=true" >> "${GITHUB_OUTPUT}"
+          else
+            echo "has-cluster-config=false" >> "${GITHUB_OUTPUT}"
+          fi
+
       - name: Create kind cluster
+        if: ${{ steps.check-cluster-config.outputs.has-cluster-config == 'false' }}
         uses: helm/kind-action@v1
 
+      - name: Create kind cluster with special config
+        if: ${{ steps.check-cluster-config.outputs.has-cluster-config == 'true' }}
+        uses: helm/kind-action@v1
+        with:
+          config: charts/k8s-monitoring/tests/integration/${{ matrix.test }}/cluster.yaml
+
       - name: Run test
+        env:
+          CREATE_CLUSTER: "false"
+          DEPLOY_GRAFANA: "false"
         run: |
           echo "Testing ${{ matrix.test }}"
-          CREATE_CLUSTER=false ./scripts/integration-test.sh "charts/k8s-monitoring/tests/integration/${{ matrix.test }}"
+          ./scripts/integration-test.sh "charts/k8s-monitoring/tests/integration/${{ matrix.test }}"

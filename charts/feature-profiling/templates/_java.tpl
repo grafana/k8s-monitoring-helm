@@ -65,7 +65,7 @@ pyroscope.java "java_pods" {
     sample_rate = {{ .Values.java.profilingConfig.sampleRate }}
     lock = {{ .Values.java.profilingConfig.lock | quote }}
   }
-  forward_to = [pyroscope.write.profiles_service.receiver]
+  forward_to = argument.profiles_destinations.value
 }
 {{- end }}
 {{- end }}

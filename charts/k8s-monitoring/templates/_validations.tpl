@@ -20,7 +20,7 @@
   {{- $msg = append $msg "clusterMetrics:" }}
   {{- $msg = append $msg "  enabled: true" }}
   {{- $msg = append $msg "" }}
-  {{- $msg = append $msg "See https://github.com/grafana/grafana-telemetry-collector-helm/blob/main/charts/kubernetes-observability/docs/Features.md for the list of available features." }}
+  {{- $msg = append $msg "See https://github.com/grafana/k8s-monitoring-helm/blob/main/charts/k8s-monitoring/docs/Features.md for the list of available features." }}
   {{- fail (join "\n" $msg) }}
 {{- end }}
 {{- end }}

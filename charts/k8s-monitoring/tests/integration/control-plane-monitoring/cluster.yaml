@@ -1,0 +1,19 @@
+---
+apiVersion: kind.x-k8s.io/v1alpha4
+kind: Cluster
+nodes:
+  - role: control-plane
+    kubeadmConfigPatches:
+      - |
+        kind: ClusterConfiguration
+        controllerManager:
+          extraArgs:
+            bind-address: 0.0.0.0
+            secure-port: "10257"
+        scheduler:
+          extraArgs:
+            bind-address: 0.0.0.0
+            secure-port: "10259"
+      - |
+        kind: KubeProxyConfiguration
+        metricsBindAddress: 0.0.0.0:10249

@@ -24,9 +24,8 @@ pyroscope.write {{ include "helper.alloy_name" .name | quote }} {
 {{- else if eq (include "destinations.auth.type" .) "bearerToken" }}
     bearer_token = {{ include "destinations.secret.read" (dict "destination" . "key" "auth.bearerToken") }}
 {{- end }}
-  }
 
-  {{- if .tls }}
+{{- if .tls }}
     tls_config {
       insecure_skip_verify = {{ .tls.insecureSkipVerify | default false }}
       {{- if eq (include "destinations.secret.uses_secret" (dict "destination" . "key" "tls.ca")) "true" }}
@@ -40,6 +39,7 @@ pyroscope.write {{ include "helper.alloy_name" .name | quote }} {
       {{- end }}
     }
 {{- end }}
+  }
 
   external_labels = {
     cluster = {{ $.clusterName | quote }},
@@ -61,4 +61,4 @@ pyroscope.write {{ include "helper.alloy_name" .name | quote }} {
 {{- define "destinations.pyroscope.supports_logs" }}false{{ end -}}
 {{- define "destinations.pyroscope.supports_traces" }}false{{ end -}}
 {{- define "destinations.pyroscope.supports_profiles" }}true{{ end -}}
-{{- define "destinations.prometheus.ecosystem" }}pyroscope{{ end -}}
+{{- define "destinations.pyroscope.ecosystem" }}pyroscope{{ end -}}

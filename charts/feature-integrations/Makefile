@@ -20,6 +20,7 @@ schema-mods/definitions/%-integration.schema.json: integrations/%-values.yaml
 	docker run --platform linux/amd64 --rm -v $(shell pwd):/src ghcr.io/grafana/helm-docs-and-schema-gen $(shell echo $< | sed 's/integrations\/\([-a-z]*\)-values.yaml/\1/') integration
 
 NUMBER_OF_INTEGRATION_VALUES_FILES := $(words $(INTEGRATION_VALUES_FILES))
+NUMBER_OF_INTEGRATION_VALUES_FILES := $(words $(INTEGRATION_VALUES_FILES))
 schema-mods/integration-list.json: $(INTEGRATION_VALUES_FILES)
 	@echo '{' > $@
 	@echo '  "definitions": {' >> $@
@@ -53,19 +54,6 @@ templates/_integration_types.tpl: $(INTEGRATION_VALUES_FILES)
 values.schema.json: values.yaml $(INTEGRATION_SCHEMA_FILES) $(SCHEMA_MODS_JSON_FILES) $(SCHEMA_MODS_JQ_FILES) schema-mods/integration-list.json
 	../../scripts/schema-gen.sh .
 
-docs/integrations/README.md: $(INTEGRATION_DOCS_FILES)
-	echo "# Integrations" > $@
-	echo "" >> $@
-	echo "This directory contains the values files for the integrations that are available." >> $@
-	echo "" >> $@
-	echo "## Integrations" >> $@
-	echo "" >> $@
-	echo "| Name | Docs |" >> $@
-	echo "|------|------|" >> $@
-	for file in $(INTEGRATION_DOCS_FILES); do \
-		echo "| $$(echo $${file} | sed 's/\.\/docs\/integrations\/\([-a-z]*\).md/\1/') | [Docs]($$(echo $${file} | sed 's/docs\/integrations\/\([-a-z]*.md\)/\1/')) |" >> $@; \
-	done
-
 README.md: values.yaml Chart.yaml $$(wildcard README.md.gotmpl)
 ifdef HAS_HELM_DOCS
 	helm-docs
@@ -78,15 +66,14 @@ clean:
 	rm -f README.md values.schema.json schema-mods/integration-list.json templates/_integration_types.tpl
 	rm -f $(INTEGRATION_SCHEMA_FILES)
 	rm -f $(INTEGRATION_DOCS_FILES)
-	rm -f docs/integrations/README.md
 
 .PHONY: build
-build: README.md Chart.lock values.schema.json templates/_integration_types.tpl docs/integrations/README.md
+build: README.md $(INTEGRATION_DOCS_FILES) Chart.lock values.schema.json templates/_integration_types.tpl
 
 .PHONY: test
 test: build
 	helm lint .
-	ct lint --lint-conf ../../.configs/lintconf.yaml --check-version-increment=false --charts .
+	ct lint --lint-conf ../../.configs/lintconf.yaml --check-version-increment=false --helm-dependency-extra-args=--skip-refresh --charts .
 ifdef HAS_HELM_UNITTEST
 	helm unittest .
 else

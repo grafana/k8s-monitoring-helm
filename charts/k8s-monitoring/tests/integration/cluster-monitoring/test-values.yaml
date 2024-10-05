@@ -9,6 +9,7 @@ tests:
       LOKI_USER: loki
       LOKI_PASS: lokipassword
     queries:
+      # Cluster metrics
       - query: kubernetes_build_info{cluster="cluster-monitoring-feature-test", job="integrations/kubernetes/kubelet"}
         type: promql
       - query: machine_memory_bytes{cluster="cluster-monitoring-feature-test", job="integrations/kubernetes/cadvisor"}
@@ -17,11 +18,20 @@ tests:
         type: promql
         expect:
           value: 1
-      - query: node_exporter_build_info{cluster="cluster-monitoring-feature-test", job="integrations/node-exporter"}
+      - query: node_exporter_build_info{cluster="cluster-monitoring-feature-test", job="integrations/node_exporter"}
         type: promql
 
+      # Cluster events
       - query: count_over_time({cluster="cluster-monitoring-feature-test", job="integrations/kubernetes/eventhandler"}[1h])
         type: logql
 
-attempts: 3
-delay: 30
+      # Pod logs
+      - query: count_over_time({cluster="cluster-monitoring-feature-test", job!="integrations/kubernetes/eventhandler"}[1h])
+        type: logql
+
+#      # DPM check
+#      - query: avg(count_over_time(scrape_samples_scraped{cluster="cluster-monitoring-feature-test"}[1m]))
+#        type: promql
+#        expect:
+#          value: 1
+#          operator: ==

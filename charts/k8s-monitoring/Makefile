@@ -64,6 +64,7 @@ EXAMPLE_RELEASE_NAME=ko
 EXAMPLE_VALUES_FILES = $(shell find docs/examples -name values.yaml)
 EXAMPLE_OUTPUT_FILES = $(EXAMPLE_VALUES_FILES:values.yaml=output.yaml)
 EXAMPLE_ALLOY_FILES = $(foreach file,$(EXAMPLE_VALUES_FILES),$(call alloy_configs, $(file)))
+EXAMPLE_README_FILES = $(EXAMPLE_VALUES_FILES:values.yaml=README.md)
 
 alloy_configs = $(shell \
 	DIR="$(shell dirname $(1))/" yq e 'with_entries(select(.key == "alloy-*")) | select(.[].enabled == true) | to_entries | env(DIR) + .[].key + ".alloy"' $(1) \
@@ -93,13 +94,31 @@ Chart.lock: Chart.yaml
 %/alloy-profiles.alloy: %/output.yaml
 	yq 'select(.kind=="ConfigMap" and .metadata.name=="$(EXAMPLE_RELEASE_NAME)-alloy-profiles") | .data["config.alloy"]' $< > $@
 
+%/README.md: %/values.yaml $$(wildcard %/description.txt)
+	echo '<!--' > $@
+	echo '(NOTE: Do not edit README.md directly. It is a generated file!)' >> $@
+	echo '(      To make changes, please modify values.yaml or description.txt and run `make examples`)' >> $@
+	echo '-->' >> $@
+
+	if [ -f $$(dirname $@)/description.txt ]; then \
+		cat $$(dirname $@)/description.txt >> $@; \
+	else \
+		echo $< | sed -e "s/docs\/examples\//# Example: /" >> $@; \
+	fi
+	echo '' >> $@
+	echo '## Values' >> $@
+	echo '' >> $@
+	echo '```yaml' >> $@
+	cat $< >> $@
+	echo '```' >> $@
+
 .PHONY: examples
-examples: $(EXAMPLE_OUTPUT_FILES) $(EXAMPLE_ALLOY_FILES)
+examples: $(EXAMPLE_OUTPUT_FILES) $(EXAMPLE_ALLOY_FILES) $(EXAMPLE_README_FILES)
 
 .PHONY: clean
 clean:
 	rm -f README.md values.schema.json templates/destinations/_destination_types.tpl schema-mods/destination-list.json $(DESTINATION_SCHEMA_FILES) $(DESTINATION_DOCS_FILES)
-	rm -f $(EXAMPLE_OUTPUT_FILES) $(EXAMPLE_ALLOY_FILES)
+	rm -f $(EXAMPLE_OUTPUT_FILES) $(EXAMPLE_ALLOY_FILES) $(EXAMPLE_README_FILES)
 
 # Build targets
 .PHONY: build
@@ -112,6 +131,7 @@ lint-configs: $(EXAMPLE_ALLOY_FILES)
 	../../scripts/lint-alloy.sh $(EXAMPLE_ALLOY_FILES)
 
 lint-helm: build
+	helm repo add grafana https://grafana.github.io/helm-charts
 	helm lint .
 	ct lint --config .ct.yaml --lint-conf ../../.configs/lintconf.yaml --check-version-increment=false --charts .
 
