@@ -31,7 +31,7 @@ destinations:
 
   - name: tempo
     type: otlp
-    url: http://tempo.tempo.svc:4317/v1/trace
+    url: http://tempo.tempo.svc:4317
     auth:
       type: bearerToken
       bearerTokenKey: tempoBearerToken

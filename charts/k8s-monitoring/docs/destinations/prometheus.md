@@ -23,11 +23,30 @@ This defines the options for defining a destination for metrics that use the Pro
 | auth.usernameFrom | string | `""` | Raw config for accessing the username. |
 | auth.usernameKey | string | `"username"` | The key for storing the username in the secret. |
 
+### Authentication - SigV4
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| auth.sigv4.accessKey | string | `""` | The access key for sigv4 authentication. |
+| auth.sigv4.accessKeyFrom | string | `""` | Raw config for accessing the access key. |
+| auth.sigv4.accessKeyKey | string | `"accessKey"` | The key for storing the access key in the secret. |
+| auth.sigv4.profile | string | `""` | The named AWS profile for sigv4 authentication. |
+| auth.sigv4.region | string | `""` | The AWS region for sigv4 authentication. |
+| auth.sigv4.roleArn | string | `""` | The Role ARN for sigv4 authentication. |
+| auth.sigv4.secretKey | string | `""` | The secret key for sigv4 authentication. |
+| auth.sigv4.secretKeyFrom | string | `""` | Raw config for accessing the secret key. |
+
+### Authentication - Sig
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| auth.sigv4.secretKeyKey | string | `"secretKey"` | The key for storing the secret key in the secret. |
+
 ### Authentication
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| auth.type | string | none | The type of authentication to do. Options are "none" (default), "basic", "bearerToken". |
+| auth.type | string | none | The type of authentication to do. Options are "none" (default), "basic", "bearerToken", "sigv4". |
 
 ### General
 

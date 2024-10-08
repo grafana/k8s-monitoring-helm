@@ -37,7 +37,6 @@ This defines the options for defining a destination for OpenTelemetry data that 
 | extraHeadersFrom | object | `{}` | Extra headers to be set when sending data through a dynamic reference. All values are treated as raw strings and not quoted. |
 | name | string | `""` | The name for this OTLP destination. |
 | protocol | string | `"grpc"` | The protocol for the OTLP destination. Options are "grpc" (default), "http". |
-| proxyURL | string | `""` | The Proxy URL for the OTLP destination. |
 | readBufferSize | string | `""` | Size of the read buffer the gRPC client to use for reading server responses. |
 | tenantId | string | `""` | The tenant ID for the OTLP destination. |
 | tenantIdFrom | string | `""` | Raw config for accessing the tenant ID. |

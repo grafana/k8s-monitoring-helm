@@ -8,12 +8,8 @@
 {{/*Inputs: . (destination definition)*/}}
 {{- define "destinations.secret.type" }}
 {{- if hasKey . "secret" }}
-  {{- if .secret.embed -}}
-embedded
-  {{- else if .secret.create -}}
-create
-  {{- else -}}
-external
+  {{- if .secret.embed -}}embedded
+  {{- else if eq .secret.create false -}}external
   {{- end }}
 {{- else -}}
 create
@@ -22,10 +18,9 @@ create
 
 {{/*Determine if a ___From field has been defined for a secret value*/}}
 {{/*Inputs: destination (destination definition), key (path to secret value)*/}}
-{{- define "destinations.secret.ref" -}}
-{{- $defaultKey := (( regexSplit "\\." .key -1) | last) -}}
+{{- define "destinations.secret.from" -}}
 {{- $value := .destination -}}
-{{- range $pathPart := (regexSplit "\\." (printf "%sFrom" .key) -1) -}}
+{{- range $pathPart := (regexSplit "\\." (printf "%sFrom" .key) -1) -}} {{/* "path.to.auth.password" --> ["path", "to", "auth" "passwordFrom"] */}}
 {{- if hasKey $value $pathPart -}}
   {{- $value = (index $value $pathPart) -}}
 {{- else -}}
@@ -39,7 +34,7 @@ create
 {{/*Determine the key to access a secret value within a secret component*/}}
 {{/*Inputs: destination (destination definition), key (path to secret value)*/}}
 {{- define "destinations.secret.key" -}}
-{{- $defaultKey := (( regexSplit "\\." .key -1) | last) -}}
+{{- $defaultKey := (( regexSplit "\\." .key -1) | last) -}}    {{/* "path.to.auth.password" --> "password" */}}
 {{- $value := .destination -}}
 {{- range $pathPart := (regexSplit "\\." (printf "%sKey" .key) -1) -}}
 {{- if hasKey $value $pathPart -}}
@@ -55,7 +50,6 @@ create
 {{/*Determine the path to the secret value*/}}
 {{/*Inputs: destination (destination definition), key (path to secret value)*/}}
 {{- define "destinations.secret.value" }}
-{{- $key := .key -}}
 {{- $value := .destination -}}
 {{- range $pathPart := (regexSplit "\\." .key -1) -}}
 {{- if hasKey $value $pathPart -}}
@@ -71,7 +65,7 @@ create
 {{/*Build the alloy command to read a secret value*/}}
 {{/*Inputs: destination (destination definition), key (path to secret value), nonsensitive*/}}
 {{- define "destinations.secret.read" }}
-{{- $credRef := include "destinations.secret.ref" . -}}
+{{- $credRef := include "destinations.secret.from" . -}}
 {{- if $credRef -}}
 {{ $credRef }}
 {{- else if eq (include "destinations.secret.type" .destination) "embedded" -}}
@@ -95,18 +89,19 @@ remote.kubernetes.secret.{{ include "helper.alloy_name" .destination.name }}.dat
 {{/*Determines if the destination will reference a Kubernetes secret*/}}
 {{/*Inputs: . (destination definition)*/}}
 {{- define "destinations.secret.uses_k8s_secret" -}}
-{{- if eq (include "destinations.secret.type" .) "embedded" -}}false
+{{- $secretType := (include "destinations.secret.type" .) }}
+{{- if eq $secretType "embedded" -}}false
 {{- else -}}
-  {{- $hasSecretDefined := false }}
-  {{- $secrets := include (printf "destinations.%s.secrets" .type) . | fromYamlArray }}
-  {{- range $secret := $secrets }}
-    {{- $ref := include "destinations.secret.ref" (dict "destination" $ "key" $secret) -}}
+  {{- $usesK8sSecret := false }}
+  {{- range $secret := include (printf "destinations.%s.secrets" .type) . | fromYamlArray }}
+    {{- $ref := include "destinations.secret.from" (dict "destination" $ "key" $secret) -}}
+    {{- $key := include "destinations.secret.key" (dict "destination" $ "key" $secret) -}}
     {{- $value := include "destinations.secret.value" (dict "destination" $ "key" $secret) -}}
-    {{- if and (not $ref) $value }}
-    {{- $hasSecretDefined = true }}
+    {{- if or (and (eq $secretType "external") $key) (and $value (not $ref)) }}
+      {{- $usesK8sSecret = true }}
     {{- end }}
   {{- end }}
-{{- $hasSecretDefined }}
+{{- $usesK8sSecret }}
 {{- end -}}
 {{- end -}}
 
@@ -115,7 +110,7 @@ remote.kubernetes.secret.{{ include "helper.alloy_name" .destination.name }}.dat
 {{- define "destinations.secret.create_k8s_secret" -}}
 {{- if eq (include "destinations.secret.uses_k8s_secret" .) "false" }}false
 {{- else if and (hasKey . "secret") (hasKey .secret "create") -}}
-g{{ .secret.create }}
+{{ .secret.create }}
 {{- else -}}
 true
 {{- end -}}

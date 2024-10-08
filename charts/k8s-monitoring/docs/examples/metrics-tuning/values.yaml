@@ -1,0 +1,43 @@
+---
+cluster:
+  name: metrics-tuning-example-cluster
+
+destinations:
+  - name: prometheus
+    type: prometheus
+    url: http://prometheus.prometheus.svc:9090/api/v1/write
+
+annotationAutodiscovery:
+  enabled: true
+  metricsTuning:
+    excludeMetrics: ["go_*"]
+
+clusterMetrics:
+  enabled: true
+  kube-state-metrics:
+    metricsTuning:
+      # No filtering, keep all metrics
+      useDefaultAllowList: false
+  node-exporter:
+    metricsTuning:
+      # Will filter to the metrics that will populate the Linux node integration
+      # See https://grafana.com/docs/grafana-cloud/monitor-infrastructure/integrations/integration-reference/integration-linux-node/
+      useIntegrationAllowList: true
+  kubelet:
+    metricsTuning:
+      # Will only keep these two metrics
+      useDefaultAllowList: false
+      includeMetrics:
+        - kubelet_node_name
+        - kubernetes_build_info
+  cadvisor:
+    metricsTuning:
+      # Will keep the default set of metrics and also include these three more
+      useDefaultAllowList: true
+      includeMetrics:
+        - container_memory_cache
+        - container_memory_rss
+        - container_memory_swap
+
+alloy-metrics:
+  enabled: true

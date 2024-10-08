@@ -1,5 +1,6 @@
 HAS_HELM_DOCS := $(shell command -v helm-docs;)
 HAS_HELM_UNITTEST := $(shell helm plugin list | grep unittest 2> /dev/null)
+HAS_SHELLSPEC := $(shell command -v shellspec;)
 
 CHART_TEMPLATE_FILES = $(shell find templates -name "*.tpl")
 CHART_YAML_FILES = $(shell find templates -name "*.yaml")
@@ -115,6 +116,14 @@ Chart.lock: Chart.yaml
 .PHONY: examples
 examples: $(EXAMPLE_OUTPUT_FILES) $(EXAMPLE_ALLOY_FILES) $(EXAMPLE_README_FILES)
 
+.PHONY: example-checks
+example-checks: $(EXAMPLE_OUTPUT_FILES)
+ifdef HAS_SHELLSPEC
+	shellspec -c tests/example-checks
+else
+	docker run --platform linux/amd64 --rm --volume $(shell pwd):/src shellspec/shellspec -c /src/tests/example-checks -s /bin/sh
+endif
+
 .PHONY: clean
 clean:
 	rm -f README.md values.schema.json templates/destinations/_destination_types.tpl schema-mods/destination-list.json $(DESTINATION_SCHEMA_FILES) $(DESTINATION_DOCS_FILES)
@@ -126,7 +135,7 @@ build: README.md examples values.schema.json templates/destinations/_destination
 
 # Test targets
 .PHONY: test unittest lint-helm lint-configs
-test: unittest lint-helm lint-configs
+test: unittest lint-helm lint-configs example-checks
 lint-configs: $(EXAMPLE_ALLOY_FILES)
 	../../scripts/lint-alloy.sh $(EXAMPLE_ALLOY_FILES)
 

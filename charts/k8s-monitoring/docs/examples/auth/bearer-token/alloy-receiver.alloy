@@ -65,7 +65,7 @@ loki.write "loki" {
 }
 // Destination: tempo (otlp)
 otelcol.auth.bearer "tempo" {
-  token = 
+  token = remote.kubernetes.secret.tempo.data["tempoBearerToken"]
 }
 
 otelcol.processor.transform "tempo" {
@@ -91,14 +91,23 @@ otelcol.processor.transform "tempo" {
 }
 otelcol.exporter.otlp "tempo" {
   client {
-    endpoint = "http://tempo.tempo.svc:4317/v1/trace"
+    endpoint = "http://tempo.tempo.svc:4317"
     headers = {
+      "X-Scope-OrgID" = nonsensitive(remote.kubernetes.secret.tempo.data["tenantId"]),
     }
     tls {
       insecure = false
       insecure_skip_verify = false
+      ca_pem = nonsensitive(remote.kubernetes.secret.tempo.data["ca"])
+      cert_pem = nonsensitive(remote.kubernetes.secret.tempo.data["cert"])
+      key_pem = remote.kubernetes.secret.tempo.data["key"]
     }
   }
+}
+
+remote.kubernetes.secret "tempo" {
+  name      = "my-tempo-secret"
+  namespace = "tempo"
 }
 
 

@@ -9,8 +9,10 @@ prometheus.remote_write {{ include "helper.alloy_name" .name | quote }} {
   endpoint {
     url = {{ .url | quote }}
     headers = {
-{{- if eq (include "destinations.secret.uses_secret" (dict "destination" . "key" "tenantId")) "true" }}
+{{- if ne (include "destinations.auth.type" .) "sigv4" }}
+  {{- if eq (include "destinations.secret.uses_secret" (dict "destination" . "key" "tenantId")) "true" }}
       "X-Scope-OrgID" = {{ include "destinations.secret.read" (dict "destination" . "key" "tenantId" "nonsensitive" true) }},
+  {{- end }}
 {{- end }}
 {{- range $key, $value := .extraHeaders }}
       {{ $key | quote }} = {{ $value | quote }},
@@ -29,6 +31,20 @@ prometheus.remote_write {{ include "helper.alloy_name" .name | quote }} {
     }
 {{- else if eq (include "destinations.auth.type" .) "bearerToken" }}
     bearer_token = {{ include "destinations.secret.read" (dict "destination" . "key" "auth.bearerToken") }}
+{{- else if eq (include "destinations.auth.type" .) "sigv4" }}
+    sigv4 {
+      access_key = {{ include "destinations.secret.read" (dict "destination" . "key" "auth.sigv4.accessKey" "nonsensitive" true) }}
+      {{- if .auth.sigv4.profile }}
+      profile = {{ .auth.sigv4.profile | quote }}
+      {{- end }}
+      {{- if .auth.sigv4.region }}
+      region = {{ .auth.sigv4.region | quote }}
+      {{- end }}
+      {{- if .auth.sigv4.roleArn }}
+      role_arn = {{ .auth.sigv4.roleArn | quote }}
+      {{- end }}
+      secret_key = {{ include "destinations.secret.read" (dict "destination" . "key" "auth.sigv4.secretKey") }}
+    }
 {{- end }}
 
 {{- if .tls }}
@@ -94,6 +110,8 @@ prometheus.remote_write {{ include "helper.alloy_name" .name | quote }} {
 - auth.username
 - auth.password
 - auth.bearerToken
+- auth.sigv4.accessKey
+- auth.sigv4.secretKey
 - tls.ca
 - tls.cert
 - tls.key

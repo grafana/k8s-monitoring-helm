@@ -6,14 +6,14 @@
     {{- fail (printf "Pod Logs feature requires Alloy to be a DaemonSet when using the \"volumes\" gather method.\nPlease set:\n%s:\n  controller:\n    type: daemonset" .CollectorName) }}
   {{- end -}}
   {{- if not .Collector.alloy.mounts.varlog }}
-    {{- fail (printf "Pod Logs feature requires Alloy to mount /var/log when using the \"volumes\" gather method.\nPlease set:\n%s:\n  controller:\n    mounts:\n      varlog: true" .CollectorName) }}
+    {{- fail (printf "Pod Logs feature requires Alloy to mount /var/log when using the \"volumes\" gather method.\nPlease set:\n%s:\n  alloy:\n    mounts:\n      varlog: true" .CollectorName) }}
   {{- end -}}
   {{- if .Collector.alloy.clustering.enabled }}
     {{- fail (printf "Pod Logs feature requires Alloy to not be in clustering mode when using the \"volumes\" gather method.\nPlease set:\n%s:\n  alloy:\n    clustering:\n      enabled: true" .CollectorName) }}
   {{- end -}}
 {{- else if eq .Values.gatherMethod "kubernetesApi" }}
-  {{- if not .Collector.alloy.mounts.varlog }}
-    {{- fail (printf "Pod Logs feature should not mount /var/log when using the \"kubernetesApi\" gather method.\nPlease set:\n%s:\n  controller:\n    mounts:\n      varlog: false" .CollectorName) }}
+  {{- if .Collector.alloy.mounts.varlog }}
+    {{- fail (printf "Pod Logs feature should not mount /var/log when using the \"kubernetesApi\" gather method.\nPlease set:\n%s:\n  alloy:\n    mounts:\n      varlog: false" .CollectorName) }}
   {{- end -}}
   {{- if not .Collector.alloy.clustering.enabled }}
     {{- fail (printf "Pod Logs feature requires Alloy to be in clustering mode when using the \"kubernetesApi\" gather method.\nPlease set:\n%s:\n  alloy:\n    clustering:\n      enabled: true" .CollectorName) }}

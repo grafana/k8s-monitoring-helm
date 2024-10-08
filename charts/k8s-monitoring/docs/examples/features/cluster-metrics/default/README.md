@@ -9,7 +9,7 @@
 ```yaml
 ---
 cluster:
-  name: cluster-metrics-cluster
+  name: cluster-metrics-example-cluster
 
 destinations:
   - name: prometheus
