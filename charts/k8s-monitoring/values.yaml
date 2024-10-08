@@ -207,7 +207,7 @@ integrations:
 # Collectors (Alloy instances)
 #
 
-# -- An Alloy instance for collecting metrics.
+# An Alloy instance for collecting metrics.
 alloy-metrics:
   # -- Deploy the Alloy instance for collecting metrics.
   # @section -- Collectors - Alloy Metrics
@@ -249,20 +249,28 @@ alloy-metrics:
       seccompProfile:
         type: "RuntimeDefault"
 
-  # @ignored
   controller:
+    # -- The type of controller to use for the Alloy Metrics instance.
+    # @section -- Collectors - Alloy Metrics
     type: statefulset
+
+    # -- The number of replicas for the Alloy Metrics instance.
+    # @section -- Collectors - Alloy Metrics
     replicas: 1
+
+    # @ignored
     nodeSelector:
       kubernetes.io/os: linux
 
+    # @ignored
     podAnnotations:
       k8s.grafana.com/logs.job: integrations/alloy
 
   # Skip installation of the Grafana Alloy CRDs, since we don't use them in this chart
+  # @ignored
   crds: {create: false}
 
-# -- An Alloy instance for data sources required to be deployed on a single replica.
+# An Alloy instance for data sources required to be deployed on a single replica.
 alloy-singleton:
   # -- Deploy the Alloy instance for data sources required to be deployed on a single replica.
   # @section -- Collectors - Alloy Singleton
@@ -300,11 +308,19 @@ alloy-singleton:
         type: "RuntimeDefault"
 
   controller:
+    # -- The type of controller to use for the Alloy Singleton instance.
+    # @section -- Collectors - Alloy Singleton
     type: deployment
-    replicas: 1  # Only one replica should be used, otherwise multiple copies of cluster events might get sent to Loki.
+    # -- The number of replicas for the Alloy Singleton instance.
+    # This should remain a single instance to avoid duplicate data.
+    # @section -- Collectors - Alloy Singleton
+    replicas: 1
+
+    # @ignored
     nodeSelector:
       kubernetes.io/os: linux
 
+    # @ignored
     podAnnotations:
       k8s.grafana.com/logs.job: integrations/alloy
 
@@ -312,7 +328,7 @@ alloy-singleton:
   # @ignored
   crds: {create: false}
 
-# -- An Alloy instance for collecting log data.
+# An Alloy instance for collecting log data.
 alloy-logs:
   # -- Deploy the Alloy instance for collecting log data.
   # @section -- Collectors - Alloy Logs
@@ -362,11 +378,15 @@ alloy-logs:
         type: "RuntimeDefault"
 
   controller:
+    # -- The type of controller to use for the Alloy Logs instance.
+    # @section -- Collectors - Alloy Logs
     type: daemonset
+
+    # @ignored
     nodeSelector:
       kubernetes.io/os: linux
 
-# -- An Alloy instance for opening receivers to collect application data.
+# An Alloy instance for opening receivers to collect application data.
 alloy-receiver:
   # -- Deploy the Alloy instance for opening receivers to collect application data.
   # @section -- Collectors - Alloy Receiver
@@ -409,11 +429,15 @@ alloy-receiver:
         type: "RuntimeDefault"
 
   controller:
+    # -- The type of controller to use for the Alloy Receiver instance.
+    # @section -- Collectors - Alloy Receiver
     type: daemonset
+
+    # @ignored
     nodeSelector:
       kubernetes.io/os: linux
 
-# -- An Alloy instance for gathering profiles.
+# An Alloy instance for gathering profiles.
 alloy-profiles:
   # -- Deploy the Alloy instance for gathering profiles.
   # @section -- Collectors - Alloy Profiles
@@ -455,13 +479,19 @@ alloy-profiles:
       runAsGroup: 0
       runAsUser: 0
 
-  # @ignored
   controller:
+    # -- The type of controller to use for the Alloy Profiles instance.
+    # @section -- Collectors - Alloy Profiles
     type: daemonset
+
+    # @ignored
     hostPID: true
+
+    # @ignored
     nodeSelector:
       kubernetes.io/os: linux
 
+    # @ignored
     tolerations:
       - effect: NoSchedule
         operator: Exists
@@ -469,3 +499,24 @@ alloy-profiles:
   # Skip installation of the Grafana Alloy CRDs, since we don't use them in this chart
   # @ignored
   crds: {create: false}
+
+# -- Deploy additional manifest objects
+extraObjects: []
+# - apiVersion: external-secrets.io/v1beta1
+#   kind: ExternalSecret
+#   metadata:
+#     name: prometheus-secret
+#   spec:
+#     refreshInterval: 1h
+#     secretStoreRef:
+#       kind: SecretStore
+#       name: example
+#     target:
+#       template:
+#         data:
+#           prometheus_host: "{{ .Values.externalServices.prometheus.host }}"
+#           username: "{{`{{ .username }}`}}"
+#           password: "{{`{{ .password }}`}}"
+#     dataFrom:
+#     - extract:
+#         key: mysecret

@@ -1,0 +1,21 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Extra Objects test
+templates:
+  - extra-objects.yaml
+tests:
+  - it: creates extra objects
+    set:
+      extraObjects:
+        - apiVersion: v1
+          kind: ConfigMap
+          metadata:
+            name: my-config
+            namespace: my-namespace
+          data:
+            key: value
+    asserts:
+      - containsDocument:
+          apiVersion: v1
+          kind: ConfigMap
+          name: my-config
+          namespace: my-namespace
