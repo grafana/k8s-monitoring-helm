@@ -137,6 +137,7 @@ otelcol.processor.transform "default" {
 {{- end }}
 {{- end }}
       "set(attributes[\"k8s.cluster.name\"], \"{{ required ".Values.cluster.name is a required value. Please set it and try again." .Values.cluster.name }}\") where attributes[\"k8s.cluster.name\"] == nil",
+      "set(attributes[\"service.instance.id\"], attributes[\"k8s.pod.uid\"]) where attributes[\"service.instance.id\"] == nil",
     ]
   }
 {{- if .Values.metrics.receiver.transforms.metric }}
@@ -173,6 +174,7 @@ otelcol.processor.transform "default" {
       "set(attributes[\"namespace\"], attributes[\"k8s.namespace.name\"])",
       "set(attributes[\"loki.resource.labels\"], \"{{ .Values.logs.receiver.transforms.labels | join ", " }}\")",
       "set(attributes[\"k8s.cluster.name\"], \"{{ required ".Values.cluster.name is a required value. Please set it and try again." .Values.cluster.name }}\") where attributes[\"k8s.cluster.name\"] == nil",
+      "set(attributes[\"service.instance.id\"], attributes[\"k8s.pod.uid\"]) where attributes[\"service.instance.id\"] == nil",
     ]
   }
 {{- if .Values.logs.receiver.transforms.log }}
@@ -196,6 +198,7 @@ otelcol.processor.transform "default" {
 {{- end }}
 {{- end }}
       "set(attributes[\"k8s.cluster.name\"], \"{{ required ".Values.cluster.name is a required value. Please set it and try again." .Values.cluster.name }}\") where attributes[\"k8s.cluster.name\"] == nil",
+      "set(attributes[\"service.instance.id\"], attributes[\"k8s.pod.uid\"]) where attributes[\"service.instance.id\"] == nil",
     ]
   }
 {{- if .Values.traces.receiver.transforms.span }}
