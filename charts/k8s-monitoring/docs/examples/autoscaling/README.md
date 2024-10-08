@@ -10,6 +10,7 @@ down based on its CPU and memory utilization.
 ## Values
 
 ```yaml
+---
 cluster:
   name: autoscaling-example-cluster
 

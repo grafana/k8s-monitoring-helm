@@ -7,10 +7,10 @@
 This example demonstrates how to use pre-existing secrets to authenticate to external services. This allows for
 credentials to be stored in different secret stores, as long as it resolves to a Kubernetes Secret.
 
-
 ## Values
 
 ```yaml
+---
 cluster:
   name: external-secrets-example-cluster
 

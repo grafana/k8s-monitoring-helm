@@ -8,7 +8,7 @@
 ![Version: 1.0.0](https://img.shields.io/badge/Version-1.0.0-informational?style=flat-square) ![AppVersion: 1.0.0](https://img.shields.io/badge/AppVersion-1.0.0-informational?style=flat-square)
 Gathers metrics automatically based on Kubernetes Pod and Service annotations
 
-The annotation-based autodiscovery feature makes it very simple to add scrape targets. With this feature enabled, any
+The annotation-based autodiscovery feature makes it easy to add scrape targets. With this feature enabled, any
 Kubernetes Pods or Services with the `k8s.grafana.com/scrape` annotation set to `true` will be automatically discovered
 and scraped by the collector. There are several other annotations that can be used to customize the behavior of the
 scrape configuration, such as:

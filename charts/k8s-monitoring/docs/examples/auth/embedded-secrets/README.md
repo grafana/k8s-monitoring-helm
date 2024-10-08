@@ -10,6 +10,7 @@ secret data directly into the destination configuration.
 ## Values
 
 ```yaml
+---
 cluster:
   name: embedded-secrets-example-cluster
 

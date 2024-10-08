@@ -59,4 +59,5 @@ alloy-singleton:
 alloy-logs:
   enabled: true
   controller:
-    podAnnotations: {kubernetes.azure.com/set-kube-service-host-fqdn: "true"}```
+    podAnnotations: {kubernetes.azure.com/set-kube-service-host-fqdn: "true"}
+```

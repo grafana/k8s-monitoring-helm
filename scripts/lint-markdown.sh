@@ -15,7 +15,8 @@ fi
 (return 0 2>/dev/null) && sourced=1 || sourced=0
 
 statusCode=0
-./node_modules/.bin/markdownlint-cli2 ./*.md ./**/*.md "#node_modules" "#data-alloy" "#charts/**/data-alloy"
+# shellcheck disable=SC2046
+./node_modules/.bin/markdownlint-cli2 $(find . -name "*.md" ! -path "./node_modules/*" ! -path "./data-alloy/*" ! -path "./charts/**/data-alloy/*")
 currentCode="$?"
 # only override the statusCode if it is 0
 if [[ "${statusCode}" == 0 ]]; then

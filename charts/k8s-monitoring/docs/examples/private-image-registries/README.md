@@ -15,6 +15,7 @@ If you do not want to use the `global` object, registry and pull secrets can be 
 ## Values
 
 ```yaml
+---
 cluster:
   name: private-image-registries-example-cluster
 

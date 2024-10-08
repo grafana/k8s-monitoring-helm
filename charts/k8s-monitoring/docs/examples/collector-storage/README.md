@@ -11,6 +11,7 @@ store log file positions, so it knows where to start reading logs from after a r
 ## Values
 
 ```yaml
+---
 cluster:
   name: collector-storage-example-cluster
 
@@ -64,4 +65,5 @@ alloy-logs:
         - name: alloy-log-positions
           hostPath:
             path: /var/alloy-log-storage
-            type: DirectoryOrCreate```
+            type: DirectoryOrCreate
+```

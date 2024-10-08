@@ -11,6 +11,7 @@ token inside the values file. The Loki destination gets a bearer token from an e
 ## Values
 
 ```yaml
+---
 cluster:
   name: bearer-token-example-cluster
 
