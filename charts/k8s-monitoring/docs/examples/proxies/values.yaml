@@ -1,0 +1,71 @@
+---
+cluster:
+  name: proxies-example-cluster
+
+destinations:
+  - name: prometheus
+    type: prometheus
+    url: http://prometheus.prometheus.svc:9090/api/v1/write
+    proxyURL: https://myproxy.default.svc:8080
+    tls:
+      insecure_skip_verify: true
+
+  - name: loki
+    type: loki
+    url: http://loki.loki.svc:3100/loki/api/v1/push
+    proxyURL: https://myproxy.default.svc:8080
+    tls:
+      insecure_skip_verify: true
+
+  - name: tempo
+    type: otlp
+    url: http://tempo.tempo.svc:4317
+    tls:
+      insecure_skip_verify: true
+
+  - name: pyroscope
+    type: pyroscope
+    url: http://pyroscope.pyroscope.svc:4040
+    proxyURL: https://myproxy.default.svc:8080
+    tls:
+      insecure_skip_verify: true
+
+clusterMetrics:
+  enabled: true
+
+clusterEvents:
+  enabled: true
+
+applicationObservability:
+  enabled: true
+  receivers:
+    grpc:
+      enabled: true
+
+podLogs:
+  enabled: true
+
+profiling:
+  enabled: true
+
+alloy-metrics:
+  enabled: true
+alloy-singleton:
+  enabled: true
+alloy-logs:
+  enabled: true
+alloy-receiver:
+  enabled: true
+  alloy:
+    extraEnv:
+      - name: HTTP_PROXY
+        value: https://myproxy.default.svc:8080
+      - name: NO_PROXY
+        value: kubernetes.default.svc
+    extraPorts:
+      - name: otlp-grpc
+        port: 4317
+        targetPort: 4317
+        protocol: TCP
+alloy-profiles:
+  enabled: true

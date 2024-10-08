@@ -1,0 +1,26 @@
+---
+cluster:
+  name: autoscaling-example-cluster
+
+destinations:
+  - name: prometheus
+    type: prometheus
+    url: http://prometheus.prometheus.svc:9090/api/v1/write
+
+clusterMetrics:
+  enabled: true
+
+alloy-metrics:
+  enabled: true
+  alloy:
+    resources:
+      requests:
+        cpu: "1m"
+        memory: "500Mi"
+  controller:
+    autoscaling:
+      enabled: true
+      minReplicas: 2
+      maxReplicas: 10
+      targetCPUUtilizationPercentage: 0
+      targetMemoryUtilizationPercentage: 80

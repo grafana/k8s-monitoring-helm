@@ -1,0 +1,55 @@
+---
+cluster:
+  name: collector-storage-example-cluster
+
+destinations:
+  - name: prometheus
+    type: prometheus
+    url: http://prometheus.prometheus.svc:9090/api/v1/write
+
+  - name: loki
+    type: loki
+    url: http://loki.loki.svc:3100/loki/api/v1/push
+
+clusterMetrics:
+  enabled: true
+
+podLogs:
+  enabled: true
+
+alloy-metrics:
+  enabled: true
+  alloy:
+    storagePath: /var/lib/alloy
+    mounts:
+      extra:
+        - name: alloy-wal
+          mountPath: /var/lib/alloy
+
+  controller:
+    enableStatefulSetAutoDeletePVC: true
+    volumeClaimTemplates:
+      - metadata:
+          name: alloy-wal
+        spec:
+          accessModes: ["ReadWriteOnce"]
+          storageClassName: "standard"
+          resources:
+            requests:
+              storage: 5Gi
+
+alloy-logs:
+  enabled: true
+  alloy:
+    storagePath: /var/lib/alloy
+    mounts:
+      extra:
+        - name: alloy-log-positions
+          mountPath: /var/lib/alloy
+  controller:
+    volumes:
+      extra:
+        - name: alloy-log-positions
+          hostPath:
+            path: /var/alloy-log-storage
+            type: DirectoryOrCreate

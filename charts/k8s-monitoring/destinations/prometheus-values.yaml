@@ -50,7 +50,7 @@ metricProcessingRules: ""
 
 auth:
   # -- The type of authentication to do.
-  # Options are "none" (default), "basic", "bearerToken".
+  # Options are "none" (default), "basic", "bearerToken", "sigv4".
   # @default -- none
   # @section -- Authentication
   type: "none"
@@ -85,10 +85,45 @@ auth:
   # @section -- Authentication - Bearer Token
   bearerTokenFrom: ""
 
+  # Authentication using AWS Signature Version 4
+  sigv4:
+    # -- The access key for sigv4 authentication.
+    # @section -- Authentication - SigV4
+    accessKey: ""
+    # -- The key for storing the access key in the secret.
+    # @section -- Authentication - SigV4
+    accessKeyKey: "accessKey"
+    # -- Raw config for accessing the access key.
+    # @section -- Authentication - SigV4
+    accessKeyFrom: ""
+
+    # -- The secret key for sigv4 authentication.
+    # @section -- Authentication - SigV4
+    secretKey: ""
+    # -- The key for storing the secret key in the secret.
+    # @section -- Authentication - Sig
+    secretKeyKey: "secretKey"
+    # -- Raw config for accessing the secret key.
+    # @section -- Authentication - SigV4
+    secretKeyFrom: ""
+
+    # -- The named AWS profile for sigv4 authentication.
+    # @section -- Authentication - SigV4
+    profile: ""
+
+    # -- The AWS region for sigv4 authentication.
+    # @section -- Authentication - SigV4
+    region: ""
+
+    # -- The Role ARN for sigv4 authentication.
+    # @section -- Authentication - SigV4
+    roleArn: ""
+
 secret:
-  # -- Whether to create a secret for this Prometheus destination.
+  # -- (bool) Whether to create a secret for this Prometheus destination.
+  # @default -- `true`
   # @section -- Secret
-  create: true
+  create:
   # -- If true, skip secret creation and embed the credentials directly into the configuration.
   # @section -- Secret
   embed: false

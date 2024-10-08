@@ -1,0 +1,60 @@
+---
+cluster:
+  name: bearer-token-example-cluster
+
+destinations:
+  - name: prometheus
+    type: prometheus
+    url: http://prometheus.prometheus.svc:9090/api/v1/write
+    auth:
+      type: bearerToken
+      bearerToken: sample-bearer-token
+
+  - name: loki
+    type: loki
+    url: http://loki.loki.svc:3100/loki/api/v1/push
+    auth:
+      type: bearerToken
+      bearerTokenFrom: env("LOKI_BEARER_TOKEN")
+
+  - name: tempo
+    type: otlp
+    url: http://tempo.tempo.svc:4317
+    auth:
+      type: bearerToken
+      bearerTokenKey: tempoBearerToken
+    secret:
+      create: false
+      name: my-tempo-secret
+      namespace: tempo
+
+applicationObservability:
+  enabled: true
+  receivers:
+    grpc:
+      enabled: true
+
+prometheusOperatorObjects:
+  enabled: true
+
+podLogs:
+  enabled: true
+
+alloy-metrics:
+  enabled: true
+
+alloy-logs:
+  enabled: true
+  alloy:
+    extraEnv:
+      - name: LOKI_BEARER_TOKEN
+        value: sample-bearer-token
+
+alloy-receiver:
+  enabled: true
+  alloy:
+    extraPorts:
+      - name: otlp-grpc
+        port: 4317
+        targetPort: 4317
+        protocol: TCP

@@ -33,10 +33,10 @@ This defines the options for defining a destination for logs that use the Loki p
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| externalLabels | object | `{}` | Custom labels to be added to all logs and events. All values are treated as strings and automatically quoted. |
-| externalLabelsFrom | object | `{}` | Custom labels to be added to all logs and events through a dynamic reference. All values are treated as raw strings and not quoted. |
 | extraHeaders | object | `{}` | Extra headers to be set when sending data. All values are treated as strings and automatically quoted. |
 | extraHeadersFrom | object | `{}` | Extra headers to be set when sending data through a dynamic reference. All values are treated as raw strings and not quoted. |
+| extraLabels | object | `{}` | Custom labels to be added to all logs and events. All values are treated as strings and automatically quoted. |
+| extraLabelsFrom | object | `{}` | Custom labels to be added to all logs and events through a dynamic reference. All values are treated as raw strings and not quoted. |
 | name | string | `""` | The name for this Loki destination. |
 | proxyURL | string | `""` | The Proxy URL for the Loki destination. |
 | tenantId | string | `""` | The tenant ID for the Loki destination. |

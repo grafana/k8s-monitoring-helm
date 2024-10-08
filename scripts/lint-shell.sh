@@ -19,10 +19,10 @@ statusCode=0
 # shellcheck disable=SC2046 disable=SC2312
 shellcheck --rcfile="$(pwd)/.shellcheckrc" $(
     comm -23 <(
-      find . -type f -name "*.sh" -not \( -path "./node_modules/*" -o -path "./data-alloy/*" -o -path "./.git/*" -o -path "./charts/k8s-monitoring-v1/test/spec/*" \) | \
+      find . -type f -name "*.sh" -not \( -path "./node_modules/*" -o -path "./data-alloy/*" -o -path "./.git/*" -o -path "./charts/k8s-monitoring-v1/test/spec/*" -o -path "./charts/k8s-monitoring/tests/example-checks/spec/*" \) | \
         sort
       ) <(
-      find . -type f -name "*.sh"  -not \( -path "./node_modules/*" -o -path "./data-alloy/*" -o -path "./.git/*" -o -path "./charts/k8s-monitoring-v1/test/spec/*" \) | \
+      find . -type f -name "*.sh"  -not \( -path "./node_modules/*" -o -path "./data-alloy/*" -o -path "./.git/*" -o -path "./charts/k8s-monitoring-v1/test/spec/*" -o -path "./charts/k8s-monitoring/tests/example-checks/spec/*" \) | \
         git check-ignore --stdin | \
         sort
       )
