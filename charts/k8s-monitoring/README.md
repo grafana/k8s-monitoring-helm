@@ -145,6 +145,7 @@ podLogs:
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
+| alloy-logs.controller.type | string | `"daemonset"` | The type of controller to use for the Alloy Logs instance. |
 | alloy-logs.enabled | bool | `false` | Deploy the Alloy instance for collecting log data. |
 | alloy-logs.extraConfig | string | `""` | Extra Alloy configuration to be added to the configuration file. |
 | alloy-logs.liveDebugging.enabled | bool | `false` | Enable live debugging for the Alloy instance. Requires stability level to be set to "experimental". |
@@ -155,6 +156,8 @@ podLogs:
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
+| alloy-metrics.controller.replicas | int | `1` | The number of replicas for the Alloy Metrics instance. |
+| alloy-metrics.controller.type | string | `"statefulset"` | The type of controller to use for the Alloy Metrics instance. |
 | alloy-metrics.enabled | bool | `false` | Deploy the Alloy instance for collecting metrics. |
 | alloy-metrics.extraConfig | string | `""` | Extra Alloy configuration to be added to the configuration file. |
 | alloy-metrics.liveDebugging.enabled | bool | `false` | Enable live debugging for the Alloy instance. Requires stability level to be set to "experimental". |
@@ -165,6 +168,7 @@ podLogs:
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
+| alloy-profiles.controller.type | string | `"daemonset"` | The type of controller to use for the Alloy Profiles instance. |
 | alloy-profiles.enabled | bool | `false` | Deploy the Alloy instance for gathering profiles. |
 | alloy-profiles.extraConfig | string | `""` | Extra Alloy configuration to be added to the configuration file. |
 | alloy-profiles.liveDebugging.enabled | bool | `false` | Enable live debugging for the Alloy instance. Requires stability level to be set to "experimental". |
@@ -176,6 +180,7 @@ podLogs:
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | alloy-receiver.alloy.extraPorts | list | `[]` | The ports to expose for the Alloy receiver. |
+| alloy-receiver.controller.type | string | `"daemonset"` | The type of controller to use for the Alloy Receiver instance. |
 | alloy-receiver.enabled | bool | `false` | Deploy the Alloy instance for opening receivers to collect application data. |
 | alloy-receiver.extraConfig | string | `""` | Extra Alloy configuration to be added to the configuration file. |
 | alloy-receiver.liveDebugging.enabled | bool | `false` | Enable live debugging for the Alloy instance. Requires stability level to be set to "experimental". |
@@ -186,6 +191,8 @@ podLogs:
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
+| alloy-singleton.controller.replicas | int | `1` | The number of replicas for the Alloy Singleton instance. This should remain a single instance to avoid duplicate data. |
+| alloy-singleton.controller.type | string | `"deployment"` | The type of controller to use for the Alloy Singleton instance. |
 | alloy-singleton.enabled | bool | `false` | Deploy the Alloy instance for data sources required to be deployed on a single replica. |
 | alloy-singleton.extraConfig | string | `""` | Extra Alloy configuration to be added to the configuration file. |
 | alloy-singleton.liveDebugging.enabled | bool | `false` | Enable live debugging for the Alloy instance. Requires stability level to be set to "experimental". |
@@ -288,8 +295,4 @@ podLogs:
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| alloy-logs | object | `{"controller":{"nodeSelector":{"kubernetes.io/os":"linux"},"type":"daemonset"},"enabled":false,"extraConfig":"","liveDebugging":{"enabled":false},"logging":{"format":"logfmt","level":"info"}}` | An Alloy instance for collecting log data. |
-| alloy-metrics | object | `{"crds":{"create":false},"enabled":false,"extraConfig":"","liveDebugging":{"enabled":false},"logging":{"format":"logfmt","level":"info"}}` | An Alloy instance for collecting metrics. |
-| alloy-profiles | object | `{"enabled":false,"extraConfig":"","liveDebugging":{"enabled":false},"logging":{"format":"logfmt","level":"info"}}` | An Alloy instance for gathering profiles. |
-| alloy-receiver | object | `{"alloy":{"extraPorts":[]},"controller":{"nodeSelector":{"kubernetes.io/os":"linux"},"type":"daemonset"},"enabled":false,"extraConfig":"","liveDebugging":{"enabled":false},"logging":{"format":"logfmt","level":"info"}}` | An Alloy instance for opening receivers to collect application data. |
-| alloy-singleton | object | `{"controller":{"nodeSelector":{"kubernetes.io/os":"linux"},"podAnnotations":{"k8s.grafana.com/logs.job":"integrations/alloy"},"replicas":1,"type":"deployment"},"enabled":false,"extraConfig":"","liveDebugging":{"enabled":false},"logging":{"format":"logfmt","level":"info"}}` | An Alloy instance for data sources required to be deployed on a single replica. |
+| extraObjects | list | `[]` | Deploy additional manifest objects |
