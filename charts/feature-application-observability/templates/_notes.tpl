@@ -21,3 +21,12 @@ Configure your applications to send telemetry data to:
 * http://{{ .Collector.ServiceName }}.{{ .Collector.Namespace }}.svc.cluster.local:{{ .Values.receivers.zipkin.port }} (Zipkin)
 {{ end }}
 {{- end }}
+
+{{- define "feature.applicationObservability.summary" -}}
+{{- $receivers := list }}
+{{- if .Values.receivers.grpc.enabled }}{{- $receivers = append $receivers "otlpgrpc" }}{{ end }}
+{{- if .Values.receivers.http.enabled }}{{- $receivers = append $receivers "otlphttp" }}{{ end }}
+{{- if .Values.receivers.zipkin.enabled }}{{- $receivers = append $receivers "zipkin" }}{{ end }}
+version: {{ .Chart.Version }}
+protocols: {{ $receivers | join "," }}
+{{- end }}

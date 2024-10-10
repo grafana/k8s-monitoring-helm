@@ -1,0 +1,79 @@
+{{- define "features.selfReporting.enabled" -}}
+{{- $metricsDestinations := include "destinations.get" (dict "destinations" $.Values.destinations "type" "metrics" "ecosystem" "otlp" "filter" $.Values.applicationObservability.destinations) | fromYamlArray -}}
+{{ and .Values.selfReporting.enabled $metricsDestinations }}
+{{- end -}}
+
+{{- define "features.selfReporting.collectors" -}}
+{{- if .Values.selfReporting.enabled}}
+  {{- $collectorsByIncreasingPreference := list "alloy-receiver" "alloy-metrics" "alloy-singleton" }}
+  {{- $chosenCollector := "" }}
+  {{- range $collector := $collectorsByIncreasingPreference }}
+    {{- if (index $.Values $collector).enabled }}{{- $chosenCollector = $collector }}{{- end -}}
+  {{- end -}}
+- {{ $chosenCollector }}
+  {{- end -}}
+{{- end }}
+
+{{- define "features.selfReporting.destinations" }}
+{{- if .Values.clusterMetrics.enabled -}}
+{{- include "destinations.get" (dict "destinations" $.Values.destinations "type" "metrics" "ecosystem" "prometheus" "filter" $.Values.clusterMetrics.destinations) -}}
+{{- end -}}
+{{ end }}
+
+{{- define "features.selfReporting.validate" }}{{ end }}
+{{- define "features.selfReporting.include" }}
+{{- $destinations := include "destinations.get" (dict "destinations" $.Values.destinations "type" "metrics" "ecosystem" "otlp" "filter" $.Values.applicationObservability.destinations) | fromYamlArray -}}
+
+// Self Reporting
+prometheus.exporter.unix "kubernetes_monitoring_telemetry" {
+  set_collectors = ["textfile"]
+  textfile {
+    directory = "/etc/alloy"
+  }
+}
+
+discovery.relabel "kubernetes_monitoring_telemetry" {
+  targets = prometheus.exporter.unix.kubernetes_monitoring_telemetry.targets
+  rule {
+    target_label = "instance"
+    action = "replace"
+    replacement = "{{ .Release.Name }}"
+  }
+  rule {
+    target_label = "job"
+    action = "replace"
+    replacement = "integrations/kubernetes/kubernetes_monitoring_telemetry"
+  }
+}
+
+prometheus.scrape "kubernetes_monitoring_telemetry" {
+  job_name   = "integrations/kubernetes/kubernetes_monitoring_telemetry"
+  targets    = discovery.relabel.kubernetes_monitoring_telemetry.output
+  scrape_interval = {{ .Values.selfReporting.scrapeInterval | default "1h" | quote}}
+  clustering {
+    enabled = true
+  }
+  forward_to = [
+    {{ include "destinations.alloy.targets" (dict "destinations" $.Values.destinations "names" $destinations "type" "metrics" "ecosystem" "prometheus") | indent 4 | trim }}
+  ]
+}
+{{ end }}
+
+{{- define "features.selfReporting.file" }}
+self-reporting-metric.prom: |
+  # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart
+  # TYPE grafana_kubernetes_monitoring_build_info gauge
+  grafana_kubernetes_monitoring_build_info{version="{{ .Chart.Version }}", namespace="{{ .Release.Namespace }}", platform="{{ .Values.global.platform }}"} 1
+  # HELP grafana_kubernetes_monitoring_feature_info A metric to report the enabled features of the Kubernetes Monitoring Helm chart
+  # TYPE grafana_kubernetes_monitoring_feature_info gauge
+{{- range $feature := include "features.list.enabled" . | fromYamlArray }}
+  {{- if ne $feature "selfReporting" }}
+    {{- $featureSummary := include (printf "feature.%s.summary" $feature) (dict "Chart" (index $.Subcharts $feature).Chart "Values" (index $.Values $feature)) | fromYaml }}
+  grafana_kubernetes_monitoring_feature_info{{ include "label_list" (merge $featureSummary (dict "feature" $feature)) }} 1
+    {{- end }}
+  {{- end }}
+{{- end }}
+
+{{- define "feature.selfReporting.notes.deployments" }}{{ end }}
+{{- define "feature.selfReporting.notes.task" }}{{ end }}
+{{- define "feature.selfReporting.notes.actions" }}{{ end }}

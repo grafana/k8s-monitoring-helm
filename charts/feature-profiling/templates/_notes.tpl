@@ -5,3 +5,8 @@ Gather profiles
 {{- end }}
 
 {{- define "feature.profiling.notes.actions" }}{{- end }}
+
+{{- define "feature.profiling.summary" -}}
+version: {{ .Chart.Version }}
+method: {{ .Values.gatherMethod }}
+{{- end }}

@@ -1,4 +1,11 @@
 {{- define "features.frontendObservability.enabled" }}{{ .Values.frontendObservability.enabled }}{{- end }}
+
+{{- define "features.frontendObservability.collectors" }}
+{{- if .Values.frontendObservability.enabled -}}
+- {{ .Values.frontendObservability.collector }}
+{{- end }}
+{{- end }}
+
 {{- define "features.frontendObservability.include" }}
 {{- if .Values.frontendObservability.enabled -}}
 {{- $destinations := include "features.frontendObservability.destinations" . | fromYamlArray }}

@@ -1,4 +1,11 @@
 {{- define "features.podLogs.enabled" }}{{ .Values.podLogs.enabled }}{{- end }}
+
+{{- define "features.podLogs.collectors" }}
+{{- if .Values.podLogs.enabled -}}
+- {{ .Values.podLogs.collector }}
+{{- end }}
+{{- end }}
+
 {{- define "features.podLogs.include" }}
 {{- if .Values.podLogs.enabled -}}
 {{- $destinations := include "features.podLogs.destinations" . | fromYamlArray }}

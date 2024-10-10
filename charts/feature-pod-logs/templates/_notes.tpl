@@ -6,3 +6,7 @@ Gather logs from Kubernetes Pods
 
 {{- define "feature.podLogs.notes.actions" }}{{- end }}
 
+{{- define "feature.podLogs.summary" -}}
+version: {{ .Chart.Version }}
+method: {{ .Values.gatherMethod }}
+{{- end }}

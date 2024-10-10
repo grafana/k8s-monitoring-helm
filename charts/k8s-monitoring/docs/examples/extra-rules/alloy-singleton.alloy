@@ -1,3 +1,51 @@
+// Destination: prometheus (prometheus)
+otelcol.exporter.prometheus "prometheus" {
+  forward_to = [prometheus.remote_write.prometheus.receiver]
+}
+
+prometheus.remote_write "prometheus" {
+  endpoint {
+    url = "http://prometheus.prometheus.svc:9090/api/v1/write"
+    headers = {
+    }
+    tls_config {
+      insecure_skip_verify = false
+    }
+    send_native_histograms = false
+    queue_config {
+      capacity = 10000
+      min_shards = 1
+      max_shards = 50
+      max_samples_per_send = 2000
+      batch_send_deadline = "5s"
+      min_backoff = "30ms"
+      max_backoff = "5s"
+      retry_on_http_429 = true
+      sample_age_limit = "0s"
+    }
+    write_relabel_config {
+      source_labels = ["cluster"]
+      regex = ""
+      replacement = "extra-rules-example-cluster"
+      target_label = "cluster"
+    }
+    write_relabel_config {
+      source_labels = ["k8s.cluster.name"]
+      regex = ""
+      replacement = "extra-rules-example-cluster"
+      target_label = "cluster"
+    }
+    write_relabel_config {
+      source_labels = ["__name__"]
+      regex = "metric_to_drop|another_metric_to_drop"
+      action = "drop"
+    }
+  }
+  external_labels = {
+    site = "lab2",
+    region = env("REGION"),
+  }
+}
 // Destination: loki (loki)
 otelcol.exporter.loki "loki" {
   forward_to = [loki.write.loki.receiver]
@@ -61,3 +109,38 @@ cluster_events "feature" {
     loki.write.loki.receiver,
   ]
 }
+
+// Self Reporting
+prometheus.exporter.unix "kubernetes_monitoring_telemetry" {
+  set_collectors = ["textfile"]
+  textfile {
+    directory = "/etc/alloy"
+  }
+}
+
+discovery.relabel "kubernetes_monitoring_telemetry" {
+  targets = prometheus.exporter.unix.kubernetes_monitoring_telemetry.targets
+  rule {
+    target_label = "instance"
+    action = "replace"
+    replacement = "ko"
+  }
+  rule {
+    target_label = "job"
+    action = "replace"
+    replacement = "integrations/kubernetes/kubernetes_monitoring_telemetry"
+  }
+}
+
+prometheus.scrape "kubernetes_monitoring_telemetry" {
+  job_name   = "integrations/kubernetes/kubernetes_monitoring_telemetry"
+  targets    = discovery.relabel.kubernetes_monitoring_telemetry.output
+  scrape_interval = "1h"
+  clustering {
+    enabled = true
+  }
+  forward_to = [
+    prometheus.remote_write.prometheus.receiver,
+  ]
+}
+

@@ -31,3 +31,11 @@
 {{- join ", " $rest }}, and {{ $last }}
 {{- end }}
 {{- end }}
+
+{{- define "label_list" }}
+{{- $labels := list }}
+{{- range $key, $value := . }}
+  {{- $labels = append $labels (printf "%s=\"%s\"" $key $value) }}
+{{- end }}
+{{- printf "{%s}" ($labels | join ", ") }}
+{{- end }}

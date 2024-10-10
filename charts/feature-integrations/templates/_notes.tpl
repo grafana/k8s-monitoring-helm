@@ -6,3 +6,7 @@ Gather data from service integrations
 {{- end }}
 
 {{- define "feature.integrations.notes.actions" }}{{- end }}
+
+{{- define "feature.integrations.summary" -}}
+version: {{ .Chart.Version }}
+{{- end }}

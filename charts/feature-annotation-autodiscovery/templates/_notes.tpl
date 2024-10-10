@@ -5,3 +5,7 @@ Scrape metrics from pods and services with the "{{.Values.annotations.scrape}}: 
 {{- end }}
 
 {{- define "feature.annotationAutodiscovery.notes.actions" }}{{- end }}
+
+{{- define "feature.annotationAutodiscovery.summary" -}}
+version: {{ .Chart.Version }}
+{{- end }}

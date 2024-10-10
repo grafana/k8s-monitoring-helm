@@ -47,14 +47,160 @@ metadata:
     app.kubernetes.io/part-of: alloy
     app.kubernetes.io/component: rbac
 ---
-# Source: k8s-monitoring/templates/alloy-logs-config.yaml
+# Source: k8s-monitoring/templates/alloy-config.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ko-alloy-metrics
+  namespace: default
+data:
+  config.alloy: |
+    // Destination: prometheus (prometheus)
+    otelcol.exporter.prometheus "prometheus" {
+      forward_to = [prometheus.remote_write.prometheus.receiver]
+    }
+    
+    prometheus.remote_write "prometheus" {
+      endpoint {
+        url = "http://prometheus.prometheus.svc:9090/api/v1/write"
+        headers = {
+        }
+        sigv4 {
+          access_key = "my-access-key"
+          region = "ap-southeast-2"
+          secret_key = "my-secret-key"
+        }
+        tls_config {
+          insecure_skip_verify = false
+          ca_pem = ""
+          cert_pem = ""
+          key_pem = ""
+        }
+        send_native_histograms = false
+        queue_config {
+          capacity = 10000
+          min_shards = 1
+          max_shards = 50
+          max_samples_per_send = 2000
+          batch_send_deadline = "5s"
+          min_backoff = "30ms"
+          max_backoff = "5s"
+          retry_on_http_429 = true
+          sample_age_limit = "0s"
+        }
+        write_relabel_config {
+          source_labels = ["cluster"]
+          regex = ""
+          replacement = "embedded-secrets-example-cluster"
+          target_label = "cluster"
+        }
+        write_relabel_config {
+          source_labels = ["k8s.cluster.name"]
+          regex = ""
+          replacement = "embedded-secrets-example-cluster"
+          target_label = "cluster"
+        }
+      }
+    }
+    
+    // Feature: Prometheus Operator Objects
+    declare "prometheus_operator_objects" {
+      argument "metrics_destinations" {
+        comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
+      }
+      
+      // Prometheus Operator podMonitor objects
+      prometheus.operator.podmonitors "pod_monitors" {
+        clustering {
+          enabled = true
+        }
+        scrape {
+          default_scrape_interval = "60s"
+        }
+        forward_to = argument.metrics_destinations.value
+      }
+      
+      // Prometheus Operator podMonitor objects
+      prometheus.operator.probes "pod_monitors" {
+        clustering {
+          enabled = true
+        }
+        scrape {
+          default_scrape_interval = "60s"
+        }
+        forward_to = argument.metrics_destinations.value
+      }
+      
+      // Prometheus Operator ServiceMonitor objects
+      prometheus.operator.servicemonitors "service_monitors" {
+        clustering {
+          enabled = true
+        }
+        scrape {
+          default_scrape_interval = "60s"
+        }
+        forward_to = argument.metrics_destinations.value
+      }
+    }
+    prometheus_operator_objects "feature" {
+      metrics_destinations = [
+        prometheus.remote_write.prometheus.receiver,
+      ]
+    }
+    
+    // Self Reporting
+    prometheus.exporter.unix "kubernetes_monitoring_telemetry" {
+      set_collectors = ["textfile"]
+      textfile {
+        directory = "/etc/alloy"
+      }
+    }
+    
+    discovery.relabel "kubernetes_monitoring_telemetry" {
+      targets = prometheus.exporter.unix.kubernetes_monitoring_telemetry.targets
+      rule {
+        target_label = "instance"
+        action = "replace"
+        replacement = "ko"
+      }
+      rule {
+        target_label = "job"
+        action = "replace"
+        replacement = "integrations/kubernetes/kubernetes_monitoring_telemetry"
+      }
+    }
+    
+    prometheus.scrape "kubernetes_monitoring_telemetry" {
+      job_name   = "integrations/kubernetes/kubernetes_monitoring_telemetry"
+      targets    = discovery.relabel.kubernetes_monitoring_telemetry.output
+      scrape_interval = "1h"
+      clustering {
+        enabled = true
+      }
+      forward_to = [
+        prometheus.remote_write.prometheus.receiver,
+      ]
+    }
+    
+    
+  self-reporting-metric.prom: |
+    # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart
+    # TYPE grafana_kubernetes_monitoring_build_info gauge
+    grafana_kubernetes_monitoring_build_info{version="2.0.0-alpha.1", namespace="default", platform=""} 1
+    # HELP grafana_kubernetes_monitoring_feature_info A metric to report the enabled features of the Kubernetes Monitoring Helm chart
+    # TYPE grafana_kubernetes_monitoring_feature_info gauge
+    grafana_kubernetes_monitoring_feature_info{feature="applicationObservability", protocols="otlpgrpc", version="1.0.0"} 1
+    grafana_kubernetes_monitoring_feature_info{feature="podLogs", method="volumes", version="1.0.0"} 1
+    grafana_kubernetes_monitoring_feature_info{feature="prometheusOperatorObjects", version="1.0.0"} 1
+---
+# Source: k8s-monitoring/templates/alloy-config.yaml
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: ko-alloy-logs
   namespace: default
 data:
-  config.alloy: |-
+  config.alloy: |
     // Destination: loki (loki)
     otelcol.exporter.loki "loki" {
       forward_to = [loki.write.loki.receiver]
@@ -71,6 +217,7 @@ data:
         "k8s_cluster_name" = "embedded-secrets-example-cluster",
       }
     }
+    
     // Feature: Pod Logs
     declare "pod_logs" {
       argument "logs_destinations" {
@@ -187,116 +334,14 @@ data:
       ]
     }
 ---
-# Source: k8s-monitoring/templates/alloy-metrics-config.yaml
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: ko-alloy-metrics
-  namespace: default
-data:
-  config.alloy: |-
-    // Destination: prometheus (prometheus)
-    otelcol.exporter.prometheus "prometheus" {
-      forward_to = [prometheus.remote_write.prometheus.receiver]
-    }
-    
-    prometheus.remote_write "prometheus" {
-      endpoint {
-        url = "http://prometheus.prometheus.svc:9090/api/v1/write"
-        headers = {
-        }
-        sigv4 {
-          access_key = "my-access-key"
-          region = "ap-southeast-2"
-          secret_key = "my-secret-key"
-        }
-        tls_config {
-          insecure_skip_verify = false
-          ca_pem = ""
-          cert_pem = ""
-          key_pem = ""
-        }
-        send_native_histograms = false
-        queue_config {
-          capacity = 10000
-          min_shards = 1
-          max_shards = 50
-          max_samples_per_send = 2000
-          batch_send_deadline = "5s"
-          min_backoff = "30ms"
-          max_backoff = "5s"
-          retry_on_http_429 = true
-          sample_age_limit = "0s"
-        }
-        write_relabel_config {
-          source_labels = ["cluster"]
-          regex = ""
-          replacement = "embedded-secrets-example-cluster"
-          target_label = "cluster"
-        }
-        write_relabel_config {
-          source_labels = ["k8s.cluster.name"]
-          regex = ""
-          replacement = "embedded-secrets-example-cluster"
-          target_label = "cluster"
-        }
-      }
-    }
-    
-    
-    // Feature: Prometheus Operator Objects
-    declare "prometheus_operator_objects" {
-      argument "metrics_destinations" {
-        comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
-      }
-      
-      // Prometheus Operator podMonitor objects
-      prometheus.operator.podmonitors "pod_monitors" {
-        clustering {
-          enabled = true
-        }
-        scrape {
-          default_scrape_interval = "60s"
-        }
-        forward_to = argument.metrics_destinations.value
-      }
-      
-      // Prometheus Operator podMonitor objects
-      prometheus.operator.probes "pod_monitors" {
-        clustering {
-          enabled = true
-        }
-        scrape {
-          default_scrape_interval = "60s"
-        }
-        forward_to = argument.metrics_destinations.value
-      }
-      
-      // Prometheus Operator ServiceMonitor objects
-      prometheus.operator.servicemonitors "service_monitors" {
-        clustering {
-          enabled = true
-        }
-        scrape {
-          default_scrape_interval = "60s"
-        }
-        forward_to = argument.metrics_destinations.value
-      }
-    }
-    prometheus_operator_objects "feature" {
-      metrics_destinations = [
-        prometheus.remote_write.prometheus.receiver,
-      ]
-    }
----
-# Source: k8s-monitoring/templates/alloy-receiver-config.yaml
+# Source: k8s-monitoring/templates/alloy-config.yaml
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: ko-alloy-receiver
   namespace: default
 data:
-  config.alloy: |-
+  config.alloy: |
     // Destination: prometheus (prometheus)
     otelcol.exporter.prometheus "prometheus" {
       forward_to = [prometheus.remote_write.prometheus.receiver]
@@ -402,7 +447,6 @@ data:
         }
       }
     }
-    
     
     // Feature: Application Observability
     declare "application_observability" {

@@ -6,6 +6,14 @@
 - alloy-profiles
 {{- end }}
 
+{{- define "collectors.list.enabled" -}}
+{{- range $collector := ((include "collectors.list" .) | fromYamlArray ) }}
+  {{- if (index $.Values $collector).enabled }}
+- {{ $collector }}
+  {{- end }}
+{{- end }}
+{{- end }}
+
 {{/* Inputs: Values (all values), name (collector name), feature (feature name) */}}
 {{- define "collectors.require_collector" -}}
 {{- if not (index .Values .name).enabled }}

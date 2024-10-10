@@ -4,6 +4,17 @@
 {{- if or $metricIntegrations $logIntegrations }}true{{ else }}false{{ end }}
 {{- end }}
 
+{{- define "features.integrations.collectors" }}
+{{- $metricIntegrations := include "feature.integrations.configured.metrics" (dict "Values" .Values.integrations) | fromYamlArray }}
+{{- $logIntegrations := include "feature.integrations.configured.logs" (dict "Values" .Values.integrations) | fromYamlArray }}
+{{- if $logIntegrations }}
+- {{ .Values.integrations.collectors.metrics }}
+{{- end }}
+{{- if $logIntegrations }}
+- {{ .Values.integrations.collectors.logs }}
+{{- end }}
+{{- end }}
+
 {{- define "features.integrations.metrics.include" }}
 {{- $destinations := include "features.integrations.destinations.metrics" . | fromYamlArray }}
 {{- $integrations := include "feature.integrations.configured.metrics" (dict "Values" .Values.integrations) | fromYamlArray }}

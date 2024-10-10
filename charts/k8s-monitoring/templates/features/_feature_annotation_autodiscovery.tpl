@@ -1,4 +1,11 @@
 {{- define "features.annotationAutodiscovery.enabled" }}{{ .Values.annotationAutodiscovery.enabled }}{{- end }}
+
+{{- define "features.annotationAutodiscovery.collectors" }}
+{{- if .Values.annotationAutodiscovery.enabled -}}
+- {{ .Values.annotationAutodiscovery.collector }}
+{{- end }}
+{{- end }}
+
 {{- define "features.annotationAutodiscovery.include" }}
 {{- if .Values.annotationAutodiscovery.enabled -}}
 {{- $destinations := include "features.annotationAutodiscovery.destinations" . | fromYamlArray }}

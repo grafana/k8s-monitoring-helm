@@ -1,4 +1,11 @@
 {{- define "features.applicationObservability.enabled" }}{{ .Values.applicationObservability.enabled }}{{- end }}
+
+{{- define "features.applicationObservability.collectors" }}
+{{- if .Values.applicationObservability.enabled -}}
+- {{ .Values.applicationObservability.collector }}
+{{- end }}
+{{- end }}
+
 {{- define "features.applicationObservability.include" }}
 {{- if .Values.applicationObservability.enabled -}}
 {{- $destinations := include "features.applicationObservability.destinations" . | fromYamlArray }}
