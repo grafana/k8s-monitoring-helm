@@ -33,7 +33,7 @@ Operator objects. Currently, this feature supports the following objects:
 
 | Repository | Name | Version |
 |------------|------|---------|
-| https://prometheus-community.github.io/helm-charts | crds(prometheus-operator-crds) | 14.0.0 |
+| https://prometheus-community.github.io/helm-charts | crds(prometheus-operator-crds) | 15.0.0 |
 <!-- markdownlint-enable no-bare-urls -->
 ## Values
 
