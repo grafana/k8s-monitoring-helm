@@ -1,5 +1,6 @@
 {{- $collectorName := "alloy-singleton" }}
 {{- if (index .Values $collectorName).enabled }}
+{{- $selfReportingEnabled := eq (include "features.self_reporting.collector" .) $collectorName}}
 {{- $destinations := include "features.clusterEvents.destinations" . | fromYamlArray }}
 ---
 apiVersion: v1
@@ -18,4 +19,7 @@ data:
     {{- if (index .Values $collectorName).extraConfig }}
       {{ (index .Values $collectorName).extraConfig | trim | nindent 4 }}
     {{- end }}
+{{- if $selfReportingEnabled }}
+  {{- include "features.self_reporting.file" . | nindent 2 }}
+{{- end }}
 {{- end }}
