@@ -14,6 +14,7 @@
 
 kubernetes.resources "scrape" {
   clustering = true
+  job_label = "integrations/kubernetes/resources"
 {{- if $metricAllowList }}
   keep_metrics = "up|{{ $metricAllowList | fromYamlArray | join "|" }}"
 {{- end }}
