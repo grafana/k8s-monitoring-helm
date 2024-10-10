@@ -516,6 +516,40 @@ prometheus.relabel "kubelet" {
   forward_to = [prometheus.relabel.metrics_service.receiver]
 }
 
+// Kubelet Resource
+discovery.relabel "kubelet_resource" {
+  targets = discovery.kubernetes.nodes.targets
+  rule {
+    replacement   = "/metrics/resource"
+    target_label  = "__metrics_path__"
+  }
+}
+
+prometheus.scrape "kubelet_resource" {
+  job_name   = "integrations/kubernetes/kubelet/resource"
+  targets  = discovery.relabel.kubelet_resource.output
+  scheme   = "https"
+  scrape_interval = "60s"
+  bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+  tls_config {
+    insecure_skip_verify = true
+  }
+  clustering {
+    enabled = true
+  }
+  forward_to = [prometheus.relabel.kubelet_resource.receiver]
+}
+
+prometheus.relabel "kubelet_resource" {
+  max_cache_size = 100000
+  rule {
+    source_labels = ["__name__"]
+    regex = "up|node_cpu_usage_seconds_total|node_memory_working_set_bytes"
+    action = "keep"
+  }
+  forward_to = [prometheus.relabel.metrics_service.receiver]
+}
+
 // cAdvisor
 discovery.relabel "cadvisor" {
   targets = discovery.kubernetes.nodes.targets
