@@ -31,6 +31,7 @@ These queries are added by default and are used if their respective metric sourc
 |                           | `up`                                                                        | `metrics.enabled: true`                                                  |
 | Grafana Alloy             | `alloy_build_info{cluster="<clusterName>"}`                                 | `metrics.enabled: true`<br>`metrics.alloy.enabled: true`                 |
 | Kubelet                   | `kubernetes_build_info{cluster="<clusterName>"}`                            | `metrics.enabled: true`<br>`metrics.kubelet.enabled: true`               |
+| Kubelet Resource          | `node_cpu_usage_seconds_total{cluster="<clusterName>"}                      | `metrics.enabled: true`<br>`metrics.kubeletResource.enabled: true`       |
 | cAdvisor                  | `machine_memory_bytes{cluster="<clusterName>"}`                             | `metrics.enabled: true`<br>`metrics.cadvisor.enabled: true`              |
 | kube-state-metrics        | `kube_node_info{cluster="<clusterName>"}`                                   | `metrics.enabled: true`<br>`metrics.kube-state-metrics.enabled: true`    |
 | Node Exporter             | `node_exporter_build_info{cluster="<clusterName>"}`                         | `metrics.enabled: true`<br>`metrics.node-exporter.enabled: true`         |

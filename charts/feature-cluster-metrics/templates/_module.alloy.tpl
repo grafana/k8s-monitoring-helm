@@ -4,7 +4,7 @@ declare "cluster_metrics" {
     comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
   }
 
-  {{- if or .Values.cadvisor.enabled .Values.kubelet.enabled (or .Values.apiServer.enabled (and .Values.controlPlane.enabled (not (eq .Values.apiServer.enabled false)))) }}
+  {{- if or .Values.cadvisor.enabled .Values.kubelet.enabled .Values.kubeletResource.enabled (or .Values.apiServer.enabled (and .Values.controlPlane.enabled (not (eq .Values.apiServer.enabled false)))) }}
   import.git "kubernetes" {
     repository = "https://github.com/grafana/alloy-modules.git"
     revision = "main"
@@ -13,6 +13,7 @@ declare "cluster_metrics" {
   }
   {{- end }}
   {{- include "feature.clusterMetrics.kubelet.alloy" . | indent 2 }}
+  {{- include "feature.clusterMetrics.kubeletResource.alloy" . | indent 2 }}
   {{- include "feature.clusterMetrics.cadvisor.alloy" . | indent 2 }}
   {{- include "feature.clusterMetrics.apiServer.alloy" . | indent 2 }}
   {{- include "feature.clusterMetrics.kubeControllerManager.alloy" . | indent 2 }}

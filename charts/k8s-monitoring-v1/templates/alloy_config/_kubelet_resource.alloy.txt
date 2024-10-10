@@ -1,0 +1,80 @@
+{{ define "alloy.config.kubelet_resource.allowList" }}
+{{ if .Values.metrics.kubeletResource.metricsTuning.useDefaultAllowList }}
+{{ "default_allow_lists/kubelet_resource.yaml" | .Files.Get }}
+{{ end }}
+{{ if .Values.metrics.kubeletResource.metricsTuning.includeMetrics }}
+{{ .Values.metrics.kubeletResource.metricsTuning.includeMetrics | toYaml }}
+{{ end }}
+{{ end }}
+
+{{ define "alloy.config.kubelet_resource" }}
+// Kubelet Resource
+discovery.relabel "kubelet_resource" {
+  targets = discovery.kubernetes.nodes.targets
+{{- if eq .Values.metrics.kubeletResource.nodeAddressFormat "proxy" }}
+  rule {
+    target_label = "__address__"
+    replacement  = "{{ .Values.cluster.kubernetesAPIService }}"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_node_name"]
+    regex         = "(.+)"
+    replacement   = "/api/v1/nodes/${1}/proxy/metrics/resource"
+    target_label  = "__metrics_path__"
+  }
+{{ else if eq .Values.metrics.kubeletResource.nodeAddressFormat "direct" }}
+  rule {
+    replacement   = "/metrics/resource"
+    target_label  = "__metrics_path__"
+  }
+{{- end }}
+{{- if .Values.metrics.extraRelabelingRules }}
+{{ .Values.metrics.extraRelabelingRules | indent 2 }}
+{{- end }}
+{{- if .Values.metrics.kubeletResource.extraRelabelingRules }}
+{{ .Values.metrics.kubeletResource.extraRelabelingRules | indent 2 }}
+{{- end }}
+}
+
+prometheus.scrape "kubelet_resource" {
+  job_name   = "integrations/kubernetes/resources"
+  targets  = discovery.relabel.kubelet_resource.output
+  scheme   = "https"
+  scrape_interval = {{ .Values.metrics.kubeletResource.scrapeInterval | default .Values.metrics.scrapeInterval | quote }}
+  bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+  tls_config {
+    insecure_skip_verify = true
+  }
+{{- if .Values.alloy.alloy.clustering.enabled }}
+  clustering {
+    enabled = true
+  }
+{{- end }}
+  forward_to = [prometheus.relabel.kubelet_resource.receiver]
+}
+
+prometheus.relabel "kubelet_resource" {
+  max_cache_size = {{ .Values.metrics.kubeletResource.maxCacheSize | default .Values.metrics.maxCacheSize | int }}
+{{- if or .Values.metrics.kubeletResource.metricsTuning.useDefaultAllowList .Values.metrics.kubeletResource.metricsTuning.includeMetrics }}
+  rule {
+    source_labels = ["__name__"]
+    regex = "up|{{ join "|" (include "alloy.config.kubelet_resource.allowList" . | fromYamlArray) }}"
+    action = "keep"
+  }
+{{- end }}
+{{- if .Values.metrics.kubeletResource.metricsTuning.excludeMetrics }}
+  rule {
+    source_labels = ["__name__"]
+    regex = {{ join "|" .Values.metrics.kubeletResource.metricsTuning.excludeMetrics | quote }}
+    action = "drop"
+  }
+{{- end }}
+{{- if .Values.metrics.extraMetricRelabelingRules }}
+{{ .Values.metrics.extraMetricRelabelingRules | indent 2 }}
+{{- end }}
+{{- if .Values.metrics.kubeletResource.extraMetricRelabelingRules }}
+{{ .Values.metrics.kubeletResource.extraMetricRelabelingRules | indent 2 }}
+{{- end }}
+  forward_to = [prometheus.relabel.metrics_service.receiver]
+}
+{{ end }}

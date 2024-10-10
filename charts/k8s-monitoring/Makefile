@@ -77,7 +77,7 @@ alloy_configs = $(shell \
 Chart.lock: Chart.yaml
 	helm dependency update .
 
-%/output.yaml: %/values.yaml Chart.yaml Chart.lock values.yaml values.schema.json $(DESTINATION_VALUES_FILES) $(CHART_TEMPLATE_FILES) $(CHART_YAML_FILES)
+%/output.yaml: %/values.yaml Chart.yaml Chart.lock values.yaml values.schema.json templates/destinations/_destination_types.tpl $(DESTINATION_VALUES_FILES) $(CHART_TEMPLATE_FILES) $(CHART_YAML_FILES)
 	helm template $(EXAMPLE_RELEASE_NAME) . -f $< > $@
 
 %/alloy-logs.alloy: %/output.yaml
@@ -131,7 +131,7 @@ clean:
 
 # Build targets
 .PHONY: build
-build: README.md examples values.schema.json templates/destinations/_destination_types.tpl $(DESTINATION_DOCS_FILES)
+build: README.md values.schema.json templates/destinations/_destination_types.tpl $(DESTINATION_DOCS_FILES) examples
 
 # Test targets
 .PHONY: test unittest lint-helm lint-configs

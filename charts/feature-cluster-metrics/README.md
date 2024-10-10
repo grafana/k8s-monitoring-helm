@@ -288,6 +288,19 @@ action on the metric list, including filtering based on label or other actions.
 | kubelet.metricsTuning.useDefaultAllowList | bool | `true` | Filter the list of metrics from the Kubelet to the minimal set required for Kubernetes Monitoring. See [Metrics Tuning and Allow Lists](#metrics-tuning-and-allow-lists) |
 | kubelet.scrapeInterval | string | `60s` | How frequently to scrape Kubelet metrics. |
 
+### Kubelet Resources
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| kubeletResource.enabled | bool | `true` | Scrape resource metrics from kubelet. |
+| kubeletResource.extraDiscoveryRules | string | `""` | Rule blocks to be added to the discovery.relabel component for Kubelet Resources entities. These relabeling rules are applied pre-scrape against the targets from service discovery. Before the scrape, any remaining target labels that start with `__` (i.e. `__meta_kubernetes*`) are dropped. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery.relabel/#rule-block)) |
+| kubeletResource.extraMetricProcessingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for Kubelet Resources metrics. These relabeling rules are applied post-scrape against the metrics returned from the scraped target, no `__meta*` labels are present. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#rule-block)) |
+| kubeletResource.maxCacheSize | string | `100000` | Sets the max_cache_size for cadvisor prometheus.relabel component. This should be at least 2x-5x your largest scrape target or samples appended rate. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#arguments)) Overrides global.maxCacheSize |
+| kubeletResource.metricsTuning.excludeMetrics | list | `[]` | Metrics to drop. Can use regular expressions. |
+| kubeletResource.metricsTuning.includeMetrics | list | `[]` | Metrics to keep. Can use regular expressions. |
+| kubeletResource.metricsTuning.useDefaultAllowList | bool | `true` | Filter the list of resources metrics from the Kubelet to the minimal set required for Kubernetes Monitoring. See [Metrics Tuning and Allow Lists](#metrics-tuning-and-allow-lists) |
+| kubeletResource.scrapeInterval | string | `60s` | How frequently to scrape Kubelet Resource metrics. |
+
 ### Node Exporter - Deployment settings
 
 | Key | Type | Default | Description |

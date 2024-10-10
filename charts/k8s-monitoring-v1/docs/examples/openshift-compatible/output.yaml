@@ -527,6 +527,40 @@ data:
       forward_to = [prometheus.relabel.metrics_service.receiver]
     }
     
+    // Kubelet Resource
+    discovery.relabel "kubelet_resource" {
+      targets = discovery.kubernetes.nodes.targets
+      rule {
+        replacement   = "/metrics/resource"
+        target_label  = "__metrics_path__"
+      }
+    }
+    
+    prometheus.scrape "kubelet_resource" {
+      job_name   = "integrations/kubernetes/resources"
+      targets  = discovery.relabel.kubelet_resource.output
+      scheme   = "https"
+      scrape_interval = "60s"
+      bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+      tls_config {
+        insecure_skip_verify = true
+      }
+      clustering {
+        enabled = true
+      }
+      forward_to = [prometheus.relabel.kubelet_resource.receiver]
+    }
+    
+    prometheus.relabel "kubelet_resource" {
+      max_cache_size = 100000
+      rule {
+        source_labels = ["__name__"]
+        regex = "up|node_cpu_usage_seconds_total|node_memory_working_set_bytes"
+        action = "keep"
+      }
+      forward_to = [prometheus.relabel.metrics_service.receiver]
+    }
+    
     // cAdvisor
     discovery.relabel "cadvisor" {
       targets = discovery.kubernetes.nodes.targets
@@ -933,7 +967,7 @@ data:
   k8s-monitoring-build-info-metric.prom: |
     # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart as well as a summary of enabled features
     # TYPE grafana_kubernetes_monitoring_build_info gauge
-    grafana_kubernetes_monitoring_build_info{version="1.5.6", namespace="default", metrics="enabled,alloy,autoDiscover,kube-state-metrics,node-exporter,kubelet,cadvisor,cost", logs="enabled,events,pod_logs", traces="disabled", deployments="prometheus-operator-crds,opencost"} 1
+    grafana_kubernetes_monitoring_build_info{version="1.5.6", namespace="default", metrics="enabled,alloy,autoDiscover,kube-state-metrics,node-exporter,kubelet,kubeletResource,cadvisor,cost", logs="enabled,events,pod_logs", traces="disabled", deployments="prometheus-operator-crds,opencost"} 1
 ---
 # Source: k8s-monitoring/templates/alloy-events-config.yaml
 apiVersion: v1
@@ -67839,6 +67873,40 @@ data:
       forward_to = [prometheus.relabel.metrics_service.receiver]
     }
     
+    // Kubelet Resource
+    discovery.relabel "kubelet_resource" {
+      targets = discovery.kubernetes.nodes.targets
+      rule {
+        replacement   = "/metrics/resource"
+        target_label  = "__metrics_path__"
+      }
+    }
+    
+    prometheus.scrape "kubelet_resource" {
+      job_name   = "integrations/kubernetes/resources"
+      targets  = discovery.relabel.kubelet_resource.output
+      scheme   = "https"
+      scrape_interval = "60s"
+      bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+      tls_config {
+        insecure_skip_verify = true
+      }
+      clustering {
+        enabled = true
+      }
+      forward_to = [prometheus.relabel.kubelet_resource.receiver]
+    }
+    
+    prometheus.relabel "kubelet_resource" {
+      max_cache_size = 100000
+      rule {
+        source_labels = ["__name__"]
+        regex = "up|node_cpu_usage_seconds_total|node_memory_working_set_bytes"
+        action = "keep"
+      }
+      forward_to = [prometheus.relabel.metrics_service.receiver]
+    }
+    
     // cAdvisor
     discovery.relabel "cadvisor" {
       targets = discovery.kubernetes.nodes.targets
@@ -68479,6 +68547,10 @@ data:
         },
         {
           "query": "kubernetes_build_info{cluster=\"openshift-compatible-test\"}",
+          "type": "promql"
+        },
+        {
+          "query": "node_cpu_usage_seconds_total{cluster=\"openshift-compatible-test\"}",
           "type": "promql"
         },
         {

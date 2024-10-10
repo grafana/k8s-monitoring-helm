@@ -674,6 +674,20 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | metrics.kubelet.nodeAddressFormat | string | `"direct"` | How to access the node services, either direct (use node IP, requires nodes/metrics) or via proxy (requires nodes/proxy) |
 | metrics.kubelet.scrapeInterval | string | 60s | How frequently to scrape metrics from the Kubelet. Overrides metrics.scrapeInterval |
 
+### Metrics Job: Kubelet Resources
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| metrics.kubeletResource.enabled | bool | `true` | Scrape resource metrics from the Kubelet |
+| metrics.kubeletResource.extraMetricRelabelingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for Kubelet Resources. These relabeling rules are applied post-scrape against the metrics returned from the scraped target, no `__meta*` labels are present. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#rule-block)) |
+| metrics.kubeletResource.extraRelabelingRules | string | `""` | Rule blocks to be added to the discovery.relabel component for Kubelet Resources. These relabeling rules are applied pre-scrape against the targets from service discovery. Before the scrape, any remaining target labels that start with `__` (i.e. `__meta_kubernetes*`) are dropped. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery.relabel/#rule-block)) |
+| metrics.kubeletResource.maxCacheSize | string | `nil` | Sets the max_cache_size for cadvisor prometheus.relabel component. This should be at least 2x-5x your largest scrape target or samples appended rate. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#arguments)) Overrides metrics.maxCacheSize |
+| metrics.kubeletResource.metricsTuning.excludeMetrics | list | `[]` | Metrics to drop. Can use regular expressions. |
+| metrics.kubeletResource.metricsTuning.includeMetrics | list | `[]` | Metrics to keep. Can use regular expressions. |
+| metrics.kubeletResource.metricsTuning.useDefaultAllowList | bool | `true` | Filter the list of metrics from the Kubelet to the minimal set required for Kubernetes Monitoring. See [Metrics Tuning and Allow Lists](#metrics-tuning-and-allow-lists) |
+| metrics.kubeletResource.nodeAddressFormat | string | `"direct"` | How to access the node services, either direct (use node IP, requires nodes/metrics) or via proxy (requires nodes/proxy) |
+| metrics.kubeletResource.scrapeInterval | string | 60s | How frequently to scrape resource metrics from the Kubelet. Overrides metrics.scrapeInterval |
+
 ### Metrics Job: Kubernetes Monitoring Telemetry
 
 | Key | Type | Default | Description |
