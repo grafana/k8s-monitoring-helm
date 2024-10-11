@@ -1,7 +1,16 @@
 SHELL := /bin/bash
 UNAME := $(shell uname)
 
+CHARTS = $(shell ls charts)
 FEATURE_CHARTS = $(shell ls charts | grep -v k8s-monitoring)
+
+.PHONY: clean
+clean:
+	rm -rf node_modules
+	set -e && \
+	for chart in $(CHARTS); do \
+		make -C charts/$$chart clean; \
+	done
 
 .PHONY: build
 build:
@@ -10,6 +19,8 @@ build:
 		make -C charts/$$chart build; \
 	done
 	make -C charts/k8s-monitoring build
+	make -C charts/k8s-monitoring-test build
+	make -C charts/k8s-monitoring-v1 build
 
 .PHONY: test
 test: build
@@ -19,6 +30,8 @@ test: build
 		make -C charts/$$chart test; \
 	done
 	make -C charts/k8s-monitoring test
+	make -C charts/k8s-monitoring-test test
+	make -C charts/k8s-monitoring-v1 test
 
 ####################################################################
 #                   Installation / Setup                           #
@@ -35,10 +48,6 @@ endif
 .PHONY: install
 install:
 	yarn install
-
-.PHONY: clean
-clean:
-	rm -rf node_modules
 
 ####################################################################
 #                           Linting                                #

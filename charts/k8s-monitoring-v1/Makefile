@@ -153,8 +153,12 @@ alloy_configs = $(shell \
 %/profiles.alloy: %/output.yaml
 	yq 'select(.kind=="ConfigMap" and .metadata.name=="$(EXAMPLE_RELEASE_NAME)-alloy-profiles") | .data["config.alloy"]' $< > $@
 
-.PHONY: examples clean
+.PHONY: examples
 examples: $(EXAMPLE_OUTPUT_FILES) $(EXAMPLE_ALLOY_FILES)
 
+.PHONY: build
+build: README.md examples values.schema.json
+
+.PHONY: clean
 clean:
 	rm -f $(EXAMPLE_OUTPUT_FILES) $(EXAMPLE_ALLOY_FILES)
