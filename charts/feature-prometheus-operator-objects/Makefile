@@ -1,5 +1,6 @@
 HAS_HELM_DOCS := $(shell command -v helm-docs;)
 HAS_HELM_UNITTEST := $(shell helm plugin list | grep unittest 2> /dev/null)
+UPDATECLI_FILES := $(shell yq -e '.dependencies[] | select(.repository == "http*") | ".updatecli-" + .name + ".yaml"' Chart.yaml | sort | uniq)
 
 .SECONDEXPANSION:
 README.md: values.yaml Chart.yaml $$(wildcard README.md.gotmpl)
@@ -16,12 +17,15 @@ Chart.lock: Chart.yaml
 values.schema.json: values.yaml $$(wildcard schema-mods/*)
 	../../scripts/schema-gen.sh .
 
+.updatecli-%.yaml: Chart.yaml
+	../../scripts/charts-to-updatecli.sh Chart.yaml
+
 .PHONY: clean
 clean:
 	rm -f README.md values.schema.json
 
 .PHONY: build
-build: README.md Chart.lock values.schema.json
+build: README.md Chart.lock values.schema.json $(UPDATECLI_FILES)
 
 .PHONY: test
 test: build

@@ -1,5 +1,6 @@
 HAS_HELM_DOCS := $(shell command -v helm-docs;)
 HAS_HELM_UNITTEST := $(shell helm plugin list | grep unittest 2> /dev/null)
+UPDATECLI_FILES := $(shell yq -e '.dependencies[] | select(.repository == "http*") | ".updatecli-" + .name + ".yaml"' Chart.yaml | sort | uniq)
 
 SCHEMA_MODS_JSON_FILES = $(shell find schema-mods -name "*.json")
 SCHEMA_MODS_JQ_FILES = $(shell find schema-mods -name "*.jq")
@@ -54,6 +55,9 @@ templates/_integration_types.tpl: $(INTEGRATION_VALUES_FILES)
 values.schema.json: values.yaml $(INTEGRATION_SCHEMA_FILES) $(SCHEMA_MODS_JSON_FILES) $(SCHEMA_MODS_JQ_FILES) schema-mods/integration-list.json
 	../../scripts/schema-gen.sh .
 
+.updatecli-%.yaml: Chart.yaml
+	../../scripts/charts-to-updatecli.sh Chart.yaml
+
 README.md: values.yaml Chart.yaml $$(wildcard README.md.gotmpl)
 ifdef HAS_HELM_DOCS
 	helm-docs
@@ -68,7 +72,7 @@ clean:
 	rm -f $(INTEGRATION_DOCS_FILES)
 
 .PHONY: build
-build: README.md $(INTEGRATION_DOCS_FILES) Chart.lock values.schema.json templates/_integration_types.tpl
+build: README.md $(INTEGRATION_DOCS_FILES) Chart.lock values.schema.json templates/_integration_types.tpl $(UPDATECLI_FILES)
 
 .PHONY: test
 test: build

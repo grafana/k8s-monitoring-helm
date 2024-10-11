@@ -1,7 +1,9 @@
 SHELL := /bin/bash
+HAS_HELM_DOCS := $(shell command -v helm-docs;)
 
 CHART_TEMPLATE_FILES = $(shell find templates -name "*.tpl")
 CHART_YAML_FILES = $(shell find templates -name "*.yaml")
+UPDATECLI_FILES := $(shell yq -e '.dependencies[] | select(.repository == "http*") | ".updatecli-" + .name + ".yaml"' Chart.yaml | sort | uniq)
 
 values.schema.json: values.yaml schema-mods/enums-and-types.json schema-mods/required-values.json
 	docker run -it --rm --platform linux/amd64 -v "$(shell pwd):/chart" --entrypoint sh alpine/helm \
@@ -44,8 +46,8 @@ values.schema.json: values.yaml schema-mods/enums-and-types.json schema-mods/req
 
 	rm values.schema.generated.json
 
-HAS_HELM_DOCS := $(shell command -v helm-docs;)
-
+.updatecli-%.yaml: Chart.yaml
+	../../scripts/charts-to-updatecli.sh Chart.yaml
 
 README.md: README.md.gotmpl values.yaml Chart.yaml
 ifdef HAS_HELM_DOCS
@@ -157,7 +159,7 @@ alloy_configs = $(shell \
 examples: $(EXAMPLE_OUTPUT_FILES) $(EXAMPLE_ALLOY_FILES)
 
 .PHONY: build
-build: README.md examples values.schema.json
+build: README.md examples values.schema.json $(UPDATECLI_FILES)
 
 .PHONY: clean
 clean:

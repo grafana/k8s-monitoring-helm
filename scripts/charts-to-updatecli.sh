@@ -22,7 +22,7 @@ for ((i=0; i<dependencyCount; i++)); do
     if [ ! -f ".updatecli-${chart}.yaml" ]; then
       echo "---" > ".updatecli-${chart}.yaml"
       yq eval --null-input "{
-  \"name\": \"Bump dependency \\\"$chart\\\" for Helm chart \\\"$chartName\\\"\",
+  \"name\": \"Update dependency \\\"$chart\\\" for Helm chart \\\"$chartName\\\"\",
   \"sources\": {
     \"$chart\": {
       \"name\": \"Get latest \\\"$chart\\\" Helm chart version\",
