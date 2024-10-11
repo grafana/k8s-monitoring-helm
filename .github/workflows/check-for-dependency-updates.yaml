@@ -70,10 +70,14 @@ jobs:
       - name: Get details
         id: get-details
         run: |
+          echo "title=$(yq eval ".name" "${{ matrix.config }}")" >> "${GITHUB_OUTPUT}"
+
           versionPath="$(yq eval '.targets.*.spec.key' "${{ matrix.config }}" | head -n 1 | cut -c2-)"
           echo "version=$(yq eval "${versionPath}" "$(dirname "${{ matrix.config }}")/Chart.yaml")" >> "${GITHUB_OUTPUT}"
-          echo "chart=$(basename "${{ matrix.config }}" | sed -e "s/.updatecli-\(.*\)\.yaml/\1/")" >> "${GITHUB_OUTPUT}"
-          echo "title=$(yq eval ".name" "${{ matrix.config }}")" >> "${GITHUB_OUTPUT}"
+
+          chart="$(basename "$(dirname "${{ matrix.config }}")")" >> "${GITHUB_OUTPUT}"
+          dep="$(basename "${{ matrix.config }}" | sed -e "s/.updatecli-\(.*\)\.yaml/\1/")"
+          echo "branch=chore/update-${chart}-${dep}" >> "${GITHUB_OUTPUT}"
 
       - name: Create pull request
         if: steps.update-dependency.outputs.changed == 'true'
@@ -86,5 +90,5 @@ jobs:
           committer: "GitHub <noreply@github.com>"
           commit-message: Update ${{ steps.get-details.outputs.title }} to ${{ steps.get-details.outputs.version }}
           labels: dependencies
-          branch: chore/update-${{ steps.get-details.outputs.chart }}
+          branch: ${{ steps.get-details.outputs.branch }}
           delete-branch: true
