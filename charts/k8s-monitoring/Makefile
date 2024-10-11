@@ -130,7 +130,7 @@ endif
 
 .PHONY: clean
 clean:
-	rm -f README.md values.schema.json templates/destinations/_destination_types.tpl schema-mods/destination-list.json $(DESTINATION_SCHEMA_FILES) $(DESTINATION_DOCS_FILES)
+	rm -f README.md values.schema.json $(UPDATECLI_FILES) templates/destinations/_destination_types.tpl schema-mods/destination-list.json $(DESTINATION_SCHEMA_FILES) $(DESTINATION_DOCS_FILES)
 	rm -f $(EXAMPLE_OUTPUT_FILES) $(EXAMPLE_ALLOY_FILES) $(EXAMPLE_README_FILES)
 
 # Build targets

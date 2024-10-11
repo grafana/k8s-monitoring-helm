@@ -163,4 +163,4 @@ build: README.md examples values.schema.json $(UPDATECLI_FILES)
 
 .PHONY: clean
 clean:
-	rm -f $(EXAMPLE_OUTPUT_FILES) $(EXAMPLE_ALLOY_FILES)
+	rm -f README.md values.schema.json $(EXAMPLE_OUTPUT_FILES) $(EXAMPLE_ALLOY_FILES) $(UPDATECLI_FILES)

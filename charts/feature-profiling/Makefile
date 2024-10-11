@@ -22,7 +22,7 @@ values.schema.json: values.yaml $$(wildcard schema-mods/*)
 
 .PHONY: clean
 clean:
-	rm -f README.md values.schema.json
+	rm -f README.md values.schema.json $(UPDATECLI_FILES)
 
 .PHONY: build
 build: README.md Chart.lock values.schema.json $(UPDATECLI_FILES)

@@ -68,6 +68,7 @@ endif
 .PHONY: clean
 clean:
 	rm -f README.md values.schema.json schema-mods/integration-list.json templates/_integration_types.tpl
+	rm -f $(UPDATECLI_FILES)
 	rm -f $(INTEGRATION_SCHEMA_FILES)
 	rm -f $(INTEGRATION_DOCS_FILES)
 
