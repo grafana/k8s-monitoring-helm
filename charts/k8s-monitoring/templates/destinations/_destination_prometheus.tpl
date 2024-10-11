@@ -90,17 +90,17 @@ prometheus.remote_write {{ include "helper.alloy_name" .name | quote }} {
 {{- if .metricProcessingRules }}
 {{ .metricProcessingRules | indent 4 }}
 {{- end }}
-
-{{- if or .externalLabels .externalLabelsFrom }}
+  }
+{{- if or .extraLabels .extraLabelsFrom }}
   external_labels = {
-  {{- range $key, $value := .externalLabels }}
+  {{- range $key, $value := .extraLabels }}
     {{ $key }} = {{ $value | quote }},
   {{- end }}
-  {{- range $key, $value := .externalLabelsFrom }}
+  {{- range $key, $value := .extraLabelsFrom }}
     {{ $key }} = {{ $value }},
   {{- end }}
-{{- end }}
   }
+{{- end }}
 }
 {{- end }}
 {{- end }}
