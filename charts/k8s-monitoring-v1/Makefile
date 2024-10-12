@@ -1,51 +1,16 @@
 SHELL := /bin/bash
+HAS_HELM_DOCS := $(shell command -v helm-docs;)
 
 CHART_TEMPLATE_FILES = $(shell find templates -name "*.tpl")
 CHART_YAML_FILES = $(shell find templates -name "*.yaml")
+UPDATECLI_FILES := $(shell yq -e '.dependencies[] | select(.repository == "http*") | ".updatecli-" + .name + ".yaml"' Chart.yaml | sort | uniq)
 
-values.schema.json: values.yaml schema-mods/enums-and-types.json schema-mods/required-values.json
-	docker run -it --rm --platform linux/amd64 -v "$(shell pwd):/chart" --entrypoint sh alpine/helm \
-		--command -c 'helm plugin install https://github.com/karuppiah7890/helm-schema-gen.git && \
-			helm schema-gen /chart/values.yaml > /chart/values.schema.generated.json'
+.SECONDEXPANSION:
+values.schema.json: values.yaml $$(wildcard schema-mods/*)
+	../../scripts/schema-gen.sh .
 
-	jq --indent 4 -s '.[0] * .[1] * .[2]' \
-		<(jq --indent 4 \
-			'del(.properties["alloy"].properties.alloy) \
-			| del(.properties["alloy"].properties.controller) \
-			| del(.properties["alloy"].properties.crds) \
-			| del(.properties["alloy-events"].properties.alloy) \
-			| del(.properties["alloy-events"].properties.controller) \
-			| del(.properties["alloy-events"].properties.crds) \
-			| del(.properties["alloy-logs"].properties.alloy) \
-			| del(.properties["alloy-logs"].properties.controller) \
-			| del(.properties["alloy-logs"].properties.crds) \
-			| del(.properties["alloy-profiles"].properties.alloy) \
-			| del(.properties["alloy-profiles"].properties.controller) \
-			| del(.properties["alloy-profiles"].properties.crds) \
-			| del(.properties["kepler"].properties.canMount) \
-			| del(.properties["beyla"].properties.config) \
-			| del(.properties["kube-state-metrics"].properties.autosharding) \
-			| del(.properties["kube-state-metrics"].properties.nodeSelector) \
-			| del(.properties["kube-state-metrics"].properties.prometheusScrape) \
-			| del(.properties["kube-state-metrics"].properties.releaseLabel) \
-			| del(.properties["kube-state-metrics"].properties.updateStrategy) \
-			| del(.properties["prometheus-node-exporter"].properties.nodeSelector) \
-			| del(.properties["prometheus-node-exporter"].properties.podAnnotations) \
-			| del(.properties["prometheus-node-exporter"].properties.releaseLabel) \
-			| del(.properties["prometheus-node-exporter"].properties.service) \
-			| del(.properties["prometheus-windows-exporter"].properties.config) \
-			| del(.properties["prometheus-windows-exporter"].properties.podAnnotations) \
-			| del(.properties["prometheus-windows-exporter"].properties.releaseLabel) \
-			| del(.properties.logs.properties.pod_logs.properties.labels.properties) \
-			| del(.properties.opencost.properties.opencost)' values.schema.generated.json) \
-		schema-mods/enums-and-types.json \
-		schema-mods/required-values.json \
-		> values.schema.json
-
-	rm values.schema.generated.json
-
-HAS_HELM_DOCS := $(shell command -v helm-docs;)
-
+.updatecli-%.yaml: Chart.yaml
+	../../scripts/charts-to-updatecli.sh Chart.yaml
 
 README.md: README.md.gotmpl values.yaml Chart.yaml
 ifdef HAS_HELM_DOCS
@@ -157,8 +122,8 @@ alloy_configs = $(shell \
 examples: $(EXAMPLE_OUTPUT_FILES) $(EXAMPLE_ALLOY_FILES)
 
 .PHONY: build
-build: README.md examples values.schema.json
+build: README.md examples values.schema.json $(UPDATECLI_FILES)
 
 .PHONY: clean
 clean:
-	rm -f $(EXAMPLE_OUTPUT_FILES) $(EXAMPLE_ALLOY_FILES)
+	rm -f README.md values.schema.json $(EXAMPLE_OUTPUT_FILES) $(EXAMPLE_ALLOY_FILES) $(UPDATECLI_FILES)
