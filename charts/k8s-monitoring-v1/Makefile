@@ -3,7 +3,7 @@ HAS_HELM_DOCS := $(shell command -v helm-docs;)
 
 CHART_TEMPLATE_FILES = $(shell find templates -name "*.tpl")
 CHART_YAML_FILES = $(shell find templates -name "*.yaml")
-UPDATECLI_FILES := $(shell yq -e '.dependencies[] | select(.repository == "http*") | ".updatecli-" + .name + ".yaml"' Chart.yaml | sort | uniq)
+UPDATECLI_FILES := $(shell yq -e '.dependencies[] | select(.repository == "http*") | ".updatecli-" + .name + ".yaml"' Chart.yaml 2>/dev/null | sort | uniq)
 
 .SECONDEXPANSION:
 values.schema.json: values.yaml $$(wildcard schema-mods/*)
