@@ -118,6 +118,25 @@ podLogs:
 
 * <https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring>
 <!-- markdownlint-enable list-marker-space -->
+
+## Requirements
+
+| Repository | Name | Version |
+|------------|------|---------|
+| file://../feature-annotation-autodiscovery | annotationAutodiscovery(k8s-monitoring-feature-annotation-autodiscovery) | 1.0.0 |
+| file://../feature-application-observability | applicationObservability(k8s-monitoring-feature-application-observability) | 1.0.0 |
+| file://../feature-cluster-events | clusterEvents(k8s-monitoring-feature-cluster-events) | 1.0.0 |
+| file://../feature-cluster-metrics | clusterMetrics(k8s-monitoring-feature-cluster-metrics) | 1.0.0 |
+| file://../feature-frontend-observability | frontendObservability(k8s-monitoring-feature-frontend-observability) | 1.0.0 |
+| file://../feature-integrations | integrations(k8s-monitoring-feature-integrations) | 1.0.0 |
+| file://../feature-pod-logs | podLogs(k8s-monitoring-feature-pod-logs) | 1.0.0 |
+| file://../feature-profiling | profiling(k8s-monitoring-feature-profiling) | 1.0.0 |
+| file://../feature-prometheus-operator-objects | prometheusOperatorObjects(k8s-monitoring-feature-prometheus-operator-objects) | 1.0.0 |
+| https://grafana.github.io/helm-charts | alloy-metrics(alloy) | 0.7.0 |
+| https://grafana.github.io/helm-charts | alloy-singleton(alloy) | 0.7.0 |
+| https://grafana.github.io/helm-charts | alloy-logs(alloy) | 0.7.0 |
+| https://grafana.github.io/helm-charts | alloy-receiver(alloy) | 0.7.0 |
+| https://grafana.github.io/helm-charts | alloy-profiles(alloy) | 0.7.0 |
 <!-- markdownlint-enable no-bare-urls -->
 
 ## Values

@@ -6,7 +6,7 @@ CHART_YAML_FILES = $(shell find templates -name "*.yaml")
 UPDATECLI_FILES := $(shell yq -e '.dependencies[] | select(.repository == "http*") | ".updatecli-" + .name + ".yaml"' Chart.yaml | sort | uniq)
 
 values.schema.json: values.yaml schema-mods/enums-and-types.json schema-mods/required-values.json
-	docker run -it --rm --platform linux/amd64 -v "$(shell pwd):/chart" --entrypoint sh alpine/helm \
+	docker run --rm --platform linux/amd64 -v "$(shell pwd):/chart" --entrypoint sh alpine/helm \
 		--command -c 'helm plugin install https://github.com/karuppiah7890/helm-schema-gen.git && \
 			helm schema-gen /chart/values.yaml > /chart/values.schema.generated.json'
 
