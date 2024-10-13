@@ -41,13 +41,14 @@ cert_manager.kubernetes {{ include "helper.alloy_name" .name | quote }} {
 {{- if .namespaces }}
   namespaces = {{ .namespaces | toJson }}
 {{- end }}
+  job_label = {{ .jobName | quote }}
 {{- if $labelSelectors }}
   label_selectors = {{ $labelSelectors | toJson }}
 {{- end }}
 {{- if $fieldSelectors }}
   field_selectors = {{ $fieldSelectors | toJson }}
 {{- end }}
-  port_name  = {{ .portName | quote }}
+  port_name = {{ .portName | quote }}
 }
 
 cert_manager.scrape {{ include "helper.alloy_name" .name | quote }} {
