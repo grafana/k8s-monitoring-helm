@@ -42,7 +42,8 @@ jobs:
             # In manual trigger, run for all charts
             echo "Manual dispatch detected, running tests for all charts"
             # shellcheck disable=SC2010
-            echo "changed_charts=$(ls charts | grep -v "k8s-monitoring-v1" | sort -u)" >> "${GITHUB_OUTPUT}"
+            changed_charts=$(ls charts | grep -v "k8s-monitoring-v1" | sort -u)
+            echo "changed_charts=$(echo "$changed_charts" | jq --raw-input --slurp --compact-output 'split("\n") | map(select(. != ""))')" >> "${GITHUB_OUTPUT}"
             exit 0
           fi
 
