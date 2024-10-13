@@ -53,7 +53,6 @@ declare "cert_manager_integration" {
   }
   
   cert_manager.kubernetes "cert_manager" {
-    job_label = "integrations/cert-manager"
     label_selectors = ["app.kubernetes.io/name=cert-manager"]
     port_name = "http-metrics"
   }
@@ -61,6 +60,7 @@ declare "cert_manager_integration" {
   cert_manager.scrape "cert_manager" {
     targets = cert_manager.kubernetes.cert_manager.output
     clustering = true
+    job_label = "integrations/cert-manager"
     scrape_interval = "60s"
     max_cache_size = 100000
     forward_to = argument.metrics_destinations.value
