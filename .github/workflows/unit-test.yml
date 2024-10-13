@@ -62,10 +62,10 @@ jobs:
 
           if [ -z "$changed_charts" ]; then
             echo "No changes detected in charts"
-            changed_charts="none"
+          else
+            echo "Changed charts: $changed_charts"
+            echo "changed_charts=$(echo "$changed_charts" | jq --raw-input --slurp --compact-output 'split("\n") | map(select(. != ""))')" >> "${GITHUB_OUTPUT}"
           fi
-          echo "Changed charts: $changed_charts"
-          echo "changed_charts=$(echo "$changed_charts" | jq --raw-input --slurp --compact-output 'split("\n") | map(select(. != ""))')" >> "${GITHUB_OUTPUT}"
 
   run-tests:
     name: Testing
