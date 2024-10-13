@@ -41,7 +41,6 @@ cert_manager.kubernetes {{ include "helper.alloy_name" .name | quote }} {
 {{- if .namespaces }}
   namespaces = {{ .namespaces | toJson }}
 {{- end }}
-  job_label = {{ .jobName | quote }}
 {{- if $labelSelectors }}
   label_selectors = {{ $labelSelectors | toJson }}
 {{- end }}
@@ -54,6 +53,7 @@ cert_manager.kubernetes {{ include "helper.alloy_name" .name | quote }} {
 cert_manager.scrape {{ include "helper.alloy_name" .name | quote }} {
   targets = cert_manager.kubernetes.{{ include "helper.alloy_name" .name }}.output
   clustering = true
+  job_label = {{ .jobName | quote }}
 {{- if $metricAllowList }}
   keep_metrics = "up|{{ $metricAllowList |  join "|" | join "|" }}"
 {{- end }}
