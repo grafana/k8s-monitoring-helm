@@ -16,10 +16,10 @@
 
 ## Maintainers
 
-| Name | Email | URL |
-| ---- | ------ |-----|
-| petewall | <pete.wall@grafana.com> |     |
-| skl | <stephen.lang@grafana.com> |     |
+| Name     | Email                      | URL |
+|----------|----------------------------|-----|
+| petewall | <pete.wall@grafana.com>    |     |
+| skl      | <stephen.lang@grafana.com> |     |
 
 ## Usage
 
@@ -32,6 +32,14 @@ helm repo add grafana https://grafana.github.io/helm-charts
 ```
 
 See the [Chart Documentation](https://github.com/grafana/k8s-monitoring-helm/blob/main/charts/k8s-monitoring-v1/README.md) for chart install instructions.
+
+## Office Hours
+
+We hold office hours roughly monthly. Meeting times and recordings will be posted here:
+
+| Date       | Topic                | Link                                                                                                                                                |
+|------------|----------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------|
+| 2024-10-11 | Upcoming 2.0 version | [Recording](https://grafana.zoom.us/rec/share/ZF00DnBBu7X68T5WDEeA6PUsiKF7D6bfi3KBVJTFZMiYnSVPp3gm7t_v-VAm-48y.htONt-nVrmpfFTsG) Passcode: U&2T37Gb |
 
 ## Contributing
 
