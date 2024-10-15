@@ -436,8 +436,17 @@ data:
         ]
       }
       
-      node_exporter.scrape "metrics" {
+      discovery.relabel "node_exporter" {
         targets = node_exporter.kubernetes.targets.output
+        rule {
+          source_labels = ["__meta_kubernetes_pod_node_name"]
+          action = "replace"
+          target_label = "instance"
+        }
+      }
+      
+      node_exporter.scrape "metrics" {
+        targets = discovery.relabel.node_exporter.output
         job_label = "integrations/node_exporter"
         clustering = true
         keep_metrics = "up|node_cpu.*|node_exporter_build_info|node_filesystem.*|node_memory.*|node_network_receive_bytes_total|node_network_receive_drop_total|node_network_transmit_bytes_total|node_network_transmit_drop_total|process_cpu_seconds_total|process_resident_memory_bytes"
@@ -460,8 +469,17 @@ data:
         ]
       }
       
-      windows_exporter.scrape "metrics" {
+      discovery.relabel "windows_exporter" {
         targets = windows_exporter.kubernetes.targets.output
+        rule {
+          source_labels = ["__meta_kubernetes_pod_node_name"]
+          action = "replace"
+          target_label = "instance"
+        }
+      }
+      
+      windows_exporter.scrape "metrics" {
+        targets = discovery.relabel.windows_exporter.output
         clustering = true
         keep_metrics = "up|windows_.*|node_cpu_seconds_total|node_filesystem_size_bytes|node_filesystem_avail_bytes|container_cpu_usage_seconds_total"
         scrape_interval = "60s"
