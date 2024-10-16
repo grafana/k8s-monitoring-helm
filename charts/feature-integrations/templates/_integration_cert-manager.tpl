@@ -47,12 +47,13 @@ cert_manager.kubernetes {{ include "helper.alloy_name" .name | quote }} {
 {{- if $fieldSelectors }}
   field_selectors = {{ $fieldSelectors | toJson }}
 {{- end }}
-  port_name  = {{ .portName | quote }}
+  port_name = {{ .portName | quote }}
 }
 
 cert_manager.scrape {{ include "helper.alloy_name" .name | quote }} {
   targets = cert_manager.kubernetes.{{ include "helper.alloy_name" .name }}.output
   clustering = true
+  job_label = {{ .jobName | quote }}
 {{- if $metricAllowList }}
   keep_metrics = "up|{{ $metricAllowList |  join "|" | join "|" }}"
 {{- end }}

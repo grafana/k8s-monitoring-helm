@@ -11,6 +11,13 @@
 | namespaces | list | `[]` | Namespaces to look for cert-manager instances. |
 | portName | string | `"http-metrics"` | Name of the port to scrape metrics from. |
 
+### Scrape Settings
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| jobName | string | `"integrations/cert-manager"` | The value of the job label for scraped metrics. |
+| scrapeInterval | string | `60s` | How frequently to scrape metrics from Windows Exporter. |
+
 ### Metric Processing Settings
 
 | Key | Type | Default | Description |
@@ -24,9 +31,3 @@
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | name | string | `""` | Name for this cert-manager instance. |
-
-### Scrape Settings
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| scrapeInterval | string | `60s` | How frequently to scrape metrics from Windows Exporter. |
