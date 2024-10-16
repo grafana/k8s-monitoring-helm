@@ -33,8 +33,20 @@ node_exporter.kubernetes "targets" {
   ]
 }
 
-node_exporter.scrape "metrics" {
+discovery.relabel "node_exporter" {
   targets = node_exporter.kubernetes.targets.output
+  rule {
+    source_labels = ["__meta_kubernetes_pod_node_name"]
+    action = "replace"
+    target_label = "instance"
+  }
+{{- if (index .Values "node-exporter").extraDiscoveryRules }}
+  {{ (index .Values "node-exporter").extraDiscoveryRules | nindent 2 }}
+{{- end }}
+}
+
+node_exporter.scrape "metrics" {
+  targets = discovery.relabel.node_exporter.output
   job_label = "integrations/node_exporter"
   clustering = true
 {{- if $metricAllowList }}

@@ -33,8 +33,20 @@ windows_exporter.kubernetes "targets" {
   ]
 }
 
-windows_exporter.scrape "metrics" {
+discovery.relabel "windows_exporter" {
   targets = windows_exporter.kubernetes.targets.output
+  rule {
+    source_labels = ["__meta_kubernetes_pod_node_name"]
+    action = "replace"
+    target_label = "instance"
+  }
+{{- if (index .Values "windows-exporter").extraDiscoveryRules }}
+  {{ (index .Values "windows-exporter").extraDiscoveryRules | nindent 2 }}
+{{- end }}
+}
+
+windows_exporter.scrape "metrics" {
+  targets = discovery.relabel.windows_exporter.output
   clustering = true
 {{- if $metricAllowList }}
   keep_metrics = "up|{{ $metricAllowList | fromYamlArray | join "|" }}"
