@@ -22,7 +22,6 @@ data:
 
     {{- include "collectors.logging.alloy" (dict "Values" .Values "collectorName" $collectorName) | trim | nindent 4 }}
     {{- include "collectors.liveDebugging.alloy" (dict "Values" .Values "collectorName" $collectorName) | trim | nindent 4 }}
-    {{- if (index .Values $collectorName).extraConfig }}
-      {{ (index .Values $collectorName).extraConfig | trim | nindent 4 }}
-    {{- end }}
+    {{- include "collectors.remoteConfig.alloy" (dict "Values" .Values "Release" .Release "collectorName" $collectorName) | trim | nindent 4 }}
+    {{- include "collectors.extraConfig.alloy" (dict "Values" .Values "collectorName" $collectorName) | trim | nindent 4 }}
 {{- end }}
