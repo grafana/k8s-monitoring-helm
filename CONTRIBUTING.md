@@ -4,14 +4,14 @@ We welcome contributions and improvements! Feel free to submit PRs.
 
 The process for making a successful contribution is:
 
-1. Make your change
-2. Build any generated files: `make build`
-3. Run unit tests: `make test`
-4. Create your PR!
-5. Wait for checks to pass
-  -   Lint checks
-  -   Unit tests
-  -   Integration tests
+1.  Make your change
+2.  Build any generated files: `make build`
+3.  Run unit tests: `make test`
+4.  Create your PR!
+5.  Wait for checks to pass
+    -   Lint checks
+    -   Unit tests
+    -   Integration tests
 
 ## Tools
 
@@ -107,10 +107,10 @@ chart, and deploy the `k8s-monitoring-test` chart which contains the tests.
 
 You can modify the behavior of the test by setting environment variables:
 
--  `DELETE_CLUSTER` - If set to `false`, the cluster will not be deleted after the test completes.
--  `CREATE_CLUSTER` - If set to `false`, the script will not create a new cluster, but will use whatever cluster your
+-   `DELETE_CLUSTER` - If set to `false`, the cluster will not be deleted after the test completes.
+-   `CREATE_CLUSTER` - If set to `false`, the script will not create a new cluster, but will use whatever cluster your
   kubectl is configured to use.
--  `DEPLOY_GRAFANA` - If set to `false`, the script will not deploy Grafana. Grafana is only deployed to make debugging
+-   `DEPLOY_GRAFANA` - If set to `false`, the script will not deploy Grafana. Grafana is only deployed to make debugging
   easier, because it will be pre-configured to connect to the database instances.
 
 ## Creating new releases
