@@ -7,6 +7,8 @@
 {{- $collectorName := "alloy-metrics" }}
 {{- if (index .Values $collectorName).enabled }}
   {{- $atLeastOneFeatureEnabled := or .Values.clusterMetrics.enabled .Values.annotationAutodiscovery.enabled .Values.prometheusOperatorObjects.enabled }}
+  {{- $atLeastOneFeatureEnabled = or $atLeastOneFeatureEnabled (index .Values $collectorName).remoteConfig.enabled }}
+  {{- $atLeastOneFeatureEnabled = or $atLeastOneFeatureEnabled (index .Values $collectorName).extraConfig }}
   {{- $integrationsConfigured := include "feature.integrations.configured.metrics" .Subcharts.integrations | fromYamlArray }}
   {{- $atLeastOneFeatureEnabled = or $atLeastOneFeatureEnabled (not (empty $integrationsConfigured)) }}
 
@@ -18,6 +20,8 @@
 {{- $collectorName = "alloy-singleton" }}
 {{- if (index .Values $collectorName).enabled }}
   {{- $atLeastOneFeatureEnabled := .Values.clusterEvents.enabled }}
+  {{- $atLeastOneFeatureEnabled = or $atLeastOneFeatureEnabled (index .Values $collectorName).remoteConfig.enabled }}
+  {{- $atLeastOneFeatureEnabled = or $atLeastOneFeatureEnabled (index .Values $collectorName).extraConfig }}
   {{- if not $atLeastOneFeatureEnabled }}
     {{- fail (printf $errorMessage $collectorName $collectorName) }}
   {{- end }}
@@ -26,6 +30,8 @@
 {{- $collectorName = "alloy-logs" }}
 {{- if (index .Values $collectorName).enabled }}
   {{- $atLeastOneFeatureEnabled := .Values.podLogs.enabled }}
+  {{- $atLeastOneFeatureEnabled = or $atLeastOneFeatureEnabled (index .Values $collectorName).remoteConfig.enabled }}
+  {{- $atLeastOneFeatureEnabled = or $atLeastOneFeatureEnabled (index .Values $collectorName).extraConfig }}
   {{- if not $atLeastOneFeatureEnabled }}
     {{- fail (printf $errorMessage $collectorName $collectorName) }}
   {{- end }}
@@ -34,6 +40,8 @@
 {{- $collectorName = "alloy-receiver" }}
 {{- if (index .Values $collectorName).enabled }}
   {{- $atLeastOneFeatureEnabled := or .Values.applicationObservability.enabled }}
+  {{- $atLeastOneFeatureEnabled = or $atLeastOneFeatureEnabled (index .Values $collectorName).remoteConfig.enabled }}
+  {{- $atLeastOneFeatureEnabled = or $atLeastOneFeatureEnabled (index .Values $collectorName).extraConfig }}
   {{- if not $atLeastOneFeatureEnabled }}
     {{- fail (printf $errorMessage $collectorName $collectorName) }}
   {{- end }}
@@ -42,6 +50,8 @@
 {{- $collectorName = "alloy-profiles" }}
 {{- if (index .Values $collectorName).enabled }}
   {{- $atLeastOneFeatureEnabled := .Values.profiling.enabled }}
+  {{- $atLeastOneFeatureEnabled = or $atLeastOneFeatureEnabled (index .Values $collectorName).remoteConfig.enabled }}
+  {{- $atLeastOneFeatureEnabled = or $atLeastOneFeatureEnabled (index .Values $collectorName).extraConfig }}
   {{- if not $atLeastOneFeatureEnabled }}
     {{- fail (printf $errorMessage $collectorName $collectorName) }}
   {{- end }}

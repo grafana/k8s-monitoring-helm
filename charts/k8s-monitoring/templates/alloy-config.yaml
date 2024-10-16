@@ -28,9 +28,8 @@ data:
 {{- end }}
     {{- include "collectors.logging.alloy" $values | trim | nindent 4 }}
     {{- include "collectors.liveDebugging.alloy" $values | trim | nindent 4 }}
-    {{- if (index $.Values $collector).extraConfig }}
-      {{ (index $.Values $collector).extraConfig | trim | nindent 4 }}
-    {{- end }}
+    {{- include "collectors.remoteConfig.alloy" $values | trim | nindent 4 }}
+    {{- include "collectors.extraConfig.alloy" $values | trim | nindent 4 }}
 {{- if $selfReportingEnabled }}
   {{- include "features.selfReporting.file" $values | trim | nindent 2 }}
 {{- end }}
