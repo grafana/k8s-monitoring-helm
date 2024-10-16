@@ -1,5 +1,6 @@
 SHELL := /bin/bash
 HAS_HELM_DOCS := $(shell command -v helm-docs;)
+HAS_SHELLSPEC := $(shell command -v shellspec;)
 
 CHART_TEMPLATE_FILES = $(shell find templates -name "*.tpl")
 CHART_YAML_FILES = $(shell find templates -name "*.yaml")
@@ -85,7 +86,11 @@ push-image:
 .PHONY: test
 test: test/test-runner.sh
 	./test/test-runner.sh --show-diffs
-	cd test; shellspec
+ifdef HAS_SHELLSPEC
+	shellspec -c test
+else
+	docker run --platform linux/amd64 --rm --volume $(shell pwd):/src shellspec/shellspec -c /src/test -s /bin/sh
+endif
 
 #
 # Example targets

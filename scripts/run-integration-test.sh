@@ -7,7 +7,7 @@ source "${PARENT_DIR}/scripts/includes/logging.sh"
 heading "Kubernetes Monitoring Helm" "Integration Tester"
 
 usage() {
-  echo "USAGE: integration-test.sh <test-dir>"
+  echo "USAGE: run-integration-test.sh <test-dir>"
   echo ""
   echo "Runs an integration test"
   echo ""
