@@ -1,5 +1,5 @@
 ---
-name: Bump dependency "prometheus-node-exporter" for Helm chart "k8s-monitoring"
+name: Update dependency "prometheus-node-exporter" for Helm chart "k8s-monitoring"
 sources:
   prometheus-node-exporter:
     name: Get latest "prometheus-node-exporter" Helm chart version
@@ -10,17 +10,15 @@ sources:
       versionfilter:
         kind: semver
         pattern: '*'
-
 conditions:
   prometheus-node-exporter:
     name: Ensure Helm chart dependency "prometheus-node-exporter" is specified
     kind: yaml
     spec:
-      file: charts/k8s-monitoring-v1/Chart.yaml
+      file: charts/k8s-monitoring/Chart.yaml
       key: $.dependencies[5].name
       value: prometheus-node-exporter
     disablesourceinput: true
-
 targets:
   prometheus-node-exporter:
     name: Bump Helm chart dependency "prometheus-node-exporter" for Helm chart "k8s-monitoring"
@@ -28,6 +26,6 @@ targets:
     spec:
       file: Chart.yaml
       key: $.dependencies[5].version
-      name: charts/k8s-monitoring-v1
+      name: charts/k8s-monitoring
       versionincrement: none
     sourceid: prometheus-node-exporter

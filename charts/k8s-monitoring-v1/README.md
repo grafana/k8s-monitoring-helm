@@ -5,7 +5,7 @@
 
 # k8s-monitoring
 
-![Version: 1.5.6](https://img.shields.io/badge/Version-1.5.6-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 2.8.3](https://img.shields.io/badge/AppVersion-2.8.3-informational?style=flat-square)
+![Version: 1.6.0](https://img.shields.io/badge/Version-1.6.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 2.8.3](https://img.shields.io/badge/AppVersion-2.8.3-informational?style=flat-square)
 
 A Helm chart for gathering, scraping, and forwarding Kubernetes telemetry data to a Grafana Stack.
 
@@ -146,7 +146,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | https://opencost.github.io/opencost-helm-chart | opencost | 1.42.0 |
 | https://prometheus-community.github.io/helm-charts | kube-state-metrics | 5.25.1 |
 | https://prometheus-community.github.io/helm-charts | prometheus-node-exporter | 4.39.0 |
-| https://prometheus-community.github.io/helm-charts | prometheus-operator-crds | 14.0.0 |
+| https://prometheus-community.github.io/helm-charts | prometheus-operator-crds | 15.0.0 |
 | https://prometheus-community.github.io/helm-charts | prometheus-windows-exporter | 0.7.0 |
 | https://sustainable-computing-io.github.io/kepler-helm-chart | kepler | 0.5.9 |
 <!-- markdownlint-enable no-bare-urls -->
@@ -412,7 +412,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | kube-state-metrics.enabled | bool | `true` | Should this helm chart deploy Kube State Metrics to the cluster. Set this to false if your cluster already has Kube State Metrics, or if you do not want to scrape metrics from Kube State Metrics. |
-| kube-state-metrics.metricLabelsAllowlist | list | `["nodes=[*]"]` | `kube_<resource>_labels` metrics to generate. |
+| kube-state-metrics.metricLabelsAllowlist | list | `["nodes=[agentpool,alpha.eksctl.io/cluster-name,alpha.eksctl.io/nodegroup-name,beta.kubernetes.io/instance-type,cloud.google.com/gke-nodepool,cluster_name,ec2_amazonaws_com_Name,ec2_amazonaws_com_aws_autoscaling_groupName,ec2_amazonaws_com_aws_autoscaling_group_name,ec2_amazonaws_com_name,eks_amazonaws_com_nodegroup,k8s_io_cloud_provider_aws,karpenter.sh/nodepool,kubernetes.azure.com/cluster,kubernetes.io/arch,kubernetes.io/hostname,kubernetes.io/os,node.kubernetes.io/instance-type,topology.kubernetes.io/region,topology.kubernetes.io/zone]"]` | `kube_<resource>_labels` metrics to generate. |
 
 ### Logs Scrape: Cluster Events
 
@@ -673,6 +673,20 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | metrics.kubelet.metricsTuning.useDefaultAllowList | bool | `true` | Filter the list of metrics from the Kubelet to the minimal set required for Kubernetes Monitoring. See [Metrics Tuning and Allow Lists](#metrics-tuning-and-allow-lists) |
 | metrics.kubelet.nodeAddressFormat | string | `"direct"` | How to access the node services, either direct (use node IP, requires nodes/metrics) or via proxy (requires nodes/proxy) |
 | metrics.kubelet.scrapeInterval | string | 60s | How frequently to scrape metrics from the Kubelet. Overrides metrics.scrapeInterval |
+
+### Metrics Job: Kubelet Resources
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| metrics.kubeletResource.enabled | bool | `true` | Scrape resource metrics from the Kubelet |
+| metrics.kubeletResource.extraMetricRelabelingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for Kubelet Resources. These relabeling rules are applied post-scrape against the metrics returned from the scraped target, no `__meta*` labels are present. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#rule-block)) |
+| metrics.kubeletResource.extraRelabelingRules | string | `""` | Rule blocks to be added to the discovery.relabel component for Kubelet Resources. These relabeling rules are applied pre-scrape against the targets from service discovery. Before the scrape, any remaining target labels that start with `__` (i.e. `__meta_kubernetes*`) are dropped. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery.relabel/#rule-block)) |
+| metrics.kubeletResource.maxCacheSize | string | `nil` | Sets the max_cache_size for cadvisor prometheus.relabel component. This should be at least 2x-5x your largest scrape target or samples appended rate. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#arguments)) Overrides metrics.maxCacheSize |
+| metrics.kubeletResource.metricsTuning.excludeMetrics | list | `[]` | Metrics to drop. Can use regular expressions. |
+| metrics.kubeletResource.metricsTuning.includeMetrics | list | `[]` | Metrics to keep. Can use regular expressions. |
+| metrics.kubeletResource.metricsTuning.useDefaultAllowList | bool | `true` | Filter the list of metrics from the Kubelet to the minimal set required for Kubernetes Monitoring. See [Metrics Tuning and Allow Lists](#metrics-tuning-and-allow-lists) |
+| metrics.kubeletResource.nodeAddressFormat | string | `"direct"` | How to access the node services, either direct (use node IP, requires nodes/metrics) or via proxy (requires nodes/proxy) |
+| metrics.kubeletResource.scrapeInterval | string | 60s | How frequently to scrape resource metrics from the Kubelet. Overrides metrics.scrapeInterval |
 
 ### Metrics Job: Kubernetes Monitoring Telemetry
 

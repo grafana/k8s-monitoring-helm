@@ -52,16 +52,8 @@ else
   success "kind is installed"
 fi
 
-# make sure shellspec exists
-info "Checking to see if shellspec is installed"
-if [[ "$(command -v shellspec)" = "" ]]; then
-  warning "shellspec is required if running locally, see: (https://shellspec.info/) or run: brew install shellspec";
-else
-  success "shellspec is installed"
-fi
-
 # make sure yamllint exists
-info "Checking to see if shellspec is installed"
+info "Checking to see if yamllint is installed"
 if [[ "$(command -v yamllint)" = "" ]]; then
   warning "yamllint is required if running locally, see: (https://github.com/adrienverge/yamllint) or run: brew install yamllint";
 else

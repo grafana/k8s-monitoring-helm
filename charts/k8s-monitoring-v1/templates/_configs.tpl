@@ -29,6 +29,10 @@
       {{- include "alloy.config.kubelet" . }}
     {{- end }}
 
+    {{- if .Values.metrics.kubeletResource.enabled }}
+      {{- include "alloy.config.kubelet_resource" . }}
+    {{- end }}
+
     {{- if .Values.metrics.cadvisor.enabled }}
       {{- include "alloy.config.cadvisor" . }}
     {{- end }}

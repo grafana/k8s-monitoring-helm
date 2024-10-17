@@ -6,11 +6,11 @@ metadata:
   name: ko-alloy-logs
   namespace: default
   labels:
-    helm.sh/chart: alloy-logs-0.7.0
+    helm.sh/chart: alloy-logs-0.9.1
     app.kubernetes.io/name: alloy-logs
     app.kubernetes.io/instance: ko
     
-    app.kubernetes.io/version: "v1.3.1"
+    app.kubernetes.io/version: "v1.4.2"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
     app.kubernetes.io/component: rbac
@@ -22,11 +22,11 @@ metadata:
   name: ko-alloy-metrics
   namespace: default
   labels:
-    helm.sh/chart: alloy-metrics-0.7.0
+    helm.sh/chart: alloy-metrics-0.9.1
     app.kubernetes.io/name: alloy-metrics
     app.kubernetes.io/instance: ko
     
-    app.kubernetes.io/version: "v1.3.1"
+    app.kubernetes.io/version: "v1.4.2"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
     app.kubernetes.io/component: rbac
@@ -315,6 +315,15 @@ data:
         forward_to = argument.metrics_destinations.value
       }  
       
+      kubernetes.resources "scrape" {
+        clustering = true
+        job_label = "integrations/kubernetes/resources"
+        keep_metrics = "up|node_cpu_usage_seconds_total|node_memory_working_set_bytes"
+        scrape_interval = "60s"
+        max_cache_size = 100000
+        forward_to = argument.metrics_destinations.value
+      }  
+      
       kubernetes.cadvisor "scrape" {
         clustering = true
         keep_metrics = "up|container_cpu_cfs_periods_total|container_cpu_cfs_throttled_periods_total|container_cpu_usage_seconds_total|container_fs_reads_bytes_total|container_fs_reads_total|container_fs_writes_bytes_total|container_fs_writes_total|container_memory_cache|container_memory_rss|container_memory_swap|container_memory_working_set_bytes|container_network_receive_bytes_total|container_network_receive_packets_dropped_total|container_network_receive_packets_total|container_network_transmit_bytes_total|container_network_transmit_packets_dropped_total|container_network_transmit_packets_total|machine_memory_bytes"
@@ -433,8 +442,17 @@ data:
         ]
       }
       
-      node_exporter.scrape "metrics" {
+      discovery.relabel "node_exporter" {
         targets = node_exporter.kubernetes.targets.output
+        rule {
+          source_labels = ["__meta_kubernetes_pod_node_name"]
+          action = "replace"
+          target_label = "instance"
+        }
+      }
+      
+      node_exporter.scrape "metrics" {
+        targets = discovery.relabel.node_exporter.output
         job_label = "integrations/node_exporter"
         clustering = true
         keep_metrics = "up|node_cpu.*|node_exporter_build_info|node_filesystem.*|node_memory.*|node_network_receive_bytes_total|node_network_receive_drop_total|node_network_transmit_bytes_total|node_network_transmit_drop_total|process_cpu_seconds_total|process_resident_memory_bytes"
@@ -457,8 +475,17 @@ data:
         ]
       }
       
-      windows_exporter.scrape "metrics" {
+      discovery.relabel "windows_exporter" {
         targets = windows_exporter.kubernetes.targets.output
+        rule {
+          source_labels = ["__meta_kubernetes_pod_node_name"]
+          action = "replace"
+          target_label = "instance"
+        }
+      }
+      
+      windows_exporter.scrape "metrics" {
+        targets = discovery.relabel.windows_exporter.output
         clustering = true
         keep_metrics = "up|windows_.*|node_cpu_seconds_total|node_filesystem_size_bytes|node_filesystem_avail_bytes|container_cpu_usage_seconds_total"
         scrape_interval = "60s"
@@ -478,11 +505,11 @@ kind: ClusterRole
 metadata:
   name: ko-alloy-logs
   labels:
-    helm.sh/chart: alloy-logs-0.7.0
+    helm.sh/chart: alloy-logs-0.9.1
     app.kubernetes.io/name: alloy-logs
     app.kubernetes.io/instance: ko
     
-    app.kubernetes.io/version: "v1.3.1"
+    app.kubernetes.io/version: "v1.4.2"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
     app.kubernetes.io/component: rbac
@@ -578,11 +605,11 @@ kind: ClusterRole
 metadata:
   name: ko-alloy-metrics
   labels:
-    helm.sh/chart: alloy-metrics-0.7.0
+    helm.sh/chart: alloy-metrics-0.9.1
     app.kubernetes.io/name: alloy-metrics
     app.kubernetes.io/instance: ko
     
-    app.kubernetes.io/version: "v1.3.1"
+    app.kubernetes.io/version: "v1.4.2"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
     app.kubernetes.io/component: rbac
@@ -834,11 +861,11 @@ kind: ClusterRoleBinding
 metadata:
   name: ko-alloy-logs
   labels:
-    helm.sh/chart: alloy-logs-0.7.0
+    helm.sh/chart: alloy-logs-0.9.1
     app.kubernetes.io/name: alloy-logs
     app.kubernetes.io/instance: ko
     
-    app.kubernetes.io/version: "v1.3.1"
+    app.kubernetes.io/version: "v1.4.2"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
     app.kubernetes.io/component: rbac
@@ -857,11 +884,11 @@ kind: ClusterRoleBinding
 metadata:
   name: ko-alloy-metrics
   labels:
-    helm.sh/chart: alloy-metrics-0.7.0
+    helm.sh/chart: alloy-metrics-0.9.1
     app.kubernetes.io/name: alloy-metrics
     app.kubernetes.io/instance: ko
     
-    app.kubernetes.io/version: "v1.3.1"
+    app.kubernetes.io/version: "v1.4.2"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
     app.kubernetes.io/component: rbac
@@ -903,11 +930,11 @@ kind: Service
 metadata:
   name: ko-alloy-logs
   labels:
-    helm.sh/chart: alloy-logs-0.7.0
+    helm.sh/chart: alloy-logs-0.9.1
     app.kubernetes.io/name: alloy-logs
     app.kubernetes.io/instance: ko
     
-    app.kubernetes.io/version: "v1.3.1"
+    app.kubernetes.io/version: "v1.4.2"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
     app.kubernetes.io/component: networking
@@ -929,11 +956,11 @@ kind: Service
 metadata:
   name: ko-alloy-metrics-cluster
   labels:
-    helm.sh/chart: alloy-metrics-0.7.0
+    helm.sh/chart: alloy-metrics-0.9.1
     app.kubernetes.io/name: alloy-metrics
     app.kubernetes.io/instance: ko
     
-    app.kubernetes.io/version: "v1.3.1"
+    app.kubernetes.io/version: "v1.4.2"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
     app.kubernetes.io/component: networking
@@ -962,11 +989,11 @@ kind: Service
 metadata:
   name: ko-alloy-metrics
   labels:
-    helm.sh/chart: alloy-metrics-0.7.0
+    helm.sh/chart: alloy-metrics-0.9.1
     app.kubernetes.io/name: alloy-metrics
     app.kubernetes.io/instance: ko
     
-    app.kubernetes.io/version: "v1.3.1"
+    app.kubernetes.io/version: "v1.4.2"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
     app.kubernetes.io/component: networking
@@ -1073,11 +1100,11 @@ kind: DaemonSet
 metadata:
   name: ko-alloy-logs
   labels:
-    helm.sh/chart: alloy-logs-0.7.0
+    helm.sh/chart: alloy-logs-0.9.1
     app.kubernetes.io/name: alloy-logs
     app.kubernetes.io/instance: ko
     
-    app.kubernetes.io/version: "v1.3.1"
+    app.kubernetes.io/version: "v1.4.2"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
 spec:
@@ -1099,7 +1126,7 @@ spec:
         - name: my-registry-creds
       containers:
         - name: alloy
-          image: my.registry.com/grafana/alloy:v1.3.1
+          image: my.registry.com/grafana/alloy:v1.4.2
           imagePullPolicy: IfNotPresent
           args:
             - run
@@ -1465,7 +1492,7 @@ spec:
         args:
         - --port=8080
         - --resources=certificatesigningrequests,configmaps,cronjobs,daemonsets,deployments,endpoints,horizontalpodautoscalers,ingresses,jobs,leases,limitranges,mutatingwebhookconfigurations,namespaces,networkpolicies,nodes,persistentvolumeclaims,persistentvolumes,poddisruptionbudgets,pods,replicasets,replicationcontrollers,resourcequotas,secrets,services,statefulsets,storageclasses,validatingwebhookconfigurations,volumeattachments
-        - --metric-labels-allowlist=nodes=[*]
+        - --metric-labels-allowlist=nodes=[agentpool,alpha.eksctl.io/cluster-name,alpha.eksctl.io/nodegroup-name,beta.kubernetes.io/instance-type,cloud.google.com/gke-nodepool,cluster_name,ec2_amazonaws_com_Name,ec2_amazonaws_com_aws_autoscaling_groupName,ec2_amazonaws_com_aws_autoscaling_group_name,ec2_amazonaws_com_name,eks_amazonaws_com_nodegroup,k8s_io_cloud_provider_aws,karpenter.sh/nodepool,kubernetes.azure.com/cluster,kubernetes.io/arch,kubernetes.io/hostname,kubernetes.io/os,node.kubernetes.io/instance-type,topology.kubernetes.io/region,topology.kubernetes.io/zone]
         imagePullPolicy: IfNotPresent
         image: my.registry.com/kube-state-metrics/kube-state-metrics:v2.13.0
         ports:
@@ -1512,11 +1539,11 @@ kind: StatefulSet
 metadata:
   name: ko-alloy-metrics
   labels:
-    helm.sh/chart: alloy-metrics-0.7.0
+    helm.sh/chart: alloy-metrics-0.9.1
     app.kubernetes.io/name: alloy-metrics
     app.kubernetes.io/instance: ko
     
-    app.kubernetes.io/version: "v1.3.1"
+    app.kubernetes.io/version: "v1.4.2"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
 spec:
@@ -1542,7 +1569,7 @@ spec:
         - name: my-registry-creds
       containers:
         - name: alloy
-          image: my.registry.com/grafana/alloy:v1.3.1
+          image: my.registry.com/grafana/alloy:v1.4.2
           imagePullPolicy: IfNotPresent
           args:
             - run

@@ -4,6 +4,7 @@ HAS_SHELLSPEC := $(shell command -v shellspec;)
 
 CHART_TEMPLATE_FILES = $(shell find templates -name "*.tpl")
 CHART_YAML_FILES = $(shell find templates -name "*.yaml")
+UPDATECLI_FILES := $(shell yq -e '.dependencies[] | select(.repository == "http*") | ".updatecli-" + .name + ".yaml"' Chart.yaml 2>/dev/null | sort | uniq)
 
 SCHEMA_MODS_JSON_FILES = $(shell find schema-mods -name "*.json")
 SCHEMA_MODS_JQ_FILES = $(shell find schema-mods -name "*.jq")
@@ -53,6 +54,9 @@ templates/destinations/_destination_types.tpl: $(DESTINATION_VALUES_FILES)
 values.schema.json: values.yaml $(DESTINATION_SCHEMA_FILES) $(SCHEMA_MODS_JSON_FILES) $(SCHEMA_MODS_JQ_FILES) schema-mods/destination-list.json
 	../../scripts/schema-gen.sh .
 
+.updatecli-%.yaml: Chart.yaml
+	../../scripts/charts-to-updatecli.sh Chart.yaml
+
 README.md: README.md.gotmpl values.yaml Chart.yaml
 ifdef HAS_HELM_DOCS
 	helm-docs --chart-to-generate .
@@ -77,7 +81,7 @@ alloy_configs = $(shell \
 Chart.lock: Chart.yaml
 	helm dependency update .
 
-%/output.yaml: %/values.yaml Chart.yaml Chart.lock values.yaml values.schema.json $(DESTINATION_VALUES_FILES) $(CHART_TEMPLATE_FILES) $(CHART_YAML_FILES)
+%/output.yaml: %/values.yaml Chart.yaml Chart.lock values.yaml values.schema.json templates/destinations/_destination_types.tpl $(DESTINATION_VALUES_FILES) $(CHART_TEMPLATE_FILES) $(CHART_YAML_FILES)
 	helm template $(EXAMPLE_RELEASE_NAME) . -f $< > $@
 
 %/alloy-logs.alloy: %/output.yaml
@@ -126,12 +130,12 @@ endif
 
 .PHONY: clean
 clean:
-	rm -f README.md values.schema.json templates/destinations/_destination_types.tpl schema-mods/destination-list.json $(DESTINATION_SCHEMA_FILES) $(DESTINATION_DOCS_FILES)
+	rm -f README.md values.schema.json $(UPDATECLI_FILES) templates/destinations/_destination_types.tpl schema-mods/destination-list.json $(DESTINATION_SCHEMA_FILES) $(DESTINATION_DOCS_FILES)
 	rm -f $(EXAMPLE_OUTPUT_FILES) $(EXAMPLE_ALLOY_FILES) $(EXAMPLE_README_FILES)
 
 # Build targets
 .PHONY: build
-build: README.md examples values.schema.json templates/destinations/_destination_types.tpl $(DESTINATION_DOCS_FILES)
+build: README.md values.schema.json templates/destinations/_destination_types.tpl $(DESTINATION_DOCS_FILES) $(UPDATECLI_FILES) examples
 
 # Test targets
 .PHONY: test unittest lint-helm lint-configs

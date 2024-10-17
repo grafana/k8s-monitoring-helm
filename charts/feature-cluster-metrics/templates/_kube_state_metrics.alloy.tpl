@@ -29,9 +29,18 @@ kube_state_metrics.kubernetes "targets" {
 {{- end }}
   ]
 }
+{{- $scrapeTargets := "kube_state_metrics.kubernetes.targets.output" }}
+{{- if (index .Values "kube-state-metrics").extraDiscoveryRules }}
+
+discovery.relabel "kube_state_metrics" {
+  targets = {{ $scrapeTargets }}
+  {{ (index .Values "kube-state-metrics").extraDiscoveryRules | nindent 2 }}
+}
+{{- $scrapeTargets = "discovery.relabel.kube_state_metrics.output" }}
+{{- end }}
 
 kube_state_metrics.scrape "metrics" {
-  targets = kube_state_metrics.kubernetes.targets.output
+  targets = {{ $scrapeTargets }}
   clustering = true
 {{- if $metricAllowList }}
   keep_metrics = "up|{{ $metricAllowList | fromYamlArray | join "|" }}"
@@ -47,9 +56,7 @@ kube_state_metrics.scrape "metrics" {
 
 prometheus.relabel "kube_state_metrics" {
   max_cache_size = {{ (index .Values "kube-state-metrics").maxCacheSize | default .Values.global.maxCacheSize | int }}
-
-  {{(index .Values "kube-state-metrics").extraMetricProcessingRules}}
-
+  {{ (index .Values "kube-state-metrics").extraMetricProcessingRules | nindent 2}}
 {{- end }}
   forward_to = argument.metrics_destinations.value
 }

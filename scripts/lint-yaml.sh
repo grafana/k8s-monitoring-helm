@@ -8,7 +8,7 @@ heading "Kubernetes Monitoring Helm" "Onboarding - Performing YAML Linting using
 
 # make sure yamllint exists
 if [[ "$(command -v yamllint || true)" = "" ]]; then
-  echo >&2 "pipeyamllintnv command is required, see (https://pypi.org/project/yamllint/) or run: brew install yamllint";
+  emergency "yamllint is required if running lint locally, see (https://pypi.org/project/yamllint/) or run: brew install yamllint";
   exit 1;
 fi
 

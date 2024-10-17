@@ -11,6 +11,10 @@ queries:
   - query: kubernetes_build_info{cluster={{ .Values.cluster.name | quote}}}
     type: promql
     {{- end }}
+    {{- if .Values.metrics.kubeletResource.enabled }}
+  - query: node_cpu_usage_seconds_total{cluster={{ .Values.cluster.name | quote}}}
+    type: promql
+    {{- end }}
     {{- if .Values.metrics.cadvisor.enabled }}
   - query: machine_memory_bytes{cluster={{ .Values.cluster.name | quote}}}
     type: promql

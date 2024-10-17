@@ -51,7 +51,7 @@ jobs:
             exit 1
           fi
 
-  check-for-example-output-changes:
+  check-for-generated-file-changes:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -60,12 +60,12 @@ jobs:
       - name: Install Helm
         uses: azure/setup-helm@v4
 
-      - name: Check for example output changes
+      - name: Check for generated file changes
         working-directory: charts/k8s-monitoring-v1
         run: |
-          make clean examples
+          make clean build
           if [[ -n "$(git status --porcelain)" ]]; then
-            echo "k8s-monitoring Helm chart v1 examples are not up to date. Please run 'make clean examples', examine changes, and commit changes." >&2
+            echo "k8s-monitoring Helm chart v1 generated files are not up to date. Please run 'make clean build', examine changes, and commit changes." >&2
             exit 1
           fi
 

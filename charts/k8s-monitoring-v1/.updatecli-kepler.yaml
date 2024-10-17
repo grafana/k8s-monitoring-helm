@@ -1,5 +1,5 @@
 ---
-name: Bump dependency "kepler" for Helm chart "k8s-monitoring"
+name: Update dependency "kepler" for Helm chart "k8s-monitoring"
 sources:
   kepler:
     name: Get latest "kepler" Helm chart version
@@ -10,17 +10,15 @@ sources:
       versionfilter:
         kind: semver
         pattern: '*'
-
 conditions:
   kepler:
     name: Ensure Helm chart dependency "kepler" is specified
     kind: yaml
     spec:
-      file: charts/k8s-monitoring-v1/Chart.yaml
+      file: charts/k8s-monitoring/Chart.yaml
       key: $.dependencies[9].name
       value: kepler
     disablesourceinput: true
-
 targets:
   kepler:
     name: Bump Helm chart dependency "kepler" for Helm chart "k8s-monitoring"
@@ -28,6 +26,6 @@ targets:
     spec:
       file: Chart.yaml
       key: $.dependencies[9].version
-      name: charts/k8s-monitoring-v1
+      name: charts/k8s-monitoring
       versionincrement: none
     sourceid: kepler
