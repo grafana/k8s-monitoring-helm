@@ -12,7 +12,19 @@
 {{- $metricAllowList := include "feature.clusterMetrics.cadvisor.allowList" . }}
 {{- $metricDenyList := .Values.cadvisor.metricsTuning.excludeMetrics }}
 
+discovery.relabel "cadvisor" {
+  rule {
+    source_labels = ["__meta_kubernetes_pod_node_name"]
+    action = "replace"
+    target_label = "instance"
+  }
+{{- if (index .Values "cadvisor").extraDiscoveryRules }}
+  {{ (index .Values "cadvisor").extraDiscoveryRules | nindent 2 }}
+{{- end }}
+}
+
 kubernetes.cadvisor "scrape" {
+  targets = discovery.relabel.cadvisor.output
   clustering = true
 {{- if $metricAllowList }}
   keep_metrics = "up|{{ $metricAllowList | fromYamlArray | join "|" }}"
@@ -102,6 +114,9 @@ prometheus.relabel "cadvisor" {
     target_label = "__keepme"
     replacement = ""
   }
+{{- end }}
+{{- if .Values.cadvisor.extraMetricProcessingRules }}
+{{ .Values.cadvisor.extraMetricProcessingRules | indent 2 }}
 {{- end }}
   forward_to = argument.metrics_destinations.value
 }
