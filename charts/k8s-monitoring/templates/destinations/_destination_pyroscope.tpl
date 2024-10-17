@@ -3,7 +3,11 @@
 {{- with merge .destination $defaultValues }}
 pyroscope.write {{ include "helper.alloy_name" .name | quote }} {
   endpoint {
-    url = {{ .url | quote }}
+{{- if .urlFrom }} 
+    url = {{ .urlFrom }}
+{{- else }}
+    url = {{ .url | quote }} 
+{{- end }}
     headers = {
 {{- if eq (include "destinations.secret.uses_secret" (dict "destination" . "key" "tenantId")) "true" }}
       "X-Scope-OrgID" = {{ include "destinations.secret.read" (dict "destination" . "key" "tenantId" "nonsensitive" true) }},

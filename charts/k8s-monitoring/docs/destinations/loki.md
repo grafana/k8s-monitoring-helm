@@ -43,6 +43,7 @@ This defines the options for defining a destination for logs that use the Loki p
 | tenantIdFrom | string | `""` | Raw config for accessing the tenant ID. |
 | tenantIdKey | string | `"tenantId"` | The key for storing the tenant ID in the secret. |
 | url | string | `""` | The URL for the Loki destination. |
+| urlFrom | string | `""` | Raw config for accessing the URL. |
 
 ### Secret
 

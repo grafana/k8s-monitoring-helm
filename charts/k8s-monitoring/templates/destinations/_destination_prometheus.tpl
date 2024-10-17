@@ -7,7 +7,11 @@ otelcol.exporter.prometheus {{ include "helper.alloy_name" .name | quote }} {
 
 prometheus.remote_write {{ include "helper.alloy_name" .name | quote }} {
   endpoint {
-    url = {{ .url | quote }}
+{{- if .urlFrom }} 
+    url = {{ .urlFrom }}
+{{- else }}
+    url = {{ .url | quote }} 
+{{- end }}
     headers = {
 {{- if ne (include "destinations.auth.type" .) "sigv4" }}
   {{- if eq (include "destinations.secret.uses_secret" (dict "destination" . "key" "tenantId")) "true" }}

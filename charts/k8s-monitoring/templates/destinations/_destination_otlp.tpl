@@ -60,7 +60,11 @@ otelcol.exporter.otlp {{ include "helper.alloy_name" .name | quote }} {
 otelcol.exporter.otlphttp {{ include "helper.alloy_name" .name | quote }} {
 {{- end }}
   client {
-    endpoint = {{ .url | quote }}
+{{- if .urlFrom }} 
+    endpoint = {{ .urlFrom }}
+{{- else }}
+    endpoint = {{ .url | quote }} 
+{{- end }}
 {{- if eq .authMode "basic" }}
     auth = otelcol.auth.basic.{{ include "helper.alloy_name" .name }}.handler
 {{- else if eq .authMode "bearerToken" }}
