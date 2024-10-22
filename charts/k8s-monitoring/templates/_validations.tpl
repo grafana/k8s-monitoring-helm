@@ -16,8 +16,8 @@
   {{- $aFeatureIsEnabled = or $aFeatureIsEnabled (eq (include (printf "features.%s.enabled" $feature) (dict "Values" $.Values)) "true") }}
 {{- end }}
 {{- range $collector := ((include "collectors.list" .) | fromYamlArray ) }}
-  {{- $aFeatureIsEnabled = or $aFeatureIsEnabled (and (index $.Values $collector).remoteConfig.enabled) }}
-  {{- $aFeatureIsEnabled = or $aFeatureIsEnabled (and (index $.Values $collector).extraConfig) }}
+  {{- $aFeatureIsEnabled = or $aFeatureIsEnabled ((index $.Values $collector).remoteConfig.enabled) }}
+  {{- $aFeatureIsEnabled = or $aFeatureIsEnabled ((index $.Values $collector).extraConfig) }}
 {{- end }}
 {{- if not $aFeatureIsEnabled }}
   {{- $msg := list "" "No features are enabled. Please choose a feature to start monitoring. For example:" }}
