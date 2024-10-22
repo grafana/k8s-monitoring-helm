@@ -32,11 +32,12 @@ data:
         username = nonsensitive(remote.kubernetes.secret.alloy_metrics_remote_cfg.data["username"])
         password = remote.kubernetes.secret.alloy_metrics_remote_cfg.data["password"]
       }
-      id = "remote-config-example-cluster-default-" + constants.hostnamepoll_frequency = "5m"
+      id = "remote-config-example-cluster-default-" + constants.hostname
+      poll_frequency = "5m"
       attributes = {
         "cluster" = "remote-config-example-cluster",
         "platform" = "kubernetes",
-        "workloadType": "statefulset",
+        "workloadType" = "statefulset",
       }
     }
 ---
@@ -267,7 +268,7 @@ spec:
             - --cluster.enabled=true
             - --cluster.join-addresses=ko-alloy-metrics-cluster
             - --cluster.name="alloy-metrics"
-            - --stability.level=generally-available
+            - --stability.level=public-preview
           env:
             - name: ALLOY_DEPLOY_MODE
               value: "helm"
