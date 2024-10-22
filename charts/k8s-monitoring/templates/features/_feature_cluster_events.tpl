@@ -1,4 +1,11 @@
 {{- define "features.clusterEvents.enabled" }}{{ .Values.clusterEvents.enabled }}{{- end }}
+
+{{- define "features.clusterEvents.collectors" }}
+{{- if .Values.clusterEvents.enabled -}}
+- {{ .Values.clusterEvents.collector }}
+{{- end }}
+{{- end }}
+
 {{- define "features.clusterEvents.include" }}
 {{- if .Values.clusterEvents.enabled -}}
 {{- $destinations := include "features.clusterEvents.destinations" . | fromYamlArray }}

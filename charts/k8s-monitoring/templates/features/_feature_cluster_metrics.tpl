@@ -1,4 +1,11 @@
 {{- define "features.clusterMetrics.enabled" }}{{ .Values.clusterMetrics.enabled }}{{- end }}
+
+{{- define "features.clusterMetrics.collectors" }}
+{{- if .Values.clusterMetrics.enabled -}}
+- {{ .Values.clusterMetrics.collector }}
+{{- end }}
+{{- end }}
+
 {{- define "features.clusterMetrics.include" }}
 {{- if .Values.clusterMetrics.enabled -}}
 {{- $destinations := include "features.clusterMetrics.destinations" . | fromYamlArray }}

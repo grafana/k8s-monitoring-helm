@@ -1,4 +1,11 @@
 {{- define "features.profiling.enabled" }}{{ .Values.profiling.enabled }}{{- end }}
+
+{{- define "features.profiling.collectors" }}
+{{- if .Values.profiling.enabled -}}
+- {{ .Values.profiling.collector }}
+{{- end }}
+{{- end }}
+
 {{- define "features.profiling.include" }}
 {{- if .Values.profiling.enabled -}}
 {{- $destinations := include "features.profiling.destinations" . | fromYamlArray }}

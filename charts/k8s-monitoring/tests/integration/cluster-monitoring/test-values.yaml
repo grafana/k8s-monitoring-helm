@@ -9,6 +9,16 @@ tests:
       LOKI_USER: loki
       LOKI_PASS: lokipassword
     queries:
+      # Self reporting metrics
+      - query: grafana_kubernetes_monitoring_build_info{cluster="cluster-monitoring-feature-test"}
+        type: promql
+      - query: grafana_kubernetes_monitoring_feature_info{cluster="cluster-monitoring-feature-test", feature="clusterMetrics"}
+        type: promql
+      - query: grafana_kubernetes_monitoring_feature_info{cluster="cluster-monitoring-feature-test", feature="clusterEvents"}
+        type: promql
+      - query: grafana_kubernetes_monitoring_feature_info{cluster="cluster-monitoring-feature-test", feature="podLogs", method="volumes"}
+        type: promql
+
       # Cluster metrics
       - query: kubernetes_build_info{cluster="cluster-monitoring-feature-test", job="integrations/kubernetes/kubelet"}
         type: promql

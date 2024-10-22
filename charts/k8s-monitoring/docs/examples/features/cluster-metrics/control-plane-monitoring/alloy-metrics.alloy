@@ -37,6 +37,7 @@ prometheus.remote_write "prometheus" {
     }
   }
 }
+
 // Feature: Cluster Metrics
 declare "cluster_metrics" {
   argument "metrics_destinations" {
@@ -344,38 +345,6 @@ declare "cluster_metrics" {
   }  
 }
 cluster_metrics "feature" {
-  metrics_destinations = [
-    prometheus.remote_write.prometheus.receiver,
-  ]
-}
-
-
-declare "etcd_integration" {
-  argument "metrics_destinations" {
-    comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
-  }
-
-  import.git "etcd" {
-    repository = "https://github.com/grafana/alloy-modules.git"
-    revision = "main"
-    path = "modules/databases/kv/etcd/metrics.alloy"
-    pull_frequency = "15m"
-  }
-  
-  etcd.kubernetes "k8s_controlplane_etcd" {
-    label_selectors = ["app.kubernetes.io/component=etcd"]
-    port_name = "metrics"
-  }
-  
-  etcd.scrape "k8s_controlplane_etcd" {
-    targets = etcd.kubernetes.k8s_controlplane_etcd.output
-    clustering = true
-    scrape_interval = "60s"
-    max_cache_size = 100000
-    forward_to = argument.metrics_destinations.value
-  }
-}
-etcd_integration "integration" {
   metrics_destinations = [
     prometheus.remote_write.prometheus.receiver,
   ]

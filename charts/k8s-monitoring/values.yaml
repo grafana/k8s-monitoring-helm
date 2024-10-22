@@ -121,6 +121,9 @@ annotationAutodiscovery:
   # @section -- Features - Annotation Autodiscovery
   destinations: []
 
+  # -- Which collector to assign this feature to. Do not change this unless you are sure of what you are doing.
+  # @section -- Features - Annotation Autodiscovery
+  # @ignored
   collector: alloy-metrics
 
 # -- Prometheus Operator Objects enables the gathering of metrics from objects like Probes, PodMonitors, and
@@ -202,6 +205,20 @@ integrations:
     metrics: alloy-metrics
     logs: alloy-logs
 
+
+# -- Self-reporting creates a single metric and log that reports anonymized information about how this Helm chart was
+# configured. It reports features enabled, destinations types used, and alloy instances enabled. It does not report any
+# actual telemetry data, credentials or configuration, or send any data to any destination other than the ones
+# configured above.
+# @section -- Features - Self-reporting
+selfReporting:
+  # -- Enable Self-reporting.
+  # @section -- Features - Self-reporting
+  enabled: true
+
+  # -- How frequently to generate self-report metrics. This does utilize the global scrapeInterval setting.
+  # @section -- Features - Self-reporting
+  scrapeInterval: 1h
 
 #
 # Collectors (Alloy instances)

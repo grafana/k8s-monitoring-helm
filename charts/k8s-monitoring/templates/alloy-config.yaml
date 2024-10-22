@@ -1,0 +1,37 @@
+{{- range $collector := include "collectors.list.enabled" . | fromYamlArray }}
+{{- $selfReportingEnabled := false }}
+{{- $destinations := list }}
+{{- range $feature := include "features.list" $ | fromYamlArray }}
+  {{- if has $collector (include (printf "features.%s.collectors" $feature) $ | fromYamlArray ) }}
+    {{- if eq $feature "selfReporting" }}
+      {{- $selfReportingEnabled = true }}
+    {{- end }}
+    {{- $destinations = concat $destinations ((include (printf "features.%s.destinations" $feature) $) | fromYamlArray) }}
+  {{- end }}
+{{- end }}
+
+{{/* Save the top level object and add the collector name */}}
+{{- $values := deepCopy $ | merge (dict "collectorName" $collector) }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "alloy.fullname" (index $.Subcharts $collector) }}
+  namespace: {{ $.Release.Namespace }}
+data:
+  config.alloy: |-
+    {{- include "destinations.alloy.config" (deepCopy $ | merge (dict "names" $destinations)) | trim | nindent 4 }}
+{{- range $feature := include "features.list" . | fromYamlArray }}
+  {{- if has $collector (include (printf "features.%s.collectors" $feature) $ | fromYamlArray ) }}
+    {{ include (printf "features.%s.include" $feature) $values | trim | nindent 4 }}
+  {{- end }}
+{{- end }}
+    {{- include "collectors.logging.alloy" $values | trim | nindent 4 }}
+    {{- include "collectors.liveDebugging.alloy" $values | trim | nindent 4 }}
+    {{- if (index $.Values $collector).extraConfig }}
+      {{ (index $.Values $collector).extraConfig | trim | nindent 4 }}
+    {{- end }}
+{{- if $selfReportingEnabled }}
+  {{- include "features.selfReporting.file" $values | trim | nindent 2 }}
+{{- end }}
+{{- end }}

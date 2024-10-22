@@ -13,3 +13,7 @@ Scrapes metrics from {{ include "english_list" $sources }}.
 {{- end }}
 
 {{- define "feature.prometheusOperatorObjects.notes.actions" }}{{- end }}
+
+{{- define "feature.prometheusOperatorObjects.summary" -}}
+version: {{ .Chart.Version }}
+{{- end }}

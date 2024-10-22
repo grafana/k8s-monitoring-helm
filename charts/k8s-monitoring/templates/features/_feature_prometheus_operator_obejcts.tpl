@@ -1,4 +1,11 @@
 {{- define "features.prometheusOperatorObjects.enabled" }}{{ .Values.prometheusOperatorObjects.enabled }}{{- end }}
+
+{{- define "features.prometheusOperatorObjects.collectors" }}
+{{- if .Values.prometheusOperatorObjects.enabled -}}
+- {{ .Values.prometheusOperatorObjects.collector }}
+{{- end }}
+{{- end }}
+
 {{- define "features.prometheusOperatorObjects.include" }}
 {{- if .Values.prometheusOperatorObjects.enabled -}}
 {{- $destinations := include "features.prometheusOperatorObjects.destinations" . | fromYamlArray }}

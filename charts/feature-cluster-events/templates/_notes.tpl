@@ -5,3 +5,7 @@ Gather Kubernetes Cluster events{{- if .Values.namespaces }} from the namespaces
 {{- end }}
 
 {{- define "feature.clusterEvents.notes.actions" }}{{- end }}
+
+{{- define "feature.clusterEvents.summary" -}}
+version: {{ .Chart.Version }}
+{{- end }}
