@@ -70,8 +70,8 @@ In order to specify different destinations of the same type, you can use multipl
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | attempts | int | `10` | Number of times to retry the test on failure. |
-| delay | int | `60` | Delay, in seconds, between test runs. |
-| initialDelay | int | `10` | Initial delay, in seconds, before starting the first test run. |
+| delay | int | `30` | Delay, in seconds, between test runs. |
+| initialDelay | int | `0` | Initial delay, in seconds, before starting the first test run. |
 | tests | list | `[]` | The tests to run. Each should contain an "env" object and a "queries" list. |
 
 ### General settings

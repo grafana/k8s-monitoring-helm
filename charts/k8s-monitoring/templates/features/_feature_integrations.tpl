@@ -7,10 +7,10 @@
 {{- define "features.integrations.collectors" }}
 {{- $metricIntegrations := include "feature.integrations.configured.metrics" (dict "Values" .Values.integrations) | fromYamlArray }}
 {{- $logIntegrations := include "feature.integrations.configured.logs" (dict "Values" .Values.integrations) | fromYamlArray }}
-{{- if $logIntegrations }}
+{{- if (not (empty $metricIntegrations)) }}
 - {{ .Values.integrations.collectors.metrics }}
 {{- end }}
-{{- if $logIntegrations }}
+{{- if (not (empty $logIntegrations)) }}
 - {{ .Values.integrations.collectors.logs }}
 {{- end }}
 {{- end }}
@@ -25,18 +25,40 @@
     {{ include "destinations.alloy.targets" (dict "destinations" $.Values.destinations "names" $destinations "type" "metrics" "ecosystem" "prometheus") | indent 4 | trim }}
   ]
 }
-{{- end -}}
-{{- end -}}
+{{- end }}
+{{- end }}
+
+{{- define "features.integrations.logs.include" }}
+{{- $destinations := include "features.integrations.destinations.logs" . | fromYamlArray }}
+{{- $integrations := include "feature.integrations.configured.logs" (dict "Values" .Values.integrations) | fromYamlArray }}
+{{- range $integrationType := $integrations }}
+  {{- include (printf "integrations.%s.module.metrics" $integrationType) (dict "Values" $.Values.integrations "Files" $.Subcharts.integrations.Files) | indent 0 }}
+{{ include "helper.alloy_name" $integrationType }}_integration "integration" {
+  logs_destinations = [
+    {{ include "destinations.alloy.targets" (dict "destinations" $.Values.destinations "names" $destinations "type" "logs" "ecosystem" "loki") | indent 4 | trim }}
+  ]
+}
+{{- end }}
+{{- end }}
+
+{{- define "features.integrations.include" }}
+{{- if eq .collectorName .Values.integrations.collectors.metrics }}
+  {{ include "features.integrations.metrics.include" . | indent 0 }}
+{{- end }}
+{{- if eq .collectorName .Values.integrations.collectors.logs }}
+  {{ include "features.integrations.logs.include" . | indent 0 }}
+{{- end }}
+{{- end }}
 
 {{- define "features.integrations.destinations" }}
 {{- $metricDestinations := include "features.integrations.destinations.metrics" . | fromYamlArray }}
 {{- $logDestinations := include "features.integrations.destinations.logs" . | fromYamlArray }}
 {{- concat $metricDestinations $logDestinations | uniq | toYaml }}
-{{- end -}}
+{{- end }}
 
 {{- define "features.integrations.destinations.metrics" }}
 {{- include "destinations.get" (dict "destinations" $.Values.destinations "type" "metrics" "ecosystem" "prometheus" "filter" $.Values.integrations.destinations) -}}
-{{- end -}}
+{{- end }}
 
 {{- define "features.integrations.destinations.logs" }}
 []
@@ -51,14 +73,13 @@
   {{- $metricDestinations := include "features.integrations.destinations.metrics" . | fromYamlArray }}
   {{- include "destinations.validate_destination_list" (dict "destinations" $metricDestinations "type" "metrics" "ecosystem" "prometheus" "feature" $featureName) }}
   {{- include "collectors.require_collector" (dict "Values" $.Values "name" "alloy-metrics" "feature" $featureName) }}
-{{- end -}}
+{{- end }}
 
 {{- $logIntegrations := include "feature.integrations.configured.logs" (dict "Values" .Values.integrations) | fromYamlArray }}
 {{- if $logIntegrations }}
   {{- $logDestinations := include "features.integrations.destinations.logs" . | fromYamlArray }}
   {{- include "destinations.validate_destination_list" (dict "destinations" $logDestinations "type" "log" "ecosystem" "loki" "feature" $featureName) }}
   {{- include "collectors.require_collector" (dict "Values" $.Values "name" "alloy-logs" "feature" $featureName) }}
-{{- end -}}
-
-{{- end -}}
-{{- end -}}
+{{- end }}
+{{- end }}
+{{- end }}
