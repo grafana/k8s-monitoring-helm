@@ -241,38 +241,3 @@ cluster_metrics "feature" {
     prometheus.remote_write.prometheus.receiver,
   ]
 }
-
-// Self Reporting
-prometheus.exporter.unix "kubernetes_monitoring_telemetry" {
-  set_collectors = ["textfile"]
-  textfile {
-    directory = "/etc/alloy"
-  }
-}
-
-discovery.relabel "kubernetes_monitoring_telemetry" {
-  targets = prometheus.exporter.unix.kubernetes_monitoring_telemetry.targets
-  rule {
-    target_label = "instance"
-    action = "replace"
-    replacement = "ko"
-  }
-  rule {
-    target_label = "job"
-    action = "replace"
-    replacement = "integrations/kubernetes/kubernetes_monitoring_telemetry"
-  }
-}
-
-prometheus.scrape "kubernetes_monitoring_telemetry" {
-  job_name   = "integrations/kubernetes/kubernetes_monitoring_telemetry"
-  targets    = discovery.relabel.kubernetes_monitoring_telemetry.output
-  scrape_interval = "1h"
-  clustering {
-    enabled = true
-  }
-  forward_to = [
-    prometheus.remote_write.prometheus.receiver,
-  ]
-}
-

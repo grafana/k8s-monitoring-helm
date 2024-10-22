@@ -19,7 +19,7 @@ metadata:
   name: {{ include "alloy.fullname" (index $.Subcharts $collector) }}
   namespace: {{ $.Release.Namespace }}
 data:
-  config.alloy: |
+  config.alloy: |-
     {{- include "destinations.alloy.config" (deepCopy $ | merge (dict "names" $destinations)) | trim | nindent 4 }}
 {{- range $feature := include "features.list" . | fromYamlArray }}
   {{- if has $collector (include (printf "features.%s.collectors" $feature) $ | fromYamlArray ) }}

@@ -4,7 +4,7 @@
 {{- end -}}
 
 {{- define "features.selfReporting.collectors" -}}
-{{- if .Values.selfReporting.enabled}}
+{{- if eq (include "features.selfReporting.enabled" .) "true" }}
   {{- $collectorsByIncreasingPreference := list "alloy-receiver" "alloy-metrics" "alloy-singleton" }}
   {{- $chosenCollector := "" }}
   {{- range $collector := $collectorsByIncreasingPreference }}
@@ -15,13 +15,14 @@
 {{- end }}
 
 {{- define "features.selfReporting.destinations" }}
-{{- if .Values.clusterMetrics.enabled -}}
+{{- if eq (include "features.selfReporting.enabled" .) "true" }}
 {{- include "destinations.get" (dict "destinations" $.Values.destinations "type" "metrics" "ecosystem" "prometheus" "filter" $.Values.clusterMetrics.destinations) -}}
-{{- end -}}
-{{ end }}
+{{- end }}
+{{- end }}
 
 {{- define "features.selfReporting.validate" }}{{ end }}
 {{- define "features.selfReporting.include" }}
+{{- if eq (include "features.selfReporting.enabled" .) "true" }}
 {{- $destinations := include "destinations.get" (dict "destinations" $.Values.destinations "type" "metrics" "ecosystem" "otlp" "filter" $.Values.applicationObservability.destinations) | fromYamlArray -}}
 
 // Self Reporting
@@ -57,9 +58,11 @@ prometheus.scrape "kubernetes_monitoring_telemetry" {
     {{ include "destinations.alloy.targets" (dict "destinations" $.Values.destinations "names" $destinations "type" "metrics" "ecosystem" "prometheus") | indent 4 | trim }}
   ]
 }
-{{ end }}
+{{- end }}
+{{- end }}
 
 {{- define "features.selfReporting.file" }}
+{{- if eq (include "features.selfReporting.enabled" .) "true" }}
 self-reporting-metric.prom: |
   # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart
   # TYPE grafana_kubernetes_monitoring_build_info gauge
@@ -72,6 +75,7 @@ self-reporting-metric.prom: |
   grafana_kubernetes_monitoring_feature_info{{ include "label_list" (merge $featureSummary (dict "feature" $feature)) }} 1
     {{- end }}
   {{- end }}
+{{- end }}
 {{- end }}
 
 {{- define "feature.selfReporting.notes.deployments" }}{{ end }}

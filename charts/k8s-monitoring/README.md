@@ -291,6 +291,14 @@ podLogs:
 | prometheusOperatorObjects.destinations | list | `[]` | The destinations where metrics will be sent. If empty, all metrics-capable destinations will be used. |
 | prometheusOperatorObjects.enabled | bool | `false` | Enable gathering metrics from Prometheus Operator Objects. |
 
+### Features - Self-reporting
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| selfReporting | object | `{"enabled":true,"scrapeInterval":"1h"}` | Self-reporting creates a single metric and log that reports anonymized information about how this Helm chart was configured. It reports features enabled, destinations types used, and alloy instances enabled. It does not report any actual telemetry data, credentials or configuration, or send any data to any destination other than the ones configured above. |
+| selfReporting.enabled | bool | `true` | Enable Self-reporting. |
+| selfReporting.scrapeInterval | string | `"1h"` | How frequently to generate self-report metrics. This does utilize the global scrapeInterval setting. |
+
 ### Other Values
 
 | Key | Type | Default | Description |
