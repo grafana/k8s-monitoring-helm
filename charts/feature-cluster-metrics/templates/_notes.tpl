@@ -40,6 +40,6 @@ Scrape Kubernetes Cluster metrics
 {{- if (index .Values "windows-exporter").deploy }}{{- $deployments = append $deployments "windows-exporter" }}{{ end }}
 {{- if .Values.kepler.enabled }}{{- $deployments = append $deployments "kepler" }}{{ end }}
 version: {{ .Chart.Version }}
-sources: {{ $sources | toJson }}
-deployments: {{ $deployments | toJson }}
+sources: {{ $sources | join "," }}
+deployments: {{ $deployments | join "," }}
 {{- end }}

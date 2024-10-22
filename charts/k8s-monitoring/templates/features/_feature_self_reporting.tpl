@@ -1,6 +1,6 @@
 {{- define "features.selfReporting.enabled" -}}
 {{- $metricsDestinations := include "destinations.get" (dict "destinations" $.Values.destinations "type" "metrics" "ecosystem" "otlp" "filter" $.Values.applicationObservability.destinations) | fromYamlArray -}}
-{{ and .Values.selfReporting.enabled $metricsDestinations }}
+{{ and .Values.selfReporting.enabled (not (empty $metricsDestinations)) }}
 {{- end -}}
 
 {{- define "features.selfReporting.collectors" -}}
