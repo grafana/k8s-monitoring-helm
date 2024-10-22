@@ -1,29 +1,25 @@
 Grafana {{.Chart.Name}} Helm chart deployed!
 
 This chart will install the following components:
-{{- range $feature := (include "features.list" .) | fromYamlArray }}
-  {{- if eq (include (printf "features.%s.enabled" $feature) (dict "Values" $.Values)) "true" }}
-    {{- include (printf "feature.%s.notes.deployments" $feature) (dict "Values" (index $.Values $feature)) | indent 0 }}
-  {{- end }}
+{{- range $feature := (include "features.list.enabled" .) | fromYamlArray }}
+  {{- include (printf "feature.%s.notes.deployments" $feature) (dict "Values" (index $.Values $feature)) | indent 0 }}
 {{- end }}
 {{- include "collectors.notes.deployments" . }}
 
 It will:
-{{- range $feature := (include "features.list" .) | fromYamlArray }}
-  {{- if eq (include (printf "features.%s.enabled" $feature) (dict "Values" $.Values)) "true" }}
+{{- range $feature := (include "features.list.enabled" .) | fromYamlArray }}
+  {{- if ne $feature "selfReporting" }}
     {{- $task := include (printf "feature.%s.notes.task" $feature) (dict "Values" (index $.Values $feature)) | trim }}
     {{- $destinations := include (printf "features.%s.destinations" $feature) (dict "Values" $.Values) | fromYamlArray }}
 * {{ $task }} and send data to {{ include "english_list" $destinations }}.
   {{- end }}
 {{- end }}
 
-{{- range $feature := (include "features.list" .) | fromYamlArray }}
-  {{- if eq (include (printf "features.%s.enabled" $feature) (dict "Values" $.Values)) "true" }}
-    {{- $collectorName := (index $.Values $feature).collector }}
-    {{- $Collector := dict "Namespace" $.Release.Namespace }}
-    {{- if $collectorName }}
-      {{- $Collector = merge $Collector (dict "ServiceName" (include "alloy.fullname" (index $.Subcharts $collectorName))) }}
-    {{- end }}
-    {{ include (printf "feature.%s.notes.actions" $feature) (dict "Values" (index $.Values $feature) "Collector" $Collector) | indent 0 }}
+{{- range $feature := (include "features.list.enabled" .) | fromYamlArray }}
+  {{- $collectorName := (index $.Values $feature).collector }}
+  {{- $Collector := dict "Namespace" $.Release.Namespace }}
+  {{- if $collectorName }}
+    {{- $Collector = merge $Collector (dict "ServiceName" (include "alloy.fullname" (index $.Subcharts $collectorName))) }}
   {{- end }}
+  {{ include (printf "feature.%s.notes.actions" $feature) (dict "Values" (index $.Values $feature) "Collector" $Collector) | indent 0 }}
 {{- end }}
