@@ -34,6 +34,15 @@ installing them for a better experience:
 
 Each chart has a Makefile with targets to automate much of the process.
 
+## Contributor Guides
+
+Each component has its own guide for contributing:
+
+{{/** [Main Helm chart](./charts/k8s-monitoring/README.md#Contributing)*/}}
+{{/** [Feature subcharts](./charts/k8s-monitoring/docs/Features.md)*/}}
+{{/** [Integrations](./charts/feature-integrations/README.md#Contributing)*/}}
+* [Destinations](./charts/k8s-monitoring/docs/Destinations.md)
+
 ## Building
 
 Lots of files in this repository are generated in order to reduce duplication and ensure consistency. To build these
