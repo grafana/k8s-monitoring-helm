@@ -14,12 +14,12 @@ remotecfg {
   id = {{ .id | quote }}
 {{- else }}
   id = "{{ $.Values.cluster.name }}-{{ $.Release.Namespace }}-" + constants.hostname
-{{- end -}}
+{{- end }}
   poll_frequency = {{ .pollFrequency | quote }}
   attributes = {
     "cluster" = {{ $.Values.cluster.name | quote }},
     "platform" = "kubernetes",
-    "workloadType": {{ (index $.Values $.collectorName).controller.type | quote }},
+    "workloadType" = {{ (index $.Values $.collectorName).controller.type | quote }},
 {{- range $key, $value := .extraAttributes }}
     {{ $key | quote }} = {{ $value | quote }},
 {{- end }}

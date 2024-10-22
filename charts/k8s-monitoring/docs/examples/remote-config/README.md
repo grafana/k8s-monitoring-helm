@@ -12,6 +12,8 @@ cluster:
 
 alloy-metrics:
   enabled: true
+  alloy:
+    stabilityLevel: public-preview
   remoteConfig:
     enabled: true
     url: "https://remote-config.example.com/alloy"
