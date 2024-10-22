@@ -1,12 +1,13 @@
 {{- define "collectors.remoteConfig.alloy" -}}
-{{- with (index .Values .collectorName).remoteConfig }}
+{{- $remoteConfigValues := (index .Values .collectorName).remoteConfig }}
+{{- with merge $remoteConfigValues (dict "type" "remoteConfig" "name" (printf "%s-remote-cfg" .collectorName)) }}
 {{- if .enabled }}
 remotecfg {
   url = {{ .url | quote }}
-{{- if eq .auth.type "basic" }}
+{{- if eq (include "secrets.authType" .) "basic" }}
   basic_auth {
-    username = {{ include "destinations.secret.read" (dict "destination" . "key" "auth.username" "nonsensitive" true) }}
-    password = {{ include "destinations.secret.read" (dict "destination" . "key" "auth.password") }}
+    username = {{ include "secrets.read" (dict "object" . "key" "auth.username" "nonsensitive" true) }}
+    password = {{ include "secrets.read" (dict "object" . "key" "auth.password") }}
   }
 {{- end -}}
 {{- if .id }}
@@ -21,14 +22,14 @@ remotecfg {
     "workloadType": {{ (index $.Values $.collectorName).controller.type | quote }},
 {{- range $key, $value := .extraAttributes }}
     {{ $key | quote }} = {{ $value | quote }},
-{{- end -}}
+{{- end }}
   }
 }
 {{- end -}}
 {{- end -}}
 {{- end -}}
 
-{{- define "collectors.remoteConfig.secrets" -}}
+{{- define "secrets.list.remoteConfig" -}}
 - auth.username
 - auth.password
 {{- end -}}

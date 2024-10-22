@@ -15,14 +15,14 @@ otelcol.receiver.loki {{ include "helper.alloy_name" .name | quote }} {
   }
 }
 {{- end }}
-{{- if eq (include "destinations.auth.type" .) "basic" }}
+{{- if eq (include "secrets.authType" .) "basic" }}
 otelcol.auth.basic {{ include "helper.alloy_name" .name | quote }} {
-  username = {{ include "destinations.secret.read" (dict "destination" . "key" "auth.username" "nonsensitive" true) }}
-  password = {{ include "destinations.secret.read" (dict "destination" . "key" "auth.password") }}
+  username = {{ include "secrets.read" (dict "object" . "key" "auth.username" "nonsensitive" true) }}
+  password = {{ include "secrets.read" (dict "object" . "key" "auth.password") }}
 }
-{{- else if eq (include "destinations.auth.type" .) "bearerToken" }}
+{{- else if eq (include "secrets.authType" .) "bearerToken" }}
 otelcol.auth.bearer {{ include "helper.alloy_name" .name | quote }} {
-  token = {{ include "destinations.secret.read" (dict "destination" . "key" "auth.bearerToken") }}
+  token = {{ include "secrets.read" (dict "object" . "key" "auth.bearerToken") }}
 }
 {{- end }}
 
@@ -30,15 +30,15 @@ otelcol.processor.transform {{ include "helper.alloy_name" .name | quote }} {
   error_mode = "ignore"
   metric_statements {
     context = "resource"
-    statements = ["set(attributes[\"k8s.cluster.name\"], \"{{ $.clusterName }}\") where attributes[\"k8s.cluster.name\"] == nil"]
+    statements = ["set(attributes[\"k8s.cluster.name\"], \"{{ $.Values.cluster.name }}\") where attributes[\"k8s.cluster.name\"] == nil"]
   }
   log_statements {
     context = "resource"
-    statements = ["set(attributes[\"k8s.cluster.name\"], \"{{ $.clusterName }}\") where attributes[\"k8s.cluster.name\"] == nil"]
+    statements = ["set(attributes[\"k8s.cluster.name\"], \"{{ $.Values.cluster.name }}\") where attributes[\"k8s.cluster.name\"] == nil"]
   }
   trace_statements {
     context = "resource"
-    statements = ["set(attributes[\"k8s.cluster.name\"], \"{{ $.clusterName }}\") where attributes[\"k8s.cluster.name\"] == nil"]
+    statements = ["set(attributes[\"k8s.cluster.name\"], \"{{ $.Values.cluster.name }}\") where attributes[\"k8s.cluster.name\"] == nil"]
   }
 
   output {
@@ -71,8 +71,8 @@ otelcol.exporter.otlphttp {{ include "helper.alloy_name" .name | quote }} {
     auth = otelcol.auth.bearer.{{ include "helper.alloy_name" .name }}.handler
 {{- end }}
     headers = {
-{{- if eq (include "destinations.secret.uses_secret" (dict "destination" . "key" "tenantId")) "true" }}
-      "X-Scope-OrgID" = {{ include "destinations.secret.read" (dict "destination" . "key" "tenantId" "nonsensitive" true) }},
+{{- if eq (include "secrets.usesKubernetesSecret" .) "true" }}
+      "X-Scope-OrgID" = {{ include "secrets.read" (dict "object" . "key" "tenantId" "nonsensitive" true) }},
 {{- end }}
 {{- range $key, $value := .extraHeaders }}
       {{ $key | quote }} = {{ $value | quote }},
@@ -92,14 +92,14 @@ otelcol.exporter.otlphttp {{ include "helper.alloy_name" .name | quote }} {
     tls {
       insecure = {{ .tls.insecure | default false }}
       insecure_skip_verify = {{ .tls.insecureSkipVerify | default false }}
-      {{- if eq (include "destinations.secret.uses_secret" (dict "destination" . "key" "tls.ca")) "true" }}
-      ca_pem = {{ include "destinations.secret.read" (dict "destination" . "key" "tls.ca" "nonsensitive" true) }}
+      {{- if eq (include "secrets.usesKubernetesSecret" .) "true" }}
+      ca_pem = {{ include "secrets.read" (dict "object" . "key" "tls.ca" "nonsensitive" true) }}
       {{- end }}
-      {{- if eq (include "destinations.secret.uses_secret" (dict "destination" . "key" "tls.cert")) "true" }}
-      cert_pem = {{ include "destinations.secret.read" (dict "destination" . "key" "tls.cert" "nonsensitive" true) }}
+      {{- if eq (include "secrets.usesKubernetesSecret" .) "true" }}
+      cert_pem = {{ include "secrets.read" (dict "object" . "key" "tls.cert" "nonsensitive" true) }}
       {{- end }}
-      {{- if eq (include "destinations.secret.uses_secret" (dict "destination" . "key" "tls.key")) "true" }}
-      key_pem = {{ include "destinations.secret.read" (dict "destination" . "key" "tls.key") }}
+      {{- if eq (include "secrets.usesKubernetesSecret" .) "true" }}
+      key_pem = {{ include "secrets.read" (dict "object" . "key" "tls.key") }}
       {{- end }}
     }
 {{- end }}
@@ -108,7 +108,7 @@ otelcol.exporter.otlphttp {{ include "helper.alloy_name" .name | quote }} {
 {{- end }}
 {{- end }}
 
-{{- define "destinations.otlp.secrets" -}}
+{{- define "secrets.list.otlp" -}}
 - tenantId
 - auth.username
 - auth.password

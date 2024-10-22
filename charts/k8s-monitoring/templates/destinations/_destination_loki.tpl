@@ -12,8 +12,8 @@ loki.write {{ include "helper.alloy_name" .name | quote }} {
 {{- else }}
     url = {{ .url | quote }} 
 {{- end }}
-{{- if eq (include "destinations.secret.uses_secret" (dict "destination" . "key" "tenantId")) "true" }}
-    tenant_id = {{ include "destinations.secret.read" (dict "destination" . "key" "tenantId" "nonsensitive" true) }}
+{{- if eq (include "secrets.usesKubernetesSecret" .) "true" }}
+    tenant_id = {{ include "secrets.read" (dict "object" . "key" "tenantId" "nonsensitive" true) }}
 {{- end }}
 {{- if or .extraHeaders .extraHeadersFrom }}
     headers = {
@@ -25,18 +25,18 @@ loki.write {{ include "helper.alloy_name" .name | quote }} {
 {{- end }}
     }
 {{- end }}
-{{- if eq (include "destinations.auth.type" .) "basic" }}
+{{- if eq (include "secrets.authType" .) "basic" }}
     basic_auth {
-      username = {{ include "destinations.secret.read" (dict "destination" . "key" "auth.username" "nonsensitive" true) }}
-      password = {{ include "destinations.secret.read" (dict "destination" . "key" "auth.password") }}
+      username = {{ include "secrets.read" (dict "object" . "key" "auth.username" "nonsensitive" true) }}
+      password = {{ include "secrets.read" (dict "object" . "key" "auth.password") }}
     }
-{{- else if eq (include "destinations.auth.type" .) "bearerToken" }}
-    bearer_token = {{ include "destinations.secret.read" (dict "destination" . "key" "auth.bearerToken") }}
+{{- else if eq (include "secrets.authType" .) "bearerToken" }}
+    bearer_token = {{ include "secrets.read" (dict "object" . "key" "auth.bearerToken") }}
 {{- end }}
   }
   external_labels = {
-    cluster = {{ $.clusterName | quote }},
-    "k8s_cluster_name" = {{ $.clusterName | quote }},
+    cluster = {{ $.Values.cluster.name | quote }},
+    "k8s_cluster_name" = {{ $.Values.cluster.name | quote }},
 {{- if .extraLabels }}
   {{- range $k, $v := .extraLabels }}
     {{ $k }} = {{ $v | quote }},
@@ -52,7 +52,7 @@ loki.write {{ include "helper.alloy_name" .name | quote }} {
 {{- end }}
 {{- end }}
 
-{{- define "destinations.loki.secrets" -}}
+{{- define "secrets.list.loki" -}}
 - tenantId
 - auth.username
 - auth.password

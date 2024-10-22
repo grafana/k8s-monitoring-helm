@@ -9,8 +9,8 @@ pyroscope.write {{ include "helper.alloy_name" .name | quote }} {
     url = {{ .url | quote }} 
 {{- end }}
     headers = {
-{{- if eq (include "destinations.secret.uses_secret" (dict "destination" . "key" "tenantId")) "true" }}
-      "X-Scope-OrgID" = {{ include "destinations.secret.read" (dict "destination" . "key" "tenantId" "nonsensitive" true) }},
+{{- if eq (include "secrets.usesKubernetesSecret" .) "true" }}
+      "X-Scope-OrgID" = {{ include "secrets.read" (dict "object" . "key" "tenantId" "nonsensitive" true) }},
 {{- end }}
 {{- range $key, $value := .extraHeaders }}
       {{ $key | quote }} = {{ $value | quote }},
@@ -20,39 +20,39 @@ pyroscope.write {{ include "helper.alloy_name" .name | quote }} {
 {{- end }}
     }
 
-{{- if eq (include "destinations.auth.type" .) "basic" }}
+{{- if eq (include "secrets.authType" .) "basic" }}
     basic_auth {
-      username = {{ include "destinations.secret.read" (dict "destination" . "key" "auth.username" "nonsensitive" true) }}
-      password = {{ include "destinations.secret.read" (dict "destination" . "key" "auth.password") }}
+      username = {{ include "secrets.read" (dict "object" . "key" "auth.username" "nonsensitive" true) }}
+      password = {{ include "secrets.read" (dict "object" . "key" "auth.password") }}
     }
-{{- else if eq (include "destinations.auth.type" .) "bearerToken" }}
-    bearer_token = {{ include "destinations.secret.read" (dict "destination" . "key" "auth.bearerToken") }}
+{{- else if eq (include "secrets.authType" .) "bearerToken" }}
+    bearer_token = {{ include "secrets.read" (dict "object" . "key" "auth.bearerToken") }}
 {{- end }}
 
 {{- if .tls }}
     tls_config {
       insecure_skip_verify = {{ .tls.insecureSkipVerify | default false }}
-      {{- if eq (include "destinations.secret.uses_secret" (dict "destination" . "key" "tls.ca")) "true" }}
-      ca_pem = {{ include "destinations.secret.read" (dict "destination" . "key" "tls.ca" "nonsensitive" true) }}
+      {{- if eq (include "secrets.usesKubernetesSecret" .) "true" }}
+      ca_pem = {{ include "secrets.read" (dict "object" . "key" "tls.ca" "nonsensitive" true) }}
       {{- end }}
-      {{- if eq (include "destinations.secret.uses_secret" (dict "destination" . "key" "tls.cert")) "true" }}
-      cert_pem = {{ include "destinations.secret.read" (dict "destination" . "key" "tls.cert" "nonsensitive" true) }}
+      {{- if eq (include "secrets.usesKubernetesSecret" .) "true" }}
+      cert_pem = {{ include "secrets.read" (dict "object" . "key" "tls.cert" "nonsensitive" true) }}
       {{- end }}
-      {{- if eq (include "destinations.secret.uses_secret" (dict "destination" . "key" "tls.key")) "true" }}
-      key_pem = {{ include "destinations.secret.read" (dict "destination" . "key" "tls.key") }}
+      {{- if eq (include "secrets.usesKubernetesSecret" .) "true" }}
+      key_pem = {{ include "secrets.read" (dict "object" . "key" "tls.key") }}
       {{- end }}
     }
 {{- end }}
   }
 
   external_labels = {
-    cluster = {{ $.clusterName | quote }},
+    cluster = {{ $.Values.cluster.name | quote }},
   }
 }
 {{- end }}
 {{- end }}
 
-{{- define "destinations.pyroscope.secrets" -}}
+{{- define "secrets.list.pyroscope" -}}
 - tenantId
 - auth.username
 - auth.password
