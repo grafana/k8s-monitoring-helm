@@ -141,7 +141,7 @@ podLogs:
 
 ## Contributing
 
-Destinations use a set of special files to define the destination configuration. These files are used to generate the
+Destinations use a specific set of files to define the destination configuration. These files are used to generate the
 destination configuration and documentation.
 
 Several files are used for defining a destination:
@@ -160,7 +160,7 @@ Several files are used for defining a destination:
     -   `destinations.&lt;destination slug&gt;.ecosystem` - Returns the telemetry data ecosystem.
     -   `destinations.&lt;destination slug&gt;.&lt;ecosystem&gt;.&lt;data type&gt;.target` - Returns the name of the Alloy target where telemetry data of the matching type and ecosystem should be sent.
   Multiple target template functions can be made to support converting from one ecosystem to another.
--   `docs/destinations/.doc_templates/&lt;destination slug&gt;.gotmpl` - The documentation template file for the
+-   `docs/destinations/.doc_templates/&lt;destination slug&gt;.gotmpl` - The optional documentation template file for the
   destination. This file can include examples, usage instructions, and other information about the destination.
 
 ### Generated files
