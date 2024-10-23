@@ -69,7 +69,7 @@ Some charts will also generate additional templates and docs based on other file
 If your chart is dependent on external charts, you can update the dependencies by:
 
 1.  Set the dependency's version in Chart.yaml.
-2.  Update the Chart.lock file by running `make -C charts/&lt;the chart you are modifying&gt; build`.
+2.  Update the Chart.lock file by running `make -C charts/<the chart you are modifying> build`.
 
 ### Updating feature dependencies
 
@@ -110,7 +110,7 @@ chart and runs helm test as well.
 To run the integration tests for the `k8s-monitoring` chart, use the following commands:
 
 ```bash
-./scripts/run-integration-test.sh charts/k8s-monitoring/tests/integration/&lt;test dir&gt;
+./scripts/run-integration-test.sh charts/k8s-monitoring/tests/integration/<test dir>
 ```
 
 This will create a new Kubernetes cluster using kind, deploy any required dependencies, deploy the `k8s-monitoring` Helm

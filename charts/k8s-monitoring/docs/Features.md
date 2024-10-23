@@ -75,7 +75,7 @@ To add a new feature, create a new Helm chart in the `charts` directory. The cha
 its name. The following files are required for a feature chart:
 
 -   `templates/_module.alloy.tpl` - This file should contain a template function named
-    `feature.&lt;feature-slug&gt;.module` which should create an [Alloy module](https://grafana.com/docs/alloy/latest/get-started/modules/)
+    `feature.<feature-slug>.module` which should create an [Alloy module](https://grafana.com/docs/alloy/latest/get-started/modules/)
     that wraps the configuration for your feature. It should expose any of these arguments as appropriate:
     -   `metrics_destination` - An argument that defines where scrape metrics should be delivered.
     -   `logs_destination` - An argument that defines where logs should be delivered.
@@ -83,9 +83,9 @@ its name. The following files are required for a feature chart:
     -   `profiles_destination` - An argument that defines where profiles should be delivered.
 
 -   `templates/_notes.alloy.tpl` - This file should contain these template functions:
-    -   `feature.&lt;feature-slug&gt;.notes.deployments` - This function returns a list of workloads that will be
+    -   `feature.<feature-slug>.notes.deployments` - This function returns a list of workloads that will be
     deployed to the Kubernetes Cluster by the feature.
-    -   `feature.&lt;feature-slug&gt;.notes.task` - This function returns a 1-line summary of what this feature will do.
-    -   `feature.&lt;feature-slug&gt;.notes.actions` - This function returns any prompts for the user to take additional
+    -   `feature.<feature-slug>.notes.task` - This function returns a 1-line summary of what this feature will do.
+    -   `feature.<feature-slug>.notes.actions` - This function returns any prompts for the user to take additional
         action after deployment.
-    -   `feature.&lt;feature-slug&gt;.summary` - This function a dictionary of settings, used for self-reporting metrics.
+    -   `feature.<feature-slug>.summary` - This function a dictionary of settings, used for self-reporting metrics.
