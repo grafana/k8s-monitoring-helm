@@ -1,0 +1,130 @@
+// Destination: loki (loki)
+otelcol.exporter.loki "loki" {
+  forward_to = [loki.write.loki.receiver]
+}
+
+loki.write "loki" {
+  endpoint {
+    url = "http://loki.loki.svc:3100/api/push"
+  }
+  external_labels = {
+    cluster = "pod-logs-cluster",
+    "k8s_cluster_name" = "pod-logs-cluster",
+  }
+}
+
+// Feature: Pod Logs
+declare "pod_logs" {
+  argument "logs_destinations" {
+    comment = "Must be a list of log destinations where collected logs should be forwarded to"
+  }
+  
+  discovery.relabel "filtered_pods" {
+    targets = discovery.kubernetes.pods.targets
+    rule {
+      source_labels = ["__meta_kubernetes_namespace"]
+      action = "replace"
+      target_label = "namespace"
+    }
+    rule {
+      source_labels = ["__meta_kubernetes_pod_name"]
+      action = "replace"
+      target_label = "pod"
+    }
+    rule {
+      source_labels = ["__meta_kubernetes_pod_container_name"]
+      action = "replace"
+      target_label = "container"
+    }
+    rule {
+      source_labels = ["__meta_kubernetes_namespace", "__meta_kubernetes_pod_container_name"]
+      separator = "/"
+      action = "replace"
+      replacement = "$1"
+      target_label = "job"
+    }
+  
+    // set the container runtime as a label
+    rule {
+      action = "replace"
+      source_labels = ["__meta_kubernetes_pod_container_id"]
+      regex = "^(\\S+):\\/\\/.+$"
+      replacement = "$1"
+      target_label = "tmp_container_runtime"
+    }
+  }
+  
+  discovery.kubernetes "pods" {
+    role = "pod"
+    selectors {
+      role = "pod"
+      field = "spec.nodeName=" + env("HOSTNAME")
+    }
+  }
+  
+  discovery.relabel "filtered_pods_with_paths" {
+    targets = discovery.relabel.filtered_pods.output
+  
+    rule {
+      source_labels = ["__meta_kubernetes_pod_uid", "__meta_kubernetes_pod_container_name"]
+      separator = "/"
+      action = "replace"
+      replacement = "/var/log/pods/*$1/*.log"
+      target_label = "__path__"
+    }
+  }
+  
+  local.file_match "pod_logs" {
+    path_targets = discovery.relabel.filtered_pods_with_paths.output
+  }
+  
+  loki.source.file "pod_logs" {
+    targets    = local.file_match.pod_logs.targets
+    forward_to = [loki.process.pod_logs.receiver]
+  }
+  
+  loki.process "pod_logs" {
+    stage.match {
+      selector = "{tmp_container_runtime=~\"containerd|cri-o\"}"
+      // the cri processing stage extracts the following k/v pairs: log, stream, time, flags
+      stage.cri {}
+  
+      // Set the extract flags and stream values as labels
+      stage.labels {
+        values = {
+          flags  = "",
+          stream  = "",
+        }
+      }
+    }
+  
+    stage.match {
+      selector = "{tmp_container_runtime=\"docker\"}"
+      // the docker processing stage extracts the following k/v pairs: log, stream, time
+      stage.docker {}
+  
+      // Set the extract stream value as a label
+      stage.labels {
+        values = {
+          stream  = "",
+        }
+      }
+    }
+  
+    // Drop the filename label, since it's not really useful in the context of Kubernetes, where we already have cluster,
+    // namespace, pod, and container labels. Drop any structured metadata. Also drop the temporary
+    // container runtime label as it is no longer needed.
+    stage.label_drop {
+      values = [
+        "filename",
+        "tmp_container_runtime",
+      ]
+    }
+    forward_to = argument.logs_destinations.value
+  }
+}
+pod_logs "feature" {
+  logs_destinations = [
+    loki.write.loki.receiver,
+  ]
+}

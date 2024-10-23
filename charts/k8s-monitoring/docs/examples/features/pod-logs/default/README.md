@@ -16,9 +16,9 @@ destinations:
     type: loki
     url: http://loki.loki.svc:3100/api/push
 
-clusterEvents:
+podLogs:
   enabled: true
 
-alloy-singleton:
+alloy-logs:
   enabled: true
 ```
