@@ -54,11 +54,28 @@ otelcol.processor.memory_limiter "logs_service" {
 {{- end }}
   }
 }
-{{ if eq .authMode "basic" }}
+{{- if eq .authMode "basic" }}
+
 otelcol.auth.basic "logs_service" {
   username = nonsensitive(remote.kubernetes.secret.logs_service.data[{{ .basicAuth.usernameKey | quote }}])
   password = remote.kubernetes.secret.logs_service.data[{{ .basicAuth.passwordKey | quote }}]
 }
+{{- else if eq .authMode "bearerToken" }}
+  {{- if .bearerToken.tokenFile }}
+
+local.file "logs_service_bearer_token" {
+  filename = .bearerToken.tokenFile
+  is_secret = true
+}
+otelcol.auth.bearer "logs_service" {
+  token = local.file.logs_service_bearer_token.content
+}
+  {{- else }}
+
+otelcol.auth.bearer "logs_service" {
+  token = remote.kubernetes.secret.logs_service.data[{{ .bearerToken.tokenKey | quote }}]
+}
+  {{- end }}
 {{- end }}
 {{ if eq .protocol "otlp" }}
 otelcol.exporter.otlp "logs_service" {
@@ -68,8 +85,10 @@ otelcol.exporter.otlphttp "logs_service" {
 {{- end }}
   client {
     endpoint = nonsensitive(remote.kubernetes.secret.logs_service.data[{{ .hostKey | quote }}]) + "{{ .writeEndpoint }}"
-{{ if or (.basicAuth.username) (.basicAuth.password) }}
+{{- if eq .authMode "basic" }}
     auth = otelcol.auth.basic.logs_service.handler
+{{- else if eq .authMode "bearerToken" }}
+    auth = otelcol.auth.bearer.logs_service.handler
 {{- end }}
     headers = {
       "X-Scope-OrgID" = nonsensitive(remote.kubernetes.secret.logs_service.data[{{ .tenantIdKey | quote }}]),
