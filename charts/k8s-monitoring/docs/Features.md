@@ -65,3 +65,27 @@ Collect profiles using Pyroscope.
 [Documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/feature-frontend-observability)
 
 Open a Faro receiver to collect telemetry data from instrumented frontend applications.
+
+## Contributing
+
+Features are stored in their own Helm chart. That chart is not a standalone chart, but is included in the main
+k8s-monitoring Helm chart as a dependency. The parent chart interacts with the feature chart via template functions.
+
+To add a new feature, create a new Helm chart in the `charts` directory. The chart should have a `feature-` prefix in
+its name. The following files are required for a feature chart:
+
+-   `templates/_module.alloy.tpl` - This file should contain a template function named
+    `feature.&lt;feature-slug&gt;.module` which should create an [Alloy module](https://grafana.com/docs/alloy/latest/get-started/modules/)
+    that wraps the configuration for your feature. It should expose any of these arguments as appropriate:
+    -   `metrics_destination` - An argument that defines where scrape metrics should be delivered.
+    -   `logs_destination` - An argument that defines where logs should be delivered.
+    -   `traces_destination` - An argument that defines where traces should be delivered.
+    -   `profiles_destination` - An argument that defines where profiles should be delivered.
+
+-   `templates/_notes.alloy.tpl` - This file should contain these template functions:
+    -   `feature.&lt;feature-slug&gt;.notes.deployments` - This function returns a list of workloads that will be
+    deployed to the Kubernetes Cluster by the feature.
+    -   `feature.&lt;feature-slug&gt;.notes.task` - This function returns a 1-line summary of what this feature will do.
+    -   `feature.&lt;feature-slug&gt;.notes.actions` - This function returns any prompts for the user to take additional
+        action after deployment.
+    -   `feature.&lt;feature-slug&gt;.summary` - This function a dictionary of settings, used for self-reporting metrics.

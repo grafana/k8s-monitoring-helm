@@ -39,9 +39,9 @@ Each chart has a Makefile with targets to automate much of the process.
 Each component has its own guide for contributing:
 
 {{/** [Main Helm chart](./charts/k8s-monitoring/README.md#Contributing)*/}}
-{{/** [Feature subcharts](./charts/k8s-monitoring/docs/Features.md)*/}}
+* [Feature subcharts](./charts/k8s-monitoring/docs/Features.md#Contributing)
 {{/** [Integrations](./charts/feature-integrations/README.md#Contributing)*/}}
-* [Destinations](./charts/k8s-monitoring/docs/Destinations.md)
+* [Destinations](./charts/k8s-monitoring/docs/Destinations/README.md#Contributing)
 
 ## Building
 
