@@ -34,6 +34,17 @@ installing them for a better experience:
 
 Each chart has a Makefile with targets to automate much of the process.
 
+## Contributor Guides
+
+Each component has its own guide for contributing:
+
+<!-- [Main Helm chart](./charts/k8s-monitoring/README.md#Contributing) -->
+
+-   [Feature subcharts](./charts/k8s-monitoring/docs/Features.md#Contributing)
+-   [Destinations](./charts/k8s-monitoring/docs/destinations/README.md#Contributing)
+
+<!-- [Integrations](./charts/feature-integrations/README.md#Contributing) -->
+
 ## Building
 
 Lots of files in this repository are generated in order to reduce duplication and ensure consistency. To build these
@@ -58,7 +69,7 @@ Some charts will also generate additional templates and docs based on other file
 If your chart is dependent on external charts, you can update the dependencies by:
 
 1.  Set the dependency's version in Chart.yaml.
-2.  Update the Chart.lock file by running `make -C charts/&lt;the chart you are modifying&gt; build`.
+2.  Update the Chart.lock file by running `make -C charts/<the chart you are modifying> build`.
 
 ### Updating feature dependencies
 
@@ -99,7 +110,7 @@ chart and runs helm test as well.
 To run the integration tests for the `k8s-monitoring` chart, use the following commands:
 
 ```bash
-./scripts/run-integration-test.sh charts/k8s-monitoring/tests/integration/&lt;test dir&gt;
+./scripts/run-integration-test.sh charts/k8s-monitoring/tests/integration/<test dir>
 ```
 
 This will create a new Kubernetes cluster using kind, deploy any required dependencies, deploy the `k8s-monitoring` Helm

@@ -138,3 +138,38 @@ podLogs:
 ```
 
 ![Example 3](./.images/example3.png)
+
+## Contributing
+
+Destinations use a specific set of files to define the destination configuration. These files are used to generate the
+destination configuration and documentation.
+
+Several files are used for defining a destination:
+
+-   `destinations/<destination slug>-values.yaml` - The values file that defines the valid configuration options
+  for the destination. It is a YAML file in the style of a Helm chart values file. This file is used to generate
+  documentation and schema files that will validate the options when deploying.
+-   `templates/destinations/_destination_<destination slug>.tpl` - The template file that generates the
+  destination configuration. This file is required to implement the following template functions:
+    -   `destinations.<destination slug>.alloy` - Returns the Alloy configuration for the destination.
+    -   `destinations.<destination slug>.secrets` - Returns a YAML list of values that should be considered secrets. This will control how the secret for this destination is generated and interfaced in the Alloy config.
+    -   `destinations.<destination slug>.supports_metrics` - Returns true if the destination supports metrics.
+    -   `destinations.<destination slug>.supports_logs` - Returns true if the destination supports logs.
+    -   `destinations.<destination slug>.supports_traces` - Returns true if the destination supports traces.
+    -   `destinations.<destination slug>.supports_profiles` - Returns true if the destination supports profiles.
+    -   `destinations.<destination slug>.ecosystem` - Returns the telemetry data ecosystem.
+    -   `destinations.<destination slug>.<ecosystem>.<data type>.target` - Returns the name of the Alloy target where telemetry data of the matching type and ecosystem should be sent.
+  Multiple target template functions can be made to support converting from one ecosystem to another.
+-   `docs/destinations/.doc_templates/<destination slug>.gotmpl` - The optional documentation template file for the
+  destination. This file can include examples, usage instructions, and other information about the destination.
+
+### Generated files
+
+When using `make build`, the following files will be updated or generated:
+
+-   `docs/destinations/<destination slug>.md` - The documentation file for the destination. This file is generated
+  from the destination values file and the destination template file.
+-   `values/destinations/<destination slug>.schema.json` - The JSON schema file for the destination values file. This
+  file is generated from the destination values file.
+-   `templates/destinations/_destination_types.tpl` - This template file is generated with the list of all possible
+  destination types.
