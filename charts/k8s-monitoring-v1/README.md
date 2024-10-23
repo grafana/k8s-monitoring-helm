@@ -237,6 +237,9 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | externalServices.loki.basicAuth.passwordKey | string | `"password"` | The key for the password property in the secret |
 | externalServices.loki.basicAuth.username | string | `""` | Loki basic auth username |
 | externalServices.loki.basicAuth.usernameKey | string | `"username"` | The key for the username property in the secret |
+| externalServices.loki.bearerToken.token | string | `""` | Configure the Loki Bearer Token |
+| externalServices.loki.bearerToken.tokenFile | string | `""` | Configure the Loki Bearer Token file |
+| externalServices.loki.bearerToken.tokenKey | string | `"bearerToken"` | Configure the Key for Loki Bearer Token secret |
 | externalServices.loki.externalLabels | object | `{}` | Custom labels to be added to all logs and events. All values are treated as strings and automatically quoted. |
 | externalServices.loki.externalLabelsFrom | object | `{}` | Custom labels to be added to all logs and events through a dynamic reference. All values are treated as raw strings and not quoted. |
 | externalServices.loki.extraHeaders | object | `{}` | Extra headers to be set when sending metrics. All values are treated as strings and automatically quoted. |

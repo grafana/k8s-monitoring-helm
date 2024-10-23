@@ -54,11 +54,28 @@ otelcol.processor.memory_limiter "metrics_service" {
 {{- end }}
   }
 }
-{{ if eq .authMode "basic" }}
+{{- if eq .authMode "basic" }}
+
 otelcol.auth.basic "metrics_service" {
   username = nonsensitive(remote.kubernetes.secret.metrics_service.data[{{ .basicAuth.usernameKey | quote }}])
   password = remote.kubernetes.secret.metrics_service.data[{{ .basicAuth.passwordKey | quote }}]
 }
+{{- else if eq .authMode "bearerToken" }}
+  {{- if .bearerToken.tokenFile }}
+
+local.file "metrics_service_bearer_token" {
+  filename = .bearerToken.tokenFile
+  is_secret = true
+}
+otelcol.auth.bearer "metrics_service" {
+  token = local.file.metrics_service.content
+}
+  {{- else }}
+
+otelcol.auth.bearer "metrics_service" {
+  token = remote.kubernetes.secret.metrics_service.data[{{ .bearerToken.tokenKey | quote }}]
+}
+  {{- end }}
 {{- end }}
 {{ if eq .protocol "otlp" }}
 otelcol.exporter.otlp "metrics_service" {
@@ -68,8 +85,10 @@ otelcol.exporter.otlphttp "metrics_service" {
 {{- end }}
   client {
     endpoint = nonsensitive(remote.kubernetes.secret.metrics_service.data[{{ .hostKey | quote }}]) + "{{ .writeEndpoint }}"
-{{ if or (.basicAuth.username) (.basicAuth.password) }}
+{{- if eq .authMode "basic" }}
     auth = otelcol.auth.basic.metrics_service.handler
+{{- else if eq .authMode "bearerToken" }}
+    auth = otelcol.auth.bearer.metrics_service.handler
 {{- end }}
     headers = {
       "X-Scope-OrgID" = nonsensitive(remote.kubernetes.secret.metrics_service.data[{{ .tenantIdKey | quote }}]),
