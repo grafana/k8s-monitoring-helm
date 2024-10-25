@@ -127,7 +127,6 @@ podLogs:
 | file://../feature-application-observability | applicationObservability(k8s-monitoring-feature-application-observability) | 1.0.0 |
 | file://../feature-cluster-events | clusterEvents(k8s-monitoring-feature-cluster-events) | 1.0.0 |
 | file://../feature-cluster-metrics | clusterMetrics(k8s-monitoring-feature-cluster-metrics) | 1.0.0 |
-| file://../feature-frontend-observability | frontendObservability(k8s-monitoring-feature-frontend-observability) | 1.0.0 |
 | file://../feature-integrations | integrations(k8s-monitoring-feature-integrations) | 1.0.0 |
 | file://../feature-pod-logs | podLogs(k8s-monitoring-feature-pod-logs) | 1.0.0 |
 | file://../feature-profiling | profiling(k8s-monitoring-feature-profiling) | 1.0.0 |
@@ -242,14 +241,6 @@ podLogs:
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | destinations | list | `[]` | The list of destinations where telemetry data will be sent. See the [destinations documentation](https://github.com/grafana/k8s-monitoring-helm/blob/main/charts/k8s-monitoring/docs/destinations/README.md) for more information. |
-
-### Features - Frontend Observability
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| frontendObservability | object | Disabled | Front-end Observability enables the Faro receiver for accepting traces and logs from front-end applications. Requires a destination that supports metrics, logs, and traces. To see the valid options, please see the [Front-end Observability feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/feature-frontend-observability). |
-| frontendObservability.destinations | list | `[]` | The destinations where cluster events will be sent. If empty, all traces and logs-capable destinations will be used. |
-| frontendObservability.enabled | bool | `false` | Enable gathering front-end observability data. |
 
 ### Global Settings
 
