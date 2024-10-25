@@ -1,6 +1,7 @@
 {{- define "features.list" }}
 - annotationAutodiscovery
 - applicationObservability
+- autoInstrumentation
 - clusterMetrics
 - clusterEvents
 - podLogs

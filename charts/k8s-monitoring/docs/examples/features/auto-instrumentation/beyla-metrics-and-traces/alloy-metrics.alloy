@@ -1,0 +1,150 @@
+// Destination: otlp-gateway (otlp)
+otelcol.receiver.prometheus "otlp_gateway" {
+  output {
+    metrics = [otelcol.processor.transform.otlp_gateway.input]
+  }
+}
+otelcol.receiver.loki "otlp_gateway" {
+  output {
+    logs = [otelcol.processor.transform.otlp_gateway.input]
+  }
+}
+
+otelcol.processor.transform "otlp_gateway" {
+  error_mode = "ignore"
+  metric_statements {
+    context = "resource"
+    statements = [
+      "set(attributes[\"cluster\"], \"annotation-autodiscovery-with-traces-cluster\") where attributes[\"cluster\"] == nil",
+      "set(attributes[\"k8s.cluster.name\"], \"annotation-autodiscovery-with-traces-cluster\") where attributes[\"k8s.cluster.name\"] == nil",
+    ]
+  }
+  log_statements {
+    context = "resource"
+    statements = [
+      "set(attributes[\"cluster\"], \"annotation-autodiscovery-with-traces-cluster\") where attributes[\"cluster\"] == nil",
+      "set(attributes[\"k8s.cluster.name\"], \"annotation-autodiscovery-with-traces-cluster\") where attributes[\"k8s.cluster.name\"] == nil",
+    ]
+  }
+  trace_statements {
+    context = "resource"
+    statements = [
+      "set(attributes[\"cluster\"], \"annotation-autodiscovery-with-traces-cluster\") where attributes[\"cluster\"] == nil",
+      "set(attributes[\"k8s.cluster.name\"], \"annotation-autodiscovery-with-traces-cluster\") where attributes[\"k8s.cluster.name\"] == nil",
+    ]
+  }
+
+  output {
+    metrics = [otelcol.exporter.otlp.otlp_gateway.input]
+    logs = [otelcol.exporter.otlp.otlp_gateway.input]
+    traces = [otelcol.exporter.otlp.otlp_gateway.input]
+  }
+}
+otelcol.exporter.otlp "otlp_gateway" {
+  client {
+    endpoint = "http://otlp-gateway.example.com"
+    headers = {
+    }
+    tls {
+      insecure = false
+      insecure_skip_verify = false
+    }
+  }
+}
+
+// Feature: Auto-Instrumentation
+declare "auto_instrumentation" {
+  argument "metrics_destinations" {
+    comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
+  }
+
+  discovery.kubernetes "beyla_pods" {
+    role = "pod"
+    namespaces {
+      own_namespace = true
+    }
+    selectors {
+      role = "pod"
+      label = "app.kubernetes.io/name=beyla"
+    }
+  }
+
+  discovery.relabel "beyla_pods" {
+    targets = discovery.kubernetes.beyla_pods.targets
+    rule {
+      source_labels = ["__meta_kubernetes_pod_node_name"]
+      action = "replace"
+      target_label = "instance"
+    }
+  }
+
+  prometheus.scrape "beyla_applications" {
+    targets         = discovery.relabel.beyla_pods.output
+    honor_labels    = true
+    scrape_interval = "60s"
+    clustering {
+      enabled = true
+    }
+    forward_to = argument.metrics_destinations.value
+  }
+
+  prometheus.scrape "beyla_internal" {
+    targets         = discovery.relabel.beyla_pods.output
+    metrics_path    = "/internal/metrics"
+    job_name        = "integrations/beyla"
+    honor_labels    = true
+    scrape_interval = "60s"
+    clustering {
+      enabled = true
+    }
+    forward_to = argument.metrics_destinations.value
+  }
+}
+auto_instrumentation "feature" {
+  metrics_destinations = [
+    otelcol.receiver.prometheus.otlp_gateway.receiver,
+  ]
+}
+
+// Self Reporting
+prometheus.exporter.unix "kubernetes_monitoring_telemetry" {
+  set_collectors = ["textfile"]
+  textfile {
+    directory = "/etc/alloy"
+  }
+}
+
+discovery.relabel "kubernetes_monitoring_telemetry" {
+  targets = prometheus.exporter.unix.kubernetes_monitoring_telemetry.targets
+  rule {
+    target_label = "instance"
+    action = "replace"
+    replacement = "ko"
+  }
+  rule {
+    target_label = "job"
+    action = "replace"
+    replacement = "integrations/kubernetes/kubernetes_monitoring_telemetry"
+  }
+}
+
+prometheus.scrape "kubernetes_monitoring_telemetry" {
+  job_name   = "integrations/kubernetes/kubernetes_monitoring_telemetry"
+  targets    = discovery.relabel.kubernetes_monitoring_telemetry.output
+  scrape_interval = "1h"
+  clustering {
+    enabled = true
+  }
+  forward_to = [prometheus.relabel.kubernetes_monitoring_telemetry.receiver]
+}
+
+prometheus.relabel "kubernetes_monitoring_telemetry" {
+  rule {
+    source_labels = ["__name__"]
+    regex = "grafana_kubernetes_monitoring_.*"
+    action = "keep"
+  }
+  forward_to = [
+    otelcol.receiver.prometheus.otlp_gateway.receiver,
+  ]
+}

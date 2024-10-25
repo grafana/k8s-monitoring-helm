@@ -30,6 +30,8 @@ cluster_metrics "feature" {
 {{- $featureName := "Kubernetes Cluster metrics" }}
 {{- $destinations := include "features.clusterMetrics.destinations" . | fromYamlArray }}
 {{- include "destinations.validate_destination_list" (dict "destinations" $destinations "type" "metrics" "ecosystem" "prometheus" "feature" $featureName) }}
-{{- include "collectors.require_collector" (dict "Values" $.Values "name" "alloy-metrics" "feature" $featureName) }}
+{{- range $collector := include "features.clusterMetrics.collectors" . | fromYamlArray }}
+  {{- include "collectors.require_collector" (dict "Values" $.Values "name" $collector "feature" $featureName) }}
+{{- end -}}
 {{- end -}}
 {{- end -}}

@@ -1,0 +1,11 @@
+{{- if .Values.deployAsConfigMap }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "feature.autoInstrumentation.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+data:
+  module.alloy: |-
+    {{- include "feature.autoInstrumentation.module" . | indent 4 }}
+{{- end }}

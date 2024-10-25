@@ -30,6 +30,8 @@ profiling "feature" {
 {{- $featureName := "Profiling" }}
 {{- $destinations := include "features.profiling.destinations" . | fromYamlArray }}
 {{- include "destinations.validate_destination_list" (dict "destinations" $destinations "type" "profiles" "ecosystem" "pyroscope" "feature" $featureName) }}
-{{- include "collectors.require_collector" (dict "Values" $.Values "name" "alloy-profiles" "feature" $featureName) }}
+{{- range $collector := include "features.profiling.collectors" . | fromYamlArray }}
+  {{- include "collectors.require_collector" (dict "Values" $.Values "name" $collector "feature" $featureName) }}
+{{- end -}}
 {{- end -}}
 {{- end -}}

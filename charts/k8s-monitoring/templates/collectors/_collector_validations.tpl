@@ -4,56 +4,17 @@
 {{- $msg = append $msg "  enabled: false" }}
 {{- $errorMessage := join "\n" $msg }}
 
-{{- $collectorName := "alloy-metrics" }}
-{{- if (index .Values $collectorName).enabled }}
-  {{- $atLeastOneFeatureEnabled := or .Values.clusterMetrics.enabled .Values.annotationAutodiscovery.enabled .Values.prometheusOperatorObjects.enabled }}
-  {{- $atLeastOneFeatureEnabled = or $atLeastOneFeatureEnabled (index .Values $collectorName).remoteConfig.enabled }}
-  {{- $atLeastOneFeatureEnabled = or $atLeastOneFeatureEnabled (index .Values $collectorName).extraConfig }}
-  {{- $integrationsConfigured := include "feature.integrations.configured.metrics" .Subcharts.integrations | fromYamlArray }}
-  {{- $atLeastOneFeatureEnabled = or $atLeastOneFeatureEnabled (not (empty $integrationsConfigured)) }}
-
-  {{- if not $atLeastOneFeatureEnabled }}
-    {{- fail (printf $errorMessage $collectorName $collectorName) }}
-  {{- end }}
+{{- $collectorsUtilized := list }}
+{{- range $feature := include "features.list.enabled" . | fromYamlArray }}
+  {{- $collectorsUtilized = concat $collectorsUtilized (include (printf "features.%s.collectors" $feature) $ | fromYamlArray) }}
 {{- end }}
 
-{{- $collectorName = "alloy-singleton" }}
-{{- if (index .Values $collectorName).enabled }}
-  {{- $atLeastOneFeatureEnabled := .Values.clusterEvents.enabled }}
-  {{- $atLeastOneFeatureEnabled = or $atLeastOneFeatureEnabled (index .Values $collectorName).remoteConfig.enabled }}
-  {{- $atLeastOneFeatureEnabled = or $atLeastOneFeatureEnabled (index .Values $collectorName).extraConfig }}
-  {{- if not $atLeastOneFeatureEnabled }}
-    {{- fail (printf $errorMessage $collectorName $collectorName) }}
-  {{- end }}
-{{- end }}
-
-{{- $collectorName = "alloy-logs" }}
-{{- if (index .Values $collectorName).enabled }}
-  {{- $atLeastOneFeatureEnabled := .Values.podLogs.enabled }}
-  {{- $atLeastOneFeatureEnabled = or $atLeastOneFeatureEnabled (index .Values $collectorName).remoteConfig.enabled }}
-  {{- $atLeastOneFeatureEnabled = or $atLeastOneFeatureEnabled (index .Values $collectorName).extraConfig }}
-  {{- if not $atLeastOneFeatureEnabled }}
-    {{- fail (printf $errorMessage $collectorName $collectorName) }}
-  {{- end }}
-{{- end }}
-
-{{- $collectorName = "alloy-receiver" }}
-{{- if (index .Values $collectorName).enabled }}
-  {{- $atLeastOneFeatureEnabled := or .Values.applicationObservability.enabled }}
-  {{- $atLeastOneFeatureEnabled = or $atLeastOneFeatureEnabled (index .Values $collectorName).remoteConfig.enabled }}
-  {{- $atLeastOneFeatureEnabled = or $atLeastOneFeatureEnabled (index .Values $collectorName).extraConfig }}
-  {{- if not $atLeastOneFeatureEnabled }}
-    {{- fail (printf $errorMessage $collectorName $collectorName) }}
-  {{- end }}
-{{- end }}
-
-{{- $collectorName = "alloy-profiles" }}
-{{- if (index .Values $collectorName).enabled }}
-  {{- $atLeastOneFeatureEnabled := .Values.profiling.enabled }}
-  {{- $atLeastOneFeatureEnabled = or $atLeastOneFeatureEnabled (index .Values $collectorName).remoteConfig.enabled }}
-  {{- $atLeastOneFeatureEnabled = or $atLeastOneFeatureEnabled (index .Values $collectorName).extraConfig }}
-  {{- if not $atLeastOneFeatureEnabled }}
-    {{- fail (printf $errorMessage $collectorName $collectorName) }}
+{{- range $collector := include "collectors.list.enabled" . | fromYamlArray }}
+  {{- $usedByAFeature := has $collector $collectorsUtilized }}
+  {{- $extraConfigDefined := not (not (index $.Values $collector).extraConfig) }}
+  {{- $remoteConfigEnabled := (index $.Values $collector).remoteConfig.enabled }}
+  {{- if not (or $usedByAFeature $extraConfigDefined $remoteConfigEnabled) }}
+    {{- fail (printf $errorMessage $collector $collector) }}
   {{- end }}
 {{- end }}
 {{- end }}

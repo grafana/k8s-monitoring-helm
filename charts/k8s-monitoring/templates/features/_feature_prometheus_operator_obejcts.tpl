@@ -30,7 +30,9 @@ prometheus_operator_objects "feature" {
 {{- $featureName := "Prometheus Operator Objects" }}
 {{- $destinations := include "features.prometheusOperatorObjects.destinations" . | fromYamlArray }}
 {{- include "destinations.validate_destination_list" (dict "destinations" $destinations "type" "metrics" "ecosystem" "prometheus" "feature" $featureName) }}
-{{- include "collectors.require_collector" (dict "Values" $.Values "name" "alloy-metrics" "feature" $featureName) }}
+{{- range $collector := include "features.prometheusOperatorObjects.collectors" . | fromYamlArray }}
+  {{- include "collectors.require_collector" (dict "Values" $.Values "name" $collector "feature" $featureName) }}
+{{- end -}}
 {{- include "feature.prometheusOperatorObjects.validate" (dict "Values" $.Values.prometheusOperatorObjects) }}
 {{- end -}}
 {{- end -}}

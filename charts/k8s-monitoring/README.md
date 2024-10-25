@@ -125,6 +125,7 @@ podLogs:
 |------------|------|---------|
 | file://../feature-annotation-autodiscovery | annotationAutodiscovery(k8s-monitoring-feature-annotation-autodiscovery) | 1.0.0 |
 | file://../feature-application-observability | applicationObservability(k8s-monitoring-feature-application-observability) | 1.0.0 |
+| file://../feature-auto-instrumentation | autoInstrumentation(k8s-monitoring-feature-auto-instrumentation) | 1.0.0 |
 | file://../feature-cluster-events | clusterEvents(k8s-monitoring-feature-cluster-events) | 1.0.0 |
 | file://../feature-cluster-metrics | clusterMetrics(k8s-monitoring-feature-cluster-metrics) | 1.0.0 |
 | file://../feature-integrations | integrations(k8s-monitoring-feature-integrations) | 1.0.0 |
@@ -281,6 +282,14 @@ podLogs:
 | applicationObservability | object | Disabled | Application Observability. Requires destinations that supports metrics, logs, and traces. To see the valid options, please see the [Application Observability feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/feature-application-observability). |
 | applicationObservability.destinations | list | `[]` | The destinations where application data will be sent. If empty, all capable destinations will be used. |
 | applicationObservability.enabled | bool | `false` | Enable gathering Kubernetes Pod logs. |
+
+### Features - Auto-Instrumentation
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| autoInstrumentation | object | Disabled | Auto-Instrumentation. Requires destinations that supports metrics, logs, and traces. To see the valid options, please see the [Application Observability feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/feature-application-observability). |
+| autoInstrumentation.destinations | list | `[]` | The destinations where application data will be sent. If empty, all capable destinations will be used. |
+| autoInstrumentation.enabled | bool | `false` | Enable gathering Kubernetes Pod logs. |
 
 ### Cluster
 
