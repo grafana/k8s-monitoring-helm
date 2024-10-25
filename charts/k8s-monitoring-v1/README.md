@@ -799,6 +799,12 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 |-----|------|---------|-------------|
 | profiles.enabled | bool | `false` | Receive and forward profiles. |
 
+### Profiles Global
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| profiles.extraConfig | string | `""` | Extra configuration that will be added to the Grafana Alloy for Logs configuration file. This value is templated so that you can refer to other values from this file. This cannot be used to modify the generated configuration values, only append new components. See [Adding custom Flow configuration](#adding-custom-flow-configuration) for an example. |
+
 ### Profiles (java)
 
 | Key | Type | Default | Description |
