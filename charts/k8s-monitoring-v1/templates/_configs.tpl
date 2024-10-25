@@ -160,4 +160,7 @@
   {{- include "alloy.config.profilesService" . }}
   {{- include "alloy.config.logging" (index .Values "alloy-profiles").logging }}
   {{- include "alloy.config.liveDebugging" (index .Values "alloy-profiles").liveDebugging}}
+  {{- if .Values.profiles.extraConfig }}
+    {{- tpl .Values.profiles.extraConfig $ | indent 0 }}
+  {{- end }}
 {{- end -}}
