@@ -105,3 +105,46 @@ Actual integration testing in a live environment should be done in the main [k8s
 | global.alloyModules.source | string | `"git"` | The source of the Alloy modules. The valid options are "configMap" or "git" |
 | global.maxCacheSize | int | `100000` | Sets the max_cache_size for every prometheus.relabel component. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)) This should be at least 2x-5x your largest scrape target or samples appended rate. |
 | global.scrapeInterval | string | `"60s"` | How frequently to scrape metrics. |
+
+### Integration: MySQL
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| mysql | object | `{"instances":[]}` | Scrape metrics from MySQL |
+
+## Contributing
+
+To contribute integrations to this feature, there are a few files that need to be created or modified:
+
+-   `values.yaml` - The main feature chart's values file. Add a section for your integration. It must contain an
+    `instance` array and any settings that apply to every instance of the integration. For example:
+    ```yaml
+    <slug>:
+      instances: []
+      globalSetting: value
+    ```
+-   `integrations/<slug>-values.yaml` - The values that will be used for each instance. This must include `name` to
+    differentiate it from other instances, and any other settings that are specific to that instance. For example:
+    ```yaml
+    name: ""
+    labelSelectors:
+      app.kubernetes.io/name: my-service
+    protocol: http
+    ...
+    ```
+-   `templates/_integration<=_<slug>.tpl` - The file that contains template functions that build the configuration to
+    discover, gather, process, and deliver the telemetry data. This file is required to implement the following template
+    functions:
+    -   `integrations.<slug>.type.metrics` - Returns true if this integration scrapes metrics.
+    -   `integrations.<slug>.type.logs` - Returns true if this integration gathers logs.
+    -   `integrations.<slug>.module` - Returns the configuration that is included once if this integration is used. This
+        is typically the module definition.
+    -   `integrations.<slug>.include.metrics` - Returns the configuration that is included for each instance of the
+        integration that scrapes metrics.
+    -   `integrations.<slug>.include.logs` - Returns the configuration that is included for each instance of the
+        integration that gathers logs.
+    -   `integrations.<slug>.exclude.logs` - Returns a rule that can be used by other Log-gathering features to ensure
+        that logs that are gathered from this integration are not collected twice. Typically the inverse of a rule in
+        the `integrations.<slug>.include.logs` function.
+    -   `default-allow-lists/<slug>.yaml` - If the integration scrapes metrics, a common pattern is to provide a list of
+        metrics that should be allowed. This minimizes the amount of metrics delivered to a useful minimal set.

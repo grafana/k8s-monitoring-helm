@@ -1,0 +1,28 @@
+---
+prerequisites:
+  - type: helm
+    name: prometheus
+    repo: https://prometheus-community.github.io/helm-charts
+    chart: prometheus
+    namespace: prometheus
+    valuesFile: charts/k8s-monitoring/tests/integration/integration-cert-manager/prometheus.yaml
+
+  - type: helm
+    name: test-database
+    chart: oci://registry-1.docker.io/bitnamicharts/mysql
+    namespace: mysql
+
+  - type: helm
+    name: grafana
+    repo: https://grafana.github.io/helm-charts
+    chart: grafana
+    namespace: grafana
+    values:
+      datasources:
+        datasources.yaml:
+          apiVersion: 1
+          datasources:
+            - name: Prometheus
+              type: prometheus
+              url: http://prometheus-server.prometheus.svc:9090
+              isDefault: true

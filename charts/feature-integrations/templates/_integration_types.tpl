@@ -3,4 +3,5 @@
 - alloy
 - cert-manager
 - etcd
+- mysql
 {{- end -}}

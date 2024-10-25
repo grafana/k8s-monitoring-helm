@@ -1,0 +1,65 @@
+---
+# -- Name for this MySQL instance.
+# @section -- General Settings
+name: ""
+
+exporter:
+  enabled: true
+
+  # TODO: Utilize the secret functions to use from
+  dataSourceName: ""
+  dataSource:
+    host: ""
+    port: 3306
+    auth:
+      username: ""
+      usernameKey: ""
+      usernameFrom: ""
+      password: ""
+      passwordKey: ""
+      passwordFrom: ""
+
+    secret:
+      # -- (bool) Whether to create a secret for this MySQL integration instance.
+      # @default -- `true`
+      # @section -- Secret
+      create:
+      # -- If true, skip secret creation and embed the credentials directly into the configuration.
+      # @section -- Secret
+      embed: false
+      # -- The name of the secret to create.
+      # @section -- Secret
+      name: ""
+      # -- The namespace for the secret.
+      # @section -- Secret
+      namespace: ""
+
+  collectors:
+    - heartbeat
+    - mysql.user
+
+# -- Discover MySQL Exporter instances based on label selectors, if not using the exporter
+# @section -- Discovery Settings
+labelSelectors: {}
+
+# -- How frequently to scrape metrics from MySQL Exporter.
+# @default -- `60s`
+# @section -- Scrape Settings
+scrapeInterval:
+
+# Adjustments to the scraped metrics to filter the amount of data sent to storage.
+metricsTuning:
+  # -- Metrics to keep. Can use regular expressions.
+  # @section -- Metric Processing Settings
+  includeMetrics: []
+  # -- Metrics to drop. Can use regular expressions.
+  # @section -- Metric Processing Settings
+  excludeMetrics: []
+
+# -- Sets the max_cache_size for prometheus.relabel component.
+# This should be at least 2x-5x your largest scrape target or samples appended rate.
+# ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#arguments))
+# Overrides global.maxCacheSize
+# @default -- `100000`
+# @section -- Metric Processing Settings
+maxCacheSize:

@@ -1,0 +1,37 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Test MySQL integration
+templates:
+  - configmap.yaml
+tests:
+  - it: should create the MySQL config
+    set:
+      deployAsConfigMap: true
+      mysql:
+        instances:
+          - name: my-database
+            exporter:
+              dataSource:
+                username: db-admin
+                password: db-password
+                host: my-db.mysql.svc
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - equal:
+          path: data["metrics.alloy"]
+          value: |-
+            declare "mysql_integration" {
+              argument "metrics_destinations" {
+                comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
+              }
+            
+              prometheus.exporter.mysql "my_database" {
+                data_source_name  = "db-admin:db-password@my-db.mysql.svc:3306/"
+                enable_collectors = ["heartbeat","mysql.user"]
+              }
+              prometheus.scrape "my_database" {
+                targets    = prometheus.exporter.mysql.my_database.targets
+                job_name   = "integration/mysql"
+                forward_to = argument.metrics_destinations.value
+              }
+            }
