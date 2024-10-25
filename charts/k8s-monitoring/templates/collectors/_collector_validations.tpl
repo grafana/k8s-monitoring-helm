@@ -33,7 +33,7 @@
 
 {{- $collectorName = "alloy-receiver" }}
 {{- if (index .Values $collectorName).enabled }}
-  {{- $atLeastOneFeatureEnabled := or .Values.applicationObservability.enabled .Values.frontendObservability.enabled }}
+  {{- $atLeastOneFeatureEnabled := or .Values.applicationObservability.enabled }}
   {{- if not $atLeastOneFeatureEnabled }}
     {{- fail (printf $errorMessage $collectorName $collectorName) }}
   {{- end }}

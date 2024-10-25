@@ -3,7 +3,6 @@
 - applicationObservability
 - clusterMetrics
 - clusterEvents
-- frontendObservability
 - podLogs
 - profiling
 - prometheusOperatorObjects

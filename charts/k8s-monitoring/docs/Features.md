@@ -60,12 +60,6 @@ Collects metrics and logs from a variety of popular services and integrations.
 
 Collect profiles using Pyroscope.
 
-## Frontend Observability
-
-[Documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/feature-frontend-observability)
-
-Open a Faro receiver to collect telemetry data from instrumented frontend applications.
-
 ## Contributing
 
 Features are stored in their own Helm chart. That chart is not a standalone chart, but is included in the main
