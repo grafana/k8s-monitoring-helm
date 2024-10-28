@@ -59,11 +59,6 @@ cleanup() {
 }
 trap cleanup EXIT
 
-runAndEcho() {
-  echo "$@"
-  eval "$@"
-}
-
 if [ "${CREATE_CLUSTER}" == "true" ]; then
   echo "Creating cluster..."
   if [ ! -f "${clusterConfig}" ]; then
@@ -91,9 +86,9 @@ for ((i=0; i<prerequisiteCount; i++)); do
     prereqUrl=$(yq -r ".prerequisites[$i].url // \"\"" "${testManifest}")
     prereqFile=$(yq -r ".prerequisites[$i].file // \"\"" "${testManifest}")
     if [ -n "${prereqUrl}" ]; then
-      runAndEcho kubectl apply -f "${prereqUrl}" "${namespaceArg}"
+      kubectl apply -f "${prereqUrl}" ${namespaceArg}
     elif [ -n "${prereqFile}" ]; then
-      runAndEcho kubectl apply -f "${PARENT_DIR}/${prereqFile}" "${namespaceArg}"
+      envsubst < "${PARENT_DIR}/${prereqFile}" | kubectl apply ${namespaceArg} -f -
     else
       echo "No URL or file specified for manifest prerequisite"
       exit 1
@@ -105,13 +100,13 @@ for ((i=0; i<prerequisiteCount; i++)); do
     prereqValuesFile="$(yq -r ".prerequisites[$i].valuesFile // \"\"" "${testManifest}")"
 
     if [ -n "${prereqValuesFile}" ]; then
-      runAndEcho helm upgrade --install "${prereqName}" "${namespaceArg}" --create-namespace --repo "${prereqRepo}" "${prereqChart}" -f "${PARENT_DIR}/${prereqValuesFile}" --hide-notes --wait
+      helm upgrade --install "${prereqName}" ${namespaceArg} --create-namespace --repo "${prereqRepo}" "${prereqChart}" -f "${PARENT_DIR}/${prereqValuesFile}" --hide-notes --wait
     elif [ -n "${prereqChart}" ]; then
       echo "${prereqValues}" > temp-values.yaml
-      runAndEcho helm upgrade --install "${prereqName}" "${namespaceArg}" --create-namespace --repo "${prereqRepo}" "${prereqChart}" -f temp-values.yaml --hide-notes --wait
+      helm upgrade --install "${prereqName}" ${namespaceArg} --create-namespace --repo "${prereqRepo}" "${prereqChart}" -f temp-values.yaml --hide-notes --wait
       rm temp-values.yaml
     else
-      runAndEcho helm upgrade --install "${prereqName}" "${namespaceArg}" --create-namespace --repo "${prereqRepo}" "${prereqChart}" --hide-notes --wait
+      helm upgrade --install "${prereqName}" ${namespaceArg} --create-namespace --repo "${prereqRepo}" "${prereqChart}" --hide-notes --wait
     fi
   else
     echo "Unknown prerequisite type: ${prereqType}"
@@ -124,6 +119,6 @@ helm upgrade --install k8smon "${PARENT_DIR}/charts/k8s-monitoring" -f "${values
 
 if [ -f "${testValuesFile}" ]; then
   echo "Deploying test chart..."
-  runAndEcho helm upgrade --install k8smon-test "${PARENT_DIR}/charts/k8s-monitoring-test" -f "${testValuesFile}" --wait
-  runAndEcho helm test k8smon-test --logs
+  helm upgrade --install k8smon-test "${PARENT_DIR}/charts/k8s-monitoring-test" -f "${testValuesFile}" --wait
+  helm test k8smon-test --logs
 fi

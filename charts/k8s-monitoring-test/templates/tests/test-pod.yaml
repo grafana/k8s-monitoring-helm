@@ -63,8 +63,11 @@ spec:
           done
           exit 1
       envFrom:
+{{ (index $test "envFrom") | toYaml | indent 8 }}
+{{- if hasKey $test "env" }}
         - secretRef:
             name: {{ include "k8s-monitoring-test.fullname" $ }}-{{ $i }}
+{{- end }}
       volumeMounts:
         - name: queries
           mountPath: /etc/test
