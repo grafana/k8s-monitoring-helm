@@ -152,13 +152,15 @@ Several files are used for defining a destination:
 -   `templates/destinations/_destination_<destination slug>.tpl` - The template file that generates the
   destination configuration. This file is required to implement the following template functions:
     -   `destinations.<destination slug>.alloy` - Returns the Alloy configuration for the destination.
-    -   `destinations.<destination slug>.secrets` - Returns a YAML list of values that should be considered secrets. This will control how the secret for this destination is generated and interfaced in the Alloy config.
     -   `destinations.<destination slug>.supports_metrics` - Returns true if the destination supports metrics.
     -   `destinations.<destination slug>.supports_logs` - Returns true if the destination supports logs.
     -   `destinations.<destination slug>.supports_traces` - Returns true if the destination supports traces.
     -   `destinations.<destination slug>.supports_profiles` - Returns true if the destination supports profiles.
     -   `destinations.<destination slug>.ecosystem` - Returns the telemetry data ecosystem.
-    -   `destinations.<destination slug>.<ecosystem>.<data type>.target` - Returns the name of the Alloy target where telemetry data of the matching type and ecosystem should be sent.
+    -   `destinations.<destination slug>.<ecosystem>.<data type>.target` - Returns the name of the Alloy target where
+        telemetry data of the matching type and ecosystem should be sent.
+    -   `secrets.list.<destination slug>` - Returns a YAML list of values that should be considered secrets. This will
+        control how the secrets for this destination are generated and interfaced in the Alloy config.
   Multiple target template functions can be made to support converting from one ecosystem to another.
 -   `docs/destinations/.doc_templates/<destination slug>.gotmpl` - The optional documentation template file for the
   destination. This file can include examples, usage instructions, and other information about the destination.

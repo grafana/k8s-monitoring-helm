@@ -1,0 +1,20 @@
+---
+cluster:
+  name: remote-config-platform-test
+
+alloy-metrics:
+  enabled: true
+  remoteConfig:
+    enabled: true
+    url: https://fleet-management-prod-008.grafana.net
+    auth:
+      type: basic
+      usernameFrom: env("GRAFANA_CLOUD_FLEET_MGMT_USER")
+      passwordFrom: env("GRAFANA_CLOUD_FLEET_MGMT_TOKEN")
+  alloy:
+    stabilityLevel: public-preview
+    envFrom:
+      - secretRef:
+          name: grafana-cloud-credentials
+      - configMapRef:
+          name: test-variables

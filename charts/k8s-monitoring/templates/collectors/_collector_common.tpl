@@ -3,10 +3,10 @@
 {{- define "collectors.logging.alloy" }}
 {{- with (index .Values .collectorName).logging }}
   {{- if or (ne .level "info" ) (ne .format "logfmt") }}
-    logging {
-      level  = "{{ .level }}"
-      format = "{{ .format }}"
-    }
+logging {
+  level  = "{{ .level }}"
+  format = "{{ .format }}"
+}
   {{- end }}
 {{- end }}
 {{- end }}
@@ -16,9 +16,9 @@
 {{- define "collectors.liveDebugging.alloy" }}
 {{- with (index .Values .collectorName).liveDebugging }}
   {{- if .enabled }}
-    livedebugging {
-      enabled = {{ .enabled }}
-    }
+livedebugging {
+  enabled = {{ .enabled }}
+}
   {{- end }}
 {{- end }}
 {{- end }}

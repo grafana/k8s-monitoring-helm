@@ -13,9 +13,9 @@ prometheus.remote_write {{ include "helper.alloy_name" .name | quote }} {
     url = {{ .url | quote }} 
 {{- end }}
     headers = {
-{{- if ne (include "destinations.auth.type" .) "sigv4" }}
-  {{- if eq (include "destinations.secret.uses_secret" (dict "destination" . "key" "tenantId")) "true" }}
-      "X-Scope-OrgID" = {{ include "destinations.secret.read" (dict "destination" . "key" "tenantId" "nonsensitive" true) }},
+{{- if ne (include "secrets.authType" .) "sigv4" }}
+  {{- if eq (include "secrets.usesKubernetesSecret" .) "true" }}
+      "X-Scope-OrgID" = {{ include "secrets.read" (dict "object" . "key" "tenantId" "nonsensitive" true) }},
   {{- end }}
 {{- end }}
 {{- range $key, $value := .extraHeaders }}
@@ -28,16 +28,16 @@ prometheus.remote_write {{ include "helper.alloy_name" .name | quote }} {
 {{- if .proxyURL }}
     proxy_url = {{ .proxyURL | quote }}
 {{- end }}
-{{- if eq (include "destinations.auth.type" .) "basic" }}
+{{- if eq (include "secrets.authType" .) "basic" }}
     basic_auth {
-      username = {{ include "destinations.secret.read" (dict "destination" . "key" "auth.username" "nonsensitive" true) }}
-      password = {{ include "destinations.secret.read" (dict "destination" . "key" "auth.password") }}
+      username = {{ include "secrets.read" (dict "object" . "key" "auth.username" "nonsensitive" true) }}
+      password = {{ include "secrets.read" (dict "object" . "key" "auth.password") }}
     }
-{{- else if eq (include "destinations.auth.type" .) "bearerToken" }}
-    bearer_token = {{ include "destinations.secret.read" (dict "destination" . "key" "auth.bearerToken") }}
-{{- else if eq (include "destinations.auth.type" .) "sigv4" }}
+{{- else if eq (include "secrets.authType" .) "bearerToken" }}
+    bearer_token = {{ include "secrets.read" (dict "object" . "key" "auth.bearerToken") }}
+{{- else if eq (include "secrets.authType" .) "sigv4" }}
     sigv4 {
-      access_key = {{ include "destinations.secret.read" (dict "destination" . "key" "auth.sigv4.accessKey" "nonsensitive" true) }}
+      access_key = {{ include "secrets.read" (dict "object" . "key" "auth.sigv4.accessKey" "nonsensitive" true) }}
       {{- if .auth.sigv4.profile }}
       profile = {{ .auth.sigv4.profile | quote }}
       {{- end }}
@@ -47,21 +47,21 @@ prometheus.remote_write {{ include "helper.alloy_name" .name | quote }} {
       {{- if .auth.sigv4.roleArn }}
       role_arn = {{ .auth.sigv4.roleArn | quote }}
       {{- end }}
-      secret_key = {{ include "destinations.secret.read" (dict "destination" . "key" "auth.sigv4.secretKey") }}
+      secret_key = {{ include "secrets.read" (dict "object" . "key" "auth.sigv4.secretKey") }}
     }
 {{- end }}
 
 {{- if .tls }}
     tls_config {
       insecure_skip_verify = {{ .tls.insecureSkipVerify | default false }}
-      {{- if eq (include "destinations.secret.uses_secret" (dict "destination" . "key" "tls.ca")) "true" }}
-      ca_pem = {{ include "destinations.secret.read" (dict "destination" . "key" "tls.ca" "nonsensitive" true) }}
+      {{- if eq (include "secrets.usesKubernetesSecret" .) "true" }}
+      ca_pem = {{ include "secrets.read" (dict "object" . "key" "tls.ca" "nonsensitive" true) }}
       {{- end }}
-      {{- if eq (include "destinations.secret.uses_secret" (dict "destination" . "key" "tls.cert")) "true" }}
-      cert_pem = {{ include "destinations.secret.read" (dict "destination" . "key" "tls.cert" "nonsensitive" true) }}
+      {{- if eq (include "secrets.usesKubernetesSecret" .) "true" }}
+      cert_pem = {{ include "secrets.read" (dict "object" . "key" "tls.cert" "nonsensitive" true) }}
       {{- end }}
-      {{- if eq (include "destinations.secret.uses_secret" (dict "destination" . "key" "tls.key")) "true" }}
-      key_pem = {{ include "destinations.secret.read" (dict "destination" . "key" "tls.key") }}
+      {{- if eq (include "secrets.usesKubernetesSecret" .) "true" }}
+      key_pem = {{ include "secrets.read" (dict "object" . "key" "tls.key") }}
       {{- end }}
     }
 {{- end }}
@@ -82,13 +82,13 @@ prometheus.remote_write {{ include "helper.alloy_name" .name | quote }} {
     write_relabel_config {
       source_labels = ["cluster"]
       regex = ""
-      replacement = {{ $.clusterName | quote }}
+      replacement = {{ $.Values.cluster.name | quote }}
       target_label = "cluster"
     }
     write_relabel_config {
       source_labels = ["k8s.cluster.name"]
       regex = ""
-      replacement = {{ $.clusterName | quote }}
+      replacement = {{ $.Values.cluster.name | quote }}
       target_label = "cluster"
     }
 {{- if .metricProcessingRules }}
@@ -109,7 +109,7 @@ prometheus.remote_write {{ include "helper.alloy_name" .name | quote }} {
 {{- end }}
 {{- end }}
 
-{{- define "destinations.prometheus.secrets" -}}
+{{- define "secrets.list.prometheus" -}}
 - tenantId
 - auth.username
 - auth.password

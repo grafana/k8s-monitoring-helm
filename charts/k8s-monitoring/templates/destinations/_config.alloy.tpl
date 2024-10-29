@@ -16,10 +16,10 @@
 {{- range $destination := .Values.destinations }}
   {{- if (has $destination.name $.names ) }}
 // Destination: {{ $destination.name }} ({{ $destination.type }})
-{{- include (printf "destinations.%s.alloy" $destination.type) (dict "destination" $destination "clusterName" $.Values.cluster.name "Files" $.Files) | indent 0 }}
+{{- include (printf "destinations.%s.alloy" $destination.type) (deepCopy $ | merge (dict "destination" $destination)) | indent 0 }}
 
-{{- if eq (include "destinations.secret.uses_k8s_secret" $destination) "true" }}
-  {{- include "destinations.secret.alloy" (dict "destination" $destination "Release" $.Release "Chart" $.Chart) | nindent 0 }}
+{{- if eq (include "secrets.usesKubernetesSecret" $destination) "true" }}
+  {{- include "secret.alloy" (deepCopy $ | merge (dict "object" $destination)) | nindent 0 }}
 {{- end }}
 {{- end }}
 {{- end }}

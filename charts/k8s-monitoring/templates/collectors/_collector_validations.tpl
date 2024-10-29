@@ -7,6 +7,8 @@
 {{- $collectorName := "alloy-metrics" }}
 {{- if (index .Values $collectorName).enabled }}
   {{- $atLeastOneFeatureEnabled := or .Values.clusterMetrics.enabled .Values.annotationAutodiscovery.enabled .Values.prometheusOperatorObjects.enabled }}
+  {{- $atLeastOneFeatureEnabled = or $atLeastOneFeatureEnabled (index .Values $collectorName).remoteConfig.enabled }}
+  {{- $atLeastOneFeatureEnabled = or $atLeastOneFeatureEnabled (index .Values $collectorName).extraConfig }}
   {{- $integrationsConfigured := include "feature.integrations.configured.metrics" .Subcharts.integrations | fromYamlArray }}
   {{- $atLeastOneFeatureEnabled = or $atLeastOneFeatureEnabled (not (empty $integrationsConfigured)) }}
 
@@ -18,6 +20,8 @@
 {{- $collectorName = "alloy-singleton" }}
 {{- if (index .Values $collectorName).enabled }}
   {{- $atLeastOneFeatureEnabled := .Values.clusterEvents.enabled }}
+  {{- $atLeastOneFeatureEnabled = or $atLeastOneFeatureEnabled (index .Values $collectorName).remoteConfig.enabled }}
+  {{- $atLeastOneFeatureEnabled = or $atLeastOneFeatureEnabled (index .Values $collectorName).extraConfig }}
   {{- if not $atLeastOneFeatureEnabled }}
     {{- fail (printf $errorMessage $collectorName $collectorName) }}
   {{- end }}
@@ -26,6 +30,8 @@
 {{- $collectorName = "alloy-logs" }}
 {{- if (index .Values $collectorName).enabled }}
   {{- $atLeastOneFeatureEnabled := .Values.podLogs.enabled }}
+  {{- $atLeastOneFeatureEnabled = or $atLeastOneFeatureEnabled (index .Values $collectorName).remoteConfig.enabled }}
+  {{- $atLeastOneFeatureEnabled = or $atLeastOneFeatureEnabled (index .Values $collectorName).extraConfig }}
   {{- if not $atLeastOneFeatureEnabled }}
     {{- fail (printf $errorMessage $collectorName $collectorName) }}
   {{- end }}
@@ -34,6 +40,8 @@
 {{- $collectorName = "alloy-receiver" }}
 {{- if (index .Values $collectorName).enabled }}
   {{- $atLeastOneFeatureEnabled := or .Values.applicationObservability.enabled }}
+  {{- $atLeastOneFeatureEnabled = or $atLeastOneFeatureEnabled (index .Values $collectorName).remoteConfig.enabled }}
+  {{- $atLeastOneFeatureEnabled = or $atLeastOneFeatureEnabled (index .Values $collectorName).extraConfig }}
   {{- if not $atLeastOneFeatureEnabled }}
     {{- fail (printf $errorMessage $collectorName $collectorName) }}
   {{- end }}
@@ -42,6 +50,8 @@
 {{- $collectorName = "alloy-profiles" }}
 {{- if (index .Values $collectorName).enabled }}
   {{- $atLeastOneFeatureEnabled := .Values.profiling.enabled }}
+  {{- $atLeastOneFeatureEnabled = or $atLeastOneFeatureEnabled (index .Values $collectorName).remoteConfig.enabled }}
+  {{- $atLeastOneFeatureEnabled = or $atLeastOneFeatureEnabled (index .Values $collectorName).extraConfig }}
   {{- if not $atLeastOneFeatureEnabled }}
     {{- fail (printf $errorMessage $collectorName $collectorName) }}
   {{- end }}
@@ -61,3 +71,18 @@
   {{- end }}
   {{- end }}
 {{- end }}
+
+{{- define "collectors.validate.remoteConfig" }}
+{{- if (index .Values .collectorName).enabled }}
+  {{- if (index .Values .collectorName).remoteConfig.enabled }}
+    {{- if not (has (index .Values .collectorName).alloy.stabilityLevel (list "public-preview" "experimental")) }}
+      {{- $msg := list "" "The remote configuratino feature requires Alloy to use the \"public-preview\" stability level. Please set:" }}
+      {{- $msg = append $msg (printf "%s:" .collectorName ) }}
+      {{- $msg = append $msg "  alloy:" }}
+      {{- $msg = append $msg "    stabilityLevel: public-preview" }}
+      {{- fail (join "\n" $msg) }}
+    {{- end }}
+  {{- end }}
+  {{- end }}
+{{- end }}
+

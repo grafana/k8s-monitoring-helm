@@ -1,0 +1,92 @@
+---
+name: Platform Test
+# yamllint disable-line rule:truthy
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - 'charts/**'
+      - '!charts/k8s-monitoring-v1/**'
+  pull_request:
+    paths:
+      - 'charts/**'
+      - '!charts/k8s-monitoring-v1/**'
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  list-tests:
+    name: List tests
+    runs-on: ubuntu-latest
+    outputs:
+      tests: ${{ steps.list_tests.outputs.tests }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: List tests
+        id: list_tests
+        run: |
+          if [ "${{ github.event_name }}" == "pull_request" ] && [ "${{contains(github.event.pull_request.labels.*.name, 'run-platform-tests')}}" != "true" ]; then
+            echo "Skipping platform tests"
+            exit 0
+          fi
+
+          tests=$(ls charts/k8s-monitoring/tests/platform)
+          echo "Tests: ${tests}"
+          echo "tests=$(echo "${tests}" | jq --raw-input --slurp --compact-output 'split("\n") | map(select(. != ""))')" >> "${GITHUB_OUTPUT}"
+
+  run-tests:
+    name: Platform Test
+    needs: list-tests
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        test: ${{ fromJson(needs.list-tests.outputs.tests) }}
+      fail-fast: false
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+
+      - name: Check for cluster config
+        id: check-cluster-config
+        run: |
+          if [ -f "charts/k8s-monitoring/tests/integration/${{ matrix.test }}/cluster.yaml" ]; then
+            echo "has-cluster-config=true" >> "${GITHUB_OUTPUT}"
+          else
+            echo "has-cluster-config=false" >> "${GITHUB_OUTPUT}"
+          fi
+
+      - name: Create kind cluster
+        if: ${{ steps.check-cluster-config.outputs.has-cluster-config == 'false' }}
+        uses: helm/kind-action@v1
+
+      - name: Create kind cluster with special config
+        if: ${{ steps.check-cluster-config.outputs.has-cluster-config == 'true' }}
+        uses: helm/kind-action@v1
+        with:
+          config: charts/k8s-monitoring/tests/integration/${{ matrix.test }}/cluster.yaml
+
+      - name: Random number
+        id: random-number
+        uses: yakubique/random-number@v1.1
+        with:
+          min: 100000
+          max: 999999
+
+      - name: Run test
+        env:
+          CREATE_CLUSTER: "false"
+          DEPLOY_GRAFANA: "false"
+          GRAFANA_CLOUD_FLEET_MGMT_USER: ${{ secrets.GRAFANA_CLOUD_FLEET_MGMT_USER }}
+          GRAFANA_CLOUD_FLEET_MGMT_TOKEN: ${{ secrets.GRAFANA_CLOUD_FLEET_MGMT_TOKEN }}
+          GRAFANA_CLOUD_METRICS_USERNAME: ${{ secrets.GRAFANA_CLOUD_METRICS_USERNAME }}
+          GRAFANA_CLOUD_LOGS_USERNAME: ${{ secrets.GRAFANA_CLOUD_LOGS_USERNAME }}
+          GRAFANA_CLOUD_RW_POLICY_TOKEN: ${{ secrets.GRAFANA_CLOUD_RW_POLICY_TOKEN }}
+          RANDOM_NUMBER: ${{ steps.random-number.outputs.number }}
+
+        run: ./scripts/run-integration-test.sh "charts/k8s-monitoring/tests/platform/${{ matrix.test }}"
