@@ -3,6 +3,8 @@ tests:
   - envFrom:
       - secretRef:
           name: grafana-cloud-credentials
+      - configMapRef:
+          name: test-variables
     queries:
-      - query: alloy_build_info{cluster="remote-config-platform-test"}
+      - query: alloy_build_info{cluster="remote-config-platform-test", random="$RANDOM_NUMBER"}
         type: promql

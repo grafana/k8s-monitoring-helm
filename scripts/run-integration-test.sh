@@ -119,6 +119,6 @@ helm upgrade --install k8smon "${PARENT_DIR}/charts/k8s-monitoring" -f "${values
 
 if [ -f "${testValuesFile}" ]; then
   echo "Deploying test chart..."
-  helm upgrade --install k8smon-test "${PARENT_DIR}/charts/k8s-monitoring-test" -f "${testValuesFile}" --wait
+  helm upgrade --install k8smon-test "${PARENT_DIR}/charts/k8s-monitoring-test" -f <(envsubst < "${testValuesFile}") --wait
   helm test k8smon-test --logs
 fi
