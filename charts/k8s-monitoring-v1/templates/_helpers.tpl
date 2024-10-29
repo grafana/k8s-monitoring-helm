@@ -36,6 +36,7 @@
   {{- if .Values.metrics.apiserver.enabled -}}{{- $metrics = append $metrics "apiserver" }}{{ end -}}
   {{- if .Values.metrics.cost.enabled -}}{{- $metrics = append $metrics "cost" }}{{ end -}}
   {{- if .Values.metrics.kepler.enabled -}}{{- $metrics = append $metrics "kepler" }}{{ end -}}
+  {{- if .Values.metrics.beyla.enabled -}}{{- $metrics = append $metrics "beyla" }}{{ end -}}
   {{- if .Values.extraConfig -}}{{- $metrics = append $metrics "extraConfig" }}{{ end -}}
 {{- else -}}
   {{- $metrics = append $metrics "disabled" -}}
@@ -65,6 +66,7 @@
 {{- if index (index .Values "prometheus-operator-crds").enabled -}}{{- $deployments = append $deployments "prometheus-operator-crds" -}}{{- end -}}
 {{- if index .Values.opencost.enabled -}}{{- $deployments = append $deployments "opencost" -}}{{- end -}}
 {{- if index .Values.kepler.enabled -}}{{- $deployments = append $deployments "kepler" -}}{{- end -}}
+{{- if index .Values.beyla.enabled -}}{{- $deployments = append $deployments "beyla" -}}{{- end -}}
 {{- join "," $deployments -}}
 {{- end }}
 
