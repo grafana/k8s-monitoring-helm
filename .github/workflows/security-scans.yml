@@ -28,11 +28,12 @@ jobs:
         id: list_images
         run: |
           file=charts/k8s-monitoring/docs/examples/features/all-features/output.yaml
-          yq -r -o json '. | select(.kind=="DaemonSet") | .spec.template.spec.containers[].image' "${file}" > images.txt
-          yq -r -o json '. | select(.kind=="Deployment") | .spec.template.spec.containers[].image' "${file}" > images.txt
-          yq -r -o json '. | select(.kind=="Job") | .spec.template.spec.containers[].image' "${file}" > images.txt
-          yq -r -o json '. | select(.kind=="Pod") | .spec.containers[].image' "${file}" > images.txt
-          yq -r -o json '. | select(.kind=="StatefulSet") | .spec.template.spec.containers[].image' "${file}" > images.txt
+          touch images.txt
+          yq -r -o json '. | select(.kind=="DaemonSet") | .spec.template.spec.containers[].image' "${file}" >> images.txt
+          yq -r -o json '. | select(.kind=="Deployment") | .spec.template.spec.containers[].image' "${file}" >> images.txt
+          yq -r -o json '. | select(.kind=="Job") | .spec.template.spec.containers[].image' "${file}" >> images.txt
+          yq -r -o json '. | select(.kind=="Pod") | .spec.containers[].image' "${file}" >> images.txt
+          yq -r -o json '. | select(.kind=="StatefulSet") | .spec.template.spec.containers[].image' "${file}" >> images.txt
           echo "images=$(sort --unique < images.txt | jq --raw-input --slurp --compact-output 'split("\n") | map(select(. != ""))')" >> "${GITHUB_OUTPUT}"
 
   scan-container-images:
@@ -45,7 +46,7 @@ jobs:
       fail-fast: false
     steps:
       - name: Run Trivy
-        uses: aquasecurity/trivy-action@v0.28
+        uses: aquasecurity/trivy-action@0.28.0
         with:
           image-ref: ${{ matrix.image }}
           format: sarif
