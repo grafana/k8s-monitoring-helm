@@ -55,13 +55,15 @@ jobs:
         id: parse-chart
         working-directory: source
         run: |
-          name=$(yq ".name" < ${changed}/Chart.yaml)
-          version=$(yq ".version" < ${changed}/Chart.yaml)
+          name="$(yq ".name" charts/k8s-monitoring/Chart.yaml)"
+          version="$(yq ".version" charts/k8s-monitoring/Chart.yaml)"
 
-          echo "description=$(yq ".description" < ${changed}/Chart.yaml)" >> "${GITHUB_OUTPUT}"
-          echo "version=${version}" >> "${GITHUB_OUTPUT}"
-          echo "tagVersion=v${version}" >> "${GITHUB_OUTPUT}"
-          echo "packageName=${name}-${version}" >> "${GITHUB_OUTPUT}"
+          {
+            echo "description=$(yq ".description" charts/k8s-monitoring/Chart.yaml)"
+            echo "version=${version}"
+            echo "tagVersion=v${version}"
+            echo "packageName=${name}-${version}"
+          } >> "${GITHUB_OUTPUT}"
 
       - name: Parse version
         id: parse-version
@@ -85,7 +87,7 @@ jobs:
           name: ${{ steps.parse-chart.outputs.tagVersion }}
           repository: grafana/k8s-monitoring-helm
           tag_name: ${{ steps.parse-chart.outputs.tagVersion }}
-          prerelease: ${{ steps.parse-version.outputs.prerelease != "" }}
+          prerelease: ${{ steps.parse-version.outputs.prerelease != '' }}
           token: ${{ secrets.GH_BOT_ACCESS_TOKEN }}
           generate_release_notes: true
           files: build/${{ steps.parse-chart.outputs.packagename }}.tgz
