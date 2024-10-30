@@ -98,6 +98,15 @@ prometheus.scrape "kubernetes_monitoring_telemetry" {
   clustering {
     enabled = true
   }
+  forward_to = [prometheus.relabel.kubernetes_monitoring_telemetry.receiver]
+}
+
+promthetheus.relabel "kubernetes_monitoring_telemetry" {
+  rule {
+    source_labels = ["__name__"]
+    regex = "grafana_kubernetes_monitoring_.*"
+    action = "keep"
+  }
   forward_to = [
     prometheus.remote_write.prometheus.receiver,
   ]
