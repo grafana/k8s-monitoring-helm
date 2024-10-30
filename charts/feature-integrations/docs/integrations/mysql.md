@@ -2,6 +2,23 @@
 
 ## Values
 
+### Exporter Settings
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| exporter.collectors | list | `["heartbeat","mysql.user"]` | The list of collectors to enable for the MySQL Exporter ([Documentation](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.exporter.mysql/#supported-collectors)). |
+| exporter.dataSource | object | `{"auth":{"password":"","passwordFrom":"","passwordKey":"password","username":"","usernameFrom":"","usernameKey":"username"},"host":"","port":3306}` | The data source to use for the MySQL Exporter. |
+| exporter.dataSource.auth.password | string | `""` | The password to use for the MySQL connection. |
+| exporter.dataSource.auth.passwordFrom | string | `""` | Raw config for accessing the password. |
+| exporter.dataSource.auth.passwordKey | string | `"password"` | The key for storing the password in the secret. |
+| exporter.dataSource.auth.username | string | `""` | The username to use for the MySQL connection. |
+| exporter.dataSource.auth.usernameFrom | string | `""` | Raw config for accessing the username. |
+| exporter.dataSource.auth.usernameKey | string | `"username"` | The key for storing the username in the secret. |
+| exporter.dataSource.host | string | `""` | The MySQL host to connect to. |
+| exporter.dataSource.port | int | `3306` | The MySQL port to connect to. |
+| exporter.dataSourceName | string | `""` | The data source string to use for the MySQL Exporter. |
+| exporter.enabled | bool | `true` | Whether to enable the Alloy-embedded MySQL Exporter. |
+
 ### Discovery Settings
 
 | Key | Type | Default | Description |
@@ -28,15 +45,11 @@
 |-----|------|---------|-------------|
 | scrapeInterval | string | `60s` | How frequently to scrape metrics from MySQL Exporter. |
 
-### Other Values
+### Secret
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| exporter.collectors[0] | string | `"heartbeat"` |  |
-| exporter.collectors[1] | string | `"mysql.user"` |  |
-| exporter.dataSource.host | string | `""` |  |
-| exporter.dataSource.password | string | `""` |  |
-| exporter.dataSource.port | int | `3306` |  |
-| exporter.dataSource.username | string | `""` |  |
-| exporter.dataSourceName | string | `""` |  |
-| exporter.enabled | bool | `true` |  |
+| secret.create | bool | `true` | Whether to create a secret to store credentials for this MySQL integration instance. |
+| secret.embed | bool | `false` | If true, skip secret creation and embed the credentials directly into the configuration. |
+| secret.name | string | `""` | The name of the secret to create. |
+| secret.namespace | string | `""` | The namespace for the secret. |

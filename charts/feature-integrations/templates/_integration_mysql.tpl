@@ -6,22 +6,41 @@ declare "mysql_integration" {
   argument "metrics_destinations" {
     comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
   }
-
   {{- range $instance := $.Values.mysql.instances }}
-    {{- include "integrations.mysql.include.metrics" (deepCopy $ | merge (dict "integration" $instance)) | nindent 2 }}
+    {{- include "integrations.mysql.include.metrics" (deepCopy $ | merge (dict "instance" $instance)) | nindent 2 }}
   {{- end }}
 }
 {{- end }}
 
 {{- define "integrations.mysql.include.metrics" }}
 {{- $defaultValues := "integrations/mysql-values.yaml" | .Files.Get | fromYaml }}
-{{- with deepCopy .integration | merge $defaultValues }}
+{{- with merge .instance $defaultValues (dict "type" "integration.mysql") }}
 {{- if .exporter.enabled }}
+{{- if eq (include "secrets.usesKubernetesSecret" .) "true" }}
+  {{- include "secret.alloy" (deepCopy $ | merge (dict "object" .)) | nindent 0 }}
+{{- end }}
 prometheus.exporter.mysql {{ include "helper.alloy_name" .name | quote }} {
 {{- if .exporter.dataSourceName }}
-  data_source_name  = {{ .exporter.dataSourceName }}
+  data_source_name  = {{ .exporter.dataSourceName | quote }}
 {{- else }}
-  data_source_name  = {{ printf "%s:%s@%s:%d/" .exporter.dataSource.username .exporter.dataSource.password .exporter.dataSource.host (.exporter.dataSource.port | int) | quote }}
+  {{- if eq (include "secrets.usesSecret" (dict "object" . "key" "exporter.dataSource.auth.username")) "true" }}
+    {{- if eq (include "secrets.usesSecret" (dict "object" . "key" "exporter.dataSource.auth.password")) "true" }}
+  data_source_name = string.format("%s:%s@(%s:%d)/",
+    {{ include "secrets.read" (dict "object" . "key" "exporter.dataSource.auth.username" "nonsensitive" true) }},
+    {{ include "secrets.read" (dict "object" . "key" "exporter.dataSource.auth.password") }},
+    {{ .exporter.dataSource.host | quote }},
+    {{ .exporter.dataSource.port | int }},
+  )
+    {{- else }}
+  data_source_name = string.format("%s@(%s:%d)/",
+    {{ include "secrets.read" (dict "object" . "key" "exporter.dataSource.auth.username" "nonsensitive" true) }},
+    {{ .exporter.dataSource.host | quote }},
+    {{ .exporter.dataSource.port | int }},
+  )
+    {{- end }}
+  {{- else }}
+  data_source_name = string.format("%s:%d/", {{ .exporter.dataSource.host | quote }}, {{ .exporter.dataSource.port | int }})
+  {{- end }}
 {{- end }}
   enable_collectors = {{ .exporter.collectors | toJson }}
 }
@@ -60,13 +79,13 @@ promtheus.relabel {{ include "helper.alloy_name" .name | quote }} {
 
 {{- define "integrations.mysql.validate" }}
   {{- range $instance := $.Values.mysql.instances }}
-    {{- include "integrations.mysql.instance.validate" (merge $ (dict "integration" $instance)) | nindent 2 }}
+    {{- include "integrations.mysql.instance.validate" (merge $ (dict "instance" $instance)) | nindent 2 }}
   {{- end }}
 {{- end }}
 
 {{- define "integrations.mysql.instance.validate" }}
 {{- $defaultValues := "integrations/mysql-values.yaml" | .Files.Get | fromYaml }}
-{{- with merge .integration $defaultValues }}
+{{- with merge .instance $defaultValues }}
 {{- if .exporter.enabled }}
   {{- if and (not .exporter.dataSourceName) (not (and .exporter.dataSource.username .exporter.dataSource.password .exporter.dataSource.host)) }}
     {{- $msg := list "" "Missing data source details for MySQL exporter." }}
@@ -88,4 +107,9 @@ promtheus.relabel {{ include "helper.alloy_name" .name | quote }} {
   {{- end }}
 {{- end }}
 {{- end }}
+{{- end }}
+
+{{- define "secrets.list.integration.mysql" }}
+- exporter.dataSource.auth.username
+- exporter.dataSource.auth.password
 {{- end }}

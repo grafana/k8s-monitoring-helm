@@ -22,16 +22,17 @@ integrations:
       - name: test-db
         exporter:
           dataSource:
-            username: db-admin
-            password: db-password
             host: database.test.svc
       - name: staging-db
         exporter:
-          dataSourceName: "root:password@database.staging.svc:3306"
+          dataSourceName: "root:password@database.staging.svc:3306/"
       - name: prod-db
         exporter:
           dataSource:
-            host: database.test.svc
+            host: database.prod.svc
+            auth:
+              username: db-admin
+              password: db-password
 
 alloy-metrics:
   enabled: true

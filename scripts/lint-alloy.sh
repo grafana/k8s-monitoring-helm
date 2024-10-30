@@ -45,8 +45,11 @@ k8sDiscovery='discovery.kubernetes "lint_config_component" { role = "nodes" }'
 
 for file in "$@";
 do
-  if [[ "${file}" == "--public-preview" ]]; then
+  if grep "${file}" -e "remotecfg {" >/dev/null; then
     STABILITY_LEVEL=public-preview
+  fi
+  if grep "${file}" -e "livedebugging {" >/dev/null; then
+    STABILITY_LEVEL=experimental
   fi
 
   # if the file doesn't exist skip it
@@ -120,10 +123,10 @@ do
     fi
 
     checkstyle="${checkstyle}</file>"
-  fi
-  # only override the statusCode if it is 0
-  if [[ "${statusCode}" == 0 ]]; then
-    statusCode="${fmtCode}"
+
+    if [[ "${statusCode}" == 0 ]]; then
+      statusCode=1
+    fi
   fi
 done
 

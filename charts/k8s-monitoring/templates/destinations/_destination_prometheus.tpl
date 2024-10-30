@@ -54,7 +54,7 @@ prometheus.remote_write {{ include "helper.alloy_name" .name | quote }} {
 {{- if .tls }}
     tls_config {
       insecure_skip_verify = {{ .tls.insecureSkipVerify | default false }}
-      {{- if eq (include "secrets.usesKubernetesSecret" .) "true" }}
+      {{- if eq (include "secrets.usesSecret" (dict "object" . "key" "tls.ca")) "true" }}
       ca_pem = {{ include "secrets.read" (dict "object" . "key" "tls.ca" "nonsensitive" true) }}
       {{- end }}
       {{- if eq (include "secrets.usesKubernetesSecret" .) "true" }}

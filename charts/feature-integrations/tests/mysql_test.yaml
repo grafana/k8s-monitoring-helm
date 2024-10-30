@@ -2,6 +2,7 @@
 suite: Test MySQL integration
 templates:
   - configmap.yaml
+  - mysql-secret.yaml
 tests:
   - it: should create the MySQL config
     set:
@@ -11,13 +12,16 @@ tests:
           - name: my-database
             exporter:
               dataSource:
-                username: db-admin
-                password: db-password
                 host: my-db.mysql.svc
+                auth:
+                  username: db-admin
+                  password: db-password
     asserts:
-      - isKind:
+      - template: configmap.yaml
+        isKind:
           of: ConfigMap
-      - equal:
+      - template: configmap.yaml
+        equal:
           path: data["metrics.alloy"]
           value: |-
             declare "mysql_integration" {
@@ -25,8 +29,19 @@ tests:
                 comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
               }
             
+            
+              remote.kubernetes.secret "my_database" {
+                name      = "my-database-release-name-k8s-monitoring-feature-integrations"
+                namespace = "NAMESPACE"
+              }
+            
               prometheus.exporter.mysql "my_database" {
-                data_source_name  = "db-admin:db-password@my-db.mysql.svc:3306/"
+                data_source_name = string.format("%s:%s@(%s:%d)/",
+                  nonsensitive(remote.kubernetes.secret.my_database.data["username"]),
+                  remote.kubernetes.secret.my_database.data["password"],
+                  "my-db.mysql.svc",
+                  3306,
+                )
                 enable_collectors = ["heartbeat","mysql.user"]
               }
               prometheus.scrape "my_database" {
@@ -35,3 +50,164 @@ tests:
                 forward_to = argument.metrics_destinations.value
               }
             }
+      - template: mysql-secret.yaml
+        documentIndex: 0
+        containsDocument:
+          apiVersion: v1
+          kind: Secret
+          name: my-database-release-name-k8s-monitoring-feature-integrations
+          namespace: NAMESPACE
+      - template: mysql-secret.yaml
+        equal:
+          path: stringData.username
+          value: db-admin
+      - template: mysql-secret.yaml
+        equal:
+          path: stringData.password
+          value: db-password
+
+  - it: works with multiple MySQL Instances
+    set:
+      deployAsConfigMap: true
+      mysql:
+        instances:
+          - name: test-db
+            exporter:
+              dataSource:
+                host: database.test.svc
+          - name: staging-db
+            exporter:
+              dataSourceName: "root:password@database.staging.svc:3306/"
+          - name: prod-db
+            exporter:
+              dataSource:
+                host: database.prod.svc
+                auth:
+                  username: db-admin
+                  password: db-password
+    asserts:
+      - template: configmap.yaml
+        isKind:
+          of: ConfigMap
+      - template: configmap.yaml
+        equal:
+          path: data["metrics.alloy"]
+          value: |-
+            declare "mysql_integration" {
+              argument "metrics_destinations" {
+                comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
+              }
+            
+              prometheus.exporter.mysql "test_db" {
+                data_source_name = string.format("%s:%d/", "database.test.svc", 3306)
+                enable_collectors = ["heartbeat","mysql.user"]
+              }
+              prometheus.scrape "test_db" {
+                targets    = prometheus.exporter.mysql.test_db.targets
+                job_name   = "integration/mysql"
+                forward_to = argument.metrics_destinations.value
+              }
+            
+              prometheus.exporter.mysql "staging_db" {
+                data_source_name  = "root:password@database.staging.svc:3306/"
+                enable_collectors = ["heartbeat","mysql.user"]
+              }
+              prometheus.scrape "staging_db" {
+                targets    = prometheus.exporter.mysql.staging_db.targets
+                job_name   = "integration/mysql"
+                forward_to = argument.metrics_destinations.value
+              }
+            
+            
+              remote.kubernetes.secret "prod_db" {
+                name      = "prod-db-release-name-k8s-monitoring-feature-integrations"
+                namespace = "NAMESPACE"
+              }
+            
+              prometheus.exporter.mysql "prod_db" {
+                data_source_name = string.format("%s:%s@(%s:%d)/",
+                  nonsensitive(remote.kubernetes.secret.prod_db.data["username"]),
+                  remote.kubernetes.secret.prod_db.data["password"],
+                  "database.prod.svc",
+                  3306,
+                )
+                enable_collectors = ["heartbeat","mysql.user"]
+              }
+              prometheus.scrape "prod_db" {
+                targets    = prometheus.exporter.mysql.prod_db.targets
+                job_name   = "integration/mysql"
+                forward_to = argument.metrics_destinations.value
+              }
+            }
+      - template: mysql-secret.yaml
+        hasDocuments:
+          count: 1  # Only one secret should be created
+      - template: mysql-secret.yaml
+        documentIndex: 0
+        containsDocument:
+          apiVersion: v1
+          kind: Secret
+          name: prod-db-release-name-k8s-monitoring-feature-integrations
+          namespace: NAMESPACE
+      - template: mysql-secret.yaml
+        equal:
+          path: stringData.username
+          value: db-admin
+      - template: mysql-secret.yaml
+        equal:
+          path: stringData.password
+          value: db-password
+
+  - it: works when referencing the MySQL Secret
+    set:
+      deployAsConfigMap: true
+      mysql:
+        instances:
+          - name: test-database
+            exporter:
+              dataSource:
+                host: test-database-mysql.mysql.svc
+                auth:
+                  usernameFrom: "\"root\""
+                  passwordKey: mysql-root-password
+            secret:
+              create: false
+              name: test-database-mysql
+              namespace: mysql
+    asserts:
+      - template: configmap.yaml
+        isKind:
+          of: ConfigMap
+      - template: configmap.yaml
+        equal:
+          path: data["metrics.alloy"]
+          value: |-
+            declare "mysql_integration" {
+              argument "metrics_destinations" {
+                comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
+              }
+            
+            
+              remote.kubernetes.secret "test_database" {
+                name      = "test-database-mysql"
+                namespace = "mysql"
+              }
+            
+              prometheus.exporter.mysql "test_database" {
+                data_source_name = string.format("%s:%s@(%s:%d)/",
+                  "root",
+                  remote.kubernetes.secret.test_database.data["mysql-root-password"],
+                  "test-database-mysql.mysql.svc",
+                  3306,
+                )
+                enable_collectors = ["heartbeat","mysql.user"]
+              }
+              prometheus.scrape "test_database" {
+                targets    = prometheus.exporter.mysql.test_database.targets
+                job_name   = "integration/mysql"
+                forward_to = argument.metrics_destinations.value
+              }
+            }
+      - template: mysql-secret.yaml
+        hasDocuments:
+          count: 0  # No secret should be created

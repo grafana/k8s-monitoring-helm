@@ -16,11 +16,11 @@
 {{- end }}
 
 {{- define "features.integrations.metrics.include" }}
-{{- $values := dict "Values" .Values.integrations "Files" $.Subcharts.integrations.Files "Release" $.Release }}
+{{- $values := dict "Chart" $.Subcharts.integrations.Chart "Values" .Values.integrations "Files" $.Subcharts.integrations.Files "Release" $.Release }}
 {{- $destinations := include "features.integrations.destinations.metrics" . | fromYamlArray }}
 {{- $integrations := include "feature.integrations.configured.metrics" $values | fromYamlArray }}
 {{- range $integrationType := $integrations }}
-  {{- include (printf "integrations.%s.module.metrics" $integrationType) $values | indent 0 }}
+{{- include (printf "integrations.%s.module.metrics" $integrationType) $values | indent 0 }}
 {{ include "helper.alloy_name" $integrationType }}_integration "integration" {
   metrics_destinations = [
     {{ include "destinations.alloy.targets" (dict "destinations" $.Values.destinations "names" $destinations "type" "metrics" "ecosystem" "prometheus") | indent 4 | trim }}

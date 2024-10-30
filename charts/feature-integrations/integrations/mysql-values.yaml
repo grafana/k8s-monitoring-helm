@@ -3,40 +3,65 @@
 # @section -- General Settings
 name: ""
 
+# Settings for the Alloy embedded MySQL Exporter
 exporter:
+  # -- Whether to enable the Alloy-embedded MySQL Exporter.
+  # @section -- Exporter Settings
   enabled: true
 
-  # TODO: Utilize the secret functions to use from
+  # -- The data source string to use for the MySQL Exporter.
+  # @section -- Exporter Settings
   dataSourceName: ""
+
+  # -- The data source to use for the MySQL Exporter.
+  # @section -- Exporter Settings
   dataSource:
+    # -- The MySQL host to connect to.
+    # @section -- Exporter Settings
     host: ""
+    # -- The MySQL port to connect to.
+    # @section -- Exporter Settings
     port: 3306
     auth:
+      # -- The username to use for the MySQL connection.
+      # @section -- Exporter Settings
       username: ""
-      usernameKey: ""
+      # -- The key for storing the username in the secret.
+      # @section -- Exporter Settings
+      usernameKey: "username"
+      # -- Raw config for accessing the username.
+      # @section -- Exporter Settings
       usernameFrom: ""
+      # -- The password to use for the MySQL connection.
+      # @section -- Exporter Settings
       password: ""
-      passwordKey: ""
+      # -- The key for storing the password in the secret.
+      # @section -- Exporter Settings
+      passwordKey: "password"
+      # -- Raw config for accessing the password.
+      # @section -- Exporter Settings
       passwordFrom: ""
 
-    secret:
-      # -- (bool) Whether to create a secret for this MySQL integration instance.
-      # @default -- `true`
-      # @section -- Secret
-      create:
-      # -- If true, skip secret creation and embed the credentials directly into the configuration.
-      # @section -- Secret
-      embed: false
-      # -- The name of the secret to create.
-      # @section -- Secret
-      name: ""
-      # -- The namespace for the secret.
-      # @section -- Secret
-      namespace: ""
-
+  # -- The list of collectors to enable for the MySQL Exporter ([Documentation](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.exporter.mysql/#supported-collectors)).
+  # @section -- Exporter Settings
   collectors:
     - heartbeat
     - mysql.user
+
+secret:
+  # -- (bool) Whether to create a secret to store credentials for this MySQL integration instance.
+  # @default -- `true`
+  # @section -- Secret
+  create:
+  # -- If true, skip secret creation and embed the credentials directly into the configuration.
+  # @section -- Secret
+  embed: false
+  # -- The name of the secret to create.
+  # @section -- Secret
+  name: ""
+  # -- The namespace for the secret.
+  # @section -- Secret
+  namespace: ""
 
 # -- Discover MySQL Exporter instances based on label selectors, if not using the exporter
 # @section -- Discovery Settings

@@ -44,7 +44,7 @@ declare "mysql_integration" {
   }
   
   prometheus.exporter.mysql "test_db" {
-    data_source_name  = "db-admin:db-password@database.test.svc:3306/"
+    data_source_name = string.format("%s:%d/", "database.test.svc", 3306)
     enable_collectors = ["heartbeat","mysql.user"]
   }
   prometheus.scrape "test_db" {
@@ -54,7 +54,7 @@ declare "mysql_integration" {
   }
   
   prometheus.exporter.mysql "staging_db" {
-    data_source_name  = root:password@database.staging.svc:3306
+    data_source_name  = "root:password@database.staging.svc:3306/"
     enable_collectors = ["heartbeat","mysql.user"]
   }
   prometheus.scrape "staging_db" {
@@ -63,8 +63,19 @@ declare "mysql_integration" {
     forward_to = argument.metrics_destinations.value
   }
   
+  
+  remote.kubernetes.secret "prod_db" {
+    name      = "prod-db-ko-integrations"
+    namespace = "default"
+  }
+  
   prometheus.exporter.mysql "prod_db" {
-    data_source_name  = "%!s(<nil>):%!s(<nil>)@database.test.svc:3306/"
+    data_source_name = string.format("%s:%s@(%s:%d)/",
+      nonsensitive(remote.kubernetes.secret.prod_db.data["username"]),
+      remote.kubernetes.secret.prod_db.data["password"],
+      "database.prod.svc",
+      3306,
+    )
     enable_collectors = ["heartbeat","mysql.user"]
   }
   prometheus.scrape "prod_db" {
