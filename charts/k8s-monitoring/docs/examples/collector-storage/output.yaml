@@ -385,6 +385,15 @@ data:
       clustering {
         enabled = true
       }
+      forward_to = [prometheus.relabel.kubernetes_monitoring_telemetry.receiver]
+    }
+    
+    prometheus.relabel "kubernetes_monitoring_telemetry" {
+      rule {
+        source_labels = ["__name__"]
+        regex = "grafana_kubernetes_monitoring_.*"
+        action = "keep"
+      }
       forward_to = [
         prometheus.remote_write.prometheus.receiver,
       ]

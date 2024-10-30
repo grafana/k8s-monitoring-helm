@@ -377,6 +377,15 @@ prometheus.scrape "kubernetes_monitoring_telemetry" {
   clustering {
     enabled = true
   }
+  forward_to = [prometheus.relabel.kubernetes_monitoring_telemetry.receiver]
+}
+
+prometheus.relabel "kubernetes_monitoring_telemetry" {
+  rule {
+    source_labels = ["__name__"]
+    regex = "grafana_kubernetes_monitoring_build_info"
+    action = "keep"
+  }
   forward_to = [prometheus.relabel.metrics_service.receiver]
 }
 
