@@ -15,13 +15,13 @@ jobs:
   release:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout grafana/k8s-monitoring-helm
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
           path: source
 
-      - name: Checkout helm-charts
+      - name: Checkout grafana/helm-charts
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -79,7 +79,7 @@ jobs:
           helm repo add opencost https://opencost.github.io/opencost-helm-chart
           helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
           mkdir ../build
-          helm package charts/k8s-monitoring --package-path ../build
+          helm package charts/k8s-monitoring --destination ../build
 
       - name: Make release on K8s Monitoring Helm
         uses: softprops/action-gh-release@v2
