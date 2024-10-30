@@ -232,7 +232,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| externalServices.loki.authMode | string | `"basic"` | one of "none", "basic", "oauth2" |
+| externalServices.loki.authMode | string | `"basic"` | one of "none", "basic", "oauth2", "bearerToken" |
 | externalServices.loki.basicAuth.password | string | `""` | Loki basic auth password |
 | externalServices.loki.basicAuth.passwordKey | string | `"password"` | The key for the password property in the secret |
 | externalServices.loki.basicAuth.username | string | `""` | Loki basic auth username |
@@ -370,11 +370,13 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| externalServices.tempo.authMode | string | `"basic"` | one of "none", "basic" |
+| externalServices.tempo.authMode | string | `"basic"` | one of "none", "basic", "bearerToken" |
 | externalServices.tempo.basicAuth.password | string | `""` | Tempo basic auth password |
 | externalServices.tempo.basicAuth.passwordKey | string | `"password"` | The key for the password property in the secret |
 | externalServices.tempo.basicAuth.username | string | `""` | Tempo basic auth username |
 | externalServices.tempo.basicAuth.usernameKey | string | `"username"` | The key for the username property in the secret |
+| externalServices.tempo.bearerToken.token | string | `""` | Configure the Tempo Bearer Token |
+| externalServices.tempo.bearerToken.tokenKey | string | `"bearerToken"` | Configure the Key for Tempo Bearer Token secret |
 | externalServices.tempo.extraHeaders | object | `{}` | Extra headers to be set when sending metrics. All values are treated as strings and automatically quoted. |
 | externalServices.tempo.extraHeadersFrom | object | `{}` | Extra headers to be set when sending metrics through a dynamic reference. All values are treated as raw strings and not quoted. |
 | externalServices.tempo.host | string | `""` | Tempo host where traces will be sent |
