@@ -1,0 +1,60 @@
+---
+name: Security Scans
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - 'charts/k8s-monitoring/docs/examples/features/all-features/output.yaml'
+  pull_request:
+    paths:
+      - 'charts/k8s-monitoring/docs/examples/features/all-features/output.yaml'
+  workflow_dispatch:
+
+jobs:
+  list-container-images:
+    name: List Container Images
+    runs-on: ubuntu-latest
+    outputs:
+      images: ${{ steps.list_images.outputs.images }}
+    steps:
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+          check-latest: true
+
+      - name: Install yq
+        run: pip install yq
+
+      - name: List Container Images
+        id: list_images
+        run: |
+          file=charts/k8s-monitoring/docs/examples/features/all-features/output.yaml
+          yq -r -o json '. | select(.kind=="DaemonSet") | .spec.template.spec.containers[].image' "${file}" > images.txt
+          yq -r -o json '. | select(.kind=="Deployment") | .spec.template.spec.containers[].image' "${file}" > images.txt
+          yq -r -o json '. | select(.kind=="Job") | .spec.template.spec.containers[].image' "${file}" > images.txt
+          yq -r -o json '. | select(.kind=="Pod") | .spec.containers[].image' "${file}" > images.txt
+          yq -r -o json '. | select(.kind=="StatefulSet") | .spec.template.spec.containers[].image' "${file}" > images.txt
+          echo "images=$(cat images.txt | sort --unique | jq --raw-input --slurp --compact-output 'split("\n") | map(select(. != ""))')" >> "${GITHUB_OUTPUT}"
+
+  scan-container-images:
+    name: Scan Container Images
+    needs: list-container-images
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        image: ${{ fromJson(needs.list-container-images.outputs.images) }}
+      fail-fast: false
+    steps:
+      - name: Run Trivy
+        uses: aquasecurity/trivy-action
+        with:
+          image-ref: ${{ matrix.image }}
+          format: sarif
+          output: trivy-results.sarif
+
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy-results.sarif
