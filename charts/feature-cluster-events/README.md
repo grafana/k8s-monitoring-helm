@@ -41,7 +41,7 @@ Actual integration testing in a live environment should be done in the main [k8s
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| extraProcessingStages | string | `""` | Stage blocks to be added to the loki.process component for cluster events. ([docs](https://grafana.com/docs/alloy/latest/reference/components/loki.process/#blocks)) This value is templated so that you can refer to other values from this file. |
+| extraProcessingStages | string | `""` | Stage blocks to be added to the loki.process component for cluster events. ([docs](https://grafana.com/docs/alloy/latest/reference/components/loki/loki.process/#blocks)) This value is templated so that you can refer to other values from this file. |
 
 ### General settings
 
