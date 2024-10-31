@@ -1,13 +1,13 @@
 {{- include "validations.cluster_name" . }}
 {{- include "validations.platform" . }}
 
+{{- include "destinations.validate" . -}}
+
 {{- /* Feature Validations*/}}
 {{- include "validations.features_enabled" . }}
 {{- range $feature := ((include "features.list" .) | fromYamlArray) }}
   {{- include (printf "features.%s.validate" $feature) (dict "Values" $.Values) }}
 {{- end }}
-
-{{- include "destinations.validate" . -}}
 
 {{- include "collectors.validate.featuresEnabled" . }}
 {{- range $collectorName := ((include "collectors.list.enabled" .) | fromYamlArray) }}

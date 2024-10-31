@@ -9,7 +9,7 @@ heading "Kubernetes Monitoring Helm" "Performing Text Linting using alex"
 dir=$(pwd || true)
 
 # check to see if remark is installed
-if [[ ! -f "${dir}"/node_modules/.bin/textlint ]]; then
+if [[ ! -f "${dir}"/node_modules/.bin/alex ]]; then
   emergency "alex node module is not installed, please run: make install";
 fi
 

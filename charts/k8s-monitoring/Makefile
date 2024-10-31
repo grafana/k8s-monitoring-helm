@@ -28,6 +28,7 @@ schema-mods/destination-list.json: $(DESTINATION_VALUES_FILES)
 	@echo '      "type": "array",' >> $@
 	@echo '      "items": {' >> $@
 	@echo '        "anyOf": [' >> $@
+	@echo '          { "$$ref": "#/definitions/invalid-destination"},' >> $@
 	@count=0; \
 	for file in $(DESTINATION_VALUES_FILES); do \
 		count=$$((count + 1)); \
@@ -148,7 +149,7 @@ lint-helm: build
 	helm lint .
 	ct lint --config .ct.yaml --lint-conf ../../.configs/lintconf.yaml --check-version-increment=false --charts .
 
-unittest: build
+unittest: values.schema.json templates/destinations/_destination_types.tpl
 ifdef HAS_HELM_UNITTEST
 	helm unittest .
 else

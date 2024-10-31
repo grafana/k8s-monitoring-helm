@@ -46,6 +46,9 @@ jobs:
       matrix:
         test: ${{ fromJson(needs.list-tests.outputs.tests) }}
       fail-fast: false
+    concurrency:
+      group: ${{ matrix.test || 'no-platform-test' }}
+      cancel-in-progress: false
     steps:
       - name: Checkout code
         uses: actions/checkout@v4

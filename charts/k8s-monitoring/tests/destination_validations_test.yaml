@@ -1,0 +1,77 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Test destination validations
+templates:
+  - validations.yaml
+tests:
+  - it: asks you to set the name of a destination
+    set:
+      cluster: {name: test-cluster}
+      clusterMetrics: {enabled: true}
+      destinations:
+        - type: prometheus
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            execution error at (k8s-monitoring/templates/validations.yaml:4:4): 
+            Destination #0 does not have a name.
+            Please set:
+            destinations:
+              - name: my-destination-name
+
+  - it: asks you to set a valid name for the destination
+    set:
+      cluster: {name: test-cluster}
+      clusterMetrics: {enabled: true}
+      destinations:
+        - name: prøm3thüs!
+          type: prometheus
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            execution error at (k8s-monitoring/templates/validations.yaml:4:4): 
+            Destination #0 (prøm3thüs!) has invalid characters in its name.
+            Please only use alphanumeric, underscores, dashes, or spaces
+
+  - it: requires a destination type
+    set:
+      cluster: {name: test-cluster}
+      clusterMetrics: {enabled: true}
+      destinations:
+        - name: a destination with no type
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            execution error at (k8s-monitoring/templates/validations.yaml:4:4): 
+            Destination #0 (a destination with no type) does not have a type.
+            Please set:
+            destinations:
+              - name: a destination with no type
+                type: loki, otlp, prometheus, or pyroscope
+
+  - it: validates the destination type
+    set:
+      cluster: {name: test-cluster}
+      clusterMetrics: {enabled: true}
+      destinations:
+        - name: a destination with an invalid type
+          type: invalidType
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            execution error at (k8s-monitoring/templates/validations.yaml:4:4): 
+            Destination #0 (a destination with an invalid type) is using an unknown type (invalidType).
+            Please set:
+            destinations:
+              - name: a destination with an invalid type
+                type: "[loki, otlp, prometheus, or pyroscope]"
+
+  - it: allows destination names with alphanumeric, underscores, dashes, and spaces
+    set:
+      cluster: {name: test-cluster}
+      clusterMetrics: {enabled: true}
+      alloy-metrics: {enabled: true}
+      destinations:
+        - name: This is my _Prometheus_ destination-1
+          type: prometheus
+    asserts:
+      - notFailedTemplate: {}
