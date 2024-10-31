@@ -49,11 +49,25 @@ jobs:
       - name: Install Updatecli
         uses: updatecli/updatecli-action@v2
 
+      - name: Get details
+        id: get-details
+        run: |
+          chart="$(basename "$(dirname "${{ matrix.config }}")")"
+          depName="$(basename "${{ matrix.config }}" | sed -e "s/.updatecli-\(.*\)\.yaml/\1/")"
+          versionPath="$(yq eval '.targets.*.spec.key' "${{ matrix.config }}" | head -n 1 | cut -c2-)"
+          version="$(yq eval "${versionPath}" "$(dirname "${{ matrix.config }}")/Chart.yaml")"
+          {
+            echo "title=$(yq eval ".name" "${{ matrix.config }}")"
+            echo "branch=chore/update-${chart}-${depName}"
+            echo "depChart=$(dirname "${{ matrix.config }}")/charts/${depName}-${version}.tgz"
+            echo "version=${version}" >> "${GITHUB_OUTPUT}"
+          } >> "${GITHUB_OUTPUT}"
+
       - name: Run Updatecli
         id: update-dependency
         run: |
           updatecli apply --config "${{ matrix.config }}"
-          if ! git diff --exit-code > /dev/null; then
+          if ! git diff --exit-code "${{ steps.get-details.outputs.depChart }}" > /dev/null; then
             echo "changed=true" >> "${GITHUB_OUTPUT}"
           fi
 
@@ -66,18 +80,6 @@ jobs:
       - name: Regenerate files
         if: steps.update-dependency.outputs.changed == 'true'
         run: make -C "$(dirname "${{ matrix.config }}")" clean build
-
-      - name: Get details
-        id: get-details
-        run: |
-          echo "title=$(yq eval ".name" "${{ matrix.config }}")" >> "${GITHUB_OUTPUT}"
-
-          versionPath="$(yq eval '.targets.*.spec.key' "${{ matrix.config }}" | head -n 1 | cut -c2-)"
-          echo "version=$(yq eval "${versionPath}" "$(dirname "${{ matrix.config }}")/Chart.yaml")" >> "${GITHUB_OUTPUT}"
-
-          chart="$(basename "$(dirname "${{ matrix.config }}")")" >> "${GITHUB_OUTPUT}"
-          dep="$(basename "${{ matrix.config }}" | sed -e "s/.updatecli-\(.*\)\.yaml/\1/")"
-          echo "branch=chore/update-${chart}-${dep}" >> "${GITHUB_OUTPUT}"
 
       - name: Create pull request
         if: steps.update-dependency.outputs.changed == 'true'
