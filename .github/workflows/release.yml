@@ -5,9 +5,9 @@ on:
   workflow_dispatch:
 
 env:
-  BIN_PATH: bin
-  PACKAGE_PATH: package
-  INDEX_PATH: index
+  BIN_PATH: "${{ github.workspace }}/bin"
+  PACKAGE_PATH: "${{ github.workspace }}/package"
+  INDEX_PATH: "${{ github.workspace }}/index"
 
 jobs:
   release:
@@ -114,6 +114,7 @@ jobs:
           fail_on_unmatched_files: true
 
       - name: Update Helm repository index
+        working-directory: helm-charts
         env:
           CR_OWNER: grafana
           CR_GIT_REPO: helm-charts
