@@ -7,6 +7,7 @@
 ## Values
 
 ```yaml
+---
 cluster:
   name: remote-config-example-cluster
 

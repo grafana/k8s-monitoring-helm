@@ -91,9 +91,9 @@ jobs:
           files: ${{ env.PACKAGE_PATH }}/${{ steps.parse-chart.outputs.packagename }}.tgz
           fail_on_unmatched_files: true
 
-#      # Note that this creates a release in grafana/helm-charts GitHub Repository with a new tag.
-#      # The tag name in grafana/helm-charts is <package>-<version>, while the
-#      # tag name for grafana/k8s-monitoring-helm is <version>.
+      # Note that this creates a release in grafana/helm-charts GitHub Repository with a new tag.
+      # The tag name in grafana/helm-charts is <package>-<version>, while the
+      # tag name for grafana/k8s-monitoring-helm is <version>.
       - name: Create release on grafana/helm-charts
         uses: softprops/action-gh-release@v2
         with:
@@ -111,13 +111,13 @@ jobs:
           files: ${{ env.PACKAGE_PATH }}/${{ steps.parse-chart.outputs.packagename }}.tgz
           fail_on_unmatched_files: true
 
-
-      - name: Update helm-charts index.yaml
+      - name: Update Helm repository index
         working-directory: helm-charts
         env:
           CR_OWNER: grafana
           CR_GIT_REPO: helm-charts
           CR_PACKAGE_PATH: ${{ env.PACKAGE_PATH }}
           CR_SKIP_EXISTING: true
-          CR_TOKEN: "${{ secrets.GH_BOT_ACCESS_TOKEN }}"
-        run: "${BIN_PATH}/cr" index --index-path "${INDEX_PATH}" --push
+          CR_TOKEN: ${{ secrets.GH_BOT_ACCESS_TOKEN }}
+        run: |
+          "${BIN_PATH}/cr" index --index-path "${INDEX_PATH}" --push
