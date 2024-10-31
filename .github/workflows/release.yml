@@ -42,13 +42,15 @@ jobs:
           tar -xzf cr.tar.gz -C "${BIN_PATH}"
           rm -f cr.tar.gz
 
-      - name: Configure Git
+      - name: Configure Git for grafana/k8s-monitoring-helm
+        working-directory: source
         run: |
-          cd source
           git config user.name "$GITHUB_ACTOR"
           git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
 
-          cd ../helm-charts
+      - name: Configure Git for grafana/helm-charts
+        working-directory: helm-charts
+        run: |
           git config user.name "$GITHUB_ACTOR"
           git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
 
@@ -79,7 +81,7 @@ jobs:
           helm repo add kepler https://sustainable-computing-io.github.io/kepler-helm-chart
           helm repo add opencost https://opencost.github.io/opencost-helm-chart
           helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
-          helm package charts/k8s-monitoring --destination "../${PACKAGE_PATH}"
+          helm package charts/k8s-monitoring --destination "${PACKAGE_PATH}"
 
       - name: Create release on grafana/k8s-monitoring-helm
         uses: softprops/action-gh-release@v2
