@@ -28,6 +28,7 @@ schema-mods/destination-list.json: $(DESTINATION_VALUES_FILES)
 	@echo '      "type": "array",' >> $@
 	@echo '      "items": {' >> $@
 	@echo '        "anyOf": [' >> $@
+	@echo '          { "$$ref": "#/definitions/invalid-destination"},' >> $@
 	@count=0; \
 	for file in $(DESTINATION_VALUES_FILES); do \
 		count=$$((count + 1)); \

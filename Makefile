@@ -23,7 +23,7 @@ build:
 	make -C charts/k8s-monitoring-v1 build
 
 .PHONY: test
-test: build
+test: build lint
 	helm repo update
 	set -e && \
 	for chart in $(FEATURE_CHARTS); do \
@@ -49,6 +49,15 @@ endif
 install:
 	yarn install
 
+node_modules/.bin/alex: package.json yarn.lock
+	yarn install
+
+node_modules/.bin/markdownlint-cli2: package.json yarn.lock
+	yarn install
+
+node_modules/.bin/textlint: package.json yarn.lock
+	yarn install
+
 ####################################################################
 #                           Linting                                #
 ####################################################################
@@ -57,28 +66,28 @@ lint: lint-sh lint-md lint-txt lint-yml lint-alex lint-misspell lint-actionlint
 
 # Shell Linting for checking shell scripts
 lint-sh lint-shell:
-	@./scripts/lint-shell.sh || true
+	@./scripts/lint-shell.sh
 
 # Markdown Linting for checking markdown files
-lint-md lint-markdown:
-	@./scripts/lint-markdown.sh || true
+lint-md lint-markdown: node_modules/.bin/markdownlint-cli2
+	@./scripts/lint-markdown.sh
 
 # Text Linting for checking text files
-lint-txt lint-text:
-	@./scripts/lint-text.sh || true
+lint-txt lint-text: node_modules/.bin/textlint
+	@./scripts/lint-text.sh
 
 # Yaml Linting for checking yaml files
 lint-yml lint-yaml:
-	@./scripts/lint-yaml.sh || true
+	@./scripts/lint-yaml.sh
 
 # Alex Linting for checking insensitive language
-lint-alex:
+lint-alex: node_modules/.bin/alex
 	@./scripts/lint-alex.sh || true
 
 # Misspell Linting for checking common spelling mistakes
 lint-misspell:
-	@./scripts/lint-misspell.sh || true
+	@./scripts/lint-misspell.sh
 
 # Actionlint Linting for checking GitHub Actions
 lint-al lint-actionlint:
-	@./scripts/lint-actionlint.sh || true
+	@./scripts/lint-actionlint.sh
