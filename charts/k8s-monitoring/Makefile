@@ -148,7 +148,7 @@ lint-helm: build
 	helm lint .
 	ct lint --config .ct.yaml --lint-conf ../../.configs/lintconf.yaml --check-version-increment=false --charts .
 
-unittest: build
+unittest: values.schema.json templates/destinations/_destination_types.tpl
 ifdef HAS_HELM_UNITTEST
 	helm unittest .
 else
