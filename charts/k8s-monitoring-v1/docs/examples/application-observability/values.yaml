@@ -27,6 +27,17 @@ externalServices:
 receivers:
   grafanaCloudMetrics:
     enabled: true
+  processors:
+    attributes:
+      include:
+        matchType: regexp
+        logBodies: ["AUTH.*"]
+      actions:
+        - key: password
+          action: update
+          value: obfuscated
+        - key: token
+          action: delete
 
 traces:
   enabled: true

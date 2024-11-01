@@ -81,6 +81,75 @@ otelcol.processor.k8sattributes "default" {
 
   output {
 {{- if .Values.metrics.enabled }}
+    metrics = [otelcol.processor.attributes.default.input]
+{{- end }}
+{{- if .Values.logs.enabled }}
+    logs    = [otelcol.processor.attributes.default.input]
+{{- end }}
+{{- if .Values.traces.enabled }}
+    traces  = [otelcol.processor.attributes.default.input]
+{{- end }}
+  }
+}
+
+otelcol.processor.attributes "default" {
+{{- if .Values.receivers.processors.attributes.include.matchType }}
+  include {
+    match_type = {{ .Values.receivers.processors.attributes.include.matchType | quote }}
+{{- if .Values.receivers.processors.attributes.include.logBodies }}
+    log_bodies = {{ .Values.receivers.processors.attributes.include.logBodies | toJson }}
+{{- end }}
+{{- if .Values.receivers.processors.attributes.include.logSeverityTexts }}
+    log_severity_texts = {{ .Values.receivers.processors.attributes.include.logSeverityTexts | toJson }}
+{{- end }}
+{{- if .Values.receivers.processors.attributes.include.metricNames }}
+    metric_names = {{ .Values.receivers.processors.attributes.include.metricNames | toJson }}
+{{- end }}
+{{- if .Values.receivers.processors.attributes.include.services }}
+    services = {{ .Values.receivers.processors.attributes.include.services | toJson }}
+{{- end }}
+{{- if .Values.receivers.processors.attributes.include.spanKinds }}
+    span_kinds = {{ .Values.receivers.processors.attributes.include.spanKinds | toJson }}
+{{- end }}
+{{- if .Values.receivers.processors.attributes.include.spanNames }}
+    span_names = {{ .Values.receivers.processors.attributes.include.spanNames | toJson }}
+{{- end }}
+  }
+{{- end }}
+{{- if .Values.receivers.processors.attributes.exclude.matchType }}
+  exclude {
+    match_type = {{ .Values.receivers.processors.attributes.exclude.matchType | quote }}
+{{- if .Values.receivers.processors.attributes.exclude.logBodies }}
+    log_bodies = {{ .Values.receivers.processors.attributes.exclude.logBodies | toJson }}
+{{- end }}
+{{- if .Values.receivers.processors.attributes.exclude.logSeverityTexts }}
+    log_severity_texts = {{ .Values.receivers.processors.attributes.exclude.logSeverityTexts | toJson }}
+{{- end }}
+{{- if .Values.receivers.processors.attributes.exclude.metricNames }}
+    metric_names = {{ .Values.receivers.processors.attributes.exclude.metricNames | toJson }}
+{{- end }}
+{{- if .Values.receivers.processors.attributes.exclude.services }}
+    services = {{ .Values.receivers.processors.attributes.exclude.services | toJson }}
+{{- end }}
+{{- if .Values.receivers.processors.attributes.exclude.spanKinds }}
+    span_kinds = {{ .Values.receivers.processors.attributes.exclude.spanKinds | toJson }}
+{{- end }}
+{{- if .Values.receivers.processors.attributes.exclude.spanNames }}
+    span_names = {{ .Values.receivers.processors.attributes.exclude.spanNames | toJson }}
+{{- end }}
+  }
+{{- end }}
+
+{{- range $action := .Values.receivers.processors.attributes.actions }}
+  action {
+    {{- range $k, $v := $action }}
+    {{ $k }} = {{ $v | quote }}
+    {{- end }}
+  }
+{{- end }}
+
+  output {
+{{- if .Values.metrics.enabled }}
     metrics = [otelcol.processor.transform.default.input]
 {{- end }}
 {{- if .Values.logs.enabled }}
@@ -88,7 +157,7 @@ otelcol.processor.k8sattributes "default" {
 {{- end }}
 {{- if .Values.traces.enabled }}
     traces  = [
-      otelcol.processor.transform.default.input, 
+      otelcol.processor.transform.default.input,
     {{- if and .Values.metrics.enabled .Values.receivers.grafanaCloudMetrics.enabled }}
       otelcol.connector.host_info.default.input,
     {{- end }}

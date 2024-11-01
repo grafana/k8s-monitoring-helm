@@ -74,6 +74,28 @@ otelcol.processor.k8sattributes "default" {
   }
 
   output {
+    metrics = [otelcol.processor.attributes.default.input]
+    logs    = [otelcol.processor.attributes.default.input]
+    traces  = [otelcol.processor.attributes.default.input]
+  }
+}
+
+otelcol.processor.attributes "default" {
+  include {
+    match_type = "regexp"
+    log_bodies = ["AUTH.*"]
+  }
+  action {
+    action = "update"
+    key = "password"
+    value = "obfuscated"
+  }
+  action {
+    action = "delete"
+    key = "token"
+  }
+
+  output {
     metrics = [otelcol.processor.transform.default.input]
     logs    = [otelcol.processor.transform.default.input]
     traces  = [
