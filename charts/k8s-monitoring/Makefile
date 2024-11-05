@@ -152,6 +152,7 @@ build: README.md alloyModules/LICENSE values.schema.json templates/destinations/
 test: unittest lint-helm lint-configs example-checks
 lint-configs: $(EXAMPLE_ALLOY_FILES)
 	../../scripts/lint-alloy.sh $(EXAMPLE_ALLOY_FILES)
+	rm -rf data-alloy  # Clean up the data-alloy directory, which is created by lint-alloy.sh when it runs Alloy.
 
 lint-helm: build
 	helm repo add grafana https://grafana.github.io/helm-charts

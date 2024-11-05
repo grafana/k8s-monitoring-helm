@@ -94,25 +94,6 @@ data:
         comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
       }
       
-      prometheus.exporter.mysql "test_db" {
-        data_source_name = string.format("%s:%d/", "database.test.svc", 3306)
-        enable_collectors = ["heartbeat","mysql.user"]
-      }
-      prometheus.scrape "test_db" {
-        targets    = prometheus.exporter.mysql.test_db.targets
-        job_name   = "integration/mysql"
-        forward_to = [prometheus.relabel.test_db.receiver]
-      }
-      
-      prometheus.relabel "test_db" {
-        max_cache_size = 100000
-        rule {
-          target_label = "instance"
-          replacement = "test-db"
-        }
-        forward_to = argument.metrics_destinations.value
-      }
-      
       prometheus.exporter.mysql "staging_db" {
         data_source_name  = "root:password@database.staging.svc:3306/"
         enable_collectors = ["heartbeat","mysql.user"]
@@ -284,20 +265,6 @@ data:
           regex = "^(\\S+):\\/\\/.+$"
           replacement = "$1"
           target_label = "tmp_container_runtime"
-        }
-        rule {
-          source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_instance"]
-          separator = ";"
-          regex = "test-db"
-          target_label = "integration"
-          replacement = "mysql"
-        }
-        rule {
-          source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_instance"]
-          separator = ";"
-          regex = "test-db"
-          target_label = "instance"
-          replacement = "test-db"
         }
         rule {
           source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_instance"]
