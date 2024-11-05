@@ -6,6 +6,14 @@ destinations:
   - name: localPrometheus
     type: prometheus
     url: http://prometheus-server.prometheus.svc:9090/api/v1/write
+  - name: localLoki
+    type: loki
+    url: http://loki.loki.svc:3100/loki/api/v1/push
+    tenantId: "1"
+    auth:
+      type: basic
+      username: loki
+      password: lokipassword
 
 integrations:
   mysql:
@@ -21,6 +29,15 @@ integrations:
           create: false
           name: test-database-mysql
           namespace: mysql
+        logs:
+          labelSelectors:
+            app.kubernetes.io/instance: test-database
+
+podLogs:
+  enabled: true
 
 alloy-metrics:
+  enabled: true
+
+alloy-logs:
   enabled: true

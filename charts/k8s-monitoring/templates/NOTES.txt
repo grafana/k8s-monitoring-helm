@@ -10,7 +10,7 @@ It will:
 {{- range $feature := (include "features.list.enabled" .) | fromYamlArray }}
   {{- if ne $feature "selfReporting" }}
     {{- $task := include (printf "feature.%s.notes.task" $feature) (dict "Values" (index $.Values $feature)) | trim }}
-    {{- $destinations := include (printf "features.%s.destinations" $feature) (dict "Values" $.Values) | fromYamlArray }}
+    {{- $destinations := include (printf "features.%s.destinations" $feature) $ | fromYamlArray }}
 * {{ $task }} and send data to {{ include "english_list" $destinations }}.
   {{- end }}
 {{- end }}

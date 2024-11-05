@@ -1,23 +1,19 @@
 {{- define "features.integrations.enabled" }}
-{{- $metricIntegrations := include "feature.integrations.configured.metrics" (dict "Values" .Values.integrations) | fromYamlArray }}
-{{- $logIntegrations := include "feature.integrations.configured.logs" (dict "Values" .Values.integrations) | fromYamlArray }}
+{{- $metricIntegrations := include "feature.integrations.configured.metrics" (dict "Values" .Values.integrations "Files" $.Subcharts.integrations.Files) | fromYamlArray }}
+{{- $logIntegrations := include "feature.integrations.configured.logs" (dict "Values" .Values.integrations "Files" $.Subcharts.integrations.Files) | fromYamlArray }}
 {{- if or $metricIntegrations $logIntegrations }}true{{ else }}false{{ end }}
 {{- end }}
 
 {{- define "features.integrations.collectors" }}
 {{- $metricIntegrations := include "feature.integrations.configured.metrics" (dict "Values" .Values.integrations) | fromYamlArray }}
-{{- $logIntegrations := include "feature.integrations.configured.logs" (dict "Values" .Values.integrations) | fromYamlArray }}
 {{- if (not (empty $metricIntegrations)) }}
-- {{ .Values.integrations.collectors.metrics }}
-{{- end }}
-{{- if (not (empty $logIntegrations)) }}
-- {{ .Values.integrations.collectors.logs }}
+- {{ .Values.integrations.collector }}
 {{- end }}
 {{- end }}
 
 {{- define "features.integrations.metrics.include" }}
 {{- $values := dict "Chart" $.Subcharts.integrations.Chart "Values" .Values.integrations "Files" $.Subcharts.integrations.Files "Release" $.Release }}
-{{- $destinations := include "features.integrations.destinations.metrics" . | fromYamlArray }}
+{{- $destinations := include "features.integrations.destinations" . | fromYamlArray }}
 {{- $integrations := include "feature.integrations.configured.metrics" $values | fromYamlArray }}
 {{- range $integrationType := $integrations }}
 {{- include (printf "integrations.%s.module.metrics" $integrationType) $values | indent 0 }}
@@ -29,6 +25,7 @@
 {{- end }}
 {{- end }}
 
+<<<<<<< HEAD
 {{- define "features.integrations.logs.include" }}
 {{- $values := dict "Values" .Values.integrations "Files" $.Subcharts.integrations.Files "Release" $.Release }}
 {{- $destinations := include "features.integrations.destinations.logs" . | fromYamlArray }}
@@ -43,45 +40,57 @@
 {{- end }}
 {{- end }}
 
+=======
+>>>>>>> 855eebe1 (Add log handling to the mysql integration)
 {{- define "features.integrations.include" }}
-{{- if eq .collectorName .Values.integrations.collectors.metrics }}
+{{- if eq .collectorName .Values.integrations.collector }}
   {{ include "features.integrations.metrics.include" . | indent 0 }}
-{{- end }}
-{{- if eq .collectorName .Values.integrations.collectors.logs }}
-  {{ include "features.integrations.logs.include" . | indent 0 }}
 {{- end }}
 {{- end }}
 
 {{- define "features.integrations.destinations" }}
-{{- $metricDestinations := include "features.integrations.destinations.metrics" . | fromYamlArray }}
-{{- $logDestinations := include "features.integrations.destinations.logs" . | fromYamlArray }}
-{{- concat $metricDestinations $logDestinations | uniq | toYaml }}
-{{- end }}
-
-{{- define "features.integrations.destinations.metrics" }}
 {{- include "destinations.get" (dict "destinations" $.Values.destinations "type" "metrics" "ecosystem" "prometheus" "filter" $.Values.integrations.destinations) -}}
 {{- end }}
 
-{{- define "features.integrations.destinations.logs" }}
-[]
+{{- define "features.integrations.logs.discoveryRules" }}
+{{- $values := (dict "Values" .Values.integrations "Files" $.Subcharts.integrations.Files) }}
+{{- $extraDiscoveryRules := list }}
+{{- $logIntegrations := include "feature.integrations.configured.logs" $values | fromYamlArray }}
+{{- range $integration := $logIntegrations }}
+  {{- $extraDiscoveryRules = append $extraDiscoveryRules ((include (printf "integrations.%s.logs.discoveryRules" $integration) $values) | indent 0) }}
+{{- end }}
+{{ $extraDiscoveryRules | join "\n" }}
+{{- end }}
+
+{{- define "features.integrations.logs.logProcessingStages" }}
+{{- $values := (dict "Values" .Values.integrations "Files" $.Subcharts.integrations.Files) }}
+{{- $extraLogProcessingStages := "" }}
+{{- $logIntegrations := include "feature.integrations.configured.logs" $values | fromYamlArray }}
+{{- range $integration := $logIntegrations }}
+  {{- $extraLogProcessingStages = cat $extraLogProcessingStages "\n" (include (printf "integrations.%s.logs.processingStage" $integration) $values) | indent 0 }}
+{{- end }}
+{{ $extraLogProcessingStages }}
 {{- end }}
 
 {{- define "features.integrations.validate" }}
 {{- if eq (include "features.integrations.enabled" .) "true" }}
 {{- $featureName := "Service Integrations" }}
 
-{{- $metricIntegrations := include "feature.integrations.configured.metrics" (dict "Values" .Values.integrations) | fromYamlArray }}
+{{- $metricIntegrations := include "feature.integrations.configured.metrics" (dict "Values" .Values.integrations "Files" $.Subcharts.integrations.Files) | fromYamlArray }}
 {{- if $metricIntegrations }}
-  {{- $metricDestinations := include "features.integrations.destinations.metrics" . | fromYamlArray }}
+  {{- $metricDestinations := include "features.integrations.destinations" . | fromYamlArray }}
   {{- include "destinations.validate_destination_list" (dict "destinations" $metricDestinations "type" "metrics" "ecosystem" "prometheus" "feature" $featureName) }}
   {{- include "collectors.require_collector" (dict "Values" $.Values "name" "alloy-metrics" "feature" $featureName) }}
 {{- end }}
 
-{{- $logIntegrations := include "feature.integrations.configured.logs" (dict "Values" .Values.integrations) | fromYamlArray }}
-{{- if $logIntegrations }}
-  {{- $logDestinations := include "features.integrations.destinations.logs" . | fromYamlArray }}
-  {{- include "destinations.validate_destination_list" (dict "destinations" $logDestinations "type" "log" "ecosystem" "loki" "feature" $featureName) }}
-  {{- include "collectors.require_collector" (dict "Values" $.Values "name" "alloy-logs" "feature" $featureName) }}
+{{- $podLogsEnabled := include "features.podLogs.enabled" $ }}
+{{- $logIntegrations := include "feature.integrations.configured.logs" (dict "Values" .Values.integrations "Files" $.Subcharts.integrations.Files) | fromYamlArray }}
+{{- if and $logIntegrations (ne $podLogsEnabled "true") }}
+  {{- $msg := list "" "Service integrations that include logs requires enabling the Pod Logs feature." }}
+  {{- $msg = append $msg "Please set:" }}
+  {{- $msg = append $msg "podLogs:" }}
+  {{- $msg = append $msg "  enabled: true" }}
+  {{- fail (join "\n" $msg) }}
 {{- end }}
 {{- end }}
 {{- end }}

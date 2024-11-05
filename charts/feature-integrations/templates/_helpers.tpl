@@ -19,3 +19,11 @@ If release name contains chart name it will be used as a full name.
 {{ define "helper.alloy_name" }}
 {{- . | lower | replace "-" "_" -}}
 {{ end }}
+
+{{- define "escape_label" -}}
+{{ . | replace "-" "_" | replace "." "_" | replace "/" "_" }}
+{{- end }}
+
+{{- define "pod_label" -}}
+{{ printf "__meta_kubernetes_pod_label_%s" (include "escape_label" .) }}
+{{- end }}

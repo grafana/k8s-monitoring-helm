@@ -19,11 +19,12 @@
 | exporter.dataSourceName | string | `""` | The data source string to use for the MySQL Exporter. |
 | exporter.enabled | bool | `true` | Whether to enable the Alloy-embedded MySQL Exporter. |
 
-### Discovery Settings
+### Logs Settings
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| labelSelectors | object | `{}` | Discover MySQL Exporter instances based on label selectors, if not using the exporter |
+| logs.enabled | bool | `true` | Whether to enable special processing of MySQL pod logs. |
+| logs.labelSelectors | object | `{}` | Label selectors to choose the set of pods to gather logs from for this MySQL Instance. Example: `app.kubernetes.io/name: mysql` |
 
 ### Metric Processing Settings
 

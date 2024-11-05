@@ -15,6 +15,9 @@ destinations:
   - name: prometheus
     type: prometheus
     url: http://prometheus.prometheus.svc:9090/api/v1/write
+  - name: loki
+    type: loki
+    url: http://loki.loki.svc:3100/api/push
 
 integrations:
   mysql:
@@ -23,9 +26,15 @@ integrations:
         exporter:
           dataSource:
             host: database.test.svc
+        logs:
+          labelSelectors:
+            app.kubernetes.io/instance: test-db
       - name: staging-db
         exporter:
           dataSourceName: "root:password@database.staging.svc:3306/"
+        logs:
+          labelSelectors:
+            app.kubernetes.io/instance: staging-db
       - name: prod-db
         exporter:
           dataSource:
@@ -33,7 +42,16 @@ integrations:
             auth:
               username: db-admin
               password: db-password
+        logs:
+          labelSelectors:
+            app.kubernetes.io/instance: prod-db
+
+podLogs:
+  enabled: true
 
 alloy-metrics:
+  enabled: true
+
+alloy-logs:
   enabled: true
 ```

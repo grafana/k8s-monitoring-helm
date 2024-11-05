@@ -47,6 +47,15 @@ tests:
               prometheus.scrape "my_database" {
                 targets    = prometheus.exporter.mysql.my_database.targets
                 job_name   = "integration/mysql"
+                forward_to = [prometheus.relabel.my_database.receiver]
+              }
+          
+              prometheus.relabel "my_database" {
+                max_cache_size = 100000
+                rule {
+                  target_label = "instance"
+                  replacement = "my-database"
+                }
                 forward_to = argument.metrics_destinations.value
               }
             }
@@ -105,6 +114,15 @@ tests:
               prometheus.scrape "test_db" {
                 targets    = prometheus.exporter.mysql.test_db.targets
                 job_name   = "integration/mysql"
+                forward_to = [prometheus.relabel.test_db.receiver]
+              }
+            
+              prometheus.relabel "test_db" {
+                max_cache_size = 100000
+                rule {
+                  target_label = "instance"
+                  replacement = "test-db"
+                }
                 forward_to = argument.metrics_destinations.value
               }
             
@@ -115,6 +133,15 @@ tests:
               prometheus.scrape "staging_db" {
                 targets    = prometheus.exporter.mysql.staging_db.targets
                 job_name   = "integration/mysql"
+                forward_to = [prometheus.relabel.staging_db.receiver]
+              }
+            
+              prometheus.relabel "staging_db" {
+                max_cache_size = 100000
+                rule {
+                  target_label = "instance"
+                  replacement = "staging-db"
+                }
                 forward_to = argument.metrics_destinations.value
               }
             
@@ -136,6 +163,15 @@ tests:
               prometheus.scrape "prod_db" {
                 targets    = prometheus.exporter.mysql.prod_db.targets
                 job_name   = "integration/mysql"
+                forward_to = [prometheus.relabel.prod_db.receiver]
+              }
+            
+              prometheus.relabel "prod_db" {
+                max_cache_size = 100000
+                rule {
+                  target_label = "instance"
+                  replacement = "prod-db"
+                }
                 forward_to = argument.metrics_destinations.value
               }
             }
@@ -205,6 +241,15 @@ tests:
               prometheus.scrape "test_database" {
                 targets    = prometheus.exporter.mysql.test_database.targets
                 job_name   = "integration/mysql"
+                forward_to = [prometheus.relabel.test_database.receiver]
+              }
+            
+              prometheus.relabel "test_database" {
+                max_cache_size = 100000
+                rule {
+                  target_label = "instance"
+                  replacement = "test-database"
+                }
                 forward_to = argument.metrics_destinations.value
               }
             }

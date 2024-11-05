@@ -12,7 +12,7 @@
 
 {{- define "features.list.enabled" }}
 {{- range $feature := ((include "features.list" .) | fromYamlArray ) }}
-  {{- if eq (include (printf "features.%s.enabled" $feature) (dict "Values" $.Values)) "true" }}
+  {{- if eq (include (printf "features.%s.enabled" $feature) $) "true" }}
 - {{ $feature }}
   {{- end }}
 {{- end }}

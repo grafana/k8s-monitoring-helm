@@ -37,8 +37,8 @@ loki.process "pod_logs" {
     ]
   }
 
-{{- if .Values.extraProcessingStages }}
-{{ tpl .Values.extraProcessingStages $ | indent 2 }}
+{{- if .Values.extraLogProcessingStages }}
+{{ tpl .Values.extraLogProcessingStages $ | indent 2 }}
 {{ end }}
   forward_to = argument.logs_destinations.value
 }
