@@ -808,12 +808,12 @@ data:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: ko-alloy-module-
+  name: ko-alloy-module-system
 data:
-  kv_etcd_metrics.alloy: |
+  node-exporter_metrics.alloy: |
     /*
-    Module: job-etcd
-    Description: Scrapes etcd
+    Module: job-node_exporter
+    Description: Scrapes node_exporter
     
     Note: Every argument except for "forward_to" is optional, and does have a defined default value.  However, the values for these
           arguments are not defined using the default = " ... " argument syntax, but rather using the coalesce(argument.value, " ... ").
@@ -835,7 +835,7 @@ data:
     
       argument "label_selectors" {
         // Docs: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
-        comment = "The label selectors to use to find matching targets (default: [\"app.kubernetes.io/component=etcd\"])"
+        comment = "The label selectors to use to find matching targets (default: [\"app.kubernetes.io/name=prometheus-node-exporter\"])"
         optional = true
       }
     
@@ -844,14 +844,14 @@ data:
         optional = true
       }
     
-      // etcd service discovery for all of the pods
-      discovery.kubernetes "etcd" {
+      // node_exporter service discovery for all of the pods
+      discovery.kubernetes "node_exporter" {
         role = "pod"
     
         selectors {
           role = "pod"
           field = join(coalesce(argument.field_selectors.value, []), ",")
-          label = join(coalesce(argument.label_selectors.value, ["app.kubernetes.io/component=etcd"]), ",")
+          label = join(coalesce(argument.label_selectors.value, ["app.kubernetes.io/name=prometheus-node-exporter"]), ",")
         }
     
         namespaces {
@@ -859,9 +859,9 @@ data:
         }
       }
     
-      // etcd relabelings (pre-scrape)
+      // node_exporter relabelings (pre-scrape)
       discovery.relabel "kubernetes" {
-        targets = discovery.kubernetes.etcd.targets
+        targets = discovery.kubernetes.node_exporter.targets
     
         // keep only the specified metrics port name, and pods that are Running and ready
         rule {
@@ -952,7 +952,7 @@ data:
     
     declare "local" {
       argument "port" {
-        comment = "The port to use (default: 9150)"
+        comment = "The port to use (default: 9100)"
         optional = true
       }
     
@@ -960,7 +960,7 @@ data:
       discovery.relabel "local" {
         targets = [
           {
-            "__address__" = "localhost" + format("%s", coalesce(argument.port.value, "9150")),
+            "__address__" = "localhost" + format("%s", coalesce(argument.port.value, "9100")),
             "source" = "local",
           },
         ]
@@ -981,7 +981,7 @@ data:
       }
     
       argument "job_label" {
-        comment = "The job label to add for all etcd metric (default: integrations/etcd)"
+        comment = "The job label to add for all node_exporter metric (default: integrations/node_exporter)"
         optional = true
       }
     
@@ -1011,15 +1011,15 @@ data:
       }
     
       argument "clustering" {
-        // Docs: https://grafana.com/docs/agent/latest/flow/concepts/clustering/
+        // Docs: https://node_exporter.com/docs/agent/latest/flow/concepts/clustering/
         comment = "Whether or not clustering should be enabled (default: false)"
         optional = true
       }
     
-      // etcd scrape job
-      prometheus.scrape "etcd" {
-        job_name = coalesce(argument.job_label.value, "integrations/etcd")
-        forward_to = [prometheus.relabel.etcd.receiver]
+      // node_exporter scrape job
+      prometheus.scrape "node_exporter" {
+        job_name = coalesce(argument.job_label.value, "integrations/node_exporter")
+        forward_to = [prometheus.relabel.node_exporter.receiver]
         targets = argument.targets.value
         scrape_interval = coalesce(argument.scrape_interval.value, "60s")
         scrape_timeout = coalesce(argument.scrape_timeout.value, "10s")
@@ -1029,27 +1029,41 @@ data:
         }
       }
     
-      // etcd metric relabelings (post-scrape)
-      prometheus.relabel "etcd" {
+      // node_exporter metric relabelings (post-scrape)
+      prometheus.relabel "node_exporter" {
         forward_to = argument.forward_to.value
         max_cache_size = coalesce(argument.max_cache_size.value, 100000)
     
         // drop metrics that match the drop_metrics regex
         rule {
           source_labels = ["__name__"]
-          regex = coalesce(argument.drop_metrics.value, "(^(go|process)_.+$)")
+          regex = coalesce(argument.drop_metrics.value, "(^(go)_.+$)")
           action = "drop"
         }
     
         // keep only metrics that match the keep_metrics regex
         rule {
           source_labels = ["__name__"]
-          regex = coalesce(argument.keep_metrics.value, "(up|etcd_(commands_total|connections_total|current_(bytes|connections|items)|items_(evicted_total|total)|max_connections|read_bytes_total|up|uptime_seconds|version|written_bytes_total))")
+          regex = coalesce(argument.keep_metrics.value, "(up|scrape_(duration_seconds|series_added|samples_(post_metric_relabeling|scraped))|node_(arp_entries|boot_time_seconds|context_switches_total|cpu_seconds_total|disk_(io_time_seconds_total|io_time_weighted_seconds_total|read_(bytes_total|time_seconds_total)|reads_completed_total|write_time_seconds_total|writes_completed_total|written_bytes_total)|file(fd_(allocated|maximum)|system_(avail_bytes|device_error|files(_free)?|readonly|size_bytes))|intr_total|load(1|15|5)|md_disks(_required)?|memory_(Active_(anon_bytes|bytes|file_bytes)|Anon(HugePages_bytes|Pages_bytes)|Bounce_bytes|Buffers_bytes|Cached_bytes|CommitLimit_bytes|Committed_AS_bytes|DirectMap(1G|2M|4k)_bytes|Dirty_bytes|HugePages_(Free|Rsvd|Surp|Total)|Hugepagesize_bytes|Inactive_(anon_bytes|bytes|file_bytes)|Mapped_bytes|Mem(Available|Free|Total)_bytes|S(Reclaimable|Unreclaim)_bytes|Shmem(HugePages_bytes|PmdMapped_bytes|_bytes)|Slab_bytes|SwapTotal_bytes|Vmalloc(Chunk|Total|Used)_bytes|Writeback(Tmp|)_bytes)|netstat_(Icmp6_(InErrors|InMsgs|OutMsgs)|Icmp_(InErrors|InMsgs|OutMsgs)|IpExt_(InOctets|OutOctets)|TcpExt_(Listen(Drops|Overflows)|TCPSynRetrans)|Tcp_(InErrs|InSegs|OutRsts|OutSegs|RetransSegs)|Udp6_(InDatagrams|InErrors|NoPorts|OutDatagrams|RcvbufErrors|SndbufErrors)|Udp(Lite|)_(InDatagrams|InErrors|NoPorts|OutDatagrams|RcvbufErrors|SndbufErrors))|network_(carrier|info|mtu_bytes|receive_(bytes_total|compressed_total|drop_total|errs_total|fifo_total|multicast_total|packets_total)|speed_bytes|transmit_(bytes_total|compressed_total|drop_total|errs_total|fifo_total|multicast_total|packets_total|queue_length)|up)|nf_conntrack_(entries(_limit)?|limit)|os_info|sockstat_(FRAG6|FRAG|RAW6|RAW|TCP6|TCP_(alloc|inuse|mem(_bytes)?|orphan|tw)|UDP6|UDPLITE6|UDPLITE|UDP_(inuse|mem(_bytes)?)|sockets_used)|softnet_(dropped_total|processed_total|times_squeezed_total)|systemd_unit_state|textfile_scrape_error|time_zone_offset_seconds|timex_(estimated_error_seconds|maxerror_seconds|offset_seconds|sync_status)|uname_info|vmstat_(oom_kill|pgfault|pgmajfault|pgpgin|pgpgout|pswpin|pswpout)|process_(max_fds|open_fds)))")
           action = "keep"
+        }
+    
+        // Drop metrics for certain file systems
+        rule {
+          source_labels = ["__name__", "fstype"]
+          separator = "@"
+          regex = "node_filesystem.*@(tempfs)"
+          action = "drop"
         }
       }
     }
-    
+---
+# Source: k8s-monitoring/templates/alloy-modules-configmaps.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ko-alloy-module-kubernetes
+data:
   core_metrics.alloy: |
     /*
     Module: job-cadvisor
@@ -2234,11 +2248,17 @@ data:
         }
       }
     }
-    
-  node-exporter_metrics.alloy: |
+---
+# Source: k8s-monitoring/templates/alloy-modules-configmaps.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ko-alloy-module-databases
+data:
+  kv_etcd_metrics.alloy: |
     /*
-    Module: job-node_exporter
-    Description: Scrapes node_exporter
+    Module: job-etcd
+    Description: Scrapes etcd
     
     Note: Every argument except for "forward_to" is optional, and does have a defined default value.  However, the values for these
           arguments are not defined using the default = " ... " argument syntax, but rather using the coalesce(argument.value, " ... ").
@@ -2260,7 +2280,7 @@ data:
     
       argument "label_selectors" {
         // Docs: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
-        comment = "The label selectors to use to find matching targets (default: [\"app.kubernetes.io/name=prometheus-node-exporter\"])"
+        comment = "The label selectors to use to find matching targets (default: [\"app.kubernetes.io/component=etcd\"])"
         optional = true
       }
     
@@ -2269,14 +2289,14 @@ data:
         optional = true
       }
     
-      // node_exporter service discovery for all of the pods
-      discovery.kubernetes "node_exporter" {
+      // etcd service discovery for all of the pods
+      discovery.kubernetes "etcd" {
         role = "pod"
     
         selectors {
           role = "pod"
           field = join(coalesce(argument.field_selectors.value, []), ",")
-          label = join(coalesce(argument.label_selectors.value, ["app.kubernetes.io/name=prometheus-node-exporter"]), ",")
+          label = join(coalesce(argument.label_selectors.value, ["app.kubernetes.io/component=etcd"]), ",")
         }
     
         namespaces {
@@ -2284,9 +2304,9 @@ data:
         }
       }
     
-      // node_exporter relabelings (pre-scrape)
+      // etcd relabelings (pre-scrape)
       discovery.relabel "kubernetes" {
-        targets = discovery.kubernetes.node_exporter.targets
+        targets = discovery.kubernetes.etcd.targets
     
         // keep only the specified metrics port name, and pods that are Running and ready
         rule {
@@ -2377,7 +2397,7 @@ data:
     
     declare "local" {
       argument "port" {
-        comment = "The port to use (default: 9100)"
+        comment = "The port to use (default: 9150)"
         optional = true
       }
     
@@ -2385,7 +2405,7 @@ data:
       discovery.relabel "local" {
         targets = [
           {
-            "__address__" = "localhost" + format("%s", coalesce(argument.port.value, "9100")),
+            "__address__" = "localhost" + format("%s", coalesce(argument.port.value, "9150")),
             "source" = "local",
           },
         ]
@@ -2406,7 +2426,7 @@ data:
       }
     
       argument "job_label" {
-        comment = "The job label to add for all node_exporter metric (default: integrations/node_exporter)"
+        comment = "The job label to add for all etcd metric (default: integrations/etcd)"
         optional = true
       }
     
@@ -2436,15 +2456,15 @@ data:
       }
     
       argument "clustering" {
-        // Docs: https://node_exporter.com/docs/agent/latest/flow/concepts/clustering/
+        // Docs: https://grafana.com/docs/agent/latest/flow/concepts/clustering/
         comment = "Whether or not clustering should be enabled (default: false)"
         optional = true
       }
     
-      // node_exporter scrape job
-      prometheus.scrape "node_exporter" {
-        job_name = coalesce(argument.job_label.value, "integrations/node_exporter")
-        forward_to = [prometheus.relabel.node_exporter.receiver]
+      // etcd scrape job
+      prometheus.scrape "etcd" {
+        job_name = coalesce(argument.job_label.value, "integrations/etcd")
+        forward_to = [prometheus.relabel.etcd.receiver]
         targets = argument.targets.value
         scrape_interval = coalesce(argument.scrape_interval.value, "60s")
         scrape_timeout = coalesce(argument.scrape_timeout.value, "10s")
@@ -2454,31 +2474,23 @@ data:
         }
       }
     
-      // node_exporter metric relabelings (post-scrape)
-      prometheus.relabel "node_exporter" {
+      // etcd metric relabelings (post-scrape)
+      prometheus.relabel "etcd" {
         forward_to = argument.forward_to.value
         max_cache_size = coalesce(argument.max_cache_size.value, 100000)
     
         // drop metrics that match the drop_metrics regex
         rule {
           source_labels = ["__name__"]
-          regex = coalesce(argument.drop_metrics.value, "(^(go)_.+$)")
+          regex = coalesce(argument.drop_metrics.value, "(^(go|process)_.+$)")
           action = "drop"
         }
     
         // keep only metrics that match the keep_metrics regex
         rule {
           source_labels = ["__name__"]
-          regex = coalesce(argument.keep_metrics.value, "(up|scrape_(duration_seconds|series_added|samples_(post_metric_relabeling|scraped))|node_(arp_entries|boot_time_seconds|context_switches_total|cpu_seconds_total|disk_(io_time_seconds_total|io_time_weighted_seconds_total|read_(bytes_total|time_seconds_total)|reads_completed_total|write_time_seconds_total|writes_completed_total|written_bytes_total)|file(fd_(allocated|maximum)|system_(avail_bytes|device_error|files(_free)?|readonly|size_bytes))|intr_total|load(1|15|5)|md_disks(_required)?|memory_(Active_(anon_bytes|bytes|file_bytes)|Anon(HugePages_bytes|Pages_bytes)|Bounce_bytes|Buffers_bytes|Cached_bytes|CommitLimit_bytes|Committed_AS_bytes|DirectMap(1G|2M|4k)_bytes|Dirty_bytes|HugePages_(Free|Rsvd|Surp|Total)|Hugepagesize_bytes|Inactive_(anon_bytes|bytes|file_bytes)|Mapped_bytes|Mem(Available|Free|Total)_bytes|S(Reclaimable|Unreclaim)_bytes|Shmem(HugePages_bytes|PmdMapped_bytes|_bytes)|Slab_bytes|SwapTotal_bytes|Vmalloc(Chunk|Total|Used)_bytes|Writeback(Tmp|)_bytes)|netstat_(Icmp6_(InErrors|InMsgs|OutMsgs)|Icmp_(InErrors|InMsgs|OutMsgs)|IpExt_(InOctets|OutOctets)|TcpExt_(Listen(Drops|Overflows)|TCPSynRetrans)|Tcp_(InErrs|InSegs|OutRsts|OutSegs|RetransSegs)|Udp6_(InDatagrams|InErrors|NoPorts|OutDatagrams|RcvbufErrors|SndbufErrors)|Udp(Lite|)_(InDatagrams|InErrors|NoPorts|OutDatagrams|RcvbufErrors|SndbufErrors))|network_(carrier|info|mtu_bytes|receive_(bytes_total|compressed_total|drop_total|errs_total|fifo_total|multicast_total|packets_total)|speed_bytes|transmit_(bytes_total|compressed_total|drop_total|errs_total|fifo_total|multicast_total|packets_total|queue_length)|up)|nf_conntrack_(entries(_limit)?|limit)|os_info|sockstat_(FRAG6|FRAG|RAW6|RAW|TCP6|TCP_(alloc|inuse|mem(_bytes)?|orphan|tw)|UDP6|UDPLITE6|UDPLITE|UDP_(inuse|mem(_bytes)?)|sockets_used)|softnet_(dropped_total|processed_total|times_squeezed_total)|systemd_unit_state|textfile_scrape_error|time_zone_offset_seconds|timex_(estimated_error_seconds|maxerror_seconds|offset_seconds|sync_status)|uname_info|vmstat_(oom_kill|pgfault|pgmajfault|pgpgin|pgpgout|pswpin|pswpout)|process_(max_fds|open_fds)))")
+          regex = coalesce(argument.keep_metrics.value, "(up|etcd_(commands_total|connections_total|current_(bytes|connections|items)|items_(evicted_total|total)|max_connections|read_bytes_total|up|uptime_seconds|version|written_bytes_total))")
           action = "keep"
-        }
-    
-        // Drop metrics for certain file systems
-        rule {
-          source_labels = ["__name__", "fstype"]
-          separator = "@"
-          regex = "node_filesystem.*@(tempfs)"
-          action = "drop"
         }
       }
     }

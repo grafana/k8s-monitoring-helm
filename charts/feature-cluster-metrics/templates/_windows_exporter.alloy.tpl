@@ -36,7 +36,7 @@ discovery.kubernetes "windows_exporter_pods" {
 }
 
 discovery.relabel "windows_exporter" {
-  targets = discovery.kubernetes.windows_exporter_pods.output
+  targets = discovery.kubernetes.windows_exporter_pods.targets
   rule {
     source_labels = ["__meta_kubernetes_pod_node_name"]
     action = "replace"
