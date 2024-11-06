@@ -59,6 +59,7 @@ ifdef HAS_VENDIR
 else
 	docker run --rm --volume $(shell pwd):/src --workdir /src ghcr.io/carvel-dev/docker-image:latest bash -c "apt-get update && apt-get install -y git && vendir sync -l"
 endif
+ALLOY_MODULE_FILES = $(shell find alloyModules -name "*.alloy")
 
 values.schema.json: values.yaml $(DESTINATION_SCHEMA_FILES) $(SCHEMA_MODS_JSON_FILES) $(SCHEMA_MODS_JQ_FILES) schema-mods/destination-list.json
 	../../scripts/schema-gen.sh .
@@ -90,7 +91,7 @@ alloy_configs = $(shell \
 Chart.lock: Chart.yaml
 	helm dependency update .
 
-%/output.yaml: %/values.yaml Chart.yaml Chart.lock values.yaml values.schema.json templates/destinations/_destination_types.tpl $(DESTINATION_VALUES_FILES) $(CHART_TEMPLATE_FILES) $(CHART_YAML_FILES)
+%/output.yaml: %/values.yaml Chart.yaml Chart.lock values.yaml values.schema.json templates/destinations/_destination_types.tpl $(DESTINATION_VALUES_FILES) $(CHART_TEMPLATE_FILES) $(CHART_YAML_FILES) alloyModules/LICENSE $(ALLOY_MODULE_FILES)
 	helm template $(EXAMPLE_RELEASE_NAME) . -f $< > $@
 
 %/alloy-logs.alloy: %/output.yaml
