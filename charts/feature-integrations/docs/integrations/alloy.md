@@ -28,4 +28,4 @@
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| scrapeInterval | string | `60s` | How frequently to scrape metrics from Windows Exporter. |
+| scrapeInterval | string | `60s` | How frequently to scrape metrics from Alloy. |

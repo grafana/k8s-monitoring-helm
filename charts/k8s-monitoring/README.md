@@ -325,8 +325,7 @@ podLogs:
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | integrations | object | No integrations enabled | Service Integrations enables gathering telemetry data for common services and applications deployed to Kubernetes. To see the valid options, please see the [Service Integrations documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/feature-integrations). |
-| integrations.destinations | list | `[]` | The destinations where cluster events will be sent. If empty, all logs-capable destinations will be used. |
-| integrations.enabled | bool | `true` | Enable Service Integrations. |
+| integrations.destinations | list | `[]` | The destinations where integration metrics will be sent. If empty, all metrics-capable destinations will be used. |
 
 ### Features - Pod Logs
 

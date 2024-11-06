@@ -1,0 +1,142 @@
+// Destination: prometheus (prometheus)
+otelcol.exporter.prometheus "prometheus" {
+  forward_to = [prometheus.remote_write.prometheus.receiver]
+}
+
+prometheus.remote_write "prometheus" {
+  endpoint {
+    url = "http://prometheus.prometheus.svc:9090/api/v1/write"
+    headers = {
+    }
+    tls_config {
+      insecure_skip_verify = false
+    }
+    send_native_histograms = false
+    queue_config {
+      capacity = 10000
+      min_shards = 1
+      max_shards = 50
+      max_samples_per_send = 2000
+      batch_send_deadline = "5s"
+      min_backoff = "30ms"
+      max_backoff = "5s"
+      retry_on_http_429 = true
+      sample_age_limit = "0s"
+    }
+    write_relabel_config {
+      source_labels = ["cluster"]
+      regex = ""
+      replacement = "mysql-integration-cluster"
+      target_label = "cluster"
+    }
+    write_relabel_config {
+      source_labels = ["k8s.cluster.name"]
+      regex = ""
+      replacement = "mysql-integration-cluster"
+      target_label = "cluster"
+    }
+  }
+}
+
+declare "mysql_integration" {
+  argument "metrics_destinations" {
+    comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
+  }
+  
+  prometheus.exporter.mysql "staging_db" {
+    data_source_name  = "root:password@database.staging.svc:3306/"
+    enable_collectors = ["heartbeat","mysql.user"]
+  }
+  prometheus.scrape "staging_db" {
+    targets    = prometheus.exporter.mysql.staging_db.targets
+    job_name   = "integration/mysql"
+    forward_to = [prometheus.relabel.staging_db.receiver]
+  }
+  
+  prometheus.relabel "staging_db" {
+    max_cache_size = 100000
+    rule {
+      target_label = "instance"
+      replacement = "staging-db"
+    }
+    forward_to = argument.metrics_destinations.value
+  }
+  
+  
+  remote.kubernetes.secret "prod_db" {
+    name      = "prod-db-ko-integrations"
+    namespace = "default"
+  }
+  
+  prometheus.exporter.mysql "prod_db" {
+    data_source_name = string.format("%s:%s@(%s:%d)/",
+      nonsensitive(remote.kubernetes.secret.prod_db.data["username"]),
+      remote.kubernetes.secret.prod_db.data["password"],
+      "database.prod.svc",
+      3306,
+    )
+    enable_collectors = ["heartbeat","mysql.user"]
+  }
+  prometheus.scrape "prod_db" {
+    targets    = prometheus.exporter.mysql.prod_db.targets
+    job_name   = "integration/mysql"
+    forward_to = [prometheus.relabel.prod_db.receiver]
+  }
+  
+  prometheus.relabel "prod_db" {
+    max_cache_size = 100000
+    rule {
+      target_label = "instance"
+      replacement = "prod-db"
+    }
+    forward_to = argument.metrics_destinations.value
+  }
+}
+mysql_integration "integration" {
+  metrics_destinations = [
+    prometheus.remote_write.prometheus.receiver,
+  ]
+}
+
+// Self Reporting
+prometheus.exporter.unix "kubernetes_monitoring_telemetry" {
+  set_collectors = ["textfile"]
+  textfile {
+    directory = "/etc/alloy"
+  }
+}
+
+discovery.relabel "kubernetes_monitoring_telemetry" {
+  targets = prometheus.exporter.unix.kubernetes_monitoring_telemetry.targets
+  rule {
+    target_label = "instance"
+    action = "replace"
+    replacement = "ko"
+  }
+  rule {
+    target_label = "job"
+    action = "replace"
+    replacement = "integrations/kubernetes/kubernetes_monitoring_telemetry"
+  }
+}
+
+prometheus.scrape "kubernetes_monitoring_telemetry" {
+  job_name   = "integrations/kubernetes/kubernetes_monitoring_telemetry"
+  targets    = discovery.relabel.kubernetes_monitoring_telemetry.output
+  scrape_interval = "1h"
+  clustering {
+    enabled = true
+  }
+  forward_to = [prometheus.relabel.kubernetes_monitoring_telemetry.receiver]
+}
+
+prometheus.relabel "kubernetes_monitoring_telemetry" {
+  rule {
+    source_labels = ["__name__"]
+    regex = "grafana_kubernetes_monitoring_.*"
+    action = "keep"
+  }
+  forward_to = [
+    prometheus.remote_write.prometheus.receiver,
+  ]
+}

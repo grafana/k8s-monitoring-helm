@@ -1,4 +1,6 @@
 {{- if .Values.deployAsConfigMap }}
+{{- $metricIntegrations := include "feature.integrations.configured.metrics" . | fromYamlArray }}
+{{- $logIntegrations := include "feature.integrations.configured.logs" . | fromYamlArray }}
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -6,10 +8,28 @@ metadata:
   name: {{ include "integrations.fullname" . }}
   namespace: {{ .Release.Namespace }}
 data:
+{{- if $metricIntegrations }}
   metrics.alloy: |-
-{{- range $type := (include "integrations.types" . | fromYamlArray) }}
-  {{- if (index $.Values $type).instances }}
-    {{- include (printf "integrations.%s.module.metrics" $type) (dict "Values" $.Values "Files" $.Files) | indent 4 }}
+{{- range $integration := $metricIntegrations }}
+  {{- if (index $.Values $integration).instances }}
+    {{- include (printf "integrations.%s.module.metrics" $integration) $ | indent 4 }}
   {{- end }}
+{{- end }}
+{{- end }}
+{{- if $logIntegrations }}
+  logs.alloy: |-
+    // Integration rules
+    discovery.relabel "test" {
+{{- range $integration := $logIntegrations }}
+  {{- include (printf "integrations.%s.logs.discoveryRules" $integration) $ | indent 6 }}
+{{- end }}
+    }
+
+    // Processing stages
+    loki.process "test" {
+{{- range $integration := $logIntegrations }}
+  {{- include (printf "integrations.%s.logs.processingStage" $integration) $ | indent 6 }}
+{{- end }}
+    }
 {{- end }}
 {{- end }}

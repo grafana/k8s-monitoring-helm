@@ -288,7 +288,7 @@ declare "alloy_integration" {
     }
   }
   {{- range $instance := $.Values.alloy.instances }}
-    {{- include "integrations.alloy.include.metrics" (dict "integration" $instance "Values" $.Values "Files" $.Files) | nindent 2 }}
+    {{- include "integrations.alloy.include.metrics" (deepCopy $ | merge (dict "integration" $instance)) | nindent 2 }}
   {{- end }}
 }
 {{- end }}
@@ -297,7 +297,7 @@ declare "alloy_integration" {
 {{/* Inputs: integration (Alloy integration definition), Values (all values), Files (Files object) */}}
 {{- define "integrations.alloy.include.metrics" }}
 {{- $defaultValues := "integrations/alloy-values.yaml" | .Files.Get | fromYaml }}
-{{- with merge .integration $defaultValues }}
+{{- with deepCopy .integration | merge $defaultValues }}
 {{- $metricAllowList := include "integrations.alloy.allowList" (dict "integration" . "Files" $.Files) }}
 {{- $metricDenyList := .excludeMetrics }}
 {{- $labelSelectors := list }}

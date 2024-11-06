@@ -42,9 +42,8 @@ Each component has its own guide for contributing:
 <!-- [Main Helm chart](./charts/k8s-monitoring/README.md#Contributing) -->
 
 -   [Feature subcharts](./charts/k8s-monitoring/docs/Features.md#Contributing)
+-   [Integrations](./charts/feature-integrations/README.md#Contributing)
 -   [Destinations](./charts/k8s-monitoring/docs/destinations/README.md#Contributing)
-
-<!-- [Integrations](./charts/feature-integrations/README.md#Contributing) -->
 
 ## Building
 

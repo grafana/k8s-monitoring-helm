@@ -2,6 +2,9 @@
 {{- $remoteConfigValues := (index .Values .collectorName).remoteConfig }}
 {{- with merge $remoteConfigValues (dict "type" "remoteConfig" "name" (printf "%s-remote-cfg" .collectorName)) }}
 {{- if .enabled }}
+{{- if eq (include "secrets.usesKubernetesSecret" .) "true" }}
+  {{- include "secret.alloy" (deepCopy $ | merge (dict "object" .)) | nindent 0 }}
+{{- end }}
 remotecfg {
   url = {{ .url | quote }}
 {{- if eq (include "secrets.authType" .) "basic" }}

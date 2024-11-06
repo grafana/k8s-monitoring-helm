@@ -1,0 +1,23 @@
+---
+tests:
+  - env:
+      PROMETHEUS_URL: http://prometheus-server.prometheus.svc:9090/api/v1/query
+      LOKI_URL: http://loki.loki.svc:3100/loki/api/v1/query
+      LOKI_TENANTID: 1
+      LOKI_USER: loki
+      LOKI_PASS: lokipassword
+
+    queries:
+      # MySQL metrics
+      - query: mysqld_exporter_build_info{cluster="mysql-integration-test", instance="test-database"}
+        type: promql
+
+      - query: count_over_time({cluster="mysql-integration-test", job="integrations/mysql", instance="test-database"}[1h])
+        type: logql
+
+      # DPM check
+      - query: avg(count_over_time(scrape_samples_scraped{cluster="mysql-integration-test"}[1m]))
+        type: promql
+        expect:
+          value: 1
+          operator: ==

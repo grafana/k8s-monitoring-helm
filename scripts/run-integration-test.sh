@@ -3,7 +3,6 @@ PARENT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 source "${PARENT_DIR}/scripts/includes/utils.sh"
 source "${PARENT_DIR}/scripts/includes/logging.sh"
 
-# output the heading
 heading "Kubernetes Monitoring Helm" "Integration Tester"
 
 usage() {
@@ -48,18 +47,17 @@ set -eo pipefail  # Exit immediately if a command fails.
 clusterName=$(yq -r .cluster.name "${valuesFile}")
 
 DEPLOY_GRAFANA=${DEPLOY_GRAFANA:-true}
-DELETE_CLUSTER=${DELETE_CLUSTER:-true}
-CREATE_CLUSTER=${CREATE_CLUSTER:-true}
+DELETE_CLUSTER=${DELETE_CLUSTER:-false}
 cleanup() {
   helm ls -A || true
 
-  if [ "${CREATE_CLUSTER}" == "true" ] && [ "${DELETE_CLUSTER}" == "true" ]; then
+  if [ "${DELETE_CLUSTER}" == "true" ]; then
     kind delete cluster --name "${clusterName}" || true
   fi
 }
 trap cleanup EXIT
 
-if [ "${CREATE_CLUSTER}" == "true" ]; then
+if ! kind get clusters | grep -q "${clusterName}"; then
   echo "Creating cluster..."
   if [ ! -f "${clusterConfig}" ]; then
     kind create cluster --name "${clusterName}"
@@ -94,16 +92,18 @@ for ((i=0; i<prerequisiteCount; i++)); do
       exit 1
     fi
   elif [ "${prereqType}" == "helm" ]; then
-    prereqRepo=$(yq -r .prerequisites[$i].repo "${testManifest}")
+    prereqRepo=$(yq -r ".prerequisites[$i].repo // \"\"" "${testManifest}")
+    prereqRepoArg=""
+    if [ -n "${prereqRepo}" ]; then prereqRepoArg="--repo ${prereqRepo}"; fi
     prereqChart=$(yq -r .prerequisites[$i].chart "${testManifest}")
     prereqValues="$(yq -r ".prerequisites[$i].values // \"\"" "${testManifest}")"
     prereqValuesFile="$(yq -r ".prerequisites[$i].valuesFile // \"\"" "${testManifest}")"
 
     if [ -n "${prereqValuesFile}" ]; then
-      helm upgrade --install "${prereqName}" ${namespaceArg} --create-namespace --repo "${prereqRepo}" "${prereqChart}" -f "${PARENT_DIR}/${prereqValuesFile}" --hide-notes --wait
+      helm upgrade --install "${prereqName}" ${namespaceArg} --create-namespace ${prereqRepoArg} "${prereqChart}" -f "${PARENT_DIR}/${prereqValuesFile}" --hide-notes --wait
     elif [ -n "${prereqChart}" ]; then
       echo "${prereqValues}" > temp-values.yaml
-      helm upgrade --install "${prereqName}" ${namespaceArg} --create-namespace --repo "${prereqRepo}" "${prereqChart}" -f temp-values.yaml --hide-notes --wait
+      helm upgrade --install "${prereqName}" ${namespaceArg} --create-namespace ${prereqRepoArg} "${prereqChart}" -f temp-values.yaml --hide-notes --wait
       rm temp-values.yaml
     else
       helm upgrade --install "${prereqName}" ${namespaceArg} --create-namespace --repo "${prereqRepo}" "${prereqChart}" --hide-notes --wait

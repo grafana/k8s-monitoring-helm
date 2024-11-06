@@ -8,10 +8,13 @@
 
 {{- define "features.podLogs.include" }}
 {{- if .Values.podLogs.enabled -}}
+{{- $extraDiscoveryRules := cat (include "features.integrations.logs.discoveryRules" .) "\n" .Values.podLogs.extraDiscoveryRules | trim }}
+{{- $extraLogProcessingStages := cat (include "features.integrations.logs.logProcessingStages" .) "\n" .Values.podLogs.extraLogProcessingStages | trim }}
+{{- $values := mergeOverwrite .Values.podLogs (dict "extraDiscoveryRules" $extraDiscoveryRules "extraLogProcessingStages" $extraLogProcessingStages) }}
 {{- $destinations := include "features.podLogs.destinations" . | fromYamlArray }}
 
 // Feature: Pod Logs
-{{- include "feature.podLogs.module" (dict "Values" $.Values.podLogs "Files" $.Subcharts.podLogs.Files) }}
+{{- include "feature.podLogs.module" (dict "Values" $values "Files" $.Subcharts.podLogs.Files) }}
 pod_logs "feature" {
   logs_destinations = [
     {{ include "destinations.alloy.targets" (dict "destinations" $.Values.destinations "names" $destinations "type" "logs" "ecosystem" "loki") | indent 4 | trim }}
