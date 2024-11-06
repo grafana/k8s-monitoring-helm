@@ -14,7 +14,6 @@ declare "mysql_integration" {
 {{- define "integrations.mysql.include.metrics" }}
 {{- $defaultValues := "integrations/mysql-values.yaml" | .Files.Get | fromYaml }}
 {{- with merge .instance $defaultValues (dict "type" "integration.mysql") }}
-{{- if .exporter.enabled }}
 {{- if eq (include "secrets.usesKubernetesSecret" .) "true" }}
   {{- include "secret.alloy" (deepCopy $ | merge (dict "object" .)) | nindent 0 }}
 {{- end }}
@@ -71,7 +70,6 @@ prometheus.relabel {{ include "helper.alloy_name" .name | quote }} {
     regex = {{ $metricDenyList | join "|" | quote }}
     action = "drop"
   }
-{{- end }}
 {{- end }}
   forward_to = argument.metrics_destinations.value
 }

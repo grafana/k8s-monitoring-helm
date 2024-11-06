@@ -17,7 +17,6 @@
 | exporter.dataSource.host | string | `""` | The MySQL host to connect to. |
 | exporter.dataSource.port | int | `3306` | The MySQL port to connect to. |
 | exporter.dataSourceName | string | `""` | The data source string to use for the MySQL Exporter. |
-| exporter.enabled | bool | `true` | Whether to enable the Alloy-embedded MySQL Exporter. |
 
 ### Logs Settings
 
