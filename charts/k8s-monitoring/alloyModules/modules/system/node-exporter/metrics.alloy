@@ -1,0 +1,246 @@
+/*
+Module: job-node_exporter
+Description: Scrapes node_exporter
+
+Note: Every argument except for "forward_to" is optional, and does have a defined default value.  However, the values for these
+      arguments are not defined using the default = " ... " argument syntax, but rather using the coalesce(argument.value, " ... ").
+      This is because if the argument passed in from another consuming module is set to null, the default = " ... " syntax will
+      does not override the value passed in, where coalesce() will return the first non-null value.
+*/
+declare "kubernetes" {
+  // arguments for kubernetes discovery
+  argument "namespaces" {
+    comment = "The namespaces to look for targets in (default: [] is all namespaces)"
+    optional = true
+  }
+
+  argument "field_selectors" {
+    // Docs: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
+    comment = "The label selectors to use to find matching targets (default: [])"
+    optional = true
+  }
+
+  argument "label_selectors" {
+    // Docs: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
+    comment = "The label selectors to use to find matching targets (default: [\"app.kubernetes.io/name=prometheus-node-exporter\"])"
+    optional = true
+  }
+
+  argument "port_name" {
+    comment = "The of the port to scrape metrics from (default: metrics)"
+    optional = true
+  }
+
+  // node_exporter service discovery for all of the pods
+  discovery.kubernetes "node_exporter" {
+    role = "pod"
+
+    selectors {
+      role = "pod"
+      field = join(coalesce(argument.field_selectors.value, []), ",")
+      label = join(coalesce(argument.label_selectors.value, ["app.kubernetes.io/name=prometheus-node-exporter"]), ",")
+    }
+
+    namespaces {
+      names = coalesce(argument.namespaces.value, [])
+    }
+  }
+
+  // node_exporter relabelings (pre-scrape)
+  discovery.relabel "kubernetes" {
+    targets = discovery.kubernetes.node_exporter.targets
+
+    // keep only the specified metrics port name, and pods that are Running and ready
+    rule {
+      source_labels = [
+        "__meta_kubernetes_pod_container_port_name",
+        "__meta_kubernetes_pod_phase",
+        "__meta_kubernetes_pod_ready",
+        "__meta_kubernetes_pod_container_init",
+      ]
+      separator = "@"
+      regex = coalesce(argument.port_name.value, "metrics") + "@Running@true@false"
+      action = "keep"
+    }
+
+    // set the namespace label
+    rule {
+      source_labels = ["__meta_kubernetes_namespace"]
+      target_label  = "namespace"
+    }
+
+    // set the pod label
+    rule {
+      source_labels = ["__meta_kubernetes_pod_name"]
+      target_label  = "pod"
+    }
+
+    // set the container label
+    rule {
+      source_labels = ["__meta_kubernetes_pod_container_name"]
+      target_label  = "container"
+    }
+
+    // set a workload label
+    rule {
+      source_labels = [
+        "__meta_kubernetes_pod_controller_kind",
+        "__meta_kubernetes_pod_controller_name",
+      ]
+      separator = "/"
+      target_label  = "workload"
+    }
+    // remove the hash from the ReplicaSet
+    rule {
+      source_labels = ["workload"]
+      regex = "(ReplicaSet/.+)-.+"
+      target_label  = "workload"
+    }
+
+    // set the app name if specified as metadata labels "app:" or "app.kubernetes.io/name:" or "k8s-app:"
+    rule {
+      action = "replace"
+      source_labels = [
+        "__meta_kubernetes_pod_label_app_kubernetes_io_name",
+        "__meta_kubernetes_pod_label_k8s_app",
+        "__meta_kubernetes_pod_label_app",
+      ]
+      separator = ";"
+      regex = "^(?:;*)?([^;]+).*$"
+      replacement = "$1"
+      target_label = "app"
+    }
+
+    // set the component if specified as metadata labels "component:" or "app.kubernetes.io/component:" or "k8s-component:"
+    rule {
+      action = "replace"
+      source_labels = [
+        "__meta_kubernetes_pod_label_app_kubernetes_io_component",
+        "__meta_kubernetes_pod_label_k8s_component",
+        "__meta_kubernetes_pod_label_component",
+      ]
+      regex = "^(?:;*)?([^;]+).*$"
+      replacement = "$1"
+      target_label = "component"
+    }
+
+    // set a source label
+    rule {
+      action = "replace"
+      replacement = "kubernetes"
+      target_label = "source"
+    }
+  }
+
+  export "output" {
+    value = discovery.relabel.kubernetes.output
+  }
+}
+
+declare "local" {
+  argument "port" {
+    comment = "The port to use (default: 9100)"
+    optional = true
+  }
+
+  // arguments for local (static)
+  discovery.relabel "local" {
+    targets = [
+      {
+        "__address__" = "localhost" + format("%s", coalesce(argument.port.value, "9100")),
+        "source" = "local",
+      },
+    ]
+  }
+
+  export "output" {
+    value = discovery.relabel.local.output
+  }
+}
+
+declare "scrape" {
+  argument "targets" {
+    comment = "Must be a list() of targets"
+  }
+
+  argument "forward_to" {
+    comment = "Must be a list(MetricsReceiver) where collected logs should be forwarded to"
+  }
+
+  argument "job_label" {
+    comment = "The job label to add for all node_exporter metric (default: integrations/node_exporter)"
+    optional = true
+  }
+
+  argument "keep_metrics" {
+    comment = "A regular expression of metrics to keep (default: see below)"
+    optional = true
+  }
+
+  argument "drop_metrics" {
+    comment = "A regular expression of metrics to drop (default: see below)"
+    optional = true
+  }
+
+  argument "scrape_interval" {
+    comment = "How often to scrape metrics from the targets (default: 60s)"
+    optional = true
+  }
+
+  argument "scrape_timeout" {
+    comment = "How long before a scrape times out (default: 10s)"
+    optional = true
+  }
+
+  argument "max_cache_size" {
+    comment = "The maximum number of elements to hold in the relabeling cache (default: 100000).  This should be at least 2x-5x your largest scrape target or samples appended rate."
+    optional = true
+  }
+
+  argument "clustering" {
+    // Docs: https://node_exporter.com/docs/agent/latest/flow/concepts/clustering/
+    comment = "Whether or not clustering should be enabled (default: false)"
+    optional = true
+  }
+
+  // node_exporter scrape job
+  prometheus.scrape "node_exporter" {
+    job_name = coalesce(argument.job_label.value, "integrations/node_exporter")
+    forward_to = [prometheus.relabel.node_exporter.receiver]
+    targets = argument.targets.value
+    scrape_interval = coalesce(argument.scrape_interval.value, "60s")
+    scrape_timeout = coalesce(argument.scrape_timeout.value, "10s")
+
+    clustering {
+      enabled = coalesce(argument.clustering.value, false)
+    }
+  }
+
+  // node_exporter metric relabelings (post-scrape)
+  prometheus.relabel "node_exporter" {
+    forward_to = argument.forward_to.value
+    max_cache_size = coalesce(argument.max_cache_size.value, 100000)
+
+    // drop metrics that match the drop_metrics regex
+    rule {
+      source_labels = ["__name__"]
+      regex = coalesce(argument.drop_metrics.value, "(^(go)_.+$)")
+      action = "drop"
+    }
+
+    // keep only metrics that match the keep_metrics regex
+    rule {
+      source_labels = ["__name__"]
+      regex = coalesce(argument.keep_metrics.value, "(up|scrape_(duration_seconds|series_added|samples_(post_metric_relabeling|scraped))|node_(arp_entries|boot_time_seconds|context_switches_total|cpu_seconds_total|disk_(io_time_seconds_total|io_time_weighted_seconds_total|read_(bytes_total|time_seconds_total)|reads_completed_total|write_time_seconds_total|writes_completed_total|written_bytes_total)|file(fd_(allocated|maximum)|system_(avail_bytes|device_error|files(_free)?|readonly|size_bytes))|intr_total|load(1|15|5)|md_disks(_required)?|memory_(Active_(anon_bytes|bytes|file_bytes)|Anon(HugePages_bytes|Pages_bytes)|Bounce_bytes|Buffers_bytes|Cached_bytes|CommitLimit_bytes|Committed_AS_bytes|DirectMap(1G|2M|4k)_bytes|Dirty_bytes|HugePages_(Free|Rsvd|Surp|Total)|Hugepagesize_bytes|Inactive_(anon_bytes|bytes|file_bytes)|Mapped_bytes|Mem(Available|Free|Total)_bytes|S(Reclaimable|Unreclaim)_bytes|Shmem(HugePages_bytes|PmdMapped_bytes|_bytes)|Slab_bytes|SwapTotal_bytes|Vmalloc(Chunk|Total|Used)_bytes|Writeback(Tmp|)_bytes)|netstat_(Icmp6_(InErrors|InMsgs|OutMsgs)|Icmp_(InErrors|InMsgs|OutMsgs)|IpExt_(InOctets|OutOctets)|TcpExt_(Listen(Drops|Overflows)|TCPSynRetrans)|Tcp_(InErrs|InSegs|OutRsts|OutSegs|RetransSegs)|Udp6_(InDatagrams|InErrors|NoPorts|OutDatagrams|RcvbufErrors|SndbufErrors)|Udp(Lite|)_(InDatagrams|InErrors|NoPorts|OutDatagrams|RcvbufErrors|SndbufErrors))|network_(carrier|info|mtu_bytes|receive_(bytes_total|compressed_total|drop_total|errs_total|fifo_total|multicast_total|packets_total)|speed_bytes|transmit_(bytes_total|compressed_total|drop_total|errs_total|fifo_total|multicast_total|packets_total|queue_length)|up)|nf_conntrack_(entries(_limit)?|limit)|os_info|sockstat_(FRAG6|FRAG|RAW6|RAW|TCP6|TCP_(alloc|inuse|mem(_bytes)?|orphan|tw)|UDP6|UDPLITE6|UDPLITE|UDP_(inuse|mem(_bytes)?)|sockets_used)|softnet_(dropped_total|processed_total|times_squeezed_total)|systemd_unit_state|textfile_scrape_error|time_zone_offset_seconds|timex_(estimated_error_seconds|maxerror_seconds|offset_seconds|sync_status)|uname_info|vmstat_(oom_kill|pgfault|pgmajfault|pgpgin|pgpgout|pswpin|pswpout)|process_(max_fds|open_fds)))")
+      action = "keep"
+    }
+
+    // Drop metrics for certain file systems
+    rule {
+      source_labels = ["__name__", "fstype"]
+      separator = "@"
+      regex = "node_filesystem.*@(tempfs)"
+      action = "drop"
+    }
+  }
+}

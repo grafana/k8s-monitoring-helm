@@ -16,6 +16,7 @@ tests:
               argument "metrics_destinations" {
                 comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
               }
+
               import.git "kubernetes" {
                 repository = "https://github.com/grafana/alloy-modules.git"
                 revision = "main"
@@ -177,35 +178,43 @@ tests:
                 forward_to = argument.metrics_destinations.value
               }
           
-              import.git "windows_exporter" {
-                repository = "https://github.com/grafana/alloy-modules.git"
-                revision = "main"
-                path = "modules/system/node-exporter/metrics.alloy"
-                pull_frequency = "15m"
-              }
-          
-              windows_exporter.kubernetes "targets" {
-                label_selectors = [
-                  "app.kubernetes.io/name=windows-exporter",
-                  "release=RELEASE-NAME",
-                ]
+              discovery.kubernetes "windows_exporter_pods" {
+                role = "pod"
+                namespaces {
+                  names = ["NAMESPACE"]
+                }
+                selectors {
+                  role = "pod"
+                  label = "app.kubernetes.io/name=windows-exporter,release=RELEASE-NAME"
+                }
               }
           
               discovery.relabel "windows_exporter" {
-                targets = windows_exporter.kubernetes.targets.output
+                targets = discovery.kubernetes.windows_exporter_pods.targets
                 rule {
                   source_labels = ["__meta_kubernetes_pod_node_name"]
                   action = "replace"
                   target_label = "instance"
                 }
               }
-          
-              windows_exporter.scrape "metrics" {
-                targets = discovery.relabel.windows_exporter.output
-                clustering = true
-                keep_metrics = "up|windows_.*|node_cpu_seconds_total|node_filesystem_size_bytes|node_filesystem_avail_bytes|container_cpu_usage_seconds_total"
+            
+              prometheus.scrape "windows_exporter" {
+                job_name   = "integrations/windows-exporter"
+                targets  = discovery.relabel.windows_exporter.output
                 scrape_interval = "60s"
+                clustering {
+                  enabled = true
+                }
+                forward_to = [prometheus.relabel.windows_exporter.receiver]
+              }
+            
+              prometheus.relabel "windows_exporter" {
                 max_cache_size = 100000
+                rule {
+                  source_labels = ["__name__"]
+                  regex = "up|windows_.*|node_cpu_seconds_total|node_filesystem_size_bytes|node_filesystem_avail_bytes|container_cpu_usage_seconds_total"
+                  action = "keep"
+                }
                 forward_to = argument.metrics_destinations.value
               }
             }

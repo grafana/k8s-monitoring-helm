@@ -14,13 +14,7 @@
 {{- if (index .Values "node-exporter").enabled }}
 {{- $metricAllowList := include "feature.clusterMetrics.node_exporter.allowList" . }}
 {{- $metricDenyList := (index .Values "node-exporter").metricsTuning.excludeMetrics }}
-
-import.git "node_exporter" {
-  repository = "https://github.com/grafana/alloy-modules.git"
-  revision = "main"
-  path = "modules/system/node-exporter/metrics.alloy"
-  pull_frequency = "15m"
-}
+{{- include "alloyModules.load" (deepCopy $ | merge (dict "name" "node_exporter" "path" "modules/system/node-exporter/metrics.alloy")) | nindent 0 }}
 
 node_exporter.kubernetes "targets" {
   label_selectors = [

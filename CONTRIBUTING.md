@@ -31,6 +31,7 @@ installing them for a better experience:
 -   [helm-docs](https://github.com/norwoodj/helm-docs) - Used for generating Helm chart README.md files.
 -   [helm unittest](https://github.com/helm-unittest/helm-unittest) - Used for executing Helm chart unit tests.
 -   [shellspec](https://github.com/shellspec/shellspec) - Used for executing some unit tests.
+-   [vendir](https://carvel.dev/vendir/) - Used for downloading Alloy Module
 
 Each chart has a Makefile with targets to automate much of the process.
 

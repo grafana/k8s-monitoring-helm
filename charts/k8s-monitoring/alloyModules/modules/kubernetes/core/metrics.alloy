@@ -1,0 +1,1029 @@
+/*
+Module: job-cadvisor
+Description: Scrapes cadvisor
+
+Note: Every argument except for "forward_to" is optional, and does have a defined default value.  However, the values for these
+      arguments are not defined using the default = " ... " argument syntax, but rather using the coalesce(argument.value, " ... ").
+      This is because if the argument passed in from another consuming module is set to null, the default = " ... " syntax will
+      does not override the value passed in, where coalesce() will return the first non-null value.
+*/
+declare "cadvisor" {
+  argument "forward_to" {
+    comment = "Must be a list(MetricsReceiver) where collected logs should be forwarded to"
+  }
+  argument "field_selectors" {
+    // Docs: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
+    comment = "The label selectors to use to find matching targets (default: [\"metadata.name=kubernetes\"])"
+    optional = true
+  }
+  argument "label_selectors" {
+    // Docs: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
+    comment = "The label selectors to use to find matching targets (default: [])"
+    optional = true
+  }
+  argument "job_label" {
+    comment = "The job label to add for all cadvisor metric (default: integrations/kubernetes/cadvisor)"
+    optional = true
+  }
+  argument "keep_metrics" {
+    comment = "A regular expression of metrics to keep (default: see below)"
+    optional = true
+  }
+  argument "drop_metrics" {
+    comment = "A regular expression of metrics to drop (default: see below)"
+    optional = true
+  }
+  argument "scrape_interval" {
+    comment = "How often to scrape metrics from the targets (default: 60s)"
+    optional = true
+  }
+  argument "scrape_timeout" {
+    comment = "How long before a scrape times out (default: 10s)"
+    optional = true
+  }
+  argument "max_cache_size" {
+    comment = "The maximum number of elements to hold in the relabeling cache (default: 100000).  This should be at least 2x-5x your largest scrape target or samples appended rate."
+    optional = true
+  }
+  argument "clustering" {
+    // Docs: https://grafana.com/docs/agent/latest/flow/concepts/clustering/
+    comment = "Whether or not clustering should be enabled (default: false)"
+    optional = true
+  }
+
+  export "output" {
+    value = discovery.relabel.cadvisor.output
+  }
+
+  // cadvisor service discovery for all of the nodes
+  discovery.kubernetes "cadvisor" {
+    role = "node"
+
+    selectors {
+      role = "node"
+      field = join(coalesce(argument.field_selectors.value, []), ",")
+      label = join(coalesce(argument.label_selectors.value, []), ",")
+    }
+  }
+
+  // cadvisor relabelings (pre-scrape)
+  discovery.relabel "cadvisor" {
+    targets = discovery.kubernetes.cadvisor.targets
+
+    // set the address to use the kubernetes service dns name
+    rule {
+      target_label = "__address__"
+      replacement  = "kubernetes.default.svc.cluster.local:443"
+    }
+
+    // set the metrics path to use the proxy path to the nodes cadvisor metrics endpoint
+    rule {
+      source_labels = ["__meta_kubernetes_node_name"]
+      regex = "(.+)"
+      replacement = "/api/v1/nodes/${1}/proxy/metrics/cadvisor"
+      target_label = "__metrics_path__"
+    }
+
+    // set the node label
+    rule {
+      source_labels = ["__meta_kubernetes_node_name"]
+      target_label  = "node"
+    }
+
+    // set the app name if specified as metadata labels "app:" or "app.kubernetes.io/name:" or "k8s-app:"
+    rule {
+      action = "replace"
+      source_labels = [
+        "__meta_kubernetes_node_label_app_kubernetes_io_name",
+        "__meta_kubernetes_node_label_k8s_app",
+        "__meta_kubernetes_node_label_app",
+      ]
+      separator = ";"
+      regex = "^(?:;*)?([^;]+).*$"
+      replacement = "$1"
+      target_label = "app"
+    }
+
+    // set a source label
+    rule {
+      action = "replace"
+      replacement = "kubernetes"
+      target_label = "source"
+    }
+  }
+
+  // cadvisor scrape job
+  prometheus.scrape "cadvisor" {
+    job_name = coalesce(argument.job_label.value, "integrations/kubernetes/cadvisor")
+    forward_to = [prometheus.relabel.cadvisor.receiver]
+    targets = discovery.relabel.cadvisor.output
+    scheme = "https"
+    scrape_interval = coalesce(argument.scrape_interval.value, "60s")
+    scrape_timeout = coalesce(argument.scrape_timeout.value, "10s")
+    bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+
+    tls_config {
+      ca_file = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+      insecure_skip_verify = false
+      server_name = "kubernetes"
+    }
+
+    clustering {
+      enabled = coalesce(argument.clustering.value, false)
+    }
+  }
+
+  // cadvisor metric relabelings (post-scrape)
+  prometheus.relabel "cadvisor" {
+    forward_to = argument.forward_to.value
+    max_cache_size = coalesce(argument.max_cache_size.value, 100000)
+
+    // drop metrics that match the drop_metrics regex
+    rule {
+      source_labels = ["__name__"]
+      regex = coalesce(argument.drop_metrics.value, "(^(go|process)_.+$)")
+      action = "drop"
+    }
+
+    // keep only metrics that match the keep_metrics regex
+    rule {
+      source_labels = ["__name__"]
+      regex = coalesce(argument.keep_metrics.value, "(up|container_(cpu_(cfs_(periods|throttled_periods)_total|usage_seconds_total)|fs_(reads|writes)(_bytes)?_total|memory_(cache|rss|swap|working_set_bytes)|network_(receive|transmit)_(bytes|packets(_dropped)?_total))|machine_memory_bytes)")
+      action = "keep"
+    }
+
+    // Drop empty container labels, addressing https://github.com/google/cadvisor/issues/2688
+    rule {
+      source_labels = ["__name__","container"]
+      separator = "@"
+      regex = "(container_cpu_.*|container_fs_.*|container_memory_.*)@"
+      action = "drop"
+    }
+
+    // Drop empty image labels, addressing https://github.com/google/cadvisor/issues/2688
+    rule {
+      source_labels = ["__name__","image"]
+      separator = "@"
+      regex = "(container_cpu_.*|container_fs_.*|container_memory_.*|container_network_.*)@"
+      action = "drop"
+    }
+
+    // Normalizing unimportant labels (not deleting to continue satisfying <label>!="" checks)
+    rule {
+      source_labels = ["__name__", "boot_id"]
+      separator = "@"
+      regex = "machine_memory_bytes@.*"
+      target_label = "boot_id"
+      replacement = "NA"
+    }
+    rule {
+      source_labels = ["__name__", "system_uuid"]
+      separator = "@"
+      regex = "machine_memory_bytes@.*"
+      target_label = "system_uuid"
+      replacement = "NA"
+    }
+
+    // Filter out non-physical devices/interfaces
+    rule {
+      source_labels = ["__name__", "device"]
+      separator = "@"
+      regex = "container_fs_.*@(/dev/)?(mmcblk.p.+|nvme.+|rbd.+|sd.+|vd.+|xvd.+|dasd.+)"
+      target_label = "__keepme"
+      replacement = "1"
+    }
+    rule {
+      source_labels = ["__name__", "__keepme"]
+      separator = "@"
+      regex = "container_fs_.*@"
+      action = "drop"
+    }
+    rule {
+      source_labels = ["__name__"]
+      regex = "container_fs_.*"
+      target_label = "__keepme"
+      replacement = ""
+    }
+    rule {
+      source_labels = ["__name__", "interface"]
+      separator = "@"
+      regex = "container_network_.*@(en[ospx][0-9].*|wlan[0-9].*|eth[0-9].*)"
+      target_label = "__keepme"
+      replacement = "1"
+    }
+    rule {
+      source_labels = ["__name__", "__keepme"]
+      separator = "@"
+      regex = "container_network_.*@"
+      action = "drop"
+    }
+    rule {
+      source_labels = ["__name__"]
+      regex = "container_network_.*"
+      target_label = "__keepme"
+      replacement = ""
+    }
+  }
+}
+
+declare "resources" {
+  argument "forward_to" {
+    comment = "Must be a list(MetricsReceiver) where collected logs should be forwarded to"
+  }
+  argument "field_selectors" {
+    // Docs: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
+    comment = "The label selectors to use to find matching targets (default: [\"metadata.name=kubernetes\"])"
+    optional = true
+  }
+  argument "label_selectors" {
+    // Docs: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
+    comment = "The label selectors to use to find matching targets (default: [])"
+    optional = true
+  }
+  argument "job_label" {
+    comment = "The job label to add for all resources metric (default: integrations/kubernetes/kube-resources)"
+    optional = true
+  }
+  argument "keep_metrics" {
+    comment = "A regular expression of metrics to keep (default: see below)"
+    optional = true
+  }
+  argument "drop_metrics" {
+    comment = "A regular expression of metrics to drop (default: see below)"
+    optional = true
+  }
+  argument "scrape_interval" {
+    comment = "How often to scrape metrics from the targets (default: 60s)"
+    optional = true
+  }
+  argument "scrape_timeout" {
+    comment = "How long before a scrape times out (default: 10s)"
+    optional = true
+  }
+  argument "max_cache_size" {
+    comment = "The maximum number of elements to hold in the relabeling cache (default: 100000).  This should be at least 2x-5x your largest scrape target or samples appended rate."
+    optional = true
+  }
+  argument "clustering" {
+    // Docs: https://grafana.com/docs/agent/latest/flow/concepts/clustering/
+    comment = "Whether or not clustering should be enabled (default: false)"
+    optional = true
+  }
+
+  export "output" {
+    value = discovery.relabel.resources.output
+  }
+
+  // resources service discovery for all of the nodes
+  discovery.kubernetes "resources" {
+    role = "node"
+
+    selectors {
+      role = "node"
+      field = join(coalesce(argument.field_selectors.value, []), ",")
+      label = join(coalesce(argument.label_selectors.value, []), ",")
+    }
+  }
+
+  // resources relabelings (pre-scrape)
+  discovery.relabel "resources" {
+    targets = discovery.kubernetes.resources.targets
+
+    // set the address to use the kubernetes service dns name
+    rule {
+      target_label = "__address__"
+      replacement  = "kubernetes.default.svc.cluster.local:443"
+    }
+
+    // set the metrics path to use the proxy path to the nodes resources metrics endpoint
+    rule {
+      source_labels = ["__meta_kubernetes_node_name"]
+      regex = "(.+)"
+      replacement = "/api/v1/nodes/${1}/proxy/metrics/resource"
+      target_label = "__metrics_path__"
+    }
+
+    // set the node label
+    rule {
+      source_labels = ["__meta_kubernetes_node_name"]
+      target_label  = "node"
+    }
+
+    // set the app name if specified as metadata labels "app:" or "app.kubernetes.io/name:" or "k8s-app:"
+    rule {
+      action = "replace"
+      source_labels = [
+        "__meta_kubernetes_node_label_app_kubernetes_io_name",
+        "__meta_kubernetes_node_label_k8s_app",
+        "__meta_kubernetes_node_label_app",
+      ]
+      separator = ";"
+      regex = "^(?:;*)?([^;]+).*$"
+      replacement = "$1"
+      target_label = "app"
+    }
+
+    // set a source label
+    rule {
+      action = "replace"
+      replacement = "kubernetes"
+      target_label = "source"
+    }
+  }
+
+   // resources scrape job
+  prometheus.scrape "resources" {
+    job_name = coalesce(argument.job_label.value, "integrations/kubernetes/kube-resources")
+    forward_to = [prometheus.relabel.resources.receiver]
+    targets = discovery.relabel.resources.output
+    scheme = "https"
+    scrape_interval = coalesce(argument.scrape_interval.value, "60s")
+    scrape_timeout = coalesce(argument.scrape_timeout.value, "10s")
+    bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+
+    tls_config {
+      ca_file = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+      insecure_skip_verify = false
+      server_name = "kubernetes"
+    }
+
+    clustering {
+      enabled = coalesce(argument.clustering.value, false)
+    }
+  }
+
+  // resources metric relabelings (post-scrape)
+  prometheus.relabel "resources" {
+    forward_to = argument.forward_to.value
+    max_cache_size = coalesce(argument.max_cache_size.value, 100000)
+
+    // drop metrics that match the drop_metrics regex
+    rule {
+      source_labels = ["__name__"]
+      regex = coalesce(argument.drop_metrics.value, "(^(go|process)_.+$)")
+      action = "drop"
+    }
+
+    // keep only metrics that match the keep_metrics regex
+    rule {
+      source_labels = ["__name__"]
+      regex = coalesce(argument.keep_metrics.value, "(.+)")
+      action = "keep"
+    }
+  }
+}
+
+declare "kubelet" {
+  argument "forward_to" {
+    comment = "Must be a list(MetricsReceiver) where collected logs should be forwarded to"
+  }
+  argument "field_selectors" {
+    // Docs: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
+    comment = "The label selectors to use to find matching targets (default: [])"
+    optional = true
+  }
+  argument "label_selectors" {
+    // Docs: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
+    comment = "The label selectors to use to find matching targets (default: [])"
+    optional = true
+  }
+  argument "job_label" {
+    comment = "The job label to add for all kubelet metric (default: integrations/kubernetes/kube-kubelet)"
+    optional = true
+  }
+  argument "keep_metrics" {
+    comment = "A regular expression of metrics to keep (default: see below)"
+    optional = true
+  }
+  argument "drop_metrics" {
+    comment = "A regular expression of metrics to drop (default: see below)"
+    optional = true
+  }
+  argument "scrape_interval" {
+    comment = "How often to scrape metrics from the targets (default: 60s)"
+    optional = true
+  }
+  argument "scrape_timeout" {
+    comment = "How long before a scrape times out (default: 10s)"
+    optional = true
+  }
+  argument "max_cache_size" {
+    comment = "The maximum number of elements to hold in the relabeling cache (default: 100000).  This should be at least 2x-5x your largest scrape target or samples appended rate."
+    optional = true
+  }
+  argument "clustering" {
+    // Docs: https://grafana.com/docs/agent/latest/flow/concepts/clustering/
+    comment = "Whether or not clustering should be enabled (default: false)"
+    optional = true
+  }
+
+  export "output" {
+    value = discovery.relabel.kubelet.output
+  }
+
+  // kubelet service discovery for all of the nodes
+  discovery.kubernetes "kubelet" {
+    role = "node"
+
+    selectors {
+      role = "node"
+      field = join(coalesce(argument.field_selectors.value, []), ",")
+      label = join(coalesce(argument.label_selectors.value, []), ",")
+    }
+  }
+
+  // kubelet relabelings (pre-scrape)
+  discovery.relabel "kubelet" {
+    targets = discovery.kubernetes.kubelet.targets
+
+    // set the address to use the kubernetes service dns name
+    rule {
+      target_label = "__address__"
+      replacement  = "kubernetes.default.svc.cluster.local:443"
+    }
+
+    // set the metrics path to use the proxy path to the nodes kubelet metrics endpoint
+    rule {
+      source_labels = ["__meta_kubernetes_node_name"]
+      regex = "(.+)"
+      replacement = "/api/v1/nodes/${1}/proxy/metrics"
+      target_label = "__metrics_path__"
+    }
+
+    // set the node label
+    rule {
+      source_labels = ["__meta_kubernetes_node_name"]
+      target_label  = "node"
+    }
+
+    // set the app name if specified as metadata labels "app:" or "app.kubernetes.io/name:" or "k8s-app:"
+    rule {
+      action = "replace"
+      source_labels = [
+        "__meta_kubernetes_node_label_app_kubernetes_io_name",
+        "__meta_kubernetes_node_label_k8s_app",
+        "__meta_kubernetes_node_label_app",
+      ]
+      separator = ";"
+      regex = "^(?:;*)?([^;]+).*$"
+      replacement = "$1"
+      target_label = "app"
+    }
+
+    // set a source label
+    rule {
+      action = "replace"
+      replacement = "kubernetes"
+      target_label = "source"
+    }
+  }
+
+  // kubelet scrape job
+  prometheus.scrape "kubelet" {
+    job_name = coalesce(argument.job_label.value, "integrations/kubernetes/kubelet")
+    forward_to = [prometheus.relabel.kubelet.receiver]
+    targets = discovery.relabel.kubelet.output
+    scheme = "https"
+    scrape_interval = coalesce(argument.scrape_interval.value, "60s")
+    scrape_timeout = coalesce(argument.scrape_timeout.value, "10s")
+    bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+
+    tls_config {
+      ca_file = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+      insecure_skip_verify = false
+      server_name = "kubernetes"
+    }
+
+    clustering {
+      enabled = coalesce(argument.clustering.value, false)
+    }
+  }
+
+  // kubelet metric relabelings (post-scrape)
+  prometheus.relabel "kubelet" {
+    forward_to = argument.forward_to.value
+    max_cache_size = coalesce(argument.max_cache_size.value, 100000)
+
+    // drop metrics that match the drop_metrics regex
+    rule {
+      source_labels = ["__name__"]
+      regex = coalesce(argument.drop_metrics.value, "(^(go|process)_.+$)")
+      action = "drop"
+    }
+
+    // keep only metrics that match the keep_metrics regex
+    rule {
+      source_labels = ["__name__"]
+      regex = coalesce(argument.keep_metrics.value, "(.+)")
+      action = "keep"
+    }
+  }
+}
+
+declare "apiserver" {
+  argument "forward_to" {
+    comment = "Must be a list(MetricsReceiver) where collected logs should be forwarded to"
+  }
+  argument "namespaces" {
+    comment = "The namespaces to look for targets in (default: default)"
+    optional = true
+  }
+  argument "field_selectors" {
+    // Docs: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
+    comment = "The label selectors to use to find matching targets (default: [\"metadata.name=kubernetes\"])"
+    optional = true
+  }
+  argument "label_selectors" {
+    // Docs: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
+    comment = "The label selectors to use to find matching targets (default: [])"
+    optional = true
+  }
+  argument "port_name" {
+    comment = "The value of the label for the selector (default: https)"
+    optional = true
+  }
+  argument "job_label" {
+    comment = "The job label to add for all kube-apiserver metrics (default: integrations/kubernetes/kube-apiserver)"
+    optional = true
+  }
+  argument "keep_metrics" {
+    comment = "A regular expression of metrics to keep (default: see below)"
+    optional = true
+  }
+  // drop metrics and les from kube-prometheus
+  // https://github.com/prometheus-operator/kube-prometheus/blob/main/manifests/kubernetesControlPlane-serviceMonitorApiserver.yaml
+  argument "drop_metrics" {
+    comment = "A regular expression of metrics to drop (default: see below)"
+    optional = true
+  }
+  argument "drop_les" {
+    comment = "Regular expression of metric les label values to drop (default: see below)"
+    optional = true
+  }
+  argument "scrape_interval" {
+    comment = "How often to scrape metrics from the targets (default: 60s)"
+    optional = true
+  }
+  argument "scrape_timeout" {
+    comment = "How long before a scrape times out (default: 10s)"
+    optional = true
+  }
+  argument "max_cache_size" {
+    comment = "The maximum number of elements to hold in the relabeling cache (default: 100000).  This should be at least 2x-5x your largest scrape target or samples appended rate."
+    optional = true
+  }
+  argument "clustering" {
+    // Docs: https://grafana.com/docs/agent/latest/flow/concepts/clustering/
+    comment = "Whether or not clustering should be enabled (default: false)"
+    optional = true
+  }
+
+  export "output" {
+    value = discovery.relabel.apiserver.output
+  }
+
+  // kube-apiserver service discovery
+  discovery.kubernetes "apiserver" {
+    role = "service"
+
+    selectors {
+      role = "service"
+      field = join(coalesce(argument.field_selectors.value, ["metadata.name=kubernetes"]), ",")
+      label = join(coalesce(argument.label_selectors.value, []), ",")
+    }
+
+    namespaces {
+      names = coalesce(argument.namespaces.value, ["default"])
+    }
+  }
+
+  // apiserver relabelings (pre-scrape)
+  discovery.relabel "apiserver" {
+    targets = discovery.kubernetes.apiserver.targets
+
+    // only keep targets with a matching port name
+    rule {
+      source_labels = ["__meta_kubernetes_service_port_name"]
+      regex = coalesce(argument.port_name.value, "https")
+      action = "keep"
+    }
+
+    // set the namespace
+    rule {
+      action = "replace"
+      source_labels = ["__meta_kubernetes_namespace"]
+      target_label = "namespace"
+    }
+
+    // set the service_name
+    rule {
+      action = "replace"
+      source_labels = ["__meta_kubernetes_service_name"]
+      target_label = "service"
+    }
+
+    // set the app name if specified as metadata labels "app:" or "app.kubernetes.io/name:" or "k8s-app:"
+    rule {
+      action = "replace"
+      source_labels = [
+        "__meta_kubernetes_service_label_app_kubernetes_io_name",
+        "__meta_kubernetes_service_label_k8s_app",
+        "__meta_kubernetes_service_label_app",
+      ]
+      separator = ";"
+      regex = "^(?:;*)?([^;]+).*$"
+      replacement = "$1"
+      target_label = "app"
+    }
+
+    // set a source label
+    rule {
+      action = "replace"
+      replacement = "kubernetes"
+      target_label = "source"
+    }
+  }
+
+  // kube-apiserver scrape job
+  prometheus.scrape "apiserver" {
+    job_name = coalesce(argument.job_label.value, "integrations/kubernetes/kube-apiserver")
+    forward_to = [prometheus.relabel.apiserver.receiver]
+    targets = discovery.relabel.apiserver.output
+    scheme = "https"
+    scrape_interval = coalesce(argument.scrape_interval.value, "60s")
+    scrape_timeout = coalesce(argument.scrape_timeout.value, "10s")
+    bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+
+    tls_config {
+      ca_file = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+      insecure_skip_verify = false
+      server_name = "kubernetes"
+    }
+
+    clustering {
+      enabled = coalesce(argument.clustering.value, false)
+    }
+  }
+
+  // apiserver metric relabelings (post-scrape)
+  prometheus.relabel "apiserver" {
+    forward_to = argument.forward_to.value
+    max_cache_size = coalesce(argument.max_cache_size.value, 100000)
+
+    // drop metrics that match the drop_metrics regex
+    rule {
+      source_labels = ["__name__"]
+      regex = coalesce(argument.drop_metrics.value, "(((go|process)_.+)|kubelet_(pod_(worker|start)_latency_microseconds|cgroup_manager_latency_microseconds|pleg_relist_(latency|interval)_microseconds|runtime_operations(_latency_microseconds|_errors)?|eviction_stats_age_microseconds|device_plugin_(registration_count|alloc_latency_microseconds)|network_plugin_operations_latency_microseconds)|scheduler_(e2e_scheduling_latency_microseconds|scheduling_algorithm_(predicate|priority|preemption)_evaluation|scheduling_algorithm_latency_microseconds|binding_latency_microseconds|scheduling_latency_seconds)|apiserver_(request_(count|latencies(_summary)?)|dropped_requests|storage_(data_key_generation|transformation_(failures_total|latencies_microseconds))|proxy_tunnel_sync_latency_secs|longrunning_gauge|registered_watchers)|kubelet_docker_(operations(_latency_microseconds|_errors|_timeout)?)|reflector_(items_per_(list|watch)|list_duration_seconds|lists_total|short_watches_total|watch_duration_seconds|watches_total)|etcd_(helper_(cache_(hit|miss)_count|cache_entry_count|object_counts)|request_(cache_(get|add)_latencies_summary|latencies_summary)|debugging.*|disk.*|server.*)|transformation_(latencies_microseconds|failures_total)|(admission_quota_controller|APIServiceOpenAPIAggregationControllerQueue1|APIServiceRegistrationController|autoregister|AvailableConditionController|crd_(autoregistration_controller|Establishing|finalizer|naming_condition_controller|openapi_controller)|DiscoveryController|non_structural_schema_condition_controller|kubeproxy_sync_proxy_rules|rest_client_request_latency|storage_operation_(errors_total|status_count))(_.*)|apiserver_admission_(controller_admission|step_admission)_latencies_seconds_.*)")
+      action = "drop"
+    }
+
+    // drop metrics whose name and le label match the drop_les regex
+    rule {
+      source_labels = [
+        "__name__",
+        "le",
+      ]
+      regex = coalesce(argument.drop_les.value, "apiserver_request_duration_seconds_bucket;(0.15|0.25|0.3|0.35|0.4|0.45|0.6|0.7|0.8|0.9|1.25|1.5|1.75|2.5|3|3.5|4.5|6|7|8|9|15|25|30|50)")
+      action = "drop"
+    }
+
+    // keep only metrics that match the keep_metrics regex
+    rule {
+      source_labels = ["__name__"]
+      regex = coalesce(argument.keep_metrics.value, "(.+)")
+      action = "keep"
+    }
+  }
+}
+
+declare "probes" {
+  argument "field_selectors" {
+    // Docs: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
+    comment = "The label selectors to use to find matching targets (default: [\"metadata.name=kubernetes\"])"
+    optional = true
+  }
+  argument "label_selectors" {
+    // Docs: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
+    comment = "The label selectors to use to find matching targets (default: [])"
+    optional = true
+  }
+  argument "forward_to" {
+    comment = "Must be a list(MetricsReceiver) where collected logs should be forwarded to"
+  }
+  argument "job_label" {
+    comment = "The job label to add for all probes metric (default: integrations/kubernetes/kube-probes)"
+    optional = true
+  }
+  argument "keep_metrics" {
+    comment = "A regular expression of metrics to keep (default: see below)"
+    optional = true
+  }
+  argument "drop_metrics" {
+    comment = "A regular expression of metrics to drop (default: see below)"
+    optional = true
+  }
+  argument "scrape_interval" {
+    comment = "How often to scrape metrics from the targets (default: 60s)"
+    optional = true
+  }
+  argument "scrape_timeout" {
+    comment = "How long before a scrape times out (default: 10s)"
+    optional = true
+  }
+  argument "max_cache_size" {
+    comment = "The maximum number of elements to hold in the relabeling cache (default: 100000).  This should be at least 2x-5x your largest scrape target or samples appended rate."
+    optional = true
+  }
+  argument "clustering" {
+    // Docs: https://grafana.com/docs/agent/latest/flow/concepts/clustering/
+    comment = "Whether or not clustering should be enabled (default: false)"
+    optional = true
+  }
+
+  export "output" {
+    value = discovery.relabel.probes.output
+  }
+
+  // probes service discovery for all of the nodes
+  discovery.kubernetes "probes" {
+    role = "node"
+
+    selectors {
+      role = "node"
+      field = join(coalesce(argument.field_selectors.value, []), ",")
+      label = join(coalesce(argument.label_selectors.value, []), ",")
+    }
+  }
+
+  // probes relabelings (pre-scrape)
+  discovery.relabel "probes" {
+    targets = discovery.kubernetes.probes.targets
+
+    // set the address to use the kubernetes service dns name
+    rule {
+      target_label = "__address__"
+      replacement  = "kubernetes.default.svc.cluster.local:443"
+    }
+
+    // set the metrics path to use the proxy path to the nodes probes metrics endpoint
+    rule {
+      source_labels = ["__meta_kubernetes_node_name"]
+      regex = "(.+)"
+      replacement = "/api/v1/nodes/${1}/proxy/metrics/probes"
+      target_label = "__metrics_path__"
+    }
+
+    // set the node label
+    rule {
+      source_labels = ["__meta_kubernetes_node_name"]
+      target_label  = "node"
+    }
+
+    // set the app name if specified as metadata labels "app:" or "app.kubernetes.io/name:" or "k8s-app:"
+    rule {
+      action = "replace"
+      source_labels = [
+        "__meta_kubernetes_node_label_app_kubernetes_io_name",
+        "__meta_kubernetes_node_label_k8s_app",
+        "__meta_kubernetes_node_label_app",
+      ]
+      separator = ";"
+      regex = "^(?:;*)?([^;]+).*$"
+      replacement = "$1"
+      target_label = "app"
+    }
+
+    // set a source label
+    rule {
+      action = "replace"
+      replacement = "kubernetes"
+      target_label = "source"
+    }
+  }
+
+   // probes scrape job
+  prometheus.scrape "probes" {
+    job_name = coalesce(argument.job_label.value, "integrations/kubernetes/kube-probes")
+    forward_to = [prometheus.relabel.probes.receiver]
+    targets = discovery.relabel.probes.output
+    scheme = "https"
+    scrape_interval = coalesce(argument.scrape_interval.value, "60s")
+    scrape_timeout = coalesce(argument.scrape_timeout.value, "10s")
+    bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+
+    tls_config {
+      ca_file = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+      insecure_skip_verify = false
+      server_name = "kubernetes"
+    }
+
+    clustering {
+      enabled = coalesce(argument.clustering.value, false)
+    }
+  }
+
+  // probes metric relabelings (post-scrape)
+  prometheus.relabel "probes" {
+    forward_to = argument.forward_to.value
+    max_cache_size = coalesce(argument.max_cache_size.value, 100000)
+
+    // drop metrics that match the drop_metrics regex
+    rule {
+      source_labels = ["__name__"]
+      regex = coalesce(argument.drop_metrics.value, "(^(go|process)_.+$)")
+      action = "drop"
+    }
+
+    // keep only metrics that match the keep_metrics regex
+    rule {
+      source_labels = ["__name__"]
+      regex = coalesce(argument.keep_metrics.value, "(.+)")
+      action = "keep"
+    }
+  }
+}
+
+declare "kube_dns" {
+  argument "forward_to" {
+    comment = "Must be a list(MetricsReceiver) where collected logs should be forwarded to"
+  }
+  // arguments for kubernetes discovery
+  argument "namespaces" {
+    comment = "The namespaces to look for targets in (default: [\"kube-system\"])"
+    optional = true
+  }
+  argument "field_selectors" {
+    // Docs: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
+    comment = "The label selectors to use to find matching targets (default: [])"
+    optional = true
+  }
+  argument "label_selectors" {
+    // Docs: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
+    comment = "The label selectors to use to find matching targets (default: [\"k8s-app=kube-dns\"])"
+    optional = true
+  }
+  argument "port_name" {
+    comment = "The of the port to scrape metrics from (default: metrics)"
+    optional = true
+  }
+  argument "job_label" {
+    comment = "The job label to add for all kube_dns metric (default: integrations/kubernetes/kube-dns)"
+    optional = true
+  }
+  argument "keep_metrics" {
+    comment = "A regular expression of metrics to keep (default: see below)"
+    optional = true
+  }
+  argument "drop_metrics" {
+    comment = "A regular expression of metrics to drop (default: see below)"
+    optional = true
+  }
+  argument "scrape_interval" {
+    comment = "How often to scrape metrics from the targets (default: 60s)"
+    optional = true
+  }
+  argument "scrape_timeout" {
+    comment = "How long before a scrape times out (default: 10s)"
+    optional = true
+  }
+  argument "max_cache_size" {
+    comment = "The maximum number of elements to hold in the relabeling cache (default: 100000).  This should be at least 2x-5x your largest scrape target or samples appended rate."
+    optional = true
+  }
+  argument "clustering" {
+    // Docs: https://grafana.com/docs/agent/latest/flow/concepts/clustering/
+    comment = "Whether or not clustering should be enabled (default: false)"
+    optional = true
+  }
+
+  export "output" {
+    value = discovery.relabel.kube_dns.output
+  }
+
+  // kube_dns service discovery for all of the nodes
+  discovery.kubernetes "kube_dns" {
+    role = "endpoints"
+
+    selectors {
+      role = "endpoints"
+      field = join(coalesce(argument.field_selectors.value, []), ",")
+      label = join(coalesce(argument.label_selectors.value, ["k8s-app=kube-dns"]), ",")
+    }
+
+    namespaces {
+      names = coalesce(argument.namespaces.value, ["kube-system"])
+    }
+  }
+
+  // kube_dns relabelings (pre-scrape)
+  discovery.relabel "kube_dns" {
+    targets = discovery.kubernetes.kube_dns.targets
+
+    // keep only the specified metrics port name, and pods that are Running and ready
+    rule {
+      source_labels = [
+        "__meta_kubernetes_pod_container_port_name",
+        "__meta_kubernetes_pod_phase",
+        "__meta_kubernetes_pod_ready",
+        "__meta_kubernetes_pod_container_init",
+      ]
+      separator = "@"
+      regex = coalesce(argument.port_name.value, "metrics") + "@Running@true@false"
+      action = "keep"
+    }
+
+    // set the namespace label
+    rule {
+      source_labels = ["__meta_kubernetes_namespace"]
+      target_label  = "namespace"
+    }
+
+    // set the pod label
+    rule {
+      source_labels = ["__meta_kubernetes_pod_name"]
+      target_label  = "pod"
+    }
+
+    // set the container label
+    rule {
+      source_labels = ["__meta_kubernetes_pod_container_name"]
+      target_label  = "container"
+    }
+
+    // set a workload label
+    rule {
+      source_labels = [
+        "__meta_kubernetes_pod_controller_kind",
+        "__meta_kubernetes_pod_controller_name",
+      ]
+      separator = "/"
+      target_label  = "workload"
+    }
+    // remove the hash from the ReplicaSet
+    rule {
+      source_labels = ["workload"]
+      regex = "(ReplicaSet/.+)-.+"
+      target_label  = "workload"
+    }
+
+    // set the app name if specified as metadata labels "app:" or "app.kubernetes.io/name:" or "k8s-app:"
+    rule {
+      action = "replace"
+      source_labels = [
+        "__meta_kubernetes_pod_label_app_kubernetes_io_name",
+        "__meta_kubernetes_pod_label_k8s_app",
+        "__meta_kubernetes_pod_label_app",
+      ]
+      separator = ";"
+      regex = "^(?:;*)?([^;]+).*$"
+      replacement = "$1"
+      target_label = "app"
+    }
+
+    // set the service label
+    rule {
+      source_labels = ["__meta_kubernetes_service_name"]
+      target_label  = "service"
+    }
+
+    // set a source label
+    rule {
+      action = "replace"
+      replacement = "kubernetes"
+      target_label = "source"
+    }
+  }
+
+   // kube_dns scrape job
+  prometheus.scrape "kube_dns" {
+    job_name = coalesce(argument.job_label.value, "integrations/kubernetes/kube-dns")
+    forward_to = [prometheus.relabel.kube_dns.receiver]
+    targets = discovery.relabel.kube_dns.output
+    scrape_interval = coalesce(argument.scrape_interval.value, "60s")
+    scrape_timeout = coalesce(argument.scrape_timeout.value, "10s")
+
+    clustering {
+      enabled = coalesce(argument.clustering.value, false)
+    }
+  }
+
+  // kube_dns metric relabelings (post-scrape)
+  prometheus.relabel "kube_dns" {
+    forward_to = argument.forward_to.value
+    max_cache_size = coalesce(argument.max_cache_size.value, 100000)
+
+    // drop metrics that match the drop_metrics regex
+    rule {
+      source_labels = ["__name__"]
+      regex = coalesce(argument.drop_metrics.value, "(^(go|process|promhttp)_.+$)")
+      action = "drop"
+    }
+
+    // keep only metrics that match the keep_metrics regex
+    rule {
+      source_labels = ["__name__"]
+      regex = coalesce(argument.keep_metrics.value, "(.+)")
+      action = "keep"
+    }
+  }
+}

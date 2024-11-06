@@ -8,13 +8,7 @@ declare "cert_manager_integration" {
   argument "metrics_destinations" {
     comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
   }
-
-  import.git "cert_manager" {
-    repository = "https://github.com/grafana/alloy-modules.git"
-    revision = "main"
-    path = "modules/kubernetes/cert-manager/metrics.alloy"
-    pull_frequency = "15m"
-  }
+  {{- include "alloyModules.load" (deepCopy $ | merge (dict "name" "cert_manager" "path" "modules/kubernetes/cert-manager/metrics.alloy")) | nindent 2 }}
 
   {{- range $instance := (index $.Values "cert-manager").instances }}
     {{- include "integrations.cert-manager.include.metrics" (dict "integration" $instance "Values" $.Values "Files" $.Files) | nindent 2 }}

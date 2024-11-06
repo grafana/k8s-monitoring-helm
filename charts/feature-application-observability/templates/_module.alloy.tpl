@@ -82,3 +82,5 @@ declare "application_observability" {
 {{- end }}
 }
 {{- end }}
+
+{{- define "feature.applicationObservability.alloyModules" }}{{- end }}

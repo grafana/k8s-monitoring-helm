@@ -9,3 +9,5 @@ declare "prometheus_operator_objects" {
   {{- include "feature.prometheusOperatorObjects.serviceMonitors.alloy" . | nindent 2 }}
 }
 {{- end -}}
+
+{{- define "feature.prometheusOperatorObjects.alloyModules" }}{{- end }}

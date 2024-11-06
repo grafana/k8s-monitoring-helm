@@ -8,13 +8,7 @@ declare "etcd_integration" {
   argument "metrics_destinations" {
     comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
   }
-
-  import.git "etcd" {
-    repository = "https://github.com/grafana/alloy-modules.git"
-    revision = "main"
-    path = "modules/databases/kv/etcd/metrics.alloy"
-    pull_frequency = "15m"
-  }
+  {{- include "alloyModules.load" (deepCopy $ | merge (dict "name" "etcd" "path" "modules/databases/kv/etcd/metrics.alloy")) | nindent 2 }}
 
   {{- range $instance := (index $.Values "etcd").instances }}
     {{- include "integrations.etcd.include.metrics" (dict "integration" $instance "Values" $.Values "Files" $.Files) | nindent 2 }}

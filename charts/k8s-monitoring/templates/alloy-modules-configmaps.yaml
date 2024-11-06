@@ -1,0 +1,29 @@
+{{- if eq .Values.global.alloyModules.source "configMap" }}
+{{- $configMaps := dict }}
+{{- $modules := list }}
+{{- range $feature := (include "features.list.enabled" .) | fromYamlArray }}
+  {{- $modules = $modules | concat (include (printf "feature.%s.alloyModules" $feature) (dict "Values" (index $.Values $feature)) | fromYamlArray) }}
+{{- end }}
+{{- range $module :=  uniq $modules }}
+  {{- $pathParts := regexSplit "/" $module -1 }}
+  {{- $configMapName := printf "%s-alloy-module-%s" $.Release.Name (index $pathParts 1) }}
+  {{- if not (hasKey $configMaps $configMapName) }}
+    {{- $configMaps = $configMaps | merge (dict $configMapName (list $module)) }}
+  {{- else }}
+    {{- $configMaps = $configMaps | merge (dict $configMapName (append (index $configMaps $configMapName) $module)) }}
+  {{- end }}
+{{- end }}
+{{- range $configMapName := (keys $configMaps | sortAlpha) }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $configMapName }}
+data:
+{{- range $path := (index $configMaps $configMapName) }}
+  {{- $pathParts := regexSplit "/" $path -1 }}
+  {{- $moduleFile := (slice $pathParts 2) | join "_" }}
+  {{ $moduleFile }}: |{{ $.Files.Get (printf "alloyModules/%s" $path) | nindent 4 }}
+{{- end }}
+{{- end }}
+{{- end }}

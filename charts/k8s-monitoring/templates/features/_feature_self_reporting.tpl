@@ -87,6 +87,7 @@ self-reporting-metric.prom: |
 {{- end }}
 {{- end }}
 
+{{- define "feature.selfReporting.alloyModules" }}{{ end }}
 {{- define "feature.selfReporting.notes.deployments" }}{{ end }}
 {{- define "feature.selfReporting.notes.task" }}{{ end }}
 {{- define "feature.selfReporting.notes.actions" }}{{ end }}
