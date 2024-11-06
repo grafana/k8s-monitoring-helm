@@ -1,6 +1,7 @@
 HAS_HELM_DOCS := $(shell command -v helm-docs;)
 HAS_HELM_UNITTEST := $(shell helm plugin list | grep unittest 2> /dev/null)
 HAS_SHELLSPEC := $(shell command -v shellspec;)
+HAS_VENDIR := $(shell command -v vendir;)
 
 CHART_TEMPLATE_FILES = $(shell find templates -name "*.tpl")
 CHART_YAML_FILES = $(shell find templates -name "*.yaml")
@@ -53,7 +54,11 @@ templates/destinations/_destination_types.tpl: $(DESTINATION_VALUES_FILES)
 	echo '{{- end -}}' >> $@
 
 alloyModules/LICENSE: vendir.yml vendir.lock.yml
+ifdef HAS_VENDIR
 	vendir sync -l
+else
+	docker run --rm --volume $(shell pwd):/src --workdir /src ghcr.io/carvel-dev/docker-image:latest bash -c "apt-get update && apt-get install -y git && vendir sync -l"
+endif
 
 values.schema.json: values.yaml $(DESTINATION_SCHEMA_FILES) $(SCHEMA_MODS_JSON_FILES) $(SCHEMA_MODS_JQ_FILES) schema-mods/destination-list.json
 	../../scripts/schema-gen.sh .
