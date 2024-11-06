@@ -52,6 +52,9 @@ templates/destinations/_destination_types.tpl: $(DESTINATION_VALUES_FILES)
 	done
 	echo '{{- end -}}' >> $@
 
+alloyModules/LICENSE: vendir.yml vendir.lock.yml
+	vendir sync -l
+
 values.schema.json: values.yaml $(DESTINATION_SCHEMA_FILES) $(SCHEMA_MODS_JSON_FILES) $(SCHEMA_MODS_JQ_FILES) schema-mods/destination-list.json
 	../../scripts/schema-gen.sh .
 
@@ -136,7 +139,7 @@ clean:
 
 # Build targets
 .PHONY: build
-build: README.md values.schema.json templates/destinations/_destination_types.tpl $(DESTINATION_DOCS_FILES) $(UPDATECLI_FILES) examples
+build: README.md alloyModules/LICENSE values.schema.json templates/destinations/_destination_types.tpl $(DESTINATION_DOCS_FILES) $(UPDATECLI_FILES) examples
 
 # Test targets
 .PHONY: test unittest lint-helm lint-configs

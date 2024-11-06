@@ -230,3 +230,5 @@ declare "annotation_autodiscovery" {
   }
 }
 {{- end -}}
+
+{{- define "feature.annotationAutodiscovery.alloyModules" }}{{- end }}

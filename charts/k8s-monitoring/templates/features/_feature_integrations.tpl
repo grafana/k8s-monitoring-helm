@@ -16,10 +16,11 @@
 {{- end }}
 
 {{- define "features.integrations.metrics.include" }}
+{{- $values := dict "Values" .Values.integrations "Files" $.Subcharts.integrations.Files "Release" $.Release }}
 {{- $destinations := include "features.integrations.destinations.metrics" . | fromYamlArray }}
-{{- $integrations := include "feature.integrations.configured.metrics" (dict "Values" .Values.integrations) | fromYamlArray }}
+{{- $integrations := include "feature.integrations.configured.metrics" $values | fromYamlArray }}
 {{- range $integrationType := $integrations }}
-  {{- include (printf "integrations.%s.module.metrics" $integrationType) (dict "Values" $.Values.integrations "Files" $.Subcharts.integrations.Files) | indent 0 }}
+  {{- include (printf "integrations.%s.module.metrics" $integrationType) $values | indent 0 }}
 {{ include "helper.alloy_name" $integrationType }}_integration "integration" {
   metrics_destinations = [
     {{ include "destinations.alloy.targets" (dict "destinations" $.Values.destinations "names" $destinations "type" "metrics" "ecosystem" "prometheus") | indent 4 | trim }}
@@ -29,10 +30,11 @@
 {{- end }}
 
 {{- define "features.integrations.logs.include" }}
+{{- $values := dict "Values" .Values.integrations "Files" $.Subcharts.integrations.Files "Release" $.Release }}
 {{- $destinations := include "features.integrations.destinations.logs" . | fromYamlArray }}
-{{- $integrations := include "feature.integrations.configured.logs" (dict "Values" .Values.integrations) | fromYamlArray }}
+{{- $integrations := include "feature.integrations.configured.logs" $values | fromYamlArray }}
 {{- range $integrationType := $integrations }}
-  {{- include (printf "integrations.%s.module.metrics" $integrationType) (dict "Values" $.Values.integrations "Files" $.Subcharts.integrations.Files) | indent 0 }}
+  {{- include (printf "integrations.%s.module.metrics" $integrationType) $values | indent 0 }}
 {{ include "helper.alloy_name" $integrationType }}_integration "integration" {
   logs_destinations = [
     {{ include "destinations.alloy.targets" (dict "destinations" $.Values.destinations "names" $destinations "type" "logs" "ecosystem" "loki") | indent 4 | trim }}

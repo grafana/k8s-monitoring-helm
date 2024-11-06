@@ -34,13 +34,14 @@ tests:
               argument "metrics_destinations" {
                 comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
               }
+          
               import.git "kubernetes" {
                 repository = "https://github.com/grafana/alloy-modules.git"
                 revision = "main"
                 path = "modules/kubernetes/core/metrics.alloy"
                 pull_frequency = "15m"
               }
-            
+          
               kubernetes.kubelet "scrape" {
                 clustering = true
                 keep_metrics = "up|container_cpu_usage_seconds_total|kubelet_certificate_manager_client_expiration_renew_errors|kubelet_certificate_manager_client_ttl_seconds|kubelet_certificate_manager_server_ttl_seconds|kubelet_cgroup_manager_duration_seconds_bucket|kubelet_cgroup_manager_duration_seconds_count|kubelet_node_config_error|kubelet_node_name|kubelet_pleg_relist_duration_seconds_bucket|kubelet_pleg_relist_duration_seconds_count|kubelet_pleg_relist_interval_seconds_bucket|kubelet_pod_start_duration_seconds_bucket|kubelet_pod_start_duration_seconds_count|kubelet_pod_worker_duration_seconds_bucket|kubelet_pod_worker_duration_seconds_count|kubelet_running_container_count|kubelet_running_containers|kubelet_running_pod_count|kubelet_running_pods|kubelet_runtime_operations_errors_total|kubelet_runtime_operations_total|kubelet_server_expiration_renew_errors|kubelet_volume_stats_available_bytes|kubelet_volume_stats_capacity_bytes|kubelet_volume_stats_inodes|kubelet_volume_stats_inodes_used|kubernetes_build_info|namespace_workload_pod|rest_client_requests_total|storage_operation_duration_seconds_count|storage_operation_errors_total|volume_manager_total_volumes"
@@ -48,7 +49,7 @@ tests:
                 max_cache_size = 100000
                 forward_to = argument.metrics_destinations.value
               }
-            
+          
               kubernetes.resources "scrape" {
                 clustering = true
                 job_label = "integrations/kubernetes/resources"
@@ -57,7 +58,7 @@ tests:
                 max_cache_size = 100000
                 forward_to = argument.metrics_destinations.value
               }
-            
+          
               kubernetes.cadvisor "scrape" {
                 clustering = true
                 keep_metrics = "up|container_cpu_cfs_periods_total|container_cpu_cfs_throttled_periods_total|container_cpu_usage_seconds_total|container_fs_reads_bytes_total|container_fs_reads_total|container_fs_writes_bytes_total|container_fs_writes_total|container_memory_cache|container_memory_rss|container_memory_swap|container_memory_working_set_bytes|container_network_receive_bytes_total|container_network_receive_packets_dropped_total|container_network_receive_packets_total|container_network_transmit_bytes_total|container_network_transmit_packets_dropped_total|container_network_transmit_packets_total|machine_memory_bytes"
@@ -65,7 +66,7 @@ tests:
                 max_cache_size = 100000
                 forward_to = [prometheus.relabel.cadvisor.receiver]
               }
-            
+          
               prometheus.relabel "cadvisor" {
                 max_cache_size = 100000
                 // Drop empty container labels, addressing https://github.com/google/cadvisor/issues/2688
@@ -138,30 +139,30 @@ tests:
                 }
                 forward_to = argument.metrics_destinations.value
               }
-            
+          
               import.git "kube_state_metrics" {
                 repository = "https://github.com/grafana/alloy-modules.git"
                 revision = "main"
                 path = "modules/kubernetes/kube-state-metrics/metrics.alloy"
                 pull_frequency = "15m"
               }
-            
+          
               kube_state_metrics.kubernetes "targets" {
                 label_selectors = [
                   "app.kubernetes.io/name=kube-state-metrics",
                   "release=RELEASE-NAME",
                 ]
               }
-            
+          
               discovery.relabel "kube_state_metrics" {
                 targets = kube_state_metrics.kubernetes.targets.output
-            
+          
                 rule {
                   action = "labeldrop"
                   regex = "source"
                 }
               }
-
+          
               kube_state_metrics.scrape "metrics" {
                 targets = discovery.relabel.kube_state_metrics.output
                 clustering = true
@@ -170,10 +171,10 @@ tests:
                 max_cache_size = 100000
                 forward_to = [prometheus.relabel.kube_state_metrics.receiver]
               }
-            
+          
               prometheus.relabel "kube_state_metrics" {
                 max_cache_size = 100000
-            
+          
                 rule {
                   source_labels = ["namespace"]
                   regex = "private"
@@ -188,14 +189,14 @@ tests:
                 path = "modules/system/node-exporter/metrics.alloy"
                 pull_frequency = "15m"
               }
-            
+          
               node_exporter.kubernetes "targets" {
                 label_selectors = [
                   "app.kubernetes.io/name=node-exporter",
                   "release=RELEASE-NAME",
                 ]
               }
-            
+          
               discovery.relabel "node_exporter" {
                 targets = node_exporter.kubernetes.targets.output
                 rule {
@@ -203,13 +204,13 @@ tests:
                   action = "replace"
                   target_label = "instance"
                 }
-
+          
                 rule {
                   target_label = "color"
                   replacement = "red"
                 }
               }
-            
+          
               node_exporter.scrape "metrics" {
                 targets = discovery.relabel.node_exporter.output
                 job_label = "integrations/node_exporter"
@@ -219,36 +220,45 @@ tests:
                 max_cache_size = 100000
                 forward_to = argument.metrics_destinations.value
               }
-            
-              import.git "windows_exporter" {
-                repository = "https://github.com/grafana/alloy-modules.git"
-                revision = "main"
-                path = "modules/system/node-exporter/metrics.alloy"
-                pull_frequency = "15m"
+          
+              discovery.kubernetes "windows_exporter_pods" {
+                role = "pod"
+                namespaces {
+                  names = ["NAMESPACE"]
+                }
+                selectors {
+                  role = "pod"
+                  label = "app.kubernetes.io/name=windows-exporter,release=RELEASE-NAME"
+                }
               }
-            
-              windows_exporter.kubernetes "targets" {
-                label_selectors = [
-                  "app.kubernetes.io/name=windows-exporter",
-                  "release=RELEASE-NAME",
-                ]
-              }
-            
+          
               discovery.relabel "windows_exporter" {
-                targets = windows_exporter.kubernetes.targets.output
+                targets = discovery.kubernetes.windows_exporter_pods.output
                 rule {
                   source_labels = ["__meta_kubernetes_pod_node_name"]
                   action = "replace"
                   target_label = "instance"
                 }
               }
-            
-              windows_exporter.scrape "metrics" {
-                targets = discovery.relabel.windows_exporter.output
-                clustering = true
-                keep_metrics = "up|windows_.*|node_cpu_seconds_total|node_filesystem_size_bytes|node_filesystem_avail_bytes|container_cpu_usage_seconds_total"
+          
+              prometheus.scrape "windows_exporter" {
+                job_name   = "integrations/windows-exporter"
+                targets  = discovery.relabel.windows_exporter.output
                 scrape_interval = "60s"
+                clustering {
+                  enabled = true
+                }
+                forward_to = [prometheus.relabel.windows_exporter.receiver]
+              }
+          
+              prometheus.relabel "windows_exporter" {
                 max_cache_size = 100000
+                rule {
+                  source_labels = ["__name__"]
+                  regex = "up|windows_.*|node_cpu_seconds_total|node_filesystem_size_bytes|node_filesystem_avail_bytes|container_cpu_usage_seconds_total"
+                  action = "keep"
+                }
                 forward_to = argument.metrics_destinations.value
               }
             }
+          

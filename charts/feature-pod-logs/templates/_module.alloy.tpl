@@ -19,3 +19,5 @@ declare "pod_logs" {
   {{- include "feature.podLogs.processing.alloy" . | nindent 2 }}
 }
 {{- end -}}
+
+{{- define "feature.podLogs.alloyModules" }}{{- end }}

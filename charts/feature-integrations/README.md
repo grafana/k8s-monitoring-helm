@@ -101,5 +101,7 @@ Actual integration testing in a live environment should be done in the main [k8s
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
+| global.alloyModules.branch | string | `"main"` | If using git, the branch of the git repository to use. |
+| global.alloyModules.source | string | `"git"` | The source of the Alloy modules. The valid options are "configMap" or "git" |
 | global.maxCacheSize | int | `100000` | Sets the max_cache_size for every prometheus.relabel component. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)) This should be at least 2x-5x your largest scrape target or samples appended rate. |
 | global.scrapeInterval | string | `"60s"` | How frequently to scrape metrics. |

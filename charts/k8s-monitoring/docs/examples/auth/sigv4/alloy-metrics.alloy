@@ -56,11 +56,14 @@ declare "cluster_metrics" {
   argument "metrics_destinations" {
     comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
   }
-  import.git "kubernetes" {
-    repository = "https://github.com/grafana/alloy-modules.git"
-    revision = "main"
-    path = "modules/kubernetes/core/metrics.alloy"
-    pull_frequency = "15m"
+  
+  remote.kubernetes.configmap "kubernetes" {
+    name = "ko-alloy-module-kubernetes"
+    namespace = "default"
+  }
+  
+  import.string "kubernetes" {
+    content = remote.kubernetes.configmap.kubernetes.data["core_metrics.alloy"]
   }  
   
   kubernetes.kubelet "scrape" {
@@ -161,11 +164,13 @@ declare "cluster_metrics" {
     forward_to = argument.metrics_destinations.value
   }          
   
-  import.git "kube_state_metrics" {
-    repository = "https://github.com/grafana/alloy-modules.git"
-    revision = "main"
-    path = "modules/kubernetes/kube-state-metrics/metrics.alloy"
-    pull_frequency = "15m"
+  remote.kubernetes.configmap "kube_state_metrics" {
+    name = "ko-alloy-module-kubernetes"
+    namespace = "default"
+  }
+  
+  import.string "kube_state_metrics" {
+    content = remote.kubernetes.configmap.kube_state_metrics.data["kube-state-metrics_metrics.alloy"]
   }
   
   kube_state_metrics.kubernetes "targets" {
@@ -184,11 +189,13 @@ declare "cluster_metrics" {
     forward_to = argument.metrics_destinations.value
   }  
   
-  import.git "node_exporter" {
-    repository = "https://github.com/grafana/alloy-modules.git"
-    revision = "main"
-    path = "modules/system/node-exporter/metrics.alloy"
-    pull_frequency = "15m"
+  remote.kubernetes.configmap "node_exporter" {
+    name = "ko-alloy-module-system"
+    namespace = "default"
+  }
+  
+  import.string "node_exporter" {
+    content = remote.kubernetes.configmap.node_exporter.data["node-exporter_metrics.alloy"]
   }
   
   node_exporter.kubernetes "targets" {
@@ -217,22 +224,19 @@ declare "cluster_metrics" {
     forward_to = argument.metrics_destinations.value
   }  
   
-  import.git "windows_exporter" {
-    repository = "https://github.com/grafana/alloy-modules.git"
-    revision = "main"
-    path = "modules/system/node-exporter/metrics.alloy"
-    pull_frequency = "15m"
-  }
-  
-  windows_exporter.kubernetes "targets" {
-    label_selectors = [
-      "app.kubernetes.io/name=windows-exporter",
-      "release=ko",
-    ]
+  discovery.kubernetes "windows_exporter_pods" {
+    role = "pod"
+    namespaces {
+      names = ["default"]
+    }
+    selectors {
+      role = "pod"
+      label = "app.kubernetes.io/name=windows-exporter,release=ko"
+    }
   }
   
   discovery.relabel "windows_exporter" {
-    targets = windows_exporter.kubernetes.targets.output
+    targets = discovery.kubernetes.windows_exporter_pods.output
     rule {
       source_labels = ["__meta_kubernetes_pod_node_name"]
       action = "replace"
@@ -240,12 +244,23 @@ declare "cluster_metrics" {
     }
   }
   
-  windows_exporter.scrape "metrics" {
-    targets = discovery.relabel.windows_exporter.output
-    clustering = true
-    keep_metrics = "up|windows_.*|node_cpu_seconds_total|node_filesystem_size_bytes|node_filesystem_avail_bytes|container_cpu_usage_seconds_total"
+  prometheus.scrape "windows_exporter" {
+    job_name   = "integrations/windows-exporter"
+    targets  = discovery.relabel.windows_exporter.output
     scrape_interval = "60s"
+    clustering {
+      enabled = true
+    }
+    forward_to = [prometheus.relabel.windows_exporter.receiver]
+  }
+  
+  prometheus.relabel "windows_exporter" {
     max_cache_size = 100000
+    rule {
+      source_labels = ["__name__"]
+      regex = "up|windows_.*|node_cpu_seconds_total|node_filesystem_size_bytes|node_filesystem_avail_bytes|container_cpu_usage_seconds_total"
+      action = "keep"
+    }
     forward_to = argument.metrics_destinations.value
   }  
 }

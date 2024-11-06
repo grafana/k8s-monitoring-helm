@@ -5,12 +5,7 @@ declare "cluster_metrics" {
   }
 
   {{- if or .Values.cadvisor.enabled .Values.kubelet.enabled .Values.kubeletResource.enabled (or .Values.apiServer.enabled (and .Values.controlPlane.enabled (not (eq .Values.apiServer.enabled false)))) }}
-  import.git "kubernetes" {
-    repository = "https://github.com/grafana/alloy-modules.git"
-    revision = "main"
-    path = "modules/kubernetes/core/metrics.alloy"
-    pull_frequency = "15m"
-  }
+  {{- include "alloyModules.load" (deepCopy $ | merge (dict "name" "kubernetes" "path" "modules/kubernetes/core/metrics.alloy")) | nindent 2 }}
   {{- end }}
   {{- include "feature.clusterMetrics.kubelet.alloy" . | indent 2 }}
   {{- include "feature.clusterMetrics.kubeletResource.alloy" . | indent 2 }}
@@ -25,3 +20,15 @@ declare "cluster_metrics" {
   {{- include "feature.clusterMetrics.kepler.alloy" . | indent 2 }}
 }
 {{- end -}}
+
+{{- define "feature.clusterMetrics.alloyModules" }}
+{{- if or .Values.cadvisor.enabled .Values.kubelet.enabled .Values.kubeletResource.enabled (or .Values.apiServer.enabled (and .Values.controlPlane.enabled (not (eq .Values.apiServer.enabled false)))) }}
+- modules/kubernetes/core/metrics.alloy
+{{- end }}
+{{- if (index .Values "kube-state-metrics").enabled }}
+- modules/kubernetes/kube-state-metrics/metrics.alloy
+{{- end }}
+{{- if (index .Values "node-exporter").enabled }}
+- modules/system/node-exporter/metrics.alloy
+{{- end }}
+{{- end }}

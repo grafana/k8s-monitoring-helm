@@ -11,13 +11,7 @@
 {{- if (index .Values "kube-state-metrics").enabled }}
 {{- $metricAllowList := include "feature.clusterMetrics.kube_state_metrics.allowList" . }}
 {{- $metricDenyList := (index .Values "kube-state-metrics").metricsTuning.excludeMetrics }}
-
-import.git "kube_state_metrics" {
-  repository = "https://github.com/grafana/alloy-modules.git"
-  revision = "main"
-  path = "modules/kubernetes/kube-state-metrics/metrics.alloy"
-  pull_frequency = "15m"
-}
+{{- include "alloyModules.load" (deepCopy $ | merge (dict "name" "kube_state_metrics" "path" "modules/kubernetes/kube-state-metrics/metrics.alloy")) | nindent 0 }}
 
 kube_state_metrics.kubernetes "targets" {
   label_selectors = [
