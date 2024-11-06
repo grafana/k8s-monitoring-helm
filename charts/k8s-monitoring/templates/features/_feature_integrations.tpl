@@ -25,23 +25,6 @@
 {{- end }}
 {{- end }}
 
-<<<<<<< HEAD
-{{- define "features.integrations.logs.include" }}
-{{- $values := dict "Values" .Values.integrations "Files" $.Subcharts.integrations.Files "Release" $.Release }}
-{{- $destinations := include "features.integrations.destinations.logs" . | fromYamlArray }}
-{{- $integrations := include "feature.integrations.configured.logs" $values | fromYamlArray }}
-{{- range $integrationType := $integrations }}
-  {{- include (printf "integrations.%s.module.metrics" $integrationType) $values | indent 0 }}
-{{ include "helper.alloy_name" $integrationType }}_integration "integration" {
-  logs_destinations = [
-    {{ include "destinations.alloy.targets" (dict "destinations" $.Values.destinations "names" $destinations "type" "logs" "ecosystem" "loki") | indent 4 | trim }}
-  ]
-}
-{{- end }}
-{{- end }}
-
-=======
->>>>>>> 855eebe1 (Add log handling to the mysql integration)
 {{- define "features.integrations.include" }}
 {{- if eq .collectorName .Values.integrations.collector }}
   {{ include "features.integrations.metrics.include" . | indent 0 }}
