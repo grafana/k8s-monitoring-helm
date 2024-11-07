@@ -55,12 +55,12 @@ jobs:
           chart="$(basename "$(dirname "${{ matrix.config }}")")"
           depName="$(basename "${{ matrix.config }}" | sed -e "s/.updatecli-\(.*\)\.yaml/\1/")"
           versionPath="$(yq eval '.targets.*.spec.key' "${{ matrix.config }}" | head -n 1 | cut -c2-)"
-          version="$(yq eval "${versionPath}" "$(dirname "${{ matrix.config }}")/Chart.yaml")"
+          oldVersion="$(yq eval "${versionPath}" "$(dirname "${{ matrix.config }}")/Chart.yaml")"
           {
             echo "title=$(yq eval ".name" "${{ matrix.config }}")"
             echo "branch=chore/update-${chart}-${depName}"
-            echo "depChart=$(dirname "${{ matrix.config }}")/charts/${depName}-${version}.tgz"
-            echo "version=${version}" >> "${GITHUB_OUTPUT}"
+            echo "depChart=$(dirname "${{ matrix.config }}")/charts/${depName}-${oldVersion}.tgz"
+            echo "oldVersion=${oldVersion}" >> "${GITHUB_OUTPUT}"
           } >> "${GITHUB_OUTPUT}"
 
       - name: Run Updatecli
@@ -70,6 +70,12 @@ jobs:
           if ! git diff --exit-code "${{ steps.get-details.outputs.depChart }}" > /dev/null; then
             echo "changed=true" >> "${GITHUB_OUTPUT}"
           fi
+
+      - name: Get updated details
+        id: get-updated-details
+        run: |
+          versionPath="$(yq eval '.targets.*.spec.key' "${{ matrix.config }}" | head -n 1 | cut -c2-)"
+          echo "newVersion=$(yq eval "${versionPath}" "$(dirname "${{ matrix.config }}")/Chart.yaml")" >> "${GITHUB_OUTPUT}"
 
       - name: Install Helm
         if: steps.update-dependency.outputs.changed == 'true'
@@ -85,12 +91,12 @@ jobs:
         if: steps.update-dependency.outputs.changed == 'true'
         uses: peter-evans/create-pull-request@v7
         with:
-          title: "[dependency] ${{ steps.get-details.outputs.title }} to ${{ steps.get-details.outputs.version }}"
-          body: ${{ steps.get-details.outputs.title }} to ${{ steps.get-details.outputs.version }}
+          title: "[dependency] ${{ steps.get-details.outputs.title }} to ${{ steps.get-updated-details.outputs.newVersion }}"
+          body: ${{ steps.get-details.outputs.title }} to ${{ steps.get-updated-details.outputs.newVersion }}
           base: main
           author: "${{ github.actor }} <${{ github.actor }}@users.noreply.github.com>"
           committer: "GitHub <noreply@github.com>"
-          commit-message: Update ${{ steps.get-details.outputs.title }} to ${{ steps.get-details.outputs.version }}
+          commit-message: Update ${{ steps.get-details.outputs.title }} to ${{ steps.get-updated-details.outputs.newVersion }}
           labels: dependencies
           branch: ${{ steps.get-details.outputs.branch }}
           delete-branch: true
