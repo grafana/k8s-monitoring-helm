@@ -11,7 +11,7 @@ declare "cluster_events" {
     namespaces = {{ .Values.namespaces | toJson }}
   {{- end }}
 {{- if .Values.extraProcessingStages }}
-    forward_to = loki.process.cluster_events.receiver
+    forward_to = [loki.process.cluster_events.receiver]
   }
 
   loki.process "cluster_events" {
