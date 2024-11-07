@@ -33,6 +33,21 @@ loki.write {{ include "helper.alloy_name" .name | quote }} {
 {{- else if eq (include "secrets.authType" .) "bearerToken" }}
     bearer_token = {{ include "secrets.read" (dict "object" . "key" "auth.bearerToken") }}
 {{- end }}
+
+{{- if .tls }}
+    tls_config {
+      insecure_skip_verify = {{ .tls.insecureSkipVerify | default false }}
+      {{- if eq (include "secrets.usesSecret" (dict "object" . "key" "tls.ca")) "true" }}
+      ca_pem = {{ include "secrets.read" (dict "object" . "key" "tls.ca" "nonsensitive" true) }}
+      {{- end }}
+      {{- if eq (include "secrets.usesKubernetesSecret" .) "true" }}
+      cert_pem = {{ include "secrets.read" (dict "object" . "key" "tls.cert" "nonsensitive" true) }}
+      {{- end }}
+      {{- if eq (include "secrets.usesKubernetesSecret" .) "true" }}
+      key_pem = {{ include "secrets.read" (dict "object" . "key" "tls.key") }}
+      {{- end }}
+    }
+{{- end }}
   }
   external_labels = {
     cluster = {{ $.Values.cluster.name | quote }},
@@ -57,6 +72,9 @@ loki.write {{ include "helper.alloy_name" .name | quote }} {
 - auth.username
 - auth.password
 - auth.bearerToken
+- tls.ca
+- tls.cert
+- tls.key
 {{- end -}}
 
 {{- define "destinations.loki.alloy.loki.logs.target" }}loki.write.{{ include "helper.alloy_name" .name }}.receiver{{ end -}}
