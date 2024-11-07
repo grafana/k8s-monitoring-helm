@@ -360,11 +360,27 @@ otelcol.processor.filter "default" {
 {{- if .Values.logs.enabled }}
     logs = [otelcol.processor.batch.batch_processor.input]
 {{- end }}
-{{- if .Values.traces.enabled }}
+
+{{- if and .Values.traces.enabled .Values.receivers.processors.otlp_traces_to_logs.enabled }}
+    traces = [otelcol.connector.spanlogs.default.input, otelcol.processor.batch.batch_processor.input]
+{{- else if .Values.receivers.processors.otlp_traces_to_logs.enabled }}
+    traces = [otelcol.connector.spanlogs.default.input]
+{{- else if .Values.traces.enabled }}
     traces = [otelcol.processor.batch.batch_processor.input]
 {{- end }}
   }
 }
+
+{{- if .Values.receivers.processors.otlp_traces_to_logs.enabled }}
+otelcol.connector.spanlogs "default" {
+  roots           = true
+  spans           = true
+  processes       = true
+  output {
+    logs = [otelcol.processor.batch.batch_processor.input]
+  }
+}
+{{- end }}
 
 otelcol.processor.batch "batch_processor" {
 {{- with .Values.receivers.processors.batch }}
