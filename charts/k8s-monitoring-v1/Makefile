@@ -92,6 +92,9 @@ else
 	docker run --platform linux/amd64 --rm --volume $(shell pwd):/src shellspec/shellspec -c /src/test -s /bin/sh
 endif
 
+Chart.lock: Chart.yaml
+	helm dependency update .
+
 #
 # Example targets
 #
@@ -127,7 +130,7 @@ alloy_configs = $(shell \
 examples: $(EXAMPLE_OUTPUT_FILES) $(EXAMPLE_ALLOY_FILES)
 
 .PHONY: build
-build: README.md examples values.schema.json $(UPDATECLI_FILES)
+build: Chart.lock README.md examples values.schema.json $(UPDATECLI_FILES)
 
 .PHONY: clean
 clean:
