@@ -155,7 +155,7 @@ Actual integration testing in a live environment should be done in the main [k8s
 |------------|------|---------|
 | https://prometheus-community.github.io/helm-charts | kube-state-metrics | 5.25.1 |
 | https://prometheus-community.github.io/helm-charts | node-exporter(prometheus-node-exporter) | 4.39.0 |
-| https://prometheus-community.github.io/helm-charts | windows-exporter(prometheus-windows-exporter) | 0.5.1 |
+| https://prometheus-community.github.io/helm-charts | windows-exporter(prometheus-windows-exporter) | 0.7.1 |
 | https://sustainable-computing-io.github.io/kepler-helm-chart | kepler | 0.5.9 |
 <!-- markdownlint-enable no-bare-urls -->
 
