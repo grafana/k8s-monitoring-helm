@@ -71,7 +71,7 @@ otelcol.exporter.otlphttp {{ include "helper.alloy_name" .name | quote }} {
     auth = otelcol.auth.bearer.{{ include "helper.alloy_name" .name }}.handler
 {{- end }}
     headers = {
-{{- if eq (include "secrets.usesKubernetesSecret" .) "true" }}
+{{- if eq (include "secrets.usesSecret" (dict "object" . "key" "tenantId")) "true" }}
       "X-Scope-OrgID" = {{ include "secrets.read" (dict "object" . "key" "tenantId" "nonsensitive" true) }},
 {{- end }}
 {{- range $key, $value := .extraHeaders }}
@@ -92,13 +92,13 @@ otelcol.exporter.otlphttp {{ include "helper.alloy_name" .name | quote }} {
     tls {
       insecure = {{ .tls.insecure | default false }}
       insecure_skip_verify = {{ .tls.insecureSkipVerify | default false }}
-      {{- if eq (include "secrets.usesKubernetesSecret" .) "true" }}
+      {{- if eq (include "secrets.usesSecret" (dict "object" . "key" "tls.ca")) "true" }}
       ca_pem = {{ include "secrets.read" (dict "object" . "key" "tls.ca" "nonsensitive" true) }}
       {{- end }}
-      {{- if eq (include "secrets.usesKubernetesSecret" .) "true" }}
+      {{- if eq (include "secrets.usesSecret" (dict "object" . "key" "tls.cert")) "true" }}
       cert_pem = {{ include "secrets.read" (dict "object" . "key" "tls.cert" "nonsensitive" true) }}
       {{- end }}
-      {{- if eq (include "secrets.usesKubernetesSecret" .) "true" }}
+      {{- if eq (include "secrets.usesSecret" (dict "object" . "key" "tls.key")) "true" }}
       key_pem = {{ include "secrets.read" (dict "object" . "key" "tls.key") }}
       {{- end }}
     }

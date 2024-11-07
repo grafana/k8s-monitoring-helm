@@ -8,8 +8,9 @@
 {{/* Inputs: . (user of the secret, needs name, secret, auth) */}}
 {{- define "secrets.secretType" }}
 {{- if hasKey . "secret" }}
-  {{- if .secret.embed -}}embedded
+  {{- if eq .secret.embed true -}}embedded
   {{- else if eq .secret.create false -}}external
+  {{- else }}create
   {{- end }}
 {{- else -}}
 create

@@ -14,7 +14,7 @@ prometheus.remote_write {{ include "helper.alloy_name" .name | quote }} {
 {{- end }}
     headers = {
 {{- if ne (include "secrets.authType" .) "sigv4" }}
-  {{- if eq (include "secrets.usesKubernetesSecret" .) "true" }}
+  {{- if eq (include "secrets.usesSecret" (dict "object" . "key" "tenantId")) "true" }}
       "X-Scope-OrgID" = {{ include "secrets.read" (dict "object" . "key" "tenantId" "nonsensitive" true) }},
   {{- end }}
 {{- end }}
@@ -57,10 +57,10 @@ prometheus.remote_write {{ include "helper.alloy_name" .name | quote }} {
       {{- if eq (include "secrets.usesSecret" (dict "object" . "key" "tls.ca")) "true" }}
       ca_pem = {{ include "secrets.read" (dict "object" . "key" "tls.ca" "nonsensitive" true) }}
       {{- end }}
-      {{- if eq (include "secrets.usesKubernetesSecret" .) "true" }}
+      {{- if eq (include "secrets.usesSecret" (dict "object" . "key" "tls.cert")) "true" }}
       cert_pem = {{ include "secrets.read" (dict "object" . "key" "tls.cert" "nonsensitive" true) }}
       {{- end }}
-      {{- if eq (include "secrets.usesKubernetesSecret" .) "true" }}
+      {{- if eq (include "secrets.usesSecret" (dict "object" . "key" "tls.key")) "true" }}
       key_pem = {{ include "secrets.read" (dict "object" . "key" "tls.key") }}
       {{- end }}
     }

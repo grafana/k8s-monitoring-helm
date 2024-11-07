@@ -12,7 +12,7 @@ loki.write {{ include "helper.alloy_name" .name | quote }} {
 {{- else }}
     url = {{ .url | quote }} 
 {{- end }}
-{{- if eq (include "secrets.usesKubernetesSecret" .) "true" }}
+{{- if eq (include "secrets.usesSecret" (dict "object" . "key" "tenantId")) "true" }}
     tenant_id = {{ include "secrets.read" (dict "object" . "key" "tenantId" "nonsensitive" true) }}
 {{- end }}
 {{- if or .extraHeaders .extraHeadersFrom }}
