@@ -23,7 +23,7 @@
 {{- define "features.selfReporting.validate" }}{{ end }}
 {{- define "features.selfReporting.include" }}
 {{- if eq (include "features.selfReporting.enabled" .) "true" }}
-{{- $destinations := include "destinations.get" (dict "destinations" $.Values.destinations "type" "metrics" "ecosystem" "otlp" "filter" $.Values.applicationObservability.destinations) | fromYamlArray -}}
+{{- $destinations := include "destinations.get" (dict "destinations" $.Values.destinations "type" "metrics" "ecosystem" "prometheus" "filter" $.Values.applicationObservability.destinations) | fromYamlArray -}}
 
 // Self Reporting
 prometheus.exporter.unix "kubernetes_monitoring_telemetry" {
@@ -75,7 +75,7 @@ prometheus.relabel "kubernetes_monitoring_telemetry" {
 self-reporting-metric.prom: |
   # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart
   # TYPE grafana_kubernetes_monitoring_build_info gauge
-  grafana_kubernetes_monitoring_build_info{version="{{ .Chart.Version }}", namespace="{{ .Release.Namespace }}", platform="{{ .Values.global.platform }}"} 1
+  grafana_kubernetes_monitoring_build_info{version="{{ .Chart.Version }}", namespace="{{ .Release.Namespace }}"{{- if .Values.global.platform }}, platform="{{ .Values.global.platform }}"{{ end }}} 1
   # HELP grafana_kubernetes_monitoring_feature_info A metric to report the enabled features of the Kubernetes Monitoring Helm chart
   # TYPE grafana_kubernetes_monitoring_feature_info gauge
 {{- range $feature := include "features.list.enabled" . | fromYamlArray }}
