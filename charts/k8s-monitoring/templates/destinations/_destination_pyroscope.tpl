@@ -47,6 +47,7 @@ pyroscope.write {{ include "helper.alloy_name" .name | quote }} {
 
   external_labels = {
     cluster = {{ $.Values.cluster.name | quote }},
+    k8s.cluster.name = {{ $.Values.cluster.name | quote }},
   }
 }
 {{- end }}

@@ -30,14 +30,17 @@ otelcol.processor.transform {{ include "helper.alloy_name" .name | quote }} {
   error_mode = "ignore"
   metric_statements {
     context = "resource"
+    statements = ["set(attributes[\"cluster\"], \"{{ $.Values.cluster.name }}\") where attributes[\"cluster\"] == nil"]
     statements = ["set(attributes[\"k8s.cluster.name\"], \"{{ $.Values.cluster.name }}\") where attributes[\"k8s.cluster.name\"] == nil"]
   }
   log_statements {
     context = "resource"
+    statements = ["set(attributes[\"cluster\"], \"{{ $.Values.cluster.name }}\") where attributes[\"cluster\"] == nil"]
     statements = ["set(attributes[\"k8s.cluster.name\"], \"{{ $.Values.cluster.name }}\") where attributes[\"k8s.cluster.name\"] == nil"]
   }
   trace_statements {
     context = "resource"
+    statements = ["set(attributes[\"cluster\"], \"{{ $.Values.cluster.name }}\") where attributes[\"cluster\"] == nil"]
     statements = ["set(attributes[\"k8s.cluster.name\"], \"{{ $.Values.cluster.name }}\") where attributes[\"k8s.cluster.name\"] == nil"]
   }
 
