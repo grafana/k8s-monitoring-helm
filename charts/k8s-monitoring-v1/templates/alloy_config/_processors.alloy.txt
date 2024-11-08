@@ -47,7 +47,7 @@ otelcol.processor.resourcedetection "default" {
 {{- if .Values.logs.enabled }}
     logs    = [otelcol.processor.k8sattributes.default.input]
 {{- end }}
-{{- if .Values.traces.enabled }}
+{{- if or .Values.traces.enabled .Values.receivers.processors.otlp_traces_to_logs.enabled }}
     traces  = [otelcol.processor.k8sattributes.default.input]
 {{- end }}
   }
@@ -86,7 +86,7 @@ otelcol.processor.k8sattributes "default" {
 {{- if .Values.logs.enabled }}
     logs    = [otelcol.processor.attributes.default.input]
 {{- end }}
-{{- if .Values.traces.enabled }}
+{{- if or .Values.traces.enabled .Values.receivers.processors.otlp_traces_to_logs.enabled }}
     traces  = [otelcol.processor.attributes.default.input]
 {{- end }}
   }
@@ -155,10 +155,10 @@ otelcol.processor.attributes "default" {
 {{- if .Values.logs.enabled }}
     logs    = [otelcol.processor.transform.default.input]
 {{- end }}
-{{- if .Values.traces.enabled }}
+{{- if or .Values.traces.enabled .Values.receivers.processors.otlp_traces_to_logs.enabled }}
     traces  = [
       otelcol.processor.transform.default.input,
-    {{- if and .Values.metrics.enabled .Values.receivers.grafanaCloudMetrics.enabled }}
+    {{- if and .Values.metrics.enabled .Values.traces.enabled .Values.receivers.grafanaCloudMetrics.enabled }}
       otelcol.connector.host_info.default.input,
     {{- end }}
     ]
@@ -257,7 +257,7 @@ otelcol.processor.transform "default" {
   }
 {{- end }}
 {{- end }}
-{{- if .Values.traces.enabled }}
+{{- if or .Values.traces.enabled .Values.receivers.processors.otlp_traces_to_logs.enabled }}
   trace_statements {
     context = "resource"
     statements = [
@@ -298,7 +298,7 @@ otelcol.processor.transform "default" {
 {{- if .Values.logs.enabled }}
     logs = [otelcol.processor.filter.default.input]
 {{- end }}
-{{- if .Values.traces.enabled }}
+{{- if or .Values.traces.enabled .Values.receivers.processors.otlp_traces_to_logs.enabled }}
     traces = [otelcol.processor.filter.default.input]
 {{- end }}
   }
@@ -334,7 +334,7 @@ otelcol.processor.filter "default" {
     ]
   }
 {{- end }}
-{{- if and .Values.traces.enabled (or .Values.traces.receiver.filters.span .Values.traces.receiver.filters.spanevent) }}
+{{- if and (or .Values.traces.enabled .Values.receivers.processors.otlp_traces_to_logs.enabled) (or .Values.traces.receiver.filters.span .Values.traces.receiver.filters.spanevent) }}
   traces {
 {{- if .Values.traces.receiver.filters.span }}
     span = [
