@@ -44,7 +44,7 @@ otelcol.receiver.otlp "receiver" {
 {{- if .Values.logs.enabled }}
     logs = [otelcol.processor.resourcedetection.default.input]
 {{- end }}
-{{- if .Values.traces.enabled }}
+{{- if or .Values.traces.enabled .Values.receivers.processors.otlp_traces_to_logs.enabled }}
     traces = [otelcol.processor.resourcedetection.default.input]
 {{- end }}
   }
