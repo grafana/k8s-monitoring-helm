@@ -204,7 +204,7 @@ tests:
               dataSource:
                 host: test-database-mysql.mysql.svc
                 auth:
-                  usernameFrom: "\"root\""
+                  usernameFrom: env(MYSQL_ROOT_USER)
                   passwordKey: mysql-root-password
             secret:
               create: false
@@ -231,7 +231,7 @@ tests:
             
               prometheus.exporter.mysql "test_database" {
                 data_source_name = string.format("%s:%s@(%s:%d)/",
-                  "root",
+                  env(MYSQL_ROOT_USER),
                   remote.kubernetes.secret.test_database.data["mysql-root-password"],
                   "test-database-mysql.mysql.svc",
                   3306,
