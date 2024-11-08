@@ -9,6 +9,12 @@ INTEGRATION_VALUES_FILES = $(shell find integrations -name "*-values.yaml" | sor
 INTEGRATION_DOCS_FILES = $(INTEGRATION_VALUES_FILES:integrations/%-values.yaml=./docs/integrations/%.md)
 INTEGRATION_SCHEMA_FILES = $(INTEGRATION_VALUES_FILES:integrations/%-values.yaml=./schema-mods/definitions/%-integration.schema.json)
 
+templates/secrets/_helpers.tpl: ../k8s-monitoring/templates/secrets/_helpers.tpl
+	cp $< $@
+
+templates/secrets/_secret.alloy.tpl: ../k8s-monitoring/templates/secrets/_secret.alloy.tpl
+	cp $< $@
+
 Chart.lock: Chart.yaml
 	helm dependency update .
 	touch Chart.lock # Ensure the timestamp is updated
@@ -67,13 +73,13 @@ endif
 
 .PHONY: clean
 clean:
-	rm -f README.md values.schema.json schema-mods/integration-list.json templates/_integration_types.tpl
+	rm -f README.md values.schema.json schema-mods/integration-list.json templates/_integration_types.tpl templates/secrets/_helpers.tpl templates/secrets/_secret.alloy.tpl
 	rm -f $(UPDATECLI_FILES)
 	rm -f $(INTEGRATION_SCHEMA_FILES)
 	rm -f $(INTEGRATION_DOCS_FILES)
 
 .PHONY: build
-build: README.md $(INTEGRATION_DOCS_FILES) Chart.lock values.schema.json templates/_integration_types.tpl $(UPDATECLI_FILES)
+build: README.md $(INTEGRATION_DOCS_FILES) Chart.lock values.schema.json templates/_integration_types.tpl templates/secrets/_helpers.tpl templates/secrets/_secret.alloy.tpl $(UPDATECLI_FILES)
 
 .PHONY: test
 test: build
