@@ -100,7 +100,13 @@ remote.kubernetes.secret.{{ include "helper.alloy_name" .object.name }}.data[{{ 
 {{/* Determines if the object will reference a secret value */}}
 {{/* Inputs: object (user of the secret, needs name, secret, auth), key (path to secret value), nonsensitive */}}
 {{- define "secrets.usesSecret" -}}
-{{- if eq (include "secrets.read" .) "" }}false{{- else -}}true{{- end -}}
+{{- $secretType := (include "secrets.secretType" .) }}
+{{- $ref := include "secrets.getSecretFromRef" . -}}
+{{- $value := include "secrets.getSecretValue" . -}}
+{{- if (not (eq $ref "")) }}false
+{{- else if eq $secretType "external" }}true
+{{- else if (eq $value "") }}false
+{{- else -}}true{{- end -}}
 {{- end -}}
 
 {{/* Determines if the object will reference a Kubernetes secret */}}
@@ -112,10 +118,10 @@ remote.kubernetes.secret.{{ include "helper.alloy_name" .object.name }}.data[{{ 
   {{- $usesK8sSecret := false }}
   {{- range $secret := include (printf "secrets.list.%s" .type) . | fromYamlArray }}
     {{- $ref := include "secrets.getSecretFromRef" (dict "object" $ "key" $secret) -}}
-    {{- $key := include "secrets.isSecretKeyDefined" (dict "object" $ "key" $secret) -}}
+    {{- $keyDefined := include "secrets.isSecretKeyDefined" (dict "object" $ "key" $secret) -}}
     {{- $value := include "secrets.getSecretValue" (dict "object" $ "key" $secret) -}}
     {{- if (eq $secretType "external") }}
-      {{- if eq $key "true" }}{{- $usesK8sSecret = true }}{{ break }}{{- end }}
+      {{- if eq $keyDefined "true" }}{{- $usesK8sSecret = true }}{{ break }}{{- end }}
     {{- else }}
       {{- if and $value (not $ref) }}{{- $usesK8sSecret = true }}{{ break }}{{- end }}
     {{- end }}
