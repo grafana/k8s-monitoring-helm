@@ -100,11 +100,11 @@ remote.kubernetes.secret.{{ include "helper.alloy_name" .object.name }}.data[{{ 
 {{/* Determines if the object will reference a secret value */}}
 {{/* Inputs: object (user of the secret, needs name, secret, auth), key (path to secret value), nonsensitive */}}
 {{- define "secrets.usesSecret" -}}
-{{- $secretType := (include "secrets.secretType" .) }}
+{{- $secretType := (include "secrets.secretType" .object) }}
 {{- $ref := include "secrets.getSecretFromRef" . -}}
 {{- $value := include "secrets.getSecretValue" . -}}
-{{- if (not (eq $ref "")) }}false
-{{- else if eq $secretType "external" }}true
+{{- if (not (eq $ref "")) }}true
+{{- else if (eq $secretType "external") }}true
 {{- else if (eq $value "") }}false
 {{- else -}}true{{- end -}}
 {{- end -}}

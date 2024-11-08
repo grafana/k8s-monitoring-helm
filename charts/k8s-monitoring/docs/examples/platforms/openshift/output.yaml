@@ -54,10 +54,10 @@ metadata:
   name: ko-kepler
   namespace: default
   labels:
-    helm.sh/chart: kepler-0.5.9
+    helm.sh/chart: kepler-0.5.11
     app.kubernetes.io/name: kepler
     app.kubernetes.io/component: exporter
-    app.kubernetes.io/version: "release-0.7.11"
+    app.kubernetes.io/version: "release-0.7.12"
     app.kubernetes.io/managed-by: Helm
 ---
 # Source: k8s-monitoring/charts/clusterMetrics/charts/kube-state-metrics/templates/serviceaccount.yaml
@@ -66,7 +66,7 @@ kind: ServiceAccount
 automountServiceAccountToken: true
 metadata:
   labels:    
-    helm.sh/chart: kube-state-metrics-5.25.1
+    helm.sh/chart: kube-state-metrics-5.26.0
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: kube-state-metrics
@@ -84,7 +84,7 @@ metadata:
   name: ko-node-exporter
   namespace: default
   labels:
-    helm.sh/chart: node-exporter-4.39.0
+    helm.sh/chart: node-exporter-4.42.0
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: node-exporter
@@ -101,13 +101,13 @@ metadata:
   name: ko-windows-exporter
   namespace: default
   labels:
-    helm.sh/chart: windows-exporter-0.5.1
+    helm.sh/chart: windows-exporter-0.7.1
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: windows-exporter
     app.kubernetes.io/name: windows-exporter
     app.kubernetes.io/instance: ko
-    app.kubernetes.io/version: "0.27.1"
+    app.kubernetes.io/version: "0.29.2"
     release: ko
 ---
 # Source: k8s-monitoring/charts/clusterMetrics/charts/windows-exporter/templates/config.yaml
@@ -117,13 +117,13 @@ metadata:
   name: ko-windows-exporter
   namespace: default
   labels:
-    helm.sh/chart: windows-exporter-0.5.1
+    helm.sh/chart: windows-exporter-0.7.1
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: windows-exporter
     app.kubernetes.io/name: windows-exporter
     app.kubernetes.io/instance: ko
-    app.kubernetes.io/version: "0.27.1"
+    app.kubernetes.io/version: "0.29.2"
     release: ko
 data:
   config.yml: |
@@ -2465,7 +2465,7 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: kepler-clusterrole
+  name: ko-kepler-clusterrole
 rules:
   - apiGroups: [""]
     resources:
@@ -2483,7 +2483,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   labels:    
-    helm.sh/chart: kube-state-metrics-5.25.1
+    helm.sh/chart: kube-state-metrics-5.26.0
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: kube-state-metrics
@@ -2767,10 +2767,10 @@ subjects:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: kepler-clusterrole-binding
+  name: ko-kepler-clusterrole-binding
 roleRef:
   kind: ClusterRole
-  name: kepler-clusterrole
+  name: ko-kepler-clusterrole
   apiGroup: "rbac.authorization.k8s.io"
 subjects:
   - kind: ServiceAccount
@@ -2782,7 +2782,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   labels:    
-    helm.sh/chart: kube-state-metrics-5.25.1
+    helm.sh/chart: kube-state-metrics-5.26.0
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: kube-state-metrics
@@ -2971,13 +2971,13 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: kepler
+  name: ko-kepler
   namespace: default
   labels:
-    helm.sh/chart: kepler-0.5.9
+    helm.sh/chart: kepler-0.5.11
     app.kubernetes.io/name: kepler
     app.kubernetes.io/component: exporter
-    app.kubernetes.io/version: "release-0.7.11"
+    app.kubernetes.io/version: "release-0.7.12"
     app.kubernetes.io/managed-by: Helm
 spec:
   type: ClusterIP
@@ -2997,7 +2997,7 @@ metadata:
   name: ko-kube-state-metrics
   namespace: default
   labels:    
-    helm.sh/chart: kube-state-metrics-5.25.1
+    helm.sh/chart: kube-state-metrics-5.26.0
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: kube-state-metrics
@@ -3025,7 +3025,7 @@ metadata:
   name: ko-node-exporter
   namespace: default
   labels:
-    helm.sh/chart: node-exporter-4.39.0
+    helm.sh/chart: node-exporter-4.42.0
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: node-exporter
@@ -3053,13 +3053,13 @@ metadata:
   name: ko-windows-exporter
   namespace: default
   labels:
-    helm.sh/chart: windows-exporter-0.5.1
+    helm.sh/chart: windows-exporter-0.7.1
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: windows-exporter
     app.kubernetes.io/name: windows-exporter
     app.kubernetes.io/instance: ko
-    app.kubernetes.io/version: "0.27.1"
+    app.kubernetes.io/version: "0.29.2"
     release: ko
   annotations:
     prometheus.io/scrape: "true"
@@ -3192,13 +3192,13 @@ spec:
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
-  name: kepler
+  name: ko-kepler
   namespace: default
   labels:
-    helm.sh/chart: kepler-0.5.9
+    helm.sh/chart: kepler-0.5.11
     app.kubernetes.io/name: kepler
     app.kubernetes.io/component: exporter
-    app.kubernetes.io/version: "release-0.7.11"
+    app.kubernetes.io/version: "release-0.7.12"
     app.kubernetes.io/managed-by: Helm
 spec:
   selector:
@@ -3217,7 +3217,7 @@ spec:
       serviceAccountName: ko-kepler
       containers:
       - name: kepler-exporter
-        image: "quay.io/sustainable_computing_io/kepler:release-0.7.11"
+        image: "quay.io/sustainable_computing_io/kepler:release-0.7.12"
         imagePullPolicy: Always
         securityContext:
             privileged: true
@@ -3305,7 +3305,7 @@ metadata:
   name: ko-node-exporter
   namespace: default
   labels:
-    helm.sh/chart: node-exporter-4.39.0
+    helm.sh/chart: node-exporter-4.42.0
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: node-exporter
@@ -3329,7 +3329,7 @@ spec:
         cluster-autoscaler.kubernetes.io/safe-to-evict: "true"
         k8s.grafana.com/logs.job: integrations/node_exporter
       labels:
-        helm.sh/chart: node-exporter-4.39.0
+        helm.sh/chart: node-exporter-4.42.0
         app.kubernetes.io/managed-by: Helm
         app.kubernetes.io/component: metrics
         app.kubernetes.io/part-of: node-exporter
@@ -3432,13 +3432,13 @@ metadata:
   name: ko-windows-exporter
   namespace: default
   labels:
-    helm.sh/chart: windows-exporter-0.5.1
+    helm.sh/chart: windows-exporter-0.7.1
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: windows-exporter
     app.kubernetes.io/name: windows-exporter
     app.kubernetes.io/instance: ko
-    app.kubernetes.io/version: "0.27.1"
+    app.kubernetes.io/version: "0.29.2"
     release: ko
 spec:
   selector:
@@ -3455,13 +3455,13 @@ spec:
         cluster-autoscaler.kubernetes.io/safe-to-evict: "true"
         k8s.grafana.com/logs.job: integrations/windows_exporter
       labels:
-        helm.sh/chart: windows-exporter-0.5.1
+        helm.sh/chart: windows-exporter-0.7.1
         app.kubernetes.io/managed-by: Helm
         app.kubernetes.io/component: metrics
         app.kubernetes.io/part-of: windows-exporter
         app.kubernetes.io/name: windows-exporter
         app.kubernetes.io/instance: ko
-        app.kubernetes.io/version: "0.27.1"
+        app.kubernetes.io/version: "0.29.2"
         release: ko
     spec:
       automountServiceAccountToken: false
@@ -3471,13 +3471,13 @@ spec:
           runAsUserName: NT AUTHORITY\system
       initContainers:
         - name: configure-firewall
-          image: ghcr.io/prometheus-community/windows-exporter:0.27.1
+          image: ghcr.io/prometheus-community/windows-exporter:0.29.2
           command: [ "powershell" ]
           args: [ "New-NetFirewallRule", "-DisplayName", "'windows-exporter'", "-Direction", "inbound", "-Profile", "Any", "-Action", "Allow", "-LocalPort", "9182", "-Protocol", "TCP" ]
       serviceAccountName: ko-windows-exporter
       containers:
         - name: windows-exporter
-          image: ghcr.io/prometheus-community/windows-exporter:0.27.1
+          image: ghcr.io/prometheus-community/windows-exporter:0.29.2
           imagePullPolicy: IfNotPresent
           args:
             - --config.file=%CONTAINER_SANDBOX_MOUNT_POINT%/config.yml
@@ -3636,7 +3636,7 @@ metadata:
   name: ko-kube-state-metrics
   namespace: default
   labels:    
-    helm.sh/chart: kube-state-metrics-5.25.1
+    helm.sh/chart: kube-state-metrics-5.26.0
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: kube-state-metrics
@@ -3656,7 +3656,7 @@ spec:
   template:
     metadata:
       labels:        
-        helm.sh/chart: kube-state-metrics-5.25.1
+        helm.sh/chart: kube-state-metrics-5.26.0
         app.kubernetes.io/managed-by: Helm
         app.kubernetes.io/component: metrics
         app.kubernetes.io/part-of: kube-state-metrics
