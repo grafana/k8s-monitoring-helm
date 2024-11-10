@@ -11,7 +11,7 @@ declare "cert_manager_integration" {
   {{- include "alloyModules.load" (deepCopy $ | merge (dict "name" "cert_manager" "path" "modules/kubernetes/cert-manager/metrics.alloy")) | nindent 2 }}
 
   {{- range $instance := (index $.Values "cert-manager").instances }}
-    {{- include "integrations.cert-manager.include.metrics" (deepCopy $ | merge (dict "integration" $instance)) | nindent 2 }}
+    {{- include "integrations.cert-manager.include.metrics" (deepCopy $ | merge (dict "instance" $instance)) | nindent 2 }}
   {{- end }}
 }
 {{- end }}
@@ -20,7 +20,7 @@ declare "cert_manager_integration" {
 {{/* Inputs: integration (cert-manager integration definition), Values (all values), Files (Files object) */}}
 {{- define "integrations.cert-manager.include.metrics" }}
 {{- $defaultValues := "integrations/cert-manager-values.yaml" | .Files.Get | fromYaml }}
-{{- with deepCopy .integration | merge $defaultValues }}
+{{- with $defaultValues | merge (deepCopy .instance) }}
 {{- $metricAllowList := .metricsTuning.includeMetrics }}
 {{- $metricDenyList := .metricsTuning.excludeMetrics }}
 {{- $labelSelectors := list }}
@@ -49,7 +49,7 @@ cert_manager.scrape {{ include "helper.alloy_name" .name | quote }} {
   clustering = true
   job_label = {{ .jobName | quote }}
 {{- if $metricAllowList }}
-  keep_metrics = "up|{{ $metricAllowList |  join "|" | join "|" }}"
+  keep_metrics = "up|{{ $metricAllowList |  join "|" }}"
 {{- end }}
 {{- if $metricDenyList }}
   drop_metrics = {{ $metricDenyList | join "|" | quote }}

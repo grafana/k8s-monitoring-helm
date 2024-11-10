@@ -11,7 +11,7 @@ declare "etcd_integration" {
   {{- include "alloyModules.load" (deepCopy $ | merge (dict "name" "etcd" "path" "modules/databases/kv/etcd/metrics.alloy")) | nindent 2 }}
 
   {{- range $instance := (index $.Values "etcd").instances }}
-    {{- include "integrations.etcd.include.metrics" (deepCopy $ | merge (dict "integration" $instance)) | nindent 2 }}
+    {{- include "integrations.etcd.include.metrics" (deepCopy $ | merge (dict "instance" $instance)) | nindent 2 }}
   {{- end }}
 }
 {{- end }}
@@ -20,7 +20,7 @@ declare "etcd_integration" {
 {{/* Inputs: integration (etcd integration definition), Values (all values), Files (Files object) */}}
 {{- define "integrations.etcd.include.metrics" }}
 {{- $defaultValues := "integrations/etcd-values.yaml" | .Files.Get | fromYaml }}
-{{- with deepCopy .integration | merge $defaultValues }}
+{{- with $defaultValues | merge (deepCopy .instance) }}
 {{- $metricAllowList := .metricsTuning.includeMetrics }}
 {{- $metricDenyList := .metricsTuning.excludeMetrics }}
 {{- $labelSelectors := list }}

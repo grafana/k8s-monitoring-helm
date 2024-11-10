@@ -2,18 +2,20 @@
 {{- define "integrations.alloy.type.logs" }}false{{- end }}
 
 {{/* Returns the allowed metrics */}}
-{{/* Inputs: integration (Alloy integration definition) Files (Files object) */}}
+{{/* Inputs: instance (Alloy integration instance) Files (Files object) */}}
 {{- define "integrations.alloy.allowList" }}
-{{- if .integration.metricsTuning.useDefaultAllowList }}
-{{ "default-allow-lists/alloy.yaml" | .Files.Get }}
-{{- end }}
-{{- if .integration.metricsTuning.useIntegrationAllowList }}
-{{ "default-allow-lists/alloy-integration.yaml" | .Files.Get }}
-{{- end }}
-{{- if .integration.metricsTuning.includeMetrics }}
-{{ .integration.metricsTuning.includeMetrics | toYaml }}
-{{- end }}
-{{- end }}
+{{- $allowList := list "up" }}
+{{- if .instance.metricsTuning.useDefaultAllowList -}}
+{{- $allowList = concat $allowList (.Files.Get "default-allow-lists/alloy.yaml" | fromYamlArray) -}}
+{{- end -}}
+{{- if .instance.metricsTuning.useIntegrationAllowList -}}
+{{- $allowList = concat $allowList (.Files.Get "default-allow-lists/alloy-integration.yaml" | fromYamlArray) -}}
+{{- end -}}
+{{- if .instance.metricsTuning.includeMetrics -}}
+{{- $allowList = concat $allowList .instance.metricsTuning.includeMetrics -}}
+{{- end -}}
+{{ $allowList | uniq | toYaml }}
+{{- end -}}
 
 {{/* Loads the Alloy module and instances */}}
 {{/* Inputs: Values (all values), Files (Files object) */}}
@@ -175,6 +177,11 @@ declare "alloy_integration" {
       optional = true
     }
 
+    argument "clustering" {
+      comment = "Whether or not clustering should be enabled (default: false)"
+      optional = true
+    }
+
     prometheus.scrape "alloy" {
       job_name = "integrations/alloy"
       forward_to = [prometheus.relabel.alloy.receiver]
@@ -182,7 +189,7 @@ declare "alloy_integration" {
       scrape_interval = coalesce(argument.scrape_interval.value, "60s")
 
       clustering {
-        enabled = true
+        enabled = coalesce(argument.clustering.value, false)
       }
     }
 
@@ -272,7 +279,7 @@ declare "alloy_integration" {
     }
   }
   {{- range $instance := $.Values.alloy.instances }}
-    {{- include "integrations.alloy.include.metrics" (deepCopy $ | merge (dict "integration" $instance)) | nindent 2 }}
+    {{- include "integrations.alloy.include.metrics" (deepCopy $ | merge (dict "instance" $instance)) | nindent 2 }}
   {{- end }}
 }
 {{- end }}
@@ -281,8 +288,8 @@ declare "alloy_integration" {
 {{/* Inputs: integration (Alloy integration definition), Values (all values), Files (Files object) */}}
 {{- define "integrations.alloy.include.metrics" }}
 {{- $defaultValues := "integrations/alloy-values.yaml" | .Files.Get | fromYaml }}
-{{- with deepCopy .integration | merge $defaultValues }}
-{{- $metricAllowList := include "integrations.alloy.allowList" (dict "integration" . "Files" $.Files) }}
+{{- with $defaultValues | merge (deepCopy .instance) }}
+{{- $metricAllowList := include "integrations.alloy.allowList" (dict "instance" . "Files" $.Files) | fromYamlArray }}
 {{- $metricDenyList := .excludeMetrics }}
 {{- $labelSelectors := list }}
 {{- range $k, $v := .labelSelectors }}
@@ -298,7 +305,7 @@ alloy_integration_scrape  {{ include "helper.alloy_name" .name | quote }} {
   targets = alloy_integration_discovery.{{ include "helper.alloy_name" .name }}.output
   clustering = true
 {{- if $metricAllowList }}
-  keep_metrics = "up|{{ $metricAllowList | fromYamlArray | join "|" }}"
+  keep_metrics = {{ $metricAllowList | join "|" | quote }}
 {{- end }}
 {{- if $metricDenyList }}
   drop_metrics = {{ $metricDenyList | join "|" | quote }}

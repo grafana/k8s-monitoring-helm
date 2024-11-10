@@ -220,6 +220,11 @@ data:
           optional = true
         }
     
+        argument "clustering" {
+          comment = "Whether or not clustering should be enabled (default: false)"
+          optional = true
+        }
+    
         prometheus.scrape "alloy" {
           job_name = "integrations/alloy"
           forward_to = [prometheus.relabel.alloy.receiver]
@@ -227,7 +232,7 @@ data:
           scrape_interval = coalesce(argument.scrape_interval.value, "60s")
     
           clustering {
-            enabled = true
+            enabled = coalesce(argument.clustering.value, false)
           }
         }
     
@@ -320,7 +325,7 @@ data:
       
       alloy_integration_discovery "alloy_metrics" {
         port_name       = "http-metrics"
-        label_selectors = ["app.kubernetes.io/name=alloy"]
+        label_selectors = ["app.kubernetes.io/name=alloy-metrics"]
       }
       
       alloy_integration_scrape  "alloy_metrics" {
@@ -390,7 +395,7 @@ data:
     grafana_kubernetes_monitoring_build_info{version="2.0.0-rc.2", namespace="default"} 1
     # HELP grafana_kubernetes_monitoring_feature_info A metric to report the enabled features of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_feature_info gauge
-    grafana_kubernetes_monitoring_feature_info{feature="integrations", version="1.0.0"} 1
+    grafana_kubernetes_monitoring_feature_info{feature="integrations", sources="alloy", version="1.0.0"} 1
 ---
 # Source: k8s-monitoring/charts/alloy-metrics/templates/rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1

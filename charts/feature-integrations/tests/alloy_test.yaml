@@ -3,12 +3,14 @@ suite: Test Alloy integration
 templates:
   - configmap.yaml
 tests:
-  - it: should create the alloy config
+  - it: should create the Alloy config
     set:
       deployAsConfigMap: true
       alloy:
         instances:
           - name: alloy-metrics
+            labelSelectors:
+              app.kubernetes.io/name: alloy-metrics
     asserts:
       - isKind:
           of: ConfigMap
@@ -172,6 +174,11 @@ tests:
                   optional = true
                 }
 
+                argument "clustering" {
+                  comment = "Whether or not clustering should be enabled (default: false)"
+                  optional = true
+                }
+
                 prometheus.scrape "alloy" {
                   job_name = "integrations/alloy"
                   forward_to = [prometheus.relabel.alloy.receiver]
@@ -179,7 +186,7 @@ tests:
                   scrape_interval = coalesce(argument.scrape_interval.value, "60s")
 
                   clustering {
-                    enabled = true
+                    enabled = coalesce(argument.clustering.value, false)
                   }
                 }
 
@@ -272,7 +279,7 @@ tests:
 
               alloy_integration_discovery "alloy_metrics" {
                 port_name       = "http-metrics"
-                label_selectors = ["app.kubernetes.io/name=alloy"]
+                label_selectors = ["app.kubernetes.io/name=alloy-metrics"]
               }
 
               alloy_integration_scrape  "alloy_metrics" {
@@ -284,3 +291,19 @@ tests:
                 forward_to = argument.metrics_destinations.value
               }
             }
+  - it: should create the Alloy config with the integration allow list
+    set:
+      deployAsConfigMap: true
+      alloy:
+        instances:
+          - name: alloy-metrics
+            metricsTuning:
+              useIntegrationAllowList: true
+            labelSelectors:
+              app.kubernetes.io/name: alloy-metrics
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["metrics.alloy"]
+          pattern: alloy_component_controller_running_components
