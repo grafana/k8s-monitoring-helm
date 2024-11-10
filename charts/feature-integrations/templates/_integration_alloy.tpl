@@ -155,11 +155,6 @@ declare "alloy_integration" {
       comment = "Must be a list(MetricsReceiver) where collected logs should be forwarded to"
     }
 
-    argument "job_label" {
-      comment = "The job label to add for all alloy metric (default: integrations/alloy)"
-      optional = true
-    }
-
     argument "keep_metrics" {
       comment = "A regular expression of metrics to keep (default: see below)"
       optional = true
@@ -175,30 +170,19 @@ declare "alloy_integration" {
       optional = true
     }
 
-    argument "scrape_timeout" {
-      comment = "How long before a scrape times out (default: 10s)"
-      optional = true
-    }
-
     argument "max_cache_size" {
       comment = "The maximum number of elements to hold in the relabeling cache (default: 100000).  This should be at least 2x-5x your largest scrape target or samples appended rate."
       optional = true
     }
 
-    argument "clustering" {
-      comment = "Whether or not clustering should be enabled (default: false)"
-      optional = true
-    }
-
     prometheus.scrape "alloy" {
-      job_name = coalesce(argument.job_label.value, "integrations/alloy")
+      job_name = "integrations/alloy"
       forward_to = [prometheus.relabel.alloy.receiver]
       targets = argument.targets.value
       scrape_interval = coalesce(argument.scrape_interval.value, "60s")
-      scrape_timeout = coalesce(argument.scrape_timeout.value, "10s")
 
       clustering {
-        enabled = coalesce(argument.clustering.value, false)
+        enabled = true
       }
     }
 
