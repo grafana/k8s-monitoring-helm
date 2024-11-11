@@ -193,6 +193,13 @@ declare "cluster_metrics" {
     forward_to = argument.metrics_destinations.value
   }  
   
+  kubernetes.kube_dns "scrape" {
+    clustering = true
+    scrape_interval = 0
+    max_cache_size = 100000
+    forward_to = argument.metrics_destinations.value
+  }  
+  
   discovery.kubernetes "kube_proxy" {
     role = "pod"
     namespaces {

@@ -201,7 +201,7 @@ Actual integration testing in a live environment should be done in the main [k8s
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| controlPlane.enabled | bool | `false` | enable all Kubernetes Control Plane metrics sources. This includes api-server, kube-scheduler, kube-controller-manager, and etcd. |
+| controlPlane.enabled | bool | `false` | enable all Kubernetes Control Plane metrics sources. This includes api-server, kube-scheduler, kube-controller-manager, and KubeDNS. |
 
 ### General settings
 
@@ -262,6 +262,18 @@ Actual integration testing in a live environment should be done in the main [k8s
 | kubeControllerManager.metricsTuning.includeMetrics | list | `[]` | Metrics to keep. Can use regular expressions. An empty list means keep all. |
 | kubeControllerManager.port | int | `10257` | Port number used by the Kube Controller Manager, set by `--secure-port.` |
 | kubeControllerManager.scrapeInterval | string | 60s | How frequently to scrape metrics from the Kube Controller Manager Overrides metrics.scrapeInterval |
+
+### KubeDNS
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| kubeDNS.enabled | bool | `false` | Scrape metrics from KubeDNS |
+| kubeDNS.extraDiscoveryRules | string | `""` | Rule blocks to be added to the discovery.relabel component for KubeDNS. These relabeling rules are applied pre-scrape against the targets from service discovery. Before the scrape, any remaining target labels that start with `__` (i.e. `__meta_kubernetes*`) are dropped. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.relabel/#rule-block)) |
+| kubeDNS.extraMetricProcessingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for KubeDNS. These relabeling rules are applied post-scrape against the metrics returned from the scraped target, no `__meta*` labels are present. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#rule-block)) |
+| kubeDNS.maxCacheSize | string | `nil` | Sets the max_cache_size for cadvisor prometheus.relabel component. This should be at least 2x-5x your largest scrape target or samples appended rate. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)) Overrides metrics.maxCacheSize |
+| kubeDNS.metricsTuning.excludeMetrics | list | `[]` | Metrics to drop. Can use regular expressions. |
+| kubeDNS.metricsTuning.includeMetrics | list | `[]` | Metrics to keep. Can use regular expressions. An empty list means keep all. |
+| kubeDNS.scrapeInterval | string | 60s | How frequently to scrape metrics from KubeDNS Overrides metrics.scrapeInterval |
 
 ### Kube Proxy
 
