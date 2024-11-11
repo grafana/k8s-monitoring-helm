@@ -34,6 +34,10 @@ prometheus.scrape "kube_controller_manager" {
   tls_config {
     insecure_skip_verify = true
   }
+{{- if .Values.externalServices.prometheus.sendNativeHistograms }}
+  scrape_protocols = ["PrometheusProto", "OpenMetricsText1.0.0", "OpenMetricsText0.0.1", "PrometheusText0.0.4"]
+  scrape_classic_histograms = true
+{{- end }}
 {{- if .Values.alloy.alloy.clustering.enabled }}
   clustering {
     enabled = true

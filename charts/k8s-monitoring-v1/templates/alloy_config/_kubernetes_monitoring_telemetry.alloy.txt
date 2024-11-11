@@ -25,6 +25,10 @@ prometheus.scrape "kubernetes_monitoring_telemetry" {
   job_name   = "integrations/kubernetes/kubernetes_monitoring_telemetry"
   targets    = discovery.relabel.kubernetes_monitoring_telemetry.output
   scrape_interval = {{ .Values.metrics.kubernetesMonitoring.scrapeInterval | default .Values.metrics.scrapeInterval | quote }}
+{{- if .Values.externalServices.prometheus.sendNativeHistograms }}
+  scrape_protocols = ["PrometheusProto", "OpenMetricsText1.0.0", "OpenMetricsText0.0.1", "PrometheusText0.0.4"]
+  scrape_classic_histograms = true
+{{- end }}
 {{- if .Values.alloy.alloy.clustering.enabled }}
   clustering {
     enabled = true
