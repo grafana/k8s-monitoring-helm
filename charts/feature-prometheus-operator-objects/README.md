@@ -44,7 +44,7 @@ Actual integration testing in a live environment should be done in the main [k8s
 
 | Repository | Name | Version |
 |------------|------|---------|
-| https://prometheus-community.github.io/helm-charts | crds(prometheus-operator-crds) | 15.0.0 |
+| https://prometheus-community.github.io/helm-charts | crds(prometheus-operator-crds) | 16.0.0 |
 <!-- markdownlint-enable no-bare-urls -->
 ## Values
 
