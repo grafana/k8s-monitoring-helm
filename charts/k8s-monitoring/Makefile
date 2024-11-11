@@ -57,7 +57,7 @@ alloyModules/LICENSE: vendir.yml vendir.lock.yml
 ifdef HAS_VENDIR
 	vendir sync -l
 else
-	docker run --rm --volume $(shell pwd):/src --workdir /src ghcr.io/carvel-dev/docker-image:latest bash -c "apt-get update && apt-get install -y git && vendir sync -l"
+	docker run --rm --volume $(shell pwd):/src --workdir /src ghcr.io/carvel-dev/docker-image:latest vendir sync -l
 endif
 ALLOY_MODULE_FILES = $(shell find alloyModules -name "*.alloy")
 
