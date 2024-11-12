@@ -32,7 +32,7 @@ global:
 
 controlPlane:
   # -- enable all Kubernetes Control Plane metrics sources. This includes api-server, kube-scheduler,
-  # kube-controller-manager, and etcd.
+  # kube-controller-manager, and KubeDNS.
   # @section -- Control Plane
   enabled: false
 
@@ -281,6 +281,49 @@ kubeControllerManager:
   # Overrides metrics.maxCacheSize
   # @raw
   # @section -- Kube Controller Manager
+  maxCacheSize:
+
+# Metrics from the KubeDNS
+kubeDNS:
+  # -- (bool) Scrape metrics from KubeDNS
+  # @default -- `false`
+  # @section -- KubeDNS
+  enabled:
+
+  # -- How frequently to scrape metrics from KubeDNS
+  # Overrides metrics.scrapeInterval
+  # @default -- 60s
+  # @section -- KubeDNS
+  scrapeInterval: ""
+
+  # -- Rule blocks to be added to the discovery.relabel component for KubeDNS.
+  # These relabeling rules are applied pre-scrape against the targets from service discovery.
+  # Before the scrape, any remaining target labels that start with `__` (i.e. `__meta_kubernetes*`) are dropped.
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.relabel/#rule-block))
+  # @section -- KubeDNS
+  extraDiscoveryRules: ""
+
+  # -- Rule blocks to be added to the prometheus.relabel component for KubeDNS.
+  # These relabeling rules are applied post-scrape against the metrics returned from the scraped target, no `__meta*` labels are present.
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#rule-block))
+  # @section -- KubeDNS
+  extraMetricProcessingRules: ""
+
+  # Adjustments to the scraped metrics to filter the amount of data sent to storage.
+  metricsTuning:
+    # -- Metrics to keep. Can use regular expressions. An empty list means keep all.
+    # @section -- KubeDNS
+    includeMetrics: []
+    # -- Metrics to drop. Can use regular expressions.
+    # @section -- KubeDNS
+    excludeMetrics: []
+
+  # -- Sets the max_cache_size for cadvisor prometheus.relabel component.
+  # This should be at least 2x-5x your largest scrape target or samples appended rate.
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments))
+  # Overrides metrics.maxCacheSize
+  # @raw
+  # @section -- KubeDNS
   maxCacheSize:
 
 # Metrics from the Kube Proxy

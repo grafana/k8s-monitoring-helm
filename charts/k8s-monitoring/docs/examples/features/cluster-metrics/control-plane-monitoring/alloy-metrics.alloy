@@ -153,7 +153,7 @@ declare "cluster_metrics" {
   
   kubernetes.apiserver "scrape" {
     clustering = true
-    scrape_interval = 0
+    scrape_interval = "60s"
     max_cache_size = 100000
     forward_to = argument.metrics_destinations.value
   }  
@@ -190,6 +190,13 @@ declare "cluster_metrics" {
     clustering {
       enabled = true
     }
+    forward_to = argument.metrics_destinations.value
+  }  
+  
+  kubernetes.kube_dns "scrape" {
+    clustering = true
+    scrape_interval = "60s"
+    max_cache_size = 100000
     forward_to = argument.metrics_destinations.value
   }  
   

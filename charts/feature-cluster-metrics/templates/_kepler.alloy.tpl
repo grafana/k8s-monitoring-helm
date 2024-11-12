@@ -1,5 +1,5 @@
 {{ define "feature.clusterMetrics.kepler.allowList" }}
-{{ if .Values.cadvisor.metricsTuning.useDefaultAllowList }}
+{{ if .Values.kepler.metricsTuning.useDefaultAllowList }}
 {{ "default-allow-lists/kepler.yaml" | .Files.Get }}
 {{ end }}
 {{ if .Values.kepler.metricsTuning.includeMetrics }}
