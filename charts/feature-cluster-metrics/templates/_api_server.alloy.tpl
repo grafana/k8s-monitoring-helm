@@ -11,7 +11,7 @@ kubernetes.apiserver "scrape" {
 {{- if $metricDenyList }}
   drop_metrics = {{ $metricDenyList | join "|" | quote }}
 {{- end }}
-  scrape_interval = {{ .Values.apiServer.scrapeInterval | default .Values.global.scrapeInterval | int }}
+  scrape_interval = {{ .Values.apiServer.scrapeInterval | default .Values.global.scrapeInterval | quote }}
   max_cache_size = {{ .Values.apiServer.maxCacheSize | default .Values.global.maxCacheSize | int }}
 {{- if .Values.apiServer.extraMetricProcessingRules }}
   forward_to = [prometheus.relabel.apiServer.receiver]

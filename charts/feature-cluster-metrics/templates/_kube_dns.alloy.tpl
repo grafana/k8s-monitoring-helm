@@ -11,8 +11,8 @@ kubernetes.kube_dns "scrape" {
 {{- if $metricDenyList }}
   drop_metrics = {{ $metricDenyList | join "|" | quote }}
 {{- end }}
-  scrape_interval = {{ .Values.cadvisor.scrapeInterval | default .Values.global.scrapeInterval | int }}
-  max_cache_size = {{ .Values.cadvisor.maxCacheSize | default .Values.global.maxCacheSize | int }}
+  scrape_interval = {{ .Values.kubeDNS.scrapeInterval | default .Values.global.scrapeInterval | quote }}
+  max_cache_size = {{ .Values.kubeDNS.maxCacheSize | default .Values.global.maxCacheSize | int }}
 {{- if .Values.kubeDNS.extraMetricProcessingRules }}
   forward_to = [prometheus.relabel.kube_dns.receiver]
 }
