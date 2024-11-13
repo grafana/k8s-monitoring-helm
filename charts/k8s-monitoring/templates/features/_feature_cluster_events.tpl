@@ -30,6 +30,8 @@ cluster_events "feature" {
 {{- $featureName := "Kubernetes Cluster events" }}
 {{- $destinations := include "features.clusterEvents.destinations" . | fromYamlArray }}
 {{- include "destinations.validate_destination_list" (dict "destinations" $destinations "type" "logs" "ecosystem" "loki" "feature" $featureName) }}
-{{- include "collectors.require_collector" (dict "Values" $.Values "name" "alloy-singleton" "feature" $featureName) }}
+{{- range $collector := include "features.clusterEvents.collectors" . | fromYamlArray }}
+  {{- include "collectors.require_collector" (dict "Values" $.Values "name" $collector "feature" $featureName) }}
+{{- end -}}
 {{- end -}}
 {{- end -}}

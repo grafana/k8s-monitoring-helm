@@ -1,0 +1,108 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Test Beyla config values
+templates:
+  - beyla-config.yaml
+tests:
+  - it: creates a ConfigMap for Beyla
+    set:
+      cluster: {name: beyla-config-cluster}
+      autoInstrumentation: {enabled: true}
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - equal:
+          path: data["beyla-config.yml"]
+          value: |-
+            attributes:
+              kubernetes:
+                enable: true
+                cluster_name: beyla-config-cluster
+              select:
+                beyla_network_flow_bytes:
+                  include:
+                    - 'k8s.src.owner.type'
+                    - 'k8s.dst.owner.type'
+                    - 'direction'
+            filter:
+              network:
+                k8s_dst_owner_name:
+                  not_match: '{kube*,*jaeger-agent*,*prometheus*,*promtail*,*grafana-agent*}'
+                k8s_src_owner_name:
+                  not_match: '{kube*,*jaeger-agent*,*prometheus*,*promtail*,*grafana-agent*}'
+            discovery:
+              services:
+                - k8s_namespace: .
+              exclude_services:
+                - exe_path: ".*alloy.*|.*otelcol.*|.*beyla.*"
+            internal_metrics:
+              prometheus:
+                port: 9090
+                path: /internal/metrics
+            prometheus_export:
+              port: 9090
+              path: /metrics
+              features:
+                - application
+                - network
+                - application_service_graph
+                - application_span
+
+  - it: sets the otel_traces_export endpoint if applicationObservability is enabled
+    set:
+      deployAsConfigMap: true
+      cluster: {name: beyla-config-cluster}
+      autoInstrumentation: {enabled: true}
+      applicationObservability:
+        enabled: true
+        receivers:
+          grpc:
+            enabled: true
+      alloy-receiver:
+        enabled: true
+        alloy:
+          extraPorts:
+            - name: otlp-grpc
+              port: 4317
+              targetPort: 4317
+              protocol: TCP
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - equal:
+          path: data["beyla-config.yml"]
+          value: |-
+            attributes:
+              kubernetes:
+                enable: true
+                cluster_name: beyla-config-cluster
+              select:
+                beyla_network_flow_bytes:
+                  include:
+                    - 'k8s.src.owner.type'
+                    - 'k8s.dst.owner.type'
+                    - 'direction'
+            filter:
+              network:
+                k8s_dst_owner_name:
+                  not_match: '{kube*,*jaeger-agent*,*prometheus*,*promtail*,*grafana-agent*}'
+                k8s_src_owner_name:
+                  not_match: '{kube*,*jaeger-agent*,*prometheus*,*promtail*,*grafana-agent*}'
+            discovery:
+              services:
+                - k8s_namespace: .
+              exclude_services:
+                - exe_path: ".*alloy.*|.*otelcol.*|.*beyla.*"
+            internal_metrics:
+              prometheus:
+                port: 9090
+                path: /internal/metrics
+            prometheus_export:
+              port: 9090
+              path: /metrics
+              features:
+                - application
+                - network
+                - application_service_graph
+                - application_span
+            otel_traces_export:
+              endpoint: http://RELEASE-NAME-alloy-receiver.NAMESPACE.svc.cluster.local:4317

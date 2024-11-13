@@ -1,0 +1,45 @@
+---
+cluster:
+  name: auto-instrumentation-integration-test
+
+destinations:
+  - name: localPrometheus
+    type: prometheus
+    url: http://prometheus-server.prometheus.svc:9090/api/v1/write
+  - name: localLoki
+    type: loki
+    url: http://loki.loki.svc:3100/loki/api/v1/push
+    tenantId: "1"
+    auth:
+      type: basic
+      username: loki
+      password: lokipassword
+  - name: localTempo
+    type: otlp
+    url: tempo.tempo.svc:4317
+    tls:
+      insecure: true
+      insecureSkipVerify: true
+
+autoInstrumentation:
+  enabled: true
+
+applicationObservability:
+  enabled: true
+  receivers:
+    grpc:
+      enabled: true
+
+selfReporting: {scrapeInterval: 1m}  # Force self-report to be generated within test time
+
+alloy-metrics:
+  enabled: true
+
+alloy-receiver:
+  enabled: true
+  alloy:
+    extraPorts:
+      - name: otlp-grpc
+        port: 4317
+        targetPort: 4317
+        protocol: TCP

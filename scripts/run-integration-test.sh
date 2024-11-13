@@ -66,13 +66,13 @@ if ! kind get clusters | grep -q "${clusterName}"; then
   fi
 fi
 
-echo "Deploying prerequisites..."
 prerequisiteCount=$(yq -r '.prerequisites | length' "${testManifest}")
 for ((i=0; i<prerequisiteCount; i++)); do
   prereqName=$(yq -r .prerequisites[$i].name "${testManifest}")
   if [ "${prereqName}" == "grafana" ] && [ "${DEPLOY_GRAFANA}" == "false" ]; then
     continue
   fi
+  echo "Deploying ${prereqName}..."
 
   prereqType=$(yq -r .prerequisites[$i].type "${testManifest}")
   namespace=$(yq -r ".prerequisites[$i].namespace // \"\"" "${testManifest}")

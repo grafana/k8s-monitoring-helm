@@ -1,0 +1,66 @@
+{{- if and .Values.autoInstrumentation.enabled }}
+{{- $grpcReceiverEndpoint := include "features.applicationObservability.receiver.grpc" . | trim }}
+{{- $httpReceiverEndpoint := include "features.applicationObservability.receiver.http" . | trim }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "beyla.fullname" .Subcharts.autoInstrumentation.Subcharts.beyla }}
+  namespace: {{ include "beyla.namespace" .Subcharts.autoInstrumentation.Subcharts.beyla }}
+  labels:
+    {{- include "beyla.labels" .Subcharts.autoInstrumentation.Subcharts.beyla | nindent 4 }}
+    app.kubernetes.io/component: config
+  {{- with .Values.autoInstrumentation.beyla.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+data:
+  beyla-config.yml: |-
+    attributes:
+      kubernetes:
+        enable: true
+        cluster_name: {{ .Values.cluster.name }}
+      select:
+        beyla_network_flow_bytes:
+          include:
+            - 'k8s.src.owner.type'
+            - 'k8s.dst.owner.type'
+            - 'direction'
+    filter:
+      network:
+        k8s_dst_owner_name:
+          not_match: '{kube*,*jaeger-agent*,*prometheus*,*promtail*,*grafana-agent*}'
+        k8s_src_owner_name:
+          not_match: '{kube*,*jaeger-agent*,*prometheus*,*promtail*,*grafana-agent*}'
+{{- if eq .Values.autoInstrumentation.beyla.preset "network" }}
+  {{- if not .Values.autoInstrumentation.beyla.config.data.network }}
+    network:
+      enable: true
+  {{- end }}
+{{- end }}
+{{- if eq .Values.autoInstrumentation.beyla.preset "application" }}
+  {{- if not .Values.autoInstrumentation.beyla.config.data.discovery }}
+    discovery:
+      services:
+        - k8s_namespace: .
+      exclude_services:
+        - exe_path: ".*alloy.*|.*otelcol.*|.*beyla.*"
+  {{- end }}
+{{- end }}
+    internal_metrics:
+      prometheus:
+        port: {{ .Values.autoInstrumentation.beyla.service.targetPort }}
+        path: /internal/metrics
+    prometheus_export:
+      port: {{ .Values.autoInstrumentation.beyla.service.targetPort }}
+      path: /metrics
+      features:
+        - application
+        - network
+        - application_service_graph
+        - application_span
+{{- if or $grpcReceiverEndpoint $httpReceiverEndpoint }}
+    otel_traces_export:
+      endpoint: {{ $grpcReceiverEndpoint | default $httpReceiverEndpoint }}
+{{- end }}
+{{- end }}

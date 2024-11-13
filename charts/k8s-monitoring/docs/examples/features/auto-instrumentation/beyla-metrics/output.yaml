@@ -1,0 +1,631 @@
+---
+# Source: k8s-monitoring/charts/alloy-metrics/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: ko-alloy-metrics
+  namespace: default
+  labels:
+    helm.sh/chart: alloy-metrics-0.9.2
+    app.kubernetes.io/name: alloy-metrics
+    app.kubernetes.io/instance: ko
+    
+    app.kubernetes.io/version: "v1.4.3"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/part-of: alloy
+    app.kubernetes.io/component: rbac
+---
+# Source: k8s-monitoring/charts/autoInstrumentation/charts/beyla/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: ko-beyla
+  namespace: default
+  labels:
+    helm.sh/chart: beyla-1.4.11
+    app.kubernetes.io/name: beyla
+    app.kubernetes.io/instance: ko
+    app.kubernetes.io/version: "1.8.6"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/part-of: beyla
+    app.kubernetes.io/component: rbac
+automountServiceAccountToken: true
+---
+# Source: k8s-monitoring/templates/alloy-config.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ko-alloy-metrics
+  namespace: default
+data:
+  config.alloy: |-
+    // Destination: prometheus (prometheus)
+    otelcol.exporter.prometheus "prometheus" {
+      forward_to = [prometheus.remote_write.prometheus.receiver]
+    }
+    
+    prometheus.remote_write "prometheus" {
+      endpoint {
+        url = "http://prometheus.prometheus.svc:9090/api/v1/write"
+        headers = {
+        }
+        tls_config {
+          insecure_skip_verify = false
+        }
+        send_native_histograms = false
+        queue_config {
+          capacity = 10000
+          min_shards = 1
+          max_shards = 50
+          max_samples_per_send = 2000
+          batch_send_deadline = "5s"
+          min_backoff = "30ms"
+          max_backoff = "5s"
+          retry_on_http_429 = true
+          sample_age_limit = "0s"
+        }
+        write_relabel_config {
+          source_labels = ["cluster"]
+          regex = ""
+          replacement = "annotation-autodiscovery-cluster"
+          target_label = "cluster"
+        }
+        write_relabel_config {
+          source_labels = ["k8s.cluster.name"]
+          regex = ""
+          replacement = "annotation-autodiscovery-cluster"
+          target_label = "cluster"
+        }
+      }
+    }
+    
+    // Feature: Auto-Instrumentation
+    declare "auto_instrumentation" {
+      argument "metrics_destinations" {
+        comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
+      }
+    
+      discovery.kubernetes "beyla_pods" {
+        role = "pod"
+        namespaces {
+          own_namespace = true
+        }
+        selectors {
+          role = "pod"
+          label = "app.kubernetes.io/name=beyla"
+        }
+      }
+    
+      discovery.relabel "beyla_pods" {
+        targets = discovery.kubernetes.beyla_pods.targets
+        rule {
+          source_labels = ["__meta_kubernetes_pod_node_name"]
+          action = "replace"
+          target_label = "instance"
+        }
+      }
+    
+      prometheus.scrape "beyla_applications" {
+        targets         = discovery.relabel.beyla_pods.output
+        honor_labels    = true
+        scrape_interval = "60s"
+        clustering {
+          enabled = true
+        }
+        forward_to = argument.metrics_destinations.value
+      }
+    
+      prometheus.scrape "beyla_internal" {
+        targets         = discovery.relabel.beyla_pods.output
+        metrics_path    = "/internal/metrics"
+        job_name        = "integrations/beyla"
+        honor_labels    = true
+        scrape_interval = "60s"
+        clustering {
+          enabled = true
+        }
+        forward_to = argument.metrics_destinations.value
+      }
+    }
+    auto_instrumentation "feature" {
+      metrics_destinations = [
+        prometheus.remote_write.prometheus.receiver,
+      ]
+    }
+    
+    // Self Reporting
+    prometheus.exporter.unix "kubernetes_monitoring_telemetry" {
+      set_collectors = ["textfile"]
+      textfile {
+        directory = "/etc/alloy"
+      }
+    }
+    
+    discovery.relabel "kubernetes_monitoring_telemetry" {
+      targets = prometheus.exporter.unix.kubernetes_monitoring_telemetry.targets
+      rule {
+        target_label = "instance"
+        action = "replace"
+        replacement = "ko"
+      }
+      rule {
+        target_label = "job"
+        action = "replace"
+        replacement = "integrations/kubernetes/kubernetes_monitoring_telemetry"
+      }
+    }
+    
+    prometheus.scrape "kubernetes_monitoring_telemetry" {
+      job_name   = "integrations/kubernetes/kubernetes_monitoring_telemetry"
+      targets    = discovery.relabel.kubernetes_monitoring_telemetry.output
+      scrape_interval = "1h"
+      clustering {
+        enabled = true
+      }
+      forward_to = [prometheus.relabel.kubernetes_monitoring_telemetry.receiver]
+    }
+    
+    prometheus.relabel "kubernetes_monitoring_telemetry" {
+      rule {
+        source_labels = ["__name__"]
+        regex = "grafana_kubernetes_monitoring_.*"
+        action = "keep"
+      }
+      forward_to = [
+        prometheus.remote_write.prometheus.receiver,
+      ]
+    }
+    
+    
+    
+    
+  self-reporting-metric.prom: |
+    # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart
+    # TYPE grafana_kubernetes_monitoring_build_info gauge
+    grafana_kubernetes_monitoring_build_info{version="2.0.0-rc.2", namespace="default"} 1
+    # HELP grafana_kubernetes_monitoring_feature_info A metric to report the enabled features of the Kubernetes Monitoring Helm chart
+    # TYPE grafana_kubernetes_monitoring_feature_info gauge
+    grafana_kubernetes_monitoring_feature_info{feature="autoInstrumentation", version="1.0.0"} 1
+---
+# Source: k8s-monitoring/templates/beyla-config.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ko-beyla
+  namespace: default
+  labels:
+    helm.sh/chart: beyla-1.4.11
+    app.kubernetes.io/name: beyla
+    app.kubernetes.io/instance: ko
+    app.kubernetes.io/version: "1.8.6"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/part-of: beyla
+    app.kubernetes.io/component: config
+data:
+  beyla-config.yml: |-
+    attributes:
+      kubernetes:
+        enable: true
+        cluster_name: annotation-autodiscovery-cluster
+      select:
+        beyla_network_flow_bytes:
+          include:
+            - 'k8s.src.owner.type'
+            - 'k8s.dst.owner.type'
+            - 'direction'
+    filter:
+      network:
+        k8s_dst_owner_name:
+          not_match: '{kube*,*jaeger-agent*,*prometheus*,*promtail*,*grafana-agent*}'
+        k8s_src_owner_name:
+          not_match: '{kube*,*jaeger-agent*,*prometheus*,*promtail*,*grafana-agent*}'
+    discovery:
+      services:
+        - k8s_namespace: .
+      exclude_services:
+        - exe_path: ".*alloy.*|.*otelcol.*|.*beyla.*"
+    internal_metrics:
+      prometheus:
+        port: 9090
+        path: /internal/metrics
+    prometheus_export:
+      port: 9090
+      path: /metrics
+      features:
+        - application
+        - network
+        - application_service_graph
+        - application_span
+---
+# Source: k8s-monitoring/charts/alloy-metrics/templates/rbac.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: ko-alloy-metrics
+  labels:
+    helm.sh/chart: alloy-metrics-0.9.2
+    app.kubernetes.io/name: alloy-metrics
+    app.kubernetes.io/instance: ko
+    
+    app.kubernetes.io/version: "v1.4.3"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/part-of: alloy
+    app.kubernetes.io/component: rbac
+rules:
+  # Rules which allow discovery.kubernetes to function.
+  - apiGroups:
+      - ""
+      - "discovery.k8s.io"
+      - "networking.k8s.io"
+    resources:
+      - endpoints
+      - endpointslices
+      - ingresses
+      - nodes
+      - nodes/proxy
+      - nodes/metrics
+      - pods
+      - services
+    verbs:
+      - get
+      - list
+      - watch
+  # Rules which allow loki.source.kubernetes and loki.source.podlogs to work.
+  - apiGroups:
+      - ""
+    resources:
+      - pods
+      - pods/log
+      - namespaces
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - "monitoring.grafana.com"
+    resources:
+      - podlogs
+    verbs:
+      - get
+      - list
+      - watch
+  # Rules which allow mimir.rules.kubernetes to work.
+  - apiGroups: ["monitoring.coreos.com"]
+    resources:
+      - prometheusrules
+    verbs:
+      - get
+      - list
+      - watch
+  - nonResourceURLs:
+      - /metrics
+    verbs:
+      - get
+  # Rules for prometheus.kubernetes.*
+  - apiGroups: ["monitoring.coreos.com"]
+    resources:
+      - podmonitors
+      - servicemonitors
+      - probes
+    verbs:
+      - get
+      - list
+      - watch
+  # Rules which allow eventhandler to work.
+  - apiGroups:
+      - ""
+    resources:
+      - events
+    verbs:
+      - get
+      - list
+      - watch
+  # needed for remote.kubernetes.*
+  - apiGroups: [""]
+    resources:
+      - "configmaps"
+      - "secrets"
+    verbs:
+      - get
+      - list
+      - watch
+  # needed for otelcol.processor.k8sattributes
+  - apiGroups: ["apps"]
+    resources: ["replicasets"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["extensions"]
+    resources: ["replicasets"]
+    verbs: ["get", "list", "watch"]
+---
+# Source: k8s-monitoring/charts/autoInstrumentation/charts/beyla/templates/cluster-role.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: ko-beyla
+  labels:
+    helm.sh/chart: beyla-1.4.11
+    app.kubernetes.io/name: beyla
+    app.kubernetes.io/instance: ko
+    app.kubernetes.io/version: "1.8.6"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/part-of: beyla
+    app.kubernetes.io/component: rbac
+rules:
+  - apiGroups: [ "apps" ]
+    resources: [ "replicasets" ]
+    verbs: [ "list", "watch" ]
+  - apiGroups: [ "" ]
+    resources: [ "pods", "services", "nodes" ]
+    verbs: [ "list", "watch", "get" ]
+---
+# Source: k8s-monitoring/charts/alloy-metrics/templates/rbac.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: ko-alloy-metrics
+  labels:
+    helm.sh/chart: alloy-metrics-0.9.2
+    app.kubernetes.io/name: alloy-metrics
+    app.kubernetes.io/instance: ko
+    
+    app.kubernetes.io/version: "v1.4.3"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/part-of: alloy
+    app.kubernetes.io/component: rbac
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: ko-alloy-metrics
+subjects:
+  - kind: ServiceAccount
+    name: ko-alloy-metrics
+    namespace: default
+---
+# Source: k8s-monitoring/charts/autoInstrumentation/charts/beyla/templates/cluster-role-binding.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: ko-beyla
+  labels:
+    helm.sh/chart: beyla-1.4.11
+    app.kubernetes.io/name: beyla
+    app.kubernetes.io/instance: ko
+    app.kubernetes.io/version: "1.8.6"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/part-of: beyla
+    app.kubernetes.io/component: rbac
+subjects:
+  - kind: ServiceAccount
+    name: ko-beyla
+    namespace: default
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: ko-beyla
+---
+# Source: k8s-monitoring/charts/alloy-metrics/templates/cluster_service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: ko-alloy-metrics-cluster
+  labels:
+    helm.sh/chart: alloy-metrics-0.9.2
+    app.kubernetes.io/name: alloy-metrics
+    app.kubernetes.io/instance: ko
+    
+    app.kubernetes.io/version: "v1.4.3"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/part-of: alloy
+    app.kubernetes.io/component: networking
+spec:
+  type: ClusterIP
+  clusterIP: 'None'
+  publishNotReadyAddresses: true
+  selector:
+    app.kubernetes.io/name: alloy-metrics
+    app.kubernetes.io/instance: ko
+  ports:
+    # Do not include the -metrics suffix in the port name, otherwise metrics
+    # can be double-collected with the non-headless Service if it's also
+    # enabled.
+    #
+    # This service should only be used for clustering, and not metric
+    # collection.
+    - name: http
+      port: 12345
+      targetPort: 12345
+      protocol: "TCP"
+---
+# Source: k8s-monitoring/charts/alloy-metrics/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: ko-alloy-metrics
+  labels:
+    helm.sh/chart: alloy-metrics-0.9.2
+    app.kubernetes.io/name: alloy-metrics
+    app.kubernetes.io/instance: ko
+    
+    app.kubernetes.io/version: "v1.4.3"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/part-of: alloy
+    app.kubernetes.io/component: networking
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: alloy-metrics
+    app.kubernetes.io/instance: ko
+  internalTrafficPolicy: Cluster
+  ports:
+    - name: http-metrics
+      port: 12345
+      targetPort: 12345
+      protocol: "TCP"
+---
+# Source: k8s-monitoring/charts/autoInstrumentation/charts/beyla/templates/daemon-set.yaml
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: ko-beyla
+  namespace: default
+  labels:
+    helm.sh/chart: beyla-1.4.11
+    app.kubernetes.io/name: beyla
+    app.kubernetes.io/instance: ko
+    app.kubernetes.io/version: "1.8.6"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/part-of: beyla
+    app.kubernetes.io/component: workload
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: beyla
+      app.kubernetes.io/instance: ko
+  updateStrategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      annotations:
+        checksum/config: 01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b
+        k8s.grafana.com/logs.job: integrations/beyla
+      labels:
+        helm.sh/chart: beyla-1.4.11
+        app.kubernetes.io/name: beyla
+        app.kubernetes.io/instance: ko
+        app.kubernetes.io/version: "1.8.6"
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/part-of: beyla
+        app.kubernetes.io/component: workload
+    spec:
+      serviceAccountName: ko-beyla
+      hostPID: true
+      containers:
+        - name: beyla
+          image: docker.io/grafana/beyla:1.8.6
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            privileged: true
+          ports:
+          - name: metrics
+            containerPort: 9090
+            protocol: TCP
+          env:
+            - name: BEYLA_CONFIG_PATH
+              value: "/etc/beyla/config/beyla-config.yml"
+          volumeMounts:
+            - mountPath: /etc/beyla/config
+              name: beyla-config
+      nodeSelector:
+        kubernetes.io/os: linux
+      volumes:
+        - name: beyla-config
+          configMap:
+            name: ko-beyla
+---
+# Source: k8s-monitoring/charts/alloy-metrics/templates/controllers/statefulset.yaml
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: ko-alloy-metrics
+  labels:
+    helm.sh/chart: alloy-metrics-0.9.2
+    app.kubernetes.io/name: alloy-metrics
+    app.kubernetes.io/instance: ko
+    
+    app.kubernetes.io/version: "v1.4.3"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/part-of: alloy
+spec:
+  replicas: 1
+  podManagementPolicy: Parallel
+  minReadySeconds: 10
+  serviceName: ko-alloy-metrics
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: alloy-metrics
+      app.kubernetes.io/instance: ko
+  template:
+    metadata:
+      annotations:
+        kubectl.kubernetes.io/default-container: alloy
+        k8s.grafana.com/logs.job: integrations/alloy
+      labels:
+        app.kubernetes.io/name: alloy-metrics
+        app.kubernetes.io/instance: ko
+    spec:
+      serviceAccountName: ko-alloy-metrics
+      containers:
+        - name: alloy
+          image: docker.io/grafana/alloy:v1.4.3
+          imagePullPolicy: IfNotPresent
+          args:
+            - run
+            - /etc/alloy/config.alloy
+            - --storage.path=/tmp/alloy
+            - --server.http.listen-addr=0.0.0.0:12345
+            - --server.http.ui-path-prefix=/
+            - --cluster.enabled=true
+            - --cluster.join-addresses=ko-alloy-metrics-cluster
+            - --cluster.name="alloy-metrics"
+            - --stability.level=generally-available
+          env:
+            - name: ALLOY_DEPLOY_MODE
+              value: "helm"
+            - name: HOSTNAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+          ports:
+            - containerPort: 12345
+              name: http-metrics
+          readinessProbe:
+            httpGet:
+              path: /-/ready
+              port: 12345
+              scheme: HTTP
+            initialDelaySeconds: 10
+            timeoutSeconds: 1
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              add:
+              - CHOWN
+              - DAC_OVERRIDE
+              - FOWNER
+              - FSETID
+              - KILL
+              - SETGID
+              - SETUID
+              - SETPCAP
+              - NET_BIND_SERVICE
+              - NET_RAW
+              - SYS_CHROOT
+              - MKNOD
+              - AUDIT_WRITE
+              - SETFCAP
+              drop:
+              - ALL
+            seccompProfile:
+              type: RuntimeDefault
+          volumeMounts:
+            - name: config
+              mountPath: /etc/alloy
+        - name: config-reloader
+          image: ghcr.io/jimmidyson/configmap-reload:v0.12.0
+          args:
+            - --volume-dir=/etc/alloy
+            - --webhook-url=http://localhost:12345/-/reload
+          volumeMounts:
+            - name: config
+              mountPath: /etc/alloy
+          resources:
+            requests:
+              cpu: 1m
+              memory: 5Mi
+      dnsPolicy: ClusterFirst
+      nodeSelector:
+        kubernetes.io/os: linux
+      volumes:
+        - name: config
+          configMap:
+            name: ko-alloy-metrics

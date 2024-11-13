@@ -63,7 +63,6 @@
 {{- if $metricIntegrations }}
   {{- $metricDestinations := include "features.integrations.destinations" . | fromYamlArray }}
   {{- include "destinations.validate_destination_list" (dict "destinations" $metricDestinations "type" "metrics" "ecosystem" "prometheus" "feature" $featureName) }}
-  {{- include "collectors.require_collector" (dict "Values" $.Values "name" "alloy-metrics" "feature" $featureName) }}
 {{- end }}
 
 {{- $podLogsEnabled := include "features.podLogs.enabled" $ }}

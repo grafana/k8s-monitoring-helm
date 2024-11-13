@@ -36,6 +36,8 @@ pod_logs "feature" {
 {{- include "destinations.validate_destination_list" (dict "destinations" $destinations "type" "logs" "ecosystem" "loki" "feature" $featureName) }}
 {{- include "collectors.require_collector" (dict "Values" $.Values "name" "alloy-logs" "feature" $featureName) }}
 
-{{- include "feature.podLogs.collector.validate" (dict "Values" $.Values.podLogs "Collector" (index .Values "alloy-logs") "CollectorName" "alloy-logs") }}
+{{- range $collector := include "features.podLogs.collectors" . | fromYamlArray }}
+  {{- include "collectors.require_collector" (dict "Values" $.Values "name" $collector "feature" $featureName) }}
+{{- end -}}
 {{- end -}}
 {{- end -}}
