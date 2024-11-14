@@ -231,6 +231,12 @@ data:
           username = nonsensitive(remote.kubernetes.secret.loki.data["loki-username"])
           password = remote.kubernetes.secret.loki.data["access-token"]
         }
+        tls_config {
+          insecure_skip_verify = false
+          ca_pem = nonsensitive(remote.kubernetes.secret.loki.data["ca"])
+          cert_pem = nonsensitive(remote.kubernetes.secret.loki.data["cert"])
+          key_pem = remote.kubernetes.secret.loki.data["key"]
+        }
       }
       external_labels = {
         cluster = "external-secrets-example-cluster",
@@ -433,6 +439,12 @@ data:
         basic_auth {
           username = nonsensitive(remote.kubernetes.secret.loki.data["loki-username"])
           password = remote.kubernetes.secret.loki.data["access-token"]
+        }
+        tls_config {
+          insecure_skip_verify = false
+          ca_pem = nonsensitive(remote.kubernetes.secret.loki.data["ca"])
+          cert_pem = nonsensitive(remote.kubernetes.secret.loki.data["cert"])
+          key_pem = remote.kubernetes.secret.loki.data["key"]
         }
       }
       external_labels = {
