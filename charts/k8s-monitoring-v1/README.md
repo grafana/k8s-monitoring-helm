@@ -343,6 +343,13 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | externalServices.prometheus.writeEndpoint | string | `"/api/prom/push"` | Prometheus metrics write endpoint. Preset for Grafana Cloud Metrics instances. |
 | externalServices.prometheus.writeRelabelConfigRules | string | `""` | Rule blocks to be added to the [write_relabel_config block](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.remote_write/#write_relabel_config-block) of the prometheus.remote_write component. |
 
+### OpenTelemetry Conversion
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| externalServices.prometheus.openTelemetryConversion | object | `{"addMetricSuffixes":true}` | Settings for converting OpenTelemetry ecosystem metrics to Prometheus ecosystem metrics. |
+| externalServices.prometheus.openTelemetryConversion.addMetricSuffixes | bool | `true` | Whether to add type and unit suffixes to metrics names. |
+
 ### External Services (Pyroscope)
 
 | Key | Type | Default | Description |

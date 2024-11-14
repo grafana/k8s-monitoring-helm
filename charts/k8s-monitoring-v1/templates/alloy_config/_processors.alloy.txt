@@ -391,6 +391,7 @@ otelcol.processor.batch "batch_processor" {
 
 {{- if .Values.metrics.enabled }}
 otelcol.exporter.prometheus "metrics_converter" {
+  add_metric_suffixes = {{ .Values.externalServices.prometheus.openTelemetryConversion.addMetricSuffixes }}
   forward_to = [prometheus.relabel.metrics_service.receiver]
 }
 {{- end }}
