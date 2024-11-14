@@ -61,6 +61,7 @@ prometheus.remote_write "metrics_service" {
       {{- if .oauth2.tokenURL }}
       token_url = {{ .oauth2.tokenURL | quote }}
       {{- end }}
+    }
 {{- else if eq .authMode "sigv4" }}
     sigv4 {
       access_key = nonsensitive(remote.kubernetes.secret.metrics_service.data[{{ .sigv4.accessKeyKey | quote }}])
