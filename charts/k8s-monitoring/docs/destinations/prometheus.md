@@ -66,6 +66,13 @@ This defines the options for defining a destination for metrics that use the Pro
 | url | string | `""` | The URL for the Prometheus destination. |
 | urlFrom | string | `""` | Raw config for accessing the URL. |
 
+### OpenTelemetry Conversion
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| openTelemetryConversion | object | `{"addMetricSuffixes":true}` | Settings for converting OpenTelemetry ecosystem metrics to Prometheus ecosystem metrics. |
+| openTelemetryConversion.addMetricSuffixes | bool | `true` | Whether to add type and unit suffixes to metrics names. |
+
 ### Queue Configuration
 
 | Key | Type | Default | Description |
