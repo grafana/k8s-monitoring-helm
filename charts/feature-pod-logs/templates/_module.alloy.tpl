@@ -16,6 +16,10 @@ declare "pod_logs" {
   {{- include "feature.podLogs.logReceiver.alloy" . | nindent 2 }}
 {{- end }}
 
+{{- if or .Values.receiver.enabled (eq .Values.gatherMethod "OpenShiftClusterLogForwarder") }}
+  {{- include "feature.podLogs.lokiReceiver" . | nindent 2 }}
+{{- end -}}
+
   {{- include "feature.podLogs.processing.alloy" . | nindent 2 }}
 }
 {{- end -}}

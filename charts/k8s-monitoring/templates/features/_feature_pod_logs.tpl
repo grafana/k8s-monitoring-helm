@@ -38,6 +38,9 @@ pod_logs "feature" {
 
 {{- range $collector := include "features.podLogs.collectors" . | fromYamlArray }}
   {{- include "collectors.require_collector" (dict "Values" $.Values "name" $collector "feature" $featureName) }}
+  {{- if or $.Values.podLogs.receiver.enabled (eq $.Values.podLogs.gatherMethod "OpenShiftClusterLogForwarder") }}
+    {{- include "collectors.require_extra_port" (dict "Values" $.Values "name" $collector "feature" $featureName "portNumber" $.Values.podLogs.receiver.port "portName" "loki" "portProtocol" "TCP") }}
+  {{- end -}}
 {{- end -}}
 {{- end -}}
 {{- end -}}
