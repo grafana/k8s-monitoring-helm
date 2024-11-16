@@ -57,7 +57,7 @@ deploymentCount=$(yq -r '.deployments | length' "${testManifest}")
 for ((i=0; i<deploymentCount; i++)); do
   name=$(yq -r .deployments[$i].name "${testManifest}")
   type=$(yq -r .deployments[$i].type "${testManifest}")
-  skipOnHeadless=$(yq -r ".deployments[$i].type // \"false\"" "${testManifest}")
+  skipOnHeadless=$(yq -r ".deployments[$i].skipOnHeadless // \"false\"" "${testManifest}")
 
   if [ "${HEADLESS}" == "true" ] && [ "${skipOnHeadless}" == "true" ]; then
     continue
