@@ -1,45 +1,40 @@
 ---
-prerequisites:
-  - type: helm
-    name: prometheus
+cluster:
+  name: integration-mysql-feature-test
+deployments:
+  - name: prometheus
+    type: helm
     repo: https://prometheus-community.github.io/helm-charts
     chart: prometheus
     namespace: prometheus
-    valuesFile: charts/k8s-monitoring/tests/integration/integration-cert-manager/prometheus.yaml
+    valuesFile: configs/prometheus.yaml
 
-  - type: helm
-    name: loki
+  - name: loki
+    type: helm
     repo: https://grafana.github.io/helm-charts
     chart: loki
     namespace: loki
-    valuesFile: .configs/loki.yaml
+    valuesFile: configs/loki.yaml
 
-  - type: helm
-    name: test-database
+  - name: test-database
+    type: helm
     chart: oci://registry-1.docker.io/bitnamicharts/mysql
     namespace: mysql
 
-  - type: helm
-    name: grafana
+  - name: grafana
+    type: helm
     repo: https://grafana.github.io/helm-charts
     chart: grafana
     namespace: grafana
-    values:
-      datasources:
-        datasources.yaml:
-          apiVersion: 1
-          datasources:
-            - name: Prometheus
-              type: prometheus
-              url: http://prometheus-server.prometheus.svc:9090
-              isDefault: true
-            - name: Loki
-              type: loki
-              url: http://loki-gateway.loki.svc:8080
-              basicAuth: true
-              basicAuthUser: loki
-              jsonData:
-                httpHeaderName1: X-Scope-OrgID
-              secureJsonData:
-                basicAuthPassword: lokipassword
-                httpHeaderValue1: "1"
+    valuesFile: configs/grafana.yaml
+    skipOnHeadless: true
+
+  - name: k8s-monitoring
+    type: helm
+    chartPath: charts/k8s-monitoring
+    valuesFile: values.yaml
+  - name: k8s-monitoring-test
+    type: helm
+    chartPath: charts/k8s-monitoring-test
+    valuesFile: test-values.yaml
+    test: true
