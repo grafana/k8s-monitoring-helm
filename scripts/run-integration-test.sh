@@ -43,7 +43,7 @@ if [ "${clusterType}" == "kind" ]; then
     if [ ! -f "${clusterConfig}" ]; then
       kind create cluster --name "${clusterName}"
     else
-      kind create cluster --name "${clusterName}" --config "${clusterConfig}"
+      kind create cluster --name "${clusterName}" --config "${TEST_DIRECTORY}/${clusterConfig}"
     fi
   fi
 else
