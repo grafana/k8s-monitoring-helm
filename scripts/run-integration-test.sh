@@ -15,6 +15,7 @@ usage() {
   echo "    test-manifest.yaml - The test manifest, which defines cluster, and deployments"
 }
 
+CREATE_CLUSTER=${CREATE_CLUSTER:-true}
 HEADLESS=${HEADLESS:-false}
 TEST_DIRECTORY=$1
 if [ -z "${TEST_DIRECTORY}" ]; then
@@ -31,23 +32,26 @@ if [ ! -f "${testManifest}" ]; then
 fi
 
 set -eo pipefail  # Exit immediately if a command fails.
+
 #
 # Cluster creation
 #
-clusterType=$(yq -r ".cluster.type // \"kind\"" "${testManifest}")
-clusterName=$(yq -r ".cluster.name // \"$(basename "${TEST_DIRECTORY}")\"" "${testManifest}")
-clusterConfig=$(yq -r ".cluster.config // \"\"" "${testManifest}")
+if [ "${CREATE_CLUSTER}" == "true" ]; then
+  clusterType=$(yq -r ".cluster.type // \"kind\"" "${testManifest}")
+  clusterName=$(yq -r ".cluster.name // \"$(basename "${TEST_DIRECTORY}")\"" "${testManifest}")
+  clusterConfig=$(yq -r ".cluster.config // \"\"" "${testManifest}")
 
-if [ "${clusterType}" == "kind" ]; then
-  if ! kind get clusters | grep -q "${clusterName}"; then
-    if [ ! -f "${clusterConfig}" ]; then
-      kind create cluster --name "${clusterName}"
-    else
-      kind create cluster --name "${clusterName}" --config "${TEST_DIRECTORY}/${clusterConfig}"
+  if [ "${clusterType}" == "kind" ]; then
+    if ! kind get clusters | grep -q "${clusterName}"; then
+      if [ ! -f "${clusterConfig}" ]; then
+        kind create cluster --name "${clusterName}"
+      else
+        kind create cluster --name "${clusterName}" --config "${TEST_DIRECTORY}/${clusterConfig}"
+      fi
     fi
+  else
+    echo "Unknown cluster type: \"${clusterType}\""
   fi
-else
-  echo "Unknown cluster type: \"${clusterType}\""
 fi
 
 #
