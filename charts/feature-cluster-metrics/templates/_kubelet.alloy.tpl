@@ -28,8 +28,9 @@ kubernetes.kubelet "scrape" {
 
 prometheus.relabel "kubelet" {
   max_cache_size = {{ .Values.kubelet.maxCacheSize | default .Values.global.maxCacheSize | int }}
-
+{{- if .Values.kubelet.extraMetricProcessingRules }}
   {{ .Values.kubelet.extraMetricProcessingRules | indent 2 }}
+{{- end }}
 
 {{- end }}
   forward_to = argument.metrics_destinations.value
