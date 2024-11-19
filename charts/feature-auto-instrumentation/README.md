@@ -37,7 +37,7 @@ Actual integration testing in a live environment should be done in the main [k8s
 
 | Repository | Name | Version |
 |------------|------|---------|
-| https://grafana.github.io/helm-charts | beyla | 1.4.11 |
+| https://grafana.github.io/helm-charts | beyla | 1.4.12 |
 <!-- markdownlint-enable list-marker-space -->
 <!-- markdownlint-enable no-bare-urls -->
 <!-- markdownlint-disable no-space-in-emphasis -->
