@@ -26,6 +26,7 @@ declare "cluster_metrics" {
   {{- include "feature.clusterMetrics.node_exporter.alloy" . | indent 2 }}
   {{- include "feature.clusterMetrics.windows_exporter.alloy" . | indent 2 }}
   {{- include "feature.clusterMetrics.kepler.alloy" . | indent 2 }}
+  {{- include "feature.clusterMetrics.opencost.alloy" . | indent 2 }}
 }
 {{- end -}}
 

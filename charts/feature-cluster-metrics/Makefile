@@ -31,6 +31,7 @@ build: README.md Chart.lock values.schema.json $(UPDATECLI_FILES)
 test: build
 	helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 	helm repo add kepler https://sustainable-computing-io.github.io/kepler-helm-chart
+	helm repo add opencost https://opencost.github.io/opencost-helm-chart
 
 	helm lint .
 	ct lint --lint-conf ../../.configs/lintconf.yaml --helm-dependency-extra-args=--skip-refresh --charts .

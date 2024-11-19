@@ -1,0 +1,31 @@
+---
+name: Update dependency "opencost" for Helm chart "feature-cluster-metrics"
+sources:
+  opencost:
+    name: Get latest "opencost" Helm chart version
+    kind: helmchart
+    spec:
+      name: opencost
+      url: https://opencost.github.io/opencost-helm-chart
+      versionfilter:
+        kind: semver
+        pattern: '*'
+conditions:
+  opencost:
+    name: Ensure Helm chart dependency "opencost" is specified
+    kind: yaml
+    spec:
+      file: charts/feature-cluster-metrics/Chart.yaml
+      key: $.dependencies[4].name
+      value: opencost
+    disablesourceinput: true
+targets:
+  opencost:
+    name: Bump Helm chart dependency "opencost" for Helm chart "feature-cluster-metrics"
+    kind: helmchart
+    spec:
+      file: Chart.yaml
+      key: $.dependencies[4].version
+      name: charts/feature-cluster-metrics
+      versionincrement: none
+    sourceid: opencost
