@@ -23,8 +23,3 @@ CHART_FILE=Chart.yaml
 
 yq e ".version = \"${VERSION}\"" "${CHART_FILE}" > "${CHART_FILE}.new" && mv "${CHART_FILE}.new" "${CHART_FILE}"
 yq e ".appVersion = \"${PLUGIN_VERSION}\"" "${CHART_FILE}" > "${CHART_FILE}.new" && mv "${CHART_FILE}.new" "${CHART_FILE}"
-
-# shellcheck disable=SC2046 disable=SC2312
-NUM_EXAMPLES=$(find docs/examples -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d ' ')
-make -j "${NUM_EXAMPLES}" examples
-make README.md docs/RBAC.md values.schema.json
