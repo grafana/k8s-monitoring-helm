@@ -33,5 +33,154 @@ cluster_metrics "feature" {
 {{- range $collector := include "features.clusterMetrics.collectors" . | fromYamlArray }}
   {{- include "collectors.require_collector" (dict "Values" $.Values "name" $collector "feature" $featureName) }}
 {{- end -}}
+
+{{- if .Values.clusterMetrics.opencost.enabled}}
+  {{- if ne .Values.cluster.name .Values.clusterMetrics.opencost.opencost.exporter.defaultClusterId }}
+    {{- $msg := list "" "The OpenCost default cluster id should match the cluster name." }}
+    {{- $msg = append $msg "Please set:" }}
+    {{- $msg = append $msg "clusterMetrics:" }}
+    {{- $msg = append $msg "  opencost:" }}
+    {{- $msg = append $msg "    opencost:" }}
+    {{- $msg = append $msg "      exporter:" }}
+    {{- $msg = append $msg (printf "        defaultClusterId: %s" .Values.cluster.name) }}
+    {{- fail (join "\n" $msg) }}
+  {{- end -}}
+
+  {{- if ne .Values.clusterMetrics.opencost.metricsSource "custom" }}
+    {{- if eq .Values.clusterMetrics.opencost.metricsSource "" }}
+      {{- $msg := list "" "OpenCost requires linking to a Prometheus data source." }}
+      {{- $msg = append $msg "Please set:" }}
+      {{- $msg = append $msg "clusterMetrics:" }}
+      {{- $msg = append $msg "  opencost:" }}
+      {{- if eq (len $destinations) 1 }}
+      {{- $msg = append $msg (printf "    metricsSource: %s" (first $destinations)) }}
+      {{- else }}
+      {{- $msg = append $msg "    metricsSource:  <metrics destination name>" }}
+      {{- $msg = append $msg (printf "Where <metrics destination name> is one of %s" (include "english_list_or" $destinations)) }}
+      {{- end }}
+      {{- fail (join "\n" $msg) }}
+    {{- end -}}
+
+    {{- $destinationFound := false }}
+    {{- range $index, $destinationName := $destinations }}
+      {{- if eq $destinationName $.Values.clusterMetrics.opencost.metricsSource }}
+        {{- $destinationFound = true }}
+        {{- $destination := index $.Values.destinations $index }}
+        {{- $destinationUrl := $destination.url }}
+        {{- $openCostMetricsUrl := $destinationUrl }}
+        {{- if regexMatch "/api/prom/push" $destinationUrl }}
+          {{- $openCostMetricsUrl = (regexReplaceAll "^(.*)/api/prom/push$" $destinationUrl "${1}/api/prom") }}
+        {{- else if regexMatch "/api/v1/push" $destinationUrl }}
+          {{- $openCostMetricsUrl = (regexReplaceAll "^(.*)/api/v1/push$" $destinationUrl "${1}/api/v1/query") }}
+        {{- else if regexMatch "/api/v1/write" $destinationUrl }}
+          {{- $openCostMetricsUrl = (regexReplaceAll "^(.*)/api/v1/write$" $destinationUrl "${1}/api/v1/query") }}
+        {{- else }}
+          {{- $openCostMetricsUrl = (printf "<%s Query URL>" $destinationName)}}
+        {{- end }}
+
+        {{- if eq $.Values.clusterMetrics.opencost.opencost.prometheus.external.url ""}}
+          {{- $msg := list "" "OpenCost requires a url to a Prometheus data source." }}
+          {{- $msg = append $msg "Please set:" }}
+          {{- $msg = append $msg "clusterMetrics:" }}
+          {{- $msg = append $msg "  opencost:" }}
+          {{- $msg = append $msg "    opencost:" }}
+          {{- $msg = append $msg "      prometheus:" }}
+          {{- $msg = append $msg "        external:" }}
+          {{- $msg = append $msg (printf "          url: %s" $openCostMetricsUrl) }}
+          {{- fail (join "\n" $msg) }}
+        {{- end }}
+
+        {{- $authType := include "secrets.authType" $destination }}
+        {{- $secretType := include "secrets.secretType" $destination }}
+        {{- if eq $authType "basic" }}
+          {{- if eq $secretType "embedded" }}
+            {{- $destinationUsername := include "secrets.getSecretValue" (dict "object" $destination "key" ".auth.username") }}
+            {{- if ne $.Values.clusterMetrics.opencost.opencost.prometheus.username $destinationUsername}}
+              {{- $msg := list "" (printf "The username for %s and OpenCost do not match." $destinationName) }}
+              {{- $msg = append $msg "Please set:" }}
+              {{- $msg = append $msg "clusterMetrics:" }}
+              {{- $msg = append $msg "  opencost:" }}
+              {{- $msg = append $msg "    opencost:" }}
+              {{- $msg = append $msg "      prometheus:" }}
+              {{- $msg = append $msg (printf "        username: %s" $destinationUsername) }}
+              {{- fail (join "\n" $msg) }}
+            {{- end }}
+  
+            {{- $destinationPassword := include "secrets.getSecretValue" (dict "object" $destination "key" ".auth.password") }}
+            {{- if ne $.Values.clusterMetrics.opencost.opencost.prometheus.password_key $destinationPassword}}
+              {{- $msg := list "" (printf "The password for %s and OpenCost do not match." $destinationName) }}
+              {{- $msg = append $msg "Please set:" }}
+              {{- $msg = append $msg "clusterMetrics:" }}
+              {{- $msg = append $msg "  opencost:" }}
+              {{- $msg = append $msg "    opencost:" }}
+              {{- $msg = append $msg "      prometheus:" }}
+              {{- $msg = append $msg (printf "        password: %s" $destinationPassword) }}
+              {{- fail (join "\n" $msg) }}
+            {{- end }}
+          {{- else }}
+            {{- $destinationSecret := include "secrets.kubernetesSecretName" (dict "Values" $.Values "Chart" $.Chart "Release" $.Release "object" $destination) }}
+            {{- if ne $.Values.clusterMetrics.opencost.opencost.prometheus.existingSecretName $destinationSecret}}
+              {{- $msg := list "" (printf "OpenCost requires the secret for %s to be set." $destinationName) }}
+              {{- $msg = append $msg "Please set:" }}
+              {{- $msg = append $msg "clusterMetrics:" }}
+              {{- $msg = append $msg "  opencost:" }}
+              {{- $msg = append $msg "    opencost:" }}
+              {{- $msg = append $msg "      prometheus:" }}
+              {{- $msg = append $msg (printf "        existingSecretName: %s" $destinationSecret) }}
+              {{- fail (join "\n" $msg) }}
+            {{- end }}
+  
+            {{- $destinationUsernameKey := include "secrets.getSecretKey" (dict "object" $destination "key" ".auth.username") }}
+            {{- if ne $.Values.clusterMetrics.opencost.opencost.prometheus.username_key $destinationUsernameKey}}
+              {{- $msg := list "" (printf "The username secret key for %s and OpenCost do not match." $destinationName) }}
+              {{- $msg = append $msg "Please set:" }}
+              {{- $msg = append $msg "clusterMetrics:" }}
+              {{- $msg = append $msg "  opencost:" }}
+              {{- $msg = append $msg "    opencost:" }}
+              {{- $msg = append $msg "      prometheus:" }}
+              {{- $msg = append $msg (printf "        username_key: %s" $destinationUsernameKey) }}
+              {{- fail (join "\n" $msg) }}
+            {{- end }}
+  
+            {{- $destinationPasswordKey := include "secrets.getSecretKey" (dict "object" $destination "key" ".auth.password") }}
+            {{- if ne $.Values.clusterMetrics.opencost.opencost.prometheus.password_key $destinationPasswordKey}}
+              {{- $msg := list "" (printf "The password secret key for %s and OpenCost do not match." $destinationName) }}
+              {{- $msg = append $msg "Please set:" }}
+              {{- $msg = append $msg "clusterMetrics:" }}
+              {{- $msg = append $msg "  opencost:" }}
+              {{- $msg = append $msg "    opencost:" }}
+              {{- $msg = append $msg "      prometheus:" }}
+              {{- $msg = append $msg (printf "        password_key: %s" $destinationPasswordKey) }}
+              {{- fail (join "\n" $msg) }}
+            {{- end }}
+          {{- end }}
+        {{- else if ne $authType "none" }}
+          {{- $msg := list "" (printf "Unable to provide guidance for configuring OpenCost to use %s authentication for %s." $authType $destinationName) }}
+          {{- $msg = append $msg "Please set:" }}
+          {{- $msg = append $msg "clusterMetrics:" }}
+          {{- $msg = append $msg "  opencost:" }}
+          {{- $msg = append $msg "    metricsSource: custom" }}
+          {{- $msg = append $msg ("And configure %s authentication for %s using guidance from the OpenCost Helm chart.") }}
+          {{- $msg = append $msg "Documentation: https://github.com/opencost/opencost-helm-chart/tree/main/charts/opencost" }}
+          {{- fail (join "\n" $msg) }}
+        {{- end }}
+      {{- end }}
+    {{- end -}}
+
+    {{- if eq $destinationFound false }}
+      {{- $msg := list "" (printf "%s is not a valid Prometheus data source for OpenCost.") }}
+      {{- $msg = append $msg "Please set:" }}
+      {{- $msg = append $msg "clusterMetrics:" }}
+      {{- $msg = append $msg "  opencost:" }}
+      {{- if eq (len $destinations) 1 }}
+      {{- $msg = append $msg (printf "    metricsSource: %s" (index $destinations 0)) }}
+      {{- else }}
+      {{- $msg = append $msg "    metricsSource:  <metrics destination name>" }}
+      {{- $msg = append $msg (printf "Where <metrics destination name> is one of %s" (include "english_list_or" $destinations)) }}
+      {{- end }}
+      {{- fail (join "\n" $msg) }}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
 {{- end -}}
 {{- end -}}

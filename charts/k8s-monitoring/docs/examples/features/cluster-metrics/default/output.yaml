@@ -15,6 +15,19 @@ metadata:
     app.kubernetes.io/part-of: alloy
     app.kubernetes.io/component: rbac
 ---
+# Source: k8s-monitoring/charts/clusterMetrics/charts/kepler/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: ko-kepler
+  namespace: default
+  labels:
+    helm.sh/chart: kepler-0.5.11
+    app.kubernetes.io/name: kepler
+    app.kubernetes.io/component: exporter
+    app.kubernetes.io/version: "release-0.7.12"
+    app.kubernetes.io/managed-by: Helm
+---
 # Source: k8s-monitoring/charts/clusterMetrics/charts/kube-state-metrics/templates/serviceaccount.yaml
 apiVersion: v1
 kind: ServiceAccount
@@ -48,6 +61,21 @@ metadata:
     app.kubernetes.io/version: "1.8.2"
     release: ko
 automountServiceAccountToken: false
+---
+# Source: k8s-monitoring/charts/clusterMetrics/charts/opencost/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: ko-opencost
+  namespace: default
+  labels:
+    helm.sh/chart: opencost-1.42.3
+    app.kubernetes.io/name: opencost
+    app.kubernetes.io/instance: ko
+    app.kubernetes.io/version: "1.113.0"
+    app.kubernetes.io/part-of: opencost
+    app.kubernetes.io/managed-by: Helm
+automountServiceAccountToken: true
 ---
 # Source: k8s-monitoring/charts/clusterMetrics/charts/windows-exporter/templates/serviceaccount.yaml
 apiVersion: v1
@@ -349,6 +377,88 @@ data:
         }
         forward_to = argument.metrics_destinations.value
       }  
+      
+      discovery.kubernetes "kepler" {
+        role = "pod"
+        namespaces {
+          own_namespace = true
+        }
+        selectors {
+          role = "pod"
+          label = "app.kubernetes.io/name=kepler"
+        }
+      }
+      
+      discovery.relabel "kepler" {
+        targets = discovery.kubernetes.kepler.targets
+        rule {
+          source_labels = ["__meta_kubernetes_pod_node_name"]
+          action = "replace"
+          target_label = "instance"
+        }
+      }
+      
+      prometheus.scrape "kepler" {
+        targets      = discovery.relabel.kepler.output
+        job_name     = "integrations/kepler"
+        honor_labels = true
+        scrape_interval = "60s"
+        clustering {
+          enabled = true
+        }
+        forward_to = [prometheus.relabel.kepler.receiver]
+      }
+      
+      prometheus.relabel "kepler" {
+        max_cache_size = 100000
+        rule {
+          source_labels = ["__name__"]
+          regex = "up|kepler_.*"
+          action = "keep"
+        }
+        forward_to = argument.metrics_destinations.value
+      }  
+      
+      discovery.kubernetes "opencost" {
+        role = "pod"
+        namespaces {
+          own_namespace = true
+        }
+        selectors {
+          role = "pod"
+          label = "app.kubernetes.io/name=opencost"
+        }
+      }
+      
+      discovery.relabel "opencost" {
+        targets = discovery.kubernetes.opencost.targets
+        rule {
+          source_labels = ["__meta_kubernetes_pod_node_name"]
+          action = "replace"
+          target_label = "instance"
+        }
+      }
+      
+      prometheus.scrape "opencost" {
+        targets      = discovery.relabel.opencost.output
+        job_name     = "integrations/opencost"
+        honor_labels = true
+        scrape_interval = "60s"
+        clustering {
+          enabled = true
+        }
+        forward_to = [prometheus.relabel.opencost.receiver]
+      }
+      
+      prometheus.relabel "opencost" {
+        max_cache_size = 100000
+        rule {
+          source_labels = ["__name__"]
+          regex = "up|container_cpu_allocation|container_gpu_allocation|container_memory_allocation_bytes|deployment_match_labels|kubecost_cluster_info|kubecost_cluster_management_cost|kubecost_cluster_memory_working_set_bytes|kubecost_http_requests_total|kubecost_http_response_size_bytes|kubecost_http_response_time_seconds|kubecost_load_balancer_cost|kubecost_network_internet_egress_cost|kubecost_network_region_egress_cost|kubecost_network_zone_egress_cost|kubecost_node_is_spot|node_cpu_hourly_cost|node_gpu_count|node_gpu_hourly_cost|node_ram_hourly_cost|node_total_hourly_cost|opencost_build_info|pod_pvc_allocation|pv_hourly_cost|service_selector_labels|statefulSet_match_labels"
+          action = "keep"
+        }
+        forward_to = argument.metrics_destinations.value
+      }
     }
     cluster_metrics "feature" {
       metrics_destinations = [
@@ -408,7 +518,7 @@ data:
     grafana_kubernetes_monitoring_build_info{version="2.0.0-rc.3", namespace="default"} 1
     # HELP grafana_kubernetes_monitoring_feature_info A metric to report the enabled features of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_feature_info gauge
-    grafana_kubernetes_monitoring_feature_info{deployments="kube-state-metrics,node-exporter,windows-exporter", feature="clusterMetrics", sources="kubelet,kubeletResource,cadvisor,kube-state-metrics,node-exporter,windows-exporter", version="1.0.0"} 1
+    grafana_kubernetes_monitoring_feature_info{deployments="kube-state-metrics,node-exporter,windows-exporter,kepler", feature="clusterMetrics", sources="kubelet,kubeletResource,cadvisor,kube-state-metrics,node-exporter,windows-exporter,kepler", version="1.0.0"} 1
 ---
 # Source: k8s-monitoring/templates/alloy-modules-configmaps.yaml
 apiVersion: v1
@@ -1967,6 +2077,23 @@ rules:
     resources: ["replicasets"]
     verbs: ["get", "list", "watch"]
 ---
+# Source: k8s-monitoring/charts/clusterMetrics/charts/kepler/templates/rolebinding.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: ko-kepler-clusterrole
+rules:
+  - apiGroups: [""]
+    resources:
+      - nodes/metrics # access /metrics/resource
+      - nodes/proxy
+      - nodes/stats
+      - pods
+    verbs:
+      - get
+      - watch
+      - list
+---
 # Source: k8s-monitoring/charts/clusterMetrics/charts/kube-state-metrics/templates/role.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -2123,6 +2250,93 @@ rules:
     - volumeattachments
   verbs: ["list", "watch"]
 ---
+# Source: k8s-monitoring/charts/clusterMetrics/charts/opencost/templates/clusterrole.yaml
+# Cluster role giving opencost to get, list, watch required resources
+# No write permissions are required
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: ko-opencost
+  labels:
+    helm.sh/chart: opencost-1.42.3
+    app.kubernetes.io/name: opencost
+    app.kubernetes.io/instance: ko
+    app.kubernetes.io/version: "1.113.0"
+    app.kubernetes.io/part-of: opencost
+    app.kubernetes.io/managed-by: Helm
+rules:
+  - apiGroups: [""]
+    resources:
+      - configmaps
+      - deployments
+      - nodes
+      - pods
+      - services
+      - resourcequotas
+      - replicationcontrollers
+      - limitranges
+      - persistentvolumeclaims
+      - persistentvolumes
+      - namespaces
+      - endpoints
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - extensions
+    resources:
+      - daemonsets
+      - deployments
+      - replicasets
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - apps
+    resources:
+      - statefulsets
+      - deployments
+      - daemonsets
+      - replicasets
+    verbs:
+      - list
+      - watch
+  - apiGroups:
+      - batch
+    resources:
+      - cronjobs
+      - jobs
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - autoscaling
+    resources:
+      - horizontalpodautoscalers
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - policy
+    resources:
+      - poddisruptionbudgets
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - storage.k8s.io
+    resources:
+      - storageclasses
+    verbs:
+      - get
+      - list
+      - watch
+---
 # Source: k8s-monitoring/charts/alloy-metrics/templates/rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -2144,6 +2358,20 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: ko-alloy-metrics
+    namespace: default
+---
+# Source: k8s-monitoring/charts/clusterMetrics/charts/kepler/templates/rolebinding.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: ko-kepler-clusterrole-binding
+roleRef:
+  kind: ClusterRole
+  name: ko-kepler-clusterrole
+  apiGroup: "rbac.authorization.k8s.io"
+subjects:
+  - kind: ServiceAccount
+    name: ko-kepler
     namespace: default
 ---
 # Source: k8s-monitoring/charts/clusterMetrics/charts/kube-state-metrics/templates/clusterrolebinding.yaml
@@ -2168,6 +2396,27 @@ subjects:
 - kind: ServiceAccount
   name: ko-kube-state-metrics
   namespace: default
+---
+# Source: k8s-monitoring/charts/clusterMetrics/charts/opencost/templates/clusterrolebinding.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: ko-opencost
+  labels:
+    helm.sh/chart: opencost-1.42.3
+    app.kubernetes.io/name: opencost
+    app.kubernetes.io/instance: ko
+    app.kubernetes.io/version: "1.113.0"
+    app.kubernetes.io/part-of: opencost
+    app.kubernetes.io/managed-by: Helm
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: ko-opencost
+subjects:
+  - kind: ServiceAccount
+    name: ko-opencost
+    namespace: default
 ---
 # Source: k8s-monitoring/charts/alloy-metrics/templates/cluster_service.yaml
 apiVersion: v1
@@ -2228,6 +2477,29 @@ spec:
       targetPort: 12345
       protocol: "TCP"
 ---
+# Source: k8s-monitoring/charts/clusterMetrics/charts/kepler/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: ko-kepler
+  namespace: default
+  labels:
+    helm.sh/chart: kepler-0.5.11
+    app.kubernetes.io/name: kepler
+    app.kubernetes.io/component: exporter
+    app.kubernetes.io/version: "release-0.7.12"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 9102
+      targetPort: http
+      protocol: TCP
+  selector:
+    app.kubernetes.io/name: kepler
+    app.kubernetes.io/component: exporter
+---
 # Source: k8s-monitoring/charts/clusterMetrics/charts/kube-state-metrics/templates/service.yaml
 apiVersion: v1
 kind: Service
@@ -2284,6 +2556,29 @@ spec:
     app.kubernetes.io/name: node-exporter
     app.kubernetes.io/instance: ko
 ---
+# Source: k8s-monitoring/charts/clusterMetrics/charts/opencost/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: ko-opencost
+  namespace: default
+  labels:
+    helm.sh/chart: opencost-1.42.3
+    app.kubernetes.io/name: opencost
+    app.kubernetes.io/instance: ko
+    app.kubernetes.io/version: "1.113.0"
+    app.kubernetes.io/part-of: opencost
+    app.kubernetes.io/managed-by: Helm
+spec:
+  selector:
+    app.kubernetes.io/name: opencost
+    app.kubernetes.io/instance: ko
+  type: "ClusterIP"
+  ports:
+    - name: http
+      port: 9003
+      targetPort: 9003
+---
 # Source: k8s-monitoring/charts/clusterMetrics/charts/windows-exporter/templates/service.yaml
 apiVersion: v1
 kind: Service
@@ -2312,6 +2607,116 @@ spec:
   selector:
     app.kubernetes.io/name: windows-exporter
     app.kubernetes.io/instance: ko
+---
+# Source: k8s-monitoring/charts/clusterMetrics/charts/kepler/templates/daemonset.yaml
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: ko-kepler
+  namespace: default
+  labels:
+    helm.sh/chart: kepler-0.5.11
+    app.kubernetes.io/name: kepler
+    app.kubernetes.io/component: exporter
+    app.kubernetes.io/version: "release-0.7.12"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: kepler
+      app.kubernetes.io/component: exporter
+  template:
+    metadata:
+      annotations:
+        k8s.grafana.com/logs.job: integrations/kepler
+      labels:
+        app.kubernetes.io/name: kepler
+        app.kubernetes.io/component: exporter
+    spec:
+      hostNetwork: true
+      serviceAccountName: ko-kepler
+      containers:
+      - name: kepler-exporter
+        image: "quay.io/sustainable_computing_io/kepler:release-0.7.12"
+        imagePullPolicy: Always
+        securityContext:
+            privileged: true
+        args:
+          - -v=$(KEPLER_LOG_LEVEL)
+        env:
+          - name: NODE_IP
+            valueFrom:
+              fieldRef:
+                fieldPath: status.hostIP
+          - name: NODE_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: spec.nodeName
+          - name: METRIC_PATH
+            value: "/metrics"
+          - name: BIND_ADDRESS
+            value: "0.0.0.0:9102"
+          - name: "CGROUP_METRICS"
+            value: "*"
+          - name: "CPU_ARCH_OVERRIDE"
+            value: ""
+          - name: "ENABLE_EBPF_CGROUPID"
+            value: "true"
+          - name: "ENABLE_GPU"
+            value: "true"
+          - name: "ENABLE_PROCESS_METRICS"
+            value: "false"
+          - name: "ENABLE_QAT"
+            value: "false"
+          - name: "EXPOSE_CGROUP_METRICS"
+            value: "false"
+          - name: "EXPOSE_ESTIMATED_IDLE_POWER_METRICS"
+            value: "true"
+          - name: "EXPOSE_HW_COUNTER_METRICS"
+            value: "true"
+          - name: "EXPOSE_IRQ_COUNTER_METRICS"
+            value: "true"
+          - name: "KEPLER_LOG_LEVEL"
+            value: "1"
+        ports:
+        - containerPort: 9102
+          hostPort: 9102
+          name: http
+        livenessProbe:
+          failureThreshold: 5
+          httpGet:
+            path: /healthz
+            port: 9102
+            scheme: HTTP
+          initialDelaySeconds: 10
+          periodSeconds: 60
+          successThreshold: 1
+          timeoutSeconds: 10
+        volumeMounts:
+          - name: lib-modules
+            mountPath: /lib/modules
+          - name: tracing
+            mountPath: /sys
+          - name: proc
+            mountPath: /proc
+      volumes:
+        - name: lib-modules
+          hostPath:
+            path: /lib/modules
+            type: DirectoryOrCreate
+        - name: tracing
+          hostPath:
+            path: /sys
+            type: Directory
+        - name: proc
+          hostPath:
+            path: /proc
+            type: Directory
+      nodeSelector:
+        kubernetes.io/os: linux
+      tolerations:
+        - effect: NoSchedule
+          key: node-role.kubernetes.io/control-plane
 ---
 # Source: k8s-monitoring/charts/clusterMetrics/charts/node-exporter/templates/daemonset.yaml
 apiVersion: apps/v1
@@ -2630,6 +3035,117 @@ spec:
           readOnlyRootFilesystem: true
       nodeSelector:
         kubernetes.io/os: linux
+---
+# Source: k8s-monitoring/charts/clusterMetrics/charts/opencost/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ko-opencost
+  namespace: default
+  labels:
+    helm.sh/chart: opencost-1.42.3
+    app.kubernetes.io/name: opencost
+    app.kubernetes.io/instance: ko
+    app.kubernetes.io/version: "1.113.0"
+    app.kubernetes.io/part-of: opencost
+    app.kubernetes.io/managed-by: Helm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: opencost
+      app.kubernetes.io/instance: ko
+  strategy: 
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: opencost
+        app.kubernetes.io/instance: ko
+    spec:
+      serviceAccountName: ko-opencost
+      tolerations:
+        - effect: NoSchedule
+          key: kubernetes.io/arch
+          operator: Equal
+          value: arm64
+      nodeSelector:
+        kubernetes.io/os: linux
+      containers:
+        - name: ko-opencost
+          image: ghcr.io/opencost/opencost:1.113.0@sha256:b313d6d320058bbd3841a948fb636182f49b46df2368d91e2ae046ed03c0f83c
+          imagePullPolicy: IfNotPresent
+          args:
+          ports:
+            - containerPort: 9003
+              name: http
+          resources:
+            limits:
+              cpu: 999m
+              memory: 1Gi
+            requests:
+              cpu: 10m
+              memory: 55Mi
+          startupProbe:
+            httpGet:
+              path: /healthz
+              port: 9003
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            failureThreshold: 30
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 9003
+            initialDelaySeconds: 10
+            periodSeconds: 20
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 9003
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            failureThreshold: 3
+          env:
+            - name: LOG_LEVEL
+              value: info
+            - name: CUSTOM_COST_ENABLED
+              value: "false"
+            - name: KUBECOST_NAMESPACE
+              value: default
+            - name: API_PORT
+              value: "9003"
+            - name: PROMETHEUS_SERVER_ENDPOINT
+              value: "http://prometheus.prometheus.svc:9090/api/v1/query"
+            - name: CLUSTER_ID
+              value: "cluster-metrics-example-cluster"
+            - name: DATA_RETENTION_DAILY_RESOLUTION_DAYS
+              value: "15"
+            - name: CLOUD_COST_ENABLED
+              value: "false"
+            - name: CLOUD_COST_MONTH_TO_DATE_INTERVAL
+              value: "6"
+            - name: CLOUD_COST_REFRESH_RATE_HOURS
+              value: "6"
+            - name: CLOUD_COST_QUERY_WINDOW_DAYS
+              value: "7"
+            - name: CLOUD_COST_RUN_WINDOW_DAYS
+              value: "3"
+            - name: EMIT_KSM_V1_METRICS
+              value: "false"
+            - name: EMIT_KSM_V1_METRICS_ONLY
+              value: "true"
+            # Add any additional provided variables
+            - name: CLOUD_PROVIDER_API_KEY
+              value: "AIzaSyD29bGxmHAVEOBYtgd8sYM2gM2ekfxQX4U"
+            - name: CURRENT_CLUSTER_ID_FILTER_ENABLED
+              value: "true"
+            - name: PROM_CLUSTER_ID_LABEL
+              value: "cluster"
 ---
 # Source: k8s-monitoring/charts/alloy-metrics/templates/controllers/statefulset.yaml
 apiVersion: apps/v1
