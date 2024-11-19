@@ -2714,6 +2714,15 @@ spec:
             type: Directory
       nodeSelector:
         kubernetes.io/os: linux
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: eks.amazonaws.com/compute-type
+                operator: NotIn
+                values:
+                - fargate
       tolerations:
         - effect: NoSchedule
           key: node-role.kubernetes.io/control-plane

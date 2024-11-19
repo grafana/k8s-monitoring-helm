@@ -666,11 +666,21 @@ kepler:
   # @section -- Kepler
   maxCacheSize:
 
-  # @ignored
-  canMount: {usrSrc: false}
-  # @ignored
+  # @ignored -- Don't mount /usr/src
+  canMount:
+    usrSrc: false
+  # @ignored -- Include idle power metric estimation.
   extraEnvVars:
     EXPOSE_ESTIMATED_IDLE_POWER_METRICS: "true"
+  # @ignored -- Do not deploy Kepler on EKS Fargate nodes
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: eks.amazonaws.com/compute-type
+                operator: NotIn
+                values: [fargate]
   # @ignored
   podAnnotations:
     k8s.grafana.com/logs.job: integrations/kepler
