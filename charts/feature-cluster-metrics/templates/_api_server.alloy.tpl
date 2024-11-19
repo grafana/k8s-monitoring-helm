@@ -19,7 +19,11 @@ kubernetes.apiserver "scrape" {
 
 prometheus.relabel "apiServer" {
   max_cache_size = {{ .Values.apiServer.maxCacheSize | default .Values.global.maxCacheSize | int }}
+
+{{- if .Values.apiServer.extraMetricProcessingRules }}
   {{ .Values.apiServer.extraMetricProcessingRules | indent 2 }}
+{{- end }}
+
 {{- end }}
   forward_to = argument.metrics_destinations.value
 }

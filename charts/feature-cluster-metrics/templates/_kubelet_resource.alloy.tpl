@@ -30,7 +30,9 @@ kubernetes.resources "scrape" {
 prometheus.relabel "kubelet_resources" {
   max_cache_size = {{ .Values.kubeletResource.maxCacheSize | default .Values.global.maxCacheSize | int }}
 
+{{- if .Values.kubeletResource.extraMetricProcessingRules }}
   {{ .Values.kubeletResource.extraMetricProcessingRules | indent 2 }}
+{{- end }}
 
 {{- end }}
   forward_to = argument.metrics_destinations.value

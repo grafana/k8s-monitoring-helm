@@ -58,7 +58,9 @@ node_exporter.scrape "metrics" {
 prometheus.relabel "node_exporter" {
   max_cache_size = {{ (index .Values "node-exporter").maxCacheSize | default .Values.global.maxCacheSize | int }}
 
-  {{(index .Values "node-exporter").extraMetricProcessingRules}}
+{{- if (index .Values "node-exporter").extraMetricProcessingRules }}
+  {{ (index .Values "node-exporter").extraMetricProcessingRules | indent 2 }}
+{{- end }}
 
 {{- end }}
   forward_to = argument.metrics_destinations.value
