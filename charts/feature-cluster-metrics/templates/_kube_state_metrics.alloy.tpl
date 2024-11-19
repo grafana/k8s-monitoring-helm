@@ -50,7 +50,9 @@ kube_state_metrics.scrape "metrics" {
 
 prometheus.relabel "kube_state_metrics" {
   max_cache_size = {{ (index .Values "kube-state-metrics").maxCacheSize | default .Values.global.maxCacheSize | int }}
+{{- if (index .Values "kube-state-metrics").extraMetricProcessingRules }}
   {{ (index .Values "kube-state-metrics").extraMetricProcessingRules | nindent 2}}
+{{- end }}
 {{- end }}
   forward_to = argument.metrics_destinations.value
 }

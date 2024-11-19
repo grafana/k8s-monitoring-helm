@@ -103,6 +103,9 @@ prometheus.relabel "cadvisor" {
     replacement = ""
   }
 {{- end }}
+{{- if .Values.cadvisor.extraMetricProcessingRules }}
+{{ .Values.cadvisor.extraMetricProcessingRules | indent 2 }}
+{{- end }}
   forward_to = argument.metrics_destinations.value
 }
 {{- end }}

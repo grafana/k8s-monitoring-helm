@@ -19,7 +19,9 @@ kubernetes.kube_dns "scrape" {
 
 prometheus.relabel "kube_dns" {
   max_cache_size = {{ .Values.kubeDNS.maxCacheSize | default .Values.global.maxCacheSize | int }}
+{{- if .Values.kubeDNS.extraMetricProcessingRules }}
   {{ .Values.kubeDNS.extraMetricProcessingRules | indent 2 }}
+{{- end }}
 {{- end }}
   forward_to = argument.metrics_destinations.value
 }
