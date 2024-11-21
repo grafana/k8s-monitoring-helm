@@ -350,7 +350,7 @@ The following features have been removed from the 2.0 release:
 
 -   **Pre-install hooks**: The pre-install and pre-upgrade hooks that did config validation have been removed. The Alloy
     pods will now validate the configuration at runtime and log any issues and without these pods, this greatly
-    increases startup time.
+    decreases startup time.
 -   **`helm test` functionality**: The `helm test` functionality that ran a config analysis and attempted to query the
     databases for expected metrics and logs has been removed. This functionality was either not fully developed, or not
     useful in production environments. The query testing was mainly for CI/CD testing in development and has been
