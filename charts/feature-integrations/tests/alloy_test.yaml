@@ -9,8 +9,6 @@ tests:
       alloy:
         instances:
           - name: alloy-metrics
-            labelSelectors:
-              app.kubernetes.io/name: alloy-metrics
     asserts:
       - isKind:
           of: ConfigMap
@@ -299,11 +297,38 @@ tests:
           - name: alloy-metrics
             metricsTuning:
               useIntegrationAllowList: true
-            labelSelectors:
-              app.kubernetes.io/name: alloy-metrics
     asserts:
       - isKind:
           of: ConfigMap
       - matchRegex:
           path: data["metrics.alloy"]
           pattern: alloy_component_controller_running_components
+  - it: should allow you to overwrite the name label
+    set:
+      deployAsConfigMap: true
+      alloy:
+        instances:
+          - name: alloy-metrics
+            labelSelectors:
+              app.kubernetes.io/name: my-alloy-instance
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["metrics.alloy"]
+          pattern: label_selectors = \["app.kubernetes.io/name=my-alloy-instance"\]
+  - it: should allow you to dismiss the name label
+    set:
+      deployAsConfigMap: true
+      alloy:
+        instances:
+          - name: alloy-metrics
+            labelSelectors:
+              app.kubernetes.io/name: null
+              app.kubernetes.io/instance: k8smon
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["metrics.alloy"]
+          pattern: label_selectors = \["app.kubernetes.io/instance=k8smon"\]

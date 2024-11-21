@@ -291,9 +291,17 @@ declare "alloy_integration" {
 {{- with $defaultValues | merge (deepCopy .instance) }}
 {{- $metricAllowList := include "integrations.alloy.allowList" (dict "instance" . "Files" $.Files) | fromYamlArray }}
 {{- $metricDenyList := .excludeMetrics }}
+
+{{- $nameLabelDefined := false }}
 {{- $labelSelectors := list }}
 {{- range $k, $v := .labelSelectors }}
-{{- $labelSelectors = append $labelSelectors (printf "%s=%s" $k $v) }}
+  {{- if eq $k "app.kubernetes.io/name" }}{{- $nameLabelDefined = true }}{{- end }}
+  {{- if $v }}
+    {{- $labelSelectors = append $labelSelectors (printf "%s=%s" $k $v) }}
+  {{- end }}
+{{- end }}
+{{- if not $nameLabelDefined }}
+  {{- $labelSelectors = append $labelSelectors (printf "app.kubernetes.io/name=%s" .name) }}
 {{- end }}
 
 alloy_integration_discovery {{ include "helper.alloy_name" .name | quote }} {

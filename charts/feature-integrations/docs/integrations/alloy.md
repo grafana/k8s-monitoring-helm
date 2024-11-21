@@ -6,7 +6,7 @@
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| labelSelectors | object | `{"app.kubernetes.io/name":"alloy"}` | Discover Alloy instances based on label selectors. |
+| labelSelectors | object | `{}` | Discover Alloy instances based on label selectors. Will automatically set a matcher for `app.kubernetes.io/name: <name>` unless set here. |
 
 ### Metric Processing Settings
 

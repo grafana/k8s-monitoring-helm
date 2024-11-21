@@ -23,9 +23,17 @@ declare "cert_manager_integration" {
 {{- with $defaultValues | merge (deepCopy .instance) }}
 {{- $metricAllowList := .metricsTuning.includeMetrics }}
 {{- $metricDenyList := .metricsTuning.excludeMetrics }}
+
+{{- $nameLabelDefined := false }}
 {{- $labelSelectors := list }}
 {{- range $k, $v := .labelSelectors }}
-{{- $labelSelectors = append $labelSelectors (printf "%s=%s" $k $v) }}
+  {{- if eq $k "app.kubernetes.io/name" }}{{- $nameLabelDefined = true }}{{- end }}
+  {{- if $v }}
+    {{- $labelSelectors = append $labelSelectors (printf "%s=%s" $k $v) }}
+  {{- end }}
+{{- end }}
+{{- if not $nameLabelDefined }}
+  {{- $labelSelectors = append $labelSelectors (printf "app.kubernetes.io/name=%s" .name) }}
 {{- end }}
 {{- $fieldSelectors := list }}
 {{- range $k, $v := .fieldSelectors }}
