@@ -30,6 +30,20 @@ discovery.relabel "filtered_pods" {
     replacement = "$1"
     target_label = "job"
   }
+{{- range $label, $podLabel := .Values.labels }}
+  rule {
+    source_labels = ["{{ include "pod_label" $podLabel }}"]
+    regex         = "(.+)"
+    target_label  = {{ $label | quote }}
+  }
+{{- end }}
+{{- range $label, $podAnnotation := .Values.annotations }}
+  rule {
+    source_labels = ["{{ include "pod_annotation" $podAnnotation }}"]
+    regex         = "(.+)"
+    target_label  = {{ $label | quote }}
+  }
+{{- end }}
 
   // set the container runtime as a label
   rule {

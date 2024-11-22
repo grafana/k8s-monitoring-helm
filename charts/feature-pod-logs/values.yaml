@@ -13,22 +13,37 @@ global:
   platform: ""
 
 # -- The method to gather pod logs. Options are "volumes", "kubernetesApi", "OpenShiftClusterLogForwarder" (experimental).
+# @section -- Pod Discovery
 gatherMethod: volumes
 
 # -- Only capture logs from pods in these namespaces (`[]` means all namespaces).
-# @section -- Logs Scrape: Pod Logs
+# @section -- Pod Discovery
 namespaces: []
 
 # -- Do not capture logs from any pods in these namespaces.
-# @section -- Logs Scrape: Pod Logs
+# @section -- Pod Discovery
 excludeNamespaces: []
 
 # -- Rules to filter pods for log gathering. Only used for "volumes" or "kubernetesApi" gather methods.
+# @section -- Pod Discovery
 extraDiscoveryRules: ""
+
+# -- Log labels to set with values copied from the Kubernetes Pod labels.
+# Format: `<log_label>: <kubernetes_label>`.
+# @section -- Log Processing
+labels:
+  app_kubernetes_io_name: app.kubernetes.io/name
+
+# -- Log labels to set with values copied from the Kubernetes Pod annotations.
+# Format: `<log_label>: <kubernetes_annotation>`.
+# @section -- Log Processing
+annotations:
+  job: k8s.grafana.com/logs.job
 
 # -- Stage blocks to be added to the loki.process component for pod logs.
 # ([docs](https://grafana.com/docs/alloy/latest/reference/components/loki/loki.process/#blocks))
 # This value is templated so that you can refer to other values from this file.
+# @section -- Log Processing
 extraLogProcessingStages: ""
 
 # @ignore
