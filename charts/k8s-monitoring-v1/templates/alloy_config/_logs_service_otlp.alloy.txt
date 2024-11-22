@@ -76,6 +76,33 @@ otelcol.auth.bearer "logs_service" {
   token = remote.kubernetes.secret.logs_service.data[{{ .bearerToken.tokenKey | quote }}]
 }
   {{- end }}
+{{- else if eq .authMode "oauth2" }}
+otelcol.auth.oauth2 "logs_service" {
+  {{- if eq .oauth2.clientId "" }}
+  client_id = nonsensitive(remote.kubernetes.secret.logs_service.data[{{ .oauth2.clientIdKey | quote }}])
+  {{- else }}
+  client_id = {{ .oauth2.clientId | quote }}
+  {{- end }}
+
+  {{- if eq .oauth2.clientSecretFile "" }}
+  client_secret = remote.kubernetes.secret.logs_service.data[{{ .oauth2.clientSecretKey | quote }}]
+  {{- else }}
+  client_secret_file = {{ .oauth2.clientSecretFile | quote }}
+  {{- end }}
+  {{- if .oauth2.endpointParams }}
+  endpoint_params = {
+  {{- range $k, $v := .oauth2.endpointParams }}
+    {{ $k }} = {{ $v | quote }},
+  {{- end }}
+  }
+  {{- end }}
+  {{- if .oauth2.scopes }}
+  scopes = {{ .oauth2.scopes | toJson }}
+  {{- end }}
+  {{- if .oauth2.tokenURL }}
+  token_url = {{ required ".Values.oauth2.tokenURL is a required value when .Values.authMode is oauth2" .oauth2.tokenURL | quote }}
+  {{- end }}
+}
 {{- end }}
 {{ if eq .protocol "otlp" }}
 otelcol.exporter.otlp "logs_service" {
@@ -89,6 +116,8 @@ otelcol.exporter.otlphttp "logs_service" {
     auth = otelcol.auth.basic.logs_service.handler
 {{- else if eq .authMode "bearerToken" }}
     auth = otelcol.auth.bearer.logs_service.handler
+{{- else if eq .authMode "oauth2" }}
+    auth = otelcol.auth.oauth2.logs_service.handler
 {{- end }}
     headers = {
       "X-Scope-OrgID" = nonsensitive(remote.kubernetes.secret.logs_service.data[{{ .tenantIdKey | quote }}]),
