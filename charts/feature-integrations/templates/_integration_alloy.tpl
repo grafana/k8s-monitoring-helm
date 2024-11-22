@@ -8,9 +8,6 @@
 {{- if .instance.metricsTuning.useDefaultAllowList -}}
 {{- $allowList = concat $allowList (.Files.Get "default-allow-lists/alloy.yaml" | fromYamlArray) -}}
 {{- end -}}
-{{- if .instance.metricsTuning.useIntegrationAllowList -}}
-{{- $allowList = concat $allowList (.Files.Get "default-allow-lists/alloy-integration.yaml" | fromYamlArray) -}}
-{{- end -}}
 {{- if .instance.metricsTuning.includeMetrics -}}
 {{- $allowList = concat $allowList .instance.metricsTuning.includeMetrics -}}
 {{- end -}}
