@@ -49,6 +49,10 @@ prometheus.scrape "node_exporter" {
   job_name   = "integrations/node_exporter"
   targets  = discovery.relabel.node_exporter.output
   scrape_interval = {{ (index .Values.metrics "node-exporter").scrapeInterval | default .Values.metrics.scrapeInterval | quote }}
+{{- if .Values.externalServices.prometheus.sendNativeHistograms }}
+  scrape_protocols = ["PrometheusProto", "OpenMetricsText1.0.0", "OpenMetricsText0.0.1", "PrometheusText0.0.4"]
+  scrape_classic_histograms = true
+{{- end }}
 {{- if .Values.alloy.alloy.clustering.enabled }}
   clustering {
     enabled = true

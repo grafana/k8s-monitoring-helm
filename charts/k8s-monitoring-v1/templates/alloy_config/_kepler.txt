@@ -36,6 +36,10 @@ prometheus.scrape "kepler" {
   job_name   = "integrations/kepler"
   honor_labels = true
   scrape_interval = {{ .Values.metrics.kepler.scrapeInterval | default .Values.metrics.scrapeInterval | quote }}
+{{- if .Values.externalServices.prometheus.sendNativeHistograms }}
+  scrape_protocols = ["PrometheusProto", "OpenMetricsText1.0.0", "OpenMetricsText0.0.1", "PrometheusText0.0.4"]
+  scrape_classic_histograms = true
+{{- end }}
 {{- if .Values.alloy.alloy.clustering.enabled }}
   clustering {
     enabled = true
