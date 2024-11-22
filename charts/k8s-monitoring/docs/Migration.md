@@ -329,12 +329,13 @@ If using the Alloy integration `metrics.alloy.enabled`, or if using `extraConfig
 The variables for adding arbitrary configuration to the Alloy instances has been moved inside the respective Alloy
 instance.
 
-| extraConfig        | v1.x setting                       | v2.0 setting                | Notes |
-|--------------------|------------------------------------|-----------------------------|-------|
-| Alloy              | `metrics.alloy`                    | `integrations.alloy`        |       |
-| Alloy Events       | `extraConfig`                      | `integrations.cert-manager` |       |
-| Alloy Logs         | `extraConfig`                      | `integrations.etcd`         |       |
-| Alloy for Profiles | `extraConfig` & `logs.extraConfig` | `integrations.mysql`        |       |
+| extraConfig        | v1.x setting                      | v2.0 setting                  | Notes |
+|--------------------|-----------------------------------|-------------------------------|-------|
+| Alloy for Metrics  | `extraConfig`                     | `alloy-metrics.extraConfig`   |       |
+| Alloy for Apps     | `extraConfig`                     | `alloy-receiver.extraConfig`  |       |
+| Alloy for Events   | `logs.cluster_events.extraConfig` | `alloy-singleton.extraConfig` |       |
+| Alloy for Logs     | `logs.extraConfig`                | `alloy-logs.extraConfig`      |       |
+| Alloy for Profiles | `profiles.extraConfig`            | `alloy-profiles.extraConfig`  |       |
 
 #### Steps to take
 
