@@ -20,8 +20,6 @@ integrations:
   alloy:
     instances:
       - name: alloy-metrics
-        labelSelectors:
-          app.kubernetes.io/name: alloy-metrics
 
 alloy-metrics:
   enabled: true

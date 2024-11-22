@@ -7,7 +7,7 @@
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | field_selectors | list | `[]` | Discover cert-manager instances based on field selectors. |
-| labelSelectors | object | `{"app.kubernetes.io/name":"cert-manager"}` | Discover cert-manager instances based on label selectors. |
+| labelSelectors | object | `{}` | Discover cert-manager instances based on label selectors. Will automatically set a matcher for `app.kubernetes.io/name: <name>` unless set here. |
 | namespaces | list | `[]` | Namespaces to look for cert-manager instances. |
 | portName | string | `"http-metrics"` | Name of the port to scrape metrics from. |
 
