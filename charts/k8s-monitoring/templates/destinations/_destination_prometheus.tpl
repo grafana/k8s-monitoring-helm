@@ -115,6 +115,8 @@ prometheus.remote_write {{ include "helper.alloy_name" .name | quote }} {
 - auth.username
 - auth.password
 - auth.bearerToken
+- auth.oauth2.clientId
+- auth.oauth2.clientSecret
 - auth.sigv4.accessKey
 - auth.sigv4.secretKey
 - tls.ca

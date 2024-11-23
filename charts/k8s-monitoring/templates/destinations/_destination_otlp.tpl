@@ -122,6 +122,8 @@ otelcol.exporter.otlphttp {{ include "helper.alloy_name" .name | quote }} {
 - auth.username
 - auth.password
 - auth.bearerToken
+- auth.oauth2.clientId
+- auth.oauth2.clientSecret
 - tls.ca
 - tls.cert
 - tls.key

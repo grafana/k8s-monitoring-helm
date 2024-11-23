@@ -20,7 +20,7 @@ proxyURL: ""
 tenantId: ""
 # -- The key for storing the tenant ID in the secret.
 # @section -- General
-tenantIdKey: "tenantId"
+tenantIdKey: tenantId
 # -- Raw config for accessing the tenant ID.
 # @section -- General
 tenantIdFrom: ""
@@ -45,17 +45,16 @@ extraLabelsFrom: {}
 
 auth:
   # -- The type of authentication to do.
-  # Options are "none" (default), "basic", "bearerToken".
-  # @default -- none
+  # Options are "none" (default), "basic", "bearerToken", "oauth2".
   # @section -- Authentication
-  type: ""
+  type: none
 
   # -- The username for basic authentication.
   # @section -- Authentication - Basic
   username: ""
   # -- The key for storing the username in the secret.
   # @section -- Authentication - Basic
-  usernameKey: "username"
+  usernameKey: username
   # -- Raw config for accessing the username.
   # @section -- Authentication - Basic
   usernameFrom: ""
@@ -79,6 +78,52 @@ auth:
   # -- Raw config for accessing the bearer token.
   # @section -- Authentication - Bearer Token
   bearerTokenFrom: ""
+
+  # Authenticate to Loki using OAuth2
+  # @section -- Authentication - OAuth2
+  oauth2:
+    # -- OAuth2 client ID
+    # @section -- Authentication - OAuth2
+    clientId: ""
+    # -- The key for the client ID property in the secret
+    # @section -- Authentication - OAuth2
+    clientIdKey: clientId
+    # -- Raw config for accessing the client ID
+    # @section -- Authentication - OAuth2
+    clientIdFrom: ""
+    # -- Prometheus OAuth2 client secret
+    # @section -- Authentication - OAuth2
+    clientSecret: ""
+    # -- The key for the client secret property in the secret
+    # @section -- Authentication - OAuth2
+    clientSecretKey: clientSecret
+    # -- Raw config for accessing the client secret
+    # @section -- Authentication - OAuth2
+    clientSecretFrom: ""
+    # -- File containing the OAuth2 client secret.
+    # @section -- Authentication - OAuth2
+    clientSecretFile: ""
+    # -- Prometheus OAuth2 endpoint parameters
+    # @section -- Authentication - OAuth2
+    endpointParams: {}
+    # -- HTTP proxy to send requests through.
+    # @section -- Authentication - OAuth2
+    proxyURL: ""
+    # -- Comma-separated list of IP addresses, CIDR notations, and domain names to exclude from proxying.
+    # @section -- Authentication - OAuth2
+    noProxy: ""
+    # -- Use the proxy URL indicated by environment variables.
+    # @section -- Authentication - OAuth2
+    proxyFromEnvironment: false
+    # -- Specifies headers to send to proxies during CONNECT requests.
+    # @section -- Authentication - OAuth2
+    proxyConnectHeader: {}
+    # -- List of scopes to authenticate with.
+    # @section -- Authentication - OAuth2
+    scopes: []
+    # -- URL to fetch the token from.
+    # @section -- Authentication - OAuth2
+    tokenURL: ""
 
 secret:
   # -- (bool) Whether to create a secret for this Loki destination.
