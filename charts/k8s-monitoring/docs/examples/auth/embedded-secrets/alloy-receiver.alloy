@@ -67,29 +67,38 @@ otelcol.auth.basic "tempo" {
   password = "my-password"
 }
 
+otelcol.processor.attributes "tempo" {
+  action {
+    key = "cluster"
+    action = "upsert"
+    value = "embedded-secrets-example-cluster"
+  }
+  action {
+    key = "k8s.cluster.name"
+    action = "upsert"
+    value = "embedded-secrets-example-cluster"
+  }
+  output {
+    metrics = [otelcol.processor.transform.tempo.input]
+    logs = [otelcol.processor.transform.tempo.input]
+    traces = [otelcol.processor.transform.tempo.input]
+  }
+}
+
 otelcol.processor.transform "tempo" {
   error_mode = "ignore"
-  metric_statements {
-    context = "resource"
-    statements = [
-      "set(attributes[\"cluster\"], \"embedded-secrets-example-cluster\") where attributes[\"cluster\"] == nil",
-      "set(attributes[\"k8s.cluster.name\"], \"embedded-secrets-example-cluster\") where attributes[\"k8s.cluster.name\"] == nil",
-    ]
+
+  output {
+    metrics = [otelcol.processor.batch.tempo.input]
+    logs = [otelcol.processor.batch.tempo.input]
+    traces = [otelcol.processor.batch.tempo.input]
   }
-  log_statements {
-    context = "resource"
-    statements = [
-      "set(attributes[\"cluster\"], \"embedded-secrets-example-cluster\") where attributes[\"cluster\"] == nil",
-      "set(attributes[\"k8s.cluster.name\"], \"embedded-secrets-example-cluster\") where attributes[\"k8s.cluster.name\"] == nil",
-    ]
-  }
-  trace_statements {
-    context = "resource"
-    statements = [
-      "set(attributes[\"cluster\"], \"embedded-secrets-example-cluster\") where attributes[\"cluster\"] == nil",
-      "set(attributes[\"k8s.cluster.name\"], \"embedded-secrets-example-cluster\") where attributes[\"k8s.cluster.name\"] == nil",
-    ]
-  }
+}
+
+otelcol.processor.batch "tempo" {
+  timeout = "2s"
+  send_batch_size = 8192
+  send_batch_max_size = 0
 
   output {
     metrics = [otelcol.exporter.otlp.tempo.input]
@@ -101,8 +110,6 @@ otelcol.exporter.otlp "tempo" {
   client {
     endpoint = "http://tempo.tempo.svc:4317"
     auth = otelcol.auth.basic.tempo.handler
-    headers = {
-    }
     tls {
       insecure = false
       insecure_skip_verify = false
@@ -217,6 +224,6 @@ application_observability "feature" {
     otelcol.exporter.loki.loki.input,
   ]
   traces_destinations = [
-    otelcol.processor.transform.tempo.input,
+    otelcol.processor.attributes.tempo.input,
   ]
 }

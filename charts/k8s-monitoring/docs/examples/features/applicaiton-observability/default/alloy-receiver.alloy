@@ -1,38 +1,47 @@
 // Destination: otlp-gateway (otlp)
 otelcol.receiver.prometheus "otlp_gateway" {
   output {
-    metrics = [otelcol.processor.transform.otlp_gateway.input]
+    metrics = [otelcol.processor.attributes.otlp_gateway.input]
   }
 }
 otelcol.receiver.loki "otlp_gateway" {
   output {
+    logs = [otelcol.processor.attributes.otlp_gateway.input]
+  }
+}
+
+otelcol.processor.attributes "otlp_gateway" {
+  action {
+    key = "cluster"
+    action = "upsert"
+    value = "applications-cluster"
+  }
+  action {
+    key = "k8s.cluster.name"
+    action = "upsert"
+    value = "applications-cluster"
+  }
+  output {
+    metrics = [otelcol.processor.transform.otlp_gateway.input]
     logs = [otelcol.processor.transform.otlp_gateway.input]
+    traces = [otelcol.processor.transform.otlp_gateway.input]
   }
 }
 
 otelcol.processor.transform "otlp_gateway" {
   error_mode = "ignore"
-  metric_statements {
-    context = "resource"
-    statements = [
-      "set(attributes[\"cluster\"], \"applications-cluster\") where attributes[\"cluster\"] == nil",
-      "set(attributes[\"k8s.cluster.name\"], \"applications-cluster\") where attributes[\"k8s.cluster.name\"] == nil",
-    ]
+
+  output {
+    metrics = [otelcol.processor.batch.otlp_gateway.input]
+    logs = [otelcol.processor.batch.otlp_gateway.input]
+    traces = [otelcol.processor.batch.otlp_gateway.input]
   }
-  log_statements {
-    context = "resource"
-    statements = [
-      "set(attributes[\"cluster\"], \"applications-cluster\") where attributes[\"cluster\"] == nil",
-      "set(attributes[\"k8s.cluster.name\"], \"applications-cluster\") where attributes[\"k8s.cluster.name\"] == nil",
-    ]
-  }
-  trace_statements {
-    context = "resource"
-    statements = [
-      "set(attributes[\"cluster\"], \"applications-cluster\") where attributes[\"cluster\"] == nil",
-      "set(attributes[\"k8s.cluster.name\"], \"applications-cluster\") where attributes[\"k8s.cluster.name\"] == nil",
-    ]
-  }
+}
+
+otelcol.processor.batch "otlp_gateway" {
+  timeout = "2s"
+  send_batch_size = 8192
+  send_batch_max_size = 0
 
   output {
     metrics = [otelcol.exporter.otlp.otlp_gateway.input]
@@ -43,8 +52,6 @@ otelcol.processor.transform "otlp_gateway" {
 otelcol.exporter.otlp "otlp_gateway" {
   client {
     endpoint = "http://otlp-gateway.example.com"
-    headers = {
-    }
     tls {
       insecure = false
       insecure_skip_verify = false
@@ -153,13 +160,13 @@ declare "application_observability" {
 }
 application_observability "feature" {
   metrics_destinations = [
-    otelcol.processor.transform.otlp_gateway.input,
+    otelcol.processor.attributes.otlp_gateway.input,
   ]
   logs_destinations = [
-    otelcol.processor.transform.otlp_gateway.input,
+    otelcol.processor.attributes.otlp_gateway.input,
   ]
   traces_destinations = [
-    otelcol.processor.transform.otlp_gateway.input,
+    otelcol.processor.attributes.otlp_gateway.input,
   ]
 }
 

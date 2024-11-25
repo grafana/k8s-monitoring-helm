@@ -1,20 +1,17 @@
 ---
 tests:
   - env:
-      PROMETHEUS_URL: http://prometheus-noauth-server.prometheus.svc:9090/api/v1/query
+      PROMETHEUS_URL: http://prometheus-server.prometheus.svc:9090/api/v1/query
     queries:
       - query: kubernetes_build_info{cluster="auth-integration-test", destination="prometheus-noauth"}
         type: promql
-      - query: kubernetes_build_info{cluster="auth-integration-test", destination="prometheus-bearer-token"}
-        type: promql
-#      - query: kubernetes_build_info{cluster="auth-integration-test", destination="prometheus-otlp-noauth"}
-#        type: promql
-  - env:
-      PROMETHEUS_URL: http://prometheus-basicauth-server.prometheus.svc:9090/api/v1/query
-      PROMETHEUS_USER: promuser
-      PROMETHEUS_PASS: prometheuspassword
-    queries:
       - query: kubernetes_build_info{cluster="auth-integration-test", destination="prometheus-basicauth"}
         type: promql
-#      - query: kubernetes_build_info{cluster="auth-integration-test", destination="prometheus-otlp-basicauth"}
-#        type: promql
+      - query: kubernetes_build_info{cluster="auth-integration-test", destination="prometheus-bearer-token"}
+        type: promql
+      - query: kubernetes_build_info{cluster="auth-integration-test", destination="prometheus-otlp-noauth"}
+        type: promql
+      - query: kubernetes_build_info{cluster="auth-integration-test", destination="prometheus-otlp-basicauth"}
+        type: promql
+      - query: kubernetes_build_info{cluster="auth-integration-test", destination="prometheus-otlp-bearer-token"}
+        type: promql

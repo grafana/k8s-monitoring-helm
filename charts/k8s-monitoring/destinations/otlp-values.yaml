@@ -8,20 +8,23 @@ name: ""
 # @section -- General
 protocol: "grpc"
 
-traces:
-  # -- Whether to send traces to the OTLP destination.
-  # @section -- Telemetry
-  enabled: true
-
 metrics:
   # -- Whether to send metrics to the OTLP destination.
+  # @default -- `true`
   # @section -- Telemetry
-  enabled: false
+  enabled:
 
 logs:
   # -- Whether to send logs to the OTLP destination.
+  # @default -- `true`
   # @section -- Telemetry
-  enabled: false
+  enabled:
+
+traces:
+  # -- Whether to send traces to the OTLP destination.
+  # @default -- `true`
+  # @section -- Telemetry
+  enabled:
 
 # -- The URL for the OTLP destination.
 # @section -- General
@@ -196,6 +199,32 @@ writeBufferSize: ""
 
 # -- Processors to apply to the data before sending it.
 processors:
+  attributes:
+    # -- Attribute processor actions
+    # Format: { key: "", value: "", action: "", pattern: "", fromAttribute: "", fromContext: "", convertedType: "" }
+    # @section -- Attributes Processor
+    actions: []
+
+  transform:
+    # -- Metric transforms
+    # @section -- Transform Processor
+    metrics:
+      resource: []
+      metric: []
+      datapoint: []
+
+    # -- Log transforms
+    # @section -- Transform Processor
+    logs:
+      resource: []
+      log: []
+
+    # -- Trace transforms
+    # @section -- Transform Processor
+    traces:
+      resource: []
+      span: []
+      spanevent: []
   batch:
     # -- Whether to use a batch processor.
     # @section -- Batch Processor
@@ -212,35 +241,10 @@ processors:
   memoryLimiter:
     # -- Whether to use a memory limiter.
     # @section -- Memory Limiter
-    enabled: true
+    enabled: false
     # -- How often to check memory usage.
     # @section -- Memory Limiter
     checkInterval: 1s
     # -- Maximum amount of memory targeted to be allocated by the process heap.
     # @section -- Memory Limiter
     limit: 0MiB
-  transform:
-    # -- Whether to use a transform processor.
-    # @section -- Transform Processor
-    enabled: false
-
-    # -- Metric transforms
-    # @section -- Transform Processor
-    metrics:
-      resource: []
-      metric: []
-      datapoint: []
-
-    # -- Log transforms
-    # @section -- Transform Processor
-    log:
-      resource: []
-      log: []
-      labels: []
-
-    # -- Trace transforms
-    # @section -- Transform Processor
-    traces:
-      resource: []
-      span: []
-      spanevent: []

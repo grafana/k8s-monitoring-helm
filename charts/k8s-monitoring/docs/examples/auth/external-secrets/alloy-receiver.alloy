@@ -88,29 +88,38 @@ otelcol.auth.bearer "tempo" {
   token = remote.kubernetes.secret.tempo.data["tempoBearerToken"]
 }
 
+otelcol.processor.attributes "tempo" {
+  action {
+    key = "cluster"
+    action = "upsert"
+    value = "external-secrets-example-cluster"
+  }
+  action {
+    key = "k8s.cluster.name"
+    action = "upsert"
+    value = "external-secrets-example-cluster"
+  }
+  output {
+    metrics = [otelcol.processor.transform.tempo.input]
+    logs = [otelcol.processor.transform.tempo.input]
+    traces = [otelcol.processor.transform.tempo.input]
+  }
+}
+
 otelcol.processor.transform "tempo" {
   error_mode = "ignore"
-  metric_statements {
-    context = "resource"
-    statements = [
-      "set(attributes[\"cluster\"], \"external-secrets-example-cluster\") where attributes[\"cluster\"] == nil",
-      "set(attributes[\"k8s.cluster.name\"], \"external-secrets-example-cluster\") where attributes[\"k8s.cluster.name\"] == nil",
-    ]
+
+  output {
+    metrics = [otelcol.processor.batch.tempo.input]
+    logs = [otelcol.processor.batch.tempo.input]
+    traces = [otelcol.processor.batch.tempo.input]
   }
-  log_statements {
-    context = "resource"
-    statements = [
-      "set(attributes[\"cluster\"], \"external-secrets-example-cluster\") where attributes[\"cluster\"] == nil",
-      "set(attributes[\"k8s.cluster.name\"], \"external-secrets-example-cluster\") where attributes[\"k8s.cluster.name\"] == nil",
-    ]
-  }
-  trace_statements {
-    context = "resource"
-    statements = [
-      "set(attributes[\"cluster\"], \"external-secrets-example-cluster\") where attributes[\"cluster\"] == nil",
-      "set(attributes[\"k8s.cluster.name\"], \"external-secrets-example-cluster\") where attributes[\"k8s.cluster.name\"] == nil",
-    ]
-  }
+}
+
+otelcol.processor.batch "tempo" {
+  timeout = "2s"
+  send_batch_size = 8192
+  send_batch_max_size = 0
 
   output {
     metrics = [otelcol.exporter.otlp.tempo.input]
@@ -247,6 +256,6 @@ application_observability "feature" {
     otelcol.exporter.loki.loki.input,
   ]
   traces_destinations = [
-    otelcol.processor.transform.tempo.input,
+    otelcol.processor.attributes.tempo.input,
   ]
 }

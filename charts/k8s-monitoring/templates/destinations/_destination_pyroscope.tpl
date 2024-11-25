@@ -27,6 +27,40 @@ pyroscope.write {{ include "helper.alloy_name" .name | quote }} {
     }
 {{- else if eq (include "secrets.authType" .) "bearerToken" }}
     bearer_token = {{ include "secrets.read" (dict "object" . "key" "auth.bearerToken") }}
+{{- else if eq (include "secrets.authType" .) "oauth2" }}
+    oauth2 {
+      client_id = {{ include "secrets.read" (dict "object" . "key" "auth.oauth2.clientId" "nonsensitive" true) }}
+      {{- if eq .auth.oauth2.clientSecretFile "" }}
+      client_secret = {{ include "secrets.read" (dict "object" . "key" "auth.oauth2.clientSecret") }}
+      {{- else }}
+      client_secret_file = {{ .auth.oauth2.clientSecretFile | quote }}
+      {{- end }}
+      {{- if .auth.oauth2.endpointParams }}
+      endpoint_params = {
+      {{- range $k, $v := .auth.oauth2.endpointParams }}
+        {{ $k }} = {{ $v | quote }},
+      {{- end }}
+      }
+      {{- end }}
+      {{- if .auth.oauth2.proxyURL }}
+      proxy_url = {{ .auth.oauth2.proxyURL | quote }}
+      {{- end }}
+      {{- if .auth.oauth2.noProxy }}
+      no_proxy = {{ .auth.oauth2.noProxy | quote }}
+      {{- end }}
+      {{- if .auth.oauth2.proxyFromEnvironment }}
+      proxyFromEnvironment = {{ .auth.oauth2.proxyFromEnvironment }}
+      {{- end }}
+      {{- if .auth.oauth2.proxyConnectHeader }}
+      proxy_connect_header = {{ .auth.oauth2.proxyConnectHeader | toJson }}
+      {{- end }}
+      {{- if .auth.oauth2.scopes }}
+      scopes = {{ .auth.oauth2.scopes | toJson }}
+      {{- end }}
+      {{- if .auth.oauth2.tokenURL }}
+      token_url = {{ .auth.oauth2.tokenURL | quote }}
+      {{- end }}
+    }
 {{- end }}
 
 {{- if .tls }}

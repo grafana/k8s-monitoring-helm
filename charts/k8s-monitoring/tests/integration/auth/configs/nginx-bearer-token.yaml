@@ -1,3 +1,4 @@
+---
 service:
   type: ClusterIP
 serverBlock: |-
@@ -7,15 +8,15 @@ serverBlock: |-
       if ($http_authorization != "Bearer my-secret-remote-write-token") {
         return 401;
       }
-  
-      proxy_pass http://prometheus-noauth-server.prometheus.svc:9090/;
+
+      proxy_pass http://prometheus-server.prometheus.svc:9090/;
     }
-  
+
     location /otlp/ {
       if ($http_authorization != "Bearer my-secret-otlp-token") {
         return 401;
       }
 
-      proxy_pass http://prometheus-noauth-server.prometheus.svc:9090/;
+      proxy_pass http://prometheus-server.prometheus.svc:9090/;
     }
   }

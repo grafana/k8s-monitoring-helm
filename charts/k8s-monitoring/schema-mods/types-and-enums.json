@@ -12,22 +12,40 @@
   },
   "definitions": {
     "loki-destination": {"properties": {
-      "auth": {"properties": {"type": {"enum": ["none", "basic", "bearerToken"]}}},
+      "auth": {"properties": {"type": {"enum": ["none", "basic", "bearerToken", "oauth2"]}}},
       "secret": {"properties": {"create": {"type": ["null", "boolean"]}}},
       "tenantId": {"type": ["string", "number"]}
     }},
     "otlp-destination": {"properties": {
-      "auth": {"properties": {"type": {"enum": ["none", "basic", "bearerToken"]}}},
+      "auth": {"properties": {"type": {"enum": ["none", "basic", "bearerToken", "oauth2"]}}},
       "secret": {"properties": {"create": {"type": ["null", "boolean"]}}},
-      "tenantId": {"type": ["string", "number"]}
+      "tenantId": {"type": ["string", "number"]},
+      "metrics": {"properties": {"enabled": {"type": ["null", "boolean"]}}},
+      "logs": {"properties": {"enabled": {"type": ["null", "boolean"]}}},
+      "traces": {"properties": {"enabled": {"type": ["null", "boolean"]}}},
+      "processors": {"properties": {
+        "attributes": {"properties": {
+          "actions": {"type": "array", "items": {
+            "type": "object", "properties": {
+              "key": {"type": "string"},
+              "action": {"type": "string"},
+              "value": {},
+              "pattern": {"type": ["null", "string"]},
+              "fromAttribute": {"type": ["null", "string"]},
+              "fromContext": {"type": ["null", "string"]},
+              "convertedType": {"type": ["null", "string"]}
+            }, "required": ["key", "action"]
+          }}
+        }}
+      }}
     }},
     "prometheus-destination": {"properties": {
-      "auth": {"properties": {"type": {"enum": ["none", "basic", "bearerToken", "sigv4"]}}},
+      "auth": {"properties": {"type": {"enum": ["none", "basic", "bearerToken", "oauth2", "sigv4"]}}},
       "secret": {"properties": {"create": {"type": ["null", "boolean"]}}},
       "tenantId": {"type": ["string", "number"]}
     }},
     "pyroscope-destination": {"properties": {
-      "auth": {"properties": {"type": {"enum": ["none", "basic", "bearerToken"]}}},
+      "auth": {"properties": {"type": {"enum": ["none", "basic", "bearerToken", "oauth2"]}}},
       "secret": {"properties": {"create": {"type": ["null", "boolean"]}}},
       "tenantId": {"type": ["string", "number"]}
     }}

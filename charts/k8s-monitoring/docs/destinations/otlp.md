@@ -68,9 +68,15 @@ This defines the options for defining a destination for OpenTelemetry data that 
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| logs.enabled | bool | `false` | Whether to send logs to the OTLP destination. |
-| metrics.enabled | bool | `false` | Whether to send metrics to the OTLP destination. |
-| traces.enabled | bool | `true` | Whether to send traces to the OTLP destination. |
+| logs.enabled | string | `true` | Whether to send logs to the OTLP destination. |
+| metrics.enabled | string | `true` | Whether to send metrics to the OTLP destination. |
+| traces.enabled | string | `true` | Whether to send traces to the OTLP destination. |
+
+### Attributes Processor
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| processors.attributes.actions | list | `[]` | Attribute processor actions Format: { key: "", value: "", action: "", pattern: "", fromAttribute: "", fromContext: "", convertedType: "" } |
 
 ### Batch Processor
 
@@ -86,15 +92,14 @@ This defines the options for defining a destination for OpenTelemetry data that 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | processors.memoryLimiter.checkInterval | string | `"1s"` | How often to check memory usage. |
-| processors.memoryLimiter.enabled | bool | `true` | Whether to use a memory limiter. |
+| processors.memoryLimiter.enabled | bool | `false` | Whether to use a memory limiter. |
 | processors.memoryLimiter.limit | string | `"0MiB"` | Maximum amount of memory targeted to be allocated by the process heap. |
 
 ### Transform Processor
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| processors.transform.enabled | bool | `false` | Whether to use a transform processor. |
-| processors.transform.log | object | `{"labels":[],"log":[],"resource":[]}` | Log transforms |
+| processors.transform.logs | object | `{"log":[],"resource":[]}` | Log transforms |
 | processors.transform.metrics | object | `{"datapoint":[],"metric":[],"resource":[]}` | Metric transforms |
 | processors.transform.traces | object | `{"resource":[],"span":[],"spanevent":[]}` | Trace transforms |
 
@@ -127,4 +132,4 @@ This defines the options for defining a destination for OpenTelemetry data that 
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| processors | object | `{"batch":{"enabled":true,"maxSize":0,"size":8192,"timeout":"2s"},"memoryLimiter":{"checkInterval":"1s","enabled":true,"limit":"0MiB"},"transform":{"enabled":false,"log":{"labels":[],"log":[],"resource":[]},"metrics":{"datapoint":[],"metric":[],"resource":[]},"traces":{"resource":[],"span":[],"spanevent":[]}}}` | Processors to apply to the data before sending it. |
+| processors | object | `{"attributes":{"actions":[]},"batch":{"enabled":true,"maxSize":0,"size":8192,"timeout":"2s"},"memoryLimiter":{"checkInterval":"1s","enabled":false,"limit":"0MiB"},"transform":{"logs":{"log":[],"resource":[]},"metrics":{"datapoint":[],"metric":[],"resource":[]},"traces":{"resource":[],"span":[],"spanevent":[]}}}` | Processors to apply to the data before sending it. |

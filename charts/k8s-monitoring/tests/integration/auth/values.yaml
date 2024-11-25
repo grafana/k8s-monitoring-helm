@@ -1,20 +1,22 @@
+---
+# yamllint disable rule:colons
 cluster:
   name: auth-integration-test
 
 destinations:
   - name: prometheus-noauth
     type: prometheus
-    url: http://prometheus-noauth-server.prometheus.svc:9090/api/v1/write
+    url: http://prometheus-server.prometheus.svc:9090/api/v1/write
     extraLabels:
       destination: prometheus-noauth
 
   - name: prometheus-basicauth
     type: prometheus
-    url: http://prometheus-basicauth-server.prometheus.svc:9090/api/v1/write
+    url: http://nginx-basic-auth.prometheus.svc/auth-gateway/api/v1/write
     auth:
       type: basic
       username: promuser
-      password: prometheuspassword
+      password: prompassword
     extraLabels:
       destination: prometheus-basicauth
 
@@ -31,7 +33,13 @@ destinations:
   - name: prometheus-otlp-noauth
     type: otlp
     protocol: http
-    url: http://prometheus-noauth-server.prometheus.svc:9090/api/v1/otlp
+    url: http://prometheus-server.prometheus.svc:9090/api/v1/otlp
+    processors:
+      attributes:
+        actions:
+          - key: destination
+            action: upsert
+            value: prometheus-otlp-noauth
     metrics:  {enabled: true}
     logs:     {enabled: false}
     traces:   {enabled: false}
@@ -39,11 +47,17 @@ destinations:
   - name: prometheus-otlp-basicauth
     type: otlp
     protocol: http
-    url: http://prometheus-basicauth-server.prometheus.svc:9090/api/v1/otlp
+    url: http://nginx-basic-auth.prometheus.svc/auth-gateway/api/v1/otlp
     auth:
       type: basic
-      username: promuser
-      password: prometheuspassword
+      username: oteluser
+      password: otelpassword
+    processors:
+      attributes:
+        actions:
+          - key: destination
+            action: upsert
+            value: prometheus-otlp-basicauth
     metrics:  {enabled: true}
     logs:     {enabled: false}
     traces:   {enabled: false}
@@ -55,6 +69,12 @@ destinations:
     auth:
       type: bearerToken
       bearerToken: my-secret-otlp-token
+    processors:
+      attributes:
+        actions:
+          - key: destination
+            action: upsert
+            value: prometheus-otlp-bearer-token
     metrics:  {enabled: true}
     logs:     {enabled: false}
     traces:   {enabled: false}
@@ -62,8 +82,18 @@ destinations:
 clusterMetrics:
   enabled: true
   destinations: [prometheus-noauth, prometheus-basicauth, prometheus-bearer-token, prometheus-otlp-noauth, prometheus-otlp-basicauth, prometheus-otlp-bearer-token]
+  kubelet:
+    metricsTuning:
+      includeMetrics: [kubernetes_build_info]
+  kubeletResource:    {enabled: false}
+  cadvisor:           {enabled: false}
   kube-state-metrics: {enabled: false, deploy: false}
   node-exporter:      {enabled: false, deploy: false}
+  windows-exporter:   {enabled: false, deploy: false}
 
 alloy-metrics:
   enabled: true
+  liveDebugging:
+    enabled: true
+  alloy:
+    stabilityLevel: experimental
