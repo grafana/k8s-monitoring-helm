@@ -1,7 +1,7 @@
 {{/* Inputs: Values (values) metricsOutput, logsOutput, tracesOutput, name */}}
 {{- define "feature.applicationObservability.processor.batch.alloy.target" }}otelcol.processor.batch.{{ .name | default "default" }}.input{{ end }}
 {{- define "feature.applicationObservability.processor.batch.alloy" }}
-otelcol.processor.batch "{{ .name | default "default" }}" {
+otelcol.processor.batch {{ .name | default "default" | quote }} {
   output {
 {{- if and .metricsOutput .Values.metrics.enabled }}
     metrics = {{ .metricsOutput }}

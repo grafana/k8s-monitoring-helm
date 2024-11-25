@@ -12,6 +12,25 @@ This defines the options for defining a destination for OpenTelemetry data that 
 | auth.bearerTokenFrom | string | `""` | Raw config for accessing the bearer token. |
 | auth.bearerTokenKey | string | `"bearerToken"` | The key for storing the bearer token in the secret. |
 
+### Authentication - OAuth2
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| auth.oauth2.clientId | string | `""` | OAuth2 client ID |
+| auth.oauth2.clientIdFrom | string | `""` | Raw config for accessing the client ID |
+| auth.oauth2.clientIdKey | string | `"clientId"` | The key for the client ID property in the secret |
+| auth.oauth2.clientSecret | string | `""` | Prometheus OAuth2 client secret |
+| auth.oauth2.clientSecretFile | string | `""` | File containing the OAuth2 client secret. |
+| auth.oauth2.clientSecretFrom | string | `""` | Raw config for accessing the client secret |
+| auth.oauth2.clientSecretKey | string | `"clientSecret"` | The key for the client secret property in the secret |
+| auth.oauth2.endpointParams | object | `{}` | Prometheus OAuth2 endpoint parameters |
+| auth.oauth2.noProxy | string | `""` | Comma-separated list of IP addresses, CIDR notations, and domain names to exclude from proxying. |
+| auth.oauth2.proxyConnectHeader | object | `{}` | Specifies headers to send to proxies during CONNECT requests. |
+| auth.oauth2.proxyFromEnvironment | bool | `false` | Use the proxy URL indicated by environment variables. |
+| auth.oauth2.proxyURL | string | `""` | HTTP proxy to send requests through. |
+| auth.oauth2.scopes | list | `[]` | List of scopes to authenticate with. |
+| auth.oauth2.tokenURL | string | `""` | URL to fetch the token from. |
+
 ### Authentication - Basic
 
 | Key | Type | Default | Description |
@@ -27,7 +46,7 @@ This defines the options for defining a destination for OpenTelemetry data that 
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| auth.type | string | none | The type of authentication to do. Options are "none" (default), "basic", "bearerToken". |
+| auth.type | string | `"none"` | The type of authentication to do. Options are "none" (default), "basic", "bearerToken", "oauth2". |
 
 ### General
 
@@ -49,9 +68,40 @@ This defines the options for defining a destination for OpenTelemetry data that 
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| logs.enabled | bool | `false` | Whether to send logs to the OTLP destination. |
-| metrics.enabled | bool | `false` | Whether to send metrics to the OTLP destination. |
-| traces.enabled | bool | `true` | Whether to send traces to the OTLP destination. |
+| logs.enabled | string | `true` | Whether to send logs to the OTLP destination. |
+| metrics.enabled | string | `true` | Whether to send metrics to the OTLP destination. |
+| traces.enabled | string | `true` | Whether to send traces to the OTLP destination. |
+
+### Attributes Processor
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| processors.attributes.actions | list | `[]` | Attribute processor actions Format: { key: "", value: "", action: "", pattern: "", fromAttribute: "", fromContext: "", convertedType: "" } |
+
+### Batch Processor
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| processors.batch.enabled | bool | `true` | Whether to use a batch processor. |
+| processors.batch.maxSize | int | `0` | Upper limit of a batch size. When set to 0, there is no upper limit. |
+| processors.batch.size | int | `8192` | Amount of data to buffer before flushing the batch. |
+| processors.batch.timeout | string | `"2s"` | How long to wait before flushing the batch. |
+
+### Memory Limiter
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| processors.memoryLimiter.checkInterval | string | `"1s"` | How often to check memory usage. |
+| processors.memoryLimiter.enabled | bool | `false` | Whether to use a memory limiter. |
+| processors.memoryLimiter.limit | string | `"0MiB"` | Maximum amount of memory targeted to be allocated by the process heap. |
+
+### Transform Processor
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| processors.transform.logs | object | `{"log":[],"resource":[]}` | Log transforms |
+| processors.transform.metrics | object | `{"datapoint":[],"metric":[],"resource":[]}` | Metric transforms |
+| processors.transform.traces | object | `{"resource":[],"span":[],"spanevent":[]}` | Trace transforms |
 
 ### Secret
 
@@ -77,3 +127,9 @@ This defines the options for defining a destination for OpenTelemetry data that 
 | tls.key | string | `""` | The client key for the server (as a string). |
 | tls.keyFile | string | `""` | The client key for the server (as a path to a file). |
 | tls.keyFrom | string | `""` | Raw config for accessing the client key. |
+
+### Other Values
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| processors | object | `{"attributes":{"actions":[]},"batch":{"enabled":true,"maxSize":0,"size":8192,"timeout":"2s"},"memoryLimiter":{"checkInterval":"1s","enabled":false,"limit":"0MiB"},"transform":{"logs":{"log":[],"resource":[]},"metrics":{"datapoint":[],"metric":[],"resource":[]},"traces":{"resource":[],"span":[],"spanevent":[]}}}` | Processors to apply to the data before sending it. |

@@ -8,20 +8,23 @@ name: ""
 # @section -- General
 protocol: "grpc"
 
-traces:
-  # -- Whether to send traces to the OTLP destination.
-  # @section -- Telemetry
-  enabled: true
-
 metrics:
   # -- Whether to send metrics to the OTLP destination.
+  # @default -- `true`
   # @section -- Telemetry
-  enabled: false
+  enabled:
 
 logs:
   # -- Whether to send logs to the OTLP destination.
+  # @default -- `true`
   # @section -- Telemetry
-  enabled: false
+  enabled:
+
+traces:
+  # -- Whether to send traces to the OTLP destination.
+  # @default -- `true`
+  # @section -- Telemetry
+  enabled:
 
 # -- The URL for the OTLP destination.
 # @section -- General
@@ -52,17 +55,16 @@ extraHeadersFrom: {}
 
 auth:
   # -- The type of authentication to do.
-  # Options are "none" (default), "basic", "bearerToken".
-  # @default -- none
+  # Options are "none" (default), "basic", "bearerToken", "oauth2".
   # @section -- Authentication
-  type: "none"
+  type: none
 
   # -- The username for basic authentication.
   # @section -- Authentication - Basic
   username: ""
   # -- The key for storing the username in the secret.
   # @section -- Authentication - Basic
-  usernameKey: "username"
+  usernameKey: username
   # -- Raw config for accessing the username.
   # @section -- Authentication - Basic
   usernameFrom: ""
@@ -72,7 +74,7 @@ auth:
   password: ""
   # -- The key for storing the password in the secret.
   # @section -- Authentication - Basic
-  passwordKey: "password"
+  passwordKey: password
   # -- Raw config for accessing the password.
   # @section -- Authentication - Basic
   passwordFrom: ""
@@ -82,10 +84,56 @@ auth:
   bearerToken: ""
   # -- The key for storing the bearer token in the secret.
   # @section -- Authentication - Bearer Token
-  bearerTokenKey: "bearerToken"
+  bearerTokenKey: bearerToken
   # -- Raw config for accessing the bearer token.
   # @section -- Authentication - Bearer Token
   bearerTokenFrom: ""
+
+  # Authenticate to Prometheus using OAuth2
+  # @section -- Authentication - OAuth2
+  oauth2:
+    # -- OAuth2 client ID
+    # @section -- Authentication - OAuth2
+    clientId: ""
+    # -- The key for the client ID property in the secret
+    # @section -- Authentication - OAuth2
+    clientIdKey: clientId
+    # -- Raw config for accessing the client ID
+    # @section -- Authentication - OAuth2
+    clientIdFrom: ""
+    # -- Prometheus OAuth2 client secret
+    # @section -- Authentication - OAuth2
+    clientSecret: ""
+    # -- The key for the client secret property in the secret
+    # @section -- Authentication - OAuth2
+    clientSecretKey: clientSecret
+    # -- Raw config for accessing the client secret
+    # @section -- Authentication - OAuth2
+    clientSecretFrom: ""
+    # -- File containing the OAuth2 client secret.
+    # @section -- Authentication - OAuth2
+    clientSecretFile: ""
+    # -- Prometheus OAuth2 endpoint parameters
+    # @section -- Authentication - OAuth2
+    endpointParams: {}
+    # -- HTTP proxy to send requests through.
+    # @section -- Authentication - OAuth2
+    proxyURL: ""
+    # -- Comma-separated list of IP addresses, CIDR notations, and domain names to exclude from proxying.
+    # @section -- Authentication - OAuth2
+    noProxy: ""
+    # -- Use the proxy URL indicated by environment variables.
+    # @section -- Authentication - OAuth2
+    proxyFromEnvironment: false
+    # -- Specifies headers to send to proxies during CONNECT requests.
+    # @section -- Authentication - OAuth2
+    proxyConnectHeader: {}
+    # -- List of scopes to authenticate with.
+    # @section -- Authentication - OAuth2
+    scopes: []
+    # -- URL to fetch the token from.
+    # @section -- Authentication - OAuth2
+    tokenURL: ""
 
 secret:
   # -- (bool) Whether to create a secret for this Prometheus destination.
@@ -148,3 +196,55 @@ readBufferSize: ""
 # -- Size of the write buffer the gRPC client to use for writing requests.
 # @section -- General
 writeBufferSize: ""
+
+# -- Processors to apply to the data before sending it.
+processors:
+  attributes:
+    # -- Attribute processor actions
+    # Format: { key: "", value: "", action: "", pattern: "", fromAttribute: "", fromContext: "", convertedType: "" }
+    # @section -- Attributes Processor
+    actions: []
+
+  transform:
+    # -- Metric transforms
+    # @section -- Transform Processor
+    metrics:
+      resource: []
+      metric: []
+      datapoint: []
+
+    # -- Log transforms
+    # @section -- Transform Processor
+    logs:
+      resource: []
+      log: []
+
+    # -- Trace transforms
+    # @section -- Transform Processor
+    traces:
+      resource: []
+      span: []
+      spanevent: []
+  batch:
+    # -- Whether to use a batch processor.
+    # @section -- Batch Processor
+    enabled: true
+    # -- Amount of data to buffer before flushing the batch.
+    # @section -- Batch Processor
+    size: 8192
+    # -- Upper limit of a batch size. When set to 0, there is no upper limit.
+    # @section -- Batch Processor
+    maxSize: 0
+    # -- How long to wait before flushing the batch.
+    # @section -- Batch Processor
+    timeout: 2s
+  memoryLimiter:
+    # -- Whether to use a memory limiter.
+    # @section -- Memory Limiter
+    enabled: false
+    # -- How often to check memory usage.
+    # @section -- Memory Limiter
+    checkInterval: 1s
+    # -- Maximum amount of memory targeted to be allocated by the process heap.
+    # @section -- Memory Limiter
+    limit: 0MiB
