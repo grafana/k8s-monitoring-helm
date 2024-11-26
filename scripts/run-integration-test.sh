@@ -96,17 +96,20 @@ for ((i=0; i<prerequisiteCount; i++)); do
     prereqRepoArg=""
     if [ -n "${prereqRepo}" ]; then prereqRepoArg="--repo ${prereqRepo}"; fi
     prereqChart=$(yq -r .prerequisites[$i].chart "${testManifest}")
+    prereqVersion=$(yq -r ".prerequisites[$i].version // \"\"" "${testManifest}")
+    prereqVersionArg=""
+    if [ -n "${prereqVersion}" ]; then prereqVersionArg="--version ${prereqVersion}"; fi
     prereqValues="$(yq -r ".prerequisites[$i].values // \"\"" "${testManifest}")"
     prereqValuesFile="$(yq -r ".prerequisites[$i].valuesFile // \"\"" "${testManifest}")"
 
     if [ -n "${prereqValuesFile}" ]; then
-      helm upgrade --install "${prereqName}" ${namespaceArg} --create-namespace ${prereqRepoArg} "${prereqChart}" -f "${PARENT_DIR}/${prereqValuesFile}" --hide-notes --wait
+      helm upgrade --install "${prereqName}" ${namespaceArg} --create-namespace ${prereqRepoArg} "${prereqChart}" ${prereqVersionArg} -f "${PARENT_DIR}/${prereqValuesFile}" --hide-notes --wait
     elif [ -n "${prereqChart}" ]; then
       echo "${prereqValues}" > temp-values.yaml
-      helm upgrade --install "${prereqName}" ${namespaceArg} --create-namespace ${prereqRepoArg} "${prereqChart}" -f temp-values.yaml --hide-notes --wait
+      helm upgrade --install "${prereqName}" ${namespaceArg} --create-namespace ${prereqRepoArg} "${prereqChart}" ${prereqVersionArg} -f temp-values.yaml --hide-notes --wait
       rm temp-values.yaml
     else
-      helm upgrade --install "${prereqName}" ${namespaceArg} --create-namespace --repo "${prereqRepo}" "${prereqChart}" --hide-notes --wait
+      helm upgrade --install "${prereqName}" ${namespaceArg} --create-namespace --repo "${prereqRepo}" "${prereqChart}" ${prereqVersionArg} --hide-notes --wait
     fi
   else
     echo "Unknown prerequisite type: ${prereqType}"
