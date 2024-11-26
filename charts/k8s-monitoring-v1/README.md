@@ -449,6 +449,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | logs.journal.enabled | bool | `false` | Scrape Kubernetes Worker Journal Logs event |
+| logs.journal.extraRelabelingRules | string | `""` | Rule blocks to be added used with the loki.source.journal component for journal logs. These relabeling rules are applied pre-scrape against the targets from service discovery. Before the scrape, any remaining target labels that start with `__` (i.e. `__meta_kubernetes*`) are dropped. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.relabel/#rule-block)) **Note:** Many field names from journald start with an `_`, such as `_systemd_unit`. The final internal label name would be `__journal__systemd_unit`, with two underscores between `__journal` and `systemd_unit`. |
 | logs.journal.extraStageBlocks | string | `""` | Stage blocks to be added to the loki.process component for journal logs. ([docs](https://grafana.com/docs/alloy/latest/reference/components/loki/loki.process/#blocks)) This value is templated so that you can refer to other values from this file. |
 | logs.journal.formatAsJson | bool | `false` | Whether to forward the original journal entry as JSON. |
 | logs.journal.jobLabel | string | `"integrations/kubernetes/journal"` | The value for the job label for journal logs |
@@ -456,11 +457,19 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | logs.journal.path | string | `"/var/log/journal"` | The path to the journal logs on the worker node |
 | logs.journal.units | list | `[]` | The list of systemd units to keep scraped logs from.  If empty, all units are scraped. |
 
+### Logs Scrape: PodLog Objects
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| logs.podLogsObjects.enabled | bool | `false` | Enable discovery of Grafana Alloy PodLogs objects. |
+| logs.podLogsObjects.extraStageBlocks | string | `""` | Stage blocks to be added to the loki.process component for logs gathered via PodLogs objects. ([docs](https://grafana.com/docs/alloy/latest/reference/components/loki/loki.process/#blocks)) This value is templated so that you can refer to other values from this file. |
+| logs.podLogsObjects.namespaces | list | `[]` | Which namespaces to look for PodLogs objects. |
+| logs.podLogsObjects.selector | string | `""` | Selector to filter which PodLogs objects to use. |
+
 ### Logs Scrape: Pod Logs
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| logs.journal.extraRelabelingRules | string | `""` | Rule blocks to be added used with the loki.source.journal component for journal logs. These relabeling rules are applied pre-scrape against the targets from service discovery. Before the scrape, any remaining target labels that start with `__` (i.e. `__meta_kubernetes*`) are dropped. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.relabel/#rule-block)) **Note:** Many field names from journald start with an `_`, such as `_systemd_unit`. The final internal label name would be `__journal__systemd_unit`, with two underscores between `__journal` and `systemd_unit`. |
 | logs.pod_logs.annotation | string | `"k8s.grafana.com/logs.autogather"` | Pod annotation to use for controlling log discovery. |
 | logs.pod_logs.annotations | object | `{"job":"k8s.grafana.com/logs.job"}` | Loki labels to set with values copied from the Kubernetes Pod annotations. Format: `<loki_label>: <kubernetes_annotation>`. |
 | logs.pod_logs.discovery | string | `"all"` | Controls the behavior of discovering pods for logs. |
@@ -472,15 +481,6 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | logs.pod_logs.labels | object | `{"app_kubernetes_io_name":"app.kubernetes.io/name"}` | Loki labels to set with values copied from the Kubernetes Pod labels. Format: `<loki_label>: <kubernetes_label>`. |
 | logs.pod_logs.namespaces | list | `[]` | Only capture logs from pods in these namespaces (`[]` means all namespaces). |
 | logs.pod_logs.structuredMetadata | object | `{}` | List of labels to turn into structured metadata. If your Loki instance does not support structured metadata, leave this empty. Format: `<structured metadata>: <Loki label>`. |
-
-### Logs Scrape: PodLog Objects
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| logs.podLogsObjects.enabled | bool | `false` | Enable discovery of Grafana Alloy PodLogs objects. |
-| logs.podLogsObjects.extraStageBlocks | string | `""` | Stage blocks to be added to the loki.process component for logs gathered via PodLogs objects. ([docs](https://grafana.com/docs/alloy/latest/reference/components/loki/loki.process/#blocks)) This value is templated so that you can refer to other values from this file. |
-| logs.podLogsObjects.namespaces | list | `[]` | Which namespaces to look for PodLogs objects. |
-| logs.podLogsObjects.selector | string | `""` | Selector to filter which PodLogs objects to use. |
 
 ### Logs Receiver
 
