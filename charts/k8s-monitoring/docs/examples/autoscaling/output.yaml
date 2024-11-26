@@ -111,6 +111,7 @@ data:
           insecure_skip_verify = false
         }
         send_native_histograms = false
+    
         queue_config {
           capacity = 10000
           min_shards = 1
@@ -122,6 +123,7 @@ data:
           retry_on_http_429 = true
           sample_age_limit = "0s"
         }
+    
         write_relabel_config {
           source_labels = ["cluster"]
           regex = ""
@@ -134,6 +136,12 @@ data:
           replacement = "autoscaling-example-cluster"
           target_label = "cluster"
         }
+      }
+    
+      wal {
+        truncate_frequency = "2h"
+        min_keepalive_time = "5m"
+        max_keepalive_time = "8h"
       }
     }
     

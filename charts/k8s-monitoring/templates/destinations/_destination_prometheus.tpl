@@ -101,7 +101,7 @@ prometheus.remote_write {{ include "helper.alloy_name" .name | quote }} {
     }
 {{- end }}
     send_native_histograms = {{ .sendNativeHistograms | default false }}
-{{- if .queueConfig }}
+
     queue_config {
       capacity = {{ .queueConfig.capacity | default 10000}}
       min_shards = {{ .queueConfig.minShards | default 1 }}
@@ -113,7 +113,7 @@ prometheus.remote_write {{ include "helper.alloy_name" .name | quote }} {
       retry_on_http_429 = {{ .queueConfig.retryOnHttp429 | default true }}
       sample_age_limit = {{ .queueConfig.sampleAgeLimit | default "0s" | quote }}
     }
-{{- end }}
+
     write_relabel_config {
       source_labels = ["cluster"]
       regex = ""
@@ -129,6 +129,12 @@ prometheus.remote_write {{ include "helper.alloy_name" .name | quote }} {
 {{- if .metricProcessingRules }}
 {{ .metricProcessingRules | indent 4 }}
 {{- end }}
+  }
+
+  wal {
+    truncate_frequency = {{ .writeAheadLog.truncateFrequency | quote }}
+    min_keepalive_time = {{ .writeAheadLog.minKeepaliveTime | quote }}
+    max_keepalive_time = {{ .writeAheadLog.maxKeepaliveTime | quote }}
   }
 {{- if or .extraLabels .extraLabelsFrom }}
   external_labels = {

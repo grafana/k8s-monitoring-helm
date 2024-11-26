@@ -130,6 +130,14 @@ This defines the options for defining a destination for metrics that use the Pro
 | tls.keyFile | string | `""` | The client key for the server (as a path to a file). |
 | tls.keyFrom | string | `""` | Raw config for accessing the client key. |
 
+### Write-Ahead Log
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| writeAheadLog.maxKeepaliveTime | string | `"8h"` | Maximum time to keep data in the write-ahead log before removing it. |
+| writeAheadLog.minKeepaliveTime | string | `"5m"` | Minimum time to keep data in the write-ahead log before it can be removed. |
+| writeAheadLog.truncateFrequency | string | `"2h"` | How frequently to clean up the write-ahead log. |
+
 ## Examples
 
 ### Local Prometheus
