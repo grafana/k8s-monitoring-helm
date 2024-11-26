@@ -1,0 +1,11 @@
+{{- if .Values.deployAsConfigMap }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "feature.nodeLogs.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+data:
+  module.alloy: |-
+    {{- include "feature.nodeLogs.module" . | indent 4 }}
+{{- end }}
