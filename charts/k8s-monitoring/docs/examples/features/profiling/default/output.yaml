@@ -3,12 +3,12 @@
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: ko-alloy-profiles
+  name: k8smon-alloy-profiles
   namespace: default
   labels:
     helm.sh/chart: alloy-profiles-0.10.0
     app.kubernetes.io/name: alloy-profiles
-    app.kubernetes.io/instance: ko
+    app.kubernetes.io/instance: k8smon
     
     app.kubernetes.io/version: "v1.5.0"
     app.kubernetes.io/managed-by: Helm
@@ -19,7 +19,7 @@ metadata:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: ko-alloy-profiles
+  name: k8smon-alloy-profiles
   namespace: default
 data:
   config.alloy: |-
@@ -875,11 +875,11 @@ data:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: ko-alloy-profiles
+  name: k8smon-alloy-profiles
   labels:
     helm.sh/chart: alloy-profiles-0.10.0
     app.kubernetes.io/name: alloy-profiles
-    app.kubernetes.io/instance: ko
+    app.kubernetes.io/instance: k8smon
     
     app.kubernetes.io/version: "v1.5.0"
     app.kubernetes.io/managed-by: Helm
@@ -975,11 +975,11 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: ko-alloy-profiles
+  name: k8smon-alloy-profiles
   labels:
     helm.sh/chart: alloy-profiles-0.10.0
     app.kubernetes.io/name: alloy-profiles
-    app.kubernetes.io/instance: ko
+    app.kubernetes.io/instance: k8smon
     
     app.kubernetes.io/version: "v1.5.0"
     app.kubernetes.io/managed-by: Helm
@@ -988,21 +988,21 @@ metadata:
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: ko-alloy-profiles
+  name: k8smon-alloy-profiles
 subjects:
   - kind: ServiceAccount
-    name: ko-alloy-profiles
+    name: k8smon-alloy-profiles
     namespace: default
 ---
 # Source: k8s-monitoring/charts/alloy-profiles/templates/service.yaml
 apiVersion: v1
 kind: Service
 metadata:
-  name: ko-alloy-profiles
+  name: k8smon-alloy-profiles
   labels:
     helm.sh/chart: alloy-profiles-0.10.0
     app.kubernetes.io/name: alloy-profiles
-    app.kubernetes.io/instance: ko
+    app.kubernetes.io/instance: k8smon
     
     app.kubernetes.io/version: "v1.5.0"
     app.kubernetes.io/managed-by: Helm
@@ -1012,7 +1012,7 @@ spec:
   type: ClusterIP
   selector:
     app.kubernetes.io/name: alloy-profiles
-    app.kubernetes.io/instance: ko
+    app.kubernetes.io/instance: k8smon
   internalTrafficPolicy: Cluster
   ports:
     - name: http-metrics
@@ -1024,11 +1024,11 @@ spec:
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
-  name: ko-alloy-profiles
+  name: k8smon-alloy-profiles
   labels:
     helm.sh/chart: alloy-profiles-0.10.0
     app.kubernetes.io/name: alloy-profiles
-    app.kubernetes.io/instance: ko
+    app.kubernetes.io/instance: k8smon
     
     app.kubernetes.io/version: "v1.5.0"
     app.kubernetes.io/managed-by: Helm
@@ -1038,16 +1038,16 @@ spec:
   selector:
     matchLabels:
       app.kubernetes.io/name: alloy-profiles
-      app.kubernetes.io/instance: ko
+      app.kubernetes.io/instance: k8smon
   template:
     metadata:
       annotations:
         kubectl.kubernetes.io/default-container: alloy
       labels:
         app.kubernetes.io/name: alloy-profiles
-        app.kubernetes.io/instance: ko
+        app.kubernetes.io/instance: k8smon
     spec:
-      serviceAccountName: ko-alloy-profiles
+      serviceAccountName: k8smon-alloy-profiles
       containers:
         - name: alloy
           image: docker.io/grafana/alloy:v1.5.0
@@ -1105,4 +1105,4 @@ spec:
       volumes:
         - name: config
           configMap:
-            name: ko-alloy-profiles
+            name: k8smon-alloy-profiles

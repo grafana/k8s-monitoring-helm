@@ -75,11 +75,14 @@ else
 endif
 
 # Example targets
-EXAMPLE_RELEASE_NAME=ko
+EXAMPLE_RELEASE_NAME=k8smon
 EXAMPLE_VALUES_FILES = $(shell find docs/examples -name values.yaml)
 EXAMPLE_OUTPUT_FILES = $(EXAMPLE_VALUES_FILES:values.yaml=output.yaml)
 EXAMPLE_ALLOY_FILES = $(foreach file,$(EXAMPLE_VALUES_FILES),$(call alloy_configs, $(file)))
 EXAMPLE_README_FILES = $(EXAMPLE_VALUES_FILES:values.yaml=README.md)
+
+INTEGRATION_TEST_VALUES_FILES = $(shell find tests/integration -name values.yaml)
+INTEGRATION_TEST_OUTPUT_FILES = $(INTEGRATION_TEST_VALUES_FILES:values.yaml=.rendered/output.yaml)
 
 alloy_configs = $(shell \
 	DIR="$(shell dirname $(1))/" yq e 'with_entries(select(.key == "alloy-*")) | select(.[].enabled == true) | to_entries | env(DIR) + .[].key + ".alloy"' $(1) \
@@ -92,6 +95,10 @@ Chart.lock: Chart.yaml
 	helm dependency update .
 
 %/output.yaml: %/values.yaml Chart.yaml Chart.lock values.yaml values.schema.json templates/destinations/_destination_types.tpl $(DESTINATION_VALUES_FILES) $(CHART_TEMPLATE_FILES) $(CHART_YAML_FILES) alloyModules/LICENSE $(ALLOY_MODULE_FILES)
+	helm template $(EXAMPLE_RELEASE_NAME) . -f $< > $@
+
+%/.rendered/output.yaml: %/values.yaml Chart.yaml Chart.lock values.yaml values.schema.json templates/destinations/_destination_types.tpl $(DESTINATION_VALUES_FILES) $(CHART_TEMPLATE_FILES) $(CHART_YAML_FILES) alloyModules/LICENSE $(ALLOY_MODULE_FILES)
+	mkdir -p $(dir $@)
 	helm template $(EXAMPLE_RELEASE_NAME) . -f $< > $@
 
 %/alloy-logs.alloy: %/output.yaml
@@ -138,18 +145,21 @@ else
 	docker run --platform linux/amd64 --rm --volume $(shell pwd):/src shellspec/shellspec -c /src/tests/example-checks -s /bin/sh
 endif
 
+.PHONY: integration-test-checks
+integration-test-checks: $(INTEGRATION_TEST_OUTPUT_FILES)
+
 .PHONY: clean
 clean:
 	rm -f README.md values.schema.json $(UPDATECLI_FILES) templates/destinations/_destination_types.tpl schema-mods/destination-list.json $(DESTINATION_SCHEMA_FILES) $(DESTINATION_DOCS_FILES)
-	rm -f $(EXAMPLE_OUTPUT_FILES) $(EXAMPLE_ALLOY_FILES) $(EXAMPLE_README_FILES)
+	rm -f $(EXAMPLE_OUTPUT_FILES) $(EXAMPLE_ALLOY_FILES) $(EXAMPLE_README_FILES) $(INTEGRATION_TEST_OUTPUT_FILES)
 
 # Build targets
 .PHONY: build
-build: README.md alloyModules/LICENSE values.schema.json templates/destinations/_destination_types.tpl $(DESTINATION_DOCS_FILES) $(UPDATECLI_FILES) examples
+build: README.md alloyModules/LICENSE values.schema.json templates/destinations/_destination_types.tpl $(DESTINATION_DOCS_FILES) $(UPDATECLI_FILES) examples integration-test-checks
 
 # Test targets
 .PHONY: test unittest lint-helm lint-configs
-test: unittest lint-helm lint-configs example-checks
+test: unittest lint-helm lint-configs integration-test-checks example-checks
 lint-configs: $(EXAMPLE_ALLOY_FILES)
 	../../scripts/lint-alloy.sh $(EXAMPLE_ALLOY_FILES)
 	rm -rf data-alloy  # Clean up the data-alloy directory, which is created by lint-alloy.sh when it runs Alloy.
