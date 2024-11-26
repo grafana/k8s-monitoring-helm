@@ -24,6 +24,7 @@ declare "application_observability" {
   // Receivers --> Resource Detection Processor
   {{- $next := printf "[%s]" $resourceDetection }}
   {{- include "feature.applicationObservability.receiver.otlp.alloy" (dict "Values" $.Values "metricsOutput" $next "logsOutput" $next "tracesOutput" $next ) | indent 2 }}
+  {{- include "feature.applicationObservability.receiver.jaeger.alloy" (dict "Values" $.Values "tracesOutput" $next ) | indent 2 }}
   {{- include "feature.applicationObservability.receiver.zipkin.alloy" (dict "Values" $.Values "tracesOutput" $next ) | indent 2 }}
 
   // Resource Detection Processor --> K8s Attribute Processor

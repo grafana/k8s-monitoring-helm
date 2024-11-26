@@ -7,10 +7,20 @@ tests:
     set:
       deployAsConfigMap: true
       receivers:
-        grpc:
-          enabled: true
-        http:
-          enabled: true
+        otlp:
+          grpc:
+            enabled: true
+          http:
+            enabled: true
+        jaeger:
+          grpc:
+            enabled: true
+          thriftBinary:
+            enabled: true
+          thriftCompact:
+            enabled: true
+          thriftHttp:
+            enabled: true
         zipkin:
           enabled: true
     asserts:
@@ -46,6 +56,28 @@ tests:
                 output {
                   metrics = [otelcol.processor.resourcedetection.default.input]
                   logs = [otelcol.processor.resourcedetection.default.input]
+                  traces = [otelcol.processor.resourcedetection.default.input]
+                }
+              }
+              otelcol.receiver.jaeger "receiver" {
+                protocols {grpc {
+                    endpoint = "0.0.0.0:0"
+                  }
+                  thrift_binary {
+                    endpoint = "0.0.0.0:0"
+                  }
+                  thrift_compact {
+                    endpoint = "0.0.0.0:0"
+                  }
+                  thrift_http {
+                    endpoint = "0.0.0.0:0"
+                  }
+                }
+          
+                debug_metrics {
+                  disable_high_cardinality_metrics = true
+                }
+                output {
                   traces = [otelcol.processor.resourcedetection.default.input]
                 }
               }

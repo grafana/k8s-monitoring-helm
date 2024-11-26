@@ -49,14 +49,26 @@ application_observability "feature" {
 
 {{- range $collector := include "features.applicationObservability.collectors" . | fromYamlArray }}
   {{- include "collectors.require_collector" (dict "Values" $.Values "name" $collector "feature" $featureName) }}
-  {{- if $.Values.applicationObservability.receivers.grpc.enabled }}
-    {{- include "collectors.require_extra_port" (dict "Values" $.Values "name" $collector "feature" $featureName "portNumber" $.Values.applicationObservability.receivers.grpc.port "portName" "otlp-grpc" "portProtocol" "TCP") }}
+  {{- if $.Values.applicationObservability.receivers.otlp.grpc.enabled }}
+    {{- include "collectors.require_extra_port" (dict "Values" $.Values "name" $collector "feature" $featureName "portNumber" $.Values.applicationObservability.receivers.otlp.grpc.port "portName" "otlp-grpc" "portProtocol" "TCP") }}
   {{- end -}}
-  {{- if $.Values.applicationObservability.receivers.http.enabled }}
-    {{- include "collectors.require_extra_port" (dict "Values" $.Values "name" $collector "feature" $featureName "portNumber" $.Values.applicationObservability.receivers.http.port "portName" "otlp-http" "portProtocol" "TCP") }}
+  {{- if $.Values.applicationObservability.receivers.otlp.http.enabled }}
+    {{- include "collectors.require_extra_port" (dict "Values" $.Values "name" $collector "feature" $featureName "portNumber" $.Values.applicationObservability.receivers.otlp.http.port "portName" "otlp-http" "portProtocol" "TCP") }}
   {{- end -}}
   {{- if $.Values.applicationObservability.receivers.zipkin.enabled }}
     {{- include "collectors.require_extra_port" (dict "Values" $.Values "name" $collector "feature" $featureName "portNumber" $.Values.applicationObservability.receivers.zipkin.port "portName" "zipkin" "portProtocol" "TCP") }}
+  {{- end -}}
+  {{- if $.Values.applicationObservability.receivers.jaeger.grpc.enabled }}
+    {{- include "collectors.require_extra_port" (dict "Values" $.Values "name" $collector "feature" $featureName "portNumber" $.Values.applicationObservability.receivers.jaeger.grpc.port "portName" "jaeger-grpc" "portProtocol" "TCP") }}
+  {{- end -}}
+  {{- if $.Values.applicationObservability.receivers.jaeger.thriftBinary.enabled }}
+    {{- include "collectors.require_extra_port" (dict "Values" $.Values "name" $collector "feature" $featureName "portNumber" $.Values.applicationObservability.receivers.jaeger.thriftBinary.port "portName" "jaeger-grpc" "portProtocol" "TCP") }}
+  {{- end -}}
+  {{- if $.Values.applicationObservability.receivers.jaeger.thriftCompact.enabled }}
+    {{- include "collectors.require_extra_port" (dict "Values" $.Values "name" $collector "feature" $featureName "portNumber" $.Values.applicationObservability.receivers.jaeger.thriftCompact.port "portName" "jaeger-grpc" "portProtocol" "TCP") }}
+  {{- end -}}
+  {{- if $.Values.applicationObservability.receivers.jaeger.thriftHttp.enabled }}
+    {{- include "collectors.require_extra_port" (dict "Values" $.Values "name" $collector "feature" $featureName "portNumber" $.Values.applicationObservability.receivers.jaeger.thriftHttp.port "portName" "jaeger-grpc" "portProtocol" "TCP") }}
   {{- end -}}
   {{- include "feature.applicationObservability.validate" (dict "Values" $.Values.applicationObservability) }}
 {{- end -}}
@@ -64,12 +76,12 @@ application_observability "feature" {
 {{- end -}}
 
 {{- define "features.applicationObservability.receiver.grpc" }}
-  {{- if and .Values.applicationObservability.enabled .Values.applicationObservability.receivers.grpc.enabled }}
-http://{{ include "alloy.fullname" (index .Subcharts .Values.applicationObservability.collector) }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.applicationObservability.receivers.grpc.port }}
+  {{- if and .Values.applicationObservability.enabled .Values.applicationObservability.receivers.otlp.grpc.enabled }}
+http://{{ include "alloy.fullname" (index .Subcharts .Values.applicationObservability.collector) }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.applicationObservability.receivers.otlp.grpc.port }}
   {{- end }}
 {{- end }}
 {{- define "features.applicationObservability.receiver.http" }}
-  {{- if and .Values.applicationObservability.enabled .Values.applicationObservability.receivers.http.enabled }}
-http://{{ include "alloy.fullname" (index .Subcharts .Values.applicationObservability.collector) }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.applicationObservability.receivers.http.port }}
+  {{- if and .Values.applicationObservability.enabled .Values.applicationObservability.receivers.otlp.http.enabled }}
+http://{{ include "alloy.fullname" (index .Subcharts .Values.applicationObservability.collector) }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.applicationObservability.receivers.otlp.http.port }}
   {{- end }}
 {{- end }}

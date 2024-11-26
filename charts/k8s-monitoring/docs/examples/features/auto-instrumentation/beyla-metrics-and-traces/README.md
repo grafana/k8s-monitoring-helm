@@ -22,8 +22,9 @@ destinations:
 applicationObservability:
   enabled: true
   receivers:
-    grpc:
-      enabled: true
+    otlp:
+      grpc:
+        enabled: true
 
 autoInstrumentation:
   enabled: true

@@ -75,8 +75,8 @@ declare "application_observability" {
 
   // Receivers --> Resource Detection Processor  
   otelcol.receiver.otlp "receiver" {
-    grpc {
-      endpoint = "0.0.0.0:4317"
+    http {
+      endpoint = "0.0.0.0:4318"
     }
     debug_metrics {
       disable_high_cardinality_metrics = true
@@ -86,7 +86,7 @@ declare "application_observability" {
       logs = [otelcol.processor.resourcedetection.default.input]
       traces = [otelcol.processor.resourcedetection.default.input]
     }
-  }  
+  }    
 
   // Resource Detection Processor --> K8s Attribute Processor  
   otelcol.processor.resourcedetection "default" {

@@ -151,20 +151,7 @@ declare "application_observability" {
     comment = "Must be a list of trace destinations where collected trace should be forwarded to"
   }
 
-  // Receivers --> Resource Detection Processor  
-  otelcol.receiver.otlp "receiver" {
-    grpc {
-      endpoint = "0.0.0.0:4317"
-    }
-    debug_metrics {
-      disable_high_cardinality_metrics = true
-    }
-    output {
-      metrics = [otelcol.processor.resourcedetection.default.input]
-      logs = [otelcol.processor.resourcedetection.default.input]
-      traces = [otelcol.processor.resourcedetection.default.input]
-    }
-  }  
+  // Receivers --> Resource Detection Processor      
 
   // Resource Detection Processor --> K8s Attribute Processor  
   otelcol.processor.resourcedetection "default" {

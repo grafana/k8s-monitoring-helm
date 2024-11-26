@@ -44,8 +44,9 @@ destinations:
 applicationObservability:
   enabled: true
   receivers:
-    grpc:
-      enabled: true
+    jaeger:
+      thriftHttp:
+        enabled: true
 
 prometheusOperatorObjects:
   enabled: true
@@ -67,8 +68,8 @@ alloy-receiver:
   enabled: true
   alloy:
     extraPorts:
-      - name: otlp-grpc
-        port: 4317
-        targetPort: 4317
+      - name: jaeger-grpc
+        port: 14268
+        targetPort: 14268
         protocol: TCP
 ```

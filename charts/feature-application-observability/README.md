@@ -74,6 +74,31 @@ Actual integration testing in a live environment should be done in the main [k8s
 | processors.memoryLimiter.enabled | bool | `false` | Use a memory limiter. |
 | processors.memoryLimiter.limit | string | `"0MiB"` | Maximum amount of memory targeted to be allocated by the process heap. |
 
+### Receivers: Jaeger
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| receivers.jaeger.grpc | object | `{"enabled":false,"port":14250}` | Configuration for the Jaeger receiver using the gRPC protocol. |
+| receivers.jaeger.include_debug_metrics | bool | `false` | Whether to include high-cardinality debug metrics. |
+| receivers.jaeger.thriftBinary | object | `{"enabled":false,"port":6832}` | Configuration for the Jaeger receiver using the Thrift binary protocol. |
+| receivers.jaeger.thriftCompact | object | `{"enabled":false,"port":6831}` | Configuration for the Jaeger receiver using the Thrift compact protocol. |
+| receivers.jaeger.thriftHttp | object | `{"enabled":false,"port":14268}` | Configuration for the Jaeger receiver using the Thrift HTTP protocol. |
+
+### Receivers: OTLP
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| receivers.otlp.grpc | object | `{"enabled":false,"port":4317}` | The OTLP gRPC receiver configuration. |
+| receivers.otlp.http | object | `{"enabled":false,"port":4318}` | The OTLP HTTP receiver configuration. |
+| receivers.otlp.include_debug_metrics | bool | `false` | Whether to include high-cardinality debug metrics. |
+
+### Receivers: Zipkin
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| receivers.zipkin | object | `{"enabled":false,"include_debug_metrics":false,"port":9411}` | The Zipkin receiver configuration. |
+| receivers.zipkin.include_debug_metrics | bool | `false` | Whether to include high-cardinality debug metrics. |
+
 ### Other Values
 
 | Key | Type | Default | Description |
@@ -87,15 +112,6 @@ Actual integration testing in a live environment should be done in the main [k8s
 | metrics.enabled | bool | `true` |  |
 | metrics.filters | object | `{"datapoint":[],"metric":[]}` | Apply a filter to metrics received via the OTLP or OTLP HTTP receivers. ([docs](https://grafana.com/docs/alloy/latest/reference/components/otelcol/otelcol.processor.filter/)) |
 | metrics.transforms | object | `{"datapoint":[],"metric":[],"resource":[]}` | Apply a transformation to metrics received via the OTLP or OTLP HTTP receivers. ([docs](https://grafana.com/docs/alloy/latest/reference/components/otelcol/otelcol.processor.transform/)) |
-| receivers.grpc.enabled | bool | `false` |  |
-| receivers.grpc.include_debug_metrics | bool | `false` |  |
-| receivers.grpc.port | int | `4317` |  |
-| receivers.http.enabled | bool | `false` |  |
-| receivers.http.include_debug_metrics | bool | `false` |  |
-| receivers.http.port | int | `4318` |  |
-| receivers.zipkin.enabled | bool | `false` |  |
-| receivers.zipkin.include_debug_metrics | bool | `false` |  |
-| receivers.zipkin.port | int | `9411` |  |
 | traces.enabled | bool | `true` |  |
 | traces.filters | object | `{"span":[],"spanevent":[]}` | Apply a filter to traces received via the OTLP or OTLP HTTP receivers. ([docs](https://grafana.com/docs/alloy/latest/reference/components/otelcol/otelcol.processor.filter/)) |
 | traces.transforms | object | `{"resource":[],"span":[],"spanevent":[]}` | Apply a transformation to traces received via the OTLP or OTLP HTTP receivers. ([docs](https://grafana.com/docs/alloy/latest/reference/components/otelcol/otelcol.processor.transform/)) |
