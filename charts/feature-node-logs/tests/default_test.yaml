@@ -1,0 +1,46 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Test default values
+templates:
+  - configmap.yaml
+tests:
+  - it: should render the default configuration
+    set:
+      deployAsConfigMap: true
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - equal:
+          path: data["module.alloy"]
+          value: |-
+            declare "node_logs" {
+              argument "logs_destinations" {
+                comment = "Must be a list of log destinations where collected logs should be forwarded to"
+              }
+          
+              loki.relabel "journal" {
+                rule {
+                  action = "replace"
+                  source_labels = ["__journal__systemd_unit"]
+                  replacement = "$1"
+                  target_label = "unit"
+                }
+          
+                forward_to = [] // No forward_to is used in this component, the defined rules are used in the loki.source.journal component
+              }
+          
+              loki.source.journal "worker" {
+                path = "/var/log/journal"
+                format_as_json = false
+                max_age = "8h"
+                relabel_rules = loki.relabel.journal.rules
+                labels = {
+                  job = "integrations/kubernetes/journal",
+                  instance = env("HOSTNAME"),
+                }
+                forward_to = [loki.process.journal_logs.receiver]
+              }
+          
+              loki.process "journal_logs" {
+                forward_to = argument.logs_destinations.value
+              }
+            }

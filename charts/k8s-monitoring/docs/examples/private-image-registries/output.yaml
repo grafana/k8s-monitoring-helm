@@ -3,12 +3,12 @@
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: ko-alloy-logs
+  name: k8smon-alloy-logs
   namespace: default
   labels:
     helm.sh/chart: alloy-logs-0.10.0
     app.kubernetes.io/name: alloy-logs
-    app.kubernetes.io/instance: ko
+    app.kubernetes.io/instance: k8smon
     
     app.kubernetes.io/version: "v1.5.0"
     app.kubernetes.io/managed-by: Helm
@@ -19,12 +19,12 @@ metadata:
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: ko-alloy-metrics
+  name: k8smon-alloy-metrics
   namespace: default
   labels:
     helm.sh/chart: alloy-metrics-0.10.0
     app.kubernetes.io/name: alloy-metrics
-    app.kubernetes.io/instance: ko
+    app.kubernetes.io/instance: k8smon
     
     app.kubernetes.io/version: "v1.5.0"
     app.kubernetes.io/managed-by: Helm
@@ -42,10 +42,10 @@ metadata:
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: kube-state-metrics
     app.kubernetes.io/name: kube-state-metrics
-    app.kubernetes.io/instance: ko
+    app.kubernetes.io/instance: k8smon
     app.kubernetes.io/version: "2.14.0"
-    release: ko
-  name: ko-kube-state-metrics
+    release: k8smon
+  name: k8smon-kube-state-metrics
   namespace: default
 imagePullSecrets:  
   - name: my-registry-creds
@@ -54,7 +54,7 @@ imagePullSecrets:
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: ko-node-exporter
+  name: k8smon-node-exporter
   namespace: default
   labels:
     helm.sh/chart: node-exporter-4.42.0
@@ -62,9 +62,9 @@ metadata:
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: node-exporter
     app.kubernetes.io/name: node-exporter
-    app.kubernetes.io/instance: ko
+    app.kubernetes.io/instance: k8smon
     app.kubernetes.io/version: "1.8.2"
-    release: ko
+    release: k8smon
 automountServiceAccountToken: false
 imagePullSecrets:  
   - name: my-registry-creds
@@ -73,7 +73,7 @@ imagePullSecrets:
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: ko-windows-exporter
+  name: k8smon-windows-exporter
   namespace: default
   labels:
     helm.sh/chart: windows-exporter-0.7.1
@@ -81,9 +81,9 @@ metadata:
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: windows-exporter
     app.kubernetes.io/name: windows-exporter
-    app.kubernetes.io/instance: ko
+    app.kubernetes.io/instance: k8smon
     app.kubernetes.io/version: "0.29.2"
-    release: ko
+    release: k8smon
 imagePullSecrets:  
   - name: my-registry-creds
 ---
@@ -91,7 +91,7 @@ imagePullSecrets:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: ko-windows-exporter
+  name: k8smon-windows-exporter
   namespace: default
   labels:
     helm.sh/chart: windows-exporter-0.7.1
@@ -99,9 +99,9 @@ metadata:
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: windows-exporter
     app.kubernetes.io/name: windows-exporter
-    app.kubernetes.io/instance: ko
+    app.kubernetes.io/instance: k8smon
     app.kubernetes.io/version: "0.29.2"
-    release: ko
+    release: k8smon
 data:
   config.yml: |
     collectors:
@@ -114,7 +114,7 @@ data:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: ko-alloy-metrics
+  name: k8smon-alloy-metrics
   namespace: default
 data:
   config.alloy: |-
@@ -174,7 +174,7 @@ data:
       }
       
       remote.kubernetes.configmap "kubernetes" {
-        name = "ko-alloy-module-kubernetes"
+        name = "k8smon-alloy-module-kubernetes"
         namespace = "default"
       }
       
@@ -281,7 +281,7 @@ data:
       }            
       
       remote.kubernetes.configmap "kube_state_metrics" {
-        name = "ko-alloy-module-kubernetes"
+        name = "k8smon-alloy-module-kubernetes"
         namespace = "default"
       }
       
@@ -292,7 +292,7 @@ data:
       kube_state_metrics.kubernetes "targets" {
         label_selectors = [
           "app.kubernetes.io/name=kube-state-metrics",
-          "release=ko",
+          "release=k8smon",
         ]
       }
       
@@ -306,7 +306,7 @@ data:
       }  
       
       remote.kubernetes.configmap "node_exporter" {
-        name = "ko-alloy-module-system"
+        name = "k8smon-alloy-module-system"
         namespace = "default"
       }
       
@@ -317,7 +317,7 @@ data:
       node_exporter.kubernetes "targets" {
         label_selectors = [
           "app.kubernetes.io/name=node-exporter",
-          "release=ko",
+          "release=k8smon",
         ]
       }
       
@@ -347,7 +347,7 @@ data:
         }
         selectors {
           role = "pod"
-          label = "app.kubernetes.io/name=windows-exporter,release=ko"
+          label = "app.kubernetes.io/name=windows-exporter,release=k8smon"
         }
       }
       
@@ -399,7 +399,7 @@ data:
       rule {
         target_label = "instance"
         action = "replace"
-        replacement = "ko"
+        replacement = "k8smon"
       }
       rule {
         target_label = "job"
@@ -445,7 +445,7 @@ data:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: ko-alloy-logs
+  name: k8smon-alloy-logs
   namespace: default
 data:
   config.alloy: |-
@@ -597,7 +597,7 @@ data:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: ko-alloy-module-kubernetes
+  name: k8smon-alloy-module-kubernetes
 data:
   core_metrics.alloy: |
     /*
@@ -1794,7 +1794,7 @@ data:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: ko-alloy-module-system
+  name: k8smon-alloy-module-system
 data:
   node-exporter_metrics.alloy: |
     /*
@@ -2054,11 +2054,11 @@ data:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: ko-alloy-logs
+  name: k8smon-alloy-logs
   labels:
     helm.sh/chart: alloy-logs-0.10.0
     app.kubernetes.io/name: alloy-logs
-    app.kubernetes.io/instance: ko
+    app.kubernetes.io/instance: k8smon
     
     app.kubernetes.io/version: "v1.5.0"
     app.kubernetes.io/managed-by: Helm
@@ -2154,11 +2154,11 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: ko-alloy-metrics
+  name: k8smon-alloy-metrics
   labels:
     helm.sh/chart: alloy-metrics-0.10.0
     app.kubernetes.io/name: alloy-metrics
-    app.kubernetes.io/instance: ko
+    app.kubernetes.io/instance: k8smon
     
     app.kubernetes.io/version: "v1.5.0"
     app.kubernetes.io/managed-by: Helm
@@ -2260,10 +2260,10 @@ metadata:
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: kube-state-metrics
     app.kubernetes.io/name: kube-state-metrics
-    app.kubernetes.io/instance: ko
+    app.kubernetes.io/instance: k8smon
     app.kubernetes.io/version: "2.14.0"
-    release: ko
-  name: ko-kube-state-metrics
+    release: k8smon
+  name: k8smon-kube-state-metrics
 rules:
 
 - apiGroups: ["certificates.k8s.io"]
@@ -2410,11 +2410,11 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: ko-alloy-logs
+  name: k8smon-alloy-logs
   labels:
     helm.sh/chart: alloy-logs-0.10.0
     app.kubernetes.io/name: alloy-logs
-    app.kubernetes.io/instance: ko
+    app.kubernetes.io/instance: k8smon
     
     app.kubernetes.io/version: "v1.5.0"
     app.kubernetes.io/managed-by: Helm
@@ -2423,21 +2423,21 @@ metadata:
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: ko-alloy-logs
+  name: k8smon-alloy-logs
 subjects:
   - kind: ServiceAccount
-    name: ko-alloy-logs
+    name: k8smon-alloy-logs
     namespace: default
 ---
 # Source: k8s-monitoring/charts/alloy-metrics/templates/rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: ko-alloy-metrics
+  name: k8smon-alloy-metrics
   labels:
     helm.sh/chart: alloy-metrics-0.10.0
     app.kubernetes.io/name: alloy-metrics
-    app.kubernetes.io/instance: ko
+    app.kubernetes.io/instance: k8smon
     
     app.kubernetes.io/version: "v1.5.0"
     app.kubernetes.io/managed-by: Helm
@@ -2446,10 +2446,10 @@ metadata:
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: ko-alloy-metrics
+  name: k8smon-alloy-metrics
 subjects:
   - kind: ServiceAccount
-    name: ko-alloy-metrics
+    name: k8smon-alloy-metrics
     namespace: default
 ---
 # Source: k8s-monitoring/charts/clusterMetrics/charts/kube-state-metrics/templates/clusterrolebinding.yaml
@@ -2462,28 +2462,28 @@ metadata:
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: kube-state-metrics
     app.kubernetes.io/name: kube-state-metrics
-    app.kubernetes.io/instance: ko
+    app.kubernetes.io/instance: k8smon
     app.kubernetes.io/version: "2.14.0"
-    release: ko
-  name: ko-kube-state-metrics
+    release: k8smon
+  name: k8smon-kube-state-metrics
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: ko-kube-state-metrics
+  name: k8smon-kube-state-metrics
 subjects:
 - kind: ServiceAccount
-  name: ko-kube-state-metrics
+  name: k8smon-kube-state-metrics
   namespace: default
 ---
 # Source: k8s-monitoring/charts/alloy-logs/templates/service.yaml
 apiVersion: v1
 kind: Service
 metadata:
-  name: ko-alloy-logs
+  name: k8smon-alloy-logs
   labels:
     helm.sh/chart: alloy-logs-0.10.0
     app.kubernetes.io/name: alloy-logs
-    app.kubernetes.io/instance: ko
+    app.kubernetes.io/instance: k8smon
     
     app.kubernetes.io/version: "v1.5.0"
     app.kubernetes.io/managed-by: Helm
@@ -2493,7 +2493,7 @@ spec:
   type: ClusterIP
   selector:
     app.kubernetes.io/name: alloy-logs
-    app.kubernetes.io/instance: ko
+    app.kubernetes.io/instance: k8smon
   internalTrafficPolicy: Cluster
   ports:
     - name: http-metrics
@@ -2505,11 +2505,11 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: ko-alloy-metrics-cluster
+  name: k8smon-alloy-metrics-cluster
   labels:
     helm.sh/chart: alloy-metrics-0.10.0
     app.kubernetes.io/name: alloy-metrics
-    app.kubernetes.io/instance: ko
+    app.kubernetes.io/instance: k8smon
     
     app.kubernetes.io/version: "v1.5.0"
     app.kubernetes.io/managed-by: Helm
@@ -2521,7 +2521,7 @@ spec:
   publishNotReadyAddresses: true
   selector:
     app.kubernetes.io/name: alloy-metrics
-    app.kubernetes.io/instance: ko
+    app.kubernetes.io/instance: k8smon
   ports:
     # Do not include the -metrics suffix in the port name, otherwise metrics
     # can be double-collected with the non-headless Service if it's also
@@ -2538,11 +2538,11 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: ko-alloy-metrics
+  name: k8smon-alloy-metrics
   labels:
     helm.sh/chart: alloy-metrics-0.10.0
     app.kubernetes.io/name: alloy-metrics
-    app.kubernetes.io/instance: ko
+    app.kubernetes.io/instance: k8smon
     
     app.kubernetes.io/version: "v1.5.0"
     app.kubernetes.io/managed-by: Helm
@@ -2552,7 +2552,7 @@ spec:
   type: ClusterIP
   selector:
     app.kubernetes.io/name: alloy-metrics
-    app.kubernetes.io/instance: ko
+    app.kubernetes.io/instance: k8smon
   internalTrafficPolicy: Cluster
   ports:
     - name: http-metrics
@@ -2564,7 +2564,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: ko-kube-state-metrics
+  name: k8smon-kube-state-metrics
   namespace: default
   labels:    
     helm.sh/chart: kube-state-metrics-5.27.0
@@ -2572,9 +2572,9 @@ metadata:
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: kube-state-metrics
     app.kubernetes.io/name: kube-state-metrics
-    app.kubernetes.io/instance: ko
+    app.kubernetes.io/instance: k8smon
     app.kubernetes.io/version: "2.14.0"
-    release: ko
+    release: k8smon
   annotations:
 spec:
   type: "ClusterIP"
@@ -2586,13 +2586,13 @@ spec:
   
   selector:    
     app.kubernetes.io/name: kube-state-metrics
-    app.kubernetes.io/instance: ko
+    app.kubernetes.io/instance: k8smon
 ---
 # Source: k8s-monitoring/charts/clusterMetrics/charts/node-exporter/templates/service.yaml
 apiVersion: v1
 kind: Service
 metadata:
-  name: ko-node-exporter
+  name: k8smon-node-exporter
   namespace: default
   labels:
     helm.sh/chart: node-exporter-4.42.0
@@ -2600,9 +2600,9 @@ metadata:
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: node-exporter
     app.kubernetes.io/name: node-exporter
-    app.kubernetes.io/instance: ko
+    app.kubernetes.io/instance: k8smon
     app.kubernetes.io/version: "1.8.2"
-    release: ko
+    release: k8smon
   annotations:
     prometheus.io/scrape: "true"
 spec:
@@ -2614,13 +2614,13 @@ spec:
       name: metrics
   selector:
     app.kubernetes.io/name: node-exporter
-    app.kubernetes.io/instance: ko
+    app.kubernetes.io/instance: k8smon
 ---
 # Source: k8s-monitoring/charts/clusterMetrics/charts/windows-exporter/templates/service.yaml
 apiVersion: v1
 kind: Service
 metadata:
-  name: ko-windows-exporter
+  name: k8smon-windows-exporter
   namespace: default
   labels:
     helm.sh/chart: windows-exporter-0.7.1
@@ -2628,9 +2628,9 @@ metadata:
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: windows-exporter
     app.kubernetes.io/name: windows-exporter
-    app.kubernetes.io/instance: ko
+    app.kubernetes.io/instance: k8smon
     app.kubernetes.io/version: "0.29.2"
-    release: ko
+    release: k8smon
   annotations:
     prometheus.io/scrape: "true"
 spec:
@@ -2643,17 +2643,17 @@ spec:
       name: metrics
   selector:
     app.kubernetes.io/name: windows-exporter
-    app.kubernetes.io/instance: ko
+    app.kubernetes.io/instance: k8smon
 ---
 # Source: k8s-monitoring/charts/alloy-logs/templates/controllers/daemonset.yaml
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
-  name: ko-alloy-logs
+  name: k8smon-alloy-logs
   labels:
     helm.sh/chart: alloy-logs-0.10.0
     app.kubernetes.io/name: alloy-logs
-    app.kubernetes.io/instance: ko
+    app.kubernetes.io/instance: k8smon
     
     app.kubernetes.io/version: "v1.5.0"
     app.kubernetes.io/managed-by: Helm
@@ -2663,16 +2663,16 @@ spec:
   selector:
     matchLabels:
       app.kubernetes.io/name: alloy-logs
-      app.kubernetes.io/instance: ko
+      app.kubernetes.io/instance: k8smon
   template:
     metadata:
       annotations:
         kubectl.kubernetes.io/default-container: alloy
       labels:
         app.kubernetes.io/name: alloy-logs
-        app.kubernetes.io/instance: ko
+        app.kubernetes.io/instance: k8smon
     spec:
-      serviceAccountName: ko-alloy-logs
+      serviceAccountName: k8smon-alloy-logs
       imagePullSecrets:
         - name: my-registry-creds
       containers:
@@ -2752,7 +2752,7 @@ spec:
       volumes:
         - name: config
           configMap:
-            name: ko-alloy-logs
+            name: k8smon-alloy-logs
         - name: varlog
           hostPath:
             path: /var/log
@@ -2764,7 +2764,7 @@ spec:
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
-  name: ko-node-exporter
+  name: k8smon-node-exporter
   namespace: default
   labels:
     helm.sh/chart: node-exporter-4.42.0
@@ -2772,14 +2772,14 @@ metadata:
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: node-exporter
     app.kubernetes.io/name: node-exporter
-    app.kubernetes.io/instance: ko
+    app.kubernetes.io/instance: k8smon
     app.kubernetes.io/version: "1.8.2"
-    release: ko
+    release: k8smon
 spec:
   selector:
     matchLabels:
       app.kubernetes.io/name: node-exporter
-      app.kubernetes.io/instance: ko
+      app.kubernetes.io/instance: k8smon
   revisionHistoryLimit: 10
   updateStrategy:
     rollingUpdate:
@@ -2796,9 +2796,9 @@ spec:
         app.kubernetes.io/component: metrics
         app.kubernetes.io/part-of: node-exporter
         app.kubernetes.io/name: node-exporter
-        app.kubernetes.io/instance: ko
+        app.kubernetes.io/instance: k8smon
         app.kubernetes.io/version: "1.8.2"
-        release: ko
+        release: k8smon
     spec:
       automountServiceAccountToken: false
       securityContext:
@@ -2806,7 +2806,7 @@ spec:
         runAsGroup: 65534
         runAsNonRoot: true
         runAsUser: 65534
-      serviceAccountName: ko-node-exporter
+      serviceAccountName: k8smon-node-exporter
       containers:
         - name: node-exporter
           image: my.registry.com/prometheus/node-exporter:v1.8.2
@@ -2893,7 +2893,7 @@ spec:
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
-  name: ko-windows-exporter
+  name: k8smon-windows-exporter
   namespace: default
   labels:
     helm.sh/chart: windows-exporter-0.7.1
@@ -2901,14 +2901,14 @@ metadata:
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: windows-exporter
     app.kubernetes.io/name: windows-exporter
-    app.kubernetes.io/instance: ko
+    app.kubernetes.io/instance: k8smon
     app.kubernetes.io/version: "0.29.2"
-    release: ko
+    release: k8smon
 spec:
   selector:
     matchLabels:
       app.kubernetes.io/name: windows-exporter
-      app.kubernetes.io/instance: ko
+      app.kubernetes.io/instance: k8smon
   updateStrategy:
     rollingUpdate:
       maxUnavailable: 1
@@ -2924,9 +2924,9 @@ spec:
         app.kubernetes.io/component: metrics
         app.kubernetes.io/part-of: windows-exporter
         app.kubernetes.io/name: windows-exporter
-        app.kubernetes.io/instance: ko
+        app.kubernetes.io/instance: k8smon
         app.kubernetes.io/version: "0.29.2"
-        release: ko
+        release: k8smon
     spec:
       automountServiceAccountToken: false
       securityContext:
@@ -2938,7 +2938,7 @@ spec:
           image: my.registry.com/prometheus-community/windows-exporter:0.29.2
           command: [ "powershell" ]
           args: [ "New-NetFirewallRule", "-DisplayName", "'windows-exporter'", "-Direction", "inbound", "-Profile", "Any", "-Action", "Allow", "-LocalPort", "9182", "-Protocol", "TCP" ]
-      serviceAccountName: ko-windows-exporter
+      serviceAccountName: k8smon-windows-exporter
       containers:
         - name: windows-exporter
           image: my.registry.com/prometheus-community/windows-exporter:0.29.2
@@ -2990,13 +2990,13 @@ spec:
       volumes:
         - name: config
           configMap:
-            name: ko-windows-exporter
+            name: k8smon-windows-exporter
 ---
 # Source: k8s-monitoring/charts/clusterMetrics/charts/kube-state-metrics/templates/deployment.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ko-kube-state-metrics
+  name: k8smon-kube-state-metrics
   namespace: default
   labels:    
     helm.sh/chart: kube-state-metrics-5.27.0
@@ -3004,14 +3004,14 @@ metadata:
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: kube-state-metrics
     app.kubernetes.io/name: kube-state-metrics
-    app.kubernetes.io/instance: ko
+    app.kubernetes.io/instance: k8smon
     app.kubernetes.io/version: "2.14.0"
-    release: ko
+    release: k8smon
 spec:
   selector:
     matchLabels:      
       app.kubernetes.io/name: kube-state-metrics
-      app.kubernetes.io/instance: ko
+      app.kubernetes.io/instance: k8smon
   replicas: 1
   strategy:
     type: Recreate
@@ -3024,13 +3024,13 @@ spec:
         app.kubernetes.io/component: metrics
         app.kubernetes.io/part-of: kube-state-metrics
         app.kubernetes.io/name: kube-state-metrics
-        app.kubernetes.io/instance: ko
+        app.kubernetes.io/instance: k8smon
         app.kubernetes.io/version: "2.14.0"
-        release: ko
+        release: k8smon
     spec:
       automountServiceAccountToken: true
       hostNetwork: false
-      serviceAccountName: ko-kube-state-metrics
+      serviceAccountName: k8smon-kube-state-metrics
       securityContext:
         fsGroup: 65534
         runAsGroup: 65534
@@ -3088,11 +3088,11 @@ spec:
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: ko-alloy-metrics
+  name: k8smon-alloy-metrics
   labels:
     helm.sh/chart: alloy-metrics-0.10.0
     app.kubernetes.io/name: alloy-metrics
-    app.kubernetes.io/instance: ko
+    app.kubernetes.io/instance: k8smon
     
     app.kubernetes.io/version: "v1.5.0"
     app.kubernetes.io/managed-by: Helm
@@ -3101,11 +3101,11 @@ spec:
   replicas: 1
   podManagementPolicy: Parallel
   minReadySeconds: 10
-  serviceName: ko-alloy-metrics
+  serviceName: k8smon-alloy-metrics
   selector:
     matchLabels:
       app.kubernetes.io/name: alloy-metrics
-      app.kubernetes.io/instance: ko
+      app.kubernetes.io/instance: k8smon
   template:
     metadata:
       annotations:
@@ -3113,9 +3113,9 @@ spec:
         k8s.grafana.com/logs.job: integrations/alloy
       labels:
         app.kubernetes.io/name: alloy-metrics
-        app.kubernetes.io/instance: ko
+        app.kubernetes.io/instance: k8smon
     spec:
-      serviceAccountName: ko-alloy-metrics
+      serviceAccountName: k8smon-alloy-metrics
       imagePullSecrets:
         - name: my-registry-creds
       containers:
@@ -3129,7 +3129,7 @@ spec:
             - --server.http.listen-addr=0.0.0.0:12345
             - --server.http.ui-path-prefix=/
             - --cluster.enabled=true
-            - --cluster.join-addresses=ko-alloy-metrics-cluster
+            - --cluster.join-addresses=k8smon-alloy-metrics-cluster
             - --cluster.name="alloy-metrics"
             - --stability.level=generally-available
           env:
@@ -3192,4 +3192,4 @@ spec:
       volumes:
         - name: config
           configMap:
-            name: ko-alloy-metrics
+            name: k8smon-alloy-metrics

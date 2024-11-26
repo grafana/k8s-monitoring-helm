@@ -129,6 +129,7 @@ podLogs:
 | file://../feature-cluster-events | clusterEvents(k8s-monitoring-feature-cluster-events) | 1.0.0 |
 | file://../feature-cluster-metrics | clusterMetrics(k8s-monitoring-feature-cluster-metrics) | 1.0.0 |
 | file://../feature-integrations | integrations(k8s-monitoring-feature-integrations) | 1.0.0 |
+| file://../feature-node-logs | nodeLogs(k8s-monitoring-feature-node-logs) | 1.0.0 |
 | file://../feature-pod-logs | podLogs(k8s-monitoring-feature-pod-logs) | 1.0.0 |
 | file://../feature-profiling | profiling(k8s-monitoring-feature-profiling) | 1.0.0 |
 | file://../feature-prometheus-operator-objects | prometheusOperatorObjects(k8s-monitoring-feature-prometheus-operator-objects) | 1.0.0 |
@@ -335,6 +336,14 @@ podLogs:
 |-----|------|---------|-------------|
 | integrations | object | No integrations enabled | Service Integrations enables gathering telemetry data for common services and applications deployed to Kubernetes. To see the valid options, please see the [Service Integrations documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/feature-integrations). |
 | integrations.destinations | list | `[]` | The destinations where integration metrics will be sent. If empty, all metrics-capable destinations will be used. |
+
+### Features - Node Logs
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| nodeLogs | object | Disabled | Node logs. Requires a destination that supports logs. To see the valid options, please see the [Node Logs feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/feature-node-logs). |
+| nodeLogs.destinations | list | `[]` | The destinations where logs will be sent. If empty, all logs-capable destinations will be used. |
+| nodeLogs.enabled | bool | `false` | Enable gathering Kubernetes Cluster Node logs. |
 
 ### Features - Pod Logs
 

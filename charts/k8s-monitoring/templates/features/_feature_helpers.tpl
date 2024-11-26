@@ -4,6 +4,7 @@
 - autoInstrumentation
 - clusterMetrics
 - clusterEvents
+- nodeLogs
 - podLogs
 - profiling
 - prometheusOperatorObjects

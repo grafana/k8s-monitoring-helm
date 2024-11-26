@@ -7,6 +7,7 @@ These are the current features supported in this Helm chart:
 -   [Application Observability](#application-observability)
 -   [Annotation Autodiscovery](#annotation-autodiscovery)
 -   [Prometheus Operator Objects](#prometheus-operator-objects)
+-   [Node Logs](#node-logs)
 -   [Pod Logs](#pod-logs)
 -   [Service Integrations](#service-integrations)
 -   [Profiling](#profiling)
@@ -41,6 +42,12 @@ Collects metrics from Pods and Services that use a specific annotation.
 [Documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/feature-prometheus-operator-objects)
 
 Collects metrics from Prometheus Operator objects, like PodMonitors and ServiceMonitors.
+
+## Node Logs
+
+[Documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/feature-node-logs)
+
+Collects logs from Kubernetes Cluster Nodes.
 
 ## Pod Logs
 

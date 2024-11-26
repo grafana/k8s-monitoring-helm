@@ -34,10 +34,10 @@ pod_logs "feature" {
 {{- $featureName := "Kubernetes Pod logs" }}
 {{- $destinations := include "features.podLogs.destinations" . | fromYamlArray }}
 {{- include "destinations.validate_destination_list" (dict "destinations" $destinations "type" "logs" "ecosystem" "loki" "feature" $featureName) }}
-{{- include "collectors.require_collector" (dict "Values" $.Values "name" "alloy-logs" "feature" $featureName) }}
 
 {{- range $collector := include "features.podLogs.collectors" . | fromYamlArray }}
   {{- include "collectors.require_collector" (dict "Values" $.Values "name" $collector "feature" $featureName) }}
+  {{- include "feature.podLogs.collector.validate" (dict "Values" $.Values.nodeLogs "Collector" (index $.Values $collector) "CollectorName" $collector) }}
 {{- end -}}
 {{- end -}}
 {{- end -}}

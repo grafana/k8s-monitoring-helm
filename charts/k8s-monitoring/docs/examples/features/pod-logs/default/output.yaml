@@ -3,12 +3,12 @@
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: ko-alloy-logs
+  name: k8smon-alloy-logs
   namespace: default
   labels:
     helm.sh/chart: alloy-logs-0.10.0
     app.kubernetes.io/name: alloy-logs
-    app.kubernetes.io/instance: ko
+    app.kubernetes.io/instance: k8smon
     
     app.kubernetes.io/version: "v1.5.0"
     app.kubernetes.io/managed-by: Helm
@@ -19,7 +19,7 @@ metadata:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: ko-alloy-logs
+  name: k8smon-alloy-logs
   namespace: default
 data:
   config.alloy: |-
@@ -171,11 +171,11 @@ data:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: ko-alloy-logs
+  name: k8smon-alloy-logs
   labels:
     helm.sh/chart: alloy-logs-0.10.0
     app.kubernetes.io/name: alloy-logs
-    app.kubernetes.io/instance: ko
+    app.kubernetes.io/instance: k8smon
     
     app.kubernetes.io/version: "v1.5.0"
     app.kubernetes.io/managed-by: Helm
@@ -271,11 +271,11 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: ko-alloy-logs
+  name: k8smon-alloy-logs
   labels:
     helm.sh/chart: alloy-logs-0.10.0
     app.kubernetes.io/name: alloy-logs
-    app.kubernetes.io/instance: ko
+    app.kubernetes.io/instance: k8smon
     
     app.kubernetes.io/version: "v1.5.0"
     app.kubernetes.io/managed-by: Helm
@@ -284,21 +284,21 @@ metadata:
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: ko-alloy-logs
+  name: k8smon-alloy-logs
 subjects:
   - kind: ServiceAccount
-    name: ko-alloy-logs
+    name: k8smon-alloy-logs
     namespace: default
 ---
 # Source: k8s-monitoring/charts/alloy-logs/templates/service.yaml
 apiVersion: v1
 kind: Service
 metadata:
-  name: ko-alloy-logs
+  name: k8smon-alloy-logs
   labels:
     helm.sh/chart: alloy-logs-0.10.0
     app.kubernetes.io/name: alloy-logs
-    app.kubernetes.io/instance: ko
+    app.kubernetes.io/instance: k8smon
     
     app.kubernetes.io/version: "v1.5.0"
     app.kubernetes.io/managed-by: Helm
@@ -308,7 +308,7 @@ spec:
   type: ClusterIP
   selector:
     app.kubernetes.io/name: alloy-logs
-    app.kubernetes.io/instance: ko
+    app.kubernetes.io/instance: k8smon
   internalTrafficPolicy: Cluster
   ports:
     - name: http-metrics
@@ -320,11 +320,11 @@ spec:
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
-  name: ko-alloy-logs
+  name: k8smon-alloy-logs
   labels:
     helm.sh/chart: alloy-logs-0.10.0
     app.kubernetes.io/name: alloy-logs
-    app.kubernetes.io/instance: ko
+    app.kubernetes.io/instance: k8smon
     
     app.kubernetes.io/version: "v1.5.0"
     app.kubernetes.io/managed-by: Helm
@@ -334,16 +334,16 @@ spec:
   selector:
     matchLabels:
       app.kubernetes.io/name: alloy-logs
-      app.kubernetes.io/instance: ko
+      app.kubernetes.io/instance: k8smon
   template:
     metadata:
       annotations:
         kubectl.kubernetes.io/default-container: alloy
       labels:
         app.kubernetes.io/name: alloy-logs
-        app.kubernetes.io/instance: ko
+        app.kubernetes.io/instance: k8smon
     spec:
-      serviceAccountName: ko-alloy-logs
+      serviceAccountName: k8smon-alloy-logs
       containers:
         - name: alloy
           image: docker.io/grafana/alloy:v1.5.0
@@ -421,7 +421,7 @@ spec:
       volumes:
         - name: config
           configMap:
-            name: ko-alloy-logs
+            name: k8smon-alloy-logs
         - name: varlog
           hostPath:
             path: /var/log

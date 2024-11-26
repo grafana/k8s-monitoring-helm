@@ -3,12 +3,12 @@
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: ko-alloy-metrics
+  name: k8smon-alloy-metrics
   namespace: default
   labels:
     helm.sh/chart: alloy-metrics-0.10.0
     app.kubernetes.io/name: alloy-metrics
-    app.kubernetes.io/instance: ko
+    app.kubernetes.io/instance: k8smon
     
     app.kubernetes.io/version: "v1.5.0"
     app.kubernetes.io/managed-by: Helm
@@ -19,7 +19,7 @@ metadata:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: ko-alloy-metrics
+  name: k8smon-alloy-metrics
   namespace: default
 data:
   config.alloy: |-
@@ -130,7 +130,7 @@ data:
       rule {
         target_label = "instance"
         action = "replace"
-        replacement = "ko"
+        replacement = "k8smon"
       }
       rule {
         target_label = "job"
@@ -175,11 +175,11 @@ data:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: ko-alloy-metrics
+  name: k8smon-alloy-metrics
   labels:
     helm.sh/chart: alloy-metrics-0.10.0
     app.kubernetes.io/name: alloy-metrics
-    app.kubernetes.io/instance: ko
+    app.kubernetes.io/instance: k8smon
     
     app.kubernetes.io/version: "v1.5.0"
     app.kubernetes.io/managed-by: Helm
@@ -275,11 +275,11 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: ko-alloy-metrics
+  name: k8smon-alloy-metrics
   labels:
     helm.sh/chart: alloy-metrics-0.10.0
     app.kubernetes.io/name: alloy-metrics
-    app.kubernetes.io/instance: ko
+    app.kubernetes.io/instance: k8smon
     
     app.kubernetes.io/version: "v1.5.0"
     app.kubernetes.io/managed-by: Helm
@@ -288,21 +288,21 @@ metadata:
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: ko-alloy-metrics
+  name: k8smon-alloy-metrics
 subjects:
   - kind: ServiceAccount
-    name: ko-alloy-metrics
+    name: k8smon-alloy-metrics
     namespace: default
 ---
 # Source: k8s-monitoring/charts/alloy-metrics/templates/cluster_service.yaml
 apiVersion: v1
 kind: Service
 metadata:
-  name: ko-alloy-metrics-cluster
+  name: k8smon-alloy-metrics-cluster
   labels:
     helm.sh/chart: alloy-metrics-0.10.0
     app.kubernetes.io/name: alloy-metrics
-    app.kubernetes.io/instance: ko
+    app.kubernetes.io/instance: k8smon
     
     app.kubernetes.io/version: "v1.5.0"
     app.kubernetes.io/managed-by: Helm
@@ -314,7 +314,7 @@ spec:
   publishNotReadyAddresses: true
   selector:
     app.kubernetes.io/name: alloy-metrics
-    app.kubernetes.io/instance: ko
+    app.kubernetes.io/instance: k8smon
   ports:
     # Do not include the -metrics suffix in the port name, otherwise metrics
     # can be double-collected with the non-headless Service if it's also
@@ -331,11 +331,11 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: ko-alloy-metrics
+  name: k8smon-alloy-metrics
   labels:
     helm.sh/chart: alloy-metrics-0.10.0
     app.kubernetes.io/name: alloy-metrics
-    app.kubernetes.io/instance: ko
+    app.kubernetes.io/instance: k8smon
     
     app.kubernetes.io/version: "v1.5.0"
     app.kubernetes.io/managed-by: Helm
@@ -345,7 +345,7 @@ spec:
   type: ClusterIP
   selector:
     app.kubernetes.io/name: alloy-metrics
-    app.kubernetes.io/instance: ko
+    app.kubernetes.io/instance: k8smon
   internalTrafficPolicy: Cluster
   ports:
     - name: http-metrics
@@ -357,11 +357,11 @@ spec:
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: ko-alloy-metrics
+  name: k8smon-alloy-metrics
   labels:
     helm.sh/chart: alloy-metrics-0.10.0
     app.kubernetes.io/name: alloy-metrics
-    app.kubernetes.io/instance: ko
+    app.kubernetes.io/instance: k8smon
     
     app.kubernetes.io/version: "v1.5.0"
     app.kubernetes.io/managed-by: Helm
@@ -370,11 +370,11 @@ spec:
   replicas: 1
   podManagementPolicy: Parallel
   minReadySeconds: 10
-  serviceName: ko-alloy-metrics
+  serviceName: k8smon-alloy-metrics
   selector:
     matchLabels:
       app.kubernetes.io/name: alloy-metrics
-      app.kubernetes.io/instance: ko
+      app.kubernetes.io/instance: k8smon
   template:
     metadata:
       annotations:
@@ -382,9 +382,9 @@ spec:
         k8s.grafana.com/logs.job: integrations/alloy
       labels:
         app.kubernetes.io/name: alloy-metrics
-        app.kubernetes.io/instance: ko
+        app.kubernetes.io/instance: k8smon
     spec:
-      serviceAccountName: ko-alloy-metrics
+      serviceAccountName: k8smon-alloy-metrics
       containers:
         - name: alloy
           image: docker.io/grafana/alloy:v1.5.0
@@ -396,7 +396,7 @@ spec:
             - --server.http.listen-addr=0.0.0.0:12345
             - --server.http.ui-path-prefix=/
             - --cluster.enabled=true
-            - --cluster.join-addresses=ko-alloy-metrics-cluster
+            - --cluster.join-addresses=k8smon-alloy-metrics-cluster
             - --cluster.name="alloy-metrics"
             - --stability.level=generally-available
           env:
@@ -459,4 +459,4 @@ spec:
       volumes:
         - name: config
           configMap:
-            name: ko-alloy-metrics
+            name: k8smon-alloy-metrics
