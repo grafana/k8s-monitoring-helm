@@ -176,7 +176,7 @@ jobs:
           helm install alloy grafana/alloy -f "${GRAFANA_ALLOY_VALUES}" -n alloy --create-namespace --wait
 
           # This prometheus instance is used pod annotation testing with https
-          helm install prometheus-workload prometheus-community/prometheus --version ^2 -f "${PROMETHEUS_WORKLOAD_VALUES}" -n prometheus --create-namespace --timeout 10m --wait
+          helm install prometheus-workload prometheus-community/prometheus --version ^25 -f "${PROMETHEUS_WORKLOAD_VALUES}" -n prometheus --create-namespace --timeout 10m --wait
 
           # Deploy the Prometheus Operator CRDs, since we want to deploy Loki with a ServiceMonitor later
           helm install prom-crds prometheus-community/prometheus-operator-crds --wait
@@ -184,7 +184,7 @@ jobs:
       - name: Deploy Prometheus
         if: (steps.list-changed.outputs.changed == 'true') || (contains(github.event.pull_request.labels.*.name, 'full_test_required'))
         run: |
-          helm install prometheus prometheus-community/prometheus --version ^2 -f "${PROMETHEUS_VALUES}" -n prometheus --create-namespace --timeout 10m --wait
+          helm install prometheus prometheus-community/prometheus --version ^25 -f "${PROMETHEUS_VALUES}" -n prometheus --create-namespace --timeout 10m --wait
 
       - name: Deploy Loki
         if: (steps.list-changed.outputs.changed == 'true') || (contains(github.event.pull_request.labels.*.name, 'full_test_required'))

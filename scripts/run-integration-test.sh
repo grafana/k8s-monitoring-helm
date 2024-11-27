@@ -79,7 +79,7 @@ for ((i=0; i<deploymentCount; i++)); do
     elif [ -n "${manifestFile}" ]; then
       envsubst < "${TEST_DIRECTORY}/${manifestFile}" | kubectl apply ${namespaceArg} -f -
     else
-      echo "No URL or file specified for manifest prerequisite \"${name}\""
+      echo "No URL or file specified for manifest deployment \"${name}\""
       exit 1
     fi
 
@@ -89,9 +89,9 @@ for ((i=0; i<deploymentCount; i++)); do
     if [ -n "${helmRepo}" ]; then helmRepoArg="--repo ${helmRepo}"; else helmRepoArg=""; fi
     helmChart=$(yq -r ".deployments[$i].chart // \"\"" "${testManifest}")
     helmChartPath=$(yq -r ".deployments[$i].chartPath // \"\""  "${testManifest}")
-    prereqVersion=$(yq -r ".prerequisites[$i].version // \"\"" "${testManifest}")
-    prereqVersionArg=""
-    if [ -n "${prereqVersion}" ]; then prereqVersionArg="--version ${prereqVersion}"; else prereqVersionArg=""; fi
+    version=$(yq -r ".deployments[$i].version // \"\"" "${testManifest}")
+    versionArg=""
+    if [ -n "${version}" ]; then versionArg="--version ${version}"; else versionArg=""; fi
     helmValues="$(yq -r ".deployments[$i].values // \"\"" "${testManifest}")"
     helmValuesFile="$(yq -r ".deployments[$i].valuesFile // \"\"" "${testManifest}")"
     helmTest="$(yq -r ".deployments[$i].test // \"false\"" "${testManifest}")"
@@ -101,13 +101,13 @@ for ((i=0; i<deploymentCount; i++)); do
     fi
 
     if [ -n "${helmValuesFile}" ]; then
-      helm upgrade --install "${name}" ${namespaceArg} --create-namespace ${helmRepoArg} "${helmChart}" ${prereqVersionArg} -f "${TEST_DIRECTORY}/${helmValuesFile}" --hide-notes --wait
+      helm upgrade --install "${name}" ${namespaceArg} --create-namespace ${helmRepoArg} "${helmChart}" ${versionArg} -f "${TEST_DIRECTORY}/${helmValuesFile}" --hide-notes --wait
     elif [ -n "${helmChart}" ]; then
       echo "${helmValues}" > temp-values.yaml
-      helm upgrade --install "${name}" ${namespaceArg} --create-namespace ${helmRepoArg} "${helmChart}" ${prereqVersionArg} -f temp-values.yaml --hide-notes --wait
+      helm upgrade --install "${name}" ${namespaceArg} --create-namespace ${helmRepoArg} "${helmChart}" ${versionArg} -f temp-values.yaml --hide-notes --wait
       rm temp-values.yaml
     else
-      helm upgrade --install "${name}" ${namespaceArg} --create-namespace --repo "${helmRepo}" "${helmChart}" ${prereqVersionArg} --hide-notes --wait
+      helm upgrade --install "${name}" ${namespaceArg} --create-namespace --repo "${helmRepo}" "${helmChart}" ${versionArg} --hide-notes --wait
     fi
 
     if [ "${helmTest}" == "true" ]; then
