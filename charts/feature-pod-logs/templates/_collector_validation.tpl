@@ -19,5 +19,4 @@
     {{- fail (printf "Pod Logs feature requires Alloy to be in clustering mode when using the \"kubernetesApi\" gather method.\nPlease set:\n%s:\n  alloy:\n    clustering:\n      enabled: true" .CollectorName) }}
   {{- end -}}
 {{- end -}}
-
 {{- end -}}

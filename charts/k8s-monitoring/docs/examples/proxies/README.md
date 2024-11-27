@@ -56,7 +56,7 @@ clusterEvents:
 applicationObservability:
   enabled: true
   receivers:
-    grpc:
+    zipkin:
       enabled: true
 
 podLogs:
@@ -80,9 +80,9 @@ alloy-receiver:
       - name: NO_PROXY
         value: kubernetes.default.svc
     extraPorts:
-      - name: otlp-grpc
-        port: 4317
-        targetPort: 4317
+      - name: zipkin
+        port: 9411
+        targetPort: 9411
         protocol: TCP
 alloy-profiles:
   enabled: true

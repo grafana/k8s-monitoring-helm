@@ -49,8 +49,9 @@ destinations:
 applicationObservability:
   enabled: true
   receivers:
-    grpc:
-      enabled: true
+    otlp:
+      grpc:
+        enabled: true
 
 prometheusOperatorObjects:
   enabled: true

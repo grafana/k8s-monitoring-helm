@@ -8,17 +8,60 @@ nameOverride: ""
 fullnameOverride: ""
 
 receivers:
-  grpc:
-    enabled: false
-    port: 4317
+  otlp:
+    # -- The OTLP gRPC receiver configuration.
+    # @section -- Receivers: OTLP
+    grpc:
+      enabled: false
+      port: 4317
+
+    # -- The OTLP HTTP receiver configuration.
+    # @section -- Receivers: OTLP
+    http:
+      enabled: false
+      port: 4318
+
+    # -- Whether to include high-cardinality debug metrics.
+    # @section -- Receivers: OTLP
     include_debug_metrics: false
-  http:
-    enabled: false
-    port: 4318
+
+  jaeger:
+    # -- Configuration for the Jaeger receiver using the gRPC protocol.
+    # @section -- Receivers: Jaeger
+    grpc:
+      enabled: false
+      port: 14250
+
+    # -- Configuration for the Jaeger receiver using the Thrift binary protocol.
+    # @section -- Receivers: Jaeger
+    thriftBinary:
+      enabled: false
+      port: 6832
+
+    # -- Configuration for the Jaeger receiver using the Thrift compact protocol.
+    # @section -- Receivers: Jaeger
+    thriftCompact:
+      enabled: false
+      port: 6831
+
+    # -- Configuration for the Jaeger receiver using the Thrift HTTP protocol.
+    # @section -- Receivers: Jaeger
+    thriftHttp:
+      enabled: false
+      port: 14268
+
+    # -- Whether to include high-cardinality debug metrics.
+    # @section -- Receivers: Jaeger
     include_debug_metrics: false
+
+  # -- The Zipkin receiver configuration.
+  # @section -- Receivers: Zipkin
   zipkin:
     enabled: false
     port: 9411
+
+    # -- Whether to include high-cardinality debug metrics.
+    # @section -- Receivers: Zipkin
     include_debug_metrics: false
 
 processors:

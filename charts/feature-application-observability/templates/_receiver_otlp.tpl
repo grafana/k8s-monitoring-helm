@@ -1,19 +1,19 @@
 {{/* Inputs: Values (values) metricsOutput, logsOutput, tracesOutput */}}
 {{- define "feature.applicationObservability.receiver.otlp.alloy" }}
-{{- if or .Values.receivers.grpc.enabled .Values.receivers.http.enabled }}
+{{- if or .Values.receivers.otlp.grpc.enabled .Values.receivers.otlp.http.enabled }}
 otelcol.receiver.otlp "receiver" {
-{{- if .Values.receivers.grpc.enabled }}
+{{- if .Values.receivers.otlp.grpc.enabled }}
   grpc {
-    endpoint = "0.0.0.0:{{ .Values.receivers.grpc.port | int }}"
+    endpoint = "0.0.0.0:{{ .Values.receivers.otlp.grpc.port | int }}"
   }
 {{- end }}
-{{- if .Values.receivers.http.enabled }}
+{{- if .Values.receivers.otlp.http.enabled }}
   http {
-    endpoint = "0.0.0.0:{{ .Values.receivers.http.port | int }}"
+    endpoint = "0.0.0.0:{{ .Values.receivers.otlp.http.port | int }}"
   }
 {{- end }}
   debug_metrics {
-    disable_high_cardinality_metrics = {{ not (or .Values.receivers.grpc.include_debug_metrics .Values.receivers.http.include_debug_metrics) }}
+    disable_high_cardinality_metrics = {{ not .Values.receivers.otlp.include_debug_metrics }}
   }
   output {
 {{- if and .metricsOutput .Values.metrics.enabled }}

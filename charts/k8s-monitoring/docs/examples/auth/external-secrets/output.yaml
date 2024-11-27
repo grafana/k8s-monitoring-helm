@@ -214,7 +214,7 @@ data:
     grafana_kubernetes_monitoring_build_info{version="2.0.0-rc.5", namespace="default"} 1
     # HELP grafana_kubernetes_monitoring_feature_info A metric to report the enabled features of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_feature_info gauge
-    grafana_kubernetes_monitoring_feature_info{feature="applicationObservability", protocols="otlpgrpc", version="1.0.0"} 1
+    grafana_kubernetes_monitoring_feature_info{feature="applicationObservability", protocols="jaegergrpc", version="1.0.0"} 1
     grafana_kubernetes_monitoring_feature_info{feature="podLogs", method="volumes", version="1.0.0"} 1
     grafana_kubernetes_monitoring_feature_info{feature="prometheusOperatorObjects", version="1.0.0"} 1
 ---
@@ -564,17 +564,17 @@ data:
         comment = "Must be a list of trace destinations where collected trace should be forwarded to"
       }
     
-      // Receivers --> Resource Detection Processor  
-      otelcol.receiver.otlp "receiver" {
-        grpc {
-          endpoint = "0.0.0.0:4317"
+      // Receivers --> Resource Detection Processor    
+      otelcol.receiver.jaeger "receiver" {
+        protocols {grpc {
+            endpoint = "0.0.0.0:0"
+          }
         }
+      
         debug_metrics {
           disable_high_cardinality_metrics = true
         }
         output {
-          metrics = [otelcol.processor.resourcedetection.default.input]
-          logs = [otelcol.processor.resourcedetection.default.input]
           traces = [otelcol.processor.resourcedetection.default.input]
         }
       }  
@@ -1140,9 +1140,9 @@ spec:
       port: 12345
       targetPort: 12345
       protocol: "TCP"
-    - name: otlp-grpc
-      port: 4317
-      targetPort: 4317
+    - name: jaeger-grpc
+      port: 14250
+      targetPort: 14250
       protocol: TCP
 ---
 # Source: k8s-monitoring/charts/alloy-logs/templates/controllers/daemonset.yaml
@@ -1307,8 +1307,8 @@ spec:
           ports:
             - containerPort: 12345
               name: http-metrics
-            - containerPort: 4317
-              name: otlp-grpc
+            - containerPort: 14250
+              name: jaeger-grpc
               protocol: TCP
           readinessProbe:
             httpGet:
