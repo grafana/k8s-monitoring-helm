@@ -69,9 +69,7 @@ for ((i=0; i<deploymentCount; i++)); do
   echo "Deploying ${name}..."
 
   namespace=$(yq -r ".deployments[$i].namespace // \"\"" "${testManifest}")
-  if [ -n "${namespace}" ]; then
-    namespaceArg="--namespace ${namespace}"
-  fi
+  if [ -n "${namespace}" ]; then namespaceArg="--namespace ${namespace}"; else namespaceArg=""; fi
 
   if [ "${type}" == "manifest" ]; then
     manifestURL=$(yq -r ".deployments[$i].url // \"\"" "${testManifest}")
@@ -88,12 +86,12 @@ for ((i=0; i<deploymentCount; i++)); do
   elif [ "${type}" == "helm" ]; then
     helmRepo=$(yq -r ".deployments[$i].repo // \"\"" "${testManifest}")
     helmRepoArg=""
-    if [ -n "${helmRepo}" ]; then helmRepoArg="--repo ${helmRepo}"; fi
+    if [ -n "${helmRepo}" ]; then helmRepoArg="--repo ${helmRepo}"; else helmRepoArg=""; fi
     helmChart=$(yq -r ".deployments[$i].chart // \"\"" "${testManifest}")
     helmChartPath=$(yq -r ".deployments[$i].chartPath // \"\""  "${testManifest}")
     prereqVersion=$(yq -r ".prerequisites[$i].version // \"\"" "${testManifest}")
     prereqVersionArg=""
-    if [ -n "${prereqVersion}" ]; then prereqVersionArg="--version ${prereqVersion}"; fi
+    if [ -n "${prereqVersion}" ]; then prereqVersionArg="--version ${prereqVersion}"; else prereqVersionArg=""; fi
     helmValues="$(yq -r ".deployments[$i].values // \"\"" "${testManifest}")"
     helmValuesFile="$(yq -r ".deployments[$i].valuesFile // \"\"" "${testManifest}")"
     helmTest="$(yq -r ".deployments[$i].test // \"false\"" "${testManifest}")"
