@@ -2,6 +2,8 @@
 tests:
   - env:
       PROMETHEUS_URL: http://prometheus-server.prometheus.svc:9090/api/v1/query
+      LOKI_URL: http://loki.loki.svc:3100/loki/api/v1/query
+      LOKI_TENANTID: 1
     queries:
       - query: kubernetes_build_info{cluster="auth-integration-test", destination="prometheus-noauth"}
         type: promql
@@ -15,3 +17,16 @@ tests:
         type: promql
       - query: kubernetes_build_info{cluster="auth-integration-test", destination="prometheus-otlp-bearer-token"}
         type: promql
+
+      - query: count_over_time({cluster="auth-integration-test", destination="loki-noauth", job!="integrations/kubernetes/eventhandler"}[1h])
+        type: logql
+      - query: count_over_time({cluster="auth-integration-test", destination="loki-basicauth", job!="integrations/kubernetes/eventhandler"}[1h])
+        type: logql
+      - query: count_over_time({cluster="auth-integration-test", destination="loki-bearer-token", job!="integrations/kubernetes/eventhandler"}[1h])
+        type: logql
+#      - query: count_over_time({cluster="auth-integration-test", destination="loki-otlp-noauth", job!="integrations/kubernetes/eventhandler"}[1h])
+#        type: logql
+#      - query: count_over_time({cluster="auth-integration-test", destination="loki-otlp-basicauth", job!="integrations/kubernetes/eventhandler"}[1h])
+#        type: logql
+#      - query: count_over_time({cluster="auth-integration-test", destination="loki-otlp-bearer-token", job!="integrations/kubernetes/eventhandler"}[1h])
+#        type: logql

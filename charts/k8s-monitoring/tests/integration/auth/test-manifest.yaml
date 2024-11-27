@@ -9,24 +9,24 @@ deployments:
     version: ^25
     namespace: prometheus
     valuesFile: configs/prometheus.yaml
+  - name: loki
+    type: helm
+    repo: https://grafana.github.io/helm-charts
+    chart: loki
+    namespace: loki
+    valuesFile: configs/loki.yaml
+
   - name: passwords
     type: manifest
-    namespace: prometheus
+    namespace: default
     file: configs/passwords.yaml
-  - name: nginx-basic-auth
+  - name: nginx-auth-gateway
     type: helm
     repo: https://charts.bitnami.com/bitnami
     chart: nginx
     version: 18.2.5
-    namespace: prometheus
-    valuesFile: configs/nginx-basic-auth.yaml
-  - name: nginx-bearer-token
-    type: helm
-    repo: https://charts.bitnami.com/bitnami
-    chart: nginx
-    version: 18.2.5
-    namespace: prometheus
-    valuesFile: configs/nginx-bearer-token.yaml
+    namespace: default
+    valuesFile: configs/nginx-auth-gateway.yaml
 
   - name: grafana
     type: helm
