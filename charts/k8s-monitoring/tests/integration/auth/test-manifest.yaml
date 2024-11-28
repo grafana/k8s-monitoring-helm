@@ -1,33 +1,46 @@
 ---
-prerequisites:
+cluster:
+  name: auth-integration-test
+deployments:
   - name: prometheus
     type: helm
     repo: https://prometheus-community.github.io/helm-charts
     chart: prometheus
+    version: ^25
     namespace: prometheus
-    valuesFile: charts/k8s-monitoring/tests/integration/auth/configs/prometheus.yaml
+    valuesFile: configs/prometheus.yaml
+  - name: loki
+    type: helm
+    repo: https://grafana.github.io/helm-charts
+    chart: loki
+    namespace: loki
+    valuesFile: configs/loki.yaml
+
   - name: passwords
     type: manifest
-    namespace: prometheus
-    file: charts/k8s-monitoring/tests/integration/auth/configs/passwords.yaml
-  - name: nginx-basic-auth
+    namespace: default
+    file: configs/passwords.yaml
+  - name: nginx-auth-gateway
     type: helm
     repo: https://charts.bitnami.com/bitnami
     chart: nginx
     version: 18.2.5
-    namespace: prometheus
-    valuesFile: charts/k8s-monitoring/tests/integration/auth/configs/nginx-basic-auth.yaml
-  - name: nginx-bearer-token
-    type: helm
-    repo: https://charts.bitnami.com/bitnami
-    chart: nginx
-    version: 18.2.5
-    namespace: prometheus
-    valuesFile: charts/k8s-monitoring/tests/integration/auth/configs/nginx-bearer-token.yaml
+    namespace: default
+    valuesFile: configs/nginx-auth-gateway.yaml
 
   - name: grafana
     type: helm
     repo: https://grafana.github.io/helm-charts
     chart: grafana
     namespace: grafana
-    valuesFile: charts/k8s-monitoring/tests/integration/auth/configs/grafana.yaml
+    valuesFile: configs/grafana.yaml
+
+  - name: k8smon
+    type: helm
+    chartPath: charts/k8s-monitoring
+    valuesFile: values.yaml
+  - name: k8s-monitoring-test
+    type: helm
+    chartPath: charts/k8s-monitoring-test
+    valuesFile: test-values.yaml
+    test: true

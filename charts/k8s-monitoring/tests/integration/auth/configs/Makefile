@@ -1,6 +1,5 @@
 htpasswd:
-	htpasswd -c -B -b htpasswd promuser prompassword
-	htpasswd -B -b htpasswd oteluser otelpassword
+	htpasswd -c -B -b htpasswd basicuser basicpassword
 
 passwords.yaml: htpasswd
 	echo "---" > passwords.yaml

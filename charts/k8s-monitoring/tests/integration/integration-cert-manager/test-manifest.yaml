@@ -1,31 +1,36 @@
 ---
-prerequisites:
-  - type: helm
-    name: prometheus
+cluster:
+  name: cert-manager-integration-test
+deployments:
+  - name: prometheus
+    type: helm
     repo: https://prometheus-community.github.io/helm-charts
     chart: prometheus
+    version: ^25
     namespace: prometheus
-    valuesFile: charts/k8s-monitoring/tests/integration/integration-cert-manager/prometheus.yaml
-
-  - type: helm
-    name: cert-manager
+    valuesFile: configs/prometheus.yaml
+  - name: cert-manager
+    type: helm
     repo: https://charts.jetstack.io
     chart: cert-manager
     namespace: cert-manager
     values:
       installCRDs: true
 
-  - type: helm
-    name: grafana
+  - name: grafana
+    type: helm
     repo: https://grafana.github.io/helm-charts
     chart: grafana
     namespace: grafana
-    values:
-      datasources:
-        datasources.yaml:
-          apiVersion: 1
-          datasources:
-            - name: Prometheus
-              type: prometheus
-              url: http://prometheus-server.prometheus.svc:9090
-              isDefault: true
+    valuesFile: configs/grafana.yaml
+    skipOnHeadless: true
+
+  - name: k8s-monitoring
+    type: helm
+    chartPath: charts/k8s-monitoring
+    valuesFile: values.yaml
+  - name: k8s-monitoring-test
+    type: helm
+    chartPath: charts/k8s-monitoring-test
+    valuesFile: test-values.yaml
+    test: true

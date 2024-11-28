@@ -12,20 +12,20 @@ destinations:
 
   - name: prometheus-basicauth
     type: prometheus
-    url: http://nginx-basic-auth.prometheus.svc/auth-gateway/api/v1/write
+    url: http://nginx-auth-gateway.default.svc/metrics/basic/api/v1/write
     auth:
       type: basic
-      username: promuser
-      password: prompassword
+      username: basicuser
+      password: basicpassword
     extraLabels:
       destination: prometheus-basicauth
 
   - name: prometheus-bearer-token
     type: prometheus
-    url: http://nginx-bearer-token.prometheus.svc/remote-write/api/v1/write
+    url: http://nginx-auth-gateway.default.svc/metrics/bearer/api/v1/write
     auth:
       type: bearerToken
-      bearerToken: my-secret-remote-write-token
+      bearerToken: my-bearer-token
     extraLabels:
       destination: prometheus-bearer-token
 
@@ -47,11 +47,11 @@ destinations:
   - name: prometheus-otlp-basicauth
     type: otlp
     protocol: http
-    url: http://nginx-basic-auth.prometheus.svc/auth-gateway/api/v1/otlp
+    url: http://nginx-auth-gateway.default.svc/metrics/basic/api/v1/otlp
     auth:
       type: basic
-      username: oteluser
-      password: otelpassword
+      username: basicuser
+      password: basicpassword
     processors:
       attributes:
         actions:
@@ -65,10 +65,10 @@ destinations:
   - name: prometheus-otlp-bearer-token
     type: otlp
     protocol: http
-    url: http://nginx-bearer-token.prometheus.svc/otlp/api/v1/otlp
+    url: http://nginx-auth-gateway.default.svc/metrics/bearer/api/v1/otlp
     auth:
       type: bearerToken
-      bearerToken: my-secret-otlp-token
+      bearerToken: my-bearer-token
     processors:
       attributes:
         actions:
@@ -78,6 +78,89 @@ destinations:
     metrics:  {enabled: true}
     logs:     {enabled: false}
     traces:   {enabled: false}
+
+
+  - name: loki-noauth
+    type: loki
+    url: http://loki.loki.svc:3100/loki/api/v1/push
+    tenantId: 1
+    extraLabels:
+      destination: loki-noauth
+
+  - name: loki-basicauth
+    type: loki
+    url: http://nginx-auth-gateway.default.svc/logs/basic/loki/api/v1/push
+    tenantId: 1
+    auth:
+      type: basic
+      username: basicuser
+      password: basicpassword
+    extraLabels:
+      destination: loki-basicauth
+
+  - name: loki-bearer-token
+    type: loki
+    url: http://nginx-auth-gateway.default.svc/logs/bearer/loki/api/v1/push
+    tenantId: 1
+    auth:
+      type: bearerToken
+      bearerToken: my-bearer-token
+    extraLabels:
+      destination: loki-bearer-token
+
+
+#  - name: loki-otlp-noauth
+#    type: otlp
+#    protocol: http
+#    url: http://loki.loki.svc:3100/otlp
+#    tenantId: 1
+#    processors:
+#      attributes:
+#        actions:
+#          - key: destination
+#            action: upsert
+#            value: loki-otlp-noauth
+#    metrics:  {enabled: false}
+#    logs:     {enabled: true}
+#    traces:   {enabled: false}
+#
+#  - name: loki-otlp-basicauth
+#    type: otlp
+#    protocol: http
+#    url: http://nginx-auth-gateway.default.svc/logs/basic/otlp
+#    tenantId: 1
+#    auth:
+#      type: basic
+#      username: basicuser
+#      password: basicpassword
+#    processors:
+#      attributes:
+#        actions:
+#          - key: destination
+#            action: upsert
+#            value: loki-otlp-basicauth
+#    metrics:  {enabled: false}
+#    logs:     {enabled: true}
+#    traces:   {enabled: false}
+#
+#  - name: loki-otlp-bearer-token
+#    type: otlp
+#    protocol: http
+#    url: http://nginx-auth-gateway.default.svc/logs/bearer/otlp
+#    tenantId: 1
+#    auth:
+#      type: bearerToken
+#      bearerToken: my-bearer-token
+#    processors:
+#      attributes:
+#        actions:
+#          - key: destination
+#            action: upsert
+#            value: loki-otlp-bearer-token
+#    metrics:  {enabled: false}
+#    logs:     {enabled: true}
+#    traces:   {enabled: false}
+
 
 clusterMetrics:
   enabled: true
@@ -91,9 +174,13 @@ clusterMetrics:
   node-exporter:      {enabled: false, deploy: false}
   windows-exporter:   {enabled: false, deploy: false}
 
+podLogs:
+  enabled: true
+#  destinations: [loki-noauth, loki-basicauth, loki-bearer-token, loki-otlp-noauth, loki-otlp-basicauth, loki-otlp-bearer-token]
+  namespaces: ["default"]
+
 alloy-metrics:
   enabled: true
-  liveDebugging:
-    enabled: true
-  alloy:
-    stabilityLevel: experimental
+
+alloy-logs:
+  enabled: true

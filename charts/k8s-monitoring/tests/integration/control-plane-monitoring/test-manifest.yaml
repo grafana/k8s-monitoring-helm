@@ -1,38 +1,37 @@
 ---
-prerequisites:
-  - type: helm
-    name: prometheus
+cluster:
+  name: control-plane-monitoring-test
+  type: kind
+  config: configs/cluster.yaml
+deployments:
+  - name: prometheus
+    type: helm
     repo: https://prometheus-community.github.io/helm-charts
     chart: prometheus
+    version: ^25
     namespace: prometheus
-    valuesFile: charts/k8s-monitoring/tests/integration/control-plane-monitoring/prometheus.yaml
-  - type: helm
-    name: loki
+    valuesFile: configs/prometheus.yaml
+  - name: loki
+    type: helm
     repo: https://grafana.github.io/helm-charts
     chart: loki
     namespace: loki
-    valuesFile: .configs/loki.yaml
-  - type: helm
-    name: grafana
+    valuesFile: configs/loki.yaml
+
+  - name: grafana
+    type: helm
     repo: https://grafana.github.io/helm-charts
     chart: grafana
     namespace: grafana
-    values:
-      datasources:
-        datasources.yaml:
-          apiVersion: 1
-          datasources:
-            - name: Prometheus
-              type: prometheus
-              url: http://prometheus-server.prometheus.svc:9090
-              isDefault: true
-            - name: Loki
-              type: loki
-              url: http://loki-gateway.loki.svc:8080
-              basicAuth: true
-              basicAuthUser: loki
-              jsonData:
-                httpHeaderName1: X-Scope-OrgID
-              secureJsonData:
-                basicAuthPassword: lokipassword
-                httpHeaderValue1: "1"
+    valuesFile: configs/grafana.yaml
+    skipOnHeadless: true
+
+  - name: k8s-monitoring
+    type: helm
+    chartPath: charts/k8s-monitoring
+    valuesFile: values.yaml
+  - name: k8s-monitoring-test
+    type: helm
+    chartPath: charts/k8s-monitoring-test
+    valuesFile: test-values.yaml
+    test: true
