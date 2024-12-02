@@ -34,8 +34,8 @@ their default allow lists:
 | Metric source | Gathers information about | Allow list |
 | --- | --- | --- |
 | API Server | Kubernetes API Server | NA |
-| cAdvisor | Containers on each node | [default-allow-lists/cadvisor.yaml](./default-allow-lists/cadvisor.yaml) |
-| Kepler | Kubernetes cluster | [default-allow-lists/kepler.yaml](./default-allow-lists/kepler.yaml) |
+| [cAdvisor](https://github.com/google/cadvisor)| Containers on each node | [default-allow-lists/cadvisor.yaml](./default-allow-lists/cadvisor.yaml) |
+| [Kepler](https://sustainable-computing.io/) | Kubernetes cluster | [default-allow-lists/kepler.yaml](./default-allow-lists/kepler.yaml) |
 | Kube Controller Manager | Kubernetes Controller Manager | NA |
 | Kube Proxy | Kube Proxy | NA|
 | Kube Scheduler | Kube Scheduler |  NA|
@@ -47,9 +47,9 @@ resources inside the cluster | [default-allow-lists/kube-state-metrics.yaml](./d
 
 ## Metrics tuning and allow lists
 
-For any metric source, you can adjust the amount of metrics being scraped and their labels to limit the number of metrics delivered to your destinations. Many of the metric sources also have an allow list. The allow list for a metric source is designed to return a useful, but minimal set of metrics for typical use cases. Some metrics sources have an "integration allow list", which contains even more metrics for diving into the details of the source itself.
+For any metric source, you can adjust the amount of metrics being scraped and their labels to limit the number of metrics delivered to your destinations. Many of the metric sources have a default allow list. The allow list for a metric source is designed to return a useful, but minimal set of metrics for typical use cases. Some metrics sources have an integration allow list, which contains even more metrics for diving into the details of the source itself.
 
-To control metrics with allow lists or labels, use the `metricsTuning` section in the values file.
+To control metrics with allow lists or label filters, use the `metricsTuning` section in the values file.
 
 ```yaml
 <metric source>:
@@ -80,14 +80,11 @@ To do so, use `extraMetricProcessingRules` section to add arbitrary relabeling r
 
 ## Testing
 
-This chart contains unit tests to verify the generated configuration. A hidden value, `deployAsConfigMap`, will render
-the generated configuration into a ConfigMap object. This ConfigMap is not used during regular operation, but it is
-useful for showing the outcome of a given values file.
+This chart contains unit tests to verify the generated configuration. The hidden value `deployAsConfigMap` will render the generated configuration into a ConfigMap object. While this ConfigMap is not used during regular operation, you can use it to show the outcome of a given values file.
 
-The unit tests use this to create an object with the configuration that can be asserted against. To run the tests, use
-`helm test`.
+The unit tests use this ConfigMap to create an object with the configuration that can be asserted against. To run the tests, use `helm test`.
 
-Actual integration testing in a live environment should be done in the main [k8s-monitoring](../k8s-monitoring) chart.
+Be sure perform actual integration testing in a live environment in the main [k8s-monitoring](../k8s-monitoring) chart.
 
 {{ template "chart.maintainersSection" . }}
 
