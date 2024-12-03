@@ -39,8 +39,8 @@ their default allow lists:
 | Kubelet | Kubernetes information on each node | [default-allow-lists/kubelet.yaml](./default-allow-lists/kubelet.yaml) |
 | [kube-state-metrics](https://github.com/kubernetes/kube-state-metrics) |Kubernetes
 resources inside the cluster | [default-allow-lists/kube-state-metrics.yaml](./default-allow-lists/kube-state-metrics.yaml) |
-| [Node Exporter](https://github.com/prometheus/node_exporter) | Linux Kubernetes nodes |
-| [Windows Exporter](https://github.com/prometheus-community/windows_exporter) |  Windows Kubernetes nodes | [default-allow-lists/windows-exporter.yaml](./default-allow-lists/windows-exporter.yaml) | [default-allow-lists/node-exporter.yaml](./default-allow-lists/node-exporter.yaml), [default-allow-lists/node-exporter-integration.yaml](./default-allow-lists/node-exporter-integration.yaml) |
+| [Node Exporter](https://github.com/prometheus/node_exporter) | Linux Kubernetes nodes | [default-allow-lists/node-exporter.yaml](./default-allow-lists/node-exporter.yaml), [default-allow-lists/node-exporter-integration.yaml](./default-allow-lists/node-exporter-integration.yaml)  |
+| [Windows Exporter](https://github.com/prometheus-community/windows_exporter) |  Windows Kubernetes nodes | [default-allow-lists/windows-exporter.yaml](./default-allow-lists/windows-exporter.yaml) |
 
 ## Metrics tuning and allow lists
 
