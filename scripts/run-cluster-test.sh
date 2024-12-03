@@ -80,7 +80,9 @@ kubectl apply -f ${TEST_DIRECTORY}/deployments
 # Deploy k8s-monitoring
 clusterName=$(yq eval '.cluster.name' "${TEST_DIRECTORY}/values.yaml")
 if [ -n "${RANDOM_NUMBER}" ]; then clusterName="${clusterName}-${RANDOM_NUMBER}"; fi
+echo helm upgrade --install k8smon ${PARENT_DIR}/charts/k8s-monitoring -f ${TEST_DIRECTORY}/values.yaml --set "cluster.name=${clusterName}" --wait
 helm upgrade --install k8smon ${PARENT_DIR}/charts/k8s-monitoring -f ${TEST_DIRECTORY}/values.yaml --set "cluster.name=${clusterName}" --wait
 
 # Run tests
-helm test k8s-monitoring-test
+echo helm test k8s-monitoring-test --logs
+helm test k8s-monitoring-test --logs
