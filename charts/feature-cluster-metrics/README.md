@@ -9,96 +9,44 @@
 
 Gathers Kubernetes Cluster metrics
 
-This chart deploys the Cluster Metrics feature of the Kubernetes Observability Helm chart. It includes the ability to
-collect metrics from the Kubernetes Cluster itself, from sources like the Kubelet and cAdvisor, from common supporting
-services like [kube-state-metrics](https://github.com/kubernetes/kube-state-metrics) and
-[Node Exporter](https://github.com/prometheus/node_exporter), and from systems to capture additional data like Kepler.
+This chart deploys the Cluster Metrics feature of the Kubernetes Observability Helm chart, which uses allow
+lists to limit the metrics needed. An allow list is a set of metric names that will be kept, while any metrics
+not on the list will be dropped. With [metrics tuning](#metrics-tuning--allow-lists), you can further customize which metrics are collected.
 
-## Metric systems
+## How it works
 
-The Cluster Metrics feature of the Kubernetes Observability Helm chart includes the following metric systems:
+This chart includes the ability to collect metrics from the following:
 
-*   Kubelet
-*   cAdvisor
-*   API Server
-*   Kube Controller Manager
-*   Kube Proxy
-*   Kube Scheduler
-*   kube-state-metrics
-*   Node Exporter
-*   Windows Exporter
-*   Kepler
+* The Kubernetes cluster itself
+* Sources like the Kubelet and cAdvisor
+* Common supporting services like [kube-state-metrics](https://github.com/kubernetes/kube-state-metrics) and
+[Node Exporter](https://github.com/prometheus/node_exporter)
+* Systems to capture additional data like Kepler
 
-### Kubelet
+### Metrics sources
 
-Kubelet metrics gather information about Kubernetes information on each node.
+The Cluster Metrics feature of the Kubernetes Observability Helm chart includes the following metric systems and
+their default allow lists:
 
-The kubelet metric source uses an [allow list](#metrics-tuning--allow-lists),
-[default-allow-lists/kubelet.yaml](./default-allow-lists/kubelet.yaml).
+| Metric source | Gathers information about | Allow list |
+| --- | --- | --- |
+| API Server | Kubernetes API Server | NA |
+| [cAdvisor](https://github.com/google/cadvisor)| Containers on each node | [default-allow-lists/cadvisor.yaml](./default-allow-lists/cadvisor.yaml) |
+| [Kepler](https://sustainable-computing.io/) | Kubernetes cluster | [default-allow-lists/kepler.yaml](./default-allow-lists/kepler.yaml) |
+| Kube Controller Manager | Kubernetes Controller Manager | NA |
+| Kube Proxy | Kube Proxy | NA|
+| Kube Scheduler | Kube Scheduler |  NA|
+| Kubelet | Kubernetes information on each node | [default-allow-lists/kubelet.yaml](./default-allow-lists/kubelet.yaml) |
+| [kube-state-metrics](https://github.com/kubernetes/kube-state-metrics) |Kubernetes
+resources inside the cluster | [default-allow-lists/kube-state-metrics.yaml](./default-allow-lists/kube-state-metrics.yaml) |
+| [Node Exporter](https://github.com/prometheus/node_exporter) | Linux Kubernetes nodes |
+| [Windows Exporter](https://github.com/prometheus-community/windows_exporter) |  Windows Kubernetes nodes | [default-allow-lists/windows-exporter.yaml](./default-allow-lists/windows-exporter.yaml) | [default-allow-lists/node-exporter.yaml](./default-allow-lists/node-exporter.yaml), [default-allow-lists/node-exporter-integration.yaml](./default-allow-lists/node-exporter-integration.yaml) |
 
-### cAdvisor
+## Metrics tuning and allow lists
 
-[cAdvisor](https://github.com/google/cadvisor) metrics gather information about containers on each node.
+For any metric source, you can adjust the amount of metrics being scraped and their labels to limit the number of metrics delivered to your destinations. Many of the metric sources have a default allow list. The allow list for a metric source is designed to return a useful, but minimal set of metrics for typical use cases. Some metrics sources have an integration allow list, which contains even more metrics for diving into the details of the source itself.
 
-The cAdvisor metric source uses an [allow list](#metrics-tuning--allow-lists),
-[default-allow-lists/cadvisor.yaml](./default-allow-lists/cadvisor.yaml).
-
-### API Server
-
-API Server metrics gather information about the Kubernetes API Server.
-
-### Kube Controller Manager
-
-Kube Controller Manager metrics gather information about the Kubernetes Controller Manager.
-
-### Kube Proxy
-
-Kube Proxy metrics gather information about the Kubernetes Proxy.
-
-### Kube Scheduler
-
-Kube Scheduler metrics gather information about the Kubernetes Scheduler.
-
-### kube-state-metrics
-
-[kube-state-metrics](https://github.com/kubernetes/kube-state-metrics) metrics gather information about Kubernetes
-resources inside the cluster.
-
-The kube-state-metrics metric source uses an [allow list](#metrics-tuning--allow-lists),
-[default-allow-lists/kube-state-metrics.yaml](./default-allow-lists/kube-state-metrics.yaml).
-
-### Node Exporter
-
-[Node Exporter](https://github.com/prometheus/node_exporter) metrics gather information about Linux Kubernetes Nodes.
-
-The Node Exporter metric source uses an [allow list](#metrics-tuning--allow-lists),
-[default-allow-lists/node-exporter.yaml](./default-allow-lists/node-exporter.yaml), and has an integration allow list,
-[default-allow-lists/node-exporter-integration.yaml](./default-allow-lists/node-exporter-integration.yaml).
-
-### Windows Exporter
-
-[Windows Exporter](https://github.com/prometheus-community/windows_exporter) metrics gather information about Windows
-Kubernetes Nodes.
-
-The Windows Exporter metric source uses an [allow list](#metrics-tuning--allow-lists),
-[default-allow-lists/windows-exporter.yaml](./default-allow-lists/windows-exporter.yaml).
-
-### Kepler
-
-[Kepler](https://sustainable-computing.io/) metrics gather information about the Kubernetes cluster.
-
-The Kepler metric source uses an [allow list](#metrics-tuning--allow-lists),
-[default-allow-lists/kepler.yaml](./default-allow-lists/kepler.yaml).
-
-## Metrics Tuning & Allow Lists
-
-All metric sources have the ability to adjust the amount of metrics being scraped and their labels. This can be useful
-to limit the number of metrics delivered to your destinations. Many of the metric sources also have an allow list, which
-is a set of metric names that will be kept, while any metrics not on the list will be dropped. The allow lists are tuned
-to return a useful, but minimal set of metrics for typical use cases. Some sources have an "integration allow list",
-which contains even more metrics for diving into the details of the source itself.
-
-To control these settings, use the `metricsTuning` section in the values file.
+To control metrics with allow lists or label filters, use the `metricsTuning` section in the values file.
 
 ```yaml
 <metric source>:
@@ -111,7 +59,7 @@ To control these settings, use the `metricsTuning` section in the values file.
 
 The behavior of the combination of these settings is shown in this table:
 
-| Allow List | includeMetrics   | excludeMetrics           | Result                                                                                                                                  |
+| Allow list | includeMetrics   | excludeMetrics           | Result                                                                                                                                  |
 |------------|------------------|--------------------------|-----------------------------------------------------------------------------------------------------------------------------------------|
 | true       | `[]`             | `[]`                     | Use the allow list metric list                                                                                                          |
 | false      | `[]`             | `[]`                     | No filter, keep all metrics                                                                                                             |
@@ -122,19 +70,18 @@ The behavior of the combination of these settings is shown in this table:
 | true       | `[my_metric_.*]` | `[other_metric_.*]`      | Use the allow list metric filter, and keep anything that starts with `my_metric_`, but remove anything that starts with `other_metric_` |
 | false      | `[my_metric_.*]` | `[my_metric_not_needed]` | *Only* keep metrics that start with `my_metric_`, but remove any that are named `my_metric_not_needed`                                  |
 
-In addition to all fo this, you can also use the `extraMetricProcessingRules` section to add arbitrary relabeling rules that can be used to take any
-action on the metric list, including filtering based on label or other actions.
+## Relabeling rules
+
+You can also use relabeling rules to take any action on the metrics allow list, such as to filter based on a label.
+To do so, use `extraMetricProcessingRules` section in the values file to add arbitrary relabeling rules.
 
 ## Testing
 
-This chart contains unit tests to verify the generated configuration. A hidden value, `deployAsConfigMap`, will render
-the generated configuration into a ConfigMap object. This ConfigMap is not used during regular operation, but it is
-useful for showing the outcome of a given values file.
+This chart contains unit tests to verify the generated configuration. The hidden value `deployAsConfigMap` will render the generated configuration into a ConfigMap object. While this ConfigMap is not used during regular operation, you can use it to show the outcome of a given values file.
 
-The unit tests use this to create an object with the configuration that can be asserted against. To run the tests, use
-`helm test`.
+The unit tests use this ConfigMap to create an object with the configuration that can be asserted against. To run the tests, use `helm test`.
 
-Actual integration testing in a live environment should be done in the main [k8s-monitoring](../k8s-monitoring) chart.
+Be sure perform actual integration testing in a live environment in the main [k8s-monitoring](../k8s-monitoring) chart.
 
 ## Maintainers
 
