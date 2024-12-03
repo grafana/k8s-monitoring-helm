@@ -60,30 +60,32 @@ jobs:
       - name: Check for cluster config
         id: check-cluster-config
         run: |
-          valuesFile="charts/k8s-monitoring/tests/integration/${{ matrix.test }}/values.yaml"
-          echo "cluster-name=$(yq -r ".cluster.name" "${valuesFile}")" >> "${GITHUB_OUTPUT}"
-          
-          if [ -f "charts/k8s-monitoring/tests/integration/${{ matrix.test }}/kind-cluster-config.yaml" ]; then
-            echo "cluster-type=kind-with-config" >> "${GITHUB_OUTPUT}"
-            echo "cluster-config=charts/k8s-monitoring/tests/integration/${{ matrix.test }}/kind-cluster-config.yaml" >> "${GITHUB_OUTPUT}"
+          if [ -f "charts/k8s-monitoring/tests/integration/${{ matrix.test }}/gke-cluster-config.yaml" ]; then
+            echo "cluster-type=gke" >> "${GITHUB_OUTPUT}"
+          elif [ -f "charts/k8s-monitoring/tests/integration/${{ matrix.test }}/gke-autopilot-cluster-config.yaml" ]; then
+            echo "cluster-type=gke" >> "${GITHUB_OUTPUT}"
           else
             echo "cluster-type=kind" >> "${GITHUB_OUTPUT}"
           fi
 
-      - name: Create kind cluster
+      - name: Setup Kind CLI
         if: ${{ steps.check-cluster-config.outputs.cluster-type == 'kind' }}
         uses: helm/kind-action@v1
         with:
-          cluster_name: ${{ steps.check-cluster-config.outputs.cluster-name }}
-          ignore_failed_clean: true
+          install_only: true
 
-      - name: Create kind cluster with special config
-        if: ${{ steps.check-cluster-config.outputs.cluster-type == 'kind-with-config' }}
-        uses: helm/kind-action@v1
+      - name: Authenticate with GCP
+        if: ${{ steps.check-cluster-config.outputs.cluster-type == 'gke' }}
+        uses: google-github-actions/auth@v2
         with:
-          cluster_name: ${{ steps.check-cluster-config.outputs.cluster-name }}
-          config: ${{ steps.check-cluster-config.outputs.cluster-config }}
-          ignore_failed_clean: true
+          credentials_json: '${{ secrets.GCP_SERVICE_ACCOUNT_TOKEN }}'
+
+      - name: Set up Cloud SDK
+        if: ${{ steps.check-cluster-config.outputs.cluster-type == 'gke' }}
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Setup Flux CLI
+        uses: fluxcd/flux2/action@main
 
       - name: Random number
         id: random-number
@@ -92,16 +94,15 @@ jobs:
           min: 100000
           max: 999999
 
-      - name: Setup Flux CLI
-        uses: fluxcd/flux2/action@main
-
       - name: Run test
+        run: ./scripts/run-integration-test.sh "charts/k8s-monitoring/tests/platform/${{ matrix.test }}"
         env:
+          CREATE_CLUSTER: "true"
+          DELETE_CLUSTER: "true"
           GRAFANA_CLOUD_FLEET_MGMT_USER: ${{ secrets.GRAFANA_CLOUD_FLEET_MGMT_USER }}
           GRAFANA_CLOUD_FLEET_MGMT_TOKEN: ${{ secrets.GRAFANA_CLOUD_FLEET_MGMT_TOKEN }}
           GRAFANA_CLOUD_METRICS_USERNAME: ${{ secrets.GRAFANA_CLOUD_METRICS_USERNAME }}
           GRAFANA_CLOUD_LOGS_USERNAME: ${{ secrets.GRAFANA_CLOUD_LOGS_USERNAME }}
+          GRAFANA_CLOUD_TRACES_USERNAME: ${{ secrets.GRAFANA_CLOUD_TRACES_USERNAME }}
           GRAFANA_CLOUD_RW_POLICY_TOKEN: ${{ secrets.GRAFANA_CLOUD_RW_POLICY_TOKEN }}
           RANDOM_NUMBER: ${{ steps.random-number.outputs.number }}
-
-        run: ./scripts/run-integration-test.sh "charts/k8s-monitoring/tests/platform/${{ matrix.test }}"
