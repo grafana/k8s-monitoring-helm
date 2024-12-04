@@ -34,7 +34,7 @@ spec:
           - secretRef: {name: grafana-cloud-credentials}
           - configMapRef: {name: test-variables}
         queries:
-          # Cluster metrics
+          # Features
           - query: grafana_kubernetes_monitoring_build_info{cluster="$CLUSTER"}
             type: promql
           - query: grafana_kubernetes_monitoring_feature_info{cluster="$CLUSTER", feature="clusterMetrics"}
@@ -44,10 +44,16 @@ spec:
           - query: grafana_kubernetes_monitoring_feature_info{cluster="$CLUSTER", feature="podLogs", method="volumes"}
             type: promql
 
-          # Alloy metrics
-          - query: kube_node_info{cluster="$CLUSTER"}
+          # Cluster metrics
+          - query: kube_node_info{cluster="$CLUSTER", job="integrations/kubernetes/kube-state-metrics"}
             type: promql
-          - query: alloy_build_info{cluster="$CLUSTER"}
+
+          # Alloy metrics
+          - query: alloy_build_info{cluster="$CLUSTER", app="alloy-metrics"}
+            type: promql
+          - query: alloy_build_info{cluster="$CLUSTER", app="alloy-singleton"}
+            type: promql
+          - query: alloy_build_info{cluster="$CLUSTER", app="alloy-logs"}
             type: promql
 
           # Cluster events
