@@ -94,7 +94,7 @@ In order to specify different destinations of the same type, you can use multipl
 |-----|------|---------|-------------|
 | image.pullSecrets | list | `[]` | Optional set of image pull secrets. |
 | image.registry | string | `"ghcr.io"` | Test pod image registry. |
-| image.repository | string | `"grafana/k8s-monitoring-test"` | Test pod image repository. |
+| image.repository | string | `"grafana/query-test"` | Test pod image repository. |
 | image.tag | string | `""` | Test pod image tag. Default is the chart version. |
 
 ### Job settings
