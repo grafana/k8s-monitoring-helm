@@ -28,21 +28,22 @@ spec:
   values:
     tests:
       - env:
+          CLUSTER: auto-instrumentation-test
           PROMETHEUS_URL: http://prometheus-server.prometheus.svc:9090/api/v1/query
           TEMPO_URL: http://tempo.tempo.svc:3100/api/search
         queries:
           # Self reporting metrics
-          - query: grafana_kubernetes_monitoring_build_info{cluster="auto-instrumentation-integration-test"}
+          - query: grafana_kubernetes_monitoring_build_info{cluster="$CLUSTER"}
             type: promql
-          - query: grafana_kubernetes_monitoring_feature_info{cluster="auto-instrumentation-integration-test", feature="autoInstrumentation"}
+          - query: grafana_kubernetes_monitoring_feature_info{cluster="$CLUSTER", feature="autoInstrumentation"}
             type: promql
 
           # Beyla metrics
-          - query: beyla_build_info{cluster="auto-instrumentation-integration-test"}
+          - query: beyla_build_info{cluster="$CLUSTER"}
             type: promql
-          - query: beyla_internal_build_info{cluster="auto-instrumentation-integration-test"}
+          - query: beyla_internal_build_info{cluster="$CLUSTER"}
             type: promql
 
           # Traces from Beyla
-          - query: "{.k8s.cluster.name=\"auto-instrumentation-integration-test\" && resource.otel.library.name=\"github.com/grafana/beyla\"}"
+          - query: "{.k8s.cluster.name=\"$CLUSTER\" && resource.otel.library.name=\"github.com/grafana/beyla\"}"
             type: traceql

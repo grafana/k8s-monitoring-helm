@@ -28,6 +28,7 @@ spec:
   values:
     tests:
       - env:
+          CLUSTER: cluster-monitoring-feature-test
           PROMETHEUS_URL: http://prometheus-server.prometheus.svc:9090/api/v1/query
           PROMETHEUS_USER: promuser
           PROMETHEUS_PASS: prometheuspassword
@@ -37,39 +38,39 @@ spec:
           LOKI_PASS: lokipassword
         queries:
           # Self reporting metrics
-          - query: grafana_kubernetes_monitoring_build_info{cluster="cluster-monitoring-feature-test"}
+          - query: grafana_kubernetes_monitoring_build_info{cluster="$CLUSTER"}
             type: promql
-          - query: grafana_kubernetes_monitoring_feature_info{cluster="cluster-monitoring-feature-test", feature="clusterMetrics"}
+          - query: grafana_kubernetes_monitoring_feature_info{cluster="$CLUSTER", feature="clusterMetrics"}
             type: promql
-          - query: grafana_kubernetes_monitoring_feature_info{cluster="cluster-monitoring-feature-test", feature="clusterEvents"}
+          - query: grafana_kubernetes_monitoring_feature_info{cluster="$CLUSTER", feature="clusterEvents"}
             type: promql
-          - query: grafana_kubernetes_monitoring_feature_info{cluster="cluster-monitoring-feature-test", feature="podLogs", method="volumes"}
+          - query: grafana_kubernetes_monitoring_feature_info{cluster="$CLUSTER", feature="podLogs", method="volumes"}
             type: promql
 
           # Cluster metrics
-          - query: kubernetes_build_info{cluster="cluster-monitoring-feature-test", job="integrations/kubernetes/kubelet"}
+          - query: kubernetes_build_info{cluster="$CLUSTER", job="integrations/kubernetes/kubelet"}
             type: promql
-          - query: node_cpu_usage_seconds_total{cluster="cluster-monitoring-feature-test", job="integrations/kubernetes/resources"}
+          - query: node_cpu_usage_seconds_total{cluster="$CLUSTER", job="integrations/kubernetes/resources"}
             type: promql
-          - query: machine_memory_bytes{cluster="cluster-monitoring-feature-test", job="integrations/kubernetes/cadvisor"}
+          - query: machine_memory_bytes{cluster="$CLUSTER", job="integrations/kubernetes/cadvisor"}
             type: promql
-          - query: count(kube_node_info{cluster="cluster-monitoring-feature-test", job="integrations/kubernetes/kube-state-metrics"})
+          - query: count(kube_node_info{cluster="$CLUSTER", job="integrations/kubernetes/kube-state-metrics"})
             type: promql
             expect:
               value: 1
-          - query: kube_node_labels{cluster="cluster-monitoring-feature-test"}
+          - query: kube_node_labels{cluster="$CLUSTER"}
             type: promql
-          - query: node_exporter_build_info{cluster="cluster-monitoring-feature-test", job="integrations/node_exporter"}
+          - query: node_exporter_build_info{cluster="$CLUSTER", job="integrations/node_exporter"}
             type: promql
-          - query: kepler_container_joules_total{cluster="cluster-monitoring-feature-test", job="integrations/kepler"}
+          - query: kepler_container_joules_total{cluster="$CLUSTER", job="integrations/kepler"}
             type: promql
-          - query: opencost_build_info{cluster="cluster-monitoring-feature-test", job="integrations/opencost"}
+          - query: opencost_build_info{cluster="$CLUSTER", job="integrations/opencost"}
             type: promql
 
           # Cluster events
-          - query: count_over_time({cluster="cluster-monitoring-feature-test", job="integrations/kubernetes/eventhandler"}[1h])
+          - query: count_over_time({cluster="$CLUSTER", job="integrations/kubernetes/eventhandler"}[1h])
             type: logql
 
           # Pod logs
-          - query: count_over_time({cluster="cluster-monitoring-feature-test", job!="integrations/kubernetes/eventhandler"}[1h])
+          - query: count_over_time({cluster="$CLUSTER", job!="integrations/kubernetes/eventhandler"}[1h])
             type: logql

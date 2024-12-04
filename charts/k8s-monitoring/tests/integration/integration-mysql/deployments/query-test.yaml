@@ -28,6 +28,7 @@ spec:
   values:
     tests:
       - env:
+          CLUSTER: mysql-integration-test
           PROMETHEUS_URL: http://prometheus-server.prometheus.svc:9090/api/v1/query
           LOKI_URL: http://loki.loki.svc:3100/loki/api/v1/query
           LOKI_TENANTID: 1
@@ -36,14 +37,14 @@ spec:
 
         queries:
           # MySQL metrics
-          - query: mysqld_exporter_build_info{cluster="mysql-integration-test", instance="test-database"}
+          - query: mysqld_exporter_build_info{cluster="$CLUSTER", instance="test-database"}
             type: promql
 
-          - query: count_over_time({cluster="mysql-integration-test", job="integrations/mysql", instance="test-database"}[1h])
+          - query: count_over_time({cluster="$CLUSTER", job="integrations/mysql", instance="test-database"}[1h])
             type: logql
 
           # DPM check
-          - query: avg(count_over_time(scrape_samples_scraped{cluster="mysql-integration-test"}[1m]))
+          - query: avg(count_over_time(scrape_samples_scraped{cluster="$CLUSTER"}[1m]))
             type: promql
             expect:
               value: 1

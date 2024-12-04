@@ -28,6 +28,7 @@ spec:
   values:
     tests:
       - env:
+          CLUSTER: control-plane-monitoring-test
           PROMETHEUS_URL: http://prometheus-server.prometheus.svc:9090/api/v1/query
           LOKI_URL: http://loki.loki.svc:3100/loki/api/v1/query
           LOKI_TENANTID: 1
@@ -35,45 +36,45 @@ spec:
           LOKI_PASS: lokipassword
         queries:
           # Self reporting metrics
-          - query: grafana_kubernetes_monitoring_build_info{cluster="control-plane-monitoring-test"}
+          - query: grafana_kubernetes_monitoring_build_info{cluster="$CLUSTER"}
             type: promql
-          - query: grafana_kubernetes_monitoring_feature_info{cluster="control-plane-monitoring-test", feature="clusterMetrics"}
+          - query: grafana_kubernetes_monitoring_feature_info{cluster="$CLUSTER", feature="clusterMetrics"}
             type: promql
-          - query: grafana_kubernetes_monitoring_feature_info{cluster="control-plane-monitoring-test", feature="clusterEvents"}
+          - query: grafana_kubernetes_monitoring_feature_info{cluster="$CLUSTER", feature="clusterEvents"}
             type: promql
-          - query: grafana_kubernetes_monitoring_feature_info{cluster="control-plane-monitoring-test", feature="podLogs", method="volumes"}
+          - query: grafana_kubernetes_monitoring_feature_info{cluster="$CLUSTER", feature="podLogs", method="volumes"}
             type: promql
 
           # Cluster metrics
-          - query: kubernetes_build_info{cluster="control-plane-monitoring-test", job="integrations/kubernetes/kubelet"}
+          - query: kubernetes_build_info{cluster="$CLUSTER", job="integrations/kubernetes/kubelet"}
             type: promql
-          - query: machine_memory_bytes{cluster="control-plane-monitoring-test", job="integrations/kubernetes/cadvisor"}
+          - query: machine_memory_bytes{cluster="$CLUSTER", job="integrations/kubernetes/cadvisor"}
             type: promql
-          - query: count(kube_node_info{cluster="control-plane-monitoring-test", job="integrations/kubernetes/kube-state-metrics"})
+          - query: count(kube_node_info{cluster="$CLUSTER", job="integrations/kubernetes/kube-state-metrics"})
             type: promql
             expect:
               value: 2
-          - query: kube_node_labels{cluster="control-plane-monitoring-test"}
+          - query: kube_node_labels{cluster="$CLUSTER"}
             type: promql
-          - query: node_exporter_build_info{cluster="control-plane-monitoring-test", job="integrations/node_exporter"}
+          - query: node_exporter_build_info{cluster="$CLUSTER", job="integrations/node_exporter"}
             type: promql
 
           # Control plane metrics
-          - query: apiserver_request_total{cluster="control-plane-monitoring-test", job="integrations/kubernetes/kube-apiserver"}
+          - query: apiserver_request_total{cluster="$CLUSTER", job="integrations/kubernetes/kube-apiserver"}
             type: promql
-          - query: coredns_build_info{cluster="control-plane-monitoring-test", job="integrations/kubernetes/kube-dns"}
+          - query: coredns_build_info{cluster="$CLUSTER", job="integrations/kubernetes/kube-dns"}
             type: promql
-          - query: workqueue_adds_total{cluster="control-plane-monitoring-test"}
+          - query: workqueue_adds_total{cluster="$CLUSTER"}
             type: promql
-          - query: kubeproxy_sync_proxy_rules_service_changes_total{cluster="control-plane-monitoring-test"}
+          - query: kubeproxy_sync_proxy_rules_service_changes_total{cluster="$CLUSTER"}
             type: promql
-          - query: scheduler_unschedulable_pods{cluster="control-plane-monitoring-test"}
+          - query: scheduler_unschedulable_pods{cluster="$CLUSTER"}
             type: promql
 
           # Cluster events
-          - query: count_over_time({cluster="control-plane-monitoring-test", job="integrations/kubernetes/eventhandler"}[1h])
+          - query: count_over_time({cluster="$CLUSTER", job="integrations/kubernetes/eventhandler"}[1h])
             type: logql
 
           # Pod logs
-          - query: count_over_time({cluster="control-plane-monitoring-test", job!="integrations/kubernetes/eventhandler"}[1h])
+          - query: count_over_time({cluster="$CLUSTER", job!="integrations/kubernetes/eventhandler"}[1h])
             type: logql
