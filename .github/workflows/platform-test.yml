@@ -60,9 +60,9 @@ jobs:
       - name: Check for cluster config
         id: check-cluster-config
         run: |
-          if [ -f "charts/k8s-monitoring/tests/integration/${{ matrix.test }}/gke-cluster-config.yaml" ]; then
+          if [ -f "charts/k8s-monitoring/tests/platform/${{ matrix.test }}/gke-cluster-config.yaml" ]; then
             echo "cluster-type=gke" >> "${GITHUB_OUTPUT}"
-          elif [ -f "charts/k8s-monitoring/tests/integration/${{ matrix.test }}/gke-autopilot-cluster-config.yaml" ]; then
+          elif [ -f "charts/k8s-monitoring/tests/platform/${{ matrix.test }}/gke-autopilot-cluster-config.yaml" ]; then
             echo "cluster-type=gke" >> "${GITHUB_OUTPUT}"
           else
             echo "cluster-type=kind" >> "${GITHUB_OUTPUT}"
@@ -95,7 +95,7 @@ jobs:
           max: 999999
 
       - name: Run test
-        run: ./scripts/run-integration-test.sh "charts/k8s-monitoring/tests/platform/${{ matrix.test }}"
+        run: ./scripts/run-cluster-test.sh "charts/k8s-monitoring/tests/platform/${{ matrix.test }}"
         env:
           CREATE_CLUSTER: "true"
           DELETE_CLUSTER: "true"
