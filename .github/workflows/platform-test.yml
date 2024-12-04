@@ -76,6 +76,16 @@ jobs:
         with:
           install_only: true
 
+      - name: Setup eksctl CLI
+        if: ${{ steps.check-cluster-config.outputs.cluster-type == 'eks' }}
+        run: |
+          PLATFORM="$(uname -s)_$ARCH"
+          curl -sLO "https://github.com/eksctl-io/eksctl/releases/latest/download/eksctl_$PLATFORM.tar.gz"
+          tar -xzf "eksctl_$PLATFORM.tar.gz" -C /tmp && rm "eksctl_$PLATFORM.tar.gz"
+          sudo mv /tmp/eksctl /usr/local/bin
+        env:
+          ARCH: amd64
+
       - name: Configure AWS Credentials
         if: ${{ steps.check-cluster-config.outputs.cluster-type == 'eks' }}
         uses: aws-actions/configure-aws-credentials@v4

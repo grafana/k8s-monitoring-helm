@@ -32,28 +32,26 @@ spec:
         location /metrics/basic/ {
           auth_basic "Prometheus Basic Auth";
           auth_basic_user_file /etc/nginx/conf/htpasswd;
-    
           proxy_pass http://prometheus-server.prometheus.svc:9090/;
         }
+
         location /logs/basic/ {
           auth_basic "Loki Basic Auth";
           auth_basic_user_file /etc/nginx/conf/htpasswd;
-    
           proxy_pass http://loki.loki.svc:3100/;
         }
-      
+
         location /metrics/bearer/ {
           if ($http_authorization != "Bearer my-bearer-token") {
             return 401;
           }
-    
           proxy_pass http://prometheus-server.prometheus.svc:9090/;
         }
+
         location /logs/bearer/ {
           if ($http_authorization != "Bearer my-bearer-token") {
             return 401;
           }
-    
           proxy_pass http://loki.loki.svc:3100/;
         }
       }
