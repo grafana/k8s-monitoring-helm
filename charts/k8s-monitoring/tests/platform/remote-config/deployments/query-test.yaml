@@ -3,7 +3,6 @@ apiVersion: source.toolkit.fluxcd.io/v1
 kind: GitRepository
 metadata:
   name: k8s-monitoring-test
-  namespace: flux-system
 spec:
   interval: 1m
   url: https://github.com/grafana/k8s-monitoring-helm
@@ -29,10 +28,8 @@ spec:
   values:
     tests:
       - envFrom:
-          - secretRef:
-              name: grafana-cloud-credentials
-          - configMapRef:
-              name: test-variables
+          - secretRef:    {name: grafana-cloud-credentials}
+          - configMapRef: {name: test-variables}
         queries:
-          - query: alloy_build_info{cluster="remote-config-platform-test", random="$RANDOM_NUMBER"}
+          - query: alloy_build_info{cluster="$CLUSTER"}
             type: promql

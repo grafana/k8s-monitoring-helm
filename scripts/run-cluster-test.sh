@@ -30,15 +30,21 @@ if [ -z "${TEST_DIRECTORY}" ]; then
   usage
   exit 1
 fi
+if [ ! -f "${TEST_DIRECTORY}/values.yaml" ]; then
+  echo "Values file (${TEST_DIRECTORY}/values.yaml) not found! This is a required file."
+  usage
+  exit 1
+fi
 
 set -eo pipefail  # Exit immediately if a command fails.
+
+clusterName=$(yq eval '.cluster.name' "${TEST_DIRECTORY}/values.yaml")
+if [ -n "${RANDOM_NUMBER}" ]; then clusterName="${clusterName}-${RANDOM_NUMBER}"; fi
 
 #
 # Cluster creation
 #
 if [ "${CREATE_CLUSTER}" == "true" ]; then
-  clusterName=$(yq eval '.cluster.name' "${TEST_DIRECTORY}/values.yaml")
-  if [ -n "${RANDOM_NUMBER}" ]; then clusterName="${clusterName}-${RANDOM_NUMBER}"; fi
   if [ -f "${TEST_DIRECTORY}/kind-cluster-config.yaml" ]; then
     createKindCluster "${clusterName}" "${TEST_DIRECTORY}/kind-cluster-config.yaml"
   elif [ -f "${TEST_DIRECTORY}/gke-cluster-config.yaml" ]; then
@@ -51,8 +57,6 @@ if [ "${CREATE_CLUSTER}" == "true" ]; then
 fi
 
 deleteCluster() {
-  clusterName=$(yq eval '.cluster.name' "${TEST_DIRECTORY}/values.yaml")
-  if [ -n "${RANDOM_NUMBER}" ]; then clusterName="${clusterName}-${RANDOM_NUMBER}"; fi
   if [ -f "${TEST_DIRECTORY}/kind-cluster-config.yaml" ]; then
     deleteKindCluster "${clusterName}" "${TEST_DIRECTORY}/kind-cluster-config.yaml"
   elif [ -f "${TEST_DIRECTORY}/gke-cluster-config.yaml" ]; then
@@ -74,12 +78,15 @@ else
   helm upgrade --install --namespace flux-system --create-namespace flux oci://ghcr.io/fluxcd-community/charts/flux2 --wait
 fi
 
-# Deploy prerequisites
-kubectl apply -f ${TEST_DIRECTORY}/deployments
+# Apply the deployments directory
+if [ -f "${TEST_DIRECTORY}/Makefile" ]; then
+  make -C "${TEST_DIRECTORY}" clean all
+fi
+if [ -d "${TEST_DIRECTORY}/deployments" ]; then
+  kubectl apply -f ${TEST_DIRECTORY}/deployments
+fi
 
 # Deploy k8s-monitoring
-clusterName=$(yq eval '.cluster.name' "${TEST_DIRECTORY}/values.yaml")
-if [ -n "${RANDOM_NUMBER}" ]; then clusterName="${clusterName}-${RANDOM_NUMBER}"; fi
 echo helm upgrade --install k8smon ${PARENT_DIR}/charts/k8s-monitoring -f ${TEST_DIRECTORY}/values.yaml --set "cluster.name=${clusterName}" --wait
 helm upgrade --install k8smon ${PARENT_DIR}/charts/k8s-monitoring -f ${TEST_DIRECTORY}/values.yaml --set "cluster.name=${clusterName}" --wait
 
