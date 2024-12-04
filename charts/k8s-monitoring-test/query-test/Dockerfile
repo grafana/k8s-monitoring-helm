@@ -5,4 +5,3 @@ RUN apt-get update && apt-get install -y bc curl gettext jq && rm -rf /var/lib/a
 COPY --from=pyroscope /usr/bin/profilecli /usr/local/bin/profilecli
 
 COPY ["query-test.sh", "/usr/local/bin/"]
-ENTRYPOINT ["/usr/local/bin/query-test.sh"]
