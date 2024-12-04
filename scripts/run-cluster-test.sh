@@ -90,6 +90,18 @@ fi
 echo helm upgrade --install k8smon ${PARENT_DIR}/charts/k8s-monitoring -f ${TEST_DIRECTORY}/values.yaml --set "cluster.name=${clusterName}" --wait
 helm upgrade --install k8smon ${PARENT_DIR}/charts/k8s-monitoring -f ${TEST_DIRECTORY}/values.yaml --set "cluster.name=${clusterName}" --wait
 
+# Ensure that the test chart has been deployed
+for i in $(seq 1 60); do
+  if helm ls | grep k8s-monitoring-test | grep deployed > /dev/null; then
+    break
+  fi
+  if [ $i -eq 60 ]; then
+    echo "k8s-monitoring-test Helm chart failed to deploy"
+    exit 1
+  fi
+  sleep 1
+done
+
 # Run tests
 echo helm test k8s-monitoring-test --logs
 helm test k8s-monitoring-test --logs
