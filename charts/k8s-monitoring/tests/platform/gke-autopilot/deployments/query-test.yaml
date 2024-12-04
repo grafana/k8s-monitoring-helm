@@ -27,10 +27,14 @@ spec:
       interval: 1m
   values:
     tests:
-      - envFrom:
+      - env:
+          PROMETHEUS_URL: https://prometheus-prod-13-prod-us-east-0.grafana.net/api/prom/api/v1/query
+          LOKI_URL: https://logs-prod-006.grafana.net/loki/api/v1/query
+        envFrom:
           - secretRef:    {name: grafana-cloud-credentials}
           - configMapRef: {name: test-variables}
         queries:
+          # Cluster metrics
           - query: grafana_kubernetes_monitoring_build_info{cluster="$CLUSTER"}
             type: promql
           - query: grafana_kubernetes_monitoring_feature_info{cluster="$CLUSTER", feature="clusterMetrics"}
@@ -39,3 +43,17 @@ spec:
             type: promql
           - query: grafana_kubernetes_monitoring_feature_info{cluster="$CLUSTER", feature="podLogs", method="volumes"}
             type: promql
+
+          # Alloy metrics
+          - query: kube_node_info{cluster="$CLUSTER"}
+            type: promql
+          - query: alloy_build_info{cluster="$CLUSTER"}
+            type: promql
+
+          # Cluster events
+          - query: count_over_time({cluster="$CLUSTER", job="integrations/kubernetes/eventhandler"}[1h])
+            type: logql
+
+          # Pod logs
+          - query: count_over_time({cluster="$CLUSTER", job!="integrations/kubernetes/eventhandler"}[1h])
+            type: logql

@@ -10,10 +10,8 @@ deployments/test-variables.yaml:
 
 deployments/grafana-cloud-credentials.yaml:
 	kubectl create secret generic grafana-cloud-credentials \
-  		--from-literal=PROMETHEUS_URL="$$GRAFANA_CLOUD_METRICS_QUERY_URL" \
   		--from-literal=PROMETHEUS_USER="$$GRAFANA_CLOUD_METRICS_USERNAME" \
   		--from-literal=PROMETHEUS_PASS="$$GRAFANA_CLOUD_RW_POLICY_TOKEN" \
-  		--from-literal=LOKI_URL="$$GRAFANA_CLOUD_LOGS_QUERY_URL" \
   		--from-literal=LOKI_USER="$$GRAFANA_CLOUD_LOGS_USERNAME" \
   		--from-literal=LOKI_PASS="$$GRAFANA_CLOUD_RW_POLICY_TOKEN" \
 		-o yaml --dry-run=client > $@

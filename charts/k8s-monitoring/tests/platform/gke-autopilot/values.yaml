@@ -5,7 +5,7 @@ cluster:
 destinations:
   - name: grafana-cloud-metrics
     type: prometheus
-    url: http://prometheus-server.prometheus.svc:9090/api/v1/write
+    url: https://prometheus-prod-13-prod-us-east-0.grafana.net/api/prom/push
     auth:
       type: basic
       usernameKey: PROMETHEUS_USER
@@ -42,6 +42,9 @@ destinations:
 
 clusterMetrics:
   enabled: true
+  kubelet: {enabled: false}
+  kubeletResource: {enabled: false}
+  cadvisor: {enabled: false}
   node-exporter:
     deploy: false
     enabled: false
@@ -54,6 +57,8 @@ clusterEvents:
 
 podLogs:
   enabled: true
+
+selfReporting: {scrapeInterval: 1m}  # Force self-report to be generated within test time
 
 alloy-metrics:
   enabled: true
