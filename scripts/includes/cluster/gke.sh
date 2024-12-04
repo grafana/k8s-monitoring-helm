@@ -53,7 +53,7 @@ deleteGKECluster() {
   if [ -n "${zone}" ]; then args="--zone ${zone}"; fi
 
   if eval "gcloud container clusters list --format=\"value(name)\" ${args}" | grep -q "${clusterName}"; then
-    bashCommand="gcloud container clusters delete \"${clusterName}\" ${args}"
+    bashCommand="gcloud container clusters delete \"${clusterName}\" --quiet ${args}"
     echo "${bashCommand}"
     eval "${bashCommand}"
   fi

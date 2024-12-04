@@ -12,7 +12,6 @@ deployments/grafana-cloud-credentials.yaml:
 	kubectl create secret generic grafana-cloud-credentials \
   		--from-literal=GRAFANA_CLOUD_FLEET_MGMT_USER="$$GRAFANA_CLOUD_FLEET_MGMT_USER" \
   		--from-literal=GRAFANA_CLOUD_FLEET_MGMT_TOKEN="$$GRAFANA_CLOUD_FLEET_MGMT_TOKEN" \
-  		--from-literal=PROMETHEUS_URL="$$GRAFANA_CLOUD_METRICS_QUERY_URL" \
   		--from-literal=PROMETHEUS_USER="$$GRAFANA_CLOUD_METRICS_USERNAME" \
   		--from-literal=PROMETHEUS_PASS="$$GRAFANA_CLOUD_RW_POLICY_TOKEN" \
 		-o yaml --dry-run=client > $@
