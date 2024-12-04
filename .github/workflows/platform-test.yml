@@ -60,7 +60,9 @@ jobs:
       - name: Check for cluster config
         id: check-cluster-config
         run: |
-          if [ -f "charts/k8s-monitoring/tests/platform/${{ matrix.test }}/gke-cluster-config.yaml" ]; then
+          if [ -f "charts/k8s-monitoring/tests/platform/${{ matrix.test }}/eks-cluster-config.yaml" ]; then
+            echo "cluster-type=eks" >> "${GITHUB_OUTPUT}"
+          elif [ -f "charts/k8s-monitoring/tests/platform/${{ matrix.test }}/gke-cluster-config.yaml" ]; then
             echo "cluster-type=gke" >> "${GITHUB_OUTPUT}"
           elif [ -f "charts/k8s-monitoring/tests/platform/${{ matrix.test }}/gke-autopilot-cluster-config.yaml" ]; then
             echo "cluster-type=gke" >> "${GITHUB_OUTPUT}"
@@ -74,7 +76,15 @@ jobs:
         with:
           install_only: true
 
-      - name: Authenticate with GCP
+      - name: Configure AWS Credentials
+        if: ${{ steps.check-cluster-config.outputs.cluster-type == 'eks' }}
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-northeast-2
+
+      - name: Configure GCP Credentials
         if: ${{ steps.check-cluster-config.outputs.cluster-type == 'gke' }}
         uses: google-github-actions/auth@v2
         with:

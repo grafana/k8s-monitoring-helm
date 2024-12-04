@@ -3,21 +3,23 @@
 PARENT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 source "${PARENT_DIR}/scripts/includes/utils.sh"
 source "${PARENT_DIR}/scripts/includes/logging.sh"
+source "${PARENT_DIR}/scripts/includes/cluster/eks.sh"
 source "${PARENT_DIR}/scripts/includes/cluster/gke.sh"
 source "${PARENT_DIR}/scripts/includes/cluster/kind.sh"
 
-heading "Kubernetes Monitoring Helm" "Integration Tester"
+heading "Kubernetes Monitoring Helm" "Cluster Test Runner"
 
 usage() {
-  echo "USAGE: run-integration-test.sh <test-dir>"
+  echo "USAGE: run-cluster-test.sh <test-dir>"
   echo ""
-  echo "Runs an integration test"
+  echo "Runs a test against a real Kubernetes Cluster"
   echo ""
   echo "  <test-dir>           - The test directory. Expects this file:"
   echo "    values.yaml        - The values file for the k8s-monitoring Helm chart."
   echo "    deployments        - Manifest files to deploy, including Flux objects."
   echo "    (Optional cluster config files):"
   echo "    kind-cluster-config.yaml          - Config file for creating a Kind cluster."
+  echo "    eks-cluster-config.yaml           - Config file for creating an EKS cluster."
   echo "    gke-cluster-config.yaml           - Config file for creating a GKE cluster."
   echo "    gke-autopilot-cluster-config.yaml - Config file for creating a GKE Autopilot cluster."
 }
@@ -47,6 +49,8 @@ if [ -n "${RANDOM_NUMBER}" ]; then clusterName="${clusterName}-${RANDOM_NUMBER}"
 if [ "${CREATE_CLUSTER}" == "true" ]; then
   if [ -f "${TEST_DIRECTORY}/kind-cluster-config.yaml" ]; then
     createKindCluster "${clusterName}" "${TEST_DIRECTORY}/kind-cluster-config.yaml"
+  elif [ -f "${TEST_DIRECTORY}/eks-cluster-config.yaml" ]; then
+    createEKSCluster "${clusterName}" "${TEST_DIRECTORY}/eks-cluster-config.yaml"
   elif [ -f "${TEST_DIRECTORY}/gke-cluster-config.yaml" ]; then
     createGKECluster "${clusterName}" "${TEST_DIRECTORY}/gke-cluster-config.yaml"
   elif [ -f "${TEST_DIRECTORY}/gke-autopilot-cluster-config.yaml" ]; then
@@ -59,6 +63,8 @@ fi
 deleteCluster() {
   if [ -f "${TEST_DIRECTORY}/kind-cluster-config.yaml" ]; then
     deleteKindCluster "${clusterName}" "${TEST_DIRECTORY}/kind-cluster-config.yaml"
+  elif [ -f "${TEST_DIRECTORY}/eks-cluster-config.yaml" ]; then
+    deleteEKSCluster "${clusterName}" "${TEST_DIRECTORY}/eks-cluster-config.yaml"
   elif [ -f "${TEST_DIRECTORY}/gke-cluster-config.yaml" ]; then
     deleteGKECluster "${clusterName}" "${TEST_DIRECTORY}/gke-cluster-config.yaml"
   elif [ -f "${TEST_DIRECTORY}/gke-autopilot-cluster-config.yaml" ]; then

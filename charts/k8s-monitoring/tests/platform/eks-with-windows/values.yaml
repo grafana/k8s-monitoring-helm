@@ -1,6 +1,6 @@
 ---
 cluster:
-  name: gke-autopilot-test
+  name: eks-with-windows-test
 
 destinations:
   - name: grafana-cloud-metrics
@@ -28,21 +28,19 @@ destinations:
 
 clusterMetrics:
   enabled: true
-  kubelet: {enabled: false}
-  kubeletResource: {enabled: false}
-  cadvisor: {enabled: false}
-  node-exporter:
-    deploy: false
-    enabled: false
-  windows-exporter:
-    deploy: false
-    enabled: false
 
 clusterEvents:
   enabled: true
 
 podLogs:
   enabled: true
+
+integrations:
+  alloy:
+    instances:
+      - name: alloy-metrics
+      - name: alloy-singleton
+      - name: alloy-logs
 
 selfReporting: {scrapeInterval: 1m}  # Force self-report to be generated within test time
 
@@ -52,6 +50,3 @@ alloy-singleton:
   enabled: true
 alloy-logs:
   enabled: true
-  alloy:
-    mounts:
-      dockercontainers: false
