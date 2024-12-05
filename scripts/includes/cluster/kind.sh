@@ -15,5 +15,10 @@ createKindCluster() {
 
 deleteKindCluster() {
   local clusterName=$1
-  kind delete cluster --name "${clusterName}"
+  if ! kind delete cluster --name "${clusterName}"; then
+    # Sometimes it just needs a minute and it'll work the second time.
+    # This has to do with something related to Beyla being installed and its eBPF hooks into the node.
+    sleep 60
+    kind delete cluster --name "${clusterName}"
+  fi
 }

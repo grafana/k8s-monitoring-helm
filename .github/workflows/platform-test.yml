@@ -57,6 +57,16 @@ jobs:
       - name: Set up Helm
         uses: azure/setup-helm@v4
 
+      - name: Setup Flux CLI
+        uses: fluxcd/flux2/action@main
+
+      - name: Random number
+        id: random-number
+        uses: yakubique/random-number@v1.1
+        with:
+          min: 100000
+          max: 999999
+
       - name: Check for cluster config
         id: check-cluster-config
         run: |
@@ -100,21 +110,11 @@ jobs:
         with:
           credentials_json: '${{ secrets.GCP_SERVICE_ACCOUNT_TOKEN }}'
 
-      - name: Set up Cloud SDK
+      - name: Set up GCP Cloud SDK
         if: ${{ steps.check-cluster-config.outputs.cluster-type == 'gke' }}
         uses: google-github-actions/setup-gcloud@v2
         with:
           install_components: gke-gcloud-auth-plugin
-
-      - name: Setup Flux CLI
-        uses: fluxcd/flux2/action@main
-
-      - name: Random number
-        id: random-number
-        uses: yakubique/random-number@v1.1
-        with:
-          min: 100000
-          max: 999999
 
       - name: Run test
         run: ./scripts/run-cluster-test.sh "charts/k8s-monitoring/tests/platform/${{ matrix.test }}"
