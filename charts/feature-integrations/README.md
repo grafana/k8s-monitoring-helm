@@ -14,13 +14,13 @@ The current integrations that are available from this feature are:
 
 | Integration | Description | Data Types | Docs |
 | --- | --- | --- | --- |
-| [Grafana Alloy](https://grafana.com/docs/alloy) | Telemetry data collector | Metrics | [Docs](./docs/integrations/alloy.md) |
-| [cert-manager](https://cert-manager.io/) | x.509 certificate management for Kubernetes | Metrics | [Docs](./docs/integrations/cert-manager.md) |
-| [etcd](https://etcd.io/) | Distributed key-value store | Metrics | [Docs](./docs/integrations/etcd.md) |
+| [Grafana Alloy](https://grafana.com/docs/alloy) | Telemetry data collector | Metrics | [Alloy doc](./docs/integrations/alloy.md) |
+| [cert-manager](https://cert-manager.io/) | x.509 certificate management for Kubernetes | Metrics | [Cert manager doc](./docs/integrations/cert-manager.md) |
+| [etcd](https://etcd.io/) | Distributed key-value store | Metrics | [etcd doc](./docs/integrations/etcd.md) |
 
 ## Usage
 
-To enable an integration, create an instance of it, with any configuration to aid in service discovery. For example:
+To enable an integration, create an instance of it with any configuration to aid in service discovery. For example:
 
 ```yaml
 cert-manager:
@@ -44,18 +44,15 @@ alloy:
         app.kubernetes.io/name: alloy-receivers
 ```
 
-For all possible values for a specific integration, see the [documentation](./docs) page for that integration.
+For all possible values for a specific integration, refer to the previous table for the link to the integration documentation.
 
 ## Testing
 
-This chart contains unit tests to verify the generated configuration. A hidden value, `deployAsConfigMap`, will render
-the generated configuration into a ConfigMap object. This ConfigMap is not used during regular operation, but it is
-useful for showing the outcome of a given values file.
+This chart contains unit tests to verify the generated configuration. The hidden value `deployAsConfigMap` will render the generated configuration into a ConfigMap object. While this ConfigMap is not used during regular operation, you can use it to show the outcome of a given values file.
 
-The unit tests use this to create an object with the configuration that can be asserted against. To run the tests, use
-`helm test`.
+The unit tests use this ConfigMap to create an object with the configuration that can be asserted against. To run the tests, use `helm test`.
 
-Actual integration testing in a live environment should be done in the main [k8s-monitoring](../k8s-monitoring) chart.
+Be sure perform actual integration testing in a live environment in the main [k8s-monitoring](../k8s-monitoring) chart.
 
 ## Maintainers
 
@@ -114,7 +111,7 @@ Actual integration testing in a live environment should be done in the main [k8s
 
 ## Contributing
 
-To contribute integrations to this feature, there are a few files that need to be created or modified:
+To contribute integrations to this feature, you must create or modify a few files:
 
 *   `values.yaml` - The main feature chart's values file. Add a section for your integration. It must contain an
     `instance` array and any settings that apply to every instance of the integration. For example:
@@ -126,7 +123,7 @@ To contribute integrations to this feature, there are a few files that need to b
     ```
 
 *   `integrations/<slug>-values.yaml` - The values that will be used for each instance. This must include `name` to
-    differentiate it from other instances, and any other settings that are specific to that instance. For example:
+    differentiate it from other instances and any other settings that are specific to that instance. For example:
 
     ```yaml
     name: ""
@@ -137,8 +134,7 @@ To contribute integrations to this feature, there are a few files that need to b
     ```
 
 *   `templates/_integration<=_<slug>.tpl` - The file that contains template functions that build the configuration to
-    discover, gather, process, and deliver the telemetry data. This file is required to implement the following template
-    functions:
+    discover, gather, process, and deliver the telemetry data. This file is required to implement the following template functions:
     *   `integrations.<slug>.type.metrics` - Returns true if this integration scrapes metrics.
     *   `integrations.<slug>.type.logs` - Returns true if this integration gathers logs.
     *   `integrations.<slug>.module` - Returns the configuration that is included once if this integration is used. This
@@ -151,4 +147,4 @@ To contribute integrations to this feature, there are a few files that need to b
         that logs that are gathered from this integration are not collected twice. Typically the inverse of a rule in
         the `integrations.<slug>.include.logs` function.
     *   `default-allow-lists/<slug>.yaml` - If the integration scrapes metrics, a common pattern is to provide a list of
-        metrics that should be allowed. This minimizes the amount of metrics delivered to a useful minimal set.
+        metrics that should be allowed. This reduces the amount of metrics delivered to a useful minimal set.

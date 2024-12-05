@@ -8,19 +8,22 @@
 ![Version: 1.0.0](https://img.shields.io/badge/Version-1.0.0-informational?style=flat-square) ![AppVersion: 1.0.0](https://img.shields.io/badge/AppVersion-1.0.0-informational?style=flat-square)
 Gathers Kubernetes Events
 
-The Cluster Events feature enables the collection of Kubernetes events from the cluster. Events are captured as logs and
-are annotated with additional metadata to make them easier to search and filter.
+The Cluster Events feature enables the collection of Kubernetes events from the cluster.
+
+## How it works
+
+Events are captured as logs and are annotated with additional metadata to make them easier to search and filter.
 
 ## Testing
 
-This chart contains unit tests to verify the generated configuration. A hidden value, `deployAsConfigMap`, will render
-the generated configuration into a ConfigMap object. This ConfigMap is not used during regular operation, but it is
-useful for showing the outcome of a given values file.
+This chart contains unit tests to verify the generated configuration. The hidden value `deployAsConfigMap` will render
+the generated configuration into a ConfigMap object. While this ConfigMap is not used during regular operation, you can use
+it to show the outcome of a given values file.
 
-The unit tests use this to create an object with the configuration that can be asserted against. To run the tests, use
+The unit tests use this ConfigMap to create an object with the configuration that can be asserted against. To run the tests, use
 `helm test`.
 
-Actual integration testing in a live environment should be done in the main [k8s-monitoring](../k8s-monitoring) chart.
+Be sure perform actual integration testing in a live environment in the main [k8s-monitoring](../k8s-monitoring) chart.
 
 ## Maintainers
 

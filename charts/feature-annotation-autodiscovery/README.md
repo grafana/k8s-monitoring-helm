@@ -8,10 +8,14 @@
 ![Version: 1.0.0](https://img.shields.io/badge/Version-1.0.0-informational?style=flat-square) ![AppVersion: 1.0.0](https://img.shields.io/badge/AppVersion-1.0.0-informational?style=flat-square)
 Gathers metrics automatically based on Kubernetes Pod and Service annotations
 
-The annotation-based autodiscovery feature makes it easy to add scrape targets. With this feature enabled, any
-Kubernetes Pods or Services with the `k8s.grafana.com/scrape` annotation set to `true` will be automatically discovered
-and scraped by the collector. There are several other annotations that can be used to customize the behavior of the
-scrape configuration, such as:
+The annotation-based autodiscovery feature makes it easy to add scrape targets.
+
+## How it works
+
+With this feature enabled, any Kubernetes Pods or Services with the `k8s.grafana.com/scrape` annotation set to `true` will be automatically discovered
+and scraped by the collector.
+
+You can use several other annotations to customize the behavior of the scrape configuration, such as:
 
 *   `k8s.grafana.com/job`: The value to use for the `job` label.
 *   `k8s.grafana.com/instance`: The value to use for the `instance` label.
@@ -23,14 +27,11 @@ scrape configuration, such as:
 
 ## Testing
 
-This chart contains unit tests to verify the generated configuration. A hidden value, `deployAsConfigMap`, will render
-the generated configuration into a ConfigMap object. This ConfigMap is not used during regular operation, but it is
-useful for showing the outcome of a given values file.
+This chart contains unit tests to verify the generated configuration. The hidden value `deployAsConfigMap` will render the generated configuration into a ConfigMap object. While this ConfigMap is not used during regular operation, you can use it to show the outcome of a given values file.
 
-The unit tests use this to create an object with the configuration that can be asserted against. To run the tests, use
-`helm test`.
+The unit tests use this ConfigMap to create an object with the configuration that can be asserted against. To run the tests, use `helm test`.
 
-Actual integration testing in a live environment should be done in the main [k8s-monitoring](../k8s-monitoring) chart.
+Be sure perform actual integration testing in a live environment in the main [k8s-monitoring](../k8s-monitoring) chart.
 
 ## Maintainers
 
