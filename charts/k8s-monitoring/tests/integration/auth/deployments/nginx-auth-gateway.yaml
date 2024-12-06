@@ -1,0 +1,65 @@
+---
+apiVersion: source.toolkit.fluxcd.io/v1beta2
+kind: OCIRepository
+metadata:
+  name: nginx
+spec:
+  interval: 1m
+  url: oci://registry-1.docker.io/bitnamicharts/nginx
+  ref:
+    semver: 18.2.5
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: nginx-auth-gateway
+spec:
+  interval: 1m
+  chartRef:
+    kind: OCIRepository
+    name: nginx
+  dependsOn:
+    - name: prometheus
+      namespace: prometheus
+    - name: loki
+      namespace: loki
+  values:
+    service:
+      type: ClusterIP
+    serverBlock: |-
+      server {
+        listen 0.0.0.0:8080;
+        location /metrics/basic/ {
+          auth_basic "Prometheus Basic Auth";
+          auth_basic_user_file /etc/nginx/conf/htpasswd;
+          proxy_pass http://prometheus-server.prometheus.svc:9090/;
+        }
+
+        location /logs/basic/ {
+          auth_basic "Loki Basic Auth";
+          auth_basic_user_file /etc/nginx/conf/htpasswd;
+          proxy_pass http://loki.loki.svc:3100/;
+        }
+
+        location /metrics/bearer/ {
+          if ($http_authorization != "Bearer my-bearer-token") {
+            return 401;
+          }
+          proxy_pass http://prometheus-server.prometheus.svc:9090/;
+        }
+
+        location /logs/bearer/ {
+          if ($http_authorization != "Bearer my-bearer-token") {
+            return 401;
+          }
+          proxy_pass http://loki.loki.svc:3100/;
+        }
+      }
+    extraVolumes:
+      - name: passwords-file
+        secret:
+          secretName: passwords
+    extraVolumeMounts:
+      - name: passwords-file
+        mountPath: /etc/nginx/conf/htpasswd
+        subPath: htpasswd
