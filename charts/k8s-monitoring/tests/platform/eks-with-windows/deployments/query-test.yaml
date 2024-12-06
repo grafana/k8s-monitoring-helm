@@ -56,10 +56,16 @@ spec:
           - query: count(kube_node_info{cluster="$CLUSTER", job="integrations/kubernetes/kube-state-metrics"})
             type: promql
             expect:
-              value: 1
+              value: 2
 
           # Single Linux node
           - query: count(sum by (instance) (node_cpu_seconds_total{cluster="$CLUSTER", job="integrations/node_exporter"}))
+            type: promql
+            expect:
+              operator: ==
+              value: 1
+          # Single Windows node
+          - query: count(windows_os_info{cluster="$CLUSTER", job="integrations/windows-exporter"})
             type: promql
             expect:
               operator: ==
