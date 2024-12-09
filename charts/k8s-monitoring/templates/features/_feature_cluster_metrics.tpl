@@ -66,7 +66,7 @@ cluster_metrics "feature" {
       {{- if eq $destinationName $.Values.clusterMetrics.opencost.metricsSource }}
         {{- $destinationFound = true }}
         {{- $destination := index $.Values.destinations $index }}
-        {{- $destinationUrl := $destination.url }}
+        {{- $destinationUrl := $destination.url | default $destination.fromUrl | default "" }}
         {{- $openCostMetricsUrl := $destinationUrl }}
         {{- if regexMatch "/api/prom/push" $destinationUrl }}
           {{- $openCostMetricsUrl = (regexReplaceAll "^(.*)/api/prom/push$" $destinationUrl "${1}/api/prom") }}
