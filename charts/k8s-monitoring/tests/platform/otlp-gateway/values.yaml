@@ -1,0 +1,48 @@
+---
+cluster:
+  name: otlp-gateway-test
+
+destinations:
+  - name: otlp-gateway
+    type: otlp
+    url: https://otlp-gateway-prod-us-east-0.grafana.net/otlp
+    protocol: http
+    auth:
+      type: basic
+      usernameKey: OTLP_GATEWAY_USER
+      passwordKey: OTLP_GATEWAY_PASS
+    secret:
+      create: false
+      name: grafana-cloud-credentials
+    metrics: {enabled: true}
+    logs: {enabled: true}
+    traces: {enabled: true}
+    processors:
+      attributes:
+        actions:
+          - key: random
+            action: upsert
+            valueFrom: sys.env("RANDOM_NUMBER")
+
+podLogs:
+  enabled: true
+  namespace: default
+
+integrations:
+  alloy:
+    instances:
+      - name: alloy-metrics
+
+alloy-metrics:
+  enabled: true
+  alloy:
+    envFrom:
+      - configMapRef:
+          name: test-variables
+
+alloy-logs:
+  enabled: true
+  alloy:
+    envFrom:
+      - configMapRef:
+          name: test-variables
