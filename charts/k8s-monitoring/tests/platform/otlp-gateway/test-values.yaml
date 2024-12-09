@@ -1,0 +1,15 @@
+---
+tests:
+  - envFrom:
+      - secretRef:
+          name: grafana-cloud-credentials
+      - configMapRef:
+          name: test-variables
+    queries:
+      # Metrics are being delivered
+      - query: alloy_build_info{cluster="otlp-gateway-test", random="$RANDOM_NUMBER"}
+        type: promql
+
+      # Logs are being delivered
+      - query: '{cluster="otlp-gateway-test", pod="k8s-monitoring-alloy-metrics-0", random="$RANDOM_NUMBER"}'
+        type: logql

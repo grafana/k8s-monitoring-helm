@@ -67,6 +67,8 @@ otelcol.processor.attributes {{ include "helper.alloy_name" .name | quote }} {
     action = {{ $action.action | quote }}
     {{- if $action.value }}
     value = {{ $action.value | quote }}
+    {{- else if $action.valueFrom }}
+    value = {{ $action.valueFrom }}
     {{- end }}
     {{- if $action.pattern }}
     pattern = {{ $action.pattern | quote }}

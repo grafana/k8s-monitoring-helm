@@ -25,9 +25,9 @@ shopt -s nullglob # Required when a chart does not use mod files.
 docker run --rm \
   --platform linux/amd64 \
   --volume "$(pwd)/${CHART_DIR}:/chart" \
-  --entrypoint sh alpine/helm \
-  --command -c 'helm plugin install https://github.com/karuppiah7890/helm-schema-gen.git && \
-    helm schema-gen /chart/values.yaml > /chart/values.schema.generated.json'
+  --entrypoint sh \
+  alpine/helm \
+  -c 'helm plugin install https://github.com/karuppiah7890/helm-schema-gen.git && helm schema-gen /chart/values.yaml > /chart/values.schema.generated.json'
 
 if [ -d "${CHART_DIR}/schema-mods" ]; then
   if [ -d "${CHART_DIR}/schema-mods/definitions" ]; then
