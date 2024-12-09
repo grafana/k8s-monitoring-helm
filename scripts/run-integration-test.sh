@@ -101,7 +101,7 @@ for ((i=0; i<deploymentCount; i++)); do
     fi
 
     if [ -n "${helmValuesFile}" ]; then
-      helm upgrade --install "${name}" ${namespaceArg} --create-namespace ${helmRepoArg} "${helmChart}" ${versionArg} -f <(envsubst < "${TEST_DIRECTORY}/${helmValuesFile}") --hide-notes --wait
+      helm upgrade --install "${name}" ${namespaceArg} --create-namespace ${helmRepoArg} "${helmChart}" ${versionArg} -f "${TEST_DIRECTORY}/${helmValuesFile}" --hide-notes --wait
     elif [ -n "${helmChart}" ]; then
       echo "${helmValues}" > temp-values.yaml
       helm upgrade --install "${name}" ${namespaceArg} --create-namespace ${helmRepoArg} "${helmChart}" ${versionArg} -f temp-values.yaml --hide-notes --wait
