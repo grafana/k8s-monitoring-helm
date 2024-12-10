@@ -66,7 +66,7 @@ cluster_metrics "feature" {
       {{- if eq $destinationName $.Values.clusterMetrics.opencost.metricsSource }}
         {{- $destinationFound = true }}
         {{- $destination := index $.Values.destinations $index }}
-        {{- $destinationUrl := $destination.url }}
+        {{- $destinationUrl := $destination.url | default $destination.fromUrl | default "" }}
         {{- $openCostMetricsUrl := $destinationUrl }}
         {{- if regexMatch "/api/prom/push" $destinationUrl }}
           {{- $openCostMetricsUrl = (regexReplaceAll "^(.*)/api/prom/push$" $destinationUrl "${1}/api/prom") }}
@@ -130,7 +130,7 @@ cluster_metrics "feature" {
               {{- fail (join "\n" $msg) }}
             {{- end }}
   
-            {{- $destinationUsernameKey := include "secrets.getSecretKey" (dict "object" $destination "key" ".auth.username") }}
+            {{- $destinationUsernameKey := include "secrets.getSecretKey" (dict "object" $destination "key" ".auth.usernameKey") }}
             {{- if ne $.Values.clusterMetrics.opencost.opencost.prometheus.username_key $destinationUsernameKey}}
               {{- $msg := list "" (printf "The username secret key for %s and OpenCost do not match." $destinationName) }}
               {{- $msg = append $msg "Please set:" }}
@@ -142,7 +142,7 @@ cluster_metrics "feature" {
               {{- fail (join "\n" $msg) }}
             {{- end }}
   
-            {{- $destinationPasswordKey := include "secrets.getSecretKey" (dict "object" $destination "key" ".auth.password") }}
+            {{- $destinationPasswordKey := include "secrets.getSecretKey" (dict "object" $destination "key" ".auth.passwordKey") }}
             {{- if ne $.Values.clusterMetrics.opencost.opencost.prometheus.password_key $destinationPasswordKey}}
               {{- $msg := list "" (printf "The password secret key for %s and OpenCost do not match." $destinationName) }}
               {{- $msg = append $msg "Please set:" }}
