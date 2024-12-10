@@ -23,11 +23,18 @@ jobs:
       - name: List tests
         id: list_tests
         run: |
+          allTests=$(find charts/k8s-monitoring/tests/platform -type d -depth 1 -exec basename {} \; | jq --raw-input --slurp --compact-output 'split("\n") | map(select(. != ""))')
           if [ "${{ github.event_name }}" == "pull_request" ]; then
+            # All labels on this PR
             labels='${{ toJson(github.event.pull_request.labels.*.name) }}'
-            tests=$(echo "${labels}" | jq --raw-output --compact-output '[.[] | select(startswith("platform-test-")) | sub("^platform-test-"; "")]')
+          
+            # Filter out labels that don't start with "platform-test-" and remove the prefix
+            chosenTests=$(echo "${labels}" | jq --raw-output --compact-output '[.[] | select(startswith("platform-test-")) | sub("^platform-test-"; "")]')
+          
+            # Choose the tests that match the labels
+            tests=$(jq -n --argjson allTests "${allTests}" --argjson chosenTests "${chosenTests}" '$allTests | map(select(. as $test | $chosenTests | index($test)))')
           else
-            tests=$(find charts/k8s-monitoring/tests/platform -type d -depth 1 -exec basename {} \; | jq --raw-input --slurp --compact-output 'split("\n") | map(select(. != ""))')
+            tests=allTests
           fi
           echo "Running tests: ${tests}"
           echo "tests=${tests}" >> "${GITHUB_OUTPUT}"
