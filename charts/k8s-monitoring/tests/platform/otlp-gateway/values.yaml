@@ -17,16 +17,12 @@ destinations:
     metrics: {enabled: true}
     logs: {enabled: true}
     traces: {enabled: true}
-    processors:
-      attributes:
-        actions:
-          - key: random
-            action: upsert
-            valueFrom: sys.env("RANDOM_NUMBER")
 
 podLogs:
   enabled: true
-  namespace: default
+  namespaces: [default]
+  volumeGatherSettings:
+    onlyGatherNewLogLines: true
 
 integrations:
   alloy:
@@ -35,14 +31,6 @@ integrations:
 
 alloy-metrics:
   enabled: true
-  alloy:
-    envFrom:
-      - configMapRef:
-          name: test-variables
 
 alloy-logs:
   enabled: true
-  alloy:
-    envFrom:
-      - configMapRef:
-          name: test-variables
