@@ -27,6 +27,7 @@ jobs:
           allTests=$(ls charts/k8s-monitoring/tests/platform)
           if [ "${{ github.event_name }}" == "pull_request" ]; then
             labels="${{ toJson(github.event.pull_request.labels.*.name) }}"
+            echo "Labels set: ${labels}"
             for test in "${allTests[@]}"; do
               index=$(echo "${labels}" | jq --raw-output --arg test "${test}" 'index("platform-test-" + $test)')
               if [ "${index}" != "null" ]; then
@@ -37,6 +38,7 @@ jobs:
             tests=("${allTests[@]}")
           fi
 
+          echo "tests to run: ${tests[@]}"
           echo "tests=$(echo "${tests[@]}" | jq --raw-input --slurp --compact-output 'split("\n") | map(select(. != ""))')" >> "${GITHUB_OUTPUT}"
 
   run-tests:
