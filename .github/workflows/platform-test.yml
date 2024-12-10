@@ -8,7 +8,6 @@ on:
       - 'charts/**'
       - '!charts/k8s-monitoring-v1/**'
   pull_request:
-    types: [labeled]
     paths:
       - 'charts/**'
       - '!charts/k8s-monitoring-v1/**'
@@ -58,24 +57,8 @@ jobs:
       - name: Set up Helm
         uses: azure/setup-helm@v4
 
-      - name: Check for cluster config
-        id: check-cluster-config
-        run: |
-          if [ -f "charts/k8s-monitoring/tests/integration/${{ matrix.test }}/cluster.yaml" ]; then
-            echo "has-cluster-config=true" >> "${GITHUB_OUTPUT}"
-          else
-            echo "has-cluster-config=false" >> "${GITHUB_OUTPUT}"
-          fi
-
-      - name: Create kind cluster
-        if: ${{ steps.check-cluster-config.outputs.has-cluster-config == 'false' }}
-        uses: helm/kind-action@v1
-
-      - name: Create kind cluster with special config
-        if: ${{ steps.check-cluster-config.outputs.has-cluster-config == 'true' }}
-        uses: helm/kind-action@v1
-        with:
-          config: charts/k8s-monitoring/tests/integration/${{ matrix.test }}/cluster.yaml
+      - name: Setup Flux CLI
+        uses: fluxcd/flux2/action@main
 
       - name: Random number
         id: random-number
@@ -84,14 +67,64 @@ jobs:
           min: 100000
           max: 999999
 
-      - name: Run test
+      - name: Check for cluster config
+        id: check-cluster-config
+        run: |
+          if [ -f "charts/k8s-monitoring/tests/platform/${{ matrix.test }}/eks-cluster-config.yaml" ]; then
+            echo "cluster-type=eks" >> "${GITHUB_OUTPUT}"
+          elif [ -f "charts/k8s-monitoring/tests/platform/${{ matrix.test }}/gke-cluster-config.yaml" ]; then
+            echo "cluster-type=gke" >> "${GITHUB_OUTPUT}"
+          elif [ -f "charts/k8s-monitoring/tests/platform/${{ matrix.test }}/gke-autopilot-cluster-config.yaml" ]; then
+            echo "cluster-type=gke" >> "${GITHUB_OUTPUT}"
+          else
+            echo "cluster-type=kind" >> "${GITHUB_OUTPUT}"
+          fi
+
+      - name: Setup Kind CLI
+        if: ${{ steps.check-cluster-config.outputs.cluster-type == 'kind' }}
+        uses: helm/kind-action@v1
+        with:
+          install_only: true
+
+      - name: Setup eksctl CLI
+        if: ${{ steps.check-cluster-config.outputs.cluster-type == 'eks' }}
+        run: |
+          PLATFORM="$(uname -s)_$ARCH"
+          curl -sLO "https://github.com/eksctl-io/eksctl/releases/latest/download/eksctl_$PLATFORM.tar.gz"
+          tar -xzf "eksctl_$PLATFORM.tar.gz" -C /tmp && rm "eksctl_$PLATFORM.tar.gz"
+          sudo mv /tmp/eksctl /usr/local/bin
         env:
-          HEADLESS: "true"
+          ARCH: amd64
+
+      - name: Configure AWS Credentials
+        if: ${{ steps.check-cluster-config.outputs.cluster-type == 'eks' }}
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-northeast-2
+
+      - name: Configure GCP Credentials
+        if: ${{ steps.check-cluster-config.outputs.cluster-type == 'gke' }}
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: '${{ secrets.GCP_SERVICE_ACCOUNT_TOKEN }}'
+
+      - name: Set up GCP Cloud SDK
+        if: ${{ steps.check-cluster-config.outputs.cluster-type == 'gke' }}
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          install_components: gke-gcloud-auth-plugin
+
+      - name: Run test
+        run: ./scripts/run-cluster-test.sh "charts/k8s-monitoring/tests/platform/${{ matrix.test }}"
+        env:
+          CREATE_CLUSTER: "true"
+          DELETE_CLUSTER: "true"
           GRAFANA_CLOUD_FLEET_MGMT_USER: ${{ secrets.GRAFANA_CLOUD_FLEET_MGMT_USER }}
           GRAFANA_CLOUD_FLEET_MGMT_TOKEN: ${{ secrets.GRAFANA_CLOUD_FLEET_MGMT_TOKEN }}
           GRAFANA_CLOUD_METRICS_USERNAME: ${{ secrets.GRAFANA_CLOUD_METRICS_USERNAME }}
           GRAFANA_CLOUD_LOGS_USERNAME: ${{ secrets.GRAFANA_CLOUD_LOGS_USERNAME }}
+          GRAFANA_CLOUD_TRACES_USERNAME: ${{ secrets.GRAFANA_CLOUD_TRACES_USERNAME }}
           GRAFANA_CLOUD_RW_POLICY_TOKEN: ${{ secrets.GRAFANA_CLOUD_RW_POLICY_TOKEN }}
           RANDOM_NUMBER: ${{ steps.random-number.outputs.number }}
-
-        run: ./scripts/run-integration-test.sh "charts/k8s-monitoring/tests/platform/${{ matrix.test }}"
