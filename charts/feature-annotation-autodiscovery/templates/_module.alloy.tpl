@@ -49,6 +49,18 @@ declare "annotation_autodiscovery" {
       target_label = "__tmp_port"
     }
 
+    // Keep only targets with container portNumber that matches annotation port number.
+    rule {
+      source_labels = ["{{ include "pod_annotation" .Values.annotations.metricsPortNumber }}"]
+      regex = "(.+)"
+      target_label = "__tmp_port_number"
+    }
+    rule {
+      source_labels = ["__meta_kubernetes_pod_container_port_number"]
+      action = "keepequal"
+      target_label = "__tmp_port_number"
+    }
+
     // If the metrics port number annotation has a value, override the target address to use it, regardless whether it is
     // one of the declared ports on that Pod.
     rule {
