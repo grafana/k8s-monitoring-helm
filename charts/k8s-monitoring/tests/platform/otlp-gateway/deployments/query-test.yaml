@@ -35,9 +35,9 @@ spec:
           - configMapRef: {name: test-variables}
         queries:
           # Metrics are being delivered
-          - query: alloy_build_info{cluster="otlp-gateway-test", random="$RANDOM_NUMBER"}
+          - query: alloy_build_info{cluster="$CLUSTER"}
             type: promql
 
           # Logs are being delivered
-          - query: '{cluster="otlp-gateway-test", pod="k8s-monitoring-alloy-metrics-0", random="$RANDOM_NUMBER"}'
+          - query: count_over_time({cluster="$CLUSTER", pod=~".*alloy-metrics-0"}[1h])
             type: logql

@@ -66,11 +66,6 @@ data:
         action = "upsert"
         value = "otlp-gateway-test"
       }
-      action {
-        key = "random"
-        action = "upsert"
-        value = sys.env("RANDOM_NUMBER")
-      }
       output {
         metrics = [otelcol.processor.transform.otlp_gateway.input]
         logs = [otelcol.processor.transform.otlp_gateway.input]
@@ -491,11 +486,6 @@ data:
         action = "upsert"
         value = "otlp-gateway-test"
       }
-      action {
-        key = "random"
-        action = "upsert"
-        value = sys.env("RANDOM_NUMBER")
-      }
       output {
         metrics = [otelcol.processor.transform.otlp_gateway.input]
         logs = [otelcol.processor.transform.otlp_gateway.input]
@@ -603,6 +593,9 @@ data:
           role = "pod"
           field = "spec.nodeName=" + env("HOSTNAME")
         }
+        namespaces {
+          names = ["default"]
+        }
       }
       
       discovery.relabel "filtered_pods_with_paths" {
@@ -623,6 +616,7 @@ data:
       
       loki.source.file "pod_logs" {
         targets    = local.file_match.pod_logs.targets
+        tail_from_end = true
         forward_to = [loki.process.pod_logs.receiver]
       }
       
@@ -1049,9 +1043,6 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
-          envFrom:
-            - configMapRef:
-                name: test-variables
           ports:
             - containerPort: 12345
               name: http-metrics
@@ -1172,9 +1163,6 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
-          envFrom:
-            - configMapRef:
-                name: test-variables
           ports:
             - containerPort: 12345
               name: http-metrics
