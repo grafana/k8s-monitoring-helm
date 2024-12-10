@@ -481,6 +481,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | logs.pod_logs.labels | object | `{"app_kubernetes_io_name":"app.kubernetes.io/name"}` | Loki labels to set with values copied from the Kubernetes Pod labels. Format: `<loki_label>: <kubernetes_label>`. |
 | logs.pod_logs.namespaces | list | `[]` | Only capture logs from pods in these namespaces (`[]` means all namespaces). |
 | logs.pod_logs.structuredMetadata | object | `{}` | List of labels to turn into structured metadata. If your Loki instance does not support structured metadata, leave this empty. Format: `<structured metadata>: <Loki label>`. |
+| logs.pod_logs.volumeGatherSettings.onlyGatherNewLogLines | bool | `false` | Only gather new log lines since this was deployed. Do not gather historical log lines. |
 
 ### Logs Receiver
 
