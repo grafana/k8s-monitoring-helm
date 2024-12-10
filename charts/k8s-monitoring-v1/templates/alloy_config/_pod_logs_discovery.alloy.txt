@@ -110,6 +110,9 @@ local.file_match "pod_logs" {
 
 loki.source.file "pod_logs" {
   targets    = local.file_match.pod_logs.targets
+{{- if .Values.logs.pod_logs.volumeGatherSettings.onlyGatherNewLogLines }}
+  tail_from_end = {{ .Values.logs.pod_logs.volumeGatherSettings.onlyGatherNewLogLines }}
+{{- end }}
   forward_to = [loki.process.pod_logs.receiver]
 }
 {{ else if eq .Values.logs.pod_logs.gatherMethod "api" }}
