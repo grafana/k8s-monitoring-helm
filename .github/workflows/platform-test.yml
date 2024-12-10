@@ -25,7 +25,7 @@ jobs:
         run: |
           if [ "${{ github.event_name }}" == "pull_request" ]; then
             labels='${{ toJson(github.event.pull_request.labels.*.name) }}'
-            tests=$(echo "${labels}" | jq --raw-input --compact-output '[.[] | select(startswith("platform-test-")) | sub("^platform-test-"; "")]')
+            tests=$(echo "${labels}" | jq --raw-output --compact-output '[.[] | select(startswith("platform-test-")) | sub("^platform-test-"; "")]')
           else
             tests=$(find charts/k8s-monitoring/tests/platform -type d -depth 1 -exec basename {} \; | jq --raw-input --slurp --compact-output 'split("\n") | map(select(. != ""))')
           fi
