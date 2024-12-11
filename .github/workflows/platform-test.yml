@@ -32,7 +32,7 @@ jobs:
             chosenTests=$(echo "${labels}" | jq --raw-output --compact-output '[.[] | select(startswith("platform-test-")) | sub("^platform-test-"; "")]')
 
             # Choose the tests that match the labels
-            tests=$(jq ---null-input --compact-output --argjson allTests "${allTests}" --argjson chosenTests "${chosenTests}" '$allTests | map(select(. as $test | $chosenTests | index($test)))')
+            tests=$(jq --null-input --compact-output --argjson allTests "${allTests}" --argjson chosenTests "${chosenTests}" '$allTests | map(select(. as $test | $chosenTests | index($test)))')
           else
             tests=allTests
           fi
