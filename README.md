@@ -40,7 +40,8 @@ We hold office hours roughly monthly. Meeting times and recordings will be poste
 | Date       | Topic                | Link                                                                    |
 |------------|----------------------|-------------------------------------------------------------------------|
 | 2024-10-11 | Upcoming 2.0 version | [Recording](https://youtu.be/2N6MQN45Gy8)                               |
-| 2024-11-22 | 2.0 Status           | [Slack](https://grafana.slack.com/archives/CAGMZG3GB/p1731099930523739) |
+| 2024-11-22 | 2.0 Status           | [Recording](https://youtu.be/rR6yxTEGLZc)                               |
+| 2024-12-19 | 1.6 and 2.0 Updates  | [Slack](https://grafana.slack.com/archives/CAGMZG3GB/p1733956434118459) |
 
 ## Contributing
 
