@@ -40,6 +40,13 @@ discovery.relabel "java_pods" {
     action = "replace"
     target_label = "namespace"
   }
+{{- if .Values.profiles.java.excludeNamespaces }}
+  rule {
+    source_labels = ["namespace"]
+    regex = "{{ .Values.profiles.java.excludeNamespaces | join "|" }}"
+    action = "drop"
+  }
+{{- end }}
   rule {
     source_labels = ["__meta_kubernetes_pod_name"]
     action = "replace"
