@@ -811,6 +811,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 |-----|------|---------|-------------|
 | profiles.ebpf.demangle | string | `"none"` | C++ demangle mode. Available options are: none, simplified, templates, full |
 | profiles.ebpf.enabled | bool | `true` | Gather profiles using eBPF |
+| profiles.ebpf.excludeNamespaces | list | `[]` | Which namespaces to exclude looking for pods. |
 | profiles.ebpf.extraRelabelingRules | string | `""` | Rule blocks to be added to the discovery.relabel component for eBPF profile sources. These relabeling rules are applied pre-scrape against the targets from service discovery. Before the scrape, any remaining target labels that start with `__` (i.e. `__meta_kubernetes*`) are dropped. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.relabel/#rule-block)) |
 | profiles.ebpf.namespaces | list | `[]` | Which namespaces to look for pods with profiles. |
 
@@ -831,6 +832,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | profiles.java.enabled | bool | `true` | Gather profiles by scraping java HTTP endpoints |
+| profiles.java.excludeNamespaces | list | `[]` | Which namespaces to exclude looking for pods. |
 | profiles.java.extraRelabelingRules | string | `""` | Rule blocks to be added to the discovery.relabel component for Java profile sources. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.relabel/#rule-block)) |
 | profiles.java.namespaces | list | `[]` | Which namespaces to look for pods with profiles. |
 | profiles.java.profilingConfig | object | `{"alloc":"512k","cpu":true,"interval":"60s","lock":"10ms","sampleRate":100}` | Configuration for the async-profiler |
@@ -840,6 +842,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | profiles.pprof.enabled | bool | `true` | Gather profiles by scraping pprof HTTP endpoints |
+| profiles.pprof.excludeNamespaces | list | `[]` | Which namespaces to exclude looking for pods. |
 | profiles.pprof.extraRelabelingRules | string | `""` | Rule blocks to be added to the discovery.relabel component for eBPF profile sources. These relabeling rules are applied pre-scrape against the targets from service discovery. Before the scrape, any remaining target labels that start with `__` (i.e. `__meta_kubernetes*`) are dropped. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.relabel/#rule-block)) |
 | profiles.pprof.namespaces | list | `[]` | Which namespaces to look for pods with profiles. |
 | profiles.pprof.types | list | `["memory","cpu","goroutine","block","mutex","fgprof"]` | Profile types to gather |
