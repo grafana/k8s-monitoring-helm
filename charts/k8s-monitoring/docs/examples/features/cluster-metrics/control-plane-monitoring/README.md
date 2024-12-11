@@ -35,6 +35,8 @@ integrations:
   etcd:
     instances:
       - name: k8s-controlplane-etcd
+        labelSelectors:
+          app.kubernetes.io/component: etcd
 
 # Collectors
 alloy-metrics:

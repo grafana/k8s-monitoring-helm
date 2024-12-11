@@ -1,6 +1,8 @@
 {{- define "feature.prometheusOperatorObjects.probes.alloy" }}
 {{- if .Values.probes.enabled }}
-// Prometheus Operator podMonitor objects
+{{- $metricAllowList := .Values.probes.metricsTuning.includeMetrics }}
+{{- $metricDenyList := .Values.probes.metricsTuning.excludeMetrics }}
+// Prometheus Operator Probe objects
 prometheus.operator.probes "pod_monitors" {
 {{- if .Values.probes.namespaces }}
   namespaces = {{ .Values.probes.namespaces | toJson }}
@@ -20,12 +22,26 @@ prometheus.operator.probes "pod_monitors" {
 {{- if .Values.probes.extraDiscoveryRules }}
 {{ .Values.probes.extraDiscoveryRules | indent 2 }}
 {{- end }}
-{{- if .Values.probes.extraMetricProcessingRules }}
+{{- if or $metricAllowList $metricDenyList .Values.probes.extraMetricProcessingRules }}
   forward_to = [prometheus.relabel.probes.receiver]
 }
 
 prometheus.relabel "probes" {
   max_cache_size = {{ .Values.probes.maxCacheSize | default .Values.global.maxCacheSize | int }}
+{{- if $metricAllowList }}
+  rule {
+    source_labels = ["__name__"]
+    regex = "up|{{ $metricAllowList | join "|" }}"
+    action = "keep"
+  }
+{{- end }}
+{{- if $metricDenyList }}
+  rule {
+    source_labels = ["__name__"]
+    regex = {{ $metricDenyList | join "|" | quote }}
+    action = "drop"
+  }
+{{- end }}
 {{- if .Values.probes.extraMetricProcessingRules }}
 {{ .Values.probes.extraMetricProcessingRules | indent 2 }}
 {{- end }}
