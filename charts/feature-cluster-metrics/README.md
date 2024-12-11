@@ -104,7 +104,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | https://prometheus-community.github.io/helm-charts | kube-state-metrics | 5.27.0 |
 | https://prometheus-community.github.io/helm-charts | node-exporter(prometheus-node-exporter) | 4.42.0 |
 | https://prometheus-community.github.io/helm-charts | windows-exporter(prometheus-windows-exporter) | 0.7.1 |
-| https://sustainable-computing-io.github.io/kepler-helm-chart | kepler | 0.5.11 |
+| https://sustainable-computing-io.github.io/kepler-helm-chart | kepler | 0.5.12 |
 <!-- markdownlint-enable no-bare-urls -->
 
 <!-- markdownlint-disable no-space-in-emphasis -->
