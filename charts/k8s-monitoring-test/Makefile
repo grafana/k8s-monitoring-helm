@@ -20,6 +20,12 @@ values.schema.json: values.yaml $$(wildcard schema-mods/*)
 .updatecli-%.yaml: Chart.yaml
 	../../scripts/charts-to-updatecli.sh Chart.yaml
 
+build-query-test-image: query-test/Dockerfile query-test/query-test.sh
+	docker build --platform linux/amd64 --tag ghcr.io/grafana/query-test:$(shell yq -r '.version' Chart.yaml) query-test
+
+push-query-test-image:
+	docker push ghcr.io/grafana/query-test:$(shell yq -r '.version' Chart.yaml)
+
 .PHONY: clean
 clean:
 	rm -f README.md values.schema.json $(UPDATECLI_FILES)
