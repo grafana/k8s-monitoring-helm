@@ -21,6 +21,10 @@ discovery.relabel "ebpf_pods" {
     regex = "Succeeded|Failed|Completed"
     action = "drop"
   }
+  rule {
+    source_labels = ["__meta_kubernetes_namespace"]
+    target_label = "namespace"
+  }
 {{- if .Values.ebpf.excludeNamespaces }}
   rule {
     source_labels = ["namespace"]
@@ -28,10 +32,6 @@ discovery.relabel "ebpf_pods" {
     action = "drop"
   }
 {{- end }}
-  rule {
-    source_labels = ["__meta_kubernetes_namespace"]
-    target_label = "namespace"
-  }
   rule {
     source_labels = ["__meta_kubernetes_pod_name"]
     target_label = "pod"
