@@ -8,7 +8,7 @@ tests:
       deployAsConfigMap: true
       etcd:
         instances:
-          - name: my-etcd
+          - name: etcd
     asserts:
       - isKind:
           of: ConfigMap
@@ -27,13 +27,13 @@ tests:
                 pull_frequency = "15m"
               }
             
-              etcd.kubernetes "my_etcd" {
+              etcd.kubernetes "etcd" {
                 label_selectors = ["app.kubernetes.io/component=etcd"]
                 port_name = "metrics"
               }
             
-              etcd.scrape "my_etcd" {
-                targets = etcd.kubernetes.my_etcd.output
+              etcd.scrape "etcd" {
+                targets = etcd.kubernetes.etcd.output
                 clustering = true
                 scrape_interval = "60s"
                 max_cache_size = 100000
@@ -68,7 +68,7 @@ tests:
             
               etcd.kubernetes "my_etcd" {
                 namespaces = ["kube-system"]
-                label_selectors = ["app.kubernetes.io/component=etcd"]
+                label_selectors = ["app.kubernetes.io/component=my-etcd"]
                 port_name = "metrics"
               }
             
@@ -80,3 +80,32 @@ tests:
                 forward_to = argument.metrics_destinations.value
               }
             }
+  - it: should allow you to overwrite the component label
+    set:
+      deployAsConfigMap: true
+      etcd:
+        instances:
+          - name: my-etcd
+            labelSelectors:
+              app.kubernetes.io/component: etcd-component
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["metrics.alloy"]
+          pattern: label_selectors = \["app.kubernetes.io/component=etcd-component"\]
+  - it: should allow you to dismiss the name label
+    set:
+      deployAsConfigMap: true
+      etcd:
+        instances:
+          - name: my-etcd
+            labelSelectors:
+              app.kubernetes.io/component: null
+              component: etcd
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["metrics.alloy"]
+          pattern: label_selectors = \["component=etcd"\]

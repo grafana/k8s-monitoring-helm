@@ -23,9 +23,17 @@ declare "etcd_integration" {
 {{- with $defaultValues | merge (deepCopy .instance) }}
 {{- $metricAllowList := .metricsTuning.includeMetrics }}
 {{- $metricDenyList := .metricsTuning.excludeMetrics }}
+
+{{- $componentLabelDefined := false }}
 {{- $labelSelectors := list }}
 {{- range $k, $v := .labelSelectors }}
-{{- $labelSelectors = append $labelSelectors (printf "%s=%s" $k $v) }}
+  {{- if eq $k "app.kubernetes.io/component" }}{{- $componentLabelDefined = true }}{{- end }}
+  {{- if $v }}
+    {{- $labelSelectors = append $labelSelectors (printf "%s=%s" $k $v) }}
+  {{- end }}
+{{- end }}
+{{- if not $componentLabelDefined }}
+  {{- $labelSelectors = append $labelSelectors (printf "app.kubernetes.io/component=%s" .name) }}
 {{- end }}
 {{- $fieldSelectors := list }}
 {{- range $k, $v := .fieldSelectors }}

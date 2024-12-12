@@ -7,7 +7,7 @@
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | field_selectors | list | `[]` | Discover etcd instances based on field selectors. |
-| labelSelectors | object | `{"app.kubernetes.io/component":"etcd"}` | Discover etcd instances based on label selectors. |
+| labelSelectors | object | `{}` | Discover etcd instances based on label selectors. Will automatically set a matcher for `app.kubernetes.io/component: <name>` unless set here. |
 | namespaces | list | `[]` | Namespaces to look for etcd instances. |
 | portName | string | `"metrics"` | Name of the port to scrape metrics from. |
 

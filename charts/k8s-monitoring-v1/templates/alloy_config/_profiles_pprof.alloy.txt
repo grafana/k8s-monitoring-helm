@@ -34,6 +34,13 @@ discovery.relabel "pprof_pods" {
     source_labels = ["__meta_kubernetes_namespace"]
     target_label  = "namespace"
   }
+{{- if .Values.profiles.pprof.excludeNamespaces }}
+  rule {
+    source_labels = ["namespace"]
+    regex = "{{ .Values.profiles.pprof.excludeNamespaces | join "|" }}"
+    action = "drop"
+  }
+{{- end }}
 
   rule {
     action        = "replace"

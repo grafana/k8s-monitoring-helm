@@ -739,7 +739,6 @@ prometheus.operator.podmonitors "pod_monitors" {
   scrape {
     default_scrape_interval = "60s"
   }
-  forward_to = [prometheus.relabel.podmonitors.receiver]
   rule {
     source_labels = ["__meta_kubernetes_namespace"]
     regex = "private"
@@ -750,10 +749,6 @@ prometheus.operator.podmonitors "pod_monitors" {
     source_labels = ["__meta_kubernetes_pod_label_team"]
     target_label = "team"
   }
-}
-
-prometheus.relabel "podmonitors" {
-  max_cache_size = 100000
   forward_to = [prometheus.relabel.metrics_service.receiver]
 }
 
@@ -765,7 +760,6 @@ prometheus.operator.probes "probes" {
   scrape {
     default_scrape_interval = "60s"
   }
-  forward_to = [prometheus.relabel.probes.receiver]
   rule {
     source_labels = ["__meta_kubernetes_namespace"]
     regex = "private"
@@ -776,10 +770,6 @@ prometheus.operator.probes "probes" {
     source_labels = ["__meta_kubernetes_ingress_label_team"]
     target_label = "team"
   }
-}
-
-prometheus.relabel "probes" {
-  max_cache_size = 100000
   forward_to = [prometheus.relabel.metrics_service.receiver]
 }
 
@@ -791,7 +781,6 @@ prometheus.operator.servicemonitors "service_monitors" {
   scrape {
     default_scrape_interval = "60s"
   }
-  forward_to = [prometheus.relabel.servicemonitors.receiver]
   rule {
     source_labels = ["__meta_kubernetes_namespace"]
     regex = "private"
@@ -809,10 +798,6 @@ prometheus.operator.servicemonitors "service_monitors" {
     replacement = "$1"
     target_label = "team"
   }
-}
-
-prometheus.relabel "servicemonitors" {
-  max_cache_size = 100000
   forward_to = [prometheus.relabel.metrics_service.receiver]
 }
 

@@ -644,6 +644,14 @@ metrics:
     # @section -- Metrics Job: Auto-Discovery
     scrapeInterval: ""
 
+    # -- The list of namespaces to include in autodiscovery. If empty, all namespaces are included.
+        # @section -- Metrics Job: Auto-Discovery
+    namespaces: []
+
+    # -- The list of namespaces to exclude from autodiscovery.
+    # @section -- Metrics Job: Auto-Discovery
+    excludeNamespaces: []
+
     # -- Rule blocks to be added to the discovery.relabel component for auto-discovered entities.
     # These relabeling rules are applied pre-scrape against the targets from service discovery.
     # Before the scrape, any remaining target labels that start with `__` (i.e. `__meta_kubernetes*`) are dropped.
@@ -1465,6 +1473,15 @@ metrics:
     # @section -- Metrics Job: Prometheus Operator (PodMonitors)
     extraRelabelingRules: ""
 
+    # Adjustments to the scraped metrics to filter the amount of data sent to storage.
+    metricsTuning:
+      # -- Metrics to keep. Can use regular expressions.
+      # @section -- Metrics Job: Prometheus Operator (PodMonitors)
+      includeMetrics: []
+      # -- Metrics to drop. Can use regular expressions.
+      # @section -- Metrics Job: Prometheus Operator (PodMonitors)
+      excludeMetrics: []
+
     # -- Rule blocks to be added to the prometheus.relabel component for PodMonitor objects.
     # These relabeling rules are applied post-scrape against the metrics returned from the scraped target, no `__meta*` labels are present.
     # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#rule-block))
@@ -1513,6 +1530,15 @@ metrics:
     # @section -- Metrics Job: Prometheus Operator (Probes)
     extraMetricRelabelingRules: ""
 
+    # Adjustments to the scraped metrics to filter the amount of data sent to storage.
+    metricsTuning:
+      # -- Metrics to keep. Can use regular expressions.
+      # @section -- Metrics Job: Prometheus Operator (Probes)
+      includeMetrics: []
+      # -- Metrics to drop. Can use regular expressions.
+      # @section -- Metrics Job: Prometheus Operator (Probes)
+      excludeMetrics: []
+
     # -- Sets the max_cache_size for cadvisor prometheus.relabel component.
     # This should be at least 2x-5x your largest scrape target or samples appended rate.
     # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments))
@@ -1554,6 +1580,15 @@ metrics:
     # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#rule-block))
     # @section -- Metrics Job: Prometheus Operator (ServiceMonitors)
     extraMetricRelabelingRules: ""
+
+    # Adjustments to the scraped metrics to filter the amount of data sent to storage.
+    metricsTuning:
+      # -- Metrics to keep. Can use regular expressions.
+      # @section -- Metrics Job: Prometheus Operator (ServiceMonitors)
+      includeMetrics: []
+      # -- Metrics to drop. Can use regular expressions.
+      # @section -- Metrics Job: Prometheus Operator (ServiceMonitors)
+      excludeMetrics: []
 
     # -- Sets the max_cache_size for cadvisor prometheus.relabel component.
     # This should be at least 2x-5x your largest scrape target or samples appended rate.
@@ -1885,6 +1920,10 @@ profiles:
     # @section -- Profiles (eBPF)
     namespaces: []
 
+    # -- Which namespaces to exclude looking for pods.
+    # @section -- Profiles (eBPF)
+    excludeNamespaces: []
+
     # -- Rule blocks to be added to the discovery.relabel component for eBPF profile sources.
     # These relabeling rules are applied pre-scrape against the targets from service discovery.
     # Before the scrape, any remaining target labels that start with `__` (i.e. `__meta_kubernetes*`) are dropped.
@@ -1904,6 +1943,10 @@ profiles:
     # -- Which namespaces to look for pods with profiles.
     # @section -- Profiles (java)
     namespaces: []
+
+    # -- Which namespaces to exclude looking for pods.
+    # @section -- Profiles (java)
+    excludeNamespaces: []
 
     # -- Rule blocks to be added to the discovery.relabel component for Java profile sources.
     # ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.relabel/#rule-block))
@@ -1927,6 +1970,10 @@ profiles:
     # -- Which namespaces to look for pods with profiles.
     # @section -- Profiles (pprof)
     namespaces: []
+
+    # -- Which namespaces to exclude looking for pods.
+    # @section -- Profiles (pprof)
+    excludeNamespaces: []
 
     # -- Rule blocks to be added to the discovery.relabel component for eBPF profile sources.
     # These relabeling rules are applied pre-scrape against the targets from service discovery.

@@ -2,6 +2,20 @@
 // Annotation Autodiscovery
 discovery.relabel "annotation_autodiscovery_pods" {
   targets = discovery.kubernetes.pods.targets
+{{- if .Values.namespaces }}
+    rule {
+      source_labels = ["__meta_kubernetes_namespace"]
+      regex = "{{ join "|" .Values.namespaces }}"
+      action = "keep"
+    }
+{{- end }}
+{{- if .Values.excludeNamespaces }}
+    rule {
+      source_labels = ["__meta_kubernetes_namespace"]
+      regex = "{{ join "|" .Values.excludeNamespaces }}"
+      action = "drop"
+    }
+{{- end }}
   rule {
     source_labels = ["__meta_kubernetes_pod_annotation_{{ include "escape_label" .Values.metrics.autoDiscover.annotations.scrape }}"]
     regex = "true"
@@ -81,6 +95,20 @@ discovery.relabel "annotation_autodiscovery_pods" {
 
 discovery.relabel "annotation_autodiscovery_services" {
   targets = discovery.kubernetes.services.targets
+{{- if .Values.namespaces }}
+    rule {
+      source_labels = ["__meta_kubernetes_namespace"]
+      regex = "{{ join "|" .Values.namespaces }}"
+      action = "keep"
+    }
+{{- end }}
+{{- if .Values.excludeNamespaces }}
+    rule {
+      source_labels = ["__meta_kubernetes_namespace"]
+      regex = "{{ join "|" .Values.excludeNamespaces }}"
+      action = "drop"
+    }
+{{- end }}
   rule {
     source_labels = ["__meta_kubernetes_service_annotation_{{ include "escape_label" .Values.metrics.autoDiscover.annotations.scrape }}"]
     regex = "true"

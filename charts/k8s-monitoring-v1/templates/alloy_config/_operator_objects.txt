@@ -1,4 +1,6 @@
 {{ define "alloy.config.pod_monitors" }}
+{{- $metricAllowList := .Values.metrics.podMonitors.metricsTuning.includeMetrics }}
+{{- $metricDenyList := .Values.metrics.podMonitors.metricsTuning.excludeMetrics }}
 // Prometheus Operator PodMonitor objects
 prometheus.operator.podmonitors "pod_monitors" {
 {{- if .Values.metrics.podMonitors.namespaces }}
@@ -17,29 +19,47 @@ prometheus.operator.podmonitors "pod_monitors" {
   scrape {
     default_scrape_interval = {{ .Values.metrics.podMonitors.scrapeInterval | default .Values.metrics.scrapeInterval | quote }}
   }
-  forward_to = [prometheus.relabel.podmonitors.receiver]
-
 {{- if .Values.metrics.extraRelabelingRules }}
 {{ .Values.metrics.extraRelabelingRules | indent 2 }}
 {{- end }}
 {{- if .Values.metrics.podMonitors.extraRelabelingRules }}
 {{ .Values.metrics.podMonitors.extraRelabelingRules | indent 2 }}
 {{- end }}
+
+{{- if or $metricAllowList $metricDenyList .Values.metrics.podMonitors.extraMetricProcessingRules }}
+  forward_to = [prometheus.relabel.podmonitors.receiver]
 }
 
 prometheus.relabel "podmonitors" {
   max_cache_size = {{ .Values.metrics.podMonitors.maxCacheSize | default .Values.metrics.maxCacheSize | int }}
+{{- if $metricAllowList }}
+  rule {
+    source_labels = ["__name__"]
+    regex = "up|{{ $metricAllowList | join "|" }}"
+    action = "keep"
+  }
+{{- end }}
+{{- if $metricDenyList }}
+  rule {
+    source_labels = ["__name__"]
+    regex = {{ $metricDenyList | join "|" | quote }}
+    action = "drop"
+  }
+{{- end }}
 {{- if .Values.metrics.extraMetricRelabelingRules }}
 {{ .Values.metrics.extraMetricRelabelingRules | indent 2 }}
 {{- end }}
 {{- if .Values.metrics.podMonitors.extraMetricRelabelingRules }}
 {{ .Values.metrics.podMonitors.extraMetricRelabelingRules | indent 2 }}
 {{- end }}
+{{- end }}
   forward_to = [prometheus.relabel.metrics_service.receiver]
 }
 {{ end }}
 
 {{ define "alloy.config.probes" }}
+{{- $metricAllowList := .Values.metrics.probes.metricsTuning.includeMetrics }}
+{{- $metricDenyList := .Values.metrics.probes.metricsTuning.excludeMetrics }}
 // Prometheus Operator Probe objects
 prometheus.operator.probes "probes" {
 {{- if .Values.metrics.probes.namespaces }}
@@ -58,29 +78,47 @@ prometheus.operator.probes "probes" {
   scrape {
     default_scrape_interval = {{ .Values.metrics.probes.scrapeInterval | default .Values.metrics.scrapeInterval | quote }}
   }
-  forward_to = [prometheus.relabel.probes.receiver]
-
 {{- if .Values.metrics.extraRelabelingRules }}
 {{ .Values.metrics.extraRelabelingRules | indent 2 }}
 {{- end }}
 {{- if .Values.metrics.probes.extraRelabelingRules }}
 {{ .Values.metrics.probes.extraRelabelingRules | indent 2 }}
 {{- end }}
+
+{{- if or $metricAllowList $metricDenyList .Values.metrics.probes.extraMetricProcessingRules }}
+  forward_to = [prometheus.relabel.probes.receiver]
 }
 
 prometheus.relabel "probes" {
   max_cache_size = {{ .Values.metrics.probes.maxCacheSize | default .Values.metrics.maxCacheSize | int }}
+{{- if $metricAllowList }}
+  rule {
+    source_labels = ["__name__"]
+    regex = "up|{{ $metricAllowList | join "|" }}"
+    action = "keep"
+  }
+{{- end }}
+{{- if $metricDenyList }}
+  rule {
+    source_labels = ["__name__"]
+    regex = {{ $metricDenyList | join "|" | quote }}
+    action = "drop"
+  }
+{{- end }}
 {{- if .Values.metrics.extraMetricRelabelingRules }}
 {{ .Values.metrics.extraMetricRelabelingRules | indent 2 }}
 {{- end }}
 {{- if .Values.metrics.probes.extraMetricRelabelingRules }}
 {{ .Values.metrics.probes.extraMetricRelabelingRules | indent 2 }}
 {{- end }}
+{{- end }}
   forward_to = [prometheus.relabel.metrics_service.receiver]
 }
 {{ end }}
 
 {{ define "alloy.config.service_monitors" }}
+{{- $metricAllowList := .Values.metrics.serviceMonitors.metricsTuning.includeMetrics }}
+{{- $metricDenyList := .Values.metrics.serviceMonitors.metricsTuning.excludeMetrics }}
 // Prometheus Operator ServiceMonitor objects
 prometheus.operator.servicemonitors "service_monitors" {
 {{- if .Values.metrics.serviceMonitors.namespaces }}
@@ -99,23 +137,39 @@ prometheus.operator.servicemonitors "service_monitors" {
   scrape {
     default_scrape_interval = {{ .Values.metrics.serviceMonitors.scrapeInterval | default .Values.metrics.scrapeInterval | quote }}
   }
-  forward_to = [prometheus.relabel.servicemonitors.receiver]
-
 {{- if .Values.metrics.extraRelabelingRules }}
 {{ .Values.metrics.extraRelabelingRules | indent 2 }}
 {{- end }}
 {{- if .Values.metrics.serviceMonitors.extraRelabelingRules }}
 {{ .Values.metrics.serviceMonitors.extraRelabelingRules | indent 2 }}
 {{- end }}
+
+{{- if or $metricAllowList $metricDenyList .Values.metrics.serviceMonitors.extraMetricProcessingRules }}
+  forward_to = [prometheus.relabel.servicemonitors.receiver]
 }
 
 prometheus.relabel "servicemonitors" {
   max_cache_size = {{ .Values.metrics.serviceMonitors.maxCacheSize | default .Values.metrics.maxCacheSize | int }}
+{{- if $metricAllowList }}
+  rule {
+    source_labels = ["__name__"]
+    regex = "up|{{ $metricAllowList | join "|" }}"
+    action = "keep"
+  }
+{{- end }}
+{{- if $metricDenyList }}
+  rule {
+    source_labels = ["__name__"]
+    regex = {{ $metricDenyList | join "|" | quote }}
+    action = "drop"
+  }
+{{- end }}
 {{- if .Values.metrics.extraMetricRelabelingRules }}
 {{ .Values.metrics.extraMetricRelabelingRules | indent 2 }}
 {{- end }}
 {{- if .Values.metrics.serviceMonitors.extraMetricRelabelingRules }}
 {{ .Values.metrics.serviceMonitors.extraMetricRelabelingRules | indent 2 }}
+{{- end }}
 {{- end }}
   forward_to = [prometheus.relabel.metrics_service.receiver]
 }

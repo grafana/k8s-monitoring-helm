@@ -22,7 +22,9 @@ create
 {{- define "secrets.getSecretFromRef" -}}
 {{- $value := .object -}}
 {{- range $pathPart := (regexSplit "\\." (printf "%sFrom" .key) -1) -}} {{/* "path.to.auth.password" --> ["path", "to", "auth" "passwordFrom"] */}}
-{{- if hasKey $value $pathPart -}}
+{{- if not $pathPart -}}
+  {{- continue -}}
+{{- else if hasKey $value $pathPart -}}
   {{- $value = (index $value $pathPart) -}}
 {{- else -}}
   {{- $value = "" -}}
@@ -38,7 +40,9 @@ create
 {{- $value := .object -}}
 {{- $defaultKey := (( regexSplit "\\." .key -1) | last) -}}             {{/* "path.to.auth.password" --> "password" */}}
 {{- range $pathPart := (regexSplit "\\." (printf "%sKey" .key) -1) -}}  {{/* "path.to.auth.password" --> ["path", "to", "auth" "passwordKey"] */}}
-{{- if hasKey $value $pathPart -}}
+{{- if not $pathPart -}}
+  {{- continue -}}
+{{- else if hasKey $value $pathPart -}}
   {{- $value = (index $value $pathPart) -}}
 {{- else -}}
   {{- $value = $defaultKey -}}
@@ -54,7 +58,9 @@ create
 {{- $found := true}}
 {{- $value := .object -}}
 {{- range $pathPart := (regexSplit "\\." (printf "%sKey" .key) -1) -}}  {{/* "path.to.auth.password" --> ["path", "to", "auth" "passwordKey"] */}}
-{{- if hasKey $value $pathPart -}}
+{{- if not $pathPart -}}
+  {{- continue -}}
+{{- else if hasKey $value $pathPart -}}
   {{- $value = (index $value $pathPart) -}}
 {{- else -}}
   {{- $found = false -}}
@@ -69,7 +75,9 @@ create
 {{- define "secrets.getSecretValue" }}
 {{- $value := .object -}}
 {{- range $pathPart := (regexSplit "\\." .key -1) -}}  {{/* "path.to.auth.password" --> ["path", "to", "auth" "password"] */}}
-{{- if hasKey $value $pathPart -}}
+{{- if not $pathPart -}}
+  {{- continue -}}
+{{- else if hasKey $value $pathPart -}}
   {{- $value = (index $value $pathPart) -}}
 {{- else -}}
   {{- $value = "" -}}

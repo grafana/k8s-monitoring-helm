@@ -6,10 +6,22 @@ declare "annotation_autodiscovery" {
 
   discovery.kubernetes "pods" {
     role = "pod"
+{{- if .Values.namespaces }}
+    namespaces {
+      names = {{ .Values.namespaces | toJson }}
+    }
+{{- end }}
   }
 
   discovery.relabel "annotation_autodiscovery_pods" {
     targets = discovery.kubernetes.pods.targets
+{{- if .Values.excludeNamespaces }}
+    rule {
+      source_labels = ["__meta_kubernetes_namespace"]
+      regex = "{{ join "|" .Values.excludeNamespaces }}"
+      action = "drop"
+    }
+{{- end }}
     rule {
       source_labels = ["{{ include "pod_annotation" .Values.annotations.scrape }}"]
       regex = "true"
@@ -82,10 +94,22 @@ declare "annotation_autodiscovery" {
 
   discovery.kubernetes "services" {
     role = "service"
+{{- if .Values.namespaces }}
+    namespaces {
+      names = {{ .Values.namespaces | toJson }}
+    }
+{{- end }}
   }
 
   discovery.relabel "annotation_autodiscovery_services" {
     targets = discovery.kubernetes.services.targets
+{{- if .Values.excludeNamespaces }}
+    rule {
+      source_labels = ["__meta_kubernetes_namespace"]
+      regex = "{{ join "|" .Values.excludeNamespaces }}"
+      action = "drop"
+    }
+{{- end }}
     rule {
       source_labels = ["{{ include "service_annotation" .Values.annotations.scrape }}"]
       regex = "true"
