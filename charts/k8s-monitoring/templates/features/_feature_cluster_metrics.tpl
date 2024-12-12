@@ -10,7 +10,7 @@
 {{- if .Values.clusterMetrics.enabled -}}
 {{- $destinations := include "features.clusterMetrics.destinations" . | fromYamlArray }}
 // Feature: Cluster Metrics
-{{- include "feature.clusterMetrics.module" (dict "Values" $.Values.clusterMetrics "Files" $.Subcharts.clusterMetrics.Files "Release" $.Release) }}
+{{- include "feature.clusterMetrics.module" (dict "Values" $.Values.clusterMetrics "Files" $.Subcharts.clusterMetrics.Files "Release" $.Release "Chart" $.Chart) }}
 cluster_metrics "feature" {
   metrics_destinations = [
     {{ include "destinations.alloy.targets" (dict "destinations" $.Values.destinations "names" $destinations "type" "metrics" "ecosystem" "prometheus") | indent 4 | trim }}

@@ -12,7 +12,7 @@
 {{- end }}
 
 {{- define "features.integrations.metrics.include" }}
-{{- $values := dict "Chart" $.Subcharts.integrations.Chart "Values" .Values.integrations "Files" $.Subcharts.integrations.Files "Release" $.Release }}
+{{- $values := dict "Chart" $.Subcharts.integrations.Chart "Values" .Values.integrations "Files" $.Subcharts.integrations.Files "Release" $.Release "Chart" $.Chart }}
 {{- $destinations := include "features.integrations.destinations" . | fromYamlArray }}
 {{- $integrations := include "feature.integrations.configured.metrics" $values | fromYamlArray }}
 {{- range $integrationType := $integrations }}

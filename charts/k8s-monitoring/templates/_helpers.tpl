@@ -19,6 +19,20 @@
 {{- end }}
 {{- end }}
 
+{{/* Used to override Alloy modules configmap name prefix including its reference */}}
+{{- define "helper.global_fullname" -}}
+{{- if .Values.global.fullnameOverride }}
+{{- .Values.global.fullnameOverride | trunc 63 | trimSuffix "-" | lower }}
+{{- else }}
+{{- $name := default .Chart.Name .Values.global.nameOverride | lower }}
+{{- if contains $name .Release.Name }}
+{{- .Release.Name | trunc 63 | trimSuffix "-" | lower }}
+{{- else }}
+{{- printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" | lower }}
+{{- end }}
+{{- end }}
+{{- end }}
+
 {{- define "english_list" }}
 {{- if eq (len .) 0 }}
 {{- else if eq (len .) 1 }}
