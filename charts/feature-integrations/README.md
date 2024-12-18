@@ -107,7 +107,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| loki | object | `{"instances":[]}` | Scrape metrics and process logs from Grafana Loki |
+| loki | object | `{"instances":[]}` | Scrape metrics from Loki |
 
 ### Integration: MySQL
 
@@ -154,5 +154,3 @@ To contribute integrations to this feature, you must create or modify a few file
         the `integrations.<slug>.include.logs` function.
     *   `default-allow-lists/<slug>.yaml` - If the integration scrapes metrics, a common pattern is to provide a list of
         metrics that should be allowed. This reduces the amount of metrics delivered to a useful minimal set.
-
-*   When testing changes to this chart, from `/charts/k8s-monitoring` run `rm -rf Chart.lock && make build` to force the chart to be rebuilt.
