@@ -21,9 +21,18 @@ otelcol.auth.basic {{ include "helper.alloy_name" .name | quote }} {
   password = {{ include "secrets.read" (dict "object" . "key" "auth.password") }}
 }
 {{- else if eq (include "secrets.authType" .) "bearerToken" }}
+{{- if .auth.bearerTokenFile }}
+local.file {{ include "helper.alloy_name" .name | quote }} {
+  filename = {{ .auth.bearerTokenFile | quote }}
+}
+otelcol.auth.bearer {{ include "helper.alloy_name" .name | quote }} {
+  token = local.file.{{ include "helper.alloy_name" .name }}.content
+}
+{{- else }}
 otelcol.auth.bearer {{ include "helper.alloy_name" .name | quote }} {
   token = {{ include "secrets.read" (dict "object" . "key" "auth.bearerToken") }}
 }
+{{- end }}
 {{- else if eq (include "secrets.authType" .) "oauth2" }}
 otelcol.auth.oauth2 {{ include "helper.alloy_name" .name | quote }} {
   {{- if eq (include "secrets.usesSecret" (dict "object" . "key" "auth.oauth2.clientId")) "true" }}

@@ -9,6 +9,7 @@ This defines the options for defining a destination for logs that use the Loki p
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | auth.bearerToken | string | `""` | The bearer token for bearer token authentication. |
+| auth.bearerTokenFile | string | `""` | Path to a file that containers the bearer token. |
 | auth.bearerTokenFrom | string | `""` | Raw config for accessing the bearer token. |
 | auth.bearerTokenKey | string | `"bearerToken"` | The key for storing the bearer token in the secret. |
 

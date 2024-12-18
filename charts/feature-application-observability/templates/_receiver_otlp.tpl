@@ -13,7 +13,7 @@ otelcol.receiver.otlp "receiver" {
   }
 {{- end }}
   debug_metrics {
-    disable_high_cardinality_metrics = {{ not .Values.receivers.otlp.include_debug_metrics }}
+    disable_high_cardinality_metrics = {{ not .Values.receivers.otlp.includeDebugMetrics }}
   }
   output {
 {{- if and .metricsOutput .Values.metrics.enabled }}
