@@ -40,6 +40,12 @@ loki.process "pod_logs" {
 {{- if .Values.extraLogProcessingStages }}
 {{ tpl .Values.extraLogProcessingStages $ | indent 2 }}
 {{ end }}
+
+  // Only keep the labels that are defined in the `keepLabels` list.
+  stage.label_keep {
+    values = {{ .Values.labelsToKeep | toJson }}
+  }
+
   forward_to = argument.logs_destinations.value
 }
 

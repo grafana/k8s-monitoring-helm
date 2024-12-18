@@ -28,18 +28,6 @@ excludeNamespaces: []
 # @section -- Pod Discovery
 extraDiscoveryRules: ""
 
-# -- Log labels to set with values copied from the Kubernetes Pod labels.
-# Format: `<log_label>: <kubernetes_label>`.
-# @section -- Log Processing
-labels:
-  app_kubernetes_io_name: app.kubernetes.io/name
-
-# -- Log labels to set with values copied from the Kubernetes Pod annotations.
-# Format: `<log_label>: <kubernetes_annotation>`.
-# @section -- Log Processing
-annotations:
-  job: k8s.grafana.com/logs.job
-
 # Settings specific for gathering Pod logs using the "volumes" gather method.
 volumeGatherSettings:
   # -- Only gather new log lines since this was deployed. Do not gather historical log lines.
@@ -55,11 +43,14 @@ extraLogProcessingStages: ""
 # -- The list of labels to keep on the logs, all other pipeline labels will be dropped.
 # @section -- Log Processing
 labelsToKeep:
+  - app_kubernetes_io_name
+  - container
+  - instance
+  - job
+  - level
   - namespace
   - pod
-  - container
-  - job
-  - app_kubernetes_io_name
+  - service_name
 
 # @ignore
 deployAsConfigMap: false

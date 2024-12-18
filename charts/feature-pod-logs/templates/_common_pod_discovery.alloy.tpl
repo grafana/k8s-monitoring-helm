@@ -30,20 +30,6 @@ discovery.relabel "filtered_pods" {
     replacement = "$1"
     target_label = "job"
   }
-{{- range $label, $podLabel := .Values.labels }}
-  rule {
-    source_labels = ["{{ include "pod_label" $podLabel }}"]
-    regex         = "(.+)"
-    target_label  = {{ $label | quote }}
-  }
-{{- end }}
-{{- range $label, $podAnnotation := .Values.annotations }}
-  rule {
-    source_labels = ["{{ include "pod_annotation" $podAnnotation }}"]
-    regex         = "(.+)"
-    target_label  = {{ $label | quote }}
-  }
-{{- end }}
 
   // set the container runtime as a label
   rule {
@@ -52,6 +38,27 @@ discovery.relabel "filtered_pods" {
     regex = "^(\\S+):\\/\\/.+$"
     replacement = "$1"
     target_label = "tmp_container_runtime"
+  }
+
+  // set the job label from the k8s.grafana.com/logs.job annotation if it exists
+  rule {
+    source_labels = ["{{ include "pod_annotation" "k8s.grafana.com/logs.job" }}"]
+    regex = "(.+)"
+    target_label = "job"
+  }
+
+  // make all labels on the pod available to the pipeline as labels,
+  // they are omitted before write to loki via stage.label_keep unless explicitly set
+  rule {
+    action = "labelmap"
+    regex = "__meta_kubernetes_pod_label_(.+)"
+  }
+
+  // make all annotations on the pod available to the pipeline as labels,
+  // they are omitted before write to loki via stage.label_keep unless explicitly set
+  rule {
+    action = "labelmap"
+    regex = "__meta_kubernetes_pod_annotation_(.+)"
   }
 
 {{- if .Values.extraDiscoveryRules }}

@@ -33,14 +33,6 @@ Be sure perform actual integration testing in a live environment in the main [k8
 
 ## Values
 
-### Log Processing
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| annotations | object | `{"job":"k8s.grafana.com/logs.job"}` | Log labels to set with values copied from the Kubernetes Pod annotations. Format: `<log_label>: <kubernetes_annotation>`. |
-| extraLogProcessingStages | string | `""` | Stage blocks to be added to the loki.process component for pod logs. ([docs](https://grafana.com/docs/alloy/latest/reference/components/loki/loki.process/#blocks)) This value is templated so that you can refer to other values from this file. |
-| labels | object | `{"app_kubernetes_io_name":"app.kubernetes.io/name"}` | Log labels to set with values copied from the Kubernetes Pod labels. Format: `<log_label>: <kubernetes_label>`. |
-
 ### Pod Discovery
 
 | Key | Type | Default | Description |
@@ -49,6 +41,13 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | extraDiscoveryRules | string | `""` | Rules to filter pods for log gathering. Only used for "volumes" or "kubernetesApi" gather methods. |
 | gatherMethod | string | `"volumes"` | The method to gather pod logs. Options are "volumes", "kubernetesApi", "OpenShiftClusterLogForwarder" (experimental). |
 | namespaces | list | `[]` | Only capture logs from pods in these namespaces (`[]` means all namespaces). |
+
+### Log Processing
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| extraLogProcessingStages | string | `""` | Stage blocks to be added to the loki.process component for pod logs. ([docs](https://grafana.com/docs/alloy/latest/reference/components/loki/loki.process/#blocks)) This value is templated so that you can refer to other values from this file. |
+| labelsToKeep | list | `["app_kubernetes_io_name","container","instance","job","level","namespace","pod","service_name"]` | The list of labels to keep on the logs, all other pipeline labels will be dropped. |
 
 ### General settings
 
