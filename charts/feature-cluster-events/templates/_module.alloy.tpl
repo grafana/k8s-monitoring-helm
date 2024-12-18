@@ -78,8 +78,8 @@ declare "cluster_events" {
       }
     }
 
-    {{- if .Values.extraProcessingStages }}
-    {{ tpl .Values.extraProcessingStages $ | indent 4 }}
+    {{- if .Values.extraLogProcessingStages }}
+    {{ tpl .Values.extraLogProcessingStages $ | indent 4 }}
     {{ end }}
 
     {{- /* the stage.structured_metadata block needs to be conditionalized because the support for enabling structured metadata can be disabled */ -}}
