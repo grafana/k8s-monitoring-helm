@@ -91,6 +91,9 @@ stage.match {
   }
   {{- end }}
 
+  {{- /* the stage.structured_metadata block needs to be conditionalized because the support for enabling structured metadata can be disabled */ -}}
+  {{- /* through the loki limits_conifg on a per-tenant basis, even if there are no values defined or there are values defined but it is disabled */ -}}
+  {{- /* in Loki, the write will fail. */ -}}
   {{- if gt (len .logs.tuning.structuredMetadata) 0 }}
   // set the structured metadata values
   stage.structured_metadata {
