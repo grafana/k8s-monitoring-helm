@@ -82,7 +82,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | receivers.jaeger.grpc | object | `{"enabled":false,"port":14250}` | Configuration for the Jaeger receiver using the gRPC protocol. |
-| receivers.jaeger.include_debug_metrics | bool | `false` | Whether to include high-cardinality debug metrics. |
+| receivers.jaeger.includeDebugMetrics | bool | `false` | Whether to include high-cardinality debug metrics. |
 | receivers.jaeger.thriftBinary | object | `{"enabled":false,"port":6832}` | Configuration for the Jaeger receiver using the Thrift binary protocol. |
 | receivers.jaeger.thriftCompact | object | `{"enabled":false,"port":6831}` | Configuration for the Jaeger receiver using the Thrift compact protocol. |
 | receivers.jaeger.thriftHttp | object | `{"enabled":false,"port":14268}` | Configuration for the Jaeger receiver using the Thrift HTTP protocol. |
@@ -93,14 +93,14 @@ Be sure perform actual integration testing in a live environment in the main [k8
 |-----|------|---------|-------------|
 | receivers.otlp.grpc | object | `{"enabled":false,"port":4317}` | The OTLP gRPC receiver configuration. |
 | receivers.otlp.http | object | `{"enabled":false,"port":4318}` | The OTLP HTTP receiver configuration. |
-| receivers.otlp.include_debug_metrics | bool | `false` | Whether to include high-cardinality debug metrics. |
+| receivers.otlp.includeDebugMetrics | bool | `false` | Whether to include high-cardinality debug metrics. |
 
 ### Receivers: Zipkin
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| receivers.zipkin | object | `{"enabled":false,"include_debug_metrics":false,"port":9411}` | The Zipkin receiver configuration. |
-| receivers.zipkin.include_debug_metrics | bool | `false` | Whether to include high-cardinality debug metrics. |
+| receivers.zipkin | object | `{"enabled":false,"includeDebugMetrics":false,"port":9411}` | The Zipkin receiver configuration. |
+| receivers.zipkin.includeDebugMetrics | bool | `false` | Whether to include high-cardinality debug metrics. |
 
 ### Other Values
 

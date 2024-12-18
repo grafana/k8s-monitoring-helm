@@ -31,7 +31,11 @@ loki.write {{ include "helper.alloy_name" .name | quote }} {
       password = {{ include "secrets.read" (dict "object" . "key" "auth.password") }}
     }
 {{- else if eq (include "secrets.authType" .) "bearerToken" }}
+{{- if .auth.bearerTokenFile }}
+    bearer_token_file = {{ .auth.bearerTokenFile | quote }}
+{{- else }}
     bearer_token = {{ include "secrets.read" (dict "object" . "key" "auth.bearerToken") }}
+{{- end }}
 {{- else if eq (include "secrets.authType" .) "oauth2" }}
     oauth2 {
       client_id = {{ include "secrets.read" (dict "object" . "key" "auth.oauth2.clientId" "nonsensitive" true) }}

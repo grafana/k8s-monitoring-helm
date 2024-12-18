@@ -26,7 +26,7 @@ otelcol.receiver.jaeger "receiver" {
   }
 
   debug_metrics {
-    disable_high_cardinality_metrics = {{ not .Values.receivers.jaeger.include_debug_metrics }}
+    disable_high_cardinality_metrics = {{ not .Values.receivers.jaeger.includeDebugMetrics }}
   }
   output {
 {{- if and .tracesOutput .Values.traces.enabled }}
