@@ -66,16 +66,15 @@ cluster_metrics "feature" {
       {{- if eq $destinationName $.Values.clusterMetrics.opencost.metricsSource }}
         {{- $destinationFound = true }}
         {{- $destination := index $.Values.destinations $index }}
-        {{- $destinationUrl := $destination.url }}
-        {{- $openCostMetricsUrl := $destinationUrl }}
-        {{- if regexMatch "/api/prom/push" $destinationUrl }}
-          {{- $openCostMetricsUrl = (regexReplaceAll "^(.*)/api/prom/push$" $destinationUrl "${1}/api/prom") }}
-        {{- else if regexMatch "/api/v1/push" $destinationUrl }}
-          {{- $openCostMetricsUrl = (regexReplaceAll "^(.*)/api/v1/push$" $destinationUrl "${1}/api/v1/query") }}
-        {{- else if regexMatch "/api/v1/write" $destinationUrl }}
-          {{- $openCostMetricsUrl = (regexReplaceAll "^(.*)/api/v1/write$" $destinationUrl "${1}/api/v1/query") }}
-        {{- else }}
-          {{- $openCostMetricsUrl = (printf "<%s Query URL>" $destinationName)}}
+        {{- $openCostMetricsUrl := (printf "<Query URL for destination \"%s\">" $destinationName) }}
+        {{- if $destination.url }}
+          {{- if regexMatch "/api/prom/push" $destination.url }}
+            {{- $openCostMetricsUrl = (regexReplaceAll "^(.*)/api/prom/push$" $destination.url "${1}/api/prom") }}
+          {{- else if regexMatch "/api/v1/push" $destination.url }}
+            {{- $openCostMetricsUrl = (regexReplaceAll "^(.*)/api/v1/push$" $destination.url "${1}/api/v1/query") }}
+          {{- else if regexMatch "/api/v1/write" $destination.url }}
+            {{- $openCostMetricsUrl = (regexReplaceAll "^(.*)/api/v1/write$" $destination.url "${1}/api/v1/query") }}
+          {{- end }}
         {{- end }}
 
         {{- if eq $.Values.clusterMetrics.opencost.opencost.prometheus.external.url ""}}
