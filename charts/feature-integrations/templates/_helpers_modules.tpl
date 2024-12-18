@@ -3,7 +3,7 @@
 {{- define "alloyModules.load" }}
 {{- if eq .Values.global.alloyModules.source "configMap" }}
 {{- $pathParts := regexSplit "/" .path -1 }}
-{{- $configMapName := printf "%s-alloy-module-%s" $.Release.Name (index $pathParts 1) }}
+{{- $configMapName := printf "%s-alloy-module-%s" (include "helper.global_fullname" .) (index $pathParts 1) }}
 {{- $moduleFile := (slice $pathParts 2) | join "_" }}
 remote.kubernetes.configmap {{ .name | quote }} {
   name = {{ $configMapName | quote }}
