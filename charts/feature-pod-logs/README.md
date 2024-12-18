@@ -62,6 +62,12 @@ Be sure perform actual integration testing in a live environment in the main [k8
 |-----|------|---------|-------------|
 | global.platform | string | `""` | The specific platform for this cluster. Will enable compatibility for some platforms. Supported options: (empty) or "openshift". |
 
+### Logs Processing
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| structuredMetadata | object | `{}` | The structured metadata mappings to set. To not set any structured metadata, set this to an empty object (e.g. `{}`) Format: `<key>: <extracted_key>`. |
+
 ### Volume Log Gathering
 
 | Key | Type | Default | Description |
