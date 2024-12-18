@@ -111,7 +111,7 @@ remote.kubernetes.secret.{{ include "helper.alloy_name" .object.name }}.data[{{ 
 {{- $secretType := (include "secrets.secretType" .object) }}
 {{- $ref := include "secrets.getSecretFromRef" . -}}
 {{- $value := include "secrets.getSecretValue" . -}}
-{{- if (not (eq $ref "")) }}true
+{{- if (ne $ref "") }}true
 {{- else if (eq $secretType "external") }}true
 {{- else if (eq $value "") }}false
 {{- else -}}true{{- end -}}
