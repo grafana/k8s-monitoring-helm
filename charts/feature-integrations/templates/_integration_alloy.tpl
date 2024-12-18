@@ -5,11 +5,11 @@
 {{/* Inputs: instance (Alloy integration instance) Files (Files object) */}}
 {{- define "integrations.alloy.allowList" }}
 {{- $allowList := list "up" }}
-{{- if .instance.metricsTuning.useDefaultAllowList -}}
+{{- if .instance.metrics.tuning.useDefaultAllowList -}}
 {{- $allowList = concat $allowList (.Files.Get "default-allow-lists/alloy.yaml" | fromYamlArray) -}}
 {{- end -}}
-{{- if .instance.metricsTuning.includeMetrics -}}
-{{- $allowList = concat $allowList .instance.metricsTuning.includeMetrics -}}
+{{- if .instance.metrics.tuning.includeMetrics -}}
+{{- $allowList = concat $allowList .instance.metrics.tuning.includeMetrics -}}
 {{- end -}}
 {{ $allowList | uniq | toYaml }}
 {{- end -}}
@@ -75,69 +75,7 @@ declare "alloy_integration" {
         action = "keep"
       }
 
-      rule {
-        source_labels = ["__meta_kubernetes_namespace"]
-        target_label  = "namespace"
-      }
-
-      rule {
-        source_labels = ["__meta_kubernetes_pod_name"]
-        target_label  = "pod"
-      }
-
-      rule {
-        source_labels = ["__meta_kubernetes_pod_container_name"]
-        target_label  = "container"
-      }
-
-      rule {
-        source_labels = [
-          "__meta_kubernetes_pod_controller_kind",
-          "__meta_kubernetes_pod_controller_name",
-        ]
-        separator = "/"
-        target_label  = "workload"
-      }
-      // remove the hash from the ReplicaSet
-      rule {
-        source_labels = ["workload"]
-        regex = "(ReplicaSet/.+)-.+"
-        target_label  = "workload"
-      }
-
-      // set the app name if specified as metadata labels "app:" or "app.kubernetes.io/name:" or "k8s-app:"
-      rule {
-        action = "replace"
-        source_labels = [
-          "__meta_kubernetes_pod_label_app_kubernetes_io_name",
-          "__meta_kubernetes_pod_label_k8s_app",
-          "__meta_kubernetes_pod_label_app",
-        ]
-        separator = ";"
-        regex = "^(?:;*)?([^;]+).*$"
-        replacement = "$1"
-        target_label = "app"
-      }
-
-      // set the component if specified as metadata labels "component:" or "app.kubernetes.io/component:" or "k8s-component:"
-      rule {
-        action = "replace"
-        source_labels = [
-          "__meta_kubernetes_pod_label_app_kubernetes_io_component",
-          "__meta_kubernetes_pod_label_k8s_component",
-          "__meta_kubernetes_pod_label_component",
-        ]
-        regex = "^(?:;*)?([^;]+).*$"
-        replacement = "$1"
-        target_label = "component"
-      }
-
-      // set a source label
-      rule {
-        action = "replace"
-        replacement = "kubernetes"
-        target_label = "source"
-      }
+      {{ include "commonRelabelings" . | nindent 4 }}
     }
 
     export "output" {
@@ -286,24 +224,33 @@ declare "alloy_integration" {
 {{- define "integrations.alloy.include.metrics" }}
 {{- $defaultValues := "integrations/alloy-values.yaml" | .Files.Get | fromYaml }}
 {{- with $defaultValues | merge (deepCopy .instance) }}
-{{- $metricAllowList := include "integrations.alloy.allowList" (dict "instance" . "Files" $.Files) | fromYamlArray }}
-{{- $metricDenyList := .excludeMetrics }}
+  {{- $metricAllowList := include "integrations.alloy.allowList" (dict "instance" . "Files" $.Files) | fromYamlArray }}
+  {{- $metricDenyList := .excludeMetrics }}
 
-{{- $nameLabelDefined := false }}
-{{- $labelSelectors := list }}
-{{- range $k, $v := .labelSelectors }}
-  {{- if eq $k "app.kubernetes.io/name" }}{{- $nameLabelDefined = true }}{{- end }}
-  {{- if $v }}
-    {{- $labelSelectors = append $labelSelectors (printf "%s=%s" $k $v) }}
+  {{- $nameLabelDefined := false }}
+  {{- $labelSelectors := list }}
+  {{- range $k, $v := .labelSelectors }}
+    {{- if eq $k "app.kubernetes.io/name" }}{{- $nameLabelDefined = true }}{{- end }}
+    {{- if $v }}
+      {{- $labelSelectors = append $labelSelectors (printf "%s=%s" $k $v) }}
+    {{- end }}
   {{- end }}
-{{- end }}
-{{- if not $nameLabelDefined }}
-  {{- $labelSelectors = append $labelSelectors (printf "app.kubernetes.io/name=%s" .name) }}
-{{- end }}
-
+  {{- if not $nameLabelDefined }}
+    {{- $labelSelectors = append $labelSelectors (printf "app.kubernetes.io/name=%s" .name) }}
+  {{- end }}
+  {{- $fieldSelectors := list }}
+  {{- range $k, $v := .fieldSelectors }}
+    {{- $fieldSelectors = append $fieldSelectors (printf "%s=%s" $k $v) }}
+  {{- end }}
 alloy_integration_discovery {{ include "helper.alloy_name" .name | quote }} {
-  port_name       = "http-metrics"
+  port_name = {{ .metrics.portName | quote }}
+{{- if .namespaces }}
+  namespaces = {{ .namespaces | toJson }}
+{{- end }}
   label_selectors = {{ $labelSelectors | toJson }}
+{{- if $fieldSelectors }}
+  field_selectors = {{ $fieldSelectors | toJson }}
+{{- end }}
 }
 
 alloy_integration_scrape  {{ include "helper.alloy_name" .name | quote }} {
@@ -316,8 +263,8 @@ alloy_integration_scrape  {{ include "helper.alloy_name" .name | quote }} {
   drop_metrics = {{ $metricDenyList | join "|" | quote }}
 {{- end }}
   scrape_interval = {{ .scrapeInterval | default $.Values.global.scrapeInterval | quote }}
-  max_cache_size = {{ .maxCacheSize | default $.Values.global.maxCacheSize | int }}
+  max_cache_size = {{ .metrics.maxCacheSize | default $.Values.global.maxCacheSize | int }}
   forward_to = argument.metrics_destinations.value
 }
-{{- end }}
+  {{- end }}
 {{- end }}

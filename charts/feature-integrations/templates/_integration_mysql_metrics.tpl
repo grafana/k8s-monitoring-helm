@@ -43,8 +43,8 @@ prometheus.exporter.mysql {{ include "helper.alloy_name" .name | quote }} {
   enable_collectors = {{ .exporter.collectors | toJson }}
 }
 
-{{- $metricAllowList := .metricsTuning.includeMetrics }}
-{{- $metricDenyList := .metricsTuning.excludeMetrics }}
+{{- $metricAllowList := .metrics.tuning.includeMetrics }}
+{{- $metricDenyList := .metrics.tuning.excludeMetrics }}
 prometheus.scrape {{ include "helper.alloy_name" .name | quote }} {
   targets    = prometheus.exporter.mysql.{{ include "helper.alloy_name" .name }}.targets
   job_name   = "integration/mysql"
@@ -52,7 +52,7 @@ prometheus.scrape {{ include "helper.alloy_name" .name | quote }} {
 }
 
 prometheus.relabel {{ include "helper.alloy_name" .name | quote }} {
-  max_cache_size = {{ .maxCacheSize | default $.Values.global.maxCacheSize | int }}
+  max_cache_size = {{ .metrics.maxCacheSize | default $.Values.global.maxCacheSize | int }}
   rule {
     target_label = "instance"
     replacement = {{ .name | quote }}
