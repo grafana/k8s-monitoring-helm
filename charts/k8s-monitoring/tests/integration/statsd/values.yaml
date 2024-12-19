@@ -1,0 +1,35 @@
+---
+cluster:
+  name: statsd-test
+
+destinations:
+  - name: localPrometheus
+    type: prometheus
+    url: http://prometheus-server.prometheus.svc:9090/api/v1/write
+    auth:
+      type: basic
+      username: promuser
+      password: prometheuspassword
+
+alloy-receiver:
+  enabled: true
+  alloy:
+    extraPorts:
+      - name: statsd-udp
+        port: 8125
+        targetPort: 8125
+        protocol: UDP
+      - name: statsd-tcp
+        port: 8125
+        targetPort: 8125
+        protocol: TCP
+  extraConfig: |-
+    prometheus.exporter.statsd "default" {
+      listen_udp           = ":8125"
+      listen_tcp           = ":8125"
+      parse_dogstatsd_tags = true
+    }
+    prometheus.scrape "statsd" {
+      targets    = prometheus.exporter.statsd.default.targets
+      forward_to = [prometheus.remote_write.localprometheus.receiver]
+    }
