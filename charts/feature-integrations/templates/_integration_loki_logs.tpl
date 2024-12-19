@@ -27,14 +27,14 @@
           {{- $valueList = append $valueList (index $selectors .) -}}
         {{- end }}
 rule {
-  source_labels = {{ $labelList | toJson }}
+  source_labels = {{ $labelList | sortAlpha | toJson }}
   separator = ";"
   regex = {{ $valueList | join ";" | quote }}
   target_label = "integration"
   replacement = "loki"
 }
 rule {
-  source_labels = {{ $labelList | toJson }}
+  source_labels = {{ $labelList | sortAlpha | toJson }}
   separator = ";"
   regex = {{ $valueList | join ";" | quote }}
   target_label = "instance"

@@ -27,14 +27,14 @@
 
 {{- if $instance.logs.enabled }}
 rule {
-  source_labels = {{ $labelList | toJson }}
+  source_labels = {{ $labelList | sortAlpha | toJson }}
   separator = ";"
   regex = {{ $valueList | join ";" | quote }}
   target_label = "integration"
   replacement = "mysql"
 }
 rule {
-  source_labels = {{ $labelList | toJson }}
+  source_labels = {{ $labelList | sortAlpha | toJson }}
   separator = ";"
   regex = {{ $valueList | join ";" | quote }}
   target_label = "instance"
