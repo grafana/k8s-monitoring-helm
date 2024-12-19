@@ -7,7 +7,7 @@ spec:
   interval: 1m
   url: https://github.com/grafana/k8s-monitoring-helm
   ref:
-    branch: hackathon-2024-12-cluster-o-nimbus
+    branch: main
   ignore: |
     /*
     !/charts/k8s-monitoring-test
@@ -28,7 +28,7 @@ spec:
   values:
     tests:
       - env:
-          CLUSTER: cluster-monitoring-feature-test
+          CLUSTER: loki-integration-test
           PROMETHEUS_URL: http://prometheus-server.prometheus.svc:9090/api/v1/query
           PROMETHEUS_USER: promuser
           PROMETHEUS_PASS: prometheuspassword
@@ -38,7 +38,7 @@ spec:
           LOKI_PASS: lokipassword
         queries:
           # Loki metrics
-          - query: loki_build_info{cluster="$CLUSTER", job="integrations/loki
+          - query: loki_build_info{cluster="$CLUSTER", job="integrations/loki"}
 
           # Loki Logs
           - query: count_over_time({cluster="$CLUSTER", job="integrations/loki"}[1h])
