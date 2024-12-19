@@ -2,7 +2,10 @@
 (NOTE: Do not edit README.md directly. It is a generated file!)
 (      To make changes, please modify values.yaml or description.txt and run `make examples`)
 -->
-# Example: features/integrations/alloy/values.yaml
+# Integration: Alloy
+
+This example demonstrates how to gather metrics from
+[Grafana Alloy](https://grafana.com/oss/alloy-opentelemetry-collector/).
 
 ## Values
 

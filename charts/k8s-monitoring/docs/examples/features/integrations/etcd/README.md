@@ -2,7 +2,9 @@
 (NOTE: Do not edit README.md directly. It is a generated file!)
 (      To make changes, please modify values.yaml or description.txt and run `make examples`)
 -->
-# Example: features/integrations/etcd/values.yaml
+# Integration: etcd
+
+This example demonstrates how to gather metrics from [etcd](https://etcd.io/).
 
 ## Values
 
