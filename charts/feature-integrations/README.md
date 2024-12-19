@@ -107,7 +107,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| loki | object | `{"instances":[]}` | Scrape metrics from Loki |
+| loki | object | `{"instances":[]}` | Scrape metrics and process logs from Grafana Loki |
 
 ### Integration: MySQL
 

@@ -18,7 +18,7 @@
 | jobName | string | `"integrations/cert-manager"` | The value of the job label for scraped metrics and logs |
 | name | string | `""` | Name for this cert-manager instance. |
 
-### Scrape Settings
+### Metrics Settings
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
