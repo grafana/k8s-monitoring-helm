@@ -1,11 +1,17 @@
 # yamllint disable rule:document-start rule:line-length rule:trailing-spaces
-suite: Test default values
+suite: Test Structured Metadata
 templates:
   - configmap.yaml
 tests:
-  - it: should render the default configuration
+  - it: should create a ConfigMap that sets structured metadata k/v pairs
     set:
       deployAsConfigMap: true
+      structuredMetadata:
+        cmdline: cmdline
+        comm: comm
+        exe: exe
+        pid: pid
+        unit: unit
     asserts:
       - isKind:
           of: ConfigMap
@@ -152,6 +158,16 @@ tests:
                     values = {
                       level = "",
                     }
+                  }
+                }
+                // set the structured metadata values
+                stage.structured_metadata {
+                  values = {
+                    "cmdline" = "cmdline",
+                    "comm" = "comm",
+                    "exe" = "exe",
+                    "pid" = "pid",
+                    "unit" = "unit",
                   }
                 }
 
