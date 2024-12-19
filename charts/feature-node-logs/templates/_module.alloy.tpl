@@ -13,13 +13,6 @@ declare "node_logs" {
     }
     {{- end }}
 
-    // add a static source label to the logs so they can be differentiated / restricted if necessary
-    stage.static_labels {
-      values = {
-        "source" = "journal",
-      }
-    }
-
     // copy all journal labels and make the available to the pipeline stages as labels, there is a label
     // keep defined to filter out unwanted labels, these pipeline labels can be set as structured metadata
     // as well, the following labels are available:
@@ -81,14 +74,16 @@ declare "node_logs" {
   }
 
   loki.process "journal_logs" {
-    // Attempt to determine the log level, most k8s workers are either in logfmt or klog formats
-    // default level to unknown
     stage.static_labels {
       values = {
+        // add a static source label to the logs so they can be differentiated / restricted if necessary
+        "source" = "journal",
+        // default level to unknown
         level = "unknown",
       }
     }
 
+    // Attempt to determine the log level, most k8s workers are either in logfmt or klog formats
     // check to see if the log line matches the klog format (https://github.com/kubernetes/klog)
     stage.match {
       // unescaped regex: ([IWED][0-9]{4}\s+[0-9]{2}:[0-9]{2}:[0-9]{2}\.[0-9]+)
