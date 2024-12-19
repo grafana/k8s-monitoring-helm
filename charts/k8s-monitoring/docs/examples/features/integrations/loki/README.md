@@ -23,10 +23,10 @@ integrations:
   loki:
     instances:
       - name: loki
+        labelSelectors:
+          app.kubernetes.io/name: loki
         logs:
           enabled: true
-          labelSelectors:
-            app.kubernetes.io/name: loki
 
 podLogs:
   enabled: true
