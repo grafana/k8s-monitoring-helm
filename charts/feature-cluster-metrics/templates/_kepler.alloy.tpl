@@ -1,15 +1,17 @@
 {{ define "feature.clusterMetrics.kepler.allowList" }}
+{{- $allowList := list }}
 {{ if .Values.kepler.metricsTuning.useDefaultAllowList }}
-{{ "default-allow-lists/kepler.yaml" | .Files.Get }}
+{{- $allowList = concat $allowList (list "up") (.Files.Get "default-allow-lists/kepler.yaml" | fromYamlArray) -}}
 {{ end }}
 {{ if .Values.kepler.metricsTuning.includeMetrics }}
-{{ .Values.kepler.metricsTuning.includeMetrics | toYaml }}
+{{- $allowList = concat $allowList (list "up") .Values.kepler.metricsTuning.includeMetrics -}}
 {{ end }}
+{{ $allowList | uniq | toYaml }}
 {{ end }}
 
 {{- define "feature.clusterMetrics.kepler.alloy" }}
 {{- if .Values.kepler.enabled }}
-{{- $metricAllowList := include "feature.clusterMetrics.kepler.allowList" . }}
+{{- $metricAllowList := include "feature.clusterMetrics.kepler.allowList" . | fromYamlArray }}
 {{- $metricDenyList := .Values.kepler.metricsTuning.excludeMetrics }}
 {{- $labelSelectors := list }}
 {{- range $k, $v := .Values.kepler.labelMatchers }}
@@ -56,7 +58,7 @@ prometheus.relabel "kepler" {
 {{- if $metricAllowList }}
   rule {
     source_labels = ["__name__"]
-    regex = "up|{{ $metricAllowList | fromYamlArray | join "|" }}"
+    regex = {{ $metricAllowList | join "|" | quote }}
     action = "keep"
   }
 {{- end }}

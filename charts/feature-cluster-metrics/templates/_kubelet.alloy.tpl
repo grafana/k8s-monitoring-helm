@@ -1,21 +1,23 @@
 {{ define "feature.clusterMetrics.kubelet.allowList" }}
+{{- $allowList := list }}
 {{ if .Values.kubelet.metricsTuning.useDefaultAllowList }}
-{{ "default-allow-lists/kubelet.yaml" | .Files.Get }}
+{{- $allowList = concat $allowList (list "up") (.Files.Get "default-allow-lists/kubelet.yaml" | fromYamlArray) -}}
 {{ end }}
 {{ if .Values.kubelet.metricsTuning.includeMetrics }}
-{{ .Values.kubelet.metricsTuning.includeMetrics | toYaml }}
+{{- $allowList = concat $allowList (list "up") .Values.kubelet.metricsTuning.includeMetrics -}}
 {{ end }}
+{{ $allowList | uniq | toYaml }}
 {{ end }}
 
 {{- define "feature.clusterMetrics.kubelet.alloy" }}
 {{- if .Values.kubelet.enabled }}
-{{- $metricAllowList := include "feature.clusterMetrics.kubelet.allowList" . }}
+{{- $metricAllowList := include "feature.clusterMetrics.kubelet.allowList" . | fromYamlArray }}
 {{- $metricDenyList := .Values.kubelet.metricsTuning.excludeMetrics }}
 
 kubernetes.kubelet "scrape" {
   clustering = true
 {{- if $metricAllowList }}
-  keep_metrics = "up|{{ $metricAllowList | fromYamlArray | join "|" }}"
+  keep_metrics = {{ $metricAllowList | join "|" | quote }}
 {{- end }}
 {{- if $metricDenyList }}
   drop_metrics = {{ $metricDenyList | join "|" | quote }}

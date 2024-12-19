@@ -1,21 +1,23 @@
 {{ define "feature.clusterMetrics.cadvisor.allowList" }}
+{{- $allowList := list }}
 {{ if .Values.cadvisor.metricsTuning.useDefaultAllowList }}
-{{ "default-allow-lists/cadvisor.yaml" | .Files.Get }}
+{{- $allowList = concat $allowList (list "up") (.Files.Get "default-allow-lists/cadvisor.yaml" | fromYamlArray) -}}
 {{ end }}
 {{ if .Values.cadvisor.metricsTuning.includeMetrics }}
-{{ .Values.cadvisor.metricsTuning.includeMetrics | toYaml }}
+{{- $allowList = concat $allowList (list "up") .Values.cadvisor.metricsTuning.includeMetrics -}}
 {{ end }}
+{{ $allowList | uniq | toYaml }}
 {{ end }}
 
 {{- define "feature.clusterMetrics.cadvisor.alloy" }}
 {{- if .Values.cadvisor.enabled }}
-{{- $metricAllowList := include "feature.clusterMetrics.cadvisor.allowList" . }}
+{{- $metricAllowList := include "feature.clusterMetrics.cadvisor.allowList" . | fromYamlArray }}
 {{- $metricDenyList := .Values.cadvisor.metricsTuning.excludeMetrics }}
 
 kubernetes.cadvisor "scrape" {
   clustering = true
 {{- if $metricAllowList }}
-  keep_metrics = "up|{{ $metricAllowList | fromYamlArray | join "|" }}"
+  keep_metrics = {{ $metricAllowList | join "|" | quote }}
 {{- end }}
 {{- if $metricDenyList }}
   drop_metrics = {{ $metricDenyList | join "|" | quote }}

@@ -1,18 +1,20 @@
 {{- define "feature.clusterMetrics.node_exporter.allowList" }}
+{{- $allowList := list }}
 {{ if (index .Values "node-exporter").metricsTuning.useDefaultAllowList }}
-{{ "default-allow-lists/node-exporter.yaml" | .Files.Get }}
+{{- $allowList = concat $allowList (list "up") (.Files.Get "default-allow-lists/node-exporter.yaml" | fromYamlArray) -}}
 {{ end }}
 {{ if (index .Values "node-exporter").metricsTuning.useIntegrationAllowList }}
-{{ "default-allow-lists/node-exporter-integration.yaml" | .Files.Get }}
+{{- $allowList = concat $allowList (list "up") (.Files.Get "default-allow-lists/node-exporter-integration.yaml" | fromYamlArray) -}}
 {{ end }}
 {{ if (index .Values "node-exporter").metricsTuning.includeMetrics }}
-{{ (index .Values "node-exporter").metricsTuning.includeMetrics | toYaml }}
+{{- $allowList = concat $allowList (list "up") (index .Values "node-exporter").metricsTuning.includeMetrics -}}
 {{ end }}
+{{ $allowList | uniq | toYaml }}
 {{- end }}
 
 {{- define "feature.clusterMetrics.node_exporter.alloy" }}
 {{- if (index .Values "node-exporter").enabled }}
-{{- $metricAllowList := include "feature.clusterMetrics.node_exporter.allowList" . }}
+{{- $metricAllowList := include "feature.clusterMetrics.node_exporter.allowList" . | fromYamlArray }}
 {{- $metricDenyList := (index .Values "node-exporter").metricsTuning.excludeMetrics }}
 {{- include "alloyModules.load" (deepCopy $ | merge (dict "name" "node_exporter" "path" "modules/system/node-exporter/metrics.alloy")) | nindent 0 }}
 
@@ -44,7 +46,7 @@ node_exporter.scrape "metrics" {
   job_label = "integrations/node_exporter"
   clustering = true
 {{- if $metricAllowList }}
-  keep_metrics = "up|{{ $metricAllowList | fromYamlArray | join "|" }}"
+  keep_metrics = {{ $metricAllowList | join "|" | quote }}
 {{- end }}
 {{- if $metricDenyList }}
   drop_metrics = {{ $metricDenyList | join "|" | quote }}

@@ -4,12 +4,12 @@
 {{/* Returns the allowed metrics */}}
 {{/* Inputs: instance (Alloy integration instance) Files (Files object) */}}
 {{- define "integrations.alloy.allowList" }}
-{{- $allowList := list "up" }}
+{{- $allowList := list }}
 {{- if .instance.metrics.tuning.useDefaultAllowList -}}
-{{- $allowList = concat $allowList (.Files.Get "default-allow-lists/alloy.yaml" | fromYamlArray) -}}
+{{- $allowList = concat $allowList (list "up") (.Files.Get "default-allow-lists/alloy.yaml" | fromYamlArray) -}}
 {{- end -}}
 {{- if .instance.metrics.tuning.includeMetrics -}}
-{{- $allowList = concat $allowList .instance.metrics.tuning.includeMetrics -}}
+{{- $allowList = concat $allowList (list "up") .instance.metrics.tuning.includeMetrics -}}
 {{- end -}}
 {{ $allowList | uniq | toYaml }}
 {{- end -}}
