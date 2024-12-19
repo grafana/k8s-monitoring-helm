@@ -299,7 +299,9 @@ otelcol.exporter.otlphttp {{ include "helper.alloy_name" .name | quote }} {
     tls {
       insecure = {{ .tls.insecure | default false }}
       insecure_skip_verify = {{ .tls.insecureSkipVerify | default false }}
-      {{- if eq (include "secrets.usesSecret" (dict "object" . "key" "tls.ca")) "true" }}
+      {{- if .tls.caFile }}
+      ca_file = {{ .tls.caFile | quote }}
+      {{- else if eq (include "secrets.usesSecret" (dict "object" . "key" "tls.ca")) "true" }}
       ca_pem = {{ include "secrets.read" (dict "object" . "key" "tls.ca" "nonsensitive" true) }}
       {{- end }}
       {{- if eq (include "secrets.usesSecret" (dict "object" . "key" "tls.cert")) "true" }}
