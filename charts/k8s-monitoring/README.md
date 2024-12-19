@@ -290,7 +290,7 @@ podLogs:
 |-----|------|---------|-------------|
 | autoInstrumentation | object | Disabled | Auto-Instrumentation. Requires destinations that supports metrics, logs, and traces. To see the valid options, please see the [Application Observability feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/feature-application-observability). |
 | autoInstrumentation.destinations | list | `[]` | The destinations where application data will be sent. If empty, all capable destinations will be used. |
-| autoInstrumentation.enabled | bool | `false` | Enable gathering Kubernetes Pod logs. |
+| autoInstrumentation.enabled | bool | `false` | Enable automatic instrumentation for applications. |
 
 ### Cluster
 

@@ -56,5 +56,5 @@ Be sure perform actual integration testing in a live environment in the main [k8
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| labelsToKeep | list | `["instance","level","name","unit","service_name"]` | The list of labels to keep on the logs, all other pipeline labels will be dropped. |
+| labelsToKeep | list | `["instance","job","level","name","unit","service_name","source"]` | The list of labels to keep on the logs, all other pipeline labels will be dropped. |
 | structuredMetadata | object | `{}` | The structured metadata mappings to set. To not set any structured metadata, set this to an empty object (e.g. `{}`) Format: `<key>: <extracted_key>`. Example: structuredMetadata:   detected_level: level |
