@@ -1,11 +1,15 @@
 # yamllint disable rule:document-start rule:line-length rule:trailing-spaces
-suite: Test default values
+suite: Test namespaces
 templates:
   - configmap.yaml
 tests:
-  - it: should create a ConfigMap
+  - it: should create a ConfigMap that sets structured metadata k/v pairs
     set:
       deployAsConfigMap: true
+      structuredMetadata:
+        kind: kind
+        component: component
+        name: name
     asserts:
       - isKind:
           of: ConfigMap
@@ -73,6 +77,14 @@ tests:
                     values = {
                       level = "Info",
                     }
+                  }
+                }
+                // set the structured metadata values
+                stage.structured_metadata {
+                  values = {
+                    "component" = "component",
+                    "kind" = "kind",
+                    "name" = "name",
                   }
                 }
 

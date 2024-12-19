@@ -30,21 +30,40 @@ journal:
   #  - kubelet.service
   #  - docker.service
   #  - containerd.service
+  #  - node-problem-detector.service
 
-  # -- Rule blocks to be added used with the loki.source.journal component for journal logs.
-  # These relabeling rules are applied pre-scrape against the targets from service discovery.
-  # Before the scrape, any remaining target labels that start with `__` (i.e. `__meta_kubernetes*`) are dropped.
-  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.relabel/#rule-block))
-  # **Note:** Many field names from journald start with an `_`, such as `_systemd_unit`. The final internal label name would
-  # be `__journal__systemd_unit`, with two underscores between `__journal` and `systemd_unit`.
-  # @section -- Journal Logs
-  extraDiscoveryRules: ""
+# -- Rule blocks to be added used with the loki.source.journal component for journal logs.
+# These relabeling rules are applied pre-scrape against the targets from service discovery.
+# Before the scrape, any remaining target labels that start with `__` (i.e. `__meta_kubernetes*`) are dropped.
+# ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.relabel/#rule-block))
+# **Note:** Many field names from journald start with an `_`, such as `_systemd_unit`. The final internal label name would
+# be `__journal__systemd_unit`, with two underscores between `__journal` and `systemd_unit`.
+# @section -- Journal Logs
+extraDiscoveryRules: ""
 
-  # -- Stage blocks to be added to the loki.process component for journal logs.
-  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/loki/loki.process/#blocks))
-  # This value is templated so that you can refer to other values from this file.
-  # @section -- Journal Logs
-  extraLogProcessingBlocks: ""
+# -- Stage blocks to be added to the loki.process component for journal logs.
+# ([docs](https://grafana.com/docs/alloy/latest/reference/components/loki/loki.process/#blocks))
+# This value is templated so that you can refer to other values from this file.
+# @section -- Journal Logs
+extraLogProcessingStages: ""
+
+# -- The list of labels to keep on the logs, all other pipeline labels will be dropped.
+# @section -- Processing settings
+labelsToKeep:
+  - instance
+  - level
+  - name
+  - unit
+  - service_name
+
+# -- The structured metadata mappings to set.
+# To not set any structured metadata, set this to an empty object (e.g. `{}`)
+# Format: `<key>: <extracted_key>`.
+# Example:
+# structuredMetadata:
+#   detected_level: level
+# @section -- Processing settings
+structuredMetadata: {}
 
 # @ignore
 deployAsConfigMap: false
