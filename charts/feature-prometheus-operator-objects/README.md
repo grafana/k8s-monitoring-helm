@@ -41,7 +41,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 
 | Repository | Name | Version |
 |------------|------|---------|
-| https://prometheus-community.github.io/helm-charts | crds(prometheus-operator-crds) | 17.0.1 |
+| https://prometheus-community.github.io/helm-charts | crds(prometheus-operator-crds) | 17.0.2 |
 <!-- markdownlint-enable no-bare-urls -->
 ## Values
 
