@@ -130,69 +130,72 @@ data:
             action = "keep"
           }
     
-          rule {
-            source_labels = ["__meta_kubernetes_namespace"]
-            target_label  = "namespace"
-          }
-    
-          rule {
-            source_labels = ["__meta_kubernetes_pod_name"]
-            target_label  = "pod"
-          }
-    
-          rule {
-            source_labels = ["__meta_kubernetes_pod_container_name"]
-            target_label  = "container"
-          }
-    
-          rule {
-            source_labels = [
-              "__meta_kubernetes_pod_controller_kind",
-              "__meta_kubernetes_pod_controller_name",
-            ]
-            separator = "/"
-            target_label  = "workload"
-          }
-          // remove the hash from the ReplicaSet
-          rule {
-            source_labels = ["workload"]
-            regex = "(ReplicaSet/.+)-.+"
-            target_label  = "workload"
-          }
-    
-          // set the app name if specified as metadata labels "app:" or "app.kubernetes.io/name:" or "k8s-app:"
-          rule {
-            action = "replace"
-            source_labels = [
-              "__meta_kubernetes_pod_label_app_kubernetes_io_name",
-              "__meta_kubernetes_pod_label_k8s_app",
-              "__meta_kubernetes_pod_label_app",
-            ]
-            separator = ";"
-            regex = "^(?:;*)?([^;]+).*$"
-            replacement = "$1"
-            target_label = "app"
-          }
-    
-          // set the component if specified as metadata labels "component:" or "app.kubernetes.io/component:" or "k8s-component:"
-          rule {
-            action = "replace"
-            source_labels = [
-              "__meta_kubernetes_pod_label_app_kubernetes_io_component",
-              "__meta_kubernetes_pod_label_k8s_component",
-              "__meta_kubernetes_pod_label_component",
-            ]
-            regex = "^(?:;*)?([^;]+).*$"
-            replacement = "$1"
-            target_label = "component"
-          }
-    
-          // set a source label
-          rule {
-            action = "replace"
-            replacement = "kubernetes"
-            target_label = "source"
-          }
+          
+        
+        rule {
+          source_labels = ["__meta_kubernetes_namespace"]
+          target_label  = "namespace"
+        }
+        
+        rule {
+          source_labels = ["__meta_kubernetes_pod_name"]
+          target_label  = "pod"
+        }
+        
+        rule {
+          source_labels = ["__meta_kubernetes_pod_container_name"]
+          target_label  = "container"
+        }
+        
+        rule {
+          source_labels = [
+            "__meta_kubernetes_pod_controller_kind",
+            "__meta_kubernetes_pod_controller_name",
+          ]
+          separator = "/"
+          target_label  = "workload"
+        }
+        
+        // remove the hash from the ReplicaSet
+        rule {
+          source_labels = ["workload"]
+          regex = "(ReplicaSet/.+)-.+"
+          target_label  = "workload"
+        }
+        
+        // set the app name if specified as metadata labels "app:" or "app.kubernetes.io/name:" or "k8s-app:"
+        rule {
+          action = "replace"
+          source_labels = [
+            "__meta_kubernetes_pod_label_app_kubernetes_io_name",
+            "__meta_kubernetes_pod_label_k8s_app",
+            "__meta_kubernetes_pod_label_app",
+          ]
+          separator = ";"
+          regex = "^(?:;*)?([^;]+).*$"
+          replacement = "$1"
+          target_label = "app"
+        }
+        
+        // set the component if specified as metadata labels "component:" or "app.kubernetes.io/component:" or "k8s-component:"
+        rule {
+          action = "replace"
+          source_labels = [
+            "__meta_kubernetes_pod_label_app_kubernetes_io_component",
+            "__meta_kubernetes_pod_label_k8s_component",
+            "__meta_kubernetes_pod_label_component",
+          ]
+          regex = "^(?:;*)?([^;]+).*$"
+          replacement = "$1"
+          target_label = "component"
+        }
+        
+        // set a source label
+        rule {
+          action = "replace"
+          replacement = "kubernetes"
+          target_label = "source"
+        }
         }
     
         export "output" {
@@ -331,9 +334,8 @@ data:
         }
       }
       
-      
       alloy_integration_discovery "alloy_metrics" {
-        port_name       = "http-metrics"
+        port_name = "http-metrics"
         label_selectors = ["app.kubernetes.io/name=alloy-metrics"]
       }
       

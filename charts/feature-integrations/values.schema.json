@@ -54,6 +54,14 @@
                 }
             }
         },
+        "loki": {
+            "type": "object",
+            "properties": {
+                "instances": {
+                    "type": "array"
+                }
+            }
+        },
         "mysql": {
             "type": "object",
             "properties": {
@@ -70,31 +78,48 @@
         "alloy-integration": {
             "type": "object",
             "properties": {
+                "fieldSelectors": {
+                    "type": "array"
+                },
                 "labelSelectors": {
                     "type": "object"
                 },
-                "maxCacheSize": {
-                    "type": "null"
-                },
-                "metricsTuning": {
+                "metrics": {
                     "type": "object",
                     "properties": {
-                        "excludeMetrics": {
-                            "type": "array"
-                        },
-                        "includeMetrics": {
-                            "type": "array"
-                        },
-                        "useDefaultAllowList": {
+                        "enabled": {
                             "type": "boolean"
+                        },
+                        "maxCacheSize": {
+                            "type": "null"
+                        },
+                        "portName": {
+                            "type": "string"
+                        },
+                        "scrapeInterval": {
+                            "type": "null"
+                        },
+                        "tuning": {
+                            "type": "object",
+                            "properties": {
+                                "excludeMetrics": {
+                                    "type": "array"
+                                },
+                                "includeMetrics": {
+                                    "type": "array"
+                                },
+                                "useDefaultAllowList": {
+                                    "type": "boolean"
+                                }
+                            }
                         }
                     }
                 },
                 "name": {
                     "type": "string"
                 },
-                "scrapeInterval": {
-                    "type": "null"
+                "namespaces": {
+                    "type": "array"
                 },
                 "type": {
                     "type": "string",
@@ -105,7 +130,7 @@
         "cert-manager-integration": {
             "type": "object",
             "properties": {
-                "field_selectors": {
+                "fieldSelectors": {
                     "type": "array"
                 },
                 "jobName": {
@@ -114,17 +139,39 @@
                 "labelSelectors": {
                     "type": "object"
                 },
-                "maxCacheSize": {
-                    "type": "null"
-                },
-                "metricsTuning": {
+                "logs": {
                     "type": "object",
                     "properties": {
-                        "excludeMetrics": {
-                            "type": "array"
+                        "enabled": {
+                            "type": "boolean"
+                        }
+                    }
+                },
+                "metrics": {
+                    "type": "object",
+                    "properties": {
+                        "enabled": {
+                            "type": "boolean"
                         },
-                        "includeMetrics": {
-                            "type": "array"
+                        "maxCacheSize": {
+                            "type": "null"
+                        },
+                        "portName": {
+                            "type": "string"
+                        },
+                        "scrapeInterval": {
+                            "type": "null"
+                        },
+                        "tuning": {
+                            "type": "object",
+                            "properties": {
+                                "excludeMetrics": {
+                                    "type": "array"
+                                },
+                                "includeMetrics": {
+                                    "type": "array"
+                                }
+                            }
                         }
                     }
                 },
@@ -133,12 +180,6 @@
                 },
                 "namespaces": {
                     "type": "array"
-                },
-                "portName": {
-                    "type": "string"
-                },
-                "scrapeInterval": {
-                    "type": "null"
                 },
                 "type": {
                     "type": "string",
@@ -155,17 +196,39 @@
                 "labelSelectors": {
                     "type": "object"
                 },
-                "maxCacheSize": {
-                    "type": "null"
-                },
-                "metricsTuning": {
+                "logs": {
                     "type": "object",
                     "properties": {
-                        "excludeMetrics": {
-                            "type": "array"
+                        "enabled": {
+                            "type": "boolean"
+                        }
+                    }
+                },
+                "metrics": {
+                    "type": "object",
+                    "properties": {
+                        "enabled": {
+                            "type": "boolean"
                         },
-                        "includeMetrics": {
-                            "type": "array"
+                        "maxCacheSize": {
+                            "type": "null"
+                        },
+                        "portName": {
+                            "type": "string"
+                        },
+                        "scrapeInterval": {
+                            "type": "null"
+                        },
+                        "tuning": {
+                            "type": "object",
+                            "properties": {
+                                "excludeMetrics": {
+                                    "type": "array"
+                                },
+                                "includeMetrics": {
+                                    "type": "array"
+                                }
+                            }
                         }
                     }
                 },
@@ -175,15 +238,100 @@
                 "namespaces": {
                     "type": "array"
                 },
-                "portName": {
-                    "type": "string"
-                },
-                "scrapeInterval": {
-                    "type": "null"
-                },
                 "type": {
                     "type": "string",
                     "const": "etcd"
+                }
+            }
+        },
+        "loki-integration": {
+            "type": "object",
+            "properties": {
+                "fieldSelectors": {
+                    "type": "array"
+                },
+                "labelSelectors": {
+                    "type": "object"
+                },
+                "logs": {
+                    "type": "object",
+                    "properties": {
+                        "enabled": {
+                            "type": "boolean"
+                        },
+                        "tuning": {
+                            "type": "object",
+                            "properties": {
+                                "dropLogLevels": {
+                                    "type": "array"
+                                },
+                                "excludeLines": {
+                                    "type": "array"
+                                },
+                                "scrubTimestamp": {
+                                    "type": "boolean"
+                                },
+                                "setLogLevelLabel": {
+                                    "type": "boolean"
+                                },
+                                "structuredMetadata": {
+                                    "type": "object",
+                                    "properties": {
+                                        "caller": {
+                                            "type": "string"
+                                        },
+                                        "component": {
+                                            "type": "string"
+                                        }
+                                    }
+                                },
+                                "timestampFormat": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                },
+                "metrics": {
+                    "type": "object",
+                    "properties": {
+                        "enabled": {
+                            "type": "boolean"
+                        },
+                        "maxCacheSize": {
+                            "type": "null"
+                        },
+                        "portName": {
+                            "type": "string"
+                        },
+                        "scrapeInterval": {
+                            "type": "null"
+                        },
+                        "tuning": {
+                            "type": "object",
+                            "properties": {
+                                "excludeMetrics": {
+                                    "type": "array"
+                                },
+                                "includeMetrics": {
+                                    "type": "array"
+                                },
+                                "useDefaultAllowList": {
+                                    "type": "boolean"
+                                }
+                            }
+                        }
+                    }
+                },
+                "name": {
+                    "type": "string"
+                },
+                "namespaces": {
+                    "type": "array"
+                },
+                "type": {
+                    "type": "string",
+                    "const": "loki"
                 }
             }
         },
@@ -238,36 +386,50 @@
                         }
                     }
                 },
+                "fieldSelectors": {
+                    "type": "array"
+                },
+                "labelSelectors": {
+                    "type": "object"
+                },
                 "logs": {
                     "type": "object",
                     "properties": {
                         "enabled": {
                             "type": "boolean"
-                        },
-                        "labelSelectors": {
-                            "type": "object"
                         }
                     }
                 },
-                "maxCacheSize": {
-                    "type": "null"
-                },
-                "metricsTuning": {
+                "metrics": {
                     "type": "object",
                     "properties": {
-                        "excludeMetrics": {
-                            "type": "array"
+                        "enabled": {
+                            "type": "boolean"
                         },
-                        "includeMetrics": {
-                            "type": "array"
+                        "maxCacheSize": {
+                            "type": "null"
+                        },
+                        "scrapeInterval": {
+                            "type": "null"
+                        },
+                        "tuning": {
+                            "type": "object",
+                            "properties": {
+                                "excludeMetrics": {
+                                    "type": "array"
+                                },
+                                "includeMetrics": {
+                                    "type": "array"
+                                }
+                            }
                         }
                     }
                 },
                 "name": {
                     "type": "string"
                 },
-                "scrapeInterval": {
-                    "type": "null"
+                "namespaces": {
+                    "type": "array"
                 },
                 "secret": {
                     "type": "object",
@@ -304,6 +466,9 @@
                     },
                     {
                         "$ref": "#/definitions/etcd-integration"
+                    },
+                    {
+                        "$ref": "#/definitions/loki-integration"
                     },
                     {
                         "$ref": "#/definitions/mysql-integration"

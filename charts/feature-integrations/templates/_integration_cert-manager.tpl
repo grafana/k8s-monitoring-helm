@@ -21,8 +21,8 @@ declare "cert_manager_integration" {
 {{- define "integrations.cert-manager.include.metrics" }}
 {{- $defaultValues := "integrations/cert-manager-values.yaml" | .Files.Get | fromYaml }}
 {{- with $defaultValues | merge (deepCopy .instance) }}
-{{- $metricAllowList := .metricsTuning.includeMetrics }}
-{{- $metricDenyList := .metricsTuning.excludeMetrics }}
+{{- $metricAllowList := .metrics.tuning.includeMetrics }}
+{{- $metricDenyList := .metrics.tuning.excludeMetrics }}
 
 {{- $nameLabelDefined := false }}
 {{- $labelSelectors := list }}
@@ -49,7 +49,7 @@ cert_manager.kubernetes {{ include "helper.alloy_name" .name | quote }} {
 {{- if $fieldSelectors }}
   field_selectors = {{ $fieldSelectors | toJson }}
 {{- end }}
-  port_name = {{ .portName | quote }}
+  port_name = {{ .metrics.portName | quote }}
 }
 
 cert_manager.scrape {{ include "helper.alloy_name" .name | quote }} {
@@ -63,7 +63,7 @@ cert_manager.scrape {{ include "helper.alloy_name" .name | quote }} {
   drop_metrics = {{ $metricDenyList | join "|" | quote }}
 {{- end }}
   scrape_interval = {{ .scrapeInterval | default $.Values.global.scrapeInterval | quote }}
-  max_cache_size = {{ .maxCacheSize | default $.Values.global.maxCacheSize | int }}
+  max_cache_size = {{ .metrics.maxCacheSize | default $.Values.global.maxCacheSize | int }}
   forward_to = argument.metrics_destinations.value
 }
 {{- end }}
