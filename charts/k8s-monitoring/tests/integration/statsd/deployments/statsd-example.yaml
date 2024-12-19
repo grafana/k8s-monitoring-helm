@@ -1,0 +1,68 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: statsd-example
+data:
+  statsd-example.js: |
+    function sleep(ms) {
+      return new Promise((resolve) => setTimeout(resolve, ms));
+    }
+  
+    async function main() {
+      console.log('Starting statsd example');
+      const StatsD = require('node-statsd');
+      const client = new StatsD({
+        host: 'k8smon-alloy-receiver.default.svc',
+        port: 8125,
+      });
+      
+      while (true) {
+        console.log('Sending metric');
+        client.gauge('example.gauge', 42, function(error, bytes) {
+          if (error) {
+            console.error('Failed to send metric:', error);
+          } else {
+            console.log('Successfully sent', bytes, 'bytes');
+          }
+        });
+        await sleep(10000);
+      }
+      client.close();
+    }
+    main();
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: statsd-example
+spec:
+  initContainers:
+    - name: dependencies
+      image: node
+      command:
+        - bash
+        - -c
+        - | 
+          npm install node-statsd
+          cp /src/statsd-example.js /workspace
+      workingDir: /workspace
+      volumeMounts:
+        - name: workspace
+          mountPath: /workspace
+        - name: source
+          mountPath: /src
+  containers:
+    - name: main
+      image: node
+      args: ["statsd-example.js"]
+      workingDir: /workspace
+      volumeMounts:
+        - name: workspace
+          mountPath: /workspace
+  volumes:
+    - name: workspace
+      emptyDir: {}
+    - name: source
+      configMap:
+        name: statsd-example
