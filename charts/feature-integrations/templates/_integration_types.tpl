@@ -3,5 +3,6 @@
 - alloy
 - cert-manager
 - etcd
+- loki
 - mysql
 {{- end -}}

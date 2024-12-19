@@ -714,16 +714,6 @@ data:
           replacement = "$1"
           target_label = "job"
         }
-        rule {
-          source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
-          regex         = "(.+)"
-          target_label  = "app_kubernetes_io_name"
-        }
-        rule {
-          source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_logs_job"]
-          regex         = "(.+)"
-          target_label  = "job"
-        }
       
         // set the container runtime as a label
         rule {
@@ -732,6 +722,27 @@ data:
           regex = "^(\\S+):\\/\\/.+$"
           replacement = "$1"
           target_label = "tmp_container_runtime"
+        }
+      
+        // set the job label from the k8s.grafana.com/logs.job annotation if it exists
+        rule {
+          source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_logs_job"]
+          regex = "(.+)"
+          target_label = "job"
+        }
+      
+        // make all labels on the pod available to the pipeline as labels,
+        // they are omitted before write to loki via stage.label_keep unless explicitly set
+        rule {
+          action = "labelmap"
+          regex = "__meta_kubernetes_pod_label_(.+)"
+        }
+      
+        // make all annotations on the pod available to the pipeline as labels,
+        // they are omitted before write to loki via stage.label_keep unless explicitly set
+        rule {
+          action = "labelmap"
+          regex = "__meta_kubernetes_pod_annotation_(.+)"
         }
       }
       
@@ -801,6 +812,12 @@ data:
             "tmp_container_runtime",
           ]
         }
+      
+        // Only keep the labels that are defined in the `keepLabels` list.
+        stage.label_keep {
+          values = ["app_kubernetes_io_name","container","instance","job","level","namespace","pod","service_name"]
+        }
+      
         forward_to = argument.logs_destinations.value
       }
     }

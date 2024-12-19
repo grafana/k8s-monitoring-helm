@@ -40,6 +40,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | annotations | object | `{"job":"k8s.grafana.com/logs.job"}` | Log labels to set with values copied from the Kubernetes Pod annotations. Format: `<log_label>: <kubernetes_annotation>`. |
 | extraLogProcessingStages | string | `""` | Stage blocks to be added to the loki.process component for pod logs. ([docs](https://grafana.com/docs/alloy/latest/reference/components/loki/loki.process/#blocks)) This value is templated so that you can refer to other values from this file. |
 | labels | object | `{"app_kubernetes_io_name":"app.kubernetes.io/name"}` | Log labels to set with values copied from the Kubernetes Pod labels. Format: `<log_label>: <kubernetes_label>`. |
+| labelsToKeep | list | `["app_kubernetes_io_name","container","instance","job","level","namespace","pod","service_name"]` | The list of labels to keep on the logs, all other pipeline labels will be dropped. |
 
 ### Pod Discovery
 
@@ -62,6 +63,12 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | global.platform | string | `""` | The specific platform for this cluster. Will enable compatibility for some platforms. Supported options: (empty) or "openshift". |
+
+### Processing settings
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| structuredMetadata | object | `{}` | The structured metadata mappings to set. To not set any structured metadata, set this to an empty object (e.g. `{}`) Format: `<key>: <extracted_key>`. Example: structuredMetadata:   component: component   kind: kind   name: name |
 
 ### Volume Log Gathering
 

@@ -103,6 +103,12 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | global.maxCacheSize | int | `100000` | Sets the max_cache_size for every prometheus.relabel component. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)) This should be at least 2x-5x your largest scrape target or samples appended rate. |
 | global.scrapeInterval | string | `"60s"` | How frequently to scrape metrics. |
 
+### Integration: Loki
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| loki | object | `{"instances":[]}` | Scrape metrics from Loki |
+
 ### Integration: MySQL
 
 | Key | Type | Default | Description |
@@ -148,3 +154,5 @@ To contribute integrations to this feature, you must create or modify a few file
         the `integrations.<slug>.include.logs` function.
     *   `default-allow-lists/<slug>.yaml` - If the integration scrapes metrics, a common pattern is to provide a list of
         metrics that should be allowed. This reduces the amount of metrics delivered to a useful minimal set.
+
+*   When testing changes to this chart, from `/charts/k8s-monitoring` run `rm -rf Chart.lock && make build` to force the chart to be rebuilt.
