@@ -1,11 +1,17 @@
 # yamllint disable rule:document-start rule:line-length rule:trailing-spaces
-suite: Test default values
+suite: Test Filtering Units
 templates:
   - configmap.yaml
 tests:
-  - it: should render the default configuration
+  - it: should create a ConfigMap that only includes certain units
     set:
       deployAsConfigMap: true
+      journal:
+        units:
+          - kubelet.service
+          - docker.service
+          - containerd.service
+          - node-problem-detector.service
     asserts:
       - isKind:
           of: ConfigMap
@@ -18,6 +24,11 @@ tests:
               }
 
               loki.relabel "journal" {
+                rule {
+                  action = "keep"
+                  source_labels = ["__journal__systemd_unit"]
+                  regex = "kubelet.service|docker.service|containerd.service|node-problem-detector.service"
+                }
 
                 // add a static source label to the logs so they can be differentiated / restricted if necessary
                 stage.static_labels {

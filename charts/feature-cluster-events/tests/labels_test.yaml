@@ -1,11 +1,18 @@
 # yamllint disable rule:document-start rule:line-length rule:trailing-spaces
-suite: Test default values
+suite: Test namespaces
 templates:
   - configmap.yaml
 tests:
-  - it: should create a ConfigMap
+  - it: should create a ConfigMap that sets custom labels to keep
     set:
       deployAsConfigMap: true
+      labelsToKeep:
+        - job
+        - namespace
+        - level
+        - node
+        - name
+        - source
     asserts:
       - isKind:
           of: ConfigMap
@@ -78,7 +85,7 @@ tests:
 
                 // Only keep the labels that are defined in the `keepLabels` list.
                 stage.label_keep {
-                  values = ["job","level","namespace","node","source"]
+                  values = ["job","namespace","level","node","name","source"]
                 }
                 forward_to = argument.logs_destinations.value
               }
