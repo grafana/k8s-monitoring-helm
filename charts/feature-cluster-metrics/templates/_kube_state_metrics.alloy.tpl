@@ -1,15 +1,17 @@
 {{ define "feature.clusterMetrics.kube_state_metrics.allowList" }}
+{{- $allowList := list }}
 {{ if (index .Values "kube-state-metrics").metricsTuning.useDefaultAllowList }}
-{{ "default-allow-lists/kube-state-metrics.yaml" | .Files.Get }}
+{{- $allowList = concat $allowList (list "up") (.Files.Get "default-allow-lists/kube-state-metrics.yaml" | fromYamlArray) -}}
 {{ end }}
 {{ if (index .Values "kube-state-metrics").metricsTuning.includeMetrics }}
-{{ (index .Values "kube-state-metrics").metricsTuning.includeMetrics | toYaml }}
+{{- $allowList = concat $allowList (list "up") (index .Values "kube-state-metrics").metricsTuning.includeMetrics -}}
 {{ end }}
+{{ $allowList | uniq | toYaml }}
 {{ end }}
 
 {{- define "feature.clusterMetrics.kube_state_metrics.alloy" }}
 {{- if (index .Values "kube-state-metrics").enabled }}
-{{- $metricAllowList := include "feature.clusterMetrics.kube_state_metrics.allowList" . }}
+{{- $metricAllowList := include "feature.clusterMetrics.kube_state_metrics.allowList" . | fromYamlArray }}
 {{- $metricDenyList := (index .Values "kube-state-metrics").metricsTuning.excludeMetrics }}
 {{- include "alloyModules.load" (deepCopy $ | merge (dict "name" "kube_state_metrics" "path" "modules/kubernetes/kube-state-metrics/metrics.alloy")) | nindent 0 }}
 
@@ -37,7 +39,7 @@ kube_state_metrics.scrape "metrics" {
   targets = {{ $scrapeTargets }}
   clustering = true
 {{- if $metricAllowList }}
-  keep_metrics = "up|{{ $metricAllowList | fromYamlArray | join "|" }}"
+  keep_metrics = {{ $metricAllowList | join "|" | quote }}
 {{- end }}
 {{- if $metricDenyList }}
   drop_metrics = {{ $metricDenyList | join "|" | quote }}

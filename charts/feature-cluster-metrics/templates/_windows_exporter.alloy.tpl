@@ -1,13 +1,15 @@
 {{- define "feature.clusterMetrics.windows_exporter.allowList" }}
+{{- $allowList := list }}
 {{ if (index .Values "windows-exporter").metricsTuning.useDefaultAllowList }}
-{{ "default-allow-lists/windows-exporter.yaml" | .Files.Get }}
+{{- $allowList = concat $allowList (list "up") (.Files.Get "default-allow-lists/windows-exporter.yaml" | fromYamlArray) -}}
 {{ end }}
 {{ if (index .Values "windows-exporter").metricsTuning.useIntegrationAllowList }}
-{{ "default-allow-lists/windows-exporter-integration.yaml" | .Files.Get }}
+{{- $allowList = concat $allowList (list "up") (.Files.Get "default-allow-lists/windows-exporter-integration.yaml" | fromYamlArray) -}}
 {{ end }}
 {{ if (index .Values "windows-exporter").metricsTuning.includeMetrics }}
-{{ (index .Values "windows-exporter").metricsTuning.includeMetrics | toYaml }}
+{{- $allowList = concat $allowList (list "up") (index .Values "windows-exporter").metricsTuning.includeMetrics -}}
 {{ end }}
+{{ $allowList | uniq | toYaml }}
 {{- end }}
 
 {{- define "feature.clusterMetrics.windows_exporter.alloy" }}
@@ -63,7 +65,7 @@ prometheus.relabel "windows_exporter" {
 {{- if $metricAllowList }}
   rule {
     source_labels = ["__name__"]
-    regex = "up|{{ $metricAllowList | join "|" }}"
+    regex = {{ $metricAllowList | join "|" | quote }}
     action = "keep"
   }
 {{- end }}

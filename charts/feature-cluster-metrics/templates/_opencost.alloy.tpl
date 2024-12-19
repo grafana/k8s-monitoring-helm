@@ -1,15 +1,17 @@
 {{ define "feature.clusterMetrics.opencost.allowList" }}
+{{- $allowList := list }}
 {{ if .Values.opencost.metricsTuning.useDefaultAllowList }}
-{{ "default-allow-lists/opencost.yaml" | .Files.Get }}
+{{- $allowList = concat $allowList (list "up") (.Files.Get "default-allow-lists/opencost.yaml" | fromYamlArray) -}}
 {{ end }}
 {{ if .Values.opencost.metricsTuning.includeMetrics }}
-{{ .Values.opencost.metricsTuning.includeMetrics | toYaml }}
+{{- $allowList = concat $allowList (list "up") .Values.opencost.metricsTuning.includeMetrics -}}
 {{ end }}
+{{ $allowList | uniq | toYaml }}
 {{ end }}
 
 {{- define "feature.clusterMetrics.opencost.alloy" }}
 {{- if .Values.opencost.enabled }}
-{{- $metricAllowList := include "feature.clusterMetrics.opencost.allowList" . }}
+{{- $metricAllowList := include "feature.clusterMetrics.opencost.allowList" . | fromYamlArray }}
 {{- $metricDenyList := .Values.opencost.metricsTuning.excludeMetrics }}
 {{- $labelSelectors := list }}
 {{- range $k, $v := .Values.opencost.labelMatchers }}
@@ -56,7 +58,7 @@ prometheus.relabel "opencost" {
 {{- if $metricAllowList }}
   rule {
     source_labels = ["__name__"]
-    regex = "up|{{ $metricAllowList | fromYamlArray | join "|" }}"
+    regex = {{ $metricAllowList | join "|" | quote }}
     action = "keep"
   }
 {{- end }}
