@@ -16,8 +16,8 @@
 {{- $labelList := list }}
 {{- $valueList := list }}
 {{- $selectors := dict "app.kubernetes.io/name" "mysql" "app.kubernetes.io/instance" $instance.name }}
-{{- if $instance.logs.labelSelectors }}
-  {{- $selectors = $instance.logs.labelSelectors }}
+{{- if $instance.labelSelectors }}
+  {{- $selectors = $instance.labelSelectors }}
 {{- end }}
 
 {{- range (keys $selectors) }}
