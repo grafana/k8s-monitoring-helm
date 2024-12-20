@@ -68,7 +68,7 @@ declare "node_logs" {
     relabel_rules = loki.relabel.journal.rules
     labels = {
       job = {{ .Values.journal.jobLabel | quote }},
-      instance = env("HOSTNAME"),
+      instance = sys.env("HOSTNAME"),
     }
     forward_to = [loki.process.journal_logs.receiver]
   }

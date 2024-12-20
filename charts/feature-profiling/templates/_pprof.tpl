@@ -4,7 +4,7 @@
 discovery.kubernetes "pprof_pods" {
   selectors {
     role = "pod"
-    field = "spec.nodeName=" + env("HOSTNAME")
+    field = "spec.nodeName=" + sys.env("HOSTNAME")
   }
 {{- if .Values.pprof.namespaces }}
   namespaces {

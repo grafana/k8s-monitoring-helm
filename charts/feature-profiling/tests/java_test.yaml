@@ -26,15 +26,15 @@ tests:
               discovery.kubernetes "java_pods" {
                 selectors {
                   role = "pod"
-                  field = "spec.nodeName=" + env("HOSTNAME")
+                  field = "spec.nodeName=" + sys.env("HOSTNAME")
                 }
                 role = "pod"
               }
-          
+
               discovery.process "java_pods" {
                 join = discovery.kubernetes.java_pods.targets
               }
-          
+
               discovery.relabel "java_pods" {
                 targets = discovery.process.java_pods.targets
                 rule {
@@ -69,7 +69,7 @@ tests:
                   target_label = "container"
                 }
               }
-          
+
               pyroscope.java "java_pods" {
                 targets = discovery.relabel.java_pods.output
                 profiling_config {

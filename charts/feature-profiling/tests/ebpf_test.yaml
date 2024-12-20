@@ -26,11 +26,11 @@ tests:
               discovery.kubernetes "ebpf_pods" {
                 selectors {
                   role = "pod"
-                  field = "spec.nodeName=" + env("HOSTNAME")
+                  field = "spec.nodeName=" + sys.env("HOSTNAME")
                 }
                 role = "pod"
               }
-          
+
               discovery.relabel "ebpf_pods" {
                 targets = discovery.kubernetes.ebpf_pods.targets
                 rule {
@@ -63,7 +63,7 @@ tests:
                   target_label = "service_name"
                 }
               }
-          
+
               pyroscope.ebpf "ebpf_pods" {
                 targets = discovery.relabel.ebpf_pods.output
                 demangle = "none"
@@ -100,14 +100,14 @@ tests:
               discovery.kubernetes "ebpf_pods" {
                 selectors {
                   role = "pod"
-                  field = "spec.nodeName=" + env("HOSTNAME")
+                  field = "spec.nodeName=" + sys.env("HOSTNAME")
                 }
                 namespaces {
                   names = ["default"]
                 }
                 role = "pod"
               }
-            
+
               discovery.relabel "ebpf_pods" {
                 targets = discovery.kubernetes.ebpf_pods.targets
                 rule {
@@ -145,7 +145,7 @@ tests:
                   action = "drop"
                 }
               }
-            
+
               pyroscope.ebpf "ebpf_pods" {
                 targets = discovery.relabel.ebpf_pods.output
                 demangle = "none"
