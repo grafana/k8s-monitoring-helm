@@ -1,0 +1,74 @@
+---
+cluster:
+  name: k8s-monitoring-gc-feature-test
+
+destinations:
+  - name: grafanaCloudMetrics
+    type: prometheus
+    url: https://prometheus-prod-13-prod-us-east-0.grafana.net/api/prom/push
+    auth:
+      type: basic
+      usernameKey: PROMETHEUS_USER
+      passwordKey: PROMETHEUS_PASS
+    secret:
+      create: false
+      name: grafana-cloud-credentials
+    extraLabelsFrom:
+      random: env("RANDOM_NUMBER")
+  - name: grafanaCloudLogs
+    type: loki
+    url: https://logs-prod-006.grafana.net/loki/api/v1/push
+    auth:
+      type: basic
+      usernameKey: LOKI_USER
+      passwordKey: LOKI_PASS
+    secret:
+      create: false
+      name: grafana-cloud-credentials
+    extraLabelsFrom:
+      random: env("RANDOM_NUMBER")
+
+clusterMetrics:
+  enabled: true
+  kepler:
+    enabled: true
+
+clusterEvents:
+  enabled: true
+
+podLogs:
+  enabled: true
+
+integrations:
+  alloy:
+    instances:
+      - name: alloy-metrics
+        labelSelectors:
+          app.kubernetes.io/name: alloy-metrics
+      - name: alloy-singleton
+        labelSelectors:
+          app.kubernetes.io/name: alloy-singleton
+      - name: alloy-logs
+        labelSelectors:
+          app.kubernetes.io/name: alloy-logs
+
+alloy-metrics:
+  enabled: true
+  alloy:
+    envFrom:
+      - configMapRef:
+          name: test-variables
+
+alloy-singleton:
+  enabled: true
+  alloy:
+    envFrom:
+      - configMapRef:
+          name: test-variables
+
+alloy-logs:
+  enabled: true
+  alloy:
+    envFrom:
+      - configMapRef:
+          name: test-variables
