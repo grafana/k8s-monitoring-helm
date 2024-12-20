@@ -46,18 +46,20 @@ integrations:
   loki:
     instances:
       - name: loki
-        labelSelectors:
-          app.kubernetes.io/name: loki
-        logs:
-          enabled: true
-          namespaces:
-            - logs
+        namespaces:
+          - logs
+  grafana:
+    instances:
+      - name: grafana
+        namespaces:
+          - o11y
 
 clusterEvents:
   enabled: true
   collector: alloy-singleton
   namespaces:
     - logs
+    - o11y
 
 clusterMetrics:
   enabled: true
@@ -72,7 +74,7 @@ clusterMetrics:
       rule {
         action = "keep"
         source_labels = ["namespace"]
-        regex = "logs"
+        regex = "logs|o11y"
       }
   apiServer:
     enabled: false
@@ -92,7 +94,7 @@ clusterMetrics:
       rule {
         action = "keep"
         source_labels = ["namespace"]
-        regex = "logs"
+        regex = "logs|o11y"
       }
   node-exporter:
     enabled: false
