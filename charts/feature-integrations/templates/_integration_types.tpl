@@ -3,6 +3,7 @@
 - alloy
 - cert-manager
 - etcd
+- grafana
 - loki
 - mysql
 {{- end -}}

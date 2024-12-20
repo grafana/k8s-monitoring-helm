@@ -54,6 +54,14 @@
                 }
             }
         },
+        "grafana": {
+            "type": "object",
+            "properties": {
+                "instances": {
+                    "type": "array"
+                }
+            }
+        },
         "loki": {
             "type": "object",
             "properties": {
@@ -244,6 +252,86 @@
                 }
             }
         },
+        "grafana-integration": {
+            "type": "object",
+            "properties": {
+                "fieldSelectors": {
+                    "type": "array"
+                },
+                "labelSelectors": {
+                    "type": "object"
+                },
+                "logs": {
+                    "type": "object",
+                    "properties": {
+                        "enabled": {
+                            "type": "boolean"
+                        },
+                        "tuning": {
+                            "type": "object",
+                            "properties": {
+                                "dropLogLevels": {
+                                    "type": "array"
+                                },
+                                "excludeLines": {
+                                    "type": "array"
+                                },
+                                "scrubTimestamp": {
+                                    "type": "boolean"
+                                },
+                                "structuredMetadata": {
+                                    "type": "object"
+                                },
+                                "timestampFormat": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                },
+                "metrics": {
+                    "type": "object",
+                    "properties": {
+                        "enabled": {
+                            "type": "boolean"
+                        },
+                        "maxCacheSize": {
+                            "type": "null"
+                        },
+                        "portName": {
+                            "type": "string"
+                        },
+                        "scrapeInterval": {
+                            "type": "null"
+                        },
+                        "tuning": {
+                            "type": "object",
+                            "properties": {
+                                "excludeMetrics": {
+                                    "type": "array"
+                                },
+                                "includeMetrics": {
+                                    "type": "array"
+                                },
+                                "useDefaultAllowList": {
+                                    "type": "boolean"
+                                }
+                            }
+                        }
+                    }
+                },
+                "name": {
+                    "type": "string"
+                },
+                "namespaces": {
+                    "type": "array"
+                },
+                "type": {
+                    "type": "string",
+                    "const": "grafana"
+                }
+            }
+        },
         "loki-integration": {
             "type": "object",
             "properties": {
@@ -271,19 +359,8 @@
                                 "scrubTimestamp": {
                                     "type": "boolean"
                                 },
-                                "setLogLevelLabel": {
-                                    "type": "boolean"
-                                },
                                 "structuredMetadata": {
-                                    "type": "object",
-                                    "properties": {
-                                        "caller": {
-                                            "type": "string"
-                                        },
-                                        "component": {
-                                            "type": "string"
-                                        }
-                                    }
+                                    "type": "object"
                                 },
                                 "timestampFormat": {
                                     "type": "string"
@@ -466,6 +543,9 @@
                     },
                     {
                         "$ref": "#/definitions/etcd-integration"
+                    },
+                    {
+                        "$ref": "#/definitions/grafana-integration"
                     },
                     {
                         "$ref": "#/definitions/loki-integration"

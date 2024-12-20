@@ -91,19 +91,26 @@ tests:
                   target_label  = "container"
                 }
 
+                // set the workload to the controller kind and name
                 rule {
-                  source_labels = [
-                    "__meta_kubernetes_pod_controller_kind",
-                    "__meta_kubernetes_pod_controller_name",
-                  ]
-                  separator = "/"
+                  action = "lowercase"
+                  source_labels = ["__meta_kubernetes_pod_controller_kind"]
+                  target_label  = "workload_type"
+                }
+
+                rule {
+                  source_labels = ["__meta_kubernetes_pod_controller_name"]
                   target_label  = "workload"
                 }
 
                 // remove the hash from the ReplicaSet
                 rule {
-                  source_labels = ["workload"]
-                  regex = "(ReplicaSet/.+)-.+"
+                  source_labels = [
+                    "workload_type",
+                    "workload",
+                  ]
+                  separator = "/"
+                  regex = "replicaset/(.+)-.+$"
                   target_label  = "workload"
                 }
 
@@ -222,97 +229,6 @@ tests:
               }
             }
 
-  - it: should add the loki processing stage to the logs config
-    set:
-      deployAsConfigMap: true
-      loki:
-        instances:
-          - name: loki
-    asserts:
-      - isKind:
-          of: ConfigMap
-      - equal:
-          path: data["logs.alloy"]
-          value: |-
-            // Integration rules
-            discovery.relabel "test" {
-              rule {
-                source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
-                separator = ";"
-                regex = "loki"
-                target_label = "integration"
-                replacement = "loki"
-              }
-              rule {
-                source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
-                separator = ";"
-                regex = "loki"
-                target_label = "instance"
-                replacement = "loki"
-              }
-            }
-
-            // Processing stages
-            loki.process "test" {
-              // Integration: Loki
-              stage.match {
-                selector = "{integration=\"loki\",instance=\"loki\"}"
-
-                // extract some of the fields from the log line
-                stage.logfmt {
-                  mapping = {
-                    "ts" = "",
-                    "level" = "",
-                    "caller" = "caller",
-                    "component" = "component",
-                  }
-                }
-                // reset the timestamp to the extracted value
-                stage.timestamp {
-                  source = "ts"
-                  format = "RFC3339Nano"
-                }
-                // remove the timestamp from the log line
-                stage.replace {
-                  expression = "(ts=[^ ]+\\s+)"
-                  replace = ""
-                }
-                // clean up the caller to remove the line
-                stage.replace {
-                  source = "caller"
-                  expression = "(:[0-9]+$)"
-                  replace = ""
-                }
-                // set the structured metadata values
-                stage.structured_metadata {
-                  values = {
-                    "caller" = "caller",
-                    "component" = "component",
-                  }
-                }
-                // set the level as a label
-                stage.labels {
-                  values = {
-                    level = "level",
-                  }
-                }
-
-                // set the static labels
-                stage.static_labels {
-                  values = {
-                    job = "integrations/loki",
-                  }
-                }
-
-                // drop the integration label and any other labels that are not needed
-                stage.label_drop {
-                  values = [
-                    "integration",
-                  ]
-                }
-              }
-            }
-
   - it: should create the Alloy config with the integration allow list
     set:
       deployAsConfigMap: true
@@ -359,3 +275,18 @@ tests:
       - matchRegex:
           path: data["metrics.alloy"]
           pattern: label_selectors = \["app.kubernetes.io/instance=k8smon"\]
+
+  - it: should allow you to restrict the namespaces for metrics
+    set:
+      deployAsConfigMap: true
+      loki:
+        instances:
+          - name: loki
+            namespaces:
+              - k8smon
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["metrics.alloy"]
+          pattern: namespaces = \["k8smon"\]

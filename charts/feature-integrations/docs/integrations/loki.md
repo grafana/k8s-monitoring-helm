@@ -19,8 +19,7 @@
 | logs.tuning.dropLogLevels | list | `[]` | The log levels to drop. Will automatically keep all log levels unless specified here. |
 | logs.tuning.excludeLines | list | `[]` | Line patterns (valid RE2 regular expression)to exclude from the logs. |
 | logs.tuning.scrubTimestamp | bool | `true` | Whether or not the timestamp should be scrubbed from the log line |
-| logs.tuning.setLogLevelLabel | bool | `true` | Whether or not the log level should be set as a label. |
-| logs.tuning.structuredMetadata | object | `{"caller":"caller","component":"component"}` | The structured metadata mappings to set. To not set any structured metadata, set this to an empty object (e.g. `{}`) |
+| logs.tuning.structuredMetadata | object | `{}` | The structured metadata mappings to set. To not set any structured metadata, set this to an empty object (e.g. `{}`) |
 | logs.tuning.timestampFormat | string | `"RFC3339Nano"` | The timestamp format to use for the log line, if not set the default timestamp which is the collection will be used for the log line |
 
 ### Metrics Settings
