@@ -1,4 +1,4 @@
-# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces rule:empty-lines
 suite: Test Alloy integration
 templates:
   - configmap.yaml
@@ -90,19 +90,26 @@ tests:
                   target_label  = "container"
                 }
 
+                // set the workload to the controller kind and name
                 rule {
-                  source_labels = [
-                    "__meta_kubernetes_pod_controller_kind",
-                    "__meta_kubernetes_pod_controller_name",
-                  ]
-                  separator = "/"
+                  action = "lowercase"
+                  source_labels = ["__meta_kubernetes_pod_controller_kind"]
+                  target_label  = "workload_type"
+                }
+
+                rule {
+                  source_labels = ["__meta_kubernetes_pod_controller_name"]
                   target_label  = "workload"
                 }
 
                 // remove the hash from the ReplicaSet
                 rule {
-                  source_labels = ["workload"]
-                  regex = "(ReplicaSet/.+)-.+"
+                  source_labels = [
+                    "workload_type",
+                    "workload",
+                  ]
+                  separator = "/"
+                  regex = "replicaset/(.+)-.+$"
                   target_label  = "workload"
                 }
 
@@ -336,3 +343,18 @@ tests:
       - matchRegex:
           path: data["metrics.alloy"]
           pattern: label_selectors = \["app.kubernetes.io/instance=k8smon"\]
+
+  - it: should allow you to restrict the namespaces
+    set:
+      deployAsConfigMap: true
+      alloy:
+        instances:
+          - name: alloy-metrics
+            namespaces:
+              - k8smon
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["metrics.alloy"]
+          pattern: namespaces = \["k8smon"\]
