@@ -1,0 +1,196 @@
+// Destination: otel-endpoint (otlp)
+otelcol.receiver.prometheus "otel_endpoint" {
+  output {
+    metrics = [otelcol.processor.attributes.otel_endpoint.input]
+  }
+}
+otelcol.receiver.loki "otel_endpoint" {
+  output {
+    logs = [otelcol.processor.attributes.otel_endpoint.input]
+  }
+}
+otelcol.auth.oauth2 "otel_endpoint" {
+  client_id = nonsensitive(remote.kubernetes.secret.otel_endpoint.data["clientId"])
+  client_secret_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+  endpoint_params = {
+    client_assertion_type = ["urn:ietf:params:oauth:client-assertion-type:jwt-bearer"],
+    grant_type = ["client_credentials"],
+  }
+  token_url = "https://my.idp/application/o/token/"
+}
+
+otelcol.processor.attributes "otel_endpoint" {
+  action {
+    key = "cluster"
+    action = "upsert"
+    value = "oauth2-auth-example"
+  }
+  action {
+    key = "k8s.cluster.name"
+    action = "upsert"
+    value = "oauth2-auth-example"
+  }
+  output {
+    metrics = [otelcol.processor.transform.otel_endpoint.input]
+    logs = [otelcol.processor.transform.otel_endpoint.input]
+    traces = [otelcol.processor.transform.otel_endpoint.input]
+  }
+}
+
+otelcol.processor.transform "otel_endpoint" {
+  error_mode = "ignore"
+
+  output {
+    metrics = [otelcol.processor.batch.otel_endpoint.input]
+    logs = [otelcol.processor.batch.otel_endpoint.input]
+    traces = [otelcol.processor.batch.otel_endpoint.input]
+  }
+}
+
+otelcol.processor.batch "otel_endpoint" {
+  timeout = "2s"
+  send_batch_size = 8192
+  send_batch_max_size = 0
+
+  output {
+    metrics = [otelcol.exporter.otlp.otel_endpoint.input]
+    logs = [otelcol.exporter.otlp.otel_endpoint.input]
+    traces = [otelcol.exporter.otlp.otel_endpoint.input]
+  }
+}
+otelcol.exporter.otlp "otel_endpoint" {
+  client {
+    endpoint = "grpc.my.otel.endpoint:443"
+    auth = otelcol.auth.oauth2.otel_endpoint.handler
+    tls {
+      insecure = false
+      insecure_skip_verify = false
+    }
+  }
+}
+
+remote.kubernetes.secret "otel_endpoint" {
+  name      = "otel-endpoint-k8smon-k8s-monitoring"
+  namespace = "default"
+}
+
+// Feature: Cluster Events
+declare "cluster_events" {
+  argument "logs_destinations" {
+    comment = "Must be a list of log destinations where collected logs should be forwarded to"
+  }
+
+  loki.source.kubernetes_events "cluster_events" {
+    job_name   = "integrations/kubernetes/eventhandler"
+    log_format = "logfmt"
+    forward_to = [loki.process.cluster_events.receiver]
+  }
+
+  loki.process "cluster_events" {
+
+    // add a static source label to the logs so they can be differentiated / restricted if necessary
+    stage.static_labels {
+      values = {
+        "source" = "kubernetes-events",
+      }
+    }
+
+    // extract some of the fields from the log line, these could be used as labels, structured metadata, etc.
+    stage.logfmt {
+      mapping = {
+        "component" = "sourcecomponent", // map the sourcecomponent field to component
+        "kind" = "",
+        "level" = "type", // most events don't have a level but they do have a "type" i.e. Normal, Warning, Error, etc.
+        "name" = "",
+        "node" = "sourcehost", // map the sourcehost field to node
+      }
+    }
+    // set these values as labels, they may or may not be used as index labels in Loki as they can be dropped
+    // prior to being written to Loki, but this makes them available
+    stage.labels {
+      values = {
+        "component" = "",
+        "kind" = "",
+        "level" = "",
+        "name" = "",
+        "node" = "",
+      }
+    }
+
+    // if kind=Node, set the node label by copying the instance label
+    stage.match {
+      selector = "{kind=\"Node\"}"
+
+      stage.labels {
+        values = {
+          "node" = "name",
+        }
+      }
+    }
+
+    // set the level extracted key value as a normalized log level
+    stage.match {
+      selector = "{level=\"Normal\"}"
+
+      stage.static_labels {
+        values = {
+          level = "Info",
+        }
+      }
+    }
+
+    // Only keep the labels that are defined in the `keepLabels` list.
+    stage.label_keep {
+      values = ["job","level","namespace","node","source"]
+    }
+    forward_to = argument.logs_destinations.value
+  }
+}
+cluster_events "feature" {
+  logs_destinations = [
+    otelcol.receiver.loki.otel_endpoint.receiver,
+  ]
+}
+
+// Self Reporting
+prometheus.exporter.unix "kubernetes_monitoring_telemetry" {
+  set_collectors = ["textfile"]
+  textfile {
+    directory = "/etc/alloy"
+  }
+}
+
+discovery.relabel "kubernetes_monitoring_telemetry" {
+  targets = prometheus.exporter.unix.kubernetes_monitoring_telemetry.targets
+  rule {
+    target_label = "instance"
+    action = "replace"
+    replacement = "k8smon"
+  }
+  rule {
+    target_label = "job"
+    action = "replace"
+    replacement = "integrations/kubernetes/kubernetes_monitoring_telemetry"
+  }
+}
+
+prometheus.scrape "kubernetes_monitoring_telemetry" {
+  job_name   = "integrations/kubernetes/kubernetes_monitoring_telemetry"
+  targets    = discovery.relabel.kubernetes_monitoring_telemetry.output
+  scrape_interval = "1h"
+  clustering {
+    enabled = true
+  }
+  forward_to = [prometheus.relabel.kubernetes_monitoring_telemetry.receiver]
+}
+
+prometheus.relabel "kubernetes_monitoring_telemetry" {
+  rule {
+    source_labels = ["__name__"]
+    regex = "grafana_kubernetes_monitoring_.*"
+    action = "keep"
+  }
+  forward_to = [
+    otelcol.receiver.prometheus.otel_endpoint.receiver,
+  ]
+}

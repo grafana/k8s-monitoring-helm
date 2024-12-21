@@ -20,11 +20,11 @@ This defines the options for defining a destination for logs that use the Loki p
 | auth.oauth2.clientId | string | `""` | OAuth2 client ID |
 | auth.oauth2.clientIdFrom | string | `""` | Raw config for accessing the client ID |
 | auth.oauth2.clientIdKey | string | `"clientId"` | The key for the client ID property in the secret |
-| auth.oauth2.clientSecret | string | `""` | Prometheus OAuth2 client secret |
+| auth.oauth2.clientSecret | string | `""` | OAuth2 client secret |
 | auth.oauth2.clientSecretFile | string | `""` | File containing the OAuth2 client secret. |
 | auth.oauth2.clientSecretFrom | string | `""` | Raw config for accessing the client secret |
 | auth.oauth2.clientSecretKey | string | `"clientSecret"` | The key for the client secret property in the secret |
-| auth.oauth2.endpointParams | object | `{}` | Prometheus OAuth2 endpoint parameters |
+| auth.oauth2.endpointParams | object | `{}` | OAuth2 endpoint parameters |
 | auth.oauth2.noProxy | string | `""` | Comma-separated list of IP addresses, CIDR notations, and domain names to exclude from proxying. |
 | auth.oauth2.proxyConnectHeader | object | `{}` | Specifies headers to send to proxies during CONNECT requests. |
 | auth.oauth2.proxyFromEnvironment | bool | `false` | Use the proxy URL indicated by environment variables. |
