@@ -38,7 +38,7 @@ pyroscope.write {{ include "helper.alloy_name" .name | quote }} {
       {{- if .auth.oauth2.endpointParams }}
       endpoint_params = {
       {{- range $k, $v := .auth.oauth2.endpointParams }}
-        {{ $k }} = {{ $v | quote }},
+        {{ $k }} = {{ $v | toJson }},
       {{- end }}
       }
       {{- end }}
