@@ -1,9 +1,13 @@
 {{/* Inputs: Values (values) metricsOutput, logsOutput, tracesOutput, name */}}
 {{/* https://grafana.com/docs/alloy/latest/reference/components/otelcol/otelcol.processor.filter/ */}}
 {{- define "feature.applicationObservability.processor.filter.enabled" }}
-{{- if or (and .Values.metrics.enabled (or .Values.metrics.filters.metric .Values.metrics.filters.datapoint)) (and .Values.logs.enabled .Values.logs.filters.log_record) (and .Values.traces.enabled (or .Values.traces.filters.span .Values.traces.filters.spanevent)) }}
+{{- if and .Values.metrics.enabled (or .Values.metrics.filters.metric .Values.metrics.filters.datapoint) -}}
 true
-{{- else }}
+{{- else if and .Values.logs.enabled .Values.logs.filters.log_record -}}
+true
+{{- else if and .Values.traces.enabled (or .Values.traces.filters.span .Values.traces.filters.spanevent) -}}
+true
+{{- else -}}
 false
 {{- end }}
 {{- end }}
