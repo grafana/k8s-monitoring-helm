@@ -3,7 +3,7 @@ discovery.kubernetes "pods" {
   role = "pod"
   selectors {
     role = "pod"
-    field = "spec.nodeName=" + env("HOSTNAME")
+    field = "spec.nodeName=" + sys.env("HOSTNAME")
   }
 {{- if .Values.namespaces }}
   namespaces {
