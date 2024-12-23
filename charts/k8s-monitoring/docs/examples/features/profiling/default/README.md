@@ -2,7 +2,10 @@
 (NOTE: Do not edit README.md directly. It is a generated file!)
 (      To make changes, please modify values.yaml or description.txt and run `make examples`)
 -->
-# Example: features/profiling/default/values.yaml
+# Profiling
+
+This example demonstrates how to enable the Profiling feature to gather profiles from your Kubernetes cluster and
+deliver them to Pyroscope.
 
 ## Values
 
