@@ -11,7 +11,7 @@ true
 false
 {{- end }}
 {{- end }}
-{{- define "feature.applicationObservability.processor.filter.alloy.target" }}otelcol.processor.filter.{{ .name | default "default" }}.target{{ end }}
+{{- define "feature.applicationObservability.processor.filter.alloy.target" }}otelcol.processor.filter.{{ .name | default "default" }}.input{{ end }}
 {{- define "feature.applicationObservability.processor.filter.alloy" }}
 otelcol.processor.filter "{{ .name | default "default" }}" {
 {{- if and .Values.metrics.enabled (or .Values.metrics.filters.metric .Values.metrics.filters.datapoint) }}
