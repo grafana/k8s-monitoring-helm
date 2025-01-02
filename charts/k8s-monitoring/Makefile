@@ -170,7 +170,9 @@ build: build-features README.md alloyModules/LICENSE values.schema.json template
 
 # Test targets
 .PHONY: test unittest lint-helm lint-configs
-test: unittest lint-helm lint-configs example-checks
+test: unittest lint-helm lint-configs example-checks test-features
+
+test-features:
 	set -e && \
 	for chart in $(FEATURE_CHARTS); do \
 		make -C charts/$$chart test; \
@@ -189,5 +191,5 @@ unittest: values.schema.json templates/destinations/_destination_types.tpl
 ifdef HAS_HELM_UNITTEST
 	helm unittest --failfast --with-subchart=false .
 else
-	docker run --rm --volume $(shell pwd):/apps helmunittest/helm-unittest .
+	docker run --rm --volume $(shell pwd):/apps helmunittest/helm-unittest --failfast --with-subchart=false .
 endif
