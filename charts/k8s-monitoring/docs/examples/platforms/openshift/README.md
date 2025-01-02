@@ -6,14 +6,16 @@
 
 This example shows the modifications requires to deploy to an OpenShift cluster.
 
-These modifications skip the deployment of kube-state-metrics and Node Exporter, since they will already be present on
-the cluster, and adjust the configuration to Grafana Alloy to find those existing components.
-It also modifies Grafana Alloy to lock down security and permissions.
+These modifications:
+- Skip the deployment of kube-state-metrics and Node Exporter, since they are already present on
+the cluster
+- Adjust the configuration to Grafana Alloy to find those existing components
+- Make changes to Grafana Alloy to lock down security and permissions
 
-The `platform: openshift` switch also creates SecurityContextConstraints objects that modifies the permissions for the
+The `platform: openshift` switch also creates SecurityContextConstraints objects that modifiy the permissions for the
 Grafana Alloy.
 
-Note that these alloy pods cannot enable `readOnlyRootFilesystem` because they require being able to write to their
+Note that these Alloy pods cannot enable `readOnlyRootFilesystem` because they require being able to write to their
 storage path, which defaults to `/tmp/alloy`.
 
 ## Values
