@@ -29,14 +29,14 @@
 rule {
   source_labels = {{ $labelList | sortAlpha | toJson }}
   separator = ";"
-  regex = {{ $valueList | join ";" | quote }}
+  regex = {{ $valueList | sortAlpha | join ";" | quote }}
   target_label = "integration"
   replacement = "mysql"
 }
 rule {
   source_labels = {{ $labelList | sortAlpha | toJson }}
   separator = ";"
-  regex = {{ $valueList | join ";" | quote }}
+  regex = {{ $valueList | sortAlpha | join ";" | quote }}
   target_label = "instance"
   replacement = {{ $instance.name | quote }}
 }
