@@ -2,11 +2,9 @@
 (NOTE: Do not edit README.md directly. It is a generated file!)
 (      To make changes, please modify values.yaml or description.txt and run `make examples`)
 -->
-# MySQL Integration
+# Integration: Loki
 
-This example shows how to load two MySQL integration instances, which utilize Alloy's [prometheus.exporter.mysql](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.exporter.mysql/) component
-to scrape metrics from the MySQL database. It also modifies the Pod Logs feature to add special log handling for MySQL
-pods. The username and password for the `prod-db` example are stored in a Kubernetes secret.
+This example demonstrates how to gather metrics and logs from [MySQL](https://www.mysql.com/).
 
 ## Values
 

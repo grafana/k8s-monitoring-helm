@@ -2,7 +2,10 @@
 (NOTE: Do not edit README.md directly. It is a generated file!)
 (      To make changes, please modify values.yaml or description.txt and run `make examples`)
 -->
-# Example: features/auto-instrumentation/beyla-metrics/values.yaml
+# Auto-Instrumentation with Beyla for Metrics
+
+This example demonstrates how to enable the auto-instrumentation feature, which deploys Grafana Beyla to automatically
+instrument your application for metrics collection.
 
 ## Values
 
