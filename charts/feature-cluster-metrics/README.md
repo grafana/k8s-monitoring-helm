@@ -102,7 +102,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 |------------|------|---------|
 | https://opencost.github.io/opencost-helm-chart | opencost | 1.42.3 |
 | https://prometheus-community.github.io/helm-charts | kube-state-metrics | 5.27.0 |
-| https://prometheus-community.github.io/helm-charts | node-exporter(prometheus-node-exporter) | 4.43.0 |
+| https://prometheus-community.github.io/helm-charts | node-exporter(prometheus-node-exporter) | 4.43.1 |
 | https://prometheus-community.github.io/helm-charts | windows-exporter(prometheus-windows-exporter) | 0.7.1 |
 | https://sustainable-computing-io.github.io/kepler-helm-chart | kepler | 0.5.12 |
 <!-- markdownlint-enable no-bare-urls -->
