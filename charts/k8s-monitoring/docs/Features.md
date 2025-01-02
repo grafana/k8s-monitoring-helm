@@ -15,55 +15,55 @@ These are the current features supported in this Helm chart:
 
 ## Cluster Metrics
 
-[Documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/feature-cluster-metrics)
+[Documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-cluster-metrics)
 
 Collects metrics about the Kubernetes cluster.
 
 ## Cluster Events
 
-[Documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/feature-cluster-events)
+[Documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-cluster-events)
 
 Collects Kubernetes Cluster events.
 
 ## Application Observability
 
-[Documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/feature-application-observability)
+[Documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-application-observability)
 
 Open receivers to collect telemetry data from instrumented applications.
 
 ## Annotation Autodiscovery
 
-[Documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/feature-annotation-autodiscovery)
+[Documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-annotation-autodiscovery)
 
 Collects metrics from Pods and Services that use a specific annotation.
 
 ## Prometheus Operator Objects
 
-[Documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/feature-prometheus-operator-objects)
+[Documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-prometheus-operator-objects)
 
 Collects metrics from Prometheus Operator objects, like PodMonitors and ServiceMonitors.
 
 ## Node Logs
 
-[Documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/feature-node-logs)
+[Documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-node-logs)
 
 Collects logs from Kubernetes Cluster Nodes.
 
 ## Pod Logs
 
-[Documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/feature-pod-logs)
+[Documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-pod-logs)
 
 Collects logs from Kubernetes Pods.
 
 ## Service Integrations
 
-[Documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/feature-integrations)
+[Documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-integrations)
 
 Collects metrics and logs from a variety of popular services and integrations.
 
 ## Profiling
 
-[Documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/feature-profiling)
+[Documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-profiling)
 
 Collect profiles using Pyroscope.
 
