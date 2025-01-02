@@ -2,7 +2,9 @@
 (NOTE: Do not edit README.md directly. It is a generated file!)
 (      To make changes, please modify values.yaml or description.txt and run `make examples`)
 -->
-# Example: features/integrations/cert-manager/values.yaml
+# Integration: cert-manager
+
+This example demonstrates how to gather metrics from [cert-manager](https://cert-manager.io/).
 
 ## Values
 

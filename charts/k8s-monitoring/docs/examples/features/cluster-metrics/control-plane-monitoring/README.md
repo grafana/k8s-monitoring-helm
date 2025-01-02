@@ -2,7 +2,10 @@
 (NOTE: Do not edit README.md directly. It is a generated file!)
 (      To make changes, please modify values.yaml or description.txt and run `make examples`)
 -->
-# Example: features/cluster-metrics/control-plane-monitoring/values.yaml
+# Cluster Metrics with Control Plane Monitoring
+
+This example demonstrates how to enable the Cluster Metrics feature to gather metrics about the Kubernetes Cluster,
+including the control plane components, and deliver them to a metrics destination.
 
 ## Values
 

@@ -2,7 +2,9 @@
 (NOTE: Do not edit README.md directly. It is a generated file!)
 (      To make changes, please modify values.yaml or description.txt and run `make examples`)
 -->
-# Example: features/integrations/loki/values.yaml
+# Integration: Loki
+
+This example demonstrates how to gather metrics and logs from [Grafana Loki](https://grafana.com/oss/loki/).
 
 ## Values
 

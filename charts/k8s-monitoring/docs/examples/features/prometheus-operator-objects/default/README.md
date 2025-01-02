@@ -2,7 +2,10 @@
 (NOTE: Do not edit README.md directly. It is a generated file!)
 (      To make changes, please modify values.yaml or description.txt and run `make examples`)
 -->
-# Example: features/prometheus-operator-objects/default/values.yaml
+# Prometheus Operator Objects
+
+This example demonstrates how to enable the Prometheus Operator Objects feature to discover and gather metrics from
+PodMonitors, ServiceMonitors, and Probes in your Kubernetes cluster.
 
 ## Values
 

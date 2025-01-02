@@ -2,7 +2,10 @@
 (NOTE: Do not edit README.md directly. It is a generated file!)
 (      To make changes, please modify values.yaml or description.txt and run `make examples`)
 -->
-# Example: features/cluster-events/default/values.yaml
+# Cluster Events
+
+This example demonstrates how to enable the Cluster Events feature to gather Kubernetes Cluster Events from the
+Kubernetes API server and deliver them to a logs destination.
 
 ## Values
 
