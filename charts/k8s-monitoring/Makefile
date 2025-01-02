@@ -7,6 +7,8 @@ CHART_TEMPLATE_FILES = $(shell find templates -name "*.tpl")
 CHART_YAML_FILES = $(shell find templates -name "*.yaml")
 UPDATECLI_FILES := $(shell yq -e '.dependencies[] | select(.repository == "http*") | ".updatecli-" + .name + ".yaml"' Chart.yaml 2>/dev/null | sort | uniq)
 
+FEATURE_CHARTS = $(shell ls charts | grep feature-)
+
 SCHEMA_MODS_JSON_FILES = $(shell find schema-mods -name "*.json")
 SCHEMA_MODS_JQ_FILES = $(shell find schema-mods -name "*.jq")
 
@@ -91,12 +93,6 @@ alloy_configs = $(shell \
 	DIR="$(shell dirname $(1))/" yq e 'with_entries(select(.key == "alloy-*")) | select(.[].enabled == true) | to_entries | env(DIR) + .[].key + ".alloy"' $(1) \
 )
 
-# TODO: Ideally, this shouldn't result in "modified" files if the subchart content is the same.
-# 	    The issue is that tar and gz include things like timestamps in their headers, which will
-#	    result in different hashes for the same content. Not great for Makefiles or modified file checks.
-Chart.lock: Chart.yaml
-	helm dependency update .
-
 %/output.yaml: %/values.yaml Chart.yaml Chart.lock values.yaml values.schema.json templates/destinations/_destination_types.tpl $(DESTINATION_VALUES_FILES) $(CHART_TEMPLATE_FILES) $(CHART_YAML_FILES) alloyModules/LICENSE $(ALLOY_MODULE_FILES)
 	helm template $(EXAMPLE_RELEASE_NAME) . -f $< > $@
 
@@ -157,14 +153,29 @@ platform-test-checks: $(PLATFORM_TEST_OUTPUT_FILES)
 clean:
 	rm -f README.md values.schema.json $(UPDATECLI_FILES) templates/destinations/_destination_types.tpl schema-mods/destination-list.json $(DESTINATION_SCHEMA_FILES) $(DESTINATION_DOCS_FILES)
 	rm -f $(EXAMPLE_OUTPUT_FILES) $(EXAMPLE_ALLOY_FILES) $(EXAMPLE_README_FILES) $(INTEGRATION_TEST_OUTPUT_FILES) $(PLATFORM_TEST_OUTPUT_FILES)
+	set -e && \
+	for chart in $(FEATURE_CHARTS); do \
+		make -C charts/$$chart clean; \
+	done
+
+build-features:
+	set -e && \
+	for chart in $(FEATURE_CHARTS); do \
+		make -C charts/$$chart build; \
+	done
 
 # Build targets
 .PHONY: build
-build: README.md alloyModules/LICENSE values.schema.json templates/destinations/_destination_types.tpl $(DESTINATION_DOCS_FILES) $(UPDATECLI_FILES) examples integration-test-checks platform-test-checks
+build: build-features README.md alloyModules/LICENSE values.schema.json templates/destinations/_destination_types.tpl $(DESTINATION_DOCS_FILES) $(UPDATECLI_FILES) examples integration-test-checks platform-test-checks
 
 # Test targets
 .PHONY: test unittest lint-helm lint-configs
 test: unittest lint-helm lint-configs example-checks
+	set -e && \
+	for chart in $(FEATURE_CHARTS); do \
+		make -C charts/$$chart test; \
+	done
+
 lint-configs: $(EXAMPLE_ALLOY_FILES)
 	../../scripts/lint-alloy.sh $(EXAMPLE_ALLOY_FILES)
 	rm -rf data-alloy  # Clean up the data-alloy directory, which is created by lint-alloy.sh when it runs Alloy.
@@ -176,7 +187,7 @@ lint-helm: build
 
 unittest: values.schema.json templates/destinations/_destination_types.tpl
 ifdef HAS_HELM_UNITTEST
-	helm unittest .
+	helm unittest --failfast --with-subchart=false .
 else
 	docker run --rm --volume $(shell pwd):/apps helmunittest/helm-unittest .
 endif

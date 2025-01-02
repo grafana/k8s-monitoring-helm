@@ -123,16 +123,16 @@ podLogs:
 
 | Repository | Name | Version |
 |------------|------|---------|
-| file://../feature-annotation-autodiscovery | annotationAutodiscovery(k8s-monitoring-feature-annotation-autodiscovery) | 1.0.0 |
-| file://../feature-application-observability | applicationObservability(k8s-monitoring-feature-application-observability) | 1.0.0 |
-| file://../feature-auto-instrumentation | autoInstrumentation(k8s-monitoring-feature-auto-instrumentation) | 1.0.0 |
-| file://../feature-cluster-events | clusterEvents(k8s-monitoring-feature-cluster-events) | 1.0.0 |
-| file://../feature-cluster-metrics | clusterMetrics(k8s-monitoring-feature-cluster-metrics) | 1.0.0 |
-| file://../feature-integrations | integrations(k8s-monitoring-feature-integrations) | 1.0.0 |
-| file://../feature-node-logs | nodeLogs(k8s-monitoring-feature-node-logs) | 1.0.0 |
-| file://../feature-pod-logs | podLogs(k8s-monitoring-feature-pod-logs) | 1.0.0 |
-| file://../feature-profiling | profiling(k8s-monitoring-feature-profiling) | 1.0.0 |
-| file://../feature-prometheus-operator-objects | prometheusOperatorObjects(k8s-monitoring-feature-prometheus-operator-objects) | 1.0.0 |
+|  | annotationAutodiscovery(feature-annotation-autodiscovery) | 1.0.0 |
+|  | applicationObservability(feature-application-observability) | 1.0.0 |
+|  | autoInstrumentation(feature-auto-instrumentation) | 1.0.0 |
+|  | clusterEvents(feature-cluster-events) | 1.0.0 |
+|  | clusterMetrics(feature-cluster-metrics) | 1.0.0 |
+|  | integrations(feature-integrations) | 1.0.0 |
+|  | nodeLogs(feature-node-logs) | 1.0.0 |
+|  | podLogs(feature-pod-logs) | 1.0.0 |
+|  | profiling(feature-profiling) | 1.0.0 |
+|  | prometheusOperatorObjects(feature-prometheus-operator-objects) | 1.0.0 |
 | https://grafana.github.io/helm-charts | alloy-metrics(alloy) | 0.10.1 |
 | https://grafana.github.io/helm-charts | alloy-singleton(alloy) | 0.10.1 |
 | https://grafana.github.io/helm-charts | alloy-logs(alloy) | 0.10.1 |
@@ -272,7 +272,7 @@ podLogs:
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| annotationAutodiscovery | object | Disabled | Annotation Autodiscovery enables gathering metrics from Kubernetes Pods and Services discovered by special annotations. Requires a destination that supports metrics. To see the valid options, please see the [Annotation Autodiscovery feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/feature-annotation-autodiscovery). |
+| annotationAutodiscovery | object | Disabled | Annotation Autodiscovery enables gathering metrics from Kubernetes Pods and Services discovered by special annotations. Requires a destination that supports metrics. To see the valid options, please see the [Annotation Autodiscovery feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-annotation-autodiscovery). |
 | annotationAutodiscovery.destinations | list | `[]` | The destinations where cluster metrics will be sent. If empty, all metrics-capable destinations will be used. |
 | annotationAutodiscovery.enabled | bool | `false` | Enable gathering metrics from Kubernetes Pods and Services discovered by special annotations. |
 
@@ -280,7 +280,7 @@ podLogs:
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| applicationObservability | object | Disabled | Application Observability. Requires destinations that supports metrics, logs, and traces. To see the valid options, please see the [Application Observability feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/feature-application-observability). |
+| applicationObservability | object | Disabled | Application Observability. Requires destinations that supports metrics, logs, and traces. To see the valid options, please see the [Application Observability feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-application-observability). |
 | applicationObservability.destinations | list | `[]` | The destinations where application data will be sent. If empty, all capable destinations will be used. |
 | applicationObservability.enabled | bool | `false` | Enable gathering Kubernetes Pod logs. |
 
@@ -288,7 +288,7 @@ podLogs:
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| autoInstrumentation | object | Disabled | Auto-Instrumentation. Requires destinations that supports metrics, logs, and traces. To see the valid options, please see the [Application Observability feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/feature-application-observability). |
+| autoInstrumentation | object | Disabled | Auto-Instrumentation. Requires destinations that supports metrics, logs, and traces. To see the valid options, please see the [Application Observability feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-application-observability). |
 | autoInstrumentation.destinations | list | `[]` | The destinations where application data will be sent. If empty, all capable destinations will be used. |
 | autoInstrumentation.enabled | bool | `false` | Enable automatic instrumentation for applications. |
 
@@ -302,7 +302,7 @@ podLogs:
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| clusterEvents | object | Disabled | Cluster events. Requires a destination that supports logs. To see the valid options, please see the [Cluster Events feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/feature-cluster-events). |
+| clusterEvents | object | Disabled | Cluster events. Requires a destination that supports logs. To see the valid options, please see the [Cluster Events feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-cluster-events). |
 | clusterEvents.destinations | list | `[]` | The destinations where cluster events will be sent. If empty, all logs-capable destinations will be used. |
 | clusterEvents.enabled | bool | `false` | Enable gathering Kubernetes Cluster events. |
 
@@ -310,7 +310,7 @@ podLogs:
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| clusterMetrics | object | Disabled | Cluster Monitoring enables observability and monitoring for your Kubernetes Cluster itself. Requires a destination that supports metrics. To see the valid options, please see the [Cluster Monitoring feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/feature-cluster-metrics). |
+| clusterMetrics | object | Disabled | Cluster Monitoring enables observability and monitoring for your Kubernetes Cluster itself. Requires a destination that supports metrics. To see the valid options, please see the [Cluster Monitoring feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-cluster-metrics). |
 | clusterMetrics.destinations | list | `[]` | The destinations where cluster metrics will be sent. If empty, all metrics-capable destinations will be used. |
 | clusterMetrics.enabled | bool | `false` | Enable gathering Kubernetes Cluster metrics. |
 
@@ -334,14 +334,14 @@ podLogs:
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| integrations | object | No integrations enabled | Service Integrations enables gathering telemetry data for common services and applications deployed to Kubernetes. To see the valid options, please see the [Service Integrations documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/feature-integrations). |
+| integrations | object | No integrations enabled | Service Integrations enables gathering telemetry data for common services and applications deployed to Kubernetes. To see the valid options, please see the [Service Integrations documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-integrations). |
 | integrations.destinations | list | `[]` | The destinations where integration metrics will be sent. If empty, all metrics-capable destinations will be used. |
 
 ### Features - Node Logs
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| nodeLogs | object | Disabled | Node logs. Requires a destination that supports logs. To see the valid options, please see the [Node Logs feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/feature-node-logs). |
+| nodeLogs | object | Disabled | Node logs. Requires a destination that supports logs. To see the valid options, please see the [Node Logs feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-node-logs). |
 | nodeLogs.destinations | list | `[]` | The destinations where logs will be sent. If empty, all logs-capable destinations will be used. |
 | nodeLogs.enabled | bool | `false` | Enable gathering Kubernetes Cluster Node logs. |
 
@@ -349,7 +349,7 @@ podLogs:
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| podLogs | object | Disabled | Pod logs. Requires a destination that supports logs. To see the valid options, please see the [Pod Logs feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/feature-pod-logs). |
+| podLogs | object | Disabled | Pod logs. Requires a destination that supports logs. To see the valid options, please see the [Pod Logs feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-pod-logs). |
 | podLogs.destinations | list | `[]` | The destinations where logs will be sent. If empty, all logs-capable destinations will be used. |
 | podLogs.enabled | bool | `false` | Enable gathering Kubernetes Pod logs. |
 
@@ -357,7 +357,7 @@ podLogs:
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| profiling | object | Disabled | Profiling enables gathering profiles from applications. Requires a destination that supports profiles. To see the valid options, please see the [Profiling feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/feature-profiling). |
+| profiling | object | Disabled | Profiling enables gathering profiles from applications. Requires a destination that supports profiles. To see the valid options, please see the [Profiling feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-profiling). |
 | profiling.destinations | list | `[]` | The destinations where profiles will be sent. If empty, all profiles-capable destinations will be used. |
 | profiling.enabled | bool | `false` | Enable gathering profiles from applications. |
 
@@ -365,7 +365,7 @@ podLogs:
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| prometheusOperatorObjects | object | Disabled | Prometheus Operator Objects enables the gathering of metrics from objects like Probes, PodMonitors, and ServiceMonitors. Requires a destination that supports metrics. To see the valid options, please see the [Prometheus Operator Objects feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/feature-prometheus-operator-objects). |
+| prometheusOperatorObjects | object | Disabled | Prometheus Operator Objects enables the gathering of metrics from objects like Probes, PodMonitors, and ServiceMonitors. Requires a destination that supports metrics. To see the valid options, please see the [Prometheus Operator Objects feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-prometheus-operator-objects). |
 | prometheusOperatorObjects.destinations | list | `[]` | The destinations where metrics will be sent. If empty, all metrics-capable destinations will be used. |
 | prometheusOperatorObjects.enabled | bool | `false` | Enable gathering metrics from Prometheus Operator Objects. |
 
