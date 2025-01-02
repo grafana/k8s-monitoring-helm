@@ -7,6 +7,7 @@ source "${PARENT_DIR}/scripts/includes/logging.sh"
 heading "Kubernetes Monitoring Helm" "Generating JSON Schema for Helm Charts"
 
 CHART_DIR=$1
+HAS_HELM_SCHEMA_GEN=$(helm plugin list | grep -c "schema-gen")
 
 if [ -z "${CHART_DIR}" ]; then
   echo "Chart directory not defined!"
@@ -22,12 +23,16 @@ set -eo pipefail  # Exit immediately if a command fails.
 shopt -s nullglob # Required when a chart does not use mod files.
 
 # Generate base schema from the values file.
-docker run --rm \
-  --platform linux/amd64 \
-  --volume "$(pwd)/${CHART_DIR}:/chart" \
-  --entrypoint sh \
-  alpine/helm \
-  -c 'helm plugin install https://github.com/karuppiah7890/helm-schema-gen.git && helm schema-gen /chart/values.yaml > /chart/values.schema.generated.json'
+if [ "${HAS_HELM_SCHEMA_GEN}" -eq "1" ]; then
+  helm schema-gen "${CHART_DIR}/values.yaml" > "${CHART_DIR}/values.schema.generated.json"
+else
+  docker run --rm \
+    --platform linux/amd64 \
+    --volume "$(pwd)/${CHART_DIR}:/chart" \
+    --entrypoint sh \
+    alpine/helm \
+    -c 'helm plugin install https://github.com/karuppiah7890/helm-schema-gen.git && helm schema-gen /chart/values.yaml > /chart/values.schema.generated.json'
+fi
 
 if [ -d "${CHART_DIR}/schema-mods" ]; then
   if [ -d "${CHART_DIR}/schema-mods/definitions" ]; then
