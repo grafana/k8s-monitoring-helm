@@ -15,23 +15,16 @@ integrations:
   alloy:
     instances:
       # monitor the collector gathering and sending meta-monitoring metrics/logs to the meta-monitoring cluster
-      - name: alloy-singleton
+      - name: alloy-in-logs
         namespaces:
           - logs
+        labelSelectors:
+          app.kubernetes.io/name: alloy-singleton
+
       # monitor the collectors gathering and sending metrics/logs to the local cluster
-      - name: alloy-metrics
-        namespaces:
-          - collectors
-      - name: alloy-logs
-        namespaces:
-          - collectors
-      - name: alloy-profiles
-        namespaces:
-          - collectors
-      - name: alloy-receiver
-        namespaces:
-          - collectors
-      - name: alloy-singleton
+      - name: alloy
+        labelSelectors:
+          app.kubernetes.io/name: [alloy-singleton, alloy-metrics, alloy-logs, alloy-profiles, alloy-receiver]
         namespaces:
           - collectors
   loki:

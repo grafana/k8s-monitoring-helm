@@ -7,7 +7,7 @@
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | fieldSelectors | list | `[]` | Discover Alloy instances based on field selectors. |
-| labelSelectors | object | `{}` | Discover Alloy instances based on label selectors. Will automatically set a matcher for `app.kubernetes.io/name: <name>` unless set here. |
+| labelSelectors | object | `{}` | Discover Alloy instances based on label selectors. |
 | metrics.portName | string | `"http-metrics"` | Name of the port to scrape metrics from. |
 | namespaces | list | `[]` | The namespaces to look for Alloy instances in. Will automatically look for Alloy instances in all namespaces unless specified here |
 

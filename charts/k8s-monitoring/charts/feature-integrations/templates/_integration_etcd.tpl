@@ -67,3 +67,5 @@ etcd.scrape {{ include "helper.alloy_name" .name | quote }} {
 }
 {{- end }}
 {{- end }}
+
+{{- define "integrations.etcd.validate" }}{{- end }}

@@ -68,3 +68,5 @@ cert_manager.scrape {{ include "helper.alloy_name" .name | quote }} {
 }
 {{- end }}
 {{- end }}
+
+{{- define "integrations.cert-manager.validate" }}{{- end }}
