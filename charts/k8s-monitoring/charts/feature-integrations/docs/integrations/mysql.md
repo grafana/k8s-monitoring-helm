@@ -22,7 +22,7 @@
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| jobLabel | string | `"integrations/mysql"` | The value of the job label for scraped metrics and logs |
+| jobLabel | string | `"integration/mysql"` | The value of the job label for scraped metrics and logs |
 | name | string | `""` | Name for this MySQL instance. |
 
 ### Logs Settings

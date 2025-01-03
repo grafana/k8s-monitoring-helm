@@ -9,6 +9,8 @@ tests:
       etcd:
         instances:
           - name: etcd
+            labelSelectors:
+              app.kubernetes.io/component: etcd
     asserts:
       - isKind:
           of: ConfigMap
@@ -34,6 +36,7 @@ tests:
             
               etcd.scrape "etcd" {
                 targets = etcd.kubernetes.etcd.output
+                job_label = "integrations/etcd"
                 clustering = true
                 scrape_interval = "60s"
                 max_cache_size = 100000
@@ -46,6 +49,8 @@ tests:
       etcd:
         instances:
           - name: my-etcd
+            labelSelectors:
+              app.kubernetes.io/component: my-etcd
             namespaces:
               - kube-system
     asserts:
@@ -74,38 +79,10 @@ tests:
             
               etcd.scrape "my_etcd" {
                 targets = etcd.kubernetes.my_etcd.output
+                job_label = "integrations/etcd"
                 clustering = true
                 scrape_interval = "60s"
                 max_cache_size = 100000
                 forward_to = argument.metrics_destinations.value
               }
             }
-  - it: should allow you to overwrite the component label
-    set:
-      deployAsConfigMap: true
-      etcd:
-        instances:
-          - name: my-etcd
-            labelSelectors:
-              app.kubernetes.io/component: etcd-component
-    asserts:
-      - isKind:
-          of: ConfigMap
-      - matchRegex:
-          path: data["metrics.alloy"]
-          pattern: label_selectors = \["app.kubernetes.io/component=etcd-component"\]
-  - it: should allow you to dismiss the name label
-    set:
-      deployAsConfigMap: true
-      etcd:
-        instances:
-          - name: my-etcd
-            labelSelectors:
-              app.kubernetes.io/component: null
-              component: etcd
-    asserts:
-      - isKind:
-          of: ConfigMap
-      - matchRegex:
-          path: data["metrics.alloy"]
-          pattern: label_selectors = \["component=etcd"\]
