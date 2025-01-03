@@ -17,14 +17,18 @@
       {{- if .logs.enabled }}
         {{- $labelList := list }}
         {{- $valueList := list }}
-        {{- $selectors := dict (include "integrations.loki.defaultSelectorLabel" $) ($instance.name | default (include "integrations.loki.defaultSelectorValue" $)) }}
-        {{- if $instance.labelSelectors }}
-          {{- $selectors = $instance.labelSelectors }}
+        {{- if .namespaces }}
+          {{- $labelList = append $labelList "__meta_kubernetes_namespace" -}}
+          {{- $valueList = append $valueList (printf "(%s)" (join "|" .namespaces)) -}}
         {{- end }}
-
-        {{- range (keys $selectors) }}
-          {{- $labelList = append $labelList (include "pod_label" .) -}}
-          {{- $valueList = append $valueList (index $selectors .) -}}
+        {{- range $k, $v := .labelSelectors }}
+          {{- if kindIs "slice" $v }}
+            {{- $labelList = append $labelList (include "pod_label" $k) -}}
+            {{- $valueList = append $valueList (printf "(%s)" (join "|" $v)) -}}
+          {{- else }}
+            {{- $labelList = append $labelList (include "pod_label" $k) -}}
+            {{- $valueList = append $valueList $v -}}
+          {{- end }}
         {{- end }}
 rule {
   source_labels = {{ $labelList | sortAlpha | toJson }}

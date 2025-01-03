@@ -47,7 +47,7 @@ prometheus.exporter.mysql {{ include "helper.alloy_name" .name | quote }} {
 {{- $metricDenyList := .metrics.tuning.excludeMetrics }}
 prometheus.scrape {{ include "helper.alloy_name" .name | quote }} {
   targets    = prometheus.exporter.mysql.{{ include "helper.alloy_name" .name }}.targets
-  job_name   = "integration/mysql"
+  job_name   = {{ .jobLabel | quote }}
   forward_to = [prometheus.relabel.{{ include "helper.alloy_name" .name }}.receiver]
 }
 
