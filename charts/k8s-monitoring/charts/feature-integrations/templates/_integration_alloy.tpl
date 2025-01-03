@@ -92,6 +92,11 @@ declare "alloy_integration" {
       comment = "Must be a list(MetricsReceiver) where collected metrics should be forwarded to"
     }
 
+    argument "job_label" {
+      comment = "The job label to add for all Alloy metrics (default: integrations/alloy)"
+      optional = true
+    }
+
     argument "keep_metrics" {
       comment = "A regular expression of metrics to keep (default: see below)"
       optional = true
@@ -118,7 +123,7 @@ declare "alloy_integration" {
     }
 
     prometheus.scrape "alloy" {
-      job_name = "integrations/alloy"
+      job_name = coalesce(argument.job_label.value, "integrations/alloy")
       forward_to = [prometheus.relabel.alloy.receiver]
       targets = argument.targets.value
       scrape_interval = coalesce(argument.scrape_interval.value, "60s")
@@ -224,38 +229,30 @@ declare "alloy_integration" {
 {{- define "integrations.alloy.include.metrics" }}
 {{- $defaultValues := "integrations/alloy-values.yaml" | .Files.Get | fromYaml }}
 {{- with $defaultValues | merge (deepCopy .instance) }}
-  {{- $metricAllowList := include "integrations.alloy.allowList" (dict "instance" . "Files" $.Files) | fromYamlArray }}
-  {{- $metricDenyList := .excludeMetrics }}
-  {{- $labelSelectors := list }}
-  {{- range $k, $v := .labelSelectors }}
-    {{- if kindIs "slice" $v }}
-      {{- $labelSelectors = append $labelSelectors (printf "%s in (%s)" $k (join "," $v)) }}
-    {{- else }}
-      {{- $labelSelectors = append $labelSelectors (printf "%s=%s" $k $v) }}
-    {{- end }}
+{{- $metricAllowList := include "integrations.alloy.allowList" (dict "instance" . "Files" $.Files) | fromYamlArray }}
+{{- $metricDenyList := .metrics.tuning.excludeMetrics }}
+{{- $labelSelectors := list }}
+{{- range $k, $v := .labelSelectors }}
+  {{- if kindIs "slice" $v }}
+    {{- $labelSelectors = append $labelSelectors (printf "%s in (%s)" $k (join "," $v)) }}
+  {{- else }}
+    {{- $labelSelectors = append $labelSelectors (printf "%s=%s" $k $v) }}
   {{- end }}
-
-  {{- $fieldSelectors := list }}
-  {{- range $k, $v := .fieldSelectors }}
-    {{- if kindIs "slice" $v }}
-      {{- $fieldSelectors = append $fieldSelectors (printf "%s in (%s)" $k (join "," $v)) }}
-    {{- else }}
-      {{- $fieldSelectors = append $fieldSelectors (printf "%s=%s" $k $v) }}
-    {{- end }}
-  {{- end }}
+{{- end }}
 alloy_integration_discovery {{ include "helper.alloy_name" .name | quote }} {
   port_name = {{ .metrics.portName | quote }}
 {{- if .namespaces }}
   namespaces = {{ .namespaces | toJson }}
 {{- end }}
   label_selectors = {{ $labelSelectors | toJson }}
-{{- if $fieldSelectors }}
-  field_selectors = {{ $fieldSelectors | toJson }}
+{{- if .fieldSelectors }}
+  field_selectors = {{ .fieldSelectors | toJson }}
 {{- end }}
 }
 
 alloy_integration_scrape  {{ include "helper.alloy_name" .name | quote }} {
   targets = alloy_integration_discovery.{{ include "helper.alloy_name" .name }}.output
+  job_label = {{ .jobLabel | quote }}
   clustering = true
 {{- if $metricAllowList }}
   keep_metrics = {{ $metricAllowList | join "|" | quote }}
@@ -279,7 +276,7 @@ alloy_integration_scrape  {{ include "helper.alloy_name" .name | quote }} {
 {{- define "integrations.alloy.instance.validate" }}
   {{- if not .instance.labelSelectors }}
     {{- $msg := list "" "The Alloy integration requires a label selector" }}
-    {{- $msg = append $msg "Please set:" }}
+    {{- $msg = append $msg "For example, please set:" }}
     {{- $msg = append $msg "integrations:" }}
     {{- $msg = append $msg "  alloy:" }}
     {{- $msg = append $msg "    instances:" }}

@@ -115,7 +115,7 @@ data:
       }
       prometheus.scrape "staging_db" {
         targets    = prometheus.exporter.mysql.staging_db.targets
-        job_name   = "integration/mysql"
+        job_name   = "integrations/mysql"
         forward_to = [prometheus.relabel.staging_db.receiver]
       }
       
@@ -145,7 +145,7 @@ data:
       }
       prometheus.scrape "prod_db" {
         targets    = prometheus.exporter.mysql.prod_db.targets
-        job_name   = "integration/mysql"
+        job_name   = "integrations/mysql"
         forward_to = [prometheus.relabel.prod_db.receiver]
       }
       
@@ -306,30 +306,30 @@ data:
           regex = "__meta_kubernetes_pod_annotation_(.+)"
         }
         rule {
-          source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_instance","__meta_kubernetes_pod_label_app_kubernetes_io_name"]
+          source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_instance"]
           separator = ";"
-          regex = "mysql;staging-db"
+          regex = "staging-db"
           target_label = "integration"
           replacement = "mysql"
         }
         rule {
-          source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_instance","__meta_kubernetes_pod_label_app_kubernetes_io_name"]
+          source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_instance"]
           separator = ";"
-          regex = "mysql;staging-db"
+          regex = "staging-db"
           target_label = "instance"
           replacement = "staging-db"
         }
         rule {
-          source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_instance","__meta_kubernetes_pod_label_app_kubernetes_io_name"]
+          source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_instance"]
           separator = ";"
-          regex = "mysql;prod-db"
+          regex = "prod-db"
           target_label = "integration"
           replacement = "mysql"
         }
         rule {
-          source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_instance","__meta_kubernetes_pod_label_app_kubernetes_io_name"]
+          source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_instance"]
           separator = ";"
-          regex = "mysql;prod-db"
+          regex = "prod-db"
           target_label = "instance"
           replacement = "prod-db"
         }

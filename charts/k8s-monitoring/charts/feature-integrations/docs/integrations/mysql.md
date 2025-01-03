@@ -18,19 +18,25 @@
 | exporter.dataSource.port | int | `3306` | The MySQL port to connect to. |
 | exporter.dataSourceName | string | `""` | The data source string to use for the MySQL Exporter. |
 
-### Discovery Settings
+### General Settings
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| fieldSelectors | list | `[]` | Discover MySQL instances based on field selectors. |
-| labelSelectors | object | `{}` | Discover MySQL instances based on label selectors. Will automatically set a matcher for `app.kubernetes.io/name: <name>` unless set here. |
-| namespaces | list | `[]` | The namespaces to look for MySQL instances in. Will automatically look for MySQL instances in all namespaces unless specified here |
+| jobLabel | string | `"integrations/mysql"` | The value of the job label for scraped metrics and logs |
+| name | string | `""` | Name for this MySQL instance. |
 
 ### Logs Settings
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | logs.enabled | bool | `true` | Whether to enable special processing of MySQL pod logs. |
+
+### Discovery Settings
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| logs.labelSelectors | object | `{}` | Discover MySQL instances based on label selectors. At least one is required. |
+| logs.namespaces | list | `[]` | The namespaces to look for MySQL instances in. Will automatically look for MySQL instances in all namespaces unless specified here |
 
 ### Metrics Settings
 
@@ -51,12 +57,6 @@
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | metrics.scrapeInterval | string | `60s` | How frequently to scrape metrics from MySQL Exporter. |
-
-### General Settings
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| name | string | `""` | Name for this MySQL instance. |
 
 ### Secret
 
