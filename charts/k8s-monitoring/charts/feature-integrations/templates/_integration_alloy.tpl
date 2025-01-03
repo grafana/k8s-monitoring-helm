@@ -50,7 +50,7 @@ declare "alloy_integration" {
       selectors {
         role = "pod"
         field = join(coalesce(argument.field_selectors.value, []), ",")
-        label = join(coalesce(argument.label_selectors.value, ["app.kubernetes.io/name=alloy"]), ",")
+        label = join(coalesce(argument.label_selectors.value, []), ",")
       }
 
       namespaces {
@@ -102,6 +102,11 @@ declare "alloy_integration" {
       optional = true
     }
 
+    argument "job_label" {
+      comment = "The job label to add for all Alloy metrics (default: integrations/alloy)"
+      optional = true
+    }
+
     argument "scrape_interval" {
       comment = "How often to scrape metrics from the targets (default: 60s)"
       optional = true
@@ -118,7 +123,7 @@ declare "alloy_integration" {
     }
 
     prometheus.scrape "alloy" {
-      job_name = "integrations/alloy"
+      job_name = coalesce(argument.job_label.value, "integrations/alloy")
       forward_to = [prometheus.relabel.alloy.receiver]
       targets = argument.targets.value
       scrape_interval = coalesce(argument.scrape_interval.value, "60s")
@@ -226,35 +231,23 @@ declare "alloy_integration" {
 {{- with $defaultValues | merge (deepCopy .instance) }}
   {{- $metricAllowList := include "integrations.alloy.allowList" (dict "instance" . "Files" $.Files) | fromYamlArray }}
   {{- $metricDenyList := .excludeMetrics }}
-
-  {{- $nameLabelDefined := false }}
-  {{- $labelSelectors := list }}
-  {{- range $k, $v := .labelSelectors }}
-    {{- if eq $k "app.kubernetes.io/name" }}{{- $nameLabelDefined = true }}{{- end }}
-    {{- if $v }}
-      {{- $labelSelectors = append $labelSelectors (printf "%s=%s" $k $v) }}
-    {{- end }}
-  {{- end }}
-  {{- if not $nameLabelDefined }}
-    {{- $labelSelectors = append $labelSelectors (printf "app.kubernetes.io/name=%s" .name) }}
-  {{- end }}
-  {{- $fieldSelectors := list }}
-  {{- range $k, $v := .fieldSelectors }}
-    {{- $fieldSelectors = append $fieldSelectors (printf "%s=%s" $k $v) }}
-  {{- end }}
 alloy_integration_discovery {{ include "helper.alloy_name" .name | quote }} {
   port_name = {{ .metrics.portName | quote }}
 {{- if .namespaces }}
   namespaces = {{ .namespaces | toJson }}
 {{- end }}
-  label_selectors = {{ $labelSelectors | toJson }}
-{{- if $fieldSelectors }}
-  field_selectors = {{ $fieldSelectors | toJson }}
+{{- if .labelSelectors }}
+  label_selectors = {{ .labelSelectors | toJson }}
+{{- end }}
+{{- if .fieldSelectors }}
+  field_selectors = {{ .fieldSelectors | toJson }}
 {{- end }}
 }
 
 alloy_integration_scrape  {{ include "helper.alloy_name" .name | quote }} {
   targets = alloy_integration_discovery.{{ include "helper.alloy_name" .name }}.output
+  targets = alloy_integration_discovery.{{ include "helper.alloy_name" .name }}.output
+  job_label = {{ .jobName | quote }}
   clustering = true
 {{- if $metricAllowList }}
   keep_metrics = {{ $metricAllowList | join "|" | quote }}

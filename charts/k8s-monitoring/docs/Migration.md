@@ -318,6 +318,7 @@ If using the Alloy integration `metrics.alloy.enabled`, or if using `extraConfig
      alloy:
        instances:
        - name: "alloy"
+         labelSelectors: ["app.kubernetes.name in (alloy-metrics)"]
     alloy-metrics:
      enabled: true
     ```
