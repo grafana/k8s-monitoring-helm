@@ -226,21 +226,22 @@ declare "alloy_integration" {
 {{- with $defaultValues | merge (deepCopy .instance) }}
   {{- $metricAllowList := include "integrations.alloy.allowList" (dict "instance" . "Files" $.Files) | fromYamlArray }}
   {{- $metricDenyList := .excludeMetrics }}
-
-  {{- $nameLabelDefined := false }}
   {{- $labelSelectors := list }}
   {{- range $k, $v := .labelSelectors }}
-    {{- if eq $k "app.kubernetes.io/name" }}{{- $nameLabelDefined = true }}{{- end }}
-    {{- if $v }}
+    {{- if kindIs "slice" $v }}
+      {{- $labelSelectors = append $labelSelectors (printf "%s in (%s)" $k (join "," $v)) }}
+    {{- else }}
       {{- $labelSelectors = append $labelSelectors (printf "%s=%s" $k $v) }}
     {{- end }}
   {{- end }}
-  {{- if not $nameLabelDefined }}
-    {{- $labelSelectors = append $labelSelectors (printf "app.kubernetes.io/name=%s" .name) }}
-  {{- end }}
+
   {{- $fieldSelectors := list }}
   {{- range $k, $v := .fieldSelectors }}
-    {{- $fieldSelectors = append $fieldSelectors (printf "%s=%s" $k $v) }}
+    {{- if kindIs "slice" $v }}
+      {{- $fieldSelectors = append $fieldSelectors (printf "%s in (%s)" $k (join "," $v)) }}
+    {{- else }}
+      {{- $fieldSelectors = append $fieldSelectors (printf "%s=%s" $k $v) }}
+    {{- end }}
   {{- end }}
 alloy_integration_discovery {{ include "helper.alloy_name" .name | quote }} {
   port_name = {{ .metrics.portName | quote }}
@@ -266,5 +267,28 @@ alloy_integration_scrape  {{ include "helper.alloy_name" .name | quote }} {
   max_cache_size = {{ .metrics.maxCacheSize | default $.Values.global.maxCacheSize | int }}
   forward_to = argument.metrics_destinations.value
 }
+  {{- end }}
+{{- end }}
+
+{{- define "integrations.alloy.validate" }}
+  {{- range $instance := $.Values.alloy.instances }}
+    {{- include "integrations.alloy.instance.validate" (merge $ (dict "instance" $instance)) | nindent 2 }}
+  {{- end }}
+{{- end }}
+
+{{- define "integrations.alloy.instance.validate" }}
+  {{- if not .instance.labelSelectors }}
+    {{- $msg := list "" "The Alloy integration requires a label selector" }}
+    {{- $msg = append $msg "Please set:" }}
+    {{- $msg = append $msg "integrations:" }}
+    {{- $msg = append $msg "  alloy:" }}
+    {{- $msg = append $msg "    instances:" }}
+    {{- $msg = append $msg (printf "      - name: %s" .instance.name) }}
+    {{- $msg = append $msg "        labelSelectors:" }}
+    {{- $msg = append $msg (printf "          app.kubernetes.io/name: %s" .instance.name) }}
+    {{- $msg = append $msg "OR" }}
+    {{- $msg = append $msg "        labelSelectors:" }}
+    {{- $msg = append $msg "          app.kubernetes.io/name: [alloy-one, alloy-two]" }}
+    {{- fail (join "\n" $msg) }}
   {{- end }}
 {{- end }}

@@ -74,5 +74,7 @@
   {{- $msg = append $msg "  enabled: true" }}
   {{- fail (join "\n" $msg) }}
 {{- end }}
+
+{{- include "feature.integrations.validate" (dict "Values" $.Values.integrations) }}
 {{- end }}
 {{- end }}
