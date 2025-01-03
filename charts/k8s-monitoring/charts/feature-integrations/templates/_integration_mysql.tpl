@@ -25,6 +25,21 @@
     {{- fail (join "\n" $msg) }}
   {{- end }}
 {{- end }}
+{{- if and .instance.logs.enabled (not .instance.logs.labelSelectors) }}
+  {{- $msg := list "" "The MySQL integration requires a label selector" }}
+  {{- $msg = append $msg "For example, please set:" }}
+  {{- $msg = append $msg "integrations:" }}
+  {{- $msg = append $msg "  mysql:" }}
+  {{- $msg = append $msg "    instances:" }}
+  {{- $msg = append $msg (printf "      - name: %s" .instance.name) }}
+  {{- $msg = append $msg "        logs:" }}
+  {{- $msg = append $msg "          labelSelectors:" }}
+  {{- $msg = append $msg (printf "            app.kubernetes.io/name: %s" .instance.name) }}
+  {{- $msg = append $msg "OR" }}
+  {{- $msg = append $msg "          labelSelectors:" }}
+  {{- $msg = append $msg "            app.kubernetes.io/name: [mysql-one, mysql-two]" }}
+  {{- fail (join "\n" $msg) }}
+{{- end }}
 {{- end }}
 
 {{- define "secrets.list.integration.mysql" }}

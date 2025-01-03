@@ -22,6 +22,8 @@ integrations:
   etcd:
     instances:
       - name: etcd
+        labelSelectors:
+          app.kubernetes.io/component: etcd
 
 alloy-metrics:
   enabled: true

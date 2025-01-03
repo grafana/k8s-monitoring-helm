@@ -23,31 +23,21 @@ declare "cert_manager_integration" {
 {{- with $defaultValues | merge (deepCopy .instance) }}
 {{- $metricAllowList := .metrics.tuning.includeMetrics }}
 {{- $metricDenyList := .metrics.tuning.excludeMetrics }}
-
-{{- $nameLabelDefined := false }}
 {{- $labelSelectors := list }}
 {{- range $k, $v := .labelSelectors }}
-  {{- if eq $k "app.kubernetes.io/name" }}{{- $nameLabelDefined = true }}{{- end }}
-  {{- if $v }}
+  {{- if kindIs "slice" $v }}
+    {{- $labelSelectors = append $labelSelectors (printf "%s in (%s)" $k (join "," $v)) }}
+  {{- else }}
     {{- $labelSelectors = append $labelSelectors (printf "%s=%s" $k $v) }}
   {{- end }}
-{{- end }}
-{{- if not $nameLabelDefined }}
-  {{- $labelSelectors = append $labelSelectors (printf "app.kubernetes.io/name=%s" .name) }}
-{{- end }}
-{{- $fieldSelectors := list }}
-{{- range $k, $v := .fieldSelectors }}
-{{- $fieldSelectors = append $fieldSelectors (printf "%s=%s" $k $v) }}
 {{- end }}
 cert_manager.kubernetes {{ include "helper.alloy_name" .name | quote }} {
 {{- if .namespaces }}
   namespaces = {{ .namespaces | toJson }}
 {{- end }}
-{{- if $labelSelectors }}
   label_selectors = {{ $labelSelectors | toJson }}
-{{- end }}
-{{- if $fieldSelectors }}
-  field_selectors = {{ $fieldSelectors | toJson }}
+{{- if .fieldSelectors }}
+  field_selectors = {{ .fieldSelectors | toJson }}
 {{- end }}
   port_name = {{ .metrics.portName | quote }}
 }
@@ -55,7 +45,7 @@ cert_manager.kubernetes {{ include "helper.alloy_name" .name | quote }} {
 cert_manager.scrape {{ include "helper.alloy_name" .name | quote }} {
   targets = cert_manager.kubernetes.{{ include "helper.alloy_name" .name }}.output
   clustering = true
-  job_label = {{ .jobName | quote }}
+  job_label = {{ .jobLabel | quote }}
 {{- if $metricAllowList }}
   keep_metrics = "up|{{ $metricAllowList |  join "|" }}"
 {{- end }}
@@ -69,4 +59,25 @@ cert_manager.scrape {{ include "helper.alloy_name" .name | quote }} {
 {{- end }}
 {{- end }}
 
-{{- define "integrations.cert-manager.validate" }}{{- end }}
+{{- define "integrations.cert-manager.validate" }}
+  {{- range $instance := (index $.Values "cert-manager").instances }}
+    {{- include "integrations.cert-manager.instance.validate" (merge $ (dict "instance" $instance)) | nindent 2 }}
+  {{- end }}
+{{- end }}
+
+{{- define "integrations.cert-manager.instance.validate" }}
+  {{- if not .instance.labelSelectors }}
+    {{- $msg := list "" "The cert-manager integration requires a label selector" }}
+    {{- $msg = append $msg "For example, please set:" }}
+    {{- $msg = append $msg "integrations:" }}
+    {{- $msg = append $msg "  cert-manager:" }}
+    {{- $msg = append $msg "    instances:" }}
+    {{- $msg = append $msg (printf "      - name: %s" .instance.name) }}
+    {{- $msg = append $msg "        labelSelectors:" }}
+    {{- $msg = append $msg (printf "          app.kubernetes.io/name: %s" .instance.name) }}
+    {{- $msg = append $msg "OR" }}
+    {{- $msg = append $msg "        labelSelectors:" }}
+    {{- $msg = append $msg "          app.kubernetes.io/name: [cert-manager-one, cert-manager-two]" }}
+    {{- fail (join "\n" $msg) }}
+  {{- end }}
+{{- end }}

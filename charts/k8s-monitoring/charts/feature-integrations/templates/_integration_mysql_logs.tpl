@@ -11,21 +11,23 @@
 {{- end }}
 
 {{- define "integrations.mysql.logs.discoveryRules" }}
-{{- range $instance := $.Values.mysql.instances }}
-{{- if $instance.logs.enabled }}
-{{- $labelList := list }}
-{{- $valueList := list }}
-{{- $selectors := dict "app.kubernetes.io/name" "mysql" "app.kubernetes.io/instance" $instance.name }}
-{{- if $instance.labelSelectors }}
-  {{- $selectors = $instance.labelSelectors }}
-{{- end }}
-
-{{- range (keys $selectors) }}
-  {{- $labelList = append $labelList (include "pod_label" .) -}}
-  {{- $valueList = append $valueList (index $selectors .) -}}
-{{- end }}
-
-{{- if $instance.logs.enabled }}
+  {{- range $instance := $.Values.mysql.instances }}
+    {{- if $instance.logs.enabled }}
+      {{- $labelList := list }}
+      {{- $valueList := list }}
+      {{- if .logs.namespaces }}
+        {{- $labelList = append $labelList "__meta_kubernetes_namespace" -}}
+        {{- $valueList = append $valueList (printf "(%s)" (join "|" .logs.namespaces)) -}}
+      {{- end }}
+      {{- range $k, $v := .logs.labelSelectors }}
+        {{- if kindIs "slice" $v }}
+          {{- $labelList = append $labelList (include "pod_label" $k) -}}
+          {{- $valueList = append $valueList (printf "(%s)" (join "|" $v)) -}}
+        {{- else }}
+          {{- $labelList = append $labelList (include "pod_label" $k) -}}
+          {{- $valueList = append $valueList $v -}}
+        {{- end }}
+      {{- end }}
 rule {
   source_labels = {{ $labelList | sortAlpha | toJson }}
   separator = ";"
@@ -40,13 +42,12 @@ rule {
   target_label = "instance"
   replacement = {{ $instance.name | quote }}
 }
-{{- end }}
-{{- end }}
-{{- end }}
+    {{- end }}
+  {{- end }}
 {{- end }}
 
 {{- define "integrations.mysql.logs.processingStage" }}
-{{- if eq (include "integrations.mysql.type.logs" .) "true" }}
+  {{- if eq (include "integrations.mysql.type.logs" .) "true" }}
 // Integration: MySQL
 stage.match {
   selector = "{integration=\"mysql\"}"
@@ -78,5 +79,5 @@ stage.match {
     values = ["integration"]
   }
 }
-{{- end }}
+  {{- end }}
 {{- end }}

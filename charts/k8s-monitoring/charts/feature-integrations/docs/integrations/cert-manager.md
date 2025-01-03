@@ -7,15 +7,15 @@
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | fieldSelectors | list | `[]` | Discover cert-manager instances based on field selectors. |
-| labelSelectors | object | `{}` | Discover cert-manager instances based on label selectors. Will automatically set a matcher for `app.kubernetes.io/name: <name>` unless set here. |
+| labelSelectors | object | `{}` | Discover cert-manager instances based on label selectors. At least one is required. |
 | metrics.portName | string | `"http-metrics"` | Name of the port to scrape metrics from. |
-| namespaces | list | `[]` | Namespaces to look for cert-manager instances. |
+| namespaces | list | `[]` | Namespaces to look for cert-manager instances. Will automatically look for cert-manager instances in all namespaces unless specified here |
 
 ### General Settings
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| jobName | string | `"integrations/cert-manager"` | The value of the job label for scraped metrics and logs |
+| jobLabel | string | `"integrations/cert-manager"` | The value of the job label for scraped metrics and logs |
 | name | string | `""` | Name for this cert-manager instance. |
 
 ### Scrape Settings

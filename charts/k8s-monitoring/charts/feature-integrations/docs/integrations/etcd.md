@@ -7,9 +7,16 @@
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | field_selectors | list | `[]` | Discover etcd instances based on field selectors. |
-| labelSelectors | object | `{}` | Discover etcd instances based on label selectors. Will automatically set a matcher for `app.kubernetes.io/component: <name>` unless set here. |
+| labelSelectors | object | `{}` | Discover etcd instances based on label selectors. At least one is required. |
 | metrics.portName | string | `"metrics"` | Name of the port to scrape metrics from. |
-| namespaces | list | `[]` | Namespaces to look for etcd instances. |
+| namespaces | list | `[]` | Namespaces to look for etcd instances. Will automatically look for etcd instances in all namespaces unless specified here |
+
+### General Settings
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| jobLabel | string | `"integrations/etcd"` | The value of the job label for scraped metrics and logs |
+| name | string | `""` | Name for this etcd instance. |
 
 ### Logs Settings
 
@@ -36,9 +43,3 @@
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | metrics.scrapeInterval | string | `60s` | How frequently to scrape metrics from Windows Exporter. |
-
-### General Settings
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| name | string | `""` | Name for this etcd instance. |
