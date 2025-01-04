@@ -31,7 +31,7 @@ data:
     
     prometheus.remote_write "prometheus" {
       endpoint {
-        url = "http://prometheus.prometheus.svc:9090/api/v1/write"
+        url = "http://prometheus-server.prometheus.svc:9090/api/v1/write"
         headers = {
         }
         tls_config {
@@ -54,13 +54,13 @@ data:
         write_relabel_config {
           source_labels = ["cluster"]
           regex = ""
-          replacement = "annotation-autodiscovery-cluster"
+          replacement = "annotation-autodiscovery-test"
           target_label = "cluster"
         }
         write_relabel_config {
           source_labels = ["k8s.cluster.name"]
           regex = ""
-          replacement = "annotation-autodiscovery-cluster"
+          replacement = "annotation-autodiscovery-test"
           target_label = "cluster"
         }
       }
@@ -306,7 +306,7 @@ data:
     prometheus.scrape "kubernetes_monitoring_telemetry" {
       job_name   = "integrations/kubernetes/kubernetes_monitoring_telemetry"
       targets    = discovery.relabel.kubernetes_monitoring_telemetry.output
-      scrape_interval = "1h"
+      scrape_interval = "1m"
       clustering {
         enabled = true
       }
@@ -531,7 +531,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
 spec:
-  replicas: 1
+  replicas: 2
   podManagementPolicy: Parallel
   minReadySeconds: 10
   serviceName: k8smon-alloy-metrics
