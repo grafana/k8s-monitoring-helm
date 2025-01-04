@@ -60,6 +60,10 @@ declare "annotation_autodiscovery" {
       action = "keepequal"
       target_label = "__tmp_port"
     }
+    rule {
+      action = "labeldrop"
+      regex = "__tmp_port"
+    }
 
     // If the metrics port number annotation has a value, override the target address to use it, regardless whether it is
     // one of the declared ports on that Pod.
