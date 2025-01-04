@@ -3,10 +3,10 @@ cluster:
   name: control-plane-monitoring-test
 
 destinations:
-  - name: localPrometheus
+  - name: prometheus
     type: prometheus
     url: http://prometheus-server.prometheus.svc:9090/api/v1/write
-  - name: localLoki
+  - name: loki
     type: loki
     url: http://loki.loki.svc:3100/loki/api/v1/push
     tenantId: "1"
@@ -20,6 +20,12 @@ clusterMetrics:
   controlPlane:
     enabled: true
 
+  kubelet: {metricsTuning: {includeMetrics: [scrape_samples_scraped]}}
+  kubeletResource: {metricsTuning: {includeMetrics: [scrape_samples_scraped]}}
+  cadvisor: {metricsTuning: {includeMetrics: [scrape_samples_scraped]}}
+  kube-state-metrics: {metricsTuning: {includeMetrics: [scrape_samples_scraped]}}
+  node-exporter: {metricsTuning: {includeMetrics: [scrape_samples_scraped]}}
+
 clusterEvents:
   enabled: true
 
@@ -30,6 +36,8 @@ selfReporting: {scrapeInterval: 1m}  # Force self-report to be generated within 
 
 alloy-metrics:
   enabled: true
+  controller:
+    replicas: 2
 
 alloy-singleton:
   enabled: true
