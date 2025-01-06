@@ -10,6 +10,8 @@ tests:
       grafana:
         instances:
           - name: grafana
+            labelSelectors:
+              app.kubernetes.io/name: grafana
     asserts:
       - isKind:
           of: ConfigMap
@@ -228,36 +230,6 @@ tests:
               }
             }
 
-  - it: should allow you to overwrite the name label
-    set:
-      deployAsConfigMap: true
-      alloy:
-        instances:
-          - name: grafana
-            labelSelectors:
-              app.kubernetes.io/name: my-grafana-instance
-    asserts:
-      - isKind:
-          of: ConfigMap
-      - matchRegex:
-          path: data["metrics.alloy"]
-          pattern: label_selectors = \["app.kubernetes.io/name=my-grafana-instance"\]
-
-  - it: should allow you to dismiss the name label
-    set:
-      deployAsConfigMap: true
-      alloy:
-        instances:
-          - name: grafana
-            labelSelectors:
-              app.kubernetes.io/name: null
-              app.kubernetes.io/instance: k8smon
-    asserts:
-      - isKind:
-          of: ConfigMap
-      - matchRegex:
-          path: data["metrics.alloy"]
-          pattern: label_selectors = \["app.kubernetes.io/instance=k8smon"\]
 
   - it: should allow you to restrict the namespaces for metrics
     set:
@@ -267,6 +239,8 @@ tests:
           - name: grafana
             namespaces:
               - k8smon
+            labelSelectors:
+              app.kubernetes.io/name: grafana
     asserts:
       - isKind:
           of: ConfigMap

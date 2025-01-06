@@ -389,16 +389,16 @@ data:
           regex = "__meta_kubernetes_pod_annotation_(.+)"
         }
         rule {
-          source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
+          source_labels = ["__meta_kubernetes_namespace"]
           separator = ";"
-          regex = "grafana"
+          regex = "(o11y)"
           target_label = "job"
           replacement = "integrations/grafana"
         }
         rule {
-          source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
+          source_labels = ["__meta_kubernetes_namespace"]
           separator = ";"
-          regex = "grafana"
+          regex = "(o11y)"
           target_label = "instance"
           replacement = "grafana"
         }
@@ -820,7 +820,7 @@ data:
       }
       
       alloy_integration_discovery "alloy_in_logs" {
-        port_name = "http-metrics"
+        port_name = "grafana"
         namespaces = ["logs"]
         label_selectors = ["app.kubernetes.io/name=alloy-singleton"]
       }
@@ -1003,6 +1003,11 @@ data:
           comment = "Must be a list(MetricsReceiver) where collected metrics should be forwarded to"
         }
     
+        argument "job_label" {
+          comment = "The job label to add for all Loki metrics (default: integrations/grafana)"
+          optional = true
+        }
+    
         argument "keep_metrics" {
           comment = "A regular expression of metrics to keep (default: see below)"
           optional = true
@@ -1029,7 +1034,7 @@ data:
         }
     
         prometheus.scrape "grafana" {
-          job_name = "integrations/grafana"
+          job_name = coalesce(argument.job_label.value, "integrations/grafana")
           forward_to = [prometheus.relabel.grafana.receiver]
           targets = argument.targets.value
           scrape_interval = coalesce(argument.scrape_interval.value, "60s")
@@ -1055,12 +1060,13 @@ data:
       
       grafana_integration_discovery "grafana" {
         namespaces = ["o11y"]
-        label_selectors = ["app.kubernetes.io/name=grafana"]
+        label_selectors = []
         port_name = "grafana"
       }
       
       grafana_integration_scrape  "grafana" {
         targets = grafana_integration_discovery.grafana.output
+        job_label = 
         clustering = true
         scrape_interval = "60s"
         max_cache_size = 100000

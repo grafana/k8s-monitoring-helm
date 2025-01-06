@@ -88,6 +88,11 @@ declare "grafana_integration" {
       comment = "Must be a list(MetricsReceiver) where collected metrics should be forwarded to"
     }
 
+    argument "job_label" {
+      comment = "The job label to add for all Loki metrics (default: integrations/grafana)"
+      optional = true
+    }
+
     argument "keep_metrics" {
       comment = "A regular expression of metrics to keep (default: see below)"
       optional = true
@@ -114,7 +119,7 @@ declare "grafana_integration" {
     }
 
     prometheus.scrape "grafana" {
-      job_name = "integrations/grafana"
+      job_name = coalesce(argument.job_label.value, "integrations/grafana")
       forward_to = [prometheus.relabel.grafana.receiver]
       targets = argument.targets.value
       scrape_interval = coalesce(argument.scrape_interval.value, "60s")
@@ -148,35 +153,28 @@ declare "grafana_integration" {
 {{- define "integrations.grafana.include.metrics" }}
 {{- $defaultValues := "integrations/grafana-values.yaml" | .Files.Get | fromYaml }}
 {{- with $defaultValues | merge (deepCopy .instance) }}
-  {{- $metricAllowList := include "integrations.grafana.allowList" (dict "instance" . "Files" $.Files) | fromYamlArray }}
-  {{- $metricDenyList := .excludeMetrics }}
-
-  {{- $nameLabelDefined := false }}
-  {{- $labelSelectors := list }}
-  {{- range $k, $v := .labelSelectors }}
-    {{- if eq $k "app.kubernetes.io/name" }}{{- $nameLabelDefined = true }}{{- end }}
-    {{- if $v }}
-      {{- $labelSelectors = append $labelSelectors (printf "%s=%s" $k $v) }}
-    {{- end }}
+{{- $metricAllowList := include "integrations.grafana.allowList" (dict "instance" . "Files" $.Files) | fromYamlArray }}
+{{- $metricDenyList := .excludeMetrics }}
+{{- $labelSelectors := list }}
+{{- range $k, $v := .labelSelectors }}
+  {{- if kindIs "slice" $v }}
+    {{- $labelSelectors = append $labelSelectors (printf "%s in (%s)" $k (join "," $v)) }}
+  {{- else }}
+    {{- $labelSelectors = append $labelSelectors (printf "%s=%s" $k $v) }}
   {{- end }}
-  {{- if not $nameLabelDefined }}
-    {{- $labelSelectors = append $labelSelectors (printf "app.kubernetes.io/name=%s" .name) }}
-  {{- end }}
-  {{- $fieldSelectors := list }}
-  {{- range $k, $v := .fieldSelectors }}
-    {{- $fieldSelectors = append $fieldSelectors (printf "%s=%s" $k $v) }}
-  {{- end }}
+{{- end }}
 grafana_integration_discovery {{ include "helper.alloy_name" .name | quote }} {
   namespaces = {{ .namespaces | toJson }}
   label_selectors = {{ $labelSelectors | toJson }}
-{{- if $fieldSelectors }}
-  field_selectors = {{ $fieldSelectors | toJson }}
+{{- if .fieldSelectors }}
+  field_selectors = {{ .fieldSelectors | toJson }}
 {{- end }}
   port_name = {{ .metrics.portName | quote }}
 }
 
 grafana_integration_scrape  {{ include "helper.alloy_name" .name | quote }} {
   targets = grafana_integration_discovery.{{ include "helper.alloy_name" .name }}.output
+  job_label = {{ .jobLabel | quote }}
   clustering = true
 {{- if $metricAllowList }}
   keep_metrics = {{ $metricAllowList | join "|" | quote }}

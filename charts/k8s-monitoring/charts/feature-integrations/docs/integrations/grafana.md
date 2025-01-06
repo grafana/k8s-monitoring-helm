@@ -7,7 +7,7 @@
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | fieldSelectors | list | `[]` | Discover Grafana instances based on field selectors. |
-| labelSelectors | object | `{}` | Discover Grafana instances based on label selectors. Will automatically set a matcher for `app.kubernetes.io/name: <name>` unless set here. |
+| labelSelectors | object | `{}` | Discover Grafana instances based on label selectors. |
 | metrics.portName | string | `"grafana"` | Name of the port to scrape metrics from. |
 | namespaces | list | `[]` | The namespaces to look for Grafana instances in. Will automatically look for Grafana instances in all namespaces unless specified here |
 
@@ -18,7 +18,7 @@
 | logs.enabled | bool | `true` | Whether to enable special processing of Grafana pod logs. |
 | logs.tuning.dropLogLevels | list | `[]` | The log levels to drop. Will automatically keep all log levels unless specified here. |
 | logs.tuning.excludeLines | list | `[]` | Line patterns (valid RE2 regular expression)to exclude from the logs. |
-| logs.tuning.scrubTimestamp | bool | `true` | Whether or not the timestamp should be scrubbed from the log line |
+| logs.tuning.scrubTimestamp | bool | `true` | Whether the timestamp should be scrubbed from the log line |
 | logs.tuning.structuredMetadata | object | `{}` | The structured metadata mappings to set. To not set any structured metadata, set this to an empty object (e.g. `{}`) |
 | logs.tuning.timestampFormat | string | `"RFC3339Nano"` | The timestamp format to use for the log line, if not set the default timestamp which is the collection will be used for the log line |
 
