@@ -49,8 +49,8 @@ declare "alloy_integration" {
 
       selectors {
         role = "pod"
-        field = join(coalesce(argument.field_selectors.value, []), ",")
-        label = join(coalesce(argument.label_selectors.value, ["app.kubernetes.io/name=alloy"]), ",")
+        field = string.join(coalesce(argument.field_selectors.value, []), ",")
+        label = string.join(coalesce(argument.label_selectors.value, ["app.kubernetes.io/name=alloy"]), ",")
       }
 
       namespaces {

@@ -9,7 +9,7 @@ metadata:
     helm.sh/chart: alloy-metrics-0.10.1
     app.kubernetes.io/name: alloy-metrics
     app.kubernetes.io/instance: k8smon
-    
+
     app.kubernetes.io/version: "v1.5.1"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
@@ -28,7 +28,7 @@ data:
       add_metric_suffixes = true
       forward_to = [prometheus.remote_write.prometheus.receiver]
     }
-    
+
     prometheus.remote_write "prometheus" {
       endpoint {
         url = "http://prometheus.prometheus.svc:9090/api/v1/write"
@@ -38,7 +38,7 @@ data:
           insecure_skip_verify = false
         }
         send_native_histograms = false
-    
+
         queue_config {
           capacity = 10000
           min_shards = 1
@@ -50,7 +50,7 @@ data:
           retry_on_http_429 = true
           sample_age_limit = "0s"
         }
-    
+
         write_relabel_config {
           source_labels = ["cluster"]
           regex = ""
@@ -64,33 +64,33 @@ data:
           target_label = "cluster"
         }
       }
-    
+
       wal {
         truncate_frequency = "2h"
         min_keepalive_time = "5m"
         max_keepalive_time = "8h"
       }
     }
-    
+
     declare "cert_manager_integration" {
       argument "metrics_destinations" {
         comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
       }
-      
+
       remote.kubernetes.configmap "cert_manager" {
         name = "k8smon-alloy-module-kubernetes"
         namespace = "default"
       }
-      
+
       import.string "cert_manager" {
         content = remote.kubernetes.configmap.cert_manager.data["cert-manager_metrics.alloy"]
       }
-      
+
       cert_manager.kubernetes "cert_manager" {
         label_selectors = ["app.kubernetes.io/name=cert-manager"]
         port_name = "http-metrics"
       }
-      
+
       cert_manager.scrape "cert_manager" {
         targets = cert_manager.kubernetes.cert_manager.output
         clustering = true
@@ -105,7 +105,7 @@ data:
         prometheus.remote_write.prometheus.receiver,
       ]
     }
-    
+
     // Self Reporting
     prometheus.exporter.unix "kubernetes_monitoring_telemetry" {
       set_collectors = ["textfile"]
@@ -113,7 +113,7 @@ data:
         directory = "/etc/alloy"
       }
     }
-    
+
     discovery.relabel "kubernetes_monitoring_telemetry" {
       targets = prometheus.exporter.unix.kubernetes_monitoring_telemetry.targets
       rule {
@@ -127,7 +127,7 @@ data:
         replacement = "integrations/kubernetes/kubernetes_monitoring_telemetry"
       }
     }
-    
+
     prometheus.scrape "kubernetes_monitoring_telemetry" {
       job_name   = "integrations/kubernetes/kubernetes_monitoring_telemetry"
       targets    = discovery.relabel.kubernetes_monitoring_telemetry.output
@@ -137,7 +137,7 @@ data:
       }
       forward_to = [prometheus.relabel.kubernetes_monitoring_telemetry.receiver]
     }
-    
+
     prometheus.relabel "kubernetes_monitoring_telemetry" {
       rule {
         source_labels = ["__name__"]
@@ -148,10 +148,10 @@ data:
         prometheus.remote_write.prometheus.receiver,
       ]
     }
-    
-    
-    
-    
+
+
+
+
   self-reporting-metric.prom: |
     # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_build_info gauge
@@ -170,7 +170,7 @@ data:
     /*
     Module: job-cert-manager
     Description: Scrapes cert-manager
-    
+
     Note: Every argument except for "forward_to" is optional, and does have a defined default value.  However, the values for these
           arguments are not defined using the default = " ... " argument syntax, but rather using the coalesce(argument.value, " ... ").
           This is because if the argument passed in from another consuming module is set to null, the default = " ... " syntax will
@@ -182,43 +182,43 @@ data:
         comment = "The namespaces to look for targets in (default: [] is all namespaces)"
         optional = true
       }
-    
+
       argument "field_selectors" {
         // Docs: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
         comment = "The label selectors to use to find matching targets (default: [])"
         optional = true
       }
-    
+
       argument "label_selectors" {
         // Docs: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
         comment = "The label selectors to use to find matching targets (default: [\"app.kubernetes.io/name=cert-manager\"])"
         optional = true
       }
-    
+
       argument "port_name" {
         comment = "The of the port to scrape metrics from (default: http-metrics)"
         optional = true
       }
-    
+
       // cert-manager service discovery for all of the pods
       discovery.kubernetes "cert_manager" {
         role = "pod"
-    
+
         selectors {
           role = "pod"
-          field = join(coalesce(argument.field_selectors.value, []), ",")
-          label = join(coalesce(argument.label_selectors.value, ["app.kubernetes.io/name=cert-manager"]), ",")
+          field = string.join(coalesce(argument.field_selectors.value, []), ",")
+          label = string.join(coalesce(argument.label_selectors.value, ["app.kubernetes.io/name=cert-manager"]), ",")
         }
-    
+
         namespaces {
           names = coalesce(argument.namespaces.value, [])
         }
       }
-    
+
       // cert-manager relabelings (pre-scrape)
       discovery.relabel "kubernetes" {
         targets = discovery.kubernetes.cert_manager.targets
-    
+
         // keep only the specified metrics port name, and pods that are Running and ready
         rule {
           source_labels = [
@@ -230,32 +230,32 @@ data:
           regex = coalesce(argument.port_name.value, "http-metrics") + "@Running@true"
           action = "keep"
         }
-    
+
         // drop any init containers
         rule {
           source_labels = ["__meta_kubernetes_pod_container_init"]
           regex = "true"
           action = "drop"
         }
-    
+
         // set the namespace label
         rule {
           source_labels = ["__meta_kubernetes_namespace"]
           target_label  = "namespace"
         }
-    
+
         // set the pod label
         rule {
           source_labels = ["__meta_kubernetes_pod_name"]
           target_label  = "pod"
         }
-    
+
         // set the container label
         rule {
           source_labels = ["__meta_kubernetes_pod_container_name"]
           target_label  = "container"
         }
-    
+
         // set a workload label
         rule {
           source_labels = [
@@ -271,7 +271,7 @@ data:
           regex = "(ReplicaSet/.+)-.+"
           target_label  = "workload"
         }
-    
+
         // set the app name if specified as metadata labels "app:" or "app.kubernetes.io/name:" or "k8s-app:"
         rule {
           action = "replace"
@@ -285,7 +285,7 @@ data:
           replacement = "$1"
           target_label = "app"
         }
-    
+
         // set the component if specified as metadata labels "component:" or "app.kubernetes.io/component:" or "k8s-component:"
         rule {
           action = "replace"
@@ -298,7 +298,7 @@ data:
           replacement = "$1"
           target_label = "component"
         }
-    
+
         // set a source label
         rule {
           action = "replace"
@@ -306,57 +306,57 @@ data:
           target_label = "source"
         }
       }
-    
+
       export "output" {
         value = discovery.relabel.kubernetes.output
       }
     }
-    
+
     declare "scrape" {
       argument "targets" {
         comment = "Must be a list() of targets"
       }
-    
+
       argument "forward_to" {
         comment = "Must be a list(MetricsReceiver) where collected metrics should be forwarded to"
       }
-    
+
       argument "job_label" {
         comment = "The job label to add for all cert-manager metric (default: integrations/cert-manager)"
         optional = true
       }
-    
+
       argument "keep_metrics" {
         comment = "A regular expression of metrics to keep (default: see below)"
         optional = true
       }
-    
+
       argument "drop_metrics" {
         comment = "A regular expression of metrics to drop (default: see below)"
         optional = true
       }
-    
+
       argument "scrape_interval" {
         comment = "How often to scrape metrics from the targets (default: 60s)"
         optional = true
       }
-    
+
       argument "scrape_timeout" {
         comment = "How long before a scrape times out (default: 10s)"
         optional = true
       }
-    
+
       argument "max_cache_size" {
         comment = "The maximum number of elements to hold in the relabeling cache (default: 100000).  This should be at least 2x-5x your largest scrape target or samples appended rate."
         optional = true
       }
-    
+
       argument "clustering" {
         // Docs: https://grafana.com/docs/agent/latest/flow/concepts/clustering/
         comment = "Whether or not clustering should be enabled (default: false)"
         optional = true
       }
-    
+
       // cert-manager scrape job
       prometheus.scrape "cert_manager" {
         job_name = coalesce(argument.job_label.value, "integrations/cert-manager")
@@ -364,24 +364,24 @@ data:
         targets = argument.targets.value
         scrape_interval = coalesce(argument.scrape_interval.value, "60s")
         scrape_timeout = coalesce(argument.scrape_timeout.value, "10s")
-    
+
         clustering {
           enabled = coalesce(argument.clustering.value, false)
         }
       }
-    
+
       // cert-manager metric relabelings (post-scrape)
       prometheus.relabel "cert_manager" {
         forward_to = argument.forward_to.value
         max_cache_size = coalesce(argument.max_cache_size.value, 100000)
-    
+
         // drop metrics that match the drop_metrics regex
         rule {
           source_labels = ["__name__"]
           regex = coalesce(argument.drop_metrics.value, "(^(go|process)_.+$)")
           action = "drop"
         }
-    
+
         // keep only metrics that match the keep_metrics regex
         rule {
           source_labels = ["__name__"]
@@ -400,7 +400,7 @@ metadata:
     helm.sh/chart: alloy-metrics-0.10.1
     app.kubernetes.io/name: alloy-metrics
     app.kubernetes.io/instance: k8smon
-    
+
     app.kubernetes.io/version: "v1.5.1"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
@@ -500,7 +500,7 @@ metadata:
     helm.sh/chart: alloy-metrics-0.10.1
     app.kubernetes.io/name: alloy-metrics
     app.kubernetes.io/instance: k8smon
-    
+
     app.kubernetes.io/version: "v1.5.1"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
@@ -523,7 +523,7 @@ metadata:
     helm.sh/chart: alloy-metrics-0.10.1
     app.kubernetes.io/name: alloy-metrics
     app.kubernetes.io/instance: k8smon
-    
+
     app.kubernetes.io/version: "v1.5.1"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
@@ -556,7 +556,7 @@ metadata:
     helm.sh/chart: alloy-metrics-0.10.1
     app.kubernetes.io/name: alloy-metrics
     app.kubernetes.io/instance: k8smon
-    
+
     app.kubernetes.io/version: "v1.5.1"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
@@ -582,7 +582,7 @@ metadata:
     helm.sh/chart: alloy-metrics-0.10.1
     app.kubernetes.io/name: alloy-metrics
     app.kubernetes.io/instance: k8smon
-    
+
     app.kubernetes.io/version: "v1.5.1"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
