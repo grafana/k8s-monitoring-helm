@@ -29,14 +29,14 @@
 rule {
   source_labels = {{ $labelList | sortAlpha | toJson }}
   separator = ";"
-  regex = {{ $valueList | join ";" | quote }}
-  target_label = "integration"
-  replacement = "loki"
+  regex = {{ $valueList | sortAlpha | join ";" | quote }}
+  target_label = "job"
+  replacement = "integrations/loki"
 }
 rule {
   source_labels = {{ $labelList | sortAlpha | toJson }}
   separator = ";"
-  regex = {{ $valueList | join ";" | quote }}
+  regex = {{ $valueList | sortAlpha | join ";" | quote }}
   target_label = "instance"
   replacement = {{ $instance.name | quote }}
 }
@@ -53,7 +53,11 @@ rule {
       {{- with $defaultValues | merge (deepCopy $instance) }}
         {{- if .logs.enabled }}
 stage.match {
-  selector = "{integration=\"loki\",instance=\"{{ $instance.name }}\"}"
+  {{- if $instance.namespaces }}
+  selector = "{job=\"integrations/loki\",instance=\"{{ $instance.name }}\",namespace=~\"{{ $instance.namespaces | join "|" }}\"}"
+  {{- else }}
+  selector = "{job=\"integrations/loki\",instance=\"{{ $instance.name }}\"}"
+  {{- end }}
 
   // extract some of the fields from the log line
   stage.logfmt {
@@ -63,6 +67,13 @@ stage.match {
       {{- range $key, $value := .logs.tuning.structuredMetadata }}
       {{ $key | quote }} = {{ if $value }}{{ $value | quote }}{{ else }}{{ $key | quote }}{{ end }},
       {{- end }}
+    }
+  }
+
+  // set the level as a label
+  stage.labels {
+    values = {
+      level = "level",
     }
   }
 
@@ -115,7 +126,7 @@ stage.match {
   {{- end }}
 
   {{- if and .logs.tuning.excludeLines (gt (len .logs.tuning.excludeLines) 0) }}
-  // drop certain log levels
+  // drop certain log lines
   stage.drop {
     source = ""
     expression = "(?i)({{ .logs.tuning.excludeLines | join "|" }})"
@@ -123,28 +134,6 @@ stage.match {
   }
   {{- end }}
 
-  {{- if .logs.tuning.setLogLevelLabel }}
-  // set the level as a label
-  stage.labels {
-    values = {
-      level = "level",
-    }
-  }
-  {{- end }}
-
-  // set the static labels
-  stage.static_labels {
-    values = {
-      job = "integrations/loki",
-    }
-  }
-
-  // drop the integration label and any other labels that are not needed
-  stage.label_drop {
-    values = [
-      "integration",
-    ]
-  }
 }
         {{- end }}
       {{- end }}

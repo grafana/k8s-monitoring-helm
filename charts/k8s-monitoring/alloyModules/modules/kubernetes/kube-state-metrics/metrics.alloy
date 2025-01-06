@@ -39,8 +39,8 @@ declare "kubernetes" {
 
     selectors {
       role = "service"
-      field = join(coalesce(argument.field_selectors.value, []), ",")
-      label = join(coalesce(argument.label_selectors.value, ["app.kubernetes.io/name=kube-state-metrics"]), ",")
+      field = string.join(coalesce(argument.field_selectors.value, []), ",")
+      label = string.join(coalesce(argument.label_selectors.value, ["app.kubernetes.io/name=kube-state-metrics"]), ",")
     }
 
     namespaces {
@@ -78,7 +78,7 @@ declare "scrape" {
   }
 
   argument "forward_to" {
-    comment = "Must be a list(MetricsReceiver) where collected logs should be forwarded to"
+    comment = "Must be a list(MetricsReceiver) where collected metrics should be forwarded to"
   }
 
   argument "job_label" {

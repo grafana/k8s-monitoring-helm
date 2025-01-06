@@ -49,8 +49,8 @@ declare "alloy_integration" {
 
       selectors {
         role = "pod"
-        field = join(coalesce(argument.field_selectors.value, []), ",")
-        label = join(coalesce(argument.label_selectors.value, ["app.kubernetes.io/name=alloy"]), ",")
+        field = string.join(coalesce(argument.field_selectors.value, []), ",")
+        label = string.join(coalesce(argument.label_selectors.value, ["app.kubernetes.io/name=alloy"]), ",")
       }
 
       namespaces {
@@ -89,7 +89,7 @@ declare "alloy_integration" {
     }
 
     argument "forward_to" {
-      comment = "Must be a list(MetricsReceiver) where collected logs should be forwarded to"
+      comment = "Must be a list(MetricsReceiver) where collected metrics should be forwarded to"
     }
 
     argument "keep_metrics" {

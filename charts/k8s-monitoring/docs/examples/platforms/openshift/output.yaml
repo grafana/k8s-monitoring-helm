@@ -845,7 +845,7 @@ data:
     */
     declare "cadvisor" {
       argument "forward_to" {
-        comment = "Must be a list(MetricsReceiver) where collected logs should be forwarded to"
+        comment = "Must be a list(MetricsReceiver) where collected metrics should be forwarded to"
       }
       argument "field_selectors" {
         // Docs: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
@@ -897,8 +897,8 @@ data:
     
         selectors {
           role = "node"
-          field = join(coalesce(argument.field_selectors.value, []), ",")
-          label = join(coalesce(argument.label_selectors.value, []), ",")
+          field = string.join(coalesce(argument.field_selectors.value, []), ",")
+          label = string.join(coalesce(argument.label_selectors.value, []), ",")
         }
       }
     
@@ -1064,7 +1064,7 @@ data:
     
     declare "resources" {
       argument "forward_to" {
-        comment = "Must be a list(MetricsReceiver) where collected logs should be forwarded to"
+        comment = "Must be a list(MetricsReceiver) where collected metrics should be forwarded to"
       }
       argument "field_selectors" {
         // Docs: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
@@ -1116,8 +1116,8 @@ data:
     
         selectors {
           role = "node"
-          field = join(coalesce(argument.field_selectors.value, []), ",")
-          label = join(coalesce(argument.label_selectors.value, []), ",")
+          field = string.join(coalesce(argument.field_selectors.value, []), ",")
+          label = string.join(coalesce(argument.label_selectors.value, []), ",")
         }
       }
     
@@ -1211,7 +1211,7 @@ data:
     
     declare "kubelet" {
       argument "forward_to" {
-        comment = "Must be a list(MetricsReceiver) where collected logs should be forwarded to"
+        comment = "Must be a list(MetricsReceiver) where collected metrics should be forwarded to"
       }
       argument "field_selectors" {
         // Docs: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
@@ -1263,8 +1263,8 @@ data:
     
         selectors {
           role = "node"
-          field = join(coalesce(argument.field_selectors.value, []), ",")
-          label = join(coalesce(argument.label_selectors.value, []), ",")
+          field = string.join(coalesce(argument.field_selectors.value, []), ",")
+          label = string.join(coalesce(argument.label_selectors.value, []), ",")
         }
       }
     
@@ -1358,7 +1358,7 @@ data:
     
     declare "apiserver" {
       argument "forward_to" {
-        comment = "Must be a list(MetricsReceiver) where collected logs should be forwarded to"
+        comment = "Must be a list(MetricsReceiver) where collected metrics should be forwarded to"
       }
       argument "namespaces" {
         comment = "The namespaces to look for targets in (default: default)"
@@ -1424,8 +1424,8 @@ data:
     
         selectors {
           role = "service"
-          field = join(coalesce(argument.field_selectors.value, ["metadata.name=kubernetes"]), ",")
-          label = join(coalesce(argument.label_selectors.value, []), ",")
+          field = string.join(coalesce(argument.field_selectors.value, ["metadata.name=kubernetes"]), ",")
+          label = string.join(coalesce(argument.label_selectors.value, []), ",")
         }
     
         namespaces {
@@ -1544,7 +1544,7 @@ data:
         optional = true
       }
       argument "forward_to" {
-        comment = "Must be a list(MetricsReceiver) where collected logs should be forwarded to"
+        comment = "Must be a list(MetricsReceiver) where collected metrics should be forwarded to"
       }
       argument "job_label" {
         comment = "The job label to add for all probes metric (default: integrations/kubernetes/kube-probes)"
@@ -1586,8 +1586,8 @@ data:
     
         selectors {
           role = "node"
-          field = join(coalesce(argument.field_selectors.value, []), ",")
-          label = join(coalesce(argument.label_selectors.value, []), ",")
+          field = string.join(coalesce(argument.field_selectors.value, []), ",")
+          label = string.join(coalesce(argument.label_selectors.value, []), ",")
         }
       }
     
@@ -1681,7 +1681,7 @@ data:
     
     declare "kube_dns" {
       argument "forward_to" {
-        comment = "Must be a list(MetricsReceiver) where collected logs should be forwarded to"
+        comment = "Must be a list(MetricsReceiver) where collected metrics should be forwarded to"
       }
       // arguments for kubernetes discovery
       argument "namespaces" {
@@ -1742,8 +1742,8 @@ data:
     
         selectors {
           role = "endpoints"
-          field = join(coalesce(argument.field_selectors.value, []), ",")
-          label = join(coalesce(argument.label_selectors.value, ["k8s-app=kube-dns"]), ",")
+          field = string.join(coalesce(argument.field_selectors.value, []), ",")
+          label = string.join(coalesce(argument.label_selectors.value, ["k8s-app=kube-dns"]), ",")
         }
     
         namespaces {
@@ -1912,8 +1912,8 @@ data:
     
         selectors {
           role = "service"
-          field = join(coalesce(argument.field_selectors.value, []), ",")
-          label = join(coalesce(argument.label_selectors.value, ["app.kubernetes.io/name=kube-state-metrics"]), ",")
+          field = string.join(coalesce(argument.field_selectors.value, []), ",")
+          label = string.join(coalesce(argument.label_selectors.value, ["app.kubernetes.io/name=kube-state-metrics"]), ",")
         }
     
         namespaces {
@@ -1951,7 +1951,7 @@ data:
       }
     
       argument "forward_to" {
-        comment = "Must be a list(MetricsReceiver) where collected logs should be forwarded to"
+        comment = "Must be a list(MetricsReceiver) where collected metrics should be forwarded to"
       }
     
       argument "job_label" {
@@ -2070,8 +2070,8 @@ data:
     
         selectors {
           role = "pod"
-          field = join(coalesce(argument.field_selectors.value, []), ",")
-          label = join(coalesce(argument.label_selectors.value, ["app.kubernetes.io/name=prometheus-node-exporter"]), ",")
+          field = string.join(coalesce(argument.field_selectors.value, []), ",")
+          label = string.join(coalesce(argument.label_selectors.value, ["app.kubernetes.io/name=prometheus-node-exporter"]), ",")
         }
     
         namespaces {
@@ -2186,7 +2186,7 @@ data:
       discovery.relabel "local" {
         targets = [
           {
-            "__address__" = "localhost" + format("%s", coalesce(argument.port.value, "9100")),
+            "__address__" = "localhost" + string.format("%s", coalesce(argument.port.value, "9100")),
             "source" = "local",
           },
         ]
@@ -2203,7 +2203,7 @@ data:
       }
     
       argument "forward_to" {
-        comment = "Must be a list(MetricsReceiver) where collected logs should be forwarded to"
+        comment = "Must be a list(MetricsReceiver) where collected metrics should be forwarded to"
       }
     
       argument "job_label" {

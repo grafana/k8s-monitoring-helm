@@ -25,20 +25,41 @@ integrations:
     instances:
       # monitor the collector gathering and sending meta-monitoring metrics/logs to the meta-monitoring cluster
       - name: alloy-singleton
-        namespaces: [logs]
+        namespaces:
+          - logs
+      # monitor the collectors gathering and sending metrics/logs to the local cluster
+      - name: alloy-metrics
+        namespaces:
+          - collectors
+      - name: alloy-logs
+        namespaces:
+          - collectors
+      - name: alloy-profiles
+        namespaces:
+          - collectors
+      - name: alloy-receiver
+        namespaces:
+          - collectors
+      - name: alloy-singleton
+        namespaces:
+          - collectors
   loki:
     instances:
       - name: loki
-        labelSelectors:
-          app.kubernetes.io/name: loki
-        logs:
-          enabled: true
-          namespaces: [logs]
+        namespaces:
+          - logs
+  grafana:
+    instances:
+      - name: grafana
+        namespaces:
+          - o11y
 
 clusterEvents:
   enabled: true
   collector: alloy-singleton
-  namespaces: [logs]
+  namespaces:
+    - logs
+    - o11y
 
 clusterMetrics:
   enabled: true
@@ -53,8 +74,18 @@ clusterMetrics:
       rule {
         action = "keep"
         source_labels = ["namespace"]
-        regex = "logs"
+        regex = "logs|o11y"
       }
+  apiServer:
+    enabled: false
+  kubeControllerManager:
+    enabled: false
+  kubeDNS:
+    enabled: false
+  kubeProxy:
+    enabled: false
+  kubeScheduler:
+    enabled: false
   kube-state-metrics:
     enabled: true
     namespaces:
@@ -63,7 +94,7 @@ clusterMetrics:
       rule {
         action = "keep"
         source_labels = ["namespace"]
-        regex = "logs"
+        regex = "logs|o11y"
       }
   node-exporter:
     enabled: false
@@ -78,13 +109,29 @@ clusterMetrics:
     enabled: false
     deploy: false
 
+nodeLogs:
+  enabled: false
+
 podLogs:
   enabled: true
   gatherMethod: kubernetesApi
   collector: alloy-singleton
-  namespaces: [logs]
+  namespaces:
+    - logs
 
 # Collectors
 alloy-singleton:
   enabled: true
+
+alloy-metrics:
+  enabled: false
+
+alloy-logs:
+  enabled: false
+
+alloy-profiles:
+  enabled: false
+
+alloy-receiver:
+  enabled: false
 ```

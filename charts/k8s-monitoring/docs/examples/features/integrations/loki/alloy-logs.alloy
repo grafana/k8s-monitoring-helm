@@ -80,8 +80,8 @@ declare "pod_logs" {
       source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
       separator = ";"
       regex = "loki"
-      target_label = "integration"
-      replacement = "loki"
+      target_label = "job"
+      replacement = "integrations/loki"
     }
     rule {
       source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
@@ -160,15 +160,20 @@ declare "pod_logs" {
     }
     // Integration: Loki
     stage.match {
-      selector = "{integration=\"loki\",instance=\"loki\"}"
+      selector = "{job=\"integrations/loki\",instance=\"loki\"}"
     
       // extract some of the fields from the log line
       stage.logfmt {
         mapping = {
           "ts" = "",
           "level" = "",
-          "caller" = "caller",
-          "component" = "component",
+        }
+      }
+    
+      // set the level as a label
+      stage.labels {
+        values = {
+          level = "level",
         }
       }
       // reset the timestamp to the extracted value
@@ -181,39 +186,7 @@ declare "pod_logs" {
         expression = "(ts=[^ ]+\\s+)"
         replace = ""
       }
-      // clean up the caller to remove the line
-      stage.replace {
-        source = "caller"
-        expression = "(:[0-9]+$)"
-        replace = ""
-      }
-      // set the structured metadata values
-      stage.structured_metadata {
-        values = {
-          "caller" = "caller",
-          "component" = "component",
-        }
-      }
-      // set the level as a label
-      stage.labels {
-        values = {
-          level = "level",
-        }
-      }
     
-      // set the static labels
-      stage.static_labels {
-        values = {
-          job = "integrations/loki",
-        }
-      }
-    
-      // drop the integration label and any other labels that are not needed
-      stage.label_drop {
-        values = [
-          "integration",
-        ]
-      }
     }
   
     // Only keep the labels that are defined in the `keepLabels` list.

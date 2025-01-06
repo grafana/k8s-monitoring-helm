@@ -205,8 +205,8 @@ data:
     
         selectors {
           role = "pod"
-          field = join(coalesce(argument.field_selectors.value, []), ",")
-          label = join(coalesce(argument.label_selectors.value, ["app.kubernetes.io/component=etcd"]), ",")
+          field = string.join(coalesce(argument.field_selectors.value, []), ",")
+          label = string.join(coalesce(argument.label_selectors.value, ["app.kubernetes.io/component=etcd"]), ",")
         }
     
         namespaces {
@@ -321,7 +321,7 @@ data:
       discovery.relabel "local" {
         targets = [
           {
-            "__address__" = "localhost" + format("%s", coalesce(argument.port.value, "9150")),
+            "__address__" = "localhost" + string.format("%s", coalesce(argument.port.value, "9150")),
             "source" = "local",
           },
         ]
@@ -338,7 +338,7 @@ data:
       }
     
       argument "forward_to" {
-        comment = "Must be a list(MetricsReceiver) where collected logs should be forwarded to"
+        comment = "Must be a list(MetricsReceiver) where collected metrics should be forwarded to"
       }
     
       argument "job_label" {
