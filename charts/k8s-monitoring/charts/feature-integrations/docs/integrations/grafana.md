@@ -11,6 +11,13 @@
 | metrics.portName | string | `"grafana"` | Name of the port to scrape metrics from. |
 | namespaces | list | `[]` | The namespaces to look for Grafana instances in. Will automatically look for Grafana instances in all namespaces unless specified here |
 
+### General Settings
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| jobLabel | string | `"integrations/grafana"` | The value of the job label for scraped metrics and logs |
+| name | string | `""` | Name for this Grafana instance. |
+
 ### Logs Settings
 
 | Key | Type | Default | Description |
@@ -41,9 +48,3 @@
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | metrics.scrapeInterval | string | `60s` | How frequently to scrape metrics from Grafana. |
-
-### General Settings
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| name | string | `""` | Name for this Grafana instance. |
