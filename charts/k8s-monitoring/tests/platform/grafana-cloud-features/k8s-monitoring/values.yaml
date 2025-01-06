@@ -13,8 +13,6 @@ destinations:
     secret:
       create: false
       name: grafana-cloud-credentials
-    extraLabelsFrom:
-      random: env("RANDOM_NUMBER")
   - name: grafanaCloudLogs
     type: loki
     url: https://logs-prod-006.grafana.net/loki/api/v1/push
@@ -25,13 +23,30 @@ destinations:
     secret:
       create: false
       name: grafana-cloud-credentials
-    extraLabelsFrom:
-      random: env("RANDOM_NUMBER")
 
 clusterMetrics:
   enabled: true
+  kubelet: {metricsTuning: {includeMetrics: [scrape_samples_scraped]}}
+  kubeletResource: {metricsTuning: {includeMetrics: [scrape_samples_scraped]}}
+  cadvisor: {metricsTuning: {includeMetrics: [scrape_samples_scraped]}}
+  kube-state-metrics: {metricsTuning: {includeMetrics: [scrape_samples_scraped]}}
+  node-exporter: {metricsTuning: {includeMetrics: [scrape_samples_scraped]}}
+  opencost:
+    enabled: true
+    metricsSource: grafanaCloudMetrics
+    opencost:
+      exporter:
+        defaultClusterId: k8s-monitoring-gc-feature-test
+      prometheus:
+        external:
+          url: https://prometheus-prod-13-prod-us-east-0.grafana.net/api/prom
+        existingSecretName: grafana-cloud-credentials
+        username_key: PROMETHEUS_USER
+        password_key: PROMETHEUS_PASS
+    metricsTuning: {includeMetrics: [scrape_samples_scraped]}
   kepler:
     enabled: true
+    metricsTuning: {includeMetrics: [scrape_samples_scraped]}
 
 clusterEvents:
   enabled: true
@@ -45,30 +60,23 @@ integrations:
       - name: alloy-metrics
         labelSelectors:
           app.kubernetes.io/name: alloy-metrics
+        metrics: {tuning: {includeMetrics: [scrape_samples_scraped]}}
       - name: alloy-singleton
         labelSelectors:
           app.kubernetes.io/name: alloy-singleton
+        metrics: {tuning: {includeMetrics: [scrape_samples_scraped]}}
       - name: alloy-logs
         labelSelectors:
           app.kubernetes.io/name: alloy-logs
+        metrics: {tuning: {includeMetrics: [scrape_samples_scraped]}}
+
+selfReporting: {scrapeInterval: 1m}  # Force self-report to be generated within test time
 
 alloy-metrics:
   enabled: true
-  alloy:
-    envFrom:
-      - configMapRef:
-          name: test-variables
 
 alloy-singleton:
   enabled: true
-  alloy:
-    envFrom:
-      - configMapRef:
-          name: test-variables
 
 alloy-logs:
   enabled: true
-  alloy:
-    envFrom:
-      - configMapRef:
-          name: test-variables
