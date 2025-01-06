@@ -1,0 +1,56 @@
+---
+name: Check for Alloy Modules updates
+# yamllint disable-line rule:truthy
+on:
+  workflow_dispatch:
+  schedule:
+    # Run once a day
+    - cron: '0 0 * * *'
+  pull_request:
+    paths:
+      - '.github/workflows/check-for-dependency-updates.yaml'
+
+permissions:
+  contents: "write"
+  pull-requests: "write"
+
+jobs:
+  check-for-alloy-modules-updates:
+    name: Check for Alloy Modules updates
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Helm
+        uses: azure/setup-helm@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Regenerate files
+        working-directory: charts/k8s-monitoring
+        run: |
+          rm -f vendir.lock.yml
+          make clean build
+
+      - name: Check for changes in generated files
+        id: check-for-changes
+        working-directory: charts/k8s-monitoring
+        run: |
+          if ! git diff --exit-code .; then
+            echo "changed=true" >> "${GITHUB_OUTPUT}"
+          fi
+
+      - name: Create pull request
+        if: steps.check-for-changes.outputs.changed == 'true'
+        uses: peter-evans/create-pull-request@v7
+        with:
+          title: "[dependency] Update Alloy Modules"
+          body: "Update Alloy Modules to the latest version"
+          base: main
+          author: "${{ github.actor }} <${{ github.actor }}@users.noreply.github.com>"
+          committer: "GitHub <noreply@github.com>"
+          commit-message: "Update Alloy Modules to the latest version"
+          labels: dependencies
+          branch: chore/update-alloy-modules"
+          delete-branch: true

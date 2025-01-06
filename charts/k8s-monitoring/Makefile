@@ -55,6 +55,13 @@ templates/destinations/_destination_types.tpl: $(DESTINATION_VALUES_FILES)
 	done
 	echo '{{- end -}}' >> $@
 
+vendir.lock.yml: vendir.yml
+ifdef HAS_VENDIR
+	vendir sync
+else
+	docker run --rm --volume $(shell pwd):/src --workdir /src ghcr.io/carvel-dev/docker-image:latest vendir sync
+endif
+
 alloyModules/LICENSE: vendir.yml vendir.lock.yml
 ifdef HAS_VENDIR
 	vendir sync -l
