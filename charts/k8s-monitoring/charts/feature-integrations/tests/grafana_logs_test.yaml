@@ -1,0 +1,210 @@
+---
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces rule:empty-lines
+suite: Test Grafana Integration - Logs
+templates:
+  - configmap.yaml
+tests:
+  - it: should add the grafana processing stage to the logs config
+    set:
+      deployAsConfigMap: true
+      grafana:
+        instances:
+          - name: grafana
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - equal:
+          path: data["logs.alloy"]
+          value: |-
+            // Integration rules
+            discovery.relabel "test" {
+              rule {
+                source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
+                separator = ";"
+                regex = "grafana"
+                target_label = "job"
+                replacement = "integrations/grafana"
+              }
+              rule {
+                source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
+                separator = ";"
+                regex = "grafana"
+                target_label = "instance"
+                replacement = "grafana"
+              }
+            }
+
+            // Processing stages
+            loki.process "test" {
+              // Integration: Loki
+              stage.match {
+                selector = "{job=\"integrations/grafana\",instance=\"grafana\"}"
+
+                // extract some of the fields from the log line
+                stage.logfmt {
+                  mapping = {
+                    "timestamp" = "t",
+                    "level" = "",
+                    "logger" = "",
+                    "type" = "",
+                  }
+                }
+
+                // set the level as a label
+                stage.labels {
+                  values = {
+                    level = "level",
+                  }
+                }
+                // reset the timestamp to the extracted value
+                stage.timestamp {
+                  source = "timestamp"
+                  format = "RFC3339Nano"
+                }
+                // remove the timestamp from the log line
+                stage.replace {
+                  expression = "( t=[^ ]+\\s+)"
+                  replace = ""
+                }
+              }
+            }
+
+  - it: should allow you to restrict the namespaces for logs
+    set:
+      deployAsConfigMap: true
+      grafana:
+        instances:
+          - name: grafana
+            namespaces:
+              - k8smon
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["logs.alloy"]
+          pattern: namespace=~\\"k8smon\\"
+
+  - it: should allow you to set the timestamp format
+    set:
+      deployAsConfigMap: true
+      grafana:
+        instances:
+          - name: grafana
+            logs:
+              tuning:
+                timestampFormat: "RFC3339"
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["logs.alloy"]
+          pattern: |-
+            \s+stage.timestamp {
+            \s+  source = "timestamp"
+            \s+  format = "RFC3339"
+            \s+}
+
+  - it: should allow you to scrub the timestamp from the log line
+    set:
+      deployAsConfigMap: true
+      grafana:
+        instances:
+          - name: grafana
+            logs:
+              tuning:
+                scrubTimestamp: true
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["logs.alloy"]
+          # The pattern should look like this, but since the regex is escaped, it will be a bit different
+          # stage.replace {
+          #   expression = "( t=[^ ]+\\s+)"
+          #   replace = ""
+          # }
+          pattern: |-
+            \s+stage.replace {
+            \s+  expression = "\( t=\[\^ \]\+\\\\s\+\)"
+            \s+  replace = ""
+            \s+}
+
+  - it: should allow you to set the structured metadata
+    set:
+      deployAsConfigMap: true
+      grafana:
+        instances:
+          - name: grafana
+            logs:
+              tuning:
+                structuredMetadata:
+                  logger: logger
+                  type: type
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["logs.alloy"]
+          pattern: |-
+            \s+stage.structured_metadata {
+            \s+  values = {
+            \s+    "logger" = "logger",
+            \s+    "type" = "type",
+            \s+  }
+            \s+}
+
+  - it: should allow you to drop log levels
+    set:
+      deployAsConfigMap: true
+      grafana:
+        instances:
+          - name: grafana
+            logs:
+              tuning:
+                dropLogLevels:
+                  - info
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["logs.alloy"]
+          # The pattern should look like this, but since the regex is escaped, it will be a bit different
+          # stage.drop {
+          #   source = "level"
+          #   expression = "(?i)(info)"
+          #   drop_counter_reason = "grafana-drop-log-level"
+          # }
+          pattern: |-
+            \s+stage.drop {
+            \s+  source = "level"
+            \s+  expression = "\(\?i\)\(info\)"
+            \s+  drop_counter_reason = "grafana-drop-log-level"
+            \s+}
+
+  - it: should allow you to exclude log lines
+    set:
+      deployAsConfigMap: true
+      grafana:
+        instances:
+          - name: grafana
+            logs:
+              tuning:
+                excludeLines:
+                  - logger=searchIndex
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["logs.alloy"]
+          # The pattern should look like this, but since the regex is escaped, it will be a bit different
+          # stage.drop {
+          #   source = ""
+          #   expression = "(?i)(logger=searchIndex)"
+          #   drop_counter_reason = "grafana-exclude-line"
+          # }
+          pattern: |-
+            \s*stage.drop {
+            \s*  source = ""
+            \s*  expression = "\(\?i\)\(logger=searchIndex\)"
+            \s*  drop_counter_reason = "grafana-exclude-line"
+            \s*}
