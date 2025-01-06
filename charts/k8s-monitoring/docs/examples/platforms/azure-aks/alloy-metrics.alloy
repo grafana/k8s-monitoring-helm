@@ -52,24 +52,24 @@ declare "cluster_metrics" {
   argument "metrics_destinations" {
     comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
   }
-
+  
   remote.kubernetes.configmap "kubernetes" {
     name = "k8smon-alloy-module-kubernetes"
     namespace = "default"
   }
-
+  
   import.string "kubernetes" {
     content = remote.kubernetes.configmap.kubernetes.data["core_metrics.alloy"]
-  }
-
+  }  
+  
   kubernetes.kubelet "scrape" {
     clustering = true
     keep_metrics = "up|go_goroutines|kubelet_certificate_manager_client_expiration_renew_errors|kubelet_certificate_manager_client_ttl_seconds|kubelet_certificate_manager_server_ttl_seconds|kubelet_cgroup_manager_duration_seconds_bucket|kubelet_cgroup_manager_duration_seconds_count|kubelet_node_config_error|kubelet_node_name|kubelet_pleg_relist_duration_seconds_bucket|kubelet_pleg_relist_duration_seconds_count|kubelet_pleg_relist_interval_seconds_bucket|kubelet_pod_start_duration_seconds_bucket|kubelet_pod_start_duration_seconds_count|kubelet_pod_worker_duration_seconds_bucket|kubelet_pod_worker_duration_seconds_count|kubelet_running_container_count|kubelet_running_containers|kubelet_running_pod_count|kubelet_running_pods|kubelet_runtime_operations_errors_total|kubelet_runtime_operations_total|kubelet_server_expiration_renew_errors|kubelet_volume_stats_available_bytes|kubelet_volume_stats_capacity_bytes|kubelet_volume_stats_inodes|kubelet_volume_stats_inodes_free|kubelet_volume_stats_inodes_used|kubelet_volume_stats_used_bytes|kubernetes_build_info|namespace_workload_pod|process_cpu_seconds_total|process_resident_memory_bytes|rest_client_requests_total|storage_operation_duration_seconds_count|storage_operation_errors_total|volume_manager_total_volumes"
     scrape_interval = "60s"
     max_cache_size = 100000
     forward_to = argument.metrics_destinations.value
-  }
-
+  }  
+  
   kubernetes.resources "scrape" {
     clustering = true
     job_label = "integrations/kubernetes/resources"
@@ -77,8 +77,8 @@ declare "cluster_metrics" {
     scrape_interval = "60s"
     max_cache_size = 100000
     forward_to = argument.metrics_destinations.value
-  }
-
+  }  
+  
   kubernetes.cadvisor "scrape" {
     clustering = true
     keep_metrics = "up|container_cpu_cfs_periods_total|container_cpu_cfs_throttled_periods_total|container_cpu_usage_seconds_total|container_fs_reads_bytes_total|container_fs_reads_total|container_fs_writes_bytes_total|container_fs_writes_total|container_memory_cache|container_memory_rss|container_memory_swap|container_memory_working_set_bytes|container_network_receive_bytes_total|container_network_receive_packets_dropped_total|container_network_receive_packets_total|container_network_transmit_bytes_total|container_network_transmit_packets_dropped_total|container_network_transmit_packets_total|machine_memory_bytes"
@@ -86,7 +86,7 @@ declare "cluster_metrics" {
     max_cache_size = 100000
     forward_to = [prometheus.relabel.cadvisor.receiver]
   }
-
+  
   prometheus.relabel "cadvisor" {
     max_cache_size = 100000
     // Drop empty container labels, addressing https://github.com/google/cadvisor/issues/2688
@@ -158,24 +158,24 @@ declare "cluster_metrics" {
       replacement = ""
     }
     forward_to = argument.metrics_destinations.value
-  }
-
+  }            
+  
   remote.kubernetes.configmap "kube_state_metrics" {
     name = "k8smon-alloy-module-kubernetes"
     namespace = "default"
   }
-
+  
   import.string "kube_state_metrics" {
     content = remote.kubernetes.configmap.kube_state_metrics.data["kube-state-metrics_metrics.alloy"]
   }
-
+  
   kube_state_metrics.kubernetes "targets" {
     label_selectors = [
       "app.kubernetes.io/name=kube-state-metrics",
       "release=k8smon",
     ]
   }
-
+  
   kube_state_metrics.scrape "metrics" {
     targets = kube_state_metrics.kubernetes.targets.output
     clustering = true
@@ -183,24 +183,24 @@ declare "cluster_metrics" {
     scrape_interval = "60s"
     max_cache_size = 100000
     forward_to = argument.metrics_destinations.value
-  }
-
+  }  
+  
   remote.kubernetes.configmap "node_exporter" {
     name = "k8smon-alloy-module-system"
     namespace = "default"
   }
-
+  
   import.string "node_exporter" {
     content = remote.kubernetes.configmap.node_exporter.data["node-exporter_metrics.alloy"]
   }
-
+  
   node_exporter.kubernetes "targets" {
     label_selectors = [
       "app.kubernetes.io/name=node-exporter",
       "release=k8smon",
     ]
   }
-
+  
   discovery.relabel "node_exporter" {
     targets = node_exporter.kubernetes.targets.output
     rule {
@@ -209,7 +209,7 @@ declare "cluster_metrics" {
       target_label = "instance"
     }
   }
-
+  
   node_exporter.scrape "metrics" {
     targets = discovery.relabel.node_exporter.output
     job_label = "integrations/node_exporter"
@@ -218,8 +218,8 @@ declare "cluster_metrics" {
     scrape_interval = "60s"
     max_cache_size = 100000
     forward_to = argument.metrics_destinations.value
-  }
-
+  }  
+  
   discovery.kubernetes "windows_exporter_pods" {
     role = "pod"
     namespaces {
@@ -230,7 +230,7 @@ declare "cluster_metrics" {
       label = "app.kubernetes.io/name=windows-exporter,release=k8smon"
     }
   }
-
+  
   discovery.relabel "windows_exporter" {
     targets = discovery.kubernetes.windows_exporter_pods.targets
     rule {
@@ -239,7 +239,7 @@ declare "cluster_metrics" {
       target_label = "instance"
     }
   }
-
+  
   prometheus.scrape "windows_exporter" {
     job_name   = "integrations/windows-exporter"
     targets  = discovery.relabel.windows_exporter.output
@@ -249,7 +249,7 @@ declare "cluster_metrics" {
     }
     forward_to = [prometheus.relabel.windows_exporter.receiver]
   }
-
+  
   prometheus.relabel "windows_exporter" {
     max_cache_size = 100000
     rule {
@@ -258,7 +258,7 @@ declare "cluster_metrics" {
       action = "keep"
     }
     forward_to = argument.metrics_destinations.value
-  }
+  }    
 }
 cluster_metrics "feature" {
   metrics_destinations = [
