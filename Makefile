@@ -1,7 +1,7 @@
 SHELL := /bin/bash
 UNAME := $(shell uname)
 
-CHARTS = $(shell ls charts)
+CHARTS = $(shell ls --color=never charts)
 
 .PHONY: clean
 clean:
