@@ -9,6 +9,7 @@ This example demonstrates how to use OAuth2 for authentication.
 ## Values
 
 ```yaml
+---
 cluster:
   name: oauth2-auth-example
 
