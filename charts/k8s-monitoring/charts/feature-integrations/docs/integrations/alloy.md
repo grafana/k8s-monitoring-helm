@@ -7,9 +7,16 @@
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | fieldSelectors | list | `[]` | Discover Alloy instances based on field selectors. |
-| labelSelectors | object | `{}` | Discover Alloy instances based on label selectors. Will automatically set a matcher for `app.kubernetes.io/name: <name>` unless set here. |
+| labelSelectors | object | `{}` | Discover Alloy instances based on label selectors. At least one is required. |
 | metrics.portName | string | `"http-metrics"` | Name of the port to scrape metrics from. |
-| namespaces | list | `[]` | The namespaces to look for Alloy instances in. Will automatically look for Alloy instances in all namespaces unless specified here |
+| namespaces | list | `[]` | Namespaces to look for Alloy instances in. Will automatically look for Alloy instances in all namespaces unless specified here |
+
+### General Settings
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| jobLabel | string | `"integrations/alloy"` | The value of the job label for scraped metrics and logs |
+| name | string | `""` | Name for this Alloy instance. |
 
 ### Metrics Settings
 
@@ -31,9 +38,3 @@
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | metrics.scrapeInterval | string | `60s` | How frequently to scrape metrics from Alloy. |
-
-### General Settings
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| name | string | `""` | Name for this Alloy instance. |

@@ -23,37 +23,28 @@ declare "etcd_integration" {
 {{- with $defaultValues | merge (deepCopy .instance) }}
 {{- $metricAllowList := .metrics.tuning.includeMetrics }}
 {{- $metricDenyList := .metrics.tuning.excludeMetrics }}
-
-{{- $componentLabelDefined := false }}
 {{- $labelSelectors := list }}
 {{- range $k, $v := .labelSelectors }}
-  {{- if eq $k "app.kubernetes.io/component" }}{{- $componentLabelDefined = true }}{{- end }}
-  {{- if $v }}
+  {{- if kindIs "slice" $v }}
+    {{- $labelSelectors = append $labelSelectors (printf "%s in (%s)" $k (join "," $v)) }}
+  {{- else }}
     {{- $labelSelectors = append $labelSelectors (printf "%s=%s" $k $v) }}
   {{- end }}
-{{- end }}
-{{- if not $componentLabelDefined }}
-  {{- $labelSelectors = append $labelSelectors (printf "app.kubernetes.io/component=%s" .name) }}
-{{- end }}
-{{- $fieldSelectors := list }}
-{{- range $k, $v := .fieldSelectors }}
-{{- $fieldSelectors = append $fieldSelectors (printf "%s=%s" $k $v) }}
 {{- end }}
 etcd.kubernetes {{ include "helper.alloy_name" .name | quote }} {
 {{- if .namespaces }}
   namespaces = {{ .namespaces | toJson }}
 {{- end }}
-{{- if $labelSelectors }}
   label_selectors = {{ $labelSelectors | toJson }}
-{{- end }}
-{{- if $fieldSelectors }}
-  field_selectors = {{ $fieldSelectors | toJson }}
+{{- if .fieldSelectors }}
+  field_selectors = {{ .fieldSelectors | toJson }}
 {{- end }}
   port_name = {{ .metrics.portName | quote }}
 }
 
 etcd.scrape {{ include "helper.alloy_name" .name | quote }} {
   targets = etcd.kubernetes.{{ include "helper.alloy_name" .name }}.output
+  job_label = {{ .jobLabel | quote }}
   clustering = true
 {{- if $metricAllowList }}
   keep_metrics = "up|{{ $metricAllowList |  join "|" | join "|" }}"
@@ -66,4 +57,27 @@ etcd.scrape {{ include "helper.alloy_name" .name | quote }} {
   forward_to = argument.metrics_destinations.value
 }
 {{- end }}
+{{- end }}
+
+{{- define "integrations.etcd.validate" }}
+  {{- range $instance := $.Values.etcd.instances }}
+    {{- include "integrations.etcd.instance.validate" (merge $ (dict "instance" $instance)) | nindent 2 }}
+  {{- end }}
+{{- end }}
+
+{{- define "integrations.etcd.instance.validate" }}
+  {{- if not .instance.labelSelectors }}
+    {{- $msg := list "" "The etcd integration requires a label selector" }}
+    {{- $msg = append $msg "For example, please set:" }}
+    {{- $msg = append $msg "integrations:" }}
+    {{- $msg = append $msg "  etcd:" }}
+    {{- $msg = append $msg "    instances:" }}
+    {{- $msg = append $msg (printf "      - name: %s" .instance.name) }}
+    {{- $msg = append $msg "        labelSelectors:" }}
+    {{- $msg = append $msg (printf "          app.kubernetes.io/component: %s" .instance.name) }}
+    {{- $msg = append $msg "OR" }}
+    {{- $msg = append $msg "        labelSelectors:" }}
+    {{- $msg = append $msg "          app.kubernetes.io/component: [etcd-one, etcd-two]" }}
+    {{- fail (join "\n" $msg) }}
+  {{- end }}
 {{- end }}

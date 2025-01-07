@@ -10,6 +10,8 @@ tests:
       grafana:
         instances:
           - name: grafana
+            labelSelectors:
+              app.kubernetes.io/name: grafana
     asserts:
       - isKind:
           of: ConfigMap
@@ -163,6 +165,11 @@ tests:
                   comment = "Must be a list(MetricsReceiver) where collected metrics should be forwarded to"
                 }
 
+                argument "job_label" {
+                  comment = "The job label to add for all Loki metrics (default: integrations/grafana)"
+                  optional = true
+                }
+            
                 argument "keep_metrics" {
                   comment = "A regular expression of metrics to keep (default: see below)"
                   optional = true
@@ -189,7 +196,7 @@ tests:
                 }
 
                 prometheus.scrape "grafana" {
-                  job_name = "integrations/grafana"
+                  job_name = coalesce(argument.job_label.value, "integrations/grafana")
                   forward_to = [prometheus.relabel.grafana.receiver]
                   targets = argument.targets.value
                   scrape_interval = coalesce(argument.scrape_interval.value, "60s")
@@ -221,6 +228,7 @@ tests:
 
               grafana_integration_scrape  "grafana" {
                 targets = grafana_integration_discovery.grafana.output
+                job_label = "integrations/grafana"
                 clustering = true
                 scrape_interval = "60s"
                 max_cache_size = 100000
@@ -228,36 +236,6 @@ tests:
               }
             }
 
-  - it: should allow you to overwrite the name label
-    set:
-      deployAsConfigMap: true
-      alloy:
-        instances:
-          - name: grafana
-            labelSelectors:
-              app.kubernetes.io/name: my-grafana-instance
-    asserts:
-      - isKind:
-          of: ConfigMap
-      - matchRegex:
-          path: data["metrics.alloy"]
-          pattern: label_selectors = \["app.kubernetes.io/name=my-grafana-instance"\]
-
-  - it: should allow you to dismiss the name label
-    set:
-      deployAsConfigMap: true
-      alloy:
-        instances:
-          - name: grafana
-            labelSelectors:
-              app.kubernetes.io/name: null
-              app.kubernetes.io/instance: k8smon
-    asserts:
-      - isKind:
-          of: ConfigMap
-      - matchRegex:
-          path: data["metrics.alloy"]
-          pattern: label_selectors = \["app.kubernetes.io/instance=k8smon"\]
 
   - it: should allow you to restrict the namespaces for metrics
     set:
@@ -267,6 +245,8 @@ tests:
           - name: grafana
             namespaces:
               - k8smon
+            labelSelectors:
+              app.kubernetes.io/name: grafana
     asserts:
       - isKind:
           of: ConfigMap

@@ -575,6 +575,11 @@ data:
           comment = "Must be a list(MetricsReceiver) where collected metrics should be forwarded to"
         }
     
+        argument "job_label" {
+          comment = "The job label to add for all Loki metrics (default: integrations/grafana)"
+          optional = true
+        }
+    
         argument "keep_metrics" {
           comment = "A regular expression of metrics to keep (default: see below)"
           optional = true
@@ -601,7 +606,7 @@ data:
         }
     
         prometheus.scrape "grafana" {
-          job_name = "integrations/grafana"
+          job_name = coalesce(argument.job_label.value, "integrations/grafana")
           forward_to = [prometheus.relabel.grafana.receiver]
           targets = argument.targets.value
           scrape_interval = coalesce(argument.scrape_interval.value, "60s")
@@ -633,6 +638,7 @@ data:
       
       grafana_integration_scrape  "grafana" {
         targets = grafana_integration_discovery.grafana.output
+        job_label = "integrations/grafana"
         clustering = true
         scrape_interval = "60s"
         max_cache_size = 100000

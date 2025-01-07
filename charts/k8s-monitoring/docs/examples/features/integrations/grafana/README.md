@@ -23,6 +23,8 @@ integrations:
   grafana:
     instances:
       - name: grafana
+        labelSelectors:
+          app.kubernetes.io/name: grafana
         namespaces:
           - o11y
 
