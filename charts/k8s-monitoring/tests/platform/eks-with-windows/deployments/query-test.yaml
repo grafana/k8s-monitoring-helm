@@ -41,6 +41,8 @@ spec:
             type: promql
           - query: grafana_kubernetes_monitoring_feature_info{cluster="$CLUSTER", feature="clusterEvents"}
             type: promql
+          - query: grafana_kubernetes_monitoring_feature_info{cluster="$CLUSTER", feature="nodeLogs"}
+            type: promql
           - query: grafana_kubernetes_monitoring_feature_info{cluster="$CLUSTER", feature="podLogs", method="volumes"}
             type: promql
           - query: grafana_kubernetes_monitoring_feature_info{cluster="$CLUSTER", feature="integrations", sources="alloy"}
@@ -83,6 +85,10 @@ spec:
           - query: count_over_time({cluster="$CLUSTER", job="integrations/kubernetes/eventhandler"}[1h])
             type: logql
 
+          # Node logs
+          - query: count_over_time({cluster="$CLUSTER", job="integrations/kubernetes/journal"}[1h])
+            type: logql
+
           # Pod logs
-          - query: count_over_time({cluster="$CLUSTER", job!="integrations/kubernetes/eventhandler"}[1h])
+          - query: count_over_time({cluster="$CLUSTER", job!~"integrations/kubernetes/eventhandler|integrations/kubernetes/journal"}[1h])
             type: logql
