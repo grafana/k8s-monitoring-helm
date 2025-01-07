@@ -15,6 +15,17 @@ metadata:
     app.kubernetes.io/part-of: alloy
     app.kubernetes.io/component: rbac
 ---
+# Source: k8s-monitoring/templates/destination_secret.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: "localprometheus-k8smon-k8s-monitoring"
+  namespace: "default"
+type: Opaque
+data:
+  username: "cHJvbXVzZXI="
+  password: "cHJvbWV0aGV1c3Bhc3N3b3Jk"
+---
 # Source: k8s-monitoring/templates/alloy-config.yaml
 apiVersion: v1
 kind: ConfigMap
@@ -23,176 +34,62 @@ metadata:
   namespace: default
 data:
   config.alloy: |-
-    // Destination: otlp-gateway (otlp)
-    otelcol.receiver.prometheus "otlp_gateway" {
-      output {
-        metrics = [otelcol.processor.attributes.otlp_gateway.input]
-      }
-    }
-    otelcol.receiver.loki "otlp_gateway" {
-      output {
-        logs = [otelcol.processor.attributes.otlp_gateway.input]
-      }
+    // Destination: localPrometheus (prometheus)
+    otelcol.exporter.prometheus "localprometheus" {
+      add_metric_suffixes = true
+      forward_to = [prometheus.remote_write.localprometheus.receiver]
     }
     
-    otelcol.processor.attributes "otlp_gateway" {
-      action {
-        key = "cluster"
-        action = "upsert"
-        value = "applications-cluster"
-      }
-      action {
-        key = "k8s.cluster.name"
-        action = "upsert"
-        value = "applications-cluster"
-      }
-      output {
-        metrics = [otelcol.processor.transform.otlp_gateway.input]
-        logs = [otelcol.processor.transform.otlp_gateway.input]
-        traces = [otelcol.processor.transform.otlp_gateway.input]
-      }
-    }
-    
-    otelcol.processor.transform "otlp_gateway" {
-      error_mode = "ignore"
-    
-      output {
-        metrics = [otelcol.processor.batch.otlp_gateway.input]
-        logs = [otelcol.processor.batch.otlp_gateway.input]
-        traces = [otelcol.processor.batch.otlp_gateway.input]
-      }
-    }
-    
-    otelcol.processor.batch "otlp_gateway" {
-      timeout = "2s"
-      send_batch_size = 8192
-      send_batch_max_size = 0
-    
-      output {
-        metrics = [otelcol.exporter.otlp.otlp_gateway.input]
-        logs = [otelcol.exporter.otlp.otlp_gateway.input]
-        traces = [otelcol.exporter.otlp.otlp_gateway.input]
-      }
-    }
-    otelcol.exporter.otlp "otlp_gateway" {
-      client {
-        endpoint = "http://otlp-gateway.example.com"
-        tls {
-          insecure = false
+    prometheus.remote_write "localprometheus" {
+      endpoint {
+        url = "http://prometheus-server.prometheus.svc:9090/api/v1/write"
+        headers = {
+        }
+        basic_auth {
+          username = nonsensitive(remote.kubernetes.secret.localprometheus.data["username"])
+          password = remote.kubernetes.secret.localprometheus.data["password"]
+        }
+        tls_config {
           insecure_skip_verify = false
         }
+        send_native_histograms = false
+    
+        queue_config {
+          capacity = 10000
+          min_shards = 1
+          max_shards = 50
+          max_samples_per_send = 2000
+          batch_send_deadline = "5s"
+          min_backoff = "30ms"
+          max_backoff = "5s"
+          retry_on_http_429 = true
+          sample_age_limit = "0s"
+        }
+    
+        write_relabel_config {
+          source_labels = ["cluster"]
+          regex = ""
+          replacement = "statsd-test"
+          target_label = "cluster"
+        }
+        write_relabel_config {
+          source_labels = ["k8s.cluster.name"]
+          regex = ""
+          replacement = "statsd-test"
+          target_label = "cluster"
+        }
+      }
+    
+      wal {
+        truncate_frequency = "2h"
+        min_keepalive_time = "5m"
+        max_keepalive_time = "8h"
       }
     }
     
-    // Feature: Application Observability
-    declare "application_observability" {
-      argument "metrics_destinations" {
-        comment = "Must be a list of metrics destinations where collected metrics should be forwarded to"
-      }
-    
-      argument "logs_destinations" {
-        comment = "Must be a list of log destinations where collected logs should be forwarded to"
-      }
-    
-      argument "traces_destinations" {
-        comment = "Must be a list of trace destinations where collected trace should be forwarded to"
-      }
-    
-      // Receivers --> Resource Detection Processor  
-      otelcol.receiver.otlp "receiver" {
-        http {
-          endpoint = "0.0.0.0:4318"
-        }
-        debug_metrics {
-          disable_high_cardinality_metrics = true
-        }
-        output {
-          metrics = [otelcol.processor.resourcedetection.default.input]
-          logs = [otelcol.processor.resourcedetection.default.input]
-          traces = [otelcol.processor.resourcedetection.default.input]
-        }
-      }    
-    
-      // Resource Detection Processor --> K8s Attribute Processor  
-      otelcol.processor.resourcedetection "default" {
-        detectors = ["env", "system"]
-        system {
-          hostname_sources = ["os"]
-        }
-      
-        output {
-          metrics = [otelcol.processor.k8sattributes.default.input]
-          logs = [otelcol.processor.k8sattributes.default.input]
-          traces = [otelcol.processor.k8sattributes.default.input]
-        }
-      }
-    
-      // K8s Attribute Processor --> Transform Processor
-      // Resource Detection Processor Traces --> Host Info Connector  
-      otelcol.processor.k8sattributes "default" {
-        extract {
-          metadata = ["k8s.namespace.name","k8s.pod.name","k8s.deployment.name","k8s.statefulset.name","k8s.daemonset.name","k8s.cronjob.name","k8s.job.name","k8s.node.name","k8s.pod.uid","k8s.pod.start_time"]
-        }
-        pod_association {
-          source {
-            from = "connection"
-          }
-        }
-      
-        output {
-          metrics = [otelcol.processor.transform.default.input]
-          logs = [otelcol.processor.transform.default.input]
-          traces = [otelcol.processor.transform.default.input, otelcol.connector.host_info.default.input]
-        }
-      }
-      // Host Info Connector --> Batch Processor  
-      otelcol.connector.host_info "default" {
-        host_identifiers = [ "k8s.node.name" ]
-      
-        output {
-          metrics = [otelcol.processor.batch.default.input]
-        }
-      }
-    
-    
-      // Transform Processor --> Batch Processor  
-      otelcol.processor.transform "default" {
-        error_mode = "ignore"
-        log_statements {
-          context = "resource"
-          statements = [
-            "set(attributes[\"pod\"], attributes[\"k8s.pod.name\"])",
-            "set(attributes[\"namespace\"], attributes[\"k8s.namespace.name\"])",
-            "set(attributes[\"loki.resource.labels\"], \"cluster, namespace, job, pod\")",
-          ]
-        }
-      
-        output {
-          metrics = [otelcol.processor.batch.default.input]
-          logs = [otelcol.processor.batch.default.input]
-          traces = [otelcol.processor.batch.default.input]
-        }
-      }
-    
-      // Batch Processor --> Destinations  
-      otelcol.processor.batch "default" {
-        output {
-          metrics = argument.metrics_destinations.value
-          logs = argument.logs_destinations.value
-          traces = argument.traces_destinations.value
-        }
-      }
-    }
-    application_observability "feature" {
-      metrics_destinations = [
-        otelcol.processor.attributes.otlp_gateway.input,
-      ]
-      logs_destinations = [
-        otelcol.processor.attributes.otlp_gateway.input,
-      ]
-      traces_destinations = [
-        otelcol.processor.attributes.otlp_gateway.input,
-      ]
+    remote.kubernetes.secret "localprometheus" {
+      name      = "localprometheus-k8smon-k8s-monitoring"
+      namespace = "default"
     }
     
     // Self Reporting
@@ -234,20 +131,27 @@ data:
         action = "keep"
       }
       forward_to = [
-        otelcol.receiver.prometheus.otlp_gateway.receiver,
+        prometheus.remote_write.localprometheus.receiver,
       ]
     }
     
     
     
-    
+    prometheus.exporter.statsd "default" {
+      listen_udp           = ":8125"
+      listen_tcp           = ":8125"
+      parse_dogstatsd_tags = true
+    }
+    prometheus.scrape "statsd" {
+      targets    = prometheus.exporter.statsd.default.targets
+      forward_to = [prometheus.remote_write.localprometheus.receiver]
+    }
   self-reporting-metric.prom: |
     # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_build_info gauge
     grafana_kubernetes_monitoring_build_info{version="2.0.0", namespace="default"} 1
     # HELP grafana_kubernetes_monitoring_feature_info A metric to report the enabled features of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_feature_info gauge
-    grafana_kubernetes_monitoring_feature_info{feature="applicationObservability", protocols="otlphttp", version="1.0.0"} 1
 ---
 # Source: k8s-monitoring/charts/alloy-receiver/templates/rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -397,9 +301,13 @@ spec:
       port: 12345
       targetPort: 12345
       protocol: "TCP"
-    - name: otlp-http
-      port: 4318
-      targetPort: 4318
+    - name: statsd-udp
+      port: 8125
+      targetPort: 8125
+      protocol: UDP
+    - name: statsd-tcp
+      port: 8125
+      targetPort: 8125
       protocol: TCP
 ---
 # Source: k8s-monitoring/charts/alloy-receiver/templates/controllers/daemonset.yaml
@@ -451,8 +359,11 @@ spec:
           ports:
             - containerPort: 12345
               name: http-metrics
-            - containerPort: 4318
-              name: otlp-http
+            - containerPort: 8125
+              name: statsd-udp
+              protocol: UDP
+            - containerPort: 8125
+              name: statsd-tcp
               protocol: TCP
           readinessProbe:
             httpGet:
