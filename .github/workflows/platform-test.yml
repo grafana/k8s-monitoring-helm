@@ -22,8 +22,9 @@ jobs:
 
       - name: List tests
         id: list_tests
+        working-directory: charts/k8s-monitoring/tests/platform
         run: |
-          allTests=$(find charts/k8s-monitoring/tests/platform -mindepth 1 -maxdepth 1 -type d -exec basename {} \; | jq --raw-input --slurp --compact-output 'split("\n") | map(select(. != ""))')
+          allTests=$(find . -name values.yaml -type f -exec dirname {} \; | sed "s|^\./||" | jq --raw-input --slurp --compact-output 'split("\n") | map(select(. != ""))')
           if [ "${{ github.event_name }}" == "pull_request" ]; then
             # All labels on this PR
             labels='${{ toJson(github.event.pull_request.labels.*.name) }}'
