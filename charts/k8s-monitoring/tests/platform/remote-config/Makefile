@@ -17,3 +17,6 @@ deployments/grafana-cloud-credentials.yaml:
   		--from-literal=PROMETHEUS_USER="$$GRAFANA_CLOUD_METRICS_USERNAME" \
   		--from-literal=PROMETHEUS_PASS="$$GRAFANA_CLOUD_RW_POLICY_TOKEN" \
 		-o yaml --dry-run=client >> $@
+
+run-test:
+	../../../../../scripts/run-cluster-test.sh .
