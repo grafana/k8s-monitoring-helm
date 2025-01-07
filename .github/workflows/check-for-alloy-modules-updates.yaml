@@ -8,11 +8,11 @@ on:
     - cron: '0 0 * * *'
   pull_request:
     paths:
-      - '.github/workflows/check-for-dependency-updates.yaml'
+      - .github/workflows/check-for-alloy-modules-updates.yaml
 
 permissions:
-  contents: "write"
-  pull-requests: "write"
+  contents: write
+  pull-requests: write
 
 jobs:
   check-for-alloy-modules-updates:
@@ -24,14 +24,12 @@ jobs:
 
       - name: Install Helm
         uses: azure/setup-helm@v4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Regenerate files
         working-directory: charts/k8s-monitoring
         run: |
-          rm -f vendir.lock.yml
-          make clean build
+          touch vendir.yml
+          make vendir.lock.yml clean build
 
       - name: Check for changes in generated files
         id: check-for-changes
@@ -41,16 +39,23 @@ jobs:
             echo "changed=true" >> "${GITHUB_OUTPUT}"
           fi
 
+      - name: Get details
+        id: get-details
+        if: steps.check-for-changes.outputs.changed == 'true'
+        working-directory: charts/k8s-monitoring
+        run: |
+          echo "sha=$(yq '.directories[0].contents[0].git.sha' vendir.lock.yml)" >> "${GITHUB_OUTPUT}"
+
       - name: Create pull request
         if: steps.check-for-changes.outputs.changed == 'true'
         uses: peter-evans/create-pull-request@v7
         with:
           title: "[dependency] Update Alloy Modules"
-          body: "Update Alloy Modules to the latest version"
+          body: "Update Alloy Modules to the latest version (SHA: ${{ steps.get-details.outputs.sha }})"
           base: main
           author: "${{ github.actor }} <${{ github.actor }}@users.noreply.github.com>"
-          committer: "GitHub <noreply@github.com>"
-          commit-message: "Update Alloy Modules to the latest version"
+          committer: GitHub <noreply@github.com>
+          commit-message: "Update Alloy Modules to the latest version (SHA: ${{ steps.get-details.outputs.sha }})"
           labels: dependencies
-          branch: chore/update-alloy-modules"
+          branch: chore/update-alloy-modules
           delete-branch: true
