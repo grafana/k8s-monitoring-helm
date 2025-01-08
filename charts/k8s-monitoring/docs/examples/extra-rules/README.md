@@ -48,7 +48,7 @@ destinations:
 clusterMetrics:
   enabled: true
   kube-state-metrics:
-    extraMetricRelabelingRules: |-
+    extraMetricProcessingRules: |-
       rule {
         source_labels = ["namespace"]
         regex = "production"
