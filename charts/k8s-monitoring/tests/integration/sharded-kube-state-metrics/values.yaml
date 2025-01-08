@@ -1,0 +1,25 @@
+---
+cluster:
+  name: sharded-kube-state-metrics-test
+
+destinations:
+  - name: prometheus
+    type: prometheus
+    url: http://prometheus-server.prometheus.svc:9090/api/v1/write
+
+annotationAutodiscovery:
+  enabled: true
+
+clusterMetrics:
+  enabled: true
+  kube-state-metrics:
+    autosharding:
+      enabled: true
+    replicas: 5
+    podAnnotations:
+      k8s.grafana.com/scrape: "true"
+      k8s.grafana.com/job: "kube-state-metrics-internal"
+      k8s.grafana.com/metrics.portNumber: "8081"
+
+alloy-metrics:
+  enabled: true

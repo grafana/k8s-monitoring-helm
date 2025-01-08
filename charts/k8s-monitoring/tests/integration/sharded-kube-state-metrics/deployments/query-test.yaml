@@ -1,0 +1,56 @@
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: GitRepository
+metadata:
+  name: k8s-monitoring-test
+spec:
+  interval: 1m
+  url: https://github.com/grafana/k8s-monitoring-helm
+  ref:
+    branch: main
+  ignore: |
+    /*
+    !/charts/k8s-monitoring-test
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: k8s-monitoring-test
+spec:
+  interval: 1m
+  chart:
+    spec:
+      chart: charts/k8s-monitoring-test
+      sourceRef:
+        kind: GitRepository
+        name: k8s-monitoring-test
+      interval: 1m
+  dependsOn:
+    - name: prometheus
+      namespace: prometheus
+  values:
+    tests:
+      - env:
+          CLUSTER: sharded-kube-state-metrics-test
+          PROMETHEUS_URL: http://prometheus-server.prometheus.svc:9090/api/v1/query
+        queries:
+          # Self reporting metrics
+          - query: count(kube_state_metrics_build_info{cluster="$CLUSTER", job="kube-state-metrics-internal"})
+            type: promql
+            expect:
+              value: 5  # Five replicas of kube-state-metrics
+          - query: kube_state_metrics_total_shards{cluster="$CLUSTER", job="kube-state-metrics-internal"}
+            type: promql
+            expect:
+              value: 5  # Five shards for kube-state-metrics
+          - query: count(kube_node_info{cluster="$CLUSTER", job="integrations/kubernetes/kube-state-metrics"})
+            type: promql
+            expect:
+              value: 3  # Three Kubernetes nodes
+
+          # DPM check
+          - query: avg(count_over_time(scrape_samples_scraped{cluster="$CLUSTER"}[1m]))
+            type: promql
+            expect:
+              value: 1
+              operator: ==
