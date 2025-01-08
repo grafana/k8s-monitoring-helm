@@ -64,7 +64,7 @@ declare "cluster_metrics" {
   
   kubernetes.kubelet "scrape" {
     clustering = true
-    keep_metrics = "up|go_goroutines|kubelet_certificate_manager_client_expiration_renew_errors|kubelet_certificate_manager_client_ttl_seconds|kubelet_certificate_manager_server_ttl_seconds|kubelet_cgroup_manager_duration_seconds_bucket|kubelet_cgroup_manager_duration_seconds_count|kubelet_node_config_error|kubelet_node_name|kubelet_pleg_relist_duration_seconds_bucket|kubelet_pleg_relist_duration_seconds_count|kubelet_pleg_relist_interval_seconds_bucket|kubelet_pod_start_duration_seconds_bucket|kubelet_pod_start_duration_seconds_count|kubelet_pod_worker_duration_seconds_bucket|kubelet_pod_worker_duration_seconds_count|kubelet_running_container_count|kubelet_running_containers|kubelet_running_pod_count|kubelet_running_pods|kubelet_runtime_operations_errors_total|kubelet_runtime_operations_total|kubelet_server_expiration_renew_errors|kubelet_volume_stats_available_bytes|kubelet_volume_stats_capacity_bytes|kubelet_volume_stats_inodes|kubelet_volume_stats_inodes_free|kubelet_volume_stats_inodes_used|kubelet_volume_stats_used_bytes|kubernetes_build_info|namespace_workload_pod|process_cpu_seconds_total|process_resident_memory_bytes|rest_client_requests_total|storage_operation_duration_seconds_count|storage_operation_errors_total|volume_manager_total_volumes"
+    keep_metrics = "up|scrape_samples_scraped|go_goroutines|kubelet_certificate_manager_client_expiration_renew_errors|kubelet_certificate_manager_client_ttl_seconds|kubelet_certificate_manager_server_ttl_seconds|kubelet_cgroup_manager_duration_seconds_bucket|kubelet_cgroup_manager_duration_seconds_count|kubelet_node_config_error|kubelet_node_name|kubelet_pleg_relist_duration_seconds_bucket|kubelet_pleg_relist_duration_seconds_count|kubelet_pleg_relist_interval_seconds_bucket|kubelet_pod_start_duration_seconds_bucket|kubelet_pod_start_duration_seconds_count|kubelet_pod_worker_duration_seconds_bucket|kubelet_pod_worker_duration_seconds_count|kubelet_running_container_count|kubelet_running_containers|kubelet_running_pod_count|kubelet_running_pods|kubelet_runtime_operations_errors_total|kubelet_runtime_operations_total|kubelet_server_expiration_renew_errors|kubelet_volume_stats_available_bytes|kubelet_volume_stats_capacity_bytes|kubelet_volume_stats_inodes|kubelet_volume_stats_inodes_free|kubelet_volume_stats_inodes_used|kubelet_volume_stats_used_bytes|kubernetes_build_info|namespace_workload_pod|process_cpu_seconds_total|process_resident_memory_bytes|rest_client_requests_total|storage_operation_duration_seconds_count|storage_operation_errors_total|volume_manager_total_volumes"
     scrape_interval = "60s"
     max_cache_size = 100000
     forward_to = argument.metrics_destinations.value
@@ -73,7 +73,7 @@ declare "cluster_metrics" {
   kubernetes.resources "scrape" {
     clustering = true
     job_label = "integrations/kubernetes/resources"
-    keep_metrics = "up|node_cpu_usage_seconds_total|node_memory_working_set_bytes"
+    keep_metrics = "up|scrape_samples_scraped|node_cpu_usage_seconds_total|node_memory_working_set_bytes"
     scrape_interval = "60s"
     max_cache_size = 100000
     forward_to = argument.metrics_destinations.value
@@ -81,7 +81,7 @@ declare "cluster_metrics" {
   
   kubernetes.cadvisor "scrape" {
     clustering = true
-    keep_metrics = "up|container_cpu_cfs_periods_total|container_cpu_cfs_throttled_periods_total|container_cpu_usage_seconds_total|container_fs_reads_bytes_total|container_fs_reads_total|container_fs_writes_bytes_total|container_fs_writes_total|container_memory_cache|container_memory_rss|container_memory_swap|container_memory_working_set_bytes|container_network_receive_bytes_total|container_network_receive_packets_dropped_total|container_network_receive_packets_total|container_network_transmit_bytes_total|container_network_transmit_packets_dropped_total|container_network_transmit_packets_total|machine_memory_bytes"
+    keep_metrics = "up|scrape_samples_scraped|container_cpu_cfs_periods_total|container_cpu_cfs_throttled_periods_total|container_cpu_usage_seconds_total|container_fs_reads_bytes_total|container_fs_reads_total|container_fs_writes_bytes_total|container_fs_writes_total|container_memory_cache|container_memory_rss|container_memory_swap|container_memory_working_set_bytes|container_network_receive_bytes_total|container_network_receive_packets_dropped_total|container_network_receive_packets_total|container_network_transmit_bytes_total|container_network_transmit_packets_dropped_total|container_network_transmit_packets_total|machine_memory_bytes"
     scrape_interval = "60s"
     max_cache_size = 100000
     forward_to = [prometheus.relabel.cadvisor.receiver]
@@ -179,7 +179,7 @@ declare "cluster_metrics" {
   kube_state_metrics.scrape "metrics" {
     targets = kube_state_metrics.kubernetes.targets.output
     clustering = true
-    keep_metrics = "up|kube_daemonset.*|kube_deployment_metadata_generation|kube_deployment_spec_replicas|kube_deployment_status_condition|kube_deployment_status_observed_generation|kube_deployment_status_replicas_available|kube_deployment_status_replicas_updated|kube_horizontalpodautoscaler_spec_max_replicas|kube_horizontalpodautoscaler_spec_min_replicas|kube_horizontalpodautoscaler_status_current_replicas|kube_horizontalpodautoscaler_status_desired_replicas|kube_job.*|kube_namespace_status_phase|kube_node.*|kube_persistentvolume_status_phase|kube_persistentvolumeclaim_access_mode|kube_persistentvolumeclaim_info|kube_persistentvolumeclaim_labels|kube_persistentvolumeclaim_resource_requests_storage_bytes|kube_persistentvolumeclaim_status_phase|kube_pod_container_info|kube_pod_container_resource_limits|kube_pod_container_resource_requests|kube_pod_container_status_last_terminated_reason|kube_pod_container_status_restarts_total|kube_pod_container_status_waiting_reason|kube_pod_info|kube_pod_owner|kube_pod_spec_volumes_persistentvolumeclaims_info|kube_pod_start_time|kube_pod_status_phase|kube_pod_status_reason|kube_replicaset.*|kube_resourcequota|kube_statefulset.*"
+    keep_metrics = "up|scrape_samples_scraped|kube_daemonset.*|kube_deployment_metadata_generation|kube_deployment_spec_replicas|kube_deployment_status_condition|kube_deployment_status_observed_generation|kube_deployment_status_replicas_available|kube_deployment_status_replicas_updated|kube_horizontalpodautoscaler_spec_max_replicas|kube_horizontalpodautoscaler_spec_min_replicas|kube_horizontalpodautoscaler_status_current_replicas|kube_horizontalpodautoscaler_status_desired_replicas|kube_job.*|kube_namespace_status_phase|kube_node.*|kube_persistentvolume_status_phase|kube_persistentvolumeclaim_access_mode|kube_persistentvolumeclaim_info|kube_persistentvolumeclaim_labels|kube_persistentvolumeclaim_resource_requests_storage_bytes|kube_persistentvolumeclaim_status_phase|kube_pod_container_info|kube_pod_container_resource_limits|kube_pod_container_resource_requests|kube_pod_container_status_last_terminated_reason|kube_pod_container_status_restarts_total|kube_pod_container_status_waiting_reason|kube_pod_info|kube_pod_owner|kube_pod_spec_volumes_persistentvolumeclaims_info|kube_pod_start_time|kube_pod_status_phase|kube_pod_status_reason|kube_replicaset.*|kube_resourcequota|kube_statefulset.*"
     scrape_interval = "60s"
     max_cache_size = 100000
     forward_to = argument.metrics_destinations.value
@@ -214,7 +214,7 @@ declare "cluster_metrics" {
     targets = discovery.relabel.node_exporter.output
     job_label = "integrations/node_exporter"
     clustering = true
-    keep_metrics = "up|node_cpu.*|node_exporter_build_info|node_filesystem.*|node_memory.*|node_network_receive_bytes_total|node_network_receive_drop_total|node_network_transmit_bytes_total|node_network_transmit_drop_total|process_cpu_seconds_total|process_resident_memory_bytes"
+    keep_metrics = "up|scrape_samples_scraped|node_cpu.*|node_exporter_build_info|node_filesystem.*|node_memory.*|node_network_receive_bytes_total|node_network_receive_drop_total|node_network_transmit_bytes_total|node_network_transmit_drop_total|process_cpu_seconds_total|process_resident_memory_bytes"
     scrape_interval = "60s"
     max_cache_size = 100000
     forward_to = argument.metrics_destinations.value
@@ -254,7 +254,7 @@ declare "cluster_metrics" {
     max_cache_size = 100000
     rule {
       source_labels = ["__name__"]
-      regex = "up|windows_.*|node_cpu_seconds_total|node_filesystem_size_bytes|node_filesystem_avail_bytes|container_cpu_usage_seconds_total"
+      regex = "up|scrape_samples_scraped|windows_.*|node_cpu_seconds_total|node_filesystem_size_bytes|node_filesystem_avail_bytes|container_cpu_usage_seconds_total"
       action = "keep"
     }
     forward_to = argument.metrics_destinations.value
@@ -295,7 +295,7 @@ declare "cluster_metrics" {
     max_cache_size = 100000
     rule {
       source_labels = ["__name__"]
-      regex = "up|kepler_.*"
+      regex = "up|scrape_samples_scraped|kepler_.*"
       action = "keep"
     }
     forward_to = argument.metrics_destinations.value

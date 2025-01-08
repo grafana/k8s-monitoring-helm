@@ -66,7 +66,7 @@ prometheus.relabel "beyla" {
 {{- if $metricAllowList }}
   rule {
     source_labels = ["__name__"]
-    regex = "up|{{ $metricAllowList | join "|" }}"
+    regex = "up|scrape_samples_scraped|{{ $metricAllowList | join "|" }}"
     action = "keep"
   }
 {{- end }}

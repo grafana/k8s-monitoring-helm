@@ -1,10 +1,10 @@
 {{ define "feature.clusterMetrics.kube_state_metrics.allowList" }}
 {{- $allowList := list }}
 {{ if (index .Values "kube-state-metrics").metricsTuning.useDefaultAllowList }}
-{{- $allowList = concat $allowList (list "up") (.Files.Get "default-allow-lists/kube-state-metrics.yaml" | fromYamlArray) -}}
+{{- $allowList = concat $allowList (list "up" "scrape_samples_scraped") (.Files.Get "default-allow-lists/kube-state-metrics.yaml" | fromYamlArray) -}}
 {{ end }}
 {{ if (index .Values "kube-state-metrics").metricsTuning.includeMetrics }}
-{{- $allowList = concat $allowList (list "up") (index .Values "kube-state-metrics").metricsTuning.includeMetrics -}}
+{{- $allowList = concat $allowList (list "up" "scrape_samples_scraped") (index .Values "kube-state-metrics").metricsTuning.includeMetrics -}}
 {{ end }}
 {{ $allowList | uniq | toYaml }}
 {{ end }}

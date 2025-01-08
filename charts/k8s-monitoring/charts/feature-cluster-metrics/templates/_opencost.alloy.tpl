@@ -1,10 +1,10 @@
 {{ define "feature.clusterMetrics.opencost.allowList" }}
 {{- $allowList := list }}
 {{ if .Values.opencost.metricsTuning.useDefaultAllowList }}
-{{- $allowList = concat $allowList (list "up") (.Files.Get "default-allow-lists/opencost.yaml" | fromYamlArray) -}}
+{{- $allowList = concat $allowList (list "up" "scrape_samples_scraped") (.Files.Get "default-allow-lists/opencost.yaml" | fromYamlArray) -}}
 {{ end }}
 {{ if .Values.opencost.metricsTuning.includeMetrics }}
-{{- $allowList = concat $allowList (list "up") .Values.opencost.metricsTuning.includeMetrics -}}
+{{- $allowList = concat $allowList (list "up" "scrape_samples_scraped") .Values.opencost.metricsTuning.includeMetrics -}}
 {{ end }}
 {{ $allowList | uniq | toYaml }}
 {{ end }}

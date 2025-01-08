@@ -60,7 +60,7 @@ prometheus.relabel {{ include "helper.alloy_name" .name | quote }} {
 {{- if $metricAllowList }}
   rule {
     source_labels = ["__name__"]
-    regex = "up|{{ $metricAllowList | fromYamlArray | join "|" }}"
+    regex = "up|scrape_samples_scraped|{{ $metricAllowList | fromYamlArray | join "|" }}"
     action = "keep"
   }
 {{- end }}

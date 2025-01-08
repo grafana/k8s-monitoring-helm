@@ -43,3 +43,10 @@ spec:
               value: 42
           - query: statsd_exporter_build_info{cluster="$CLUSTER", job="integrations/statsd"}
             type: promql
+
+          # DPM check
+          - query: avg(count_over_time(scrape_samples_scraped{cluster="$CLUSTER"}[1m]))
+            type: promql
+            expect:
+              value: 1
+              operator: ==

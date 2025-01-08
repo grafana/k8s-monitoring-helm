@@ -35,3 +35,10 @@ spec:
         queries:
           - query: alloy_build_info{cluster="$CLUSTER"}
             type: promql
+
+          # DPM check
+          - query: avg(count_over_time(scrape_samples_scraped{cluster="$CLUSTER"}[1m]))
+            type: promql
+            expect:
+              value: 1
+              operator: ==
