@@ -2,7 +2,7 @@
 (NOTE: Do not edit README.md directly. It is a generated file!)
 (      To make changes, please modify values.yaml or description.txt and run `make examples`)
 -->
-# Integration: Loki
+# Integration: MySQL
 
 This example demonstrates how to gather metrics and logs from [MySQL](https://www.mysql.com/).
 
