@@ -54,6 +54,8 @@ This defines the options for defining a destination for profiles that use the Py
 |-----|------|---------|-------------|
 | extraHeaders | object | `{}` | Extra headers to be set when sending data. All values are treated as strings and automatically quoted. |
 | extraHeadersFrom | object | `{}` | Extra headers to be set when sending data through a dynamic reference. All values are treated as raw strings and not quoted. |
+| extraLabels | object | `{}` | Extra labels to be added to all profiles before delivering to the destination. All values are treated as strings and automatically quoted. |
+| extraLabelsFrom | object | `{}` | Extra labels to be added to all profiles using a dynamic reference before delivering to the destination. All values are treated as raw strings and not quoted. |
 | name | string | `""` | The name for this Pyroscope destination. |
 | proxyURL | string | `""` | The Proxy URL for the Pyroscope destination. |
 | tenantId | string | `""` | The tenant ID for the Pyroscope destination. |

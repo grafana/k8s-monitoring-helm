@@ -84,6 +84,12 @@ pyroscope.write {{ include "helper.alloy_name" .name | quote }} {
   external_labels = {
     cluster = {{ $.Values.cluster.name | quote }},
     k8s_cluster_name = {{ $.Values.cluster.name | quote }},
+  {{- range $key, $value := .extraLabels }}
+    {{ $key }} = {{ $value | quote }},
+  {{- end }}
+  {{- range $key, $value := .extraLabelsFrom }}
+    {{ $key }} = {{ $value }},
+  {{- end }}
   }
 }
 {{- end }}
