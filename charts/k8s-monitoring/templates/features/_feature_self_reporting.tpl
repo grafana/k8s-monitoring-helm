@@ -1,5 +1,5 @@
 {{- define "features.selfReporting.enabled" -}}
-{{- $metricsDestinations := include "destinations.get" (dict "destinations" $.Values.destinations "type" "metrics" "ecosystem" "otlp" "filter" $.Values.applicationObservability.destinations) | fromYamlArray -}}
+{{- $metricsDestinations := include "destinations.get" (dict "destinations" $.Values.destinations "type" "metrics" "ecosystem" "prometheus" "filter" $.Values.selfReporting.destinations) | fromYamlArray -}}
 {{ and .Values.selfReporting.enabled (not (empty $metricsDestinations)) }}
 {{- end -}}
 
@@ -16,14 +16,14 @@
 
 {{- define "features.selfReporting.destinations" }}
 {{- if eq (include "features.selfReporting.enabled" .) "true" }}
-{{- include "destinations.get" (dict "destinations" $.Values.destinations "type" "metrics" "ecosystem" "prometheus" "filter" $.Values.clusterMetrics.destinations) -}}
+{{- include "destinations.get" (dict "destinations" $.Values.destinations "type" "metrics" "ecosystem" "prometheus" "filter" $.Values.selfReporting.destinations) -}}
 {{- end }}
 {{- end }}
 
 {{- define "features.selfReporting.validate" }}{{ end }}
 {{- define "features.selfReporting.include" }}
 {{- if eq (include "features.selfReporting.enabled" .) "true" }}
-{{- $destinations := include "destinations.get" (dict "destinations" $.Values.destinations "type" "metrics" "ecosystem" "prometheus" "filter" $.Values.applicationObservability.destinations) | fromYamlArray -}}
+{{- $destinations := include "destinations.get" (dict "destinations" $.Values.destinations "type" "metrics" "ecosystem" "prometheus" "filter" $.Values.selfReporting.destinations) | fromYamlArray -}}
 
 // Self Reporting
 prometheus.exporter.unix "kubernetes_monitoring_telemetry" {
