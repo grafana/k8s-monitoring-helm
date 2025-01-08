@@ -26,7 +26,7 @@ prometheus.operator.podmonitors "pod_monitors" {
 {{ .Values.metrics.podMonitors.extraRelabelingRules | indent 2 }}
 {{- end }}
 
-{{- if or $metricAllowList $metricDenyList .Values.metrics.podMonitors.extraMetricRelabelingRules }}
+{{- if or $metricAllowList $metricDenyList .Values.metrics.extraMetricRelabelingRules .Values.metrics.podMonitors.extraMetricRelabelingRules }}
   forward_to = [prometheus.relabel.podmonitors.receiver]
 }
 
@@ -85,7 +85,7 @@ prometheus.operator.probes "probes" {
 {{ .Values.metrics.probes.extraRelabelingRules | indent 2 }}
 {{- end }}
 
-{{- if or $metricAllowList $metricDenyList .Values.metrics.probes.extraMetricRelabelingRules }}
+{{- if or $metricAllowList $metricDenyList .Values.metrics.extraMetricRelabelingRules .Values.metrics.probes.extraMetricRelabelingRules }}
   forward_to = [prometheus.relabel.probes.receiver]
 }
 
@@ -144,7 +144,7 @@ prometheus.operator.servicemonitors "service_monitors" {
 {{ .Values.metrics.serviceMonitors.extraRelabelingRules | indent 2 }}
 {{- end }}
 
-{{- if or $metricAllowList $metricDenyList .Values.metrics.serviceMonitors.extraMetricRelabelingRules }}
+{{- if or $metricAllowList $metricDenyList .Values.metrics.extraMetricRelabelingRules .Values.metrics.serviceMonitors.extraMetricRelabelingRules }}
   forward_to = [prometheus.relabel.servicemonitors.receiver]
 }
 
