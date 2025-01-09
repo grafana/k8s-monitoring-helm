@@ -167,16 +167,14 @@ cluster_metrics "feature" {
     {{- end -}}
 
     {{- if eq $destinationFound false }}
-      {{- $msg := list "" (printf "%s is not a valid Prometheus data source for OpenCost.") }}
+      {{- $msg := list "" (printf "The destination \"%s\" is not a Prometheus data source." $.Values.clusterMetrics.opencost.metricsSource) }}
+      {{- $msg = append $msg "OpenCost requires a Prometheus database to query where cluster metrics are stored." }}
+      {{- $msg = append $msg "" }}
       {{- $msg = append $msg "Please set:" }}
       {{- $msg = append $msg "clusterMetrics:" }}
       {{- $msg = append $msg "  opencost:" }}
-      {{- if eq (len $destinations) 1 }}
-      {{- $msg = append $msg (printf "    metricsSource: %s" (index $destinations 0)) }}
-      {{- else }}
       {{- $msg = append $msg "    metricsSource:  <metrics destination name>" }}
       {{- $msg = append $msg (printf "Where <metrics destination name> is one of %s" (include "english_list_or" $destinations)) }}
-      {{- end }}
       {{- fail (join "\n" $msg) }}
     {{- end -}}
   {{- end -}}
