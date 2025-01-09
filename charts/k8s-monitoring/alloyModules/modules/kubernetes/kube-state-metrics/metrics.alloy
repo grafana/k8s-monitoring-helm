@@ -33,12 +33,12 @@ declare "kubernetes" {
     optional = true
   }
 
-  // kube state metrics service discovery for all of the pods
+  // kube state metrics service discovery for all of the endpoints
   discovery.kubernetes "ksm" {
-    role = "service"
+    role = "endpoints"
 
     selectors {
-      role = "service"
+      role = "endpoints"
       field = string.join(coalesce(argument.field_selectors.value, []), ",")
       label = string.join(coalesce(argument.label_selectors.value, ["app.kubernetes.io/name=kube-state-metrics"]), ",")
     }
@@ -54,7 +54,7 @@ declare "kubernetes" {
 
     // only keep targets with a matching port name
     rule {
-      source_labels = ["__meta_kubernetes_service_port_name"]
+      source_labels = ["__meta_kubernetes_endpoint_port_name"]
       regex = coalesce(argument.port_name.value, "http")
       action = "keep"
     }
