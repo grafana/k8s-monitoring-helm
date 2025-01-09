@@ -1,10 +1,10 @@
 {{ define "feature.clusterMetrics.kubeletResource.allowList" }}
 {{- $allowList := list }}
 {{ if .Values.kubeletResource.metricsTuning.useDefaultAllowList }}
-{{- $allowList = concat $allowList (list "up") (.Files.Get "default-allow-lists/kubelet_resource.yaml" | fromYamlArray) -}}
+{{- $allowList = concat $allowList (list "up" "scrape_samples_scraped") (.Files.Get "default-allow-lists/kubelet_resource.yaml" | fromYamlArray) -}}
 {{ end }}
 {{ if .Values.kubeletResource.metricsTuning.includeMetrics }}
-{{- $allowList = concat $allowList (list "up") .Values.kubeletResource.metricsTuning.includeMetrics -}}
+{{- $allowList = concat $allowList (list "up" "scrape_samples_scraped") .Values.kubeletResource.metricsTuning.includeMetrics -}}
 {{ end }}
 {{ $allowList | uniq | toYaml }}
 {{ end }}

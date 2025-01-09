@@ -1,10 +1,10 @@
 {{ define "feature.clusterMetrics.kepler.allowList" }}
 {{- $allowList := list }}
 {{ if .Values.kepler.metricsTuning.useDefaultAllowList }}
-{{- $allowList = concat $allowList (list "up") (.Files.Get "default-allow-lists/kepler.yaml" | fromYamlArray) -}}
+{{- $allowList = concat $allowList (list "up" "scrape_samples_scraped") (.Files.Get "default-allow-lists/kepler.yaml" | fromYamlArray) -}}
 {{ end }}
 {{ if .Values.kepler.metricsTuning.includeMetrics }}
-{{- $allowList = concat $allowList (list "up") .Values.kepler.metricsTuning.includeMetrics -}}
+{{- $allowList = concat $allowList (list "up" "scrape_samples_scraped") .Values.kepler.metricsTuning.includeMetrics -}}
 {{ end }}
 {{ $allowList | uniq | toYaml }}
 {{ end }}

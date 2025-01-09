@@ -50,3 +50,10 @@ spec:
           # Traces from Beyla
           - query: "{.k8s.cluster.name=\"$CLUSTER\" && resource.otel.library.name=\"github.com/grafana/beyla\"}"
             type: traceql
+
+          # DPM check
+          - query: avg(count_over_time(scrape_samples_scraped{cluster="$CLUSTER"}[1m]))
+            type: promql
+            expect:
+              value: 1
+              operator: ==

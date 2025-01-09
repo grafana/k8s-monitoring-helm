@@ -1,13 +1,13 @@
 {{- define "feature.clusterMetrics.windows_exporter.allowList" }}
 {{- $allowList := list }}
 {{ if (index .Values "windows-exporter").metricsTuning.useDefaultAllowList }}
-{{- $allowList = concat $allowList (list "up") (.Files.Get "default-allow-lists/windows-exporter.yaml" | fromYamlArray) -}}
+{{- $allowList = concat $allowList (list "up" "scrape_samples_scraped") (.Files.Get "default-allow-lists/windows-exporter.yaml" | fromYamlArray) -}}
 {{ end }}
 {{ if (index .Values "windows-exporter").metricsTuning.useIntegrationAllowList }}
-{{- $allowList = concat $allowList (list "up") (.Files.Get "default-allow-lists/windows-exporter-integration.yaml" | fromYamlArray) -}}
+{{- $allowList = concat $allowList (list "up" "scrape_samples_scraped") (.Files.Get "default-allow-lists/windows-exporter-integration.yaml" | fromYamlArray) -}}
 {{ end }}
 {{ if (index .Values "windows-exporter").metricsTuning.includeMetrics }}
-{{- $allowList = concat $allowList (list "up") (index .Values "windows-exporter").metricsTuning.includeMetrics -}}
+{{- $allowList = concat $allowList (list "up" "scrape_samples_scraped") (index .Values "windows-exporter").metricsTuning.includeMetrics -}}
 {{ end }}
 {{ $allowList | uniq | toYaml }}
 {{- end }}

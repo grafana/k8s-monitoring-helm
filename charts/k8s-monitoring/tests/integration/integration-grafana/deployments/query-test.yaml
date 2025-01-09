@@ -42,9 +42,16 @@ spec:
           LOKI_USER: loki
           LOKI_PASS: lokipassword
         queries:
-          # Loki metrics
+          # Grafana metrics
           - query: grafana_build_info{cluster="$CLUSTER", job="integrations/grafana"}
 
-          # Loki Logs
+          # Grafana Logs
           - query: count_over_time({cluster="$CLUSTER", job="integrations/grafana"}[1h])
             type: logql
+
+          # DPM check
+          - query: avg(count_over_time(scrape_samples_scraped{cluster="$CLUSTER"}[1m]))
+            type: promql
+            expect:
+              value: 1
+              operator: ==

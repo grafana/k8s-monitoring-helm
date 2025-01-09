@@ -6,10 +6,10 @@
 {{- define "integrations.alloy.allowList" }}
 {{- $allowList := list }}
 {{- if .instance.metrics.tuning.useDefaultAllowList -}}
-{{- $allowList = concat $allowList (list "up") (.Files.Get "default-allow-lists/alloy.yaml" | fromYamlArray) -}}
+{{- $allowList = concat $allowList (list "up" "scrape_samples_scraped") (.Files.Get "default-allow-lists/alloy.yaml" | fromYamlArray) -}}
 {{- end -}}
 {{- if .instance.metrics.tuning.includeMetrics -}}
-{{- $allowList = concat $allowList (list "up") .instance.metrics.tuning.includeMetrics -}}
+{{- $allowList = concat $allowList (list "up" "scrape_samples_scraped") .instance.metrics.tuning.includeMetrics -}}
 {{- end -}}
 {{ $allowList | uniq | toYaml }}
 {{- end -}}

@@ -1,13 +1,13 @@
 {{- define "feature.clusterMetrics.node_exporter.allowList" }}
 {{- $allowList := list }}
 {{ if (index .Values "node-exporter").metricsTuning.useDefaultAllowList }}
-{{- $allowList = concat $allowList (list "up") (.Files.Get "default-allow-lists/node-exporter.yaml" | fromYamlArray) -}}
+{{- $allowList = concat $allowList (list "up" "scrape_samples_scraped") (.Files.Get "default-allow-lists/node-exporter.yaml" | fromYamlArray) -}}
 {{ end }}
 {{ if (index .Values "node-exporter").metricsTuning.useIntegrationAllowList }}
-{{- $allowList = concat $allowList (list "up") (.Files.Get "default-allow-lists/node-exporter-integration.yaml" | fromYamlArray) -}}
+{{- $allowList = concat $allowList (list "up" "scrape_samples_scraped") (.Files.Get "default-allow-lists/node-exporter-integration.yaml" | fromYamlArray) -}}
 {{ end }}
 {{ if (index .Values "node-exporter").metricsTuning.includeMetrics }}
-{{- $allowList = concat $allowList (list "up") (index .Values "node-exporter").metricsTuning.includeMetrics -}}
+{{- $allowList = concat $allowList (list "up" "scrape_samples_scraped") (index .Values "node-exporter").metricsTuning.includeMetrics -}}
 {{ end }}
 {{ $allowList | uniq | toYaml }}
 {{- end }}

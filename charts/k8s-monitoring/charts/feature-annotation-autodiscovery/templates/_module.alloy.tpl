@@ -243,7 +243,7 @@ declare "annotation_autodiscovery" {
 {{- if .Values.metricsTuning.includeMetrics }}
     rule {
       source_labels = ["__name__"]
-      regex = "up|{{ join "|" .Values.metricsTuning.includeMetrics }}"
+      regex = "up|scrape_samples_scraped|{{ join "|" .Values.metricsTuning.includeMetrics }}"
       action = "keep"
     }
 {{- end }}
