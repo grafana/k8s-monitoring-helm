@@ -1,7 +1,3 @@
-<!--
-(NOTE: Do not edit README.md directly. It is a generated file!)
-(      To make changes, please modify values.yaml or description.txt and run `make examples`)
--->
 # Sharded kube-state-metrics
 
 This example demonstrates how to [shard kube-state-metrics](https://github.com/kubernetes/kube-state-metrics#scaling-kube-state-metrics)
@@ -30,25 +26,3 @@ duplicate metrics for a short period.
 
 However, if the deployment strategy is set to `Recreate`, the old kube-state-metrics pod is terminated before the new
 one is started. This means that there will be a gap in metrics while the new pod is starting.
-
-## Values
-
-```yaml
-cluster:
-  name: sharded-kube-state-metrics
-
-destinations:
-  - name: prometheus
-    type: prometheus
-    url: http://prometheus.prometheus.svc:9090/api/v1/write
-
-clusterMetrics:
-  enabled: true
-  kube-state-metrics:
-    autosharding:
-      enabled: true
-    replicas: 5
-
-alloy-metrics:
-  enabled: true
-```
