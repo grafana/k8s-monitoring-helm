@@ -98,12 +98,12 @@ echo helm upgrade --install k8smon ${PARENT_DIR}/charts/k8s-monitoring -f ${TEST
 helm upgrade --install k8smon ${PARENT_DIR}/charts/k8s-monitoring -f ${TEST_DIRECTORY}/values.yaml --set "cluster.name=${clusterName}" --set "clusterMetrics.opencost.opencost.exporter.defaultClusterId=${clusterName}" --wait
 
 # Ensure that the test chart has been deployed
-TWO_MINUTES=120
-for i in $(seq 1 ${TWO_MINUTES}); do
-  if helm status k8s-monitoring-test | grep "STATUS: deployed" > /dev/null 2>&1; then
+FIVE_MINUTES=300
+for i in $(seq 1 ${FIVE_MINUTES}); do
+  if helm status k8s-monitoring-test 2>&1 | grep "STATUS: deployed" > /dev/null ; then
     break
   fi
-  if [ $i -eq ${TWO_MINUTES} ]; then
+  if [ $i -eq ${FIVE_MINUTES} ]; then
     echo "k8s-monitoring-test Helm chart failed to deploy"
     helm status k8s-monitoring-test
     flux events --for HelmRelease/k8s-monitoring-test --namespace default
