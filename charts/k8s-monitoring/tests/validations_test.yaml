@@ -7,7 +7,7 @@ tests:
     asserts:
       - failedTemplate:
           errorMessage: |-
-            execution error at (k8s-monitoring/templates/validations.yaml:1:4): 
+            execution error at (k8s-monitoring/templates/validations.yaml:2:4): 
             A Cluster name is required!
             Please set:
             cluster:
@@ -20,9 +20,27 @@ tests:
     asserts:
       - failedTemplate:
           errorMessage: |-
-            execution error at (k8s-monitoring/templates/validations.yaml:7:4): 
+            execution error at (k8s-monitoring/templates/validations.yaml:8:4): 
             No features are enabled. Please choose a feature to start monitoring. For example:
             clusterMetrics:
               enabled: true
             
             See https://github.com/grafana/k8s-monitoring-helm/blob/main/charts/k8s-monitoring/docs/Features.md for the list of available features.
+
+  - it: detects if you're using a v1 values file
+    set:
+      cluster:
+        name: test-cluster
+      externalServices:
+        prometheus:
+          host: prometheus-server.prometheus.svc:9090
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            execution error at (k8s-monitoring/templates/validations.yaml:1:4): 
+            The Helm chart values appears to be from version 1.x of the k8s-monitoring Helm chart.
+            To continue using version 1.x, add this to your helm command:
+              --version ^1
+            
+            If you'd like to migrate to version 2.0, see the Migration guide:
+              https://github.com/grafana/k8s-monitoring-helm/blob/main/charts/k8s-monitoring/docs/Migration.md

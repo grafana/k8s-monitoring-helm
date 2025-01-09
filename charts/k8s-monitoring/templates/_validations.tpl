@@ -1,3 +1,16 @@
+{{/* Checks if a V1 values file was used */}}
+{{- define "validations.checkForV1" }}
+{{- if (index .Values "externalServices") }}
+  {{- $msg := list "" "The Helm chart values appears to be from version 1.x of the k8s-monitoring Helm chart." }}
+  {{- $msg = append $msg "To continue using version 1.x, add this to your helm command:" }}
+  {{- $msg = append $msg "  --version ^1" }}
+  {{- $msg = append $msg "" }}
+  {{- $msg = append $msg "If you'd like to migrate to version 2.0, see the Migration guide:" }}
+  {{- $msg = append $msg "  https://github.com/grafana/k8s-monitoring-helm/blob/main/charts/k8s-monitoring/docs/Migration.md" }}
+  {{- fail (join "\n" $msg) }}
+{{- end }}
+{{- end }}
+
 {{/* Checks that the cluster name is defined */}}
 {{- define "validations.cluster_name" }}
 {{- if not .Values.cluster.name }}
