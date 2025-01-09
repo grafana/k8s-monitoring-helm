@@ -42,7 +42,7 @@ discovery.relabel "filtered_pods" {
 
   // set the job label from the k8s.grafana.com/logs.job annotation if it exists
   rule {
-    source_labels = ["{{ include "pod_annotation" "k8s.grafana.com/logs.job" }}"]
+    source_labels = ["{{ include "pod_annotation" .Values.annotations.job }}"]
     regex = "(.+)"
     target_label = "job"
   }
