@@ -1,0 +1,69 @@
+---
+name: Scan Chart Images
+
+on:
+  workflow_dispatch:
+# Disabling auto-checking.
+# There are often many vulnerabilities in these images, but we don't own them.
+# It just adds to noise if this is failing all the time.
+#
+#  push:
+#    branches: ["main"]
+#    paths:
+#      - '.github/workflows/scan-chart-images.yaml'
+#      - 'charts/k8s-monitoring/docs/examples/**'
+#  pull_request:
+#    paths:
+#      - '.github/workflows/scan-chart-images.yaml'
+#      - 'charts/k8s-monitoring/docs/examples/**'
+
+jobs:
+  list-container-images:
+    name: List Container Images
+    runs-on: ubuntu-latest
+    outputs:
+      images: ${{ steps.list_images.outputs.images }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install yq
+        uses: dcarbone/install-yq-action@v1.1.1
+
+      - name: List Container Images
+        id: list_images
+        working-directory: charts/k8s-monitoring
+        run: |
+          files=$(find docs/examples -name output.yaml)
+          touch images.txt
+          for file in $files; do
+            if [ "${file}" == "docs/examples/private-image-registries/output.yaml" ]; then
+              continue
+            fi
+            {
+              yq -r -o json '. | select(.kind=="DaemonSet") | .spec.template.spec.containers[].image' "${file}"
+              yq -r -o json '. | select(.kind=="Deployment") | .spec.template.spec.containers[].image' "${file}"
+              yq -r -o json '. | select(.kind=="Job") | .spec.template.spec.containers[].image' "${file}"
+              yq -r -o json '. | select(.kind=="Pod") | .spec.containers[].image' "${file}"
+              yq -r -o json '. | select(.kind=="StatefulSet") | .spec.template.spec.containers[].image' "${file}"
+            } >> images.txt
+          done
+          echo "images=$(sort --unique < images.txt | jq --raw-input --slurp --compact-output 'split("\n") | map(select(. != ""))')" >> "${GITHUB_OUTPUT}"
+
+  scan-container-images:
+    name: Scan Container Images
+    needs: list-container-images
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        image: ${{ fromJson(needs.list-container-images.outputs.images) }}
+      fail-fast: false
+    steps:
+      - name: Run Trivy
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: ${{ matrix.image }}
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: false
+          severity: 'CRITICAL,HIGH'
