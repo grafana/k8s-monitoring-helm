@@ -489,39 +489,39 @@ data:
   beyla-config.yml: |-
     attributes:
       kubernetes:
-        enable: true
         cluster_name: auto-instrumentation-test
+        enable: true
       select:
         beyla_network_flow_bytes:
           include:
-            - 'k8s.src.owner.type'
-            - 'k8s.dst.owner.type'
-            - 'direction'
+          - k8s.src.owner.type
+          - k8s.dst.owner.type
+          - direction
+    discovery:
+      exclude_services:
+      - exe_path: .*alloy.*|.*otelcol.*|.*beyla.*
+      services:
+      - k8s_namespace: .
     filter:
       network:
         k8s_dst_owner_name:
           not_match: '{kube*,*jaeger-agent*,*prometheus*,*promtail*,*grafana-agent*}'
         k8s_src_owner_name:
           not_match: '{kube*,*jaeger-agent*,*prometheus*,*promtail*,*grafana-agent*}'
-    discovery:
-      services:
-        - k8s_namespace: .
-      exclude_services:
-        - exe_path: ".*alloy.*|.*otelcol.*|.*beyla.*"
     internal_metrics:
       prometheus:
-        port: 9090
         path: /internal/metrics
-    prometheus_export:
-      port: 9090
-      path: /metrics
-      features:
-        - application
-        - network
-        - application_service_graph
-        - application_span
+        port: 9090
     otel_traces_export:
       endpoint: http://k8smon-alloy-receiver.default.svc.cluster.local:4317
+    prometheus_export:
+      features:
+      - application
+      - network
+      - application_service_graph
+      - application_span
+      path: /metrics
+      port: 9090
 ---
 # Source: k8s-monitoring/charts/alloy-metrics/templates/rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -1031,6 +1031,7 @@ spec:
     metadata:
       annotations:
         checksum/config: 01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b
+        k8s.grafana.com/job: default/beyla
         k8s.grafana.com/logs.job: integrations/beyla
       labels:
         helm.sh/chart: beyla-1.5.0
