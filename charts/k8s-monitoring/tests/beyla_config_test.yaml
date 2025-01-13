@@ -15,37 +15,37 @@ tests:
           value: |-
             attributes:
               kubernetes:
-                enable: true
                 cluster_name: beyla-config-cluster
+                enable: true
               select:
                 beyla_network_flow_bytes:
                   include:
-                    - 'k8s.src.owner.type'
-                    - 'k8s.dst.owner.type'
-                    - 'direction'
+                  - k8s.src.owner.type
+                  - k8s.dst.owner.type
+                  - direction
+            discovery:
+              exclude_services:
+              - exe_path: .*alloy.*|.*otelcol.*|.*beyla.*
+              services:
+              - k8s_namespace: .
             filter:
               network:
                 k8s_dst_owner_name:
                   not_match: '{kube*,*jaeger-agent*,*prometheus*,*promtail*,*grafana-agent*}'
                 k8s_src_owner_name:
                   not_match: '{kube*,*jaeger-agent*,*prometheus*,*promtail*,*grafana-agent*}'
-            discovery:
-              services:
-                - k8s_namespace: .
-              exclude_services:
-                - exe_path: ".*alloy.*|.*otelcol.*|.*beyla.*"
             internal_metrics:
               prometheus:
-                port: 9090
                 path: /internal/metrics
+                port: 9090
             prometheus_export:
-              port: 9090
-              path: /metrics
               features:
-                - application
-                - network
-                - application_service_graph
-                - application_span
+              - application
+              - network
+              - application_service_graph
+              - application_span
+              path: /metrics
+              port: 9090
 
   - it: sets the otel_traces_export endpoint if applicationObservability is enabled
     set:
@@ -74,36 +74,36 @@ tests:
           value: |-
             attributes:
               kubernetes:
-                enable: true
                 cluster_name: beyla-config-cluster
+                enable: true
               select:
                 beyla_network_flow_bytes:
                   include:
-                    - 'k8s.src.owner.type'
-                    - 'k8s.dst.owner.type'
-                    - 'direction'
+                  - k8s.src.owner.type
+                  - k8s.dst.owner.type
+                  - direction
+            discovery:
+              exclude_services:
+              - exe_path: .*alloy.*|.*otelcol.*|.*beyla.*
+              services:
+              - k8s_namespace: .
             filter:
               network:
                 k8s_dst_owner_name:
                   not_match: '{kube*,*jaeger-agent*,*prometheus*,*promtail*,*grafana-agent*}'
                 k8s_src_owner_name:
                   not_match: '{kube*,*jaeger-agent*,*prometheus*,*promtail*,*grafana-agent*}'
-            discovery:
-              services:
-                - k8s_namespace: .
-              exclude_services:
-                - exe_path: ".*alloy.*|.*otelcol.*|.*beyla.*"
             internal_metrics:
               prometheus:
-                port: 9090
                 path: /internal/metrics
-            prometheus_export:
-              port: 9090
-              path: /metrics
-              features:
-                - application
-                - network
-                - application_service_graph
-                - application_span
+                port: 9090
             otel_traces_export:
               endpoint: http://RELEASE-NAME-alloy-receiver.NAMESPACE.svc.cluster.local:4317
+            prometheus_export:
+              features:
+              - application
+              - network
+              - application_service_graph
+              - application_span
+              path: /metrics
+              port: 9090

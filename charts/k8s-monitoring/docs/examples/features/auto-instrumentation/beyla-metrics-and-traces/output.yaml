@@ -423,39 +423,63 @@ data:
   beyla-config.yml: |-
     attributes:
       kubernetes:
-        enable: true
         cluster_name: annotation-autodiscovery-with-traces-cluster
+        enable: true
       select:
         beyla_network_flow_bytes:
           include:
-            - 'k8s.src.owner.type'
-            - 'k8s.dst.owner.type'
-            - 'direction'
+          - direction
+          - k8s.cluster.name
+          - k8s.dst.name
+          - k8s.dst.namespace
+          - k8s.dst.owner.name
+          - k8s.dst.owner.type
+          - k8s.src.name
+          - k8s.src.namespace
+          - k8s.src.owner.name
+          - k8s.src.owner.type
+    discovery:
+      exclude_otel_instrumented_services: false
+      services:
+      - k8s_pod_labels:
+          instrument: beyla
     filter:
       network:
         k8s_dst_owner_name:
           not_match: '{kube*,*jaeger-agent*,*prometheus*,*promtail*,*grafana-agent*}'
         k8s_src_owner_name:
           not_match: '{kube*,*jaeger-agent*,*prometheus*,*promtail*,*grafana-agent*}'
-    discovery:
-      services:
-        - k8s_namespace: .
-      exclude_services:
-        - exe_path: ".*alloy.*|.*otelcol.*|.*beyla.*"
+    ignored_patterns:
+    - /debug/*
+    - /metrics
     internal_metrics:
       prometheus:
-        port: 9090
         path: /internal/metrics
-    prometheus_export:
-      port: 9090
-      path: /metrics
-      features:
-        - application
-        - network
-        - application_service_graph
-        - application_span
+        port: 9090
+        routes: null
+    log_level: debug
+    network:
+      enable: true
     otel_traces_export:
       endpoint: http://k8smon-alloy-receiver.default.svc.cluster.local:4317
+    patterns:
+    - /account
+    - /api/products/{productId}
+    - /cart
+    - /fastcache
+    - /health
+    - /login
+    - /payment
+    prometheus_export:
+      features:
+      - application
+      - application_process
+      - application_service_graph
+      - application_span
+      - network
+      path: /metrics
+      port: 9090
+    unmatched: heuristic
 ---
 # Source: k8s-monitoring/charts/alloy-metrics/templates/rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -965,6 +989,7 @@ spec:
     metadata:
       annotations:
         checksum/config: 01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b
+        k8s.grafana.com/job: default/beyla
         k8s.grafana.com/logs.job: integrations/beyla
       labels:
         helm.sh/chart: beyla-1.5.0
@@ -977,6 +1002,8 @@ spec:
     spec:
       serviceAccountName: k8smon-beyla
       hostPID: true
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
       containers:
         - name: beyla
           image: docker.io/grafana/beyla:1.9.0

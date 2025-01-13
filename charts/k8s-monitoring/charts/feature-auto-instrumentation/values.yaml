@@ -67,12 +67,41 @@ beyla:
   # @section -- Beyla
   maxCacheSize:
 
-  # @ignored
   config:
     # @ignored -- This allows this chart to create the ConfigMap while also keeping the default name
     skipConfigMapCheck: true
     # @ignored -- This allows this chart to create the Beyla ConfigMap with required modifications
     create: false
+
+    # -- The configuration for Grafana Beyla
+    # Some sections will be set automatically, such as the cluster name.
+    # Others will be modified depending on the value of beyla.preset.
+    # @section -- Beyla
+    data:
+      attributes:
+        kubernetes:
+          enable: true
+          # @ignored -- This will be replaced by the actual cluster name
+          # cluster_name: ""
+      internal_metrics:
+        prometheus:
+          # @ignored -- This will be replaced with service.targetPort below
+          port: 9090
+          path: /internal/metrics
+      prometheus_export:
+        # @ignored -- This will be replaced with service.targetPort below
+        port: 9090
+        path: /metrics
+        features:
+          - application
+          - network
+          - application_service_graph
+          - application_span
+
+      # @ignored -- If the Application Observability feature is enabled, and if there is an HTTP or gRPC receiver, the
+      # endpoint will be set here.
+      # otel_traces_export:
+      #   endpoint: ""
 
   # -- The port number for the Beyla service.
   # @section -- Beyla
@@ -81,6 +110,7 @@ beyla:
 
   # @ignored
   podAnnotations:
+    k8s.grafana.com/job: default/beyla
     k8s.grafana.com/logs.job: integrations/beyla
 
   # @ignored -- Beyla can only install to Linux nodes
