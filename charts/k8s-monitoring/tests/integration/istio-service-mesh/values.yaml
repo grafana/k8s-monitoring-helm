@@ -1,0 +1,52 @@
+---
+cluster:
+  name: istio-service-mesh-test
+
+destinations:
+  - name: localPrometheus
+    type: prometheus
+    url: http://prometheus-server.prometheus.svc:9090/api/v1/write
+    auth:
+      type: basic
+      username: promuser
+      password: prometheuspassword
+  - name: localLoki
+    type: loki
+    url: http://loki.loki.svc:3100/loki/api/v1/push
+    tenantId: "1"
+    auth:
+      type: basic
+      username: loki
+      password: lokipassword
+
+annotationAutodiscovery:
+  enabled: true
+  annotations:
+    scrape: prometheus.io/scrape
+    metricsPath: prometheus.io/path
+    metricsPortNumber: prometheus.io/port
+
+clusterMetrics:
+  enabled: true
+
+clusterEvents:
+  enabled: true
+
+podLogs:
+  enabled: true
+
+selfReporting: {scrapeInterval: 1m}  # Force self-report to be generated within test time
+
+alloy-metrics:
+  enabled: true
+  alloy:
+    clustering:
+      portName: tcp
+  controller:
+    replicas: 2
+
+alloy-singleton:
+  enabled: true
+
+alloy-logs:
+  enabled: true

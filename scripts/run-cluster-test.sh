@@ -92,11 +92,6 @@ if [ -d "${TEST_DIRECTORY}/deployments" ]; then
   kubectl apply -f ${TEST_DIRECTORY}/deployments
 fi
 
-# Deploy k8s-monitoring
-#    OpenCost's defaultClusterId is set to the cluster name always, even if OpenCost is not enabled
-echo helm upgrade --install k8smon ${PARENT_DIR}/charts/k8s-monitoring -f ${TEST_DIRECTORY}/values.yaml --set "cluster.name=${clusterName}" --set "clusterMetrics.opencost.opencost.exporter.defaultClusterId=${clusterName}" --wait
-helm upgrade --install k8smon ${PARENT_DIR}/charts/k8s-monitoring -f ${TEST_DIRECTORY}/values.yaml --set "cluster.name=${clusterName}" --set "clusterMetrics.opencost.opencost.exporter.defaultClusterId=${clusterName}" --wait
-
 # Ensure that the test chart has been deployed
 FIVE_MINUTES=300
 for i in $(seq 1 ${FIVE_MINUTES}); do
@@ -111,6 +106,11 @@ for i in $(seq 1 ${FIVE_MINUTES}); do
   fi
   sleep 1
 done
+
+# Deploy k8s-monitoring
+#    OpenCost's defaultClusterId is set to the cluster name always, even if OpenCost is not enabled
+echo helm upgrade --install k8smon ${PARENT_DIR}/charts/k8s-monitoring -f ${TEST_DIRECTORY}/values.yaml --set "cluster.name=${clusterName}" --set "clusterMetrics.opencost.opencost.exporter.defaultClusterId=${clusterName}" --wait
+helm upgrade --install k8smon ${PARENT_DIR}/charts/k8s-monitoring -f ${TEST_DIRECTORY}/values.yaml --set "cluster.name=${clusterName}" --set "clusterMetrics.opencost.opencost.exporter.defaultClusterId=${clusterName}" --wait
 
 # Run tests
 echo helm test k8s-monitoring-test --logs
