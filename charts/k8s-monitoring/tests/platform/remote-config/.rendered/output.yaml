@@ -276,6 +276,31 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
+            -
+              name: CLUSTER_NAME
+              valueFrom:
+                configMapKeyRef:
+                  key: CLUSTER
+                  name: test-variables
+            -
+              name: NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            -
+              name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            -
+              name: GCLOUD_FM_COLLECTOR_ID
+              value: $(CLUSTER_NAME)-$(NAMESPACE)-$(POD_NAME)
+            -
+              name: GCLOUD_RW_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: GRAFANA_CLOUD_FLEET_MGMT_TOKEN
+                  name: grafana-cloud-credentials
           envFrom:
             - secretRef:
                 name: grafana-cloud-credentials
