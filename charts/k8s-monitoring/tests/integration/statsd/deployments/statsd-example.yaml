@@ -8,7 +8,6 @@ data:
     function sleep(ms) {
       return new Promise((resolve) => setTimeout(resolve, ms));
     }
-  
     async function main() {
       console.log('Starting statsd example');
       const StatsD = require('node-statsd');
@@ -16,7 +15,6 @@ data:
         host: 'k8smon-alloy-receiver.default.svc',
         port: 8125,
       });
-      
       while (true) {
         console.log('Sending metric');
         client.gauge('example.gauge', 42, function(error, bytes) {
@@ -43,7 +41,7 @@ spec:
       command:
         - bash
         - -c
-        - | 
+        - |
           npm install node-statsd
           cp /src/statsd-example.js /workspace
       workingDir: /workspace
