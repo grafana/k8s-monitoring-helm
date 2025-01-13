@@ -2,7 +2,7 @@
 (NOTE: Do not edit README.md directly. It is a generated file!)
 (      To make changes, please modify values.yaml or description.txt and run `make examples`)
 -->
-# OTLP Gateway Example
+# OTLP Endpoint Example
 
 Some cloud services allow for sending all telemetry data to a single endpoint, which will then distribute the data to
 the appropriate backend databases for storage. In this Helm chart, the
