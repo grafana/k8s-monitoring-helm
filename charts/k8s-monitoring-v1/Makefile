@@ -5,6 +5,7 @@ HAS_SHELLSPEC := $(shell command -v shellspec;)
 CHART_TEMPLATE_FILES = $(shell find templates -name "*.tpl")
 CHART_YAML_FILES = $(shell find templates -name "*.yaml")
 UPDATECLI_FILES := $(shell yq -e '.dependencies[] | select(.repository == "http*") | ".updatecli-" + .name + ".yaml"' Chart.yaml 2>/dev/null | sort | uniq)
+ALLOW_LISTS := default_allow_lists/kube-state-metrics.yaml
 
 .SECONDEXPANSION:
 values.schema.json: values.yaml $$(wildcard schema-mods/*)
@@ -12,6 +13,9 @@ values.schema.json: values.yaml $$(wildcard schema-mods/*)
 
 .updatecli-%.yaml: Chart.yaml
 	../../scripts/charts-to-updatecli.sh Chart.yaml
+
+default_allow_lists/%.yaml: ../../allowLists/%.yaml
+	cp $< $@
 
 README.md: README.md.gotmpl values.yaml Chart.yaml
 ifdef HAS_HELM_DOCS
@@ -111,7 +115,7 @@ alloy_configs = $(shell \
 	DIR="$(shell dirname $(1))/" yq e 'with_entries(select(.key == "alloy*")) | select(.[].enabled == true) | to_entries | env(DIR) + .[].key + ".alloy"' $(1) \
 )
 
-%/output.yaml: %/values.yaml Chart.yaml Chart.lock values.yaml $(CHART_TEMPLATE_FILES) $(CHART_YAML_FILES)
+%/output.yaml: %/values.yaml Chart.yaml Chart.lock values.yaml $(CHART_TEMPLATE_FILES) $(CHART_YAML_FILES) $(ALLOW_LISTS)
 	helm template $(EXAMPLE_RELEASE_NAME) . -f $< > $@
 
 %/metrics.alloy: %/output.yaml
@@ -130,8 +134,8 @@ alloy_configs = $(shell \
 examples: $(EXAMPLE_OUTPUT_FILES) $(EXAMPLE_ALLOY_FILES)
 
 .PHONY: build
-build: Chart.lock README.md examples values.schema.json $(UPDATECLI_FILES)
+build: Chart.lock README.md examples values.schema.json $(UPDATECLI_FILES) $(ALLOW_LISTS)
 
 .PHONY: clean
 clean:
-	rm -f README.md values.schema.json $(EXAMPLE_OUTPUT_FILES) $(EXAMPLE_ALLOY_FILES) $(UPDATECLI_FILES)
+	rm -f README.md values.schema.json $(EXAMPLE_OUTPUT_FILES) $(EXAMPLE_ALLOY_FILES) $(UPDATECLI_FILES) $(ALLOW_LISTS)
