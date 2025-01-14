@@ -4,7 +4,8 @@
 -->
 # Node Logs
 
-This example demonstrates how to gather logs from the Nodes in your Kubernetes cluster.
+This example demonstrates how to gather logs from the Nodes in your Kubernetes cluster. It currently gathers logs from
+the journald services on the node and requires a HostPath volume mount to `/var/log/journal`.
 
 ## Values
 
@@ -20,6 +21,10 @@ destinations:
 
 nodeLogs:
   enabled: true
+  journal:
+    units:
+      - kubelet.service
+      - containerd.service
 
 alloy-logs:
   enabled: true
