@@ -25,4 +25,22 @@ alloy-metrics:
       type: "basic"
       username: "my-remote-cfg-user"
       password: "my-remote-cfg-password"
+    extraEnv:
+      - name: CLUSTER_NAME
+        value: remote-config-example-cluster
+      - name: NAMESPACE
+        valueFrom:
+          fieldRef:
+            fieldPath: metadata.namespace
+      - name: POD_NAME
+        valueFrom:
+          fieldRef:
+            fieldPath: metadata.name
+      - name: GCLOUD_FM_COLLECTOR_ID
+        value: $(CLUSTER_NAME)-$(NAMESPACE)-$(POD_NAME)
+      - name: GCLOUD_RW_API_KEY
+        valueFrom:
+          secretKeyRef:
+            name: alloy-metrics-remote-cfg-k8smon-k8s-monitoring
+            key: password
 ```
