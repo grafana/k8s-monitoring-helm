@@ -11,7 +11,9 @@ if [ ! -f "$CHART_YAML" ]; then
 fi
 
 rm -f .updatecli-*.yaml
-chartDir=$(basename "$(dirname "$(readlink -f "$CHART_YAML")")")
+rootDir=$(git rev-parse --show-toplevel)
+parentChart=$(basename "$(dirname "$(readlink -f "$CHART_YAML")")")
+parentChartPath=$(dirname "$(readlink -f "$CHART_YAML")" | sed "s|$rootDir/||")
 dependencyCount=$(yq eval '.dependencies | length' "$CHART_YAML")
 for ((i=0; i<dependencyCount; i++)); do
   dependency=$(yq eval ".dependencies[$i]" "$CHART_YAML")
@@ -22,7 +24,7 @@ for ((i=0; i<dependencyCount; i++)); do
     if [ ! -f ".updatecli-${chart}.yaml" ]; then
       echo "---" > ".updatecli-${chart}.yaml"
       yq eval --null-input "{
-  \"name\": \"Update dependency \\\"$chart\\\" for Helm chart \\\"$chartDir\\\"\",
+  \"name\": \"Update dependency \\\"$chart\\\" for Helm chart \\\"$parentChart\\\"\",
   \"sources\": {
     \"$chart\": {
       \"name\": \"Get latest \\\"$chart\\\" Helm chart version\",
@@ -42,7 +44,7 @@ for ((i=0; i<dependencyCount; i++)); do
       \"name\": \"Ensure Helm chart dependency \\\"$chart\\\" is specified\",
       \"kind\": \"yaml\",
       \"spec\": {
-        \"file\": \"charts/$chartDir/Chart.yaml\",
+        \"file\": \"$parentChartPath/Chart.yaml\",
         \"key\": \"$.dependencies[$i].name\",
         \"value\": \"$chart\"
       },
@@ -54,12 +56,12 @@ for ((i=0; i<dependencyCount; i++)); do
     fi
     yq eval ".targets += {
 \"$name\": {
-  \"name\": \"Bump Helm chart dependency \\\"$name\\\" for Helm chart \\\"$chartDir\\\"\",
+  \"name\": \"Bump Helm chart dependency \\\"$name\\\" for Helm chart \\\"$parentChart\\\"\",
   \"kind\": \"helmchart\",
   \"spec\": {
     \"file\": \"Chart.yaml\",
     \"key\": \"$.dependencies[$i].version\",
-    \"name\": \"charts/$chartDir\",
+    \"name\": \"$parentChartPath\",
     \"versionincrement\": \"none\"
   },
   \"sourceid\": \"$chart\"
