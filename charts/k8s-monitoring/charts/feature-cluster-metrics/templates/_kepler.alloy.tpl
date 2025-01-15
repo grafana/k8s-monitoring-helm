@@ -43,7 +43,7 @@ discovery.relabel "kepler" {
 
 prometheus.scrape "kepler" {
   targets      = discovery.relabel.kepler.output
-  job_name     = "integrations/kepler"
+  job_name     = {{ .Values.kepler.jobLabel | quote }}
   honor_labels = true
   scrape_interval = {{ .Values.kepler.scrapeInterval | default .Values.global.scrapeInterval | quote }}
   clustering {

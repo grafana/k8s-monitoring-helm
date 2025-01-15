@@ -43,7 +43,7 @@ discovery.relabel "opencost" {
 
 prometheus.scrape "opencost" {
   targets      = discovery.relabel.opencost.output
-  job_name     = "integrations/opencost"
+  job_name     = {{ .Values.opencost.jobLabel | quote }}
   honor_labels = true
   scrape_interval = {{ .Values.opencost.scrapeInterval | default .Values.global.scrapeInterval | quote }}
   clustering {

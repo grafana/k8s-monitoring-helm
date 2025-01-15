@@ -16,6 +16,7 @@
 
 kubernetes.cadvisor "scrape" {
   clustering = true
+  job_label = {{ .Values.cadvisor.jobLabel | quote }}
 {{- if $metricAllowList }}
   keep_metrics = {{ $metricAllowList | join "|" | quote }}
 {{- end }}

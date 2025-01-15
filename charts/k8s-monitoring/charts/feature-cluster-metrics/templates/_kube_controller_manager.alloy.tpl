@@ -28,7 +28,7 @@ discovery.relabel "kube_controller_manager" {
 
 prometheus.scrape "kube_controller_manager" {
   targets           = discovery.relabel.kube_controller_manager.output
-  job_name          = "kube-controller-manager"
+  job_name          = {{ .Values.kubeControllerManager.jobLabel | quote }}
   scheme            = "https"
   scrape_interval   = {{ .Values.kubeControllerManager.scrapeInterval | default .Values.global.scrapeInterval | quote }}
   bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"

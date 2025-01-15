@@ -5,6 +5,7 @@
 
 kubernetes.kube_dns "scrape" {
   clustering = true
+  job_label = {{ .Values.kubeDNS.jobLabel | quote }}
 {{- if $metricAllowList }}
   keep_metrics = "up|{{ $metricAllowList | join "|" }}"
 {{- end }}
