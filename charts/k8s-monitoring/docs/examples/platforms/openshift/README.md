@@ -37,6 +37,11 @@ destinations:
 
 clusterMetrics:
   enabled: true
+  kube-state-metrics:
+    deploy: false
+
+    labelMatchers:
+
   kepler:
     enabled: true
 

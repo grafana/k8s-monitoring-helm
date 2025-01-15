@@ -51,6 +51,10 @@ node_exporter.scrape "metrics" {
 {{- if $metricDenyList }}
   drop_metrics = {{ $metricDenyList | join "|" | quote }}
 {{- end }}
+  scheme = {{ (index .Values "node-exporter").service.scheme | quote }}
+{{- if (index .Values "node-exporter").bearerTokenFile }}
+  bearer_token_file = {{ (index .Values "node-exporter").bearerTokenFile | quote }}
+{{- end }}
   scrape_interval = {{ (index .Values "node-exporter").scrapeInterval | default .Values.global.scrapeInterval | quote }}
   max_cache_size = {{ (index .Values "node-exporter").maxCacheSize | default .Values.global.maxCacheSize | int }}
 {{- if (index .Values "node-exporter").extraMetricProcessingRules }}

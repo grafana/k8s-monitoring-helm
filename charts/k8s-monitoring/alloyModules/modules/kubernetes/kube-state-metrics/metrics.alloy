@@ -96,6 +96,16 @@ declare "scrape" {
     optional = true
   }
 
+  argument "scheme" {
+    comment = "The scheme to use when scraping metrics (default: http)"
+    optional = true
+  }
+
+  argument "bearer_token_file" {
+    comment = "The bearer token file (default: none)"
+    optional = true
+  }
+
   argument "scrape_interval" {
     comment = "How often to scrape metrics from the targets (default: 60s)"
     optional = true
@@ -124,6 +134,12 @@ declare "scrape" {
     targets = argument.targets.value
     scrape_interval = coalesce(argument.scrape_interval.value, "60s")
     scrape_timeout = coalesce(argument.scrape_timeout.value, "10s")
+
+    scheme = coalesce(argument.scheme.value, "http")
+    bearer_token_file = coalesce(argument.bearer_token_file.value, "")
+    tls_config {
+      insecure_skip_verify = true
+    }
 
     clustering {
       enabled = coalesce(argument.clustering.value, false)
