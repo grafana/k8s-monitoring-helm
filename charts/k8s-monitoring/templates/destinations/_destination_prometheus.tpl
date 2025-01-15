@@ -88,7 +88,7 @@ prometheus.remote_write {{ include "helper.alloy_name" .name | quote }} {
       {{- if .auth.sigv4.roleArn }}
       role_arn = {{ .auth.sigv4.roleArn | quote }}
       {{- end }}
-      {{- if include "secrets.read" (dict "object" . "key" "auth.sigv4.secretKey") }}
+      {{- if eq (include "secrets.usesSecret" (dict "object" . "key" "auth.sigv4.secretKey")) "true" }}
       secret_key = {{ include "secrets.read" (dict "object" . "key" "auth.sigv4.secretKey") }}
       {{- end }}
     }
