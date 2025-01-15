@@ -76,7 +76,9 @@ prometheus.remote_write {{ include "helper.alloy_name" .name | quote }} {
     }
 {{- else if eq (include "secrets.authType" .) "sigv4" }}
     sigv4 {
+      {{- if include "secrets.read" (dict "object" . "key" "auth.sigv4.accessKey" "nonsensitive" true) }}
       access_key = {{ include "secrets.read" (dict "object" . "key" "auth.sigv4.accessKey" "nonsensitive" true) }}
+      {{- end }}
       {{- if .auth.sigv4.profile }}
       profile = {{ .auth.sigv4.profile | quote }}
       {{- end }}
@@ -86,9 +88,10 @@ prometheus.remote_write {{ include "helper.alloy_name" .name | quote }} {
       {{- if .auth.sigv4.roleArn }}
       role_arn = {{ .auth.sigv4.roleArn | quote }}
       {{- end }}
+      {{- if include "secrets.read" (dict "object" . "key" "auth.sigv4.secretKey") }}
       secret_key = {{ include "secrets.read" (dict "object" . "key" "auth.sigv4.secretKey") }}
+      {{- end }}
     }
-{{- end }}
 
 {{- if .tls }}
     tls_config {
