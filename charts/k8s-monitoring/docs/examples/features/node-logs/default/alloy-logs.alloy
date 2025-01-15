@@ -23,6 +23,11 @@ declare "node_logs" {
   }
 
   loki.relabel "journal" {
+    rule {
+      action = "keep"
+      source_labels = ["__journal__systemd_unit"]
+      regex = "kubelet.service|containerd.service"
+    }
 
     // copy all journal labels and make the available to the pipeline stages as labels, there is a label
     // keep defined to filter out unwanted labels, these pipeline labels can be set as structured metadata

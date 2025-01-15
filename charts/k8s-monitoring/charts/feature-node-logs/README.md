@@ -8,15 +8,34 @@
 ![Version: 1.0.0](https://img.shields.io/badge/Version-1.0.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.0.0](https://img.shields.io/badge/AppVersion-1.0.0-informational?style=flat-square)
 Kubernetes Observability feature for gathering Cluster Node logs.
 
-The Node Logs feature enables the collection of logs from Kubernetes Cluster Nodes.
+The Node Logs feature enables the collection of logs from Kubernetes Cluster Nodes. This is useful for understanding the
+health and performance of the nodes in your cluster. Currently, it gathers logs from the journald service from a
+filterable list of units.
+
+## journald
+
+Gathering logs from journald requires a volume mount to the Node's `/var/log/journal` directory.
+
+You can define a list of units to filter logs from. By default, the feature will collect logs from all units.
+
+```yaml
+nodeLogs:
+  journal:
+    units:
+      - kubelet.service
+      - containerd.service
+```
 
 ## Testing
 
-This chart contains unit tests to verify the generated configuration. The hidden value `deployAsConfigMap` will render the generated configuration into a ConfigMap object. While this ConfigMap is not used during regular operation, you can use it to show the outcome of a given values file.
+This chart contains unit tests to verify the generated configuration. The hidden value `deployAsConfigMap` will render
+the generated configuration into a ConfigMap object. While this ConfigMap is not used during regular operation, you can
+use it to show the outcome of a given values file.
 
-The unit tests use this ConfigMap to create an object with the configuration that can be asserted against. To run the tests, use `helm test`.
+The unit tests use this ConfigMap to create an object with the configuration that can be asserted against. To run the
+tests, use `helm test`.
 
-Be sure perform actual integration testing in a live environment in the main [k8s-monitoring](../k8s-monitoring) chart.
+Be sure perform actual integration testing in a live environment in the main [k8s-monitoring](../..) chart.
 
 ## Maintainers
 
