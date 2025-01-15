@@ -198,6 +198,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | kube-state-metrics.metricsTuning.excludeMetrics | list | `[]` | Metrics to drop. Can use regular expressions. |
 | kube-state-metrics.metricsTuning.includeMetrics | list | `[]` | Metrics to keep. Can use regular expressions. |
 | kube-state-metrics.metricsTuning.useDefaultAllowList | bool | `true` | Filter the list of metrics from Kube State Metrics to a useful, minimal set. |
+| kube-state-metrics.namespace | string | `""` | Namespace to locate Node Exporter pods. If `deploy` is set to `true`, this will automatically be set to the namespace where this Helm chart is deployed. |
 | kube-state-metrics.scrapeInterval | string | `60s` | How frequently to scrape kube-state-metrics metrics. |
 | kube-state-metrics.service.portName | string | `"http"` | The port name used by kube-state-metrics. |
 | kube-state-metrics.service.scheme | string | `"http"` | The scrape scheme used by kube-state-metrics. |
@@ -291,7 +292,9 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | node-exporter.metricsTuning.includeMetrics | list | `[]` | Metrics to keep. Can use regular expressions. |
 | node-exporter.metricsTuning.useDefaultAllowList | bool | `true` | Filter the list of metrics from Node Exporter to the minimal set required for Kubernetes Monitoring. |
 | node-exporter.metricsTuning.useIntegrationAllowList | bool | `false` | Filter the list of metrics from Node Exporter to the minimal set required for Kubernetes Monitoring as well as the Node Exporter integration. |
+| node-exporter.namespace | string | `""` | Namespace to locate Node Exporter pods. If `deploy` is set to `true`, this will automatically be set to the namespace where this Helm chart is deployed. |
 | node-exporter.scrapeInterval | string | `60s` | How frequently to scrape Node Exporter metrics. |
+| node-exporter.service.portName | string | `"metrics"` | The port name used by Node Exporter. |
 | node-exporter.service.scheme | string | `"http"` | The scrape scheme used by Node Exporter. |
 
 ### Node Exporter - Deployment settings
@@ -337,5 +340,6 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | windows-exporter.metricsTuning.excludeMetrics | list | `[]` | Metrics to drop. Can use regular expressions. |
 | windows-exporter.metricsTuning.includeMetrics | list | `[]` | Metrics to keep. Can use regular expressions. |
 | windows-exporter.metricsTuning.useDefaultAllowList | bool | `true` | Filter the list of metrics from Windows Exporter to the minimal set required for Kubernetes Monitoring. |
+| windows-exporter.namespace | string | `""` | Namespace to locate Windows Exporter pods. If `deploy` is set to `true`, this will automatically be set to the namespace where this Helm chart is deployed. |
 | windows-exporter.scrapeInterval | string | `60s` | How frequently to scrape metrics from Windows Exporter. |
 <!-- markdownlint-enable no-space-in-emphasis -->

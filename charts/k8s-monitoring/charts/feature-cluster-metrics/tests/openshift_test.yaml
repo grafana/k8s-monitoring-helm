@@ -10,14 +10,17 @@ tests:
         platform: openshift
       kube-state-metrics:
         deploy: false
+        namespace: openshift-monitoring
         service:
           scheme: https
           portName: https-main
         bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
       node-exporter:
         deploy: false
+        namespace: openshift-monitoring
         service:
           scheme: https
+          portName: https
         bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
     asserts:
       - isKind:
@@ -143,6 +146,7 @@ tests:
               }
             
               kube_state_metrics.kubernetes "targets" {
+                namespaces = ["openshift-monitoring"]
                 port_name = "https-main"
                 label_selectors = [
                   "app.kubernetes.io/name=kube-state-metrics",
@@ -168,6 +172,8 @@ tests:
               }
             
               node_exporter.kubernetes "targets" {
+                namespaces = ["openshift-monitoring"]
+                port_name = "https"
                 label_selectors = [
                   "app.kubernetes.io/name=node-exporter",
                 ]

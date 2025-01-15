@@ -19,6 +19,12 @@
 {{- include "alloyModules.load" (deepCopy $ | merge (dict "name" "node_exporter" "path" "modules/system/node-exporter/metrics.alloy")) | nindent 0 }}
 
 node_exporter.kubernetes "targets" {
+{{- if (index .Values "node-exporter").deploy }}
+  namespaces = [{{ .Release.Namespace | quote }}]
+{{- else if (index .Values "node-exporter").namespace }}
+  namespaces = [{{ (index .Values "node-exporter").namespace | quote }}]
+{{- end }}
+  port_name = {{ (index .Values "node-exporter").service.portName | quote }}
   label_selectors = [
 {{- range $label, $value := (index .Values "node-exporter").labelMatchers }}
     {{ printf "%s=%s" $label $value | quote }},

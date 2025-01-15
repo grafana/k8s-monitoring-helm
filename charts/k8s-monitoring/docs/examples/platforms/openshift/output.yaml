@@ -60,23 +60,6 @@ metadata:
     app.kubernetes.io/version: "release-0.7.12"
     app.kubernetes.io/managed-by: Helm
 ---
-# Source: k8s-monitoring/charts/clusterMetrics/charts/node-exporter/templates/serviceaccount.yaml
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: k8smon-node-exporter
-  namespace: default
-  labels:
-    helm.sh/chart: node-exporter-4.43.1
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/component: metrics
-    app.kubernetes.io/part-of: node-exporter
-    app.kubernetes.io/name: node-exporter
-    app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.8.2"
-    release: k8smon
-automountServiceAccountToken: false
----
 # Source: k8s-monitoring/charts/clusterMetrics/charts/windows-exporter/templates/serviceaccount.yaml
 apiVersion: v1
 kind: ServiceAccount
@@ -296,7 +279,8 @@ data:
       }
       
       kube_state_metrics.kubernetes "targets" {
-        port_name = "http"
+        namespaces = ["openshift-monitoring"]
+        port_name = "https-main"
         label_selectors = [
           "app.kubernetes.io/name=kube-state-metrics",
         ]
@@ -306,7 +290,8 @@ data:
         targets = kube_state_metrics.kubernetes.targets.output
         clustering = true
         keep_metrics = "up|scrape_samples_scraped|kube_configmap_info|kube_configmap_metadata_resource_version|kube_daemonset.*|kube_deployment_metadata_generation|kube_deployment_spec_replicas|kube_deployment_status_condition|kube_deployment_status_observed_generation|kube_deployment_status_replicas_available|kube_deployment_status_replicas_updated|kube_horizontalpodautoscaler_spec_max_replicas|kube_horizontalpodautoscaler_spec_min_replicas|kube_horizontalpodautoscaler_status_current_replicas|kube_horizontalpodautoscaler_status_desired_replicas|kube_job.*|kube_namespace_status_phase|kube_node.*|kube_persistentvolume_status_phase|kube_persistentvolumeclaim_access_mode|kube_persistentvolumeclaim_info|kube_persistentvolumeclaim_labels|kube_persistentvolumeclaim_resource_requests_storage_bytes|kube_persistentvolumeclaim_status_phase|kube_pod_container_info|kube_pod_container_resource_limits|kube_pod_container_resource_requests|kube_pod_container_status_last_terminated_reason|kube_pod_container_status_restarts_total|kube_pod_container_status_waiting_reason|kube_pod_info|kube_pod_owner|kube_pod_spec_volumes_persistentvolumeclaims_info|kube_pod_start_time|kube_pod_status_phase|kube_pod_status_reason|kube_replicaset.*|kube_resourcequota|kube_secret_metadata_resource_version|kube_statefulset.*"
-        scheme = "http"
+        scheme = "https"
+        bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
         scrape_interval = "60s"
         max_cache_size = 100000
         forward_to = argument.metrics_destinations.value
@@ -322,9 +307,10 @@ data:
       }
       
       node_exporter.kubernetes "targets" {
+        namespaces = ["openshift-monitoring"]
+        port_name = "https"
         label_selectors = [
           "app.kubernetes.io/name=node-exporter",
-          "release=k8smon",
         ]
       }
       
@@ -342,7 +328,8 @@ data:
         job_label = "integrations/node_exporter"
         clustering = true
         keep_metrics = "up|scrape_samples_scraped|node_cpu.*|node_exporter_build_info|node_filesystem.*|node_memory.*|node_network_receive_bytes_total|node_network_receive_drop_total|node_network_transmit_bytes_total|node_network_transmit_drop_total|process_cpu_seconds_total|process_resident_memory_bytes"
-        scheme = "http"
+        scheme = "https"
+        bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
         scrape_interval = "60s"
         max_cache_size = 100000
         forward_to = argument.metrics_destinations.value
@@ -639,7 +626,7 @@ data:
     grafana_kubernetes_monitoring_build_info{version="2.0.3", namespace="default", platform="openshift"} 1
     # HELP grafana_kubernetes_monitoring_feature_info A metric to report the enabled features of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_feature_info gauge
-    grafana_kubernetes_monitoring_feature_info{deployments="node-exporter,windows-exporter,kepler", feature="clusterMetrics", sources="kubelet,kubeletResource,cadvisor,kube-state-metrics,node-exporter,windows-exporter,kepler", version="1.0.0"} 1
+    grafana_kubernetes_monitoring_feature_info{deployments="windows-exporter,kepler", feature="clusterMetrics", sources="kubelet,kubeletResource,cadvisor,kube-state-metrics,node-exporter,windows-exporter,kepler", version="1.0.0"} 1
     grafana_kubernetes_monitoring_feature_info{feature="clusterEvents", version="1.0.0"} 1
     grafana_kubernetes_monitoring_feature_info{feature="podLogs", method="volumes", version="1.0.0"} 1
 ---
@@ -2951,34 +2938,6 @@ spec:
     app.kubernetes.io/name: kepler
     app.kubernetes.io/component: exporter
 ---
-# Source: k8s-monitoring/charts/clusterMetrics/charts/node-exporter/templates/service.yaml
-apiVersion: v1
-kind: Service
-metadata:
-  name: k8smon-node-exporter
-  namespace: default
-  labels:
-    helm.sh/chart: node-exporter-4.43.1
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/component: metrics
-    app.kubernetes.io/part-of: node-exporter
-    app.kubernetes.io/name: node-exporter
-    app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.8.2"
-    release: k8smon
-  annotations:
-    prometheus.io/scrape: "false"
-spec:
-  type: ClusterIP
-  ports:
-    - port: 9100
-      targetPort: 9100
-      protocol: TCP
-      name: metrics
-  selector:
-    app.kubernetes.io/name: node-exporter
-    app.kubernetes.io/instance: k8smon
----
 # Source: k8s-monitoring/charts/clusterMetrics/charts/windows-exporter/templates/service.yaml
 apiVersion: v1
 kind: Service
@@ -3034,6 +2993,9 @@ spec:
         app.kubernetes.io/name: alloy-logs
         app.kubernetes.io/instance: k8smon
     spec:
+      securityContext:
+        seLinuxOptions:
+          type: spc_t
       serviceAccountName: k8smon-alloy-logs
       containers:
         - name: alloy
@@ -3083,6 +3045,8 @@ spec:
               - SETFCAP
               drop:
               - ALL
+            privileged: false
+            runAsUser: 0
             seccompProfile:
               type: RuntimeDefault
           volumeMounts:
@@ -3238,133 +3202,6 @@ spec:
       tolerations:
         - effect: NoSchedule
           key: node-role.kubernetes.io/control-plane
----
-# Source: k8s-monitoring/charts/clusterMetrics/charts/node-exporter/templates/daemonset.yaml
-apiVersion: apps/v1
-kind: DaemonSet
-metadata:
-  name: k8smon-node-exporter
-  namespace: default
-  labels:
-    helm.sh/chart: node-exporter-4.43.1
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/component: metrics
-    app.kubernetes.io/part-of: node-exporter
-    app.kubernetes.io/name: node-exporter
-    app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.8.2"
-    release: k8smon
-spec:
-  selector:
-    matchLabels:
-      app.kubernetes.io/name: node-exporter
-      app.kubernetes.io/instance: k8smon
-  revisionHistoryLimit: 10
-  updateStrategy:
-    rollingUpdate:
-      maxUnavailable: 1
-    type: RollingUpdate
-  template:
-    metadata:
-      annotations:
-        cluster-autoscaler.kubernetes.io/safe-to-evict: "true"
-        k8s.grafana.com/logs.job: integrations/node_exporter
-      labels:
-        helm.sh/chart: node-exporter-4.43.1
-        app.kubernetes.io/managed-by: Helm
-        app.kubernetes.io/component: metrics
-        app.kubernetes.io/part-of: node-exporter
-        app.kubernetes.io/name: node-exporter
-        app.kubernetes.io/instance: k8smon
-        app.kubernetes.io/version: "1.8.2"
-        release: k8smon
-    spec:
-      automountServiceAccountToken: false
-      securityContext:
-        fsGroup: 65534
-        runAsGroup: 65534
-        runAsNonRoot: true
-        runAsUser: 65534
-      serviceAccountName: k8smon-node-exporter
-      containers:
-        - name: node-exporter
-          image: quay.io/prometheus/node-exporter:v1.8.2
-          imagePullPolicy: IfNotPresent
-          args:
-            - --path.procfs=/host/proc
-            - --path.sysfs=/host/sys
-            - --path.rootfs=/host/root
-            - --path.udev.data=/host/root/run/udev/data
-            - --web.listen-address=[$(HOST_IP)]:9100
-          securityContext:
-            readOnlyRootFilesystem: true
-          env:
-            - name: HOST_IP
-              value: 0.0.0.0
-          ports:
-            - name: metrics
-              containerPort: 9100
-              protocol: TCP
-          livenessProbe:
-            failureThreshold: 3
-            httpGet:
-              httpHeaders:
-              path: /
-              port: 9100
-              scheme: HTTP
-            initialDelaySeconds: 0
-            periodSeconds: 10
-            successThreshold: 1
-            timeoutSeconds: 1
-          readinessProbe:
-            failureThreshold: 3
-            httpGet:
-              httpHeaders:
-              path: /
-              port: 9100
-              scheme: HTTP
-            initialDelaySeconds: 0
-            periodSeconds: 10
-            successThreshold: 1
-            timeoutSeconds: 1
-          volumeMounts:
-            - name: proc
-              mountPath: /host/proc
-              readOnly:  true
-            - name: sys
-              mountPath: /host/sys
-              readOnly: true
-            - name: root
-              mountPath: /host/root
-              mountPropagation: HostToContainer
-              readOnly: true
-      hostNetwork: true
-      hostPID: true
-      hostIPC: false
-      affinity:
-        nodeAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            nodeSelectorTerms:
-            - matchExpressions:
-              - key: eks.amazonaws.com/compute-type
-                operator: NotIn
-                values:
-                - fargate
-      nodeSelector:
-        kubernetes.io/os: linux
-      tolerations:
-        - effect: NoSchedule
-          operator: Exists
-      volumes:
-        - name: proc
-          hostPath:
-            path: /proc
-        - name: sys
-          hostPath:
-            path: /sys
-        - name: root
-          hostPath:
-            path: /
 ---
 # Source: k8s-monitoring/charts/clusterMetrics/charts/windows-exporter/templates/daemonset.yaml
 apiVersion: apps/v1

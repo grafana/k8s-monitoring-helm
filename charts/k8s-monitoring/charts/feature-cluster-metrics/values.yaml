@@ -397,6 +397,11 @@ kube-state-metrics:
   labelMatchers:
     app.kubernetes.io/name: kube-state-metrics
 
+  # -- Namespace to locate Node Exporter pods. If `deploy` is set to `true`, this will automatically be set to the
+  # namespace where this Helm chart is deployed.
+  # @section -- kube-state-metrics
+  namespace: ""
+
   # -- Rule blocks to be added to the discovery.relabel component for kube-state-metrics.
   # These relabeling rules are applied pre-scrape against the targets from service discovery.
   # Before the scrape, any remaining target labels that start with __ (i.e. __meta_kubernetes*) are dropped.
@@ -490,6 +495,11 @@ node-exporter:
   labelMatchers:
     app.kubernetes.io/name: node-exporter
 
+  # -- Namespace to locate Node Exporter pods. If `deploy` is set to `true`, this will automatically be set to the
+  # namespace where this Helm chart is deployed.
+  # @section -- Node Exporter
+  namespace: ""
+
   # -- Rule blocks to be added to the discovery.relabel component for Node Exporter.
   # These relabeling rules are applied pre-scrape against the targets from service discovery.
   # Before the scrape, any remaining target labels that start with __ (i.e. __meta_kubernetes*) are dropped.
@@ -531,6 +541,10 @@ node-exporter:
     # -- The scrape scheme used by Node Exporter.
     # @section -- Node Exporter
     scheme: http
+
+    # -- The port name used by Node Exporter.
+    # @section -- Node Exporter
+    portName: metrics
 
     # Disable the prometheus.io/scrape annotation
     # @ignored
@@ -584,6 +598,11 @@ windows-exporter:
   # @section -- Windows Exporter
   labelMatchers:
     app.kubernetes.io/name: windows-exporter
+
+  # -- Namespace to locate Windows Exporter pods. If `deploy` is set to `true`, this will automatically be set to the
+  # namespace where this Helm chart is deployed.
+  # @section -- Windows Exporter
+  namespace: ""
 
   # -- Rule blocks to be added to the discovery.relabel component for Windows Exporter.
   # These relabeling rules are applied pre-scrape against the targets from service discovery.
