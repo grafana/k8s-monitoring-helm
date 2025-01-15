@@ -7,6 +7,7 @@
 {{- $transform := include "feature.applicationObservability.processor.transform.alloy.target" dict }}
 {{- $filter := include "feature.applicationObservability.processor.filter.alloy.target" dict }}
 {{- $batch := include "feature.applicationObservability.processor.batch.alloy.target" dict }}
+{{- $interval := include "feature.applicationObservability.processor.interval.alloy.target" dict }}
 {{- $memoryLimiter := include "feature.applicationObservability.processor.memory_limiter.alloy.target" dict }}
 declare "application_observability" {
   argument "metrics_destinations" {
@@ -66,6 +67,11 @@ declare "application_observability" {
   {{- $metricsNext = printf "[%s]" $memoryLimiter }}
   {{- $logsNext = printf "[%s]" $memoryLimiter }}
   {{- $tracesNext = printf "[%s]" $memoryLimiter }}
+{{- else if .Values.processors.interval.enabled }}
+  // Batch Processor --> Interval
+  {{- $metricsNext = printf "[%s]" $interval }}
+  {{- $logsNext = printf "[%s]" $interval }}
+  {{- $tracesNext = printf "[%s]" $interval }}
 {{- else }}
   // Batch Processor --> Destinations
   {{- $metricsNext = "argument.metrics_destinations.value" }}
@@ -75,11 +81,26 @@ declare "application_observability" {
   {{- include "feature.applicationObservability.processor.batch.alloy" (dict "Values" $.Values "metricsOutput" $metricsNext "logsOutput" $logsNext "tracesOutput" $tracesNext ) | indent 2 }}
 
 {{- if .Values.processors.memoryLimiter.enabled }}
+{{- if .Values.processors.interval.enabled }}
+  // Memory Limiter --> Interval
+  {{- $metricsNext = printf "[%s]" $interval }}
+  {{- $logsNext = printf "[%s]" $interval }}
+  {{- $tracesNext = printf "[%s]" $interval }}
+{{- else }}
   // Memory Limiter --> Destinations
   {{- $metricsNext = "argument.metrics_destinations.value" }}
   {{- $logsNext = "argument.logs_destinations.value" }}
   {{- $tracesNext = "argument.traces_destinations.value" }}
+{{- end }}
   {{- include "feature.applicationObservability.processor.memory_limiter.alloy" (dict "Values" $.Values "metricsOutput" $metricsNext "logsOutput" $logsNext "tracesOutput" $tracesNext ) | indent 2 }}
+{{- end }}
+
+{{- if .Values.processors.interval.enabled }}
+  // Interval --> Destinations
+  {{- $metricsNext = "argument.metrics_destinations.value" }}
+  {{- $logsNext = "argument.logs_destinations.value" }}
+  {{- $tracesNext = "argument.traces_destinations.value" }}
+  {{- include "feature.applicationObservability.processor.interval.alloy" (dict "Values" $.Values "metricsOutput" $metricsNext "logsOutput" $logsNext "tracesOutput" $tracesNext ) | indent 2 }}
 {{- end }}
 }
 {{- end }}

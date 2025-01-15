@@ -61,6 +61,15 @@ Be sure perform actual integration testing in a live environment in the main [k8
 |-----|------|---------|-------------|
 | processors.grafanaCloudMetrics.enabled | bool | `true` | Generate host info metrics from telemetry data, used in Application Observability in Grafana Cloud. |
 
+### Processors: Interval
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| processors.interval.enabled | bool | `false` | Utilize an interval processor to aggregates metrics and periodically forwards the latest values to the next component in the pipeline. |
+| processors.interval.interval | string | `"60s"` | The interval at which to emit aggregated metrics. |
+| processors.interval.passthrough.gauge | bool | `false` | Determines whether gauge metrics should be passed through as they are or aggregated. |
+| processors.interval.passthrough.summary | bool | `false` | Determines whether summary metrics should be passed through as they are or aggregated. |
+
 ### Processors: K8s Attributes
 
 | Key | Type | Default | Description |
