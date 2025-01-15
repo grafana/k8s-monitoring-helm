@@ -92,6 +92,7 @@ prometheus.remote_write {{ include "helper.alloy_name" .name | quote }} {
       secret_key = {{ include "secrets.read" (dict "object" . "key" "auth.sigv4.secretKey") }}
       {{- end }}
     }
+{{- end }}
 
 {{- if .tls }}
     tls_config {
