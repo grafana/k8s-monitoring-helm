@@ -19,6 +19,13 @@ prometheus.operator.probes "pod_monitors" {
     default_scrape_interval = {{ .Values.probes.scrapeInterval | default .Values.global.scrapeInterval | quote }}
   }
 
+{{- with .Values.probes.excludeNamespaces }}
+  rule {
+    source_labels = ["__meta_kubernetes_namespace"]
+    regex = {{ . | join "|" | quote }}
+    action = "drop"
+  }
+{{- end }}
 {{- if .Values.probes.extraDiscoveryRules }}
 {{ .Values.probes.extraDiscoveryRules | indent 2 }}
 {{- end }}
