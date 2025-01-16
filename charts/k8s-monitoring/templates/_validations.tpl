@@ -13,7 +13,7 @@
 
 {{/* Checks that the cluster name is defined */}}
 {{- define "validations.cluster_name" }}
-{{- if not .Values.cluster.name }}
+{{- if or (not .Values.cluster) (not .Values.cluster.name) }}
   {{- $msg := list "" "A Cluster name is required!" }}
   {{- $msg = append $msg "Please set:" }}
   {{- $msg = append $msg "cluster:" }}

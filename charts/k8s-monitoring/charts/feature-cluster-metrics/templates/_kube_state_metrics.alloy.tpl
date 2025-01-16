@@ -16,6 +16,12 @@
 {{- include "alloyModules.load" (deepCopy $ | merge (dict "name" "kube_state_metrics" "path" "modules/kubernetes/kube-state-metrics/metrics.alloy")) | nindent 0 }}
 
 kube_state_metrics.kubernetes "targets" {
+{{- if (index .Values "kube-state-metrics").deploy }}
+  namespaces = [{{ .Release.Namespace | quote }}]
+{{- else if (index .Values "kube-state-metrics").namespace }}
+  namespaces = [{{ (index .Values "kube-state-metrics").namespace | quote }}]
+{{- end }}
+  port_name = {{ (index .Values "kube-state-metrics").service.portName | quote }}
   label_selectors = [
 {{- range $label, $value := (index .Values "kube-state-metrics").labelMatchers }}
     {{ printf "%s=%s" $label $value | quote }},
@@ -43,6 +49,10 @@ kube_state_metrics.scrape "metrics" {
 {{- end }}
 {{- if $metricDenyList }}
   drop_metrics = {{ $metricDenyList | join "|" | quote }}
+{{- end }}
+  scheme = {{ (index .Values "kube-state-metrics").service.scheme | quote }}
+{{- if (index .Values "kube-state-metrics").bearerTokenFile }}
+  bearer_token_file = {{ (index .Values "kube-state-metrics").bearerTokenFile | quote }}
 {{- end }}
   scrape_interval = {{ (index .Values "kube-state-metrics").scrapeInterval | default .Values.global.scrapeInterval | quote }}
   max_cache_size = {{ (index .Values "kube-state-metrics").maxCacheSize | default .Values.global.maxCacheSize | int }}

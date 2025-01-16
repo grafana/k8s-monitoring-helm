@@ -397,6 +397,11 @@ kube-state-metrics:
   labelMatchers:
     app.kubernetes.io/name: kube-state-metrics
 
+  # -- Namespace to locate kube-state-metrics pods. If `deploy` is set to `true`, this will automatically be set to the
+  # namespace where this Helm chart is deployed.
+  # @section -- kube-state-metrics
+  namespace: ""
+
   # -- Rule blocks to be added to the discovery.relabel component for kube-state-metrics.
   # These relabeling rules are applied pre-scrape against the targets from service discovery.
   # Before the scrape, any remaining target labels that start with __ (i.e. __meta_kubernetes*) are dropped.
@@ -426,6 +431,20 @@ kube-state-metrics:
   # @default -- `60s`
   # @section -- kube-state-metrics
   scrapeInterval: ""
+
+  # kube-state-metrics service settings
+  service:
+    # -- The scrape scheme used by kube-state-metrics.
+    # @section -- kube-state-metrics
+    scheme: http
+
+    # -- The port name used by kube-state-metrics.
+    # @section -- kube-state-metrics
+    portName: http
+
+  # -- The bearer token file to use when scraping metrics from kube-state-metrics.
+  # @section -- kube-state-metrics
+  bearerTokenFile: ""
 
   # -- Sets the max_cache_size for cadvisor prometheus.relabel component.
   # This should be at least 2x-5x your largest scrape target or samples appended rate.
@@ -476,6 +495,11 @@ node-exporter:
   labelMatchers:
     app.kubernetes.io/name: node-exporter
 
+  # -- Namespace to locate Node Exporter pods. If `deploy` is set to `true`, this will automatically be set to the
+  # namespace where this Helm chart is deployed.
+  # @section -- Node Exporter
+  namespace: ""
+
   # -- Rule blocks to be added to the discovery.relabel component for Node Exporter.
   # These relabeling rules are applied pre-scrape against the targets from service discovery.
   # Before the scrape, any remaining target labels that start with __ (i.e. __meta_kubernetes*) are dropped.
@@ -512,6 +536,25 @@ node-exporter:
   # @section -- Node Exporter
   scrapeInterval: ""
 
+  # Node Exporter service settings
+  service:
+    # -- The scrape scheme used by Node Exporter.
+    # @section -- Node Exporter
+    scheme: http
+
+    # -- The port name used by Node Exporter.
+    # @section -- Node Exporter
+    portName: metrics
+
+    # Disable the prometheus.io/scrape annotation
+    # @ignored
+    annotations:
+      prometheus.io/scrape: "false"
+
+  # -- The bearer token file to use when scraping metrics from Node Exporter.
+  # @section -- Node Exporter
+  bearerTokenFile: ""
+
   # -- Sets the max_cache_size for cadvisor prometheus.relabel component.
   # This should be at least 2x-5x your largest scrape target or samples appended rate.
   # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments))
@@ -521,7 +564,7 @@ node-exporter:
   maxCacheSize:
 
   # -- Deploy Node Exporter. Set to false if your cluster already has Node Exporter deployed.
-  # @section -- Node Exporter - Deployment settings
+  # @section -- Node Exporter
   deploy: true
 
   # @ignored
@@ -545,11 +588,6 @@ node-exporter:
   podAnnotations:
     k8s.grafana.com/logs.job: integrations/node_exporter
 
-  # @ignored
-  service:
-    annotations:
-      prometheus.io/scrape: "false"
-
 # Windows Exporter metrics gathers hardware information about Windows nodes.
 windows-exporter:
   # -- Scrape node metrics
@@ -560,6 +598,11 @@ windows-exporter:
   # @section -- Windows Exporter
   labelMatchers:
     app.kubernetes.io/name: windows-exporter
+
+  # -- Namespace to locate Windows Exporter pods. If `deploy` is set to `true`, this will automatically be set to the
+  # namespace where this Helm chart is deployed.
+  # @section -- Windows Exporter
+  namespace: ""
 
   # -- Rule blocks to be added to the discovery.relabel component for Windows Exporter.
   # These relabeling rules are applied pre-scrape against the targets from service discovery.
