@@ -19,6 +19,13 @@ prometheus.operator.servicemonitors "service_monitors" {
     default_scrape_interval = {{ .Values.serviceMonitors.scrapeInterval | default .Values.global.scrapeInterval | quote }}
   }
 
+{{- with .Values.serviceMonitors.excludeNamespaces }}
+  rule {
+    source_labels = ["__meta_kubernetes_namespace"]
+    regex = {{ . | join "|" | quote }}
+    action = "drop"
+  }
+{{- end }}
 {{- if .Values.serviceMonitors.extraDiscoveryRules }}
 {{ .Values.serviceMonitors.extraDiscoveryRules | indent 2 }}
 {{- end }}
