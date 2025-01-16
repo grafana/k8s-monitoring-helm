@@ -806,6 +806,18 @@ data:
             "tmp_container_runtime",
           ]
         }
+      
+        // Only keep the labels that are defined in the `keepLabels` list.
+        stage.label_keep {
+          values = ["app_kubernetes_io_name","container","instance","job","level","namespace","pod","service_name"]
+        }
+      
+        stage.static_labels {
+          values = {
+            site = "lab2",
+            color = env("COLOR"),
+          }
+        }
         stage.json {
           source = "payload"
           expressions = {
@@ -814,22 +826,11 @@ data:
           }
         }
         
-        stage.static {
-          values = {
-            site = "lab2",
-          }
-        }
-        
         stage.labels {
           values = {
             sku  = "",
             count = "",
           }
-        }
-      
-        // Only keep the labels that are defined in the `keepLabels` list.
-        stage.label_keep {
-          values = ["app_kubernetes_io_name","container","instance","job","level","namespace","pod","service_name"]
         }
       
         forward_to = argument.logs_destinations.value
@@ -3122,6 +3123,9 @@ spec:
             -
               name: REGION
               value: northwest
+            -
+              name: COLOR
+              value: blue
           ports:
             - containerPort: 12345
               name: http-metrics

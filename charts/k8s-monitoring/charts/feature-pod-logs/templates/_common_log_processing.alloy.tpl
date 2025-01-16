@@ -37,28 +37,43 @@ loki.process "pod_logs" {
     ]
   }
 
-{{- if .Values.extraLogProcessingStages }}
-{{ tpl .Values.extraLogProcessingStages $ | indent 2 }}
-{{- end -}}
-
-  {{- /* the stage.structured_metadata block needs to be conditionalized because the support for enabling structured metadata can be disabled */ -}}
-  {{- /* through the loki limits_conifg on a per-tenant basis, even if there are no values defined or there are values defined but it is disabled */ -}}
-  {{- /* in Loki, the write will fail. */ -}}
-  {{- if gt (len (keys .Values.structuredMetadata)) 0 }}
+{{- /* the stage.structured_metadata block needs to be conditionalized because the support for enabling structured metadata can be disabled */ -}}
+{{- /* through the loki limits_conifg on a per-tenant basis, even if there are no values defined or there are values defined but it is disabled */ -}}
+{{- /* in Loki, the write will fail. */ -}}
+{{- if .Values.structuredMetadata }}
   // set the structured metadata values
   stage.structured_metadata {
     values = {
-      {{- range $key, $value := .Values.structuredMetadata }}
+    {{- range $key, $value := .Values.structuredMetadata }}
       {{ $key | quote }} = {{ if $value }}{{ $value | quote }}{{ else }}{{ $key | quote }}{{ end }},
-      {{- end }}
+    {{- end }}
     }
   }
-  {{- end }}
+{{- end }}
+{{- with .Values.labelsToKeep }}
 
   // Only keep the labels that are defined in the `keepLabels` list.
   stage.label_keep {
-    values = {{ .Values.labelsToKeep | toJson }}
+    values = {{ . | toJson }}
   }
+{{- end }}
+
+{{- if or .Values.staticLabels .Values.staticLabelsFrom }}
+
+  stage.static_labels {
+    values = {
+    {{- range $key, $value := .Values.staticLabels }}
+      {{ $key }} = {{ $value | quote }},
+    {{- end }}
+    {{- range $key, $value := .Values.staticLabelsFrom }}
+      {{ $key }} = {{ $value }},
+    {{- end }}
+    }
+  }
+{{- end }}
+{{- if .Values.extraLogProcessingStages }}
+{{ tpl .Values.extraLogProcessingStages $ | indent 2 }}
+{{- end }}
 
   forward_to = argument.logs_destinations.value
 }

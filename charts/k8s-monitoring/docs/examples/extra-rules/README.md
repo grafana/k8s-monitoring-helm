@@ -103,18 +103,18 @@ podLogs:
       }
     }
 
-    stage.static {
-      values = {
-        site = "lab2",
-      }
-    }
-
     stage.labels {
       values = {
         sku  = "",
         count = "",
       }
     }
+
+  staticLabels:
+    site: lab2
+
+  staticLabelsFrom:
+    color: env("COLOR")
 
 alloy-metrics:
   enabled: true
@@ -136,4 +136,6 @@ alloy-logs:
     extraEnv:
       - name: REGION
         value: northwest
+      - name: COLOR
+        value: blue
 ```
