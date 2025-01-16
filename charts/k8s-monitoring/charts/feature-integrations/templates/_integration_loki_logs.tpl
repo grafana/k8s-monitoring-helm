@@ -27,7 +27,7 @@
             {{- $valueList = append $valueList (printf "(?:%s)" (join "|" $v)) -}}
           {{- else }}
             {{- $labelList = append $labelList (include "pod_label" $k) -}}
-            {{- $valueList = append $valueList $v -}}
+            {{- $valueList = append $valueList (printf "(?:%s)" $v) -}}
           {{- end }}
         {{- end }}
 // add static label of integration="loki" and instance="name" to pods that match the selector so they can be identified in the loki.process stages

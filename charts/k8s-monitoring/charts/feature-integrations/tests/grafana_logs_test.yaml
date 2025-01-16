@@ -23,14 +23,14 @@ tests:
               rule {
                 source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
                 separator = ";"
-                regex = "grafana"
+                regex = "(?:grafana)"
                 target_label = "job"
                 replacement = "integrations/grafana"
               }
               rule {
                 source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
                 separator = ";"
-                regex = "grafana"
+                regex = "(?:grafana)"
                 target_label = "instance"
                 replacement = "grafana"
               }
@@ -84,7 +84,22 @@ tests:
           of: ConfigMap
       - matchRegex:
           path: data["logs.alloy"]
-          pattern: namespace=~\\"k8smon\\"
+          # The pattern should look like this, but since the regex is escaped, it will be a bit different
+          # rule {
+          #   source_labels = ["__meta_kubernetes_namespace","__meta_kubernetes_pod_label_app_kubernetes_io_name"]
+          #   separator = ";"
+          #   regex = "(?:k8smon);(?:grafana)"
+          #   target_label = "job"
+          #   replacement = "integrations/grafana"
+          # }
+          pattern: |-
+            \s*rule {
+            \s*  source_labels = \["__meta_kubernetes_namespace","__meta_kubernetes_pod_label_app_kubernetes_io_name"\]
+            \s*  separator = ";"
+            \s*  regex = "\(\?:k8smon\)\;\(\?:grafana\)"
+            \s*  target_label = "job"
+            \s*  replacement = "integrations/grafana"
+            \s*}
 
   - it: should allow you to set the timestamp format
     set:

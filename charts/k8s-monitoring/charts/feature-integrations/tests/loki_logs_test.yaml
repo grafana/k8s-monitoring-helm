@@ -24,14 +24,14 @@ tests:
               rule {
                 source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
                 separator = ";"
-                regex = "loki"
+                regex = "(?:loki)"
                 target_label = "integration"
                 replacement = "loki"
               }
               rule {
                 source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
                 separator = ";"
-                regex = "loki"
+                regex = "(?:loki)"
                 target_label = "instance"
                 replacement = "loki"
               }
@@ -39,7 +39,7 @@ tests:
               rule {
                 source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name","__meta_kubernetes_namespace","__meta_kubernetes_pod_label_component"]
                 separator = ";"
-                regex = "loki;([^;]+);([^;]+)"
+                regex = "(?:loki);([^;]+);([^;]+)"
                 target_label = "job"
                 replacement = "$1/$2"
               }
@@ -94,7 +94,22 @@ tests:
           of: ConfigMap
       - matchRegex:
           path: data["logs.alloy"]
-          pattern: namespace=~\\"k8smon\\"
+          # The pattern should look like this, but since the regex is escaped, it will be a bit different
+          # rule {
+          #   source_labels = ["__meta_kubernetes_namespace","__meta_kubernetes_pod_label_app_kubernetes_io_name"]
+          #   separator = ";"
+          #   regex = "(?:k8smon);(?:loki)"
+          #   target_label = "integration"
+          #   replacement = "loki"
+          # }
+          pattern: |-
+            \s*rule {
+            \s*  source_labels = \["__meta_kubernetes_namespace","__meta_kubernetes_pod_label_app_kubernetes_io_name"\]
+            \s*  separator = ";"
+            \s*  regex = "\(\?:k8smon\)\;\(\?:loki\)"
+            \s*  target_label = "integration"
+            \s*  replacement = "loki"
+            \s*}
 
   - it: should allow you to set the timestamp format
     set:
