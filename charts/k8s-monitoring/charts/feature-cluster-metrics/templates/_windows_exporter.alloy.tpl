@@ -30,6 +30,10 @@ discovery.kubernetes "windows_exporter_pods" {
   namespaces {
     names = [{{ .Release.Namespace | quote }}]
   }
+{{- else if (index .Values "windows-exporter").namespace }}
+  namespaces {
+    names = [{{ (index .Values "windows-exporter").namespace | quote }}]
+  }
 {{- end }}
   selectors {
     role = "pod"

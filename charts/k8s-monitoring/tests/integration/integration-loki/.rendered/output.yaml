@@ -332,6 +332,8 @@ data:
       }
       
       kube_state_metrics.kubernetes "targets" {
+        namespaces = ["default"]
+        port_name = "http"
         label_selectors = [
           "app.kubernetes.io/name=kube-state-metrics",
           "release=k8smon",
@@ -342,6 +344,7 @@ data:
         targets = kube_state_metrics.kubernetes.targets.output
         clustering = true
         keep_metrics = "up|scrape_samples_scraped|kube_configmap_info|kube_configmap_metadata_resource_version|kube_daemonset.*|kube_deployment_metadata_generation|kube_deployment_spec_replicas|kube_deployment_status_condition|kube_deployment_status_observed_generation|kube_deployment_status_replicas_available|kube_deployment_status_replicas_updated|kube_horizontalpodautoscaler_spec_max_replicas|kube_horizontalpodautoscaler_spec_min_replicas|kube_horizontalpodautoscaler_status_current_replicas|kube_horizontalpodautoscaler_status_desired_replicas|kube_job.*|kube_namespace_status_phase|kube_node.*|kube_persistentvolume_status_phase|kube_persistentvolumeclaim_access_mode|kube_persistentvolumeclaim_info|kube_persistentvolumeclaim_labels|kube_persistentvolumeclaim_resource_requests_storage_bytes|kube_persistentvolumeclaim_status_phase|kube_pod_container_info|kube_pod_container_resource_limits|kube_pod_container_resource_requests|kube_pod_container_status_last_terminated_reason|kube_pod_container_status_restarts_total|kube_pod_container_status_waiting_reason|kube_pod_info|kube_pod_owner|kube_pod_spec_volumes_persistentvolumeclaims_info|kube_pod_start_time|kube_pod_status_phase|kube_pod_status_reason|kube_replicaset.*|kube_resourcequota|kube_secret_metadata_resource_version|kube_statefulset.*"
+        scheme = "http"
         scrape_interval = "60s"
         max_cache_size = 100000
         forward_to = argument.metrics_destinations.value
@@ -357,6 +360,8 @@ data:
       }
       
       node_exporter.kubernetes "targets" {
+        namespaces = ["default"]
+        port_name = "metrics"
         label_selectors = [
           "app.kubernetes.io/name=node-exporter",
           "release=k8smon",
@@ -377,6 +382,7 @@ data:
         job_label = "integrations/node_exporter"
         clustering = true
         keep_metrics = "up|scrape_samples_scraped|node_cpu.*|node_exporter_build_info|node_filesystem.*|node_memory.*|node_network_receive_bytes_total|node_network_receive_drop_total|node_network_transmit_bytes_total|node_network_transmit_drop_total|process_cpu_seconds_total|process_resident_memory_bytes"
+        scheme = "http"
         scrape_interval = "60s"
         max_cache_size = 100000
         forward_to = argument.metrics_destinations.value
@@ -2289,6 +2295,16 @@ data:
         optional = true
       }
     
+      argument "scheme" {
+        comment = "The scheme to use when scraping metrics (default: http)"
+        optional = true
+      }
+    
+      argument "bearer_token_file" {
+        comment = "The bearer token file (default: none)"
+        optional = true
+      }
+    
       argument "scrape_interval" {
         comment = "How often to scrape metrics from the targets (default: 60s)"
         optional = true
@@ -2317,6 +2333,12 @@ data:
         targets = argument.targets.value
         scrape_interval = coalesce(argument.scrape_interval.value, "60s")
         scrape_timeout = coalesce(argument.scrape_timeout.value, "10s")
+    
+        scheme = coalesce(argument.scheme.value, "http")
+        bearer_token_file = coalesce(argument.bearer_token_file.value, "")
+        tls_config {
+          insecure_skip_verify = true
+        }
     
         clustering {
           enabled = coalesce(argument.clustering.value, false)
@@ -2541,6 +2563,16 @@ data:
         optional = true
       }
     
+      argument "scheme" {
+        comment = "The scheme to use when scraping metrics (default: http)"
+        optional = true
+      }
+    
+      argument "bearer_token_file" {
+        comment = "The bearer token file (default: none)"
+        optional = true
+      }
+    
       argument "scrape_interval" {
         comment = "How often to scrape metrics from the targets (default: 60s)"
         optional = true
@@ -2569,6 +2601,12 @@ data:
         targets = argument.targets.value
         scrape_interval = coalesce(argument.scrape_interval.value, "60s")
         scrape_timeout = coalesce(argument.scrape_timeout.value, "10s")
+    
+        scheme = coalesce(argument.scheme.value, "http")
+        bearer_token_file = coalesce(argument.bearer_token_file.value, "")
+        tls_config {
+          insecure_skip_verify = true
+        }
     
         clustering {
           enabled = coalesce(argument.clustering.value, false)
