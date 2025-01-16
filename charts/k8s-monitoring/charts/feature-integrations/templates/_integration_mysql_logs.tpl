@@ -17,28 +17,28 @@
       {{- $valueList := list }}
       {{- if .logs.namespaces }}
         {{- $labelList = append $labelList "__meta_kubernetes_namespace" -}}
-        {{- $valueList = append $valueList (printf "(%s)" (join "|" .logs.namespaces)) -}}
+        {{- $valueList = append $valueList (printf "(?:%s)" (join "|" .logs.namespaces)) -}}
       {{- end }}
       {{- range $k, $v := .logs.labelSelectors }}
         {{- if kindIs "slice" $v }}
           {{- $labelList = append $labelList (include "pod_label" $k) -}}
-          {{- $valueList = append $valueList (printf "(%s)" (join "|" $v)) -}}
+          {{- $valueList = append $valueList (printf "(?:%s)" (join "|" $v)) -}}
         {{- else }}
           {{- $labelList = append $labelList (include "pod_label" $k) -}}
-          {{- $valueList = append $valueList $v -}}
+          {{- $valueList = append $valueList (printf "(?:%s)" $v) -}}
         {{- end }}
       {{- end }}
 rule {
-  source_labels = {{ $labelList | sortAlpha | toJson }}
+  source_labels = {{ $labelList | toJson }}
   separator = ";"
-  regex = {{ $valueList | sortAlpha | join ";" | quote }}
+  regex = {{ $valueList | join ";" | quote }}
   target_label = "integration"
   replacement = "mysql"
 }
 rule {
-  source_labels = {{ $labelList | sortAlpha | toJson }}
+  source_labels = {{ $labelList | toJson }}
   separator = ";"
-  regex = {{ $valueList | sortAlpha | join ";" | quote }}
+  regex = {{ $valueList | join ";" | quote }}
   target_label = "instance"
   replacement = {{ $instance.name | quote }}
 }

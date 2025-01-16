@@ -34,6 +34,7 @@ spec:
     tests:
       - env:
           CLUSTER: loki-integration-test
+          NAMESPACE: loki
           PROMETHEUS_URL: http://prometheus-server.prometheus.svc:9090/api/v1/query
           PROMETHEUS_USER: promuser
           PROMETHEUS_PASS: prometheuspassword
@@ -43,10 +44,10 @@ spec:
           LOKI_PASS: lokipassword
         queries:
           # Loki metrics
-          - query: loki_build_info{cluster="$CLUSTER", job="integrations/loki"}
+          - query: loki_build_info{cluster="$CLUSTER", namespace="$NAMESPACE"}
 
           # Loki Logs
-          - query: count_over_time({cluster="$CLUSTER", job="integrations/loki"}[1h])
+          - query: count_over_time({cluster="$CLUSTER", namespace="$NAMESPACE"}[1h])
             type: logql
 
           # DPM check

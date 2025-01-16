@@ -188,7 +188,7 @@ declare "cluster_metrics" {
     targets = kube_state_metrics.kubernetes.targets.output
     clustering = true
     job_label = "integrations/kubernetes/kube-state-metrics"
-    keep_metrics = "up|scrape_samples_scraped|kube_configmap_info|kube_configmap_metadata_resource_version|kube_daemonset.*|kube_deployment_metadata_generation|kube_deployment_spec_replicas|kube_deployment_status_condition|kube_deployment_status_observed_generation|kube_deployment_status_replicas_available|kube_deployment_status_replicas_updated|kube_horizontalpodautoscaler_spec_max_replicas|kube_horizontalpodautoscaler_spec_min_replicas|kube_horizontalpodautoscaler_status_current_replicas|kube_horizontalpodautoscaler_status_desired_replicas|kube_job.*|kube_namespace_status_phase|kube_node.*|kube_persistentvolume_status_phase|kube_persistentvolumeclaim_access_mode|kube_persistentvolumeclaim_info|kube_persistentvolumeclaim_labels|kube_persistentvolumeclaim_resource_requests_storage_bytes|kube_persistentvolumeclaim_status_phase|kube_pod_container_info|kube_pod_container_resource_limits|kube_pod_container_resource_requests|kube_pod_container_status_last_terminated_reason|kube_pod_container_status_restarts_total|kube_pod_container_status_waiting_reason|kube_pod_info|kube_pod_owner|kube_pod_spec_volumes_persistentvolumeclaims_info|kube_pod_start_time|kube_pod_status_phase|kube_pod_status_reason|kube_replicaset.*|kube_resourcequota|kube_secret_metadata_resource_version|kube_statefulset.*"
+    keep_metrics = "up|scrape_samples_scraped|(.+)"
     scheme = "http"
     scrape_interval = "60s"
     max_cache_size = 100000
@@ -204,7 +204,45 @@ declare "cluster_metrics" {
       regex = "logs|o11y"
     }
     forward_to = argument.metrics_destinations.value
-  }        
+  }  
+  
+  remote.kubernetes.configmap "node_exporter" {
+    name = "k8smon-alloy-module-system"
+    namespace = "default"
+  }
+  
+  import.string "node_exporter" {
+    content = remote.kubernetes.configmap.node_exporter.data["node-exporter_metrics.alloy"]
+  }
+  
+  node_exporter.kubernetes "targets" {
+    namespaces = ["default"]
+    port_name = "metrics"
+    label_selectors = [
+      "app.kubernetes.io/name=node-exporter",
+      "release=k8smon",
+    ]
+  }
+  
+  discovery.relabel "node_exporter" {
+    targets = node_exporter.kubernetes.targets.output
+    rule {
+      source_labels = ["__meta_kubernetes_pod_node_name"]
+      action = "replace"
+      target_label = "instance"
+    }
+  }
+  
+  node_exporter.scrape "metrics" {
+    targets = discovery.relabel.node_exporter.output
+    job_label = "integrations/node_exporter"
+    clustering = true
+    keep_metrics = "up|scrape_samples_scraped|node_cpu.*|node_exporter_build_info|node_filesystem.*|node_memory.*|node_network_receive_bytes_total|node_network_receive_drop_total|node_network_transmit_bytes_total|node_network_transmit_drop_total|process_cpu_seconds_total|process_resident_memory_bytes"
+    scheme = "http"
+    scrape_interval = "60s"
+    max_cache_size = 100000
+    forward_to = argument.metrics_destinations.value
+  }      
 }
 cluster_metrics "feature" {
   metrics_destinations = [
@@ -352,33 +390,42 @@ declare "pod_logs" {
       regex = "__meta_kubernetes_pod_annotation_(.+)"
     }
     rule {
-      source_labels = ["__meta_kubernetes_namespace"]
+      source_labels = ["__meta_kubernetes_namespace","__meta_kubernetes_pod_label_app_kubernetes_io_name"]
       separator = ";"
-      regex = "(o11y)"
+      regex = "(?:o11y);(?:grafana)"
       target_label = "job"
       replacement = "integrations/grafana"
     }
     rule {
-      source_labels = ["__meta_kubernetes_namespace"]
+      source_labels = ["__meta_kubernetes_namespace","__meta_kubernetes_pod_label_app_kubernetes_io_name"]
       separator = ";"
-      regex = "(o11y)"
+      regex = "(?:o11y);(?:grafana)"
       target_label = "instance"
       replacement = "grafana"
     }
     
+    // add static label of integration="loki" and instance="name" to pods that match the selector so they can be identified in the loki.process stages
     rule {
-      source_labels = ["__meta_kubernetes_namespace"]
+      source_labels = ["__meta_kubernetes_namespace","__meta_kubernetes_pod_label_app_kubernetes_io_name"]
       separator = ";"
-      regex = "(logs)"
-      target_label = "job"
-      replacement = "integrations/loki"
+      regex = "(?:logs);(?:loki)"
+      target_label = "integration"
+      replacement = "loki"
     }
     rule {
-      source_labels = ["__meta_kubernetes_namespace"]
+      source_labels = ["__meta_kubernetes_namespace","__meta_kubernetes_pod_label_app_kubernetes_io_name"]
       separator = ";"
-      regex = "(logs)"
+      regex = "(?:logs);(?:loki)"
       target_label = "instance"
       replacement = "loki"
+    }
+    // override the job label to be namespace/component so it aligns to the loki-mixin
+    rule {
+      source_labels = ["__meta_kubernetes_namespace","__meta_kubernetes_pod_label_app_kubernetes_io_name","__meta_kubernetes_namespace","__meta_kubernetes_pod_label_component"]
+      separator = ";"
+      regex = "(?:logs);(?:loki);([^;]+);([^;]+)"
+      target_label = "job"
+      replacement = "$1/$2"
     }
   }
   
@@ -447,6 +494,10 @@ declare "pod_logs" {
           "level" = "",
           "logger" = "",
           "type" = "",
+          "caller" = "caller",
+          "org_id" = "org_id",
+          "tenant" = "tenant",
+          "user" = "user",
         }
       }
     
@@ -466,17 +517,30 @@ declare "pod_logs" {
         expression = "( t=[^ ]+\\s+)"
         replace = ""
       }
+      // set the structured metadata values
+      stage.structured_metadata {
+        values = {
+          "caller" = "caller",
+          "org_id" = "org_id",
+          "tenant" = "tenant",
+          "user" = "user",
+        }
+      }
     } 
      
     // Integration: Loki
     stage.match {
-      selector = "{job=\"integrations/loki\",instance=\"loki\",namespace=~\"logs\"}"
+      selector = "{integration=\"loki\",instance=\"loki\",namespace=~\"logs\"}"
     
       // extract some of the fields from the log line
       stage.logfmt {
         mapping = {
           "ts" = "",
           "level" = "",
+          "caller" = "caller",
+          "org_id" = "org_id",
+          "tenant" = "tenant",
+          "user" = "user",
         }
       }
     
@@ -495,6 +559,21 @@ declare "pod_logs" {
       stage.replace {
         expression = "(ts=[^ ]+\\s+)"
         replace = ""
+      }
+      // clean up the caller to remove the line
+      stage.replace {
+        source = "caller"
+        expression = "(:[0-9]+$)"
+        replace = ""
+      }
+      // set the structured metadata values
+      stage.structured_metadata {
+        values = {
+          "caller" = "caller",
+          "org_id" = "org_id",
+          "tenant" = "tenant",
+          "user" = "user",
+        }
       }
     
     }
@@ -1023,7 +1102,7 @@ declare "grafana_integration" {
   
   grafana_integration_discovery "grafana" {
     namespaces = ["o11y"]
-    label_selectors = []
+    label_selectors = ["app.kubernetes.io/name in (grafana)"]
     port_name = "grafana"
   }
   
@@ -1097,6 +1176,13 @@ declare "loki_integration" {
         separator = "@"
         regex = coalesce(argument.port_name.value, "http-metrics") + "@Running@true@false"
         action = "keep"
+      }
+
+      // the loki-mixin expects the job label to be namespace/component
+      rule {
+        source_labels = ["__meta_kubernetes_namespace","__meta_kubernetes_pod_label_app_kubernetes_io_component"]
+        separator = "/"
+        target_label = "job"
       }
 
       
@@ -1237,15 +1323,42 @@ declare "loki_integration" {
       // drop metrics that match the drop_metrics regex
       rule {
         source_labels = ["__name__"]
-        regex = coalesce(argument.drop_metrics.value, "(^(go|process)_.+$)")
+        regex = coalesce(argument.drop_metrics.value, "")
         action = "drop"
+      }
+
+      // keep only metrics that match the keep_metrics regex
+      rule {
+        source_labels = ["__name__"]
+        regex = coalesce(argument.keep_metrics.value, "(.+)")
+        action = "keep"
+      }
+
+      // the loki-mixin expects the instance label to be the node name
+      rule {
+        source_labels = ["node"]
+        target_label = "instance"
+        replacement = "$1"
+      }
+      rule {
+        action = "labeldrop"
+        regex = "node"
+      }
+
+      // set the memcached exporter container name from container="exporter" to container="memcached"
+      rule {
+        source_labels = ["component", "container"]
+        separator = ";"
+        regex = "memcached-[^;]+;exporter"
+        target_label = "container"
+        replacement = "memcached"
       }
     }
   }
   
   loki_integration_discovery "loki" {
     namespaces = ["logs"]
-    label_selectors = []
+    label_selectors = ["app.kubernetes.io/name in (loki)"]
     port_name = "http-metrics"
   }
   

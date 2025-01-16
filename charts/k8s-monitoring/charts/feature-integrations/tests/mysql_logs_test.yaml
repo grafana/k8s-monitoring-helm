@@ -1,0 +1,108 @@
+---
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces rule:empty-lines
+suite: Test MySQL integration
+templates:
+  - configmap.yaml
+tests:
+  - it: should add the   MySQL processing stage to the logs config
+    set:
+      deployAsConfigMap: true
+      mysql:
+        instances:
+          - name: mysql
+            logs:
+              enabled: true
+              labelSelectors:
+                app.kubernetes.io/name: mysql
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - equal:
+          path: data["logs.alloy"]
+          value: |-
+            // Integration rules
+            discovery.relabel "test" {
+              rule {
+                source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
+                separator = ";"
+                regex = "(?:mysql)"
+                target_label = "integration"
+                replacement = "mysql"
+              }
+              rule {
+                source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
+                separator = ";"
+                regex = "(?:mysql)"
+                target_label = "instance"
+                replacement = "mysql"
+              }
+            }
+
+            // Processing stages
+            loki.process "test" {
+              // Integration: MySQL
+              stage.match {
+                selector = "{integration=\"mysql\"}"
+
+                stage.regex {
+                  expression = `(?P<timestamp>.+) (?P<thread>[\d]+) \[(?P<label>.+?)\]( \[(?P<err_code>.+?)\] \[(?P<subsystem>.+?)\])? (?P<msg>.+)`
+                }
+
+                stage.labels {
+                  values = {
+                    level = "label",
+                    err_code = "err_code",
+                    subsystem = "subsystem",
+                  }
+                }
+
+                stage.drop {
+                  expression = "^ *$"
+                  drop_counter_reason = "drop empty lines"
+                }
+
+                stage.static_labels {
+                  values = {
+                    job = "integrations/mysql",
+                  }
+                }
+
+                stage.label_drop {
+                  values = ["integration"]
+                }
+              }
+            }
+
+  - it: should allow you to restrict the namespaces for logs
+    set:
+      deployAsConfigMap: true
+      mysql:
+        instances:
+          - name: mysql
+            logs:
+              enabled: true
+              labelSelectors:
+                app.kubernetes.io/name: mysql
+              namespaces:
+                - k8smon
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["logs.alloy"]
+          # The pattern should look like this, but since the regex is escaped, it will be a bit different
+          # rule {
+          #   source_labels = ["__meta_kubernetes_namespace","__meta_kubernetes_pod_label_app_kubernetes_io_name"]
+          #   separator = ";"
+          #   regex = "(?:k8smon);(?:mysql)"
+          #   target_label = "integration"
+          #   replacement = "mysql"
+          # }
+          pattern: |-
+            \s*rule {
+            \s*  source_labels = \["__meta_kubernetes_namespace","__meta_kubernetes_pod_label_app_kubernetes_io_name"\]
+            \s*  separator = ";"
+            \s*  regex = "\(\?:k8smon\)\;\(\?:mysql\)"
+            \s*  target_label = "integration"
+            \s*  replacement = "mysql"
+            \s*}

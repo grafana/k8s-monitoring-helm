@@ -74,6 +74,13 @@ declare "loki_integration" {
         action = "keep"
       }
 
+      // the loki-mixin expects the job label to be namespace/component
+      rule {
+        source_labels = ["__meta_kubernetes_namespace","__meta_kubernetes_pod_label_app_kubernetes_io_component"]
+        separator = "/"
+        target_label = "job"
+      }
+
       {{ include "commonRelabelings" . | nindent 4 }}
     }
 
@@ -140,8 +147,35 @@ declare "loki_integration" {
       // drop metrics that match the drop_metrics regex
       rule {
         source_labels = ["__name__"]
-        regex = coalesce(argument.drop_metrics.value, "(^(go|process)_.+$)")
+        regex = coalesce(argument.drop_metrics.value, "")
         action = "drop"
+      }
+
+      // keep only metrics that match the keep_metrics regex
+      rule {
+        source_labels = ["__name__"]
+        regex = coalesce(argument.keep_metrics.value, "(.+)")
+        action = "keep"
+      }
+
+      // the loki-mixin expects the instance label to be the node name
+      rule {
+        source_labels = ["node"]
+        target_label = "instance"
+        replacement = "$1"
+      }
+      rule {
+        action = "labeldrop"
+        regex = "node"
+      }
+
+      // set the memcached exporter container name from container="exporter" to container="memcached"
+      rule {
+        source_labels = ["component", "container"]
+        separator = ";"
+        regex = "memcached-[^;]+;exporter"
+        target_label = "container"
+        replacement = "memcached"
       }
     }
   }
@@ -177,7 +211,7 @@ loki_integration_discovery {{ include "helper.alloy_name" .name | quote }} {
 
 loki_integration_scrape  {{ include "helper.alloy_name" .name | quote }} {
   targets = loki_integration_discovery.{{ include "helper.alloy_name" .name }}.output
-  job_label = {{ .jobLabel | quote }}
+  job_label = "integrations/loki"
   clustering = true
 {{- if $metricAllowList }}
   keep_metrics = {{ $metricAllowList | join "|" | quote }}

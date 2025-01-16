@@ -146,6 +146,13 @@ data:
             action = "keep"
           }
     
+          // the loki-mixin expects the job label to be namespace/component
+          rule {
+            source_labels = ["__meta_kubernetes_namespace","__meta_kubernetes_pod_label_app_kubernetes_io_component"]
+            separator = "/"
+            target_label = "job"
+          }
+    
           
         
         rule {
@@ -284,8 +291,35 @@ data:
           // drop metrics that match the drop_metrics regex
           rule {
             source_labels = ["__name__"]
-            regex = coalesce(argument.drop_metrics.value, "(^(go|process)_.+$)")
+            regex = coalesce(argument.drop_metrics.value, "")
             action = "drop"
+          }
+    
+          // keep only metrics that match the keep_metrics regex
+          rule {
+            source_labels = ["__name__"]
+            regex = coalesce(argument.keep_metrics.value, "(.+)")
+            action = "keep"
+          }
+    
+          // the loki-mixin expects the instance label to be the node name
+          rule {
+            source_labels = ["node"]
+            target_label = "instance"
+            replacement = "$1"
+          }
+          rule {
+            action = "labeldrop"
+            regex = "node"
+          }
+    
+          // set the memcached exporter container name from container="exporter" to container="memcached"
+          rule {
+            source_labels = ["component", "container"]
+            separator = ";"
+            regex = "memcached-[^;]+;exporter"
+            target_label = "container"
+            replacement = "memcached"
           }
         }
       }
@@ -453,19 +487,28 @@ data:
           action = "labelmap"
           regex = "__meta_kubernetes_pod_annotation_(.+)"
         }
+        // add static label of integration="loki" and instance="name" to pods that match the selector so they can be identified in the loki.process stages
         rule {
           source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
           separator = ";"
-          regex = "loki"
-          target_label = "job"
-          replacement = "integrations/loki"
+          regex = "(?:loki)"
+          target_label = "integration"
+          replacement = "loki"
         }
         rule {
           source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
           separator = ";"
-          regex = "loki"
+          regex = "(?:loki)"
           target_label = "instance"
           replacement = "loki"
+        }
+        // override the job label to be namespace/component so it aligns to the loki-mixin
+        rule {
+          source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name","__meta_kubernetes_namespace","__meta_kubernetes_pod_label_component"]
+          separator = ";"
+          regex = "(?:loki);([^;]+);([^;]+)"
+          target_label = "job"
+          replacement = "$1/$2"
         }
       }
       
@@ -542,7 +585,7 @@ data:
         }
         // Integration: Loki
         stage.match {
-          selector = "{job=\"integrations/loki\",instance=\"loki\"}"
+          selector = "{integration=\"loki\",instance=\"loki\"}"
         
           // extract some of the fields from the log line
           stage.logfmt {

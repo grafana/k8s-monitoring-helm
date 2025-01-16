@@ -20,19 +20,28 @@ tests:
           value: |-
             // Integration rules
             discovery.relabel "test" {
+              // add static label of integration="loki" and instance="name" to pods that match the selector so they can be identified in the loki.process stages
               rule {
                 source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
                 separator = ";"
-                regex = "loki"
-                target_label = "job"
-                replacement = "integrations/loki"
+                regex = "(?:loki)"
+                target_label = "integration"
+                replacement = "loki"
               }
               rule {
                 source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
                 separator = ";"
-                regex = "loki"
+                regex = "(?:loki)"
                 target_label = "instance"
                 replacement = "loki"
+              }
+              // override the job label to be namespace/component so it aligns to the loki-mixin
+              rule {
+                source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name","__meta_kubernetes_namespace","__meta_kubernetes_pod_label_component"]
+                separator = ";"
+                regex = "(?:loki);([^;]+);([^;]+)"
+                target_label = "job"
+                replacement = "$1/$2"
               }
             }
 
@@ -40,7 +49,7 @@ tests:
             loki.process "test" {
               // Integration: Loki
               stage.match {
-                selector = "{job=\"integrations/loki\",instance=\"loki\"}"
+                selector = "{integration=\"loki\",instance=\"loki\"}"
 
                 // extract some of the fields from the log line
                 stage.logfmt {
@@ -85,7 +94,22 @@ tests:
           of: ConfigMap
       - matchRegex:
           path: data["logs.alloy"]
-          pattern: namespace=~\\"k8smon\\"
+          # The pattern should look like this, but since the regex is escaped, it will be a bit different
+          # rule {
+          #   source_labels = ["__meta_kubernetes_namespace","__meta_kubernetes_pod_label_app_kubernetes_io_name"]
+          #   separator = ";"
+          #   regex = "(?:k8smon);(?:loki)"
+          #   target_label = "integration"
+          #   replacement = "loki"
+          # }
+          pattern: |-
+            \s*rule {
+            \s*  source_labels = \["__meta_kubernetes_namespace","__meta_kubernetes_pod_label_app_kubernetes_io_name"\]
+            \s*  separator = ";"
+            \s*  regex = "\(\?:k8smon\)\;\(\?:loki\)"
+            \s*  target_label = "integration"
+            \s*  replacement = "loki"
+            \s*}
 
   - it: should allow you to set the timestamp format
     set:
