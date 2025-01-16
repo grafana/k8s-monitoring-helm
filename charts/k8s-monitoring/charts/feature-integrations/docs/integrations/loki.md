@@ -7,16 +7,9 @@
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | fieldSelectors | list | `[]` | Discover Loki instances based on field selectors. |
-| labelSelectors | object | `{}` | Discover Loki instances based on label selectors. |
+| labelSelectors | object | `{"app.kubernetes.io/name":["loki","enterprise-logs"]}` | Discover Loki instances based on label selectors. |
 | metrics.portName | string | `"http-metrics"` | Name of the port to scrape metrics from. |
 | namespaces | list | `[]` | Namespaces to look for Loki instances in. Will automatically look for Loki instances in all namespaces unless specified here |
-
-### General Settings
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| jobLabel | string | `"integrations/loki"` | The value of the job label for scraped metrics and logs |
-| name | string | `""` | Name for this Loki instance. |
 
 ### Logs Settings
 
@@ -49,3 +42,9 @@
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | metrics.scrapeInterval | string | `60s` | How frequently to scrape metrics from Loki. |
+
+### General Settings
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| name | string | `""` | Name for this Loki instance. |

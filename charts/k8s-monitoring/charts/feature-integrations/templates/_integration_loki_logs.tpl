@@ -19,30 +19,43 @@
         {{- $valueList := list }}
         {{- if .namespaces }}
           {{- $labelList = append $labelList "__meta_kubernetes_namespace" -}}
-          {{- $valueList = append $valueList (printf "(%s)" (join "|" .namespaces)) -}}
+          {{- $valueList = append $valueList (printf "(?:%s)" (join "|" .namespaces)) -}}
         {{- end }}
         {{- range $k, $v := .labelSelectors }}
           {{- if kindIs "slice" $v }}
             {{- $labelList = append $labelList (include "pod_label" $k) -}}
-            {{- $valueList = append $valueList (printf "(%s)" (join "|" $v)) -}}
+            {{- $valueList = append $valueList (printf "(?:%s)" (join "|" $v)) -}}
           {{- else }}
             {{- $labelList = append $labelList (include "pod_label" $k) -}}
             {{- $valueList = append $valueList $v -}}
           {{- end }}
         {{- end }}
+// add static label of integration="loki" and instance="name" to pods that match the selector so they can be identified in the loki.process stages
 rule {
-  source_labels = {{ $labelList | sortAlpha | toJson }}
+  source_labels = {{ $labelList | toJson }}
   separator = ";"
-  regex = {{ $valueList | sortAlpha | join ";" | quote }}
-  target_label = "job"
-  replacement = "integrations/loki"
+  regex = {{ $valueList | join ";" | quote }}
+  target_label = "integration"
+  replacement = "loki"
 }
 rule {
-  source_labels = {{ $labelList | sortAlpha | toJson }}
+  source_labels = {{ $labelList | toJson }}
   separator = ";"
-  regex = {{ $valueList | sortAlpha | join ";" | quote }}
+  regex = {{ $valueList | join ";" | quote }}
   target_label = "instance"
   replacement = {{ $instance.name | quote }}
+}
+{{- $labelList = append $labelList "__meta_kubernetes_namespace" -}}
+{{- $valueList = append $valueList "([^;]+)" -}}
+{{- $labelList = append $labelList (include "pod_label" "component") -}}
+{{- $valueList = append $valueList "([^;]+)" }}
+// override the job label to be namespace/component so it aligns to the loki-mixin
+rule {
+  source_labels = {{ $labelList | toJson }}
+  separator = ";"
+  regex = {{ $valueList | join ";" | quote }}
+  target_label = "job"
+  replacement = "$1/$2"
 }
       {{- end }}
     {{- end }}
@@ -58,9 +71,9 @@ rule {
         {{- if .logs.enabled }}
 stage.match {
   {{- if $instance.namespaces }}
-  selector = "{job=\"integrations/loki\",instance=\"{{ $instance.name }}\",namespace=~\"{{ $instance.namespaces | join "|" }}\"}"
+  selector = "{integration=\"loki\",instance=\"{{ $instance.name }}\",namespace=~\"{{ $instance.namespaces | join "|" }}\"}"
   {{- else }}
-  selector = "{job=\"integrations/loki\",instance=\"{{ $instance.name }}\"}"
+  selector = "{integration=\"loki\",instance=\"{{ $instance.name }}\"}"
   {{- end }}
 
   // extract some of the fields from the log line
