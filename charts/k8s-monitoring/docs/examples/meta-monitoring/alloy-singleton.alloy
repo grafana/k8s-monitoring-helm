@@ -187,6 +187,7 @@ declare "cluster_metrics" {
     targets = kube_state_metrics.kubernetes.targets.output
     clustering = true
     keep_metrics = "up|scrape_samples_scraped|(.+)"
+    scheme = "http"
     scrape_interval = "60s"
     max_cache_size = 100000
     forward_to = [prometheus.relabel.kube_state_metrics.receiver]
@@ -213,6 +214,8 @@ declare "cluster_metrics" {
   }
   
   node_exporter.kubernetes "targets" {
+    namespaces = ["default"]
+    port_name = "metrics"
     label_selectors = [
       "app.kubernetes.io/name=node-exporter",
       "release=k8smon",
@@ -233,6 +236,7 @@ declare "cluster_metrics" {
     job_label = "integrations/node_exporter"
     clustering = true
     keep_metrics = "up|scrape_samples_scraped|node_cpu.*|node_exporter_build_info|node_filesystem.*|node_memory.*|node_network_receive_bytes_total|node_network_receive_drop_total|node_network_transmit_bytes_total|node_network_transmit_drop_total|process_cpu_seconds_total|process_resident_memory_bytes"
+    scheme = "http"
     scrape_interval = "60s"
     max_cache_size = 100000
     forward_to = argument.metrics_destinations.value

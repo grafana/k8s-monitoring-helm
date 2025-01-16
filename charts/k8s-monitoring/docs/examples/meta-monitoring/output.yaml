@@ -246,6 +246,7 @@ data:
         targets = kube_state_metrics.kubernetes.targets.output
         clustering = true
         keep_metrics = "up|scrape_samples_scraped|(.+)"
+        scheme = "http"
         scrape_interval = "60s"
         max_cache_size = 100000
         forward_to = [prometheus.relabel.kube_state_metrics.receiver]
@@ -272,6 +273,8 @@ data:
       }
       
       node_exporter.kubernetes "targets" {
+        namespaces = ["default"]
+        port_name = "metrics"
         label_selectors = [
           "app.kubernetes.io/name=node-exporter",
           "release=k8smon",
@@ -292,6 +295,7 @@ data:
         job_label = "integrations/node_exporter"
         clustering = true
         keep_metrics = "up|scrape_samples_scraped|node_cpu.*|node_exporter_build_info|node_filesystem.*|node_memory.*|node_network_receive_bytes_total|node_network_receive_drop_total|node_network_transmit_bytes_total|node_network_transmit_drop_total|process_cpu_seconds_total|process_resident_memory_bytes"
+        scheme = "http"
         scrape_interval = "60s"
         max_cache_size = 100000
         forward_to = argument.metrics_destinations.value
@@ -2898,6 +2902,16 @@ data:
         optional = true
       }
     
+      argument "scheme" {
+        comment = "The scheme to use when scraping metrics (default: http)"
+        optional = true
+      }
+    
+      argument "bearer_token_file" {
+        comment = "The bearer token file (default: none)"
+        optional = true
+      }
+    
       argument "scrape_interval" {
         comment = "How often to scrape metrics from the targets (default: 60s)"
         optional = true
@@ -2926,6 +2940,12 @@ data:
         targets = argument.targets.value
         scrape_interval = coalesce(argument.scrape_interval.value, "60s")
         scrape_timeout = coalesce(argument.scrape_timeout.value, "10s")
+    
+        scheme = coalesce(argument.scheme.value, "http")
+        bearer_token_file = coalesce(argument.bearer_token_file.value, "")
+        tls_config {
+          insecure_skip_verify = true
+        }
     
         clustering {
           enabled = coalesce(argument.clustering.value, false)
