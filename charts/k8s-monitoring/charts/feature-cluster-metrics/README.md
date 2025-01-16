@@ -198,7 +198,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | kube-state-metrics.metricsTuning.excludeMetrics | list | `[]` | Metrics to drop. Can use regular expressions. |
 | kube-state-metrics.metricsTuning.includeMetrics | list | `[]` | Metrics to keep. Can use regular expressions. |
 | kube-state-metrics.metricsTuning.useDefaultAllowList | bool | `true` | Filter the list of metrics from Kube State Metrics to a useful, minimal set. |
-| kube-state-metrics.namespace | string | `""` | Namespace to locate Node Exporter pods. If `deploy` is set to `true`, this will automatically be set to the namespace where this Helm chart is deployed. |
+| kube-state-metrics.namespace | string | `""` | Namespace to locate kube-state-metrics pods. If `deploy` is set to `true`, this will automatically be set to the namespace where this Helm chart is deployed. |
 | kube-state-metrics.scrapeInterval | string | `60s` | How frequently to scrape kube-state-metrics metrics. |
 | kube-state-metrics.service.portName | string | `"http"` | The port name used by kube-state-metrics. |
 | kube-state-metrics.service.scheme | string | `"http"` | The scrape scheme used by kube-state-metrics. |
