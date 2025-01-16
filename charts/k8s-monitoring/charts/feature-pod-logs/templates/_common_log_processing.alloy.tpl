@@ -54,7 +54,7 @@ loki.process "pod_logs" {
 
   // Only keep the labels that are defined in the `keepLabels` list.
   stage.label_keep {
-    values = {{ . | toJson }}
+    values = {{ append . "integration" | toJson }}
   }
 {{- end }}
 
