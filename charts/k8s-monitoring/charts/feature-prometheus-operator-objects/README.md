@@ -103,6 +103,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | serviceMonitors.enabled | bool | `true` | Enable discovery of Prometheus Operator ServiceMonitor objects. |
+| serviceMonitors.excludeNamespaces | list | `[]` | Which namespaces to not look for ServiceMonitor objects. |
 | serviceMonitors.extraDiscoveryRules | string | `""` | Rule blocks to be added to the prometheus.operator.probes component for Probes. These relabeling rules are applied pre-scrape against the targets from service discovery. The relabelings defined in the PodMonitor object are applied first, then these relabelings are applied. Before the scrape, any remaining target labels that start with `__` (i.e. `__meta_kubernetes*`) are dropped. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.relabel/#rule-block)) |
 | serviceMonitors.extraMetricProcessingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for ServiceMonitor objects. These relabeling rules are applied post-scrape against the metrics returned from the scraped target, no `__meta*` labels are present. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#rule-block)) |
 | serviceMonitors.maxCacheSize | string | `nil` | Sets the max_cache_size for cadvisor prometheus.relabel component. This should be at least 2x-5x your largest scrape target or samples appended rate. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)) Overrides global.maxCacheSize |
@@ -111,9 +112,3 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | serviceMonitors.namespaces | list | `[]` | Which namespaces to look for ServiceMonitor objects. |
 | serviceMonitors.scrapeInterval | string | 60s | How frequently to scrape metrics from ServiceMonitor objects. Only used if the ServiceMonitor does not specify the scrape interval. Overrides global.scrapeInterval |
 | serviceMonitors.selector | string | `""` | Selector to filter which ServiceMonitor objects to use. |
-
-### ServiceMonitor
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| serviceMonitors.excludeNamespaces | list | `[]` | Which namespaces to not look for ServiceMonitor objects. |
