@@ -5,6 +5,7 @@
 
 kubernetes.apiserver "scrape" {
   clustering = true
+  job_label = {{ .Values.apiServer.jobLabel | quote }}
 {{- if $metricAllowList }}
   keep_metrics = "up|{{ $metricAllowList | join "|" }}"
 {{- end }}
