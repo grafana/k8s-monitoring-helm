@@ -49,7 +49,7 @@ discovery.relabel "node_exporter" {
 
 node_exporter.scrape "metrics" {
   targets = discovery.relabel.node_exporter.output
-  job_label = "integrations/node_exporter"
+  job_label = {{ (index .Values "node-exporter").jobLabel | quote }}
   clustering = true
 {{- if $metricAllowList }}
   keep_metrics = {{ $metricAllowList | join "|" | quote }}

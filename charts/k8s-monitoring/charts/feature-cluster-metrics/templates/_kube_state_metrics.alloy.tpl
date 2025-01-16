@@ -44,6 +44,7 @@ discovery.relabel "kube_state_metrics" {
 kube_state_metrics.scrape "metrics" {
   targets = {{ $scrapeTargets }}
   clustering = true
+  job_label = {{ (index .Values "kube-state-metrics").jobLabel | quote }}
 {{- if $metricAllowList }}
   keep_metrics = {{ $metricAllowList | join "|" | quote }}
 {{- end }}

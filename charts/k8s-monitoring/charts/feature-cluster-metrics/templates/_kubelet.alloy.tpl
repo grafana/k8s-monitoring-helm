@@ -16,6 +16,7 @@
 
 kubernetes.kubelet "scrape" {
   clustering = true
+  job_label = {{ .Values.kubelet.jobLabel | quote }}
 {{- if $metricAllowList }}
   keep_metrics = {{ $metricAllowList | join "|" | quote }}
 {{- end }}

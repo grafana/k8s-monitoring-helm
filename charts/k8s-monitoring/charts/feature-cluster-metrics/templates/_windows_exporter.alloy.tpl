@@ -54,7 +54,7 @@ discovery.relabel "windows_exporter" {
 }
 
 prometheus.scrape "windows_exporter" {
-  job_name   = "integrations/windows-exporter"
+  job_name   = {{ (index .Values "windows-exporter").jobLabel | quote }}
   targets  = discovery.relabel.windows_exporter.output
   scrape_interval = {{ (index .Values "windows-exporter").scrapeInterval | default .Values.global.scrapeInterval | quote }}
   clustering {

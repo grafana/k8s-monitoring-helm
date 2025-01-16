@@ -16,7 +16,7 @@
 
 kubernetes.resources "scrape" {
   clustering = true
-  job_label = "integrations/kubernetes/resources"
+  job_label = {{ .Values.kubeletResource.jobLabel | quote }}
 {{- if $metricAllowList }}
   keep_metrics = {{ $metricAllowList | join "|" | quote }}
 {{- end }}
