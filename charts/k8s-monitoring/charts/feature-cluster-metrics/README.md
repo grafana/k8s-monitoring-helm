@@ -282,6 +282,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | node-exporter.bearerTokenFile | string | `""` | The bearer token file to use when scraping metrics from Node Exporter. |
+| node-exporter.deploy | bool | `true` | Deploy Node Exporter. Set to false if your cluster already has Node Exporter deployed. |
 | node-exporter.enabled | bool | `true` | Scrape metrics from Node Exporter. |
 | node-exporter.extraDiscoveryRules | string | `""` | Rule blocks to be added to the discovery.relabel component for Node Exporter. These relabeling rules are applied pre-scrape against the targets from service discovery. Before the scrape, any remaining target labels that start with __ (i.e. __meta_kubernetes*) are dropped. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.relabel/#rule-block)) |
 | node-exporter.extraMetricProcessingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for Node Exporter metrics. These relabeling rules are applied post-scrape against the metrics returned from the scraped target, no `__meta*` labels are present. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#rule-block)) |
@@ -296,12 +297,6 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | node-exporter.scrapeInterval | string | `60s` | How frequently to scrape Node Exporter metrics. |
 | node-exporter.service.portName | string | `"metrics"` | The port name used by Node Exporter. |
 | node-exporter.service.scheme | string | `"http"` | The scrape scheme used by Node Exporter. |
-
-### Node Exporter - Deployment settings
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| node-exporter.deploy | bool | `true` | Deploy Node Exporter. Set to false if your cluster already has Node Exporter deployed. |
 
 ### OpenCost
 
