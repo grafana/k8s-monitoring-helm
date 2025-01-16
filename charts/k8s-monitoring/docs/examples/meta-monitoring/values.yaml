@@ -32,11 +32,24 @@ integrations:
       - name: loki
         namespaces:
           - logs
+        labelSelectors:
+          app.kubernetes.io/name: [loki]
+        logs:
+          tuning:
+            # extract logfmt fields and set them as structured metadata
+            structuredMetadata:
+              caller:
+              tenant:
+              org_id:
+              user:
+
   grafana:
     instances:
       - name: grafana
         namespaces:
           - o11y
+        labelSelectors:
+          app.kubernetes.io/name: [grafana]
 
 clusterEvents:
   enabled: true
@@ -74,15 +87,20 @@ clusterMetrics:
     enabled: true
     namespaces:
       - logs
+      - o11y
     extraMetricProcessingRules: |-
       rule {
         action = "keep"
         source_labels = ["namespace"]
         regex = "logs|o11y"
       }
+    metricsTuning:
+      useDefaultAllowList: false
+      includeMetrics: [(.+)]
   node-exporter:
-    enabled: false
-    deploy: false
+    enabled: true
+    useIntegrationAllowList: true
+    deploy: true
   windows-exporter:
     enabled: false
     deploy: false
