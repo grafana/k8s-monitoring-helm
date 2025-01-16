@@ -7,7 +7,7 @@
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | fieldSelectors | list | `[]` | Discover Grafana instances based on field selectors. |
-| labelSelectors | object | `{}` | Discover Grafana instances based on label selectors. |
+| labelSelectors | object | `{"app.kubernetes.io/name":"grafana"}` | Discover Grafana instances based on label selectors. |
 | metrics.portName | string | `"grafana"` | Name of the port to scrape metrics from. |
 | namespaces | list | `[]` | The namespaces to look for Grafana instances in. Will automatically look for Grafana instances in all namespaces unless specified here |
 
