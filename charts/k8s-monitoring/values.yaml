@@ -62,6 +62,8 @@ clusterMetrics:
   # @ignored
   collector: alloy-metrics
 
+  # To see additional options, please see the [Cluster Monitoring feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-cluster-metrics).
+
 # -- Cluster events.
 # Requires a destination that supports logs.
 # To see the valid options, please see the [Cluster Events feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-cluster-events).
@@ -81,6 +83,8 @@ clusterEvents:
   # @ignored
   collector: alloy-singleton
 
+  # To see additional options, please see the [Cluster Events feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-cluster-events).
+
 # -- Node logs.
 # Requires a destination that supports logs.
 # To see the valid options, please see the [Node Logs feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-node-logs).
@@ -95,7 +99,12 @@ nodeLogs:
   # @section -- Features - Node Logs
   destinations: []
 
+  # -- Which collector to assign this feature to. Do not change this unless you are sure of what you are doing.
+  # @section -- Features - Node Logs
+  # @ignored
   collector: alloy-logs
+
+  # To see additional options, please see the [Node Logs feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-node-logs).
 
 # -- Pod logs.
 # Requires a destination that supports logs.
@@ -111,7 +120,12 @@ podLogs:
   # @section -- Features - Pod Logs
   destinations: []
 
+  # -- Which collector to assign this feature to. Do not change this unless you are sure of what you are doing.
+  # @section -- Features - Pod Logs
+  # @ignored
   collector: alloy-logs
+
+  # To see additional options, please see the [Pod Logs feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-pod-logs).
 
 # -- Application Observability.
 # Requires destinations that supports metrics, logs, and traces.
@@ -132,9 +146,11 @@ applicationObservability:
   # @ignored
   collector: alloy-receiver
 
+  # To see additional options, please see the [Application Observability feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-application-observability).
+
 # -- Auto-Instrumentation.
 # Requires destinations that supports metrics, logs, and traces.
-# To see the valid options, please see the [Application Observability feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-application-observability).
+# To see the valid options, please see the [Auto-Instrumentation feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-auto-instrumentation).
 # @default -- Disabled
 # @section -- Features - Auto-Instrumentation
 autoInstrumentation:
@@ -150,6 +166,8 @@ autoInstrumentation:
   # @section -- Features - Auto-Instrumentation
   # @ignored
   collector: alloy-metrics
+
+  # To see additional options, please see the [Auto-Instrumentation feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-auto-instrumentation).
 
 # -- Annotation Autodiscovery enables gathering metrics from Kubernetes Pods and Services discovered by special annotations.
 # Requires a destination that supports metrics.
@@ -170,10 +188,11 @@ annotationAutodiscovery:
   # @ignored
   collector: alloy-metrics
 
+  # To see additional options, please see the [Annotation Autodiscovery feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-annotation-autodiscovery).
+
 # -- Prometheus Operator Objects enables the gathering of metrics from objects like Probes, PodMonitors, and
 # ServiceMonitors. Requires a destination that supports metrics.
-# To see the valid options, please see the
-# [Prometheus Operator Objects feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-prometheus-operator-objects).
+# To see the valid options, please see the [Prometheus Operator Objects feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-prometheus-operator-objects).
 # @default -- Disabled
 # @section -- Features - Prometheus Operator Objects
 prometheusOperatorObjects:
@@ -189,6 +208,8 @@ prometheusOperatorObjects:
   # @section -- Features - Prometheus Operator Objects
   # @ignored
   collector: alloy-metrics
+
+  # To see additional options, please see the [Prometheus Operator Objects feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-prometheus-operator-objects).
 
 # -- Profiling enables gathering profiles from applications.
 # Requires a destination that supports profiles.
@@ -209,6 +230,8 @@ profiling:
   # @ignored
   collector: alloy-profiles
 
+  # To see additional options, please see the [Profiling feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-profiling).
+
 # -- Service Integrations enables gathering telemetry data for common services and applications deployed to Kubernetes.
 # To see the valid options, please see the [Service Integrations documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-integrations).
 # @default -- No integrations enabled
@@ -222,6 +245,8 @@ integrations:
   # @section -- Features - Service Integrations
   # @ignored
   collector: alloy-metrics
+
+  # To see additional options, please see the [Service Integrations documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-integrations).
 
 # -- Self-reporting creates a single metric and log that reports anonymized information about how this Helm chart was
 # configured. It reports features enabled, destinations types used, and alloy instances enabled. It does not report any
@@ -246,6 +271,7 @@ selfReporting:
 #
 
 # An Alloy instance for collecting metrics.
+# To see additional valid options, please see the [Alloy Helm chart documentation](https://github.com/grafana/alloy/tree/main/operations/helm/charts/alloy).
 alloy-metrics:
   # -- Deploy the Alloy instance for collecting metrics.
   # @section -- Collectors - Alloy Metrics
@@ -349,6 +375,11 @@ alloy-metrics:
       seccompProfile:
         type: "RuntimeDefault"
 
+    # Set resource requests and limits. [Guidelines](https://grafana.com/docs/alloy/latest/introduction/estimate-resource-usage/).
+    # resources:
+    #   requests: {}
+    #   limits: {}
+
   controller:
     # -- The type of controller to use for the Alloy Metrics instance.
     # @section -- Collectors - Alloy Metrics
@@ -371,6 +402,7 @@ alloy-metrics:
   crds: {create: false}
 
 # An Alloy instance for data sources required to be deployed on a single replica.
+# To see additional valid options, please see the [Alloy Helm chart documentation](https://github.com/grafana/alloy/tree/main/operations/helm/charts/alloy).
 alloy-singleton:
   # -- Deploy the Alloy instance for data sources required to be deployed on a single replica.
   # @section -- Collectors - Alloy Singleton
@@ -456,6 +488,11 @@ alloy-singleton:
       seccompProfile:
         type: "RuntimeDefault"
 
+    # Set resource requests and limits. [Guidelines](https://grafana.com/docs/alloy/latest/introduction/estimate-resource-usage/).
+    # resources:
+    #   requests: {}
+    #   limits: {}
+
   controller:
     # -- The type of controller to use for the Alloy Singleton instance.
     # @section -- Collectors - Alloy Singleton
@@ -478,6 +515,7 @@ alloy-singleton:
   crds: {create: false}
 
 # An Alloy instance for collecting log data.
+# To see additional valid options, please see the [Alloy Helm chart documentation](https://github.com/grafana/alloy/tree/main/operations/helm/charts/alloy).
 alloy-logs:
   # -- Deploy the Alloy instance for collecting log data.
   # @section -- Collectors - Alloy Logs
@@ -575,6 +613,11 @@ alloy-logs:
       seccompProfile:
         type: "RuntimeDefault"
 
+    # Set resource requests and limits. [Guidelines](https://grafana.com/docs/alloy/latest/introduction/estimate-resource-usage/).
+    # resources:
+    #   requests: {}
+    #   limits: {}
+
   controller:
     # -- The type of controller to use for the Alloy Logs instance.
     # @section -- Collectors - Alloy Logs
@@ -593,6 +636,7 @@ alloy-logs:
   crds: {create: false}
 
 # An Alloy instance for opening receivers to collect application data.
+# To see additional valid options, please see the [Alloy Helm chart documentation](https://github.com/grafana/alloy/tree/main/operations/helm/charts/alloy).
 alloy-receiver:
   # -- Deploy the Alloy instance for opening receivers to collect application data.
   # @section -- Collectors - Alloy Receiver
@@ -683,6 +727,11 @@ alloy-receiver:
       seccompProfile:
         type: "RuntimeDefault"
 
+    # Set resource requests and limits. [Guidelines](https://grafana.com/docs/alloy/latest/introduction/estimate-resource-usage/).
+    # resources:
+    #   requests: {}
+    #   limits: {}
+
   controller:
     # -- The type of controller to use for the Alloy Receiver instance.
     # @section -- Collectors - Alloy Receiver
@@ -701,6 +750,7 @@ alloy-receiver:
   crds: {create: false}
 
 # An Alloy instance for gathering profiles.
+# To see additional valid options, please see the [Alloy Helm chart documentation](https://github.com/grafana/alloy/tree/main/operations/helm/charts/alloy).
 alloy-profiles:
   # -- Deploy the Alloy instance for gathering profiles.
   # @section -- Collectors - Alloy Profiles
@@ -790,6 +840,11 @@ alloy-profiles:
       privileged: true
       runAsGroup: 0
       runAsUser: 0
+
+    # Set resource requests and limits. [Guidelines](https://grafana.com/docs/alloy/latest/introduction/estimate-resource-usage/).
+    # resources:
+    #   requests: {}
+    #   limits: {}
 
   controller:
     # -- The type of controller to use for the Alloy Profiles instance.
