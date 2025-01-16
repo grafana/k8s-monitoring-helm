@@ -11,6 +11,7 @@ deployments/test-variables.yaml:
 
 deployments/grafana-cloud-credentials.yaml:
 	echo "---" > $@
+	echo "# yamllint disable rule:line-length" >> $@
 	kubectl create secret generic grafana-cloud-credentials \
   		--from-literal=PROMETHEUS_USER="$$GRAFANA_CLOUD_METRICS_USERNAME" \
   		--from-literal=PROMETHEUS_PASS="$$GRAFANA_CLOUD_RW_POLICY_TOKEN" \
