@@ -11,6 +11,7 @@ deployments/test-variables.yaml:
 
 deployments/grafana-cloud-credentials.yaml:
 	echo "---" > $@
+	echo "# yamllint disable rule:line-length" >> $@
 	kubectl create secret generic grafana-cloud-credentials \
   		--from-literal=OTLP_GATEWAY_USER="$$GRAFANA_CLOUD_OTLP_USERNAME" \
   		--from-literal=OTLP_GATEWAY_PASS="$$GRAFANA_CLOUD_RW_POLICY_TOKEN" \

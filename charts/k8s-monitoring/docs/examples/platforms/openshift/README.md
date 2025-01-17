@@ -139,4 +139,5 @@ alloy-logs:
   global:
     podSecurityContext:
       seLinuxOptions:
-        type: spc_t```
+        type: spc_t
+```
