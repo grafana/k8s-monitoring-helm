@@ -81,6 +81,7 @@ clusterEvents:
   collector: alloy-singleton
   namespaces:
     - logs
+    - metrics
     - o11y
 
 clusterMetrics:
@@ -96,7 +97,7 @@ clusterMetrics:
       rule {
         action = "keep"
         source_labels = ["namespace"]
-        regex = "logs|o11y"
+        regex = "logs|metrics|o11y"
       }
   apiServer:
     enabled: false
@@ -117,7 +118,7 @@ clusterMetrics:
       rule {
         action = "keep"
         source_labels = ["namespace"]
-        regex = "logs|o11y"
+        regex = "logs|metrics|o11y"
       }
     metricsTuning:
       useDefaultAllowList: false
@@ -145,6 +146,8 @@ podLogs:
   collector: alloy-singleton
   namespaces:
     - logs
+    - metrics
+    - o11y
 
 # Collectors
 alloy-singleton:

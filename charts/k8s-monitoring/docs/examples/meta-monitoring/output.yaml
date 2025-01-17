@@ -220,7 +220,7 @@ data:
         rule {
           action = "keep"
           source_labels = ["namespace"]
-          regex = "logs|o11y"
+          regex = "logs|metrics|o11y"
         }
         forward_to = argument.metrics_destinations.value
       }            
@@ -260,7 +260,7 @@ data:
         rule {
           action = "keep"
           source_labels = ["namespace"]
-          regex = "logs|o11y"
+          regex = "logs|metrics|o11y"
         }
         forward_to = argument.metrics_destinations.value
       }  
@@ -318,7 +318,7 @@ data:
       loki.source.kubernetes_events "cluster_events" {
         job_name   = "integrations/kubernetes/eventhandler"
         log_format = "logfmt"
-        namespaces = ["logs","o11y"]
+        namespaces = ["logs","metrics","o11y"]
         forward_to = [loki.process.cluster_events.receiver]
       }
     
@@ -515,7 +515,7 @@ data:
       discovery.kubernetes "pods" {
         role = "pod"
         namespaces {
-          names = ["logs"]
+          names = ["logs","metrics","o11y"]
         }
       }
       
