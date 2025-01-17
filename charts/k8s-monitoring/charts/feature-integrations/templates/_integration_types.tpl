@@ -5,5 +5,6 @@
 - etcd
 - grafana
 - loki
+- mimir
 - mysql
 {{- end -}}

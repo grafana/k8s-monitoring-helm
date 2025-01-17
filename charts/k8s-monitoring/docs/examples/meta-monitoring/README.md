@@ -36,13 +36,22 @@ integrations:
           app.kubernetes.io/name: [alloy-singleton, alloy-metrics, alloy-logs, alloy-profiles, alloy-receiver]
         namespaces:
           - collectors
+
+  grafana:
+    instances:
+      - name: grafana
+        namespaces:
+          - o11y
+        labelSelectors:
+          app.kubernetes.io/name: grafana
+
   loki:
     instances:
       - name: loki
         namespaces:
           - logs
         labelSelectors:
-          app.kubernetes.io/name: [loki]
+          app.kubernetes.io/name: loki
         logs:
           tuning:
             # extract logfmt fields and set them as structured metadata
@@ -51,14 +60,21 @@ integrations:
               tenant:
               org_id:
               user:
-
-  grafana:
+  mimir:
     instances:
-      - name: grafana
+      - name: mimir
         namespaces:
-          - o11y
+          - metrics
         labelSelectors:
-          app.kubernetes.io/name: [grafana]
+          app.kubernetes.io/name: mimir
+        logs:
+          tuning:
+            # extract logfmt fields and set them as structured metadata
+            structuredMetadata:
+              caller:
+              tenant:
+              org_id:
+              user:
 
 clusterEvents:
   enabled: true
