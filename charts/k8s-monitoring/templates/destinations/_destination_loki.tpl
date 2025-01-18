@@ -79,10 +79,14 @@ loki.write {{ include "helper.alloy_name" .name | quote }} {
       {{- else if eq (include "secrets.usesSecret" (dict "object" . "key" "tls.ca")) "true" }}
       ca_pem = {{ include "secrets.read" (dict "object" . "key" "tls.ca" "nonsensitive" true) }}
       {{- end }}
-      {{- if eq (include "secrets.usesSecret" (dict "object" . "key" "tls.cert")) "true" }}
+      {{- if .tls.certFile }}
+      cert_file = {{ .tls.certFile | quote }}
+      {{- else if eq (include "secrets.usesSecret" (dict "object" . "key" "tls.cert")) "true" }}
       cert_pem = {{ include "secrets.read" (dict "object" . "key" "tls.cert" "nonsensitive" true) }}
       {{- end }}
-      {{- if eq (include "secrets.usesSecret" (dict "object" . "key" "tls.key")) "true" }}
+      {{- if .tls.keyFile }}
+      key_file = {{ .tls.keyFile | quote }}
+      {{- else if eq (include "secrets.usesSecret" (dict "object" . "key" "tls.key")) "true" }}
       key_pem = {{ include "secrets.read" (dict "object" . "key" "tls.key") }}
       {{- end }}
     }
