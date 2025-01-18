@@ -54,8 +54,8 @@ See our [Contributing Guide](./CONTRIBUTING.md) for more information.
 
 ## Links
 
-- [Kubernetes Monitoring on Grafana Cloud](https://grafana.com/docs/grafana-cloud/kubernetes-monitoring/)
-- [Grafana Alloy](https://github.com/grafana/alloy)
-- [Kube State Metrics](https://github.com/kubernetes/kube-state-metrics)
-- [Node Exporter](https://github.com/prometheus/node_exporter)
-- [OpenCost](https://github.com/opencost/opencost)
+-   [Kubernetes Monitoring on Grafana Cloud](https://grafana.com/docs/grafana-cloud/kubernetes-monitoring/)
+-   [Grafana Alloy](https://github.com/grafana/alloy)
+-   [Kube State Metrics](https://github.com/kubernetes/kube-state-metrics)
+-   [Node Exporter](https://github.com/prometheus/node_exporter)
+-   [OpenCost](https://github.com/opencost/opencost)
