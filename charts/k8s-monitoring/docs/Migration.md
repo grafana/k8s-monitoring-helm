@@ -297,10 +297,13 @@ If using Prometheus Operator objects, `metrics.podMonitors.enabled`, `metrics.pr
 
 ### Integrations
 
-Integrations are a new feature in v2.0 that allow you to enable and configure additional data sources, but this also
-includes the Alloy metrics that were previously part of `v1`. Some service integrations were previously defined in the
-`extraConfig` and `logs.extraConfig` sections. If you are using those fields for any of the new build-in integrations,
-you can replace your `extraConfig` to the new `integrations` feature.
+Integrations are a new feature in v2.0 that allow you to enable and configure additional data sources. This
+includes the Alloy metrics that were previously part of `v1`. Some service integrations that previously needed to be 
+defined in the `extraConfig` and `logs.extraConfig` sections can now be used in the integration feature.
+
+If you are using the `metrics.alloy` setting for getting Alloy metrics, or if you are using `extraConfig` to add config
+to get data from any of the new build-in integrations, you should replace your `extraConfig` to the new `integrations`
+feature.
 
 #### Built-in integrations
 
@@ -336,7 +339,11 @@ in the `extraConfig` sections. See the [Extra Configs](#extra-configs) section b
 ### Extra Configs
 
 The variables for adding arbitrary configuration to the Alloy instances has been moved inside the respective Alloy
-instance.
+instance. If you are using `extraConfig` to add configuration for scraping metrics from an integration built-in with the
+[integrations](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-integrations)
+feature (e.g. cert-manager, etcd, MySQL), you can move that configuration to the new `integrations` feature.
+
+For other uses of `extraConfig`, continue with this section.
 
 | extraConfig        | v1.x setting                      | v2.0 setting                  | Notes |
 |--------------------|-----------------------------------|-------------------------------|-------|
