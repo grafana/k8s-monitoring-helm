@@ -298,7 +298,11 @@ If using Prometheus Operator objects, `metrics.podMonitors.enabled`, `metrics.pr
 ### Integrations
 
 Integrations are a new feature in v2.0 that allow you to enable and configure additional data sources, but this also
-includes the Alloy metrics that were previously part of `v1`.
+includes the Alloy metrics that were previously part of `v1`. Some service integrations were previously defined in the
+`extraConfig` and `logs.extraConfig` sections. If you are using those fields for any of the new build-in integrations,
+you can replace your `extraConfig` to the new `integrations` feature.
+
+#### Built-in integrations
 
 | Integration  | v1.x setting                       | v2.0 setting                | Notes |
 |--------------|------------------------------------|-----------------------------|-------|
@@ -307,7 +311,7 @@ includes the Alloy metrics that were previously part of `v1`.
 | etcd         | `extraConfig`                      | `integrations.etcd`         |       |
 | MySQL        | `extraConfig` & `logs.extraConfig` | `integrations.mysql`        |       |
 
-#### Steps to take
+##### Steps to take
 
 If using the Alloy integration `metrics.alloy.enabled`, or if using `extraConfig` for cert-manager, etcd, or MySQL:
 
@@ -323,6 +327,11 @@ If using the Alloy integration `metrics.alloy.enabled`, or if using `extraConfig
     ```
 
 2.  Move `metrics.alloy` to `integrations.alloy.instances[]`
+
+#### Other integrations
+
+For service integrations that are not available in the built-in integrations feature, you can continue to use them
+in the `extraConfig` sections. See the [Extra Configs](#extra-configs) section below for guidance.
 
 ### Extra Configs
 
@@ -344,6 +353,20 @@ instance.
 3.  Move `logs.cluster_events.extraConfig` to `alloy-singleton.extraConfig`
 4.  Move `logs.extraConfig` to `alloy-logs.extraConfig`
 5.  Move `profiles.extraConfig` to `alloy-profiles.extraConfig`
+6.  Rename destinations for telemetry data to the appropriate destination component:
+
+#### Destination names
+
+| Data type | v1.x setting                                  | v2.0 setting                                          |
+|-----------|-----------------------------------------------|-------------------------------------------------------|
+| Metrics   | `prometheus.relabel.metrics_service.receiver` | `prometheus.remote_write.<destination_name>.receiver` |
+| Logs      | `loki.process.logs_service.receiver`          | `loki.write.<destination_name>.receiver`              |
+| Traces    | `otelcol.exporter.otlp.traces_service.input`  | `otelcol.exporter.otlp.<destination_name>.input`      |
+| Profiles  | `pyroscope.write.profiles_service.receiver`   | `pyroscope.write.<destination_name>.receiver`         |
+
+Note that the `<destination_name>` in the component reference is the name of the destination, set to lower-case and
+with any special characters replaced with an underscore. For example, if your destination is named
+`Grafana Cloud Metrics`, then the destination name would be `grafana_cloud_metrics`.
 
 ### Dropped features
 
