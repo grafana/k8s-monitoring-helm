@@ -35,4 +35,13 @@ traces:
 
 beyla:
   enabled: true
+  # Check Beyla Helm chart documentation in https://github.com/grafana/beyla/blob/main/charts/beyla/README.md
+  image:
+    tag: latest
+  config:
+    data:
+      # Check Beyla configuration file format in https://grafana.com/docs/beyla/latest/configure/
+      discovery:
+        services:
+          k8s_deployment_name: .*-prod
 ```
