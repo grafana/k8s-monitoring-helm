@@ -35,14 +35,14 @@ declare "application_observability" {
   // K8s Attribute Processor --> Transform Processor
   {{- $tracesNext := list $transform }}
   {{- $next = printf "[%s]" $transform }}
-{{- if .Values.processors.grafanaCloudMetrics.enabled }}
+{{- if (index .Values.processors "grafanaCloudMetrics").enabled | default .Values.connectors.grafanaCloudMetrics.enabled }}
   // Resource Detection Processor Traces --> Host Info Connector
   {{- $tracesNext = append $tracesNext $grafanaCloudMetrics }}
 {{- end -}}
   {{- $tracesNext = printf "[%s]" ($tracesNext | join ", ")}}
   {{- include "feature.applicationObservability.processor.k8sattributes.alloy" (dict "Values" $.Values "metricsOutput" $next "logsOutput" $next "tracesOutput" $tracesNext ) | indent 2 }}
 
-{{- if .Values.processors.grafanaCloudMetrics.enabled }}
+{{- if (index .Values.processors "grafanaCloudMetrics").enabled | default .Values.connectors.grafanaCloudMetrics.enabled }}
   // Host Info Connector --> Batch Processor
   {{- $next = printf "[%s]" $batch }}
   {{- include "feature.applicationObservability.connector.host_info.alloy" (dict "Values" $.Values "metricsOutput" $next ) | indent 2 }}
