@@ -224,7 +224,7 @@ chart and runs helm test as well.
 To run the integration tests for the `k8s-monitoring` chart, use the following commands:
 
 ```bash
-./scripts/run-integration-test.sh charts/k8s-monitoring/tests/integration/<test dir>
+./scripts/run-cluster-test.sh charts/k8s-monitoring/tests/integration/<test dir>
 ```
 
 This will create a new Kubernetes cluster using kind, deploy any required dependencies, deploy the `k8s-monitoring` Helm
