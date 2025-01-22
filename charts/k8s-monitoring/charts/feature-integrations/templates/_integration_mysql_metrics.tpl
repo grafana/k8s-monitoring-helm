@@ -13,7 +13,7 @@ declare "mysql_integration" {
 
 {{- define "integrations.mysql.include.metrics" }}
 {{- $defaultValues := "integrations/mysql-values.yaml" | .Files.Get | fromYaml }}
-{{- with merge .instance $defaultValues (dict "type" "integration.mysql") }}
+{{- with mergeOverwrite $defaultValues .instance (dict "type" "integration.mysql") }}
 {{- if eq (include "secrets.usesKubernetesSecret" .) "true" }}
   {{- include "secret.alloy" (deepCopy $ | merge (dict "object" .)) | nindent 0 }}
 {{- end }}

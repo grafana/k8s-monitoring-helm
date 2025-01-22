@@ -13,7 +13,7 @@
 {{- define "integrations.grafana.logs.discoveryRules" }}
   {{- $defaultValues := "integrations/grafana-values.yaml" | .Files.Get | fromYaml }}
   {{- range $instance := $.Values.grafana.instances }}
-    {{- with $defaultValues | merge (deepCopy $instance) }}
+    {{- with mergeOverwrite $defaultValues (deepCopy $instance) }}
       {{- if .logs.enabled }}
         {{- $labelList := list }}
         {{- $valueList := list }}
@@ -54,7 +54,7 @@ rule {
     {{- $defaultValues := "integrations/grafana-values.yaml" | .Files.Get | fromYaml }}
 // Integration: Loki
     {{- range $instance := $.Values.grafana.instances }}
-      {{- with $defaultValues | merge (deepCopy $instance) }}
+      {{- with mergeOverwrite $defaultValues (deepCopy $instance) }}
         {{- if .logs.enabled }}
 stage.match {
   {{- if $instance.namespaces }}

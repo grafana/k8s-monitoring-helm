@@ -20,7 +20,7 @@ declare "cert_manager_integration" {
 {{/* Inputs: integration (cert-manager integration definition), Values (all values), Files (Files object) */}}
 {{- define "integrations.cert-manager.include.metrics" }}
 {{- $defaultValues := "integrations/cert-manager-values.yaml" | .Files.Get | fromYaml }}
-{{- with $defaultValues | merge (deepCopy .instance) }}
+{{- with mergeOverwrite $defaultValues (deepCopy .instance) }}
 {{- $metricAllowList := .metrics.tuning.includeMetrics }}
 {{- $metricDenyList := .metrics.tuning.excludeMetrics }}
 {{- $labelSelectors := list }}

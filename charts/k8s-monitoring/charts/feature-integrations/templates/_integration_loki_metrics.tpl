@@ -189,7 +189,7 @@ declare "loki_integration" {
 {{/* Inputs: integration (loki integration definition), Values (all values), Files (Files object) */}}
 {{- define "integrations.loki.include.metrics" }}
 {{- $defaultValues := "integrations/loki-values.yaml" | .Files.Get | fromYaml }}
-{{- with $defaultValues | merge (deepCopy .instance) }}
+{{- with mergeOverwrite $defaultValues (deepCopy .instance) }}
 {{- $metricAllowList := include "integrations.loki.allowList" (dict "instance" . "Files" $.Files) | fromYamlArray }}
 {{- $metricDenyList := .metrics.tuning.excludeMetrics }}
 {{- $labelSelectors := list }}

@@ -152,7 +152,7 @@ declare "grafana_integration" {
 {{/* Inputs: integration (grafana integration definition), Values (all values), Files (Files object) */}}
 {{- define "integrations.grafana.include.metrics" }}
 {{- $defaultValues := "integrations/grafana-values.yaml" | .Files.Get | fromYaml }}
-{{- with $defaultValues | merge (deepCopy .instance) }}
+{{- with mergeOverwrite $defaultValues (deepCopy .instance) }}
 {{- $metricAllowList := include "integrations.grafana.allowList" (dict "instance" . "Files" $.Files) | fromYamlArray }}
 {{- $metricDenyList := .excludeMetrics }}
 {{- $labelSelectors := list }}

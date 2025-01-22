@@ -20,7 +20,7 @@ declare "etcd_integration" {
 {{/* Inputs: integration (etcd integration definition), Values (all values), Files (Files object) */}}
 {{- define "integrations.etcd.include.metrics" }}
 {{- $defaultValues := "integrations/etcd-values.yaml" | .Files.Get | fromYaml }}
-{{- with $defaultValues | merge (deepCopy .instance) }}
+{{- with mergeOverwrite $defaultValues (deepCopy .instance) }}
 {{- $metricAllowList := .metrics.tuning.includeMetrics }}
 {{- $metricDenyList := .metrics.tuning.excludeMetrics }}
 {{- $labelSelectors := list }}
