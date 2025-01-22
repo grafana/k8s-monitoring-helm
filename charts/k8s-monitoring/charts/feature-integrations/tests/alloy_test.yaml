@@ -306,3 +306,21 @@ tests:
                 forward_to = argument.metrics_destinations.value
               }
             }
+  - it: can create Alloy config with a single allowed metric
+    set:
+      deployAsConfigMap: true
+      alloy:
+        instances:
+          - name: alloy-metrics
+            labelSelectors:
+              app.kubernetes.io/name: alloy-metrics
+            metrics:
+              tuning:
+                useDefaultAllowList: false
+                includeMetrics: ["example_metric"]
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["metrics.alloy"]
+          pattern: \s+keep_metrics \= "up\|scrape_samples_scraped\|example_metric"

@@ -13,7 +13,7 @@
 {{- define "integrations.loki.logs.discoveryRules" }}
   {{- $defaultValues := "integrations/loki-values.yaml" | .Files.Get | fromYaml }}
   {{- range $instance := $.Values.loki.instances }}
-    {{- with $defaultValues | merge (deepCopy $instance) }}
+    {{- with mergeOverwrite $defaultValues (deepCopy $instance) }}
       {{- if .logs.enabled }}
         {{- $labelList := list }}
         {{- $valueList := list }}
@@ -67,7 +67,7 @@ rule {
     {{- $defaultValues := "integrations/loki-values.yaml" | .Files.Get | fromYaml }}
 // Integration: Loki
     {{- range $instance := $.Values.loki.instances }}
-      {{- with $defaultValues | merge (deepCopy $instance) }}
+      {{- with mergeOverwrite $defaultValues (deepCopy $instance) }}
         {{- if .logs.enabled }}
 stage.match {
   {{- if $instance.namespaces }}
