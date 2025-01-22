@@ -90,7 +90,8 @@ EXAMPLE_OUTPUT_FILES = $(EXAMPLE_VALUES_FILES:values.yaml=output.yaml)
 EXAMPLE_ALLOY_FILES = $(foreach file,$(EXAMPLE_VALUES_FILES),$(call alloy_configs, $(file)))
 EXAMPLE_README_FILES = $(EXAMPLE_VALUES_FILES:values.yaml=README.md)
 
-INTEGRATION_TEST_VALUES_FILES = $(shell find tests/integration -name values.yaml)
+NON_RENDERED_INTEGRATION_TEST_VALUES_FILES = $(shell find tests/integration -name .norender | sed 's/.norender/values.yaml/')
+INTEGRATION_TEST_VALUES_FILES = $(filter-out $(NON_RENDERED_INTEGRATION_TEST_VALUES_FILES),$(shell find tests/integration -name values.yaml))
 INTEGRATION_TEST_OUTPUT_FILES = $(INTEGRATION_TEST_VALUES_FILES:values.yaml=.rendered/output.yaml)
 
 PLATFORM_TEST_VALUES_FILES = $(shell find tests/platform -name values.yaml)
