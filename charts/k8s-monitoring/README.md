@@ -111,6 +111,7 @@ podLogs:
 | Name | Email | Url |
 | ---- | ------ | --- |
 | petewall | <pete.wall@grafana.com> |  |
+| rlankfo | <robert.lankford@grafana.com> |  |
 
 <!-- markdownlint-disable no-bare-urls -->
 <!-- markdownlint-disable list-marker-space -->

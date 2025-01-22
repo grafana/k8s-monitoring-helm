@@ -13,6 +13,119 @@ The process for making a successful contribution is:
     -   Unit tests
     -   Integration tests
 
+## Design Idioms
+
+The Kubernetes Monitoring Helm chart has a few design idioms with the goal of making it an easy and pleasant experience
+for users and maintainers. These should guide your contributions:
+
+### Don't ask about systems, ask about outcomes
+
+Many users will not know about the particular observability systems and why one is better than another. Instead of
+asking if they want to deploy a particular system, ask what outcome they want.
+
+Bad:
+
+```yaml
+mega-widget:
+  enabled: true
+  megaQuarkMode: blue
+```
+
+Good:
+
+```yaml
+quantumObservability:
+  enabled: true
+  quarkMode: blue
+```
+
+### No error messages without suggestions
+
+If a user encounters an error, we want to provide them with a suggestion for how to fix it.
+
+Bad:
+
+```text
+Error: megaQuarkMode not set!
+```
+
+Good:
+
+```text
+Error: The Quantum Observability feature requires a quark mode!
+Please set:
+quantumObservability:
+  quarkMode: <favorite color>
+```
+
+### Don't require the user to know configuration language
+
+This Helm chart is essentially a package of observability collection systems and a utility to generate configurations
+for those systems. It should be possible for a user to modify that configuration without needing to know the
+actual config language syntax.
+
+Bad:
+
+```yaml
+quantumObservability:
+  extraDiscoveryRules: |
+    // Keep only the production namespace
+    rule {
+      source_labels = ["__meta_kubernetes_namespace"]
+      regex = "production"
+      action = keep
+    }
+```
+
+Good:
+
+```text
+quantumObservability:
+  namespaces: [production]
+```
+
+### Lots of test automation
+
+We want to make it easy to contribute to this project. We have a lot of test automation to ensure that changes are high
+quality and robust.
+
+### Just the right amount of magic
+
+This is a bit hard to qualify, but using this chart should be simple and easy with predictable and intuitive defaults.
+Sometimes, going too far with this can lead to a chart that does things that are unexpected.
+
+No magic:
+
+```yaml
+quantumObservability:
+  extraQuarkLabellingRules: ""
+```
+
+Some magic:
+
+```yaml
+quantumObservability:
+  # Add quark labels from Kubernetes pod labels
+  quarkLabelsFromPodLabels: {}
+```
+
+More magic:
+
+```yaml
+quantumObservability:
+  # Add quark labels from Kubernetes pod labels
+  quarkLabelsFromPodLabels:
+    position: app.kubernetes.io/position
+```
+
+Too much magic:
+
+```yaml
+quantumObservability:
+  # This will automatically add `position` from the `app.kubernetes.io/position` label
+  quarkLabelsFromPodLabels: {}
+```
+
 ## Tools
 
 This repository heavily makes use of automation and tooling to generate files and run tests. The following tools are
