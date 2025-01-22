@@ -17,10 +17,11 @@
 
 ## Maintainers
 
-| Name     | Email                      | URL |
-|----------|----------------------------|-----|
-| petewall | <pete.wall@grafana.com>    |     |
-| skl      | <stephen.lang@grafana.com> |     |
+| Name     | Email                         | URL |
+|----------|-------------------------------|-----|
+| petewall | <pete.wall@grafana.com>       |     |
+| rlankfo  | <robert.lankford@grafana.com> |     |
+| skl      | <stephen.lang@grafana.com>    |     |
 
 ## Usage
 

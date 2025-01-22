@@ -298,7 +298,7 @@ If using Prometheus Operator objects, `metrics.podMonitors.enabled`, `metrics.pr
 ### Integrations
 
 Integrations are a new feature in v2.0 that allow you to enable and configure additional data sources. This
-includes the Alloy metrics that were previously part of `v1`. Some service integrations that previously needed to be 
+includes the Alloy metrics that were previously part of `v1`. Some service integrations that previously needed to be
 defined in the `extraConfig` and `logs.extraConfig` sections can now be used in the integration feature.
 
 If you are using the `metrics.alloy` setting for getting Alloy metrics, or if you are using `extraConfig` to add config
