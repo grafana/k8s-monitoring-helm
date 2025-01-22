@@ -50,7 +50,7 @@ discovery.relabel "kubernetes_monitoring_telemetry" {
 prometheus.scrape "kubernetes_monitoring_telemetry" {
   job_name   = "integrations/kubernetes/kubernetes_monitoring_telemetry"
   targets    = discovery.relabel.kubernetes_monitoring_telemetry.output
-  scrape_interval = {{ .Values.selfReporting.scrapeInterval | default "1h" | quote}}
+  scrape_interval = {{ .Values.selfReporting.scrapeInterval | default .Values.global.scrapeInterval | quote}}
   clustering {
     enabled = true
   }
