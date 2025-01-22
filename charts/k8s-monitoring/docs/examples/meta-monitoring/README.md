@@ -36,13 +36,37 @@ integrations:
           app.kubernetes.io/name: [alloy-singleton, alloy-metrics, alloy-logs, alloy-profiles, alloy-receiver]
         namespaces:
           - collectors
+
+  grafana:
+    instances:
+      - name: grafana
+        namespaces:
+          - o11y
+        labelSelectors:
+          app.kubernetes.io/name: grafana
+
   loki:
     instances:
       - name: loki
         namespaces:
           - logs
         labelSelectors:
-          app.kubernetes.io/name: [loki]
+          app.kubernetes.io/name: loki
+        logs:
+          tuning:
+            # extract logfmt fields and set them as structured metadata
+            structuredMetadata:
+              caller:
+              tenant:
+              org_id:
+              user:
+  mimir:
+    instances:
+      - name: mimir
+        namespaces:
+          - metrics
+        labelSelectors:
+          app.kubernetes.io/name: mimir
         logs:
           tuning:
             # extract logfmt fields and set them as structured metadata
@@ -52,19 +76,12 @@ integrations:
               org_id:
               user:
 
-  grafana:
-    instances:
-      - name: grafana
-        namespaces:
-          - o11y
-        labelSelectors:
-          app.kubernetes.io/name: [grafana]
-
 clusterEvents:
   enabled: true
   collector: alloy-singleton
   namespaces:
     - logs
+    - metrics
     - o11y
 
 clusterMetrics:
@@ -80,7 +97,7 @@ clusterMetrics:
       rule {
         action = "keep"
         source_labels = ["namespace"]
-        regex = "logs|o11y"
+        regex = "logs|metrics|o11y"
       }
   apiServer:
     enabled: false
@@ -101,7 +118,7 @@ clusterMetrics:
       rule {
         action = "keep"
         source_labels = ["namespace"]
-        regex = "logs|o11y"
+        regex = "logs|metrics|o11y"
       }
     metricsTuning:
       useDefaultAllowList: false
@@ -129,6 +146,8 @@ podLogs:
   collector: alloy-singleton
   namespaces:
     - logs
+    - metrics
+    - o11y
 
 # Collectors
 alloy-singleton:

@@ -118,6 +118,12 @@ Be sure perform actual integration testing in a live environment in the main [k8
 |-----|------|---------|-------------|
 | loki | object | `{"instances":[]}` | Scrape metrics/logs from Loki |
 
+### Integration: Mimir
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| mimir | object | `{"instances":[]}` | Scrape metrics/logs from Mimir |
+
 ### Integration: MySQL
 
 | Key | Type | Default | Description |

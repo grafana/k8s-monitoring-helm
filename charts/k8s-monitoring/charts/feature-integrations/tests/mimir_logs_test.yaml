@@ -1,0 +1,245 @@
+---
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces rule:empty-lines
+suite: Test Mimir integration
+templates:
+  - configmap.yaml
+tests:
+  - it: should add the Mimir processing stage to the logs config
+    set:
+      deployAsConfigMap: true
+      mimir:
+        instances:
+          - name: mimir
+            labelSelectors:
+              app.kubernetes.io/name: mimir
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - equal:
+          path: data["logs.alloy"]
+          value: |-
+            // Integration rules
+            discovery.relabel "test" {
+              // add static label of integration="mimir" and instance="name" to pods that match the selector so they can be identified in the mimir.process stages
+              rule {
+                source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
+                separator = ";"
+                regex = "(?:mimir)"
+                target_label = "integration"
+                replacement = "mimir"
+              }
+              rule {
+                source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
+                separator = ";"
+                regex = "(?:mimir)"
+                target_label = "instance"
+                replacement = "mimir"
+              }
+              // override the job label to be namespace/component so it aligns to the mimir-mixin
+              rule {
+                source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name","__meta_kubernetes_namespace","__meta_kubernetes_pod_label_component"]
+                separator = ";"
+                regex = "(?:mimir);([^;]+);([^;]+)"
+                target_label = "job"
+                replacement = "$1/$2"
+              }
+            }
+
+            // Processing stages
+            loki.process "test" {
+              // Integration: Mimir
+              stage.match {
+                selector = "{integration=\"mimir\",instance=\"mimir\"}"
+
+                // extract some of the fields from the log line
+                stage.logfmt {
+                  mapping = {
+                    "ts" = "",
+                    "level" = "",
+                  }
+                }
+
+                // set the level as a label
+                stage.labels {
+                  values = {
+                    level = "level",
+                  }
+                }
+                // reset the timestamp to the extracted value
+                stage.timestamp {
+                  source = "ts"
+                  format = "RFC3339Nano"
+                }
+                // remove the timestamp from the log line
+                stage.replace {
+                  expression = "(ts=[^ ]+\\s+)"
+                  replace = ""
+                }
+
+              }
+            }
+
+  - it: should allow you to restrict the namespaces for logs
+    set:
+      deployAsConfigMap: true
+      mimir:
+        instances:
+          - name: mimir
+            labelSelectors:
+              app.kubernetes.io/name: mimir
+            namespaces:
+              - k8smon
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["logs.alloy"]
+          # The pattern should look like this, but since the regex is escaped, it will be a bit different
+          # rule {
+          #   source_labels = ["__meta_kubernetes_namespace","__meta_kubernetes_pod_label_app_kubernetes_io_name"]
+          #   separator = ";"
+          #   regex = "(?:k8smon);(?:mimir)"
+          #   target_label = "integration"
+          #   replacement = "mimir"
+          # }
+          pattern: |-
+            \s*rule {
+            \s*  source_labels = \["__meta_kubernetes_namespace","__meta_kubernetes_pod_label_app_kubernetes_io_name"\]
+            \s*  separator = ";"
+            \s*  regex = "\(\?:k8smon\)\;\(\?:mimir\)"
+            \s*  target_label = "integration"
+            \s*  replacement = "mimir"
+            \s*}
+
+  - it: should allow you to set the timestamp format
+    set:
+      deployAsConfigMap: true
+      mimir:
+        instances:
+          - name: mimir
+            labelSelectors:
+              app.kubernetes.io/name: mimir
+            logs:
+              tuning:
+                timestampFormat: "RFC3339"
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["logs.alloy"]
+          pattern: |-
+            \s+stage.timestamp {
+            \s+  source = "ts"
+            \s+  format = "RFC3339"
+            \s+}
+
+  - it: should allow you to scrub the timestamp from the log line
+    set:
+      deployAsConfigMap: true
+      mimir:
+        instances:
+          - name: mimir
+            labelSelectors:
+              app.kubernetes.io/name: mimir
+            logs:
+              tuning:
+                scrubTimestamp: true
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["logs.alloy"]
+          # The pattern should look like this, but since the regex is escaped, it will be a bit different
+          # stage.replace {
+          #   expression = "(ts=[^ ]+\\s+)"
+          #   replace = ""
+          # }
+          pattern: |-
+            \s+stage.replace {
+            \s+  expression = "\(ts=\[\^ \]\+\\\\s\+\)"
+            \s+  replace = ""
+            \s+}
+
+  - it: should allow you to set the structured metadata
+    set:
+      deployAsConfigMap: true
+      mimir:
+        instances:
+          - name: mimir
+            labelSelectors:
+              app.kubernetes.io/name: mimir
+            logs:
+              tuning:
+                structuredMetadata:
+                  component: component
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["logs.alloy"]
+          pattern: |-
+            \s+stage.structured_metadata {
+            \s+  values = {
+            \s+    "component" = "component",
+            \s+  }
+            \s+}
+
+  - it: should allow you to drop log levels
+    set:
+      deployAsConfigMap: true
+      mimir:
+        instances:
+          - name: mimir
+            labelSelectors:
+              app.kubernetes.io/name: mimir
+            logs:
+              tuning:
+                dropLogLevels:
+                  - info
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["logs.alloy"]
+          # The pattern should look like this, but since the regex is escaped, it will be a bit different
+          # stage.drop {
+          #   source = "level"
+          #   expression = "(?i)(info)"
+          #   drop_counter_reason = "mimir-drop-log-level"
+          # }
+          pattern: |-
+            \s+stage.drop {
+            \s+  source = "level"
+            \s+  expression = "\(\?i\)\(info\)"
+            \s+  drop_counter_reason = "mimir-drop-log-level"
+            \s+}
+
+  - it: should allow you to exclude log lines
+    set:
+      deployAsConfigMap: true
+      mimir:
+        instances:
+          - name: mimir
+            labelSelectors:
+              app.kubernetes.io/name: mimir
+            logs:
+              tuning:
+                excludeLines:
+                  - logger=searchIndex
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["logs.alloy"]
+          # The pattern should look like this, but since the regex is escaped, it will be a bit different
+          # stage.drop {
+          #   source = ""
+          #   expression = "(?i)(logger=searchIndex)"
+          #   drop_counter_reason = "mimir-exclude-line"
+          # }
+          pattern: |-
+            \s*stage.drop {
+            \s*  source = ""
+            \s*  expression = "\(\?i\)\(logger=searchIndex\)"
+            \s*  drop_counter_reason = "mimir-exclude-line"
+            \s*}
