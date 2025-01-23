@@ -6,8 +6,8 @@ otelcol.connector.host_info "{{ .name | default "default" }}" {
   host_identifiers = [ "k8s.node.name" ]
 
   output {
-{{- if and .metricsOutput .Values.metrics.enabled }}
-    metrics = {{ .metricsOutput }}
+{{- if and .metrics .Values.metrics.enabled }}
+    metrics = {{ .metrics }}
 {{- end }}
   }
 }

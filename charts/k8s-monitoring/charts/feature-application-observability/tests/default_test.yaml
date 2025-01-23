@@ -42,7 +42,7 @@ tests:
                 comment = "Must be a list of trace destinations where collected trace should be forwarded to"
               }
 
-              // Receivers --> Resource Detection Processor
+              // OTLP Receiver
               otelcol.receiver.otlp "receiver" {
                 grpc {
                   endpoint = "0.0.0.0:4317"
@@ -59,6 +59,8 @@ tests:
                   traces = [otelcol.processor.resourcedetection.default.input]
                 }
               }
+            
+              // Jaeger Receiver
               otelcol.receiver.jaeger "receiver" {
                 protocols {
                   grpc {
@@ -82,6 +84,8 @@ tests:
                   traces = [otelcol.processor.resourcedetection.default.input]
                 }
               }
+
+              // Zipkin Receiver
               otelcol.receiver.zipkin "receiver" {
                 endpoint = "0.0.0.0:9411"
                 debug_metrics {
@@ -92,7 +96,7 @@ tests:
                 }
               }
 
-              // Resource Detection Processor --> K8s Attribute Processor
+              // Resource Detection Processor
               otelcol.processor.resourcedetection "default" {
                 detectors = ["env", "system"]
                 system {
@@ -105,9 +109,8 @@ tests:
                   traces = [otelcol.processor.k8sattributes.default.input]
                 }
               }
-
-              // K8s Attribute Processor --> Transform Processor
-              // Resource Detection Processor Traces --> Host Info Connector
+          
+              // K8s Attributes Processor
               otelcol.processor.k8sattributes "default" {
                 extract {
                   metadata = ["k8s.namespace.name","k8s.pod.name","k8s.deployment.name","k8s.statefulset.name","k8s.daemonset.name","k8s.cronjob.name","k8s.job.name","k8s.node.name","k8s.pod.uid","k8s.pod.start_time"]
@@ -124,7 +127,8 @@ tests:
                   traces = [otelcol.processor.transform.default.input, otelcol.connector.host_info.default.input]
                 }
               }
-              // Host Info Connector --> Batch Processor
+
+              // Host Info Connector
               otelcol.connector.host_info "default" {
                 host_identifiers = [ "k8s.node.name" ]
 
@@ -132,9 +136,8 @@ tests:
                   metrics = [otelcol.processor.batch.default.input]
                 }
               }
-
-
-              // Transform Processor --> Batch Processor
+            
+              // Transform Processor
               otelcol.processor.transform "default" {
                 error_mode = "ignore"
                 log_statements {
@@ -153,7 +156,7 @@ tests:
                 }
               }
 
-              // Batch Processor --> Destinations
+              // Batch Processor
               otelcol.processor.batch "default" {
                 send_batch_size = 16384
                 send_batch_max_size = 0
