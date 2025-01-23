@@ -33,11 +33,15 @@ spec:
           - secretRef: {name: grafana-cloud-credentials}
           - configMapRef: {name: test-variables}
         queries:
-          - query: alloy_build_info{cluster="$CLUSTER", job="integrations/self"}
+          # Statefulset Metric
+          - query: alloy_build_info{collector_id="$CLUSTER-default-k8smon-alloy-metrics-0"}
+            type: promql
+          # Daemonset Metric
+          - query: alloy_build_info{collector_id="$CLUSTER-default-$CLUSTER-control-plane"}
             type: promql
 
           # DPM check
-          - query: avg(count_over_time(scrape_samples_scraped{cluster="$CLUSTER"}[1m]))
+          - query: avg(count_over_time(scrape_samples_scraped{collector_id=~"$CLUSTER.*"}[1m]))
             type: promql
             expect:
               value: 1
