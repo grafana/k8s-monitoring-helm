@@ -14,24 +14,49 @@
   description: OTLP Receiver
   component: receiver.otlp
   targets:
+{{- if .Values.processors.memoryLimiter.enabled }}
+    metrics: [{name: default, component: processor.memory_limiter}]
+    logs: [{name: default, component: processor.memory_limiter}]
+    traces: [{name: default, component: processor.memory_limiter}]
+{{- else }}
     metrics: [{name: default, component: processor.resourcedetection}]
     logs: [{name: default, component: processor.resourcedetection}]
     traces: [{name: default, component: processor.resourcedetection}]
+{{- end }}
 {{- end }}
 {{- if or .Values.receivers.jaeger.grpc.enabled .Values.receivers.jaeger.thriftBinary.enabled .Values.receivers.jaeger.thriftCompact.enabled .Values.receivers.jaeger.thriftHttp.enabled }}
 - name: default
   description: Jaeger Receiver
   component: receiver.jaeger
   targets:
+{{- if .Values.processors.memoryLimiter.enabled }}
+    traces: [{name: default, component: processor.memory_limiter}]
+{{- else }}
     traces: [{name: default, component: processor.resourcedetection}]
+{{- end }}
 {{- end }}
 {{- if .Values.receivers.zipkin.enabled }}
 - name: default
   description: Zipkin Receiver
   component: receiver.zipkin
   targets:
+{{- if .Values.processors.memoryLimiter.enabled }}
+    traces: [{name: default, component: processor.memory_limiter}]
+{{- else }}
     traces: [{name: default, component: processor.resourcedetection}]
 {{- end }}
+{{- end }}
+
+{{- if .Values.processors.memoryLimiter.enabled }}
+- name: default
+  description: Memory Limiter
+  component: processor.memory_limiter
+  targets:
+    metrics: [{name: default, component: processor.resourcedetection}]
+    logs: [{name: default, component: processor.resourcedetection}]
+    traces: [{name: default, component: processor.resourcedetection}]
+{{- end }}
+
 
 - name: default
   description: Resource Detection Processor
@@ -59,38 +84,66 @@
     traces: [{name: default, component: processor.transform}]
 {{- end }}
 
+{{- $filterEnabled := eq (include "feature.applicationObservability.processor.filter.enabled" .) "true" }}
 - name: default
   description: Transform Processor
   component: processor.transform
   targets:
-{{- if eq (include "feature.applicationObservability.processor.filter.enabled" .) "true" }}
+    traces: [{name: default, component: processor.batch}]
+    traces:
+{{- if .Values.connectors.spanLogs.enabled}}
+      - {name: default, component: connector.spanlogs}
+{{- end }}
+{{- if .Values.connectors.spanMetrics.enabled}}
+      - {name: default, component: connector.spanmetrics}
+{{- end }}
+{{- if $filterEnabled }}
+      - {name: default, component: processor.filter}
     metrics: [{name: default, component: processor.filter}]
     logs: [{name: default, component: processor.filter}]
-    traces: [{name: default, component: processor.filter}]
+{{- else }}
+      - {name: default, component: processor.batch}
+    metrics: [{name: default, component: processor.batch}]
+    logs: [{name: default, component: processor.batch}]
+{{- end }}
 
+{{- if .Values.connectors.spanLogs.enabled}}
+- name: default
+  description: Span Logs Connector
+  component: connector.spanlogs
+  targets:
+{{- if $filterEnabled }}
+    logs: [{name: default, component: processor.filter}]
+{{- else }}
+    logs: [{name: default, component: processor.batch}]
+{{- end }}
+{{- end }}
+{{- if .Values.connectors.spanMetrics.enabled}}
+- name: default
+  description: Span Metrics Connector
+  component: connector.spanmetrics
+  targets:
+{{- if $filterEnabled }}
+    metrics: [{name: default, component: processor.filter}]
+{{- else }}
+    metrics: [{name: default, component: processor.batch}]
+{{- end }}
+{{- end }}
+
+{{- if $filterEnabled }}
 - name: default
   description: Filter Processor
   component: processor.filter
   targets:
-{{- end }}
     metrics: [{name: default, component: processor.batch}]
     logs: [{name: default, component: processor.batch}]
     traces: [{name: default, component: processor.batch}]
+{{- end }}
 
 - name: default
   description: Batch Processor
   component: processor.batch
   targets:
-{{- if .Values.processors.memoryLimiter.enabled }}
-    metrics: [{name: default, component: processor.memory_limiter}]
-    logs: [{name: default, component: processor.memory_limiter}]
-    traces: [{name: default, component: processor.memory_limiter}]
-
-- name: default
-  description: Memory Limiter
-  component: processor.memory_limiter
-  targets:
-{{- end }}
 {{- if .Values.processors.interval.enabled }}
     metrics: [{name: default, component: processor.interval}]
     logs: [{name: default, component: processor.interval}]
