@@ -130,6 +130,12 @@ Be sure perform actual integration testing in a live environment in the main [k8
 |-----|------|---------|-------------|
 | mysql | object | `{"instances":[]}` | Scrape metrics/logs from MySQL |
 
+### Integration: Tempo
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| tempo | object | `{"instances":[]}` | Scrape metrics/logs from Tempo |
+
 ## Contributing
 
 To contribute integrations to this feature, you must create or modify a few files:
