@@ -552,7 +552,21 @@ data:
         comment = "Must be a list of trace destinations where collected trace should be forwarded to"
       }
     
-      // Receivers --> Resource Detection Processor      
+      // Receivers --> Resource Detection Processor    
+      otelcol.receiver.jaeger "receiver" {
+        protocols {
+          thrift_http {
+            endpoint = "0.0.0.0:14268"
+          }
+        }
+      
+        debug_metrics {
+          disable_high_cardinality_metrics = true
+        }
+        output {
+          traces = [otelcol.processor.resourcedetection.default.input]
+        }
+      }  
     
       // Resource Detection Processor --> K8s Attribute Processor  
       otelcol.processor.resourcedetection "default" {
