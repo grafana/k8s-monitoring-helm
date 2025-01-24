@@ -1,8 +1,8 @@
 
 
 
-remote.kubernetes.secret "alloy_metrics_remote_cfg" {
-  name      = "alloy-metrics-remote-cfg-k8smon-k8s-monitoring"
+remote.kubernetes.secret "alloy_logs_remote_cfg" {
+  name      = "alloy-logs-remote-cfg-k8smon-k8s-monitoring"
   namespace = "default"
 }
 
@@ -10,7 +10,7 @@ remotecfg {
   id = sys.env("GCLOUD_FM_COLLECTOR_ID")
   url = "https://remote-config.example.com/alloy"
   basic_auth {
-    username = nonsensitive(remote.kubernetes.secret.alloy_metrics_remote_cfg.data["username"])
+    username = nonsensitive(remote.kubernetes.secret.alloy_logs_remote_cfg.data["username"])
     password = sys.env("GCLOUD_RW_API_KEY")
   }
   poll_frequency = "5m"
@@ -21,6 +21,6 @@ remotecfg {
     "release" = "k8smon",
     "cluster" = "remote-config-example-cluster",
     "namespace" = "default",
-    "workloadType" = "statefulset",
+    "workloadType" = "daemonset",
   }
 }
