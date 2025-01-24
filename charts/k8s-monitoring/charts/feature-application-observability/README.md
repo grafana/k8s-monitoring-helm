@@ -50,7 +50,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| connectors.spanLogs.enabled | bool | `false` | Use a span logs connector which creates metrics from spans. |
+| connectors.spanLogs.enabled | bool | `false` | Use a span logs connector which creates logs from spans. |
 | connectors.spanLogs.labels | list | `[]` | A list of keys that will be logged as labels. |
 | connectors.spanLogs.process | bool | `false` | Log one line for every process. |
 | connectors.spanLogs.processAttributes | list | `[]` | Additional process attributes to log. |
