@@ -18,6 +18,10 @@ destinations:
   - name: loki
     type: loki
     url: http://loki.loki.svc:3100/api/push
+  - name: loki
+    type: otlp
+    protocol: http
+    url: http://otlp-gateway.svc:443/otlp
 
 integrations:
   collector: alloy-singleton
@@ -80,6 +84,7 @@ clusterEvents:
   enabled: true
   collector: alloy-singleton
   namespaces:
+    - collectors
     - logs
     - metrics
     - o11y
@@ -97,7 +102,7 @@ clusterMetrics:
       rule {
         action = "keep"
         source_labels = ["namespace"]
-        regex = "logs|metrics|o11y"
+        regex = "collectors|logs|metrics|o11y"
       }
   apiServer:
     enabled: false
@@ -118,7 +123,7 @@ clusterMetrics:
       rule {
         action = "keep"
         source_labels = ["namespace"]
-        regex = "logs|metrics|o11y"
+        regex = "collectors|logs|metrics|o11y"
       }
     metricsTuning:
       useDefaultAllowList: false
@@ -145,9 +150,18 @@ podLogs:
   gatherMethod: kubernetesApi
   collector: alloy-singleton
   namespaces:
+    - collectors
     - logs
     - metrics
     - o11y
+
+applicationObservability:
+  enabled: true
+  receivers:
+    jaeger:
+      thriftHttp:
+        enabled: true
+        port: 14268
 
 # Collectors
 alloy-singleton:
@@ -163,5 +177,11 @@ alloy-profiles:
   enabled: false
 
 alloy-receiver:
-  enabled: false
+  enabled: true
+  alloy:
+    extraPorts:
+      - name: jaeger-http
+        port: 14268
+        targetPort: 14268
+        protocol: TCP
 ```

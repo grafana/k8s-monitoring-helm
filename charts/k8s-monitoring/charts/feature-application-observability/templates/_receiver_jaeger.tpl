@@ -1,26 +1,26 @@
 {{/* Inputs: Values (values) tracesOutput */}}
 {{- define "feature.applicationObservability.receiver.jaeger.alloy" }}
-{{- if or .Values.receivers.jaeger.grpc.enabled .Values.receivers.jaeger.thriftBinary.enabled .Values.receivers.jaeger.thriftCompact.enabled .Values.receivers.jaeger.thriftBinary.enabled }}
+{{- if or .Values.receivers.jaeger.grpc.enabled .Values.receivers.jaeger.thriftBinary.enabled .Values.receivers.jaeger.thriftCompact.enabled .Values.receivers.jaeger.thriftHttp.enabled }}
 otelcol.receiver.jaeger "receiver" {
   protocols {
-{{- if .Values.receivers.jaeger.grpc.enabled -}}
+{{- if .Values.receivers.jaeger.grpc.enabled }}
     grpc {
-      endpoint = "0.0.0.0:{{ .Values.receivers.jaeger.grpc | int }}"
+      endpoint = "0.0.0.0:{{ .Values.receivers.jaeger.grpc.port | int }}"
     }
 {{- end }}
 {{- if .Values.receivers.jaeger.thriftBinary.enabled }}
     thrift_binary {
-      endpoint = "0.0.0.0:{{ .Values.receivers.jaeger.thriftBinary | int }}"
+      endpoint = "0.0.0.0:{{ .Values.receivers.jaeger.thriftBinary.port | int }}"
     }
 {{- end }}
 {{- if .Values.receivers.jaeger.thriftCompact.enabled }}
     thrift_compact {
-      endpoint = "0.0.0.0:{{ .Values.receivers.jaeger.thriftCompact | int }}"
+      endpoint = "0.0.0.0:{{ .Values.receivers.jaeger.thriftCompact.port | int }}"
     }
 {{- end }}
 {{- if .Values.receivers.jaeger.thriftHttp.enabled }}
     thrift_http {
-      endpoint = "0.0.0.0:{{ .Values.receivers.jaeger.thriftHttp | int }}"
+      endpoint = "0.0.0.0:{{ .Values.receivers.jaeger.thriftHttp.port | int }}"
     }
 {{- end }}
   }

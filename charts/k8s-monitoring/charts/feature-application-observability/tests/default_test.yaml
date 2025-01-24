@@ -33,15 +33,15 @@ tests:
               argument "metrics_destinations" {
                 comment = "Must be a list of metrics destinations where collected metrics should be forwarded to"
               }
-          
+
               argument "logs_destinations" {
                 comment = "Must be a list of log destinations where collected logs should be forwarded to"
               }
-          
+
               argument "traces_destinations" {
                 comment = "Must be a list of trace destinations where collected trace should be forwarded to"
               }
-          
+
               // Receivers --> Resource Detection Processor
               otelcol.receiver.otlp "receiver" {
                 grpc {
@@ -60,20 +60,21 @@ tests:
                 }
               }
               otelcol.receiver.jaeger "receiver" {
-                protocols {grpc {
-                    endpoint = "0.0.0.0:0"
+                protocols {
+                  grpc {
+                    endpoint = "0.0.0.0:14250"
                   }
                   thrift_binary {
-                    endpoint = "0.0.0.0:0"
+                    endpoint = "0.0.0.0:6832"
                   }
                   thrift_compact {
-                    endpoint = "0.0.0.0:0"
+                    endpoint = "0.0.0.0:6831"
                   }
                   thrift_http {
-                    endpoint = "0.0.0.0:0"
+                    endpoint = "0.0.0.0:14268"
                   }
                 }
-          
+
                 debug_metrics {
                   disable_high_cardinality_metrics = true
                 }
@@ -90,21 +91,21 @@ tests:
                   traces = [otelcol.processor.resourcedetection.default.input]
                 }
               }
-          
+
               // Resource Detection Processor --> K8s Attribute Processor
               otelcol.processor.resourcedetection "default" {
                 detectors = ["env", "system"]
                 system {
                   hostname_sources = ["os"]
                 }
-          
+
                 output {
                   metrics = [otelcol.processor.k8sattributes.default.input]
                   logs = [otelcol.processor.k8sattributes.default.input]
                   traces = [otelcol.processor.k8sattributes.default.input]
                 }
               }
-          
+
               // K8s Attribute Processor --> Transform Processor
               // Resource Detection Processor Traces --> Host Info Connector
               otelcol.processor.k8sattributes "default" {
@@ -116,7 +117,7 @@ tests:
                     from = "connection"
                   }
                 }
-          
+
                 output {
                   metrics = [otelcol.processor.transform.default.input]
                   logs = [otelcol.processor.transform.default.input]
@@ -126,13 +127,13 @@ tests:
               // Host Info Connector --> Batch Processor
               otelcol.connector.host_info "default" {
                 host_identifiers = [ "k8s.node.name" ]
-          
+
                 output {
                   metrics = [otelcol.processor.batch.default.input]
                 }
               }
-            
-            
+
+
               // Transform Processor --> Batch Processor
               otelcol.processor.transform "default" {
                 error_mode = "ignore"
@@ -144,7 +145,7 @@ tests:
                     "set(attributes[\"loki.resource.labels\"], \"cluster, namespace, job, pod\")",
                   ]
                 }
-          
+
                 output {
                   metrics = [otelcol.processor.batch.default.input]
                   logs = [otelcol.processor.batch.default.input]

@@ -19,6 +19,13 @@
       {{ fail (printf "\nDestination #%d (%s) is using an unknown type (%s).\nPlease set:\ndestinations:\n  - name: %s\n    type: \"[%s]\"" $i $destination.name $destination.type $destination.name (include "english_list_or" $types)) }}
     {{- end }}
 
+    {{/* Check if OTLP destination using Grafana Cloud has protocol set */}}
+    {{- if and (eq $destination.type "otlp") ($destination.url) (contains ".grafana.net" $destination.url) }}
+      {{- if ne $destination.protocol "http" }}
+        {{ fail (printf "\nDestination #%d (%s) is using Grafana Cloud OTLP gateway but has incorrect protocol '%s', the gateway only supports 'http'.\nPlease set:\ndestinations:\n  - name: %s\n    type: otlp\n    url: %s\n    protocol: http" $i $destination.name ($destination.protocol | default "grpc (default)") $destination.name $destination.url) }}
+      {{- end }}
+    {{- end }}
+
     {{- if eq (include "secrets.authType" $destination) "basic" }}
       {{- if eq (include "secrets.usesSecret" (dict "object" $destination "key" "auth.username")) "false" }}
         {{ fail (printf "\nDestination #%d (%s) is using basic auth but does not have a username.\nPlease set:\ndestinations:\n  - name: %s\n    auth:\n      type: basic\n      username: my-username\n      password: my-password" $i $destination.name $destination.name) }}
