@@ -1,11 +1,14 @@
 # yamllint disable rule:document-start rule:line-length rule:trailing-spaces
-suite: Test default values
+suite: Test with interval processor
 templates:
   - configmap.yaml
 tests:
-  - it: creates the default pipeline
+  - it: creates the pipeline with the interval processor
     set:
       deployAsConfigMap: true
+      processors:
+        interval:
+          enabled: true
       receivers:
         otlp:
           grpc:
@@ -33,15 +36,15 @@ tests:
               argument "metrics_destinations" {
                 comment = "Must be a list of metrics destinations where collected metrics should be forwarded to"
               }
-
+          
               argument "logs_destinations" {
                 comment = "Must be a list of log destinations where collected logs should be forwarded to"
               }
-
+          
               argument "traces_destinations" {
                 comment = "Must be a list of trace destinations where collected trace should be forwarded to"
               }
-
+          
               // OTLP Receiver
               otelcol.receiver.otlp "receiver" {
                 grpc {
@@ -59,7 +62,7 @@ tests:
                   traces = [otelcol.processor.resourcedetection.default.input]
                 }
               }
-            
+
               // Jaeger Receiver
               otelcol.receiver.jaeger "receiver" {
                 protocols {
@@ -76,7 +79,7 @@ tests:
                     endpoint = "0.0.0.0:14268"
                   }
                 }
-
+          
                 debug_metrics {
                   disable_high_cardinality_metrics = true
                 }
@@ -95,14 +98,14 @@ tests:
                   traces = [otelcol.processor.resourcedetection.default.input]
                 }
               }
-
+          
               // Resource Detection Processor
               otelcol.processor.resourcedetection "default" {
                 detectors = ["env", "system"]
                 system {
                   hostname_sources = ["os"]
                 }
-
+          
                 output {
                   metrics = [otelcol.processor.k8sattributes.default.input]
                   logs = [otelcol.processor.k8sattributes.default.input]
@@ -120,7 +123,7 @@ tests:
                     from = "connection"
                   }
                 }
-
+          
                 output {
                   metrics = [otelcol.processor.transform.default.input]
                   logs = [otelcol.processor.transform.default.input]
@@ -131,7 +134,7 @@ tests:
               // Host Info Connector
               otelcol.connector.host_info "default" {
                 host_identifiers = [ "k8s.node.name" ]
-
+          
                 output {
                   metrics = [otelcol.processor.batch.default.input]
                 }
@@ -148,7 +151,7 @@ tests:
                     "set(attributes[\"loki.resource.labels\"], \"cluster, namespace, job, pod\")",
                   ]
                 }
-
+          
                 output {
                   metrics = [otelcol.processor.batch.default.input]
                   logs = [otelcol.processor.batch.default.input]
@@ -162,6 +165,21 @@ tests:
                 send_batch_max_size = 0
                 timeout = "2s"
 
+                output {
+                  metrics = [otelcol.processor.interval.default.input]
+                  logs = [otelcol.processor.interval.default.input]
+                  traces = [otelcol.processor.interval.default.input]
+                }
+              }
+
+              // Interval Processor
+              otelcol.processor.interval "default" {
+                interval = "60s"
+                passthrough {
+                  gauge = false
+                  summary = false
+                }
+          
                 output {
                   metrics = argument.metrics_destinations.value
                   logs = argument.logs_destinations.value

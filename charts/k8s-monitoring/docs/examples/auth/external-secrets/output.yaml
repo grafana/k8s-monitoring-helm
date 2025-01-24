@@ -581,7 +581,7 @@ data:
         comment = "Must be a list of trace destinations where collected trace should be forwarded to"
       }
     
-      // Receivers --> Resource Detection Processor    
+      // Jaeger Receiver  
       otelcol.receiver.jaeger "receiver" {
         protocols {
           grpc {
@@ -595,9 +595,9 @@ data:
         output {
           traces = [otelcol.processor.resourcedetection.default.input]
         }
-      }  
+      }
     
-      // Resource Detection Processor --> K8s Attribute Processor  
+      // Resource Detection Processor  
       otelcol.processor.resourcedetection "default" {
         detectors = ["env", "system"]
         system {
@@ -611,8 +611,7 @@ data:
         }
       }
     
-      // K8s Attribute Processor --> Transform Processor
-      // Resource Detection Processor Traces --> Host Info Connector  
+      // K8s Attributes Processor  
       otelcol.processor.k8sattributes "default" {
         extract {
           metadata = ["k8s.namespace.name","k8s.pod.name","k8s.deployment.name","k8s.statefulset.name","k8s.daemonset.name","k8s.cronjob.name","k8s.job.name","k8s.node.name","k8s.pod.uid","k8s.pod.start_time"]
@@ -629,7 +628,8 @@ data:
           traces = [otelcol.processor.transform.default.input, otelcol.connector.host_info.default.input]
         }
       }
-      // Host Info Connector --> Batch Processor  
+    
+      // Host Info Connector  
       otelcol.connector.host_info "default" {
         host_identifiers = [ "k8s.node.name" ]
       
@@ -638,8 +638,7 @@ data:
         }
       }
     
-    
-      // Transform Processor --> Batch Processor  
+      // Transform Processor  
       otelcol.processor.transform "default" {
         error_mode = "ignore"
         log_statements {
@@ -658,8 +657,12 @@ data:
         }
       }
     
-      // Batch Processor --> Destinations  
+      // Batch Processor  
       otelcol.processor.batch "default" {
+        send_batch_size = 16384
+        send_batch_max_size = 0
+        timeout = "2s"
+      
         output {
           metrics = argument.metrics_destinations.value
           logs = argument.logs_destinations.value

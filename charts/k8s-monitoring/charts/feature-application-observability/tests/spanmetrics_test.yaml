@@ -1,28 +1,25 @@
 # yamllint disable rule:document-start rule:line-length rule:trailing-spaces
-suite: Test default values
+suite: Test with spanmetrics processor
 templates:
   - configmap.yaml
 tests:
-  - it: creates the default pipeline
+  - it: creates the pipeline with the spanmetrics connector
     set:
       deployAsConfigMap: true
+      processors:
+        interval:
+          enabled: true
+      connectors:
+        spanMetrics:
+          enabled: true
+          dimensions:
+            - name: "http.status_code"
+            - name: "http.method"
+              default: "GET"
       receivers:
         otlp:
           grpc:
             enabled: true
-          http:
-            enabled: true
-        jaeger:
-          grpc:
-            enabled: true
-          thriftBinary:
-            enabled: true
-          thriftCompact:
-            enabled: true
-          thriftHttp:
-            enabled: true
-        zipkin:
-          enabled: true
     asserts:
       - isKind:
           of: ConfigMap
@@ -33,22 +30,19 @@ tests:
               argument "metrics_destinations" {
                 comment = "Must be a list of metrics destinations where collected metrics should be forwarded to"
               }
-
+          
               argument "logs_destinations" {
                 comment = "Must be a list of log destinations where collected logs should be forwarded to"
               }
-
+          
               argument "traces_destinations" {
                 comment = "Must be a list of trace destinations where collected trace should be forwarded to"
               }
-
+          
               // OTLP Receiver
               otelcol.receiver.otlp "receiver" {
                 grpc {
                   endpoint = "0.0.0.0:4317"
-                }
-                http {
-                  endpoint = "0.0.0.0:4318"
                 }
                 debug_metrics {
                   disable_high_cardinality_metrics = true
@@ -59,42 +53,6 @@ tests:
                   traces = [otelcol.processor.resourcedetection.default.input]
                 }
               }
-            
-              // Jaeger Receiver
-              otelcol.receiver.jaeger "receiver" {
-                protocols {
-                  grpc {
-                    endpoint = "0.0.0.0:14250"
-                  }
-                  thrift_binary {
-                    endpoint = "0.0.0.0:6832"
-                  }
-                  thrift_compact {
-                    endpoint = "0.0.0.0:6831"
-                  }
-                  thrift_http {
-                    endpoint = "0.0.0.0:14268"
-                  }
-                }
-
-                debug_metrics {
-                  disable_high_cardinality_metrics = true
-                }
-                output {
-                  traces = [otelcol.processor.resourcedetection.default.input]
-                }
-              }
-
-              // Zipkin Receiver
-              otelcol.receiver.zipkin "receiver" {
-                endpoint = "0.0.0.0:9411"
-                debug_metrics {
-                  disable_high_cardinality_metrics = true
-                }
-                output {
-                  traces = [otelcol.processor.resourcedetection.default.input]
-                }
-              }
 
               // Resource Detection Processor
               otelcol.processor.resourcedetection "default" {
@@ -102,7 +60,7 @@ tests:
                 system {
                   hostname_sources = ["os"]
                 }
-
+          
                 output {
                   metrics = [otelcol.processor.k8sattributes.default.input]
                   logs = [otelcol.processor.k8sattributes.default.input]
@@ -120,7 +78,7 @@ tests:
                     from = "connection"
                   }
                 }
-
+          
                 output {
                   metrics = [otelcol.processor.transform.default.input]
                   logs = [otelcol.processor.transform.default.input]
@@ -131,7 +89,7 @@ tests:
               // Host Info Connector
               otelcol.connector.host_info "default" {
                 host_identifiers = [ "k8s.node.name" ]
-
+          
                 output {
                   metrics = [otelcol.processor.batch.default.input]
                 }
@@ -148,11 +106,36 @@ tests:
                     "set(attributes[\"loki.resource.labels\"], \"cluster, namespace, job, pod\")",
                   ]
                 }
-
+          
                 output {
                   metrics = [otelcol.processor.batch.default.input]
                   logs = [otelcol.processor.batch.default.input]
-                  traces = [otelcol.processor.batch.default.input]
+                  traces = [otelcol.connector.spanmetrics.default.input, otelcol.processor.batch.default.input]
+                }
+              }
+
+              // Span Metrics Connector
+              otelcol.connector.spanmetrics "default" {
+                dimension {
+                  name = "http.status_code"
+                }
+                dimension {
+                  name = "http.method"
+                  default = "GET"
+                }
+                dimensions_cache_size = 1000
+                namespace = "traces.span.metrics"
+
+                histogram {
+                  disable = false
+                  unit = "ms"
+                  explicit {
+                    buckets = ["2ms","4ms","6ms","8ms","10ms","50ms","100ms","200ms","400ms","800ms","1s","1400ms","2s","5s","10s","15s"]
+                  }
+                }
+
+                output {
+                  metrics = [otelcol.processor.batch.default.input]
                 }
               }
 
@@ -162,6 +145,21 @@ tests:
                 send_batch_max_size = 0
                 timeout = "2s"
 
+                output {
+                  metrics = [otelcol.processor.interval.default.input]
+                  logs = [otelcol.processor.interval.default.input]
+                  traces = [otelcol.processor.interval.default.input]
+                }
+              }
+
+              // Interval Processor
+              otelcol.processor.interval "default" {
+                interval = "60s"
+                passthrough {
+                  gauge = false
+                  summary = false
+                }
+          
                 output {
                   metrics = argument.metrics_destinations.value
                   logs = argument.logs_destinations.value

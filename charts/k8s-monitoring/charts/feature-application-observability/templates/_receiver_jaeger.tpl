@@ -1,6 +1,5 @@
 {{/* Inputs: Values (values) tracesOutput */}}
 {{- define "feature.applicationObservability.receiver.jaeger.alloy" }}
-{{- if or .Values.receivers.jaeger.grpc.enabled .Values.receivers.jaeger.thriftBinary.enabled .Values.receivers.jaeger.thriftCompact.enabled .Values.receivers.jaeger.thriftHttp.enabled }}
 otelcol.receiver.jaeger "receiver" {
   protocols {
 {{- if .Values.receivers.jaeger.grpc.enabled }}
@@ -29,10 +28,9 @@ otelcol.receiver.jaeger "receiver" {
     disable_high_cardinality_metrics = {{ not .Values.receivers.jaeger.includeDebugMetrics }}
   }
   output {
-{{- if and .tracesOutput .Values.traces.enabled }}
-    traces = {{ .tracesOutput }}
+{{- if and .traces .Values.traces.enabled }}
+    traces = {{ .traces }}
 {{- end }}
   }
 }
-{{- end }}
 {{- end }}

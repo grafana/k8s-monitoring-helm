@@ -64,12 +64,8 @@ receivers:
     # @section -- Receivers: Zipkin
     includeDebugMetrics: false
 
+# Processors are components that modify the telemetry data, such as filtering, batching, and adding metadata.
 processors:
-  grafanaCloudMetrics:
-    # -- Generate host info metrics from telemetry data, used in Application Observability in Grafana Cloud.
-    # @section -- Processors: Grafana Cloud Host Info
-    enabled: true
-
   batch:
     # -- What batch size to use, in bytes
     # @section -- Processors: Batch
@@ -80,6 +76,25 @@ processors:
     # -- How long before sending (Processors)
     # @section -- Processors: Batch
     timeout: 2s
+
+  interval:
+    # -- Utilize an interval processor to aggregate metrics and periodically forward the latest values to the next
+    # component in the pipeline.
+    # @section -- Processors: Interval
+    enabled: false
+
+    # -- The interval at which to emit aggregated metrics.
+    # @section -- Processors: Interval
+    interval: 60s
+
+    passthrough:
+      # -- Determines whether gauge metrics should be passed through as they are or aggregated.
+      # @section -- Processors: Interval
+      gauge: false
+
+      # -- Determines whether summary metrics should be passed through as they are or aggregated.
+      # @section -- Processors: Interval
+      summary: false
 
   k8sattributes:
     # -- Kubernetes metadata to extract and add to the attributes of the received telemetry data.
@@ -114,6 +129,105 @@ processors:
     # -- Maximum amount of memory targeted to be allocated by the process heap.
     # @section -- Processors: Memory Limiter
     limit: 0MiB
+
+# Connectors are components that create new telemetry data from existing telemetry data.
+connectors:
+  grafanaCloudMetrics:
+    # -- Generate host info metrics from telemetry data. These metrics are required for using Application Observability
+    # in Grafana Cloud. Note: Enabling this may incur additional costs.
+    # See https://grafana.com/docs/grafana-cloud/monitor-applications/application-observability/pricing/
+    # @section -- Connectors: Grafana Cloud Host Info
+    enabled: true
+
+  # Span Logs connector settings.
+  spanLogs:
+    # -- Use a span logs connector which creates logs from spans.
+    # @section -- Connectors: Span Logs
+    enabled: false
+
+    # -- Create a log line for each span. This can lead to a large number of logs.
+    # @section -- Connectors: Span Logs
+    spans: false
+    # -- Additional span attributes to log.
+    # @section -- Connectors: Span Logs
+    spanAttributes: []
+
+    # -- Log one line for every root span of a trace.
+    # @section -- Connectors: Span Logs
+    roots: false
+
+    # -- Log one line for every process.
+    # @section -- Connectors: Span Logs
+    process: false
+    # -- Additional process attributes to log.
+    # @section -- Connectors: Span Logs
+    processAttributes: []
+
+    # -- A list of keys that will be logged as labels.
+    # @section -- Connectors: Span Logs
+    labels: []
+
+  # Span Metrics connector settings.
+  spanMetrics:
+    # -- Use a span metrics connector which creates metrics from spans.
+    # @section -- Connectors: Span Metrics
+    enabled: false
+
+    # -- Define dimensions to be added.
+    # Some are set internally by default: [service.name, span.name, span.kind, status.code]
+    # Example:
+    # - name: "http.status_code"
+    # - name: "http.method"
+    #   default: "GET"
+    # @section -- Connectors: Span Metrics
+    dimensions: []
+
+    # -- How many dimensions to cache
+    # @section -- Connectors: Span Metrics
+    dimensionsCacheSize: 1000
+
+    # -- The Metric namespace.
+    # @section -- Connectors: Span Metrics
+    namespace: traces.span.metrics
+
+    events:
+      # -- Capture events metrics, which track span events.
+      # @section -- Connectors: Span Metrics
+      enabled: false
+
+    exemplars:
+      # -- Attach exemplars to histograms.
+      # @section -- Connectors: Span Metrics
+      enabled: false
+
+      # -- (number) Limits the number of exemplars that can be added to a unique dimension set.
+      # @section -- Connectors: Span Metrics
+      maxPerDataPoint:
+
+    histogram:
+      # -- Capture histogram metrics, derived from spans’ durations.
+      # @section -- Connectors: Span Metrics
+      enabled: true
+
+      # -- Type of histograms to create. Must be either "explicit" or "exponential".
+      # @section -- Connectors: Span Metrics
+      type: explicit
+
+      # -- The histogram unit.
+      # @section -- Connectors: Span Metrics
+      unit: ms
+
+      # Settings for explicit histograms.
+      explicit:
+        # -- The histogram buckets to use.
+        # @section -- Connectors: Span Metrics
+        buckets: ["2ms", "4ms", "6ms", "8ms", "10ms", "50ms", "100ms", "200ms", "400ms", "800ms", "1s", "1400ms", "2s", "5s", "10s", "15s"]
+
+      # Settings for exponential histograms.
+      exponential:
+        # -- Maximum number of buckets per positive or negative number range.
+        # @section -- Connectors: Span Metrics
+        maxSize: 160
 
 metrics:
   enabled: true
