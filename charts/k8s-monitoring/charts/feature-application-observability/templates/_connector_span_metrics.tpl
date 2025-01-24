@@ -12,6 +12,7 @@ otelcol.connector.spanmetrics "{{ .name | default "default" }}" {
   }
 {{- end }}
   dimensions_cache_size = {{ .Values.connectors.spanMetrics.dimensionsCacheSize }}
+  namespace = {{ .Values.connectors.spanMetrics.namespace | quote }}
 {{- if .Values.connectors.spanMetrics.events.enabled }}
   events {
     enabled = true
