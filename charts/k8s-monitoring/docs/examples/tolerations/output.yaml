@@ -47,8 +47,6 @@ metadata:
     release: k8smon
   name: k8smon-kube-state-metrics
   namespace: default
-imagePullSecrets:  
-  - name: my-registry-creds
 ---
 # Source: k8s-monitoring/charts/clusterMetrics/charts/node-exporter/templates/serviceaccount.yaml
 apiVersion: v1
@@ -66,8 +64,6 @@ metadata:
     app.kubernetes.io/version: "1.8.2"
     release: k8smon
 automountServiceAccountToken: false
-imagePullSecrets:  
-  - name: my-registry-creds
 ---
 # Source: k8s-monitoring/charts/clusterMetrics/charts/windows-exporter/templates/serviceaccount.yaml
 apiVersion: v1
@@ -84,8 +80,6 @@ metadata:
     app.kubernetes.io/instance: k8smon
     app.kubernetes.io/version: "0.29.2"
     release: k8smon
-imagePullSecrets:  
-  - name: my-registry-creds
 ---
 # Source: k8s-monitoring/charts/clusterMetrics/charts/windows-exporter/templates/config.yaml
 apiVersion: v1
@@ -149,13 +143,13 @@ data:
         write_relabel_config {
           source_labels = ["cluster"]
           regex = ""
-          replacement = "private-image-registries-example-cluster"
+          replacement = "tolerations-example-cluster"
           target_label = "cluster"
         }
         write_relabel_config {
           source_labels = ["k8s.cluster.name"]
           regex = ""
-          replacement = "private-image-registries-example-cluster"
+          replacement = "tolerations-example-cluster"
           target_label = "cluster"
         }
       }
@@ -471,8 +465,8 @@ data:
         }
       }
       external_labels = {
-        cluster = "private-image-registries-example-cluster",
-        "k8s_cluster_name" = "private-image-registries-example-cluster",
+        cluster = "tolerations-example-cluster",
+        "k8s_cluster_name" = "tolerations-example-cluster",
       }
     }
     
@@ -2730,11 +2724,9 @@ spec:
         app.kubernetes.io/instance: k8smon
     spec:
       serviceAccountName: k8smon-alloy-logs
-      imagePullSecrets:
-        - name: my-registry-creds
       containers:
         - name: alloy
-          image: my.registry.com/grafana/alloy:v1.6.1
+          image: docker.io/grafana/alloy:v1.6.1
           imagePullPolicy: IfNotPresent
           args:
             - run
@@ -2792,7 +2784,7 @@ spec:
               mountPath: /var/lib/docker/containers
               readOnly: true
         - name: config-reloader
-          image: my.registry.com/jimmidyson/configmap-reload:v0.14.0
+          image: ghcr.io/jimmidyson/configmap-reload:v0.14.0
           args:
             - --volume-dir=/etc/alloy
             - --webhook-url=http://localhost:12345/-/reload
@@ -2806,6 +2798,9 @@ spec:
       dnsPolicy: ClusterFirst
       nodeSelector:
         kubernetes.io/os: linux
+      tolerations:
+        - effect: NoSchedule
+          operator: Exists
       volumes:
         - name: config
           configMap:
@@ -2866,7 +2861,7 @@ spec:
       serviceAccountName: k8smon-node-exporter
       containers:
         - name: node-exporter
-          image: my.registry.com/prometheus/node-exporter:v1.8.2
+          image: quay.io/prometheus/node-exporter:v1.8.2
           imagePullPolicy: IfNotPresent
           args:
             - --path.procfs=/host/proc
@@ -2916,8 +2911,6 @@ spec:
               mountPath: /host/root
               mountPropagation: HostToContainer
               readOnly: true
-      imagePullSecrets:        
-        - name: my-registry-creds
       hostNetwork: true
       hostPID: true
       hostIPC: false
@@ -2992,13 +2985,13 @@ spec:
           runAsUserName: NT AUTHORITY\system
       initContainers:
         - name: configure-firewall
-          image: my.registry.com/prometheus-community/windows-exporter:0.29.2
+          image: ghcr.io/prometheus-community/windows-exporter:0.29.2
           command: [ "powershell" ]
           args: [ "New-NetFirewallRule", "-DisplayName", "'windows-exporter'", "-Direction", "inbound", "-Profile", "Any", "-Action", "Allow", "-LocalPort", "9182", "-Protocol", "TCP" ]
       serviceAccountName: k8smon-windows-exporter
       containers:
         - name: windows-exporter
-          image: my.registry.com/prometheus-community/windows-exporter:0.29.2
+          image: ghcr.io/prometheus-community/windows-exporter:0.29.2
           imagePullPolicy: IfNotPresent
           args:
             - --config.file=%CONTAINER_SANDBOX_MOUNT_POINT%/config.yml
@@ -3035,8 +3028,6 @@ spec:
             - name: config
               mountPath: /config.yml
               subPath: config.yml
-      imagePullSecrets:        
-        - name: my-registry-creds
       hostNetwork: true
       hostPID: true
       nodeSelector:
@@ -3105,7 +3096,7 @@ spec:
         - --resources=certificatesigningrequests,configmaps,cronjobs,daemonsets,deployments,endpoints,horizontalpodautoscalers,ingresses,jobs,leases,limitranges,mutatingwebhookconfigurations,namespaces,networkpolicies,nodes,persistentvolumeclaims,persistentvolumes,poddisruptionbudgets,pods,replicasets,replicationcontrollers,resourcequotas,secrets,services,statefulsets,storageclasses,validatingwebhookconfigurations,volumeattachments
         - --metric-labels-allowlist=nodes=[agentpool,alpha.eksctl.io/cluster-name,alpha.eksctl.io/nodegroup-name,beta.kubernetes.io/instance-type,cloud.google.com/gke-nodepool,cluster_name,ec2_amazonaws_com_Name,ec2_amazonaws_com_aws_autoscaling_groupName,ec2_amazonaws_com_aws_autoscaling_group_name,ec2_amazonaws_com_name,eks_amazonaws_com_nodegroup,k8s_io_cloud_provider_aws,karpenter.sh/nodepool,kubernetes.azure.com/cluster,kubernetes.io/arch,kubernetes.io/hostname,kubernetes.io/os,node.kubernetes.io/instance-type,topology.kubernetes.io/region,topology.kubernetes.io/zone]
         imagePullPolicy: IfNotPresent
-        image: my.registry.com/kube-state-metrics/kube-state-metrics:v2.14.0
+        image: registry.k8s.io/kube-state-metrics/kube-state-metrics:v2.14.0
         ports:
         - containerPort: 8080
           name: "http"
@@ -3139,10 +3130,11 @@ spec:
             drop:
             - ALL
           readOnlyRootFilesystem: true
-      imagePullSecrets:        
-        - name: my-registry-creds
       nodeSelector:
         kubernetes.io/os: linux
+      tolerations:
+        - effect: NoSchedule
+          operator: Exists
 ---
 # Source: k8s-monitoring/charts/alloy-metrics/templates/controllers/statefulset.yaml
 apiVersion: apps/v1
@@ -3176,11 +3168,9 @@ spec:
         app.kubernetes.io/instance: k8smon
     spec:
       serviceAccountName: k8smon-alloy-metrics
-      imagePullSecrets:
-        - name: my-registry-creds
       containers:
         - name: alloy
-          image: my.registry.com/grafana/alloy:v1.6.1
+          image: docker.io/grafana/alloy:v1.6.1
           imagePullPolicy: IfNotPresent
           args:
             - run
@@ -3235,7 +3225,7 @@ spec:
             - name: config
               mountPath: /etc/alloy
         - name: config-reloader
-          image: my.registry.com/jimmidyson/configmap-reload:v0.14.0
+          image: ghcr.io/jimmidyson/configmap-reload:v0.14.0
           args:
             - --volume-dir=/etc/alloy
             - --webhook-url=http://localhost:12345/-/reload
@@ -3249,6 +3239,9 @@ spec:
       dnsPolicy: ClusterFirst
       nodeSelector:
         kubernetes.io/os: linux
+      tolerations:
+        - effect: NoSchedule
+          operator: Exists
       volumes:
         - name: config
           configMap:
