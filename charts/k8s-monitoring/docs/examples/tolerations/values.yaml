@@ -1,0 +1,43 @@
+---
+cluster:
+  name: tolerations-example-cluster
+
+destinations:
+  - name: prometheus
+    type: prometheus
+    url: http://prometheus.prometheus.svc:9090/api/v1/write
+  - name: loki
+    type: loki
+    url: http://loki.loki.svc:3100/loki/api/v1/push
+
+clusterMetrics:
+  enabled: true
+  kube-state-metrics:
+    tolerations:
+      - effect: NoSchedule
+        operator: Exists
+  node-exporter:
+    tolerations:
+      - effect: NoSchedule
+        operator: Exists
+  windows-exporter:
+    tolerations:
+      - effect: NoSchedule
+        operator: Exists
+
+podLogs:
+  enabled: true
+
+alloy-metrics:
+  enabled: true
+  controller:
+    tolerations:
+      - effect: NoSchedule
+        operator: Exists
+
+alloy-logs:
+  enabled: true
+  controller:
+    tolerations:
+      - effect: NoSchedule
+        operator: Exists

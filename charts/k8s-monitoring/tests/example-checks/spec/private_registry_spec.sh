@@ -1,5 +1,5 @@
 findUnmodifiedImageRegisries() {
-  grep "image: " ../../docs/examples/private-image-registries/output.yaml | grep -v "my.registry.com"
+  grep "image: " ../../docs/examples/private-image-registries/globally/output.yaml | grep -v "my.registry.com"
 }
 
 Describe 'Private Registry Check'
