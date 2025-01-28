@@ -4,13 +4,12 @@
 -->
 # Private Image Registries
 
-This example shows how to override the container image registries for every subchart. This can be used to support
-air-gapped environments, or in environments where you might not want to use public image registries.
+This example shows how to override the individual container image registries for every subchart. This can be used to
+support air-gapped environments, or in environments where you might not want to use public image registries.
 
 If you want to change the image registry for every subchart, you can use the `global` object to set the registry
 [globally](../globally).
 
-This example shows the location for
 ## Values
 
 ```yaml

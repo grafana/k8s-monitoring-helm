@@ -44,7 +44,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| connectors.grafanaCloudMetrics.enabled | bool | `true` | Generate host info metrics from telemetry data. These metrics are required for using Application Observability in Grafana Cloud. Note: Enabling this may incur additional costs. See https://grafana.com/docs/grafana-cloud/monitor-applications/application-observability/pricing/ |
+| connectors.grafanaCloudMetrics.enabled | bool | `true` | Generate host info metrics from telemetry data. These metrics are required for using Application Observability in Grafana Cloud. Note: Enabling this may incur additional costs. See [Application Observability Pricing](https://grafana.com/docs/grafana-cloud/monitor-applications/application-observability/pricing/) |
 
 ### Connectors: Span Logs
 
