@@ -578,11 +578,6 @@ data:
             "tmp_container_runtime",
           ]
         }
-      
-        // Only keep the labels that are defined in the `keepLabels` list.
-        stage.label_keep {
-          values = ["app_kubernetes_io_name","container","instance","job","level","namespace","pod","service_name","integration"]
-        }
         // Integration: Mimir
         stage.match {
           selector = "{integration=\"mimir\",instance=\"mimir\"}"
@@ -612,6 +607,11 @@ data:
             replace = ""
           }
         
+        }
+      
+        // Only keep the labels that are defined in the `keepLabels` list.
+        stage.label_keep {
+          values = ["app_kubernetes_io_name","container","instance","job","level","namespace","pod","service_name","integration"]
         }
       
         forward_to = argument.logs_destinations.value

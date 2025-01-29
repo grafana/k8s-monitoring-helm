@@ -117,7 +117,9 @@ clusterMetrics:
   kube-state-metrics:
     enabled: true
     namespaces:
+      - collectors
       - logs
+      - metrics
       - o11y
     extraMetricProcessingRules: |-
       rule {
@@ -147,6 +149,16 @@ nodeLogs:
 
 podLogs:
   enabled: true
+  labelsToKeep:
+    - app
+    - app_kubernetes_io_name
+    - component
+    - container
+    - job
+    - level
+    - namespace
+    - pod
+    - service_name
   gatherMethod: kubernetesApi
   collector: alloy-singleton
   namespaces:

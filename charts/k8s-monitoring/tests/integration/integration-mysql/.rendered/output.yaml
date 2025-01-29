@@ -374,11 +374,6 @@ data:
             "tmp_container_runtime",
           ]
         }
-      
-        // Only keep the labels that are defined in the `keepLabels` list.
-        stage.label_keep {
-          values = ["app_kubernetes_io_name","container","instance","job","level","namespace","pod","service_name","integration"]
-        }
         // Integration: MySQL
         stage.match {
           selector = "{integration=\"mysql\"}"
@@ -409,6 +404,11 @@ data:
           stage.label_drop {
             values = ["integration"]
           }
+        }
+      
+        // Only keep the labels that are defined in the `keepLabels` list.
+        stage.label_keep {
+          values = ["app_kubernetes_io_name","container","instance","job","level","namespace","pod","service_name","integration"]
         }
       
         forward_to = argument.logs_destinations.value

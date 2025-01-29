@@ -50,13 +50,6 @@ loki.process "pod_logs" {
     }
   }
 {{- end }}
-{{- with .Values.labelsToKeep }}
-
-  // Only keep the labels that are defined in the `keepLabels` list.
-  stage.label_keep {
-    values = {{ append . "integration" | toJson }}
-  }
-{{- end }}
 
 {{- if or .Values.staticLabels .Values.staticLabelsFrom }}
 
@@ -73,6 +66,14 @@ loki.process "pod_logs" {
 {{- end }}
 {{- if .Values.extraLogProcessingStages }}
 {{ tpl .Values.extraLogProcessingStages $ | indent 2 }}
+{{- end }}
+
+{{- with .Values.labelsToKeep }}
+
+  // Only keep the labels that are defined in the `keepLabels` list.
+  stage.label_keep {
+    values = {{ append . "integration" | toJson }}
+  }
 {{- end }}
 
   forward_to = argument.logs_destinations.value
