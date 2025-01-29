@@ -12,13 +12,23 @@ FEATURE_CHARTS = $(shell ls --color=never charts | grep feature-)
 SCHEMA_MODS_JSON_FILES = $(shell find schema-mods -name "*.json")
 SCHEMA_MODS_JQ_FILES = $(shell find schema-mods -name "*.jq")
 
+COLLECTOR_VALUES_FILES = $(shell find collectors -name "*-values.yaml" | sort -u)
+COLLECTOR_DOCS_FILES = $(COLLECTOR_VALUES_FILES:collectors/%-values.yaml=./docs/collectors/%.md)
+COLLECTOR_SCHEMA_FILES = $(COLLECTOR_VALUES_FILES:collectors/%-values.yaml=./schema-mods/definitions/%-collectors.schema.json)
+
 DESTINATION_VALUES_FILES = $(shell find destinations -name "*-values.yaml" | sort -u)
 DESTINATION_DOCS_FILES = $(DESTINATION_VALUES_FILES:destinations/%-values.yaml=./docs/destinations/%.md)
 DESTINATION_SCHEMA_FILES = $(DESTINATION_VALUES_FILES:destinations/%-values.yaml=./schema-mods/definitions/%-destination.schema.json)
 
 .SECONDEXPANSION:
+docs/collectors/%.md: collectors/%-values.yaml $$(wildcard docs/collectors/.doc_templates/%.gotmpl)
+	docker run --platform linux/amd64 --rm -v $(shell pwd):/src ghcr.io/grafana/helm-docs-and-schema-gen $(shell echo $< | sed 's/collectors\/\([-a-z]*\)-values.yaml/\1/') collector
+
 docs/destinations/%.md: destinations/%-values.yaml $$(wildcard docs/destinations/.doc_templates/%.gotmpl)
 	docker run --platform linux/amd64 --rm -v $(shell pwd):/src ghcr.io/grafana/helm-docs-and-schema-gen $(shell echo $< | sed 's/destinations\/\([-a-z]*\)-values.yaml/\1/') destination
+
+schema-mods/definitions/%-collectors.schema.json: collectors/%-values.yaml
+	docker run --platform linux/amd64 --rm -v $(shell pwd):/src ghcr.io/grafana/helm-docs-and-schema-gen $(shell echo $< | sed 's/collectors\/\([-a-z]*\)-values.yaml/\1/') collector
 
 schema-mods/definitions/%-destination.schema.json: destinations/%-values.yaml
 	docker run --platform linux/amd64 --rm -v $(shell pwd):/src ghcr.io/grafana/helm-docs-and-schema-gen $(shell echo $< | sed 's/destinations\/\([-a-z]*\)-values.yaml/\1/') destination
@@ -70,7 +80,7 @@ else
 endif
 ALLOY_MODULE_FILES = $(shell find alloyModules -name "*.alloy")
 
-values.schema.json: values.yaml $(DESTINATION_SCHEMA_FILES) $(SCHEMA_MODS_JSON_FILES) $(SCHEMA_MODS_JQ_FILES) schema-mods/destination-list.json
+values.schema.json: values.yaml $(COLLECTOR_SCHEMA_FILES) $(DESTINATION_SCHEMA_FILES) $(SCHEMA_MODS_JSON_FILES) $(SCHEMA_MODS_JQ_FILES) schema-mods/destination-list.json
 	../../scripts/schema-gen.sh .
 
 .updatecli-%.yaml: Chart.yaml
@@ -159,7 +169,7 @@ platform-test-checks: $(PLATFORM_TEST_OUTPUT_FILES)
 
 .PHONY: clean
 clean:
-	rm -f README.md values.schema.json $(UPDATECLI_FILES) templates/destinations/_destination_types.tpl schema-mods/destination-list.json $(DESTINATION_SCHEMA_FILES) $(DESTINATION_DOCS_FILES)
+	rm -f README.md values.schema.json $(UPDATECLI_FILES) templates/destinations/_destination_types.tpl schema-mods/destination-list.json $(COLLECTOR_SCHEMA_FILES) $(COLLECTOR_DOCS_FILES) $(DESTINATION_SCHEMA_FILES) $(DESTINATION_DOCS_FILES)
 	rm -f $(EXAMPLE_OUTPUT_FILES) $(EXAMPLE_ALLOY_FILES) $(EXAMPLE_README_FILES) $(INTEGRATION_TEST_OUTPUT_FILES) $(PLATFORM_TEST_OUTPUT_FILES)
 	set -e && \
 	for chart in $(FEATURE_CHARTS); do \
@@ -174,7 +184,7 @@ build-features:
 
 # Build targets
 .PHONY: build
-build: build-features README.md alloyModules/LICENSE values.schema.json templates/destinations/_destination_types.tpl $(DESTINATION_DOCS_FILES) $(UPDATECLI_FILES) examples integration-test-checks platform-test-checks
+build: build-features README.md alloyModules/LICENSE values.schema.json templates/destinations/_destination_types.tpl $(COLLECTOR_DOCS_FILES) $(DESTINATION_DOCS_FILES) $(UPDATECLI_FILES) examples integration-test-checks platform-test-checks
 
 # Test targets
 .PHONY: test unittest lint-helm lint-configs

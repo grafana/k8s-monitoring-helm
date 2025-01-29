@@ -12,23 +12,28 @@
 {{- range $collector := include "collectors.list.enabled" . | fromYamlArray }}
   {{- $usedByAFeature := has $collector $collectorsUtilized }}
   {{- $extraConfigDefined := not (not (index $.Values $collector).extraConfig) }}
-  {{- $remoteConfigEnabled := (index $.Values $collector).remoteConfig.enabled }}
+  {{- $remoteConfigEnabled := (dig "remoteConfig" "enabled" false (index $.Values $collector)) }}
   {{- if not (or $usedByAFeature $extraConfigDefined $remoteConfigEnabled) }}
     {{- fail (printf $errorMessage $collector $collector) }}
   {{- end }}
 {{- end }}
 {{- end }}
 
+{{- define "collectors.modifications.liveDebugging" }}
+alloy:
+  stabilityLevel: experimental
+{{- end }}
+
 {{- define "collectors.validate.liveDebugging" }}
-{{- if (index .Values .collectorName).enabled }}
-  {{- if (index .Values .collectorName).liveDebugging.enabled }}
-    {{- if not (eq (index .Values .collectorName).alloy.stabilityLevel "experimental") }}
+  {{- $defaultValues := "collectors/alloy-values.yaml" | .Files.Get | fromYaml }}
+  {{- $collectorValues := mergeOverwrite $defaultValues (index .Values .collectorName) }}
+  {{- if $collectorValues.liveDebugging.enabled }}
+    {{- if not (eq $collectorValues.alloy.stabilityLevel "experimental") }}
       {{- $msg := list "" "The live debugging feature requires Alloy to use the \"experimental\" stability level. Please set:" }}
       {{- $msg = append $msg (printf "%s:" .collectorName ) }}
       {{- $msg = append $msg "  alloy:" }}
       {{- $msg = append $msg "    stabilityLevel: experimental" }}
       {{- fail (join "\n" $msg) }}
     {{- end }}
-  {{- end }}
   {{- end }}
 {{- end }}

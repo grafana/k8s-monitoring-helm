@@ -1,0 +1,102 @@
+# -- Extra Alloy configuration to be added to the configuration file.
+# @section -- General
+extraConfig: ""
+
+# Remote configuration from a remote config server.
+remoteConfig:
+  # -- Enable fetching configuration from a remote config server.
+  # @section -- Remote Configuration
+  enabled: false
+  
+  # -- The URL of the remote config server.
+  # @section -- Remote Configuration: Authentication
+  url: ""
+  
+  auth:
+    # -- The type of authentication to use for the remote config server.
+    # @section -- Remote Configuration: Authentication
+    type: "none"
+    
+    # -- The username to use for the remote config server.
+    # @section -- Remote Configuration: Authentication
+    username: ""
+    # -- The key for storing the username in the secret.
+    # @section -- Remote Configuration: Authentication
+    usernameKey: "username"
+    # -- Raw config for accessing the password.
+    # @section -- Remote Configuration: Authentication
+    usernameFrom: ""
+    
+    # -- The password to use for the remote config server.
+    # @section -- Remote Configuration: Authentication
+    password: ""
+    # -- The key for storing the password in the secret.
+    # @section -- Remote Configuration: Authentication
+    passwordKey: "password"
+    # -- Raw config for accessing the password.
+    # @section -- Remote Configuration: Authentication
+    passwordFrom: ""
+  
+  secret:
+    # -- Whether to create a secret for the remote config server.
+    # @section -- Remote Configuration: Authentication
+    create: true
+    # -- If true, skip secret creation and embed the credentials directly into the configuration.
+    # @section -- Remote Configuration: Authentication
+    embed: false
+    # -- The name of the secret to create.
+    # @section -- Remote Configuration: Authentication
+    name: ""
+    # -- The namespace for the secret.
+    # @section -- Remote Configuration: Authentication
+    namespace: ""
+  
+  # -- The frequency at which to poll the remote config server for updates.
+  # @section -- Remote Configuration
+  pollFrequency: 5m
+  
+  # -- Attributes to be added to this collector when requesting configuration.
+  # @section -- Remote Configuration
+  extraAttributes: {}
+
+logging:
+  # -- Level at which Alloy log lines should be written.
+  # @section -- Logging
+  level: info
+  # -- Format to use for writing Alloy log lines.
+  # @section -- Logging
+  format: logfmt
+
+liveDebugging:
+  # -- Enable live debugging for the Alloy instance.
+  # Requires stability level to be set to "experimental".
+  # @section -- General
+  enabled: false
+
+# @ignored
+alloy:
+  configMap: {create: false}
+
+  securityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop: ["ALL"]
+      add: ["CHOWN", "DAC_OVERRIDE", "FOWNER", "FSETID", "KILL", "SETGID", "SETUID", "SETPCAP", "NET_BIND_SERVICE", "NET_RAW", "SYS_CHROOT", "MKNOD", "AUDIT_WRITE", "SETFCAP"]
+    seccompProfile:
+      type: "RuntimeDefault"
+  
+  # Set resource requests and limits. [Guidelines](https://grafana.com/docs/alloy/latest/introduction/estimate-resource-usage/).
+  # resources:
+  #   requests: {}
+  #   limits: {}
+
+
+  nodeSelector:
+    kubernetes.io/os: linux
+
+  podAnnotations:
+    k8s.grafana.com/logs.job: integrations/alloy
+
+# Skip installation of the Grafana Alloy CRDs, since we don't use them in this chart
+crds:
+  create: false

@@ -1,0 +1,22 @@
+{{- range $collector := include "collectors.list.enabled" . | fromYamlArray }}
+{{- $collectorValues := (index $.Values $collector) }}
+{{- $defaultValues := "collectors/alloy-values.yaml" | $.Files.Get | fromYaml }}
+{{- $values := mergeOverwrite $defaultValues $collectorValues (dict "collectorName" $collector) }}
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: {{ include "collector.alloy.fullname" (merge $ (dict "collectorName" $collector)) }}
+  namespace: {{ $.Release.Namespace }}
+spec:
+  interval: 1m
+  chart:
+    spec:
+      chart: alloy
+      sourceRef:
+        kind: HelmRepository
+        name: {{ $.Release.Name }}
+        namespace: {{ $.Release.Namespace }}
+      interval: 1m
+  values: {{ $values | toYaml | nindent 4 }}
+{{- end }}

@@ -29,7 +29,7 @@
   {{- $aFeatureIsEnabled = or $aFeatureIsEnabled (eq (include (printf "features.%s.enabled" $feature) $) "true") }}
 {{- end }}
 {{- range $collector := ((include "collectors.list" .) | fromYamlArray ) }}
-  {{- $aFeatureIsEnabled = or $aFeatureIsEnabled ((index $.Values $collector).remoteConfig.enabled) }}
+  {{- $aFeatureIsEnabled = or $aFeatureIsEnabled (dig "remoteConfig" "enabled" false (index $.Values $collector)) }}
   {{- $aFeatureIsEnabled = or $aFeatureIsEnabled ((index $.Values $collector).extraConfig) }}
 {{- end }}
 {{- if not $aFeatureIsEnabled }}

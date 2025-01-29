@@ -34,7 +34,9 @@ node_logs "feature" {
 
 {{- range $collector := include "features.nodeLogs.collectors" . | fromYamlArray }}
   {{- include "collectors.require_collector" (dict "Values" $.Values "name" $collector "feature" $featureName) }}
-  {{- include "feature.nodeLogs.collector.validate" (dict "Values" $.Values.nodeLogs "Collector" (index $.Values $collector) "CollectorName" $collector) }}
+  {{- $defaultValues := "collectors/alloy-values.yaml" | $.Files.Get | fromYaml }}
+  {{- $collectorValues := mergeOverwrite $defaultValues (index $.Values $collector) }}
+  {{- include "feature.nodeLogs.collector.validate" (dict "Values" $.Values.nodeLogs "Collector" $collectorValues "CollectorName" $collector) }}
 {{- end -}}
 {{- end -}}
 {{- end -}}

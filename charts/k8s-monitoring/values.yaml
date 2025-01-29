@@ -279,103 +279,10 @@ alloy-metrics:
   # @section -- Collectors - Alloy Metrics
   enabled: false
 
-  # -- Extra Alloy configuration to be added to the configuration file.
-  # @section -- Collectors - Alloy Metrics
-  extraConfig: ""
-
-  # Remote configuration from a remote config server.
-  remoteConfig:
-    # -- Enable fetching configuration from a remote config server.
-    # @section -- Collectors - Alloy Metrics
-    enabled: false
-
-    # -- The URL of the remote config server.
-    # @section -- Collectors - Alloy Metrics
-    url: ""
-
-    auth:
-      # -- The type of authentication to use for the remote config server.
-      # @section -- Collectors - Alloy Metrics
-      type: "none"
-
-      # -- The username to use for the remote config server.
-      # @section -- Collectors - Alloy Metrics
-      username: ""
-      # -- The key for storing the username in the secret.
-      # @section -- Collectors - Alloy Metrics
-      usernameKey: "username"
-      # -- Raw config for accessing the password.
-      # @section -- Collectors - Alloy Metrics
-      usernameFrom: ""
-
-      # -- The password to use for the remote config server.
-      # @section -- Collectors - Alloy Metrics
-      password: ""
-      # -- The key for storing the password in the secret.
-      # @section -- Collectors - Alloy Metrics
-      passwordKey: "password"
-      # -- Raw config for accessing the password.
-      # @section -- Collectors - Alloy Metrics
-      passwordFrom: ""
-
-    secret:
-      # -- Whether to create a secret for the remote config server.
-      # @section -- Collectors - Alloy Metrics
-      create: true
-      # -- If true, skip secret creation and embed the credentials directly into the configuration.
-      # @section -- Collectors - Alloy Metrics
-      embed: false
-      # -- The name of the secret to create.
-      # @section -- Collectors - Alloy Metrics
-      name: ""
-      # -- The namespace for the secret.
-      # @section -- Collectors - Alloy Metrics
-      namespace: ""
-
-    # -- The frequency at which to poll the remote config server for updates.
-    # @section -- Collectors - Alloy Metrics
-    pollFrequency: 5m
-
-    # -- Attributes to be added to this collector when requesting configuration.
-    # @section -- Collectors - Alloy Metrics
-    extraAttributes: {}
-
-  logging:
-    # -- Level at which Alloy log lines should be written.
-    # @section -- Collectors - Alloy Metrics
-    level: info
-    # -- Format to use for writing Alloy log lines.
-    # @section -- Collectors - Alloy Metrics
-    format: logfmt
-
-  liveDebugging:
-    # -- Enable live debugging for the Alloy instance.
-    # Requires stability level to be set to "experimental".
-    # @section -- Collectors - Alloy Metrics
-    enabled: false
-
-  # @ignored
   alloy:
-    configMap: {create: false}
-
-    # Enable clustering to ensure that scraping is distributed across all instances.
-    # @ignored
     clustering:
       name: alloy-metrics
       enabled: true
-
-    securityContext:
-      allowPrivilegeEscalation: false
-      capabilities:
-        drop: ["ALL"]
-        add: ["CHOWN", "DAC_OVERRIDE", "FOWNER", "FSETID", "KILL", "SETGID", "SETUID", "SETPCAP", "NET_BIND_SERVICE", "NET_RAW", "SYS_CHROOT", "MKNOD", "AUDIT_WRITE", "SETFCAP"]
-      seccompProfile:
-        type: "RuntimeDefault"
-
-    # Set resource requests and limits. [Guidelines](https://grafana.com/docs/alloy/latest/introduction/estimate-resource-usage/).
-    # resources:
-    #   requests: {}
-    #   limits: {}
 
   controller:
     # -- The type of controller to use for the Alloy Metrics instance.
@@ -386,117 +293,12 @@ alloy-metrics:
     # @section -- Collectors - Alloy Metrics
     replicas: 1
 
-    # @ignored
-    nodeSelector:
-      kubernetes.io/os: linux
-
-    # @ignored
-    podAnnotations:
-      k8s.grafana.com/logs.job: integrations/alloy
-
-  # Skip installation of the Grafana Alloy CRDs, since we don't use them in this chart
-  # @ignored
-  crds: {create: false}
-
 # An Alloy instance for data sources required to be deployed on a single replica.
 # To see additional valid options, please see the [Alloy Helm chart documentation](https://github.com/grafana/alloy/tree/main/operations/helm/charts/alloy).
 alloy-singleton:
   # -- Deploy the Alloy instance for data sources required to be deployed on a single replica.
   # @section -- Collectors - Alloy Singleton
   enabled: false
-
-  # -- Extra Alloy configuration to be added to the configuration file.
-  # @section -- Collectors - Alloy Singleton
-  extraConfig: ""
-
-  # Remote configuration from a remote config server.
-  remoteConfig:
-    # -- Enable fetching configuration from a remote config server.
-    # @section -- Collectors - Alloy Singleton
-    enabled: false
-
-    # -- The URL of the remote config server.
-    # @section -- Collectors - Alloy Singleton
-    url: ""
-
-    auth:
-      # -- The type of authentication to use for the remote config server.
-      # @section -- Collectors - Alloy Singleton
-      type: "none"
-
-      # -- The username to use for the remote config server.
-      # @section -- Collectors - Alloy Singleton
-      username: ""
-      # -- The key for storing the username in the secret.
-      # @section -- Collectors - Alloy Singleton
-      usernameKey: "username"
-      # -- Raw config for accessing the username.
-      # @section -- Collectors - Alloy Singleton
-      usernameFrom: ""
-
-      # -- The password to use for the remote config server.
-      # @section -- Collectors - Alloy Singleton
-      password: ""
-      # -- The key for storing the password in the secret.
-      # @section -- Collectors - Alloy Singleton
-      passwordKey: "password"
-      # -- Raw config for accessing the password.
-      # @section -- Collectors - Alloy Singleton
-      passwordFrom: ""
-
-    secret:
-      # -- Whether to create a secret for the remote config server.
-      # @section -- Collectors - Alloy Singleton
-      create: true
-      # -- If true, skip secret creation and embed the credentials directly into the configuration.
-      # @section -- Collectors - Alloy Singleton
-      embed: false
-      # -- The name of the secret to create.
-      # @section -- Collectors - Alloy Singleton
-      name: ""
-      # -- The namespace for the secret.
-      # @section -- Collectors - Alloy Singleton
-      namespace: ""
-
-    # -- The frequency at which to poll the remote config server for updates.
-    # @section -- Collectors - Alloy Singleton
-    pollFrequency: 5m
-
-    # -- Attributes to be added to this collector when requesting configuration.
-    # @section -- Collectors - Alloy Singleton
-    extraAttributes: {}
-
-  logging:
-    # -- Level at which Alloy log lines should be written.
-    # @section -- Collectors - Alloy Singleton
-    level: info
-    # -- Format to use for writing Alloy log lines.
-    # @section -- Collectors - Alloy Singleton
-    format: logfmt
-
-  liveDebugging:
-    # -- Enable live debugging for the Alloy instance.
-    # Requires stability level to be set to "experimental".
-    # @section -- Collectors - Alloy Singleton
-    enabled: false
-
-  # @ignored
-  alloy:
-    # This chart is creating the configuration, so the alloy chart does not need to.
-    configMap: {create: false}
-
-    securityContext:
-      allowPrivilegeEscalation: false
-      capabilities:
-        drop: ["ALL"]
-        add: ["CHOWN", "DAC_OVERRIDE", "FOWNER", "FSETID", "KILL", "SETGID", "SETUID", "SETPCAP", "NET_BIND_SERVICE", "NET_RAW", "SYS_CHROOT", "MKNOD", "AUDIT_WRITE", "SETFCAP"]
-      seccompProfile:
-        type: "RuntimeDefault"
-
-    # Set resource requests and limits. [Guidelines](https://grafana.com/docs/alloy/latest/introduction/estimate-resource-usage/).
-    # resources:
-    #   requests: {}
-    #   limits: {}
 
   controller:
     # -- The type of controller to use for the Alloy Singleton instance.
@@ -507,18 +309,6 @@ alloy-singleton:
     # @section -- Collectors - Alloy Singleton
     replicas: 1
 
-    # @ignored
-    nodeSelector:
-      kubernetes.io/os: linux
-
-    # @ignored
-    podAnnotations:
-      k8s.grafana.com/logs.job: integrations/alloy
-
-  # Skip installation of the Grafana Alloy CRDs, since we don't use them in this chart
-  # @ignored
-  crds: {create: false}
-
 # An Alloy instance for collecting log data.
 # To see additional valid options, please see the [Alloy Helm chart documentation](https://github.com/grafana/alloy/tree/main/operations/helm/charts/alloy).
 alloy-logs:
@@ -526,90 +316,7 @@ alloy-logs:
   # @section -- Collectors - Alloy Logs
   enabled: false
 
-  # -- Extra Alloy configuration to be added to the configuration file.
-  # @section -- Collectors - Alloy Logs
-  extraConfig: ""
-
-  # Remote configuration from a remote config server.
-  remoteConfig:
-    # -- Enable fetching configuration from a remote config server.
-    # @section -- Collectors - Alloy Logs
-    enabled: false
-
-    # -- The URL of the remote config server.
-    # @section -- Collectors - Alloy Logs
-    url: ""
-
-    auth:
-      # -- The type of authentication to use for the remote config server.
-      # @section -- Collectors - Alloy Logs
-      type: "none"
-
-      # -- The username to use for the remote config server.
-      # @section -- Collectors - Alloy Logs
-      username: ""
-      # -- The key for storing the username in the secret.
-      # @section -- Collectors - Alloy Logs
-      usernameKey: "username"
-      # -- Raw config for accessing the username.
-      # @section -- Collectors - Alloy Logs
-      usernameFrom: ""
-
-      # -- The password to use for the remote config server.
-      # @section -- Collectors - Alloy Logs
-      password: ""
-      # -- The key for storing the username in the secret.
-      # @section -- Collectors - Alloy Logs
-      passwordKey: "password"
-      # -- Raw config for accessing the password.
-      # @section -- Collectors - Alloy Logs
-      passwordFrom: ""
-
-    secret:
-      # -- Whether to create a secret for the remote config server.
-      # @section -- Collectors - Alloy Logs
-      create: true
-      # -- If true, skip secret creation and embed the credentials directly into the configuration.
-      # @section -- Collectors - Alloy Logs
-      embed: false
-      # -- The name of the secret to create.
-      # @section -- Collectors - Alloy Logs
-      name: ""
-      # -- The namespace for the secret.
-      # @section -- Collectors - Alloy Logs
-      namespace: ""
-
-    # -- The frequency at which to poll the remote config server for updates.
-    # @section -- Collectors - Alloy Logs
-    pollFrequency: 5m
-
-    # -- Attributes to be added to this collector when requesting configuration.
-    # @section -- Collectors - Alloy Logs
-    extraAttributes: {}
-
-  logging:
-    # -- Level at which Alloy log lines should be written.
-    # @section -- Collectors - Alloy Logs
-    level: info
-    # -- Format to use for writing Alloy log lines.
-    # @section -- Collectors - Alloy Logs
-    format: logfmt
-
-  liveDebugging:
-    # -- Enable live debugging for the Alloy instance.
-    # Requires stability level to be set to "experimental".
-    # @section -- Collectors - Alloy Logs
-    enabled: false
-
-  # @ignored
   alloy:
-    # This chart is creating the configuration, so the alloy chart does not need to.
-    configMap: {create: false}
-
-    # Disabling clustering by default, because the default log gathering format does not require clusters.
-    clustering: {enabled: false}
-
-    # @ignored
     mounts:
       # Mount /var/log from the host into the container for log collection.
       varlog: true
@@ -617,36 +324,10 @@ alloy-logs:
       # collection. Set to true if your cluster puts log files inside this directory.
       dockercontainers: true
 
-    # @ignored
-    securityContext:
-      allowPrivilegeEscalation: false
-      capabilities:
-        drop: ["ALL"]
-        add: ["CHOWN", "DAC_OVERRIDE", "FOWNER", "FSETID", "KILL", "SETGID", "SETUID", "SETPCAP", "NET_BIND_SERVICE", "NET_RAW", "SYS_CHROOT", "MKNOD", "AUDIT_WRITE", "SETFCAP"]
-      seccompProfile:
-        type: "RuntimeDefault"
-
-    # Set resource requests and limits. [Guidelines](https://grafana.com/docs/alloy/latest/introduction/estimate-resource-usage/).
-    # resources:
-    #   requests: {}
-    #   limits: {}
-
   controller:
     # -- The type of controller to use for the Alloy Logs instance.
     # @section -- Collectors - Alloy Logs
     type: daemonset
-
-    # @ignored
-    nodeSelector:
-      kubernetes.io/os: linux
-
-    # @ignored
-    podAnnotations:
-      k8s.grafana.com/logs.job: integrations/alloy
-
-  # Skip installation of the Grafana Alloy CRDs, since we don't use them in this chart
-  # @ignored
-  crds: {create: false}
 
 # An Alloy instance for opening receivers to collect application data.
 # To see additional valid options, please see the [Alloy Helm chart documentation](https://github.com/grafana/alloy/tree/main/operations/helm/charts/alloy).
@@ -655,120 +336,15 @@ alloy-receiver:
   # @section -- Collectors - Alloy Receiver
   enabled: false
 
-  # -- Extra Alloy configuration to be added to the configuration file.
-  # @section -- Collectors - Alloy Receiver
-  extraConfig: ""
-
-  # Remote configuration from a remote config server.
-  remoteConfig:
-    # -- Enable fetching configuration from a remote config server.
-    # @section -- Collectors - Alloy Receiver
-    enabled: false
-
-    # -- The URL of the remote config server.
-    # @section -- Collectors - Alloy Receiver
-    url: ""
-
-    auth:
-      # -- The type of authentication to use for the remote config server.
-      # @section -- Collectors - Alloy Receiver
-      type: "none"
-
-      # -- The username to use for the remote config server.
-      # @section -- Collectors - Alloy Receiver
-      username: ""
-      # -- The key for storing the username in the secret.
-      # @section -- Collectors - Alloy Receiver
-      usernameKey: "username"
-      # -- Raw config for accessing the username.
-      # @section -- Collectors - Alloy Receiver
-      usernameFrom: ""
-
-      # -- The password to use for the remote config server.
-      # @section -- Collectors - Alloy Receiver
-      password: ""
-      # -- The key for storing the password in the secret.
-      # @section -- Collectors - Alloy Receiver
-      passwordKey: "password"
-      # -- Raw config for accessing the password.
-      # @section -- Collectors - Alloy Receiver
-      passwordFrom: ""
-
-    secret:
-      # -- Whether to create a secret for the remote config server.
-      # @section -- Collectors - Alloy Receiver
-      create: true
-      # -- If true, skip secret creation and embed the credentials directly into the configuration.
-      # @section -- Collectors - Alloy Receiver
-      embed: false
-      # -- The name of the secret to create.
-      # @section -- Collectors - Alloy Receiver
-      name: ""
-      # -- The namespace for the secret.
-      # @section -- Collectors - Alloy Receiver
-      namespace: ""
-
-    # -- The frequency at which to poll the remote config server for updates.
-    # @section -- Collectors - Alloy Receiver
-    pollFrequency: 5m
-
-    # -- Attributes to be added to this collector when requesting configuration.
-    # @section -- Collectors - Alloy Receiver
-    extraAttributes: {}
-
-  logging:
-    # -- Level at which Alloy log lines should be written.
-    # @section -- Collectors - Alloy Receiver
-    level: info
-    # -- Format to use for writing Alloy log lines.
-    # @section -- Collectors - Alloy Receiver
-    format: logfmt
-
-  liveDebugging:
-    # -- Enable live debugging for the Alloy instance.
-    # Requires stability level to be set to "experimental".
-    # @section -- Collectors - Alloy Receiver
-    enabled: false
-
   alloy:
     # -- The ports to expose for the Alloy receiver.
     # @section -- Collectors - Alloy Receiver
     extraPorts: []
 
-    # This chart is creating the configuration, so the alloy chart does not need to.
-    # @ignored
-    configMap: {create: false}
-
-    # @ignored
-    securityContext:
-      allowPrivilegeEscalation: false
-      capabilities:
-        drop: ["ALL"]
-        add: ["CHOWN", "DAC_OVERRIDE", "FOWNER", "FSETID", "KILL", "SETGID", "SETUID", "SETPCAP", "NET_BIND_SERVICE", "NET_RAW", "SYS_CHROOT", "MKNOD", "AUDIT_WRITE", "SETFCAP"]
-      seccompProfile:
-        type: "RuntimeDefault"
-
-    # Set resource requests and limits. [Guidelines](https://grafana.com/docs/alloy/latest/introduction/estimate-resource-usage/).
-    # resources:
-    #   requests: {}
-    #   limits: {}
-
   controller:
     # -- The type of controller to use for the Alloy Receiver instance.
     # @section -- Collectors - Alloy Receiver
     type: daemonset
-
-    # @ignored
-    nodeSelector:
-      kubernetes.io/os: linux
-
-    # @ignored
-    podAnnotations:
-      k8s.grafana.com/logs.job: integrations/alloy
-
-  # Skip installation of the Grafana Alloy CRDs, since we don't use them in this chart
-  # @ignored
-  crds: {create: false}
 
 # An Alloy instance for gathering profiles.
 # To see additional valid options, please see the [Alloy Helm chart documentation](https://github.com/grafana/alloy/tree/main/operations/helm/charts/alloy).
@@ -777,103 +353,14 @@ alloy-profiles:
   # @section -- Collectors - Alloy Profiles
   enabled: false
 
-  # -- Extra Alloy configuration to be added to the configuration file.
-  # @section -- Collectors - Alloy Profiles
-  extraConfig: ""
-
-  # Remote configuration from a remote config server.
-  remoteConfig:
-    # -- Enable fetching configuration from a remote config server.
-    # @section -- Collectors - Alloy Profiles
-    enabled: false
-
-    # -- The URL of the remote config server.
-    # @section -- Collectors - Alloy Profiles
-    url: ""
-
-    auth:
-      # -- The type of authentication to use for the remote config server.
-      # @section -- Collectors - Alloy Profiles
-      type: "none"
-
-      # -- The username to use for the remote config server.
-      # @section -- Collectors - Alloy Profiles
-      username: ""
-      # -- The key for storing the username in the secret.
-      # @section -- Collectors - Alloy Profiles
-      usernameKey: "username"
-      # -- Raw config for accessing the username.
-      # @section -- Collectors - Alloy Profiles
-      usernameFrom: ""
-
-      # -- The password to use for the remote config server.
-      # @section -- Collectors - Alloy Profiles
-      password: ""
-      # -- The key for storing the password in the secret.
-      # @section -- Collectors - Alloy Profiles
-      passwordKey: "password"
-      # -- Raw config for accessing the password.
-      # @section -- Collectors - Alloy Profiles
-      passwordFrom: ""
-
-    secret:
-      # -- Whether to create a secret for the remote config server.
-      # @section -- Collectors - Alloy Profiles
-      create: true
-      # -- If true, skip secret creation and embed the credentials directly into the configuration.
-      # @section -- Collectors - Alloy Profiles
-      embed: false
-      # -- The name of the secret to create.
-      # @section -- Collectors - Alloy Profiles
-      name: ""
-      # -- The namespace for the secret.
-      # @section -- Collectors - Alloy Profiles
-      namespace: ""
-
-    # -- The frequency at which to poll the remote config server for updates.
-    # @section -- Collectors - Alloy Profiles
-    pollFrequency: 5m
-
-    # -- Attributes to be added to this collector when requesting configuration.
-    # @section -- Collectors - Alloy Profiles
-    extraAttributes: {}
-
-  logging:
-    # -- Level at which Alloy log lines should be written.
-    # @section -- Collectors - Alloy Profiles
-    level: info
-    # -- Format to use for writing Alloy log lines.
-    # @section -- Collectors - Alloy Profiles
-    format: logfmt
-
-  liveDebugging:
-    # -- Enable live debugging for the Alloy instance.
-    # Requires stability level to be set to "experimental".
-    # @section -- Collectors - Alloy Profiles
-    enabled: false
-
-  # @ignored
   alloy:
     # Pyroscope components are currently in public preview
     stabilityLevel: public-preview
-
-    # This chart is creating the configuration, so the alloy chart does not need to.
-    configMap: {create: false}
-
-    # Disabling clustering because each instance will gather profiles for the workloads on the same node.
-    clustering:
-      name: alloy-profiles
-      enabled: false
 
     securityContext:
       privileged: true
       runAsGroup: 0
       runAsUser: 0
-
-    # Set resource requests and limits. [Guidelines](https://grafana.com/docs/alloy/latest/introduction/estimate-resource-usage/).
-    # resources:
-    #   requests: {}
-    #   limits: {}
 
   controller:
     # -- The type of controller to use for the Alloy Profiles instance.
@@ -882,23 +369,6 @@ alloy-profiles:
 
     # @ignored
     hostPID: true
-
-    # @ignored
-    nodeSelector:
-      kubernetes.io/os: linux
-
-    # @ignored
-    podAnnotations:
-      k8s.grafana.com/logs.job: integrations/alloy
-
-    # @ignored
-    tolerations:
-      - effect: NoSchedule
-        operator: Exists
-
-  # Skip installation of the Grafana Alloy CRDs, since we don't use them in this chart
-  # @ignored
-  crds: {create: false}
 
 # -- Deploy additional manifest objects
 extraObjects: []

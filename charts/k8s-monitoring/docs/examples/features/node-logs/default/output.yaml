@@ -1,19 +1,64 @@
 ---
-# Source: k8s-monitoring/charts/alloy-logs/templates/serviceaccount.yaml
+# Source: k8s-monitoring/charts/alloy/templates/serviceaccount.yaml
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: k8smon-alloy-logs
+  name: k8smon-alloy
   namespace: default
   labels:
-    helm.sh/chart: alloy-logs-0.11.0
-    app.kubernetes.io/name: alloy-logs
+    helm.sh/chart: alloy-0.11.0
+    app.kubernetes.io/name: alloy
     app.kubernetes.io/instance: k8smon
     
     app.kubernetes.io/version: "v1.6.1"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
     app.kubernetes.io/component: rbac
+---
+# Source: k8s-monitoring/charts/alloy/templates/configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: k8smon-alloy
+  labels:
+    helm.sh/chart: alloy-0.11.0
+    app.kubernetes.io/name: alloy
+    app.kubernetes.io/instance: k8smon
+    
+    app.kubernetes.io/version: "v1.6.1"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/part-of: alloy
+    app.kubernetes.io/component: config
+data:
+  config.alloy: |-
+    logging {
+    	level  = "info"
+    	format = "logfmt"
+    }
+    
+    discovery.kubernetes "pods" {
+    	role = "pod"
+    }
+    
+    discovery.kubernetes "nodes" {
+    	role = "node"
+    }
+    
+    discovery.kubernetes "services" {
+    	role = "service"
+    }
+    
+    discovery.kubernetes "endpoints" {
+    	role = "endpoints"
+    }
+    
+    discovery.kubernetes "endpointslices" {
+    	role = "endpointslice"
+    }
+    
+    discovery.kubernetes "ingresses" {
+    	role = "ingress"
+    }
 ---
 # Source: k8s-monitoring/templates/alloy-config.yaml
 apiVersion: v1
@@ -199,14 +244,14 @@ data:
       ]
     }
 ---
-# Source: k8s-monitoring/charts/alloy-logs/templates/rbac.yaml
+# Source: k8s-monitoring/charts/alloy/templates/rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: k8smon-alloy-logs
+  name: k8smon-alloy
   labels:
-    helm.sh/chart: alloy-logs-0.11.0
-    app.kubernetes.io/name: alloy-logs
+    helm.sh/chart: alloy-0.11.0
+    app.kubernetes.io/name: alloy
     app.kubernetes.io/instance: k8smon
     
     app.kubernetes.io/version: "v1.6.1"
@@ -299,14 +344,14 @@ rules:
     resources: ["replicasets"]
     verbs: ["get", "list", "watch"]
 ---
-# Source: k8s-monitoring/charts/alloy-logs/templates/rbac.yaml
+# Source: k8s-monitoring/charts/alloy/templates/rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: k8smon-alloy-logs
+  name: k8smon-alloy
   labels:
-    helm.sh/chart: alloy-logs-0.11.0
-    app.kubernetes.io/name: alloy-logs
+    helm.sh/chart: alloy-0.11.0
+    app.kubernetes.io/name: alloy
     app.kubernetes.io/instance: k8smon
     
     app.kubernetes.io/version: "v1.6.1"
@@ -316,20 +361,20 @@ metadata:
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: k8smon-alloy-logs
+  name: k8smon-alloy
 subjects:
   - kind: ServiceAccount
-    name: k8smon-alloy-logs
+    name: k8smon-alloy
     namespace: default
 ---
-# Source: k8s-monitoring/charts/alloy-logs/templates/service.yaml
+# Source: k8s-monitoring/charts/alloy/templates/service.yaml
 apiVersion: v1
 kind: Service
 metadata:
-  name: k8smon-alloy-logs
+  name: k8smon-alloy
   labels:
-    helm.sh/chart: alloy-logs-0.11.0
-    app.kubernetes.io/name: alloy-logs
+    helm.sh/chart: alloy-0.11.0
+    app.kubernetes.io/name: alloy
     app.kubernetes.io/instance: k8smon
     
     app.kubernetes.io/version: "v1.6.1"
@@ -339,7 +384,7 @@ metadata:
 spec:
   type: ClusterIP
   selector:
-    app.kubernetes.io/name: alloy-logs
+    app.kubernetes.io/name: alloy
     app.kubernetes.io/instance: k8smon
   internalTrafficPolicy: Cluster
   ports:
@@ -348,14 +393,14 @@ spec:
       targetPort: 12345
       protocol: "TCP"
 ---
-# Source: k8s-monitoring/charts/alloy-logs/templates/controllers/daemonset.yaml
+# Source: k8s-monitoring/charts/alloy/templates/controllers/daemonset.yaml
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
-  name: k8smon-alloy-logs
+  name: k8smon-alloy
   labels:
-    helm.sh/chart: alloy-logs-0.11.0
-    app.kubernetes.io/name: alloy-logs
+    helm.sh/chart: alloy-0.11.0
+    app.kubernetes.io/name: alloy
     app.kubernetes.io/instance: k8smon
     
     app.kubernetes.io/version: "v1.6.1"
@@ -365,18 +410,17 @@ spec:
   minReadySeconds: 10
   selector:
     matchLabels:
-      app.kubernetes.io/name: alloy-logs
+      app.kubernetes.io/name: alloy
       app.kubernetes.io/instance: k8smon
   template:
     metadata:
       annotations:
         kubectl.kubernetes.io/default-container: alloy
-        k8s.grafana.com/logs.job: integrations/alloy
       labels:
-        app.kubernetes.io/name: alloy-logs
+        app.kubernetes.io/name: alloy
         app.kubernetes.io/instance: k8smon
     spec:
-      serviceAccountName: k8smon-alloy-logs
+      serviceAccountName: k8smon-alloy
       containers:
         - name: alloy
           image: docker.io/grafana/alloy:v1.6.1
@@ -405,37 +449,9 @@ spec:
               scheme: HTTP
             initialDelaySeconds: 10
             timeoutSeconds: 1
-          securityContext:
-            allowPrivilegeEscalation: false
-            capabilities:
-              add:
-              - CHOWN
-              - DAC_OVERRIDE
-              - FOWNER
-              - FSETID
-              - KILL
-              - SETGID
-              - SETUID
-              - SETPCAP
-              - NET_BIND_SERVICE
-              - NET_RAW
-              - SYS_CHROOT
-              - MKNOD
-              - AUDIT_WRITE
-              - SETFCAP
-              drop:
-              - ALL
-            seccompProfile:
-              type: RuntimeDefault
           volumeMounts:
             - name: config
               mountPath: /etc/alloy
-            - name: varlog
-              mountPath: /var/log
-              readOnly: true
-            - name: dockercontainers
-              mountPath: /var/lib/docker/containers
-              readOnly: true
         - name: config-reloader
           image: ghcr.io/jimmidyson/configmap-reload:v0.14.0
           args:
@@ -449,15 +465,97 @@ spec:
               cpu: 1m
               memory: 5Mi
       dnsPolicy: ClusterFirst
-      nodeSelector:
-        kubernetes.io/os: linux
       volumes:
         - name: config
           configMap:
-            name: k8smon-alloy-logs
-        - name: varlog
-          hostPath:
-            path: /var/log
-        - name: dockercontainers
-          hostPath:
-            path: /var/lib/docker/containers
+            name: k8smon-alloy
+---
+# Source: k8s-monitoring/templates/alloy.yaml
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: k8smon-alloy-singleton
+  namespace: default
+spec:
+  interval: 1m
+  chart:
+    spec:
+      chart: alloy
+      sourceRef:
+        kind: HelmRepository
+        name: k8smon
+        namespace: default
+      interval: 1m
+  values: 
+    alloy:
+      configMap:
+        create: false
+      mounts:
+        dockercontainers: true
+        varlog: true
+      nodeSelector:
+        kubernetes.io/os: linux
+      podAnnotations:
+        k8s.grafana.com/logs.job: integrations/alloy
+      securityContext:
+        allowPrivilegeEscalation: false
+        capabilities:
+          add:
+          - CHOWN
+          - DAC_OVERRIDE
+          - FOWNER
+          - FSETID
+          - KILL
+          - SETGID
+          - SETUID
+          - SETPCAP
+          - NET_BIND_SERVICE
+          - NET_RAW
+          - SYS_CHROOT
+          - MKNOD
+          - AUDIT_WRITE
+          - SETFCAP
+          drop:
+          - ALL
+        seccompProfile:
+          type: RuntimeDefault
+    collectorName: alloy-logs
+    controller:
+      type: daemonset
+    crds:
+      create: false
+    enabled: true
+    extraConfig: ""
+    liveDebugging:
+      enabled: false
+    logging:
+      format: logfmt
+      level: info
+    remoteConfig:
+      auth:
+        password: ""
+        passwordFrom: ""
+        passwordKey: password
+        type: none
+        username: ""
+        usernameFrom: ""
+        usernameKey: username
+      enabled: false
+      extraAttributes: {}
+      pollFrequency: 5m
+      secret:
+        create: true
+        embed: false
+        name: ""
+        namespace: ""
+      url: ""
+---
+# Source: k8s-monitoring/templates/temp_helm_repo.yaml
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: k8smon
+  namespace: default
+spec:
+  interval: 1m
+  url: https://grafana.github.io/helm-charts

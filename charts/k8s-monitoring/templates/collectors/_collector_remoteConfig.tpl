@@ -32,10 +32,24 @@ remotecfg {
 {{- end -}}
 {{- end -}}
 
+{{- define "collectors.modifications.remoteConfig" }}
+alloy:
+  stabilityLevel: public-preview
+  extraEnv:
+    - name: GCLOUD_FM_COLLECTOR_ID
+      value: ""
+    - name: GCLOUD_RW_API_KEY
+      valueFrom:
+        secretKeyRef:
+          name: ""
+          key: ""
+{{- end -}}
+
 {{- define "collectors.validate.remoteConfig" }}
-{{- if (index .Values .collectorName).enabled }}
-  {{- if (index .Values .collectorName).remoteConfig.enabled }}
-    {{- if not (has (index .Values .collectorName).alloy.stabilityLevel (list "public-preview" "experimental")) }}
+  {{- $defaultValues := "collectors/alloy-values.yaml" | .Files.Get | fromYaml }}
+  {{- $collectorValues := mergeOverwrite $defaultValues (index .Values .collectorName) }}
+  {{- if $collectorValues.remoteConfig.enabled }}
+    {{- if not (has $collectorValues.alloy.stabilityLevel (list "public-preview" "experimental")) }}
       {{- $msg := list "" "The remote configuration feature requires Alloy to use the \"public-preview\" stability level. Please set:" }}
       {{- $msg = append $msg (printf "%s:" .collectorName ) }}
       {{- $msg = append $msg "  alloy:" }}
@@ -44,7 +58,7 @@ remotecfg {
     {{- end }}
     {{- $hasCollectorIdEnv := false }}
     {{- $hasAPIKey := false }}
-    {{- range $env := (index .Values .collectorName).alloy.extraEnv }}
+    {{- range $env := $collectorValues.alloy.extraEnv }}
       {{- if eq $env.name "GCLOUD_FM_COLLECTOR_ID" }}{{ $hasCollectorIdEnv = true }}{{- end }}
       {{- if eq $env.name "GCLOUD_RW_API_KEY" }}{{ $hasAPIKey = true }}{{- end }}
     {{- end }}
@@ -71,7 +85,6 @@ remotecfg {
       {{- $msg = append $msg "            key: <secret key>" }}
       {{- fail (join "\n" $msg) }}
     {{- end }}
-  {{- end }}
   {{- end }}
 {{- end }}
 

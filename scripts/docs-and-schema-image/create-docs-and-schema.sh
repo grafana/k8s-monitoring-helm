@@ -4,7 +4,7 @@ usage() {
   echo "USAGE: create-docs-and-schema.sh <name> <kind>"
   echo "Creates the docs and schema for a values file snippet"
   echo ""
-  echo "<kind> is the kind of resource (e.g. destination, integration)"
+  echo "<kind> is the kind of resource (e.g. destination, collector)"
   echo ""
   echo "Expects a file at /src/<kind>s/<name>-values.yaml"
   echo "Looks for an optional file at /src/docs/<kind>s/.doc_templates/<name>.gotmpl"
