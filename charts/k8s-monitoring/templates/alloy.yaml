@@ -6,7 +6,7 @@
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
-  name: {{ include "collector.alloy.fullname" (merge $ (dict "collectorName" $collector)) }}
+  name: {{ include "collector.alloy.fullname" (deepCopy $ | merge (dict "collectorName" $collector)) }}
   namespace: {{ $.Release.Namespace }}
 spec:
   interval: 1m

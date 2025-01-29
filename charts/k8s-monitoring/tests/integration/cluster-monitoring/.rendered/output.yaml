@@ -1,20 +1,4 @@
 ---
-# Source: k8s-monitoring/charts/alloy/templates/serviceaccount.yaml
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: k8smon-alloy
-  namespace: default
-  labels:
-    helm.sh/chart: alloy-0.11.0
-    app.kubernetes.io/name: alloy
-    app.kubernetes.io/instance: k8smon
-    
-    app.kubernetes.io/version: "v1.6.1"
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/part-of: alloy
-    app.kubernetes.io/component: rbac
----
 # Source: k8s-monitoring/charts/clusterMetrics/charts/kepler/templates/serviceaccount.yaml
 apiVersion: v1
 kind: ServiceAccount
@@ -115,51 +99,6 @@ data:
   tenantId: "MQ=="
   username: "bG9raQ=="
   password: "bG9raXBhc3N3b3Jk"
----
-# Source: k8s-monitoring/charts/alloy/templates/configmap.yaml
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: k8smon-alloy
-  labels:
-    helm.sh/chart: alloy-0.11.0
-    app.kubernetes.io/name: alloy
-    app.kubernetes.io/instance: k8smon
-    
-    app.kubernetes.io/version: "v1.6.1"
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/part-of: alloy
-    app.kubernetes.io/component: config
-data:
-  config.alloy: |-
-    logging {
-    	level  = "info"
-    	format = "logfmt"
-    }
-    
-    discovery.kubernetes "pods" {
-    	role = "pod"
-    }
-    
-    discovery.kubernetes "nodes" {
-    	role = "node"
-    }
-    
-    discovery.kubernetes "services" {
-    	role = "service"
-    }
-    
-    discovery.kubernetes "endpoints" {
-    	role = "endpoints"
-    }
-    
-    discovery.kubernetes "endpointslices" {
-    	role = "endpointslice"
-    }
-    
-    discovery.kubernetes "ingresses" {
-    	role = "ingress"
-    }
 ---
 # Source: k8s-monitoring/charts/clusterMetrics/charts/windows-exporter/templates/config.yaml
 apiVersion: v1
@@ -2456,106 +2395,6 @@ data:
       }
     }
 ---
-# Source: k8s-monitoring/charts/alloy/templates/rbac.yaml
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: k8smon-alloy
-  labels:
-    helm.sh/chart: alloy-0.11.0
-    app.kubernetes.io/name: alloy
-    app.kubernetes.io/instance: k8smon
-    
-    app.kubernetes.io/version: "v1.6.1"
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/part-of: alloy
-    app.kubernetes.io/component: rbac
-rules:
-  # Rules which allow discovery.kubernetes to function.
-  - apiGroups:
-      - ""
-      - "discovery.k8s.io"
-      - "networking.k8s.io"
-    resources:
-      - endpoints
-      - endpointslices
-      - ingresses
-      - nodes
-      - nodes/proxy
-      - nodes/metrics
-      - pods
-      - services
-    verbs:
-      - get
-      - list
-      - watch
-  # Rules which allow loki.source.kubernetes and loki.source.podlogs to work.
-  - apiGroups:
-      - ""
-    resources:
-      - pods
-      - pods/log
-      - namespaces
-    verbs:
-      - get
-      - list
-      - watch
-  - apiGroups:
-      - "monitoring.grafana.com"
-    resources:
-      - podlogs
-    verbs:
-      - get
-      - list
-      - watch
-  # Rules which allow mimir.rules.kubernetes to work.
-  - apiGroups: ["monitoring.coreos.com"]
-    resources:
-      - prometheusrules
-    verbs:
-      - get
-      - list
-      - watch
-  - nonResourceURLs:
-      - /metrics
-    verbs:
-      - get
-  # Rules for prometheus.kubernetes.*
-  - apiGroups: ["monitoring.coreos.com"]
-    resources:
-      - podmonitors
-      - servicemonitors
-      - probes
-    verbs:
-      - get
-      - list
-      - watch
-  # Rules which allow eventhandler to work.
-  - apiGroups:
-      - ""
-    resources:
-      - events
-    verbs:
-      - get
-      - list
-      - watch
-  # needed for remote.kubernetes.*
-  - apiGroups: [""]
-    resources:
-      - "configmaps"
-      - "secrets"
-    verbs:
-      - get
-      - list
-      - watch
-  # needed for otelcol.processor.k8sattributes
-  - apiGroups: ["apps"]
-    resources: ["replicasets"]
-    verbs: ["get", "list", "watch"]
-  - apiGroups: ["extensions"]
-    resources: ["replicasets"]
-    verbs: ["get", "list", "watch"]
----
 # Source: k8s-monitoring/charts/clusterMetrics/charts/kepler/templates/rolebinding.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -2816,29 +2655,6 @@ rules:
       - list
       - watch
 ---
-# Source: k8s-monitoring/charts/alloy/templates/rbac.yaml
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: k8smon-alloy
-  labels:
-    helm.sh/chart: alloy-0.11.0
-    app.kubernetes.io/name: alloy
-    app.kubernetes.io/instance: k8smon
-    
-    app.kubernetes.io/version: "v1.6.1"
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/part-of: alloy
-    app.kubernetes.io/component: rbac
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: k8smon-alloy
-subjects:
-  - kind: ServiceAccount
-    name: k8smon-alloy
-    namespace: default
----
 # Source: k8s-monitoring/charts/clusterMetrics/charts/kepler/templates/rolebinding.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -2896,32 +2712,6 @@ subjects:
   - kind: ServiceAccount
     name: k8smon-opencost
     namespace: default
----
-# Source: k8s-monitoring/charts/alloy/templates/service.yaml
-apiVersion: v1
-kind: Service
-metadata:
-  name: k8smon-alloy
-  labels:
-    helm.sh/chart: alloy-0.11.0
-    app.kubernetes.io/name: alloy
-    app.kubernetes.io/instance: k8smon
-    
-    app.kubernetes.io/version: "v1.6.1"
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/part-of: alloy
-    app.kubernetes.io/component: networking
-spec:
-  type: ClusterIP
-  selector:
-    app.kubernetes.io/name: alloy
-    app.kubernetes.io/instance: k8smon
-  internalTrafficPolicy: Cluster
-  ports:
-    - name: http-metrics
-      port: 12345
-      targetPort: 12345
-      protocol: "TCP"
 ---
 # Source: k8s-monitoring/charts/clusterMetrics/charts/kepler/templates/service.yaml
 apiVersion: v1
@@ -3051,83 +2841,6 @@ spec:
   selector:
     app.kubernetes.io/name: windows-exporter
     app.kubernetes.io/instance: k8smon
----
-# Source: k8s-monitoring/charts/alloy/templates/controllers/daemonset.yaml
-apiVersion: apps/v1
-kind: DaemonSet
-metadata:
-  name: k8smon-alloy
-  labels:
-    helm.sh/chart: alloy-0.11.0
-    app.kubernetes.io/name: alloy
-    app.kubernetes.io/instance: k8smon
-    
-    app.kubernetes.io/version: "v1.6.1"
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/part-of: alloy
-spec:
-  minReadySeconds: 10
-  selector:
-    matchLabels:
-      app.kubernetes.io/name: alloy
-      app.kubernetes.io/instance: k8smon
-  template:
-    metadata:
-      annotations:
-        kubectl.kubernetes.io/default-container: alloy
-      labels:
-        app.kubernetes.io/name: alloy
-        app.kubernetes.io/instance: k8smon
-    spec:
-      serviceAccountName: k8smon-alloy
-      containers:
-        - name: alloy
-          image: docker.io/grafana/alloy:v1.6.1
-          imagePullPolicy: IfNotPresent
-          args:
-            - run
-            - /etc/alloy/config.alloy
-            - --storage.path=/tmp/alloy
-            - --server.http.listen-addr=0.0.0.0:12345
-            - --server.http.ui-path-prefix=/
-            - --stability.level=generally-available
-          env:
-            - name: ALLOY_DEPLOY_MODE
-              value: "helm"
-            - name: HOSTNAME
-              valueFrom:
-                fieldRef:
-                  fieldPath: spec.nodeName
-          ports:
-            - containerPort: 12345
-              name: http-metrics
-          readinessProbe:
-            httpGet:
-              path: /-/ready
-              port: 12345
-              scheme: HTTP
-            initialDelaySeconds: 10
-            timeoutSeconds: 1
-          volumeMounts:
-            - name: config
-              mountPath: /etc/alloy
-        - name: config-reloader
-          image: ghcr.io/jimmidyson/configmap-reload:v0.14.0
-          args:
-            - --volume-dir=/etc/alloy
-            - --webhook-url=http://localhost:12345/-/reload
-          volumeMounts:
-            - name: config
-              mountPath: /etc/alloy
-          resources:
-            requests:
-              cpu: 1m
-              memory: 5Mi
-      dnsPolicy: ClusterFirst
-      volumes:
-        - name: config
-          configMap:
-            name: k8smon-alloy
 ---
 # Source: k8s-monitoring/charts/clusterMetrics/charts/kepler/templates/daemonset.yaml
 apiVersion: apps/v1
@@ -3694,7 +3407,7 @@ spec:
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
-  name: k8smon-alloy-singleton
+  name: k8smon-alloy-metrics
   namespace: default
 spec:
   interval: 1m
@@ -3853,7 +3566,7 @@ spec:
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
-  name: k8smon-alloy-singleton
+  name: k8smon-alloy-logs
   namespace: default
 spec:
   interval: 1m
