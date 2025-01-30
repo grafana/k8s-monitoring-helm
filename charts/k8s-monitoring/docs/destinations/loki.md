@@ -57,6 +57,7 @@ This defines the options for defining a destination for logs that use the Loki p
 | extraHeadersFrom | object | `{}` | Extra headers to be set when sending data through a dynamic reference. All values are treated as raw strings and not quoted. |
 | extraLabels | object | `{}` | Custom labels to be added to all logs and events. All values are treated as strings and automatically quoted. |
 | extraLabelsFrom | object | `{}` | Custom labels to be added to all logs and events through a dynamic reference. All values are treated as raw strings and not quoted. |
+| logProcessingStages | string | `""` | Stage blocks to be evaluated before delivering to the Loki destination. See ([docs](https://grafana.com/docs/alloy/latest/reference/components/loki/loki.process/#blocks)) for more information. |
 | name | string | `""` | The name for this Loki destination. |
 | proxyURL | string | `""` | The Proxy URL for the Loki destination. |
 | tenantId | string | `""` | The tenant ID for the Loki destination. |
