@@ -1,0 +1,59 @@
+---
+cluster:
+  name: split-destinations-cluster
+
+destinations:
+  - name: allMetrics
+    type: prometheus
+    url: http://all-metrics-prometheus-server.all-dbs.svc:9090/api/v1/write
+    auth:
+      type: basic
+      username: promuser
+      password: prometheuspassword
+  - name: productionMetrics
+    type: prometheus
+    url: http://prod-metrics-prometheus-server.prod-dbs.svc:9090/api/v1/write
+    auth:
+      type: basic
+      username: promuser
+      password: prometheuspassword
+    metricProcessingRules: |-
+      write_relabel_config {
+        source_labels = ["namespace"]
+        regex = "production"
+        action = "keep"
+      }
+
+  - name: allLogs
+    type: loki
+    url: http://all-logs-loki.all-dbs.svc:3100/loki/api/v1/push
+    tenantId: "1"
+    auth:
+      type: basic
+      username: loki
+      password: lokipassword
+  - name: productionLogs
+    type: loki
+    url: http://prod-logs-loki.prod-dbs.svc:3100/loki/api/v1/push
+    tenantId: "1"
+    auth:
+      type: basic
+      username: loki
+      password: lokipassword
+    logProcessingStages: |-
+      stage.match {
+        selector = "{namespace!=\"production\"}"
+        action   = "drop"
+      }
+
+clusterMetrics:
+  enabled: true
+
+podLogs:
+  enabled: true
+
+alloy-metrics:
+  enabled: true
+
+alloy-logs:
+  enabled: true
