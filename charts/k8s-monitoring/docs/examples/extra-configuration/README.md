@@ -36,7 +36,6 @@ alloy-metrics:
         label = ["app.kubernetes.io/name=animal-service"]
       }
     }
-    
     prometheus.scrape "animal_service" {
       job_name   = "animal_service"
       targets    = discovery.kubernetes.animal_service.targets
