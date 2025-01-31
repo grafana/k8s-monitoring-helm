@@ -61,6 +61,48 @@ discovery.relabel "filtered_pods" {
     regex = "__meta_kubernetes_pod_annotation_(.+)"
   }
 
+  // explicitly set service_name. if not set, loki will automatically try to populate a default.
+  // see https://grafana.com/docs/loki/latest/get-started/labels/#default-labels-for-all-users
+  //
+  // choose the first value found from the following ordered list:
+  // - pod.annotation[resource.opentelemetry.io/service.name]
+  // - pod.label[app.kubernetes.io/name]
+  // - k8s.pod.name
+  // - k8s.container.name
+  rule {
+    action = "replace"
+    source_labels = [
+      "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_name",
+      "__meta_kubernetes_pod_label_app_kubernetes_io_name",
+      "__meta_kubernetes_pod_name",
+      "__meta_kubernetes_pod_container_name",
+    ]
+    separator = ";"
+    regex = "^(?:;*)?([^;]+).*$"
+    replacement = "$1"
+    target_label = "service_name"
+  }
+
+  // set service_namespace
+  rule {
+    action = "replace"
+    source_labels = ["__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_namespace"]
+    target_label = "service_namespace"
+  }
+
+  // set deployment_environment and deployment_environment_name
+  rule {
+    action = "replace"
+    source_labels = ["__meta_kubernetes_pod_annotation_resource_opentelemetry_io_deployment_environment_name"]
+    target_label = "deployment_environment_name"
+  }
+  rule {
+    action = "replace"
+    source_labels = ["__meta_kubernetes_pod_annotation_resource_opentelemetry_io_deployment_environment"]
+    target_label = "deployment_environment"
+  }
+
+
 {{- if .Values.extraDiscoveryRules }}
 {{ .Values.extraDiscoveryRules | indent 2 }}
 {{- end }}
