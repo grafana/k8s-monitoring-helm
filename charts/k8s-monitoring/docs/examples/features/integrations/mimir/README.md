@@ -2,9 +2,9 @@
 (NOTE: Do not edit README.md directly. It is a generated file!)
 (      To make changes, please modify values.yaml or description.txt and run `make examples`)
 -->
-# Integration: Loki
+# Integration: Mimir
 
-This example demonstrates how to gather metrics and logs from [Grafana Loki](https://grafana.com/oss/loki/).
+This example demonstrates how to gather metrics and logs from [Grafana Mimir](https://grafana.com/oss/mimir/).
 
 ## Values
 
