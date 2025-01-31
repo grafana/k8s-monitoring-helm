@@ -9,12 +9,67 @@ alloy-metrics:
     url: https://fleet-management-prod-008.grafana.net
     auth:
       type: basic
-      usernameFrom: env("GRAFANA_CLOUD_FLEET_MGMT_USER")
-      passwordFrom: env("GRAFANA_CLOUD_FLEET_MGMT_TOKEN")
+      usernameKey: GRAFANA_CLOUD_FLEET_MGMT_USER
+      passwordKey: GRAFANA_CLOUD_FLEET_MGMT_TOKEN
+    secret:
+      create: false
+      name: grafana-cloud-credentials
   alloy:
     stabilityLevel: public-preview
-    envFrom:
-      - secretRef:
-          name: grafana-cloud-credentials
-      - configMapRef:
-          name: test-variables
+    extraEnv:
+      - name: CLUSTER_NAME
+        valueFrom:
+          configMapKeyRef:
+            name: test-variables
+            key: CLUSTER
+      - name: NAMESPACE
+        valueFrom:
+          fieldRef:
+            fieldPath: metadata.namespace
+      - name: POD_NAME
+        valueFrom:
+          fieldRef:
+            fieldPath: metadata.name
+      - name: GCLOUD_FM_COLLECTOR_ID
+        value: $(CLUSTER_NAME)-$(NAMESPACE)-$(POD_NAME)
+      - name: GCLOUD_RW_API_KEY
+        valueFrom:
+          secretKeyRef:
+            name: grafana-cloud-credentials
+            key: GRAFANA_CLOUD_FLEET_MGMT_TOKEN
+
+alloy-logs:
+  enabled: true
+  remoteConfig:
+    enabled: true
+    url: https://fleet-management-prod-008.grafana.net
+    auth:
+      type: basic
+      usernameKey: GRAFANA_CLOUD_FLEET_MGMT_USER
+      passwordKey: GRAFANA_CLOUD_FLEET_MGMT_TOKEN
+    secret:
+      create: false
+      name: grafana-cloud-credentials
+  alloy:
+    stabilityLevel: public-preview
+    extraEnv:
+      - name: CLUSTER_NAME
+        valueFrom:
+          configMapKeyRef:
+            name: test-variables
+            key: CLUSTER
+      - name: NAMESPACE
+        valueFrom:
+          fieldRef:
+            fieldPath: metadata.namespace
+      - name: NODE_NAME
+        valueFrom:
+          fieldRef:
+            fieldPath: spec.nodeName
+      - name: GCLOUD_FM_COLLECTOR_ID
+        value: $(CLUSTER_NAME)-$(NAMESPACE)-$(NODE_NAME)
+      - name: GCLOUD_RW_API_KEY
+        valueFrom:
+          secretKeyRef:
+            name: grafana-cloud-credentials
+            key: GRAFANA_CLOUD_FLEET_MGMT_TOKEN

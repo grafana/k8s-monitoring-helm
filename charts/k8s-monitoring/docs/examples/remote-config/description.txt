@@ -1,4 +1,19 @@
 # Remote Config
 
 This example demonstrates how to configure Alloy to utilize
-[remote configuration](https://grafana.com/docs/alloy/latest/reference/config-blocks/remotecfg/).
+[remote configuration](https://grafana.com/docs/alloy/latest/reference/config-blocks/remotecfg/). These two environment
+variables must be set:
+
+*   `GCLOUD_FM_COLLECTOR_ID` - The collector id. It should uniquely identify this Alloy instance. The value in practice is:
+    *   For Deployments: `<cluster name>-<namespace>-<pod name>`
+    *   For StatefulSets: `<cluster name>-<namespace>-<pod name>`
+    *   For DaemonSets: `<cluster name>-<namespace>-<node name>`
+*   `GCLOUD_RW_API_KEY` - The Grafana Cloud Access Policy token that has following scopes:
+    *   `fleet-management:read`
+    *   `logs:write`
+    *   `metrics:write`
+    *   `traces:write`
+    *   `profiles:write`
+
+The values file below shows enabling the `alloy-metrics` StatefulSet and the `alloy-logs` DaemonSets and a convenient
+way to set the environment variables automatically.

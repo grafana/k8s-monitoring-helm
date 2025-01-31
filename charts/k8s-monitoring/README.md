@@ -5,7 +5,7 @@
 
 # k8s-monitoring
 
-![Version: 2.0.4](https://img.shields.io/badge/Version-2.0.4-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 2.0.4](https://img.shields.io/badge/AppVersion-2.0.4-informational?style=flat-square)
+![Version: 2.0.6](https://img.shields.io/badge/Version-2.0.6-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 2.0.6](https://img.shields.io/badge/AppVersion-2.0.6-informational?style=flat-square)
 
 Capture all telemetry data from your Kubernetes cluster.
 
@@ -134,11 +134,11 @@ podLogs:
 |  | podLogs(feature-pod-logs) | 1.0.0 |
 |  | profiling(feature-profiling) | 1.0.0 |
 |  | prometheusOperatorObjects(feature-prometheus-operator-objects) | 1.0.0 |
-| https://grafana.github.io/helm-charts | alloy-metrics(alloy) | 0.10.1 |
-| https://grafana.github.io/helm-charts | alloy-singleton(alloy) | 0.10.1 |
-| https://grafana.github.io/helm-charts | alloy-logs(alloy) | 0.10.1 |
-| https://grafana.github.io/helm-charts | alloy-receiver(alloy) | 0.10.1 |
-| https://grafana.github.io/helm-charts | alloy-profiles(alloy) | 0.10.1 |
+| https://grafana.github.io/helm-charts | alloy-metrics(alloy) | 0.11.0 |
+| https://grafana.github.io/helm-charts | alloy-singleton(alloy) | 0.11.0 |
+| https://grafana.github.io/helm-charts | alloy-logs(alloy) | 0.11.0 |
+| https://grafana.github.io/helm-charts | alloy-receiver(alloy) | 0.11.0 |
+| https://grafana.github.io/helm-charts | alloy-profiles(alloy) | 0.11.0 |
 <!-- markdownlint-enable no-bare-urls -->
 
 ## Values
@@ -161,6 +161,8 @@ podLogs:
 | alloy-logs.remoteConfig.auth.usernameFrom | string | `""` | Raw config for accessing the username. |
 | alloy-logs.remoteConfig.auth.usernameKey | string | `"username"` | The key for storing the username in the secret. |
 | alloy-logs.remoteConfig.enabled | bool | `false` | Enable fetching configuration from a remote config server. |
+| alloy-logs.remoteConfig.extraAttributes | object | `{}` | Attributes to be added to this collector when requesting configuration. |
+| alloy-logs.remoteConfig.pollFrequency | string | `"5m"` | The frequency at which to poll the remote config server for updates. |
 | alloy-logs.remoteConfig.secret.create | bool | `true` | Whether to create a secret for the remote config server. |
 | alloy-logs.remoteConfig.secret.embed | bool | `false` | If true, skip secret creation and embed the credentials directly into the configuration. |
 | alloy-logs.remoteConfig.secret.name | string | `""` | The name of the secret to create. |
@@ -187,7 +189,6 @@ podLogs:
 | alloy-metrics.remoteConfig.auth.usernameKey | string | `"username"` | The key for storing the username in the secret. |
 | alloy-metrics.remoteConfig.enabled | bool | `false` | Enable fetching configuration from a remote config server. |
 | alloy-metrics.remoteConfig.extraAttributes | object | `{}` | Attributes to be added to this collector when requesting configuration. |
-| alloy-metrics.remoteConfig.id | string | `<cluster>-<namespace>-<pod-name>` | The unique identifier for this Alloy instance. |
 | alloy-metrics.remoteConfig.pollFrequency | string | `"5m"` | The frequency at which to poll the remote config server for updates. |
 | alloy-metrics.remoteConfig.secret.create | bool | `true` | Whether to create a secret for the remote config server. |
 | alloy-metrics.remoteConfig.secret.embed | bool | `false` | If true, skip secret creation and embed the credentials directly into the configuration. |
@@ -213,6 +214,8 @@ podLogs:
 | alloy-profiles.remoteConfig.auth.usernameFrom | string | `""` | Raw config for accessing the username. |
 | alloy-profiles.remoteConfig.auth.usernameKey | string | `"username"` | The key for storing the username in the secret. |
 | alloy-profiles.remoteConfig.enabled | bool | `false` | Enable fetching configuration from a remote config server. |
+| alloy-profiles.remoteConfig.extraAttributes | object | `{}` | Attributes to be added to this collector when requesting configuration. |
+| alloy-profiles.remoteConfig.pollFrequency | string | `"5m"` | The frequency at which to poll the remote config server for updates. |
 | alloy-profiles.remoteConfig.secret.create | bool | `true` | Whether to create a secret for the remote config server. |
 | alloy-profiles.remoteConfig.secret.embed | bool | `false` | If true, skip secret creation and embed the credentials directly into the configuration. |
 | alloy-profiles.remoteConfig.secret.name | string | `""` | The name of the secret to create. |
@@ -238,6 +241,8 @@ podLogs:
 | alloy-receiver.remoteConfig.auth.usernameFrom | string | `""` | Raw config for accessing the username. |
 | alloy-receiver.remoteConfig.auth.usernameKey | string | `"username"` | The key for storing the username in the secret. |
 | alloy-receiver.remoteConfig.enabled | bool | `false` | Enable fetching configuration from a remote config server. |
+| alloy-receiver.remoteConfig.extraAttributes | object | `{}` | Attributes to be added to this collector when requesting configuration. |
+| alloy-receiver.remoteConfig.pollFrequency | string | `"5m"` | The frequency at which to poll the remote config server for updates. |
 | alloy-receiver.remoteConfig.secret.create | bool | `true` | Whether to create a secret for the remote config server. |
 | alloy-receiver.remoteConfig.secret.embed | bool | `false` | If true, skip secret creation and embed the credentials directly into the configuration. |
 | alloy-receiver.remoteConfig.secret.name | string | `""` | The name of the secret to create. |
@@ -263,6 +268,8 @@ podLogs:
 | alloy-singleton.remoteConfig.auth.usernameFrom | string | `""` | Raw config for accessing the username. |
 | alloy-singleton.remoteConfig.auth.usernameKey | string | `"username"` | The key for storing the username in the secret. |
 | alloy-singleton.remoteConfig.enabled | bool | `false` | Enable fetching configuration from a remote config server. |
+| alloy-singleton.remoteConfig.extraAttributes | object | `{}` | Attributes to be added to this collector when requesting configuration. |
+| alloy-singleton.remoteConfig.pollFrequency | string | `"5m"` | The frequency at which to poll the remote config server for updates. |
 | alloy-singleton.remoteConfig.secret.create | bool | `true` | Whether to create a secret for the remote config server. |
 | alloy-singleton.remoteConfig.secret.embed | bool | `false` | If true, skip secret creation and embed the credentials directly into the configuration. |
 | alloy-singleton.remoteConfig.secret.name | string | `""` | The name of the secret to create. |

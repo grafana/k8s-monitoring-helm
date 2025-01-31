@@ -40,6 +40,41 @@ Be sure perform actual integration testing in a live environment in the main [k8
 
 ## Values
 
+### Connectors: Grafana Cloud Host Info
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| connectors.grafanaCloudMetrics.enabled | bool | `true` | Generate host info metrics from telemetry data. These metrics are required for using Application Observability in Grafana Cloud. Note: Enabling this may incur additional costs. See [Application Observability Pricing](https://grafana.com/docs/grafana-cloud/monitor-applications/application-observability/pricing/) |
+
+### Connectors: Span Logs
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| connectors.spanLogs.enabled | bool | `false` | Use a span logs connector which creates logs from spans. |
+| connectors.spanLogs.labels | list | `[]` | A list of keys that will be logged as labels. |
+| connectors.spanLogs.process | bool | `false` | Log one line for every process. |
+| connectors.spanLogs.processAttributes | list | `[]` | Additional process attributes to log. |
+| connectors.spanLogs.roots | bool | `false` | Log one line for every root span of a trace. |
+| connectors.spanLogs.spanAttributes | list | `[]` | Additional span attributes to log. |
+| connectors.spanLogs.spans | bool | `false` | Create a log line for each span. This can lead to a large number of logs. |
+
+### Connectors: Span Metrics
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| connectors.spanMetrics.dimensions | list | `[]` | Define dimensions to be added. Some are set internally by default: [service.name, span.name, span.kind, status.code] Example: - name: "http.status_code" - name: "http.method"   default: "GET" |
+| connectors.spanMetrics.dimensionsCacheSize | int | `1000` | How many dimensions to cache |
+| connectors.spanMetrics.enabled | bool | `false` | Use a span metrics connector which creates metrics from spans. |
+| connectors.spanMetrics.events.enabled | bool | `false` | Capture events metrics, which track span events. |
+| connectors.spanMetrics.exemplars.enabled | bool | `false` | Attach exemplars to histograms. |
+| connectors.spanMetrics.exemplars.maxPerDataPoint | number | `nil` | Limits the number of exemplars that can be added to a unique dimension set. |
+| connectors.spanMetrics.histogram.enabled | bool | `true` | Capture histogram metrics, derived from spans’ durations. |
+| connectors.spanMetrics.histogram.explicit.buckets | list | `["2ms","4ms","6ms","8ms","10ms","50ms","100ms","200ms","400ms","800ms","1s","1400ms","2s","5s","10s","15s"]` | The histogram buckets to use. |
+| connectors.spanMetrics.histogram.exponential.maxSize | int | `160` | Maximum number of buckets per positive or negative number range. |
+| connectors.spanMetrics.histogram.type | string | `"explicit"` | Type of histograms to create. Must be either "explicit" or "exponential". |
+| connectors.spanMetrics.histogram.unit | string | `"ms"` | The histogram unit. |
+| connectors.spanMetrics.namespace | string | `"traces.span.metrics"` | The Metric namespace. |
+
 ### General settings
 
 | Key | Type | Default | Description |
@@ -55,11 +90,14 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | processors.batch.size | int | `16384` | What batch size to use, in bytes |
 | processors.batch.timeout | string | `"2s"` | How long before sending (Processors) |
 
-### Processors: Grafana Cloud Host Info
+### Processors: Interval
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| processors.grafanaCloudMetrics.enabled | bool | `true` | Generate host info metrics from telemetry data, used in Application Observability in Grafana Cloud. |
+| processors.interval.enabled | bool | `false` | Utilize an interval processor to aggregate metrics and periodically forward the latest values to the next component in the pipeline. |
+| processors.interval.interval | string | `"60s"` | The interval at which to emit aggregated metrics. |
+| processors.interval.passthrough.gauge | bool | `false` | Determines whether gauge metrics should be passed through as they are or aggregated. |
+| processors.interval.passthrough.summary | bool | `false` | Determines whether summary metrics should be passed through as they are or aggregated. |
 
 ### Processors: K8s Attributes
 

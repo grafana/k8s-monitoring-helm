@@ -1,6 +1,5 @@
 {{/* Inputs: Values (values) metricsOutput, logsOutput, tracesOutput */}}
 {{- define "feature.applicationObservability.receiver.otlp.alloy" }}
-{{- if or .Values.receivers.otlp.grpc.enabled .Values.receivers.otlp.http.enabled }}
 otelcol.receiver.otlp "receiver" {
 {{- if .Values.receivers.otlp.grpc.enabled }}
   grpc {
@@ -16,16 +15,15 @@ otelcol.receiver.otlp "receiver" {
     disable_high_cardinality_metrics = {{ not .Values.receivers.otlp.includeDebugMetrics }}
   }
   output {
-{{- if and .metricsOutput .Values.metrics.enabled }}
-    metrics = {{ .metricsOutput }}
+{{- if and .metrics .Values.metrics.enabled }}
+    metrics = {{ .metrics }}
 {{- end }}
-{{- if and .logsOutput .Values.logs.enabled }}
-    logs = {{ .logsOutput }}
+{{- if and .logs .Values.logs.enabled }}
+    logs = {{ .logs }}
 {{- end }}
-{{- if and .tracesOutput .Values.traces.enabled }}
-    traces = {{ .tracesOutput }}
+{{- if and .traces .Values.traces.enabled }}
+    traces = {{ .traces }}
 {{- end }}
   }
 }
-{{- end }}
 {{- end }}

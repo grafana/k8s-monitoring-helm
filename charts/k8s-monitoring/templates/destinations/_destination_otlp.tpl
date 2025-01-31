@@ -263,10 +263,10 @@ otelcol.exporter.otlp {{ include "helper.alloy_name" .name | quote }} {
 otelcol.exporter.otlphttp {{ include "helper.alloy_name" .name | quote }} {
 {{- end }}
   client {
-{{- if .urlFrom }} 
+{{- if .urlFrom }}
     endpoint = {{ .urlFrom }}
 {{- else }}
-    endpoint = {{ .url | quote }} 
+    endpoint = {{ .url | quote }}
 {{- end }}
 {{- if eq .auth.type "basic" }}
     auth = otelcol.auth.basic.{{ include "helper.alloy_name" .name }}.handler

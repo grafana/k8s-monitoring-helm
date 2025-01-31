@@ -2,8 +2,15 @@
 {{- $defaultValues := "destinations/loki-values.yaml" | .Files.Get | fromYaml }}
 {{- with merge .destination $defaultValues }}
 otelcol.exporter.loki {{ include "helper.alloy_name" .name | quote }} {
+  forward_to = [{{ include "destinations.loki.alloy.loki.logs.target" . }}]
+}
+{{- if .logProcessingStages }}
+
+loki.process {{ include "helper.alloy_name" .name | quote }} {
+{{ .logProcessingStages | indent 2 }}
   forward_to = [loki.write.{{ include "helper.alloy_name" .name }}.receiver]
 }
+{{- end }}
 
 loki.write {{ include "helper.alloy_name" .name | quote }} {
   endpoint {
@@ -122,7 +129,13 @@ loki.write {{ include "helper.alloy_name" .name | quote }} {
 - tls.key
 {{- end -}}
 
-{{- define "destinations.loki.alloy.loki.logs.target" }}loki.write.{{ include "helper.alloy_name" .name }}.receiver{{ end -}}
+{{- define "destinations.loki.alloy.loki.logs.target" }}
+{{- if .logProcessingStages -}}
+loki.process.{{ include "helper.alloy_name" .name }}.receiver
+{{- else -}}
+loki.write.{{ include "helper.alloy_name" .name }}.receiver
+{{- end -}}
+{{- end -}}
 {{- define "destinations.loki.alloy.otlp.logs.target" }}otelcol.exporter.loki.{{ include "helper.alloy_name" .name }}.input{{ end -}}
 
 {{- define "destinations.loki.supports_metrics" }}false{{ end -}}

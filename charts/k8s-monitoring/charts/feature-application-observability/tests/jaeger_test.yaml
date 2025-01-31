@@ -1,0 +1,177 @@
+---
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces rule:empty-lines
+suite: Test Loki integration
+templates:
+  - configmap.yaml
+tests:
+  - it: should allow you to enable just the jaeger grpc receiver
+    set:
+      deployAsConfigMap: true
+      receivers:
+        jaeger:
+          grpc:
+            enabled: true
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["module.alloy"]
+          # The pattern should look like this, but since the regex is escaped, it will be a bit different
+          # otelcol.receiver.jaeger "receiver" {
+          #   protocols {
+          #     grpc {
+          #       endpoint = "0.0.0.0:14250"
+          #     }
+          #   }
+          #
+          #   debug_metrics {
+          #     disable_high_cardinality_metrics = true
+          #   }
+          #   output {
+          #     traces = [otelcol.processor.resourcedetection.default.input]
+          #   }
+          # }
+          pattern: |-
+            \s*otelcol\.receiver\.jaeger "receiver"\s*\{
+            \s*  protocols\s*\{
+            \s*    grpc\s*\{
+            \s*      endpoint = "0\.0\.0\.0:14250"
+            \s*    \}
+            \s*  \}
+            \s*
+            \s*  debug_metrics\s*\{
+            \s*    disable_high_cardinality_metrics = true
+            \s*  \}
+            \s*  output\s*\{
+            \s*    traces = \[otelcol\.processor\.resourcedetection\.default\.input\]
+            \s*  \}
+            \s*}
+
+  - it: should allow you to enable just the jaeger thrift binary receiver
+    set:
+      deployAsConfigMap: true
+      receivers:
+        jaeger:
+          thriftBinary:
+            enabled: true
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["module.alloy"]
+          # The pattern should look like this, but since the regex is escaped, it will be a bit different
+          # otelcol.receiver.jaeger "receiver" {
+          #   protocols {
+          #     thrift_binary {
+          #       endpoint = "0.0.0.0:6832"
+          #     }
+          #   }
+          #
+          #   debug_metrics {
+          #     disable_high_cardinality_metrics = true
+          #   }
+          #   output {
+          #     traces = [otelcol.processor.resourcedetection.default.input]
+          #   }
+          # }
+          pattern: |-
+            \s*otelcol\.receiver\.jaeger "receiver"\s*\{
+            \s*  protocols\s*\{
+            \s*    thrift_binary\s*\{
+            \s*      endpoint = "0\.0\.0\.0:6832"
+            \s*    \}
+            \s*  \}
+            \s*
+            \s*  debug_metrics\s*\{
+            \s*    disable_high_cardinality_metrics = true
+            \s*  \}
+            \s*  output\s*\{
+            \s*    traces = \[otelcol\.processor\.resourcedetection\.default\.input\]
+            \s*  \}
+            \s*}
+
+  - it: should allow you to enable just the jaeger thrift compact receiver
+    set:
+      deployAsConfigMap: true
+      receivers:
+        jaeger:
+          thriftCompact:
+            enabled: true
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["module.alloy"]
+          # The pattern should look like this, but since the regex is escaped, it will be a bit different
+          # otelcol.receiver.jaeger "receiver" {
+          #   protocols {
+          #     thrift_compact {
+          #       endpoint = "0.0.0.0:6831"
+          #     }
+          #   }
+          #
+          #   debug_metrics {
+          #     disable_high_cardinality_metrics = true
+          #   }
+          #   output {
+          #     traces = [otelcol.processor.resourcedetection.default.input]
+          #   }
+          # }
+          pattern: |-
+            \s*otelcol\.receiver\.jaeger "receiver"\s*\{
+            \s*  protocols\s*\{
+            \s*    thrift_compact\s*\{
+            \s*      endpoint = "0\.0\.0\.0:6831"
+            \s*    \}
+            \s*  \}
+            \s*
+            \s*  debug_metrics\s*\{
+            \s*    disable_high_cardinality_metrics = true
+            \s*  \}
+            \s*  output\s*\{
+            \s*    traces = \[otelcol\.processor\.resourcedetection\.default\.input\]
+            \s*  \}
+            \s*}
+
+  - it: should allow you to enable just the jaeger thrift http receiver
+    set:
+      deployAsConfigMap: true
+      receivers:
+        jaeger:
+          thriftHttp:
+            enabled: true
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["module.alloy"]
+          # The pattern should look like this, but since the regex is escaped, it will be a bit different
+          # otelcol.receiver.jaeger "receiver" {
+          #   protocols {
+          #     thrift_http {
+          #       endpoint = "0.0.0.0:14268"
+          #     }
+          #   }
+          #
+          #   debug_metrics {
+          #     disable_high_cardinality_metrics = true
+          #   }
+          #   output {
+          #     traces = [otelcol.processor.resourcedetection.default.input]
+          #   }
+          # }
+          pattern: |-
+            \s*otelcol\.receiver\.jaeger "receiver"\s*\{
+            \s*  protocols\s*\{
+            \s*    thrift_http\s*\{
+            \s*      endpoint = "0\.0\.0\.0:14268"
+            \s*    \}
+            \s*  \}
+            \s*
+            \s*  debug_metrics\s*\{
+            \s*    disable_high_cardinality_metrics = true
+            \s*  \}
+            \s*  output\s*\{
+            \s*    traces = \[otelcol\.processor\.resourcedetection\.default\.input\]
+            \s*  \}
+            \s*}

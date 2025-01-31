@@ -1,0 +1,65 @@
+---
+cluster:
+  name: pod-labels-and-annotations
+
+destinations:
+  - name: prometheus
+    type: prometheus
+    url: http://prometheus.prometheus.svc:9090/api/v1/write
+  - name: loki
+    type: loki
+    url: http://loki.loki.svc:3100/api/push
+  - name: tempo
+    type: otlp
+    url: http://tempo.tempo.svc
+    metrics: {enabled: false}
+    logs: {enabled: false}
+    traces: {enabled: true}
+
+clusterMetrics:
+  enabled: true
+  kube-state-metrics:
+    metricsTuning:
+      includeMetrics:
+        - kube_pod_annotations
+        - kube_pod_labels
+    metricLabelsAllowlist:       # Configures kube-state-metrics to capture Pod labels as kube_pod_labels metrics
+      - pods=[*]
+    metricAnnotationsAllowlist:  # Configures kube-state-metrics to capture Pod annotations as kube_pod_annotations metrics
+      - pods=[*]
+
+podLogs:
+  enabled: true
+  labels:       # Capture the `example.com/name` Pod label as the `name` log label
+    name: example.com/name
+  annotations:  # Capture the `example.com/environment` Pod annotation as the `environment` log label
+    environment: example.com/environment
+  labelsToKeep: [name, environment]
+
+applicationObservability:
+  enabled: true
+  processors:
+    k8sattributes:
+      labels:
+        - from: pod
+          key_regex: "kubernetes.io/(.*)"
+          tag_name: "$1"
+  receivers:
+    otlp:
+      grpc:
+        enabled: true
+
+alloy-metrics:
+  enabled: true
+
+alloy-logs:
+  enabled: true
+
+alloy-receiver:
+  enabled: true
+  alloy:
+    extraPorts:
+      - name: otlp-grpc
+        port: 4317
+        targetPort: 4317
+        protocol: TCP

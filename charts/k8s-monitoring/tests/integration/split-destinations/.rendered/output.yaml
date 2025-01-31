@@ -6,11 +6,11 @@ metadata:
   name: k8smon-alloy-logs
   namespace: default
   labels:
-    helm.sh/chart: alloy-logs-0.10.1
+    helm.sh/chart: alloy-logs-0.11.0
     app.kubernetes.io/name: alloy-logs
     app.kubernetes.io/instance: k8smon
     
-    app.kubernetes.io/version: "v1.5.1"
+    app.kubernetes.io/version: "v1.6.1"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
     app.kubernetes.io/component: rbac
@@ -22,11 +22,11 @@ metadata:
   name: k8smon-alloy-metrics
   namespace: default
   labels:
-    helm.sh/chart: alloy-metrics-0.10.1
+    helm.sh/chart: alloy-metrics-0.11.0
     app.kubernetes.io/name: alloy-metrics
     app.kubernetes.io/instance: k8smon
     
-    app.kubernetes.io/version: "v1.5.1"
+    app.kubernetes.io/version: "v1.6.1"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
     app.kubernetes.io/component: rbac
@@ -37,7 +37,7 @@ kind: ServiceAccount
 automountServiceAccountToken: true
 metadata:
   labels:    
-    helm.sh/chart: kube-state-metrics-5.28.0
+    helm.sh/chart: kube-state-metrics-5.29.0
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: kube-state-metrics
@@ -47,8 +47,6 @@ metadata:
     release: k8smon
   name: k8smon-kube-state-metrics
   namespace: default
-imagePullSecrets:  
-  - name: my-registry-creds
 ---
 # Source: k8s-monitoring/charts/clusterMetrics/charts/node-exporter/templates/serviceaccount.yaml
 apiVersion: v1
@@ -66,8 +64,6 @@ metadata:
     app.kubernetes.io/version: "1.8.2"
     release: k8smon
 automountServiceAccountToken: false
-imagePullSecrets:  
-  - name: my-registry-creds
 ---
 # Source: k8s-monitoring/charts/clusterMetrics/charts/windows-exporter/templates/serviceaccount.yaml
 apiVersion: v1
@@ -84,8 +80,52 @@ metadata:
     app.kubernetes.io/instance: k8smon
     app.kubernetes.io/version: "0.29.2"
     release: k8smon
-imagePullSecrets:  
-  - name: my-registry-creds
+---
+# Source: k8s-monitoring/templates/destination_secret.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: "allmetrics-k8smon-k8s-monitoring"
+  namespace: "default"
+type: Opaque
+data:
+  username: "cHJvbXVzZXI="
+  password: "cHJvbWV0aGV1c3Bhc3N3b3Jk"
+---
+# Source: k8s-monitoring/templates/destination_secret.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: "productionmetrics-k8smon-k8s-monitoring"
+  namespace: "default"
+type: Opaque
+data:
+  username: "cHJvbXVzZXI="
+  password: "cHJvbWV0aGV1c3Bhc3N3b3Jk"
+---
+# Source: k8s-monitoring/templates/destination_secret.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: "alllogs-k8smon-k8s-monitoring"
+  namespace: "default"
+type: Opaque
+data:
+  tenantId: "MQ=="
+  username: "bG9raQ=="
+  password: "bG9raXBhc3N3b3Jk"
+---
+# Source: k8s-monitoring/templates/destination_secret.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: "productionlogs-k8smon-k8s-monitoring"
+  namespace: "default"
+type: Opaque
+data:
+  tenantId: "MQ=="
+  username: "bG9raQ=="
+  password: "bG9raXBhc3N3b3Jk"
 ---
 # Source: k8s-monitoring/charts/clusterMetrics/charts/windows-exporter/templates/config.yaml
 apiVersion: v1
@@ -118,16 +158,20 @@ metadata:
   namespace: default
 data:
   config.alloy: |-
-    // Destination: prometheus (prometheus)
-    otelcol.exporter.prometheus "prometheus" {
+    // Destination: allMetrics (prometheus)
+    otelcol.exporter.prometheus "allmetrics" {
       add_metric_suffixes = true
-      forward_to = [prometheus.remote_write.prometheus.receiver]
+      forward_to = [prometheus.remote_write.allmetrics.receiver]
     }
     
-    prometheus.remote_write "prometheus" {
+    prometheus.remote_write "allmetrics" {
       endpoint {
-        url = "http://prometheus.prometheus.svc:9090/api/v1/write"
+        url = "http://all-metrics-prometheus-server.all-dbs.svc:9090/api/v1/write"
         headers = {
+        }
+        basic_auth {
+          username = nonsensitive(remote.kubernetes.secret.allmetrics.data["username"])
+          password = remote.kubernetes.secret.allmetrics.data["password"]
         }
         tls_config {
           insecure_skip_verify = false
@@ -149,13 +193,13 @@ data:
         write_relabel_config {
           source_labels = ["cluster"]
           regex = ""
-          replacement = "private-image-registries-example-cluster"
+          replacement = "split-destinations-cluster"
           target_label = "cluster"
         }
         write_relabel_config {
           source_labels = ["k8s.cluster.name"]
           regex = ""
-          replacement = "private-image-registries-example-cluster"
+          replacement = "split-destinations-cluster"
           target_label = "cluster"
         }
       }
@@ -165,6 +209,74 @@ data:
         min_keepalive_time = "5m"
         max_keepalive_time = "8h"
       }
+    }
+    
+    remote.kubernetes.secret "allmetrics" {
+      name      = "allmetrics-k8smon-k8s-monitoring"
+      namespace = "default"
+    }
+    
+    // Destination: productionMetrics (prometheus)
+    otelcol.exporter.prometheus "productionmetrics" {
+      add_metric_suffixes = true
+      forward_to = [prometheus.remote_write.productionmetrics.receiver]
+    }
+    
+    prometheus.remote_write "productionmetrics" {
+      endpoint {
+        url = "http://prod-metrics-prometheus-server.prod-dbs.svc:9090/api/v1/write"
+        headers = {
+        }
+        basic_auth {
+          username = nonsensitive(remote.kubernetes.secret.productionmetrics.data["username"])
+          password = remote.kubernetes.secret.productionmetrics.data["password"]
+        }
+        tls_config {
+          insecure_skip_verify = false
+        }
+        send_native_histograms = false
+    
+        queue_config {
+          capacity = 10000
+          min_shards = 1
+          max_shards = 50
+          max_samples_per_send = 2000
+          batch_send_deadline = "5s"
+          min_backoff = "30ms"
+          max_backoff = "5s"
+          retry_on_http_429 = true
+          sample_age_limit = "0s"
+        }
+    
+        write_relabel_config {
+          source_labels = ["cluster"]
+          regex = ""
+          replacement = "split-destinations-cluster"
+          target_label = "cluster"
+        }
+        write_relabel_config {
+          source_labels = ["k8s.cluster.name"]
+          regex = ""
+          replacement = "split-destinations-cluster"
+          target_label = "cluster"
+        }
+        write_relabel_config {
+          source_labels = ["namespace"]
+          regex = "production"
+          action = "keep"
+        }
+      }
+    
+      wal {
+        truncate_frequency = "2h"
+        min_keepalive_time = "5m"
+        max_keepalive_time = "8h"
+      }
+    }
+    
+    remote.kubernetes.secret "productionmetrics" {
+      name      = "productionmetrics-k8smon-k8s-monitoring"
+      namespace = "default"
     }
     
     // Feature: Cluster Metrics
@@ -391,7 +503,8 @@ data:
     }
     cluster_metrics "feature" {
       metrics_destinations = [
-        prometheus.remote_write.prometheus.receiver,
+        prometheus.remote_write.allmetrics.receiver,
+        prometheus.remote_write.productionmetrics.receiver,
       ]
     }
     
@@ -434,7 +547,8 @@ data:
         action = "keep"
       }
       forward_to = [
-        prometheus.remote_write.prometheus.receiver,
+        prometheus.remote_write.allmetrics.receiver,
+        prometheus.remote_write.productionmetrics.receiver,
       ]
     }
     
@@ -444,7 +558,7 @@ data:
   self-reporting-metric.prom: |
     # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_build_info gauge
-    grafana_kubernetes_monitoring_build_info{version="2.0.4", namespace="default"} 1
+    grafana_kubernetes_monitoring_build_info{version="2.0.6", namespace="default"} 1
     # HELP grafana_kubernetes_monitoring_feature_info A metric to report the enabled features of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_feature_info gauge
     grafana_kubernetes_monitoring_feature_info{deployments="kube-state-metrics,node-exporter,windows-exporter", feature="clusterMetrics", sources="kubelet,kubeletResource,cadvisor,kube-state-metrics,node-exporter,windows-exporter", version="1.0.0"} 1
@@ -458,22 +572,68 @@ metadata:
   namespace: default
 data:
   config.alloy: |-
-    // Destination: loki (loki)
-    otelcol.exporter.loki "loki" {
-      forward_to = [loki.write.loki.receiver]
+    // Destination: allLogs (loki)
+    otelcol.exporter.loki "alllogs" {
+      forward_to = [loki.write.alllogs.receiver]
     }
     
-    loki.write "loki" {
+    loki.write "alllogs" {
       endpoint {
-        url = "http://loki.loki.svc:3100/loki/api/v1/push"
+        url = "http://all-logs-loki.all-dbs.svc:3100/loki/api/v1/push"
+        tenant_id = nonsensitive(remote.kubernetes.secret.alllogs.data["tenantId"])
+        basic_auth {
+          username = nonsensitive(remote.kubernetes.secret.alllogs.data["username"])
+          password = remote.kubernetes.secret.alllogs.data["password"]
+        }
         tls_config {
           insecure_skip_verify = false
         }
       }
       external_labels = {
-        cluster = "private-image-registries-example-cluster",
-        "k8s_cluster_name" = "private-image-registries-example-cluster",
+        cluster = "split-destinations-cluster",
+        "k8s_cluster_name" = "split-destinations-cluster",
       }
+    }
+    
+    remote.kubernetes.secret "alllogs" {
+      name      = "alllogs-k8smon-k8s-monitoring"
+      namespace = "default"
+    }
+    
+    // Destination: productionLogs (loki)
+    otelcol.exporter.loki "productionlogs" {
+      forward_to = [loki.process.productionlogs.receiver]
+    }
+    
+    loki.process "productionlogs" {
+      stage.match {
+        selector = "{namespace!=\"production\"}"
+        action   = "drop"
+      }
+      forward_to = [loki.write.productionlogs.receiver]
+    }
+    
+    loki.write "productionlogs" {
+      endpoint {
+        url = "http://prod-logs-loki.prod-dbs.svc:3100/loki/api/v1/push"
+        tenant_id = nonsensitive(remote.kubernetes.secret.productionlogs.data["tenantId"])
+        basic_auth {
+          username = nonsensitive(remote.kubernetes.secret.productionlogs.data["username"])
+          password = remote.kubernetes.secret.productionlogs.data["password"]
+        }
+        tls_config {
+          insecure_skip_verify = false
+        }
+      }
+      external_labels = {
+        cluster = "split-destinations-cluster",
+        "k8s_cluster_name" = "split-destinations-cluster",
+      }
+    }
+    
+    remote.kubernetes.secret "productionlogs" {
+      name      = "productionlogs-k8smon-k8s-monitoring"
+      namespace = "default"
     }
     
     // Feature: Pod Logs
@@ -615,7 +775,8 @@ data:
     }
     pod_logs "feature" {
       logs_destinations = [
-        loki.write.loki.receiver,
+        loki.write.alllogs.receiver,
+        loki.process.productionlogs.receiver,
       ]
     }
 ---
@@ -2114,11 +2275,11 @@ kind: ClusterRole
 metadata:
   name: k8smon-alloy-logs
   labels:
-    helm.sh/chart: alloy-logs-0.10.1
+    helm.sh/chart: alloy-logs-0.11.0
     app.kubernetes.io/name: alloy-logs
     app.kubernetes.io/instance: k8smon
     
-    app.kubernetes.io/version: "v1.5.1"
+    app.kubernetes.io/version: "v1.6.1"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
     app.kubernetes.io/component: rbac
@@ -2214,11 +2375,11 @@ kind: ClusterRole
 metadata:
   name: k8smon-alloy-metrics
   labels:
-    helm.sh/chart: alloy-metrics-0.10.1
+    helm.sh/chart: alloy-metrics-0.11.0
     app.kubernetes.io/name: alloy-metrics
     app.kubernetes.io/instance: k8smon
     
-    app.kubernetes.io/version: "v1.5.1"
+    app.kubernetes.io/version: "v1.6.1"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
     app.kubernetes.io/component: rbac
@@ -2313,7 +2474,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   labels:    
-    helm.sh/chart: kube-state-metrics-5.28.0
+    helm.sh/chart: kube-state-metrics-5.29.0
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: kube-state-metrics
@@ -2470,11 +2631,11 @@ kind: ClusterRoleBinding
 metadata:
   name: k8smon-alloy-logs
   labels:
-    helm.sh/chart: alloy-logs-0.10.1
+    helm.sh/chart: alloy-logs-0.11.0
     app.kubernetes.io/name: alloy-logs
     app.kubernetes.io/instance: k8smon
     
-    app.kubernetes.io/version: "v1.5.1"
+    app.kubernetes.io/version: "v1.6.1"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
     app.kubernetes.io/component: rbac
@@ -2493,11 +2654,11 @@ kind: ClusterRoleBinding
 metadata:
   name: k8smon-alloy-metrics
   labels:
-    helm.sh/chart: alloy-metrics-0.10.1
+    helm.sh/chart: alloy-metrics-0.11.0
     app.kubernetes.io/name: alloy-metrics
     app.kubernetes.io/instance: k8smon
     
-    app.kubernetes.io/version: "v1.5.1"
+    app.kubernetes.io/version: "v1.6.1"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
     app.kubernetes.io/component: rbac
@@ -2515,7 +2676,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   labels:    
-    helm.sh/chart: kube-state-metrics-5.28.0
+    helm.sh/chart: kube-state-metrics-5.29.0
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: kube-state-metrics
@@ -2539,11 +2700,11 @@ kind: Service
 metadata:
   name: k8smon-alloy-logs
   labels:
-    helm.sh/chart: alloy-logs-0.10.1
+    helm.sh/chart: alloy-logs-0.11.0
     app.kubernetes.io/name: alloy-logs
     app.kubernetes.io/instance: k8smon
     
-    app.kubernetes.io/version: "v1.5.1"
+    app.kubernetes.io/version: "v1.6.1"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
     app.kubernetes.io/component: networking
@@ -2565,11 +2726,11 @@ kind: Service
 metadata:
   name: k8smon-alloy-metrics-cluster
   labels:
-    helm.sh/chart: alloy-metrics-0.10.1
+    helm.sh/chart: alloy-metrics-0.11.0
     app.kubernetes.io/name: alloy-metrics
     app.kubernetes.io/instance: k8smon
     
-    app.kubernetes.io/version: "v1.5.1"
+    app.kubernetes.io/version: "v1.6.1"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
     app.kubernetes.io/component: networking
@@ -2598,11 +2759,11 @@ kind: Service
 metadata:
   name: k8smon-alloy-metrics
   labels:
-    helm.sh/chart: alloy-metrics-0.10.1
+    helm.sh/chart: alloy-metrics-0.11.0
     app.kubernetes.io/name: alloy-metrics
     app.kubernetes.io/instance: k8smon
     
-    app.kubernetes.io/version: "v1.5.1"
+    app.kubernetes.io/version: "v1.6.1"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
     app.kubernetes.io/component: networking
@@ -2625,7 +2786,7 @@ metadata:
   name: k8smon-kube-state-metrics
   namespace: default
   labels:    
-    helm.sh/chart: kube-state-metrics-5.28.0
+    helm.sh/chart: kube-state-metrics-5.29.0
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: kube-state-metrics
@@ -2707,11 +2868,11 @@ kind: DaemonSet
 metadata:
   name: k8smon-alloy-logs
   labels:
-    helm.sh/chart: alloy-logs-0.10.1
+    helm.sh/chart: alloy-logs-0.11.0
     app.kubernetes.io/name: alloy-logs
     app.kubernetes.io/instance: k8smon
     
-    app.kubernetes.io/version: "v1.5.1"
+    app.kubernetes.io/version: "v1.6.1"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
 spec:
@@ -2730,11 +2891,9 @@ spec:
         app.kubernetes.io/instance: k8smon
     spec:
       serviceAccountName: k8smon-alloy-logs
-      imagePullSecrets:
-        - name: my-registry-creds
       containers:
         - name: alloy
-          image: my.registry.com/grafana/alloy:v1.5.1
+          image: docker.io/grafana/alloy:v1.6.1
           imagePullPolicy: IfNotPresent
           args:
             - run
@@ -2792,7 +2951,7 @@ spec:
               mountPath: /var/lib/docker/containers
               readOnly: true
         - name: config-reloader
-          image: my.registry.com/jimmidyson/configmap-reload:v0.12.0
+          image: ghcr.io/jimmidyson/configmap-reload:v0.14.0
           args:
             - --volume-dir=/etc/alloy
             - --webhook-url=http://localhost:12345/-/reload
@@ -2866,7 +3025,7 @@ spec:
       serviceAccountName: k8smon-node-exporter
       containers:
         - name: node-exporter
-          image: my.registry.com/prometheus/node-exporter:v1.8.2
+          image: quay.io/prometheus/node-exporter:v1.8.2
           imagePullPolicy: IfNotPresent
           args:
             - --path.procfs=/host/proc
@@ -2916,8 +3075,6 @@ spec:
               mountPath: /host/root
               mountPropagation: HostToContainer
               readOnly: true
-      imagePullSecrets:        
-        - name: my-registry-creds
       hostNetwork: true
       hostPID: true
       hostIPC: false
@@ -2992,13 +3149,13 @@ spec:
           runAsUserName: NT AUTHORITY\system
       initContainers:
         - name: configure-firewall
-          image: my.registry.com/prometheus-community/windows-exporter:0.29.2
+          image: ghcr.io/prometheus-community/windows-exporter:0.29.2
           command: [ "powershell" ]
           args: [ "New-NetFirewallRule", "-DisplayName", "'windows-exporter'", "-Direction", "inbound", "-Profile", "Any", "-Action", "Allow", "-LocalPort", "9182", "-Protocol", "TCP" ]
       serviceAccountName: k8smon-windows-exporter
       containers:
         - name: windows-exporter
-          image: my.registry.com/prometheus-community/windows-exporter:0.29.2
+          image: ghcr.io/prometheus-community/windows-exporter:0.29.2
           imagePullPolicy: IfNotPresent
           args:
             - --config.file=%CONTAINER_SANDBOX_MOUNT_POINT%/config.yml
@@ -3035,8 +3192,6 @@ spec:
             - name: config
               mountPath: /config.yml
               subPath: config.yml
-      imagePullSecrets:        
-        - name: my-registry-creds
       hostNetwork: true
       hostPID: true
       nodeSelector:
@@ -3056,7 +3211,7 @@ metadata:
   name: k8smon-kube-state-metrics
   namespace: default
   labels:    
-    helm.sh/chart: kube-state-metrics-5.28.0
+    helm.sh/chart: kube-state-metrics-5.29.0
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: kube-state-metrics
@@ -3076,7 +3231,7 @@ spec:
   template:
     metadata:
       labels:        
-        helm.sh/chart: kube-state-metrics-5.28.0
+        helm.sh/chart: kube-state-metrics-5.29.0
         app.kubernetes.io/managed-by: Helm
         app.kubernetes.io/component: metrics
         app.kubernetes.io/part-of: kube-state-metrics
@@ -3105,7 +3260,7 @@ spec:
         - --resources=certificatesigningrequests,configmaps,cronjobs,daemonsets,deployments,endpoints,horizontalpodautoscalers,ingresses,jobs,leases,limitranges,mutatingwebhookconfigurations,namespaces,networkpolicies,nodes,persistentvolumeclaims,persistentvolumes,poddisruptionbudgets,pods,replicasets,replicationcontrollers,resourcequotas,secrets,services,statefulsets,storageclasses,validatingwebhookconfigurations,volumeattachments
         - --metric-labels-allowlist=nodes=[agentpool,alpha.eksctl.io/cluster-name,alpha.eksctl.io/nodegroup-name,beta.kubernetes.io/instance-type,cloud.google.com/gke-nodepool,cluster_name,ec2_amazonaws_com_Name,ec2_amazonaws_com_aws_autoscaling_groupName,ec2_amazonaws_com_aws_autoscaling_group_name,ec2_amazonaws_com_name,eks_amazonaws_com_nodegroup,k8s_io_cloud_provider_aws,karpenter.sh/nodepool,kubernetes.azure.com/cluster,kubernetes.io/arch,kubernetes.io/hostname,kubernetes.io/os,node.kubernetes.io/instance-type,topology.kubernetes.io/region,topology.kubernetes.io/zone]
         imagePullPolicy: IfNotPresent
-        image: my.registry.com/kube-state-metrics/kube-state-metrics:v2.14.0
+        image: registry.k8s.io/kube-state-metrics/kube-state-metrics:v2.14.0
         ports:
         - containerPort: 8080
           name: "http"
@@ -3139,8 +3294,6 @@ spec:
             drop:
             - ALL
           readOnlyRootFilesystem: true
-      imagePullSecrets:        
-        - name: my-registry-creds
       nodeSelector:
         kubernetes.io/os: linux
 ---
@@ -3150,11 +3303,11 @@ kind: StatefulSet
 metadata:
   name: k8smon-alloy-metrics
   labels:
-    helm.sh/chart: alloy-metrics-0.10.1
+    helm.sh/chart: alloy-metrics-0.11.0
     app.kubernetes.io/name: alloy-metrics
     app.kubernetes.io/instance: k8smon
     
-    app.kubernetes.io/version: "v1.5.1"
+    app.kubernetes.io/version: "v1.6.1"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
 spec:
@@ -3176,11 +3329,9 @@ spec:
         app.kubernetes.io/instance: k8smon
     spec:
       serviceAccountName: k8smon-alloy-metrics
-      imagePullSecrets:
-        - name: my-registry-creds
       containers:
         - name: alloy
-          image: my.registry.com/grafana/alloy:v1.5.1
+          image: docker.io/grafana/alloy:v1.6.1
           imagePullPolicy: IfNotPresent
           args:
             - run
@@ -3235,7 +3386,7 @@ spec:
             - name: config
               mountPath: /etc/alloy
         - name: config-reloader
-          image: my.registry.com/jimmidyson/configmap-reload:v0.12.0
+          image: ghcr.io/jimmidyson/configmap-reload:v0.14.0
           args:
             - --volume-dir=/etc/alloy
             - --webhook-url=http://localhost:12345/-/reload

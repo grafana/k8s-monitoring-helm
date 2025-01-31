@@ -6,11 +6,11 @@ metadata:
   name: k8smon-alloy-metrics
   namespace: default
   labels:
-    helm.sh/chart: alloy-metrics-0.10.1
+    helm.sh/chart: alloy-metrics-0.11.0
     app.kubernetes.io/name: alloy-metrics
     app.kubernetes.io/instance: k8smon
     
-    app.kubernetes.io/version: "v1.5.1"
+    app.kubernetes.io/version: "v1.6.1"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
     app.kubernetes.io/component: rbac
@@ -22,11 +22,11 @@ metadata:
   name: k8smon-alloy-receiver
   namespace: default
   labels:
-    helm.sh/chart: alloy-receiver-0.10.1
+    helm.sh/chart: alloy-receiver-0.11.0
     app.kubernetes.io/name: alloy-receiver
     app.kubernetes.io/instance: k8smon
     
-    app.kubernetes.io/version: "v1.5.1"
+    app.kubernetes.io/version: "v1.6.1"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
     app.kubernetes.io/component: rbac
@@ -38,10 +38,10 @@ metadata:
   name: k8smon-beyla
   namespace: default
   labels:
-    helm.sh/chart: beyla-1.6.3
+    helm.sh/chart: beyla-1.7.2
     app.kubernetes.io/name: beyla
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.9.8"
+    app.kubernetes.io/version: "2.0.2"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: beyla
     app.kubernetes.io/component: rbac
@@ -219,7 +219,7 @@ data:
   self-reporting-metric.prom: |
     # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_build_info gauge
-    grafana_kubernetes_monitoring_build_info{version="2.0.4", namespace="default"} 1
+    grafana_kubernetes_monitoring_build_info{version="2.0.6", namespace="default"} 1
     # HELP grafana_kubernetes_monitoring_feature_info A metric to report the enabled features of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_feature_info gauge
     grafana_kubernetes_monitoring_feature_info{feature="applicationObservability", protocols="otlpgrpc", version="1.0.0"} 1
@@ -308,7 +308,7 @@ data:
         comment = "Must be a list of trace destinations where collected trace should be forwarded to"
       }
     
-      // Receivers --> Resource Detection Processor  
+      // OTLP Receiver  
       otelcol.receiver.otlp "receiver" {
         grpc {
           endpoint = "0.0.0.0:4317"
@@ -321,9 +321,9 @@ data:
           logs = [otelcol.processor.resourcedetection.default.input]
           traces = [otelcol.processor.resourcedetection.default.input]
         }
-      }    
+      }
     
-      // Resource Detection Processor --> K8s Attribute Processor  
+      // Resource Detection Processor  
       otelcol.processor.resourcedetection "default" {
         detectors = ["env", "system"]
         system {
@@ -337,8 +337,7 @@ data:
         }
       }
     
-      // K8s Attribute Processor --> Transform Processor
-      // Resource Detection Processor Traces --> Host Info Connector  
+      // K8s Attributes Processor  
       otelcol.processor.k8sattributes "default" {
         extract {
           metadata = ["k8s.namespace.name","k8s.pod.name","k8s.deployment.name","k8s.statefulset.name","k8s.daemonset.name","k8s.cronjob.name","k8s.job.name","k8s.node.name","k8s.pod.uid","k8s.pod.start_time"]
@@ -355,7 +354,8 @@ data:
           traces = [otelcol.processor.transform.default.input, otelcol.connector.host_info.default.input]
         }
       }
-      // Host Info Connector --> Batch Processor  
+    
+      // Host Info Connector  
       otelcol.connector.host_info "default" {
         host_identifiers = [ "k8s.node.name" ]
       
@@ -364,8 +364,7 @@ data:
         }
       }
     
-    
-      // Transform Processor --> Batch Processor  
+      // Transform Processor  
       otelcol.processor.transform "default" {
         error_mode = "ignore"
         log_statements {
@@ -384,8 +383,12 @@ data:
         }
       }
     
-      // Batch Processor --> Destinations  
+      // Batch Processor  
       otelcol.processor.batch "default" {
+        send_batch_size = 16384
+        send_batch_max_size = 0
+        timeout = "2s"
+      
         output {
           metrics = argument.metrics_destinations.value
           logs = argument.logs_destinations.value
@@ -412,10 +415,10 @@ metadata:
   name: k8smon-beyla
   namespace: default
   labels:
-    helm.sh/chart: beyla-1.6.3
+    helm.sh/chart: beyla-1.7.2
     app.kubernetes.io/name: beyla
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.9.8"
+    app.kubernetes.io/version: "2.0.2"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: beyla
     app.kubernetes.io/component: config
@@ -487,11 +490,11 @@ kind: ClusterRole
 metadata:
   name: k8smon-alloy-metrics
   labels:
-    helm.sh/chart: alloy-metrics-0.10.1
+    helm.sh/chart: alloy-metrics-0.11.0
     app.kubernetes.io/name: alloy-metrics
     app.kubernetes.io/instance: k8smon
     
-    app.kubernetes.io/version: "v1.5.1"
+    app.kubernetes.io/version: "v1.6.1"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
     app.kubernetes.io/component: rbac
@@ -587,11 +590,11 @@ kind: ClusterRole
 metadata:
   name: k8smon-alloy-receiver
   labels:
-    helm.sh/chart: alloy-receiver-0.10.1
+    helm.sh/chart: alloy-receiver-0.11.0
     app.kubernetes.io/name: alloy-receiver
     app.kubernetes.io/instance: k8smon
     
-    app.kubernetes.io/version: "v1.5.1"
+    app.kubernetes.io/version: "v1.6.1"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
     app.kubernetes.io/component: rbac
@@ -687,10 +690,10 @@ kind: ClusterRole
 metadata:
   name: k8smon-beyla
   labels:
-    helm.sh/chart: beyla-1.6.3
+    helm.sh/chart: beyla-1.7.2
     app.kubernetes.io/name: beyla
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.9.8"
+    app.kubernetes.io/version: "2.0.2"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: beyla
     app.kubernetes.io/component: rbac
@@ -708,11 +711,11 @@ kind: ClusterRoleBinding
 metadata:
   name: k8smon-alloy-metrics
   labels:
-    helm.sh/chart: alloy-metrics-0.10.1
+    helm.sh/chart: alloy-metrics-0.11.0
     app.kubernetes.io/name: alloy-metrics
     app.kubernetes.io/instance: k8smon
     
-    app.kubernetes.io/version: "v1.5.1"
+    app.kubernetes.io/version: "v1.6.1"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
     app.kubernetes.io/component: rbac
@@ -731,11 +734,11 @@ kind: ClusterRoleBinding
 metadata:
   name: k8smon-alloy-receiver
   labels:
-    helm.sh/chart: alloy-receiver-0.10.1
+    helm.sh/chart: alloy-receiver-0.11.0
     app.kubernetes.io/name: alloy-receiver
     app.kubernetes.io/instance: k8smon
     
-    app.kubernetes.io/version: "v1.5.1"
+    app.kubernetes.io/version: "v1.6.1"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
     app.kubernetes.io/component: rbac
@@ -754,10 +757,10 @@ kind: ClusterRoleBinding
 metadata:
   name: k8smon-beyla
   labels:
-    helm.sh/chart: beyla-1.6.3
+    helm.sh/chart: beyla-1.7.2
     app.kubernetes.io/name: beyla
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.9.8"
+    app.kubernetes.io/version: "2.0.2"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: beyla
     app.kubernetes.io/component: rbac
@@ -776,11 +779,11 @@ kind: Service
 metadata:
   name: k8smon-alloy-metrics-cluster
   labels:
-    helm.sh/chart: alloy-metrics-0.10.1
+    helm.sh/chart: alloy-metrics-0.11.0
     app.kubernetes.io/name: alloy-metrics
     app.kubernetes.io/instance: k8smon
     
-    app.kubernetes.io/version: "v1.5.1"
+    app.kubernetes.io/version: "v1.6.1"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
     app.kubernetes.io/component: networking
@@ -809,11 +812,11 @@ kind: Service
 metadata:
   name: k8smon-alloy-metrics
   labels:
-    helm.sh/chart: alloy-metrics-0.10.1
+    helm.sh/chart: alloy-metrics-0.11.0
     app.kubernetes.io/name: alloy-metrics
     app.kubernetes.io/instance: k8smon
     
-    app.kubernetes.io/version: "v1.5.1"
+    app.kubernetes.io/version: "v1.6.1"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
     app.kubernetes.io/component: networking
@@ -835,11 +838,11 @@ kind: Service
 metadata:
   name: k8smon-alloy-receiver
   labels:
-    helm.sh/chart: alloy-receiver-0.10.1
+    helm.sh/chart: alloy-receiver-0.11.0
     app.kubernetes.io/name: alloy-receiver
     app.kubernetes.io/instance: k8smon
     
-    app.kubernetes.io/version: "v1.5.1"
+    app.kubernetes.io/version: "v1.6.1"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
     app.kubernetes.io/component: networking
@@ -865,11 +868,11 @@ kind: DaemonSet
 metadata:
   name: k8smon-alloy-receiver
   labels:
-    helm.sh/chart: alloy-receiver-0.10.1
+    helm.sh/chart: alloy-receiver-0.11.0
     app.kubernetes.io/name: alloy-receiver
     app.kubernetes.io/instance: k8smon
     
-    app.kubernetes.io/version: "v1.5.1"
+    app.kubernetes.io/version: "v1.6.1"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
 spec:
@@ -890,7 +893,7 @@ spec:
       serviceAccountName: k8smon-alloy-receiver
       containers:
         - name: alloy
-          image: docker.io/grafana/alloy:v1.5.1
+          image: docker.io/grafana/alloy:v1.6.1
           imagePullPolicy: IfNotPresent
           args:
             - run
@@ -945,7 +948,7 @@ spec:
             - name: config
               mountPath: /etc/alloy
         - name: config-reloader
-          image: ghcr.io/jimmidyson/configmap-reload:v0.12.0
+          image: ghcr.io/jimmidyson/configmap-reload:v0.14.0
           args:
             - --volume-dir=/etc/alloy
             - --webhook-url=http://localhost:12345/-/reload
@@ -971,10 +974,10 @@ metadata:
   name: k8smon-beyla
   namespace: default
   labels:
-    helm.sh/chart: beyla-1.6.3
+    helm.sh/chart: beyla-1.7.2
     app.kubernetes.io/name: beyla
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.9.8"
+    app.kubernetes.io/version: "2.0.2"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: beyla
     app.kubernetes.io/component: workload
@@ -992,10 +995,10 @@ spec:
         k8s.grafana.com/job: default/beyla
         k8s.grafana.com/logs.job: integrations/beyla
       labels:
-        helm.sh/chart: beyla-1.6.3
+        helm.sh/chart: beyla-1.7.2
         app.kubernetes.io/name: beyla
         app.kubernetes.io/instance: k8smon
-        app.kubernetes.io/version: "1.9.8"
+        app.kubernetes.io/version: "2.0.2"
         app.kubernetes.io/managed-by: Helm
         app.kubernetes.io/part-of: beyla
         app.kubernetes.io/component: workload
@@ -1006,7 +1009,7 @@ spec:
       dnsPolicy: ClusterFirstWithHostNet
       containers:
         - name: beyla
-          image: docker.io/grafana/beyla:1.9.8
+          image: docker.io/grafana/beyla:2.0.2
           imagePullPolicy: IfNotPresent
           securityContext:
             privileged: true
@@ -1033,11 +1036,11 @@ kind: StatefulSet
 metadata:
   name: k8smon-alloy-metrics
   labels:
-    helm.sh/chart: alloy-metrics-0.10.1
+    helm.sh/chart: alloy-metrics-0.11.0
     app.kubernetes.io/name: alloy-metrics
     app.kubernetes.io/instance: k8smon
     
-    app.kubernetes.io/version: "v1.5.1"
+    app.kubernetes.io/version: "v1.6.1"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
 spec:
@@ -1061,7 +1064,7 @@ spec:
       serviceAccountName: k8smon-alloy-metrics
       containers:
         - name: alloy
-          image: docker.io/grafana/alloy:v1.5.1
+          image: docker.io/grafana/alloy:v1.6.1
           imagePullPolicy: IfNotPresent
           args:
             - run
@@ -1116,7 +1119,7 @@ spec:
             - name: config
               mountPath: /etc/alloy
         - name: config-reloader
-          image: ghcr.io/jimmidyson/configmap-reload:v0.12.0
+          image: ghcr.io/jimmidyson/configmap-reload:v0.14.0
           args:
             - --volume-dir=/etc/alloy
             - --webhook-url=http://localhost:12345/-/reload

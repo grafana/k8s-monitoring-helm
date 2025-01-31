@@ -60,14 +60,14 @@ otelcol.processor.filter "{{ .name | default "default" }}" {
   }
 {{- end }}
   output {
-{{- if and .metricsOutput .Values.metrics.enabled }}
-    metrics = {{ .metricsOutput }}
+{{- if and .metrics .Values.metrics.enabled }}
+    metrics = {{ .metrics }}
 {{- end }}
-{{- if and .logsOutput .Values.logs.enabled }}
-    logs = {{ .logsOutput }}
+{{- if and .logs .Values.logs.enabled }}
+    logs = {{ .logs }}
 {{- end }}
-{{- if and .tracesOutput .Values.traces.enabled }}
-    traces = {{ .tracesOutput }}
+{{- if and .traces .Values.traces.enabled }}
+    traces = {{ .traces }}
 {{- end }}
   }
 }

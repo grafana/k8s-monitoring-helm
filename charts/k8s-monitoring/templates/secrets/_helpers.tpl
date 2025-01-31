@@ -22,13 +22,12 @@ create
 {{- define "secrets.getSecretFromRef" -}}
 {{- $value := .object -}}
 {{- range $pathPart := (regexSplit "\\." (printf "%sFrom" .key) -1) -}} {{/* "path.to.auth.password" --> ["path", "to", "auth" "passwordFrom"] */}}
-{{- if not $pathPart -}}
-  {{- continue -}}
-{{- else if hasKey $value $pathPart -}}
-  {{- $value = (index $value $pathPart) -}}
-{{- else -}}
-  {{- $value = "" -}}
-  {{- break -}}
+{{- if $pathPart -}}
+  {{- if and (not (kindIs "string" $value)) (hasKey $value $pathPart) -}}
+    {{- $value = (index $value $pathPart) -}}
+  {{- else -}}
+    {{- $value = "" -}}
+  {{- end -}}
 {{- end -}}
 {{- end -}}
 {{- $value -}}
@@ -40,13 +39,12 @@ create
 {{- $value := .object -}}
 {{- $defaultKey := (( regexSplit "\\." .key -1) | last) -}}             {{/* "path.to.auth.password" --> "password" */}}
 {{- range $pathPart := (regexSplit "\\." (printf "%sKey" .key) -1) -}}  {{/* "path.to.auth.password" --> ["path", "to", "auth" "passwordKey"] */}}
-{{- if not $pathPart -}}
-  {{- continue -}}
-{{- else if hasKey $value $pathPart -}}
-  {{- $value = (index $value $pathPart) -}}
-{{- else -}}
-  {{- $value = $defaultKey -}}
-  {{- break -}}
+{{- if $pathPart -}}
+  {{- if and (not (kindIs "string" $value)) (hasKey $value $pathPart) -}}
+    {{- $value = (index $value $pathPart) -}}
+  {{- else -}}
+    {{- $value = $defaultKey -}}
+  {{- end -}}
 {{- end -}}
 {{- end -}}
 {{- $value -}}
@@ -58,13 +56,12 @@ create
 {{- $found := true}}
 {{- $value := .object -}}
 {{- range $pathPart := (regexSplit "\\." (printf "%sKey" .key) -1) -}}  {{/* "path.to.auth.password" --> ["path", "to", "auth" "passwordKey"] */}}
-{{- if not $pathPart -}}
-  {{- continue -}}
-{{- else if hasKey $value $pathPart -}}
-  {{- $value = (index $value $pathPart) -}}
-{{- else -}}
-  {{- $found = false -}}
-  {{- break -}}
+{{- if $pathPart -}}
+  {{- if and (not (kindIs "string" $value)) (hasKey $value $pathPart) -}}
+    {{- $value = (index $value $pathPart) -}}
+  {{- else -}}
+    {{- $found = false -}}
+  {{- end -}}
 {{- end -}}
 {{- end -}}
 {{- $found -}}
@@ -75,13 +72,12 @@ create
 {{- define "secrets.getSecretValue" }}
 {{- $value := .object -}}
 {{- range $pathPart := (regexSplit "\\." .key -1) -}}  {{/* "path.to.auth.password" --> ["path", "to", "auth" "password"] */}}
-{{- if not $pathPart -}}
-  {{- continue -}}
-{{- else if hasKey $value $pathPart -}}
-  {{- $value = (index $value $pathPart) -}}
-{{- else -}}
-  {{- $value = "" -}}
-  {{- break -}}
+{{- if $pathPart -}}
+  {{- if and (not (kindIs "string" $value)) (hasKey $value $pathPart) -}}
+    {{- $value = (index $value $pathPart) -}}
+  {{- else -}}
+    {{- $value = "" -}}
+  {{- end -}}
 {{- end -}}
 {{- end -}}
 {{- $value -}}
@@ -129,9 +125,9 @@ remote.kubernetes.secret.{{ include "helper.alloy_name" .object.name }}.data[{{ 
     {{- $keyDefined := include "secrets.isSecretKeyDefined" (dict "object" $ "key" $secret) -}}
     {{- $value := include "secrets.getSecretValue" (dict "object" $ "key" $secret) -}}
     {{- if (eq $secretType "external") }}
-      {{- if eq $keyDefined "true" }}{{- $usesK8sSecret = true }}{{ break }}{{- end }}
+      {{- if eq $keyDefined "true" }}{{- $usesK8sSecret = true }}{{- end }}
     {{- else }}
-      {{- if and $value (not $ref) }}{{- $usesK8sSecret = true }}{{ break }}{{- end }}
+      {{- if and $value (not $ref) }}{{- $usesK8sSecret = true }}{{- end }}
     {{- end }}
   {{- end }}
 {{- $usesK8sSecret -}}

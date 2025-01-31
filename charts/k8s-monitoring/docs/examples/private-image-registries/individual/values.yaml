@@ -1,0 +1,69 @@
+---
+cluster:
+  name: private-image-registries-example-cluster
+
+destinations:
+  - name: prometheus
+    type: prometheus
+    url: http://prometheus.prometheus.svc:9090/api/v1/write
+
+  - name: loki
+    type: loki
+    url: http://loki.loki.svc:3100/loki/api/v1/push
+
+clusterMetrics:
+  enabled: true
+
+  kube-state-metrics:
+    image:
+      registry: my.registry.com
+      repository: kube-state-metrics/kube-state-metrics
+    imagePullSecrets:
+      - name: my-registry-creds
+
+  node-exporter:
+    image:
+      registry: my.registry.com
+      repository: prometheus/node-exporter
+    imagePullSecrets:
+      - name: my-registry-creds
+
+  windows-exporter:
+    image:
+      registry: my.registry.com
+      repository: prometheus-community/windows-exporter
+    imagePullSecrets:
+      - name: my-registry-creds
+
+  opencost:
+    imagePullSecrets:
+      - name: my-registry-creds
+    opencost:
+      exporter:
+        image:
+          registry: my.registry.com
+          repository: opencost/opencost
+
+  kepler:
+    image:
+      repository: quay.io/sustainable_computing_io/kepler
+    imagePullSecrets:
+      - name: my-registry-creds
+
+
+autoInstrumentation:
+  enabled: true
+  beyla:
+    image:
+      registry: my.registry.com
+      repository: grafana/beyla
+      pullSecrets:
+        - name: my-registry-creds
+
+alloy-metrics:
+  enabled: true
+  image:
+    registry: my.registry.com
+    repository: grafana/alloy
+    pullSecrets:
+      - name: my-registry-creds

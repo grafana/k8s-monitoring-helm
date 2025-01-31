@@ -7,16 +7,20 @@ remote.kubernetes.secret "alloy_metrics_remote_cfg" {
 }
 
 remotecfg {
+  id = sys.env("GCLOUD_FM_COLLECTOR_ID")
   url = "https://remote-config.example.com/alloy"
   basic_auth {
     username = nonsensitive(remote.kubernetes.secret.alloy_metrics_remote_cfg.data["username"])
-    password = remote.kubernetes.secret.alloy_metrics_remote_cfg.data["password"]
+    password = sys.env("GCLOUD_RW_API_KEY")
   }
-  id = "remote-config-example-cluster-default-" + constants.hostname
   poll_frequency = "5m"
   attributes = {
-    "cluster" = "remote-config-example-cluster",
     "platform" = "kubernetes",
+    "source" = "k8s-monitoring",
+    "sourceVersion" = "2.0.6",
+    "release" = "k8smon",
+    "cluster" = "remote-config-example-cluster",
+    "namespace" = "default",
     "workloadType" = "statefulset",
   }
 }

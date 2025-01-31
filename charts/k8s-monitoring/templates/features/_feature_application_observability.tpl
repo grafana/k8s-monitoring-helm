@@ -62,13 +62,13 @@ application_observability "feature" {
     {{- include "collectors.require_extra_port" (dict "Values" $.Values "name" $collector "feature" $featureName "portNumber" $.Values.applicationObservability.receivers.jaeger.grpc.port "portName" "jaeger-grpc" "portProtocol" "TCP") }}
   {{- end -}}
   {{- if $.Values.applicationObservability.receivers.jaeger.thriftBinary.enabled }}
-    {{- include "collectors.require_extra_port" (dict "Values" $.Values "name" $collector "feature" $featureName "portNumber" $.Values.applicationObservability.receivers.jaeger.thriftBinary.port "portName" "jaeger-grpc" "portProtocol" "TCP") }}
+    {{- include "collectors.require_extra_port" (dict "Values" $.Values "name" $collector "feature" $featureName "portNumber" $.Values.applicationObservability.receivers.jaeger.thriftBinary.port "portName" "jaeger-binary" "portProtocol" "TCP") }}
   {{- end -}}
   {{- if $.Values.applicationObservability.receivers.jaeger.thriftCompact.enabled }}
-    {{- include "collectors.require_extra_port" (dict "Values" $.Values "name" $collector "feature" $featureName "portNumber" $.Values.applicationObservability.receivers.jaeger.thriftCompact.port "portName" "jaeger-grpc" "portProtocol" "TCP") }}
+    {{- include "collectors.require_extra_port" (dict "Values" $.Values "name" $collector "feature" $featureName "portNumber" $.Values.applicationObservability.receivers.jaeger.thriftCompact.port "portName" "jaeger-compact" "portProtocol" "TCP") }}
   {{- end -}}
   {{- if $.Values.applicationObservability.receivers.jaeger.thriftHttp.enabled }}
-    {{- include "collectors.require_extra_port" (dict "Values" $.Values "name" $collector "feature" $featureName "portNumber" $.Values.applicationObservability.receivers.jaeger.thriftHttp.port "portName" "jaeger-grpc" "portProtocol" "TCP") }}
+    {{- include "collectors.require_extra_port" (dict "Values" $.Values "name" $collector "feature" $featureName "portNumber" $.Values.applicationObservability.receivers.jaeger.thriftHttp.port "portName" "jaeger-http" "portProtocol" "TCP") }}
   {{- end -}}
   {{- include "feature.applicationObservability.validate" (dict "Values" $.Values.applicationObservability) }}
 {{- end -}}
