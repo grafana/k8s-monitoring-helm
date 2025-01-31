@@ -84,6 +84,19 @@ spec:
           - query: count_over_time({cluster="$CLUSTER", service_name="$LABEL_POD_LOG_SERVICE_NAME"}[1h])
             type: logql
 
+          # Pod logs service_namespace label from resource.opentelemetry.io/service.namespace annotation
+          - query: count_over_time({cluster="$CLUSTER", service_namespace="hello-kubernetes"}[1h])
+            type: logql
+
+          # Pod logs deployment_environment label from resource.opentelemetry.io/deployment.environment annotation
+          - query: count_over_time({cluster="$CLUSTER", deployment_environment="hello-kubernetes"}[1h])
+            type: logql
+
+          # Pod logs deployment_environment_name label from resource.opentelemetry.io/deployment.environment.name
+          # annotation
+          - query: count_over_time({cluster="$CLUSTER", deployment_environment_name="hello-kubernetes"}[1h])
+            type: logql
+
           # Alloy integration
           - query: alloy_build_info{cluster="$CLUSTER"}
             type: promql
@@ -169,6 +182,9 @@ spec:
         app.kubernetes.io/instance: test
       annotations:
         resource.opentelemetry.io/service.name: "hello-kubernetes-annotation"
+        resource.opentelemetry.io/service.namespace: "hello-kubernetes"
+        resource.opentelemetry.io/deployment.environment: "hello-kubernetes"
+        resource.opentelemetry.io/deployment.environment.name: "hello-kubernetes"
     spec:
       containers:
         - name: hello-kubernetes

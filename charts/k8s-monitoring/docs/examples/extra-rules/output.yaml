@@ -755,6 +755,25 @@ data:
           replacement = "$1"
           target_label = "service_name"
         }
+      
+        // set service_namespace
+        rule {
+          action = "replace"
+          source_labels = ["__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_namespace"]
+          target_label = "service_namespace"
+        }
+      
+        // set deployment_environment and deployment_environment_name
+        rule {
+          action = "replace"
+          source_labels = ["__meta_kubernetes_pod_annotation_resource_opentelemetry_io_deployment_environment_name"]
+          target_label = "deployment_environment_name"
+        }
+        rule {
+          action = "replace"
+          source_labels = ["__meta_kubernetes_pod_annotation_resource_opentelemetry_io_deployment_environment"]
+          target_label = "deployment_environment"
+        }
         rule {
           source_labels = ["__meta_kubernetes_namespace"]
           regex = "production"
@@ -852,7 +871,7 @@ data:
       
         // Only keep the labels that are defined in the `keepLabels` list.
         stage.label_keep {
-          values = ["app_kubernetes_io_name","container","instance","job","level","namespace","pod","service_name","integration"]
+          values = ["app_kubernetes_io_name","container","instance","job","level","namespace","pod","service_name","service_namespace","deployment_environment","deployment_environment_name","integration"]
         }
       
         forward_to = argument.logs_destinations.value
