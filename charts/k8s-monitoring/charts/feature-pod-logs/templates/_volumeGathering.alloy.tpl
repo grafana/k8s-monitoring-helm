@@ -1,49 +1,53 @@
-{{- define "feature.podLogs.kubernetesApi.alloy" }}
-discovery.kubernetes "kubernetes_api_pods" {
+{{- define "feature.podLogs.volumeGathering.alloy" }}
+discovery.kubernetes "volume_gathering_pods" {
   role = "pod"
-{{- if .Values.kubernetesApiGathering.namespaces }}
+  selectors {
+    role = "pod"
+    field = "spec.nodeName=" + sys.env("HOSTNAME")
+  }
+{{- if .Values.volumeGathering.namespaces }}
   namespaces {
     names = {{ .Values.namespaces | toJson }}
   }
 {{- end }}
-{{- if or .Values.kubernetesApiGathering.labelSelectors .Values.kubernetesApiGathering.fieldSelectors }}
+{{- if or .Values.volumeGathering.labelSelectors .Values.volumeGathering.fieldSelectors }}
   selectors {
     role = "pod"
-{{- if .Values.kubernetesApiGathering.labelSelectors }}
-    label = {{ .Values.kubernetesApiGathering.labelSelectors | toJson }}
+{{- if .Values.volumeGathering.labelSelectors }}
+    label = {{ .Values.volumeGathering.labelSelectors | toJson }}
 {{- end }}
-{{- if .Values.kubernetesApiGathering.fieldSelectors }}
-    field = {{ .Values.kubernetesApiGathering.fieldSelectors | join "," | quote }}
+{{- if .Values.volumeGathering.fieldSelectors }}
+    field = {{ .Values.volumeGathering.fieldSelectors | join "," | quote }}
 {{- end }}
   }
 {{- end }}
-{{- if or .Values.kubernetesApiGathering.nodeLabelSelectors .Values.kubernetesApiGathering.nodeFieldSelectors }}
+{{- if or .Values.volumeGathering.nodeLabelSelectors .Values.volumeGathering.nodeFieldSelectors }}
   attach_metadata {
     node = true
   }
   selectors {
     role = "node"
-{{- if .Values.kubernetesApiGathering.nodeLabelSelectors }}
-    label = {{ .Values.kubernetesApiGathering.nodeLabelSelectors | toJson }}
+{{- if .Values.volumeGathering.nodeLabelSelectors }}
+    label = {{ .Values.volumeGathering.nodeLabelSelectors | toJson }}
 {{- end }}
-{{- if .Values.kubernetesApiGathering.nodeFieldSelectors }}
-    field = {{ .Values.kubernetesApiGathering.nodeFieldSelectors | join "," | quote }}
+{{- if .Values.volumeGathering.nodeFieldSelectors }}
+    field = {{ .Values.volumeGathering.nodeFieldSelectors | join "," | quote }}
 {{- end }}
   }
 {{- end }}
 }
 
-discovery.relabel "kubernetes_api_pods" {
-  targets = discovery.kubernetes.kubernetes_api_pods.targets
+discovery.relabel "volume_gathering_pods" {
+  targets = discovery.kubernetes.volume_gathering_pods.targets
   rule {
     source_labels = ["__meta_kubernetes_namespace"]
     action = "replace"
     target_label = "namespace"
   }
-{{- if .Values.kubernetesApiGathering.excludeNamespaces }}
+{{- if .Values.volumeGathering.excludeNamespaces }}
   rule {
     source_labels = ["namespace"]
-    regex = "{{ .Values.kubernetesApiGathering.excludeNamespaces | join "|" }}"
+    regex = "{{ .Values.volumeGathering.excludeNamespaces | join "|" }}"
     action = "drop"
   }
 {{- end }}
@@ -119,32 +123,48 @@ discovery.relabel "kubernetes_api_pods" {
     target_label = "service_name"
   }
 
-  // set service_namespace
+  // set resource attributes
   rule {
-    action = "replace"
-    source_labels = ["__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_namespace"]
-    target_label = "service_namespace"
+    action = "labelmap"
+    regex = "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_(.+)"
   }
 
-  // set deployment_environment and deployment_environment_name
   rule {
-    action = "replace"
-    source_labels = ["__meta_kubernetes_pod_annotation_resource_opentelemetry_io_deployment_environment_name"]
-    target_label = "deployment_environment_name"
-  }
-  rule {
-    action = "replace"
-    source_labels = ["__meta_kubernetes_pod_annotation_resource_opentelemetry_io_deployment_environment"]
-    target_label = "deployment_environment"
+    source_labels = ["__meta_kubernetes_pod_uid", "__meta_kubernetes_pod_container_name"]
+    separator = "/"
+    replacement = "{{ .Values.volumeGathering.podLogsPath }}/*$1/*.log"
+    target_label = "__path__"
   }
 
-{{- if .Values.kubernetesApiGathering.extraDiscoveryRules }}
-{{ .Values.kubernetesApiGathering.extraDiscoveryRules | indent 2 }}
+{{- range $label, $k8sAnnotation := .Values.annotations }}
+  rule {
+    source_labels = ["{{ include "pod_annotation" $k8sAnnotation }}"]
+    regex = "(.+)"
+    target_label = {{ $label | quote }}
+  }
+{{- end }}
+{{- range $label, $k8sLabels := .Values.labels }}
+  rule {
+    source_labels = ["{{ include "pod_label" $k8sLabels }}"]
+    regex = "(.+)"
+    target_label = {{ $label | quote }}
+  }
+{{- end }}
+
+{{- if .Values.volumeGathering.extraDiscoveryRules }}
+{{ .Values.volumeGathering.extraDiscoveryRules | indent 2 }}
 {{- end }}
 }
 
-loki.source.kubernetes "kubernetes_api_pods" {
-  targets = discovery.relabel.kubernetes_api_pods.output
+local.file_match "volume_gathering_pods" {
+  path_targets = discovery.relabel.volume_gathering_pods.output
+}
+
+loki.source.file "volume_gathering_pods" {
+  targets    = local.file_match.volume_gathering_pods.targets
+{{- if .Values.volumeGathering.onlyGatherNewLogLines | default .Values.volumeGatherSettings.onlyGatherNewLogLines }}
+  tail_from_end = {{ .Values.volumeGathering.onlyGatherNewLogLines | default .Values.volumeGatherSettings.onlyGatherNewLogLines }}
+{{- end }}
   forward_to = [loki.process.pod_log_processor.receiver]
 }
-{{- end }}
+{{- end -}}

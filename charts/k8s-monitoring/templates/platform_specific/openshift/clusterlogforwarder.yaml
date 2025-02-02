@@ -1,0 +1,31 @@
+{{- if and (eq .Values.global.platform "openshift") .Values.podLogs.lokiReceiver.enabled .Values.podLogs.lokiReceiver.openShiftClusterLogForwarder.enabled }}
+{{/* https://docs.openshift.com/container-platform/4.17/observability/logging/logging-6.1/log6x-clf-6.1.html */}}
+---
+apiVersion: logging.openshift.io/v1
+kind: ClusterLogForwarder
+metadata:
+  name: {{ include "helper.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+spec:
+{{- if .Values.podLogs.lokiReceiver.openShiftClusterLogForwarder.namespaces }}
+  inputs:
+    - name: application-from-namespaces
+      application:
+        namespaces: {{ .Values.podLogs.lokiReceiver.openShiftClusterLogForwarder.namespaces | toYaml | nindent 10 }}
+{{- end }}
+  outputs:
+    - name: {{ include "helper.fullname" . }}
+      type: loki
+      url: {{ include "features.podLogs.receiver.loki" . }}
+  pipelines:
+    - name: application-logs
+      inputRefs:
+{{- if .Values.podLogs.lokiReceiver.openShiftClusterLogForwarder.namespaces }}
+        - application-from-namespaces
+{{- else }}
+        - application
+{{- end }}
+        - infrastructure
+      outputRefs:
+        - {{ include "helper.fullname" . }}
+{{- end }}
