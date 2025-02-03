@@ -15,7 +15,7 @@
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | logs.enabled | bool | `true` | Whether to enable special processing of Mimir pod logs. |
-| logs.tuning.dropLogLevels | list | `[]` | The log levels to drop. Will automatically keep all log levels unless specified here. |
+| logs.tuning.dropLogLevels | list | `["debug"]` | The log levels to drop. Will automatically keep all log levels unless specified here. |
 | logs.tuning.excludeLines | list | `[]` | Line patterns (valid RE2 regular expression)to exclude from the logs. |
 | logs.tuning.scrubTimestamp | bool | `true` | Whether the timestamp should be scrubbed from the log line |
 | logs.tuning.structuredMetadata | object | `{}` | The structured metadata mappings to set. To not set any structured metadata, set this to an empty object (e.g. `{}`) |
@@ -36,7 +36,7 @@
 | metrics.maxCacheSize | string | `100000` | Sets the max_cache_size for prometheus.relabel component. This should be at least 2x-5x your largest scrape target or samples appended rate. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#arguments)) Overrides global.maxCacheSize |
 | metrics.tuning.excludeMetrics | list | `[]` | Metrics to drop. Can use regular expressions. |
 | metrics.tuning.includeMetrics | list | `[]` | Metrics to keep. Can use regular expressions. |
-| metrics.tuning.useDefaultAllowList | bool | `true` | Filter the list of metrics from Grafana Mimir to the minimal set required for the Grafana Mimir integration. |
+| metrics.tuning.useDefaultAllowList | string | `nil` | Filter the list of metrics from Grafana Mimir to the minimal set required for the Grafana Mimir integration. |
 
 ### General Settings
 

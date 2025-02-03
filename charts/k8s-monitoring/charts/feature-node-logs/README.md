@@ -62,7 +62,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | journal.jobLabel | string | `"integrations/kubernetes/journal"` | The value for the job label for journal logs. |
 | journal.maxAge | string | `"8h"` | The path to the journal logs on the worker node. |
 | journal.path | string | `"/var/log/journal"` | The path to the journal logs on the worker node. |
-| journal.units | list | `[]` | The list of systemd units to keep scraped logs from. If empty, all units are scraped. |
+| journal.units | list | `[]` | The list of systemd units to keep scraped logs from, this can be a valid RE2 regex. If empty, all units are scraped. |
 
 ### General settings
 
