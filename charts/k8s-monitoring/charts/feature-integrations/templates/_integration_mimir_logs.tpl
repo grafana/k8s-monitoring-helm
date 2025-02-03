@@ -105,7 +105,7 @@ stage.match {
   {{- if .logs.tuning.scrubTimestamp }}
   // remove the timestamp from the log line
   stage.replace {
-    expression = "(ts=[^ ]+\\s+)"
+    expression = `(?:^|\s+)(ts=\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d+[^ ]*\s+)`
     replace = ""
   }
   {{- end }}
