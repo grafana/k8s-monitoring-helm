@@ -38,15 +38,17 @@ tests:
 
             // Processing stages
             loki.process "test" {
-              // Integration: Grafana
+              // Integration: Loki
               stage.match {
                 selector = "{job=\"integrations/grafana\",instance=\"grafana\"}"
 
                 // extract some of the fields from the log line
                 stage.logfmt {
                   mapping = {
-                    "ts" = "t",
+                    "timestamp" = "t",
                     "level" = "",
+                    "logger" = "",
+                    "type" = "",
                   }
                 }
 
@@ -58,7 +60,7 @@ tests:
                 }
                 // reset the timestamp to the extracted value
                 stage.timestamp {
-                  source = "ts"
+                  source = "timestamp"
                   format = "RFC3339Nano"
                 }
                 // remove the timestamp from the log line
@@ -72,7 +74,6 @@ tests:
                   expression = "(?i)(debug)"
                   drop_counter_reason = "grafana-drop-log-level"
                 }
-
               }
             }
 
@@ -116,7 +117,7 @@ tests:
               app.kubernetes.io/name: grafana
             logs:
               tuning:
-                timestampFormat: RFC3339
+                timestampFormat: "RFC3339"
     asserts:
       - isKind:
           of: ConfigMap
@@ -124,7 +125,7 @@ tests:
           path: data["logs.alloy"]
           pattern: |-
             \s+stage.timestamp {
-            \s+  source = "ts"
+            \s+  source = "timestamp"
             \s+  format = "RFC3339"
             \s+}
 

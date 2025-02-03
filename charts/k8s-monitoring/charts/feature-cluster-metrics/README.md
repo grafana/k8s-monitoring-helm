@@ -351,4 +351,10 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | windows-exporter.metricsTuning.useDefaultAllowList | bool | `true` | Filter the list of metrics from Windows Exporter to the minimal set required for Kubernetes Monitoring. |
 | windows-exporter.namespace | string | `""` | Namespace to locate Windows Exporter pods. If `deploy` is set to `true`, this will automatically be set to the namespace where this Helm chart is deployed. |
 | windows-exporter.scrapeInterval | string | `60s` | How frequently to scrape metrics from Windows Exporter. |
+
+### Other Values
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| kube-state-metrics.namespaces | string | `""` |  |
 <!-- markdownlint-enable no-space-in-emphasis -->

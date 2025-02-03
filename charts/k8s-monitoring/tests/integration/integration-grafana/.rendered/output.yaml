@@ -1129,8 +1129,14 @@ data:
           }
           // remove the timestamp from the log line
           stage.replace {
-            expression = "( t=[^ ]+\\s+)"
+            expression = `(?:^|\s+)(t=\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d+[^ ]*\s+)`
             replace = ""
+          }
+          // drop certain log levels
+          stage.drop {
+            source = "level"
+            expression = "(?i)(debug)"
+            drop_counter_reason = "grafana-drop-log-level"
           }
         }
     
