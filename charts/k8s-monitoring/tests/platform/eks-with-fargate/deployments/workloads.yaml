@@ -1,0 +1,57 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: fargate
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: noisy-pod
+  namespace: fargate
+spec:
+  containers:
+    - name: busybox
+      image: busybox
+      args:
+        - /bin/sh
+        - -c
+        - |
+          echo "level=INFO Starting..."
+          while true; do
+            if [ $RANDOM -gt ${ERROR_THRESHOLD} ]; then
+              echo "level=ERROR Something went wrong"
+            else
+              echo "level=INFO Everything is fine"
+            fi
+            sleep 5
+          done
+      env:
+        - name: ERROR_THRESHOLD
+          value: "10000"
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: noisy-pod
+  namespace: default
+spec:
+  containers:
+    - name: busybox
+      image: busybox
+      args:
+        - /bin/sh
+        - -c
+        - |
+          echo "level=INFO Starting..."
+          while true; do
+            if [ $RANDOM -gt ${ERROR_THRESHOLD} ]; then
+              echo "level=ERROR Something went wrong"
+            else
+              echo "level=INFO Everything is fine"
+            fi
+            sleep 5
+          done
+      env:
+        - name: ERROR_THRESHOLD
+          value: "10000"

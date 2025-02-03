@@ -1,4 +1,20 @@
 {{- define "feature.podLogs.kubernetesApi.alloy" }}
+{{- $labelSelectors := list }}
+{{- range $k, $v := .Values.kubernetesApiGathering.labelSelectors }}
+  {{- if kindIs "slice" $v }}
+    {{- $labelSelectors = append $labelSelectors (printf "%s in (%s)" $k (join "," $v)) }}
+  {{- else }}
+    {{- $labelSelectors = append $labelSelectors (printf "%s=%s" $k $v) }}
+  {{- end }}
+{{- end }}
+{{- $nodeLabelSelectors := list }}
+{{- range $k, $v := .Values.kubernetesApiGathering.nodeLabelSelectors }}
+  {{- if kindIs "slice" $v }}
+    {{- $nodeLabelSelectors = append $nodeLabelSelectors (printf "%s in (%s)" $k (join "," $v)) }}
+  {{- else }}
+    {{- $nodeLabelSelectors = append $nodeLabelSelectors (printf "%s=%s" $k $v) }}
+  {{- end }}
+{{- end }}
 discovery.kubernetes "kubernetes_api_pods" {
   role = "pod"
 {{- if .Values.kubernetesApiGathering.namespaces }}
@@ -6,25 +22,25 @@ discovery.kubernetes "kubernetes_api_pods" {
     names = {{ .Values.namespaces | toJson }}
   }
 {{- end }}
-{{- if or .Values.kubernetesApiGathering.labelSelectors .Values.kubernetesApiGathering.fieldSelectors }}
+{{- if or $labelSelectors .Values.kubernetesApiGathering.fieldSelectors }}
   selectors {
     role = "pod"
-{{- if .Values.kubernetesApiGathering.labelSelectors }}
-    label = {{ .Values.kubernetesApiGathering.labelSelectors | toJson }}
+{{- if $labelSelectors }}
+    label = {{ $labelSelectors | join "," | quote }}
 {{- end }}
 {{- if .Values.kubernetesApiGathering.fieldSelectors }}
     field = {{ .Values.kubernetesApiGathering.fieldSelectors | join "," | quote }}
 {{- end }}
   }
 {{- end }}
-{{- if or .Values.kubernetesApiGathering.nodeLabelSelectors .Values.kubernetesApiGathering.nodeFieldSelectors }}
+{{- if or $nodeLabelSelectors .Values.kubernetesApiGathering.nodeFieldSelectors }}
   attach_metadata {
     node = true
   }
   selectors {
     role = "node"
-{{- if .Values.kubernetesApiGathering.nodeLabelSelectors }}
-    label = {{ .Values.kubernetesApiGathering.nodeLabelSelectors | toJson }}
+{{- if $nodeLabelSelectors }}
+    label = {{ $nodeLabelSelectors | join "," | quote }}
 {{- end }}
 {{- if .Values.kubernetesApiGathering.nodeFieldSelectors }}
     field = {{ .Values.kubernetesApiGathering.nodeFieldSelectors | join "," | quote }}

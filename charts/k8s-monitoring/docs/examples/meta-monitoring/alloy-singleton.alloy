@@ -472,8 +472,16 @@ declare "pod_logs" {
     comment = "Must be a list of log destinations where collected logs should be forwarded to"
   }
 
-  discovery.relabel "filtered_pods" {
-    targets = discovery.kubernetes.pods.targets
+  discovery.kubernetes "volume_gathering_pods" {
+    role = "pod"
+    selectors {
+      role = "pod"
+      field = "spec.nodeName=" + sys.env("HOSTNAME")
+    }
+  }
+
+  discovery.relabel "volume_gathering_pods" {
+    targets = discovery.kubernetes.volume_gathering_pods.targets
     rule {
       source_labels = ["__meta_kubernetes_namespace"]
       action = "replace"
@@ -481,28 +489,24 @@ declare "pod_logs" {
     }
     rule {
       source_labels = ["__meta_kubernetes_pod_name"]
-      action = "replace"
       target_label = "pod"
     }
     rule {
       source_labels = ["__meta_kubernetes_pod_container_name"]
-      action = "replace"
       target_label = "container"
     }
+
     rule {
       source_labels = ["__meta_kubernetes_namespace", "__meta_kubernetes_pod_container_name"]
       separator = "/"
-      action = "replace"
       replacement = "$1"
       target_label = "job"
     }
 
     // set the container runtime as a label
     rule {
-      action = "replace"
       source_labels = ["__meta_kubernetes_pod_container_id"]
       regex = "^(\\S+):\\/\\/.+$"
-      replacement = "$1"
       target_label = "tmp_container_runtime"
     }
 
@@ -518,6 +522,14 @@ declare "pod_logs" {
     rule {
       action = "labelmap"
       regex = "__meta_kubernetes_pod_annotation_(.+)"
+    }
+    rule {
+      source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_logs_job"]
+      target_label = "job"
+    }
+    rule {
+      source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
+      target_label = "app_kubernetes_io_name"
     }
 
     // explicitly set service_name. if not set, loki will automatically try to populate a default.
@@ -547,6 +559,13 @@ declare "pod_logs" {
       action = "labelmap"
       regex = "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_(.+)"
     }
+
+    rule {
+      source_labels = ["__meta_kubernetes_pod_uid", "__meta_kubernetes_pod_container_name"]
+      separator = "/"
+      replacement = "/var/log/pods/*$1/*.log"
+      target_label = "__path__"
+    }
     rule {
       source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_logs_job"]
       regex = "(.+)"
@@ -557,83 +576,18 @@ declare "pod_logs" {
       regex = "(.+)"
       target_label = "app_kubernetes_io_name"
     }
-    rule {
-      source_labels = ["__meta_kubernetes_namespace","__meta_kubernetes_pod_label_app_kubernetes_io_name"]
-      separator = ";"
-      regex = "(?:o11y);(?:grafana)"
-      target_label = "job"
-      replacement = "integrations/grafana"
-    }
-    rule {
-      source_labels = ["__meta_kubernetes_namespace","__meta_kubernetes_pod_label_app_kubernetes_io_name"]
-      separator = ";"
-      regex = "(?:o11y);(?:grafana)"
-      target_label = "instance"
-      replacement = "grafana"
-    }
-
-    // add static label of integration="loki" and instance="name" to pods that match the selector so they can be identified in the loki.process stages
-    rule {
-      source_labels = ["__meta_kubernetes_namespace","__meta_kubernetes_pod_label_app_kubernetes_io_name"]
-      separator = ";"
-      regex = "(?:logs);(?:loki)"
-      target_label = "integration"
-      replacement = "loki"
-    }
-    rule {
-      source_labels = ["__meta_kubernetes_namespace","__meta_kubernetes_pod_label_app_kubernetes_io_name"]
-      separator = ";"
-      regex = "(?:logs);(?:loki)"
-      target_label = "instance"
-      replacement = "loki"
-    }
-    // override the job label to be namespace/component so it aligns to the loki-mixin
-    rule {
-      source_labels = ["__meta_kubernetes_namespace","__meta_kubernetes_pod_label_app_kubernetes_io_name","__meta_kubernetes_namespace","__meta_kubernetes_pod_label_component"]
-      separator = ";"
-      regex = "(?:logs);(?:loki);([^;]+);([^;]+)"
-      target_label = "job"
-      replacement = "$1/$2"
-    }
-
-    // add static label of integration="mimir" and instance="name" to pods that match the selector so they can be identified in the mimir.process stages
-    rule {
-      source_labels = ["__meta_kubernetes_namespace","__meta_kubernetes_pod_label_app_kubernetes_io_name"]
-      separator = ";"
-      regex = "(?:metrics);(?:mimir)"
-      target_label = "integration"
-      replacement = "mimir"
-    }
-    rule {
-      source_labels = ["__meta_kubernetes_namespace","__meta_kubernetes_pod_label_app_kubernetes_io_name"]
-      separator = ";"
-      regex = "(?:metrics);(?:mimir)"
-      target_label = "instance"
-      replacement = "mimir"
-    }
-    // override the job label to be namespace/component so it aligns to the mimir-mixin
-    rule {
-      source_labels = ["__meta_kubernetes_namespace","__meta_kubernetes_pod_label_app_kubernetes_io_name","__meta_kubernetes_namespace","__meta_kubernetes_pod_label_component"]
-      separator = ";"
-      regex = "(?:metrics);(?:mimir);([^;]+);([^;]+)"
-      target_label = "job"
-      replacement = "$1/$2"
-    }
   }
 
-  discovery.kubernetes "pods" {
-    role = "pod"
-    namespaces {
-      names = ["collectors","logs","metrics","o11y"]
-    }
+  local.file_match "volume_gathering_pods" {
+    path_targets = discovery.relabel.volume_gathering_pods.output
   }
 
-  loki.source.kubernetes "pod_logs" {
-    targets = discovery.relabel.filtered_pods.output
-    forward_to = [loki.process.pod_logs.receiver]
+  loki.source.file "volume_gathering_pods" {
+    targets    = local.file_match.volume_gathering_pods.targets
+    forward_to = [loki.process.pod_log_processor.receiver]
   }
 
-  loki.process "pod_logs" {
+  loki.process "pod_log_processor" {
     stage.match {
       selector = "{tmp_container_runtime=~\"containerd|cri-o\"}"
       // the cri processing stage extracts the following k/v pairs: log, stream, time, flags

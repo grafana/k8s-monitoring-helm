@@ -1,4 +1,20 @@
 {{- define "feature.podLogs.volumeGathering.alloy" }}
+{{- $labelSelectors := list }}
+{{- range $k, $v := .Values.volumeGathering.labelSelectors }}
+  {{- if kindIs "slice" $v }}
+    {{- $labelSelectors = append $labelSelectors (printf "%s in (%s)" $k (join "," $v)) }}
+  {{- else }}
+    {{- $labelSelectors = append $labelSelectors (printf "%s=%s" $k $v) }}
+  {{- end }}
+{{- end }}
+{{- $nodeLabelSelectors := list }}
+{{- range $k, $v := .Values.volumeGathering.nodeLabelSelectors }}
+  {{- if kindIs "slice" $v }}
+    {{- $nodeLabelSelectors = append $nodeLabelSelectors (printf "%s in (%s)" $k (join "," $v)) }}
+  {{- else }}
+    {{- $nodeLabelSelectors = append $nodeLabelSelectors (printf "%s=%s" $k $v) }}
+  {{- end }}
+{{- end }}
 discovery.kubernetes "volume_gathering_pods" {
   role = "pod"
   selectors {
@@ -10,25 +26,25 @@ discovery.kubernetes "volume_gathering_pods" {
     names = {{ .Values.namespaces | toJson }}
   }
 {{- end }}
-{{- if or .Values.volumeGathering.labelSelectors .Values.volumeGathering.fieldSelectors }}
+{{- if or $labelSelectors .Values.volumeGathering.fieldSelectors }}
   selectors {
     role = "pod"
-{{- if .Values.volumeGathering.labelSelectors }}
-    label = {{ .Values.volumeGathering.labelSelectors | toJson }}
+{{- if $labelSelectors }}
+    label = {{ $labelSelectors | join "," | quote }}
 {{- end }}
 {{- if .Values.volumeGathering.fieldSelectors }}
     field = {{ .Values.volumeGathering.fieldSelectors | join "," | quote }}
 {{- end }}
   }
 {{- end }}
-{{- if or .Values.volumeGathering.nodeLabelSelectors .Values.volumeGathering.nodeFieldSelectors }}
+{{- if or $nodeLabelSelectors .Values.volumeGathering.nodeFieldSelectors }}
   attach_metadata {
     node = true
   }
   selectors {
     role = "node"
-{{- if .Values.volumeGathering.nodeLabelSelectors }}
-    label = {{ .Values.volumeGathering.nodeLabelSelectors | toJson }}
+{{- if $nodeLabelSelectors }}
+    label = {{ $nodeLabelSelectors | join "," | quote }}
 {{- end }}
 {{- if .Values.volumeGathering.nodeFieldSelectors }}
     field = {{ .Values.volumeGathering.nodeFieldSelectors | join "," | quote }}
@@ -162,8 +178,8 @@ local.file_match "volume_gathering_pods" {
 
 loki.source.file "volume_gathering_pods" {
   targets    = local.file_match.volume_gathering_pods.targets
-{{- if .Values.volumeGathering.onlyGatherNewLogLines | default .Values.volumeGatherSettings.onlyGatherNewLogLines }}
-  tail_from_end = {{ .Values.volumeGathering.onlyGatherNewLogLines | default .Values.volumeGatherSettings.onlyGatherNewLogLines }}
+{{- if .Values.volumeGathering.onlyGatherNewLogLines | default (dig "volumeGatherSettings" "onlyGatherNewLogLines" false .Values) }}
+  tail_from_end = {{ .Values.volumeGathering.onlyGatherNewLogLines | default (dig "volumeGatherSettings" "onlyGatherNewLogLines" false .Values) }}
 {{- end }}
   forward_to = [loki.process.pod_log_processor.receiver]
 }

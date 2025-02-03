@@ -211,7 +211,7 @@ data:
     # HELP grafana_kubernetes_monitoring_feature_info A metric to report the enabled features of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_feature_info gauge
     grafana_kubernetes_monitoring_feature_info{feature="applicationObservability", protocols="jaegergrpc", version="1.0.0"} 1
-    grafana_kubernetes_monitoring_feature_info{feature="podLogs", method="volumes", version="1.0.0"} 1
+    grafana_kubernetes_monitoring_feature_info{feature="podLogs", methods="volumes", version="1.0.0"} 1
     grafana_kubernetes_monitoring_feature_info{feature="prometheusOperatorObjects", version="1.0.0"} 1
 ---
 # Source: k8s-monitoring/templates/alloy-config.yaml
@@ -258,8 +258,16 @@ data:
         comment = "Must be a list of log destinations where collected logs should be forwarded to"
       }
     
-      discovery.relabel "filtered_pods" {
-        targets = discovery.kubernetes.pods.targets
+      discovery.kubernetes "volume_gathering_pods" {
+        role = "pod"
+        selectors {
+          role = "pod"
+          field = "spec.nodeName=" + sys.env("HOSTNAME")
+        }
+      }
+    
+      discovery.relabel "volume_gathering_pods" {
+        targets = discovery.kubernetes.volume_gathering_pods.targets
         rule {
           source_labels = ["__meta_kubernetes_namespace"]
           action = "replace"
@@ -267,28 +275,24 @@ data:
         }
         rule {
           source_labels = ["__meta_kubernetes_pod_name"]
-          action = "replace"
           target_label = "pod"
         }
         rule {
           source_labels = ["__meta_kubernetes_pod_container_name"]
-          action = "replace"
           target_label = "container"
         }
+    
         rule {
           source_labels = ["__meta_kubernetes_namespace", "__meta_kubernetes_pod_container_name"]
           separator = "/"
-          action = "replace"
           replacement = "$1"
           target_label = "job"
         }
     
         // set the container runtime as a label
         rule {
-          action = "replace"
           source_labels = ["__meta_kubernetes_pod_container_id"]
           regex = "^(\\S+):\\/\\/.+$"
-          replacement = "$1"
           target_label = "tmp_container_runtime"
         }
     
@@ -304,6 +308,14 @@ data:
         rule {
           action = "labelmap"
           regex = "__meta_kubernetes_pod_annotation_(.+)"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_logs_job"]
+          target_label = "job"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
+          target_label = "app_kubernetes_io_name"
         }
     
         // explicitly set service_name. if not set, loki will automatically try to populate a default.
@@ -333,6 +345,13 @@ data:
           action = "labelmap"
           regex = "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_(.+)"
         }
+    
+        rule {
+          source_labels = ["__meta_kubernetes_pod_uid", "__meta_kubernetes_pod_container_name"]
+          separator = "/"
+          replacement = "/var/log/pods/*$1/*.log"
+          target_label = "__path__"
+        }
         rule {
           source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_logs_job"]
           regex = "(.+)"
@@ -345,36 +364,16 @@ data:
         }
       }
     
-      discovery.kubernetes "pods" {
-        role = "pod"
-        selectors {
-          role = "pod"
-          field = "spec.nodeName=" + sys.env("HOSTNAME")
-        }
+      local.file_match "volume_gathering_pods" {
+        path_targets = discovery.relabel.volume_gathering_pods.output
       }
     
-      discovery.relabel "filtered_pods_with_paths" {
-        targets = discovery.relabel.filtered_pods.output
-    
-        rule {
-          source_labels = ["__meta_kubernetes_pod_uid", "__meta_kubernetes_pod_container_name"]
-          separator = "/"
-          action = "replace"
-          replacement = "/var/log/pods/*$1/*.log"
-          target_label = "__path__"
-        }
+      loki.source.file "volume_gathering_pods" {
+        targets    = local.file_match.volume_gathering_pods.targets
+        forward_to = [loki.process.pod_log_processor.receiver]
       }
     
-      local.file_match "pod_logs" {
-        path_targets = discovery.relabel.filtered_pods_with_paths.output
-      }
-    
-      loki.source.file "pod_logs" {
-        targets    = local.file_match.pod_logs.targets
-        forward_to = [loki.process.pod_logs.receiver]
-      }
-    
-      loki.process "pod_logs" {
+      loki.process "pod_log_processor" {
         stage.match {
           selector = "{tmp_container_runtime=~\"containerd|cri-o\"}"
           // the cri processing stage extracts the following k/v pairs: log, stream, time, flags

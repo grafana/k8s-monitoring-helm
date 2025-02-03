@@ -13,30 +13,49 @@
         "deployAsConfigMap": {
             "type": "boolean"
         },
-        "excludeNamespaces": {
-            "type": "array"
-        },
-        "extraDiscoveryRules": {
-            "type": "string"
-        },
         "extraLogProcessingStages": {
             "type": "string"
         },
         "fullnameOverride": {
             "type": "string"
         },
-        "gatherMethod": {
-            "type": "string",
-            "enum": [
-                "volumes",
-                "kubernetesApi"
-            ]
-        },
         "global": {
             "type": "object",
             "properties": {
                 "platform": {
                     "type": "string"
+                }
+            }
+        },
+        "kubernetesApiGathering": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "excludeNamespaces": {
+                    "type": "array"
+                },
+                "extraDiscoveryRules": {
+                    "type": "string"
+                },
+                "fieldSelectors": {
+                    "type": "array"
+                },
+                "labelSelectors": {
+                    "type": "object"
+                },
+                "namespaces": {
+                    "type": "array"
+                },
+                "nodeFieldSelectors": {
+                    "type": "array"
+                },
+                "nodeLabelSelectors": {
+                    "type": "object"
+                },
+                "nodes": {
+                    "type": "array"
                 }
             }
         },
@@ -54,11 +73,30 @@
                 "type": "string"
             }
         },
+        "lokiReceiver": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "openShiftClusterLogForwarder": {
+                    "type": "object",
+                    "properties": {
+                        "enabled": {
+                            "type": "boolean"
+                        },
+                        "namespaces": {
+                            "type": "array"
+                        }
+                    }
+                },
+                "port": {
+                    "type": "integer"
+                }
+            }
+        },
         "nameOverride": {
             "type": "string"
-        },
-        "namespaces": {
-            "type": "array"
         },
         "staticLabels": {
             "type": "object"
@@ -69,13 +107,46 @@
         "structuredMetadata": {
             "type": "object"
         },
-        "volumeGatherSettings": {
+        "volumeGathering": {
             "type": "object",
             "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "excludeNamespaces": {
+                    "type": "array"
+                },
+                "extraDiscoveryRules": {
+                    "type": "string"
+                },
+                "fieldSelectors": {
+                    "type": "array"
+                },
+                "labelSelectors": {
+                    "type": "object"
+                },
+                "namespaces": {
+                    "type": "array"
+                },
+                "nodeFieldSelectors": {
+                    "type": "array"
+                },
+                "nodeLabelSelectors": {
+                    "type": "object"
+                },
                 "onlyGatherNewLogLines": {
                     "type": "boolean"
+                },
+                "podLogsPath": {
+                    "type": "string"
                 }
             }
+        },
+        "gatherMethod": {
+            "enum": [
+                "volumes",
+                "kubernetesApi"
+            ]
         }
     }
 }
