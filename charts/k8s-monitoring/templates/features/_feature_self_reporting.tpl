@@ -70,18 +70,17 @@ prometheus.relabel "kubernetes_monitoring_telemetry" {
 {{- end }}
 {{- end }}
 
-{{- define "features.selfReporting.file" }}
+{{- define "features.selfReporting.metrics" }}
 {{- if eq (include "features.selfReporting.enabled" .) "true" }}
-self-reporting-metric.prom: |
-  # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart
-  # TYPE grafana_kubernetes_monitoring_build_info gauge
-  grafana_kubernetes_monitoring_build_info{version="{{ .Chart.Version }}", namespace="{{ .Release.Namespace }}"{{- if .Values.global.platform }}, platform="{{ .Values.global.platform }}"{{ end }}} 1
-  # HELP grafana_kubernetes_monitoring_feature_info A metric to report the enabled features of the Kubernetes Monitoring Helm chart
-  # TYPE grafana_kubernetes_monitoring_feature_info gauge
+# HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart
+# TYPE grafana_kubernetes_monitoring_build_info gauge
+grafana_kubernetes_monitoring_build_info{version="{{ .Chart.Version }}", namespace="{{ .Release.Namespace }}"{{- if .Values.global.platform }}, platform="{{ .Values.global.platform }}"{{ end }}} 1
+# HELP grafana_kubernetes_monitoring_feature_info A metric to report the enabled features of the Kubernetes Monitoring Helm chart
+# TYPE grafana_kubernetes_monitoring_feature_info gauge
 {{- range $feature := include "features.list.enabled" . | fromYamlArray }}
   {{- if ne $feature "selfReporting" }}
     {{- $featureSummary := include (printf "feature.%s.summary" $feature) (dict "Chart" (index $.Subcharts $feature).Chart "Values" (index $.Values $feature)) | fromYaml }}
-  grafana_kubernetes_monitoring_feature_info{{ include "label_list" (merge $featureSummary (dict "feature" $feature)) }} 1
+grafana_kubernetes_monitoring_feature_info{{ include "label_list" (merge $featureSummary (dict "feature" $feature)) }} 1
     {{- end }}
   {{- end }}
 {{- end }}

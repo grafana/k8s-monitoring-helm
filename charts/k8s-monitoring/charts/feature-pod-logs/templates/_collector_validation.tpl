@@ -9,7 +9,7 @@
     {{- fail (printf "Pod Logs feature requires Alloy to mount /var/log when using the \"volumes\" gather method.\nPlease set:\n%s:\n  alloy:\n    mounts:\n      varlog: true" .CollectorName) }}
   {{- end -}}
   {{- if .Collector.alloy.clustering.enabled }}
-    {{- fail (printf "Pod Logs feature requires Alloy to not be in clustering mode when using the \"volumes\" gather method.\nPlease set:\n%s:\n  alloy:\n    clustering:\n      enabled: true" .CollectorName) }}
+    {{- fail (printf "Pod Logs feature requires Alloy clustering to be disabled when using the \"volumes\" gather method.\nPlease set:\n%s:\n  alloy:\n    clustering:\n      enabled: false" .CollectorName) }}
   {{- end -}}
 {{- else if eq .Values.gatherMethod "kubernetesApi" }}
   {{- if .Collector.alloy.mounts.varlog }}
