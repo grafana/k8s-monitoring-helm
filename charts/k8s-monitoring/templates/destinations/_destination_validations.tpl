@@ -30,10 +30,10 @@
         {{ fail (printf "\nDestination #%d (%s) is using Grafana Cloud Traces but has incorrect protocol '%s', the Tempo only supports 'grpc'.\nPlease set:\ndestinations:\n  - name: %s\n    type: otlp\n    url: %s\n    protocol: grpc" $i $destination.name ($destination.protocol | default "grpc (default)") $destination.name $destination.url) }}
       {{- end }}
       {{- if eq $destination.metrics.enabled "true" }}
-        {{ fail (printf "\nDestination #%d (%s) is using Grafana Cloud Traces but has metrics enabled, the Tempo only supports traces.\nPlease set:\ndestinations:\n  - name: %s\n    type: otlp\n    url: %s\n    protocol: grpc" $i $destination.name $destination.name $destination.url) }}
+        {{ fail (printf "\nDestination #%d (%s) is using Grafana Cloud Traces but has metrics enabled, the Tempo only supports traces.\nPlease set:\ndestinations:\n  - name: %s\n    type: otlp\n    url: %s\n    metrics:\n      enabled: false" $i $destination.name $destination.name $destination.url) }}
       {{- end }}
       {{- if eq $destination.logs.enabled "true" }}
-        {{ fail (printf "\nDestination #%d (%s) is using Grafana Cloud Traces but has logs enabled, the Tempo only supports traces.\nPlease set:\ndestinations:\n  - name: %s\n    type: otlp\n    url: %s\n    protocol: grpc" $i $destination.name $destination.name $destination.url) }}
+        {{ fail (printf "\nDestination #%d (%s) is using Grafana Cloud Traces but has logs enabled, the Tempo only supports traces.\nPlease set:\ndestinations:\n  - name: %s\n    type: otlp\n    url: %s\n    logs:\n      enabled: false" $i $destination.name $destination.name $destination.url) }}
       {{- end }}
     {{- end }}
 
