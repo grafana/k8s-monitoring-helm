@@ -12,6 +12,20 @@
 
 {{/* Save the top level object and add the collector name */}}
 {{- $values := deepCopy $ | merge (dict "collectorName" $collector) }}
+{{- $alloyConfig := "" }}
+{{- $alloyConfig = cat $alloyConfig (include "destinations.alloy.config" (deepCopy $ | merge (dict "names" $destinations)) | trim | nindent 0) }}
+{{- range $feature := include "features.list" . | fromYamlArray }}
+  {{- if has $collector (include (printf "features.%s.collectors" $feature) $ | fromYamlArray ) }}
+    {{ $alloyConfig = cat $alloyConfig (include (printf "features.%s.include" $feature) $values | trim | nindent 0) }}
+  {{- end }}
+{{- end }}
+{{- $alloyConfig = cat $alloyConfig (include "collectors.logging.alloy" $values | trim | nindent 0) }}
+{{- $alloyConfig = cat $alloyConfig (include "collectors.liveDebugging.alloy" $values | trim | nindent 0) }}
+{{- $alloyConfig = cat $alloyConfig (include "collectors.remoteConfig.alloy" $values | trim | nindent 0) }}
+{{- $alloyConfig = cat $alloyConfig (include "collectors.extraConfig.alloy" $values | trim | nindent 0) }}
+
+{{/* Remove all trailing whitespace */}}
+{{- $alloyConfig = regexReplaceAll `[ \t]+(\r?\n)` $alloyConfig "\n" }}
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -20,17 +34,9 @@ metadata:
   namespace: {{ $.Release.Namespace }}
 data:
   config.alloy: |-
-    {{- include "destinations.alloy.config" (deepCopy $ | merge (dict "names" $destinations)) | trim | nindent 4 }}
-{{- range $feature := include "features.list" . | fromYamlArray }}
-  {{- if has $collector (include (printf "features.%s.collectors" $feature) $ | fromYamlArray ) }}
-    {{ include (printf "features.%s.include" $feature) $values | trim | nindent 4 }}
-  {{- end }}
-{{- end }}
-    {{- include "collectors.logging.alloy" $values | trim | nindent 4 }}
-    {{- include "collectors.liveDebugging.alloy" $values | trim | nindent 4 }}
-    {{- include "collectors.remoteConfig.alloy" $values | trim | nindent 4 }}
-    {{- include "collectors.extraConfig.alloy" $values | trim | nindent 4 }}
-{{- if $selfReportingEnabled }}
-  {{- include "features.selfReporting.file" $values | trim | nindent 2 }}
+    {{- $alloyConfig | trim | nindent 4 }}
+{{ if $selfReportingEnabled }}
+  self-reporting-metric.prom: |
+    {{- include "features.selfReporting.metrics" $values | nindent 4 }}
 {{- end }}
 {{- end }}
