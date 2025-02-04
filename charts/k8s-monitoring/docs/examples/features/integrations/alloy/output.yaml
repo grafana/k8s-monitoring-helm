@@ -71,7 +71,6 @@ data:
         max_keepalive_time = "8h"
       }
     }
-    
     declare "alloy_integration" {
       argument "metrics_destinations" {
         comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
@@ -130,35 +129,35 @@ data:
             action = "keep"
           }
     
-          
-        
+    
+    
         rule {
           source_labels = ["__meta_kubernetes_namespace"]
           target_label  = "namespace"
         }
-        
+    
         rule {
           source_labels = ["__meta_kubernetes_pod_name"]
           target_label  = "pod"
         }
-        
+    
         rule {
           source_labels = ["__meta_kubernetes_pod_container_name"]
           target_label  = "container"
         }
-        
+    
         // set the workload to the controller kind and name
         rule {
           action = "lowercase"
           source_labels = ["__meta_kubernetes_pod_controller_kind"]
           target_label  = "workload_type"
         }
-        
+    
         rule {
           source_labels = ["__meta_kubernetes_pod_controller_name"]
           target_label  = "workload"
         }
-        
+    
         // remove the hash from the ReplicaSet
         rule {
           source_labels = [
@@ -169,7 +168,7 @@ data:
           regex = "replicaset/(.+)-.+$"
           target_label  = "workload"
         }
-        
+    
         // set the app name if specified as metadata labels "app:" or "app.kubernetes.io/name:" or "k8s-app:"
         rule {
           action = "replace"
@@ -183,7 +182,7 @@ data:
           replacement = "$1"
           target_label = "app"
         }
-        
+    
         // set the component if specified as metadata labels "component:" or "app.kubernetes.io/component:" or "k8s-component:"
         rule {
           action = "replace"
@@ -196,7 +195,7 @@ data:
           replacement = "$1"
           target_label = "component"
         }
-        
+    
         // set a source label
         rule {
           action = "replace"
@@ -345,12 +344,12 @@ data:
           }
         }
       }
-      
+    
       alloy_integration_discovery "alloy" {
         port_name = "http-metrics"
         label_selectors = ["app.kubernetes.io/name=alloy-metrics"]
       }
-      
+    
       alloy_integration_scrape  "alloy" {
         targets = alloy_integration_discovery.alloy.output
         job_label = "integrations/alloy"
@@ -366,7 +365,6 @@ data:
         prometheus.remote_write.prometheus.receiver,
       ]
     }
-    
     // Self Reporting
     prometheus.exporter.unix "kubernetes_monitoring_telemetry" {
       set_collectors = ["textfile"]
@@ -409,11 +407,9 @@ data:
         prometheus.remote_write.prometheus.receiver,
       ]
     }
-    
-    
-    
-    
+
   self-reporting-metric.prom: |
+    
     # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_build_info gauge
     grafana_kubernetes_monitoring_build_info{version="2.0.6", namespace="default"} 1

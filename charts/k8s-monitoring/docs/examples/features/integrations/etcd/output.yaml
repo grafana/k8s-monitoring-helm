@@ -71,26 +71,25 @@ data:
         max_keepalive_time = "8h"
       }
     }
-    
     declare "etcd_integration" {
       argument "metrics_destinations" {
         comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
       }
-      
+    
       remote.kubernetes.configmap "etcd" {
         name = "k8smon-alloy-module-databases"
         namespace = "default"
       }
-      
+    
       import.string "etcd" {
         content = remote.kubernetes.configmap.etcd.data["kv_etcd_metrics.alloy"]
       }
-      
+    
       etcd.kubernetes "etcd" {
         label_selectors = ["app.kubernetes.io/component=etcd"]
         port_name = "metrics"
       }
-      
+    
       etcd.scrape "etcd" {
         targets = etcd.kubernetes.etcd.output
         job_label = "integrations/etcd"
@@ -105,7 +104,6 @@ data:
         prometheus.remote_write.prometheus.receiver,
       ]
     }
-    
     // Self Reporting
     prometheus.exporter.unix "kubernetes_monitoring_telemetry" {
       set_collectors = ["textfile"]
@@ -148,11 +146,9 @@ data:
         prometheus.remote_write.prometheus.receiver,
       ]
     }
-    
-    
-    
-    
+
   self-reporting-metric.prom: |
+    
     # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_build_info gauge
     grafana_kubernetes_monitoring_build_info{version="2.0.6", namespace="default"} 1

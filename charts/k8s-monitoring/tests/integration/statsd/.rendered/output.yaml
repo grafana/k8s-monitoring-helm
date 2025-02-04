@@ -91,7 +91,6 @@ data:
       name      = "localprometheus-k8smon-k8s-monitoring"
       namespace = "default"
     }
-    
     // Self Reporting
     prometheus.exporter.unix "kubernetes_monitoring_telemetry" {
       set_collectors = ["textfile"]
@@ -146,7 +145,9 @@ data:
       targets    = prometheus.exporter.statsd.default.targets
       forward_to = [prometheus.remote_write.localprometheus.receiver]
     }
+
   self-reporting-metric.prom: |
+    
     # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_build_info gauge
     grafana_kubernetes_monitoring_build_info{version="2.0.6", namespace="default"} 1

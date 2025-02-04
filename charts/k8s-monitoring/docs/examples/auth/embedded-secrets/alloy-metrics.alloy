@@ -51,13 +51,12 @@ prometheus.remote_write "prometheus" {
     max_keepalive_time = "8h"
   }
 }
-
 // Feature: Prometheus Operator Objects
 declare "prometheus_operator_objects" {
   argument "metrics_destinations" {
     comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
   }
-  
+
   // Prometheus Operator PodMonitor objects
   prometheus.operator.podmonitors "pod_monitors" {
     clustering {
@@ -68,7 +67,7 @@ declare "prometheus_operator_objects" {
     }
     forward_to = argument.metrics_destinations.value
   }
-  
+
   // Prometheus Operator Probe objects
   prometheus.operator.probes "pod_monitors" {
     clustering {
@@ -79,7 +78,7 @@ declare "prometheus_operator_objects" {
     }
     forward_to = argument.metrics_destinations.value
   }
-  
+
   // Prometheus Operator ServiceMonitor objects
   prometheus.operator.servicemonitors "service_monitors" {
     clustering {
@@ -96,7 +95,6 @@ prometheus_operator_objects "feature" {
     prometheus.remote_write.prometheus.receiver,
   ]
 }
-
 // Self Reporting
 prometheus.exporter.unix "kubernetes_monitoring_telemetry" {
   set_collectors = ["textfile"]

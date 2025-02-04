@@ -209,22 +209,21 @@ data:
         max_keepalive_time = "8h"
       }
     }
-    
     // Feature: Cluster Metrics
     declare "cluster_metrics" {
       argument "metrics_destinations" {
         comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
       }
-      
+    
       remote.kubernetes.configmap "kubernetes" {
         name = "k8smon-alloy-module-kubernetes"
         namespace = "default"
       }
-      
+    
       import.string "kubernetes" {
         content = remote.kubernetes.configmap.kubernetes.data["core_metrics.alloy"]
-      }  
-      
+      }
+    
       kubernetes.kubelet "scrape" {
         clustering = true
         job_label = "integrations/kubernetes/kubelet"
@@ -232,8 +231,8 @@ data:
         scrape_interval = "60s"
         max_cache_size = 100000
         forward_to = argument.metrics_destinations.value
-      }  
-      
+      }
+    
       kubernetes.resources "scrape" {
         clustering = true
         job_label = "integrations/kubernetes/resources"
@@ -241,8 +240,8 @@ data:
         scrape_interval = "60s"
         max_cache_size = 100000
         forward_to = argument.metrics_destinations.value
-      }  
-      
+      }
+    
       kubernetes.cadvisor "scrape" {
         clustering = true
         job_label = "integrations/kubernetes/cadvisor"
@@ -251,7 +250,7 @@ data:
         max_cache_size = 100000
         forward_to = [prometheus.relabel.cadvisor.receiver]
       }
-      
+    
       prometheus.relabel "cadvisor" {
         max_cache_size = 100000
         // Drop empty container labels, addressing https://github.com/google/cadvisor/issues/2688
@@ -323,17 +322,17 @@ data:
           replacement = ""
         }
         forward_to = argument.metrics_destinations.value
-      }            
-      
+      }
+    
       remote.kubernetes.configmap "kube_state_metrics" {
         name = "k8smon-alloy-module-kubernetes"
         namespace = "default"
       }
-      
+    
       import.string "kube_state_metrics" {
         content = remote.kubernetes.configmap.kube_state_metrics.data["kube-state-metrics_metrics.alloy"]
       }
-      
+    
       kube_state_metrics.kubernetes "targets" {
         namespaces = ["default"]
         port_name = "http"
@@ -342,7 +341,7 @@ data:
           "release=k8smon",
         ]
       }
-      
+    
       kube_state_metrics.scrape "metrics" {
         targets = kube_state_metrics.kubernetes.targets.output
         clustering = true
@@ -352,17 +351,17 @@ data:
         scrape_interval = "60s"
         max_cache_size = 100000
         forward_to = argument.metrics_destinations.value
-      }  
-      
+      }
+    
       remote.kubernetes.configmap "node_exporter" {
         name = "k8smon-alloy-module-system"
         namespace = "default"
       }
-      
+    
       import.string "node_exporter" {
         content = remote.kubernetes.configmap.node_exporter.data["node-exporter_metrics.alloy"]
       }
-      
+    
       node_exporter.kubernetes "targets" {
         namespaces = ["default"]
         port_name = "metrics"
@@ -371,7 +370,7 @@ data:
           "release=k8smon",
         ]
       }
-      
+    
       discovery.relabel "node_exporter" {
         targets = node_exporter.kubernetes.targets.output
         rule {
@@ -380,7 +379,7 @@ data:
           target_label = "instance"
         }
       }
-      
+    
       node_exporter.scrape "metrics" {
         targets = discovery.relabel.node_exporter.output
         job_label = "integrations/node_exporter"
@@ -390,8 +389,8 @@ data:
         scrape_interval = "60s"
         max_cache_size = 100000
         forward_to = argument.metrics_destinations.value
-      }  
-      
+      }
+    
       discovery.kubernetes "windows_exporter_pods" {
         role = "pod"
         namespaces {
@@ -402,7 +401,7 @@ data:
           label = "app.kubernetes.io/name=windows-exporter,release=k8smon"
         }
       }
-      
+    
       discovery.relabel "windows_exporter" {
         targets = discovery.kubernetes.windows_exporter_pods.targets
         rule {
@@ -411,7 +410,7 @@ data:
           target_label = "instance"
         }
       }
-      
+    
       prometheus.scrape "windows_exporter" {
         job_name   = "integrations/windows-exporter"
         targets  = discovery.relabel.windows_exporter.output
@@ -421,7 +420,7 @@ data:
         }
         forward_to = [prometheus.relabel.windows_exporter.receiver]
       }
-      
+    
       prometheus.relabel "windows_exporter" {
         max_cache_size = 100000
         rule {
@@ -430,7 +429,7 @@ data:
           action = "keep"
         }
         forward_to = argument.metrics_destinations.value
-      }    
+      }
     }
     cluster_metrics "feature" {
       metrics_destinations = [
@@ -512,7 +511,6 @@ data:
         "k8s_cluster_name" = "proxies-example-cluster",
       }
     }
-    
     // Feature: Cluster Events
     declare "cluster_events" {
       argument "logs_destinations" {
@@ -590,7 +588,6 @@ data:
         loki.write.loki.receiver,
       ]
     }
-    
     // Self Reporting
     prometheus.exporter.unix "kubernetes_monitoring_telemetry" {
       set_collectors = ["textfile"]
@@ -633,11 +630,9 @@ data:
         prometheus.remote_write.prometheus.receiver,
       ]
     }
-    
-    
-    
-    
+
   self-reporting-metric.prom: |
+    
     # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_build_info gauge
     grafana_kubernetes_monitoring_build_info{version="2.0.6", namespace="default"} 1
@@ -674,13 +669,12 @@ data:
         "k8s_cluster_name" = "proxies-example-cluster",
       }
     }
-    
     // Feature: Pod Logs
     declare "pod_logs" {
       argument "logs_destinations" {
         comment = "Must be a list of log destinations where collected logs should be forwarded to"
       }
-      
+    
       discovery.relabel "filtered_pods" {
         targets = discovery.kubernetes.pods.targets
         rule {
@@ -705,7 +699,7 @@ data:
           replacement = "$1"
           target_label = "job"
         }
-      
+    
         // set the container runtime as a label
         rule {
           action = "replace"
@@ -714,28 +708,21 @@ data:
           replacement = "$1"
           target_label = "tmp_container_runtime"
         }
-      
-        // set the job label from the k8s.grafana.com/logs.job annotation if it exists
-        rule {
-          source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_logs_job"]
-          regex = "(.+)"
-          target_label = "job"
-        }
-      
+    
         // make all labels on the pod available to the pipeline as labels,
         // they are omitted before write to loki via stage.label_keep unless explicitly set
         rule {
           action = "labelmap"
           regex = "__meta_kubernetes_pod_label_(.+)"
         }
-      
+    
         // make all annotations on the pod available to the pipeline as labels,
         // they are omitted before write to loki via stage.label_keep unless explicitly set
         rule {
           action = "labelmap"
           regex = "__meta_kubernetes_pod_annotation_(.+)"
         }
-      
+    
         // explicitly set service_name. if not set, loki will automatically try to populate a default.
         // see https://grafana.com/docs/loki/latest/get-started/labels/#default-labels-for-all-users
         //
@@ -757,14 +744,14 @@ data:
           replacement = "$1"
           target_label = "service_name"
         }
-      
+    
         // set service_namespace
         rule {
           action = "replace"
           source_labels = ["__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_namespace"]
           target_label = "service_namespace"
         }
-      
+    
         // set deployment_environment and deployment_environment_name
         rule {
           action = "replace"
@@ -776,8 +763,16 @@ data:
           source_labels = ["__meta_kubernetes_pod_annotation_resource_opentelemetry_io_deployment_environment"]
           target_label = "deployment_environment"
         }
+        rule {
+          source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_logs_job"]
+          target_label = "job"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
+          target_label = "app_kubernetes_io_name"
+        }
       }
-      
+    
       discovery.kubernetes "pods" {
         role = "pod"
         selectors {
@@ -785,10 +780,10 @@ data:
           field = "spec.nodeName=" + sys.env("HOSTNAME")
         }
       }
-      
+    
       discovery.relabel "filtered_pods_with_paths" {
         targets = discovery.relabel.filtered_pods.output
-      
+    
         rule {
           source_labels = ["__meta_kubernetes_pod_uid", "__meta_kubernetes_pod_container_name"]
           separator = "/"
@@ -797,22 +792,22 @@ data:
           target_label = "__path__"
         }
       }
-      
+    
       local.file_match "pod_logs" {
         path_targets = discovery.relabel.filtered_pods_with_paths.output
       }
-      
+    
       loki.source.file "pod_logs" {
         targets    = local.file_match.pod_logs.targets
         forward_to = [loki.process.pod_logs.receiver]
       }
-      
+    
       loki.process "pod_logs" {
         stage.match {
           selector = "{tmp_container_runtime=~\"containerd|cri-o\"}"
           // the cri processing stage extracts the following k/v pairs: log, stream, time, flags
           stage.cri {}
-      
+    
           // Set the extract flags and stream values as labels
           stage.labels {
             values = {
@@ -821,12 +816,12 @@ data:
             }
           }
         }
-      
+    
         stage.match {
           selector = "{tmp_container_runtime=\"docker\"}"
           // the docker processing stage extracts the following k/v pairs: log, stream, time
           stage.docker {}
-      
+    
           // Set the extract stream value as a label
           stage.labels {
             values = {
@@ -834,7 +829,7 @@ data:
             }
           }
         }
-      
+    
         // Drop the filename label, since it's not really useful in the context of Kubernetes, where we already have cluster,
         // namespace, pod, and container labels. Drop any structured metadata. Also drop the temporary
         // container runtime label as it is no longer needed.
@@ -844,12 +839,12 @@ data:
             "tmp_container_runtime",
           ]
         }
-      
+    
         // Only keep the labels that are defined in the `keepLabels` list.
         stage.label_keep {
           values = ["app_kubernetes_io_name","container","instance","job","level","namespace","pod","service_name","service_namespace","deployment_environment","deployment_environment_name","integration"]
         }
-      
+    
         forward_to = argument.logs_destinations.value
       }
     }
@@ -983,7 +978,6 @@ data:
         }
       }
     }
-    
     // Feature: Application Observability
     declare "application_observability" {
       argument "metrics_destinations" {
@@ -998,7 +992,7 @@ data:
         comment = "Must be a list of trace destinations where collected trace should be forwarded to"
       }
     
-      // Zipkin Receiver  
+      // Zipkin Receiver
       otelcol.receiver.zipkin "receiver" {
         endpoint = "0.0.0.0:9411"
         debug_metrics {
@@ -1009,13 +1003,13 @@ data:
         }
       }
     
-      // Resource Detection Processor  
+      // Resource Detection Processor
       otelcol.processor.resourcedetection "default" {
         detectors = ["env", "system"]
         system {
           hostname_sources = ["os"]
         }
-      
+    
         output {
           metrics = [otelcol.processor.k8sattributes.default.input]
           logs = [otelcol.processor.k8sattributes.default.input]
@@ -1023,7 +1017,7 @@ data:
         }
       }
     
-      // K8s Attributes Processor  
+      // K8s Attributes Processor
       otelcol.processor.k8sattributes "default" {
         extract {
           metadata = ["k8s.namespace.name","k8s.pod.name","k8s.deployment.name","k8s.statefulset.name","k8s.daemonset.name","k8s.cronjob.name","k8s.job.name","k8s.node.name","k8s.pod.uid","k8s.pod.start_time"]
@@ -1033,7 +1027,7 @@ data:
             from = "connection"
           }
         }
-      
+    
         output {
           metrics = [otelcol.processor.transform.default.input]
           logs = [otelcol.processor.transform.default.input]
@@ -1041,16 +1035,16 @@ data:
         }
       }
     
-      // Host Info Connector  
+      // Host Info Connector
       otelcol.connector.host_info "default" {
         host_identifiers = [ "k8s.node.name" ]
-      
+    
         output {
           metrics = [otelcol.processor.batch.default.input]
         }
       }
     
-      // Transform Processor  
+      // Transform Processor
       otelcol.processor.transform "default" {
         error_mode = "ignore"
         log_statements {
@@ -1061,7 +1055,7 @@ data:
             "set(attributes[\"loki.resource.labels\"], \"cluster, namespace, job, pod\")",
           ]
         }
-      
+    
         output {
           metrics = [otelcol.processor.batch.default.input]
           logs = [otelcol.processor.batch.default.input]
@@ -1069,12 +1063,12 @@ data:
         }
       }
     
-      // Batch Processor  
+      // Batch Processor
       otelcol.processor.batch "default" {
         send_batch_size = 16384
         send_batch_max_size = 0
         timeout = "2s"
-      
+    
         output {
           metrics = argument.metrics_destinations.value
           logs = argument.logs_destinations.value
@@ -1118,12 +1112,11 @@ data:
         k8s_cluster_name = "proxies-example-cluster",
       }
     }
-    
     // Feature: Profiling
     declare "profiling" {
       argument "profiles_destinations" {
         comment = "Must be a list of profile destinations where collected profiles should be forwarded to"
-      }  
+      }
       // Profiles: eBPF
       discovery.kubernetes "ebpf_pods" {
         selectors {
@@ -1132,7 +1125,7 @@ data:
         }
         role = "pod"
       }
-      
+    
       discovery.relabel "ebpf_pods" {
         targets = discovery.kubernetes.ebpf_pods.targets
         rule {
@@ -1165,12 +1158,12 @@ data:
           target_label = "service_name"
         }
       }
-      
+    
       pyroscope.ebpf "ebpf_pods" {
         targets = discovery.relabel.ebpf_pods.output
         demangle = "none"
         forward_to = argument.profiles_destinations.value
-      }  
+      }
       // Profiles: Java
       discovery.kubernetes "java_pods" {
         selectors {
@@ -1179,11 +1172,11 @@ data:
         }
         role = "pod"
       }
-      
+    
       discovery.process "java_pods" {
         join = discovery.kubernetes.java_pods.targets
       }
-      
+    
       discovery.relabel "java_pods" {
         targets = discovery.process.java_pods.targets
         rule {
@@ -1218,7 +1211,7 @@ data:
           target_label = "container"
         }
       }
-      
+    
       pyroscope.java "java_pods" {
         targets = discovery.relabel.java_pods.output
         profiling_config {
@@ -1229,7 +1222,7 @@ data:
           lock = "10ms"
         }
         forward_to = argument.profiles_destinations.value
-      }  
+      }
       // Profiles: pprof
       discovery.kubernetes "pprof_pods" {
         selectors {
@@ -1238,7 +1231,7 @@ data:
         }
         role = "pod"
       }
-      
+    
       discovery.relabel "pprof_pods" {
         targets = discovery.kubernetes.pprof_pods.targets
         rule {
@@ -1246,7 +1239,7 @@ data:
           source_labels = ["__meta_kubernetes_pod_phase"]
           regex         = "Pending|Succeeded|Failed|Completed"
         }
-      
+    
         rule {
           regex  = "__meta_kubernetes_pod_label_(.+)"
           action = "labelmap"
@@ -1264,7 +1257,7 @@ data:
           target_label  = "container"
         }
       }
-      
+    
       discovery.relabel "pprof_pods_block_default_name" {
         targets = discovery.relabel.pprof_pods.output
         rule {
@@ -1277,7 +1270,7 @@ data:
           regex         = ""
           action        = "keep"
         }
-      
+    
         rule {
           source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_block_scheme"]
           action        = "replace"
@@ -1300,7 +1293,7 @@ data:
           replacement   = "$1:$2"
         }
       }
-      
+    
       discovery.relabel "pprof_pods_block_custom_name" {
         targets = discovery.relabel.pprof_pods.output
         rule {
@@ -1318,7 +1311,7 @@ data:
           target_label  = "__meta_kubernetes_pod_annotation_profiles_grafana_com_block_port_name"
           action        = "keepequal"
         }
-      
+    
         rule {
           source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_block_scheme"]
           action        = "replace"
@@ -1341,10 +1334,10 @@ data:
           replacement   = "$1:$2"
         }
       }
-      
+    
       pyroscope.scrape "pyroscope_scrape_block" {
         targets = concat(discovery.relabel.pprof_pods_block_default_name.output, discovery.relabel.pprof_pods_block_custom_name.output)
-      
+    
         bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
         profiling_config {
           profile.block {
@@ -1375,7 +1368,7 @@ data:
             enabled = false
           }
         }
-      
+    
         forward_to = argument.profiles_destinations.value
       }
       discovery.relabel "pprof_pods_cpu_default_name" {
@@ -1390,7 +1383,7 @@ data:
           regex         = ""
           action        = "keep"
         }
-      
+    
         rule {
           source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_cpu_scheme"]
           action        = "replace"
@@ -1413,7 +1406,7 @@ data:
           replacement   = "$1:$2"
         }
       }
-      
+    
       discovery.relabel "pprof_pods_cpu_custom_name" {
         targets = discovery.relabel.pprof_pods.output
         rule {
@@ -1431,7 +1424,7 @@ data:
           target_label  = "__meta_kubernetes_pod_annotation_profiles_grafana_com_cpu_port_name"
           action        = "keepequal"
         }
-      
+    
         rule {
           source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_cpu_scheme"]
           action        = "replace"
@@ -1454,10 +1447,10 @@ data:
           replacement   = "$1:$2"
         }
       }
-      
+    
       pyroscope.scrape "pyroscope_scrape_cpu" {
         targets = concat(discovery.relabel.pprof_pods_cpu_default_name.output, discovery.relabel.pprof_pods_cpu_custom_name.output)
-      
+    
         bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
         profiling_config {
           profile.block {
@@ -1488,7 +1481,7 @@ data:
             enabled = false
           }
         }
-      
+    
         forward_to = argument.profiles_destinations.value
       }
       discovery.relabel "pprof_pods_fgprof_default_name" {
@@ -1503,7 +1496,7 @@ data:
           regex         = ""
           action        = "keep"
         }
-      
+    
         rule {
           source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_fgprof_scheme"]
           action        = "replace"
@@ -1526,7 +1519,7 @@ data:
           replacement   = "$1:$2"
         }
       }
-      
+    
       discovery.relabel "pprof_pods_fgprof_custom_name" {
         targets = discovery.relabel.pprof_pods.output
         rule {
@@ -1544,7 +1537,7 @@ data:
           target_label  = "__meta_kubernetes_pod_annotation_profiles_grafana_com_fgprof_port_name"
           action        = "keepequal"
         }
-      
+    
         rule {
           source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_fgprof_scheme"]
           action        = "replace"
@@ -1567,10 +1560,10 @@ data:
           replacement   = "$1:$2"
         }
       }
-      
+    
       pyroscope.scrape "pyroscope_scrape_fgprof" {
         targets = concat(discovery.relabel.pprof_pods_fgprof_default_name.output, discovery.relabel.pprof_pods_fgprof_custom_name.output)
-      
+    
         bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
         profiling_config {
           profile.block {
@@ -1601,7 +1594,7 @@ data:
             enabled = false
           }
         }
-      
+    
         forward_to = argument.profiles_destinations.value
       }
       discovery.relabel "pprof_pods_goroutine_default_name" {
@@ -1616,7 +1609,7 @@ data:
           regex         = ""
           action        = "keep"
         }
-      
+    
         rule {
           source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_goroutine_scheme"]
           action        = "replace"
@@ -1639,7 +1632,7 @@ data:
           replacement   = "$1:$2"
         }
       }
-      
+    
       discovery.relabel "pprof_pods_goroutine_custom_name" {
         targets = discovery.relabel.pprof_pods.output
         rule {
@@ -1657,7 +1650,7 @@ data:
           target_label  = "__meta_kubernetes_pod_annotation_profiles_grafana_com_goroutine_port_name"
           action        = "keepequal"
         }
-      
+    
         rule {
           source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_goroutine_scheme"]
           action        = "replace"
@@ -1680,10 +1673,10 @@ data:
           replacement   = "$1:$2"
         }
       }
-      
+    
       pyroscope.scrape "pyroscope_scrape_goroutine" {
         targets = concat(discovery.relabel.pprof_pods_goroutine_default_name.output, discovery.relabel.pprof_pods_goroutine_custom_name.output)
-      
+    
         bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
         profiling_config {
           profile.block {
@@ -1714,7 +1707,7 @@ data:
             enabled = false
           }
         }
-      
+    
         forward_to = argument.profiles_destinations.value
       }
       discovery.relabel "pprof_pods_memory_default_name" {
@@ -1729,7 +1722,7 @@ data:
           regex         = ""
           action        = "keep"
         }
-      
+    
         rule {
           source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_memory_scheme"]
           action        = "replace"
@@ -1752,7 +1745,7 @@ data:
           replacement   = "$1:$2"
         }
       }
-      
+    
       discovery.relabel "pprof_pods_memory_custom_name" {
         targets = discovery.relabel.pprof_pods.output
         rule {
@@ -1770,7 +1763,7 @@ data:
           target_label  = "__meta_kubernetes_pod_annotation_profiles_grafana_com_memory_port_name"
           action        = "keepequal"
         }
-      
+    
         rule {
           source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_memory_scheme"]
           action        = "replace"
@@ -1793,10 +1786,10 @@ data:
           replacement   = "$1:$2"
         }
       }
-      
+    
       pyroscope.scrape "pyroscope_scrape_memory" {
         targets = concat(discovery.relabel.pprof_pods_memory_default_name.output, discovery.relabel.pprof_pods_memory_custom_name.output)
-      
+    
         bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
         profiling_config {
           profile.block {
@@ -1827,7 +1820,7 @@ data:
             enabled = false
           }
         }
-      
+    
         forward_to = argument.profiles_destinations.value
       }
       discovery.relabel "pprof_pods_mutex_default_name" {
@@ -1842,7 +1835,7 @@ data:
           regex         = ""
           action        = "keep"
         }
-      
+    
         rule {
           source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_mutex_scheme"]
           action        = "replace"
@@ -1865,7 +1858,7 @@ data:
           replacement   = "$1:$2"
         }
       }
-      
+    
       discovery.relabel "pprof_pods_mutex_custom_name" {
         targets = discovery.relabel.pprof_pods.output
         rule {
@@ -1883,7 +1876,7 @@ data:
           target_label  = "__meta_kubernetes_pod_annotation_profiles_grafana_com_mutex_port_name"
           action        = "keepequal"
         }
-      
+    
         rule {
           source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_mutex_scheme"]
           action        = "replace"
@@ -1906,10 +1899,10 @@ data:
           replacement   = "$1:$2"
         }
       }
-      
+    
       pyroscope.scrape "pyroscope_scrape_mutex" {
         targets = concat(discovery.relabel.pprof_pods_mutex_default_name.output, discovery.relabel.pprof_pods_mutex_custom_name.output)
-      
+    
         bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
         profiling_config {
           profile.block {
@@ -1940,7 +1933,7 @@ data:
             enabled = true
           }
         }
-      
+    
         forward_to = argument.profiles_destinations.value
       }
     }
