@@ -75,3 +75,119 @@ tests:
           type: prometheus
     asserts:
       - notFailedTemplate: {}
+
+  - it: detects if you're using the Grafana Cloud OTLP endpoint with the wrong protocol
+    set:
+      cluster:
+        name: test-cluster
+      destinations:
+        - name: OTLP Endpoint
+          type: otlp
+          url: https://otlp-gateway-test.grafana.net
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            execution error at (k8s-monitoring/templates/validations.yaml:5:4): 
+            Destination #0 (OTLP Endpoint) is using Grafana Cloud OTLP gateway but has incorrect protocol 'grpc (default)'. The gateway requires 'http'.
+            Please set:
+            destinations:
+              - name: OTLP Endpoint
+                type: otlp
+                url: https://otlp-gateway-test.grafana.net
+                protocol: http
+
+  - it: detects if you're using Grafana Cloud Traces with the wrong protocol
+    set:
+      cluster:
+        name: test-cluster
+      destinations:
+        - name: Grafana Cloud Traces
+          type: otlp
+          url: https://tempo-test.grafana.net
+          protocol: http
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            execution error at (k8s-monitoring/templates/validations.yaml:5:4): 
+            Destination #0 (Grafana Cloud Traces) is using Grafana Cloud Traces but has incorrect protocol 'http'. Grafana Cloud Traces requires 'grpc'.
+            Please set:
+            destinations:
+              - name: Grafana Cloud Traces
+                type: otlp
+                url: https://tempo-test.grafana.net
+                protocol: grpc
+
+  - it: detects if metrics are enabled for Grafana Cloud Traces
+    set:
+      cluster:
+        name: test-cluster
+      destinations:
+        - name: Grafana Cloud Traces
+          type: otlp
+          url: https://tempo-test.grafana.net
+          protocol: grpc
+          metrics: {enabled: true}
+          logs: {enabled: false}
+          traces: {enabled: true}
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            execution error at (k8s-monitoring/templates/validations.yaml:5:4): 
+            Destination #0 (Grafana Cloud Traces) is using Grafana Cloud Traces but has metrics enabled. Tempo only supports traces.
+            Please set:
+            destinations:
+              - name: Grafana Cloud Traces
+                type: otlp
+                url: https://tempo-test.grafana.net
+                metrics:
+                  enabled: false
+
+  - it: detects if logs are enabled for Grafana Cloud Traces
+    set:
+      cluster:
+        name: test-cluster
+      destinations:
+        - name: Grafana Cloud Traces
+          type: otlp
+          url: https://tempo-test.grafana.net
+          protocol: grpc
+          metrics: {enabled: false}
+          logs: {enabled: true}
+          traces: {enabled: true}
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            execution error at (k8s-monitoring/templates/validations.yaml:5:4): 
+            Destination #0 (Grafana Cloud Traces) is using Grafana Cloud Traces but has logs enabled. Tempo only supports traces.
+            Please set:
+            destinations:
+              - name: Grafana Cloud Traces
+                type: otlp
+                url: https://tempo-test.grafana.net
+                logs:
+                  enabled: false
+
+  - it: detects if traces are disabled for Grafana Cloud Traces
+    set:
+      cluster:
+        name: test-cluster
+      destinations:
+        - name: Grafana Cloud Traces
+          type: otlp
+          url: https://tempo-test.grafana.net
+          protocol: grpc
+          metrics: {enabled: false}
+          logs: {enabled: false}
+          traces: {enabled: false}
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            execution error at (k8s-monitoring/templates/validations.yaml:5:4): 
+            Destination #0 (Grafana Cloud Traces) is using Grafana Cloud Traces but has traces disabled.
+            Please set:
+            destinations:
+              - name: Grafana Cloud Traces
+                type: otlp
+                url: https://tempo-test.grafana.net
+                traces:
+                  enabled: true
