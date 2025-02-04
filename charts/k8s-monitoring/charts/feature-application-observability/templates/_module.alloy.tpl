@@ -27,7 +27,7 @@ declare "application_observability" {
     {{- end }}
   {{- end }}
 
-  // {{ $component.description }}
+  // {{ $component.description | trim }}
   {{- include (printf "feature.applicationObservability.%s.alloy" $component.component) $args | indent 2 }}
 {{- end }}
 }

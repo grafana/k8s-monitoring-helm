@@ -8,6 +8,6 @@
   {{- fail (printf "Node Logs feature requires Alloy to mount /var/log.\nPlease set:\n%s:\n  alloy:\n    mounts:\n      varlog: true" .CollectorName) }}
 {{- end -}}
 {{- if .Collector.alloy.clustering.enabled }}
-  {{- fail (printf "Node Logs feature requires Alloy to not be in clustering mode.\nPlease set:\n%s:\n  alloy:\n    clustering:\n      enabled: true" .CollectorName) }}
+  {{- fail (printf "Node Logs feature requires Alloy clustering to be disabled.\nPlease set:\n%s:\n  alloy:\n    clustering:\n      enabled: false" .CollectorName) }}
 {{- end -}}
 {{- end -}}

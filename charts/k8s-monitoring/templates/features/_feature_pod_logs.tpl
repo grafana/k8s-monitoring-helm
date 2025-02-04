@@ -37,7 +37,7 @@ pod_logs "feature" {
 
 {{- range $collector := include "features.podLogs.collectors" . | fromYamlArray }}
   {{- include "collectors.require_collector" (dict "Values" $.Values "name" $collector "feature" $featureName) }}
-  {{- include "feature.podLogs.collector.validate" (dict "Values" $.Values.nodeLogs "Collector" (index $.Values $collector) "CollectorName" $collector) }}
+  {{- include "feature.podLogs.collector.validate" (dict "Values" $.Values.podLogs "Collector" (index $.Values $collector) "CollectorName" $collector) }}
 {{- end -}}
 {{- end -}}
 {{- end -}}

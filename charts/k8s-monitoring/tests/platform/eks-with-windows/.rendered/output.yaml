@@ -189,22 +189,21 @@ data:
       name      = "grafana-cloud-credentials"
       namespace = "default"
     }
-    
     // Feature: Cluster Metrics
     declare "cluster_metrics" {
       argument "metrics_destinations" {
         comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
       }
-      
+    
       remote.kubernetes.configmap "kubernetes" {
         name = "k8smon-alloy-module-kubernetes"
         namespace = "default"
       }
-      
+    
       import.string "kubernetes" {
         content = remote.kubernetes.configmap.kubernetes.data["core_metrics.alloy"]
-      }  
-      
+      }
+    
       kubernetes.kubelet "scrape" {
         clustering = true
         job_label = "integrations/kubernetes/kubelet"
@@ -212,8 +211,8 @@ data:
         scrape_interval = "60s"
         max_cache_size = 100000
         forward_to = argument.metrics_destinations.value
-      }  
-      
+      }
+    
       kubernetes.resources "scrape" {
         clustering = true
         job_label = "integrations/kubernetes/resources"
@@ -221,8 +220,8 @@ data:
         scrape_interval = "60s"
         max_cache_size = 100000
         forward_to = argument.metrics_destinations.value
-      }  
-      
+      }
+    
       kubernetes.cadvisor "scrape" {
         clustering = true
         job_label = "integrations/kubernetes/cadvisor"
@@ -231,7 +230,7 @@ data:
         max_cache_size = 100000
         forward_to = [prometheus.relabel.cadvisor.receiver]
       }
-      
+    
       prometheus.relabel "cadvisor" {
         max_cache_size = 100000
         // Drop empty container labels, addressing https://github.com/google/cadvisor/issues/2688
@@ -303,17 +302,17 @@ data:
           replacement = ""
         }
         forward_to = argument.metrics_destinations.value
-      }            
-      
+      }
+    
       remote.kubernetes.configmap "kube_state_metrics" {
         name = "k8smon-alloy-module-kubernetes"
         namespace = "default"
       }
-      
+    
       import.string "kube_state_metrics" {
         content = remote.kubernetes.configmap.kube_state_metrics.data["kube-state-metrics_metrics.alloy"]
       }
-      
+    
       kube_state_metrics.kubernetes "targets" {
         namespaces = ["default"]
         port_name = "http"
@@ -322,7 +321,7 @@ data:
           "release=k8smon",
         ]
       }
-      
+    
       kube_state_metrics.scrape "metrics" {
         targets = kube_state_metrics.kubernetes.targets.output
         clustering = true
@@ -332,17 +331,17 @@ data:
         scrape_interval = "60s"
         max_cache_size = 100000
         forward_to = argument.metrics_destinations.value
-      }  
-      
+      }
+    
       remote.kubernetes.configmap "node_exporter" {
         name = "k8smon-alloy-module-system"
         namespace = "default"
       }
-      
+    
       import.string "node_exporter" {
         content = remote.kubernetes.configmap.node_exporter.data["node-exporter_metrics.alloy"]
       }
-      
+    
       node_exporter.kubernetes "targets" {
         namespaces = ["default"]
         port_name = "metrics"
@@ -351,7 +350,7 @@ data:
           "release=k8smon",
         ]
       }
-      
+    
       discovery.relabel "node_exporter" {
         targets = node_exporter.kubernetes.targets.output
         rule {
@@ -360,7 +359,7 @@ data:
           target_label = "instance"
         }
       }
-      
+    
       node_exporter.scrape "metrics" {
         targets = discovery.relabel.node_exporter.output
         job_label = "integrations/node_exporter"
@@ -370,8 +369,8 @@ data:
         scrape_interval = "60s"
         max_cache_size = 100000
         forward_to = argument.metrics_destinations.value
-      }  
-      
+      }
+    
       discovery.kubernetes "windows_exporter_pods" {
         role = "pod"
         namespaces {
@@ -382,7 +381,7 @@ data:
           label = "app.kubernetes.io/name=windows-exporter,release=k8smon"
         }
       }
-      
+    
       discovery.relabel "windows_exporter" {
         targets = discovery.kubernetes.windows_exporter_pods.targets
         rule {
@@ -391,7 +390,7 @@ data:
           target_label = "instance"
         }
       }
-      
+    
       prometheus.scrape "windows_exporter" {
         job_name   = "integrations/windows-exporter"
         targets  = discovery.relabel.windows_exporter.output
@@ -401,7 +400,7 @@ data:
         }
         forward_to = [prometheus.relabel.windows_exporter.receiver]
       }
-      
+    
       prometheus.relabel "windows_exporter" {
         max_cache_size = 100000
         rule {
@@ -410,14 +409,13 @@ data:
           action = "keep"
         }
         forward_to = argument.metrics_destinations.value
-      }    
+      }
     }
     cluster_metrics "feature" {
       metrics_destinations = [
         prometheus.remote_write.grafana_cloud_metrics.receiver,
       ]
     }
-    
     declare "alloy_integration" {
       argument "metrics_destinations" {
         comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
@@ -476,35 +474,35 @@ data:
             action = "keep"
           }
     
-          
-        
+    
+    
         rule {
           source_labels = ["__meta_kubernetes_namespace"]
           target_label  = "namespace"
         }
-        
+    
         rule {
           source_labels = ["__meta_kubernetes_pod_name"]
           target_label  = "pod"
         }
-        
+    
         rule {
           source_labels = ["__meta_kubernetes_pod_container_name"]
           target_label  = "container"
         }
-        
+    
         // set the workload to the controller kind and name
         rule {
           action = "lowercase"
           source_labels = ["__meta_kubernetes_pod_controller_kind"]
           target_label  = "workload_type"
         }
-        
+    
         rule {
           source_labels = ["__meta_kubernetes_pod_controller_name"]
           target_label  = "workload"
         }
-        
+    
         // remove the hash from the ReplicaSet
         rule {
           source_labels = [
@@ -515,7 +513,7 @@ data:
           regex = "replicaset/(.+)-.+$"
           target_label  = "workload"
         }
-        
+    
         // set the app name if specified as metadata labels "app:" or "app.kubernetes.io/name:" or "k8s-app:"
         rule {
           action = "replace"
@@ -529,7 +527,7 @@ data:
           replacement = "$1"
           target_label = "app"
         }
-        
+    
         // set the component if specified as metadata labels "component:" or "app.kubernetes.io/component:" or "k8s-component:"
         rule {
           action = "replace"
@@ -542,7 +540,7 @@ data:
           replacement = "$1"
           target_label = "component"
         }
-        
+    
         // set a source label
         rule {
           action = "replace"
@@ -691,12 +689,12 @@ data:
           }
         }
       }
-      
+    
       alloy_integration_discovery "alloy" {
         port_name = "http-metrics"
         label_selectors = ["app.kubernetes.io/name in (alloy-metrics,alloy-singleton,alloy-logs)"]
       }
-      
+    
       alloy_integration_scrape  "alloy" {
         targets = alloy_integration_discovery.alloy.output
         job_label = "integrations/alloy"
@@ -813,7 +811,6 @@ data:
       name      = "grafana-cloud-credentials"
       namespace = "default"
     }
-    
     // Feature: Cluster Events
     declare "cluster_events" {
       argument "logs_destinations" {
@@ -891,7 +888,6 @@ data:
         loki.write.grafana_cloud_logs.receiver,
       ]
     }
-    
     // Self Reporting
     prometheus.exporter.unix "kubernetes_monitoring_telemetry" {
       set_collectors = ["textfile"]
@@ -934,11 +930,9 @@ data:
         prometheus.remote_write.grafana_cloud_metrics.receiver,
       ]
     }
-    
-    
-    
-    
+
   self-reporting-metric.prom: |
+    
     # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_build_info gauge
     grafana_kubernetes_monitoring_build_info{version="2.0.6", namespace="default"} 1
@@ -988,7 +982,6 @@ data:
       name      = "grafana-cloud-credentials"
       namespace = "default"
     }
-    
     // Feature: Node Logs
     declare "node_logs" {
       argument "logs_destinations" {
@@ -1141,13 +1134,12 @@ data:
         loki.write.grafana_cloud_logs.receiver,
       ]
     }
-    
     // Feature: Pod Logs
     declare "pod_logs" {
       argument "logs_destinations" {
         comment = "Must be a list of log destinations where collected logs should be forwarded to"
       }
-      
+    
       discovery.relabel "filtered_pods" {
         targets = discovery.kubernetes.pods.targets
         rule {
@@ -1172,7 +1164,7 @@ data:
           replacement = "$1"
           target_label = "job"
         }
-      
+    
         // set the container runtime as a label
         rule {
           action = "replace"
@@ -1181,28 +1173,21 @@ data:
           replacement = "$1"
           target_label = "tmp_container_runtime"
         }
-      
-        // set the job label from the k8s.grafana.com/logs.job annotation if it exists
-        rule {
-          source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_logs_job"]
-          regex = "(.+)"
-          target_label = "job"
-        }
-      
+    
         // make all labels on the pod available to the pipeline as labels,
         // they are omitted before write to loki via stage.label_keep unless explicitly set
         rule {
           action = "labelmap"
           regex = "__meta_kubernetes_pod_label_(.+)"
         }
-      
+    
         // make all annotations on the pod available to the pipeline as labels,
         // they are omitted before write to loki via stage.label_keep unless explicitly set
         rule {
           action = "labelmap"
           regex = "__meta_kubernetes_pod_annotation_(.+)"
         }
-      
+    
         // explicitly set service_name. if not set, loki will automatically try to populate a default.
         // see https://grafana.com/docs/loki/latest/get-started/labels/#default-labels-for-all-users
         //
@@ -1224,14 +1209,14 @@ data:
           replacement = "$1"
           target_label = "service_name"
         }
-      
+    
         // set service_namespace
         rule {
           action = "replace"
           source_labels = ["__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_namespace"]
           target_label = "service_namespace"
         }
-      
+    
         // set deployment_environment and deployment_environment_name
         rule {
           action = "replace"
@@ -1243,8 +1228,16 @@ data:
           source_labels = ["__meta_kubernetes_pod_annotation_resource_opentelemetry_io_deployment_environment"]
           target_label = "deployment_environment"
         }
+        rule {
+          source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_logs_job"]
+          target_label = "job"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
+          target_label = "app_kubernetes_io_name"
+        }
       }
-      
+    
       discovery.kubernetes "pods" {
         role = "pod"
         selectors {
@@ -1252,10 +1245,10 @@ data:
           field = "spec.nodeName=" + sys.env("HOSTNAME")
         }
       }
-      
+    
       discovery.relabel "filtered_pods_with_paths" {
         targets = discovery.relabel.filtered_pods.output
-      
+    
         rule {
           source_labels = ["__meta_kubernetes_pod_uid", "__meta_kubernetes_pod_container_name"]
           separator = "/"
@@ -1264,22 +1257,22 @@ data:
           target_label = "__path__"
         }
       }
-      
+    
       local.file_match "pod_logs" {
         path_targets = discovery.relabel.filtered_pods_with_paths.output
       }
-      
+    
       loki.source.file "pod_logs" {
         targets    = local.file_match.pod_logs.targets
         forward_to = [loki.process.pod_logs.receiver]
       }
-      
+    
       loki.process "pod_logs" {
         stage.match {
           selector = "{tmp_container_runtime=~\"containerd|cri-o\"}"
           // the cri processing stage extracts the following k/v pairs: log, stream, time, flags
           stage.cri {}
-      
+    
           // Set the extract flags and stream values as labels
           stage.labels {
             values = {
@@ -1288,12 +1281,12 @@ data:
             }
           }
         }
-      
+    
         stage.match {
           selector = "{tmp_container_runtime=\"docker\"}"
           // the docker processing stage extracts the following k/v pairs: log, stream, time
           stage.docker {}
-      
+    
           // Set the extract stream value as a label
           stage.labels {
             values = {
@@ -1301,7 +1294,7 @@ data:
             }
           }
         }
-      
+    
         // Drop the filename label, since it's not really useful in the context of Kubernetes, where we already have cluster,
         // namespace, pod, and container labels. Drop any structured metadata. Also drop the temporary
         // container runtime label as it is no longer needed.
@@ -1311,12 +1304,12 @@ data:
             "tmp_container_runtime",
           ]
         }
-      
+    
         // Only keep the labels that are defined in the `keepLabels` list.
         stage.label_keep {
           values = ["app_kubernetes_io_name","container","instance","job","level","namespace","pod","service_name","service_namespace","deployment_environment","deployment_environment_name","integration"]
         }
-      
+    
         forward_to = argument.logs_destinations.value
       }
     }

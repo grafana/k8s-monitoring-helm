@@ -46,7 +46,6 @@ prometheus.remote_write "prometheus" {
     max_keepalive_time = "8h"
   }
 }
-
 declare "mimir_integration" {
   argument "metrics_destinations" {
     comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
@@ -112,35 +111,35 @@ declare "mimir_integration" {
         target_label = "job"
       }
 
-      
-    
+
+
     rule {
       source_labels = ["__meta_kubernetes_namespace"]
       target_label  = "namespace"
     }
-    
+
     rule {
       source_labels = ["__meta_kubernetes_pod_name"]
       target_label  = "pod"
     }
-    
+
     rule {
       source_labels = ["__meta_kubernetes_pod_container_name"]
       target_label  = "container"
     }
-    
+
     // set the workload to the controller kind and name
     rule {
       action = "lowercase"
       source_labels = ["__meta_kubernetes_pod_controller_kind"]
       target_label  = "workload_type"
     }
-    
+
     rule {
       source_labels = ["__meta_kubernetes_pod_controller_name"]
       target_label  = "workload"
     }
-    
+
     // remove the hash from the ReplicaSet
     rule {
       source_labels = [
@@ -151,7 +150,7 @@ declare "mimir_integration" {
       regex = "replicaset/(.+)-.+$"
       target_label  = "workload"
     }
-    
+
     // set the app name if specified as metadata labels "app:" or "app.kubernetes.io/name:" or "k8s-app:"
     rule {
       action = "replace"
@@ -165,7 +164,7 @@ declare "mimir_integration" {
       replacement = "$1"
       target_label = "app"
     }
-    
+
     // set the component if specified as metadata labels "component:" or "app.kubernetes.io/component:" or "k8s-component:"
     rule {
       action = "replace"
@@ -178,7 +177,7 @@ declare "mimir_integration" {
       replacement = "$1"
       target_label = "component"
     }
-    
+
     // set a source label
     rule {
       action = "replace"
@@ -282,13 +281,13 @@ declare "mimir_integration" {
       }
     }
   }
-  
+
   mimir_integration_discovery "mimir" {
     namespaces = []
     label_selectors = ["app.kubernetes.io/name=mimir"]
     port_name = "http-metrics"
   }
-  
+
   mimir_integration_scrape  "mimir" {
     targets = mimir_integration_discovery.mimir.output
     job_label = "integrations/mimir"
@@ -303,7 +302,6 @@ mimir_integration "integration" {
     prometheus.remote_write.prometheus.receiver,
   ]
 }
-
 // Self Reporting
 prometheus.exporter.unix "kubernetes_monitoring_telemetry" {
   set_collectors = ["textfile"]

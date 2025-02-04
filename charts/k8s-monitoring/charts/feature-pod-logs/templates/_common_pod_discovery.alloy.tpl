@@ -40,13 +40,6 @@ discovery.relabel "filtered_pods" {
     target_label = "tmp_container_runtime"
   }
 
-  // set the job label from the k8s.grafana.com/logs.job annotation if it exists
-  rule {
-    source_labels = ["{{ include "pod_annotation" .Values.annotations.job }}"]
-    regex = "(.+)"
-    target_label = "job"
-  }
-
   // make all labels on the pod available to the pipeline as labels,
   // they are omitted before write to loki via stage.label_keep unless explicitly set
   rule {
@@ -102,6 +95,18 @@ discovery.relabel "filtered_pods" {
     target_label = "deployment_environment"
   }
 
+{{- range $label, $k8sAnnotation := .Values.annotations }}
+  rule {
+    source_labels = ["{{ include "pod_annotation" $k8sAnnotation }}"]
+    target_label = {{ $label | quote }}
+  }
+{{- end }}
+{{- range $label, $k8sLabels := .Values.labels }}
+  rule {
+    source_labels = ["{{ include "pod_label" $k8sLabels }}"]
+    target_label = {{ $label | quote }}
+  }
+{{- end }}
 
 {{- if .Values.extraDiscoveryRules }}
 {{ .Values.extraDiscoveryRules | indent 2 }}
