@@ -20,7 +20,7 @@
     {{- end }}
 
     {{/* Check if OTLP destination using Grafana Cloud has protocol set */}}
-    {{- if and (eq $destination.type "otlp") ($destination.url) (contains ".grafana.net" $destination.url) }}
+    {{- if and (eq $destination.type "otlp") ($destination.url) (contains ".grafana.net" $destination.url) (contains "otlp-gateway" $destination.url) }}
       {{- if ne $destination.protocol "http" }}
         {{ fail (printf "\nDestination #%d (%s) is using Grafana Cloud OTLP gateway but has incorrect protocol '%s', the gateway only supports 'http'.\nPlease set:\ndestinations:\n  - name: %s\n    type: otlp\n    url: %s\n    protocol: http" $i $destination.name ($destination.protocol | default "grpc (default)") $destination.name $destination.url) }}
       {{- end }}
