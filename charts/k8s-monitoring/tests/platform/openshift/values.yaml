@@ -1,0 +1,57 @@
+cluster:
+  name: openshift-test
+
+global:
+  platform: openshift
+
+destinations:
+  - name: grafanaCloudMetrics
+    type: prometheus
+    url: https://prometheus-prod-13-prod-us-east-0.grafana.net/api/prom/push
+    auth:
+      type: basic
+      usernameKey: PROMETHEUS_USER
+      passwordKey: PROMETHEUS_PASS
+    secret:
+      create: false
+      name: grafana-cloud-credentials
+  - name: grafanaCloudLogs
+    type: loki
+    url: https://logs-prod-006.grafana.net/loki/api/v1/push
+    auth:
+      type: basic
+      usernameKey: LOKI_USER
+      passwordKey: LOKI_PASS
+    secret:
+      create: false
+      name: grafana-cloud-credentials
+
+clusterMetrics:
+  enabled: true
+  opencost:
+    enabled: true
+    metricsSource: grafanaCloudMetrics
+    opencost:
+      exporter:
+        defaultClusterId: k8s-monitoring-gc-feature-test
+      prometheus:
+        external:
+          url: https://prometheus-prod-13-prod-us-east-0.grafana.net/api/prom
+        existingSecretName: grafana-cloud-credentials
+        username_key: PROMETHEUS_USER
+        password_key: PROMETHEUS_PASS
+  kepler:
+    enabled: true
+
+clusterEvents:
+  enabled: true
+
+podLogs:
+  enabled: true
+
+integrations:
+  alloy:
+    instances:
+      - name: alloy
+        labelSelectors:
+          app.kubernetes.io/name: [alloy-metrics, alloy-singleton, alloy-logs]

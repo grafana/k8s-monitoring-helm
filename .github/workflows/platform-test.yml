@@ -98,6 +98,12 @@ jobs:
         env:
           ARCH: amd64
 
+      - name: Setup OpenShift Installer CLI
+        if : ${{ steps.check-cluster-config.outputs.cluster-type == 'okd' }}
+        uses: redhat-actions/openshift-tools-installer@v1
+        with:
+          openshift-install: latest
+
       - name: Configure AWS Credentials
         if: ${{ steps.check-cluster-config.outputs.cluster-type == 'eks' }}
         uses: aws-actions/configure-aws-credentials@v4

@@ -6,6 +6,7 @@ source "${PARENT_DIR}/scripts/includes/logging.sh"
 source "${PARENT_DIR}/scripts/includes/cluster/eks.sh"
 source "${PARENT_DIR}/scripts/includes/cluster/gke.sh"
 source "${PARENT_DIR}/scripts/includes/cluster/kind.sh"
+source "${PARENT_DIR}/scripts/includes/cluster/openshift.sh"
 
 heading "Kubernetes Monitoring Helm" "Cluster Test Runner"
 
@@ -22,6 +23,7 @@ usage() {
   echo "    eks-cluster-config.yaml           - Config file for creating an EKS cluster."
   echo "    gke-cluster-config.yaml           - Config file for creating a GKE cluster."
   echo "    gke-autopilot-cluster-config.yaml - Config file for creating a GKE Autopilot cluster."
+  echo "    openshift-cluster-config.yaml     - Config file for creating an OpenShift cluster."
 }
 
 CREATE_CLUSTER=${CREATE_CLUSTER:-true}
@@ -55,6 +57,8 @@ if [ "${CREATE_CLUSTER}" == "true" ]; then
     createGKECluster "${clusterName}" "${TEST_DIRECTORY}/gke-cluster-config.yaml"
   elif [ -f "${TEST_DIRECTORY}/gke-autopilot-cluster-config.yaml" ]; then
     createGKEAutopilotCluster "${clusterName}" "${TEST_DIRECTORY}/gke-autopilot-cluster-config.yaml"
+  elif [ -f "${TEST_DIRECTORY}/openshift-cluster-config.yaml" ]; then
+    createOpenShiftCluster "${clusterName}" "${TEST_DIRECTORY}/openshift-cluster-config.yaml"
   else
     createKindCluster "${clusterName}"
   fi
@@ -69,6 +73,8 @@ deleteCluster() {
     deleteGKECluster "${clusterName}" "${TEST_DIRECTORY}/gke-cluster-config.yaml"
   elif [ -f "${TEST_DIRECTORY}/gke-autopilot-cluster-config.yaml" ]; then
     deleteGKECluster "${clusterName}" "${TEST_DIRECTORY}/gke-autopilot-cluster-config.yaml"
+  elif [ -f "${TEST_DIRECTORY}/openshift-cluster-config.yaml" ]; then
+    deleteOpenShiftCluster "${clusterName}" "${TEST_DIRECTORY}/openshift-cluster-config.yaml"
   else
     deleteKindCluster "${clusterName}"
   fi
