@@ -1,0 +1,50 @@
+---
+cluster:
+  name: tempo-integration-test
+
+destinations:
+  - name: localPrometheus
+    type: prometheus
+    url: http://prometheus-server.prometheus.svc:9090/api/v1/write
+    auth:
+      type: basic
+      username: promuser
+      password: prometheuspassword
+  - name: localLoki
+    type: loki
+    url: http://loki.loki.svc:3100/loki/api/v1/push
+    tenantId: "1"
+    auth:
+      type: basic
+      username: loki
+      password: lokipassword
+
+clusterMetrics:
+  enabled: true
+
+integrations:
+  collector: alloy-singleton
+  tempo:
+    instances:
+      - name: tempo
+        labelSelectors:
+          app.kubernetes.io/name: tempo
+        metrics:
+          portName: prom-metrics
+        logs:
+          enabled: true
+
+clusterEvents:
+  enabled: true
+
+podLogs:
+  enabled: true
+
+alloy-metrics:
+  enabled: true
+
+alloy-singleton:
+  enabled: true
+
+alloy-logs:
+  enabled: true
