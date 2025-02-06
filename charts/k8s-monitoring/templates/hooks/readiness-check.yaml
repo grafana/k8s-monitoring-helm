@@ -1,0 +1,35 @@
+{{- if .Values.nodeLogs.enabled }}
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: {{ include "helper.fullname" . }}-readiness-check
+  annotations:
+    "helm.sh/hook": "pre-install,pre-upgrade"
+spec:
+  restartPolicy: Never
+  containers:
+    - name: readiness-check
+      image: "{{ .Values.global.image.registry | default (index .Values .Values.nodeLogs.collector).image.registry }}/{{ (index .Values .Values.nodeLogs.collector).image.repository }}{{ include "alloy.imageId" (index .Subcharts .Values.nodeLogs.collector) }}"
+      imagePullPolicy: IfNotPresent
+      command:
+        - sh
+        - -c
+        - |
+          echo "Kubernetes Monitoring Readiness Check"
+          echo "* Node Logs: Checking if {{ .Values.nodeLogs.journal.path }} exists"
+          if [ ! -d {{ .Values.nodeLogs.journal.path }} ]; then
+              echo "{{ .Values.nodeLogs.journal.path }} does not exist. Please ensure that the host has persistent journald logging enabled."
+              exit 1
+          fi
+      volumeMounts:
+        - name: varlog
+          mountPath: /var/log
+          readOnly: true
+  nodeSelector:
+    kubernetes.io/os: linux
+  volumes:
+    - name: varlog
+      hostPath:
+        path: /var/log
+{{- end }}
