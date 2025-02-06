@@ -72,6 +72,31 @@ spec:
           - query: count_over_time({cluster="$CLUSTER", job!="integrations/kubernetes/eventhandler"}[1h])
             type: logql
 
+          # Pod logs service_name label
+          - query: count_over_time({cluster="$CLUSTER", service_name!=""}[1h])
+            type: logql
+
+          # Pod logs service_name label from resource.opentelemetry.io/service.name annotation
+          - query: count_over_time({cluster="$CLUSTER", service_name="$ANNOTATION_POD_LOG_SERVICE_NAME"}[1h])
+            type: logql
+
+          # Pod logs service_name label from app.kubernetes.io/name label
+          - query: count_over_time({cluster="$CLUSTER", service_name="$LABEL_POD_LOG_SERVICE_NAME"}[1h])
+            type: logql
+
+          # Pod logs service_namespace label from resource.opentelemetry.io/service.namespace annotation
+          - query: count_over_time({cluster="$CLUSTER", service_namespace="hello-kubernetes"}[1h])
+            type: logql
+
+          # Pod logs deployment_environment label from resource.opentelemetry.io/deployment.environment annotation
+          - query: count_over_time({cluster="$CLUSTER", deployment_environment="hello-kubernetes"}[1h])
+            type: logql
+
+          # Pod logs deployment_environment_name label from resource.opentelemetry.io/deployment.environment.name
+          # annotation
+          - query: count_over_time({cluster="$CLUSTER", deployment_environment_name="hello-kubernetes"}[1h])
+            type: logql
+
           # Alloy integration
           - query: alloy_build_info{cluster="$CLUSTER"}
             type: promql
@@ -82,3 +107,113 @@ spec:
             expect:
               value: 1
               operator: ==
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hello-kubernetes-test-0
+  labels:
+    app.kubernetes.io/name: "hello-kubernetes-label"
+    app.kubernetes.io/instance: test
+    app.kubernetes.io/version: "1.10"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: "hello-kubernetes-label"
+      app.kubernetes.io/instance: test
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: "hello-kubernetes-label"
+        app.kubernetes.io/instance: test
+    spec:
+      containers:
+        - name: hello-kubernetes
+          image: "paulbouwer/hello-kubernetes:1.10"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+          env:
+            - name: KUBERNETES_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: KUBERNETES_POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: KUBERNETES_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            - name: CONTAINER_IMAGE
+              value: "paulbouwer/hello-kubernetes:1.10"
+---
+# Source: hello-kubernetes/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hello-kubernetes-test-1
+  labels:
+    app.kubernetes.io/name: "hello-kubernetes-label"
+    app.kubernetes.io/instance: test
+    app.kubernetes.io/version: "1.10"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: "hello-kubernetes-label"
+      app.kubernetes.io/instance: test
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: "hello-kubernetes-label"
+        app.kubernetes.io/instance: test
+      annotations:
+        resource.opentelemetry.io/service.name: "hello-kubernetes-annotation"
+        resource.opentelemetry.io/service.namespace: "hello-kubernetes"
+        resource.opentelemetry.io/deployment.environment: "hello-kubernetes"
+        resource.opentelemetry.io/deployment.environment.name: "hello-kubernetes"
+    spec:
+      containers:
+        - name: hello-kubernetes
+          image: "paulbouwer/hello-kubernetes:1.10"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+          env:
+            - name: KUBERNETES_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: KUBERNETES_POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: KUBERNETES_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            - name: CONTAINER_IMAGE
+              value: "paulbouwer/hello-kubernetes:1.10"

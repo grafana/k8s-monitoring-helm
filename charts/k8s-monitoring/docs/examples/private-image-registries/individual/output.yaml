@@ -160,7 +160,6 @@ data:
         max_keepalive_time = "8h"
       }
     }
-    
     // Feature: Auto-Instrumentation
     declare "auto_instrumentation" {
       argument "metrics_destinations" {
@@ -214,22 +213,21 @@ data:
         prometheus.remote_write.prometheus.receiver,
       ]
     }
-    
     // Feature: Cluster Metrics
     declare "cluster_metrics" {
       argument "metrics_destinations" {
         comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
       }
-      
+    
       remote.kubernetes.configmap "kubernetes" {
         name = "k8smon-alloy-module-kubernetes"
         namespace = "default"
       }
-      
+    
       import.string "kubernetes" {
         content = remote.kubernetes.configmap.kubernetes.data["core_metrics.alloy"]
-      }  
-      
+      }
+    
       kubernetes.kubelet "scrape" {
         clustering = true
         job_label = "integrations/kubernetes/kubelet"
@@ -237,8 +235,8 @@ data:
         scrape_interval = "60s"
         max_cache_size = 100000
         forward_to = argument.metrics_destinations.value
-      }  
-      
+      }
+    
       kubernetes.resources "scrape" {
         clustering = true
         job_label = "integrations/kubernetes/resources"
@@ -246,8 +244,8 @@ data:
         scrape_interval = "60s"
         max_cache_size = 100000
         forward_to = argument.metrics_destinations.value
-      }  
-      
+      }
+    
       kubernetes.cadvisor "scrape" {
         clustering = true
         job_label = "integrations/kubernetes/cadvisor"
@@ -256,7 +254,7 @@ data:
         max_cache_size = 100000
         forward_to = [prometheus.relabel.cadvisor.receiver]
       }
-      
+    
       prometheus.relabel "cadvisor" {
         max_cache_size = 100000
         // Drop empty container labels, addressing https://github.com/google/cadvisor/issues/2688
@@ -328,17 +326,17 @@ data:
           replacement = ""
         }
         forward_to = argument.metrics_destinations.value
-      }            
-      
+      }
+    
       remote.kubernetes.configmap "kube_state_metrics" {
         name = "k8smon-alloy-module-kubernetes"
         namespace = "default"
       }
-      
+    
       import.string "kube_state_metrics" {
         content = remote.kubernetes.configmap.kube_state_metrics.data["kube-state-metrics_metrics.alloy"]
       }
-      
+    
       kube_state_metrics.kubernetes "targets" {
         namespaces = ["default"]
         port_name = "http"
@@ -347,7 +345,7 @@ data:
           "release=k8smon",
         ]
       }
-      
+    
       kube_state_metrics.scrape "metrics" {
         targets = kube_state_metrics.kubernetes.targets.output
         clustering = true
@@ -357,17 +355,17 @@ data:
         scrape_interval = "60s"
         max_cache_size = 100000
         forward_to = argument.metrics_destinations.value
-      }  
-      
+      }
+    
       remote.kubernetes.configmap "node_exporter" {
         name = "k8smon-alloy-module-system"
         namespace = "default"
       }
-      
+    
       import.string "node_exporter" {
         content = remote.kubernetes.configmap.node_exporter.data["node-exporter_metrics.alloy"]
       }
-      
+    
       node_exporter.kubernetes "targets" {
         namespaces = ["default"]
         port_name = "metrics"
@@ -376,7 +374,7 @@ data:
           "release=k8smon",
         ]
       }
-      
+    
       discovery.relabel "node_exporter" {
         targets = node_exporter.kubernetes.targets.output
         rule {
@@ -385,7 +383,7 @@ data:
           target_label = "instance"
         }
       }
-      
+    
       node_exporter.scrape "metrics" {
         targets = discovery.relabel.node_exporter.output
         job_label = "integrations/node_exporter"
@@ -395,8 +393,8 @@ data:
         scrape_interval = "60s"
         max_cache_size = 100000
         forward_to = argument.metrics_destinations.value
-      }  
-      
+      }
+    
       discovery.kubernetes "windows_exporter_pods" {
         role = "pod"
         namespaces {
@@ -407,7 +405,7 @@ data:
           label = "app.kubernetes.io/name=windows-exporter,release=k8smon"
         }
       }
-      
+    
       discovery.relabel "windows_exporter" {
         targets = discovery.kubernetes.windows_exporter_pods.targets
         rule {
@@ -416,7 +414,7 @@ data:
           target_label = "instance"
         }
       }
-      
+    
       prometheus.scrape "windows_exporter" {
         job_name   = "integrations/windows-exporter"
         targets  = discovery.relabel.windows_exporter.output
@@ -426,7 +424,7 @@ data:
         }
         forward_to = [prometheus.relabel.windows_exporter.receiver]
       }
-      
+    
       prometheus.relabel "windows_exporter" {
         max_cache_size = 100000
         rule {
@@ -435,14 +433,13 @@ data:
           action = "keep"
         }
         forward_to = argument.metrics_destinations.value
-      }    
+      }
     }
     cluster_metrics "feature" {
       metrics_destinations = [
         prometheus.remote_write.prometheus.receiver,
       ]
     }
-    
     // Self Reporting
     prometheus.exporter.unix "kubernetes_monitoring_telemetry" {
       set_collectors = ["textfile"]
@@ -485,14 +482,12 @@ data:
         prometheus.remote_write.prometheus.receiver,
       ]
     }
-    
-    
-    
-    
+
   self-reporting-metric.prom: |
+    
     # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_build_info gauge
-    grafana_kubernetes_monitoring_build_info{version="2.0.6", namespace="default"} 1
+    grafana_kubernetes_monitoring_build_info{version="2.0.8", namespace="default"} 1
     # HELP grafana_kubernetes_monitoring_feature_info A metric to report the enabled features of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_feature_info gauge
     grafana_kubernetes_monitoring_feature_info{feature="autoInstrumentation", version="1.0.0"} 1
