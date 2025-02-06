@@ -7,4 +7,5 @@
 - loki
 - mimir
 - mysql
+- tempo
 {{- end -}}
