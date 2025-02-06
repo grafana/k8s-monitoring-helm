@@ -1,0 +1,72 @@
+---
+cluster:
+  name: application-observability-gc-feature-test
+
+destinations:
+  - name: grafanaCloudLogs
+    type: loki
+    url: https://logs-prod-006.grafana.net/loki/api/v1/push
+    auth:
+      type: basic
+      usernameKey: LOKI_USER
+      passwordKey: LOKI_PASS
+    secret:
+      create: false
+      name: grafana-cloud-credentials
+  - name: otlp-gateway
+    type: otlp
+    url: https://otlp-gateway-prod-us-east-0.grafana.net/otlp
+    protocol: http
+    auth:
+      type: basic
+      usernameKey: OTLP_GATEWAY_USER
+      passwordKey: OTLP_GATEWAY_PASS
+    secret:
+      create: false
+      name: grafana-cloud-credentials
+    metrics:
+      enabled: true
+    logs:
+      enabled: false
+    traces:
+      enabled: true
+    processors:
+      batch:
+        size: 4096
+        maxSize: 4096
+
+applicationObservability:
+  enabled: true
+  traces:
+    transforms:
+      span:
+        - replace_pattern(name, "\\?.*", "")
+        - replace_match(name, "GET /api/products/*", "GET /api/products/{productId}")
+
+  receivers:
+    otlp:
+      grpc:
+        enabled: true
+      http:
+        enabled: true
+
+podLogs:
+  enabled: true
+
+alloy-logs:
+  enabled: true
+
+alloy-receiver:
+  enabled: true
+  controller:
+    type: deployment
+  alloy:
+    extraPorts:
+      - name: otlp-http
+        port: 4318
+        targetPort: 4318
+        protocol: TCP
+      - name: otlp-grpc
+        port: 4317
+        targetPort: 4317
+        protocol: TCP
