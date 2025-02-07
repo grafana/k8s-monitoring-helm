@@ -86,8 +86,8 @@ Be sure perform actual integration testing in a live environment in the main [k8
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| processors.batch.maxSize | int | `0` | The upper limit of the amount of data contained in a single batch, in bytes. When set to 0, batches can be any size. |
-| processors.batch.size | int | `16384` | What batch size to use, in bytes |
+| processors.batch.maxSize | int | `0` | The upper limit of the amount of data contained in a single batch. When set to 0, batches can be any size. |
+| processors.batch.size | int | `8192` | What batch size to use |
 | processors.batch.timeout | string | `"2s"` | How long before sending (Processors) |
 
 ### Processors: Interval
