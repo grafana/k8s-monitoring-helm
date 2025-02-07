@@ -3,11 +3,17 @@
 {{- define "destinations.validate" }}
   {{- range $i, $destination := .Values.destinations }}
     {{- if not $destination.name }}
-      {{ fail (printf "\nDestination #%d does not have a name.\nPlease set:\ndestinations:\n  - name: my-destination-name" $i) }}
+      {{- $msg := list "" (printf "Destination #%d does not have a name." $i) }}
+      {{- $msg = append $msg "Please set:" }}
+      {{- $msg = append $msg "destinations:" }}
+      {{- $msg = append $msg "  - name: my-destination-name" }}
+      {{- fail (join "\n" $msg) }}
     {{- end }}
 
     {{- if (regexFind "[^-_ a-zA-Z0-9]" $destination.name) }}
-      {{ fail (printf "\nDestination #%d (%s) has invalid characters in its name.\nPlease only use alphanumeric, underscores, dashes, or spaces" $i $destination.name) }}
+      {{- $msg := list "" (printf "Destination #%d (%s) invalid characters in its name." $i $destination.name) }}
+      {{- $msg = append $msg "Please only use alphanumeric, underscores, dashes, or spaces." }}
+      {{- fail (join "\n" $msg) }}
     {{- end }}
 
     {{- $types := (include "destinations.types" . ) | fromYamlArray }}
@@ -17,6 +23,17 @@
 
     {{- if not (has $destination.type $types) }}
       {{ fail (printf "\nDestination #%d (%s) is using an unknown type (%s).\nPlease set:\ndestinations:\n  - name: %s\n    type: \"[%s]\"" $i $destination.name $destination.type $destination.name (include "english_list_or" $types)) }}
+    {{- end }}
+
+    {{- if and (eq $destination.type "otlp") (not (has ($destination.protocol | default "grpc") (list "grpc" "http"))) }}
+      {{- $msg := list "" (printf "Destination #%d (%s) has an unsupported protocol: %s." $i $destination.name $destination.protocol) }}
+      {{- $msg = append $msg "The protocol must be either \"grpc\" or \"http\"" }}
+      {{- $msg = append $msg "Please set:" }}
+      {{- $msg = append $msg "destinations:" }}
+      {{- $msg = append $msg (printf "  - name: %s" $destination.name) }}
+      {{- $msg = append $msg "    type: otlp" }}
+      {{- $msg = append $msg "    protocol: otlp / http" }}
+      {{- fail (join "\n" $msg) }}
     {{- end }}
 
     {{/* Check if OTLP destination using Grafana Cloud OTLP gateway has protocol set */}}
