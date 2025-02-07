@@ -29,8 +29,8 @@ tests:
       - failedTemplate:
           errorMessage: |-
             execution error at (k8s-monitoring/templates/validations.yaml:5:4): 
-            Destination #0 (prøm3thüs!) has invalid characters in its name.
-            Please only use alphanumeric, underscores, dashes, or spaces
+            Destination #0 (prøm3thüs!) invalid characters in its name.
+            Please only use alphanumeric, underscores, dashes, or spaces.
 
   - it: requires a destination type
     set:
@@ -75,6 +75,27 @@ tests:
           type: prometheus
     asserts:
       - notFailedTemplate: {}
+
+  - it: detects if you're using an otlp destination with an invalid protocol
+    set:
+      cluster:
+        name: test-cluster
+      destinations:
+        - name: my-destination
+          type: otlp
+          url: https://otlp.example.com
+          protocol: magic
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            execution error at (k8s-monitoring/templates/validations.yaml:5:4): 
+            Destination #0 (my-destination) has an unsupported protocol: magic.
+            The protocol must be either "grpc" or "http"
+            Please set:
+            destinations:
+              - name: my-destination
+                type: otlp
+                protocol: otlp / http
 
   - it: detects if you're using the Grafana Cloud OTLP endpoint with the wrong protocol
     set:
