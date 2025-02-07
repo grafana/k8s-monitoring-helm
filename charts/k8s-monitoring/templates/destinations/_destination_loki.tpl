@@ -32,6 +32,9 @@ loki.write {{ include "helper.alloy_name" .name | quote }} {
 {{- end }}
     }
 {{- end }}
+{{- if .proxyURL }}
+    proxy_url = {{ .proxyURL | quote }}
+{{- end }}
 {{- if eq (include "secrets.authType" .) "basic" }}
     basic_auth {
       username = {{ include "secrets.read" (dict "object" . "key" "auth.username" "nonsensitive" true) }}
