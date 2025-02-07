@@ -261,6 +261,15 @@ otelcol.processor.memory_limiter {{ include "helper.alloy_name" .name | quote }}
 otelcol.exporter.otlp {{ include "helper.alloy_name" .name | quote }} {
 {{- else if eq .protocol "http" }}
 otelcol.exporter.otlphttp {{ include "helper.alloy_name" .name | quote }} {
+{{- else }}
+{{- $msg := list "" "Protocol must be either 'grpc' or 'http', got '%s'" .protocol }}
+{{- $msg = append $msg "For example, please set:" }}
+{{- $msg = append $msg "destinations:" }}
+{{- $msg = append $msg "  otlp:" }}
+{{- $msg = append $msg "    protocol:" }}
+{{- $msg = append $msg "      - grpc" }}
+{{- $msg = append $msg "      - http" }}
+{{- fail (join "\n" $msg) }}
 {{- end }}
   client {
 {{- if .urlFrom }}
