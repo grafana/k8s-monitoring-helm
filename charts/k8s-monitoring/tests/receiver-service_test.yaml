@@ -1,0 +1,109 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Test Extra Receiver Service
+templates:
+  - receiver-service.yaml
+tests:
+  - it: does not create a Service by default
+    set:
+      cluster: {name: test-cluster}
+      alloy-receiver:
+        enabled: true
+        extraConfig: " "
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: creates a Service when enabled
+    set:
+      cluster: {name: test-cluster}
+      alloy-receiver:
+        enabled: true
+        extraConfig: " "
+        extraService:
+          enabled: true
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: Service
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-alloy
+
+  - it: creates a Service with a specified name
+    set:
+      cluster: {name: test-cluster}
+      alloy-receiver:
+        enabled: true
+        extraConfig: " "
+        extraService:
+          enabled: true
+          name: alloy-ingester
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: Service
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-alloy-ingester
+
+  - it: creates a Service with a specified full name
+    set:
+      cluster: {name: test-cluster}
+      alloy-receiver:
+        enabled: true
+        extraConfig: " "
+        extraService:
+          enabled: true
+          fullname: alloy-ingester
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: Service
+      - equal:
+          path: metadata.name
+          value: alloy-ingester
+
+  - it: has the same extraPorts as the main receiver
+    set:
+      cluster: {name: test-cluster}
+      alloy-receiver:
+        enabled: true
+        extraConfig: " "
+        alloy:
+          extraPorts:
+          - name: otlp-http
+            port: 4318
+            targetPort: 4318
+            protocol: TCP
+          - name: otlp-grpc
+            port: 4317
+            targetPort: 4317
+            protocol: TCP
+        extraService:
+          enabled: true
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: Service
+      - equal:
+          path: spec.ports
+          value:
+            - name: http-metrics
+              port: 12345
+              targetPort: 12345
+              protocol: TCP
+            - name: otlp-http
+              port: 4318
+              targetPort: 4318
+              protocol: TCP
+            - name: otlp-grpc
+              port: 4317
+              targetPort: 4317
+              protocol: TCP
+
+
+
