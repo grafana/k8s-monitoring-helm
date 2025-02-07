@@ -230,6 +230,9 @@ podLogs:
 | alloy-receiver.controller.type | string | `"daemonset"` | The type of controller to use for the Alloy Receiver instance. |
 | alloy-receiver.enabled | bool | `false` | Deploy the Alloy instance for opening receivers to collect application data. |
 | alloy-receiver.extraConfig | string | `""` | Extra Alloy configuration to be added to the configuration file. |
+| alloy-receiver.extraService.enabled | bool | `false` | Create an extra service for the Alloy receiver. This service will mirror the alloy-receiver service, but its name can be customized to match existing application settings. |
+| alloy-receiver.extraService.fullname | string | `""` | If set, the full name of the extra service to create. This will result in the format `<fullname>`. |
+| alloy-receiver.extraService.name | string | `"alloy"` | The name of the extra service to create. This will result in the format `<release-name>-<name>`. |
 | alloy-receiver.liveDebugging.enabled | bool | `false` | Enable live debugging for the Alloy instance. Requires stability level to be set to "experimental". |
 | alloy-receiver.logging.format | string | `"logfmt"` | Format to use for writing Alloy log lines. |
 | alloy-receiver.logging.level | string | `"info"` | Level at which Alloy log lines should be written. |
