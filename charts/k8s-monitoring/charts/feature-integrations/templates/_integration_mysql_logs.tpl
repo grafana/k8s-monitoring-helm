@@ -10,7 +10,7 @@
 
 {{- define "integrations.mysql.logs.discoveryRules" }}
   {{- range $instance := $.Values.mysql.instances }}
-    {{- if ne $instance.logs.enabled false }}
+    {{- if ne (dig "logs" "enabled" true $instance) false }}
       {{- $labelList := list }}
       {{- $valueList := list }}
       {{- if .logs.namespaces }}
