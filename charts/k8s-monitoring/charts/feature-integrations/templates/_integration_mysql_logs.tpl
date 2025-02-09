@@ -3,16 +3,14 @@
 {{- $defaultValues := "integrations/mysql-values.yaml" | .Files.Get | fromYaml }}
 {{- $logsEnabled := false }}
 {{- range $instance := .Values.mysql.instances }}
-  {{- with merge $instance $defaultValues (dict "type" "integration.mysql") }}
-    {{- $logsEnabled = or $logsEnabled $instance.logs.enabled }}
-  {{- end }}
+  {{- $logsEnabled = or $logsEnabled (dig "logs" "enabled" true $instance) }}
 {{- end }}
 {{- $logsEnabled -}}
 {{- end }}
 
 {{- define "integrations.mysql.logs.discoveryRules" }}
   {{- range $instance := $.Values.mysql.instances }}
-    {{- if $instance.logs.enabled }}
+    {{- if ne (dig "logs" "enabled" true $instance) false }}
       {{- $labelList := list }}
       {{- $valueList := list }}
       {{- if .logs.namespaces }}
