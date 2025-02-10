@@ -4,10 +4,10 @@
 {{/* Inputs: instance (loki integration instance) Files (Files object) */}}
 {{- define "integrations.loki.allowList" }}
 {{- $allowList := list -}}
-{{- if .instance.metrics.tuning.useDefaultAllowList -}}
+{{- if or (eq .instance.metrics.tuning.useDefaultAllowList true) (eq (.instance.metrics.tuning.useDefaultAllowList | toString) "<nil>") -}}
 {{- $allowList = concat $allowList (list "up" "scrape_samples_scraped") (.Files.Get "default-allow-lists/loki.yaml" | fromYamlArray) -}}
 {{- end -}}
-{{- if .instance.metrics.tuning.includeMetrics -}}
+{{- if gt (len .instance.metrics.tuning.includeMetrics) 0 -}}
 {{- $allowList = concat $allowList (list "up" "scrape_samples_scraped") .instance.metrics.tuning.includeMetrics -}}
 {{- end -}}
 {{ $allowList | uniq | toYaml }}
@@ -45,6 +45,10 @@ declare "loki_integration" {
     // loki service discovery for all of the pods
     discovery.kubernetes "loki_pods" {
       role = "pod"
+
+      attach_metadata {
+        node = true
+      }
 
       selectors {
         role = "pod"

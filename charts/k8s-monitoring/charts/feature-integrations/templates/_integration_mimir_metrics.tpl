@@ -4,10 +4,10 @@
 {{/* Inputs: instance (mimir integration instance) Files (Files object) */}}
 {{- define "integrations.mimir.allowList" }}
 {{- $allowList := list -}}
-{{- if .instance.metrics.tuning.useDefaultAllowList -}}
+{{- if or (eq .instance.metrics.tuning.useDefaultAllowList true) (eq (.instance.metrics.tuning.useDefaultAllowList | toString) "<nil>") -}}
 {{- $allowList = concat $allowList (list "up" "scrape_samples_scraped") (.Files.Get "default-allow-lists/mimir.yaml" | fromYamlArray) -}}
 {{- end -}}
-{{- if .instance.metrics.tuning.includeMetrics -}}
+{{- if gt (len .instance.metrics.tuning.includeMetrics) 0 -}}
 {{- $allowList = concat $allowList (list "up" "scrape_samples_scraped") .instance.metrics.tuning.includeMetrics -}}
 {{- end -}}
 {{ $allowList | uniq | toYaml }}
