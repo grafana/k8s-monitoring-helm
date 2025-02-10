@@ -98,12 +98,14 @@ discovery.relabel "filtered_pods" {
 {{- range $label, $k8sAnnotation := .Values.annotations }}
   rule {
     source_labels = ["{{ include "pod_annotation" $k8sAnnotation }}"]
+    regex = "(.+)"
     target_label = {{ $label | quote }}
   }
 {{- end }}
 {{- range $label, $k8sLabels := .Values.labels }}
   rule {
     source_labels = ["{{ include "pod_label" $k8sLabels }}"]
+    regex = "(.+)"
     target_label = {{ $label | quote }}
   }
 {{- end }}
