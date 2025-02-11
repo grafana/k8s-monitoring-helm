@@ -1,5 +1,5 @@
 # yamllint disable rule:document-start rule:line-length rule:trailing-spaces
-suite: Test etcd integration
+suite: Test etcd Integration - Metrics
 templates:
   - configmap.yaml
 tests:
@@ -21,19 +21,19 @@ tests:
               argument "metrics_destinations" {
                 comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
               }
-            
+
               import.git "etcd" {
                 repository = "https://github.com/grafana/alloy-modules.git"
                 revision = "main"
                 path = "modules/databases/kv/etcd/metrics.alloy"
                 pull_frequency = "15m"
               }
-            
+
               etcd.kubernetes "etcd" {
                 label_selectors = ["app.kubernetes.io/component=etcd"]
                 port_name = "metrics"
               }
-            
+
               etcd.scrape "etcd" {
                 targets = etcd.kubernetes.etcd.output
                 job_label = "integrations/etcd"
@@ -63,20 +63,20 @@ tests:
               argument "metrics_destinations" {
                 comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
               }
-            
+
               import.git "etcd" {
                 repository = "https://github.com/grafana/alloy-modules.git"
                 revision = "main"
                 path = "modules/databases/kv/etcd/metrics.alloy"
                 pull_frequency = "15m"
               }
-            
+
               etcd.kubernetes "my_etcd" {
                 namespaces = ["kube-system"]
                 label_selectors = ["app.kubernetes.io/component=my-etcd"]
                 port_name = "metrics"
               }
-            
+
               etcd.scrape "my_etcd" {
                 targets = etcd.kubernetes.my_etcd.output
                 job_label = "integrations/etcd"

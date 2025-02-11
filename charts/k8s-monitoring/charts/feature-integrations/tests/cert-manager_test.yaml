@@ -1,5 +1,5 @@
 # yamllint disable rule:document-start rule:line-length rule:trailing-spaces
-suite: Test cert-manager integration
+suite: Test cert-manager Integration - Metrics
 templates:
   - configmap.yaml
 tests:
@@ -21,19 +21,19 @@ tests:
               argument "metrics_destinations" {
                 comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
               }
-            
+
               import.git "cert_manager" {
                 repository = "https://github.com/grafana/alloy-modules.git"
                 revision = "main"
                 path = "modules/kubernetes/cert-manager/metrics.alloy"
                 pull_frequency = "15m"
               }
-            
+
               cert_manager.kubernetes "cert_manager" {
                 label_selectors = ["app.kubernetes.io/name=cert-manager"]
                 port_name = "http-metrics"
               }
-            
+
               cert_manager.scrape "cert_manager" {
                 targets = cert_manager.kubernetes.cert_manager.output
                 clustering = true
@@ -63,20 +63,20 @@ tests:
               argument "metrics_destinations" {
                 comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
               }
-            
+
               import.git "cert_manager" {
                 repository = "https://github.com/grafana/alloy-modules.git"
                 revision = "main"
                 path = "modules/kubernetes/cert-manager/metrics.alloy"
                 pull_frequency = "15m"
               }
-            
+
               cert_manager.kubernetes "my_cert_manager" {
                 namespaces = ["kube-system"]
                 label_selectors = ["app.kubernetes.io/name=my-cert-manager"]
                 port_name = "http-metrics"
               }
-            
+
               cert_manager.scrape "my_cert_manager" {
                 targets = cert_manager.kubernetes.my_cert_manager.output
                 clustering = true
