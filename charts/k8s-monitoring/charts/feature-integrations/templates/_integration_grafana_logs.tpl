@@ -3,8 +3,8 @@
 {{- $defaultValues := "integrations/grafana-values.yaml" | .Files.Get | fromYaml }}
 {{- $logsEnabled := false }}
 {{- range $instance := .Values.grafana.instances }}
-  {{- with merge $instance $defaultValues (dict "type" "integration.grafana") }}
-    {{- $logsEnabled = or $logsEnabled $instance.logs.enabled }}
+  {{- with merge (deepCopy $defaultValues) (deepCopy $instance) (dict "type" "integration.grafana") }}
+    {{- $logsEnabled = or $logsEnabled .logs.enabled }}
   {{- end }}
 {{- end }}
 {{- $logsEnabled -}}
@@ -13,7 +13,7 @@
 {{- define "integrations.grafana.logs.discoveryRules" }}
   {{- $defaultValues := "integrations/grafana-values.yaml" | .Files.Get | fromYaml }}
   {{- range $instance := $.Values.grafana.instances }}
-    {{- with mergeOverwrite $defaultValues (deepCopy $instance) }}
+    {{- with $defaultValues | merge (deepCopy $instance) }}
       {{- if .logs.enabled }}
         {{- $labelList := list }}
         {{- $valueList := list }}
@@ -52,9 +52,9 @@ rule {
 {{- define "integrations.grafana.logs.processingStage" }}
   {{- if eq (include "integrations.grafana.type.logs" .) "true" }}
     {{- $defaultValues := "integrations/grafana-values.yaml" | .Files.Get | fromYaml }}
-// Integration: Loki
+// Integration: Grafana
     {{- range $instance := $.Values.grafana.instances }}
-      {{- with mergeOverwrite $defaultValues (deepCopy $instance) }}
+      {{- with $defaultValues | merge (deepCopy $instance) }}
         {{- if .logs.enabled }}
 stage.match {
   {{- if $instance.namespaces }}
@@ -66,10 +66,8 @@ stage.match {
   // extract some of the fields from the log line
   stage.logfmt {
     mapping = {
-      "timestamp" = "t",
+      "ts" = "t",
       "level" = "",
-      "logger" = "",
-      "type" = "",
       {{- range $key, $value := .logs.tuning.structuredMetadata }}
       {{ $key | quote }} = {{ if $value }}{{ $value | quote }}{{ else }}{{ $key | quote }}{{ end }},
       {{- end }}
@@ -86,7 +84,7 @@ stage.match {
   {{- if .logs.tuning.timestampFormat }}
   // reset the timestamp to the extracted value
   stage.timestamp {
-    source = "timestamp"
+    source = "ts"
     format = {{ .logs.tuning.timestampFormat | quote }}
   }
   {{- end }}
@@ -99,9 +97,18 @@ stage.match {
   }
   {{- end }}
 
+  {{- if hasKey .logs.tuning.structuredMetadata "caller" }}
+  // clean up the caller to remove the line
+  stage.replace {
+    source = "caller"
+    expression = "(:[0-9]+$)"
+    replace = ""
+  }
+  {{- end }}
+
   {{- /* the stage.structured_metadata block needs to be conditionalized because the support for enabling structured metadata can be disabled */ -}}
   {{- /* through the grafana limits_conifg on a per-tenant basis, even if there are no values defined or there are values defined but it is disabled */ -}}
-  {{- /* in Loki, the write will fail. */ -}}
+  {{- /* in Grafana, the write will fail. */ -}}
   {{- if gt (len .logs.tuning.structuredMetadata) 0 }}
   // set the structured metadata values
   stage.structured_metadata {
@@ -130,6 +137,7 @@ stage.match {
     drop_counter_reason = "grafana-exclude-line"
   }
   {{- end }}
+
 }
         {{- end }}
       {{- end }}

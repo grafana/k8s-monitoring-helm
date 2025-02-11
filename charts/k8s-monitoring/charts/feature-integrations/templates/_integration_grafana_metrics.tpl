@@ -4,8 +4,11 @@
 {{/* Inputs: instance (grafana integration instance) Files (Files object) */}}
 {{- define "integrations.grafana.allowList" }}
 {{- $allowList := list -}}
+{{- if .instance.metrics.tuning.useDefaultAllowList -}}
+{{- $allowList = concat $allowList (list "up" "scrape_samples_scraped") (.Files.Get "default-allow-lists/grafana.yaml" | fromYamlArray) -}}
+{{- end -}}
 {{- if .instance.metrics.tuning.includeMetrics -}}
-{{- $allowList = concat $allowList .instance.metrics.tuning.includeMetrics -}}
+{{- $allowList = concat $allowList (list "up" "scrape_samples_scraped") .instance.metrics.tuning.includeMetrics -}}
 {{- end -}}
 {{ $allowList | uniq | toYaml }}
 {{- end -}}
@@ -89,7 +92,7 @@ declare "grafana_integration" {
     }
 
     argument "job_label" {
-      comment = "The job label to add for all Loki metrics (default: integrations/grafana)"
+      comment = "The job label to add for all Grafana metrics (default: integrations/grafana)"
       optional = true
     }
 
@@ -137,8 +140,26 @@ declare "grafana_integration" {
       // drop metrics that match the drop_metrics regex
       rule {
         source_labels = ["__name__"]
-        regex = coalesce(argument.drop_metrics.value, "(^(go|process)_.+$)")
+        regex = coalesce(argument.drop_metrics.value, "")
         action = "drop"
+      }
+
+      // keep only metrics that match the keep_metrics regex
+      rule {
+        source_labels = ["__name__"]
+        regex = coalesce(argument.keep_metrics.value, "(.+)")
+        action = "keep"
+      }
+
+      // the grafana-mixin expects the instance label to be the node name
+      rule {
+        source_labels = ["node"]
+        target_label = "instance"
+        replacement = "$1"
+      }
+      rule {
+        action = "labeldrop"
+        regex = "node"
       }
     }
   }
@@ -151,10 +172,10 @@ declare "grafana_integration" {
 {{/* Instantiates the grafana integration */}}
 {{/* Inputs: integration (grafana integration definition), Values (all values), Files (Files object) */}}
 {{- define "integrations.grafana.include.metrics" }}
-{{- $defaultValues := "integrations/grafana-values.yaml" | .Files.Get | fromYaml }}
-{{- with mergeOverwrite $defaultValues (deepCopy .instance) }}
+{{- $defaultValues := fromYaml (.Files.Get "integrations/grafana-values.yaml") }}
+{{- with mergeOverwrite $defaultValues .instance (dict "type" "integration.grafana") }}
 {{- $metricAllowList := include "integrations.grafana.allowList" (dict "instance" . "Files" $.Files) | fromYamlArray }}
-{{- $metricDenyList := .excludeMetrics }}
+{{- $metricDenyList := .metrics.tuning.excludeMetrics }}
 {{- $labelSelectors := list }}
 {{- range $k, $v := .labelSelectors }}
   {{- if kindIs "slice" $v }}
@@ -174,7 +195,7 @@ grafana_integration_discovery {{ include "helper.alloy_name" .name | quote }} {
 
 grafana_integration_scrape  {{ include "helper.alloy_name" .name | quote }} {
   targets = grafana_integration_discovery.{{ include "helper.alloy_name" .name }}.output
-  job_label = {{ .jobLabel | quote }}
+  job_label = "integrations/grafana"
   clustering = true
 {{- if $metricAllowList }}
   keep_metrics = {{ $metricAllowList | join "|" | quote }}
