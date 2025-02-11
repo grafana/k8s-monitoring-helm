@@ -761,7 +761,7 @@ data:
         }
     
         argument "job_label" {
-          comment = "The job label to add for all tempo metrics (default: integrations/tempo)"
+          comment = "The job label to add for all Tempo metrics (default: integrations/tempo)"
           optional = true
         }
     
@@ -1148,7 +1148,7 @@ data:
             "tmp_container_runtime",
           ]
         }
-        // Integration: tempo
+        // Integration: Tempo
         stage.match {
           selector = "{integration=\"tempo\",instance=\"tempo\"}"
     
@@ -1175,6 +1175,12 @@ data:
           stage.replace {
             expression = "(ts=[^ ]+\\s+)"
             replace = ""
+          }
+          // drop certain log levels
+          stage.drop {
+            source = "level"
+            expression = "(?i)(debug)"
+            drop_counter_reason = "tempo-drop-log-level"
           }
     
         }
