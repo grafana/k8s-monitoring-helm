@@ -235,7 +235,7 @@ data:
         }
     
         argument "job_label" {
-          comment = "The job label to add for all Grafana metrics (default: integrations/grafana)"
+          comment = "The job label to add for all Loki metrics (default: integrations/grafana)"
           optional = true
         }
     
@@ -283,26 +283,8 @@ data:
           // drop metrics that match the drop_metrics regex
           rule {
             source_labels = ["__name__"]
-            regex = coalesce(argument.drop_metrics.value, "")
+            regex = coalesce(argument.drop_metrics.value, "(^(go|process)_.+$)")
             action = "drop"
-          }
-    
-          // keep only metrics that match the keep_metrics regex
-          rule {
-            source_labels = ["__name__"]
-            regex = coalesce(argument.keep_metrics.value, "(.+)")
-            action = "keep"
-          }
-    
-          // the grafana-mixin expects the instance label to be the node name
-          rule {
-            source_labels = ["node"]
-            target_label = "instance"
-            replacement = "$1"
-          }
-          rule {
-            action = "labeldrop"
-            regex = "node"
           }
         }
       }
@@ -501,10 +483,12 @@ data:
         }
         rule {
           source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_logs_job"]
+          regex = "(.+)"
           target_label = "job"
         }
         rule {
           source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
+          regex = "(.+)"
           target_label = "app_kubernetes_io_name"
         }
         rule {
@@ -589,15 +573,17 @@ data:
             "tmp_container_runtime",
           ]
         }
-        // Integration: Grafana
+        // Integration: Loki
         stage.match {
           selector = "{job=\"integrations/grafana\",instance=\"grafana\",namespace=~\"o11y\"}"
     
           // extract some of the fields from the log line
           stage.logfmt {
             mapping = {
-              "ts" = "t",
+              "timestamp" = "t",
               "level" = "",
+              "logger" = "",
+              "type" = "",
             }
           }
     
@@ -609,21 +595,14 @@ data:
           }
           // reset the timestamp to the extracted value
           stage.timestamp {
-            source = "ts"
+            source = "timestamp"
             format = "RFC3339Nano"
           }
           // remove the timestamp from the log line
           stage.replace {
-            expression = `(?:^|\s+)(t=\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d+[^ ]*\s+)`
+            expression = "( t=[^ ]+\\s+)"
             replace = ""
           }
-          // drop certain log levels
-          stage.drop {
-            source = "level"
-            expression = "(?i)(debug)"
-            drop_counter_reason = "grafana-drop-log-level"
-          }
-    
         }
     
         // Only keep the labels that are defined in the `keepLabels` list.
