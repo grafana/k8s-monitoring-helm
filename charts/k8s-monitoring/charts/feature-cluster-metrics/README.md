@@ -203,6 +203,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | kube-state-metrics.metricsTuning.includeMetrics | list | `[]` | Metrics to keep. Can use regular expressions. |
 | kube-state-metrics.metricsTuning.useDefaultAllowList | bool | `true` | Filter the list of metrics from Kube State Metrics to a useful, minimal set. |
 | kube-state-metrics.namespace | string | `""` | Namespace to locate kube-state-metrics pods. If `deploy` is set to `true`, this will automatically be set to the namespace where this Helm chart is deployed. |
+| kube-state-metrics.namespaces | string | `""` | Comma-separated list(string) or yaml list of namespaces to be enabled for collecting resources. By default all namespaces are collected. |
 | kube-state-metrics.scrapeInterval | string | `60s` | How frequently to scrape kube-state-metrics metrics. |
 | kube-state-metrics.service.portName | string | `"http"` | The port name used by kube-state-metrics. |
 | kube-state-metrics.service.scheme | string | `"http"` | The scrape scheme used by kube-state-metrics. |
@@ -350,10 +351,4 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | windows-exporter.metricsTuning.useDefaultAllowList | bool | `true` | Filter the list of metrics from Windows Exporter to the minimal set required for Kubernetes Monitoring. |
 | windows-exporter.namespace | string | `""` | Namespace to locate Windows Exporter pods. If `deploy` is set to `true`, this will automatically be set to the namespace where this Helm chart is deployed. |
 | windows-exporter.scrapeInterval | string | `60s` | How frequently to scrape metrics from Windows Exporter. |
-
-### Other Values
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| kube-state-metrics.namespaces | string | `""` |  |
 <!-- markdownlint-enable no-space-in-emphasis -->
