@@ -3,8 +3,8 @@
 {{- $defaultValues := "integrations/mimir-values.yaml" | .Files.Get | fromYaml }}
 {{- $logsEnabled := false }}
 {{- range $instance := .Values.mimir.instances }}
-  {{- with merge $instance $defaultValues (dict "type" "integration.mimir") }}
-    {{- $logsEnabled = or $logsEnabled $instance.logs.enabled }}
+  {{- with merge (deepCopy $defaultValues) (deepCopy $instance) (dict "type" "integration.mimir") }}
+    {{- $logsEnabled = or $logsEnabled .logs.enabled }}
   {{- end }}
 {{- end }}
 {{- $logsEnabled -}}

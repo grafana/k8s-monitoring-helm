@@ -4,10 +4,10 @@
 {{/* Inputs: instance (mimir integration instance) Files (Files object) */}}
 {{- define "integrations.mimir.allowList" }}
 {{- $allowList := list -}}
-{{- if or (eq .instance.metrics.tuning.useDefaultAllowList true) (eq (.instance.metrics.tuning.useDefaultAllowList | toString) "<nil>") -}}
+{{- if .instance.metrics.tuning.useDefaultAllowList -}}
 {{- $allowList = concat $allowList (list "up" "scrape_samples_scraped") (.Files.Get "default-allow-lists/mimir.yaml" | fromYamlArray) -}}
 {{- end -}}
-{{- if gt (len .instance.metrics.tuning.includeMetrics) 0 -}}
+{{- if .instance.metrics.tuning.includeMetrics -}}
 {{- $allowList = concat $allowList (list "up" "scrape_samples_scraped") .instance.metrics.tuning.includeMetrics -}}
 {{- end -}}
 {{ $allowList | uniq | toYaml }}
@@ -188,8 +188,8 @@ declare "mimir_integration" {
 {{/* Instantiates the mimir integration */}}
 {{/* Inputs: integration (mimir integration definition), Values (all values), Files (Files object) */}}
 {{- define "integrations.mimir.include.metrics" }}
-{{- $defaultValues := "integrations/mimir-values.yaml" | .Files.Get | fromYaml }}
-{{- with mergeOverwrite $defaultValues (deepCopy .instance) }}
+{{- $defaultValues := fromYaml (.Files.Get "integrations/mimir-values.yaml") }}
+{{- with mergeOverwrite $defaultValues .instance (dict "type" "integration.mimir") }}
 {{- $metricAllowList := include "integrations.mimir.allowList" (dict "instance" . "Files" $.Files) | fromYamlArray }}
 {{- $metricDenyList := .metrics.tuning.excludeMetrics }}
 {{- $labelSelectors := list }}

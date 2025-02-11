@@ -286,7 +286,7 @@ tests:
           path: data["metrics.alloy"]
           pattern: namespaces = \["k8smon"\]
 
-  - it: should allow you to set the default allow list
+  - it: should allow you to disable the default allow list
     set:
       deployAsConfigMap: true
       mimir:
@@ -294,13 +294,30 @@ tests:
           - name: mimir
             metrics:
               tuning:
-                useDefaultAllowList: true
+                useDefaultAllowList: false
     asserts:
       - isKind:
           of: ConfigMap
       - matchRegex:
           path: data["metrics.alloy"]
-          pattern: keep_metrics = "up\|scrape_samples_scraped\|cortex_alertmanager_alerts.+\|thanos_store_index_cache_requests_total"
+          # The pattern should look like this, but since the regex is escaped, it will be a bit different
+          # mimir_integration_scrape  "mimir" {
+          #   targets = mimir_integration_discovery.mimir.output
+          #   job_label = "integrations/mimir"
+          #   clustering = true
+          #   scrape_interval = "60s"
+          #   max_cache_size = 100000
+          #   forward_to = argument.metrics_destinations.value
+          # }
+          pattern: |-
+            \s*mimir_integration_scrape  "mimir" {
+            \s*  targets = mimir_integration_discovery.mimir.output
+            \s*  job_label = "integrations/mimir"
+            \s*  clustering = true
+            \s*  scrape_interval = "60s"
+            \s*  max_cache_size = 100000
+            \s*  forward_to = argument.metrics_destinations.value
+            \s*}
 
   - it: should allow you to specific which metrics to include
     set:
