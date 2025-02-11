@@ -286,7 +286,7 @@ tests:
           path: data["metrics.alloy"]
           pattern: namespaces = \["k8smon"\]
 
-  - it: should allow you to set the default allow list
+  - it: should allow you to disable the default allow list
     set:
       deployAsConfigMap: true
       loki:
@@ -294,13 +294,30 @@ tests:
           - name: loki
             metrics:
               tuning:
-                useDefaultAllowList: true
+                useDefaultAllowList: false
     asserts:
       - isKind:
           of: ConfigMap
       - matchRegex:
           path: data["metrics.alloy"]
-          pattern: keep_metrics = "up\|scrape_samples_scraped\|go_gc_cycles_total_gc_cycles_total.+\|loki_s3_request_duration_seconds_count"
+          # The pattern should look like this, but since the regex is escaped, it will be a bit different
+          # loki_integration_scrape  "loki" {
+          #   targets = loki_integration_discovery.loki.output
+          #   job_label = "integrations/loki"
+          #   clustering = true
+          #   scrape_interval = "60s"
+          #   max_cache_size = 100000
+          #   forward_to = argument.metrics_destinations.value
+          # }
+          pattern: |-
+            \s*loki_integration_scrape  "loki" {
+            \s*  targets = loki_integration_discovery.loki.output
+            \s*  job_label = "integrations/loki"
+            \s*  clustering = true
+            \s*  scrape_interval = "60s"
+            \s*  max_cache_size = 100000
+            \s*  forward_to = argument.metrics_destinations.value
+            \s*}
 
   - it: should allow you to specific which metrics to include
     set:
@@ -329,6 +346,7 @@ tests:
           - name: loki
             metrics:
               tuning:
+                useDefaultAllowList: false
                 excludeMetrics:
                   - foo
                   - bar

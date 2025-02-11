@@ -3,8 +3,8 @@
 {{- $defaultValues := "integrations/loki-values.yaml" | .Files.Get | fromYaml }}
 {{- $logsEnabled := false }}
 {{- range $instance := .Values.loki.instances }}
-  {{- with merge $instance $defaultValues (dict "type" "integration.loki") }}
-    {{- $logsEnabled = or $logsEnabled $instance.logs.enabled }}
+  {{- with merge (deepCopy $instance) (deepCopy $defaultValues) (dict "type" "integration.loki") }}
+    {{- $logsEnabled = or $logsEnabled .logs.enabled }}
   {{- end }}
 {{- end }}
 {{- $logsEnabled -}}

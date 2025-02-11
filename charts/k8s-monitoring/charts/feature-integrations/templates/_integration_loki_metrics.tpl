@@ -4,10 +4,10 @@
 {{/* Inputs: instance (loki integration instance) Files (Files object) */}}
 {{- define "integrations.loki.allowList" }}
 {{- $allowList := list -}}
-{{- if or (eq .instance.metrics.tuning.useDefaultAllowList true) (eq (.instance.metrics.tuning.useDefaultAllowList | toString) "<nil>") -}}
+{{- if .instance.metrics.tuning.useDefaultAllowList -}}
 {{- $allowList = concat $allowList (list "up" "scrape_samples_scraped") (.Files.Get "default-allow-lists/loki.yaml" | fromYamlArray) -}}
 {{- end -}}
-{{- if gt (len .instance.metrics.tuning.includeMetrics) 0 -}}
+{{- if .instance.metrics.tuning.includeMetrics -}}
 {{- $allowList = concat $allowList (list "up" "scrape_samples_scraped") .instance.metrics.tuning.includeMetrics -}}
 {{- end -}}
 {{ $allowList | uniq | toYaml }}
@@ -45,10 +45,6 @@ declare "loki_integration" {
     // loki service discovery for all of the pods
     discovery.kubernetes "loki_pods" {
       role = "pod"
-
-      attach_metadata {
-        node = true
-      }
 
       selectors {
         role = "pod"
@@ -193,7 +189,7 @@ declare "loki_integration" {
 {{/* Inputs: integration (loki integration definition), Values (all values), Files (Files object) */}}
 {{- define "integrations.loki.include.metrics" }}
 {{- $defaultValues := "integrations/loki-values.yaml" | .Files.Get | fromYaml }}
-{{- with mergeOverwrite $defaultValues (deepCopy .instance) }}
+{{- with mergeOverwrite $defaultValues .instance (dict "type" "integration.loki") }}
 {{- $metricAllowList := include "integrations.loki.allowList" (dict "instance" . "Files" $.Files) | fromYamlArray }}
 {{- $metricDenyList := .metrics.tuning.excludeMetrics }}
 {{- $labelSelectors := list }}
