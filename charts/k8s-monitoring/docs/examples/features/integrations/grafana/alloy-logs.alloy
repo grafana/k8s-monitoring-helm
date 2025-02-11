@@ -199,17 +199,15 @@ declare "pod_logs" {
         "tmp_container_runtime",
       ]
     }
-    // Integration: Loki
+    // Integration: Grafana
     stage.match {
       selector = "{job=\"integrations/grafana\",instance=\"grafana\",namespace=~\"o11y\"}"
 
       // extract some of the fields from the log line
       stage.logfmt {
         mapping = {
-          "timestamp" = "t",
+          "ts" = "t",
           "level" = "",
-          "logger" = "",
-          "type" = "",
         }
       }
 
@@ -221,7 +219,7 @@ declare "pod_logs" {
       }
       // reset the timestamp to the extracted value
       stage.timestamp {
-        source = "timestamp"
+        source = "ts"
         format = "RFC3339Nano"
       }
       // remove the timestamp from the log line
@@ -235,6 +233,7 @@ declare "pod_logs" {
         expression = "(?i)(debug)"
         drop_counter_reason = "grafana-drop-log-level"
       }
+
     }
 
     // Only keep the labels that are defined in the `keepLabels` list.
