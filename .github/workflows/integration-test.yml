@@ -27,7 +27,7 @@ jobs:
 
       - name: List tests
         id: list_tests
-        dir: charts/k8s-monitoring/tests/integration
+        working-directory: charts/k8s-monitoring/tests/integration
         run: |
           tests=$(find . -name values.yaml -exec dirname {} \;)
           echo "Tests: ${tests}"
@@ -58,7 +58,7 @@ jobs:
 
       - name: Read special test dependencies
         id: read_deps
-        dir: charts/k8s-monitoring/tests/integration
+        working-directory: charts/k8s-monitoring/tests/integration
         run: |
           if [ -f "${{ matrix.test }}/deps.json" ]; then
             # e.g. ["terraform", "vendir"]
@@ -72,7 +72,7 @@ jobs:
         if: contains(env.deps, 'terraform')
 
       - name: Run test
-        dir: charts/k8s-monitoring/tests/integration
+        working-directory: charts/k8s-monitoring/tests/integration
         run: ./scripts/run-cluster-test.sh "${{ matrix.test }}"
         env:
           CREATE_CLUSTER: "true"
