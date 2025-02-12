@@ -123,9 +123,23 @@ data:
         role = "node"
       }
     
+      discovery.relabel "nodes" {
+        targets = discovery.kubernetes.nodes.targets
+        rule {
+          source_labels = ["__meta_kubernetes_node_name"]
+          target_label  = "node"
+        }
+    
+        rule {
+          replacement = "kubernetes"
+          target_label = "source"
+        }
+    
+      }
+    
       // Kubelet
       discovery.relabel "kubelet" {
-        targets = discovery.kubernetes.nodes.targets
+        targets = discovery.relabel.nodes.output
       }
     
       prometheus.scrape "kubelet" {

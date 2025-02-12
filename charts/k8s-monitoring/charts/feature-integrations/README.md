@@ -130,6 +130,18 @@ Be sure perform actual integration testing in a live environment in the main [k8
 |-----|------|---------|-------------|
 | mysql | object | `{"instances":[]}` | Scrape metrics/logs from MySQL |
 
+### Node Labels
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| nodeLabels.availabilityZone | bool | `false` | Whether or not to add the availability\_zone label |
+| nodeLabels.instanceType | bool | `false` | Whether or not to add the instance\_type label |
+| nodeLabels.nodeArchitecture | bool | `false` | Whether or not to add the node architecture label |
+| nodeLabels.nodeOS | bool | `false` | Whether or not to add the os label |
+| nodeLabels.nodePool | bool | `false` | Whether or not to attach the nodepool label |
+| nodeLabels.nodeRole | bool | `false` | Whether or not to add the node\_role label |
+| nodeLabels.region | bool | `false` | Whether or not to add the region label |
+
 ### Integration: Tempo
 
 | Key | Type | Default | Description |

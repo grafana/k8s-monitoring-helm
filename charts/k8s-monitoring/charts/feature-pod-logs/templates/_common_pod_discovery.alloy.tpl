@@ -96,6 +96,7 @@ discovery.relabel "filtered_pods" {
     target_label = {{ $label | quote }}
   }
 {{- end }}
+{{- include "feature.podLogs.nodeDiscoveryRules" . | indent 2 }}
 
 {{- if .Values.extraDiscoveryRules }}
 {{ .Values.extraDiscoveryRules | indent 2 }}

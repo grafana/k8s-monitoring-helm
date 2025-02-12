@@ -28,6 +28,16 @@ destinations:
 
 integrations:
   collector: alloy-singleton
+  # attach available node labels to all integration metrics collection
+  nodeLabels:
+    nodepool: true
+    region: true
+    availability_zone: true
+    node_role: true
+    os: true
+    architecture: true
+    instance_type: true
+
   alloy:
     instances:
       # monitor the collector gathering and sending meta-monitoring metrics/logs to the meta-monitoring cluster
@@ -95,6 +105,15 @@ clusterEvents:
 clusterMetrics:
   enabled: true
   collector: alloy-singleton
+  nodeLabels:
+    nodePool: true
+    region: true
+    availabilityZone: true
+    nodeRole: true
+    os: true
+    architecture: true
+    instanceType: true
+
   kubelet:
     enabled: false
   kubeletResource:
@@ -144,6 +163,24 @@ nodeLogs:
 podLogs:
   enabled: true
   collector: alloy-singleton
+  nodeLabels:
+    nodePool: true
+    region: true
+    availabilityZone: true
+    nodeRole: true
+    os: true
+    architecture: true
+    instanceType: true
+
+  structuredMetadata:
+    nodepool:
+    region:
+    availability_zone:
+    node_role:
+    os:
+    architecture:
+    instance_type:
+
   labelsToKeep:
     - app
     - app_kubernetes_io_name
@@ -154,6 +191,7 @@ podLogs:
     - namespace
     - pod
     - service_name
+
   gatherMethod: kubernetesApi
   namespaces:
     - collectors

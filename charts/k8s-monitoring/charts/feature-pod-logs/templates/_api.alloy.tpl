@@ -6,6 +6,7 @@ discovery.kubernetes "pods" {
     names = {{ .Values.namespaces | toJson }}
   }
 {{- end }}
+{{- include "feature.podLogs.attachNodeMetadata" . | indent 2 }}
 }
 
 loki.source.kubernetes "pod_logs" {

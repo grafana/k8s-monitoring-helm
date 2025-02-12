@@ -27,6 +27,7 @@ discovery.kubernetes "kepler" {
     role = "pod"
     label = {{ $labelSelectors | join "," | quote }}
   }
+{{- include "feature.clusterMetrics.attachNodeMetadata" . | indent 2 }}
 }
 
 discovery.relabel "kepler" {
@@ -36,6 +37,7 @@ discovery.relabel "kepler" {
     action = "replace"
     target_label = "instance"
   }
+{{- include "feature.clusterMetrics.nodeDiscoveryRules" . | indent 2 }}
 {{- if .Values.kepler.extraDiscoveryRules }}
 {{ .Values.kepler.extraDiscoveryRules | indent 2 }}
 {{- end }}

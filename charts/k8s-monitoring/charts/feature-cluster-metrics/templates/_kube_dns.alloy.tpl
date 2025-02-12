@@ -13,6 +13,7 @@ discovery.kubernetes "kube_dns" {
     role = "endpoints"
     label = "k8s-app=kube-dns"
   }
+{{- include "feature.clusterMetrics.attachNodeMetadata" . | indent 2 }}
 }
 
 discovery.relabel "kube_dns" {
@@ -97,6 +98,7 @@ discovery.relabel "kube_dns" {
     replacement = "kubernetes"
     target_label = "source"
   }
+{{- include "feature.clusterMetrics.nodeDiscoveryRules" . | indent 2 }}
 {{- if .Values.kubeDNS.extraDiscoveryRules }}
 {{ .Values.kubeDNS.extraDiscoveryRules | indent 2 }}
 {{- end }}

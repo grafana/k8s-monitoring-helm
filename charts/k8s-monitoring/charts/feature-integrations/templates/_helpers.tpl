@@ -45,7 +45,7 @@ If release name contains chart name it will be used as a full name.
 {{- end }}
 {{- end }}
 
-{{- define "commonRelabelings" }}
+{{- define "feature.integrations.commonDiscoveryRules" }}
 rule {
   source_labels = ["__meta_kubernetes_namespace"]
   target_label  = "namespace"
@@ -117,4 +117,21 @@ rule {
   replacement = "kubernetes"
   target_label = "source"
 }
+{{ include "feature.integrations.nodeDiscoveryRules" . }}
+{{- end }}
+
+{{- define "feature.integrations.attachNodeMetadata" }}
+{{- $attachMetadata := false -}}
+{{- $attachMetadata = or $attachMetadata .Values.nodeLabels.nodePool -}}
+{{- $attachMetadata = or $attachMetadata .Values.nodeLabels.region -}}
+{{- $attachMetadata = or $attachMetadata .Values.nodeLabels.availabilityZone -}}
+{{- $attachMetadata = or $attachMetadata .Values.nodeLabels.nodeRole -}}
+{{- $attachMetadata = or $attachMetadata .Values.nodeLabels.nodeOS -}}
+{{- $attachMetadata = or $attachMetadata .Values.nodeLabels.nodeArchitecture -}}
+{{- $attachMetadata = or $attachMetadata .Values.nodeLabels.instanceType -}}
+{{- if eq $attachMetadata true }}
+attach_metadata {
+  node = true
+}
+{{- end }}
 {{- end }}

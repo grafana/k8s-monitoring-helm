@@ -7,36 +7,77 @@ declare "cluster_metrics" {
     role = "node"
   }
 
-  // cAdvisor
-  discovery.relabel "cadvisor" {
+  discovery.relabel "nodes" {
     targets = discovery.kubernetes.nodes.targets
-    rule {
-      replacement   = "/metrics/cadvisor"
-      target_label  = "__metrics_path__"
-    }
     rule {
       source_labels = ["__meta_kubernetes_node_name"]
       target_label  = "node"
     }
-    // set the app name if specified as metadata labels "app:" or "app.kubernetes.io/name:" or "k8s-app:"
-    rule {
-      action = "replace"
-      source_labels = [
-        "__meta_kubernetes_node_label_app_kubernetes_io_name",
-        "__meta_kubernetes_node_label_k8s_app",
-        "__meta_kubernetes_node_label_app",
-      ]
-      separator = ";"
-      regex = "^(?:;*)?([^;]+).*$"
-      replacement = "$1"
-      target_label = "app"
-    }
 
-    // set a source label
     rule {
-      action = "replace"
       replacement = "kubernetes"
       target_label = "source"
+    }
+
+
+    rule {
+      source_labels = [
+        "__meta_kubernetes_node_label_karpenter_sh_nodepool",
+        "__meta_kubernetes_node_label_cloud_google_com_gke_nodepool",
+        "__meta_kubernetes_node_label_eks_amazonaws_com_nodegroup",
+        "__meta_kubernetes_node_label_kubernetes_azure_com_agentpool",
+        "__meta_kubernetes_node_label_agentpool",
+      ]
+      regex = "^(?:;*)?([^;]+).*$"
+      target_label = "nodepool"
+    }
+
+    rule {
+      source_labels = [
+        "__meta_kubernetes_node_label_topology_kubernetes_io_region",
+        "__meta_kubernetes_node_label_failure_domain_beta_kubernetes_io_region",
+      ]
+      regex = "^(?:;*)?([^;]+).*$"
+      target_label = "region"
+    }
+
+    rule {
+      source_labels = [
+        "__meta_kubernetes_node_label_topology_kubernetes_io_zone",
+        "__meta_kubernetes_node_label_failure_domain_beta_kubernetes_io_zone",
+        "__meta_kubernetes_node_label_topology_gke_io_zone",
+      ]
+      regex = "^(?:;*)?([^;]+).*$"
+      target_label = "availability_zone"
+    }
+
+    rule {
+      source_labels = [
+        "__meta_kubernetes_node_label_kubernetes_io_role",
+        "__meta_kubernetes_node_label_node_kubernetes_io_role",
+        "__meta_kubernetes_node_label_node_role",
+        "__meta_kubernetes_node_label_role",
+      ]
+      regex = "^(?:;*)?([^;]+).*$"
+      target_label = "node_role"
+    }
+
+    rule {
+      source_labels = [
+        "__meta_kubernetes_node_label_node_kubernetes_io_instance_type",
+        "__meta_kubernetes_node_label_beta_kubernetes_io_instance_type",
+      ]
+      regex = "^(?:;*)?([^;]+).*$"
+      target_label = "instance_type"
+    }
+  }
+
+  // cAdvisor
+  discovery.relabel "cadvisor" {
+    targets = discovery.relabel.nodes.output
+    rule {
+      replacement   = "/metrics/cadvisor"
+      target_label  = "__metrics_path__"
     }
   }
 
@@ -209,6 +250,9 @@ declare "cluster_metrics" {
     namespaces {
       names = ["default"]
     }
+    attach_metadata {
+      node = true
+    }
   }
 
   discovery.relabel "node_exporter" {
@@ -300,6 +344,57 @@ declare "cluster_metrics" {
       action = "replace"
       replacement = "kubernetes"
       target_label = "source"
+    }
+
+    rule {
+      source_labels = [
+        "__meta_kubernetes_node_label_karpenter_sh_nodepool",
+        "__meta_kubernetes_node_label_cloud_google_com_gke_nodepool",
+        "__meta_kubernetes_node_label_eks_amazonaws_com_nodegroup",
+        "__meta_kubernetes_node_label_kubernetes_azure_com_agentpool",
+        "__meta_kubernetes_node_label_agentpool",
+      ]
+      regex = "^(?:;*)?([^;]+).*$"
+      target_label = "nodepool"
+    }
+
+    rule {
+      source_labels = [
+        "__meta_kubernetes_node_label_topology_kubernetes_io_region",
+        "__meta_kubernetes_node_label_failure_domain_beta_kubernetes_io_region",
+      ]
+      regex = "^(?:;*)?([^;]+).*$"
+      target_label = "region"
+    }
+
+    rule {
+      source_labels = [
+        "__meta_kubernetes_node_label_topology_kubernetes_io_zone",
+        "__meta_kubernetes_node_label_failure_domain_beta_kubernetes_io_zone",
+        "__meta_kubernetes_node_label_topology_gke_io_zone",
+      ]
+      regex = "^(?:;*)?([^;]+).*$"
+      target_label = "availability_zone"
+    }
+
+    rule {
+      source_labels = [
+        "__meta_kubernetes_node_label_kubernetes_io_role",
+        "__meta_kubernetes_node_label_node_kubernetes_io_role",
+        "__meta_kubernetes_node_label_node_role",
+        "__meta_kubernetes_node_label_role",
+      ]
+      regex = "^(?:;*)?([^;]+).*$"
+      target_label = "node_role"
+    }
+
+    rule {
+      source_labels = [
+        "__meta_kubernetes_node_label_node_kubernetes_io_instance_type",
+        "__meta_kubernetes_node_label_beta_kubernetes_io_instance_type",
+      ]
+      regex = "^(?:;*)?([^;]+).*$"
+      target_label = "instance_type"
     }
   }
 
@@ -523,6 +618,57 @@ declare "pod_logs" {
       regex = "(.+)"
       target_label = "app_kubernetes_io_name"
     }
+
+    rule {
+      source_labels = [
+        "__meta_kubernetes_node_label_karpenter_sh_nodepool",
+        "__meta_kubernetes_node_label_cloud_google_com_gke_nodepool",
+        "__meta_kubernetes_node_label_eks_amazonaws_com_nodegroup",
+        "__meta_kubernetes_node_label_kubernetes_azure_com_agentpool",
+        "__meta_kubernetes_node_label_agentpool",
+      ]
+      regex = "^(?:;*)?([^;]+).*$"
+      target_label = "nodepool"
+    }
+
+    rule {
+      source_labels = [
+        "__meta_kubernetes_node_label_topology_kubernetes_io_region",
+        "__meta_kubernetes_node_label_failure_domain_beta_kubernetes_io_region",
+      ]
+      regex = "^(?:;*)?([^;]+).*$"
+      target_label = "region"
+    }
+
+    rule {
+      source_labels = [
+        "__meta_kubernetes_node_label_topology_kubernetes_io_zone",
+        "__meta_kubernetes_node_label_failure_domain_beta_kubernetes_io_zone",
+        "__meta_kubernetes_node_label_topology_gke_io_zone",
+      ]
+      regex = "^(?:;*)?([^;]+).*$"
+      target_label = "availability_zone"
+    }
+
+    rule {
+      source_labels = [
+        "__meta_kubernetes_node_label_kubernetes_io_role",
+        "__meta_kubernetes_node_label_node_kubernetes_io_role",
+        "__meta_kubernetes_node_label_node_role",
+        "__meta_kubernetes_node_label_role",
+      ]
+      regex = "^(?:;*)?([^;]+).*$"
+      target_label = "node_role"
+    }
+
+    rule {
+      source_labels = [
+        "__meta_kubernetes_node_label_node_kubernetes_io_instance_type",
+        "__meta_kubernetes_node_label_beta_kubernetes_io_instance_type",
+      ]
+      regex = "^(?:;*)?([^;]+).*$"
+      target_label = "instance_type"
+    }
     rule {
       source_labels = ["__meta_kubernetes_namespace","__meta_kubernetes_pod_label_app_kubernetes_io_name"]
       separator = ";"
@@ -592,6 +738,9 @@ declare "pod_logs" {
     namespaces {
       names = ["collectors","logs","metrics","o11y"]
     }
+    attach_metadata {
+      node = true
+    }
   }
 
   loki.source.kubernetes "pod_logs" {
@@ -635,6 +784,18 @@ declare "pod_logs" {
         "filename",
         "tmp_container_runtime",
       ]
+    }
+    // set the structured metadata values
+    stage.structured_metadata {
+      values = {
+        "architecture" = "architecture",
+        "availability_zone" = "availability_zone",
+        "instance_type" = "instance_type",
+        "node_role" = "node_role",
+        "nodepool" = "nodepool",
+        "os" = "os",
+        "region" = "region",
+      }
     }
     // Integration: Grafana
     stage.match {
@@ -837,6 +998,10 @@ declare "alloy_integration" {
       namespaces {
         names = coalesce(argument.namespaces.value, [])
       }
+
+      attach_metadata {
+        node = true
+      }
     }
 
     // alloy relabelings (pre-scrape)
@@ -856,79 +1021,87 @@ declare "alloy_integration" {
         action = "keep"
       }
 
+      rule {
+        source_labels = ["__meta_kubernetes_namespace"]
+        target_label  = "namespace"
+      }
+
+      rule {
+        source_labels = ["__meta_kubernetes_pod_name"]
+        target_label  = "pod"
+      }
+
+      rule {
+        source_labels = ["__meta_kubernetes_pod_container_name"]
+        target_label  = "container"
+      }
+
+      // set the workload to the controller kind and name
+      rule {
+        action = "lowercase"
+        source_labels = ["__meta_kubernetes_pod_controller_kind"]
+        target_label  = "workload_type"
+      }
+
+      rule {
+        source_labels = ["__meta_kubernetes_pod_controller_name"]
+        target_label  = "workload"
+      }
+
+      // remove the hash from the ReplicaSet
+      rule {
+        source_labels = [
+          "workload_type",
+          "workload",
+        ]
+        separator = "/"
+        regex = "replicaset/(.+)-.+$"
+        target_label  = "workload"
+      }
+
+      // set the app name if specified as metadata labels "app:" or "app.kubernetes.io/name:" or "k8s-app:"
+      rule {
+        action = "replace"
+        source_labels = [
+          "__meta_kubernetes_pod_label_app_kubernetes_io_name",
+          "__meta_kubernetes_pod_label_k8s_app",
+          "__meta_kubernetes_pod_label_app",
+        ]
+        separator = ";"
+        regex = "^(?:;*)?([^;]+).*$"
+        replacement = "$1"
+        target_label = "app"
+      }
+
+      // set the component if specified as metadata labels "component:" or "app.kubernetes.io/component:" or "k8s-component:"
+      rule {
+        action = "replace"
+        source_labels = [
+          "__meta_kubernetes_pod_label_app_kubernetes_io_component",
+          "__meta_kubernetes_pod_label_k8s_component",
+          "__meta_kubernetes_pod_label_component",
+        ]
+        regex = "^(?:;*)?([^;]+).*$"
+        replacement = "$1"
+        target_label = "component"
+      }
+
+      // set a source label
+      rule {
+        action = "replace"
+        replacement = "kubernetes"
+        target_label = "source"
+      }
 
 
-    rule {
-      source_labels = ["__meta_kubernetes_namespace"]
-      target_label  = "namespace"
-    }
-
-    rule {
-      source_labels = ["__meta_kubernetes_pod_name"]
-      target_label  = "pod"
-    }
-
-    rule {
-      source_labels = ["__meta_kubernetes_pod_container_name"]
-      target_label  = "container"
-    }
-
-    // set the workload to the controller kind and name
-    rule {
-      action = "lowercase"
-      source_labels = ["__meta_kubernetes_pod_controller_kind"]
-      target_label  = "workload_type"
-    }
-
-    rule {
-      source_labels = ["__meta_kubernetes_pod_controller_name"]
-      target_label  = "workload"
-    }
-
-    // remove the hash from the ReplicaSet
-    rule {
-      source_labels = [
-        "workload_type",
-        "workload",
-      ]
-      separator = "/"
-      regex = "replicaset/(.+)-.+$"
-      target_label  = "workload"
-    }
-
-    // set the app name if specified as metadata labels "app:" or "app.kubernetes.io/name:" or "k8s-app:"
-    rule {
-      action = "replace"
-      source_labels = [
-        "__meta_kubernetes_pod_label_app_kubernetes_io_name",
-        "__meta_kubernetes_pod_label_k8s_app",
-        "__meta_kubernetes_pod_label_app",
-      ]
-      separator = ";"
-      regex = "^(?:;*)?([^;]+).*$"
-      replacement = "$1"
-      target_label = "app"
-    }
-
-    // set the component if specified as metadata labels "component:" or "app.kubernetes.io/component:" or "k8s-component:"
-    rule {
-      action = "replace"
-      source_labels = [
-        "__meta_kubernetes_pod_label_app_kubernetes_io_component",
-        "__meta_kubernetes_pod_label_k8s_component",
-        "__meta_kubernetes_pod_label_component",
-      ]
-      regex = "^(?:;*)?([^;]+).*$"
-      replacement = "$1"
-      target_label = "component"
-    }
-
-    // set a source label
-    rule {
-      action = "replace"
-      replacement = "kubernetes"
-      target_label = "source"
-    }
+      rule {
+        source_labels = [
+          "__meta_kubernetes_node_label_topology_kubernetes_io_region",
+          "__meta_kubernetes_node_label_failure_domain_beta_kubernetes_io_region",
+        ]
+        regex = "^(?:;*)?([^;]+).*$"
+        target_label = "region"
+      }
     }
 
     export "output" {
@@ -1148,6 +1321,10 @@ declare "grafana_integration" {
       namespaces {
         names = coalesce(argument.namespaces.value, [])
       }
+
+      attach_metadata {
+        node = true
+      }
     }
 
     // grafana relabelings (pre-scrape)
@@ -1169,77 +1346,87 @@ declare "grafana_integration" {
 
 
 
-    rule {
-      source_labels = ["__meta_kubernetes_namespace"]
-      target_label  = "namespace"
-    }
+      rule {
+        source_labels = ["__meta_kubernetes_namespace"]
+        target_label  = "namespace"
+      }
 
-    rule {
-      source_labels = ["__meta_kubernetes_pod_name"]
-      target_label  = "pod"
-    }
+      rule {
+        source_labels = ["__meta_kubernetes_pod_name"]
+        target_label  = "pod"
+      }
 
-    rule {
-      source_labels = ["__meta_kubernetes_pod_container_name"]
-      target_label  = "container"
-    }
+      rule {
+        source_labels = ["__meta_kubernetes_pod_container_name"]
+        target_label  = "container"
+      }
 
-    // set the workload to the controller kind and name
-    rule {
-      action = "lowercase"
-      source_labels = ["__meta_kubernetes_pod_controller_kind"]
-      target_label  = "workload_type"
-    }
+      // set the workload to the controller kind and name
+      rule {
+        action = "lowercase"
+        source_labels = ["__meta_kubernetes_pod_controller_kind"]
+        target_label  = "workload_type"
+      }
 
-    rule {
-      source_labels = ["__meta_kubernetes_pod_controller_name"]
-      target_label  = "workload"
-    }
+      rule {
+        source_labels = ["__meta_kubernetes_pod_controller_name"]
+        target_label  = "workload"
+      }
 
-    // remove the hash from the ReplicaSet
-    rule {
-      source_labels = [
-        "workload_type",
-        "workload",
-      ]
-      separator = "/"
-      regex = "replicaset/(.+)-.+$"
-      target_label  = "workload"
-    }
+      // remove the hash from the ReplicaSet
+      rule {
+        source_labels = [
+          "workload_type",
+          "workload",
+        ]
+        separator = "/"
+        regex = "replicaset/(.+)-.+$"
+        target_label  = "workload"
+      }
 
-    // set the app name if specified as metadata labels "app:" or "app.kubernetes.io/name:" or "k8s-app:"
-    rule {
-      action = "replace"
-      source_labels = [
-        "__meta_kubernetes_pod_label_app_kubernetes_io_name",
-        "__meta_kubernetes_pod_label_k8s_app",
-        "__meta_kubernetes_pod_label_app",
-      ]
-      separator = ";"
-      regex = "^(?:;*)?([^;]+).*$"
-      replacement = "$1"
-      target_label = "app"
-    }
+      // set the app name if specified as metadata labels "app:" or "app.kubernetes.io/name:" or "k8s-app:"
+      rule {
+        action = "replace"
+        source_labels = [
+          "__meta_kubernetes_pod_label_app_kubernetes_io_name",
+          "__meta_kubernetes_pod_label_k8s_app",
+          "__meta_kubernetes_pod_label_app",
+        ]
+        separator = ";"
+        regex = "^(?:;*)?([^;]+).*$"
+        replacement = "$1"
+        target_label = "app"
+      }
 
-    // set the component if specified as metadata labels "component:" or "app.kubernetes.io/component:" or "k8s-component:"
-    rule {
-      action = "replace"
-      source_labels = [
-        "__meta_kubernetes_pod_label_app_kubernetes_io_component",
-        "__meta_kubernetes_pod_label_k8s_component",
-        "__meta_kubernetes_pod_label_component",
-      ]
-      regex = "^(?:;*)?([^;]+).*$"
-      replacement = "$1"
-      target_label = "component"
-    }
+      // set the component if specified as metadata labels "component:" or "app.kubernetes.io/component:" or "k8s-component:"
+      rule {
+        action = "replace"
+        source_labels = [
+          "__meta_kubernetes_pod_label_app_kubernetes_io_component",
+          "__meta_kubernetes_pod_label_k8s_component",
+          "__meta_kubernetes_pod_label_component",
+        ]
+        regex = "^(?:;*)?([^;]+).*$"
+        replacement = "$1"
+        target_label = "component"
+      }
 
-    // set a source label
-    rule {
-      action = "replace"
-      replacement = "kubernetes"
-      target_label = "source"
-    }
+      // set a source label
+      rule {
+        action = "replace"
+        replacement = "kubernetes"
+        target_label = "source"
+      }
+
+
+      rule {
+        source_labels = [
+          "__meta_kubernetes_node_label_topology_kubernetes_io_region",
+          "__meta_kubernetes_node_label_failure_domain_beta_kubernetes_io_region",
+        ]
+        regex = "^(?:;*)?([^;]+).*$"
+        target_label = "region"
+      }
     }
 
     export "output" {
@@ -1388,6 +1575,10 @@ declare "loki_integration" {
       namespaces {
         names = coalesce(argument.namespaces.value, [])
       }
+
+      attach_metadata {
+        node = true
+      }
     }
 
     // loki relabelings (pre-scrape)
@@ -1416,77 +1607,87 @@ declare "loki_integration" {
 
 
 
-    rule {
-      source_labels = ["__meta_kubernetes_namespace"]
-      target_label  = "namespace"
-    }
+      rule {
+        source_labels = ["__meta_kubernetes_namespace"]
+        target_label  = "namespace"
+      }
 
-    rule {
-      source_labels = ["__meta_kubernetes_pod_name"]
-      target_label  = "pod"
-    }
+      rule {
+        source_labels = ["__meta_kubernetes_pod_name"]
+        target_label  = "pod"
+      }
 
-    rule {
-      source_labels = ["__meta_kubernetes_pod_container_name"]
-      target_label  = "container"
-    }
+      rule {
+        source_labels = ["__meta_kubernetes_pod_container_name"]
+        target_label  = "container"
+      }
 
-    // set the workload to the controller kind and name
-    rule {
-      action = "lowercase"
-      source_labels = ["__meta_kubernetes_pod_controller_kind"]
-      target_label  = "workload_type"
-    }
+      // set the workload to the controller kind and name
+      rule {
+        action = "lowercase"
+        source_labels = ["__meta_kubernetes_pod_controller_kind"]
+        target_label  = "workload_type"
+      }
 
-    rule {
-      source_labels = ["__meta_kubernetes_pod_controller_name"]
-      target_label  = "workload"
-    }
+      rule {
+        source_labels = ["__meta_kubernetes_pod_controller_name"]
+        target_label  = "workload"
+      }
 
-    // remove the hash from the ReplicaSet
-    rule {
-      source_labels = [
-        "workload_type",
-        "workload",
-      ]
-      separator = "/"
-      regex = "replicaset/(.+)-.+$"
-      target_label  = "workload"
-    }
+      // remove the hash from the ReplicaSet
+      rule {
+        source_labels = [
+          "workload_type",
+          "workload",
+        ]
+        separator = "/"
+        regex = "replicaset/(.+)-.+$"
+        target_label  = "workload"
+      }
 
-    // set the app name if specified as metadata labels "app:" or "app.kubernetes.io/name:" or "k8s-app:"
-    rule {
-      action = "replace"
-      source_labels = [
-        "__meta_kubernetes_pod_label_app_kubernetes_io_name",
-        "__meta_kubernetes_pod_label_k8s_app",
-        "__meta_kubernetes_pod_label_app",
-      ]
-      separator = ";"
-      regex = "^(?:;*)?([^;]+).*$"
-      replacement = "$1"
-      target_label = "app"
-    }
+      // set the app name if specified as metadata labels "app:" or "app.kubernetes.io/name:" or "k8s-app:"
+      rule {
+        action = "replace"
+        source_labels = [
+          "__meta_kubernetes_pod_label_app_kubernetes_io_name",
+          "__meta_kubernetes_pod_label_k8s_app",
+          "__meta_kubernetes_pod_label_app",
+        ]
+        separator = ";"
+        regex = "^(?:;*)?([^;]+).*$"
+        replacement = "$1"
+        target_label = "app"
+      }
 
-    // set the component if specified as metadata labels "component:" or "app.kubernetes.io/component:" or "k8s-component:"
-    rule {
-      action = "replace"
-      source_labels = [
-        "__meta_kubernetes_pod_label_app_kubernetes_io_component",
-        "__meta_kubernetes_pod_label_k8s_component",
-        "__meta_kubernetes_pod_label_component",
-      ]
-      regex = "^(?:;*)?([^;]+).*$"
-      replacement = "$1"
-      target_label = "component"
-    }
+      // set the component if specified as metadata labels "component:" or "app.kubernetes.io/component:" or "k8s-component:"
+      rule {
+        action = "replace"
+        source_labels = [
+          "__meta_kubernetes_pod_label_app_kubernetes_io_component",
+          "__meta_kubernetes_pod_label_k8s_component",
+          "__meta_kubernetes_pod_label_component",
+        ]
+        regex = "^(?:;*)?([^;]+).*$"
+        replacement = "$1"
+        target_label = "component"
+      }
 
-    // set a source label
-    rule {
-      action = "replace"
-      replacement = "kubernetes"
-      target_label = "source"
-    }
+      // set a source label
+      rule {
+        action = "replace"
+        replacement = "kubernetes"
+        target_label = "source"
+      }
+
+
+      rule {
+        source_labels = [
+          "__meta_kubernetes_node_label_topology_kubernetes_io_region",
+          "__meta_kubernetes_node_label_failure_domain_beta_kubernetes_io_region",
+        ]
+        regex = "^(?:;*)?([^;]+).*$"
+        target_label = "region"
+      }
     }
 
     export "output" {
@@ -1645,6 +1846,10 @@ declare "mimir_integration" {
       namespaces {
         names = coalesce(argument.namespaces.value, [])
       }
+
+      attach_metadata {
+        node = true
+      }
     }
 
     // mimir relabelings (pre-scrape)
@@ -1671,79 +1876,87 @@ declare "mimir_integration" {
         target_label = "job"
       }
 
+      rule {
+        source_labels = ["__meta_kubernetes_namespace"]
+        target_label  = "namespace"
+      }
+
+      rule {
+        source_labels = ["__meta_kubernetes_pod_name"]
+        target_label  = "pod"
+      }
+
+      rule {
+        source_labels = ["__meta_kubernetes_pod_container_name"]
+        target_label  = "container"
+      }
+
+      // set the workload to the controller kind and name
+      rule {
+        action = "lowercase"
+        source_labels = ["__meta_kubernetes_pod_controller_kind"]
+        target_label  = "workload_type"
+      }
+
+      rule {
+        source_labels = ["__meta_kubernetes_pod_controller_name"]
+        target_label  = "workload"
+      }
+
+      // remove the hash from the ReplicaSet
+      rule {
+        source_labels = [
+          "workload_type",
+          "workload",
+        ]
+        separator = "/"
+        regex = "replicaset/(.+)-.+$"
+        target_label  = "workload"
+      }
+
+      // set the app name if specified as metadata labels "app:" or "app.kubernetes.io/name:" or "k8s-app:"
+      rule {
+        action = "replace"
+        source_labels = [
+          "__meta_kubernetes_pod_label_app_kubernetes_io_name",
+          "__meta_kubernetes_pod_label_k8s_app",
+          "__meta_kubernetes_pod_label_app",
+        ]
+        separator = ";"
+        regex = "^(?:;*)?([^;]+).*$"
+        replacement = "$1"
+        target_label = "app"
+      }
+
+      // set the component if specified as metadata labels "component:" or "app.kubernetes.io/component:" or "k8s-component:"
+      rule {
+        action = "replace"
+        source_labels = [
+          "__meta_kubernetes_pod_label_app_kubernetes_io_component",
+          "__meta_kubernetes_pod_label_k8s_component",
+          "__meta_kubernetes_pod_label_component",
+        ]
+        regex = "^(?:;*)?([^;]+).*$"
+        replacement = "$1"
+        target_label = "component"
+      }
+
+      // set a source label
+      rule {
+        action = "replace"
+        replacement = "kubernetes"
+        target_label = "source"
+      }
 
 
-    rule {
-      source_labels = ["__meta_kubernetes_namespace"]
-      target_label  = "namespace"
-    }
-
-    rule {
-      source_labels = ["__meta_kubernetes_pod_name"]
-      target_label  = "pod"
-    }
-
-    rule {
-      source_labels = ["__meta_kubernetes_pod_container_name"]
-      target_label  = "container"
-    }
-
-    // set the workload to the controller kind and name
-    rule {
-      action = "lowercase"
-      source_labels = ["__meta_kubernetes_pod_controller_kind"]
-      target_label  = "workload_type"
-    }
-
-    rule {
-      source_labels = ["__meta_kubernetes_pod_controller_name"]
-      target_label  = "workload"
-    }
-
-    // remove the hash from the ReplicaSet
-    rule {
-      source_labels = [
-        "workload_type",
-        "workload",
-      ]
-      separator = "/"
-      regex = "replicaset/(.+)-.+$"
-      target_label  = "workload"
-    }
-
-    // set the app name if specified as metadata labels "app:" or "app.kubernetes.io/name:" or "k8s-app:"
-    rule {
-      action = "replace"
-      source_labels = [
-        "__meta_kubernetes_pod_label_app_kubernetes_io_name",
-        "__meta_kubernetes_pod_label_k8s_app",
-        "__meta_kubernetes_pod_label_app",
-      ]
-      separator = ";"
-      regex = "^(?:;*)?([^;]+).*$"
-      replacement = "$1"
-      target_label = "app"
-    }
-
-    // set the component if specified as metadata labels "component:" or "app.kubernetes.io/component:" or "k8s-component:"
-    rule {
-      action = "replace"
-      source_labels = [
-        "__meta_kubernetes_pod_label_app_kubernetes_io_component",
-        "__meta_kubernetes_pod_label_k8s_component",
-        "__meta_kubernetes_pod_label_component",
-      ]
-      regex = "^(?:;*)?([^;]+).*$"
-      replacement = "$1"
-      target_label = "component"
-    }
-
-    // set a source label
-    rule {
-      action = "replace"
-      replacement = "kubernetes"
-      target_label = "source"
-    }
+      rule {
+        source_labels = [
+          "__meta_kubernetes_node_label_topology_kubernetes_io_region",
+          "__meta_kubernetes_node_label_failure_domain_beta_kubernetes_io_region",
+        ]
+        regex = "^(?:;*)?([^;]+).*$"
+        target_label = "region"
+      }
     }
 
     export "output" {

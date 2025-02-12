@@ -12,6 +12,7 @@ discovery.kubernetes "kube_proxy" {
     role = "pod"
     label = {{ .Values.kubeProxy.selectorLabel | quote }}
   }
+{{- include "feature.clusterMetrics.attachNodeMetadata" . | indent 2 }}
 }
 
 discovery.relabel "kube_proxy" {
@@ -21,6 +22,7 @@ discovery.relabel "kube_proxy" {
     replacement = "$1:{{ .Values.kubeProxy.port }}"
     target_label = "__address__"
   }
+{{- include "feature.clusterMetrics.nodeDiscoveryRules" . | indent 2 }}
 {{- if .Values.kubeProxy.extraDiscoveryRules }}
 {{ .Values.kubeProxy.extraDiscoveryRules | indent 2 }}
 {{- end }}
