@@ -27,8 +27,9 @@ jobs:
 
       - name: List tests
         id: list_tests
+        working-directory: charts/k8s-monitoring/tests/integration
         run: |
-          tests=$(ls charts/k8s-monitoring/tests/integration)
+          tests=$(find . -name values.yaml -exec dirname {} \;)
           echo "Tests: ${tests}"
           echo "tests=$(echo "${tests}" | jq --raw-input --slurp --compact-output 'split("\n") | map(select(. != ""))')" >> "${GITHUB_OUTPUT}"
 

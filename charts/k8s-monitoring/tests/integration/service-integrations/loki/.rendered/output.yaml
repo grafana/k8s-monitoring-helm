@@ -186,13 +186,13 @@ data:
         write_relabel_config {
           source_labels = ["cluster"]
           regex = ""
-          replacement = "grafana-integration-test"
+          replacement = "loki-integration-test"
           target_label = "cluster"
         }
         write_relabel_config {
           source_labels = ["k8s.cluster.name"]
           regex = ""
-          replacement = "grafana-integration-test"
+          replacement = "loki-integration-test"
           target_label = "cluster"
         }
       }
@@ -435,12 +435,12 @@ data:
         prometheus.remote_write.localprometheus.receiver,
       ]
     }
-    declare "grafana_integration" {
+    declare "loki_integration" {
       argument "metrics_destinations" {
         comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
       }
     
-      declare "grafana_integration_discovery" {
+      declare "loki_integration_discovery" {
         argument "namespaces" {
           comment = "The namespaces to look for targets in (default: [] is all namespaces)"
           optional = true
@@ -452,23 +452,23 @@ data:
         }
     
         argument "label_selectors" {
-          comment = "The label selectors to use to find matching targets (default: [\"app.kubernetes.io/name=grafana\"])"
+          comment = "The label selectors to use to find matching targets (default: [\"app.kubernetes.io/name=loki\"])"
           optional = true
         }
     
         argument "port_name" {
-          comment = "The of the port to scrape metrics from (default: grafana)"
+          comment = "The of the port to scrape metrics from (default: http-metrics)"
           optional = true
         }
     
-        // grafana service discovery for all of the pods
-        discovery.kubernetes "grafana_pods" {
+        // loki service discovery for all of the pods
+        discovery.kubernetes "loki_pods" {
           role = "pod"
     
           selectors {
             role = "pod"
             field = string.join(coalesce(argument.field_selectors.value, []), ",")
-            label = string.join(coalesce(argument.label_selectors.value, ["app.kubernetes.io/name=grafana"]), ",")
+            label = string.join(coalesce(argument.label_selectors.value, ["app.kubernetes.io/name=loki"]), ",")
           }
     
           namespaces {
@@ -476,9 +476,9 @@ data:
           }
         }
     
-        // grafana relabelings (pre-scrape)
-        discovery.relabel "grafana_pods" {
-          targets = discovery.kubernetes.grafana_pods.targets
+        // loki relabelings (pre-scrape)
+        discovery.relabel "loki_pods" {
+          targets = discovery.kubernetes.loki_pods.targets
     
           // keep only the specified metrics port name, and pods that are Running and ready
           rule {
@@ -489,8 +489,15 @@ data:
               "__meta_kubernetes_pod_container_init",
             ]
             separator = "@"
-            regex = coalesce(argument.port_name.value, "grafana") + "@Running@true@false"
+            regex = coalesce(argument.port_name.value, "http-metrics") + "@Running@true@false"
             action = "keep"
+          }
+    
+          // the loki-mixin expects the job label to be namespace/component
+          rule {
+            source_labels = ["__meta_kubernetes_namespace","__meta_kubernetes_pod_label_app_kubernetes_io_component"]
+            separator = "/"
+            target_label = "job"
           }
     
     
@@ -569,11 +576,11 @@ data:
         }
     
         export "output" {
-          value = discovery.relabel.grafana_pods.output
+          value = discovery.relabel.loki_pods.output
         }
       }
     
-      declare "grafana_integration_scrape" {
+      declare "loki_integration_scrape" {
         argument "targets" {
           comment = "Must be a list() of targets"
         }
@@ -583,7 +590,7 @@ data:
         }
     
         argument "job_label" {
-          comment = "The job label to add for all Grafana metrics (default: integrations/grafana)"
+          comment = "The job label to add for all Loki metrics (default: integrations/loki)"
           optional = true
         }
     
@@ -612,9 +619,9 @@ data:
           optional = true
         }
     
-        prometheus.scrape "grafana" {
-          job_name = coalesce(argument.job_label.value, "integrations/grafana")
-          forward_to = [prometheus.relabel.grafana.receiver]
+        prometheus.scrape "loki" {
+          job_name = coalesce(argument.job_label.value, "integrations/loki")
+          forward_to = [prometheus.relabel.loki.receiver]
           targets = argument.targets.value
           scrape_interval = coalesce(argument.scrape_interval.value, "60s")
     
@@ -623,8 +630,8 @@ data:
           }
         }
     
-        // grafana metric relabelings (post-scrape)
-        prometheus.relabel "grafana" {
+        // loki metric relabelings (post-scrape)
+        prometheus.relabel "loki" {
           forward_to = argument.forward_to.value
           max_cache_size = coalesce(argument.max_cache_size.value, 100000)
     
@@ -642,7 +649,7 @@ data:
             action = "keep"
           }
     
-          // the grafana-mixin expects the instance label to be the node name
+          // the loki-mixin expects the instance label to be the node name
           rule {
             source_labels = ["node"]
             target_label = "instance"
@@ -652,25 +659,35 @@ data:
             action = "labeldrop"
             regex = "node"
           }
+    
+          // set the memcached exporter container name from container="exporter" to container="memcached"
+          rule {
+            source_labels = ["component", "container"]
+            separator = ";"
+            regex = "memcached-[^;]+;exporter"
+            target_label = "container"
+            replacement = "memcached"
+          }
         }
       }
     
-      grafana_integration_discovery "grafana" {
+      loki_integration_discovery "loki" {
         namespaces = []
-        label_selectors = ["app.kubernetes.io/name=grafana"]
-        port_name = "grafana"
+        label_selectors = ["app.kubernetes.io/name=loki"]
+        port_name = "http-metrics"
       }
     
-      grafana_integration_scrape  "grafana" {
-        targets = grafana_integration_discovery.grafana.output
-        job_label = "integrations/grafana"
+      loki_integration_scrape  "loki" {
+        targets = loki_integration_discovery.loki.output
+        job_label = "integrations/loki"
         clustering = true
+        keep_metrics = "up|scrape_samples_scraped|go_gc_cycles_total_gc_cycles_total|go_gc_duration_seconds|go_gc_duration_seconds_count|go_gc_duration_seconds_sum|go_gc_pauses_seconds_bucket|go_goroutines|go_memstats_heap_inuse_bytes|loki_azure_blob_request_duration_seconds_bucket|loki_azure_blob_request_duration_seconds_count|loki_bigtable_request_duration_seconds_bucket|loki_bigtable_request_duration_seconds_count|loki_bloom_blocks_cache_added_total|loki_bloom_blocks_cache_entries|loki_bloom_blocks_cache_evicted_total|loki_bloom_blocks_cache_fetched_total|loki_bloom_blocks_cache_usage_bytes|loki_bloom_chunks_indexed_total|loki_bloom_gateway_block_query_latency_seconds_bucket|loki_bloom_gateway_dequeue_duration_seconds_bucket|loki_bloom_gateway_filtered_chunks_sum|loki_bloom_gateway_filtered_series_sum|loki_bloom_gateway_inflight_tasks|loki_bloom_gateway_process_duration_seconds_bucket|loki_bloom_gateway_process_duration_seconds_count|loki_bloom_gateway_querier_chunks_filtered_total|loki_bloom_gateway_querier_chunks_skipped_total|loki_bloom_gateway_querier_chunks_total|loki_bloom_gateway_querier_series_filtered_total|loki_bloom_gateway_querier_series_skipped_total|loki_bloom_gateway_querier_series_total|loki_bloom_gateway_queue_duration_seconds_bucket|loki_bloom_gateway_queue_duration_seconds_count|loki_bloom_gateway_queue_duration_seconds_sum|loki_bloom_gateway_queue_length|loki_bloom_gateway_requested_chunks_sum|loki_bloom_gateway_requested_series_sum|loki_bloom_gateway_tasks_dequeued_bucket|loki_bloom_gateway_tasks_dequeued_total|loki_bloom_gateway_tasks_processed_total|loki_bloom_inserts_total|loki_bloom_recorder_chunks_total|loki_bloom_recorder_series_total|loki_bloom_size_bucket|loki_bloom_store_blocks_fetched_size_bytes_bucket|loki_bloom_store_blocks_fetched_sum|loki_bloom_store_download_queue_size_sum|loki_bloom_store_metas_fetched_bucket|loki_bloom_store_metas_fetched_size_bytes_bucket|loki_bloom_store_metas_fetched_sum|loki_bloom_tokens_total|loki_bloombuilder_blocks_created_total|loki_bloombuilder_blocks_reused_total|loki_bloombuilder_bytes_per_task_bucket|loki_bloombuilder_chunk_series_size_sum|loki_bloombuilder_metas_created_total|loki_bloombuilder_processing_task|loki_bloombuilder_series_per_task_bucket|loki_bloomplanner_blocks_deleted_total|loki_bloomplanner_connected_builders|loki_bloomplanner_inflight_tasks|loki_bloomplanner_metas_deleted_total|loki_bloomplanner_queue_length|loki_bloomplanner_retention_running|loki_bloomplanner_retention_time_seconds_bucket|loki_bloomplanner_tenant_tasks_completed|loki_bloomplanner_tenant_tasks_planned|loki_boltdb_shipper_compact_tables_operation_duration_seconds|loki_boltdb_shipper_compact_tables_operation_last_successful_run_timestamp_seconds|loki_boltdb_shipper_compact_tables_operation_total|loki_boltdb_shipper_request_duration_seconds_bucket|loki_boltdb_shipper_request_duration_seconds_count|loki_boltdb_shipper_request_duration_seconds_sum|loki_boltdb_shipper_retention_marker_count_total|loki_boltdb_shipper_retention_marker_table_processed_duration_seconds_bucket|loki_boltdb_shipper_retention_marker_table_processed_duration_seconds_count|loki_boltdb_shipper_retention_marker_table_processed_duration_seconds_sum|loki_boltdb_shipper_retention_marker_table_processed_total|loki_boltdb_shipper_retention_sweeper_chunk_deleted_duration_seconds_bucket|loki_boltdb_shipper_retention_sweeper_chunk_deleted_duration_seconds_count|loki_boltdb_shipper_retention_sweeper_chunk_deleted_duration_seconds_sum|loki_boltdb_shipper_retention_sweeper_marker_file_processing_current_time|loki_boltdb_shipper_retention_sweeper_marker_files_current|loki_build_info|loki_chunk_store_deduped_chunks_total|loki_chunk_store_index_entries_per_chunk_count|loki_chunk_store_index_entries_per_chunk_sum|loki_compactor_apply_retention_last_successful_run_timestamp_seconds|loki_compactor_apply_retention_operation_duration_seconds|loki_compactor_apply_retention_operation_total|loki_compactor_delete_requests_processed_total|loki_compactor_delete_requests_received_total|loki_compactor_deleted_lines|loki_compactor_load_pending_requests_attempts_total|loki_compactor_locked_table_successive_compaction_skips|loki_compactor_oldest_pending_delete_request_age_seconds|loki_compactor_pending_delete_requests_count|loki_consul_request_duration_seconds_bucket|loki_discarded_samples_total|loki_distributor_bytes_received_total|loki_distributor_ingester_append_failures_total|loki_distributor_lines_received_total|loki_distributor_structured_metadata_bytes_received_total|loki_dynamo_consumed_capacity_total|loki_dynamo_dropped_requests_total|loki_dynamo_failures_total|loki_dynamo_query_pages_count|loki_dynamo_request_duration_seconds_bucket|loki_dynamo_request_duration_seconds_count|loki_dynamo_throttled_total|loki_embeddedcache_entries|loki_embeddedcache_memory_bytes|loki_gcs_request_duration_seconds_bucket|loki_gcs_request_duration_seconds_count|loki_index_gateway_postfilter_chunks_sum|loki_index_gateway_prefilter_chunks_sum|loki_index_request_duration_seconds_bucket|loki_index_request_duration_seconds_count|loki_index_request_duration_seconds_sum|loki_ingester_chunk_age_seconds_bucket|loki_ingester_chunk_age_seconds_count|loki_ingester_chunk_age_seconds_sum|loki_ingester_chunk_bounds_hours_bucket|loki_ingester_chunk_bounds_hours_count|loki_ingester_chunk_bounds_hours_sum|loki_ingester_chunk_entries_bucket|loki_ingester_chunk_entries_count|loki_ingester_chunk_entries_sum|loki_ingester_chunk_size_bytes_bucket|loki_ingester_chunk_utilization_bucket|loki_ingester_chunk_utilization_count|loki_ingester_chunk_utilization_sum|loki_ingester_chunks_flushed_total|loki_ingester_flush_queue_length|loki_ingester_memory_chunks|loki_ingester_memory_streams|loki_ingester_streams_created_total|loki_memcache_request_duration_seconds_bucket|loki_memcache_request_duration_seconds_count|loki_panic_total|loki_prometheus_rule_group_rules|loki_request_duration_seconds_bucket|loki_request_duration_seconds_count|loki_request_duration_seconds_sum|loki_ruler_wal_appender_ready|loki_ruler_wal_disk_size|loki_ruler_wal_prometheus_remote_storage_highest_timestamp_in_seconds|loki_ruler_wal_prometheus_remote_storage_queue_highest_sent_timestamp_seconds|loki_ruler_wal_prometheus_remote_storage_samples_pending|loki_ruler_wal_prometheus_remote_storage_samples_total|loki_ruler_wal_samples_appended_total|loki_ruler_wal_storage_created_series_total|loki_s3_request_duration_seconds_bucket|loki_s3_request_duration_seconds_count"
         scrape_interval = "60s"
         max_cache_size = 100000
         forward_to = argument.metrics_destinations.value
       }
     }
-    grafana_integration "integration" {
+    loki_integration "integration" {
       metrics_destinations = [
         prometheus.remote_write.localprometheus.receiver,
       ]
@@ -719,13 +736,13 @@ data:
         write_relabel_config {
           source_labels = ["cluster"]
           regex = ""
-          replacement = "grafana-integration-test"
+          replacement = "loki-integration-test"
           target_label = "cluster"
         }
         write_relabel_config {
           source_labels = ["k8s.cluster.name"]
           regex = ""
-          replacement = "grafana-integration-test"
+          replacement = "loki-integration-test"
           target_label = "cluster"
         }
       }
@@ -760,8 +777,8 @@ data:
         }
       }
       external_labels = {
-        cluster = "grafana-integration-test",
-        "k8s_cluster_name" = "grafana-integration-test",
+        cluster = "loki-integration-test",
+        "k8s_cluster_name" = "loki-integration-test",
       }
     }
     
@@ -899,7 +916,7 @@ data:
     grafana_kubernetes_monitoring_feature_info{deployments="kube-state-metrics,node-exporter,windows-exporter", feature="clusterMetrics", sources="kubelet,kubeletResource,cadvisor,kube-state-metrics,node-exporter,windows-exporter", version="1.0.0"} 1
     grafana_kubernetes_monitoring_feature_info{feature="clusterEvents", version="1.0.0"} 1
     grafana_kubernetes_monitoring_feature_info{feature="podLogs", method="volumes", version="1.0.0"} 1
-    grafana_kubernetes_monitoring_feature_info{feature="integrations", sources="%!s(<nil>)", version="1.0.0"} 1
+    grafana_kubernetes_monitoring_feature_info{feature="integrations", sources="loki", version="1.0.0"} 1
 ---
 # Source: k8s-monitoring/templates/alloy-config.yaml
 apiVersion: v1
@@ -927,8 +944,8 @@ data:
         }
       }
       external_labels = {
-        cluster = "grafana-integration-test",
-        "k8s_cluster_name" = "grafana-integration-test",
+        cluster = "loki-integration-test",
+        "k8s_cluster_name" = "loki-integration-test",
       }
     }
     
@@ -1040,19 +1057,28 @@ data:
           regex = "(.+)"
           target_label = "app_kubernetes_io_name"
         }
+        // add static label of integration="loki" and instance="name" to pods that match the selector so they can be identified in the loki.process stages
         rule {
           source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
           separator = ";"
-          regex = "(?:grafana)"
-          target_label = "job"
-          replacement = "integrations/grafana"
+          regex = "(?:loki)"
+          target_label = "integration"
+          replacement = "loki"
         }
         rule {
           source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
           separator = ";"
-          regex = "(?:grafana)"
+          regex = "(?:loki)"
           target_label = "instance"
-          replacement = "grafana"
+          replacement = "loki"
+        }
+        // override the job label to be namespace/component so it aligns to the loki-mixin
+        rule {
+          source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name","__meta_kubernetes_namespace","__meta_kubernetes_pod_label_component"]
+          separator = ";"
+          regex = "(?:loki);([^;]+);([^;]+)"
+          target_label = "job"
+          replacement = "$1/$2"
         }
       }
     
@@ -1122,14 +1148,14 @@ data:
             "tmp_container_runtime",
           ]
         }
-        // Integration: Grafana
+        // Integration: Loki
         stage.match {
-          selector = "{job=\"integrations/grafana\",instance=\"grafana\"}"
+          selector = "{integration=\"loki\",instance=\"loki\"}"
     
           // extract some of the fields from the log line
           stage.logfmt {
             mapping = {
-              "ts" = "t",
+              "ts" = "",
               "level" = "",
             }
           }
@@ -1147,14 +1173,14 @@ data:
           }
           // remove the timestamp from the log line
           stage.replace {
-            expression = `(?:^|\s+)(t=\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d+[^ ]*\s+)`
+            expression = `(?:^|\s+)(ts=\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d+[^ ]*\s+)`
             replace = ""
           }
           // drop certain log levels
           stage.drop {
             source = "level"
             expression = "(?i)(debug)"
-            drop_counter_reason = "grafana-drop-log-level"
+            drop_counter_reason = "loki-drop-log-level"
           }
     
         }
@@ -3903,7 +3929,7 @@ spec:
         args:
         - --port=8080
         - --resources=certificatesigningrequests,configmaps,cronjobs,daemonsets,deployments,endpoints,horizontalpodautoscalers,ingresses,jobs,leases,limitranges,mutatingwebhookconfigurations,namespaces,networkpolicies,nodes,persistentvolumeclaims,persistentvolumes,poddisruptionbudgets,pods,replicasets,replicationcontrollers,resourcequotas,secrets,services,statefulsets,storageclasses,validatingwebhookconfigurations,volumeattachments
-        - --metric-labels-allowlist=nodes=[agentpool,alpha.eksctl.io/cluster-name,alpha.eksctl.io/nodegroup-name,beta.kubernetes.io/instance-type,cloud.google.com/gke-nodepool,cluster_name,ec2_amazonaws_com_Name,ec2_amazonaws_com_aws_autoscaling_groupName,ec2_amazonaws_com_aws_autoscaling_group_name,ec2_amazonaws_com_name,eks_amazonaws_com_nodegroup,k8s_io_cloud_provider_aws,karpenter.sh/nodepool,kubernetes.azure.com/cluster,kubernetes.io/arch,kubernetes.io/hostname,kubernetes.io/os,node.kubernetes.io/instance-type,topology.kubernetes.io/region,topology.kubernetes.io/zone]
+        - --metric-labels-allowlist=nodes=[agentpool,alpha.eksctl.io/cluster-name,alpha.eksctl.io/nodegroup-name,beta.kubernetes.io/instance-type,cloud.google.com/gke-nodepool,cluster-name,ec2.amazonaws.com/Name,ec2.amazonaws.com/aws-autoscaling-groupName,ec2.amazonaws.com/aws-autoscaling-group-name,ec2.amazonaws.com/name,eks.amazonaws.com/nodegroup,k8s.io/cloud-provider-aws,karpenter.sh/nodepool,kubernetes.azure.com/cluster,kubernetes.io/arch,kubernetes.io/hostname,kubernetes.io/os,node.kubernetes.io/instance-type,topology.kubernetes.io/region,topology.kubernetes.io/zone]
         imagePullPolicy: IfNotPresent
         image: registry.k8s.io/kube-state-metrics/kube-state-metrics:v2.14.0
         ports:
