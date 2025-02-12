@@ -15,6 +15,20 @@ is struggling to keep up. The symptoms of this might be:
 By increasing the number of replicas and enabling [automatic sharding](https://github.com/kubernetes/kube-state-metrics#automated-sharding),
 kube-state-metrics will automatically distribute the resources on the cluster across the shards.
 
+## Enabling sharding
+
+To enable sharding, you need to enable the `autosharding` flag in the kube-state-metrics section, and set the desired
+number of replicas.
+
+**Note**: If you are upgrading a k8s-monitoring Helm release to enabling kube-state-metrics sharding, you will need to
+delete the existing kube-state-metrics Service. The changes due to sharding make it so Kubernetes will not be able to
+update the Service in place. After deleting the Service, you can upgrade as normal.
+
+```shell
+$ kubectl delete service grafana-k8s-monitoring-kube-state-metrics
+$ helm upgrade grafana-k8s-monitoring grafana/k8s-monitoring -f values.yaml
+```
+
 ## Changing replicas
 
 Whenever the number of replicas changes, there are two scenarios to consider. Your requirements will dictate which one
