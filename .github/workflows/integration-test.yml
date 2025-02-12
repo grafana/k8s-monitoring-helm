@@ -58,11 +58,10 @@ jobs:
 
       - name: Read special test dependencies
         id: read_deps
-        working-directory: charts/k8s-monitoring/tests/integration
         run: |
-          if [ -f "${{ matrix.test }}/deps.json" ]; then
+          if [ -f "charts/k8s-monitoring/tests/integration/${{ matrix.test }}/deps.json" ]; then
             # e.g. ["terraform", "vendir"]
-            echo "deps=$(jq --compact-output '.' ${{ matrix.test }}/deps.json)" >> $GITHUB_ENV
+            echo "deps=$(jq --compact-output '.' charts/k8s-monitoring/tests/integration/${{ matrix.test }}/deps.json)" >> $GITHUB_ENV
           else
             echo "deps=[]" >> $GITHUB_ENV
           fi
@@ -72,8 +71,7 @@ jobs:
         if: contains(env.deps, 'terraform')
 
       - name: Run test
-        working-directory: charts/k8s-monitoring/tests/integration
-        run: ./scripts/run-cluster-test.sh "${{ matrix.test }}"
+        run: ./scripts/run-cluster-test.sh "charts/k8s-monitoring/tests/integration/${{ matrix.test }}"
         env:
           CREATE_CLUSTER: "true"
           DELETE_CLUSTER: "true"
