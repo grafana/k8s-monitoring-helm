@@ -116,24 +116,15 @@ clusterMetrics:
     enabled: false
   kube-state-metrics:
     enabled: true
-    namespaces:
-      - collectors
-      - logs
-      - metrics
-      - o11y
-    extraMetricProcessingRules: |-
-      rule {
-        action = "keep"
-        source_labels = ["namespace"]
-        regex = "collectors|logs|metrics|o11y"
-      }
+    namespaces: collectors,logs,metrics,o11y
     metricsTuning:
       useDefaultAllowList: false
       includeMetrics: [(.+)]
   node-exporter:
     enabled: true
-    useIntegrationAllowList: true
     deploy: true
+    metricsTuning:
+      useIntegrationAllowList: true
   windows-exporter:
     enabled: false
     deploy: false
@@ -149,6 +140,7 @@ nodeLogs:
 
 podLogs:
   enabled: true
+  collector: alloy-singleton
   labelsToKeep:
     - app
     - app_kubernetes_io_name
@@ -160,7 +152,6 @@ podLogs:
     - pod
     - service_name
   gatherMethod: kubernetesApi
-  collector: alloy-singleton
   namespaces:
     - collectors
     - logs
@@ -174,6 +165,20 @@ applicationObservability:
       thriftHttp:
         enabled: true
         port: 14268
+  processors:
+    k8sattributes:
+      metadata:
+        - k8s.namespace.name
+        - k8s.pod.name
+        - k8s.deployment.name
+        - k8s.statefulset.name
+        - k8s.daemonset.name
+        - k8s.cronjob.name
+        - k8s.job.name
+        - k8s.node.name
+        - k8s.pod.uid
+        - k8s.pod.start_time
+        - k8s.container.name
 
 # Collectors
 alloy-singleton:

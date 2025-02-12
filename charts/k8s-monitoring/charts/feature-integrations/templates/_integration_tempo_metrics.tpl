@@ -99,7 +99,7 @@ declare "tempo_integration" {
     }
 
     argument "job_label" {
-      comment = "The job label to add for all tempo metrics (default: integrations/tempo)"
+      comment = "The job label to add for all Tempo metrics (default: integrations/tempo)"
       optional = true
     }
 
@@ -188,8 +188,8 @@ declare "tempo_integration" {
 {{/* Instantiates the tempo integration */}}
 {{/* Inputs: integration (tempo integration definition), Values (all values), Files (Files object) */}}
 {{- define "integrations.tempo.include.metrics" }}
-{{- $defaultValues := "integrations/tempo-values.yaml" | .Files.Get | fromYaml }}
-{{- with $defaultValues | merge (deepCopy .instance) }}
+{{- $defaultValues := fromYaml (.Files.Get "integrations/tempo-values.yaml") }}
+{{- with mergeOverwrite $defaultValues .instance (dict "type" "integration.tempo") }}
 {{- $metricAllowList := include "integrations.tempo.allowList" (dict "instance" . "Files" $.Files) | fromYamlArray }}
 {{- $metricDenyList := .metrics.tuning.excludeMetrics }}
 {{- $labelSelectors := list }}

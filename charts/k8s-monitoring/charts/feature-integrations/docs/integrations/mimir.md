@@ -15,7 +15,7 @@
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | logs.enabled | bool | `true` | Whether to enable special processing of Mimir pod logs. |
-| logs.tuning.dropLogLevels | list | `[]` | The log levels to drop. Will automatically keep all log levels unless specified here. |
+| logs.tuning.dropLogLevels | list | `["debug"]` | The log levels to drop. Will automatically keep all log levels unless specified here. |
 | logs.tuning.excludeLines | list | `[]` | Line patterns (valid RE2 regular expression)to exclude from the logs. |
 | logs.tuning.scrubTimestamp | bool | `true` | Whether the timestamp should be scrubbed from the log line |
 | logs.tuning.structuredMetadata | object | `{}` | The structured metadata mappings to set. To not set any structured metadata, set this to an empty object (e.g. `{}`) |

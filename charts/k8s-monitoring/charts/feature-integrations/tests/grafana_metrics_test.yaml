@@ -166,10 +166,10 @@ tests:
                 }
 
                 argument "job_label" {
-                  comment = "The job label to add for all Loki metrics (default: integrations/grafana)"
+                  comment = "The job label to add for all Grafana metrics (default: integrations/grafana)"
                   optional = true
                 }
-            
+
                 argument "keep_metrics" {
                   comment = "A regular expression of metrics to keep (default: see below)"
                   optional = true
@@ -214,8 +214,26 @@ tests:
                   // drop metrics that match the drop_metrics regex
                   rule {
                     source_labels = ["__name__"]
-                    regex = coalesce(argument.drop_metrics.value, "(^(go|process)_.+$)")
+                    regex = coalesce(argument.drop_metrics.value, "")
                     action = "drop"
+                  }
+
+                  // keep only metrics that match the keep_metrics regex
+                  rule {
+                    source_labels = ["__name__"]
+                    regex = coalesce(argument.keep_metrics.value, "(.+)")
+                    action = "keep"
+                  }
+
+                  // the grafana-mixin expects the instance label to be the node name
+                  rule {
+                    source_labels = ["node"]
+                    target_label = "instance"
+                    replacement = "$1"
+                  }
+                  rule {
+                    action = "labeldrop"
+                    regex = "node"
                   }
                 }
               }
@@ -236,7 +254,6 @@ tests:
               }
             }
 
-
   - it: should allow you to restrict the namespaces for metrics
     set:
       deployAsConfigMap: true
@@ -253,3 +270,39 @@ tests:
       - matchRegex:
           path: data["metrics.alloy"]
           pattern: namespaces = \["k8smon"\]
+
+  - it: should allow you to specific which metrics to include
+    set:
+      deployAsConfigMap: true
+      grafana:
+        instances:
+          - name: grafana
+            metrics:
+              tuning:
+                includeMetrics:
+                  - foo
+                  - bar
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["metrics.alloy"]
+          pattern: keep_metrics = "up\|scrape_samples_scraped\|foo\|bar"
+
+  - it: should allow you to specific which metrics to exclude
+    set:
+      deployAsConfigMap: true
+      grafana:
+        instances:
+          - name: grafana
+            metrics:
+              tuning:
+                excludeMetrics:
+                  - foo
+                  - bar
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["metrics.alloy"]
+          pattern: drop_metrics = "foo\|bar"

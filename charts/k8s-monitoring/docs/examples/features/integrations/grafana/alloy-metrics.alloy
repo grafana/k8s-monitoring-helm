@@ -194,7 +194,7 @@ declare "grafana_integration" {
     }
 
     argument "job_label" {
-      comment = "The job label to add for all Loki metrics (default: integrations/grafana)"
+      comment = "The job label to add for all Grafana metrics (default: integrations/grafana)"
       optional = true
     }
 
@@ -242,8 +242,26 @@ declare "grafana_integration" {
       // drop metrics that match the drop_metrics regex
       rule {
         source_labels = ["__name__"]
-        regex = coalesce(argument.drop_metrics.value, "(^(go|process)_.+$)")
+        regex = coalesce(argument.drop_metrics.value, "")
         action = "drop"
+      }
+
+      // keep only metrics that match the keep_metrics regex
+      rule {
+        source_labels = ["__name__"]
+        regex = coalesce(argument.keep_metrics.value, "(.+)")
+        action = "keep"
+      }
+
+      // the grafana-mixin expects the instance label to be the node name
+      rule {
+        source_labels = ["node"]
+        target_label = "instance"
+        replacement = "$1"
+      }
+      rule {
+        action = "labeldrop"
+        regex = "node"
       }
     }
   }

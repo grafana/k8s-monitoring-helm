@@ -1,6 +1,6 @@
 ---
 # yamllint disable rule:document-start rule:line-length rule:trailing-spaces rule:empty-lines
-suite: Test Tempo integration
+suite: Test Tempo Integration - Metrics
 templates:
   - configmap.yaml
 tests:
@@ -173,7 +173,7 @@ tests:
                 }
 
                 argument "job_label" {
-                  comment = "The job label to add for all tempo metrics (default: integrations/tempo)"
+                  comment = "The job label to add for all Tempo metrics (default: integrations/tempo)"
                   optional = true
                 }
 
@@ -285,3 +285,74 @@ tests:
       - matchRegex:
           path: data["metrics.alloy"]
           pattern: namespaces = \["k8smon"\]
+
+  - it: should allow you to disable the default allow list
+    set:
+      deployAsConfigMap: true
+      tempo:
+        instances:
+          - name: tempo
+            metrics:
+              tuning:
+                useDefaultAllowList: false
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["metrics.alloy"]
+          # The pattern should look like this, but since the regex is escaped, it will be a bit different
+          # tempo_integration_scrape  "tempo" {
+          #   targets = tempo_integration_discovery.tempo.output
+          #   job_label = "integrations/tempo"
+          #   clustering = true
+          #   scrape_interval = "60s"
+          #   max_cache_size = 100000
+          #   forward_to = argument.metrics_destinations.value
+          # }
+          pattern: |-
+            \s*tempo_integration_scrape  "tempo" {
+            \s*  targets = tempo_integration_discovery.tempo.output
+            \s*  job_label = "integrations/tempo"
+            \s*  clustering = true
+            \s*  scrape_interval = "60s"
+            \s*  max_cache_size = 100000
+            \s*  forward_to = argument.metrics_destinations.value
+            \s*}
+
+  - it: should allow you to specific which metrics to include
+    set:
+      deployAsConfigMap: true
+      tempo:
+        instances:
+          - name: tempo
+            metrics:
+              tuning:
+                useDefaultAllowList: false
+                includeMetrics:
+                  - foo
+                  - bar
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["metrics.alloy"]
+          pattern: keep_metrics = "up\|scrape_samples_scraped\|foo\|bar"
+
+  - it: should allow you to specific which metrics to exclude
+    set:
+      deployAsConfigMap: true
+      tempo:
+        instances:
+          - name: tempo
+            metrics:
+              tuning:
+                useDefaultAllowList: false
+                excludeMetrics:
+                  - foo
+                  - bar
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["metrics.alloy"]
+          pattern: drop_metrics = "foo\|bar"

@@ -17,10 +17,10 @@ Gather application data via {{ include "english_list" $receivers }} {{ $receiver
 Configure your applications to send telemetry data to:
 {{- if .Values.receivers.otlp.grpc.enabled }}
 * http://{{ .Collector.ServiceName }}.{{ .Collector.Namespace }}.svc.cluster.local:{{ .Values.receivers.otlp.grpc.port }} (OTLP gRPC)
-{{ end }}
+{{- end }}
 {{- if .Values.receivers.otlp.http.enabled }}
 * http://{{ .Collector.ServiceName }}.{{ .Collector.Namespace }}.svc.cluster.local:{{ .Values.receivers.otlp.http.port }} (OTLP HTTP)
-{{ end }}
+{{- end }}
 {{- if .Values.receivers.jaeger.grpc.enabled }}
 * http://{{ .Collector.ServiceName }}.{{ .Collector.Namespace }}.svc.cluster.local:{{ .Values.receivers.jaeger.grpc.port }} (Jaeger gRPC)
 {{- end }}
@@ -35,7 +35,7 @@ Configure your applications to send telemetry data to:
 {{- end }}
 {{- if .Values.receivers.zipkin.enabled }}
 * http://{{ .Collector.ServiceName }}.{{ .Collector.Namespace }}.svc.cluster.local:{{ .Values.receivers.zipkin.port }} (Zipkin)
-{{ end }}
+{{- end }}
 {{- end }}
 
 {{- define "feature.applicationObservability.summary" -}}

@@ -1,6 +1,6 @@
 ---
 # yamllint disable rule:document-start rule:line-length rule:trailing-spaces rule:empty-lines
-suite: Test Tempo integration
+suite: Test Tempo Integration - Logs
 templates:
   - configmap.yaml
 tests:
@@ -47,7 +47,7 @@ tests:
 
             // Processing stages
             loki.process "test" {
-              // Integration: tempo
+              // Integration: Tempo
               stage.match {
                 selector = "{integration=\"tempo\",instance=\"tempo\"}"
 
@@ -74,6 +74,12 @@ tests:
                 stage.replace {
                   expression = "(ts=[^ ]+\\s+)"
                   replace = ""
+                }
+                // drop certain log levels
+                stage.drop {
+                  source = "level"
+                  expression = "(?i)(debug)"
+                  drop_counter_reason = "tempo-drop-log-level"
                 }
 
               }

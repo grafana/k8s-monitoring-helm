@@ -316,17 +316,6 @@ data:
         scheme = "http"
         scrape_interval = "60s"
         max_cache_size = 100000
-        forward_to = [prometheus.relabel.kube_state_metrics.receiver]
-      }
-    
-      prometheus.relabel "kube_state_metrics" {
-        max_cache_size = 100000
-    
-        rule {
-          action = "keep"
-          source_labels = ["namespace"]
-          regex = "collectors|logs|metrics|o11y"
-        }
         forward_to = argument.metrics_destinations.value
       }
     
@@ -361,7 +350,7 @@ data:
         targets = discovery.relabel.node_exporter.output
         job_label = "integrations/node_exporter"
         clustering = true
-        keep_metrics = "up|scrape_samples_scraped|node_cpu.*|node_exporter_build_info|node_filesystem.*|node_memory.*|node_network_receive_bytes_total|node_network_receive_drop_total|node_network_transmit_bytes_total|node_network_transmit_drop_total|process_cpu_seconds_total|process_resident_memory_bytes"
+        keep_metrics = "up|scrape_samples_scraped|node_cpu.*|node_exporter_build_info|node_filesystem.*|node_memory.*|node_network_receive_bytes_total|node_network_receive_drop_total|node_network_transmit_bytes_total|node_network_transmit_drop_total|process_cpu_seconds_total|process_resident_memory_bytes|node_arp_entries|node_boot_time_seconds|node_context_switches_total|node_cpu_seconds_total|node_disk_io_time_seconds_total|node_disk_io_time_weighted_seconds_total|node_disk_read_bytes_total|node_disk_read_time_seconds_total|node_disk_reads_completed_total|node_disk_write_time_seconds_total|node_disk_writes_completed_total|node_disk_written_bytes_total|node_filefd_allocated|node_filefd_maximum|node_filesystem_avail_bytes|node_filesystem_device_error|node_filesystem_files|node_filesystem_files_free|node_filesystem_readonly|node_filesystem_size_bytes|node_intr_total|node_load1|node_load15|node_load5|node_md_disks|node_md_disks_required|node_memory_Active_anon_bytes|node_memory_Active_bytes|node_memory_Active_file_bytes|node_memory_AnonHugePages_bytes|node_memory_AnonPages_bytes|node_memory_Bounce_bytes|node_memory_Buffers_bytes|node_memory_Cached_bytes|node_memory_CommitLimit_bytes|node_memory_Committed_AS_bytes|node_memory_DirectMap1G_bytes|node_memory_DirectMap2M_bytes|node_memory_DirectMap4k_bytes|node_memory_Dirty_bytes|node_memory_HugePages_Free|node_memory_HugePages_Rsvd|node_memory_HugePages_Surp|node_memory_HugePages_Total|node_memory_Hugepagesize_bytes|node_memory_Inactive_anon_bytes|node_memory_Inactive_bytes|node_memory_Inactive_file_bytes|node_memory_Mapped_bytes|node_memory_MemAvailable_bytes|node_memory_MemFree_bytes|node_memory_MemTotal_bytes|node_memory_Shmem_bytes|node_memory_ShmemHugePages_bytes|node_memory_Slab_bytes|node_memory_SReclaimable_bytes|node_memory_SUnreclaim_bytes|node_memory_SwapTotal_bytes|node_memory_VmallocChunk_bytes|node_memory_VmallocTotal_bytes|node_memory_VmallocUsed_bytes|node_memory_Writeback_bytes|node_memory_WritebackTmp_bytes|node_netstat_Icmp_InErrors|node_netstat_Icmp_InMsgs|node_netstat_Icmp_OutMsgs|node_netstat_Icmp6_InErrors|node_netstat_Icmp6_InMsgs|node_netstat_Icmp6_OutMsgs|node_netstat_IpExt_InOctets|node_netstat_IpExt_OutOctets|node_netstat_Tcp_InErrs|node_netstat_Tcp_InSegs|node_netstat_Tcp_OutRsts|node_netstat_Tcp_OutSegs|node_netstat_Tcp_RetransSegs|node_netstat_TcpExt_ListenDrops|node_netstat_TcpExt_ListenOverflows|node_netstat_TcpExt_TCPSynRetrans|node_netstat_Udp_InDatagrams|node_netstat_Udp_InErrors|node_netstat_Udp_NoPorts|node_netstat_Udp_OutDatagrams|node_netstat_Udp_RcvbufErrors|node_netstat_Udp_SndbufErrors|node_netstat_Udp6_InDatagrams|node_netstat_Udp6_InErrors|node_netstat_Udp6_NoPorts|node_netstat_Udp6_OutDatagrams|node_netstat_Udp6_RcvbufErrors|node_netstat_Udp6_SndbufErrors|node_netstat_UdpLite_InErrors|node_network_carrier|node_network_info|node_network_mtu_bytes|node_network_receive_compressed_total|node_network_receive_errs_total|node_network_receive_fifo_total|node_network_receive_multicast_total|node_network_receive_packets_total|node_network_speed_bytes|node_network_transmit_compressed_total|node_network_transmit_errs_total|node_network_transmit_fifo_total|node_network_transmit_multicast_total|node_network_transmit_packets_total|node_network_transmit_queue_length|node_network_up|node_nf_conntrack_entries|node_nf_conntrack_entries_limit|node_os_info|node_procs_running|node_sockstat_FRAG_inuse|node_sockstat_FRAG6_inuse|node_sockstat_RAW_inuse|node_sockstat_RAW6_inuse|node_sockstat_sockets_used|node_sockstat_TCP_alloc|node_sockstat_TCP_inuse|node_sockstat_TCP_mem|node_sockstat_TCP_mem_bytes|node_sockstat_TCP_orphan|node_sockstat_TCP_tw|node_sockstat_TCP6_inuse|node_sockstat_UDP_inuse|node_sockstat_UDP_mem|node_sockstat_UDP_mem_bytes|node_sockstat_UDP6_inuse|node_sockstat_UDPLITE_inuse|node_sockstat_UDPLITE6_inuse|node_softnet_dropped_total|node_softnet_processed_total|node_softnet_times_squeezed_total|node_systemd_service_restart_total|node_systemd_unit_state|node_textfile_scrape_error|node_time_zone_offset_seconds|node_timex_estimated_error_seconds|node_timex_maxerror_seconds|node_timex_offset_seconds|node_timex_sync_status|node_uname_info|node_vmstat_oom_kill|node_vmstat_pgfault|node_vmstat_pgmajfault|node_vmstat_pgpgin|node_vmstat_pgpgout|node_vmstat_pswpin|node_vmstat_pswpout|process_max_fds|process_open_fds"
         scheme = "http"
         scrape_interval = "60s"
         max_cache_size = 100000
@@ -668,21 +657,15 @@ data:
             "tmp_container_runtime",
           ]
         }
-        // Integration: Loki
+        // Integration: Grafana
         stage.match {
           selector = "{job=\"integrations/grafana\",instance=\"grafana\",namespace=~\"o11y\"}"
     
           // extract some of the fields from the log line
           stage.logfmt {
             mapping = {
-              "timestamp" = "t",
+              "ts" = "t",
               "level" = "",
-              "logger" = "",
-              "type" = "",
-              "caller" = "caller",
-              "org_id" = "org_id",
-              "tenant" = "tenant",
-              "user" = "user",
             }
           }
     
@@ -694,23 +677,21 @@ data:
           }
           // reset the timestamp to the extracted value
           stage.timestamp {
-            source = "timestamp"
+            source = "ts"
             format = "RFC3339Nano"
           }
           // remove the timestamp from the log line
           stage.replace {
-            expression = "( t=[^ ]+\\s+)"
+            expression = `(?:^|\s+)(t=\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d+[^ ]*\s+)`
             replace = ""
           }
-          // set the structured metadata values
-          stage.structured_metadata {
-            values = {
-              "caller" = "caller",
-              "org_id" = "org_id",
-              "tenant" = "tenant",
-              "user" = "user",
-            }
+          // drop certain log levels
+          stage.drop {
+            source = "level"
+            expression = "(?i)(debug)"
+            drop_counter_reason = "grafana-drop-log-level"
           }
+    
         }
     
         // Integration: Loki
@@ -742,7 +723,7 @@ data:
           }
           // remove the timestamp from the log line
           stage.replace {
-            expression = "(ts=[^ ]+\\s+)"
+            expression = `(?:^|\s+)(ts=\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d+[^ ]*\s+)`
             replace = ""
           }
           // clean up the caller to remove the line
@@ -759,6 +740,12 @@ data:
               "tenant" = "tenant",
               "user" = "user",
             }
+          }
+          // drop certain log levels
+          stage.drop {
+            source = "level"
+            expression = "(?i)(debug)"
+            drop_counter_reason = "loki-drop-log-level"
           }
     
         }
@@ -792,7 +779,7 @@ data:
           }
           // remove the timestamp from the log line
           stage.replace {
-            expression = "(ts=[^ ]+\\s+)"
+            expression = `(?:^|\s+)(ts=\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d+[^ ]*\s+)`
             replace = ""
           }
           // clean up the caller to remove the line
@@ -809,6 +796,12 @@ data:
               "tenant" = "tenant",
               "user" = "user",
             }
+          }
+          // drop certain log levels
+          stage.drop {
+            source = "level"
+            expression = "(?i)(debug)"
+            drop_counter_reason = "mimir-drop-log-level"
           }
     
         }
@@ -1101,14 +1094,14 @@ data:
       }
     
       alloy_integration_discovery "alloy_in_logs" {
-        port_name = "grafana"
+        port_name = "http-metrics"
         namespaces = ["logs"]
         label_selectors = ["app.kubernetes.io/name=alloy-singleton"]
       }
     
       alloy_integration_scrape  "alloy_in_logs" {
         targets = alloy_integration_discovery.alloy_in_logs.output
-        job_label = "integrations/grafana"
+        job_label = "integrations/alloy"
         clustering = true
         keep_metrics = "up|scrape_samples_scraped|alloy_build_info|alloy_component_controller_running_components|alloy_component_dependencies_wait_seconds|alloy_component_dependencies_wait_seconds_bucket|alloy_component_evaluation_seconds|alloy_component_evaluation_seconds_bucket|alloy_component_evaluation_seconds_count|alloy_component_evaluation_seconds_sum|alloy_component_evaluation_slow_seconds|alloy_config_hash|alloy_resources_machine_rx_bytes_total|alloy_resources_machine_tx_bytes_total|alloy_resources_process_cpu_seconds_total|alloy_resources_process_resident_memory_bytes|alloy_tcp_connections|alloy_wal_samples_appended_total|alloy_wal_storage_active_series|cluster_node_gossip_health_score|cluster_node_gossip_proto_version|cluster_node_gossip_received_events_total|cluster_node_info|cluster_node_lamport_time|cluster_node_peers|cluster_node_update_observers|cluster_transport_rx_bytes_total|cluster_transport_rx_packet_queue_length|cluster_transport_rx_packets_failed_total|cluster_transport_rx_packets_total|cluster_transport_stream_rx_bytes_total|cluster_transport_stream_rx_packets_failed_total|cluster_transport_stream_rx_packets_total|cluster_transport_stream_tx_bytes_total|cluster_transport_stream_tx_packets_failed_total|cluster_transport_stream_tx_packets_total|cluster_transport_streams|cluster_transport_tx_bytes_total|cluster_transport_tx_packet_queue_length|cluster_transport_tx_packets_failed_total|cluster_transport_tx_packets_total|otelcol_exporter_send_failed_spans_total|otelcol_exporter_sent_spans_total|go_gc_duration_seconds_count|go_goroutines|go_memstats_heap_inuse_bytes|loki_process_dropped_lines_total|loki_write_batch_retries_total|loki_write_dropped_bytes_total|loki_write_dropped_entries_total|loki_write_encoded_bytes_total|loki_write_mutated_bytes_total|loki_write_mutated_entries_total|loki_write_request_duration_seconds_bucket|loki_write_sent_bytes_total|loki_write_sent_entries_total|process_cpu_seconds_total|process_start_time_seconds|otelcol_processor_batch_batch_send_size_bucket|otelcol_processor_batch_metadata_cardinality|otelcol_processor_batch_timeout_trigger_send_total|prometheus_remote_storage_bytes_total|prometheus_remote_storage_enqueue_retries_total|prometheus_remote_storage_highest_timestamp_in_seconds|prometheus_remote_storage_metadata_bytes_total|prometheus_remote_storage_queue_highest_sent_timestamp_seconds|prometheus_remote_storage_samples_dropped_total|prometheus_remote_storage_samples_failed_total|prometheus_remote_storage_samples_pending|prometheus_remote_storage_samples_retried_total|prometheus_remote_storage_samples_total|prometheus_remote_storage_sent_batch_duration_seconds_bucket|prometheus_remote_storage_sent_batch_duration_seconds_count|prometheus_remote_storage_sent_batch_duration_seconds_sum|prometheus_remote_storage_shard_capacity|prometheus_remote_storage_shards|prometheus_remote_storage_shards_desired|prometheus_remote_storage_shards_max|prometheus_remote_storage_shards_min|prometheus_remote_storage_succeeded_samples_total|prometheus_remote_write_wal_samples_appended_total|prometheus_remote_write_wal_storage_active_series|prometheus_sd_discovered_targets|prometheus_target_interval_length_seconds_count|prometheus_target_interval_length_seconds_sum|prometheus_target_scrapes_exceeded_sample_limit_total|prometheus_target_scrapes_sample_duplicate_timestamp_total|prometheus_target_scrapes_sample_out_of_bounds_total|prometheus_target_scrapes_sample_out_of_order_total|prometheus_target_sync_length_seconds_sum|prometheus_wal_watcher_current_segment|otelcol_receiver_accepted_spans_total|otelcol_receiver_refused_spans_total|rpc_server_duration_milliseconds_bucket|scrape_duration_seconds|traces_exporter_send_failed_spans|traces_exporter_send_failed_spans_total|traces_exporter_sent_spans|traces_exporter_sent_spans_total|traces_loadbalancer_backend_outcome|traces_loadbalancer_num_backends|traces_receiver_accepted_spans|traces_receiver_accepted_spans_total|traces_receiver_refused_spans|traces_receiver_refused_spans_total"
         scrape_interval = "60s"
@@ -1285,7 +1278,7 @@ data:
         }
     
         argument "job_label" {
-          comment = "The job label to add for all Loki metrics (default: integrations/grafana)"
+          comment = "The job label to add for all Grafana metrics (default: integrations/grafana)"
           optional = true
         }
     
@@ -1333,8 +1326,26 @@ data:
           // drop metrics that match the drop_metrics regex
           rule {
             source_labels = ["__name__"]
-            regex = coalesce(argument.drop_metrics.value, "(^(go|process)_.+$)")
+            regex = coalesce(argument.drop_metrics.value, "")
             action = "drop"
+          }
+    
+          // keep only metrics that match the keep_metrics regex
+          rule {
+            source_labels = ["__name__"]
+            regex = coalesce(argument.keep_metrics.value, "(.+)")
+            action = "keep"
+          }
+    
+          // the grafana-mixin expects the instance label to be the node name
+          rule {
+            source_labels = ["node"]
+            target_label = "instance"
+            replacement = "$1"
+          }
+          rule {
+            action = "labeldrop"
+            regex = "node"
           }
         }
       }
@@ -2099,7 +2110,7 @@ data:
       // K8s Attributes Processor
       otelcol.processor.k8sattributes "default" {
         extract {
-          metadata = ["k8s.namespace.name","k8s.pod.name","k8s.deployment.name","k8s.statefulset.name","k8s.daemonset.name","k8s.cronjob.name","k8s.job.name","k8s.node.name","k8s.pod.uid","k8s.pod.start_time"]
+          metadata = ["k8s.namespace.name","k8s.pod.name","k8s.deployment.name","k8s.statefulset.name","k8s.daemonset.name","k8s.cronjob.name","k8s.job.name","k8s.node.name","k8s.pod.uid","k8s.pod.start_time","k8s.container.name"]
         }
         pod_association {
           source {

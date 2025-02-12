@@ -188,8 +188,8 @@ declare "mimir_integration" {
 {{/* Instantiates the mimir integration */}}
 {{/* Inputs: integration (mimir integration definition), Values (all values), Files (Files object) */}}
 {{- define "integrations.mimir.include.metrics" }}
-{{- $defaultValues := "integrations/mimir-values.yaml" | .Files.Get | fromYaml }}
-{{- with $defaultValues | merge (deepCopy .instance) }}
+{{- $defaultValues := fromYaml (.Files.Get "integrations/mimir-values.yaml") }}
+{{- with mergeOverwrite $defaultValues .instance (dict "type" "integration.mimir") }}
 {{- $metricAllowList := include "integrations.mimir.allowList" (dict "instance" . "Files" $.Files) | fromYamlArray }}
 {{- $metricDenyList := .metrics.tuning.excludeMetrics }}
 {{- $labelSelectors := list }}
