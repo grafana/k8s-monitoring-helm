@@ -83,6 +83,11 @@ if [ "${DELETE_CLUSTER}" == "true" ]; then
   trap deleteCluster EXIT
 fi
 
+# If cluster creation left a kubeconfig file, use it
+if [ -f "${TEST_DIRECTORY}/kubeconfig.yaml" ]; then
+  export KUBECONFIG="${TEST_DIRECTORY}/kubeconfig.yaml"
+fi
+
 # Build any pre-requisite files
 if [ -f "${TEST_DIRECTORY}/Makefile" ]; then
   make -C "${TEST_DIRECTORY}" clean all
