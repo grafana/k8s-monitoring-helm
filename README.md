@@ -35,7 +35,7 @@ helm repo add grafana https://grafana.github.io/helm-charts
 ```
 
 See
-the [Chart Documentation](https://github.com/grafana/k8s-monitoring-helm/blob/main/charts/k8s-monitoring-v1/README.md)
+the [Chart Documentation](https://github.com/grafana/k8s-monitoring-helm/blob/main/charts/k8s-monitoring/README.md)
 for chart install instructions.
 
 ## Office Hours
