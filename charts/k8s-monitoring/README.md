@@ -11,6 +11,10 @@ Capture all telemetry data from your Kubernetes cluster.
 
 ## Usage
 
+### Migrating from v1
+
+v2 introduces some significant changes to the chart configuration values. Refer to the migration [documentation](./docs/Migration.md) for tools and strategies to migrate from v1.
+
 ### Setup Grafana chart repository
 
 ```shell
