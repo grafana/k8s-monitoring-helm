@@ -1,4 +1,4 @@
-all: deployments/test-variables.yaml deployments/grafana-cloud-credentials.yaml
+all: deployments/test-variables.yaml deployments/grafana-cloud-credentials.yaml flux-manifest.yaml
 clean:
 	rm -f deployments/test-variables.yaml deployments/grafana-cloud-credentials.yaml
 
@@ -21,16 +21,14 @@ deployments/grafana-cloud-credentials.yaml:
   		--from-literal=LOKI_PASS="$$GRAFANA_CLOUD_RW_POLICY_TOKEN" \
 		-o yaml --dry-run=client >> $@
 
-flux-manifests/flux.yaml:
+flux-manifest.yaml:
 	flux install \
 		--components source-controller,helm-controller \
-		--export > $@
-
-flux-manifests/scc.yaml:
-	wget https://raw.githubusercontent.com/fluxcd/flux2/main/manifests/openshift/scc.yaml -O $@
-
-.PHONY: flux-manifests
-flux-manifests: flux-manifests/flux.yaml flux-manifests/scc.yaml
+		--export > flux-temp.yaml
+	echo "---" >> flux-temp.yaml
+	curl https://raw.githubusercontent.com/fluxcd/flux2/main/manifests/openshift/scc.yaml >> flux-temp.yaml
+	kustomize build . > $@
+	rm flux-temp.yaml
 
 run-test:
 	../../../../../scripts/run-cluster-test.sh .

@@ -84,8 +84,10 @@ if [ "${DELETE_CLUSTER}" == "true" ]; then
 fi
 
 # Deploy flux
-if command -v flux &> /dev/null; then
-  flux install
+if [ -f "${TEST_DIRECTORY}/flux-manifest.yaml" ]; then
+  kubectl apply -f "${TEST_DIRECTORY}/flux-manifest.yaml"
+elif command -v flux &> /dev/null; then
+  flux install --components=source-controller,helm-controller
 else
   helm upgrade --install --namespace flux-system --create-namespace flux oci://ghcr.io/fluxcd-community/charts/flux2 --wait
 fi
