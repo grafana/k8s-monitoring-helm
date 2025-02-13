@@ -38,14 +38,20 @@ application_observability "feature" {
 {{- define "features.applicationObservability.validate" }}
 {{- if .Values.applicationObservability.enabled -}}
 {{- $featureName := "Application Observability" }}
+{{- if .Values.applicationObservability.metrics.enabled -}}
 {{- $metricDestinations := include "destinations.get" (dict "destinations" $.Values.destinations "type" "metrics" "ecosystem" "otlp" "filter" $.Values.applicationObservability.destinations) | fromYamlArray -}}
 {{- include "destinations.validate_destination_list" (dict "destinations" $metricDestinations "type" "metrics" "ecosystem" "otlp" "feature" $featureName) }}
+{{- end -}}
 
+{{- if .Values.applicationObservability.logs.enabled -}}
 {{- $logDestinations := include "destinations.get" (dict "destinations" $.Values.destinations "type" "logs" "ecosystem" "loki" "filter" $.Values.applicationObservability.destinations) | fromYamlArray -}}
 {{- include "destinations.validate_destination_list" (dict "destinations" $logDestinations "type" "logs" "ecosystem" "loki" "feature" $featureName) }}
+{{- end -}}
 
+{{- if .Values.applicationObservability.traces.enabled -}}
 {{- $traceDestinations := include "destinations.get" (dict "destinations" $.Values.destinations "type" "traces" "ecosystem" "otlp" "filter" $.Values.applicationObservability.destinations) | fromYamlArray -}}
 {{- include "destinations.validate_destination_list" (dict "destinations" $traceDestinations "type" "traces" "ecosystem" "otlp" "feature" $featureName) }}
+{{- end -}}
 
 {{- range $collector := include "features.applicationObservability.collectors" . | fromYamlArray }}
   {{- include "collectors.require_collector" (dict "Values" $.Values "name" $collector "feature" $featureName) }}
