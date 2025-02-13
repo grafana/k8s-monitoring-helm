@@ -61,83 +61,19 @@ clusterEvents:
 podLogs:
   enabled: true
 
+integrations:
+  alloy:
+    instances:
+      - name: alloy
+        labelSelectors:
+          app.kubernetes.io/name: [alloy-metrics, alloy-singleton, alloy-logs]
+
 alloy-metrics:
   enabled: true
-  alloy:
-    securityContext:
-      allowPrivilegeEscalation: false
-      capabilities:
-        add:
-          - CHOWN
-          - DAC_OVERRIDE
-          - FOWNER
-          - FSETID
-          - KILL
-          - SETGID
-          - SETUID
-          - SETPCAP
-          - NET_BIND_SERVICE
-          - NET_RAW
-          - SYS_CHROOT
-          - MKNOD
-          - AUDIT_WRITE
-          - SETFCAP
-        drop:
-          - ALL
-      seccompProfile:
-        type: RuntimeDefault
+
 alloy-singleton:
   enabled: true
-  alloy:
-    securityContext:
-      allowPrivilegeEscalation: false
-      capabilities:
-        add:
-          - CHOWN
-          - DAC_OVERRIDE
-          - FOWNER
-          - FSETID
-          - KILL
-          - SETGID
-          - SETUID
-          - SETPCAP
-          - NET_BIND_SERVICE
-          - NET_RAW
-          - SYS_CHROOT
-          - MKNOD
-          - AUDIT_WRITE
-          - SETFCAP
-        drop:
-          - ALL
-      seccompProfile:
-        type: RuntimeDefault
+
 alloy-logs:
   enabled: true
-  alloy:
-    securityContext:
-      allowPrivilegeEscalation: false
-      capabilities:
-        add:
-          - CHOWN
-          - DAC_OVERRIDE
-          - FOWNER
-          - FSETID
-          - KILL
-          - SETGID
-          - SETUID
-          - SETPCAP
-          - NET_BIND_SERVICE
-          - NET_RAW
-          - SYS_CHROOT
-          - MKNOD
-          - AUDIT_WRITE
-          - SETFCAP
-        drop:
-          - ALL
-      privileged: false
-      runAsUser: 0
-  global:
-    podSecurityContext:
-      seLinuxOptions:
-        type: spc_t
 ```
