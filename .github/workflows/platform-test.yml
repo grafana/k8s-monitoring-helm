@@ -102,9 +102,13 @@ jobs:
 
       - name: Setup OpenShift Installer CLI
         if: ${{ steps.check-cluster-config.outputs.cluster-type == 'openshift' }}
-        uses: redhat-actions/openshift-tools-installer@v1
+        uses: robinraju/release-downloader@v1
         with:
-          openshift-install: latest
+          repository: okd-project/okd
+          latest: true
+          fileName: openshift-install-linux-*.tar.gz
+          extract: true
+          out-file-path: /usr/local/bin
 
       - name: Configure AWS Credentials
         if: ${{ steps.check-cluster-config.outputs.cluster-type == 'eks' }}
