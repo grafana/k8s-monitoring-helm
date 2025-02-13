@@ -83,19 +83,24 @@ if [ "${DELETE_CLUSTER}" == "true" ]; then
   trap deleteCluster EXIT
 fi
 
+# Build any pre-requisite files
+if [ -f "${TEST_DIRECTORY}/Makefile" ]; then
+  make -C "${TEST_DIRECTORY}" clean all
+fi
+
 # Deploy flux
 if [ -f "${TEST_DIRECTORY}/flux-manifest.yaml" ]; then
+  # Use the locally defined flux-manifest.yaml file, which may include platform specific customizations
   kubectl apply -f "${TEST_DIRECTORY}/flux-manifest.yaml"
 elif command -v flux &> /dev/null; then
+  # Install via the flux CLI, if it's available
   flux install --components=source-controller,helm-controller
 else
+  # Install via Helm, if the flux CLI is not available
   helm upgrade --install --namespace flux-system --create-namespace flux oci://ghcr.io/fluxcd-community/charts/flux2 --wait
 fi
 
 # Apply the deployments directory
-if [ -f "${TEST_DIRECTORY}/Makefile" ]; then
-  make -C "${TEST_DIRECTORY}" clean all
-fi
 if [ -d "${TEST_DIRECTORY}/deployments" ]; then
   kubectl apply -f ${TEST_DIRECTORY}/deployments
 fi

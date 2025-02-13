@@ -101,7 +101,7 @@ jobs:
           ARCH: amd64
 
       - name: Setup OpenShift Installer CLI
-        if : ${{ steps.check-cluster-config.outputs.cluster-type == 'openshift' }}
+        if: ${{ steps.check-cluster-config.outputs.cluster-type == 'openshift' }}
         uses: redhat-actions/openshift-tools-installer@v1
         with:
           openshift-install: latest
@@ -121,7 +121,7 @@ jobs:
           credentials_json: '${{ secrets.GCP_SERVICE_ACCOUNT_TOKEN }}'
 
       - name: Set up GCP Cloud SDK
-        if: ${{ steps.check-cluster-config.outputs.cluster-type == 'gke' || steps.check-cluster-config.outputs.cluster-type == 'okd' }}
+        if: ${{ steps.check-cluster-config.outputs.cluster-type == 'gke' || steps.check-cluster-config.outputs.cluster-type == 'openshift' }}
         uses: google-github-actions/setup-gcloud@v2
         with:
           install_components: gke-gcloud-auth-plugin

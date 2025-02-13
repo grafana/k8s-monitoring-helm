@@ -1,6 +1,7 @@
+.PHONY: all clean run-test
 all: deployments/test-variables.yaml deployments/grafana-cloud-credentials.yaml flux-manifest.yaml
 clean:
-	rm -f deployments/test-variables.yaml deployments/grafana-cloud-credentials.yaml
+	rm -f deployments/test-variables.yaml deployments/grafana-cloud-credentials.yaml flux-manifest.yaml
 
 deployments/test-variables.yaml:
 	echo "---" > $@
