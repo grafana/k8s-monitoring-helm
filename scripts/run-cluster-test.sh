@@ -85,8 +85,12 @@ fi
 
 # If cluster creation left a kubeconfig file, use it
 if [ -f "${TEST_DIRECTORY}/kubeconfig.yaml" ]; then
+  echo "Using local kubeconfig file: ${TEST_DIRECTORY}/kubeconfig.yaml"
   export KUBECONFIG="${TEST_DIRECTORY}/kubeconfig.yaml"
 fi
+
+# Test the cluster connection
+kubectl get nodes
 
 # Build any pre-requisite files
 if [ -f "${TEST_DIRECTORY}/Makefile" ]; then
@@ -96,22 +100,27 @@ fi
 # Deploy flux
 if [ -f "${TEST_DIRECTORY}/flux-manifest.yaml" ]; then
   # Use the locally defined flux-manifest.yaml file, which may include platform specific customizations
+  echo "Deploying Flux via ${TEST_DIRECTORY}/flux-manifest.yaml"
   kubectl apply -f "${TEST_DIRECTORY}/flux-manifest.yaml"
 elif command -v flux &> /dev/null; then
   # Install via the flux CLI, if it's available
+  echo "Deploying Flux via the flux CLI"
   flux install --components=source-controller,helm-controller
 else
   # Install via Helm, if the flux CLI is not available
+  echo "Deploying Flux via Helm"
   helm upgrade --install --namespace flux-system --create-namespace flux oci://ghcr.io/fluxcd-community/charts/flux2 --wait
 fi
 
 # Apply the deployments directory
 if [ -d "${TEST_DIRECTORY}/deployments" ]; then
+  echo "Applying ${TEST_DIRECTORY}/deployments"
   kubectl apply -f ${TEST_DIRECTORY}/deployments
 fi
 
 # Ensure that the test chart has been deployed
 FIVE_MINUTES=300
+echo "Waiting for k8s-monitoring-test Helm chart to be ready"
 for i in $(seq 1 ${FIVE_MINUTES}); do
   if helm status k8s-monitoring-test 2>&1 | grep "STATUS: deployed" > /dev/null ; then
     break
