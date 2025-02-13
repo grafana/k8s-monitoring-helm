@@ -21,7 +21,7 @@ spec:
   clusterIP: {{ (index .Values "alloy-receiver").service.clusterIP }}
   {{- end }}
   selector:
-    {{- include "alloy.selectorLabels" . | nindent 4 }}
+    {{- include "alloy.selectorLabels" (index .Subcharts "alloy-receiver") | nindent 4 }}
   {{- if semverCompare ">=1.26-0" .Capabilities.KubeVersion.Version }}
   internalTrafficPolicy: {{ (index .Values "alloy-receiver").service.internalTrafficPolicy}}
   {{- end }}
