@@ -46,6 +46,43 @@ destinations:
         action   = "drop"
       }
 
+  - name: allTraces
+    type: otlp
+    url: all-traces-tempo.all-dbs.svc:4317
+    tls:
+      insecure: true
+      insecureSkipVerify: true
+    metrics: { enabled: false }
+    logs: { enabled: false }
+    traces: { enabled: true }
+
+  - name: productionTraces
+    type: otlp
+    url: prod-traces-tempo.prod-dbs.svc:4317
+    tls:
+      insecure: true
+      insecureSkipVerify: true
+    metrics: { enabled: false }
+    logs: { enabled: false }
+    traces: { enabled: true }
+    processors:
+      filter:
+        enabled: true
+        traces:
+          span:
+            - resource.attributes["k8s.namespace.name"] != "prod-dbs"
+
+autoInstrumentation:
+  enabled: true
+
+applicationObservability:
+  enabled: true
+  receivers:
+    otlp:
+      grpc:
+        enabled: true
+
+
 clusterMetrics:
   enabled: true
 
@@ -57,3 +94,12 @@ alloy-metrics:
 
 alloy-logs:
   enabled: true
+
+alloy-receiver:
+  enabled: true
+  alloy:
+    extraPorts:
+      - name: otlp-grpc
+        port: 4317
+        targetPort: 4317
+        protocol: TCP

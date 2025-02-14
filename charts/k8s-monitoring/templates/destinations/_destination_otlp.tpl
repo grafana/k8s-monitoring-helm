@@ -198,6 +198,68 @@ otelcol.processor.transform {{ include "helper.alloy_name" .name | quote }} {
   }
 {{- end }}
 {{- end }}
+{{- if .processors.filter.enabled }}
+
+  output {
+{{- if ne .metrics.enabled false }}
+    metrics = [otelcol.processor.filter.{{ include "helper.alloy_name" .name }}.input]
+{{- end }}
+{{- if ne .logs.enabled false }}
+    logs = [otelcol.processor.filter.{{ include "helper.alloy_name" .name }}.input]
+{{- end }}
+{{- if ne .traces.enabled false }}
+    traces = [otelcol.processor.filter.{{ include "helper.alloy_name" .name }}.input]
+{{- end }}
+  }
+}
+
+otelcol.processor.filter {{ include "helper.alloy_name" .name | quote }} {
+{{- if and .metrics.enabled (or .processors.filter.metrics.metric .processors.filter.metrics.datapoint) }}
+  metrics {
+{{- if .processors.filter.metrics.metric }}
+    metric = [
+{{- range $filter := .processors.filter.metrics.metric }}
+{{ $filter | quote | indent 6 }},
+{{- end }}
+    ]
+{{- end }}
+{{- if .processors.filter.metrics.datapoint }}
+    datapoint = [
+{{- range $filter := .processors.filter.metrics.datapoint }}
+{{ $filter | quote | indent 6 }},
+{{- end }}
+    ]
+{{- end }}
+  }
+{{- end }}
+{{- if and .logs.enabled .processors.filter.logs.log_record }}
+  logs {
+    log_record = [
+{{- range $filter := .processors.filter.logs.log_record }}
+{{ $filter | quote | indent 6 }},
+{{- end }}
+    ]
+  }
+{{- end }}
+{{- if and .traces.enabled (or .processors.filter.traces.span .processors.filter.traces.spanevent) }}
+  traces {
+{{- if .processors.filter.traces.span }}
+    span = [
+{{- range $filter := .processors.filter.traces.span }}
+{{ $filter | quote | indent 6 }},
+{{- end }}
+    ]
+{{- end }}
+{{- if .processors.filter.traces.spanevent }}
+    spanevent = [
+{{- range $filter := .processors.filter.traces.spanevent }}
+{{ $filter | quote | indent 6 }},
+{{- end }}
+    ]
+{{- end }}
+  }
+{{- end }}
+{{- end }}
 {{- if .processors.batch.enabled }}
 
   output {
