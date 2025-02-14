@@ -47,19 +47,6 @@ metadata:
     app.kubernetes.io/part-of: alloy
     app.kubernetes.io/component: rbac
 ---
-# Source: k8s-monitoring/charts/clusterMetrics/charts/kepler/templates/serviceaccount.yaml
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: k8smon-kepler
-  namespace: default
-  labels:
-    helm.sh/chart: kepler-0.5.13
-    app.kubernetes.io/name: kepler
-    app.kubernetes.io/component: exporter
-    app.kubernetes.io/version: "release-0.7.12"
-    app.kubernetes.io/managed-by: Helm
----
 # Source: k8s-monitoring/charts/clusterMetrics/charts/windows-exporter/templates/serviceaccount.yaml
 apiVersion: v1
 kind: ServiceAccount
@@ -107,19 +94,27 @@ metadata:
   namespace: default
 data:
   config.alloy: |-
-    // Destination: prometheus (prometheus)
-    otelcol.exporter.prometheus "prometheus" {
+    // Destination: grafanaCloudMetrics (prometheus)
+    otelcol.exporter.prometheus "grafanacloudmetrics" {
       add_metric_suffixes = true
-      forward_to = [prometheus.remote_write.prometheus.receiver]
+      forward_to = [prometheus.remote_write.grafanacloudmetrics.receiver]
     }
     
-    prometheus.remote_write "prometheus" {
+    prometheus.remote_write "grafanacloudmetrics" {
       endpoint {
-        url = "http://prometheus.prometheus.svc:9090/api/v1/write"
+        url = "https://prometheus-prod-13-prod-us-east-0.grafana.net/api/prom/push"
         headers = {
+          "X-Scope-OrgID" = nonsensitive(remote.kubernetes.secret.grafanacloudmetrics.data["tenantId"]),
+        }
+        basic_auth {
+          username = nonsensitive(remote.kubernetes.secret.grafanacloudmetrics.data["PROMETHEUS_USER"])
+          password = remote.kubernetes.secret.grafanacloudmetrics.data["PROMETHEUS_PASS"]
         }
         tls_config {
           insecure_skip_verify = false
+          ca_pem = nonsensitive(remote.kubernetes.secret.grafanacloudmetrics.data["ca"])
+          cert_pem = nonsensitive(remote.kubernetes.secret.grafanacloudmetrics.data["cert"])
+          key_pem = remote.kubernetes.secret.grafanacloudmetrics.data["key"]
         }
         send_native_histograms = false
     
@@ -138,13 +133,13 @@ data:
         write_relabel_config {
           source_labels = ["cluster"]
           regex = ""
-          replacement = "openshift-cluster"
+          replacement = "openshift-test"
           target_label = "cluster"
         }
         write_relabel_config {
           source_labels = ["k8s.cluster.name"]
           regex = ""
-          replacement = "openshift-cluster"
+          replacement = "openshift-test"
           target_label = "cluster"
         }
       }
@@ -154,6 +149,11 @@ data:
         min_keepalive_time = "5m"
         max_keepalive_time = "8h"
       }
+    }
+    
+    remote.kubernetes.secret "grafanacloudmetrics" {
+      name      = "grafana-cloud-credentials"
+      namespace = "default"
     }
     // Feature: Cluster Metrics
     declare "cluster_metrics" {
@@ -376,51 +376,10 @@ data:
         }
         forward_to = argument.metrics_destinations.value
       }
-    
-      discovery.kubernetes "kepler" {
-        role = "pod"
-        namespaces {
-          own_namespace = true
-        }
-        selectors {
-          role = "pod"
-          label = "app.kubernetes.io/name=kepler"
-        }
-      }
-    
-      discovery.relabel "kepler" {
-        targets = discovery.kubernetes.kepler.targets
-        rule {
-          source_labels = ["__meta_kubernetes_pod_node_name"]
-          action = "replace"
-          target_label = "instance"
-        }
-      }
-    
-      prometheus.scrape "kepler" {
-        targets      = discovery.relabel.kepler.output
-        job_name     = "integrations/kepler"
-        honor_labels = true
-        scrape_interval = "60s"
-        clustering {
-          enabled = true
-        }
-        forward_to = [prometheus.relabel.kepler.receiver]
-      }
-    
-      prometheus.relabel "kepler" {
-        max_cache_size = 100000
-        rule {
-          source_labels = ["__name__"]
-          regex = "up|scrape_samples_scraped|kepler_.*"
-          action = "keep"
-        }
-        forward_to = argument.metrics_destinations.value
-      }
     }
     cluster_metrics "feature" {
       metrics_destinations = [
-        prometheus.remote_write.prometheus.receiver,
+        prometheus.remote_write.grafanacloudmetrics.receiver,
       ]
     }
     declare "alloy_integration" {
@@ -714,7 +673,7 @@ data:
     }
     alloy_integration "integration" {
       metrics_destinations = [
-        prometheus.remote_write.prometheus.receiver,
+        prometheus.remote_write.grafanacloudmetrics.receiver,
       ]
     }
 ---
@@ -726,19 +685,27 @@ metadata:
   namespace: default
 data:
   config.alloy: |-
-    // Destination: prometheus (prometheus)
-    otelcol.exporter.prometheus "prometheus" {
+    // Destination: grafanaCloudMetrics (prometheus)
+    otelcol.exporter.prometheus "grafanacloudmetrics" {
       add_metric_suffixes = true
-      forward_to = [prometheus.remote_write.prometheus.receiver]
+      forward_to = [prometheus.remote_write.grafanacloudmetrics.receiver]
     }
     
-    prometheus.remote_write "prometheus" {
+    prometheus.remote_write "grafanacloudmetrics" {
       endpoint {
-        url = "http://prometheus.prometheus.svc:9090/api/v1/write"
+        url = "https://prometheus-prod-13-prod-us-east-0.grafana.net/api/prom/push"
         headers = {
+          "X-Scope-OrgID" = nonsensitive(remote.kubernetes.secret.grafanacloudmetrics.data["tenantId"]),
+        }
+        basic_auth {
+          username = nonsensitive(remote.kubernetes.secret.grafanacloudmetrics.data["PROMETHEUS_USER"])
+          password = remote.kubernetes.secret.grafanacloudmetrics.data["PROMETHEUS_PASS"]
         }
         tls_config {
           insecure_skip_verify = false
+          ca_pem = nonsensitive(remote.kubernetes.secret.grafanacloudmetrics.data["ca"])
+          cert_pem = nonsensitive(remote.kubernetes.secret.grafanacloudmetrics.data["cert"])
+          key_pem = remote.kubernetes.secret.grafanacloudmetrics.data["key"]
         }
         send_native_histograms = false
     
@@ -757,13 +724,13 @@ data:
         write_relabel_config {
           source_labels = ["cluster"]
           regex = ""
-          replacement = "openshift-cluster"
+          replacement = "openshift-test"
           target_label = "cluster"
         }
         write_relabel_config {
           source_labels = ["k8s.cluster.name"]
           regex = ""
-          replacement = "openshift-cluster"
+          replacement = "openshift-test"
           target_label = "cluster"
         }
       }
@@ -774,22 +741,41 @@ data:
         max_keepalive_time = "8h"
       }
     }
-    // Destination: loki (loki)
-    otelcol.exporter.loki "loki" {
-      forward_to = [loki.write.loki.receiver]
+    
+    remote.kubernetes.secret "grafanacloudmetrics" {
+      name      = "grafana-cloud-credentials"
+      namespace = "default"
     }
     
-    loki.write "loki" {
+    // Destination: grafanaCloudLogs (loki)
+    otelcol.exporter.loki "grafanacloudlogs" {
+      forward_to = [loki.write.grafanacloudlogs.receiver]
+    }
+    
+    loki.write "grafanacloudlogs" {
       endpoint {
-        url = "http://prometheus.prometheus.svc:9090/api/v1/write"
+        url = "https://logs-prod-006.grafana.net/loki/api/v1/push"
+        tenant_id = nonsensitive(remote.kubernetes.secret.grafanacloudlogs.data["tenantId"])
+        basic_auth {
+          username = nonsensitive(remote.kubernetes.secret.grafanacloudlogs.data["LOKI_USER"])
+          password = remote.kubernetes.secret.grafanacloudlogs.data["LOKI_PASS"]
+        }
         tls_config {
           insecure_skip_verify = false
+          ca_pem = nonsensitive(remote.kubernetes.secret.grafanacloudlogs.data["ca"])
+          cert_pem = nonsensitive(remote.kubernetes.secret.grafanacloudlogs.data["cert"])
+          key_pem = remote.kubernetes.secret.grafanacloudlogs.data["key"]
         }
       }
       external_labels = {
-        cluster = "openshift-cluster",
-        "k8s_cluster_name" = "openshift-cluster",
+        cluster = "openshift-test",
+        "k8s_cluster_name" = "openshift-test",
       }
+    }
+    
+    remote.kubernetes.secret "grafanacloudlogs" {
+      name      = "grafana-cloud-credentials"
+      namespace = "default"
     }
     // Feature: Cluster Events
     declare "cluster_events" {
@@ -865,7 +851,7 @@ data:
     }
     cluster_events "feature" {
       logs_destinations = [
-        loki.write.loki.receiver,
+        loki.write.grafanacloudlogs.receiver,
       ]
     }
     // Self Reporting
@@ -907,7 +893,7 @@ data:
         action = "keep"
       }
       forward_to = [
-        prometheus.remote_write.prometheus.receiver,
+        prometheus.remote_write.grafanacloudmetrics.receiver,
       ]
     }
 
@@ -918,7 +904,7 @@ data:
     grafana_kubernetes_monitoring_build_info{version="2.0.10", namespace="default", platform="openshift"} 1
     # HELP grafana_kubernetes_monitoring_feature_info A metric to report the enabled features of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_feature_info gauge
-    grafana_kubernetes_monitoring_feature_info{deployments="windows-exporter,kepler", feature="clusterMetrics", sources="kubelet,kubeletResource,cadvisor,kube-state-metrics,node-exporter,windows-exporter,kepler", version="1.0.0"} 1
+    grafana_kubernetes_monitoring_feature_info{deployments="windows-exporter", feature="clusterMetrics", sources="kubelet,kubeletResource,cadvisor,kube-state-metrics,node-exporter,windows-exporter", version="1.0.0"} 1
     grafana_kubernetes_monitoring_feature_info{feature="clusterEvents", version="1.0.0"} 1
     grafana_kubernetes_monitoring_feature_info{feature="podLogs", method="volumes", version="1.0.0"} 1
     grafana_kubernetes_monitoring_feature_info{feature="integrations", sources="alloy", version="1.0.0"} 1
@@ -931,22 +917,35 @@ metadata:
   namespace: default
 data:
   config.alloy: |-
-    // Destination: loki (loki)
-    otelcol.exporter.loki "loki" {
-      forward_to = [loki.write.loki.receiver]
+    // Destination: grafanaCloudLogs (loki)
+    otelcol.exporter.loki "grafanacloudlogs" {
+      forward_to = [loki.write.grafanacloudlogs.receiver]
     }
     
-    loki.write "loki" {
+    loki.write "grafanacloudlogs" {
       endpoint {
-        url = "http://prometheus.prometheus.svc:9090/api/v1/write"
+        url = "https://logs-prod-006.grafana.net/loki/api/v1/push"
+        tenant_id = nonsensitive(remote.kubernetes.secret.grafanacloudlogs.data["tenantId"])
+        basic_auth {
+          username = nonsensitive(remote.kubernetes.secret.grafanacloudlogs.data["LOKI_USER"])
+          password = remote.kubernetes.secret.grafanacloudlogs.data["LOKI_PASS"]
+        }
         tls_config {
           insecure_skip_verify = false
+          ca_pem = nonsensitive(remote.kubernetes.secret.grafanacloudlogs.data["ca"])
+          cert_pem = nonsensitive(remote.kubernetes.secret.grafanacloudlogs.data["cert"])
+          key_pem = remote.kubernetes.secret.grafanacloudlogs.data["key"]
         }
       }
       external_labels = {
-        cluster = "openshift-cluster",
-        "k8s_cluster_name" = "openshift-cluster",
+        cluster = "openshift-test",
+        "k8s_cluster_name" = "openshift-test",
       }
+    }
+    
+    remote.kubernetes.secret "grafanacloudlogs" {
+      name      = "grafana-cloud-credentials"
+      namespace = "default"
     }
     // Feature: Pod Logs
     declare "pod_logs" {
@@ -1131,7 +1130,7 @@ data:
     }
     pod_logs "feature" {
       logs_destinations = [
-        loki.write.loki.receiver,
+        loki.write.grafanacloudlogs.receiver,
       ]
     }
 ---
@@ -2924,38 +2923,6 @@ rules:
     resources: ["replicasets"]
     verbs: ["get", "list", "watch"]
 ---
-# Source: k8s-monitoring/charts/clusterMetrics/charts/kepler/templates/rolebinding.yaml
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: k8smon-kepler-clusterrole
-rules:
-  - apiGroups: [""]
-    resources:
-      - nodes/metrics # access /metrics/resource
-      - nodes/proxy
-      - nodes/stats
-      - pods
-    verbs:
-      - get
-      - watch
-      - list
----
-# Source: k8s-monitoring/charts/clusterMetrics/templates/platform_specific/openshift/kepler-scc.yaml
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: k8smon-kepler-scc
-rules:
-- verbs:
-    - use
-  apiGroups:
-    - security.openshift.io
-  resources:
-    - securitycontextconstraints
-  resourceNames:
-    - k8smon-kepler
----
 # Source: k8s-monitoring/templates/platform_specific/openshift/alloy-logs-scc.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -3069,34 +3036,6 @@ subjects:
   - kind: ServiceAccount
     name: k8smon-alloy-singleton
     namespace: default
----
-# Source: k8s-monitoring/charts/clusterMetrics/charts/kepler/templates/rolebinding.yaml
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: k8smon-kepler-clusterrole-binding
-roleRef:
-  kind: ClusterRole
-  name: k8smon-kepler-clusterrole
-  apiGroup: "rbac.authorization.k8s.io"
-subjects:
-  - kind: ServiceAccount
-    name: k8smon-kepler
-    namespace: default
----
-# Source: k8s-monitoring/charts/clusterMetrics/templates/platform_specific/openshift/kepler-scc.yaml
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: k8smon-kepler-scc
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: k8smon-kepler-scc
-subjects:
-- kind: ServiceAccount
-  name: k8smon-kepler
-  namespace: default
 ---
 # Source: k8s-monitoring/templates/platform_specific/openshift/alloy-logs-scc.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -3251,29 +3190,6 @@ spec:
       targetPort: 12345
       protocol: "TCP"
 ---
-# Source: k8s-monitoring/charts/clusterMetrics/charts/kepler/templates/service.yaml
-apiVersion: v1
-kind: Service
-metadata:
-  name: k8smon-kepler
-  namespace: default
-  labels:
-    helm.sh/chart: kepler-0.5.13
-    app.kubernetes.io/name: kepler
-    app.kubernetes.io/component: exporter
-    app.kubernetes.io/version: "release-0.7.12"
-    app.kubernetes.io/managed-by: Helm
-spec:
-  type: ClusterIP
-  ports:
-    - name: http
-      port: 9102
-      targetPort: http
-      protocol: TCP
-  selector:
-    app.kubernetes.io/name: kepler
-    app.kubernetes.io/component: exporter
----
 # Source: k8s-monitoring/charts/clusterMetrics/charts/windows-exporter/templates/service.yaml
 apiVersion: v1
 kind: Service
@@ -3417,125 +3333,6 @@ spec:
         - name: dockercontainers
           hostPath:
             path: /var/lib/docker/containers
----
-# Source: k8s-monitoring/charts/clusterMetrics/charts/kepler/templates/daemonset.yaml
-apiVersion: apps/v1
-kind: DaemonSet
-metadata:
-  name: k8smon-kepler
-  namespace: default
-  labels:
-    helm.sh/chart: kepler-0.5.13
-    app.kubernetes.io/name: kepler
-    app.kubernetes.io/component: exporter
-    app.kubernetes.io/version: "release-0.7.12"
-    app.kubernetes.io/managed-by: Helm
-spec:
-  selector:
-    matchLabels:
-      app.kubernetes.io/name: kepler
-      app.kubernetes.io/component: exporter
-  template:
-    metadata:
-      annotations:
-        k8s.grafana.com/logs.job: integrations/kepler
-      labels:
-        app.kubernetes.io/name: kepler
-        app.kubernetes.io/component: exporter
-    spec:
-      hostNetwork: true
-      serviceAccountName: k8smon-kepler
-      containers:
-      - name: kepler-exporter
-        image: "quay.io/sustainable_computing_io/kepler:release-0.7.12"
-        imagePullPolicy: Always
-        securityContext:
-            privileged: true
-        args:
-          - -v=$(KEPLER_LOG_LEVEL)
-        env:
-          - name: NODE_IP
-            valueFrom:
-              fieldRef:
-                fieldPath: status.hostIP
-          - name: NODE_NAME
-            valueFrom:
-              fieldRef:
-                fieldPath: spec.nodeName
-          - name: METRIC_PATH
-            value: "/metrics"
-          - name: BIND_ADDRESS
-            value: "0.0.0.0:9102"
-          - name: "CGROUP_METRICS"
-            value: "*"
-          - name: "CPU_ARCH_OVERRIDE"
-            value: ""
-          - name: "ENABLE_EBPF_CGROUPID"
-            value: "true"
-          - name: "ENABLE_GPU"
-            value: "true"
-          - name: "ENABLE_PROCESS_METRICS"
-            value: "false"
-          - name: "ENABLE_QAT"
-            value: "false"
-          - name: "EXPOSE_CGROUP_METRICS"
-            value: "false"
-          - name: "EXPOSE_ESTIMATED_IDLE_POWER_METRICS"
-            value: "true"
-          - name: "EXPOSE_HW_COUNTER_METRICS"
-            value: "true"
-          - name: "EXPOSE_IRQ_COUNTER_METRICS"
-            value: "true"
-          - name: "KEPLER_LOG_LEVEL"
-            value: "1"
-        ports:
-        - containerPort: 9102
-          hostPort: 9102
-          name: http
-        livenessProbe:
-          failureThreshold: 5
-          httpGet:
-            path: /healthz
-            port: 9102
-            scheme: HTTP
-          initialDelaySeconds: 10
-          periodSeconds: 60
-          successThreshold: 1
-          timeoutSeconds: 10
-        volumeMounts:
-          - name: lib-modules
-            mountPath: /lib/modules
-          - name: tracing
-            mountPath: /sys
-          - name: proc
-            mountPath: /proc
-      volumes:
-        - name: lib-modules
-          hostPath:
-            path: /lib/modules
-            type: DirectoryOrCreate
-        - name: tracing
-          hostPath:
-            path: /sys
-            type: Directory
-        - name: proc
-          hostPath:
-            path: /proc
-            type: Directory
-      nodeSelector:
-        kubernetes.io/os: linux
-      affinity:
-        nodeAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            nodeSelectorTerms:
-            - matchExpressions:
-              - key: eks.amazonaws.com/compute-type
-                operator: NotIn
-                values:
-                - fargate
-      tolerations:
-        - effect: NoSchedule
-          key: node-role.kubernetes.io/control-plane
 ---
 # Source: k8s-monitoring/charts/clusterMetrics/charts/windows-exporter/templates/daemonset.yaml
 apiVersion: apps/v1
@@ -3848,44 +3645,6 @@ spec:
         - name: config
           configMap:
             name: k8smon-alloy-metrics
----
-# Source: k8s-monitoring/charts/clusterMetrics/templates/platform_specific/openshift/kepler-scc.yaml
-apiVersion: security.openshift.io/v1
-kind: SecurityContextConstraints
-metadata:
-  name: k8smon-kepler
-allowHostDirVolumePlugin: true
-allowHostIPC: false
-allowHostNetwork: true
-allowHostPID: false
-allowHostPorts: true
-allowPrivilegeEscalation: true
-allowPrivilegedContainer: true
-allowedCapabilities: []
-defaultAddCapabilities: null
-defaultAllowPrivilegeEscalation: false
-forbiddenSysctls:
-- '*'
-fsGroup:
-  type: RunAsAny
-groups: []
-priority: null
-readOnlyRootFilesystem: true
-requiredDropCapabilities: null
-runAsUser:
-  type: RunAsAny
-seLinuxContext:
-  type: RunAsAny
-seccompProfiles:
-  - runtime/default
-supplementalGroups:
-  type: RunAsAny
-users:
-  - system:serviceaccount:default:k8smon-kepler
-volumes:
-- configMap
-- hostPath
-- projected
 ---
 # Source: k8s-monitoring/templates/platform_specific/openshift/alloy-logs-scc.yaml
 apiVersion: security.openshift.io/v1

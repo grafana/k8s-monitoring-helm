@@ -76,4 +76,8 @@ alloy-singleton:
 
 alloy-logs:
   enabled: true
+  global:
+    podSecurityContext:
+      seLinuxOptions:
+        type: container_logreader_t
 ```
