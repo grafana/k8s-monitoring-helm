@@ -20,11 +20,12 @@ destinations:
 
 annotationAutodiscovery:
   enabled: true
-
-alloy-metrics:
-  enabled: true
   annotations:
     scrape: prometheus.io/scrape
     metricsPath: prometheus.io/path
     metricsPortNumber: prometheus.io/port
+    metricsScheme: prometheus.io/scheme
+
+alloy-metrics:
+  enabled: true
 ```

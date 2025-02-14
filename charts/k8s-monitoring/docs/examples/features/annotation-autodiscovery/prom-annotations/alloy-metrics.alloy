@@ -59,7 +59,7 @@ declare "annotation_autodiscovery" {
   discovery.relabel "annotation_autodiscovery_pods" {
     targets = discovery.kubernetes.pods.targets
     rule {
-      source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_scrape"]
+      source_labels = ["__meta_kubernetes_pod_annotation_prometheus_io_scrape"]
       regex = "true"
       action = "keep"
     }
@@ -74,7 +74,7 @@ declare "annotation_autodiscovery" {
       target_label = "instance"
     }
     rule {
-      source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_metrics_path"]
+      source_labels = ["__meta_kubernetes_pod_annotation_prometheus_io_path"]
       action = "replace"
       target_label = "__metrics_path__"
     }
@@ -104,20 +104,20 @@ declare "annotation_autodiscovery" {
     // If the metrics port number annotation has a value, override the target address to use it, regardless whether it is
     // one of the declared ports on that Pod.
     rule {
-      source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_metrics_portNumber", "__meta_kubernetes_pod_ip"]
+      source_labels = ["__meta_kubernetes_pod_annotation_prometheus_io_port", "__meta_kubernetes_pod_ip"]
       regex = "(\\d+);(([A-Fa-f0-9]{1,4}::?){1,7}[A-Fa-f0-9]{1,4})"
       replacement = "[$2]:$1" // IPv6
       target_label = "__address__"
     }
     rule {
-      source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_metrics_portNumber", "__meta_kubernetes_pod_ip"]
+      source_labels = ["__meta_kubernetes_pod_annotation_prometheus_io_port", "__meta_kubernetes_pod_ip"]
       regex = "(\\d+);((([0-9]+?)(\\.|$)){4})" // IPv4, takes priority over IPv6 when both exists
       replacement = "$2:$1"
       target_label = "__address__"
     }
 
     rule {
-      source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_metrics_scheme"]
+      source_labels = ["__meta_kubernetes_pod_annotation_prometheus_io_scheme"]
       action = "replace"
       target_label = "__scheme__"
     }
@@ -136,7 +136,7 @@ declare "annotation_autodiscovery" {
   discovery.relabel "annotation_autodiscovery_services" {
     targets = discovery.kubernetes.services.targets
     rule {
-      source_labels = ["__meta_kubernetes_service_annotation_k8s_grafana_com_scrape"]
+      source_labels = ["__meta_kubernetes_service_annotation_prometheus_io_scrape"]
       regex = "true"
       action = "keep"
     }
@@ -151,7 +151,7 @@ declare "annotation_autodiscovery" {
       target_label = "instance"
     }
     rule {
-      source_labels = ["__meta_kubernetes_service_annotation_k8s_grafana_com_metrics_path"]
+      source_labels = ["__meta_kubernetes_service_annotation_prometheus_io_path"]
       action = "replace"
       target_label = "__metrics_path__"
     }
@@ -177,7 +177,7 @@ declare "annotation_autodiscovery" {
       target_label = "__tmp_port"
     }
     rule {
-      source_labels = ["__meta_kubernetes_service_annotation_k8s_grafana_com_metrics_portNumber"]
+      source_labels = ["__meta_kubernetes_service_annotation_prometheus_io_port"]
       regex = "(.+)"
       target_label = "__tmp_port"
     }
@@ -192,7 +192,7 @@ declare "annotation_autodiscovery" {
     }
 
     rule {
-      source_labels = ["__meta_kubernetes_service_annotation_k8s_grafana_com_metrics_scheme"]
+      source_labels = ["__meta_kubernetes_service_annotation_prometheus_io_scheme"]
       action = "replace"
       target_label = "__scheme__"
     }
