@@ -86,6 +86,11 @@ fi
 echo "What's going on?"
 ls -l "${TEST_DIRECTORY}"
 find "${TEST_DIRECTORY}"
+
+echo "checking specifically for ${TEST_DIRECTORY}/kubeconfig.yaml:"
+ls "${TEST_DIRECTORY}/kubeconfig.yaml"
+yq '.clusters[0].cluster.server' kubeconfig.yaml
+
 # If cluster creation left a kubeconfig file, use it
 if [ -f "${TEST_DIRECTORY}/kubeconfig.yaml" ]; then
   echo "Using local kubeconfig file: ${TEST_DIRECTORY}/kubeconfig.yaml"
