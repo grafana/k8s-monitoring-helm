@@ -30,9 +30,13 @@ spec:
       namespace: all-dbs
     - name: all-metrics
       namespace: all-dbs
+    - name: all-traces
+      namespace: all-dbs
     - name: prod-logs
       namespace: prod-dbs
     - name: prod-metrics
+      namespace: prod-dbs
+    - name: prod-traces
       namespace: prod-dbs
   values:
     tests:
@@ -45,6 +49,7 @@ spec:
           LOKI_TENANTID: 1
           LOKI_USER: loki
           LOKI_PASS: lokipassword
+          TEMPO_URL: http://all-traces-tempo.all-dbs.svc:3100/api/search
         queries:
           - query: kube_pod_info{cluster="$CLUSTER", pod="prod-pod", namespace="production"}
             type: promql
@@ -54,6 +59,11 @@ spec:
             type: logql
           - query: count_over_time({cluster="$CLUSTER", pod="dev-pod", namespace="development"}[1h])
             type: logql
+          - query: "{.k8s.cluster.name=\"$CLUSTER\" && resource.k8s.namespace.name=\"prod-dbs\"}"
+            type: traceql
+          - query: "{.k8s.cluster.name=\"$CLUSTER\" && resource.k8s.namespace.name=\"all-dbs\"}"
+            type: traceql
+
       - env:
           CLUSTER: split-destinations-cluster
           PROMETHEUS_URL: http://prod-metrics-prometheus-server.prod-dbs.svc:9090/api/v1/query
@@ -63,6 +73,7 @@ spec:
           LOKI_TENANTID: 1
           LOKI_USER: loki
           LOKI_PASS: lokipassword
+          TEMPO_URL: http://prod-traces-tempo.prod-dbs.svc:3100/api/search
         queries:
           - query: kube_pod_info{cluster="$CLUSTER", pod="prod-pod", namespace="production"}
             type: promql
@@ -70,7 +81,15 @@ spec:
             type: promql
             expect:
               value: 0
+
+          # No way to check if there are zero results for logql queries
+          # - query: count_over_time({cluster="$CLUSTER", pod="dev-pod", namespace="development"}[1h])
+          #   type: logql
           - query: count_over_time({cluster="$CLUSTER", pod="prod-pod", namespace="production"}[1h])
             type: logql
-#          - query: count_over_time({cluster="$CLUSTER", pod="dev-pod", namespace="development"}[1h])
-#            type: logql
+
+          # No way to check if there are zero results for traceql queries
+          # - query: "{.k8s.cluster.name=\"$CLUSTER\" && resource.k8s.namespace.name=\"all-dbs\"}"
+          #   type: traceql
+          - query: "{.k8s.cluster.name=\"$CLUSTER\" && resource.k8s.namespace.name=\"prod-dbs\"}"
+            type: traceql
