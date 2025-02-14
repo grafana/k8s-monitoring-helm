@@ -147,6 +147,14 @@ installing them for a better experience:
 -   [shellspec](https://github.com/shellspec/shellspec) - Used for executing some unit tests.
 -   [vendir](https://carvel.dev/vendir/) - Used for downloading Alloy Module
 
+If you are going to be running platform tests, you might want to install the following tools:
+
+-   [gcloud](https://cloud.google.com/sdk/docs/install) - Used for interacting with Google Cloud Platform.
+-   [aws-cli & eksctl](https://docs.aws.amazon.com/eks/latest/userguide/setting-up.html) - Used for interacting with Amazon Web Services and creating EKS clusters.
+-   [az](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli) - Used for interacting with Azure.
+-   openshift-install - Used for creating OKD OpenShift clusters.
+    -   `gh release download --repo okd-project/okd -p "openshift-install-mac-arm64*"`
+
 Each chart has a Makefile with targets to automate much of the process.
 
 ## Contributor Guides

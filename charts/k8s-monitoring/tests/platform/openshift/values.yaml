@@ -1,18 +1,31 @@
 ---
 cluster:
-  name: openshift-cluster
+  name: openshift-test
 
 global:
   platform: openshift
 
 destinations:
-  - name: prometheus
+  - name: grafanaCloudMetrics
     type: prometheus
-    url: http://prometheus.prometheus.svc:9090/api/v1/write
-
-  - name: loki
+    url: https://prometheus-prod-13-prod-us-east-0.grafana.net/api/prom/push
+    auth:
+      type: basic
+      usernameKey: PROMETHEUS_USER
+      passwordKey: PROMETHEUS_PASS
+    secret:
+      create: false
+      name: grafana-cloud-credentials
+  - name: grafanaCloudLogs
     type: loki
-    url: http://prometheus.prometheus.svc:9090/api/v1/write
+    url: https://logs-prod-006.grafana.net/loki/api/v1/push
+    auth:
+      type: basic
+      usernameKey: LOKI_USER
+      passwordKey: LOKI_PASS
+    secret:
+      create: false
+      name: grafana-cloud-credentials
 
 clusterMetrics:
   enabled: true
@@ -30,9 +43,6 @@ clusterMetrics:
     service:
       scheme: https
       portName: https
-
-  kepler:
-    enabled: true
 
 clusterEvents:
   enabled: true
@@ -59,3 +69,4 @@ alloy-logs:
     podSecurityContext:
       seLinuxOptions:
         type: container_logreader_t
+

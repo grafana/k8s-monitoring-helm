@@ -6,6 +6,7 @@ source "${PARENT_DIR}/scripts/includes/logging.sh"
 source "${PARENT_DIR}/scripts/includes/cluster/eks.sh"
 source "${PARENT_DIR}/scripts/includes/cluster/gke.sh"
 source "${PARENT_DIR}/scripts/includes/cluster/kind.sh"
+source "${PARENT_DIR}/scripts/includes/cluster/openshift.sh"
 
 heading "Kubernetes Monitoring Helm" "Cluster Test Runner"
 
@@ -22,6 +23,7 @@ usage() {
   echo "    eks-cluster-config.yaml           - Config file for creating an EKS cluster."
   echo "    gke-cluster-config.yaml           - Config file for creating a GKE cluster."
   echo "    gke-autopilot-cluster-config.yaml - Config file for creating a GKE Autopilot cluster."
+  echo "    openshift-cluster-config.yaml     - Config file for creating an OpenShift cluster."
 }
 
 CREATE_CLUSTER=${CREATE_CLUSTER:-true}
@@ -55,6 +57,8 @@ if [ "${CREATE_CLUSTER}" == "true" ]; then
     createGKECluster "${clusterName}" "${TEST_DIRECTORY}/gke-cluster-config.yaml"
   elif [ -f "${TEST_DIRECTORY}/gke-autopilot-cluster-config.yaml" ]; then
     createGKEAutopilotCluster "${clusterName}" "${TEST_DIRECTORY}/gke-autopilot-cluster-config.yaml"
+  elif [ -f "${TEST_DIRECTORY}/openshift-cluster-config.yaml" ]; then
+    createOpenShiftCluster "${clusterName}" "${TEST_DIRECTORY}/openshift-cluster-config.yaml"
   else
     createKindCluster "${clusterName}"
   fi
@@ -69,6 +73,8 @@ deleteCluster() {
     deleteGKECluster "${clusterName}" "${TEST_DIRECTORY}/gke-cluster-config.yaml"
   elif [ -f "${TEST_DIRECTORY}/gke-autopilot-cluster-config.yaml" ]; then
     deleteGKECluster "${clusterName}" "${TEST_DIRECTORY}/gke-autopilot-cluster-config.yaml"
+  elif [ -f "${TEST_DIRECTORY}/openshift-cluster-config.yaml" ]; then
+    deleteOpenShiftCluster "${clusterName}" "${TEST_DIRECTORY}/openshift-cluster-config.yaml"
   else
     deleteKindCluster "${clusterName}"
   fi
@@ -77,23 +83,44 @@ if [ "${DELETE_CLUSTER}" == "true" ]; then
   trap deleteCluster EXIT
 fi
 
+# If cluster creation left a kubeconfig file, use it
+if [ -f "${TEST_DIRECTORY}/kubeconfig.yaml" ]; then
+  echo "Using local kubeconfig file: ${TEST_DIRECTORY}/kubeconfig.yaml"
+  export KUBECONFIG="${TEST_DIRECTORY}/kubeconfig.yaml"
+fi
+
+# Test the cluster connection
+kubectl get nodes
+
+# Build any pre-requisite files
+if [ -f "${TEST_DIRECTORY}/Makefile" ]; then
+  make -C "${TEST_DIRECTORY}" clean all
+fi
+
 # Deploy flux
-if command -v flux &> /dev/null; then
-  flux install
+if [ -f "${TEST_DIRECTORY}/flux-manifest.yaml" ]; then
+  # Use the locally defined flux-manifest.yaml file, which may include platform specific customizations
+  echo "Deploying Flux via ${TEST_DIRECTORY}/flux-manifest.yaml"
+  kubectl apply -f "${TEST_DIRECTORY}/flux-manifest.yaml"
+elif command -v flux &> /dev/null; then
+  # Install via the flux CLI, if it's available
+  echo "Deploying Flux via the flux CLI"
+  flux install --components=source-controller,helm-controller
 else
+  # Install via Helm, if the flux CLI is not available
+  echo "Deploying Flux via Helm"
   helm upgrade --install --namespace flux-system --create-namespace flux oci://ghcr.io/fluxcd-community/charts/flux2 --wait
 fi
 
 # Apply the deployments directory
-if [ -f "${TEST_DIRECTORY}/Makefile" ]; then
-  make -C "${TEST_DIRECTORY}" clean all
-fi
 if [ -d "${TEST_DIRECTORY}/deployments" ]; then
+  echo "Applying ${TEST_DIRECTORY}/deployments"
   kubectl apply -f ${TEST_DIRECTORY}/deployments
 fi
 
 # Ensure that the test chart has been deployed
 FIVE_MINUTES=300
+echo "Waiting for k8s-monitoring-test Helm chart to be ready"
 for i in $(seq 1 ${FIVE_MINUTES}); do
   if helm status k8s-monitoring-test 2>&1 | grep "STATUS: deployed" > /dev/null ; then
     break
