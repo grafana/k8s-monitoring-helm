@@ -88,6 +88,15 @@ This defines the options for defining a destination for OpenTelemetry data that 
 | processors.batch.size | int | `8192` | Amount of data to buffer before flushing the batch. |
 | processors.batch.timeout | string | `"2s"` | How long to wait before flushing the batch. |
 
+### Filter Processor
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| processors.filter.enabled | bool | `false` | Enable the filter processor. Any rules that evaluate to true will drop the matching telemetry data. |
+| processors.filter.logs | object | `{"logRecord":[]}` | Log filters |
+| processors.filter.metrics | object | `{"datapoint":[],"metric":[]}` | Metric filters |
+| processors.filter.traces | object | `{"span":[],"spanevent":[]}` | Trace filters |
+
 ### Memory Limiter
 
 | Key | Type | Default | Description |
@@ -128,9 +137,3 @@ This defines the options for defining a destination for OpenTelemetry data that 
 | tls.key | string | `""` | The client key for the server (as a string). |
 | tls.keyFile | string | `""` | The client key for the server (as a path to a file). |
 | tls.keyFrom | string | `""` | Raw config for accessing the client key. |
-
-### Other Values
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| processors | object | `{"attributes":{"actions":[]},"batch":{"enabled":true,"maxSize":0,"size":8192,"timeout":"2s"},"memoryLimiter":{"checkInterval":"1s","enabled":false,"limit":"0MiB"},"transform":{"logs":{"log":[],"resource":[]},"metrics":{"datapoint":[],"metric":[],"resource":[]},"traces":{"resource":[],"span":[],"spanevent":[]}}}` | Processors to apply to the data before sending it. |

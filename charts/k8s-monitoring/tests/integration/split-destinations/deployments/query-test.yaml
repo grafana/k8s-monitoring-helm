@@ -81,13 +81,15 @@ spec:
             type: promql
             expect:
               value: 0
+
+          # No way to check if there are zero results for logql queries
+          # - query: count_over_time({cluster="$CLUSTER", pod="dev-pod", namespace="development"}[1h])
+          #   type: logql
           - query: count_over_time({cluster="$CLUSTER", pod="prod-pod", namespace="production"}[1h])
             type: logql
-# No way to check if there are zero results for logql queries
-#          - query: count_over_time({cluster="$CLUSTER", pod="dev-pod", namespace="development"}[1h])
-#            type: logql
+
+          # No way to check if there are zero results for traceql queries
+          # - query: "{.k8s.cluster.name=\"$CLUSTER\" && resource.k8s.namespace.name=\"all-dbs\"}"
+          #   type: traceql
           - query: "{.k8s.cluster.name=\"$CLUSTER\" && resource.k8s.namespace.name=\"prod-dbs\"}"
             type: traceql
-# No way to check if there are zero results for traceql queries
-#          - query: "{.k8s.cluster.name=\"$CLUSTER\" && resource.k8s.namespace.name=\"all-dbs\"}"
-#            type: traceql
