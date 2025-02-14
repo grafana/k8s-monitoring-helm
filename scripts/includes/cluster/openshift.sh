@@ -4,7 +4,7 @@ createOpenShiftCluster() {
   local clusterName=$1
   local clusterConfig=$2
 
-  clusterInstallerFilesDir="$(dirname "${clusterConfig}")/${clusterName}-installer-files"
+  clusterInstallerFilesDir="$(cd "$(dirname "${clusterConfig}")" && pwd)/${clusterName}-installer-files"
   mkdir -p "${clusterInstallerFilesDir}"
   yq ".metadata.name=\"${clusterName}\"" "${clusterConfig}" > "${clusterInstallerFilesDir}/install-config.yaml"
   openshift-install create cluster --dir "${clusterInstallerFilesDir}"
