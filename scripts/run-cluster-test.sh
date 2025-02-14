@@ -83,6 +83,9 @@ if [ "${DELETE_CLUSTER}" == "true" ]; then
   trap deleteCluster EXIT
 fi
 
+echo "What's going on?"
+ls -l "${TEST_DIRECTORY}"
+find "${TEST_DIRECTORY}"
 # If cluster creation left a kubeconfig file, use it
 if [ -f "${TEST_DIRECTORY}/kubeconfig.yaml" ]; then
   echo "Using local kubeconfig file: ${TEST_DIRECTORY}/kubeconfig.yaml"
