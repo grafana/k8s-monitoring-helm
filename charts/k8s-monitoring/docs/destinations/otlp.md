@@ -92,10 +92,10 @@ This defines the options for defining a destination for OpenTelemetry data that 
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| processors.filter.enabled | bool | `false` | Enable the filter processor. Any rules that evaluate to true will drop the matching telemetry data. |
-| processors.filter.logs | object | `{"logRecord":[]}` | Log filters |
-| processors.filter.metrics | object | `{"datapoint":[],"metric":[]}` | Metric filters |
-| processors.filter.traces | object | `{"span":[],"spanevent":[]}` | Trace filters |
+| processors.filters.enabled | bool | `false` | Enable the filter processor. Any rules that evaluate to true will drop the matching telemetry data. |
+| processors.filters.logs | object | `{"logRecord":[]}` | Log filters |
+| processors.filters.metrics | object | `{"datapoint":[],"metric":[]}` | Metric filters |
+| processors.filters.traces | object | `{"span":[],"spanevent":[]}` | Trace filters |
 
 ### Memory Limiter
 

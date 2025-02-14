@@ -198,7 +198,7 @@ otelcol.processor.transform {{ include "helper.alloy_name" .name | quote }} {
   }
 {{- end }}
 {{- end }}
-{{- if .processors.filter.enabled }}
+{{- if .processors.filters.enabled }}
 
   output {
 {{- if ne .metrics.enabled false }}
@@ -214,45 +214,45 @@ otelcol.processor.transform {{ include "helper.alloy_name" .name | quote }} {
 }
 
 otelcol.processor.filter {{ include "helper.alloy_name" .name | quote }} {
-{{- if and .metrics.enabled (or .processors.filter.metrics.metric .processors.filter.metrics.datapoint) }}
+{{- if and .metrics.enabled (or .processors.filters.metrics.metric .processors.filters.metrics.datapoint) }}
   metrics {
-{{- if .processors.filter.metrics.metric }}
+{{- if .processors.filters.metrics.metric }}
     metric = [
-{{- range $filter := .processors.filter.metrics.metric }}
+{{- range $filter := .processors.filters.metrics.metric }}
 {{ $filter | quote | indent 6 }},
 {{- end }}
     ]
 {{- end }}
-{{- if .processors.filter.metrics.datapoint }}
+{{- if .processors.filters.metrics.datapoint }}
     datapoint = [
-{{- range $filter := .processors.filter.metrics.datapoint }}
+{{- range $filter := .processors.filters.metrics.datapoint }}
 {{ $filter | quote | indent 6 }},
 {{- end }}
     ]
 {{- end }}
   }
 {{- end }}
-{{- if and .logs.enabled .processors.filter.logs.log_record }}
+{{- if and .logs.enabled .processors.filters.logs.log_record }}
   logs {
     log_record = [
-{{- range $filter := .processors.filter.logs.log_record }}
+{{- range $filter := .processors.filters.logs.log_record }}
 {{ $filter | quote | indent 6 }},
 {{- end }}
     ]
   }
 {{- end }}
-{{- if and .traces.enabled (or .processors.filter.traces.span .processors.filter.traces.spanevent) }}
+{{- if and .traces.enabled (or .processors.filters.traces.span .processors.filters.traces.spanevent) }}
   traces {
-{{- if .processors.filter.traces.span }}
+{{- if .processors.filters.traces.span }}
     span = [
-{{- range $filter := .processors.filter.traces.span }}
+{{- range $filter := .processors.filters.traces.span }}
 {{ $filter | quote | indent 6 }},
 {{- end }}
     ]
 {{- end }}
-{{- if .processors.filter.traces.spanevent }}
+{{- if .processors.filters.traces.spanevent }}
     spanevent = [
-{{- range $filter := .processors.filter.traces.spanevent }}
+{{- range $filter := .processors.filters.traces.spanevent }}
 {{ $filter | quote | indent 6 }},
 {{- end }}
     ]
