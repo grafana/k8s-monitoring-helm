@@ -8,8 +8,6 @@ deployments/test-variables.yaml:
 	kubectl create configmap test-variables \
 		--from-literal=CLUSTER="$(shell yq eval '.cluster.name' values.yaml)-$$RANDOM_NUMBER" \
 		--from-literal=RANDOM_NUMBER="$$RANDOM_NUMBER" \
-		--from-literal=ANNOTATION_POD_LOG_SERVICE_NAME="hello-kubernetes-annotation" \
-		--from-literal=LABEL_POD_LOG_SERVICE_NAME="hello-kubernetes-label" \
 		-o yaml --dry-run=client >> $@
 
 deployments/grafana-cloud-credentials.yaml:
