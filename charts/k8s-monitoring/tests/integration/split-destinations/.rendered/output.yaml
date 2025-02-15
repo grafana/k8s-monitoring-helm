@@ -1103,16 +1103,6 @@ data:
     // Destination: allTraces (otlp)
     
     otelcol.processor.attributes "alltraces" {
-      action {
-        key = "cluster"
-        action = "upsert"
-        value = "split-destinations-cluster"
-      }
-      action {
-        key = "k8s.cluster.name"
-        action = "upsert"
-        value = "split-destinations-cluster"
-      }
       output {
         metrics = [otelcol.processor.transform.alltraces.input]
         logs = [otelcol.processor.transform.alltraces.input]
@@ -1122,6 +1112,14 @@ data:
     
     otelcol.processor.transform "alltraces" {
       error_mode = "ignore"
+    
+      trace_statements {
+        context = "resource"
+        statements = [
+          `set(attributes["cluster"], "split-destinations-cluster")`,
+          `set(attributes["k8s.cluster.name"], "split-destinations-cluster")`,
+        ]
+      }
     
       output {
         traces = [otelcol.processor.batch.alltraces.input]
@@ -1149,16 +1147,6 @@ data:
     // Destination: productionTraces (otlp)
     
     otelcol.processor.attributes "productiontraces" {
-      action {
-        key = "cluster"
-        action = "upsert"
-        value = "split-destinations-cluster"
-      }
-      action {
-        key = "k8s.cluster.name"
-        action = "upsert"
-        value = "split-destinations-cluster"
-      }
       output {
         metrics = [otelcol.processor.transform.productiontraces.input]
         logs = [otelcol.processor.transform.productiontraces.input]
@@ -1168,6 +1156,14 @@ data:
     
     otelcol.processor.transform "productiontraces" {
       error_mode = "ignore"
+    
+      trace_statements {
+        context = "resource"
+        statements = [
+          `set(attributes["cluster"], "split-destinations-cluster")`,
+          `set(attributes["k8s.cluster.name"], "split-destinations-cluster")`,
+        ]
+      }
     
       output {
         traces = [otelcol.processor.filter.productiontraces.input]
