@@ -755,16 +755,6 @@ data:
     // Destination: tempo (otlp)
     
     otelcol.processor.attributes "tempo" {
-      action {
-        key = "cluster"
-        action = "upsert"
-        value = "pod-labels-and-annotations"
-      }
-      action {
-        key = "k8s.cluster.name"
-        action = "upsert"
-        value = "pod-labels-and-annotations"
-      }
       output {
         metrics = [otelcol.processor.transform.tempo.input]
         logs = [otelcol.processor.transform.tempo.input]
@@ -774,6 +764,14 @@ data:
     
     otelcol.processor.transform "tempo" {
       error_mode = "ignore"
+    
+      trace_statements {
+        context = "resource"
+        statements = [
+          `set(attributes["cluster"], "pod-labels-and-annotations")`,
+          `set(attributes["k8s.cluster.name"], "pod-labels-and-annotations")`,
+        ]
+      }
     
       output {
         traces = [otelcol.processor.batch.tempo.input]

@@ -60,16 +60,6 @@ otelcol.auth.oauth2 {{ include "helper.alloy_name" .name | quote }} {
 {{- end }}
 
 otelcol.processor.attributes {{ include "helper.alloy_name" .name | quote }} {
-  action {
-    key = "cluster"
-    action = "upsert"
-    value = {{ $.Values.cluster.name | quote }}
-  }
-  action {
-    key = "k8s.cluster.name"
-    action = "upsert"
-    value = {{ $.Values.cluster.name | quote }}
-  }
 {{- range $action := .processors.attributes.actions }}
   action {
     key = {{ $action.key | quote }}
@@ -103,26 +93,30 @@ otelcol.processor.attributes {{ include "helper.alloy_name" .name | quote }} {
 otelcol.processor.transform {{ include "helper.alloy_name" .name | quote }} {
   error_mode = "ignore"
 {{- if ne .metrics.enabled false }}
-{{- if .processors.transform.metrics.resource }}
   metric_statements {
     context = "resource"
     statements = [
+      `set(attributes["cluster"], {{ $.Values.cluster.name | quote }})`,
+      `set(attributes["k8s.cluster.name"], {{ $.Values.cluster.name | quote }})`,
+{{- if .processors.transform.metrics.resource }}
 {{- range $transform := .processors.transform.metrics.resource }}
 {{ $transform | quote | indent 6 }},
 {{- end }}
+{{- end }}
     ]
   }
-{{- end }}
-{{- if .processors.transform.metrics.metric }}
+
   metric_statements {
     context = "metric"
     statements = [
+{{- if .processors.transform.metrics.metric }}
 {{- range $transform := .processors.transform.metrics.metric }}
 {{ $transform | quote | indent 6 }},
 {{- end }}
+{{- end }}
     ]
   }
-{{- end }}
+
 {{- if .processors.transform.metrics.datapoint }}
   metric_statements {
     context = "datapoint"
@@ -135,26 +129,38 @@ otelcol.processor.transform {{ include "helper.alloy_name" .name | quote }} {
 {{- end }}
 {{- end }}
 {{- if ne .logs.enabled false }}
-{{- if .processors.transform.logs.resource }}
   log_statements {
     context = "resource"
     statements = [
+      `set(attributes["cluster"], {{ $.Values.cluster.name | quote }})`,
+      `set(attributes["k8s.cluster.name"], {{ $.Values.cluster.name | quote }})`,
+{{- if .processors.transform.logs.resource }}
 {{- range $transform := .processors.transform.logs.resource }}
 {{ $transform | quote | indent 6 }},
 {{- end }}
+{{- end }}
     ]
   }
-{{- end }}
-{{- if .processors.transform.logs.log }}
+
   log_statements {
     context = "log"
     statements = [
+      `delete_key(attributes, "loki.attribute.labels")`,
+      `set(resource.attributes["service.name"], attributes["service_name"]) where resource.attributes["service.name"] == nil and attributes["service_name"] != nil`,
+      `delete_key(attributes, "service_name") where attributes["service_name"] != nil`,
+      `set(resource.attributes["service.namespace"], attributes["service_namespace"] ) where resource.attributes["service.namespace"] == nil and attributes["service_namespace"] != nil`,
+      `delete_key(attributes, "service_namespace") where attributes["service_namespace"] != nil`,
+      `set(resource.attributes["deployment.environment.name"], attributes["deployment_environment_name"] ) where resource.attributes["deployment.environment.name"] == nil and attributes["deployment_environment_name"] != nil`,
+      `delete_key(attributes, "deployment_environment_name") where attributes["deployment_environment_name"] != nil`,
+      `set(resource.attributes["deployment.environment"], attributes["deployment_environment"] ) where resource.attributes["deployment.environment"] == nil and attributes["deployment_environment"] != nil`,
+      `delete_key(attributes, "deployment_environment") where attributes["deployment_environment"] != nil`,
+{{- if .processors.transform.logs.log }}
 {{- range $transform := .processors.transform.logs.log }}
 {{ $transform | quote | indent 6 }},
 {{- end }}
+{{- end }}
     ]
   }
-{{- end }}
 {{- if .processors.transform.logs.scope }}
   log_statements {
     context = "scope"
@@ -167,16 +173,19 @@ otelcol.processor.transform {{ include "helper.alloy_name" .name | quote }} {
 {{- end }}
 {{- end }}
 {{- if ne .traces.enabled false }}
-{{- if .processors.transform.traces.resource }}
+
   trace_statements {
     context = "resource"
     statements = [
+      `set(attributes["cluster"], {{ $.Values.cluster.name | quote }})`,
+      `set(attributes["k8s.cluster.name"], {{ $.Values.cluster.name | quote }})`,
+{{- if .processors.transform.traces.resource }}
 {{- range $transform := .processors.transform.traces.resource }}
 {{ $transform | quote | indent 6 }},
 {{- end }}
+{{- end }}
     ]
   }
-{{- end }}
 {{- if .processors.transform.traces.span }}
   trace_statements {
     context = "span"
