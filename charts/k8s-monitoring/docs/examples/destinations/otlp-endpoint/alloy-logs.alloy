@@ -33,8 +33,10 @@ otelcol.processor.transform "otlp_gateway" {
   }
 
   metric_statements {
-    context = "metric"
+    context = "datapoint"
     statements = [
+      `set(attributes["cluster"], "otlp-gateway-test")`,
+      `set(attributes["k8s.cluster.name"], "otlp-gateway-test")`,
     ]
   }
   log_statements {

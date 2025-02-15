@@ -106,27 +106,31 @@ otelcol.processor.transform {{ include "helper.alloy_name" .name | quote }} {
     ]
   }
 
+{{- if .processors.transform.metrics.metric }}
   metric_statements {
     context = "metric"
     statements = [
-{{- if .processors.transform.metrics.metric }}
+
 {{- range $transform := .processors.transform.metrics.metric }}
+{{ $transform | quote | indent 6 }},
+{{- end }}
+    ]
+  }
+{{- end }}
+
+  metric_statements {
+    context = "datapoint"
+    statements = [
+      `set(attributes["cluster"], {{ $.Values.cluster.name | quote }})`,
+      `set(attributes["k8s.cluster.name"], {{ $.Values.cluster.name | quote }})`,
+{{- if .processors.transform.metrics.datapoint }}
+{{- range $transform := .processors.transform.metrics.datapoint }}
 {{ $transform | quote | indent 6 }},
 {{- end }}
 {{- end }}
     ]
   }
 
-{{- if .processors.transform.metrics.datapoint }}
-  metric_statements {
-    context = "datapoint"
-    statements = [
-{{- range $transform := .processors.transform.metrics.datapoint }}
-{{ $transform | quote | indent 6 }},
-{{- end }}
-    ]
-  }
-{{- end }}
 {{- end }}
 {{- if ne .logs.enabled false }}
   log_statements {

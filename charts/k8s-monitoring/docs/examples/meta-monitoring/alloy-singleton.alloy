@@ -84,8 +84,10 @@ otelcol.processor.transform "loki" {
   }
 
   metric_statements {
-    context = "metric"
+    context = "datapoint"
     statements = [
+      `set(attributes["cluster"], "loki-meta-monitoring-cluster")`,
+      `set(attributes["k8s.cluster.name"], "loki-meta-monitoring-cluster")`,
     ]
   }
   log_statements {
