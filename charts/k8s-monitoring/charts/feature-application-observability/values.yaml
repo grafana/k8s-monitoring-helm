@@ -96,6 +96,45 @@ processors:
       # @section -- Processors: Interval
       summary: false
 
+  # -- Capture Resource attributes from various sources. You can add more than is listed here. For example:
+  # resourceDetection:
+  #   sourceType:
+  #     enabled: true
+  #     resourceAttributes:
+  #       host.name:
+  #         enabled: true
+  # @section -- Processors: Resource Detection
+  resourceDetection:
+    env:
+      # -- Enable getting resource attributes from the OTEL_RESOURCE_ATTRIBUTES environment variable.
+      # @section -- Processors: Resource Detection
+      enabled: true
+
+    system:
+      # -- Enable getting resource attributes from the host machine.
+      # @section -- Processors: Resource Detection
+      enabled: true
+      # -- The priority list of sources from which the hostname will be determined. Options: ["dns", "os", "cname", "lookup"].
+      # @section -- Processors: Resource Detection
+      hostnameSources:
+        - os
+      # -- The list of resource attributes to add for system resource detection. See the [Alloy documentation](https://grafana.com/docs/alloy/latest/reference/components/otelcol/otelcol.processor.resourcedetection/#system--resource_attributes) for a list of available attributes.
+      # @section -- Processors: Resource Detection
+      resourceAttributes: {}
+
+    kubernetesNode:
+      # -- Enable getting resource attributes about the Kubernetes node from the API server.
+      # @section -- Processors: Resource Detection
+      enabled: false
+
+      # -- The authentication method. This should not be changed.
+      # @section -- Processors: Resource Detection
+      authType: serviceAccount
+
+      # -- The name of an environment variable from which to retrieve the node name.
+      # @section -- Processors: Resource Detection
+      nodeFromEnvVar: K8S_NODE_NAME
+
   k8sattributes:
     # -- Kubernetes metadata to extract and add to the attributes of the received telemetry data.
     # @section -- Processors: K8s Attributes
