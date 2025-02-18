@@ -2,6 +2,21 @@ SHELL := /bin/bash
 UNAME := $(shell uname)
 
 CHARTS = $(shell ls --color=never charts)
+HELM_VERSION = $(shell helm version --short)
+HELM_MAJOR_VERSION = $(shell echo $(HELM_VERSION) | cut -d '.' -f 1 | sed -e 's/v//')
+HELM_MINOR_VERSION = $(shell echo $(HELM_VERSION) | cut -d '.' -f 2)
+HELM_REQUIRED_MAJOR_VERSION = 3
+HELM_REQUIRED_MINOR_VERSION = 14
+
+.PHONY: check-helm-version
+check-helm-version:
+	@if [ "$(HELM_MAJOR_VERSION)" -lt "$(HELM_REQUIRED_MAJOR_VERSION)" ] || [ "$(HELM_MINOR_VERSION)" -lt "$(HELM_REQUIRED_MINOR_VERSION)" ]; then \
+		echo "This project requires Helm v$(HELM_REQUIRED_MAJOR_VERSION).$(HELM_REQUIRED_MINOR_VERSION)."; \
+		echo "You are currently using version v$(HELM_MAJOR_VERSION).$(HELM_MINOR_VERSION)."; \
+		echo "Please install the latest version of the Helm CLI."; \
+		echo "  https://helm.sh/docs/intro/install/"; \
+		exit 1; \
+	fi
 
 .PHONY: clean
 clean:
@@ -12,7 +27,7 @@ clean:
 	done
 
 .PHONY: build
-build:
+build: check-helm-version
 	set -e && \
 	for chart in $(CHARTS); do \
 		make -C charts/$$chart $@; \
