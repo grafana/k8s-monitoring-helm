@@ -297,7 +297,8 @@ podLogs:
 |-----|------|---------|-------------|
 | applicationObservability | object | Disabled | Application Observability. Requires destinations that supports metrics, logs, and traces. To see the valid options, please see the [Application Observability feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-application-observability). |
 | applicationObservability.destinations | list | `[]` | The destinations where application data will be sent. If empty, all capable destinations will be used. |
-| applicationObservability.enabled | bool | `false` | Enable gathering Kubernetes Pod logs. |
+| applicationObservability.enabled | bool | `false` | Enable receiving Application Observability. |
+| applicationObservability.receivers | object | `{}` | The receivers used for receiving application data. |
 
 ### Features - Auto-Instrumentation
 
