@@ -54,7 +54,7 @@ spec:
         - name: OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE
           value: cumulative
         - name: OTEL_RESOURCE_ATTRIBUTES
-          value: 'service.name=$(OTEL_SERVICE_NAME),service.namespace=opentelemetry-demo,service.version={{ .Chart.AppVersion }},k8s.cluster.name=$(CLUSTER)'
+          value: 'service.name=$(OTEL_SERVICE_NAME),service.namespace=opentelemetry-demo,service.version={{ .Chart.AppVersion }},k8s.cluster.name=$(CLUSTER),deployment.environment.name=platform-test'
 
     opentelemetry-collector:
       enabled: false
@@ -67,3 +67,45 @@ spec:
 
     grafana:
       enabled: false
+
+    components:
+      checkoutService:
+        podAnnotations:
+          resource.opentelemetry.io/service.name: checkoutservice
+          resource.opentelemetry.io/service.namespace: opentelemetry-demo
+          resource.opentelemetry.io/deployment.environment.name: platform-test
+      emailService:
+        podAnnotations:
+          resource.opentelemetry.io/service.name: emailservice
+          resource.opentelemetry.io/service.namespace: opentelemetry-demo
+          resource.opentelemetry.io/deployment.environment.name: platform-test
+      flagd:
+        podAnnotations:
+          resource.opentelemetry.io/service.name: flagd
+          resource.opentelemetry.io/service.namespace: opentelemetry-demo
+          resource.opentelemetry.io/deployment.environment.name: platform-test
+      frontend:
+        podAnnotations:
+          resource.opentelemetry.io/service.name: frontend
+          resource.opentelemetry.io/service.namespace: opentelemetry-demo
+          resource.opentelemetry.io/deployment.environment.name: platform-test
+      frontendProxy:
+        podAnnotations:
+          resource.opentelemetry.io/service.name: frontendproxy
+          resource.opentelemetry.io/service.namespace: opentelemetry-demo
+          resource.opentelemetry.io/deployment.environment.name: platform-test
+      imageprovider:
+        podAnnotations:
+          resource.opentelemetry.io/service.name: imageprovider
+          resource.opentelemetry.io/service.namespace: opentelemetry-demo
+          resource.opentelemetry.io/deployment.environment.name: platform-test
+      productCatalogService:
+        podAnnotations:
+          resource.opentelemetry.io/service.name: productcatalogservice
+          resource.opentelemetry.io/service.namespace: opentelemetry-demo
+          resource.opentelemetry.io/deployment.environment.name: platform-test
+      shippingService:
+        podAnnotations:
+          resource.opentelemetry.io/service.name: shippingservice
+          resource.opentelemetry.io/service.namespace: opentelemetry-demo
+          resource.opentelemetry.io/deployment.environment.name: platform-test

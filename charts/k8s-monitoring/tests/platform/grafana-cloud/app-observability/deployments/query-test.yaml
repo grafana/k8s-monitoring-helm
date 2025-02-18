@@ -35,5 +35,8 @@ spec:
           - configMapRef: {name: test-variables}
         queries:
           # otel demo services
-          - query: group by (telemetry_sdk_language, job) (traces_target_info{deployment_environment=~".*", k8s_cluster_name="$CLUSTER"})
+          - query: group by (telemetry_sdk_language, job) (traces_target_info{deployment_environment_name="platform-test", k8s_cluster_name="$CLUSTER"})
             type: promql
+
+          - query: 'avg(count_over_time({k8s_cluster_name="$CLUSTER", service_namespace="opentelemetry-demo", service_name="checkoutservice"} | deployment_environment_name =~ `platform-test` [1m]))'
+            type: logql

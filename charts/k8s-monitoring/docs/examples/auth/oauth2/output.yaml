@@ -160,16 +160,6 @@ data:
     }
     
     otelcol.processor.attributes "otel_endpoint" {
-      action {
-        key = "cluster"
-        action = "upsert"
-        value = "oauth2-auth-example"
-      }
-      action {
-        key = "k8s.cluster.name"
-        action = "upsert"
-        value = "oauth2-auth-example"
-      }
       output {
         metrics = [otelcol.processor.transform.otel_endpoint.input]
         logs = [otelcol.processor.transform.otel_endpoint.input]
@@ -179,6 +169,51 @@ data:
     
     otelcol.processor.transform "otel_endpoint" {
       error_mode = "ignore"
+      metric_statements {
+        context = "resource"
+        statements = [
+          `set(attributes["cluster"], "oauth2-auth-example")`,
+          `set(attributes["k8s.cluster.name"], "oauth2-auth-example")`,
+        ]
+      }
+    
+      metric_statements {
+        context = "datapoint"
+        statements = [
+          `set(attributes["cluster"], "oauth2-auth-example")`,
+          `set(attributes["k8s.cluster.name"], "oauth2-auth-example")`,
+        ]
+      }
+      log_statements {
+        context = "resource"
+        statements = [
+          `set(attributes["cluster"], "oauth2-auth-example")`,
+          `set(attributes["k8s.cluster.name"], "oauth2-auth-example")`,
+        ]
+      }
+    
+      log_statements {
+        context = "log"
+        statements = [
+          `delete_key(attributes, "loki.attribute.labels")`,
+          `set(resource.attributes["service.name"], attributes["service_name"]) where resource.attributes["service.name"] == nil and attributes["service_name"] != nil`,
+          `delete_key(attributes, "service_name") where attributes["service_name"] != nil`,
+          `set(resource.attributes["service.namespace"], attributes["service_namespace"] ) where resource.attributes["service.namespace"] == nil and attributes["service_namespace"] != nil`,
+          `delete_key(attributes, "service_namespace") where attributes["service_namespace"] != nil`,
+          `set(resource.attributes["deployment.environment.name"], attributes["deployment_environment_name"] ) where resource.attributes["deployment.environment.name"] == nil and attributes["deployment_environment_name"] != nil`,
+          `delete_key(attributes, "deployment_environment_name") where attributes["deployment_environment_name"] != nil`,
+          `set(resource.attributes["deployment.environment"], attributes["deployment_environment"] ) where resource.attributes["deployment.environment"] == nil and attributes["deployment_environment"] != nil`,
+          `delete_key(attributes, "deployment_environment") where attributes["deployment_environment"] != nil`,
+        ]
+      }
+    
+      trace_statements {
+        context = "resource"
+        statements = [
+          `set(attributes["cluster"], "oauth2-auth-example")`,
+          `set(attributes["k8s.cluster.name"], "oauth2-auth-example")`,
+        ]
+      }
     
       output {
         metrics = [otelcol.processor.batch.otel_endpoint.input]
@@ -723,16 +758,6 @@ data:
     }
     
     otelcol.processor.attributes "otel_endpoint" {
-      action {
-        key = "cluster"
-        action = "upsert"
-        value = "oauth2-auth-example"
-      }
-      action {
-        key = "k8s.cluster.name"
-        action = "upsert"
-        value = "oauth2-auth-example"
-      }
       output {
         metrics = [otelcol.processor.transform.otel_endpoint.input]
         logs = [otelcol.processor.transform.otel_endpoint.input]
@@ -742,6 +767,51 @@ data:
     
     otelcol.processor.transform "otel_endpoint" {
       error_mode = "ignore"
+      metric_statements {
+        context = "resource"
+        statements = [
+          `set(attributes["cluster"], "oauth2-auth-example")`,
+          `set(attributes["k8s.cluster.name"], "oauth2-auth-example")`,
+        ]
+      }
+    
+      metric_statements {
+        context = "datapoint"
+        statements = [
+          `set(attributes["cluster"], "oauth2-auth-example")`,
+          `set(attributes["k8s.cluster.name"], "oauth2-auth-example")`,
+        ]
+      }
+      log_statements {
+        context = "resource"
+        statements = [
+          `set(attributes["cluster"], "oauth2-auth-example")`,
+          `set(attributes["k8s.cluster.name"], "oauth2-auth-example")`,
+        ]
+      }
+    
+      log_statements {
+        context = "log"
+        statements = [
+          `delete_key(attributes, "loki.attribute.labels")`,
+          `set(resource.attributes["service.name"], attributes["service_name"]) where resource.attributes["service.name"] == nil and attributes["service_name"] != nil`,
+          `delete_key(attributes, "service_name") where attributes["service_name"] != nil`,
+          `set(resource.attributes["service.namespace"], attributes["service_namespace"] ) where resource.attributes["service.namespace"] == nil and attributes["service_namespace"] != nil`,
+          `delete_key(attributes, "service_namespace") where attributes["service_namespace"] != nil`,
+          `set(resource.attributes["deployment.environment.name"], attributes["deployment_environment_name"] ) where resource.attributes["deployment.environment.name"] == nil and attributes["deployment_environment_name"] != nil`,
+          `delete_key(attributes, "deployment_environment_name") where attributes["deployment_environment_name"] != nil`,
+          `set(resource.attributes["deployment.environment"], attributes["deployment_environment"] ) where resource.attributes["deployment.environment"] == nil and attributes["deployment_environment"] != nil`,
+          `delete_key(attributes, "deployment_environment") where attributes["deployment_environment"] != nil`,
+        ]
+      }
+    
+      trace_statements {
+        context = "resource"
+        statements = [
+          `set(attributes["cluster"], "oauth2-auth-example")`,
+          `set(attributes["k8s.cluster.name"], "oauth2-auth-example")`,
+        ]
+      }
     
       output {
         metrics = [otelcol.processor.batch.otel_endpoint.input]
@@ -940,16 +1010,6 @@ data:
     }
     
     otelcol.processor.attributes "otel_endpoint" {
-      action {
-        key = "cluster"
-        action = "upsert"
-        value = "oauth2-auth-example"
-      }
-      action {
-        key = "k8s.cluster.name"
-        action = "upsert"
-        value = "oauth2-auth-example"
-      }
       output {
         metrics = [otelcol.processor.transform.otel_endpoint.input]
         logs = [otelcol.processor.transform.otel_endpoint.input]
@@ -959,6 +1019,51 @@ data:
     
     otelcol.processor.transform "otel_endpoint" {
       error_mode = "ignore"
+      metric_statements {
+        context = "resource"
+        statements = [
+          `set(attributes["cluster"], "oauth2-auth-example")`,
+          `set(attributes["k8s.cluster.name"], "oauth2-auth-example")`,
+        ]
+      }
+    
+      metric_statements {
+        context = "datapoint"
+        statements = [
+          `set(attributes["cluster"], "oauth2-auth-example")`,
+          `set(attributes["k8s.cluster.name"], "oauth2-auth-example")`,
+        ]
+      }
+      log_statements {
+        context = "resource"
+        statements = [
+          `set(attributes["cluster"], "oauth2-auth-example")`,
+          `set(attributes["k8s.cluster.name"], "oauth2-auth-example")`,
+        ]
+      }
+    
+      log_statements {
+        context = "log"
+        statements = [
+          `delete_key(attributes, "loki.attribute.labels")`,
+          `set(resource.attributes["service.name"], attributes["service_name"]) where resource.attributes["service.name"] == nil and attributes["service_name"] != nil`,
+          `delete_key(attributes, "service_name") where attributes["service_name"] != nil`,
+          `set(resource.attributes["service.namespace"], attributes["service_namespace"] ) where resource.attributes["service.namespace"] == nil and attributes["service_namespace"] != nil`,
+          `delete_key(attributes, "service_namespace") where attributes["service_namespace"] != nil`,
+          `set(resource.attributes["deployment.environment.name"], attributes["deployment_environment_name"] ) where resource.attributes["deployment.environment.name"] == nil and attributes["deployment_environment_name"] != nil`,
+          `delete_key(attributes, "deployment_environment_name") where attributes["deployment_environment_name"] != nil`,
+          `set(resource.attributes["deployment.environment"], attributes["deployment_environment"] ) where resource.attributes["deployment.environment"] == nil and attributes["deployment_environment"] != nil`,
+          `delete_key(attributes, "deployment_environment") where attributes["deployment_environment"] != nil`,
+        ]
+      }
+    
+      trace_statements {
+        context = "resource"
+        statements = [
+          `set(attributes["cluster"], "oauth2-auth-example")`,
+          `set(attributes["k8s.cluster.name"], "oauth2-auth-example")`,
+        ]
+      }
     
       output {
         metrics = [otelcol.processor.batch.otel_endpoint.input]

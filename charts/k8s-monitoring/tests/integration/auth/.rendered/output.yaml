@@ -293,16 +293,6 @@ data:
     
     otelcol.processor.attributes "prometheus_otlp_noauth" {
       action {
-        key = "cluster"
-        action = "upsert"
-        value = "auth-integration-test"
-      }
-      action {
-        key = "k8s.cluster.name"
-        action = "upsert"
-        value = "auth-integration-test"
-      }
-      action {
         key = "destination"
         action = "upsert"
         value = "prometheus-otlp-noauth"
@@ -316,6 +306,21 @@ data:
     
     otelcol.processor.transform "prometheus_otlp_noauth" {
       error_mode = "ignore"
+      metric_statements {
+        context = "resource"
+        statements = [
+          `set(attributes["cluster"], "auth-integration-test")`,
+          `set(attributes["k8s.cluster.name"], "auth-integration-test")`,
+        ]
+      }
+    
+      metric_statements {
+        context = "datapoint"
+        statements = [
+          `set(attributes["cluster"], "auth-integration-test")`,
+          `set(attributes["k8s.cluster.name"], "auth-integration-test")`,
+        ]
+      }
     
       output {
         metrics = [otelcol.processor.batch.prometheus_otlp_noauth.input]
@@ -353,16 +358,6 @@ data:
     
     otelcol.processor.attributes "prometheus_otlp_basicauth" {
       action {
-        key = "cluster"
-        action = "upsert"
-        value = "auth-integration-test"
-      }
-      action {
-        key = "k8s.cluster.name"
-        action = "upsert"
-        value = "auth-integration-test"
-      }
-      action {
         key = "destination"
         action = "upsert"
         value = "prometheus-otlp-basicauth"
@@ -376,6 +371,21 @@ data:
     
     otelcol.processor.transform "prometheus_otlp_basicauth" {
       error_mode = "ignore"
+      metric_statements {
+        context = "resource"
+        statements = [
+          `set(attributes["cluster"], "auth-integration-test")`,
+          `set(attributes["k8s.cluster.name"], "auth-integration-test")`,
+        ]
+      }
+    
+      metric_statements {
+        context = "datapoint"
+        statements = [
+          `set(attributes["cluster"], "auth-integration-test")`,
+          `set(attributes["k8s.cluster.name"], "auth-integration-test")`,
+        ]
+      }
     
       output {
         metrics = [otelcol.processor.batch.prometheus_otlp_basicauth.input]
@@ -419,16 +429,6 @@ data:
     
     otelcol.processor.attributes "prometheus_otlp_bearer_token" {
       action {
-        key = "cluster"
-        action = "upsert"
-        value = "auth-integration-test"
-      }
-      action {
-        key = "k8s.cluster.name"
-        action = "upsert"
-        value = "auth-integration-test"
-      }
-      action {
         key = "destination"
         action = "upsert"
         value = "prometheus-otlp-bearer-token"
@@ -442,6 +442,21 @@ data:
     
     otelcol.processor.transform "prometheus_otlp_bearer_token" {
       error_mode = "ignore"
+      metric_statements {
+        context = "resource"
+        statements = [
+          `set(attributes["cluster"], "auth-integration-test")`,
+          `set(attributes["k8s.cluster.name"], "auth-integration-test")`,
+        ]
+      }
+    
+      metric_statements {
+        context = "datapoint"
+        statements = [
+          `set(attributes["cluster"], "auth-integration-test")`,
+          `set(attributes["k8s.cluster.name"], "auth-integration-test")`,
+        ]
+      }
     
       output {
         metrics = [otelcol.processor.batch.prometheus_otlp_bearer_token.input]

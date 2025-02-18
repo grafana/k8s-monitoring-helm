@@ -3,16 +3,6 @@ cluster:
   name: application-observability-gc-feature-test
 
 destinations:
-  - name: grafanaCloudLogs
-    type: loki
-    url: https://logs-prod-006.grafana.net/loki/api/v1/push
-    auth:
-      type: basic
-      usernameKey: LOKI_USER
-      passwordKey: LOKI_PASS
-    secret:
-      create: false
-      name: grafana-cloud-credentials
   - name: otlp-gateway
     type: otlp
     url: https://otlp-gateway-prod-us-east-0.grafana.net/otlp
@@ -27,7 +17,7 @@ destinations:
     metrics:
       enabled: true
     logs:
-      enabled: false
+      enabled: true
     traces:
       enabled: true
     processors:
@@ -52,6 +42,8 @@ applicationObservability:
 
 podLogs:
   enabled: true
+  destinations:
+    - otlp-gateway
 
 alloy-logs:
   enabled: true
