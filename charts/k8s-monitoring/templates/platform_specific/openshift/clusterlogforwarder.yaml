@@ -1,31 +1,72 @@
-{{- if and (eq .Values.global.platform "openshift") .Values.podLogs.lokiReceiver.enabled .Values.podLogs.lokiReceiver.openShiftClusterLogForwarder.enabled }}
-{{/* https://docs.openshift.com/container-platform/4.17/observability/logging/logging-6.1/log6x-clf-6.1.html */}}
+{{- if and (eq .Values.global.platform "openshift") .Values.podLogs.lokiReceiver.enabled .Values.podLogs.openShiftClusterLogForwarder.enabled }}
+{{- /* https://docs.openshift.com/container-platform/4.17/observability/logging/logging-6.1/log6x-clf-6.1.html */}}
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ include "helper.fullname" . }}-clf
+  namespace: openshift-logging
+{{- if .Values.podLogs.openShiftClusterLogForwarder.application.enabled }}
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: {{ include "helper.fullname" . }}-clf-application-logs
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: collect-application-logs
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "helper.fullname" . }}-clf
+    namespace: openshift-logging
+{{- end }}
+{{- if .Values.podLogs.openShiftClusterLogForwarder.infrastructure.enabled }}
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: {{ include "helper.fullname" . }}-clf-infrastructure-logs
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: collect-infrastructure-logs
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "helper.fullname" . }}-clf
+    namespace: openshift-logging
+{{- end }}
 ---
 apiVersion: logging.openshift.io/v1
 kind: ClusterLogForwarder
 metadata:
   name: {{ include "helper.fullname" . }}
-  namespace: {{ .Release.Namespace }}
+  namespace: openshift-logging
 spec:
-{{- if .Values.podLogs.lokiReceiver.openShiftClusterLogForwarder.namespaces }}
+  serviceAccountName: {{ include "helper.fullname" . }}-clf
   inputs:
-    - name: application-from-namespaces
+{{- if .Values.podLogs.openShiftClusterLogForwarder.application.enabled }}
+    - name: application-logs
       application:
-        namespaces: {{ .Values.podLogs.lokiReceiver.openShiftClusterLogForwarder.namespaces | toYaml | nindent 10 }}
+        {{- if .Values.podLogs.openShiftClusterLogForwarder.application.namespaces }}
+        namespaces: {{ .Values.podLogs.openShiftClusterLogForwarder.application.namespaces | toYaml | nindent 10 }}
+        {{- end }}
 {{- end }}
   outputs:
     - name: {{ include "helper.fullname" . }}
       type: loki
-      url: {{ include "features.podLogs.receiver.loki" . }}
+      url: {{ include "features.podLogs.receiver.loki" . | trim }}
+      labelKeys
+        - log_type
   pipelines:
-    - name: application-logs
+    - name: {{ include "helper.fullname" . }}
       inputRefs:
-{{- if .Values.podLogs.lokiReceiver.openShiftClusterLogForwarder.namespaces }}
-        - application-from-namespaces
-{{- else }}
-        - application
+{{- if .Values.podLogs.openShiftClusterLogForwarder.applicationLogs.enabled }}
+        - application-logs
 {{- end }}
+{{- if .Values.podLogs.openShiftClusterLogForwarder.infrastructureLogs.enabled }}
         - infrastructure
+{{- end }}
       outputRefs:
         - {{ include "helper.fullname" . }}
 {{- end }}
