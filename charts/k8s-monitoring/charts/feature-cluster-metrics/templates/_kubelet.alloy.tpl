@@ -14,28 +14,67 @@
 {{- $metricAllowList := include "feature.clusterMetrics.kubelet.allowList" . | fromYamlArray }}
 {{- $metricDenyList := .Values.kubelet.metricsTuning.excludeMetrics }}
 
-kubernetes.kubelet "scrape" {
-  clustering = true
-  job_label = {{ .Values.kubelet.jobLabel | quote }}
-{{- if $metricAllowList }}
-  keep_metrics = {{ $metricAllowList | join "|" | quote }}
+// Kubelet
+discovery.relabel "kubelet" {
+  targets = discovery.kubernetes.nodes.targets
+{{- if eq .Values.kubelet.nodeAddressFormat "proxy" }}
+  rule {
+    target_label = "__address__"
+    replacement  = "{{ .Values.cluster.kubernetesAPIService }}"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_node_name"]
+    regex         = "(.+)"
+    replacement   = "/api/v1/nodes/${1}/proxy/metrics"
+    target_label  = "__metrics_path__"
+  }
 {{- end }}
-{{- if $metricDenyList }}
-  drop_metrics = {{ $metricDenyList | join "|" | quote }}
+{{- if .Values.kubelet.extraRelabelingRules }}
+{{ .Values.kubelet.extraRelabelingRules | indent 2 }}
 {{- end }}
+}
+
+prometheus.scrape "kubelet" {
+  targets  = discovery.relabel.kubelet.output
+  job_name = {{ .Values.kubelet.jobLabel | quote }}
+  scheme   = "https"
   scrape_interval = {{ .Values.kubelet.scrapeInterval | default .Values.global.scrapeInterval | quote }}
-  max_cache_size = {{ .Values.kubelet.maxCacheSize | default .Values.global.maxCacheSize | int }}
-{{- if .Values.kubelet.extraMetricProcessingRules }}
+  bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+
+  tls_config {
+    ca_file = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+    insecure_skip_verify = false
+    server_name = "kubernetes"
+  }
+
+  clustering {
+    enabled = true
+  }
+
   forward_to = [prometheus.relabel.kubelet.receiver]
 }
 
 prometheus.relabel "kubelet" {
   max_cache_size = {{ .Values.kubelet.maxCacheSize | default .Values.global.maxCacheSize | int }}
+
+{{- if $metricAllowList }}
+  rule {
+    source_labels = ["__name__"]
+    regex = {{ $metricAllowList | join "|" | quote }}
+    action = "keep"
+  }
+{{- end }}
+{{- if $metricDenyList }}
+  rule {
+    source_labels = ["__name__"]
+    regex = {{ $metricDenyList | join "|" | quote }}
+    action = "drop"
+  }
+{{- end }}
 {{- if .Values.kubelet.extraMetricProcessingRules }}
   {{ .Values.kubelet.extraMetricProcessingRules | indent 2 }}
 {{- end }}
 
-{{- end }}
   forward_to = argument.metrics_destinations.value
 }
 {{- end }}

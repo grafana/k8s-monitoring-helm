@@ -1,11 +1,12 @@
 {{- define "feature.clusterMetrics.module" }}
 {{- $includeKubernetesModule := false }}
-{{- $includeKubernetesModule = or $includeKubernetesModule .Values.cadvisor.enabled }}
-{{- $includeKubernetesModule = or $includeKubernetesModule .Values.kubelet.enabled }}
-{{- $includeKubernetesModule = or $includeKubernetesModule .Values.kubeletResource.enabled }}
 {{- $includeKubernetesModule = or $includeKubernetesModule .Values.apiServer.enabled }}
 {{- $includeKubernetesModule = or $includeKubernetesModule .Values.kubeDNS.enabled }}
 {{- $includeKubernetesModule = or $includeKubernetesModule (and .Values.controlPlane.enabled (or (not (eq .Values.apiServer.enabled false)) (not (eq .Values.kubeDNS.enabled false)))) }}
+{{- $discoverNodes := false }}
+{{- $discoverNodes = or $discoverNodes .Values.cadvisor.enabled }}
+{{- $discoverNodes = or $discoverNodes .Values.kubelet.enabled }}
+{{- $discoverNodes = or $discoverNodes .Values.kubeletResource.enabled }}
 declare "cluster_metrics" {
   argument "metrics_destinations" {
     comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
@@ -13,6 +14,11 @@ declare "cluster_metrics" {
 
   {{- if $includeKubernetesModule }}
   {{- include "alloyModules.load" (deepCopy $ | merge (dict "name" "kubernetes" "path" "modules/kubernetes/core/metrics.alloy")) | nindent 2 }}
+  {{- end }}
+  {{- if $discoverNodes }}
+  discovery.kubernetes "nodes" {
+    role = "node"
+  }
   {{- end }}
   {{- include "feature.clusterMetrics.kubelet.alloy" . | indent 2 }}
   {{- include "feature.clusterMetrics.kubeletResource.alloy" . | indent 2 }}
