@@ -27,10 +27,14 @@ otelcol.processor.k8sattributes "{{ .name | default "default" }}" {
       from = "resource_attribute"
       name = "k8s.pod.ip"
     }
+  }
+  pod_association {
     source {
       from = "resource_attribute"
       name = "k8s.pod.uid"
     }
+  }
+  pod_association {
     source {
       from = "connection"
     }
