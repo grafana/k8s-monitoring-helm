@@ -89,15 +89,31 @@ kubernetesApiGathering:
 
 lokiReceiver:
   # -- Enable receiving logs using the Loki protocol.
+  # @section -- Loki Receiver
   enabled: false
 
   # -- The port to listen on for logs.
+  # @section -- Loki Receiver
   port: 3100
 
-  openShiftClusterLogForwarder:
-    enabled: false
 
+openShiftClusterLogForwarder:
+  # -- Enable receiving logs with the OpenShift ClusterLogForwarder.
+  # @section -- OpenShift ClusterLogForwarder
+  enabled: false
+
+  application:
+    # -- Enable receiving application logs.
+    # @section -- OpenShift ClusterLogForwarder: Application Logs
+    enabled: true
+    # -- The namespaces to receive application logs from.
+    # @section -- OpenShift ClusterLogForwarder: Application Logs
     namespaces: []
+
+  infrastructure:
+    # -- Enable receiving infrastructure logs.
+    # @section -- OpenShift ClusterLogForwarder: Infrastructure Logs
+    enabled: false
 
 # -- Log labels to set with values copied from the Kubernetes Pod labels.
 # Format: `<log_label>: <kubernetes_label>`.
