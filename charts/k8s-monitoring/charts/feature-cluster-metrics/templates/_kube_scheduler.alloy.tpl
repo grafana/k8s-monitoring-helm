@@ -10,7 +10,7 @@ discovery.kubernetes "kube_scheduler" {
   }
   selectors {
     role = "pod"
-    label = "component=kube-scheduler"
+    label = {{ .Values.kubeScheduler.selectorLabel | quote }}
   }
 }
 

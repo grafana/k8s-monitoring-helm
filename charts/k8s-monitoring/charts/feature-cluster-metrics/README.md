@@ -221,6 +221,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | kubeControllerManager.metricsTuning.includeMetrics | list | `[]` | Metrics to keep. Can use regular expressions. An empty list means keep all. |
 | kubeControllerManager.port | int | `10257` | Port number used by the Kube Controller Manager, set by `--secure-port.` |
 | kubeControllerManager.scrapeInterval | string | 60s | How frequently to scrape metrics from the Kube Controller Manager Overrides metrics.scrapeInterval |
+| kubeControllerManager.selectorLabel | string | `"component=kube-controller-manager"` | Selector label. |
 
 ### KubeDNS
 
@@ -247,6 +248,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | kubeProxy.metricsTuning.includeMetrics | list | `[]` | Metrics to keep. Can use regular expressions. An empty list means keep all. |
 | kubeProxy.port | int | `10249` | Port number used by the Kube Proxy, set in `--metrics-bind-address`. |
 | kubeProxy.scrapeInterval | string | 60s | How frequently to scrape metrics from the Kube Proxy Overrides metrics.scrapeInterval |
+| kubeProxy.selectorLabel | string | `"k8s-app=kube-proxy"` | Selector label. |
 
 ### Kube Scheduler
 
@@ -261,6 +263,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | kubeScheduler.metricsTuning.includeMetrics | list | `[]` | Metrics to keep. Can use regular expressions. An empty list means keep all. |
 | kubeScheduler.port | int | `10259` | Port number used by the Kube Scheduler, set by `--secure-port`. |
 | kubeScheduler.scrapeInterval | string | 60s | How frequently to scrape metrics from the Kube Scheduler Overrides metrics.scrapeInterval |
+| kubeScheduler.selectorLabel | string | `"component=kube-scheduler"` | Selector label. |
 
 ### Kubelet
 
