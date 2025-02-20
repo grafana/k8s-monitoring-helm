@@ -15,17 +15,17 @@
 {{- $metricDenyList := (index .Values "kube-state-metrics").metricsTuning.excludeMetrics }}
 {{- $labelSelectors := list }}
 {{- range $label, $value := (index .Values "kube-state-metrics").labelMatchers }}
-  {{- $labelSelectors = append $labelSelectors (printf "%s=%s" $label $value | quote) }}
+  {{- $labelSelectors = append $labelSelectors (printf "%s=%s" $label $value) }}
 {{- end }}
 {{- if (index .Values "kube-state-metrics").deploy }}
-  {{- $labelSelectors = append $labelSelectors (printf "release=%s" .Release.Name | quote) }}
+  {{- $labelSelectors = append $labelSelectors (printf "release=%s" .Release.Name) }}
 {{- end }}
 discovery.kubernetes "kube_state_metrics" {
   role = "endpoints"
 
   selectors {
     role = "endpoints"
-    label = [{{ $labelSelectors | join "," | quote }}]
+    label = {{ $labelSelectors | join "," | quote }}
   }
 }
 
@@ -49,7 +49,7 @@ discovery.relabel "kube_state_metrics" {
 
 prometheus.scrape "kube_state_metrics" {
   targets = discovery.relabel.kube_state_metrics.output
-  job_label = {{ (index .Values "kube-state-metrics").jobLabel | quote }}
+  job_name = {{ (index .Values "kube-state-metrics").jobLabel | quote }}
   scrape_interval = {{ (index .Values "kube-state-metrics").scrapeInterval | default .Values.global.scrapeInterval | quote }}
   scheme = {{ (index .Values "kube-state-metrics").service.scheme | quote }}
   bearer_token_file = {{ (index .Values "kube-state-metrics").bearerTokenFile | quote }}
