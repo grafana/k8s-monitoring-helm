@@ -10,7 +10,7 @@ discovery.kubernetes "kube_controller_manager" {
   }
   selectors {
     role = "pod"
-    label = "component=kube-controller-manager"
+    label = {{ .Values.kubeControllerManager.selectorLabel | quote }}
   }
 }
 

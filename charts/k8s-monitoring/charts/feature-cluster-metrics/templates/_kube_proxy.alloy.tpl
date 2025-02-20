@@ -10,7 +10,7 @@ discovery.kubernetes "kube_proxy" {
   }
   selectors {
     role = "pod"
-    label = "k8s-app=kube-proxy"
+    label = {{ .Values.kubeProxy.selectorLabel | quote }}
   }
 }
 
