@@ -73,7 +73,7 @@ prometheus.scrape "cadvisor" {
 
   tls_config {
     ca_file = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
-    insecure_skip_verify = false
+    insecure_skip_verify = true
     server_name = "kubernetes"
   }
 
