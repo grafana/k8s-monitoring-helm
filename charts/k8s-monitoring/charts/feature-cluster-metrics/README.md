@@ -142,7 +142,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | cadvisor.metricsTuning.keepPhysicalNetworkDevices | list | `["en[ospx][0-9].*","wlan[0-9].*","eth[0-9].*"]` | Only keep network metrics that use the following physical devices |
 | cadvisor.metricsTuning.normalizeUnnecessaryLabels | list | `[{"labels":["boot_id","system_uuid"],"metric":"machine_memory_bytes"}]` | Normalize labels to the same value for the given metric and label pairs |
 | cadvisor.metricsTuning.useDefaultAllowList | bool | `true` | Filter the list of metrics from cAdvisor to the minimal set required for Kubernetes Monitoring. |
-| cadvisor.nodeAddressFormat | string | `"direct"` | How to access the node services, either direct (use node IP, requires nodes/metrics) or via proxy (requires nodes/proxy) |
+| cadvisor.nodeAddressFormat | string | `"direct"` | How to access cAdvisor to get metrics, either "direct" (use node IP) or "proxy" (uses API Server) |
 
 ### cadvisor
 
@@ -276,7 +276,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | kubelet.metricsTuning.excludeMetrics | list | `[]` | Metrics to drop. Can use regular expressions. |
 | kubelet.metricsTuning.includeMetrics | list | `[]` | Metrics to keep. Can use regular expressions. |
 | kubelet.metricsTuning.useDefaultAllowList | bool | `true` | Filter the list of metrics from the Kubelet to the minimal set required for Kubernetes Monitoring. |
-| kubelet.nodeAddressFormat | string | `"direct"` | How to access the node services, either direct (use node IP, requires nodes/metrics) or via proxy (requires nodes/proxy) |
+| kubelet.nodeAddressFormat | string | `"direct"` | How to access the Kubelet to get metrics, either "direct" (use node IP) or "proxy" (uses API Server) |
 | kubelet.scrapeInterval | string | `60s` | How frequently to scrape Kubelet metrics. |
 
 ### Kubelet Resources
@@ -291,7 +291,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | kubeletResource.metricsTuning.excludeMetrics | list | `[]` | Metrics to drop. Can use regular expressions. |
 | kubeletResource.metricsTuning.includeMetrics | list | `[]` | Metrics to keep. Can use regular expressions. |
 | kubeletResource.metricsTuning.useDefaultAllowList | bool | `true` | Filter the list of resources metrics from the Kubelet to the minimal set required for Kubernetes Monitoring. |
-| kubeletResource.nodeAddressFormat | string | `"direct"` | How to access the node services, either direct (use node IP, requires nodes/metrics) or via proxy (requires nodes/proxy) |
+| kubeletResource.nodeAddressFormat | string | `"direct"` | How to access the Kubelet to get resource metrics, either "direct" (use node IP) or "proxy" (uses API Server) |
 | kubeletResource.scrapeInterval | string | `60s` | How frequently to scrape Kubelet Resource metrics. |
 
 ### Node Exporter
