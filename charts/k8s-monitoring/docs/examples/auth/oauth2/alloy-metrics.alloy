@@ -557,33 +557,57 @@ declare "cluster_metrics" {
     }
     forward_to = argument.metrics_destinations.value
   }
+  discovery.kubernetes "kube_state_metrics" {
+    role = "endpoints"
 
-  remote.kubernetes.configmap "kube_state_metrics" {
-    name = "k8smon-alloy-module-kubernetes"
-    namespace = "default"
+    selectors {
+      role = "endpoints"
+      field = string.join(coalesce(argument.field_selectors.value, []), ",")
+      label = ["\"app.kubernetes.io/name=kube-state-metrics\",\"release=k8smon\""]
+    }
   }
 
-  import.string "kube_state_metrics" {
-    content = remote.kubernetes.configmap.kube_state_metrics.data["kube-state-metrics_metrics.alloy"]
+  discovery.relabel "kube_state_metrics" {
+    targets = discovery.kubernetes.kube_state_metrics.targets
+
+    // only keep targets with a matching port name
+    rule {
+      source_labels = ["__meta_kubernetes_endpoint_port_name"]
+      regex = "http"
+      action = "keep"
+    }
+
+    rule {
+      action = "replace"
+      replacement = "kubernetes"
+      target_label = "source"
+    }
+
   }
 
-  kube_state_metrics.kubernetes "targets" {
-    namespaces = ["default"]
-    port_name = "http"
-    label_selectors = [
-      "app.kubernetes.io/name=kube-state-metrics",
-      "release=k8smon",
-    ]
-  }
-
-  kube_state_metrics.scrape "metrics" {
-    targets = kube_state_metrics.kubernetes.targets.output
-    clustering = true
+  prometheus.scrape "kube_state_metrics" {
+    targets = discovery.relabel.kube_state_metrics.output
     job_label = "integrations/kubernetes/kube-state-metrics"
-    keep_metrics = "up|scrape_samples_scraped|kube_configmap_info|kube_configmap_metadata_resource_version|kube_daemonset.*|kube_deployment_metadata_generation|kube_deployment_spec_replicas|kube_deployment_status_condition|kube_deployment_status_observed_generation|kube_deployment_status_replicas_available|kube_deployment_status_replicas_updated|kube_horizontalpodautoscaler_spec_max_replicas|kube_horizontalpodautoscaler_spec_min_replicas|kube_horizontalpodautoscaler_status_current_replicas|kube_horizontalpodautoscaler_status_desired_replicas|kube_job.*|kube_namespace_status_phase|kube_node.*|kube_persistentvolume_status_phase|kube_persistentvolumeclaim_access_mode|kube_persistentvolumeclaim_info|kube_persistentvolumeclaim_labels|kube_persistentvolumeclaim_resource_requests_storage_bytes|kube_persistentvolumeclaim_status_phase|kube_pod_container_info|kube_pod_container_resource_limits|kube_pod_container_resource_requests|kube_pod_container_status_last_terminated_reason|kube_pod_container_status_restarts_total|kube_pod_container_status_waiting_reason|kube_pod_info|kube_pod_owner|kube_pod_spec_volumes_persistentvolumeclaims_info|kube_pod_start_time|kube_pod_status_phase|kube_pod_status_reason|kube_replicaset.*|kube_resourcequota|kube_secret_metadata_resource_version|kube_statefulset.*"
-    scheme = "http"
     scrape_interval = "60s"
+    scheme = "http"
+    bearer_token_file = ""
+    tls_config {
+      insecure_skip_verify = true
+    }
+
+    clustering {
+      enabled = true
+    }
+    forward_to = [prometheus.relabel.kube_state_metrics.receiver]
+  }
+
+  prometheus.relabel "kube_state_metrics" {
     max_cache_size = 100000
+    rule {
+      source_labels = ["__name__"]
+      regex = "up|scrape_samples_scraped|kube_configmap_info|kube_configmap_metadata_resource_version|kube_daemonset.*|kube_deployment_metadata_generation|kube_deployment_spec_replicas|kube_deployment_status_condition|kube_deployment_status_observed_generation|kube_deployment_status_replicas_available|kube_deployment_status_replicas_updated|kube_horizontalpodautoscaler_spec_max_replicas|kube_horizontalpodautoscaler_spec_min_replicas|kube_horizontalpodautoscaler_status_current_replicas|kube_horizontalpodautoscaler_status_desired_replicas|kube_job.*|kube_namespace_status_phase|kube_node.*|kube_persistentvolume_status_phase|kube_persistentvolumeclaim_access_mode|kube_persistentvolumeclaim_info|kube_persistentvolumeclaim_labels|kube_persistentvolumeclaim_resource_requests_storage_bytes|kube_persistentvolumeclaim_status_phase|kube_pod_container_info|kube_pod_container_resource_limits|kube_pod_container_resource_requests|kube_pod_container_status_last_terminated_reason|kube_pod_container_status_restarts_total|kube_pod_container_status_waiting_reason|kube_pod_info|kube_pod_owner|kube_pod_spec_volumes_persistentvolumeclaims_info|kube_pod_start_time|kube_pod_status_phase|kube_pod_status_reason|kube_replicaset.*|kube_resourcequota|kube_secret_metadata_resource_version|kube_statefulset.*"
+      action = "keep"
+    }
     forward_to = argument.metrics_destinations.value
   }
 

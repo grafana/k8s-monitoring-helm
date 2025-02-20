@@ -13,56 +13,77 @@
 {{- if (index .Values "kube-state-metrics").enabled }}
 {{- $metricAllowList := include "feature.clusterMetrics.kube_state_metrics.allowList" . | fromYamlArray }}
 {{- $metricDenyList := (index .Values "kube-state-metrics").metricsTuning.excludeMetrics }}
-{{- include "alloyModules.load" (deepCopy $ | merge (dict "name" "kube_state_metrics" "path" "modules/kubernetes/kube-state-metrics/metrics.alloy")) | nindent 0 }}
-
-kube_state_metrics.kubernetes "targets" {
-{{- if (index .Values "kube-state-metrics").deploy }}
-  namespaces = [{{ .Release.Namespace | quote }}]
-{{- else if (index .Values "kube-state-metrics").namespace }}
-  namespaces = [{{ (index .Values "kube-state-metrics").namespace | quote }}]
-{{- end }}
-  port_name = {{ (index .Values "kube-state-metrics").service.portName | quote }}
-  label_selectors = [
+{{- $labelSelectors := list }}
 {{- range $label, $value := (index .Values "kube-state-metrics").labelMatchers }}
-    {{ printf "%s=%s" $label $value | quote }},
+  {{- $labelSelectors = append $labelSelectors (printf "%s=%s" $label $value | quote) }}
 {{- end }}
 {{- if (index .Values "kube-state-metrics").deploy }}
-    {{ printf "release=%s" .Release.Name | quote }},
+  {{- $labelSelectors = append $labelSelectors (printf "release=%s" .Release.Name | quote) }}
 {{- end }}
-  ]
+discovery.kubernetes "kube_state_metrics" {
+  role = "endpoints"
+
+  selectors {
+    role = "endpoints"
+    field = string.join(coalesce(argument.field_selectors.value, []), ",")
+    label = [{{ $labelSelectors | join "," | quote }}]
+  }
 }
-{{- $scrapeTargets := "kube_state_metrics.kubernetes.targets.output" }}
-{{- if (index .Values "kube-state-metrics").extraDiscoveryRules }}
 
 discovery.relabel "kube_state_metrics" {
-  targets = {{ $scrapeTargets }}
-  {{ (index .Values "kube-state-metrics").extraDiscoveryRules | nindent 2 }}
-}
-{{- $scrapeTargets = "discovery.relabel.kube_state_metrics.output" }}
-{{- end }}
+  targets = discovery.kubernetes.kube_state_metrics.targets
 
-kube_state_metrics.scrape "metrics" {
-  targets = {{ $scrapeTargets }}
-  clustering = true
+  // only keep targets with a matching port name
+  rule {
+    source_labels = ["__meta_kubernetes_endpoint_port_name"]
+    regex = {{ (index .Values "kube-state-metrics").service.portName | quote }}
+    action = "keep"
+  }
+
+  rule {
+    action = "replace"
+    replacement = "kubernetes"
+    target_label = "source"
+  }
+  {{- (index .Values "kube-state-metrics").extraDiscoveryRules | nindent 2 }}
+}
+
+prometheus.scrape "kube_state_metrics" {
+  targets = discovery.relabel.kube_state_metrics.output
   job_label = {{ (index .Values "kube-state-metrics").jobLabel | quote }}
-{{- if $metricAllowList }}
-  keep_metrics = {{ $metricAllowList | join "|" | quote }}
-{{- end }}
-{{- if $metricDenyList }}
-  drop_metrics = {{ $metricDenyList | join "|" | quote }}
-{{- end }}
-  scheme = {{ (index .Values "kube-state-metrics").service.scheme | quote }}
-{{- if (index .Values "kube-state-metrics").bearerTokenFile }}
-  bearer_token_file = {{ (index .Values "kube-state-metrics").bearerTokenFile | quote }}
-{{- end }}
   scrape_interval = {{ (index .Values "kube-state-metrics").scrapeInterval | default .Values.global.scrapeInterval | quote }}
-  max_cache_size = {{ (index .Values "kube-state-metrics").maxCacheSize | default .Values.global.maxCacheSize | int }}
-{{- if (index .Values "kube-state-metrics").extraMetricProcessingRules }}
+  scheme = {{ (index .Values "kube-state-metrics").service.scheme | quote }}
+  bearer_token_file = {{ (index .Values "kube-state-metrics").bearerTokenFile | quote }}
+  tls_config {
+    insecure_skip_verify = true
+  }
+
+  clustering {
+    enabled = true
+  }
+
+{{- if or $metricAllowList $metricDenyList (index .Values "kube-state-metrics").extraMetricProcessingRules }}
   forward_to = [prometheus.relabel.kube_state_metrics.receiver]
 }
 
 prometheus.relabel "kube_state_metrics" {
   max_cache_size = {{ (index .Values "kube-state-metrics").maxCacheSize | default .Values.global.maxCacheSize | int }}
+
+{{- if $metricAllowList }}
+  rule {
+    source_labels = ["__name__"]
+    regex = {{ $metricAllowList | join "|" | quote }}
+    action = "keep"
+  }
+{{- end }}
+{{- if $metricDenyList }}
+  rule {
+    source_labels = ["__name__"]
+    regex = {{ $metricDenyList | join "|" | quote }}
+    action = "drop"
+  }
+{{- end }}
+
 {{- if (index .Values "kube-state-metrics").extraMetricProcessingRules }}
   {{ (index .Values "kube-state-metrics").extraMetricProcessingRules | nindent 2}}
 {{- end }}

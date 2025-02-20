@@ -292,33 +292,57 @@ declare "cluster_metrics" {
     }
     forward_to = argument.metrics_destinations.value
   }
+  discovery.kubernetes "kube_state_metrics" {
+    role = "endpoints"
 
-  remote.kubernetes.configmap "kube_state_metrics" {
-    name = "k8smon-alloy-module-kubernetes"
-    namespace = "default"
+    selectors {
+      role = "endpoints"
+      field = string.join(coalesce(argument.field_selectors.value, []), ",")
+      label = ["\"app.kubernetes.io/name=kube-state-metrics\",\"release=k8smon\""]
+    }
   }
 
-  import.string "kube_state_metrics" {
-    content = remote.kubernetes.configmap.kube_state_metrics.data["kube-state-metrics_metrics.alloy"]
+  discovery.relabel "kube_state_metrics" {
+    targets = discovery.kubernetes.kube_state_metrics.targets
+
+    // only keep targets with a matching port name
+    rule {
+      source_labels = ["__meta_kubernetes_endpoint_port_name"]
+      regex = "http"
+      action = "keep"
+    }
+
+    rule {
+      action = "replace"
+      replacement = "kubernetes"
+      target_label = "source"
+    }
+
   }
 
-  kube_state_metrics.kubernetes "targets" {
-    namespaces = ["default"]
-    port_name = "http"
-    label_selectors = [
-      "app.kubernetes.io/name=kube-state-metrics",
-      "release=k8smon",
-    ]
-  }
-
-  kube_state_metrics.scrape "metrics" {
-    targets = kube_state_metrics.kubernetes.targets.output
-    clustering = true
+  prometheus.scrape "kube_state_metrics" {
+    targets = discovery.relabel.kube_state_metrics.output
     job_label = "integrations/kubernetes/kube-state-metrics"
-    keep_metrics = "up|scrape_samples_scraped|(.+)"
-    scheme = "http"
     scrape_interval = "60s"
+    scheme = "http"
+    bearer_token_file = ""
+    tls_config {
+      insecure_skip_verify = true
+    }
+
+    clustering {
+      enabled = true
+    }
+    forward_to = [prometheus.relabel.kube_state_metrics.receiver]
+  }
+
+  prometheus.relabel "kube_state_metrics" {
     max_cache_size = 100000
+    rule {
+      source_labels = ["__name__"]
+      regex = "up|scrape_samples_scraped|(.+)"
+      action = "keep"
+    }
     forward_to = argument.metrics_destinations.value
   }
 
