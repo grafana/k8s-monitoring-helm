@@ -25,7 +25,6 @@ discovery.kubernetes "kube_state_metrics" {
 
   selectors {
     role = "endpoints"
-    field = string.join(coalesce(argument.field_selectors.value, []), ",")
     label = [{{ $labelSelectors | join "," | quote }}]
   }
 }
