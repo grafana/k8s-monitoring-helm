@@ -55,8 +55,8 @@ discovery.relabel "kubelet" {
     target_label = "source"
   }
 {{- end }}
-{{- if .Values.kubelet.extraRelabelingRules }}
-{{ .Values.kubelet.extraRelabelingRules | indent 2 }}
+{{- if .Values.kubelet.extraDiscoveryRules }}
+{{ .Values.kubelet.extraDiscoveryRules | indent 2 }}
 {{- end }}
 }
 
