@@ -78,9 +78,8 @@ discovery.relabel "filtered_pods" {
 
   // set resource attributes
   rule {
-    action = "replace"
-    source_labels = ["__meta_kubernetes_pod_annotation_resource_opentelemetry_io_(.+))"]
-    target_label = "$1"
+    action = "labelmap"
+    source_labels = ["__meta_kubernetes_pod_annotation_resource_opentelemetry_io_(.+)"]
   }
 
 {{- range $label, $k8sAnnotation := .Values.annotations }}
