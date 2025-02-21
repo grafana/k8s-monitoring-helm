@@ -76,23 +76,10 @@ discovery.relabel "filtered_pods" {
     target_label = "service_name"
   }
 
-  // set service_namespace
+  // set resource attributes
   rule {
-    action = "replace"
-    source_labels = ["__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_namespace"]
-    target_label = "service_namespace"
-  }
-
-  // set deployment_environment and deployment_environment_name
-  rule {
-    action = "replace"
-    source_labels = ["__meta_kubernetes_pod_annotation_resource_opentelemetry_io_deployment_environment_name"]
-    target_label = "deployment_environment_name"
-  }
-  rule {
-    action = "replace"
-    source_labels = ["__meta_kubernetes_pod_annotation_resource_opentelemetry_io_deployment_environment"]
-    target_label = "deployment_environment"
+    action = "labelmap"
+    regex = "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_(.+)"
   }
 
 {{- range $label, $k8sAnnotation := .Values.annotations }}
