@@ -12,21 +12,108 @@ global:
   # @section -- Global Settings
   platform: ""
 
-# -- The method to gather pod logs. Options are "volumes", "kubernetesApi", "OpenShiftClusterLogForwarder" (experimental).
-# @section -- Pod Discovery
-gatherMethod: volumes
+volumeGathering:
+  enabled: true
 
-# -- Only capture logs from pods in these namespaces (`[]` means all namespaces).
-# @section -- Pod Discovery
-namespaces: []
+  # -- Only capture logs from pods in these namespaces (`[]` means all namespaces).
+  # @section -- Volume Gathering: Discovery
+  namespaces: []
 
-# -- Do not capture logs from any pods in these namespaces.
-# @section -- Pod Discovery
-excludeNamespaces: []
+  # -- Do not capture logs from any pods in these namespaces.
+  # @section -- Volume Gathering: Discovery
+  excludeNamespaces: []
 
-# -- Rules to filter pods for log gathering. Only used for "volumes" or "kubernetesApi" gather methods.
-# @section -- Pod Discovery
-extraDiscoveryRules: ""
+  # -- Discover Pods based on field selectors.
+  # @section -- Volume Gathering: Discovery
+  fieldSelectors: []
+
+  # -- Discover Pods based on label selectors.
+  # @section -- Volume Gathering: Discovery
+  labelSelectors: {}
+
+  # -- Discover Pods based on Node field selectors.
+  # @section -- Kubernetes API Gathering: Discovery
+  nodeFieldSelectors: []
+
+  # -- Discover Pods based on Node label selectors.
+  # @section -- Kubernetes API Gathering: Discovery
+  nodeLabelSelectors: {}
+
+  # -- Rules to filter pods for log gathering.
+  # @section -- Volume Gathering: Discovery
+  extraDiscoveryRules: ""
+
+  # -- Path on the Kubernetes nodes where the Pod logs are stored.
+  # @section -- Volume Gathering: Discovery
+  podLogsPath: /var/log/pods
+
+  # -- Only gather new log lines since this was deployed. Do not gather historical log lines.
+  # @section -- Volume Gathering: Gathering
+  onlyGatherNewLogLines: false
+
+kubernetesApiGathering:
+  # -- Only capture logs from pods in these namespaces (`[]` means all namespaces).
+  enabled: false
+
+  # -- Only capture logs from pods in these namespaces (`[]` means all namespaces).
+  # @section -- Kubernetes API Gathering: Discovery
+  namespaces: []
+
+  # -- Do not capture logs from any pods in these namespaces.
+  # @section -- Kubernetes API Gathering: Discovery
+  excludeNamespaces: []
+
+  # -- Discover Pods based on field selectors.
+  # @section -- Kubernetes API Gathering: Discovery
+  fieldSelectors: []
+
+  # -- Discover Pods based on label selectors.
+  # @section -- Kubernetes API Gathering: Discovery
+  labelSelectors: {}
+
+  # -- Discover Pods based on Node field selectors.
+  # @section -- Kubernetes API Gathering: Discovery
+  nodeFieldSelectors: []
+
+  # -- Discover Pods based on Node label selectors.
+  # @section -- Kubernetes API Gathering: Discovery
+  nodeLabelSelectors: {}
+
+  # -- Do not capture logs from any pods in these namespaces.
+  # @section -- Kubernetes API Gathering: Discovery
+  nodes: []
+
+  # -- Rules to filter pods for log gathering.
+  # @section -- Kubernetes API Gathering: Discovery
+  extraDiscoveryRules: ""
+
+lokiReceiver:
+  # -- Enable receiving logs using the Loki protocol.
+  # @section -- Loki Receiver
+  enabled: false
+
+  # -- The port to listen on for logs.
+  # @section -- Loki Receiver
+  port: 3100
+
+
+openShiftClusterLogForwarder:
+  # -- Enable receiving logs with the OpenShift ClusterLogForwarder.
+  # @section -- OpenShift ClusterLogForwarder
+  enabled: false
+
+  application:
+    # -- Enable receiving application logs.
+    # @section -- OpenShift ClusterLogForwarder: Application Logs
+    enabled: true
+    # -- The namespaces to receive application logs from.
+    # @section -- OpenShift ClusterLogForwarder: Application Logs
+    namespaces: []
+
+  infrastructure:
+    # -- Enable receiving infrastructure logs.
+    # @section -- OpenShift ClusterLogForwarder: Infrastructure Logs
+    enabled: false
 
 # -- Log labels to set with values copied from the Kubernetes Pod labels.
 # Format: `<log_label>: <kubernetes_label>`.
@@ -47,12 +134,6 @@ staticLabelsFrom: {}
 # @section -- Log Processing
 annotations:
   job: k8s.grafana.com/logs.job
-
-# Settings specific for gathering Pod logs using the "volumes" gather method.
-volumeGatherSettings:
-  # -- Only gather new log lines since this was deployed. Do not gather historical log lines.
-  # @section -- Volume Log Gathering
-  onlyGatherNewLogLines: false
 
 # -- Stage blocks to be added to the loki.process component for pod logs.
 # ([docs](https://grafana.com/docs/alloy/latest/reference/components/loki/loki.process/#blocks))

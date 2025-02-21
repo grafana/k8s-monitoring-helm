@@ -1,0 +1,61 @@
+---
+cluster:
+  name: eks-with-fargate-test
+
+destinations:
+  - name: grafana-cloud-metrics
+    type: prometheus
+    url: https://prometheus-prod-13-prod-us-east-0.grafana.net/api/prom/push
+    auth:
+      type: basic
+      usernameKey: PROMETHEUS_USER
+      passwordKey: PROMETHEUS_PASS
+    secret:
+      create: false
+      name: grafana-cloud-credentials
+      namespace: default
+  - name: grafana-cloud-logs
+    type: loki
+    url: https://logs-prod-006.grafana.net/loki/api/v1/push
+    auth:
+      type: basic
+      usernameKey: LOKI_USER
+      passwordKey: LOKI_PASS
+    secret:
+      create: false
+      name: grafana-cloud-credentials
+      namespace: default
+
+clusterMetrics:
+  enabled: true
+  windowsExporter:
+    enabled: true
+
+clusterEvents:
+  enabled: true
+
+podLogs:
+  enabled: true
+  volumeGathering:
+    enabled: true
+  kubernetesApiGathering:
+    enabled: true
+    nodeLabelSelectors:
+      "eks.amazonaws.com/compute-type": fargate
+
+integrations:
+  alloy:
+    instances:
+      - name: alloy
+        labelSelectors:
+          app.kubernetes.io/name: [alloy-metrics, alloy-singleton, alloy-logs]
+
+alloy-metrics:
+  enabled: true
+alloy-singleton:
+  enabled: true
+alloy-logs:
+  enabled: true
+  alloy:
+    clustering:
+      enabled: true

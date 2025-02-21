@@ -47,15 +47,6 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | staticLabels | object | `{}` | Log labels to set with static values. |
 | staticLabelsFrom | object | `{}` | Log labels to set with static values, not quoted so it can reference config components. |
 
-### Pod Discovery
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| excludeNamespaces | list | `[]` | Do not capture logs from any pods in these namespaces. |
-| extraDiscoveryRules | string | `""` | Rules to filter pods for log gathering. Only used for "volumes" or "kubernetesApi" gather methods. |
-| gatherMethod | string | `"volumes"` | The method to gather pod logs. Options are "volumes", "kubernetesApi", "OpenShiftClusterLogForwarder" (experimental). |
-| namespaces | list | `[]` | Only capture logs from pods in these namespaces (`[]` means all namespaces). |
-
 ### General settings
 
 | Key | Type | Default | Description |
@@ -69,14 +60,51 @@ Be sure perform actual integration testing in a live environment in the main [k8
 |-----|------|---------|-------------|
 | global.platform | string | `""` | The specific platform for this cluster. Will enable compatibility for some platforms. Supported options: (empty) or "openshift". |
 
+### Kubernetes API Gathering: Discovery
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| kubernetesApiGathering.excludeNamespaces | list | `[]` | Do not capture logs from any pods in these namespaces. |
+| kubernetesApiGathering.extraDiscoveryRules | string | `""` | Rules to filter pods for log gathering. |
+| kubernetesApiGathering.fieldSelectors | list | `[]` | Discover Pods based on field selectors. |
+| kubernetesApiGathering.labelSelectors | object | `{}` | Discover Pods based on label selectors. |
+| kubernetesApiGathering.namespaces | list | `[]` | Only capture logs from pods in these namespaces (`[]` means all namespaces). |
+| kubernetesApiGathering.nodeFieldSelectors | list | `[]` | Discover Pods based on Node field selectors. |
+| kubernetesApiGathering.nodeLabelSelectors | object | `{}` | Discover Pods based on Node label selectors. |
+| kubernetesApiGathering.nodes | list | `[]` | Do not capture logs from any pods in these namespaces. |
+| volumeGathering.nodeFieldSelectors | list | `[]` | Discover Pods based on Node field selectors. |
+| volumeGathering.nodeLabelSelectors | object | `{}` | Discover Pods based on Node label selectors. |
+
 ### Processing settings
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | structuredMetadata | object | `{}` | The structured metadata mappings to set. To not set any structured metadata, set this to an empty object (e.g. `{}`) Format: `<key>: <extracted_key>`. Example: structuredMetadata:   component: component   kind: kind   name: name |
 
-### Volume Log Gathering
+### Volume Gathering: Discovery
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| volumeGatherSettings.onlyGatherNewLogLines | bool | `false` | Only gather new log lines since this was deployed. Do not gather historical log lines. |
+| volumeGathering.excludeNamespaces | list | `[]` | Do not capture logs from any pods in these namespaces. |
+| volumeGathering.extraDiscoveryRules | string | `""` | Rules to filter pods for log gathering. |
+| volumeGathering.fieldSelectors | list | `[]` | Discover Pods based on field selectors. |
+| volumeGathering.labelSelectors | object | `{}` | Discover Pods based on label selectors. |
+| volumeGathering.namespaces | list | `[]` | Only capture logs from pods in these namespaces (`[]` means all namespaces). |
+| volumeGathering.podLogsPath | string | `"/var/log/pods"` | Path on the Kubernetes nodes where the Pod logs are stored. |
+
+### Volume Gathering: Gathering
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| volumeGathering.onlyGatherNewLogLines | bool | `false` | Only gather new log lines since this was deployed. Do not gather historical log lines. |
+
+### Other Values
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| kubernetesApiGathering.enabled | bool | `false` | Only capture logs from pods in these namespaces (`[]` means all namespaces). |
+| lokiReceiver.enabled | bool | `false` | Enable receiving logs using the Loki protocol. |
+| lokiReceiver.openShiftClusterLogForwarder.enabled | bool | `false` |  |
+| lokiReceiver.openShiftClusterLogForwarder.namespaces | list | `[]` |  |
+| lokiReceiver.port | int | `3100` | The port to listen on for logs. |
+| volumeGathering.enabled | bool | `true` |  |
