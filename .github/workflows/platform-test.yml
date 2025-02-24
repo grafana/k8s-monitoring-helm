@@ -72,7 +72,9 @@ jobs:
       - name: Check for cluster config
         id: check-cluster-config
         run: |
-          if [ -f "charts/k8s-monitoring/tests/platform/${{ matrix.test }}/eks-cluster-config.yaml" ]; then
+          if [ -f "charts/k8s-monitoring/tests/platform/${{ matrix.test }}/aks-cluster-config.yaml" ]; then
+            echo "cluster-type=aks" >> "${GITHUB_OUTPUT}"
+          elif [ -f "charts/k8s-monitoring/tests/platform/${{ matrix.test }}/eks-cluster-config.yaml" ]; then
             echo "cluster-type=eks" >> "${GITHUB_OUTPUT}"
           elif [ -f "charts/k8s-monitoring/tests/platform/${{ matrix.test }}/gke-cluster-config.yaml" ]; then
             echo "cluster-type=gke" >> "${GITHUB_OUTPUT}"
@@ -89,6 +91,14 @@ jobs:
         uses: helm/kind-action@v1
         with:
           install_only: true
+
+      - name: Setup Azure CLI
+        if: ${{ steps.check-cluster-config.outputs.cluster-type == 'aks' }}
+        run: ""
+
+      - name: Configure Azure Credentials
+        if: ${{ steps.check-cluster-config.outputs.cluster-type == 'aks' }}
+        run: ""
 
       - name: Setup eksctl CLI
         if: ${{ steps.check-cluster-config.outputs.cluster-type == 'eks' }}
