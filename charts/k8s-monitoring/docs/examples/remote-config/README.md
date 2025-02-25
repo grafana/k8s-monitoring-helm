@@ -41,6 +41,8 @@ alloy-metrics:
   alloy:
     stabilityLevel: public-preview
     extraEnv:
+      - name: GCLOUD_RW_API_KEY
+        value: "my-remote-cfg-password"
       - name: CLUSTER_NAME
         value: remote-config-example-cluster
       - name: NAMESPACE
@@ -52,9 +54,7 @@ alloy-metrics:
           fieldRef:
             fieldPath: metadata.name
       - name: GCLOUD_FM_COLLECTOR_ID
-        value: $(CLUSTER_NAME)-$(NAMESPACE)-$(POD_NAME)
-      - name: GCLOUD_RW_API_KEY
-        value: my-remote-cfg-password
+        value: k8smon-$(CLUSTER_NAME)-$(NAMESPACE)-$(POD_NAME)
 
 alloy-logs:
   enabled: true
@@ -68,6 +68,8 @@ alloy-logs:
   alloy:
     stabilityLevel: public-preview
     extraEnv:
+      - name: GCLOUD_RW_API_KEY
+        value: "my-remote-cfg-password"
       - name: CLUSTER_NAME
         value: remote-config-example-cluster
       - name: NAMESPACE
@@ -79,7 +81,5 @@ alloy-logs:
           fieldRef:
             fieldPath: spec.nodeName
       - name: GCLOUD_FM_COLLECTOR_ID
-        value: $(CLUSTER_NAME)-$(NAMESPACE)-$(NODE_NAME)
-      - name: GCLOUD_RW_API_KEY
-        value: "my-remote-cfg-password"
+        value: k8smon-$(CLUSTER_NAME)-$(NAMESPACE)-alloy-logs-$(NODE_NAME)
 ```
