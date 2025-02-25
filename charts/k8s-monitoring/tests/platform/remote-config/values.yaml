@@ -17,6 +17,11 @@ alloy-metrics:
   alloy:
     stabilityLevel: public-preview
     extraEnv:
+      - name: GCLOUD_RW_API_KEY
+        valueFrom:
+          secretKeyRef:
+            name: grafana-cloud-credentials
+            key: GRAFANA_CLOUD_FLEET_MGMT_TOKEN
       - name: CLUSTER_NAME
         valueFrom:
           configMapKeyRef:
@@ -31,12 +36,7 @@ alloy-metrics:
           fieldRef:
             fieldPath: metadata.name
       - name: GCLOUD_FM_COLLECTOR_ID
-        value: $(CLUSTER_NAME)-$(NAMESPACE)-$(POD_NAME)
-      - name: GCLOUD_RW_API_KEY
-        valueFrom:
-          secretKeyRef:
-            name: grafana-cloud-credentials
-            key: GRAFANA_CLOUD_FLEET_MGMT_TOKEN
+        value: k8smon-$(CLUSTER_NAME)-$(NAMESPACE)-$(POD_NAME)
 
 alloy-logs:
   enabled: true
@@ -53,6 +53,11 @@ alloy-logs:
   alloy:
     stabilityLevel: public-preview
     extraEnv:
+      - name: GCLOUD_RW_API_KEY
+        valueFrom:
+          secretKeyRef:
+            name: grafana-cloud-credentials
+            key: GRAFANA_CLOUD_FLEET_MGMT_TOKEN
       - name: CLUSTER_NAME
         valueFrom:
           configMapKeyRef:
@@ -67,9 +72,4 @@ alloy-logs:
           fieldRef:
             fieldPath: spec.nodeName
       - name: GCLOUD_FM_COLLECTOR_ID
-        value: $(CLUSTER_NAME)-$(NAMESPACE)-$(NODE_NAME)
-      - name: GCLOUD_RW_API_KEY
-        valueFrom:
-          secretKeyRef:
-            name: grafana-cloud-credentials
-            key: GRAFANA_CLOUD_FLEET_MGMT_TOKEN
+        value: k8smon-$(CLUSTER_NAME)-$(NAMESPACE)-alloy-logs-$(NODE_NAME)
