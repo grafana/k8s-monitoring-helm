@@ -22,6 +22,7 @@ remotecfg {
     "release" = "{{ $.Release.Name }}",
     "cluster" = {{ $.Values.cluster.name | quote }},
     "namespace" = {{ $.Release.Namespace | quote }},
+    "workloadName" = {{ $.collectorName | quote }},
     "workloadType" = {{ (index $.Values $.collectorName).controller.type | quote }},
 {{- range $key, $value := .extraAttributes }}
     {{ $key | quote }} = {{ $value | quote }},
