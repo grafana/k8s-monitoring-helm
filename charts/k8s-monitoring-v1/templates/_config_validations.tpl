@@ -70,18 +70,4 @@ alloy-logs:
   {{- end }}
 {{- end -}}
 
-{{- $Values := .Values }}
-{{- range $alloy := tuple "alloy" "alloy-events" "alloy-logs" "alloy-profiles"}}
-  {{- with (index $Values $alloy) }}
-    {{- if and .liveDebugging.enabled (not (eq .alloy.stabilityLevel "experimental")) }}
-{{/*
-To enable Alloy live debugging, you must set the stabilityLevel to "experimental":
-alloy-logs:
-  alloy:
-    stabilityLevel: experimental
-*/}}
-      {{ fail (printf "To enable Alloy live debugging, you must set the stabilityLevel to \"experimental\":\n%s:\n  alloy:\n    stabilityLevel: experimental" $alloy) }}
-    {{- end -}}
-  {{- end -}}
-{{- end -}}
 {{- end -}}

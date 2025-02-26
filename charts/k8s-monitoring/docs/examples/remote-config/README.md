@@ -39,7 +39,6 @@ alloy-metrics:
       username: my-remote-cfg-user
       passwordFrom: sys.env("GCLOUD_RW_API_KEY")
   alloy:
-    stabilityLevel: public-preview
     extraEnv:
       - name: GCLOUD_RW_API_KEY
         value: "my-remote-cfg-password"
@@ -66,7 +65,6 @@ alloy-logs:
       username: "my-remote-cfg-user"
       passwordFrom: sys.env("GCLOUD_RW_API_KEY")
   alloy:
-    stabilityLevel: public-preview
     extraEnv:
       - name: GCLOUD_RW_API_KEY
         value: "my-remote-cfg-password"

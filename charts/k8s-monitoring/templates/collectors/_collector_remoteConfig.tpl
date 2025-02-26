@@ -36,13 +36,6 @@ remotecfg {
 {{- define "collectors.validate.remoteConfig" }}
 {{- if (index .Values .collectorName).enabled }}
   {{- if (index .Values .collectorName).remoteConfig.enabled }}
-    {{- if not (has (index .Values .collectorName).alloy.stabilityLevel (list "public-preview" "experimental")) }}
-      {{- $msg := list "" "The remote configuration feature requires Alloy to use the \"public-preview\" stability level. Please set:" }}
-      {{- $msg = append $msg (printf "%s:" .collectorName ) }}
-      {{- $msg = append $msg "  alloy:" }}
-      {{- $msg = append $msg "    stabilityLevel: public-preview" }}
-      {{- fail (join "\n" $msg) }}
-    {{- end }}
     {{- $hasCollectorIdEnv := false }}
     {{- $hasAPIKey := false }}
     {{- range $env := (index .Values .collectorName).alloy.extraEnv }}
