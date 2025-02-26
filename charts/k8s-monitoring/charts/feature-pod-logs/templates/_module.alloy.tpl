@@ -8,7 +8,7 @@ declare "pod_logs" {
   {{- include "feature.podLogs.volumeGathering.alloy" . | nindent 2 }}
 {{- end }}
 
-{{- if .Values.kubernetesApiGathering.enabled }}
+{{- if .Values.kubernetesApiStreaming.enabled }}
   {{- include "feature.podLogs.kubernetesApi.alloy" . | nindent 2 }}
 {{- end }}
 

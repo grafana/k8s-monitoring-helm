@@ -31,6 +31,7 @@ pod_logs "feature" {
 
 {{- define "features.podLogs.validate" }}
 {{- if .Values.podLogs.enabled -}}
+{{- include "feature.podLogs.validate" (dict "Values" $.Values.podLogs "Capabilities" $.Capabilities) }}
 {{- $featureName := "Kubernetes Pod logs" }}
 {{- $destinations := include "features.podLogs.destinations" . | fromYamlArray }}
 {{- include "destinations.validate_destination_list" (dict "destinations" $destinations "type" "logs" "ecosystem" "loki" "feature" $featureName) }}

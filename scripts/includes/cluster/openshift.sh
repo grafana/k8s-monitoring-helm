@@ -9,8 +9,8 @@ createOpenShiftCluster() {
     mkdir -p "${clusterInstallerFilesDir}"
     yq ".metadata.name=\"${clusterName}\"" "${clusterConfig}" > "${clusterInstallerFilesDir}/install-config.yaml"
     openshift-install create cluster --dir "${clusterInstallerFilesDir}"
-    ln -s "${clusterInstallerFilesDir}/auth/kubeconfig" "$(dirname "${clusterConfig}")/kubeconfig.yaml"
   fi
+  ln -sf "${clusterInstallerFilesDir}/auth/kubeconfig" "$(dirname "${clusterConfig}")/kubeconfig.yaml"
 }
 
 deleteOpenShiftCluster() {

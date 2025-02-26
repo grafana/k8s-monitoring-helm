@@ -6,11 +6,11 @@ metadata:
   name: k8smon-alloy-logs
   namespace: default
   labels:
-    helm.sh/chart: alloy-logs-0.11.0
+    helm.sh/chart: alloy-logs-0.12.1
     app.kubernetes.io/name: alloy-logs
     app.kubernetes.io/instance: k8smon
     
-    app.kubernetes.io/version: "v1.6.1"
+    app.kubernetes.io/version: "v1.7.1"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
     app.kubernetes.io/component: rbac
@@ -150,23 +150,10 @@ data:
           target_label = "service_name"
         }
     
-        // set service_namespace
+        // set resource attributes
         rule {
-          action = "replace"
-          source_labels = ["__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_namespace"]
-          target_label = "service_namespace"
-        }
-    
-        // set deployment_environment and deployment_environment_name
-        rule {
-          action = "replace"
-          source_labels = ["__meta_kubernetes_pod_annotation_resource_opentelemetry_io_deployment_environment_name"]
-          target_label = "deployment_environment_name"
-        }
-        rule {
-          action = "replace"
-          source_labels = ["__meta_kubernetes_pod_annotation_resource_opentelemetry_io_deployment_environment"]
-          target_label = "deployment_environment"
+          action = "labelmap"
+          regex = "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_(.+)"
         }
     
         rule {
@@ -254,11 +241,11 @@ kind: ClusterRole
 metadata:
   name: k8smon-alloy-logs
   labels:
-    helm.sh/chart: alloy-logs-0.11.0
+    helm.sh/chart: alloy-logs-0.12.1
     app.kubernetes.io/name: alloy-logs
     app.kubernetes.io/instance: k8smon
     
-    app.kubernetes.io/version: "v1.6.1"
+    app.kubernetes.io/version: "v1.7.1"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
     app.kubernetes.io/component: rbac
@@ -354,11 +341,11 @@ kind: ClusterRoleBinding
 metadata:
   name: k8smon-alloy-logs
   labels:
-    helm.sh/chart: alloy-logs-0.11.0
+    helm.sh/chart: alloy-logs-0.12.1
     app.kubernetes.io/name: alloy-logs
     app.kubernetes.io/instance: k8smon
     
-    app.kubernetes.io/version: "v1.6.1"
+    app.kubernetes.io/version: "v1.7.1"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
     app.kubernetes.io/component: rbac
@@ -376,12 +363,13 @@ apiVersion: v1
 kind: Service
 metadata:
   name: k8smon-alloy-logs
+  namespace: default
   labels:
-    helm.sh/chart: alloy-logs-0.11.0
+    helm.sh/chart: alloy-logs-0.12.1
     app.kubernetes.io/name: alloy-logs
     app.kubernetes.io/instance: k8smon
     
-    app.kubernetes.io/version: "v1.6.1"
+    app.kubernetes.io/version: "v1.7.1"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
     app.kubernetes.io/component: networking
@@ -402,12 +390,13 @@ apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   name: k8smon-alloy-logs
+  namespace: default
   labels:
-    helm.sh/chart: alloy-logs-0.11.0
+    helm.sh/chart: alloy-logs-0.12.1
     app.kubernetes.io/name: alloy-logs
     app.kubernetes.io/instance: k8smon
     
-    app.kubernetes.io/version: "v1.6.1"
+    app.kubernetes.io/version: "v1.7.1"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
 spec:
@@ -428,7 +417,7 @@ spec:
       serviceAccountName: k8smon-alloy-logs
       containers:
         - name: alloy
-          image: docker.io/grafana/alloy:v1.6.1
+          image: docker.io/grafana/alloy:v1.7.1
           imagePullPolicy: IfNotPresent
           args:
             - run
@@ -510,3 +499,10 @@ spec:
         - name: dockercontainers
           hostPath:
             path: /var/lib/docker/containers
+---
+# Source: k8s-monitoring/templates/platform_specific/openshift/clusterlogforwarder.yaml
+TODO:
+- loki receiver should go into alloy receivers
+- CLF For infra should go into node logs
+- PodLogs just handles CLF for application logs
+- Need proper processing stages for log data

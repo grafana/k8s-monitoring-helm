@@ -64,14 +64,14 @@ Be sure perform actual integration testing in a live environment in the main [k8
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| kubernetesApiGathering.excludeNamespaces | list | `[]` | Do not capture logs from any pods in these namespaces. |
-| kubernetesApiGathering.extraDiscoveryRules | string | `""` | Rules to filter pods for log gathering. |
-| kubernetesApiGathering.fieldSelectors | list | `[]` | Discover Pods based on field selectors. |
-| kubernetesApiGathering.labelSelectors | object | `{}` | Discover Pods based on label selectors. |
-| kubernetesApiGathering.namespaces | list | `[]` | Only capture logs from pods in these namespaces (`[]` means all namespaces). |
-| kubernetesApiGathering.nodeFieldSelectors | list | `[]` | Discover Pods based on Node field selectors. |
-| kubernetesApiGathering.nodeLabelSelectors | object | `{}` | Discover Pods based on Node label selectors. |
-| kubernetesApiGathering.nodes | list | `[]` | Do not capture logs from any pods in these namespaces. |
+| kubernetesApiStreaming.excludeNamespaces | list | `[]` | Do not capture logs from any pods in these namespaces. |
+| kubernetesApiStreaming.extraDiscoveryRules | string | `""` | Rules to filter pods for log gathering. |
+| kubernetesApiStreaming.fieldSelectors | list | `[]` | Discover Pods based on field selectors. |
+| kubernetesApiStreaming.labelSelectors | object | `{}` | Discover Pods based on label selectors. |
+| kubernetesApiStreaming.namespaces | list | `[]` | Only capture logs from pods in these namespaces (`[]` means all namespaces). |
+| kubernetesApiStreaming.nodeFieldSelectors | list | `[]` | Discover Pods based on Node field selectors. |
+| kubernetesApiStreaming.nodeLabelSelectors | object | `{}` | Discover Pods based on Node label selectors. |
+| kubernetesApiStreaming.nodes | list | `[]` | Do not capture logs from any pods in these namespaces. |
 | volumeGathering.nodeFieldSelectors | list | `[]` | Discover Pods based on Node field selectors. |
 | volumeGathering.nodeLabelSelectors | object | `{}` | Discover Pods based on Node label selectors. |
 
@@ -102,7 +102,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| kubernetesApiGathering.enabled | bool | `false` | Only capture logs from pods in these namespaces (`[]` means all namespaces). |
+| kubernetesApiStreaming.enabled | bool | `false` | Only capture logs from pods in these namespaces (`[]` means all namespaces). |
 | lokiReceiver.enabled | bool | `false` | Enable receiving logs using the Loki protocol. |
 | lokiReceiver.openShiftClusterLogForwarder.enabled | bool | `false` |  |
 | lokiReceiver.openShiftClusterLogForwarder.namespaces | list | `[]` |  |

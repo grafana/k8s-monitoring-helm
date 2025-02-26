@@ -10,7 +10,7 @@
   {{- end -}}
 {{- end -}}
 
-{{- if or (and .Values.kubernetesApiGathering.enabled (not .Values.gatherMethod)) (eq .Values.gatherMethod "kubernetesApi") }}
+{{- if or (and .Values.kubernetesApiStreaming.enabled (not .Values.gatherMethod)) (eq .Values.gatherMethod "kubernetesApi") }}
   {{- if not .Collector.alloy.clustering.enabled }}
     {{- if eq .Collector.controller.type "daemonset" }}
       {{- fail (printf "Pod Logs feature requires Alloy DaemonSet to be in clustering mode when using the \"kubernetesApi\" gather method.\nPlease set:\n%s:\n  alloy:\n    clustering:\n      enabled: true" .CollectorName) }}
@@ -23,12 +23,12 @@
 
 {{- define "feature.podLogs.validate" -}}
 {{/*Validate that if both volume gathering and k8s api gathering, there are some selectors set*/}}
-{{- if and .Values.volumeGathering.enabled .Values.kubernetesApiGathering.enabled }}
-  {{- if not (or .Values.kubernetesApiGathering.labelSelectors .Values.kubernetesApiGathering.fieldSelectors .Values.kubernetesApiGathering.nodeLabelSelectors .Values.kubernetesApiGathering.nodeFieldSelectors)}}
+{{- if and .Values.volumeGathering.enabled .Values.kubernetesApiStreaming.enabled }}
+  {{- if not (or .Values.kubernetesApiStreaming.labelSelectors .Values.kubernetesApiStreaming.fieldSelectors .Values.kubernetesApiStreaming.nodeLabelSelectors .Values.kubernetesApiStreaming.nodeFieldSelectors)}}
     {{- $msg := list "" "When gathering Pod logs by Volumes and the Kubernetes API, you must set selectors to targets pods not covered by the Collector DaemonSet." }}
     {{- $msg = append $msg "Please set at least one of:" }}
     {{- $msg = append $msg "podLogs:" }}
-    {{- $msg = append $msg "  kubernetesApiGathering:" }}
+    {{- $msg = append $msg "  kubernetesApiStreaming:" }}
     {{- $msg = append $msg "    fieldSelectors: [<field selector>]" }}
     {{- $msg = append $msg "    labelSelectors:" }}
     {{- $msg = append $msg "      <Kubernetes Pod Label>: <value> OR [<value1>, <value2>]" }}
@@ -38,4 +38,25 @@
     {{- $errorMessage := join "\n" $msg }}
   {{- end -}}
 {{- end -}}
+
+{{- if .Values.openShiftClusterLogForwarder.enabled }}
+  {{- if not (eq .Values.global.platform "openshift") }}
+    {{- $msg := list "" "The OpenShift ClusterLogForwarder is only supported on OpenShift clusters." }}
+    {{- $msg = append $msg "Please set:" }}
+    {{- $msg = append $msg "global:" }}
+    {{- $msg = append $msg "  platform: openshift" }}
+    {{- fail (join "\n" $msg) }}
+  {{- end }}
+
+  {{- if not .Values.lokiReceiver.enabled }}
+    {{- $msg := list "" "The OpenShift ClusterLogForwarder requires the Loki Receiver to be enabled." }}
+    {{- $msg = append $msg "Please set:" }}
+    {{- $msg = append $msg "podLogs:" }}
+    {{- $msg = append $msg "  lokiReceiver:" }}
+    {{- $msg = append $msg "    enabled: true" }}
+    {{- fail (join "\n" $msg) }}
+  {{- end }}
+
+{{- end }}
+
 {{- end -}}

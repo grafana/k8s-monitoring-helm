@@ -1,20 +1,4 @@
 ---
-# Source: k8s-monitoring/charts/alloy-logs/templates/serviceaccount.yaml
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: k8smon-alloy-logs
-  namespace: default
-  labels:
-    helm.sh/chart: alloy-logs-0.12.1
-    app.kubernetes.io/name: alloy-logs
-    app.kubernetes.io/instance: k8smon
-    
-    app.kubernetes.io/version: "v1.7.1"
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/part-of: alloy
-    app.kubernetes.io/component: rbac
----
 # Source: k8s-monitoring/charts/alloy-metrics/templates/serviceaccount.yaml
 apiVersion: v1
 kind: ServiceAccount
@@ -24,6 +8,22 @@ metadata:
   labels:
     helm.sh/chart: alloy-metrics-0.12.1
     app.kubernetes.io/name: alloy-metrics
+    app.kubernetes.io/instance: k8smon
+    
+    app.kubernetes.io/version: "v1.7.1"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/part-of: alloy
+    app.kubernetes.io/component: rbac
+---
+# Source: k8s-monitoring/charts/alloy-receiver/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: k8smon-alloy-receiver
+  namespace: default
+  labels:
+    helm.sh/chart: alloy-receiver-0.12.1
+    app.kubernetes.io/name: alloy-receiver
     app.kubernetes.io/instance: k8smon
     
     app.kubernetes.io/version: "v1.7.1"
@@ -62,6 +62,13 @@ metadata:
     app.kubernetes.io/instance: k8smon
     app.kubernetes.io/version: "0.30.4"
     release: k8smon
+---
+# Source: k8s-monitoring/templates/platform_specific/openshift/clusterlogforwarder.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: k8smon-k8s-monitoring-clf
+  namespace: openshift-logging
 ---
 # Source: k8s-monitoring/charts/clusterMetrics/charts/windows-exporter/templates/config.yaml
 apiVersion: v1
@@ -808,7 +815,7 @@ data:
     
       alloy_integration_discovery "alloy" {
         port_name = "http-metrics"
-        label_selectors = ["app.kubernetes.io/name in (alloy-metrics,alloy-singleton,alloy-logs)"]
+        label_selectors = ["app.kubernetes.io/name in (alloy-metrics,alloy-singleton,alloy-receiver)"]
       }
     
       alloy_integration_scrape  "alloy" {
@@ -1056,14 +1063,14 @@ data:
     # TYPE grafana_kubernetes_monitoring_feature_info gauge
     grafana_kubernetes_monitoring_feature_info{deployments="windows-exporter", feature="clusterMetrics", sources="kubelet,kubeletResource,cadvisor,kube-state-metrics,node-exporter,windows-exporter", version="1.0.0"} 1
     grafana_kubernetes_monitoring_feature_info{feature="clusterEvents", version="1.0.0"} 1
-    grafana_kubernetes_monitoring_feature_info{feature="podLogs", methods="volumes", version="1.0.0"} 1
+    grafana_kubernetes_monitoring_feature_info{feature="podLogs", methods="lokiReceiver,OSClusterLogForwarder", version="1.0.0"} 1
     grafana_kubernetes_monitoring_feature_info{feature="integrations", sources="alloy", version="1.0.0"} 1
 ---
 # Source: k8s-monitoring/templates/alloy-config.yaml
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: k8smon-alloy-logs
+  name: k8smon-alloy-receiver
   namespace: default
 data:
   config.alloy: |-
@@ -1103,118 +1110,48 @@ data:
         comment = "Must be a list of log destinations where collected logs should be forwarded to"
       }
     
-      discovery.kubernetes "volume_gathering_pods" {
-        role = "pod"
-        selectors {
-          role = "pod"
-          field = "spec.nodeName=" + sys.env("HOSTNAME")
+      loki.source.api "loki_receiver" {
+        http {
+          listen_address = "0.0.0.0"
+          listen_port = 3100
         }
+        forward_to = [loki.process.openshift_logs.receiver]
       }
     
-      discovery.relabel "volume_gathering_pods" {
-        targets = discovery.kubernetes.volume_gathering_pods.targets
-        rule {
-          source_labels = ["__meta_kubernetes_namespace"]
-          action = "replace"
-          target_label = "namespace"
-        }
-        rule {
-          source_labels = ["__meta_kubernetes_pod_name"]
-          target_label = "pod"
-        }
-        rule {
-          source_labels = ["__meta_kubernetes_pod_container_name"]
-          target_label = "container"
+      loki.process "openshift_logs"  {
+    
+        stage.json {}
+    
+        stage.match {
+          selector = "{log_type=\"application\"}"
+          stage.labels {
+            pod = "kubernetes_pod_name"
+            namespace = "kubernetes_namespace"
+            container = "kubernetes_container_name"
+            node = "hostname"
+          }
+          stage.template {
+            source   = "job"
+            template = "{{ .namespace }}/{{ .container }}"
+          }
         }
     
-        rule {
-          source_labels = ["__meta_kubernetes_namespace", "__meta_kubernetes_pod_container_name"]
-          separator = "/"
-          replacement = "$1"
-          target_label = "job"
+        stage.match {
+          selector = "{log_type=\"infrastructure\"}"
+          stage.labels {
+            pod = "kubernetes_pod_name"
+            namespace = "kubernetes_namespace"
+            container = "kubernetes_container_name"
+            node = "hostname"
+          }
+          stage.static_labels {
+            job = "integrations/node_logs"
+          }
+          stage.template {
+            source   = "job"
+            template = "{{ .namespace }}/{{ .container }}"
+          }
         }
-    
-        // set the container runtime as a label
-        rule {
-          source_labels = ["__meta_kubernetes_pod_container_id"]
-          regex = "^(\\S+):\\/\\/.+$"
-          target_label = "tmp_container_runtime"
-        }
-    
-        // make all labels on the pod available to the pipeline as labels,
-        // they are omitted before write to loki via stage.label_keep unless explicitly set
-        rule {
-          action = "labelmap"
-          regex = "__meta_kubernetes_pod_label_(.+)"
-        }
-    
-        // make all annotations on the pod available to the pipeline as labels,
-        // they are omitted before write to loki via stage.label_keep unless explicitly set
-        rule {
-          action = "labelmap"
-          regex = "__meta_kubernetes_pod_annotation_(.+)"
-        }
-        rule {
-          source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_logs_job"]
-          target_label = "job"
-        }
-        rule {
-          source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
-          target_label = "app_kubernetes_io_name"
-        }
-    
-        // explicitly set service_name. if not set, loki will automatically try to populate a default.
-        // see https://grafana.com/docs/loki/latest/get-started/labels/#default-labels-for-all-users
-        //
-        // choose the first value found from the following ordered list:
-        // - pod.annotation[resource.opentelemetry.io/service.name]
-        // - pod.label[app.kubernetes.io/name]
-        // - k8s.pod.name
-        // - k8s.container.name
-        rule {
-          action = "replace"
-          source_labels = [
-            "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_name",
-            "__meta_kubernetes_pod_label_app_kubernetes_io_name",
-            "__meta_kubernetes_pod_name",
-            "__meta_kubernetes_pod_container_name",
-          ]
-          separator = ";"
-          regex = "^(?:;*)?([^;]+).*$"
-          replacement = "$1"
-          target_label = "service_name"
-        }
-    
-        // set resource attributes
-        rule {
-          action = "labelmap"
-          regex = "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_(.+)"
-        }
-    
-        rule {
-          source_labels = ["__meta_kubernetes_pod_uid", "__meta_kubernetes_pod_container_name"]
-          separator = "/"
-          replacement = "/var/log/pods/*$1/*.log"
-          target_label = "__path__"
-        }
-        rule {
-          source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_logs_job"]
-          regex = "(.+)"
-          target_label = "job"
-        }
-        rule {
-          source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
-          regex = "(.+)"
-          target_label = "app_kubernetes_io_name"
-        }
-      }
-    
-      local.file_match "volume_gathering_pods" {
-        path_targets = discovery.relabel.volume_gathering_pods.output
-      }
-    
-      loki.source.file "volume_gathering_pods" {
-        targets    = local.file_match.volume_gathering_pods.targets
         forward_to = [loki.process.pod_log_processor.receiver]
       }
     
@@ -1268,6 +1205,10 @@ data:
       logs_destinations = [
         loki.write.grafanacloudlogs.receiver,
       ]
+    }
+    
+    livedebugging {
+      enabled = true
     }
 ---
 # Source: k8s-monitoring/templates/alloy-modules-configmaps.yaml
@@ -2591,14 +2532,14 @@ data:
       }
     }
 ---
-# Source: k8s-monitoring/charts/alloy-logs/templates/rbac.yaml
+# Source: k8s-monitoring/charts/alloy-metrics/templates/rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: k8smon-alloy-logs
+  name: k8smon-alloy-metrics
   labels:
-    helm.sh/chart: alloy-logs-0.12.1
-    app.kubernetes.io/name: alloy-logs
+    helm.sh/chart: alloy-metrics-0.12.1
+    app.kubernetes.io/name: alloy-metrics
     app.kubernetes.io/instance: k8smon
     
     app.kubernetes.io/version: "v1.7.1"
@@ -2691,14 +2632,14 @@ rules:
     resources: ["replicasets"]
     verbs: ["get", "list", "watch"]
 ---
-# Source: k8s-monitoring/charts/alloy-metrics/templates/rbac.yaml
+# Source: k8s-monitoring/charts/alloy-receiver/templates/rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: k8smon-alloy-metrics
+  name: k8smon-alloy-receiver
   labels:
-    helm.sh/chart: alloy-metrics-0.12.1
-    app.kubernetes.io/name: alloy-metrics
+    helm.sh/chart: alloy-receiver-0.12.1
+    app.kubernetes.io/name: alloy-receiver
     app.kubernetes.io/instance: k8smon
     
     app.kubernetes.io/version: "v1.7.1"
@@ -2891,21 +2832,6 @@ rules:
     resources: ["replicasets"]
     verbs: ["get", "list", "watch"]
 ---
-# Source: k8s-monitoring/templates/platform_specific/openshift/alloy-logs-scc.yaml
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: k8smon-alloy-logs-scc
-rules:
-- verbs:
-    - use
-  apiGroups:
-    - security.openshift.io
-  resources:
-    - securitycontextconstraints
-  resourceNames:
-    - k8smon-alloy-logs
----
 # Source: k8s-monitoring/templates/platform_specific/openshift/alloy-metrics-scc.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -2921,6 +2847,21 @@ rules:
   resourceNames:
     - k8smon-alloy-metrics
 ---
+# Source: k8s-monitoring/templates/platform_specific/openshift/alloy-receiver-scc.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: k8smon-alloy-receiver-scc
+rules:
+- verbs:
+    - use
+  apiGroups:
+    - security.openshift.io
+  resources:
+    - securitycontextconstraints
+  resourceNames:
+    - k8smon-alloy-receiver
+---
 # Source: k8s-monitoring/templates/platform_specific/openshift/alloy-singleton-scc.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -2935,29 +2876,6 @@ rules:
     - securitycontextconstraints
   resourceNames:
     - k8smon-alloy-singleton
----
-# Source: k8s-monitoring/charts/alloy-logs/templates/rbac.yaml
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: k8smon-alloy-logs
-  labels:
-    helm.sh/chart: alloy-logs-0.12.1
-    app.kubernetes.io/name: alloy-logs
-    app.kubernetes.io/instance: k8smon
-    
-    app.kubernetes.io/version: "v1.7.1"
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/part-of: alloy
-    app.kubernetes.io/component: rbac
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: k8smon-alloy-logs
-subjects:
-  - kind: ServiceAccount
-    name: k8smon-alloy-logs
-    namespace: default
 ---
 # Source: k8s-monitoring/charts/alloy-metrics/templates/rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -2980,6 +2898,29 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: k8smon-alloy-metrics
+    namespace: default
+---
+# Source: k8s-monitoring/charts/alloy-receiver/templates/rbac.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: k8smon-alloy-receiver
+  labels:
+    helm.sh/chart: alloy-receiver-0.12.1
+    app.kubernetes.io/name: alloy-receiver
+    app.kubernetes.io/instance: k8smon
+    
+    app.kubernetes.io/version: "v1.7.1"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/part-of: alloy
+    app.kubernetes.io/component: rbac
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: k8smon-alloy-receiver
+subjects:
+  - kind: ServiceAccount
+    name: k8smon-alloy-receiver
     namespace: default
 ---
 # Source: k8s-monitoring/charts/alloy-singleton/templates/rbac.yaml
@@ -3005,20 +2946,6 @@ subjects:
     name: k8smon-alloy-singleton
     namespace: default
 ---
-# Source: k8s-monitoring/templates/platform_specific/openshift/alloy-logs-scc.yaml
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: k8smon-alloy-logs-scc
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: k8smon-alloy-logs-scc
-subjects:
-- kind: ServiceAccount
-  name: k8smon-alloy-logs
-  namespace: default
----
 # Source: k8s-monitoring/templates/platform_specific/openshift/alloy-metrics-scc.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -3031,6 +2958,20 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: k8smon-alloy-metrics
+  namespace: default
+---
+# Source: k8s-monitoring/templates/platform_specific/openshift/alloy-receiver-scc.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: k8smon-alloy-receiver-scc
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: k8smon-alloy-receiver-scc
+subjects:
+- kind: ServiceAccount
+  name: k8smon-alloy-receiver
   namespace: default
 ---
 # Source: k8s-monitoring/templates/platform_specific/openshift/alloy-singleton-scc.yaml
@@ -3047,32 +2988,33 @@ subjects:
   name: k8smon-alloy-singleton
   namespace: default
 ---
-# Source: k8s-monitoring/charts/alloy-logs/templates/service.yaml
-apiVersion: v1
-kind: Service
+# Source: k8s-monitoring/templates/platform_specific/openshift/clusterlogforwarder.yaml
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: k8smon-alloy-logs
-  namespace: default
-  labels:
-    helm.sh/chart: alloy-logs-0.12.1
-    app.kubernetes.io/name: alloy-logs
-    app.kubernetes.io/instance: k8smon
-    
-    app.kubernetes.io/version: "v1.7.1"
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/part-of: alloy
-    app.kubernetes.io/component: networking
-spec:
-  type: ClusterIP
-  selector:
-    app.kubernetes.io/name: alloy-logs
-    app.kubernetes.io/instance: k8smon
-  internalTrafficPolicy: Cluster
-  ports:
-    - name: http-metrics
-      port: 12345
-      targetPort: 12345
-      protocol: "TCP"
+  name: k8smon-k8s-monitoring-clf-application-logs
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: collect-application-logs
+subjects:
+  - kind: ServiceAccount
+    name: k8smon-k8s-monitoring-clf
+    namespace: openshift-logging
+---
+# Source: k8s-monitoring/templates/platform_specific/openshift/clusterlogforwarder.yaml
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: k8smon-k8s-monitoring-clf-infrastructure-logs
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: collect-infrastructure-logs
+subjects:
+  - kind: ServiceAccount
+    name: k8smon-k8s-monitoring-clf
+    namespace: openshift-logging
 ---
 # Source: k8s-monitoring/charts/alloy-metrics/templates/cluster_service.yaml
 apiVersion: v1
@@ -3135,6 +3077,37 @@ spec:
       targetPort: 12345
       protocol: "TCP"
 ---
+# Source: k8s-monitoring/charts/alloy-receiver/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: k8smon-alloy-receiver
+  namespace: default
+  labels:
+    helm.sh/chart: alloy-receiver-0.12.1
+    app.kubernetes.io/name: alloy-receiver
+    app.kubernetes.io/instance: k8smon
+    
+    app.kubernetes.io/version: "v1.7.1"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/part-of: alloy
+    app.kubernetes.io/component: networking
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: alloy-receiver
+    app.kubernetes.io/instance: k8smon
+  internalTrafficPolicy: Cluster
+  ports:
+    - name: http-metrics
+      port: 12345
+      targetPort: 12345
+      protocol: "TCP"
+    - name: loki
+      port: 3100
+      targetPort: 3100
+      protocol: TCP
+---
 # Source: k8s-monitoring/charts/alloy-singleton/templates/service.yaml
 apiVersion: v1
 kind: Service
@@ -3189,15 +3162,15 @@ spec:
     app.kubernetes.io/name: windows-exporter
     app.kubernetes.io/instance: k8smon
 ---
-# Source: k8s-monitoring/charts/alloy-logs/templates/controllers/daemonset.yaml
+# Source: k8s-monitoring/charts/alloy-receiver/templates/controllers/daemonset.yaml
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
-  name: k8smon-alloy-logs
+  name: k8smon-alloy-receiver
   namespace: default
   labels:
-    helm.sh/chart: alloy-logs-0.12.1
-    app.kubernetes.io/name: alloy-logs
+    helm.sh/chart: alloy-receiver-0.12.1
+    app.kubernetes.io/name: alloy-receiver
     app.kubernetes.io/instance: k8smon
     
     app.kubernetes.io/version: "v1.7.1"
@@ -3207,7 +3180,7 @@ spec:
   minReadySeconds: 10
   selector:
     matchLabels:
-      app.kubernetes.io/name: alloy-logs
+      app.kubernetes.io/name: alloy-receiver
       app.kubernetes.io/instance: k8smon
   template:
     metadata:
@@ -3215,13 +3188,10 @@ spec:
         kubectl.kubernetes.io/default-container: alloy
         k8s.grafana.com/logs.job: integrations/alloy
       labels:
-        app.kubernetes.io/name: alloy-logs
+        app.kubernetes.io/name: alloy-receiver
         app.kubernetes.io/instance: k8smon
     spec:
-      securityContext:
-        seLinuxOptions:
-          type: container_logreader_t
-      serviceAccountName: k8smon-alloy-logs
+      serviceAccountName: k8smon-alloy-receiver
       containers:
         - name: alloy
           image: docker.io/grafana/alloy:v1.7.1
@@ -3232,7 +3202,7 @@ spec:
             - --storage.path=/tmp/alloy
             - --server.http.listen-addr=0.0.0.0:12345
             - --server.http.ui-path-prefix=/
-            - --stability.level=generally-available
+            - --stability.level=experimental
           env:
             - name: ALLOY_DEPLOY_MODE
               value: "helm"
@@ -3243,6 +3213,9 @@ spec:
           ports:
             - containerPort: 12345
               name: http-metrics
+            - containerPort: 3100
+              name: loki
+              protocol: TCP
           readinessProbe:
             httpGet:
               path: /-/ready
@@ -3275,12 +3248,6 @@ spec:
           volumeMounts:
             - name: config
               mountPath: /etc/alloy
-            - name: varlog
-              mountPath: /var/log
-              readOnly: true
-            - name: dockercontainers
-              mountPath: /var/lib/docker/containers
-              readOnly: true
         - name: config-reloader
           image: ghcr.io/jimmidyson/configmap-reload:v0.14.0
           args:
@@ -3299,13 +3266,7 @@ spec:
       volumes:
         - name: config
           configMap:
-            name: k8smon-alloy-logs
-        - name: varlog
-          hostPath:
-            path: /var/log
-        - name: dockercontainers
-          hostPath:
-            path: /var/lib/docker/containers
+            name: k8smon-alloy-receiver
 ---
 # Source: k8s-monitoring/charts/clusterMetrics/charts/windows-exporter/templates/daemonset.yaml
 apiVersion: apps/v1
@@ -3621,12 +3582,46 @@ spec:
           configMap:
             name: k8smon-alloy-metrics
 ---
-# Source: k8s-monitoring/templates/platform_specific/openshift/alloy-logs-scc.yaml
+# Source: k8s-monitoring/templates/platform_specific/openshift/clusterlogforwarder.yaml
+apiVersion: logging.openshift.io/v1
+kind: ClusterLogForwarder
+metadata:
+  name: k8smon-k8s-monitoring
+  namespace: openshift-logging
+spec:
+  serviceAccountName: k8smon-k8s-monitoring-clf
+  inputs:
+    - name: apps
+      application:
+        namespaces: []
+    - name: infra
+      infrastructure:
+        sources:
+          - node
+  outputs:
+    - name: k8smon-k8s-monitoring
+      type: loki
+      url: http://k8smon-alloy-receiver.default.svc.cluster.local:3100
+  pipelines:
+    - name: k8smon-k8s-monitoring
+      inputRefs:
+        - apps
+        - infra
+      outputRefs:
+        - k8smon-k8s-monitoring
+
+TODO:
+- loki receiver should go into alloy receivers
+- CLF For infra should go into node logs
+- PodLogs just handles CLF for application logs
+- Need proper processing stages for log data
+---
+# Source: k8s-monitoring/templates/platform_specific/openshift/alloy-metrics-scc.yaml
 apiVersion: security.openshift.io/v1
 kind: SecurityContextConstraints
 metadata:
-  name: k8smon-alloy-logs
-allowHostDirVolumePlugin: true
+  name: k8smon-alloy-metrics
+allowHostDirVolumePlugin: false
 allowHostIPC: false
 allowHostNetwork: false
 allowHostPID: false
@@ -3668,17 +3663,16 @@ supplementalGroups:
   type: RunAsAny
 users: []
 volumes:
-- hostPath
 - configMap
 - emptyDir
 - projected
 - secret
 ---
-# Source: k8s-monitoring/templates/platform_specific/openshift/alloy-metrics-scc.yaml
+# Source: k8s-monitoring/templates/platform_specific/openshift/alloy-receiver-scc.yaml
 apiVersion: security.openshift.io/v1
 kind: SecurityContextConstraints
 metadata:
-  name: k8smon-alloy-metrics
+  name: k8smon-alloy-receiver
 allowHostDirVolumePlugin: false
 allowHostIPC: false
 allowHostNetwork: false

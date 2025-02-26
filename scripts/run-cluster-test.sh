@@ -3,10 +3,6 @@
 PARENT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 source "${PARENT_DIR}/scripts/includes/utils.sh"
 source "${PARENT_DIR}/scripts/includes/logging.sh"
-source "${PARENT_DIR}/scripts/includes/cluster/eks.sh"
-source "${PARENT_DIR}/scripts/includes/cluster/gke.sh"
-source "${PARENT_DIR}/scripts/includes/cluster/kind.sh"
-source "${PARENT_DIR}/scripts/includes/cluster/openshift.sh"
 
 heading "Kubernetes Monitoring Helm" "Cluster Test Runner"
 
@@ -49,35 +45,14 @@ if [ -n "${RANDOM_NUMBER}" ]; then clusterName="${clusterName}-${RANDOM_NUMBER}"
 # Cluster creation
 #
 if [ "${CREATE_CLUSTER}" == "true" ]; then
-  if [ -f "${TEST_DIRECTORY}/kind-cluster-config.yaml" ]; then
-    createKindCluster "${clusterName}" "${TEST_DIRECTORY}/kind-cluster-config.yaml"
-  elif [ -f "${TEST_DIRECTORY}/eks-cluster-config.yaml" ]; then
-    createEKSCluster "${clusterName}" "${TEST_DIRECTORY}/eks-cluster-config.yaml"
-  elif [ -f "${TEST_DIRECTORY}/gke-cluster-config.yaml" ]; then
-    createGKECluster "${clusterName}" "${TEST_DIRECTORY}/gke-cluster-config.yaml"
-  elif [ -f "${TEST_DIRECTORY}/gke-autopilot-cluster-config.yaml" ]; then
-    createGKEAutopilotCluster "${clusterName}" "${TEST_DIRECTORY}/gke-autopilot-cluster-config.yaml"
-  elif [ -f "${TEST_DIRECTORY}/openshift-cluster-config.yaml" ]; then
-    createOpenShiftCluster "${clusterName}" "${TEST_DIRECTORY}/openshift-cluster-config.yaml"
-  else
-    createKindCluster "${clusterName}"
-  fi
+  "${PARENT_DIR}/scripts/create-cluster.sh" "${TEST_DIRECTORY}"
 fi
 
+#
+# Cluster deletion
+#
 deleteCluster() {
-  if [ -f "${TEST_DIRECTORY}/kind-cluster-config.yaml" ]; then
-    deleteKindCluster "${clusterName}" "${TEST_DIRECTORY}/kind-cluster-config.yaml"
-  elif [ -f "${TEST_DIRECTORY}/eks-cluster-config.yaml" ]; then
-    deleteEKSCluster "${clusterName}" "${TEST_DIRECTORY}/eks-cluster-config.yaml"
-  elif [ -f "${TEST_DIRECTORY}/gke-cluster-config.yaml" ]; then
-    deleteGKECluster "${clusterName}" "${TEST_DIRECTORY}/gke-cluster-config.yaml"
-  elif [ -f "${TEST_DIRECTORY}/gke-autopilot-cluster-config.yaml" ]; then
-    deleteGKECluster "${clusterName}" "${TEST_DIRECTORY}/gke-autopilot-cluster-config.yaml"
-  elif [ -f "${TEST_DIRECTORY}/openshift-cluster-config.yaml" ]; then
-    deleteOpenShiftCluster "${clusterName}" "${TEST_DIRECTORY}/openshift-cluster-config.yaml"
-  else
-    deleteKindCluster "${clusterName}"
-  fi
+  "${PARENT_DIR}/scripts/delete-cluster.sh" "${TEST_DIRECTORY}"
 }
 if [ "${DELETE_CLUSTER}" == "true" ]; then
   trap deleteCluster EXIT

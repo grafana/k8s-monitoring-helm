@@ -6,7 +6,6 @@ kind: ServiceAccount
 metadata:
   name: {{ include "helper.fullname" . }}-clf
   namespace: openshift-logging
-{{- if .Values.podLogs.openShiftClusterLogForwarder.application.enabled }}
 ---
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
@@ -20,8 +19,6 @@ subjects:
   - kind: ServiceAccount
     name: {{ include "helper.fullname" . }}-clf
     namespace: openshift-logging
-{{- end }}
-{{- if .Values.podLogs.openShiftClusterLogForwarder.infrastructure.enabled }}
 ---
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
@@ -35,7 +32,6 @@ subjects:
   - kind: ServiceAccount
     name: {{ include "helper.fullname" . }}-clf
     namespace: openshift-logging
-{{- end }}
 ---
 apiVersion: logging.openshift.io/v1
 kind: ClusterLogForwarder
@@ -46,27 +42,35 @@ spec:
   serviceAccountName: {{ include "helper.fullname" . }}-clf
   inputs:
 {{- if .Values.podLogs.openShiftClusterLogForwarder.application.enabled }}
-    - name: application-logs
+    - name: apps
       application:
-        {{- if .Values.podLogs.openShiftClusterLogForwarder.application.namespaces }}
-        namespaces: {{ .Values.podLogs.openShiftClusterLogForwarder.application.namespaces | toYaml | nindent 10 }}
-        {{- end }}
+        namespaces: {{ .Values.podLogs.openShiftClusterLogForwarder.application.namespaces | toJson }}
+{{- end }}
+{{- if .Values.podLogs.openShiftClusterLogForwarder.infrastructure.enabled }}
+    - name: infra
+      infrastructure:
+        sources:
+          - node
 {{- end }}
   outputs:
     - name: {{ include "helper.fullname" . }}
       type: loki
       url: {{ include "features.podLogs.receiver.loki" . | trim }}
-      labelKeys
-        - log_type
   pipelines:
     - name: {{ include "helper.fullname" . }}
       inputRefs:
-{{- if .Values.podLogs.openShiftClusterLogForwarder.applicationLogs.enabled }}
-        - application-logs
+{{- if .Values.podLogs.openShiftClusterLogForwarder.application.enabled }}
+        - apps
 {{- end }}
-{{- if .Values.podLogs.openShiftClusterLogForwarder.infrastructureLogs.enabled }}
-        - infrastructure
+{{- if .Values.podLogs.openShiftClusterLogForwarder.infrastructure.enabled }}
+        - infra
 {{- end }}
       outputRefs:
         - {{ include "helper.fullname" . }}
 {{- end }}
+
+TODO:
+- loki receiver should go into alloy receivers
+- CLF For infra should go into node logs
+- PodLogs just handles CLF for application logs
+- Need proper processing stages for log data

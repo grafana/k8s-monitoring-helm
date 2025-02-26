@@ -33,8 +33,16 @@ flux-manifest.yaml:
 	kustomize build . > $@
 	rm flux-temp.yaml
 
+create-cluster:
+	../../../../../scripts/create-cluster.sh .
+
 run-test:
 	../../../../../scripts/run-cluster-test.sh .
+
+delete-cluster:
+	../../../../../scripts/delete-cluster.sh .
+	@echo "You may now delete the cluster files and random number file."
+
 
 CLUSTER_NAME_PREFIX := $(shell yq eval '.cluster.name' values.yaml)
 CLUSTER_NAME := $(CLUSTER_NAME_PREFIX)-$(shell echo $$RANDOM_NUMBER)

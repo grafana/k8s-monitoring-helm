@@ -1,6 +1,6 @@
 {{- define "feature.podLogs.kubernetesApi.alloy" }}
 {{- $labelSelectors := list }}
-{{- range $k, $v := .Values.kubernetesApiGathering.labelSelectors }}
+{{- range $k, $v := .Values.kubernetesApiStreaming.labelSelectors }}
   {{- if kindIs "slice" $v }}
     {{- $labelSelectors = append $labelSelectors (printf "%s in (%s)" $k (join "," $v)) }}
   {{- else }}
@@ -8,7 +8,7 @@
   {{- end }}
 {{- end }}
 {{- $nodeLabelSelectors := list }}
-{{- range $k, $v := .Values.kubernetesApiGathering.nodeLabelSelectors }}
+{{- range $k, $v := .Values.kubernetesApiStreaming.nodeLabelSelectors }}
   {{- if kindIs "slice" $v }}
     {{- $nodeLabelSelectors = append $nodeLabelSelectors (printf "%s in (%s)" $k (join "," $v)) }}
   {{- else }}
@@ -17,23 +17,23 @@
 {{- end }}
 discovery.kubernetes "kubernetes_api_pods" {
   role = "pod"
-{{- if .Values.kubernetesApiGathering.namespaces }}
+{{- if .Values.kubernetesApiStreaming.namespaces }}
   namespaces {
     names = {{ .Values.namespaces | toJson }}
   }
 {{- end }}
-{{- if or $labelSelectors .Values.kubernetesApiGathering.fieldSelectors }}
+{{- if or $labelSelectors .Values.kubernetesApiStreaming.fieldSelectors }}
   selectors {
     role = "pod"
 {{- if $labelSelectors }}
     label = {{ $labelSelectors | join "," | quote }}
 {{- end }}
-{{- if .Values.kubernetesApiGathering.fieldSelectors }}
-    field = {{ .Values.kubernetesApiGathering.fieldSelectors | join "," | quote }}
+{{- if .Values.kubernetesApiStreaming.fieldSelectors }}
+    field = {{ .Values.kubernetesApiStreaming.fieldSelectors | join "," | quote }}
 {{- end }}
   }
 {{- end }}
-{{- if or $nodeLabelSelectors .Values.kubernetesApiGathering.nodeFieldSelectors }}
+{{- if or $nodeLabelSelectors .Values.kubernetesApiStreaming.nodeFieldSelectors }}
   attach_metadata {
     node = true
   }
@@ -42,8 +42,8 @@ discovery.kubernetes "kubernetes_api_pods" {
 {{- if $nodeLabelSelectors }}
     label = {{ $nodeLabelSelectors | join "," | quote }}
 {{- end }}
-{{- if .Values.kubernetesApiGathering.nodeFieldSelectors }}
-    field = {{ .Values.kubernetesApiGathering.nodeFieldSelectors | join "," | quote }}
+{{- if .Values.kubernetesApiStreaming.nodeFieldSelectors }}
+    field = {{ .Values.kubernetesApiStreaming.nodeFieldSelectors | join "," | quote }}
 {{- end }}
   }
 {{- end }}
@@ -56,10 +56,10 @@ discovery.relabel "kubernetes_api_pods" {
     action = "replace"
     target_label = "namespace"
   }
-{{- if .Values.kubernetesApiGathering.excludeNamespaces }}
+{{- if .Values.kubernetesApiStreaming.excludeNamespaces }}
   rule {
     source_labels = ["namespace"]
-    regex = "{{ .Values.kubernetesApiGathering.excludeNamespaces | join "|" }}"
+    regex = "{{ .Values.kubernetesApiStreaming.excludeNamespaces | join "|" }}"
     action = "drop"
   }
 {{- end }}
@@ -154,8 +154,8 @@ discovery.relabel "kubernetes_api_pods" {
     target_label = "deployment_environment"
   }
 
-{{- if .Values.kubernetesApiGathering.extraDiscoveryRules }}
-{{ .Values.kubernetesApiGathering.extraDiscoveryRules | indent 2 }}
+{{- if .Values.kubernetesApiStreaming.extraDiscoveryRules }}
+{{ .Values.kubernetesApiStreaming.extraDiscoveryRules | indent 2 }}
 {{- end }}
 }
 
