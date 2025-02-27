@@ -8,13 +8,15 @@ These tests are essential for maintaining the chart's reliability and ensuring t
 2.  Integration tests
 3.  Platform tests
 
+You can run these tests from your own workstation to ensure that they pass before pushing your changes to the repository.
+
+The unit and integration tests are also run automatically on every Pull Request and commits to the `main` branch.
+
 ## Unit Tests
 
 Unit tests utilize the [helm unittest](https://github.com/helm-unittest/helm-unittest) plugin, and exercise the Helm chart at the template level. They are useful to evaluating that invidual sections of the chart are rendered correctly, especially under different configurations.
 
 To run these tests, use the `make unittest` command.
-
-These tests are also run automatically on every Pull Request and commits to the `main` branch.
 
 ## Integration Tests
 
@@ -37,8 +39,6 @@ To run these tests, run the `run-cluster-test.sh` script with the test directory
 ./scripts/run-cluster-test.sh charts/k8s-monitoring/tests/integration/cluster-monitoring
 ```
 
-These tests are also run automatically on every Pull Request and commits to the `main` branch.
-
 ## Platform Tests
 
 Platform tests are a variant of integration tests, but utilize external dependencies.
@@ -57,4 +57,6 @@ direnv allow
 make run-test
 ```
 
-These tests are optionally run on Pull Requests with specific labels attached. They are also run before every release.
+Due to the time and resource requirements of these tests, they are not run on every pull request. However, if the pull request includes the label `platform-test-<test name>`, that specific test will be run.
+
+The full suite of platform tests are run before every release of the chart.
