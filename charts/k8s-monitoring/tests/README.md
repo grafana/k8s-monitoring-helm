@@ -47,7 +47,7 @@ Some of the tests will provision a Kubernetes Cluster from cloud service provide
 
 All of the tests utilize a Grafana Cloud instance for data storage, rather than deploying local databases.
 
-The test directores are setup to use [direnv](https://direnv.net/) to manage the environment variables, including required credentials.
+The test directories are set up to use [direnv](https://direnv.net/) to manage the environment variables, including required credentials.
 
 To run these tests, run `make run-test` from within the test directory.
 
