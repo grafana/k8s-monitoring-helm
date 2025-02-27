@@ -3,6 +3,7 @@
 PARENT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 source "${PARENT_DIR}/scripts/includes/utils.sh"
 source "${PARENT_DIR}/scripts/includes/logging.sh"
+source "${PARENT_DIR}/scripts/includes/cluster/aks.sh"
 source "${PARENT_DIR}/scripts/includes/cluster/eks.sh"
 source "${PARENT_DIR}/scripts/includes/cluster/gke.sh"
 source "${PARENT_DIR}/scripts/includes/cluster/kind.sh"
@@ -51,6 +52,8 @@ if [ -n "${RANDOM_NUMBER}" ]; then clusterName="${clusterName}-${RANDOM_NUMBER}"
 if [ "${CREATE_CLUSTER}" == "true" ]; then
   if [ -f "${TEST_DIRECTORY}/kind-cluster-config.yaml" ]; then
     createKindCluster "${clusterName}" "${TEST_DIRECTORY}/kind-cluster-config.yaml"
+  elif [ -f "${TEST_DIRECTORY}/aks-cluster-config.yaml" ]; then
+    createAKSCluster "${clusterName}" "${TEST_DIRECTORY}/aks-cluster-config.yaml"
   elif [ -f "${TEST_DIRECTORY}/eks-cluster-config.yaml" ]; then
     createEKSCluster "${clusterName}" "${TEST_DIRECTORY}/eks-cluster-config.yaml"
   elif [ -f "${TEST_DIRECTORY}/gke-cluster-config.yaml" ]; then
@@ -67,6 +70,8 @@ fi
 deleteCluster() {
   if [ -f "${TEST_DIRECTORY}/kind-cluster-config.yaml" ]; then
     deleteKindCluster "${clusterName}" "${TEST_DIRECTORY}/kind-cluster-config.yaml"
+  elif [ -f "${TEST_DIRECTORY}/aks-cluster-config.yaml" ]; then
+    deleteAKSCluster "${clusterName}" "${TEST_DIRECTORY}/aks-cluster-config.yaml"
   elif [ -f "${TEST_DIRECTORY}/eks-cluster-config.yaml" ]; then
     deleteEKSCluster "${clusterName}" "${TEST_DIRECTORY}/eks-cluster-config.yaml"
   elif [ -f "${TEST_DIRECTORY}/gke-cluster-config.yaml" ]; then
