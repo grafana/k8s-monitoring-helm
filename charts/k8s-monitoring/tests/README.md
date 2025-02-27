@@ -22,14 +22,14 @@ Integration tests are end-to-end tests that exercise the chart as a whole. They 
 
 Each integration runs the following steps:
 
-1.  Create a kind cluster
-2.  Deploy [Flux](https://fluxcd.io/) to the cluster
+1.  Create a kind cluster.
+2.  Deploy [Flux](https://fluxcd.io/) to the cluster.
 3.  Apply the `deployments` directory to the cluster, which typically includes:
     -   Databases, depending on the telemetry data types being sent (e.g. Prometheus, Loki, Tempo, etc.)
     -   Grafana, pre-configured with those data sources enabled
     -   The k8s-monitoring-test Helm chart, which includes the test queries
-4.  Deploy the k8s-monitoring Helm chart with the values.yaml file
-5.  Runs the k8s-monitoring-test chart's `helm test` command, which runs the queries against the databases and ensures that the results are as expected
+4.  Deploy the k8s-monitoring Helm chart with the values.yaml file.
+5.  Runs the k8s-monitoring-test chart's `helm test` command, which runs the queries against the databases and ensures that the results are as expected.
 
 To run these tests, run the `run-cluster-test.sh` script with the test directory as the argument.
 
