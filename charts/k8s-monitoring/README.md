@@ -154,7 +154,7 @@ podLogs:
 | alloy-logs.controller.type | string | `"daemonset"` | The type of controller to use for the Alloy Logs instance. |
 | alloy-logs.enabled | bool | `false` | Deploy the Alloy instance for collecting log data. |
 | alloy-logs.extraConfig | string | `""` | Extra Alloy configuration to be added to the configuration file. |
-| alloy-logs.liveDebugging.enabled | bool | `false` | Enable live debugging for the Alloy instance. Requires stability level to be set to "experimental". |
+| alloy-logs.liveDebugging.enabled | bool | `false` | Enable live debugging for the Alloy instance. |
 | alloy-logs.logging.format | string | `"logfmt"` | Format to use for writing Alloy log lines. |
 | alloy-logs.logging.level | string | `"info"` | Level at which Alloy log lines should be written. |
 | alloy-logs.remoteConfig.auth.password | string | `""` | The password to use for the remote config server. |
@@ -181,7 +181,7 @@ podLogs:
 | alloy-metrics.controller.type | string | `"statefulset"` | The type of controller to use for the Alloy Metrics instance. |
 | alloy-metrics.enabled | bool | `false` | Deploy the Alloy instance for collecting metrics. |
 | alloy-metrics.extraConfig | string | `""` | Extra Alloy configuration to be added to the configuration file. |
-| alloy-metrics.liveDebugging.enabled | bool | `false` | Enable live debugging for the Alloy instance. Requires stability level to be set to "experimental". |
+| alloy-metrics.liveDebugging.enabled | bool | `false` | Enable live debugging for the Alloy instance. |
 | alloy-metrics.logging.format | string | `"logfmt"` | Format to use for writing Alloy log lines. |
 | alloy-metrics.logging.level | string | `"info"` | Level at which Alloy log lines should be written. |
 | alloy-metrics.remoteConfig.auth.password | string | `""` | The password to use for the remote config server. |
@@ -207,7 +207,7 @@ podLogs:
 | alloy-profiles.controller.type | string | `"daemonset"` | The type of controller to use for the Alloy Profiles instance. |
 | alloy-profiles.enabled | bool | `false` | Deploy the Alloy instance for gathering profiles. |
 | alloy-profiles.extraConfig | string | `""` | Extra Alloy configuration to be added to the configuration file. |
-| alloy-profiles.liveDebugging.enabled | bool | `false` | Enable live debugging for the Alloy instance. Requires stability level to be set to "experimental". |
+| alloy-profiles.liveDebugging.enabled | bool | `false` | Enable live debugging for the Alloy instance. |
 | alloy-profiles.logging.format | string | `"logfmt"` | Format to use for writing Alloy log lines. |
 | alloy-profiles.logging.level | string | `"info"` | Level at which Alloy log lines should be written. |
 | alloy-profiles.remoteConfig.auth.password | string | `""` | The password to use for the remote config server. |
@@ -237,7 +237,7 @@ podLogs:
 | alloy-receiver.extraService.enabled | bool | `false` | Create an extra service for the Alloy receiver. This service will mirror the alloy-receiver service, but its name can be customized to match existing application settings. |
 | alloy-receiver.extraService.fullname | string | `""` | If set, the full name of the extra service to create. This will result in the format `<fullname>`. |
 | alloy-receiver.extraService.name | string | `"alloy"` | The name of the extra service to create. This will result in the format `<release-name>-<name>`. |
-| alloy-receiver.liveDebugging.enabled | bool | `false` | Enable live debugging for the Alloy instance. Requires stability level to be set to "experimental". |
+| alloy-receiver.liveDebugging.enabled | bool | `false` | Enable live debugging for the Alloy instance. |
 | alloy-receiver.logging.format | string | `"logfmt"` | Format to use for writing Alloy log lines. |
 | alloy-receiver.logging.level | string | `"info"` | Level at which Alloy log lines should be written. |
 | alloy-receiver.remoteConfig.auth.password | string | `""` | The password to use for the remote config server. |
@@ -264,7 +264,7 @@ podLogs:
 | alloy-singleton.controller.type | string | `"deployment"` | The type of controller to use for the Alloy Singleton instance. |
 | alloy-singleton.enabled | bool | `false` | Deploy the Alloy instance for data sources required to be deployed on a single replica. |
 | alloy-singleton.extraConfig | string | `""` | Extra Alloy configuration to be added to the configuration file. |
-| alloy-singleton.liveDebugging.enabled | bool | `false` | Enable live debugging for the Alloy instance. Requires stability level to be set to "experimental". |
+| alloy-singleton.liveDebugging.enabled | bool | `false` | Enable live debugging for the Alloy instance. |
 | alloy-singleton.logging.format | string | `"logfmt"` | Format to use for writing Alloy log lines. |
 | alloy-singleton.logging.level | string | `"info"` | Level at which Alloy log lines should be written. |
 | alloy-singleton.remoteConfig.auth.password | string | `""` | The password to use for the remote config server. |

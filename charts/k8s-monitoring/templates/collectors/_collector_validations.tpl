@@ -18,17 +18,3 @@
   {{- end }}
 {{- end }}
 {{- end }}
-
-{{- define "collectors.validate.liveDebugging" }}
-{{- if (index .Values .collectorName).enabled }}
-  {{- if (index .Values .collectorName).liveDebugging.enabled }}
-    {{- if not (eq (index .Values .collectorName).alloy.stabilityLevel "experimental") }}
-      {{- $msg := list "" "The live debugging feature requires Alloy to use the \"experimental\" stability level. Please set:" }}
-      {{- $msg = append $msg (printf "%s:" .collectorName ) }}
-      {{- $msg = append $msg "  alloy:" }}
-      {{- $msg = append $msg "    stabilityLevel: experimental" }}
-      {{- fail (join "\n" $msg) }}
-    {{- end }}
-  {{- end }}
-  {{- end }}
-{{- end }}
