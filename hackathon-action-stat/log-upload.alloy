@@ -2,13 +2,17 @@ otelcol.receiver.filelog "run_log" {
   include = ["log.txt"]
   start_at = "beginning"
   delete_after_read = true
+  include_file_name = false
+  include_file_path = false
+  include_file_name_resolved = false
+  include_file_path_resolved = false
   attributes = {
-    "run_id" = sys.env("RUN_ID"),
+    "run.id" = sys.env("RUN_ID"),
   }
   resource = {
-    "source" = "github_actions",
-    "repository" = sys.env("GITHUB_REPOSITORY"),
-    "workflowName" = sys.env("GITHUB_WORKFLOW"),
+    "repository.name" = sys.env("GITHUB_REPOSITORY"),
+    "workflow.name" = sys.env("GITHUB_WORKFLOW"),
+    "service_name" = "github_actions",
   }
 
   output {
