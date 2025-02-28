@@ -128,3 +128,62 @@ jobs:
           else
             echo "Generated files in charts/${{ matrix.dir }} are up to date."
           fi
+
+  upload-telemetry:
+    runs-on: ubuntu-latest
+    needs: [run-tests, check-generated-files]
+    if: ${{ always() }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Install Grafana Alloy
+        run: |
+          sudo mkdir -p /etc/apt/keyrings/
+          wget -q -O - https://apt.grafana.com/gpg.key | gpg --dearmor | sudo tee /etc/apt/keyrings/grafana.gpg > /dev/null
+          echo "deb [signed-by=/etc/apt/keyrings/grafana.gpg] https://apt.grafana.com stable main" | sudo tee /etc/apt/sources.list.d/grafana.list
+          sudo apt-get update
+          sudo apt-get install -y alloy
+
+      - name: Get run data
+        id: run_data
+        run: |
+          echo "run_id=${{ github.run_id }}" >> "${GITHUB_OUTPUT}"
+          echo ""
+
+      - name: upload logs
+        env:
+          GC_TELEMETRY_DATA_UPLOAD_LOGS_URL: https://logs-dev-002.grafana-dev.net/loki/api/v1/push
+          GC_TELEMETRY_DATA_UPLOAD_LOGS_USERNAME: ${{ secrets.GC_TELEMETRY_DATA_UPLOAD_LOGS_USERNAME }}
+          GC_TELEMETRY_DATA_UPLOAD_TOKEN: ${{ secrets.GC_TELEMETRY_DATA_UPLOAD_TOKEN }}
+          RUN_ID: ${{ steps.run_data.outputs.run_id }}
+        run: |
+          # Get logs from the run
+          echo "log data" > log.txt
+
+          # Run alloy in the background and save its PID
+          alloy run hackathon-action-stat/log-upload.alloy --stability.level public-preview --disable-reporting &
+          ALLOY_PID=$!
+
+          # Set timeout duration (5 minutes = 300 seconds)
+          TIMEOUT=300
+          START_TIME=$SECONDS
+
+          # Watch for log.txt to be deleted or timeout
+          while true; do
+            # Check if timeout reached
+            if [ $((SECONDS - START_TIME)) -ge $TIMEOUT ]; then
+              echo "Timeout reached after ${TIMEOUT} seconds. Killing alloy process."
+              kill $ALLOY_PID || true
+              break
+            fi
+
+            # Check if log file is deleted
+            if [ ! -f log.txt ]; then
+              echo "log.txt deleted. Killing alloy process."
+              kill $ALLOY_PID || true
+              break
+            fi
+
+            sleep 1
+          done

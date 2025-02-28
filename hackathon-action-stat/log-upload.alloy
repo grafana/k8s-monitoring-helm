@@ -1,0 +1,31 @@
+otelcol.receiver.filelog "run_log" {
+  include = ["log.txt"]
+  delete_after_read = true
+  attributes = {
+    "run_id" = sys.env("RUN_ID"),
+  }
+  resource = {
+    "source" = "github_actions",
+    "repository" = sys.env("GITHUB_REPOSITORY"),
+    "workflowName" = sys.env("GITHUB_WORKFLOW"),
+  }
+
+  output {
+    logs = [otelcol.exporter.loki.prep_for_loki.input]
+  }
+}
+
+otelcol.exporter.loki "prep_for_loki" {
+  forward_to = [loki.write.grafana_cloud_loki.receiver]
+}
+
+loki.write "grafana_cloud_loki" {
+  endpoint {
+    url = sys.env("GC_TELEMETRY_DATA_UPLOAD_LOGS_URL")
+
+    basic_auth {
+      username = sys.env("GC_TELEMETRY_DATA_UPLOAD_LOGS_USERNAME")
+      password = sys.env("GC_TELEMETRY_DATA_UPLOAD_TOKEN")
+    }
+  }
+}
