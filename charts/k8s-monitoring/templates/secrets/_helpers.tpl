@@ -148,25 +148,25 @@ true
 {{/* This returns the Kubernetes Secret name for this destination */}}
 {{/* Inputs: $ (top level helm data) object (user of the secret, needs name, secret, auth) */}}
 {{- define "secrets.kubernetesSecretName" -}}
-{{- if and (hasKey .object "secret") (hasKey .object.secret "name") (not (empty .object.secret.name)) -}}
-{{ .object.secret.name }}
+{{- $secretName := dig "secret" "name" "" .object }}
+{{- if $secretName -}}
+  {{- $secretName -}}
 {{- else -}}
-
-{{- if contains .Chart.Name .Release.Name }}
-{{- printf "%s-%s" .object.name .Release.Name | trunc 63 | trimSuffix "-" | lower -}}
-{{- else }}
-{{- printf "%s-%s-%s" .object.name .Release.Name .Chart.Name | trunc 63 | trimSuffix "-" | lower -}}
-{{- end }}
-
+  {{- if contains .Chart.Name .Release.Name }}
+    {{- printf "%s-%s" .object.name .Release.Name | trunc 63 | trimSuffix "-" | lower -}}
+  {{- else }}
+    {{- printf "%s-%s-%s" .object.name .Release.Name .Chart.Name | trunc 63 | trimSuffix "-" | lower -}}
+  {{- end }}
 {{- end }}
 {{- end }}
 
 {{/* This returns the Kubernetes Secret namespace for this destination */}}
 {{/* Inputs: $ (top level helm data) object (user of the secret, needs name, secret, auth) */}}
 {{- define "secrets.kubernetesSecretNamespace" -}}
-{{- if and (hasKey .object "secret") (hasKey .object.secret "namespace") (not (empty .object.secret.namespace)) -}}
-{{- .object.secret.namespace -}}
+{{- $secretNamespace := dig "secret" "namespace" "" .object }}
+{{- if $secretNamespace -}}
+  {{- $secretNamespace -}}
 {{- else -}}
-{{- .Release.Namespace -}}
+  {{- .Release.Namespace -}}
 {{- end }}
 {{- end }}
