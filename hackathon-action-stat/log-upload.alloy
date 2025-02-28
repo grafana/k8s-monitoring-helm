@@ -12,21 +12,18 @@ otelcol.receiver.filelog "run_log" {
   }
 
   output {
-    logs = [otelcol.exporter.loki.prep_for_loki.input]
+    logs = [otelcol.exporter.otlp.grafana_cloud.input]
   }
 }
 
-otelcol.exporter.loki "prep_for_loki" {
-  forward_to = [loki.write.grafana_cloud_loki.receiver]
+otelcol.exporter.otlp "grafana_cloud" {
+  client {
+    endpoint = sys.env("GC_TELEMETRY_DATA_UPLOAD_OTLP_URL")
+    auth = otelcol.auth.basic.grafana_cloud.handler
+  }
 }
 
-loki.write "grafana_cloud_loki" {
-  endpoint {
-    url = sys.env("GC_TELEMETRY_DATA_UPLOAD_LOGS_URL")
-
-    basic_auth {
-      username = sys.env("GC_TELEMETRY_DATA_UPLOAD_LOGS_USERNAME")
-      password = sys.env("GC_TELEMETRY_DATA_UPLOAD_TOKEN")
-    }
-  }
+otelcol.auth.basic "grafana_cloud" {
+  username = sys.env("GC_TELEMETRY_DATA_UPLOAD_OTLP_USERNAME")
+  password = sys.env("GC_TELEMETRY_DATA_UPLOAD_TOKEN")
 }
