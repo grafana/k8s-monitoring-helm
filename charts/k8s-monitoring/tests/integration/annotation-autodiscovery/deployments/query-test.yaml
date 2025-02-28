@@ -41,16 +41,21 @@ spec:
             type: promql
 
           # Annotation Autodiscovery from a Service Annotation
-          - query: certmanager_clock_time_seconds{cluster="$CLUSTER", job="integrations/cert-manager"}
+          - query: certmanager_clock_time_seconds{cluster="$CLUSTER", job="integrations/cert-manager", scrape_interval="60s", scrape_timeout="10s"}
             type: promql
 
           # Annotation Autodiscovery from a Pod Annotation
-          - query: static_metric{cluster="$CLUSTER"}
+          - query: static_metric{cluster="$CLUSTER", job="nginx-static-metrics", scrape_interval="30s", scrape_timeout="15s"}
             type: promql
 
           # DPM check
           - query: avg(count_over_time(scrape_samples_scraped{cluster="$CLUSTER"}[1m]))
             type: promql
             expect:
-              value: 1
-              operator: ==
+              value: 1.6
+              operator: "<"
+          - query: avg(count_over_time(scrape_samples_scraped{cluster="$CLUSTER"}[1m]))
+            type: promql
+            expect:
+              value: 1.7
+              operator: ">"

@@ -82,14 +82,31 @@ declare "annotation_autodiscovery" {
 
     rule {
       source_labels = ["{{ include "pod_annotation" .Values.annotations.metricsScheme }}"]
-      action = "replace"
+      regex = "(.+)"
       target_label = "__scheme__"
     }
 
     rule {
       source_labels = ["{{ include "pod_annotation" .Values.annotations.metricsScrapeInterval }}"]
-      action = "replace"
+      regex = "(.+)"
       target_label = "__scrape_interval__"
+    }
+    rule {
+      source_labels = ["__scrape_interval__"]
+      regex = ""
+      replacement = {{ .Values.scrapeInterval | default .Values.global.scrapeInterval | quote }}
+      target_label = "__scrape_interval__"
+    }
+    rule {
+      source_labels = ["{{ include "pod_annotation" .Values.annotations.metricsScrapeTimeout }}"]
+      regex = "(.+)"
+      target_label = "__scrape_timeout__"
+    }
+    rule {
+      source_labels = ["__scrape_timeout__"]
+      regex = ""
+      replacement = {{ .Values.scrapeTimeout | default .Values.global.scrapeTimeout | quote }}
+      target_label = "__scrape_timeout__"
     }
 {{- if .Values.extraDiscoveryRules }}
 {{ .Values.extraDiscoveryRules | indent 4 }}
@@ -172,15 +189,33 @@ declare "annotation_autodiscovery" {
 
     rule {
       source_labels = ["{{ include "service_annotation" .Values.annotations.metricsScheme }}"]
-      action = "replace"
+      regex = "(.+)"
       target_label = "__scheme__"
     }
 
     rule {
       source_labels = ["{{ include "service_annotation" .Values.annotations.metricsScrapeInterval }}"]
-      action = "replace"
+      regex = "(.+)"
       target_label = "__scrape_interval__"
     }
+    rule {
+      source_labels = ["__scrape_interval__"]
+      regex = ""
+      replacement = {{ .Values.scrapeInterval | default .Values.global.scrapeInterval | quote }}
+      target_label = "__scrape_interval__"
+    }
+    rule {
+      source_labels = ["{{ include "service_annotation" .Values.annotations.metricsScrapeTimeout }}"]
+      regex = "(.+)"
+      target_label = "__scrape_timeout__"
+    }
+    rule {
+      source_labels = ["__scrape_timeout__"]
+      regex = ""
+      replacement = {{ .Values.scrapeTimeout | default .Values.global.scrapeTimeout | quote }}
+      target_label = "__scrape_timeout__"
+    }
+
 {{- if .Values.extraDiscoveryRules }}
 {{ .Values.extraDiscoveryRules | indent 4 }}
 {{- end }}
@@ -206,7 +241,6 @@ declare "annotation_autodiscovery" {
 
   prometheus.scrape "annotation_autodiscovery_http" {
     targets = discovery.relabel.annotation_autodiscovery_http.output
-    scrape_interval = {{ .Values.scrapeInterval | default .Values.global.scrapeInterval | quote }}
     honor_labels = true
 {{- if .Values.bearerToken.enabled }}
     bearer_token_file = {{ .Values.bearerToken.token | quote }}
@@ -223,7 +257,6 @@ declare "annotation_autodiscovery" {
 
   prometheus.scrape "annotation_autodiscovery_https" {
     targets = discovery.relabel.annotation_autodiscovery_https.output
-    scrape_interval = {{ .Values.scrapeInterval | default .Values.global.scrapeInterval | quote }}
     honor_labels = true
 {{- if .Values.bearerToken.enabled }}
     bearer_token_file = {{ .Values.bearerToken.token | quote }}
