@@ -131,7 +131,7 @@ discovery.relabel "pprof_pods_{{ $currentType }}_custom_name" {
 }
 
 pyroscope.scrape "pyroscope_scrape_{{ $currentType }}" {
-  targets = concat(discovery.relabel.pprof_pods_{{ $currentType }}_default_name.output, discovery.relabel.pprof_pods_{{ $currentType }}_custom_name.output)
+  targets = array.concat(discovery.relabel.pprof_pods_{{ $currentType }}_default_name.output, discovery.relabel.pprof_pods_{{ $currentType }}_custom_name.output)
 
   bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
   profiling_config {

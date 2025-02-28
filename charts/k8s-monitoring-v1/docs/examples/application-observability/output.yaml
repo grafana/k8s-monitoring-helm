@@ -510,7 +510,7 @@ data:
     }
     
     discovery.relabel "annotation_autodiscovery_http" {
-      targets = concat(discovery.relabel.annotation_autodiscovery_pods.output, discovery.relabel.annotation_autodiscovery_services.output)
+      targets = array.concat(discovery.relabel.annotation_autodiscovery_pods.output, discovery.relabel.annotation_autodiscovery_services.output)
       rule {
         source_labels = ["__scheme__"]
         regex = "https"
@@ -519,7 +519,7 @@ data:
     }
     
     discovery.relabel "annotation_autodiscovery_https" {
-      targets = concat(discovery.relabel.annotation_autodiscovery_pods.output, discovery.relabel.annotation_autodiscovery_services.output)
+      targets = array.concat(discovery.relabel.annotation_autodiscovery_pods.output, discovery.relabel.annotation_autodiscovery_services.output)
       rule {
         source_labels = ["__scheme__"]
         regex = "https"
@@ -1477,7 +1477,7 @@ data:
     }
     
     discovery.relabel "pprof_pods" {
-      targets = concat(discovery.kubernetes.pprof_pods.targets)
+      targets = array.concat(discovery.kubernetes.pprof_pods.targets)
     
       rule {
         action        = "drop"
@@ -1510,7 +1510,7 @@ data:
     }
     
     discovery.relabel "pprof_pods_memory_default_name" {
-      targets = concat(discovery.relabel.pprof_pods.output)
+      targets = array.concat(discovery.relabel.pprof_pods.output)
     
       rule {
         source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_memory_scrape"]
@@ -1550,7 +1550,7 @@ data:
     }
     
     discovery.relabel "pprof_pods_memory_custom_name" {
-      targets = concat(discovery.relabel.pprof_pods.output)
+      targets = array.concat(discovery.relabel.pprof_pods.output)
     
       rule {
         source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_memory_scrape"]
@@ -1596,7 +1596,7 @@ data:
     }
     
     pyroscope.scrape "pyroscope_scrape_memory" {
-      targets = concat(discovery.relabel.pprof_pods_memory_default_name.output, discovery.relabel.pprof_pods_memory_custom_name.output)
+      targets = array.concat(discovery.relabel.pprof_pods_memory_default_name.output, discovery.relabel.pprof_pods_memory_custom_name.output)
     
       bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
     
@@ -1633,7 +1633,7 @@ data:
       forward_to = [pyroscope.write.profiles_service.receiver]
     }
     discovery.relabel "pprof_pods_cpu_default_name" {
-      targets = concat(discovery.relabel.pprof_pods.output)
+      targets = array.concat(discovery.relabel.pprof_pods.output)
     
       rule {
         source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_cpu_scrape"]
@@ -1673,7 +1673,7 @@ data:
     }
     
     discovery.relabel "pprof_pods_cpu_custom_name" {
-      targets = concat(discovery.relabel.pprof_pods.output)
+      targets = array.concat(discovery.relabel.pprof_pods.output)
     
       rule {
         source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_cpu_scrape"]
@@ -1719,7 +1719,7 @@ data:
     }
     
     pyroscope.scrape "pyroscope_scrape_cpu" {
-      targets = concat(discovery.relabel.pprof_pods_cpu_default_name.output, discovery.relabel.pprof_pods_cpu_custom_name.output)
+      targets = array.concat(discovery.relabel.pprof_pods_cpu_default_name.output, discovery.relabel.pprof_pods_cpu_custom_name.output)
     
       bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
     
@@ -1756,7 +1756,7 @@ data:
       forward_to = [pyroscope.write.profiles_service.receiver]
     }
     discovery.relabel "pprof_pods_goroutine_default_name" {
-      targets = concat(discovery.relabel.pprof_pods.output)
+      targets = array.concat(discovery.relabel.pprof_pods.output)
     
       rule {
         source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_goroutine_scrape"]
@@ -1796,7 +1796,7 @@ data:
     }
     
     discovery.relabel "pprof_pods_goroutine_custom_name" {
-      targets = concat(discovery.relabel.pprof_pods.output)
+      targets = array.concat(discovery.relabel.pprof_pods.output)
     
       rule {
         source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_goroutine_scrape"]
@@ -1842,7 +1842,7 @@ data:
     }
     
     pyroscope.scrape "pyroscope_scrape_goroutine" {
-      targets = concat(discovery.relabel.pprof_pods_goroutine_default_name.output, discovery.relabel.pprof_pods_goroutine_custom_name.output)
+      targets = array.concat(discovery.relabel.pprof_pods_goroutine_default_name.output, discovery.relabel.pprof_pods_goroutine_custom_name.output)
     
       bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
     
@@ -1879,7 +1879,7 @@ data:
       forward_to = [pyroscope.write.profiles_service.receiver]
     }
     discovery.relabel "pprof_pods_block_default_name" {
-      targets = concat(discovery.relabel.pprof_pods.output)
+      targets = array.concat(discovery.relabel.pprof_pods.output)
     
       rule {
         source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_block_scrape"]
@@ -1919,7 +1919,7 @@ data:
     }
     
     discovery.relabel "pprof_pods_block_custom_name" {
-      targets = concat(discovery.relabel.pprof_pods.output)
+      targets = array.concat(discovery.relabel.pprof_pods.output)
     
       rule {
         source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_block_scrape"]
@@ -1965,7 +1965,7 @@ data:
     }
     
     pyroscope.scrape "pyroscope_scrape_block" {
-      targets = concat(discovery.relabel.pprof_pods_block_default_name.output, discovery.relabel.pprof_pods_block_custom_name.output)
+      targets = array.concat(discovery.relabel.pprof_pods_block_default_name.output, discovery.relabel.pprof_pods_block_custom_name.output)
     
       bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
     
@@ -2002,7 +2002,7 @@ data:
       forward_to = [pyroscope.write.profiles_service.receiver]
     }
     discovery.relabel "pprof_pods_mutex_default_name" {
-      targets = concat(discovery.relabel.pprof_pods.output)
+      targets = array.concat(discovery.relabel.pprof_pods.output)
     
       rule {
         source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_mutex_scrape"]
@@ -2042,7 +2042,7 @@ data:
     }
     
     discovery.relabel "pprof_pods_mutex_custom_name" {
-      targets = concat(discovery.relabel.pprof_pods.output)
+      targets = array.concat(discovery.relabel.pprof_pods.output)
     
       rule {
         source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_mutex_scrape"]
@@ -2088,7 +2088,7 @@ data:
     }
     
     pyroscope.scrape "pyroscope_scrape_mutex" {
-      targets = concat(discovery.relabel.pprof_pods_mutex_default_name.output, discovery.relabel.pprof_pods_mutex_custom_name.output)
+      targets = array.concat(discovery.relabel.pprof_pods_mutex_default_name.output, discovery.relabel.pprof_pods_mutex_custom_name.output)
     
       bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
     
@@ -2125,7 +2125,7 @@ data:
       forward_to = [pyroscope.write.profiles_service.receiver]
     }
     discovery.relabel "pprof_pods_fgprof_default_name" {
-      targets = concat(discovery.relabel.pprof_pods.output)
+      targets = array.concat(discovery.relabel.pprof_pods.output)
     
       rule {
         source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_fgprof_scrape"]
@@ -2165,7 +2165,7 @@ data:
     }
     
     discovery.relabel "pprof_pods_fgprof_custom_name" {
-      targets = concat(discovery.relabel.pprof_pods.output)
+      targets = array.concat(discovery.relabel.pprof_pods.output)
     
       rule {
         source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_fgprof_scrape"]
@@ -2211,7 +2211,7 @@ data:
     }
     
     pyroscope.scrape "pyroscope_scrape_fgprof" {
-      targets = concat(discovery.relabel.pprof_pods_fgprof_default_name.output, discovery.relabel.pprof_pods_fgprof_custom_name.output)
+      targets = array.concat(discovery.relabel.pprof_pods_fgprof_default_name.output, discovery.relabel.pprof_pods_fgprof_custom_name.output)
     
       bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
     
@@ -71574,7 +71574,7 @@ data:
     }
     
     discovery.relabel "annotation_autodiscovery_http" {
-      targets = concat(discovery.relabel.annotation_autodiscovery_pods.output, discovery.relabel.annotation_autodiscovery_services.output)
+      targets = array.concat(discovery.relabel.annotation_autodiscovery_pods.output, discovery.relabel.annotation_autodiscovery_services.output)
       rule {
         source_labels = ["__scheme__"]
         regex = "https"
@@ -71583,7 +71583,7 @@ data:
     }
     
     discovery.relabel "annotation_autodiscovery_https" {
-      targets = concat(discovery.relabel.annotation_autodiscovery_pods.output, discovery.relabel.annotation_autodiscovery_services.output)
+      targets = array.concat(discovery.relabel.annotation_autodiscovery_pods.output, discovery.relabel.annotation_autodiscovery_services.output)
       rule {
         source_labels = ["__scheme__"]
         regex = "https"
@@ -72513,7 +72513,7 @@ data:
     }
     
     discovery.relabel "pprof_pods" {
-      targets = concat(discovery.kubernetes.pprof_pods.targets)
+      targets = array.concat(discovery.kubernetes.pprof_pods.targets)
     
       rule {
         action        = "drop"
@@ -72546,7 +72546,7 @@ data:
     }
     
     discovery.relabel "pprof_pods_memory_default_name" {
-      targets = concat(discovery.relabel.pprof_pods.output)
+      targets = array.concat(discovery.relabel.pprof_pods.output)
     
       rule {
         source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_memory_scrape"]
@@ -72586,7 +72586,7 @@ data:
     }
     
     discovery.relabel "pprof_pods_memory_custom_name" {
-      targets = concat(discovery.relabel.pprof_pods.output)
+      targets = array.concat(discovery.relabel.pprof_pods.output)
     
       rule {
         source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_memory_scrape"]
@@ -72632,7 +72632,7 @@ data:
     }
     
     pyroscope.scrape "pyroscope_scrape_memory" {
-      targets = concat(discovery.relabel.pprof_pods_memory_default_name.output, discovery.relabel.pprof_pods_memory_custom_name.output)
+      targets = array.concat(discovery.relabel.pprof_pods_memory_default_name.output, discovery.relabel.pprof_pods_memory_custom_name.output)
     
       bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
     
@@ -72669,7 +72669,7 @@ data:
       forward_to = [pyroscope.write.profiles_service.receiver]
     }
     discovery.relabel "pprof_pods_cpu_default_name" {
-      targets = concat(discovery.relabel.pprof_pods.output)
+      targets = array.concat(discovery.relabel.pprof_pods.output)
     
       rule {
         source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_cpu_scrape"]
@@ -72709,7 +72709,7 @@ data:
     }
     
     discovery.relabel "pprof_pods_cpu_custom_name" {
-      targets = concat(discovery.relabel.pprof_pods.output)
+      targets = array.concat(discovery.relabel.pprof_pods.output)
     
       rule {
         source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_cpu_scrape"]
@@ -72755,7 +72755,7 @@ data:
     }
     
     pyroscope.scrape "pyroscope_scrape_cpu" {
-      targets = concat(discovery.relabel.pprof_pods_cpu_default_name.output, discovery.relabel.pprof_pods_cpu_custom_name.output)
+      targets = array.concat(discovery.relabel.pprof_pods_cpu_default_name.output, discovery.relabel.pprof_pods_cpu_custom_name.output)
     
       bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
     
@@ -72792,7 +72792,7 @@ data:
       forward_to = [pyroscope.write.profiles_service.receiver]
     }
     discovery.relabel "pprof_pods_goroutine_default_name" {
-      targets = concat(discovery.relabel.pprof_pods.output)
+      targets = array.concat(discovery.relabel.pprof_pods.output)
     
       rule {
         source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_goroutine_scrape"]
@@ -72832,7 +72832,7 @@ data:
     }
     
     discovery.relabel "pprof_pods_goroutine_custom_name" {
-      targets = concat(discovery.relabel.pprof_pods.output)
+      targets = array.concat(discovery.relabel.pprof_pods.output)
     
       rule {
         source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_goroutine_scrape"]
@@ -72878,7 +72878,7 @@ data:
     }
     
     pyroscope.scrape "pyroscope_scrape_goroutine" {
-      targets = concat(discovery.relabel.pprof_pods_goroutine_default_name.output, discovery.relabel.pprof_pods_goroutine_custom_name.output)
+      targets = array.concat(discovery.relabel.pprof_pods_goroutine_default_name.output, discovery.relabel.pprof_pods_goroutine_custom_name.output)
     
       bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
     
@@ -72915,7 +72915,7 @@ data:
       forward_to = [pyroscope.write.profiles_service.receiver]
     }
     discovery.relabel "pprof_pods_block_default_name" {
-      targets = concat(discovery.relabel.pprof_pods.output)
+      targets = array.concat(discovery.relabel.pprof_pods.output)
     
       rule {
         source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_block_scrape"]
@@ -72955,7 +72955,7 @@ data:
     }
     
     discovery.relabel "pprof_pods_block_custom_name" {
-      targets = concat(discovery.relabel.pprof_pods.output)
+      targets = array.concat(discovery.relabel.pprof_pods.output)
     
       rule {
         source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_block_scrape"]
@@ -73001,7 +73001,7 @@ data:
     }
     
     pyroscope.scrape "pyroscope_scrape_block" {
-      targets = concat(discovery.relabel.pprof_pods_block_default_name.output, discovery.relabel.pprof_pods_block_custom_name.output)
+      targets = array.concat(discovery.relabel.pprof_pods_block_default_name.output, discovery.relabel.pprof_pods_block_custom_name.output)
     
       bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
     
@@ -73038,7 +73038,7 @@ data:
       forward_to = [pyroscope.write.profiles_service.receiver]
     }
     discovery.relabel "pprof_pods_mutex_default_name" {
-      targets = concat(discovery.relabel.pprof_pods.output)
+      targets = array.concat(discovery.relabel.pprof_pods.output)
     
       rule {
         source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_mutex_scrape"]
@@ -73078,7 +73078,7 @@ data:
     }
     
     discovery.relabel "pprof_pods_mutex_custom_name" {
-      targets = concat(discovery.relabel.pprof_pods.output)
+      targets = array.concat(discovery.relabel.pprof_pods.output)
     
       rule {
         source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_mutex_scrape"]
@@ -73124,7 +73124,7 @@ data:
     }
     
     pyroscope.scrape "pyroscope_scrape_mutex" {
-      targets = concat(discovery.relabel.pprof_pods_mutex_default_name.output, discovery.relabel.pprof_pods_mutex_custom_name.output)
+      targets = array.concat(discovery.relabel.pprof_pods_mutex_default_name.output, discovery.relabel.pprof_pods_mutex_custom_name.output)
     
       bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
     
@@ -73161,7 +73161,7 @@ data:
       forward_to = [pyroscope.write.profiles_service.receiver]
     }
     discovery.relabel "pprof_pods_fgprof_default_name" {
-      targets = concat(discovery.relabel.pprof_pods.output)
+      targets = array.concat(discovery.relabel.pprof_pods.output)
     
       rule {
         source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_fgprof_scrape"]
@@ -73201,7 +73201,7 @@ data:
     }
     
     discovery.relabel "pprof_pods_fgprof_custom_name" {
-      targets = concat(discovery.relabel.pprof_pods.output)
+      targets = array.concat(discovery.relabel.pprof_pods.output)
     
       rule {
         source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_fgprof_scrape"]
@@ -73247,7 +73247,7 @@ data:
     }
     
     pyroscope.scrape "pyroscope_scrape_fgprof" {
-      targets = concat(discovery.relabel.pprof_pods_fgprof_default_name.output, discovery.relabel.pprof_pods_fgprof_custom_name.output)
+      targets = array.concat(discovery.relabel.pprof_pods_fgprof_default_name.output, discovery.relabel.pprof_pods_fgprof_custom_name.output)
     
       bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
     
