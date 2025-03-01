@@ -1,7 +1,11 @@
-.PHONY: all clean run-test
-all: deployments/test-variables.yaml deployments/grafana-cloud-credentials.yaml flux-manifest.yaml
+.PHONY: all clean run-test console
+all: deployments/okderators.yaml deployments/test-variables.yaml deployments/grafana-cloud-credentials.yaml flux-manifest.yaml
 clean:
-	rm -f deployments/test-variables.yaml deployments/grafana-cloud-credentials.yaml flux-manifest.yaml
+	rm -f deployments/okderators.yaml deployments/test-variables.yaml deployments/grafana-cloud-credentials.yaml flux-manifest.yaml
+
+deployments/okderators.yaml:
+	echo "---" > $@
+	curl https://raw.githubusercontent.com/okd-project/okderators-catalog-index/refs/heads/main/install/okderators.catalogsource.yml >> $@
 
 deployments/test-variables.yaml:
 	echo "---" > $@
@@ -29,5 +33,20 @@ flux-manifest.yaml:
 	kustomize build . > $@
 	rm flux-temp.yaml
 
+create-cluster:
+	../../../../../scripts/create-cluster.sh .
+
 run-test:
 	../../../../../scripts/run-cluster-test.sh .
+
+delete-cluster:
+	../../../../../scripts/delete-cluster.sh .
+	@echo "You may now delete the cluster files and random number file."
+
+
+CLUSTER_NAME_PREFIX := $(shell yq eval '.cluster.name' values.yaml)
+CLUSTER_NAME := $(CLUSTER_NAME_PREFIX)-$(shell echo $$RANDOM_NUMBER)
+console:
+	@echo "URL:      $(shell grep --color=never 'Access the OpenShift web-console here' "$(CLUSTER_NAME)-installer-files/.openshift_install.log" | sed -e 's/.*Access the OpenShift web-console here: \(https:.*\)"/\1/')"
+	@echo "Username: $(shell grep --color=never 'Login to the console with user:' "$(CLUSTER_NAME)-installer-files/.openshift_install.log" | sed -e 's/.*Login to the console with user: \\"\([-a-zA-Z0-9]*\)\\", and password: \\"\([-a-zA-Z0-9]*\)\\""/\1/')"
+	@echo "Password: $(shell grep --color=never 'Login to the console with user:' "$(CLUSTER_NAME)-installer-files/.openshift_install.log" | sed -e 's/.*Login to the console with user: \\"\([-a-zA-Z0-9]*\)\\", and password: \\"\([-a-zA-Z0-9]*\)\\""/\2/')"

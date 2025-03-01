@@ -49,13 +49,27 @@ clusterEvents:
 
 podLogs:
   enabled: true
+  collector: alloy-receiver
+  volumeGathering:
+    enabled: false
+  lokiReceiver:
+    enabled: true
+  openShiftClusterLogForwarder:
+    enabled: true
+    application:
+      enabled: true
+      # namespaces:
+      #   - default
+      #   - flux-system
+    infrastructure:
+      enabled: true
 
 integrations:
   alloy:
     instances:
       - name: alloy
         labelSelectors:
-          app.kubernetes.io/name: [alloy-metrics, alloy-singleton, alloy-logs]
+          app.kubernetes.io/name: [alloy-metrics, alloy-singleton, alloy-receiver]
 
 alloy-metrics:
   enabled: true
@@ -63,9 +77,14 @@ alloy-metrics:
 alloy-singleton:
   enabled: true
 
-alloy-logs:
+alloy-receiver:
   enabled: true
-  global:
-    podSecurityContext:
-      seLinuxOptions:
-        type: container_logreader_t
+  liveDebugging:
+    enabled: true
+  alloy:
+    stabilityLevel: experimental
+    extraPorts:
+      - name: loki
+        port: 3100
+        targetPort: 3100
+        protocol: TCP

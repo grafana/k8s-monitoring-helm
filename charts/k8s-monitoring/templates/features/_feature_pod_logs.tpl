@@ -31,6 +31,7 @@ pod_logs "feature" {
 
 {{- define "features.podLogs.validate" }}
 {{- if .Values.podLogs.enabled -}}
+{{- include "feature.podLogs.validate" (dict "Values" $.Values.podLogs "Capabilities" $.Capabilities) }}
 {{- $featureName := "Kubernetes Pod logs" }}
 {{- $destinations := include "features.podLogs.destinations" . | fromYamlArray }}
 {{- include "destinations.validate_destination_list" (dict "destinations" $destinations "type" "logs" "ecosystem" "loki" "feature" $featureName) }}
@@ -38,6 +39,15 @@ pod_logs "feature" {
 {{- range $collector := include "features.podLogs.collectors" . | fromYamlArray }}
   {{- include "collectors.require_collector" (dict "Values" $.Values "name" $collector "feature" $featureName) }}
   {{- include "feature.podLogs.collector.validate" (dict "Values" $.Values.podLogs "Collector" (index $.Values $collector) "CollectorName" $collector) }}
+  {{- if $.Values.podLogs.lokiReceiver.enabled }}
+    {{- include "collectors.require_extra_port" (dict "Values" $.Values "name" $collector "feature" $featureName "portNumber" $.Values.podLogs.lokiReceiver.port "portName" "loki" "portProtocol" "TCP") }}
+  {{- end -}}
 {{- end -}}
 {{- end -}}
 {{- end -}}
+
+{{- define "features.podLogs.receiver.loki" }}
+  {{- if and .Values.podLogs.enabled .Values.podLogs.lokiReceiver.enabled }}
+http://{{ include "alloy.fullname" (index .Subcharts .Values.podLogs.collector) }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.podLogs.lokiReceiver.port }}
+  {{- end }}
+{{- end }}

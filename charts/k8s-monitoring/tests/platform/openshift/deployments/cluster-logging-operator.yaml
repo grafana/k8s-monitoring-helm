@@ -1,0 +1,32 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: openshift-logging
+  labels:
+    openshift.io/cluster-monitoring: "true"
+---
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  name: openshift-logging
+  namespace: openshift-logging
+  annotations:
+    olm.providedAPIs: ClusterLogForwarder.v1.logging.openshift.io,ClusterLogging.v1.logging.openshift.io,LogFileMetricExporter.v1alpha1.logging.openshift.io
+spec:
+  upgradeStrategy: Default
+---
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: cluster-logging
+  namespace: openshift-logging
+  labels:
+    operators.coreos.com/cluster-logging.openshift-logging: ""
+spec:
+  channel: alpha
+  installPlanApproval: Automatic
+  name: cluster-logging
+  source: okderators
+  sourceNamespace: openshift-marketplace
+  startingCSV: clusterlogging.v5.9.0-2024-05-05-192913
