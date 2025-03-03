@@ -1,4 +1,6 @@
 {{- if .Values.deployAsConfigMap }}
+{{- $alloyConfig := include "feature.prometheusOperatorObjects.module" . }}
+{{- $alloyConfig = regexReplaceAll `[ \t]+(\r?\n)` $alloyConfig "\n" }}
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -7,5 +9,5 @@ metadata:
   namespace: {{ .Release.Namespace }}
 data:
   module.alloy: |-
-    {{- include "feature.prometheusOperatorObjects.module" . | indent 4 }}
+    {{- $alloyConfig | trim | nindent 4 }}
 {{- end }}

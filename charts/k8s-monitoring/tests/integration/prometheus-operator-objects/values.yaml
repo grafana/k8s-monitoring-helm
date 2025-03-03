@@ -1,0 +1,23 @@
+---
+cluster:
+  name: prom-operator-objects-cluster
+
+destinations:
+  - name: localPrometheus
+    type: prometheus
+    url: http://prometheus-server.prometheus.svc:9090/api/v1/write
+
+prometheusOperatorObjects:
+  enabled: true
+
+  serviceMonitors:
+    enabled: true
+    labelSelectors:
+      app.kubernetes.io/name: grafana
+
+  # Will be deployed by the prometheus-operator-crds chart
+  crds:
+    deploy: false
+
+alloy-metrics:
+  enabled: true
