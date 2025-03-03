@@ -10,5 +10,23 @@ destinations:
 prometheusOperatorObjects:
   enabled: true
 
+  podMonitors:
+    labelSelectors:
+      app.kubernetes.io/name: my-app
+
+  serviceMonitors:
+    namespaces:
+      - development
+      - staging
+      - production
+    labelExpressions:
+      - key: preview-build
+        operator: DoesNotExist
+      - key: app.kubernetes.io/name
+        operator: In
+        values:
+          - my-app
+          - my-other-app
+
 alloy-metrics:
   enabled: true

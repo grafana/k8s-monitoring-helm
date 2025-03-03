@@ -7,9 +7,22 @@ prometheus.operator.servicemonitors "service_monitors" {
 {{- if .Values.serviceMonitors.namespaces }}
   namespaces = {{ .Values.serviceMonitors.namespaces | toJson }}
 {{- end }}
-{{- if .Values.serviceMonitors.selector }}
+{{- if or .Values.serviceMonitors.labelSelectors .Values.serviceMonitors.labelExpressions }}
   selector {
-{{ .Values.serviceMonitors.selector | indent 4 }}
+  {{- if .Values.serviceMonitors.labelSelectors }}
+    match_labels = {
+    {{- range $key, $value := .Values.serviceMonitors.labelSelectors }}
+      {{ $key | quote }} = {{ $value | quote }},
+    {{- end }}
+    }
+  {{- end }}
+  {{- range $expression := .Values.serviceMonitors.labelExpressions }}
+    match_expression {
+      key = {{ $expression.key | quote }}
+      operator = {{ $expression.operator | quote }}
+      {{ if $expression.values }}values = {{ $expression.values | toJson }}{{ end }}
+    }
+  {{- end }}
   }
 {{- end }}
   clustering {

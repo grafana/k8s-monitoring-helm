@@ -54,6 +54,11 @@ declare "prometheus_operator_objects" {
 
   // Prometheus Operator PodMonitor objects
   prometheus.operator.podmonitors "pod_monitors" {
+    selector {
+      match_labels = {
+        "app.kubernetes.io/name" = "my-app",
+      }
+    }
     clustering {
       enabled = true
     }
@@ -76,6 +81,19 @@ declare "prometheus_operator_objects" {
 
   // Prometheus Operator ServiceMonitor objects
   prometheus.operator.servicemonitors "service_monitors" {
+    namespaces = ["development","staging","production"]
+    selector {
+      match_expression {
+        key = "preview-build"
+        operator = "DoesNotExist"
+
+      }
+      match_expression {
+        key = "app.kubernetes.io/name"
+        operator = "In"
+        values = ["my-app","my-other-app"]
+      }
+    }
     clustering {
       enabled = true
     }

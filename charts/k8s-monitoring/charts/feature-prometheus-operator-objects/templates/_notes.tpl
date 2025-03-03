@@ -15,5 +15,10 @@ Scrapes metrics from {{ include "english_list" $sources }}.
 {{- define "feature.prometheusOperatorObjects.notes.actions" }}{{- end }}
 
 {{- define "feature.prometheusOperatorObjects.summary" -}}
+{{- $sources := list }}
+{{- if .Values.serviceMonitors.enabled }}{{- $sources = append $sources "ServiceMonitors" }}{{- end }}
+{{- if .Values.podMonitors.enabled }}{{- $sources = append $sources "PodMonitors" }}{{- end }}
+{{- if .Values.probes.enabled }}{{- $sources = append $sources "Probes" }}{{- end }}
 version: {{ .Chart.Version }}
+sources: {{ $sources | join "," }}
 {{- end }}

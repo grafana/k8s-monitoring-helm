@@ -7,9 +7,22 @@ prometheus.operator.probes "pod_monitors" {
 {{- if .Values.probes.namespaces }}
   namespaces = {{ .Values.probes.namespaces | toJson }}
 {{- end }}
-{{- if .Values.probes.selector }}
+{{- if or .Values.probes.labelSelectors .Values.probes.labelExpressions }}
   selector {
-{{ .Values.probes.selector | indent 4 }}
+  {{- if .Values.probes.labelSelectors }}
+    match_labels = {
+    {{- range $key, $value := .Values.probes.labelSelectors }}
+      {{ $key | quote }} = {{ $value | quote }}
+    {{- end }}
+    }
+  {{- end }}
+  {{- range $expression := .Values.probes.labelExpressions }}
+    match_expression {
+      key = {{ $expression.key | quote }}
+      operator = {{ $expression.operator | quote }}
+      {{ if $expression.values }}values = {{ $expression.values | toJson }}{{ end }}
+    }
+  {{- end }}
   }
 {{- end }}
   clustering {

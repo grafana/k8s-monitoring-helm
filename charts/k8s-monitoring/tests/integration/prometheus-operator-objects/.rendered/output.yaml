@@ -23,15 +23,15 @@ metadata:
   namespace: default
 data:
   config.alloy: |-
-    // Destination: prometheus (prometheus)
-    otelcol.exporter.prometheus "prometheus" {
+    // Destination: localPrometheus (prometheus)
+    otelcol.exporter.prometheus "localprometheus" {
       add_metric_suffixes = true
-      forward_to = [prometheus.remote_write.prometheus.receiver]
+      forward_to = [prometheus.remote_write.localprometheus.receiver]
     }
     
-    prometheus.remote_write "prometheus" {
+    prometheus.remote_write "localprometheus" {
       endpoint {
-        url = "http://prometheus.prometheus.svc:9090/api/v1/write"
+        url = "http://prometheus-server.prometheus.svc:9090/api/v1/write"
         headers = {
         }
         tls_config {
@@ -54,13 +54,13 @@ data:
         write_relabel_config {
           source_labels = ["cluster"]
           regex = ""
-          replacement = "prometheus-operator-objects-cluster"
+          replacement = "prom-operator-objects-cluster"
           target_label = "cluster"
         }
         write_relabel_config {
           source_labels = ["k8s.cluster.name"]
           regex = ""
-          replacement = "prometheus-operator-objects-cluster"
+          replacement = "prom-operator-objects-cluster"
           target_label = "cluster"
         }
       }
@@ -79,11 +79,6 @@ data:
     
       // Prometheus Operator PodMonitor objects
       prometheus.operator.podmonitors "pod_monitors" {
-        selector {
-          match_labels = {
-            "app.kubernetes.io/name" = "my-app",
-          }
-        }
         clustering {
           enabled = true
         }
@@ -106,17 +101,9 @@ data:
     
       // Prometheus Operator ServiceMonitor objects
       prometheus.operator.servicemonitors "service_monitors" {
-        namespaces = ["development","staging","production"]
         selector {
-          match_expression {
-            key = "preview-build"
-            operator = "DoesNotExist"
-    
-          }
-          match_expression {
-            key = "app.kubernetes.io/name"
-            operator = "In"
-            values = ["my-app","my-other-app"]
+          match_labels = {
+            "app.kubernetes.io/name" = "grafana",
           }
         }
         clustering {
@@ -130,7 +117,7 @@ data:
     }
     prometheus_operator_objects "feature" {
       metrics_destinations = [
-        prometheus.remote_write.prometheus.receiver,
+        prometheus.remote_write.localprometheus.receiver,
       ]
     }
     // Self Reporting
@@ -172,7 +159,7 @@ data:
         action = "keep"
       }
       forward_to = [
-        prometheus.remote_write.prometheus.receiver,
+        prometheus.remote_write.localprometheus.receiver,
       ]
     }
 
