@@ -118,14 +118,31 @@ declare "annotation_autodiscovery" {
 
     rule {
       source_labels = ["__meta_kubernetes_pod_annotation_prometheus_io_scheme"]
-      action = "replace"
+      regex = "(.+)"
       target_label = "__scheme__"
     }
 
     rule {
       source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_metrics_scrapeInterval"]
-      action = "replace"
+      regex = "(.+)"
       target_label = "__scrape_interval__"
+    }
+    rule {
+      source_labels = ["__scrape_interval__"]
+      regex = ""
+      replacement = "60s"
+      target_label = "__scrape_interval__"
+    }
+    rule {
+      source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_metrics_scrapeTimeout"]
+      regex = "(.+)"
+      target_label = "__scrape_timeout__"
+    }
+    rule {
+      source_labels = ["__scrape_timeout__"]
+      regex = ""
+      replacement = "10s"
+      target_label = "__scrape_timeout__"
     }
   }
 
@@ -193,14 +210,31 @@ declare "annotation_autodiscovery" {
 
     rule {
       source_labels = ["__meta_kubernetes_service_annotation_prometheus_io_scheme"]
-      action = "replace"
+      regex = "(.+)"
       target_label = "__scheme__"
     }
 
     rule {
       source_labels = ["__meta_kubernetes_service_annotation_k8s_grafana_com_metrics_scrapeInterval"]
-      action = "replace"
+      regex = "(.+)"
       target_label = "__scrape_interval__"
+    }
+    rule {
+      source_labels = ["__scrape_interval__"]
+      regex = ""
+      replacement = "60s"
+      target_label = "__scrape_interval__"
+    }
+    rule {
+      source_labels = ["__meta_kubernetes_service_annotation_k8s_grafana_com_metrics_scrapeTimeout"]
+      regex = "(.+)"
+      target_label = "__scrape_timeout__"
+    }
+    rule {
+      source_labels = ["__scrape_timeout__"]
+      regex = ""
+      replacement = "10s"
+      target_label = "__scrape_timeout__"
     }
   }
 
@@ -224,7 +258,6 @@ declare "annotation_autodiscovery" {
 
   prometheus.scrape "annotation_autodiscovery_http" {
     targets = discovery.relabel.annotation_autodiscovery_http.output
-    scrape_interval = "60s"
     honor_labels = true
     bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
     clustering {
@@ -236,7 +269,6 @@ declare "annotation_autodiscovery" {
 
   prometheus.scrape "annotation_autodiscovery_https" {
     targets = discovery.relabel.annotation_autodiscovery_https.output
-    scrape_interval = "60s"
     honor_labels = true
     bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
     tls_config {

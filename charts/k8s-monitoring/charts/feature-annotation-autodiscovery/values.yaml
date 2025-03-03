@@ -12,6 +12,10 @@ global:
   # @section -- Global Settings
   scrapeInterval: 60s
 
+  # -- The scrape timeout for discovered pods and services.
+  # @section -- Global Settings
+  scrapeTimeout: 10s
+
   # -- Sets the max_cache_size for every prometheus.relabel component. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments))
   # This should be at least 2x-5x your largest scrape target or samples appended rate.
   # @section -- Global Settings
@@ -45,6 +49,10 @@ annotations:
   # Overrides metrics.autoDiscover.scrapeInterval
   # @section -- Annotations
   metricsScrapeInterval: "k8s.grafana.com/metrics.scrapeInterval"
+  # -- Annotation for overriding the scrape timeout for this service or pod. Value should be a duration like "15s, 1m".
+  # Overrides metrics.autoDiscover.scrapeTimeout
+  # @section -- Annotations
+  metricsScrapeTimeout: "k8s.grafana.com/metrics.scrapeTimeout"
 
 # -- The list of namespaces to include in autodiscovery. If empty, all namespaces are included.
 # @section -- Discovery Settings
@@ -54,19 +62,24 @@ namespaces: []
 # @section -- Discovery Settings
 excludeNamespaces: []
 
-# -- Rule blocks to be added to the prometheus.operator.podmonitors component for PodMonitors.
+# -- Rule blocks to be added to the discovery.relabel component for discovered pods and services.
 # These relabeling rules are applied pre-scrape against the targets from service discovery.
-# The relabelings defined in the PodMonitor object are applied first, then these relabelings are applied.
 # Before the scrape, any remaining target labels that start with `__` (i.e. `__meta_kubernetes*`) are dropped.
 # ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.relabel/#rule-block))
 # @section -- Discovery Settings
 extraDiscoveryRules: ""
 
-# -- How frequently to scrape metrics from PodMonitor objects. Only used if the PodMonitor does not specify the scrape interval.
+# -- How frequently to scrape metrics from discovered pods and services. Only used if the `k8s.grafana.com/metrics.scrapeInterval` annotation is not set.
 # Overrides global.scrapeInterval
 # @default -- 60s
 # @section -- Scrape Settings
 scrapeInterval: ""
+
+# -- The scrape timeout for discovered pods and services. Only used if the `k8s.grafana.com/metrics.scrapeTimeout` annotation is not set.
+# Overrides global.scrapeTimeout
+# @default -- 10s
+# @section -- Scrape Settings
+scrapeTimeout: ""
 
 # Adjustments to the scraped metrics to filter the amount of metrics sent to storage.
 # @section -- Metric Processing Settings
@@ -78,7 +91,7 @@ metricsTuning:
   # @section -- Metric Processing Settings
   excludeMetrics: []
 
-# -- Rule blocks to be added to the prometheus.relabel component for PodMonitor objects.
+# -- Rule blocks to be added to the prometheus.relabel component for discovered pods and services.
 # These relabeling rules are applied post-scrape against the metrics returned from the scraped target, no `__meta*` labels are present.
 # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#rule-block))
 # @section -- Metric Processing Settings

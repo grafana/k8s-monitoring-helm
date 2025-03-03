@@ -62,6 +62,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | annotations.metricsPortNumber | string | `"k8s.grafana.com/metrics.portNumber"` | Annotation for setting the metrics port by number. |
 | annotations.metricsScheme | string | `"k8s.grafana.com/metrics.scheme"` | Annotation for setting the metrics scheme, default: http. |
 | annotations.metricsScrapeInterval | string | `"k8s.grafana.com/metrics.scrapeInterval"` | Annotation for overriding the scrape interval for this service or pod. Value should be a duration like "15s, 1m". Overrides metrics.autoDiscover.scrapeInterval |
+| annotations.metricsScrapeTimeout | string | `"k8s.grafana.com/metrics.scrapeTimeout"` | Annotation for overriding the scrape timeout for this service or pod. Value should be a duration like "15s, 1m". Overrides metrics.autoDiscover.scrapeTimeout |
 | annotations.scrape | string | `"k8s.grafana.com/scrape"` | Annotation for enabling scraping for this service or pod. Value should be either "true" or "false" |
 
 ### Scrape Settings
@@ -69,21 +70,22 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | bearerToken | object | `{"enabled":true,"token":"/var/run/secrets/kubernetes.io/serviceaccount/token"}` | Sets bearer_token_file line in the prometheus.scrape annotation_autodiscovery. |
-| scrapeInterval | string | 60s | How frequently to scrape metrics from PodMonitor objects. Only used if the PodMonitor does not specify the scrape interval. Overrides global.scrapeInterval |
+| scrapeInterval | string | 60s | How frequently to scrape metrics from discovered pods and services. Only used if the `k8s.grafana.com/metrics.scrapeInterval` annotation is not set. Overrides global.scrapeInterval |
+| scrapeTimeout | string | 10s | The scrape timeout for discovered pods and services. Only used if the `k8s.grafana.com/metrics.scrapeTimeout` annotation is not set. Overrides global.scrapeTimeout |
 
 ### Discovery Settings
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | excludeNamespaces | list | `[]` | The list of namespaces to exclude from autodiscovery. |
-| extraDiscoveryRules | string | `""` | Rule blocks to be added to the prometheus.operator.podmonitors component for PodMonitors. These relabeling rules are applied pre-scrape against the targets from service discovery. The relabelings defined in the PodMonitor object are applied first, then these relabelings are applied. Before the scrape, any remaining target labels that start with `__` (i.e. `__meta_kubernetes*`) are dropped. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.relabel/#rule-block)) |
+| extraDiscoveryRules | string | `""` | Rule blocks to be added to the discovery.relabel component for discovered pods and services. These relabeling rules are applied pre-scrape against the targets from service discovery. Before the scrape, any remaining target labels that start with `__` (i.e. `__meta_kubernetes*`) are dropped. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.relabel/#rule-block)) |
 | namespaces | list | `[]` | The list of namespaces to include in autodiscovery. If empty, all namespaces are included. |
 
 ### Metric Processing Settings
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| extraMetricProcessingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for PodMonitor objects. These relabeling rules are applied post-scrape against the metrics returned from the scraped target, no `__meta*` labels are present. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#rule-block)) |
+| extraMetricProcessingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for discovered pods and services. These relabeling rules are applied post-scrape against the metrics returned from the scraped target, no `__meta*` labels are present. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#rule-block)) |
 | maxCacheSize | string | `nil` | Sets the max_cache_size for cadvisor prometheus.relabel component. This should be at least 2x-5x your largest scrape target or samples appended rate. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)) Overrides global.maxCacheSize |
 | metricsTuning.excludeMetrics | list | `[]` | Metrics to drop. Can use regular expressions. |
 | metricsTuning.includeMetrics | list | `[]` | Metrics to keep. Can use regular expressions. |
@@ -101,3 +103,4 @@ Be sure perform actual integration testing in a live environment in the main [k8
 |-----|------|---------|-------------|
 | global.maxCacheSize | int | `100000` | Sets the max_cache_size for every prometheus.relabel component. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)) This should be at least 2x-5x your largest scrape target or samples appended rate. |
 | global.scrapeInterval | string | `"60s"` | How frequently to scrape metrics. |
+| global.scrapeTimeout | string | `"10s"` | The scrape timeout for discovered pods and services. |
