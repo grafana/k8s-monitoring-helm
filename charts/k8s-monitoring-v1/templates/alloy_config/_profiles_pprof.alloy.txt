@@ -16,7 +16,7 @@ discovery.kubernetes "pprof_pods" {
 }
 
 discovery.relabel "pprof_pods" {
-  targets = concat(discovery.kubernetes.pprof_pods.targets)
+  targets = array.concat(discovery.kubernetes.pprof_pods.targets)
 
   rule {
     action        = "drop"
@@ -61,7 +61,7 @@ discovery.relabel "pprof_pods" {
 {{- $profileTypes := .Values.profiles.pprof.types }}
 {{ range $profileTypes }}
 discovery.relabel "pprof_pods_{{.}}_default_name" {
-  targets = concat(discovery.relabel.pprof_pods.output)
+  targets = array.concat(discovery.relabel.pprof_pods.output)
 
   rule {
     source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_{{.}}_scrape"]
@@ -101,7 +101,7 @@ discovery.relabel "pprof_pods_{{.}}_default_name" {
 }
 
 discovery.relabel "pprof_pods_{{.}}_custom_name" {
-  targets = concat(discovery.relabel.pprof_pods.output)
+  targets = array.concat(discovery.relabel.pprof_pods.output)
 
   rule {
     source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_{{.}}_scrape"]
@@ -147,7 +147,7 @@ discovery.relabel "pprof_pods_{{.}}_custom_name" {
 }
 
 pyroscope.scrape "pyroscope_scrape_{{.}}" {
-  targets = concat(discovery.relabel.pprof_pods_{{.}}_default_name.output, discovery.relabel.pprof_pods_{{.}}_custom_name.output)
+  targets = array.concat(discovery.relabel.pprof_pods_{{.}}_default_name.output, discovery.relabel.pprof_pods_{{.}}_custom_name.output)
 
   bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
 
