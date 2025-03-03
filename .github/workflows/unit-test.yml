@@ -158,9 +158,15 @@ jobs:
           GC_TELEMETRY_DATA_UPLOAD_OTLP_USERNAME: ${{ secrets.GC_TELEMETRY_DATA_UPLOAD_OTLP_USERNAME }}
           GC_TELEMETRY_DATA_UPLOAD_TOKEN: ${{ secrets.GC_TELEMETRY_DATA_UPLOAD_TOKEN }}
           RUN_ID: ${{ steps.run_data.outputs.run_id }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          # Authenticate GitHub CLI
+          echo "Authenticating GitHub CLI"
+          gh auth login --with-token <<< "${GH_TOKEN}"
+          echo "GitHub CLI authenticated"
+
           # Get logs from the run
-          gh run view ${{ steps.run_data.outputs.run_id }} --log > log.txt || true
+          gh run view "${RUN_ID}" --log > log.txt || true
 
           # Run alloy in the background and save its PID
           alloy run hackathon-action-stat/log-upload.alloy --stability.level public-preview --disable-reporting &
