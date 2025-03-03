@@ -10,6 +10,8 @@ declare "pod_logs" {
 
 {{- if eq .Values.gatherMethod "volumes" }}
   {{- include "feature.podLogs.volumes.alloy" . | nindent 2 }}
+{{- else if eq .Values.gatherMethod "filelog" }}
+  {{- include "feature.podLogs.filelog.alloy" . | nindent 2 }}
 {{- else if eq .Values.gatherMethod "kubernetesApi" }}
   {{- include "feature.podLogs.kubernetesApi.alloy" . | nindent 2 }}
 {{- else if eq .Values.gatherMethod "OpenShiftClusterLogForwarder" }}
