@@ -68,11 +68,15 @@ loki.process "pod_logs" {
 {{ tpl .Values.extraLogProcessingStages $ | indent 2 }}
 {{- end }}
 
-{{- with .Values.labelsToKeep }}
+{{- if .Values.labelsToKeep }}
+  {{- $lokiLabels := list }}
+  {{- range $label := .Values.labelsToKeep }}
+    {{- $lokiLabels = append $lokiLabels (include "escape_label" $label) }}
+  {{- end }}
 
   // Only keep the labels that are defined in the `keepLabels` list.
   stage.label_keep {
-    values = {{ append . "integration" | toJson }}
+    values = {{ $lokiLabels | toJson }}
   }
 {{- end }}
 

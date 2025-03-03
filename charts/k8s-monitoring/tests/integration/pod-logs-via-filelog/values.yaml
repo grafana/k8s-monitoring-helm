@@ -1,0 +1,49 @@
+---
+cluster:
+  name: pod-logs-via-filelog-test
+
+destinations:
+  - name: localLoki
+    type: loki
+    url: http://loki.loki.svc:3100/loki/api/v1/push
+    tenantId: "1"
+    auth:
+      type: basic
+      username: loki
+      password: lokipassword
+
+podLogs:
+  enabled: true
+  gatherMethod: filelog
+  namespaces:
+    - development
+    - production
+  namespaceLabels:
+    color: color
+
+  labelsToKeep:
+    - app.kubernetes.io/name
+    - container
+    - instance
+    - job
+    - level
+    - namespace
+    - pod
+    - service.name
+    - service.namespace
+    - deployment.environment
+    - deployment.environment_name
+    - k8s.pod.name
+    - k8s.namespace.name
+    - k8s.deployment.name
+    - k8s.statefulset.name
+    - k8s.daemonset.name
+    - k8s.cronjob.name
+    - k8s.job.name
+    - k8s.node.name
+    - color
+
+alloy-logs:
+  enabled: true
+  alloy:
+    stabilityLevel: public-preview
