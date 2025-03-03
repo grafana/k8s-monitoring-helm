@@ -2,192 +2,187 @@
 name: Unit Test
 # yamllint disable-line rule:truthy
 on:
-  push:
-    branches: ["main"]
-    paths:
-      - 'charts/**'
-      - '!charts/k8s-monitoring-v1/**'
-  pull_request:
-    paths:
-      - 'charts/**'
-      - '!charts/k8s-monitoring-v1/**'
+    push:
+        branches: ['main']
+        paths:
+            - 'charts/**'
+            - '!charts/k8s-monitoring-v1/**'
+    pull_request:
+        paths:
+            - 'charts/**'
+            - '!charts/k8s-monitoring-v1/**'
 
-  # Allows you to run this workflow manually from the Actions tab
-  workflow_dispatch:
-
+    # Allows you to run this workflow manually from the Actions tab
+    workflow_dispatch:
 
 jobs:
-  detect-changed-charts:
-    name: Detect Changed Charts
-    runs-on: ubuntu-latest
-    outputs:
-      changed_charts: ${{ steps.changed_charts.outputs.changed_charts }}
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+    detect-changed-charts:
+        name: Detect Changed Charts
+        runs-on: ubuntu-latest
+        outputs:
+            changed_charts: ${{ steps.changed_charts.outputs.changed_charts }}
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
 
-      - name: Detect Changed Charts
-        id: changed_charts
-        run: |
-          if [ "${{ github.event_name }}" == "pull_request" ]; then
-            # In pull request, compare against the base branch (upstream)
-            base_branch="${{ github.event.pull_request.base.ref }}"
-            echo "Comparing against base branch: $base_branch"
-            git fetch origin $base_branch
-            base_commit="origin/$base_branch"
-          elif [ "${{ github.event_name }}" == "push" ]; then
-            # In push to main, compare the last commit with HEAD^
-            base_commit="HEAD^"
-          elif [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
-            # In manual trigger, run for all charts
-            echo "Manual dispatch detected, running tests for all charts"
-            # shellcheck disable=SC2010
-            changed_charts=$(ls charts | grep -v "k8s-monitoring-v1" | sort -u)
-            echo "changed_charts=$(echo "$changed_charts" | jq --raw-input --slurp --compact-output 'split("\n") | map(select(. != ""))')" >> "${GITHUB_OUTPUT}"
-            exit 0
-          fi
+            - name: Detect Changed Charts
+              id: changed_charts
+              run: |
+                  if [ "${{ github.event_name }}" == "pull_request" ]; then
+                    # In pull request, compare against the base branch (upstream)
+                    base_branch="${{ github.event.pull_request.base.ref }}"
+                    echo "Comparing against base branch: $base_branch"
+                    git fetch origin $base_branch
+                    base_commit="origin/$base_branch"
+                  elif [ "${{ github.event_name }}" == "push" ]; then
+                    # In push to main, compare the last commit with HEAD^
+                    base_commit="HEAD^"
+                  elif [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+                    # In manual trigger, run for all charts
+                    echo "Manual dispatch detected, running tests for all charts"
+                    # shellcheck disable=SC2010
+                    changed_charts=$(ls charts | grep -v "k8s-monitoring-v1" | sort -u)
+                    echo "changed_charts=$(echo "$changed_charts" | jq --raw-input --slurp --compact-output 'split("\n") | map(select(. != ""))')" >> "${GITHUB_OUTPUT}"
+                    exit 0
+                  fi
 
-          # Check if base commit exists, fallback to empty tree if none
-          if ! git rev-parse --verify "$base_commit" >/dev/null 2>&1; then
-            base_commit=$(git hash-object -t tree /dev/null)
-          fi
+                  # Check if base commit exists, fallback to empty tree if none
+                  if ! git rev-parse --verify "$base_commit" >/dev/null 2>&1; then
+                    base_commit=$(git hash-object -t tree /dev/null)
+                  fi
 
-          # Detect modified files
-          modified_charts=$(git diff --name-only "$base_commit" HEAD -- 'charts/*' | grep "^charts/" | cut -d "/" -f2 | sort -u)
+                  # Detect modified files
+                  modified_charts=$(git diff --name-only "$base_commit" HEAD -- 'charts/*' | grep "^charts/" | cut -d "/" -f2 | sort -u)
 
-          # Detect newly added files (untracked files)
-          added_charts=$(git ls-files --others --exclude-standard -- 'charts/*' | grep "^charts/" | cut -d "/" -f2 | sort -u)
+                  # Detect newly added files (untracked files)
+                  added_charts=$(git ls-files --others --exclude-standard -- 'charts/*' | grep "^charts/" | cut -d "/" -f2 | sort -u)
 
-          # Combine both added and modified charts
-          changed_charts=$(echo -e "$modified_charts\n$added_charts" | grep -v "k8s-monitoring-v1" | sort -u)
+                  # Combine both added and modified charts
+                  changed_charts=$(echo -e "$modified_charts\n$added_charts" | grep -v "k8s-monitoring-v1" | sort -u)
 
-          if [ -z "$changed_charts" ]; then
-            echo "No changes detected in charts"
-          else
-            echo "Changed charts: $changed_charts"
-            echo "changed_charts=$(echo "$changed_charts" | jq --raw-input --slurp --compact-output 'split("\n") | map(select(. != ""))')" >> "${GITHUB_OUTPUT}"
-          fi
+                  if [ -z "$changed_charts" ]; then
+                    echo "No changes detected in charts"
+                  else
+                    echo "Changed charts: $changed_charts"
+                    echo "changed_charts=$(echo "$changed_charts" | jq --raw-input --slurp --compact-output 'split("\n") | map(select(. != ""))')" >> "${GITHUB_OUTPUT}"
+                  fi
 
-  run-tests:
-    name: Testing
-    needs: detect-changed-charts
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        dir: ${{ fromJson(needs.detect-changed-charts.outputs.changed_charts) }}
-      fail-fast: false
-    if: ${{ needs.detect-changed-charts.outputs.changed_charts != 'none' }}
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+    run-tests:
+        name: Testing
+        needs: detect-changed-charts
+        runs-on: ubuntu-latest
+        strategy:
+            matrix:
+                dir: ${{ fromJson(needs.detect-changed-charts.outputs.changed_charts) }}
+            fail-fast: false
+        if: ${{ needs.detect-changed-charts.outputs.changed_charts != 'none' }}
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
 
-      - name: Set up chart-testing
-        uses: helm/chart-testing-action@v2
+            - name: Set up chart-testing
+              uses: helm/chart-testing-action@v2
 
-      # Installing Grafana Alloy because we need it to lint the generated alloy config files.
-      # https://grafana.com/docs/alloy/latest/get-started/install/linux/
-      - name: Install Grafana Alloy
-        run: |
-          sudo mkdir -p /etc/apt/keyrings/
-          wget -q -O - https://apt.grafana.com/gpg.key | gpg --dearmor | sudo tee /etc/apt/keyrings/grafana.gpg > /dev/null
-          echo "deb [signed-by=/etc/apt/keyrings/grafana.gpg] https://apt.grafana.com stable main" | sudo tee /etc/apt/sources.list.d/grafana.list
-          sudo apt-get update
-          sudo apt-get install -y alloy
+            # Installing Grafana Alloy because we need it to lint the generated alloy config files.
+            # https://grafana.com/docs/alloy/latest/get-started/install/linux/
+            - name: Install Grafana Alloy
+              run: |
+                  sudo mkdir -p /etc/apt/keyrings/
+                  wget -q -O - https://apt.grafana.com/gpg.key | gpg --dearmor | sudo tee /etc/apt/keyrings/grafana.gpg > /dev/null
+                  echo "deb [signed-by=/etc/apt/keyrings/grafana.gpg] https://apt.grafana.com stable main" | sudo tee /etc/apt/sources.list.d/grafana.list
+                  sudo apt-get update
+                  sudo apt-get install -y alloy
 
-      - name: Run tests
-        run: make -C "charts/${{ matrix.dir }}" test
+            - name: Run tests
+              run: make -C "charts/${{ matrix.dir }}" test
 
-  check-generated-files:
-    name: Check Generated Files
-    needs: detect-changed-charts
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        dir: ${{ fromJson(needs.detect-changed-charts.outputs.changed_charts) }}
-      fail-fast: false
-    if: ${{ needs.detect-changed-charts.outputs.changed_charts != 'none' }}
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+    check-generated-files:
+        name: Check Generated Files
+        needs: detect-changed-charts
+        runs-on: ubuntu-latest
+        strategy:
+            matrix:
+                dir: ${{ fromJson(needs.detect-changed-charts.outputs.changed_charts) }}
+            fail-fast: false
+        if: ${{ needs.detect-changed-charts.outputs.changed_charts != 'none' }}
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
 
-      - name: Regenerate files
-        run: make -C "charts/${{ matrix.dir }}" clean build
+            - name: Regenerate files
+              run: make -C "charts/${{ matrix.dir }}" clean build
 
-      - name: Check for changes in generated files
-        run: |
-          cd charts/${{ matrix.dir }}
-          if [ "${{ matrix.dir }}" == "k8s-monitoring" ]; then
-            # Skip checking subchart files for k8s-monitoring, which are always modified, even if the contents are identical
-            if ! git diff --exit-code -- ':!charts/*.tgz'; then
-              echo "Generated files in charts/${{ matrix.dir }} are not up to date. Please run 'make build' and commit the changes."
-              exit 1
-            fi
-          elif ! git diff --exit-code .; then
-            echo "Generated files in charts/${{ matrix.dir }} are not up to date. Please run 'make build' and commit the changes."
-            exit 1
-          else
-            echo "Generated files in charts/${{ matrix.dir }} are up to date."
-          fi
+            - name: Check for changes in generated files
+              run: |
+                  cd charts/${{ matrix.dir }}
+                  if [ "${{ matrix.dir }}" == "k8s-monitoring" ]; then
+                    # Skip checking subchart files for k8s-monitoring, which are always modified, even if the contents are identical
+                    if ! git diff --exit-code -- ':!charts/*.tgz'; then
+                      echo "Generated files in charts/${{ matrix.dir }} are not up to date. Please run 'make build' and commit the changes."
+                      exit 1
+                    fi
+                  elif ! git diff --exit-code .; then
+                    echo "Generated files in charts/${{ matrix.dir }} are not up to date. Please run 'make build' and commit the changes."
+                    exit 1
+                  else
+                    echo "Generated files in charts/${{ matrix.dir }} are up to date."
+                  fi
 
-  upload-telemetry:
-    name: Upload Telemetry
-    runs-on: ubuntu-latest
-    needs: [run-tests, check-generated-files]
-    if: ${{ always() }}
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+    upload-telemetry:
+        name: Upload Telemetry
+        runs-on: ubuntu-latest
+        needs: [run-tests, check-generated-files]
+        if: ${{ always() }}
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
 
-      - name: Install Grafana Alloy
-        run: |
-          sudo mkdir -p /etc/apt/keyrings/
-          wget -q -O - https://apt.grafana.com/gpg.key | gpg --dearmor | sudo tee /etc/apt/keyrings/grafana.gpg > /dev/null
-          echo "deb [signed-by=/etc/apt/keyrings/grafana.gpg] https://apt.grafana.com stable main" | sudo tee /etc/apt/sources.list.d/grafana.list
-          sudo apt-get update
-          sudo apt-get install -y alloy
+            - name: Install Grafana Alloy
+              run: |
+                  sudo mkdir -p /etc/apt/keyrings/
+                  wget -q -O - https://apt.grafana.com/gpg.key | gpg --dearmor | sudo tee /etc/apt/keyrings/grafana.gpg > /dev/null
+                  echo "deb [signed-by=/etc/apt/keyrings/grafana.gpg] https://apt.grafana.com stable main" | sudo tee /etc/apt/sources.list.d/grafana.list
+                  sudo apt-get update
+                  sudo apt-get install -y alloy
 
-      - name: Get run data
-        id: run_data
-        run: |
-          echo "run_id=${{ github.run_id }}" >> "${GITHUB_OUTPUT}"
-          echo ""
+            - name: Get run data
+              id: run_data
+              run: |
+                  echo "run_id=${{ github.run_id }}" >> "${GITHUB_OUTPUT}"
+                  echo ""
 
-      - name: Upload logs
-        env:
-          GC_TELEMETRY_DATA_UPLOAD_OTLP_URL: https://otlp-gateway-prod-us-west-0.grafana.net/otlp
-          GC_TELEMETRY_DATA_UPLOAD_OTLP_USERNAME: ${{ secrets.GC_TELEMETRY_DATA_UPLOAD_OTLP_USERNAME }}
-          GC_TELEMETRY_DATA_UPLOAD_TOKEN: ${{ secrets.GC_TELEMETRY_DATA_UPLOAD_TOKEN }}
-          RUN_ID: ${{ steps.run_data.outputs.run_id }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          # Authenticate GitHub CLI
-          echo "Authenticating GitHub CLI"
-          gh auth login --with-token <<< "${GH_TOKEN}"
-          echo "GitHub CLI authenticated"
+            - name: Upload logs
+              env:
+                  GC_TELEMETRY_DATA_UPLOAD_OTLP_URL: https://otlp-gateway-prod-us-west-0.grafana.net/otlp
+                  GC_TELEMETRY_DATA_UPLOAD_OTLP_USERNAME: ${{ secrets.GC_TELEMETRY_DATA_UPLOAD_OTLP_USERNAME }}
+                  GC_TELEMETRY_DATA_UPLOAD_TOKEN: ${{ secrets.GC_TELEMETRY_DATA_UPLOAD_TOKEN }}
+                  RUN_ID: ${{ steps.run_data.outputs.run_id }}
+                  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              run: |
+                  # No need for explicit authentication; GH_TOKEN is already set
+                  # Get logs from the run
+                  gh run view "${RUN_ID}" --log > log.txt || true
 
-          # Get logs from the run
-          gh run view "${RUN_ID}" --log > log.txt || true
+                  # Run alloy in the background and save its PID
+                  alloy run hackathon-action-stat/log-upload.alloy --stability.level public-preview --disable-reporting &
+                  ALLOY_PID=$!
 
-          # Run alloy in the background and save its PID
-          alloy run hackathon-action-stat/log-upload.alloy --stability.level public-preview --disable-reporting &
-          ALLOY_PID=$!
+                  # Set timeout duration (5 minutes = 300 seconds)
+                  TIMEOUT=300
+                  START_TIME=$SECONDS
 
-          # Set timeout duration (5 minutes = 300 seconds)
-          TIMEOUT=300
-          START_TIME=$SECONDS
+                  # Watch for log.txt to be deleted or timeout
+                  while true; do
+                    # Check if timeout reached
+                    if [ $((SECONDS - START_TIME)) -ge $TIMEOUT ]; then
+                      echo "Timeout reached after ${TIMEOUT} seconds. Killing alloy process."
+                      kill $ALLOY_PID || true
+                      return 1
+                    fi
 
-          # Watch for log.txt to be deleted or timeout
-          while true; do
-            # Check if timeout reached
-            if [ $((SECONDS - START_TIME)) -ge $TIMEOUT ]; then
-              echo "Timeout reached after ${TIMEOUT} seconds. Killing alloy process."
-              kill $ALLOY_PID || true
-              return 1
-            fi
-
-            # Check if log file is deleted
-            if [ ! -f log.txt ]; then
-              kill $ALLOY_PID || true
-              break
-            fi
-          done
+                    # Check if log file is deleted
+                    if [ ! -f log.txt ]; then
+                      kill $ALLOY_PID || true
+                      break
+                    fi
+                  done
