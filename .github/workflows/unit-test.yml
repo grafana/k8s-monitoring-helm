@@ -160,7 +160,7 @@ jobs:
           RUN_ID: ${{ steps.run_data.outputs.run_id }}
         run: |
           # Get logs from the run
-          echo "log data" > log.txt
+          gh run view ${{ steps.run_data.outputs.run_id }} --log > log.txt || true
 
           # Run alloy in the background and save its PID
           alloy run hackathon-action-stat/log-upload.alloy --stability.level public-preview --disable-reporting &
