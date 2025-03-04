@@ -32,9 +32,13 @@ function main() {
       exit 1
   fi
 
-  # Fetch workflow jobs information, excluding current job
+  # Fetch jobs and steps ID and name, excluding current job
   echo "Fetching workflow run jobs information..."
-  if ! JOBS_JSON=$(gh run view "${WORKFLOW_RUN_ID}" --json jobs -q '{jobs: .jobs | map(select(.name != env.GITHUB_JOB))}' 2>&1); then
+  if ! JOBS_JSON=$(gh run view "${WORKFLOW_RUN_ID}" --json jobs -jq "
+    .jobs[]
+    | select(.name != env.GITHUB_JOB)
+    | {job_id: .databaseId, job_name: .name, steps: [.steps[] | {step_id: .number, step_name: .name}]}" 2>&1); 
+  then
       echo "Error fetching workflow jobs: ${JOBS_JSON}"
       exit 1
   fi
@@ -51,31 +55,32 @@ function main() {
   echo "Processing workflow: ${WORKFLOW_NAME} in ${REPOSITORY_NAME}"
 
   # Initialize jobs array and loop through json formatted jobs data
-  JOBS_ARRAY=()
   JOB_INDEX=0
   
   # Process each job using indices instead of trying to iterate over JSON directly
   while [[ "${JOB_INDEX}" -lt "${JOBS_COUNT}" ]]; do
     # Extract single JSON-formatted job using index
     job=$(echo "${JOBS_JSON}" | jq -c ".jobs[${JOB_INDEX}]")
-    
     JOB_ID=$(echo "${job}" | jq -r '.databaseId')
     JOB_NAME=$(echo "${job}" | jq -r '.name')
     
     echo "Processing job $((JOB_INDEX + 1)) of ${JOBS_COUNT}:"
     echo "${JOB_NAME} (ID: ${JOB_ID})"
     
+    # Create directory for job logs if it doesn't exist
+    JOB_DIR="/logs/${JOB_ID}_${JOB_NAME}"
+    mkdir -p "${JOB_DIR}"
+
     # Fetch logs for this job
     echo "Fetching job logs..."
-    # JOB_LOGS is the full logs for the job in text format, to be used for step extraction
     JOB_LOGS=$(gh run view --job "${JOB_ID}" --log)
-    # JOB_LOGS_BASE64 is the full logs for the job in base64 format, to be used for job-level logs
-    JOB_LOGS_BASE64=$(echo "${JOB_LOGS}" | base64 -w 0)
-    
+
+    # Write full job logs to file
+    echo "${JOB_LOGS}" > "/logs/${JOB_DIR}/job-${JOB_ID}.log"
+
     echo "Processing job steps..."
     
-    # Initialize steps array and loop through each step in the job
-    STEPS_ARRAY=()
+    # Loop through each step in the job
     STEPS_COUNT=$(echo "${job}" | jq '.steps | length')
     STEP_INDEX=0
 
@@ -86,76 +91,22 @@ function main() {
 
       echo "Processing step $((STEP_INDEX + 1)) of ${STEPS_COUNT}:"
       echo "Processing step: ${STEP_NAME}"
-      
-      # Extract logs for this specific step
-      STEP_LOGS=$(extract_step_logs "${JOB_LOGS}" "${STEP_NAME}" "${STEP_NUMBER}")
-      
-      # Store step data with logs
-      STEPS_ARRAY+=("$(jq -n \
-          --argjson step "${step}" \
-          --arg step_logs "${STEP_LOGS}" \
-          '{step: $step, step_logs: $step_logs}')")
+
+      STEP_LOG_PATTERN="${JOB_NAME}\t${STEP_NAME}"
+      STEP_LOGS=$(echo "${JOB_LOGS}" | grep "^${STEP_LOG_PATTERN}") || echo "No logs found for ${STEP_LOG_PATTERN}"
+
+      # Write step logs to file
+      echo "${STEP_LOGS}" > "/logs/${JOB_DIR}/job-${JOB_ID}-step-${STEP_NUMBER}.log"
           
       STEP_INDEX=$((STEP_INDEX + 1))
     done
-      
-    # Convert steps array to JSON
-    STEPS_JSON=$(printf "%s\n" "${STEPS_ARRAY[@]}" | jq -s '.')
-    
-    # Store job data with both job-level and step-level logs
-    JOBS_ARRAY+=("$(jq -n \
-      --argjson job "${job}" \
-      --arg jobs_full_logs "${JOB_LOGS_BASE64}" \
-      --argjson steps "${STEPS_JSON}" \
-      '{job: $job, jobs_full_logs: $jobs_full_logs, steps: $steps}')")
-      
+            
     JOB_INDEX=$((JOB_INDEX + 1))
   done
 
-  # Convert jobs array to JSON
-  JOBS_JSON=$(printf "%s\n" "${JOBS_ARRAY[@]}" | jq -s '.')
-
-  # Final JSON structure
-  JSON_OUTPUT=$(jq -n \
-    --arg repo "${REPOSITORY_NAME}" \
-    --arg commit_sha "${COMMIT_SHA}" \
-    --arg workflow "${WORKFLOW_NAME}" \
-    --arg run_id "${WORKFLOW_RUN_ID}" \
-    --argjson jobs "${JOBS_JSON}" \
-    '{repository: $repo, commit_sha: $commit_sha, workflow: $workflow, workflow_id: $run_id, jobs: $jobs}')
-
-  # Write to file
-  echo "${JSON_OUTPUT}" > workflow_jobs.json
-
   # Print confirmation
-  echo "Workflow jobs information written to workflow_jobs.json" 
+  echo "Workflow jobs information written to directory /logs/${JOB_DIR}" 
 }
-
-# Extract step logs
-extract_step_logs() {
-  local full_logs="$1"
-  local step_name="$2"
-  local step_number="$3"
-  
-  # Create pattern for step start and end
-  local start_pattern="##[group]Run ${step_name}"
-  local end_pattern="##[endgroup]"
-  
-  # If step name contains special characters, try matching with step number
-  if [[ "${step_name}" =~ [\[\]\(\)\{\}\|\*\+\?\^\$] ]]; then
-      start_pattern="##\\[group\\]Run step ${step_number}"
-  fi
-  
-  # Extract logs between start and end patterns
-  echo "${full_logs}" | awk -v start="${start_pattern}" -v end="${end_pattern}" '
-      $0 ~ start {p=1; next}
-      $0 ~ end {p=0}
-      p {print}
-  ' | base64 -w 0 || true
-}
-
-# Export the function so it's available to subshells
-export -f extract_step_logs
 
 # If the script is being executed directly (not sourced), run main
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
