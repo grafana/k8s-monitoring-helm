@@ -27,8 +27,8 @@ discovery.relabel "filtered_pods_with_paths" {
 otelcol.receiver.filelog "pod_logs" {
 {{- if .Values.namespaces }}
   include = [
-{{- with .Values.namespaces }}
-    "/var/log/pods/{{ . }}_.*/*/*.log"
+{{- range .Values.namespaces }}
+    "/var/log/pods/{{ . }}_*/*/*.log",
 {{- end }}
   ]
 {{- else }}
@@ -36,8 +36,8 @@ otelcol.receiver.filelog "pod_logs" {
 {{- end }}
 {{- if .Values.excludeNamespaces }}
   exclude = [
-{{- with .Values.excludeNamespaces }}
-    "/var/log/pods/{{ . }}_.*/*/*.log"
+{{- range .Values.excludeNamespaces }}
+    "/var/log/pods/{{ . }}_*/*/*.log",
 {{- end }}
   ]
 {{- end }}
@@ -46,7 +46,9 @@ otelcol.receiver.filelog "pod_logs" {
   include_file_path = true
 
   operators = [
-    {type = "container"},
+    {
+      type = "container",
+    },
   ]
 
   output {
@@ -65,7 +67,6 @@ otelcol.processor.k8sattributes "pod_logs" {
       "k8s.cronjob.name",
       "k8s.job.name",
       "k8s.node.name",
-      "k8s.pod.start_time",
     ]
   }
   pod_association {
@@ -74,6 +75,23 @@ otelcol.processor.k8sattributes "pod_logs" {
       name = "k8s.pod.uid"
     }
   }
+
+  output {
+    logs = [otelcol.processor.attributes.pod_logs.input]
+  }
+}
+
+otelcol.processor.attributes "pod_logs" {
+//  action {
+//    key = "loki.attribute.labels"
+//    action = "insert"
+//    value = "k8s.namespace.name,k8s.pod.name,k8s.deployment.name,k8s.statefulset.name,k8s.daemonset.name,k8s.cronjob.name,k8s.job.name,k8s.node.name"
+//  }
+//  action {
+//    key = "loki.resource.labels"
+//    action = "insert"
+//    value = "k8s.namespace.name,k8s.pod.name,k8s.deployment.name,k8s.statefulset.name,k8s.daemonset.name,k8s.cronjob.name,k8s.job.name,k8s.node.name"
+//  }
 
   output {
     logs = [otelcol.exporter.loki.pod_logs.input]
