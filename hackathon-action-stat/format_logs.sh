@@ -57,13 +57,11 @@ function main() {
       exit 0
   fi
 
-  # Create logs directory in current directory
-  mkdir "logs"
+  # Create direcotry to store workflow logs
+  WORKFLOW_DIR="logs/workflow-${WORKFLOW_RUN_ID}-${WORKFLOW_NAME}"
+  mkdir -p "${WORKFLOW_DIR}"
 
-  # Variable to store the last processed job directory
-  JOB_DIR=""
-
-  # Process each job using indices instead of trying to iterate over JSON directly
+  # Process each job using indices
   JOB_INDEX=0
   while [[ "${JOB_INDEX}" -lt "${JOBS_COUNT}" ]]; do
     # Extract single JSON-formatted job using index
@@ -72,24 +70,19 @@ function main() {
     JOB_NAME=$(echo "${job}" | jq -r '.job_name')
     
     if [[ -z "${JOB_ID}" || "${JOB_ID}" == "null" || -z "${JOB_NAME}" || "${JOB_NAME}" == "null" ]]; then
-        echo "Invalid job data received for index ${JOB_INDEX}"
+        echo "Invalid job data received for jobs index ${JOB_INDEX}"
         JOB_INDEX=$((JOB_INDEX + 1))
         continue
     fi
     
-    echo "Processing job $((JOB_INDEX + 1)) of ${JOBS_COUNT}:"
-    echo "${JOB_NAME} (ID: ${JOB_ID})"
-    
-    # Set the job directory path
-    JOB_DIR="logs/${JOB_ID}_${JOB_NAME}"
-    mkdir -p "${JOB_DIR}"
+    echo "Processing job $((JOB_INDEX + 1)) of ${JOBS_COUNT}: ${JOB_NAME} (ID: ${JOB_ID})"
 
     # Fetch logs for this job
     echo "Fetching job logs..."
     JOB_LOGS=$(gh run view --job "${JOB_ID}" --log)
 
     # Write full job logs to file
-    echo "${JOB_LOGS}" > "${JOB_DIR}/job-${JOB_ID}.log"
+    echo "${JOB_LOGS}" > "${WORKFLOW_DIR}/job-${JOB_ID}.log"
 
     echo "Processing job steps..."
     
@@ -99,17 +92,22 @@ function main() {
 
     while [[ "${STEP_INDEX}" -lt "${STEPS_COUNT}" ]]; do
       step=$(echo "${job}" | jq -c ".steps[${STEP_INDEX}]")
-      STEP_NAME=$(echo "${step}" | jq -r '.name')
-      STEP_NUMBER=$(echo "${step}" | jq -r '.number')
+      STEP_NAME=$(echo "${step}" | jq -r '.step_name')
+      STEP_NUMBER=$(echo "${step}" | jq -r '.step_id')
 
-      echo "Processing step $((STEP_INDEX + 1)) of ${STEPS_COUNT}:"
-      echo "Processing step: ${STEP_NAME}"
+      echo "Processing job ${JOB_INDEX} - step $((STEP_INDEX + 1)) of ${STEPS_COUNT}: ${STEP_NAME}"
+
+      if [[ -z "${STEP_NAME}" || "${STEP_NAME}" == "null" ]]; then
+          echo "Invalid step data received for step index ${STEP_INDEX}"
+          STEP_INDEX=$((STEP_INDEX + 1))
+          continue
+      fi
 
       STEP_LOG_PATTERN="${JOB_NAME}\t${STEP_NAME}"
-      STEP_LOGS=$(echo "${JOB_LOGS}" | grep "^${STEP_LOG_PATTERN}") || echo "No logs found for ${STEP_LOG_PATTERN}"
+      STEP_LOGS=$(echo "${JOB_LOGS}" | grep "^${STEP_LOG_PATTERN}" || echo "No logs found for ${STEP_LOG_PATTERN}")
 
       # Write step logs to file
-      echo "${STEP_LOGS}" > "${JOB_DIR}/job-${JOB_ID}-step-${STEP_NUMBER}.log"
+      echo "${STEP_LOGS}" > "${WORKFLOW_DIR}/job-${JOB_ID}-step-${STEP_NUMBER}.log"
           
       STEP_INDEX=$((STEP_INDEX + 1))
     done
@@ -118,10 +116,11 @@ function main() {
   done
 
   # Print confirmation
-  if [[ -n "${JOB_DIR}" ]]; then
-    echo "Workflow jobs information written to directory ${JOB_DIR}"
+  FILE_COUNT=$(find "${WORKFLOW_DIR}" -type f | wc -l) || true
+  if [[ "${FILE_COUNT}" -gt 0 ]]; then
+    echo "Successfully processed workflow logs: ${FILE_COUNT} files written to ${WORKFLOW_DIR}"
   else
-    echo "No job directories were created"
+    echo -e "\033[33mWarning: No log files were created in ${WORKFLOW_DIR}\033[0m"
   fi
 }
 
