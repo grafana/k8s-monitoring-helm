@@ -57,9 +57,12 @@ function main() {
       exit 0
   fi
 
-  # Initialize jobs array and loop through json formatted jobs data
-  JOB_INDEX=0
-  
+  # Create logs directory in current directory
+  mkdir "logs"
+
+  # Variable to store the last processed job directory
+  JOB_DIR=""
+
   # Process each job using indices instead of trying to iterate over JSON directly
   JOB_INDEX=0
   while [[ "${JOB_INDEX}" -lt "${JOBS_COUNT}" ]]; do
@@ -77,8 +80,8 @@ function main() {
     echo "Processing job $((JOB_INDEX + 1)) of ${JOBS_COUNT}:"
     echo "${JOB_NAME} (ID: ${JOB_ID})"
     
-    # Create directory for job logs if it doesn't exist
-    JOB_DIR="/logs/${JOB_ID}_${JOB_NAME}"
+    # Set the job directory path
+    JOB_DIR="logs/${JOB_ID}_${JOB_NAME}"
     mkdir -p "${JOB_DIR}"
 
     # Fetch logs for this job
@@ -86,7 +89,7 @@ function main() {
     JOB_LOGS=$(gh run view --job "${JOB_ID}" --log)
 
     # Write full job logs to file
-    echo "${JOB_LOGS}" > "/logs/${JOB_DIR}/job-${JOB_ID}.log"
+    echo "${JOB_LOGS}" > "${JOB_DIR}/job-${JOB_ID}.log"
 
     echo "Processing job steps..."
     
@@ -106,7 +109,7 @@ function main() {
       STEP_LOGS=$(echo "${JOB_LOGS}" | grep "^${STEP_LOG_PATTERN}") || echo "No logs found for ${STEP_LOG_PATTERN}"
 
       # Write step logs to file
-      echo "${STEP_LOGS}" > "/logs/${JOB_DIR}/job-${JOB_ID}-step-${STEP_NUMBER}.log"
+      echo "${STEP_LOGS}" > "${JOB_DIR}/job-${JOB_ID}-step-${STEP_NUMBER}.log"
           
       STEP_INDEX=$((STEP_INDEX + 1))
     done
@@ -115,7 +118,11 @@ function main() {
   done
 
   # Print confirmation
-  echo "Workflow jobs information written to directory /logs/${JOB_DIR}" 
+  if [[ -n "${JOB_DIR}" ]]; then
+    echo "Workflow jobs information written to directory ${JOB_DIR}"
+  else
+    echo "No job directories were created"
+  fi
 }
 
 # If the script is being executed directly (not sourced), run main
