@@ -15,7 +15,6 @@ on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
-
 jobs:
   detect-changed-charts:
     name: Detect Changed Charts
@@ -157,19 +156,16 @@ jobs:
           GC_TELEMETRY_DATA_UPLOAD_OTLP_URL: https://otlp-gateway-prod-us-west-0.grafana.net/otlp
           GC_TELEMETRY_DATA_UPLOAD_OTLP_USERNAME: ${{ secrets.GC_TELEMETRY_DATA_UPLOAD_OTLP_USERNAME }}
           GC_TELEMETRY_DATA_UPLOAD_TOKEN: ${{ secrets.GC_TELEMETRY_DATA_UPLOAD_TOKEN }}
-          RUN_ID: ${{ steps.run_data.outputs.run_id }}
+          WORKFLOW_RUN_ID: ${{ steps.run_data.outputs.run_id }}
+          WORKFLOW_NAME: ${{ github.workflow }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          mkdir -p logs
-          export LOG_DIRECTORY="$(pwd)/logs"
-
-          # Make fake log data
-          echo "Job One	Step One	2025-03-04T03:42:39.6718631Z Syncing" > "${LOG_DIRECTORY}/job-1-step-1.log"
-          echo "Job One	Step One	2025-03-04T03:42:39.6718651Z Sleeping" >> "${LOG_DIRECTORY}/job-1-step-1.log"
-
-          echo "Job One	Step Two	2025-03-04T03:42:39.6718631Z Syncing" > "${LOG_DIRECTORY}/job-1-step-2.log"
-          echo "Job One	Step Two	2025-03-04T03:42:39.6718651Z Sleeping" >> "${LOG_DIRECTORY}/job-1-step-2.log"
-
-          echo "Job Two	Step Seven	2025-03-04T03:42:39.6718631Z Syncing" > "${LOG_DIRECTORY}/job-2-step-7.log"
+          # Use format_logs.sh to fetch and process logs from the workflow run
+          chmod +x hackathon-action-stat/format_logs.sh
+          ./hackathon-action-stat/format_logs.sh
+          
+          mkdir -p "logs/workflow-${WORKFLOW_RUN_ID}-${WORKFLOW_NAME}"
+          export WORKFLOW_LOG_DIRECTORY="$(pwd)/logs/workflow-${WORKFLOW_RUN_ID}-${WORKFLOW_NAME}"
 
           # Run alloy in the background and save its PID
           alloy run hackathon-action-stat/log-upload.alloy --stability.level public-preview --disable-reporting &
@@ -179,7 +175,7 @@ jobs:
           TIMEOUT=300
           START_TIME=$SECONDS
 
-          # Watch for log.txt to be deleted or timeout
+          # Watch for workflow_logs.json to be deleted or timeout
           while true; do
             # Check if timeout reached
             if [ $((SECONDS - START_TIME)) -ge $TIMEOUT ]; then
@@ -189,7 +185,7 @@ jobs:
             fi
 
             # Check if log directory is empty
-            if [ -z "$(ls -A "${LOG_DIRECTORY}")" ]; then
+            if [ -z "$(ls -A "${WORKFLOW_LOG_DIRECTORY}")" ]; then
               kill $ALLOY_PID || true
               break
             fi
