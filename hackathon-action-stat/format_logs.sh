@@ -50,56 +50,66 @@ function main() {
 
   echo "Processing workflow: ${WORKFLOW_NAME} in ${REPOSITORY_NAME}"
 
-  # Initialize jobs array and look through json formatted jobs data
+  # Initialize jobs array and loop through json formatted jobs data
   JOBS_ARRAY=()
-  COUNT=0
+  JOB_INDEX=0
+  
+  # Process each job using indices instead of trying to iterate over JSON directly
+  while [[ "${JOB_INDEX}" -lt "${JOBS_COUNT}" ]]; do
+    # Extract single JSON-formatted job using index
+    job=$(echo "${JOBS_JSON}" | jq -c ".jobs[${JOB_INDEX}]")
+    
+    JOB_ID=$(echo "${job}" | jq -r '.databaseId')
+    JOB_NAME=$(echo "${job}" | jq -r '.name')
+    
+    echo "Processing job $((JOB_INDEX + 1)) of ${JOBS_COUNT}:"
+    echo "${JOB_NAME} (ID: ${JOB_ID})"
+    
+    # Fetch logs for this job
+    echo "Fetching job logs..."
+    # JOB_LOGS is the full logs for the job in text format, to be used for step extraction
+    JOB_LOGS=$(gh run view --job "${JOB_ID}" --log)
+    # JOB_LOGS_BASE64 is the full logs for the job in base64 format, to be used for job-level logs
+    JOB_LOGS_BASE64=$(echo "${JOB_LOGS}" | base64 -w 0)
+    
+    echo "Processing job steps..."
+    
+    # Initialize steps array and loop through each step in the job
+    STEPS_ARRAY=()
+    STEPS_COUNT=$(echo "${job}" | jq '.steps | length')
+    STEP_INDEX=0
 
-  for job in $(echo "${JOBS_JSON}" | jq -c '.jobs[]'); do
-      COUNT=$((COUNT + 1))
-      JOB_ID=$(echo "${job}" | jq -r '.databaseId')
-      JOB_NAME=$(echo "${job}" | jq -r '.name')
-      
-      echo "Processing job ${COUNT} of ${JOBS_COUNT}:"
-      echo "${JOB_NAME} (ID: ${JOB_ID})"
-      
-      # Fetch logs for this job
-      echo "Fetching job logs..."
-      # JOB_LOGS is the full logs for the job in text format, to be used for step extraction
-      JOB_LOGS=$(gh run view --job "${JOB_ID}" --log)
-      # JOB_LOGS_BASE64 is the full logs for the job in base64 format, to be used for job-level logs
-      JOB_LOGS_BASE64=$(echo "${JOB_LOGS}" | base64 -w 0)
-      
-      # Process each step from the detailed job JSON
-      echo "Processing job steps..."
-      
-      # Initialize steps array
-      STEPS_ARRAY=()
+    while [[ "${STEP_INDEX}" -lt "${STEPS_COUNT}" ]]; do
+      step=$(echo "${job}" | jq -c ".steps[${STEP_INDEX}]")
+      STEP_NAME=$(echo "${step}" | jq -r '.name')
+      STEP_NUMBER=$(echo "${step}" | jq -r '.number')
 
-      for step in $(echo "${job}" | jq -c '.steps[]'); do
-          STEP_NAME=$(echo "${step}" | jq -r '.name')
-          STEP_NUMBER=$(echo "${step}" | jq -r '.number')
-          
-          echo "Processing step: ${STEP_NAME}"
-          
-          # Extract logs for this specific step
-          STEP_LOGS=$(extract_step_logs "${JOB_LOGS}" "${STEP_NAME}" "${STEP_NUMBER}")
-          
-          # Store step data with logs
-          STEPS_ARRAY+=("$(jq -n \
-              --argjson step "${step}" \
-              --arg step_logs "${STEP_LOGS}" \
-              '{step: $step, step_logs: $step_logs}')")
-      done
+      echo "Processing step $((STEP_INDEX + 1)) of ${STEPS_COUNT}:"
+      echo "Processing step: ${STEP_NAME}"
       
-      # Convert steps array to JSON
-      STEPS_JSON=$(printf "%s\n" "${STEPS_ARRAY[@]}" | jq -s '.')
+      # Extract logs for this specific step
+      STEP_LOGS=$(extract_step_logs "${JOB_LOGS}" "${STEP_NAME}" "${STEP_NUMBER}")
       
-      # Store job data with both job-level and step-level logs
-      JOBS_ARRAY+=("$(jq -n \
-          --argjson job "${job}" \
-          --arg jobs_full_logs "${JOB_LOGS_BASE64}" \
-          --argjson steps "${STEPS_JSON}" \
-          '{job: $job, jobs_full_logs: $jobs_full_logs, steps: $steps}')")
+      # Store step data with logs
+      STEPS_ARRAY+=("$(jq -n \
+          --argjson step "${step}" \
+          --arg step_logs "${STEP_LOGS}" \
+          '{step: $step, step_logs: $step_logs}')")
+          
+      STEP_INDEX=$((STEP_INDEX + 1))
+    done
+      
+    # Convert steps array to JSON
+    STEPS_JSON=$(printf "%s\n" "${STEPS_ARRAY[@]}" | jq -s '.')
+    
+    # Store job data with both job-level and step-level logs
+    JOBS_ARRAY+=("$(jq -n \
+      --argjson job "${job}" \
+      --arg jobs_full_logs "${JOB_LOGS_BASE64}" \
+      --argjson steps "${STEPS_JSON}" \
+      '{job: $job, jobs_full_logs: $jobs_full_logs, steps: $steps}')")
+      
+    JOB_INDEX=$((JOB_INDEX + 1))
   done
 
   # Convert jobs array to JSON
