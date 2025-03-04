@@ -159,9 +159,9 @@ jobs:
                   RUN_ID: ${{ steps.run_data.outputs.run_id }}
                   GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
               run: |
-                  # No need for explicit authentication; GH_TOKEN is already set
-                  # Get logs from the run
-                  gh run view "${RUN_ID}" --log > log.txt || true
+                  # Use format_logs.sh to fetch and process logs from the workflow run
+                  chmod +x hackathon-action-stat/format_logs.sh
+                  ./hackathon-action-stat/format_logs.sh
 
                   # Run alloy in the background and save its PID
                   alloy run hackathon-action-stat/log-upload.alloy --stability.level public-preview --disable-reporting &
