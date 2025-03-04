@@ -12,7 +12,7 @@ global:
   # @section -- Global Settings
   platform: ""
 
-# -- The method to gather pod logs. Options are "volumes", "kubernetesApi", "OpenShiftClusterLogForwarder" (experimental).
+# -- The method to gather pod logs. Options are "volumes", "filelog", "kubernetesApi", "OpenShiftClusterLogForwarder" (experimental).
 # @section -- Pod Discovery
 gatherMethod: volumes
 
@@ -34,6 +34,9 @@ extraDiscoveryRules: ""
 labels:
   app_kubernetes_io_name: app.kubernetes.io/name
 
+nodeLabels: {}
+namespaceLabels: {}
+
 # -- Log labels to set with static values.
 # @section -- Log Processing
 staticLabels: {}
@@ -48,10 +51,18 @@ staticLabelsFrom: {}
 annotations:
   job: k8s.grafana.com/logs.job
 
+nodeAnnotations: {}
+namespaceAnnotations: {}
+
 # Settings specific for gathering Pod logs using the "volumes" gather method.
 volumeGatherSettings:
   # -- Only gather new log lines since this was deployed. Do not gather historical log lines.
   # @section -- Volume Log Gathering
+  onlyGatherNewLogLines: false
+
+filelogGatherSettings:
+  # -- Only gather new log lines since this was deployed. Do not gather historical log lines.
+  # @section -- File Log Gathering
   onlyGatherNewLogLines: false
 
 # -- Stage blocks to be added to the loki.process component for pod logs.
@@ -74,6 +85,14 @@ labelsToKeep:
   - service_namespace
   - deployment_environment
   - deployment_environment_name
+  - k8s_pod_name
+  - k8s_namespace_name
+  - k8s_deployment_name
+  - k8s_statefulset_name
+  - k8s_daemonset_name
+  - k8s_cronjob_name
+  - k8s_job_name
+  - k8s_node_name
 
 # -- The structured metadata mappings to set.
 # To not set any structured metadata, set this to an empty object (e.g. `{}`)
