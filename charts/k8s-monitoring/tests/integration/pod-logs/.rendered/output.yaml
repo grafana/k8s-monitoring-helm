@@ -68,119 +68,99 @@ data:
         comment = "Must be a list of log destinations where collected logs should be forwarded to"
       }
     
-      discovery.relabel "filtered_pods" {
-        targets = discovery.kubernetes.pods.targets
-        rule {
-          source_labels = ["__meta_kubernetes_namespace"]
-          action = "replace"
-          target_label = "namespace"
+      otelcol.receiver.filelog "pod_logs" {
+        include = [
+          "/var/log/pods/default_*/*/*.log",
+          "/var/log/pods/development_*/*/*.log",
+          "/var/log/pods/production_*/*/*.log",
+          "/var/log/pods/flux-system_*/*/*.log",
+        ]
+        start_at = "beginning"
+        include_file_name = false
+        include_file_path = true
+    
+        operators = [
+          // Container operator will set k8s.pod.name, k8s.pod.uid, k8s.container.name, k8s.container.restart_count, and k8s.namespace.name
+          {
+            type                       = "container",
+            add_metadata_from_filepath = true,
+          },
+        ]
+    
+        output {
+          logs = [otelcol.processor.k8sattributes.pod_logs.input]
         }
-        rule {
-          source_labels = ["__meta_kubernetes_pod_name"]
-          action = "replace"
-          target_label = "pod"
-        }
-        rule {
-          source_labels = ["__meta_kubernetes_pod_container_name"]
-          action = "replace"
-          target_label = "container"
-        }
-        rule {
-          source_labels = ["__meta_kubernetes_namespace", "__meta_kubernetes_pod_container_name"]
-          separator = "/"
-          action = "replace"
-          replacement = "$1"
-          target_label = "job"
+      }
+    
+      otelcol.processor.k8sattributes "pod_logs" {
+        pod_association {
+          source {
+            from = "resource_attribute"
+            name = "k8s.pod.uid"
+          }
         }
     
-        // set the container runtime as a label
-        rule {
-          action = "replace"
-          source_labels = ["__meta_kubernetes_pod_container_id"]
-          regex = "^(\\S+):\\/\\/.+$"
-          replacement = "$1"
-          target_label = "tmp_container_runtime"
-        }
-    
-        // make all labels on the pod available to the pipeline as labels,
-        // they are omitted before write to loki via stage.label_keep unless explicitly set
-        rule {
-          action = "labelmap"
-          regex = "__meta_kubernetes_pod_label_(.+)"
-        }
-    
-        // make all annotations on the pod available to the pipeline as labels,
-        // they are omitted before write to loki via stage.label_keep unless explicitly set
-        rule {
-          action = "labelmap"
-          regex = "__meta_kubernetes_pod_annotation_(.+)"
-        }
-    
-        // explicitly set service_name. if not set, loki will automatically try to populate a default.
-        // see https://grafana.com/docs/loki/latest/get-started/labels/#default-labels-for-all-users
-        //
-        // choose the first value found from the following ordered list:
-        // - pod.annotation[resource.opentelemetry.io/service.name]
-        // - pod.label[app.kubernetes.io/name]
-        // - k8s.pod.name
-        // - k8s.container.name
-        rule {
-          action = "replace"
-          source_labels = [
-            "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_name",
-            "__meta_kubernetes_pod_label_app_kubernetes_io_name",
-            "__meta_kubernetes_pod_name",
-            "__meta_kubernetes_pod_container_name",
+        extract {
+          metadata = [
+            "k8s.deployment.name",
+            "k8s.statefulset.name",
+            "k8s.daemonset.name",
+            "k8s.cronjob.name",
+            "k8s.job.name",
+            "k8s.node.name",
           ]
-          separator = ";"
-          regex = "^(?:;*)?([^;]+).*$"
-          replacement = "$1"
-          target_label = "service_name"
+          annotation {
+            key_regex = "(.*)"
+            tag_name  = "$1"
+            from      = "pod"
+          }
+          annotation {
+            key_regex = "opentelemetry.io/(.*)"
+            tag_name  = "$1"
+            from      = "pod"
+          }
+          annotation {
+            tag_name = "job"
+            key      = "k8s.grafana.com/logs.job"
+            from     = "pod"
+          }
+          label {
+            key_regex = "(.*)"
+            tag_name  = "$1"
+            from      = "pod"
+          }
+          label {
+            tag_name = "app_kubernetes_io_name"
+            key      = "app.kubernetes.io/name"
+            from     = "pod"
+          }
         }
     
-        // set resource attributes
-        rule {
-          action = "labelmap"
-          regex = "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_(.+)"
-        }
-        rule {
-          source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_logs_job"]
-          regex = "(.+)"
-          target_label = "job"
-        }
-        rule {
-          source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
-          regex = "(.+)"
-          target_label = "app_kubernetes_io_name"
-        }
-      }
-    
-      discovery.kubernetes "pods" {
-        role = "pod"
-        selectors {
-          role = "pod"
-          field = "spec.nodeName=" + sys.env("HOSTNAME")
-        }
-      }
-    
-      discovery.relabel "filtered_pods_with_paths" {
-        targets = discovery.relabel.filtered_pods.output
-    
-        rule {
-          source_labels = ["__meta_kubernetes_pod_uid", "__meta_kubernetes_pod_container_name"]
-          separator = "/"
-          action = "replace"
-          replacement = "/var/log/pods/*$1/*.log"
-          target_label = "__path__"
+        output {
+          logs = [otelcol.processor.transform.pod_logs.input]
         }
       }
     
-      local.file_match "pod_logs" {
-        path_targets = discovery.relabel.filtered_pods_with_paths.output
+      otelcol.processor.transform "pod_logs" {
+        error_mode = "ignore"
+        log_statements {
+          context = "resource"
+          statements = [
+            `delete_key(attributes, "k8s.container.restart_count")`,
+            `delete_key(attributes, "log.file.path")`,
+            `set(attributes["loki.resource.labels"], "k8s.namespace.name,k8s.pod.name,k8s.deployment.name,k8s.statefulset.name,k8s.daemonset.name,k8s.cronjob.name,k8s.job.name,k8s.node.name")`,
+            `set(attributes["service.name"], attributes["k8s.pod.name"]) where attributes["service.name"] == nil`,
+            `set(attributes["service.name"], attributes["k8s.pod.name"]) where attributes["service.name"] == nil`,
+            `set(attributes["service.name"], attributes["k8s.container.name"]) where attributes["service.name"] == nil`,
+          ]
+        }
+    
+        output {
+          logs = [otelcol.exporter.loki.pod_logs.input]
+        }
       }
     
-      loki.source.file "pod_logs" {
-        targets    = local.file_match.pod_logs.targets
+      otelcol.exporter.loki "pod_logs" {
         forward_to = [loki.process.pod_logs.receiver]
       }
     
@@ -224,7 +204,7 @@ data:
     
         // Only keep the labels that are defined in the `keepLabels` list.
         stage.label_keep {
-          values = ["app_kubernetes_io_name","container","instance","job","level","namespace","pod","service_name","service_namespace","deployment_environment","deployment_environment_name","integration"]
+          values = ["app_kubernetes_io_name","container","instance","job","level","namespace","pod","service_name","service_namespace","deployment_environment","deployment_environment_name","k8s_pod_name","k8s_namespace_name","k8s_deployment_name","k8s_statefulset_name","k8s_daemonset_name","k8s_cronjob_name","k8s_job_name","k8s_node_name","integration"]
         }
     
         forward_to = argument.logs_destinations.value
@@ -234,6 +214,10 @@ data:
       logs_destinations = [
         loki.write.localloki.receiver,
       ]
+    }
+    
+    livedebugging {
+      enabled = true
     }
 ---
 # Source: k8s-monitoring/charts/alloy-logs/templates/rbac.yaml
@@ -375,13 +359,14 @@ metadata:
     app.kubernetes.io/part-of: alloy
     app.kubernetes.io/component: networking
 spec:
-  type: ClusterIP
+  type: NodePort
   selector:
     app.kubernetes.io/name: alloy-logs
     app.kubernetes.io/instance: k8smon
   internalTrafficPolicy: Cluster
   ports:
     - name: http-metrics
+      nodePort: 31234
       port: 12345
       targetPort: 12345
       protocol: "TCP"
@@ -426,7 +411,7 @@ spec:
             - --storage.path=/tmp/alloy
             - --server.http.listen-addr=0.0.0.0:12345
             - --server.http.ui-path-prefix=/
-            - --stability.level=generally-available
+            - --stability.level=public-preview
           env:
             - name: ALLOY_DEPLOY_MODE
               value: "helm"
