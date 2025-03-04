@@ -34,10 +34,7 @@ function main() {
 
   # Fetch jobs and steps ID and name, excluding current job
   echo "Fetching workflow run jobs information..."
-  if ! JOBS_JSON=$(gh run view "${WORKFLOW_RUN_ID}" --json jobs -jq "
-    .jobs[]
-    | select(.name != env.GITHUB_JOB)
-    | {job_id: .databaseId, job_name: .name, steps: [.steps[] | {step_id: .number, step_name: .name}]}" 2>&1); 
+  if ! JOBS_JSON=$(gh run view "${WORKFLOW_RUN_ID}" --json jobs --jq '.jobs[] | select(.name != env.GITHUB_JOB) | {job_id: .databaseId, job_name: .name, steps: [.steps[] | {step_id: .number, step_name: .name}]}' 2>&1); 
   then
       echo "Error fetching workflow jobs: ${JOBS_JSON}"
       exit 1
