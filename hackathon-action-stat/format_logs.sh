@@ -34,10 +34,18 @@ function main() {
 
   # Fetch workflow jobs information, excluding current job
   echo "Fetching workflow run jobs information..."
-  JOBS_JSON=$(gh run view "${WORKFLOW_RUN_ID}" --json jobs -q '
-  {
-      jobs: .jobs | map(select(.name != env.GITHUB_JOB))
-  }')
+  if ! JOBS_JSON=$(gh run view "${WORKFLOW_RUN_ID}" --json jobs -q '{jobs: .jobs | map(select(.name != env.GITHUB_JOB))}' 2>&1); then
+      echo "Error fetching workflow jobs: ${JOBS_JSON}"
+      exit 1
+  fi
+
+  # Validate JSON output
+  if ! echo "${JOBS_JSON}" | jq empty 2>/dev/null; then
+      echo "Invalid JSON received from GitHub CLI"
+      echo "Raw output: ${JOBS_JSON}"
+      exit 1
+  fi
+
   JOBS_COUNT=$(echo "${JOBS_JSON}" | jq '.jobs | length')
 
   echo "Processing workflow: ${WORKFLOW_NAME} in ${REPOSITORY_NAME}"
