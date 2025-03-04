@@ -117,12 +117,12 @@ function main() {
 
   # Final JSON structure
   JSON_OUTPUT=$(jq -n \
-      --arg repo "${REPOSITORY_NAME}" \
-      --arg commit_sha "${COMMIT_SHA}" \
-      --arg workflow "${WORKFLOW_NAME}" \
-      --arg run_id "${WORKFLOW_RUN_ID}" \
-      --argjson jobs "${JOBS_JSON}" \
-      '{repository: $repo, commit_sha: $commit_sha, workflow: $workflow, workflow_id: $run_id, jobs: $jobs}')
+    --arg repo "${REPOSITORY_NAME}" \
+    --arg commit_sha "${COMMIT_SHA}" \
+    --arg workflow "${WORKFLOW_NAME}" \
+    --arg run_id "${WORKFLOW_RUN_ID}" \
+    --argjson jobs "${JOBS_JSON}" \
+    '{repository: $repo, commit_sha: $commit_sha, workflow: $workflow, workflow_id: $run_id, jobs: $jobs}')
 
   # Write to file
   echo "${JSON_OUTPUT}" > workflow_jobs.json
@@ -130,11 +130,6 @@ function main() {
   # Print confirmation
   echo "Workflow jobs information written to workflow_jobs.json" 
 }
-
-# If the script is being executed directly (not sourced), run main
-if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
-    main "$@"
-fi
 
 # Extract step logs
 extract_step_logs() {
@@ -158,3 +153,11 @@ extract_step_logs() {
       p {print}
   ' | base64 -w 0 || true
 }
+
+# Export the function so it's available to subshells
+export -f extract_step_logs
+
+# If the script is being executed directly (not sourced), run main
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    main "$@"
+fi
