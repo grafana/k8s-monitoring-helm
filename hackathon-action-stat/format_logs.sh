@@ -24,7 +24,7 @@ function main() {
   if [[ -z "${GITHUB_WORKFLOW:-}" ]]; then
       echo -e "\033[33mWarning: Unable to identify workflow name.\033[0m"
   fi
-  WORKFLOW_NAME="${GITHUB_WORKFLOW:-}"
+  WORKFLOW_NAME="${GITHUB_WORKFLOW:-"unknown"}"
 
   # Ensure GitHub CLI is authenticated
   if ! gh auth status &>/dev/null; then
