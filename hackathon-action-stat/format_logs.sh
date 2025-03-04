@@ -16,10 +16,10 @@ function main() {
   fi
   REPOSITORY_NAME="${GITHUB_REPOSITORY}"
 
-  if [[ -z "${GITHUB_SHA:-}" ]]; then
-      echo -e "\033[33mWarning: Unable to identify commit SHA that triggered this workflow run.\033[0m"
-  fi
-  COMMIT_SHA="${GITHUB_SHA:-}"
+  # if [[ -z "${GITHUB_SHA:-}" ]]; then
+  #     echo -e "\033[33mWarning: Unable to identify commit SHA that triggered this workflow run.\033[0m"
+  # fi
+  # COMMIT_SHA="${GITHUB_SHA:-}"
 
   if [[ -z "${GITHUB_WORKFLOW:-}" ]]; then
       echo -e "\033[33mWarning: Unable to identify workflow name.\033[0m"
