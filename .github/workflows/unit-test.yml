@@ -159,8 +159,17 @@ jobs:
           GC_TELEMETRY_DATA_UPLOAD_TOKEN: ${{ secrets.GC_TELEMETRY_DATA_UPLOAD_TOKEN }}
           RUN_ID: ${{ steps.run_data.outputs.run_id }}
         run: |
-          # Get logs from the run
-          echo "log data" > log.txt
+          mkdir -p logs
+          export LOG_DIRECTORY="$(pwd)/logs"
+
+          # Make fake log data
+          echo "Job One	Step One	2025-03-04T03:42:39.6718631Z Syncing" > "${LOG_DIRECTORY}/job-1-step-1.txt"
+          echo "Job One	Step One	2025-03-04T03:42:39.6718651Z Sleeping" >> "${LOG_DIRECTORY}/job-1-step-1.txt"
+
+          echo "Job One	Step Two	2025-03-04T03:42:39.6718631Z Syncing" > "${LOG_DIRECTORY}/job-1-step-2.txt"
+          echo "Job One	Step Two	2025-03-04T03:42:39.6718651Z Sleeping" >> "${LOG_DIRECTORY}/job-1-step-2.txt"
+
+          echo "Job Two	Step Seven	2025-03-04T03:42:39.6718631Z Syncing" > "${LOG_DIRECTORY}/job-2-step-7.txt"
 
           # Run alloy in the background and save its PID
           alloy run hackathon-action-stat/log-upload.alloy --stability.level public-preview --disable-reporting &
@@ -179,8 +188,8 @@ jobs:
               return 1
             fi
 
-            # Check if log file is deleted
-            if [ ! -f log.txt ]; then
+            # Check if log directory is empty
+            if [ -z "$(ls -A "${LOG_DIRECTORY}")" ]; then
               kill $ALLOY_PID || true
               break
             fi

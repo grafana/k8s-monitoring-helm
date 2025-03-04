@@ -1,8 +1,8 @@
 otelcol.receiver.filelog "run_log" {
-  include = ["log.txt"]
+  include = [string.format("%s/job-*-step-*.log", sys.env("LOG_DIRECTORY"))]
   start_at = "beginning"
   delete_after_read = true
-  include_file_name = false
+  include_file_name = true
   include_file_path = false
   include_file_name_resolved = false
   include_file_path_resolved = false
@@ -15,9 +15,34 @@ otelcol.receiver.filelog "run_log" {
     "service_name" = "github_actions",
   }
 
+  operators = [
+    {
+      type       = "regex_parser",
+      parse_from = "attributes[\"log.file.name\"]",
+      regex      = "^job-(?P<job_id>[0-9]+)-step-(?P<step_id>[0-9]+)\\.log$",
+    },
+    {
+      type  = "regex_parser",
+      regex = "^(?P<job_name>[^\t]+)\t(?P<step_name>[^\t]+)\t(?P<timestamp_field>[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]+Z) .*$",
+      timestamp = {
+        parse_from = "body.timestamp_field",
+        layout_type = "strptime",
+        layout = "%Y-%m-%dT%H:%M:%S.%f%z",
+      },
+    },
+  ]
+
   output {
-    logs = [otelcol.exporter.otlphttp.grafana_cloud.input]
+    logs = [
+      otelcol.exporter.debug.test.input,
+      otelcol.exporter.otlphttp.grafana_cloud.input,
+    ]
   }
+}
+
+otelcol.exporter.debug "test" {
+  verbosity = "detailed"
+  use_internal_logger = false
 }
 
 otelcol.exporter.otlphttp "grafana_cloud" {
