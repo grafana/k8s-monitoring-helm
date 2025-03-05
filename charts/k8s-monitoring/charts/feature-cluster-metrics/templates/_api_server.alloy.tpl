@@ -25,21 +25,17 @@ discovery.relabel "apiserver" {
     action = "keep"
   }
 
-  // set the namespace
   rule {
-    action = "replace"
     source_labels = ["__meta_kubernetes_namespace"]
     target_label = "namespace"
   }
 
   rule {
-    action = "replace"
     source_labels = ["__meta_kubernetes_service_name"]
     target_label = "service"
   }
 
   rule {
-    action = "replace"
     replacement = "kubernetes"
     target_label = "source"
   }
@@ -65,7 +61,7 @@ prometheus.scrape "apiserver" {
   clustering {
     enabled = true
   }
-{{- if or $metricAllowList $metricDenyList .Values.apiServer.metricsTuning.dropRequestDurationBuckets .Values.apiServer.extraMetricProcessingRules }}
+{{- if or $metricAllowList $metricDenyList .Values.apiServer.extraMetricProcessingRules }}
 
   forward_to = [prometheus.relabel.apiserver.receiver]
 }
@@ -87,20 +83,13 @@ prometheus.relabel "apiserver" {
     action = "drop"
   }
 {{- end }}
-{{- if .Values.apiServer.metricsTuning.dropRequestDurationBuckets }}
-  rule {
-    source_labels = ["__name__", "le"]
-    regex = "apiserver_request_duration_seconds_bucket;({{ .Values.apiServer.metricsTuning.dropRequestDurationBuckets | join "|" }})"
-    action = "drop"
-  }
-{{- end }}
 
 {{- if .Values.apiServer.extraMetricProcessingRules }}
   {{ .Values.apiServer.extraMetricProcessingRules | indent 2 }}
 {{- end }}
 
+{{- end }}
   forward_to = argument.metrics_destinations.value
 }
-{{- end }}
 {{- end }}
 {{- end }}
