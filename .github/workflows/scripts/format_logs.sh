@@ -6,20 +6,20 @@ function main() {
 
   # Ensure GitHub Workflow run ID is set
   if [[ -z "${GITHUB_RUN_ID:-}" ]]; then
-      echo "GITHUB_RUN_ID must be set."
+      echo -e "\033[31mError: GITHUB_RUN_ID must be set.\033[0m"
       exit 1
   fi
   WORKFLOW_RUN_ID="${GITHUB_RUN_ID}"
 
   # Ensure GitHub CLI is authenticated
   if ! gh auth status &>/dev/null; then
-      echo "GitHub CLI is not authenticated. Ensure GH_TOKEN is set."
+      echo -e "\033[31mError: GitHub CLI is not authenticated. Ensure GH_TOKEN is set.\033[0m"
       exit 1
   fi
 
   if [[ -z "${GITHUB_REPOSITORY:-}" ]]; then
     GITHUB_REPOSITORY=$(gh repo view --json nameWithOwner -q .nameWithOwner) || {
-      echo "Unable to identify repository. GITHUB_REPOSITORY must be set."
+      echo -e "\033[31mError: Unable to identify repository. GITHUB_REPOSITORY must be set.\033[0m"
       exit 1
     }
   fi
@@ -36,14 +36,15 @@ function main() {
   echo "Fetching workflow run jobs information..."
   if ! JOBS_JSON=$(gh run view "${WORKFLOW_RUN_ID}" --json jobs --jq '[.jobs[] | select(.name != env.GITHUB_JOB) | {job_id: .databaseId, job_name: .name, steps: [.steps[] | {step_id: .number, step_name: .name}]}]' 2>&1); 
   then
-      echo "Error fetching workflow jobs: ${JOBS_JSON}"
+      echo -e "\033[31mError fetching workflow jobs\033[0m"
+      echo -e "Raw output: ${JOBS_JSON}"
       exit 1
   fi
 
   # Validate JSON output
   if ! echo "${JOBS_JSON}" | jq empty 2>/dev/null; then
-      echo "Invalid JSON received from GitHub CLI"
-      echo "Raw output: ${JOBS_JSON}"
+      echo -e "\033[31mInvalid JSON received from GitHub CLI\033[0m"
+      echo -e "Raw output: ${JOBS_JSON}"
       exit 1
   fi
 
@@ -70,7 +71,7 @@ function main() {
     JOB_NAME=$(echo "${job}" | jq -r '.job_name')
     
     if [[ -z "${JOB_ID}" || "${JOB_ID}" == "null" || -z "${JOB_NAME}" || "${JOB_NAME}" == "null" ]]; then
-        echo "Invalid job data received for jobs index ${JOB_INDEX}"
+        echo -e "\033[33mWarning:Invalid job data received for jobs index ${JOB_INDEX}.\033[0m"
         JOB_INDEX=$((JOB_INDEX + 1))
         continue
     fi
@@ -98,7 +99,7 @@ function main() {
       echo "Processing job ${JOB_INDEX} - step $((STEP_INDEX + 1)) of ${STEPS_COUNT}: ${STEP_NAME}"
 
       if [[ -z "${STEP_NAME}" || "${STEP_NAME}" == "null" ]]; then
-          echo "Invalid step data received for step index ${STEP_INDEX}"
+          echo -e "\033[33mWarning: Invalid step data received for step index ${STEP_INDEX}.\033[0m"
           STEP_INDEX=$((STEP_INDEX + 1))
           continue
       fi
