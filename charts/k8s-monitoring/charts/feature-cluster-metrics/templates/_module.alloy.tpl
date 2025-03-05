@@ -1,8 +1,7 @@
 {{- define "feature.clusterMetrics.module" }}
 {{- $includeKubernetesModule := false }}
-{{- $includeKubernetesModule = or $includeKubernetesModule .Values.apiServer.enabled }}
 {{- $includeKubernetesModule = or $includeKubernetesModule .Values.kubeDNS.enabled }}
-{{- $includeKubernetesModule = or $includeKubernetesModule (and .Values.controlPlane.enabled (or (not (eq .Values.apiServer.enabled false)) (not (eq .Values.kubeDNS.enabled false)))) }}
+{{- $includeKubernetesModule = or $includeKubernetesModule (and .Values.controlPlane.enabled (not (eq .Values.kubeDNS.enabled false))) }}
 {{- $discoverNodes := false }}
 {{- $discoverNodes = or $discoverNodes .Values.cadvisor.enabled }}
 {{- $discoverNodes = or $discoverNodes .Values.kubelet.enabled }}
@@ -37,7 +36,10 @@ declare "cluster_metrics" {
 {{- end -}}
 
 {{- define "feature.clusterMetrics.alloyModules" }}
-{{- if or .Values.cadvisor.enabled .Values.kubelet.enabled .Values.kubeletResource.enabled (or .Values.apiServer.enabled (and .Values.controlPlane.enabled (not (eq .Values.apiServer.enabled false)))) }}
+{{- $includeKubernetesModule := false }}
+{{- $includeKubernetesModule = or $includeKubernetesModule .Values.kubeDNS.enabled }}
+{{- $includeKubernetesModule = or $includeKubernetesModule (and .Values.controlPlane.enabled (not (eq .Values.kubeDNS.enabled false))) }}
+{{- if $includeKubernetesModule }}
 - modules/kubernetes/core/metrics.alloy
 {{- end }}
 {{- if (index .Values "kube-state-metrics").enabled }}
