@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: markdownlint
+      - name: Lint markdown files
         uses: reviewdog/action-markdownlint@v0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
@@ -26,7 +26,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: reviewdog/action-misspell@v1
+      - name: Check files for spelling errors
+        uses: reviewdog/action-misspell@v1
         with:
           github_token: ${{ secrets.github_token }}
           locale: US
@@ -50,7 +51,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: reviewdog/action-languagetool@v1
+      - name: Check files for language errors
+        uses: reviewdog/action-languagetool@v1
         with:
           github_token: ${{ secrets.github_token }}
           reporter: github-check
@@ -67,7 +69,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: reviewdog/action-alex@v1
+      - name: Check files for inappropriate language
+        uses: reviewdog/action-alex@v1
         with:
           github_token: ${{ secrets.github_token }}
           reporter: github-check
@@ -79,7 +82,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: reviewdog/action-shellcheck@v1
+      - name: Lint shell files
+        uses: reviewdog/action-shellcheck@v1
         with:
           github_token: ${{ secrets.github_token }}
           reporter: github-check
@@ -96,7 +100,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: reviewdog/action-tflint@v1
+      - name: Lint terraform files
+        uses: reviewdog/action-tflint@v1
         with:
           github_token: ${{ secrets.github_token }}
           reporter: github-check
@@ -106,7 +111,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: reviewdog/action-yamllint@v1
+      - name: Lint yaml files
+        uses: reviewdog/action-yamllint@v1
         with:
           github_token: ${{ secrets.github_token }}
           reporter: github-check
@@ -116,7 +122,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: reviewdog/action-actionlint@v1
+      - name: Lint action files
+        uses: reviewdog/action-actionlint@v1
         with:
           github_token: ${{ secrets.github_token }}
           reporter: github-check
@@ -128,11 +135,12 @@ jobs:
       - uses: actions/checkout@v4
       - uses: reviewdog/action-setup@v1
       - run: npm install
-      - env:
-          REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Lint text files
         run: |
           npx textlint --format checkstyle --config ./.textlintrc --ignore-path ./.textlintignore "$(find . -type f -name "*.md" -not \( -path "./node_modules/*" -o -path "./data-alloy/*" \))" | \
             reviewdog -f=checkstyle -name="textlint" -reporter=github-check -level=info
+        env:
+          REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   alloy:
     name: runner / alloy
@@ -140,35 +148,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: reviewdog/action-setup@v1
-      - run: |
-          GITHUB_ORG="grafana" && \
-          GITHUB_REPO="alloy" && \
-          ARCHIVE="alloy" && \
-          BINARY="alloy" && \
-          BIN_PATH="/usr/local/bin" && \
-          TMP_PATH="/tmp" && \
-          ALLOY_VERSION=$(wget -q -O - "https://api.github.com/repos/$GITHUB_ORG/$GITHUB_REPO/releases/latest" \
-              | grep -m 1 tag_name \
-              | cut -d '"' -f 4 | cut -c2-) && \
-          HOST_OS=$(uname -a | awk '{print tolower($1)}') && \
-          HOST_ARCH=$(arch | sed 's/x86_64/amd64/') && \
-          DOWNLOAD_URL="https://github.com/$GITHUB_ORG/$GITHUB_REPO/releases/download" && \
-          DOWNLOAD_URL="$DOWNLOAD_URL/v$ALLOY_VERSION/$ARCHIVE-$HOST_OS-$HOST_ARCH.zip"
-              echo "Downloading $DOWNLOAD_URL to $TMP_PATH/$ARCHIVE.zip" && \
-              wget -q -O "$TMP_PATH/$ARCHIVE.zip" "$DOWNLOAD_URL" && \
-              echo "Unzipping: $TMP_PATH/$ARCHIVE.zip" && \
-              ( cd "$TMP_PATH" || exit ; unzip -qq -o -d "$TMP_PATH" "$TMP_PATH/$BINARY.zip" ) && \
-              rm -rf "$TMP_PATH/$ARCHIVE.zip" && \
-              chmod a+x "$TMP_PATH/$BINARY-$HOST_OS-$HOST_ARCH" &&
-              echo "Moving: $TMP_PATH/$ARCHIVE-$HOST_OS-$HOST_ARCH/$BINARY to $BIN_PATH/$BINARY" && \
-              sudo mv "$TMP_PATH/$BINARY-$HOST_OS-$HOST_ARCH" "$BIN_PATH/$BINARY" && \
-              rm -rf "$TMP_PATH/$ARCHIVE-$HOST_OS-$HOST_ARCH"
-
-          echo ""
-          # shellcheck disable=SC2034
-          alloy --version
-      - env:
-          REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Install alloy
         run: |
-          ./scripts/lint-alloy.sh --format=checkstyle | \
-            reviewdog -f=checkstyle -name="alloy" -reporter=github-pr-check
+          sudo mkdir -p /etc/apt/keyrings/
+          wget -q -O - https://apt.grafana.com/gpg.key | gpg --dearmor | sudo tee /etc/apt/keyrings/grafana.gpg > /dev/null
+          echo "deb [signed-by=/etc/apt/keyrings/grafana.gpg] https://apt.grafana.com stable main" | sudo tee /etc/apt/sources.list.d/grafana.list
+          sudo apt-get update
+          sudo apt-get install -y alloy
+          alloy --version
+      - name: Lint Alloy configuration files
+        run: ./scripts/lint-alloy.sh --format=checkstyle | reviewdog -f=checkstyle -name="alloy" -reporter=github-pr-check
+        env:
+          REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
