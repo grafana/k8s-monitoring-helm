@@ -1,0 +1,25 @@
+---
+name: Upload Telemetry
+# yamllint disable-line rule:truthy
+on:
+  workflow_run:
+    workflows: ["Unit Test"]
+    types:
+      - completed
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+
+  upload-telemetry:
+    name: Upload Telemetry
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: grafana/hackathon-12-action-stat@v0.1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          telemetry-url: replace-later
+          telemetry-username: replace-later
+          telemetry-password: replace-later
