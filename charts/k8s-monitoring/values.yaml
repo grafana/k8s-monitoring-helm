@@ -641,6 +641,12 @@ alloy-logs:
     nodeSelector:
       kubernetes.io/os: linux
 
+    # If this is not scheduled on every Node, then logs from Pods on that Node might not be collected.
+    # @ignored
+    tolerations:
+      - effect: NoSchedule
+        operator: Exists
+
     # @ignored
     podAnnotations:
       k8s.grafana.com/logs.job: integrations/alloy
