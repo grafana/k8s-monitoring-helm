@@ -3,34 +3,34 @@
 set -eu
 
 function main() {
-  # Ensure GitHub Actions environment variables are set
+
+  # Ensure GitHub Workflow run ID is set
   if [[ -z "${GITHUB_RUN_ID:-}" ]]; then
       echo "GITHUB_RUN_ID must be set."
       exit 1
   fi
   WORKFLOW_RUN_ID="${GITHUB_RUN_ID}"
 
-  if [[ -z "${GITHUB_REPOSITORY:-}" ]]; then
-      echo "Unable to identify repository. GITHUB_REPOSITORY must be set."
-      exit 1
-  fi
-  REPOSITORY_NAME="${GITHUB_REPOSITORY}"
-
-  # if [[ -z "${GITHUB_SHA:-}" ]]; then
-  #     echo -e "\033[33mWarning: Unable to identify commit SHA that triggered this workflow run.\033[0m"
-  # fi
-  # COMMIT_SHA="${GITHUB_SHA:-}"
-
-  if [[ -z "${GITHUB_WORKFLOW:-}" ]]; then
-      echo -e "\033[33mWarning: Unable to identify workflow name.\033[0m"
-  fi
-  WORKFLOW_NAME="${GITHUB_WORKFLOW:-"unknown"}"
-
   # Ensure GitHub CLI is authenticated
   if ! gh auth status &>/dev/null; then
       echo "GitHub CLI is not authenticated. Ensure GH_TOKEN is set."
       exit 1
   fi
+
+  if [[ -z "${GITHUB_REPOSITORY:-}" ]]; then
+    GITHUB_REPOSITORY=$(gh repo view --json nameWithOwner -q .nameWithOwner) || {
+      echo "Unable to identify repository. GITHUB_REPOSITORY must be set."
+      exit 1
+    }
+  fi
+  REPOSITORY_NAME="${GITHUB_REPOSITORY}"
+
+  if [[ -z "${GITHUB_WORKFLOW:-}" ]]; then
+    GITHUB_WORKFLOW=$(gh run view "${WORKFLOW_RUN_ID}" --json workflowName --jq '.workflowName') || {
+      echo -e "\033[33mWarning: Unable to identify workflow name.\033[0m"
+    }
+  fi
+  WORKFLOW_NAME="${GITHUB_WORKFLOW:-"unknown"}"
 
   # Fetch jobs and steps ID and name, excluding current job
   echo "Fetching workflow run jobs information..."
