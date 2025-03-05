@@ -249,11 +249,76 @@ should render the configuration with control plane components included:
           forward_to = argument.metrics_destinations.value
         }
 
-        kubernetes.apiserver "scrape" {
-          clustering = true
-          job_label = "integrations/kubernetes/kube-apiserver"
+        discovery.kubernetes "apiserver" {
+          role = "endpoints"
+
+          selectors {
+            role = "endpoints"
+            field = "metadata.name=kubernetes"
+          }
+
+          namespaces {
+            names = ["default"]
+          }
+        }
+
+        discovery.relabel "apiserver" {
+          targets = discovery.kubernetes.apiserver.targets
+
+          rule {
+            source_labels = ["__meta_kubernetes_endpoint_port_name"]
+            regex = "https"
+            action = "keep"
+          }
+
+          // set the namespace
+          rule {
+            action = "replace"
+            source_labels = ["__meta_kubernetes_namespace"]
+            target_label = "namespace"
+          }
+
+          rule {
+            action = "replace"
+            source_labels = ["__meta_kubernetes_service_name"]
+            target_label = "service"
+          }
+
+          rule {
+            action = "replace"
+            replacement = "kubernetes"
+            target_label = "source"
+          }
+        }
+
+        prometheus.scrape "apiserver" {
+          targets = discovery.relabel.apiserver.output
+          job_name = "integrations/kubernetes/kube-apiserver"
+          scheme = "https"
           scrape_interval = "60s"
+          bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+
+          tls_config {
+            ca_file = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+            insecure_skip_verify = false
+            server_name = "kubernetes"
+          }
+
+          clustering {
+            enabled = true
+          }
+
+          forward_to = [prometheus.relabel.apiserver.receiver]
+        }
+
+        prometheus.relabel "apiserver" {
           max_cache_size = 100000
+          rule {
+            source_labels = ["__name__", "le"]
+            regex = "apiserver_request_duration_seconds_bucket;(0.15|0.25|0.3|0.35|0.4|0.45|0.6|0.7|0.8|0.9|1.25|1.5|1.75|2.5|3|3.5|4.5|6|7|8|9|15|25|30|50)"
+            action = "drop"
+          }
+
           forward_to = argument.metrics_destinations.value
         }
 
