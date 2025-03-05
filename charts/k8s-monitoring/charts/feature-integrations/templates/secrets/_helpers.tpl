@@ -23,8 +23,12 @@ create
 {{- $value := .object -}}
 {{- range $pathPart := (regexSplit "\\." (printf "%sFrom" .key) -1) -}} {{/* "path.to.auth.password" --> ["path", "to", "auth" "passwordFrom"] */}}
 {{- if $pathPart -}}
-  {{- if and (not (kindIs "string" $value)) (hasKey $value $pathPart) -}}
-    {{- $value = (index $value $pathPart) -}}
+  {{- if not (kindIs "string" $value) -}}
+    {{- if hasKey $value $pathPart -}}
+      {{- $value = (index $value $pathPart) -}}
+    {{- else -}}
+      {{- $value = "" -}}
+    {{- end -}}
   {{- else -}}
     {{- $value = "" -}}
   {{- end -}}
@@ -40,8 +44,12 @@ create
 {{- $defaultKey := (( regexSplit "\\." .key -1) | last) -}}             {{/* "path.to.auth.password" --> "password" */}}
 {{- range $pathPart := (regexSplit "\\." (printf "%sKey" .key) -1) -}}  {{/* "path.to.auth.password" --> ["path", "to", "auth" "passwordKey"] */}}
 {{- if $pathPart -}}
-  {{- if and (not (kindIs "string" $value)) (hasKey $value $pathPart) -}}
-    {{- $value = (index $value $pathPart) -}}
+  {{- if not (kindIs "string" $value) -}}
+    {{- if hasKey $value $pathPart -}}
+      {{- $value = (index $value $pathPart) -}}
+    {{- else -}}
+      {{- $value = $defaultKey -}}
+    {{- end -}}
   {{- else -}}
     {{- $value = $defaultKey -}}
   {{- end -}}
@@ -57,8 +65,12 @@ create
 {{- $value := .object -}}
 {{- range $pathPart := (regexSplit "\\." (printf "%sKey" .key) -1) -}}  {{/* "path.to.auth.password" --> ["path", "to", "auth" "passwordKey"] */}}
 {{- if $pathPart -}}
-  {{- if and (not (kindIs "string" $value)) (hasKey $value $pathPart) -}}
-    {{- $value = (index $value $pathPart) -}}
+  {{- if not (kindIs "string" $value) -}}
+    {{- if hasKey $value $pathPart -}}
+      {{- $value = (index $value $pathPart) -}}
+    {{- else -}}
+      {{- $found = false -}}
+    {{- end -}}
   {{- else -}}
     {{- $found = false -}}
   {{- end -}}
@@ -73,8 +85,12 @@ create
 {{- $value := .object -}}
 {{- range $pathPart := (regexSplit "\\." .key -1) -}}  {{/* "path.to.auth.password" --> ["path", "to", "auth" "password"] */}}
 {{- if $pathPart -}}
-  {{- if and (not (kindIs "string" $value)) (hasKey $value $pathPart) -}}
-    {{- $value = (index $value $pathPart) -}}
+  {{- if not (kindIs "string" $value) -}}
+    {{- if hasKey $value $pathPart -}}
+      {{- $value = (index $value $pathPart) -}}
+    {{- else -}}
+      {{- $value = "" -}}
+    {{- end -}}
   {{- else -}}
     {{- $value = "" -}}
   {{- end -}}
