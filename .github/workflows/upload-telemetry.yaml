@@ -3,12 +3,9 @@ name: Upload Telemetry
 # yamllint disable-line rule:truthy
 on:
   workflow_run:
-    workflows: ["Unit Test"]
+    workflows: ["Unit Test", "ReviewDog"]
     types:
       - completed
-
-  # Allows you to run this workflow manually from the Actions tab
-  workflow_dispatch:
 
 jobs:
 
@@ -23,3 +20,4 @@ jobs:
           telemetry-url: https://otlp-gateway-prod-us-west-0.grafana.net/otlp
           telemetry-username: ${{ secrets.GC_TELEMETRY_DATA_UPLOAD_OTLP_USERNAME }}
           telemetry-password: ${{ secrets.GC_TELEMETRY_DATA_UPLOAD_OTLP_PASSWORD }}
+          workflow-run-id: ${{ github.event.workflow_run.id }}
