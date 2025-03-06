@@ -43,7 +43,11 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | annotations | object | `{"job":"k8s.grafana.com/logs.job"}` | Log labels to set with values copied from the Kubernetes Pod annotations. Format: `<log_label>: <kubernetes_annotation>`. |
 | extraLogProcessingStages | string | `""` | Stage blocks to be added to the loki.process component for pod logs. ([docs](https://grafana.com/docs/alloy/latest/reference/components/loki/loki.process/#blocks)) This value is templated so that you can refer to other values from this file. |
 | labels | object | `{"app_kubernetes_io_name":"app.kubernetes.io/name"}` | Log labels to set with values copied from the Kubernetes Pod labels. Format: `<log_label>: <kubernetes_label>`. |
-| labelsToKeep | list | `["app_kubernetes_io_name","container","instance","job","level","namespace","pod","service_name","service_namespace","deployment_environment","deployment_environment_name"]` | The list of labels to keep on the logs, all other pipeline labels will be dropped. |
+| labelsToKeep | list | `["app.kubernetes.io/name","container","instance","job","level","namespace","pod","service.name","service.namespace","deployment.environment","deployment.environment_name","k8s.pod.name","k8s.namespace.name","k8s.deployment.name","k8s.statefulset.name","k8s.daemonset.name","k8s.cronjob.name","k8s.job.name","k8s.node.name"]` | The list of labels to keep on the logs, all other pipeline labels will be dropped. |
+| namespaceAnnotations | object | `{}` | Log labels to set with values copied from the Kubernetes Namespace annotations. Only used for "filelog" gather method. Format: `<log_label>: <kubernetes_namespace_annotation>`. |
+| namespaceLabels | object | `{}` | Log labels to set with values copied from the Kubernetes Namespace labels. Only used for "filelog" gather method. Format: `<log_label>: <kubernetes_namespace_label>`. |
+| nodeAnnotations | object | `{}` | Log labels to set with values copied from the Kubernetes Node annotations. Only used for "filelog" gather method. Format: `<log_label>: <kubernetes_node_annotation>`. |
+| nodeLabels | object | `{}` | Log labels to set with values copied from the Kubernetes Node labels. Only used for "filelog" gather method. Format: `<log_label>: <kubernetes_node_label>`. |
 | staticLabels | object | `{}` | Log labels to set with static values. |
 | staticLabelsFrom | object | `{}` | Log labels to set with static values, not quoted so it can reference config components. |
 
@@ -53,8 +57,14 @@ Be sure perform actual integration testing in a live environment in the main [k8
 |-----|------|---------|-------------|
 | excludeNamespaces | list | `[]` | Do not capture logs from any pods in these namespaces. |
 | extraDiscoveryRules | string | `""` | Rules to filter pods for log gathering. Only used for "volumes" or "kubernetesApi" gather methods. |
-| gatherMethod | string | `"volumes"` | The method to gather pod logs. Options are "volumes", "kubernetesApi", "OpenShiftClusterLogForwarder" (experimental). |
+| gatherMethod | string | `"volumes"` | The method to gather pod logs. Options are "volumes", "filelog" (experimental), "kubernetesApi", "OpenShiftClusterLogForwarder" (experimental). |
 | namespaces | list | `[]` | Only capture logs from pods in these namespaces (`[]` means all namespaces). |
+
+### File Log Gathering
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| filelogGatherSettings.onlyGatherNewLogLines | bool | `false` | Only gather new log lines since this was deployed. Do not gather historical log lines. |
 
 ### General settings
 
