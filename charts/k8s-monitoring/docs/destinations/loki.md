@@ -58,6 +58,9 @@ This defines the options for defining a destination for logs that use the Loki p
 | extraLabels | object | `{}` | Custom labels to be added to all logs and events. All values are treated as strings and automatically quoted. |
 | extraLabelsFrom | object | `{}` | Custom labels to be added to all logs and events through a dynamic reference. All values are treated as raw strings and not quoted. |
 | logProcessingStages | string | `""` | Stage blocks to be evaluated before delivering to the Loki destination. See ([docs](https://grafana.com/docs/alloy/latest/reference/components/loki/loki.process/#blocks)) for more information. |
+| maxBackoffPeriod | string | `"5m"` | The maximum backoff period for the Loki destination. |
+| maxBackoffRetries | int | `10` | The maximum number of backoff retries for the Loki destination. |
+| minBackoffPeriod | string | `"500ms"` | The minimum backoff period for the Loki destination. |
 | name | string | `""` | The name for this Loki destination. |
 | proxyURL | string | `""` | The Proxy URL for the Loki destination. |
 | tenantId | string | `""` | The tenant ID for the Loki destination. |

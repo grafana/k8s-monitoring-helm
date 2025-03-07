@@ -17,6 +17,9 @@ loki.write "loki" {
       cert_pem = nonsensitive(remote.kubernetes.secret.loki.data["cert"])
       key_pem = remote.kubernetes.secret.loki.data["key"]
     }
+    min_backoff_period = "500ms"
+    max_backoff_period = "5m"
+    max_backoff_retries = "10"
   }
   external_labels = {
     cluster = "external-secrets-example-cluster",

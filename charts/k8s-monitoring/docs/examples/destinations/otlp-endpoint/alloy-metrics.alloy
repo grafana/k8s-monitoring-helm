@@ -97,6 +97,13 @@ otelcol.exporter.otlphttp "otlp_gateway" {
       insecure_skip_verify = false
     }
   }
+
+  retry_on_failure {
+    enabled = true
+    initial_interval = "5s"
+    max_interval = "30s"
+    max_elapsed_time = "1m"
+  }
 }
 
 remote.kubernetes.secret "otlp_gateway" {
