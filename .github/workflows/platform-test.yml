@@ -25,6 +25,7 @@ jobs:
         working-directory: charts/k8s-monitoring/tests/platform
         run: |
           allTests=$(find . -name values.yaml -type f -exec dirname {} \; | sed "s|^\./||" | jq --raw-input --slurp --compact-output 'split("\n") | map(select(. != ""))')
+          manualOnlyTests=$(find . -name .manual-only -type f -exec dirname {} \; | sed "s|^\./||" | jq --raw-input --slurp --compact-output 'split("\n") | map(select(. != ""))')
           if [ "${{ github.event_name }}" == "pull_request" ]; then
             # All labels on this PR
             labels='${{ toJson(github.event.pull_request.labels.*.name) }}'
@@ -35,7 +36,8 @@ jobs:
             # Choose the tests that match the labels
             tests=$(jq --null-input --compact-output --argjson allTests "${allTests}" --argjson chosenTests "${chosenTests}" '$allTests | map(select(. as $test | $chosenTests | index($test)))')
           else
-            tests="${allTests}"
+            # remove manual only tests
+            tests=$(jq --null-input --compact-output --argjson allTests "${allTests}" --argjson manualOnlyTests "${manualOnlyTests}" '$allTests | map(select(. as $test | $manualOnlyTests | index($test) | not))')
           fi
           echo "Running tests: ${tests}"
           echo "tests=${tests}" >> "${GITHUB_OUTPUT}"
