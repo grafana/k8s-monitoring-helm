@@ -58,9 +58,9 @@ This defines the options for defining a destination for OpenTelemetry data that 
 | name | string | `""` | The name for this OTLP destination. |
 | protocol | string | `"grpc"` | The protocol for the OTLP destination. Options are "grpc" (default), "http". |
 | readBufferSize | string | `""` | Size of the read buffer the gRPC client to use for reading server responses. |
-| retryOnFailure.initialInterval | string | `"5s"` | The initial time to wait before retrying a failure request to the OTLP destination. |
+| retryOnFailure.initialInterval | string | `"5s"` | The initial time to wait before retrying a failed request to the OTLP destination. |
 | retryOnFailure.maxElapsedTime | string | `"1m"` | The maximum amount of time to wait before discarding a failed batch. |
-| retryOnFailure.maxInterval | string | `"30s"` | The maximum time to wait before retrying a failure request to the OTLP destination. |
+| retryOnFailure.maxInterval | string | `"30s"` | The maximum time to wait before retrying a failed request to the OTLP destination. |
 | tenantId | string | `""` | The tenant ID for the OTLP destination. |
 | tenantIdFrom | string | `""` | Raw config for accessing the tenant ID. |
 | tenantIdKey | string | `"tenantId"` | The key for storing the tenant ID in the secret. |
