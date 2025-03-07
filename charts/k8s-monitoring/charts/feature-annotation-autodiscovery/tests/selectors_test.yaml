@@ -1,0 +1,23 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Test selectors
+templates:
+  - configmap.yaml
+tests:
+  - it: will set appropriate selectors
+    set:
+      deployAsConfigMap: true
+      labelSelectors:
+        app: myapp
+      pods:
+        labelSelectors:
+          color: blue
+      services:
+        labelSelectors:
+          region:
+            - north
+            - east
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["module.alloy"]

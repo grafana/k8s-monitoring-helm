@@ -37,6 +37,11 @@ can exclude a specified list of namespaces:
             action = "replace"
             target_label = "__metrics_path__"
           }
+          rule {
+            action = "labelmap"
+            regex = "__meta_kubernetes_pod_annotation_k8s_grafana_com_metrics_param_(.+)"
+            replacement = "__param_$1"
+          }
 
           // Choose the pod port
           // The discovery generates a target for each declared container port of the pod.
@@ -135,6 +140,11 @@ can exclude a specified list of namespaces:
             source_labels = ["__meta_kubernetes_service_annotation_k8s_grafana_com_metrics_path"]
             action = "replace"
             target_label = "__metrics_path__"
+          }
+          rule {
+            action = "labelmap"
+            regex = "__meta_kubernetes_service_annotation_k8s_grafana_com_metrics_param_(.+)"
+            replacement = "__param_$1"
           }
 
           // Choose the service port
@@ -282,6 +292,11 @@ can use a specified list of namespaces:
             action = "replace"
             target_label = "__metrics_path__"
           }
+          rule {
+            action = "labelmap"
+            regex = "__meta_kubernetes_pod_annotation_k8s_grafana_com_metrics_param_(.+)"
+            replacement = "__param_$1"
+          }
 
           // Choose the pod port
           // The discovery generates a target for each declared container port of the pod.
@@ -378,6 +393,11 @@ can use a specified list of namespaces:
             source_labels = ["__meta_kubernetes_service_annotation_k8s_grafana_com_metrics_path"]
             action = "replace"
             target_label = "__metrics_path__"
+          }
+          rule {
+            action = "labelmap"
+            regex = "__meta_kubernetes_service_annotation_k8s_grafana_com_metrics_param_(.+)"
+            replacement = "__param_$1"
           }
 
           // Choose the service port

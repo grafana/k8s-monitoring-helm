@@ -79,6 +79,10 @@ data:
     
       discovery.kubernetes "pods" {
         role = "pod"
+        selectors {
+          role = "pod"
+          label = "color=blue"
+        }
       }
     
       discovery.relabel "annotation_autodiscovery_pods" {
@@ -102,6 +106,11 @@ data:
           source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_metrics_path"]
           action = "replace"
           target_label = "__metrics_path__"
+        }
+        rule {
+          action = "labelmap"
+          regex = "__meta_kubernetes_pod_annotation_k8s_grafana_com_metrics_param_(.+)"
+          replacement = "__param_$1"
         }
     
         // Choose the pod port
@@ -170,13 +179,17 @@ data:
           target_label = "__scrape_timeout__"
         }
         rule {
-          source_labels = ["__scrape_interval__"]
-          target_label = "scrape_interval"
+          source_labels = ["__meta_kubernetes_pod_label_color"]
+          target_label = "color"
         }
-        rule {
-          source_labels = ["__scrape_timeout__"]
-          target_label = "scrape_timeout"
-        }
+          rule {
+            source_labels = ["__scrape_interval__"]
+            target_label = "scrape_interval"
+          }
+          rule {
+            source_labels = ["__scrape_timeout__"]
+            target_label = "scrape_timeout"
+          }
       }
     
       discovery.kubernetes "services" {
@@ -204,6 +217,11 @@ data:
           source_labels = ["__meta_kubernetes_service_annotation_k8s_grafana_com_metrics_path"]
           action = "replace"
           target_label = "__metrics_path__"
+        }
+        rule {
+          action = "labelmap"
+          regex = "__meta_kubernetes_service_annotation_k8s_grafana_com_metrics_param_(.+)"
+          replacement = "__param_$1"
         }
     
         // Choose the service port
@@ -269,14 +287,14 @@ data:
           replacement = "10s"
           target_label = "__scrape_timeout__"
         }
-        rule {
-          source_labels = ["__scrape_interval__"]
-          target_label = "scrape_interval"
-        }
-        rule {
-          source_labels = ["__scrape_timeout__"]
-          target_label = "scrape_timeout"
-        }
+          rule {
+            source_labels = ["__scrape_interval__"]
+            target_label = "scrape_interval"
+          }
+          rule {
+            source_labels = ["__scrape_timeout__"]
+            target_label = "scrape_timeout"
+          }
       }
     
       discovery.relabel "annotation_autodiscovery_http" {

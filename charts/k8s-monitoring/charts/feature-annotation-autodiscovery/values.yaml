@@ -45,6 +45,10 @@ annotations:
   # -- Annotation for setting the metrics scheme, default: http.
   # @section -- Annotations
   metricsScheme: "k8s.grafana.com/metrics.scheme"
+  # -- Annotation for setting __param_<key> parameters when scraping.
+  # Example: `k8s.grafana.com/metrics.param_key: "value"`.
+  # @section -- Annotations
+  metricsParam: "k8s.grafana.com/metrics.param"
   # -- Annotation for overriding the scrape interval for this service or pod. Value should be a duration like "15s, 1m".
   # Overrides metrics.autoDiscover.scrapeInterval
   # @section -- Annotations
@@ -61,6 +65,62 @@ namespaces: []
 # -- The list of namespaces to exclude from autodiscovery.
 # @section -- Discovery Settings
 excludeNamespaces: []
+
+# -- Filter the list of discovered pods and services by labels.
+# Example: `labelSelectors: { 'app': 'myapp' }` will only discover pods and services with the label `app=myapp`.
+# Example: `labelSelectors: { 'app': ['myapp', 'myotherapp'] }` will only discover pods and services with the label `app=myapp` or `app=myotherapp`.
+# @section -- Discovery Settings
+labelSelectors: {}
+
+pods:
+  # -- Enable discovering Pods with annotations.
+  # @section -- Pod Discovery Settings
+  enabled: true
+
+  # -- Filter the list of discovered Pods by labels.
+  # Example: `labelSelectors: { 'app': 'myapp' }` will only discover Pods with the label `app=myapp`.
+  # Example: `labelSelectors: { 'app': ['myapp', 'myotherapp'] }` will only discover Pods with the label `app=myapp` or `app=myotherapp`.
+  # @section -- Pod Discovery Settings
+  labelSelectors: {}
+
+  # -- Add labels to metrics from discovered Pods. Runs during discovery, so __meta_ labels are available. See the
+  # [documentation](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.kubernetes/#pod-role)
+  # for the full list of meta labels.
+  # @section -- Pod Metric Processing Settings
+  labels: {}
+
+  # -- Metric labels to set with static data for discovered Pods.
+  # @section -- Pod Metric Processing Settings
+  staticLabels: {}
+
+  # -- Static labels to set on metrics from discovered Pods, not quoted so it can reference config components.
+  # @section -- Pod Metric Processing Settings
+  staticLabelsFrom: {}
+
+services:
+  # -- Enable discovering Services with annotations.
+  # @section -- Services
+  enabled: true
+
+  # -- Filter the list of discovered Services by labels.
+  # Example: `labelSelectors: { 'app': 'myapp' }` will only discover Services with the label `app=myapp`.
+  # Example: `labelSelectors: { 'app': ['myapp', 'myotherapp'] }` will only discover Services with the label `app=myapp` or `app=myotherapp`.
+  # @section -- Service Discovery Settings
+  labelSelectors: {}
+
+  # -- Add labels to metrics from discovered Services. Run during discovery, so __meta_ labels are available. See the
+  # [documentation](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.kubernetes/#service-role)
+  # for the full list of meta labels.
+  # @section -- Service Metric Processing Settings
+  labels: {}
+
+  # -- Metric labels to set with static data for discovered Services.
+  # @section -- Service Metric Processing Settings
+  staticLabels: {}
+
+  # -- Static labels to set on metrics from discovered Services, not quoted so it can reference config components.
+  # @section -- Service Metric Processing Settings
+  staticLabelsFrom: {}
 
 # -- Rule blocks to be added to the discovery.relabel component for discovered pods and services.
 # These relabeling rules are applied pre-scrape against the targets from service discovery.

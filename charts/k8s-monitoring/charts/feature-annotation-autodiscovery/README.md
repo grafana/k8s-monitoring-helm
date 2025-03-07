@@ -57,6 +57,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 |-----|------|---------|-------------|
 | annotations.instance | string | `"k8s.grafana.com/instance"` | Annotation for overriding the instance label |
 | annotations.job | string | `"k8s.grafana.com/job"` | Annotation for overriding the job label |
+| annotations.metricsParam | string | `"k8s.grafana.com/metrics.param"` | Annotation for setting __param_<key> parameters when scraping. |
 | annotations.metricsPath | string | `"k8s.grafana.com/metrics.path"` | Annotation for setting or overriding the metrics path. If not set, it defaults to /metrics |
 | annotations.metricsPortName | string | `"k8s.grafana.com/metrics.portName"` | Annotation for setting the metrics port by name. |
 | annotations.metricsPortNumber | string | `"k8s.grafana.com/metrics.portNumber"` | Annotation for setting the metrics port by number. |
@@ -79,6 +80,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 |-----|------|---------|-------------|
 | excludeNamespaces | list | `[]` | The list of namespaces to exclude from autodiscovery. |
 | extraDiscoveryRules | string | `""` | Rule blocks to be added to the discovery.relabel component for discovered pods and services. These relabeling rules are applied pre-scrape against the targets from service discovery. Before the scrape, any remaining target labels that start with `__` (i.e. `__meta_kubernetes*`) are dropped. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.relabel/#rule-block)) |
+| labelSelectors | object | `{}` | Filter the list of discovered pods and services by labels. Example: `labelSelectors: { 'app': 'myapp' }` will only discover pods and services with the label `app=myapp`. Example: `labelSelectors: { 'app': ['myapp', 'myotherapp'] }` will only discover pods and services with the label `app=myapp` or `app=myotherapp`. |
 | namespaces | list | `[]` | The list of namespaces to include in autodiscovery. If empty, all namespaces are included. |
 
 ### Metric Processing Settings
@@ -104,3 +106,38 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | global.maxCacheSize | int | `100000` | Sets the max_cache_size for every prometheus.relabel component. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)) This should be at least 2x-5x your largest scrape target or samples appended rate. |
 | global.scrapeInterval | string | `"60s"` | How frequently to scrape metrics. |
 | global.scrapeTimeout | string | `"10s"` | The scrape timeout for discovered pods and services. |
+
+### Pod Discovery Settings
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| pods.enabled | bool | `true` | Enable discovering Pods with annotations. |
+| pods.labelSelectors | object | `{}` | Filter the list of discovered Pods by labels. Example: `labelSelectors: { 'app': 'myapp' }` will only discover Pods with the label `app=myapp`. Example: `labelSelectors: { 'app': ['myapp', 'myotherapp'] }` will only discover Pods with the label `app=myapp` or `app=myotherapp`. |
+
+### Pod Metric Processing Settings
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| pods.labels | object | `{}` | Add labels to metrics from discovered Pods. Runs during discovery, so __meta_ labels are available. See the [documentation](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.kubernetes/#pod-role) for the full list of meta labels. |
+| pods.staticLabels | object | `{}` | Metric labels to set with static data for discovered Pods. |
+| pods.staticLabelsFrom | object | `{}` | Static labels to set on metrics from discovered Pods, not quoted so it can reference config components. |
+
+### Services
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| services.enabled | bool | `true` | Enable discovering Services with annotations. |
+
+### Service Discovery Settings
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| services.labelSelectors | object | `{}` | Filter the list of discovered Services by labels. Example: `labelSelectors: { 'app': 'myapp' }` will only discover Services with the label `app=myapp`. Example: `labelSelectors: { 'app': ['myapp', 'myotherapp'] }` will only discover Services with the label `app=myapp` or `app=myotherapp`. |
+
+### Service Metric Processing Settings
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| services.labels | object | `{}` | Add labels to metrics from discovered Services. Run during discovery, so __meta_ labels are available. See the [documentation](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.kubernetes/#service-role) for the full list of meta labels. |
+| services.staticLabels | object | `{}` | Metric labels to set with static data for discovered Services. |
+| services.staticLabelsFrom | object | `{}` | Static labels to set on metrics from discovered Services, not quoted so it can reference config components. |

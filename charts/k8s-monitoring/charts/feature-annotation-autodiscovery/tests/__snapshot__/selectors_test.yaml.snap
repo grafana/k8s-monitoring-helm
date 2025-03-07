@@ -1,4 +1,4 @@
-creates a module with default discovery, scraping, and processing configurations:
+will set appropriate selectors:
   1: |
     |-
       declare "annotation_autodiscovery" {
@@ -8,6 +8,10 @@ creates a module with default discovery, scraping, and processing configurations
 
         discovery.kubernetes "pods" {
           role = "pod"
+          selectors {
+            role = "pod"
+            label = "app=myapp,color=blue"
+          }
         }
 
         discovery.relabel "annotation_autodiscovery_pods" {
@@ -107,6 +111,10 @@ creates a module with default discovery, scraping, and processing configurations
 
         discovery.kubernetes "services" {
           role = "service"
+          selectors {
+            role = "service"
+            label = "app=myapp,region in (north,east)"
+          }
         }
 
         discovery.relabel "annotation_autodiscovery_services" {
