@@ -65,6 +65,9 @@ loki.write "loki" {
     tls_config {
       insecure_skip_verify = false
     }
+    min_backoff_period = "500ms"
+    max_backoff_period = "5m"
+    max_backoff_retries = "10"
   }
   external_labels = {
     cluster = "bearer-token-example-cluster",
@@ -164,6 +167,13 @@ otelcol.exporter.otlp "tempo" {
       cert_pem = nonsensitive(remote.kubernetes.secret.tempo.data["cert"])
       key_pem = remote.kubernetes.secret.tempo.data["key"]
     }
+  }
+
+  retry_on_failure {
+    enabled = true
+    initial_interval = "5s"
+    max_interval = "30s"
+    max_elapsed_time = "1m"
   }
 }
 

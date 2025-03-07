@@ -241,6 +241,9 @@ data:
           cert_pem = nonsensitive(remote.kubernetes.secret.loki.data["cert"])
           key_pem = remote.kubernetes.secret.loki.data["key"]
         }
+        min_backoff_period = "500ms"
+        max_backoff_period = "5m"
+        max_backoff_retries = "10"
       }
       external_labels = {
         cluster = "external-secrets-example-cluster",
@@ -515,6 +518,9 @@ data:
           cert_pem = nonsensitive(remote.kubernetes.secret.loki.data["cert"])
           key_pem = remote.kubernetes.secret.loki.data["key"]
         }
+        min_backoff_period = "500ms"
+        max_backoff_period = "5m"
+        max_backoff_retries = "10"
       }
       external_labels = {
         cluster = "external-secrets-example-cluster",
@@ -620,6 +626,13 @@ data:
           cert_pem = nonsensitive(remote.kubernetes.secret.tempo.data["cert"])
           key_pem = remote.kubernetes.secret.tempo.data["key"]
         }
+      }
+    
+      retry_on_failure {
+        enabled = true
+        initial_interval = "5s"
+        max_interval = "30s"
+        max_elapsed_time = "1m"
       }
     }
     
