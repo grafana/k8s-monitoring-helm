@@ -29,6 +29,15 @@ jobs:
         id: list_tests
         working-directory: charts/k8s-monitoring/tests/integration
         run: |
+          # if "integration-test-skip" is set, return an empty list
+          # All labels on this PR
+          labels='${{ toJson(github.event.pull_request.labels.*.name) }}'
+          if echo "${labels}" | jq --raw-output --compact-output 'index("integration-test-skip")' > /dev/null; then
+              echo "\"integration-test-skip\" label is set, skipping integration tests."
+              echo "tests=[]" >> "${GITHUB_OUTPUT}"
+              exit 0
+          fi
+
           tests=$(find . -name values.yaml -exec dirname {} \;)
           echo "Tests: ${tests}"
           echo "tests=$(echo "${tests}" | jq --raw-input --slurp --compact-output 'split("\n") | map(select(. != ""))')" >> "${GITHUB_OUTPUT}"
