@@ -46,17 +46,18 @@ discovery.relabel "annotation_autodiscovery_pods" {
   }
   rule {
     source_labels = ["{{ include "pod_annotation" .Values.annotations.job }}"]
-    action = "replace"
     target_label = "job"
   }
   rule {
     source_labels = ["{{ include "pod_annotation" .Values.annotations.instance }}"]
-    action = "replace"
     target_label = "instance"
   }
   rule {
+    source_labels = ["__meta_kubernetes_namespace"]
+    target_label = "namespace"
+  }
+  rule {
     source_labels = ["{{ include "pod_annotation" .Values.annotations.metricsPath }}"]
-    action = "replace"
     target_label = "__metrics_path__"
   }
   rule {
