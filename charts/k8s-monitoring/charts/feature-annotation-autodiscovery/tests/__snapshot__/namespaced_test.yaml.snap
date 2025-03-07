@@ -24,18 +24,24 @@ can exclude a specified list of namespaces:
           }
           rule {
             source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_job"]
-            action = "replace"
             target_label = "job"
           }
           rule {
             source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_instance"]
-            action = "replace"
             target_label = "instance"
           }
           rule {
+            source_labels = ["__meta_kubernetes_namespace"]
+            target_label = "namespace"
+          }
+          rule {
             source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_metrics_path"]
-            action = "replace"
             target_label = "__metrics_path__"
+          }
+          rule {
+            action = "labelmap"
+            regex = "__meta_kubernetes_pod_annotation_k8s_grafana_com_metrics_param_(.+)"
+            replacement = "__param_$1"
           }
 
           // Choose the pod port
@@ -123,18 +129,24 @@ can exclude a specified list of namespaces:
           }
           rule {
             source_labels = ["__meta_kubernetes_service_annotation_k8s_grafana_com_job"]
-            action = "replace"
             target_label = "job"
           }
           rule {
             source_labels = ["__meta_kubernetes_service_annotation_k8s_grafana_com_instance"]
-            action = "replace"
             target_label = "instance"
           }
           rule {
+            source_labels = ["__meta_kubernetes_namespace"]
+            target_label = "namespace"
+          }
+          rule {
             source_labels = ["__meta_kubernetes_service_annotation_k8s_grafana_com_metrics_path"]
-            action = "replace"
             target_label = "__metrics_path__"
+          }
+          rule {
+            action = "labelmap"
+            regex = "__meta_kubernetes_service_annotation_k8s_grafana_com_metrics_param_(.+)"
+            replacement = "__param_$1"
           }
 
           // Choose the service port
@@ -269,18 +281,24 @@ can use a specified list of namespaces:
           }
           rule {
             source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_job"]
-            action = "replace"
             target_label = "job"
           }
           rule {
             source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_instance"]
-            action = "replace"
             target_label = "instance"
           }
           rule {
+            source_labels = ["__meta_kubernetes_namespace"]
+            target_label = "namespace"
+          }
+          rule {
             source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_metrics_path"]
-            action = "replace"
             target_label = "__metrics_path__"
+          }
+          rule {
+            action = "labelmap"
+            regex = "__meta_kubernetes_pod_annotation_k8s_grafana_com_metrics_param_(.+)"
+            replacement = "__param_$1"
           }
 
           // Choose the pod port
@@ -366,18 +384,24 @@ can use a specified list of namespaces:
           }
           rule {
             source_labels = ["__meta_kubernetes_service_annotation_k8s_grafana_com_job"]
-            action = "replace"
             target_label = "job"
           }
           rule {
             source_labels = ["__meta_kubernetes_service_annotation_k8s_grafana_com_instance"]
-            action = "replace"
             target_label = "instance"
           }
           rule {
+            source_labels = ["__meta_kubernetes_namespace"]
+            target_label = "namespace"
+          }
+          rule {
             source_labels = ["__meta_kubernetes_service_annotation_k8s_grafana_com_metrics_path"]
-            action = "replace"
             target_label = "__metrics_path__"
+          }
+          rule {
+            action = "labelmap"
+            regex = "__meta_kubernetes_service_annotation_k8s_grafana_com_metrics_param_(.+)"
+            replacement = "__param_$1"
           }
 
           // Choose the service port

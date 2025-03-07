@@ -3,223 +3,12 @@ declare "annotation_autodiscovery" {
   argument "metrics_destinations" {
     comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
   }
-
-  discovery.kubernetes "pods" {
-    role = "pod"
-{{- if .Values.namespaces }}
-    namespaces {
-      names = {{ .Values.namespaces | toJson }}
-    }
+{{- if .Values.pods.enabled }}
+  {{- include "feature.annotationAutodiscovery.pods" . | indent 2 }}
 {{- end }}
-  }
-
-  discovery.relabel "annotation_autodiscovery_pods" {
-    targets = discovery.kubernetes.pods.targets
-{{- if .Values.excludeNamespaces }}
-    rule {
-      source_labels = ["__meta_kubernetes_namespace"]
-      regex = "{{ join "|" .Values.excludeNamespaces }}"
-      action = "drop"
-    }
+{{- if .Values.services.enabled }}
+{{- include "feature.annotationAutodiscovery.services" . | indent 2 }}
 {{- end }}
-    rule {
-      source_labels = ["{{ include "pod_annotation" .Values.annotations.scrape }}"]
-      regex = "true"
-      action = "keep"
-    }
-    rule {
-      source_labels = ["{{ include "pod_annotation" .Values.annotations.job }}"]
-      action = "replace"
-      target_label = "job"
-    }
-    rule {
-      source_labels = ["{{ include "pod_annotation" .Values.annotations.instance }}"]
-      action = "replace"
-      target_label = "instance"
-    }
-    rule {
-      source_labels = ["{{ include "pod_annotation" .Values.annotations.metricsPath }}"]
-      action = "replace"
-      target_label = "__metrics_path__"
-    }
-
-    // Choose the pod port
-    // The discovery generates a target for each declared container port of the pod.
-    // If the metricsPortName annotation has value, keep only the target where the port name matches the one of the annotation.
-    rule {
-      source_labels = ["__meta_kubernetes_pod_container_port_name"]
-      target_label = "__tmp_port"
-    }
-    rule {
-      source_labels = ["{{ include "pod_annotation" .Values.annotations.metricsPortName }}"]
-      regex = "(.+)"
-      target_label = "__tmp_port"
-    }
-    rule {
-      source_labels = ["__meta_kubernetes_pod_container_port_name"]
-      action = "keepequal"
-      target_label = "__tmp_port"
-    }
-    rule {
-      action = "labeldrop"
-      regex = "__tmp_port"
-    }
-
-    // If the metrics port number annotation has a value, override the target address to use it, regardless whether it is
-    // one of the declared ports on that Pod.
-    rule {
-      source_labels = ["{{ include "pod_annotation" .Values.annotations.metricsPortNumber }}", "__meta_kubernetes_pod_ip"]
-      regex = "(\\d+);(([A-Fa-f0-9]{1,4}::?){1,7}[A-Fa-f0-9]{1,4})"
-      replacement = "[$2]:$1" // IPv6
-      target_label = "__address__"
-    }
-    rule {
-      source_labels = ["{{ include "pod_annotation" .Values.annotations.metricsPortNumber }}", "__meta_kubernetes_pod_ip"]
-      regex = "(\\d+);((([0-9]+?)(\\.|$)){4})" // IPv4, takes priority over IPv6 when both exists
-      replacement = "$2:$1"
-      target_label = "__address__"
-    }
-
-    rule {
-      source_labels = ["{{ include "pod_annotation" .Values.annotations.metricsScheme }}"]
-      regex = "(.+)"
-      target_label = "__scheme__"
-    }
-
-    rule {
-      source_labels = ["{{ include "pod_annotation" .Values.annotations.metricsScrapeInterval }}"]
-      regex = "(.+)"
-      target_label = "__scrape_interval__"
-    }
-    rule {
-      source_labels = ["__scrape_interval__"]
-      regex = ""
-      replacement = {{ .Values.scrapeInterval | default .Values.global.scrapeInterval | quote }}
-      target_label = "__scrape_interval__"
-    }
-    rule {
-      source_labels = ["{{ include "pod_annotation" .Values.annotations.metricsScrapeTimeout }}"]
-      regex = "(.+)"
-      target_label = "__scrape_timeout__"
-    }
-    rule {
-      source_labels = ["__scrape_timeout__"]
-      regex = ""
-      replacement = {{ .Values.scrapeTimeout | default .Values.global.scrapeTimeout | quote }}
-      target_label = "__scrape_timeout__"
-    }
-{{- if .Values.extraDiscoveryRules }}
-{{ .Values.extraDiscoveryRules | indent 4 }}
-{{- end }}
-  }
-
-  discovery.kubernetes "services" {
-    role = "service"
-{{- if .Values.namespaces }}
-    namespaces {
-      names = {{ .Values.namespaces | toJson }}
-    }
-{{- end }}
-  }
-
-  discovery.relabel "annotation_autodiscovery_services" {
-    targets = discovery.kubernetes.services.targets
-{{- if .Values.excludeNamespaces }}
-    rule {
-      source_labels = ["__meta_kubernetes_namespace"]
-      regex = "{{ join "|" .Values.excludeNamespaces }}"
-      action = "drop"
-    }
-{{- end }}
-    rule {
-      source_labels = ["{{ include "service_annotation" .Values.annotations.scrape }}"]
-      regex = "true"
-      action = "keep"
-    }
-    rule {
-      source_labels = ["{{ include "service_annotation" .Values.annotations.job }}"]
-      action = "replace"
-      target_label = "job"
-    }
-    rule {
-      source_labels = ["{{ include "service_annotation" .Values.annotations.instance }}"]
-      action = "replace"
-      target_label = "instance"
-    }
-    rule {
-      source_labels = ["{{ include "service_annotation" .Values.annotations.metricsPath }}"]
-      action = "replace"
-      target_label = "__metrics_path__"
-    }
-
-    // Choose the service port
-    rule {
-      source_labels = ["__meta_kubernetes_service_port_name"]
-      target_label = "__tmp_port"
-    }
-    rule {
-      source_labels = ["{{ include "service_annotation" .Values.annotations.metricsPortName }}"]
-      regex = "(.+)"
-      target_label = "__tmp_port"
-    }
-    rule {
-      source_labels = ["__meta_kubernetes_service_port_name"]
-      action = "keepequal"
-      target_label = "__tmp_port"
-    }
-
-    rule {
-      source_labels = ["__meta_kubernetes_service_port_number"]
-      target_label = "__tmp_port"
-    }
-    rule {
-      source_labels = ["{{ include "service_annotation" .Values.annotations.metricsPortNumber }}"]
-      regex = "(.+)"
-      target_label = "__tmp_port"
-    }
-    rule {
-      source_labels = ["__meta_kubernetes_service_port_number"]
-      action = "keepequal"
-      target_label = "__tmp_port"
-    }
-    rule {
-      action = "labeldrop"
-      regex = "__tmp_port"
-    }
-
-    rule {
-      source_labels = ["{{ include "service_annotation" .Values.annotations.metricsScheme }}"]
-      regex = "(.+)"
-      target_label = "__scheme__"
-    }
-
-    rule {
-      source_labels = ["{{ include "service_annotation" .Values.annotations.metricsScrapeInterval }}"]
-      regex = "(.+)"
-      target_label = "__scrape_interval__"
-    }
-    rule {
-      source_labels = ["__scrape_interval__"]
-      regex = ""
-      replacement = {{ .Values.scrapeInterval | default .Values.global.scrapeInterval | quote }}
-      target_label = "__scrape_interval__"
-    }
-    rule {
-      source_labels = ["{{ include "service_annotation" .Values.annotations.metricsScrapeTimeout }}"]
-      regex = "(.+)"
-      target_label = "__scrape_timeout__"
-    }
-    rule {
-      source_labels = ["__scrape_timeout__"]
-      regex = ""
-      replacement = {{ .Values.scrapeTimeout | default .Values.global.scrapeTimeout | quote }}
-      target_label = "__scrape_timeout__"
-    }
-
-{{- if .Values.extraDiscoveryRules }}
-{{ .Values.extraDiscoveryRules | indent 4 }}
-{{- end }}
-  }
 
   discovery.relabel "annotation_autodiscovery_http" {
     targets = array.concat(discovery.relabel.annotation_autodiscovery_pods.output, discovery.relabel.annotation_autodiscovery_services.output)
@@ -248,7 +37,10 @@ declare "annotation_autodiscovery" {
     clustering {
       enabled = true
     }
-{{ if or .Values.metricsTuning.includeMetrics .Values.metricsTuning.excludeMetrics .Values.extraMetricProcessingRules }}
+{{- $metricRelabelRulesNeeded :=  or .Values.metricsTuning.includeMetrics .Values.metricsTuning.excludeMetrics .Values.extraMetricProcessingRules }}
+{{- $metricRelabelRulesNeeded =  or $metricRelabelRulesNeeded (and .Values.pods.enabled (or .Values.pods.staticLabels .Values.pods.staticLabelsFrom)) }}
+{{- $metricRelabelRulesNeeded =  or $metricRelabelRulesNeeded (and .Values.services.enabled (or .Values.services.staticLabels .Values.services.staticLabelsFrom)) }}
+{{ if $metricRelabelRulesNeeded }}
     forward_to = [prometheus.relabel.annotation_autodiscovery.receiver]
 {{- else }}
     forward_to = argument.metrics_destinations.value
@@ -267,7 +59,7 @@ declare "annotation_autodiscovery" {
     clustering {
       enabled = true
     }
-{{ if or .Values.metricsTuning.includeMetrics .Values.metricsTuning.excludeMetrics .Values.extraMetricProcessingRules }}
+{{ if $metricRelabelRulesNeeded }}
     forward_to = [prometheus.relabel.annotation_autodiscovery.receiver]
   }
 
@@ -287,6 +79,46 @@ declare "annotation_autodiscovery" {
       action = "drop"
     }
 {{- end }}
+{{- if .Values.pods.enabled }}
+{{- range $k, $v := .Values.pods.staticLabels }}
+    rule {
+      source_labels = ["temp_source"]
+      regex = "pod"
+      target_label = {{ $k | quote }}
+      replacement = {{ $v | quote }}
+    }
+{{- end }}
+{{- range $k, $v := .Values.pods.staticLabelsFrom }}
+    rule {
+      source_labels = ["temp_source"]
+      regex = "pod"
+      target_label = {{ $k | quote }}
+      replacement = {{ $v }}
+    }
+{{- end }}
+{{- end }}
+{{- if .Values.services.enabled }}
+{{- range $k, $v := .Values.services.staticLabels }}
+    rule {
+      source_labels = ["temp_source"]
+      regex = "service"
+      target_label = {{ $k | quote }}
+      replacement = {{ $v | quote }}
+    }
+{{- end }}
+{{- range $k, $v := .Values.services.staticLabelsFrom }}
+    rule {
+      source_labels = ["temp_source"]
+      regex = "service"
+      target_label = {{ $k | quote }}
+      replacement = {{ $v }}
+    }
+{{- end }}
+{{- end }}
+    rule {
+      action = "labeldrop"
+      regex = "temp_source"
+    }
 {{- if .Values.extraMetricProcessingRules }}
 {{ .Values.extraMetricProcessingRules | indent 4 }}
 {{- end }}

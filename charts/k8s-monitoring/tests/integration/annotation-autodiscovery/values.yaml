@@ -6,9 +6,22 @@ destinations:
   - name: prometheus
     type: prometheus
     url: http://prometheus-server.prometheus.svc:9090/api/v1/write
+  - name: localLoki
+    type: loki
+    url: http://loki.loki.svc:3100/loki/api/v1/push
+    tenantId: "1"
+    auth:
+      type: basic
+      username: loki
+      password: lokipassword
 
 annotationAutodiscovery:
   enabled: true
+  pods:
+    labelSelectors:
+      color: blue
+    labels:
+      color: color
 
   # Persist the scrape interval and timeout values, so we can test the values are set correctly.
   extraDiscoveryRules: |-
@@ -21,7 +34,13 @@ annotationAutodiscovery:
       target_label = "scrape_timeout"
     }
 
+podLogs:
+  enabled: true
+
 alloy-metrics:
   enabled: true
   controller:
     replicas: 2
+
+alloy-logs:
+  enabled: true
