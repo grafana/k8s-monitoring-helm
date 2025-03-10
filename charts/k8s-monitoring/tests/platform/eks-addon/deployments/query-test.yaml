@@ -35,19 +35,19 @@ spec:
           - configMapRef: {name: test-variables}
         queries:
           # Cluster metrics
-          - query: kubernetes_build_info{cluster="$CLUSTER", job="integrations/kubernetes/kubelet"}
+          - query: kubernetes_build_info{cluster="$CLUSTER", job="integrations/kubernetes/kubelet", source="eks-addon"}
             type: promql
-          - query: node_cpu_usage_seconds_total{cluster="$CLUSTER", job="integrations/kubernetes/resources"}
+          - query: node_cpu_usage_seconds_total{cluster="$CLUSTER", job="integrations/kubernetes/resources", source="eks-addon"}
             type: promql
-          - query: machine_memory_bytes{cluster="$CLUSTER", job="integrations/kubernetes/cadvisor"}
+          - query: machine_memory_bytes{cluster="$CLUSTER", job="integrations/kubernetes/cadvisor", source="eks-addon"}
             type: promql
-          - query: count(kube_node_info{cluster="$CLUSTER", job="integrations/kubernetes/kube-state-metrics"})
+          - query: count(kube_node_info{cluster="$CLUSTER", job="integrations/kubernetes/kube-state-metrics", source="eks-addon"})
             type: promql
 
           # Cluster events
-          - query: count_over_time({cluster="$CLUSTER", job="integrations/kubernetes/eventhandler"}[1h])
+          - query: count_over_time({cluster="$CLUSTER", job="integrations/kubernetes/eventhandler", source="eks-addon"}[1h])
             type: logql
 
           # Pod logs
-          - query: count_over_time({cluster="$CLUSTER", job!~"integrations/kubernetes/eventhandler|integrations/kubernetes/journal"}[1h])
+          - query: count_over_time({cluster="$CLUSTER", job!~"integrations/kubernetes/eventhandler|integrations/kubernetes/journal", source="eks-addon"}[1h])
             type: logql

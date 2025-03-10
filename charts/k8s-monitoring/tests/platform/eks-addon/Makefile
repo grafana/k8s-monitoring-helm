@@ -1,6 +1,9 @@
-all: deployments/test-variables.yaml deployments/grafana-cloud.yaml deployments/grafana-cloud-credentials.yaml
+all: values.json deployments/test-variables.yaml deployments/grafana-cloud.yaml deployments/grafana-cloud-credentials.yaml
 clean:
 	rm -f deployments/test-variables.yaml deployments/grafana-cloud.yaml deployments/grafana-cloud-credentials.yaml
+
+values.json: values.yaml
+	yq eval --output-format json '. | del(.cluster.name)' values.yaml > $@
 
 deployments/test-variables.yaml:
 	echo "---" > $@
