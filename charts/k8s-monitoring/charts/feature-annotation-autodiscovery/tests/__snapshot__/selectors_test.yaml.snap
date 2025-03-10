@@ -1,4 +1,4 @@
-creates a module with default discovery, scraping, and processing configurations:
+will set appropriate selectors:
   1: |
     |-
       declare "annotation_autodiscovery" {
@@ -8,12 +8,16 @@ creates a module with default discovery, scraping, and processing configurations
 
         discovery.kubernetes "pods" {
           role = "pod"
+          selectors {
+            role = "pod"
+            label = "app=myapp,color=blue"
+          }
         }
 
         discovery.relabel "annotation_autodiscovery_pods" {
           targets = discovery.kubernetes.pods.targets
           rule {
-            source_labels = ["__meta_kubernetes_pod_annotation_prometheus_io_scrape"]
+            source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_scrape"]
             regex = "true"
             action = "keep"
           }
@@ -30,7 +34,7 @@ creates a module with default discovery, scraping, and processing configurations
             target_label = "namespace"
           }
           rule {
-            source_labels = ["__meta_kubernetes_pod_annotation_prometheus_io_path"]
+            source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_metrics_path"]
             target_label = "__metrics_path__"
           }
           rule {
@@ -77,7 +81,7 @@ creates a module with default discovery, scraping, and processing configurations
           }
 
           rule {
-            source_labels = ["__meta_kubernetes_pod_annotation_prometheus_io_scheme"]
+            source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_metrics_scheme"]
             regex = "(.+)"
             target_label = "__scheme__"
           }
@@ -108,12 +112,16 @@ creates a module with default discovery, scraping, and processing configurations
 
         discovery.kubernetes "services" {
           role = "service"
+          selectors {
+            role = "service"
+            label = "app=myapp,region in (north,east)"
+          }
         }
 
         discovery.relabel "annotation_autodiscovery_services" {
           targets = discovery.kubernetes.services.targets
           rule {
-            source_labels = ["__meta_kubernetes_service_annotation_prometheus_io_scrape"]
+            source_labels = ["__meta_kubernetes_service_annotation_k8s_grafana_com_scrape"]
             regex = "true"
             action = "keep"
           }
@@ -130,7 +138,7 @@ creates a module with default discovery, scraping, and processing configurations
             target_label = "namespace"
           }
           rule {
-            source_labels = ["__meta_kubernetes_service_annotation_prometheus_io_path"]
+            source_labels = ["__meta_kubernetes_service_annotation_k8s_grafana_com_metrics_path"]
             target_label = "__metrics_path__"
           }
           rule {
@@ -175,7 +183,7 @@ creates a module with default discovery, scraping, and processing configurations
           }
 
           rule {
-            source_labels = ["__meta_kubernetes_service_annotation_prometheus_io_scheme"]
+            source_labels = ["__meta_kubernetes_service_annotation_k8s_grafana_com_metrics_scheme"]
             regex = "(.+)"
             target_label = "__scheme__"
           }

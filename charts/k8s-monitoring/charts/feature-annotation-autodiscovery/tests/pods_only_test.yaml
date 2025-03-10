@@ -1,0 +1,23 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Test Pods only
+templates:
+  - configmap.yaml
+tests:
+  - it: will only discover pods
+    set:
+      deployAsConfigMap: true
+      labelSelectors:
+        app: myapp
+      pods:
+        enabled: true
+        labels:
+          namespace: __meta_kubernetes_namespace
+        staticLabels:
+          color: blue
+      services:
+        enabled: false
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["module.alloy"]

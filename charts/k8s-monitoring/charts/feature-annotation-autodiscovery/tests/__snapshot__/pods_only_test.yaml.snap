@@ -1,4 +1,4 @@
-creates a module with default discovery, scraping, and processing configurations:
+will only discover pods:
   1: |
     |-
       declare "annotation_autodiscovery" {
@@ -8,12 +8,16 @@ creates a module with default discovery, scraping, and processing configurations
 
         discovery.kubernetes "pods" {
           role = "pod"
+          selectors {
+            role = "pod"
+            label = "app=myapp"
+          }
         }
 
         discovery.relabel "annotation_autodiscovery_pods" {
           targets = discovery.kubernetes.pods.targets
           rule {
-            source_labels = ["__meta_kubernetes_pod_annotation_prometheus_io_scrape"]
+            source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_scrape"]
             regex = "true"
             action = "keep"
           }
@@ -30,7 +34,7 @@ creates a module with default discovery, scraping, and processing configurations
             target_label = "namespace"
           }
           rule {
-            source_labels = ["__meta_kubernetes_pod_annotation_prometheus_io_path"]
+            source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_metrics_path"]
             target_label = "__metrics_path__"
           }
           rule {
@@ -77,7 +81,7 @@ creates a module with default discovery, scraping, and processing configurations
           }
 
           rule {
-            source_labels = ["__meta_kubernetes_pod_annotation_prometheus_io_scheme"]
+            source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_metrics_scheme"]
             regex = "(.+)"
             target_label = "__scheme__"
           }
@@ -104,103 +108,13 @@ creates a module with default discovery, scraping, and processing configurations
             replacement = "10s"
             target_label = "__scrape_timeout__"
           }
-        }
-
-        discovery.kubernetes "services" {
-          role = "service"
-        }
-
-        discovery.relabel "annotation_autodiscovery_services" {
-          targets = discovery.kubernetes.services.targets
           rule {
-            source_labels = ["__meta_kubernetes_service_annotation_prometheus_io_scrape"]
-            regex = "true"
-            action = "keep"
-          }
-          rule {
-            source_labels = ["__meta_kubernetes_service_annotation_k8s_grafana_com_job"]
-            target_label = "job"
-          }
-          rule {
-            source_labels = ["__meta_kubernetes_service_annotation_k8s_grafana_com_instance"]
-            target_label = "instance"
-          }
-          rule {
-            source_labels = ["__meta_kubernetes_namespace"]
+            source_labels = ["__meta_kubernetes_pod_label___meta_kubernetes_namespace"]
             target_label = "namespace"
           }
           rule {
-            source_labels = ["__meta_kubernetes_service_annotation_prometheus_io_path"]
-            target_label = "__metrics_path__"
-          }
-          rule {
-            action = "labelmap"
-            regex = "__meta_kubernetes_service_annotation_k8s_grafana_com_metrics_param_(.+)"
-            replacement = "__param_$1"
-          }
-
-          // Choose the service port
-          rule {
-            source_labels = ["__meta_kubernetes_service_port_name"]
-            target_label = "__tmp_port"
-          }
-          rule {
-            source_labels = ["__meta_kubernetes_service_annotation_k8s_grafana_com_metrics_portName"]
-            regex = "(.+)"
-            target_label = "__tmp_port"
-          }
-          rule {
-            source_labels = ["__meta_kubernetes_service_port_name"]
-            action = "keepequal"
-            target_label = "__tmp_port"
-          }
-
-          rule {
-            source_labels = ["__meta_kubernetes_service_port_number"]
-            target_label = "__tmp_port"
-          }
-          rule {
-            source_labels = ["__meta_kubernetes_service_annotation_k8s_grafana_com_metrics_portNumber"]
-            regex = "(.+)"
-            target_label = "__tmp_port"
-          }
-          rule {
-            source_labels = ["__meta_kubernetes_service_port_number"]
-            action = "keepequal"
-            target_label = "__tmp_port"
-          }
-          rule {
-            action = "labeldrop"
-            regex = "__tmp_port"
-          }
-
-          rule {
-            source_labels = ["__meta_kubernetes_service_annotation_prometheus_io_scheme"]
-            regex = "(.+)"
-            target_label = "__scheme__"
-          }
-
-          rule {
-            source_labels = ["__meta_kubernetes_service_annotation_k8s_grafana_com_metrics_scrapeInterval"]
-            regex = "(.+)"
-            target_label = "__scrape_interval__"
-          }
-          rule {
-            source_labels = ["__scrape_interval__"]
-            regex = ""
-            replacement = "60s"
-            target_label = "__scrape_interval__"
-          }
-          rule {
-            source_labels = ["__meta_kubernetes_service_annotation_k8s_grafana_com_metrics_scrapeTimeout"]
-            regex = "(.+)"
-            target_label = "__scrape_timeout__"
-          }
-          rule {
-            source_labels = ["__scrape_timeout__"]
-            regex = ""
-            replacement = "10s"
-            target_label = "__scrape_timeout__"
+            target_label = "temp_source"
+            replacement = "pod"
           }
         }
 
@@ -230,7 +144,7 @@ creates a module with default discovery, scraping, and processing configurations
             enabled = true
           }
 
-          forward_to = argument.metrics_destinations.value
+          forward_to = [prometheus.relabel.annotation_autodiscovery.receiver]
         }
 
         prometheus.scrape "annotation_autodiscovery_https" {
@@ -244,6 +158,21 @@ creates a module with default discovery, scraping, and processing configurations
             enabled = true
           }
 
+          forward_to = [prometheus.relabel.annotation_autodiscovery.receiver]
+        }
+
+        prometheus.relabel "annotation_autodiscovery" {
+          max_cache_size = 100000
+          rule {
+            source_labels = ["temp_source"]
+            regex = "pod"
+            target_label = "color"
+            replacement = "blue"
+          }
+          rule {
+            action = "labeldrop"
+            regex = "temp_source"
+          }
           forward_to = argument.metrics_destinations.value
         }
       }
