@@ -144,6 +144,13 @@ data:
           key_pem = remote.kubernetes.secret.otlp_gateway.data["key"]
         }
       }
+    
+      retry_on_failure {
+        enabled = true
+        initial_interval = "5s"
+        max_interval = "30s"
+        max_elapsed_time = "5m"
+      }
     }
     
     remote.kubernetes.secret "otlp_gateway" {
@@ -609,6 +616,13 @@ data:
           cert_pem = nonsensitive(remote.kubernetes.secret.otlp_gateway.data["cert"])
           key_pem = remote.kubernetes.secret.otlp_gateway.data["key"]
         }
+      }
+    
+      retry_on_failure {
+        enabled = true
+        initial_interval = "5s"
+        max_interval = "30s"
+        max_elapsed_time = "5m"
       }
     }
     

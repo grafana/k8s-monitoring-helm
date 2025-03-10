@@ -83,6 +83,9 @@ pyroscope.write {{ include "helper.alloy_name" .name | quote }} {
       {{- end }}
     }
 {{- end }}
+    min_backoff_period = {{ .minBackoffPeriod | quote }}
+    max_backoff_period = {{ .maxBackoffPeriod | quote }}
+    max_backoff_retries = {{ .maxBackoffRetries | quote }}
   }
 
   external_labels = {
