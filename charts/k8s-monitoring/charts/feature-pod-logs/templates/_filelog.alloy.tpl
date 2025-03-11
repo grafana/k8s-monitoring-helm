@@ -140,7 +140,7 @@ otelcol.processor.transform "pod_logs" {
       `set(attributes["service.version"], attributes["app.kubernetes.io/version"]) where attributes["service.name"] == nil`,
 
       `set(attributes["service.instance.id"], attributes["service.instance.id"]) where attributes["service.instance.id"] == nil`,
-      `set(attributes["service.instance.id"], concat(attributes["k8s.namespace.name"], attributes["k8s.pod.name"], attributes["k8s.container.name"])) where attributes["service.instance.id"] == nil`,
+      `set(attributes["service.instance.id"], Concat([attributes["k8s.namespace.name"], attributes["k8s.pod.name"], attributes["k8s.container.name"]], ".")) where attributes["service.instance.id"] == nil`,
 
       `set(attributes["loki.resource.labels"], {{ .Values.labelsToKeep | join "," | quote }})`,   // Used to preserve the labels when converting to Loki
       `keep_matching_keys(attributes, "loki.resource.labels|{{ .Values.labelsToKeep | join "|" }}")`,
