@@ -902,13 +902,13 @@ remote.kubernetes.secret "profiles_service" {
 }
 pyroscope.write "profiles_service" {
   endpoint {
-    url = nonsensitive(remote.kubernetes.secret.profiles_service.data["host"])
+    url = convert.nonsensitive(remote.kubernetes.secret.profiles_service.data["host"])
     headers = {
-      "X-Scope-OrgID" = nonsensitive(remote.kubernetes.secret.profiles_service.data["tenantId"]),
+      "X-Scope-OrgID" = convert.nonsensitive(remote.kubernetes.secret.profiles_service.data["tenantId"]),
     }
 
     basic_auth {
-      username = nonsensitive(remote.kubernetes.secret.profiles_service.data["username"])
+      username = convert.nonsensitive(remote.kubernetes.secret.profiles_service.data["username"])
       password = remote.kubernetes.secret.profiles_service.data["password"]
     }
   }

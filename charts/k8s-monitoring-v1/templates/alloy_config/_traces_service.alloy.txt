@@ -8,7 +8,7 @@ remote.kubernetes.secret "traces_service" {
 {{- with .Values.externalServices.tempo }}
 {{ if eq .authMode "basic" }}
 otelcol.auth.basic "traces_service" {
-  username = nonsensitive(remote.kubernetes.secret.traces_service.data[{{ .basicAuth.usernameKey | quote }}])
+  username = convert.nonsensitive(remote.kubernetes.secret.traces_service.data[{{ .basicAuth.usernameKey | quote }}])
   password = remote.kubernetes.secret.traces_service.data[{{ .basicAuth.passwordKey | quote }}]
 }
 {{- else if eq .authMode "bearerToken" }}
@@ -22,14 +22,14 @@ otelcol.exporter.otlp "traces_service" {
 otelcol.exporter.otlphttp "traces_service" {
 {{- end }}
   client {
-    endpoint = nonsensitive(remote.kubernetes.secret.traces_service.data[{{ .hostKey | quote }}])
+    endpoint = convert.nonsensitive(remote.kubernetes.secret.traces_service.data[{{ .hostKey | quote }}])
 {{ if eq .authMode "basic" }}
     auth = otelcol.auth.basic.traces_service.handler
 {{- else if eq .authMode "bearerToken" }}
     auth = otelcol.auth.bearer.traces_service.handler
 {{- end }}
     headers = {
-      "X-Scope-OrgID" = nonsensitive(remote.kubernetes.secret.traces_service.data[{{ .tenantIdKey | quote }}]),
+      "X-Scope-OrgID" = convert.nonsensitive(remote.kubernetes.secret.traces_service.data[{{ .tenantIdKey | quote }}]),
 {{- range $key, $value := .extraHeaders }}
       {{ $key | quote }} = {{ $value | quote }},
 {{- end }}

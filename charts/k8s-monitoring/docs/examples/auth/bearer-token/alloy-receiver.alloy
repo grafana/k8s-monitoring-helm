@@ -158,13 +158,13 @@ otelcol.exporter.otlp "tempo" {
     endpoint = "http://tempo.tempo.svc:4317"
     auth = otelcol.auth.bearer.tempo.handler
     headers = {
-      "X-Scope-OrgID" = nonsensitive(remote.kubernetes.secret.tempo.data["tenantId"]),
+      "X-Scope-OrgID" = convert.nonsensitive(remote.kubernetes.secret.tempo.data["tenantId"]),
     }
     tls {
       insecure = false
       insecure_skip_verify = false
-      ca_pem = nonsensitive(remote.kubernetes.secret.tempo.data["ca"])
-      cert_pem = nonsensitive(remote.kubernetes.secret.tempo.data["cert"])
+      ca_pem = convert.nonsensitive(remote.kubernetes.secret.tempo.data["ca"])
+      cert_pem = convert.nonsensitive(remote.kubernetes.secret.tempo.data["cert"])
       key_pem = remote.kubernetes.secret.tempo.data["key"]
     }
   }

@@ -68,16 +68,16 @@ data:
       endpoint {
         url = "http://prometheus.prometheus.svc:9090/api/v1/write"
         headers = {
-          "X-Scope-OrgID" = nonsensitive(remote.kubernetes.secret.prometheus.data["tenantId"]),
+          "X-Scope-OrgID" = convert.nonsensitive(remote.kubernetes.secret.prometheus.data["tenantId"]),
         }
         basic_auth {
-          username = nonsensitive(remote.kubernetes.secret.prometheus.data["prom-username"])
+          username = convert.nonsensitive(remote.kubernetes.secret.prometheus.data["prom-username"])
           password = remote.kubernetes.secret.prometheus.data["access-token"]
         }
         tls_config {
           insecure_skip_verify = false
-          ca_pem = nonsensitive(remote.kubernetes.secret.prometheus.data["ca"])
-          cert_pem = nonsensitive(remote.kubernetes.secret.prometheus.data["cert"])
+          ca_pem = convert.nonsensitive(remote.kubernetes.secret.prometheus.data["ca"])
+          cert_pem = convert.nonsensitive(remote.kubernetes.secret.prometheus.data["cert"])
           key_pem = remote.kubernetes.secret.prometheus.data["key"]
         }
         send_native_histograms = false
@@ -233,15 +233,15 @@ data:
     loki.write "loki" {
       endpoint {
         url = "http://loki.loki.svc:3100/loki/api/v1/push"
-        tenant_id = nonsensitive(remote.kubernetes.secret.loki.data["tenantId"])
+        tenant_id = convert.nonsensitive(remote.kubernetes.secret.loki.data["tenantId"])
         basic_auth {
-          username = nonsensitive(remote.kubernetes.secret.loki.data["loki-username"])
+          username = convert.nonsensitive(remote.kubernetes.secret.loki.data["loki-username"])
           password = remote.kubernetes.secret.loki.data["access-token"]
         }
         tls_config {
           insecure_skip_verify = false
-          ca_pem = nonsensitive(remote.kubernetes.secret.loki.data["ca"])
-          cert_pem = nonsensitive(remote.kubernetes.secret.loki.data["cert"])
+          ca_pem = convert.nonsensitive(remote.kubernetes.secret.loki.data["ca"])
+          cert_pem = convert.nonsensitive(remote.kubernetes.secret.loki.data["cert"])
           key_pem = remote.kubernetes.secret.loki.data["key"]
         }
         min_backoff_period = "500ms"
@@ -450,16 +450,16 @@ data:
       endpoint {
         url = "http://prometheus.prometheus.svc:9090/api/v1/write"
         headers = {
-          "X-Scope-OrgID" = nonsensitive(remote.kubernetes.secret.prometheus.data["tenantId"]),
+          "X-Scope-OrgID" = convert.nonsensitive(remote.kubernetes.secret.prometheus.data["tenantId"]),
         }
         basic_auth {
-          username = nonsensitive(remote.kubernetes.secret.prometheus.data["prom-username"])
+          username = convert.nonsensitive(remote.kubernetes.secret.prometheus.data["prom-username"])
           password = remote.kubernetes.secret.prometheus.data["access-token"]
         }
         tls_config {
           insecure_skip_verify = false
-          ca_pem = nonsensitive(remote.kubernetes.secret.prometheus.data["ca"])
-          cert_pem = nonsensitive(remote.kubernetes.secret.prometheus.data["cert"])
+          ca_pem = convert.nonsensitive(remote.kubernetes.secret.prometheus.data["ca"])
+          cert_pem = convert.nonsensitive(remote.kubernetes.secret.prometheus.data["cert"])
           key_pem = remote.kubernetes.secret.prometheus.data["key"]
         }
         send_native_histograms = false
@@ -510,15 +510,15 @@ data:
     loki.write "loki" {
       endpoint {
         url = "http://loki.loki.svc:3100/loki/api/v1/push"
-        tenant_id = nonsensitive(remote.kubernetes.secret.loki.data["tenantId"])
+        tenant_id = convert.nonsensitive(remote.kubernetes.secret.loki.data["tenantId"])
         basic_auth {
-          username = nonsensitive(remote.kubernetes.secret.loki.data["loki-username"])
+          username = convert.nonsensitive(remote.kubernetes.secret.loki.data["loki-username"])
           password = remote.kubernetes.secret.loki.data["access-token"]
         }
         tls_config {
           insecure_skip_verify = false
-          ca_pem = nonsensitive(remote.kubernetes.secret.loki.data["ca"])
-          cert_pem = nonsensitive(remote.kubernetes.secret.loki.data["cert"])
+          ca_pem = convert.nonsensitive(remote.kubernetes.secret.loki.data["ca"])
+          cert_pem = convert.nonsensitive(remote.kubernetes.secret.loki.data["cert"])
           key_pem = remote.kubernetes.secret.loki.data["key"]
         }
         min_backoff_period = "500ms"
@@ -620,13 +620,13 @@ data:
         endpoint = "http://tempo.tempo.svc:4317"
         auth = otelcol.auth.bearer.tempo.handler
         headers = {
-          "X-Scope-OrgID" = nonsensitive(remote.kubernetes.secret.tempo.data["tenantId"]),
+          "X-Scope-OrgID" = convert.nonsensitive(remote.kubernetes.secret.tempo.data["tenantId"]),
         }
         tls {
           insecure = false
           insecure_skip_verify = false
-          ca_pem = nonsensitive(remote.kubernetes.secret.tempo.data["ca"])
-          cert_pem = nonsensitive(remote.kubernetes.secret.tempo.data["cert"])
+          ca_pem = convert.nonsensitive(remote.kubernetes.secret.tempo.data["ca"])
+          cert_pem = convert.nonsensitive(remote.kubernetes.secret.tempo.data["cert"])
           key_pem = remote.kubernetes.secret.tempo.data["key"]
         }
       }
