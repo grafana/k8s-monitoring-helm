@@ -32,7 +32,7 @@ jobs:
           # if "integration-test-skip" is set, return an empty list
           # All labels on this PR
           labels='${{ toJson(github.event.pull_request.labels.*.name) }}'
-          if echo "${labels}" | jq --raw-output --compact-output 'index("integration-test-skip")' > /dev/null; then
+          if echo "${labels}" | jq --exit-status '. | any(. == "integration-test-skip")' > /dev/null; then
               echo "\"integration-test-skip\" label is set, skipping integration tests."
               echo "tests=[]" >> "${GITHUB_OUTPUT}"
               exit 0
@@ -46,6 +46,7 @@ jobs:
     name: Integration Test
     needs: list-tests
     runs-on: ubuntu-latest
+    if: needs.list-tests.outputs.tests != '[]'
     strategy:
       matrix:
         test: ${{ fromJson(needs.list-tests.outputs.tests) }}
