@@ -56,7 +56,7 @@ otelcol.processor.k8sattributes "pod_logs" {
       from      = "pod"
     }
     annotation {
-      key_regex = "opentelemetry.io/(.*)"
+      key_regex = "resource.opentelemetry.io/(.*)"
       tag_name  = "$1"
       from      = "pod"
     }
@@ -122,21 +122,25 @@ otelcol.processor.transform "pod_logs" {
       `delete_key(attributes, "k8s.container.restart_count")`,
       `delete_key(attributes, "log.file.path")`,
 
-      `set(attributes["service.name"], attributes["service_name"]) where attributes["service.name"] == nil`,
-      `set(attributes["service.name"], attributes["service"]) where attributes["service.name"] == nil`,
-      `set(attributes["service.name"], attributes["app"]) where attributes["service.name"] == nil`,
-      `set(attributes["service.name"], attributes["application"]) where attributes["service.name"] == nil`,
-      `set(attributes["service.name"], attributes["name"]) where attributes["service.name"] == nil`,
+      `set(attributes["service.name"], attributes["service.name"]) where attributes["service.name"] == nil`,
       `set(attributes["service.name"], attributes["app.kubernetes.io/name"]) where attributes["service.name"] == nil`,
-      `set(attributes["service.name"], attributes["container"]) where attributes["service.name"] == nil`,
-      `set(attributes["service.name"], attributes["container_name"]) where attributes["service.name"] == nil`,
+      `set(attributes["service.name"], attributes["k8s.deployment.name"]) where attributes["service.name"] == nil`,
+      `set(attributes["service.name"], attributes["k8s.replicaset.name"]) where attributes["service.name"] == nil`,
+      `set(attributes["service.name"], attributes["k8s.statefulset.name"]) where attributes["service.name"] == nil`,
+      `set(attributes["service.name"], attributes["k8s.daemonset.name"]) where attributes["service.name"] == nil`,
+      `set(attributes["service.name"], attributes["k8s.cronjob.name"]) where attributes["service.name"] == nil`,
+      `set(attributes["service.name"], attributes["k8s.job.name"]) where attributes["service.name"] == nil`,
+      `set(attributes["service.name"], attributes["k8s.pod.name"]) where attributes["service.name"] == nil`,
       `set(attributes["service.name"], attributes["k8s.container.name"]) where attributes["service.name"] == nil`,
-      `set(attributes["service.name"], attributes["component"]) where attributes["service.name"] == nil`,
-      `set(attributes["service.name"], attributes["workload"]) where attributes["service.name"] == nil`,
-      `set(attributes["service.name"], attributes["job"]) where attributes["service.name"] == nil`,
 
-      `set(attributes["service.namespace"], attributes["service_namespace"]) where attributes["service.namespace"] == nil`,
+      `set(attributes["service.namespace"], attributes["service.namespace"]) where attributes["service.namespace"] == nil`,
       `set(attributes["service.namespace"], attributes["k8s.namespace.name"]) where attributes["service.namespace"] == nil`,
+
+      `set(attributes["service.version"], attributes["service.version"]) where attributes["service.name"] == nil`,
+      `set(attributes["service.version"], attributes["app.kubernetes.io/version"]) where attributes["service.name"] == nil`,
+
+      `set(attributes["service.instance.id"], attributes["service.instance.id"]) where attributes["service.instance.id"] == nil`,
+      `set(attributes["service.instance.id"], concat(attributes["k8s.namespace.name"], attributes["k8s.pod.name"], attributes["k8s.container.name"])) where attributes["service.instance.id"] == nil`,
 
       `set(attributes["loki.resource.labels"], {{ .Values.labelsToKeep | join "," | quote }})`,   // Used to preserve the labels when converting to Loki
       `keep_matching_keys(attributes, "loki.resource.labels|{{ .Values.labelsToKeep | join "|" }}")`,
