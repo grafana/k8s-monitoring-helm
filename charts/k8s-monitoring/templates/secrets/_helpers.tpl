@@ -110,7 +110,7 @@ create
 {{- else if eq (include "secrets.usesKubernetesSecret" .object) "true" -}}
 {{- $credKey := include "secrets.getSecretKey" (dict "object" .object "key" .key) -}}
 {{- if .nonsensitive -}}
-nonsensitive(remote.kubernetes.secret.{{ include "helper.alloy_name" .object.name }}.data[{{ $credKey | quote }}])
+convert.nonsensitive(remote.kubernetes.secret.{{ include "helper.alloy_name" .object.name }}.data[{{ $credKey | quote }}])
 {{- else -}}
 remote.kubernetes.secret.{{ include "helper.alloy_name" .object.name }}.data[{{ $credKey | quote }}]
 {{- end -}}

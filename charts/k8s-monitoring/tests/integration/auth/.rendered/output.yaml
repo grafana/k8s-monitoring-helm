@@ -179,7 +179,7 @@ data:
         headers = {
         }
         basic_auth {
-          username = nonsensitive(remote.kubernetes.secret.prometheus_basicauth.data["username"])
+          username = convert.nonsensitive(remote.kubernetes.secret.prometheus_basicauth.data["username"])
           password = remote.kubernetes.secret.prometheus_basicauth.data["password"]
         }
         tls_config {
@@ -361,7 +361,7 @@ data:
       }
     }
     otelcol.auth.basic "prometheus_otlp_basicauth" {
-      username = nonsensitive(remote.kubernetes.secret.prometheus_otlp_basicauth.data["username"])
+      username = convert.nonsensitive(remote.kubernetes.secret.prometheus_otlp_basicauth.data["username"])
       password = remote.kubernetes.secret.prometheus_otlp_basicauth.data["password"]
     }
     
@@ -636,7 +636,7 @@ data:
     loki.write "loki_noauth" {
       endpoint {
         url = "http://loki.loki.svc:3100/loki/api/v1/push"
-        tenant_id = nonsensitive(remote.kubernetes.secret.loki_noauth.data["tenantId"])
+        tenant_id = convert.nonsensitive(remote.kubernetes.secret.loki_noauth.data["tenantId"])
         tls_config {
           insecure_skip_verify = false
         }
@@ -664,9 +664,9 @@ data:
     loki.write "loki_basicauth" {
       endpoint {
         url = "http://nginx-auth-gateway.default.svc/logs/basic/loki/api/v1/push"
-        tenant_id = nonsensitive(remote.kubernetes.secret.loki_basicauth.data["tenantId"])
+        tenant_id = convert.nonsensitive(remote.kubernetes.secret.loki_basicauth.data["tenantId"])
         basic_auth {
-          username = nonsensitive(remote.kubernetes.secret.loki_basicauth.data["username"])
+          username = convert.nonsensitive(remote.kubernetes.secret.loki_basicauth.data["username"])
           password = remote.kubernetes.secret.loki_basicauth.data["password"]
         }
         tls_config {
@@ -696,7 +696,7 @@ data:
     loki.write "loki_bearer_token" {
       endpoint {
         url = "http://nginx-auth-gateway.default.svc/logs/bearer/loki/api/v1/push"
-        tenant_id = nonsensitive(remote.kubernetes.secret.loki_bearer_token.data["tenantId"])
+        tenant_id = convert.nonsensitive(remote.kubernetes.secret.loki_bearer_token.data["tenantId"])
         bearer_token = remote.kubernetes.secret.loki_bearer_token.data["bearerToken"]
         tls_config {
           insecure_skip_verify = false

@@ -792,16 +792,16 @@ otelcol.processor.memory_limiter "metrics_service" {
 }
 
 otelcol.auth.basic "metrics_service" {
-  username = nonsensitive(remote.kubernetes.secret.metrics_service.data["username"])
+  username = convert.nonsensitive(remote.kubernetes.secret.metrics_service.data["username"])
   password = remote.kubernetes.secret.metrics_service.data["password"]
 }
 
 otelcol.exporter.otlphttp "metrics_service" {
   client {
-    endpoint = nonsensitive(remote.kubernetes.secret.metrics_service.data["host"]) + "/api/v1/otlp"
+    endpoint = convert.nonsensitive(remote.kubernetes.secret.metrics_service.data["host"]) + "/api/v1/otlp"
     auth = otelcol.auth.basic.metrics_service.handler
     headers = {
-      "X-Scope-OrgID" = nonsensitive(remote.kubernetes.secret.metrics_service.data["tenantId"]),
+      "X-Scope-OrgID" = convert.nonsensitive(remote.kubernetes.secret.metrics_service.data["tenantId"]),
     }
     tls {
       insecure_skip_verify = true
@@ -868,11 +868,11 @@ loki.process "logs_service" {
 // Loki
 loki.write "logs_service" {
   endpoint {
-    url = nonsensitive(remote.kubernetes.secret.logs_service.data["host"]) + "/loki/api/v1/push"
-    tenant_id = nonsensitive(remote.kubernetes.secret.logs_service.data["tenantId"])
+    url = convert.nonsensitive(remote.kubernetes.secret.logs_service.data["host"]) + "/loki/api/v1/push"
+    tenant_id = convert.nonsensitive(remote.kubernetes.secret.logs_service.data["tenantId"])
 
     basic_auth {
-      username = nonsensitive(remote.kubernetes.secret.logs_service.data["username"])
+      username = convert.nonsensitive(remote.kubernetes.secret.logs_service.data["username"])
       password = remote.kubernetes.secret.logs_service.data["password"]
     }
   }

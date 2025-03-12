@@ -8,16 +8,16 @@ prometheus.remote_write "prometheus" {
   endpoint {
     url = "http://prometheus.prometheus.svc:9090/api/v1/write"
     headers = {
-      "X-Scope-OrgID" = nonsensitive(remote.kubernetes.secret.prometheus.data["tenantId"]),
+      "X-Scope-OrgID" = convert.nonsensitive(remote.kubernetes.secret.prometheus.data["tenantId"]),
     }
     basic_auth {
-      username = nonsensitive(remote.kubernetes.secret.prometheus.data["prom-username"])
+      username = convert.nonsensitive(remote.kubernetes.secret.prometheus.data["prom-username"])
       password = remote.kubernetes.secret.prometheus.data["access-token"]
     }
     tls_config {
       insecure_skip_verify = false
-      ca_pem = nonsensitive(remote.kubernetes.secret.prometheus.data["ca"])
-      cert_pem = nonsensitive(remote.kubernetes.secret.prometheus.data["cert"])
+      ca_pem = convert.nonsensitive(remote.kubernetes.secret.prometheus.data["ca"])
+      cert_pem = convert.nonsensitive(remote.kubernetes.secret.prometheus.data["cert"])
       key_pem = remote.kubernetes.secret.prometheus.data["key"]
     }
     send_native_histograms = false
