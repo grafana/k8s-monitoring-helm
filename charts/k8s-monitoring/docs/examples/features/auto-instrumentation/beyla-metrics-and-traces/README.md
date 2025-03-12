@@ -13,7 +13,7 @@ generate traces for your application.
 ```yaml
 ---
 cluster:
-  name: annotation-autodiscovery-with-traces-cluster
+  name: auto-instrumentation-with-traces-cluster
 
 destinations:
   - name: otlp-gateway

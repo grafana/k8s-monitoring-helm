@@ -71,13 +71,13 @@ data:
         write_relabel_config {
           source_labels = ["cluster"]
           regex = ""
-          replacement = "auto-instrumentation-cluster"
+          replacement = "auto-instrumentation-with-rules-cluster"
           target_label = "cluster"
         }
         write_relabel_config {
           source_labels = ["k8s.cluster.name"]
           regex = ""
-          replacement = "auto-instrumentation-cluster"
+          replacement = "auto-instrumentation-with-rules-cluster"
           target_label = "cluster"
         }
       }
@@ -211,13 +211,14 @@ data:
   beyla-config.yml: |-
     attributes:
       kubernetes:
-        cluster_name: auto-instrumentation-cluster
+        cluster_name: auto-instrumentation-with-rules-cluster
         enable: true
     discovery:
       exclude_services:
-      - exe_path: .*alloy.*|.*otelcol.*|.*beyla.*
+      - k8s_namespace: kube-system
       services:
-      - k8s_namespace: .
+      - k8s_pod_labels:
+          instrument: beyla
     filter:
       network:
         k8s_dst_owner_name:

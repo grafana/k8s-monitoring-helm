@@ -12,7 +12,7 @@ instrument your application for metrics collection.
 ```yaml
 ---
 cluster:
-  name: annotation-autodiscovery-cluster
+  name: auto-instrumentation-cluster
 
 destinations:
   - name: prometheus

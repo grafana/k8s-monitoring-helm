@@ -1,0 +1,23 @@
+---
+cluster:
+  name: auto-instrumentation-with-rules-cluster
+
+destinations:
+  - name: prometheus
+    type: prometheus
+    url: http://prometheus.prometheus.svc:9090/api/v1/write
+
+autoInstrumentation:
+  enabled: true
+  beyla:
+    config:
+      data:
+        discovery:
+          exclude_services:
+            - k8s_namespace: kube-system
+          services:
+            - k8s_pod_labels:
+                instrument: beyla
+
+alloy-metrics:
+  enabled: true
