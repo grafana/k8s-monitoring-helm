@@ -122,7 +122,6 @@ otelcol.processor.transform "pod_logs" {
       `delete_key(attributes, "k8s.container.restart_count")`,
       `delete_key(attributes, "log.file.path")`,
 
-      `set(attributes["service.name"], attributes["service.name"]) where attributes["service.name"] == nil`,
       `set(attributes["service.name"], attributes["app.kubernetes.io/name"]) where attributes["service.name"] == nil`,
       `set(attributes["service.name"], attributes["k8s.deployment.name"]) where attributes["service.name"] == nil`,
       `set(attributes["service.name"], attributes["k8s.replicaset.name"]) where attributes["service.name"] == nil`,
@@ -133,13 +132,10 @@ otelcol.processor.transform "pod_logs" {
       `set(attributes["service.name"], attributes["k8s.pod.name"]) where attributes["service.name"] == nil`,
       `set(attributes["service.name"], attributes["k8s.container.name"]) where attributes["service.name"] == nil`,
 
-      `set(attributes["service.namespace"], attributes["service.namespace"]) where attributes["service.namespace"] == nil`,
       `set(attributes["service.namespace"], attributes["k8s.namespace.name"]) where attributes["service.namespace"] == nil`,
 
-      `set(attributes["service.version"], attributes["service.version"]) where attributes["service.name"] == nil`,
-      `set(attributes["service.version"], attributes["app.kubernetes.io/version"]) where attributes["service.name"] == nil`,
+      `set(attributes["service.version"], attributes["app.kubernetes.io/version"]) where attributes["service.version"] == nil`,
 
-      `set(attributes["service.instance.id"], attributes["service.instance.id"]) where attributes["service.instance.id"] == nil`,
       `set(attributes["service.instance.id"], Concat([attributes["k8s.namespace.name"], attributes["k8s.pod.name"], attributes["k8s.container.name"]], ".")) where attributes["service.instance.id"] == nil`,
 
       `set(attributes["loki.resource.labels"], {{ .Values.labelsToKeep | join "," | quote }})`,   // Used to preserve the labels when converting to Loki
