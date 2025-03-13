@@ -53,6 +53,10 @@ spec:
           # Cluster metrics
           - query: kubernetes_build_info{cluster="$CLUSTER", job="integrations/kubernetes/kubelet"}
             type: promql
+          - query: node_cpu_usage_seconds_total{cluster="$CLUSTER", job="integrations/kubernetes/resources"}
+            type: promql
+          - query: prober_probe_total{cluster="$CLUSTER", probe_type="Readiness", pod="k8smon-alloy-metrics-0", job="integrations/kubernetes/probes"}
+            type: promql
           - query: machine_memory_bytes{cluster="$CLUSTER", job="integrations/kubernetes/cadvisor"}
             type: promql
           - query: count(kube_node_info{cluster="$CLUSTER", job="integrations/kubernetes/kube-state-metrics"})
