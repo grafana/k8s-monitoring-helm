@@ -11,8 +11,8 @@ instrumented.
 
 In this example, Beyla is configured with two discovery rules:
 
-* Do not instrument anything in the `kube-system` namespace.
-* Instrument anything with the Pod label `instrument=beyla`
+*   Do not instrument anything in the `kube-system` namespace.
+*   Instrument anything with the Pod label `instrument=beyla`
 
 ## Values
 
