@@ -310,7 +310,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | node-exporter.jobLabel | string | `"integrations/node_exporter"` | The value for the job label. |
 | node-exporter.labelMatchers | object | `{"app.kubernetes.io/name":"node-exporter"}` | Labels used to select the Node Exporter pods. |
 | node-exporter.maxCacheSize | string | `100000` | Sets the max_cache_size for the Node Exporter prometheus.relabel component. This should be at least 2x-5x your largest scrape target or samples appended rate. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)) Overrides global.maxCacheSize |
-| node-exporter.metricsTuning.dropMetricsForFilesystem | list | `["tempfs"]` | Drop metrics for the given filesystem types |
+| node-exporter.metricsTuning.dropMetricsForFilesystem | list | `["ramfs","tmpfs"]` | Drop metrics for the given filesystem types |
 | node-exporter.metricsTuning.excludeMetrics | list | `[]` | Metrics to drop. Can use regular expressions. |
 | node-exporter.metricsTuning.includeMetrics | list | `[]` | Metrics to keep. Can use regular expressions. |
 | node-exporter.metricsTuning.useDefaultAllowList | bool | `true` | Filter the list of metrics from Node Exporter to the minimal set required for Kubernetes Monitoring. |
