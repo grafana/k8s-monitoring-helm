@@ -82,4 +82,8 @@ alloy-metrics:
     repository: grafana/alloy
     pullSecrets:
       - name: my-registry-creds
+  configReloader:
+    image:
+      registry: my.registry.com
+      repository: jimmidyson/configmap-reload
 ```
