@@ -44,6 +44,28 @@ discovery.relabel "annotation_autodiscovery_pods" {
     regex = "true"
     action = "keep"
   }
+  // Only keep pods that are running, ready, and not init containers.
+  rule {
+    source_labels = [
+      "__meta_kubernetes_pod_phase",
+      "__meta_kubernetes_pod_ready",
+      "__meta_kubernetes_pod_container_init",
+    ]
+    regex = "Running;true;false"
+    action = "keep"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_pod_name"]
+    target_label = "pod"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_pod_container_name"]
+    target_label = "container"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_namespace"]
+    target_label = "namespace"
+  }
   rule {
     source_labels = ["{{ include "pod_annotation" .Values.annotations.job }}"]
     target_label = "job"
@@ -52,14 +74,35 @@ discovery.relabel "annotation_autodiscovery_pods" {
     source_labels = ["{{ include "pod_annotation" .Values.annotations.instance }}"]
     target_label = "instance"
   }
+
+  // Rules to choose the right container
   rule {
-    source_labels = ["__meta_kubernetes_namespace"]
-    target_label = "namespace"
+    source_labels = ["container"]
+    target_label = "__tmp_container"
   }
+  rule {
+    source_labels = ["{{ include "pod_annotation" .Values.annotations.metricsContainer }}"]
+    regex = "(.+)"
+    target_label = "__tmp_container"
+  }
+  rule {
+    source_labels = ["container"]
+    action = "keepequal"
+    target_label = "__tmp_container"
+  }
+  rule {
+    action = "labeldrop"
+    regex = "__tmp_container"
+  }
+
+  // Set metrics path
   rule {
     source_labels = ["{{ include "pod_annotation" .Values.annotations.metricsPath }}"]
+    regex = "(.+)"
     target_label = "__metrics_path__"
   }
+
+  // Set metrics scraping URL parameters
   rule {
     action = "labelmap"
     regex = "{{ include "pod_annotation" .Values.annotations.metricsParam }}_(.+)"

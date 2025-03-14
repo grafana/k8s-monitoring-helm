@@ -122,6 +122,28 @@ data:
           regex = "true"
           action = "keep"
         }
+        // Only keep pods that are running, ready, and not init containers.
+        rule {
+          source_labels = [
+            "__meta_kubernetes_pod_phase",
+            "__meta_kubernetes_pod_ready",
+            "__meta_kubernetes_pod_container_init",
+          ]
+          regex = "Running;true;false"
+          action = "keep"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_pod_name"]
+          target_label = "pod"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_pod_container_name"]
+          target_label = "container"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_namespace"]
+          target_label = "namespace"
+        }
         rule {
           source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_job"]
           target_label = "job"
@@ -130,14 +152,35 @@ data:
           source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_instance"]
           target_label = "instance"
         }
+    
+        // Rules to choose the right container
         rule {
-          source_labels = ["__meta_kubernetes_namespace"]
-          target_label = "namespace"
+          source_labels = ["container"]
+          target_label = "__tmp_container"
         }
+        rule {
+          source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_metrics_container"]
+          regex = "(.+)"
+          target_label = "__tmp_container"
+        }
+        rule {
+          source_labels = ["container"]
+          action = "keepequal"
+          target_label = "__tmp_container"
+        }
+        rule {
+          action = "labeldrop"
+          regex = "__tmp_container"
+        }
+    
+        // Set metrics path
         rule {
           source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_metrics_path"]
+          regex = "(.+)"
           target_label = "__metrics_path__"
         }
+    
+        // Set metrics scraping URL parameters
         rule {
           action = "labelmap"
           regex = "__meta_kubernetes_pod_annotation_k8s_grafana_com_metrics_param_(.+)"
@@ -235,6 +278,14 @@ data:
           action = "keep"
         }
         rule {
+          source_labels = ["__meta_kubernetes_service_name"]
+          target_label = "service"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_namespace"]
+          target_label = "namespace"
+        }
+        rule {
           source_labels = ["__meta_kubernetes_service_annotation_k8s_grafana_com_job"]
           target_label = "job"
         }
@@ -242,14 +293,14 @@ data:
           source_labels = ["__meta_kubernetes_service_annotation_k8s_grafana_com_instance"]
           target_label = "instance"
         }
-        rule {
-          source_labels = ["__meta_kubernetes_namespace"]
-          target_label = "namespace"
-        }
+    
+        // Set metrics path
         rule {
           source_labels = ["__meta_kubernetes_service_annotation_k8s_grafana_com_metrics_path"]
           target_label = "__metrics_path__"
         }
+    
+        // Set metrics scraping URL parameters
         rule {
           action = "labelmap"
           regex = "__meta_kubernetes_service_annotation_k8s_grafana_com_metrics_param_(.+)"

@@ -45,6 +45,14 @@ discovery.relabel "annotation_autodiscovery_services" {
     action = "keep"
   }
   rule {
+    source_labels = ["__meta_kubernetes_service_name"]
+    target_label = "service"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_namespace"]
+    target_label = "namespace"
+  }
+  rule {
     source_labels = ["{{ include "service_annotation" .Values.annotations.job }}"]
     target_label = "job"
   }
@@ -52,14 +60,14 @@ discovery.relabel "annotation_autodiscovery_services" {
     source_labels = ["{{ include "service_annotation" .Values.annotations.instance }}"]
     target_label = "instance"
   }
-  rule {
-    source_labels = ["__meta_kubernetes_namespace"]
-    target_label = "namespace"
-  }
+
+  // Set metrics path
   rule {
     source_labels = ["{{ include "service_annotation" .Values.annotations.metricsPath }}"]
     target_label = "__metrics_path__"
   }
+
+  // Set metrics scraping URL parameters
   rule {
     action = "labelmap"
     regex = "{{ include "service_annotation" .Values.annotations.metricsParam }}_(.+)"
