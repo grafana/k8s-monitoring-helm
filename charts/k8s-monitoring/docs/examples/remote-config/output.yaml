@@ -42,6 +42,7 @@ metadata:
 type: Opaque
 data:
   username: "bXktcmVtb3RlLWNmZy11c2Vy"
+  password: "bXktcmVtb3RlLWNmZy1wYXNzd29yZA=="
 # create: true
 ---
 # Source: k8s-monitoring/templates/remote_config_secret.yaml
@@ -53,6 +54,7 @@ metadata:
 type: Opaque
 data:
   username: "bXktcmVtb3RlLWNmZy11c2Vy"
+  password: "bXktcmVtb3RlLWNmZy1wYXNzd29yZA=="
 ---
 # Source: k8s-monitoring/templates/alloy-config.yaml
 apiVersion: v1
@@ -72,7 +74,7 @@ data:
       url = "https://remote-config.example.com/alloy"
       basic_auth {
         username = convert.nonsensitive(remote.kubernetes.secret.alloy_metrics_remote_cfg.data["username"])
-        password = sys.env("GCLOUD_RW_API_KEY")
+        password = remote.kubernetes.secret.alloy_metrics_remote_cfg.data["password"]
       }
       poll_frequency = "5m"
       attributes = {
@@ -105,7 +107,7 @@ data:
       url = "https://remote-config.example.com/alloy"
       basic_auth {
         username = convert.nonsensitive(remote.kubernetes.secret.alloy_logs_remote_cfg.data["username"])
-        password = sys.env("GCLOUD_RW_API_KEY")
+        password = remote.kubernetes.secret.alloy_logs_remote_cfg.data["password"]
       }
       poll_frequency = "5m"
       attributes = {
@@ -504,7 +506,10 @@ spec:
                   fieldPath: spec.nodeName
             -
               name: GCLOUD_RW_API_KEY
-              value: my-remote-cfg-password
+              valueFrom:
+                secretKeyRef:
+                  key: password
+                  name: alloy-logs-remote-cfg-k8smon-k8s-monitoring
             -
               name: CLUSTER_NAME
               value: remote-config-example-cluster
@@ -647,7 +652,10 @@ spec:
                   fieldPath: spec.nodeName
             -
               name: GCLOUD_RW_API_KEY
-              value: my-remote-cfg-password
+              valueFrom:
+                secretKeyRef:
+                  key: password
+                  name: alloy-metrics-remote-cfg-k8smon-k8s-monitoring
             -
               name: CLUSTER_NAME
               value: remote-config-example-cluster
