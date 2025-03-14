@@ -37,11 +37,14 @@ alloy-metrics:
     auth:
       type: basic
       username: my-remote-cfg-user
-      passwordFrom: sys.env("GCLOUD_RW_API_KEY")
+      password: my-remote-cfg-password
   alloy:
     extraEnv:
       - name: GCLOUD_RW_API_KEY
-        value: "my-remote-cfg-password"
+        valueFrom:
+          secretKeyRef:
+            name: alloy-metrics-remote-cfg-k8smon-k8s-monitoring
+            key: password
       - name: CLUSTER_NAME
         value: remote-config-example-cluster
       - name: NAMESPACE
@@ -59,15 +62,18 @@ alloy-logs:
   enabled: true
   remoteConfig:
     enabled: true
-    url: "https://remote-config.example.com/alloy"
+    url: https://remote-config.example.com/alloy
     auth:
       type: basic
-      username: "my-remote-cfg-user"
-      passwordFrom: sys.env("GCLOUD_RW_API_KEY")
+      username: my-remote-cfg-user
+      password: my-remote-cfg-password
   alloy:
     extraEnv:
       - name: GCLOUD_RW_API_KEY
-        value: "my-remote-cfg-password"
+        valueFrom:
+          secretKeyRef:
+            name: alloy-logs-remote-cfg-k8smon-k8s-monitoring
+            key: password
       - name: CLUSTER_NAME
         value: remote-config-example-cluster
       - name: NAMESPACE
