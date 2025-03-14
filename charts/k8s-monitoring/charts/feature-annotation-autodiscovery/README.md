@@ -57,6 +57,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 |-----|------|---------|-------------|
 | annotations.instance | string | `"k8s.grafana.com/instance"` | Annotation for overriding the instance label |
 | annotations.job | string | `"k8s.grafana.com/job"` | Annotation for overriding the job label |
+| annotations.metricsContainer | string | `"k8s.grafana.com/metrics.container"` | Annotation for selecting the specific container to scrape. |
 | annotations.metricsParam | string | `"k8s.grafana.com/metrics.param"` | Annotation for setting `__param_<key>` parameters when scraping. Example: `k8s.grafana.com/metrics.param_key: "value"`. |
 | annotations.metricsPath | string | `"k8s.grafana.com/metrics.path"` | Annotation for setting or overriding the metrics path. If not set, it defaults to /metrics |
 | annotations.metricsPortName | string | `"k8s.grafana.com/metrics.portName"` | Annotation for setting the metrics port by name. |
