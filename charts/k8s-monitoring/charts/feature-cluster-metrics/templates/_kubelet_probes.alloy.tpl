@@ -1,23 +1,23 @@
-{{ define "feature.clusterMetrics.kubeletResource.allowList" }}
+{{ define "feature.clusterMetrics.kubeletProbes.allowList" }}
 {{- $allowList := list }}
-{{ if .Values.kubeletResource.metricsTuning.useDefaultAllowList }}
-{{- $allowList = concat $allowList (list "up" "scrape_samples_scraped") (.Files.Get "default-allow-lists/kubelet_resource.yaml" | fromYamlArray) -}}
+{{ if .Values.kubeletProbes.metricsTuning.useDefaultAllowList }}
+{{- $allowList = concat $allowList (list "up" "scrape_samples_scraped") (.Files.Get "default-allow-lists/kubelet_probes.yaml" | fromYamlArray) -}}
 {{ end }}
-{{ if .Values.kubeletResource.metricsTuning.includeMetrics }}
-{{- $allowList = concat $allowList (list "up" "scrape_samples_scraped") .Values.kubeletResource.metricsTuning.includeMetrics -}}
+{{ if .Values.kubeletProbes.metricsTuning.includeMetrics }}
+{{- $allowList = concat $allowList (list "up" "scrape_samples_scraped") .Values.kubeletProbes.metricsTuning.includeMetrics -}}
 {{ end }}
 {{ $allowList | uniq | toYaml }}
 {{ end }}
 
-{{- define "feature.clusterMetrics.kubeletResource.alloy" }}
-{{- if .Values.kubeletResource.enabled }}
-{{- $metricAllowList := include "feature.clusterMetrics.kubeletResource.allowList" . | fromYamlArray }}
-{{- $metricDenyList := .Values.kubeletResource.metricsTuning.excludeMetrics }}
+{{- define "feature.clusterMetrics.kubeletProbes.alloy" }}
+{{- if .Values.kubeletProbes.enabled }}
+{{- $metricAllowList := include "feature.clusterMetrics.kubeletProbes.allowList" . | fromYamlArray }}
+{{- $metricDenyList := .Values.kubeletProbes.metricsTuning.excludeMetrics }}
 
-// Kubelet Resources
-discovery.relabel "kubelet_resources" {
+// Kubelet Probes
+discovery.relabel "kubelet_probes" {
   targets = discovery.kubernetes.nodes.targets
-{{- if eq .Values.kubeletResource.nodeAddressFormat "proxy" }}
+{{- if eq .Values.kubeletProbes.nodeAddressFormat "proxy" }}
   rule {
     target_label = "__address__"
     replacement  = "{{ .Values.global.kubernetesAPIService | default "kubernetes.default.svc.cluster.local:443" }}"
@@ -25,12 +25,12 @@ discovery.relabel "kubelet_resources" {
   rule {
     source_labels = ["__meta_kubernetes_node_name"]
     regex         = "(.+)"
-    replacement   = "/api/v1/nodes/${1}/proxy/metrics/resource"
+    replacement   = "/api/v1/nodes/${1}/proxy/metrics/probes"
     target_label  = "__metrics_path__"
   }
-{{ else if eq .Values.kubeletResource.nodeAddressFormat "direct" }}
+{{ else if eq .Values.kubeletProbes.nodeAddressFormat "direct" }}
   rule {
-    replacement   = "/metrics/resource"
+    replacement   = "/metrics/probes"
     target_label  = "__metrics_path__"
   }
 {{- end }}
@@ -60,16 +60,16 @@ discovery.relabel "kubelet_resources" {
     replacement = "kubernetes"
     target_label = "source"
   }
-{{- if .Values.kubeletResource.extraRelabelingRules }}
-{{ .Values.kubeletResource.extraRelabelingRules | indent 2 }}
+{{- if .Values.kubeletProbes.extraRelabelingRules }}
+{{ .Values.kubeletProbes.extraRelabelingRules | indent 2 }}
 {{- end }}
 }
 
-prometheus.scrape "kubelet_resources" {
-  targets  = discovery.relabel.kubelet_resources.output
-  job_name = {{ .Values.kubeletResource.jobLabel | quote }}
+prometheus.scrape "kubelet_probes" {
+  targets  = discovery.relabel.kubelet_probes.output
+  job_name = {{ .Values.kubeletProbes.jobLabel | quote }}
   scheme   = "https"
-  scrape_interval = {{ .Values.kubeletResource.scrapeInterval | default .Values.global.scrapeInterval | quote }}
+  scrape_interval = {{ .Values.kubeletProbes.scrapeInterval | default .Values.global.scrapeInterval | quote }}
   bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
 
   tls_config {
@@ -82,11 +82,11 @@ prometheus.scrape "kubelet_resources" {
     enabled = true
   }
 
-  forward_to = [prometheus.relabel.kubelet_resources.receiver]
+  forward_to = [prometheus.relabel.kubelet_probes.receiver]
 }
 
-prometheus.relabel "kubelet_resources" {
-  max_cache_size = {{ .Values.kubeletResource.maxCacheSize | default .Values.global.maxCacheSize | int }}
+prometheus.relabel "kubelet_probes" {
+  max_cache_size = {{ .Values.kubeletProbes.maxCacheSize | default .Values.global.maxCacheSize | int }}
 
 {{- if $metricAllowList }}
   rule {
@@ -102,8 +102,8 @@ prometheus.relabel "kubelet_resources" {
     action = "drop"
   }
 {{- end }}
-{{- if .Values.kubeletResource.extraMetricProcessingRules }}
-  {{ .Values.kubeletResource.extraMetricProcessingRules | indent 2 }}
+{{- if .Values.kubeletProbes.extraMetricProcessingRules }}
+  {{ .Values.kubeletProbes.extraMetricProcessingRules | indent 2 }}
 {{- end }}
 
   forward_to = argument.metrics_destinations.value

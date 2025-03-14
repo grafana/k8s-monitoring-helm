@@ -12,6 +12,10 @@ global:
   # @section -- Global Settings
   platform: ""
 
+  # -- The Kubernetes service. Change this if your cluster DNS is configured differently than the default.
+  # @section -- Global Settings
+  kubernetesAPIService: ""
+
   # -- How frequently to scrape metrics.
   # @section -- Global Settings
   scrapeInterval: 60s
@@ -95,7 +99,7 @@ kubelet:
 
 # Kubelet Resource metrics gather information about resource information on each node.
 kubeletResource:
-  # -- Scrape resource metrics from kubelet.
+  # -- Scrape resource metrics from the Kubelet.
   # @section -- Kubelet Resources
   enabled: true
 
@@ -107,14 +111,14 @@ kubeletResource:
   # @section -- Kubelet Resources
   jobLabel: "integrations/kubernetes/resources"
 
-  # -- Rule blocks to be added to the discovery.relabel component for Kubelet Resources.
+  # -- Rule blocks to be added to the discovery.relabel component for Kubelet resources.
   # These relabeling rules are applied pre-scrape against the targets from service discovery.
   # Before the scrape, any remaining target labels that start with `__` (i.e. `__meta_kubernetes*`) are dropped.
   # ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.relabel/#rule-block))
   # @section -- Kubelet Resources
   extraDiscoveryRules: ""
 
-  # -- Rule blocks to be added to the prometheus.relabel component for Kubelet Resources metrics.
+  # -- Rule blocks to be added to the prometheus.relabel component for Kubelet resource metrics.
   # These relabeling rules are applied post-scrape against the metrics returned from the scraped target, no `__meta*` labels are present.
   # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#rule-block))
   # @section -- Kubelet Resources
@@ -122,7 +126,7 @@ kubeletResource:
 
   # Adjustments to the scraped metrics to filter the amount of data sent to storage.
   metricsTuning:
-    # -- Filter the list of resources metrics from the Kubelet to the minimal set required for Kubernetes Monitoring.
+    # -- Filter the list of resource metrics from the Kubelet to the minimal set required for Kubernetes Monitoring.
     # @section -- Kubelet Resources
     useDefaultAllowList: true
     # -- Metrics to keep. Can use regular expressions.
@@ -140,9 +144,61 @@ kubeletResource:
   # @section -- Kubelet Resources
   maxCacheSize:
 
-  # -- How frequently to scrape Kubelet Resource metrics.
+  # -- How frequently to scrape Kubelet resource metrics.
   # @default -- `60s`
   # @section -- Kubelet Resources
+  scrapeInterval: ""
+
+# Kubelet Probe metrics gather information about liveness and readiness probe information.
+kubeletProbes:
+  # -- Scrape probe metrics from the Kubelet.
+  # @section -- Kubelet Probes
+  enabled: false
+
+  # -- How to access the Kubelet to get probe metrics, either "direct" (use node IP) or "proxy" (uses API Server)
+  # @section -- Kubelet Probes
+  nodeAddressFormat: direct
+
+  # -- The value for the job label.
+  # @section -- Kubelet Probes
+  jobLabel: "integrations/kubernetes/probes"
+
+  # -- Rule blocks to be added to the discovery.relabel component for Kubelet probes.
+  # These relabeling rules are applied pre-scrape against the targets from service discovery.
+  # Before the scrape, any remaining target labels that start with `__` (i.e. `__meta_kubernetes*`) are dropped.
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.relabel/#rule-block))
+  # @section -- Kubelet Probes
+  extraDiscoveryRules: ""
+
+  # -- Rule blocks to be added to the prometheus.relabel component for Kubelet probe metrics.
+  # These relabeling rules are applied post-scrape against the metrics returned from the scraped target, no `__meta*` labels are present.
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#rule-block))
+  # @section -- Kubelet Probes
+  extraMetricProcessingRules: ""
+
+  # Adjustments to the scraped metrics to filter the amount of data sent to storage.
+  metricsTuning:
+    # -- Filter the list of probe metrics from the Kubelet to the minimal set required for Kubernetes Monitoring.
+    # @section -- Kubelet Probes
+    useDefaultAllowList: true
+    # -- Metrics to keep. Can use regular expressions.
+    # @section -- Kubelet Probes
+    includeMetrics: []
+    # -- Metrics to drop. Can use regular expressions.
+    # @section -- Kubelet Probes
+    excludeMetrics: []
+
+  # -- Sets the max_cache_size for prometheus.relabel components.
+  # This should be at least 2x-5x your largest scrape target or samples appended rate.
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments))
+  # Overrides global.maxCacheSize
+  # @default -- `100000`
+  # @section -- Kubelet Probes
+  maxCacheSize:
+
+  # -- How frequently to scrape Kubelet probe metrics.
+  # @default -- `60s`
+  # @section -- Kubelet Probes
   scrapeInterval: ""
 
 # cAdvisor metrics gather information about containers on each node.
@@ -332,6 +388,13 @@ kubeDNS:
   # @default -- 60s
   # @section -- KubeDNS
   scrapeInterval: ""
+
+  # -- Rule blocks to be added to the discovery.relabel component for KubeDNS.
+  # These relabeling rules are applied pre-scrape against the targets from service discovery.
+  # Before the scrape, any remaining target labels that start with `__` (i.e. `__meta_kubernetes*`) are dropped.
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.relabel/#rule-block))
+  # @section -- KubeDNS
+  extraDiscoveryRules: ""
 
   # -- Rule blocks to be added to the prometheus.relabel component for KubeDNS.
   # These relabeling rules are applied post-scrape against the metrics returned from the scraped target, no `__meta*` labels are present.

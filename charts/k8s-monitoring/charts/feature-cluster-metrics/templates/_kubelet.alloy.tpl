@@ -20,7 +20,7 @@ discovery.relabel "kubelet" {
 {{- if eq .Values.kubelet.nodeAddressFormat "proxy" }}
   rule {
     target_label = "__address__"
-    replacement  = "{{ .Values.cluster.kubernetesAPIService }}"
+    replacement  = "{{ .Values.global.kubernetesAPIService | default "kubernetes.default.svc.cluster.local:443" }}"
   }
   rule {
     source_labels = ["__meta_kubernetes_node_name"]

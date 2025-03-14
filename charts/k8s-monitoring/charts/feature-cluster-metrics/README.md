@@ -170,6 +170,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 |-----|------|---------|-------------|
 | global.alloyModules.branch | string | `"main"` | If using git, the branch of the git repository to use. |
 | global.alloyModules.source | string | `"git"` | The source of the Alloy modules. The valid options are "configMap" or "git" |
+| global.kubernetesAPIService | string | `""` | The Kubernetes service. Change this if your cluster DNS is configured differently than the default. |
 | global.maxCacheSize | int | `100000` | Sets the max_cache_size for every prometheus.relabel component. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)) This should be at least 2x-5x your largest scrape target or samples appended rate. |
 | global.platform | string | `""` | The specific platform for this cluster. Will enable compatibility for some platforms. Supported options: (empty) or "openshift". |
 | global.scrapeInterval | string | `"60s"` | How frequently to scrape metrics. |
@@ -231,6 +232,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | kubeDNS.enabled | bool | `false` | Scrape metrics from KubeDNS |
+| kubeDNS.extraDiscoveryRules | string | `""` | Rule blocks to be added to the discovery.relabel component for KubeDNS. These relabeling rules are applied pre-scrape against the targets from service discovery. Before the scrape, any remaining target labels that start with `__` (i.e. `__meta_kubernetes*`) are dropped. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.relabel/#rule-block)) |
 | kubeDNS.extraMetricProcessingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for KubeDNS. These relabeling rules are applied post-scrape against the metrics returned from the scraped target, no `__meta*` labels are present. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#rule-block)) |
 | kubeDNS.jobLabel | string | `"integrations/kubernetes/kube-dns"` | The value for the job label. |
 | kubeDNS.maxCacheSize | string | `nil` | Sets the max_cache_size for the KubeDNS prometheus.relabel component. This should be at least 2x-5x your largest scrape target or samples appended rate. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)) Overrides metrics.maxCacheSize |
@@ -283,20 +285,35 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | kubelet.nodeAddressFormat | string | `"direct"` | How to access the Kubelet to get metrics, either "direct" (use node IP) or "proxy" (uses API Server) |
 | kubelet.scrapeInterval | string | `60s` | How frequently to scrape Kubelet metrics. |
 
+### Kubelet Probes
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| kubeletProbes.enabled | bool | `false` | Scrape probe metrics from the Kubelet. |
+| kubeletProbes.extraDiscoveryRules | string | `""` | Rule blocks to be added to the discovery.relabel component for Kubelet probes. These relabeling rules are applied pre-scrape against the targets from service discovery. Before the scrape, any remaining target labels that start with `__` (i.e. `__meta_kubernetes*`) are dropped. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.relabel/#rule-block)) |
+| kubeletProbes.extraMetricProcessingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for Kubelet probe metrics. These relabeling rules are applied post-scrape against the metrics returned from the scraped target, no `__meta*` labels are present. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#rule-block)) |
+| kubeletProbes.jobLabel | string | `"integrations/kubernetes/probes"` | The value for the job label. |
+| kubeletProbes.maxCacheSize | string | `100000` | Sets the max_cache_size for prometheus.relabel components. This should be at least 2x-5x your largest scrape target or samples appended rate. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)) Overrides global.maxCacheSize |
+| kubeletProbes.metricsTuning.excludeMetrics | list | `[]` | Metrics to drop. Can use regular expressions. |
+| kubeletProbes.metricsTuning.includeMetrics | list | `[]` | Metrics to keep. Can use regular expressions. |
+| kubeletProbes.metricsTuning.useDefaultAllowList | bool | `true` | Filter the list of probe metrics from the Kubelet to the minimal set required for Kubernetes Monitoring. |
+| kubeletProbes.nodeAddressFormat | string | `"direct"` | How to access the Kubelet to get probe metrics, either "direct" (use node IP) or "proxy" (uses API Server) |
+| kubeletProbes.scrapeInterval | string | `60s` | How frequently to scrape Kubelet probe metrics. |
+
 ### Kubelet Resources
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| kubeletResource.enabled | bool | `true` | Scrape resource metrics from kubelet. |
-| kubeletResource.extraDiscoveryRules | string | `""` | Rule blocks to be added to the discovery.relabel component for Kubelet Resources. These relabeling rules are applied pre-scrape against the targets from service discovery. Before the scrape, any remaining target labels that start with `__` (i.e. `__meta_kubernetes*`) are dropped. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.relabel/#rule-block)) |
-| kubeletResource.extraMetricProcessingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for Kubelet Resources metrics. These relabeling rules are applied post-scrape against the metrics returned from the scraped target, no `__meta*` labels are present. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#rule-block)) |
+| kubeletResource.enabled | bool | `true` | Scrape resource metrics from the Kubelet. |
+| kubeletResource.extraDiscoveryRules | string | `""` | Rule blocks to be added to the discovery.relabel component for Kubelet resources. These relabeling rules are applied pre-scrape against the targets from service discovery. Before the scrape, any remaining target labels that start with `__` (i.e. `__meta_kubernetes*`) are dropped. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.relabel/#rule-block)) |
+| kubeletResource.extraMetricProcessingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for Kubelet resource metrics. These relabeling rules are applied post-scrape against the metrics returned from the scraped target, no `__meta*` labels are present. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#rule-block)) |
 | kubeletResource.jobLabel | string | `"integrations/kubernetes/resources"` | The value for the job label. |
 | kubeletResource.maxCacheSize | string | `100000` | Sets the max_cache_size for prometheus.relabel components. This should be at least 2x-5x your largest scrape target or samples appended rate. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)) Overrides global.maxCacheSize |
 | kubeletResource.metricsTuning.excludeMetrics | list | `[]` | Metrics to drop. Can use regular expressions. |
 | kubeletResource.metricsTuning.includeMetrics | list | `[]` | Metrics to keep. Can use regular expressions. |
-| kubeletResource.metricsTuning.useDefaultAllowList | bool | `true` | Filter the list of resources metrics from the Kubelet to the minimal set required for Kubernetes Monitoring. |
+| kubeletResource.metricsTuning.useDefaultAllowList | bool | `true` | Filter the list of resource metrics from the Kubelet to the minimal set required for Kubernetes Monitoring. |
 | kubeletResource.nodeAddressFormat | string | `"direct"` | How to access the Kubelet to get resource metrics, either "direct" (use node IP) or "proxy" (uses API Server) |
-| kubeletResource.scrapeInterval | string | `60s` | How frequently to scrape Kubelet Resource metrics. |
+| kubeletResource.scrapeInterval | string | `60s` | How frequently to scrape Kubelet resource metrics. |
 
 ### Node Exporter
 
