@@ -27,6 +27,13 @@ discovery.kubernetes "kube_state_metrics" {
     role = "endpoints"
     label = {{ $labelSelectors | join "," | quote }}
   }
+{{- if (index .Values "kube-state-metrics").deploy }}
+  namespaces {
+    names = [{{ .Release.Namespace | quote }}]
+  }
+{{- else if (index .Values "kube-state-metrics").namespace }}
+  namespaces = [{{ (index .Values "kube-state-metrics").namespace | quote }}]
+{{- end }}
 }
 
 discovery.relabel "kube_state_metrics" {
