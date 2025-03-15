@@ -384,6 +384,9 @@ data:
           role = "endpoints"
           label = "app.kubernetes.io/name=kube-state-metrics,release=k8smon"
         }
+        namespaces {
+          names = ["default"]
+        }
       }
     
       discovery.relabel "kube_state_metrics" {
@@ -1179,14 +1182,6 @@ data:
         loki.write.grafana_cloud_logs.receiver,
       ]
     }
----
-# Source: k8s-monitoring/templates/alloy-modules-configmaps.yaml
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: k8smon-alloy-module-kubernetes
-data:
-  kube-state-metrics_metrics.alloy: |
 ---
 # Source: k8s-monitoring/charts/alloy-logs/templates/rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1

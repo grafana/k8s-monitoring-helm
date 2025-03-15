@@ -31,11 +31,4 @@ declare "cluster_metrics" {
 }
 {{- end -}}
 
-{{- define "feature.clusterMetrics.alloyModules" }}
-{{- if (index .Values "kube-state-metrics").enabled }}
-- modules/kubernetes/kube-state-metrics/metrics.alloy
-{{- end }}
-{{- if (index .Values "node-exporter").enabled }}
-- modules/system/node-exporter/metrics.alloy
-{{- end }}
-{{- end }}
+{{- define "feature.clusterMetrics.alloyModules" }}{{- end }}
