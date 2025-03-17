@@ -40,6 +40,14 @@ Be sure perform actual integration testing in a live environment in the main [k8
 
 ## Values
 
+### Gather settings
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| excludeNamespaces | list | `[]` | List of namespaces to ignore events for. |
+| logFormat | string | `"logfmt"` | Log format used to forward cluster events. Allowed values: `logfmt` (default), `json`. |
+| namespaces | list | `[]` | List of namespaces to watch for events (`[]` means all namespaces) |
+
 ### Processing settings
 
 | Key | Type | Default | Description |
@@ -54,10 +62,3 @@ Be sure perform actual integration testing in a live environment in the main [k8
 |-----|------|---------|-------------|
 | fullnameOverride | string | `""` | Full name override |
 | nameOverride | string | `""` | Name override |
-
-### Gather settings
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| logFormat | string | `"logfmt"` | Log format used to forward cluster events. Allowed values: `logfmt` (default), `json`. |
-| namespaces | list | `[]` | List of namespaces to watch for events (`[]` means all namespaces) |

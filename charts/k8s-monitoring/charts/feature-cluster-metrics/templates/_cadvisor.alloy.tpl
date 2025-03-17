@@ -177,6 +177,20 @@ prometheus.relabel "cadvisor" {
     replacement = ""
   }
 {{- end }}
+{{- if .Values.cadvisor.metricsTuning.includeNamespaces }}
+  rule {
+    source_labels = ["namespace"]
+    regex = {{ .Values.cadvisor.metricsTuning.includeNamespaces | join "|" | quote }}
+    action = "keep"
+  }
+{{- end }}
+{{- if .Values.cadvisor.metricsTuning.excludeNamespaces }}
+  rule {
+    source_labels = ["namespace"]
+    regex = {{ .Values.cadvisor.metricsTuning.excludeNamespaces | join "|" | quote }}
+    action = "drop"
+  }
+{{- end }}
 {{- if .Values.cadvisor.extraMetricProcessingRules }}
 {{ .Values.cadvisor.extraMetricProcessingRules | indent 2 }}
 {{- end }}
