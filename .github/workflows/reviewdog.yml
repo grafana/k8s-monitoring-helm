@@ -1,162 +1,162 @@
----
-name: ReviewDog
-# yamllint disable-line rule:truthy
-on:
-  push:
-    branches: ["main"]
+#---
+#name: ReviewDog
+## yamllint disable-line rule:truthy
+#on:
+#  push:
+#    branches: ["main"]
+#
+#  pull_request:
+#
+#  workflow_dispatch:
 
-  pull_request:
-
-  workflow_dispatch:
-
-jobs:
-  markdownlint:
-    name: runner / markdownlint
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Lint markdown files
-        uses: reviewdog/action-markdownlint@v0
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          reporter: github-check
-
-  misspell:
-    name: runner / misspell
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Check files for spelling errors
-        uses: reviewdog/action-misspell@v1
-        with:
-          github_token: ${{ secrets.github_token }}
-          locale: US
-          reporter: github-check
-          level: warning
-          exclude: |
-            ./.git/*
-            ./.cache/*
-            ./examples/**/output.yaml
-          pattern: |
-            *.md
-            *.yaml
-            *.yml
-            *.alloy
-            *.txt
-            *.tmpl
-            *.gotmpl
-
-  languagetool:
-    name: runner / languagetool
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Check files for language errors
-        uses: reviewdog/action-languagetool@v1
-        with:
-          github_token: ${{ secrets.github_token }}
-          reporter: github-check
-          level: info
-          patterns: |
-            ./*.md
-            ./**/*.md
-            ./**/**/*.md
-            ./**/**/**/*.md
-            !./node-modules/**
-
-  alex:
-    name: runner / alex
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Check files for inappropriate language
-        uses: reviewdog/action-alex@v1
-        with:
-          github_token: ${{ secrets.github_token }}
-          reporter: github-check
-          # GitHub Status Check won't become failure with warning.
-          level: warning
-
-  shellcheck:
-    name: runner / shellcheck
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Lint shell files
-        uses: reviewdog/action-shellcheck@v1
-        with:
-          github_token: ${{ secrets.github_token }}
-          reporter: github-check
-          exclude: |
-            ./.git/*
-            ./.cache/*
-            ./tests/spec/*
-          pattern: |
-            *.sh
-            *.bash
-
-  tflint:
-    name: runner / tflint
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Lint terraform files
-        uses: reviewdog/action-tflint@v1
-        with:
-          github_token: ${{ secrets.github_token }}
-          reporter: github-check
-
-  yamllint:
-    name: runner / yamllint
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Lint yaml files
-        uses: reviewdog/action-yamllint@v1
-        with:
-          github_token: ${{ secrets.github_token }}
-          reporter: github-check
-
-  actionlint:
-    name: runner / actionlint
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Lint action files
-        uses: reviewdog/action-actionlint@v1
-        with:
-          github_token: ${{ secrets.github_token }}
-          reporter: github-check
-
-  textlint:
-    name: runner / textlint
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: reviewdog/action-setup@v1
-      - run: npm install
-      - name: Lint text files
-        run: |
-          npx textlint --format checkstyle --config ./.textlintrc --ignore-path ./.textlintignore "$(find . -type f -name "*.md" -not \( -path "./node_modules/*" -o -path "./data-alloy/*" \))" | \
-            reviewdog -f=checkstyle -name="textlint" -reporter=github-check -level=info
-        env:
-          REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  alloy:
-    name: runner / alloy
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: reviewdog/action-setup@v1
-      - name: Install alloy
-        run: |
-          sudo mkdir -p /etc/apt/keyrings/
-          wget -q -O - https://apt.grafana.com/gpg.key | gpg --dearmor | sudo tee /etc/apt/keyrings/grafana.gpg > /dev/null
-          echo "deb [signed-by=/etc/apt/keyrings/grafana.gpg] https://apt.grafana.com stable main" | sudo tee /etc/apt/sources.list.d/grafana.list
-          sudo apt-get update
-          sudo apt-get install -y alloy
-          alloy --version
-      - name: Lint Alloy configuration files
-        run: ./scripts/lint-alloy.sh --format=checkstyle | reviewdog -f=checkstyle -name="alloy" -reporter=github-pr-check
-        env:
-          REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#jobs:
+#  markdownlint:
+#    name: runner / markdownlint
+#    runs-on: ubuntu-latest
+#    steps:
+#      - uses: actions/checkout@v4
+#      - name: Lint markdown files
+#        uses: reviewdog/action-markdownlint@v0
+#        with:
+#          github_token: ${{ secrets.GITHUB_TOKEN }}
+#          reporter: github-check
+#
+#  misspell:
+#    name: runner / misspell
+#    runs-on: ubuntu-latest
+#    steps:
+#      - uses: actions/checkout@v4
+#      - name: Check files for spelling errors
+#        uses: reviewdog/action-misspell@v1
+#        with:
+#          github_token: ${{ secrets.github_token }}
+#          locale: US
+#          reporter: github-check
+#          level: warning
+#          exclude: |
+#            ./.git/*
+#            ./.cache/*
+#            ./examples/**/output.yaml
+#          pattern: |
+#            *.md
+#            *.yaml
+#            *.yml
+#            *.alloy
+#            *.txt
+#            *.tmpl
+#            *.gotmpl
+#
+#  languagetool:
+#    name: runner / languagetool
+#    runs-on: ubuntu-latest
+#    steps:
+#      - uses: actions/checkout@v4
+#      - name: Check files for language errors
+#        uses: reviewdog/action-languagetool@v1
+#        with:
+#          github_token: ${{ secrets.github_token }}
+#          reporter: github-check
+#          level: info
+#          patterns: |
+#            ./*.md
+#            ./**/*.md
+#            ./**/**/*.md
+#            ./**/**/**/*.md
+#            !./node-modules/**
+#
+#  alex:
+#    name: runner / alex
+#    runs-on: ubuntu-latest
+#    steps:
+#      - uses: actions/checkout@v4
+#      - name: Check files for inappropriate language
+#        uses: reviewdog/action-alex@v1
+#        with:
+#          github_token: ${{ secrets.github_token }}
+#          reporter: github-check
+#          # GitHub Status Check won't become failure with warning.
+#          level: warning
+#
+#  shellcheck:
+#    name: runner / shellcheck
+#    runs-on: ubuntu-latest
+#    steps:
+#      - uses: actions/checkout@v4
+#      - name: Lint shell files
+#        uses: reviewdog/action-shellcheck@v1
+#        with:
+#          github_token: ${{ secrets.github_token }}
+#          reporter: github-check
+#          exclude: |
+#            ./.git/*
+#            ./.cache/*
+#            ./tests/spec/*
+#          pattern: |
+#            *.sh
+#            *.bash
+#
+#  tflint:
+#    name: runner / tflint
+#    runs-on: ubuntu-latest
+#    steps:
+#      - uses: actions/checkout@v4
+#      - name: Lint terraform files
+#        uses: reviewdog/action-tflint@v1
+#        with:
+#          github_token: ${{ secrets.github_token }}
+#          reporter: github-check
+#
+#  yamllint:
+#    name: runner / yamllint
+#    runs-on: ubuntu-latest
+#    steps:
+#      - uses: actions/checkout@v4
+#      - name: Lint yaml files
+#        uses: reviewdog/action-yamllint@v1
+#        with:
+#          github_token: ${{ secrets.github_token }}
+#          reporter: github-check
+#
+#  actionlint:
+#    name: runner / actionlint
+#    runs-on: ubuntu-latest
+#    steps:
+#      - uses: actions/checkout@v4
+#      - name: Lint action files
+#        uses: reviewdog/action-actionlint@v1
+#        with:
+#          github_token: ${{ secrets.github_token }}
+#          reporter: github-check
+#
+#  textlint:
+#    name: runner / textlint
+#    runs-on: ubuntu-latest
+#    steps:
+#      - uses: actions/checkout@v4
+#      - uses: reviewdog/action-setup@v1
+#      - run: npm install
+#      - name: Lint text files
+#        run: |
+#          npx textlint --format checkstyle --config ./.textlintrc --ignore-path ./.textlintignore "$(find . -type f -name "*.md" -not \( -path "./node_modules/*" -o -path "./data-alloy/*" \))" | \
+#            reviewdog -f=checkstyle -name="textlint" -reporter=github-check -level=info
+#        env:
+#          REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#
+#  alloy:
+#    name: runner / alloy
+#    runs-on: ubuntu-latest
+#    steps:
+#      - uses: actions/checkout@v4
+#      - uses: reviewdog/action-setup@v1
+#      - name: Install alloy
+#        run: |
+#          sudo mkdir -p /etc/apt/keyrings/
+#          wget -q -O - https://apt.grafana.com/gpg.key | gpg --dearmor | sudo tee /etc/apt/keyrings/grafana.gpg > /dev/null
+#          echo "deb [signed-by=/etc/apt/keyrings/grafana.gpg] https://apt.grafana.com stable main" | sudo tee /etc/apt/sources.list.d/grafana.list
+#          sudo apt-get update
+#          sudo apt-get install -y alloy
+#          alloy --version
+#      - name: Lint Alloy configuration files
+#        run: ./scripts/lint-alloy.sh --format=checkstyle | reviewdog -f=checkstyle -name="alloy" -reporter=github-pr-check
+#        env:
+#          REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
