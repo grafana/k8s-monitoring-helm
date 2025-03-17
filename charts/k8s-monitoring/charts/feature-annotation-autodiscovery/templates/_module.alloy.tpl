@@ -10,8 +10,16 @@ declare "annotation_autodiscovery" {
 {{- include "feature.annotationAutodiscovery.services" . | indent 2 }}
 {{- end }}
 
+{{- $targets := list }}
+{{- if .Values.pods.enabled }}
+  {{- $targets = append $targets "discovery.relabel.annotation_autodiscovery_pods.output" }}
+{{- end }}
+{{- if .Values.services.enabled }}
+  {{- $targets = append $targets "discovery.relabel.annotation_autodiscovery_services.output" }}
+{{- end }}
+
   discovery.relabel "annotation_autodiscovery_http" {
-    targets = array.concat(discovery.relabel.annotation_autodiscovery_pods.output, discovery.relabel.annotation_autodiscovery_services.output)
+    targets = array.concat({{ $targets | join ", " }})
     rule {
       source_labels = ["__scheme__"]
       regex = "https"
@@ -20,7 +28,7 @@ declare "annotation_autodiscovery" {
   }
 
   discovery.relabel "annotation_autodiscovery_https" {
-    targets = array.concat(discovery.relabel.annotation_autodiscovery_pods.output, discovery.relabel.annotation_autodiscovery_services.output)
+    targets = array.concat({{ $targets | join ", " }})
     rule {
       source_labels = ["__scheme__"]
       regex = "https"
