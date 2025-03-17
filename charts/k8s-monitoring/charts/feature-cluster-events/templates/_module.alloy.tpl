@@ -14,6 +14,13 @@ declare "cluster_events" {
   }
 
   loki.process "cluster_events" {
+    {{- if .Values.excludeNamespaces }}
+    stage.drop {
+      source = "namespace"
+      expression = {{ .Values.excludeNamespaces | join "|" | quote }}
+      drop_counter_reason = "excluded_namespaces"
+    }
+    {{- end }}
 
     // add a static source label to the logs so they can be differentiated / restricted if necessary
     stage.static_labels {

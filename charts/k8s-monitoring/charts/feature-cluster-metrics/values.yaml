@@ -257,6 +257,13 @@ cadvisor:
     # @section -- cAdvisor
     keepPhysicalNetworkDevices: ["en[ospx][0-9].*", "wlan[0-9].*", "eth[0-9].*"]
 
+    # -- For metrics with a `namespace` label, only keep those that are in this list.
+    # @section -- cAdvisor
+    includeNamespaces: []
+    # -- For metrics with a `namespace` label, drop those that are in this list.
+    # @section -- cAdvisor
+    excludeNamespaces: []
+
   # -- How frequently to scrape cAdvisor metrics.
   # @default -- `60s`
   # @section -- cadvisor
@@ -549,9 +556,16 @@ kube-state-metrics:
   # @section -- kube-state-metrics
   namespace: ""
 
-  # -- Comma-separated list(string) or yaml list of namespaces to be enabled for collecting resources. By default all namespaces are collected.
+  # -- List (or comma-separated string) of namespaces to be enabled for collecting resources. By default, all namespaces
+  # are collected. Requires kube-state-metrics to be deployed by this chart.
   # @section -- kube-state-metrics
-  namespaces: ""
+  namespaces: []
+
+  # -- List (or comma-separated string) of namespaces to be excluded from collecting resources. If namespaces and
+  # namespaces denylist are both set, only namespaces that are excluded in namespaces denylist will be used.
+  # Requires kube-state-metrics to be deployed by this chart.
+  # @section -- kube-state-metrics
+  namespacesDenylist: []
 
   # -- Rule blocks to be added to the discovery.relabel component for kube-state-metrics.
   # These relabeling rules are applied pre-scrape against the targets from service discovery.

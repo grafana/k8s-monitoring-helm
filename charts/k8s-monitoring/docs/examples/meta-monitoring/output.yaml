@@ -143,99 +143,6 @@ data:
         "k8s_cluster_name" = "loki-meta-monitoring-cluster",
       }
     }
-    // Destination: loki (otlp)
-    
-    otelcol.processor.attributes "loki" {
-      output {
-        metrics = [otelcol.processor.transform.loki.input]
-        logs = [otelcol.processor.transform.loki.input]
-        traces = [otelcol.processor.transform.loki.input]
-      }
-    }
-    
-    otelcol.processor.transform "loki" {
-      error_mode = "ignore"
-      metric_statements {
-        context = "resource"
-        statements = [
-          `set(attributes["cluster"], "loki-meta-monitoring-cluster")`,
-          `set(attributes["k8s.cluster.name"], "loki-meta-monitoring-cluster")`,
-        ]
-      }
-    
-      metric_statements {
-        context = "datapoint"
-        statements = [
-          `set(attributes["cluster"], "loki-meta-monitoring-cluster")`,
-          `set(attributes["k8s.cluster.name"], "loki-meta-monitoring-cluster")`,
-        ]
-      }
-      log_statements {
-        context = "resource"
-        statements = [
-          `set(attributes["cluster"], "loki-meta-monitoring-cluster")`,
-          `set(attributes["k8s.cluster.name"], "loki-meta-monitoring-cluster")`,
-        ]
-      }
-    
-      log_statements {
-        context = "log"
-        statements = [
-          `delete_key(attributes, "loki.attribute.labels")`,
-          `delete_key(attributes, "loki.resource.labels")`,
-          `set(resource.attributes["service.name"], attributes["service_name"]) where resource.attributes["service.name"] == nil and attributes["service_name"] != nil`,
-          `delete_key(attributes, "service_name") where attributes["service_name"] != nil`,
-          `set(resource.attributes["service.namespace"], attributes["service_namespace"] ) where resource.attributes["service.namespace"] == nil and attributes["service_namespace"] != nil`,
-          `delete_key(attributes, "service_namespace") where attributes["service_namespace"] != nil`,
-          `set(resource.attributes["deployment.environment.name"], attributes["deployment_environment_name"] ) where resource.attributes["deployment.environment.name"] == nil and attributes["deployment_environment_name"] != nil`,
-          `delete_key(attributes, "deployment_environment_name") where attributes["deployment_environment_name"] != nil`,
-          `set(resource.attributes["deployment.environment"], attributes["deployment_environment"] ) where resource.attributes["deployment.environment"] == nil and attributes["deployment_environment"] != nil`,
-          `delete_key(attributes, "deployment_environment") where attributes["deployment_environment"] != nil`,
-        ]
-      }
-    
-      trace_statements {
-        context = "resource"
-        statements = [
-          `set(attributes["cluster"], "loki-meta-monitoring-cluster")`,
-          `set(attributes["k8s.cluster.name"], "loki-meta-monitoring-cluster")`,
-        ]
-      }
-    
-      output {
-        metrics = [otelcol.processor.batch.loki.input]
-        logs = [otelcol.processor.batch.loki.input]
-        traces = [otelcol.processor.batch.loki.input]
-      }
-    }
-    
-    otelcol.processor.batch "loki" {
-      timeout = "2s"
-      send_batch_size = 8192
-      send_batch_max_size = 0
-    
-      output {
-        metrics = [otelcol.exporter.otlphttp.loki.input]
-        logs = [otelcol.exporter.otlphttp.loki.input]
-        traces = [otelcol.exporter.otlphttp.loki.input]
-      }
-    }
-    otelcol.exporter.otlphttp "loki" {
-      client {
-        endpoint = "http://otlp-gateway.svc:443/otlp"
-        tls {
-          insecure = false
-          insecure_skip_verify = false
-        }
-      }
-    
-      retry_on_failure {
-        enabled = true
-        initial_interval = "5s"
-        max_interval = "30s"
-        max_elapsed_time = "5m"
-      }
-    }
     // Feature: Cluster Metrics
     declare "cluster_metrics" {
       argument "metrics_destinations" {
@@ -2220,17 +2127,17 @@ data:
         "k8s_cluster_name" = "loki-meta-monitoring-cluster",
       }
     }
-    // Destination: loki (otlp)
+    // Destination: tempo (otlp)
     
-    otelcol.processor.attributes "loki" {
+    otelcol.processor.attributes "tempo" {
       output {
-        metrics = [otelcol.processor.transform.loki.input]
-        logs = [otelcol.processor.transform.loki.input]
-        traces = [otelcol.processor.transform.loki.input]
+        metrics = [otelcol.processor.transform.tempo.input]
+        logs = [otelcol.processor.transform.tempo.input]
+        traces = [otelcol.processor.transform.tempo.input]
       }
     }
     
-    otelcol.processor.transform "loki" {
+    otelcol.processor.transform "tempo" {
       error_mode = "ignore"
       metric_statements {
         context = "resource"
@@ -2280,26 +2187,26 @@ data:
       }
     
       output {
-        metrics = [otelcol.processor.batch.loki.input]
-        logs = [otelcol.processor.batch.loki.input]
-        traces = [otelcol.processor.batch.loki.input]
+        metrics = [otelcol.processor.batch.tempo.input]
+        logs = [otelcol.processor.batch.tempo.input]
+        traces = [otelcol.processor.batch.tempo.input]
       }
     }
     
-    otelcol.processor.batch "loki" {
+    otelcol.processor.batch "tempo" {
       timeout = "2s"
       send_batch_size = 8192
       send_batch_max_size = 0
     
       output {
-        metrics = [otelcol.exporter.otlphttp.loki.input]
-        logs = [otelcol.exporter.otlphttp.loki.input]
-        traces = [otelcol.exporter.otlphttp.loki.input]
+        metrics = [otelcol.exporter.otlphttp.tempo.input]
+        logs = [otelcol.exporter.otlphttp.tempo.input]
+        traces = [otelcol.exporter.otlphttp.tempo.input]
       }
     }
-    otelcol.exporter.otlphttp "loki" {
+    otelcol.exporter.otlphttp "tempo" {
       client {
-        endpoint = "http://otlp-gateway.svc:443/otlp"
+        endpoint = "http://tempo.tempo.svc:443/otlp"
         tls {
           insecure = false
           insecure_skip_verify = false
@@ -2437,7 +2344,7 @@ data:
         otelcol.exporter.loki.loki.input,
       ]
       traces_destinations = [
-        otelcol.processor.attributes.loki.input,
+        otelcol.processor.attributes.tempo.input,
       ]
     }
 ---
