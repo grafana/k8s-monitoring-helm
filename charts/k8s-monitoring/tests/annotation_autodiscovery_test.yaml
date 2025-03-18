@@ -1,0 +1,70 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Cluster Events feature tests
+templates:
+  - alloy-config.yaml
+  - validations.yaml
+tests:
+  - it: requires a metrics destination
+    set:
+      cluster:
+        name: ci-test-cluster
+      annotationAutodiscovery:
+        enabled: true
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            execution error at (k8s-monitoring/templates/validations.yaml:10:6): 
+            No destinations found that can accept metrics from Annotation Autodiscovery
+            Please add a destination with metrics support.
+            See https://github.com/grafana/k8s-monitoring-helm/blob/main/charts/k8s-monitoring/docs/destinations/README.md for more details.
+
+  - it: requires the alloy-metrics collector
+    set:
+      cluster:
+        name: ci-test-cluster
+      destinations:
+        - name: prom
+          type: prometheus
+          url: http://prom.prom.svc:9090/api/v1/write
+      annotationAutodiscovery:
+        enabled: true
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            execution error at (k8s-monitoring/templates/validations.yaml:10:6): 
+            The Annotation Autodiscovery feature requires the use of the alloy-metrics collector.
+            
+            Please enable it by setting:
+            alloy-metrics:
+              enabled: true
+
+  - it: requires one of the two types to be enabled
+    template: alloy-config.yaml
+    set:
+      cluster:
+        name: ci-test-cluster
+      destinations:
+        - name: prom
+          type: prometheus
+          url: http://prom.prom.svc:9090/api/v1/write
+      annotationAutodiscovery:
+        enabled: true
+        pods:
+          enabled: false
+        services:
+          enabled: false
+      alloy-metrics:
+        enabled: true
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            execution error at (k8s-monitoring/templates/validations.yaml:10:6): 
+            Either Pods or Services must be enabled for this feature to work.
+            Please enable one or both. For example:
+            annotationAutodiscovery:
+              pods:
+                enabled: true
+            AND/OR
+              services:
+                enabled: true
+            See https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-annotation-autodiscovery for more details.
