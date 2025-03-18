@@ -8,7 +8,7 @@ heading "Kubernetes Monitoring Helm" "Performing Text Linting using textlint"
 
 dir=$(pwd || true)
 
-# check to see if remark is installed
+# check to see if textlint is installed
 if [[ ! -f "${dir}"/node_modules/.bin/textlint ]]; then
   emergency "textlint node module is not installed, please run: make install";
 fi

@@ -1,28 +1,57 @@
 ---
+enable-beta-ecosystems: true  # Enables Helm dependency checking
+
 version: 2
 updates:
-  - package-ecosystem: "github-actions"
-    directory: "/"
+  - package-ecosystem: helm
+    directory: /charts/k8s-monitoring
     schedule:
-      interval: "weekly"
-  - package-ecosystem: 'npm'
-    directory: '/'
-    schedule:
-      interval: 'weekly'
-      day: 'saturday'
-    versioning-strategy: 'increase'
+      interval: daily
     labels:
-      - 'dependencies'
-      - 'automerge'
-    open-pull-requests-limit: 5
-    pull-request-branch-name:
-      separator: '-'
-    commit-message:
-      # cause a release for non-dev-deps
-      prefix: fix(deps)
-      # no release for dev-deps
-      prefix-development: chore(dev-deps)
-    ignore:
-      - dependency-name: '@salesforce/dev-scripts'
-      - dependency-name: '*'
-        update-types: ['version-update:semver-major']
+      - dependencies
+      - helm
+  - package-ecosystem: helm
+    directory: /charts/k8s-monitoring-v1
+    schedule:
+      interval: daily
+    labels:
+      - dependencies
+      - helm
+  - package-ecosystem: helm
+    directory: /charts/k8s-monitoring/charts/feature-auto-instrumentation
+    schedule:
+      interval: daily
+    labels:
+      - dependencies
+      - helm
+  - package-ecosystem: helm
+    directory: /charts/k8s-monitoring/charts/feature-cluster-metrics
+    schedule:
+      interval: daily
+    labels:
+      - dependencies
+      - helm
+  - package-ecosystem: helm
+    directory: /charts/k8s-monitoring/charts/feature-prometheus-operator-objects
+    schedule:
+      interval: daily
+    labels:
+      - dependencies
+      - helm
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: daily
+    labels:
+      - dependencies
+      - github-actions
+
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: daily
+    versioning-strategy: increase
+    labels:
+      - dependencies
+      - npm

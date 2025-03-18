@@ -4,7 +4,7 @@ source "${PARENT_DIR}/scripts/includes/utils.sh"
 source "${PARENT_DIR}/scripts/includes/logging.sh"
 
 usage() {
-  echo "USAGE: lint-configs.sh [--public-preview] output.alloy [output2.alloy...]"
+  echo "USAGE: lint-alloy.sh [--public-preview] output.alloy [output2.alloy...]"
   echo ""
   echo "Uses Grafana Alloy to lint the generated configuration"
   echo "  --public-preview    - Switch to the public-preview stability level"
@@ -45,11 +45,8 @@ k8sDiscovery='discovery.kubernetes "lint_config_component" { role = "nodes" }'
 
 for file in "$@";
 do
-  if grep "${file}" -e "remotecfg {" >/dev/null; then
+  if grep "${file}" -e "otelcol.receiver.filelog" >/dev/null; then
     STABILITY_LEVEL=public-preview
-  fi
-  if grep "${file}" -e "livedebugging {" >/dev/null; then
-    STABILITY_LEVEL=experimental
   fi
 
   # if the file doesn't exist skip it

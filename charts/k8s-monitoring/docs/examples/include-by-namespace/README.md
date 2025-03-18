@@ -10,6 +10,7 @@ namespaces.
 ## Values
 
 ```yaml
+---
 cluster:
   name: include-by-namespace-cluster
 

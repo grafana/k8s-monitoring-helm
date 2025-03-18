@@ -4,25 +4,28 @@ source "${PARENT_DIR}/scripts/includes/utils.sh"
 source "${PARENT_DIR}/scripts/includes/logging.sh"
 
 # output the heading
-heading "Kubernetes Monitoring Helm" "Performing Text Linting using alex"
+heading "Kubernetes Monitoring Helm" "Performing Terraform Linting using tflint"
 
 dir=$(pwd || true)
 
-# check to see if alex is installed
-if [[ ! -f "${dir}"/node_modules/.bin/alex ]]; then
-  emergency "alex node module is not installed, please run: make install";
+# check to see if tflint is installed
+if [[ "$(command -v tflint || true)" = "" ]]; then
+  emergency "tflint is required if running lint locally.  Run: brew install tflint";
 fi
 
 # determine whether or not the script is called directly or sourced
 (return 0 2>/dev/null) && sourced=1 || sourced=0
 
+terraformDirectories=$(find . -name 'vars.tf' -exec dirname {} \;)
+
 statusCode=0
-"${dir}"/node_modules/.bin/alex "${dir}/"*.md "${dir}"/charts/*.md "${dir}"/charts/**/*.md "${dir}"/charts/**/**/*.md "${dir}"/examples/*.md "${dir}"/examples/**/*.md "${dir}"/examples/**/**/*.md
-currentCode="$?"
-# only override the statusCode if it is 0
-if [[ "${statusCode}" == 0 ]]; then
-  statusCode="${currentCode}"
-fi
+for dir in ${terraformDirectories}; do
+  tflint --chdir "${dir}"
+  currentCode="$?"
+  if [[ "${statusCode}" == 0 ]]; then
+    statusCode="${currentCode}"
+  fi
+done
 
 if [[ "${statusCode}" == "0" ]]; then
   echo "no issues found"
