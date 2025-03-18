@@ -15,7 +15,7 @@ fi
 (return 0 2>/dev/null) && sourced=1 || sourced=0
 
 statusCode=0
-actionlint .github/workflows/*.yml
+actionlint .github/workflows/*.yml .github/workflows/*.yaml
 currentCode="$?"
 # only override the statusCode if it is 0
 if [[ "${statusCode}" == 0 ]]; then
