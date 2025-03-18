@@ -17,8 +17,11 @@ fi
 (return 0 2>/dev/null) && sourced=1 || sourced=0
 
 statusCode=0
-"${dir}"/node_modules/.bin/alex "${dir}/"*.md "${dir}"/charts/*.md "${dir}"/charts/**/*.md "${dir}"/charts/**/**/*.md "${dir}"/examples/*.md "${dir}"/examples/**/*.md "${dir}"/examples/**/**/*.md
+
+markdownFiles=$(find . -type f -name "*.md" ! -path "./node_modules/*" ! -path "./data-alloy/*" ! -path "./CODE_OF_CONDUCT.md")
+
 currentCode="$?"
+"${dir}"/node_modules/.bin/alex ${markdownFiles}
 # only override the statusCode if it is 0
 if [[ "${statusCode}" == 0 ]]; then
   statusCode="${currentCode}"

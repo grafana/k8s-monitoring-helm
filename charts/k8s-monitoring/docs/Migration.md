@@ -7,7 +7,7 @@ been re-arranged to be organized around features, rather than data types (e.g. m
 explain how the settings have changed, feature-by-feature, and how to migrate your v1 values.yaml file.
 
 In v1, many features were enabled by default. Cluster metrics, pod logs, cluster events, etc... In v2, all features
-are disabled by default, which leads your values file to better reflect your desired feature set.
+are turned off by default, which leads your values file to better reflect your desired feature set.
 
 A migration tool is available
 at [https://grafana.github.io/k8s-monitoring-helm-migrator/](https://grafana.github.io/k8s-monitoring-helm-migrator/).
@@ -44,7 +44,7 @@ Here's how to map from v1 `externalServices` to v2 `destinations`:
 
 1.  Create a destination for each external service you are using.
 2.  Provide a `name` and a `type` for the destination
-3.  Provide the URL for the destination. *NOTE* this is a full data writing/pushing URL, not just the hostname!
+3.  Provide the URL for the destination. *NOTE* this is a full data writing/pushing URL, not only the hostname!
 4.  Map the other settings from the original service to the new destination
 
 -   `authMode` --> `auth.type`
@@ -372,12 +372,13 @@ For other uses of `extraConfig`, continue with this section.
 | Profiles  | `pyroscope.write.profiles_service.receiver`   | `pyroscope.write.<destination_name>.receiver`         |
 
 Note that the `<destination_name>` in the component reference is the name of the destination, set to lower-case and
-with any special characters replaced with an underscore. For example, if your destination is named
+with any non-alphanumeric characters replaced with an underscore. For example, if your destination is named
 `Grafana Cloud Metrics`, then the destination name would be `grafana_cloud_metrics`.
 
 ### Dropped features
 
 The following features have been removed from the 2.0 release:
+<!--alex ignore hooks-->
 
 -   **Pre-install hooks**: The pre-install and pre-upgrade hooks that did config validation have been removed. The Alloy
     pods will now validate the configuration at runtime and log any issues and without these pods, this greatly

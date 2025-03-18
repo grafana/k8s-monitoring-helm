@@ -37,8 +37,8 @@ is best for you.
 ### RollingUpdate
 
 If the deployment strategy is set to `RollingUpdate`, when kube-state-metrics is updated it is possible for there to be
-two running instances for a short period. This means that there shouldn't be a gap in metrics, but could lead to
-duplicate metrics for a short period.
+two running instances for a short duration. This means that there shouldn't be a gap in metrics, but could lead to
+duplicate metrics for a short duration.
 
 ### Recreate
 

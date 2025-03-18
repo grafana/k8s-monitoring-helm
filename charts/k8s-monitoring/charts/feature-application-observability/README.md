@@ -40,6 +40,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 
 ## Values
 
+<!--alex ignore host-hostess--> 
 ### Connectors: Grafana Cloud Host Info
 
 | Key | Type | Default | Description |
