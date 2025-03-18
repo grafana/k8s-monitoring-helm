@@ -5,7 +5,6 @@ HAS_VENDIR := $(shell command -v vendir;)
 
 CHART_TEMPLATE_FILES = $(shell find templates -name "*.tpl")
 CHART_YAML_FILES = $(shell find templates -name "*.yaml")
-UPDATECLI_FILES := $(shell yq -e '.dependencies[] | select(.repository == "http*") | ".updatecli-" + .name + ".yaml"' Chart.yaml 2>/dev/null | sort | uniq)
 
 FEATURE_CHARTS = $(shell ls --color=never charts | grep feature-)
 
@@ -72,9 +71,6 @@ ALLOY_MODULE_FILES = $(shell find alloyModules -name "*.alloy")
 
 values.schema.json: values.yaml $(DESTINATION_SCHEMA_FILES) $(SCHEMA_MODS_JSON_FILES) $(SCHEMA_MODS_JQ_FILES) schema-mods/destination-list.json
 	../../scripts/schema-gen.sh .
-
-.updatecli-%.yaml: Chart.yaml
-	../../scripts/charts-to-updatecli.sh Chart.yaml
 
 README.md: README.md.gotmpl values.yaml Chart.yaml
 ifdef HAS_HELM_DOCS
@@ -160,7 +156,7 @@ platform-test-checks: $(PLATFORM_TEST_OUTPUT_FILES)
 
 .PHONY: clean
 clean:
-	rm -f README.md values.schema.json $(UPDATECLI_FILES) templates/destinations/_destination_types.tpl schema-mods/destination-list.json $(DESTINATION_SCHEMA_FILES) $(DESTINATION_DOCS_FILES)
+	rm -f README.md values.schema.json templates/destinations/_destination_types.tpl schema-mods/destination-list.json $(DESTINATION_SCHEMA_FILES) $(DESTINATION_DOCS_FILES)
 	rm -f $(EXAMPLE_OUTPUT_FILES) $(EXAMPLE_ALLOY_FILES) $(EXAMPLE_README_FILES) $(INTEGRATION_TEST_OUTPUT_FILES) $(PLATFORM_TEST_OUTPUT_FILES)
 	set -e && \
 	for chart in $(FEATURE_CHARTS); do \
@@ -175,7 +171,7 @@ build-features:
 
 # Build targets
 .PHONY: build
-build: build-features README.md alloyModules/LICENSE values.schema.json templates/destinations/_destination_types.tpl $(DESTINATION_DOCS_FILES) $(UPDATECLI_FILES) examples integration-test-checks platform-test-checks
+build: build-features README.md alloyModules/LICENSE values.schema.json templates/destinations/_destination_types.tpl $(DESTINATION_DOCS_FILES) examples integration-test-checks platform-test-checks
 
 # Test targets
 .PHONY: test unittest lint-helm lint-configs

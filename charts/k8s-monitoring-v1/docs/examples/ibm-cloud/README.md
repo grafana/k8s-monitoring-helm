@@ -1,7 +1,7 @@
 # IBM Cloud
 
 The only difference from the default in running Kubernetes Monitoring on an IBM Cloud Kubernetes Cluster is the need to
-add the host path volume mount for `/var/data` to the Grafana Alloy instance responsible for gathering pod logs. This is
+add the `hostPath` volume mount for `/var/data` to the Grafana Alloy instance responsible for gathering pod logs. This is
 because on the node, pod logs are stored in `/var/data`, with `/var/log/pods` being symlinked
 to `/var/data/kubeletlogs/`.
 

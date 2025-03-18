@@ -38,6 +38,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 <!-- markdownlint-enable list-marker-space -->
 <!-- markdownlint-enable no-bare-urls -->
 
+<!--alex ignore host-hostess-->
 ## Values
 
 ### Connectors: Grafana Cloud Host Info

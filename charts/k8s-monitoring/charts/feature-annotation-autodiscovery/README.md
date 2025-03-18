@@ -8,7 +8,7 @@
 ![Version: 1.0.0](https://img.shields.io/badge/Version-1.0.0-informational?style=flat-square) ![AppVersion: 1.0.0](https://img.shields.io/badge/AppVersion-1.0.0-informational?style=flat-square)
 Gathers metrics automatically based on Kubernetes Pod and Service annotations
 
-The annotation-based autodiscovery feature makes it easy to add scrape targets.
+The annotation-based autodiscovery feature adds scrape targets based on Kubernetes annotations.
 
 ## How it works
 

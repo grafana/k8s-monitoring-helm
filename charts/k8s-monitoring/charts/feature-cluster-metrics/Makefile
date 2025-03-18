@@ -1,6 +1,5 @@
 HAS_HELM_DOCS := $(shell command -v helm-docs;)
 HAS_HELM_UNITTEST := $(shell helm plugin list | grep unittest 2> /dev/null)
-UPDATECLI_FILES := $(shell yq -e '.dependencies[] | select(.repository == "http*") | ".updatecli-" + .name + ".yaml"' Chart.yaml 2>/dev/null | sort | uniq)
 ALLOW_LISTS := default-allow-lists/kube-state-metrics.yaml
 
 .SECONDEXPANSION:
@@ -26,10 +25,10 @@ default-allow-lists/%.yaml: ../../../../allowLists/%.yaml
 
 .PHONY: clean
 clean:
-	rm -f README.md values.schema.json $(UPDATECLI_FILES) $(ALLOW_LISTS)
+	rm -f README.md values.schema.json $(ALLOW_LISTS)
 
 .PHONY: build
-build: README.md Chart.lock values.schema.json $(UPDATECLI_FILES) $(ALLOW_LISTS)
+build: README.md Chart.lock values.schema.json $(ALLOW_LISTS)
 
 .PHONY: test
 test: build

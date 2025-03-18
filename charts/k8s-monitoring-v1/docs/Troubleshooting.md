@@ -1,4 +1,5 @@
 # Troubleshooting
+<!--alex disable invalid-->
 
 This document contains some information about frequently encountered issues and how to resolve them.
 
@@ -111,7 +112,7 @@ The table below shows the scopes required for various actions done by this chart
 ### Kepler pods crashing on AWS Graviton nodes
 
 Kepler [cannot run](https://github.com/sustainable-computing-io/kepler/issues/1556) on AWS Graviton nodes and pods on
-those nodes will crash. To prevent this, you can add a node selector to the Kepler deployment:
+those nodes will CrashLoopBackOff. To prevent this, you can add a node selector to the Kepler deployment:
 
 ```yaml
 kepler:

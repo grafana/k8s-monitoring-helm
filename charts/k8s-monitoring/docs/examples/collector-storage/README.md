@@ -5,8 +5,8 @@
 # Collector Storage Example
 
 This example shows how to use volumes to enhance the abilities of metric scraping and log gathering. Metric scraping can
-utilize a Write-Ahead Log (WAL) to store metrics in case of a scrape failure. Log gathering can utilize a volume to
-store log file positions, so it knows where to start reading logs from after a restart.
+utilize a Write-Ahead Log (WAL) to store metrics in case Alloy was unable to deliver metrics. Log gathering can utilize
+a volume to store log file positions, so Alloy remembers where to start reading logs from after a restart.
 
 ## Values
 

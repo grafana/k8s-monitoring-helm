@@ -6,7 +6,7 @@ source "${PARENT_DIR}/scripts/includes/logging.sh"
 # output the heading
 heading "Kubernetes Monitoring Helm" "Performing Markdown Linting using markdownlint"
 
-# check to see if remark is installed
+# check to see if markdownlint is installed
 if [[ ! -f "$(pwd || true)"/node_modules/.bin/markdownlint-cli2 ]]; then
   emergency "markdownlint-cli2 node module is not installed, please run: make install";
 fi

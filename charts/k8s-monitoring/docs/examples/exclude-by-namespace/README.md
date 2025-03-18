@@ -10,6 +10,7 @@ namespaces.
 ## Values
 
 ```yaml
+---
 cluster:
   name: exclude-by-namespace-cluster
 
