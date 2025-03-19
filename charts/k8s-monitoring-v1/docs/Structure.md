@@ -33,6 +33,7 @@ logs via HostPath volume mounts. This requires this instance to be deployed as a
 deployed as a StatefulSet, which allows it to be scaled (optionally with a HorizontalPodAutoscaler) based on load. If it
 was combined with the Alloy for Logs, it would lose its ability to scale. Also, the Grafana Alloy Singleton cannot be
 scaled beyond one replica, because that would result in duplicate data being sent.
+
 ### Security
 
 Another reason for using distinct instances is to minimize the security footprint required. While the Alloy for logs
