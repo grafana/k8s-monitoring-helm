@@ -50,7 +50,7 @@ data, while limiting Grafana Alloy to only act as a collector of that data.
 
 This Helm chart also creates the configuration files, stored in ConfigMaps, for the Grafana Alloy instances. The
 configuration is built based on the features enabled in the values file and the collector they are assigned to. For
-example, the Cluster Metrics feature is assigned to the Grafana Alloy for Metrics, by default.
+example, the Cluster Metrics feature is assigned to the Grafana Alloy for Metrics by default.
 
 All configuration related to telemetry data destinations are automatically loaded onto the Grafana Alloy instances that
 require them.
