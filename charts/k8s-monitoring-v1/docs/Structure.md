@@ -27,9 +27,9 @@ section inside the Helm chart's values.yaml file that controls how it is configu
 
 ### Grafana Alloy instances
 
-You may wonder why there are five instances of Grafana Alloy, rather than combining them. The reason is a balance
+There are five instances of Grafana Alloy instead of one that includes all functions due to the need for balance
 between functionality and scalability. For example, the default functionality of the Grafana Alloy for Logs is to gather
-logs via HostPath volume mounts. This requires it to be deployed as a DaemonSet. The Grafana Alloy for Metrics is
+logs via HostPath volume mounts. This requires this instance to be deployed as a DaemonSet. The Grafana Alloy for Metrics is
 deployed as a StatefulSet, which allows it to be scaled (optionally with a HorizontalPodAutoscaler) based on load. If it
 was combined with the Alloy for Logs, it would lose its ability to scale. Also, the Grafana Alloy Singleton cannot be
 scaled beyond one replica, because that would result in duplicate data being sent.
