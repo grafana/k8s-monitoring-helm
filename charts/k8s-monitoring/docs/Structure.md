@@ -46,7 +46,7 @@ auto instrumented data and node metrics respectively, rather than using the
 Alloy components. This allows Beyla and Node Exporter to be deployed with the permissions they require to gather their
 data, while limiting Grafana Alloy to only act as a collector of that data.
 
-## Configuration Created
+## Configuration created
 
 This Helm chart also creates the configuration files, stored in ConfigMaps, for the Grafana Alloy instances. The
 configuration is built based on the features enabled in the values file and the collector they are assigned to. For
