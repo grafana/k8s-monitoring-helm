@@ -1,4 +1,7 @@
-# alloy
+# Grafana Alloy Integration
+
+This integration is designed to capture the metrics and logs to understand the health and performance of your Grafana
+Alloy instances.
 
 ## Values
 
@@ -38,3 +41,36 @@
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | metrics.scrapeInterval | string | `60s` | How frequently to scrape metrics from Alloy. |
+
+## Enabling
+
+To enable this integration, create an instance with the Alloy names:
+
+```yaml
+integrations:
+  alloy:
+    instances:
+      - name: alloy
+        labelSelectors:
+          app.kubernetes.io/name: [alloy-metrics, alloy-singleton, alloy-logs]
+```
+
+Multiple instances can be used if you wish to set different configurations for each Alloy integration. For example, if
+you want full health and performance metrics for the alloy-metrics instance, but only the `alloy_build_info` metric for
+the other Alloy instances, you can use the following configuration:
+
+```yaml
+integrations:
+  alloy:
+    instances:
+      - name: alloy-metrics
+        labelSelectors:
+          app.kubernetes.io/name: alloy-metrics
+      - name: alloy
+        labelSelectors:
+          app.kubernetes.io/name: [alloy-logs, alloy-singleton]
+        metrics:
+          tuning:
+            useDefaultAllowList: false
+            includedMetrics: [alloy_build_info]
+```

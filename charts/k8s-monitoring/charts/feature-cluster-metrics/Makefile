@@ -17,9 +17,6 @@ Chart.lock: Chart.yaml
 values.schema.json: values.yaml $$(wildcard schema-mods/*)
 	../../../../scripts/schema-gen.sh .
 
-.updatecli-%.yaml: Chart.yaml
-	../../../../scripts/charts-to-updatecli.sh Chart.yaml
-
 default-allow-lists/%.yaml: ../../../../allowLists/%.yaml
 	cp $< $@
 
