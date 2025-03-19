@@ -1,7 +1,7 @@
 # Structure
 
 The Kubernetes Monitoring Helm chart contains many software packages, and builds a comprehensive set of configuration
-and secrets for those packages. This document aims to describe and explain the structure of the Helm chart.
+and secrets for those packages. 
 
 ![Kubernetes Monitoring inside of a Cluster](https://grafana.com/media/docs/grafana-cloud/k8s/helm-chart-diagram-2024-dec.png)
 
