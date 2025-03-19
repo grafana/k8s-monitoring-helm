@@ -26,7 +26,6 @@ schema-mods/definitions/%-integration.schema.json: integrations/%-values.yaml
 	docker run --platform linux/amd64 --rm -v $(shell pwd):/src ghcr.io/grafana/helm-docs-and-schema-gen $(shell echo $< | sed 's/integrations\/\([-a-z]*\)-values.yaml/\1/') integration
 
 NUMBER_OF_INTEGRATION_VALUES_FILES := $(words $(INTEGRATION_VALUES_FILES))
-NUMBER_OF_INTEGRATION_VALUES_FILES := $(words $(INTEGRATION_VALUES_FILES))
 schema-mods/integration-list.json: $(INTEGRATION_VALUES_FILES)
 	@echo '{' > $@
 	@echo '  "definitions": {' >> $@
@@ -59,9 +58,6 @@ templates/_integration_types.tpl: $(INTEGRATION_VALUES_FILES)
 
 values.schema.json: values.yaml $(INTEGRATION_SCHEMA_FILES) $(SCHEMA_MODS_JSON_FILES) $(SCHEMA_MODS_JQ_FILES) schema-mods/integration-list.json
 	../../../../scripts/schema-gen.sh .
-
-.updatecli-%.yaml: Chart.yaml
-	../../../../scripts/charts-to-updatecli.sh Chart.yaml
 
 README.md: values.yaml Chart.yaml $$(wildcard README.md.gotmpl)
 ifdef HAS_HELM_DOCS

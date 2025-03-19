@@ -1,12 +1,9 @@
 # Structure
 
 The Kubernetes Monitoring Helm chart contains many software packages, and builds a comprehensive set of configuration
-and
-secrets for those packages.
-This document aims to describe and explain the structure of the Helm chart.
+and secrets for those packages. This document aims to describe and explain the structure of the Helm chart.
 
-<!-- TODO: This url needs an update for Alloy -->
-![Kubernetes Monitoring inside of a Cluster](https://grafana.com/media/docs/grafana-cloud/k8s/Helm-chart-agent-diagram.png)
+![Kubernetes Monitoring inside of a Cluster](https://grafana.com/media/docs/grafana-cloud/k8s/helm-chart-diagram-2024-dec.png)
 
 ## Software Deployed
 
@@ -19,23 +16,39 @@ section inside the Helm chart's values.yaml file that controls how it is configu
 | [Grafana Alloy](https://grafana.com/oss/alloy/)                                        | StatefulSet               | `alloy`                       | The Grafana Alloy instance that is responsible for scraping metrics, and accepting metrics, logs, and traces via receivers.                                                                                                   |
 | Grafana Alloy for Logs                                                                 | DaemonSet                 | `alloy-logs`                  | The Grafana Alloy instance that gathers Pod logs. By default, it uses HostPath volume mounts to read Pod log files directly from the nodes. It can alternatively get logs via the API server and be deployed as a Deployment. |
 | Grafana Alloy for Events                                                               | Deployment                | `alloy-events`                | The Grafana Alloy instance that is responsible for gathering Cluster events from the API server. This does not support clustering, so only one instance should be used.                                                       |
-| Grafana Alloy for Profiles                                                             | Deployment                | `alloy-events`                | The Grafana Alloy instance that is responsible for gathering profiles.                                                                                                                                                        |
+| Grafana Alloy for Profiles                                                             | DaemonSet                 | `alloy-profiles`              | The Grafana Alloy instance that is responsible for gathering profiles.                                                                                                                                                        |
 | [kube-state-metrics](https://github.com/kubernetes/kube-state-metrics)                 | Deployment                | `kube-state-metrics`          | A service for generating metrics about the state of the objects inside the Cluster.                                                                                                                                           |
 | [Node Exporter](https://github.com/prometheus/node_exporter)                           | DaemonSet                 | `prometheus-node-exporter`    | An exporter used for gathering hardware and OS metrics for *NIX nodes of the Cluster.                                                                                                                                         |
 | [Windows Exporter](https://github.com/prometheus-community/windows_exporter)           | DaemonSet                 | `prometheus-windows-exporter` | An exporter used for gathering hardware and OS metrics for Windows nodes of the Cluster. Not deployed by default.                                                                                                             |
 | [OpenCost](https://www.opencost.io/)                                                   | Deployment                | `opencost`                    | Used for gathering cost metrics for the Cluster.                                                                                                                                                                              |
 | [Prometheus Operator CRDs](https://github.com/prometheus-operator/prometheus-operator) | CustomResourceDefinitions | `prometheus-operator-crds`    | The custom resources for the Prometheus Operator. Use if you want to deploy PodMonitors, ServiceMonitors, or Probes.                                                                                                          |
+| [Grafana Beyla](https://grafana.com/oss/beyla-ebpf/)                                   | DaemonSet                 | `beyla`                       | Used for automatically instrumenting applications and gathering network metrics.                                                                                                                                              |
+| [Kepler](https://sustainable-computing.io/)                                            | DaemonSet                 | `kepler`                      | Used for gathering energy consumption metrics.                                                                                                                                                                                |
 
 ### Grafana Alloy instances
 
-You may wonder why there are four instances of Grafana Alloy, rather than combining them. The reason is a balance
-between functionality and scalability. The default functionality of the Grafana Alloy for Logs is to gather logs via
-HostPath volume mounts. This requires it to be deployed as a DaemonSet. The Grafana Alloy for metrics and receivers is
-deployed as a StatefulSet, which allows it to be scaled (optionally with a HorizontalPodAutoscaler) based on load. If it
-was combined with the Alloy for Logs, it would lose its ability to scale.
+There are five instances of Grafana Alloy instead of one that includes all functions due to the need for:
 
-Also, the Grafana Alloy for Events cannot be scaled beyond one replica, because that would result in duplicate events
-being sent to the logs service.
+*   Balance between functionality and scalability
+*   Security
+
+#### Functionality/Scalability balance
+
+Without multiple instances, scalability can be hindered. For example, the default functionality of the Grafana Alloy for Logs is to gather
+logs via HostPath volume mounts. This requires this instance to be deployed as a DaemonSet. The Grafana Alloy for Metrics is
+deployed as a StatefulSet, which allows it to be scaled (optionally with a HorizontalPodAutoscaler) based on load. If it would lose its ability to scale. Also, the Grafana Alloy Singleton cannot be
+scaled beyond one replica, because that would result in duplicate data being sent.
+
+#### Security
+
+Another reason for using distinct instances is to minimize the security footprint required. While the Alloy for logs
+may require a HostPath volume mount, the other instances do not. That means they can be deployed with a more restrictive
+security context. This is similarly why we use a distinct Grafana Beyla and Node Exporter deployments to gather
+auto instrumented data and node metrics respectively, rather than using the
+[beyla.ebpf](https://grafana.com/docs/alloy/latest/reference/components/beyla/beyla.ebpf/) or
+[prometheus.exporter.unix](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.exporter.unix/)
+Alloy components. This allows Beyla and Node Exporter to be deployed with the permissions they require to gather their
+data, while limiting Grafana Alloy to only act as a collector of that data.
 
 ## Configuration Created
 
@@ -85,6 +98,6 @@ controls it.
 
 ### Grafana Alloy for Profiles Configuration
 
-| Name           | Associated values | Description                         |
-|----------------|-------------------|-------------------------------------|
-| Cluster Events | `.profiles`       | Controls how profiles are gathered. |
+| Name      | Associated values | Description                         |
+|-----------|-------------------|-------------------------------------|
+| Profiling | `.profiles`       | Controls how profiles are gathered. |
