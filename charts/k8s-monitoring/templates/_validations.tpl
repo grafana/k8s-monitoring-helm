@@ -1,3 +1,23 @@
+{{- define "validations" }}
+  {{- include "validations.checkForV1" . }}
+  {{- include "validations.platform" . }}
+  {{- include "validations.cluster_name" . }}
+  {{- include "validations.platform" . }}
+
+  {{- include "destinations.validate" . -}}
+
+  {{- /* Feature Validations*/}}
+  {{- include "validations.features_enabled" . }}
+  {{- range $feature := ((include "features.list" .) | fromYamlArray) }}
+    {{- include (printf "features.%s.validate" $feature) $ }}
+  {{- end }}
+
+  {{- include "collectors.validate.featuresEnabled" . }}
+  {{- range $collectorName := ((include "collectors.list.enabled" .) | fromYamlArray) }}
+    {{- include "collectors.validate.remoteConfig" (dict "collectorName" $collectorName "Values" $.Values) }}
+  {{- end }}
+{{- end }}
+
 {{/* Checks if a V1 values file was used */}}
 {{- define "validations.checkForV1" }}
 {{- if (index .Values "externalServices") }}
@@ -38,16 +58,6 @@
   {{- $msg = append $msg "  enabled: true" }}
   {{- $msg = append $msg "" }}
   {{- $msg = append $msg "See https://github.com/grafana/k8s-monitoring-helm/blob/main/charts/k8s-monitoring/docs/Features.md for the list of available features." }}
-  {{- fail (join "\n" $msg) }}
-{{- end }}
-{{- end }}
-
-{{/* Checks for platform settings */}}
-{{- define "validations.platform" }}
-{{- if and (not (eq .Values.global.platform "openshift")) (.Capabilities.APIVersions.Has "security.openshift.io/v1/SecurityContextConstraints") }}
-  {{- $msg := list "" "This Kubernetes cluster appears to be OpenShift. Please set the platform to enable compatibility:" }}
-  {{- $msg = append $msg "global:" }}
-  {{- $msg = append $msg "  platform: openshift" }}
   {{- fail (join "\n" $msg) }}
 {{- end }}
 {{- end }}
