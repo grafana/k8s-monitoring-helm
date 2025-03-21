@@ -1,9 +1,21 @@
 {{ define "feature.profiling.java.alloy" }}
 {{- if .Values.java.enabled }}
+{{- $labelSelectors := list }}
+{{- range $k, $v := .Values.java.labelSelectors }}
+  {{- if kindIs "slice" $v }}
+    {{- $labelSelectors = append $labelSelectors (printf "%s in (%s)" $k (join "," $v)) }}
+  {{- else }}
+    {{- $labelSelectors = append $labelSelectors (printf "%s=%s" $k $v) }}
+  {{- end }}
+{{- end }}
 // Profiles: Java
 discovery.kubernetes "java_pods" {
+  role = "pod"
   selectors {
     role = "pod"
+{{- if $labelSelectors }}
+    label = {{ $labelSelectors | join "," | quote }}
+{{- end }}
     field = "spec.nodeName=" + sys.env("HOSTNAME")
   }
 {{- if .Values.java.namespaces }}
@@ -11,7 +23,6 @@ discovery.kubernetes "java_pods" {
     names = {{ .Values.java.namespaces | toJson }}
   }
 {{- end }}
-  role = "pod"
 }
 
 discovery.process "java_pods" {
@@ -44,6 +55,17 @@ discovery.relabel "java_pods" {
     source_labels = ["namespace"]
     regex = "{{ .Values.java.excludeNamespaces | join "|" }}"
     action = "drop"
+  }
+{{- end }}
+{{- range $k, $v := .Values.java.annotationSelectors }}
+  rule {
+    source_labels = [{{ include "pod_annotation" $k | quote }}]
+  {{- if kindIs "slice" $v }}
+    regex = {{ $v | join "|" | quote }}
+  {{- else }}
+    regex = {{ $v | quote }}
+  {{- end }}
+    action = "keep"
   }
 {{- end }}
   rule {
