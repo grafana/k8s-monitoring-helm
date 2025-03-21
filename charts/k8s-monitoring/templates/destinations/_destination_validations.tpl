@@ -47,8 +47,8 @@
 
         {{/* Check if OTLP destination using Grafana Cloud Tempo checks */}}
         {{- if and (regexMatch "tempo-.+grafana\\.net" $destination.url) }}
-          {{- if ne $destination.protocol "grpc" }}
-            {{ fail (printf "\nDestination #%d (%s) is using Grafana Cloud Traces but has incorrect protocol '%s'. Grafana Cloud Traces requires 'grpc'.\nPlease set:\ndestinations:\n  - name: %s\n    type: otlp\n    url: %s\n    protocol: grpc" $i $destination.name ($destination.protocol | default "grpc (default)") $destination.name $destination.url) }}
+          {{- if ne ($destination.protocol | default "grpc") "grpc" }}
+            {{ fail (printf "\nDestination #%d (%s) is using Grafana Cloud Traces but has incorrect protocol '%s'. Grafana Cloud Traces requires 'grpc'.\nPlease set:\ndestinations:\n  - name: %s\n    type: otlp\n    url: %s\n    protocol: grpc" $i $destination.name $destination.protocol $destination.name $destination.url) }}
           {{- end }}
           {{- if eq (dig "metrics" "enabled" true $destination) true }}
             {{ fail (printf "\nDestination #%d (%s) is using Grafana Cloud Traces but has metrics enabled. Tempo only supports traces.\nPlease set:\ndestinations:\n  - name: %s\n    type: otlp\n    url: %s\n    metrics:\n      enabled: false" $i $destination.name $destination.name $destination.url) }}
