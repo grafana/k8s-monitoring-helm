@@ -1,5 +1,5 @@
 # yamllint disable rule:document-start rule:line-length rule:trailing-spaces
-suite: Test default values
+suite: Test eBPF profiling
 templates:
   - configmap.yaml
 tests:
@@ -30,6 +30,26 @@ tests:
             regex = "secret-program"
             action = "drop"
           }
+      java:
+        enabled: false
+      pprof:
+        enabled: false
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["module.alloy"]
+
+  - it: should be able to filter by label and annotation
+    set:
+      deployAsConfigMap: true
+      ebpf:
+        enabled: true
+        labelSelectors:
+          app.kubernetes.io/name: secret-program
+          colors: [blue, green]
+        annotationSelectors:
+          k8s.grafana.com/profile: "true"
       java:
         enabled: false
       pprof:

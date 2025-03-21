@@ -1,3 +1,140 @@
+should be able to filter by label and annotation:
+  1: |
+    |-
+      declare "profiling" {
+        argument "profiles_destinations" {
+          comment = "Must be a list of profile destinations where collected profiles should be forwarded to"
+        }
+        // Profiles: Java
+        discovery.kubernetes "java_pods" {
+          role = "pod"
+          selectors {
+            role = "pod"
+            label = "app.kubernetes.io/name=secret-program,colors in (blue,green)"
+            field = "spec.nodeName=" + sys.env("HOSTNAME")
+          }
+        }
+
+        discovery.process "java_pods" {
+          join = discovery.kubernetes.java_pods.targets
+        }
+
+        discovery.relabel "java_pods" {
+          targets = discovery.process.java_pods.targets
+          rule {
+            source_labels = ["__meta_kubernetes_pod_phase"]
+            regex = "Succeeded|Failed|Completed"
+            action = "drop"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_pod_name"]
+            regex = "^$"
+            action = "drop"
+          }
+          rule {
+            source_labels = ["__meta_process_exe"]
+            action = "keep"
+            regex = ".*/java$"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_namespace"]
+            target_label = "namespace"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_profile"]
+            regex = "true"
+            action = "keep"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_pod_name"]
+            target_label = "pod"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_pod_node_name"]
+            target_label = "node"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_pod_container_name"]
+            target_label = "container"
+          }
+        }
+
+        pyroscope.java "java_pods" {
+          targets = discovery.relabel.java_pods.output
+          profiling_config {
+            interval = "60s"
+            alloc = "512k"
+            cpu = true
+            sample_rate = 100
+            lock = "10ms"
+          }
+          forward_to = argument.profiles_destinations.value
+        }
+      }
 should build the Java profiling configuration:
   1: |
-    "declare \"profiling\" {\n  argument \"profiles_destinations\" {\n    comment = \"Must be a list of profile destinations where collected profiles should be forwarded to\"\n  }    \n  // Profiles: Java\n  discovery.kubernetes \"java_pods\" {\n    selectors {\n      role = \"pod\"\n      field = \"spec.nodeName=\" + sys.env(\"HOSTNAME\")\n    }\n    role = \"pod\"\n  }\n  \n  discovery.process \"java_pods\" {\n    join = discovery.kubernetes.java_pods.targets\n  }\n  \n  discovery.relabel \"java_pods\" {\n    targets = discovery.process.java_pods.targets\n    rule {\n      source_labels = [\"__meta_kubernetes_pod_phase\"]\n      regex = \"Succeeded|Failed|Completed\"\n      action = \"drop\"\n    }\n    rule {\n      source_labels = [\"__meta_kubernetes_pod_name\"]\n      regex = \"^$\"\n      action = \"drop\"\n    }\n    rule {\n      source_labels = [\"__meta_process_exe\"]\n      action = \"keep\"\n      regex = \".*/java$\"\n    }\n    rule {\n      source_labels = [\"__meta_kubernetes_namespace\"]\n      target_label = \"namespace\"\n    }\n    rule {\n      source_labels = [\"__meta_kubernetes_pod_name\"]\n      target_label = \"pod\"\n    }\n    rule {\n      source_labels = [\"__meta_kubernetes_pod_node_name\"]\n      target_label = \"node\"\n    }\n    rule {\n      source_labels = [\"__meta_kubernetes_pod_container_name\"]\n      target_label = \"container\"\n    }\n  }\n  \n  pyroscope.java \"java_pods\" {\n    targets = discovery.relabel.java_pods.output\n    profiling_config {\n      interval = \"60s\"\n      alloc = \"512k\"\n      cpu = true\n      sample_rate = 100\n      lock = \"10ms\"\n    }\n    forward_to = argument.profiles_destinations.value\n  }  \n}"
+    |-
+      declare "profiling" {
+        argument "profiles_destinations" {
+          comment = "Must be a list of profile destinations where collected profiles should be forwarded to"
+        }
+        // Profiles: Java
+        discovery.kubernetes "java_pods" {
+          role = "pod"
+          selectors {
+            role = "pod"
+            field = "spec.nodeName=" + sys.env("HOSTNAME")
+          }
+        }
+
+        discovery.process "java_pods" {
+          join = discovery.kubernetes.java_pods.targets
+        }
+
+        discovery.relabel "java_pods" {
+          targets = discovery.process.java_pods.targets
+          rule {
+            source_labels = ["__meta_kubernetes_pod_phase"]
+            regex = "Succeeded|Failed|Completed"
+            action = "drop"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_pod_name"]
+            regex = "^$"
+            action = "drop"
+          }
+          rule {
+            source_labels = ["__meta_process_exe"]
+            action = "keep"
+            regex = ".*/java$"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_namespace"]
+            target_label = "namespace"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_pod_name"]
+            target_label = "pod"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_pod_node_name"]
+            target_label = "node"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_pod_container_name"]
+            target_label = "container"
+          }
+        }
+
+        pyroscope.java "java_pods" {
+          targets = discovery.relabel.java_pods.output
+          profiling_config {
+            interval = "60s"
+            alloc = "512k"
+            cpu = true
+            sample_rate = 100
+            lock = "10ms"
+          }
+          forward_to = argument.profiles_destinations.value
+        }
+      }
