@@ -57,6 +57,7 @@ alloy-logs:
       enabled: true
     mounts:
       varlog: false
+      dockercontainers: false
   controller:
     replicas: 2
     type: deployment
