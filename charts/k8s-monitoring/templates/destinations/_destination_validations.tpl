@@ -64,11 +64,13 @@
     {{- end }}
 
     {{- if eq (include "secrets.authType" $destination) "basic" }}
-      {{- if eq (include "secrets.usesSecret" (dict "object" $destination "key" "auth.username")) "false" }}
-        {{ fail (printf "\nDestination #%d (%s) is using basic auth but does not have a username.\nPlease set:\ndestinations:\n  - name: %s\n    auth:\n      type: basic\n      username: my-username\n      password: my-password" $i $destination.name $destination.name) }}
-      {{- end }}
-      {{- if eq (include "secrets.usesSecret" (dict "object" $destination "key" "auth.password")) "false" }}
-        {{ fail (printf "\nDestination #%d (%s) is using basic auth but does not have a password.\nPlease set:\ndestinations:\n  - name: %s\n    auth:\n      type: basic\n      username: my-username\n      password: my-password" $i $destination.name $destination.name) }}
+      {{- if ne (include "secrets.secretType" (get $destination "auth")) "external" }}
+        {{- if eq (include "secrets.usesSecret" (dict "object" $destination "key" "auth.username")) "false" }}
+          {{ fail (printf "\nDestination #%d (%s) is using basic auth but does not have a username.\nPlease set:\ndestinations:\n  - name: %s\n    auth:\n      type: basic\n      username: my-username\n      password: my-password" $i $destination.name $destination.name) }}
+        {{- end }}
+        {{- if eq (include "secrets.usesSecret" (dict "object" $destination "key" "auth.password")) "false" }}
+          {{ fail (printf "\nDestination #%d (%s) is using basic auth but does not have a password.\nPlease set:\ndestinations:\n  - name: %s\n    auth:\n      type: basic\n      username: my-username\n      password: my-password" $i $destination.name $destination.name) }}
+        {{- end }}
       {{- end }}
     {{- end }}
   {{- end }}
