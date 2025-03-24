@@ -5,7 +5,7 @@
 
 # k8s-monitoring
 
-![Version: 1.6.29](https://img.shields.io/badge/Version-1.6.29-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 2.13.1](https://img.shields.io/badge/AppVersion-2.13.1-informational?style=flat-square)
+![Version: 1.6.30](https://img.shields.io/badge/Version-1.6.30-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 2.13.2](https://img.shields.io/badge/AppVersion-2.13.2-informational?style=flat-square)
 
 A Helm chart for gathering, scraping, and forwarding Kubernetes telemetry data to a Grafana Stack.
 
@@ -144,10 +144,10 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | https://grafana.github.io/helm-charts | alloy-profiles(alloy) | 0.12.5 |
 | https://grafana.github.io/helm-charts | beyla | 1.7.3 |
 | https://opencost.github.io/opencost-helm-chart | opencost | 1.43.2 |
-| https://prometheus-community.github.io/helm-charts | kube-state-metrics | 5.30.1 |
-| https://prometheus-community.github.io/helm-charts | prometheus-node-exporter | 4.44.1 |
-| https://prometheus-community.github.io/helm-charts | prometheus-operator-crds | 18.0.1 |
-| https://prometheus-community.github.io/helm-charts | prometheus-windows-exporter | 0.9.0 |
+| https://prometheus-community.github.io/helm-charts | kube-state-metrics | 5.31.0 |
+| https://prometheus-community.github.io/helm-charts | prometheus-node-exporter | 4.45.0 |
+| https://prometheus-community.github.io/helm-charts | prometheus-operator-crds | 19.0.0 |
+| https://prometheus-community.github.io/helm-charts | prometheus-windows-exporter | 0.9.1 |
 | https://sustainable-computing-io.github.io/kepler-helm-chart | kepler | 0.5.13 |
 <!-- markdownlint-enable no-bare-urls -->
 
