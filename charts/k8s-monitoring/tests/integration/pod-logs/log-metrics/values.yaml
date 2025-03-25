@@ -1,0 +1,49 @@
+---
+cluster:
+  name: log-metrics-test
+
+destinations:
+  - name: localPrometheus
+    type: prometheus
+    url: http://prometheus-server.prometheus.svc:9090/api/v1/write
+
+  - name: localLoki
+    type: loki
+    url: http://loki.loki.svc:3100/loki/api/v1/push
+    tenantId: "1"
+    auth:
+      type: basic
+      username: loki
+      password: lokipassword
+
+podLogs:
+  enabled: true
+
+  extraLogProcessingStages: |-
+    stage.metrics {
+      metric.counter {
+        name        = "log_lines_total"
+        description = "total number of log lines"
+        prefix      = "my_custom_tracking_"
+
+        match_all         = true
+        action            = "inc"
+        max_idle_duration = "24h"
+      }
+    }
+
+integrations:
+  alloy:
+    instances:
+      - name: alloy
+        labelSelectors:
+          app.kubernetes.io/name: [alloy-metrics, alloy-logs]
+        metrics:
+          tuning:
+            includeMetrics: [my_custom_tracking_.*]
+
+alloy-metrics:
+  enabled: true
+
+alloy-logs:
+  enabled: true
