@@ -55,7 +55,7 @@
       {{- fail (join "\n" $msg) }}
     {{- end -}}
   {{- end -}}
-{{- else if eq .Values.gatherMethod "filelog" }}0
+{{- else if eq .Values.gatherMethod "filelog" }}
   {{- if and (not (eq .Collector.alloy.stabilityLevel "public-preview")) (not (eq .Collector.alloy.stabilityLevel "experimental")) }}
     {{- $msg := list "" "Pod Logs feature requires Alloy to use the public-preview stability level when using the \"filelog\" gather method." }}
     {{- $msg = append $msg "Please set:"}}
