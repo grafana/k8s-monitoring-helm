@@ -1,6 +1,28 @@
 {{- if .Values.deployAsConfigMap }}
 {{- $metricIntegrations := include "feature.integrations.configured.metrics" . | fromYamlArray }}
+{{- $metricsConfig := "" }}
+{{- range $integration := $metricIntegrations }}
+  {{- if (index $.Values $integration).instances }}
+    {{- $metricsConfig = cat $metricsConfig (include (printf "integrations.%s.module.metrics" $integration) $) }}
+  {{- end }}
+{{- end }}
+{{- $metricsConfig = regexReplaceAll `[ \t]+(\r?\n)` $metricsConfig "\n" }}
+
 {{- $logIntegrations := include "feature.integrations.configured.logs" . | fromYamlArray }}
+{{- $logsDiscoveryRules := "" }}
+{{- range $integration := $logIntegrations }}
+  {{- if (index $.Values $integration).instances }}
+    {{- $logsDiscoveryRules = cat $logsDiscoveryRules (include (printf "integrations.%s.logs.discoveryRules" $integration) $) }}
+  {{- end }}
+{{- end }}
+{{- $logsDiscoveryRules = regexReplaceAll `[ \t]+(\r?\n)` $logsDiscoveryRules "\n" }}
+{{- $logsProcessingStages := "" }}
+{{- range $integration := $logIntegrations }}
+  {{- if (index $.Values $integration).instances }}
+    {{- $logsProcessingStages = cat $logsProcessingStages (include (printf "integrations.%s.logs.processingStage" $integration) $) }}
+  {{- end }}
+{{- end }}
+{{- $logsProcessingStages = regexReplaceAll `[ \t]+(\r?\n)` $logsProcessingStages "\n" }}
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -8,28 +30,20 @@ metadata:
   name: {{ include "integrations.fullname" . }}
   namespace: {{ .Release.Namespace }}
 data:
-{{- if $metricIntegrations }}
+{{- if $metricsConfig }}
   metrics.alloy: |-
-{{- range $integration := $metricIntegrations }}
-  {{- if (index $.Values $integration).instances }}
-    {{- include (printf "integrations.%s.module.metrics" $integration) $ | indent 4 }}
-  {{- end }}
-{{- end }}
+  {{- $metricsConfig | trim | nindent 4 }}
 {{- end }}
 {{- if $logIntegrations }}
   logs.alloy: |-
     // Integration rules
     discovery.relabel "test" {
-{{- range $integration := $logIntegrations }}
-  {{- include (printf "integrations.%s.logs.discoveryRules" $integration) $ | indent 6 }}
-{{- end }}
+      {{- $logsDiscoveryRules | trim | nindent 6 }}
     }
 
     // Processing stages
     loki.process "test" {
-{{- range $integration := $logIntegrations }}
-  {{- include (printf "integrations.%s.logs.processingStage" $integration) $ | indent 6 }}
-{{- end }}
+      {{- $logsProcessingStages | trim | nindent 6 }}
     }
 {{- end }}
 {{- end }}
