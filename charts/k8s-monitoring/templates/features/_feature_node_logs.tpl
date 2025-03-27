@@ -44,9 +44,10 @@ node_logs "feature" {
 {{- $destinations := include "features.nodeLogs.destinations" . | fromYamlArray }}
 {{- include "destinations.validate_destination_list" (dict "destinations" $destinations "type" "logs" "ecosystem" "loki" "feature" $featureName) }}
 
-{{- range $collector := include "features.nodeLogs.collectors" . | fromYamlArray }}
-  {{- include "collectors.require_collector" (dict "Values" $.Values "name" $collector "feature" $featureName) }}
-  {{- include "feature.nodeLogs.collector.validate" (dict "Values" $.Values.nodeLogs "Collector" (index $.Values $collector) "CollectorName" $collector) }}
+{{- range $collectorName := include "features.nodeLogs.collectors" . | fromYamlArray }}
+  {{- $collectorValues := include "collector.alloy.values" (deepCopy $ | merge (dict "collectorName" $collectorName)) | fromYaml }}
+  {{- include "collectors.require_collector" (dict "Values" $.Values "name" $collectorName "feature" $featureName) }}
+  {{- include "feature.nodeLogs.collector.validate" (dict "Values" $.Values.nodeLogs "Collector" $collectorValues "CollectorName" $collectorName) }}
 {{- end -}}
 {{- end -}}
 {{- end -}}

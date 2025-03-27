@@ -159,11 +159,7 @@ podLogs:
 |  | podLogs(feature-pod-logs) | 1.0.0 |
 |  | profiling(feature-profiling) | 1.0.0 |
 |  | prometheusOperatorObjects(feature-prometheus-operator-objects) | 1.0.0 |
-| https://grafana.github.io/helm-charts | alloy-metrics(alloy) | 1.0.2 |
-| https://grafana.github.io/helm-charts | alloy-singleton(alloy) | 1.0.2 |
-| https://grafana.github.io/helm-charts | alloy-logs(alloy) | 1.0.2 |
-| https://grafana.github.io/helm-charts | alloy-receiver(alloy) | 1.0.2 |
-| https://grafana.github.io/helm-charts | alloy-profiles(alloy) | 1.0.2 |
+| https://grafana.github.io/helm-charts | alloy-operator | 0.2.3-beta.1 |
 <!-- markdownlint-enable no-bare-urls -->
 
 ## Values
@@ -172,142 +168,35 @@ podLogs:
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| alloy-logs.controller.type | string | `"daemonset"` | The type of controller to use for the Alloy Logs instance. |
 | alloy-logs.enabled | bool | `false` | Deploy the Alloy instance for collecting log data. |
-| alloy-logs.extraConfig | string | `""` | Extra Alloy configuration to be added to the configuration file. |
-| alloy-logs.liveDebugging.enabled | bool | `false` | Enable live debugging for the Alloy instance. |
-| alloy-logs.logging.format | string | `"logfmt"` | Format to use for writing Alloy log lines. |
-| alloy-logs.logging.level | string | `"info"` | Level at which Alloy log lines should be written. |
-| alloy-logs.remoteConfig.auth.password | string | `""` | The password to use for the remote config server. |
-| alloy-logs.remoteConfig.auth.passwordFrom | string | `""` | Raw config for accessing the password. |
-| alloy-logs.remoteConfig.auth.passwordKey | string | `"password"` | The key for storing the username in the secret. |
-| alloy-logs.remoteConfig.auth.type | string | `"none"` | The type of authentication to use for the remote config server. |
-| alloy-logs.remoteConfig.auth.username | string | `""` | The username to use for the remote config server. |
-| alloy-logs.remoteConfig.auth.usernameFrom | string | `""` | Raw config for accessing the username. |
-| alloy-logs.remoteConfig.auth.usernameKey | string | `"username"` | The key for storing the username in the secret. |
-| alloy-logs.remoteConfig.enabled | bool | `false` | Enable fetching configuration from a remote config server. |
-| alloy-logs.remoteConfig.extraAttributes | object | `{}` | Attributes to be added to this collector when requesting configuration. |
-| alloy-logs.remoteConfig.pollFrequency | string | `"5m"` | The frequency at which to poll the remote config server for updates. |
-| alloy-logs.remoteConfig.proxyURL | string | `""` | The proxy URL to use of the remote config server. |
-| alloy-logs.remoteConfig.secret.create | bool | `true` | Whether to create a secret for the remote config server. |
-| alloy-logs.remoteConfig.secret.embed | bool | `false` | If true, skip secret creation and embed the credentials directly into the configuration. |
-| alloy-logs.remoteConfig.secret.name | string | `""` | The name of the secret to create. |
-| alloy-logs.remoteConfig.secret.namespace | string | `""` | The namespace for the secret. |
-| alloy-logs.remoteConfig.url | string | `""` | The URL of the remote config server. |
 
 ### Collectors - Alloy Metrics
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| alloy-metrics.controller.replicas | int | `1` | The number of replicas for the Alloy Metrics instance. |
-| alloy-metrics.controller.type | string | `"statefulset"` | The type of controller to use for the Alloy Metrics instance. |
 | alloy-metrics.enabled | bool | `false` | Deploy the Alloy instance for collecting metrics. |
-| alloy-metrics.extraConfig | string | `""` | Extra Alloy configuration to be added to the configuration file. |
-| alloy-metrics.liveDebugging.enabled | bool | `false` | Enable live debugging for the Alloy instance. |
-| alloy-metrics.logging.format | string | `"logfmt"` | Format to use for writing Alloy log lines. |
-| alloy-metrics.logging.level | string | `"info"` | Level at which Alloy log lines should be written. |
-| alloy-metrics.remoteConfig.auth.password | string | `""` | The password to use for the remote config server. |
-| alloy-metrics.remoteConfig.auth.passwordFrom | string | `""` | Raw config for accessing the password. |
-| alloy-metrics.remoteConfig.auth.passwordKey | string | `"password"` | The key for storing the password in the secret. |
-| alloy-metrics.remoteConfig.auth.type | string | `"none"` | The type of authentication to use for the remote config server. |
-| alloy-metrics.remoteConfig.auth.username | string | `""` | The username to use for the remote config server. |
-| alloy-metrics.remoteConfig.auth.usernameFrom | string | `""` | Raw config for accessing the password. |
-| alloy-metrics.remoteConfig.auth.usernameKey | string | `"username"` | The key for storing the username in the secret. |
-| alloy-metrics.remoteConfig.enabled | bool | `false` | Enable fetching configuration from a remote config server. |
-| alloy-metrics.remoteConfig.extraAttributes | object | `{}` | Attributes to be added to this collector when requesting configuration. |
-| alloy-metrics.remoteConfig.pollFrequency | string | `"5m"` | The frequency at which to poll the remote config server for updates. |
-| alloy-metrics.remoteConfig.proxyURL | string | `""` | The proxy URL to use of the remote config server. |
-| alloy-metrics.remoteConfig.secret.create | bool | `true` | Whether to create a secret for the remote config server. |
-| alloy-metrics.remoteConfig.secret.embed | bool | `false` | If true, skip secret creation and embed the credentials directly into the configuration. |
-| alloy-metrics.remoteConfig.secret.name | string | `""` | The name of the secret to create. |
-| alloy-metrics.remoteConfig.secret.namespace | string | `""` | The namespace for the secret. |
-| alloy-metrics.remoteConfig.url | string | `""` | The URL of the remote config server. |
 
 ### Collectors - Alloy Profiles
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| alloy-profiles.controller.type | string | `"daemonset"` | The type of controller to use for the Alloy Profiles instance. |
 | alloy-profiles.enabled | bool | `false` | Deploy the Alloy instance for gathering profiles. |
-| alloy-profiles.extraConfig | string | `""` | Extra Alloy configuration to be added to the configuration file. |
-| alloy-profiles.liveDebugging.enabled | bool | `false` | Enable live debugging for the Alloy instance. |
-| alloy-profiles.logging.format | string | `"logfmt"` | Format to use for writing Alloy log lines. |
-| alloy-profiles.logging.level | string | `"info"` | Level at which Alloy log lines should be written. |
-| alloy-profiles.remoteConfig.auth.password | string | `""` | The password to use for the remote config server. |
-| alloy-profiles.remoteConfig.auth.passwordFrom | string | `""` | Raw config for accessing the password. |
-| alloy-profiles.remoteConfig.auth.passwordKey | string | `"password"` | The key for storing the password in the secret. |
-| alloy-profiles.remoteConfig.auth.type | string | `"none"` | The type of authentication to use for the remote config server. |
-| alloy-profiles.remoteConfig.auth.username | string | `""` | The username to use for the remote config server. |
-| alloy-profiles.remoteConfig.auth.usernameFrom | string | `""` | Raw config for accessing the username. |
-| alloy-profiles.remoteConfig.auth.usernameKey | string | `"username"` | The key for storing the username in the secret. |
-| alloy-profiles.remoteConfig.enabled | bool | `false` | Enable fetching configuration from a remote config server. |
-| alloy-profiles.remoteConfig.extraAttributes | object | `{}` | Attributes to be added to this collector when requesting configuration. |
-| alloy-profiles.remoteConfig.pollFrequency | string | `"5m"` | The frequency at which to poll the remote config server for updates. |
-| alloy-profiles.remoteConfig.proxyURL | string | `""` | The proxy URL to use of the remote config server. |
-| alloy-profiles.remoteConfig.secret.create | bool | `true` | Whether to create a secret for the remote config server. |
-| alloy-profiles.remoteConfig.secret.embed | bool | `false` | If true, skip secret creation and embed the credentials directly into the configuration. |
-| alloy-profiles.remoteConfig.secret.name | string | `""` | The name of the secret to create. |
-| alloy-profiles.remoteConfig.secret.namespace | string | `""` | The namespace for the secret. |
-| alloy-profiles.remoteConfig.url | string | `""` | The URL of the remote config server. |
 
 ### Collectors - Alloy Receiver
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | alloy-receiver.alloy.extraPorts | list | `[]` | The ports to expose for the Alloy receiver. |
-| alloy-receiver.controller.type | string | `"daemonset"` | The type of controller to use for the Alloy Receiver instance. |
 | alloy-receiver.enabled | bool | `false` | Deploy the Alloy instance for opening receivers to collect application data. |
-| alloy-receiver.extraConfig | string | `""` | Extra Alloy configuration to be added to the configuration file. |
 | alloy-receiver.extraService.enabled | bool | `false` | Create an extra service for the Alloy receiver. This service will mirror the alloy-receiver service, but its name can be customized to match existing application settings. |
 | alloy-receiver.extraService.fullname | string | `""` | If set, the full name of the extra service to create. This will result in the format `<fullname>`. |
 | alloy-receiver.extraService.name | string | `"alloy"` | The name of the extra service to create. This will result in the format `<release-name>-<name>`. |
-| alloy-receiver.liveDebugging.enabled | bool | `false` | Enable live debugging for the Alloy instance. |
-| alloy-receiver.logging.format | string | `"logfmt"` | Format to use for writing Alloy log lines. |
-| alloy-receiver.logging.level | string | `"info"` | Level at which Alloy log lines should be written. |
-| alloy-receiver.remoteConfig.auth.password | string | `""` | The password to use for the remote config server. |
-| alloy-receiver.remoteConfig.auth.passwordFrom | string | `""` | Raw config for accessing the password. |
-| alloy-receiver.remoteConfig.auth.passwordKey | string | `"password"` | The key for storing the password in the secret. |
-| alloy-receiver.remoteConfig.auth.type | string | `"none"` | The type of authentication to use for the remote config server. |
-| alloy-receiver.remoteConfig.auth.username | string | `""` | The username to use for the remote config server. |
-| alloy-receiver.remoteConfig.auth.usernameFrom | string | `""` | Raw config for accessing the username. |
-| alloy-receiver.remoteConfig.auth.usernameKey | string | `"username"` | The key for storing the username in the secret. |
-| alloy-receiver.remoteConfig.enabled | bool | `false` | Enable fetching configuration from a remote config server. |
-| alloy-receiver.remoteConfig.extraAttributes | object | `{}` | Attributes to be added to this collector when requesting configuration. |
-| alloy-receiver.remoteConfig.pollFrequency | string | `"5m"` | The frequency at which to poll the remote config server for updates. |
-| alloy-receiver.remoteConfig.proxyURL | string | `""` | The proxy URL to use of the remote config server. |
-| alloy-receiver.remoteConfig.secret.create | bool | `true` | Whether to create a secret for the remote config server. |
-| alloy-receiver.remoteConfig.secret.embed | bool | `false` | If true, skip secret creation and embed the credentials directly into the configuration. |
-| alloy-receiver.remoteConfig.secret.name | string | `""` | The name of the secret to create. |
-| alloy-receiver.remoteConfig.secret.namespace | string | `""` | The namespace for the secret. |
-| alloy-receiver.remoteConfig.url | string | `""` | The URL of the remote config server. |
 
 ### Collectors - Alloy Singleton
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| alloy-singleton.controller.replicas | int | `1` | The number of replicas for the Alloy Singleton instance. This should remain a single instance to avoid duplicate data. |
-| alloy-singleton.controller.type | string | `"deployment"` | The type of controller to use for the Alloy Singleton instance. |
 | alloy-singleton.enabled | bool | `false` | Deploy the Alloy instance for data sources required to be deployed on a single replica. |
-| alloy-singleton.extraConfig | string | `""` | Extra Alloy configuration to be added to the configuration file. |
-| alloy-singleton.liveDebugging.enabled | bool | `false` | Enable live debugging for the Alloy instance. |
-| alloy-singleton.logging.format | string | `"logfmt"` | Format to use for writing Alloy log lines. |
-| alloy-singleton.logging.level | string | `"info"` | Level at which Alloy log lines should be written. |
-| alloy-singleton.remoteConfig.auth.password | string | `""` | The password to use for the remote config server. |
-| alloy-singleton.remoteConfig.auth.passwordFrom | string | `""` | Raw config for accessing the password. |
-| alloy-singleton.remoteConfig.auth.passwordKey | string | `"password"` | The key for storing the password in the secret. |
-| alloy-singleton.remoteConfig.auth.type | string | `"none"` | The type of authentication to use for the remote config server. |
-| alloy-singleton.remoteConfig.auth.username | string | `""` | The username to use for the remote config server. |
-| alloy-singleton.remoteConfig.auth.usernameFrom | string | `""` | Raw config for accessing the username. |
-| alloy-singleton.remoteConfig.auth.usernameKey | string | `"username"` | The key for storing the username in the secret. |
-| alloy-singleton.remoteConfig.enabled | bool | `false` | Enable fetching configuration from a remote config server. |
-| alloy-singleton.remoteConfig.extraAttributes | object | `{}` | Attributes to be added to this collector when requesting configuration. |
-| alloy-singleton.remoteConfig.pollFrequency | string | `"5m"` | The frequency at which to poll the remote config server for updates. |
-| alloy-singleton.remoteConfig.proxyURL | string | `""` | The proxy URL to use of the remote config server. |
-| alloy-singleton.remoteConfig.secret.create | bool | `true` | Whether to create a secret for the remote config server. |
-| alloy-singleton.remoteConfig.secret.embed | bool | `false` | If true, skip secret creation and embed the credentials directly into the configuration. |
-| alloy-singleton.remoteConfig.secret.name | string | `""` | The name of the secret to create. |
-| alloy-singleton.remoteConfig.secret.namespace | string | `""` | The namespace for the secret. |
-| alloy-singleton.remoteConfig.url | string | `""` | The URL of the remote config server. |
 
 ### Features - Annotation Autodiscovery
 
@@ -366,8 +255,6 @@ podLogs:
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| global.alloyModules.branch | string | `"main"` | If using git, the branch of the git repository to use. |
-| global.alloyModules.source | string | `"configMap"` | The source of the Alloy modules. The valid options are "configMap" or "git" |
 | global.kubernetesAPIService | string | `""` | The Kubernetes service. Change this if your cluster DNS is configured differently than the default. |
 | global.maxCacheSize | int | `100000` | Sets the max_cache_size for every prometheus.relabel component. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)) This should be at least 2x-5x your largest scrape target or samples appended rate. |
 | global.platform | string | `""` | The specific platform for this cluster. Will enable compatibility for some platforms. Supported options: (empty) or "openshift". |
@@ -424,4 +311,5 @@ podLogs:
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
+| alloy-operator.deploy | bool | `true` |  |
 | extraObjects | list | `[]` | Deploy additional manifest objects |

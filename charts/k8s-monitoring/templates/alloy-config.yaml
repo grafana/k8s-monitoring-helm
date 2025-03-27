@@ -1,8 +1,8 @@
-{{- range $collector := include "collectors.list.enabled" . | fromYamlArray }}
+{{- range $collectorName := include "collectors.list.enabled" . | fromYamlArray }}
 {{- $selfReportingEnabled := false }}
 {{- $destinations := list }}
 {{- range $feature := include "features.list" $ | fromYamlArray }}
-  {{- if has $collector (include (printf "features.%s.collectors" $feature) $ | fromYamlArray ) }}
+  {{- if has $collectorName (include (printf "features.%s.collectors" $feature) $ | fromYamlArray ) }}
     {{- if eq $feature "selfReporting" }}
       {{- $selfReportingEnabled = true }}
     {{- end }}
@@ -11,15 +11,16 @@
 {{- end }}
 
 {{/* Save the top level object and add the collector name */}}
-{{- $values := deepCopy $ | merge (dict "collectorName" $collector) }}
+{{- $values := deepCopy $ | merge (dict "collectorName" $collectorName) }}
+{{- $collectorValues := include "collector.alloy.values" $values | fromYaml }}
 {{- $alloyConfig := "" }}
 {{- range $feature := include "features.list" . | fromYamlArray }}
-  {{- if has $collector (include (printf "features.%s.collectors" $feature) $ | fromYamlArray ) }}
+  {{- if has $collectorName (include (printf "features.%s.collectors" $feature) $ | fromYamlArray ) }}
     {{ $alloyConfig = cat $alloyConfig (include (printf "features.%s.include" $feature) $values | trim | nindent 0) }}
   {{- end }}
 {{- end }}
-{{- $alloyConfig = cat $alloyConfig (include "collectors.logging.alloy" $values | trim | nindent 0) }}
-{{- $alloyConfig = cat $alloyConfig (include "collectors.liveDebugging.alloy" $values | trim | nindent 0) }}
+{{- $alloyConfig = cat $alloyConfig (include "collectors.logging.alloy" $collectorValues | trim | nindent 0) }}
+{{- $alloyConfig = cat $alloyConfig (include "collectors.liveDebugging.alloy" $collectorValues | trim | nindent 0) }}
 {{- $alloyConfig = cat $alloyConfig (include "collectors.remoteConfig.alloy" $values | trim | nindent 0) }}
 {{- $alloyConfig = cat $alloyConfig (include "collectors.extraConfig.alloy" $values | trim | nindent 0) }}
 {{- $alloyConfig = cat $alloyConfig ((include "destinations.alloy.config" $) | trim | nindent 0) }}
@@ -30,7 +31,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ include "alloy.fullname" (index $.Subcharts $collector) }}
+  name: {{ include "collector.alloy.fullname" $values }}
   namespace: {{ $.Release.Namespace }}
 data:
   config.alloy: |-
