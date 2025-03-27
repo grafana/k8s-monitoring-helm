@@ -1,0 +1,38 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: development
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: dev-pod
+  namespace: development
+  annotations:
+    k8s.grafana.com/logs.job: dev-pod
+spec:
+  containers:
+    - name: busybox
+      image: busybox
+      args:
+        - /bin/sh
+        - -c
+        - |
+          echo "level=INFO Starting..."
+
+          # Create a secret that looks like a Grafana Cloud API Token
+          echo "level=DEBUG Generating password..."
+          PASSWORD=glc_$(LC_ALL=C tr -dc 'a-zA-Z0-9' < /dev/urandom | head -c 50)=
+
+          while true; do
+            if [ $RANDOM -gt ${LEAK_THRESHOLD} ]; then
+              echo "level=DEBUG Probably shouldn't print this, access_token=${PASSWORD}"
+            else
+              echo "level=INFO Everything is fine"
+            fi
+            sleep 5
+          done
+      env:
+        - name: LEAK_THRESHOLD
+          value: "10000"

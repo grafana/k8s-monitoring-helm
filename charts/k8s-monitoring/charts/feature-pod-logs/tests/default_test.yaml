@@ -47,3 +47,14 @@ tests:
           of: ConfigMap
       - matchSnapshot:
           path: data["module.alloy"]
+  - it: should allow using the secret filter
+    set:
+      deployAsConfigMap: true
+      secretFilter:
+        enabled: true
+        partialMask: 3
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["module.alloy"]
