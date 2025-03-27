@@ -40,11 +40,13 @@ Be sure perform actual integration testing in a live environment in the main [k8
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
+| ebpf.annotationSelectors | object | `{}` | Select pods to profile based on pod annotations. Example: `k8s.grafana.com/profile: "true"` will select pods with the annotation `k8s.grafana.com/profile="true"`. Example with multiple values: `color: ["blue", "green"]` will select pods with the annotation `color="blue"` or `color="green"`. |
 | ebpf.demangle | string | `"none"` | C++ demangle mode. Available options are: none, simplified, templates, full |
 | ebpf.enabled | bool | `true` | Gather profiles using eBPF |
 | ebpf.excludeNamespaces | list | `[]` | Which namespaces to exclude looking for pods. |
 | ebpf.extraDiscoveryRules | string | `""` | Rule blocks to be added to the discovery.relabel component for eBPF profile sources. These relabeling rules are applied pre-scrape against the targets from service discovery. Before the scrape, any remaining target labels that start with `__` (i.e. `__meta_kubernetes*`) are dropped. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.relabel/#rule-block)) |
-| ebpf.namespaces | list | `[]` | Which namespaces to look for pods with profiles. |
+| ebpf.labelSelectors | object | `{}` | Select pods to profile based on pod labels. Example: `app.kubernetes.io/name: myapp` will select pods with the label `app.kubernetes.io/name=myapp`. Example with multiple values: `app.kubernetes.io/name: [myapp, myapp2]` will select pods with the label `app.kubernetes.io/name=myapp` or `app.kubernetes.io/name=myapp2`. |
+| ebpf.namespaces | list | `[]` | Select pods to profile based on their namespaces. |
 
 ### General settings
 
@@ -57,18 +59,22 @@ Be sure perform actual integration testing in a live environment in the main [k8
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
+| java.annotationSelectors | object | `{}` | Select pods to profile based on pod annotations. Example: `k8s.grafana.com/profile: "true"` will select pods with the annotation `k8s.grafana.com/profile="true"`. Example with multiple values: `color: ["blue", "green"]` will select pods with the annotation `color="blue"` or `color="green"`. |
 | java.enabled | bool | `true` | Gather profiles by scraping java HTTP endpoints |
 | java.excludeNamespaces | list | `[]` | Which namespaces to exclude looking for pods. |
 | java.extraDiscoveryRules | string | `""` | Rule blocks to be added to the discovery.relabel component for Java profile sources. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.relabel/#rule-block)) |
-| java.namespaces | list | `[]` | Which namespaces to look for pods with profiles. |
+| java.labelSelectors | object | `{}` | Select pods to profile based on pod labels. Example: `app.kubernetes.io/name: myapp` will select pods with the label `app.kubernetes.io/name=myapp`. Example with multiple values: `app.kubernetes.io/name: [myapp, myapp2]` will select pods with the label `app.kubernetes.io/name=myapp` or `app.kubernetes.io/name=myapp2`. |
+| java.namespaces | list | `[]` | Select pods to profile based on their namespaces. |
 | java.profilingConfig | object | `{"alloc":"512k","cpu":true,"interval":"60s","lock":"10ms","sampleRate":100}` | Configuration for the async-profiler |
 
 ### pprof
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
+| pprof.annotationSelectors | object | `{}` | Select pods to profile based on pod annotations. Example: `k8s.grafana.com/profile: "true"` will select pods with the annotation `k8s.grafana.com/profile="true"`. Example with multiple values: `color: ["blue", "green"]` will select pods with the annotation `color="blue"` or `color="green"`. |
 | pprof.enabled | bool | `true` | Gather profiles by scraping pprof HTTP endpoints |
 | pprof.excludeNamespaces | list | `[]` | Which namespaces to exclude looking for pods. |
 | pprof.extraDiscoveryRules | string | `""` | Rule blocks to be added to the discovery.relabel component for eBPF profile sources. These relabeling rules are applied pre-scrape against the targets from service discovery. Before the scrape, any remaining target labels that start with `__` (i.e. `__meta_kubernetes*`) are dropped. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.relabel/#rule-block)) |
-| pprof.namespaces | list | `[]` | Which namespaces to look for pods with profiles. |
+| pprof.labelSelectors | object | `{}` | Select pods to profile based on pod labels. Example: `app.kubernetes.io/name: myapp` will select pods with the label `app.kubernetes.io/name=myapp`. Example with multiple values: `app.kubernetes.io/name: [myapp, myapp2]` will select pods with the label `app.kubernetes.io/name=myapp` or `app.kubernetes.io/name=myapp2`. |
+| pprof.namespaces | list | `[]` | Select pods to profile based on their namespaces. |
 | pprof.types | object | `{"block":true,"cpu":true,"fgprof":true,"godeltaprof_block":false,"godeltaprof_memory":false,"godeltaprof_mutex":false,"goroutine":true,"memory":true,"mutex":true}` | Profile types to gather |
