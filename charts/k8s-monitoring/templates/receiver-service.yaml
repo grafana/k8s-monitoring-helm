@@ -1,7 +1,10 @@
-{{- if and (index .Values "alloy-receiver").enabled (index .Values "alloy-receiver").extraService.enabled -}}
-{{- $name := printf "%s-%s" .Release.Name (index .Values "alloy-receiver").extraService.name | trunc 63 | trimSuffix "-" }}
-{{- if (index .Values "alloy-receiver").extraService.fullname }}
-  {{- $name = (index .Values "alloy-receiver").extraService.fullname }}
+{{- $collectorName := "alloy-receiver" }}
+{{- $collectorValues := include "collector.alloy.values" (deepCopy $ | merge (dict "collectorName" $collectorName)) | fromYaml }}
+
+{{- if and $collectorValues.enabled $collectorValues.extraService.enabled -}}
+{{- $name := printf "%s-%s" .Release.Name $collectorValues.extraService.name | trunc 63 | trimSuffix "-" }}
+{{- if $collectorValues.extraService.fullname }}
+  {{- $name = $collectorValues.extraService.fullname }}
 {{- end }}
 
 apiVersion: v1
@@ -9,31 +12,31 @@ kind: Service
 metadata:
   name: {{ $name }}
   labels:
-    {{- include "alloy.labels" (index .Subcharts "alloy-receiver") | nindent 4 }}
+    {{- include "collector.alloy.labels" (deepCopy $ | merge (dict "collectorName" $collectorName)) | nindent 4 }}
     app.kubernetes.io/component: networking
-  {{- with (index .Values "alloy-receiver").service.annotations }}
+  {{- with $collectorValues.service.annotations }}
   annotations:
     {{- toYaml . | nindent 4 }}
   {{- end }}
 spec:
-  type: {{ (index .Values "alloy-receiver").service.type }}
-  {{- if (index .Values "alloy-receiver").service.clusterIP }}
-  clusterIP: {{ (index .Values "alloy-receiver").service.clusterIP }}
+  type: {{ $collectorValues.service.type }}
+  {{- if $collectorValues.service.clusterIP }}
+  clusterIP: {{ $collectorValues.service.clusterIP }}
   {{- end }}
   selector:
-    {{- include "alloy.selectorLabels" (index .Subcharts "alloy-receiver") | nindent 4 }}
+    {{- include "collector.alloy.selectorLabels" (deepCopy $ | merge (dict "collectorName" $collectorName)) | nindent 4 }}
   {{- if semverCompare ">=1.26-0" .Capabilities.KubeVersion.Version }}
-  internalTrafficPolicy: {{ (index .Values "alloy-receiver").service.internalTrafficPolicy}}
+  internalTrafficPolicy: {{ $collectorValues.service.internalTrafficPolicy}}
   {{- end }}
   ports:
     - name: http-metrics
-      {{- if eq (index .Values "alloy-receiver").service.type "NodePort" }}
-      nodePort: {{ (index .Values "alloy-receiver").service.nodePort }}
+      {{- if eq $collectorValues.service.type "NodePort" }}
+      nodePort: {{ $collectorValues.service.nodePort }}
       {{- end }}
-      port: {{ (index .Values "alloy-receiver").alloy.listenPort }}
-      targetPort: {{ (index .Values "alloy-receiver").alloy.listenPort }}
+      port: {{ $collectorValues.alloy.listenPort }}
+      targetPort: {{ $collectorValues.alloy.listenPort }}
       protocol: "TCP"
-{{- range $portMap := (index .Values "alloy-receiver").alloy.extraPorts }}
+{{- range $portMap := $collectorValues.alloy.extraPorts }}
     - name: {{ $portMap.name }}
       port: {{ $portMap.port }}
       targetPort: {{ $portMap.targetPort }}

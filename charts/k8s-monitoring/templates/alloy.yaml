@@ -1,0 +1,19 @@
+{{- range $collectorName := include "collectors.list.enabled" . | fromYamlArray }}
+{{- include "crdValidation" $ }}
+{{- $values := (deepCopy $ | merge (dict "collectorName" $collectorName)) }}
+{{- $alloyValues := (include "collector.alloy.values" $values | fromYaml) | merge (dict "nameOverride" $collectorName) }}
+{{- $excluded := dict "enabled" true "extraConfig" true "includeDestinations" true "remoteConfig" true "logging" true "liveDebugging" true }}
+{{- $cleanValues := dict }}
+{{- range $key, $val := $alloyValues }}
+  {{- if not (hasKey $excluded $key) }}
+    {{- $_ := set $cleanValues $key $val }}
+  {{- end }}
+{{- end }}
+---
+apiVersion: collectors.grafana.com/v1alpha1
+kind: Alloy
+metadata:
+  name: {{ include "collector.alloy.fullname" $values }}
+  namespace: {{ $.Release.Namespace }}
+spec: {{ $cleanValues | toYaml | nindent 2 }}
+{{- end }}

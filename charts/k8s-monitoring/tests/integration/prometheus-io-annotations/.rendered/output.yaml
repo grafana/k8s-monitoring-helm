@@ -1,19 +1,17 @@
 ---
-# Source: k8s-monitoring/charts/alloy-metrics/templates/serviceaccount.yaml
+# Source: k8s-monitoring/charts/alloy-operator/templates/serviceaccount.yaml
 apiVersion: v1
 kind: ServiceAccount
-automountServiceAccountToken: true
 metadata:
-  name: k8smon-alloy-metrics
+  name: k8smon-alloy-operator
   namespace: default
   labels:
-    helm.sh/chart: alloy-metrics-1.0.3
-    app.kubernetes.io/name: alloy-metrics
+    helm.sh/chart: alloy-operator-0.2.6
+    app.kubernetes.io/name: alloy-operator
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "v1.8.3"
+    app.kubernetes.io/version: "1.0.2"
     app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/part-of: alloy
-    app.kubernetes.io/component: rbac
+automountServiceAccountToken: true
 ---
 # Source: k8s-monitoring/charts/clusterMetrics/charts/kube-state-metrics/templates/serviceaccount.yaml
 apiVersion: v1
@@ -942,111 +940,134 @@ data:
     
     # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_build_info gauge
-    grafana_kubernetes_monitoring_build_info{version="2.0.29", namespace="default"} 1
+    grafana_kubernetes_monitoring_build_info{version="2.1.0", namespace="default"} 1
     # HELP grafana_kubernetes_monitoring_feature_info A metric to report the enabled features of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_feature_info gauge
     grafana_kubernetes_monitoring_feature_info{feature="annotationAutodiscovery", version="1.0.0"} 1
     grafana_kubernetes_monitoring_feature_info{deployments="kube-state-metrics,node-exporter,windows-exporter", feature="clusterMetrics", sources="kubelet,kubeletResource,cadvisor,kube-state-metrics,node-exporter,windows-exporter", version="1.0.0"} 1
 ---
-# Source: k8s-monitoring/charts/alloy-metrics/templates/rbac.yaml
+# Source: k8s-monitoring/charts/alloy-operator/templates/rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: k8smon-alloy-metrics
+  name:
+    k8smon-alloy-operator-alloy-editor-role
   labels:
-    helm.sh/chart: alloy-metrics-1.0.3
-    app.kubernetes.io/name: alloy-metrics
+    helm.sh/chart: alloy-operator-0.2.6
+    app.kubernetes.io/name: alloy-operator
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "v1.8.3"
+    app.kubernetes.io/version: "1.0.2"
     app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/part-of: alloy
-    app.kubernetes.io/component: rbac
 rules:
-  # Rules which allow discovery.kubernetes to function.
   - apiGroups:
-      - ""
-      - "discovery.k8s.io"
-      - "networking.k8s.io"
+      - collectors.grafana.com
     resources:
-      - endpoints
-      - endpointslices
-      - ingresses
-      - nodes
-      - nodes/proxy
-      - nodes/metrics
-      - pods
-      - services
+      - alloys
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - collectors.grafana.com
+    resources:
+      - alloys/status
+    verbs:
+      - get
+---
+# Source: k8s-monitoring/charts/alloy-operator/templates/rbac.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name:
+    k8smon-alloy-operator-alloy-viewer-role
+  labels:
+    helm.sh/chart: alloy-operator-0.2.6
+    app.kubernetes.io/name: alloy-operator
+    app.kubernetes.io/instance: k8smon
+    app.kubernetes.io/version: "1.0.2"
+    app.kubernetes.io/managed-by: Helm
+rules:
+  - apiGroups:
+      - collectors.grafana.com
+    resources:
+      - alloys
     verbs:
       - get
       - list
       - watch
-  # Rules which allow loki.source.kubernetes and loki.source.podlogs to work.
+  - apiGroups:
+      - collectors.grafana.com
+    resources:
+      - alloys/status
+    verbs:
+      - get
+---
+# Source: k8s-monitoring/charts/alloy-operator/templates/rbac.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name:
+    k8smon-alloy-operator-role
+rules:
   - apiGroups:
       - ""
     resources:
-      - pods
-      - pods/log
       - namespaces
     verbs:
       - get
-      - list
-      - watch
   - apiGroups:
-      - "monitoring.grafana.com"
+      - ""
     resources:
-      - podlogs
+      - secrets
     verbs:
-      - get
-      - list
-      - watch
-  # Rules which allow mimir.rules.kubernetes to work.
-  - apiGroups: ["monitoring.coreos.com"]
-    resources:
-      - prometheusrules
-    verbs:
-      - get
-      - list
-      - watch
-  - nonResourceURLs:
-      - /metrics
-    verbs:
-      - get
-  # Rules for prometheus.kubernetes.*
-  - apiGroups: ["monitoring.coreos.com"]
-    resources:
-      - podmonitors
-      - servicemonitors
-      - probes
-      - scrapeconfigs
-    verbs:
-      - get
-      - list
-      - watch
-  # Rules which allow eventhandler to work.
+      - '*'
   - apiGroups:
       - ""
     resources:
       - events
     verbs:
-      - get
-      - list
-      - watch
-  # needed for remote.kubernetes.*
-  - apiGroups: [""]
+      - create
+  - apiGroups:
+      - collectors.grafana.com
     resources:
-      - "configmaps"
-      - "secrets"
+      - alloys
+      - alloys/status
+      - alloys/finalizers
     verbs:
+      - create
+      - delete
       - get
       - list
+      - patch
+      - update
       - watch
-  # needed for otelcol.processor.k8sattributes
-  - apiGroups: ["apps"]
-    resources: ["replicasets"]
-    verbs: ["get", "list", "watch"]
-  - apiGroups: ["extensions"]
-    resources: ["replicasets"]
-    verbs: ["get", "list", "watch"]
+  - apiGroups:
+      - rbac.authorization.k8s.io
+    resources:
+      - clusterrolebindings
+      - clusterroles
+    verbs:
+      - '*'
+  - apiGroups:
+      - ""
+    resources:
+      - configmaps
+      - serviceaccounts
+      - services
+    verbs:
+      - '*'
+  - apiGroups:
+      - apps
+    resources:
+      - daemonsets
+      - deployments
+      - statefulsets
+    verbs:
+      - '*'
 ---
 # Source: k8s-monitoring/charts/clusterMetrics/charts/kube-state-metrics/templates/role.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -1204,26 +1225,26 @@ rules:
     - volumeattachments
   verbs: ["list", "watch"]
 ---
-# Source: k8s-monitoring/charts/alloy-metrics/templates/rbac.yaml
+# Source: k8s-monitoring/charts/alloy-operator/templates/rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: k8smon-alloy-metrics
+  name:
+    k8smon-alloy-operator-rolebinding
   labels:
-    helm.sh/chart: alloy-metrics-1.0.3
-    app.kubernetes.io/name: alloy-metrics
+    helm.sh/chart: alloy-operator-0.2.6
+    app.kubernetes.io/name: alloy-operator
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "v1.8.3"
+    app.kubernetes.io/version: "1.0.2"
     app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/part-of: alloy
-    app.kubernetes.io/component: rbac
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: k8smon-alloy-metrics
+  name:
+    k8smon-alloy-operator-role
 subjects:
   - kind: ServiceAccount
-    name: k8smon-alloy-metrics
+    name: k8smon-alloy-operator
     namespace: default
 ---
 # Source: k8s-monitoring/charts/clusterMetrics/charts/kube-state-metrics/templates/clusterrolebinding.yaml
@@ -1249,64 +1270,100 @@ subjects:
   name: k8smon-kube-state-metrics
   namespace: default
 ---
-# Source: k8s-monitoring/charts/alloy-metrics/templates/cluster_service.yaml
-apiVersion: v1
-kind: Service
+# Source: k8s-monitoring/charts/alloy-operator/templates/rbac.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
 metadata:
-  name: k8smon-alloy-metrics-cluster
+  name:
+    k8smon-alloy-operator-leader-election-role
   namespace: default
   labels:
-    helm.sh/chart: alloy-metrics-1.0.3
-    app.kubernetes.io/name: alloy-metrics
+    helm.sh/chart: alloy-operator-0.2.6
+    app.kubernetes.io/name: alloy-operator
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "v1.8.3"
+    app.kubernetes.io/version: "1.0.2"
     app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/part-of: alloy
-    app.kubernetes.io/component: networking
-spec:
-  type: ClusterIP
-  clusterIP: 'None'
-  publishNotReadyAddresses: true
-  selector:
-    app.kubernetes.io/name: alloy-metrics
-    app.kubernetes.io/instance: k8smon
-  ports:
-    # Do not include the -metrics suffix in the port name, otherwise metrics
-    # can be double-collected with the non-headless Service if it's also
-    # enabled.
-    #
-    # This service should only be used for clustering, and not metric
-    # collection.
-    - name: http
-      port: 12345
-      targetPort: 12345
-      protocol: "TCP"
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - configmaps
+    verbs:
+      - get
+      - list
+      - watch
+      - create
+      - update
+      - patch
+      - delete
+  - apiGroups:
+      - coordination.k8s.io
+    resources:
+      - leases
+    verbs:
+      - get
+      - list
+      - watch
+      - create
+      - update
+      - patch
+      - delete
+  - apiGroups:
+      - ""
+    resources:
+      - events
+    verbs:
+      - create
+      - patch
 ---
-# Source: k8s-monitoring/charts/alloy-metrics/templates/service.yaml
+# Source: k8s-monitoring/charts/alloy-operator/templates/rbac.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name:
+    k8smon-alloy-operator-leader-election-rolebinding
+  namespace: default
+  labels:
+    helm.sh/chart: alloy-operator-0.2.6
+    app.kubernetes.io/name: alloy-operator
+    app.kubernetes.io/instance: k8smon
+    app.kubernetes.io/version: "1.0.2"
+    app.kubernetes.io/managed-by: Helm
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name:
+    k8smon-alloy-operator-leader-election-role
+subjects:
+  - kind: ServiceAccount
+    name: k8smon-alloy-operator
+    namespace: default
+---
+# Source: k8s-monitoring/charts/alloy-operator/templates/service.yaml
 apiVersion: v1
 kind: Service
 metadata:
-  name: k8smon-alloy-metrics
-  namespace: default
+  name: k8smon-alloy-operator
   labels:
-    helm.sh/chart: alloy-metrics-1.0.3
-    app.kubernetes.io/name: alloy-metrics
+    helm.sh/chart: alloy-operator-0.2.6
+    app.kubernetes.io/name: alloy-operator
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "v1.8.3"
+    app.kubernetes.io/version: "1.0.2"
     app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/part-of: alloy
-    app.kubernetes.io/component: networking
 spec:
   type: ClusterIP
-  selector:
-    app.kubernetes.io/name: alloy-metrics
-    app.kubernetes.io/instance: k8smon
-  internalTrafficPolicy: Cluster
   ports:
-    - name: http-metrics
-      port: 12345
-      targetPort: 12345
-      protocol: "TCP"
+    - name: http
+      port: 8081
+      targetPort: http
+      protocol: TCP
+    - name: metrics
+      port: 8082
+      targetPort: metrics
+      protocol: TCP
+  selector:
+    app.kubernetes.io/name: alloy-operator
+    app.kubernetes.io/instance: k8smon
 ---
 # Source: k8s-monitoring/charts/clusterMetrics/charts/kube-state-metrics/templates/service.yaml
 apiVersion: v1
@@ -1619,6 +1676,71 @@ spec:
           configMap:
             name: k8smon-windows-exporter
 ---
+# Source: k8s-monitoring/charts/alloy-operator/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: k8smon-alloy-operator
+  labels:
+    helm.sh/chart: alloy-operator-0.2.6
+    app.kubernetes.io/name: alloy-operator
+    app.kubernetes.io/instance: k8smon
+    app.kubernetes.io/version: "1.0.2"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: alloy-operator
+      app.kubernetes.io/instance: k8smon
+  template:
+    metadata:
+      labels:
+        helm.sh/chart: alloy-operator-0.2.6
+        app.kubernetes.io/name: alloy-operator
+        app.kubernetes.io/instance: k8smon
+        app.kubernetes.io/version: "1.0.2"
+        app.kubernetes.io/managed-by: Helm
+    spec:
+      serviceAccountName: k8smon-alloy-operator
+      containers:
+        - name: alloy-operator
+          image: "ghcr.io/grafana/alloy-operator:1.0.2"
+          imagePullPolicy: IfNotPresent
+          args:
+            - --leader-elect
+            - --leader-election-id=k8smon-alloy-operator
+            - --health-probe-bind-address=:8081
+            - --metrics-bind-address=:8082
+          ports:
+            - name: http
+              containerPort: 8081
+              protocol: TCP
+            - name: metrics
+              containerPort: 8082
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8081
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 8081
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            limits:
+              cpu: 500m
+              memory: 128Mi
+            requests:
+              cpu: 10m
+              memory: 64Mi
+          securityContext:
+            runAsNonRoot: true
+---
 # Source: k8s-monitoring/charts/clusterMetrics/charts/kube-state-metrics/templates/deployment.yaml
 apiVersion: apps/v1
 kind: Deployment
@@ -1713,110 +1835,195 @@ spec:
       nodeSelector:
         kubernetes.io/os: linux
 ---
-# Source: k8s-monitoring/charts/alloy-metrics/templates/controllers/statefulset.yaml
-apiVersion: apps/v1
-kind: StatefulSet
+# Source: k8s-monitoring/templates/alloy.yaml
+apiVersion: collectors.grafana.com/v1alpha1
+kind: Alloy
 metadata:
   name: k8smon-alloy-metrics
   namespace: default
-  labels:
-    helm.sh/chart: alloy-metrics-1.0.3
-    app.kubernetes.io/name: alloy-metrics
-    app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "v1.8.3"
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/part-of: alloy
-spec:
-  replicas: 2
-  podManagementPolicy: Parallel
-  minReadySeconds: 10
-  serviceName: k8smon-alloy-metrics
-  selector:
-    matchLabels:
-      app.kubernetes.io/name: alloy-metrics
-      app.kubernetes.io/instance: k8smon
-  template:
-    metadata:
-      annotations:
-        kubectl.kubernetes.io/default-container: alloy
-        k8s.grafana.com/logs.job: integrations/alloy
-      labels:
-        app.kubernetes.io/name: alloy-metrics
-        app.kubernetes.io/instance: k8smon
-    spec:
-      serviceAccountName: k8smon-alloy-metrics
-      containers:
-        - name: alloy
-          image: docker.io/grafana/alloy:v1.8.3
-          imagePullPolicy: IfNotPresent
-          args:
-            - run
-            - /etc/alloy/config.alloy
-            - --storage.path=/tmp/alloy
-            - --server.http.listen-addr=0.0.0.0:12345
-            - --server.http.ui-path-prefix=/
-            - --cluster.enabled=true
-            - --cluster.join-addresses=k8smon-alloy-metrics-cluster
-            - --cluster.name=alloy-metrics
-            - --stability.level=generally-available
-          env:
-            - name: ALLOY_DEPLOY_MODE
-              value: "helm"
-            - name: HOSTNAME
-              valueFrom:
-                fieldRef:
-                  fieldPath: spec.nodeName
-          ports:
-            - containerPort: 12345
-              name: http-metrics
-          readinessProbe:
-            httpGet:
-              path: /-/ready
-              port: 12345
-              scheme: HTTP
-            initialDelaySeconds: 10
-            timeoutSeconds: 1
-          securityContext:
-            allowPrivilegeEscalation: false
-            capabilities:
-              add:
-              - CHOWN
-              - DAC_OVERRIDE
-              - FOWNER
-              - FSETID
-              - KILL
-              - SETGID
-              - SETUID
-              - SETPCAP
-              - NET_BIND_SERVICE
-              - NET_RAW
-              - SYS_CHROOT
-              - MKNOD
-              - AUDIT_WRITE
-              - SETFCAP
-              drop:
-              - ALL
-            seccompProfile:
-              type: RuntimeDefault
-          volumeMounts:
-            - name: config
-              mountPath: /etc/alloy
-        - name: config-reloader
-          image: quay.io/prometheus-operator/prometheus-config-reloader:v0.81.0
-          args:
-            - --watched-dir=/etc/alloy
-            - --reload-url=http://localhost:12345/-/reload
-          volumeMounts:
-            - name: config
-              mountPath: /etc/alloy
-          resources:
-            requests:
-              cpu: 10m
-              memory: 50Mi
-      dnsPolicy: ClusterFirst
-      nodeSelector:
-        kubernetes.io/os: linux
-      volumes:
-        - name: config
-          configMap:
-            name: k8smon-alloy-metrics
+spec: 
+  alloy:
+    clustering:
+      enabled: true
+      name: alloy-metrics
+      portName: http
+    configMap:
+      content: ""
+      create: false
+      key: null
+      name: null
+    enableReporting: true
+    envFrom: []
+    extraArgs: []
+    extraEnv: []
+    extraPorts: []
+    hostAliases: []
+    lifecycle: {}
+    listenAddr: 0.0.0.0
+    listenPort: 12345
+    listenScheme: HTTP
+    livenessProbe: {}
+    mounts:
+      dockercontainers: false
+      extra: []
+      varlog: false
+    nodeSelector:
+      kubernetes.io/os: linux
+    podAnnotations:
+      k8s.grafana.com/logs.job: integrations/alloy
+    resources: {}
+    securityContext:
+      allowPrivilegeEscalation: false
+      capabilities:
+        add:
+        - CHOWN
+        - DAC_OVERRIDE
+        - FOWNER
+        - FSETID
+        - KILL
+        - SETGID
+        - SETUID
+        - SETPCAP
+        - NET_BIND_SERVICE
+        - NET_RAW
+        - SYS_CHROOT
+        - MKNOD
+        - AUDIT_WRITE
+        - SETFCAP
+        drop:
+        - ALL
+      seccompProfile:
+        type: RuntimeDefault
+    stabilityLevel: generally-available
+    storagePath: /tmp/alloy
+    uiPathPrefix: /
+  configReloader:
+    customArgs: []
+    enabled: true
+    image:
+      digest: ""
+      registry: quay.io
+      repository: prometheus-operator/prometheus-config-reloader
+      tag: v0.81.0
+    resources:
+      requests:
+        cpu: 10m
+        memory: 50Mi
+    securityContext: {}
+  controller:
+    affinity: {}
+    autoscaling:
+      enabled: false
+      horizontal:
+        enabled: false
+        maxReplicas: 5
+        minReplicas: 1
+        scaleDown:
+          policies: []
+          selectPolicy: Max
+          stabilizationWindowSeconds: 300
+        scaleUp:
+          policies: []
+          selectPolicy: Max
+          stabilizationWindowSeconds: 0
+        targetCPUUtilizationPercentage: 0
+        targetMemoryUtilizationPercentage: 80
+      maxReplicas: 5
+      minReplicas: 1
+      scaleDown:
+        policies: []
+        selectPolicy: Max
+        stabilizationWindowSeconds: 300
+      scaleUp:
+        policies: []
+        selectPolicy: Max
+        stabilizationWindowSeconds: 0
+      targetCPUUtilizationPercentage: 0
+      targetMemoryUtilizationPercentage: 80
+      vertical:
+        enabled: false
+        recommenders: []
+        resourcePolicy:
+          containerPolicies:
+          - containerName: alloy
+            controlledResources:
+            - cpu
+            - memory
+            controlledValues: RequestsAndLimits
+            maxAllowed: {}
+            minAllowed: {}
+        updatePolicy: null
+    dnsPolicy: ClusterFirst
+    enableStatefulSetAutoDeletePVC: false
+    extraAnnotations: {}
+    extraContainers: []
+    hostNetwork: false
+    hostPID: false
+    initContainers: []
+    nodeSelector: {}
+    parallelRollout: true
+    podAnnotations: {}
+    podDisruptionBudget:
+      enabled: false
+      maxUnavailable: null
+      minAvailable: null
+    podLabels: {}
+    priorityClassName: ""
+    replicas: 2
+    terminationGracePeriodSeconds: null
+    tolerations: []
+    topologySpreadConstraints: []
+    type: statefulset
+    updateStrategy: {}
+    volumeClaimTemplates: []
+    volumes:
+      extra: []
+  crds:
+    create: false
+  extraObjects: []
+  global:
+    image:
+      pullSecrets: []
+      registry: ""
+    podSecurityContext: {}
+  image:
+    digest: null
+    pullPolicy: IfNotPresent
+    pullSecrets: []
+    registry: docker.io
+    repository: grafana/alloy
+    tag: null
+  ingress:
+    annotations: {}
+    enabled: false
+    extraPaths: []
+    faroPort: 12347
+    hosts:
+    - chart-example.local
+    labels: {}
+    path: /
+    pathType: Prefix
+    tls: []
+  nameOverride: alloy-metrics
+  rbac:
+    create: true
+  service:
+    annotations: {}
+    clusterIP: ""
+    enabled: true
+    internalTrafficPolicy: Cluster
+    nodePort: 31128
+    type: ClusterIP
+  serviceAccount:
+    additionalLabels: {}
+    annotations: {}
+    automountServiceAccountToken: true
+    create: true
+    name: null
+  serviceMonitor:
+    additionalLabels: {}
+    enabled: false
+    interval: ""
+    metricRelabelings: []
+    relabelings: []
+    tlsConfig: {}
