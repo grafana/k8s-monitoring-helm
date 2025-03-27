@@ -1,8 +1,9 @@
 {{/* Validates that the Alloy instance is appropriate for the given Pod Logs settings */}}
 {{/* Inputs: Values (Pod Logs values), Collector (Alloy values), CollectorName (string) */}}
 {{- define "feature.podLogs.collector.validate" -}}
+{{- $stabilityLevel := (dig "alloy" "stabilityLevel" "generally-available" .Collector)}}
 {{- if eq .Values.gatherMethod "volumes" }}
-  {{- if not (eq .Collector.controller.type "daemonset") }}
+  {{- if ne (dig "controller" "type" "daemonset" .Collector) "daemonset" }}
     {{- $msg := list "" "Pod Logs feature requires Alloy to be a DaemonSet when using the \"volumes\" gather method." }}
     {{- $msg = append $msg "Please set:"}}
     {{- $msg = append $msg (printf "%s:" .CollectorName) }}
@@ -10,7 +11,7 @@
     {{- $msg = append $msg "    type: daemonset" }}
     {{- fail (join "\n" $msg) }}
   {{- end -}}
-  {{- if not .Collector.alloy.mounts.varlog }}
+  {{- if (not (dig "alloy" "mounts" "varlog" false .Collector)) }}
     {{- $msg := list "" "Pod Logs feature requires Alloy to mount /var/log when using the \"volumes\" gather method." }}
     {{- $msg = append $msg "Please set:"}}
     {{- $msg = append $msg (printf "%s:" .CollectorName) }}
@@ -18,7 +19,7 @@
     {{- $msg = append $msg "    varlog: true" }}
     {{- fail (join "\n" $msg) }}
   {{- end -}}
-  {{- if .Collector.alloy.clustering.enabled }}
+  {{- if (dig "alloy" "clustering" "enabled" false .Collector) }}
     {{- $msg := list "" "Pod Logs feature requires Alloy clustering to be disabled when using the \"volumes\" gather method." }}
     {{- $msg = append $msg "Please set:"}}
     {{- $msg = append $msg (printf "%s:" .CollectorName) }}
@@ -28,7 +29,7 @@
     {{- fail (join "\n" $msg) }}
   {{- end -}}
 {{- else if eq .Values.gatherMethod "kubernetesApi" }}
-  {{- if .Collector.alloy.mounts.varlog }}
+  {{- if (dig "alloy" "mounts" "varlog" false .Collector) }}
     {{- $msg := list "" "Pod Logs feature should not mount /var/log when using the \"kubernetesApi\" gather method." }}
     {{- $msg = append $msg "Please set:"}}
     {{- $msg = append $msg (printf "%s:" .CollectorName) }}
@@ -36,8 +37,8 @@
     {{- $msg = append $msg "    varlog: false" }}
     {{- fail (join "\n" $msg) }}
   {{- end -}}
-  {{- if not .Collector.alloy.clustering.enabled }}
-    {{- if eq .Collector.controller.type "daemonset" }}
+  {{- if not (dig "alloy" "clustering" "enabled" false .Collector) }}
+    {{- if eq (dig "controller" "type" "daemonset" .Collector) "daemonset" }}
       {{- $msg := list "" "Pod Logs feature requires Alloy DaemonSet to be in clustering mode when using the \"kubernetesApi\" gather method." }}
       {{- $msg = append $msg "Please set:"}}
       {{- $msg = append $msg (printf "%s:" .CollectorName) }}
@@ -45,7 +46,7 @@
       {{- $msg = append $msg "    clustering:"}}
       {{- $msg = append $msg "      enabled: true" }}
       {{- fail (join "\n" $msg) }}
-    {{- else if gt (.Collector.controller.replicas | int) 1 }}
+    {{- else if gt ((dig "controller" "replicas" 1 .Collector) | int) 1 }}
       {{- $msg := list "" "Pod Logs feature requires Alloy with multiple replicas to be in clustering mode when using the \"kubernetesApi\" gather method." }}
       {{- $msg = append $msg "Please set:"}}
       {{- $msg = append $msg (printf "%s:" .CollectorName) }}
@@ -56,7 +57,7 @@
     {{- end -}}
   {{- end -}}
 {{- else if eq .Values.gatherMethod "filelog" }}
-  {{- if and (not (eq .Collector.alloy.stabilityLevel "public-preview")) (not (eq .Collector.alloy.stabilityLevel "experimental")) }}
+  {{- if and (ne $stabilityLevel "public-preview") (ne $stabilityLevel "experimental") }}
     {{- $msg := list "" "Pod Logs feature requires Alloy to use the public-preview stability level when using the \"filelog\" gather method." }}
     {{- $msg = append $msg "Please set:"}}
     {{- $msg = append $msg (printf "%s:" .CollectorName) }}
@@ -67,7 +68,7 @@
 {{- end -}}
 
 {{- if .Values.secretFilter.enabled }}
-  {{- if not (eq .Collector.alloy.stabilityLevel "experimental") }}
+  {{- if ne $stabilityLevel "experimental" }}
     {{- $msg := list "" "Pod Logs feature requires Alloy to use the experimental stability level when using the secretFilter." }}
     {{- $msg = append $msg "Please set:"}}
     {{- $msg = append $msg (printf "%s:" .CollectorName) }}
