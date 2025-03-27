@@ -1,6 +1,6 @@
 resource "helm_release" "grafana-k8s-monitoring" {
   name             = "grafana-k8s-monitoring"
-  chart            = "../../../../k8s-monitoring"
+  chart            = "../../../../../k8s-monitoring"
   namespace        = var.namespace
   create_namespace = true
   atomic           = true

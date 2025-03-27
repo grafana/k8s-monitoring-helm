@@ -1,3 +1,4 @@
 #!/usr/bin/env bash
 
-kubectl apply -f k8s-monitoring-application.yaml
+TEST_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+kubectl apply -f "${TEST_DIR}/k8s-monitoring-application.yaml"
