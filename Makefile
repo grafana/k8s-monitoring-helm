@@ -73,6 +73,7 @@ lint: lint-alloy lint-shell lint-markdown lint-terraform lint-text lint-yaml lin
 ALLOY_FILES := $(shell find . -name "*.alloy" ! -path "./data-alloy/*")
 lint-alloy: ## Lint Alloy files
 	@./scripts/lint-alloy.sh $(ALLOY_FILES)
+	rm -rf data-alloy  # Clean up temporary Alloy data directory
 
 .PHONY: lint-shell
 lint-shell: ## Lint shell scripts

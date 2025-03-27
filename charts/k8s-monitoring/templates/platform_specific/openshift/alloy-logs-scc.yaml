@@ -1,10 +1,14 @@
-{{- if and (index .Values "alloy-logs").enabled (eq .Values.global.platform "openshift") }}
-{{- $usesHostPathVolumes := (index .Values "alloy-logs").alloy.mounts.varlog }}
+{{- with "alloy-logs" }}
+{{- $collectorName := . }}
+{{- $collectorValues := include "collector.alloy.values" (deepCopy $ | merge (dict "collectorName" $collectorName)) | fromYaml }}
+{{- $collectorReleaseName := include "collector.alloy.fullname" (merge $ (dict "collectorName" $collectorName)) }}
+{{- if and $collectorValues.enabled (eq $.Values.global.platform "openshift") }}
+  {{- $usesHostPathVolumes := $collectorValues.alloy.mounts.varlog }}
 ---
 apiVersion: security.openshift.io/v1
 kind: SecurityContextConstraints
 metadata:
-  name: {{ include "alloy.fullname" (index .Subcharts "alloy-logs") }}
+  name: {{ $collectorReleaseName }}
 allowHostDirVolumePlugin: {{ $usesHostPathVolumes }}
 allowHostIPC: false
 allowHostNetwork: false
@@ -58,7 +62,7 @@ volumes:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: {{ include "alloy.fullname" (index .Subcharts "alloy-logs") }}-scc
+  name: {{ $collectorReleaseName }}-scc
 rules:
 - verbs:
     - use
@@ -67,18 +71,19 @@ rules:
   resources:
     - securitycontextconstraints
   resourceNames:
-    - {{ include "alloy.fullname" (index .Subcharts "alloy-logs") }}
+    - {{ $collectorReleaseName }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: {{ include "alloy.fullname" (index .Subcharts "alloy-logs") }}-scc
+  name: {{ $collectorReleaseName }}-scc
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: {{ include "alloy.fullname" (index .Subcharts "alloy-logs") }}-scc
+  name: {{ $collectorReleaseName }}-scc
 subjects:
 - kind: ServiceAccount
-  name: {{ include "alloy.fullname" (index .Subcharts "alloy-logs") }}
-  namespace: {{ .Release.Namespace }}
+  name: {{ $collectorReleaseName }}
+  namespace: {{ $.Release.Namespace }}
+{{- end }}
 {{- end }}
