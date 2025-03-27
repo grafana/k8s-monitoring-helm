@@ -3,7 +3,7 @@
 {{- $metricAllowList := .Values.probes.metricsTuning.includeMetrics }}
 {{- $metricDenyList := .Values.probes.metricsTuning.excludeMetrics }}
 // Prometheus Operator Probe objects
-prometheus.operator.probes "pod_monitors" {
+prometheus.operator.probes "probes" {
 {{- if .Values.probes.namespaces }}
   namespaces = {{ .Values.probes.namespaces | toJson }}
 {{- end }}
