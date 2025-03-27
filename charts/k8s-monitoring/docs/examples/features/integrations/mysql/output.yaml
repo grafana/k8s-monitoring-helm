@@ -138,7 +138,7 @@ data:
       prometheus.exporter.mysql "prod_db" {
         data_source_name = string.format("%s:%s@(%s:%d)/",
           convert.nonsensitive(remote.kubernetes.secret.prod_db.data["username"]),
-          remote.kubernetes.secret.prod_db.data["password"],
+          convert.nonsensitive(remote.kubernetes.secret.prod_db.data["password"]),
           "database.prod.svc",
           3306,
         )

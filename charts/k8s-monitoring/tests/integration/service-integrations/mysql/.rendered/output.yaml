@@ -114,8 +114,8 @@ data:
     
       prometheus.exporter.mysql "test_database" {
         data_source_name = string.format("%s:%s@(%s:%d)/",
-          "root",
-          remote.kubernetes.secret.test_database.data["mysql-root-password"],
+          convert.nonsensitive(remote.kubernetes.secret.test_database.data["mysql-username"]),
+          convert.nonsensitive(remote.kubernetes.secret.test_database.data["mysql-root-password"]),
           "test-database-mysql.mysql.svc",
           3306,
         )
