@@ -50,3 +50,17 @@
   {{- fail (join "\n" $msg) }}
 {{- end }}
 {{- end }}
+
+{{- define "collector.alloy.fullname" -}}
+  {{- $collectorValues := (index .Values .collectorName) }}
+  {{- if $collectorValues.fullnameOverride }}
+    {{- $collectorValues.fullnameOverride | trunc 63 | trimSuffix "-" }}
+  {{- else }}
+    {{- $name := default .collectorName .Values.nameOverride }}
+    {{- if contains $name .Release.Name }}
+      {{- .Release.Name | trunc 63 | trimSuffix "-" }}
+    {{- else }}
+      {{- printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" }}
+    {{- end }}
+  {{- end }}
+{{- end }}

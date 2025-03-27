@@ -10,7 +10,7 @@
     {{- $msg = append $msg "    type: daemonset" }}
     {{- fail (join "\n" $msg) }}
   {{- end -}}
-  {{- if not .Collector.alloy.mounts.varlog }}
+  {{- if (not (dig "alloy" "mounts" "varlog" false .Collector)) }}
     {{- $msg := list "" "Pod Logs feature requires Alloy to mount /var/log when using the \"volumes\" gather method." }}
     {{- $msg = append $msg "Please set:"}}
     {{- $msg = append $msg (printf "%s:" .CollectorName) }}
@@ -18,7 +18,7 @@
     {{- $msg = append $msg "    varlog: true" }}
     {{- fail (join "\n" $msg) }}
   {{- end -}}
-  {{- if .Collector.alloy.clustering.enabled }}
+  {{- if (dig "alloy" "clustering" "enabled" false .Collector) }}
     {{- $msg := list "" "Pod Logs feature requires Alloy clustering to be disabled when using the \"volumes\" gather method." }}
     {{- $msg = append $msg "Please set:"}}
     {{- $msg = append $msg (printf "%s:" .CollectorName) }}
@@ -28,7 +28,7 @@
     {{- fail (join "\n" $msg) }}
   {{- end -}}
 {{- else if eq .Values.gatherMethod "kubernetesApi" }}
-  {{- if .Collector.alloy.mounts.varlog }}
+  {{- if (dig "alloy" "mounts" "varlog" false .Collector) }}
     {{- $msg := list "" "Pod Logs feature should not mount /var/log when using the \"kubernetesApi\" gather method." }}
     {{- $msg = append $msg "Please set:"}}
     {{- $msg = append $msg (printf "%s:" .CollectorName) }}
