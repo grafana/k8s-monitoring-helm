@@ -37,6 +37,8 @@ cluster_metrics "feature" {
 {{- $isTranslating -}}
 {{- end -}}
 
+{{- define "features.clusterMetrics.collector.values" }}{{- end -}}
+
 {{- define "features.clusterMetrics.validate" }}
 {{- if .Values.clusterMetrics.enabled -}}
 {{- $featureName := "Kubernetes Cluster metrics" }}

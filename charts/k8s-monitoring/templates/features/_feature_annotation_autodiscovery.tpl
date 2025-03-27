@@ -37,6 +37,8 @@ annotation_autodiscovery "feature" {
 {{- $isTranslating -}}
 {{- end -}}
 
+{{- define "features.annotationAutodiscovery.collector.values" }}{{- end -}}
+
 {{- define "features.annotationAutodiscovery.validate" }}
 {{- if .Values.annotationAutodiscovery.enabled -}}
   {{- $featureName := "Annotation Autodiscovery" }}

@@ -6,7 +6,13 @@
 
   {{- include "destinations.validate" . -}}
 
-  {{- /* Feature Validations*/}}
+  {{- /* Feature Config Influence */}}
+  {{- $updatedValues := dict }}
+  {{- range $feature := ((include "features.list" .) | fromYamlArray) }}
+    {{- $updatedValues = merge $.Values (include (printf "features.%s.collector.values" $feature) $ | fromYaml) }}
+  {{- end }}
+
+  {{- /* Feature Validations */}}
   {{- include "validations.features_enabled" . }}
   {{- range $feature := ((include "features.list" .) | fromYamlArray) }}
     {{- include (printf "features.%s.validate" $feature) $ }}
@@ -14,7 +20,7 @@
 
   {{- include "collectors.validate.featuresEnabled" . }}
   {{- range $collectorName := ((include "collectors.list.enabled" .) | fromYamlArray) }}
-    {{- include "collectors.validate.remoteConfig" (dict "collectorName" $collectorName "Values" $.Values) }}
+    {{- include "collectors.validate.remoteConfig" (deepCopy $ | merge (dict "collectorName" $collectorName)) }}
   {{- end }}
 {{- end }}
 
@@ -48,10 +54,12 @@
 {{- range $feature := ((include "features.list" .) | fromYamlArray ) }}
   {{- $aFeatureIsEnabled = or $aFeatureIsEnabled (eq (include (printf "features.%s.enabled" $feature) $) "true") }}
 {{- end }}
+
 {{- range $collector := ((include "collectors.list" .) | fromYamlArray ) }}
-  {{- $aFeatureIsEnabled = or $aFeatureIsEnabled ((index $.Values $collector).remoteConfig.enabled) }}
+  {{- $aFeatureIsEnabled = or $aFeatureIsEnabled (dig "remoteConfig" "enabled" false (index $.Values $collector)) }}
   {{- $aFeatureIsEnabled = or $aFeatureIsEnabled ((index $.Values $collector).extraConfig) }}
 {{- end }}
+
 {{- if not $aFeatureIsEnabled }}
   {{- $msg := list "" "No features are enabled. Please choose a feature to start monitoring. For example:" }}
   {{- $msg = append $msg "clusterMetrics:" }}

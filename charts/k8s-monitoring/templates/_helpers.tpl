@@ -1,3 +1,7 @@
+{{- define "helper.chart" }}
+{{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
+{{- end }}
+
 {{ define "helper.kubernetesName" }}
 {{- . | lower | replace " " "-" | replace "_" "-" -}}
 {{ end }}
