@@ -10,7 +10,7 @@
 {{ define "alloy.config.kube_state_metrics" }}
 // Kube State Metrics
 discovery.relabel "kube_state_metrics" {
-  targets = discovery.kubernetes.services.targets
+  targets = discovery.kubernetes.endpoints.targets
 {{- if (index .Values "kube-state-metrics").enabled }}
   rule {
     source_labels = ["__meta_kubernetes_service_label_release"]
@@ -26,7 +26,7 @@ discovery.relabel "kube_state_metrics" {
   }
   {{- end }}
   rule {
-    source_labels = ["__meta_kubernetes_service_port_name"]
+    source_labels = ["__meta_kubernetes_endpoint_port_name"]
     regex = "{{- (index .Values.metrics "kube-state-metrics").service.port -}}"
     action = "keep"
   }
