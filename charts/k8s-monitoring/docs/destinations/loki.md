@@ -53,6 +53,7 @@ This defines the options for defining a destination for logs that use the Loki p
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
+| clusterLabels | list | `["cluster","k8s.cluster.name"]` | Labels to be set with the cluster name as the value. |
 | extraHeaders | object | `{}` | Extra headers to be set when sending data. All values are treated as strings and automatically quoted. |
 | extraHeadersFrom | object | `{}` | Extra headers to be set when sending data through a dynamic reference. All values are treated as raw strings and not quoted. |
 | extraLabels | object | `{}` | Custom labels to be added to all logs and events. All values are treated as strings and automatically quoted. |
@@ -62,6 +63,7 @@ This defines the options for defining a destination for logs that use the Loki p
 | maxBackoffRetries | int | `10` | The maximum number of backoff retries for the Loki destination. |
 | minBackoffPeriod | string | `"500ms"` | The minimum backoff period for the Loki destination. |
 | name | string | `""` | The name for this Loki destination. |
+| proxyFromEnvironment | bool | `false` | Use the proxy URL indicated by environment variables. |
 | proxyURL | string | `""` | The Proxy URL for the Loki destination. |
 | tenantId | string | `""` | The tenant ID for the Loki destination. |
 | tenantIdFrom | string | `""` | Raw config for accessing the tenant ID. |

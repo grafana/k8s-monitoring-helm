@@ -79,7 +79,14 @@ loki.process "pod_logs" {
     values = {{ $lokiLabels | toJson }}
   }
 {{- end }}
+{{ if .Values.secretFilter.enabled }}
+  forward_to = [loki.secretfilter.pod_logs.receiver]
+}
 
+loki.secretfilter "pod_logs" {
+  include_generic = {{ .Values.secretFilter.includeGeneric }}
+  partial_mask = {{ .Values.secretFilter.partialMask }}
+{{- end }}
   forward_to = argument.logs_destinations.value
 }
 

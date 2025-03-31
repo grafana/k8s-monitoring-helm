@@ -79,6 +79,14 @@ Be sure perform actual integration testing in a live environment in the main [k8
 |-----|------|---------|-------------|
 | global.platform | string | `""` | The specific platform for this cluster. Will enable compatibility for some platforms. Supported options: (empty) or "openshift". |
 
+### Secret Filtering
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| secretFilter.enabled | bool | `false` | Enable secret filtering. |
+| secretFilter.includeGeneric | bool | `false` | Include the generic API key rule. |
+| secretFilter.partialMask | int | `0` | Show the first N characters of the secret. |
+
 ### Processing settings
 
 | Key | Type | Default | Description |

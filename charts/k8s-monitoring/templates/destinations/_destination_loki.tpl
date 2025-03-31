@@ -35,6 +35,9 @@ loki.write {{ include "helper.alloy_name" .name | quote }} {
 {{- if .proxyURL }}
     proxy_url = {{ .proxyURL | quote }}
 {{- end }}
+{{- if .proxyFromEnvironment }}
+    proxy_from_environment = {{ .proxyFromEnvironment }}
+{{- end }}
 {{- if eq (include "secrets.authType" .) "basic" }}
     basic_auth {
       username = {{ include "secrets.read" (dict "object" . "key" "auth.username" "nonsensitive" true) }}
@@ -106,8 +109,9 @@ loki.write {{ include "helper.alloy_name" .name | quote }} {
     max_backoff_retries = {{ .maxBackoffRetries | quote }}
   }
   external_labels = {
-    cluster = {{ $.Values.cluster.name | quote }},
-    "k8s_cluster_name" = {{ $.Values.cluster.name | quote }},
+{{- range $label := .clusterLabels }}
+    {{ include "escape_label" $label | quote }} = {{ $.Values.cluster.name | quote }},
+{{- end }}
 {{- if .extraLabels }}
   {{- range $k, $v := .extraLabels }}
     {{ $k }} = {{ $v | quote }},

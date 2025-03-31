@@ -1,9 +1,21 @@
 {{ define "feature.profiling.pprof.alloy" }}
 {{- if .Values.pprof.enabled }}
+{{- $labelSelectors := list }}
+{{- range $k, $v := .Values.pprof.labelSelectors }}
+  {{- if kindIs "slice" $v }}
+    {{- $labelSelectors = append $labelSelectors (printf "%s in (%s)" $k (join "," $v)) }}
+  {{- else }}
+    {{- $labelSelectors = append $labelSelectors (printf "%s=%s" $k $v) }}
+  {{- end }}
+{{- end }}
 // Profiles: pprof
 discovery.kubernetes "pprof_pods" {
+  role = "pod"
   selectors {
     role = "pod"
+{{- if $labelSelectors }}
+    label = {{ $labelSelectors | join "," | quote }}
+{{- end }}
     field = "spec.nodeName=" + sys.env("HOSTNAME")
   }
 {{- if .Values.pprof.namespaces }}
@@ -11,7 +23,6 @@ discovery.kubernetes "pprof_pods" {
     names = {{ .Values.pprof.namespaces | toJson }}
   }
 {{- end }}
-  role = "pod"
 }
 
 discovery.relabel "pprof_pods" {
@@ -35,6 +46,17 @@ discovery.relabel "pprof_pods" {
     source_labels = ["namespace"]
     regex = "{{ .Values.pprof.excludeNamespaces | join "|" }}"
     action = "drop"
+  }
+{{- end }}
+{{- range $k, $v := .Values.pprof.annotationSelectors }}
+  rule {
+    source_labels = [{{ include "pod_annotation" $k | quote }}]
+  {{- if kindIs "slice" $v }}
+    regex = {{ $v | join "|" | quote }}
+  {{- else }}
+    regex = {{ $v | quote }}
+  {{- end }}
+    action = "keep"
   }
 {{- end }}
   rule {

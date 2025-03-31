@@ -29,6 +29,9 @@ prometheus.remote_write {{ include "helper.alloy_name" .name | quote }} {
 {{- if .proxyURL }}
     proxy_url = {{ .proxyURL | quote }}
 {{- end }}
+{{- if .proxyFromEnvironment }}
+    proxy_from_environment = {{ .proxyFromEnvironment }}
+{{- end }}
 {{- if eq (include "secrets.authType" .) "basic" }}
     basic_auth {
       username = {{ include "secrets.read" (dict "object" . "key" "auth.username" "nonsensitive" true) }}
@@ -127,19 +130,14 @@ prometheus.remote_write {{ include "helper.alloy_name" .name | quote }} {
       retry_on_http_429 = {{ .queueConfig.retryOnHttp429 | default true }}
       sample_age_limit = {{ .queueConfig.sampleAgeLimit | default "0s" | quote }}
     }
-
+{{ range $label := .clusterLabels }}
     write_relabel_config {
-      source_labels = ["cluster"]
+      source_labels = [{{ include "escape_label" $label | quote }}]
       regex = ""
       replacement = {{ $.Values.cluster.name | quote }}
-      target_label = "cluster"
+      target_label = {{ include "escape_label" $label | quote }}
     }
-    write_relabel_config {
-      source_labels = ["k8s.cluster.name"]
-      regex = ""
-      replacement = {{ $.Values.cluster.name | quote }}
-      target_label = "cluster"
-    }
+{{- end }}
 {{- if .metricProcessingRules }}
 {{ .metricProcessingRules | indent 4 }}
 {{- end }}

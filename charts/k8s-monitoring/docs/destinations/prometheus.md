@@ -72,12 +72,14 @@ This defines the options for defining a destination for metrics that use the Pro
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
+| clusterLabels | list | `["cluster","k8s.cluster.name"]` | Labels to be set with the cluster name as the value. |
 | extraHeaders | object | `{}` | Extra headers to be set when sending data. All values are treated as strings and automatically quoted. |
 | extraHeadersFrom | object | `{}` | Extra headers to be set when sending data using a dynamic reference. All values are treated as raw strings and not quoted. |
 | extraLabels | object | `{}` | Extra labels to be added to all metrics before delivering to the destination. All values are treated as strings and automatically quoted. |
 | extraLabelsFrom | object | `{}` | Extra labels to be added to all metrics using a dynamic reference before delivering to the destination. All values are treated as raw strings and not quoted. |
 | metricProcessingRules | string | `""` | Rule blocks to apply to all metrics. Uses the [write_relabel_config block](https://grafana.com/docs/alloy/latest/reference/components/prometheus.remote_write/#write_relabel_config-block) of the prometheus.remote_write component. Format: write_relabel_config {   source_labels = ["..."]   action = "..."   ... } |
 | name | string | `""` | The name for this Prometheus destination. |
+| proxyFromEnvironment | bool | `false` | Use the proxy URL indicated by environment variables. |
 | proxyURL | string | `""` | The Proxy URL for the Prometheus destination. |
 | sendNativeHistograms | bool | `false` | Whether native histograms should be sent. |
 | tenantId | string | `""` | The tenant ID for the Prometheus destination. |

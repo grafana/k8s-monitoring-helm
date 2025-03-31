@@ -25,7 +25,7 @@ prometheus.exporter.mysql {{ include "helper.alloy_name" .name | quote }} {
     {{- if eq (include "secrets.usesSecret" (dict "object" . "key" "exporter.dataSource.auth.password")) "true" }}
   data_source_name = string.format("%s:%s@(%s:%d)/",
     {{ include "secrets.read" (dict "object" . "key" "exporter.dataSource.auth.username" "nonsensitive" true) }},
-    {{ include "secrets.read" (dict "object" . "key" "exporter.dataSource.auth.password") }},
+    {{ include "secrets.read" (dict "object" . "key" "exporter.dataSource.auth.password" "nonsensitive" true) }},
     {{ .exporter.dataSource.host | quote }},
     {{ .exporter.dataSource.port | int }},
   )

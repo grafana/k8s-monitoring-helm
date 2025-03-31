@@ -13,8 +13,8 @@ pyroscope.write "pyroscope" {
   }
 
   external_labels = {
-    cluster = "include-by-namespace-cluster",
-    k8s_cluster_name = "include-by-namespace-cluster",
+    "cluster" = "include-by-namespace-cluster",
+    "k8s_cluster_name" = "include-by-namespace-cluster",
   }
 }
 // Feature: Profiling
@@ -24,6 +24,7 @@ declare "profiling" {
   }
   // Profiles: eBPF
   discovery.kubernetes "ebpf_pods" {
+    role = "pod"
     selectors {
       role = "pod"
       field = "spec.nodeName=" + sys.env("HOSTNAME")
@@ -31,7 +32,6 @@ declare "profiling" {
     namespaces {
       names = ["alpha","bravo","delta"]
     }
-    role = "pod"
   }
 
   discovery.relabel "ebpf_pods" {
@@ -74,6 +74,7 @@ declare "profiling" {
   }
   // Profiles: Java
   discovery.kubernetes "java_pods" {
+    role = "pod"
     selectors {
       role = "pod"
       field = "spec.nodeName=" + sys.env("HOSTNAME")
@@ -81,7 +82,6 @@ declare "profiling" {
     namespaces {
       names = ["alpha","bravo","delta"]
     }
-    role = "pod"
   }
 
   discovery.process "java_pods" {
@@ -136,6 +136,7 @@ declare "profiling" {
   }
   // Profiles: pprof
   discovery.kubernetes "pprof_pods" {
+    role = "pod"
     selectors {
       role = "pod"
       field = "spec.nodeName=" + sys.env("HOSTNAME")
@@ -143,7 +144,6 @@ declare "profiling" {
     namespaces {
       names = ["alpha","bravo","delta"]
     }
-    role = "pod"
   }
 
   discovery.relabel "pprof_pods" {

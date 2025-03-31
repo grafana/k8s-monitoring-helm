@@ -98,10 +98,10 @@ data:
           target_label = "cluster"
         }
         write_relabel_config {
-          source_labels = ["k8s.cluster.name"]
+          source_labels = ["k8s_cluster_name"]
           regex = ""
           replacement = "embedded-secrets-example-cluster"
-          target_label = "cluster"
+          target_label = "k8s_cluster_name"
         }
       }
     
@@ -129,7 +129,7 @@ data:
       }
     
       // Prometheus Operator Probe objects
-      prometheus.operator.probes "pod_monitors" {
+      prometheus.operator.probes "probes" {
         clustering {
           enabled = true
         }
@@ -202,7 +202,7 @@ data:
     
     # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_build_info gauge
-    grafana_kubernetes_monitoring_build_info{version="2.0.20", namespace="default"} 1
+    grafana_kubernetes_monitoring_build_info{version="2.0.22", namespace="default"} 1
     # HELP grafana_kubernetes_monitoring_feature_info A metric to report the enabled features of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_feature_info gauge
     grafana_kubernetes_monitoring_feature_info{feature="applicationObservability", protocols="otlpgrpc", version="1.0.0"} 1
@@ -234,7 +234,7 @@ data:
         max_backoff_retries = "10"
       }
       external_labels = {
-        cluster = "embedded-secrets-example-cluster",
+        "cluster" = "embedded-secrets-example-cluster",
         "k8s_cluster_name" = "embedded-secrets-example-cluster",
       }
     }
@@ -460,10 +460,10 @@ data:
           target_label = "cluster"
         }
         write_relabel_config {
-          source_labels = ["k8s.cluster.name"]
+          source_labels = ["k8s_cluster_name"]
           regex = ""
           replacement = "embedded-secrets-example-cluster"
-          target_label = "cluster"
+          target_label = "k8s_cluster_name"
         }
       }
     
@@ -490,7 +490,7 @@ data:
         max_backoff_retries = "10"
       }
       external_labels = {
-        cluster = "embedded-secrets-example-cluster",
+        "cluster" = "embedded-secrets-example-cluster",
         "k8s_cluster_name" = "embedded-secrets-example-cluster",
       }
     }

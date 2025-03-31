@@ -86,10 +86,10 @@ data:
           target_label = "cluster"
         }
         write_relabel_config {
-          source_labels = ["k8s.cluster.name"]
+          source_labels = ["k8s_cluster_name"]
           regex = ""
           replacement = "mysql-integration-cluster"
-          target_label = "cluster"
+          target_label = "k8s_cluster_name"
         }
       }
     
@@ -138,7 +138,7 @@ data:
       prometheus.exporter.mysql "prod_db" {
         data_source_name = string.format("%s:%s@(%s:%d)/",
           convert.nonsensitive(remote.kubernetes.secret.prod_db.data["username"]),
-          remote.kubernetes.secret.prod_db.data["password"],
+          convert.nonsensitive(remote.kubernetes.secret.prod_db.data["password"]),
           "database.prod.svc",
           3306,
         )
@@ -211,7 +211,7 @@ data:
     
     # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_build_info gauge
-    grafana_kubernetes_monitoring_build_info{version="2.0.20", namespace="default"} 1
+    grafana_kubernetes_monitoring_build_info{version="2.0.22", namespace="default"} 1
     # HELP grafana_kubernetes_monitoring_feature_info A metric to report the enabled features of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_feature_info gauge
     grafana_kubernetes_monitoring_feature_info{feature="podLogs", method="volumes", version="1.0.0"} 1
@@ -241,7 +241,7 @@ data:
         max_backoff_retries = "10"
       }
       external_labels = {
-        cluster = "mysql-integration-cluster",
+        "cluster" = "mysql-integration-cluster",
         "k8s_cluster_name" = "mysql-integration-cluster",
       }
     }

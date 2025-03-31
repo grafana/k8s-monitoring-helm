@@ -125,7 +125,7 @@ metadata:
   name: k8smon-windows-exporter
   namespace: default
   labels:
-    helm.sh/chart: windows-exporter-0.9.1
+    helm.sh/chart: windows-exporter-0.9.2
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: windows-exporter
@@ -141,7 +141,7 @@ metadata:
   name: k8smon-windows-exporter
   namespace: default
   labels:
-    helm.sh/chart: windows-exporter-0.9.1
+    helm.sh/chart: windows-exporter-0.9.2
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: windows-exporter
@@ -201,10 +201,10 @@ data:
           target_label = "cluster"
         }
         write_relabel_config {
-          source_labels = ["k8s.cluster.name"]
+          source_labels = ["k8s_cluster_name"]
           regex = ""
           replacement = "proxies-example-cluster"
-          target_label = "cluster"
+          target_label = "k8s_cluster_name"
         }
       }
     
@@ -739,10 +739,10 @@ data:
           target_label = "cluster"
         }
         write_relabel_config {
-          source_labels = ["k8s.cluster.name"]
+          source_labels = ["k8s_cluster_name"]
           regex = ""
           replacement = "proxies-example-cluster"
-          target_label = "cluster"
+          target_label = "k8s_cluster_name"
         }
       }
     
@@ -769,7 +769,7 @@ data:
         max_backoff_retries = "10"
       }
       external_labels = {
-        cluster = "proxies-example-cluster",
+        "cluster" = "proxies-example-cluster",
         "k8s_cluster_name" = "proxies-example-cluster",
       }
     }
@@ -897,7 +897,7 @@ data:
     
     # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_build_info gauge
-    grafana_kubernetes_monitoring_build_info{version="2.0.20", namespace="default"} 1
+    grafana_kubernetes_monitoring_build_info{version="2.0.22", namespace="default"} 1
     # HELP grafana_kubernetes_monitoring_feature_info A metric to report the enabled features of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_feature_info gauge
     grafana_kubernetes_monitoring_feature_info{feature="applicationObservability", protocols="zipkin", version="1.0.0"} 1
@@ -931,7 +931,7 @@ data:
         max_backoff_retries = "10"
       }
       external_labels = {
-        cluster = "proxies-example-cluster",
+        "cluster" = "proxies-example-cluster",
         "k8s_cluster_name" = "proxies-example-cluster",
       }
     }
@@ -1153,10 +1153,10 @@ data:
           target_label = "cluster"
         }
         write_relabel_config {
-          source_labels = ["k8s.cluster.name"]
+          source_labels = ["k8s_cluster_name"]
           regex = ""
           replacement = "proxies-example-cluster"
-          target_label = "cluster"
+          target_label = "k8s_cluster_name"
         }
       }
     
@@ -1183,7 +1183,7 @@ data:
         max_backoff_retries = "10"
       }
       external_labels = {
-        cluster = "proxies-example-cluster",
+        "cluster" = "proxies-example-cluster",
         "k8s_cluster_name" = "proxies-example-cluster",
       }
     }
@@ -1417,6 +1417,7 @@ data:
         url = "http://pyroscope.pyroscope.svc:4040"
         headers = {
         }
+        proxy_url = "https://myproxy.default.svc:8080"
         tls_config {
           insecure_skip_verify = false
         }
@@ -1426,8 +1427,8 @@ data:
       }
     
       external_labels = {
-        cluster = "proxies-example-cluster",
-        k8s_cluster_name = "proxies-example-cluster",
+        "cluster" = "proxies-example-cluster",
+        "k8s_cluster_name" = "proxies-example-cluster",
       }
     }
     // Feature: Profiling
@@ -1437,11 +1438,11 @@ data:
       }
       // Profiles: eBPF
       discovery.kubernetes "ebpf_pods" {
+        role = "pod"
         selectors {
           role = "pod"
           field = "spec.nodeName=" + sys.env("HOSTNAME")
         }
-        role = "pod"
       }
     
       discovery.relabel "ebpf_pods" {
@@ -1484,11 +1485,11 @@ data:
       }
       // Profiles: Java
       discovery.kubernetes "java_pods" {
+        role = "pod"
         selectors {
           role = "pod"
           field = "spec.nodeName=" + sys.env("HOSTNAME")
         }
-        role = "pod"
       }
     
       discovery.process "java_pods" {
@@ -1543,11 +1544,11 @@ data:
       }
       // Profiles: pprof
       discovery.kubernetes "pprof_pods" {
+        role = "pod"
         selectors {
           role = "pod"
           field = "spec.nodeName=" + sys.env("HOSTNAME")
         }
-        role = "pod"
       }
     
       discovery.relabel "pprof_pods" {
@@ -3291,7 +3292,7 @@ metadata:
   name: k8smon-windows-exporter
   namespace: default
   labels:
-    helm.sh/chart: windows-exporter-0.9.1
+    helm.sh/chart: windows-exporter-0.9.2
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: windows-exporter
@@ -3764,7 +3765,7 @@ metadata:
   name: k8smon-windows-exporter
   namespace: default
   labels:
-    helm.sh/chart: windows-exporter-0.9.1
+    helm.sh/chart: windows-exporter-0.9.2
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: windows-exporter
@@ -3787,7 +3788,7 @@ spec:
         cluster-autoscaler.kubernetes.io/safe-to-evict: "true"
         k8s.grafana.com/logs.job: integrations/windows_exporter
       labels:
-        helm.sh/chart: windows-exporter-0.9.1
+        helm.sh/chart: windows-exporter-0.9.2
         app.kubernetes.io/managed-by: Helm
         app.kubernetes.io/component: metrics
         app.kubernetes.io/part-of: windows-exporter

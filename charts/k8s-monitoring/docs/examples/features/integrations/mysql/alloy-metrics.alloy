@@ -33,10 +33,10 @@ prometheus.remote_write "prometheus" {
       target_label = "cluster"
     }
     write_relabel_config {
-      source_labels = ["k8s.cluster.name"]
+      source_labels = ["k8s_cluster_name"]
       regex = ""
       replacement = "mysql-integration-cluster"
-      target_label = "cluster"
+      target_label = "k8s_cluster_name"
     }
   }
 
@@ -85,7 +85,7 @@ declare "mysql_integration" {
   prometheus.exporter.mysql "prod_db" {
     data_source_name = string.format("%s:%s@(%s:%d)/",
       convert.nonsensitive(remote.kubernetes.secret.prod_db.data["username"]),
-      remote.kubernetes.secret.prod_db.data["password"],
+      convert.nonsensitive(remote.kubernetes.secret.prod_db.data["password"]),
       "database.prod.svc",
       3306,
     )

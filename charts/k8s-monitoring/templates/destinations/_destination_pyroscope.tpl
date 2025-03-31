@@ -19,6 +19,12 @@ pyroscope.write {{ include "helper.alloy_name" .name | quote }} {
       {{ $key | quote }} = {{ $value }},
 {{- end }}
     }
+{{- if .proxyURL }}
+    proxy_url = {{ .proxyURL | quote }}
+{{- end }}
+{{- if .proxyFromEnvironment }}
+    proxy_from_environment = {{ .proxyFromEnvironment }}
+{{- end }}
 
 {{- if eq (include "secrets.authType" .) "basic" }}
     basic_auth {
@@ -89,8 +95,9 @@ pyroscope.write {{ include "helper.alloy_name" .name | quote }} {
   }
 
   external_labels = {
-    cluster = {{ $.Values.cluster.name | quote }},
-    k8s_cluster_name = {{ $.Values.cluster.name | quote }},
+{{- range $label := .clusterLabels }}
+    {{ include "escape_label" $label | quote }} = {{ $.Values.cluster.name | quote }},
+{{- end }}
   {{- range $key, $value := .extraLabels }}
     {{ $key }} = {{ $value | quote }},
   {{- end }}
