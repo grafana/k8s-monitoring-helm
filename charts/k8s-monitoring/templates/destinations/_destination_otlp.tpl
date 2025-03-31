@@ -96,8 +96,9 @@ otelcol.processor.transform {{ include "helper.alloy_name" .name | quote }} {
   metric_statements {
     context = "resource"
     statements = [
-      `set(attributes["cluster"], {{ $.Values.cluster.name | quote }})`,
-      `set(attributes["k8s.cluster.name"], {{ $.Values.cluster.name | quote }})`,
+{{- range $label := .clusterLabels }}
+      `set(attributes[{{ $label | quote }}], {{ $.Values.cluster.name | quote }})`,
+{{- end }}
 {{- if .processors.transform.metrics.resource }}
 {{- range $transform := .processors.transform.metrics.resource }}
 {{ $transform | quote | indent 6 }},
@@ -121,8 +122,9 @@ otelcol.processor.transform {{ include "helper.alloy_name" .name | quote }} {
   metric_statements {
     context = "datapoint"
     statements = [
-      `set(attributes["cluster"], {{ $.Values.cluster.name | quote }})`,
-      `set(attributes["k8s.cluster.name"], {{ $.Values.cluster.name | quote }})`,
+{{- range $label := .clusterLabels }}
+      `set(attributes[{{ $label | quote }}], {{ $.Values.cluster.name | quote }})`,
+{{- end }}
 {{- if .processors.transform.metrics.datapoint }}
 {{- range $transform := .processors.transform.metrics.datapoint }}
 {{ $transform | quote | indent 6 }},
@@ -136,8 +138,9 @@ otelcol.processor.transform {{ include "helper.alloy_name" .name | quote }} {
   log_statements {
     context = "resource"
     statements = [
-      `set(attributes["cluster"], {{ $.Values.cluster.name | quote }})`,
-      `set(attributes["k8s.cluster.name"], {{ $.Values.cluster.name | quote }})`,
+{{- range $label := .clusterLabels }}
+      `set(attributes[{{ $label | quote }}], {{ $.Values.cluster.name | quote }})`,
+{{- end }}
 {{- if .processors.transform.logs.resource }}
 {{- range $transform := .processors.transform.logs.resource }}
 {{ $transform | quote | indent 6 }},
@@ -182,8 +185,9 @@ otelcol.processor.transform {{ include "helper.alloy_name" .name | quote }} {
   trace_statements {
     context = "resource"
     statements = [
-      `set(attributes["cluster"], {{ $.Values.cluster.name | quote }})`,
-      `set(attributes["k8s.cluster.name"], {{ $.Values.cluster.name | quote }})`,
+{{- range $label := .clusterLabels }}
+      `set(attributes[{{ $label | quote }}], {{ $.Values.cluster.name | quote }})`,
+{{- end }}
 {{- if .processors.transform.traces.resource }}
 {{- range $transform := .processors.transform.traces.resource }}
 {{ $transform | quote | indent 6 }},
