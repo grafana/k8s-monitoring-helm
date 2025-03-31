@@ -33,7 +33,7 @@ alloy-metrics:
       }
       selectors {
         role = "service"
-        label = ["app.kubernetes.io/name=animal-service"]
+        label = "app.kubernetes.io/name=animal-service"
       }
     }
     prometheus.scrape "animal_service" {
