@@ -52,3 +52,7 @@
 {{- end }}
 {{- printf "{%s}" ($labels | join ", ") }}
 {{- end }}
+
+{{- define "escape_label" -}}
+{{ . | replace "-" "_" | replace "." "_" | replace "/" "_" }}
+{{- end }}
