@@ -19,6 +19,12 @@ pyroscope.write {{ include "helper.alloy_name" .name | quote }} {
       {{ $key | quote }} = {{ $value }},
 {{- end }}
     }
+{{- if .proxyURL }}
+    proxy_url = {{ .proxyURL | quote }}
+{{- end }}
+{{- if .proxyFromEnvironment }}
+    proxy_from_environment = {{ .proxyFromEnvironment }}
+{{- end }}
 
 {{- if eq (include "secrets.authType" .) "basic" }}
     basic_auth {
