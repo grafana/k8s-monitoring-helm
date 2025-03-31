@@ -38,6 +38,7 @@ declare "annotation_autodiscovery" {
 
   prometheus.scrape "annotation_autodiscovery_http" {
     targets = discovery.relabel.annotation_autodiscovery_http.output
+    job_name = {{ .Values.jobLabel | quote }}
     honor_labels = true
 {{- if .Values.bearerToken.enabled }}
     bearer_token_file = {{ .Values.bearerToken.token | quote }}
@@ -57,6 +58,7 @@ declare "annotation_autodiscovery" {
 
   prometheus.scrape "annotation_autodiscovery_https" {
     targets = discovery.relabel.annotation_autodiscovery_https.output
+    job_name = {{ .Values.jobLabel | quote }}
     honor_labels = true
 {{- if .Values.bearerToken.enabled }}
     bearer_token_file = {{ .Values.bearerToken.token | quote }}
