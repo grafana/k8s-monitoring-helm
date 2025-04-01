@@ -49,7 +49,6 @@ flowchart TD
     %% Tail Sampler to Grafana Cloud
     E -->|Traces| F
     E -->|Metrics| G
-
 ```
 
 For more information, see the [Application Observability feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-application-observability).
@@ -62,7 +61,7 @@ This secret stores credentials needed for remote write access to your Grafana Cl
 
 ```bash
 # grafana cloud api token with write scopes for metrics and traces
- GRAFANA_CLOUD_API_KEY="***"
+GRAFANA_CLOUD_API_KEY="***"
 
 # update username and remote write url to match your grafana cloud stack
 GRAFANA_CLOUD_PROMETHEUS_USERNAME="1234"
