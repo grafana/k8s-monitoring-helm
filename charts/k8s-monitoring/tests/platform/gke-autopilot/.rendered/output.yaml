@@ -75,67 +75,6 @@ metadata:
   namespace: default
 data:
   config.alloy: |-
-    // Destination: grafana-cloud-metrics (prometheus)
-    otelcol.exporter.prometheus "grafana_cloud_metrics" {
-      add_metric_suffixes = true
-      forward_to = [prometheus.remote_write.grafana_cloud_metrics.receiver]
-    }
-    
-    prometheus.remote_write "grafana_cloud_metrics" {
-      endpoint {
-        url = "https://prometheus-prod-13-prod-us-east-0.grafana.net/api/prom/push"
-        headers = {
-          "X-Scope-OrgID" = convert.nonsensitive(remote.kubernetes.secret.grafana_cloud_metrics.data["tenantId"]),
-        }
-        basic_auth {
-          username = convert.nonsensitive(remote.kubernetes.secret.grafana_cloud_metrics.data["PROMETHEUS_USER"])
-          password = remote.kubernetes.secret.grafana_cloud_metrics.data["PROMETHEUS_PASS"]
-        }
-        tls_config {
-          insecure_skip_verify = false
-          ca_pem = convert.nonsensitive(remote.kubernetes.secret.grafana_cloud_metrics.data["ca"])
-          cert_pem = convert.nonsensitive(remote.kubernetes.secret.grafana_cloud_metrics.data["cert"])
-          key_pem = remote.kubernetes.secret.grafana_cloud_metrics.data["key"]
-        }
-        send_native_histograms = false
-    
-        queue_config {
-          capacity = 10000
-          min_shards = 1
-          max_shards = 50
-          max_samples_per_send = 2000
-          batch_send_deadline = "5s"
-          min_backoff = "30ms"
-          max_backoff = "5s"
-          retry_on_http_429 = true
-          sample_age_limit = "0s"
-        }
-    
-        write_relabel_config {
-          source_labels = ["cluster"]
-          regex = ""
-          replacement = "gke-autopilot-test"
-          target_label = "cluster"
-        }
-        write_relabel_config {
-          source_labels = ["k8s_cluster_name"]
-          regex = ""
-          replacement = "gke-autopilot-test"
-          target_label = "k8s_cluster_name"
-        }
-      }
-    
-      wal {
-        truncate_frequency = "2h"
-        min_keepalive_time = "5m"
-        max_keepalive_time = "8h"
-      }
-    }
-    
-    remote.kubernetes.secret "grafana_cloud_metrics" {
-      name      = "grafana-cloud-credentials"
-      namespace = "default"
-    }
     // Feature: Cluster Metrics
     declare "cluster_metrics" {
       argument "metrics_destinations" {
@@ -732,15 +671,10 @@ data:
         prometheus.remote_write.grafana_cloud_metrics.receiver,
       ]
     }
----
-# Source: k8s-monitoring/templates/alloy-config.yaml
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: k8smon-alloy-singleton
-  namespace: default
-data:
-  config.alloy: |-
+    
+    
+    
+    
     // Destination: grafana-cloud-metrics (prometheus)
     otelcol.exporter.prometheus "grafana_cloud_metrics" {
       add_metric_suffixes = true
@@ -836,6 +770,15 @@ data:
       name      = "grafana-cloud-credentials"
       namespace = "default"
     }
+---
+# Source: k8s-monitoring/templates/alloy-config.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: k8smon-alloy-singleton
+  namespace: default
+data:
+  config.alloy: |-
     // Feature: Cluster Events
     declare "cluster_events" {
       argument "logs_destinations" {
@@ -955,27 +898,72 @@ data:
         prometheus.remote_write.grafana_cloud_metrics.receiver,
       ]
     }
-
-  self-reporting-metric.prom: |
     
-    # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart
-    # TYPE grafana_kubernetes_monitoring_build_info gauge
-    grafana_kubernetes_monitoring_build_info{version="2.0.23", namespace="default"} 1
-    # HELP grafana_kubernetes_monitoring_feature_info A metric to report the enabled features of the Kubernetes Monitoring Helm chart
-    # TYPE grafana_kubernetes_monitoring_feature_info gauge
-    grafana_kubernetes_monitoring_feature_info{deployments="kube-state-metrics", feature="clusterMetrics", sources="kubelet,kubeletResource,cadvisor,kube-state-metrics", version="1.0.0"} 1
-    grafana_kubernetes_monitoring_feature_info{feature="clusterEvents", version="1.0.0"} 1
-    grafana_kubernetes_monitoring_feature_info{feature="podLogs", method="volumes", version="1.0.0"} 1
-    grafana_kubernetes_monitoring_feature_info{feature="integrations", sources="alloy", version="1.0.0"} 1
----
-# Source: k8s-monitoring/templates/alloy-config.yaml
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: k8smon-alloy-logs
-  namespace: default
-data:
-  config.alloy: |-
+    
+    
+    
+    // Destination: grafana-cloud-metrics (prometheus)
+    otelcol.exporter.prometheus "grafana_cloud_metrics" {
+      add_metric_suffixes = true
+      forward_to = [prometheus.remote_write.grafana_cloud_metrics.receiver]
+    }
+    
+    prometheus.remote_write "grafana_cloud_metrics" {
+      endpoint {
+        url = "https://prometheus-prod-13-prod-us-east-0.grafana.net/api/prom/push"
+        headers = {
+          "X-Scope-OrgID" = convert.nonsensitive(remote.kubernetes.secret.grafana_cloud_metrics.data["tenantId"]),
+        }
+        basic_auth {
+          username = convert.nonsensitive(remote.kubernetes.secret.grafana_cloud_metrics.data["PROMETHEUS_USER"])
+          password = remote.kubernetes.secret.grafana_cloud_metrics.data["PROMETHEUS_PASS"]
+        }
+        tls_config {
+          insecure_skip_verify = false
+          ca_pem = convert.nonsensitive(remote.kubernetes.secret.grafana_cloud_metrics.data["ca"])
+          cert_pem = convert.nonsensitive(remote.kubernetes.secret.grafana_cloud_metrics.data["cert"])
+          key_pem = remote.kubernetes.secret.grafana_cloud_metrics.data["key"]
+        }
+        send_native_histograms = false
+    
+        queue_config {
+          capacity = 10000
+          min_shards = 1
+          max_shards = 50
+          max_samples_per_send = 2000
+          batch_send_deadline = "5s"
+          min_backoff = "30ms"
+          max_backoff = "5s"
+          retry_on_http_429 = true
+          sample_age_limit = "0s"
+        }
+    
+        write_relabel_config {
+          source_labels = ["cluster"]
+          regex = ""
+          replacement = "gke-autopilot-test"
+          target_label = "cluster"
+        }
+        write_relabel_config {
+          source_labels = ["k8s_cluster_name"]
+          regex = ""
+          replacement = "gke-autopilot-test"
+          target_label = "k8s_cluster_name"
+        }
+      }
+    
+      wal {
+        truncate_frequency = "2h"
+        min_keepalive_time = "5m"
+        max_keepalive_time = "8h"
+      }
+    }
+    
+    remote.kubernetes.secret "grafana_cloud_metrics" {
+      name      = "grafana-cloud-credentials"
+      namespace = "default"
+    }
+    
     // Destination: grafana-cloud-logs (loki)
     otelcol.exporter.loki "grafana_cloud_logs" {
       forward_to = [loki.write.grafana_cloud_logs.receiver]
@@ -1009,6 +997,27 @@ data:
       name      = "grafana-cloud-credentials"
       namespace = "default"
     }
+
+  self-reporting-metric.prom: |
+    
+    # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart
+    # TYPE grafana_kubernetes_monitoring_build_info gauge
+    grafana_kubernetes_monitoring_build_info{version="2.0.23", namespace="default"} 1
+    # HELP grafana_kubernetes_monitoring_feature_info A metric to report the enabled features of the Kubernetes Monitoring Helm chart
+    # TYPE grafana_kubernetes_monitoring_feature_info gauge
+    grafana_kubernetes_monitoring_feature_info{deployments="kube-state-metrics", feature="clusterMetrics", sources="kubelet,kubeletResource,cadvisor,kube-state-metrics", version="1.0.0"} 1
+    grafana_kubernetes_monitoring_feature_info{feature="clusterEvents", version="1.0.0"} 1
+    grafana_kubernetes_monitoring_feature_info{feature="podLogs", method="volumes", version="1.0.0"} 1
+    grafana_kubernetes_monitoring_feature_info{feature="integrations", sources="alloy", version="1.0.0"} 1
+---
+# Source: k8s-monitoring/templates/alloy-config.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: k8smon-alloy-logs
+  namespace: default
+data:
+  config.alloy: |-
     // Feature: Pod Logs
     declare "pod_logs" {
       argument "logs_destinations" {
@@ -1181,6 +1190,105 @@ data:
       logs_destinations = [
         loki.write.grafana_cloud_logs.receiver,
       ]
+    }
+    
+    
+    
+    
+    // Destination: grafana-cloud-metrics (prometheus)
+    otelcol.exporter.prometheus "grafana_cloud_metrics" {
+      add_metric_suffixes = true
+      forward_to = [prometheus.remote_write.grafana_cloud_metrics.receiver]
+    }
+    
+    prometheus.remote_write "grafana_cloud_metrics" {
+      endpoint {
+        url = "https://prometheus-prod-13-prod-us-east-0.grafana.net/api/prom/push"
+        headers = {
+          "X-Scope-OrgID" = convert.nonsensitive(remote.kubernetes.secret.grafana_cloud_metrics.data["tenantId"]),
+        }
+        basic_auth {
+          username = convert.nonsensitive(remote.kubernetes.secret.grafana_cloud_metrics.data["PROMETHEUS_USER"])
+          password = remote.kubernetes.secret.grafana_cloud_metrics.data["PROMETHEUS_PASS"]
+        }
+        tls_config {
+          insecure_skip_verify = false
+          ca_pem = convert.nonsensitive(remote.kubernetes.secret.grafana_cloud_metrics.data["ca"])
+          cert_pem = convert.nonsensitive(remote.kubernetes.secret.grafana_cloud_metrics.data["cert"])
+          key_pem = remote.kubernetes.secret.grafana_cloud_metrics.data["key"]
+        }
+        send_native_histograms = false
+    
+        queue_config {
+          capacity = 10000
+          min_shards = 1
+          max_shards = 50
+          max_samples_per_send = 2000
+          batch_send_deadline = "5s"
+          min_backoff = "30ms"
+          max_backoff = "5s"
+          retry_on_http_429 = true
+          sample_age_limit = "0s"
+        }
+    
+        write_relabel_config {
+          source_labels = ["cluster"]
+          regex = ""
+          replacement = "gke-autopilot-test"
+          target_label = "cluster"
+        }
+        write_relabel_config {
+          source_labels = ["k8s_cluster_name"]
+          regex = ""
+          replacement = "gke-autopilot-test"
+          target_label = "k8s_cluster_name"
+        }
+      }
+    
+      wal {
+        truncate_frequency = "2h"
+        min_keepalive_time = "5m"
+        max_keepalive_time = "8h"
+      }
+    }
+    
+    remote.kubernetes.secret "grafana_cloud_metrics" {
+      name      = "grafana-cloud-credentials"
+      namespace = "default"
+    }
+    
+    // Destination: grafana-cloud-logs (loki)
+    otelcol.exporter.loki "grafana_cloud_logs" {
+      forward_to = [loki.write.grafana_cloud_logs.receiver]
+    }
+    
+    loki.write "grafana_cloud_logs" {
+      endpoint {
+        url = "https://logs-prod-006.grafana.net/loki/api/v1/push"
+        tenant_id = convert.nonsensitive(remote.kubernetes.secret.grafana_cloud_logs.data["tenantId"])
+        basic_auth {
+          username = convert.nonsensitive(remote.kubernetes.secret.grafana_cloud_logs.data["LOKI_USER"])
+          password = remote.kubernetes.secret.grafana_cloud_logs.data["LOKI_PASS"]
+        }
+        tls_config {
+          insecure_skip_verify = false
+          ca_pem = convert.nonsensitive(remote.kubernetes.secret.grafana_cloud_logs.data["ca"])
+          cert_pem = convert.nonsensitive(remote.kubernetes.secret.grafana_cloud_logs.data["cert"])
+          key_pem = remote.kubernetes.secret.grafana_cloud_logs.data["key"]
+        }
+        min_backoff_period = "500ms"
+        max_backoff_period = "5m"
+        max_backoff_retries = "10"
+      }
+      external_labels = {
+        "cluster" = "gke-autopilot-test",
+        "k8s_cluster_name" = "gke-autopilot-test",
+      }
+    }
+    
+    remote.kubernetes.secret "grafana_cloud_logs" {
+      name      = "grafana-cloud-credentials"
+      namespace = "default"
     }
 ---
 # Source: k8s-monitoring/charts/alloy-logs/templates/rbac.yaml

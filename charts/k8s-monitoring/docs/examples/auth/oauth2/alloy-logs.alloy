@@ -1,121 +1,3 @@
-// Destination: otel-endpoint (otlp)
-otelcol.receiver.prometheus "otel_endpoint" {
-  output {
-    metrics = [otelcol.processor.attributes.otel_endpoint.input]
-  }
-}
-otelcol.receiver.loki "otel_endpoint" {
-  output {
-    logs = [otelcol.processor.attributes.otel_endpoint.input]
-  }
-}
-otelcol.auth.oauth2 "otel_endpoint" {
-  client_id = convert.nonsensitive(remote.kubernetes.secret.otel_endpoint.data["clientId"])
-  client_secret_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
-  endpoint_params = {
-    client_assertion_type = ["urn:ietf:params:oauth:client-assertion-type:jwt-bearer"],
-    grant_type = ["client_credentials"],
-  }
-  token_url = "https://my.idp/application/o/token/"
-}
-
-otelcol.processor.attributes "otel_endpoint" {
-  output {
-    metrics = [otelcol.processor.transform.otel_endpoint.input]
-    logs = [otelcol.processor.transform.otel_endpoint.input]
-    traces = [otelcol.processor.transform.otel_endpoint.input]
-  }
-}
-
-otelcol.processor.transform "otel_endpoint" {
-  error_mode = "ignore"
-  metric_statements {
-    context = "resource"
-    statements = [
-      `set(attributes["cluster"], "oauth2-auth-example")`,
-      `set(attributes["k8s.cluster.name"], "oauth2-auth-example")`,
-    ]
-  }
-
-  metric_statements {
-    context = "datapoint"
-    statements = [
-      `set(attributes["cluster"], "oauth2-auth-example")`,
-      `set(attributes["k8s.cluster.name"], "oauth2-auth-example")`,
-    ]
-  }
-  log_statements {
-    context = "resource"
-    statements = [
-      `set(attributes["cluster"], "oauth2-auth-example")`,
-      `set(attributes["k8s.cluster.name"], "oauth2-auth-example")`,
-    ]
-  }
-
-  log_statements {
-    context = "log"
-    statements = [
-      `delete_key(attributes, "loki.attribute.labels")`,
-      `delete_key(attributes, "loki.resource.labels")`,
-      `set(resource.attributes["service.name"], attributes["service_name"]) where resource.attributes["service.name"] == nil and attributes["service_name"] != nil`,
-      `delete_key(attributes, "service_name") where attributes["service_name"] != nil`,
-      `set(resource.attributes["service.namespace"], attributes["service_namespace"] ) where resource.attributes["service.namespace"] == nil and attributes["service_namespace"] != nil`,
-      `delete_key(attributes, "service_namespace") where attributes["service_namespace"] != nil`,
-      `set(resource.attributes["deployment.environment.name"], attributes["deployment_environment_name"] ) where resource.attributes["deployment.environment.name"] == nil and attributes["deployment_environment_name"] != nil`,
-      `delete_key(attributes, "deployment_environment_name") where attributes["deployment_environment_name"] != nil`,
-      `set(resource.attributes["deployment.environment"], attributes["deployment_environment"] ) where resource.attributes["deployment.environment"] == nil and attributes["deployment_environment"] != nil`,
-      `delete_key(attributes, "deployment_environment") where attributes["deployment_environment"] != nil`,
-    ]
-  }
-
-  trace_statements {
-    context = "resource"
-    statements = [
-      `set(attributes["cluster"], "oauth2-auth-example")`,
-      `set(attributes["k8s.cluster.name"], "oauth2-auth-example")`,
-    ]
-  }
-
-  output {
-    metrics = [otelcol.processor.batch.otel_endpoint.input]
-    logs = [otelcol.processor.batch.otel_endpoint.input]
-    traces = [otelcol.processor.batch.otel_endpoint.input]
-  }
-}
-
-otelcol.processor.batch "otel_endpoint" {
-  timeout = "2s"
-  send_batch_size = 8192
-  send_batch_max_size = 0
-
-  output {
-    metrics = [otelcol.exporter.otlp.otel_endpoint.input]
-    logs = [otelcol.exporter.otlp.otel_endpoint.input]
-    traces = [otelcol.exporter.otlp.otel_endpoint.input]
-  }
-}
-otelcol.exporter.otlp "otel_endpoint" {
-  client {
-    endpoint = "grpc.my.otel.endpoint:443"
-    auth = otelcol.auth.oauth2.otel_endpoint.handler
-    tls {
-      insecure = false
-      insecure_skip_verify = false
-    }
-  }
-
-  retry_on_failure {
-    enabled = true
-    initial_interval = "5s"
-    max_interval = "30s"
-    max_elapsed_time = "5m"
-  }
-}
-
-remote.kubernetes.secret "otel_endpoint" {
-  name      = "otel-endpoint-k8smon-k8s-monitoring"
-  namespace = "default"
-}
 // Feature: Node Logs
 declare "node_logs" {
   argument "logs_destinations" {
@@ -440,4 +322,126 @@ pod_logs "feature" {
   logs_destinations = [
     otelcol.receiver.loki.otel_endpoint.receiver,
   ]
+}
+
+
+
+
+// Destination: otel-endpoint (otlp)
+otelcol.receiver.prometheus "otel_endpoint" {
+  output {
+    metrics = [otelcol.processor.attributes.otel_endpoint.input]
+  }
+}
+otelcol.receiver.loki "otel_endpoint" {
+  output {
+    logs = [otelcol.processor.attributes.otel_endpoint.input]
+  }
+}
+otelcol.auth.oauth2 "otel_endpoint" {
+  client_id = convert.nonsensitive(remote.kubernetes.secret.otel_endpoint.data["clientId"])
+  client_secret_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+  endpoint_params = {
+    client_assertion_type = ["urn:ietf:params:oauth:client-assertion-type:jwt-bearer"],
+    grant_type = ["client_credentials"],
+  }
+  token_url = "https://my.idp/application/o/token/"
+}
+
+otelcol.processor.attributes "otel_endpoint" {
+  output {
+    metrics = [otelcol.processor.transform.otel_endpoint.input]
+    logs = [otelcol.processor.transform.otel_endpoint.input]
+    traces = [otelcol.processor.transform.otel_endpoint.input]
+  }
+}
+
+otelcol.processor.transform "otel_endpoint" {
+  error_mode = "ignore"
+  metric_statements {
+    context = "resource"
+    statements = [
+      `set(attributes["cluster"], "oauth2-auth-example")`,
+      `set(attributes["k8s.cluster.name"], "oauth2-auth-example")`,
+    ]
+  }
+
+  metric_statements {
+    context = "datapoint"
+    statements = [
+      `set(attributes["cluster"], "oauth2-auth-example")`,
+      `set(attributes["k8s.cluster.name"], "oauth2-auth-example")`,
+    ]
+  }
+  log_statements {
+    context = "resource"
+    statements = [
+      `set(attributes["cluster"], "oauth2-auth-example")`,
+      `set(attributes["k8s.cluster.name"], "oauth2-auth-example")`,
+    ]
+  }
+
+  log_statements {
+    context = "log"
+    statements = [
+      `delete_key(attributes, "loki.attribute.labels")`,
+      `delete_key(attributes, "loki.resource.labels")`,
+      `set(resource.attributes["service.name"], attributes["service_name"]) where resource.attributes["service.name"] == nil and attributes["service_name"] != nil`,
+      `delete_key(attributes, "service_name") where attributes["service_name"] != nil`,
+      `set(resource.attributes["service.namespace"], attributes["service_namespace"] ) where resource.attributes["service.namespace"] == nil and attributes["service_namespace"] != nil`,
+      `delete_key(attributes, "service_namespace") where attributes["service_namespace"] != nil`,
+      `set(resource.attributes["deployment.environment.name"], attributes["deployment_environment_name"] ) where resource.attributes["deployment.environment.name"] == nil and attributes["deployment_environment_name"] != nil`,
+      `delete_key(attributes, "deployment_environment_name") where attributes["deployment_environment_name"] != nil`,
+      `set(resource.attributes["deployment.environment"], attributes["deployment_environment"] ) where resource.attributes["deployment.environment"] == nil and attributes["deployment_environment"] != nil`,
+      `delete_key(attributes, "deployment_environment") where attributes["deployment_environment"] != nil`,
+    ]
+  }
+
+  trace_statements {
+    context = "resource"
+    statements = [
+      `set(attributes["cluster"], "oauth2-auth-example")`,
+      `set(attributes["k8s.cluster.name"], "oauth2-auth-example")`,
+    ]
+  }
+
+  output {
+    metrics = [otelcol.processor.batch.otel_endpoint.input]
+    logs = [otelcol.processor.batch.otel_endpoint.input]
+    traces = [otelcol.processor.batch.otel_endpoint.input]
+  }
+}
+
+otelcol.processor.batch "otel_endpoint" {
+  timeout = "2s"
+  send_batch_size = 8192
+  send_batch_max_size = 0
+
+  output {
+    metrics = [otelcol.exporter.otlp.otel_endpoint.input]
+    logs = [otelcol.exporter.otlp.otel_endpoint.input]
+    traces = [otelcol.exporter.otlp.otel_endpoint.input]
+  }
+}
+otelcol.exporter.otlp "otel_endpoint" {
+  client {
+    endpoint = "grpc.my.otel.endpoint:443"
+    auth = otelcol.auth.oauth2.otel_endpoint.handler
+    tls {
+      insecure = false
+      insecure_skip_verify = false
+    }
+  }
+
+  retry_on_failure {
+    enabled = true
+    initial_interval = "5s"
+    max_interval = "30s"
+    max_elapsed_time = "5m"
+  }
+}
+
+remote.kubernetes.secret "otel_endpoint" {
+  name      = "otel-endpoint-k8smon-k8s-monitoring"
+  namespace = "default"
 }

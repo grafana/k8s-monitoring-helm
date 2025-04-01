@@ -97,54 +97,6 @@ metadata:
   namespace: default
 data:
   config.alloy: |-
-    // Destination: prometheus (prometheus)
-    otelcol.exporter.prometheus "prometheus" {
-      add_metric_suffixes = true
-      forward_to = [prometheus.remote_write.prometheus.receiver]
-    }
-    
-    prometheus.remote_write "prometheus" {
-      endpoint {
-        url = "http://prometheus.prometheus.svc:9090/api/v1/write"
-        headers = {
-        }
-        tls_config {
-          insecure_skip_verify = false
-        }
-        send_native_histograms = false
-    
-        queue_config {
-          capacity = 10000
-          min_shards = 1
-          max_shards = 50
-          max_samples_per_send = 2000
-          batch_send_deadline = "5s"
-          min_backoff = "30ms"
-          max_backoff = "5s"
-          retry_on_http_429 = true
-          sample_age_limit = "0s"
-        }
-    
-        write_relabel_config {
-          source_labels = ["cluster"]
-          regex = ""
-          replacement = "metrics-tuning-example-cluster"
-          target_label = "cluster"
-        }
-        write_relabel_config {
-          source_labels = ["k8s_cluster_name"]
-          regex = ""
-          replacement = "metrics-tuning-example-cluster"
-          target_label = "k8s_cluster_name"
-        }
-      }
-    
-      wal {
-        truncate_frequency = "2h"
-        min_keepalive_time = "5m"
-        max_keepalive_time = "8h"
-      }
-    }
     // Feature: Annotation Autodiscovery
     declare "annotation_autodiscovery" {
       argument "metrics_destinations" {
@@ -973,6 +925,58 @@ data:
       forward_to = [
         prometheus.remote_write.prometheus.receiver,
       ]
+    }
+    
+    
+    
+    
+    // Destination: prometheus (prometheus)
+    otelcol.exporter.prometheus "prometheus" {
+      add_metric_suffixes = true
+      forward_to = [prometheus.remote_write.prometheus.receiver]
+    }
+    
+    prometheus.remote_write "prometheus" {
+      endpoint {
+        url = "http://prometheus.prometheus.svc:9090/api/v1/write"
+        headers = {
+        }
+        tls_config {
+          insecure_skip_verify = false
+        }
+        send_native_histograms = false
+    
+        queue_config {
+          capacity = 10000
+          min_shards = 1
+          max_shards = 50
+          max_samples_per_send = 2000
+          batch_send_deadline = "5s"
+          min_backoff = "30ms"
+          max_backoff = "5s"
+          retry_on_http_429 = true
+          sample_age_limit = "0s"
+        }
+    
+        write_relabel_config {
+          source_labels = ["cluster"]
+          regex = ""
+          replacement = "metrics-tuning-example-cluster"
+          target_label = "cluster"
+        }
+        write_relabel_config {
+          source_labels = ["k8s_cluster_name"]
+          regex = ""
+          replacement = "metrics-tuning-example-cluster"
+          target_label = "k8s_cluster_name"
+        }
+      }
+    
+      wal {
+        truncate_frequency = "2h"
+        min_keepalive_time = "5m"
+        max_keepalive_time = "8h"
+      }
     }
 
   self-reporting-metric.prom: |

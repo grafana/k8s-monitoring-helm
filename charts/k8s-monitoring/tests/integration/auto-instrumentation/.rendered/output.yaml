@@ -69,54 +69,6 @@ metadata:
   namespace: default
 data:
   config.alloy: |-
-    // Destination: localPrometheus (prometheus)
-    otelcol.exporter.prometheus "localprometheus" {
-      add_metric_suffixes = true
-      forward_to = [prometheus.remote_write.localprometheus.receiver]
-    }
-    
-    prometheus.remote_write "localprometheus" {
-      endpoint {
-        url = "http://prometheus-server.prometheus.svc:9090/api/v1/write"
-        headers = {
-        }
-        tls_config {
-          insecure_skip_verify = false
-        }
-        send_native_histograms = false
-    
-        queue_config {
-          capacity = 10000
-          min_shards = 1
-          max_shards = 50
-          max_samples_per_send = 2000
-          batch_send_deadline = "5s"
-          min_backoff = "30ms"
-          max_backoff = "5s"
-          retry_on_http_429 = true
-          sample_age_limit = "0s"
-        }
-    
-        write_relabel_config {
-          source_labels = ["cluster"]
-          regex = ""
-          replacement = "auto-instrumentation-test"
-          target_label = "cluster"
-        }
-        write_relabel_config {
-          source_labels = ["k8s_cluster_name"]
-          regex = ""
-          replacement = "auto-instrumentation-test"
-          target_label = "k8s_cluster_name"
-        }
-      }
-    
-      wal {
-        truncate_frequency = "2h"
-        min_keepalive_time = "5m"
-        max_keepalive_time = "8h"
-      }
-    }
     // Feature: Auto-Instrumentation
     declare "auto_instrumentation" {
       argument "metrics_destinations" {
@@ -216,25 +168,8 @@ data:
     livedebugging {
       enabled = true
     }
-
-  self-reporting-metric.prom: |
     
-    # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart
-    # TYPE grafana_kubernetes_monitoring_build_info gauge
-    grafana_kubernetes_monitoring_build_info{version="2.0.23", namespace="default"} 1
-    # HELP grafana_kubernetes_monitoring_feature_info A metric to report the enabled features of the Kubernetes Monitoring Helm chart
-    # TYPE grafana_kubernetes_monitoring_feature_info gauge
-    grafana_kubernetes_monitoring_feature_info{feature="applicationObservability", protocols="otlpgrpc", version="1.0.0"} 1
-    grafana_kubernetes_monitoring_feature_info{feature="autoInstrumentation", version="1.0.0"} 1
----
-# Source: k8s-monitoring/templates/alloy-config.yaml
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: k8smon-alloy-receiver
-  namespace: default
-data:
-  config.alloy: |-
+    
     // Destination: localPrometheus (prometheus)
     otelcol.exporter.prometheus "localprometheus" {
       add_metric_suffixes = true
@@ -407,6 +342,25 @@ data:
         max_elapsed_time = "5m"
       }
     }
+
+  self-reporting-metric.prom: |
+    
+    # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart
+    # TYPE grafana_kubernetes_monitoring_build_info gauge
+    grafana_kubernetes_monitoring_build_info{version="2.0.23", namespace="default"} 1
+    # HELP grafana_kubernetes_monitoring_feature_info A metric to report the enabled features of the Kubernetes Monitoring Helm chart
+    # TYPE grafana_kubernetes_monitoring_feature_info gauge
+    grafana_kubernetes_monitoring_feature_info{feature="applicationObservability", protocols="otlpgrpc", version="1.0.0"} 1
+    grafana_kubernetes_monitoring_feature_info{feature="autoInstrumentation", version="1.0.0"} 1
+---
+# Source: k8s-monitoring/templates/alloy-config.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: k8smon-alloy-receiver
+  namespace: default
+data:
+  config.alloy: |-
     // Feature: Application Observability
     declare "application_observability" {
       argument "metrics_destinations" {
@@ -530,8 +484,184 @@ data:
         otelcol.exporter.loki.localloki.input,
       ]
       traces_destinations = [
-        otelcol.processor.attributes.localtempo.input,
+    
       ]
+    }
+    
+    
+    
+    
+    // Destination: localPrometheus (prometheus)
+    otelcol.exporter.prometheus "localprometheus" {
+      add_metric_suffixes = true
+      forward_to = [prometheus.remote_write.localprometheus.receiver]
+    }
+    
+    prometheus.remote_write "localprometheus" {
+      endpoint {
+        url = "http://prometheus-server.prometheus.svc:9090/api/v1/write"
+        headers = {
+        }
+        tls_config {
+          insecure_skip_verify = false
+        }
+        send_native_histograms = false
+    
+        queue_config {
+          capacity = 10000
+          min_shards = 1
+          max_shards = 50
+          max_samples_per_send = 2000
+          batch_send_deadline = "5s"
+          min_backoff = "30ms"
+          max_backoff = "5s"
+          retry_on_http_429 = true
+          sample_age_limit = "0s"
+        }
+    
+        write_relabel_config {
+          source_labels = ["cluster"]
+          regex = ""
+          replacement = "auto-instrumentation-test"
+          target_label = "cluster"
+        }
+        write_relabel_config {
+          source_labels = ["k8s_cluster_name"]
+          regex = ""
+          replacement = "auto-instrumentation-test"
+          target_label = "k8s_cluster_name"
+        }
+      }
+    
+      wal {
+        truncate_frequency = "2h"
+        min_keepalive_time = "5m"
+        max_keepalive_time = "8h"
+      }
+    }
+    // Destination: localLoki (loki)
+    otelcol.exporter.loki "localloki" {
+      forward_to = [loki.write.localloki.receiver]
+    }
+    
+    loki.write "localloki" {
+      endpoint {
+        url = "http://loki.loki.svc:3100/loki/api/v1/push"
+        tenant_id = convert.nonsensitive(remote.kubernetes.secret.localloki.data["tenantId"])
+        basic_auth {
+          username = convert.nonsensitive(remote.kubernetes.secret.localloki.data["username"])
+          password = remote.kubernetes.secret.localloki.data["password"]
+        }
+        tls_config {
+          insecure_skip_verify = false
+        }
+        min_backoff_period = "500ms"
+        max_backoff_period = "5m"
+        max_backoff_retries = "10"
+      }
+      external_labels = {
+        "cluster" = "auto-instrumentation-test",
+        "k8s_cluster_name" = "auto-instrumentation-test",
+      }
+    }
+    
+    remote.kubernetes.secret "localloki" {
+      name      = "localloki-k8smon-k8s-monitoring"
+      namespace = "default"
+    }
+    
+    // Destination: localTempo (otlp)
+    
+    otelcol.processor.attributes "localtempo" {
+      output {
+        metrics = [otelcol.processor.transform.localtempo.input]
+        logs = [otelcol.processor.transform.localtempo.input]
+        traces = [otelcol.processor.transform.localtempo.input]
+      }
+    }
+    
+    otelcol.processor.transform "localtempo" {
+      error_mode = "ignore"
+      metric_statements {
+        context = "resource"
+        statements = [
+          `set(attributes["cluster"], "auto-instrumentation-test")`,
+          `set(attributes["k8s.cluster.name"], "auto-instrumentation-test")`,
+        ]
+      }
+    
+      metric_statements {
+        context = "datapoint"
+        statements = [
+          `set(attributes["cluster"], "auto-instrumentation-test")`,
+          `set(attributes["k8s.cluster.name"], "auto-instrumentation-test")`,
+        ]
+      }
+      log_statements {
+        context = "resource"
+        statements = [
+          `set(attributes["cluster"], "auto-instrumentation-test")`,
+          `set(attributes["k8s.cluster.name"], "auto-instrumentation-test")`,
+        ]
+      }
+    
+      log_statements {
+        context = "log"
+        statements = [
+          `delete_key(attributes, "loki.attribute.labels")`,
+          `delete_key(attributes, "loki.resource.labels")`,
+          `set(resource.attributes["service.name"], attributes["service_name"]) where resource.attributes["service.name"] == nil and attributes["service_name"] != nil`,
+          `delete_key(attributes, "service_name") where attributes["service_name"] != nil`,
+          `set(resource.attributes["service.namespace"], attributes["service_namespace"] ) where resource.attributes["service.namespace"] == nil and attributes["service_namespace"] != nil`,
+          `delete_key(attributes, "service_namespace") where attributes["service_namespace"] != nil`,
+          `set(resource.attributes["deployment.environment.name"], attributes["deployment_environment_name"] ) where resource.attributes["deployment.environment.name"] == nil and attributes["deployment_environment_name"] != nil`,
+          `delete_key(attributes, "deployment_environment_name") where attributes["deployment_environment_name"] != nil`,
+          `set(resource.attributes["deployment.environment"], attributes["deployment_environment"] ) where resource.attributes["deployment.environment"] == nil and attributes["deployment_environment"] != nil`,
+          `delete_key(attributes, "deployment_environment") where attributes["deployment_environment"] != nil`,
+        ]
+      }
+    
+      trace_statements {
+        context = "resource"
+        statements = [
+          `set(attributes["cluster"], "auto-instrumentation-test")`,
+          `set(attributes["k8s.cluster.name"], "auto-instrumentation-test")`,
+        ]
+      }
+    
+      output {
+        metrics = [otelcol.processor.batch.localtempo.input]
+        logs = [otelcol.processor.batch.localtempo.input]
+        traces = [otelcol.processor.batch.localtempo.input]
+      }
+    }
+    
+    otelcol.processor.batch "localtempo" {
+      timeout = "2s"
+      send_batch_size = 8192
+      send_batch_max_size = 0
+    
+      output {
+        metrics = [otelcol.exporter.otlp.localtempo.input]
+        logs = [otelcol.exporter.otlp.localtempo.input]
+        traces = [otelcol.exporter.otlp.localtempo.input]
+      }
+    }
+    otelcol.exporter.otlp "localtempo" {
+      client {
+        endpoint = "tempo.tempo.svc:4317"
+        tls {
+          insecure = true
+          insecure_skip_verify = true
+        }
+      }
+    
+      retry_on_failure {
+        enabled = true
+        initial_interval = "5s"
+        max_interval = "30s"
+        max_elapsed_time = "5m"
+      }
     }
 ---
 # Source: k8s-monitoring/templates/beyla-config.yaml
