@@ -13,7 +13,7 @@ SCHEMA_MODS_JQ_FILES = $(shell find schema-mods -name "*.jq")
 
 COLLECTOR_VALUES_FILES = $(shell find collectors -name "*-values.yaml" -depth 1 | sort -u)
 COLLECTOR_DOCS_FILES = $(COLLECTOR_VALUES_FILES:collectors/%-values.yaml=./docs/collectors/%.md)
-COLLECTOR_SCHEMA_FILES = $(COLLECTOR_VALUES_FILES:collectors/%-values.yaml=./schema-mods/definitions/%-collectors.schema.json)
+COLLECTOR_SCHEMA_FILES = $(COLLECTOR_VALUES_FILES:collectors/%-values.yaml=./schema-mods/definitions/%-collector.schema.json)
 
 DESTINATION_VALUES_FILES = $(shell find destinations -name "*-values.yaml" | sort -u)
 DESTINATION_DOCS_FILES = $(DESTINATION_VALUES_FILES:destinations/%-values.yaml=./docs/destinations/%.md)
