@@ -24,25 +24,6 @@ metadata:
   namespace: default
 data:
   config.alloy: |-
-    // Destination: pyro (pyroscope)
-    pyroscope.write "pyro" {
-      endpoint {
-        url = "http://pyroscope.pyroscope.svc:4040"
-        headers = {
-        }
-        tls_config {
-          insecure_skip_verify = false
-        }
-        min_backoff_period = "500ms"
-        max_backoff_period = "5m"
-        max_backoff_retries = "10"
-      }
-    
-      external_labels = {
-        "cluster" = "profiling-feature-test",
-        "k8s_cluster_name" = "profiling-feature-test",
-      }
-    }
     // Feature: Profiling
     declare "profiling" {
       argument "profiles_destinations" {
@@ -872,6 +853,29 @@ data:
       profiles_destinations = [
         pyroscope.write.pyro.receiver,
       ]
+    }
+    
+    
+    
+    
+    // Destination: pyro (pyroscope)
+    pyroscope.write "pyro" {
+      endpoint {
+        url = "http://pyroscope.pyroscope.svc:4040"
+        headers = {
+        }
+        tls_config {
+          insecure_skip_verify = false
+        }
+        min_backoff_period = "500ms"
+        max_backoff_period = "5m"
+        max_backoff_retries = "10"
+      }
+    
+      external_labels = {
+        "cluster" = "profiling-feature-test",
+        "k8s_cluster_name" = "profiling-feature-test",
+      }
     }
 ---
 # Source: k8s-monitoring/charts/alloy-profiles/templates/rbac.yaml

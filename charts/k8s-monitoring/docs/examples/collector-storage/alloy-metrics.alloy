@@ -1,51 +1,3 @@
-// Destination: prometheus (prometheus)
-otelcol.exporter.prometheus "prometheus" {
-  add_metric_suffixes = true
-  forward_to = [prometheus.remote_write.prometheus.receiver]
-}
-
-prometheus.remote_write "prometheus" {
-  endpoint {
-    url = "http://prometheus.prometheus.svc:9090/api/v1/write"
-    headers = {
-    }
-    tls_config {
-      insecure_skip_verify = false
-    }
-    send_native_histograms = false
-
-    queue_config {
-      capacity = 10000
-      min_shards = 1
-      max_shards = 50
-      max_samples_per_send = 2000
-      batch_send_deadline = "5s"
-      min_backoff = "30ms"
-      max_backoff = "5s"
-      retry_on_http_429 = true
-      sample_age_limit = "0s"
-    }
-
-    write_relabel_config {
-      source_labels = ["cluster"]
-      regex = ""
-      replacement = "collector-storage-example-cluster"
-      target_label = "cluster"
-    }
-    write_relabel_config {
-      source_labels = ["k8s_cluster_name"]
-      regex = ""
-      replacement = "collector-storage-example-cluster"
-      target_label = "k8s_cluster_name"
-    }
-  }
-
-  wal {
-    truncate_frequency = "2h"
-    min_keepalive_time = "5m"
-    max_keepalive_time = "8h"
-  }
-}
 // Feature: Cluster Metrics
 declare "cluster_metrics" {
   argument "metrics_destinations" {
@@ -567,4 +519,76 @@ prometheus.relabel "kubernetes_monitoring_telemetry" {
   forward_to = [
     prometheus.remote_write.prometheus.receiver,
   ]
+}
+
+
+
+
+// Destination: prometheus (prometheus)
+otelcol.exporter.prometheus "prometheus" {
+  add_metric_suffixes = true
+  forward_to = [prometheus.remote_write.prometheus.receiver]
+}
+
+prometheus.remote_write "prometheus" {
+  endpoint {
+    url = "http://prometheus.prometheus.svc:9090/api/v1/write"
+    headers = {
+    }
+    tls_config {
+      insecure_skip_verify = false
+    }
+    send_native_histograms = false
+
+    queue_config {
+      capacity = 10000
+      min_shards = 1
+      max_shards = 50
+      max_samples_per_send = 2000
+      batch_send_deadline = "5s"
+      min_backoff = "30ms"
+      max_backoff = "5s"
+      retry_on_http_429 = true
+      sample_age_limit = "0s"
+    }
+
+    write_relabel_config {
+      source_labels = ["cluster"]
+      regex = ""
+      replacement = "collector-storage-example-cluster"
+      target_label = "cluster"
+    }
+    write_relabel_config {
+      source_labels = ["k8s_cluster_name"]
+      regex = ""
+      replacement = "collector-storage-example-cluster"
+      target_label = "k8s_cluster_name"
+    }
+  }
+
+  wal {
+    truncate_frequency = "2h"
+    min_keepalive_time = "5m"
+    max_keepalive_time = "8h"
+  }
+}
+// Destination: loki (loki)
+otelcol.exporter.loki "loki" {
+  forward_to = [loki.write.loki.receiver]
+}
+
+loki.write "loki" {
+  endpoint {
+    url = "http://loki.loki.svc:3100/loki/api/v1/push"
+    tls_config {
+      insecure_skip_verify = false
+    }
+    min_backoff_period = "500ms"
+    max_backoff_period = "5m"
+    max_backoff_retries = "10"
+  }
+  external_labels = {
+    "cluster" = "collector-storage-example-cluster",
+    "k8s_cluster_name" = "collector-storage-example-cluster",
+  }
 }

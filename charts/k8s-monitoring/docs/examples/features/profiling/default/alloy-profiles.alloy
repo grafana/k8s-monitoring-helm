@@ -1,22 +1,3 @@
-// Destination: pyroscope (pyroscope)
-pyroscope.write "pyroscope" {
-  endpoint {
-    url = "http://pyroscope.pyroscope.svc:4040"
-    headers = {
-    }
-    tls_config {
-      insecure_skip_verify = false
-    }
-    min_backoff_period = "500ms"
-    max_backoff_period = "5m"
-    max_backoff_retries = "10"
-  }
-
-  external_labels = {
-    "cluster" = "profiling-cluster",
-    "k8s_cluster_name" = "profiling-cluster",
-  }
-}
 // Feature: Profiling
 declare "profiling" {
   argument "profiles_destinations" {
@@ -846,4 +827,27 @@ profiling "feature" {
   profiles_destinations = [
     pyroscope.write.pyroscope.receiver,
   ]
+}
+
+
+
+
+// Destination: pyroscope (pyroscope)
+pyroscope.write "pyroscope" {
+  endpoint {
+    url = "http://pyroscope.pyroscope.svc:4040"
+    headers = {
+    }
+    tls_config {
+      insecure_skip_verify = false
+    }
+    min_backoff_period = "500ms"
+    max_backoff_period = "5m"
+    max_backoff_retries = "10"
+  }
+
+  external_labels = {
+    "cluster" = "profiling-cluster",
+    "k8s_cluster_name" = "profiling-cluster",
+  }
 }

@@ -1,71 +1,3 @@
-// Destination: prometheus (prometheus)
-otelcol.exporter.prometheus "prometheus" {
-  add_metric_suffixes = true
-  forward_to = [prometheus.remote_write.prometheus.receiver]
-}
-
-prometheus.remote_write "prometheus" {
-  endpoint {
-    url = "http://prometheus.prometheus.svc:9090/api/v1/write"
-    headers = {
-    }
-    tls_config {
-      insecure_skip_verify = false
-    }
-    send_native_histograms = false
-
-    queue_config {
-      capacity = 10000
-      min_shards = 1
-      max_shards = 50
-      max_samples_per_send = 2000
-      batch_send_deadline = "5s"
-      min_backoff = "30ms"
-      max_backoff = "5s"
-      retry_on_http_429 = true
-      sample_age_limit = "0s"
-    }
-
-    write_relabel_config {
-      source_labels = ["cluster"]
-      regex = ""
-      replacement = "loki-meta-monitoring-cluster"
-      target_label = "cluster"
-    }
-    write_relabel_config {
-      source_labels = ["k8s_cluster_name"]
-      regex = ""
-      replacement = "loki-meta-monitoring-cluster"
-      target_label = "k8s_cluster_name"
-    }
-  }
-
-  wal {
-    truncate_frequency = "2h"
-    min_keepalive_time = "5m"
-    max_keepalive_time = "8h"
-  }
-}
-// Destination: loki (loki)
-otelcol.exporter.loki "loki" {
-  forward_to = [loki.write.loki.receiver]
-}
-
-loki.write "loki" {
-  endpoint {
-    url = "http://loki.loki.svc:3100/api/push"
-    tls_config {
-      insecure_skip_verify = false
-    }
-    min_backoff_period = "500ms"
-    max_backoff_period = "5m"
-    max_backoff_retries = "10"
-  }
-  external_labels = {
-    "cluster" = "loki-meta-monitoring-cluster",
-    "k8s_cluster_name" = "loki-meta-monitoring-cluster",
-  }
-}
 // Feature: Cluster Metrics
 declare "cluster_metrics" {
   argument "metrics_destinations" {
@@ -1959,4 +1891,169 @@ prometheus.relabel "kubernetes_monitoring_telemetry" {
   forward_to = [
     prometheus.remote_write.prometheus.receiver,
   ]
+}
+
+
+
+
+// Destination: prometheus (prometheus)
+otelcol.exporter.prometheus "prometheus" {
+  add_metric_suffixes = true
+  forward_to = [prometheus.remote_write.prometheus.receiver]
+}
+
+prometheus.remote_write "prometheus" {
+  endpoint {
+    url = "http://prometheus.prometheus.svc:9090/api/v1/write"
+    headers = {
+    }
+    tls_config {
+      insecure_skip_verify = false
+    }
+    send_native_histograms = false
+
+    queue_config {
+      capacity = 10000
+      min_shards = 1
+      max_shards = 50
+      max_samples_per_send = 2000
+      batch_send_deadline = "5s"
+      min_backoff = "30ms"
+      max_backoff = "5s"
+      retry_on_http_429 = true
+      sample_age_limit = "0s"
+    }
+
+    write_relabel_config {
+      source_labels = ["cluster"]
+      regex = ""
+      replacement = "loki-meta-monitoring-cluster"
+      target_label = "cluster"
+    }
+    write_relabel_config {
+      source_labels = ["k8s_cluster_name"]
+      regex = ""
+      replacement = "loki-meta-monitoring-cluster"
+      target_label = "k8s_cluster_name"
+    }
+  }
+
+  wal {
+    truncate_frequency = "2h"
+    min_keepalive_time = "5m"
+    max_keepalive_time = "8h"
+  }
+}
+// Destination: loki (loki)
+otelcol.exporter.loki "loki" {
+  forward_to = [loki.write.loki.receiver]
+}
+
+loki.write "loki" {
+  endpoint {
+    url = "http://loki.loki.svc:3100/api/push"
+    tls_config {
+      insecure_skip_verify = false
+    }
+    min_backoff_period = "500ms"
+    max_backoff_period = "5m"
+    max_backoff_retries = "10"
+  }
+  external_labels = {
+    "cluster" = "loki-meta-monitoring-cluster",
+    "k8s_cluster_name" = "loki-meta-monitoring-cluster",
+  }
+}
+// Destination: tempo (otlp)
+
+otelcol.processor.attributes "tempo" {
+  output {
+    metrics = [otelcol.processor.transform.tempo.input]
+    logs = [otelcol.processor.transform.tempo.input]
+    traces = [otelcol.processor.transform.tempo.input]
+  }
+}
+
+otelcol.processor.transform "tempo" {
+  error_mode = "ignore"
+  metric_statements {
+    context = "resource"
+    statements = [
+      `set(attributes["cluster"], "loki-meta-monitoring-cluster")`,
+      `set(attributes["k8s.cluster.name"], "loki-meta-monitoring-cluster")`,
+    ]
+  }
+
+  metric_statements {
+    context = "datapoint"
+    statements = [
+      `set(attributes["cluster"], "loki-meta-monitoring-cluster")`,
+      `set(attributes["k8s.cluster.name"], "loki-meta-monitoring-cluster")`,
+    ]
+  }
+  log_statements {
+    context = "resource"
+    statements = [
+      `set(attributes["cluster"], "loki-meta-monitoring-cluster")`,
+      `set(attributes["k8s.cluster.name"], "loki-meta-monitoring-cluster")`,
+    ]
+  }
+
+  log_statements {
+    context = "log"
+    statements = [
+      `delete_key(attributes, "loki.attribute.labels")`,
+      `delete_key(attributes, "loki.resource.labels")`,
+      `set(resource.attributes["service.name"], attributes["service_name"]) where resource.attributes["service.name"] == nil and attributes["service_name"] != nil`,
+      `delete_key(attributes, "service_name") where attributes["service_name"] != nil`,
+      `set(resource.attributes["service.namespace"], attributes["service_namespace"] ) where resource.attributes["service.namespace"] == nil and attributes["service_namespace"] != nil`,
+      `delete_key(attributes, "service_namespace") where attributes["service_namespace"] != nil`,
+      `set(resource.attributes["deployment.environment.name"], attributes["deployment_environment_name"] ) where resource.attributes["deployment.environment.name"] == nil and attributes["deployment_environment_name"] != nil`,
+      `delete_key(attributes, "deployment_environment_name") where attributes["deployment_environment_name"] != nil`,
+      `set(resource.attributes["deployment.environment"], attributes["deployment_environment"] ) where resource.attributes["deployment.environment"] == nil and attributes["deployment_environment"] != nil`,
+      `delete_key(attributes, "deployment_environment") where attributes["deployment_environment"] != nil`,
+    ]
+  }
+
+  trace_statements {
+    context = "resource"
+    statements = [
+      `set(attributes["cluster"], "loki-meta-monitoring-cluster")`,
+      `set(attributes["k8s.cluster.name"], "loki-meta-monitoring-cluster")`,
+    ]
+  }
+
+  output {
+    metrics = [otelcol.processor.batch.tempo.input]
+    logs = [otelcol.processor.batch.tempo.input]
+    traces = [otelcol.processor.batch.tempo.input]
+  }
+}
+
+otelcol.processor.batch "tempo" {
+  timeout = "2s"
+  send_batch_size = 8192
+  send_batch_max_size = 0
+
+  output {
+    metrics = [otelcol.exporter.otlphttp.tempo.input]
+    logs = [otelcol.exporter.otlphttp.tempo.input]
+    traces = [otelcol.exporter.otlphttp.tempo.input]
+  }
+}
+otelcol.exporter.otlphttp "tempo" {
+  client {
+    endpoint = "http://tempo.tempo.svc:443/otlp"
+    tls {
+      insecure = false
+      insecure_skip_verify = false
+    }
+  }
+
+  retry_on_failure {
+    enabled = true
+    initial_interval = "5s"
+    max_interval = "30s"
+    max_elapsed_time = "5m"
+  }
 }

@@ -1,23 +1,3 @@
-// Destination: loki (loki)
-otelcol.exporter.loki "loki" {
-  forward_to = [loki.write.loki.receiver]
-}
-
-loki.write "loki" {
-  endpoint {
-    url = "http://loki.loki.svc:3100/api/push"
-    tls_config {
-      insecure_skip_verify = false
-    }
-    min_backoff_period = "500ms"
-    max_backoff_period = "5m"
-    max_backoff_retries = "10"
-  }
-  external_labels = {
-    "cluster" = "pod-logs-cluster",
-    "k8s_cluster_name" = "pod-logs-cluster",
-  }
-}
 // Feature: Pod Logs
 declare "pod_logs" {
   argument "logs_destinations" {
@@ -190,4 +170,28 @@ pod_logs "feature" {
   logs_destinations = [
     loki.write.loki.receiver,
   ]
+}
+
+
+
+
+// Destination: loki (loki)
+otelcol.exporter.loki "loki" {
+  forward_to = [loki.write.loki.receiver]
+}
+
+loki.write "loki" {
+  endpoint {
+    url = "http://loki.loki.svc:3100/api/push"
+    tls_config {
+      insecure_skip_verify = false
+    }
+    min_backoff_period = "500ms"
+    max_backoff_period = "5m"
+    max_backoff_retries = "10"
+  }
+  external_labels = {
+    "cluster" = "pod-logs-cluster",
+    "k8s_cluster_name" = "pod-logs-cluster",
+  }
 }
