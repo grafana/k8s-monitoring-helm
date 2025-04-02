@@ -1,0 +1,12 @@
+{{- range $collector := include "collectors.list.enabled" . | fromYamlArray }}
+{{- $collectorValues := (index $.Values $collector) }}
+{{- $defaultValues := "collectors/alloy-values.yaml" | $.Files.Get | fromYaml }}
+{{- $values := mergeOverwrite $defaultValues $collectorValues (dict "collectorName" $collector) }}
+---
+apiVersion: collectors.grafana.com/v1alpha1
+kind: Alloy
+metadata:
+  name: {{ include "collector.alloy.fullname" (deepCopy $ | merge (dict "collectorName" $collector)) }}
+  namespace: {{ $.Release.Namespace }}
+spec: {{ $values | toYaml | nindent 2 }}
+{{- end }}

@@ -19,7 +19,7 @@ It will:
   {{- $collectorName := (index $.Values $feature).collector }}
   {{- $Collector := dict "Namespace" $.Release.Namespace }}
   {{- if $collectorName }}
-    {{- $Collector = merge $Collector (dict "ServiceName" (include "alloy.fullname" (index $.Subcharts $collectorName))) }}
+    {{- $Collector = merge $Collector (dict "ServiceName" (include "collector.alloy.fullname" (merge $ (dict "collectorName" $collectorName)))) }}
   {{- end }}
   {{ include (printf "feature.%s.notes.actions" $feature) (dict "Values" (index $.Values $feature) "Collector" $Collector) | indent 0 }}
 {{- end }}
