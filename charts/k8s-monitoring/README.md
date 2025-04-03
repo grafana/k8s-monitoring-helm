@@ -167,6 +167,7 @@ podLogs:
 | alloy-logs.remoteConfig.enabled | bool | `false` | Enable fetching configuration from a remote config server. |
 | alloy-logs.remoteConfig.extraAttributes | object | `{}` | Attributes to be added to this collector when requesting configuration. |
 | alloy-logs.remoteConfig.pollFrequency | string | `"5m"` | The frequency at which to poll the remote config server for updates. |
+| alloy-logs.remoteConfig.proxyURL | string | `""` | The proxy URL to use of the remote config server. |
 | alloy-logs.remoteConfig.secret.create | bool | `true` | Whether to create a secret for the remote config server. |
 | alloy-logs.remoteConfig.secret.embed | bool | `false` | If true, skip secret creation and embed the credentials directly into the configuration. |
 | alloy-logs.remoteConfig.secret.name | string | `""` | The name of the secret to create. |
@@ -177,7 +178,6 @@ podLogs:
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| alloy-logs.remoteConfig.proxyURL | string | `""` | The proxy URL to use of the remote config server. |
 | alloy-metrics.controller.replicas | int | `1` | The number of replicas for the Alloy Metrics instance. |
 | alloy-metrics.controller.type | string | `"statefulset"` | The type of controller to use for the Alloy Metrics instance. |
 | alloy-metrics.enabled | bool | `false` | Deploy the Alloy instance for collecting metrics. |
@@ -201,9 +201,6 @@ podLogs:
 | alloy-metrics.remoteConfig.secret.name | string | `""` | The name of the secret to create. |
 | alloy-metrics.remoteConfig.secret.namespace | string | `""` | The namespace for the secret. |
 | alloy-metrics.remoteConfig.url | string | `""` | The URL of the remote config server. |
-| alloy-profiles.remoteConfig.proxyURL | string | `""` | The proxy URL to use of the remote config server. |
-| alloy-receiver.remoteConfig.proxyURL | string | `""` | The proxy URL to use of the remote config server. |
-| alloy-singleton.remoteConfig.proxyURL | string | `""` | The proxy URL to use of the remote config server. |
 
 ### Collectors - Alloy Profiles
 
@@ -225,6 +222,7 @@ podLogs:
 | alloy-profiles.remoteConfig.enabled | bool | `false` | Enable fetching configuration from a remote config server. |
 | alloy-profiles.remoteConfig.extraAttributes | object | `{}` | Attributes to be added to this collector when requesting configuration. |
 | alloy-profiles.remoteConfig.pollFrequency | string | `"5m"` | The frequency at which to poll the remote config server for updates. |
+| alloy-profiles.remoteConfig.proxyURL | string | `""` | The proxy URL to use of the remote config server. |
 | alloy-profiles.remoteConfig.secret.create | bool | `true` | Whether to create a secret for the remote config server. |
 | alloy-profiles.remoteConfig.secret.embed | bool | `false` | If true, skip secret creation and embed the credentials directly into the configuration. |
 | alloy-profiles.remoteConfig.secret.name | string | `""` | The name of the secret to create. |
@@ -255,6 +253,7 @@ podLogs:
 | alloy-receiver.remoteConfig.enabled | bool | `false` | Enable fetching configuration from a remote config server. |
 | alloy-receiver.remoteConfig.extraAttributes | object | `{}` | Attributes to be added to this collector when requesting configuration. |
 | alloy-receiver.remoteConfig.pollFrequency | string | `"5m"` | The frequency at which to poll the remote config server for updates. |
+| alloy-receiver.remoteConfig.proxyURL | string | `""` | The proxy URL to use of the remote config server. |
 | alloy-receiver.remoteConfig.secret.create | bool | `true` | Whether to create a secret for the remote config server. |
 | alloy-receiver.remoteConfig.secret.embed | bool | `false` | If true, skip secret creation and embed the credentials directly into the configuration. |
 | alloy-receiver.remoteConfig.secret.name | string | `""` | The name of the secret to create. |
@@ -282,6 +281,7 @@ podLogs:
 | alloy-singleton.remoteConfig.enabled | bool | `false` | Enable fetching configuration from a remote config server. |
 | alloy-singleton.remoteConfig.extraAttributes | object | `{}` | Attributes to be added to this collector when requesting configuration. |
 | alloy-singleton.remoteConfig.pollFrequency | string | `"5m"` | The frequency at which to poll the remote config server for updates. |
+| alloy-singleton.remoteConfig.proxyURL | string | `""` | The proxy URL to use of the remote config server. |
 | alloy-singleton.remoteConfig.secret.create | bool | `true` | Whether to create a secret for the remote config server. |
 | alloy-singleton.remoteConfig.secret.embed | bool | `false` | If true, skip secret creation and embed the credentials directly into the configuration. |
 | alloy-singleton.remoteConfig.secret.name | string | `""` | The name of the secret to create. |
