@@ -25,7 +25,17 @@ jobs:
       - name: Rebuild the generated files
         run: make clean build
 
+      - name: Check for changed files
+        id: check-changes
+        run: |
+          if git diff --exit-code > /dev/null; then
+            echo "changes=false" >> "${GITHUB_OUTPUT}"
+          else
+            echo "changes=true" >> "${GITHUB_OUTPUT}"
+          fi
+
       - name: Commit and push changes
+        if: (steps.check-changes.outputs.changes == 'true')
         run: |
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'

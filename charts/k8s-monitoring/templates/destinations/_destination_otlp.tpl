@@ -427,8 +427,8 @@ otelcol.exporter.otlphttp {{ include "helper.alloy_name" .name | quote }} {
 {{- define "destinations.otlp.alloy.otlp.logs.target" }}{{ include "destinations.otlp.alloy.otlp.target" . }}{{- end }}
 {{- define "destinations.otlp.alloy.otlp.traces.target" }}{{ include "destinations.otlp.alloy.otlp.target" . }}{{- end }}
 
-{{- define "destinations.otlp.supports_metrics" }}{{ dig "metrics" "enabled" "false" . }}{{ end -}}
-{{- define "destinations.otlp.supports_logs" }}{{ dig "logs" "enabled" "false" . }}{{ end -}}
+{{- define "destinations.otlp.supports_metrics" }}{{ dig "metrics" "enabled" "true" . }}{{ end -}}
+{{- define "destinations.otlp.supports_logs" }}{{ dig "logs" "enabled" "true" . }}{{ end -}}
 {{- define "destinations.otlp.supports_traces" }}{{ dig "traces" "enabled" "true" . }}{{ end -}}
 {{- define "destinations.otlp.supports_profiles" }}false{{ end -}}
 {{- define "destinations.otlp.ecosystem" }}otlp{{ end -}}

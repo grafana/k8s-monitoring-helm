@@ -125,119 +125,6 @@ metadata:
   namespace: default
 data:
   config.alloy: |-
-    // Destination: otlp-gateway (otlp)
-    otelcol.receiver.prometheus "otlp_gateway" {
-      output {
-        metrics = [otelcol.processor.attributes.otlp_gateway.input]
-      }
-    }
-    otelcol.receiver.loki "otlp_gateway" {
-      output {
-        logs = [otelcol.processor.attributes.otlp_gateway.input]
-      }
-    }
-    otelcol.auth.basic "otlp_gateway" {
-      username = convert.nonsensitive(remote.kubernetes.secret.otlp_gateway.data["username"])
-      password = remote.kubernetes.secret.otlp_gateway.data["password"]
-    }
-    
-    otelcol.processor.attributes "otlp_gateway" {
-      output {
-        metrics = [otelcol.processor.transform.otlp_gateway.input]
-        logs = [otelcol.processor.transform.otlp_gateway.input]
-        traces = [otelcol.processor.transform.otlp_gateway.input]
-      }
-    }
-    
-    otelcol.processor.transform "otlp_gateway" {
-      error_mode = "ignore"
-      metric_statements {
-        context = "resource"
-        statements = [
-          `set(attributes["cluster"], "otlp-gateway-test")`,
-          `set(attributes["k8s.cluster.name"], "otlp-gateway-test")`,
-        ]
-      }
-    
-      metric_statements {
-        context = "datapoint"
-        statements = [
-          `set(attributes["cluster"], "otlp-gateway-test")`,
-          `set(attributes["k8s.cluster.name"], "otlp-gateway-test")`,
-        ]
-      }
-      log_statements {
-        context = "resource"
-        statements = [
-          `set(attributes["cluster"], "otlp-gateway-test")`,
-          `set(attributes["k8s.cluster.name"], "otlp-gateway-test")`,
-        ]
-      }
-    
-      log_statements {
-        context = "log"
-        statements = [
-          `delete_key(attributes, "loki.attribute.labels")`,
-          `delete_key(attributes, "loki.resource.labels")`,
-          `set(resource.attributes["service.name"], attributes["service_name"]) where resource.attributes["service.name"] == nil and attributes["service_name"] != nil`,
-          `delete_key(attributes, "service_name") where attributes["service_name"] != nil`,
-          `set(resource.attributes["service.namespace"], attributes["service_namespace"] ) where resource.attributes["service.namespace"] == nil and attributes["service_namespace"] != nil`,
-          `delete_key(attributes, "service_namespace") where attributes["service_namespace"] != nil`,
-          `set(resource.attributes["deployment.environment.name"], attributes["deployment_environment_name"] ) where resource.attributes["deployment.environment.name"] == nil and attributes["deployment_environment_name"] != nil`,
-          `delete_key(attributes, "deployment_environment_name") where attributes["deployment_environment_name"] != nil`,
-          `set(resource.attributes["deployment.environment"], attributes["deployment_environment"] ) where resource.attributes["deployment.environment"] == nil and attributes["deployment_environment"] != nil`,
-          `delete_key(attributes, "deployment_environment") where attributes["deployment_environment"] != nil`,
-        ]
-      }
-    
-      trace_statements {
-        context = "resource"
-        statements = [
-          `set(attributes["cluster"], "otlp-gateway-test")`,
-          `set(attributes["k8s.cluster.name"], "otlp-gateway-test")`,
-        ]
-      }
-    
-      output {
-        metrics = [otelcol.processor.batch.otlp_gateway.input]
-        logs = [otelcol.processor.batch.otlp_gateway.input]
-        traces = [otelcol.processor.batch.otlp_gateway.input]
-      }
-    }
-    
-    otelcol.processor.batch "otlp_gateway" {
-      timeout = "2s"
-      send_batch_size = 8192
-      send_batch_max_size = 0
-    
-      output {
-        metrics = [otelcol.exporter.otlphttp.otlp_gateway.input]
-        logs = [otelcol.exporter.otlphttp.otlp_gateway.input]
-        traces = [otelcol.exporter.otlphttp.otlp_gateway.input]
-      }
-    }
-    otelcol.exporter.otlphttp "otlp_gateway" {
-      client {
-        endpoint = "https://otlp-gateway-my-region.grafana.net/otlp"
-        auth = otelcol.auth.basic.otlp_gateway.handler
-        tls {
-          insecure = false
-          insecure_skip_verify = false
-        }
-      }
-    
-      retry_on_failure {
-        enabled = true
-        initial_interval = "5s"
-        max_interval = "30s"
-        max_elapsed_time = "5m"
-      }
-    }
-    
-    remote.kubernetes.secret "otlp_gateway" {
-      name      = "otlp-gateway-k8smon-k8s-monitoring"
-      namespace = "default"
-    }
     // Feature: Cluster Metrics
     declare "cluster_metrics" {
       argument "metrics_destinations" {
@@ -760,25 +647,10 @@ data:
         otelcol.receiver.prometheus.otlp_gateway.receiver,
       ]
     }
-
-  self-reporting-metric.prom: |
     
-    # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart
-    # TYPE grafana_kubernetes_monitoring_build_info gauge
-    grafana_kubernetes_monitoring_build_info{version="2.0.22", namespace="default"} 1
-    # HELP grafana_kubernetes_monitoring_feature_info A metric to report the enabled features of the Kubernetes Monitoring Helm chart
-    # TYPE grafana_kubernetes_monitoring_feature_info gauge
-    grafana_kubernetes_monitoring_feature_info{deployments="kube-state-metrics,node-exporter,windows-exporter", feature="clusterMetrics", sources="kubelet,kubeletResource,cadvisor,kube-state-metrics,node-exporter,windows-exporter", version="1.0.0"} 1
-    grafana_kubernetes_monitoring_feature_info{feature="podLogs", method="volumes", version="1.0.0"} 1
----
-# Source: k8s-monitoring/templates/alloy-config.yaml
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: k8smon-alloy-logs
-  namespace: default
-data:
-  config.alloy: |-
+    
+    
+    
     // Destination: otlp-gateway (otlp)
     otelcol.receiver.prometheus "otlp_gateway" {
       output {
@@ -892,6 +764,25 @@ data:
       name      = "otlp-gateway-k8smon-k8s-monitoring"
       namespace = "default"
     }
+
+  self-reporting-metric.prom: |
+    
+    # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart
+    # TYPE grafana_kubernetes_monitoring_build_info gauge
+    grafana_kubernetes_monitoring_build_info{version="2.0.23", namespace="default"} 1
+    # HELP grafana_kubernetes_monitoring_feature_info A metric to report the enabled features of the Kubernetes Monitoring Helm chart
+    # TYPE grafana_kubernetes_monitoring_feature_info gauge
+    grafana_kubernetes_monitoring_feature_info{deployments="kube-state-metrics,node-exporter,windows-exporter", feature="clusterMetrics", sources="kubelet,kubeletResource,cadvisor,kube-state-metrics,node-exporter,windows-exporter", version="1.0.0"} 1
+    grafana_kubernetes_monitoring_feature_info{feature="podLogs", method="volumes", version="1.0.0"} 1
+---
+# Source: k8s-monitoring/templates/alloy-config.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: k8smon-alloy-logs
+  namespace: default
+data:
+  config.alloy: |-
     // Feature: Pod Logs
     declare "pod_logs" {
       argument "logs_destinations" {
@@ -1064,6 +955,123 @@ data:
       logs_destinations = [
         otelcol.receiver.loki.otlp_gateway.receiver,
       ]
+    }
+    
+    
+    
+    
+    // Destination: otlp-gateway (otlp)
+    otelcol.receiver.prometheus "otlp_gateway" {
+      output {
+        metrics = [otelcol.processor.attributes.otlp_gateway.input]
+      }
+    }
+    otelcol.receiver.loki "otlp_gateway" {
+      output {
+        logs = [otelcol.processor.attributes.otlp_gateway.input]
+      }
+    }
+    otelcol.auth.basic "otlp_gateway" {
+      username = convert.nonsensitive(remote.kubernetes.secret.otlp_gateway.data["username"])
+      password = remote.kubernetes.secret.otlp_gateway.data["password"]
+    }
+    
+    otelcol.processor.attributes "otlp_gateway" {
+      output {
+        metrics = [otelcol.processor.transform.otlp_gateway.input]
+        logs = [otelcol.processor.transform.otlp_gateway.input]
+        traces = [otelcol.processor.transform.otlp_gateway.input]
+      }
+    }
+    
+    otelcol.processor.transform "otlp_gateway" {
+      error_mode = "ignore"
+      metric_statements {
+        context = "resource"
+        statements = [
+          `set(attributes["cluster"], "otlp-gateway-test")`,
+          `set(attributes["k8s.cluster.name"], "otlp-gateway-test")`,
+        ]
+      }
+    
+      metric_statements {
+        context = "datapoint"
+        statements = [
+          `set(attributes["cluster"], "otlp-gateway-test")`,
+          `set(attributes["k8s.cluster.name"], "otlp-gateway-test")`,
+        ]
+      }
+      log_statements {
+        context = "resource"
+        statements = [
+          `set(attributes["cluster"], "otlp-gateway-test")`,
+          `set(attributes["k8s.cluster.name"], "otlp-gateway-test")`,
+        ]
+      }
+    
+      log_statements {
+        context = "log"
+        statements = [
+          `delete_key(attributes, "loki.attribute.labels")`,
+          `delete_key(attributes, "loki.resource.labels")`,
+          `set(resource.attributes["service.name"], attributes["service_name"]) where resource.attributes["service.name"] == nil and attributes["service_name"] != nil`,
+          `delete_key(attributes, "service_name") where attributes["service_name"] != nil`,
+          `set(resource.attributes["service.namespace"], attributes["service_namespace"] ) where resource.attributes["service.namespace"] == nil and attributes["service_namespace"] != nil`,
+          `delete_key(attributes, "service_namespace") where attributes["service_namespace"] != nil`,
+          `set(resource.attributes["deployment.environment.name"], attributes["deployment_environment_name"] ) where resource.attributes["deployment.environment.name"] == nil and attributes["deployment_environment_name"] != nil`,
+          `delete_key(attributes, "deployment_environment_name") where attributes["deployment_environment_name"] != nil`,
+          `set(resource.attributes["deployment.environment"], attributes["deployment_environment"] ) where resource.attributes["deployment.environment"] == nil and attributes["deployment_environment"] != nil`,
+          `delete_key(attributes, "deployment_environment") where attributes["deployment_environment"] != nil`,
+        ]
+      }
+    
+      trace_statements {
+        context = "resource"
+        statements = [
+          `set(attributes["cluster"], "otlp-gateway-test")`,
+          `set(attributes["k8s.cluster.name"], "otlp-gateway-test")`,
+        ]
+      }
+    
+      output {
+        metrics = [otelcol.processor.batch.otlp_gateway.input]
+        logs = [otelcol.processor.batch.otlp_gateway.input]
+        traces = [otelcol.processor.batch.otlp_gateway.input]
+      }
+    }
+    
+    otelcol.processor.batch "otlp_gateway" {
+      timeout = "2s"
+      send_batch_size = 8192
+      send_batch_max_size = 0
+    
+      output {
+        metrics = [otelcol.exporter.otlphttp.otlp_gateway.input]
+        logs = [otelcol.exporter.otlphttp.otlp_gateway.input]
+        traces = [otelcol.exporter.otlphttp.otlp_gateway.input]
+      }
+    }
+    otelcol.exporter.otlphttp "otlp_gateway" {
+      client {
+        endpoint = "https://otlp-gateway-my-region.grafana.net/otlp"
+        auth = otelcol.auth.basic.otlp_gateway.handler
+        tls {
+          insecure = false
+          insecure_skip_verify = false
+        }
+      }
+    
+      retry_on_failure {
+        enabled = true
+        initial_interval = "5s"
+        max_interval = "30s"
+        max_elapsed_time = "5m"
+      }
+    }
+    
+    remote.kubernetes.secret "otlp_gateway" {
+      name      = "otlp-gateway-k8smon-k8s-monitoring"
+      namespace = "default"
     }
 ---
 # Source: k8s-monitoring/charts/alloy-logs/templates/rbac.yaml

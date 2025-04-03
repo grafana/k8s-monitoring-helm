@@ -53,54 +53,6 @@ metadata:
   namespace: default
 data:
   config.alloy: |-
-    // Destination: localPrometheus (prometheus)
-    otelcol.exporter.prometheus "localprometheus" {
-      add_metric_suffixes = true
-      forward_to = [prometheus.remote_write.localprometheus.receiver]
-    }
-    
-    prometheus.remote_write "localprometheus" {
-      endpoint {
-        url = "http://prometheus-server.prometheus.svc:9090/api/v1/write"
-        headers = {
-        }
-        tls_config {
-          insecure_skip_verify = false
-        }
-        send_native_histograms = false
-    
-        queue_config {
-          capacity = 10000
-          min_shards = 1
-          max_shards = 50
-          max_samples_per_send = 2000
-          batch_send_deadline = "5s"
-          min_backoff = "30ms"
-          max_backoff = "5s"
-          retry_on_http_429 = true
-          sample_age_limit = "0s"
-        }
-    
-        write_relabel_config {
-          source_labels = ["cluster"]
-          regex = ""
-          replacement = "log-metrics-test"
-          target_label = "cluster"
-        }
-        write_relabel_config {
-          source_labels = ["k8s_cluster_name"]
-          regex = ""
-          replacement = "log-metrics-test"
-          target_label = "k8s_cluster_name"
-        }
-      }
-    
-      wal {
-        truncate_frequency = "2h"
-        min_keepalive_time = "5m"
-        max_keepalive_time = "8h"
-      }
-    }
     declare "alloy_integration" {
       argument "metrics_destinations" {
         comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
@@ -437,25 +389,58 @@ data:
         prometheus.remote_write.localprometheus.receiver,
       ]
     }
-
-  self-reporting-metric.prom: |
     
-    # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart
-    # TYPE grafana_kubernetes_monitoring_build_info gauge
-    grafana_kubernetes_monitoring_build_info{version="2.0.22", namespace="default"} 1
-    # HELP grafana_kubernetes_monitoring_feature_info A metric to report the enabled features of the Kubernetes Monitoring Helm chart
-    # TYPE grafana_kubernetes_monitoring_feature_info gauge
-    grafana_kubernetes_monitoring_feature_info{feature="podLogs", method="volumes", version="1.0.0"} 1
-    grafana_kubernetes_monitoring_feature_info{feature="integrations", sources="alloy", version="1.0.0"} 1
----
-# Source: k8s-monitoring/templates/alloy-config.yaml
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: k8smon-alloy-logs
-  namespace: default
-data:
-  config.alloy: |-
+    
+    
+    
+    // Destination: localPrometheus (prometheus)
+    otelcol.exporter.prometheus "localprometheus" {
+      add_metric_suffixes = true
+      forward_to = [prometheus.remote_write.localprometheus.receiver]
+    }
+    
+    prometheus.remote_write "localprometheus" {
+      endpoint {
+        url = "http://prometheus-server.prometheus.svc:9090/api/v1/write"
+        headers = {
+        }
+        tls_config {
+          insecure_skip_verify = false
+        }
+        send_native_histograms = false
+    
+        queue_config {
+          capacity = 10000
+          min_shards = 1
+          max_shards = 50
+          max_samples_per_send = 2000
+          batch_send_deadline = "5s"
+          min_backoff = "30ms"
+          max_backoff = "5s"
+          retry_on_http_429 = true
+          sample_age_limit = "0s"
+        }
+    
+        write_relabel_config {
+          source_labels = ["cluster"]
+          regex = ""
+          replacement = "log-metrics-test"
+          target_label = "cluster"
+        }
+        write_relabel_config {
+          source_labels = ["k8s_cluster_name"]
+          regex = ""
+          replacement = "log-metrics-test"
+          target_label = "k8s_cluster_name"
+        }
+      }
+    
+      wal {
+        truncate_frequency = "2h"
+        min_keepalive_time = "5m"
+        max_keepalive_time = "8h"
+      }
+    }
     // Destination: localLoki (loki)
     otelcol.exporter.loki "localloki" {
       forward_to = [loki.write.localloki.receiver]
@@ -486,6 +471,25 @@ data:
       name      = "localloki-k8smon-k8s-monitoring"
       namespace = "default"
     }
+
+  self-reporting-metric.prom: |
+    
+    # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart
+    # TYPE grafana_kubernetes_monitoring_build_info gauge
+    grafana_kubernetes_monitoring_build_info{version="2.0.23", namespace="default"} 1
+    # HELP grafana_kubernetes_monitoring_feature_info A metric to report the enabled features of the Kubernetes Monitoring Helm chart
+    # TYPE grafana_kubernetes_monitoring_feature_info gauge
+    grafana_kubernetes_monitoring_feature_info{feature="podLogs", method="volumes", version="1.0.0"} 1
+    grafana_kubernetes_monitoring_feature_info{feature="integrations", sources="alloy", version="1.0.0"} 1
+---
+# Source: k8s-monitoring/templates/alloy-config.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: k8smon-alloy-logs
+  namespace: default
+data:
+  config.alloy: |-
     // Feature: Pod Logs
     declare "pod_logs" {
       argument "logs_destinations" {
@@ -669,6 +673,88 @@ data:
       logs_destinations = [
         loki.write.localloki.receiver,
       ]
+    }
+    
+    
+    
+    
+    // Destination: localPrometheus (prometheus)
+    otelcol.exporter.prometheus "localprometheus" {
+      add_metric_suffixes = true
+      forward_to = [prometheus.remote_write.localprometheus.receiver]
+    }
+    
+    prometheus.remote_write "localprometheus" {
+      endpoint {
+        url = "http://prometheus-server.prometheus.svc:9090/api/v1/write"
+        headers = {
+        }
+        tls_config {
+          insecure_skip_verify = false
+        }
+        send_native_histograms = false
+    
+        queue_config {
+          capacity = 10000
+          min_shards = 1
+          max_shards = 50
+          max_samples_per_send = 2000
+          batch_send_deadline = "5s"
+          min_backoff = "30ms"
+          max_backoff = "5s"
+          retry_on_http_429 = true
+          sample_age_limit = "0s"
+        }
+    
+        write_relabel_config {
+          source_labels = ["cluster"]
+          regex = ""
+          replacement = "log-metrics-test"
+          target_label = "cluster"
+        }
+        write_relabel_config {
+          source_labels = ["k8s_cluster_name"]
+          regex = ""
+          replacement = "log-metrics-test"
+          target_label = "k8s_cluster_name"
+        }
+      }
+    
+      wal {
+        truncate_frequency = "2h"
+        min_keepalive_time = "5m"
+        max_keepalive_time = "8h"
+      }
+    }
+    // Destination: localLoki (loki)
+    otelcol.exporter.loki "localloki" {
+      forward_to = [loki.write.localloki.receiver]
+    }
+    
+    loki.write "localloki" {
+      endpoint {
+        url = "http://loki.loki.svc:3100/loki/api/v1/push"
+        tenant_id = convert.nonsensitive(remote.kubernetes.secret.localloki.data["tenantId"])
+        basic_auth {
+          username = convert.nonsensitive(remote.kubernetes.secret.localloki.data["username"])
+          password = remote.kubernetes.secret.localloki.data["password"]
+        }
+        tls_config {
+          insecure_skip_verify = false
+        }
+        min_backoff_period = "500ms"
+        max_backoff_period = "5m"
+        max_backoff_retries = "10"
+      }
+      external_labels = {
+        "cluster" = "log-metrics-test",
+        "k8s_cluster_name" = "log-metrics-test",
+      }
+    }
+    
+    remote.kubernetes.secret "localloki" {
+      name      = "localloki-k8smon-k8s-monitoring"
+      namespace = "default"
     }
 ---
 # Source: k8s-monitoring/charts/alloy-logs/templates/rbac.yaml

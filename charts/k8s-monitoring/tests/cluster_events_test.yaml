@@ -128,10 +128,16 @@ tests:
           of: ConfigMap
       - matchRegex:
           path: data["config.alloy"]
-          pattern: otelcol.receiver.loki.otlp.receiver
+          pattern: |-
+            \s*logs_destinations = \[
+            \s*  otelcol.receiver.loki.otlp.receiver,
+            \s*]
       - notMatchRegex:
           path: data["config.alloy"]
-          pattern: loki.write.loki.receiver
+          pattern: |-
+            \s*logs_destinations = \[
+            \s*  loki.write.loki.receiver,
+            \s*]
 
   - it: will use both, if it's told to
     template: alloy-config.yaml

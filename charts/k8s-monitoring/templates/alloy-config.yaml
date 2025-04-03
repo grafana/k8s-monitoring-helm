@@ -13,7 +13,6 @@
 {{/* Save the top level object and add the collector name */}}
 {{- $values := deepCopy $ | merge (dict "collectorName" $collector) }}
 {{- $alloyConfig := "" }}
-{{- $alloyConfig = cat $alloyConfig (include "destinations.alloy.config" (deepCopy $ | merge (dict "names" $destinations)) | trim | nindent 0) }}
 {{- range $feature := include "features.list" . | fromYamlArray }}
   {{- if has $collector (include (printf "features.%s.collectors" $feature) $ | fromYamlArray ) }}
     {{ $alloyConfig = cat $alloyConfig (include (printf "features.%s.include" $feature) $values | trim | nindent 0) }}
@@ -23,6 +22,7 @@
 {{- $alloyConfig = cat $alloyConfig (include "collectors.liveDebugging.alloy" $values | trim | nindent 0) }}
 {{- $alloyConfig = cat $alloyConfig (include "collectors.remoteConfig.alloy" $values | trim | nindent 0) }}
 {{- $alloyConfig = cat $alloyConfig (include "collectors.extraConfig.alloy" $values | trim | nindent 0) }}
+{{- $alloyConfig = cat $alloyConfig ((include "destinations.alloy.config" $) | trim | nindent 0) }}
 
 {{/* Remove all trailing whitespace */}}
 {{- $alloyConfig = regexReplaceAll `[ \t]+(\r?\n)` $alloyConfig "\n" }}
