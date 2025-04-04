@@ -3,7 +3,7 @@ cluster:
   name: extra-configuration-cluster
 
 destinations:
-  - name: prometheus
+  - name: prometheus-kubernetes
     type: prometheus
     url: http://prometheus.prometheus.svc:9090/api/v1/write
 
@@ -23,5 +23,5 @@ alloy-metrics:
     prometheus.scrape "animal_service" {
       job_name   = "animal_service"
       targets    = discovery.kubernetes.animal_service.targets
-      forward_to = [prometheus.remote_write.prometheus.receiver]
+      forward_to = [prometheus.remote_write.prometheus_kubernetes.receiver]
     }
