@@ -7,11 +7,11 @@ metadata:
   name: k8smon-alloy-logs
   namespace: default
   labels:
-    helm.sh/chart: alloy-logs-0.12.5
+    helm.sh/chart: alloy-logs-0.12.6
     app.kubernetes.io/name: alloy-logs
     app.kubernetes.io/instance: k8smon
     
-    app.kubernetes.io/version: "v1.7.4"
+    app.kubernetes.io/version: "v1.7.5"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
     app.kubernetes.io/component: rbac
@@ -250,11 +250,11 @@ kind: ClusterRole
 metadata:
   name: k8smon-alloy-logs
   labels:
-    helm.sh/chart: alloy-logs-0.12.5
+    helm.sh/chart: alloy-logs-0.12.6
     app.kubernetes.io/name: alloy-logs
     app.kubernetes.io/instance: k8smon
     
-    app.kubernetes.io/version: "v1.7.4"
+    app.kubernetes.io/version: "v1.7.5"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
     app.kubernetes.io/component: rbac
@@ -314,6 +314,7 @@ rules:
       - podmonitors
       - servicemonitors
       - probes
+      - scrapeconfigs
     verbs:
       - get
       - list
@@ -350,11 +351,11 @@ kind: ClusterRoleBinding
 metadata:
   name: k8smon-alloy-logs
   labels:
-    helm.sh/chart: alloy-logs-0.12.5
+    helm.sh/chart: alloy-logs-0.12.6
     app.kubernetes.io/name: alloy-logs
     app.kubernetes.io/instance: k8smon
     
-    app.kubernetes.io/version: "v1.7.4"
+    app.kubernetes.io/version: "v1.7.5"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
     app.kubernetes.io/component: rbac
@@ -374,11 +375,11 @@ metadata:
   name: k8smon-alloy-logs
   namespace: default
   labels:
-    helm.sh/chart: alloy-logs-0.12.5
+    helm.sh/chart: alloy-logs-0.12.6
     app.kubernetes.io/name: alloy-logs
     app.kubernetes.io/instance: k8smon
     
-    app.kubernetes.io/version: "v1.7.4"
+    app.kubernetes.io/version: "v1.7.5"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
     app.kubernetes.io/component: networking
@@ -401,11 +402,11 @@ metadata:
   name: k8smon-alloy-logs
   namespace: default
   labels:
-    helm.sh/chart: alloy-logs-0.12.5
+    helm.sh/chart: alloy-logs-0.12.6
     app.kubernetes.io/name: alloy-logs
     app.kubernetes.io/instance: k8smon
     
-    app.kubernetes.io/version: "v1.7.4"
+    app.kubernetes.io/version: "v1.7.5"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
 spec:
@@ -426,7 +427,7 @@ spec:
       serviceAccountName: k8smon-alloy-logs
       containers:
         - name: alloy
-          image: docker.io/grafana/alloy:v1.7.4
+          image: docker.io/grafana/alloy:v1.7.5
           imagePullPolicy: IfNotPresent
           args:
             - run
@@ -484,10 +485,10 @@ spec:
               mountPath: /var/lib/docker/containers
               readOnly: true
         - name: config-reloader
-          image: ghcr.io/jimmidyson/configmap-reload:v0.14.0
+          image: quay.io/prometheus-operator/prometheus-config-reloader:v0.81.0
           args:
-            - --volume-dir=/etc/alloy
-            - --webhook-url=http://localhost:12345/-/reload
+            - --watched-dir=/etc/alloy
+            - --reload-url=http://localhost:12345/-/reload
           volumeMounts:
             - name: config
               mountPath: /etc/alloy
