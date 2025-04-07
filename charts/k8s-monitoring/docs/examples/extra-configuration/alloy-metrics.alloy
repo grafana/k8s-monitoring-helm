@@ -37,7 +37,7 @@ prometheus.relabel "kubernetes_monitoring_telemetry" {
     action = "keep"
   }
   forward_to = [
-    prometheus.remote_write.prometheus.receiver,
+    prometheus.remote_write.prometheus_kubernetes.receiver,
   ]
 }
 
@@ -56,15 +56,15 @@ discovery.kubernetes "animal_service" {
 prometheus.scrape "animal_service" {
   job_name   = "animal_service"
   targets    = discovery.kubernetes.animal_service.targets
-  forward_to = [prometheus.remote_write.prometheus.receiver]
+  forward_to = [prometheus.remote_write.prometheus_kubernetes.receiver]
 }
-// Destination: prometheus (prometheus)
-otelcol.exporter.prometheus "prometheus" {
+// Destination: prometheus-kubernetes (prometheus)
+otelcol.exporter.prometheus "prometheus_kubernetes" {
   add_metric_suffixes = true
-  forward_to = [prometheus.remote_write.prometheus.receiver]
+  forward_to = [prometheus.remote_write.prometheus_kubernetes.receiver]
 }
 
-prometheus.remote_write "prometheus" {
+prometheus.remote_write "prometheus_kubernetes" {
   endpoint {
     url = "http://prometheus.prometheus.svc:9090/api/v1/write"
     headers = {
