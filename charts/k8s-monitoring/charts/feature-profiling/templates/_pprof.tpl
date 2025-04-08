@@ -164,8 +164,8 @@ pyroscope.scrape "pyroscope_scrape_{{ $currentType }}" {
     {{- end }}
   }
 
-  scrape_interval = {{ .Values.pprof.scrapeInterval | quote }}
-  scrape_timeout = {{ .Values.pprof.scrapeTimeout | quote }}
+  scrape_interval = {{ $.Values.pprof.scrapeInterval | quote }}
+  scrape_timeout = {{ $.Values.pprof.scrapeTimeout | quote }}
 
   forward_to = argument.profiles_destinations.value
 }
