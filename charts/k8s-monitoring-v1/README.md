@@ -880,7 +880,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | receivers.processors.attributes.actions | list | `[]` | The list of attribute actions to include in the telemetry data. Example: actions: - key: "new_user_key"   from_attribute: "user_key"   action: "upsert" |
 | receivers.processors.attributes.include | object | `{"logBodies":[],"logSeverityTexts":[],"matchType":"","metricNames":[],"services":[],"spanKinds":[],"spanNames":[]}` | The list include data being fed into the action blocks based on the properties of a span, log, or metric records. |
 | receivers.processors.batch.maxSize | int | `0` | The upper limit of the amount of data contained in a single batch, in bytes. When set to 0, batches can be any size. |
-| receivers.processors.batch.size | int | `16384` | What batch size to use, in bytes |
+| receivers.processors.batch.size | int | `16384` | Amount of data to buffer before flushing the batch. |
 | receivers.processors.batch.timeout | string | `"2s"` | How long before sending (Processors) |
 | receivers.processors.k8sattributes.annotations | list | `[]` | Kubernetes annotations to extract and add to the attributes of the received telemetry data. |
 | receivers.processors.k8sattributes.labels | list | `[]` | Kubernetes labels to extract and add to the attributes of the received telemetry data. |
