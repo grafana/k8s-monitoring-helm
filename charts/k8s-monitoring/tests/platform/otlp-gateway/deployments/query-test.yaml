@@ -38,6 +38,10 @@ spec:
           - query: alloy_build_info{cluster="$CLUSTER"}
             type: promql
 
+          # Pod Logs are being delivered with the correct labels
+          - query: count_over_time({cluster="$CLUSTER", job!="integrations/kubernetes/eventhandler", namespace="default"}[1h])
+            type: logql
+
           # Cluster Events are being delivered with the correct labels
           - query: count_over_time({cluster="$CLUSTER", job="integrations/kubernetes/eventhandler"}[1h])
             type: logql
