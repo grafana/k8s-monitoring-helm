@@ -33,6 +33,23 @@ metadata:
     app.kubernetes.io/part-of: alloy
     app.kubernetes.io/component: rbac
 ---
+# Source: k8s-monitoring/charts/alloy-singleton/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+automountServiceAccountToken: true
+metadata:
+  name: k8smon-alloy-singleton
+  namespace: default
+  labels:
+    helm.sh/chart: alloy-singleton-0.12.6
+    app.kubernetes.io/name: alloy-singleton
+    app.kubernetes.io/instance: k8smon
+    
+    app.kubernetes.io/version: "v1.7.5"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/part-of: alloy
+    app.kubernetes.io/component: rbac
+---
 # Source: k8s-monitoring/templates/alloy-config.yaml
 apiVersion: v1
 kind: ConfigMap
@@ -335,48 +352,6 @@ data:
         otelcol.receiver.prometheus.otlp_gateway.receiver,
       ]
     }
-    // Self Reporting
-    prometheus.exporter.unix "kubernetes_monitoring_telemetry" {
-      set_collectors = ["textfile"]
-      textfile {
-        directory = "/etc/alloy"
-      }
-    }
-    
-    discovery.relabel "kubernetes_monitoring_telemetry" {
-      targets = prometheus.exporter.unix.kubernetes_monitoring_telemetry.targets
-      rule {
-        target_label = "instance"
-        action = "replace"
-        replacement = "k8smon"
-      }
-      rule {
-        target_label = "job"
-        action = "replace"
-        replacement = "integrations/kubernetes/kubernetes_monitoring_telemetry"
-      }
-    }
-    
-    prometheus.scrape "kubernetes_monitoring_telemetry" {
-      job_name   = "integrations/kubernetes/kubernetes_monitoring_telemetry"
-      targets    = discovery.relabel.kubernetes_monitoring_telemetry.output
-      scrape_interval = "60s"
-      clustering {
-        enabled = true
-      }
-      forward_to = [prometheus.relabel.kubernetes_monitoring_telemetry.receiver]
-    }
-    
-    prometheus.relabel "kubernetes_monitoring_telemetry" {
-      rule {
-        source_labels = ["__name__"]
-        regex = "grafana_kubernetes_monitoring_.*"
-        action = "keep"
-      }
-      forward_to = [
-        otelcol.receiver.prometheus.otlp_gateway.receiver,
-      ]
-    }
     
     
     
@@ -433,8 +408,257 @@ data:
       log_statements {
         context = "log"
         statements = [
-          `delete_key(attributes, "loki.attribute.labels")`,
-          `delete_key(attributes, "loki.resource.labels")`,
+          `set(resource.attributes["service.name"], attributes["service_name"]) where resource.attributes["service.name"] == nil and attributes["service_name"] != nil`,
+          `delete_key(attributes, "service_name") where attributes["service_name"] != nil`,
+          `set(resource.attributes["service.namespace"], attributes["service_namespace"] ) where resource.attributes["service.namespace"] == nil and attributes["service_namespace"] != nil`,
+          `delete_key(attributes, "service_namespace") where attributes["service_namespace"] != nil`,
+          `set(resource.attributes["deployment.environment.name"], attributes["deployment_environment_name"] ) where resource.attributes["deployment.environment.name"] == nil and attributes["deployment_environment_name"] != nil`,
+          `delete_key(attributes, "deployment_environment_name") where attributes["deployment_environment_name"] != nil`,
+          `set(resource.attributes["deployment.environment"], attributes["deployment_environment"] ) where resource.attributes["deployment.environment"] == nil and attributes["deployment_environment"] != nil`,
+          `delete_key(attributes, "deployment_environment") where attributes["deployment_environment"] != nil`,
+        ]
+      }
+    
+      trace_statements {
+        context = "resource"
+        statements = [
+          `set(attributes["cluster"], "otlp-gateway-test")`,
+          `set(attributes["k8s.cluster.name"], "otlp-gateway-test")`,
+        ]
+      }
+    
+      output {
+        metrics = [otelcol.processor.batch.otlp_gateway.input]
+        logs = [otelcol.processor.batch.otlp_gateway.input]
+        traces = [otelcol.processor.batch.otlp_gateway.input]
+      }
+    }
+    
+    otelcol.processor.batch "otlp_gateway" {
+      timeout = "2s"
+      send_batch_size = 8192
+      send_batch_max_size = 0
+    
+      output {
+        metrics = [otelcol.exporter.otlphttp.otlp_gateway.input]
+        logs = [otelcol.exporter.otlphttp.otlp_gateway.input]
+        traces = [otelcol.exporter.otlphttp.otlp_gateway.input]
+      }
+    }
+    otelcol.exporter.otlphttp "otlp_gateway" {
+      client {
+        endpoint = "https://otlp-gateway-prod-us-east-0.grafana.net/otlp"
+        auth = otelcol.auth.basic.otlp_gateway.handler
+        headers = {
+          "X-Scope-OrgID" = convert.nonsensitive(remote.kubernetes.secret.otlp_gateway.data["tenantId"]),
+        }
+        tls {
+          insecure = false
+          insecure_skip_verify = false
+          ca_pem = convert.nonsensitive(remote.kubernetes.secret.otlp_gateway.data["ca"])
+          cert_pem = convert.nonsensitive(remote.kubernetes.secret.otlp_gateway.data["cert"])
+          key_pem = remote.kubernetes.secret.otlp_gateway.data["key"]
+        }
+      }
+    
+      retry_on_failure {
+        enabled = true
+        initial_interval = "5s"
+        max_interval = "30s"
+        max_elapsed_time = "5m"
+      }
+    }
+    
+    remote.kubernetes.secret "otlp_gateway" {
+      name      = "grafana-cloud-credentials"
+      namespace = "default"
+    }
+---
+# Source: k8s-monitoring/templates/alloy-config.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: k8smon-alloy-singleton
+  namespace: default
+data:
+  config.alloy: |-
+    // Feature: Cluster Events
+    declare "cluster_events" {
+      argument "logs_destinations" {
+        comment = "Must be a list of log destinations where collected logs should be forwarded to"
+      }
+    
+      loki.source.kubernetes_events "cluster_events" {
+        job_name   = "integrations/kubernetes/eventhandler"
+        log_format = "logfmt"
+        forward_to = [loki.process.cluster_events.receiver]
+      }
+    
+      loki.process "cluster_events" {
+    
+        // add a static source label to the logs so they can be differentiated / restricted if necessary
+        stage.static_labels {
+          values = {
+            "source" = "kubernetes-events",
+          }
+        }
+    
+        // extract some of the fields from the log line, these could be used as labels, structured metadata, etc.
+        stage.logfmt {
+          mapping = {
+            "component" = "sourcecomponent", // map the sourcecomponent field to component
+            "kind" = "",
+            "level" = "type", // most events don't have a level but they do have a "type" i.e. Normal, Warning, Error, etc.
+            "name" = "",
+            "node" = "sourcehost", // map the sourcehost field to node
+          }
+        }
+        // set these values as labels, they may or may not be used as index labels in Loki as they can be dropped
+        // prior to being written to Loki, but this makes them available
+        stage.labels {
+          values = {
+            "component" = "",
+            "kind" = "",
+            "level" = "",
+            "name" = "",
+            "node" = "",
+          }
+        }
+    
+        // if kind=Node, set the node label by copying the instance label
+        stage.match {
+          selector = "{kind=\"Node\"}"
+    
+          stage.labels {
+            values = {
+              "node" = "name",
+            }
+          }
+        }
+    
+        // set the level extracted key value as a normalized log level
+        stage.match {
+          selector = "{level=\"Normal\"}"
+    
+          stage.static_labels {
+            values = {
+              level = "Info",
+            }
+          }
+        }
+    
+        // Only keep the labels that are defined in the `keepLabels` list.
+        stage.label_keep {
+          values = ["job","level","namespace","node","source"]
+        }
+        forward_to = argument.logs_destinations.value
+      }
+    }
+    cluster_events "feature" {
+      logs_destinations = [
+        otelcol.receiver.loki.otlp_gateway.receiver,
+      ]
+    }
+    // Self Reporting
+    prometheus.exporter.unix "kubernetes_monitoring_telemetry" {
+      set_collectors = ["textfile"]
+      textfile {
+        directory = "/etc/alloy"
+      }
+    }
+    
+    discovery.relabel "kubernetes_monitoring_telemetry" {
+      targets = prometheus.exporter.unix.kubernetes_monitoring_telemetry.targets
+      rule {
+        target_label = "instance"
+        action = "replace"
+        replacement = "k8smon"
+      }
+      rule {
+        target_label = "job"
+        action = "replace"
+        replacement = "integrations/kubernetes/kubernetes_monitoring_telemetry"
+      }
+    }
+    
+    prometheus.scrape "kubernetes_monitoring_telemetry" {
+      job_name   = "integrations/kubernetes/kubernetes_monitoring_telemetry"
+      targets    = discovery.relabel.kubernetes_monitoring_telemetry.output
+      scrape_interval = "60s"
+      clustering {
+        enabled = true
+      }
+      forward_to = [prometheus.relabel.kubernetes_monitoring_telemetry.receiver]
+    }
+    
+    prometheus.relabel "kubernetes_monitoring_telemetry" {
+      rule {
+        source_labels = ["__name__"]
+        regex = "grafana_kubernetes_monitoring_.*"
+        action = "keep"
+      }
+      forward_to = [
+        otelcol.receiver.prometheus.otlp_gateway.receiver,
+      ]
+    }
+    
+    livedebugging {
+      enabled = true
+    }
+    
+    
+    // Destination: otlp-gateway (otlp)
+    otelcol.receiver.prometheus "otlp_gateway" {
+      output {
+        metrics = [otelcol.processor.attributes.otlp_gateway.input]
+      }
+    }
+    otelcol.receiver.loki "otlp_gateway" {
+      output {
+        logs = [otelcol.processor.attributes.otlp_gateway.input]
+      }
+    }
+    otelcol.auth.basic "otlp_gateway" {
+      username = convert.nonsensitive(remote.kubernetes.secret.otlp_gateway.data["OTLP_GATEWAY_USER"])
+      password = remote.kubernetes.secret.otlp_gateway.data["OTLP_GATEWAY_PASS"]
+    }
+    
+    otelcol.processor.attributes "otlp_gateway" {
+      output {
+        metrics = [otelcol.processor.transform.otlp_gateway.input]
+        logs = [otelcol.processor.transform.otlp_gateway.input]
+        traces = [otelcol.processor.transform.otlp_gateway.input]
+      }
+    }
+    
+    otelcol.processor.transform "otlp_gateway" {
+      error_mode = "ignore"
+      metric_statements {
+        context = "resource"
+        statements = [
+          `set(attributes["cluster"], "otlp-gateway-test")`,
+          `set(attributes["k8s.cluster.name"], "otlp-gateway-test")`,
+        ]
+      }
+    
+      metric_statements {
+        context = "datapoint"
+        statements = [
+          `set(attributes["cluster"], "otlp-gateway-test")`,
+          `set(attributes["k8s.cluster.name"], "otlp-gateway-test")`,
+        ]
+      }
+      log_statements {
+        context = "resource"
+        statements = [
+          `set(attributes["cluster"], "otlp-gateway-test")`,
+          `set(attributes["k8s.cluster.name"], "otlp-gateway-test")`,
+        ]
+      }
+    
+      log_statements {
+        context = "log"
+        statements = [
           `set(resource.attributes["service.name"], attributes["service_name"]) where resource.attributes["service.name"] == nil and attributes["service_name"] != nil`,
           `delete_key(attributes, "service_name") where attributes["service_name"] != nil`,
           `set(resource.attributes["service.namespace"], attributes["service_namespace"] ) where resource.attributes["service.namespace"] == nil and attributes["service_namespace"] != nil`,
@@ -508,6 +732,7 @@ data:
     grafana_kubernetes_monitoring_build_info{version="2.0.23", namespace="default"} 1
     # HELP grafana_kubernetes_monitoring_feature_info A metric to report the enabled features of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_feature_info gauge
+    grafana_kubernetes_monitoring_feature_info{feature="clusterEvents", version="1.0.0"} 1
     grafana_kubernetes_monitoring_feature_info{feature="podLogs", method="volumes", version="1.0.0"} 1
     grafana_kubernetes_monitoring_feature_info{feature="integrations", sources="alloy", version="1.0.0"} 1
 ---
@@ -748,8 +973,6 @@ data:
       log_statements {
         context = "log"
         statements = [
-          `delete_key(attributes, "loki.attribute.labels")`,
-          `delete_key(attributes, "loki.resource.labels")`,
           `set(resource.attributes["service.name"], attributes["service_name"]) where resource.attributes["service.name"] == nil and attributes["service_name"] != nil`,
           `delete_key(attributes, "service_name") where attributes["service_name"] != nil`,
           `set(resource.attributes["service.namespace"], attributes["service_namespace"] ) where resource.attributes["service.namespace"] == nil and attributes["service_namespace"] != nil`,
@@ -1018,6 +1241,107 @@ rules:
     resources: ["replicasets"]
     verbs: ["get", "list", "watch"]
 ---
+# Source: k8s-monitoring/charts/alloy-singleton/templates/rbac.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: k8smon-alloy-singleton
+  labels:
+    helm.sh/chart: alloy-singleton-0.12.6
+    app.kubernetes.io/name: alloy-singleton
+    app.kubernetes.io/instance: k8smon
+    
+    app.kubernetes.io/version: "v1.7.5"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/part-of: alloy
+    app.kubernetes.io/component: rbac
+rules:
+  # Rules which allow discovery.kubernetes to function.
+  - apiGroups:
+      - ""
+      - "discovery.k8s.io"
+      - "networking.k8s.io"
+    resources:
+      - endpoints
+      - endpointslices
+      - ingresses
+      - nodes
+      - nodes/proxy
+      - nodes/metrics
+      - pods
+      - services
+    verbs:
+      - get
+      - list
+      - watch
+  # Rules which allow loki.source.kubernetes and loki.source.podlogs to work.
+  - apiGroups:
+      - ""
+    resources:
+      - pods
+      - pods/log
+      - namespaces
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - "monitoring.grafana.com"
+    resources:
+      - podlogs
+    verbs:
+      - get
+      - list
+      - watch
+  # Rules which allow mimir.rules.kubernetes to work.
+  - apiGroups: ["monitoring.coreos.com"]
+    resources:
+      - prometheusrules
+    verbs:
+      - get
+      - list
+      - watch
+  - nonResourceURLs:
+      - /metrics
+    verbs:
+      - get
+  # Rules for prometheus.kubernetes.*
+  - apiGroups: ["monitoring.coreos.com"]
+    resources:
+      - podmonitors
+      - servicemonitors
+      - probes
+      - scrapeconfigs
+    verbs:
+      - get
+      - list
+      - watch
+  # Rules which allow eventhandler to work.
+  - apiGroups:
+      - ""
+    resources:
+      - events
+    verbs:
+      - get
+      - list
+      - watch
+  # needed for remote.kubernetes.*
+  - apiGroups: [""]
+    resources:
+      - "configmaps"
+      - "secrets"
+    verbs:
+      - get
+      - list
+      - watch
+  # needed for otelcol.processor.k8sattributes
+  - apiGroups: ["apps"]
+    resources: ["replicasets"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["extensions"]
+    resources: ["replicasets"]
+    verbs: ["get", "list", "watch"]
+---
 # Source: k8s-monitoring/charts/alloy-logs/templates/rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -1062,6 +1386,29 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: k8smon-alloy-metrics
+    namespace: default
+---
+# Source: k8s-monitoring/charts/alloy-singleton/templates/rbac.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: k8smon-alloy-singleton
+  labels:
+    helm.sh/chart: alloy-singleton-0.12.6
+    app.kubernetes.io/name: alloy-singleton
+    app.kubernetes.io/instance: k8smon
+    
+    app.kubernetes.io/version: "v1.7.5"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/part-of: alloy
+    app.kubernetes.io/component: rbac
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: k8smon-alloy-singleton
+subjects:
+  - kind: ServiceAccount
+    name: k8smon-alloy-singleton
     namespace: default
 ---
 # Source: k8s-monitoring/charts/alloy-logs/templates/service.yaml
@@ -1144,6 +1491,33 @@ spec:
   type: ClusterIP
   selector:
     app.kubernetes.io/name: alloy-metrics
+    app.kubernetes.io/instance: k8smon
+  internalTrafficPolicy: Cluster
+  ports:
+    - name: http-metrics
+      port: 12345
+      targetPort: 12345
+      protocol: "TCP"
+---
+# Source: k8s-monitoring/charts/alloy-singleton/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: k8smon-alloy-singleton
+  namespace: default
+  labels:
+    helm.sh/chart: alloy-singleton-0.12.6
+    app.kubernetes.io/name: alloy-singleton
+    app.kubernetes.io/instance: k8smon
+    
+    app.kubernetes.io/version: "v1.7.5"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/part-of: alloy
+    app.kubernetes.io/component: networking
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: alloy-singleton
     app.kubernetes.io/instance: k8smon
   internalTrafficPolicy: Cluster
   ports:
@@ -1269,6 +1643,110 @@ spec:
         - name: dockercontainers
           hostPath:
             path: /var/lib/docker/containers
+---
+# Source: k8s-monitoring/charts/alloy-singleton/templates/controllers/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: k8smon-alloy-singleton
+  namespace: default
+  labels:
+    helm.sh/chart: alloy-singleton-0.12.6
+    app.kubernetes.io/name: alloy-singleton
+    app.kubernetes.io/instance: k8smon
+    
+    app.kubernetes.io/version: "v1.7.5"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/part-of: alloy
+spec:
+  replicas: 1
+  minReadySeconds: 10
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: alloy-singleton
+      app.kubernetes.io/instance: k8smon
+  template:
+    metadata:
+      annotations:
+        kubectl.kubernetes.io/default-container: alloy
+        k8s.grafana.com/logs.job: integrations/alloy
+      labels:
+        app.kubernetes.io/name: alloy-singleton
+        app.kubernetes.io/instance: k8smon
+    spec:
+      serviceAccountName: k8smon-alloy-singleton
+      containers:
+        - name: alloy
+          image: docker.io/grafana/alloy:v1.7.5
+          imagePullPolicy: IfNotPresent
+          args:
+            - run
+            - /etc/alloy/config.alloy
+            - --storage.path=/tmp/alloy
+            - --server.http.listen-addr=0.0.0.0:12345
+            - --server.http.ui-path-prefix=/
+            - --stability.level=generally-available
+          env:
+            - name: ALLOY_DEPLOY_MODE
+              value: "helm"
+            - name: HOSTNAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+          ports:
+            - containerPort: 12345
+              name: http-metrics
+          readinessProbe:
+            httpGet:
+              path: /-/ready
+              port: 12345
+              scheme: HTTP
+            initialDelaySeconds: 10
+            timeoutSeconds: 1
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              add:
+              - CHOWN
+              - DAC_OVERRIDE
+              - FOWNER
+              - FSETID
+              - KILL
+              - SETGID
+              - SETUID
+              - SETPCAP
+              - NET_BIND_SERVICE
+              - NET_RAW
+              - SYS_CHROOT
+              - MKNOD
+              - AUDIT_WRITE
+              - SETFCAP
+              drop:
+              - ALL
+            seccompProfile:
+              type: RuntimeDefault
+          volumeMounts:
+            - name: config
+              mountPath: /etc/alloy
+        - name: config-reloader
+          image: quay.io/prometheus-operator/prometheus-config-reloader:v0.81.0
+          args:
+            - --watched-dir=/etc/alloy
+            - --reload-url=http://localhost:12345/-/reload
+          volumeMounts:
+            - name: config
+              mountPath: /etc/alloy
+          resources:
+            requests:
+              cpu: 1m
+              memory: 5Mi
+      dnsPolicy: ClusterFirst
+      nodeSelector:
+        kubernetes.io/os: linux
+      volumes:
+        - name: config
+          configMap:
+            name: k8smon-alloy-singleton
 ---
 # Source: k8s-monitoring/charts/alloy-metrics/templates/controllers/statefulset.yaml
 apiVersion: apps/v1

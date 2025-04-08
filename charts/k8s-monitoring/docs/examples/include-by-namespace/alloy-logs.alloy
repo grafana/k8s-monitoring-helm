@@ -284,8 +284,6 @@ otelcol.processor.transform "tempo" {
   log_statements {
     context = "log"
     statements = [
-      `delete_key(attributes, "loki.attribute.labels")`,
-      `delete_key(attributes, "loki.resource.labels")`,
       `set(resource.attributes["service.name"], attributes["service_name"]) where resource.attributes["service.name"] == nil and attributes["service_name"] != nil`,
       `delete_key(attributes, "service_name") where attributes["service_name"] != nil`,
       `set(resource.attributes["service.namespace"], attributes["service_namespace"] ) where resource.attributes["service.namespace"] == nil and attributes["service_namespace"] != nil`,
