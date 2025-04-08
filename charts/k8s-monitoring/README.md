@@ -399,4 +399,5 @@ podLogs:
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
+| alloy-operator.deploy | bool | `true` |  |
 | extraObjects | list | `[]` | Deploy additional manifest objects |

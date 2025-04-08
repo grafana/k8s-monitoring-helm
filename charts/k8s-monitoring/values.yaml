@@ -365,29 +365,6 @@ alloy-metrics:
     # @section -- Collectors - Alloy Metrics
     enabled: false
 
-  # @ignored
-  alloy:
-    configMap: {create: false}
-
-    # Enable clustering to ensure that scraping is distributed across all instances.
-    # @ignored
-    clustering:
-      name: alloy-metrics
-      enabled: true
-
-    securityContext:
-      allowPrivilegeEscalation: false
-      capabilities:
-        drop: ["ALL"]
-        add: ["CHOWN", "DAC_OVERRIDE", "FOWNER", "FSETID", "KILL", "SETGID", "SETUID", "SETPCAP", "NET_BIND_SERVICE", "NET_RAW", "SYS_CHROOT", "MKNOD", "AUDIT_WRITE", "SETFCAP"]
-      seccompProfile:
-        type: "RuntimeDefault"
-
-    # Set resource requests and limits. [Guidelines](https://grafana.com/docs/alloy/latest/introduction/estimate-resource-usage/).
-    # resources:
-    #   requests: {}
-    #   limits: {}
-
   controller:
     # -- The type of controller to use for the Alloy Metrics instance.
     # @section -- Collectors - Alloy Metrics
@@ -941,6 +918,9 @@ alloy-profiles:
   # Skip installation of the Grafana Alloy CRDs, since we don't use them in this chart
   # @ignored
   crds: {create: false}
+
+alloy-operator:
+  deploy: true
 
 # -- Deploy additional manifest objects
 extraObjects: []

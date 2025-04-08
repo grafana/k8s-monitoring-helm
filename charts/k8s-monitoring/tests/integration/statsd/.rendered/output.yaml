@@ -502,7 +502,6 @@ spec:
         - ALL
       seccompProfile:
         type: RuntimeDefault
-  collectorName: alloy-receiver
   controller:
     nodeSelector:
       kubernetes.io/os: linux
@@ -511,44 +510,8 @@ spec:
     type: daemonset
   crds:
     create: false
-  enabled: true
-  extraConfig: |-
-    prometheus.exporter.statsd "default" {
-      listen_udp           = ":8125"
-      listen_tcp           = ":8125"
-      parse_dogstatsd_tags = true
-    }
-    prometheus.scrape "statsd" {
-      targets    = prometheus.exporter.statsd.default.targets
-      forward_to = [prometheus.remote_write.localprometheus.receiver]
-    }
   extraService:
     enabled: false
     fullname: ""
     name: alloy
-  liveDebugging:
-    enabled: false
-  logging:
-    format: logfmt
-    level: info
-  remoteConfig:
-    auth:
-      password: ""
-      passwordFrom: ""
-      passwordKey: password
-      type: none
-      username: ""
-      usernameFrom: ""
-      usernameKey: username
-    enabled: false
-    extraAttributes: {}
-    name: alloy-receiver-remote-cfg
-    pollFrequency: 5m
-    proxyURL: ""
-    secret:
-      create: true
-      embed: false
-      name: ""
-      namespace: ""
-    type: remoteConfig
-    url: ""
+  nameOverride: alloy-receiver

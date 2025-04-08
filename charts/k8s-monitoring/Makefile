@@ -26,7 +26,7 @@ docs/collectors/%.md: collectors/%-values.yaml $$(wildcard docs/collectors/.doc_
 docs/destinations/%.md: destinations/%-values.yaml $$(wildcard docs/destinations/.doc_templates/%.gotmpl)
 	docker run --platform linux/amd64 --rm -v $(shell pwd):/src ghcr.io/grafana/helm-docs-and-schema-gen $(shell echo $< | sed 's/destinations\/\([-a-z]*\)-values.yaml/\1/') destination
 
-schema-mods/definitions/%-collectors.schema.json: collectors/%-values.yaml
+schema-mods/definitions/%-collector.schema.json: collectors/%-values.yaml
 	docker run --platform linux/amd64 --rm -v $(shell pwd):/src ghcr.io/grafana/helm-docs-and-schema-gen $(shell echo $< | sed 's/collectors\/\([-a-z]*\)-values.yaml/\1/') collector
 
 schema-mods/definitions/%-destination.schema.json: destinations/%-values.yaml
@@ -99,6 +99,7 @@ EXAMPLE_README_FILES = $(EXAMPLE_VALUES_FILES:values.yaml=README.md)
 NON_RENDERED_INTEGRATION_TEST_VALUES_FILES = $(shell find tests/integration -name .no-render | sed 's/.no-render/values.yaml/')
 INTEGRATION_TEST_VALUES_FILES = $(filter-out $(NON_RENDERED_INTEGRATION_TEST_VALUES_FILES),$(shell find tests/integration -name values.yaml))
 INTEGRATION_TEST_OUTPUT_FILES = $(INTEGRATION_TEST_VALUES_FILES:values.yaml=.rendered/output.yaml)
+INTEGRATION_TEST_ALLOY_INSTANCE_FILES = $(foreach file,$(INTEGRATION_TEST_OUTPUT_FILES),$(call alloy_instances, $(file)))
 
 NON_RENDERED_PLATFORM_TEST_VALUES_FILES = $(shell find tests/platform -name .no-render | sed 's/.no-render/values.yaml/')
 PLATFORM_TEST_VALUES_FILES = $(filter-out $(NON_RENDERED_PLATFORM_TEST_VALUES_FILES),$(shell find tests/platform -name values.yaml))
@@ -106,6 +107,9 @@ PLATFORM_TEST_OUTPUT_FILES = $(PLATFORM_TEST_VALUES_FILES:values.yaml=.rendered/
 
 alloy_configs = $(shell \
 	DIR="$(shell dirname $(1))/" yq e 'with_entries(select(.key == "alloy-*" and .value.enabled == true)) | to_entries | env(DIR) + .[].key + ".alloy"' $(1) \
+)
+alloy_instances = $(shell \
+	DIR="$(shell dirname $(1))/" yq e 'with_entries(select(.key == "alloy-*" and .value.enabled == true)) | to_entries | env(DIR) + .[].key + ".yaml"' $(1) \
 )
 
 %/output.yaml: %/values.yaml Chart.yaml Chart.lock values.yaml values.schema.json templates/destinations/_destination_types.tpl $(DESTINATION_VALUES_FILES) $(CHART_TEMPLATE_FILES) $(CHART_YAML_FILES) alloyModules/LICENSE $(ALLOY_MODULE_FILES)
@@ -115,20 +119,11 @@ alloy_configs = $(shell \
 	mkdir -p $(dir $@)
 	helm template $(EXAMPLE_RELEASE_NAME) . -f $< > $@
 
-%/alloy-logs.alloy: %/output.yaml
-	yq 'select(.kind=="ConfigMap" and .metadata.name=="$(EXAMPLE_RELEASE_NAME)-alloy-logs") | .data["config.alloy"]' $< > $@
+%/alloy-logs.alloy %/alloy-metrics.alloy %/alloy-receiver.alloy %/alloy-singleton.alloy %/alloy-profiles.alloy: %/output.yaml
+	yq 'select(.kind=="ConfigMap" and .metadata.name=="$(EXAMPLE_RELEASE_NAME)-$(basename $(notdir $@))") | .data["config.alloy"]' $< > $@
 
-%/alloy-metrics.alloy: %/output.yaml
-	yq 'select(.kind=="ConfigMap" and .metadata.name=="$(EXAMPLE_RELEASE_NAME)-alloy-metrics") | .data["config.alloy"]' $< > $@
-
-%/alloy-receiver.alloy: %/output.yaml
-	yq 'select(.kind=="ConfigMap" and .metadata.name=="$(EXAMPLE_RELEASE_NAME)-alloy-receiver") | .data["config.alloy"]' $< > $@
-
-%/alloy-singleton.alloy: %/output.yaml
-	yq 'select(.kind=="ConfigMap" and .metadata.name=="$(EXAMPLE_RELEASE_NAME)-alloy-singleton") | .data["config.alloy"]' $< > $@
-
-%/alloy-profiles.alloy: %/output.yaml
-	yq 'select(.kind=="ConfigMap" and .metadata.name=="$(EXAMPLE_RELEASE_NAME)-alloy-profiles") | .data["config.alloy"]' $< > $@
+%/alloy-logs.yaml %/alloy-metrics.yaml %/alloy-receiver.yaml %/alloy-singleton.yaml %/alloy-profiles.yaml: %/output.yaml
+	yq 'select(.kind=="Alloy" and .metadata.name=="$(EXAMPLE_RELEASE_NAME)-$(basename $(notdir $@))") | .' $< > $@
 
 %/README.md: %/values.yaml $$(wildcard %/description.txt)
 	echo '<!--' > $@

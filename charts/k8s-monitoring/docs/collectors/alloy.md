@@ -6,6 +6,7 @@
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
+| enabled | bool | `false` | Enable this Alloy instance. |
 | extraConfig | string | `""` | Extra Alloy configuration to be added to the configuration file. |
 | liveDebugging.enabled | bool | `false` | Enable live debugging for the Alloy instance. Requires stability level to be set to "experimental". |
 

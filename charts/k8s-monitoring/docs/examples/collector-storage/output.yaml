@@ -1885,7 +1885,6 @@ spec:
       seccompProfile:
         type: RuntimeDefault
     storagePath: /var/lib/alloy
-  collectorName: alloy-metrics
   controller:
     enableStatefulSetAutoDeletePVC: true
     nodeSelector:
@@ -1906,34 +1905,7 @@ spec:
         storageClassName: standard
   crds:
     create: false
-  enabled: true
-  extraConfig: ""
-  liveDebugging:
-    enabled: false
-  logging:
-    format: logfmt
-    level: info
-  remoteConfig:
-    auth:
-      password: ""
-      passwordFrom: ""
-      passwordKey: password
-      type: none
-      username: ""
-      usernameFrom: ""
-      usernameKey: username
-    enabled: false
-    extraAttributes: {}
-    name: alloy-metrics-remote-cfg
-    pollFrequency: 5m
-    proxyURL: ""
-    secret:
-      create: true
-      embed: false
-      name: ""
-      namespace: ""
-    type: remoteConfig
-    url: ""
+  nameOverride: alloy-metrics
 ---
 # Source: k8s-monitoring/templates/alloy.yaml
 apiVersion: collectors.grafana.com/v1alpha1
@@ -1980,7 +1952,6 @@ spec:
       seccompProfile:
         type: RuntimeDefault
     storagePath: /var/lib/alloy
-  collectorName: alloy-logs
   controller:
     nodeSelector:
       kubernetes.io/os: linux
@@ -1998,31 +1969,4 @@ spec:
         name: alloy-log-positions
   crds:
     create: false
-  enabled: true
-  extraConfig: ""
-  liveDebugging:
-    enabled: false
-  logging:
-    format: logfmt
-    level: info
-  remoteConfig:
-    auth:
-      password: ""
-      passwordFrom: ""
-      passwordKey: password
-      type: none
-      username: ""
-      usernameFrom: ""
-      usernameKey: username
-    enabled: false
-    extraAttributes: {}
-    name: alloy-logs-remote-cfg
-    pollFrequency: 5m
-    proxyURL: ""
-    secret:
-      create: true
-      embed: false
-      name: ""
-      namespace: ""
-    type: remoteConfig
-    url: ""
+  nameOverride: alloy-logs

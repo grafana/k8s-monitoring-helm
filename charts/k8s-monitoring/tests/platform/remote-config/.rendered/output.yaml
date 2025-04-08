@@ -448,7 +448,6 @@ spec:
         - ALL
       seccompProfile:
         type: RuntimeDefault
-  collectorName: alloy-metrics
   controller:
     nodeSelector:
       kubernetes.io/os: linux
@@ -458,34 +457,7 @@ spec:
     type: statefulset
   crds:
     create: false
-  enabled: true
-  extraConfig: ""
-  liveDebugging:
-    enabled: false
-  logging:
-    format: logfmt
-    level: info
-  remoteConfig:
-    auth:
-      password: ""
-      passwordFrom: ""
-      passwordKey: GRAFANA_CLOUD_FLEET_MGMT_TOKEN
-      type: basic
-      username: ""
-      usernameFrom: ""
-      usernameKey: GRAFANA_CLOUD_FLEET_MGMT_USER
-    enabled: true
-    extraAttributes: {}
-    name: alloy-metrics-remote-cfg
-    pollFrequency: 5m
-    proxyURL: ""
-    secret:
-      create: false
-      embed: false
-      name: grafana-cloud-credentials
-      namespace: ""
-    type: remoteConfig
-    url: https://fleet-management-prod-008.grafana.net
+  nameOverride: alloy-metrics
 ---
 # Source: k8s-monitoring/templates/alloy.yaml
 apiVersion: collectors.grafana.com/v1alpha1
@@ -549,7 +521,6 @@ spec:
         - ALL
       seccompProfile:
         type: RuntimeDefault
-  collectorName: alloy-logs
   controller:
     nodeSelector:
       kubernetes.io/os: linux
@@ -561,31 +532,4 @@ spec:
     type: daemonset
   crds:
     create: false
-  enabled: true
-  extraConfig: ""
-  liveDebugging:
-    enabled: false
-  logging:
-    format: logfmt
-    level: info
-  remoteConfig:
-    auth:
-      password: ""
-      passwordFrom: ""
-      passwordKey: GRAFANA_CLOUD_FLEET_MGMT_TOKEN
-      type: basic
-      username: ""
-      usernameFrom: ""
-      usernameKey: GRAFANA_CLOUD_FLEET_MGMT_USER
-    enabled: true
-    extraAttributes: {}
-    name: alloy-logs-remote-cfg
-    pollFrequency: 5m
-    proxyURL: ""
-    secret:
-      create: false
-      embed: false
-      name: grafana-cloud-credentials
-      namespace: ""
-    type: remoteConfig
-    url: https://fleet-management-prod-008.grafana.net
+  nameOverride: alloy-logs
