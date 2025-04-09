@@ -111,7 +111,6 @@ otelcol.processor.transform {{ include "helper.alloy_name" .name | quote }} {
   metric_statements {
     context = "metric"
     statements = [
-
 {{- range $transform := .processors.transform.metrics.metric }}
 {{ $transform | quote | indent 6 }},
 {{- end }}
@@ -122,9 +121,6 @@ otelcol.processor.transform {{ include "helper.alloy_name" .name | quote }} {
   metric_statements {
     context = "datapoint"
     statements = [
-{{- range $label := .clusterLabels }}
-      `set(attributes[{{ $label | quote }}], {{ $.Values.cluster.name | quote }})`,
-{{- end }}
 {{- if .processors.transform.metrics.datapoint }}
 {{- range $transform := .processors.transform.metrics.datapoint }}
 {{ $transform | quote | indent 6 }},
@@ -152,6 +148,8 @@ otelcol.processor.transform {{ include "helper.alloy_name" .name | quote }} {
   log_statements {
     context = "log"
     statements = [
+      `delete_key(attributes, "loki.attribute.labels")`,
+      `delete_key(attributes, "loki.resource.labels")`,
       `set(resource.attributes["service.name"], attributes["service_name"]) where resource.attributes["service.name"] == nil and attributes["service_name"] != nil`,
       `delete_key(attributes, "service_name") where attributes["service_name"] != nil`,
       `set(resource.attributes["service.namespace"], attributes["service_namespace"] ) where resource.attributes["service.namespace"] == nil and attributes["service_namespace"] != nil`,
@@ -160,6 +158,14 @@ otelcol.processor.transform {{ include "helper.alloy_name" .name | quote }} {
       `delete_key(attributes, "deployment_environment_name") where attributes["deployment_environment_name"] != nil`,
       `set(resource.attributes["deployment.environment"], attributes["deployment_environment"] ) where resource.attributes["deployment.environment"] == nil and attributes["deployment_environment"] != nil`,
       `delete_key(attributes, "deployment_environment") where attributes["deployment_environment"] != nil`,
+      `set(resource.attributes["job"], attributes["job"] ) where resource.attributes["job"] == nil and attributes["job"] != nil`,
+      `delete_key(attributes, "job") where attributes["job"] != nil`,
+      `set(resource.attributes["level"], attributes["level"] ) where resource.attributes["level"] == nil and attributes["level"] != nil`,
+      `delete_key(attributes, "level") where attributes["level"] != nil`,
+      `set(resource.attributes["namespace"], attributes["namespace"] ) where resource.attributes["namespace"] == nil and attributes["namespace"] != nil`,
+      `delete_key(attributes, "namespace") where attributes["namespace"] != nil`,
+      `set(resource.attributes["node"], attributes["node"] ) where resource.attributes["node"] == nil and attributes["node"] != nil`,
+      `delete_key(attributes, "node") where attributes["node"] != nil`,
 {{- if .processors.transform.logs.log }}
 {{- range $transform := .processors.transform.logs.log }}
 {{ $transform | quote | indent 6 }},
