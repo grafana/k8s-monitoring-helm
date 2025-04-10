@@ -1,0 +1,4019 @@
+---
+# Source: k8s-monitoring/charts/alloy-logs/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: k8smon-alloy-logs
+  namespace: default
+  labels:
+    helm.sh/chart: alloy-logs-0.12.0
+    app.kubernetes.io/name: alloy-logs
+    app.kubernetes.io/instance: k8smon
+    
+    app.kubernetes.io/version: "v1.7.0"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/part-of: alloy
+    app.kubernetes.io/component: rbac
+---
+# Source: k8s-monitoring/charts/alloy-metrics/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: k8smon-alloy-metrics
+  namespace: default
+  labels:
+    helm.sh/chart: alloy-metrics-0.12.0
+    app.kubernetes.io/name: alloy-metrics
+    app.kubernetes.io/instance: k8smon
+    
+    app.kubernetes.io/version: "v1.7.0"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/part-of: alloy
+    app.kubernetes.io/component: rbac
+---
+# Source: k8s-monitoring/charts/alloy-singleton/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: k8smon-alloy-singleton
+  namespace: default
+  labels:
+    helm.sh/chart: alloy-singleton-0.12.0
+    app.kubernetes.io/name: alloy-singleton
+    app.kubernetes.io/instance: k8smon
+    
+    app.kubernetes.io/version: "v1.7.0"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/part-of: alloy
+    app.kubernetes.io/component: rbac
+---
+# Source: k8s-monitoring/charts/clusterMetrics/charts/kube-state-metrics/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+automountServiceAccountToken: true
+metadata:
+  labels:    
+    helm.sh/chart: kube-state-metrics-5.30.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: metrics
+    app.kubernetes.io/part-of: kube-state-metrics
+    app.kubernetes.io/name: kube-state-metrics
+    app.kubernetes.io/instance: k8smon
+    app.kubernetes.io/version: "2.15.0"
+    release: k8smon
+  name: k8smon-kube-state-metrics
+  namespace: default
+---
+# Source: k8s-monitoring/charts/clusterMetrics/charts/node-exporter/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: k8smon-node-exporter
+  namespace: default
+  labels:
+    helm.sh/chart: node-exporter-4.44.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: metrics
+    app.kubernetes.io/part-of: node-exporter
+    app.kubernetes.io/name: node-exporter
+    app.kubernetes.io/instance: k8smon
+    app.kubernetes.io/version: "1.9.0"
+    release: k8smon
+automountServiceAccountToken: false
+---
+# Source: k8s-monitoring/charts/clusterMetrics/charts/windows-exporter/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: k8smon-windows-exporter
+  namespace: default
+  labels:
+    helm.sh/chart: windows-exporter-0.8.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: metrics
+    app.kubernetes.io/part-of: windows-exporter
+    app.kubernetes.io/name: windows-exporter
+    app.kubernetes.io/instance: k8smon
+    app.kubernetes.io/version: "0.29.2"
+    release: k8smon
+---
+# Source: k8s-monitoring/charts/clusterMetrics/charts/windows-exporter/templates/config.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: k8smon-windows-exporter
+  namespace: default
+  labels:
+    helm.sh/chart: windows-exporter-0.8.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: metrics
+    app.kubernetes.io/part-of: windows-exporter
+    app.kubernetes.io/name: windows-exporter
+    app.kubernetes.io/instance: k8smon
+    app.kubernetes.io/version: "0.29.2"
+    release: k8smon
+data:
+  config.yml: |
+    collectors:
+      enabled: cpu,cs,container,logical_disk,memory,net,os
+    collector:
+      service:
+        services-where: "Name='containerd' or Name='kubelet'"
+---
+# Source: k8s-monitoring/templates/alloy-config.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: k8smon-alloy-metrics
+  namespace: default
+data:
+  config.alloy: |-
+    // Destination: grafana-cloud-metrics (prometheus)
+    otelcol.exporter.prometheus "grafana_cloud_metrics" {
+      add_metric_suffixes = true
+      forward_to = [prometheus.remote_write.grafana_cloud_metrics.receiver]
+    }
+    
+    prometheus.remote_write "grafana_cloud_metrics" {
+      endpoint {
+        url = "https://prometheus-prod-13-prod-us-east-0.grafana.net/api/prom/push"
+        headers = {
+          "X-Scope-OrgID" = nonsensitive(remote.kubernetes.secret.grafana_cloud_metrics.data["tenantId"]),
+        }
+        basic_auth {
+          username = nonsensitive(remote.kubernetes.secret.grafana_cloud_metrics.data["PROMETHEUS_USER"])
+          password = remote.kubernetes.secret.grafana_cloud_metrics.data["PROMETHEUS_PASS"]
+        }
+        tls_config {
+          insecure_skip_verify = false
+          ca_pem = nonsensitive(remote.kubernetes.secret.grafana_cloud_metrics.data["ca"])
+          cert_pem = nonsensitive(remote.kubernetes.secret.grafana_cloud_metrics.data["cert"])
+          key_pem = remote.kubernetes.secret.grafana_cloud_metrics.data["key"]
+        }
+        send_native_histograms = false
+    
+        queue_config {
+          capacity = 10000
+          min_shards = 1
+          max_shards = 50
+          max_samples_per_send = 2000
+          batch_send_deadline = "5s"
+          min_backoff = "30ms"
+          max_backoff = "5s"
+          retry_on_http_429 = true
+          sample_age_limit = "0s"
+        }
+    
+        write_relabel_config {
+          source_labels = ["cluster"]
+          regex = ""
+          replacement = "aks-test"
+          target_label = "cluster"
+        }
+        write_relabel_config {
+          source_labels = ["k8s.cluster.name"]
+          regex = ""
+          replacement = "aks-test"
+          target_label = "cluster"
+        }
+      }
+    
+      wal {
+        truncate_frequency = "2h"
+        min_keepalive_time = "5m"
+        max_keepalive_time = "8h"
+      }
+    }
+    
+    remote.kubernetes.secret "grafana_cloud_metrics" {
+      name      = "grafana-cloud-credentials"
+      namespace = "default"
+    }
+    // Feature: Cluster Metrics
+    declare "cluster_metrics" {
+      argument "metrics_destinations" {
+        comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
+      }
+      discovery.kubernetes "nodes" {
+        role = "node"
+      }
+    
+      // Kubelet
+      discovery.relabel "kubelet" {
+        targets = discovery.kubernetes.nodes.targets
+      }
+    
+      prometheus.scrape "kubelet" {
+        targets  = discovery.relabel.kubelet.output
+        job_name = "integrations/kubernetes/kubelet"
+        scheme   = "https"
+        scrape_interval = "60s"
+        bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+    
+        tls_config {
+          ca_file = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+          insecure_skip_verify = true
+          server_name = "kubernetes"
+        }
+    
+        clustering {
+          enabled = true
+        }
+    
+        forward_to = [prometheus.relabel.kubelet.receiver]
+      }
+    
+      prometheus.relabel "kubelet" {
+        max_cache_size = 100000
+        rule {
+          source_labels = ["__name__"]
+          regex = "up|scrape_samples_scraped|go_goroutines|kubelet_certificate_manager_client_expiration_renew_errors|kubelet_certificate_manager_client_ttl_seconds|kubelet_certificate_manager_server_ttl_seconds|kubelet_cgroup_manager_duration_seconds_bucket|kubelet_cgroup_manager_duration_seconds_count|kubelet_node_config_error|kubelet_node_name|kubelet_pleg_relist_duration_seconds_bucket|kubelet_pleg_relist_duration_seconds_count|kubelet_pleg_relist_interval_seconds_bucket|kubelet_pod_start_duration_seconds_bucket|kubelet_pod_start_duration_seconds_count|kubelet_pod_worker_duration_seconds_bucket|kubelet_pod_worker_duration_seconds_count|kubelet_running_container_count|kubelet_running_containers|kubelet_running_pod_count|kubelet_running_pods|kubelet_runtime_operations_errors_total|kubelet_runtime_operations_total|kubelet_server_expiration_renew_errors|kubelet_volume_stats_available_bytes|kubelet_volume_stats_capacity_bytes|kubelet_volume_stats_inodes|kubelet_volume_stats_inodes_free|kubelet_volume_stats_inodes_used|kubelet_volume_stats_used_bytes|kubernetes_build_info|namespace_workload_pod|process_cpu_seconds_total|process_resident_memory_bytes|rest_client_requests_total|storage_operation_duration_seconds_count|storage_operation_errors_total|volume_manager_total_volumes"
+          action = "keep"
+        }
+    
+        forward_to = argument.metrics_destinations.value
+      }
+    
+      // Kubelet Resources
+      discovery.relabel "kubelet_resources" {
+        targets = discovery.kubernetes.nodes.targets
+        rule {
+          replacement   = "/metrics/resource"
+          target_label  = "__metrics_path__"
+        }
+        // set the node label
+        rule {
+          source_labels = ["__meta_kubernetes_node_name"]
+          target_label  = "node"
+        }
+    
+        // set the app name if specified as metadata labels "app:" or "app.kubernetes.io/name:" or "k8s-app:"
+        rule {
+          action = "replace"
+          source_labels = [
+            "__meta_kubernetes_node_label_app_kubernetes_io_name",
+            "__meta_kubernetes_node_label_k8s_app",
+            "__meta_kubernetes_node_label_app",
+          ]
+          separator = ";"
+          regex = "^(?:;*)?([^;]+).*$"
+          replacement = "$1"
+          target_label = "app"
+        }
+    
+        // set a source label
+        rule {
+          action = "replace"
+          replacement = "kubernetes"
+          target_label = "source"
+        }
+      }
+    
+      prometheus.scrape "kubelet_resources" {
+        targets  = discovery.relabel.kubelet_resources.output
+        job_name = "integrations/kubernetes/resources"
+        scheme   = "https"
+        scrape_interval = "60s"
+        bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+    
+        tls_config {
+          ca_file = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+          insecure_skip_verify = true
+          server_name = "kubernetes"
+        }
+    
+        clustering {
+          enabled = true
+        }
+    
+        forward_to = [prometheus.relabel.kubelet_resources.receiver]
+      }
+    
+      prometheus.relabel "kubelet_resources" {
+        max_cache_size = 100000
+        rule {
+          source_labels = ["__name__"]
+          regex = "up|scrape_samples_scraped|node_cpu_usage_seconds_total|node_memory_working_set_bytes"
+          action = "keep"
+        }
+    
+        forward_to = argument.metrics_destinations.value
+      }
+    
+      // cAdvisor
+      discovery.relabel "cadvisor" {
+        targets = discovery.kubernetes.nodes.targets
+        rule {
+          replacement   = "/metrics/cadvisor"
+          target_label  = "__metrics_path__"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_node_name"]
+          target_label  = "node"
+        }
+        // set the app name if specified as metadata labels "app:" or "app.kubernetes.io/name:" or "k8s-app:"
+        rule {
+          action = "replace"
+          source_labels = [
+            "__meta_kubernetes_node_label_app_kubernetes_io_name",
+            "__meta_kubernetes_node_label_k8s_app",
+            "__meta_kubernetes_node_label_app",
+          ]
+          separator = ";"
+          regex = "^(?:;*)?([^;]+).*$"
+          replacement = "$1"
+          target_label = "app"
+        }
+    
+        // set a source label
+        rule {
+          action = "replace"
+          replacement = "kubernetes"
+          target_label = "source"
+        }
+      }
+    
+      prometheus.scrape "cadvisor" {
+        targets = discovery.relabel.cadvisor.output
+        job_name = "integrations/kubernetes/cadvisor"
+        scheme = "https"
+        scrape_interval = "60s"
+        bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+    
+        tls_config {
+          ca_file = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+          insecure_skip_verify = true
+          server_name = "kubernetes"
+        }
+    
+        clustering {
+          enabled = true
+        }
+    
+        forward_to = [prometheus.relabel.cadvisor.receiver]
+      }
+    
+      prometheus.relabel "cadvisor" {
+        max_cache_size = 100000
+        rule {
+          source_labels = ["__name__"]
+          regex = "up|scrape_samples_scraped|container_cpu_cfs_periods_total|container_cpu_cfs_throttled_periods_total|container_cpu_usage_seconds_total|container_fs_reads_bytes_total|container_fs_reads_total|container_fs_writes_bytes_total|container_fs_writes_total|container_memory_cache|container_memory_rss|container_memory_swap|container_memory_working_set_bytes|container_network_receive_bytes_total|container_network_receive_packets_dropped_total|container_network_receive_packets_total|container_network_transmit_bytes_total|container_network_transmit_packets_dropped_total|container_network_transmit_packets_total|machine_memory_bytes"
+          action = "keep"
+        }
+        // Drop empty container labels, addressing https://github.com/google/cadvisor/issues/2688
+        rule {
+          source_labels = ["__name__","container"]
+          separator = "@"
+          regex = "(container_cpu_.*|container_fs_.*|container_memory_.*)@"
+          action = "drop"
+        }
+        // Drop empty image labels, addressing https://github.com/google/cadvisor/issues/2688
+        rule {
+          source_labels = ["__name__","image"]
+          separator = "@"
+          regex = "(container_cpu_.*|container_fs_.*|container_memory_.*|container_network_.*)@"
+          action = "drop"
+        }
+        // Normalizing unimportant labels (not deleting to continue satisfying <label>!="" checks)
+        rule {
+          source_labels = ["__name__", "boot_id"]
+          separator = "@"
+          regex = "machine_memory_bytes@.*"
+          target_label = "boot_id"
+          replacement = "NA"
+        }
+        rule {
+          source_labels = ["__name__", "system_uuid"]
+          separator = "@"
+          regex = "machine_memory_bytes@.*"
+          target_label = "system_uuid"
+          replacement = "NA"
+        }
+        // Filter out non-physical devices/interfaces
+        rule {
+          source_labels = ["__name__", "device"]
+          separator = "@"
+          regex = "container_fs_.*@(/dev/)?(mmcblk.p.+|nvme.+|rbd.+|sd.+|vd.+|xvd.+|dasd.+)"
+          target_label = "__keepme"
+          replacement = "1"
+        }
+        rule {
+          source_labels = ["__name__", "__keepme"]
+          separator = "@"
+          regex = "container_fs_.*@"
+          action = "drop"
+        }
+        rule {
+          source_labels = ["__name__"]
+          regex = "container_fs_.*"
+          target_label = "__keepme"
+          replacement = ""
+        }
+        rule {
+          source_labels = ["__name__", "interface"]
+          separator = "@"
+          regex = "container_network_.*@(en[ospx][0-9].*|wlan[0-9].*|eth[0-9].*)"
+          target_label = "__keepme"
+          replacement = "1"
+        }
+        rule {
+          source_labels = ["__name__", "__keepme"]
+          separator = "@"
+          regex = "container_network_.*@"
+          action = "drop"
+        }
+        rule {
+          source_labels = ["__name__"]
+          regex = "container_network_.*"
+          target_label = "__keepme"
+          replacement = ""
+        }
+        forward_to = argument.metrics_destinations.value
+      }
+      discovery.kubernetes "kube_state_metrics" {
+        role = "endpoints"
+    
+        selectors {
+          role = "endpoints"
+          label = "app.kubernetes.io/name=kube-state-metrics,release=k8smon"
+        }
+      }
+    
+      discovery.relabel "kube_state_metrics" {
+        targets = discovery.kubernetes.kube_state_metrics.targets
+    
+        // only keep targets with a matching port name
+        rule {
+          source_labels = ["__meta_kubernetes_endpoint_port_name"]
+          regex = "http"
+          action = "keep"
+        }
+    
+        rule {
+          action = "replace"
+          replacement = "kubernetes"
+          target_label = "source"
+        }
+    
+      }
+    
+      prometheus.scrape "kube_state_metrics" {
+        targets = discovery.relabel.kube_state_metrics.output
+        job_name = "integrations/kubernetes/kube-state-metrics"
+        scrape_interval = "60s"
+        scheme = "http"
+        bearer_token_file = ""
+        tls_config {
+          insecure_skip_verify = true
+        }
+    
+        clustering {
+          enabled = true
+        }
+        forward_to = [prometheus.relabel.kube_state_metrics.receiver]
+      }
+    
+      prometheus.relabel "kube_state_metrics" {
+        max_cache_size = 100000
+        rule {
+          source_labels = ["__name__"]
+          regex = "up|scrape_samples_scraped|kube_configmap_info|kube_configmap_metadata_resource_version|kube_daemonset.*|kube_deployment_metadata_generation|kube_deployment_spec_replicas|kube_deployment_status_condition|kube_deployment_status_observed_generation|kube_deployment_status_replicas_available|kube_deployment_status_replicas_updated|kube_horizontalpodautoscaler_spec_max_replicas|kube_horizontalpodautoscaler_spec_min_replicas|kube_horizontalpodautoscaler_status_current_replicas|kube_horizontalpodautoscaler_status_desired_replicas|kube_job.*|kube_namespace_status_phase|kube_node.*|kube_persistentvolume_status_phase|kube_persistentvolumeclaim_access_mode|kube_persistentvolumeclaim_info|kube_persistentvolumeclaim_labels|kube_persistentvolumeclaim_resource_requests_storage_bytes|kube_persistentvolumeclaim_status_phase|kube_pod_container_info|kube_pod_container_resource_limits|kube_pod_container_resource_requests|kube_pod_container_status_last_terminated_reason|kube_pod_container_status_restarts_total|kube_pod_container_status_waiting_reason|kube_pod_info|kube_pod_owner|kube_pod_spec_volumes_persistentvolumeclaims_info|kube_pod_start_time|kube_pod_status_phase|kube_pod_status_reason|kube_replicaset.*|kube_resourcequota|kube_secret_metadata_resource_version|kube_statefulset.*"
+          action = "keep"
+        }
+        forward_to = argument.metrics_destinations.value
+      }
+    
+      remote.kubernetes.configmap "node_exporter" {
+        name = "k8smon-alloy-module-system"
+        namespace = "default"
+      }
+    
+      import.string "node_exporter" {
+        content = remote.kubernetes.configmap.node_exporter.data["node-exporter_metrics.alloy"]
+      }
+    
+      node_exporter.kubernetes "targets" {
+        namespaces = ["default"]
+        port_name = "metrics"
+        label_selectors = [
+          "app.kubernetes.io/name=node-exporter",
+          "release=k8smon",
+        ]
+      }
+    
+      discovery.relabel "node_exporter" {
+        targets = node_exporter.kubernetes.targets.output
+        rule {
+          source_labels = ["__meta_kubernetes_pod_node_name"]
+          action = "replace"
+          target_label = "instance"
+        }
+      }
+    
+      node_exporter.scrape "metrics" {
+        targets = discovery.relabel.node_exporter.output
+        job_label = "integrations/node_exporter"
+        clustering = true
+        keep_metrics = "up|scrape_samples_scraped|node_cpu.*|node_exporter_build_info|node_filesystem.*|node_memory.*|node_network_receive_bytes_total|node_network_receive_drop_total|node_network_transmit_bytes_total|node_network_transmit_drop_total|process_cpu_seconds_total|process_resident_memory_bytes"
+        scheme = "http"
+        scrape_interval = "60s"
+        max_cache_size = 100000
+        forward_to = argument.metrics_destinations.value
+      }
+    
+      discovery.kubernetes "windows_exporter_pods" {
+        role = "pod"
+        namespaces {
+          names = ["default"]
+        }
+        selectors {
+          role = "pod"
+          label = "app.kubernetes.io/name=windows-exporter,release=k8smon"
+        }
+      }
+    
+      discovery.relabel "windows_exporter" {
+        targets = discovery.kubernetes.windows_exporter_pods.targets
+        rule {
+          source_labels = ["__meta_kubernetes_pod_node_name"]
+          action = "replace"
+          target_label = "instance"
+        }
+      }
+    
+      prometheus.scrape "windows_exporter" {
+        job_name   = "integrations/windows-exporter"
+        targets  = discovery.relabel.windows_exporter.output
+        scrape_interval = "60s"
+        clustering {
+          enabled = true
+        }
+        forward_to = [prometheus.relabel.windows_exporter.receiver]
+      }
+    
+      prometheus.relabel "windows_exporter" {
+        max_cache_size = 100000
+        rule {
+          source_labels = ["__name__"]
+          regex = "up|scrape_samples_scraped|windows_.*|node_cpu_seconds_total|node_filesystem_size_bytes|node_filesystem_avail_bytes|container_cpu_usage_seconds_total"
+          action = "keep"
+        }
+        forward_to = argument.metrics_destinations.value
+      }
+    }
+    cluster_metrics "feature" {
+      metrics_destinations = [
+        prometheus.remote_write.grafana_cloud_metrics.receiver,
+      ]
+    }
+    declare "alloy_integration" {
+      argument "metrics_destinations" {
+        comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
+      }
+    
+      declare "alloy_integration_discovery" {
+        argument "namespaces" {
+          comment = "The namespaces to look for targets in (default: [] is all namespaces)"
+          optional = true
+        }
+    
+        argument "field_selectors" {
+          comment = "The field selectors to use to find matching targets (default: [])"
+          optional = true
+        }
+    
+        argument "label_selectors" {
+          comment = "The label selectors to use to find matching targets (default: [\"app.kubernetes.io/name=alloy\"])"
+          optional = true
+        }
+    
+        argument "port_name" {
+          comment = "The of the port to scrape metrics from (default: http-metrics)"
+          optional = true
+        }
+    
+        // Alloy service discovery for all of the pods
+        discovery.kubernetes "alloy_pods" {
+          role = "pod"
+    
+          selectors {
+            role = "pod"
+            field = string.join(coalesce(argument.field_selectors.value, []), ",")
+            label = string.join(coalesce(argument.label_selectors.value, ["app.kubernetes.io/name=alloy"]), ",")
+          }
+    
+          namespaces {
+            names = coalesce(argument.namespaces.value, [])
+          }
+        }
+    
+        // alloy relabelings (pre-scrape)
+        discovery.relabel "alloy_pods" {
+          targets = discovery.kubernetes.alloy_pods.targets
+    
+          // keep only the specified metrics port name, and pods that are Running and ready
+          rule {
+            source_labels = [
+              "__meta_kubernetes_pod_container_port_name",
+              "__meta_kubernetes_pod_phase",
+              "__meta_kubernetes_pod_ready",
+              "__meta_kubernetes_pod_container_init",
+            ]
+            separator = "@"
+            regex = coalesce(argument.port_name.value, "metrics") + "@Running@true@false"
+            action = "keep"
+          }
+    
+    
+    
+        rule {
+          source_labels = ["__meta_kubernetes_namespace"]
+          target_label  = "namespace"
+        }
+    
+        rule {
+          source_labels = ["__meta_kubernetes_pod_name"]
+          target_label  = "pod"
+        }
+    
+        rule {
+          source_labels = ["__meta_kubernetes_pod_container_name"]
+          target_label  = "container"
+        }
+    
+        // set the workload to the controller kind and name
+        rule {
+          action = "lowercase"
+          source_labels = ["__meta_kubernetes_pod_controller_kind"]
+          target_label  = "workload_type"
+        }
+    
+        rule {
+          source_labels = ["__meta_kubernetes_pod_controller_name"]
+          target_label  = "workload"
+        }
+    
+        // remove the hash from the ReplicaSet
+        rule {
+          source_labels = [
+            "workload_type",
+            "workload",
+          ]
+          separator = "/"
+          regex = "replicaset/(.+)-.+$"
+          target_label  = "workload"
+        }
+    
+        // set the app name if specified as metadata labels "app:" or "app.kubernetes.io/name:" or "k8s-app:"
+        rule {
+          action = "replace"
+          source_labels = [
+            "__meta_kubernetes_pod_label_app_kubernetes_io_name",
+            "__meta_kubernetes_pod_label_k8s_app",
+            "__meta_kubernetes_pod_label_app",
+          ]
+          separator = ";"
+          regex = "^(?:;*)?([^;]+).*$"
+          replacement = "$1"
+          target_label = "app"
+        }
+    
+        // set the component if specified as metadata labels "component:" or "app.kubernetes.io/component:" or "k8s-component:"
+        rule {
+          action = "replace"
+          source_labels = [
+            "__meta_kubernetes_pod_label_app_kubernetes_io_component",
+            "__meta_kubernetes_pod_label_k8s_component",
+            "__meta_kubernetes_pod_label_component",
+          ]
+          regex = "^(?:;*)?([^;]+).*$"
+          replacement = "$1"
+          target_label = "component"
+        }
+    
+        // set a source label
+        rule {
+          action = "replace"
+          replacement = "kubernetes"
+          target_label = "source"
+        }
+        }
+    
+        export "output" {
+          value = discovery.relabel.alloy_pods.output
+        }
+      }
+    
+      declare "alloy_integration_scrape" {
+        argument "targets" {
+          comment = "Must be a list() of targets"
+        }
+    
+        argument "forward_to" {
+          comment = "Must be a list(MetricsReceiver) where collected metrics should be forwarded to"
+        }
+    
+        argument "job_label" {
+          comment = "The job label to add for all Alloy metrics (default: integrations/alloy)"
+          optional = true
+        }
+    
+        argument "keep_metrics" {
+          comment = "A regular expression of metrics to keep (default: see below)"
+          optional = true
+        }
+    
+        argument "drop_metrics" {
+          comment = "A regular expression of metrics to drop (default: see below)"
+          optional = true
+        }
+    
+        argument "scrape_interval" {
+          comment = "How often to scrape metrics from the targets (default: 60s)"
+          optional = true
+        }
+    
+        argument "max_cache_size" {
+          comment = "The maximum number of elements to hold in the relabeling cache (default: 100000).  This should be at least 2x-5x your largest scrape target or samples appended rate."
+          optional = true
+        }
+    
+        argument "clustering" {
+          comment = "Whether or not clustering should be enabled (default: false)"
+          optional = true
+        }
+    
+        prometheus.scrape "alloy" {
+          job_name = coalesce(argument.job_label.value, "integrations/alloy")
+          forward_to = [prometheus.relabel.alloy.receiver]
+          targets = argument.targets.value
+          scrape_interval = coalesce(argument.scrape_interval.value, "60s")
+    
+          clustering {
+            enabled = coalesce(argument.clustering.value, false)
+          }
+        }
+    
+        // alloy metric relabelings (post-scrape)
+        prometheus.relabel "alloy" {
+          forward_to = argument.forward_to.value
+          max_cache_size = coalesce(argument.max_cache_size.value, 100000)
+    
+          // drop metrics that match the drop_metrics regex
+          rule {
+            source_labels = ["__name__"]
+            regex = coalesce(argument.drop_metrics.value, "")
+            action = "drop"
+          }
+    
+          // keep only metrics that match the keep_metrics regex
+          rule {
+            source_labels = ["__name__"]
+            regex = coalesce(argument.keep_metrics.value, ".*")
+            action = "keep"
+          }
+    
+          // remove the component_id label from any metric that starts with log_bytes or log_lines, these are custom metrics that are generated
+          // as part of the log annotation modules in this repo
+          rule {
+            action = "replace"
+            source_labels = ["__name__"]
+            regex = "^log_(bytes|lines).+"
+            replacement = ""
+            target_label = "component_id"
+          }
+    
+          // set the namespace label to that of the exported_namespace
+          rule {
+            action = "replace"
+            source_labels = ["__name__", "exported_namespace"]
+            separator = "@"
+            regex = "^log_(bytes|lines).+@(.+)"
+            replacement = "$2"
+            target_label = "namespace"
+          }
+    
+          // set the pod label to that of the exported_pod
+          rule {
+            action = "replace"
+            source_labels = ["__name__", "exported_pod"]
+            separator = "@"
+            regex = "^log_(bytes|lines).+@(.+)"
+            replacement = "$2"
+            target_label = "pod"
+          }
+    
+          // set the container label to that of the exported_container
+          rule {
+            action = "replace"
+            source_labels = ["__name__", "exported_container"]
+            separator = "@"
+            regex = "^log_(bytes|lines).+@(.+)"
+            replacement = "$2"
+            target_label = "container"
+          }
+    
+          // set the job label to that of the exported_job
+          rule {
+            action = "replace"
+            source_labels = ["__name__", "exported_job"]
+            separator = "@"
+            regex = "^log_(bytes|lines).+@(.+)"
+            replacement = "$2"
+            target_label = "job"
+          }
+    
+          // set the instance label to that of the exported_instance
+          rule {
+            action = "replace"
+            source_labels = ["__name__", "exported_instance"]
+            separator = "@"
+            regex = "^log_(bytes|lines).+@(.+)"
+            replacement = "$2"
+            target_label = "instance"
+          }
+    
+          rule {
+            action = "labeldrop"
+            regex = "exported_(namespace|pod|container|job|instance)"
+          }
+        }
+      }
+    
+      alloy_integration_discovery "alloy" {
+        port_name = "http-metrics"
+        label_selectors = ["app.kubernetes.io/name in (alloy-metrics,alloy-singleton,alloy-logs)"]
+      }
+    
+      alloy_integration_scrape  "alloy" {
+        targets = alloy_integration_discovery.alloy.output
+        job_label = "integrations/alloy"
+        clustering = true
+        keep_metrics = "up|scrape_samples_scraped|alloy_build_info|alloy_component_controller_running_components|alloy_component_dependencies_wait_seconds|alloy_component_dependencies_wait_seconds_bucket|alloy_component_evaluation_seconds|alloy_component_evaluation_seconds_bucket|alloy_component_evaluation_seconds_count|alloy_component_evaluation_seconds_sum|alloy_component_evaluation_slow_seconds|alloy_config_hash|alloy_resources_machine_rx_bytes_total|alloy_resources_machine_tx_bytes_total|alloy_resources_process_cpu_seconds_total|alloy_resources_process_resident_memory_bytes|alloy_tcp_connections|alloy_wal_samples_appended_total|alloy_wal_storage_active_series|cluster_node_gossip_health_score|cluster_node_gossip_proto_version|cluster_node_gossip_received_events_total|cluster_node_info|cluster_node_lamport_time|cluster_node_peers|cluster_node_update_observers|cluster_transport_rx_bytes_total|cluster_transport_rx_packet_queue_length|cluster_transport_rx_packets_failed_total|cluster_transport_rx_packets_total|cluster_transport_stream_rx_bytes_total|cluster_transport_stream_rx_packets_failed_total|cluster_transport_stream_rx_packets_total|cluster_transport_stream_tx_bytes_total|cluster_transport_stream_tx_packets_failed_total|cluster_transport_stream_tx_packets_total|cluster_transport_streams|cluster_transport_tx_bytes_total|cluster_transport_tx_packet_queue_length|cluster_transport_tx_packets_failed_total|cluster_transport_tx_packets_total|otelcol_exporter_send_failed_spans_total|otelcol_exporter_sent_spans_total|go_gc_duration_seconds_count|go_goroutines|go_memstats_heap_inuse_bytes|loki_process_dropped_lines_total|loki_write_batch_retries_total|loki_write_dropped_bytes_total|loki_write_dropped_entries_total|loki_write_encoded_bytes_total|loki_write_mutated_bytes_total|loki_write_mutated_entries_total|loki_write_request_duration_seconds_bucket|loki_write_sent_bytes_total|loki_write_sent_entries_total|process_cpu_seconds_total|process_start_time_seconds|otelcol_processor_batch_batch_send_size_bucket|otelcol_processor_batch_metadata_cardinality|otelcol_processor_batch_timeout_trigger_send_total|prometheus_remote_storage_bytes_total|prometheus_remote_storage_enqueue_retries_total|prometheus_remote_storage_highest_timestamp_in_seconds|prometheus_remote_storage_metadata_bytes_total|prometheus_remote_storage_queue_highest_sent_timestamp_seconds|prometheus_remote_storage_samples_dropped_total|prometheus_remote_storage_samples_failed_total|prometheus_remote_storage_samples_pending|prometheus_remote_storage_samples_retried_total|prometheus_remote_storage_samples_total|prometheus_remote_storage_sent_batch_duration_seconds_bucket|prometheus_remote_storage_sent_batch_duration_seconds_count|prometheus_remote_storage_sent_batch_duration_seconds_sum|prometheus_remote_storage_shard_capacity|prometheus_remote_storage_shards|prometheus_remote_storage_shards_desired|prometheus_remote_storage_shards_max|prometheus_remote_storage_shards_min|prometheus_remote_storage_succeeded_samples_total|prometheus_remote_write_wal_samples_appended_total|prometheus_remote_write_wal_storage_active_series|prometheus_sd_discovered_targets|prometheus_target_interval_length_seconds_count|prometheus_target_interval_length_seconds_sum|prometheus_target_scrapes_exceeded_sample_limit_total|prometheus_target_scrapes_sample_duplicate_timestamp_total|prometheus_target_scrapes_sample_out_of_bounds_total|prometheus_target_scrapes_sample_out_of_order_total|prometheus_target_sync_length_seconds_sum|prometheus_wal_watcher_current_segment|otelcol_receiver_accepted_spans_total|otelcol_receiver_refused_spans_total|rpc_server_duration_milliseconds_bucket|scrape_duration_seconds|traces_exporter_send_failed_spans|traces_exporter_send_failed_spans_total|traces_exporter_sent_spans|traces_exporter_sent_spans_total|traces_loadbalancer_backend_outcome|traces_loadbalancer_num_backends|traces_receiver_accepted_spans|traces_receiver_accepted_spans_total|traces_receiver_refused_spans|traces_receiver_refused_spans_total"
+        scrape_interval = "60s"
+        max_cache_size = 100000
+        forward_to = argument.metrics_destinations.value
+      }
+    }
+    alloy_integration "integration" {
+      metrics_destinations = [
+        prometheus.remote_write.grafana_cloud_metrics.receiver,
+      ]
+    }
+---
+# Source: k8s-monitoring/templates/alloy-config.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: k8smon-alloy-singleton
+  namespace: default
+data:
+  config.alloy: |-
+    // Destination: grafana-cloud-metrics (prometheus)
+    otelcol.exporter.prometheus "grafana_cloud_metrics" {
+      add_metric_suffixes = true
+      forward_to = [prometheus.remote_write.grafana_cloud_metrics.receiver]
+    }
+    
+    prometheus.remote_write "grafana_cloud_metrics" {
+      endpoint {
+        url = "https://prometheus-prod-13-prod-us-east-0.grafana.net/api/prom/push"
+        headers = {
+          "X-Scope-OrgID" = nonsensitive(remote.kubernetes.secret.grafana_cloud_metrics.data["tenantId"]),
+        }
+        basic_auth {
+          username = nonsensitive(remote.kubernetes.secret.grafana_cloud_metrics.data["PROMETHEUS_USER"])
+          password = remote.kubernetes.secret.grafana_cloud_metrics.data["PROMETHEUS_PASS"]
+        }
+        tls_config {
+          insecure_skip_verify = false
+          ca_pem = nonsensitive(remote.kubernetes.secret.grafana_cloud_metrics.data["ca"])
+          cert_pem = nonsensitive(remote.kubernetes.secret.grafana_cloud_metrics.data["cert"])
+          key_pem = remote.kubernetes.secret.grafana_cloud_metrics.data["key"]
+        }
+        send_native_histograms = false
+    
+        queue_config {
+          capacity = 10000
+          min_shards = 1
+          max_shards = 50
+          max_samples_per_send = 2000
+          batch_send_deadline = "5s"
+          min_backoff = "30ms"
+          max_backoff = "5s"
+          retry_on_http_429 = true
+          sample_age_limit = "0s"
+        }
+    
+        write_relabel_config {
+          source_labels = ["cluster"]
+          regex = ""
+          replacement = "aks-test"
+          target_label = "cluster"
+        }
+        write_relabel_config {
+          source_labels = ["k8s.cluster.name"]
+          regex = ""
+          replacement = "aks-test"
+          target_label = "cluster"
+        }
+      }
+    
+      wal {
+        truncate_frequency = "2h"
+        min_keepalive_time = "5m"
+        max_keepalive_time = "8h"
+      }
+    }
+    
+    remote.kubernetes.secret "grafana_cloud_metrics" {
+      name      = "grafana-cloud-credentials"
+      namespace = "default"
+    }
+    
+    // Destination: grafana-cloud-logs (loki)
+    otelcol.exporter.loki "grafana_cloud_logs" {
+      forward_to = [loki.write.grafana_cloud_logs.receiver]
+    }
+    
+    loki.write "grafana_cloud_logs" {
+      endpoint {
+        url = "https://logs-prod-006.grafana.net/loki/api/v1/push"
+        tenant_id = nonsensitive(remote.kubernetes.secret.grafana_cloud_logs.data["tenantId"])
+        basic_auth {
+          username = nonsensitive(remote.kubernetes.secret.grafana_cloud_logs.data["LOKI_USER"])
+          password = remote.kubernetes.secret.grafana_cloud_logs.data["LOKI_PASS"]
+        }
+        tls_config {
+          insecure_skip_verify = false
+          ca_pem = nonsensitive(remote.kubernetes.secret.grafana_cloud_logs.data["ca"])
+          cert_pem = nonsensitive(remote.kubernetes.secret.grafana_cloud_logs.data["cert"])
+          key_pem = remote.kubernetes.secret.grafana_cloud_logs.data["key"]
+        }
+      }
+      external_labels = {
+        cluster = "aks-test",
+        "k8s_cluster_name" = "aks-test",
+      }
+    }
+    
+    remote.kubernetes.secret "grafana_cloud_logs" {
+      name      = "grafana-cloud-credentials"
+      namespace = "default"
+    }
+    // Feature: Cluster Events
+    declare "cluster_events" {
+      argument "logs_destinations" {
+        comment = "Must be a list of log destinations where collected logs should be forwarded to"
+      }
+    
+      loki.source.kubernetes_events "cluster_events" {
+        job_name   = "integrations/kubernetes/eventhandler"
+        log_format = "logfmt"
+        forward_to = [loki.process.cluster_events.receiver]
+      }
+    
+      loki.process "cluster_events" {
+    
+        // add a static source label to the logs so they can be differentiated / restricted if necessary
+        stage.static_labels {
+          values = {
+            "source" = "kubernetes-events",
+          }
+        }
+    
+        // extract some of the fields from the log line, these could be used as labels, structured metadata, etc.
+        stage.logfmt {
+          mapping = {
+            "component" = "sourcecomponent", // map the sourcecomponent field to component
+            "kind" = "",
+            "level" = "type", // most events don't have a level but they do have a "type" i.e. Normal, Warning, Error, etc.
+            "name" = "",
+            "node" = "sourcehost", // map the sourcehost field to node
+          }
+        }
+        // set these values as labels, they may or may not be used as index labels in Loki as they can be dropped
+        // prior to being written to Loki, but this makes them available
+        stage.labels {
+          values = {
+            "component" = "",
+            "kind" = "",
+            "level" = "",
+            "name" = "",
+            "node" = "",
+          }
+        }
+    
+        // if kind=Node, set the node label by copying the instance label
+        stage.match {
+          selector = "{kind=\"Node\"}"
+    
+          stage.labels {
+            values = {
+              "node" = "name",
+            }
+          }
+        }
+    
+        // set the level extracted key value as a normalized log level
+        stage.match {
+          selector = "{level=\"Normal\"}"
+    
+          stage.static_labels {
+            values = {
+              level = "Info",
+            }
+          }
+        }
+    
+        // Only keep the labels that are defined in the `keepLabels` list.
+        stage.label_keep {
+          values = ["job","level","namespace","node","source"]
+        }
+        forward_to = argument.logs_destinations.value
+      }
+    }
+    cluster_events "feature" {
+      logs_destinations = [
+        loki.write.grafana_cloud_logs.receiver,
+      ]
+    }
+    // Self Reporting
+    prometheus.exporter.unix "kubernetes_monitoring_telemetry" {
+      set_collectors = ["textfile"]
+      textfile {
+        directory = "/etc/alloy"
+      }
+    }
+    
+    discovery.relabel "kubernetes_monitoring_telemetry" {
+      targets = prometheus.exporter.unix.kubernetes_monitoring_telemetry.targets
+      rule {
+        target_label = "instance"
+        action = "replace"
+        replacement = "k8smon"
+      }
+      rule {
+        target_label = "job"
+        action = "replace"
+        replacement = "integrations/kubernetes/kubernetes_monitoring_telemetry"
+      }
+    }
+    
+    prometheus.scrape "kubernetes_monitoring_telemetry" {
+      job_name   = "integrations/kubernetes/kubernetes_monitoring_telemetry"
+      targets    = discovery.relabel.kubernetes_monitoring_telemetry.output
+      scrape_interval = "60s"
+      clustering {
+        enabled = true
+      }
+      forward_to = [prometheus.relabel.kubernetes_monitoring_telemetry.receiver]
+    }
+    
+    prometheus.relabel "kubernetes_monitoring_telemetry" {
+      rule {
+        source_labels = ["__name__"]
+        regex = "grafana_kubernetes_monitoring_.*"
+        action = "keep"
+      }
+      forward_to = [
+        prometheus.remote_write.grafana_cloud_metrics.receiver,
+      ]
+    }
+
+  self-reporting-metric.prom: |
+    
+    # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart
+    # TYPE grafana_kubernetes_monitoring_build_info gauge
+    grafana_kubernetes_monitoring_build_info{version="2.0.14", namespace="default"} 1
+    # HELP grafana_kubernetes_monitoring_feature_info A metric to report the enabled features of the Kubernetes Monitoring Helm chart
+    # TYPE grafana_kubernetes_monitoring_feature_info gauge
+    grafana_kubernetes_monitoring_feature_info{deployments="kube-state-metrics,node-exporter,windows-exporter", feature="clusterMetrics", sources="kubelet,kubeletResource,cadvisor,kube-state-metrics,node-exporter,windows-exporter", version="1.0.0"} 1
+    grafana_kubernetes_monitoring_feature_info{feature="clusterEvents", version="1.0.0"} 1
+    grafana_kubernetes_monitoring_feature_info{feature="podLogs", method="volumes", version="1.0.0"} 1
+    grafana_kubernetes_monitoring_feature_info{feature="integrations", sources="alloy", version="1.0.0"} 1
+---
+# Source: k8s-monitoring/templates/alloy-config.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: k8smon-alloy-logs
+  namespace: default
+data:
+  config.alloy: |-
+    // Destination: grafana-cloud-logs (loki)
+    otelcol.exporter.loki "grafana_cloud_logs" {
+      forward_to = [loki.write.grafana_cloud_logs.receiver]
+    }
+    
+    loki.write "grafana_cloud_logs" {
+      endpoint {
+        url = "https://logs-prod-006.grafana.net/loki/api/v1/push"
+        tenant_id = nonsensitive(remote.kubernetes.secret.grafana_cloud_logs.data["tenantId"])
+        basic_auth {
+          username = nonsensitive(remote.kubernetes.secret.grafana_cloud_logs.data["LOKI_USER"])
+          password = remote.kubernetes.secret.grafana_cloud_logs.data["LOKI_PASS"]
+        }
+        tls_config {
+          insecure_skip_verify = false
+          ca_pem = nonsensitive(remote.kubernetes.secret.grafana_cloud_logs.data["ca"])
+          cert_pem = nonsensitive(remote.kubernetes.secret.grafana_cloud_logs.data["cert"])
+          key_pem = remote.kubernetes.secret.grafana_cloud_logs.data["key"]
+        }
+      }
+      external_labels = {
+        cluster = "aks-test",
+        "k8s_cluster_name" = "aks-test",
+      }
+    }
+    
+    remote.kubernetes.secret "grafana_cloud_logs" {
+      name      = "grafana-cloud-credentials"
+      namespace = "default"
+    }
+    // Feature: Pod Logs
+    declare "pod_logs" {
+      argument "logs_destinations" {
+        comment = "Must be a list of log destinations where collected logs should be forwarded to"
+      }
+    
+      discovery.relabel "filtered_pods" {
+        targets = discovery.kubernetes.pods.targets
+        rule {
+          source_labels = ["__meta_kubernetes_namespace"]
+          action = "replace"
+          target_label = "namespace"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_pod_name"]
+          action = "replace"
+          target_label = "pod"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_pod_container_name"]
+          action = "replace"
+          target_label = "container"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_namespace", "__meta_kubernetes_pod_container_name"]
+          separator = "/"
+          action = "replace"
+          replacement = "$1"
+          target_label = "job"
+        }
+    
+        // set the container runtime as a label
+        rule {
+          action = "replace"
+          source_labels = ["__meta_kubernetes_pod_container_id"]
+          regex = "^(\\S+):\\/\\/.+$"
+          replacement = "$1"
+          target_label = "tmp_container_runtime"
+        }
+    
+        // make all labels on the pod available to the pipeline as labels,
+        // they are omitted before write to loki via stage.label_keep unless explicitly set
+        rule {
+          action = "labelmap"
+          regex = "__meta_kubernetes_pod_label_(.+)"
+        }
+    
+        // make all annotations on the pod available to the pipeline as labels,
+        // they are omitted before write to loki via stage.label_keep unless explicitly set
+        rule {
+          action = "labelmap"
+          regex = "__meta_kubernetes_pod_annotation_(.+)"
+        }
+    
+        // explicitly set service_name. if not set, loki will automatically try to populate a default.
+        // see https://grafana.com/docs/loki/latest/get-started/labels/#default-labels-for-all-users
+        //
+        // choose the first value found from the following ordered list:
+        // - pod.annotation[resource.opentelemetry.io/service.name]
+        // - pod.label[app.kubernetes.io/name]
+        // - k8s.pod.name
+        // - k8s.container.name
+        rule {
+          action = "replace"
+          source_labels = [
+            "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_name",
+            "__meta_kubernetes_pod_label_app_kubernetes_io_name",
+            "__meta_kubernetes_pod_name",
+            "__meta_kubernetes_pod_container_name",
+          ]
+          separator = ";"
+          regex = "^(?:;*)?([^;]+).*$"
+          replacement = "$1"
+          target_label = "service_name"
+        }
+    
+        // set resource attributes
+        rule {
+          action = "labelmap"
+          regex = "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_(.+)"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_logs_job"]
+          regex = "(.+)"
+          target_label = "job"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
+          regex = "(.+)"
+          target_label = "app_kubernetes_io_name"
+        }
+      }
+    
+      discovery.kubernetes "pods" {
+        role = "pod"
+        selectors {
+          role = "pod"
+          field = "spec.nodeName=" + sys.env("HOSTNAME")
+        }
+      }
+    
+      discovery.relabel "filtered_pods_with_paths" {
+        targets = discovery.relabel.filtered_pods.output
+    
+        rule {
+          source_labels = ["__meta_kubernetes_pod_uid", "__meta_kubernetes_pod_container_name"]
+          separator = "/"
+          action = "replace"
+          replacement = "/var/log/pods/*$1/*.log"
+          target_label = "__path__"
+        }
+      }
+    
+      local.file_match "pod_logs" {
+        path_targets = discovery.relabel.filtered_pods_with_paths.output
+      }
+    
+      loki.source.file "pod_logs" {
+        targets    = local.file_match.pod_logs.targets
+        forward_to = [loki.process.pod_logs.receiver]
+      }
+    
+      loki.process "pod_logs" {
+        stage.match {
+          selector = "{tmp_container_runtime=~\"containerd|cri-o\"}"
+          // the cri processing stage extracts the following k/v pairs: log, stream, time, flags
+          stage.cri {}
+    
+          // Set the extract flags and stream values as labels
+          stage.labels {
+            values = {
+              flags  = "",
+              stream  = "",
+            }
+          }
+        }
+    
+        stage.match {
+          selector = "{tmp_container_runtime=\"docker\"}"
+          // the docker processing stage extracts the following k/v pairs: log, stream, time
+          stage.docker {}
+    
+          // Set the extract stream value as a label
+          stage.labels {
+            values = {
+              stream  = "",
+            }
+          }
+        }
+    
+        // Drop the filename label, since it's not really useful in the context of Kubernetes, where we already have cluster,
+        // namespace, pod, and container labels. Drop any structured metadata. Also drop the temporary
+        // container runtime label as it is no longer needed.
+        stage.label_drop {
+          values = [
+            "filename",
+            "tmp_container_runtime",
+          ]
+        }
+    
+        // Only keep the labels that are defined in the `keepLabels` list.
+        stage.label_keep {
+          values = ["app_kubernetes_io_name","container","instance","job","level","namespace","pod","service_name","service_namespace","deployment_environment","deployment_environment_name","integration"]
+        }
+    
+        forward_to = argument.logs_destinations.value
+      }
+    }
+    pod_logs "feature" {
+      logs_destinations = [
+        loki.write.grafana_cloud_logs.receiver,
+      ]
+    }
+---
+# Source: k8s-monitoring/templates/alloy-modules-configmaps.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: k8smon-alloy-module-kubernetes
+data:
+  core_metrics.alloy: |
+    /*
+    Module: job-cadvisor
+    Description: Scrapes cadvisor
+    
+    Note: Every argument except for "forward_to" is optional, and does have a defined default value.  However, the values for these
+          arguments are not defined using the default = " ... " argument syntax, but rather using the coalesce(argument.value, " ... ").
+          This is because if the argument passed in from another consuming module is set to null, the default = " ... " syntax will
+          does not override the value passed in, where coalesce() will return the first non-null value.
+    */
+    declare "cadvisor" {
+      argument "forward_to" {
+        comment = "Must be a list(MetricsReceiver) where collected metrics should be forwarded to"
+      }
+      argument "field_selectors" {
+        // Docs: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
+        comment = "The label selectors to use to find matching targets (default: [\"metadata.name=kubernetes\"])"
+        optional = true
+      }
+      argument "label_selectors" {
+        // Docs: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
+        comment = "The label selectors to use to find matching targets (default: [])"
+        optional = true
+      }
+      argument "job_label" {
+        comment = "The job label to add for all cadvisor metric (default: integrations/kubernetes/cadvisor)"
+        optional = true
+      }
+      argument "keep_metrics" {
+        comment = "A regular expression of metrics to keep (default: see below)"
+        optional = true
+      }
+      argument "drop_metrics" {
+        comment = "A regular expression of metrics to drop (default: see below)"
+        optional = true
+      }
+      argument "scrape_interval" {
+        comment = "How often to scrape metrics from the targets (default: 60s)"
+        optional = true
+      }
+      argument "scrape_timeout" {
+        comment = "How long before a scrape times out (default: 10s)"
+        optional = true
+      }
+      argument "max_cache_size" {
+        comment = "The maximum number of elements to hold in the relabeling cache (default: 100000).  This should be at least 2x-5x your largest scrape target or samples appended rate."
+        optional = true
+      }
+      argument "clustering" {
+        // Docs: https://grafana.com/docs/agent/latest/flow/concepts/clustering/
+        comment = "Whether or not clustering should be enabled (default: false)"
+        optional = true
+      }
+    
+      export "output" {
+        value = discovery.relabel.cadvisor.output
+      }
+    
+      // cadvisor service discovery for all of the nodes
+      discovery.kubernetes "cadvisor" {
+        role = "node"
+    
+        selectors {
+          role = "node"
+          field = string.join(coalesce(argument.field_selectors.value, []), ",")
+          label = string.join(coalesce(argument.label_selectors.value, []), ",")
+        }
+      }
+    
+      // cadvisor relabelings (pre-scrape)
+      discovery.relabel "cadvisor" {
+        targets = discovery.kubernetes.cadvisor.targets
+    
+        // set the address to use the kubernetes service dns name
+        rule {
+          target_label = "__address__"
+          replacement  = "kubernetes.default.svc.cluster.local:443"
+        }
+    
+        // set the metrics path to use the proxy path to the nodes cadvisor metrics endpoint
+        rule {
+          source_labels = ["__meta_kubernetes_node_name"]
+          regex = "(.+)"
+          replacement = "/api/v1/nodes/${1}/proxy/metrics/cadvisor"
+          target_label = "__metrics_path__"
+        }
+    
+        // set the node label
+        rule {
+          source_labels = ["__meta_kubernetes_node_name"]
+          target_label  = "node"
+        }
+    
+        // set the app name if specified as metadata labels "app:" or "app.kubernetes.io/name:" or "k8s-app:"
+        rule {
+          action = "replace"
+          source_labels = [
+            "__meta_kubernetes_node_label_app_kubernetes_io_name",
+            "__meta_kubernetes_node_label_k8s_app",
+            "__meta_kubernetes_node_label_app",
+          ]
+          separator = ";"
+          regex = "^(?:;*)?([^;]+).*$"
+          replacement = "$1"
+          target_label = "app"
+        }
+    
+        // set a source label
+        rule {
+          action = "replace"
+          replacement = "kubernetes"
+          target_label = "source"
+        }
+      }
+    
+      // cadvisor scrape job
+      prometheus.scrape "cadvisor" {
+        job_name = coalesce(argument.job_label.value, "integrations/kubernetes/cadvisor")
+        forward_to = [prometheus.relabel.cadvisor.receiver]
+        targets = discovery.relabel.cadvisor.output
+        scheme = "https"
+        scrape_interval = coalesce(argument.scrape_interval.value, "60s")
+        scrape_timeout = coalesce(argument.scrape_timeout.value, "10s")
+        bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+    
+        tls_config {
+          ca_file = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+          insecure_skip_verify = false
+          server_name = "kubernetes"
+        }
+    
+        clustering {
+          enabled = coalesce(argument.clustering.value, false)
+        }
+      }
+    
+      // cadvisor metric relabelings (post-scrape)
+      prometheus.relabel "cadvisor" {
+        forward_to = argument.forward_to.value
+        max_cache_size = coalesce(argument.max_cache_size.value, 100000)
+    
+        // drop metrics that match the drop_metrics regex
+        rule {
+          source_labels = ["__name__"]
+          regex = coalesce(argument.drop_metrics.value, "(^(go|process)_.+$)")
+          action = "drop"
+        }
+    
+        // keep only metrics that match the keep_metrics regex
+        rule {
+          source_labels = ["__name__"]
+          regex = coalesce(argument.keep_metrics.value, "(up|container_(cpu_(cfs_(periods|throttled_periods)_total|usage_seconds_total)|fs_(reads|writes)(_bytes)?_total|memory_(cache|rss|swap|working_set_bytes)|network_(receive|transmit)_(bytes|packets(_dropped)?_total))|machine_memory_bytes)")
+          action = "keep"
+        }
+    
+        // Drop empty container labels, addressing https://github.com/google/cadvisor/issues/2688
+        rule {
+          source_labels = ["__name__","container"]
+          separator = "@"
+          regex = "(container_cpu_.*|container_fs_.*|container_memory_.*)@"
+          action = "drop"
+        }
+    
+        // Drop empty image labels, addressing https://github.com/google/cadvisor/issues/2688
+        rule {
+          source_labels = ["__name__","image"]
+          separator = "@"
+          regex = "(container_cpu_.*|container_fs_.*|container_memory_.*|container_network_.*)@"
+          action = "drop"
+        }
+    
+        // Normalizing unimportant labels (not deleting to continue satisfying <label>!="" checks)
+        rule {
+          source_labels = ["__name__", "boot_id"]
+          separator = "@"
+          regex = "machine_memory_bytes@.*"
+          target_label = "boot_id"
+          replacement = "NA"
+        }
+        rule {
+          source_labels = ["__name__", "system_uuid"]
+          separator = "@"
+          regex = "machine_memory_bytes@.*"
+          target_label = "system_uuid"
+          replacement = "NA"
+        }
+    
+        // Filter out non-physical devices/interfaces
+        rule {
+          source_labels = ["__name__", "device"]
+          separator = "@"
+          regex = "container_fs_.*@(/dev/)?(mmcblk.p.+|nvme.+|rbd.+|sd.+|vd.+|xvd.+|dasd.+)"
+          target_label = "__keepme"
+          replacement = "1"
+        }
+        rule {
+          source_labels = ["__name__", "__keepme"]
+          separator = "@"
+          regex = "container_fs_.*@"
+          action = "drop"
+        }
+        rule {
+          source_labels = ["__name__"]
+          regex = "container_fs_.*"
+          target_label = "__keepme"
+          replacement = ""
+        }
+        rule {
+          source_labels = ["__name__", "interface"]
+          separator = "@"
+          regex = "container_network_.*@(en[ospx][0-9].*|wlan[0-9].*|eth[0-9].*)"
+          target_label = "__keepme"
+          replacement = "1"
+        }
+        rule {
+          source_labels = ["__name__", "__keepme"]
+          separator = "@"
+          regex = "container_network_.*@"
+          action = "drop"
+        }
+        rule {
+          source_labels = ["__name__"]
+          regex = "container_network_.*"
+          target_label = "__keepme"
+          replacement = ""
+        }
+      }
+    }
+    
+    declare "resources" {
+      argument "forward_to" {
+        comment = "Must be a list(MetricsReceiver) where collected metrics should be forwarded to"
+      }
+      argument "field_selectors" {
+        // Docs: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
+        comment = "The label selectors to use to find matching targets (default: [\"metadata.name=kubernetes\"])"
+        optional = true
+      }
+      argument "label_selectors" {
+        // Docs: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
+        comment = "The label selectors to use to find matching targets (default: [])"
+        optional = true
+      }
+      argument "job_label" {
+        comment = "The job label to add for all resources metric (default: integrations/kubernetes/kube-resources)"
+        optional = true
+      }
+      argument "keep_metrics" {
+        comment = "A regular expression of metrics to keep (default: see below)"
+        optional = true
+      }
+      argument "drop_metrics" {
+        comment = "A regular expression of metrics to drop (default: see below)"
+        optional = true
+      }
+      argument "scrape_interval" {
+        comment = "How often to scrape metrics from the targets (default: 60s)"
+        optional = true
+      }
+      argument "scrape_timeout" {
+        comment = "How long before a scrape times out (default: 10s)"
+        optional = true
+      }
+      argument "max_cache_size" {
+        comment = "The maximum number of elements to hold in the relabeling cache (default: 100000).  This should be at least 2x-5x your largest scrape target or samples appended rate."
+        optional = true
+      }
+      argument "clustering" {
+        // Docs: https://grafana.com/docs/agent/latest/flow/concepts/clustering/
+        comment = "Whether or not clustering should be enabled (default: false)"
+        optional = true
+      }
+    
+      export "output" {
+        value = discovery.relabel.resources.output
+      }
+    
+      // resources service discovery for all of the nodes
+      discovery.kubernetes "resources" {
+        role = "node"
+    
+        selectors {
+          role = "node"
+          field = string.join(coalesce(argument.field_selectors.value, []), ",")
+          label = string.join(coalesce(argument.label_selectors.value, []), ",")
+        }
+      }
+    
+      // resources relabelings (pre-scrape)
+      discovery.relabel "resources" {
+        targets = discovery.kubernetes.resources.targets
+    
+        // set the address to use the kubernetes service dns name
+        rule {
+          target_label = "__address__"
+          replacement  = "kubernetes.default.svc.cluster.local:443"
+        }
+    
+        // set the metrics path to use the proxy path to the nodes resources metrics endpoint
+        rule {
+          source_labels = ["__meta_kubernetes_node_name"]
+          regex = "(.+)"
+          replacement = "/api/v1/nodes/${1}/proxy/metrics/resource"
+          target_label = "__metrics_path__"
+        }
+    
+        // set the node label
+        rule {
+          source_labels = ["__meta_kubernetes_node_name"]
+          target_label  = "node"
+        }
+    
+        // set the app name if specified as metadata labels "app:" or "app.kubernetes.io/name:" or "k8s-app:"
+        rule {
+          action = "replace"
+          source_labels = [
+            "__meta_kubernetes_node_label_app_kubernetes_io_name",
+            "__meta_kubernetes_node_label_k8s_app",
+            "__meta_kubernetes_node_label_app",
+          ]
+          separator = ";"
+          regex = "^(?:;*)?([^;]+).*$"
+          replacement = "$1"
+          target_label = "app"
+        }
+    
+        // set a source label
+        rule {
+          action = "replace"
+          replacement = "kubernetes"
+          target_label = "source"
+        }
+      }
+    
+       // resources scrape job
+      prometheus.scrape "resources" {
+        job_name = coalesce(argument.job_label.value, "integrations/kubernetes/kube-resources")
+        forward_to = [prometheus.relabel.resources.receiver]
+        targets = discovery.relabel.resources.output
+        scheme = "https"
+        scrape_interval = coalesce(argument.scrape_interval.value, "60s")
+        scrape_timeout = coalesce(argument.scrape_timeout.value, "10s")
+        bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+    
+        tls_config {
+          ca_file = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+          insecure_skip_verify = false
+          server_name = "kubernetes"
+        }
+    
+        clustering {
+          enabled = coalesce(argument.clustering.value, false)
+        }
+      }
+    
+      // resources metric relabelings (post-scrape)
+      prometheus.relabel "resources" {
+        forward_to = argument.forward_to.value
+        max_cache_size = coalesce(argument.max_cache_size.value, 100000)
+    
+        // drop metrics that match the drop_metrics regex
+        rule {
+          source_labels = ["__name__"]
+          regex = coalesce(argument.drop_metrics.value, "(^(go|process)_.+$)")
+          action = "drop"
+        }
+    
+        // keep only metrics that match the keep_metrics regex
+        rule {
+          source_labels = ["__name__"]
+          regex = coalesce(argument.keep_metrics.value, "(.+)")
+          action = "keep"
+        }
+      }
+    }
+    
+    declare "kubelet" {
+      argument "forward_to" {
+        comment = "Must be a list(MetricsReceiver) where collected metrics should be forwarded to"
+      }
+      argument "field_selectors" {
+        // Docs: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
+        comment = "The label selectors to use to find matching targets (default: [])"
+        optional = true
+      }
+      argument "label_selectors" {
+        // Docs: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
+        comment = "The label selectors to use to find matching targets (default: [])"
+        optional = true
+      }
+      argument "job_label" {
+        comment = "The job label to add for all kubelet metric (default: integrations/kubernetes/kube-kubelet)"
+        optional = true
+      }
+      argument "keep_metrics" {
+        comment = "A regular expression of metrics to keep (default: see below)"
+        optional = true
+      }
+      argument "drop_metrics" {
+        comment = "A regular expression of metrics to drop (default: see below)"
+        optional = true
+      }
+      argument "scrape_interval" {
+        comment = "How often to scrape metrics from the targets (default: 60s)"
+        optional = true
+      }
+      argument "scrape_timeout" {
+        comment = "How long before a scrape times out (default: 10s)"
+        optional = true
+      }
+      argument "max_cache_size" {
+        comment = "The maximum number of elements to hold in the relabeling cache (default: 100000).  This should be at least 2x-5x your largest scrape target or samples appended rate."
+        optional = true
+      }
+      argument "clustering" {
+        // Docs: https://grafana.com/docs/agent/latest/flow/concepts/clustering/
+        comment = "Whether or not clustering should be enabled (default: false)"
+        optional = true
+      }
+    
+      export "output" {
+        value = discovery.relabel.kubelet.output
+      }
+    
+      // kubelet service discovery for all of the nodes
+      discovery.kubernetes "kubelet" {
+        role = "node"
+    
+        selectors {
+          role = "node"
+          field = string.join(coalesce(argument.field_selectors.value, []), ",")
+          label = string.join(coalesce(argument.label_selectors.value, []), ",")
+        }
+      }
+    
+      // kubelet relabelings (pre-scrape)
+      discovery.relabel "kubelet" {
+        targets = discovery.kubernetes.kubelet.targets
+    
+        // set the address to use the kubernetes service dns name
+        rule {
+          target_label = "__address__"
+          replacement  = "kubernetes.default.svc.cluster.local:443"
+        }
+    
+        // set the metrics path to use the proxy path to the nodes kubelet metrics endpoint
+        rule {
+          source_labels = ["__meta_kubernetes_node_name"]
+          regex = "(.+)"
+          replacement = "/api/v1/nodes/${1}/proxy/metrics"
+          target_label = "__metrics_path__"
+        }
+    
+        // set the node label
+        rule {
+          source_labels = ["__meta_kubernetes_node_name"]
+          target_label  = "node"
+        }
+    
+        // set the app name if specified as metadata labels "app:" or "app.kubernetes.io/name:" or "k8s-app:"
+        rule {
+          action = "replace"
+          source_labels = [
+            "__meta_kubernetes_node_label_app_kubernetes_io_name",
+            "__meta_kubernetes_node_label_k8s_app",
+            "__meta_kubernetes_node_label_app",
+          ]
+          separator = ";"
+          regex = "^(?:;*)?([^;]+).*$"
+          replacement = "$1"
+          target_label = "app"
+        }
+    
+        // set a source label
+        rule {
+          action = "replace"
+          replacement = "kubernetes"
+          target_label = "source"
+        }
+      }
+    
+      // kubelet scrape job
+      prometheus.scrape "kubelet" {
+        job_name = coalesce(argument.job_label.value, "integrations/kubernetes/kubelet")
+        forward_to = [prometheus.relabel.kubelet.receiver]
+        targets = discovery.relabel.kubelet.output
+        scheme = "https"
+        scrape_interval = coalesce(argument.scrape_interval.value, "60s")
+        scrape_timeout = coalesce(argument.scrape_timeout.value, "10s")
+        bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+    
+        tls_config {
+          ca_file = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+          insecure_skip_verify = false
+          server_name = "kubernetes"
+        }
+    
+        clustering {
+          enabled = coalesce(argument.clustering.value, false)
+        }
+      }
+    
+      // kubelet metric relabelings (post-scrape)
+      prometheus.relabel "kubelet" {
+        forward_to = argument.forward_to.value
+        max_cache_size = coalesce(argument.max_cache_size.value, 100000)
+    
+        // drop metrics that match the drop_metrics regex
+        rule {
+          source_labels = ["__name__"]
+          regex = coalesce(argument.drop_metrics.value, "(^(go|process)_.+$)")
+          action = "drop"
+        }
+    
+        // keep only metrics that match the keep_metrics regex
+        rule {
+          source_labels = ["__name__"]
+          regex = coalesce(argument.keep_metrics.value, "(.+)")
+          action = "keep"
+        }
+      }
+    }
+    
+    declare "apiserver" {
+      argument "forward_to" {
+        comment = "Must be a list(MetricsReceiver) where collected metrics should be forwarded to"
+      }
+      argument "namespaces" {
+        comment = "The namespaces to look for targets in (default: default)"
+        optional = true
+      }
+      argument "field_selectors" {
+        // Docs: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
+        comment = "The label selectors to use to find matching targets (default: [\"metadata.name=kubernetes\"])"
+        optional = true
+      }
+      argument "label_selectors" {
+        // Docs: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
+        comment = "The label selectors to use to find matching targets (default: [])"
+        optional = true
+      }
+      argument "port_name" {
+        comment = "The value of the label for the selector (default: https)"
+        optional = true
+      }
+      argument "job_label" {
+        comment = "The job label to add for all kube-apiserver metrics (default: integrations/kubernetes/kube-apiserver)"
+        optional = true
+      }
+      argument "keep_metrics" {
+        comment = "A regular expression of metrics to keep (default: see below)"
+        optional = true
+      }
+      // drop metrics and les from kube-prometheus
+      // https://github.com/prometheus-operator/kube-prometheus/blob/main/manifests/kubernetesControlPlane-serviceMonitorApiserver.yaml
+      argument "drop_metrics" {
+        comment = "A regular expression of metrics to drop (default: see below)"
+        optional = true
+      }
+      argument "drop_les" {
+        comment = "Regular expression of metric les label values to drop (default: see below)"
+        optional = true
+      }
+      argument "scrape_interval" {
+        comment = "How often to scrape metrics from the targets (default: 60s)"
+        optional = true
+      }
+      argument "scrape_timeout" {
+        comment = "How long before a scrape times out (default: 10s)"
+        optional = true
+      }
+      argument "max_cache_size" {
+        comment = "The maximum number of elements to hold in the relabeling cache (default: 100000).  This should be at least 2x-5x your largest scrape target or samples appended rate."
+        optional = true
+      }
+      argument "clustering" {
+        // Docs: https://grafana.com/docs/agent/latest/flow/concepts/clustering/
+        comment = "Whether or not clustering should be enabled (default: false)"
+        optional = true
+      }
+    
+      export "output" {
+        value = discovery.relabel.apiserver.output
+      }
+    
+      // kube-apiserver service discovery
+      discovery.kubernetes "apiserver" {
+        role = "service"
+    
+        selectors {
+          role = "service"
+          field = string.join(coalesce(argument.field_selectors.value, ["metadata.name=kubernetes"]), ",")
+          label = string.join(coalesce(argument.label_selectors.value, []), ",")
+        }
+    
+        namespaces {
+          names = coalesce(argument.namespaces.value, ["default"])
+        }
+      }
+    
+      // apiserver relabelings (pre-scrape)
+      discovery.relabel "apiserver" {
+        targets = discovery.kubernetes.apiserver.targets
+    
+        // only keep targets with a matching port name
+        rule {
+          source_labels = ["__meta_kubernetes_service_port_name"]
+          regex = coalesce(argument.port_name.value, "https")
+          action = "keep"
+        }
+    
+        // set the namespace
+        rule {
+          action = "replace"
+          source_labels = ["__meta_kubernetes_namespace"]
+          target_label = "namespace"
+        }
+    
+        // set the service_name
+        rule {
+          action = "replace"
+          source_labels = ["__meta_kubernetes_service_name"]
+          target_label = "service"
+        }
+    
+        // set the app name if specified as metadata labels "app:" or "app.kubernetes.io/name:" or "k8s-app:"
+        rule {
+          action = "replace"
+          source_labels = [
+            "__meta_kubernetes_service_label_app_kubernetes_io_name",
+            "__meta_kubernetes_service_label_k8s_app",
+            "__meta_kubernetes_service_label_app",
+          ]
+          separator = ";"
+          regex = "^(?:;*)?([^;]+).*$"
+          replacement = "$1"
+          target_label = "app"
+        }
+    
+        // set a source label
+        rule {
+          action = "replace"
+          replacement = "kubernetes"
+          target_label = "source"
+        }
+      }
+    
+      // kube-apiserver scrape job
+      prometheus.scrape "apiserver" {
+        job_name = coalesce(argument.job_label.value, "integrations/kubernetes/kube-apiserver")
+        forward_to = [prometheus.relabel.apiserver.receiver]
+        targets = discovery.relabel.apiserver.output
+        scheme = "https"
+        scrape_interval = coalesce(argument.scrape_interval.value, "60s")
+        scrape_timeout = coalesce(argument.scrape_timeout.value, "10s")
+        bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+    
+        tls_config {
+          ca_file = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+          insecure_skip_verify = false
+          server_name = "kubernetes"
+        }
+    
+        clustering {
+          enabled = coalesce(argument.clustering.value, false)
+        }
+      }
+    
+      // apiserver metric relabelings (post-scrape)
+      prometheus.relabel "apiserver" {
+        forward_to = argument.forward_to.value
+        max_cache_size = coalesce(argument.max_cache_size.value, 100000)
+    
+        // drop metrics that match the drop_metrics regex
+        rule {
+          source_labels = ["__name__"]
+          regex = coalesce(argument.drop_metrics.value, "(((go|process)_.+)|kubelet_(pod_(worker|start)_latency_microseconds|cgroup_manager_latency_microseconds|pleg_relist_(latency|interval)_microseconds|runtime_operations(_latency_microseconds|_errors)?|eviction_stats_age_microseconds|device_plugin_(registration_count|alloc_latency_microseconds)|network_plugin_operations_latency_microseconds)|scheduler_(e2e_scheduling_latency_microseconds|scheduling_algorithm_(predicate|priority|preemption)_evaluation|scheduling_algorithm_latency_microseconds|binding_latency_microseconds|scheduling_latency_seconds)|apiserver_(request_(count|latencies(_summary)?)|dropped_requests|storage_(data_key_generation|transformation_(failures_total|latencies_microseconds))|proxy_tunnel_sync_latency_secs|longrunning_gauge|registered_watchers)|kubelet_docker_(operations(_latency_microseconds|_errors|_timeout)?)|reflector_(items_per_(list|watch)|list_duration_seconds|lists_total|short_watches_total|watch_duration_seconds|watches_total)|etcd_(helper_(cache_(hit|miss)_count|cache_entry_count|object_counts)|request_(cache_(get|add)_latencies_summary|latencies_summary)|debugging.*|disk.*|server.*)|transformation_(latencies_microseconds|failures_total)|(admission_quota_controller|APIServiceOpenAPIAggregationControllerQueue1|APIServiceRegistrationController|autoregister|AvailableConditionController|crd_(autoregistration_controller|Establishing|finalizer|naming_condition_controller|openapi_controller)|DiscoveryController|non_structural_schema_condition_controller|kubeproxy_sync_proxy_rules|rest_client_request_latency|storage_operation_(errors_total|status_count))(_.*)|apiserver_admission_(controller_admission|step_admission)_latencies_seconds_.*)")
+          action = "drop"
+        }
+    
+        // drop metrics whose name and le label match the drop_les regex
+        rule {
+          source_labels = [
+            "__name__",
+            "le",
+          ]
+          regex = coalesce(argument.drop_les.value, "apiserver_request_duration_seconds_bucket;(0.15|0.25|0.3|0.35|0.4|0.45|0.6|0.7|0.8|0.9|1.25|1.5|1.75|2.5|3|3.5|4.5|6|7|8|9|15|25|30|50)")
+          action = "drop"
+        }
+    
+        // keep only metrics that match the keep_metrics regex
+        rule {
+          source_labels = ["__name__"]
+          regex = coalesce(argument.keep_metrics.value, "(.+)")
+          action = "keep"
+        }
+      }
+    }
+    
+    declare "probes" {
+      argument "field_selectors" {
+        // Docs: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
+        comment = "The label selectors to use to find matching targets (default: [\"metadata.name=kubernetes\"])"
+        optional = true
+      }
+      argument "label_selectors" {
+        // Docs: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
+        comment = "The label selectors to use to find matching targets (default: [])"
+        optional = true
+      }
+      argument "forward_to" {
+        comment = "Must be a list(MetricsReceiver) where collected metrics should be forwarded to"
+      }
+      argument "job_label" {
+        comment = "The job label to add for all probes metric (default: integrations/kubernetes/kube-probes)"
+        optional = true
+      }
+      argument "keep_metrics" {
+        comment = "A regular expression of metrics to keep (default: see below)"
+        optional = true
+      }
+      argument "drop_metrics" {
+        comment = "A regular expression of metrics to drop (default: see below)"
+        optional = true
+      }
+      argument "scrape_interval" {
+        comment = "How often to scrape metrics from the targets (default: 60s)"
+        optional = true
+      }
+      argument "scrape_timeout" {
+        comment = "How long before a scrape times out (default: 10s)"
+        optional = true
+      }
+      argument "max_cache_size" {
+        comment = "The maximum number of elements to hold in the relabeling cache (default: 100000).  This should be at least 2x-5x your largest scrape target or samples appended rate."
+        optional = true
+      }
+      argument "clustering" {
+        // Docs: https://grafana.com/docs/agent/latest/flow/concepts/clustering/
+        comment = "Whether or not clustering should be enabled (default: false)"
+        optional = true
+      }
+    
+      export "output" {
+        value = discovery.relabel.probes.output
+      }
+    
+      // probes service discovery for all of the nodes
+      discovery.kubernetes "probes" {
+        role = "node"
+    
+        selectors {
+          role = "node"
+          field = string.join(coalesce(argument.field_selectors.value, []), ",")
+          label = string.join(coalesce(argument.label_selectors.value, []), ",")
+        }
+      }
+    
+      // probes relabelings (pre-scrape)
+      discovery.relabel "probes" {
+        targets = discovery.kubernetes.probes.targets
+    
+        // set the address to use the kubernetes service dns name
+        rule {
+          target_label = "__address__"
+          replacement  = "kubernetes.default.svc.cluster.local:443"
+        }
+    
+        // set the metrics path to use the proxy path to the nodes probes metrics endpoint
+        rule {
+          source_labels = ["__meta_kubernetes_node_name"]
+          regex = "(.+)"
+          replacement = "/api/v1/nodes/${1}/proxy/metrics/probes"
+          target_label = "__metrics_path__"
+        }
+    
+        // set the node label
+        rule {
+          source_labels = ["__meta_kubernetes_node_name"]
+          target_label  = "node"
+        }
+    
+        // set the app name if specified as metadata labels "app:" or "app.kubernetes.io/name:" or "k8s-app:"
+        rule {
+          action = "replace"
+          source_labels = [
+            "__meta_kubernetes_node_label_app_kubernetes_io_name",
+            "__meta_kubernetes_node_label_k8s_app",
+            "__meta_kubernetes_node_label_app",
+          ]
+          separator = ";"
+          regex = "^(?:;*)?([^;]+).*$"
+          replacement = "$1"
+          target_label = "app"
+        }
+    
+        // set a source label
+        rule {
+          action = "replace"
+          replacement = "kubernetes"
+          target_label = "source"
+        }
+      }
+    
+       // probes scrape job
+      prometheus.scrape "probes" {
+        job_name = coalesce(argument.job_label.value, "integrations/kubernetes/kube-probes")
+        forward_to = [prometheus.relabel.probes.receiver]
+        targets = discovery.relabel.probes.output
+        scheme = "https"
+        scrape_interval = coalesce(argument.scrape_interval.value, "60s")
+        scrape_timeout = coalesce(argument.scrape_timeout.value, "10s")
+        bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+    
+        tls_config {
+          ca_file = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+          insecure_skip_verify = false
+          server_name = "kubernetes"
+        }
+    
+        clustering {
+          enabled = coalesce(argument.clustering.value, false)
+        }
+      }
+    
+      // probes metric relabelings (post-scrape)
+      prometheus.relabel "probes" {
+        forward_to = argument.forward_to.value
+        max_cache_size = coalesce(argument.max_cache_size.value, 100000)
+    
+        // drop metrics that match the drop_metrics regex
+        rule {
+          source_labels = ["__name__"]
+          regex = coalesce(argument.drop_metrics.value, "(^(go|process)_.+$)")
+          action = "drop"
+        }
+    
+        // keep only metrics that match the keep_metrics regex
+        rule {
+          source_labels = ["__name__"]
+          regex = coalesce(argument.keep_metrics.value, "(.+)")
+          action = "keep"
+        }
+      }
+    }
+    
+    declare "kube_dns" {
+      argument "forward_to" {
+        comment = "Must be a list(MetricsReceiver) where collected metrics should be forwarded to"
+      }
+      // arguments for kubernetes discovery
+      argument "namespaces" {
+        comment = "The namespaces to look for targets in (default: [\"kube-system\"])"
+        optional = true
+      }
+      argument "field_selectors" {
+        // Docs: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
+        comment = "The label selectors to use to find matching targets (default: [])"
+        optional = true
+      }
+      argument "label_selectors" {
+        // Docs: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
+        comment = "The label selectors to use to find matching targets (default: [\"k8s-app=kube-dns\"])"
+        optional = true
+      }
+      argument "port_name" {
+        comment = "The of the port to scrape metrics from (default: metrics)"
+        optional = true
+      }
+      argument "job_label" {
+        comment = "The job label to add for all kube_dns metric (default: integrations/kubernetes/kube-dns)"
+        optional = true
+      }
+      argument "keep_metrics" {
+        comment = "A regular expression of metrics to keep (default: see below)"
+        optional = true
+      }
+      argument "drop_metrics" {
+        comment = "A regular expression of metrics to drop (default: see below)"
+        optional = true
+      }
+      argument "scrape_interval" {
+        comment = "How often to scrape metrics from the targets (default: 60s)"
+        optional = true
+      }
+      argument "scrape_timeout" {
+        comment = "How long before a scrape times out (default: 10s)"
+        optional = true
+      }
+      argument "max_cache_size" {
+        comment = "The maximum number of elements to hold in the relabeling cache (default: 100000).  This should be at least 2x-5x your largest scrape target or samples appended rate."
+        optional = true
+      }
+      argument "clustering" {
+        // Docs: https://grafana.com/docs/agent/latest/flow/concepts/clustering/
+        comment = "Whether or not clustering should be enabled (default: false)"
+        optional = true
+      }
+    
+      export "output" {
+        value = discovery.relabel.kube_dns.output
+      }
+    
+      // kube_dns service discovery for all of the nodes
+      discovery.kubernetes "kube_dns" {
+        role = "endpoints"
+    
+        selectors {
+          role = "endpoints"
+          field = string.join(coalesce(argument.field_selectors.value, []), ",")
+          label = string.join(coalesce(argument.label_selectors.value, ["k8s-app=kube-dns"]), ",")
+        }
+    
+        namespaces {
+          names = coalesce(argument.namespaces.value, ["kube-system"])
+        }
+      }
+    
+      // kube_dns relabelings (pre-scrape)
+      discovery.relabel "kube_dns" {
+        targets = discovery.kubernetes.kube_dns.targets
+    
+        // keep only the specified metrics port name, and pods that are Running and ready
+        rule {
+          source_labels = [
+            "__meta_kubernetes_pod_container_port_name",
+            "__meta_kubernetes_pod_phase",
+            "__meta_kubernetes_pod_ready",
+          ]
+          separator = "@"
+          regex = coalesce(argument.port_name.value, "metrics") + "@Running@true"
+          action = "keep"
+        }
+    
+        // drop any init containers
+        rule {
+          source_labels = ["__meta_kubernetes_pod_container_init"]
+          regex = "true"
+          action = "drop"
+        }
+    
+        // set the namespace label
+        rule {
+          source_labels = ["__meta_kubernetes_namespace"]
+          target_label  = "namespace"
+        }
+    
+        // set the pod label
+        rule {
+          source_labels = ["__meta_kubernetes_pod_name"]
+          target_label  = "pod"
+        }
+    
+        // set the container label
+        rule {
+          source_labels = ["__meta_kubernetes_pod_container_name"]
+          target_label  = "container"
+        }
+    
+        // set a workload label
+        rule {
+          source_labels = [
+            "__meta_kubernetes_pod_controller_kind",
+            "__meta_kubernetes_pod_controller_name",
+          ]
+          separator = "/"
+          target_label  = "workload"
+        }
+        // remove the hash from the ReplicaSet
+        rule {
+          source_labels = ["workload"]
+          regex = "(ReplicaSet/.+)-.+"
+          target_label  = "workload"
+        }
+    
+        // set the app name if specified as metadata labels "app:" or "app.kubernetes.io/name:" or "k8s-app:"
+        rule {
+          action = "replace"
+          source_labels = [
+            "__meta_kubernetes_pod_label_app_kubernetes_io_name",
+            "__meta_kubernetes_pod_label_k8s_app",
+            "__meta_kubernetes_pod_label_app",
+          ]
+          separator = ";"
+          regex = "^(?:;*)?([^;]+).*$"
+          replacement = "$1"
+          target_label = "app"
+        }
+    
+        // set the service label
+        rule {
+          source_labels = ["__meta_kubernetes_service_name"]
+          target_label  = "service"
+        }
+    
+        // set a source label
+        rule {
+          action = "replace"
+          replacement = "kubernetes"
+          target_label = "source"
+        }
+      }
+    
+       // kube_dns scrape job
+      prometheus.scrape "kube_dns" {
+        job_name = coalesce(argument.job_label.value, "integrations/kubernetes/kube-dns")
+        forward_to = [prometheus.relabel.kube_dns.receiver]
+        targets = discovery.relabel.kube_dns.output
+        scrape_interval = coalesce(argument.scrape_interval.value, "60s")
+        scrape_timeout = coalesce(argument.scrape_timeout.value, "10s")
+    
+        clustering {
+          enabled = coalesce(argument.clustering.value, false)
+        }
+      }
+    
+      // kube_dns metric relabelings (post-scrape)
+      prometheus.relabel "kube_dns" {
+        forward_to = argument.forward_to.value
+        max_cache_size = coalesce(argument.max_cache_size.value, 100000)
+    
+        // drop metrics that match the drop_metrics regex
+        rule {
+          source_labels = ["__name__"]
+          regex = coalesce(argument.drop_metrics.value, "(^(go|process|promhttp)_.+$)")
+          action = "drop"
+        }
+    
+        // keep only metrics that match the keep_metrics regex
+        rule {
+          source_labels = ["__name__"]
+          regex = coalesce(argument.keep_metrics.value, "(.+)")
+          action = "keep"
+        }
+      }
+    }
+    
+  kube-state-metrics_metrics.alloy: |
+---
+# Source: k8s-monitoring/templates/alloy-modules-configmaps.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: k8smon-alloy-module-system
+data:
+  node-exporter_metrics.alloy: |
+    /*
+    Module: job-node_exporter
+    Description: Scrapes node_exporter
+    
+    Note: Every argument except for "forward_to" is optional, and does have a defined default value.  However, the values for these
+          arguments are not defined using the default = " ... " argument syntax, but rather using the coalesce(argument.value, " ... ").
+          This is because if the argument passed in from another consuming module is set to null, the default = " ... " syntax will
+          does not override the value passed in, where coalesce() will return the first non-null value.
+    */
+    declare "kubernetes" {
+      // arguments for kubernetes discovery
+      argument "namespaces" {
+        comment = "The namespaces to look for targets in (default: [] is all namespaces)"
+        optional = true
+      }
+    
+      argument "field_selectors" {
+        // Docs: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
+        comment = "The label selectors to use to find matching targets (default: [])"
+        optional = true
+      }
+    
+      argument "label_selectors" {
+        // Docs: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
+        comment = "The label selectors to use to find matching targets (default: [\"app.kubernetes.io/name=prometheus-node-exporter\"])"
+        optional = true
+      }
+    
+      argument "port_name" {
+        comment = "The of the port to scrape metrics from (default: metrics)"
+        optional = true
+      }
+    
+      // node_exporter service discovery for all of the pods
+      discovery.kubernetes "node_exporter" {
+        role = "pod"
+    
+        selectors {
+          role = "pod"
+          field = string.join(coalesce(argument.field_selectors.value, []), ",")
+          label = string.join(coalesce(argument.label_selectors.value, ["app.kubernetes.io/name=prometheus-node-exporter"]), ",")
+        }
+    
+        namespaces {
+          names = coalesce(argument.namespaces.value, [])
+        }
+      }
+    
+      // node_exporter relabelings (pre-scrape)
+      discovery.relabel "kubernetes" {
+        targets = discovery.kubernetes.node_exporter.targets
+    
+        // keep only the specified metrics port name, and pods that are Running and ready
+        rule {
+          source_labels = [
+            "__meta_kubernetes_pod_container_port_name",
+            "__meta_kubernetes_pod_phase",
+            "__meta_kubernetes_pod_ready",
+          ]
+          separator = "@"
+          regex = coalesce(argument.port_name.value, "metrics") + "@Running@true"
+          action = "keep"
+        }
+    
+        // drop any init containers
+        rule {
+          source_labels = ["__meta_kubernetes_pod_container_init"]
+          regex = "true"
+          action = "drop"
+        }
+    
+        // set the namespace label
+        rule {
+          source_labels = ["__meta_kubernetes_namespace"]
+          target_label  = "namespace"
+        }
+    
+        // set the pod label
+        rule {
+          source_labels = ["__meta_kubernetes_pod_name"]
+          target_label  = "pod"
+        }
+    
+        // set the container label
+        rule {
+          source_labels = ["__meta_kubernetes_pod_container_name"]
+          target_label  = "container"
+        }
+    
+        // set a workload label
+        rule {
+          source_labels = [
+            "__meta_kubernetes_pod_controller_kind",
+            "__meta_kubernetes_pod_controller_name",
+          ]
+          separator = "/"
+          target_label  = "workload"
+        }
+        // remove the hash from the ReplicaSet
+        rule {
+          source_labels = ["workload"]
+          regex = "(ReplicaSet/.+)-.+"
+          target_label  = "workload"
+        }
+    
+        // set the app name if specified as metadata labels "app:" or "app.kubernetes.io/name:" or "k8s-app:"
+        rule {
+          action = "replace"
+          source_labels = [
+            "__meta_kubernetes_pod_label_app_kubernetes_io_name",
+            "__meta_kubernetes_pod_label_k8s_app",
+            "__meta_kubernetes_pod_label_app",
+          ]
+          separator = ";"
+          regex = "^(?:;*)?([^;]+).*$"
+          replacement = "$1"
+          target_label = "app"
+        }
+    
+        // set the component if specified as metadata labels "component:" or "app.kubernetes.io/component:" or "k8s-component:"
+        rule {
+          action = "replace"
+          source_labels = [
+            "__meta_kubernetes_pod_label_app_kubernetes_io_component",
+            "__meta_kubernetes_pod_label_k8s_component",
+            "__meta_kubernetes_pod_label_component",
+          ]
+          regex = "^(?:;*)?([^;]+).*$"
+          replacement = "$1"
+          target_label = "component"
+        }
+    
+        // set a source label
+        rule {
+          action = "replace"
+          replacement = "kubernetes"
+          target_label = "source"
+        }
+      }
+    
+      export "output" {
+        value = discovery.relabel.kubernetes.output
+      }
+    }
+    
+    declare "local" {
+      argument "port" {
+        comment = "The port to use (default: 9100)"
+        optional = true
+      }
+    
+      // arguments for local (static)
+      discovery.relabel "local" {
+        targets = [
+          {
+            "__address__" = "localhost" + string.format("%s", coalesce(argument.port.value, "9100")),
+            "source" = "local",
+          },
+        ]
+      }
+    
+      export "output" {
+        value = discovery.relabel.local.output
+      }
+    }
+    
+    declare "scrape" {
+      argument "targets" {
+        comment = "Must be a list() of targets"
+      }
+    
+      argument "forward_to" {
+        comment = "Must be a list(MetricsReceiver) where collected metrics should be forwarded to"
+      }
+    
+      argument "job_label" {
+        comment = "The job label to add for all node_exporter metric (default: integrations/node_exporter)"
+        optional = true
+      }
+    
+      argument "keep_metrics" {
+        comment = "A regular expression of metrics to keep (default: see below)"
+        optional = true
+      }
+    
+      argument "drop_metrics" {
+        comment = "A regular expression of metrics to drop (default: see below)"
+        optional = true
+      }
+    
+      argument "scheme" {
+        comment = "The scheme to use when scraping metrics (default: http)"
+        optional = true
+      }
+    
+      argument "bearer_token_file" {
+        comment = "The bearer token file (default: none)"
+        optional = true
+      }
+    
+      argument "scrape_interval" {
+        comment = "How often to scrape metrics from the targets (default: 60s)"
+        optional = true
+      }
+    
+      argument "scrape_timeout" {
+        comment = "How long before a scrape times out (default: 10s)"
+        optional = true
+      }
+    
+      argument "max_cache_size" {
+        comment = "The maximum number of elements to hold in the relabeling cache (default: 100000).  This should be at least 2x-5x your largest scrape target or samples appended rate."
+        optional = true
+      }
+    
+      argument "clustering" {
+        // Docs: https://node_exporter.com/docs/agent/latest/flow/concepts/clustering/
+        comment = "Whether or not clustering should be enabled (default: false)"
+        optional = true
+      }
+    
+      // node_exporter scrape job
+      prometheus.scrape "node_exporter" {
+        job_name = coalesce(argument.job_label.value, "integrations/node_exporter")
+        forward_to = [prometheus.relabel.node_exporter.receiver]
+        targets = argument.targets.value
+        scrape_interval = coalesce(argument.scrape_interval.value, "60s")
+        scrape_timeout = coalesce(argument.scrape_timeout.value, "10s")
+    
+        scheme = coalesce(argument.scheme.value, "http")
+        bearer_token_file = coalesce(argument.bearer_token_file.value, "")
+        tls_config {
+          insecure_skip_verify = true
+        }
+    
+        clustering {
+          enabled = coalesce(argument.clustering.value, false)
+        }
+      }
+    
+      // node_exporter metric relabelings (post-scrape)
+      prometheus.relabel "node_exporter" {
+        forward_to = argument.forward_to.value
+        max_cache_size = coalesce(argument.max_cache_size.value, 100000)
+    
+        // drop metrics that match the drop_metrics regex
+        rule {
+          source_labels = ["__name__"]
+          regex = coalesce(argument.drop_metrics.value, "(^(go)_.+$)")
+          action = "drop"
+        }
+    
+        // keep only metrics that match the keep_metrics regex
+        rule {
+          source_labels = ["__name__"]
+          regex = coalesce(argument.keep_metrics.value, "(up|scrape_(duration_seconds|series_added|samples_(post_metric_relabeling|scraped))|node_(arp_entries|boot_time_seconds|context_switches_total|cpu_seconds_total|disk_(io_time_seconds_total|io_time_weighted_seconds_total|read_(bytes_total|time_seconds_total)|reads_completed_total|write_time_seconds_total|writes_completed_total|written_bytes_total)|file(fd_(allocated|maximum)|system_(avail_bytes|device_error|files(_free)?|readonly|size_bytes))|intr_total|load(1|15|5)|md_disks(_required)?|memory_(Active_(anon_bytes|bytes|file_bytes)|Anon(HugePages_bytes|Pages_bytes)|Bounce_bytes|Buffers_bytes|Cached_bytes|CommitLimit_bytes|Committed_AS_bytes|DirectMap(1G|2M|4k)_bytes|Dirty_bytes|HugePages_(Free|Rsvd|Surp|Total)|Hugepagesize_bytes|Inactive_(anon_bytes|bytes|file_bytes)|Mapped_bytes|Mem(Available|Free|Total)_bytes|S(Reclaimable|Unreclaim)_bytes|Shmem(HugePages_bytes|PmdMapped_bytes|_bytes)|Slab_bytes|SwapTotal_bytes|Vmalloc(Chunk|Total|Used)_bytes|Writeback(Tmp|)_bytes)|netstat_(Icmp6_(InErrors|InMsgs|OutMsgs)|Icmp_(InErrors|InMsgs|OutMsgs)|IpExt_(InOctets|OutOctets)|TcpExt_(Listen(Drops|Overflows)|TCPSynRetrans)|Tcp_(InErrs|InSegs|OutRsts|OutSegs|RetransSegs)|Udp6_(InDatagrams|InErrors|NoPorts|OutDatagrams|RcvbufErrors|SndbufErrors)|Udp(Lite|)_(InDatagrams|InErrors|NoPorts|OutDatagrams|RcvbufErrors|SndbufErrors))|network_(carrier|info|mtu_bytes|receive_(bytes_total|compressed_total|drop_total|errs_total|fifo_total|multicast_total|packets_total)|speed_bytes|transmit_(bytes_total|compressed_total|drop_total|errs_total|fifo_total|multicast_total|packets_total|queue_length)|up)|nf_conntrack_(entries(_limit)?|limit)|os_info|sockstat_(FRAG6|FRAG|RAW6|RAW|TCP6|TCP_(alloc|inuse|mem(_bytes)?|orphan|tw)|UDP6|UDPLITE6|UDPLITE|UDP_(inuse|mem(_bytes)?)|sockets_used)|softnet_(dropped_total|processed_total|times_squeezed_total)|systemd_unit_state|textfile_scrape_error|time_zone_offset_seconds|timex_(estimated_error_seconds|maxerror_seconds|offset_seconds|sync_status)|uname_info|vmstat_(oom_kill|pgfault|pgmajfault|pgpgin|pgpgout|pswpin|pswpout)|process_(max_fds|open_fds)))")
+          action = "keep"
+        }
+    
+        // Drop metrics for certain file systems
+        rule {
+          source_labels = ["__name__", "fstype"]
+          separator = "@"
+          regex = "node_filesystem.*@(tempfs)"
+          action = "drop"
+        }
+      }
+    }
+---
+# Source: k8s-monitoring/charts/alloy-logs/templates/rbac.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: k8smon-alloy-logs
+  labels:
+    helm.sh/chart: alloy-logs-0.12.0
+    app.kubernetes.io/name: alloy-logs
+    app.kubernetes.io/instance: k8smon
+    
+    app.kubernetes.io/version: "v1.7.0"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/part-of: alloy
+    app.kubernetes.io/component: rbac
+rules:
+  # Rules which allow discovery.kubernetes to function.
+  - apiGroups:
+      - ""
+      - "discovery.k8s.io"
+      - "networking.k8s.io"
+    resources:
+      - endpoints
+      - endpointslices
+      - ingresses
+      - nodes
+      - nodes/proxy
+      - nodes/metrics
+      - pods
+      - services
+    verbs:
+      - get
+      - list
+      - watch
+  # Rules which allow loki.source.kubernetes and loki.source.podlogs to work.
+  - apiGroups:
+      - ""
+    resources:
+      - pods
+      - pods/log
+      - namespaces
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - "monitoring.grafana.com"
+    resources:
+      - podlogs
+    verbs:
+      - get
+      - list
+      - watch
+  # Rules which allow mimir.rules.kubernetes to work.
+  - apiGroups: ["monitoring.coreos.com"]
+    resources:
+      - prometheusrules
+    verbs:
+      - get
+      - list
+      - watch
+  - nonResourceURLs:
+      - /metrics
+    verbs:
+      - get
+  # Rules for prometheus.kubernetes.*
+  - apiGroups: ["monitoring.coreos.com"]
+    resources:
+      - podmonitors
+      - servicemonitors
+      - probes
+    verbs:
+      - get
+      - list
+      - watch
+  # Rules which allow eventhandler to work.
+  - apiGroups:
+      - ""
+    resources:
+      - events
+    verbs:
+      - get
+      - list
+      - watch
+  # needed for remote.kubernetes.*
+  - apiGroups: [""]
+    resources:
+      - "configmaps"
+      - "secrets"
+    verbs:
+      - get
+      - list
+      - watch
+  # needed for otelcol.processor.k8sattributes
+  - apiGroups: ["apps"]
+    resources: ["replicasets"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["extensions"]
+    resources: ["replicasets"]
+    verbs: ["get", "list", "watch"]
+---
+# Source: k8s-monitoring/charts/alloy-metrics/templates/rbac.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: k8smon-alloy-metrics
+  labels:
+    helm.sh/chart: alloy-metrics-0.12.0
+    app.kubernetes.io/name: alloy-metrics
+    app.kubernetes.io/instance: k8smon
+    
+    app.kubernetes.io/version: "v1.7.0"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/part-of: alloy
+    app.kubernetes.io/component: rbac
+rules:
+  # Rules which allow discovery.kubernetes to function.
+  - apiGroups:
+      - ""
+      - "discovery.k8s.io"
+      - "networking.k8s.io"
+    resources:
+      - endpoints
+      - endpointslices
+      - ingresses
+      - nodes
+      - nodes/proxy
+      - nodes/metrics
+      - pods
+      - services
+    verbs:
+      - get
+      - list
+      - watch
+  # Rules which allow loki.source.kubernetes and loki.source.podlogs to work.
+  - apiGroups:
+      - ""
+    resources:
+      - pods
+      - pods/log
+      - namespaces
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - "monitoring.grafana.com"
+    resources:
+      - podlogs
+    verbs:
+      - get
+      - list
+      - watch
+  # Rules which allow mimir.rules.kubernetes to work.
+  - apiGroups: ["monitoring.coreos.com"]
+    resources:
+      - prometheusrules
+    verbs:
+      - get
+      - list
+      - watch
+  - nonResourceURLs:
+      - /metrics
+    verbs:
+      - get
+  # Rules for prometheus.kubernetes.*
+  - apiGroups: ["monitoring.coreos.com"]
+    resources:
+      - podmonitors
+      - servicemonitors
+      - probes
+    verbs:
+      - get
+      - list
+      - watch
+  # Rules which allow eventhandler to work.
+  - apiGroups:
+      - ""
+    resources:
+      - events
+    verbs:
+      - get
+      - list
+      - watch
+  # needed for remote.kubernetes.*
+  - apiGroups: [""]
+    resources:
+      - "configmaps"
+      - "secrets"
+    verbs:
+      - get
+      - list
+      - watch
+  # needed for otelcol.processor.k8sattributes
+  - apiGroups: ["apps"]
+    resources: ["replicasets"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["extensions"]
+    resources: ["replicasets"]
+    verbs: ["get", "list", "watch"]
+---
+# Source: k8s-monitoring/charts/alloy-singleton/templates/rbac.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: k8smon-alloy-singleton
+  labels:
+    helm.sh/chart: alloy-singleton-0.12.0
+    app.kubernetes.io/name: alloy-singleton
+    app.kubernetes.io/instance: k8smon
+    
+    app.kubernetes.io/version: "v1.7.0"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/part-of: alloy
+    app.kubernetes.io/component: rbac
+rules:
+  # Rules which allow discovery.kubernetes to function.
+  - apiGroups:
+      - ""
+      - "discovery.k8s.io"
+      - "networking.k8s.io"
+    resources:
+      - endpoints
+      - endpointslices
+      - ingresses
+      - nodes
+      - nodes/proxy
+      - nodes/metrics
+      - pods
+      - services
+    verbs:
+      - get
+      - list
+      - watch
+  # Rules which allow loki.source.kubernetes and loki.source.podlogs to work.
+  - apiGroups:
+      - ""
+    resources:
+      - pods
+      - pods/log
+      - namespaces
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - "monitoring.grafana.com"
+    resources:
+      - podlogs
+    verbs:
+      - get
+      - list
+      - watch
+  # Rules which allow mimir.rules.kubernetes to work.
+  - apiGroups: ["monitoring.coreos.com"]
+    resources:
+      - prometheusrules
+    verbs:
+      - get
+      - list
+      - watch
+  - nonResourceURLs:
+      - /metrics
+    verbs:
+      - get
+  # Rules for prometheus.kubernetes.*
+  - apiGroups: ["monitoring.coreos.com"]
+    resources:
+      - podmonitors
+      - servicemonitors
+      - probes
+    verbs:
+      - get
+      - list
+      - watch
+  # Rules which allow eventhandler to work.
+  - apiGroups:
+      - ""
+    resources:
+      - events
+    verbs:
+      - get
+      - list
+      - watch
+  # needed for remote.kubernetes.*
+  - apiGroups: [""]
+    resources:
+      - "configmaps"
+      - "secrets"
+    verbs:
+      - get
+      - list
+      - watch
+  # needed for otelcol.processor.k8sattributes
+  - apiGroups: ["apps"]
+    resources: ["replicasets"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["extensions"]
+    resources: ["replicasets"]
+    verbs: ["get", "list", "watch"]
+---
+# Source: k8s-monitoring/charts/clusterMetrics/charts/kube-state-metrics/templates/role.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:    
+    helm.sh/chart: kube-state-metrics-5.30.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: metrics
+    app.kubernetes.io/part-of: kube-state-metrics
+    app.kubernetes.io/name: kube-state-metrics
+    app.kubernetes.io/instance: k8smon
+    app.kubernetes.io/version: "2.15.0"
+    release: k8smon
+  name: k8smon-kube-state-metrics
+rules:
+
+- apiGroups: ["certificates.k8s.io"]
+  resources:
+  - certificatesigningrequests
+  verbs: ["list", "watch"]
+
+- apiGroups: [""]
+  resources:
+  - configmaps
+  verbs: ["list", "watch"]
+
+- apiGroups: ["batch"]
+  resources:
+  - cronjobs
+  verbs: ["list", "watch"]
+
+- apiGroups: ["extensions", "apps"]
+  resources:
+  - daemonsets
+  verbs: ["list", "watch"]
+
+- apiGroups: ["extensions", "apps"]
+  resources:
+  - deployments
+  verbs: ["list", "watch"]
+
+- apiGroups: [""]
+  resources:
+  - endpoints
+  verbs: ["list", "watch"]
+
+- apiGroups: ["autoscaling"]
+  resources:
+  - horizontalpodautoscalers
+  verbs: ["list", "watch"]
+
+- apiGroups: ["extensions", "networking.k8s.io"]
+  resources:
+  - ingresses
+  verbs: ["list", "watch"]
+
+- apiGroups: ["batch"]
+  resources:
+  - jobs
+  verbs: ["list", "watch"]
+
+- apiGroups: ["coordination.k8s.io"]
+  resources:
+  - leases
+  verbs: ["list", "watch"]
+
+- apiGroups: [""]
+  resources:
+  - limitranges
+  verbs: ["list", "watch"]
+
+- apiGroups: ["admissionregistration.k8s.io"]
+  resources:
+    - mutatingwebhookconfigurations
+  verbs: ["list", "watch"]
+
+- apiGroups: [""]
+  resources:
+  - namespaces
+  verbs: ["list", "watch"]
+
+- apiGroups: ["networking.k8s.io"]
+  resources:
+  - networkpolicies
+  verbs: ["list", "watch"]
+
+- apiGroups: [""]
+  resources:
+  - nodes
+  verbs: ["list", "watch"]
+
+- apiGroups: [""]
+  resources:
+  - persistentvolumeclaims
+  verbs: ["list", "watch"]
+
+- apiGroups: [""]
+  resources:
+  - persistentvolumes
+  verbs: ["list", "watch"]
+
+- apiGroups: ["policy"]
+  resources:
+    - poddisruptionbudgets
+  verbs: ["list", "watch"]
+
+- apiGroups: [""]
+  resources:
+  - pods
+  verbs: ["list", "watch"]
+
+- apiGroups: ["extensions", "apps"]
+  resources:
+  - replicasets
+  verbs: ["list", "watch"]
+
+- apiGroups: [""]
+  resources:
+  - replicationcontrollers
+  verbs: ["list", "watch"]
+
+- apiGroups: [""]
+  resources:
+  - resourcequotas
+  verbs: ["list", "watch"]
+
+- apiGroups: [""]
+  resources:
+  - secrets
+  verbs: ["list", "watch"]
+
+- apiGroups: [""]
+  resources:
+  - services
+  verbs: ["list", "watch"]
+
+- apiGroups: ["apps"]
+  resources:
+  - statefulsets
+  verbs: ["list", "watch"]
+
+- apiGroups: ["storage.k8s.io"]
+  resources:
+    - storageclasses
+  verbs: ["list", "watch"]
+
+- apiGroups: ["admissionregistration.k8s.io"]
+  resources:
+    - validatingwebhookconfigurations
+  verbs: ["list", "watch"]
+
+- apiGroups: ["storage.k8s.io"]
+  resources:
+    - volumeattachments
+  verbs: ["list", "watch"]
+---
+# Source: k8s-monitoring/charts/alloy-logs/templates/rbac.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: k8smon-alloy-logs
+  labels:
+    helm.sh/chart: alloy-logs-0.12.0
+    app.kubernetes.io/name: alloy-logs
+    app.kubernetes.io/instance: k8smon
+    
+    app.kubernetes.io/version: "v1.7.0"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/part-of: alloy
+    app.kubernetes.io/component: rbac
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: k8smon-alloy-logs
+subjects:
+  - kind: ServiceAccount
+    name: k8smon-alloy-logs
+    namespace: default
+---
+# Source: k8s-monitoring/charts/alloy-metrics/templates/rbac.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: k8smon-alloy-metrics
+  labels:
+    helm.sh/chart: alloy-metrics-0.12.0
+    app.kubernetes.io/name: alloy-metrics
+    app.kubernetes.io/instance: k8smon
+    
+    app.kubernetes.io/version: "v1.7.0"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/part-of: alloy
+    app.kubernetes.io/component: rbac
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: k8smon-alloy-metrics
+subjects:
+  - kind: ServiceAccount
+    name: k8smon-alloy-metrics
+    namespace: default
+---
+# Source: k8s-monitoring/charts/alloy-singleton/templates/rbac.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: k8smon-alloy-singleton
+  labels:
+    helm.sh/chart: alloy-singleton-0.12.0
+    app.kubernetes.io/name: alloy-singleton
+    app.kubernetes.io/instance: k8smon
+    
+    app.kubernetes.io/version: "v1.7.0"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/part-of: alloy
+    app.kubernetes.io/component: rbac
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: k8smon-alloy-singleton
+subjects:
+  - kind: ServiceAccount
+    name: k8smon-alloy-singleton
+    namespace: default
+---
+# Source: k8s-monitoring/charts/clusterMetrics/charts/kube-state-metrics/templates/clusterrolebinding.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  labels:    
+    helm.sh/chart: kube-state-metrics-5.30.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: metrics
+    app.kubernetes.io/part-of: kube-state-metrics
+    app.kubernetes.io/name: kube-state-metrics
+    app.kubernetes.io/instance: k8smon
+    app.kubernetes.io/version: "2.15.0"
+    release: k8smon
+  name: k8smon-kube-state-metrics
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: k8smon-kube-state-metrics
+subjects:
+- kind: ServiceAccount
+  name: k8smon-kube-state-metrics
+  namespace: default
+---
+# Source: k8s-monitoring/charts/alloy-logs/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: k8smon-alloy-logs
+  labels:
+    helm.sh/chart: alloy-logs-0.12.0
+    app.kubernetes.io/name: alloy-logs
+    app.kubernetes.io/instance: k8smon
+    
+    app.kubernetes.io/version: "v1.7.0"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/part-of: alloy
+    app.kubernetes.io/component: networking
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: alloy-logs
+    app.kubernetes.io/instance: k8smon
+  internalTrafficPolicy: Cluster
+  ports:
+    - name: http-metrics
+      port: 12345
+      targetPort: 12345
+      protocol: "TCP"
+---
+# Source: k8s-monitoring/charts/alloy-metrics/templates/cluster_service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: k8smon-alloy-metrics-cluster
+  labels:
+    helm.sh/chart: alloy-metrics-0.12.0
+    app.kubernetes.io/name: alloy-metrics
+    app.kubernetes.io/instance: k8smon
+    
+    app.kubernetes.io/version: "v1.7.0"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/part-of: alloy
+    app.kubernetes.io/component: networking
+spec:
+  type: ClusterIP
+  clusterIP: 'None'
+  publishNotReadyAddresses: true
+  selector:
+    app.kubernetes.io/name: alloy-metrics
+    app.kubernetes.io/instance: k8smon
+  ports:
+    # Do not include the -metrics suffix in the port name, otherwise metrics
+    # can be double-collected with the non-headless Service if it's also
+    # enabled.
+    #
+    # This service should only be used for clustering, and not metric
+    # collection.
+    - name: http
+      port: 12345
+      targetPort: 12345
+      protocol: "TCP"
+---
+# Source: k8s-monitoring/charts/alloy-metrics/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: k8smon-alloy-metrics
+  labels:
+    helm.sh/chart: alloy-metrics-0.12.0
+    app.kubernetes.io/name: alloy-metrics
+    app.kubernetes.io/instance: k8smon
+    
+    app.kubernetes.io/version: "v1.7.0"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/part-of: alloy
+    app.kubernetes.io/component: networking
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: alloy-metrics
+    app.kubernetes.io/instance: k8smon
+  internalTrafficPolicy: Cluster
+  ports:
+    - name: http-metrics
+      port: 12345
+      targetPort: 12345
+      protocol: "TCP"
+---
+# Source: k8s-monitoring/charts/alloy-singleton/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: k8smon-alloy-singleton
+  labels:
+    helm.sh/chart: alloy-singleton-0.12.0
+    app.kubernetes.io/name: alloy-singleton
+    app.kubernetes.io/instance: k8smon
+    
+    app.kubernetes.io/version: "v1.7.0"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/part-of: alloy
+    app.kubernetes.io/component: networking
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: alloy-singleton
+    app.kubernetes.io/instance: k8smon
+  internalTrafficPolicy: Cluster
+  ports:
+    - name: http-metrics
+      port: 12345
+      targetPort: 12345
+      protocol: "TCP"
+---
+# Source: k8s-monitoring/charts/clusterMetrics/charts/kube-state-metrics/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: k8smon-kube-state-metrics
+  namespace: default
+  labels:    
+    helm.sh/chart: kube-state-metrics-5.30.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: metrics
+    app.kubernetes.io/part-of: kube-state-metrics
+    app.kubernetes.io/name: kube-state-metrics
+    app.kubernetes.io/instance: k8smon
+    app.kubernetes.io/version: "2.15.0"
+    release: k8smon
+  annotations:
+spec:
+  type: "ClusterIP"
+  ports:
+  - name: "http"
+    protocol: TCP
+    port: 8080
+    targetPort: 8080
+  
+  selector:    
+    app.kubernetes.io/name: kube-state-metrics
+    app.kubernetes.io/instance: k8smon
+---
+# Source: k8s-monitoring/charts/clusterMetrics/charts/node-exporter/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: k8smon-node-exporter
+  namespace: default
+  labels:
+    helm.sh/chart: node-exporter-4.44.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: metrics
+    app.kubernetes.io/part-of: node-exporter
+    app.kubernetes.io/name: node-exporter
+    app.kubernetes.io/instance: k8smon
+    app.kubernetes.io/version: "1.9.0"
+    release: k8smon
+  annotations:
+    prometheus.io/scrape: "false"
+spec:
+  type: ClusterIP
+  ports:
+    - port: 9100
+      targetPort: 9100
+      protocol: TCP
+      name: metrics
+  selector:
+    app.kubernetes.io/name: node-exporter
+    app.kubernetes.io/instance: k8smon
+---
+# Source: k8s-monitoring/charts/clusterMetrics/charts/windows-exporter/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: k8smon-windows-exporter
+  namespace: default
+  labels:
+    helm.sh/chart: windows-exporter-0.8.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: metrics
+    app.kubernetes.io/part-of: windows-exporter
+    app.kubernetes.io/name: windows-exporter
+    app.kubernetes.io/instance: k8smon
+    app.kubernetes.io/version: "0.29.2"
+    release: k8smon
+spec:
+  type: ClusterIP
+  ports:
+    - port: 9182
+      targetPort: metrics
+      protocol: TCP
+      appProtocol: http
+      name: metrics
+  selector:
+    app.kubernetes.io/name: windows-exporter
+    app.kubernetes.io/instance: k8smon
+---
+# Source: k8s-monitoring/charts/alloy-logs/templates/controllers/daemonset.yaml
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: k8smon-alloy-logs
+  labels:
+    helm.sh/chart: alloy-logs-0.12.0
+    app.kubernetes.io/name: alloy-logs
+    app.kubernetes.io/instance: k8smon
+    
+    app.kubernetes.io/version: "v1.7.0"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/part-of: alloy
+spec:
+  minReadySeconds: 10
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: alloy-logs
+      app.kubernetes.io/instance: k8smon
+  template:
+    metadata:
+      annotations:
+        kubectl.kubernetes.io/default-container: alloy
+        k8s.grafana.com/logs.job: integrations/alloy
+        kubernetes.azure.com/set-kube-service-host-fqdn: "true"
+      labels:
+        app.kubernetes.io/name: alloy-logs
+        app.kubernetes.io/instance: k8smon
+    spec:
+      serviceAccountName: k8smon-alloy-logs
+      containers:
+        - name: alloy
+          image: docker.io/grafana/alloy:v1.7.0
+          imagePullPolicy: IfNotPresent
+          args:
+            - run
+            - /etc/alloy/config.alloy
+            - --storage.path=/tmp/alloy
+            - --server.http.listen-addr=0.0.0.0:12345
+            - --server.http.ui-path-prefix=/
+            - --stability.level=generally-available
+          env:
+            - name: ALLOY_DEPLOY_MODE
+              value: "helm"
+            - name: HOSTNAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+          ports:
+            - containerPort: 12345
+              name: http-metrics
+          readinessProbe:
+            httpGet:
+              path: /-/ready
+              port: 12345
+              scheme: HTTP
+            initialDelaySeconds: 10
+            timeoutSeconds: 1
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              add:
+              - CHOWN
+              - DAC_OVERRIDE
+              - FOWNER
+              - FSETID
+              - KILL
+              - SETGID
+              - SETUID
+              - SETPCAP
+              - NET_BIND_SERVICE
+              - NET_RAW
+              - SYS_CHROOT
+              - MKNOD
+              - AUDIT_WRITE
+              - SETFCAP
+              drop:
+              - ALL
+            seccompProfile:
+              type: RuntimeDefault
+          volumeMounts:
+            - name: config
+              mountPath: /etc/alloy
+            - name: varlog
+              mountPath: /var/log
+              readOnly: true
+            - name: dockercontainers
+              mountPath: /var/lib/docker/containers
+              readOnly: true
+        - name: config-reloader
+          image: ghcr.io/jimmidyson/configmap-reload:v0.14.0
+          args:
+            - --volume-dir=/etc/alloy
+            - --webhook-url=http://localhost:12345/-/reload
+          volumeMounts:
+            - name: config
+              mountPath: /etc/alloy
+          resources:
+            requests:
+              cpu: 1m
+              memory: 5Mi
+      dnsPolicy: ClusterFirst
+      nodeSelector:
+        kubernetes.io/os: linux
+      volumes:
+        - name: config
+          configMap:
+            name: k8smon-alloy-logs
+        - name: varlog
+          hostPath:
+            path: /var/log
+        - name: dockercontainers
+          hostPath:
+            path: /var/lib/docker/containers
+---
+# Source: k8s-monitoring/charts/clusterMetrics/charts/node-exporter/templates/daemonset.yaml
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: k8smon-node-exporter
+  namespace: default
+  labels:
+    helm.sh/chart: node-exporter-4.44.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: metrics
+    app.kubernetes.io/part-of: node-exporter
+    app.kubernetes.io/name: node-exporter
+    app.kubernetes.io/instance: k8smon
+    app.kubernetes.io/version: "1.9.0"
+    release: k8smon
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: node-exporter
+      app.kubernetes.io/instance: k8smon
+  revisionHistoryLimit: 10
+  updateStrategy:
+    rollingUpdate:
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      annotations:
+        cluster-autoscaler.kubernetes.io/safe-to-evict: "true"
+        k8s.grafana.com/logs.job: integrations/node_exporter
+      labels:
+        helm.sh/chart: node-exporter-4.44.0
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/component: metrics
+        app.kubernetes.io/part-of: node-exporter
+        app.kubernetes.io/name: node-exporter
+        app.kubernetes.io/instance: k8smon
+        app.kubernetes.io/version: "1.9.0"
+        release: k8smon
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        fsGroup: 65534
+        runAsGroup: 65534
+        runAsNonRoot: true
+        runAsUser: 65534
+      serviceAccountName: k8smon-node-exporter
+      containers:
+        - name: node-exporter
+          image: quay.io/prometheus/node-exporter:v1.9.0
+          imagePullPolicy: IfNotPresent
+          args:
+            - --path.procfs=/host/proc
+            - --path.sysfs=/host/sys
+            - --path.rootfs=/host/root
+            - --path.udev.data=/host/root/run/udev/data
+            - --web.listen-address=[$(HOST_IP)]:9100
+          securityContext:
+            readOnlyRootFilesystem: true
+          env:
+            - name: HOST_IP
+              value: 0.0.0.0
+          ports:
+            - name: metrics
+              containerPort: 9100
+              protocol: TCP
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              httpHeaders:
+              path: /
+              port: 9100
+              scheme: HTTP
+            initialDelaySeconds: 0
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              httpHeaders:
+              path: /
+              port: 9100
+              scheme: HTTP
+            initialDelaySeconds: 0
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          volumeMounts:
+            - name: proc
+              mountPath: /host/proc
+              readOnly:  true
+            - name: sys
+              mountPath: /host/sys
+              readOnly: true
+            - name: root
+              mountPath: /host/root
+              mountPropagation: HostToContainer
+              readOnly: true
+      hostNetwork: true
+      hostPID: true
+      hostIPC: false
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: eks.amazonaws.com/compute-type
+                operator: NotIn
+                values:
+                - fargate
+      nodeSelector:
+        kubernetes.io/os: linux
+      tolerations:
+        - effect: NoSchedule
+          operator: Exists
+      volumes:
+        - name: proc
+          hostPath:
+            path: /proc
+        - name: sys
+          hostPath:
+            path: /sys
+        - name: root
+          hostPath:
+            path: /
+---
+# Source: k8s-monitoring/charts/clusterMetrics/charts/windows-exporter/templates/daemonset.yaml
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: k8smon-windows-exporter
+  namespace: default
+  labels:
+    helm.sh/chart: windows-exporter-0.8.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: metrics
+    app.kubernetes.io/part-of: windows-exporter
+    app.kubernetes.io/name: windows-exporter
+    app.kubernetes.io/instance: k8smon
+    app.kubernetes.io/version: "0.29.2"
+    release: k8smon
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: windows-exporter
+      app.kubernetes.io/instance: k8smon
+  updateStrategy:
+    rollingUpdate:
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      annotations:
+        cluster-autoscaler.kubernetes.io/safe-to-evict: "true"
+        k8s.grafana.com/logs.job: integrations/windows_exporter
+      labels:
+        helm.sh/chart: windows-exporter-0.8.0
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/component: metrics
+        app.kubernetes.io/part-of: windows-exporter
+        app.kubernetes.io/name: windows-exporter
+        app.kubernetes.io/instance: k8smon
+        app.kubernetes.io/version: "0.29.2"
+        release: k8smon
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        windowsOptions:
+          hostProcess: true
+          runAsUserName: NT AUTHORITY\system
+      initContainers:
+        - name: configure-firewall
+          image: ghcr.io/prometheus-community/windows-exporter:0.29.2
+          command: [ "powershell" ]
+          args: [ "New-NetFirewallRule", "-DisplayName", "'windows-exporter'", "-Direction", "inbound", "-Profile", "Any", "-Action", "Allow", "-LocalPort", "9182", "-Protocol", "TCP" ]
+      serviceAccountName: k8smon-windows-exporter
+      containers:
+        - name: windows-exporter
+          image: ghcr.io/prometheus-community/windows-exporter:0.29.2
+          imagePullPolicy: IfNotPresent
+          args:
+            - --config.file=%CONTAINER_SANDBOX_MOUNT_POINT%/config.yml
+            - --collector.textfile.directories=%CONTAINER_SANDBOX_MOUNT_POINT%
+            - --web.listen-address=:9182
+          env:
+          ports:
+            - name: metrics
+              containerPort: 9182
+              protocol: TCP
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              httpHeaders:
+              path: /health
+              port: 9182
+              scheme: HTTP
+            initialDelaySeconds: 0
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              httpHeaders:
+              path: /health
+              port: 9182
+              scheme: HTTP
+            initialDelaySeconds: 0
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          volumeMounts:
+            - name: config
+              mountPath: /config.yml
+              subPath: config.yml
+      hostNetwork: true
+      hostPID: true
+      nodeSelector:
+        kubernetes.io/os: windows
+      tolerations:
+        - effect: NoSchedule
+          operator: Exists
+      volumes:
+        - name: config
+          configMap:
+            name: k8smon-windows-exporter
+---
+# Source: k8s-monitoring/charts/alloy-singleton/templates/controllers/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: k8smon-alloy-singleton
+  labels:
+    helm.sh/chart: alloy-singleton-0.12.0
+    app.kubernetes.io/name: alloy-singleton
+    app.kubernetes.io/instance: k8smon
+    
+    app.kubernetes.io/version: "v1.7.0"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/part-of: alloy
+spec:
+  replicas: 1
+  minReadySeconds: 10
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: alloy-singleton
+      app.kubernetes.io/instance: k8smon
+  template:
+    metadata:
+      annotations:
+        kubectl.kubernetes.io/default-container: alloy
+        k8s.grafana.com/logs.job: integrations/alloy
+        kubernetes.azure.com/set-kube-service-host-fqdn: "true"
+      labels:
+        app.kubernetes.io/name: alloy-singleton
+        app.kubernetes.io/instance: k8smon
+    spec:
+      serviceAccountName: k8smon-alloy-singleton
+      containers:
+        - name: alloy
+          image: docker.io/grafana/alloy:v1.7.0
+          imagePullPolicy: IfNotPresent
+          args:
+            - run
+            - /etc/alloy/config.alloy
+            - --storage.path=/tmp/alloy
+            - --server.http.listen-addr=0.0.0.0:12345
+            - --server.http.ui-path-prefix=/
+            - --stability.level=generally-available
+          env:
+            - name: ALLOY_DEPLOY_MODE
+              value: "helm"
+            - name: HOSTNAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+          ports:
+            - containerPort: 12345
+              name: http-metrics
+          readinessProbe:
+            httpGet:
+              path: /-/ready
+              port: 12345
+              scheme: HTTP
+            initialDelaySeconds: 10
+            timeoutSeconds: 1
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              add:
+              - CHOWN
+              - DAC_OVERRIDE
+              - FOWNER
+              - FSETID
+              - KILL
+              - SETGID
+              - SETUID
+              - SETPCAP
+              - NET_BIND_SERVICE
+              - NET_RAW
+              - SYS_CHROOT
+              - MKNOD
+              - AUDIT_WRITE
+              - SETFCAP
+              drop:
+              - ALL
+            seccompProfile:
+              type: RuntimeDefault
+          volumeMounts:
+            - name: config
+              mountPath: /etc/alloy
+        - name: config-reloader
+          image: ghcr.io/jimmidyson/configmap-reload:v0.14.0
+          args:
+            - --volume-dir=/etc/alloy
+            - --webhook-url=http://localhost:12345/-/reload
+          volumeMounts:
+            - name: config
+              mountPath: /etc/alloy
+          resources:
+            requests:
+              cpu: 1m
+              memory: 5Mi
+      dnsPolicy: ClusterFirst
+      nodeSelector:
+        kubernetes.io/os: linux
+      volumes:
+        - name: config
+          configMap:
+            name: k8smon-alloy-singleton
+---
+# Source: k8s-monitoring/charts/clusterMetrics/charts/kube-state-metrics/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: k8smon-kube-state-metrics
+  namespace: default
+  labels:    
+    helm.sh/chart: kube-state-metrics-5.30.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/component: metrics
+    app.kubernetes.io/part-of: kube-state-metrics
+    app.kubernetes.io/name: kube-state-metrics
+    app.kubernetes.io/instance: k8smon
+    app.kubernetes.io/version: "2.15.0"
+    release: k8smon
+spec:
+  selector:
+    matchLabels:      
+      app.kubernetes.io/name: kube-state-metrics
+      app.kubernetes.io/instance: k8smon
+  replicas: 1
+  strategy:
+    type: Recreate
+  revisionHistoryLimit: 10
+  template:
+    metadata:
+      labels:        
+        helm.sh/chart: kube-state-metrics-5.30.0
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/component: metrics
+        app.kubernetes.io/part-of: kube-state-metrics
+        app.kubernetes.io/name: kube-state-metrics
+        app.kubernetes.io/instance: k8smon
+        app.kubernetes.io/version: "2.15.0"
+        release: k8smon
+      annotations:
+      
+        k8s.grafana.com/logs.job: integrations/kubernetes/kube-state-metrics
+        kubernetes.azure.com/set-kube-service-host-fqdn: "true"
+    spec:
+      automountServiceAccountToken: true
+      hostNetwork: false
+      serviceAccountName: k8smon-kube-state-metrics
+      securityContext:
+        fsGroup: 65534
+        runAsGroup: 65534
+        runAsNonRoot: true
+        runAsUser: 65534
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: kube-state-metrics
+        args:
+        - --port=8080
+        - --resources=certificatesigningrequests,configmaps,cronjobs,daemonsets,deployments,endpoints,horizontalpodautoscalers,ingresses,jobs,leases,limitranges,mutatingwebhookconfigurations,namespaces,networkpolicies,nodes,persistentvolumeclaims,persistentvolumes,poddisruptionbudgets,pods,replicasets,replicationcontrollers,resourcequotas,secrets,services,statefulsets,storageclasses,validatingwebhookconfigurations,volumeattachments
+        - --metric-labels-allowlist=nodes=[agentpool,alpha.eksctl.io/cluster-name,alpha.eksctl.io/nodegroup-name,beta.kubernetes.io/instance-type,cloud.google.com/gke-nodepool,cluster-name,ec2.amazonaws.com/Name,ec2.amazonaws.com/aws-autoscaling-groupName,ec2.amazonaws.com/aws-autoscaling-group-name,ec2.amazonaws.com/name,eks.amazonaws.com/nodegroup,k8s.io/cloud-provider-aws,karpenter.sh/nodepool,kubernetes.azure.com/cluster,kubernetes.io/arch,kubernetes.io/hostname,kubernetes.io/os,node.kubernetes.io/instance-type,topology.kubernetes.io/region,topology.kubernetes.io/zone]
+        imagePullPolicy: IfNotPresent
+        image: registry.k8s.io/kube-state-metrics/kube-state-metrics:v2.15.0
+        ports:
+        - containerPort: 8080
+          name: "http"
+        livenessProbe:
+          failureThreshold: 3
+          httpGet:
+            httpHeaders:
+            path: /livez
+            port: 8080
+            scheme: HTTP
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 5
+        readinessProbe:
+          failureThreshold: 3
+          httpGet:
+            httpHeaders:
+            path: /readyz
+            port: 8081
+            scheme: HTTP
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 5
+        resources:
+          {}
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+      nodeSelector:
+        kubernetes.io/os: linux
+---
+# Source: k8s-monitoring/charts/alloy-metrics/templates/controllers/statefulset.yaml
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: k8smon-alloy-metrics
+  labels:
+    helm.sh/chart: alloy-metrics-0.12.0
+    app.kubernetes.io/name: alloy-metrics
+    app.kubernetes.io/instance: k8smon
+    
+    app.kubernetes.io/version: "v1.7.0"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/part-of: alloy
+spec:
+  replicas: 1
+  podManagementPolicy: Parallel
+  minReadySeconds: 10
+  serviceName: k8smon-alloy-metrics
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: alloy-metrics
+      app.kubernetes.io/instance: k8smon
+  template:
+    metadata:
+      annotations:
+        kubectl.kubernetes.io/default-container: alloy
+        k8s.grafana.com/logs.job: integrations/alloy
+        kubernetes.azure.com/set-kube-service-host-fqdn: "true"
+      labels:
+        app.kubernetes.io/name: alloy-metrics
+        app.kubernetes.io/instance: k8smon
+    spec:
+      serviceAccountName: k8smon-alloy-metrics
+      containers:
+        - name: alloy
+          image: docker.io/grafana/alloy:v1.7.0
+          imagePullPolicy: IfNotPresent
+          args:
+            - run
+            - /etc/alloy/config.alloy
+            - --storage.path=/tmp/alloy
+            - --server.http.listen-addr=0.0.0.0:12345
+            - --server.http.ui-path-prefix=/
+            - --cluster.enabled=true
+            - --cluster.join-addresses=k8smon-alloy-metrics-cluster
+            - --cluster.name=alloy-metrics
+            - --stability.level=generally-available
+          env:
+            - name: ALLOY_DEPLOY_MODE
+              value: "helm"
+            - name: HOSTNAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+          ports:
+            - containerPort: 12345
+              name: http-metrics
+          readinessProbe:
+            httpGet:
+              path: /-/ready
+              port: 12345
+              scheme: HTTP
+            initialDelaySeconds: 10
+            timeoutSeconds: 1
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              add:
+              - CHOWN
+              - DAC_OVERRIDE
+              - FOWNER
+              - FSETID
+              - KILL
+              - SETGID
+              - SETUID
+              - SETPCAP
+              - NET_BIND_SERVICE
+              - NET_RAW
+              - SYS_CHROOT
+              - MKNOD
+              - AUDIT_WRITE
+              - SETFCAP
+              drop:
+              - ALL
+            seccompProfile:
+              type: RuntimeDefault
+          volumeMounts:
+            - name: config
+              mountPath: /etc/alloy
+        - name: config-reloader
+          image: ghcr.io/jimmidyson/configmap-reload:v0.14.0
+          args:
+            - --volume-dir=/etc/alloy
+            - --webhook-url=http://localhost:12345/-/reload
+          volumeMounts:
+            - name: config
+              mountPath: /etc/alloy
+          resources:
+            requests:
+              cpu: 1m
+              memory: 5Mi
+      dnsPolicy: ClusterFirst
+      nodeSelector:
+        kubernetes.io/os: linux
+      volumes:
+        - name: config
+          configMap:
+            name: k8smon-alloy-metrics
