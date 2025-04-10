@@ -1,7 +1,12 @@
-{{- if and (index .Values "alloy-receiver").enabled (index .Values "alloy-receiver").extraService.enabled -}}
-{{- $name := printf "%s-%s" .Release.Name (index .Values "alloy-receiver").extraService.name | trunc 63 | trimSuffix "-" }}
-{{- if (index .Values "alloy-receiver").extraService.fullname }}
-  {{- $name = (index .Values "alloy-receiver").extraService.fullname }}
+{{- $collectorName := "alloy-receiver" }}
+{{- $alloyValues := (index .Values $collectorName) }}
+{{- $alloyDefaultValues := "collectors/alloy-values.yaml" | .Files.Get | fromYaml }}
+{{- $upstreamAlloyDefaultValues := "collectors/upstream/alloy-values.yaml" | .Files.Get | fromYaml }}
+{{- $collector := deepCopy $alloyValues | merge $alloyDefaultValues $upstreamAlloyDefaultValues }}
+{{- if and $collector.enabled $collector.extraService.enabled -}}
+{{- $name := printf "%s-%s" .Release.Name $collector.extraService.name | trunc 63 | trimSuffix "-" }}
+{{- if $collector.extraService.fullname }}
+  {{- $name = $collector.extraService.fullname }}
 {{- end }}
 
 apiVersion: v1
@@ -9,31 +14,31 @@ kind: Service
 metadata:
   name: {{ $name }}
   labels:
-    {{- include "alloy.labels" (index .Subcharts "alloy-receiver") | nindent 4 }}
+    {{- include "collector.alloy.labels" (deepCopy $ | merge (dict "collectorName" $collectorName)) | nindent 4 }}
     app.kubernetes.io/component: networking
-  {{- with (index .Values "alloy-receiver").service.annotations }}
+  {{- with $collector.service.annotations }}
   annotations:
     {{- toYaml . | nindent 4 }}
   {{- end }}
 spec:
-  type: {{ (index .Values "alloy-receiver").service.type }}
-  {{- if (index .Values "alloy-receiver").service.clusterIP }}
-  clusterIP: {{ (index .Values "alloy-receiver").service.clusterIP }}
+  type: {{ $collector.service.type }}
+  {{- if $collector.service.clusterIP }}
+  clusterIP: {{ $collector.service.clusterIP }}
   {{- end }}
   selector:
-    {{- include "alloy.selectorLabels" (index .Subcharts "alloy-receiver") | nindent 4 }}
+    {{- include "collector.alloy.selectorLabels" (deepCopy $ | merge (dict "collectorName" $collectorName)) | nindent 4 }}
   {{- if semverCompare ">=1.26-0" .Capabilities.KubeVersion.Version }}
-  internalTrafficPolicy: {{ (index .Values "alloy-receiver").service.internalTrafficPolicy}}
+  internalTrafficPolicy: {{ $collector.service.internalTrafficPolicy}}
   {{- end }}
   ports:
     - name: http-metrics
-      {{- if eq (index .Values "alloy-receiver").service.type "NodePort" }}
-      nodePort: {{ (index .Values "alloy-receiver").service.nodePort }}
+      {{- if eq $collector.service.type "NodePort" }}
+      nodePort: {{ $collector.service.nodePort }}
       {{- end }}
-      port: {{ (index .Values "alloy-receiver").alloy.listenPort }}
-      targetPort: {{ (index .Values "alloy-receiver").alloy.listenPort }}
+      port: {{ $collector.alloy.listenPort }}
+      targetPort: {{ $collector.alloy.listenPort }}
       protocol: "TCP"
-{{- range $portMap := (index .Values "alloy-receiver").alloy.extraPorts }}
+{{- range $portMap := $collector.alloy.extraPorts }}
     - name: {{ $portMap.name }}
       port: {{ $portMap.port }}
       targetPort: {{ $portMap.targetPort }}

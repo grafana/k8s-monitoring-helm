@@ -34,7 +34,7 @@ alloy-metrics:
       name = "mongodb-atlas"
       namespace = "monitoring"
     }
-    
+
     discovery.http "mongodb_atlas" {
       url = string.format("https://cloud.mongodb.com/prometheus/v1.0/groups/%s/discovery", remote.kubernetes.secret.mongodb_atlas.data["group_id"])
 
@@ -43,18 +43,18 @@ alloy-metrics:
         password = remote.kubernetes.secret.mongodb_atlas.data["password"]
       }
     }
-  
+
     prometheus.scrape "mongodb_atlas" {
       targets         = discovery.http.mongodb_atlas.targets
       job_name        = "integrations/mongodb-atlas"
       scrape_interval = "10s"
       scheme          = "https"
-  
+
       basic_auth {
         username = nonsensitive(remote.kubernetes.secret.mongodb_atlas.data["username"])
         password = remote.kubernetes.secret.mongodb_atlas.data["password"]
       }
-  
+
       forward_to = [prometheus.remote_write.prometheus.receiver]
     }
 ```
