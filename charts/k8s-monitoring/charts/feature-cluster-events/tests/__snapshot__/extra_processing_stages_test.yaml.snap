@@ -1,3 +1,84 @@
 should create a ConfigMap with extra processing stages:
   1: |
-    "declare \"cluster_events\" {\n  argument \"logs_destinations\" {\n    comment = \"Must be a list of log destinations where collected logs should be forwarded to\"\n  }\n\n  loki.source.kubernetes_events \"cluster_events\" {\n    job_name   = \"integrations/kubernetes/eventhandler\"\n    log_format = \"logfmt\"\n    forward_to = [loki.process.cluster_events.receiver]\n  }\n\n  loki.process \"cluster_events\" {\n\n    // add a static source label to the logs so they can be differentiated / restricted if necessary\n    stage.static_labels {\n      values = {\n        \"source\" = \"kubernetes-events\",\n      }\n    }\n\n    // extract some of the fields from the log line, these could be used as labels, structured metadata, etc.\n    stage.logfmt {\n      mapping = {\n        \"component\" = \"sourcecomponent\", // map the sourcecomponent field to component\n        \"kind\" = \"\",\n        \"level\" = \"type\", // most events don't have a level but they do have a \"type\" i.e. Normal, Warning, Error, etc.\n        \"name\" = \"\",\n        \"node\" = \"sourcehost\", // map the sourcehost field to node\n      }\n    }\n    // set these values as labels, they may or may not be used as index labels in Loki as they can be dropped\n    // prior to being written to Loki, but this makes them available\n    stage.labels {\n      values = {\n        \"component\" = \"\",\n        \"kind\" = \"\",\n        \"level\" = \"\",\n        \"name\" = \"\",\n        \"node\" = \"\",\n      }\n    }\n\n    // if kind=Node, set the node label by copying the instance label\n    stage.match {\n      selector = \"{kind=\\\"Node\\\"}\"\n\n      stage.labels {\n        values = {\n          \"node\" = \"name\",\n        }\n      }\n    }\n\n    // set the level extracted key value as a normalized log level\n    stage.match {\n      selector = \"{level=\\\"Normal\\\"}\"\n\n      stage.static_labels {\n        values = {\n          level = \"Info\",\n        }\n      }\n    }\n        stage.drop {\n      source = \"namespace\"\n      value  = \"private\"\n    }\n    \n\n    // Only keep the labels that are defined in the `keepLabels` list.\n    stage.label_keep {\n      values = [\"job\",\"level\",\"namespace\",\"node\",\"source\"]\n    }\n    stage.labels {\n      values = {\n        \"service_name\" = \"job\",\n      }\n    }\n    forward_to = argument.logs_destinations.value\n  }\n}"
+    |-
+      declare "cluster_events" {
+        argument "logs_destinations" {
+          comment = "Must be a list of log destinations where collected logs should be forwarded to"
+        }
+
+        loki.source.kubernetes_events "cluster_events" {
+          job_name   = "integrations/kubernetes/eventhandler"
+          log_format = "logfmt"
+          forward_to = [loki.process.cluster_events.receiver]
+        }
+
+        loki.process "cluster_events" {
+
+          // add a static source label to the logs so they can be differentiated / restricted if necessary
+          stage.static_labels {
+            values = {
+              "source" = "kubernetes-events",
+            }
+          }
+
+          // extract some of the fields from the log line, these could be used as labels, structured metadata, etc.
+          stage.logfmt {
+            mapping = {
+              "component" = "sourcecomponent", // map the sourcecomponent field to component
+              "kind" = "",
+              "level" = "type", // most events don't have a level but they do have a "type" i.e. Normal, Warning, Error, etc.
+              "name" = "",
+              "node" = "sourcehost", // map the sourcehost field to node
+            }
+          }
+          // set these values as labels, they may or may not be used as index labels in Loki as they can be dropped
+          // prior to being written to Loki, but this makes them available
+          stage.labels {
+            values = {
+              "component" = "",
+              "kind" = "",
+              "level" = "",
+              "name" = "",
+              "node" = "",
+            }
+          }
+
+          // if kind=Node, set the node label by copying the instance label
+          stage.match {
+            selector = "{kind=\"Node\"}"
+
+            stage.labels {
+              values = {
+                "node" = "name",
+              }
+            }
+          }
+
+          // set the level extracted key value as a normalized log level
+          stage.match {
+            selector = "{level=\"Normal\"}"
+
+            stage.static_labels {
+              values = {
+                level = "Info",
+              }
+            }
+          }
+              stage.drop {
+            source = "namespace"
+            value  = "private"
+          }
+
+
+          // Only keep the labels that are defined in the `keepLabels` list.
+          stage.label_keep {
+            values = ["job","level","namespace","node","source"]
+          }
+          stage.labels {
+            values = {
+              "service_name" = "job",
+            }
+          }
+          forward_to = argument.logs_destinations.value
+        }
+      }
