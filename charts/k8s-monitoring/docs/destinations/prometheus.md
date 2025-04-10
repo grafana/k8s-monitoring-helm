@@ -84,7 +84,7 @@ This defines the options for defining a destination for metrics that use the Pro
 | tenantIdFrom | string | `""` | Raw config for accessing the tenant ID. |
 | tenantIdKey | string | `"tenantId"` | The key for storing the tenant ID in the secret. |
 | url | string | `""` | The URL for the Prometheus destination. |
-| urlFrom | string | `""` | Raw config for accessing the URL. |
+| urlFrom | string | `""` | Raw config for accessing the URL. Lets you insert raw Alloy references so you can load the URL from any number of places, such as loading values from config maps to HTTP calls. For example: `urlFrom: sys.env("PROMETHEUS_URL")` |
 
 ### OpenTelemetry Conversion
 
