@@ -25,6 +25,18 @@ cluster_metrics "feature" {
 {{- end -}}
 {{- end -}}
 
+{{- define "features.clusterMetrics.destinations.isTranslating" }}
+{{- $isTranslating := false -}}
+{{- $destinations := include "features.clusterMetrics.destinations" . | fromYamlArray -}}
+{{ range $destination := $destinations -}}
+  {{- $destinationEcosystem := include "destination.getEcosystem" (deepCopy $ | merge (dict "destination" $destination)) -}}
+  {{- if ne $destinationEcosystem "prometheus" -}}
+    {{- $isTranslating = true -}}
+  {{- end -}}
+{{- end -}}
+{{- $isTranslating -}}
+{{- end -}}
+
 {{- define "features.clusterMetrics.validate" }}
 {{- if .Values.clusterMetrics.enabled -}}
 {{- $featureName := "Kubernetes Cluster metrics" }}

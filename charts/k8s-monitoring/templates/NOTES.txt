@@ -7,11 +7,13 @@ This chart will install the following components:
 {{- include "collectors.notes.deployments" . }}
 
 It will:
+{{- $isTranslating := false }}
 {{- range $feature := (include "features.list.enabled" .) | fromYamlArray }}
   {{- if ne $feature "selfReporting" }}
     {{- $task := include (printf "feature.%s.notes.task" $feature) (dict "Values" (index $.Values $feature)) | trim }}
     {{- $destinations := include (printf "features.%s.destinations" $feature) $ | fromYamlArray }}
-* {{ $task }} and send data to {{ include "english_list" $destinations }}.
+    {{- $featureIsTranslating := include (printf "features.%s.destinations.isTranslating" $feature) $ }}
+* {{ $task }} and send data to {{ include "english_list" $destinations }}{{ if $featureIsTranslating }}{{ $isTranslating = true }}*{{ end }}.
   {{- end }}
 {{- end }}
 
@@ -22,4 +24,11 @@ It will:
     {{- $Collector = merge $Collector (dict "ServiceName" (include "alloy.fullname" (index $.Subcharts $collectorName))) }}
   {{- end }}
   {{ include (printf "feature.%s.notes.actions" $feature) (dict "Values" (index $.Values $feature) "Collector" $Collector) | indent 0 }}
+{{- end }}
+
+{{- if $isTranslating }}
+
+* One or more features will have their data translated to a different storage ecosystem. This may result in an imperfect
+  translation of labels and attributes. For more information, consult:
+    https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/docs/destinations#ecosystem-translation
 {{- end }}

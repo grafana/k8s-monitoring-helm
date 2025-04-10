@@ -139,6 +139,19 @@ podLogs:
 
 ![Example 3](./.images/example3.png)
 
+## Ecosystem Translation
+
+Telemetry data that come from one ecosystem and are sent to another ecosystem may need to be translated. Often, this
+translation is not exact and relies on conventions and best practices to assign labels and attributes appropriately.
+
+Care should be taken when mixing ecosystems.
+
+When logs are gathered with a Loki source component, they are in the Loki ecosystem. The Cluster Events and Pod Logs
+features are examples of logs gathered in the Loki ecosystem. When these logs are sent to a destination in the OTLP
+ecosystem, they will be translated to OTLP format. This translation is not always exact, and some labels may be lost in
+the translation. This chart will try and map common Loki labels to OTLP attributes for example, in the Cluster Events
+feature, `job` becomes `service_name`.
+
 ## Contributing
 
 Destinations use a specific set of files to define the destination configuration. These files are used to generate the

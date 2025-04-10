@@ -25,6 +25,18 @@ auto_instrumentation "feature" {
 {{- end -}}
 {{- end -}}
 
+{{- define "features.autoInstrumentation.destinations.isTranslating" }}
+{{- $isTranslating := false -}}
+{{- $destinations := include "features.autoInstrumentation.destinations" . | fromYamlArray -}}
+{{ range $destination := $destinations -}}
+  {{- $destinationEcosystem := include "destination.getEcosystem" (deepCopy $ | merge (dict "destination" $destination)) -}}
+  {{- if ne $destinationEcosystem "prometheus" -}}
+    {{- $isTranslating = true -}}
+  {{- end -}}
+{{- end -}}
+{{- $isTranslating -}}
+{{- end -}}
+
 {{- define "features.autoInstrumentation.validate" }}
 {{- if .Values.autoInstrumentation.enabled -}}
 {{- $featureName := "Auto-Instrumentation" }}

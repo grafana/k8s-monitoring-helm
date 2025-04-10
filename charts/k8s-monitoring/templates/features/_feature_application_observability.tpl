@@ -35,6 +35,18 @@ application_observability "feature" {
 {{- end -}}
 {{- end -}}
 
+{{- define "features.applicationObservability.destinations.isTranslating" }}
+{{- $isTranslating := false -}}
+{{- $destinations := include "features.applicationObservability.destinations" . | fromYamlArray -}}
+{{ range $destination := $destinations -}}
+  {{- $destinationEcosystem := include "destination.getEcosystem" (deepCopy $ | merge (dict "destination" $destination)) -}}
+  {{- if ne $destinationEcosystem "otlp" -}}
+    {{- $isTranslating = true -}}
+  {{- end -}}
+{{- end -}}
+{{- $isTranslating -}}
+{{- end -}}
+
 {{- define "features.applicationObservability.validate" }}
 {{- if .Values.applicationObservability.enabled -}}
 {{- $featureName := "Application Observability" }}

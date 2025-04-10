@@ -29,6 +29,18 @@ pod_logs "feature" {
 {{- end -}}
 {{- end -}}
 
+{{- define "features.podLogs.destinations.isTranslating" }}
+{{- $isTranslating := false -}}
+{{- $destinations := include "features.podLogs.destinations" . | fromYamlArray -}}
+{{ range $destination := $destinations -}}
+  {{- $destinationEcosystem := include "destination.getEcosystem" (deepCopy $ | merge (dict "destination" $destination)) -}}
+  {{- if ne $destinationEcosystem "loki" -}}
+    {{- $isTranslating = true -}}
+  {{- end -}}
+{{- end -}}
+{{- $isTranslating -}}
+{{- end -}}
+
 {{- define "features.podLogs.validate" }}
 {{- if .Values.podLogs.enabled -}}
 {{- $featureName := "Kubernetes Pod logs" }}
