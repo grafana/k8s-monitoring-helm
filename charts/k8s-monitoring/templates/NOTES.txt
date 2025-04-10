@@ -12,7 +12,7 @@ It will:
   {{- if ne $feature "selfReporting" }}
     {{- $task := include (printf "feature.%s.notes.task" $feature) (dict "Values" (index $.Values $feature)) | trim }}
     {{- $destinations := include (printf "features.%s.destinations" $feature) $ | fromYamlArray }}
-    {{- $featureIsTranslating := include (printf "features.%s.destinations.isTranslating" $feature) $ }}
+    {{- $featureIsTranslating := eq (include (printf "features.%s.destinations.isTranslating" $feature) $) "true" }}
 * {{ $task }} and send data to {{ include "english_list" $destinations }}{{ if $featureIsTranslating }}{{ $isTranslating = true }}*{{ end }}.
   {{- end }}
 {{- end }}
