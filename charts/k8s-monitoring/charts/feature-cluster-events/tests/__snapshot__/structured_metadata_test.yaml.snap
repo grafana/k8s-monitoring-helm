@@ -1,7 +1,6 @@
-renders the config to gather Kubernetes Cluster Events:
+should create a ConfigMap that sets structured metadata k/v pairs:
   1: |
     |-
-      // Feature: Cluster Events
       declare "cluster_events" {
         argument "logs_destinations" {
           comment = "Must be a list of log destinations where collected logs should be forwarded to"
@@ -65,6 +64,14 @@ renders the config to gather Kubernetes Cluster Events:
               }
             }
           }
+          // set the structured metadata values
+          stage.structured_metadata {
+            values = {
+              "component" = "component",
+              "kind" = "kind",
+              "name" = "name",
+            }
+          }
 
           // Only keep the labels that are defined in the `keepLabels` list.
           stage.label_keep {
@@ -76,34 +83,5 @@ renders the config to gather Kubernetes Cluster Events:
             }
           }
           forward_to = argument.logs_destinations.value
-        }
-      }
-      cluster_events "feature" {
-        logs_destinations = [
-          loki.write.loki.receiver,
-        ]
-      }
-
-
-
-
-      // Destination: loki (loki)
-      otelcol.exporter.loki "loki" {
-        forward_to = [loki.write.loki.receiver]
-      }
-
-      loki.write "loki" {
-        endpoint {
-          url = "http://loki.loki.svc:3100/api/push"
-          tls_config {
-            insecure_skip_verify = false
-          }
-          min_backoff_period = "500ms"
-          max_backoff_period = "5m"
-          max_backoff_retries = "10"
-        }
-        external_labels = {
-          "cluster" = "ci-test-cluster",
-          "k8s_cluster_name" = "ci-test-cluster",
         }
       }

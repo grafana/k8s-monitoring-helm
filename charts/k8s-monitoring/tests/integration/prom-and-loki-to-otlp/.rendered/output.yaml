@@ -50,19 +50,6 @@ metadata:
     app.kubernetes.io/part-of: alloy
     app.kubernetes.io/component: rbac
 ---
-# Source: k8s-monitoring/charts/clusterMetrics/charts/kepler/templates/serviceaccount.yaml
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: k8smon-kepler
-  namespace: default
-  labels:
-    helm.sh/chart: kepler-0.5.13
-    app.kubernetes.io/name: kepler
-    app.kubernetes.io/component: exporter
-    app.kubernetes.io/version: "release-0.7.12"
-    app.kubernetes.io/managed-by: Helm
----
 # Source: k8s-monitoring/charts/clusterMetrics/charts/kube-state-metrics/templates/serviceaccount.yaml
 apiVersion: v1
 kind: ServiceAccount
@@ -97,21 +84,6 @@ metadata:
     release: k8smon
 automountServiceAccountToken: false
 ---
-# Source: k8s-monitoring/charts/clusterMetrics/charts/opencost/templates/serviceaccount.yaml
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: k8smon-opencost
-  namespace: default
-  labels:
-    helm.sh/chart: opencost-1.43.2
-    app.kubernetes.io/name: opencost
-    app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.113.0"
-    app.kubernetes.io/part-of: opencost
-    app.kubernetes.io/managed-by: Helm
-automountServiceAccountToken: true
----
 # Source: k8s-monitoring/charts/clusterMetrics/charts/windows-exporter/templates/serviceaccount.yaml
 apiVersion: v1
 kind: ServiceAccount
@@ -127,6 +99,29 @@ metadata:
     app.kubernetes.io/instance: k8smon
     app.kubernetes.io/version: "0.30.5"
     release: k8smon
+---
+# Source: k8s-monitoring/templates/destination_secret.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: "prometheus-k8smon-k8s-monitoring"
+  namespace: "default"
+type: Opaque
+data:
+  username: "cHJvbXVzZXI="
+  password: "cHJvbWV0aGV1c3Bhc3N3b3Jk"
+---
+# Source: k8s-monitoring/templates/destination_secret.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: "loki-k8smon-k8s-monitoring"
+  namespace: "default"
+type: Opaque
+data:
+  tenantId: "MQ=="
+  username: "bG9raQ=="
+  password: "bG9raXBhc3N3b3Jk"
 ---
 # Source: k8s-monitoring/charts/clusterMetrics/charts/windows-exporter/templates/config.yaml
 apiVersion: v1
@@ -633,485 +628,213 @@ data:
         }
         forward_to = argument.metrics_destinations.value
       }
-    
-      discovery.kubernetes "kepler" {
-        role = "pod"
-        namespaces {
-          own_namespace = true
-        }
-        selectors {
-          role = "pod"
-          label = "app.kubernetes.io/name=kepler"
-        }
-      }
-    
-      discovery.relabel "kepler" {
-        targets = discovery.kubernetes.kepler.targets
-        rule {
-          source_labels = ["__meta_kubernetes_pod_node_name"]
-          action = "replace"
-          target_label = "instance"
-        }
-      }
-    
-      prometheus.scrape "kepler" {
-        targets      = discovery.relabel.kepler.output
-        job_name     = "integrations/kepler"
-        honor_labels = true
-        scrape_interval = "60s"
-        clustering {
-          enabled = true
-        }
-        forward_to = [prometheus.relabel.kepler.receiver]
-      }
-    
-      prometheus.relabel "kepler" {
-        max_cache_size = 100000
-        rule {
-          source_labels = ["__name__"]
-          regex = "up|scrape_samples_scraped|kepler_.*"
-          action = "keep"
-        }
-        forward_to = argument.metrics_destinations.value
-      }
-    
-      discovery.kubernetes "opencost" {
-        role = "pod"
-        namespaces {
-          own_namespace = true
-        }
-        selectors {
-          role = "pod"
-          label = "app.kubernetes.io/name=opencost"
-        }
-      }
-    
-      discovery.relabel "opencost" {
-        targets = discovery.kubernetes.opencost.targets
-        rule {
-          source_labels = ["__meta_kubernetes_pod_node_name"]
-          action = "replace"
-          target_label = "instance"
-        }
-      }
-    
-      prometheus.scrape "opencost" {
-        targets      = discovery.relabel.opencost.output
-        job_name     = "integrations/opencost"
-        honor_labels = true
-        scrape_interval = "60s"
-        clustering {
-          enabled = true
-        }
-        forward_to = [prometheus.relabel.opencost.receiver]
-      }
-    
-      prometheus.relabel "opencost" {
-        max_cache_size = 100000
-        rule {
-          source_labels = ["__name__"]
-          regex = "up|scrape_samples_scraped|container_cpu_allocation|container_gpu_allocation|container_memory_allocation_bytes|deployment_match_labels|kubecost_cluster_info|kubecost_cluster_management_cost|kubecost_cluster_memory_working_set_bytes|kubecost_http_requests_total|kubecost_http_response_size_bytes|kubecost_http_response_time_seconds|kubecost_load_balancer_cost|kubecost_network_internet_egress_cost|kubecost_network_region_egress_cost|kubecost_network_zone_egress_cost|kubecost_node_is_spot|node_cpu_hourly_cost|node_gpu_count|node_gpu_hourly_cost|node_ram_hourly_cost|node_total_hourly_cost|opencost_build_info|pod_pvc_allocation|pv_hourly_cost|service_selector_labels|statefulSet_match_labels"
-          action = "keep"
-        }
-        forward_to = argument.metrics_destinations.value
-      }
     }
     cluster_metrics "feature" {
       metrics_destinations = [
-        prometheus.remote_write.grafanacloudmetrics.receiver,
-      ]
-    }
-    declare "alloy_integration" {
-      argument "metrics_destinations" {
-        comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
-      }
-    
-      declare "alloy_integration_discovery" {
-        argument "namespaces" {
-          comment = "The namespaces to look for targets in (default: [] is all namespaces)"
-          optional = true
-        }
-    
-        argument "field_selectors" {
-          comment = "The field selectors to use to find matching targets (default: [])"
-          optional = true
-        }
-    
-        argument "label_selectors" {
-          comment = "The label selectors to use to find matching targets (default: [\"app.kubernetes.io/name=alloy\"])"
-          optional = true
-        }
-    
-        argument "port_name" {
-          comment = "The of the port to scrape metrics from (default: http-metrics)"
-          optional = true
-        }
-    
-        // Alloy service discovery for all of the pods
-        discovery.kubernetes "alloy_pods" {
-          role = "pod"
-    
-          selectors {
-            role = "pod"
-            field = string.join(coalesce(argument.field_selectors.value, []), ",")
-            label = string.join(coalesce(argument.label_selectors.value, ["app.kubernetes.io/name=alloy"]), ",")
-          }
-    
-          namespaces {
-            names = coalesce(argument.namespaces.value, [])
-          }
-        }
-    
-        // alloy relabelings (pre-scrape)
-        discovery.relabel "alloy_pods" {
-          targets = discovery.kubernetes.alloy_pods.targets
-    
-          // keep only the specified metrics port name, and pods that are Running and ready
-          rule {
-            source_labels = [
-              "__meta_kubernetes_pod_container_port_name",
-              "__meta_kubernetes_pod_phase",
-              "__meta_kubernetes_pod_ready",
-              "__meta_kubernetes_pod_container_init",
-            ]
-            separator = "@"
-            regex = coalesce(argument.port_name.value, "metrics") + "@Running@true@false"
-            action = "keep"
-          }
-    
-    
-    
-        rule {
-          source_labels = ["__meta_kubernetes_namespace"]
-          target_label  = "namespace"
-        }
-    
-        rule {
-          source_labels = ["__meta_kubernetes_pod_name"]
-          target_label  = "pod"
-        }
-    
-        rule {
-          source_labels = ["__meta_kubernetes_pod_container_name"]
-          target_label  = "container"
-        }
-    
-        // set the workload to the controller kind and name
-        rule {
-          action = "lowercase"
-          source_labels = ["__meta_kubernetes_pod_controller_kind"]
-          target_label  = "workload_type"
-        }
-    
-        rule {
-          source_labels = ["__meta_kubernetes_pod_controller_name"]
-          target_label  = "workload"
-        }
-    
-        // remove the hash from the ReplicaSet
-        rule {
-          source_labels = [
-            "workload_type",
-            "workload",
-          ]
-          separator = "/"
-          regex = "replicaset/(.+)-.+$"
-          target_label  = "workload"
-        }
-    
-        // set the app name if specified as metadata labels "app:" or "app.kubernetes.io/name:" or "k8s-app:"
-        rule {
-          action = "replace"
-          source_labels = [
-            "__meta_kubernetes_pod_label_app_kubernetes_io_name",
-            "__meta_kubernetes_pod_label_k8s_app",
-            "__meta_kubernetes_pod_label_app",
-          ]
-          separator = ";"
-          regex = "^(?:;*)?([^;]+).*$"
-          replacement = "$1"
-          target_label = "app"
-        }
-    
-        // set the component if specified as metadata labels "component:" or "app.kubernetes.io/component:" or "k8s-component:"
-        rule {
-          action = "replace"
-          source_labels = [
-            "__meta_kubernetes_pod_label_app_kubernetes_io_component",
-            "__meta_kubernetes_pod_label_k8s_component",
-            "__meta_kubernetes_pod_label_component",
-          ]
-          regex = "^(?:;*)?([^;]+).*$"
-          replacement = "$1"
-          target_label = "component"
-        }
-    
-        // set a source label
-        rule {
-          action = "replace"
-          replacement = "kubernetes"
-          target_label = "source"
-        }
-        }
-    
-        export "output" {
-          value = discovery.relabel.alloy_pods.output
-        }
-      }
-    
-      declare "alloy_integration_scrape" {
-        argument "targets" {
-          comment = "Must be a list() of targets"
-        }
-    
-        argument "forward_to" {
-          comment = "Must be a list(MetricsReceiver) where collected metrics should be forwarded to"
-        }
-    
-        argument "job_label" {
-          comment = "The job label to add for all Alloy metrics (default: integrations/alloy)"
-          optional = true
-        }
-    
-        argument "keep_metrics" {
-          comment = "A regular expression of metrics to keep (default: see below)"
-          optional = true
-        }
-    
-        argument "drop_metrics" {
-          comment = "A regular expression of metrics to drop (default: see below)"
-          optional = true
-        }
-    
-        argument "scrape_interval" {
-          comment = "How often to scrape metrics from the targets (default: 60s)"
-          optional = true
-        }
-    
-        argument "max_cache_size" {
-          comment = "The maximum number of elements to hold in the relabeling cache (default: 100000).  This should be at least 2x-5x your largest scrape target or samples appended rate."
-          optional = true
-        }
-    
-        argument "clustering" {
-          comment = "Whether or not clustering should be enabled (default: false)"
-          optional = true
-        }
-    
-        prometheus.scrape "alloy" {
-          job_name = coalesce(argument.job_label.value, "integrations/alloy")
-          forward_to = [prometheus.relabel.alloy.receiver]
-          targets = argument.targets.value
-          scrape_interval = coalesce(argument.scrape_interval.value, "60s")
-    
-          clustering {
-            enabled = coalesce(argument.clustering.value, false)
-          }
-        }
-    
-        // alloy metric relabelings (post-scrape)
-        prometheus.relabel "alloy" {
-          forward_to = argument.forward_to.value
-          max_cache_size = coalesce(argument.max_cache_size.value, 100000)
-    
-          // drop metrics that match the drop_metrics regex
-          rule {
-            source_labels = ["__name__"]
-            regex = coalesce(argument.drop_metrics.value, "")
-            action = "drop"
-          }
-    
-          // keep only metrics that match the keep_metrics regex
-          rule {
-            source_labels = ["__name__"]
-            regex = coalesce(argument.keep_metrics.value, ".*")
-            action = "keep"
-          }
-    
-          // remove the component_id label from any metric that starts with log_bytes or log_lines, these are custom metrics that are generated
-          // as part of the log annotation modules in this repo
-          rule {
-            action = "replace"
-            source_labels = ["__name__"]
-            regex = "^log_(bytes|lines).+"
-            replacement = ""
-            target_label = "component_id"
-          }
-    
-          // set the namespace label to that of the exported_namespace
-          rule {
-            action = "replace"
-            source_labels = ["__name__", "exported_namespace"]
-            separator = "@"
-            regex = "^log_(bytes|lines).+@(.+)"
-            replacement = "$2"
-            target_label = "namespace"
-          }
-    
-          // set the pod label to that of the exported_pod
-          rule {
-            action = "replace"
-            source_labels = ["__name__", "exported_pod"]
-            separator = "@"
-            regex = "^log_(bytes|lines).+@(.+)"
-            replacement = "$2"
-            target_label = "pod"
-          }
-    
-          // set the container label to that of the exported_container
-          rule {
-            action = "replace"
-            source_labels = ["__name__", "exported_container"]
-            separator = "@"
-            regex = "^log_(bytes|lines).+@(.+)"
-            replacement = "$2"
-            target_label = "container"
-          }
-    
-          // set the job label to that of the exported_job
-          rule {
-            action = "replace"
-            source_labels = ["__name__", "exported_job"]
-            separator = "@"
-            regex = "^log_(bytes|lines).+@(.+)"
-            replacement = "$2"
-            target_label = "job"
-          }
-    
-          // set the instance label to that of the exported_instance
-          rule {
-            action = "replace"
-            source_labels = ["__name__", "exported_instance"]
-            separator = "@"
-            regex = "^log_(bytes|lines).+@(.+)"
-            replacement = "$2"
-            target_label = "instance"
-          }
-    
-          rule {
-            action = "labeldrop"
-            regex = "exported_(namespace|pod|container|job|instance)"
-          }
-        }
-      }
-    
-      alloy_integration_discovery "alloy" {
-        port_name = "http-metrics"
-        label_selectors = ["app.kubernetes.io/name in (alloy-metrics,alloy-singleton,alloy-logs)"]
-      }
-    
-      alloy_integration_scrape  "alloy" {
-        targets = alloy_integration_discovery.alloy.output
-        job_label = "integrations/alloy"
-        clustering = true
-        keep_metrics = "up|scrape_samples_scraped|alloy_build_info|alloy_component_controller_running_components|alloy_component_dependencies_wait_seconds|alloy_component_dependencies_wait_seconds_bucket|alloy_component_evaluation_seconds|alloy_component_evaluation_seconds_bucket|alloy_component_evaluation_seconds_count|alloy_component_evaluation_seconds_sum|alloy_component_evaluation_slow_seconds|alloy_config_hash|alloy_resources_machine_rx_bytes_total|alloy_resources_machine_tx_bytes_total|alloy_resources_process_cpu_seconds_total|alloy_resources_process_resident_memory_bytes|alloy_tcp_connections|alloy_wal_samples_appended_total|alloy_wal_storage_active_series|cluster_node_gossip_health_score|cluster_node_gossip_proto_version|cluster_node_gossip_received_events_total|cluster_node_info|cluster_node_lamport_time|cluster_node_peers|cluster_node_update_observers|cluster_transport_rx_bytes_total|cluster_transport_rx_packet_queue_length|cluster_transport_rx_packets_failed_total|cluster_transport_rx_packets_total|cluster_transport_stream_rx_bytes_total|cluster_transport_stream_rx_packets_failed_total|cluster_transport_stream_rx_packets_total|cluster_transport_stream_tx_bytes_total|cluster_transport_stream_tx_packets_failed_total|cluster_transport_stream_tx_packets_total|cluster_transport_streams|cluster_transport_tx_bytes_total|cluster_transport_tx_packet_queue_length|cluster_transport_tx_packets_failed_total|cluster_transport_tx_packets_total|otelcol_exporter_send_failed_spans_total|otelcol_exporter_sent_spans_total|go_gc_duration_seconds_count|go_goroutines|go_memstats_heap_inuse_bytes|loki_process_dropped_lines_total|loki_write_batch_retries_total|loki_write_dropped_bytes_total|loki_write_dropped_entries_total|loki_write_encoded_bytes_total|loki_write_mutated_bytes_total|loki_write_mutated_entries_total|loki_write_request_duration_seconds_bucket|loki_write_sent_bytes_total|loki_write_sent_entries_total|process_cpu_seconds_total|process_start_time_seconds|otelcol_processor_batch_batch_send_size_bucket|otelcol_processor_batch_metadata_cardinality|otelcol_processor_batch_timeout_trigger_send_total|prometheus_remote_storage_bytes_total|prometheus_remote_storage_enqueue_retries_total|prometheus_remote_storage_highest_timestamp_in_seconds|prometheus_remote_storage_metadata_bytes_total|prometheus_remote_storage_queue_highest_sent_timestamp_seconds|prometheus_remote_storage_samples_dropped_total|prometheus_remote_storage_samples_failed_total|prometheus_remote_storage_samples_pending|prometheus_remote_storage_samples_retried_total|prometheus_remote_storage_samples_total|prometheus_remote_storage_sent_batch_duration_seconds_bucket|prometheus_remote_storage_sent_batch_duration_seconds_count|prometheus_remote_storage_sent_batch_duration_seconds_sum|prometheus_remote_storage_shard_capacity|prometheus_remote_storage_shards|prometheus_remote_storage_shards_desired|prometheus_remote_storage_shards_max|prometheus_remote_storage_shards_min|prometheus_remote_storage_succeeded_samples_total|prometheus_remote_write_wal_samples_appended_total|prometheus_remote_write_wal_storage_active_series|prometheus_sd_discovered_targets|prometheus_target_interval_length_seconds_count|prometheus_target_interval_length_seconds_sum|prometheus_target_scrapes_exceeded_sample_limit_total|prometheus_target_scrapes_sample_duplicate_timestamp_total|prometheus_target_scrapes_sample_out_of_bounds_total|prometheus_target_scrapes_sample_out_of_order_total|prometheus_target_sync_length_seconds_sum|prometheus_wal_watcher_current_segment|otelcol_receiver_accepted_spans_total|otelcol_receiver_refused_spans_total|rpc_server_duration_milliseconds_bucket|scrape_duration_seconds|traces_exporter_send_failed_spans|traces_exporter_send_failed_spans_total|traces_exporter_sent_spans|traces_exporter_sent_spans_total|traces_loadbalancer_backend_outcome|traces_loadbalancer_num_backends|traces_receiver_accepted_spans|traces_receiver_accepted_spans_total|traces_receiver_refused_spans|traces_receiver_refused_spans_total"
-        scrape_interval = "60s"
-        max_cache_size = 100000
-        forward_to = argument.metrics_destinations.value
-      }
-    }
-    alloy_integration "integration" {
-      metrics_destinations = [
-        prometheus.remote_write.grafanacloudmetrics.receiver,
+        otelcol.receiver.prometheus.prometheus.receiver,
       ]
     }
     
     
     
     
-    // Destination: grafanaCloudMetrics (prometheus)
-    otelcol.exporter.prometheus "grafanacloudmetrics" {
-      add_metric_suffixes = true
-      forward_to = [prometheus.remote_write.grafanacloudmetrics.receiver]
+    // Destination: prometheus (otlp)
+    otelcol.receiver.prometheus "prometheus" {
+      output {
+        metrics = [otelcol.processor.attributes.prometheus.input]
+      }
+    }
+    otelcol.auth.basic "prometheus" {
+      username = convert.nonsensitive(remote.kubernetes.secret.prometheus.data["username"])
+      password = remote.kubernetes.secret.prometheus.data["password"]
     }
     
-    prometheus.remote_write "grafanacloudmetrics" {
-      endpoint {
-        url = "https://prometheus-prod-13-prod-us-east-0.grafana.net/api/prom/push"
-        headers = {
-          "X-Scope-OrgID" = convert.nonsensitive(remote.kubernetes.secret.grafanacloudmetrics.data["tenantId"]),
-        }
-        basic_auth {
-          username = convert.nonsensitive(remote.kubernetes.secret.grafanacloudmetrics.data["PROMETHEUS_USER"])
-          password = remote.kubernetes.secret.grafanacloudmetrics.data["PROMETHEUS_PASS"]
-        }
-        tls_config {
-          insecure_skip_verify = false
-          ca_pem = convert.nonsensitive(remote.kubernetes.secret.grafanacloudmetrics.data["ca"])
-          cert_pem = convert.nonsensitive(remote.kubernetes.secret.grafanacloudmetrics.data["cert"])
-          key_pem = remote.kubernetes.secret.grafanacloudmetrics.data["key"]
-        }
-        send_native_histograms = false
-    
-        queue_config {
-          capacity = 10000
-          min_shards = 1
-          max_shards = 50
-          max_samples_per_send = 2000
-          batch_send_deadline = "5s"
-          min_backoff = "30ms"
-          max_backoff = "5s"
-          retry_on_http_429 = true
-          sample_age_limit = "0s"
-        }
-    
-        write_relabel_config {
-          source_labels = ["cluster"]
-          regex = ""
-          replacement = "k8s-monitoring-gc-feature-test"
-          target_label = "cluster"
-        }
-        write_relabel_config {
-          source_labels = ["k8s_cluster_name"]
-          regex = ""
-          replacement = "k8s-monitoring-gc-feature-test"
-          target_label = "k8s_cluster_name"
-        }
-      }
-    
-      wal {
-        truncate_frequency = "2h"
-        min_keepalive_time = "5m"
-        max_keepalive_time = "8h"
+    otelcol.processor.attributes "prometheus" {
+      output {
+        metrics = [otelcol.processor.transform.prometheus.input]
+        logs = [otelcol.processor.transform.prometheus.input]
+        traces = [otelcol.processor.transform.prometheus.input]
       }
     }
     
-    remote.kubernetes.secret "grafanacloudmetrics" {
-      name      = "grafana-cloud-credentials"
+    otelcol.processor.transform "prometheus" {
+      error_mode = "ignore"
+      metric_statements {
+        context = "resource"
+        statements = [
+          `set(attributes["k8s.cluster.name"], "prom-and-loki-to-otlp-test")`,
+        ]
+      }
+    
+      metric_statements {
+        context = "datapoint"
+        statements = [
+          `set(attributes["k8s.cluster.name"], "prom-and-loki-to-otlp-test")`,
+          `set(resource.attributes["k8s.container.name"], attributes["container"] ) where resource.attributes["k8s.container.name"] == nil and attributes["container"] != nil`,
+          `delete_key(attributes, "container") where attributes["container"] == resource.attributes["k8s.container.name"]`,
+          `set(resource.attributes["k8s.cronjob.name"], attributes["cronjob"] ) where resource.attributes["k8s.cronjob.name"] == nil and attributes["cronjob"] != nil`,
+          `delete_key(attributes, "cronjob") where attributes["cronjob"] == resource.attributes["k8s.cronjob.name"]`,
+          `set(resource.attributes["k8s.daemonset.name"], attributes["daemonset"] ) where resource.attributes["k8s.daemonset.name"] == nil and attributes["daemonset"] != nil`,
+          `delete_key(attributes, "daemonset") where attributes["daemonset"] == resource.attributes["k8s.daemonset.name"]`,
+          `set(resource.attributes["k8s.deployment.name"], attributes["deployment"] ) where resource.attributes["k8s.deployment.name"] == nil and attributes["deployment"] != nil`,
+          `delete_key(attributes, "deployment") where attributes["deployment"] == resource.attributes["k8s.deployment.name"]`,
+          `set(resource.attributes["deployment.environment"], attributes["deployment_environment"] ) where resource.attributes["deployment.environment"] == nil and attributes["deployment_environment"] != nil`,
+          `delete_key(attributes, "deployment_environment") where attributes["deployment_environment"] == resource.attributes["deployment.environment"]`,
+          `set(resource.attributes["deployment.environment.name"], attributes["deployment_environment_name"] ) where resource.attributes["deployment.environment.name"] == nil and attributes["deployment_environment_name"] != nil`,
+          `delete_key(attributes, "deployment_environment_name") where attributes["deployment_environment_name"] == resource.attributes["deployment.environment.name"]`,
+          `set(resource.attributes["k8s.job.name"], attributes["job_name"] ) where resource.attributes["k8s.job.name"] == nil and attributes["job_name"] != nil`,
+          `delete_key(attributes, "job_name") where attributes["job_name"] == resource.attributes["k8s.job.name"]`,
+          `set(resource.attributes["k8s.namespace.name"], attributes["namespace"] ) where resource.attributes["k8s.namespace.name"] == nil and attributes["namespace"] != nil`,
+          `delete_key(attributes, "namespace") where attributes["namespace"] == resource.attributes["k8s.namespace.name"]`,
+          `set(resource.attributes["k8s.pod.name"], attributes["pod"] ) where resource.attributes["k8s.pod.name"] == nil and attributes["pod"] != nil`,
+          `delete_key(attributes, "pod") where attributes["pod"] == resource.attributes["k8s.pod.name"]`,
+          `set(resource.attributes["k8s.replicaset.name"], attributes["replicaset"] ) where resource.attributes["k8s.replicaset.name"] == nil and attributes["replicaset"] != nil`,
+          `delete_key(attributes, "replicaset") where attributes["replicaset"] == resource.attributes["k8s.replicaset.name"]`,
+          `set(resource.attributes["service.name"], attributes["service_name"] ) where resource.attributes["service.name"] == nil and attributes["service_name"] != nil`,
+          `delete_key(attributes, "service_name") where attributes["service_name"] == resource.attributes["service.name"]`,
+          `set(resource.attributes["service.namespace"], attributes["service_namespace"] ) where resource.attributes["service.namespace"] == nil and attributes["service_namespace"] != nil`,
+          `delete_key(attributes, "service_namespace") where attributes["service_namespace"] == resource.attributes["service.namespace"]`,
+          `set(resource.attributes["k8s.statefulset.name"], attributes["statefulset"] ) where resource.attributes["k8s.statefulset.name"] == nil and attributes["statefulset"] != nil`,
+          `delete_key(attributes, "statefulset") where attributes["statefulset"] == resource.attributes["k8s.statefulset.name"]`,
+        ]
+      }
+    
+      output {
+        metrics = [otelcol.processor.batch.prometheus.input]
+      }
+    }
+    
+    otelcol.processor.batch "prometheus" {
+      timeout = "2s"
+      send_batch_size = 8192
+      send_batch_max_size = 0
+    
+      output {
+        metrics = [otelcol.exporter.otlphttp.prometheus.input]
+      }
+    }
+    otelcol.exporter.otlphttp "prometheus" {
+      client {
+        endpoint = "http://prometheus-server.prometheus.svc:9090/api/v1/otlp"
+        auth = otelcol.auth.basic.prometheus.handler
+        tls {
+          insecure = false
+          insecure_skip_verify = true
+        }
+      }
+    
+      retry_on_failure {
+        enabled = true
+        initial_interval = "5s"
+        max_interval = "30s"
+        max_elapsed_time = "5m"
+      }
+    }
+    
+    remote.kubernetes.secret "prometheus" {
+      name      = "prometheus-k8smon-k8s-monitoring"
       namespace = "default"
     }
     
-    // Destination: grafanaCloudLogs (loki)
-    otelcol.exporter.loki "grafanacloudlogs" {
-      forward_to = [loki.write.grafanacloudlogs.receiver]
+    // Destination: loki (otlp)
+    otelcol.receiver.loki "loki" {
+      output {
+        logs = [otelcol.processor.attributes.loki.input]
+      }
+    }
+    otelcol.auth.basic "loki" {
+      username = convert.nonsensitive(remote.kubernetes.secret.loki.data["username"])
+      password = remote.kubernetes.secret.loki.data["password"]
     }
     
-    loki.write "grafanacloudlogs" {
-      endpoint {
-        url = "https://logs-prod-006.grafana.net/loki/api/v1/push"
-        tenant_id = convert.nonsensitive(remote.kubernetes.secret.grafanacloudlogs.data["tenantId"])
-        basic_auth {
-          username = convert.nonsensitive(remote.kubernetes.secret.grafanacloudlogs.data["LOKI_USER"])
-          password = remote.kubernetes.secret.grafanacloudlogs.data["LOKI_PASS"]
+    otelcol.processor.attributes "loki" {
+      output {
+        metrics = [otelcol.processor.transform.loki.input]
+        logs = [otelcol.processor.transform.loki.input]
+        traces = [otelcol.processor.transform.loki.input]
+      }
+    }
+    
+    otelcol.processor.transform "loki" {
+      error_mode = "ignore"
+      log_statements {
+        context = "resource"
+        statements = [
+          `set(attributes["k8s.cluster.name"], "prom-and-loki-to-otlp-test")`,
+        ]
+      }
+    
+      log_statements {
+        context = "log"
+        statements = [
+          `delete_key(attributes, "loki.attribute.labels")`,
+          `delete_key(attributes, "loki.resource.labels")`,
+          `set(resource.attributes["k8s.container.name"], attributes["container"] ) where resource.attributes["k8s.container.name"] == nil and attributes["container"] != nil`,
+          `delete_key(attributes, "container") where attributes["container"] == resource.attributes["k8s.container.name"]`,
+          `set(resource.attributes["k8s.cronjob.name"], attributes["cronjob"] ) where resource.attributes["k8s.cronjob.name"] == nil and attributes["cronjob"] != nil`,
+          `delete_key(attributes, "cronjob") where attributes["cronjob"] == resource.attributes["k8s.cronjob.name"]`,
+          `set(resource.attributes["k8s.daemonset.name"], attributes["daemonset"] ) where resource.attributes["k8s.daemonset.name"] == nil and attributes["daemonset"] != nil`,
+          `delete_key(attributes, "daemonset") where attributes["daemonset"] == resource.attributes["k8s.daemonset.name"]`,
+          `set(resource.attributes["k8s.deployment.name"], attributes["deployment"] ) where resource.attributes["k8s.deployment.name"] == nil and attributes["deployment"] != nil`,
+          `delete_key(attributes, "deployment") where attributes["deployment"] == resource.attributes["k8s.deployment.name"]`,
+          `set(resource.attributes["deployment.environment"], attributes["deployment_environment"] ) where resource.attributes["deployment.environment"] == nil and attributes["deployment_environment"] != nil`,
+          `delete_key(attributes, "deployment_environment") where attributes["deployment_environment"] == resource.attributes["deployment.environment"]`,
+          `set(resource.attributes["deployment.environment.name"], attributes["deployment_environment_name"] ) where resource.attributes["deployment.environment.name"] == nil and attributes["deployment_environment_name"] != nil`,
+          `delete_key(attributes, "deployment_environment_name") where attributes["deployment_environment_name"] == resource.attributes["deployment.environment.name"]`,
+          `set(resource.attributes["k8s.job.name"], attributes["job_name"] ) where resource.attributes["k8s.job.name"] == nil and attributes["job_name"] != nil`,
+          `delete_key(attributes, "job_name") where attributes["job_name"] == resource.attributes["k8s.job.name"]`,
+          `set(resource.attributes["k8s.namespace.name"], attributes["namespace"] ) where resource.attributes["k8s.namespace.name"] == nil and attributes["namespace"] != nil`,
+          `delete_key(attributes, "namespace") where attributes["namespace"] == resource.attributes["k8s.namespace.name"]`,
+          `set(resource.attributes["k8s.pod.name"], attributes["pod"] ) where resource.attributes["k8s.pod.name"] == nil and attributes["pod"] != nil`,
+          `delete_key(attributes, "pod") where attributes["pod"] == resource.attributes["k8s.pod.name"]`,
+          `set(resource.attributes["k8s.replicaset.name"], attributes["replicaset"] ) where resource.attributes["k8s.replicaset.name"] == nil and attributes["replicaset"] != nil`,
+          `delete_key(attributes, "replicaset") where attributes["replicaset"] == resource.attributes["k8s.replicaset.name"]`,
+          `set(resource.attributes["service.name"], attributes["service_name"] ) where resource.attributes["service.name"] == nil and attributes["service_name"] != nil`,
+          `delete_key(attributes, "service_name") where attributes["service_name"] == resource.attributes["service.name"]`,
+          `set(resource.attributes["service.namespace"], attributes["service_namespace"] ) where resource.attributes["service.namespace"] == nil and attributes["service_namespace"] != nil`,
+          `delete_key(attributes, "service_namespace") where attributes["service_namespace"] == resource.attributes["service.namespace"]`,
+          `set(resource.attributes["k8s.statefulset.name"], attributes["statefulset"] ) where resource.attributes["k8s.statefulset.name"] == nil and attributes["statefulset"] != nil`,
+          `delete_key(attributes, "statefulset") where attributes["statefulset"] == resource.attributes["k8s.statefulset.name"]`,
+        ]
+      }
+    
+      output {
+        logs = [otelcol.processor.batch.loki.input]
+      }
+    }
+    
+    otelcol.processor.batch "loki" {
+      timeout = "2s"
+      send_batch_size = 8192
+      send_batch_max_size = 0
+    
+      output {
+        logs = [otelcol.exporter.otlphttp.loki.input]
+      }
+    }
+    otelcol.exporter.otlphttp "loki" {
+      client {
+        endpoint = "http://loki.loki.svc:3100/otlp"
+        auth = otelcol.auth.basic.loki.handler
+        headers = {
+          "X-Scope-OrgID" = convert.nonsensitive(remote.kubernetes.secret.loki.data["tenantId"]),
         }
-        tls_config {
+        tls {
+          insecure = false
           insecure_skip_verify = false
-          ca_pem = convert.nonsensitive(remote.kubernetes.secret.grafanacloudlogs.data["ca"])
-          cert_pem = convert.nonsensitive(remote.kubernetes.secret.grafanacloudlogs.data["cert"])
-          key_pem = remote.kubernetes.secret.grafanacloudlogs.data["key"]
         }
-        min_backoff_period = "500ms"
-        max_backoff_period = "5m"
-        max_backoff_retries = "10"
       }
-      external_labels = {
-        "cluster" = "k8s-monitoring-gc-feature-test",
-        "k8s_cluster_name" = "k8s-monitoring-gc-feature-test",
+    
+      retry_on_failure {
+        enabled = true
+        initial_interval = "5s"
+        max_interval = "30s"
+        max_elapsed_time = "5m"
       }
     }
     
-    remote.kubernetes.secret "grafanacloudlogs" {
-      name      = "grafana-cloud-credentials"
+    remote.kubernetes.secret "loki" {
+      name      = "loki-k8smon-k8s-monitoring"
       namespace = "default"
     }
 ---
@@ -1202,7 +925,7 @@ data:
     }
     cluster_events "feature" {
       logs_destinations = [
-        loki.write.grafanacloudlogs.receiver,
+        otelcol.receiver.loki.loki.receiver,
       ]
     }
     // Self Reporting
@@ -1244,106 +967,210 @@ data:
         action = "keep"
       }
       forward_to = [
-        prometheus.remote_write.grafanacloudmetrics.receiver,
+        otelcol.receiver.prometheus.prometheus.receiver,
       ]
     }
     
     
     
     
-    // Destination: grafanaCloudMetrics (prometheus)
-    otelcol.exporter.prometheus "grafanacloudmetrics" {
-      add_metric_suffixes = true
-      forward_to = [prometheus.remote_write.grafanacloudmetrics.receiver]
+    // Destination: prometheus (otlp)
+    otelcol.receiver.prometheus "prometheus" {
+      output {
+        metrics = [otelcol.processor.attributes.prometheus.input]
+      }
+    }
+    otelcol.auth.basic "prometheus" {
+      username = convert.nonsensitive(remote.kubernetes.secret.prometheus.data["username"])
+      password = remote.kubernetes.secret.prometheus.data["password"]
     }
     
-    prometheus.remote_write "grafanacloudmetrics" {
-      endpoint {
-        url = "https://prometheus-prod-13-prod-us-east-0.grafana.net/api/prom/push"
-        headers = {
-          "X-Scope-OrgID" = convert.nonsensitive(remote.kubernetes.secret.grafanacloudmetrics.data["tenantId"]),
-        }
-        basic_auth {
-          username = convert.nonsensitive(remote.kubernetes.secret.grafanacloudmetrics.data["PROMETHEUS_USER"])
-          password = remote.kubernetes.secret.grafanacloudmetrics.data["PROMETHEUS_PASS"]
-        }
-        tls_config {
-          insecure_skip_verify = false
-          ca_pem = convert.nonsensitive(remote.kubernetes.secret.grafanacloudmetrics.data["ca"])
-          cert_pem = convert.nonsensitive(remote.kubernetes.secret.grafanacloudmetrics.data["cert"])
-          key_pem = remote.kubernetes.secret.grafanacloudmetrics.data["key"]
-        }
-        send_native_histograms = false
-    
-        queue_config {
-          capacity = 10000
-          min_shards = 1
-          max_shards = 50
-          max_samples_per_send = 2000
-          batch_send_deadline = "5s"
-          min_backoff = "30ms"
-          max_backoff = "5s"
-          retry_on_http_429 = true
-          sample_age_limit = "0s"
-        }
-    
-        write_relabel_config {
-          source_labels = ["cluster"]
-          regex = ""
-          replacement = "k8s-monitoring-gc-feature-test"
-          target_label = "cluster"
-        }
-        write_relabel_config {
-          source_labels = ["k8s_cluster_name"]
-          regex = ""
-          replacement = "k8s-monitoring-gc-feature-test"
-          target_label = "k8s_cluster_name"
-        }
-      }
-    
-      wal {
-        truncate_frequency = "2h"
-        min_keepalive_time = "5m"
-        max_keepalive_time = "8h"
+    otelcol.processor.attributes "prometheus" {
+      output {
+        metrics = [otelcol.processor.transform.prometheus.input]
+        logs = [otelcol.processor.transform.prometheus.input]
+        traces = [otelcol.processor.transform.prometheus.input]
       }
     }
     
-    remote.kubernetes.secret "grafanacloudmetrics" {
-      name      = "grafana-cloud-credentials"
+    otelcol.processor.transform "prometheus" {
+      error_mode = "ignore"
+      metric_statements {
+        context = "resource"
+        statements = [
+          `set(attributes["k8s.cluster.name"], "prom-and-loki-to-otlp-test")`,
+        ]
+      }
+    
+      metric_statements {
+        context = "datapoint"
+        statements = [
+          `set(attributes["k8s.cluster.name"], "prom-and-loki-to-otlp-test")`,
+          `set(resource.attributes["k8s.container.name"], attributes["container"] ) where resource.attributes["k8s.container.name"] == nil and attributes["container"] != nil`,
+          `delete_key(attributes, "container") where attributes["container"] == resource.attributes["k8s.container.name"]`,
+          `set(resource.attributes["k8s.cronjob.name"], attributes["cronjob"] ) where resource.attributes["k8s.cronjob.name"] == nil and attributes["cronjob"] != nil`,
+          `delete_key(attributes, "cronjob") where attributes["cronjob"] == resource.attributes["k8s.cronjob.name"]`,
+          `set(resource.attributes["k8s.daemonset.name"], attributes["daemonset"] ) where resource.attributes["k8s.daemonset.name"] == nil and attributes["daemonset"] != nil`,
+          `delete_key(attributes, "daemonset") where attributes["daemonset"] == resource.attributes["k8s.daemonset.name"]`,
+          `set(resource.attributes["k8s.deployment.name"], attributes["deployment"] ) where resource.attributes["k8s.deployment.name"] == nil and attributes["deployment"] != nil`,
+          `delete_key(attributes, "deployment") where attributes["deployment"] == resource.attributes["k8s.deployment.name"]`,
+          `set(resource.attributes["deployment.environment"], attributes["deployment_environment"] ) where resource.attributes["deployment.environment"] == nil and attributes["deployment_environment"] != nil`,
+          `delete_key(attributes, "deployment_environment") where attributes["deployment_environment"] == resource.attributes["deployment.environment"]`,
+          `set(resource.attributes["deployment.environment.name"], attributes["deployment_environment_name"] ) where resource.attributes["deployment.environment.name"] == nil and attributes["deployment_environment_name"] != nil`,
+          `delete_key(attributes, "deployment_environment_name") where attributes["deployment_environment_name"] == resource.attributes["deployment.environment.name"]`,
+          `set(resource.attributes["k8s.job.name"], attributes["job_name"] ) where resource.attributes["k8s.job.name"] == nil and attributes["job_name"] != nil`,
+          `delete_key(attributes, "job_name") where attributes["job_name"] == resource.attributes["k8s.job.name"]`,
+          `set(resource.attributes["k8s.namespace.name"], attributes["namespace"] ) where resource.attributes["k8s.namespace.name"] == nil and attributes["namespace"] != nil`,
+          `delete_key(attributes, "namespace") where attributes["namespace"] == resource.attributes["k8s.namespace.name"]`,
+          `set(resource.attributes["k8s.pod.name"], attributes["pod"] ) where resource.attributes["k8s.pod.name"] == nil and attributes["pod"] != nil`,
+          `delete_key(attributes, "pod") where attributes["pod"] == resource.attributes["k8s.pod.name"]`,
+          `set(resource.attributes["k8s.replicaset.name"], attributes["replicaset"] ) where resource.attributes["k8s.replicaset.name"] == nil and attributes["replicaset"] != nil`,
+          `delete_key(attributes, "replicaset") where attributes["replicaset"] == resource.attributes["k8s.replicaset.name"]`,
+          `set(resource.attributes["service.name"], attributes["service_name"] ) where resource.attributes["service.name"] == nil and attributes["service_name"] != nil`,
+          `delete_key(attributes, "service_name") where attributes["service_name"] == resource.attributes["service.name"]`,
+          `set(resource.attributes["service.namespace"], attributes["service_namespace"] ) where resource.attributes["service.namespace"] == nil and attributes["service_namespace"] != nil`,
+          `delete_key(attributes, "service_namespace") where attributes["service_namespace"] == resource.attributes["service.namespace"]`,
+          `set(resource.attributes["k8s.statefulset.name"], attributes["statefulset"] ) where resource.attributes["k8s.statefulset.name"] == nil and attributes["statefulset"] != nil`,
+          `delete_key(attributes, "statefulset") where attributes["statefulset"] == resource.attributes["k8s.statefulset.name"]`,
+        ]
+      }
+    
+      output {
+        metrics = [otelcol.processor.batch.prometheus.input]
+      }
+    }
+    
+    otelcol.processor.batch "prometheus" {
+      timeout = "2s"
+      send_batch_size = 8192
+      send_batch_max_size = 0
+    
+      output {
+        metrics = [otelcol.exporter.otlphttp.prometheus.input]
+      }
+    }
+    otelcol.exporter.otlphttp "prometheus" {
+      client {
+        endpoint = "http://prometheus-server.prometheus.svc:9090/api/v1/otlp"
+        auth = otelcol.auth.basic.prometheus.handler
+        tls {
+          insecure = false
+          insecure_skip_verify = true
+        }
+      }
+    
+      retry_on_failure {
+        enabled = true
+        initial_interval = "5s"
+        max_interval = "30s"
+        max_elapsed_time = "5m"
+      }
+    }
+    
+    remote.kubernetes.secret "prometheus" {
+      name      = "prometheus-k8smon-k8s-monitoring"
       namespace = "default"
     }
     
-    // Destination: grafanaCloudLogs (loki)
-    otelcol.exporter.loki "grafanacloudlogs" {
-      forward_to = [loki.write.grafanacloudlogs.receiver]
+    // Destination: loki (otlp)
+    otelcol.receiver.loki "loki" {
+      output {
+        logs = [otelcol.processor.attributes.loki.input]
+      }
+    }
+    otelcol.auth.basic "loki" {
+      username = convert.nonsensitive(remote.kubernetes.secret.loki.data["username"])
+      password = remote.kubernetes.secret.loki.data["password"]
     }
     
-    loki.write "grafanacloudlogs" {
-      endpoint {
-        url = "https://logs-prod-006.grafana.net/loki/api/v1/push"
-        tenant_id = convert.nonsensitive(remote.kubernetes.secret.grafanacloudlogs.data["tenantId"])
-        basic_auth {
-          username = convert.nonsensitive(remote.kubernetes.secret.grafanacloudlogs.data["LOKI_USER"])
-          password = remote.kubernetes.secret.grafanacloudlogs.data["LOKI_PASS"]
+    otelcol.processor.attributes "loki" {
+      output {
+        metrics = [otelcol.processor.transform.loki.input]
+        logs = [otelcol.processor.transform.loki.input]
+        traces = [otelcol.processor.transform.loki.input]
+      }
+    }
+    
+    otelcol.processor.transform "loki" {
+      error_mode = "ignore"
+      log_statements {
+        context = "resource"
+        statements = [
+          `set(attributes["k8s.cluster.name"], "prom-and-loki-to-otlp-test")`,
+        ]
+      }
+    
+      log_statements {
+        context = "log"
+        statements = [
+          `delete_key(attributes, "loki.attribute.labels")`,
+          `delete_key(attributes, "loki.resource.labels")`,
+          `set(resource.attributes["k8s.container.name"], attributes["container"] ) where resource.attributes["k8s.container.name"] == nil and attributes["container"] != nil`,
+          `delete_key(attributes, "container") where attributes["container"] == resource.attributes["k8s.container.name"]`,
+          `set(resource.attributes["k8s.cronjob.name"], attributes["cronjob"] ) where resource.attributes["k8s.cronjob.name"] == nil and attributes["cronjob"] != nil`,
+          `delete_key(attributes, "cronjob") where attributes["cronjob"] == resource.attributes["k8s.cronjob.name"]`,
+          `set(resource.attributes["k8s.daemonset.name"], attributes["daemonset"] ) where resource.attributes["k8s.daemonset.name"] == nil and attributes["daemonset"] != nil`,
+          `delete_key(attributes, "daemonset") where attributes["daemonset"] == resource.attributes["k8s.daemonset.name"]`,
+          `set(resource.attributes["k8s.deployment.name"], attributes["deployment"] ) where resource.attributes["k8s.deployment.name"] == nil and attributes["deployment"] != nil`,
+          `delete_key(attributes, "deployment") where attributes["deployment"] == resource.attributes["k8s.deployment.name"]`,
+          `set(resource.attributes["deployment.environment"], attributes["deployment_environment"] ) where resource.attributes["deployment.environment"] == nil and attributes["deployment_environment"] != nil`,
+          `delete_key(attributes, "deployment_environment") where attributes["deployment_environment"] == resource.attributes["deployment.environment"]`,
+          `set(resource.attributes["deployment.environment.name"], attributes["deployment_environment_name"] ) where resource.attributes["deployment.environment.name"] == nil and attributes["deployment_environment_name"] != nil`,
+          `delete_key(attributes, "deployment_environment_name") where attributes["deployment_environment_name"] == resource.attributes["deployment.environment.name"]`,
+          `set(resource.attributes["k8s.job.name"], attributes["job_name"] ) where resource.attributes["k8s.job.name"] == nil and attributes["job_name"] != nil`,
+          `delete_key(attributes, "job_name") where attributes["job_name"] == resource.attributes["k8s.job.name"]`,
+          `set(resource.attributes["k8s.namespace.name"], attributes["namespace"] ) where resource.attributes["k8s.namespace.name"] == nil and attributes["namespace"] != nil`,
+          `delete_key(attributes, "namespace") where attributes["namespace"] == resource.attributes["k8s.namespace.name"]`,
+          `set(resource.attributes["k8s.pod.name"], attributes["pod"] ) where resource.attributes["k8s.pod.name"] == nil and attributes["pod"] != nil`,
+          `delete_key(attributes, "pod") where attributes["pod"] == resource.attributes["k8s.pod.name"]`,
+          `set(resource.attributes["k8s.replicaset.name"], attributes["replicaset"] ) where resource.attributes["k8s.replicaset.name"] == nil and attributes["replicaset"] != nil`,
+          `delete_key(attributes, "replicaset") where attributes["replicaset"] == resource.attributes["k8s.replicaset.name"]`,
+          `set(resource.attributes["service.name"], attributes["service_name"] ) where resource.attributes["service.name"] == nil and attributes["service_name"] != nil`,
+          `delete_key(attributes, "service_name") where attributes["service_name"] == resource.attributes["service.name"]`,
+          `set(resource.attributes["service.namespace"], attributes["service_namespace"] ) where resource.attributes["service.namespace"] == nil and attributes["service_namespace"] != nil`,
+          `delete_key(attributes, "service_namespace") where attributes["service_namespace"] == resource.attributes["service.namespace"]`,
+          `set(resource.attributes["k8s.statefulset.name"], attributes["statefulset"] ) where resource.attributes["k8s.statefulset.name"] == nil and attributes["statefulset"] != nil`,
+          `delete_key(attributes, "statefulset") where attributes["statefulset"] == resource.attributes["k8s.statefulset.name"]`,
+        ]
+      }
+    
+      output {
+        logs = [otelcol.processor.batch.loki.input]
+      }
+    }
+    
+    otelcol.processor.batch "loki" {
+      timeout = "2s"
+      send_batch_size = 8192
+      send_batch_max_size = 0
+    
+      output {
+        logs = [otelcol.exporter.otlphttp.loki.input]
+      }
+    }
+    otelcol.exporter.otlphttp "loki" {
+      client {
+        endpoint = "http://loki.loki.svc:3100/otlp"
+        auth = otelcol.auth.basic.loki.handler
+        headers = {
+          "X-Scope-OrgID" = convert.nonsensitive(remote.kubernetes.secret.loki.data["tenantId"]),
         }
-        tls_config {
+        tls {
+          insecure = false
           insecure_skip_verify = false
-          ca_pem = convert.nonsensitive(remote.kubernetes.secret.grafanacloudlogs.data["ca"])
-          cert_pem = convert.nonsensitive(remote.kubernetes.secret.grafanacloudlogs.data["cert"])
-          key_pem = remote.kubernetes.secret.grafanacloudlogs.data["key"]
         }
-        min_backoff_period = "500ms"
-        max_backoff_period = "5m"
-        max_backoff_retries = "10"
       }
-      external_labels = {
-        "cluster" = "k8s-monitoring-gc-feature-test",
-        "k8s_cluster_name" = "k8s-monitoring-gc-feature-test",
+    
+      retry_on_failure {
+        enabled = true
+        initial_interval = "5s"
+        max_interval = "30s"
+        max_elapsed_time = "5m"
       }
     }
     
-    remote.kubernetes.secret "grafanacloudlogs" {
-      name      = "grafana-cloud-credentials"
+    remote.kubernetes.secret "loki" {
+      name      = "loki-k8smon-k8s-monitoring"
       namespace = "default"
     }
 
@@ -1354,10 +1181,9 @@ data:
     grafana_kubernetes_monitoring_build_info{version="2.0.23", namespace="default"} 1
     # HELP grafana_kubernetes_monitoring_feature_info A metric to report the enabled features of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_feature_info gauge
-    grafana_kubernetes_monitoring_feature_info{deployments="kube-state-metrics,node-exporter,windows-exporter,kepler", feature="clusterMetrics", sources="kubelet,kubeletResource,cadvisor,kube-state-metrics,node-exporter,windows-exporter,kepler", version="1.0.0"} 1
+    grafana_kubernetes_monitoring_feature_info{deployments="kube-state-metrics,node-exporter,windows-exporter", feature="clusterMetrics", sources="kubelet,kubeletResource,cadvisor,kube-state-metrics,node-exporter,windows-exporter", version="1.0.0"} 1
     grafana_kubernetes_monitoring_feature_info{feature="clusterEvents", version="1.0.0"} 1
     grafana_kubernetes_monitoring_feature_info{feature="podLogs", method="volumes", version="1.0.0"} 1
-    grafana_kubernetes_monitoring_feature_info{feature="integrations", sources="alloy", version="1.0.0"} 1
 ---
 # Source: k8s-monitoring/templates/alloy-config.yaml
 apiVersion: v1
@@ -1537,106 +1363,210 @@ data:
     }
     pod_logs "feature" {
       logs_destinations = [
-        loki.write.grafanacloudlogs.receiver,
+        otelcol.receiver.loki.loki.receiver,
       ]
     }
     
     
     
     
-    // Destination: grafanaCloudMetrics (prometheus)
-    otelcol.exporter.prometheus "grafanacloudmetrics" {
-      add_metric_suffixes = true
-      forward_to = [prometheus.remote_write.grafanacloudmetrics.receiver]
+    // Destination: prometheus (otlp)
+    otelcol.receiver.prometheus "prometheus" {
+      output {
+        metrics = [otelcol.processor.attributes.prometheus.input]
+      }
+    }
+    otelcol.auth.basic "prometheus" {
+      username = convert.nonsensitive(remote.kubernetes.secret.prometheus.data["username"])
+      password = remote.kubernetes.secret.prometheus.data["password"]
     }
     
-    prometheus.remote_write "grafanacloudmetrics" {
-      endpoint {
-        url = "https://prometheus-prod-13-prod-us-east-0.grafana.net/api/prom/push"
-        headers = {
-          "X-Scope-OrgID" = convert.nonsensitive(remote.kubernetes.secret.grafanacloudmetrics.data["tenantId"]),
-        }
-        basic_auth {
-          username = convert.nonsensitive(remote.kubernetes.secret.grafanacloudmetrics.data["PROMETHEUS_USER"])
-          password = remote.kubernetes.secret.grafanacloudmetrics.data["PROMETHEUS_PASS"]
-        }
-        tls_config {
-          insecure_skip_verify = false
-          ca_pem = convert.nonsensitive(remote.kubernetes.secret.grafanacloudmetrics.data["ca"])
-          cert_pem = convert.nonsensitive(remote.kubernetes.secret.grafanacloudmetrics.data["cert"])
-          key_pem = remote.kubernetes.secret.grafanacloudmetrics.data["key"]
-        }
-        send_native_histograms = false
-    
-        queue_config {
-          capacity = 10000
-          min_shards = 1
-          max_shards = 50
-          max_samples_per_send = 2000
-          batch_send_deadline = "5s"
-          min_backoff = "30ms"
-          max_backoff = "5s"
-          retry_on_http_429 = true
-          sample_age_limit = "0s"
-        }
-    
-        write_relabel_config {
-          source_labels = ["cluster"]
-          regex = ""
-          replacement = "k8s-monitoring-gc-feature-test"
-          target_label = "cluster"
-        }
-        write_relabel_config {
-          source_labels = ["k8s_cluster_name"]
-          regex = ""
-          replacement = "k8s-monitoring-gc-feature-test"
-          target_label = "k8s_cluster_name"
-        }
-      }
-    
-      wal {
-        truncate_frequency = "2h"
-        min_keepalive_time = "5m"
-        max_keepalive_time = "8h"
+    otelcol.processor.attributes "prometheus" {
+      output {
+        metrics = [otelcol.processor.transform.prometheus.input]
+        logs = [otelcol.processor.transform.prometheus.input]
+        traces = [otelcol.processor.transform.prometheus.input]
       }
     }
     
-    remote.kubernetes.secret "grafanacloudmetrics" {
-      name      = "grafana-cloud-credentials"
+    otelcol.processor.transform "prometheus" {
+      error_mode = "ignore"
+      metric_statements {
+        context = "resource"
+        statements = [
+          `set(attributes["k8s.cluster.name"], "prom-and-loki-to-otlp-test")`,
+        ]
+      }
+    
+      metric_statements {
+        context = "datapoint"
+        statements = [
+          `set(attributes["k8s.cluster.name"], "prom-and-loki-to-otlp-test")`,
+          `set(resource.attributes["k8s.container.name"], attributes["container"] ) where resource.attributes["k8s.container.name"] == nil and attributes["container"] != nil`,
+          `delete_key(attributes, "container") where attributes["container"] == resource.attributes["k8s.container.name"]`,
+          `set(resource.attributes["k8s.cronjob.name"], attributes["cronjob"] ) where resource.attributes["k8s.cronjob.name"] == nil and attributes["cronjob"] != nil`,
+          `delete_key(attributes, "cronjob") where attributes["cronjob"] == resource.attributes["k8s.cronjob.name"]`,
+          `set(resource.attributes["k8s.daemonset.name"], attributes["daemonset"] ) where resource.attributes["k8s.daemonset.name"] == nil and attributes["daemonset"] != nil`,
+          `delete_key(attributes, "daemonset") where attributes["daemonset"] == resource.attributes["k8s.daemonset.name"]`,
+          `set(resource.attributes["k8s.deployment.name"], attributes["deployment"] ) where resource.attributes["k8s.deployment.name"] == nil and attributes["deployment"] != nil`,
+          `delete_key(attributes, "deployment") where attributes["deployment"] == resource.attributes["k8s.deployment.name"]`,
+          `set(resource.attributes["deployment.environment"], attributes["deployment_environment"] ) where resource.attributes["deployment.environment"] == nil and attributes["deployment_environment"] != nil`,
+          `delete_key(attributes, "deployment_environment") where attributes["deployment_environment"] == resource.attributes["deployment.environment"]`,
+          `set(resource.attributes["deployment.environment.name"], attributes["deployment_environment_name"] ) where resource.attributes["deployment.environment.name"] == nil and attributes["deployment_environment_name"] != nil`,
+          `delete_key(attributes, "deployment_environment_name") where attributes["deployment_environment_name"] == resource.attributes["deployment.environment.name"]`,
+          `set(resource.attributes["k8s.job.name"], attributes["job_name"] ) where resource.attributes["k8s.job.name"] == nil and attributes["job_name"] != nil`,
+          `delete_key(attributes, "job_name") where attributes["job_name"] == resource.attributes["k8s.job.name"]`,
+          `set(resource.attributes["k8s.namespace.name"], attributes["namespace"] ) where resource.attributes["k8s.namespace.name"] == nil and attributes["namespace"] != nil`,
+          `delete_key(attributes, "namespace") where attributes["namespace"] == resource.attributes["k8s.namespace.name"]`,
+          `set(resource.attributes["k8s.pod.name"], attributes["pod"] ) where resource.attributes["k8s.pod.name"] == nil and attributes["pod"] != nil`,
+          `delete_key(attributes, "pod") where attributes["pod"] == resource.attributes["k8s.pod.name"]`,
+          `set(resource.attributes["k8s.replicaset.name"], attributes["replicaset"] ) where resource.attributes["k8s.replicaset.name"] == nil and attributes["replicaset"] != nil`,
+          `delete_key(attributes, "replicaset") where attributes["replicaset"] == resource.attributes["k8s.replicaset.name"]`,
+          `set(resource.attributes["service.name"], attributes["service_name"] ) where resource.attributes["service.name"] == nil and attributes["service_name"] != nil`,
+          `delete_key(attributes, "service_name") where attributes["service_name"] == resource.attributes["service.name"]`,
+          `set(resource.attributes["service.namespace"], attributes["service_namespace"] ) where resource.attributes["service.namespace"] == nil and attributes["service_namespace"] != nil`,
+          `delete_key(attributes, "service_namespace") where attributes["service_namespace"] == resource.attributes["service.namespace"]`,
+          `set(resource.attributes["k8s.statefulset.name"], attributes["statefulset"] ) where resource.attributes["k8s.statefulset.name"] == nil and attributes["statefulset"] != nil`,
+          `delete_key(attributes, "statefulset") where attributes["statefulset"] == resource.attributes["k8s.statefulset.name"]`,
+        ]
+      }
+    
+      output {
+        metrics = [otelcol.processor.batch.prometheus.input]
+      }
+    }
+    
+    otelcol.processor.batch "prometheus" {
+      timeout = "2s"
+      send_batch_size = 8192
+      send_batch_max_size = 0
+    
+      output {
+        metrics = [otelcol.exporter.otlphttp.prometheus.input]
+      }
+    }
+    otelcol.exporter.otlphttp "prometheus" {
+      client {
+        endpoint = "http://prometheus-server.prometheus.svc:9090/api/v1/otlp"
+        auth = otelcol.auth.basic.prometheus.handler
+        tls {
+          insecure = false
+          insecure_skip_verify = true
+        }
+      }
+    
+      retry_on_failure {
+        enabled = true
+        initial_interval = "5s"
+        max_interval = "30s"
+        max_elapsed_time = "5m"
+      }
+    }
+    
+    remote.kubernetes.secret "prometheus" {
+      name      = "prometheus-k8smon-k8s-monitoring"
       namespace = "default"
     }
     
-    // Destination: grafanaCloudLogs (loki)
-    otelcol.exporter.loki "grafanacloudlogs" {
-      forward_to = [loki.write.grafanacloudlogs.receiver]
+    // Destination: loki (otlp)
+    otelcol.receiver.loki "loki" {
+      output {
+        logs = [otelcol.processor.attributes.loki.input]
+      }
+    }
+    otelcol.auth.basic "loki" {
+      username = convert.nonsensitive(remote.kubernetes.secret.loki.data["username"])
+      password = remote.kubernetes.secret.loki.data["password"]
     }
     
-    loki.write "grafanacloudlogs" {
-      endpoint {
-        url = "https://logs-prod-006.grafana.net/loki/api/v1/push"
-        tenant_id = convert.nonsensitive(remote.kubernetes.secret.grafanacloudlogs.data["tenantId"])
-        basic_auth {
-          username = convert.nonsensitive(remote.kubernetes.secret.grafanacloudlogs.data["LOKI_USER"])
-          password = remote.kubernetes.secret.grafanacloudlogs.data["LOKI_PASS"]
+    otelcol.processor.attributes "loki" {
+      output {
+        metrics = [otelcol.processor.transform.loki.input]
+        logs = [otelcol.processor.transform.loki.input]
+        traces = [otelcol.processor.transform.loki.input]
+      }
+    }
+    
+    otelcol.processor.transform "loki" {
+      error_mode = "ignore"
+      log_statements {
+        context = "resource"
+        statements = [
+          `set(attributes["k8s.cluster.name"], "prom-and-loki-to-otlp-test")`,
+        ]
+      }
+    
+      log_statements {
+        context = "log"
+        statements = [
+          `delete_key(attributes, "loki.attribute.labels")`,
+          `delete_key(attributes, "loki.resource.labels")`,
+          `set(resource.attributes["k8s.container.name"], attributes["container"] ) where resource.attributes["k8s.container.name"] == nil and attributes["container"] != nil`,
+          `delete_key(attributes, "container") where attributes["container"] == resource.attributes["k8s.container.name"]`,
+          `set(resource.attributes["k8s.cronjob.name"], attributes["cronjob"] ) where resource.attributes["k8s.cronjob.name"] == nil and attributes["cronjob"] != nil`,
+          `delete_key(attributes, "cronjob") where attributes["cronjob"] == resource.attributes["k8s.cronjob.name"]`,
+          `set(resource.attributes["k8s.daemonset.name"], attributes["daemonset"] ) where resource.attributes["k8s.daemonset.name"] == nil and attributes["daemonset"] != nil`,
+          `delete_key(attributes, "daemonset") where attributes["daemonset"] == resource.attributes["k8s.daemonset.name"]`,
+          `set(resource.attributes["k8s.deployment.name"], attributes["deployment"] ) where resource.attributes["k8s.deployment.name"] == nil and attributes["deployment"] != nil`,
+          `delete_key(attributes, "deployment") where attributes["deployment"] == resource.attributes["k8s.deployment.name"]`,
+          `set(resource.attributes["deployment.environment"], attributes["deployment_environment"] ) where resource.attributes["deployment.environment"] == nil and attributes["deployment_environment"] != nil`,
+          `delete_key(attributes, "deployment_environment") where attributes["deployment_environment"] == resource.attributes["deployment.environment"]`,
+          `set(resource.attributes["deployment.environment.name"], attributes["deployment_environment_name"] ) where resource.attributes["deployment.environment.name"] == nil and attributes["deployment_environment_name"] != nil`,
+          `delete_key(attributes, "deployment_environment_name") where attributes["deployment_environment_name"] == resource.attributes["deployment.environment.name"]`,
+          `set(resource.attributes["k8s.job.name"], attributes["job_name"] ) where resource.attributes["k8s.job.name"] == nil and attributes["job_name"] != nil`,
+          `delete_key(attributes, "job_name") where attributes["job_name"] == resource.attributes["k8s.job.name"]`,
+          `set(resource.attributes["k8s.namespace.name"], attributes["namespace"] ) where resource.attributes["k8s.namespace.name"] == nil and attributes["namespace"] != nil`,
+          `delete_key(attributes, "namespace") where attributes["namespace"] == resource.attributes["k8s.namespace.name"]`,
+          `set(resource.attributes["k8s.pod.name"], attributes["pod"] ) where resource.attributes["k8s.pod.name"] == nil and attributes["pod"] != nil`,
+          `delete_key(attributes, "pod") where attributes["pod"] == resource.attributes["k8s.pod.name"]`,
+          `set(resource.attributes["k8s.replicaset.name"], attributes["replicaset"] ) where resource.attributes["k8s.replicaset.name"] == nil and attributes["replicaset"] != nil`,
+          `delete_key(attributes, "replicaset") where attributes["replicaset"] == resource.attributes["k8s.replicaset.name"]`,
+          `set(resource.attributes["service.name"], attributes["service_name"] ) where resource.attributes["service.name"] == nil and attributes["service_name"] != nil`,
+          `delete_key(attributes, "service_name") where attributes["service_name"] == resource.attributes["service.name"]`,
+          `set(resource.attributes["service.namespace"], attributes["service_namespace"] ) where resource.attributes["service.namespace"] == nil and attributes["service_namespace"] != nil`,
+          `delete_key(attributes, "service_namespace") where attributes["service_namespace"] == resource.attributes["service.namespace"]`,
+          `set(resource.attributes["k8s.statefulset.name"], attributes["statefulset"] ) where resource.attributes["k8s.statefulset.name"] == nil and attributes["statefulset"] != nil`,
+          `delete_key(attributes, "statefulset") where attributes["statefulset"] == resource.attributes["k8s.statefulset.name"]`,
+        ]
+      }
+    
+      output {
+        logs = [otelcol.processor.batch.loki.input]
+      }
+    }
+    
+    otelcol.processor.batch "loki" {
+      timeout = "2s"
+      send_batch_size = 8192
+      send_batch_max_size = 0
+    
+      output {
+        logs = [otelcol.exporter.otlphttp.loki.input]
+      }
+    }
+    otelcol.exporter.otlphttp "loki" {
+      client {
+        endpoint = "http://loki.loki.svc:3100/otlp"
+        auth = otelcol.auth.basic.loki.handler
+        headers = {
+          "X-Scope-OrgID" = convert.nonsensitive(remote.kubernetes.secret.loki.data["tenantId"]),
         }
-        tls_config {
+        tls {
+          insecure = false
           insecure_skip_verify = false
-          ca_pem = convert.nonsensitive(remote.kubernetes.secret.grafanacloudlogs.data["ca"])
-          cert_pem = convert.nonsensitive(remote.kubernetes.secret.grafanacloudlogs.data["cert"])
-          key_pem = remote.kubernetes.secret.grafanacloudlogs.data["key"]
         }
-        min_backoff_period = "500ms"
-        max_backoff_period = "5m"
-        max_backoff_retries = "10"
       }
-      external_labels = {
-        "cluster" = "k8s-monitoring-gc-feature-test",
-        "k8s_cluster_name" = "k8s-monitoring-gc-feature-test",
+    
+      retry_on_failure {
+        enabled = true
+        initial_interval = "5s"
+        max_interval = "30s"
+        max_elapsed_time = "5m"
       }
     }
     
-    remote.kubernetes.secret "grafanacloudlogs" {
-      name      = "grafana-cloud-credentials"
+    remote.kubernetes.secret "loki" {
+      name      = "loki-k8smon-k8s-monitoring"
       namespace = "default"
     }
 ---
@@ -1942,23 +1872,6 @@ rules:
   - apiGroups: ["extensions"]
     resources: ["replicasets"]
     verbs: ["get", "list", "watch"]
----
-# Source: k8s-monitoring/charts/clusterMetrics/charts/kepler/templates/rolebinding.yaml
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: k8smon-kepler-clusterrole
-rules:
-  - apiGroups: [""]
-    resources:
-      - nodes/metrics # access /metrics/resource
-      - nodes/proxy
-      - nodes/stats
-      - pods
-    verbs:
-      - get
-      - watch
-      - list
 ---
 # Source: k8s-monitoring/charts/clusterMetrics/charts/kube-state-metrics/templates/role.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -2116,93 +2029,6 @@ rules:
     - volumeattachments
   verbs: ["list", "watch"]
 ---
-# Source: k8s-monitoring/charts/clusterMetrics/charts/opencost/templates/clusterrole.yaml
-# Cluster role giving opencost to get, list, watch required resources
-# No write permissions are required
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: k8smon-opencost
-  labels:
-    helm.sh/chart: opencost-1.43.2
-    app.kubernetes.io/name: opencost
-    app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.113.0"
-    app.kubernetes.io/part-of: opencost
-    app.kubernetes.io/managed-by: Helm
-rules:
-  - apiGroups: [""]
-    resources:
-      - configmaps
-      - deployments
-      - nodes
-      - pods
-      - services
-      - resourcequotas
-      - replicationcontrollers
-      - limitranges
-      - persistentvolumeclaims
-      - persistentvolumes
-      - namespaces
-      - endpoints
-    verbs:
-      - get
-      - list
-      - watch
-  - apiGroups:
-      - extensions
-    resources:
-      - daemonsets
-      - deployments
-      - replicasets
-    verbs:
-      - get
-      - list
-      - watch
-  - apiGroups:
-      - apps
-    resources:
-      - statefulsets
-      - deployments
-      - daemonsets
-      - replicasets
-    verbs:
-      - list
-      - watch
-  - apiGroups:
-      - batch
-    resources:
-      - cronjobs
-      - jobs
-    verbs:
-      - get
-      - list
-      - watch
-  - apiGroups:
-      - autoscaling
-    resources:
-      - horizontalpodautoscalers
-    verbs:
-      - get
-      - list
-      - watch
-  - apiGroups:
-      - policy
-    resources:
-      - poddisruptionbudgets
-    verbs:
-      - get
-      - list
-      - watch
-  - apiGroups:
-      - storage.k8s.io
-    resources:
-      - storageclasses
-    verbs:
-      - get
-      - list
-      - watch
----
 # Source: k8s-monitoring/charts/alloy-logs/templates/rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -2272,20 +2098,6 @@ subjects:
     name: k8smon-alloy-singleton
     namespace: default
 ---
-# Source: k8s-monitoring/charts/clusterMetrics/charts/kepler/templates/rolebinding.yaml
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: k8smon-kepler-clusterrole-binding
-roleRef:
-  kind: ClusterRole
-  name: k8smon-kepler-clusterrole
-  apiGroup: "rbac.authorization.k8s.io"
-subjects:
-  - kind: ServiceAccount
-    name: k8smon-kepler
-    namespace: default
----
 # Source: k8s-monitoring/charts/clusterMetrics/charts/kube-state-metrics/templates/clusterrolebinding.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -2308,27 +2120,6 @@ subjects:
 - kind: ServiceAccount
   name: k8smon-kube-state-metrics
   namespace: default
----
-# Source: k8s-monitoring/charts/clusterMetrics/charts/opencost/templates/clusterrolebinding.yaml
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: k8smon-opencost
-  labels:
-    helm.sh/chart: opencost-1.43.2
-    app.kubernetes.io/name: opencost
-    app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.113.0"
-    app.kubernetes.io/part-of: opencost
-    app.kubernetes.io/managed-by: Helm
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: k8smon-opencost
-subjects:
-  - kind: ServiceAccount
-    name: k8smon-opencost
-    namespace: default
 ---
 # Source: k8s-monitoring/charts/alloy-logs/templates/service.yaml
 apiVersion: v1
@@ -2445,29 +2236,6 @@ spec:
       targetPort: 12345
       protocol: "TCP"
 ---
-# Source: k8s-monitoring/charts/clusterMetrics/charts/kepler/templates/service.yaml
-apiVersion: v1
-kind: Service
-metadata:
-  name: k8smon-kepler
-  namespace: default
-  labels:
-    helm.sh/chart: kepler-0.5.13
-    app.kubernetes.io/name: kepler
-    app.kubernetes.io/component: exporter
-    app.kubernetes.io/version: "release-0.7.12"
-    app.kubernetes.io/managed-by: Helm
-spec:
-  type: ClusterIP
-  ports:
-    - name: http
-      port: 9102
-      targetPort: http
-      protocol: TCP
-  selector:
-    app.kubernetes.io/name: kepler
-    app.kubernetes.io/component: exporter
----
 # Source: k8s-monitoring/charts/clusterMetrics/charts/kube-state-metrics/templates/service.yaml
 apiVersion: v1
 kind: Service
@@ -2523,29 +2291,6 @@ spec:
   selector:
     app.kubernetes.io/name: node-exporter
     app.kubernetes.io/instance: k8smon
----
-# Source: k8s-monitoring/charts/clusterMetrics/charts/opencost/templates/service.yaml
-apiVersion: v1
-kind: Service
-metadata:
-  name: k8smon-opencost
-  namespace: default
-  labels:
-    helm.sh/chart: opencost-1.43.2
-    app.kubernetes.io/name: opencost
-    app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.113.0"
-    app.kubernetes.io/part-of: opencost
-    app.kubernetes.io/managed-by: Helm
-spec:
-  selector:
-    app.kubernetes.io/name: opencost
-    app.kubernetes.io/instance: k8smon
-  type: "ClusterIP"
-  ports:
-    - name: http
-      port: 9003
-      targetPort: 9003
 ---
 # Source: k8s-monitoring/charts/clusterMetrics/charts/windows-exporter/templates/service.yaml
 apiVersion: v1
@@ -2691,125 +2436,6 @@ spec:
         - name: dockercontainers
           hostPath:
             path: /var/lib/docker/containers
----
-# Source: k8s-monitoring/charts/clusterMetrics/charts/kepler/templates/daemonset.yaml
-apiVersion: apps/v1
-kind: DaemonSet
-metadata:
-  name: k8smon-kepler
-  namespace: default
-  labels:
-    helm.sh/chart: kepler-0.5.13
-    app.kubernetes.io/name: kepler
-    app.kubernetes.io/component: exporter
-    app.kubernetes.io/version: "release-0.7.12"
-    app.kubernetes.io/managed-by: Helm
-spec:
-  selector:
-    matchLabels:
-      app.kubernetes.io/name: kepler
-      app.kubernetes.io/component: exporter
-  template:
-    metadata:
-      annotations:
-        k8s.grafana.com/logs.job: integrations/kepler
-      labels:
-        app.kubernetes.io/name: kepler
-        app.kubernetes.io/component: exporter
-    spec:
-      hostNetwork: true
-      serviceAccountName: k8smon-kepler
-      containers:
-      - name: kepler-exporter
-        image: "quay.io/sustainable_computing_io/kepler:release-0.7.12"
-        imagePullPolicy: Always
-        securityContext:
-            privileged: true
-        args:
-          - -v=$(KEPLER_LOG_LEVEL)
-        env:
-          - name: NODE_IP
-            valueFrom:
-              fieldRef:
-                fieldPath: status.hostIP
-          - name: NODE_NAME
-            valueFrom:
-              fieldRef:
-                fieldPath: spec.nodeName
-          - name: METRIC_PATH
-            value: "/metrics"
-          - name: BIND_ADDRESS
-            value: "0.0.0.0:9102"
-          - name: "CGROUP_METRICS"
-            value: "*"
-          - name: "CPU_ARCH_OVERRIDE"
-            value: ""
-          - name: "ENABLE_EBPF_CGROUPID"
-            value: "true"
-          - name: "ENABLE_GPU"
-            value: "true"
-          - name: "ENABLE_PROCESS_METRICS"
-            value: "false"
-          - name: "ENABLE_QAT"
-            value: "false"
-          - name: "EXPOSE_CGROUP_METRICS"
-            value: "false"
-          - name: "EXPOSE_ESTIMATED_IDLE_POWER_METRICS"
-            value: "true"
-          - name: "EXPOSE_HW_COUNTER_METRICS"
-            value: "true"
-          - name: "EXPOSE_IRQ_COUNTER_METRICS"
-            value: "true"
-          - name: "KEPLER_LOG_LEVEL"
-            value: "1"
-        ports:
-        - containerPort: 9102
-          hostPort: 9102
-          name: http
-        livenessProbe:
-          failureThreshold: 5
-          httpGet:
-            path: /healthz
-            port: 9102
-            scheme: HTTP
-          initialDelaySeconds: 10
-          periodSeconds: 60
-          successThreshold: 1
-          timeoutSeconds: 10
-        volumeMounts:
-          - name: lib-modules
-            mountPath: /lib/modules
-          - name: tracing
-            mountPath: /sys
-          - name: proc
-            mountPath: /proc
-      volumes:
-        - name: lib-modules
-          hostPath:
-            path: /lib/modules
-            type: DirectoryOrCreate
-        - name: tracing
-          hostPath:
-            path: /sys
-            type: Directory
-        - name: proc
-          hostPath:
-            path: /proc
-            type: Directory
-      nodeSelector:
-        kubernetes.io/os: linux
-      affinity:
-        nodeAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            nodeSelectorTerms:
-            - matchExpressions:
-              - key: eks.amazonaws.com/compute-type
-                operator: NotIn
-                values:
-                - fargate
-      tolerations:
-        - effect: NoSchedule
-          key: node-role.kubernetes.io/control-plane
 ---
 # Source: k8s-monitoring/charts/clusterMetrics/charts/node-exporter/templates/daemonset.yaml
 apiVersion: apps/v1
@@ -3235,127 +2861,6 @@ spec:
           readOnlyRootFilesystem: true
       nodeSelector:
         kubernetes.io/os: linux
----
-# Source: k8s-monitoring/charts/clusterMetrics/charts/opencost/templates/deployment.yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: k8smon-opencost
-  namespace: default
-  labels:
-    helm.sh/chart: opencost-1.43.2
-    app.kubernetes.io/name: opencost
-    app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.113.0"
-    app.kubernetes.io/part-of: opencost
-    app.kubernetes.io/managed-by: Helm
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app.kubernetes.io/name: opencost
-      app.kubernetes.io/instance: k8smon
-  strategy: 
-    rollingUpdate:
-      maxSurge: 1
-      maxUnavailable: 1
-    type: RollingUpdate
-  template:
-    metadata:
-      labels:
-        app.kubernetes.io/name: opencost
-        app.kubernetes.io/instance: k8smon
-    spec:
-      serviceAccountName: k8smon-opencost
-      tolerations:
-        - effect: NoSchedule
-          key: kubernetes.io/arch
-          operator: Equal
-          value: arm64
-      nodeSelector:
-        kubernetes.io/os: linux
-      containers:
-        - name: k8smon-opencost
-          image: ghcr.io/opencost/opencost:1.113.0@sha256:b313d6d320058bbd3841a948fb636182f49b46df2368d91e2ae046ed03c0f83c
-          imagePullPolicy: IfNotPresent
-          args:
-          ports:
-            - containerPort: 9003
-              name: http
-          resources:
-            limits:
-              cpu: 999m
-              memory: 1Gi
-            requests:
-              cpu: 10m
-              memory: 55Mi
-          startupProbe:
-            httpGet:
-              path: /healthz
-              port: 9003
-            initialDelaySeconds: 10
-            periodSeconds: 5
-            failureThreshold: 30
-          livenessProbe:
-            httpGet:
-              path: /healthz
-              port: 9003
-            initialDelaySeconds: 10
-            periodSeconds: 20
-            failureThreshold: 3
-          readinessProbe:
-            httpGet:
-              path: /healthz
-              port: 9003
-            initialDelaySeconds: 10
-            periodSeconds: 10
-            failureThreshold: 3
-          env:
-            - name: LOG_LEVEL
-              value: info
-            - name: CUSTOM_COST_ENABLED
-              value: "false"
-            - name: KUBECOST_NAMESPACE
-              value: default
-            - name: API_PORT
-              value: "9003"
-            - name: PROMETHEUS_SERVER_ENDPOINT
-              value: "https://prometheus-prod-13-prod-us-east-0.grafana.net/api/prom"
-            - name: CLUSTER_ID
-              value: "k8s-monitoring-gc-feature-test"
-            - name: DB_BASIC_AUTH_USERNAME
-              valueFrom:
-                secretKeyRef:
-                  name: grafana-cloud-credentials
-                  key: PROMETHEUS_USER
-            - name: DB_BASIC_AUTH_PW
-              valueFrom:
-                secretKeyRef:
-                  name: grafana-cloud-credentials
-                  key: PROMETHEUS_PASS
-            - name: DATA_RETENTION_DAILY_RESOLUTION_DAYS
-              value: "15"
-            - name: CLOUD_COST_ENABLED
-              value: "false"
-            - name: CLOUD_COST_MONTH_TO_DATE_INTERVAL
-              value: "6"
-            - name: CLOUD_COST_REFRESH_RATE_HOURS
-              value: "6"
-            - name: CLOUD_COST_QUERY_WINDOW_DAYS
-              value: "7"
-            - name: CLOUD_COST_RUN_WINDOW_DAYS
-              value: "3"
-            - name: EMIT_KSM_V1_METRICS
-              value: "false"
-            - name: EMIT_KSM_V1_METRICS_ONLY
-              value: "true"
-            # Add any additional provided variables
-            - name: CLOUD_PROVIDER_API_KEY
-              value: "AIzaSyD29bGxmHAVEOBYtgd8sYM2gM2ekfxQX4U"
-            - name: CURRENT_CLUSTER_ID_FILTER_ENABLED
-              value: "true"
-            - name: PROM_CLUSTER_ID_LABEL
-              value: "cluster"
 ---
 # Source: k8s-monitoring/charts/alloy-metrics/templates/controllers/statefulset.yaml
 apiVersion: apps/v1
