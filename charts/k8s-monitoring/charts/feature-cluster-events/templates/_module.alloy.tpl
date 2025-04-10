@@ -5,7 +5,7 @@ declare "cluster_events" {
   }
 
   loki.source.kubernetes_events "cluster_events" {
-    job_name   = "integrations/kubernetes/eventhandler"
+    job_name   = {{ .Values.jobLabel | quote }}
     log_format = "{{ .Values.logFormat }}"
   {{- if .Values.namespaces }}
     namespaces = {{ .Values.namespaces | toJson }}
@@ -106,6 +106,11 @@ declare "cluster_events" {
     // Only keep the labels that are defined in the `keepLabels` list.
     stage.label_keep {
       values = {{ .Values.labelsToKeep | toJson }}
+    }
+    stage.labels {
+      values = {
+        "service_name" = "job",
+      }
     }
     forward_to = argument.logs_destinations.value
   }

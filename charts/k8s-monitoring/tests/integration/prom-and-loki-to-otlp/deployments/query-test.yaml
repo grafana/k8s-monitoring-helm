@@ -33,7 +33,7 @@ spec:
   values:
     tests:
       - env:
-          CLUSTER: cluster-monitoring-feature-test
+          CLUSTER: prom-and-loki-to-otlp-test
           PROMETHEUS_URL: http://prometheus-server.prometheus.svc:9090/api/v1/query
           PROMETHEUS_USER: promuser
           PROMETHEUS_PASS: prometheuspassword
@@ -69,11 +69,11 @@ spec:
             type: promql
 
           # Cluster events
-          - query: count_over_time({k8s_cluster_name="$CLUSTER", job="integrations/kubernetes/eventhandler"}[1h])
+          - query: count_over_time({k8s_cluster_name="$CLUSTER", service_name="integrations/kubernetes/eventhandler"}[1h])
             type: logql
 
           # Pod logs
-          - query: count_over_time({k8s_cluster_name="$CLUSTER", job!="integrations/kubernetes/eventhandler"}[1h])
+          - query: count_over_time({k8s_cluster_name="$CLUSTER", service_name!="integrations/kubernetes/eventhandler", k8s_namespace_name="default", k8s_pod_name="k8smon-alloy-metrics-0"}[1h])
             type: logql
 
           # DPM check
