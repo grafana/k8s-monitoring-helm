@@ -1,0 +1,59 @@
+---
+cluster:
+  name: prom-and-loki-to-otlp-test
+
+destinations:
+  - name: prometheus
+    type: otlp
+    protocol: http
+    url: http://prometheus-server.prometheus.svc:9090/api/v1/otlp
+    auth:
+      type: basic
+      username: promuser
+      password: prometheuspassword
+    tls:
+      insecureSkipVerify: true
+    metrics:
+      enabled: true
+    logs:
+      enabled: false
+    traces:
+      enabled: false
+    clusterLabels: [k8s.cluster.name]
+
+  - name: loki
+    type: otlp
+    protocol: http
+    url: http://loki.loki.svc:3100/otlp
+    tenantId: "1"
+    auth:
+      type: basic
+      username: loki
+      password: lokipassword
+    metrics:
+      enabled: false
+    logs:
+      enabled: true
+    traces:
+      enabled: false
+    clusterLabels: [k8s.cluster.name]
+
+clusterMetrics:
+  enabled: true
+
+clusterEvents:
+  enabled: true
+
+podLogs:
+  enabled: true
+
+alloy-metrics:
+  enabled: true
+  liveDebugging:
+    enabled: true
+
+alloy-singleton:
+  enabled: true
+
+alloy-logs:
+  enabled: true
