@@ -91,25 +91,6 @@ destinations:
       tenantIdFrom: env("LOKI_TENANT_ID")
 ```
 
-#### Features
-
-([Documentation](./docs/Features.md))
-
-This section is where you define which features you want to enable with this chart. Features define what kind of data to collect.
-
-Here is an example of enabling some features:
-
-```yaml
-clusterMetrics:
-  enabled: true
-
-clusterEvents:
-  enabled: true
-
-podLogs:
-  enabled: true
-```
-
 #### Collectors
 
 ([Documentation](./docs/Collectors.md))
@@ -129,7 +110,26 @@ alloy-{collector_name}:
   enabled: true
 ```
 
-**Specific features require specific collector configuration**. For example, the applicationObservability feature requires the alloy-receiver, with specific ports open for select protocols. Check ([individual feature documentation](./docs/Features.md)) to find out about collector requirements.
+**Specific features require specific collector configuration**. For example, the applicationObservability feature requires the alloy-receiver, with specific ports open for select protocols. Check [individual feature documentation](./docs/Features.md) to find out about collector requirements.
+
+#### Features
+
+([Documentation](./docs/Features.md))
+
+This section is where you define which features you want to enable with this chart. Features define what kind of data to collect.
+
+Here is an example of enabling some features:
+
+```yaml
+clusterMetrics:
+  enabled: true
+
+clusterEvents:
+  enabled: true
+
+podLogs:
+  enabled: true
+```
 
 ## Maintainers
 
