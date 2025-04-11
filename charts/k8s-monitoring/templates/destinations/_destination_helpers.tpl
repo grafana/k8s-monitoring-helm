@@ -36,5 +36,15 @@
 {{- if and (empty $destinations) (not (empty $backupDestinations)) }}
   {{- $backupDestinations | toYaml | indent 0 }}
 {{- end }}
+{{- end }}
 
+{{/* Inputs: . (Values), destination (string, name of destination) */}}
+{{- define "destination.getEcosystem" -}}
+{{- $ecosystem := "unknown" }}
+{{- range $destination := .Values.destinations }}
+  {{- if eq $destination.name $.destination }}
+    {{- $ecosystem = include (printf "destinations.%s.ecosystem" $destination.type) $destination }}
+  {{- end }}
+{{- end }}
+{{- $ecosystem }}
 {{- end }}

@@ -25,6 +25,18 @@ profiling "feature" {
 {{- end -}}
 {{- end -}}
 
+{{- define "features.profiling.destinations.isTranslating" }}
+{{- $isTranslating := false -}}
+{{- $destinations := include "features.profiling.destinations" . | fromYamlArray -}}
+{{ range $destination := $destinations -}}
+  {{- $destinationEcosystem := include "destination.getEcosystem" (deepCopy $ | merge (dict "destination" $destination)) -}}
+  {{- if ne $destinationEcosystem "pyroscope" -}}
+    {{- $isTranslating = true -}}
+  {{- end -}}
+{{- end -}}
+{{- $isTranslating -}}
+{{- end -}}
+
 {{- define "features.profiling.validate" }}
 {{- if .Values.profiling.enabled -}}
 {{- $featureName := "Profiling" }}

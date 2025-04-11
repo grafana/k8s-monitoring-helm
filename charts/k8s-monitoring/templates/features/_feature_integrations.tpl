@@ -35,6 +35,18 @@
 {{- include "destinations.get" (dict "destinations" $.Values.destinations "type" "metrics" "ecosystem" "prometheus" "filter" $.Values.integrations.destinations) -}}
 {{- end }}
 
+{{- define "features.integrations.destinations.isTranslating" }}
+{{- $isTranslating := false -}}
+{{- $destinations := include "features.integrations.destinations" . | fromYamlArray -}}
+{{ range $destination := $destinations -}}
+  {{- $destinationEcosystem := include "destination.getEcosystem" (deepCopy $ | merge (dict "destination" $destination)) -}}
+  {{- if ne $destinationEcosystem "prometheus" -}}
+    {{- $isTranslating = true -}}
+  {{- end -}}
+{{- end -}}
+{{- $isTranslating -}}
+{{- end -}}
+
 {{- define "features.integrations.logs.discoveryRules" }}
 {{- $values := (dict "Values" .Values.integrations "Files" $.Subcharts.integrations.Files) }}
 {{- $extraDiscoveryRules := list }}

@@ -25,6 +25,18 @@ prometheus_operator_objects "feature" {
 {{- end -}}
 {{- end -}}
 
+{{- define "features.prometheusOperatorObjects.destinations.isTranslating" }}
+{{- $isTranslating := false -}}
+{{- $destinations := include "features.prometheusOperatorObjects.destinations" . | fromYamlArray -}}
+{{ range $destination := $destinations -}}
+  {{- $destinationEcosystem := include "destination.getEcosystem" (deepCopy $ | merge (dict "destination" $destination)) -}}
+  {{- if ne $destinationEcosystem "prometheus" -}}
+    {{- $isTranslating = true -}}
+  {{- end -}}
+{{- end -}}
+{{- $isTranslating -}}
+{{- end -}}
+
 {{- define "features.prometheusOperatorObjects.validate" }}
 {{- if .Values.prometheusOperatorObjects.enabled -}}
 {{- $featureName := "Prometheus Operator Objects" }}

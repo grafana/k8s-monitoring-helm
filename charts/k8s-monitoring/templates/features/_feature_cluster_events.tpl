@@ -21,8 +21,20 @@ cluster_events "feature" {
 
 {{- define "features.clusterEvents.destinations" }}
 {{- if .Values.clusterEvents.enabled -}}
-{{- include "destinations.get" (dict "destinations" $.Values.destinations "type" "logs" "ecosystem" "loki" "filter" $.Values.clusterEvents.destinations) -}}
+  {{- include "destinations.get" (dict "destinations" $.Values.destinations "type" "logs" "ecosystem" "loki" "filter" $.Values.clusterEvents.destinations) -}}
 {{- end -}}
+{{- end -}}
+
+{{- define "features.clusterEvents.destinations.isTranslating" }}
+{{- $isTranslating := false -}}
+{{- $destinations := include "features.clusterEvents.destinations" . | fromYamlArray -}}
+{{ range $destination := $destinations -}}
+  {{- $destinationEcosystem := include "destination.getEcosystem" (deepCopy $ | merge (dict "destination" $destination)) -}}
+  {{- if ne $destinationEcosystem "loki" -}}
+    {{- $isTranslating = true -}}
+  {{- end -}}
+{{- end -}}
+{{- $isTranslating -}}
 {{- end -}}
 
 {{- define "features.clusterEvents.validate" }}

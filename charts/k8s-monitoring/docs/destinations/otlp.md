@@ -113,9 +113,16 @@ This defines the options for defining a destination for OpenTelemetry data that 
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| processors.transform.logs | object | `{"log":[],"resource":[]}` | Log transforms |
-| processors.transform.metrics | object | `{"datapoint":[],"metric":[],"resource":[]}` | Metric transforms |
-| processors.transform.traces | object | `{"resource":[],"span":[],"spanevent":[]}` | Trace transforms |
+| processors.transform.logs.log | list | `[]` | Log transforms |
+| processors.transform.logs.logToResource | object | `{"container":"k8s.container.name","cronjob":"k8s.cronjob.name","daemonset":"k8s.daemonset.name","deployment":"k8s.deployment.name","deployment_environment":"deployment.environment","deployment_environment_name":"deployment.environment.name","job_name":"k8s.job.name","namespace":"k8s.namespace.name","pod":"k8s.pod.name","replicaset":"k8s.replicaset.name","service_name":"service.name","service_namespace":"service.namespace","statefulset":"k8s.statefulset.name"}` | Promote certain log attributes to resource attributes. This is helpful for translating log data from Loki sources to OTLP format. Format: `{ <log attribute name>: <resource attribute name> }`. Will not copy if the resource attribute already exists. |
+| processors.transform.logs.resource | list | `[]` | Log resource transforms |
+| processors.transform.metrics.datapoint | list | `[]` | Metric datapoint transforms |
+| processors.transform.metrics.datapointToResource | object | `{"deployment_environment":"deployment.environment","deployment_environment_name":"deployment.environment.name","service_name":"service.name","service_namespace":"service.namespace"}` | Promote certain metric datapoint attributes to resource attributes. This is helpful for translating metric data from Prometheus sources to OTLP format. Format: `{ <datapoint attribute name>: <resource attribute name> }`. Will not copy if the resource attribute already exists. |
+| processors.transform.metrics.metric | list | `[]` | Metric transforms |
+| processors.transform.metrics.resource | list | `[]` | Metric resource transforms |
+| processors.transform.traces.resource | list | `[]` | Trace resource transforms |
+| processors.transform.traces.span | list | `[]` | Trace span transforms |
+| processors.transform.traces.spanevent | list | `[]` | Trace spanevent transforms |
 
 ### Secret
 

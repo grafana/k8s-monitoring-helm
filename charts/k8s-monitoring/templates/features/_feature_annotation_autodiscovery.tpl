@@ -25,6 +25,18 @@ annotation_autodiscovery "feature" {
 {{- end -}}
 {{- end -}}
 
+{{- define "features.annotationAutodiscovery.destinations.isTranslating" }}
+{{- $isTranslating := false -}}
+{{- $destinations := include "features.annotationAutodiscovery.destinations" . | fromYamlArray -}}
+{{ range $destination := $destinations -}}
+  {{- $destinationEcosystem := include "destination.getEcosystem" (deepCopy $ | merge (dict "destination" $destination)) -}}
+  {{- if ne $destinationEcosystem "prometheus" -}}
+    {{- $isTranslating = true -}}
+  {{- end -}}
+{{- end -}}
+{{- $isTranslating -}}
+{{- end -}}
+
 {{- define "features.annotationAutodiscovery.validate" }}
 {{- if .Values.annotationAutodiscovery.enabled -}}
   {{- $featureName := "Annotation Autodiscovery" }}

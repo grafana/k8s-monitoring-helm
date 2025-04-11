@@ -1,0 +1,20 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Post-install notes
+templates:
+  - NOTES.txt
+tests:
+  - it: print the warning about ecosystem translation if the destinations don't match
+    set:
+      cluster:
+        name: ci-test-cluster
+      destinations:
+        - name: otlp
+          type: otlp
+          url: http://otlp.otlp.svc:4317
+          logs: {enabled: true}
+      clusterEvents:
+        enabled: true
+      alloy-singleton:
+        enabled: true
+    asserts:
+      - matchSnapshotRaw: {}

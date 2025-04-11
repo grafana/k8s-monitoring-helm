@@ -35,8 +35,16 @@ spec:
           - configMapRef: {name: test-variables}
         queries:
           # Metrics are being delivered
-          - query: alloy_build_info{cluster="$CLUSTER"}
+          - query: alloy_build_info{k8s_cluster_name="$CLUSTER"}
             type: promql
+
+          # Pod Logs are being delivered with the correct labels
+          - query: count_over_time({k8s_cluster_name="$CLUSTER", service_name!="integrations/kubernetes/eventhandler", k8s_namespace_name="default", k8s_pod_name="k8smon-alloy-metrics-0"}[1h])
+            type: logql
+
+          # Cluster Events are being delivered with the correct labels
+          - query: count_over_time({k8s_cluster_name="$CLUSTER", service_name="integrations/kubernetes/eventhandler"}[1h])
+            type: logql
 
           # DPM check
           - query: avg(count_over_time(scrape_samples_scraped{cluster="$CLUSTER"}[1m]))

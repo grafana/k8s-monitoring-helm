@@ -226,24 +226,70 @@ processors:
     actions: []
 
   transform:
-    # -- Metric transforms
-    # @section -- Transform Processor
+    # Metric transforms
     metrics:
+      # -- Metric resource transforms
+      # @section -- Transform Processor
       resource: []
+      # -- Metric transforms
+      # @section -- Transform Processor
       metric: []
+      # -- Metric datapoint transforms
+      # @section -- Transform Processor
       datapoint: []
 
-    # -- Log transforms
-    # @section -- Transform Processor
+      # -- Promote certain metric datapoint attributes to resource attributes. This is helpful for translating metric
+      # data from Prometheus sources to OTLP format.
+      # Format: `{ <datapoint attribute name>: <resource attribute name> }`.
+      # Will not copy if the resource attribute already exists.
+      # @section -- Transform Processor
+      datapointToResource:
+        service_name: service.name
+        service_namespace: service.namespace
+        deployment_environment_name: deployment.environment.name
+        deployment_environment: deployment.environment
+
+    # Log transforms
     logs:
+      # -- Log resource transforms
+      # @section -- Transform Processor
       resource: []
+      # -- Log transforms
+      # @section -- Transform Processor
       log: []
 
-    # -- Trace transforms
-    # @section -- Transform Processor
+      # -- Promote certain log attributes to resource attributes. This is helpful for translating log data from Loki
+      # sources to OTLP format.
+      # Format: `{ <log attribute name>: <resource attribute name> }`.
+      # Will not copy if the resource attribute already exists.
+      # @section -- Transform Processor
+      logToResource:
+        service_name: service.name
+        service_namespace: service.namespace
+        deployment_environment_name: deployment.environment.name
+        deployment_environment: deployment.environment
+
+        container: k8s.container.name
+        cronjob: k8s.cronjob.name
+        daemonset: k8s.daemonset.name
+        deployment: k8s.deployment.name
+        job_name: k8s.job.name
+        namespace: k8s.namespace.name
+        pod: k8s.pod.name
+        replicaset: k8s.replicaset.name
+        statefulset: k8s.statefulset.name
+
+
+    # Trace transforms
     traces:
+      # -- Trace resource transforms
+      # @section -- Transform Processor
       resource: []
+      # -- Trace span transforms
+      # @section -- Transform Processor
       span: []
+      # -- Trace spanevent transforms
+      # @section -- Transform Processor
       spanevent: []
 
   filters:
