@@ -2,7 +2,24 @@
 
 Collectors are Alloy instances deployed as Kubernetes workloads using the Alloy helm chart. Each collector uses a workload type appropriate for the telemetry type it collects.
 
-## Alloy Recevier
+## General Configuration
+
+Each collector is defined in its own section in the k8s monitoring chart values file. The general format to enable and configure a collector looks like this:
+
+```
+alloy-{collector_name}:
+  enabled: true
+  // k8s monitoring options
+  alloy:
+    // alloy helm chart values go here
+```
+This creates a k8s workload as either a daemonset, statefulset or deployment, with its own set of pods, running alloy containers.
+
+Because collectors are deployed using the Alloy helm chart, standard [Alloy helm chart values](https://raw.githubusercontent.com/grafana/alloy/refs/heads/main/operations/helm/charts/alloy/values.yaml) apply. Those values will be passed down to the children helm charts for each collector.
+
+Options specific to the k8s monitoring helm chart are described in the reference section down below.
+
+## Alloy Receiver
 
 * **Pods Name**: <helm_release>-alloy-receiver-*
 * **Default Controller Type**: DaemonSet
@@ -10,7 +27,7 @@ Collectors are Alloy instances deployed as Kubernetes workloads using the Alloy 
 
 This collector creates an Alloy cluster deployed as a k8s DaemonSet to receive application metrics when the [Application Observability Feature](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-application-observability) is turned on.
 
-**This collector is not automatically enabled with the feature.**
+> This collector is not automatically enabled with the feature.
 
 For each [receiver](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-application-observability#receivers-jaeger) turned on in the feature, you must also configure this collector to expose the corresponding ports on the k8s service fronting the pods. For example, to enable a receiver to collect Zipkin traces, you need to add:
 
@@ -40,12 +57,47 @@ alloy-receiver:
         targetPort: 4318
         protocol: TCP
 ```
-Applications inside the Kubernetes cluster can simply use the kubedns name to reference a particular receiver endpoint. Ex:
+
+### Configuring Client Endpoints
+
+#### Inside the cluster
+
+Applications inside the Kubernetes cluster can simply use the [kubedns](https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#namespaces-of-services) name to reference a particular receiver endpoint. Ex:
 
 ```
 endpoint: http://grafana-k8s-monitoring-alloy[.mynamespace.cluster.local]:4318
 ```
 
+#### Outside the cluster
+
+To expose the receiver to applications outside of the cluster (frontend observability for example), you can use different approaches depending on your setup. Load balancers are created by whatever controller(s) are installed on your cluster. Make sure to check the [Alloy chart values](https://raw.githubusercontent.com/grafana/alloy/main/operations/helm/charts/alloy/values.yaml) for the full list of options.
+
+Ex: to create a NLB on AWS EKS when using the AWS LB controller:
+
+```
+alloy-receiver:
+  alloy:
+    service:
+      type: LoadBalancer
+```
+To create an ALB instead:
+```
+alloy-receiver:
+  alloy:
+    ingress:
+      enabled: true
+      path: /
+      faroPort: 12347
+```
+
+You can also create additional services and ingress objects as needed if the Alloy chart options don't fit your needs. Consult your K8s vendor documentation for details.
+
+### Istio/Service Mesh
+Depending on your mesh configuration, you might need to explicitly include the Grafana Monitoring namespace as a member, or declare the receiver as a backend of your application for traffic within the cluster.
+
+For traffic from outside the cluster, you most likely will need to set up an ingress gateway into your mesh.
+
+In any case, consult your mesh vendor for details.
 
 ## Troubleshooting
 
@@ -77,7 +129,7 @@ then open your browser to `http://localhost:12345`
 
 ## Scaling
 
-### DaemonSets
+### DaemonSets & Singleton
 
 For collectors deployed as DaemonSets, one pod is deployed per node. You cannot deploy more replicas with this type of controller, so you need to scale the individual pods by increasing the resource requests/limits. Refer to the [Alloy helm chart sizing guidelines](https://grafana.com/docs/alloy/latest/introduction/estimate-resource-usage/) to learn how to best tune those parameters. Ex:
 
@@ -90,7 +142,9 @@ alloy-metrics:
       limits: {}
 ```
 
-### StatefulSets & Singleton
+Same for Singleton, this deployment is made to have a single pod.
+
+### StatefulSets
 For StatefulSet collectors, you can set the number of replicas in the `alloy` config section of the collector:
 
 ```
@@ -107,17 +161,7 @@ alloy-metrics:
 
 Alloy doesn't provide autoscaling out of the box, but you can use the Kubernetes [HPA](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/) and [VPA](https://github.com/kubernetes/autoscaler/tree/master/vertical-pod-autoscaler) autoscalers depending on the type of deployment for the collector. Just set the HorizontalPodAutoscaler or VerticalPodAutoscaler target to the collector deployment name.
 
-## Values
-The following tables list the available options for each collector type. Because collectors are deployed using the Alloy helm chart, standard [Alloy helm chart values](https://raw.githubusercontent.com/grafana/alloy/refs/heads/main/operations/helm/charts/alloy/values.yaml) apply.
-```
-alloy-{collector_name}:
-  alloy:
-    // alloy helm chart values go here
-```
-
-Those values will be passed down to the children helm charts for each collector.
-
-Below are options specific to the k8s monitoring helm chart.
+## Values Reference
 
 ### Alloy Logs
 
