@@ -64,21 +64,6 @@ templates/destinations/_destination_types.tpl: $(DESTINATION_VALUES_FILES)
 	done
 	echo '{{- end -}}' >> $@
 
-vendir.lock.yml: vendir.yml
-ifdef HAS_VENDIR
-	vendir sync
-else
-	docker run --rm --volume $(shell pwd):/src --workdir /src ghcr.io/carvel-dev/docker-image:latest vendir sync
-endif
-
-alloyModules/LICENSE: vendir.yml vendir.lock.yml
-ifdef HAS_VENDIR
-	vendir sync -l
-else
-	docker run --rm --volume $(shell pwd):/src --workdir /src ghcr.io/carvel-dev/docker-image:latest vendir sync -l
-endif
-ALLOY_MODULE_FILES = $(shell find alloyModules -name "*.alloy")
-
 values.schema.json: values.yaml $(COLLECTOR_SCHEMA_FILES) $(DESTINATION_SCHEMA_FILES) $(SCHEMA_MODS_JSON_FILES) $(SCHEMA_MODS_JQ_FILES) schema-mods/destination-list.json
 	../../scripts/schema-gen.sh .
 
@@ -112,10 +97,10 @@ alloy_instances = $(shell \
 	DIR="$(shell dirname $(1))/" yq e 'with_entries(select(.key == "alloy-*" and .value.enabled == true)) | to_entries | env(DIR) + .[].key + ".yaml"' $(1) \
 )
 
-%/output.yaml: %/values.yaml Chart.yaml Chart.lock values.yaml values.schema.json templates/destinations/_destination_types.tpl $(DESTINATION_VALUES_FILES) $(CHART_TEMPLATE_FILES) $(CHART_YAML_FILES) alloyModules/LICENSE $(ALLOY_MODULE_FILES)
+%/output.yaml: %/values.yaml Chart.yaml Chart.lock values.yaml values.schema.json templates/destinations/_destination_types.tpl $(DESTINATION_VALUES_FILES) $(CHART_TEMPLATE_FILES) $(CHART_YAML_FILES)
 	helm template $(EXAMPLE_RELEASE_NAME) . -f $< > $@
 
-%/.rendered/output.yaml: %/values.yaml Chart.yaml Chart.lock values.yaml values.schema.json templates/destinations/_destination_types.tpl $(DESTINATION_VALUES_FILES) $(CHART_TEMPLATE_FILES) $(CHART_YAML_FILES) alloyModules/LICENSE $(ALLOY_MODULE_FILES)
+%/.rendered/output.yaml: %/values.yaml Chart.yaml Chart.lock values.yaml values.schema.json templates/destinations/_destination_types.tpl $(DESTINATION_VALUES_FILES) $(CHART_TEMPLATE_FILES) $(CHART_YAML_FILES)
 	mkdir -p $(dir $@)
 	helm template $(EXAMPLE_RELEASE_NAME) . -f $< > $@
 
@@ -178,7 +163,7 @@ build-features:
 
 # Build targets
 .PHONY: build
-build: build-features README.md alloyModules/LICENSE values.schema.json templates/destinations/_destination_types.tpl $(COLLECTOR_DOCS_FILES) $(DESTINATION_DOCS_FILES) examples integration-test-checks platform-test-checks
+build: build-features README.md values.schema.json templates/destinations/_destination_types.tpl $(COLLECTOR_DOCS_FILES) $(DESTINATION_DOCS_FILES) examples integration-test-checks platform-test-checks
 
 # Test targets
 .PHONY: test unittest lint-helm lint-configs

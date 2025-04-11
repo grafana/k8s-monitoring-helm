@@ -1,21 +1,9 @@
 {{- range $collector := include "collectors.list.enabled" . | fromYamlArray }}
-{{- $defaultValues := "collectors/alloy-values.yaml" | $.Files.Get | fromYaml }}
-{{- $namedDefaultValues := (printf "collectors/named-defaults/%s.yaml" $collector) | $.Files.Get | fromYaml }}
-{{- $collectorValues := (index $.Values $collector) }}
-{{- $values := mergeOverwrite $defaultValues $collectorValues $namedDefaultValues (dict "nameOverride" $collector) }}
-
-{{- $excluded := dict "enabled" true "extraConfig" true "remoteConfig" true "logging" true "liveDebugging" true }}
-{{- $cleanValues := dict }}
-{{- range $key, $val := $values }}
-  {{- if not (hasKey $excluded $key) }}
-    {{- $_ := set $cleanValues $key $val }}
-  {{- end }}
-{{- end }}
 ---
 apiVersion: collectors.grafana.com/v1alpha1
 kind: Alloy
 metadata:
   name: {{ include "collector.alloy.fullname" (deepCopy $ | merge (dict "collectorName" $collector)) }}
   namespace: {{ $.Release.Namespace }}
-spec: {{ $cleanValues | toYaml | nindent 2 }}
+spec: {{ include "collector.alloy.values" (deepCopy $ | merge (dict "collectorName" $collector)) | nindent 2 }}
 {{- end }}

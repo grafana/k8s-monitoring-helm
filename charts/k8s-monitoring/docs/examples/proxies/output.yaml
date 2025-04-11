@@ -3716,6 +3716,7 @@ metadata:
   name: k8smon-alloy-metrics
   namespace: default
 spec: 
+  
   alloy:
     clustering:
       enabled: true
@@ -3749,10 +3750,6 @@ spec:
       seccompProfile:
         type: RuntimeDefault
   controller:
-    nodeSelector:
-      kubernetes.io/os: linux
-    podAnnotations:
-      k8s.grafana.com/logs.job: integrations/alloy
     replicas: 1
     type: statefulset
   crds:
@@ -3766,7 +3763,10 @@ metadata:
   name: k8smon-alloy-singleton
   namespace: default
 spec: 
+  
   alloy:
+    clustering:
+      enabled: false
     configMap:
       create: false
     nodeSelector:
@@ -3796,10 +3796,6 @@ spec:
       seccompProfile:
         type: RuntimeDefault
   controller:
-    nodeSelector:
-      kubernetes.io/os: linux
-    podAnnotations:
-      k8s.grafana.com/logs.job: integrations/alloy
     replicas: 1
     type: deployment
   crds:
@@ -3813,6 +3809,7 @@ metadata:
   name: k8smon-alloy-logs
   namespace: default
 spec: 
+  
   alloy:
     clustering:
       enabled: false
@@ -3848,10 +3845,6 @@ spec:
       seccompProfile:
         type: RuntimeDefault
   controller:
-    nodeSelector:
-      kubernetes.io/os: linux
-    podAnnotations:
-      k8s.grafana.com/logs.job: integrations/alloy
     tolerations:
     - effect: NoSchedule
       operator: Exists
@@ -3867,6 +3860,7 @@ metadata:
   name: k8smon-alloy-receiver
   namespace: default
 spec: 
+  
   alloy:
     configMap:
       create: false
@@ -3906,12 +3900,6 @@ spec:
         - ALL
       seccompProfile:
         type: RuntimeDefault
-  controller:
-    nodeSelector:
-      kubernetes.io/os: linux
-    podAnnotations:
-      k8s.grafana.com/logs.job: integrations/alloy
-    type: daemonset
   crds:
     create: false
   extraService:
@@ -3927,10 +3915,8 @@ metadata:
   name: k8smon-alloy-profiles
   namespace: default
 spec: 
+  
   alloy:
-    clustering:
-      enabled: false
-      name: alloy-profiles
     configMap:
       create: false
     nodeSelector:
@@ -3962,16 +3948,8 @@ spec:
       runAsUser: 0
       seccompProfile:
         type: RuntimeDefault
-    stabilityLevel: public-preview
   controller:
     hostPID: true
-    nodeSelector:
-      kubernetes.io/os: linux
-    podAnnotations:
-      k8s.grafana.com/logs.job: integrations/alloy
-    tolerations:
-    - effect: NoSchedule
-      operator: Exists
     type: daemonset
   crds:
     create: false

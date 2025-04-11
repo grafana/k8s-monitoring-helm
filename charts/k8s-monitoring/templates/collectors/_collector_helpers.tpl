@@ -80,3 +80,24 @@ app.kubernetes.io/part-of: alloy
 app.kubernetes.io/name: {{ include "collector.alloy.fullname" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
+
+{{- /* Gets the native Alloy values. Input: $, .collectorName (string, collector name) */ -}}
+{{- define "collector.alloy.values" -}}
+{{- $values := include "collector.alloy.allValues" . | fromYaml }}
+{{- $excluded := dict "enabled" true "extraConfig" true "remoteConfig" true "logging" true "liveDebugging" true }}
+{{- $cleanValues := dict }}
+{{- range $key, $val := $values }}
+  {{- if not (hasKey $excluded $key) }}
+    {{- $_ := set $cleanValues $key $val }}
+  {{- end }}
+{{- end }}
+{{ $cleanValues | toYaml }}
+{{- end }}
+
+{{- /* Gets the Alloy values. Input: $, .collectorName (string, collector name) */ -}}
+{{- define "collector.alloy.allValues" -}}
+{{- $defaultValues := "collectors/alloy-values.yaml" | .Files.Get | fromYaml }}
+{{- $namedDefaultValues := (printf "collectors/named-defaults/%s.yaml" .collectorName) | $.Files.Get | fromYaml }}
+{{- $collectorValues := (index $.Values .collectorName) }}
+{{ mergeOverwrite $defaultValues $namedDefaultValues (dict "nameOverride" .collectorName) $collectorValues | toYaml }}
+{{- end }}

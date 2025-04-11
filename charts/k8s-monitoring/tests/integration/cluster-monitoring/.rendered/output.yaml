@@ -2625,6 +2625,7 @@ metadata:
   name: k8smon-alloy-metrics
   namespace: default
 spec: 
+  
   alloy:
     clustering:
       enabled: true
@@ -2658,10 +2659,6 @@ spec:
       seccompProfile:
         type: RuntimeDefault
   controller:
-    nodeSelector:
-      kubernetes.io/os: linux
-    podAnnotations:
-      k8s.grafana.com/logs.job: integrations/alloy
     replicas: 1
     type: statefulset
   crds:
@@ -2675,7 +2672,10 @@ metadata:
   name: k8smon-alloy-singleton
   namespace: default
 spec: 
+  
   alloy:
+    clustering:
+      enabled: false
     configMap:
       create: false
     nodeSelector:
@@ -2705,10 +2705,6 @@ spec:
       seccompProfile:
         type: RuntimeDefault
   controller:
-    nodeSelector:
-      kubernetes.io/os: linux
-    podAnnotations:
-      k8s.grafana.com/logs.job: integrations/alloy
     replicas: 1
     type: deployment
   crds:
@@ -2722,6 +2718,7 @@ metadata:
   name: k8smon-alloy-logs
   namespace: default
 spec: 
+  
   alloy:
     clustering:
       enabled: false
@@ -2757,10 +2754,6 @@ spec:
       seccompProfile:
         type: RuntimeDefault
   controller:
-    nodeSelector:
-      kubernetes.io/os: linux
-    podAnnotations:
-      k8s.grafana.com/logs.job: integrations/alloy
     tolerations:
     - effect: NoSchedule
       operator: Exists
