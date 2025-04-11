@@ -146,7 +146,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | https://opencost.github.io/opencost-helm-chart | opencost | 1.43.2 |
 | https://prometheus-community.github.io/helm-charts | kube-state-metrics | 5.31.1 |
 | https://prometheus-community.github.io/helm-charts | prometheus-node-exporter | 4.45.2 |
-| https://prometheus-community.github.io/helm-charts | prometheus-operator-crds | 19.0.0 |
+| https://prometheus-community.github.io/helm-charts | prometheus-operator-crds | 19.1.0 |
 | https://prometheus-community.github.io/helm-charts | prometheus-windows-exporter | 0.9.2 |
 | https://sustainable-computing-io.github.io/kepler-helm-chart | kepler | 0.5.13 |
 <!-- markdownlint-enable no-bare-urls -->
