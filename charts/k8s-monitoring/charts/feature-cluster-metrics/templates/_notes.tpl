@@ -41,5 +41,7 @@ Scrape Kubernetes Cluster metrics
 {{- if .Values.kepler.enabled }}{{- $deployments = append $deployments "kepler" }}{{ end }}
 version: {{ .Chart.Version }}
 sources: {{ $sources | join "," }}
+{{- if ne (len $deployments) 0 }}
 deployments: {{ $deployments | join "," }}
+{{- end }}
 {{- end }}
