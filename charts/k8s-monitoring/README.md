@@ -105,7 +105,7 @@ The main collectors are:
 
 To enable a collector, add a new section to your values file. Ex:
 
-```
+```YAML
 alloy-{collector_name}:
   enabled: true
 ```
