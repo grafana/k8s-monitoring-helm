@@ -21,9 +21,9 @@ Options specific to the k8s monitoring helm chart are described in the reference
 
 ## Alloy Receiver
 
-* **Pods Name**: <helm_release>-alloy-receiver-*
-* **Default Controller Type**: DaemonSet
-* **Service Name**: <helm_release_name>-alloy-receiver
+*   **Pods Name**: <helm_release>-alloy-receiver-*
+*   **Default Controller Type**: DaemonSet
+*   **Service Name**: <helm_release_name>-alloy-receiver
 
 This collector creates an Alloy cluster deployed as a k8s DaemonSet to receive application metrics when the [Application Observability Feature](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-application-observability) is turned on.
 
@@ -31,7 +31,7 @@ This collector creates an Alloy cluster deployed as a k8s DaemonSet to receive a
 
 For each [receiver](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-application-observability#receivers-jaeger) turned on in the feature, you must also configure this collector to expose the corresponding ports on the k8s service fronting the pods. For example, to enable a receiver to collect Zipkin traces, you need to add:
 
-```
+```YAML
 applicationObservability:
   enabled: true
   receivers:
@@ -64,7 +64,7 @@ alloy-receiver:
 
 Applications inside the Kubernetes cluster can simply use the [kubedns](https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#namespaces-of-services) name to reference a particular receiver endpoint. Ex:
 
-```
+```YAML
 endpoint: http://grafana-k8s-monitoring-alloy[.mynamespace.cluster.local]:4318
 ```
 
@@ -74,14 +74,14 @@ To expose the receiver to applications outside of the cluster (frontend observab
 
 Ex: to create a NLB on AWS EKS when using the AWS LB controller:
 
-```
+```YAML
 alloy-receiver:
   alloy:
     service:
       type: LoadBalancer
 ```
 To create an ALB instead:
-```
+```YAML
 alloy-receiver:
   alloy:
     ingress:
@@ -93,6 +93,7 @@ alloy-receiver:
 You can also create additional services and ingress objects as needed if the Alloy chart options don't fit your needs. Consult your K8s vendor documentation for details.
 
 ### Istio/Service Mesh
+
 Depending on your mesh configuration, you might need to explicitly include the Grafana Monitoring namespace as a member, or declare the receiver as a backend of your application for traffic within the cluster.
 
 For traffic from outside the cluster, you most likely will need to set up an ingress gateway into your mesh.
@@ -133,7 +134,7 @@ then open your browser to `http://localhost:12345`
 
 For collectors deployed as DaemonSets, one pod is deployed per node. You cannot deploy more replicas with this type of controller, so you need to scale the individual pods by increasing the resource requests/limits. Refer to the [Alloy helm chart sizing guidelines](https://grafana.com/docs/alloy/latest/introduction/estimate-resource-usage/) to learn how to best tune those parameters. Ex:
 
-```
+```YAML
 alloy-metrics:
   ...
   alloy:
@@ -145,9 +146,10 @@ alloy-metrics:
 Same for Singleton, this deployment is made to have a single pod.
 
 ### StatefulSets
+
 For StatefulSet collectors, you can set the number of replicas in the `alloy` config section of the collector:
 
-```
+```YAML
 alloy-metrics:
   ...
   controller:
