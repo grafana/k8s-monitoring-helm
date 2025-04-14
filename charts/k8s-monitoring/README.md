@@ -99,9 +99,9 @@ Collectors are the actual kubernetes workloads running alloy containers (deploym
 
 The main collectors are:
 
-* **alloy-logs** is the logs collector. It is deployed as a daemonset and scrapes workload logs on each node
-* **alloy-metrics** is a statefulset that scrapes metrics from prometheus sources like cadvisor and kube-state-metrics
-* **alloy-receiver** is a daemonset to collect metrics sent via HTTP, gRPC, Zipkin, etc
+*   **alloy-logs** is the logs collector. It is deployed as a daemonset and scrapes workload logs on each node
+*   **alloy-metrics** is a statefulset that scrapes metrics from prometheus sources like cadvisor and kube-state-metrics
+*   **alloy-receiver** is a daemonset to collect metrics sent via HTTP, gRPC, Zipkin, etc
 
 To enable a collector, add a new section to your values file. Ex:
 
