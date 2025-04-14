@@ -6,13 +6,14 @@ Collectors are Alloy instances deployed as Kubernetes workloads using the Alloy 
 
 Each collector is defined in its own section in the k8s monitoring chart values file. The general format to enable and configure a collector looks like this:
 
-```
+```YAML
 alloy-{collector_name}:
   enabled: true
   // k8s monitoring options
   alloy:
     // alloy helm chart values go here
 ```
+
 This creates a k8s workload as either a daemonset, statefulset or deployment, with its own set of pods, running alloy containers.
 
 Because collectors are deployed using the Alloy helm chart, standard [Alloy helm chart values](https://raw.githubusercontent.com/grafana/alloy/refs/heads/main/operations/helm/charts/alloy/values.yaml) apply. Those values will be passed down to the children helm charts for each collector.
@@ -80,7 +81,9 @@ alloy-receiver:
     service:
       type: LoadBalancer
 ```
+
 To create an ALB instead:
+
 ```YAML
 alloy-receiver:
   alloy:
