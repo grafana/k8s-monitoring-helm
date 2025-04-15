@@ -1,10 +1,11 @@
+{{- /* Builds the alloy config for remoteConfig */ -}}
 {{- define "collectors.remoteConfig.alloy" -}}
-{{- $remoteConfigValues := (index .Values .collectorName).remoteConfig }}
-{{- with merge $remoteConfigValues (dict "type" "remoteConfig" "name" (printf "%s-remote-cfg" .collectorName)) }}
-{{- if .enabled }}
-{{- if eq (include "secrets.usesKubernetesSecret" .) "true" }}
-  {{- include "secret.alloy" (deepCopy $ | merge (dict "object" .)) | nindent 0 }}
-{{- end }}
+{{- $collectorValues := include "collector.alloy.values" . | fromYaml }}
+{{- with merge $collectorValues.remoteConfig (dict "type" "remoteConfig" "name" (printf "%s-remote-cfg" .collectorName)) }}
+  {{- if .enabled }}
+    {{- if eq (include "secrets.usesKubernetesSecret" .) "true" }}
+      {{- include "secret.alloy" (deepCopy $ | merge (dict "object" .)) | nindent 0 }}
+    {{- end }}
 remotecfg {
   id = sys.env("GCLOUD_FM_COLLECTOR_ID")
   url = {{ .url | quote }}
@@ -26,22 +27,27 @@ remotecfg {
     "cluster" = {{ $.Values.cluster.name | quote }},
     "namespace" = {{ $.Release.Namespace | quote }},
     "workloadName" = {{ $.collectorName | quote }},
-    "workloadType" = {{ (index $.Values $.collectorName).controller.type | quote }},
+    "workloadType" = {{ $collectorValues.controller.type | quote }},
 {{- range $key, $value := .extraAttributes }}
     {{ $key | quote }} = {{ $value | quote }},
 {{- end }}
   }
 }
+    {{- end -}}
+  {{- end -}}
 {{- end -}}
-{{- end -}}
+
+{{- define "collectors.values.remoteConfig" -}}
+
 {{- end -}}
 
 {{- define "collectors.validate.remoteConfig" }}
-{{- if (index .Values .collectorName).enabled }}
-  {{- if (index .Values .collectorName).remoteConfig.enabled }}
+{{- $collectorValues := include "collector.alloy.values" . | fromYaml }}
+{{- if $collectorValues.enabled }}
+  {{- if $collectorValues.remoteConfig.enabled }}
     {{- $hasCollectorIdEnv := false }}
     {{- $hasAPIKey := false }}
-    {{- range $env := (index .Values .collectorName).alloy.extraEnv }}
+    {{- range $env := $collectorValues.alloy.extraEnv }}
       {{- if eq $env.name "GCLOUD_FM_COLLECTOR_ID" }}{{ $hasCollectorIdEnv = true }}{{- end }}
       {{- if eq $env.name "GCLOUD_RW_API_KEY" }}{{ $hasAPIKey = true }}{{- end }}
     {{- end }}

@@ -11,13 +11,27 @@ FEATURE_CHARTS = $(shell ls --color=never charts | grep feature-)
 SCHEMA_MODS_JSON_FILES = $(shell find schema-mods -name "*.json")
 SCHEMA_MODS_JQ_FILES = $(shell find schema-mods -name "*.jq")
 
+ALLOY_OPERATOR_VERSION := $(shell yq '.dependencies[] | select(.name == "alloy-operator") | .version' Chart.yaml)
+collectors/upstream/alloy-values.yaml: charts/alloy-operator-$(ALLOY_OPERATOR_VERSION).tgz
+	tar xzf $< -C collectors/upstream/ --strip-components=1 alloy-operator/alloy-values.yaml
+
+COLLECTOR_VALUES_FILES = $(shell find collectors -name "*-values.yaml" -depth 1 | sort -u)
+COLLECTOR_DOCS_FILES = $(COLLECTOR_VALUES_FILES:collectors/%-values.yaml=./docs/collectors/%.md)
+COLLECTOR_SCHEMA_FILES = $(COLLECTOR_VALUES_FILES:collectors/%-values.yaml=./schema-mods/definitions/%-collector.schema.json)
+
 DESTINATION_VALUES_FILES = $(shell find destinations -name "*-values.yaml" | sort -u)
 DESTINATION_DOCS_FILES = $(DESTINATION_VALUES_FILES:destinations/%-values.yaml=./docs/destinations/%.md)
 DESTINATION_SCHEMA_FILES = $(DESTINATION_VALUES_FILES:destinations/%-values.yaml=./schema-mods/definitions/%-destination.schema.json)
 
 .SECONDEXPANSION:
+docs/collectors/%.md: collectors/%-values.yaml $$(wildcard docs/collectors/.doc_templates/%.gotmpl)
+	docker run --platform linux/amd64 --rm -v $(shell pwd):/src ghcr.io/grafana/helm-docs-and-schema-gen $(shell echo $< | sed 's/collectors\/\([-a-z]*\)-values.yaml/\1/') collector
+
 docs/destinations/%.md: destinations/%-values.yaml $$(wildcard docs/destinations/.doc_templates/%.gotmpl)
 	docker run --platform linux/amd64 --rm -v $(shell pwd):/src ghcr.io/grafana/helm-docs-and-schema-gen $(shell echo $< | sed 's/destinations\/\([-a-z]*\)-values.yaml/\1/') destination
+
+schema-mods/definitions/%-collector.schema.json: collectors/%-values.yaml
+	docker run --platform linux/amd64 --rm -v $(shell pwd):/src ghcr.io/grafana/helm-docs-and-schema-gen $(shell echo $< | sed 's/collectors\/\([-a-z]*\)-values.yaml/\1/') collector
 
 schema-mods/definitions/%-destination.schema.json: destinations/%-values.yaml
 	docker run --platform linux/amd64 --rm -v $(shell pwd):/src ghcr.io/grafana/helm-docs-and-schema-gen $(shell echo $< | sed 's/destinations\/\([-a-z]*\)-values.yaml/\1/') destination
@@ -54,22 +68,7 @@ templates/destinations/_destination_types.tpl: $(DESTINATION_VALUES_FILES)
 	done
 	echo '{{- end -}}' >> $@
 
-vendir.lock.yml: vendir.yml
-ifdef HAS_VENDIR
-	vendir sync
-else
-	docker run --rm --volume $(shell pwd):/src --workdir /src ghcr.io/carvel-dev/docker-image:latest vendir sync
-endif
-
-alloyModules/LICENSE: vendir.yml vendir.lock.yml
-ifdef HAS_VENDIR
-	vendir sync -l
-else
-	docker run --rm --volume $(shell pwd):/src --workdir /src ghcr.io/carvel-dev/docker-image:latest vendir sync -l
-endif
-ALLOY_MODULE_FILES = $(shell find alloyModules -name "*.alloy")
-
-values.schema.json: values.yaml $(DESTINATION_SCHEMA_FILES) $(SCHEMA_MODS_JSON_FILES) $(SCHEMA_MODS_JQ_FILES) schema-mods/destination-list.json
+values.schema.json: values.yaml $(COLLECTOR_SCHEMA_FILES) $(DESTINATION_SCHEMA_FILES) $(SCHEMA_MODS_JSON_FILES) $(SCHEMA_MODS_JQ_FILES) schema-mods/destination-list.json
 	../../scripts/schema-gen.sh .
 
 README.md: README.md.gotmpl values.yaml Chart.yaml
@@ -89,36 +88,31 @@ EXAMPLE_README_FILES = $(EXAMPLE_VALUES_FILES:values.yaml=README.md)
 NON_RENDERED_INTEGRATION_TEST_VALUES_FILES = $(shell find tests/integration -name .no-render | sed 's/.no-render/values.yaml/')
 INTEGRATION_TEST_VALUES_FILES = $(filter-out $(NON_RENDERED_INTEGRATION_TEST_VALUES_FILES),$(shell find tests/integration -name values.yaml))
 INTEGRATION_TEST_OUTPUT_FILES = $(INTEGRATION_TEST_VALUES_FILES:values.yaml=.rendered/output.yaml)
+INTEGRATION_TEST_ALLOY_INSTANCE_FILES = $(foreach file,$(INTEGRATION_TEST_OUTPUT_FILES),$(call alloy_instances, $(file)))
 
 NON_RENDERED_PLATFORM_TEST_VALUES_FILES = $(shell find tests/platform -name .no-render | sed 's/.no-render/values.yaml/')
 PLATFORM_TEST_VALUES_FILES = $(filter-out $(NON_RENDERED_PLATFORM_TEST_VALUES_FILES),$(shell find tests/platform -name values.yaml))
 PLATFORM_TEST_OUTPUT_FILES = $(PLATFORM_TEST_VALUES_FILES:values.yaml=.rendered/output.yaml)
 
 alloy_configs = $(shell \
-	DIR="$(shell dirname $(1))/" yq e 'with_entries(select(.key == "alloy-*")) | select(.[].enabled == true) | to_entries | env(DIR) + .[].key + ".alloy"' $(1) \
+	DIR="$(shell dirname $(1))/" yq e 'with_entries(select(.key == "alloy-*" and .value.enabled == true)) | to_entries | env(DIR) + .[].key + ".alloy"' $(1) \
+)
+alloy_instances = $(shell \
+	DIR="$(shell dirname $(1))/" yq e 'with_entries(select(.key == "alloy-*" and .value.enabled == true)) | to_entries | env(DIR) + .[].key + ".yaml"' $(1) \
 )
 
-%/output.yaml: %/values.yaml Chart.yaml Chart.lock values.yaml values.schema.json templates/destinations/_destination_types.tpl $(DESTINATION_VALUES_FILES) $(CHART_TEMPLATE_FILES) $(CHART_YAML_FILES) alloyModules/LICENSE $(ALLOY_MODULE_FILES)
+%/output.yaml: %/values.yaml Chart.yaml Chart.lock values.yaml values.schema.json templates/destinations/_destination_types.tpl $(DESTINATION_VALUES_FILES) $(CHART_TEMPLATE_FILES) $(CHART_YAML_FILES)
 	helm template $(EXAMPLE_RELEASE_NAME) . -f $< > $@
 
-%/.rendered/output.yaml: %/values.yaml Chart.yaml Chart.lock values.yaml values.schema.json templates/destinations/_destination_types.tpl $(DESTINATION_VALUES_FILES) $(CHART_TEMPLATE_FILES) $(CHART_YAML_FILES) alloyModules/LICENSE $(ALLOY_MODULE_FILES)
+%/.rendered/output.yaml: %/values.yaml Chart.yaml Chart.lock values.yaml values.schema.json templates/destinations/_destination_types.tpl $(DESTINATION_VALUES_FILES) $(CHART_TEMPLATE_FILES) $(CHART_YAML_FILES)
 	mkdir -p $(dir $@)
 	helm template $(EXAMPLE_RELEASE_NAME) . -f $< > $@
 
-%/alloy-logs.alloy: %/output.yaml
-	yq 'select(.kind=="ConfigMap" and .metadata.name=="$(EXAMPLE_RELEASE_NAME)-alloy-logs") | .data["config.alloy"]' $< > $@
+%/alloy-logs.alloy %/alloy-metrics.alloy %/alloy-receiver.alloy %/alloy-singleton.alloy %/alloy-profiles.alloy: %/output.yaml
+	yq 'select(.kind=="ConfigMap" and .metadata.name=="$(EXAMPLE_RELEASE_NAME)-$(basename $(notdir $@))") | .data["config.alloy"]' $< > $@
 
-%/alloy-metrics.alloy: %/output.yaml
-	yq 'select(.kind=="ConfigMap" and .metadata.name=="$(EXAMPLE_RELEASE_NAME)-alloy-metrics") | .data["config.alloy"]' $< > $@
-
-%/alloy-receiver.alloy: %/output.yaml
-	yq 'select(.kind=="ConfigMap" and .metadata.name=="$(EXAMPLE_RELEASE_NAME)-alloy-receiver") | .data["config.alloy"]' $< > $@
-
-%/alloy-singleton.alloy: %/output.yaml
-	yq 'select(.kind=="ConfigMap" and .metadata.name=="$(EXAMPLE_RELEASE_NAME)-alloy-singleton") | .data["config.alloy"]' $< > $@
-
-%/alloy-profiles.alloy: %/output.yaml
-	yq 'select(.kind=="ConfigMap" and .metadata.name=="$(EXAMPLE_RELEASE_NAME)-alloy-profiles") | .data["config.alloy"]' $< > $@
+%/alloy-logs.yaml %/alloy-metrics.yaml %/alloy-receiver.yaml %/alloy-singleton.yaml %/alloy-profiles.yaml: %/output.yaml
+	yq 'select(.kind=="Alloy" and .metadata.name=="$(EXAMPLE_RELEASE_NAME)-$(basename $(notdir $@))") | .' $< > $@
 
 %/README.md: %/values.yaml $$(wildcard %/description.txt)
 	echo '<!--' > $@
@@ -156,7 +150,9 @@ platform-test-checks: $(PLATFORM_TEST_OUTPUT_FILES)
 
 .PHONY: clean
 clean:
-	rm -f README.md values.schema.json templates/destinations/_destination_types.tpl schema-mods/destination-list.json $(DESTINATION_SCHEMA_FILES) $(DESTINATION_DOCS_FILES)
+	rm -f README.md values.schema.json templates/destinations/_destination_types.tpl schema-mods/destination-list.json
+	rm -f $(COLLECTOR_SCHEMA_FILES) $(COLLECTOR_DOCS_FILES)
+	rm -f $(DESTINATION_SCHEMA_FILES) $(DESTINATION_DOCS_FILES)
 	rm -f $(EXAMPLE_OUTPUT_FILES) $(EXAMPLE_ALLOY_FILES) $(EXAMPLE_README_FILES) $(INTEGRATION_TEST_OUTPUT_FILES) $(PLATFORM_TEST_OUTPUT_FILES)
 	set -e && \
 	for chart in $(FEATURE_CHARTS); do \
@@ -171,7 +167,7 @@ build-features:
 
 # Build targets
 .PHONY: build
-build: build-features README.md alloyModules/LICENSE values.schema.json templates/destinations/_destination_types.tpl $(DESTINATION_DOCS_FILES) examples integration-test-checks platform-test-checks
+build: build-features README.md values.schema.json templates/destinations/_destination_types.tpl $(COLLECTOR_DOCS_FILES) $(DESTINATION_DOCS_FILES) examples integration-test-checks platform-test-checks
 
 # Test targets
 .PHONY: test unittest lint-helm lint-configs

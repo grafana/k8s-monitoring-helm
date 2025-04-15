@@ -1,5 +1,6 @@
 {{- define "collectors.extraConfig.alloy" -}}
-  {{- if (index .Values .collectorName).extraConfig }}
-{{ tpl (index .Values .collectorName).extraConfig $ | trim }}
+{{- $collectorValues := include "collector.alloy.values" . | fromYaml }}
+  {{- if $collectorValues.extraConfig }}
+{{ tpl $collectorValues.extraConfig $ | trim }}
   {{- end }}
 {{- end -}}
