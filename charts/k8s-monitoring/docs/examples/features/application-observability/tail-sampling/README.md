@@ -165,7 +165,7 @@ destinations:
     url: http://otlp-gateway.example.com
     metrics: {enabled: true}
     logs: {enabled: true}
-    traces: {enabled: false}  # Disable traces in other destinations as all traces should be sent to the tail-sampler   
+    traces: {enabled: false}  # Disable traces in other destinations as all traces should be sent to the tail-sampler
 
   - name: tail-sampler
     type: otlp
