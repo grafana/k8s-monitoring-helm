@@ -94,11 +94,32 @@ destinations:
       tenantIdFrom: env("LOKI_TENANT_ID")
 ```
 
+#### Collectors
+
+([Documentation](./docs/Collectors.md))
+
+Collectors are the actual kubernetes workloads running alloy containers (deployments/statefulsets/daemonset) dedicated to certain tasks. Logs, metrics and app observability having different collection requirements leads to the need for multiple instances/clusters.
+
+The main collectors are:
+
+*   **alloy-logs** is the logs collector. It is deployed as a daemonset and scrapes workload logs on each node
+*   **alloy-metrics** is a statefulset that scrapes metrics from prometheus sources like cadvisor and kube-state-metrics
+*   **alloy-receiver** is a daemonset to collect metrics sent via HTTP, gRPC, Zipkin, etc
+
+To enable a collector, add a new section to your values file. Ex:
+
+```YAML
+alloy-{collector_name}:
+  enabled: true
+```
+
+**Specific features require specific collector configuration**. For example, the applicationObservability feature requires the alloy-receiver, with specific ports open for select protocols. Check [individual feature documentation](./docs/Features.md) to find out about collector requirements.
+
 #### Features
 
 ([Documentation](./docs/Features.md))
 
-This section is where you define which features you want to enable with this chart.
+This section is where you define which features you want to enable with this chart. Features define what kind of data to collect.
 
 Here is an example of enabling some features:
 
