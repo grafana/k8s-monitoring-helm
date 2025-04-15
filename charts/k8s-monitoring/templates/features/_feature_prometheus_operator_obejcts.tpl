@@ -37,6 +37,8 @@ prometheus_operator_objects "feature" {
 {{- $isTranslating -}}
 {{- end -}}
 
+{{- define "features.prometheusOperatorObjects.collector.values" }}{{- end -}}
+
 {{- define "features.prometheusOperatorObjects.validate" }}
 {{- if .Values.prometheusOperatorObjects.enabled -}}
 {{- $featureName := "Prometheus Operator Objects" }}

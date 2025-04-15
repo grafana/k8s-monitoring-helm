@@ -34,10 +34,4 @@ applicationObservability:
 
 alloy-receiver:
   enabled: true
-  alloy:
-    extraPorts:
-      - name: otlp-http
-        port: 4318
-        targetPort: 4318
-        protocol: TCP
 ```

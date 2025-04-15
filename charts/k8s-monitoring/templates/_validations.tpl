@@ -6,7 +6,13 @@
 
   {{- include "destinations.validate" . -}}
 
-  {{- /* Feature Validations*/}}
+  {{- /* Feature Config Influence */}}
+  {{- $updatedValues := dict }}
+  {{- range $feature := ((include "features.list" .) | fromYamlArray) }}
+    {{- $updatedValues = merge $.Values (include (printf "features.%s.collector.values" $feature) $ | fromYaml) }}
+  {{- end }}
+
+  {{- /* Feature Validations */}}
   {{- include "validations.features_enabled" . }}
   {{- range $feature := ((include "features.list" .) | fromYamlArray) }}
     {{- include (printf "features.%s.validate" $feature) $ }}

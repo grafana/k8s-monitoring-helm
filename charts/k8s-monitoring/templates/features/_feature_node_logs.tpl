@@ -38,6 +38,8 @@ node_logs "feature" {
 {{- $isTranslating -}}
 {{- end -}}
 
+{{- define "features.nodeLogs.collector.values" }}{{- end -}}
+
 {{- define "features.nodeLogs.validate" }}
 {{- if .Values.nodeLogs.enabled -}}
 {{- $featureName := "Kubernetes Node logs" }}

@@ -27,15 +27,20 @@
 {{- end }}
 {{- end }}
 
-{{/* Inputs: Values (all values), name (collector name), feature (feature name), portNumber, portName, portProtocol */}}
-{{- define "collectors.require_extra_port" -}}
-{{- $found := false -}}
+{{/* Inputs: Values (all values), name (collector name), portNumber */}}
+{{- define "collectors.has_extra_port" -}}
+{{- $found := "false" -}}
 {{- range (index .Values .name).alloy.extraPorts -}}
   {{- if eq (int .targetPort) (int $.portNumber) }}
-    {{- $found = true -}}
+    {{- $found = "true" -}}
   {{- end }}
 {{- end }}
-{{- if not $found }}
+{{- $found -}}
+{{- end }}
+
+{{/* Inputs: Values (all values), name (collector name), feature (feature name), portNumber, portName, portProtocol */}}
+{{- define "collectors.require_extra_port" -}}
+{{- if eq (include "collectors.has_extra_port" .) "false" }}
   {{- $msg := list "" }}
   {{- $msg = append $msg (printf "The %s feature requires that port %d to be open on the %s collector." .feature (.portNumber | int) .name ) }}
   {{- $msg = append $msg "" }}

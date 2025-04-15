@@ -82,11 +82,6 @@ alloy-receiver:
         value: https://myproxy.default.svc:8080
       - name: NO_PROXY
         value: kubernetes.default.svc
-    extraPorts:
-      - name: zipkin
-        port: 9411
-        targetPort: 9411
-        protocol: TCP
 alloy-profiles:
   enabled: true
 ```
