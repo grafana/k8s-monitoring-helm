@@ -37,6 +37,8 @@ profiling "feature" {
 {{- $isTranslating -}}
 {{- end -}}
 
+{{- define "features.profiling.collector.values" }}{{- end -}}
+
 {{- define "features.profiling.validate" }}
 {{- if .Values.profiling.enabled -}}
 {{- $featureName := "Profiling" }}

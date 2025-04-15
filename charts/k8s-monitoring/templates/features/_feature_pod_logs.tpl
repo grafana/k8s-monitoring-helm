@@ -41,6 +41,8 @@ pod_logs "feature" {
 {{- $isTranslating -}}
 {{- end -}}
 
+{{- define "features.podLogs.collector.values" }}{{- end -}}
+
 {{- define "features.podLogs.validate" }}
 {{- if .Values.podLogs.enabled -}}
 {{- $featureName := "Kubernetes Pod logs" }}

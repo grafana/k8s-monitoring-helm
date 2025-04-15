@@ -67,6 +67,8 @@
 {{ $extraLogProcessingStages }}
 {{- end }}
 
+{{- define "features.integrations.collector.values" }}{{- end -}}
+
 {{- define "features.integrations.validate" }}
 {{- if eq (include "features.integrations.enabled" .) "true" }}
 {{- $featureName := "Service Integrations" }}
