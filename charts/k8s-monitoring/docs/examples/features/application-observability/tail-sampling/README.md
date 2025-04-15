@@ -165,11 +165,11 @@ destinations:
     url: http://otlp-gateway.example.com
     metrics: {enabled: true}
     logs: {enabled: true}
-    traces: {enabled: false}
+    traces: {enabled: false}  # Disable traces in other destinations as all traces should be sent to the tail-sampler   
 
   - name: tail-sampler
     type: otlp
-    url: tail-sampler-deployment.default.svc.cluster.local:4317 # Update if using a different namespace or deployment name
+    url: tail-sampler-deployment.default.svc.cluster.local:4317  # Update if using a different namespace or deployment name
     protocol: grpc
     tls:
       insecure: true
