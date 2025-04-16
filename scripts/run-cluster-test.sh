@@ -118,17 +118,16 @@ if [ -d "${TEST_DIRECTORY}/deployments" ]; then
   kubectl apply -f ${TEST_DIRECTORY}/deployments
 fi
 
-# Ensure that the test chart has been deployed
+echo "Waiting for Helm releases to be ready"
 FIVE_MINUTES=300
-echo "Waiting for k8s-monitoring-test Helm chart to be ready"
+HELM_RELEASE_COUNT=$(flux get helmreleases --all-namespaces | wc -l)
 for i in $(seq 1 ${FIVE_MINUTES}); do
-  if helm status k8s-monitoring-test 2>&1 | grep "STATUS: deployed" > /dev/null ; then
+  if [ "$(flux get helmreleases --all-namespaces --status-selector ready=true | wc -l)" -ge ${HELM_RELEASE_COUNT} ]; then
     break
   fi
   if [ $i -eq ${FIVE_MINUTES} ]; then
-    echo "k8s-monitoring-test Helm chart failed to deploy"
-    helm status k8s-monitoring-test
-    flux events --for HelmRelease/k8s-monitoring-test --namespace default
+    echo "A Helm release failed to become ready in ${FIVE_MINUTES} minutes"
+    flux get helmreleases --all-namespaces
     exit 1
   fi
   sleep 1
