@@ -15,7 +15,7 @@ fi
 PREVIOUS_PATCH_RELEASE="${major}.${minor}.$((patch - 1))"
 
 echo "Installing version ${PREVIOUS_PATCH_RELEASE}..."
-helm upgrade --install k8smon --version "${PREVIOUS_PATCH_RELEASE}" grafana/k8s-monitoring -f "${TEST_DIR}/values.yaml" --set "cluster.name=${CLUSTER_NAME}" --set "clusterMetrics.opencost.opencost.exporter.defaultClusterId=${CLUSTER_NAME}" --wait
+helm upgrade --install k8smon --version "${PREVIOUS_PATCH_RELEASE}" --repo https://grafana.github.io/helm-charts k8s-monitoring -f "${TEST_DIR}/values.yaml" --set "cluster.name=${CLUSTER_NAME}" --set "clusterMetrics.opencost.opencost.exporter.defaultClusterId=${CLUSTER_NAME}" --wait
 
 echo "Testing and waiting for data from the previous version..."
 helm test k8s-monitoring-test --logs
