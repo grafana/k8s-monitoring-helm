@@ -53,26 +53,35 @@ jobs:
               exit 0
           fi
           
-          tests=$(find . -name values.yaml -exec dirname {} \;)
-          # If manually triggered, run all tests
-          
-          # If the only changes are within a test directory, only run those tests
-          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
-            echo "Running all tests."
+          all_tests=$(find . -name values.yaml -exec dirname {} \; | sort)
 
-          # If pull request, check if the only changes are within a test directory
+          # Default: run all tests
+          tests="${all_tests}"
+          
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "Manual triggered - running all tests."
+
+          elif [ "${{ github.event_name }}" = "push" ]; then
+            echo "Push to main - running all tests."
+
           elif [ "${{ github.event_name }}" == "pull_request" ]; then
-            # Check if the only changes are within a test directory
-            changed_files=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }})
-            if echo "${changed_files}" | grep -qv '^charts/k8s-monitoring/tests/integration/'; then
-                echo "Changes outside of test directories detected, running all tests."
+            # Fetch base branch so we can diff against it
+            git fetch origin ${{ github.base_ref }}
+          
+            changed_files=$(git diff --name-only origin/${{ github.base_ref }}...HEAD)
+
+            # Check if any changed files are outside of the integration test directory
+            if echo "$changed_files" | grep -qv '^charts/k8s-monitoring/tests/integration/'; then
+              echo "PR contains changes outside of integration test directory - running all tests."
             else
-                echo "Only changes within test directories detected, running those tests."
-                tests=$(echo "${tests}" | grep -E "$(echo "${changed_files}" | sed 's|^charts/k8s-monitoring/tests/integration/||' | sed 's|/values.yaml$||' | tr '\n' '|')" | sed 's/|$//')
+              echo "PR only contains changes inside integration test directory - running only changed tests."
+              # Extract test dirs from changed values.yaml
+              tests=$(echo "$changed_files" \
+                | grep '^charts/k8s-monitoring/tests/integration/' \
+                | sed 's|^charts/k8s-monitoring/tests/integration/||' \
+                | awk -F/ '{print $1}' \
+                | sort -u)
             fi
-        
-          elif [ "${{ github.event_name }}" == "push" ]; then
-            echo "Running all tests."
           fi
 
           echo "tests=$(echo "${tests}" | jq --raw-input --slurp --compact-output 'split("\n") | map(select(. != ""))')" >> "${GITHUB_OUTPUT}"
