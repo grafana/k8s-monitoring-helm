@@ -26,8 +26,8 @@ destinations:
         endpointParams:
           grant_type: ["client_credentials"]
           client_assertion_type: ["urn:ietf:params:oauth:client-assertion-type:jwt-bearer"]
-    logs: {enabled: true}
     metrics: {enabled: true}
+    logs: {enabled: true}
     traces: {enabled: true}
 
 clusterMetrics:

@@ -73,9 +73,9 @@ This defines the options for defining a destination for OpenTelemetry data that 
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| logs.enabled | string | `true` | Whether to send logs to the OTLP destination. |
-| metrics.enabled | string | `true` | Whether to send metrics to the OTLP destination. |
-| traces.enabled | string | `true` | Whether to send traces to the OTLP destination. |
+| logs.enabled | bool | `true` | Whether to send logs to the OTLP destination. |
+| metrics.enabled | bool | `true` | Whether to send metrics to the OTLP destination. |
+| traces.enabled | bool | `true` | Whether to send traces to the OTLP destination. |
 
 ### Attributes Processor
 

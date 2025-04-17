@@ -25,6 +25,9 @@ destinations:
     type: otlp
     protocol: http
     url: http://tempo.tempo.svc:443/otlp
+    metrics: {enabled: false}
+    logs: {enabled: false}
+    traces: {enabled: true}
   - name: pyroscope
     type: pyroscope
     url: http://pyroscope.pyroscope.svc:4040

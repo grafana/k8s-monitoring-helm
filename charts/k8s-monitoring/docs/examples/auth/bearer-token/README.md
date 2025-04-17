@@ -40,6 +40,9 @@ destinations:
       create: false
       name: my-tempo-secret
       namespace: tempo
+    metrics: {enabled: false}
+    logs: {enabled: false}
+    traces: {enabled: true}
 
 applicationObservability:
   enabled: true

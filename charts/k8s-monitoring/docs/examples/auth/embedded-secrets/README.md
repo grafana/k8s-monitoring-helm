@@ -45,6 +45,9 @@ destinations:
       password: my-password
     secret:
       embed: true
+    metrics: {enabled: false}
+    logs: {enabled: false}
+    traces: {enabled: true}
 
 applicationObservability:
   enabled: true

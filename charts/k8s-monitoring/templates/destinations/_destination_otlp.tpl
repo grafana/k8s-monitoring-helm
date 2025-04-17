@@ -1,6 +1,6 @@
 {{- define "destinations.otlp.alloy" }}
 {{- $defaultValues := "destinations/otlp-values.yaml" | .Files.Get | fromYaml }}
-{{- with merge .destination $defaultValues }}
+{{- with mergeOverwrite $defaultValues .destination }}
 {{- if eq (include "destinations.otlp.supports_metrics" .) "true" }}
 otelcol.receiver.prometheus {{ include "helper.alloy_name" .name | quote }} {
   output {
@@ -84,9 +84,15 @@ otelcol.processor.attributes {{ include "helper.alloy_name" .name | quote }} {
   }
 {{- end }}
   output {
+{{- if ne .metrics.enabled false }}
     metrics = [otelcol.processor.transform.{{ include "helper.alloy_name" .name }}.input]
+{{- end }}
+{{- if ne .logs.enabled false }}
     logs = [otelcol.processor.transform.{{ include "helper.alloy_name" .name }}.input]
+{{- end }}
+{{- if ne .traces.enabled false }}
     traces = [otelcol.processor.transform.{{ include "helper.alloy_name" .name }}.input]
+{{- end }}
   }
 }
 
@@ -124,9 +130,11 @@ otelcol.processor.transform {{ include "helper.alloy_name" .name | quote }} {
 {{- range $label := .clusterLabels }}
       `set(attributes[{{ $label | quote }}], {{ $.Values.cluster.name | quote }})`,
 {{- end }}
-{{- range $datapointAttribute, $resourceAttribute := .processors.transform.logs.logToResource }}
+{{- range $datapointAttribute, $resourceAttribute := .processors.transform.metrics.datapointToResource }}
+  {{- if $resourceAttribute }}
       `set(resource.attributes[{{ $resourceAttribute | quote }}], attributes[{{ $datapointAttribute | quote }}] ) where resource.attributes[{{ $resourceAttribute | quote }}] == nil and attributes[{{ $datapointAttribute | quote }}] != nil`,
       `delete_key(attributes, {{ $datapointAttribute | quote }}) where attributes[{{ $datapointAttribute | quote }}] == resource.attributes[{{ $resourceAttribute | quote }}]`,
+  {{- end }}
 {{- end }}
 {{- if .processors.transform.metrics.datapoint }}
 {{- range $transform := .processors.transform.metrics.datapoint }}
@@ -158,8 +166,10 @@ otelcol.processor.transform {{ include "helper.alloy_name" .name | quote }} {
       `delete_key(attributes, "loki.attribute.labels")`,
       `delete_key(attributes, "loki.resource.labels")`,
 {{- range $logAttribute, $resourceAttribute := .processors.transform.logs.logToResource }}
+  {{- if $resourceAttribute }}
       `set(resource.attributes[{{ $resourceAttribute | quote }}], attributes[{{ $logAttribute | quote }}] ) where resource.attributes[{{ $resourceAttribute | quote }}] == nil and attributes[{{ $logAttribute | quote }}] != nil`,
       `delete_key(attributes, {{ $logAttribute | quote }}) where attributes[{{ $logAttribute | quote }}] == resource.attributes[{{ $resourceAttribute | quote }}]`,
+  {{- end }}
 {{- end }}
 {{- if .processors.transform.logs.log }}
 {{- range $transform := .processors.transform.logs.log }}
