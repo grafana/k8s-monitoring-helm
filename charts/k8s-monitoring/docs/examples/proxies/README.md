@@ -39,6 +39,9 @@ destinations:
     url: http://tempo.tempo.svc:4317
     tls:
       insecure_skip_verify: true
+    metrics: {enabled: false}
+    logs: {enabled: false}
+    traces: {enabled: true}
 
   - name: pyroscope
     type: pyroscope
