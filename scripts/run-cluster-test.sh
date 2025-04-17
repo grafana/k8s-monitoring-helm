@@ -28,17 +28,19 @@ usage() {
 
 CREATE_CLUSTER=${CREATE_CLUSTER:-true}
 DELETE_CLUSTER=${DELETE_CLUSTER:-false}
-TEST_DIRECTORY=$1
-if [ -z "${TEST_DIRECTORY}" ]; then
+
+if [ -z "${1}" ]; then
   echo "Test directory not defined!"
   usage
   exit 1
 fi
+TEST_DIRECTORY=$(realpath $1)
 if [ ! -f "${TEST_DIRECTORY}/values.yaml" ]; then
   echo "Values file (${TEST_DIRECTORY}/values.yaml) not found! This is a required file."
   usage
   exit 1
 fi
+CHART_NAME=$(echo "${TEST_DIRECTORY#"${PARENT_DIR}"/}" | sed -E 's|charts/([^/]+)/tests/.*|\1|')
 
 set -eo pipefail  # Exit immediately if a command fails.
 
@@ -139,8 +141,8 @@ if [ -f "${TEST_DIRECTORY}/deploy.sh" ]; then
   echo "Running ${TEST_DIRECTORY}/deploy.sh"
   ${TEST_DIRECTORY}/deploy.sh
 else
-  echo helm upgrade --install k8smon ${PARENT_DIR}/charts/k8s-monitoring -f ${TEST_DIRECTORY}/values.yaml --set "cluster.name=${clusterName}" --set "clusterMetrics.opencost.opencost.exporter.defaultClusterId=${clusterName}" --wait
-  helm upgrade --install k8smon ${PARENT_DIR}/charts/k8s-monitoring -f ${TEST_DIRECTORY}/values.yaml --set "cluster.name=${clusterName}" --set "clusterMetrics.opencost.opencost.exporter.defaultClusterId=${clusterName}" --wait
+  echo helm upgrade --install k8smon "${PARENT_DIR}/charts/${CHART_NAME}" -f "${TEST_DIRECTORY}/values.yaml" --set "cluster.name=${clusterName}" --set "clusterMetrics.opencost.opencost.exporter.defaultClusterId=${clusterName}" --wait
+  helm upgrade --install k8smon "${PARENT_DIR}/charts/${CHART_NAME}" -f "${TEST_DIRECTORY}/values.yaml" --set "cluster.name=${clusterName}" --set "clusterMetrics.opencost.opencost.exporter.defaultClusterId=${clusterName}" --wait
 fi
 
 # Run tests

@@ -1,0 +1,74 @@
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: GitRepository
+metadata:
+  name: k8s-monitoring-test
+spec:
+  interval: 1m
+  url: https://github.com/grafana/k8s-monitoring-helm
+  ref:
+    branch: main
+  ignore: |
+    /*
+    !/charts/k8s-monitoring-test
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: k8s-monitoring-test
+spec:
+  interval: 1m
+  chart:
+    spec:
+      chart: charts/k8s-monitoring-test
+      sourceRef:
+        kind: GitRepository
+        name: k8s-monitoring-test
+      interval: 1m
+  dependsOn:
+    - name: loki
+      namespace: loki
+    - name: prometheus
+      namespace: prometheus
+    - name: pyroscope
+      namespace: pyroscope
+  values:
+    tests:
+      - env:
+          CLUSTER: ci-test-cluster
+          PROMETHEUS_URL: https://prometheus-server.prometheus.svc:9090/api/v1/query
+          PROMETHEUS_USER: promuser
+          PROMETHEUS_PASS: prometheuspassword
+          LOKI_URL: http://loki.loki.svc:3100/loki/api/v1/query
+          LOKI_TENANTID: 1
+          LOKI_USER: loki
+          LOKI_PASS: lokipassword
+          PROFILECLI_URL: http://pyroscope.pyroscope.svc:4040
+        queries:
+          # Check that the external label is properly being set
+          - query: count(kube_node_info{cluster="$CLUSTER", color="red"})
+            type: promql
+            expect:
+              value: 2
+          # Check that the metrics exclusion list is working
+          - query: kube_pod_info{cluster="$CLUSTER"}
+            type: promql
+            expect:
+              count: 0
+          # Check for cluster events
+          - query: count_over_time({cluster="$CLUSTER", job="integrations/kubernetes/eventhandler"}[1h])
+            type: logql
+          # Check for pod logs
+          - query: count_over_time({cluster="$CLUSTER", job!="integrations/kubernetes/eventhandler"}[1h])
+            type: logql
+          
+          # Check for profiles
+          - query: '{cluster="$CLUSTER"}'
+            type: pyroql
+          
+          # DPM check
+          - query: avg(count_over_time(scrape_samples_scraped{cluster="$CLUSTER"}[1m]))
+            type: promql
+            expect:
+              value: 1
+              operator: ==
