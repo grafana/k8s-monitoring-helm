@@ -18,7 +18,6 @@ externalServices:
     secret:
       create: false
       name: combined
-      namespace: monitoring
     tls:
       insecure_skip_verify: true
   loki:
@@ -30,7 +29,6 @@ externalServices:
     secret:
       create: false
       name: combined
-      namespace: monitoring
 
 metrics:
   serviceMonitors:
@@ -89,52 +87,6 @@ logs:
       all_pods = discovery.relabel.pod_logs.output
       logs_destination = loki.process.logs_service.receiver
     }
-
-test:
-  attempts: 20
-  extraQueries:
-    # Check for Node label metrics
-    - query: "kube_node_labels{cluster=\"ci-integrations-cluster\"}"
-      type: promql
-
-    # Check for Kepler metrics
-    - query: "kepler_container_joules_total{cluster=\"ci-integrations-cluster\"}"
-      type: promql
-
-    # Check for Beyla metrics
-    - query: "beyla_internal_build_info{cluster=\"ci-integrations-cluster\"}"
-      type: promql
-
-    # Check for CertManager metrics, discovered by service annotations
-    - query: "certmanager_clock_time_seconds{cluster=\"ci-integrations-cluster\", job=\"integrations/cert-manager\"}"
-      type: promql
-
-    # Check for Prometheus metrics, discovered by https pod annotations
-    - query: "prometheus_build_info{job=\"integrations/prometheus\"}"
-      type: promql
-
-    # Check for MySQL metrics, discovered by the module loaded above in .extraConfig
-    - query: "mysqld_exporter_build_info{cluster=\"ci-integrations-cluster\"}"
-      type: promql
-
-    # Check for MySQL logs, discovered by the module loaded above in .logs.extraConfig
-    - query: "count_over_time({cluster=\"ci-integrations-cluster\", job=\"integrations/mysql\"}[1h])"
-      type: logql
-
-    # Cluster events still work, too
-    - query: "count_over_time({cluster=\"ci-integrations-cluster\", job=\"integrations/kubernetes/eventhandler\"}[1h])"
-      type: logql
-
-    # Regular pod logs still work, too (checking the Loki pod <namespace>/<pod_name>)
-    - query: "count_over_time({cluster=\"ci-integrations-cluster\", job=\"loki/loki\"}[1h])"
-      type: logql
-
-    # DPM check
-    - query: "avg(count_over_time(scrape_samples_scraped{cluster=\"ci-integrations-cluster\"}[1m]))"
-      type: promql
-      expect:
-        value: 1
-        operator: ==
 
 opencost:
   enabled: false

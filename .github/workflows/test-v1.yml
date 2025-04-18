@@ -104,106 +104,58 @@ jobs:
         run: make test
         working-directory: charts/k8s-monitoring-v1
 
-  test-chart:
+  list-tests:
+    name: List tests
     runs-on: ubuntu-latest
+    outputs:
+      tests: ${{ steps.list_tests.outputs.tests }}
     steps:
-      - name: Checkout
+      - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+
+      - name: List tests
+        id: list_tests
+        working-directory: charts/k8s-monitoring-v1/tests/integration
+        run: |
+          # if "integration-test-skip" is set, return an empty list
+          # All labels on this PR
+          labels='${{ toJson(github.event.pull_request.labels.*.name) }}'
+          if echo "${labels}" | jq --exit-status '. | any(. == "integration-test-skip")' > /dev/null; then
+              echo "\"integration-test-skip\" label is set, skipping integration tests."
+              echo "tests=[]" >> "${GITHUB_OUTPUT}"
+              exit 0
+          fi
+
+          tests=$(find . -name values.yaml -exec dirname {} \;)
+          echo "Tests: ${tests}"
+          echo "tests=$(echo "${tests}" | jq --raw-input --slurp --compact-output 'split("\n") | map(select(. != ""))')" >> "${GITHUB_OUTPUT}"
+
+  run-tests:
+    name: Integration Test
+    needs: list-tests
+    runs-on: ubuntu-latest
+    if: needs.list-tests.outputs.tests != '[]'
+    strategy:
+      matrix:
+        test: ${{ fromJson(needs.list-tests.outputs.tests) }}
+      fail-fast: false
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
       - name: Set up Helm
         uses: azure/setup-helm@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.9'
-          check-latest: true
-
-      - name: Set up chart-testing
-        uses: helm/chart-testing-action@v2
-
-      - name: List changed charts
-        id: list-changed
-        run: |
-          latestRelease=$(git describe --abbrev=0 --tags)
-          changed=$(ct list-changed --config "${CT_CONFIGFILE}" --since "${latestRelease}")
-          if [[ -n "$changed" ]]; then
-            echo "changed=true" >> "${GITHUB_OUTPUT}"
-          fi
-
-      - name: Create kind cluster
+      - name: Setup Kind CLI
         uses: helm/kind-action@v1
-        if: (steps.list-changed.outputs.changed == 'true') || (contains(github.event.pull_request.labels.*.name, 'full_test_required'))
         with:
-          config: "${{ github.workspace }}/.github/configs/cluster-config.yaml"
+          install_only: true
 
-      - name: Create Certs and Credentials
-        if: (steps.list-changed.outputs.changed == 'true') || (contains(github.event.pull_request.labels.*.name, 'full_test_required'))
-        run: |
-          kubectl apply -f "${SECRETGEN_CONTROLLER_MANIFEST}"
-          kubectl apply -f "${CERTIFICATES_MANIFEST}"
-          kubectl apply -f "${CREDENTIALS}"
+      - name: Setup Flux CLI
+        uses: fluxcd/flux2/action@main
 
-      - name: Set up Helm repositories
-        if: (steps.list-changed.outputs.changed == 'true') || (contains(github.event.pull_request.labels.*.name, 'full_test_required'))
-        run: |
-          helm repo add grafana https://grafana.github.io/helm-charts
-          helm repo add jetstack https://charts.jetstack.io
-          helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
-          helm repo update
-
-      - name: Deploy Services for Test Data
-        if: (steps.list-changed.outputs.changed == 'true') || (contains(github.event.pull_request.labels.*.name, 'full_test_required'))
-        run: |
-          # MySQL for integration testing
-          helm install mysql oci://registry-1.docker.io/bitnamicharts/mysql -f "${MYSQL_VALUES}" -n mysql --create-namespace --wait
-          kubectl apply -f "${MYSQL_CONFIG_MANIFEST}"
-
-          # Cert Manager for integration testing (service annotations)
-          helm install cert-manager jetstack/cert-manager -f "${CERT_MANAGER_VALUES}" -n cert-manager --create-namespace --wait
-
-          # This alloy instance is only used for generating metrics, logs, and traces that'll get
-          # sent to the K8s Monitoring Alloy to test ingesting MLT from receivers.
-          kubectl apply -f "${GRAFANA_ALLOY_RECEIVER_SERVICE}"
-          helm install alloy grafana/alloy -f "${GRAFANA_ALLOY_VALUES}" -n alloy --create-namespace --wait
-
-          # This prometheus instance is used pod annotation testing with https
-          helm install prometheus-workload prometheus-community/prometheus --version ^25 -f "${PROMETHEUS_WORKLOAD_VALUES}" -n prometheus --create-namespace --timeout 10m --wait
-
-          # Deploy the Prometheus Operator CRDs, since we want to deploy Loki with a ServiceMonitor later
-          helm install prom-crds prometheus-community/prometheus-operator-crds --wait
-
-      - name: Deploy Prometheus
-        if: (steps.list-changed.outputs.changed == 'true') || (contains(github.event.pull_request.labels.*.name, 'full_test_required'))
-        run: |
-          helm install prometheus prometheus-community/prometheus --version ^25 -f "${PROMETHEUS_VALUES}" -n prometheus --create-namespace --timeout 10m --wait
-
-      - name: Deploy Loki
-        if: (steps.list-changed.outputs.changed == 'true') || (contains(github.event.pull_request.labels.*.name, 'full_test_required'))
-        run: |
-          helm install loki grafana/loki -f "${LOKI_VALUES}" -n loki --create-namespace --wait
-          helm install loki-otlp grafana/alloy -f "${GRAFANA_ALLOY_LOKI_OTLP_VALUES}" -n loki --wait
-
-      - name: Deploy Tempo
-        if: (steps.list-changed.outputs.changed == 'true') || (contains(github.event.pull_request.labels.*.name, 'full_test_required'))
-        run: |
-          helm install tempo grafana/tempo -n tempo --create-namespace --wait
-
-      - name: Deploy Pyroscope
-        if: (steps.list-changed.outputs.changed == 'true') || (contains(github.event.pull_request.labels.*.name, 'full_test_required'))
-        run: |
-          helm install pyroscope grafana/pyroscope -f "${PYROSCOPE_VALUES}" -n pyroscope --create-namespace --wait
-
-      - name: Deploy Grafana
-        if: (steps.list-changed.outputs.changed == 'true') || (contains(github.event.pull_request.labels.*.name, 'full_test_required'))
-        run: |
-          helm install grafana grafana/grafana -f "${GRAFANA_VALUES}" -n grafana --create-namespace --wait
-          kubectl apply -f "${PODLOGS_OBJECTS}"
-
-      - name: Test chart
-        if: (steps.list-changed.outputs.changed == 'true') || (contains(github.event.pull_request.labels.*.name, 'full_test_required'))
-        run: |
-          latestRelease=$(git describe --abbrev=0 --tags)
-          ct install --config "${CT_CONFIGFILE}" --since "${latestRelease}" --helm-extra-args "--timeout 10m" --charts charts/k8s-monitoring-v1
+      - name: Run test
+        run: ./scripts/run-cluster-test.sh "charts/k8s-monitoring-v1/tests/integration/${{ matrix.test }}"
+        env:
+          CREATE_CLUSTER: "true"
+          DELETE_CLUSTER: "true"
