@@ -1,0 +1,138 @@
+---
+# This values file will test the following features:
+# * Sending metrics, logs, and traces via OTLP HTTP
+# * Access kubelet and cadvisor metrics using the proxy
+# * Pod logs gathered via K8s API and PodLogs objects
+# * Filtering pod logs by namespace
+# * Custom test queries, including LogQL and TraceQL queries
+#
+cluster:
+  name: ci-test-cluster-2
+
+externalServices:
+  prometheus:
+    host: http://prometheus-server.prometheus.svc:9090
+    basicAuth:
+      username: promuser
+      password: prometheuspassword
+    queryEndpoint: /api/v1/query
+    writeEndpoint: /api/v1/otlp
+    protocol: otlphttp
+    tls:
+      insecure_skip_verify: true
+    externalLabels:
+      color: blue
+    externalLabelsFrom:
+      magic_word: env("MAGIC_WORD")
+  loki:
+    host: http://loki-otlp-interface.loki.svc:4318
+    tenantId: 1
+    protocol: otlphttp
+    writeEndpoint: /
+    basicAuth:
+      username: loki
+      password: lokipassword
+  tempo:
+    host: http://tempo.tempo.svc:4318
+    authMode: none
+    protocol: otlphttp
+    tlsOptions: |-
+      insecure             = true
+      insecure_skip_verify = true
+
+metrics:
+  kube-state-metrics:
+    metricsTuning: {includeMetrics: [scrape_samples_scraped]}
+  kubelet:
+    nodeAddressFormat: proxy
+    metricsTuning: {includeMetrics: [scrape_samples_scraped]}
+  cadvisor:
+    nodeAddressFormat: proxy
+    metricsTuning: {includeMetrics: [scrape_samples_scraped]}
+
+  cost:
+    enabled: false
+
+logs:
+  pod_logs:
+    gatherMethod: api
+    namespaces:
+      - default
+      - loki
+      - prometheus
+      - tempo
+  cluster_events:
+    extraStageBlocks: |
+      stage.static_labels {
+        values = {
+          color = "red",
+        }
+      }
+  podLogsObjects:
+    enabled: true
+    namespaces: [grafana]
+    extraStageBlocks: |
+      stage.static_labels {
+        values = {
+          source = "podlogs_object",
+        }
+      }
+  receiver:
+    transforms:
+      log:
+        - set(resource.attributes["service.name"], attributes["job"])
+
+traces:
+  enabled: true
+
+receivers:
+  prometheus:
+    enabled: true
+
+extraConfig: |-
+  tracing {
+    sampling_fraction = 0.1
+    write_to = [otelcol.processor.k8sattributes.default.input]
+  }
+
+opencost:
+  enabled: false
+
+alloy:
+  alloy:
+    extraEnv:
+      - name: MAGIC_WORD
+        value: abracadabra
+  controller:
+    replicas: 1
+    podLabels:
+      capabilities: telemetry-receiver
+
+alloy-logs:
+  alloy:
+    clustering: {enabled: true}
+    mounts:
+      varlog: false
+  controller:
+    replicas: 2
+    type: deployment
+  crds:
+    create: true
+
+# Prometheus Operator CRDs are pre-installed in the CI environment
+prometheus-operator-crds:
+  enabled: false
+
+extraObjects:
+  - apiVersion: monitoring.grafana.com/v1alpha2
+    kind: PodLogs
+    metadata:
+      name: test-podlogs-object
+      namespace: grafana
+    spec:
+      namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: grafana
+      selector:
+        matchLabels:
+          app.kubernetes.io/name: grafana
