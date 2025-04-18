@@ -1,13 +1,17 @@
 {{ define "validations.platform" -}}
+  {{- $platform := "" }}
   {{- if (.Capabilities.APIVersions.Has "security.openshift.io/v1/SecurityContextConstraints") }}
+    {{- $platform = "openshift" }}
     {{- include "validations.platform.openshift" . }}
   {{- end }}
 
   {{- range $node := (lookup "v1" "Node" "" "").items }}
-    {{- range $label, $value := $node.metadata.labels }}
-      {{- if regexMatch "kubernetes.azure.com.*" $label }}
-        {{- include "validations.platform.aks" $ }}
-        {{- break }}
+    {{- if eq $platform "" }}
+      {{- range $label, $value := $node.metadata.labels }}
+        {{- if regexMatch "kubernetes.azure.com.*" $label }}
+          {{- $platform = "aks" }}
+          {{- include "validations.platform.aks" $ }}
+        {{- end }}
       {{- end }}
     {{- end }}
   {{- end }}
