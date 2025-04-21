@@ -20,6 +20,32 @@ destinations:
     extraLabels:
       destination: prometheus-basicauth
 
+  - name: prometheus-basicauth-external-secret-1
+    type: prometheus
+    url: http://nginx-auth-gateway.default.svc/metrics/basic/api/v1/write
+    auth:
+      type: basic
+    secret:
+      create: false
+      name: credentials
+      namespace: default
+    extraLabels:
+      destination: prometheus-basicauth-external-secret-1
+
+  - name: prometheus-basicauth-external-secret-2
+    type: prometheus
+    url: http://nginx-auth-gateway.default.svc/metrics/basic/api/v1/write
+    auth:
+      type: basic
+      usernameKey: prometheusUsername
+      passwordKey: prometheusPassword
+    secret:
+      create: false
+      name: credentials
+      namespace: default
+    extraLabels:
+      destination: prometheus-basicauth-external-secret-2
+
   - name: prometheus-bearer-token
     type: prometheus
     url: http://nginx-auth-gateway.default.svc/metrics/bearer/api/v1/write
@@ -98,6 +124,21 @@ destinations:
     extraLabels:
       destination: loki-basicauth
 
+  - name: loki-basicauth-external-secret
+    type: loki
+    url: http://nginx-auth-gateway.default.svc/logs/basic/loki/api/v1/push
+    tenantIdKey: lokiTenantId
+    auth:
+      type: basic
+      usernameKey: lokiUsername
+      passwordKey: lokiPassword
+    secret:
+      create: false
+      name: credentials
+      namespace: default
+    extraLabels:
+      destination: loki-basicauth-external-secret
+
   - name: loki-bearer-token
     type: loki
     url: http://nginx-auth-gateway.default.svc/logs/bearer/loki/api/v1/push
@@ -164,7 +205,15 @@ destinations:
 
 clusterMetrics:
   enabled: true
-  destinations: [prometheus-noauth, prometheus-basicauth, prometheus-bearer-token, prometheus-otlp-noauth, prometheus-otlp-basicauth, prometheus-otlp-bearer-token]
+  destinations:
+    - prometheus-noauth
+    - prometheus-basicauth
+    - prometheus-basicauth-external-secret-1
+    - prometheus-basicauth-external-secret-2
+    - prometheus-bearer-token
+    - prometheus-otlp-noauth
+    - prometheus-otlp-basicauth
+    - prometheus-otlp-bearer-token
   kubelet:
     metricsTuning:
       includeMetrics: [kubernetes_build_info]
@@ -176,7 +225,11 @@ clusterMetrics:
 
 podLogs:
   enabled: true
-  destinations: [loki-noauth, loki-basicauth, loki-bearer-token]
+  destinations:
+    - loki-noauth
+    - loki-basicauth
+    - loki-basicauth-external-secret
+    - loki-bearer-token
   namespaces: ["default"]
 
 alloy-metrics:

@@ -42,6 +42,10 @@ spec:
             type: promql
           - query: kubernetes_build_info{cluster="$CLUSTER", destination="prometheus-basicauth"}
             type: promql
+          - query: kubernetes_build_info{cluster="$CLUSTER", destination="prometheus-basicauth-external-secret-1"}
+            type: promql
+          - query: kubernetes_build_info{cluster="$CLUSTER", destination="prometheus-basicauth-external-secret-2"}
+            type: promql
           - query: kubernetes_build_info{cluster="$CLUSTER", destination="prometheus-bearer-token"}
             type: promql
           - query: kubernetes_build_info{cluster="$CLUSTER", destination="prometheus-otlp-noauth"}
@@ -54,6 +58,8 @@ spec:
           - query: count_over_time({cluster="$CLUSTER", destination="loki-noauth", job!="integrations/kubernetes/eventhandler"}[1h])
             type: logql
           - query: count_over_time({cluster="$CLUSTER", destination="loki-basicauth", job!="integrations/kubernetes/eventhandler"}[1h])
+            type: logql
+          - query: count_over_time({cluster="$CLUSTER", destination="loki-basicauth-external-secret", job!="integrations/kubernetes/eventhandler"}[1h])
             type: logql
           - query: count_over_time({cluster="$CLUSTER", destination="loki-bearer-token", job!="integrations/kubernetes/eventhandler"}[1h])
             type: logql

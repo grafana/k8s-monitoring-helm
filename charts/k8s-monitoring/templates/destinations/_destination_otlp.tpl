@@ -1,6 +1,5 @@
 {{- define "destinations.otlp.alloy" }}
-{{- $defaultValues := "destinations/otlp-values.yaml" | .Files.Get | fromYaml }}
-{{- with mergeOverwrite $defaultValues .destination }}
+{{- with .destination }}
 {{- if eq (include "destinations.otlp.supports_metrics" .) "true" }}
 otelcol.receiver.prometheus {{ include "helper.alloy_name" .name | quote }} {
   output {

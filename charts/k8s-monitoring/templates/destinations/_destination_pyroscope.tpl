@@ -1,6 +1,5 @@
 {{- define "destinations.pyroscope.alloy" }}
-{{- $defaultValues := "destinations/pyroscope-values.yaml" | .Files.Get | fromYaml }}
-{{- with mergeOverwrite $defaultValues .destination }}
+{{- with .destination }}
 pyroscope.write {{ include "helper.alloy_name" .name | quote }} {
   endpoint {
 {{- if .urlFrom }} 
