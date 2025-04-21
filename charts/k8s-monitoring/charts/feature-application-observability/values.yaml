@@ -9,17 +9,45 @@ fullnameOverride: ""
 
 receivers:
   otlp:
-    # -- The OTLP gRPC receiver configuration.
-    # @section -- Receivers: OTLP
+    # The OTLP gRPC receiver configuration.
     grpc:
+      # -- Accept application data over OTLP gRPC.
+      # @section -- Receivers: OTLP
       enabled: false
+
+      # -- The port to listen on for OTLP gRPC requests.
+      # @section -- Receivers: OTLP
       port: 4317
 
-    # -- The OTLP HTTP receiver configuration.
-    # @section -- Receivers: OTLP
+      # -- Maximum size of messages the gRPC server will accept.
+      # @section -- Receivers: OTLP
+      maxReceivedMessageSize: 4MiB
+
+      # -- Limit the number of concurrent streaming gRPC calls. 0 means no limit.
+      # @section -- Receivers: OTLP
+      maxConcurrentStreams: 0
+
+      # -- Size of the read buffer the gRPC server will use for reading from clients.
+      # @section -- Receivers: OTLP
+      readBufferSize: 512KiB
+
+      # -- Size of the write buffer the gRPC server will use for writing to clients.
+      # @section -- Receivers: OTLP
+      writeBufferSize: 32KiB
+
+    # The OTLP HTTP receiver configuration.
     http:
+      # -- Accept application data over OTLP HTTP.
+      # @section -- Receivers: OTLP
       enabled: false
+
+      # -- The port to listen on for OTLP HTTP requests.
+      # @section -- Receivers: OTLP
       port: 4318
+
+      # -- Maximum request body size the server will allow.
+      # @section -- Receivers: OTLP
+      maxRequestBodySize: 20MiB
 
     # -- Whether to include high-cardinality debug metrics.
     # @section -- Receivers: OTLP
