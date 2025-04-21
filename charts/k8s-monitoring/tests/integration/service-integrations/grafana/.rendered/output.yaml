@@ -88,13 +88,13 @@ metadata:
   name: k8smon-windows-exporter
   namespace: default
   labels:
-    helm.sh/chart: windows-exporter-0.9.2
+    helm.sh/chart: windows-exporter-0.10.0
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: windows-exporter
     app.kubernetes.io/name: windows-exporter
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "0.30.5"
+    app.kubernetes.io/version: "0.30.6"
     release: k8smon
 ---
 # Source: k8s-monitoring/templates/destination_secret.yaml
@@ -127,13 +127,13 @@ metadata:
   name: k8smon-windows-exporter
   namespace: default
   labels:
-    helm.sh/chart: windows-exporter-0.9.2
+    helm.sh/chart: windows-exporter-0.10.0
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: windows-exporter
     app.kubernetes.io/name: windows-exporter
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "0.30.5"
+    app.kubernetes.io/version: "0.30.6"
     release: k8smon
 data:
   config.yml: |
@@ -2244,13 +2244,13 @@ metadata:
   name: k8smon-windows-exporter
   namespace: default
   labels:
-    helm.sh/chart: windows-exporter-0.9.2
+    helm.sh/chart: windows-exporter-0.10.0
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: windows-exporter
     app.kubernetes.io/name: windows-exporter
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "0.30.5"
+    app.kubernetes.io/version: "0.30.6"
     release: k8smon
 spec:
   type: ClusterIP
@@ -2515,13 +2515,13 @@ metadata:
   name: k8smon-windows-exporter
   namespace: default
   labels:
-    helm.sh/chart: windows-exporter-0.9.2
+    helm.sh/chart: windows-exporter-0.10.0
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: windows-exporter
     app.kubernetes.io/name: windows-exporter
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "0.30.5"
+    app.kubernetes.io/version: "0.30.6"
     release: k8smon
 spec:
   selector:
@@ -2538,13 +2538,13 @@ spec:
         cluster-autoscaler.kubernetes.io/safe-to-evict: "true"
         k8s.grafana.com/logs.job: integrations/windows_exporter
       labels:
-        helm.sh/chart: windows-exporter-0.9.2
+        helm.sh/chart: windows-exporter-0.10.0
         app.kubernetes.io/managed-by: Helm
         app.kubernetes.io/component: metrics
         app.kubernetes.io/part-of: windows-exporter
         app.kubernetes.io/name: windows-exporter
         app.kubernetes.io/instance: k8smon
-        app.kubernetes.io/version: "0.30.5"
+        app.kubernetes.io/version: "0.30.6"
         release: k8smon
     spec:
       automountServiceAccountToken: false
@@ -2554,13 +2554,13 @@ spec:
           runAsUserName: NT AUTHORITY\system
       initContainers:
         - name: configure-firewall
-          image: ghcr.io/prometheus-community/windows-exporter:0.30.5
+          image: ghcr.io/prometheus-community/windows-exporter:0.30.6
           command: [ "powershell" ]
           args: [ "New-NetFirewallRule", "-DisplayName", "'windows-exporter'", "-Direction", "inbound", "-Profile", "Any", "-Action", "Allow", "-LocalPort", "9182", "-Protocol", "TCP" ]
       serviceAccountName: k8smon-windows-exporter
       containers:
         - name: windows-exporter
-          image: ghcr.io/prometheus-community/windows-exporter:0.30.5
+          image: ghcr.io/prometheus-community/windows-exporter:0.30.6
           imagePullPolicy: IfNotPresent
           args:
             - --config.file=%CONTAINER_SANDBOX_MOUNT_POINT%/config.yml
