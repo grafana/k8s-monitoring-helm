@@ -1,6 +1,5 @@
 {{- define "destinations.loki.alloy" }}
-{{- $defaultValues := "destinations/loki-values.yaml" | .Files.Get | fromYaml }}
-{{- with mergeOverwrite $defaultValues .destination }}
+{{- with .destination }}
 otelcol.exporter.loki {{ include "helper.alloy_name" .name | quote }} {
   forward_to = [{{ include "destinations.loki.alloy.loki.logs.target" . }}]
 }
