@@ -144,7 +144,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | receivers.otlp.grpc.enabled | bool | `false` | Accept application data over OTLP gRPC. |
-| receivers.otlp.grpc.maxConcurrentStreams | int | `0` | Limit the number of concurrent streaming RPC calls. 0 means no limit. |
+| receivers.otlp.grpc.maxConcurrentStreams | int | `0` | Limit the number of concurrent streaming gRPC calls. 0 means no limit. |
 | receivers.otlp.grpc.maxReceivedMessageSize | string | `"4MiB"` | Maximum size of messages the gRPC server will accept. |
 | receivers.otlp.grpc.port | int | `4317` | The port to listen on for OTLP gRPC requests. |
 | receivers.otlp.grpc.readBufferSize | string | `"512KiB"` | Size of the read buffer the gRPC server will use for reading from clients. |
