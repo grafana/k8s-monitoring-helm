@@ -120,11 +120,11 @@ Be sure perform actual integration testing in a live environment in the main [k8
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| processors.resourceDetection | object | `{"env":{"enabled":true},"kubernetesNode":{"authType":"serviceAccount","enabled":false,"nodeFromEnvVar":"K8S_NODE_NAME"},"system":{"enabled":true,"hostnameSources":["os"],"resourceAttributes":{}}}` | Capture Resource attributes from various sources. You can add more than is listed here. For example: resourceDetection:   sourceType:     enabled: true     resourceAttributes:       host.name:         enabled: true |
 | processors.resourceDetection.env.enabled | bool | `true` | Enable getting resource attributes from the OTEL_RESOURCE_ATTRIBUTES environment variable. |
 | processors.resourceDetection.kubernetesNode.authType | string | `"serviceAccount"` | The authentication method. This should not be changed. |
 | processors.resourceDetection.kubernetesNode.enabled | bool | `false` | Enable getting resource attributes about the Kubernetes node from the API server. |
 | processors.resourceDetection.kubernetesNode.nodeFromEnvVar | string | `"K8S_NODE_NAME"` | The name of an environment variable from which to retrieve the node name. |
+| processors.resourceDetection.override | bool | `true` | Configures whether existing resource attributes should be overridden or preserved. |
 | processors.resourceDetection.system.enabled | bool | `true` | Enable getting resource attributes from the host machine. |
 | processors.resourceDetection.system.hostnameSources | list | `["os"]` | The priority list of sources from which the hostname will be determined. Options: ["dns", "os", "cname", "lookup"]. |
 | processors.resourceDetection.system.resourceAttributes | object | `{}` | The list of resource attributes to add for system resource detection. See the [Alloy documentation](https://grafana.com/docs/alloy/latest/reference/components/otelcol/otelcol.processor.resourcedetection/#system--resource_attributes) for a list of available attributes. |

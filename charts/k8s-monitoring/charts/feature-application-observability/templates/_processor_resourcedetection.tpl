@@ -5,6 +5,7 @@
 {{- $detectors := include "feature.applicationObservability.processor.resourcedetection.detectors" . | fromYamlArray }}
 otelcol.processor.resourcedetection "{{ .name | default "default" }}" {
   detectors = {{ $detectors | sortAlpha | toJson }}
+  override = {{ .Values.processors.resourceDetection.override }}
 
 {{- range $detector := $detectors }}
   {{- /* Skip env, it has no settings */}}
@@ -73,8 +74,10 @@ otelcol.processor.resourcedetection "{{ .name | default "default" }}" {
 {{- define "feature.applicationObservability.processor.resourcedetection.detectors" }}
 {{- $enabledDetectors := list }}
 {{- range $detector, $options := .Values.processors.resourceDetection }}
-  {{- if $options.enabled }}
-    {{- $enabledDetectors = append $enabledDetectors $detector }}
+  {{- if ne $detector "override" }}
+    {{- if $options.enabled }}
+      {{- $enabledDetectors = append $enabledDetectors $detector }}
+    {{- end }}
   {{- end }}
 {{- end }}
 {{ $enabledDetectors | toJson }}
