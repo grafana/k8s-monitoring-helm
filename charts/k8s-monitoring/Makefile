@@ -80,19 +80,22 @@ endif
 
 # Example targets
 EXAMPLE_RELEASE_NAME=k8smon
-EXAMPLE_VALUES_FILES = $(shell find docs/examples -name values.yaml)
-EXAMPLE_OUTPUT_FILES = $(EXAMPLE_VALUES_FILES:values.yaml=output.yaml)
+EXAMPLE_VALUES_FILES := $(shell find docs/examples -name values.yaml)
+EXAMPLE_OUTPUT_FILES := $(EXAMPLE_VALUES_FILES:values.yaml=output.yaml)
 EXAMPLE_ALLOY_FILES = $(foreach file,$(EXAMPLE_VALUES_FILES),$(call alloy_configs, $(file)))
-EXAMPLE_README_FILES = $(EXAMPLE_VALUES_FILES:values.yaml=README.md)
+EXAMPLE_README_FILES := $(EXAMPLE_VALUES_FILES:values.yaml=README.md)
 
-NON_RENDERED_INTEGRATION_TEST_VALUES_FILES = $(shell find tests/integration -name .no-render | sed 's/.no-render/values.yaml/')
-INTEGRATION_TEST_VALUES_FILES = $(filter-out $(NON_RENDERED_INTEGRATION_TEST_VALUES_FILES),$(shell find tests/integration -name values.yaml))
-INTEGRATION_TEST_OUTPUT_FILES = $(INTEGRATION_TEST_VALUES_FILES:values.yaml=.rendered/output.yaml)
-INTEGRATION_TEST_ALLOY_INSTANCE_FILES = $(foreach file,$(INTEGRATION_TEST_OUTPUT_FILES),$(call alloy_instances, $(file)))
+NON_RENDERED_INTEGRATION_TEST_VALUES_FILES := $(shell find tests/integration -name .no-render | sed 's/.no-render/values.yaml/')
+INTEGRATION_TEST_VALUES_FILES := $(filter-out $(NON_RENDERED_INTEGRATION_TEST_VALUES_FILES),$(shell find tests/integration -name values.yaml))
+INTEGRATION_TEST_OUTPUT_FILES := $(INTEGRATION_TEST_VALUES_FILES:values.yaml=.rendered/output.yaml)
+INTEGRATION_TEST_ALLOY_INSTANCE_FILES = $(foreach file,$(INTEGRATION_TEST_VALUES_FILES),$(call alloy_instances, $(file)))
 
-NON_RENDERED_PLATFORM_TEST_VALUES_FILES = $(shell find tests/platform -name .no-render | sed 's/.no-render/values.yaml/')
-PLATFORM_TEST_VALUES_FILES = $(filter-out $(NON_RENDERED_PLATFORM_TEST_VALUES_FILES),$(shell find tests/platform -name values.yaml))
-PLATFORM_TEST_OUTPUT_FILES = $(PLATFORM_TEST_VALUES_FILES:values.yaml=.rendered/output.yaml)
+NON_RENDERED_PLATFORM_TEST_VALUES_FILES := $(shell find tests/platform -name .no-render | sed 's/.no-render/values.yaml/')
+PLATFORM_TEST_VALUES_FILES := $(filter-out $(NON_RENDERED_PLATFORM_TEST_VALUES_FILES),$(shell find tests/platform -name values.yaml))
+PLATFORM_TEST_OUTPUT_FILES := $(PLATFORM_TEST_VALUES_FILES:values.yaml=.rendered/output.yaml)
+
+pete:
+	@echo $(EXAMPLE_ALLOY_FILES)
 
 alloy_configs = $(shell \
 	DIR="$(shell dirname $(1))/" yq e 'with_entries(select(.key == "alloy-*" and .value.enabled == true)) | to_entries | env(DIR) + .[].key + ".alloy"' $(1) \
@@ -108,11 +111,16 @@ alloy_instances = $(shell \
 	mkdir -p $(dir $@)
 	helm template $(EXAMPLE_RELEASE_NAME) . -f $< > $@
 
-%/alloy-logs.alloy %/alloy-metrics.alloy %/alloy-receiver.alloy %/alloy-singleton.alloy %/alloy-profiles.alloy: %/output.yaml
-	yq 'select(.kind=="ConfigMap" and .metadata.name=="$(EXAMPLE_RELEASE_NAME)-$(basename $(notdir $@))") | .data["config.alloy"]' $< > $@
+ALLOY_INSTANCES := logs metrics receiver singleton profiles
+define alloy_files
+%/alloy-$(1).alloy: %/output.yaml
+	yq 'select(.kind=="ConfigMap" and .metadata.name=="$(EXAMPLE_RELEASE_NAME)-alloy-$(1)") | .data["config.alloy"]' $$< > $$@
+%/alloy-$(1).yaml: %/output.yaml
+	yq 'select(.kind=="Alloy" and .metadata.name=="$(EXAMPLE_RELEASE_NAME)-alloy-$(1)") | .' $$< > $$@
+endef
+$(foreach instance,$(ALLOY_INSTANCES),$(eval $(call alloy_files,$(instance))))
 
-%/alloy-logs.yaml %/alloy-metrics.yaml %/alloy-receiver.yaml %/alloy-singleton.yaml %/alloy-profiles.yaml: %/output.yaml
-	yq 'select(.kind=="Alloy" and .metadata.name=="$(EXAMPLE_RELEASE_NAME)-$(basename $(notdir $@))") | .' $< > $@
+
 
 %/README.md: %/values.yaml $$(wildcard %/description.txt)
 	echo '<!--' > $@
@@ -133,7 +141,7 @@ alloy_instances = $(shell \
 	echo '```' >> $@
 
 .PHONY: examples
-examples: $(EXAMPLE_OUTPUT_FILES) $(EXAMPLE_ALLOY_FILES) $(EXAMPLE_README_FILES)
+examples: $(EXAMPLE_OUTPUT_FILES) $(EXAMPLE_ALLOY_FILES) $(EXAMPLE_README_FILES) $(INTEGRATION_TEST_OUTPUT_FILES) $(PLATFORM_TEST_OUTPUT_FILES)
 
 .PHONY: example-checks
 example-checks: $(EXAMPLE_OUTPUT_FILES)
@@ -149,15 +157,18 @@ integration-test-checks: $(INTEGRATION_TEST_OUTPUT_FILES)
 platform-test-checks: $(PLATFORM_TEST_OUTPUT_FILES)
 
 .PHONY: clean
-clean:
+clean: clean-examples
 	rm -f README.md values.schema.json templates/destinations/_destination_types.tpl schema-mods/destination-list.json
 	rm -f $(COLLECTOR_SCHEMA_FILES) $(COLLECTOR_DOCS_FILES)
 	rm -f $(DESTINATION_SCHEMA_FILES) $(DESTINATION_DOCS_FILES)
-	rm -f $(EXAMPLE_OUTPUT_FILES) $(EXAMPLE_ALLOY_FILES) $(EXAMPLE_README_FILES) $(INTEGRATION_TEST_OUTPUT_FILES) $(PLATFORM_TEST_OUTPUT_FILES)
 	set -e && \
 	for chart in $(FEATURE_CHARTS); do \
 		make -C charts/$$chart clean; \
 	done
+
+.PHONY: clean-examples
+clean-examples:
+	rm -f $(EXAMPLE_OUTPUT_FILES) $(EXAMPLE_ALLOY_FILES) $(EXAMPLE_README_FILES) $(INTEGRATION_TEST_OUTPUT_FILES) $(PLATFORM_TEST_OUTPUT_FILES)
 
 build-features:
 	set -e && \
