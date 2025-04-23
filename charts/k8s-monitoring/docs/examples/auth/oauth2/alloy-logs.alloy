@@ -431,10 +431,28 @@ otelcol.processor.transform "otel_endpoint" {
     ]
   }
 
+
   output {
     metrics = [otelcol.processor.batch.otel_endpoint.input]
     logs = [otelcol.processor.batch.otel_endpoint.input]
     traces = [otelcol.processor.batch.otel_endpoint.input]
+  }
+}
+
+otelcol.exporter.loadbalancing "otel_endpoint" {
+  resolver {
+    kubernetes {
+      service = "k8smon-otel-endpoint-sampler"
+    }
+  }
+  protocol {
+    otlp {
+      client {
+        tls {
+          insecure = true
+        }
+      }
+    }
   }
 }
 

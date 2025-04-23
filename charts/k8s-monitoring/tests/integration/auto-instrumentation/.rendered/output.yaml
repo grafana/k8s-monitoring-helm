@@ -248,8 +248,26 @@ data:
         ]
       }
     
+    
       output {
         traces = [otelcol.processor.batch.localtempo.input]
+      }
+    }
+    
+    otelcol.exporter.loadbalancing "localtempo" {
+      resolver {
+        kubernetes {
+          service = "k8smon-localTempo-sampler"
+        }
+      }
+      protocol {
+        otlp {
+          client {
+            tls {
+              insecure = true
+            }
+          }
+        }
       }
     }
     
@@ -529,8 +547,26 @@ data:
         ]
       }
     
+    
       output {
         traces = [otelcol.processor.batch.localtempo.input]
+      }
+    }
+    
+    otelcol.exporter.loadbalancing "localtempo" {
+      resolver {
+        kubernetes {
+          service = "k8smon-localTempo-sampler"
+        }
+      }
+      protocol {
+        otlp {
+          client {
+            tls {
+              insecure = true
+            }
+          }
+        }
       }
     }
     

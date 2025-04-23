@@ -109,6 +109,12 @@ This defines the options for defining a destination for OpenTelemetry data that 
 | processors.memoryLimiter.enabled | bool | `false` | Whether to use a memory limiter. |
 | processors.memoryLimiter.limit | string | `"0MiB"` | Maximum amount of memory targeted to be allocated by the process heap. |
 
+### Tail Sampling
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| processors.tailSampling.enabled | bool | `false` | Apply Tail sampling policies to the traces before delivering them to their destination. |
+
 ### Transform Processor
 
 | Key | Type | Default | Description |
@@ -153,4 +159,7 @@ This defines the options for defining a destination for OpenTelemetry data that 
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
+| connectors.serviceGraphMetrics.destination | string | `""` |  |
+| connectors.serviceGraphMetrics.enabled | bool | `false` |  |
+| processors.tailSampling.policies | list | `[]` |  |
 | retryOnFailure.enabled | bool | `true` |  |

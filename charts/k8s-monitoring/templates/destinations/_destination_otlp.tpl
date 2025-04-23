@@ -286,9 +286,7 @@ otelcol.processor.filter {{ include "helper.alloy_name" .name | quote }} {
   }
 {{- end }}
 {{- end }}
-
-  // TODO: override this if tail sampling is enabled
-
+{{/*  // TODO: override this if tail sampling is enabled*/}}
 {{- if .processors.batch.enabled }}
 
   output {
@@ -301,6 +299,23 @@ otelcol.processor.filter {{ include "helper.alloy_name" .name | quote }} {
 {{- if ne .traces.enabled false }}
     traces = [otelcol.processor.batch.{{ include "helper.alloy_name" .name }}.input]
 {{- end }}
+  }
+}
+
+otelcol.exporter.loadbalancing {{ include "helper.alloy_name" .name | quote }} {
+  resolver {
+    kubernetes {
+      service = "{{ printf "%s-%s-sampler" $.Release.Name .name }}"
+    }
+  }
+  protocol {
+    otlp {
+      client {
+        tls {
+          insecure = true
+        }
+      }
+    }
   }
 }
 
