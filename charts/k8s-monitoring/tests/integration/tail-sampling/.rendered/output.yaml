@@ -1059,19 +1059,87 @@ metadata:
   name: k8smon-localTempo-sampler
   namespace: default
 spec:
+  controller:
+    type: statefulset
+    replicas: 1
   alloy:
     configMap:
       create: true
-      content: ""
+      content: |-
+        // Destination: localTempo (otlp)
+        
+        otelcol.processor.attributes "localtempo" {
+          output {
+            metrics = [otelcol.processor.transform.localtempo.input]
+            logs = [otelcol.processor.transform.localtempo.input]
+            traces = [otelcol.processor.transform.localtempo.input]
+          }
+        }
+        
+        otelcol.processor.transform "localtempo" {
+          error_mode = "ignore"
+        
+          trace_statements {
+            context = "resource"
+            statements = [
+              `set(attributes["cluster"], "tail-sampling-test")`,
+              `set(attributes["k8s.cluster.name"], "tail-sampling-test")`,
+            ]
+          }
+        
+        
+          output {
+            traces = [otelcol.processor.batch.localtempo.input]
+          }
+        }
+        
+        otelcol.exporter.loadbalancing "localtempo" {
+          resolver {
+            kubernetes {
+              service = "k8smon-localTempo-sampler"
+            }
+          }
+          protocol {
+            otlp {
+              client {
+                tls {
+                  insecure = true
+                }
+              }
+            }
+          }
+        }
+        
+        otelcol.processor.batch "localtempo" {
+          timeout = "2s"
+          send_batch_size = 8192
+          send_batch_max_size = 0
+        
+          output {
+            traces = [otelcol.exporter.otlp.localtempo.input]
+          }
+        }
+        otelcol.exporter.otlp "localtempo" {
+          client {
+            endpoint = "tempo.tempo.svc:4317"
+            tls {
+              insecure = true
+              insecure_skip_verify = true
+            }
+          }
+        
+          retry_on_failure {
+            enabled = true
+            initial_interval = "5s"
+            max_interval = "30s"
+            max_elapsed_time = "5m"
+          }
+        }
       # $destination.processors.tailSampling
       # Step 1: otelcol.receiver    << ingest traces
       # Step 2: apply sampling policies
       # Step 3: Export traces to original trace destination   <-- render the otlp destination alloy config, wired to memory limiter, batch, and exporter
       # Step 4: Export metrics to chosen metrics destination
-
-  controller:
-    type: statefulset
-    replicas: 1
 ---
 # Source: k8s-monitoring/templates/alloy.yaml
 apiVersion: collectors.grafana.com/v1alpha1

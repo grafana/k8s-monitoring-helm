@@ -2,6 +2,10 @@
 {{- if eq $destination.type "otlp" }}
   {{- $isSamplingEnabled := include "destinations.otlp.is_tail_sampling_enabled" $destination }}
   {{- if eq $isSamplingEnabled "true" }}
+
+  {{- $alloyConfig := "" }}
+  {{- $alloyConfig = cat $alloyConfig ((include "destinations.alloy.config" (deepCopy $ | merge (dict "names" (list $destination.name)))) | trim | nindent 0) }}
+  {{- $alloyConfig = regexReplaceAll `[ \t]+(\r?\n)` $alloyConfig "\n" }}
 ---
 apiVersion: collectors.grafana.com/v1alpha1
 kind: Alloy
@@ -10,19 +14,19 @@ metadata:
   name: {{ printf "%s-%s-sampler" $.Release.Name $destination.name }}
   namespace: {{ $.Release.Namespace }}
 spec:
+  controller:
+    type: statefulset
+    replicas: 1
   alloy:
     configMap:
       create: true
-      content: ""
+      content: |-
+        {{- $alloyConfig | trim | nindent 8 }}
       # $destination.processors.tailSampling
       # Step 1: otelcol.receiver    << ingest traces
       # Step 2: apply sampling policies
       # Step 3: Export traces to original trace destination   <-- render the otlp destination alloy config, wired to memory limiter, batch, and exporter
       # Step 4: Export metrics to chosen metrics destination
-
-  controller:
-    type: statefulset
-    replicas: 1
 {{- end }}
 {{- end }}
 {{- end }}
