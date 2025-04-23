@@ -1,0 +1,12 @@
+{{- $traceDestinations := include "destinations.get" (dict "destinations" $.Values.destinations "type" "traces" "ecosystem" "otlp") | fromYamlArray -}}
+{{- range $dest :=  $traceDestinations }}
+{{- $values := (deepCopy $ | merge (dict "collectorName" (printf "%s-sampler" $dest ))) }}
+
+---
+apiVersion: collectors.grafana.com/v1alpha1
+kind: Alloy
+metadata:
+  name: {{ include "collector.alloy.fullname" $values }}
+  namespace: {{ $.Release.Namespace }}
+spec: {{ $values | toYaml | nindent 2 }}
+{{- end }}
