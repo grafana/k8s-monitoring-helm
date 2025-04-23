@@ -287,17 +287,16 @@ otelcol.processor.filter {{ include "helper.alloy_name" .name | quote }} {
 {{- end }}
 {{- end }}
 {{/*  // TODO: override this if tail sampling is enabled*/}}
-{{- if .processors.batch.enabled }}
 
   output {
 {{- if ne .metrics.enabled false }}
-    metrics = [otelcol.processor.batch.{{ include "helper.alloy_name" .name }}.input]
+    metrics = [{{ include "destinations.otlp.alloy.exporter.target" . }}]
 {{- end }}
 {{- if ne .logs.enabled false }}
-    logs = [otelcol.processor.batch.{{ include "helper.alloy_name" .name }}.input]
+    logs = [{{ include "destinations.otlp.alloy.exporter.target" . }}]
 {{- end }}
 {{- if ne .traces.enabled false }}
-    traces = [otelcol.processor.batch.{{ include "helper.alloy_name" .name }}.input]
+    traces = [{{ include "destinations.otlp.alloy.exporter.target" . }}]
 {{- end }}
   }
 }
@@ -319,37 +318,39 @@ otelcol.exporter.loadbalancing {{ include "helper.alloy_name" .name | quote }} {
   }
 }
 
+{{- include "destinations.otlp.alloy.exporter" . }}
+{{- end }}
+{{- end }}
+
+{{- define "destinations.otlp.alloy.exporter.target" }}
+{{- if .processors.batch.enabled -}}
+otelcol.processor.batch.{{ include "helper.alloy_name" .name }}.input
+{{- else if .processors.memoryLimiter.enabled -}}
+otelcol.processor.memory_limiter.{{ include "helper.alloy_name" .name }}.input
+{{- else if eq .protocol "grpc" -}}
+otelcol.exporter.otlp.{{ include "helper.alloy_name" .name }}.input
+{{- else if eq .protocol "http" -}}
+otelcol.exporter.otlphttp.{{ include "helper.alloy_name" .name }}.input
+{{- end }}
+{{- end }}
+
+{{- define "destinations.otlp.alloy.exporter" }}
+{{- if .processors.batch.enabled }}
+
 otelcol.processor.batch {{ include "helper.alloy_name" .name | quote }} {
   timeout = {{ .processors.batch.timeout | quote }}
   send_batch_size = {{ .processors.batch.size | int }}
   send_batch_max_size = {{ .processors.batch.maxSize | int }}
 {{- end }}
-{{- if .processors.memoryLimiter.enabled }}
-
-  output {
-{{- if ne .metrics.enabled false }}
-    metrics = [otelcol.processor.memory_limiter.{{ include "helper.alloy_name" .name }}.input]
-{{- end }}
-{{- if ne .logs.enabled false }}
-    logs = [otelcol.processor.memory_limiter.{{ include "helper.alloy_name" .name }}.input]
-{{- end }}
-{{- if ne .traces.enabled false }}
-    traces = [otelcol.processor.memory_limiter.{{ include "helper.alloy_name" .name }}.input]
-{{- end }}
-  }
-}
-
-otelcol.processor.memory_limiter {{ include "helper.alloy_name" .name | quote }} {
-  check_interval = {{ .processors.memoryLimiter.checkInterval | quote }}
-  limit = {{ .processors.memoryLimiter.limit | quote }}
-{{- end }}
 
   output {
 {{- $target := "" }}
-{{- if eq .protocol "grpc" }}
-{{- $target = printf "otelcol.exporter.otlp.%s.input" (include "helper.alloy_name" .name) }}
+{{- if .processors.memoryLimiter.enabled }}
+  {{- $target = printf "otelcol.processor.memory_limiter.%s.input" (include "helper.alloy_name" .name) }}
+{{- else if eq .protocol "grpc" }}
+  {{- $target = printf "otelcol.exporter.otlp.%s.input" (include "helper.alloy_name" .name) }}
 {{- else if eq .protocol "http" }}
-{{- $target = printf "otelcol.exporter.otlphttp.%s.input" (include "helper.alloy_name" .name) }}
+  {{- $target = printf "otelcol.exporter.otlphttp.%s.input" (include "helper.alloy_name" .name) }}
 {{- end }}
 {{- if ne .metrics.enabled false }}
     metrics = [{{ $target }}]
@@ -362,6 +363,30 @@ otelcol.processor.memory_limiter {{ include "helper.alloy_name" .name | quote }}
 {{- end }}
   }
 }
+{{- if .processors.memoryLimiter.enabled }}
+
+otelcol.processor.memory_limiter {{ include "helper.alloy_name" .name | quote }} {
+  check_interval = {{ .processors.memoryLimiter.checkInterval | quote }}
+  limit = {{ .processors.memoryLimiter.limit | quote }}
+
+  output {
+{{- if eq .protocol "grpc" }}
+  {{- $target = printf "otelcol.exporter.otlp.%s.input" (include "helper.alloy_name" .name) }}
+{{- else if eq .protocol "http" }}
+  {{- $target = printf "otelcol.exporter.otlphttp.%s.input" (include "helper.alloy_name" .name) }}
+{{- end }}
+{{- if ne .metrics.enabled false }}
+    metrics = [{{ $target }}]
+{{- end }}
+{{- if ne .logs.enabled false }}
+    logs = [{{ $target }}]
+{{- end }}
+{{- if ne .traces.enabled false }}
+    traces = [{{ $target }}]
+{{- end }}
+  }
+}
+{{- end }}
 
 {{- if eq .protocol "grpc" }}
 otelcol.exporter.otlp {{ include "helper.alloy_name" .name | quote }} {
@@ -431,7 +456,6 @@ otelcol.exporter.otlphttp {{ include "helper.alloy_name" .name | quote }} {
     max_elapsed_time = {{ .retryOnFailure.maxElapsedTime | quote }}
   }
 }
-{{- end }}
 {{- end }}
 
 {{- define "secrets.list.otlp" -}}
