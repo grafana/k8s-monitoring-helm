@@ -286,6 +286,9 @@ otelcol.processor.filter {{ include "helper.alloy_name" .name | quote }} {
   }
 {{- end }}
 {{- end }}
+
+  // TODO: override this if tail sampling is enabled
+
 {{- if .processors.batch.enabled }}
 
   output {
@@ -440,3 +443,7 @@ otelcol.exporter.otlphttp {{ include "helper.alloy_name" .name | quote }} {
 {{- define "destinations.otlp.supports_traces" }}{{ dig "traces" "enabled" "true" . }}{{ end -}}
 {{- define "destinations.otlp.supports_profiles" }}false{{ end -}}
 {{- define "destinations.otlp.ecosystem" }}otlp{{ end -}}
+
+{{- define "destinations.otlp.is_tail_sampling_enabled" }}
+{{- dig "processors" "tailSampling" "enabled" "false" . -}}
+{{- end -}}

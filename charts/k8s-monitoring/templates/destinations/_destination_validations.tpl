@@ -61,6 +61,8 @@
           {{- end }}
         {{- end }}
       {{- end }}
+
+      {{- /* TODO: Add validation for catching if traces.enabled = false and processors.tailSampling.enabled = true */ -}}
     {{- end }}
 
     {{- if eq (include "secrets.authType" $destination) "basic" }}
