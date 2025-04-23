@@ -2,3 +2,30 @@
 
 This example demonstrates how to use pre-existing secrets to authenticate to external services. This allows for
 credentials to be stored in different secret stores, as long as it resolves to a Kubernetes Secret.
+
+## Secret
+
+Given these secrets already exist on the cluster, they can be used to authenticate to the external services.
+
+```yaml
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: my-monitoring-secret
+  namespace: monitoring
+type: Opaque
+stringData:
+  prom-username: "12345"
+  loki-username: "67890"
+  access-token: "It's a secret to everyone"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: my-tempo-secret
+  namespace: tempo
+type: Opaque
+stringData:
+  tempoBearerToken: "It's a secret to everyone"
+```
