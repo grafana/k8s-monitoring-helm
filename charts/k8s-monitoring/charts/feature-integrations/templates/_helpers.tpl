@@ -16,8 +16,12 @@ If release name contains chart name it will be used as a full name.
 {{- end }}
 {{- end }}
 
+{{ define "helper.kubernetesName" }}
+{{- . | lower | replace " " "-" | replace "_" "-" -}}
+{{ end }}
+
 {{ define "helper.alloy_name" }}
-{{- . | lower | replace "-" "_" -}}
+{{- . | lower | replace " " "_" | replace "-" "_" -}}
 {{ end }}
 
 {{- define "escape_label" -}}
