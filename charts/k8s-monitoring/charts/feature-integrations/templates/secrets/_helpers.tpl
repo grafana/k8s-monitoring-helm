@@ -169,9 +169,9 @@ true
   {{- $secretName -}}
 {{- else -}}
   {{- if contains .Chart.Name .Release.Name }}
-    {{- printf "%s-%s" .object.name .Release.Name | trunc 63 | trimSuffix "-" | lower -}}
+    {{- printf "%s-%s" (include "helper.kubernetesName" .object.name) .Release.Name | trunc 63 | trimSuffix "-" | lower -}}
   {{- else }}
-    {{- printf "%s-%s-%s" .object.name .Release.Name .Chart.Name | trunc 63 | trimSuffix "-" | lower -}}
+    {{- printf "%s-%s-%s" (include "helper.kubernetesName" .object.name) .Release.Name .Chart.Name | trunc 63 | trimSuffix "-" | lower -}}
   {{- end }}
 {{- end }}
 {{- end }}
