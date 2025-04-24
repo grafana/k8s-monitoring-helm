@@ -1,9 +1,9 @@
-{{ define "helper.k8s_name" }}
-{{- . | lower | replace " " "-" -}}
+{{ define "helper.kubernetesName" }}
+{{- . | lower | replace " " "-" | replace "_" "-" -}}
 {{ end }}
 
 {{ define "helper.alloy_name" }}
-{{- . | lower | replace " " "-" | replace "-" "_" -}}
+{{- . | lower | replace " " "_" | replace "-" "_" -}}
 {{ end }}
 
 {{- define "helper.fullname" -}}
