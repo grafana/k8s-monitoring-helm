@@ -1,0 +1,52 @@
+---
+cluster:
+  name: application-observability-test
+
+destinations:
+  - name: localPrometheus
+    type: prometheus
+    url: http://prometheus-server.prometheus.svc:9090/api/v1/write
+  - name: localTempo
+    type: otlp
+    url: tempo.tempo.svc:4317
+    tls:
+      insecure: true
+      insecureSkipVerify: true
+    metrics: {enabled: false}
+    logs: {enabled: false}
+    traces: {enabled: true}
+
+applicationObservability:
+  enabled: true
+  receivers:
+    otlp:
+      grpc:
+        enabled: true
+  connectors:
+    grafanaCloudMetrics:
+      enabled: true
+  logs:
+    enabled: false
+
+integrations:
+  collector: alloy-receiver
+  alloy:
+    instances:
+      - name: alloy-app
+        labelSelectors:
+          app.kubernetes.io/name: alloy-app
+        metrics:
+          tuning:
+            useDefaultAllowList: false
+            includeMetrics: [alloy_build_info]
+
+alloy-receiver:
+  enabled: true
+  alloy:
+    extraPorts:
+      - name: otlp-grpc
+        port: 4317
+        targetPort: 4317
+        protocol: TCP
+  liveDebugging:
+    enabled: true
