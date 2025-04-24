@@ -1055,7 +1055,6 @@ spec:
 apiVersion: collectors.grafana.com/v1alpha1
 kind: Alloy
 metadata:
-
   name: k8smon-localTempo-sampler
   namespace: default
 spec:
@@ -1065,7 +1064,7 @@ spec:
   alloy:
     configMap:
       create: true
-      content: |-
+      content: |
         // Destination: localTempo (otlp)
         
         otelcol.processor.attributes "localtempo" {
@@ -1135,11 +1134,6 @@ spec:
             max_elapsed_time = "5m"
           }
         }
-      # $destination.processors.tailSampling
-      # Step 1: otelcol.receiver    << ingest traces
-      # Step 2: apply sampling policies
-      # Step 3: Export traces to original trace destination   <-- render the otlp destination alloy config, wired to memory limiter, batch, and exporter
-      # Step 4: Export metrics to chosen metrics destination
 ---
 # Source: k8s-monitoring/templates/alloy.yaml
 apiVersion: collectors.grafana.com/v1alpha1

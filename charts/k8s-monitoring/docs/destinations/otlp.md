@@ -113,7 +113,7 @@ This defines the options for defining a destination for OpenTelemetry data that 
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| processors.tailSampling.enabled | bool | `false` | Apply Tail sampling policies to the traces before delivering them to their destination. |
+| processors.tail_sampling.enabled | bool | `false` | Apply Tail sampling policies to the traces before delivering them to their destination. |
 
 ### Transform Processor
 
@@ -161,5 +161,6 @@ This defines the options for defining a destination for OpenTelemetry data that 
 |-----|------|---------|-------------|
 | connectors.serviceGraphMetrics.destination | string | `""` |  |
 | connectors.serviceGraphMetrics.enabled | bool | `false` |  |
-| processors.tailSampling.policies | list | `[]` |  |
+| processors.tail_sampling.decision_wait | string | `"15s"` |  |
+| processors.tail_sampling.policies | string | `nil` |  |
 | retryOnFailure.enabled | bool | `true` |  |

@@ -484,5 +484,5 @@ otelcol.exporter.otlphttp {{ include "helper.alloy_name" .name | quote }} {
 {{- define "destinations.otlp.ecosystem" }}otlp{{ end -}}
 
 {{- define "destinations.otlp.is_tail_sampling_enabled" }}
-{{- dig "processors" "tailSampling" "enabled" "false" . -}}
+{{- dig "processors" "tail_sampling" "enabled" "false" . -}}
 {{- end -}}
