@@ -50,6 +50,10 @@ spec:
             expect:
               value: 0
 
+          # Metrics are being scraped from the nginx-static-metrics PodMonitor
+          - query: static_metric{cluster="$CLUSTER", job="nginx/nginx-static-metrics"}
+            type: promql
+
           # DPM check
           - query: avg(count_over_time(scrape_samples_scraped{cluster="$CLUSTER"}[1m]))
             type: promql
