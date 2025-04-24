@@ -162,5 +162,5 @@ This defines the options for defining a destination for OpenTelemetry data that 
 | connectors.serviceGraphMetrics.destination | string | `""` |  |
 | connectors.serviceGraphMetrics.enabled | bool | `false` |  |
 | processors.tail_sampling.decision_wait | string | `"15s"` |  |
-| processors.tail_sampling.policies | string | `nil` |  |
+| processors.tail_sampling.policies | list | `[]` |  |
 | retryOnFailure.enabled | bool | `true` |  |
