@@ -3,6 +3,9 @@ name: Release Helm chart v1
 # yamllint disable-line rule:truthy
 on:
   workflow_dispatch:
+
+permissions: {}
+
 env:
   CR_CONFIGFILE: "${{ github.workspace }}/source/.github/configs/cr.yaml"
   CT_CONFIGFILE: "${{ github.workspace }}/source/.github/configs/ct.yaml"
@@ -10,6 +13,7 @@ env:
   CR_PACKAGE_PATH: "${{ github.workspace }}/.cr-release-packages"
   CR_TOOL_PATH: "${{ github.workspace }}/.cr-tool"
   CR_VERSION: "1.6.1"
+
 jobs:
   setup:
     runs-on: ubuntu-latest
@@ -22,18 +26,21 @@ jobs:
         with:
           fetch-depth: 0
           path: source
+          persist-credentials: 'false'
 
       - name: Install chart-testing
         uses: helm/chart-testing-action@0d28d3144d3a25ea2cc349d6e59901c4ff469b3b # v2.7.0
 
       - name: List changed charts
         id: list-changed
+        env:
+          BRANCH: ${{ github.ref_name }}
         run: |
           cd source
 
           latest_tag=$( if ! git describe --tags --abbrev=0 --match='helm-chart/*' 2> /dev/null ; then git rev-list --max-parents=0 --first-parent HEAD; fi )
 
-          changed=$(ct list-changed --config "${CT_CONFIGFILE}" --since "${latest_tag}" --target-branch "${{ github.ref_name }}")
+          changed=$(ct list-changed --config "${CT_CONFIGFILE}" --since "${latest_tag}" --target-branch "${BRANCH}")
           if echo "${changed}" | grep "k8s-monitoring-v1"; then
             name=$(yq ".name" charts/k8s-monitoring-v1/Chart.yaml)
             version=$(yq ".version" charts/k8s-monitoring-v1/Chart.yaml)
@@ -64,6 +71,7 @@ jobs:
         with:
           fetch-depth: 0
           path: source
+          persist-credentials: 'false'
 
       - name: Configure Git
         run: |
@@ -78,6 +86,7 @@ jobs:
           repository: grafana/helm-charts
           path: helm-charts
           token: "${{ secrets.GH_BOT_ACCESS_TOKEN }}"
+          persist-credentials: 'false'
 
       - name: Configure Git for helm-charts
         run: |
@@ -90,15 +99,16 @@ jobs:
 
       - name: Parse Chart.yaml
         id: parse-chart
+        env:
+          CHART_PATH: "${{ needs.setup.outputs.chartpath }}"
         run: |
           cd source
-          changed="${{ needs.setup.outputs.chartpath }}"
-          description=$(yq ".description" < ${changed}/Chart.yaml)
-          name=$(yq ".name" < ${changed}/Chart.yaml)
-          version=$(yq ".version" < ${changed}/Chart.yaml)
+          description="$(yq ".description" < "${CHART_PATH}/Chart.yaml")"
+          name="$(yq ".name" < "${CHART_PATH}/Chart.yaml")"
+          version="$(yq ".version" < "${CHART_PATH}/Chart.yaml")"
 
           # shellcheck disable=SC2129
-          echo "chartpath=${changed}" >> "${GITHUB_OUTPUT}"
+          echo "chartpath=${CHART_PATH}" >> "${GITHUB_OUTPUT}"
           echo "desc=${description}" >> "${GITHUB_OUTPUT}"
           echo "tagname=v${version}" >> "${GITHUB_OUTPUT}"
           echo "packagename=${name}-${version}" >> "${GITHUB_OUTPUT}"
@@ -113,6 +123,8 @@ jobs:
           rm -f cr.tar.gz
 
       - name: Create Helm package
+        env:
+          CHART_PATH: "${{ steps.parse-chart.outputs.chartpath }}"
         run: |
           cd source
           helm repo add grafana https://grafana.github.io/helm-charts
@@ -120,7 +132,7 @@ jobs:
           helm repo add opencost https://opencost.github.io/opencost-helm-chart
           helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 
-          "${CR_TOOL_PATH}/cr" package "${{ steps.parse-chart.outputs.chartpath }}" --config "${CR_CONFIGFILE}" --package-path "${CR_PACKAGE_PATH}"
+          "${CR_TOOL_PATH}/cr" package "${CHART_PATH}" --config "${CR_CONFIGFILE}" --package-path "${CR_PACKAGE_PATH}"
 
       - name: Make release on K8s Monitoring Helm
         uses: softprops/action-gh-release@da05d552573ad5aba039eaac05058a918a7bf631 # v2.2.2
