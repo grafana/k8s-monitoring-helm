@@ -105,27 +105,27 @@ spec:
           otelcol.receiver.otlp "default" {
             http {}
             grpc {}
-    
+
             output {
               logs = [otelcol.processor.batch.default.input]
             }
           }
-    
+
           otelcol.processor.batch "default" {
             output {
               logs = [otelcol.exporter.loki.default.input]
             }
           }
-    
+
           otelcol.exporter.loki "default" {
             forward_to = [loki.write.default.receiver]
           }
-    
+
           remote.kubernetes.secret "loki" {
             name = "combined"
             namespace = "default"
           }
-    
+
           loki.write "default" {
             endpoint {
               url = "http://loki.loki.svc:3100/loki/api/v1/push"

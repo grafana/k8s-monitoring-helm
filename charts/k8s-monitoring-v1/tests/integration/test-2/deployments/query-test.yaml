@@ -57,36 +57,36 @@ spec:
             expect:
               value: 1
               operator: "<="
-          
+
           # Check for cluster events
           - query: count_over_time({cluster="$CLUSTER", job="integrations/kubernetes/eventhandler", color="red"}[1h])
             type: logql
-            
+
             # Check for pod logs (gathered via API)
           - query: count_over_time({cluster="$CLUSTER", job!="integrations/kubernetes/eventhandler"}[1h])
             type: logql
-            
+
             # Check for pod logs (gathered via PodLogs)
           - query: count_over_time({cluster="$CLUSTER", job="grafana/test-podlogs-object", source="podlogs_object"}[1h])
             type: logql
-            
+
             # Check for traces
           - query: '{.k8s.cluster.name="$CLUSTER"}'
             type: traceql
-          
+
           # These checks for metrics and traces that are being sent directly to this alloy via the receivers
           - query: alloy_build_info{cluster="from-the-other-alloy"}
             type: promql
           - query: '{.k8s.cluster.name="from-the-other-alloy"}'
             type: traceql
-          
+
           # DPM check
           - query: avg(count_over_time(scrape_samples_scraped{cluster=~"$CLUSTER|from-the-other-alloy"}[1m]))
             type: promql
             expect:
               value: 1
               operator: ==
-          
+
           # hostinfo connector check
           - query: traces_host_info
             type: promql
