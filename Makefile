@@ -67,7 +67,7 @@ test: build lint ## Run tests for all charts
 	done
 
 .PHONY: lint
-lint: lint-alloy lint-shell lint-markdown lint-terraform lint-text lint-yaml lint-alex lint-misspell lint-actionlint ## Run all linters
+lint: lint-alloy lint-shell lint-markdown lint-terraform lint-text lint-yaml lint-alex lint-misspell lint-actionlint lint-zizmor ## Run all linters
 
 .PHONY: lint-alloy
 ALLOY_FILES := $(shell find . -name "*.alloy" ! -path "./data-alloy/*")
@@ -105,6 +105,10 @@ lint-misspell: ## Check for common misspellings
 .PHONY: lint-actionlint
 lint-actionlint: ## Lint GitHub Action workflows
 	@./scripts/lint-actionlint.sh
+
+.PHONY: lint-zizmor
+lint-zizmor: ## Statically analyze GitHub Action workflows
+	@./scripts/lint-zizmor.sh
 
 
 ##@ General

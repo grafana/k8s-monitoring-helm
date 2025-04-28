@@ -37,7 +37,7 @@ jobs:
           if [ "${{ github.event_name }}" == "pull_request" ]; then
             # In pull request, compare against the base branch (upstream)
             echo "Comparing against base branch: ${BASE_BRANCH}"
-            git fetch origin ${BASE_BRANCH}
+            git fetch origin "${BASE_BRANCH}"
             base_commit="origin/${BASE_BRANCH}"
           elif [ "${{ github.event_name }}" == "push" ]; then
             # In push to main, compare the last commit with HEAD^
@@ -129,7 +129,7 @@ jobs:
         env:
           CHART: ${{ matrix.dir }}
         run: |
-          cd charts/${CHART}
+          cd "charts/${CHART}"
           if [ "${CHART}" == "k8s-monitoring" ]; then
             # Skip checking subchart files for k8s-monitoring, which are always modified, even if the contents are identical
             if ! git diff --exit-code -- ':!charts/*.tgz'; then

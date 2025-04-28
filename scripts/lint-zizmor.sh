@@ -4,18 +4,18 @@ source "${PARENT_DIR}/scripts/includes/utils.sh"
 source "${PARENT_DIR}/scripts/includes/logging.sh"
 
 # output the heading
-heading "Kubernetes Monitoring Helm" "Performing GitHub Action Linting using actionlint"
+heading "Kubernetes Monitoring Helm" "Performing GitHub Action Static Analysis using zizmor"
 
-# check to see if actionlint is installed
+# check to see if zizmor is installed
 if [[ "$(command -v actionlint || true)" = "" ]]; then
-  emergency "actionlint is required if running lint locally, see: (https://github.com/rhysd/actionlint) or run: go install github.com/rhysd/actionlint/cmd/actionlint@latest";
+  emergency "zizmor is required if running lint locally, see: (https://woodruffw.github.io/zizmor/installation/)";
 fi
 
 # determine whether or not the script is called directly or sourced
 (return 0 2>/dev/null) && sourced=1 || sourced=0
 
 statusCode=0
-actionlint .github/workflows/*.yml .github/workflows/*.yaml
+zizmor .
 currentCode="$?"
 # only override the statusCode if it is 0
 if [[ "${statusCode}" == 0 ]]; then

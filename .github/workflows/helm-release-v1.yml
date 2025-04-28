@@ -103,13 +103,12 @@ jobs:
           CHART_PATH: "${{ needs.setup.outputs.chartpath }}"
         run: |
           cd source
-          changed="${CHART_PATH}"
-          description=$(yq ".description" < ${changed}/Chart.yaml)
-          name=$(yq ".name" < ${changed}/Chart.yaml)
-          version=$(yq ".version" < ${changed}/Chart.yaml)
+          description="$(yq ".description" < "${CHART_PATH}/Chart.yaml")"
+          name="$(yq ".name" < "${CHART_PATH}/Chart.yaml")"
+          version="$(yq ".version" < "${CHART_PATH}/Chart.yaml")"
 
           # shellcheck disable=SC2129
-          echo "chartpath=${changed}" >> "${GITHUB_OUTPUT}"
+          echo "chartpath=${CHART_PATH}" >> "${GITHUB_OUTPUT}"
           echo "desc=${description}" >> "${GITHUB_OUTPUT}"
           echo "tagname=v${version}" >> "${GITHUB_OUTPUT}"
           echo "packagename=${name}-${version}" >> "${GITHUB_OUTPUT}"
