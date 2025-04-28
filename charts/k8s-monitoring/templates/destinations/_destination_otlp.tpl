@@ -49,6 +49,22 @@ otelcol.auth.oauth2 {{ include "helper.alloy_name" .name | quote }} {
   {{- end }}
   }
   {{- end }}
+  {{- if .auth.oauth2.proxyURL }}
+  proxy_url = {{ .auth.oauth2.proxyURL | quote }}
+  {{- end }}
+  {{- if .auth.oauth2.noProxy }}
+  no_proxy = {{ .auth.oauth2.noProxy | quote }}
+  {{- end }}
+  {{- if .auth.oauth2.proxyFromEnvironment }}
+  proxyFromEnvironment = {{ .auth.oauth2.proxyFromEnvironment }}
+  {{- end }}
+  {{- if .auth.oauth2.proxyConnectHeader }}
+  proxy_connect_header = {
+  {{- range $k, $v := .auth.oauth2.proxyConnectHeader }}
+    {{ $k }} = {{ $v | toJson }},
+  {{- end }}
+  }
+  {{- end }}
   {{- if .auth.oauth2.scopes }}
   scopes = {{ .auth.oauth2.scopes | toJson }}
   {{- end }}

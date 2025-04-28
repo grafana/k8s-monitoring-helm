@@ -63,8 +63,10 @@ This defines the options for defining a destination for logs that use the Loki p
 | maxBackoffRetries | int | `10` | The maximum number of backoff retries for the Loki destination. |
 | minBackoffPeriod | string | `"500ms"` | The minimum backoff period for the Loki destination. |
 | name | string | `""` | The name for this Loki destination. |
+| noProxy | string | `""` | Comma-separated list of IP addresses, CIDR notations, and domain names to exclude from proxying. |
+| proxyConnectHeader | object | `{}` | Specifies headers to send to proxies during CONNECT requests. |
 | proxyFromEnvironment | bool | `false` | Use the proxy URL indicated by environment variables. |
-| proxyURL | string | `""` | The Proxy URL for the Loki destination. |
+| proxyURL | string | `""` | HTTP proxy to send requests through. |
 | tenantId | string | `""` | The tenant ID for the Loki destination. |
 | tenantIdFrom | string | `""` | Raw config for accessing the tenant ID. |
 | tenantIdKey | string | `"tenantId"` | The key for storing the tenant ID in the secret. |
