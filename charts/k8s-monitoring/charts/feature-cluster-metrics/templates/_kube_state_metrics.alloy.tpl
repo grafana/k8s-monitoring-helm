@@ -21,10 +21,10 @@
   {{- $labelSelectors = append $labelSelectors (printf "release=%s" .Release.Name) }}
 {{- end }}
 discovery.kubernetes "kube_state_metrics" {
-  role = "endpoints"
+  role = "{{ (index .Values "kube-state-metrics").discoveryType }}"
 
   selectors {
-    role = "endpoints"
+    role = "{{ (index .Values "kube-state-metrics").discoveryType }}"
     label = {{ $labelSelectors | join "," | quote }}
   }
 {{- if (index .Values "kube-state-metrics").deploy }}
@@ -43,7 +43,7 @@ discovery.relabel "kube_state_metrics" {
 
   // only keep targets with a matching port name
   rule {
-    source_labels = ["__meta_kubernetes_endpoint_port_name"]
+    source_labels = ["__meta_kubernetes_pod_container_port_name"]
     regex = {{ (index .Values "kube-state-metrics").service.portName | quote }}
     action = "keep"
   }
