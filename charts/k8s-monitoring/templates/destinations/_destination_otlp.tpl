@@ -61,7 +61,7 @@ otelcol.auth.oauth2 {{ include "helper.alloy_name" .name | quote }} {
   {{- if .auth.oauth2.proxyConnectHeader }}
   proxy_connect_header = {
   {{- range $k, $v := .auth.oauth2.proxyConnectHeader }}
-    {{ $k }} = {{ $v | toJson }},
+    {{ $k | quote }} = {{ $v | toJson }},
   {{- end }}
   }
   {{- end }}
