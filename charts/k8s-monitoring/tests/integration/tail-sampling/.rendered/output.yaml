@@ -146,7 +146,7 @@ data:
     }
     
     livedebugging {
-      enabled = true
+    enabled = true
     }
     
     
@@ -233,8 +233,6 @@ data:
     
     otelcol.processor.attributes "localtempo" {
       output {
-        metrics = [otelcol.processor.transform.localtempo.input]
-        logs = [otelcol.processor.transform.localtempo.input]
         traces = [otelcol.processor.transform.localtempo.input]
       }
     }
@@ -303,7 +301,7 @@ data:
     
     # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_build_info gauge
-    grafana_kubernetes_monitoring_build_info{version="2.0.23", namespace="default"} 1
+    grafana_kubernetes_monitoring_build_info{version="2.0.26", namespace="default"} 1
     # HELP grafana_kubernetes_monitoring_feature_info A metric to report the enabled features of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_feature_info gauge
     grafana_kubernetes_monitoring_feature_info{feature="applicationObservability", protocols="otlpgrpc", version="1.0.0"} 1
@@ -335,6 +333,9 @@ data:
       otelcol.receiver.otlp "receiver" {
         grpc {
           endpoint = "0.0.0.0:4317"
+          max_recv_msg_size = "4MiB"
+          read_buffer_size = "512KiB"
+          write_buffer_size = "32KiB"
         }
         debug_metrics {
           disable_high_cardinality_metrics = true
@@ -349,6 +350,7 @@ data:
       // Resource Detection Processor
       otelcol.processor.resourcedetection "default" {
         detectors = ["env","system"]
+        override = true
     
         system {
           hostname_sources = ["os"]
@@ -530,8 +532,6 @@ data:
     
     otelcol.processor.attributes "localtempo" {
       output {
-        metrics = [otelcol.processor.transform.localtempo.input]
-        logs = [otelcol.processor.transform.localtempo.input]
         traces = [otelcol.processor.transform.localtempo.input]
       }
     }
@@ -1131,8 +1131,6 @@ spec:
         
         otelcol.processor.attributes "localtempo" {
           output {
-            metrics = [otelcol.processor.transform.localtempo.input]
-            logs = [otelcol.processor.transform.localtempo.input]
             traces = [otelcol.processor.transform.localtempo.input]
           }
         }
