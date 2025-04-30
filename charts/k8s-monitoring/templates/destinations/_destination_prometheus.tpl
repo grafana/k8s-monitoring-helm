@@ -28,6 +28,16 @@ prometheus.remote_write {{ include "helper.alloy_name" .name | quote }} {
 {{- if .proxyURL }}
     proxy_url = {{ .proxyURL | quote }}
 {{- end }}
+{{- if .noProxy }}
+    no_proxy = {{ .noProxy | quote }}
+{{- end }}
+{{- if .proxyConnectHeader }}
+    proxy_connect_header = {
+{{- range $k, $v := .proxyConnectHeader }}
+      {{ $k | quote }} = {{ $v | toJson }},
+{{- end }}
+    }
+{{- end }}
 {{- if .proxyFromEnvironment }}
     proxy_from_environment = {{ .proxyFromEnvironment }}
 {{- end }}
@@ -67,7 +77,11 @@ prometheus.remote_write {{ include "helper.alloy_name" .name | quote }} {
       proxyFromEnvironment = {{ .auth.oauth2.proxyFromEnvironment }}
       {{- end }}
       {{- if .auth.oauth2.proxyConnectHeader }}
-      proxy_connect_header = {{ .auth.oauth2.proxyConnectHeader | toJson }}
+      proxy_connect_header = {
+      {{- range $k, $v := .auth.oauth2.proxyConnectHeader }}
+        {{ $k }} = {{ $v | toJson }},
+      {{- end }}
+      }
       {{- end }}
       {{- if .auth.oauth2.scopes }}
       scopes = {{ .auth.oauth2.scopes | toJson }}
