@@ -85,5 +85,5 @@ alloy-metrics:
   configReloader:
     image:
       registry: my.registry.com
-      repository: jimmidyson/configmap-reload
+      repository: prometheus-operator/prometheus-config-reloader
 ```
