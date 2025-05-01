@@ -6,14 +6,6 @@ destinations:
   - name: localPrometheus
     type: prometheus
     url: http://prometheus-server.prometheus.svc:9090/api/v1/write
-  - name: localLoki
-    type: loki
-    url: http://loki.loki.svc:3100/loki/api/v1/push
-    tenantId: "1"
-    auth:
-      type: basic
-      username: loki
-      password: lokipassword
   - name: localTempo
     type: otlp
     url: tempo.tempo.svc:4317
@@ -27,57 +19,6 @@ destinations:
       tail_sampling:
         enabled: true
         policies:
-          - name: always_sample-policy
-            type: always_sample
-          - name: latency-policy
-            type: latency
-            threshold_ms: 5000
-          - name: numeric_attribute-policy
-            type: numeric_attribute
-            key: key
-            min_value: 1
-            max_value: 256
-          - name: probabilistic-policy
-            type: probabilistic
-            sampling_percentage: 10
-          - name: status_code-policy
-            type: status_code
-            status_codes:
-              - UNSET
-              - ERROR
-          - name: string_attribute-policy
-            type: string_attribute
-            key: key
-            values:
-              - value1
-              - value2
-          - name: trace_state-policy
-            type: trace_state
-            key: key
-            values:
-              - value1
-              - value2
-          - name: rate_limiting-policy
-            type: rate_limiting
-            spans_per_second: 35
-          - name: span_count-policy
-            type: span_count
-            min_spans: 2
-            max_spans: 20
-          - name: boolean_attribute-policy
-            type: boolean_attribute
-            key: key
-            value: true
-            invert_match: true
-          - name: ottl_condition-policy
-            type: ottl_condition
-            error_mode: ignore
-            span:
-              - attributes["attr_key_1"] == "test_attr_val_1"
-              - attributes["attr_key_2"] == "test_attr_val_2"
-            spanevent:
-              - name != "test_span_event_name"
-              - attributes["event_attr_key"] != "event_attr_val"
           - name: and-policy
             type: and
             and:
@@ -93,34 +34,6 @@ destinations:
                   values:
                     - value1
                     - value2
-          - name: composite-policy-1
-            type: composite
-            composite:
-              max_total_spans_per_second: 1000
-              policy_order: [test-composite-policy-1, test-composite-policy-2, test-composite-policy-3]
-              composite_sub_policy:
-                - name: test-composite-policy-1
-                  type: numeric_attribute
-                  numeric_attribute:
-                  key: key1
-                  min_value: 50
-                - name: test-composite-policy-2
-                  type: string_attribute
-                  string_attribute:
-                  key: key2
-                  values:
-                    - value1
-                    - value2
-                - name: test-composite-policy-3
-                  type: always_sample
-              rate_allocation:
-                - policy: test-composite-policy-1
-                  percent: 50
-                - policy: test-composite-policy-2
-                  percent: 25
-
-autoInstrumentation:
-  enabled: true
 
 applicationObservability:
   enabled: true
@@ -128,11 +41,6 @@ applicationObservability:
     otlp:
       grpc:
         enabled: true
-
-alloy-metrics:
-  enabled: true
-  liveDebugging:
-    enabled: true
 
 alloy-receiver:
   enabled: true

@@ -1,3 +1,1801 @@
+creates a boolean_attribute policy:
+  1: |
+    |-
+      otelcol.receiver.otlp "receiver" {
+        grpc {
+          max_recv_msg_size = "4MB"  # TODO this could be configurable
+        }
+
+        output {
+          traces = ["otelcol.processor.tail_sampling.sampler.input"]
+        }
+      }
+      otelcol.processor.tail_sampling "sampler" {
+        // https://grafana.com/docs/alloy/latest/reference/components/otelcol.processor.tail_sampling/
+
+        decision_wait = "15s"
+
+        policy {
+          name = "boolean_attribute-policy"
+          type = "boolean_attribute"
+          boolean_attribute {
+            key = "key"
+            value = true
+            invert_match = false
+          }
+        }
+
+        output {
+          traces = [otelcol.processor.batch.default.input]
+        }
+      }
+      // Destination: tempo (otlp)
+      otelcol.receiver.prometheus "tempo" {
+        output {
+          metrics = [otelcol.processor.attributes.tempo.input]
+        }
+      }
+      otelcol.receiver.loki "tempo" {
+        output {
+          logs = [otelcol.processor.attributes.tempo.input]
+        }
+      }
+
+      otelcol.processor.attributes "tempo" {
+        output {
+          metrics = [otelcol.processor.transform.tempo.input]
+          logs = [otelcol.processor.transform.tempo.input]
+          traces = [otelcol.processor.transform.tempo.input]
+        }
+      }
+
+      otelcol.processor.transform "tempo" {
+        error_mode = "ignore"
+        metric_statements {
+          context = "resource"
+          statements = [
+            `set(attributes["cluster"], "")`,
+            `set(attributes["k8s.cluster.name"], "")`,
+          ]
+        }
+
+        metric_statements {
+          context = "datapoint"
+          statements = [
+            `set(attributes["cluster"], "")`,
+            `set(attributes["k8s.cluster.name"], "")`,
+            `set(resource.attributes["deployment.environment"], attributes["deployment_environment"] ) where resource.attributes["deployment.environment"] == nil and attributes["deployment_environment"] != nil`,
+            `delete_key(attributes, "deployment_environment") where attributes["deployment_environment"] == resource.attributes["deployment.environment"]`,
+            `set(resource.attributes["deployment.environment.name"], attributes["deployment_environment_name"] ) where resource.attributes["deployment.environment.name"] == nil and attributes["deployment_environment_name"] != nil`,
+            `delete_key(attributes, "deployment_environment_name") where attributes["deployment_environment_name"] == resource.attributes["deployment.environment.name"]`,
+            `set(resource.attributes["service.name"], attributes["service_name"] ) where resource.attributes["service.name"] == nil and attributes["service_name"] != nil`,
+            `delete_key(attributes, "service_name") where attributes["service_name"] == resource.attributes["service.name"]`,
+            `set(resource.attributes["service.namespace"], attributes["service_namespace"] ) where resource.attributes["service.namespace"] == nil and attributes["service_namespace"] != nil`,
+            `delete_key(attributes, "service_namespace") where attributes["service_namespace"] == resource.attributes["service.namespace"]`,
+          ]
+        }
+        log_statements {
+          context = "resource"
+          statements = [
+            `set(attributes["cluster"], "")`,
+            `set(attributes["k8s.cluster.name"], "")`,
+          ]
+        }
+
+        log_statements {
+          context = "log"
+          statements = [
+            `delete_key(attributes, "loki.attribute.labels")`,
+            `delete_key(attributes, "loki.resource.labels")`,
+            `set(resource.attributes["k8s.container.name"], attributes["container"] ) where resource.attributes["k8s.container.name"] == nil and attributes["container"] != nil`,
+            `delete_key(attributes, "container") where attributes["container"] == resource.attributes["k8s.container.name"]`,
+            `set(resource.attributes["k8s.cronjob.name"], attributes["cronjob"] ) where resource.attributes["k8s.cronjob.name"] == nil and attributes["cronjob"] != nil`,
+            `delete_key(attributes, "cronjob") where attributes["cronjob"] == resource.attributes["k8s.cronjob.name"]`,
+            `set(resource.attributes["k8s.daemonset.name"], attributes["daemonset"] ) where resource.attributes["k8s.daemonset.name"] == nil and attributes["daemonset"] != nil`,
+            `delete_key(attributes, "daemonset") where attributes["daemonset"] == resource.attributes["k8s.daemonset.name"]`,
+            `set(resource.attributes["k8s.deployment.name"], attributes["deployment"] ) where resource.attributes["k8s.deployment.name"] == nil and attributes["deployment"] != nil`,
+            `delete_key(attributes, "deployment") where attributes["deployment"] == resource.attributes["k8s.deployment.name"]`,
+            `set(resource.attributes["deployment.environment"], attributes["deployment_environment"] ) where resource.attributes["deployment.environment"] == nil and attributes["deployment_environment"] != nil`,
+            `delete_key(attributes, "deployment_environment") where attributes["deployment_environment"] == resource.attributes["deployment.environment"]`,
+            `set(resource.attributes["deployment.environment.name"], attributes["deployment_environment_name"] ) where resource.attributes["deployment.environment.name"] == nil and attributes["deployment_environment_name"] != nil`,
+            `delete_key(attributes, "deployment_environment_name") where attributes["deployment_environment_name"] == resource.attributes["deployment.environment.name"]`,
+            `set(resource.attributes["k8s.job.name"], attributes["job_name"] ) where resource.attributes["k8s.job.name"] == nil and attributes["job_name"] != nil`,
+            `delete_key(attributes, "job_name") where attributes["job_name"] == resource.attributes["k8s.job.name"]`,
+            `set(resource.attributes["k8s.namespace.name"], attributes["namespace"] ) where resource.attributes["k8s.namespace.name"] == nil and attributes["namespace"] != nil`,
+            `delete_key(attributes, "namespace") where attributes["namespace"] == resource.attributes["k8s.namespace.name"]`,
+            `set(resource.attributes["k8s.pod.name"], attributes["pod"] ) where resource.attributes["k8s.pod.name"] == nil and attributes["pod"] != nil`,
+            `delete_key(attributes, "pod") where attributes["pod"] == resource.attributes["k8s.pod.name"]`,
+            `set(resource.attributes["k8s.replicaset.name"], attributes["replicaset"] ) where resource.attributes["k8s.replicaset.name"] == nil and attributes["replicaset"] != nil`,
+            `delete_key(attributes, "replicaset") where attributes["replicaset"] == resource.attributes["k8s.replicaset.name"]`,
+            `set(resource.attributes["service.name"], attributes["service_name"] ) where resource.attributes["service.name"] == nil and attributes["service_name"] != nil`,
+            `delete_key(attributes, "service_name") where attributes["service_name"] == resource.attributes["service.name"]`,
+            `set(resource.attributes["service.namespace"], attributes["service_namespace"] ) where resource.attributes["service.namespace"] == nil and attributes["service_namespace"] != nil`,
+            `delete_key(attributes, "service_namespace") where attributes["service_namespace"] == resource.attributes["service.namespace"]`,
+            `set(resource.attributes["k8s.statefulset.name"], attributes["statefulset"] ) where resource.attributes["k8s.statefulset.name"] == nil and attributes["statefulset"] != nil`,
+            `delete_key(attributes, "statefulset") where attributes["statefulset"] == resource.attributes["k8s.statefulset.name"]`,
+          ]
+        }
+
+        trace_statements {
+          context = "resource"
+          statements = [
+            `set(attributes["cluster"], "")`,
+            `set(attributes["k8s.cluster.name"], "")`,
+          ]
+        }
+
+
+        output {
+          metrics = [otelcol.processor.batch.tempo.input]
+          logs = [otelcol.processor.batch.tempo.input]
+          traces = [otelcol.processor.batch.tempo.input]
+        }
+      }
+
+      otelcol.exporter.loadbalancing "tempo" {
+        resolver {
+          kubernetes {
+            service = "RELEASE-NAME-tempo-sampler"
+          }
+        }
+        protocol {
+          otlp {
+            client {
+              tls {
+                insecure = true
+              }
+            }
+          }
+        }
+      }
+
+      otelcol.processor.batch "tempo" {
+        timeout = "2s"
+        send_batch_size = 8192
+        send_batch_max_size = 0
+
+        output {
+          metrics = [otelcol.exporter.otlp.tempo.input]
+          logs = [otelcol.exporter.otlp.tempo.input]
+          traces = [otelcol.exporter.otlp.tempo.input]
+        }
+      }
+      otelcol.exporter.otlp "tempo" {
+        client {
+          endpoint = "tempo:4317"
+          tls {
+            insecure = false
+            insecure_skip_verify = false
+          }
+        }
+
+        retry_on_failure {
+          enabled = true
+          initial_interval = "5s"
+          max_interval = "30s"
+          max_elapsed_time = "5m"
+        }
+      }
+creates a composite policy:
+  1: |
+    |-
+      otelcol.receiver.otlp "receiver" {
+        grpc {
+          max_recv_msg_size = "4MB"  # TODO this could be configurable
+        }
+
+        output {
+          traces = ["otelcol.processor.tail_sampling.sampler.input"]
+        }
+      }
+      otelcol.processor.tail_sampling "sampler" {
+        // https://grafana.com/docs/alloy/latest/reference/components/otelcol.processor.tail_sampling/
+
+        decision_wait = "15s"
+
+        policy {
+          name = "composite-policy-1"
+          type = "composite"
+          composite {
+            max_total_spans_per_second = 1000
+            policy_order = ["test-composite-policy-1", "test-composite-policy-2", "test-composite-policy-3"]
+            composite_sub_policy {
+              name = "test-composite-policy-1"
+              type = "numeric_attribute"
+              numeric_attribute {
+                key = "key1"
+                min_value = 50
+              }
+            }
+            composite_sub_policy {
+              name = "test-composite-policy-2"
+              type = "string_attribute"
+              string_attribute {
+                key = "key2"
+                values = ["value1", "value2"]
+              }
+            }
+            composite_sub_policy {
+              name = "test-composite-policy-3"
+              type = "always_sample"
+            }
+            rate_allocation {
+              policy = "test-composite-policy-1"
+              percent = 50
+            }
+            rate_allocation {
+              policy = "test-composite-policy-2"
+              percent = 25
+            }
+          }
+        }
+
+        output {
+          traces = [otelcol.processor.batch.default.input]
+        }
+      }
+      // Destination: tempo (otlp)
+      otelcol.receiver.prometheus "tempo" {
+        output {
+          metrics = [otelcol.processor.attributes.tempo.input]
+        }
+      }
+      otelcol.receiver.loki "tempo" {
+        output {
+          logs = [otelcol.processor.attributes.tempo.input]
+        }
+      }
+
+      otelcol.processor.attributes "tempo" {
+        output {
+          metrics = [otelcol.processor.transform.tempo.input]
+          logs = [otelcol.processor.transform.tempo.input]
+          traces = [otelcol.processor.transform.tempo.input]
+        }
+      }
+
+      otelcol.processor.transform "tempo" {
+        error_mode = "ignore"
+        metric_statements {
+          context = "resource"
+          statements = [
+            `set(attributes["cluster"], "")`,
+            `set(attributes["k8s.cluster.name"], "")`,
+          ]
+        }
+
+        metric_statements {
+          context = "datapoint"
+          statements = [
+            `set(attributes["cluster"], "")`,
+            `set(attributes["k8s.cluster.name"], "")`,
+            `set(resource.attributes["deployment.environment"], attributes["deployment_environment"] ) where resource.attributes["deployment.environment"] == nil and attributes["deployment_environment"] != nil`,
+            `delete_key(attributes, "deployment_environment") where attributes["deployment_environment"] == resource.attributes["deployment.environment"]`,
+            `set(resource.attributes["deployment.environment.name"], attributes["deployment_environment_name"] ) where resource.attributes["deployment.environment.name"] == nil and attributes["deployment_environment_name"] != nil`,
+            `delete_key(attributes, "deployment_environment_name") where attributes["deployment_environment_name"] == resource.attributes["deployment.environment.name"]`,
+            `set(resource.attributes["service.name"], attributes["service_name"] ) where resource.attributes["service.name"] == nil and attributes["service_name"] != nil`,
+            `delete_key(attributes, "service_name") where attributes["service_name"] == resource.attributes["service.name"]`,
+            `set(resource.attributes["service.namespace"], attributes["service_namespace"] ) where resource.attributes["service.namespace"] == nil and attributes["service_namespace"] != nil`,
+            `delete_key(attributes, "service_namespace") where attributes["service_namespace"] == resource.attributes["service.namespace"]`,
+          ]
+        }
+        log_statements {
+          context = "resource"
+          statements = [
+            `set(attributes["cluster"], "")`,
+            `set(attributes["k8s.cluster.name"], "")`,
+          ]
+        }
+
+        log_statements {
+          context = "log"
+          statements = [
+            `delete_key(attributes, "loki.attribute.labels")`,
+            `delete_key(attributes, "loki.resource.labels")`,
+            `set(resource.attributes["k8s.container.name"], attributes["container"] ) where resource.attributes["k8s.container.name"] == nil and attributes["container"] != nil`,
+            `delete_key(attributes, "container") where attributes["container"] == resource.attributes["k8s.container.name"]`,
+            `set(resource.attributes["k8s.cronjob.name"], attributes["cronjob"] ) where resource.attributes["k8s.cronjob.name"] == nil and attributes["cronjob"] != nil`,
+            `delete_key(attributes, "cronjob") where attributes["cronjob"] == resource.attributes["k8s.cronjob.name"]`,
+            `set(resource.attributes["k8s.daemonset.name"], attributes["daemonset"] ) where resource.attributes["k8s.daemonset.name"] == nil and attributes["daemonset"] != nil`,
+            `delete_key(attributes, "daemonset") where attributes["daemonset"] == resource.attributes["k8s.daemonset.name"]`,
+            `set(resource.attributes["k8s.deployment.name"], attributes["deployment"] ) where resource.attributes["k8s.deployment.name"] == nil and attributes["deployment"] != nil`,
+            `delete_key(attributes, "deployment") where attributes["deployment"] == resource.attributes["k8s.deployment.name"]`,
+            `set(resource.attributes["deployment.environment"], attributes["deployment_environment"] ) where resource.attributes["deployment.environment"] == nil and attributes["deployment_environment"] != nil`,
+            `delete_key(attributes, "deployment_environment") where attributes["deployment_environment"] == resource.attributes["deployment.environment"]`,
+            `set(resource.attributes["deployment.environment.name"], attributes["deployment_environment_name"] ) where resource.attributes["deployment.environment.name"] == nil and attributes["deployment_environment_name"] != nil`,
+            `delete_key(attributes, "deployment_environment_name") where attributes["deployment_environment_name"] == resource.attributes["deployment.environment.name"]`,
+            `set(resource.attributes["k8s.job.name"], attributes["job_name"] ) where resource.attributes["k8s.job.name"] == nil and attributes["job_name"] != nil`,
+            `delete_key(attributes, "job_name") where attributes["job_name"] == resource.attributes["k8s.job.name"]`,
+            `set(resource.attributes["k8s.namespace.name"], attributes["namespace"] ) where resource.attributes["k8s.namespace.name"] == nil and attributes["namespace"] != nil`,
+            `delete_key(attributes, "namespace") where attributes["namespace"] == resource.attributes["k8s.namespace.name"]`,
+            `set(resource.attributes["k8s.pod.name"], attributes["pod"] ) where resource.attributes["k8s.pod.name"] == nil and attributes["pod"] != nil`,
+            `delete_key(attributes, "pod") where attributes["pod"] == resource.attributes["k8s.pod.name"]`,
+            `set(resource.attributes["k8s.replicaset.name"], attributes["replicaset"] ) where resource.attributes["k8s.replicaset.name"] == nil and attributes["replicaset"] != nil`,
+            `delete_key(attributes, "replicaset") where attributes["replicaset"] == resource.attributes["k8s.replicaset.name"]`,
+            `set(resource.attributes["service.name"], attributes["service_name"] ) where resource.attributes["service.name"] == nil and attributes["service_name"] != nil`,
+            `delete_key(attributes, "service_name") where attributes["service_name"] == resource.attributes["service.name"]`,
+            `set(resource.attributes["service.namespace"], attributes["service_namespace"] ) where resource.attributes["service.namespace"] == nil and attributes["service_namespace"] != nil`,
+            `delete_key(attributes, "service_namespace") where attributes["service_namespace"] == resource.attributes["service.namespace"]`,
+            `set(resource.attributes["k8s.statefulset.name"], attributes["statefulset"] ) where resource.attributes["k8s.statefulset.name"] == nil and attributes["statefulset"] != nil`,
+            `delete_key(attributes, "statefulset") where attributes["statefulset"] == resource.attributes["k8s.statefulset.name"]`,
+          ]
+        }
+
+        trace_statements {
+          context = "resource"
+          statements = [
+            `set(attributes["cluster"], "")`,
+            `set(attributes["k8s.cluster.name"], "")`,
+          ]
+        }
+
+
+        output {
+          metrics = [otelcol.processor.batch.tempo.input]
+          logs = [otelcol.processor.batch.tempo.input]
+          traces = [otelcol.processor.batch.tempo.input]
+        }
+      }
+
+      otelcol.exporter.loadbalancing "tempo" {
+        resolver {
+          kubernetes {
+            service = "RELEASE-NAME-tempo-sampler"
+          }
+        }
+        protocol {
+          otlp {
+            client {
+              tls {
+                insecure = true
+              }
+            }
+          }
+        }
+      }
+
+      otelcol.processor.batch "tempo" {
+        timeout = "2s"
+        send_batch_size = 8192
+        send_batch_max_size = 0
+
+        output {
+          metrics = [otelcol.exporter.otlp.tempo.input]
+          logs = [otelcol.exporter.otlp.tempo.input]
+          traces = [otelcol.exporter.otlp.tempo.input]
+        }
+      }
+      otelcol.exporter.otlp "tempo" {
+        client {
+          endpoint = "tempo:4317"
+          tls {
+            insecure = false
+            insecure_skip_verify = false
+          }
+        }
+
+        retry_on_failure {
+          enabled = true
+          initial_interval = "5s"
+          max_interval = "30s"
+          max_elapsed_time = "5m"
+        }
+      }
+creates a latency policy:
+  1: |
+    |-
+      otelcol.receiver.otlp "receiver" {
+        grpc {
+          max_recv_msg_size = "4MB"  # TODO this could be configurable
+        }
+
+        output {
+          traces = ["otelcol.processor.tail_sampling.sampler.input"]
+        }
+      }
+      otelcol.processor.tail_sampling "sampler" {
+        // https://grafana.com/docs/alloy/latest/reference/components/otelcol.processor.tail_sampling/
+
+        decision_wait = "15s"
+
+        policy {
+          name = "latency-policy"
+          type = "latency"
+          latency {
+            threshold_ms = 5000
+          }
+        }
+
+        output {
+          traces = [otelcol.processor.batch.default.input]
+        }
+      }
+      // Destination: tempo (otlp)
+      otelcol.receiver.prometheus "tempo" {
+        output {
+          metrics = [otelcol.processor.attributes.tempo.input]
+        }
+      }
+      otelcol.receiver.loki "tempo" {
+        output {
+          logs = [otelcol.processor.attributes.tempo.input]
+        }
+      }
+
+      otelcol.processor.attributes "tempo" {
+        output {
+          metrics = [otelcol.processor.transform.tempo.input]
+          logs = [otelcol.processor.transform.tempo.input]
+          traces = [otelcol.processor.transform.tempo.input]
+        }
+      }
+
+      otelcol.processor.transform "tempo" {
+        error_mode = "ignore"
+        metric_statements {
+          context = "resource"
+          statements = [
+            `set(attributes["cluster"], "")`,
+            `set(attributes["k8s.cluster.name"], "")`,
+          ]
+        }
+
+        metric_statements {
+          context = "datapoint"
+          statements = [
+            `set(attributes["cluster"], "")`,
+            `set(attributes["k8s.cluster.name"], "")`,
+            `set(resource.attributes["deployment.environment"], attributes["deployment_environment"] ) where resource.attributes["deployment.environment"] == nil and attributes["deployment_environment"] != nil`,
+            `delete_key(attributes, "deployment_environment") where attributes["deployment_environment"] == resource.attributes["deployment.environment"]`,
+            `set(resource.attributes["deployment.environment.name"], attributes["deployment_environment_name"] ) where resource.attributes["deployment.environment.name"] == nil and attributes["deployment_environment_name"] != nil`,
+            `delete_key(attributes, "deployment_environment_name") where attributes["deployment_environment_name"] == resource.attributes["deployment.environment.name"]`,
+            `set(resource.attributes["service.name"], attributes["service_name"] ) where resource.attributes["service.name"] == nil and attributes["service_name"] != nil`,
+            `delete_key(attributes, "service_name") where attributes["service_name"] == resource.attributes["service.name"]`,
+            `set(resource.attributes["service.namespace"], attributes["service_namespace"] ) where resource.attributes["service.namespace"] == nil and attributes["service_namespace"] != nil`,
+            `delete_key(attributes, "service_namespace") where attributes["service_namespace"] == resource.attributes["service.namespace"]`,
+          ]
+        }
+        log_statements {
+          context = "resource"
+          statements = [
+            `set(attributes["cluster"], "")`,
+            `set(attributes["k8s.cluster.name"], "")`,
+          ]
+        }
+
+        log_statements {
+          context = "log"
+          statements = [
+            `delete_key(attributes, "loki.attribute.labels")`,
+            `delete_key(attributes, "loki.resource.labels")`,
+            `set(resource.attributes["k8s.container.name"], attributes["container"] ) where resource.attributes["k8s.container.name"] == nil and attributes["container"] != nil`,
+            `delete_key(attributes, "container") where attributes["container"] == resource.attributes["k8s.container.name"]`,
+            `set(resource.attributes["k8s.cronjob.name"], attributes["cronjob"] ) where resource.attributes["k8s.cronjob.name"] == nil and attributes["cronjob"] != nil`,
+            `delete_key(attributes, "cronjob") where attributes["cronjob"] == resource.attributes["k8s.cronjob.name"]`,
+            `set(resource.attributes["k8s.daemonset.name"], attributes["daemonset"] ) where resource.attributes["k8s.daemonset.name"] == nil and attributes["daemonset"] != nil`,
+            `delete_key(attributes, "daemonset") where attributes["daemonset"] == resource.attributes["k8s.daemonset.name"]`,
+            `set(resource.attributes["k8s.deployment.name"], attributes["deployment"] ) where resource.attributes["k8s.deployment.name"] == nil and attributes["deployment"] != nil`,
+            `delete_key(attributes, "deployment") where attributes["deployment"] == resource.attributes["k8s.deployment.name"]`,
+            `set(resource.attributes["deployment.environment"], attributes["deployment_environment"] ) where resource.attributes["deployment.environment"] == nil and attributes["deployment_environment"] != nil`,
+            `delete_key(attributes, "deployment_environment") where attributes["deployment_environment"] == resource.attributes["deployment.environment"]`,
+            `set(resource.attributes["deployment.environment.name"], attributes["deployment_environment_name"] ) where resource.attributes["deployment.environment.name"] == nil and attributes["deployment_environment_name"] != nil`,
+            `delete_key(attributes, "deployment_environment_name") where attributes["deployment_environment_name"] == resource.attributes["deployment.environment.name"]`,
+            `set(resource.attributes["k8s.job.name"], attributes["job_name"] ) where resource.attributes["k8s.job.name"] == nil and attributes["job_name"] != nil`,
+            `delete_key(attributes, "job_name") where attributes["job_name"] == resource.attributes["k8s.job.name"]`,
+            `set(resource.attributes["k8s.namespace.name"], attributes["namespace"] ) where resource.attributes["k8s.namespace.name"] == nil and attributes["namespace"] != nil`,
+            `delete_key(attributes, "namespace") where attributes["namespace"] == resource.attributes["k8s.namespace.name"]`,
+            `set(resource.attributes["k8s.pod.name"], attributes["pod"] ) where resource.attributes["k8s.pod.name"] == nil and attributes["pod"] != nil`,
+            `delete_key(attributes, "pod") where attributes["pod"] == resource.attributes["k8s.pod.name"]`,
+            `set(resource.attributes["k8s.replicaset.name"], attributes["replicaset"] ) where resource.attributes["k8s.replicaset.name"] == nil and attributes["replicaset"] != nil`,
+            `delete_key(attributes, "replicaset") where attributes["replicaset"] == resource.attributes["k8s.replicaset.name"]`,
+            `set(resource.attributes["service.name"], attributes["service_name"] ) where resource.attributes["service.name"] == nil and attributes["service_name"] != nil`,
+            `delete_key(attributes, "service_name") where attributes["service_name"] == resource.attributes["service.name"]`,
+            `set(resource.attributes["service.namespace"], attributes["service_namespace"] ) where resource.attributes["service.namespace"] == nil and attributes["service_namespace"] != nil`,
+            `delete_key(attributes, "service_namespace") where attributes["service_namespace"] == resource.attributes["service.namespace"]`,
+            `set(resource.attributes["k8s.statefulset.name"], attributes["statefulset"] ) where resource.attributes["k8s.statefulset.name"] == nil and attributes["statefulset"] != nil`,
+            `delete_key(attributes, "statefulset") where attributes["statefulset"] == resource.attributes["k8s.statefulset.name"]`,
+          ]
+        }
+
+        trace_statements {
+          context = "resource"
+          statements = [
+            `set(attributes["cluster"], "")`,
+            `set(attributes["k8s.cluster.name"], "")`,
+          ]
+        }
+
+
+        output {
+          metrics = [otelcol.processor.batch.tempo.input]
+          logs = [otelcol.processor.batch.tempo.input]
+          traces = [otelcol.processor.batch.tempo.input]
+        }
+      }
+
+      otelcol.exporter.loadbalancing "tempo" {
+        resolver {
+          kubernetes {
+            service = "RELEASE-NAME-tempo-sampler"
+          }
+        }
+        protocol {
+          otlp {
+            client {
+              tls {
+                insecure = true
+              }
+            }
+          }
+        }
+      }
+
+      otelcol.processor.batch "tempo" {
+        timeout = "2s"
+        send_batch_size = 8192
+        send_batch_max_size = 0
+
+        output {
+          metrics = [otelcol.exporter.otlp.tempo.input]
+          logs = [otelcol.exporter.otlp.tempo.input]
+          traces = [otelcol.exporter.otlp.tempo.input]
+        }
+      }
+      otelcol.exporter.otlp "tempo" {
+        client {
+          endpoint = "tempo:4317"
+          tls {
+            insecure = false
+            insecure_skip_verify = false
+          }
+        }
+
+        retry_on_failure {
+          enabled = true
+          initial_interval = "5s"
+          max_interval = "30s"
+          max_elapsed_time = "5m"
+        }
+      }
+creates a numeric_attribute policy:
+  1: |
+    |-
+      otelcol.receiver.otlp "receiver" {
+        grpc {
+          max_recv_msg_size = "4MB"  # TODO this could be configurable
+        }
+
+        output {
+          traces = ["otelcol.processor.tail_sampling.sampler.input"]
+        }
+      }
+      otelcol.processor.tail_sampling "sampler" {
+        // https://grafana.com/docs/alloy/latest/reference/components/otelcol.processor.tail_sampling/
+
+        decision_wait = "15s"
+
+        policy {
+          name = "numeric_attribute-policy"
+          type = "numeric_attribute"
+          numeric_attribute {
+            key = "key"
+            min_value = 1
+            max_value = 256
+
+          }
+        }
+
+        output {
+          traces = [otelcol.processor.batch.default.input]
+        }
+      }
+      // Destination: tempo (otlp)
+      otelcol.receiver.prometheus "tempo" {
+        output {
+          metrics = [otelcol.processor.attributes.tempo.input]
+        }
+      }
+      otelcol.receiver.loki "tempo" {
+        output {
+          logs = [otelcol.processor.attributes.tempo.input]
+        }
+      }
+
+      otelcol.processor.attributes "tempo" {
+        output {
+          metrics = [otelcol.processor.transform.tempo.input]
+          logs = [otelcol.processor.transform.tempo.input]
+          traces = [otelcol.processor.transform.tempo.input]
+        }
+      }
+
+      otelcol.processor.transform "tempo" {
+        error_mode = "ignore"
+        metric_statements {
+          context = "resource"
+          statements = [
+            `set(attributes["cluster"], "")`,
+            `set(attributes["k8s.cluster.name"], "")`,
+          ]
+        }
+
+        metric_statements {
+          context = "datapoint"
+          statements = [
+            `set(attributes["cluster"], "")`,
+            `set(attributes["k8s.cluster.name"], "")`,
+            `set(resource.attributes["deployment.environment"], attributes["deployment_environment"] ) where resource.attributes["deployment.environment"] == nil and attributes["deployment_environment"] != nil`,
+            `delete_key(attributes, "deployment_environment") where attributes["deployment_environment"] == resource.attributes["deployment.environment"]`,
+            `set(resource.attributes["deployment.environment.name"], attributes["deployment_environment_name"] ) where resource.attributes["deployment.environment.name"] == nil and attributes["deployment_environment_name"] != nil`,
+            `delete_key(attributes, "deployment_environment_name") where attributes["deployment_environment_name"] == resource.attributes["deployment.environment.name"]`,
+            `set(resource.attributes["service.name"], attributes["service_name"] ) where resource.attributes["service.name"] == nil and attributes["service_name"] != nil`,
+            `delete_key(attributes, "service_name") where attributes["service_name"] == resource.attributes["service.name"]`,
+            `set(resource.attributes["service.namespace"], attributes["service_namespace"] ) where resource.attributes["service.namespace"] == nil and attributes["service_namespace"] != nil`,
+            `delete_key(attributes, "service_namespace") where attributes["service_namespace"] == resource.attributes["service.namespace"]`,
+          ]
+        }
+        log_statements {
+          context = "resource"
+          statements = [
+            `set(attributes["cluster"], "")`,
+            `set(attributes["k8s.cluster.name"], "")`,
+          ]
+        }
+
+        log_statements {
+          context = "log"
+          statements = [
+            `delete_key(attributes, "loki.attribute.labels")`,
+            `delete_key(attributes, "loki.resource.labels")`,
+            `set(resource.attributes["k8s.container.name"], attributes["container"] ) where resource.attributes["k8s.container.name"] == nil and attributes["container"] != nil`,
+            `delete_key(attributes, "container") where attributes["container"] == resource.attributes["k8s.container.name"]`,
+            `set(resource.attributes["k8s.cronjob.name"], attributes["cronjob"] ) where resource.attributes["k8s.cronjob.name"] == nil and attributes["cronjob"] != nil`,
+            `delete_key(attributes, "cronjob") where attributes["cronjob"] == resource.attributes["k8s.cronjob.name"]`,
+            `set(resource.attributes["k8s.daemonset.name"], attributes["daemonset"] ) where resource.attributes["k8s.daemonset.name"] == nil and attributes["daemonset"] != nil`,
+            `delete_key(attributes, "daemonset") where attributes["daemonset"] == resource.attributes["k8s.daemonset.name"]`,
+            `set(resource.attributes["k8s.deployment.name"], attributes["deployment"] ) where resource.attributes["k8s.deployment.name"] == nil and attributes["deployment"] != nil`,
+            `delete_key(attributes, "deployment") where attributes["deployment"] == resource.attributes["k8s.deployment.name"]`,
+            `set(resource.attributes["deployment.environment"], attributes["deployment_environment"] ) where resource.attributes["deployment.environment"] == nil and attributes["deployment_environment"] != nil`,
+            `delete_key(attributes, "deployment_environment") where attributes["deployment_environment"] == resource.attributes["deployment.environment"]`,
+            `set(resource.attributes["deployment.environment.name"], attributes["deployment_environment_name"] ) where resource.attributes["deployment.environment.name"] == nil and attributes["deployment_environment_name"] != nil`,
+            `delete_key(attributes, "deployment_environment_name") where attributes["deployment_environment_name"] == resource.attributes["deployment.environment.name"]`,
+            `set(resource.attributes["k8s.job.name"], attributes["job_name"] ) where resource.attributes["k8s.job.name"] == nil and attributes["job_name"] != nil`,
+            `delete_key(attributes, "job_name") where attributes["job_name"] == resource.attributes["k8s.job.name"]`,
+            `set(resource.attributes["k8s.namespace.name"], attributes["namespace"] ) where resource.attributes["k8s.namespace.name"] == nil and attributes["namespace"] != nil`,
+            `delete_key(attributes, "namespace") where attributes["namespace"] == resource.attributes["k8s.namespace.name"]`,
+            `set(resource.attributes["k8s.pod.name"], attributes["pod"] ) where resource.attributes["k8s.pod.name"] == nil and attributes["pod"] != nil`,
+            `delete_key(attributes, "pod") where attributes["pod"] == resource.attributes["k8s.pod.name"]`,
+            `set(resource.attributes["k8s.replicaset.name"], attributes["replicaset"] ) where resource.attributes["k8s.replicaset.name"] == nil and attributes["replicaset"] != nil`,
+            `delete_key(attributes, "replicaset") where attributes["replicaset"] == resource.attributes["k8s.replicaset.name"]`,
+            `set(resource.attributes["service.name"], attributes["service_name"] ) where resource.attributes["service.name"] == nil and attributes["service_name"] != nil`,
+            `delete_key(attributes, "service_name") where attributes["service_name"] == resource.attributes["service.name"]`,
+            `set(resource.attributes["service.namespace"], attributes["service_namespace"] ) where resource.attributes["service.namespace"] == nil and attributes["service_namespace"] != nil`,
+            `delete_key(attributes, "service_namespace") where attributes["service_namespace"] == resource.attributes["service.namespace"]`,
+            `set(resource.attributes["k8s.statefulset.name"], attributes["statefulset"] ) where resource.attributes["k8s.statefulset.name"] == nil and attributes["statefulset"] != nil`,
+            `delete_key(attributes, "statefulset") where attributes["statefulset"] == resource.attributes["k8s.statefulset.name"]`,
+          ]
+        }
+
+        trace_statements {
+          context = "resource"
+          statements = [
+            `set(attributes["cluster"], "")`,
+            `set(attributes["k8s.cluster.name"], "")`,
+          ]
+        }
+
+
+        output {
+          metrics = [otelcol.processor.batch.tempo.input]
+          logs = [otelcol.processor.batch.tempo.input]
+          traces = [otelcol.processor.batch.tempo.input]
+        }
+      }
+
+      otelcol.exporter.loadbalancing "tempo" {
+        resolver {
+          kubernetes {
+            service = "RELEASE-NAME-tempo-sampler"
+          }
+        }
+        protocol {
+          otlp {
+            client {
+              tls {
+                insecure = true
+              }
+            }
+          }
+        }
+      }
+
+      otelcol.processor.batch "tempo" {
+        timeout = "2s"
+        send_batch_size = 8192
+        send_batch_max_size = 0
+
+        output {
+          metrics = [otelcol.exporter.otlp.tempo.input]
+          logs = [otelcol.exporter.otlp.tempo.input]
+          traces = [otelcol.exporter.otlp.tempo.input]
+        }
+      }
+      otelcol.exporter.otlp "tempo" {
+        client {
+          endpoint = "tempo:4317"
+          tls {
+            insecure = false
+            insecure_skip_verify = false
+          }
+        }
+
+        retry_on_failure {
+          enabled = true
+          initial_interval = "5s"
+          max_interval = "30s"
+          max_elapsed_time = "5m"
+        }
+      }
+creates a probabilistic policy:
+  1: |
+    |-
+      otelcol.receiver.otlp "receiver" {
+        grpc {
+          max_recv_msg_size = "4MB"  # TODO this could be configurable
+        }
+
+        output {
+          traces = ["otelcol.processor.tail_sampling.sampler.input"]
+        }
+      }
+      otelcol.processor.tail_sampling "sampler" {
+        // https://grafana.com/docs/alloy/latest/reference/components/otelcol.processor.tail_sampling/
+
+        decision_wait = "15s"
+
+        policy {
+          name = "probabilistic-policy"
+          type = "probabilistic"
+          probabilistic {
+            sampling_percentage = 10
+          }
+        }
+
+        output {
+          traces = [otelcol.processor.batch.default.input]
+        }
+      }
+      // Destination: tempo (otlp)
+      otelcol.receiver.prometheus "tempo" {
+        output {
+          metrics = [otelcol.processor.attributes.tempo.input]
+        }
+      }
+      otelcol.receiver.loki "tempo" {
+        output {
+          logs = [otelcol.processor.attributes.tempo.input]
+        }
+      }
+
+      otelcol.processor.attributes "tempo" {
+        output {
+          metrics = [otelcol.processor.transform.tempo.input]
+          logs = [otelcol.processor.transform.tempo.input]
+          traces = [otelcol.processor.transform.tempo.input]
+        }
+      }
+
+      otelcol.processor.transform "tempo" {
+        error_mode = "ignore"
+        metric_statements {
+          context = "resource"
+          statements = [
+            `set(attributes["cluster"], "")`,
+            `set(attributes["k8s.cluster.name"], "")`,
+          ]
+        }
+
+        metric_statements {
+          context = "datapoint"
+          statements = [
+            `set(attributes["cluster"], "")`,
+            `set(attributes["k8s.cluster.name"], "")`,
+            `set(resource.attributes["deployment.environment"], attributes["deployment_environment"] ) where resource.attributes["deployment.environment"] == nil and attributes["deployment_environment"] != nil`,
+            `delete_key(attributes, "deployment_environment") where attributes["deployment_environment"] == resource.attributes["deployment.environment"]`,
+            `set(resource.attributes["deployment.environment.name"], attributes["deployment_environment_name"] ) where resource.attributes["deployment.environment.name"] == nil and attributes["deployment_environment_name"] != nil`,
+            `delete_key(attributes, "deployment_environment_name") where attributes["deployment_environment_name"] == resource.attributes["deployment.environment.name"]`,
+            `set(resource.attributes["service.name"], attributes["service_name"] ) where resource.attributes["service.name"] == nil and attributes["service_name"] != nil`,
+            `delete_key(attributes, "service_name") where attributes["service_name"] == resource.attributes["service.name"]`,
+            `set(resource.attributes["service.namespace"], attributes["service_namespace"] ) where resource.attributes["service.namespace"] == nil and attributes["service_namespace"] != nil`,
+            `delete_key(attributes, "service_namespace") where attributes["service_namespace"] == resource.attributes["service.namespace"]`,
+          ]
+        }
+        log_statements {
+          context = "resource"
+          statements = [
+            `set(attributes["cluster"], "")`,
+            `set(attributes["k8s.cluster.name"], "")`,
+          ]
+        }
+
+        log_statements {
+          context = "log"
+          statements = [
+            `delete_key(attributes, "loki.attribute.labels")`,
+            `delete_key(attributes, "loki.resource.labels")`,
+            `set(resource.attributes["k8s.container.name"], attributes["container"] ) where resource.attributes["k8s.container.name"] == nil and attributes["container"] != nil`,
+            `delete_key(attributes, "container") where attributes["container"] == resource.attributes["k8s.container.name"]`,
+            `set(resource.attributes["k8s.cronjob.name"], attributes["cronjob"] ) where resource.attributes["k8s.cronjob.name"] == nil and attributes["cronjob"] != nil`,
+            `delete_key(attributes, "cronjob") where attributes["cronjob"] == resource.attributes["k8s.cronjob.name"]`,
+            `set(resource.attributes["k8s.daemonset.name"], attributes["daemonset"] ) where resource.attributes["k8s.daemonset.name"] == nil and attributes["daemonset"] != nil`,
+            `delete_key(attributes, "daemonset") where attributes["daemonset"] == resource.attributes["k8s.daemonset.name"]`,
+            `set(resource.attributes["k8s.deployment.name"], attributes["deployment"] ) where resource.attributes["k8s.deployment.name"] == nil and attributes["deployment"] != nil`,
+            `delete_key(attributes, "deployment") where attributes["deployment"] == resource.attributes["k8s.deployment.name"]`,
+            `set(resource.attributes["deployment.environment"], attributes["deployment_environment"] ) where resource.attributes["deployment.environment"] == nil and attributes["deployment_environment"] != nil`,
+            `delete_key(attributes, "deployment_environment") where attributes["deployment_environment"] == resource.attributes["deployment.environment"]`,
+            `set(resource.attributes["deployment.environment.name"], attributes["deployment_environment_name"] ) where resource.attributes["deployment.environment.name"] == nil and attributes["deployment_environment_name"] != nil`,
+            `delete_key(attributes, "deployment_environment_name") where attributes["deployment_environment_name"] == resource.attributes["deployment.environment.name"]`,
+            `set(resource.attributes["k8s.job.name"], attributes["job_name"] ) where resource.attributes["k8s.job.name"] == nil and attributes["job_name"] != nil`,
+            `delete_key(attributes, "job_name") where attributes["job_name"] == resource.attributes["k8s.job.name"]`,
+            `set(resource.attributes["k8s.namespace.name"], attributes["namespace"] ) where resource.attributes["k8s.namespace.name"] == nil and attributes["namespace"] != nil`,
+            `delete_key(attributes, "namespace") where attributes["namespace"] == resource.attributes["k8s.namespace.name"]`,
+            `set(resource.attributes["k8s.pod.name"], attributes["pod"] ) where resource.attributes["k8s.pod.name"] == nil and attributes["pod"] != nil`,
+            `delete_key(attributes, "pod") where attributes["pod"] == resource.attributes["k8s.pod.name"]`,
+            `set(resource.attributes["k8s.replicaset.name"], attributes["replicaset"] ) where resource.attributes["k8s.replicaset.name"] == nil and attributes["replicaset"] != nil`,
+            `delete_key(attributes, "replicaset") where attributes["replicaset"] == resource.attributes["k8s.replicaset.name"]`,
+            `set(resource.attributes["service.name"], attributes["service_name"] ) where resource.attributes["service.name"] == nil and attributes["service_name"] != nil`,
+            `delete_key(attributes, "service_name") where attributes["service_name"] == resource.attributes["service.name"]`,
+            `set(resource.attributes["service.namespace"], attributes["service_namespace"] ) where resource.attributes["service.namespace"] == nil and attributes["service_namespace"] != nil`,
+            `delete_key(attributes, "service_namespace") where attributes["service_namespace"] == resource.attributes["service.namespace"]`,
+            `set(resource.attributes["k8s.statefulset.name"], attributes["statefulset"] ) where resource.attributes["k8s.statefulset.name"] == nil and attributes["statefulset"] != nil`,
+            `delete_key(attributes, "statefulset") where attributes["statefulset"] == resource.attributes["k8s.statefulset.name"]`,
+          ]
+        }
+
+        trace_statements {
+          context = "resource"
+          statements = [
+            `set(attributes["cluster"], "")`,
+            `set(attributes["k8s.cluster.name"], "")`,
+          ]
+        }
+
+
+        output {
+          metrics = [otelcol.processor.batch.tempo.input]
+          logs = [otelcol.processor.batch.tempo.input]
+          traces = [otelcol.processor.batch.tempo.input]
+        }
+      }
+
+      otelcol.exporter.loadbalancing "tempo" {
+        resolver {
+          kubernetes {
+            service = "RELEASE-NAME-tempo-sampler"
+          }
+        }
+        protocol {
+          otlp {
+            client {
+              tls {
+                insecure = true
+              }
+            }
+          }
+        }
+      }
+
+      otelcol.processor.batch "tempo" {
+        timeout = "2s"
+        send_batch_size = 8192
+        send_batch_max_size = 0
+
+        output {
+          metrics = [otelcol.exporter.otlp.tempo.input]
+          logs = [otelcol.exporter.otlp.tempo.input]
+          traces = [otelcol.exporter.otlp.tempo.input]
+        }
+      }
+      otelcol.exporter.otlp "tempo" {
+        client {
+          endpoint = "tempo:4317"
+          tls {
+            insecure = false
+            insecure_skip_verify = false
+          }
+        }
+
+        retry_on_failure {
+          enabled = true
+          initial_interval = "5s"
+          max_interval = "30s"
+          max_elapsed_time = "5m"
+        }
+      }
+creates a rate_limiting policy:
+  1: |
+    |-
+      otelcol.receiver.otlp "receiver" {
+        grpc {
+          max_recv_msg_size = "4MB"  # TODO this could be configurable
+        }
+
+        output {
+          traces = ["otelcol.processor.tail_sampling.sampler.input"]
+        }
+      }
+      otelcol.processor.tail_sampling "sampler" {
+        // https://grafana.com/docs/alloy/latest/reference/components/otelcol.processor.tail_sampling/
+
+        decision_wait = "15s"
+
+        policy {
+          name = "rate_limiting-policy"
+          type = "rate_limiting"
+          rate_limiting {
+            spans_per_second = 35
+          }
+        }
+
+        output {
+          traces = [otelcol.processor.batch.default.input]
+        }
+      }
+      // Destination: tempo (otlp)
+      otelcol.receiver.prometheus "tempo" {
+        output {
+          metrics = [otelcol.processor.attributes.tempo.input]
+        }
+      }
+      otelcol.receiver.loki "tempo" {
+        output {
+          logs = [otelcol.processor.attributes.tempo.input]
+        }
+      }
+
+      otelcol.processor.attributes "tempo" {
+        output {
+          metrics = [otelcol.processor.transform.tempo.input]
+          logs = [otelcol.processor.transform.tempo.input]
+          traces = [otelcol.processor.transform.tempo.input]
+        }
+      }
+
+      otelcol.processor.transform "tempo" {
+        error_mode = "ignore"
+        metric_statements {
+          context = "resource"
+          statements = [
+            `set(attributes["cluster"], "")`,
+            `set(attributes["k8s.cluster.name"], "")`,
+          ]
+        }
+
+        metric_statements {
+          context = "datapoint"
+          statements = [
+            `set(attributes["cluster"], "")`,
+            `set(attributes["k8s.cluster.name"], "")`,
+            `set(resource.attributes["deployment.environment"], attributes["deployment_environment"] ) where resource.attributes["deployment.environment"] == nil and attributes["deployment_environment"] != nil`,
+            `delete_key(attributes, "deployment_environment") where attributes["deployment_environment"] == resource.attributes["deployment.environment"]`,
+            `set(resource.attributes["deployment.environment.name"], attributes["deployment_environment_name"] ) where resource.attributes["deployment.environment.name"] == nil and attributes["deployment_environment_name"] != nil`,
+            `delete_key(attributes, "deployment_environment_name") where attributes["deployment_environment_name"] == resource.attributes["deployment.environment.name"]`,
+            `set(resource.attributes["service.name"], attributes["service_name"] ) where resource.attributes["service.name"] == nil and attributes["service_name"] != nil`,
+            `delete_key(attributes, "service_name") where attributes["service_name"] == resource.attributes["service.name"]`,
+            `set(resource.attributes["service.namespace"], attributes["service_namespace"] ) where resource.attributes["service.namespace"] == nil and attributes["service_namespace"] != nil`,
+            `delete_key(attributes, "service_namespace") where attributes["service_namespace"] == resource.attributes["service.namespace"]`,
+          ]
+        }
+        log_statements {
+          context = "resource"
+          statements = [
+            `set(attributes["cluster"], "")`,
+            `set(attributes["k8s.cluster.name"], "")`,
+          ]
+        }
+
+        log_statements {
+          context = "log"
+          statements = [
+            `delete_key(attributes, "loki.attribute.labels")`,
+            `delete_key(attributes, "loki.resource.labels")`,
+            `set(resource.attributes["k8s.container.name"], attributes["container"] ) where resource.attributes["k8s.container.name"] == nil and attributes["container"] != nil`,
+            `delete_key(attributes, "container") where attributes["container"] == resource.attributes["k8s.container.name"]`,
+            `set(resource.attributes["k8s.cronjob.name"], attributes["cronjob"] ) where resource.attributes["k8s.cronjob.name"] == nil and attributes["cronjob"] != nil`,
+            `delete_key(attributes, "cronjob") where attributes["cronjob"] == resource.attributes["k8s.cronjob.name"]`,
+            `set(resource.attributes["k8s.daemonset.name"], attributes["daemonset"] ) where resource.attributes["k8s.daemonset.name"] == nil and attributes["daemonset"] != nil`,
+            `delete_key(attributes, "daemonset") where attributes["daemonset"] == resource.attributes["k8s.daemonset.name"]`,
+            `set(resource.attributes["k8s.deployment.name"], attributes["deployment"] ) where resource.attributes["k8s.deployment.name"] == nil and attributes["deployment"] != nil`,
+            `delete_key(attributes, "deployment") where attributes["deployment"] == resource.attributes["k8s.deployment.name"]`,
+            `set(resource.attributes["deployment.environment"], attributes["deployment_environment"] ) where resource.attributes["deployment.environment"] == nil and attributes["deployment_environment"] != nil`,
+            `delete_key(attributes, "deployment_environment") where attributes["deployment_environment"] == resource.attributes["deployment.environment"]`,
+            `set(resource.attributes["deployment.environment.name"], attributes["deployment_environment_name"] ) where resource.attributes["deployment.environment.name"] == nil and attributes["deployment_environment_name"] != nil`,
+            `delete_key(attributes, "deployment_environment_name") where attributes["deployment_environment_name"] == resource.attributes["deployment.environment.name"]`,
+            `set(resource.attributes["k8s.job.name"], attributes["job_name"] ) where resource.attributes["k8s.job.name"] == nil and attributes["job_name"] != nil`,
+            `delete_key(attributes, "job_name") where attributes["job_name"] == resource.attributes["k8s.job.name"]`,
+            `set(resource.attributes["k8s.namespace.name"], attributes["namespace"] ) where resource.attributes["k8s.namespace.name"] == nil and attributes["namespace"] != nil`,
+            `delete_key(attributes, "namespace") where attributes["namespace"] == resource.attributes["k8s.namespace.name"]`,
+            `set(resource.attributes["k8s.pod.name"], attributes["pod"] ) where resource.attributes["k8s.pod.name"] == nil and attributes["pod"] != nil`,
+            `delete_key(attributes, "pod") where attributes["pod"] == resource.attributes["k8s.pod.name"]`,
+            `set(resource.attributes["k8s.replicaset.name"], attributes["replicaset"] ) where resource.attributes["k8s.replicaset.name"] == nil and attributes["replicaset"] != nil`,
+            `delete_key(attributes, "replicaset") where attributes["replicaset"] == resource.attributes["k8s.replicaset.name"]`,
+            `set(resource.attributes["service.name"], attributes["service_name"] ) where resource.attributes["service.name"] == nil and attributes["service_name"] != nil`,
+            `delete_key(attributes, "service_name") where attributes["service_name"] == resource.attributes["service.name"]`,
+            `set(resource.attributes["service.namespace"], attributes["service_namespace"] ) where resource.attributes["service.namespace"] == nil and attributes["service_namespace"] != nil`,
+            `delete_key(attributes, "service_namespace") where attributes["service_namespace"] == resource.attributes["service.namespace"]`,
+            `set(resource.attributes["k8s.statefulset.name"], attributes["statefulset"] ) where resource.attributes["k8s.statefulset.name"] == nil and attributes["statefulset"] != nil`,
+            `delete_key(attributes, "statefulset") where attributes["statefulset"] == resource.attributes["k8s.statefulset.name"]`,
+          ]
+        }
+
+        trace_statements {
+          context = "resource"
+          statements = [
+            `set(attributes["cluster"], "")`,
+            `set(attributes["k8s.cluster.name"], "")`,
+          ]
+        }
+
+
+        output {
+          metrics = [otelcol.processor.batch.tempo.input]
+          logs = [otelcol.processor.batch.tempo.input]
+          traces = [otelcol.processor.batch.tempo.input]
+        }
+      }
+
+      otelcol.exporter.loadbalancing "tempo" {
+        resolver {
+          kubernetes {
+            service = "RELEASE-NAME-tempo-sampler"
+          }
+        }
+        protocol {
+          otlp {
+            client {
+              tls {
+                insecure = true
+              }
+            }
+          }
+        }
+      }
+
+      otelcol.processor.batch "tempo" {
+        timeout = "2s"
+        send_batch_size = 8192
+        send_batch_max_size = 0
+
+        output {
+          metrics = [otelcol.exporter.otlp.tempo.input]
+          logs = [otelcol.exporter.otlp.tempo.input]
+          traces = [otelcol.exporter.otlp.tempo.input]
+        }
+      }
+      otelcol.exporter.otlp "tempo" {
+        client {
+          endpoint = "tempo:4317"
+          tls {
+            insecure = false
+            insecure_skip_verify = false
+          }
+        }
+
+        retry_on_failure {
+          enabled = true
+          initial_interval = "5s"
+          max_interval = "30s"
+          max_elapsed_time = "5m"
+        }
+      }
+creates a span_count policy:
+  1: |
+    |-
+      otelcol.receiver.otlp "receiver" {
+        grpc {
+          max_recv_msg_size = "4MB"  # TODO this could be configurable
+        }
+
+        output {
+          traces = ["otelcol.processor.tail_sampling.sampler.input"]
+        }
+      }
+      otelcol.processor.tail_sampling "sampler" {
+        // https://grafana.com/docs/alloy/latest/reference/components/otelcol.processor.tail_sampling/
+
+        decision_wait = "15s"
+
+        policy {
+          name = "span_count-policy"
+          type = "span_count"
+          span_count {
+            min_spans = 2
+            max_spans = 20
+
+          }
+        }
+
+        output {
+          traces = [otelcol.processor.batch.default.input]
+        }
+      }
+      // Destination: tempo (otlp)
+      otelcol.receiver.prometheus "tempo" {
+        output {
+          metrics = [otelcol.processor.attributes.tempo.input]
+        }
+      }
+      otelcol.receiver.loki "tempo" {
+        output {
+          logs = [otelcol.processor.attributes.tempo.input]
+        }
+      }
+
+      otelcol.processor.attributes "tempo" {
+        output {
+          metrics = [otelcol.processor.transform.tempo.input]
+          logs = [otelcol.processor.transform.tempo.input]
+          traces = [otelcol.processor.transform.tempo.input]
+        }
+      }
+
+      otelcol.processor.transform "tempo" {
+        error_mode = "ignore"
+        metric_statements {
+          context = "resource"
+          statements = [
+            `set(attributes["cluster"], "")`,
+            `set(attributes["k8s.cluster.name"], "")`,
+          ]
+        }
+
+        metric_statements {
+          context = "datapoint"
+          statements = [
+            `set(attributes["cluster"], "")`,
+            `set(attributes["k8s.cluster.name"], "")`,
+            `set(resource.attributes["deployment.environment"], attributes["deployment_environment"] ) where resource.attributes["deployment.environment"] == nil and attributes["deployment_environment"] != nil`,
+            `delete_key(attributes, "deployment_environment") where attributes["deployment_environment"] == resource.attributes["deployment.environment"]`,
+            `set(resource.attributes["deployment.environment.name"], attributes["deployment_environment_name"] ) where resource.attributes["deployment.environment.name"] == nil and attributes["deployment_environment_name"] != nil`,
+            `delete_key(attributes, "deployment_environment_name") where attributes["deployment_environment_name"] == resource.attributes["deployment.environment.name"]`,
+            `set(resource.attributes["service.name"], attributes["service_name"] ) where resource.attributes["service.name"] == nil and attributes["service_name"] != nil`,
+            `delete_key(attributes, "service_name") where attributes["service_name"] == resource.attributes["service.name"]`,
+            `set(resource.attributes["service.namespace"], attributes["service_namespace"] ) where resource.attributes["service.namespace"] == nil and attributes["service_namespace"] != nil`,
+            `delete_key(attributes, "service_namespace") where attributes["service_namespace"] == resource.attributes["service.namespace"]`,
+          ]
+        }
+        log_statements {
+          context = "resource"
+          statements = [
+            `set(attributes["cluster"], "")`,
+            `set(attributes["k8s.cluster.name"], "")`,
+          ]
+        }
+
+        log_statements {
+          context = "log"
+          statements = [
+            `delete_key(attributes, "loki.attribute.labels")`,
+            `delete_key(attributes, "loki.resource.labels")`,
+            `set(resource.attributes["k8s.container.name"], attributes["container"] ) where resource.attributes["k8s.container.name"] == nil and attributes["container"] != nil`,
+            `delete_key(attributes, "container") where attributes["container"] == resource.attributes["k8s.container.name"]`,
+            `set(resource.attributes["k8s.cronjob.name"], attributes["cronjob"] ) where resource.attributes["k8s.cronjob.name"] == nil and attributes["cronjob"] != nil`,
+            `delete_key(attributes, "cronjob") where attributes["cronjob"] == resource.attributes["k8s.cronjob.name"]`,
+            `set(resource.attributes["k8s.daemonset.name"], attributes["daemonset"] ) where resource.attributes["k8s.daemonset.name"] == nil and attributes["daemonset"] != nil`,
+            `delete_key(attributes, "daemonset") where attributes["daemonset"] == resource.attributes["k8s.daemonset.name"]`,
+            `set(resource.attributes["k8s.deployment.name"], attributes["deployment"] ) where resource.attributes["k8s.deployment.name"] == nil and attributes["deployment"] != nil`,
+            `delete_key(attributes, "deployment") where attributes["deployment"] == resource.attributes["k8s.deployment.name"]`,
+            `set(resource.attributes["deployment.environment"], attributes["deployment_environment"] ) where resource.attributes["deployment.environment"] == nil and attributes["deployment_environment"] != nil`,
+            `delete_key(attributes, "deployment_environment") where attributes["deployment_environment"] == resource.attributes["deployment.environment"]`,
+            `set(resource.attributes["deployment.environment.name"], attributes["deployment_environment_name"] ) where resource.attributes["deployment.environment.name"] == nil and attributes["deployment_environment_name"] != nil`,
+            `delete_key(attributes, "deployment_environment_name") where attributes["deployment_environment_name"] == resource.attributes["deployment.environment.name"]`,
+            `set(resource.attributes["k8s.job.name"], attributes["job_name"] ) where resource.attributes["k8s.job.name"] == nil and attributes["job_name"] != nil`,
+            `delete_key(attributes, "job_name") where attributes["job_name"] == resource.attributes["k8s.job.name"]`,
+            `set(resource.attributes["k8s.namespace.name"], attributes["namespace"] ) where resource.attributes["k8s.namespace.name"] == nil and attributes["namespace"] != nil`,
+            `delete_key(attributes, "namespace") where attributes["namespace"] == resource.attributes["k8s.namespace.name"]`,
+            `set(resource.attributes["k8s.pod.name"], attributes["pod"] ) where resource.attributes["k8s.pod.name"] == nil and attributes["pod"] != nil`,
+            `delete_key(attributes, "pod") where attributes["pod"] == resource.attributes["k8s.pod.name"]`,
+            `set(resource.attributes["k8s.replicaset.name"], attributes["replicaset"] ) where resource.attributes["k8s.replicaset.name"] == nil and attributes["replicaset"] != nil`,
+            `delete_key(attributes, "replicaset") where attributes["replicaset"] == resource.attributes["k8s.replicaset.name"]`,
+            `set(resource.attributes["service.name"], attributes["service_name"] ) where resource.attributes["service.name"] == nil and attributes["service_name"] != nil`,
+            `delete_key(attributes, "service_name") where attributes["service_name"] == resource.attributes["service.name"]`,
+            `set(resource.attributes["service.namespace"], attributes["service_namespace"] ) where resource.attributes["service.namespace"] == nil and attributes["service_namespace"] != nil`,
+            `delete_key(attributes, "service_namespace") where attributes["service_namespace"] == resource.attributes["service.namespace"]`,
+            `set(resource.attributes["k8s.statefulset.name"], attributes["statefulset"] ) where resource.attributes["k8s.statefulset.name"] == nil and attributes["statefulset"] != nil`,
+            `delete_key(attributes, "statefulset") where attributes["statefulset"] == resource.attributes["k8s.statefulset.name"]`,
+          ]
+        }
+
+        trace_statements {
+          context = "resource"
+          statements = [
+            `set(attributes["cluster"], "")`,
+            `set(attributes["k8s.cluster.name"], "")`,
+          ]
+        }
+
+
+        output {
+          metrics = [otelcol.processor.batch.tempo.input]
+          logs = [otelcol.processor.batch.tempo.input]
+          traces = [otelcol.processor.batch.tempo.input]
+        }
+      }
+
+      otelcol.exporter.loadbalancing "tempo" {
+        resolver {
+          kubernetes {
+            service = "RELEASE-NAME-tempo-sampler"
+          }
+        }
+        protocol {
+          otlp {
+            client {
+              tls {
+                insecure = true
+              }
+            }
+          }
+        }
+      }
+
+      otelcol.processor.batch "tempo" {
+        timeout = "2s"
+        send_batch_size = 8192
+        send_batch_max_size = 0
+
+        output {
+          metrics = [otelcol.exporter.otlp.tempo.input]
+          logs = [otelcol.exporter.otlp.tempo.input]
+          traces = [otelcol.exporter.otlp.tempo.input]
+        }
+      }
+      otelcol.exporter.otlp "tempo" {
+        client {
+          endpoint = "tempo:4317"
+          tls {
+            insecure = false
+            insecure_skip_verify = false
+          }
+        }
+
+        retry_on_failure {
+          enabled = true
+          initial_interval = "5s"
+          max_interval = "30s"
+          max_elapsed_time = "5m"
+        }
+      }
+creates a status_code policy:
+  1: |
+    |-
+      otelcol.receiver.otlp "receiver" {
+        grpc {
+          max_recv_msg_size = "4MB"  # TODO this could be configurable
+        }
+
+        output {
+          traces = ["otelcol.processor.tail_sampling.sampler.input"]
+        }
+      }
+      otelcol.processor.tail_sampling "sampler" {
+        // https://grafana.com/docs/alloy/latest/reference/components/otelcol.processor.tail_sampling/
+
+        decision_wait = "15s"
+
+        policy {
+          name = "status_code-policy"
+          type = "status_code"
+          status_code {
+            status_codes = ["UNSET", "ERROR"]
+          }
+        }
+
+        output {
+          traces = [otelcol.processor.batch.default.input]
+        }
+      }
+      // Destination: tempo (otlp)
+      otelcol.receiver.prometheus "tempo" {
+        output {
+          metrics = [otelcol.processor.attributes.tempo.input]
+        }
+      }
+      otelcol.receiver.loki "tempo" {
+        output {
+          logs = [otelcol.processor.attributes.tempo.input]
+        }
+      }
+
+      otelcol.processor.attributes "tempo" {
+        output {
+          metrics = [otelcol.processor.transform.tempo.input]
+          logs = [otelcol.processor.transform.tempo.input]
+          traces = [otelcol.processor.transform.tempo.input]
+        }
+      }
+
+      otelcol.processor.transform "tempo" {
+        error_mode = "ignore"
+        metric_statements {
+          context = "resource"
+          statements = [
+            `set(attributes["cluster"], "")`,
+            `set(attributes["k8s.cluster.name"], "")`,
+          ]
+        }
+
+        metric_statements {
+          context = "datapoint"
+          statements = [
+            `set(attributes["cluster"], "")`,
+            `set(attributes["k8s.cluster.name"], "")`,
+            `set(resource.attributes["deployment.environment"], attributes["deployment_environment"] ) where resource.attributes["deployment.environment"] == nil and attributes["deployment_environment"] != nil`,
+            `delete_key(attributes, "deployment_environment") where attributes["deployment_environment"] == resource.attributes["deployment.environment"]`,
+            `set(resource.attributes["deployment.environment.name"], attributes["deployment_environment_name"] ) where resource.attributes["deployment.environment.name"] == nil and attributes["deployment_environment_name"] != nil`,
+            `delete_key(attributes, "deployment_environment_name") where attributes["deployment_environment_name"] == resource.attributes["deployment.environment.name"]`,
+            `set(resource.attributes["service.name"], attributes["service_name"] ) where resource.attributes["service.name"] == nil and attributes["service_name"] != nil`,
+            `delete_key(attributes, "service_name") where attributes["service_name"] == resource.attributes["service.name"]`,
+            `set(resource.attributes["service.namespace"], attributes["service_namespace"] ) where resource.attributes["service.namespace"] == nil and attributes["service_namespace"] != nil`,
+            `delete_key(attributes, "service_namespace") where attributes["service_namespace"] == resource.attributes["service.namespace"]`,
+          ]
+        }
+        log_statements {
+          context = "resource"
+          statements = [
+            `set(attributes["cluster"], "")`,
+            `set(attributes["k8s.cluster.name"], "")`,
+          ]
+        }
+
+        log_statements {
+          context = "log"
+          statements = [
+            `delete_key(attributes, "loki.attribute.labels")`,
+            `delete_key(attributes, "loki.resource.labels")`,
+            `set(resource.attributes["k8s.container.name"], attributes["container"] ) where resource.attributes["k8s.container.name"] == nil and attributes["container"] != nil`,
+            `delete_key(attributes, "container") where attributes["container"] == resource.attributes["k8s.container.name"]`,
+            `set(resource.attributes["k8s.cronjob.name"], attributes["cronjob"] ) where resource.attributes["k8s.cronjob.name"] == nil and attributes["cronjob"] != nil`,
+            `delete_key(attributes, "cronjob") where attributes["cronjob"] == resource.attributes["k8s.cronjob.name"]`,
+            `set(resource.attributes["k8s.daemonset.name"], attributes["daemonset"] ) where resource.attributes["k8s.daemonset.name"] == nil and attributes["daemonset"] != nil`,
+            `delete_key(attributes, "daemonset") where attributes["daemonset"] == resource.attributes["k8s.daemonset.name"]`,
+            `set(resource.attributes["k8s.deployment.name"], attributes["deployment"] ) where resource.attributes["k8s.deployment.name"] == nil and attributes["deployment"] != nil`,
+            `delete_key(attributes, "deployment") where attributes["deployment"] == resource.attributes["k8s.deployment.name"]`,
+            `set(resource.attributes["deployment.environment"], attributes["deployment_environment"] ) where resource.attributes["deployment.environment"] == nil and attributes["deployment_environment"] != nil`,
+            `delete_key(attributes, "deployment_environment") where attributes["deployment_environment"] == resource.attributes["deployment.environment"]`,
+            `set(resource.attributes["deployment.environment.name"], attributes["deployment_environment_name"] ) where resource.attributes["deployment.environment.name"] == nil and attributes["deployment_environment_name"] != nil`,
+            `delete_key(attributes, "deployment_environment_name") where attributes["deployment_environment_name"] == resource.attributes["deployment.environment.name"]`,
+            `set(resource.attributes["k8s.job.name"], attributes["job_name"] ) where resource.attributes["k8s.job.name"] == nil and attributes["job_name"] != nil`,
+            `delete_key(attributes, "job_name") where attributes["job_name"] == resource.attributes["k8s.job.name"]`,
+            `set(resource.attributes["k8s.namespace.name"], attributes["namespace"] ) where resource.attributes["k8s.namespace.name"] == nil and attributes["namespace"] != nil`,
+            `delete_key(attributes, "namespace") where attributes["namespace"] == resource.attributes["k8s.namespace.name"]`,
+            `set(resource.attributes["k8s.pod.name"], attributes["pod"] ) where resource.attributes["k8s.pod.name"] == nil and attributes["pod"] != nil`,
+            `delete_key(attributes, "pod") where attributes["pod"] == resource.attributes["k8s.pod.name"]`,
+            `set(resource.attributes["k8s.replicaset.name"], attributes["replicaset"] ) where resource.attributes["k8s.replicaset.name"] == nil and attributes["replicaset"] != nil`,
+            `delete_key(attributes, "replicaset") where attributes["replicaset"] == resource.attributes["k8s.replicaset.name"]`,
+            `set(resource.attributes["service.name"], attributes["service_name"] ) where resource.attributes["service.name"] == nil and attributes["service_name"] != nil`,
+            `delete_key(attributes, "service_name") where attributes["service_name"] == resource.attributes["service.name"]`,
+            `set(resource.attributes["service.namespace"], attributes["service_namespace"] ) where resource.attributes["service.namespace"] == nil and attributes["service_namespace"] != nil`,
+            `delete_key(attributes, "service_namespace") where attributes["service_namespace"] == resource.attributes["service.namespace"]`,
+            `set(resource.attributes["k8s.statefulset.name"], attributes["statefulset"] ) where resource.attributes["k8s.statefulset.name"] == nil and attributes["statefulset"] != nil`,
+            `delete_key(attributes, "statefulset") where attributes["statefulset"] == resource.attributes["k8s.statefulset.name"]`,
+          ]
+        }
+
+        trace_statements {
+          context = "resource"
+          statements = [
+            `set(attributes["cluster"], "")`,
+            `set(attributes["k8s.cluster.name"], "")`,
+          ]
+        }
+
+
+        output {
+          metrics = [otelcol.processor.batch.tempo.input]
+          logs = [otelcol.processor.batch.tempo.input]
+          traces = [otelcol.processor.batch.tempo.input]
+        }
+      }
+
+      otelcol.exporter.loadbalancing "tempo" {
+        resolver {
+          kubernetes {
+            service = "RELEASE-NAME-tempo-sampler"
+          }
+        }
+        protocol {
+          otlp {
+            client {
+              tls {
+                insecure = true
+              }
+            }
+          }
+        }
+      }
+
+      otelcol.processor.batch "tempo" {
+        timeout = "2s"
+        send_batch_size = 8192
+        send_batch_max_size = 0
+
+        output {
+          metrics = [otelcol.exporter.otlp.tempo.input]
+          logs = [otelcol.exporter.otlp.tempo.input]
+          traces = [otelcol.exporter.otlp.tempo.input]
+        }
+      }
+      otelcol.exporter.otlp "tempo" {
+        client {
+          endpoint = "tempo:4317"
+          tls {
+            insecure = false
+            insecure_skip_verify = false
+          }
+        }
+
+        retry_on_failure {
+          enabled = true
+          initial_interval = "5s"
+          max_interval = "30s"
+          max_elapsed_time = "5m"
+        }
+      }
+creates a string_attribute policy:
+  1: |
+    |-
+      otelcol.receiver.otlp "receiver" {
+        grpc {
+          max_recv_msg_size = "4MB"  # TODO this could be configurable
+        }
+
+        output {
+          traces = ["otelcol.processor.tail_sampling.sampler.input"]
+        }
+      }
+      otelcol.processor.tail_sampling "sampler" {
+        // https://grafana.com/docs/alloy/latest/reference/components/otelcol.processor.tail_sampling/
+
+        decision_wait = "15s"
+
+        policy {
+          name = "string_attribute-policy"
+          type = "string_attribute"
+          string_attribute {
+            key = "key"
+            values = ["value1", "value2"]
+          }
+        }
+
+        output {
+          traces = [otelcol.processor.batch.default.input]
+        }
+      }
+      // Destination: tempo (otlp)
+      otelcol.receiver.prometheus "tempo" {
+        output {
+          metrics = [otelcol.processor.attributes.tempo.input]
+        }
+      }
+      otelcol.receiver.loki "tempo" {
+        output {
+          logs = [otelcol.processor.attributes.tempo.input]
+        }
+      }
+
+      otelcol.processor.attributes "tempo" {
+        output {
+          metrics = [otelcol.processor.transform.tempo.input]
+          logs = [otelcol.processor.transform.tempo.input]
+          traces = [otelcol.processor.transform.tempo.input]
+        }
+      }
+
+      otelcol.processor.transform "tempo" {
+        error_mode = "ignore"
+        metric_statements {
+          context = "resource"
+          statements = [
+            `set(attributes["cluster"], "")`,
+            `set(attributes["k8s.cluster.name"], "")`,
+          ]
+        }
+
+        metric_statements {
+          context = "datapoint"
+          statements = [
+            `set(attributes["cluster"], "")`,
+            `set(attributes["k8s.cluster.name"], "")`,
+            `set(resource.attributes["deployment.environment"], attributes["deployment_environment"] ) where resource.attributes["deployment.environment"] == nil and attributes["deployment_environment"] != nil`,
+            `delete_key(attributes, "deployment_environment") where attributes["deployment_environment"] == resource.attributes["deployment.environment"]`,
+            `set(resource.attributes["deployment.environment.name"], attributes["deployment_environment_name"] ) where resource.attributes["deployment.environment.name"] == nil and attributes["deployment_environment_name"] != nil`,
+            `delete_key(attributes, "deployment_environment_name") where attributes["deployment_environment_name"] == resource.attributes["deployment.environment.name"]`,
+            `set(resource.attributes["service.name"], attributes["service_name"] ) where resource.attributes["service.name"] == nil and attributes["service_name"] != nil`,
+            `delete_key(attributes, "service_name") where attributes["service_name"] == resource.attributes["service.name"]`,
+            `set(resource.attributes["service.namespace"], attributes["service_namespace"] ) where resource.attributes["service.namespace"] == nil and attributes["service_namespace"] != nil`,
+            `delete_key(attributes, "service_namespace") where attributes["service_namespace"] == resource.attributes["service.namespace"]`,
+          ]
+        }
+        log_statements {
+          context = "resource"
+          statements = [
+            `set(attributes["cluster"], "")`,
+            `set(attributes["k8s.cluster.name"], "")`,
+          ]
+        }
+
+        log_statements {
+          context = "log"
+          statements = [
+            `delete_key(attributes, "loki.attribute.labels")`,
+            `delete_key(attributes, "loki.resource.labels")`,
+            `set(resource.attributes["k8s.container.name"], attributes["container"] ) where resource.attributes["k8s.container.name"] == nil and attributes["container"] != nil`,
+            `delete_key(attributes, "container") where attributes["container"] == resource.attributes["k8s.container.name"]`,
+            `set(resource.attributes["k8s.cronjob.name"], attributes["cronjob"] ) where resource.attributes["k8s.cronjob.name"] == nil and attributes["cronjob"] != nil`,
+            `delete_key(attributes, "cronjob") where attributes["cronjob"] == resource.attributes["k8s.cronjob.name"]`,
+            `set(resource.attributes["k8s.daemonset.name"], attributes["daemonset"] ) where resource.attributes["k8s.daemonset.name"] == nil and attributes["daemonset"] != nil`,
+            `delete_key(attributes, "daemonset") where attributes["daemonset"] == resource.attributes["k8s.daemonset.name"]`,
+            `set(resource.attributes["k8s.deployment.name"], attributes["deployment"] ) where resource.attributes["k8s.deployment.name"] == nil and attributes["deployment"] != nil`,
+            `delete_key(attributes, "deployment") where attributes["deployment"] == resource.attributes["k8s.deployment.name"]`,
+            `set(resource.attributes["deployment.environment"], attributes["deployment_environment"] ) where resource.attributes["deployment.environment"] == nil and attributes["deployment_environment"] != nil`,
+            `delete_key(attributes, "deployment_environment") where attributes["deployment_environment"] == resource.attributes["deployment.environment"]`,
+            `set(resource.attributes["deployment.environment.name"], attributes["deployment_environment_name"] ) where resource.attributes["deployment.environment.name"] == nil and attributes["deployment_environment_name"] != nil`,
+            `delete_key(attributes, "deployment_environment_name") where attributes["deployment_environment_name"] == resource.attributes["deployment.environment.name"]`,
+            `set(resource.attributes["k8s.job.name"], attributes["job_name"] ) where resource.attributes["k8s.job.name"] == nil and attributes["job_name"] != nil`,
+            `delete_key(attributes, "job_name") where attributes["job_name"] == resource.attributes["k8s.job.name"]`,
+            `set(resource.attributes["k8s.namespace.name"], attributes["namespace"] ) where resource.attributes["k8s.namespace.name"] == nil and attributes["namespace"] != nil`,
+            `delete_key(attributes, "namespace") where attributes["namespace"] == resource.attributes["k8s.namespace.name"]`,
+            `set(resource.attributes["k8s.pod.name"], attributes["pod"] ) where resource.attributes["k8s.pod.name"] == nil and attributes["pod"] != nil`,
+            `delete_key(attributes, "pod") where attributes["pod"] == resource.attributes["k8s.pod.name"]`,
+            `set(resource.attributes["k8s.replicaset.name"], attributes["replicaset"] ) where resource.attributes["k8s.replicaset.name"] == nil and attributes["replicaset"] != nil`,
+            `delete_key(attributes, "replicaset") where attributes["replicaset"] == resource.attributes["k8s.replicaset.name"]`,
+            `set(resource.attributes["service.name"], attributes["service_name"] ) where resource.attributes["service.name"] == nil and attributes["service_name"] != nil`,
+            `delete_key(attributes, "service_name") where attributes["service_name"] == resource.attributes["service.name"]`,
+            `set(resource.attributes["service.namespace"], attributes["service_namespace"] ) where resource.attributes["service.namespace"] == nil and attributes["service_namespace"] != nil`,
+            `delete_key(attributes, "service_namespace") where attributes["service_namespace"] == resource.attributes["service.namespace"]`,
+            `set(resource.attributes["k8s.statefulset.name"], attributes["statefulset"] ) where resource.attributes["k8s.statefulset.name"] == nil and attributes["statefulset"] != nil`,
+            `delete_key(attributes, "statefulset") where attributes["statefulset"] == resource.attributes["k8s.statefulset.name"]`,
+          ]
+        }
+
+        trace_statements {
+          context = "resource"
+          statements = [
+            `set(attributes["cluster"], "")`,
+            `set(attributes["k8s.cluster.name"], "")`,
+          ]
+        }
+
+
+        output {
+          metrics = [otelcol.processor.batch.tempo.input]
+          logs = [otelcol.processor.batch.tempo.input]
+          traces = [otelcol.processor.batch.tempo.input]
+        }
+      }
+
+      otelcol.exporter.loadbalancing "tempo" {
+        resolver {
+          kubernetes {
+            service = "RELEASE-NAME-tempo-sampler"
+          }
+        }
+        protocol {
+          otlp {
+            client {
+              tls {
+                insecure = true
+              }
+            }
+          }
+        }
+      }
+
+      otelcol.processor.batch "tempo" {
+        timeout = "2s"
+        send_batch_size = 8192
+        send_batch_max_size = 0
+
+        output {
+          metrics = [otelcol.exporter.otlp.tempo.input]
+          logs = [otelcol.exporter.otlp.tempo.input]
+          traces = [otelcol.exporter.otlp.tempo.input]
+        }
+      }
+      otelcol.exporter.otlp "tempo" {
+        client {
+          endpoint = "tempo:4317"
+          tls {
+            insecure = false
+            insecure_skip_verify = false
+          }
+        }
+
+        retry_on_failure {
+          enabled = true
+          initial_interval = "5s"
+          max_interval = "30s"
+          max_elapsed_time = "5m"
+        }
+      }
+creates a trace_state policy:
+  1: |
+    |-
+      otelcol.receiver.otlp "receiver" {
+        grpc {
+          max_recv_msg_size = "4MB"  # TODO this could be configurable
+        }
+
+        output {
+          traces = ["otelcol.processor.tail_sampling.sampler.input"]
+        }
+      }
+      otelcol.processor.tail_sampling "sampler" {
+        // https://grafana.com/docs/alloy/latest/reference/components/otelcol.processor.tail_sampling/
+
+        decision_wait = "15s"
+
+        policy {
+          name = "trace_state-policy"
+          type = "trace_state"
+          trace_state {
+            key = "key"
+            values = ["value1", "value2"]
+          }
+        }
+
+        output {
+          traces = [otelcol.processor.batch.default.input]
+        }
+      }
+      // Destination: tempo (otlp)
+      otelcol.receiver.prometheus "tempo" {
+        output {
+          metrics = [otelcol.processor.attributes.tempo.input]
+        }
+      }
+      otelcol.receiver.loki "tempo" {
+        output {
+          logs = [otelcol.processor.attributes.tempo.input]
+        }
+      }
+
+      otelcol.processor.attributes "tempo" {
+        output {
+          metrics = [otelcol.processor.transform.tempo.input]
+          logs = [otelcol.processor.transform.tempo.input]
+          traces = [otelcol.processor.transform.tempo.input]
+        }
+      }
+
+      otelcol.processor.transform "tempo" {
+        error_mode = "ignore"
+        metric_statements {
+          context = "resource"
+          statements = [
+            `set(attributes["cluster"], "")`,
+            `set(attributes["k8s.cluster.name"], "")`,
+          ]
+        }
+
+        metric_statements {
+          context = "datapoint"
+          statements = [
+            `set(attributes["cluster"], "")`,
+            `set(attributes["k8s.cluster.name"], "")`,
+            `set(resource.attributes["deployment.environment"], attributes["deployment_environment"] ) where resource.attributes["deployment.environment"] == nil and attributes["deployment_environment"] != nil`,
+            `delete_key(attributes, "deployment_environment") where attributes["deployment_environment"] == resource.attributes["deployment.environment"]`,
+            `set(resource.attributes["deployment.environment.name"], attributes["deployment_environment_name"] ) where resource.attributes["deployment.environment.name"] == nil and attributes["deployment_environment_name"] != nil`,
+            `delete_key(attributes, "deployment_environment_name") where attributes["deployment_environment_name"] == resource.attributes["deployment.environment.name"]`,
+            `set(resource.attributes["service.name"], attributes["service_name"] ) where resource.attributes["service.name"] == nil and attributes["service_name"] != nil`,
+            `delete_key(attributes, "service_name") where attributes["service_name"] == resource.attributes["service.name"]`,
+            `set(resource.attributes["service.namespace"], attributes["service_namespace"] ) where resource.attributes["service.namespace"] == nil and attributes["service_namespace"] != nil`,
+            `delete_key(attributes, "service_namespace") where attributes["service_namespace"] == resource.attributes["service.namespace"]`,
+          ]
+        }
+        log_statements {
+          context = "resource"
+          statements = [
+            `set(attributes["cluster"], "")`,
+            `set(attributes["k8s.cluster.name"], "")`,
+          ]
+        }
+
+        log_statements {
+          context = "log"
+          statements = [
+            `delete_key(attributes, "loki.attribute.labels")`,
+            `delete_key(attributes, "loki.resource.labels")`,
+            `set(resource.attributes["k8s.container.name"], attributes["container"] ) where resource.attributes["k8s.container.name"] == nil and attributes["container"] != nil`,
+            `delete_key(attributes, "container") where attributes["container"] == resource.attributes["k8s.container.name"]`,
+            `set(resource.attributes["k8s.cronjob.name"], attributes["cronjob"] ) where resource.attributes["k8s.cronjob.name"] == nil and attributes["cronjob"] != nil`,
+            `delete_key(attributes, "cronjob") where attributes["cronjob"] == resource.attributes["k8s.cronjob.name"]`,
+            `set(resource.attributes["k8s.daemonset.name"], attributes["daemonset"] ) where resource.attributes["k8s.daemonset.name"] == nil and attributes["daemonset"] != nil`,
+            `delete_key(attributes, "daemonset") where attributes["daemonset"] == resource.attributes["k8s.daemonset.name"]`,
+            `set(resource.attributes["k8s.deployment.name"], attributes["deployment"] ) where resource.attributes["k8s.deployment.name"] == nil and attributes["deployment"] != nil`,
+            `delete_key(attributes, "deployment") where attributes["deployment"] == resource.attributes["k8s.deployment.name"]`,
+            `set(resource.attributes["deployment.environment"], attributes["deployment_environment"] ) where resource.attributes["deployment.environment"] == nil and attributes["deployment_environment"] != nil`,
+            `delete_key(attributes, "deployment_environment") where attributes["deployment_environment"] == resource.attributes["deployment.environment"]`,
+            `set(resource.attributes["deployment.environment.name"], attributes["deployment_environment_name"] ) where resource.attributes["deployment.environment.name"] == nil and attributes["deployment_environment_name"] != nil`,
+            `delete_key(attributes, "deployment_environment_name") where attributes["deployment_environment_name"] == resource.attributes["deployment.environment.name"]`,
+            `set(resource.attributes["k8s.job.name"], attributes["job_name"] ) where resource.attributes["k8s.job.name"] == nil and attributes["job_name"] != nil`,
+            `delete_key(attributes, "job_name") where attributes["job_name"] == resource.attributes["k8s.job.name"]`,
+            `set(resource.attributes["k8s.namespace.name"], attributes["namespace"] ) where resource.attributes["k8s.namespace.name"] == nil and attributes["namespace"] != nil`,
+            `delete_key(attributes, "namespace") where attributes["namespace"] == resource.attributes["k8s.namespace.name"]`,
+            `set(resource.attributes["k8s.pod.name"], attributes["pod"] ) where resource.attributes["k8s.pod.name"] == nil and attributes["pod"] != nil`,
+            `delete_key(attributes, "pod") where attributes["pod"] == resource.attributes["k8s.pod.name"]`,
+            `set(resource.attributes["k8s.replicaset.name"], attributes["replicaset"] ) where resource.attributes["k8s.replicaset.name"] == nil and attributes["replicaset"] != nil`,
+            `delete_key(attributes, "replicaset") where attributes["replicaset"] == resource.attributes["k8s.replicaset.name"]`,
+            `set(resource.attributes["service.name"], attributes["service_name"] ) where resource.attributes["service.name"] == nil and attributes["service_name"] != nil`,
+            `delete_key(attributes, "service_name") where attributes["service_name"] == resource.attributes["service.name"]`,
+            `set(resource.attributes["service.namespace"], attributes["service_namespace"] ) where resource.attributes["service.namespace"] == nil and attributes["service_namespace"] != nil`,
+            `delete_key(attributes, "service_namespace") where attributes["service_namespace"] == resource.attributes["service.namespace"]`,
+            `set(resource.attributes["k8s.statefulset.name"], attributes["statefulset"] ) where resource.attributes["k8s.statefulset.name"] == nil and attributes["statefulset"] != nil`,
+            `delete_key(attributes, "statefulset") where attributes["statefulset"] == resource.attributes["k8s.statefulset.name"]`,
+          ]
+        }
+
+        trace_statements {
+          context = "resource"
+          statements = [
+            `set(attributes["cluster"], "")`,
+            `set(attributes["k8s.cluster.name"], "")`,
+          ]
+        }
+
+
+        output {
+          metrics = [otelcol.processor.batch.tempo.input]
+          logs = [otelcol.processor.batch.tempo.input]
+          traces = [otelcol.processor.batch.tempo.input]
+        }
+      }
+
+      otelcol.exporter.loadbalancing "tempo" {
+        resolver {
+          kubernetes {
+            service = "RELEASE-NAME-tempo-sampler"
+          }
+        }
+        protocol {
+          otlp {
+            client {
+              tls {
+                insecure = true
+              }
+            }
+          }
+        }
+      }
+
+      otelcol.processor.batch "tempo" {
+        timeout = "2s"
+        send_batch_size = 8192
+        send_batch_max_size = 0
+
+        output {
+          metrics = [otelcol.exporter.otlp.tempo.input]
+          logs = [otelcol.exporter.otlp.tempo.input]
+          traces = [otelcol.exporter.otlp.tempo.input]
+        }
+      }
+      otelcol.exporter.otlp "tempo" {
+        client {
+          endpoint = "tempo:4317"
+          tls {
+            insecure = false
+            insecure_skip_verify = false
+          }
+        }
+
+        retry_on_failure {
+          enabled = true
+          initial_interval = "5s"
+          max_interval = "30s"
+          max_elapsed_time = "5m"
+        }
+      }
 creates an always_sample policy:
   1: |
     |-
@@ -19,6 +1817,378 @@ creates an always_sample policy:
           name = "always_sample-policy"
           type = "always_sample"
 
+        }
+
+        output {
+          traces = [otelcol.processor.batch.default.input]
+        }
+      }
+      // Destination: tempo (otlp)
+      otelcol.receiver.prometheus "tempo" {
+        output {
+          metrics = [otelcol.processor.attributes.tempo.input]
+        }
+      }
+      otelcol.receiver.loki "tempo" {
+        output {
+          logs = [otelcol.processor.attributes.tempo.input]
+        }
+      }
+
+      otelcol.processor.attributes "tempo" {
+        output {
+          metrics = [otelcol.processor.transform.tempo.input]
+          logs = [otelcol.processor.transform.tempo.input]
+          traces = [otelcol.processor.transform.tempo.input]
+        }
+      }
+
+      otelcol.processor.transform "tempo" {
+        error_mode = "ignore"
+        metric_statements {
+          context = "resource"
+          statements = [
+            `set(attributes["cluster"], "")`,
+            `set(attributes["k8s.cluster.name"], "")`,
+          ]
+        }
+
+        metric_statements {
+          context = "datapoint"
+          statements = [
+            `set(attributes["cluster"], "")`,
+            `set(attributes["k8s.cluster.name"], "")`,
+            `set(resource.attributes["deployment.environment"], attributes["deployment_environment"] ) where resource.attributes["deployment.environment"] == nil and attributes["deployment_environment"] != nil`,
+            `delete_key(attributes, "deployment_environment") where attributes["deployment_environment"] == resource.attributes["deployment.environment"]`,
+            `set(resource.attributes["deployment.environment.name"], attributes["deployment_environment_name"] ) where resource.attributes["deployment.environment.name"] == nil and attributes["deployment_environment_name"] != nil`,
+            `delete_key(attributes, "deployment_environment_name") where attributes["deployment_environment_name"] == resource.attributes["deployment.environment.name"]`,
+            `set(resource.attributes["service.name"], attributes["service_name"] ) where resource.attributes["service.name"] == nil and attributes["service_name"] != nil`,
+            `delete_key(attributes, "service_name") where attributes["service_name"] == resource.attributes["service.name"]`,
+            `set(resource.attributes["service.namespace"], attributes["service_namespace"] ) where resource.attributes["service.namespace"] == nil and attributes["service_namespace"] != nil`,
+            `delete_key(attributes, "service_namespace") where attributes["service_namespace"] == resource.attributes["service.namespace"]`,
+          ]
+        }
+        log_statements {
+          context = "resource"
+          statements = [
+            `set(attributes["cluster"], "")`,
+            `set(attributes["k8s.cluster.name"], "")`,
+          ]
+        }
+
+        log_statements {
+          context = "log"
+          statements = [
+            `delete_key(attributes, "loki.attribute.labels")`,
+            `delete_key(attributes, "loki.resource.labels")`,
+            `set(resource.attributes["k8s.container.name"], attributes["container"] ) where resource.attributes["k8s.container.name"] == nil and attributes["container"] != nil`,
+            `delete_key(attributes, "container") where attributes["container"] == resource.attributes["k8s.container.name"]`,
+            `set(resource.attributes["k8s.cronjob.name"], attributes["cronjob"] ) where resource.attributes["k8s.cronjob.name"] == nil and attributes["cronjob"] != nil`,
+            `delete_key(attributes, "cronjob") where attributes["cronjob"] == resource.attributes["k8s.cronjob.name"]`,
+            `set(resource.attributes["k8s.daemonset.name"], attributes["daemonset"] ) where resource.attributes["k8s.daemonset.name"] == nil and attributes["daemonset"] != nil`,
+            `delete_key(attributes, "daemonset") where attributes["daemonset"] == resource.attributes["k8s.daemonset.name"]`,
+            `set(resource.attributes["k8s.deployment.name"], attributes["deployment"] ) where resource.attributes["k8s.deployment.name"] == nil and attributes["deployment"] != nil`,
+            `delete_key(attributes, "deployment") where attributes["deployment"] == resource.attributes["k8s.deployment.name"]`,
+            `set(resource.attributes["deployment.environment"], attributes["deployment_environment"] ) where resource.attributes["deployment.environment"] == nil and attributes["deployment_environment"] != nil`,
+            `delete_key(attributes, "deployment_environment") where attributes["deployment_environment"] == resource.attributes["deployment.environment"]`,
+            `set(resource.attributes["deployment.environment.name"], attributes["deployment_environment_name"] ) where resource.attributes["deployment.environment.name"] == nil and attributes["deployment_environment_name"] != nil`,
+            `delete_key(attributes, "deployment_environment_name") where attributes["deployment_environment_name"] == resource.attributes["deployment.environment.name"]`,
+            `set(resource.attributes["k8s.job.name"], attributes["job_name"] ) where resource.attributes["k8s.job.name"] == nil and attributes["job_name"] != nil`,
+            `delete_key(attributes, "job_name") where attributes["job_name"] == resource.attributes["k8s.job.name"]`,
+            `set(resource.attributes["k8s.namespace.name"], attributes["namespace"] ) where resource.attributes["k8s.namespace.name"] == nil and attributes["namespace"] != nil`,
+            `delete_key(attributes, "namespace") where attributes["namespace"] == resource.attributes["k8s.namespace.name"]`,
+            `set(resource.attributes["k8s.pod.name"], attributes["pod"] ) where resource.attributes["k8s.pod.name"] == nil and attributes["pod"] != nil`,
+            `delete_key(attributes, "pod") where attributes["pod"] == resource.attributes["k8s.pod.name"]`,
+            `set(resource.attributes["k8s.replicaset.name"], attributes["replicaset"] ) where resource.attributes["k8s.replicaset.name"] == nil and attributes["replicaset"] != nil`,
+            `delete_key(attributes, "replicaset") where attributes["replicaset"] == resource.attributes["k8s.replicaset.name"]`,
+            `set(resource.attributes["service.name"], attributes["service_name"] ) where resource.attributes["service.name"] == nil and attributes["service_name"] != nil`,
+            `delete_key(attributes, "service_name") where attributes["service_name"] == resource.attributes["service.name"]`,
+            `set(resource.attributes["service.namespace"], attributes["service_namespace"] ) where resource.attributes["service.namespace"] == nil and attributes["service_namespace"] != nil`,
+            `delete_key(attributes, "service_namespace") where attributes["service_namespace"] == resource.attributes["service.namespace"]`,
+            `set(resource.attributes["k8s.statefulset.name"], attributes["statefulset"] ) where resource.attributes["k8s.statefulset.name"] == nil and attributes["statefulset"] != nil`,
+            `delete_key(attributes, "statefulset") where attributes["statefulset"] == resource.attributes["k8s.statefulset.name"]`,
+          ]
+        }
+
+        trace_statements {
+          context = "resource"
+          statements = [
+            `set(attributes["cluster"], "")`,
+            `set(attributes["k8s.cluster.name"], "")`,
+          ]
+        }
+
+
+        output {
+          metrics = [otelcol.processor.batch.tempo.input]
+          logs = [otelcol.processor.batch.tempo.input]
+          traces = [otelcol.processor.batch.tempo.input]
+        }
+      }
+
+      otelcol.exporter.loadbalancing "tempo" {
+        resolver {
+          kubernetes {
+            service = "RELEASE-NAME-tempo-sampler"
+          }
+        }
+        protocol {
+          otlp {
+            client {
+              tls {
+                insecure = true
+              }
+            }
+          }
+        }
+      }
+
+      otelcol.processor.batch "tempo" {
+        timeout = "2s"
+        send_batch_size = 8192
+        send_batch_max_size = 0
+
+        output {
+          metrics = [otelcol.exporter.otlp.tempo.input]
+          logs = [otelcol.exporter.otlp.tempo.input]
+          traces = [otelcol.exporter.otlp.tempo.input]
+        }
+      }
+      otelcol.exporter.otlp "tempo" {
+        client {
+          endpoint = "tempo:4317"
+          tls {
+            insecure = false
+            insecure_skip_verify = false
+          }
+        }
+
+        retry_on_failure {
+          enabled = true
+          initial_interval = "5s"
+          max_interval = "30s"
+          max_elapsed_time = "5m"
+        }
+      }
+creates an and policy:
+  1: |
+    |-
+      otelcol.receiver.otlp "receiver" {
+        grpc {
+          max_recv_msg_size = "4MB"  # TODO this could be configurable
+        }
+
+        output {
+          traces = ["otelcol.processor.tail_sampling.sampler.input"]
+        }
+      }
+      otelcol.processor.tail_sampling "sampler" {
+        // https://grafana.com/docs/alloy/latest/reference/components/otelcol.processor.tail_sampling/
+
+        decision_wait = "15s"
+
+        policy {
+          name = "and-policy"
+          type = "and"
+          and {
+            and_sub_policy {
+              name = "test-and-policy-1"
+              type = "numeric_attribute"
+              numeric_attribute {
+                key = "key1"
+                min_value = 1
+                max_value = 256
+
+              }
+            }
+            and_sub_policy {
+              name = "test-and-policy-2"
+              type = "string_attribute"
+              string_attribute {
+                key = "key2"
+                values = ["value1", "value2"]
+              }
+            }
+          }
+        }
+
+        output {
+          traces = [otelcol.processor.batch.default.input]
+        }
+      }
+      // Destination: tempo (otlp)
+      otelcol.receiver.prometheus "tempo" {
+        output {
+          metrics = [otelcol.processor.attributes.tempo.input]
+        }
+      }
+      otelcol.receiver.loki "tempo" {
+        output {
+          logs = [otelcol.processor.attributes.tempo.input]
+        }
+      }
+
+      otelcol.processor.attributes "tempo" {
+        output {
+          metrics = [otelcol.processor.transform.tempo.input]
+          logs = [otelcol.processor.transform.tempo.input]
+          traces = [otelcol.processor.transform.tempo.input]
+        }
+      }
+
+      otelcol.processor.transform "tempo" {
+        error_mode = "ignore"
+        metric_statements {
+          context = "resource"
+          statements = [
+            `set(attributes["cluster"], "")`,
+            `set(attributes["k8s.cluster.name"], "")`,
+          ]
+        }
+
+        metric_statements {
+          context = "datapoint"
+          statements = [
+            `set(attributes["cluster"], "")`,
+            `set(attributes["k8s.cluster.name"], "")`,
+            `set(resource.attributes["deployment.environment"], attributes["deployment_environment"] ) where resource.attributes["deployment.environment"] == nil and attributes["deployment_environment"] != nil`,
+            `delete_key(attributes, "deployment_environment") where attributes["deployment_environment"] == resource.attributes["deployment.environment"]`,
+            `set(resource.attributes["deployment.environment.name"], attributes["deployment_environment_name"] ) where resource.attributes["deployment.environment.name"] == nil and attributes["deployment_environment_name"] != nil`,
+            `delete_key(attributes, "deployment_environment_name") where attributes["deployment_environment_name"] == resource.attributes["deployment.environment.name"]`,
+            `set(resource.attributes["service.name"], attributes["service_name"] ) where resource.attributes["service.name"] == nil and attributes["service_name"] != nil`,
+            `delete_key(attributes, "service_name") where attributes["service_name"] == resource.attributes["service.name"]`,
+            `set(resource.attributes["service.namespace"], attributes["service_namespace"] ) where resource.attributes["service.namespace"] == nil and attributes["service_namespace"] != nil`,
+            `delete_key(attributes, "service_namespace") where attributes["service_namespace"] == resource.attributes["service.namespace"]`,
+          ]
+        }
+        log_statements {
+          context = "resource"
+          statements = [
+            `set(attributes["cluster"], "")`,
+            `set(attributes["k8s.cluster.name"], "")`,
+          ]
+        }
+
+        log_statements {
+          context = "log"
+          statements = [
+            `delete_key(attributes, "loki.attribute.labels")`,
+            `delete_key(attributes, "loki.resource.labels")`,
+            `set(resource.attributes["k8s.container.name"], attributes["container"] ) where resource.attributes["k8s.container.name"] == nil and attributes["container"] != nil`,
+            `delete_key(attributes, "container") where attributes["container"] == resource.attributes["k8s.container.name"]`,
+            `set(resource.attributes["k8s.cronjob.name"], attributes["cronjob"] ) where resource.attributes["k8s.cronjob.name"] == nil and attributes["cronjob"] != nil`,
+            `delete_key(attributes, "cronjob") where attributes["cronjob"] == resource.attributes["k8s.cronjob.name"]`,
+            `set(resource.attributes["k8s.daemonset.name"], attributes["daemonset"] ) where resource.attributes["k8s.daemonset.name"] == nil and attributes["daemonset"] != nil`,
+            `delete_key(attributes, "daemonset") where attributes["daemonset"] == resource.attributes["k8s.daemonset.name"]`,
+            `set(resource.attributes["k8s.deployment.name"], attributes["deployment"] ) where resource.attributes["k8s.deployment.name"] == nil and attributes["deployment"] != nil`,
+            `delete_key(attributes, "deployment") where attributes["deployment"] == resource.attributes["k8s.deployment.name"]`,
+            `set(resource.attributes["deployment.environment"], attributes["deployment_environment"] ) where resource.attributes["deployment.environment"] == nil and attributes["deployment_environment"] != nil`,
+            `delete_key(attributes, "deployment_environment") where attributes["deployment_environment"] == resource.attributes["deployment.environment"]`,
+            `set(resource.attributes["deployment.environment.name"], attributes["deployment_environment_name"] ) where resource.attributes["deployment.environment.name"] == nil and attributes["deployment_environment_name"] != nil`,
+            `delete_key(attributes, "deployment_environment_name") where attributes["deployment_environment_name"] == resource.attributes["deployment.environment.name"]`,
+            `set(resource.attributes["k8s.job.name"], attributes["job_name"] ) where resource.attributes["k8s.job.name"] == nil and attributes["job_name"] != nil`,
+            `delete_key(attributes, "job_name") where attributes["job_name"] == resource.attributes["k8s.job.name"]`,
+            `set(resource.attributes["k8s.namespace.name"], attributes["namespace"] ) where resource.attributes["k8s.namespace.name"] == nil and attributes["namespace"] != nil`,
+            `delete_key(attributes, "namespace") where attributes["namespace"] == resource.attributes["k8s.namespace.name"]`,
+            `set(resource.attributes["k8s.pod.name"], attributes["pod"] ) where resource.attributes["k8s.pod.name"] == nil and attributes["pod"] != nil`,
+            `delete_key(attributes, "pod") where attributes["pod"] == resource.attributes["k8s.pod.name"]`,
+            `set(resource.attributes["k8s.replicaset.name"], attributes["replicaset"] ) where resource.attributes["k8s.replicaset.name"] == nil and attributes["replicaset"] != nil`,
+            `delete_key(attributes, "replicaset") where attributes["replicaset"] == resource.attributes["k8s.replicaset.name"]`,
+            `set(resource.attributes["service.name"], attributes["service_name"] ) where resource.attributes["service.name"] == nil and attributes["service_name"] != nil`,
+            `delete_key(attributes, "service_name") where attributes["service_name"] == resource.attributes["service.name"]`,
+            `set(resource.attributes["service.namespace"], attributes["service_namespace"] ) where resource.attributes["service.namespace"] == nil and attributes["service_namespace"] != nil`,
+            `delete_key(attributes, "service_namespace") where attributes["service_namespace"] == resource.attributes["service.namespace"]`,
+            `set(resource.attributes["k8s.statefulset.name"], attributes["statefulset"] ) where resource.attributes["k8s.statefulset.name"] == nil and attributes["statefulset"] != nil`,
+            `delete_key(attributes, "statefulset") where attributes["statefulset"] == resource.attributes["k8s.statefulset.name"]`,
+          ]
+        }
+
+        trace_statements {
+          context = "resource"
+          statements = [
+            `set(attributes["cluster"], "")`,
+            `set(attributes["k8s.cluster.name"], "")`,
+          ]
+        }
+
+
+        output {
+          metrics = [otelcol.processor.batch.tempo.input]
+          logs = [otelcol.processor.batch.tempo.input]
+          traces = [otelcol.processor.batch.tempo.input]
+        }
+      }
+
+      otelcol.exporter.loadbalancing "tempo" {
+        resolver {
+          kubernetes {
+            service = "RELEASE-NAME-tempo-sampler"
+          }
+        }
+        protocol {
+          otlp {
+            client {
+              tls {
+                insecure = true
+              }
+            }
+          }
+        }
+      }
+
+      otelcol.processor.batch "tempo" {
+        timeout = "2s"
+        send_batch_size = 8192
+        send_batch_max_size = 0
+
+        output {
+          metrics = [otelcol.exporter.otlp.tempo.input]
+          logs = [otelcol.exporter.otlp.tempo.input]
+          traces = [otelcol.exporter.otlp.tempo.input]
+        }
+      }
+      otelcol.exporter.otlp "tempo" {
+        client {
+          endpoint = "tempo:4317"
+          tls {
+            insecure = false
+            insecure_skip_verify = false
+          }
+        }
+
+        retry_on_failure {
+          enabled = true
+          initial_interval = "5s"
+          max_interval = "30s"
+          max_elapsed_time = "5m"
+        }
+      }
+creates an ottl_condition policy:
+  1: |
+    |-
+      otelcol.receiver.otlp "receiver" {
+        grpc {
+          max_recv_msg_size = "4MB"  # TODO this could be configurable
+        }
+
+        output {
+          traces = ["otelcol.processor.tail_sampling.sampler.input"]
+        }
+      }
+      otelcol.processor.tail_sampling "sampler" {
+        // https://grafana.com/docs/alloy/latest/reference/components/otelcol.processor.tail_sampling/
+
+        decision_wait = "15s"
+
+        policy {
+          name = "ottl_condition-policy"
+          type = "ottl_condition"
+          ottl_condition {
+            error_mode = "ignore"
+            span = ["attributes[\"attr_key_1\"] == \"test_attr_val_1\"", "attributes[\"attr_key_2\"] == \"test_attr_val_2\""]
+            spanevent = ["name != \"test_span_event_name\"", "attributes[\"event_attr_key\"] != \"event_attr_val\""
+            ]
+          }
         }
 
         output {
