@@ -32,6 +32,7 @@ declare "cluster_events" {
         "level" = "type", // most events don't have a level but they do have a "type" i.e. Normal, Warning, Error, etc.
         "name" = "",
         "node" = "sourcehost", // map the sourcehost field to node
+        "reason" = "",
       }
     }
     // set these values as labels, they may or may not be used as index labels in Loki as they can be dropped
@@ -43,10 +44,11 @@ declare "cluster_events" {
         "level" = "",
         "name" = "",
         "node" = "",
+        "reason" = "",
       }
     }
 
-    // if kind=Node, set the node label by copying the instance label
+    // if kind=Node, set the node label by copying the name field
     stage.match {
       selector = "{kind=\"Node\"}"
 
@@ -67,10 +69,16 @@ declare "cluster_events" {
         }
       }
     }
+    // set the structured metadata values
+    stage.structured_metadata {
+      values = {
+        "name" = "name",
+      }
+    }
 
     // Only keep the labels that are defined in the `keepLabels` list.
     stage.label_keep {
-      values = ["job","level","namespace","node","source"]
+      values = ["job","level","namespace","node","source","reason"]
     }
     stage.labels {
       values = {
