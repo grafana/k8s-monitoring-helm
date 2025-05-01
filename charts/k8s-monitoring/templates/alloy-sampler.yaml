@@ -9,7 +9,7 @@
     {{- $traces := list }}
     {{- $traces = append $traces "otelcol.processor.tail_sampling.sampler.input" }}
     {{- $receiverConfig := include "sampler.receiver.otlp.alloy" $traces }}
-    {{- $samplerConfig := include "sampler.processor.tail_sampling" $destination.processors.tail_sampling }}
+    {{- $samplerConfig := include "sampler.processor.tail_sampling" $destination.processors.tail_sampling | trim }}
 
     {{- $alloyConfig := "" }}
     {{- $alloyConfig = cat $alloyConfig ((include "destinations.alloy.config" (deepCopy $ | merge (dict "names" (list $destination.name)))) | trim | nindent 0) }}

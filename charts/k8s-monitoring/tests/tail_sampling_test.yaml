@@ -2,13 +2,10 @@
 # yamllint disable rule:document-start rule:line-length rule:trailing-spaces
 suite: Test sampling policies
 templates:
-  - configmap.yaml
+  - alloy-sampler.yaml
 tests:
   - it: creates an always_sample policy
     set:
-      deployAsConfigMap: true
-      cluster:
-        name: tail-sampling-test
       destinations:
         - name: tempo 
           type: otlp
@@ -22,8 +19,6 @@ tests:
                   type: always_sample
     asserts:
       - isKind:
-          of: ConfigMap
+          of: Alloy
       - matchSnapshot:
-          path: data["module.alloy"]
-
 

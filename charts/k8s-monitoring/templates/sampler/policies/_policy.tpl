@@ -3,7 +3,7 @@
 policy {
   name = {{ $policy.name | quote }}
   type = {{ $policy.type | quote }}
-  {{- if and (ne $policy.type "composite") (ne $policy.type "and") }} 
+  {{- if and (ne $policy.type "composite") (ne $policy.type "and") }}
   {{- include "policy.generate" $policy }}
   {{- else if eq $policy.type "and" }}
   and {
