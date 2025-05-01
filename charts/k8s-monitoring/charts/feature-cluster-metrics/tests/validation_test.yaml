@@ -1,0 +1,73 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Test validation
+templates:
+  - configmap.yaml
+tests:
+  - it: warns about a disabled, but deployed kube-state-metrics
+    set:
+      deployAsConfigMap: true
+      kube-state-metrics:
+        enabled: false
+        deploy: true
+        ddepolot: true
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            execution error at (feature-cluster-metrics/templates/configmap.yaml:2:4): 
+            For the Cluster Metrics feature, kube-state-metrics is disabled but it will still be deployed.
+            If you do not want these metrics, disable the deployment by setting:
+            clusterMetrics:
+              kube-state-metrics:
+                enabled: false
+                deploy: false
+
+            If you do want these metrics, enable it by setting:
+            clusterMetrics:
+              kube-state-metrics:
+                enabled: true
+
+  - it: warns about a disabled, but deployed Node Exporter
+    set:
+      deployAsConfigMap: true
+      node-exporter:
+        enabled: false
+        deploy: true
+        ddepolot: true
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            execution error at (feature-cluster-metrics/templates/configmap.yaml:2:4): 
+            For the Cluster Metrics feature, Node Exporter is disabled but it will still be deployed.
+            If you do not want these metrics, disable the deployment by setting:
+            clusterMetrics:
+              node-exporter:
+                enabled: false
+                deploy: false
+
+            If you do want these metrics, enable it by setting:
+            clusterMetrics:
+              node-exporter:
+                enabled: true
+
+  - it: warns about a disabled, but deployed Windows Exporter
+    set:
+      deployAsConfigMap: true
+      windows-exporter:
+        enabled: false
+        deploy: true
+        ddepolot: true
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            execution error at (feature-cluster-metrics/templates/configmap.yaml:2:4): 
+            For the Cluster Metrics feature, Windows Exporter is disabled but it will still be deployed.
+            If you do not want these metrics, disable the deployment by setting:
+            clusterMetrics:
+              windows-exporter:
+                enabled: false
+                deploy: false
+
+            If you do want these metrics, enable it by setting:
+            clusterMetrics:
+              windows-exporter:
+                enabled: true
