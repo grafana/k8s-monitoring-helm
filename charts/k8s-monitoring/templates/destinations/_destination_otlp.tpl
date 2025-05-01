@@ -286,8 +286,9 @@ otelcol.processor.filter {{ include "helper.alloy_name" .name | quote }} {
   }
 {{- end }}
 {{- end }}
-{{/*  // TODO: override this if tail sampling is enabled*/}}
 
+{{/* override traces target and enable loadbalancing exporter if sampling is enabled */}}
+{{- if and .processors.tail_sampling.enabled }}
   output {
 {{- if ne .metrics.enabled false }}
     metrics = [{{ include "destinations.otlp.alloy.exporter.target" . }}]
@@ -296,7 +297,7 @@ otelcol.processor.filter {{ include "helper.alloy_name" .name | quote }} {
     logs = [{{ include "destinations.otlp.alloy.exporter.target" . }}]
 {{- end }}
 {{- if ne .traces.enabled false }}
-    traces = [{{ include "destinations.otlp.alloy.exporter.target" . }}]
+    traces = [otelcol.exporter.loadbalancing.{{ include "helper.alloy_name" .name }}.input]
 {{- end }}
   }
 }
@@ -315,6 +316,20 @@ otelcol.exporter.loadbalancing {{ include "helper.alloy_name" .name | quote }} {
         }
       }
     }
+  }
+}
+{{- end }}
+
+  output {
+{{- if ne .metrics.enabled false }}
+    metrics = [{{ include "destinations.otlp.alloy.exporter.target" . }}]
+{{- end }}
+{{- if ne .logs.enabled false }}
+    logs = [{{ include "destinations.otlp.alloy.exporter.target" . }}]
+{{- end }}
+{{- if ne .traces.enabled false }}
+    traces = [{{ include "destinations.otlp.alloy.exporter.target" . }}]
+{{- end }}
   }
 }
 

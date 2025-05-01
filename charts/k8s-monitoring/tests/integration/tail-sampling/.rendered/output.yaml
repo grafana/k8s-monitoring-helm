@@ -13,22 +13,6 @@ metadata:
     app.kubernetes.io/managed-by: Helm
 automountServiceAccountToken: true
 ---
-# Source: k8s-monitoring/charts/autoInstrumentation/charts/beyla/templates/serviceaccount.yaml
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: k8smon-beyla
-  namespace: default
-  labels:
-    helm.sh/chart: beyla-1.7.3
-    app.kubernetes.io/name: beyla
-    app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "2.0.3"
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/part-of: beyla
-    app.kubernetes.io/component: rbac
-automountServiceAccountToken: true
----
 # Source: k8s-monitoring/templates/destination_secret.yaml
 apiVersion: v1
 kind: Secret
@@ -40,272 +24,6 @@ data:
   tenantId: "MQ=="
   username: "bG9raQ=="
   password: "bG9raXBhc3N3b3Jk"
----
-# Source: k8s-monitoring/templates/alloy-config.yaml
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: k8smon-alloy-metrics
-  namespace: default
-data:
-  config.alloy: |-
-    // Feature: Auto-Instrumentation
-    declare "auto_instrumentation" {
-      argument "metrics_destinations" {
-        comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
-      }
-    
-      discovery.kubernetes "beyla_pods" {
-        role = "pod"
-        namespaces {
-          own_namespace = true
-        }
-        selectors {
-          role = "pod"
-          label = "app.kubernetes.io/name=beyla"
-        }
-      }
-    
-      discovery.relabel "beyla_pods" {
-        targets = discovery.kubernetes.beyla_pods.targets
-        rule {
-          source_labels = ["__meta_kubernetes_pod_node_name"]
-          action = "replace"
-          target_label = "instance"
-        }
-      }
-    
-      prometheus.scrape "beyla_applications" {
-        targets         = discovery.relabel.beyla_pods.output
-        honor_labels    = true
-        scrape_interval = "60s"
-        clustering {
-          enabled = true
-        }
-        forward_to = argument.metrics_destinations.value
-      }
-    
-      prometheus.scrape "beyla_internal" {
-        targets         = discovery.relabel.beyla_pods.output
-        metrics_path    = "/internal/metrics"
-        job_name        = "integrations/beyla"
-        honor_labels    = true
-        scrape_interval = "60s"
-        clustering {
-          enabled = true
-        }
-        forward_to = argument.metrics_destinations.value
-      }
-    }
-    auto_instrumentation "feature" {
-      metrics_destinations = [
-        prometheus.remote_write.localprometheus.receiver,
-      ]
-    }
-    // Self Reporting
-    prometheus.exporter.unix "kubernetes_monitoring_telemetry" {
-      set_collectors = ["textfile"]
-      textfile {
-        directory = "/etc/alloy"
-      }
-    }
-    
-    discovery.relabel "kubernetes_monitoring_telemetry" {
-      targets = prometheus.exporter.unix.kubernetes_monitoring_telemetry.targets
-      rule {
-        target_label = "instance"
-        action = "replace"
-        replacement = "k8smon"
-      }
-      rule {
-        target_label = "job"
-        action = "replace"
-        replacement = "integrations/kubernetes/kubernetes_monitoring_telemetry"
-      }
-    }
-    
-    prometheus.scrape "kubernetes_monitoring_telemetry" {
-      job_name   = "integrations/kubernetes/kubernetes_monitoring_telemetry"
-      targets    = discovery.relabel.kubernetes_monitoring_telemetry.output
-      scrape_interval = "60s"
-      clustering {
-        enabled = true
-      }
-      forward_to = [prometheus.relabel.kubernetes_monitoring_telemetry.receiver]
-    }
-    
-    prometheus.relabel "kubernetes_monitoring_telemetry" {
-      rule {
-        source_labels = ["__name__"]
-        regex = "grafana_kubernetes_monitoring_.*"
-        action = "keep"
-      }
-      forward_to = [
-        prometheus.remote_write.localprometheus.receiver,
-      ]
-    }
-    
-    livedebugging {
-    enabled = true
-    }
-    
-    
-    // Destination: localPrometheus (prometheus)
-    otelcol.exporter.prometheus "localprometheus" {
-      add_metric_suffixes = true
-      forward_to = [prometheus.remote_write.localprometheus.receiver]
-    }
-    
-    prometheus.remote_write "localprometheus" {
-      endpoint {
-        url = "http://prometheus-server.prometheus.svc:9090/api/v1/write"
-        headers = {
-        }
-        tls_config {
-          insecure_skip_verify = false
-        }
-        send_native_histograms = false
-    
-        queue_config {
-          capacity = 10000
-          min_shards = 1
-          max_shards = 50
-          max_samples_per_send = 2000
-          batch_send_deadline = "5s"
-          min_backoff = "30ms"
-          max_backoff = "5s"
-          retry_on_http_429 = true
-          sample_age_limit = "0s"
-        }
-    
-        write_relabel_config {
-          source_labels = ["cluster"]
-          regex = ""
-          replacement = "tail-sampling-test"
-          target_label = "cluster"
-        }
-        write_relabel_config {
-          source_labels = ["k8s_cluster_name"]
-          regex = ""
-          replacement = "tail-sampling-test"
-          target_label = "k8s_cluster_name"
-        }
-      }
-    
-      wal {
-        truncate_frequency = "2h"
-        min_keepalive_time = "5m"
-        max_keepalive_time = "8h"
-      }
-    }
-    // Destination: localLoki (loki)
-    otelcol.exporter.loki "localloki" {
-      forward_to = [loki.write.localloki.receiver]
-    }
-    
-    loki.write "localloki" {
-      endpoint {
-        url = "http://loki.loki.svc:3100/loki/api/v1/push"
-        tenant_id = convert.nonsensitive(remote.kubernetes.secret.localloki.data["tenantId"])
-        basic_auth {
-          username = convert.nonsensitive(remote.kubernetes.secret.localloki.data["username"])
-          password = remote.kubernetes.secret.localloki.data["password"]
-        }
-        tls_config {
-          insecure_skip_verify = false
-        }
-        min_backoff_period = "500ms"
-        max_backoff_period = "5m"
-        max_backoff_retries = "10"
-      }
-      external_labels = {
-        "cluster" = "tail-sampling-test",
-        "k8s_cluster_name" = "tail-sampling-test",
-      }
-    }
-    
-    remote.kubernetes.secret "localloki" {
-      name      = "localloki-k8smon-k8s-monitoring"
-      namespace = "default"
-    }
-    
-    // Destination: localTempo (otlp)
-    
-    otelcol.processor.attributes "localtempo" {
-      output {
-        traces = [otelcol.processor.transform.localtempo.input]
-      }
-    }
-    
-    otelcol.processor.transform "localtempo" {
-      error_mode = "ignore"
-    
-      trace_statements {
-        context = "resource"
-        statements = [
-          `set(attributes["cluster"], "tail-sampling-test")`,
-          `set(attributes["k8s.cluster.name"], "tail-sampling-test")`,
-        ]
-      }
-    
-    
-      output {
-        traces = [otelcol.processor.batch.localtempo.input]
-      }
-    }
-    
-    otelcol.exporter.loadbalancing "localtempo" {
-      resolver {
-        kubernetes {
-          service = "k8smon-localTempo-sampler"
-        }
-      }
-      protocol {
-        otlp {
-          client {
-            tls {
-              insecure = true
-            }
-          }
-        }
-      }
-    }
-    
-    otelcol.processor.batch "localtempo" {
-      timeout = "2s"
-      send_batch_size = 8192
-      send_batch_max_size = 0
-    
-      output {
-        traces = [otelcol.exporter.otlp.localtempo.input]
-      }
-    }
-    otelcol.exporter.otlp "localtempo" {
-      client {
-        endpoint = "tempo.tempo.svc:4317"
-        tls {
-          insecure = true
-          insecure_skip_verify = true
-        }
-      }
-    
-      retry_on_failure {
-        enabled = true
-        initial_interval = "5s"
-        max_interval = "30s"
-        max_elapsed_time = "5m"
-      }
-    }
-
-  self-reporting-metric.prom: |
-    
-    # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart
-    # TYPE grafana_kubernetes_monitoring_build_info gauge
-    grafana_kubernetes_monitoring_build_info{version="2.0.26", namespace="default"} 1
-    # HELP grafana_kubernetes_monitoring_feature_info A metric to report the enabled features of the Kubernetes Monitoring Helm chart
-    # TYPE grafana_kubernetes_monitoring_feature_info gauge
-    grafana_kubernetes_monitoring_feature_info{feature="applicationObservability", protocols="otlpgrpc", version="1.0.0"} 1
-    grafana_kubernetes_monitoring_feature_info{feature="autoInstrumentation", version="1.0.0"} 1
 ---
 # Source: k8s-monitoring/templates/alloy-config.yaml
 apiVersion: v1
@@ -445,6 +163,48 @@ data:
         otelcol.processor.attributes.localtempo.input,
       ]
     }
+    // Self Reporting
+    prometheus.exporter.unix "kubernetes_monitoring_telemetry" {
+      set_collectors = ["textfile"]
+      textfile {
+        directory = "/etc/alloy"
+      }
+    }
+    
+    discovery.relabel "kubernetes_monitoring_telemetry" {
+      targets = prometheus.exporter.unix.kubernetes_monitoring_telemetry.targets
+      rule {
+        target_label = "instance"
+        action = "replace"
+        replacement = "k8smon"
+      }
+      rule {
+        target_label = "job"
+        action = "replace"
+        replacement = "integrations/kubernetes/kubernetes_monitoring_telemetry"
+      }
+    }
+    
+    prometheus.scrape "kubernetes_monitoring_telemetry" {
+      job_name   = "integrations/kubernetes/kubernetes_monitoring_telemetry"
+      targets    = discovery.relabel.kubernetes_monitoring_telemetry.output
+      scrape_interval = "60s"
+      clustering {
+        enabled = true
+      }
+      forward_to = [prometheus.relabel.kubernetes_monitoring_telemetry.receiver]
+    }
+    
+    prometheus.relabel "kubernetes_monitoring_telemetry" {
+      rule {
+        source_labels = ["__name__"]
+        regex = "grafana_kubernetes_monitoring_.*"
+        action = "keep"
+      }
+      forward_to = [
+        prometheus.remote_write.localprometheus.receiver,
+      ]
+    }
     
     
     
@@ -549,7 +309,7 @@ data:
     
     
       output {
-        traces = [otelcol.processor.batch.localtempo.input]
+        traces = [otelcol.exporter.loadbalancing.localtempo.input]
       }
     }
     
@@ -567,6 +327,11 @@ data:
             }
           }
         }
+      }
+    }
+    
+      output {
+        traces = [otelcol.processor.batch.localtempo.input]
       }
     }
     
@@ -595,52 +360,15 @@ data:
         max_elapsed_time = "5m"
       }
     }
----
-# Source: k8s-monitoring/templates/beyla-config.yaml
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: k8smon-beyla
-  namespace: default
-  labels:
-    helm.sh/chart: beyla-1.7.3
-    app.kubernetes.io/name: beyla
-    app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "2.0.3"
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/part-of: beyla
-    app.kubernetes.io/component: config
-data:
-  beyla-config.yml: |-
-    attributes:
-      kubernetes:
-        cluster_name: tail-sampling-test
-        enable: true
-    discovery:
-      exclude_services:
-      - exe_path: .*alloy.*|.*otelcol.*|.*beyla.*
-      services:
-      - k8s_namespace: .
-    filter:
-      network:
-        k8s_dst_owner_name:
-          not_match: '{kube*,*jaeger-agent*,*prometheus*,*promtail*,*grafana-agent*}'
-        k8s_src_owner_name:
-          not_match: '{kube*,*jaeger-agent*,*prometheus*,*promtail*,*grafana-agent*}'
-    internal_metrics:
-      prometheus:
-        path: /internal/metrics
-        port: 9090
-    otel_traces_export:
-      endpoint: http://k8smon-alloy-receiver.default.svc.cluster.local:4317
-    prometheus_export:
-      features:
-      - application
-      - network
-      - application_service_graph
-      - application_span
-      path: /metrics
-      port: 9090
+
+  self-reporting-metric.prom: |
+    
+    # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart
+    # TYPE grafana_kubernetes_monitoring_build_info gauge
+    grafana_kubernetes_monitoring_build_info{version="2.0.26", namespace="default"} 1
+    # HELP grafana_kubernetes_monitoring_feature_info A metric to report the enabled features of the Kubernetes Monitoring Helm chart
+    # TYPE grafana_kubernetes_monitoring_feature_info gauge
+    grafana_kubernetes_monitoring_feature_info{feature="applicationObservability", protocols="otlpgrpc", version="1.0.0"} 1
 ---
 # Source: k8s-monitoring/charts/alloy-operator/templates/rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -765,27 +493,6 @@ rules:
     verbs:
       - '*'
 ---
-# Source: k8s-monitoring/charts/autoInstrumentation/charts/beyla/templates/cluster-role.yaml
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: k8smon-beyla
-  labels:
-    helm.sh/chart: beyla-1.7.3
-    app.kubernetes.io/name: beyla
-    app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "2.0.3"
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/part-of: beyla
-    app.kubernetes.io/component: rbac
-rules:
-  - apiGroups: [ "apps" ]
-    resources: [ "replicasets" ]
-    verbs: [ "list", "watch" ]
-  - apiGroups: [ "" ]
-    resources: [ "pods", "services", "nodes" ]
-    verbs: [ "list", "watch", "get" ]
----
 # Source: k8s-monitoring/charts/alloy-operator/templates/rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -807,28 +514,6 @@ subjects:
   - kind: ServiceAccount
     name: k8smon-alloy-operator
     namespace: default
----
-# Source: k8s-monitoring/charts/autoInstrumentation/charts/beyla/templates/cluster-role-binding.yaml
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: k8smon-beyla
-  labels:
-    helm.sh/chart: beyla-1.7.3
-    app.kubernetes.io/name: beyla
-    app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "2.0.3"
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/part-of: beyla
-    app.kubernetes.io/component: rbac
-subjects:
-  - kind: ServiceAccount
-    name: k8smon-beyla
-    namespace: default
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: k8smon-beyla
 ---
 # Source: k8s-monitoring/charts/alloy-operator/templates/rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -925,67 +610,6 @@ spec:
     app.kubernetes.io/name: alloy-operator
     app.kubernetes.io/instance: k8smon
 ---
-# Source: k8s-monitoring/charts/autoInstrumentation/charts/beyla/templates/daemon-set.yaml
-apiVersion: apps/v1
-kind: DaemonSet
-metadata:
-  name: k8smon-beyla
-  namespace: default
-  labels:
-    helm.sh/chart: beyla-1.7.3
-    app.kubernetes.io/name: beyla
-    app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "2.0.3"
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/part-of: beyla
-    app.kubernetes.io/component: workload
-spec:
-  selector:
-    matchLabels:
-      app.kubernetes.io/name: beyla
-      app.kubernetes.io/instance: k8smon
-  updateStrategy:
-    type: RollingUpdate
-  template:
-    metadata:
-      annotations:
-        checksum/config: 01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b
-        k8s.grafana.com/job: default/beyla
-        k8s.grafana.com/logs.job: integrations/beyla
-      labels:
-        helm.sh/chart: beyla-1.7.3
-        app.kubernetes.io/name: beyla
-        app.kubernetes.io/instance: k8smon
-        app.kubernetes.io/version: "2.0.3"
-        app.kubernetes.io/managed-by: Helm
-        app.kubernetes.io/part-of: beyla
-        app.kubernetes.io/component: workload
-    spec:
-      serviceAccountName: k8smon-beyla
-      hostPID: true
-      containers:
-        - name: beyla
-          image: docker.io/grafana/beyla:2.0.3
-          imagePullPolicy: IfNotPresent
-          securityContext:
-            privileged: true
-          ports:
-          - name: metrics
-            containerPort: 9090
-            protocol: TCP
-          env:
-            - name: BEYLA_CONFIG_PATH
-              value: "/etc/beyla/config/beyla-config.yml"
-          volumeMounts:
-            - mountPath: /etc/beyla/config
-              name: beyla-config
-      nodeSelector:
-        kubernetes.io/os: linux
-      volumes:
-        - name: beyla-config
-          configMap:
-            name: k8smon-beyla
----
 # Source: k8s-monitoring/charts/alloy-operator/templates/deployment.yaml
 apiVersion: apps/v1
 kind: Deployment
@@ -1064,7 +688,8 @@ spec:
   alloy:
     configMap:
       create: true
-      content: |
+      content: |-
+        
         otelcol.receiver.otlp "receiver" {
           grpc {
             max_recv_msg_size = "4MB"  # TODO this could be configurable
@@ -1074,107 +699,10 @@ spec:
             traces = ["otelcol.processor.tail_sampling.sampler.input"]
           }
         }
-        
         otelcol.processor.tail_sampling "sampler" {
           // https://grafana.com/docs/alloy/latest/reference/components/otelcol.processor.tail_sampling/
         
           decision_wait = "15s"
-        
-          policy {
-            name = "always_sample-policy"
-            type = "always_sample"
-            
-          }
-        
-          policy {
-            name = "latency-policy"
-            type = "latency"
-            latency {
-              threshold_ms = 5000
-            }
-          }
-        
-          policy {
-            name = "numeric_attribute-policy"
-            type = "numeric_attribute"
-            numeric_attribute {
-              key = "key"
-              min_value = 1
-            }
-          }
-        
-          policy {
-            name = "probabilistic-policy"
-            type = "probabilistic"
-            probabilistic {
-              sampling_percentage = 10
-            }
-          }
-        
-          policy {
-            name = "status_code-policy"
-            type = "status_code"
-            status_code {
-              status_codes = ["UNSET", "ERROR"]
-            }
-          }
-        
-          policy {
-            name = "string_attribute-policy"
-            type = "string_attribute"
-            string_attribute {
-              key = "key"
-              values = ["value1", "value2"]
-            }
-          }
-        
-          policy {
-            name = "trace_state-policy"
-            type = "trace_state"
-            trace_state {
-              key = "key"
-              values = ["value1", "value2"]
-            }
-          }
-        
-          policy {
-            name = "rate_limiting-policy"
-            type = "rate_limiting"
-            rate_limiting {
-              spans_per_second = 35
-            }
-          }
-        
-          policy {
-            name = "span_count-policy"
-            type = "span_count"
-            span_count {
-              min_spans = 2
-              max_spans = 20
-              
-            }
-          }
-        
-          policy {
-            name = "boolean_attribute-policy"
-            type = "boolean_attribute"
-            boolean_attribute {
-              key = "key"
-              value = true
-              invert_match = true
-            }
-          }
-        
-          policy {
-            name = "ottl_condition-policy"
-            type = "ottl_condition"
-            ottl_condition {
-              error_mode = "ignore"
-              span = ["attributes[\"attr_key_1\"] == \"test_attr_val_1\"", "attributes[\"attr_key_2\"] == \"test_attr_val_2\""]
-              spanevent = ["name != \"test_span_event_name\"", "attributes[\"event_attr_key\"] != \"event_attr_val\""
-              ]
-            }
-          }
         
           policy {
             name = "and-policy"
@@ -1186,6 +714,8 @@ spec:
                 numeric_attribute {
                   key = "key1"
                   min_value = 1
+                  max_value = 256
+        
                 }
               }
               and_sub_policy {
@@ -1199,48 +729,10 @@ spec:
             }
           }
         
-          policy {
-            name = "composite-policy-1"
-            type = "composite"
-            composite {
-              max_total_spans_per_second = 1000
-              policy_order = ["test-composite-policy-1", "test-composite-policy-2", "test-composite-policy-3"]
-              composite_sub_policy {
-                name = "test-composite-policy-1"
-                type = "numeric_attribute"
-                numeric_attribute {
-                  key = "key1"
-                  min_value = 50
-                }
-              }
-              composite_sub_policy {
-                name = "test-composite-policy-2"
-                type = "string_attribute"
-                string_attribute {
-                  key = "key2"
-                  values = ["value1", "value2"]
-                }
-              }
-              composite_sub_policy {
-                name = "test-composite-policy-3"
-                type = "always_sample"
-              }
-              rate_allocation {
-                policy = "test-composite-policy-1"
-                percent = 50
-              }
-              rate_allocation {
-                policy = "test-composite-policy-2"
-                percent = 25
-              }
-            }
-          }
-        
           output {
             traces = [otelcol.processor.batch.default.input]
           }
         }
-        
         // Destination: localTempo (otlp)
         
         otelcol.processor.attributes "localtempo" {
@@ -1262,7 +754,7 @@ spec:
         
         
           output {
-            traces = [otelcol.processor.batch.localtempo.input]
+            traces = [otelcol.exporter.loadbalancing.localtempo.input]
           }
         }
         
@@ -1280,6 +772,11 @@ spec:
                 }
               }
             }
+          }
+        }
+        
+          output {
+            traces = [otelcol.processor.batch.localtempo.input]
           }
         }
         
@@ -1308,199 +805,6 @@ spec:
             max_elapsed_time = "5m"
           }
         }
----
-# Source: k8s-monitoring/templates/alloy.yaml
-apiVersion: collectors.grafana.com/v1alpha1
-kind: Alloy
-metadata:
-  name: k8smon-alloy-metrics
-  namespace: default
-spec: 
-  alloy:
-    clustering:
-      enabled: true
-      name: alloy-metrics
-      portName: http
-    configMap:
-      content: ""
-      create: false
-      key: null
-      name: null
-    enableReporting: true
-    envFrom: []
-    extraArgs: []
-    extraEnv: []
-    extraPorts: []
-    hostAliases: []
-    lifecycle: {}
-    listenAddr: 0.0.0.0
-    listenPort: 12345
-    listenScheme: HTTP
-    livenessProbe: {}
-    mounts:
-      dockercontainers: false
-      extra: []
-      varlog: false
-    nodeSelector:
-      kubernetes.io/os: linux
-    podAnnotations:
-      k8s.grafana.com/logs.job: integrations/alloy
-    resources: {}
-    securityContext:
-      allowPrivilegeEscalation: false
-      capabilities:
-        add:
-        - CHOWN
-        - DAC_OVERRIDE
-        - FOWNER
-        - FSETID
-        - KILL
-        - SETGID
-        - SETUID
-        - SETPCAP
-        - NET_BIND_SERVICE
-        - NET_RAW
-        - SYS_CHROOT
-        - MKNOD
-        - AUDIT_WRITE
-        - SETFCAP
-        drop:
-        - ALL
-      seccompProfile:
-        type: RuntimeDefault
-    stabilityLevel: generally-available
-    storagePath: /tmp/alloy
-    uiPathPrefix: /
-  configReloader:
-    customArgs: []
-    enabled: true
-    image:
-      digest: ""
-      registry: quay.io
-      repository: prometheus-operator/prometheus-config-reloader
-      tag: v0.81.0
-    resources:
-      requests:
-        cpu: 10m
-        memory: 50Mi
-    securityContext: {}
-  controller:
-    affinity: {}
-    autoscaling:
-      enabled: false
-      horizontal:
-        enabled: false
-        maxReplicas: 5
-        minReplicas: 1
-        scaleDown:
-          policies: []
-          selectPolicy: Max
-          stabilizationWindowSeconds: 300
-        scaleUp:
-          policies: []
-          selectPolicy: Max
-          stabilizationWindowSeconds: 0
-        targetCPUUtilizationPercentage: 0
-        targetMemoryUtilizationPercentage: 80
-      maxReplicas: 5
-      minReplicas: 1
-      scaleDown:
-        policies: []
-        selectPolicy: Max
-        stabilizationWindowSeconds: 300
-      scaleUp:
-        policies: []
-        selectPolicy: Max
-        stabilizationWindowSeconds: 0
-      targetCPUUtilizationPercentage: 0
-      targetMemoryUtilizationPercentage: 80
-      vertical:
-        enabled: false
-        recommenders: []
-        resourcePolicy:
-          containerPolicies:
-          - containerName: alloy
-            controlledResources:
-            - cpu
-            - memory
-            controlledValues: RequestsAndLimits
-            maxAllowed: {}
-            minAllowed: {}
-        updatePolicy: null
-    dnsPolicy: ClusterFirst
-    enableStatefulSetAutoDeletePVC: false
-    extraAnnotations: {}
-    extraContainers: []
-    hostNetwork: false
-    hostPID: false
-    initContainers: []
-    nodeSelector: {}
-    parallelRollout: true
-    podAnnotations: {}
-    podDisruptionBudget:
-      enabled: false
-      maxUnavailable: null
-      minAvailable: null
-    podLabels: {}
-    priorityClassName: ""
-    replicas: 1
-    terminationGracePeriodSeconds: null
-    tolerations: []
-    topologySpreadConstraints: []
-    type: statefulset
-    updateStrategy: {}
-    volumeClaimTemplates: []
-    volumes:
-      extra: []
-  crds:
-    create: false
-  extraObjects: []
-  global:
-    image:
-      pullSecrets: []
-      registry: ""
-    podSecurityContext: {}
-  image:
-    digest: null
-    pullPolicy: IfNotPresent
-    pullSecrets: []
-    registry: docker.io
-    repository: grafana/alloy
-    tag: null
-  ingress:
-    annotations: {}
-    enabled: false
-    extraPaths: []
-    faroPort: 12347
-    hosts:
-    - chart-example.local
-    labels: {}
-    path: /
-    pathType: Prefix
-    tls: []
-  nameOverride: alloy-metrics
-  rbac:
-    create: true
-  service:
-    annotations: {}
-    clusterIP: ""
-    enabled: true
-    internalTrafficPolicy: Cluster
-    nodePort: 31128
-    type: ClusterIP
-  serviceAccount:
-    additionalLabels: {}
-    annotations: {}
-    automountServiceAccountToken: true
-    create: true
-    name: null
-  serviceMonitor:
-    additionalLabels: {}
-    enabled: false
-    interval: ""
-    metricRelabelings: []
-    relabelings: []
-    tlsConfig: {}
 ---
 # Source: k8s-monitoring/templates/alloy.yaml
 apiVersion: collectors.grafana.com/v1alpha1
