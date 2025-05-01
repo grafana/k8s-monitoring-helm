@@ -6,12 +6,9 @@
     {{- $defaultValues := "destinations/otlp-values.yaml" | $.Files.Get | fromYaml }}
     {{- $destination = mergeOverwrite $defaultValues $destination }}
 
-    {{- $traces := list }}
-    {{- $traces = append $traces "otelcol.processor.tail_sampling.sampler.input" }}
-    {{- $receiverConfig := include "sampler.receiver.otlp.alloy" $traces }}
-    {{- $samplerConfig := include "sampler.processor.tail_sampling" $destination.processors.tail_sampling | trim }}
-
     {{- $alloyConfig := "" }}
+    {{- $alloyConfig = cat $alloyConfig ((include "sampler.receiver.otlp.alloy" (list "otelcol.processor.tail_sampling.sampler.input")) | trim | nindent 0) }}
+    {{- $alloyConfig = cat $alloyConfig ((include "sampler.processor.tail_sampling" $destination.processors.tail_sampling) | trim | nindent 0) }}
     {{- $alloyConfig = cat $alloyConfig ((include "destinations.alloy.config" (deepCopy $ | merge (dict "names" (list $destination.name)))) | trim | nindent 0) }}
     {{- $alloyConfig = regexReplaceAll `[ \t]+(\r?\n)` $alloyConfig "\n" }}
 ---
@@ -27,9 +24,7 @@ spec:
   alloy:
     configMap:
       create: true
-      content: |
-        {{- $receiverConfig | trim | nindent 8 }}
-        {{ $samplerConfig | trim | nindent 8 }}
+      content: |-
         {{ $alloyConfig | trim | nindent 8 }}
 {{- end }}
 {{- end }}
