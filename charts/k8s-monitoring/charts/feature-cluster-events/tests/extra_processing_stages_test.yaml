@@ -7,9 +7,17 @@ tests:
     set:
       deployAsConfigMap: true
       extraLogProcessingStages: |-
-        stage.drop {
-          source = "namespace"
-          value  = "private"
+        stage.metrics {
+          metric.counter {
+            name        = "failures"
+            description = "total number of failed events"
+            prefix      = "kubernetes_event_"
+
+            action            = "inc"
+            max_idle_duration = "24h"
+            source            = "reason"
+            value             = "Failed"
+          }
         }
     asserts:
       - isKind:

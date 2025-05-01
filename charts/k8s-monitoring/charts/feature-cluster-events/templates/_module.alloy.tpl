@@ -38,6 +38,7 @@ declare "cluster_events" {
         "level" = "type", // most events don't have a level but they do have a "type" i.e. Normal, Warning, Error, etc.
         "name" = "",
         "node" = "sourcehost", // map the sourcehost field to node
+        "reason" = "",
       }
     }
     {{- else }}
@@ -48,6 +49,7 @@ declare "cluster_events" {
         "level" = "type", // most events don't have a level but they do have a "type" i.e. Normal, Warning, Error, etc.
         "name" = "",
         "node" = "sourcehost", // map the sourcehost field to node
+        "reason" = "",
       }
     }
     {{- end }}
@@ -60,10 +62,11 @@ declare "cluster_events" {
         "level" = "",
         "name" = "",
         "node" = "",
+        "reason" = "",
       }
     }
 
-    // if kind=Node, set the node label by copying the instance label
+    // if kind=Node, set the node label by copying the name field
     stage.match {
       selector = "{kind=\"Node\"}"
 
@@ -73,6 +76,67 @@ declare "cluster_events" {
         }
       }
     }
+
+{{- if .Values.includeReasons }}
+    stage.static_labels {
+      values = {
+        drop = "yes",
+      }
+    }
+    stage.match {
+      selector = "{reason=~\"{{ .Values.includeReasons | join "|" }}\"}"
+      stage.static_labels {
+        values = {
+          drop = "no",
+        }
+      }
+    }
+    stage.match {
+      selector = "{drop=\"yes\"}"
+      action = "drop"
+      drop_counter_reason = "not_included_reasons"
+    }
+    stage.label_drop {
+      values = ["drop"]
+    }
+{{- end }}
+{{- if .Values.excludeReasons }}
+    stage.drop {
+      source = "reason"
+      expression = {{ .Values.excludeReasons | join "|" | quote }}
+      drop_counter_reason = "excluded_reasons"
+    }
+{{- end }}
+{{- if .Values.includeLevels }}
+    stage.static_labels {
+      values = {
+        drop = "yes",
+      }
+    }
+    stage.match {
+      selector = "{level=~\"{{ .Values.includeLevels | join "|" }}\"}"
+      stage.static_labels {
+        values = {
+          drop = "no",
+        }
+      }
+    }
+    stage.match {
+      selector = "{drop=\"yes\"}"
+      action = "drop"
+      drop_counter_reason = "not_included_levels"
+    }
+    stage.label_drop {
+      values = ["drop"]
+    }
+{{- end }}
+{{- if .Values.excludeLevels }}
+    stage.drop {
+      source = "level"
+      expression = {{ .Values.excludeLevels | join "|" | quote }}
+      drop_counter_reason = "excluded_levels"
+    }
+{{- end }}
 
     // set the level extracted key value as a normalized log level
     stage.match {
