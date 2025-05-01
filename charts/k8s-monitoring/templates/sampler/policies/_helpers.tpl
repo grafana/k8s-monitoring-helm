@@ -21,7 +21,7 @@ latency {
 numeric_attribute {
   key = {{ $policy.key | quote }}
   min_value = {{ $policy.min_value }}
-  {{- if hasKey $policy "max_vlaue" }}
+  {{- if hasKey $policy "max_value" }}
   max_value = {{ $policy.max_value }}
   {{ end }}
 }
