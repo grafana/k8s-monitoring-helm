@@ -1067,11 +1067,11 @@ spec:
       content: |
         otelcol.receiver.otlp "receiver" {
           grpc {
-            max_recv_msg_size = "4MB"  # TODO this could be configurable"
+            max_recv_msg_size = "4MB"  # TODO this could be configurable
           }
         
           output {
-            traces = ["target"]
+            traces = ["otelcol.processor.tail_sampling.sampler.input"]
           }
         }
         
@@ -1080,12 +1080,12 @@ spec:
         
           decision_wait = "15s"
         
-          
           policy {
             name = "always_sample-policy"
             type = "always_sample"
+            
           }
-          
+        
           policy {
             name = "latency-policy"
             type = "latency"
@@ -1093,17 +1093,16 @@ spec:
               threshold_ms = 5000
             }
           }
-          
+        
           policy {
             name = "numeric_attribute-policy"
             type = "numeric_attribute"
             numeric_attribute {
               key = "key"
               min_value = 1
-              max_value = 256
             }
           }
-          
+        
           policy {
             name = "probabilistic-policy"
             type = "probabilistic"
@@ -1111,7 +1110,7 @@ spec:
               sampling_percentage = 10
             }
           }
-          
+        
           policy {
             name = "status_code-policy"
             type = "status_code"
@@ -1119,7 +1118,7 @@ spec:
               status_codes = ["UNSET", "ERROR"]
             }
           }
-          
+        
           policy {
             name = "string_attribute-policy"
             type = "string_attribute"
@@ -1128,7 +1127,7 @@ spec:
               values = ["value1", "value2"]
             }
           }
-          
+        
           policy {
             name = "trace_state-policy"
             type = "trace_state"
@@ -1137,7 +1136,7 @@ spec:
               values = ["value1", "value2"]
             }
           }
-          
+        
           policy {
             name = "rate_limiting-policy"
             type = "rate_limiting"
@@ -1145,16 +1144,17 @@ spec:
               spans_per_second = 35
             }
           }
-          
+        
           policy {
             name = "span_count-policy"
             type = "span_count"
             span_count {
               min_spans = 2
               max_spans = 20
+              
             }
           }
-          
+        
           policy {
             name = "boolean_attribute-policy"
             type = "boolean_attribute"
@@ -1164,33 +1164,33 @@ spec:
               invert_match = true
             }
           }
-          
+        
           policy {
             name = "ottl_condition-policy"
             type = "ottl_condition"
             ottl_condition {
               error_mode = "ignore"
               span = ["attributes[\"attr_key_1\"] == \"test_attr_val_1\"", "attributes[\"attr_key_2\"] == \"test_attr_val_2\""]
-              spanevent = ["name != \"test_span_event_name\"", "attributes[\"event_attr_key\"] != \"event_attr_val\""]
+              spanevent = ["name != \"test_span_event_name\"", "attributes[\"event_attr_key\"] != \"event_attr_val\""
+              ]
             }
           }
-          
+        
           policy {
             name = "and-policy"
             type = "and"
             and {
               and_sub_policy {
                 name = "test-and-policy-1"
-                type = "numeric_attribute"    
+                type = "numeric_attribute"
                 numeric_attribute {
                   key = "key1"
                   min_value = 1
-                  max_value = 256
                 }
               }
               and_sub_policy {
                 name = "test-and-policy-2"
-                type = "string_attribute"    
+                type = "string_attribute"
                 string_attribute {
                   key = "key2"
                   values = ["value1", "value2"]
@@ -1198,7 +1198,7 @@ spec:
               }
             }
           }
-          
+        
           policy {
             name = "composite-policy-1"
             type = "composite"
@@ -1207,24 +1207,23 @@ spec:
               policy_order = ["test-composite-policy-1", "test-composite-policy-2", "test-composite-policy-3"]
               composite_sub_policy {
                 name = "test-composite-policy-1"
-                type = "numeric_attribute"    
+                type = "numeric_attribute"
                 numeric_attribute {
-                  key = 
-                  min_value = 
-                  max_value = 
+                  key = "key1"
+                  min_value = 50
                 }
               }
               composite_sub_policy {
                 name = "test-composite-policy-2"
-                type = "string_attribute"    
+                type = "string_attribute"
                 string_attribute {
-                  key = 
-                  values = []
+                  key = "key2"
+                  values = ["value1", "value2"]
                 }
               }
               composite_sub_policy {
                 name = "test-composite-policy-3"
-                type = "always_sample"    
+                type = "always_sample"
               }
               rate_allocation {
                 policy = "test-composite-policy-1"
@@ -1236,7 +1235,6 @@ spec:
               }
             }
           }
-          
         
           output {
             traces = [otelcol.processor.batch.default.input]
@@ -1310,13 +1308,6 @@ spec:
             max_elapsed_time = "5m"
           }
         }
-
-
-       # $destination.processors.tailSampling
-       # Step 1: otelcol.receiver    << ingest traces
-       # Step 2: apply sampling policies
-       # Step 3: Export traces to original trace destination   <-- render the otlp destination alloy config, wired to memory limiter, batch, and exporter
-       # Step 4: Export metrics to chosen metrics destination
 ---
 # Source: k8s-monitoring/templates/alloy.yaml
 apiVersion: collectors.grafana.com/v1alpha1

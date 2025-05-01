@@ -4,9 +4,9 @@ otelcol.processor.tail_sampling "sampler" {
 
   decision_wait = {{ .decision_wait | quote }}
 
-  {{/* range .policies }}
-    {{- include "policy.block" . | nindent 2 }}
-  {{- end */}}
+{{- range .policies }}
+{{ include "policy.block" . | trim | nindent 2 }}
+{{- end }}
 
   output {
     traces = [otelcol.processor.batch.default.input]

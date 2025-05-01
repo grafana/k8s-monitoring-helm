@@ -2,7 +2,7 @@
 {{ $traces := . }}
 otelcol.receiver.otlp "receiver" {
   grpc {
-    max_recv_msg_size = "4MB"  # TODO this could be configurable"
+    max_recv_msg_size = "4MB"  # TODO this could be configurable
   }
 
   output {

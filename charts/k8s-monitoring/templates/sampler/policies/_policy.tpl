@@ -4,14 +4,14 @@ policy {
   name = {{ $policy.name | quote }}
   type = {{ $policy.type | quote }}
   {{- if and (ne $policy.type "composite") (ne $policy.type "and") }}
-  {{- include "policy.generate" $policy }}
+{{ include "policy.generate" $policy | trim | indent 2 }}
   {{- else if eq $policy.type "and" }}
   and {
   {{- range $sub := $policy.and.and_sub_policy }}
     and_sub_policy {
       name = {{ $sub.name | quote }}
       type = {{ $sub.type | quote }}
-      {{- include "policy.generate" $sub | indent 4 }}
+{{ include "policy.generate" $sub | trim | indent 6 }}
     }
   {{- end }}
   }
@@ -28,8 +28,11 @@ policy {
     {{- range $sub := $policy.composite.composite_sub_policy }}
     composite_sub_policy {
       name = {{ $sub.name | quote }}
-      type = {{ $sub.type | quote }}
-      {{- include "policy.generate" $sub | indent 4 }}
+      type = {{ $sub.type | quote -}}
+      {{- $cp :=  include "policy.generate" $sub | trim }}
+      {{- if $cp }}
+{{ $cp | indent 6 }}
+      {{- end }}
     }
     {{- end }}
 
@@ -42,5 +45,4 @@ policy {
   }
   {{- end }}
 }
-{{ end -}}
-
+{{- end }}
