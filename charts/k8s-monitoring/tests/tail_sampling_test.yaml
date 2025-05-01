@@ -1,0 +1,29 @@
+---
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Test sampling policies
+templates:
+  - configmap.yaml
+tests:
+  - it: creates an always_sample policy
+    set:
+      deployAsConfigMap: true
+      cluster:
+        name: tail-sampling-test
+      destinations:
+        - name: tempo 
+          type: otlp
+          url: tempo:4317
+          traces: {enabled: true}
+          processors:
+            tail_sampling:
+              enabled: true
+              policies:
+                - name: always_sample-policy
+                  type: always_sample
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["module.alloy"]
+
+

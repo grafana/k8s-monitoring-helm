@@ -9,4 +9,4 @@ otelcol.receiver.otlp "receiver" {
     traces = {{ $traces | toJson }}
   }
 }
-{{- end }}
+{{ end }}

@@ -27,6 +27,72 @@ destinations:
       tail_sampling:
         enabled: true
         policies:
+          - name: always_sample-policy
+            type: always_sample
+          - name: latency-policy
+            type: latency
+            threshold_ms: 5000
+          - name: numeric_attribute-policy
+            type: numeric_attribute
+            key: key
+            min_value: 1
+            max_value: 256
+          - name: probabilistic-policy
+            type: probabilistic
+            sampling_percentage: 10
+          - name: status_code-policy
+            type: status_code
+            status_codes:
+              - UNSET
+              - ERROR
+          - name: string_attribute-policy
+            type: string_attribute
+            key: key
+            values:
+              - value1
+              - value2
+          - name: trace_state-policy
+            type: trace_state
+            key: key
+            values:
+              - value1
+              - value2
+          - name: rate_limiting-policy
+            type: rate_limiting
+            spans_per_second: 35
+          - name: span_count-policy
+            type: span_count
+            min_spans: 2
+            max_spans: 20
+          - name: boolean_attribute-policy
+            type: boolean_attribute
+            key: key
+            value: true
+            invert_match: true
+          - name: ottl_condition-policy
+            type: ottl_condition
+            error_mode: ignore
+            span:
+              - attributes["attr_key_1"] == "test_attr_val_1"
+              - attributes["attr_key_2"] == "test_attr_val_2"
+            spanevent:
+              - name != "test_span_event_name"
+              - attributes["event_attr_key"] != "event_attr_val"
+          - name: and-policy
+            type: and
+            and:
+              and_sub_policy:
+                - name: test-and-policy-1
+                  type: numeric_attribute
+                  key: key1
+                  min_value: 1
+                  max_value: 256
+                - name: test-and-policy-2
+                  type: string_attribute
+                  key: key2
+                  values:
+                    - value1
+                    - value2
           - name: composite-policy-1
             type: composite
             composite:
@@ -42,7 +108,9 @@ destinations:
                   type: string_attribute
                   string_attribute:
                     key: key2
-                    values: [value1, value2]
+                    values:
+                      - value1
+                      - value2
                 - name: test-composite-policy-3
                   type: always_sample
               rate_allocation:
