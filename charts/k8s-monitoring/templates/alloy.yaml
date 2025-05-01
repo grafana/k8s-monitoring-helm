@@ -1,4 +1,5 @@
 {{- range $collectorName := include "collectors.list.enabled" . | fromYamlArray }}
+{{- include "crdValidation" $ }}
 {{- $values := (deepCopy $ | merge (dict "collectorName" $collectorName)) }}
 {{- $alloyValues := (include "collector.alloy.values" $values | fromYaml) | merge (dict "nameOverride" $collectorName) }}
 {{- $excluded := dict "enabled" true "extraConfig" true "remoteConfig" true "logging" true "liveDebugging" true }}

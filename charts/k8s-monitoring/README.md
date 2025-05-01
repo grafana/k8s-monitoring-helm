@@ -5,7 +5,7 @@
 
 # k8s-monitoring
 
-![Version: 2.0.26](https://img.shields.io/badge/Version-2.0.26-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 2.0.26](https://img.shields.io/badge/AppVersion-2.0.26-informational?style=flat-square)
+![Version: 2.1.0](https://img.shields.io/badge/Version-2.1.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 2.1.0](https://img.shields.io/badge/AppVersion-2.1.0-informational?style=flat-square)
 
 Capture all telemetry data from your Kubernetes cluster.
 
@@ -159,7 +159,7 @@ podLogs:
 |  | podLogs(feature-pod-logs) | 1.0.0 |
 |  | profiling(feature-profiling) | 1.0.0 |
 |  | prometheusOperatorObjects(feature-prometheus-operator-objects) | 1.0.0 |
-| https://grafana.github.io/helm-charts | alloy-operator | 0.2.3-beta.1 |
+| https://grafana.github.io/helm-charts | alloy-operator | 0.2.6 |
 <!-- markdownlint-enable no-bare-urls -->
 
 ## Values
