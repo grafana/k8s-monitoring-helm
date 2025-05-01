@@ -191,5 +191,6 @@ cluster_metrics "feature" {
     {{- end -}}
   {{- end -}}
 {{- end -}}
+{{- include "feature.clusterMetrics.validate" (dict "Values" $.Values.clusterMetrics) }}
 {{- end -}}
 {{- end -}}
