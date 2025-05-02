@@ -1,12 +1,11 @@
 {{- define "sampler.receiver.otlp.alloy" }}
-{{ $traces := . }}
-otelcol.receiver.otlp "receiver" {
+otelcol.receiver.otlp {{ .name | default "default" | quote }} {
   grpc {
     max_recv_msg_size = "4MB"  # TODO this could be configurable
   }
 
   output {
-    traces = {{ $traces | toJson }}
+    traces = [{{ .traces }}]
   }
 }
 {{ end }}

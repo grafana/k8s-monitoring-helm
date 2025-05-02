@@ -59,6 +59,7 @@ This defines the options for defining a destination for OpenTelemetry data that 
 | name | string | `""` | The name for this OTLP destination. |
 | protocol | string | `"grpc"` | The protocol for the OTLP destination. Options are "grpc" (default), "http". |
 | readBufferSize | string | `""` | Size of the read buffer the gRPC client to use for reading server responses. |
+| retryOnFailure.enabled | bool | `true` | Should failed requests be retried? |
 | retryOnFailure.initialInterval | string | `"5s"` | The initial time to wait before retrying a failed request to the OTLP destination. |
 | retryOnFailure.maxElapsedTime | string | `"5m"` | The maximum amount of time to wait before discarding a failed batch. |
 | retryOnFailure.maxInterval | string | `"30s"` | The maximum time to wait before retrying a failed request to the OTLP destination. |
@@ -113,7 +114,9 @@ This defines the options for defining a destination for OpenTelemetry data that 
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| processors.tail_sampling.enabled | bool | `false` | Apply Tail sampling policies to the traces before delivering them to their destination. |
+| processors.tailSampling.decisionWait | string | `"15s"` | TODO: Needs a description |
+| processors.tailSampling.enabled | bool | `false` | Apply tail sampling policies to the traces before delivering them to their destination. |
+| processors.tailSampling.policies | list | `[]` | Tail sampling policies apply. |
 
 ### Transform Processor
 
@@ -154,13 +157,3 @@ This defines the options for defining a destination for OpenTelemetry data that 
 | tls.key | string | `""` | The client key for the server (as a string). |
 | tls.keyFile | string | `""` | The client key for the server (as a path to a file). |
 | tls.keyFrom | string | `""` | Raw config for accessing the client key. |
-
-### Other Values
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| connectors.serviceGraphMetrics.destination | string | `""` |  |
-| connectors.serviceGraphMetrics.enabled | bool | `false` |  |
-| processors.tail_sampling.decision_wait | string | `"15s"` |  |
-| processors.tail_sampling.policies | list | `[]` |  |
-| retryOnFailure.enabled | bool | `true` |  |

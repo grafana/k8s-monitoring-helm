@@ -287,8 +287,6 @@ otelcol.processor.filter {{ include "helper.alloy_name" .name | quote }} {
 {{- end }}
 {{- end }}
 
-{{/* override traces target and enable loadbalancing exporter if sampling is enabled */}}
-{{- if and .processors.tail_sampling.enabled }}
   output {
 {{- if ne .metrics.enabled false }}
     metrics = [{{ include "destinations.otlp.alloy.exporter.target" . }}]
@@ -297,15 +295,16 @@ otelcol.processor.filter {{ include "helper.alloy_name" .name | quote }} {
     logs = [{{ include "destinations.otlp.alloy.exporter.target" . }}]
 {{- end }}
 {{- if ne .traces.enabled false }}
+{{- /* If sampling is enabled, override traces target and enable loadbalancing exporter if sampling is enabled */}}
+{{- if and .processors.tailSampling.enabled }}
     traces = [otelcol.exporter.loadbalancing.{{ include "helper.alloy_name" .name }}.input]
-{{- end }}
   }
 }
 
 otelcol.exporter.loadbalancing {{ include "helper.alloy_name" .name | quote }} {
   resolver {
     kubernetes {
-      service = "{{ printf "%s-%s-sampler" $.Release.Name .name }}"
+      service = "{{ include "helper.k8s_name" (printf "%s-%s-sampler" $.Release.Name .name) }}"
     }
   }
   protocol {
@@ -318,20 +317,12 @@ otelcol.exporter.loadbalancing {{ include "helper.alloy_name" .name | quote }} {
     }
   }
 }
-{{- end }}
-
-  output {
-{{- if ne .metrics.enabled false }}
-    metrics = [{{ include "destinations.otlp.alloy.exporter.target" . }}]
-{{- end }}
-{{- if ne .logs.enabled false }}
-    logs = [{{ include "destinations.otlp.alloy.exporter.target" . }}]
-{{- end }}
-{{- if ne .traces.enabled false }}
+{{- else }}
     traces = [{{ include "destinations.otlp.alloy.exporter.target" . }}]
-{{- end }}
   }
 }
+{{- end }}
+{{- end }}
 
 {{- include "destinations.otlp.alloy.exporter" . }}
 {{- end }}
@@ -498,6 +489,6 @@ otelcol.exporter.otlphttp {{ include "helper.alloy_name" .name | quote }} {
 {{- define "destinations.otlp.supports_profiles" }}false{{ end -}}
 {{- define "destinations.otlp.ecosystem" }}otlp{{ end -}}
 
-{{- define "destinations.otlp.is_tail_sampling_enabled" }}
-{{- dig "processors" "tail_sampling" "enabled" "false" . -}}
+{{- define "destinations.otlp.isTailSamplingEnabled" }}
+{{- dig "processors" "tailSampling" "enabled" "false" . -}}
 {{- end -}}

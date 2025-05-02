@@ -290,28 +290,10 @@ data:
         ]
       }
     
-    
       output {
         metrics = [otelcol.processor.batch.otlp_gateway.input]
         logs = [otelcol.processor.batch.otlp_gateway.input]
         traces = [otelcol.processor.batch.otlp_gateway.input]
-      }
-    }
-    
-    otelcol.exporter.loadbalancing "otlp_gateway" {
-      resolver {
-        kubernetes {
-          service = "k8smon-otlp-gateway-sampler"
-        }
-      }
-      protocol {
-        otlp {
-          client {
-            tls {
-              insecure = true
-            }
-          }
-        }
       }
     }
     
