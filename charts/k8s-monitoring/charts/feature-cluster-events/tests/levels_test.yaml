@@ -1,22 +1,22 @@
 # yamllint disable rule:document-start rule:line-length rule:trailing-spaces
-suite: Test namespace filtering
+suite: Test level filtering
 templates:
   - configmap.yaml
 tests:
-  - it: can restrict events to a given list of namespaces
+  - it: can restrict events to a given list of levels
     set:
       deployAsConfigMap: true
-      namespaces: ["a", "b"]
+      includeReasons: ["Warning", "Error"]
     asserts:
       - isKind:
           of: ConfigMap
       - matchSnapshot:
           path: data["module.alloy"]
 
-  - it: can restrict events from a given list of namespaces
+  - it: can restrict events from a given list of levels
     set:
       deployAsConfigMap: true
-      excludeNamespaces: ["kube-system"]
+      excludeReasons: ["Normal"]
     asserts:
       - isKind:
           of: ConfigMap

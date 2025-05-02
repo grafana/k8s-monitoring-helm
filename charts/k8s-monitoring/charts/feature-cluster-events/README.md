@@ -40,6 +40,19 @@ Be sure perform actual integration testing in a live environment in the main [k8
 
 ## Values
 
+### Processing settings
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| excludeLevels | list | `[]` | List of event levels to ignore. e.g. `["Normal", "Warning"]` |
+| excludeReasons | list | `[]` | List of event reasons to ignore. e.g. `["Pulling", "Started"]` |
+| extraLogProcessingStages | string | `""` | Stage blocks to be added to the loki.process component for cluster events. ([docs](https://grafana.com/docs/alloy/latest/reference/components/loki/loki.process/#blocks)) This value is templated so that you can refer to other values from this file. |
+| includeLevels | list | `[]` | List of event levels to include (`[]` means allow all event levels). e.g. `["Normal", "Warning"]` |
+| includeReasons | list | `[]` | List of event reasons to include (`[]` means allow all event reasons). e.g. `["Failed"]` |
+| jobLabel | string | `"integrations/kubernetes/eventhandler"` | The value for the job label. |
+| labelsToKeep | list | `["job","level","namespace","node","source","reason"]` | The list of labels to keep on the logs, all other pipeline labels will be dropped. |
+| structuredMetadata | object | `{"name":"name"}` | The structured metadata mappings to set. To not set any structured metadata, set this to an empty object (e.g. `{}`) Format: `<key>: <extracted_key>`. Example: structuredMetadata:   component: component   kind: kind   name: name |
+
 ### Gather settings
 
 | Key | Type | Default | Description |
@@ -47,15 +60,6 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | excludeNamespaces | list | `[]` | List of namespaces to ignore events for. |
 | logFormat | string | `"logfmt"` | Log format used to forward cluster events. Allowed values: `logfmt` (default), `json`. |
 | namespaces | list | `[]` | List of namespaces to watch for events (`[]` means all namespaces) |
-
-### Processing settings
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| extraLogProcessingStages | string | `""` | Stage blocks to be added to the loki.process component for cluster events. ([docs](https://grafana.com/docs/alloy/latest/reference/components/loki/loki.process/#blocks)) This value is templated so that you can refer to other values from this file. |
-| jobLabel | string | `"integrations/kubernetes/eventhandler"` | The value for the job label. |
-| labelsToKeep | list | `["job","level","namespace","node","source"]` | The list of labels to keep on the logs, all other pipeline labels will be dropped. |
-| structuredMetadata | object | `{}` | The structured metadata mappings to set. To not set any structured metadata, set this to an empty object (e.g. `{}`) Format: `<key>: <extracted_key>`. Example: structuredMetadata:   component: component   kind: kind   name: name |
 
 ### General settings
 
