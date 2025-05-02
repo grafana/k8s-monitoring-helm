@@ -89,6 +89,7 @@ OPENCOST_EXPORTER_IMAGE = $(shell yq eval 'select(.kind=="Deployment" and .metad
 WINDOWS_EXPORTER_IMAGE = $(shell yq eval 'select(.kind=="DaemonSet" and .metadata.name=="$(EXAMPLE_RELEASE_NAME)-windows-exporter") | .spec.template.spec.containers[0].image' docs/examples/features/cluster-metrics/default/output.yaml)
 docs/Images.md: Chart.yaml docs/examples/features/cluster-metrics/default/output.yaml docs/examples/features/auto-instrumentation/beyla-metrics/output.yaml
 	echo "# Images" > $@
+	echo "" >> $@
 	echo "The following is the list of images potentially used in the $(shell yq eval '.version' Chart.yaml) version of the $(shell yq eval '.name' Chart.yaml) Helm chart:" >> $@
 	echo "" >> $@
 	echo "| Image Name | Repository | Feature |" >> $@
