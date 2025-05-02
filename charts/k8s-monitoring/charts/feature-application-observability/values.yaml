@@ -95,10 +95,13 @@ receivers:
 # Processors are components that modify the telemetry data, such as filtering, batching, and adding metadata.
 processors:
   batch:
-    # -- What batch size to use
+    # -- Number of spans, metric data points, or log records after which a batch will be sent regardless of the timeout.
+    # This setting acts as a trigger and does not affect the size of the batch. If you need to enforce batch size
+    #, limit use `maxSize`.
     # @section -- Processors: Batch
     size: 8192
-    # -- The upper limit of the amount of data contained in a single batch. When set to 0, batches can be any size.
+    # -- Maximum number of spans, metric data points, or log records to send in a single batch. This number must be
+    # greater than or equal to the `size` setting. If set to 0, the batch processor will not enforce a maximum size.
     # @section -- Processors: Batch
     maxSize: 0
     # -- How long before sending (Processors)

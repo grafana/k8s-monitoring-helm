@@ -228,10 +228,13 @@ externalServices:
     # Metric processor settings. Only applies when protocol is "otlp" or "otlphttp"
     processors:
       batch:
-        # -- Amount of data to buffer before flushing the batch.
+        # -- Number of spans, metric data points, or log records after which a batch will be sent regardless of the
+        # timeout. This setting acts as a trigger and does not affect the size of the batch. If you need to enforce
+        # batch size, limit use `maxSize`.
         # @section -- External Services (Prometheus)
         size: 8192
-        # -- Upper limit of a batch size. When set to 0, there is no upper limit.
+        # -- Maximum number of spans, metric data points, or log records to send in a single batch. This number must be
+        # greater than or equal to the `size` setting. If set to 0, the batch processor will not enforce a maximum size.
         # @section -- External Services (Prometheus)
         maxSize: 0
         # -- How long to wait before flushing the batch.
@@ -415,10 +418,13 @@ externalServices:
     # Log processor settings. Only applies when protocol is "otlp" or "otlphttp"
     processors:
       batch:
-        # -- Amount of data to buffer before flushing the batch.
+        # -- Number of spans, metric data points, or log records after which a batch will be sent regardless of the
+        # timeout. This setting acts as a trigger and does not affect the size of the batch. If you need to enforce
+        # batch size, limit use `maxSize`.
         # @section -- External Services (Loki)
         size: 8192
-        # -- Upper limit of a batch size. When set to 0, there is no upper limit.
+        # -- Maximum number of spans, metric data points, or log records to send in a single batch. This number must be
+        # greater than or equal to the `size` setting. If set to 0, the batch processor will not enforce a maximum size.
         # @section -- External Services (Loki)
         maxSize: 0
         # -- How long to wait before flushing the batch.
@@ -2105,10 +2111,13 @@ receivers:
     # Batch processor settings for OTLP/gRPC, OTLP/HTTP, Jaeger, or Zipkin receivers
     # @section -- OTEL Receivers (Processors)
     batch:
-      # -- Amount of data to buffer before flushing the batch.
+      # -- Number of spans, metric data points, or log records after which a batch will be sent regardless of the
+      # timeout. This setting acts as a trigger and does not affect the size of the batch. If you need to enforce
+      # batch size, limit use `maxSize`.
       # @section -- OTEL Receivers (Processors)
       size: 16384
-      # -- The upper limit of the amount of data contained in a single batch, in bytes. When set to 0, batches can be any size.
+      # -- Maximum number of spans, metric data points, or log records to send in a single batch. This number must be
+      # greater than or equal to the `size` setting. If set to 0, the batch processor will not enforce a maximum size.
       # @section -- OTEL Receivers (Processors)
       maxSize: 0
       # -- How long before sending (Processors)

@@ -258,8 +258,8 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | externalServices.loki.oauth2.proxyURL | string | `""` | HTTP proxy to send requests through. |
 | externalServices.loki.oauth2.scopes | list | `[]` | List of scopes to authenticate with. |
 | externalServices.loki.oauth2.tokenURL | string | `""` | URL to fetch the token from. |
-| externalServices.loki.processors.batch.maxSize | int | `0` | Upper limit of a batch size. When set to 0, there is no upper limit. |
-| externalServices.loki.processors.batch.size | int | `8192` | Amount of data to buffer before flushing the batch. |
+| externalServices.loki.processors.batch.maxSize | int | `0` | Maximum number of spans, metric data points, or log records to send in a single batch. This number must be greater than or equal to the `size` setting. If set to 0, the batch processor will not enforce a maximum size. |
+| externalServices.loki.processors.batch.size | int | `8192` | Number of spans, metric data points, or log records after which a batch will be sent regardless of the timeout. This setting acts as a trigger and does not affect the size of the batch. If you need to enforce batch size, limit use `maxSize`. |
 | externalServices.loki.processors.batch.timeout | string | `"2s"` | How long to wait before flushing the batch. |
 | externalServices.loki.processors.memoryLimiter.checkInterval | string | `"1s"` | How often to check memory usage. |
 | externalServices.loki.processors.memoryLimiter.enabled | bool | `false` | Use a memory limiter. |
@@ -305,8 +305,8 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | externalServices.prometheus.oauth2.proxyURL | string | `""` | HTTP proxy to send requests through. |
 | externalServices.prometheus.oauth2.scopes | list | `[]` | List of scopes to authenticate with. |
 | externalServices.prometheus.oauth2.tokenURL | string | `""` | URL to fetch the token from. |
-| externalServices.prometheus.processors.batch.maxSize | int | `0` | Upper limit of a batch size. When set to 0, there is no upper limit. |
-| externalServices.prometheus.processors.batch.size | int | `8192` | Amount of data to buffer before flushing the batch. |
+| externalServices.prometheus.processors.batch.maxSize | int | `0` | Maximum number of spans, metric data points, or log records to send in a single batch. This number must be greater than or equal to the `size` setting. If set to 0, the batch processor will not enforce a maximum size. |
+| externalServices.prometheus.processors.batch.size | int | `8192` | Number of spans, metric data points, or log records after which a batch will be sent regardless of the timeout. This setting acts as a trigger and does not affect the size of the batch. If you need to enforce batch size, limit use `maxSize`. |
 | externalServices.prometheus.processors.batch.timeout | string | `"2s"` | How long to wait before flushing the batch. |
 | externalServices.prometheus.processors.memoryLimiter.checkInterval | string | `"1s"` | How often to check memory usage. |
 | externalServices.prometheus.processors.memoryLimiter.enabled | bool | `false` | Use a memory limiter. |
@@ -879,8 +879,8 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | receivers.processors.attributes | object | `{"actions":[],"exclude":{"logBodies":[],"logSeverityTexts":[],"matchType":"","metricNames":[],"services":[],"spanKinds":[],"spanNames":[]},"include":{"logBodies":[],"logSeverityTexts":[],"matchType":"","metricNames":[],"services":[],"spanKinds":[],"spanNames":[]}}` | Apply an attributes processor to data received via OTLP/gRPC, OTLP/HTTP, Jaeger, or Zipkin receivers ([docs](https://grafana.com/docs/alloy/latest/reference/components/otelcol/otelcol.processor.attributes/)) |
 | receivers.processors.attributes.actions | list | `[]` | The list of attribute actions to include in the telemetry data. Example: actions: - key: "new_user_key"   from_attribute: "user_key"   action: "upsert" |
 | receivers.processors.attributes.include | object | `{"logBodies":[],"logSeverityTexts":[],"matchType":"","metricNames":[],"services":[],"spanKinds":[],"spanNames":[]}` | The list include data being fed into the action blocks based on the properties of a span, log, or metric records. |
-| receivers.processors.batch.maxSize | int | `0` | The upper limit of the amount of data contained in a single batch, in bytes. When set to 0, batches can be any size. |
-| receivers.processors.batch.size | int | `16384` | Amount of data to buffer before flushing the batch. |
+| receivers.processors.batch.maxSize | int | `0` | Maximum number of spans, metric data points, or log records to send in a single batch. This number must be greater than or equal to the `size` setting. If set to 0, the batch processor will not enforce a maximum size. |
+| receivers.processors.batch.size | int | `16384` | Number of spans, metric data points, or log records after which a batch will be sent regardless of the timeout. This setting acts as a trigger and does not affect the size of the batch. If you need to enforce batch size, limit use `maxSize`. |
 | receivers.processors.batch.timeout | string | `"2s"` | How long before sending (Processors) |
 | receivers.processors.k8sattributes.annotations | list | `[]` | Kubernetes annotations to extract and add to the attributes of the received telemetry data. |
 | receivers.processors.k8sattributes.labels | list | `[]` | Kubernetes labels to extract and add to the attributes of the received telemetry data. |
