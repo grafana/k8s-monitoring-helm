@@ -39,9 +39,9 @@ alloy:
     - name: alloy-metrics
       labelSelectors:
         app.kubernetes.io/name: alloy-metrics
-    - name: alloy-receivers
+    - name: alloy-receiver
       labelSelectors:
-        app.kubernetes.io/name: alloy-receivers
+        app.kubernetes.io/name: alloy-receiver
 ```
 
 For all possible values for a specific integration, refer to the previous table for the link to the integration documentation.
