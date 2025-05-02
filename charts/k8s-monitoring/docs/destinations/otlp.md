@@ -88,8 +88,8 @@ This defines the options for defining a destination for OpenTelemetry data that 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | processors.batch.enabled | bool | `true` | Whether to use a batch processor. |
-| processors.batch.maxSize | int | `0` | Upper limit of a batch size. When set to 0, there is no upper limit. |
-| processors.batch.size | int | `8192` | Amount of data to buffer before flushing the batch. |
+| processors.batch.maxSize | int | `0` | Maximum number of spans, metric data points, or log records to send in a single batch. This number must be greater than or equal to the `size` setting. If set to 0, the batch processor will not enforce a maximum size. |
+| processors.batch.size | int | `8192` | Number of spans, metric data points, or log records after which a batch will be sent regardless of the timeout. This setting acts as a trigger and does not affect the size of the batch. If you need to enforce batch size limit, use `maxSize`. |
 | processors.batch.timeout | string | `"2s"` | How long to wait before flushing the batch. |
 
 ### Filter Processor
