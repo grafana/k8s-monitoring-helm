@@ -10,6 +10,12 @@ Gathers metrics automatically based on Kubernetes Pod and Service annotations
 
 The annotation-based autodiscovery feature adds scrape targets based on Kubernetes annotations.
 
+## Usage
+
+annotationAutodiscovery:
+  enabled: true
+  ... [values](#values)
+
 ## How it works
 
 With this feature enabled, any Kubernetes Pods or Services with the `k8s.grafana.com/scrape` annotation set to `true` will be automatically discovered

@@ -10,6 +10,12 @@ Gathers Kubernetes Events
 
 The Cluster Events feature enables the collection of Kubernetes events from the cluster.
 
+## Usage
+
+clusterEvents:
+  enabled: true
+  ... [values](#values)
+
 ## How it works
 
 Events are captured as logs and are annotated with additional metadata to make them easier to search and filter.

@@ -12,7 +12,13 @@ The Application Observability feature enables the collection of application tele
 
 ## Before enabling
 
-Before you enable this feature, you must enable one or more receivers where data will be sent from the application.
+Before you enable this feature, you must [enable one or more receivers](https://github.com/grafana/k8s-monitoring-helm/blob/main/charts/k8s-monitoring/docs/Collectors.md) where data will be sent from the application.
+
+## Usage
+
+applicationObservability:
+  enabled: true
+  ... [values](#values)
 
 ## Testing
 
