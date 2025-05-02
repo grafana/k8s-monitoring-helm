@@ -54,10 +54,10 @@ metadata:
   name: k8smon-kepler
   namespace: default
   labels:
-    helm.sh/chart: kepler-0.5.13
+    helm.sh/chart: kepler-0.5.17
     app.kubernetes.io/name: kepler
     app.kubernetes.io/component: exporter
-    app.kubernetes.io/version: "release-0.7.12"
+    app.kubernetes.io/version: "release-0.8.0"
     app.kubernetes.io/managed-by: Helm
 ---
 # Source: k8s-monitoring/charts/clusterMetrics/charts/windows-exporter/templates/serviceaccount.yaml
@@ -2097,10 +2097,10 @@ metadata:
   name: k8smon-kepler
   namespace: default
   labels:
-    helm.sh/chart: kepler-0.5.13
+    helm.sh/chart: kepler-0.5.17
     app.kubernetes.io/name: kepler
     app.kubernetes.io/component: exporter
-    app.kubernetes.io/version: "release-0.7.12"
+    app.kubernetes.io/version: "release-0.8.0"
     app.kubernetes.io/managed-by: Helm
 spec:
   type: ClusterIP
@@ -2267,10 +2267,10 @@ metadata:
   name: k8smon-kepler
   namespace: default
   labels:
-    helm.sh/chart: kepler-0.5.13
+    helm.sh/chart: kepler-0.5.17
     app.kubernetes.io/name: kepler
     app.kubernetes.io/component: exporter
-    app.kubernetes.io/version: "release-0.7.12"
+    app.kubernetes.io/version: "release-0.8.0"
     app.kubernetes.io/managed-by: Helm
 spec:
   selector:
@@ -2289,7 +2289,7 @@ spec:
       serviceAccountName: k8smon-kepler
       containers:
       - name: kepler-exporter
-        image: "quay.io/sustainable_computing_io/kepler:release-0.7.12"
+        image: "quay.io/sustainable_computing_io/kepler:release-0.8.0"
         imagePullPolicy: Always
         securityContext:
             privileged: true
@@ -2338,12 +2338,24 @@ spec:
           failureThreshold: 5
           httpGet:
             path: /healthz
-            port: 9102
+            port: http
             scheme: HTTP
           initialDelaySeconds: 10
           periodSeconds: 60
           successThreshold: 1
           timeoutSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: http
+            scheme: HTTP
+          initialDelaySeconds: 10
+        startupProbe:
+          httpGet:
+            path: /healthz
+            port: http
+            scheme: HTTP
+          initialDelaySeconds: 1
         volumeMounts:
           - name: lib-modules
             mountPath: /lib/modules
