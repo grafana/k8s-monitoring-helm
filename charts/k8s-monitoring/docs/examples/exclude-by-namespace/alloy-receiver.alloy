@@ -263,22 +263,3 @@ otelcol.exporter.otlphttp "tempo" {
     max_elapsed_time = "5m"
   }
 }
-// Destination: pyroscope (pyroscope)
-pyroscope.write "pyroscope" {
-  endpoint {
-    url = "http://pyroscope.pyroscope.svc:4040"
-    headers = {
-    }
-    tls_config {
-      insecure_skip_verify = false
-    }
-    min_backoff_period = "500ms"
-    max_backoff_period = "5m"
-    max_backoff_retries = "10"
-  }
-
-  external_labels = {
-    "cluster" = "exclude-by-namespace-cluster",
-    "k8s_cluster_name" = "exclude-by-namespace-cluster",
-  }
-}

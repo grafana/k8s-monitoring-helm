@@ -530,23 +530,3 @@ prometheus.remote_write "prometheus" {
     max_keepalive_time = "8h"
   }
 }
-// Destination: loki (loki)
-otelcol.exporter.loki "loki" {
-  forward_to = [loki.write.loki.receiver]
-}
-
-loki.write "loki" {
-  endpoint {
-    url = "http://loki.loki.svc:3100/loki/api/v1/push"
-    tls_config {
-      insecure_skip_verify = false
-    }
-    min_backoff_period = "500ms"
-    max_backoff_period = "5m"
-    max_backoff_retries = "10"
-  }
-  external_labels = {
-    "cluster" = "azure-aks-example-cluster",
-    "k8s_cluster_name" = "azure-aks-example-cluster",
-  }
-}
