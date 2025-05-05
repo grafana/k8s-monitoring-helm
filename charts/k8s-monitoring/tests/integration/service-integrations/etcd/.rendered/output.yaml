@@ -33,7 +33,10 @@ data:
     
         selectors {
           role = "pod"
-          label = "app.kubernetes.io/component=etcd"
+          label = "component=etcd"
+        }
+        namespaces {
+          names = ["kube-system"]
         }
       }
     
@@ -140,7 +143,7 @@ data:
     }
     etcd_integration "integration" {
       metrics_destinations = [
-        prometheus.remote_write.prometheus.receiver,
+        prometheus.remote_write.localprometheus.receiver,
       ]
     }
     // Self Reporting
@@ -182,22 +185,22 @@ data:
         action = "keep"
       }
       forward_to = [
-        prometheus.remote_write.prometheus.receiver,
+        prometheus.remote_write.localprometheus.receiver,
       ]
     }
     
     
     
     
-    // Destination: prometheus (prometheus)
-    otelcol.exporter.prometheus "prometheus" {
+    // Destination: localPrometheus (prometheus)
+    otelcol.exporter.prometheus "localprometheus" {
       add_metric_suffixes = true
-      forward_to = [prometheus.remote_write.prometheus.receiver]
+      forward_to = [prometheus.remote_write.localprometheus.receiver]
     }
     
-    prometheus.remote_write "prometheus" {
+    prometheus.remote_write "localprometheus" {
       endpoint {
-        url = "http://prometheus.prometheus.svc:9090/api/v1/write"
+        url = "http://prometheus-server.prometheus.svc:9090/api/v1/write"
         headers = {
         }
         tls_config {
@@ -220,13 +223,13 @@ data:
         write_relabel_config {
           source_labels = ["cluster"]
           regex = ""
-          replacement = "etcd-integration-cluster"
+          replacement = "etcd-integration-test"
           target_label = "cluster"
         }
         write_relabel_config {
           source_labels = ["k8s_cluster_name"]
           regex = ""
-          replacement = "etcd-integration-cluster"
+          replacement = "etcd-integration-test"
           target_label = "k8s_cluster_name"
         }
       }

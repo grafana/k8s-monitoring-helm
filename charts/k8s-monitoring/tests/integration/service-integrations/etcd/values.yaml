@@ -1,0 +1,19 @@
+---
+cluster:
+  name: etcd-integration-test
+
+destinations:
+  - name: localPrometheus
+    type: prometheus
+    url: http://prometheus-server.prometheus.svc:9090/api/v1/write
+
+integrations:
+  etcd:
+    instances:
+      - name: etcd
+        namespaces: [kube-system]
+        labelSelectors:
+          component: etcd
+
+alloy-metrics:
+  enabled: true
