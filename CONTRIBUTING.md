@@ -145,7 +145,6 @@ installing them for a better experience:
 -   [helm unittest](https://github.com/helm-unittest/helm-unittest) - Used for executing Helm chart unit tests.
 -   [Flux CLI](https://fluxcd.io/flux/cmd/) - Used for executing Helm chart integration and platform tests.
 -   [shellspec](https://github.com/shellspec/shellspec) - Used for executing some unit tests.
--   [vendir](https://carvel.dev/vendir/) - Used for downloading Alloy Module
 
 If you are going to be running platform tests, you might want to install the following tools:
 

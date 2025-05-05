@@ -8,7 +8,6 @@ declare "etcd_integration" {
   argument "metrics_destinations" {
     comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
   }
-  {{- include "alloyModules.load" (deepCopy $ | merge (dict "name" "etcd" "path" "modules/databases/kv/etcd/metrics.alloy")) | nindent 2 }}
 
   {{- range $instance := (index $.Values "etcd").instances }}
     {{- include "integrations.etcd.include.metrics" (deepCopy $ | merge (dict "instance" $instance)) | nindent 2 }}
@@ -31,29 +30,137 @@ declare "etcd_integration" {
     {{- $labelSelectors = append $labelSelectors (printf "%s=%s" $k $v) }}
   {{- end }}
 {{- end }}
-etcd.kubernetes {{ include "helper.alloy_name" .name | quote }} {
-{{- if .namespaces }}
-  namespaces = {{ .namespaces | toJson }}
-{{- end }}
-  label_selectors = {{ $labelSelectors | toJson }}
+discovery.kubernetes {{ include "helper.alloy_name" .name | quote }} {
+  role = "pod"
+
+  selectors {
+    role = "pod"
 {{- if .fieldSelectors }}
-  field_selectors = {{ .fieldSelectors | toJson }}
+    field = {{ .fieldSelectors | join "," | quote }}
 {{- end }}
-  port_name = {{ .metrics.portName | quote }}
+    label = {{ $labelSelectors | join "," | quote }}
+  }
+
+{{- if .namespaces }}
+  namespaces {
+    names = {{ .namespaces | toJson }}
+  }
+{{- end }}
 }
 
-etcd.scrape {{ include "helper.alloy_name" .name | quote }} {
-  targets = etcd.kubernetes.{{ include "helper.alloy_name" .name }}.output
-  job_label = {{ .jobLabel | quote }}
-  clustering = true
+discovery.relabel {{ include "helper.alloy_name" .name | quote }} {
+  targets = discovery.kubernetes.{{ include "helper.alloy_name" .name }}.targets
+
+  // keep only the specified metrics port name, and pods that are Running and ready
+  rule {
+    source_labels = [
+      "__meta_kubernetes_pod_phase",
+      "__meta_kubernetes_pod_ready",
+    ]
+    separator = "@"
+    regex = "Running@true"
+    action = "keep"
+  }
+
+  // drop any init containers
+  rule {
+    source_labels = ["__meta_kubernetes_pod_container_init"]
+    regex = "true"
+    action = "drop"
+  }
+
+  // set the metrics port
+  rule {
+    source_labels = ["__address__"]
+    replacement = "$1:{{ .metrics.port }}"
+    target_label = "__address__"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_namespace"]
+    target_label  = "namespace"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_pod_name"]
+    target_label  = "pod"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_pod_container_name"]
+    target_label  = "container"
+  }
+  rule {
+    source_labels = [
+      "__meta_kubernetes_pod_controller_kind",
+      "__meta_kubernetes_pod_controller_name",
+    ]
+    separator = "/"
+    target_label  = "workload"
+  }
+  rule {
+    source_labels = ["workload"]
+    regex = "(ReplicaSet/.+)-.+"
+    target_label  = "workload"
+  }
+
+  rule {
+    action = "replace"
+    source_labels = [
+      "__meta_kubernetes_pod_label_app_kubernetes_io_name",
+      "__meta_kubernetes_pod_label_k8s_app",
+      "__meta_kubernetes_pod_label_app",
+    ]
+    separator = ";"
+    regex = "^(?:;*)?([^;]+).*$"
+    replacement = "$1"
+    target_label = "app"
+  }
+
+  rule {
+    action = "replace"
+    source_labels = [
+      "__meta_kubernetes_pod_label_app_kubernetes_io_component",
+      "__meta_kubernetes_pod_label_k8s_component",
+      "__meta_kubernetes_pod_label_component",
+    ]
+    regex = "^(?:;*)?([^;]+).*$"
+    replacement = "$1"
+    target_label = "component"
+  }
+
+  rule {
+    action = "replace"
+    replacement = "kubernetes"
+    target_label = "source"
+  }
+}
+
+prometheus.scrape {{ include "helper.alloy_name" .name | quote }} {
+  targets = discovery.relabel.{{ include "helper.alloy_name" .name }}.output
+  job_name = {{ .jobLabel | quote }}
+  scrape_interval = {{ .scrapeInterval | default $.Values.global.scrapeInterval | quote }}
+  clustering {
+    enabled = true
+  }
+  forward_to = [prometheus.relabel.{{ include "helper.alloy_name" .name }}.receiver]
+}
+
+prometheus.relabel {{ include "helper.alloy_name" .name | quote }} {
+  max_cache_size = {{ .metrics.maxCacheSize | default $.Values.global.maxCacheSize | int }}
+
 {{- if $metricAllowList }}
-  keep_metrics = "up|{{ $metricAllowList |  join "|" | join "|" }}"
+  rule {
+    source_labels = ["__name__"]
+    regex = {{ $metricAllowList | join "|" | quote }}
+    action = "keep"
+  }
 {{- end }}
 {{- if $metricDenyList }}
-  drop_metrics = {{ $metricDenyList | join "|" | quote }}
+  rule {
+    source_labels = ["__name__"]
+    regex = {{ $metricDenyList | join "|" | quote }}
+    action = "drop"
+  }
 {{- end }}
-  scrape_interval = {{ .scrapeInterval | default $.Values.global.scrapeInterval | quote }}
-  max_cache_size = {{ .metrics.maxCacheSize | default $.Values.global.maxCacheSize | int }}
   forward_to = argument.metrics_destinations.value
 }
 {{- end }}

@@ -6,9 +6,9 @@
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| field_selectors | list | `[]` | Discover etcd instances based on field selectors. |
+| fieldSelectors | list | `[]` | Discover etcd instances based on field selectors. |
 | labelSelectors | object | `{}` | Discover etcd instances based on label selectors. At least one is required. |
-| metrics.portName | string | `"metrics"` | Name of the port to scrape metrics from. |
+| metrics.port | int | `2381` | The etcd metrics port number to scrape metrics from. Defined on the etcd pod with: `--listen-metrics-urls=http://127.0.0.1:2381` |
 | namespaces | list | `[]` | Namespaces to look for etcd instances. Will automatically look for etcd instances in all namespaces unless specified here |
 
 ### General Settings
