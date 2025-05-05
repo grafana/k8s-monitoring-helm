@@ -23,51 +23,6 @@ metadata:
   namespace: default
 data:
   config.alloy: |-
-    // Self Reporting
-    prometheus.exporter.unix "kubernetes_monitoring_telemetry" {
-      set_collectors = ["textfile"]
-      textfile {
-        directory = "/etc/alloy"
-      }
-    }
-    
-    discovery.relabel "kubernetes_monitoring_telemetry" {
-      targets = prometheus.exporter.unix.kubernetes_monitoring_telemetry.targets
-      rule {
-        target_label = "instance"
-        action = "replace"
-        replacement = "k8smon"
-      }
-      rule {
-        target_label = "job"
-        action = "replace"
-        replacement = "integrations/kubernetes/kubernetes_monitoring_telemetry"
-      }
-    }
-    
-    prometheus.scrape "kubernetes_monitoring_telemetry" {
-      job_name   = "integrations/kubernetes/kubernetes_monitoring_telemetry"
-      targets    = discovery.relabel.kubernetes_monitoring_telemetry.output
-      scrape_interval = "60s"
-      clustering {
-        enabled = true
-      }
-      forward_to = [prometheus.relabel.kubernetes_monitoring_telemetry.receiver]
-    }
-    
-    prometheus.relabel "kubernetes_monitoring_telemetry" {
-      rule {
-        source_labels = ["__name__"]
-        regex = "grafana_kubernetes_monitoring_.*"
-        action = "keep"
-      }
-      forward_to = [
-        prometheus.remote_write.prometheus_kubernetes.receiver,
-      ]
-    }
-    
-    
-    
     discovery.kubernetes "animal_service" {
       role = "service"
       namespaces {
@@ -131,14 +86,6 @@ data:
         max_keepalive_time = "8h"
       }
     }
-
-  self-reporting-metric.prom: |
-    
-    # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart
-    # TYPE grafana_kubernetes_monitoring_build_info gauge
-    grafana_kubernetes_monitoring_build_info{version="2.0.26", namespace="default"} 1
-    # HELP grafana_kubernetes_monitoring_feature_info A metric to report the enabled features of the Kubernetes Monitoring Helm chart
-    # TYPE grafana_kubernetes_monitoring_feature_info gauge
 ---
 # Source: k8s-monitoring/charts/alloy-metrics/templates/rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1

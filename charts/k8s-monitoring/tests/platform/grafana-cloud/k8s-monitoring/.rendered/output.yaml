@@ -1077,40 +1077,6 @@ data:
       name      = "grafana-cloud-credentials"
       namespace = "default"
     }
-    
-    // Destination: grafanaCloudLogs (loki)
-    otelcol.exporter.loki "grafanacloudlogs" {
-      forward_to = [loki.write.grafanacloudlogs.receiver]
-    }
-    
-    loki.write "grafanacloudlogs" {
-      endpoint {
-        url = "https://logs-prod-006.grafana.net/loki/api/v1/push"
-        tenant_id = convert.nonsensitive(remote.kubernetes.secret.grafanacloudlogs.data["tenantId"])
-        basic_auth {
-          username = convert.nonsensitive(remote.kubernetes.secret.grafanacloudlogs.data["LOKI_USER"])
-          password = remote.kubernetes.secret.grafanacloudlogs.data["LOKI_PASS"]
-        }
-        tls_config {
-          insecure_skip_verify = false
-          ca_pem = convert.nonsensitive(remote.kubernetes.secret.grafanacloudlogs.data["ca"])
-          cert_pem = convert.nonsensitive(remote.kubernetes.secret.grafanacloudlogs.data["cert"])
-          key_pem = remote.kubernetes.secret.grafanacloudlogs.data["key"]
-        }
-        min_backoff_period = "500ms"
-        max_backoff_period = "5m"
-        max_backoff_retries = "10"
-      }
-      external_labels = {
-        "cluster" = "k8s-monitoring-gc-feature-test",
-        "k8s_cluster_name" = "k8s-monitoring-gc-feature-test",
-      }
-    }
-    
-    remote.kubernetes.secret "grafanacloudlogs" {
-      name      = "grafana-cloud-credentials"
-      namespace = "default"
-    }
 ---
 # Source: k8s-monitoring/templates/alloy-config.yaml
 apiVersion: v1
@@ -1548,68 +1514,6 @@ data:
     
     
     
-    
-    // Destination: grafanaCloudMetrics (prometheus)
-    otelcol.exporter.prometheus "grafanacloudmetrics" {
-      add_metric_suffixes = true
-      forward_to = [prometheus.remote_write.grafanacloudmetrics.receiver]
-    }
-    
-    prometheus.remote_write "grafanacloudmetrics" {
-      endpoint {
-        url = "https://prometheus-prod-13-prod-us-east-0.grafana.net/api/prom/push"
-        headers = {
-          "X-Scope-OrgID" = convert.nonsensitive(remote.kubernetes.secret.grafanacloudmetrics.data["tenantId"]),
-        }
-        basic_auth {
-          username = convert.nonsensitive(remote.kubernetes.secret.grafanacloudmetrics.data["PROMETHEUS_USER"])
-          password = remote.kubernetes.secret.grafanacloudmetrics.data["PROMETHEUS_PASS"]
-        }
-        tls_config {
-          insecure_skip_verify = false
-          ca_pem = convert.nonsensitive(remote.kubernetes.secret.grafanacloudmetrics.data["ca"])
-          cert_pem = convert.nonsensitive(remote.kubernetes.secret.grafanacloudmetrics.data["cert"])
-          key_pem = remote.kubernetes.secret.grafanacloudmetrics.data["key"]
-        }
-        send_native_histograms = false
-    
-        queue_config {
-          capacity = 10000
-          min_shards = 1
-          max_shards = 50
-          max_samples_per_send = 2000
-          batch_send_deadline = "5s"
-          min_backoff = "30ms"
-          max_backoff = "5s"
-          retry_on_http_429 = true
-          sample_age_limit = "0s"
-        }
-    
-        write_relabel_config {
-          source_labels = ["cluster"]
-          regex = ""
-          replacement = "k8s-monitoring-gc-feature-test"
-          target_label = "cluster"
-        }
-        write_relabel_config {
-          source_labels = ["k8s_cluster_name"]
-          regex = ""
-          replacement = "k8s-monitoring-gc-feature-test"
-          target_label = "k8s_cluster_name"
-        }
-      }
-    
-      wal {
-        truncate_frequency = "2h"
-        min_keepalive_time = "5m"
-        max_keepalive_time = "8h"
-      }
-    }
-    
-    remote.kubernetes.secret "grafanacloudmetrics" {
-      name      = "grafana-cloud-credentials"
-      namespace = "default"
-    }
     
     // Destination: grafanaCloudLogs (loki)
     otelcol.exporter.loki "grafanacloudlogs" {

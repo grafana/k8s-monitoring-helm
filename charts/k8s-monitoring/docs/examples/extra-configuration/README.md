@@ -9,7 +9,8 @@ to any existing configuration and does not replace it or modify it in any way.
 
 In the example below, note that the `discovery.kubernetes.animal_service` component discovers the Kubernetes Service by
 namespace and label selectors. Metrics found are then forwarded to `prometheus.remote_write.<destination-name>.receiver`
-for delivery, where alloy only supports lowercase and underscores for `<destination-name>`. For example, `prometheus-kubernetes` will become `prometheus.remote_write.prometheus_kubernetes.receiver`
+for delivery, where alloy only supports lowercase and underscores for `<destination-name>`. For example,
+`prometheus-kubernetes` will become `prometheus.remote_write.prometheus_kubernetes.receiver`
 
 ## Values
 
@@ -23,8 +24,12 @@ destinations:
     type: prometheus
     url: http://prometheus.prometheus.svc:9090/api/v1/write
 
+selfReporting:
+  enabled: false
+
 alloy-metrics:
   enabled: true
+  includeDestinations: [prometheus-kubernetes]
   extraConfig: |
     discovery.kubernetes "animal_service" {
       role = "service"

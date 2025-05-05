@@ -16,11 +16,13 @@
 {{- range $destination := .Values.destinations }}
 {{- $defaultValues := (printf "destinations/%s-values.yaml" $destination.type) | $.Files.Get | fromYaml }}
 {{- $destinationWithDefaults := mergeOverwrite $defaultValues $destination }}
+{{- if (has $destination.name $.names ) }}
 // Destination: {{ $destination.name }} ({{ $destination.type }})
 {{- include (printf "destinations.%s.alloy" $destination.type) (deepCopy $ | merge (dict "destination" $destinationWithDefaults)) | indent 0 }}
 
 {{- if eq (include "secrets.usesKubernetesSecret" $destinationWithDefaults) "true" }}
   {{- include "secret.alloy" (deepCopy $ | merge (dict "object" $destinationWithDefaults)) | nindent 0 }}
+{{- end }}
 {{- end }}
 {{- end }}
 {{- end }}

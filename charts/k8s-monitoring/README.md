@@ -175,6 +175,7 @@ podLogs:
 | alloy-logs.controller.type | string | `"daemonset"` | The type of controller to use for the Alloy Logs instance. |
 | alloy-logs.enabled | bool | `false` | Deploy the Alloy instance for collecting log data. |
 | alloy-logs.extraConfig | string | `""` | Extra Alloy configuration to be added to the configuration file. |
+| alloy-logs.includeDestinations | list | `[]` | Include the configuration components for these destinations. Configuration is already added for destinations used By enabled features on this collector. This is useful when referencing destinations in the extraConfig. |
 | alloy-logs.liveDebugging.enabled | bool | `false` | Enable live debugging for the Alloy instance. |
 | alloy-logs.logging.format | string | `"logfmt"` | Format to use for writing Alloy log lines. |
 | alloy-logs.logging.level | string | `"info"` | Level at which Alloy log lines should be written. |
@@ -203,6 +204,7 @@ podLogs:
 | alloy-metrics.controller.type | string | `"statefulset"` | The type of controller to use for the Alloy Metrics instance. |
 | alloy-metrics.enabled | bool | `false` | Deploy the Alloy instance for collecting metrics. |
 | alloy-metrics.extraConfig | string | `""` | Extra Alloy configuration to be added to the configuration file. |
+| alloy-metrics.includeDestinations | list | `[]` | Include the configuration components for these destinations. Configuration is already added for destinations used By enabled features on this collector. This is useful when referencing destinations in the extraConfig. |
 | alloy-metrics.liveDebugging.enabled | bool | `false` | Enable live debugging for the Alloy instance. |
 | alloy-metrics.logging.format | string | `"logfmt"` | Format to use for writing Alloy log lines. |
 | alloy-metrics.logging.level | string | `"info"` | Level at which Alloy log lines should be written. |
@@ -230,6 +232,7 @@ podLogs:
 | alloy-profiles.controller.type | string | `"daemonset"` | The type of controller to use for the Alloy Profiles instance. |
 | alloy-profiles.enabled | bool | `false` | Deploy the Alloy instance for gathering profiles. |
 | alloy-profiles.extraConfig | string | `""` | Extra Alloy configuration to be added to the configuration file. |
+| alloy-profiles.includeDestinations | list | `[]` | Include the configuration components for these destinations. Configuration is already added for destinations used By enabled features on this collector. This is useful when referencing destinations in the extraConfig. |
 | alloy-profiles.liveDebugging.enabled | bool | `false` | Enable live debugging for the Alloy instance. |
 | alloy-profiles.logging.format | string | `"logfmt"` | Format to use for writing Alloy log lines. |
 | alloy-profiles.logging.level | string | `"info"` | Level at which Alloy log lines should be written. |
@@ -261,6 +264,7 @@ podLogs:
 | alloy-receiver.extraService.enabled | bool | `false` | Create an extra service for the Alloy receiver. This service will mirror the alloy-receiver service, but its name can be customized to match existing application settings. |
 | alloy-receiver.extraService.fullname | string | `""` | If set, the full name of the extra service to create. This will result in the format `<fullname>`. |
 | alloy-receiver.extraService.name | string | `"alloy"` | The name of the extra service to create. This will result in the format `<release-name>-<name>`. |
+| alloy-receiver.includeDestinations | list | `[]` | Include the configuration components for these destinations. Configuration is already added for destinations used By enabled features on this collector. This is useful when referencing destinations in the extraConfig. |
 | alloy-receiver.liveDebugging.enabled | bool | `false` | Enable live debugging for the Alloy instance. |
 | alloy-receiver.logging.format | string | `"logfmt"` | Format to use for writing Alloy log lines. |
 | alloy-receiver.logging.level | string | `"info"` | Level at which Alloy log lines should be written. |
@@ -289,6 +293,7 @@ podLogs:
 | alloy-singleton.controller.type | string | `"deployment"` | The type of controller to use for the Alloy Singleton instance. |
 | alloy-singleton.enabled | bool | `false` | Deploy the Alloy instance for data sources required to be deployed on a single replica. |
 | alloy-singleton.extraConfig | string | `""` | Extra Alloy configuration to be added to the configuration file. |
+| alloy-singleton.includeDestinations | list | `[]` | Include the configuration components for these destinations. Configuration is already added for destinations used By enabled features on this collector. This is useful when referencing destinations in the extraConfig. |
 | alloy-singleton.liveDebugging.enabled | bool | `false` | Enable live debugging for the Alloy instance. |
 | alloy-singleton.logging.format | string | `"logfmt"` | Format to use for writing Alloy log lines. |
 | alloy-singleton.logging.level | string | `"info"` | Level at which Alloy log lines should be written. |
