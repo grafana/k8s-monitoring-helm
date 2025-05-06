@@ -22,7 +22,7 @@ metadata:
   name: k8smon-kepler
   namespace: default
   labels:
-    helm.sh/chart: kepler-0.5.17
+    helm.sh/chart: kepler-0.5.18
     app.kubernetes.io/name: kepler
     app.kubernetes.io/component: exporter
     app.kubernetes.io/version: "release-0.8.0"
@@ -1296,7 +1296,7 @@ metadata:
   name: k8smon-kepler
   namespace: default
   labels:
-    helm.sh/chart: kepler-0.5.17
+    helm.sh/chart: kepler-0.5.18
     app.kubernetes.io/name: kepler
     app.kubernetes.io/component: exporter
     app.kubernetes.io/version: "release-0.8.0"
@@ -1425,7 +1425,7 @@ metadata:
   name: k8smon-kepler
   namespace: default
   labels:
-    helm.sh/chart: kepler-0.5.17
+    helm.sh/chart: kepler-0.5.18
     app.kubernetes.io/name: kepler
     app.kubernetes.io/component: exporter
     app.kubernetes.io/version: "release-0.8.0"
@@ -1521,6 +1521,8 @@ spec:
             mountPath: /sys
           - name: proc
             mountPath: /proc
+          - name: config-dir
+            mountPath: /etc/kepler
       volumes:
         - name: lib-modules
           hostPath:
@@ -1534,6 +1536,9 @@ spec:
           hostPath:
             path: /proc
             type: Directory
+        - name: config-dir
+          emptyDir:
+            sizeLimit: 100Ki
       nodeSelector:
         kubernetes.io/os: linux
       affinity:
