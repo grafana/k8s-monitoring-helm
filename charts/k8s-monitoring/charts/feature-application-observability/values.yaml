@@ -305,6 +305,50 @@ connectors:
         # @section -- Connectors: Span Metrics
         maxSize: 160
 
+  # Service Graphs connector settings.
+  serviceGraphs:
+    # -- Use a service graphs connector which creates service graphs from telemetry data.
+    # @section -- Connectors: Service Graphs
+    enabled: false
+
+    # -- Define dimensions to be added.
+    # Some are set internally by default: [service.name, span.name, span.kind, status.code]
+    # Example:
+    # - name: "http.status_code"
+    # - name: "http.method"
+    #   default: "GET"
+    # @section -- Connectors: Service Graphs
+    dimensions: []
+
+    # -- Configures how often to delete series which have not been updated.
+    # @section -- Connectors: Service Graphs
+    cacheLoop: "1m"
+
+    # -- The time to expire old entries from the store periodically.
+    # @section -- Connectors: Service Graphs
+    storeExpirationLoop: "2s"
+
+    # -- The interval at which metrics are flushed to downstream components.
+    # @section -- Connectors: Service Graphs
+    metricsFlushInterval: "60s"
+
+    # -- The attribute name used to identify the database name from span attributes.
+    # @section -- Connectors: Service Graphs
+    databaseNameAttribute: "db.name" 
+
+    # -- Buckets for latency histogram metrics.
+    # @section -- Connectors: Service Graphs
+    histogramBuckets: ["2ms", "4ms", "6ms", "8ms", "10ms", "50ms", "100ms", "200ms", "400ms", "800ms", "1s", "1400ms", "2s", "5s", "10s", "15s"]
+    
+    # Settings for the in-memory store for spans.
+    store:
+      # -- The maximum number of items to keep in the in-memory store.
+      # @section -- Connectors: Service Graphs
+      maxItems: 1000
+      # -- The time to live for spans in the in-memory store.
+      # @section -- Connectors: Service Graphs
+      ttl: "2s"
+
 metrics:
   enabled: true
   # -- Apply a filter to metrics received via the OTLP or OTLP HTTP receivers.

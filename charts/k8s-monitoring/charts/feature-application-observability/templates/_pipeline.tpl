@@ -97,6 +97,9 @@
 {{- if .Values.connectors.spanMetrics.enabled}}
       - {name: default, component: connector.spanmetrics}
 {{- end }}
+{{- if .Values.connectors.serviceGraphs.enabled}}
+      - {name: default, component: connector.serviceGraphs}
+{{- end }}
 {{- if $filterEnabled }}
       - {name: default, component: processor.filter}
     metrics: [{name: default, component: processor.filter}]
@@ -122,6 +125,18 @@
 - name: default
   description: Span Metrics Connector
   component: connector.spanmetrics
+  targets:
+{{- if $filterEnabled }}
+    metrics: [{name: default, component: processor.filter}]
+{{- else }}
+    metrics: [{name: default, component: processor.batch}]
+{{- end }}
+{{- end }}
+
+{{- if .Values.connectors.serviceGraphs.enabled}}
+- name: default
+  description: Service Graphs Connector
+  component: connector.serviceGraphs
   targets:
 {{- if $filterEnabled }}
     metrics: [{name: default, component: processor.filter}]

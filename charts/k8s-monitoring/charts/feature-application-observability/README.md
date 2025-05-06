@@ -47,6 +47,20 @@ Be sure perform actual integration testing in a live environment in the main [k8
 |-----|------|---------|-------------|
 | connectors.grafanaCloudMetrics.enabled | bool | `true` | Generate host info metrics from telemetry data. These metrics are required for using Application Observability in Grafana Cloud. Note: Enabling this may incur additional costs. See [Application Observability Pricing](https://grafana.com/docs/grafana-cloud/monitor-applications/application-observability/pricing/) |
 
+### Connectors: Service Graphs
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| connectors.serviceGraphs.cacheLoop | string | `"1m"` | Configures how often to delete series which have not been updated. |
+| connectors.serviceGraphs.databaseNameAttribute | string | `"db.name"` | The attribute name used to identify the database name from span attributes. |
+| connectors.serviceGraphs.dimensions | list | `[]` | Define dimensions to be added. Some are set internally by default: [service.name, span.name, span.kind, status.code] Example: - name: "http.status_code" - name: "http.method"   default: "GET" |
+| connectors.serviceGraphs.enabled | bool | `false` | Use a service graphs connector which creates service graphs from telemetry data. |
+| connectors.serviceGraphs.histogramBuckets | list | `["2ms","4ms","6ms","8ms","10ms","50ms","100ms","200ms","400ms","800ms","1s","1400ms","2s","5s","10s","15s"]` | Buckets for latency histogram metrics. |
+| connectors.serviceGraphs.metricsFlushInterval | string | `"60s"` | The interval at which metrics are flushed to downstream components. |
+| connectors.serviceGraphs.store.maxItems | int | `1000` | The maximum number of items to keep in the in-memory store. |
+| connectors.serviceGraphs.store.ttl | string | `"2s"` | The time to live for spans in the in-memory store. |
+| connectors.serviceGraphs.storeExpirationLoop | string | `"2s"` | The time to expire old entries from the store periodically. |
+
 ### Connectors: Span Logs
 
 | Key | Type | Default | Description |
