@@ -341,6 +341,18 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | node-exporter.service.portName | string | `"metrics"` | The port name used by Node Exporter. |
 | node-exporter.service.scheme | string | `"http"` | The scrape scheme used by Node Exporter. |
 
+### Node Labels
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| nodeLabels.availabilityZone | bool | `false` | Whether or not to add the availability\_zone label |
+| nodeLabels.instanceType | bool | `false` | Whether or not to add the instance\_type label |
+| nodeLabels.nodeArchitecture | bool | `false` | Whether or not to add the node architecture label |
+| nodeLabels.nodeOS | bool | `false` | Whether or not to add the os label |
+| nodeLabels.nodePool | bool | `false` | Whether or not to attach the nodepool label |
+| nodeLabels.nodeRole | bool | `false` | Whether or not to add the node\_role label |
+| nodeLabels.region | bool | `false` | Whether or not to add the region label |
+
 ### OpenCost
 
 | Key | Type | Default | Description |

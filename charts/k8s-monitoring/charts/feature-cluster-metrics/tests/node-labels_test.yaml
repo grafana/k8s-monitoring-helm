@@ -1,0 +1,293 @@
+---
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces rule:empty-lines
+suite: Test - Cluster Metrics - Node Labels
+templates:
+  - configmap.yaml
+tests:
+  - it: should add the node pool label rules to the discovery relabel
+    set:
+      deployAsConfigMap: true
+      nodeLabels:
+        nodePool: true
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["module.alloy"]
+          # The pattern should look like this, but since the regex is escaped, it will be a bit different
+          #   rule {
+          #     source_labels = [
+          #       "__meta_kubernetes_node_label_karpenter_sh_nodepool",
+          #       "__meta_kubernetes_node_label_cloud_google_com_gke_nodepool",
+          #       "__meta_kubernetes_node_label_eks_amazonaws_com_nodegroup",
+          #       "__meta_kubernetes_node_label_kubernetes_azure_com_agentpool",
+          #       "__meta_kubernetes_node_label_agentpool",
+          #     ]
+          #     regex = "^(?:;*)?([^;]+).*$"
+          #     target_label = "nodepool"
+          #   }
+          pattern: |-
+            \s*  rule \{
+            \s*    source_labels = \[
+            \s*      "__meta_kubernetes_node_label_karpenter_sh_nodepool",
+            \s*      "__meta_kubernetes_node_label_cloud_google_com_gke_nodepool",
+            \s*      "__meta_kubernetes_node_label_eks_amazonaws_com_nodegroup",
+            \s*      "__meta_kubernetes_node_label_kubernetes_azure_com_agentpool",
+            \s*      "__meta_kubernetes_node_label_agentpool",
+            \s*    \]
+            \s*    regex = "\^\(\?:;\*\)\?\(\[\^;\]\+\)\.\*\$"
+            \s*    target_label = "nodepool"
+            \s*  \}
+      - matchRegex:
+          path: data["module.alloy"]
+          # The pattern should look like this, but since the regex is escaped, it will be a bit different
+          # attach_metadata {
+          #   node = true
+          # }
+          pattern: |-
+            \s*  attach_metadata \{
+            \s*    node = true
+            \s*  \}
+
+
+  - it: should add the node region label rules to the discovery relabel
+    set:
+      deployAsConfigMap: true
+      nodeLabels:
+        region: true
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["module.alloy"]
+          # The pattern should look like this, but since the regex is escaped, it will be a bit different
+          # rule {
+          #   source_labels = [
+          #     "__meta_kubernetes_node_label_topology_kubernetes_io_region",
+          #     "__meta_kubernetes_node_label_failure_domain_beta_kubernetes_io_region",
+          #   ]
+          #   regex = "^(?:;*)?([^;]+).*$"
+          #   target_label = "region"
+          # }
+          pattern: |-
+            \s*  rule \{
+            \s*    source_labels = \[
+            \s*      "__meta_kubernetes_node_label_topology_kubernetes_io_region",
+            \s*      "__meta_kubernetes_node_label_failure_domain_beta_kubernetes_io_region",
+            \s*    \]
+            \s*    regex = "\^\(\?:;\*\)\?\(\[\^;\]\+\)\.\*\$"
+            \s*    target_label = "region"
+            \s*  \}
+      - matchRegex:
+          path: data["module.alloy"]
+          # The pattern should look like this, but since the regex is escaped, it will be a bit different
+          # attach_metadata {
+          #   node = true
+          # }
+          pattern: |-
+            \s*  attach_metadata \{
+            \s*    node = true
+            \s*  \}
+
+  - it: should add the node availability zone label rules to the discovery relabel
+    set:
+      deployAsConfigMap: true
+      nodeLabels:
+        availabilityZone: true
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["module.alloy"]
+          # The pattern should look like this, but since the regex is escaped, it will be a bit different
+          # rule {
+          #   source_labels = [
+          #     "__meta_kubernetes_node_label_topology_kubernetes_io_zone",
+          #     "__meta_kubernetes_node_label_failure_domain_beta_kubernetes_io_zone",
+          #     "__meta_kubernetes_node_label_topology_gke_io_zone",
+          #   ]
+          #   regex = "^(?:;*)?([^;]+).*$"
+          #   target_label = "availability_zone"
+          # }
+          pattern: |-
+            \s*  rule \{
+            \s*    source_labels = \[
+            \s*      "__meta_kubernetes_node_label_topology_kubernetes_io_zone",
+            \s*      "__meta_kubernetes_node_label_failure_domain_beta_kubernetes_io_zone",
+            \s*      "__meta_kubernetes_node_label_topology_gke_io_zone",
+            \s*    \]
+            \s*    regex = "\^\(\?:;\*\)\?\(\[\^;\]\+\)\.\*\$"
+            \s*    target_label = "availability_zone"
+            \s*  \}
+      - matchRegex:
+          path: data["module.alloy"]
+          # The pattern should look like this, but since the regex is escaped, it will be a bit different
+          # attach_metadata {
+          #   node = true
+          # }
+          pattern: |-
+            \s*  attach_metadata \{
+            \s*    node = true
+            \s*  \}
+
+  - it: should add the node role label rules to the discovery relabel
+    set:
+      deployAsConfigMap: true
+      nodeLabels:
+        nodeRole: true
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["module.alloy"]
+          # The pattern should look like this, but since the regex is escaped, it will be a bit different
+          # rule {
+          #   source_labels = [
+          #     "__meta_kubernetes_node_label_kubernetes_io_role",
+          #     "__meta_kubernetes_node_label_node_kubernetes_io_role",
+          #     "__meta_kubernetes_node_label_node_role",
+          #     "__meta_kubernetes_node_label_role",
+          #   ]
+          #   regex = "^(?:;*)?([^;]+).*$"
+          #   target_label = "node_role"
+          # }
+          pattern: |-
+            \s*  rule \{
+            \s*    source_labels = \[
+            \s*      "__meta_kubernetes_node_label_kubernetes_io_role",
+            \s*      "__meta_kubernetes_node_label_node_kubernetes_io_role",
+            \s*      "__meta_kubernetes_node_label_node_role",
+            \s*      "__meta_kubernetes_node_label_role",
+            \s*    \]
+            \s*    regex = "\^\(\?:;\*\)\?\(\[\^;\]\+\)\.\*\$"
+            \s*    target_label = "node_role"
+            \s*  \}
+      - matchRegex:
+          path: data["module.alloy"]
+          # The pattern should look like this, but since the regex is escaped, it will be a bit different
+          # attach_metadata {
+          #   node = true
+          # }
+          pattern: |-
+            \s*  attach_metadata \{
+            \s*    node = true
+            \s*  \}
+
+  - it: should add the node os label rules to the discovery relabel
+    set:
+      deployAsConfigMap: true
+      nodeLabels:
+        nodeOS: true
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["module.alloy"]
+          # The pattern should look like this, but since the regex is escaped, it will be a bit different
+          # rule {
+          #   source_labels = [
+          #     "__meta_kubernetes_node_label_kubernetes_io_os",
+          #     "__meta_kubernetes_node_label_os_kubernetes_io",
+          #     "__meta_kubernetes_node_label_os",
+          #   ]
+          #   regex = "^(?:;*)?([^;]+).*$"
+          #   target_label = "os"
+          # }
+          pattern: |-
+            \s*  rule \{
+            \s*    source_labels = \[
+            \s*      "__meta_kubernetes_node_label_kubernetes_io_os",
+            \s*      "__meta_kubernetes_node_label_os_kubernetes_io",
+            \s*      "__meta_kubernetes_node_label_os",
+            \s*    \]
+            \s*    regex = "\^\(\?:;\*\)\?\(\[\^;\]\+\)\.\*\$"
+            \s*    target_label = "os"
+            \s*  \}
+      - matchRegex:
+          path: data["module.alloy"]
+          # The pattern should look like this, but since the regex is escaped, it will be a bit different
+          # attach_metadata {
+          #   node = true
+          # }
+          pattern: |-
+            \s*  attach_metadata \{
+            \s*    node = true
+            \s*  \}
+
+  - it: should add the node architecture label rules to the discovery relabel
+    set:
+      deployAsConfigMap: true
+      nodeLabels:
+        nodeArchitecture: true
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["module.alloy"]
+          # The pattern should look like this, but since the regex is escaped, it will be a bit different
+          # rule {
+          #   source_labels = [
+          #     "__meta_kubernetes_node_label_kubernetes_io_arch",
+          #     "__meta_kubernetes_node_label_beta_kubernetes_io_arch",
+          #   ]
+          #   regex = "^(?:;*)?([^;]+).*$"
+          #   target_label = "architecture"
+          # }
+          pattern: |-
+            \s*  rule \{
+            \s*    source_labels = \[
+            \s*      "__meta_kubernetes_node_label_kubernetes_io_arch",
+            \s*      "__meta_kubernetes_node_label_beta_kubernetes_io_arch",
+            \s*    \]
+            \s*    regex = "\^\(\?:;\*\)\?\(\[\^;\]\+\)\.\*\$"
+            \s*    target_label = "architecture"
+            \s*  \}
+      - matchRegex:
+          path: data["module.alloy"]
+          # The pattern should look like this, but since the regex is escaped, it will be a bit different
+          # attach_metadata {
+          #   node = true
+          # }
+          pattern: |-
+            \s*  attach_metadata \{
+            \s*    node = true
+            \s*  \}
+
+  - it: should add the node instance type label rules to the discovery relabel
+    set:
+      deployAsConfigMap: true
+      nodeLabels:
+        instanceType: true
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["module.alloy"]
+          # The pattern should look like this, but since the regex is escaped, it will be a bit different
+          # rule {
+          #   source_labels = [
+          #     "__meta_kubernetes_node_label_node_kubernetes_io_instance_type",
+          #     "__meta_kubernetes_node_label_beta_kubernetes_io_instance_type",
+          #   ]
+          #   regex = "^(?:;*)?([^;]+).*$"
+          #   target_label = "instance_type"
+          # }
+          pattern: |-
+            \s*  rule \{
+            \s*    source_labels = \[
+            \s*      "__meta_kubernetes_node_label_node_kubernetes_io_instance_type",
+            \s*      "__meta_kubernetes_node_label_beta_kubernetes_io_instance_type",
+            \s*    \]
+            \s*    regex = "\^\(\?:;\*\)\?\(\[\^;\]\+\)\.\*\$"
+            \s*    target_label = "instance_type"
+            \s*  \}
+      - matchRegex:
+          path: data["module.alloy"]
+          # The pattern should look like this, but since the regex is escaped, it will be a bit different
+          # attach_metadata {
+          #   node = true
+          # }
+          pattern: |-
+            \s*  attach_metadata \{
+            \s*    node = true
+            \s*  \}

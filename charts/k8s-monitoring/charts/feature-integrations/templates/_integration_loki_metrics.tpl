@@ -55,6 +55,7 @@ declare "loki_integration" {
       namespaces {
         names = coalesce(argument.namespaces.value, [])
       }
+      {{- include "feature.integrations.attachNodeMetadata" . | nindent 6 }}
     }
 
     // loki relabelings (pre-scrape)
@@ -81,7 +82,7 @@ declare "loki_integration" {
         target_label = "job"
       }
 
-      {{ include "commonRelabelings" . | nindent 4 }}
+      {{ include "feature.integrations.commonDiscoveryRules" . | nindent 6 }}
     }
 
     export "output" {

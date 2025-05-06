@@ -369,9 +369,23 @@ declare "cluster_metrics" {
     role = "node"
   }
 
+  discovery.relabel "nodes" {
+    targets = discovery.kubernetes.nodes.targets
+    rule {
+      source_labels = ["__meta_kubernetes_node_name"]
+      target_label  = "node"
+    }
+
+    rule {
+      replacement = "kubernetes"
+      target_label = "source"
+    }
+
+  }
+
   // Kubelet
   discovery.relabel "kubelet" {
-    targets = discovery.kubernetes.nodes.targets
+    targets = discovery.relabel.nodes.output
   }
 
   prometheus.scrape "kubelet" {
@@ -407,41 +421,15 @@ declare "cluster_metrics" {
 
   // Kubelet Resources
   discovery.relabel "kubelet_resources" {
-    targets = discovery.kubernetes.nodes.targets
+    targets = discovery.relabel.nodes.output
     rule {
       replacement   = "/metrics/resource"
       target_label  = "__metrics_path__"
     }
-    // set the node label
-    rule {
-      source_labels = ["__meta_kubernetes_node_name"]
-      target_label  = "node"
-    }
-
-    // set the app name if specified as metadata labels "app:" or "app.kubernetes.io/name:" or "k8s-app:"
-    rule {
-      action = "replace"
-      source_labels = [
-        "__meta_kubernetes_node_label_app_kubernetes_io_name",
-        "__meta_kubernetes_node_label_k8s_app",
-        "__meta_kubernetes_node_label_app",
-      ]
-      separator = ";"
-      regex = "^(?:;*)?([^;]+).*$"
-      replacement = "$1"
-      target_label = "app"
-    }
-
-    // set a source label
-    rule {
-      action = "replace"
-      replacement = "kubernetes"
-      target_label = "source"
-    }
   }
 
   prometheus.scrape "kubelet_resources" {
-    targets  = discovery.relabel.kubelet_resources.output
+    targets = discovery.relabel.kubelet_resources.output
     job_name = "integrations/kubernetes/resources"
     scheme   = "https"
     scrape_interval = "60s"
@@ -473,34 +461,10 @@ declare "cluster_metrics" {
 
   // cAdvisor
   discovery.relabel "cadvisor" {
-    targets = discovery.kubernetes.nodes.targets
+    targets = discovery.relabel.nodes.output
     rule {
       replacement   = "/metrics/cadvisor"
       target_label  = "__metrics_path__"
-    }
-    rule {
-      source_labels = ["__meta_kubernetes_node_name"]
-      target_label  = "node"
-    }
-    // set the app name if specified as metadata labels "app:" or "app.kubernetes.io/name:" or "k8s-app:"
-    rule {
-      action = "replace"
-      source_labels = [
-        "__meta_kubernetes_node_label_app_kubernetes_io_name",
-        "__meta_kubernetes_node_label_k8s_app",
-        "__meta_kubernetes_node_label_app",
-      ]
-      separator = ";"
-      regex = "^(?:;*)?([^;]+).*$"
-      replacement = "$1"
-      target_label = "app"
-    }
-
-    // set a source label
-    rule {
-      action = "replace"
-      replacement = "kubernetes"
-      target_label = "source"
     }
   }
 

@@ -10,6 +10,7 @@ discovery.kubernetes "pods" {
     names = {{ .Values.namespaces | toJson }}
   }
 {{- end }}
+{{- include "feature.podLogs.attachNodeMetadata" . | indent 2 }}
 }
 
 discovery.relabel "filtered_pods_with_paths" {

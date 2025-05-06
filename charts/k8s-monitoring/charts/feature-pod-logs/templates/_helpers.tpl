@@ -27,4 +27,3 @@ If release name contains chart name it will be used as a full name.
 {{- define "pod_annotation" -}}
 {{ printf "__meta_kubernetes_pod_annotation_%s" (include "escape_label" .) }}
 {{- end }}
-

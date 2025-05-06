@@ -42,6 +42,7 @@ discovery.kubernetes "node_exporter" {
     names = [{{ (index .Values "node-exporter").namespace | quote }}]
   }
 {{- end }}
+{{- include "feature.clusterMetrics.attachNodeMetadata" . | indent 2 }}
 }
 
 discovery.relabel "node_exporter" {
@@ -135,6 +136,7 @@ discovery.relabel "node_exporter" {
     target_label = "source"
   }
 
+{{- include "feature.clusterMetrics.nodeDiscoveryRules" . | indent 2 }}
 {{- if (index .Values "node-exporter").extraDiscoveryRules }}
   {{ (index .Values "node-exporter").extraDiscoveryRules | nindent 2 }}
 {{- end }}

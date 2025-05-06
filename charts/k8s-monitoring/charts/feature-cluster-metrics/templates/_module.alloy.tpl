@@ -13,6 +13,20 @@ declare "cluster_metrics" {
   discovery.kubernetes "nodes" {
     role = "node"
   }
+
+  discovery.relabel "nodes" {
+    targets = discovery.kubernetes.nodes.targets
+    rule {
+      source_labels = ["__meta_kubernetes_node_name"]
+      target_label  = "node"
+    }
+
+    rule {
+      replacement = "kubernetes"
+      target_label = "source"
+    }
+    {{ include "feature.clusterMetrics.nodeDiscoveryRules" . | indent 4 }}
+  }
   {{- end }}
   {{- include "feature.clusterMetrics.kubelet.alloy" . | indent 2 }}
   {{- include "feature.clusterMetrics.kubeletResource.alloy" . | indent 2 }}

@@ -39,6 +39,7 @@ discovery.kubernetes "windows_exporter_pods" {
     role = "pod"
     label = {{ $labelSelectors | join "," | quote }}
   }
+{{- include "feature.clusterMetrics.attachNodeMetadata" . | indent 2 }}
 }
 
 discovery.relabel "windows_exporter" {
@@ -48,6 +49,7 @@ discovery.relabel "windows_exporter" {
     action = "replace"
     target_label = "instance"
   }
+{{- include "feature.clusterMetrics.nodeDiscoveryRules" . | indent 2 }}
 {{- if (index .Values "windows-exporter").extraDiscoveryRules }}
   {{ (index .Values "windows-exporter").extraDiscoveryRules | nindent 2 }}
 {{- end }}

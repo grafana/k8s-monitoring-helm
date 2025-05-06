@@ -56,6 +56,7 @@ declare "alloy_integration" {
       namespaces {
         names = coalesce(argument.namespaces.value, [])
       }
+      {{- include "feature.integrations.attachNodeMetadata" . | nindent 6 }}
     }
 
     // alloy relabelings (pre-scrape)
@@ -75,7 +76,7 @@ declare "alloy_integration" {
         action = "keep"
       }
 
-      {{ include "commonRelabelings" . | nindent 4 }}
+      {{- include "feature.integrations.commonDiscoveryRules" . | nindent 6 }}
     }
 
     export "output" {
