@@ -27,21 +27,8 @@ destinations:
       tailSampling:
         enabled: true
         policies:
-          - name: and-policy
-            type: and
-            and:
-              and_sub_policy:
-                - name: test-and-policy-1
-                  type: numeric_attribute
-                  key: key1
-                  min_value: 1
-                  max_value: 256
-                - name: test-and-policy-2
-                  type: string_attribute
-                  key: key2
-                  values:
-                    - value1
-                    - value2
+          - name: always 
+            type: always_sample 
 
 applicationObservability:
   enabled: true
@@ -58,3 +45,16 @@ alloy-receiver:
         port: 4317
         targetPort: 4317
         protocol: TCP
+
+integrations:
+  alloy:
+    instances:
+      - name: alloy-sampler
+        labelSelectors:
+          app.kubernetes.io/instance: k8smon-localtempo-sampler
+        metrics:
+          tuning:
+            includeMetrics: [otelcol_processor_tail_sampling.*]
+
+alloy-metrics:
+  enabled: true

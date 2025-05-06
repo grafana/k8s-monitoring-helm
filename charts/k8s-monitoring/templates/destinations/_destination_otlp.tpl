@@ -304,7 +304,7 @@ otelcol.processor.filter {{ include "helper.alloy_name" .name | quote }} {
 otelcol.exporter.loadbalancing {{ include "helper.alloy_name" .name | quote }} {
   resolver {
     kubernetes {
-      service = "{{ include "helper.k8s_name" (printf "%s-%s-sampler" $.Release.Name .name) }}"
+      service = "{{ include "helper.k8s_name" (printf "%s-%s-sampler-alloy" $.Release.Name .name) }}"
     }
   }
   protocol {
