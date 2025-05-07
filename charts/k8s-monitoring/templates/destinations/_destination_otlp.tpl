@@ -296,7 +296,7 @@ otelcol.processor.filter {{ include "helper.alloy_name" .name | quote }} {
 {{- end }}
 {{- if ne .traces.enabled false }}
 {{- /* If sampling is enabled, override traces target and enable loadbalancing exporter if sampling is enabled */}}
-{{- if and .processors.tailSampling.enabled }}
+{{- if .processors.tailSampling.enabled }}
     traces = [otelcol.exporter.loadbalancing.{{ include "helper.alloy_name" .name }}.input]
   }
 }
