@@ -26,6 +26,7 @@ declare "node_logs" {
     // - machine_id
     // - pid
     // - stream_id
+    // - syslog_identifier
     // - systemd_cgroup
     // - systemd_invocation_id
     // - systemd_slice
@@ -39,18 +40,59 @@ declare "node_logs" {
       regex = "__journal__?(.+)"
     }
 
+    // preserves original value of `__journal_unit` and `__journal_user_unit` becuase we will overide `unit` and `user_unit`
     rule {
       action = "replace"
-      source_labels = ["__journal__systemd_unit"]
+      source_labels = ["__journal_unit"]
+      target_label = "journal_unit"
+    }
+  
+    rule {
+      action = "replace"
+      source_labels = ["__journal_user_unit"]
+      target_label = "journal_user_unit"
+    }
+
+    // fills the labels `unit` and `user_unit`
+    rule {
+      action = "replace"
+      source_labels = [
+        "__journal_unit",
+        "__journal__systemd_unit",
+      ]
+      separator = ";"
+      regex = "^;*([^;]+).*$"
       replacement = "$1"
       target_label = "unit"
     }
 
-    // the service_name label will be set automatically in loki if not set, and the unit label
-    // will not allow service_name to be set automatically.
     rule {
       action = "replace"
-      source_labels = ["__journal__systemd_unit"]
+      source_labels = [
+        "__journal_user_unit",
+        "__journal__systemd_user_unit",
+      ]
+      separator = ";"
+      regex = "^;*([^;]+).*$"
+      replacement = "$1"
+      target_label = "user_unit"
+    }
+
+    // the `service_name` label will be set automatically in loki
+    //    we set it here, which means `service_name` WILL NOT be set automatically by loki.
+    // we try every useful identifier until we hit something
+    //    `_systemd_unit` should always be set, but we have `syslog_identifier` as a hail-mary
+    rule {
+      action = "replace"
+      source_labels = [
+        "__journal_unit",
+        "__journal_user_unit",
+        "__journal__systemd_unit",
+        "__journal__systemd_user_unit",
+        "__journal_syslog_identifier",
+      ]
+      separator = ";"
+      regex = "^;*([^;]+).*$"
       replacement = "$1"
       target_label = "service_name"
     }
