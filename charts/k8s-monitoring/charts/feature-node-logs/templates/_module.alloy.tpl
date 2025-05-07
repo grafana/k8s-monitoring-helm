@@ -36,7 +36,7 @@ declare "node_logs" {
     // More Info: https://www.freedesktop.org/software/systemd/man/systemd.journal-fields.html
     rule {
       action = "labelmap"
-      regex = "__journal__(.+)"
+      regex = "__journal__?(.+)"
     }
 
     rule {
@@ -54,9 +54,10 @@ declare "node_logs" {
       replacement = "$1"
       target_label = "service_name"
     }
-  {{- if .Values.extraDiscoveryRules }}
-  {{ .Values.extraDiscoveryRules | indent 2 }}
-  {{- end }}
+
+    {{- if .Values.extraDiscoveryRules }}
+    {{ .Values.extraDiscoveryRules | indent 4 }}
+    {{- end }}
 
     forward_to = [] // No forward_to is used in this component, the defined rules are used in the loki.source.journal component
   }
