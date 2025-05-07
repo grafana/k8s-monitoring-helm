@@ -315,14 +315,12 @@ otelcol.exporter.loadbalancing {{ include "helper.alloy_name" .name | quote }} {
         }
       }
     }
-  }
-}
 {{- else }}
     traces = [{{ include "destinations.otlp.alloy.exporter.target" . }}]
+{{- end }}
+{{- end }}
   }
 }
-{{- end }}
-{{- end }}
 
 {{- include "destinations.otlp.alloy.exporter" . }}
 {{- end }}
