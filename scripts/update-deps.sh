@@ -11,18 +11,23 @@ if [ "$#" -lt 1 ]; then
   exit 1
 fi
 
-helm repo update
+set -euo pipefail
+
+echo "Updating Helm repositories..."
+helm repo update > /dev/null
 
 updateDependency() {
-  name=$1
-  slug=$2
-  chartDir=$3
-  latestVersion=$(helm search repo ${slug} --output json | jq -r '.[0].version')
-  echo "Updating ${name} to ${latestVersion}..."
-  pushd ${chartDir}
+  chart=$1
+  slug=$(echo "${chart}" | cut -d'/' -f2)
+  chartDir=$2
+  chartName=$(basename "${chartDir}")
+  latestVersion=$(helm show chart "${chart}" | yq .version)
+  echo "Updating ${slug} in ${chartName} to ${latestVersion}..."
+  pushd "${chartDir}" || exit 1
   yq eval ".dependencies[] |= select(.name == \"${slug}\") .version = \"${latestVersion}\"" -i Chart.yaml
-  helm dependency update
-  popd
+  echo "Rebuilding dependencies for ${chartName}..."
+  helm dependency update > /dev/null
+  popd || exit 1
 }
 
 # Iterate over the provided dependencies
@@ -34,43 +39,43 @@ for dependency in "$@"; do
   fi
 
   if [[ "$dependency" == "alloy" ]]; then
-    updateDependency "Grafana Alloy" "alloy" "charts/k8s-monitoring"
-    updateDependency "Grafana Alloy" "alloy" "charts/k8s-monitoring-v1"
+    updateDependency "grafana/alloy" "charts/k8s-monitoring"
+    updateDependency "grafana/alloy" "charts/k8s-monitoring-v1"
   fi
 
   if [[ "$dependency" == "ksm" ]]; then
-    updateDependency "kube-state-metrics" "kube-state-metrics" "charts/k8s-monitoring/charts/feature-cluster-metrics"
-    updateDependency "kube-state-metrics" "kube-state-metrics" "charts/k8s-monitoring-v1"
+    updateDependency "prometheus-community/kube-state-metrics" "charts/k8s-monitoring/charts/feature-cluster-metrics"
+    updateDependency "prometheus-community/kube-state-metrics" "charts/k8s-monitoring-v1"
   fi
 
   if [[ "$dependency" == "node-exporter" ]]; then
-    updateDependency "Node Exporter" "prometheus-node-exporter" "charts/k8s-monitoring/charts/feature-cluster-metrics"
-    updateDependency "Node Exporter" "prometheus-node-exporter" "charts/k8s-monitoring-v1"
+    updateDependency "prometheus-community/prometheus-node-exporter" "charts/k8s-monitoring/charts/feature-cluster-metrics"
+    updateDependency "prometheus-community/prometheus-node-exporter" "charts/k8s-monitoring-v1"
   fi
 
   if [[ "$dependency" == "windows-exporter" ]]; then
-    updateDependency "Windows Exporter" "prometheus-windows-exporter" "charts/k8s-monitoring/charts/feature-cluster-metrics"
-    updateDependency "Windows Exporter" "prometheus-windows-exporter" "charts/k8s-monitoring-v1"
+    updateDependency "prometheus-community/prometheus-windows-exporter" "charts/k8s-monitoring/charts/feature-cluster-metrics"
+    updateDependency "prometheus-community/prometheus-windows-exporter" "charts/k8s-monitoring-v1"
   fi
 
   if [[ "$dependency" == "kepler" ]]; then
-    updateDependency "Kepler" "kepler" "charts/k8s-monitoring/charts/feature-cluster-metrics"
-    updateDependency "Kepler" "kepler" "charts/k8s-monitoring-v1"
+    updateDependency "kepler/kepler" "charts/k8s-monitoring/charts/feature-cluster-metrics"
+    updateDependency "kepler/kepler" "charts/k8s-monitoring-v1"
   fi
 
   if [[ "$dependency" == "opencost" ]]; then
-    updateDependency "OpenCost" "opencost" "charts/k8s-monitoring/charts/feature-cluster-metrics"
-    updateDependency "OpenCost" "opencost" "charts/k8s-monitoring-v1"
+    updateDependency "opencost/opencost" "charts/k8s-monitoring/charts/feature-cluster-metrics"
+    updateDependency "opencost/opencost" "charts/k8s-monitoring-v1"
   fi
 
   if [[ "$dependency" == "beyla" ]]; then
-    updateDependency "Grafana Beyla" "beyla" "charts/k8s-monitoring/charts/feature-auto-instrumentation"
-    updateDependency "Grafana Beyla" "beyla" "charts/k8s-monitoring-v1"
+    updateDependency "grafana/beyla" "charts/k8s-monitoring/charts/feature-auto-instrumentation"
+    updateDependency "grafana/beyla" "charts/k8s-monitoring-v1"
   fi
 
   if [[ "$dependency" == "prometheus-operator-crds" ]]; then
-    updateDependency "Prometheus Operator CRDs" "prometheus-operator-crds" "charts/k8s-monitoring/charts/feature-promtheus-operator-objects"
-    updateDependency "Prometheus Operator CRDs" "prometheus-operator-crds" "charts/k8s-monitoring-v1"
+    updateDependency "prometheus-operator-crds" "charts/k8s-monitoring/charts/feature-promtheus-operator-objects"
+    updateDependency "prometheus-operator-crds" "charts/k8s-monitoring-v1"
   fi
 
 done
