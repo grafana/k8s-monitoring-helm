@@ -40,9 +40,12 @@ jobs:
             # Choose the tests that match the labels
             tests=$(jq --null-input --compact-output --argjson allTests "${allTests}" --argjson chosenTests "${chosenTests}" '$allTests | map(select(. as $test | $chosenTests | index($test)))')
           else
-            # remove manual only tests
-            tests=$(jq --null-input --compact-output --argjson allTests "${allTests}" --argjson manualOnlyTests "${manualOnlyTests}" '$allTests | map(select(. as $test | $manualOnlyTests | index($test) | not))')
+            tests=${allTests}
           fi
+
+          # remove manual only tests
+          tests=$(jq --null-input --compact-output --argjson tests "${tests}" --argjson manualOnlyTests "${manualOnlyTests}" '$tests | map(select(. as $test | $manualOnlyTests | index($test) | not))')
+
           echo "Running tests: ${tests}"
           echo "tests=${tests}" >> "${GITHUB_OUTPUT}"
 
@@ -82,7 +85,9 @@ jobs:
         env:
           TEST: ${{ matrix.test }}
         run: |
-          if [ -f "charts/k8s-monitoring/tests/platform/${TEST}/eks-cluster-config.yaml" ]; then
+          if [ -f "charts/k8s-monitoring/tests/platform/${TEST}/aks-cluster-config.yaml" ]; then
+            echo "cluster-type=aks" >> "${GITHUB_OUTPUT}"
+          elif [ -f "charts/k8s-monitoring/tests/platform/${TEST}/eks-cluster-config.yaml" ]; then
             echo "cluster-type=eks" >> "${GITHUB_OUTPUT}"
           elif [ -f "charts/k8s-monitoring/tests/platform/${TEST}/gke-cluster-config.yaml" ]; then
             echo "cluster-type=gke" >> "${GITHUB_OUTPUT}"
@@ -99,6 +104,26 @@ jobs:
         uses: helm/kind-action@a1b0e391336a6ee6713a0583f8c6240d70863de3  # v1.12.0
         with:
           install_only: true
+
+      - name: Configure Azure Credentials
+        if: ${{ steps.check-cluster-config.outputs.cluster-type == 'aks' }}
+        run: |
+          echo "Not ready for automated testing yet"
+          exit 1
+#        uses: azure/login@a457da9ea143d694b1b9c7c869ebb04ebe844ef5  # v2.3.0
+#        with:
+#          auth-type: IDENTITY
+#          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+#          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+#          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+
+      - name: Setup Azure CLI
+        if: ${{ steps.check-cluster-config.outputs.cluster-type == 'aks' }}
+        uses: azure/cli@089eac9d8cc39f5d003e94f8b65efc51076c9cbd  # v2.1.0
+        with:
+          azcliversion: latest
+          inlineScript: |
+            az version
 
       - name: Setup eksctl CLI
         if: ${{ steps.check-cluster-config.outputs.cluster-type == 'eks' }}
