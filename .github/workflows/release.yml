@@ -138,4 +138,6 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Push chart as OCI image to GitHub Container Registry
-        run: helm push "${{ env.PACKAGE_PATH }}/${{ steps.parse-chart.outputs.packagename }}.tgz" "oci://ghcr.io/${GITHUB_REPOSITORY_OWNER}/k8s-monitoring-helm"
+        env:
+          CHART_PACKAGE: ${{ env.PACKAGE_PATH }}/${{ steps.parse-chart.outputs.packagename }}.tgz
+        run: helm push "${CHART_PACKAGE}" "oci://ghcr.io/${GITHUB_REPOSITORY_OWNER}/k8s-monitoring-helm"
