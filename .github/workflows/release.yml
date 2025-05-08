@@ -129,3 +129,13 @@ jobs:
           CR_TOKEN: ${{ secrets.GH_BOT_ACCESS_TOKEN }}
         run: |
           "${BIN_PATH}/cr" index --index-path "${INDEX_PATH}" --push
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772  # v3.4.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push chart as OCI image to GitHub Container Registry
+        run: helm push "${{ env.PACKAGE_PATH }}/${{ steps.parse-chart.outputs.packagename }}.tgz" "oci://ghcr.io/${GITHUB_REPOSITORY_OWNER}/k8s-monitoring-helm"
