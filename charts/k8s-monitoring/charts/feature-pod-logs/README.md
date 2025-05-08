@@ -10,6 +10,12 @@ Kubernetes Observability feature for gathering Pod logs.
 
 The Pod Logs feature enables the collection of logs from Kubernetes Pods on the cluster.
 
+## Usage
+
+podLogs:
+  enabled: true
+  ... [values](#values)
+
 ## Testing
 
 This chart contains unit tests to verify the generated configuration. The hidden value `deployAsConfigMap` will render

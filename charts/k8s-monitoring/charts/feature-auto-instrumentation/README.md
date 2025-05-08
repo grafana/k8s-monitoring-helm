@@ -10,6 +10,12 @@ Gathers telemetry data via automatic instrumentation
 
 The auto-instrumentation feature deploys Grafana Beyla to automatically instrument programs running on this cluster using eBPF.
 
+## Usage
+
+autoInstrumentation:
+  enabled: true
+  ... [values](#values)
+
 ## Testing
 
 This chart contains unit tests to verify the generated configuration. The hidden value `deployAsConfigMap` will render

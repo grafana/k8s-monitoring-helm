@@ -10,6 +10,12 @@ Gathers profiles from eBPF, Java, and pprof sources.
 
 The Profiling feature enables the collection of profiles from the processes running in the cluster.
 
+## Usage
+
+profiling:
+  enabled: true
+  ... [values](#values)
+
 ## Testing
 
 This chart contains unit tests to verify the generated configuration. The hidden value `deployAsConfigMap` will render
