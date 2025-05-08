@@ -17,6 +17,9 @@
     {{- $alloyConfig = cat $alloyConfig ((include "sampler.processor.tailSampling.alloy" $samplerConfig) | trim | nindent 0) }}
     {{- $alloyConfig = cat $alloyConfig ((include "destinations.otlp.alloy.exporter" $destination) | trim | nindent 0) }}
     {{- $alloyConfig = regexReplaceAll `[ \t]+(\r?\n)` $alloyConfig "\n" }}
+
+    {{- $alloySpec := dict "alloy" (dict "configMap" (dict "create" true "content" $alloyConfig)) }}
+    {{- $alloy := merge $alloySpec $destination.processors.tailSampling.collector }}
 ---
 apiVersion: collectors.grafana.com/v1alpha1
 kind: Alloy
@@ -24,14 +27,7 @@ metadata:
   name: {{ include "helper.k8s_name" (printf "%s-%s-sampler" $.Release.Name $destination.name) }}
   namespace: {{ $.Release.Namespace }}
 spec:
-  controller:
-    type: statefulset
-    replicas: 1
-  alloy:
-    configMap:
-      create: true
-      content: |-
-        {{ $alloyConfig | trim | nindent 8 }}
+  {{- $alloy | toYaml | nindent 2 }}
 {{- end }}
 {{- end }}
 {{- end }}
