@@ -1,3 +1,56 @@
+// Feature: Auto-Instrumentation
+declare "auto_instrumentation" {
+  argument "metrics_destinations" {
+    comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
+  }
+
+  discovery.kubernetes "beyla_pods" {
+    role = "pod"
+    namespaces {
+      own_namespace = true
+    }
+    selectors {
+      role = "pod"
+      label = "app.kubernetes.io/name=beyla"
+    }
+  }
+
+  discovery.relabel "beyla_pods" {
+    targets = discovery.kubernetes.beyla_pods.targets
+    rule {
+      source_labels = ["__meta_kubernetes_pod_node_name"]
+      action = "replace"
+      target_label = "instance"
+    }
+  }
+
+  prometheus.scrape "beyla_applications" {
+    targets         = discovery.relabel.beyla_pods.output
+    honor_labels    = true
+    scrape_interval = "60s"
+    clustering {
+      enabled = true
+    }
+    forward_to = argument.metrics_destinations.value
+  }
+
+  prometheus.scrape "beyla_internal" {
+    targets         = discovery.relabel.beyla_pods.output
+    metrics_path    = "/internal/metrics"
+    job_name        = "integrations/beyla"
+    honor_labels    = true
+    scrape_interval = "60s"
+    clustering {
+      enabled = true
+    }
+    forward_to = argument.metrics_destinations.value
+  }
+}
+auto_instrumentation "feature" {
+  metrics_destinations = [
+    prometheus.remote_write.prometheus.receiver,
+  ]
+}
 // Feature: Cluster Metrics
 declare "cluster_metrics" {
   argument "metrics_destinations" {
@@ -432,6 +485,47 @@ declare "cluster_metrics" {
     rule {
       source_labels = ["__name__"]
       regex = "up|scrape_samples_scraped|windows_.*|node_cpu_seconds_total|node_filesystem_size_bytes|node_filesystem_avail_bytes|container_cpu_usage_seconds_total"
+      action = "keep"
+    }
+    forward_to = argument.metrics_destinations.value
+  }
+
+  discovery.kubernetes "kepler" {
+    role = "pod"
+    namespaces {
+      own_namespace = true
+    }
+    selectors {
+      role = "pod"
+      label = "app.kubernetes.io/name=kepler"
+    }
+  }
+
+  discovery.relabel "kepler" {
+    targets = discovery.kubernetes.kepler.targets
+    rule {
+      source_labels = ["__meta_kubernetes_pod_node_name"]
+      action = "replace"
+      target_label = "instance"
+    }
+  }
+
+  prometheus.scrape "kepler" {
+    targets      = discovery.relabel.kepler.output
+    job_name     = "integrations/kepler"
+    honor_labels = true
+    scrape_interval = "60s"
+    clustering {
+      enabled = true
+    }
+    forward_to = [prometheus.relabel.kepler.receiver]
+  }
+
+  prometheus.relabel "kepler" {
+    max_cache_size = 100000
+    rule {
+      source_labels = ["__name__"]
+      regex = "up|scrape_samples_scraped|kepler_.*"
       action = "keep"
     }
     forward_to = argument.metrics_destinations.value
