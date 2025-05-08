@@ -40,9 +40,12 @@ jobs:
             # Choose the tests that match the labels
             tests=$(jq --null-input --compact-output --argjson allTests "${allTests}" --argjson chosenTests "${chosenTests}" '$allTests | map(select(. as $test | $chosenTests | index($test)))')
           else
-            # remove manual only tests
-            tests=$(jq --null-input --compact-output --argjson allTests "${allTests}" --argjson manualOnlyTests "${manualOnlyTests}" '$allTests | map(select(. as $test | $manualOnlyTests | index($test) | not))')
+            tests=${allTests}
           fi
+
+          # remove manual only tests
+          tests=$(jq --null-input --compact-output --argjson tests "${tests}" --argjson manualOnlyTests "${manualOnlyTests}" '$tests | map(select(. as $test | $manualOnlyTests | index($test) | not))')
+
           echo "Running tests: ${tests}"
           echo "tests=${tests}" >> "${GITHUB_OUTPUT}"
 
