@@ -1129,34 +1129,30 @@ metadata:
   name: k8smon-localtempo-sampler
   namespace: default
 spec:
-  controller:
-    type: statefulset
-    replicas: 1
   alloy:
     configMap:
-      create: true
-      content: |-
-        
+      content: |2-
+  
         otelcol.receiver.otlp "sampler_receiver" {
           grpc {
             max_recv_msg_size = "4MB"
           }
-        
+  
           output {
             traces = [otelcol.processor.tail_sampling.tail_sampler.input]
           }
         }
         otelcol.processor.tail_sampling "tail_sampler" {
           // https://grafana.com/docs/alloy/latest/reference/components/otelcol.processor.tail_sampling/
-        
+  
           decision_wait = "15s"
-        
+  
           policy {
             name = "always"
             type = "always_sample"
-        
+  
           }
-        
+  
           output {
             traces = [otelcol.processor.batch.localtempo.input]
           }
@@ -1165,7 +1161,7 @@ spec:
           timeout = "2s"
           send_batch_size = 8192
           send_batch_max_size = 0
-        
+  
           output {
             traces = [otelcol.exporter.otlp.localtempo.input]
           }
@@ -1178,7 +1174,7 @@ spec:
               insecure_skip_verify = true
             }
           }
-        
+  
           retry_on_failure {
             enabled = true
             initial_interval = "5s"
@@ -1186,6 +1182,10 @@ spec:
             max_elapsed_time = "5m"
           }
         }
+      create: true
+  controller:
+    replicas: 2
+    type: statefulset
 ---
 # Source: k8s-monitoring/templates/alloy.yaml
 apiVersion: collectors.grafana.com/v1alpha1

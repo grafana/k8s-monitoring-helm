@@ -1,0 +1,272 @@
+// Feature: Cluster Events
+declare "cluster_events" {
+  argument "logs_destinations" {
+    comment = "Must be a list of log destinations where collected logs should be forwarded to"
+  }
+
+  loki.source.kubernetes_events "cluster_events" {
+    job_name   = "integrations/kubernetes/eventhandler"
+    log_format = "logfmt"
+    forward_to = [loki.process.cluster_events.receiver]
+  }
+
+  loki.process "cluster_events" {
+
+    // add a static source label to the logs so they can be differentiated / restricted if necessary
+    stage.static_labels {
+      values = {
+        "source" = "kubernetes-events",
+      }
+    }
+
+    // extract some of the fields from the log line, these could be used as labels, structured metadata, etc.
+    stage.logfmt {
+      mapping = {
+        "component" = "sourcecomponent", // map the sourcecomponent field to component
+        "kind" = "",
+        "level" = "type", // most events don't have a level but they do have a "type" i.e. Normal, Warning, Error, etc.
+        "name" = "",
+        "node" = "sourcehost", // map the sourcehost field to node
+      }
+    }
+    // set these values as labels, they may or may not be used as index labels in Loki as they can be dropped
+    // prior to being written to Loki, but this makes them available
+    stage.labels {
+      values = {
+        "component" = "",
+        "kind" = "",
+        "level" = "",
+        "name" = "",
+        "node" = "",
+      }
+    }
+
+    // if kind=Node, set the node label by copying the instance label
+    stage.match {
+      selector = "{kind=\"Node\"}"
+
+      stage.labels {
+        values = {
+          "node" = "name",
+        }
+      }
+    }
+
+    // set the level extracted key value as a normalized log level
+    stage.match {
+      selector = "{level=\"Normal\"}"
+
+      stage.static_labels {
+        values = {
+          level = "Info",
+        }
+      }
+    }
+
+    // Only keep the labels that are defined in the `keepLabels` list.
+    stage.label_keep {
+      values = ["job","level","namespace","node","source"]
+    }
+    stage.labels {
+      values = {
+        "service_name" = "job",
+      }
+    }
+    forward_to = argument.logs_destinations.value
+  }
+}
+cluster_events "feature" {
+  logs_destinations = [
+    otelcol.receiver.loki.otel_endpoint.receiver,
+  ]
+}
+// Self Reporting
+prometheus.exporter.unix "kubernetes_monitoring_telemetry" {
+  set_collectors = ["textfile"]
+  textfile {
+    directory = "/etc/alloy"
+  }
+}
+
+discovery.relabel "kubernetes_monitoring_telemetry" {
+  targets = prometheus.exporter.unix.kubernetes_monitoring_telemetry.targets
+  rule {
+    target_label = "instance"
+    action = "replace"
+    replacement = "k8smon"
+  }
+  rule {
+    target_label = "job"
+    action = "replace"
+    replacement = "integrations/kubernetes/kubernetes_monitoring_telemetry"
+  }
+}
+
+prometheus.scrape "kubernetes_monitoring_telemetry" {
+  job_name   = "integrations/kubernetes/kubernetes_monitoring_telemetry"
+  targets    = discovery.relabel.kubernetes_monitoring_telemetry.output
+  scrape_interval = "60s"
+  clustering {
+    enabled = true
+  }
+  forward_to = [prometheus.relabel.kubernetes_monitoring_telemetry.receiver]
+}
+
+prometheus.relabel "kubernetes_monitoring_telemetry" {
+  rule {
+    source_labels = ["__name__"]
+    regex = "grafana_kubernetes_monitoring_.*"
+    action = "keep"
+  }
+  forward_to = [
+    otelcol.receiver.prometheus.otel_endpoint.receiver,
+  ]
+}
+
+
+
+
+// Destination: otel-endpoint (otlp)
+otelcol.receiver.prometheus "otel_endpoint" {
+  output {
+    metrics = [otelcol.processor.attributes.otel_endpoint.input]
+  }
+}
+otelcol.receiver.loki "otel_endpoint" {
+  output {
+    logs = [otelcol.processor.attributes.otel_endpoint.input]
+  }
+}
+otelcol.auth.oauth2 "otel_endpoint" {
+  client_id = convert.nonsensitive(remote.kubernetes.secret.otel_endpoint.data["clientId"])
+  client_secret_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+  endpoint_params = {
+    client_assertion_type = ["urn:ietf:params:oauth:client-assertion-type:jwt-bearer"],
+    grant_type = ["client_credentials"],
+  }
+  token_url = "https://my.idp/application/o/token/"
+}
+
+otelcol.processor.attributes "otel_endpoint" {
+  output {
+    metrics = [otelcol.processor.transform.otel_endpoint.input]
+    logs = [otelcol.processor.transform.otel_endpoint.input]
+    traces = [otelcol.processor.transform.otel_endpoint.input]
+  }
+}
+
+otelcol.processor.transform "otel_endpoint" {
+  error_mode = "ignore"
+  metric_statements {
+    context = "resource"
+    statements = [
+      `set(attributes["cluster"], "oauth2-auth-example")`,
+      `set(attributes["k8s.cluster.name"], "oauth2-auth-example")`,
+    ]
+  }
+
+  metric_statements {
+    context = "datapoint"
+    statements = [
+      `set(attributes["cluster"], "oauth2-auth-example")`,
+      `set(attributes["k8s.cluster.name"], "oauth2-auth-example")`,
+      `set(resource.attributes["deployment.environment"], attributes["deployment_environment"] ) where resource.attributes["deployment.environment"] == nil and attributes["deployment_environment"] != nil`,
+      `delete_key(attributes, "deployment_environment") where attributes["deployment_environment"] == resource.attributes["deployment.environment"]`,
+      `set(resource.attributes["deployment.environment.name"], attributes["deployment_environment_name"] ) where resource.attributes["deployment.environment.name"] == nil and attributes["deployment_environment_name"] != nil`,
+      `delete_key(attributes, "deployment_environment_name") where attributes["deployment_environment_name"] == resource.attributes["deployment.environment.name"]`,
+      `set(resource.attributes["service.name"], attributes["service_name"] ) where resource.attributes["service.name"] == nil and attributes["service_name"] != nil`,
+      `delete_key(attributes, "service_name") where attributes["service_name"] == resource.attributes["service.name"]`,
+      `set(resource.attributes["service.namespace"], attributes["service_namespace"] ) where resource.attributes["service.namespace"] == nil and attributes["service_namespace"] != nil`,
+      `delete_key(attributes, "service_namespace") where attributes["service_namespace"] == resource.attributes["service.namespace"]`,
+    ]
+  }
+  log_statements {
+    context = "resource"
+    statements = [
+      `set(attributes["cluster"], "oauth2-auth-example")`,
+      `set(attributes["k8s.cluster.name"], "oauth2-auth-example")`,
+    ]
+  }
+
+  log_statements {
+    context = "log"
+    statements = [
+      `delete_key(attributes, "loki.attribute.labels")`,
+      `delete_key(attributes, "loki.resource.labels")`,
+      `set(resource.attributes["k8s.container.name"], attributes["container"] ) where resource.attributes["k8s.container.name"] == nil and attributes["container"] != nil`,
+      `delete_key(attributes, "container") where attributes["container"] == resource.attributes["k8s.container.name"]`,
+      `set(resource.attributes["k8s.cronjob.name"], attributes["cronjob"] ) where resource.attributes["k8s.cronjob.name"] == nil and attributes["cronjob"] != nil`,
+      `delete_key(attributes, "cronjob") where attributes["cronjob"] == resource.attributes["k8s.cronjob.name"]`,
+      `set(resource.attributes["k8s.daemonset.name"], attributes["daemonset"] ) where resource.attributes["k8s.daemonset.name"] == nil and attributes["daemonset"] != nil`,
+      `delete_key(attributes, "daemonset") where attributes["daemonset"] == resource.attributes["k8s.daemonset.name"]`,
+      `set(resource.attributes["k8s.deployment.name"], attributes["deployment"] ) where resource.attributes["k8s.deployment.name"] == nil and attributes["deployment"] != nil`,
+      `delete_key(attributes, "deployment") where attributes["deployment"] == resource.attributes["k8s.deployment.name"]`,
+      `set(resource.attributes["deployment.environment"], attributes["deployment_environment"] ) where resource.attributes["deployment.environment"] == nil and attributes["deployment_environment"] != nil`,
+      `delete_key(attributes, "deployment_environment") where attributes["deployment_environment"] == resource.attributes["deployment.environment"]`,
+      `set(resource.attributes["deployment.environment.name"], attributes["deployment_environment_name"] ) where resource.attributes["deployment.environment.name"] == nil and attributes["deployment_environment_name"] != nil`,
+      `delete_key(attributes, "deployment_environment_name") where attributes["deployment_environment_name"] == resource.attributes["deployment.environment.name"]`,
+      `set(resource.attributes["k8s.job.name"], attributes["job_name"] ) where resource.attributes["k8s.job.name"] == nil and attributes["job_name"] != nil`,
+      `delete_key(attributes, "job_name") where attributes["job_name"] == resource.attributes["k8s.job.name"]`,
+      `set(resource.attributes["k8s.namespace.name"], attributes["namespace"] ) where resource.attributes["k8s.namespace.name"] == nil and attributes["namespace"] != nil`,
+      `delete_key(attributes, "namespace") where attributes["namespace"] == resource.attributes["k8s.namespace.name"]`,
+      `set(resource.attributes["k8s.pod.name"], attributes["pod"] ) where resource.attributes["k8s.pod.name"] == nil and attributes["pod"] != nil`,
+      `delete_key(attributes, "pod") where attributes["pod"] == resource.attributes["k8s.pod.name"]`,
+      `set(resource.attributes["k8s.replicaset.name"], attributes["replicaset"] ) where resource.attributes["k8s.replicaset.name"] == nil and attributes["replicaset"] != nil`,
+      `delete_key(attributes, "replicaset") where attributes["replicaset"] == resource.attributes["k8s.replicaset.name"]`,
+      `set(resource.attributes["service.name"], attributes["service_name"] ) where resource.attributes["service.name"] == nil and attributes["service_name"] != nil`,
+      `delete_key(attributes, "service_name") where attributes["service_name"] == resource.attributes["service.name"]`,
+      `set(resource.attributes["service.namespace"], attributes["service_namespace"] ) where resource.attributes["service.namespace"] == nil and attributes["service_namespace"] != nil`,
+      `delete_key(attributes, "service_namespace") where attributes["service_namespace"] == resource.attributes["service.namespace"]`,
+      `set(resource.attributes["k8s.statefulset.name"], attributes["statefulset"] ) where resource.attributes["k8s.statefulset.name"] == nil and attributes["statefulset"] != nil`,
+      `delete_key(attributes, "statefulset") where attributes["statefulset"] == resource.attributes["k8s.statefulset.name"]`,
+    ]
+  }
+
+  trace_statements {
+    context = "resource"
+    statements = [
+      `set(attributes["cluster"], "oauth2-auth-example")`,
+      `set(attributes["k8s.cluster.name"], "oauth2-auth-example")`,
+    ]
+  }
+
+  output {
+    metrics = [otelcol.processor.batch.otel_endpoint.input]
+    logs = [otelcol.processor.batch.otel_endpoint.input]
+    traces = [otelcol.processor.batch.otel_endpoint.input]
+  }
+}
+
+otelcol.processor.batch "otel_endpoint" {
+  timeout = "2s"
+  send_batch_size = 8192
+  send_batch_max_size = 0
+
+  output {
+    metrics = [otelcol.exporter.otlp.otel_endpoint.input]
+    logs = [otelcol.exporter.otlp.otel_endpoint.input]
+    traces = [otelcol.exporter.otlp.otel_endpoint.input]
+  }
+}
+otelcol.exporter.otlp "otel_endpoint" {
+  client {
+    endpoint = "grpc.my.otel.endpoint:443"
+    auth = otelcol.auth.oauth2.otel_endpoint.handler
+    tls {
+      insecure = false
+      insecure_skip_verify = false
+    }
+  }
+
+  retry_on_failure {
+    enabled = true
+    initial_interval = "5s"
+    max_interval = "30s"
+    max_elapsed_time = "5m"
+  }
+}
+
+remote.kubernetes.secret "otel_endpoint" {
+  name      = "otel-endpoint-k8smon-k8s-monitoring"
+  namespace = "default"
+}

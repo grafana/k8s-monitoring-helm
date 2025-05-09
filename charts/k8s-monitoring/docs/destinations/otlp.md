@@ -114,6 +114,7 @@ This defines the options for defining a destination for OpenTelemetry data that 
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
+| processors.tailSampling.collector | object | `{"controller":{"replicas":2,"type":"statefulset"}}` | Settings for the Alloy instance that will handle tail sampling. |
 | processors.tailSampling.decisionWait | string | `"15s"` | TODO: Needs a description |
 | processors.tailSampling.enabled | bool | `false` | Apply tail sampling policies to the traces before delivering them to their destination. |
 | processors.tailSampling.policies | list | `[]` | Tail sampling policies apply. |
