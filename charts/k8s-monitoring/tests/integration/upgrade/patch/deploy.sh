@@ -10,7 +10,7 @@ CURRENT_VERSION="$(yq eval '.version' ../../../../Chart.yaml)"
 IFS='.' read -r major minor patch <<< "${CURRENT_VERSION}"
 if [ "${patch}" -eq 0 ]; then
   echo "Patch version is 0. Testing an in-place upgrade."
-  PREVIOUS_PATCH_RELEASE="${major}.${minor}.$((patch))"
+  PREVIOUS_PATCH_RELEASE="${major}.${minor}.${patch}"
 else
   PREVIOUS_PATCH_RELEASE="${major}.${minor}.$((patch - 1))"
 fi

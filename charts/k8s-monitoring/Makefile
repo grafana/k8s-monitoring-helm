@@ -94,9 +94,6 @@ NON_RENDERED_PLATFORM_TEST_VALUES_FILES := $(shell find tests/platform -name .no
 PLATFORM_TEST_VALUES_FILES := $(filter-out $(NON_RENDERED_PLATFORM_TEST_VALUES_FILES),$(shell find tests/platform -name values.yaml))
 PLATFORM_TEST_OUTPUT_FILES := $(PLATFORM_TEST_VALUES_FILES:values.yaml=.rendered/output.yaml)
 
-pete:
-	@echo $(EXAMPLE_ALLOY_FILES)
-
 alloy_configs = $(shell \
 	DIR="$(shell dirname $(1))/" yq e 'with_entries(select(.key == "alloy-*" and .value.enabled == true)) | to_entries | env(DIR) + .[].key + ".alloy"' $(1) \
 )
@@ -111,11 +108,14 @@ alloy_instances = $(shell \
 	mkdir -p $(dir $@)
 	helm template $(EXAMPLE_RELEASE_NAME) . -f $< > $@
 
-%/alloy-logs.alloy %/alloy-metrics.alloy %/alloy-receiver.alloy %/alloy-singleton.alloy %/alloy-profiles.alloy: %/output.yaml
-	yq 'select(.kind=="ConfigMap" and .metadata.name=="$(EXAMPLE_RELEASE_NAME)-$(basename $(notdir $@))") | .data["config.alloy"]' $< > $@
-
-%/alloy-logs.yaml %/alloy-metrics.yaml %/alloy-receiver.yaml %/alloy-singleton.yaml %/alloy-profiles.yaml: %/output.yaml
-	yq 'select(.kind=="Alloy" and .metadata.name=="$(EXAMPLE_RELEASE_NAME)-$(basename $(notdir $@))") | .' $< > $@
+ALLOY_INSTANCES := logs metrics receiver singleton profiles
+define alloy_files
+%/alloy-$(1).alloy: %/output.yaml
+	yq 'select(.kind=="ConfigMap" and .metadata.name=="$(EXAMPLE_RELEASE_NAME)-alloy-$(1)") | .data["config.alloy"]' $$< > $$@
+%/alloy-$(1).yaml: %/output.yaml
+	yq 'select(.kind=="Alloy" and .metadata.name=="$(EXAMPLE_RELEASE_NAME)-alloy-$(1)") | .' $$< > $$@
+endef
+$(foreach instance,$(ALLOY_INSTANCES),$(eval $(call alloy_files,$(instance))))
 
 %/README.md: %/values.yaml $$(wildcard %/description.txt)
 	echo '<!--' > $@
