@@ -47,6 +47,53 @@ application_observability "feature" {
 {{- $isTranslating -}}
 {{- end -}}
 
+{{- define "features.applicationObservability.collector.values" }}
+{{- if .Values.applicationObservability.enabled -}}
+{{- $values := dict }}
+{{- range $collector := include "features.applicationObservability.collectors" . | fromYamlArray }}
+  {{- $extraPorts := deepCopy (dig "alloy" "extraPorts" list (index $.Values $collector)) }}
+  {{- if $.Values.applicationObservability.receivers.otlp.grpc.enabled }}
+    {{- if eq (include "collectors.has_extra_port" (deepCopy $ | merge (dict "name" $collector "portNumber" $.Values.applicationObservability.receivers.otlp.grpc.port))) "false" }}
+      {{- $extraPorts = append $extraPorts (dict "name" "otlp-grpc" "port" $.Values.applicationObservability.receivers.otlp.grpc.port "targetPort" $.Values.applicationObservability.receivers.otlp.grpc.port "protocol" "TCP") }}
+    {{- end -}}
+  {{- end -}}
+  {{- if $.Values.applicationObservability.receivers.otlp.http.enabled }}
+    {{- if eq (include "collectors.has_extra_port" (deepCopy $ | merge (dict "name" $collector "portNumber" $.Values.applicationObservability.receivers.otlp.http.port))) "false" }}
+      {{- $extraPorts = append $extraPorts (dict "name" "otlp-http" "port" $.Values.applicationObservability.receivers.otlp.http.port "targetPort" $.Values.applicationObservability.receivers.otlp.http.port "protocol" "TCP") }}
+    {{- end -}}
+  {{- end -}}
+  {{- if $.Values.applicationObservability.receivers.zipkin.enabled }}
+    {{- if eq (include "collectors.has_extra_port" (deepCopy $ | merge (dict "name" $collector "portNumber" $.Values.applicationObservability.receivers.zipkin.port))) "false" }}
+      {{- $extraPorts = append $extraPorts (dict "name" "zipkin" "port" $.Values.applicationObservability.receivers.zipkin.port "targetPort" $.Values.applicationObservability.receivers.zipkin.port "protocol" "TCP") }}
+    {{- end -}}
+  {{- end -}}
+  {{- if $.Values.applicationObservability.receivers.jaeger.grpc.enabled }}
+    {{- if eq (include "collectors.has_extra_port" (deepCopy $ | merge (dict "name" $collector "portNumber" $.Values.applicationObservability.receivers.jaeger.grpc.port))) "false" }}
+      {{- $extraPorts = append $extraPorts (dict "name" "jaeger-grpc" "port" $.Values.applicationObservability.receivers.jaeger.grpc.port "targetPort" $.Values.applicationObservability.receivers.jaeger.grpc.port "protocol" "TCP") }}
+    {{- end -}}
+  {{- end -}}
+  {{- if $.Values.applicationObservability.receivers.jaeger.thriftBinary.enabled }}
+    {{- if eq (include "collectors.has_extra_port" (deepCopy $ | merge (dict "name" $collector "portNumber" $.Values.applicationObservability.receivers.jaeger.thriftBinary.port))) "false" }}
+      {{- $extraPorts = append $extraPorts (dict "name" "jaeger-binary" "port" $.Values.applicationObservability.receivers.jaeger.thriftBinary.port "targetPort" $.Values.applicationObservability.receivers.jaeger.thriftBinary.port "protocol" "TCP") }}
+    {{- end -}}
+  {{- end -}}
+  {{- if $.Values.applicationObservability.receivers.jaeger.thriftCompact.enabled }}
+    {{- if eq (include "collectors.has_extra_port" (deepCopy $ | merge (dict "name" $collector "portNumber" $.Values.applicationObservability.receivers.jaeger.thriftCompact.port))) "false" }}
+      {{- $extraPorts = append $extraPorts (dict "name" "jaeger-compact" "port" $.Values.applicationObservability.receivers.jaeger.thriftCompact.port "targetPort" $.Values.applicationObservability.receivers.jaeger.thriftCompact.port "protocol" "TCP") }}
+    {{- end -}}
+  {{- end -}}
+  {{- if $.Values.applicationObservability.receivers.jaeger.thriftHttp.enabled }}
+    {{- if eq (include "collectors.has_extra_port" (deepCopy $ | merge (dict "name" $collector "portNumber" $.Values.applicationObservability.receivers.jaeger.thriftHttp.port))) "false" }}
+      {{- $extraPorts = append $extraPorts (dict "name" "jaeger-http" "port" $.Values.applicationObservability.receivers.jaeger.thriftHttp.port "targetPort" $.Values.applicationObservability.receivers.jaeger.thriftHttp.port "protocol" "TCP") }}
+    {{- end -}}
+  {{- end -}}
+
+  {{- $values = $values | merge (dict $collector (dict "alloy" (dict "extraPorts" $extraPorts))) }}
+{{- end -}}
+{{- $values | toYaml }}
+{{- end -}}
+{{- end -}}
+
 {{- define "features.applicationObservability.validate" }}
 {{- if .Values.applicationObservability.enabled -}}
 {{- $featureName := "Application Observability" }}
@@ -95,11 +142,11 @@ application_observability "feature" {
 
 {{- define "features.applicationObservability.receiver.grpc" }}
   {{- if and .Values.applicationObservability.enabled .Values.applicationObservability.receivers.otlp.grpc.enabled }}
-http://{{ include "alloy.fullname" (index .Subcharts .Values.applicationObservability.collector) }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.applicationObservability.receivers.otlp.grpc.port }}
+http://{{ include "collector.alloy.fullname" (deepCopy $ | merge (dict "collectorName" .Values.applicationObservability.collector)) }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.applicationObservability.receivers.otlp.grpc.port }}
   {{- end }}
 {{- end }}
 {{- define "features.applicationObservability.receiver.http" }}
   {{- if and .Values.applicationObservability.enabled .Values.applicationObservability.receivers.otlp.http.enabled }}
-http://{{ include "alloy.fullname" (index .Subcharts .Values.applicationObservability.collector) }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.applicationObservability.receivers.otlp.http.port }}
+http://{{ include "collector.alloy.fullname" (deepCopy $ | merge (dict "collectorName" .Values.applicationObservability.collector)) }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.applicationObservability.receivers.otlp.http.port }}
   {{- end }}
 {{- end }}

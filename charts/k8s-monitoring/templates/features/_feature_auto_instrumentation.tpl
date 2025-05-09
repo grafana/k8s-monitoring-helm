@@ -37,6 +37,8 @@ auto_instrumentation "feature" {
 {{- $isTranslating -}}
 {{- end -}}
 
+{{- define "features.autoInstrumentation.collector.values" }}{{- end -}}
+
 {{- define "features.autoInstrumentation.validate" }}
 {{- if .Values.autoInstrumentation.enabled -}}
 {{- $featureName := "Auto-Instrumentation" }}

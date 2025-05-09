@@ -1,0 +1,33 @@
+{{- range $destination := .Values.destinations }}
+{{- if eq $destination.type "otlp" }}
+  {{- $isSamplingEnabled := include "destinations.otlp.isTailSamplingEnabled" $destination }}
+  {{- if eq $isSamplingEnabled "true" }}
+
+    {{- $defaultValues := "destinations/otlp-values.yaml" | $.Files.Get | fromYaml }}
+    {{- $destination = mergeOverwrite $defaultValues $destination }}
+    {{- $destinationTarget := include "destinations.otlp.alloy.exporter.target" $destination }}
+
+    {{- $samplerConfig := merge (dict "traces" $destinationTarget "name" "tail_sampler") $destination.processors.tailSampling}}
+    {{- $samplerTarget := include "sampler.processor.tailSampling.alloy.target" $samplerConfig }}
+
+    {{- $receiverConfig := (dict "traces" $samplerTarget "name" "sampler_receiver") }}
+
+    {{- $alloyConfig := "" }}
+    {{- $alloyConfig = cat $alloyConfig ((include "sampler.receiver.otlp.alloy" $receiverConfig) | trim | nindent 0) }}
+    {{- $alloyConfig = cat $alloyConfig ((include "sampler.processor.tailSampling.alloy" $samplerConfig) | trim | nindent 0) }}
+    {{- $alloyConfig = cat $alloyConfig ((include "destinations.otlp.alloy.exporter" $destination) | trim | nindent 0) }}
+    {{- $alloyConfig = regexReplaceAll `[ \t]+(\r?\n)` $alloyConfig "\n" }}
+
+    {{- $alloySpec := dict "alloy" (dict "configMap" (dict "create" true "content" $alloyConfig)) }}
+    {{- $alloy := merge $alloySpec $destination.processors.tailSampling.collector }}
+---
+apiVersion: collectors.grafana.com/v1alpha1
+kind: Alloy
+metadata:
+  name: {{ include "helper.k8s_name" (printf "%s-%s-sampler" $.Release.Name $destination.name) }}
+  namespace: {{ $.Release.Namespace }}
+spec:
+  {{- $alloy | toYaml | nindent 2 }}
+{{- end }}
+{{- end }}
+{{- end }}

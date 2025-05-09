@@ -20,6 +20,7 @@
 {{- end }}
 {{- end }}
 
+{{- define "features.selfReporting.collector.values" }}{{ end }}
 {{- define "features.selfReporting.validate" }}{{ end }}
 {{- define "features.selfReporting.include" }}
 {{- if eq (include "features.selfReporting.enabled" .) "true" }}
