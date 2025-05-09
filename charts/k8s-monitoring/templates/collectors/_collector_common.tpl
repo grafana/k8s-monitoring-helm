@@ -3,8 +3,8 @@
 {{- define "collectors.logging.alloy" }}
 {{- if or (ne .logging.level "info" ) (ne .logging.format "logfmt") }}
 logging {
-  level  = "{{ .logging.level }}"
-  format = "{{ .logging.format }}"
+level  = "{{ .logging.level }}"
+format = "{{ .logging.format }}"
 }
 {{- end }}
 {{- end }}
@@ -14,7 +14,7 @@ logging {
 {{- define "collectors.liveDebugging.alloy" }}
 {{- if .liveDebugging.enabled }}
 livedebugging {
-  enabled = {{ .liveDebugging.enabled }}
+enabled = {{ .liveDebugging.enabled }}
 }
 {{- end }}
 {{- end }}

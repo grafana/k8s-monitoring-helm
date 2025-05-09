@@ -60,6 +60,7 @@ This defines the options for defining a destination for OpenTelemetry data that 
 | protocol | string | `"grpc"` | The protocol for the OTLP destination. Options are "grpc" (default), "http". |
 | proxyURL | string | `""` | HTTP proxy to send requests through, only when using the `http` protocol. |
 | readBufferSize | string | `""` | Size of the read buffer the gRPC client to use for reading server responses. |
+| retryOnFailure.enabled | bool | `true` | Should failed requests be retried? |
 | retryOnFailure.initialInterval | string | `"5s"` | The initial time to wait before retrying a failed request to the OTLP destination. |
 | retryOnFailure.maxElapsedTime | string | `"5m"` | The maximum amount of time to wait before discarding a failed batch. |
 | retryOnFailure.maxInterval | string | `"30s"` | The maximum time to wait before retrying a failed request to the OTLP destination. |
@@ -110,6 +111,15 @@ This defines the options for defining a destination for OpenTelemetry data that 
 | processors.memoryLimiter.enabled | bool | `false` | Whether to use a memory limiter. |
 | processors.memoryLimiter.limit | string | `"0MiB"` | Maximum amount of memory targeted to be allocated by the process heap. |
 
+### Tail Sampling
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| processors.tailSampling.collector | object | `{"controller":{"replicas":2,"type":"statefulset"}}` | Settings for the Alloy instance that will handle tail sampling. |
+| processors.tailSampling.decisionWait | string | `"15s"` | TODO: Needs a description |
+| processors.tailSampling.enabled | bool | `false` | Apply tail sampling policies to the traces before delivering them to their destination. |
+| processors.tailSampling.policies | list | `[]` | Tail sampling policies apply. |
+
 ### Transform Processor
 
 | Key | Type | Default | Description |
@@ -149,9 +159,3 @@ This defines the options for defining a destination for OpenTelemetry data that 
 | tls.key | string | `""` | The client key for the server (as a string). |
 | tls.keyFile | string | `""` | The client key for the server (as a path to a file). |
 | tls.keyFrom | string | `""` | Raw config for accessing the client key. |
-
-### Other Values
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| retryOnFailure.enabled | bool | `true` |  |

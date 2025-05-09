@@ -2,8 +2,8 @@
 {{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
-{{ define "helper.kubernetesName" }}
-{{- . | lower | replace " " "-" | replace "_" "-" -}}
+{{ define "helper.k8s_name" }}
+{{- . | lower | replace " " "-" -}}
 {{ end }}
 
 {{ define "helper.alloy_name" }}
