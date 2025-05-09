@@ -8,11 +8,12 @@ set -eo pipefail
 CLUSTER_NAME=$(yq eval '.cluster.name' values.yaml)
 CURRENT_VERSION="$(yq eval '.version' ../../../../Chart.yaml)"
 IFS='.' read -r major minor patch <<< "${CURRENT_VERSION}"
-if [ "${patch}" -eq 0 ]; then
-  echo "Patch version is 0. This test is not applicable."
-  exit 1
+if [ "${minor}" -eq 0 ]; then
+  echo "Minor version is 0. Testing an in-place upgrade."
+  PREVIOUS_MINOR_RELEASE="${major}.${minor}"
+else
+  PREVIOUS_MINOR_RELEASE="${major}.$((minor - 1))"
 fi
-PREVIOUS_MINOR_RELEASE="^${major}.${minor}"
 
 echo "Installing version ${PREVIOUS_MINOR_RELEASE}..."
 helm upgrade --install k8smon --version "${PREVIOUS_MINOR_RELEASE}" --repo https://grafana.github.io/helm-charts k8s-monitoring -f "${TEST_DIR}/values.yaml" --set "cluster.name=${CLUSTER_NAME}" --set "clusterMetrics.opencost.opencost.exporter.defaultClusterId=${CLUSTER_NAME}" --wait

@@ -13,22 +13,6 @@ metadata:
     app.kubernetes.io/managed-by: Helm
 automountServiceAccountToken: true
 ---
-# Source: k8s-monitoring/charts/autoInstrumentation/charts/beyla/templates/serviceaccount.yaml
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: k8smon-beyla
-  namespace: default
-  labels:
-    helm.sh/chart: beyla-1.7.3
-    app.kubernetes.io/name: beyla
-    app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "2.0.3"
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/part-of: beyla
-    app.kubernetes.io/component: rbac
-automountServiceAccountToken: true
----
 # Source: k8s-monitoring/templates/destination_secret.yaml
 apiVersion: v1
 kind: Secret
@@ -49,55 +33,296 @@ metadata:
   namespace: default
 data:
   config.alloy: |-
-    // Feature: Auto-Instrumentation
-    declare "auto_instrumentation" {
+    declare "alloy_integration" {
       argument "metrics_destinations" {
         comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
       }
     
-      discovery.kubernetes "beyla_pods" {
-        role = "pod"
-        namespaces {
-          own_namespace = true
+      declare "alloy_integration_discovery" {
+        argument "namespaces" {
+          comment = "The namespaces to look for targets in (default: [] is all namespaces)"
+          optional = true
         }
-        selectors {
+    
+        argument "field_selectors" {
+          comment = "The field selectors to use to find matching targets (default: [])"
+          optional = true
+        }
+    
+        argument "label_selectors" {
+          comment = "The label selectors to use to find matching targets (default: [\"app.kubernetes.io/name=alloy\"])"
+          optional = true
+        }
+    
+        argument "port_name" {
+          comment = "The of the port to scrape metrics from (default: http-metrics)"
+          optional = true
+        }
+    
+        // Alloy service discovery for all of the pods
+        discovery.kubernetes "alloy_pods" {
           role = "pod"
-          label = "app.kubernetes.io/name=beyla"
+    
+          selectors {
+            role = "pod"
+            field = string.join(coalesce(argument.field_selectors.value, []), ",")
+            label = string.join(coalesce(argument.label_selectors.value, ["app.kubernetes.io/name=alloy"]), ",")
+          }
+    
+          namespaces {
+            names = coalesce(argument.namespaces.value, [])
+          }
+    
+        }
+    
+        // alloy relabelings (pre-scrape)
+        discovery.relabel "alloy_pods" {
+          targets = discovery.kubernetes.alloy_pods.targets
+    
+          // keep only the specified metrics port name, and pods that are Running and ready
+          rule {
+            source_labels = [
+              "__meta_kubernetes_pod_container_port_name",
+              "__meta_kubernetes_pod_phase",
+              "__meta_kubernetes_pod_ready",
+              "__meta_kubernetes_pod_container_init",
+            ]
+            separator = "@"
+            regex = coalesce(argument.port_name.value, "metrics") + "@Running@true@false"
+            action = "keep"
+          }
+    
+          rule {
+            source_labels = ["__meta_kubernetes_namespace"]
+            target_label  = "namespace"
+          }
+    
+          rule {
+            source_labels = ["__meta_kubernetes_pod_name"]
+            target_label  = "pod"
+          }
+    
+          rule {
+            source_labels = ["__meta_kubernetes_pod_container_name"]
+            target_label  = "container"
+          }
+    
+          // set the workload to the controller kind and name
+          rule {
+            action = "lowercase"
+            source_labels = ["__meta_kubernetes_pod_controller_kind"]
+            target_label  = "workload_type"
+          }
+    
+          rule {
+            source_labels = ["__meta_kubernetes_pod_controller_name"]
+            target_label  = "workload"
+          }
+    
+          // remove the hash from the ReplicaSet
+          rule {
+            source_labels = [
+              "workload_type",
+              "workload",
+            ]
+            separator = "/"
+            regex = "replicaset/(.+)-.+$"
+            target_label  = "workload"
+          }
+    
+          // set the app name if specified as metadata labels "app:" or "app.kubernetes.io/name:" or "k8s-app:"
+          rule {
+            action = "replace"
+            source_labels = [
+              "__meta_kubernetes_pod_label_app_kubernetes_io_name",
+              "__meta_kubernetes_pod_label_k8s_app",
+              "__meta_kubernetes_pod_label_app",
+            ]
+            separator = ";"
+            regex = "^(?:;*)?([^;]+).*$"
+            replacement = "$1"
+            target_label = "app"
+          }
+    
+          // set the component if specified as metadata labels "component:" or "app.kubernetes.io/component:" or "k8s-component:"
+          rule {
+            action = "replace"
+            source_labels = [
+              "__meta_kubernetes_pod_label_app_kubernetes_io_component",
+              "__meta_kubernetes_pod_label_k8s_component",
+              "__meta_kubernetes_pod_label_component",
+            ]
+            regex = "^(?:;*)?([^;]+).*$"
+            replacement = "$1"
+            target_label = "component"
+          }
+    
+          // set a source label
+          rule {
+            action = "replace"
+            replacement = "kubernetes"
+            target_label = "source"
+          }
+    
+        }
+    
+        export "output" {
+          value = discovery.relabel.alloy_pods.output
         }
       }
     
-      discovery.relabel "beyla_pods" {
-        targets = discovery.kubernetes.beyla_pods.targets
-        rule {
-          source_labels = ["__meta_kubernetes_pod_node_name"]
-          action = "replace"
-          target_label = "instance"
+      declare "alloy_integration_scrape" {
+        argument "targets" {
+          comment = "Must be a list() of targets"
+        }
+    
+        argument "forward_to" {
+          comment = "Must be a list(MetricsReceiver) where collected metrics should be forwarded to"
+        }
+    
+        argument "job_label" {
+          comment = "The job label to add for all Alloy metrics (default: integrations/alloy)"
+          optional = true
+        }
+    
+        argument "keep_metrics" {
+          comment = "A regular expression of metrics to keep (default: see below)"
+          optional = true
+        }
+    
+        argument "drop_metrics" {
+          comment = "A regular expression of metrics to drop (default: see below)"
+          optional = true
+        }
+    
+        argument "scrape_interval" {
+          comment = "How often to scrape metrics from the targets (default: 60s)"
+          optional = true
+        }
+    
+        argument "max_cache_size" {
+          comment = "The maximum number of elements to hold in the relabeling cache (default: 100000).  This should be at least 2x-5x your largest scrape target or samples appended rate."
+          optional = true
+        }
+    
+        argument "clustering" {
+          comment = "Whether or not clustering should be enabled (default: false)"
+          optional = true
+        }
+    
+        prometheus.scrape "alloy" {
+          job_name = coalesce(argument.job_label.value, "integrations/alloy")
+          forward_to = [prometheus.relabel.alloy.receiver]
+          targets = argument.targets.value
+          scrape_interval = coalesce(argument.scrape_interval.value, "60s")
+    
+          clustering {
+            enabled = coalesce(argument.clustering.value, false)
+          }
+        }
+    
+        // alloy metric relabelings (post-scrape)
+        prometheus.relabel "alloy" {
+          forward_to = argument.forward_to.value
+          max_cache_size = coalesce(argument.max_cache_size.value, 100000)
+    
+          // drop metrics that match the drop_metrics regex
+          rule {
+            source_labels = ["__name__"]
+            regex = coalesce(argument.drop_metrics.value, "")
+            action = "drop"
+          }
+    
+          // keep only metrics that match the keep_metrics regex
+          rule {
+            source_labels = ["__name__"]
+            regex = coalesce(argument.keep_metrics.value, ".*")
+            action = "keep"
+          }
+    
+          // remove the component_id label from any metric that starts with log_bytes or log_lines, these are custom metrics that are generated
+          // as part of the log annotation modules in this repo
+          rule {
+            action = "replace"
+            source_labels = ["__name__"]
+            regex = "^log_(bytes|lines).+"
+            replacement = ""
+            target_label = "component_id"
+          }
+    
+          // set the namespace label to that of the exported_namespace
+          rule {
+            action = "replace"
+            source_labels = ["__name__", "exported_namespace"]
+            separator = "@"
+            regex = "^log_(bytes|lines).+@(.+)"
+            replacement = "$2"
+            target_label = "namespace"
+          }
+    
+          // set the pod label to that of the exported_pod
+          rule {
+            action = "replace"
+            source_labels = ["__name__", "exported_pod"]
+            separator = "@"
+            regex = "^log_(bytes|lines).+@(.+)"
+            replacement = "$2"
+            target_label = "pod"
+          }
+    
+          // set the container label to that of the exported_container
+          rule {
+            action = "replace"
+            source_labels = ["__name__", "exported_container"]
+            separator = "@"
+            regex = "^log_(bytes|lines).+@(.+)"
+            replacement = "$2"
+            target_label = "container"
+          }
+    
+          // set the job label to that of the exported_job
+          rule {
+            action = "replace"
+            source_labels = ["__name__", "exported_job"]
+            separator = "@"
+            regex = "^log_(bytes|lines).+@(.+)"
+            replacement = "$2"
+            target_label = "job"
+          }
+    
+          // set the instance label to that of the exported_instance
+          rule {
+            action = "replace"
+            source_labels = ["__name__", "exported_instance"]
+            separator = "@"
+            regex = "^log_(bytes|lines).+@(.+)"
+            replacement = "$2"
+            target_label = "instance"
+          }
+    
+          rule {
+            action = "labeldrop"
+            regex = "exported_(namespace|pod|container|job|instance)"
+          }
         }
       }
     
-      prometheus.scrape "beyla_applications" {
-        targets         = discovery.relabel.beyla_pods.output
-        honor_labels    = true
+      alloy_integration_discovery "alloy_sampler" {
+        port_name = "http-metrics"
+        label_selectors = ["app.kubernetes.io/instance=k8smon-localtempo-sampler"]
+      }
+    
+      alloy_integration_scrape  "alloy_sampler" {
+        targets = alloy_integration_discovery.alloy_sampler.output
+        job_label = "integrations/alloy"
+        clustering = true
+        keep_metrics = "up|scrape_samples_scraped|alloy_build_info|alloy_component_controller_running_components|alloy_component_dependencies_wait_seconds|alloy_component_dependencies_wait_seconds_bucket|alloy_component_evaluation_seconds|alloy_component_evaluation_seconds_bucket|alloy_component_evaluation_seconds_count|alloy_component_evaluation_seconds_sum|alloy_component_evaluation_slow_seconds|alloy_config_hash|alloy_resources_machine_rx_bytes_total|alloy_resources_machine_tx_bytes_total|alloy_resources_process_cpu_seconds_total|alloy_resources_process_resident_memory_bytes|alloy_tcp_connections|alloy_wal_samples_appended_total|alloy_wal_storage_active_series|cluster_node_gossip_health_score|cluster_node_gossip_proto_version|cluster_node_gossip_received_events_total|cluster_node_info|cluster_node_lamport_time|cluster_node_peers|cluster_node_update_observers|cluster_transport_rx_bytes_total|cluster_transport_rx_packet_queue_length|cluster_transport_rx_packets_failed_total|cluster_transport_rx_packets_total|cluster_transport_stream_rx_bytes_total|cluster_transport_stream_rx_packets_failed_total|cluster_transport_stream_rx_packets_total|cluster_transport_stream_tx_bytes_total|cluster_transport_stream_tx_packets_failed_total|cluster_transport_stream_tx_packets_total|cluster_transport_streams|cluster_transport_tx_bytes_total|cluster_transport_tx_packet_queue_length|cluster_transport_tx_packets_failed_total|cluster_transport_tx_packets_total|otelcol_exporter_send_failed_spans_total|otelcol_exporter_sent_spans_total|go_gc_duration_seconds_count|go_goroutines|go_memstats_heap_inuse_bytes|loki_process_dropped_lines_total|loki_write_batch_retries_total|loki_write_dropped_bytes_total|loki_write_dropped_entries_total|loki_write_encoded_bytes_total|loki_write_mutated_bytes_total|loki_write_mutated_entries_total|loki_write_request_duration_seconds_bucket|loki_write_sent_bytes_total|loki_write_sent_entries_total|process_cpu_seconds_total|process_start_time_seconds|otelcol_processor_batch_batch_send_size_bucket|otelcol_processor_batch_metadata_cardinality|otelcol_processor_batch_timeout_trigger_send_total|prometheus_remote_storage_bytes_total|prometheus_remote_storage_enqueue_retries_total|prometheus_remote_storage_highest_timestamp_in_seconds|prometheus_remote_storage_metadata_bytes_total|prometheus_remote_storage_queue_highest_sent_timestamp_seconds|prometheus_remote_storage_samples_dropped_total|prometheus_remote_storage_samples_failed_total|prometheus_remote_storage_samples_pending|prometheus_remote_storage_samples_retried_total|prometheus_remote_storage_samples_total|prometheus_remote_storage_sent_batch_duration_seconds_bucket|prometheus_remote_storage_sent_batch_duration_seconds_count|prometheus_remote_storage_sent_batch_duration_seconds_sum|prometheus_remote_storage_shard_capacity|prometheus_remote_storage_shards|prometheus_remote_storage_shards_desired|prometheus_remote_storage_shards_max|prometheus_remote_storage_shards_min|prometheus_remote_storage_succeeded_samples_total|prometheus_remote_write_wal_samples_appended_total|prometheus_remote_write_wal_storage_active_series|prometheus_sd_discovered_targets|prometheus_target_interval_length_seconds_count|prometheus_target_interval_length_seconds_sum|prometheus_target_scrapes_exceeded_sample_limit_total|prometheus_target_scrapes_sample_duplicate_timestamp_total|prometheus_target_scrapes_sample_out_of_bounds_total|prometheus_target_scrapes_sample_out_of_order_total|prometheus_target_sync_length_seconds_sum|prometheus_wal_watcher_current_segment|otelcol_receiver_accepted_spans_total|otelcol_receiver_refused_spans_total|rpc_server_duration_milliseconds_bucket|scrape_duration_seconds|traces_exporter_send_failed_spans|traces_exporter_send_failed_spans_total|traces_exporter_sent_spans|traces_exporter_sent_spans_total|traces_loadbalancer_backend_outcome|traces_loadbalancer_num_backends|traces_receiver_accepted_spans|traces_receiver_accepted_spans_total|traces_receiver_refused_spans|traces_receiver_refused_spans_total|otelcol_processor_tail_sampling.*"
         scrape_interval = "60s"
-        clustering {
-          enabled = true
-        }
-        forward_to = argument.metrics_destinations.value
-      }
-    
-      prometheus.scrape "beyla_internal" {
-        targets         = discovery.relabel.beyla_pods.output
-        metrics_path    = "/internal/metrics"
-        job_name        = "integrations/beyla"
-        honor_labels    = true
-        scrape_interval = "60s"
-        clustering {
-          enabled = true
-        }
+        max_cache_size = 100000
         forward_to = argument.metrics_destinations.value
       }
     }
-    auto_instrumentation "feature" {
+    alloy_integration "integration" {
       metrics_destinations = [
         prometheus.remote_write.localprometheus.receiver,
       ]
@@ -145,9 +370,7 @@ data:
       ]
     }
     
-    livedebugging {
-    enabled = true
-    }
+    
     
     
     // Destination: localPrometheus (prometheus)
@@ -181,13 +404,13 @@ data:
         write_relabel_config {
           source_labels = ["cluster"]
           regex = ""
-          replacement = "auto-instrumentation-test"
+          replacement = "tail-sampling-test"
           target_label = "cluster"
         }
         write_relabel_config {
           source_labels = ["k8s_cluster_name"]
           regex = ""
-          replacement = "auto-instrumentation-test"
+          replacement = "tail-sampling-test"
           target_label = "k8s_cluster_name"
         }
       }
@@ -207,7 +430,7 @@ data:
     # HELP grafana_kubernetes_monitoring_feature_info A metric to report the enabled features of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_feature_info gauge
     grafana_kubernetes_monitoring_feature_info{feature="applicationObservability", protocols="otlpgrpc", version="1.0.0"} 1
-    grafana_kubernetes_monitoring_feature_info{feature="autoInstrumentation", version="1.0.0"} 1
+    grafana_kubernetes_monitoring_feature_info{feature="integrations", sources="alloy", version="1.0.0"} 1
 ---
 # Source: k8s-monitoring/templates/alloy-config.yaml
 apiVersion: v1
@@ -382,13 +605,13 @@ data:
         write_relabel_config {
           source_labels = ["cluster"]
           regex = ""
-          replacement = "auto-instrumentation-test"
+          replacement = "tail-sampling-test"
           target_label = "cluster"
         }
         write_relabel_config {
           source_labels = ["k8s_cluster_name"]
           regex = ""
-          replacement = "auto-instrumentation-test"
+          replacement = "tail-sampling-test"
           target_label = "k8s_cluster_name"
         }
       }
@@ -420,8 +643,8 @@ data:
         max_backoff_retries = "10"
       }
       external_labels = {
-        "cluster" = "auto-instrumentation-test",
-        "k8s_cluster_name" = "auto-instrumentation-test",
+        "cluster" = "tail-sampling-test",
+        "k8s_cluster_name" = "tail-sampling-test",
       }
     }
     
@@ -444,13 +667,30 @@ data:
       trace_statements {
         context = "resource"
         statements = [
-          `set(attributes["cluster"], "auto-instrumentation-test")`,
-          `set(attributes["k8s.cluster.name"], "auto-instrumentation-test")`,
+          `set(attributes["cluster"], "tail-sampling-test")`,
+          `set(attributes["k8s.cluster.name"], "tail-sampling-test")`,
         ]
       }
     
       output {
-        traces = [otelcol.processor.batch.localtempo.input]
+        traces = [otelcol.exporter.loadbalancing.localtempo.input]
+      }
+    }
+    
+    otelcol.exporter.loadbalancing "localtempo" {
+      resolver {
+        kubernetes {
+          service = "k8smon-localtempo-sampler-alloy"
+        }
+      }
+      protocol {
+        otlp {
+          client {
+            tls {
+              insecure = true
+            }
+          }
+        }
       }
     }
     
@@ -479,52 +719,6 @@ data:
         max_elapsed_time = "5m"
       }
     }
----
-# Source: k8s-monitoring/templates/beyla-config.yaml
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: k8smon-beyla
-  namespace: default
-  labels:
-    helm.sh/chart: beyla-1.7.3
-    app.kubernetes.io/name: beyla
-    app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "2.0.3"
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/part-of: beyla
-    app.kubernetes.io/component: config
-data:
-  beyla-config.yml: |-
-    attributes:
-      kubernetes:
-        cluster_name: auto-instrumentation-test
-        enable: true
-    discovery:
-      exclude_services:
-      - exe_path: .*alloy.*|.*otelcol.*|.*beyla.*
-      services:
-      - k8s_namespace: .
-    filter:
-      network:
-        k8s_dst_owner_name:
-          not_match: '{kube*,*jaeger-agent*,*prometheus*,*promtail*,*grafana-agent*}'
-        k8s_src_owner_name:
-          not_match: '{kube*,*jaeger-agent*,*prometheus*,*promtail*,*grafana-agent*}'
-    internal_metrics:
-      prometheus:
-        path: /internal/metrics
-        port: 9090
-    otel_traces_export:
-      endpoint: http://k8smon-alloy-receiver.default.svc.cluster.local:4317
-    prometheus_export:
-      features:
-      - application
-      - network
-      - application_service_graph
-      - application_span
-      path: /metrics
-      port: 9090
 ---
 # Source: k8s-monitoring/charts/alloy-operator/templates/rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -649,27 +843,6 @@ rules:
     verbs:
       - '*'
 ---
-# Source: k8s-monitoring/charts/autoInstrumentation/charts/beyla/templates/cluster-role.yaml
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: k8smon-beyla
-  labels:
-    helm.sh/chart: beyla-1.7.3
-    app.kubernetes.io/name: beyla
-    app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "2.0.3"
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/part-of: beyla
-    app.kubernetes.io/component: rbac
-rules:
-  - apiGroups: [ "apps" ]
-    resources: [ "replicasets" ]
-    verbs: [ "list", "watch" ]
-  - apiGroups: [ "" ]
-    resources: [ "pods", "services", "nodes" ]
-    verbs: [ "list", "watch", "get" ]
----
 # Source: k8s-monitoring/charts/alloy-operator/templates/rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -691,28 +864,6 @@ subjects:
   - kind: ServiceAccount
     name: k8smon-alloy-operator
     namespace: default
----
-# Source: k8s-monitoring/charts/autoInstrumentation/charts/beyla/templates/cluster-role-binding.yaml
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: k8smon-beyla
-  labels:
-    helm.sh/chart: beyla-1.7.3
-    app.kubernetes.io/name: beyla
-    app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "2.0.3"
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/part-of: beyla
-    app.kubernetes.io/component: rbac
-subjects:
-  - kind: ServiceAccount
-    name: k8smon-beyla
-    namespace: default
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: k8smon-beyla
 ---
 # Source: k8s-monitoring/charts/alloy-operator/templates/rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -809,70 +960,6 @@ spec:
     app.kubernetes.io/name: alloy-operator
     app.kubernetes.io/instance: k8smon
 ---
-# Source: k8s-monitoring/charts/autoInstrumentation/charts/beyla/templates/daemon-set.yaml
-apiVersion: apps/v1
-kind: DaemonSet
-metadata:
-  name: k8smon-beyla
-  namespace: default
-  labels:
-    helm.sh/chart: beyla-1.7.3
-    app.kubernetes.io/name: beyla
-    app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "2.0.3"
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/part-of: beyla
-    app.kubernetes.io/component: workload
-spec:
-  selector:
-    matchLabels:
-      app.kubernetes.io/name: beyla
-      app.kubernetes.io/instance: k8smon
-  updateStrategy:
-    type: RollingUpdate
-  template:
-    metadata:
-      annotations:
-        checksum/config: 01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b
-        k8s.grafana.com/job: default/beyla
-        k8s.grafana.com/logs.job: integrations/beyla
-      labels:
-        helm.sh/chart: beyla-1.7.3
-        app.kubernetes.io/name: beyla
-        app.kubernetes.io/instance: k8smon
-        app.kubernetes.io/version: "2.0.3"
-        app.kubernetes.io/managed-by: Helm
-        app.kubernetes.io/part-of: beyla
-        app.kubernetes.io/component: workload
-    spec:
-      serviceAccountName: k8smon-beyla
-      hostPID: true
-      containers:
-        - name: beyla
-          image: docker.io/grafana/beyla:2.0.3
-          imagePullPolicy: IfNotPresent
-          securityContext:
-            privileged: true
-          ports:
-          - name: metrics
-            containerPort: 9090
-            protocol: TCP
-          env:
-            - name: BEYLA_CONFIG_PATH
-              value: "/etc/beyla/config/beyla-config.yml"
-          volumeMounts:
-            - mountPath: /etc/beyla/config
-              name: beyla-config
-      nodeSelector:
-        kubernetes.io/os: linux
-      tolerations:
-        - effect: NoSchedule
-          operator: Exists
-      volumes:
-        - name: beyla-config
-          configMap:
-            name: k8smon-beyla
----
 # Source: k8s-monitoring/charts/alloy-operator/templates/deployment.yaml
 apiVersion: apps/v1
 kind: Deployment
@@ -937,6 +1024,71 @@ spec:
               memory: 64Mi
           securityContext:
             runAsNonRoot: true
+---
+# Source: k8s-monitoring/templates/alloy-sampler.yaml
+apiVersion: collectors.grafana.com/v1alpha1
+kind: Alloy
+metadata:
+  name: k8smon-localtempo-sampler
+  namespace: default
+spec:
+  alloy:
+    configMap:
+      content: |2-
+  
+        otelcol.receiver.otlp "sampler_receiver" {
+          grpc {
+            max_recv_msg_size = "4MB"
+          }
+  
+          output {
+            traces = [otelcol.processor.tail_sampling.tail_sampler.input]
+          }
+        }
+        otelcol.processor.tail_sampling "tail_sampler" {
+          // https://grafana.com/docs/alloy/latest/reference/components/otelcol.processor.tail_sampling/
+  
+          decision_wait = "15s"
+  
+          policy {
+            name = "always"
+            type = "always_sample"
+  
+          }
+  
+          output {
+            traces = [otelcol.processor.batch.localtempo.input]
+          }
+        }
+        otelcol.processor.batch "localtempo" {
+          timeout = "2s"
+          send_batch_size = 8192
+          send_batch_max_size = 0
+  
+          output {
+            traces = [otelcol.exporter.otlp.localtempo.input]
+          }
+        }
+        otelcol.exporter.otlp "localtempo" {
+          client {
+            endpoint = "tempo.tempo.svc:4317"
+            tls {
+              insecure = true
+              insecure_skip_verify = true
+            }
+          }
+  
+          retry_on_failure {
+            enabled = true
+            initial_interval = "5s"
+            max_interval = "30s"
+            max_elapsed_time = "5m"
+          }
+        }
+      create: true
+  controller:
+    replicas: 2
+    type: statefulset
 ---
 # Source: k8s-monitoring/templates/alloy.yaml
 apiVersion: collectors.grafana.com/v1alpha1
