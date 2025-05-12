@@ -31,8 +31,8 @@ environment variables.
 
 Another option which will work for all destination types is to use the `HTTP_PROXY`, `HTTPS_PROXY` and/or `NO_PROXY`
 environment variables. For `prometheus`, `loki`, and `pyroscope` destinations, use the `proxy_from_environment` option
-to indicate that the proxy settings should be read from the environment variables. The `otlp` destination with the
-`grpc` protocol can only read the proxy settings from the `HTTPS_PROXY` and/or `NO_PROXY` environment variables.
+to indicate that the proxy settings should be read from the environment variables. When using this method, watch out
+for issues connecting to the Kubernetes API service, or other internal services.
 
 ## Values
 
@@ -72,7 +72,7 @@ destinations:
   - name: otlpgateway
     type: otlp
     protocol: http
-    url: http://otlpgateway.example.com:4317
+    url: https://otlpgateway.example.com:4317
     proxyURL: https://myproxy.default.svc:8080
     tls:
       insecure_skip_verify: true
