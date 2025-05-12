@@ -97,6 +97,29 @@ tests:
                 type: otlp
                 protocol: otlp / http
 
+  - it: detects if you're using a grpc otlp destination with the proxyURL
+    set:
+      cluster:
+        name: test-cluster
+      destinations:
+        - name: my-destination
+          type: otlp
+          url: https://otlp.example.com
+          proxyURL: https://myproxy.default.svc:8080
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            execution error at (k8s-monitoring/templates/validations.yaml:1:4): 
+            Destination #0 (my-destination) does not support proxyURL.
+            When using the gPRC protocol, the proxyURL option is not supported.
+            Please remove the proxyURL field and set the appropriate environment variables on the Alloy instances.
+            Or, change to use the http protocol:
+            destinations:
+              - name: my-destination
+                type: otlp
+                protocol: http
+            For more information, see https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/docs/examples/proxies
+
   - it: detects if you're using the Grafana Cloud OTLP endpoint with the wrong protocol
     set:
       cluster:

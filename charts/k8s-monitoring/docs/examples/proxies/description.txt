@@ -2,8 +2,30 @@
 
 This example shows how to use proxy URLs and TLS settings to modify how to send data to the external services.
 
-For Alloy, the [prometheus.remote_write](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.remote_write/),
-[loki.write](https://grafana.com/docs/alloy/latest/reference/components/loki/loki.write/), and
-[pyroscope.write](https://grafana.com/docs/alloy/latest/reference/components/pyroscope/pyroscope.write/) components all
-support direct setting of a `proxyURL`. The [otelcol.exporter.otlp[http]](https://grafana.com/docs/alloy/latest/reference/components/otelcol/otelcol.exporter.otlp/)
-component does not, but uses the `HTTP_PROXY` and `NO_PROXY` environment variables to set a proxy.
+## Directly setting proxies
+
+Most destinations allow for proxy settings to be set directly on the destination configuration.
+
+```yaml
+- name: prometheus
+  type: prometheus
+  url: http://prometheus.example.com/api/v1/write
+  proxyURL: https://myproxy.default.svc:8080
+  noProxy: settings.example.com
+  proxyConnectHeader:
+    "MYPROXY-HEADER": ["my-proxy-header-value"]
+```
+
+The `prometheus`, `loki`, and `pyroscope` destinations support setting the `proxyURL`, `noProxy`, and
+`proxyConnectHeader` options.
+
+When using the `otlp` destination, the `proxyURL` setting is available if using the `http` protocol. However, if using
+the `grpc` protocol, the `proxyURL` setting is not available. Instead, you can set the `HTTP_PROXY` and `NO_PROXY`
+environment variables.
+
+## Using environment variables
+
+Another option which will work for all destination types is to use the `HTTP_PROXY`, `HTTPS_PROXY` and/or `NO_PROXY`
+environment variables. For `prometheus`, `loki`, and `pyroscope` destinations, use the `proxy_from_environment` option
+to indicate that the proxy settings should be read from the environment variables. The `otlp` destination with the
+`grpc` protocol can only read the proxy settings from the `HTTPS_PROXY` and/or `NO_PROXY` environment variables.
