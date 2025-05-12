@@ -13,6 +13,12 @@ This chart deploys the Cluster Metrics feature of the Kubernetes Observability H
 lists to limit the metrics needed. An allow list is a set of metric names that will be kept, while any metrics
 not on the list will be dropped. With [metrics tuning](#metrics-tuning--allow-lists), you can further customize which metrics are collected.
 
+## Usage
+
+clusterMetrics:
+  enabled: true
+  ... [values](#values)
+
 ## How it works
 
 This chart includes the ability to collect metrics from the following:
@@ -104,10 +110,10 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | Repository | Name | Version |
 |------------|------|---------|
 | https://opencost.github.io/opencost-helm-chart | opencost | 1.43.2 |
-| https://prometheus-community.github.io/helm-charts | kube-state-metrics | 5.33.0 |
+| https://prometheus-community.github.io/helm-charts | kube-state-metrics | 5.33.1 |
 | https://prometheus-community.github.io/helm-charts | node-exporter(prometheus-node-exporter) | 4.46.0 |
 | https://prometheus-community.github.io/helm-charts | windows-exporter(prometheus-windows-exporter) | 0.10.0 |
-| https://sustainable-computing-io.github.io/kepler-helm-chart | kepler | 0.5.17 |
+| https://sustainable-computing-io.github.io/kepler-helm-chart | kepler | 0.5.18 |
 <!-- markdownlint-enable no-bare-urls -->
 
 <!-- markdownlint-disable no-space-in-emphasis -->

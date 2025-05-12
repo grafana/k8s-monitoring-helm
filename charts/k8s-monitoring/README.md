@@ -5,7 +5,7 @@
 
 # k8s-monitoring
 
-![Version: 2.0.27](https://img.shields.io/badge/Version-2.0.27-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 2.0.27](https://img.shields.io/badge/AppVersion-2.0.27-informational?style=flat-square)
+![Version: 2.0.28](https://img.shields.io/badge/Version-2.0.28-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 2.0.28](https://img.shields.io/badge/AppVersion-2.0.28-informational?style=flat-square)
 
 Capture all telemetry data from your Kubernetes cluster.
 
@@ -159,11 +159,11 @@ podLogs:
 |  | podLogs(feature-pod-logs) | 1.0.0 |
 |  | profiling(feature-profiling) | 1.0.0 |
 |  | prometheusOperatorObjects(feature-prometheus-operator-objects) | 1.0.0 |
-| https://grafana.github.io/helm-charts | alloy-metrics(alloy) | 1.0.2 |
-| https://grafana.github.io/helm-charts | alloy-singleton(alloy) | 1.0.2 |
-| https://grafana.github.io/helm-charts | alloy-logs(alloy) | 1.0.2 |
-| https://grafana.github.io/helm-charts | alloy-receiver(alloy) | 1.0.2 |
-| https://grafana.github.io/helm-charts | alloy-profiles(alloy) | 1.0.2 |
+| https://grafana.github.io/helm-charts | alloy-metrics(alloy) | 1.0.3 |
+| https://grafana.github.io/helm-charts | alloy-singleton(alloy) | 1.0.3 |
+| https://grafana.github.io/helm-charts | alloy-logs(alloy) | 1.0.3 |
+| https://grafana.github.io/helm-charts | alloy-receiver(alloy) | 1.0.3 |
+| https://grafana.github.io/helm-charts | alloy-profiles(alloy) | 1.0.3 |
 <!-- markdownlint-enable no-bare-urls -->
 
 ## Values

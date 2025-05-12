@@ -67,7 +67,6 @@ discovery.relabel "filtered_pods" {
     source_labels = [
       "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_name",
       "__meta_kubernetes_pod_label_app_kubernetes_io_name",
-      "__meta_kubernetes_pod_name",
       "__meta_kubernetes_pod_container_name",
     ]
     separator = ";"

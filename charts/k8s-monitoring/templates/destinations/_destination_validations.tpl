@@ -39,6 +39,19 @@
         {{- fail (join "\n" $msg) }}
       {{- end }}
 
+      {{- if and $destination.proxyURL (eq ($destination.protocol | default "grpc") "grpc") }}
+        {{- $msg := list "" (printf "Destination #%d (%s) does not support proxyURL." $i $destination.name) }}
+        {{- $msg = append $msg "When using the gPRC protocol, the proxyURL option is not supported." }}
+        {{- $msg = append $msg "Please remove the proxyURL field and set the appropriate environment variables on the Alloy instances." }}
+        {{- $msg = append $msg "Or, change to use the http protocol:" }}
+        {{- $msg = append $msg "destinations:" }}
+        {{- $msg = append $msg (printf "  - name: %s" $destination.name) }}
+        {{- $msg = append $msg "    type: otlp" }}
+        {{- $msg = append $msg "    protocol: http" }}
+        {{- $msg = append $msg "For more information, see https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/docs/examples/proxies" }}
+        {{- fail (join "\n" $msg) }}
+      {{- end }}
+
       {{/* Check if OTLP destination using Grafana Cloud OTLP gateway has protocol set */}}
       {{- if $destination.url }}
         {{- if and (ne $destination.protocol "http") (regexMatch "otlp-gateway-.+grafana\\.net" $destination.url) }}

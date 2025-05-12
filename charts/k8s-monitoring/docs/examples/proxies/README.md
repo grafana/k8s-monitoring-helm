@@ -6,11 +6,33 @@
 
 This example shows how to use proxy URLs and TLS settings to modify how to send data to the external services.
 
-For Alloy, the [prometheus.remote_write](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.remote_write/),
-[loki.write](https://grafana.com/docs/alloy/latest/reference/components/loki/loki.write/), and
-[pyroscope.write](https://grafana.com/docs/alloy/latest/reference/components/pyroscope/pyroscope.write/) components all
-support direct setting of a `proxyURL`. The [otelcol.exporter.otlp[http]](https://grafana.com/docs/alloy/latest/reference/components/otelcol/otelcol.exporter.otlp/)
-component does not, but uses the `HTTP_PROXY` and `NO_PROXY` environment variables to set a proxy.
+## Directly setting proxies
+
+Most destinations allow for proxy settings to be set directly on the destination configuration.
+
+```yaml
+- name: prometheus
+  type: prometheus
+  url: http://prometheus.example.com/api/v1/write
+  proxyURL: https://myproxy.default.svc:8080
+  noProxy: settings.example.com
+  proxyConnectHeader:
+    "MYPROXY-HEADER": ["my-proxy-header-value"]
+```
+
+The `prometheus`, `loki`, and `pyroscope` destinations support setting the `proxyURL`, `noProxy`, and
+`proxyConnectHeader` options.
+
+When using the `otlp` destination, the `proxyURL` setting is available if using the `http` protocol. However, if using
+the `grpc` protocol, the `proxyURL` setting is not available. Instead, you can set the `HTTP_PROXY` and `NO_PROXY`
+environment variables.
+
+## Using environment variables
+
+Another option which will work for all destination types is to use the `HTTP_PROXY`, `HTTPS_PROXY` and/or `NO_PROXY`
+environment variables. For `prometheus`, `loki`, and `pyroscope` destinations, use the `proxy_from_environment` option
+to indicate that the proxy settings should be read from the environment variables. The `otlp` destination with the
+`grpc` protocol can only read the proxy settings from the `HTTPS_PROXY` and/or `NO_PROXY` environment variables.
 
 ## Values
 
@@ -32,23 +54,35 @@ destinations:
 
   - name: loki
     type: loki
-    url: http://loki.loki.svc:3100/loki/api/v1/push
+    url: http://loki.example.com/loki/api/v1/push
     proxyURL: https://myproxy.default.svc:8080
     tls:
       insecure_skip_verify: true
 
   - name: tempo
     type: otlp
-    url: http://tempo.tempo.svc:4317
+    protocol: grpc
+    url: http://tempo.example.com:4317
     tls:
       insecure_skip_verify: true
     metrics: {enabled: false}
     logs: {enabled: false}
     traces: {enabled: true}
 
+  - name: otlpgateway
+    type: otlp
+    protocol: http
+    url: http://otlpgateway.example.com:4317
+    proxyURL: https://myproxy.default.svc:8080
+    tls:
+      insecure_skip_verify: true
+    metrics: {enabled: true}
+    logs: {enabled: true}
+    traces: {enabled: true}
+
   - name: pyroscope
     type: pyroscope
-    url: http://pyroscope.pyroscope.svc:4040
+    url: http://pyroscope.example.com:4040
     proxyURL: https://myproxy.default.svc:8080
     tls:
       insecure_skip_verify: true
@@ -80,8 +114,10 @@ alloy-logs:
 alloy-receiver:
   enabled: true
   alloy:
+    # The following are required for the OTLP destination using the gRPC protocol.
+    # They are also used for any destination that sets `proxy_from_environment=true`.
     extraEnv:
-      - name: HTTP_PROXY
+      - name: HTTPS_PROXY
         value: https://myproxy.default.svc:8080
       - name: NO_PROXY
         value: kubernetes.default.svc
