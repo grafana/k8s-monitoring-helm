@@ -27,9 +27,9 @@ clusterMetrics:
   enabled: true
   kube-state-metrics:
     tolerations:
-    - key: protected-node
-      effect: NoSchedule
-      operator: Exists
+      - key: protected-node
+        effect: NoSchedule
+        operator: Exists
   node-exporter:
     tolerations:
       - key: protected-node
