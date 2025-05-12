@@ -15,23 +15,35 @@ destinations:
 
   - name: loki
     type: loki
-    url: http://loki.loki.svc:3100/loki/api/v1/push
+    url: http://loki.example.com/loki/api/v1/push
     proxyURL: https://myproxy.default.svc:8080
     tls:
       insecure_skip_verify: true
 
   - name: tempo
     type: otlp
-    url: http://tempo.tempo.svc:4317
+    protocol: grpc
+    url: http://tempo.example.com:4317
     tls:
       insecure_skip_verify: true
     metrics: {enabled: false}
     logs: {enabled: false}
     traces: {enabled: true}
 
+  - name: otlpgateway
+    type: otlp
+    protocol: http
+    url: http://otlpgateway.example.com:4317
+    proxyURL: https://myproxy.default.svc:8080
+    tls:
+      insecure_skip_verify: true
+    metrics: {enabled: true}
+    logs: {enabled: true}
+    traces: {enabled: true}
+
   - name: pyroscope
     type: pyroscope
-    url: http://pyroscope.pyroscope.svc:4040
+    url: http://pyroscope.example.com:4040
     proxyURL: https://myproxy.default.svc:8080
     tls:
       insecure_skip_verify: true
@@ -63,8 +75,10 @@ alloy-logs:
 alloy-receiver:
   enabled: true
   alloy:
+    # The following are required for the OTLP destination using the gRPC protocol.
+    # They are also used for any destination that sets `proxy_from_environment=true`.
     extraEnv:
-      - name: HTTP_PROXY
+      - name: HTTPS_PROXY
         value: https://myproxy.default.svc:8080
       - name: NO_PROXY
         value: kubernetes.default.svc

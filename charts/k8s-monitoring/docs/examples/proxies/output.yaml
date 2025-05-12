@@ -866,7 +866,7 @@ data:
     
     loki.write "loki" {
       endpoint {
-        url = "http://loki.loki.svc:3100/loki/api/v1/push"
+        url = "http://loki.example.com/loki/api/v1/push"
         proxy_url = "https://myproxy.default.svc:8080"
         tls_config {
           insecure_skip_verify = false
@@ -1086,7 +1086,7 @@ data:
     
     loki.write "loki" {
       endpoint {
-        url = "http://loki.loki.svc:3100/loki/api/v1/push"
+        url = "http://loki.example.com/loki/api/v1/push"
         proxy_url = "https://myproxy.default.svc:8080"
         tls_config {
           insecure_skip_verify = false
@@ -1223,93 +1223,20 @@ data:
     }
     application_observability "feature" {
       metrics_destinations = [
-        otelcol.exporter.prometheus.prometheus.input,
+        otelcol.processor.attributes.otlpgateway.input,
       ]
       logs_destinations = [
-        otelcol.exporter.loki.loki.input,
+        otelcol.processor.attributes.otlpgateway.input,
       ]
       traces_destinations = [
         otelcol.processor.attributes.tempo.input,
+        otelcol.processor.attributes.otlpgateway.input,
       ]
     }
     
     
     
     
-    // Destination: prometheus (prometheus)
-    otelcol.exporter.prometheus "prometheus" {
-      add_metric_suffixes = true
-      forward_to = [prometheus.remote_write.prometheus.receiver]
-    }
-    
-    prometheus.remote_write "prometheus" {
-      endpoint {
-        url = "http://prometheus.example.com/api/v1/write"
-        headers = {
-        }
-        proxy_url = "https://myproxy.default.svc:8080"
-        no_proxy = "settings.example.com"
-        proxy_connect_header = {
-          "MYPROXY-HEADER" = ["my-proxy-header-value"],
-        }
-        tls_config {
-          insecure_skip_verify = false
-        }
-        send_native_histograms = false
-    
-        queue_config {
-          capacity = 10000
-          min_shards = 1
-          max_shards = 50
-          max_samples_per_send = 2000
-          batch_send_deadline = "5s"
-          min_backoff = "30ms"
-          max_backoff = "5s"
-          retry_on_http_429 = true
-          sample_age_limit = "0s"
-        }
-    
-        write_relabel_config {
-          source_labels = ["cluster"]
-          regex = ""
-          replacement = "proxies-example-cluster"
-          target_label = "cluster"
-        }
-        write_relabel_config {
-          source_labels = ["k8s_cluster_name"]
-          regex = ""
-          replacement = "proxies-example-cluster"
-          target_label = "k8s_cluster_name"
-        }
-      }
-    
-      wal {
-        truncate_frequency = "2h"
-        min_keepalive_time = "5m"
-        max_keepalive_time = "8h"
-      }
-    }
-    // Destination: loki (loki)
-    otelcol.exporter.loki "loki" {
-      forward_to = [loki.write.loki.receiver]
-    }
-    
-    loki.write "loki" {
-      endpoint {
-        url = "http://loki.loki.svc:3100/loki/api/v1/push"
-        proxy_url = "https://myproxy.default.svc:8080"
-        tls_config {
-          insecure_skip_verify = false
-        }
-        min_backoff_period = "500ms"
-        max_backoff_period = "5m"
-        max_backoff_retries = "10"
-      }
-      external_labels = {
-        "cluster" = "proxies-example-cluster",
-        "k8s_cluster_name" = "proxies-example-cluster",
-      }
-    }
     // Destination: tempo (otlp)
     
     otelcol.processor.attributes "tempo" {
@@ -1345,7 +1272,136 @@ data:
     }
     otelcol.exporter.otlp "tempo" {
       client {
-        endpoint = "http://tempo.tempo.svc:4317"
+        endpoint = "http://tempo.example.com:4317"
+        tls {
+          insecure = false
+          insecure_skip_verify = false
+        }
+      }
+    
+      retry_on_failure {
+        enabled = true
+        initial_interval = "5s"
+        max_interval = "30s"
+        max_elapsed_time = "5m"
+      }
+    }
+    // Destination: otlpgateway (otlp)
+    otelcol.receiver.prometheus "otlpgateway" {
+      output {
+        metrics = [otelcol.processor.attributes.otlpgateway.input]
+      }
+    }
+    otelcol.receiver.loki "otlpgateway" {
+      output {
+        logs = [otelcol.processor.attributes.otlpgateway.input]
+      }
+    }
+    
+    otelcol.processor.attributes "otlpgateway" {
+      output {
+        metrics = [otelcol.processor.transform.otlpgateway.input]
+        logs = [otelcol.processor.transform.otlpgateway.input]
+        traces = [otelcol.processor.transform.otlpgateway.input]
+      }
+    }
+    
+    otelcol.processor.transform "otlpgateway" {
+      error_mode = "ignore"
+      metric_statements {
+        context = "resource"
+        statements = [
+          `set(attributes["cluster"], "proxies-example-cluster")`,
+          `set(attributes["k8s.cluster.name"], "proxies-example-cluster")`,
+        ]
+      }
+    
+      metric_statements {
+        context = "datapoint"
+        statements = [
+          `set(attributes["cluster"], "proxies-example-cluster")`,
+          `set(attributes["k8s.cluster.name"], "proxies-example-cluster")`,
+          `set(resource.attributes["deployment.environment"], attributes["deployment_environment"] ) where resource.attributes["deployment.environment"] == nil and attributes["deployment_environment"] != nil`,
+          `delete_key(attributes, "deployment_environment") where attributes["deployment_environment"] == resource.attributes["deployment.environment"]`,
+          `set(resource.attributes["deployment.environment.name"], attributes["deployment_environment_name"] ) where resource.attributes["deployment.environment.name"] == nil and attributes["deployment_environment_name"] != nil`,
+          `delete_key(attributes, "deployment_environment_name") where attributes["deployment_environment_name"] == resource.attributes["deployment.environment.name"]`,
+          `set(resource.attributes["service.name"], attributes["service_name"] ) where resource.attributes["service.name"] == nil and attributes["service_name"] != nil`,
+          `delete_key(attributes, "service_name") where attributes["service_name"] == resource.attributes["service.name"]`,
+          `set(resource.attributes["service.namespace"], attributes["service_namespace"] ) where resource.attributes["service.namespace"] == nil and attributes["service_namespace"] != nil`,
+          `delete_key(attributes, "service_namespace") where attributes["service_namespace"] == resource.attributes["service.namespace"]`,
+        ]
+      }
+      log_statements {
+        context = "resource"
+        statements = [
+          `set(attributes["cluster"], "proxies-example-cluster")`,
+          `set(attributes["k8s.cluster.name"], "proxies-example-cluster")`,
+        ]
+      }
+    
+      log_statements {
+        context = "log"
+        statements = [
+          `delete_key(attributes, "loki.attribute.labels")`,
+          `delete_key(attributes, "loki.resource.labels")`,
+          `set(resource.attributes["k8s.container.name"], attributes["container"] ) where resource.attributes["k8s.container.name"] == nil and attributes["container"] != nil`,
+          `delete_key(attributes, "container") where attributes["container"] == resource.attributes["k8s.container.name"]`,
+          `set(resource.attributes["k8s.cronjob.name"], attributes["cronjob"] ) where resource.attributes["k8s.cronjob.name"] == nil and attributes["cronjob"] != nil`,
+          `delete_key(attributes, "cronjob") where attributes["cronjob"] == resource.attributes["k8s.cronjob.name"]`,
+          `set(resource.attributes["k8s.daemonset.name"], attributes["daemonset"] ) where resource.attributes["k8s.daemonset.name"] == nil and attributes["daemonset"] != nil`,
+          `delete_key(attributes, "daemonset") where attributes["daemonset"] == resource.attributes["k8s.daemonset.name"]`,
+          `set(resource.attributes["k8s.deployment.name"], attributes["deployment"] ) where resource.attributes["k8s.deployment.name"] == nil and attributes["deployment"] != nil`,
+          `delete_key(attributes, "deployment") where attributes["deployment"] == resource.attributes["k8s.deployment.name"]`,
+          `set(resource.attributes["deployment.environment"], attributes["deployment_environment"] ) where resource.attributes["deployment.environment"] == nil and attributes["deployment_environment"] != nil`,
+          `delete_key(attributes, "deployment_environment") where attributes["deployment_environment"] == resource.attributes["deployment.environment"]`,
+          `set(resource.attributes["deployment.environment.name"], attributes["deployment_environment_name"] ) where resource.attributes["deployment.environment.name"] == nil and attributes["deployment_environment_name"] != nil`,
+          `delete_key(attributes, "deployment_environment_name") where attributes["deployment_environment_name"] == resource.attributes["deployment.environment.name"]`,
+          `set(resource.attributes["k8s.job.name"], attributes["job_name"] ) where resource.attributes["k8s.job.name"] == nil and attributes["job_name"] != nil`,
+          `delete_key(attributes, "job_name") where attributes["job_name"] == resource.attributes["k8s.job.name"]`,
+          `set(resource.attributes["k8s.namespace.name"], attributes["namespace"] ) where resource.attributes["k8s.namespace.name"] == nil and attributes["namespace"] != nil`,
+          `delete_key(attributes, "namespace") where attributes["namespace"] == resource.attributes["k8s.namespace.name"]`,
+          `set(resource.attributes["k8s.pod.name"], attributes["pod"] ) where resource.attributes["k8s.pod.name"] == nil and attributes["pod"] != nil`,
+          `delete_key(attributes, "pod") where attributes["pod"] == resource.attributes["k8s.pod.name"]`,
+          `set(resource.attributes["k8s.replicaset.name"], attributes["replicaset"] ) where resource.attributes["k8s.replicaset.name"] == nil and attributes["replicaset"] != nil`,
+          `delete_key(attributes, "replicaset") where attributes["replicaset"] == resource.attributes["k8s.replicaset.name"]`,
+          `set(resource.attributes["service.name"], attributes["service_name"] ) where resource.attributes["service.name"] == nil and attributes["service_name"] != nil`,
+          `delete_key(attributes, "service_name") where attributes["service_name"] == resource.attributes["service.name"]`,
+          `set(resource.attributes["service.namespace"], attributes["service_namespace"] ) where resource.attributes["service.namespace"] == nil and attributes["service_namespace"] != nil`,
+          `delete_key(attributes, "service_namespace") where attributes["service_namespace"] == resource.attributes["service.namespace"]`,
+          `set(resource.attributes["k8s.statefulset.name"], attributes["statefulset"] ) where resource.attributes["k8s.statefulset.name"] == nil and attributes["statefulset"] != nil`,
+          `delete_key(attributes, "statefulset") where attributes["statefulset"] == resource.attributes["k8s.statefulset.name"]`,
+        ]
+      }
+    
+      trace_statements {
+        context = "resource"
+        statements = [
+          `set(attributes["cluster"], "proxies-example-cluster")`,
+          `set(attributes["k8s.cluster.name"], "proxies-example-cluster")`,
+        ]
+      }
+    
+      output {
+        metrics = [otelcol.processor.batch.otlpgateway.input]
+        logs = [otelcol.processor.batch.otlpgateway.input]
+        traces = [otelcol.processor.batch.otlpgateway.input]
+      }
+    }
+    
+    otelcol.processor.batch "otlpgateway" {
+      timeout = "2s"
+      send_batch_size = 8192
+      send_batch_max_size = 0
+    
+      output {
+        metrics = [otelcol.exporter.otlphttp.otlpgateway.input]
+        logs = [otelcol.exporter.otlphttp.otlpgateway.input]
+        traces = [otelcol.exporter.otlphttp.otlpgateway.input]
+      }
+    }
+    otelcol.exporter.otlphttp "otlpgateway" {
+      client {
+        endpoint = "http://otlpgateway.example.com:4317"
         tls {
           insecure = false
           insecure_skip_verify = false
@@ -2223,7 +2279,7 @@ data:
     // Destination: pyroscope (pyroscope)
     pyroscope.write "pyroscope" {
       endpoint {
-        url = "http://pyroscope.pyroscope.svc:4040"
+        url = "http://pyroscope.example.com:4040"
         headers = {
         }
         proxy_url = "https://myproxy.default.svc:8080"
@@ -3533,7 +3589,7 @@ spec:
                 fieldRef:
                   fieldPath: spec.nodeName
             -
-              name: HTTP_PROXY
+              name: HTTPS_PROXY
               value: https://myproxy.default.svc:8080
             -
               name: NO_PROXY

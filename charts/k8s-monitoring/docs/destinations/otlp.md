@@ -58,6 +58,7 @@ This defines the options for defining a destination for OpenTelemetry data that 
 | extraHeadersFrom | object | `{}` | Extra headers to be set when sending data through a dynamic reference. All values are treated as raw strings and not quoted. |
 | name | string | `""` | The name for this OTLP destination. |
 | protocol | string | `"grpc"` | The protocol for the OTLP destination. Options are "grpc" (default), "http". |
+| proxyURL | string | `""` | HTTP proxy to send requests through, only when using the `http` protocol. |
 | readBufferSize | string | `""` | Size of the read buffer the gRPC client to use for reading server responses. |
 | retryOnFailure.initialInterval | string | `"5s"` | The initial time to wait before retrying a failed request to the OTLP destination. |
 | retryOnFailure.maxElapsedTime | string | `"5m"` | The maximum amount of time to wait before discarding a failed batch. |
