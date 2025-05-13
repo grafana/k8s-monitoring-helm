@@ -35,6 +35,13 @@ spec:
           PROMETHEUS_URL: http://prometheus-server.prometheus.svc:9090/api/v1/query
           TEMPO_URL: http://tempo.tempo.svc:3100/api/search
         queries:
-          # Self reporting metrics
+          # check sampler metrics 
           - query: otelcol_processor_tail_sampling_count_traces_sampled_total{policy="otelcol.processor.tail_sampling.tail_sampler.always", cluster="$CLUSTER"}
             type: promql
+          # query load balancer backends
+          - query: otelcol_loadbalancer_num_backends{component_id="otelcol.exporter.loadbalancing.localtempo", cluster="$CLUSTER"}
+            type: promql
+            expect:
+              value: 2
+              operator: ==
+
