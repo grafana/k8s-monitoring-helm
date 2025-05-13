@@ -11,6 +11,17 @@ Capture all telemetry data from your Kubernetes cluster.
 
 ## Usage
 
+### Upgrading from v2.0
+
+v2.1 introduces the use of the [Alloy Operator](https://github.com/grafana/alloy-operator) to manage the creation and
+lifecycle of Alloy instances. When upgrading from v2.0 to v2.1 or later, you may need to install the Alloy CRD.
+
+To do this, run the following command:
+
+```shell
+kubectl apply -f https://github.com/grafana/alloy-operator/releases/latest/download/collectors.grafana.com_alloy.yaml
+```
+
 ### Migrating from v1
 
 v2 introduces some significant changes to the chart configuration values. Refer to the migration [documentation](./docs/Migration.md) for tools and strategies to migrate from v1.

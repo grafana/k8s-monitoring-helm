@@ -26,6 +26,7 @@ You can define a list of units to filter logs from. By default, the feature will
 
 ```yaml
 nodeLogs:
+  enabled: true
   journal:
     units:
       - kubelet.service

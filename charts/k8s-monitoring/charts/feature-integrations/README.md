@@ -23,12 +23,13 @@ The current integrations that are available from this feature are:
 To enable an integration, create an instance of it with any configuration to aid in service discovery. For example:
 
 ```yaml
-cert-manager:
-  instances:
-    - name: cert-manager
-      namespace: kube-system
-      labelSelectors:
-        app.kubernetes.io/name: cert-manager
+integrations:
+  cert-manager:
+    instances:
+      - name: cert-manager
+        namespace: kube-system
+        labelSelectors:
+          app.kubernetes.io/name: cert-manager
 ```
 
 You can specify multiple instances of the same integration to match multiple instances of that service. For example:
