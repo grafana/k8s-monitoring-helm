@@ -19,9 +19,10 @@ Operator objects. Currently, this feature supports the following objects:
 
 ## Usage
 
+```yaml
 prometheusOperatorObjects:
   enabled: true
-  ... [values](#values)
+```
 
 ## Testing
 

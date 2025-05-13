@@ -12,9 +12,10 @@ The Pod Logs feature enables the collection of logs from Kubernetes Pods on the 
 
 ## Usage
 
+```yaml
 podLogs:
   enabled: true
-  ... [values](#values)
+```
 
 ## Testing
 
