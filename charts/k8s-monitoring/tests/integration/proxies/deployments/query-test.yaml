@@ -28,20 +28,36 @@ spec:
   dependsOn:
     - name: prometheus
       namespace: prometheus
-    - name: tempo
-      namespace: tempo
   values:
     tests:
       - env:
-          CLUSTER: application-observability-test
+          CLUSTER: proxies-test
           PROMETHEUS_URL: http://prometheus-server.prometheus.svc:9090/api/v1/query
+          LOKI_URL: http://loki.loki.svc:3100/loki/api/v1/query
+          LOKI_TENANTID: 1
+          LOKI_USER: loki
+          LOKI_PASS: lokipassword
           TEMPO_URL: http://tempo.tempo.svc:3100/api/search
+
         queries:
-          # Self reporting metrics
-          - query: grafana_kubernetes_monitoring_build_info{cluster="$CLUSTER"}
+          # Cert Manager metrics
+          - query: alloy_build_info{cluster="$CLUSTER"}
             type: promql
-          - query: grafana_kubernetes_monitoring_feature_info{cluster="$CLUSTER", feature="applicationObservability"}
+
+          # DPM check
+          - query: avg(count_over_time(scrape_samples_scraped{cluster="$CLUSTER"}[1m]))
             type: promql
+            expect:
+              value: 1
+              operator: ==
+
+          # Cluster events
+          - query: count_over_time({cluster="$CLUSTER", job="integrations/kubernetes/eventhandler"}[1h])
+            type: logql
+
+          # Pod logs
+          - query: count_over_time({cluster="$CLUSTER", job!="integrations/kubernetes/eventhandler"}[1h])
+            type: logql
 
           # Traces
           - query: "{resource.cluster=\"$CLUSTER\" && resource.k8s.deployment.name=\"alloy-app\"}"

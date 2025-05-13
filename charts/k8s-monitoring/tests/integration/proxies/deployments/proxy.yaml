@@ -1,0 +1,225 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: proxy
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: proxy-config
+  namespace: proxy
+data:
+  tinyproxy.conf: |-
+    ##
+    ## tinyproxy.conf -- tinyproxy daemon configuration file
+    ##
+    ## This example tinyproxy.conf file contains example settings
+    ## with explanations in comments. For decriptions of all
+    ## parameters, see the tinproxy.conf(5) manual page.
+    ##
+
+    #
+    # User/Group: This allows you to set the user and group that will be
+    # used for tinyproxy after the initial binding to the port has been done
+    # as the root user. Either the user or group name or the UID or GID
+    # number may be used.
+    #
+    User nobody
+    Group nogroup
+
+    #
+    # Port: Specify the port which tinyproxy will listen on.  Please note
+    # that should you choose to run on a port lower than 1024 you will need
+    # to start tinyproxy using root.
+    #
+    Port 8888
+
+    #
+    # Listen: If you have multiple interfaces this allows you to bind to
+    # only one. If this is commented out, tinyproxy will bind to all
+    # interfaces present.
+    #
+    #Listen 192.168.0.1
+
+    #
+    # Bind: This allows you to specify which interface will be used for
+    # outgoing connections.  This is useful for multi-home'd machines where
+    # you want all traffic to appear outgoing from one particular interface.
+    #
+    #Bind 192.168.0.1
+
+    #
+    # BindSame: If enabled, tinyproxy will bind the outgoing connection to the
+    # ip address of the incoming connection.
+    #
+    #BindSame yes
+
+    #
+    # Timeout: The maximum number of seconds of inactivity a connection is
+    # allowed to have before it is closed by tinyproxy.
+    #
+    Timeout 600
+
+    #
+    # ErrorFile: Defines the HTML file to send when a given HTTP error
+    # occurs.  You will probably need to customize the location to your
+    # particular install.  The usual locations to check are:
+    #   /usr/local/share/tinyproxy
+    #   /usr/share/tinyproxy
+    #   /etc/tinyproxy
+    #
+    #ErrorFile 404 "@pkgdatadir@/404.html"
+    #ErrorFile 400 "@pkgdatadir@/400.html"
+    #ErrorFile 503 "@pkgdatadir@/503.html"
+    #ErrorFile 403 "@pkgdatadir@/403.html"
+    #ErrorFile 408 "@pkgdatadir@/408.html"
+
+    #
+    # DefaultErrorFile: The HTML file that gets sent if there is no
+    # HTML file defined with an ErrorFile keyword for the HTTP error
+    # that has occurred.
+    #
+    DefaultErrorFile "@pkgdatadir@/default.html"
+
+    #
+    # StatHost: This configures the host name or IP address that is treated
+    # as the stat host: Whenever a request for this host is received,
+    # Tinyproxy will return an internal statistics page instead of
+    # forwarding the request to that host.  The default value of StatHost is
+    # @TINYPROXY_STATHOST@.
+    #
+    #StatHost "@TINYPROXY_STATHOST@"
+    #
+
+    #
+    # StatFile: The HTML file that gets sent when a request is made
+    # for the stathost.  If this file doesn't exist a basic page is
+    # hardcoded in tinyproxy.
+    #
+    StatFile "@pkgdatadir@/stats.html"
+
+    #
+    # LogLevel: Warning
+    #
+    # Set the logging level. Allowed settings are:
+    #	Critical	(least verbose)
+    #	Error
+    #	Warning
+    #	Notice
+    #	Connect		(to log connections without Info's noise)
+    #	Info		(most verbose)
+    #
+    # The LogLevel logs from the set level and above. For example, if the
+    # LogLevel was set to Warning, then all log messages from Warning to
+    # Critical would be output, but Notice and below would be suppressed.
+    #
+    LogLevel Info
+
+    #
+    # MaxClients: This is the absolute highest number of threads which will
+    # be created. In other words, only MaxClients number of clients can be
+    # connected at the same time.
+    #
+    MaxClients 1024
+
+    #
+    # Allow: Customization of authorization controls. If there are any
+    # access control keywords then the default action is to DENY. Otherwise,
+    # the default action is ALLOW.
+    #
+    # The order of the controls are important. All incoming connections are
+    # tested against the controls based on order.
+    #
+    #Allow 127.0.0.1
+    #Allow ::1
+
+    #
+    # AddHeader: Adds the specified headers to outgoing HTTP requests that
+    # Tinyproxy makes. Note that this option will not work for HTTPS
+    # traffic, as Tinyproxy has no control over what headers are exchanged.
+    #
+    #AddHeader "X-My-Header" "Powered by Tinyproxy"
+
+    #
+    # ViaProxyName: The "Via" header is required by the HTTP RFC, but using
+    # the real host name is a security concern.  If the following directive
+    # is enabled, the string supplied will be used as the host name in the
+    # Via header; otherwise, the server's host name will be used.
+    #
+    ViaProxyName "tinyproxy"
+
+    #
+    # DisableViaHeader: When this is set to yes, Tinyproxy does NOT add
+    # the Via header to the requests. This virtually puts Tinyproxy into
+    # stealth mode. Note that RFC 2616 requires proxies to set the Via
+    # header, so by enabling this option, you break compliance.
+    # Don't disable the Via header unless you know what you are doing...
+    #
+    DisableViaHeader Yes
+
+    #
+    # Filter: This allows you to specify the location of the filter file.
+    #
+    Filter "/etc/tinyproxy/filter"
+
+    #
+    # FilterDefaultDeny: Change the default policy of the filtering system.
+    # If this directive is commented out, or is set to "No" then the default
+    # policy is to allow everything which is not specifically denied by the
+    # filter file.
+    #
+    # However, by setting this directive to "Yes" the default policy becomes
+    # to deny everything which is _not_ specifically allowed by the filter
+    # file.
+    #
+    FilterDefaultDeny Yes
+  filter: |-
+    loki\.svc
+    prometheus\.svc
+    tempo\.svc
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: proxy-server
+  namespace: proxy
+  labels:
+    app: proxy-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: proxy-server
+  template:
+    metadata:
+      labels:
+        app: proxy-server
+    spec:
+      containers:
+        - name: proxy-server
+          image: vimagick/tinyproxy@sha256:72b441b95ee1e641af948f68f09492f9f795ead72b73954414e339168c98ad8c
+          ports:
+            - containerPort: 8888
+          volumeMounts:
+            - name: config
+              mountPath: /etc/tinyproxy
+      volumes:
+        - name: config
+          configMap:
+            name: proxy-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: proxy-server
+  namespace: proxy
+  labels:
+    app: proxy-server
+spec:
+  selector:
+    app: proxy-server
+  ports:
+    - protocol: TCP
+      port: 8888
+      targetPort: 8888

@@ -372,6 +372,9 @@ otelcol.exporter.otlphttp {{ include "helper.alloy_name" .name | quote }} {
 {{- else }}
     endpoint = {{ .url | quote }}
 {{- end }}
+{{- if .proxyURL }}
+    proxy_url = {{ .proxyURL | quote }}
+{{- end }}
 {{- if eq .auth.type "basic" }}
     auth = otelcol.auth.basic.{{ include "helper.alloy_name" .name }}.handler
 {{- else if eq .auth.type "bearerToken" }}

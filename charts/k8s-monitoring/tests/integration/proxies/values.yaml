@@ -1,0 +1,80 @@
+---
+cluster:
+  name: proxies-test
+
+destinations:
+  - name: localPrometheus
+    type: prometheus
+    url: http://prometheus-server.prometheus.svc:9090/api/v1/write
+    proxyURL: http://proxy-server.proxy.svc:8888
+    tls:
+      insecureSkipVerify: true
+
+  - name: localLoki
+    type: loki
+    url: http://loki.loki.svc:3100/loki/api/v1/push
+    proxyURL: http://proxy-server.proxy.svc:8888
+    tenantId: "1"
+    auth:
+      type: basic
+      username: loki
+      password: lokipassword
+    tls:
+      insecureSkipVerify: true
+
+  - name: localTempo
+    type: otlp
+    protocol: http
+    url: http://tempo.tempo.svc:4318
+    proxyURL: http://proxy-server.proxy.svc:8888
+    tls:
+      insecure: true
+      insecureSkipVerify: true
+    metrics: {enabled: false}
+    logs: {enabled: false}
+    traces: {enabled: true}
+
+clusterEvents:
+  enabled: true
+
+podLogs:
+  enabled: true
+
+integrations:
+  alloy:
+    instances:
+      - name: alloy
+        labelSelectors:
+          app.kubernetes.io/name: [alloy-metrics, alloy-singleton, alloy-logs, alloy-receiver]
+
+applicationObservability:
+  enabled: true
+  receivers:
+    otlp:
+      grpc:
+        enabled: true
+  connectors:
+    grafanaCloudMetrics:
+      enabled: true
+
+alloy-metrics:
+  enabled: true
+
+alloy-singleton:
+  enabled: true
+
+alloy-logs:
+  enabled: true
+
+alloy-receiver:
+  enabled: true
+  alloy:
+    extraPorts:
+      - name: otlp-grpc
+        port: 4317
+        targetPort: 4317
+        protocol: TCP
+  extraConfig: |
+    remote.http "url_test" {
+      url = "https://api.github.com/users/grafana/repos"
+    }
