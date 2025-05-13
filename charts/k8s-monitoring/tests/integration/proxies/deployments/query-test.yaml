@@ -33,6 +33,11 @@ spec:
       - env:
           CLUSTER: proxies-test
           PROMETHEUS_URL: http://prometheus-server.prometheus.svc:9090/api/v1/query
+          LOKI_URL: http://loki.loki.svc:3100/loki/api/v1/query
+          LOKI_TENANTID: 1
+          LOKI_USER: loki
+          LOKI_PASS: lokipassword
+          TEMPO_URL: http://tempo.tempo.svc:3100/api/search
 
         queries:
           # Cert Manager metrics
@@ -59,5 +64,5 @@ spec:
             type: traceql
 
           # Host Info connector
-          - query: traces_host_info{k8s_cluster_name="$CLUSTER", grafana_host_id="application-observability-test-control-plane"}
+          - query: traces_host_info{k8s_cluster_name="$CLUSTER", grafana_host_id="$CLUSTER-control-plane"}
             type: promql
