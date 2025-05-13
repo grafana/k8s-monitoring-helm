@@ -26,13 +26,12 @@ destinations:
     processors:
       tailSampling:
         collector:
-          spec:
-            controller:
-              replicas: 2
+          controller:
+            replicas: 3
         enabled: true
         policies:
-          - name: always 
-            type: always_sample 
+          - name: always
+            type: always_sample
 
 applicationObservability:
   enabled: true
@@ -53,12 +52,18 @@ alloy-receiver:
 integrations:
   alloy:
     instances:
+      - name: alloy-receiver
+        labelSelectors:
+          app.kubernetes.io/instance: k8smon-alloy-receiver
+        metrics:
+          tuning:
+            includeMetrics: [otelcol_loadbalancer_.*]
       - name: alloy-sampler
         labelSelectors:
           app.kubernetes.io/instance: k8smon-localtempo-sampler
         metrics:
           tuning:
-            includeMetrics: [otelcol_processor_tail_sampling.*]
+            includeMetrics: [otelcol_processor_tail_sampling_.*]
 
 alloy-metrics:
   enabled: true
