@@ -610,27 +610,15 @@ data:
           not_match: '{kube*,*jaeger-agent*,*prometheus*,*promtail*,*grafana-agent*}'
         k8s_src_owner_name:
           not_match: '{kube*,*jaeger-agent*,*prometheus*,*promtail*,*grafana-agent*}'
-    ignored_patterns:
-    - /debug/*
-    - /metrics
     internal_metrics:
       prometheus:
         path: /internal/metrics
         port: 9090
-        routes: null
     log_level: debug
     network:
       enable: true
     otel_traces_export:
       endpoint: http://k8smon-alloy-receiver.default.svc.cluster.local:4317
-    patterns:
-    - /account
-    - /api/products/{productId}
-    - /cart
-    - /fastcache
-    - /health
-    - /login
-    - /payment
     prometheus_export:
       features:
       - application
@@ -640,7 +628,19 @@ data:
       - network
       path: /metrics
       port: 9090
-    unmatched: heuristic
+    routes:
+      ignored_patterns:
+      - /debug/*
+      - /metrics
+      patterns:
+      - /account
+      - /api/products/{productId}
+      - /cart
+      - /fastcache
+      - /health
+      - /login
+      - /payment
+      unmatched: heuristic
 ---
 # Source: k8s-monitoring/charts/alloy-metrics/templates/rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1
