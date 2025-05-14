@@ -168,22 +168,20 @@ declare "pod_logs" {
         "tmp_container_runtime",
       ]
     }
-    // set the structured metadata values
     stage.structured_metadata {
       values = {
-        "availability_zone" = "availability_zone",
+        "k8s_pod_name" = "k8s_pod_name",
         "node_arch" = "architecture",
         "node_os" = "os",
         "node_pool" = "nodepool",
-        "node_role" = "node_role",
         "node_type" = "instance_type",
-        "region" = "region",
+        "pod" = "pod",
       }
     }
 
     // Only keep the labels that are defined in the `keepLabels` list.
     stage.label_keep {
-      values = ["app_kubernetes_io_name","container","instance","job","level","namespace","pod","service_name","service_namespace","deployment_environment","deployment_environment_name","k8s_pod_name","k8s_namespace_name","k8s_deployment_name","k8s_statefulset_name","k8s_daemonset_name","k8s_cronjob_name","k8s_job_name","k8s_node_name"]
+      values = ["app_kubernetes_io_name","container","instance","job","level","namespace","service_name","service_namespace","deployment_environment","deployment_environment_name","k8s_namespace_name","k8s_deployment_name","k8s_statefulset_name","k8s_daemonset_name","k8s_cronjob_name","k8s_job_name","k8s_node_name"]
     }
 
     forward_to = argument.logs_destinations.value

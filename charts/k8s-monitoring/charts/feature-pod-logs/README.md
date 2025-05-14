@@ -50,7 +50,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | annotations | object | `{"job":"k8s.grafana.com/logs.job"}` | Log labels to set with values copied from the Kubernetes Pod annotations. Format: `<log_label>: <kubernetes_annotation>`. |
 | extraLogProcessingStages | string | `""` | Stage blocks to be added to the loki.process component for pod logs. ([docs](https://grafana.com/docs/alloy/latest/reference/components/loki/loki.process/#blocks)) This value is templated so that you can refer to other values from this file. |
 | labels | object | `{"app_kubernetes_io_name":"app.kubernetes.io/name"}` | Log labels to set with values copied from the Kubernetes Pod labels. Format: `<log_label>: <kubernetes_label>`. |
-| labelsToKeep | list | `["app.kubernetes.io/name","container","instance","job","level","namespace","pod","service.name","service.namespace","deployment.environment","deployment.environment.name","k8s.pod.name","k8s.namespace.name","k8s.deployment.name","k8s.statefulset.name","k8s.daemonset.name","k8s.cronjob.name","k8s.job.name","k8s.node.name"]` | The list of labels to keep on the logs, all other pipeline labels will be dropped. |
+| labelsToKeep | list | `["app.kubernetes.io/name","container","instance","job","level","namespace","service.name","service.namespace","deployment.environment","deployment.environment.name","k8s.namespace.name","k8s.deployment.name","k8s.statefulset.name","k8s.daemonset.name","k8s.cronjob.name","k8s.job.name","k8s.node.name"]` | The list of labels to keep on the logs, all other pipeline labels will be dropped. |
 | namespaceAnnotations | object | `{}` | Log labels to set with values copied from the Kubernetes Namespace annotations. Only used for "filelog" gather method. Format: `<log_label>: <kubernetes_namespace_annotation>`. |
 | namespaceLabels | object | `{}` | Log labels to set with values copied from the Kubernetes Namespace labels. Only used for "filelog" gather method. Format: `<log_label>: <kubernetes_namespace_label>`. |
 | nodeAnnotations | object | `{}` | Log labels to set with values copied from the Kubernetes Node annotations. Only used for "filelog" gather method. Format: `<log_label>: <kubernetes_node_annotation>`. |
@@ -98,7 +98,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| structuredMetadata | object | `{}` | The structured metadata mappings to set. To not set any structured metadata, set this to an empty object (e.g. `{}`) Format: `<key>: <extracted_key>`. Example: structuredMetadata:   component: component   kind: kind   name: name |
+| structuredMetadata | object | `{"k8s.pod.name":"k8s.pod.name","pod":"pod"}` | The structured metadata mappings to set. Format: `<key>: <extracted_key>`. Example: structuredMetadata:   component: component   kind: kind   name: name |
 
 ### Volume Log Gathering
 
