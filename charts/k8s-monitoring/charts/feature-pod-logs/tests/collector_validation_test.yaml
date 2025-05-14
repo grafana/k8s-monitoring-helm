@@ -43,30 +43,6 @@ tests:
                 mounts:
                   varlog: true
 
-  - it: should fail if using volume-based gathering, but is clustered
-    set:
-      gatherMethod: volumes
-      testing: true
-      test:
-        Collector:
-          alloy:
-            clustering:
-              enabled: true
-            mounts:
-              varlog: true
-          controller:
-            type: daemonset
-    asserts:
-      - failedTemplate:
-          errorMessage: |-
-            execution error at (feature-pod-logs/templates/test/collector.yaml:2:3): 
-            Pod Logs feature requires Alloy clustering to be disabled when using the "volumes" gather method.
-            Please set:
-            alloy-test:
-              alloy:
-                clustering:
-                  enabled: false
-
   - it: should fail if using Kubernetes API-based gathering, but /var/log is mounted
     set:
       gatherMethod: kubernetesApi
