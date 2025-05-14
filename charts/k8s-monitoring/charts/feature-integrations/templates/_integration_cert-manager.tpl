@@ -146,6 +146,7 @@ prometheus.scrape {{ include "helper.alloy_name" .name | quote }} {
   clustering {
     enabled = true
   }
+{{- if or $metricAllowList $metricDenyList }}
   forward_to = [prometheus.relabel.{{ include "helper.alloy_name" .name }}.receiver]
 }
 
@@ -165,6 +166,7 @@ prometheus.relabel {{ include "helper.alloy_name" .name | quote }} {
     regex = {{ $metricDenyList | join "|" | quote }}
     action = "drop"
   }
+{{- end }}
 {{- end }}
   forward_to = argument.metrics_destinations.value
 }

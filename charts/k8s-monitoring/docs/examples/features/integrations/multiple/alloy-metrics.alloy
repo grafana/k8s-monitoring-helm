@@ -118,6 +118,40 @@ cert_manager_integration "integration" {
     prometheus.remote_write.prometheus.receiver,
   ]
 }
+declare "mysql_integration" {
+  argument "metrics_destinations" {
+    comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
+  }
+
+  prometheus.exporter.mysql "mysql_cluster" {
+    data_source_name  = "grafana:REDACTED@(mysql-cluster-router.mysql-cluster:3306)/"
+    enable_collectors = ["perf_schema.replication_group_members"]
+  }
+  prometheus.scrape "mysql_cluster" {
+    targets    = prometheus.exporter.mysql.mysql_cluster.targets
+    job_name   = "integration/mysql"
+    forward_to = [prometheus.relabel.mysql_cluster.receiver]
+  }
+
+  prometheus.relabel "mysql_cluster" {
+    max_cache_size = 100000
+    rule {
+      target_label = "instance"
+      replacement = "mysql-cluster"
+    }
+    rule {
+      source_labels = ["__name__"]
+      regex = "mysql_exporter_collector_duration_seconds|mysql_exporter_collector_success"
+      action = "drop"
+    }
+    forward_to = argument.metrics_destinations.value
+  }
+}
+mysql_integration "integration" {
+  metrics_destinations = [
+    prometheus.remote_write.prometheus.receiver,
+  ]
+}
 // Self Reporting
 prometheus.exporter.unix "kubernetes_monitoring_telemetry" {
   set_collectors = ["textfile"]
@@ -195,13 +229,13 @@ prometheus.remote_write "prometheus" {
     write_relabel_config {
       source_labels = ["cluster"]
       regex = ""
-      replacement = "cert-manager-integration-cluster"
+      replacement = "multiple-integrations-example"
       target_label = "cluster"
     }
     write_relabel_config {
       source_labels = ["k8s_cluster_name"]
       regex = ""
-      replacement = "cert-manager-integration-cluster"
+      replacement = "multiple-integrations-example"
       target_label = "k8s_cluster_name"
     }
   }

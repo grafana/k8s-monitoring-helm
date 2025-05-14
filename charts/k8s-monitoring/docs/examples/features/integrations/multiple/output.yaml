@@ -31,16 +31,6 @@ metadata:
     app.kubernetes.io/part-of: alloy
     app.kubernetes.io/component: rbac
 ---
-# Source: k8s-monitoring/charts/integrations/templates/mysql-secret.yaml
-apiVersion: v1
-kind: Secret
-metadata:
-  name: "prod-db-k8smon-integrations"
-  namespace: "default"
-stringData:
-  username: "db-admin"
-  password: "db-password"
----
 # Source: k8s-monitoring/templates/alloy-config.yaml
 apiVersion: v1
 kind: ConfigMap
@@ -49,56 +39,151 @@ metadata:
   namespace: default
 data:
   config.alloy: |-
+    declare "cert_manager_integration" {
+      argument "metrics_destinations" {
+        comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
+      }
+    
+      discovery.kubernetes "cert_manager" {
+        role = "pod"
+    
+        selectors {
+          role = "pod"
+          label = "app.kubernetes.io/name=cert-manager"
+        }
+      }
+    
+      discovery.relabel "cert_manager" {
+        targets = discovery.kubernetes.cert_manager.targets
+    
+        // keep only the specified metrics port name, and pods that are Running and ready
+        rule {
+          source_labels = [
+            "__meta_kubernetes_pod_container_port_name",
+            "__meta_kubernetes_pod_phase",
+            "__meta_kubernetes_pod_ready",
+          ]
+          separator = "@"
+          regex = "http-metrics@Running@true"
+          action = "keep"
+        }
+    
+        // drop any init containers
+        rule {
+          source_labels = ["__meta_kubernetes_pod_container_init"]
+          regex = "true"
+          action = "drop"
+        }
+    
+        // set the namespace label
+        rule {
+          source_labels = ["__meta_kubernetes_namespace"]
+          target_label  = "namespace"
+        }
+    
+        // set the pod label
+        rule {
+          source_labels = ["__meta_kubernetes_pod_name"]
+          target_label  = "pod"
+        }
+    
+        // set the container label
+        rule {
+          source_labels = ["__meta_kubernetes_pod_container_name"]
+          target_label  = "container"
+        }
+    
+        // set a workload label
+        rule {
+          source_labels = [
+            "__meta_kubernetes_pod_controller_kind",
+            "__meta_kubernetes_pod_controller_name",
+          ]
+          separator = "/"
+          target_label  = "workload"
+        }
+        // remove the hash from the ReplicaSet
+        rule {
+          source_labels = ["workload"]
+          regex = "(ReplicaSet/.+)-.+"
+          target_label  = "workload"
+        }
+    
+        // set the app name if specified as metadata labels "app:" or "app.kubernetes.io/name:" or "k8s-app:"
+        rule {
+          action = "replace"
+          source_labels = [
+            "__meta_kubernetes_pod_label_app_kubernetes_io_name",
+            "__meta_kubernetes_pod_label_k8s_app",
+            "__meta_kubernetes_pod_label_app",
+          ]
+          separator = ";"
+          regex = "^(?:;*)?([^;]+).*$"
+          replacement = "$1"
+          target_label = "app"
+        }
+    
+        // set the component if specified as metadata labels "component:" or "app.kubernetes.io/component:" or "k8s-component:"
+        rule {
+          action = "replace"
+          source_labels = [
+            "__meta_kubernetes_pod_label_app_kubernetes_io_component",
+            "__meta_kubernetes_pod_label_k8s_component",
+            "__meta_kubernetes_pod_label_component",
+          ]
+          regex = "^(?:;*)?([^;]+).*$"
+          replacement = "$1"
+          target_label = "component"
+        }
+    
+        // set a source label
+        rule {
+          action = "replace"
+          replacement = "kubernetes"
+          target_label = "source"
+        }
+      }
+    
+      prometheus.scrape "cert_manager" {
+        targets = discovery.relabel.cert_manager.output
+        job_name = "integrations/cert-manager"
+        scrape_interval = "60s"
+        clustering {
+          enabled = true
+        }
+        forward_to = argument.metrics_destinations.value
+      }
+    }
+    cert_manager_integration "integration" {
+      metrics_destinations = [
+        prometheus.remote_write.prometheus.receiver,
+      ]
+    }
     declare "mysql_integration" {
       argument "metrics_destinations" {
         comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
       }
     
-      prometheus.exporter.mysql "staging_db" {
-        data_source_name  = "root:password@database.staging.svc:3306/"
-        enable_collectors = ["heartbeat","mysql.user"]
+      prometheus.exporter.mysql "mysql_cluster" {
+        data_source_name  = "grafana:REDACTED@(mysql-cluster-router.mysql-cluster:3306)/"
+        enable_collectors = ["perf_schema.replication_group_members"]
       }
-      prometheus.scrape "staging_db" {
-        targets    = prometheus.exporter.mysql.staging_db.targets
+      prometheus.scrape "mysql_cluster" {
+        targets    = prometheus.exporter.mysql.mysql_cluster.targets
         job_name   = "integration/mysql"
-        forward_to = [prometheus.relabel.staging_db.receiver]
+        forward_to = [prometheus.relabel.mysql_cluster.receiver]
       }
     
-      prometheus.relabel "staging_db" {
+      prometheus.relabel "mysql_cluster" {
         max_cache_size = 100000
         rule {
           target_label = "instance"
-          replacement = "staging-db"
+          replacement = "mysql-cluster"
         }
-        forward_to = argument.metrics_destinations.value
-      }
-    
-    
-      remote.kubernetes.secret "prod_db" {
-        name      = "prod-db-k8smon-integrations"
-        namespace = "default"
-      }
-    
-      prometheus.exporter.mysql "prod_db" {
-        data_source_name = string.format("%s:%s@(%s:%d)/",
-          convert.nonsensitive(remote.kubernetes.secret.prod_db.data["username"]),
-          convert.nonsensitive(remote.kubernetes.secret.prod_db.data["password"]),
-          "database.prod.svc",
-          3306,
-        )
-        enable_collectors = ["heartbeat","mysql.user"]
-      }
-      prometheus.scrape "prod_db" {
-        targets    = prometheus.exporter.mysql.prod_db.targets
-        job_name   = "integration/mysql"
-        forward_to = [prometheus.relabel.prod_db.receiver]
-      }
-    
-      prometheus.relabel "prod_db" {
-        max_cache_size = 100000
         rule {
-          target_label = "instance"
-          replacement = "prod-db"
+          source_labels = ["__name__"]
+          regex = "mysql_exporter_collector_duration_seconds|mysql_exporter_collector_success"
+          action = "drop"
         }
         forward_to = argument.metrics_destinations.value
       }
@@ -185,13 +270,13 @@ data:
         write_relabel_config {
           source_labels = ["cluster"]
           regex = ""
-          replacement = "mysql-integration-cluster"
+          replacement = "multiple-integrations-example"
           target_label = "cluster"
         }
         write_relabel_config {
           source_labels = ["k8s_cluster_name"]
           regex = ""
-          replacement = "mysql-integration-cluster"
+          replacement = "multiple-integrations-example"
           target_label = "k8s_cluster_name"
         }
       }
@@ -211,7 +296,7 @@ data:
     # HELP grafana_kubernetes_monitoring_feature_info A metric to report the enabled features of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_feature_info gauge
     grafana_kubernetes_monitoring_feature_info{feature="podLogs", method="volumes", version="1.0.0"} 1
-    grafana_kubernetes_monitoring_feature_info{feature="integrations", sources="mysql", version="1.0.0"} 1
+    grafana_kubernetes_monitoring_feature_info{feature="integrations", sources="cert-manager,mysql", version="1.0.0"} 1
 ---
 # Source: k8s-monitoring/templates/alloy-config.yaml
 apiVersion: v1
@@ -312,18 +397,18 @@ data:
           target_label = "app_kubernetes_io_name"
         }
         rule {
-          source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_instance"]
+          source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_component"]
           separator = ";"
-          regex = "(?:prod-db)"
+          regex = "(?:mysql)"
           target_label = "integration"
           replacement = "mysql"
         }
         rule {
-          source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_instance"]
+          source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_component"]
           separator = ";"
-          regex = "(?:prod-db)"
+          regex = "(?:mysql)"
           target_label = "instance"
-          replacement = "prod-db"
+          replacement = "mysql-cluster"
         }
       }
     
@@ -458,8 +543,8 @@ data:
         max_backoff_retries = "10"
       }
       external_labels = {
-        "cluster" = "mysql-integration-cluster",
-        "k8s_cluster_name" = "mysql-integration-cluster",
+        "cluster" = "multiple-integrations-example",
+        "k8s_cluster_name" = "multiple-integrations-example",
       }
     }
 ---
