@@ -24,8 +24,8 @@ The `prometheus`, `loki`, and `pyroscope` destinations support setting the `prox
 `proxyConnectHeader` options.
 
 When using the `otlp` destination, the `proxyURL` setting is available if using the `http` protocol. However, if using
-the `grpc` protocol, the `proxyURL` setting is not available. Instead, you can set the `HTTP_PROXY` and `NO_PROXY`
-environment variables.
+the `grpc` protocol, the `proxyURL` setting is not available. Instead, you can
+use [environment variables](#using-environment-variables).
 
 ## Using environment variables
 
