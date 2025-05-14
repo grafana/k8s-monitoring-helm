@@ -271,6 +271,26 @@ selfReporting:
 # Collectors (Alloy instances)
 #
 
+alloy-operator:
+  deploy: true
+
+# -- The new way to deploy collectors with templates.
+# Alternative, new way to deploy alloy-metrics and other collectors with named defaults.
+# We can keep the previous way for backwards compatibility only and recommend using this one?
+# Will need to verify that there are no name conflicts, but I imagine this is doable.
+collectors:
+  - template: alloy-daemon # The consolidated DaemonSet capable of running multiple pipelines and survey mode.
+    name: alloy-daemon
+    enabled: false
+    # sizeTemplate: XL # An option for the future to simplify scaling?
+
+  # - template: alloy-metrics # An example of a named collector.
+  #   name: alloy-metrics
+  #   enabled: true
+
+
+# -- The deprecated way to deploy collectors, kept for backwards compatibility.
+
 # An Alloy instance for collecting metrics.
 # To see additional valid options, please see the [Alloy Helm chart documentation](https://github.com/grafana/alloy/tree/main/operations/helm/charts/alloy).
 alloy-metrics:
@@ -324,8 +344,6 @@ alloy-profiles:
   # @section -- Collectors - Alloy Profiles
   enabled: false
 
-alloy-operator:
-  deploy: true
 
 # -- Deploy additional manifest objects
 extraObjects: []
