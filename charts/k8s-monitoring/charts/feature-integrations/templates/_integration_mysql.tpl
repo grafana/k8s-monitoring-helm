@@ -1,6 +1,6 @@
 {{- define "integrations.mysql.validate" }}
   {{- range $instance := $.Values.mysql.instances }}
-    {{- include "integrations.mysql.instance.validate" (merge $ (dict "instance" $instance)) | nindent 2 }}
+    {{- include "integrations.mysql.instance.validate" (deepCopy $ | merge (dict "instance" $instance)) | nindent 2 }}
   {{- end }}
 {{- end }}
 
