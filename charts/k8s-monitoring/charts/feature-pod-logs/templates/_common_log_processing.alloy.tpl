@@ -45,7 +45,7 @@ loki.process "pod_logs" {
   stage.structured_metadata {
     values = {
     {{- range $key, $value := .Values.structuredMetadata }}
-      {{ $key | quote }} = {{ if $value }}{{ $value | quote }}{{ else }}{{ $key | quote }}{{ end }},
+      {{ (include "escape_label" $key) | quote }} = {{ (include "escape_label" ($value | default $key)) | quote }},
     {{- end }}
     }
   }

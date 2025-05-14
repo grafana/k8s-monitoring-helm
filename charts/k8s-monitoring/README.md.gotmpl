@@ -12,9 +12,11 @@
 
 {{ template "chart.homepageLine" . }}
 
-## Usage
+## Breaking change announcements
 
-### Upgrading from v2.0
+### Version 2.1
+
+#### Alloy Operator
 
 v2.1 introduces the use of the [Alloy Operator](https://github.com/grafana/alloy-operator) to manage the creation and
 lifecycle of Alloy instances. When upgrading from v2.0 to v2.1 or later, you may need to install the Alloy CRD.
@@ -25,9 +27,16 @@ To do this, run the following command:
 kubectl apply -f https://github.com/grafana/alloy-operator/releases/latest/download/collectors.grafana.com_alloy.yaml
 ```
 
-### Migrating from v1
+#### Pod Logs
+
+v2.1 also moves the `pod` and `k8s.pod.name` fields from labels to structured metadata in the pod logs feature. If your
+logs destination does not support structured metadata, you may not see these labels on your logs.
+
+### Version 2.0
 
 v2 introduces some significant changes to the chart configuration values. Refer to the migration [documentation](./docs/Migration.md) for tools and strategies to migrate from v1.
+
+## Usage
 
 ### Setup Grafana chart repository
 
@@ -41,19 +50,24 @@ helm repo update
 There are some required values that will need to be used with this chart. The basic structure of the values file is:
 
 ```yaml
-cluster: {} # Cluster configuration, including the cluster name
+cluster: # Cluster configuration, including the cluster name
+  name: my-cluster
 
-destinations: [] # List of destinations where telemetry data will be sent
+destinations: [...] # List of destinations where telemetry data will be sent
 
 # Features to enable, which determines what data to collect
-clusterMetrics: {}
-clusterEvents: {}
+clusterMetrics:
+  enabled: true
+clusterEvents:
+  enabled: true
 # etc...
 ...
 
 # Telemetry collector definitions
-alloy-metrics: {}
-alloy-singleton: {}
+alloy-metrics:
+  enabled: true
+alloy-singleton:
+  enabled: true
 ```
 
 Here is more detail about the different sections:
