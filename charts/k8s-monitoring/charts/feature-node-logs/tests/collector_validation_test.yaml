@@ -1,0 +1,42 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces rule:empty-lines
+suite: Test collector validation
+templates:
+  - test/collector.yaml
+tests:
+  - it: should fail if not a daemonset
+    set:
+      testing: true
+      test:
+        Collector:
+          controller:
+            type: deployment
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            execution error at (feature-node-logs/templates/test/collector.yaml:2:3): 
+            Node Logs feature requires Alloy to be a DaemonSet.
+            Please set:
+            alloy-test:
+              controller:
+                type: daemonset
+
+  - it: should fail if /var/log is not mounted
+    set:
+      testing: true
+      test:
+        Collector:
+          alloy:
+            mounts:
+              varlog: false
+          controller:
+            type: daemonset
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            execution error at (feature-node-logs/templates/test/collector.yaml:2:3): 
+            Node Logs feature requires Alloy to mount /var/log.
+            Please set:
+            alloy-test:
+              alloy:
+                mounts:
+                  varlog: true

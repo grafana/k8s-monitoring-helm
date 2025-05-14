@@ -19,15 +19,6 @@
     {{- $msg = append $msg "      varlog: true" }}
     {{- fail (join "\n" $msg) }}
   {{- end -}}
-  {{- if .Collector.alloy.clustering.enabled }}
-    {{- $msg := list "" "Pod Logs feature requires Alloy clustering to be disabled when using the \"volumes\" gather method." }}
-    {{- $msg = append $msg "Please set:"}}
-    {{- $msg = append $msg (printf "%s:" .CollectorName) }}
-    {{- $msg = append $msg "  alloy:"}}
-    {{- $msg = append $msg "    clustering:"}}
-    {{- $msg = append $msg "      enabled: false" }}
-    {{- fail (join "\n" $msg) }}
-  {{- end -}}
 {{- else if eq .Values.gatherMethod "kubernetesApi" }}
   {{- if or .Collector.alloy.mounts.varlog .Collector.alloy.mounts.dockercontainers }}
     {{- $msg := list "" }}
