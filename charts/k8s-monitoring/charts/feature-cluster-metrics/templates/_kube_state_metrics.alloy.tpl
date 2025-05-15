@@ -43,7 +43,11 @@ discovery.relabel "kube_state_metrics" {
 
   // only keep targets with a matching port name
   rule {
+{{- if eq (index .Values "kube-state-metrics").discoveryType "service" }}
+    source_labels = ["__meta_kubernetes_service_port_name"]
+{{- else }}
     source_labels = ["__meta_kubernetes_pod_container_port_name"]
+{{- end }}
     regex = {{ (index .Values "kube-state-metrics").service.portName | quote }}
     action = "keep"
   }
