@@ -1,0 +1,36 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Test - Cluster Metrics - kube-state-metrics
+templates:
+  - configmap.yaml
+tests:
+  - it: can discover kube-state-metrics via pods
+    set:
+      deployAsConfigMap: true
+      kubelet: { enabled: false }
+      kubeletResource: { enabled: false }
+      cadvisor: { enabled: false }
+      node-exporter: { enabled: false, deploy: false }
+      windows-exporter: { enabled: false, deploy: false }
+      kube-state-metrics:
+        discoveryType: pod
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["module.alloy"]
+
+  - it: can discover kube-state-metrics via service
+    set:
+      deployAsConfigMap: true
+      kubelet: { enabled: false }
+      kubeletResource: { enabled: false }
+      cadvisor: { enabled: false }
+      node-exporter: { enabled: false, deploy: false }
+      windows-exporter: { enabled: false, deploy: false }
+      kube-state-metrics:
+        discoveryType: service
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["module.alloy"]
