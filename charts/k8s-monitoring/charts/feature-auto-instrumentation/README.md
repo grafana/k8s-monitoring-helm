@@ -12,9 +12,10 @@ The auto-instrumentation feature deploys Grafana Beyla to automatically instrume
 
 ## Usage
 
+```yaml
 autoInstrumentation:
   enabled: true
-  ... [values](#values)
+```
 
 ## Testing
 

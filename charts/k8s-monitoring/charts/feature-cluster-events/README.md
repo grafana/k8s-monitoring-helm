@@ -12,9 +12,10 @@ The Cluster Events feature enables the collection of Kubernetes events from the 
 
 ## Usage
 
+```yaml
 clusterEvents:
   enabled: true
-  ... [values](#values)
+```
 
 ## How it works
 

@@ -1,0 +1,21 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Validations - CRD Present on Upgrade
+templates:
+  - alloy.yaml
+release:
+  upgrade: true
+capabilities:
+  apiVersions:
+    - collectors.grafana.com/v1alpha1/Alloy
+tests:
+  - it: works if it's already there
+    set:
+      cluster:
+        name: crd-validation-cluster
+      alloy-metrics:
+        enabled: true
+        extraConfig: |-
+          prometheus.exporter.unix "self" {}
+    asserts:
+      - isKind:
+          of: Alloy

@@ -1,0 +1,22 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Validations - CRD Missing on Upgrade
+templates:
+  - alloy.yaml
+release:
+  upgrade: true
+tests:
+  - it: asks you to deploy the Alloy CRD on upgrades
+    set:
+      cluster:
+        name: crd-validation-cluster
+      alloy-metrics:
+        enabled: true
+        extraConfig: |-
+          prometheus.exporter.unix "self" {}
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            execution error at (k8s-monitoring/templates/alloy.yaml:2:4): 
+            The k8s-monitoring Helm chart v2.1 requires the Alloy CRD to be deployed.
+            Before upgrading, please install the Alloy CRD:
+            kubectl apply -f https://github.com/grafana/alloy-operator/releases/download/0.2.6/collectors.grafana.com_alloy.yaml

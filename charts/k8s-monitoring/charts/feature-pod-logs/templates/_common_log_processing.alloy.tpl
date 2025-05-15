@@ -41,11 +41,12 @@ loki.process "pod_logs" {
 {{- /* through the loki limits_conifg on a per-tenant basis, even if there are no values defined or there are values defined but it is disabled */ -}}
 {{- /* in Loki, the write will fail. */ -}}
 {{- if .Values.structuredMetadata }}
-  // set the structured metadata values
   stage.structured_metadata {
     values = {
     {{- range $key, $value := .Values.structuredMetadata }}
-      {{ $key | quote }} = {{ if $value }}{{ $value | quote }}{{ else }}{{ $key | quote }}{{ end }},
+      {{- if $value }}
+      {{ (include "escape_label" $key) | quote }} = {{ (include "escape_label" $value) | quote }},
+      {{- end }}
     {{- end }}
     }
   }

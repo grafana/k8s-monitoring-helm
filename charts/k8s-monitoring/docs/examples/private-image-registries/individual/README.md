@@ -75,6 +75,13 @@ autoInstrumentation:
       pullSecrets:
         - name: my-registry-creds
 
+alloy-operator:
+  image:
+    registry: my.registry.com
+    repository: grafana/alloy-operator
+    pullSecrets:
+      - name: my-registry-creds
+
 alloy-metrics:
   enabled: true
   image:

@@ -1,0 +1,69 @@
+---
+cluster:
+  name: tail-sampling-test
+
+destinations:
+  - name: localPrometheus
+    type: prometheus
+    url: http://prometheus-server.prometheus.svc:9090/api/v1/write
+  - name: localLoki
+    type: loki
+    url: http://loki.loki.svc:3100/loki/api/v1/push
+    tenantId: "1"
+    auth:
+      type: basic
+      username: loki
+      password: lokipassword
+  - name: localTempo
+    type: otlp
+    url: tempo.tempo.svc:4317
+    tls:
+      insecure: true
+      insecureSkipVerify: true
+    metrics: {enabled: false}
+    logs: {enabled: false}
+    traces: {enabled: true}
+    processors:
+      tailSampling:
+        collector:
+          controller:
+            replicas: 3
+        enabled: true
+        policies:
+          - name: always
+            type: always_sample
+
+applicationObservability:
+  enabled: true
+  receivers:
+    otlp:
+      grpc:
+        enabled: true
+
+alloy-receiver:
+  enabled: true
+  alloy:
+    extraPorts:
+      - name: otlp-grpc
+        port: 4317
+        targetPort: 4317
+        protocol: TCP
+
+integrations:
+  alloy:
+    instances:
+      - name: alloy-receiver
+        labelSelectors:
+          app.kubernetes.io/instance: k8smon-alloy-receiver
+        metrics:
+          tuning:
+            includeMetrics: [otelcol_loadbalancer_.*]
+      - name: alloy-sampler
+        labelSelectors:
+          app.kubernetes.io/instance: k8smon-localtempo-sampler
+        metrics:
+          tuning:
+            includeMetrics: [otelcol_processor_tail_sampling_.*]
+
+alloy-metrics:
+  enabled: true

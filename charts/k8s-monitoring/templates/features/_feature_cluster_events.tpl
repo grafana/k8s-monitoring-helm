@@ -37,6 +37,8 @@ cluster_events "feature" {
 {{- $isTranslating -}}
 {{- end -}}
 
+{{- define "features.clusterEvents.collector.values" }}{{- end -}}
+
 {{- define "features.clusterEvents.validate" }}
 {{- if .Values.clusterEvents.enabled -}}
 {{- $featureName := "Kubernetes Cluster events" }}

@@ -205,6 +205,8 @@ readBufferSize: ""
 writeBufferSize: ""
 
 retryOnFailure:
+  # -- Should failed requests be retried?
+  # @section -- General
   enabled: true
   # -- The initial time to wait before retrying a failed request to the OTLP destination.
   # @section -- General
@@ -216,8 +218,31 @@ retryOnFailure:
   # @section -- General
   maxElapsedTime: 5m
 
-# Processors to apply to the data before sending it.
+# Processors to apply to the data before delivering it to its destination.
 processors:
+  tailSampling:
+    # -- Apply tail sampling policies to the traces before delivering them to this destination. This will create an
+    # additional Alloy instance to handle the tail sampling, and traces sent to this destination will be automatically
+    # forwarded, using a load balancer component, to the new sampling Alloy instance.
+    # @section -- Tail Sampling
+    enabled: false
+
+    # -- Wait time since the first span of a trace before making a sampling decision.
+    # @section -- Tail Sampling
+    decisionWait: 15s
+
+    # -- Tail sampling policies to apply.
+    # @section -- Tail Sampling
+    policies: []
+
+    # -- Settings for the Alloy instance that will handle tail sampling.
+    # @section -- Tail Sampling
+    collector:
+      alloy: {}
+      controller:
+        type: statefulset
+        replicas: 2
+
   attributes:
     # -- Attribute processor actions
     # Format: { key: "", value: "", action: "", pattern: "", fromAttribute: "", fromContext: "", convertedType: "" }

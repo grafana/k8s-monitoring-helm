@@ -15,9 +15,10 @@ not on the list will be dropped. With [metrics tuning](#metrics-tuning--allow-li
 
 ## Usage
 
+```yaml
 clusterMetrics:
   enabled: true
-  ... [values](#values)
+```
 
 ## How it works
 
