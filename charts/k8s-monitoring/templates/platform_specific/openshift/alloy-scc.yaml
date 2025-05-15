@@ -1,19 +1,20 @@
-{{- with "alloy-metrics" }}
-{{- $collectorName := . }}
-{{- $collectorReleaseName := include "collector.alloy.fullname" (merge $ (dict "collectorName" $collectorName)) }}
-{{- if and (index $.Values $collectorName).enabled (eq $.Values.global.platform "openshift") }}
+{{- if eq $.Values.global.platform "openshift" }}
+{{- range $collectorName := include "collectors.list.enabled" . | fromYamlArray }}
+{{- $values := (deepCopy $ | merge (dict "collectorName" $collectorName)) }}
+{{- $alloyValues := (include "collector.alloy.values" $values | fromYaml) | merge (dict "nameOverride" $collectorName) }}
+{{- $alloyFullName := include "collector.alloy.fullname" $values }}
 ---
 apiVersion: security.openshift.io/v1
 kind: SecurityContextConstraints
 metadata:
-  name: {{ $collectorReleaseName }}
-allowHostDirVolumePlugin: false
+  name: {{ $alloyFullName }}
+allowHostDirVolumePlugin: {{ $alloyValues.alloy.mounts.varlog }}
 allowHostIPC: false
 allowHostNetwork: false
-allowHostPID: false
+allowHostPID: {{ dig "controller" "hostPID" false $alloyValues }}
 allowHostPorts: false
-allowPrivilegeEscalation: false
-allowPrivilegedContainer: false
+allowPrivilegeEscalation: {{ dig "alloy" "securityContext" "allowPrivilegeEscalation" false $alloyValues }}
+allowPrivilegedContainer: {{ dig "alloy" "securityContext" "privileged" false $alloyValues }}
 allowedCapabilities:
 - CHOWN
 - DAC_OVERRIDE
@@ -51,13 +52,16 @@ users: []
 volumes:
 - configMap
 - emptyDir
+{{- if $alloyValues.alloy.mounts.varlog }}
+- hostPath
+{{- end }}
 - projected
 - secret
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: {{ $collectorReleaseName }}-scc
+  name: {{ $alloyFullName }}-scc
 rules:
 - verbs:
     - use
@@ -66,19 +70,19 @@ rules:
   resources:
     - securitycontextconstraints
   resourceNames:
-    - {{ $collectorReleaseName }}
+    - {{ $alloyFullName }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: {{ $collectorReleaseName }}-scc
+  name: {{ $alloyFullName }}-scc
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: {{ $collectorReleaseName }}-scc
+  name: {{ $alloyFullName }}-scc
 subjects:
 - kind: ServiceAccount
-  name: {{ $collectorReleaseName }}
+  name: {{ $alloyFullName }}
   namespace: {{ $.Release.Namespace }}
 {{- end }}
 {{- end }}

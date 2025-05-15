@@ -1463,7 +1463,22 @@ rules:
     verbs:
       - '*'
 ---
-# Source: k8s-monitoring/templates/platform_specific/openshift/alloy-logs-scc.yaml
+# Source: k8s-monitoring/templates/platform_specific/openshift/alloy-scc.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: k8smon-alloy-metrics-scc
+rules:
+- verbs:
+    - use
+  apiGroups:
+    - security.openshift.io
+  resources:
+    - securitycontextconstraints
+  resourceNames:
+    - k8smon-alloy-metrics
+---
+# Source: k8s-monitoring/templates/platform_specific/openshift/alloy-scc.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
@@ -1478,11 +1493,11 @@ rules:
   resourceNames:
     - k8smon-alloy-singleton
 ---
-# Source: k8s-monitoring/templates/platform_specific/openshift/alloy-metrics-scc.yaml
+# Source: k8s-monitoring/templates/platform_specific/openshift/alloy-scc.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: k8smon-alloy-singleton-scc
+  name: k8smon-alloy-logs-scc
 rules:
 - verbs:
     - use
@@ -1491,22 +1506,7 @@ rules:
   resources:
     - securitycontextconstraints
   resourceNames:
-    - k8smon-alloy-singleton
----
-# Source: k8s-monitoring/templates/platform_specific/openshift/alloy-singleton-scc.yaml
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: k8smon-alloy-singleton-scc
-rules:
-- verbs:
-    - use
-  apiGroups:
-    - security.openshift.io
-  resources:
-    - securitycontextconstraints
-  resourceNames:
-    - k8smon-alloy-singleton
+    - k8smon-alloy-logs
 ---
 # Source: k8s-monitoring/charts/alloy-operator/templates/rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -1530,7 +1530,21 @@ subjects:
     name: k8smon-alloy-operator
     namespace: default
 ---
-# Source: k8s-monitoring/templates/platform_specific/openshift/alloy-logs-scc.yaml
+# Source: k8s-monitoring/templates/platform_specific/openshift/alloy-scc.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: k8smon-alloy-metrics-scc
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: k8smon-alloy-metrics-scc
+subjects:
+- kind: ServiceAccount
+  name: k8smon-alloy-metrics
+  namespace: default
+---
+# Source: k8s-monitoring/templates/platform_specific/openshift/alloy-scc.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
@@ -1544,32 +1558,18 @@ subjects:
   name: k8smon-alloy-singleton
   namespace: default
 ---
-# Source: k8s-monitoring/templates/platform_specific/openshift/alloy-metrics-scc.yaml
+# Source: k8s-monitoring/templates/platform_specific/openshift/alloy-scc.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: k8smon-alloy-singleton-scc
+  name: k8smon-alloy-logs-scc
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: k8smon-alloy-singleton-scc
+  name: k8smon-alloy-logs-scc
 subjects:
 - kind: ServiceAccount
-  name: k8smon-alloy-singleton
-  namespace: default
----
-# Source: k8s-monitoring/templates/platform_specific/openshift/alloy-singleton-scc.yaml
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: k8smon-alloy-singleton-scc
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: k8smon-alloy-singleton-scc
-subjects:
-- kind: ServiceAccount
-  name: k8smon-alloy-singleton
+  name: k8smon-alloy-logs
   namespace: default
 ---
 # Source: k8s-monitoring/charts/alloy-operator/templates/rbac.yaml
@@ -2443,11 +2443,115 @@ spec:
     relabelings: []
     tlsConfig: {}
 ---
-# Source: k8s-monitoring/templates/platform_specific/openshift/alloy-logs-scc.yaml
+# Source: k8s-monitoring/templates/platform_specific/openshift/alloy-scc.yaml
+apiVersion: security.openshift.io/v1
+kind: SecurityContextConstraints
+metadata:
+  name: k8smon-alloy-metrics
+allowHostDirVolumePlugin: false
+allowHostIPC: false
+allowHostNetwork: false
+allowHostPID: false
+allowHostPorts: false
+allowPrivilegeEscalation: false
+allowPrivilegedContainer: false
+allowedCapabilities:
+- CHOWN
+- DAC_OVERRIDE
+- FOWNER
+- FSETID
+- KILL
+- SETGID
+- SETUID
+- SETPCAP
+- NET_BIND_SERVICE
+- NET_RAW
+- SYS_CHROOT
+- MKNOD
+- AUDIT_WRITE
+- SETFCAP
+defaultAddCapabilities: null
+defaultAllowPrivilegeEscalation: false
+forbiddenSysctls:
+- '*'
+fsGroup:
+  type: RunAsAny
+groups: []
+priority: null
+readOnlyRootFilesystem: false  # Set because Grafana Alloy needs to write to /tmp/alloy
+requiredDropCapabilities: null
+runAsUser:
+  type: RunAsAny
+seLinuxContext:
+  type: RunAsAny
+seccompProfiles:
+  - runtime/default
+supplementalGroups:
+  type: RunAsAny
+users: []
+volumes:
+- configMap
+- emptyDir
+- projected
+- secret
+---
+# Source: k8s-monitoring/templates/platform_specific/openshift/alloy-scc.yaml
 apiVersion: security.openshift.io/v1
 kind: SecurityContextConstraints
 metadata:
   name: k8smon-alloy-singleton
+allowHostDirVolumePlugin: false
+allowHostIPC: false
+allowHostNetwork: false
+allowHostPID: false
+allowHostPorts: false
+allowPrivilegeEscalation: false
+allowPrivilegedContainer: false
+allowedCapabilities:
+- CHOWN
+- DAC_OVERRIDE
+- FOWNER
+- FSETID
+- KILL
+- SETGID
+- SETUID
+- SETPCAP
+- NET_BIND_SERVICE
+- NET_RAW
+- SYS_CHROOT
+- MKNOD
+- AUDIT_WRITE
+- SETFCAP
+defaultAddCapabilities: null
+defaultAllowPrivilegeEscalation: false
+forbiddenSysctls:
+- '*'
+fsGroup:
+  type: RunAsAny
+groups: []
+priority: null
+readOnlyRootFilesystem: false  # Set because Grafana Alloy needs to write to /tmp/alloy
+requiredDropCapabilities: null
+runAsUser:
+  type: RunAsAny
+seLinuxContext:
+  type: RunAsAny
+seccompProfiles:
+  - runtime/default
+supplementalGroups:
+  type: RunAsAny
+users: []
+volumes:
+- configMap
+- emptyDir
+- projected
+- secret
+---
+# Source: k8s-monitoring/templates/platform_specific/openshift/alloy-scc.yaml
+apiVersion: security.openshift.io/v1
+kind: SecurityContextConstraints
+metadata:
+  name: k8smon-alloy-logs
 allowHostDirVolumePlugin: true
 allowHostIPC: false
 allowHostNetwork: false
@@ -2493,109 +2597,5 @@ volumes:
 - configMap
 - emptyDir
 - hostPath
-- projected
-- secret
----
-# Source: k8s-monitoring/templates/platform_specific/openshift/alloy-metrics-scc.yaml
-apiVersion: security.openshift.io/v1
-kind: SecurityContextConstraints
-metadata:
-  name: k8smon-alloy-singleton
-allowHostDirVolumePlugin: false
-allowHostIPC: false
-allowHostNetwork: false
-allowHostPID: false
-allowHostPorts: false
-allowPrivilegeEscalation: false
-allowPrivilegedContainer: false
-allowedCapabilities:
-- CHOWN
-- DAC_OVERRIDE
-- FOWNER
-- FSETID
-- KILL
-- SETGID
-- SETUID
-- SETPCAP
-- NET_BIND_SERVICE
-- NET_RAW
-- SYS_CHROOT
-- MKNOD
-- AUDIT_WRITE
-- SETFCAP
-defaultAddCapabilities: null
-defaultAllowPrivilegeEscalation: false
-forbiddenSysctls:
-- '*'
-fsGroup:
-  type: RunAsAny
-groups: []
-priority: null
-readOnlyRootFilesystem: false  # Set because Grafana Alloy needs to write to /tmp/alloy
-requiredDropCapabilities: null
-runAsUser:
-  type: RunAsAny
-seLinuxContext:
-  type: RunAsAny
-seccompProfiles:
-  - runtime/default
-supplementalGroups:
-  type: RunAsAny
-users: []
-volumes:
-- configMap
-- emptyDir
-- projected
-- secret
----
-# Source: k8s-monitoring/templates/platform_specific/openshift/alloy-singleton-scc.yaml
-apiVersion: security.openshift.io/v1
-kind: SecurityContextConstraints
-metadata:
-  name: k8smon-alloy-singleton
-allowHostDirVolumePlugin: false
-allowHostIPC: false
-allowHostNetwork: false
-allowHostPID: false
-allowHostPorts: false
-allowPrivilegeEscalation: false
-allowPrivilegedContainer: false
-allowedCapabilities:
-- CHOWN
-- DAC_OVERRIDE
-- FOWNER
-- FSETID
-- KILL
-- SETGID
-- SETUID
-- SETPCAP
-- NET_BIND_SERVICE
-- NET_RAW
-- SYS_CHROOT
-- MKNOD
-- AUDIT_WRITE
-- SETFCAP
-defaultAddCapabilities: null
-defaultAllowPrivilegeEscalation: false
-forbiddenSysctls:
-- '*'
-fsGroup:
-  type: RunAsAny
-groups: []
-priority: null
-readOnlyRootFilesystem: false  # Set because Grafana Alloy needs to write to /tmp/alloy
-requiredDropCapabilities: null
-runAsUser:
-  type: RunAsAny
-seLinuxContext:
-  type: RunAsAny
-seccompProfiles:
-  - runtime/default
-supplementalGroups:
-  type: RunAsAny
-users: []
-volumes:
-- configMap
-- emptyDir
 - projected
 - secret
