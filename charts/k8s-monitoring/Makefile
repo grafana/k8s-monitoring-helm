@@ -77,9 +77,11 @@ else
 	docker run --rm --volume "$(shell pwd):/helm-docs" -u $(shell id -u) jnorwood/helm-docs:latest
 endif
 
-ALLOY_IMAGE = $(shell yq eval 'select(.kind=="StatefulSet" and .metadata.name=="$(EXAMPLE_RELEASE_NAME)-alloy-metrics") | .spec.template.spec.containers[0].image' docs/examples/features/cluster-metrics/default/output.yaml)
+# TODO: Extract the Alloy images from Alloy Operator somehow and add them here.
+#ALLOY_IMAGE = $(shell yq eval 'select(.kind=="StatefulSet" and .metadata.name=="$(EXAMPLE_RELEASE_NAME)-alloy-metrics") | .spec.template.spec.containers[0].image' docs/examples/features/cluster-metrics/default/output.yaml)
+ALLOY_OPERATOR_IMAGE = $(shell yq eval 'select(.kind=="Deployment" and .metadata.name=="$(EXAMPLE_RELEASE_NAME)-alloy-operator") | .spec.template.spec.containers[0].image' docs/examples/features/cluster-metrics/default/output.yaml)
 BEYLA_IMAGE = $(shell yq eval 'select(.kind=="DaemonSet" and .metadata.name=="$(EXAMPLE_RELEASE_NAME)-beyla") | .spec.template.spec.containers[0].image' docs/examples/features/auto-instrumentation/beyla-metrics/output.yaml)
-CONFIG_RELOADER_IMAGE = $(shell yq eval 'select(.kind=="StatefulSet" and .metadata.name=="$(EXAMPLE_RELEASE_NAME)-alloy-metrics") | .spec.template.spec.containers[1].image' docs/examples/features/cluster-metrics/default/output.yaml)
+#CONFIG_RELOADER_IMAGE = $(shell yq eval 'select(.kind=="StatefulSet" and .metadata.name=="$(EXAMPLE_RELEASE_NAME)-alloy-metrics") | .spec.template.spec.containers[1].image' docs/examples/features/cluster-metrics/default/output.yaml)
 KEPLER_IMAGE = $(shell yq eval 'select(.kind=="DaemonSet" and .metadata.name=="$(EXAMPLE_RELEASE_NAME)-kepler") | .spec.template.spec.containers[0].image' docs/examples/features/cluster-metrics/default/output.yaml)
 KUBE_STATE_METRICS_IMAGE = $(shell yq eval 'select(.kind=="Deployment" and .metadata.name=="$(EXAMPLE_RELEASE_NAME)-kube-state-metrics") | .spec.template.spec.containers[0].image' docs/examples/features/cluster-metrics/default/output.yaml)
 NODE_EXPORTER_IMAGE = $(shell yq eval 'select(.kind=="DaemonSet" and .metadata.name=="$(EXAMPLE_RELEASE_NAME)-node-exporter") | .spec.template.spec.containers[0].image' docs/examples/features/cluster-metrics/default/output.yaml)
@@ -92,9 +94,10 @@ docs/Images.md: Chart.yaml docs/examples/features/cluster-metrics/default/output
 	echo "" >> $@
 	echo "| Image Name | Repository | Feature |" >> $@
 	echo "| ---------- | ---------- | ------- |" >> $@
-	echo "| Alloy | $(ALLOY_IMAGE) | Always used. The telemetry data collector. |" >> $@
+	echo "| Alloy Operator | $(ALLOY_OPERATOR_IMAGE) | Always used. Deploys and manages Grafana Alloy collector instances. |" >> $@
+#	echo "| Alloy | $(ALLOY_IMAGE) | Always used. The telemetry data collector. |" >> $@
 	echo "| Beyla | $(BEYLA_IMAGE) | Automatically instruments apps on the cluster, generating metrics and traces. Enabled with \`autoInstrumentation.beyla.enabled=true\`. |" >> $@
-	echo "| Config Reloader | $(CONFIG_RELOADER_IMAGE) | Alloy sidecar that reloads the Alloy configuration upon changes. Enabled with \`alloy-____.configReloader.enabled=true\`. |" >> $@
+	#echo "| Config Reloader | $(CONFIG_RELOADER_IMAGE) | Alloy sidecar that reloads the Alloy configuration upon changes. Enabled with \`alloy-____.configReloader.enabled=true\`. |" >> $@
 	echo "| Kepler | $(KEPLER_IMAGE) | Gathers energy metrics for Kubernetes objects. Enabled with \`clusterMetrics.kepler.enabled=true\`. |" >> $@
 	echo "| kube-state-metrics | $(KUBE_STATE_METRICS_IMAGE) | Gathers Kubernetes cluster object metrics. Enabled with \`clusterMetrics.kube-state-metrics.deploy=true\`. |" >> $@
 	echo "| Node Exporter | $(NODE_EXPORTER_IMAGE) | Gathers Kubernetes cluster node metrics. Enabled with \`clusterMetrics.node-exporter.deploy=true\`. |" >> $@
