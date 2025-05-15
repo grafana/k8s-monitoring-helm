@@ -80,7 +80,7 @@ alloy-operator:
     registry: my.registry.com
     repository: grafana/alloy-operator
     pullSecrets:
-    - name: my-registry-creds
+      - name: my-registry-creds
 
 alloy-metrics:
   enabled: true

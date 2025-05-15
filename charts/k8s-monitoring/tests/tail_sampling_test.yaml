@@ -34,9 +34,9 @@ tests:
             tailSampling:
               enabled: true
               policies:
-              - name: latency-policy
-                type: latency
-                threshold_ms: 5000
+                - name: latency-policy
+                  type: latency
+                  threshold_ms: 5000
     asserts:
       - isKind:
           of: Alloy
@@ -54,11 +54,11 @@ tests:
             tailSampling:
               enabled: true
               policies:
-              - name: numeric_attribute-policy
-                type: numeric_attribute
-                key: key
-                min_value: 1
-                max_value: 256
+                - name: numeric_attribute-policy
+                  type: numeric_attribute
+                  key: key
+                  min_value: 1
+                  max_value: 256
     asserts:
       - isKind:
           of: Alloy
@@ -76,9 +76,9 @@ tests:
             tailSampling:
               enabled: true
               policies:
-              - name: probabilistic-policy
-                type: probabilistic
-                sampling_percentage: 10
+                - name: probabilistic-policy
+                  type: probabilistic
+                  sampling_percentage: 10
     asserts:
       - isKind:
           of: Alloy
@@ -96,11 +96,11 @@ tests:
             tailSampling:
               enabled: true
               policies:
-              - name: status_code-policy
-                type: status_code
-                status_codes:
-                  - UNSET
-                  - ERROR
+                - name: status_code-policy
+                  type: status_code
+                  status_codes:
+                    - UNSET
+                    - ERROR
     asserts:
       - isKind:
           of: Alloy
@@ -118,12 +118,12 @@ tests:
             tailSampling:
               enabled: true
               policies:
-              - name: string_attribute-policy
-                type: string_attribute
-                key: key
-                values:
-                  - value1
-                  - value2
+                - name: string_attribute-policy
+                  type: string_attribute
+                  key: key
+                  values:
+                    - value1
+                    - value2
     asserts:
       - isKind:
           of: Alloy
@@ -141,12 +141,12 @@ tests:
             tailSampling:
               enabled: true
               policies:
-              - name: trace_state-policy
-                type: trace_state
-                key: key
-                values:
-                  - value1
-                  - value2
+                - name: trace_state-policy
+                  type: trace_state
+                  key: key
+                  values:
+                    - value1
+                    - value2
     asserts:
       - isKind:
           of: Alloy
@@ -164,9 +164,9 @@ tests:
             tailSampling:
               enabled: true
               policies:
-              - name: rate_limiting-policy
-                type: rate_limiting
-                spans_per_second: 35
+                - name: rate_limiting-policy
+                  type: rate_limiting
+                  spans_per_second: 35
     asserts:
       - isKind:
           of: Alloy
@@ -184,10 +184,10 @@ tests:
             tailSampling:
               enabled: true
               policies:
-              - name: span_count-policy
-                type: span_count
-                min_spans: 2
-                max_spans: 20
+                - name: span_count-policy
+                  type: span_count
+                  min_spans: 2
+                  max_spans: 20
     asserts:
       - isKind:
           of: Alloy
@@ -205,11 +205,11 @@ tests:
             tailSampling:
               enabled: true
               policies:
-              - name: boolean_attribute-policy
-                type: boolean_attribute
-                key: key
-                value: true
-                invert_match: false 
+                - name: boolean_attribute-policy
+                  type: boolean_attribute
+                  key: key
+                  value: true
+                  invert_match: false
     asserts:
       - isKind:
           of: Alloy
@@ -227,15 +227,15 @@ tests:
             tailSampling:
               enabled: true
               policies:
-              - name: ottl_condition-policy
-                type: ottl_condition
-                error_mode: ignore
-                span:
-                  - attributes["attr_key_1"] == "test_attr_val_1"
-                  - attributes["attr_key_2"] == "test_attr_val_2"
-                spanevent:
-                  - name != "test_span_event_name"
-                  - attributes["event_attr_key"] != "event_attr_val"
+                - name: ottl_condition-policy
+                  type: ottl_condition
+                  error_mode: ignore
+                  span:
+                    - attributes["attr_key_1"] == "test_attr_val_1"
+                    - attributes["attr_key_2"] == "test_attr_val_2"
+                  spanevent:
+                    - name != "test_span_event_name"
+                    - attributes["event_attr_key"] != "event_attr_val"
     asserts:
       - isKind:
           of: Alloy
@@ -253,21 +253,21 @@ tests:
             tailSampling:
               enabled: true
               policies:
-              - name: and-policy
-                type: and
-                and:
-                  and_sub_policy:
-                    - name: test-and-policy-1
-                      type: numeric_attribute
-                      key: key1
-                      min_value: 1
-                      max_value: 256
-                    - name: test-and-policy-2
-                      type: string_attribute
-                      key: key2
-                      values:
-                        - value1
-                        - value2
+                - name: and-policy
+                  type: and
+                  and:
+                    and_sub_policy:
+                      - name: test-and-policy-1
+                        type: numeric_attribute
+                        key: key1
+                        min_value: 1
+                        max_value: 256
+                      - name: test-and-policy-2
+                        type: string_attribute
+                        key: key2
+                        values:
+                          - value1
+                          - value2
     asserts:
       - isKind:
           of: Alloy
@@ -285,31 +285,31 @@ tests:
             tailSampling:
               enabled: true
               policies:
-              - name: composite-policy-1
-                type: composite
-                composite:
-                  max_total_spans_per_second: 1000
-                  policy_order: [test-composite-policy-1, test-composite-policy-2, test-composite-policy-3]
-                  composite_sub_policy:
-                    - name: test-composite-policy-1
-                      type: numeric_attribute
-                      numeric_attribute:
-                      key: key1
-                      min_value: 50
-                    - name: test-composite-policy-2
-                      type: string_attribute
-                      string_attribute:
-                      key: key2
-                      values:
-                        - value1
-                        - value2
-                    - name: test-composite-policy-3
-                      type: always_sample
-                  rate_allocation:
-                    - policy: test-composite-policy-1
-                      percent: 50
-                    - policy: test-composite-policy-2
-                      percent: 25
+                - name: composite-policy-1
+                  type: composite
+                  composite:
+                    max_total_spans_per_second: 1000
+                    policy_order: [test-composite-policy-1, test-composite-policy-2, test-composite-policy-3]
+                    composite_sub_policy:
+                      - name: test-composite-policy-1
+                        type: numeric_attribute
+                        numeric_attribute:
+                        key: key1
+                        min_value: 50
+                      - name: test-composite-policy-2
+                        type: string_attribute
+                        string_attribute:
+                        key: key2
+                        values:
+                          - value1
+                          - value2
+                      - name: test-composite-policy-3
+                        type: always_sample
+                    rate_allocation:
+                      - policy: test-composite-policy-1
+                        percent: 50
+                      - policy: test-composite-policy-2
+                        percent: 25
     asserts:
       - isKind:
           of: Alloy
