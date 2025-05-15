@@ -86,11 +86,17 @@ app.kubernetes.io/name: {{ include "collector.alloy.fullname" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
-{{- /* Gets the Alloy values. Input: $, .collectorName (string, collector name) */ -}}
+{{- /* Gets the Alloy values. Input: $, .collectorName (string, collector name), .collectorValues (object) */ -}}
 {{- define "collector.alloy.values" -}}
 {{- $defaultValues := "collectors/alloy-values.yaml" | .Files.Get | fromYaml }}
 {{- $upstreamValues := "collectors/upstream/alloy-values.yaml" | .Files.Get | fromYaml }}
-{{- $namedDefaultValues := (printf "collectors/named-defaults/%s.yaml" .collectorName) | $.Files.Get | fromYaml }}
-{{- $userValues := (index $.Values .collectorName) }}
+{{- $namedDefaultValues := dict }}
+{{- range $fileName, $_ := $.Files.Glob (printf "collectors/named-defaults/%s.yaml" .collectorName) }}
+  {{- $namedDefaultValues = ($.Files.Get $fileName | fromYaml) }}
+{{- end }}
+{{- $userValues := $.collectorValues }}
+{{- if not $.collectorValues }}
+  {{- $userValues = (index $.Values .collectorName) }}
+{{- end }}
 {{ mergeOverwrite $upstreamValues $defaultValues $namedDefaultValues $userValues | toYaml }}
 {{- end }}
