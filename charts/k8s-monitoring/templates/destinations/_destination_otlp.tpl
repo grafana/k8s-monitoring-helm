@@ -276,7 +276,7 @@ otelcol.processor.filter {{ include "helper.alloy_name" .name | quote }} {
 {{- end }}
 {{- if and .logs.enabled .processors.filters.logs.logRecord }}
   logs {
-    logRecord = [
+    log_record = [
 {{- range $filter := .processors.filters.logs.logRecord }}
 {{ $filter | quote | indent 6 }},
 {{- end }}
