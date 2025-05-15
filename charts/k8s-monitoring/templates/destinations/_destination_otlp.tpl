@@ -274,10 +274,10 @@ otelcol.processor.filter {{ include "helper.alloy_name" .name | quote }} {
 {{- end }}
   }
 {{- end }}
-{{- if and .logs.enabled .processors.filters.logs.log_record }}
+{{- if and .logs.enabled .processors.filters.logs.logRecord }}
   logs {
-    log_record = [
-{{- range $filter := .processors.filters.logs.log_record }}
+    logRecord = [
+{{- range $filter := .processors.filters.logs.logRecord }}
 {{ $filter | quote | indent 6 }},
 {{- end }}
     ]
