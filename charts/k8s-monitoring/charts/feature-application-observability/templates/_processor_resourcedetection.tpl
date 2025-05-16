@@ -4,7 +4,8 @@
 {{- define "feature.applicationObservability.processor.resourcedetection.alloy" }}
 {{- $detectors := include "feature.applicationObservability.processor.resourcedetection.detectors" . | fromYamlArray }}
 otelcol.processor.resourcedetection "{{ .name | default "default" }}" {
-  detectors = {{ $detectors | sortAlpha | toJson }}
+  {{- /* Fix case style for kubernetesNode --> kubernetes_node */}}
+  detectors = {{ $detectors | sortAlpha | toJson | replace "kubernetesNode" "kubernetes_node" }}
   override = {{ .Values.processors.resourceDetection.override }}
 
 {{- range $detector := $detectors }}
