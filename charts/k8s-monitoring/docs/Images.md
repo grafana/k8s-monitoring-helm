@@ -4,7 +4,7 @@ The following is the list of images potentially used in the 2.1.0 version of the
 
 | Image Name | Repository | Feature |
 | ---------- | ---------- | ------- |
-| Alloy Operator | ghcr.io/grafana/alloy-operator:1.0.2 | Always used. Deploys and manages Grafana Alloy collector instances. |
+| Alloy Operator | ghcr.io/grafana/alloy-operator:1.0.3 | Always used. Deploys and manages Grafana Alloy collector instances. |
 | Beyla | docker.io/grafana/beyla:2.0.3 | Automatically instruments apps on the cluster, generating metrics and traces. Enabled with `autoInstrumentation.beyla.enabled=true`. |
 | Kepler | quay.io/sustainable_computing_io/kepler:release-0.8.0 | Gathers energy metrics for Kubernetes objects. Enabled with `clusterMetrics.kepler.enabled=true`. |
 | kube-state-metrics | registry.k8s.io/kube-state-metrics/kube-state-metrics:v2.15.0 | Gathers Kubernetes cluster object metrics. Enabled with `clusterMetrics.kube-state-metrics.deploy=true`. |
