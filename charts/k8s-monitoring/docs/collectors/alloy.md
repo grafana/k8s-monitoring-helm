@@ -32,7 +32,6 @@
 | remoteConfig.secret.embed | bool | `false` | If true, skip secret creation and embed the credentials directly into the configuration. |
 | remoteConfig.secret.name | string | `""` | The name of the secret to create. |
 | remoteConfig.secret.namespace | string | `""` | The namespace for the secret. |
-| remoteConfig.url | string | `""` | The URL of the remote config server. |
 
 ### Remote Configuration
 
@@ -40,7 +39,12 @@
 |-----|------|---------|-------------|
 | remoteConfig.enabled | bool | `false` | Enable fetching configuration from a remote config server. |
 | remoteConfig.extraAttributes | object | `{}` | Attributes to be added to this collector when requesting configuration. |
+| remoteConfig.noProxy | string | `""` | Comma-separated list of IP addresses, CIDR notations, and domain names to exclude from proxying. |
 | remoteConfig.pollFrequency | string | `"5m"` | The frequency at which to poll the remote config server for updates. |
+| remoteConfig.proxyConnectHeader | object | `{}` | Specifies headers to send to proxies during CONNECT requests. |
+| remoteConfig.proxyFromEnvironment | bool | `false` | Use the proxy URL indicated by environment variables. |
+| remoteConfig.proxyURL | string | `""` | The proxy URL to use of the remote config server. |
+| remoteConfig.url | string | `""` | The URL of the remote config server. |
 
 ### Other Values
 
