@@ -12,6 +12,19 @@ remotecfg {
 {{- if .proxyURL }}
   proxy_url = {{ .proxyURL | quote }}
 {{- end }}
+{{- if .noProxy }}
+  no_proxy = {{ .noProxy | quote }}
+{{- end }}
+{{- if .proxyConnectHeader }}
+  proxy_connect_header = {
+{{- range $k, $v := .proxyConnectHeader }}
+    {{ $k | quote }} = {{ $v | toJson }},
+{{- end }}
+  }
+{{- end }}
+{{- if .proxyFromEnvironment }}
+  proxy_from_environment = {{ .proxyFromEnvironment }}
+{{- end }}
 {{- if eq (include "secrets.authType" .) "basic" }}
   basic_auth {
     username = {{ include "secrets.read" (dict "object" . "key" "auth.username" "nonsensitive" true) }}
