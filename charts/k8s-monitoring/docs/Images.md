@@ -1,6 +1,6 @@
 # Images
 
-The following is the list of images potentially used in the 2.1.1 version of the k8s-monitoring Helm chart:
+The following is the list of images potentially used in the 2.1.2 version of the k8s-monitoring Helm chart:
 
 | Image Name | Repository | Feature |
 | ---------- | ---------- | ------- |
