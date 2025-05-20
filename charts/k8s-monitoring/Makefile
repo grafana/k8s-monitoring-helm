@@ -172,6 +172,16 @@ else
 	docker run --platform linux/amd64 --rm --volume $(shell pwd):/src shellspec/shellspec -c /src/tests/example-checks -s /bin/sh
 endif
 
+
+ALLOY_OPERATOR_VERSION=$(shell yq '.dependencies[] | select(.name == "alloy-operator") | .version' Chart.yaml)
+.PHONY: misc-checks
+misc-checks: Chart.yaml
+ifdef HAS_SHELLSPEC
+	ALLOY_OPERATOR_VERSION=$(ALLOY_OPERATOR_VERSION) shellspec -c tests/misc-checks
+else
+	docker run --platform linux/amd64 --rm --env ALLOY_OPERATOR_VERSION=$(ALLOY_OPERATOR_VERSION) --volume $(shell pwd):/src shellspec/shellspec -c /src/tests/misc-checks -s /bin/sh
+endif
+
 .PHONY: integration-test-checks
 integration-test-checks: $(INTEGRATION_TEST_OUTPUT_FILES)
 .PHONY: platform-test-checks
