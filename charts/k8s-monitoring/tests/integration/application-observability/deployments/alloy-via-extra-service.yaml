@@ -1,0 +1,51 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: alloy
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: grafana
+  namespace: alloy
+spec:
+  interval: 1m
+  url: https://grafana.github.io/helm-charts
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: alloy-via-extra-service
+  namespace: alloy
+spec:
+  interval: 1m
+  chart:
+    spec:
+      chart: alloy
+      sourceRef:
+        kind: HelmRepository
+        name: grafana
+        namespace: alloy
+      interval: 1m
+  values:
+    controller:
+      type: deployment
+      replicas: 1
+    alloy:
+      configMap:
+        content: |-
+          tracing {
+            sampling_fraction = 1
+            write_to = [otelcol.exporter.otlphttp.alloy.input]
+          }
+
+          otelcol.exporter.otlphttp "alloy" {
+            client {
+              endpoint = "http://k8smon-extra-receiver.default.svc:4318"
+              tls {
+                insecure = true
+                insecure_skip_verify = true
+              }
+            }
+          }

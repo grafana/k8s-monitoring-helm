@@ -2,10 +2,10 @@
 {{- include "crdValidation" $ }}
 {{- $values := (deepCopy $ | merge (dict "collectorName" $collectorName)) }}
 {{- $alloyValues := (include "collector.alloy.values" $values | fromYaml) | merge (dict "nameOverride" $collectorName) }}
-{{- $excluded := dict "enabled" true "extraConfig" true "includeDestinations" true "remoteConfig" true "logging" true "liveDebugging" true }}
+{{- $fieldsToExclude := include "collector.alloy.extraFields" . | fromYamlArray }}
 {{- $cleanValues := dict }}
 {{- range $key, $val := $alloyValues }}
-  {{- if not (hasKey $excluded $key) }}
+  {{- if not (has $key $fieldsToExclude) }}
     {{- $_ := set $cleanValues $key $val }}
   {{- end }}
 {{- end }}

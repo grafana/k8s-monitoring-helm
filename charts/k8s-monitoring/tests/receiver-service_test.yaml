@@ -105,3 +105,24 @@ tests:
               port: 4317
               targetPort: 4317
               protocol: TCP
+
+  - it: has the right selectors
+    set:
+      cluster: {name: test-cluster}
+      alloy-receiver:
+        enabled: true
+        extraConfig: " "
+        extraService:
+          enabled: true
+          fullname: alloy-ingester
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: Service
+      - equal:
+          path: spec.selector["app.kubernetes.io/instance"]
+          value: RELEASE-NAME-alloy-receiver
+      - equal:
+          path: spec.selector["app.kubernetes.io/name"]
+          value: alloy-receiver
