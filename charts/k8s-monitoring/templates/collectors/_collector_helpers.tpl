@@ -72,18 +72,13 @@
 
 {{- define "collector.alloy.labels" -}}
 helm.sh/chart: {{ include "helper.chart" . }}
-{{ include "collector.alloy.selectorLabels" . }}
-{{/* substr trims delimeter prefix char from alloy.imageId output
-    e.g. ':' for tags and '@' for digests.
-    For digests, we crop the string to a 7-char (short) sha. */}}
-{{/*app.kubernetes.io/version: {{ (include "alloy.imageId" .) | trunc 15 | trimPrefix "@sha256" | trimPrefix ":" | quote }}*/}}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
 app.kubernetes.io/part-of: alloy
 {{- end }}
 
 {{- define "collector.alloy.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "collector.alloy.fullname" . }}
-app.kubernetes.io/instance: {{ .Release.Name }}
+app.kubernetes.io/name: {{ .collectorName }}
+app.kubernetes.io/instance: {{ include "collector.alloy.fullname" . }}
 {{- end }}
 
 {{- /* Gets the Alloy values. Input: $, .collectorName (string, collector name), .collectorValues (object) */ -}}
@@ -99,4 +94,16 @@ app.kubernetes.io/instance: {{ .Release.Name }}
   {{- $userValues = (index $.Values .collectorName) }}
 {{- end }}
 {{ mergeOverwrite $upstreamValues $defaultValues $namedDefaultValues $userValues | toYaml }}
+{{- end }}
+
+{{/* Lists the fields that are not a part of Alloy itself, and should be removed before creating an Alloy instance. */}}
+{{/* Inputs: (none) */}}
+{{- define "collector.alloy.extraFields" }}
+- enabled
+- extraConfig
+- extraService
+- includeDestinations
+- liveDebugging
+- logging
+- remoteConfig
 {{- end }}
