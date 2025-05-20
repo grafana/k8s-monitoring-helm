@@ -1,9 +1,17 @@
 {
   "properties": {
-    "global":                {"properties": {"platform": {"enum": ["", "openshift"]}}},
-    "clusterEvents":         {"properties": {"destinations": { "uniqueItems": true, "items": { "type": "string" }}}},
-    "clusterMetrics":        {"properties": {"destinations": { "uniqueItems": true, "items": { "type": "string" }}}},
-    "podLogs":               {"properties": {"destinations": { "uniqueItems": true, "items": { "type": "string" }}}},
+    "global":                    {"properties": {"platform": {"enum": ["", "openshift"]}}},
+    "clusterEvents":             {"properties": {"destinations": { "uniqueItems": true, "items": { "type": "string" }}}},
+    "clusterMetrics":            {"properties": {"destinations": { "uniqueItems": true, "items": { "type": "string" }}}},
+    "podLogs":                   {"properties": {"destinations": { "uniqueItems": true, "items": { "type": "string" }}}},
+    "nodeLogs":                  {"properties": {"destinations": { "uniqueItems": true, "items": { "type": "string" }}}},
+    "applicationObservability":  {"properties": {"destinations": { "uniqueItems": true, "items": { "type": "string" }}}},
+    "autoInstrumentation":       {"properties": {"destinations": { "uniqueItems": true, "items": { "type": "string" }}}},
+    "annotationAutodiscovery":   {"properties": {"destinations": { "uniqueItems": true, "items": { "type": "string" }}}},
+    "prometheusOperatorObjects": {"properties": {"destinations": { "uniqueItems": true, "items": { "type": "string" }}}},
+    "profiling":                 {"properties": {"destinations": { "uniqueItems": true, "items": { "type": "string" }}}},
+    "integrations":              {"properties": {"destinations": { "uniqueItems": true, "items": { "type": "string" }}}},
+    "selfReporting":             {"properties": {"destinations": { "uniqueItems": true, "items": { "type": "string" }}}},
 
     "destinations": {"$ref": "#/definitions/destination-list"},
     "alloy-metrics": {"$ref": "#/definitions/alloy-collector"},
@@ -13,6 +21,9 @@
     "alloy-profiles": {"$ref": "#/definitions/alloy-collector"}
   },
   "definitions": {
+    "alloy-collector": {"properties":  {
+      "includeDestinations": { "uniqueItems": true, "items": { "type": "string" }}
+    }},
     "loki-destination": {"properties": {
       "auth": {"properties": {
         "type": {"enum": ["none", "basic", "bearerToken", "oauth2"]},

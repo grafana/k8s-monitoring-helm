@@ -8,6 +8,7 @@
 |-----|------|---------|-------------|
 | enabled | bool | `false` | Enable this Alloy instance. |
 | extraConfig | string | `""` | Extra Alloy configuration to be added to the configuration file. |
+| includeDestinations | list | `[]` | Include the configuration components for these destinations. Configuration is already added for destinations used By enabled features on this collector. This is useful when referencing destinations in the extraConfig. |
 | liveDebugging.enabled | bool | `false` | Enable live debugging for the Alloy instance. Requires stability level to be set to "experimental". |
 
 ### Logging
