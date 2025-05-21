@@ -191,10 +191,6 @@ otelcol.receiver.loki "otlp_gateway" {
     logs = [otelcol.processor.attributes.otlp_gateway.input]
   }
 }
-otelcol.auth.basic "otlp_gateway" {
-  username = convert.nonsensitive(remote.kubernetes.secret.otlp_gateway.data["username"])
-  password = remote.kubernetes.secret.otlp_gateway.data["password"]
-}
 
 otelcol.processor.attributes "otlp_gateway" {
   output {
@@ -313,6 +309,11 @@ otelcol.exporter.otlphttp "otlp_gateway" {
     max_interval = "30s"
     max_elapsed_time = "5m"
   }
+}
+
+otelcol.auth.basic "otlp_gateway" {
+  username = convert.nonsensitive(remote.kubernetes.secret.otlp_gateway.data["username"])
+  password = remote.kubernetes.secret.otlp_gateway.data["password"]
 }
 
 remote.kubernetes.secret "otlp_gateway" {

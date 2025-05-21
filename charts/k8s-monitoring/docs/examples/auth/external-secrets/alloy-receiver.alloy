@@ -227,9 +227,6 @@ remote.kubernetes.secret "loki" {
 }
 
 // Destination: tempo (otlp)
-otelcol.auth.bearer "tempo" {
-  token = remote.kubernetes.secret.tempo.data["tempoBearerToken"]
-}
 
 otelcol.processor.attributes "tempo" {
   output {
@@ -284,6 +281,10 @@ otelcol.exporter.otlp "tempo" {
     max_interval = "30s"
     max_elapsed_time = "5m"
   }
+}
+
+otelcol.auth.bearer "tempo" {
+  token = remote.kubernetes.secret.tempo.data["tempoBearerToken"]
 }
 
 remote.kubernetes.secret "tempo" {

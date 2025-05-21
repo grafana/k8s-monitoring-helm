@@ -804,15 +804,6 @@ otelcol.receiver.loki "otel_endpoint" {
     logs = [otelcol.processor.attributes.otel_endpoint.input]
   }
 }
-otelcol.auth.oauth2 "otel_endpoint" {
-  client_id = convert.nonsensitive(remote.kubernetes.secret.otel_endpoint.data["clientId"])
-  client_secret_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
-  endpoint_params = {
-    client_assertion_type = ["urn:ietf:params:oauth:client-assertion-type:jwt-bearer"],
-    grant_type = ["client_credentials"],
-  }
-  token_url = "https://my.idp/application/o/token/"
-}
 
 otelcol.processor.attributes "otel_endpoint" {
   output {
@@ -931,6 +922,16 @@ otelcol.exporter.otlp "otel_endpoint" {
     max_interval = "30s"
     max_elapsed_time = "5m"
   }
+}
+
+otelcol.auth.oauth2 "otel_endpoint" {
+  client_id = convert.nonsensitive(remote.kubernetes.secret.otel_endpoint.data["clientId"])
+  client_secret_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+  endpoint_params = {
+    client_assertion_type = ["urn:ietf:params:oauth:client-assertion-type:jwt-bearer"],
+    grant_type = ["client_credentials"],
+  }
+  token_url = "https://my.idp/application/o/token/"
 }
 
 remote.kubernetes.secret "otel_endpoint" {
