@@ -46,9 +46,3 @@
 | remoteConfig.proxyFromEnvironment | bool | `false` | Use the proxy URL indicated by environment variables. |
 | remoteConfig.proxyURL | string | `""` | The proxy URL to use of the remote config server. |
 | remoteConfig.url | string | `""` | The URL of the remote config server. |
-
-### Other Values
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| crds.create | bool | `false` |  |
