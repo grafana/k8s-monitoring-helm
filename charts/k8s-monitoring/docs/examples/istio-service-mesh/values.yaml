@@ -6,6 +6,15 @@ destinations:
   - name: localPrometheus
     type: prometheus
     url: http://prometheus-server.prometheus.svc:9090/api/v1/write
+  - name: localTempo
+    type: otlp
+    url: tempo.tempo.svc:4317
+    tls:
+      insecure: true
+      insecureSkipVerify: true
+    metrics: {enabled: false}
+    logs: {enabled: false}
+    traces: {enabled: true}
 
 annotationAutodiscovery:
   enabled: true
@@ -17,6 +26,20 @@ annotationAutodiscovery:
 clusterMetrics:
   enabled: true
 
+applicationObservability:
+  enabled: true
+  receivers:
+    otlp:
+      grpc:
+        enabled: true
+      http:
+        enabled: true
+  connectors:
+    grafanaCloudMetrics:
+      enabled: true
+  logs:
+    enabled: false
+
 alloy-metrics:
   enabled: true
   alloy:
@@ -24,3 +47,13 @@ alloy-metrics:
       portName: tcp
   controller:
     replicas: 2
+
+alloy-receiver:
+  enabled: true
+  liveDebugging:
+    enabled: true
+  controller:
+    # Using TPROXY preserves both the source and destination IP addresses and ports, which allows
+    # the k8sattributes processor to look up the pod by IP and enrich the rest of the attributes
+    podAnnotations:
+      sidecar.istio.io/interceptionMode: TPROXY

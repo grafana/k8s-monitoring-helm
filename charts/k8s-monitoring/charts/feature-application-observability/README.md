@@ -153,12 +153,14 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | receivers.otlp.grpc.enabled | bool | `false` | Accept application data over OTLP gRPC. |
+| receivers.otlp.grpc.includeMetadata | bool | `false` | Propagate incoming connection metadata to downstream consumers. |
 | receivers.otlp.grpc.maxConcurrentStreams | int | `0` | Limit the number of concurrent streaming gRPC calls. 0 means no limit. |
 | receivers.otlp.grpc.maxReceivedMessageSize | string | `"4MiB"` | Maximum size of messages the gRPC server will accept. |
 | receivers.otlp.grpc.port | int | `4317` | The port to listen on for OTLP gRPC requests. |
 | receivers.otlp.grpc.readBufferSize | string | `"512KiB"` | Size of the read buffer the gRPC server will use for reading from clients. |
 | receivers.otlp.grpc.writeBufferSize | string | `"32KiB"` | Size of the write buffer the gRPC server will use for writing to clients. |
 | receivers.otlp.http.enabled | bool | `false` | Accept application data over OTLP HTTP. |
+| receivers.otlp.http.includeMetadata | bool | `false` | Propagate incoming connection metadata to downstream consumers. |
 | receivers.otlp.http.maxRequestBodySize | string | `"20MiB"` | Maximum request body size the server will allow. |
 | receivers.otlp.http.port | int | `4318` | The port to listen on for OTLP HTTP requests. |
 | receivers.otlp.includeDebugMetrics | bool | `false` | Whether to include high-cardinality debug metrics. |

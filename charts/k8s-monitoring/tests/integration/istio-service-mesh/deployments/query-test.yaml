@@ -30,6 +30,8 @@ spec:
       namespace: loki
     - name: prometheus
       namespace: prometheus
+    - name: tempo
+      namespace: tempo
   values:
     pod:
       extraAnnotations:
@@ -44,6 +46,7 @@ spec:
           LOKI_TENANTID: 1
           LOKI_USER: loki
           LOKI_PASS: lokipassword
+          TEMPO_URL: http://tempo.tempo.svc:3100/api/search
         queries:
           # Cluster metrics
           - query: kubernetes_build_info{cluster="$CLUSTER", job="integrations/kubernetes/kubelet"}
@@ -69,9 +72,17 @@ spec:
           - query: count_over_time({cluster="$CLUSTER", job!="integrations/kubernetes/eventhandler"}[1h])
             type: logql
 
-          # DPM check
+          # DPM check (ensures that clustering is working)
           - query: avg(count_over_time(scrape_samples_scraped{cluster="$CLUSTER"}[1m]))
             type: promql
             expect:
               value: 1
               operator: ==
+
+          # Alloy Receiver works
+          - query: "{resource.cluster=\"$CLUSTER\" && resource.k8s.deployment.name=\"alloy-app\"}"
+            type: traceql
+
+          # Host Info connector
+          - query: traces_host_info{k8s_cluster_name="$CLUSTER", grafana_host_id="$CLUSTER-control-plane"}
+            type: promql
