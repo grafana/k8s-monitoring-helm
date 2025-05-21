@@ -4,6 +4,7 @@ otelcol.receiver.otlp "receiver" {
 {{- if .Values.receivers.otlp.grpc.enabled }}
   grpc {
     endpoint = "0.0.0.0:{{ .Values.receivers.otlp.grpc.port | int }}"
+    include_metadata = {{ .Values.receivers.otlp.grpc.includeMetadata }}
     max_recv_msg_size = {{ .Values.receivers.otlp.grpc.maxReceivedMessageSize | quote }}
 {{- if ne (int .Values.receivers.otlp.grpc.maxConcurrentStreams) 0 }}
     max_concurrent_streams = {{ .Values.receivers.otlp.grpc.maxConcurrentStreams }}
@@ -15,6 +16,7 @@ otelcol.receiver.otlp "receiver" {
 {{- if .Values.receivers.otlp.http.enabled }}
   http {
     endpoint = "0.0.0.0:{{ .Values.receivers.otlp.http.port | int }}"
+    include_metadata = {{ .Values.receivers.otlp.http.includeMetadata }}
     max_request_body_size = {{ .Values.receivers.otlp.http.maxRequestBodySize | quote }}
   }
 {{- end }}
