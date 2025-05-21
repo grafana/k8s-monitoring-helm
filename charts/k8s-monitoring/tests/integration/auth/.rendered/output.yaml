@@ -597,10 +597,6 @@ data:
         metrics = [otelcol.processor.attributes.prometheus_otlp_basicauth.input]
       }
     }
-    otelcol.auth.basic "prometheus_otlp_basicauth" {
-      username = convert.nonsensitive(remote.kubernetes.secret.prometheus_otlp_basicauth.data["username"])
-      password = remote.kubernetes.secret.prometheus_otlp_basicauth.data["password"]
-    }
     
     otelcol.processor.attributes "prometheus_otlp_basicauth" {
       action {
@@ -671,6 +667,11 @@ data:
       }
     }
     
+    otelcol.auth.basic "prometheus_otlp_basicauth" {
+      username = convert.nonsensitive(remote.kubernetes.secret.prometheus_otlp_basicauth.data["username"])
+      password = remote.kubernetes.secret.prometheus_otlp_basicauth.data["password"]
+    }
+    
     remote.kubernetes.secret "prometheus_otlp_basicauth" {
       name      = "prometheus-otlp-basicauth-k8smon-k8s-monitoring"
       namespace = "default"
@@ -681,9 +682,6 @@ data:
       output {
         metrics = [otelcol.processor.attributes.prometheus_otlp_bearer_token.input]
       }
-    }
-    otelcol.auth.bearer "prometheus_otlp_bearer_token" {
-      token = remote.kubernetes.secret.prometheus_otlp_bearer_token.data["bearerToken"]
     }
     
     otelcol.processor.attributes "prometheus_otlp_bearer_token" {
@@ -753,6 +751,10 @@ data:
         max_interval = "30s"
         max_elapsed_time = "5m"
       }
+    }
+    
+    otelcol.auth.bearer "prometheus_otlp_bearer_token" {
+      token = remote.kubernetes.secret.prometheus_otlp_bearer_token.data["bearerToken"]
     }
     
     remote.kubernetes.secret "prometheus_otlp_bearer_token" {

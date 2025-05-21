@@ -15,7 +15,11 @@
     {{- $alloyConfig := "" }}
     {{- $alloyConfig = cat $alloyConfig ((include "sampler.receiver.otlp.alloy" $receiverConfig) | trim | nindent 0) }}
     {{- $alloyConfig = cat $alloyConfig ((include "sampler.processor.tailSampling.alloy" $samplerConfig) | trim | nindent 0) }}
+    {{- $alloyConfig = cat $alloyConfig (printf "\n\n// Destination: %s (%s)" $destination.name $destination.type) }}
     {{- $alloyConfig = cat $alloyConfig ((include "destinations.otlp.alloy.exporter" $destination) | trim | nindent 0) }}
+    {{- if eq (include "secrets.usesKubernetesSecret" $destination) "true" }}
+      {{- $alloyConfig = cat $alloyConfig (include "secret.alloy" (deepCopy $ | merge (dict "object" $destination)) | nindent 0) }}
+    {{- end }}
     {{- $alloyConfig = regexReplaceAll `[ \t]+(\r?\n)` $alloyConfig "\n" }}
 
     {{- $alloySpec := dict "alloy" (dict "configMap" (dict "create" true "content" $alloyConfig)) }}

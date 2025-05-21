@@ -14,65 +14,6 @@ otelcol.receiver.loki {{ include "helper.alloy_name" .name | quote }} {
   }
 }
 {{- end }}
-{{- if eq (include "secrets.authType" .) "basic" }}
-otelcol.auth.basic {{ include "helper.alloy_name" .name | quote }} {
-  username = {{ include "secrets.read" (dict "object" . "key" "auth.username" "nonsensitive" true) }}
-  password = {{ include "secrets.read" (dict "object" . "key" "auth.password") }}
-}
-{{- else if eq (include "secrets.authType" .) "bearerToken" }}
-{{- if .auth.bearerTokenFile }}
-local.file {{ include "helper.alloy_name" .name | quote }} {
-  filename = {{ .auth.bearerTokenFile | quote }}
-}
-otelcol.auth.bearer {{ include "helper.alloy_name" .name | quote }} {
-  token = local.file.{{ include "helper.alloy_name" .name }}.content
-}
-{{- else }}
-otelcol.auth.bearer {{ include "helper.alloy_name" .name | quote }} {
-  token = {{ include "secrets.read" (dict "object" . "key" "auth.bearerToken") }}
-}
-{{- end }}
-{{- else if eq (include "secrets.authType" .) "oauth2" }}
-otelcol.auth.oauth2 {{ include "helper.alloy_name" .name | quote }} {
-  {{- if eq (include "secrets.usesSecret" (dict "object" . "key" "auth.oauth2.clientId")) "true" }}
-  client_id = {{ include "secrets.read" (dict "object" . "key" "auth.oauth2.clientId" "nonsensitive" true) }}
-  {{- end }}
-  {{- if .auth.oauth2.clientSecretFile }}
-  client_secret_file = {{ .auth.oauth2.clientSecretFile | quote }}
-  {{- else if eq (include "secrets.usesSecret" (dict "object" . "key" "auth.oauth2.clientSecret")) "true" }}
-  client_secret = {{ include "secrets.read" (dict "object" . "key" "auth.oauth2.clientSecret") }}
-  {{- end }}
-  {{- if .auth.oauth2.endpointParams }}
-  endpoint_params = {
-  {{- range $k, $v := .auth.oauth2.endpointParams }}
-    {{ $k }} = {{ $v | toJson }},
-  {{- end }}
-  }
-  {{- end }}
-  {{- if .auth.oauth2.proxyURL }}
-  proxy_url = {{ .auth.oauth2.proxyURL | quote }}
-  {{- end }}
-  {{- if .auth.oauth2.noProxy }}
-  no_proxy = {{ .auth.oauth2.noProxy | quote }}
-  {{- end }}
-  {{- if .auth.oauth2.proxyFromEnvironment }}
-  proxyFromEnvironment = {{ .auth.oauth2.proxyFromEnvironment }}
-  {{- end }}
-  {{- if .auth.oauth2.proxyConnectHeader }}
-  proxy_connect_header = {
-  {{- range $k, $v := .auth.oauth2.proxyConnectHeader }}
-    {{ $k | quote }} = {{ $v | toJson }},
-  {{- end }}
-  }
-  {{- end }}
-  {{- if .auth.oauth2.scopes }}
-  scopes = {{ .auth.oauth2.scopes | toJson }}
-  {{- end }}
-  {{- if .auth.oauth2.tokenURL }}
-  token_url = {{ .auth.oauth2.tokenURL | quote }}
-  {{- end }}
-}
-{{- end }}
 
 otelcol.processor.attributes {{ include "helper.alloy_name" .name | quote }} {
 {{- range $action := .processors.attributes.actions }}
@@ -479,6 +420,70 @@ otelcol.exporter.otlphttp {{ include "helper.alloy_name" .name | quote }} {
     max_elapsed_time = {{ .retryOnFailure.maxElapsedTime | quote }}
   }
 }
+{{- if eq (include "secrets.authType" .) "basic" }}
+
+otelcol.auth.basic {{ include "helper.alloy_name" .name | quote }} {
+  username = {{ include "secrets.read" (dict "object" . "key" "auth.username" "nonsensitive" true) }}
+  password = {{ include "secrets.read" (dict "object" . "key" "auth.password") }}
+}
+{{- else if eq (include "secrets.authType" .) "bearerToken" }}
+{{- if .auth.bearerTokenFile }}
+
+local.file {{ include "helper.alloy_name" .name | quote }} {
+  filename = {{ .auth.bearerTokenFile | quote }}
+}
+
+otelcol.auth.bearer {{ include "helper.alloy_name" .name | quote }} {
+  token = local.file.{{ include "helper.alloy_name" .name }}.content
+}
+{{- else }}
+
+otelcol.auth.bearer {{ include "helper.alloy_name" .name | quote }} {
+  token = {{ include "secrets.read" (dict "object" . "key" "auth.bearerToken") }}
+}
+{{- end }}
+{{- else if eq (include "secrets.authType" .) "oauth2" }}
+
+otelcol.auth.oauth2 {{ include "helper.alloy_name" .name | quote }} {
+  {{- if eq (include "secrets.usesSecret" (dict "object" . "key" "auth.oauth2.clientId")) "true" }}
+  client_id = {{ include "secrets.read" (dict "object" . "key" "auth.oauth2.clientId" "nonsensitive" true) }}
+  {{- end }}
+  {{- if .auth.oauth2.clientSecretFile }}
+  client_secret_file = {{ .auth.oauth2.clientSecretFile | quote }}
+  {{- else if eq (include "secrets.usesSecret" (dict "object" . "key" "auth.oauth2.clientSecret")) "true" }}
+  client_secret = {{ include "secrets.read" (dict "object" . "key" "auth.oauth2.clientSecret") }}
+  {{- end }}
+  {{- if .auth.oauth2.endpointParams }}
+  endpoint_params = {
+  {{- range $k, $v := .auth.oauth2.endpointParams }}
+    {{ $k }} = {{ $v | toJson }},
+  {{- end }}
+  }
+  {{- end }}
+  {{- if .auth.oauth2.proxyURL }}
+  proxy_url = {{ .auth.oauth2.proxyURL | quote }}
+  {{- end }}
+  {{- if .auth.oauth2.noProxy }}
+  no_proxy = {{ .auth.oauth2.noProxy | quote }}
+  {{- end }}
+  {{- if .auth.oauth2.proxyFromEnvironment }}
+  proxyFromEnvironment = {{ .auth.oauth2.proxyFromEnvironment }}
+  {{- end }}
+  {{- if .auth.oauth2.proxyConnectHeader }}
+  proxy_connect_header = {
+  {{- range $k, $v := .auth.oauth2.proxyConnectHeader }}
+    {{ $k | quote }} = {{ $v | toJson }},
+  {{- end }}
+  }
+  {{- end }}
+  {{- if .auth.oauth2.scopes }}
+  scopes = {{ .auth.oauth2.scopes | toJson }}
+  {{- end }}
+  {{- if .auth.oauth2.tokenURL }}
+  token_url = {{ .auth.oauth2.tokenURL | quote }}
+  {{- end }}
+}
+{{- end }}
 {{- end }}
 
 {{- define "secrets.list.otlp" -}}
