@@ -23,7 +23,8 @@
     {{- $alloyConfig = regexReplaceAll `[ \t]+(\r?\n)` $alloyConfig "\n" }}
 
     {{- $alloySpec := dict "alloy" (dict "configMap" (dict "create" true "content" $alloyConfig)) }}
-    {{- $alloy := merge $alloySpec $destination.processors.tailSampling.collector }}
+    {{- $globalValues := include "collector.alloy.values.global" $ | fromYaml }}
+    {{- $alloy := mergeOverwrite $alloySpec $globalValues $destination.processors.tailSampling.collector }}
 ---
 apiVersion: collectors.grafana.com/v1alpha1
 kind: Alloy

@@ -81,10 +81,25 @@ app.kubernetes.io/name: {{ .collectorName }}
 app.kubernetes.io/instance: {{ include "collector.alloy.fullname" . }}
 {{- end }}
 
+{{- define "collector.alloy.values.global"}}
+{{- $globalValues := dict }}
+{{- if dig "image" "registry" "" .Values.global }}
+  {{- $globalValues = mergeOverwrite $globalValues (dict "global" (dict "image" (dict "registry" .Values.global.image.registry))) }}
+{{- end }}
+{{- if dig "image" "pullSecrets" "" .Values.global }}
+  {{- $globalValues = mergeOverwrite $globalValues (dict "global" (dict "image" (dict "pullSecrets" .Values.global.image.pullSecrets))) }}
+{{- end }}
+{{- if dig "podSecurityContext" "" .Values.global }}
+  {{- $globalValues = mergeOverwrite $globalValues (dict "global" (dict "podSecurityContext" .Values.global.podSecurityContext)) }}
+{{- end }}
+{{- $globalValues | toYaml }}
+{{- end }}
+
 {{- /* Gets the Alloy values. Input: $, .collectorName (string, collector name), .collectorValues (object) */ -}}
 {{- define "collector.alloy.values" -}}
 {{- $defaultValues := "collectors/alloy-values.yaml" | .Files.Get | fromYaml }}
 {{- $upstreamValues := "collectors/upstream/alloy-values.yaml" | .Files.Get | fromYaml }}
+{{- $globalValues := include "collector.alloy.values.global" . | fromYaml }}
 {{- $namedDefaultValues := dict }}
 {{- range $fileName, $_ := $.Files.Glob (printf "collectors/named-defaults/%s.yaml" .collectorName) }}
   {{- $namedDefaultValues = ($.Files.Get $fileName | fromYaml) }}
@@ -93,7 +108,7 @@ app.kubernetes.io/instance: {{ include "collector.alloy.fullname" . }}
 {{- if not $.collectorValues }}
   {{- $userValues = (index $.Values .collectorName) }}
 {{- end }}
-{{ mergeOverwrite $upstreamValues $defaultValues $namedDefaultValues $userValues | toYaml }}
+{{ mergeOverwrite $upstreamValues $defaultValues $namedDefaultValues $globalValues $userValues | toYaml }}
 {{- end }}
 
 {{/* Lists the fields that are not a part of Alloy itself, and should be removed before creating an Alloy instance. */}}
