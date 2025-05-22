@@ -29,6 +29,19 @@ destinations:
     type: loki
     url: http://loki.loki.svc:3100/loki/api/v1/push
 
+  - name: tempo
+    type: otlp
+    url: http://tempo.tempo.svc:3200/api/v1/metrics
+    metrics: {enabled: false}
+    logs: {enabled: false}
+    traces: {enabled: true}
+    processors:
+      tailSampling:
+        enabled: true
+        policies:
+          - name: always_sample-policy
+            type: always_sample
+
 # Dependent charts use two methods for global image registry and pull secrets
 # so we need to define it both ways.
 global:
@@ -46,9 +59,19 @@ clusterMetrics:
 podLogs:
   enabled: true
 
+applicationObservability:
+  enabled: true
+  receivers:
+    otlp:
+      http:
+        enabled: true
+
 alloy-metrics:
   enabled: true
 
 alloy-logs:
+  enabled: true
+
+alloy-receiver:
   enabled: true
 ```
