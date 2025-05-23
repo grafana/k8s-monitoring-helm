@@ -16,6 +16,9 @@
 {{- else if eq $policy.type "latency" }}
 latency {
   threshold_ms = {{ $policy.threshold_ms }}
+  {{- if hasKey $policy "upper_threshold_ms" }}
+  upper_threshold_ms = {{ $policy.upper_threshold_ms }}
+  {{- end }}
 }
 {{- else if eq $policy.type "numeric_attribute" }}
 numeric_attribute {
