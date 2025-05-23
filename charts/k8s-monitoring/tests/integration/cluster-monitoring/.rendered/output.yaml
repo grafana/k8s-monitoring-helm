@@ -4,7 +4,7 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: k8smon-alloy-operator
-  namespace: o11y
+  namespace: default
   labels:
     helm.sh/chart: alloy-operator-0.2.9
     app.kubernetes.io/name: alloy-operator
@@ -18,7 +18,7 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: k8smon-kepler
-  namespace: o11y
+  namespace: default
   labels:
     helm.sh/chart: kepler-0.6.0
     app.kubernetes.io/name: kepler
@@ -41,14 +41,14 @@ metadata:
     app.kubernetes.io/version: "2.15.0"
     release: k8smon
   name: k8smon-kube-state-metrics
-  namespace: o11y
+  namespace: default
 ---
 # Source: k8s-monitoring/charts/clusterMetrics/charts/node-exporter/templates/serviceaccount.yaml
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: k8smon-node-exporter
-  namespace: o11y
+  namespace: default
   labels:
     helm.sh/chart: node-exporter-4.46.0
     app.kubernetes.io/managed-by: Helm
@@ -65,7 +65,7 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: k8smon-opencost
-  namespace: o11y
+  namespace: default
   labels:
     helm.sh/chart: opencost-1.43.2
     app.kubernetes.io/name: opencost
@@ -80,7 +80,7 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: k8smon-windows-exporter
-  namespace: o11y
+  namespace: default
   labels:
     helm.sh/chart: windows-exporter-0.10.0
     app.kubernetes.io/managed-by: Helm
@@ -96,7 +96,7 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: "localprometheus-k8smon-k8s-monitoring"
-  namespace: "o11y"
+  namespace: "default"
 type: Opaque
 data:
   username: "cHJvbXVzZXI="
@@ -107,7 +107,7 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: "localloki-k8smon-k8s-monitoring"
-  namespace: "o11y"
+  namespace: "default"
 type: Opaque
 data:
   tenantId: "MQ=="
@@ -119,7 +119,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: k8smon-windows-exporter
-  namespace: o11y
+  namespace: default
   labels:
     helm.sh/chart: windows-exporter-0.10.0
     app.kubernetes.io/managed-by: Helm
@@ -142,7 +142,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: k8smon-alloy-metrics
-  namespace: o11y
+  namespace: default
 data:
   config.alloy: |-
     // Feature: Cluster Metrics
@@ -358,7 +358,7 @@ data:
           label = "app.kubernetes.io/name=kube-state-metrics,release=k8smon"
         }
         namespaces {
-          names = ["o11y"]
+          names = ["default"]
         }
       }
     
@@ -415,7 +415,7 @@ data:
           label = "app.kubernetes.io/name=node-exporter,release=k8smon"
         }
         namespaces {
-          names = ["o11y"]
+          names = ["default"]
         }
       }
     
@@ -547,7 +547,7 @@ data:
       discovery.kubernetes "windows_exporter_pods" {
         role = "pod"
         namespaces {
-          names = ["o11y"]
+          names = ["default"]
         }
         selectors {
           role = "pod"
@@ -730,7 +730,7 @@ data:
     
     remote.kubernetes.secret "localprometheus" {
       name      = "localprometheus-k8smon-k8s-monitoring"
-      namespace = "o11y"
+      namespace = "default"
     }
 ---
 # Source: k8s-monitoring/templates/alloy-config.yaml
@@ -738,7 +738,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: k8smon-alloy-singleton
-  namespace: o11y
+  namespace: default
 data:
   config.alloy: |-
     // Feature: Cluster Events
@@ -932,7 +932,7 @@ data:
     
     remote.kubernetes.secret "localprometheus" {
       name      = "localprometheus-k8smon-k8s-monitoring"
-      namespace = "o11y"
+      namespace = "default"
     }
     
     // Destination: localLoki (loki)
@@ -963,14 +963,14 @@ data:
     
     remote.kubernetes.secret "localloki" {
       name      = "localloki-k8smon-k8s-monitoring"
-      namespace = "o11y"
+      namespace = "default"
     }
 
   self-reporting-metric.prom: |
     
     # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_build_info gauge
-    grafana_kubernetes_monitoring_build_info{version="2.1.4", namespace="o11y"} 1
+    grafana_kubernetes_monitoring_build_info{version="2.1.4", namespace="default"} 1
     # HELP grafana_kubernetes_monitoring_feature_info A metric to report the enabled features of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_feature_info gauge
     grafana_kubernetes_monitoring_feature_info{deployments="kube-state-metrics,node-exporter,windows-exporter,kepler", feature="clusterMetrics", sources="kubelet,kubeletResource,cadvisor,kube-state-metrics,node-exporter,windows-exporter,kepler", version="1.0.0"} 1
@@ -982,7 +982,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: k8smon-alloy-logs
-  namespace: o11y
+  namespace: default
 data:
   config.alloy: |-
     // Feature: Pod Logs
@@ -1195,7 +1195,7 @@ data:
     
     remote.kubernetes.secret "localloki" {
       name      = "localloki-k8smon-k8s-monitoring"
-      namespace = "o11y"
+      namespace = "default"
     }
 ---
 # Source: k8s-monitoring/charts/alloy-operator/templates/rbac.yaml
@@ -1650,7 +1650,7 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: k8smon-alloy-operator
-    namespace: o11y
+    namespace: default
 ---
 # Source: k8s-monitoring/charts/clusterMetrics/charts/kepler/templates/rolebinding.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -1664,7 +1664,7 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: k8smon-kepler
-    namespace: o11y
+    namespace: default
 ---
 # Source: k8s-monitoring/charts/clusterMetrics/charts/kube-state-metrics/templates/clusterrolebinding.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -1687,7 +1687,7 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: k8smon-kube-state-metrics
-  namespace: o11y
+  namespace: default
 ---
 # Source: k8s-monitoring/charts/clusterMetrics/charts/opencost/templates/clusterrolebinding.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -1708,7 +1708,7 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: k8smon-opencost
-    namespace: o11y
+    namespace: default
 ---
 # Source: k8s-monitoring/charts/alloy-operator/templates/rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -1716,7 +1716,7 @@ kind: Role
 metadata:
   name:
     k8smon-alloy-operator-leader-election-role
-  namespace: o11y
+  namespace: default
   labels:
     helm.sh/chart: alloy-operator-0.2.9
     app.kubernetes.io/name: alloy-operator
@@ -1762,7 +1762,7 @@ kind: RoleBinding
 metadata:
   name:
     k8smon-alloy-operator-leader-election-rolebinding
-  namespace: o11y
+  namespace: default
   labels:
     helm.sh/chart: alloy-operator-0.2.9
     app.kubernetes.io/name: alloy-operator
@@ -1777,7 +1777,7 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: k8smon-alloy-operator
-    namespace: o11y
+    namespace: default
 ---
 # Source: k8s-monitoring/charts/alloy-operator/templates/service.yaml
 apiVersion: v1
@@ -1810,7 +1810,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: k8smon-kepler
-  namespace: o11y
+  namespace: default
   labels:
     helm.sh/chart: kepler-0.6.0
     app.kubernetes.io/name: kepler
@@ -1833,7 +1833,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: k8smon-kube-state-metrics
-  namespace: o11y
+  namespace: default
   labels:    
     helm.sh/chart: kube-state-metrics-5.33.1
     app.kubernetes.io/managed-by: Helm
@@ -1861,7 +1861,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: k8smon-node-exporter
-  namespace: o11y
+  namespace: default
   labels:
     helm.sh/chart: node-exporter-4.46.0
     app.kubernetes.io/managed-by: Helm
@@ -1889,7 +1889,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: k8smon-opencost
-  namespace: o11y
+  namespace: default
   labels:
     helm.sh/chart: opencost-1.43.2
     app.kubernetes.io/name: opencost
@@ -1912,7 +1912,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: k8smon-windows-exporter
-  namespace: o11y
+  namespace: default
   labels:
     helm.sh/chart: windows-exporter-0.10.0
     app.kubernetes.io/managed-by: Helm
@@ -1939,7 +1939,7 @@ apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   name: k8smon-kepler
-  namespace: o11y
+  namespace: default
   labels:
     helm.sh/chart: kepler-0.6.0
     app.kubernetes.io/name: kepler
@@ -2075,7 +2075,7 @@ apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   name: k8smon-node-exporter
-  namespace: o11y
+  namespace: default
   labels:
     helm.sh/chart: node-exporter-4.46.0
     app.kubernetes.io/managed-by: Helm
@@ -2202,7 +2202,7 @@ apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   name: k8smon-windows-exporter
-  namespace: o11y
+  namespace: default
   labels:
     helm.sh/chart: windows-exporter-0.10.0
     app.kubernetes.io/managed-by: Helm
@@ -2370,7 +2370,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: k8smon-kube-state-metrics
-  namespace: o11y
+  namespace: default
   labels:    
     helm.sh/chart: kube-state-metrics-5.33.1
     app.kubernetes.io/managed-by: Helm
@@ -2464,7 +2464,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: k8smon-opencost
-  namespace: o11y
+  namespace: default
   labels:
     helm.sh/chart: opencost-1.43.2
     app.kubernetes.io/name: opencost
@@ -2539,7 +2539,7 @@ spec:
             - name: CUSTOM_COST_ENABLED
               value: "false"
             - name: KUBECOST_NAMESPACE
-              value: o11y
+              value: default
             - name: API_PORT
               value: "9003"
             - name: PROMETHEUS_SERVER_ENDPOINT
@@ -2585,7 +2585,7 @@ apiVersion: collectors.grafana.com/v1alpha1
 kind: Alloy
 metadata:
   name: k8smon-alloy-metrics
-  namespace: o11y
+  namespace: default
 spec: 
   alloy:
     clustering:
@@ -2776,7 +2776,7 @@ apiVersion: collectors.grafana.com/v1alpha1
 kind: Alloy
 metadata:
   name: k8smon-alloy-singleton
-  namespace: o11y
+  namespace: default
 spec: 
   alloy:
     clustering:
@@ -2967,7 +2967,7 @@ apiVersion: collectors.grafana.com/v1alpha1
 kind: Alloy
 metadata:
   name: k8smon-alloy-logs
-  namespace: o11y
+  namespace: default
 spec: 
   alloy:
     clustering:

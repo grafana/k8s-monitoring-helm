@@ -4,7 +4,7 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: k8smon-alloy-operator
-  namespace: o11y
+  namespace: default
   labels:
     helm.sh/chart: alloy-operator-0.2.9
     app.kubernetes.io/name: alloy-operator
@@ -18,7 +18,7 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: "prometheus-k8smon-k8s-monitoring"
-  namespace: "o11y"
+  namespace: "default"
 type: Opaque
 data:
   bearerToken: "c2FtcGxlLWJlYXJlci10b2tlbg=="
@@ -28,7 +28,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: k8smon-alloy-metrics
-  namespace: o11y
+  namespace: default
 data:
   config.alloy: |-
     // Feature: Prometheus Operator Objects
@@ -173,14 +173,14 @@ data:
     
     remote.kubernetes.secret "prometheus" {
       name      = "prometheus-k8smon-k8s-monitoring"
-      namespace = "o11y"
+      namespace = "default"
     }
 
   self-reporting-metric.prom: |
     
     # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_build_info gauge
-    grafana_kubernetes_monitoring_build_info{version="2.1.4", namespace="o11y"} 1
+    grafana_kubernetes_monitoring_build_info{version="2.1.4", namespace="default"} 1
     # HELP grafana_kubernetes_monitoring_feature_info A metric to report the enabled features of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_feature_info gauge
     grafana_kubernetes_monitoring_feature_info{feature="applicationObservability", protocols="jaegerthrifthttp", version="1.0.0"} 1
@@ -192,7 +192,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: k8smon-alloy-logs
-  namespace: o11y
+  namespace: default
 data:
   config.alloy: |-
     // Feature: Pod Logs
@@ -404,7 +404,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: k8smon-alloy-receiver
-  namespace: o11y
+  namespace: default
 data:
   config.alloy: |-
     // Feature: Application Observability
@@ -591,7 +591,7 @@ data:
     
     remote.kubernetes.secret "prometheus" {
       name      = "prometheus-k8smon-k8s-monitoring"
-      namespace = "o11y"
+      namespace = "default"
     }
     
     // Destination: loki (loki)
@@ -873,7 +873,7 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: k8smon-alloy-operator
-    namespace: o11y
+    namespace: default
 ---
 # Source: k8s-monitoring/charts/alloy-operator/templates/rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -881,7 +881,7 @@ kind: Role
 metadata:
   name:
     k8smon-alloy-operator-leader-election-role
-  namespace: o11y
+  namespace: default
   labels:
     helm.sh/chart: alloy-operator-0.2.9
     app.kubernetes.io/name: alloy-operator
@@ -927,7 +927,7 @@ kind: RoleBinding
 metadata:
   name:
     k8smon-alloy-operator-leader-election-rolebinding
-  namespace: o11y
+  namespace: default
   labels:
     helm.sh/chart: alloy-operator-0.2.9
     app.kubernetes.io/name: alloy-operator
@@ -942,7 +942,7 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: k8smon-alloy-operator
-    namespace: o11y
+    namespace: default
 ---
 # Source: k8s-monitoring/charts/alloy-operator/templates/service.yaml
 apiVersion: v1
@@ -1042,7 +1042,7 @@ apiVersion: collectors.grafana.com/v1alpha1
 kind: Alloy
 metadata:
   name: k8smon-alloy-metrics
-  namespace: o11y
+  namespace: default
 spec: 
   alloy:
     clustering:
@@ -1233,7 +1233,7 @@ apiVersion: collectors.grafana.com/v1alpha1
 kind: Alloy
 metadata:
   name: k8smon-alloy-logs
-  namespace: o11y
+  namespace: default
 spec: 
   alloy:
     clustering:
@@ -1428,7 +1428,7 @@ apiVersion: collectors.grafana.com/v1alpha1
 kind: Alloy
 metadata:
   name: k8smon-alloy-receiver
-  namespace: o11y
+  namespace: default
 spec: 
   alloy:
     clustering:
