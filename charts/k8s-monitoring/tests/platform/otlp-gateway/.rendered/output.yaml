@@ -4,7 +4,7 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: k8smon-alloy-operator
-  namespace: default
+  namespace: o11y
   labels:
     helm.sh/chart: alloy-operator-0.2.9
     app.kubernetes.io/name: alloy-operator
@@ -18,7 +18,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: k8smon-alloy-metrics
-  namespace: default
+  namespace: o11y
 data:
   config.alloy: |-
     declare "alloy_integration" {
@@ -463,7 +463,7 @@ data:
     
     remote.kubernetes.secret "otlp_gateway" {
       name      = "grafana-cloud-credentials"
-      namespace = "default"
+      namespace = "o11y"
     }
 ---
 # Source: k8s-monitoring/templates/alloy-config.yaml
@@ -471,7 +471,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: k8smon-alloy-singleton
-  namespace: default
+  namespace: o11y
 data:
   config.alloy: |-
     // Feature: Cluster Events
@@ -754,14 +754,14 @@ data:
     
     remote.kubernetes.secret "otlp_gateway" {
       name      = "grafana-cloud-credentials"
-      namespace = "default"
+      namespace = "o11y"
     }
 
   self-reporting-metric.prom: |
     
     # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_build_info gauge
-    grafana_kubernetes_monitoring_build_info{version="2.1.4", namespace="default"} 1
+    grafana_kubernetes_monitoring_build_info{version="2.1.4", namespace="o11y"} 1
     # HELP grafana_kubernetes_monitoring_feature_info A metric to report the enabled features of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_feature_info gauge
     grafana_kubernetes_monitoring_feature_info{feature="clusterEvents", version="1.0.0"} 1
@@ -773,7 +773,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: k8smon-alloy-logs
-  namespace: default
+  namespace: o11y
 data:
   config.alloy: |-
     // Feature: Pod Logs
@@ -933,6 +933,12 @@ data:
             "filename",
             "tmp_container_runtime",
           ]
+        }
+        stage.structured_metadata {
+          values = {
+            "k8s_pod_name" = "k8s_pod_name",
+            "pod" = "pod",
+          }
         }
     
         // Only keep the labels that are defined in the `keepLabels` list.
@@ -1096,7 +1102,7 @@ data:
     
     remote.kubernetes.secret "otlp_gateway" {
       name      = "grafana-cloud-credentials"
-      namespace = "default"
+      namespace = "o11y"
     }
 ---
 # Source: k8s-monitoring/charts/alloy-operator/templates/rbac.yaml
@@ -1291,7 +1297,7 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: k8smon-alloy-operator
-    namespace: default
+    namespace: o11y
 ---
 # Source: k8s-monitoring/charts/alloy-operator/templates/rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -1299,7 +1305,7 @@ kind: Role
 metadata:
   name:
     k8smon-alloy-operator-leader-election-role
-  namespace: default
+  namespace: o11y
   labels:
     helm.sh/chart: alloy-operator-0.2.9
     app.kubernetes.io/name: alloy-operator
@@ -1345,7 +1351,7 @@ kind: RoleBinding
 metadata:
   name:
     k8smon-alloy-operator-leader-election-rolebinding
-  namespace: default
+  namespace: o11y
   labels:
     helm.sh/chart: alloy-operator-0.2.9
     app.kubernetes.io/name: alloy-operator
@@ -1360,7 +1366,7 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: k8smon-alloy-operator
-    namespace: default
+    namespace: o11y
 ---
 # Source: k8s-monitoring/charts/alloy-operator/templates/service.yaml
 apiVersion: v1
@@ -1460,7 +1466,7 @@ apiVersion: collectors.grafana.com/v1alpha1
 kind: Alloy
 metadata:
   name: k8smon-alloy-metrics
-  namespace: default
+  namespace: o11y
 spec: 
   alloy:
     clustering:
@@ -1651,7 +1657,7 @@ apiVersion: collectors.grafana.com/v1alpha1
 kind: Alloy
 metadata:
   name: k8smon-alloy-singleton
-  namespace: default
+  namespace: o11y
 spec: 
   alloy:
     clustering:
@@ -1842,7 +1848,7 @@ apiVersion: collectors.grafana.com/v1alpha1
 kind: Alloy
 metadata:
   name: k8smon-alloy-logs
-  namespace: default
+  namespace: o11y
 spec: 
   alloy:
     clustering:

@@ -4,7 +4,7 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: k8smon-alloy-operator
-  namespace: default
+  namespace: o11y
   labels:
     helm.sh/chart: alloy-operator-0.2.9
     app.kubernetes.io/name: alloy-operator
@@ -18,7 +18,7 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: "prometheus-basicauth-k8smon-k8s-monitoring"
-  namespace: "default"
+  namespace: "o11y"
 type: Opaque
 data:
   username: "YmFzaWN1c2Vy"
@@ -29,7 +29,7 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: "prometheus-bearer-token-k8smon-k8s-monitoring"
-  namespace: "default"
+  namespace: "o11y"
 type: Opaque
 data:
   bearerToken: "bXktYmVhcmVyLXRva2Vu"
@@ -39,7 +39,7 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: "prometheus-otlp-basicauth-k8smon-k8s-monitoring"
-  namespace: "default"
+  namespace: "o11y"
 type: Opaque
 data:
   username: "YmFzaWN1c2Vy"
@@ -50,7 +50,7 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: "prometheus-otlp-bearer-token-k8smon-k8s-monitoring"
-  namespace: "default"
+  namespace: "o11y"
 type: Opaque
 data:
   bearerToken: "bXktYmVhcmVyLXRva2Vu"
@@ -60,7 +60,7 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: "loki-noauth-k8smon-k8s-monitoring"
-  namespace: "default"
+  namespace: "o11y"
 type: Opaque
 data:
   tenantId: "MQ=="
@@ -70,7 +70,7 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: "loki-basicauth-k8smon-k8s-monitoring"
-  namespace: "default"
+  namespace: "o11y"
 type: Opaque
 data:
   tenantId: "MQ=="
@@ -82,7 +82,7 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: "loki-bearer-token-k8smon-k8s-monitoring"
-  namespace: "default"
+  namespace: "o11y"
 type: Opaque
 data:
   tenantId: "MQ=="
@@ -93,7 +93,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: k8smon-alloy-metrics
-  namespace: default
+  namespace: o11y
 data:
   config.alloy: |-
     // Feature: Cluster Metrics
@@ -326,7 +326,7 @@ data:
     
     remote.kubernetes.secret "prometheus_basicauth" {
       name      = "prometheus-basicauth-k8smon-k8s-monitoring"
-      namespace = "default"
+      namespace = "o11y"
     }
     
     // Destination: prometheus-basicauth-external-secret-1 (prometheus)
@@ -514,7 +514,7 @@ data:
     
     remote.kubernetes.secret "prometheus_bearer_token" {
       name      = "prometheus-bearer-token-k8smon-k8s-monitoring"
-      namespace = "default"
+      namespace = "o11y"
     }
     
     // Destination: prometheus-otlp-noauth (otlp)
@@ -674,7 +674,7 @@ data:
     
     remote.kubernetes.secret "prometheus_otlp_basicauth" {
       name      = "prometheus-otlp-basicauth-k8smon-k8s-monitoring"
-      namespace = "default"
+      namespace = "o11y"
     }
     
     // Destination: prometheus-otlp-bearer-token (otlp)
@@ -759,14 +759,14 @@ data:
     
     remote.kubernetes.secret "prometheus_otlp_bearer_token" {
       name      = "prometheus-otlp-bearer-token-k8smon-k8s-monitoring"
-      namespace = "default"
+      namespace = "o11y"
     }
 
   self-reporting-metric.prom: |
     
     # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_build_info gauge
-    grafana_kubernetes_monitoring_build_info{version="2.1.4", namespace="default"} 1
+    grafana_kubernetes_monitoring_build_info{version="2.1.4", namespace="o11y"} 1
     # HELP grafana_kubernetes_monitoring_feature_info A metric to report the enabled features of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_feature_info gauge
     grafana_kubernetes_monitoring_feature_info{feature="clusterMetrics", sources="kubelet", version="1.0.0"} 1
@@ -777,7 +777,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: k8smon-alloy-logs
-  namespace: default
+  namespace: o11y
 data:
   config.alloy: |-
     // Feature: Pod Logs
@@ -993,7 +993,7 @@ data:
     
     remote.kubernetes.secret "loki_noauth" {
       name      = "loki-noauth-k8smon-k8s-monitoring"
-      namespace = "default"
+      namespace = "o11y"
     }
     
     // Destination: loki-basicauth (loki)
@@ -1025,7 +1025,7 @@ data:
     
     remote.kubernetes.secret "loki_basicauth" {
       name      = "loki-basicauth-k8smon-k8s-monitoring"
-      namespace = "default"
+      namespace = "o11y"
     }
     
     // Destination: loki-basicauth-external-secret (loki)
@@ -1089,7 +1089,7 @@ data:
     
     remote.kubernetes.secret "loki_bearer_token" {
       name      = "loki-bearer-token-k8smon-k8s-monitoring"
-      namespace = "default"
+      namespace = "o11y"
     }
 ---
 # Source: k8s-monitoring/charts/alloy-operator/templates/rbac.yaml
@@ -1284,7 +1284,7 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: k8smon-alloy-operator
-    namespace: default
+    namespace: o11y
 ---
 # Source: k8s-monitoring/charts/alloy-operator/templates/rbac.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -1292,7 +1292,7 @@ kind: Role
 metadata:
   name:
     k8smon-alloy-operator-leader-election-role
-  namespace: default
+  namespace: o11y
   labels:
     helm.sh/chart: alloy-operator-0.2.9
     app.kubernetes.io/name: alloy-operator
@@ -1338,7 +1338,7 @@ kind: RoleBinding
 metadata:
   name:
     k8smon-alloy-operator-leader-election-rolebinding
-  namespace: default
+  namespace: o11y
   labels:
     helm.sh/chart: alloy-operator-0.2.9
     app.kubernetes.io/name: alloy-operator
@@ -1353,7 +1353,7 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: k8smon-alloy-operator
-    namespace: default
+    namespace: o11y
 ---
 # Source: k8s-monitoring/charts/alloy-operator/templates/service.yaml
 apiVersion: v1
@@ -1453,7 +1453,7 @@ apiVersion: collectors.grafana.com/v1alpha1
 kind: Alloy
 metadata:
   name: k8smon-alloy-metrics
-  namespace: default
+  namespace: o11y
 spec: 
   alloy:
     clustering:
@@ -1644,7 +1644,7 @@ apiVersion: collectors.grafana.com/v1alpha1
 kind: Alloy
 metadata:
   name: k8smon-alloy-logs
-  namespace: default
+  namespace: o11y
 spec: 
   alloy:
     clustering:
