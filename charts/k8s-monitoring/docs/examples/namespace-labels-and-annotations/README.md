@@ -76,7 +76,13 @@ destinations:
     logs: {enabled: false}
     traces: {enabled: true}
 
-# Omiting default configuration
+clusterMetrics:
+  enabled: true
+
+podLogs:
+  enabled: true
+
+
 
 applicationObservability:
   enabled: true
@@ -122,8 +128,8 @@ alloy-receiver:
   enabled: true
   alloy:
     extraPorts:
-      - name: otlp-grpc
-        port: 4317
-        targetPort: 4317
+      - name: otlp-http
+        port: 4318
+        targetPort: 4318
         protocol: TCP
 ```
