@@ -32,7 +32,7 @@ loki.source.journal "worker" {
   relabel_rules = loki.relabel.journal.rules
   labels = {
     job = {{ .Values.logs.journal.jobLabel | default "integrations/kubernetes/journal" | quote }},
-    instance = env("HOSTNAME"),
+    instance = sys.env("HOSTNAME"),
   }
   forward_to = [loki.process.journal_logs.receiver]
 }
