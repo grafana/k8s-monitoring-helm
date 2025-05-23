@@ -11,6 +11,9 @@ discovery.kubernetes "pods" {
 
 loki.source.kubernetes "pod_logs" {
   targets = discovery.relabel.filtered_pods.output
+  clustering {
+    enabled = true
+  }
   forward_to = [loki.process.pod_logs.receiver]
 }
 {{- end }}
