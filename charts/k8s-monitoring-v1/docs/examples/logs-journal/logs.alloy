@@ -3,7 +3,7 @@ discovery.kubernetes "pods" {
   role = "pod"
   selectors {
     role = "pod"
-    field = "spec.nodeName=" + env("HOSTNAME")
+    field = "spec.nodeName=" + sys.env("HOSTNAME")
   }
 }
 
@@ -174,7 +174,7 @@ loki.source.journal "worker" {
   relabel_rules = loki.relabel.journal.rules
   labels = {
     job = "integrations/kubernetes/journal",
-    instance = env("HOSTNAME"),
+    instance = sys.env("HOSTNAME"),
   }
   forward_to = [loki.process.journal_logs.receiver]
 }
