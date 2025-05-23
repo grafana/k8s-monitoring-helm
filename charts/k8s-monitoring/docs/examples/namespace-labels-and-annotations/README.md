@@ -8,7 +8,6 @@ This example shows how to promote labels and annotations set on the Kubernetes N
 
 ## Metrics
 
-
 Labels and annotations on Kubernetes objects are not set as metric labels on metrics
 like [kube_namespace_annotations](https://github.com/kubernetes/kube-state-metrics/blob/main/docs/metrics/cluster/namespace-metrics.md). This is
 because it would greatly increase metric cardinality, which can get costly.
@@ -20,13 +19,13 @@ This example shows how to extract labels and annotations from the namespace of y
 These attributes can then be promoted to datapoint attributes (labels) for metrics, log attributes for logs, and resouce attributes traces.
 
 In this example:
-	•	the k8sattributes processor is configured to extract the example.com/product annotation and the example.com/team label from the namespace
-	•	the transform processor copies those values to datapoint attributes and make them available for application metrics.
+
+-   The k8sattributes processor is configured to extract the example.com/product annotation and the example.com/team label from the namespace
+-   The transform processor copies those values to datapoint attributes and make them available for application metrics.
 
 As long as these are not promoted these will be available for `target_info` metric.
 
-
-```
+```yaml
 applicationObservability:
   enabled: true
   receivers:
@@ -81,22 +80,13 @@ clusterMetrics:
 
 podLogs:
   enabled: true
-
-
-
 applicationObservability:
   enabled: true
   receivers:
     otlp:
-      grpc:
-        enabled: true
-        port: 4317
       http:
         enabled: true
         port: 4318
-    zipkin:
-      enabled: true
-      port: 9411
   connectors:
     grafanaCloudMetrics:
       enabled: true
@@ -105,18 +95,20 @@ applicationObservability:
       annotations:
         - from: namespace
           key: "example.com/product"
-          tag_name: "product" # This is the name of the label that will be used to store the product
-                              # product as label is available
+          # This is the name of the label that will be used to store the product as label if available
+          tag_name: "product"
       labels:
         - from: namespace
           key: "example.com/team"
-          tag_name: "team" # This is the name of the label that will be used to store the team
-                           # team as label is available
+          # This is the name of the label that will be used to store the team as label if available
+          tag_name: "team"
   metrics:
     transforms:
       datapoint:
-        - set(attributes["product"], resource.attributes["product"]) # This adds the product label to the datapoints and similarly you can add to traces and logs
-        - set(attributes["team"], resource.attributes["team"]) # This adds the team label to the datapoints and similarly you can add to traces and logs
+        # This adds the product label to the datapoints and similarly you can add to traces and logs
+        - set(attributes["product"], resource.attributes["product"])
+        # This adds the team label to the datapoints and similarly you can add to traces and logs
+        - set(attributes["team"], resource.attributes["team"])
 
 alloy-metrics:
   enabled: true

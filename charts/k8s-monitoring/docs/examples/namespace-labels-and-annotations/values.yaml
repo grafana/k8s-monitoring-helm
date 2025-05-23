@@ -21,22 +21,13 @@ clusterMetrics:
 
 podLogs:
   enabled: true
-
-
-
 applicationObservability:
   enabled: true
   receivers:
     otlp:
-      grpc:
-        enabled: true
-        port: 4317
       http:
         enabled: true
         port: 4318
-    zipkin:
-      enabled: true
-      port: 9411
   connectors:
     grafanaCloudMetrics:
       enabled: true
@@ -45,18 +36,20 @@ applicationObservability:
       annotations:
         - from: namespace
           key: "example.com/product"
-          tag_name: "product" # This is the name of the label that will be used to store the product
-                              # product as label is available
+          # This is the name of the label that will be used to store the product as label if available
+          tag_name: "product"
       labels:
         - from: namespace
           key: "example.com/team"
-          tag_name: "team" # This is the name of the label that will be used to store the team
-                           # team as label is available
+          # This is the name of the label that will be used to store the team as label if available
+          tag_name: "team"
   metrics:
     transforms:
       datapoint:
-        - set(attributes["product"], resource.attributes["product"]) # This adds the product label to the datapoints and similarly you can add to traces and logs
-        - set(attributes["team"], resource.attributes["team"]) # This adds the team label to the datapoints and similarly you can add to traces and logs
+        # This adds the product label to the datapoints and similarly you can add to traces and logs
+        - set(attributes["product"], resource.attributes["product"])
+        # This adds the team label to the datapoints and similarly you can add to traces and logs
+        - set(attributes["team"], resource.attributes["team"])
 
 alloy-metrics:
   enabled: true
