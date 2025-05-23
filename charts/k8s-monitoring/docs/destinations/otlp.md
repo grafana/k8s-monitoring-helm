@@ -119,6 +119,7 @@ This defines the options for defining a destination for OpenTelemetry data that 
 | processors.tailSampling.decisionWait | string | `"15s"` | Wait time since the first span of a trace before making a sampling decision. |
 | processors.tailSampling.enabled | bool | `false` | Apply tail sampling policies to the traces before delivering them to this destination. This will create an additional Alloy instance to handle the tail sampling, and traces sent to this destination will be automatically forwarded, using a load balancer component, to the new sampling Alloy instance. |
 | processors.tailSampling.policies | list | `[]` | Tail sampling policies to apply. |
+| processors.tailSampling.receiver | object | `{"otlp":{"grpc":{"maxReceivedMessageSize":"4MB"}}}` | The tail sampling otlp receiver configuration. |
 
 ### Transform Processor
 

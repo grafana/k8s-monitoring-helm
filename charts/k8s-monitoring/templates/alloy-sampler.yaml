@@ -10,7 +10,7 @@
     {{- $samplerConfig := merge (dict "traces" $destinationTarget "name" "tail_sampler") $destination.processors.tailSampling}}
     {{- $samplerTarget := include "sampler.processor.tailSampling.alloy.target" $samplerConfig }}
 
-    {{- $receiverConfig := (dict "traces" $samplerTarget "name" "sampler_receiver") }}
+    {{- $receiverConfig := merge (dict "traces" $samplerTarget "name" "sampler_receiver") $destination.processors.tailSampling }}
 
     {{- $alloyConfig := "" }}
     {{- $alloyConfig = cat $alloyConfig ((include "sampler.receiver.otlp.alloy" $receiverConfig) | trim | nindent 0) }}
