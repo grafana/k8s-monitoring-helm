@@ -1,0 +1,80 @@
+---
+cluster:
+  name: service-graph-metrics-test
+
+destinations:
+  - name: localPrometheus
+    type: prometheus
+    url: http://prometheus-server.prometheus.svc:9090/api/v1/write
+  - name: localLoki
+    type: loki
+    url: http://loki.loki.svc:3100/loki/api/v1/push
+    tenantId: "1"
+    auth:
+      type: basic
+      username: loki
+      password: lokipassword
+  - name: localTempo
+    type: otlp
+    url: tempo.tempo.svc:4317
+    tls:
+      insecure: true
+      insecureSkipVerify: true
+    metrics: {enabled: false}
+    logs: {enabled: false}
+    traces: {enabled: true}
+    processors:
+      serviceGraphMetrics:
+        collector:
+          controller:
+            replicas: 3
+        enabled: true
+        receiver:
+          otlp:
+            grpc:
+              maxReceivedMessageSize: 8MB
+        cacheLoop: 2m
+        databaseNameAttribute: "db.name"
+        dimensions:
+          - cluster
+          - service.name
+          - service.namespace
+          - k8s.deployment.name
+          - k8s.namespace.name
+        metricsFlushInterval: 60s
+        storeExpirationLoop: 5s
+
+applicationObservability:
+  enabled: true
+  receivers:
+    otlp:
+      grpc:
+        enabled: true
+
+alloy-receiver:
+  enabled: true
+  alloy:
+    extraPorts:
+      - name: otlp-grpc
+        port: 4317
+        targetPort: 4317
+        protocol: TCP
+
+integrations:
+  alloy:
+    instances:
+      - name: alloy-receiver
+        labelSelectors:
+          app.kubernetes.io/instance: k8smon-alloy-receiver
+        metrics:
+          tuning:
+            includeMetrics: [otelcol_loadbalancer_.*]
+      - name: alloy-servicegraph
+        labelSelectors:
+          app.kubernetes.io/instance: k8smon-localtempo-servicegraph
+        metrics:
+          tuning:
+            includeMetrics: [traces_service_graph_request_.*]
+
+alloy-metrics:
+  enabled: true

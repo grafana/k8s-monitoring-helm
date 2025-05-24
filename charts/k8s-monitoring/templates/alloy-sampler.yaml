@@ -13,7 +13,7 @@
     {{- $receiverConfig := merge (dict "traces" $samplerTarget "name" "sampler_receiver") $destination.processors.tailSampling }}
 
     {{- $alloyConfig := "" }}
-    {{- $alloyConfig = cat $alloyConfig ((include "sampler.receiver.otlp.alloy" $receiverConfig) | trim | nindent 0) }}
+    {{- $alloyConfig = cat $alloyConfig ((include "receiver.otlp.alloy" $receiverConfig) | trim | nindent 0) }}
     {{- $alloyConfig = cat $alloyConfig ((include "sampler.processor.tailSampling.alloy" $samplerConfig) | trim | nindent 0) }}
     {{- $alloyConfig = cat $alloyConfig (printf "\n\n// Destination: %s (%s)" $destination.name $destination.type) }}
     {{- $alloyConfig = cat $alloyConfig ((include "destinations.otlp.alloy.exporter" $destination) | trim | nindent 0) }}
