@@ -46,12 +46,17 @@ applicationObservability:
     k8sattributes:
       annotations:
         - from: namespace
-          key: "helvetia.io/application-id"
-          tag_name: "leanix_id"
+          key: "example.com/product"
+          tag_name: "product"
+      labels:
+        - from: namespace
+          key: "example.com/team"
+          tag_name: "team"
   metrics:
     transforms:
       datapoint:
-        - set(attributes["leanix_id"], resource.attributes["leanix_id"])
+        - set(attributes["product"], resource.attributes["product"])
+        - set(attributes["team"], resource.attributes["team"])
 ```
 
 ## Values
