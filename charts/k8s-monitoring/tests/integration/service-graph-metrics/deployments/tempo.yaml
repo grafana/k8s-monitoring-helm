@@ -27,4 +27,14 @@ spec:
         kind: HelmRepository
         name: grafana
         namespace: tempo
-      interval:
+      interval: 1m
+  values:
+    tempo:
+      metricsGenerator:
+        enabled: true
+        remoteWriteUrl: http://prometheus-server.prometheus.svc:9090/api/v1/write
+      overrides:
+        defaults:
+          metrics_generator:
+            processors:
+              - local-blocks

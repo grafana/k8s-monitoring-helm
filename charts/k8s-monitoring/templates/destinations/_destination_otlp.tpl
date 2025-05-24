@@ -260,9 +260,9 @@ otelcol.processor.filter {{ include "helper.alloy_name" .name | quote }} {
 {{- end }}
 {{- if .processors.serviceGraphMetrics.enabled }}
       otelcol.exporter.loadbalancing.{{ printf "%s_servicegraph" (include "helper.alloy_name" .name) }}.input,
-  {{/* if tail sampling is enabled, let that pipeline handle writing traces downstream. otherwise, keep traces. */}}
+  {{- /* if tail sampling is enabled, let that pipeline handle writing traces downstream. otherwise, keep traces. */}}
   {{- if not .processors.tailSampling.enabled }}
-    {{- include "destinations.otlp.alloy.exporter.target" . | nindent 2 }}
+    {{- include "destinations.otlp.alloy.exporter.target" . | nindent 6 }},
   {{- end }}
 {{- end }}
     ]
