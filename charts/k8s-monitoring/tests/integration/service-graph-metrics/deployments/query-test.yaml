@@ -31,7 +31,7 @@ spec:
   values:
     tests:
       - env:
-          CLUSTER: tail-sampling-test
+          CLUSTER: service-graph-metrics-test
           PROMETHEUS_URL: http://prometheus-server.prometheus.svc:9090/api/v1/query
           TEMPO_URL: http://tempo.tempo.svc:3100/api/search
         queries:
@@ -41,4 +41,5 @@ spec:
             expect:
               value: 3
               operator: ==
-          # TODO: query test for traces_service_graph_* metrics. query test to make sure traces are still received
+          - query: 'rate(traces_service_graph_request_total{cluster="service-graph-metrics-test"}[1m]) > 0'
+            type: promql
