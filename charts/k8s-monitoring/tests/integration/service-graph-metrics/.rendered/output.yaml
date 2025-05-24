@@ -1118,7 +1118,40 @@ spec:
         otelcol.connector.servicegraph "service_graph_metrics" {
           // https://grafana.com/docs/alloy/latest/reference/components/otelcol/otelcol.connector.servicegraph/
   
-          // TODO configs
+          cache_loop = "2m"
+  
+          database_name_attribute = "db.name"
+  
+          dimensions = [
+              "cluster",
+              "service.name",
+              "service.namespace",
+              "k8s.deployment.name",
+              "k8s.namespace.name",
+          ]
+  
+          latency_histogram_buckets = [
+              "2ms",
+              "4ms",
+              "6ms",
+              "8ms",
+              "10ms",
+              "50ms",
+              "100ms",
+              "200ms",
+              "400ms",
+              "800ms",
+              "1s",
+              "1400ms",
+              "2s",
+              "5s",
+              "10s",
+              "15s",
+          ]
+  
+          metrics_flush_interval = "60s"
+  
+          store_expiration_loop = "5s"
   
           output {
               metrics = [

@@ -33,9 +33,16 @@ destinations:
           otlp:
             grpc:
               maxReceivedMessageSize: 8MB
+        cacheLoop: 2m
+        databaseNameAttribute: "db.name"
         dimensions:
           - cluster
-          - namespace
+          - service.name
+          - service.namespace
+          - k8s.deployment.name
+          - k8s.namespace.name
+        metricsFlushInterval: 60s
+        storeExpirationLoop: 5s
 
 applicationObservability:
   enabled: true
