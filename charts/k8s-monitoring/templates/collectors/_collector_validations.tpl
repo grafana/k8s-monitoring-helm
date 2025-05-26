@@ -10,10 +10,11 @@
   {{- $extraConfigDefined := not (not $collectorValues.extraConfig) }}
   {{- $remoteConfigEnabled := $collectorValues.remoteConfig.enabled }}
   {{- if not (or $usedByAFeature $extraConfigDefined $remoteConfigEnabled) }}
-    {{- $msg := list "" (printf "The %s collector is enabled, but there are no enabled features that will use it. Please disable the collector by setting:" $collectorName) }}
+    {{- $msg := list "" (printf "The %s collector is enabled, but there are no enabled features that will use it." $collectorName) }}
+    {{- $msg = append $msg "Please disable the collector by setting:" }}
     {{- $msg = append $msg (printf "%s:" $collectorName) }}
     {{- $msg = append $msg "  enabled: false" }}
-    {{- $errorMessage := join "\n" $msg }}
+    {{- fail (join "\n" $msg) }}
   {{- end }}
 {{- end }}
 {{- end }}
