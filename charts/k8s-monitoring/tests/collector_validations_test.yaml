@@ -1,0 +1,22 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Validations - Collectors
+templates:
+  - validations.yaml
+tests:
+  - it: warns about collectors that are unused
+    set:
+      cluster: {name: test-cluster}
+      alloy-metrics:
+        enabled: true
+        extraConfig: |-
+          // This is config to make it seem "used"
+      alloy-logs:
+        enabled: true
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            execution error at (k8s-monitoring/templates/validations.yaml:1:4): 
+            The alloy-logs collector is enabled, but there are no enabled features that will use it.
+            Please disable the collector by setting:
+            alloy-logs:
+              enabled: false
