@@ -4,6 +4,18 @@ otelcol.processor.tail_sampling {{ .name | default "default" | quote }} {
   // https://grafana.com/docs/alloy/latest/reference/components/otelcol.processor.tail_sampling/
 
   decision_wait = {{ .decisionWait | quote }}
+{{- if .decisionCache }}
+  decision_cache = {
+    sampled_cache_size     = {{ .decisionCache.sampledCacheSize | default 60000 }},
+    non_sampled_cache_size = {{ .decisionCache.nonSampledCacheSize | default 60000 }},
+  }
+{{- end }}
+{{- if .numTraces }}
+  num_traces = {{ .numTraces | default 50000}}
+{{- end }}
+{{- if .expectedNewTracesPerSec }}
+  expected_new_traces_per_sec = {{ .expectedNewTracesPerSec }}
+{{- end }}
 
 {{- range .policies }}
 {{ include "policy.block" . | trim | nindent 2 }}
