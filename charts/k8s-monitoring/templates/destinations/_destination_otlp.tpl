@@ -66,15 +66,27 @@ otelcol.processor.transform {{ include "helper.alloy_name" .name | quote }} {
 {{ $transform | quote | indent 6 }},
 {{- end }}
 {{- end }}
+{{- if .processors.transform.metrics.resourceFrom }}
+{{- range $transform := .processors.transform.metrics.resourceFrom }}
+{{ $transform | indent 6 }},
+{{- end }}
+{{- end }}
     ]
   }
 
-{{- if .processors.transform.metrics.metric }}
+{{- if or .processors.transform.metrics.metric .processors.transform.metric.metricFrom }}
   metric_statements {
     context = "metric"
     statements = [
+{{- if .processors.transform.metrics.metric }}
 {{- range $transform := .processors.transform.metrics.metric }}
 {{ $transform | quote | indent 6 }},
+{{- end }}
+{{- end }}
+{{- if .processors.transform.metrics.metricFrom }}
+{{- range $transform := .processors.transform.metrics.metricFrom }}
+{{ $transform | indent 6 }},
+{{- end }}
 {{- end }}
     ]
   }
@@ -97,6 +109,11 @@ otelcol.processor.transform {{ include "helper.alloy_name" .name | quote }} {
 {{ $transform | quote | indent 6 }},
 {{- end }}
 {{- end }}
+{{- if .processors.transform.metrics.datapointFrom }}
+{{- range $transform := .processors.transform.metrics.datapointFrom }}
+{{ $transform | indent 6 }},
+{{- end }}
+{{- end }}
     ]
   }
 
@@ -111,6 +128,11 @@ otelcol.processor.transform {{ include "helper.alloy_name" .name | quote }} {
 {{- if .processors.transform.logs.resource }}
 {{- range $transform := .processors.transform.logs.resource }}
 {{ $transform | quote | indent 6 }},
+{{- end }}
+{{- end }}
+{{- if .processors.transform.logs.resourceFrom }}
+{{- range $transform := .processors.transform.logs.resourceFrom }}
+{{ $transform | indent 6 }},
 {{- end }}
 {{- end }}
     ]
@@ -132,14 +154,26 @@ otelcol.processor.transform {{ include "helper.alloy_name" .name | quote }} {
 {{ $transform | quote | indent 6 }},
 {{- end }}
 {{- end }}
+{{- if .processors.transform.logs.logFrom }}
+{{- range $transform := .processors.transform.logs.logFrom }}
+{{ $transform | indent 6 }},
+{{- end }}
+{{- end }}
     ]
   }
-{{- if .processors.transform.logs.scope }}
+{{- if or .processors.transform.logs.scope .processors.transform.logs.scopeFrom }}
   log_statements {
     context = "scope"
     statements = [
+{{- if .processors.transform.logs.scope }}
 {{- range $transform := .processors.transform.logs.scope }}
 {{ $transform | quote | indent 6 }},
+{{- end }}
+{{- end }}
+{{- if .processors.transform.logs.scopeFrom }}
+{{- range $transform := .processors.transform.logs.scopeFrom }}
+{{ $transform | indent 6 }},
+{{- end }}
 {{- end }}
     ]
   }
@@ -158,24 +192,43 @@ otelcol.processor.transform {{ include "helper.alloy_name" .name | quote }} {
 {{ $transform | quote | indent 6 }},
 {{- end }}
 {{- end }}
+{{- if .processors.transform.traces.resourceFrom }}
+{{- range $transform := .processors.transform.traces.resourceFrom }}
+{{ $transform | indent 6 }},
+{{- end }}
+{{- end }}
     ]
   }
-{{- if .processors.transform.traces.span }}
+{{- if or .processors.transform.traces.span .processors.transform.traces.spanFrom }}
   trace_statements {
     context = "span"
     statements = [
+{{- if .processors.transform.traces.span }}
 {{- range $transform := .processors.transform.traces.span }}
 {{ $transform | quote | indent 6 }},
+{{- end }}
+{{- end }}
+{{- if .processors.transform.traces.spanFrom }}
+{{- range $transform := .processors.transform.traces.spanFrom }}
+{{ $transform | indent 6 }},
+{{- end }}
 {{- end }}
     ]
   }
 {{- end }}
-{{- if .processors.transform.traces.spanevent }}
+{{- if or .processors.transform.traces.spanevent .processors.transform.traces.spaneventFrom }}
   trace_statements {
     context = "spanevent"
     statements = [
+{{- if .processors.transform.traces.spanevent }}
 {{- range $transform := .processors.transform.traces.spanevent }}
 {{ $transform | quote | indent 6 }},
+{{- end }}
+{{- end }}
+{{- if .processors.transform.traces.spaneventFrom }}
+{{- range $transform := .processors.transform.traces.spaneventFrom }}
+{{ $transform | indent 6 }},
+{{- end }}
 {{- end }}
     ]
   }
