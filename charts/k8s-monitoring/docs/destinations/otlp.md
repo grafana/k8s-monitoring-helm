@@ -116,11 +116,11 @@ This defines the options for defining a destination for OpenTelemetry data that 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | processors.tailSampling.collector | object | `{"alloy":{},"controller":{"replicas":2,"type":"statefulset"}}` | Settings for the Alloy instance that will handle tail sampling. |
-| processors.tailSampling.decisionCache | object | `{"nonSampledCacheSize":0,"sampledCacheSize":0}` | The number of trace IDs to be kept in an LRU cache, persisting the “keep” decisions for traces that may have already been released from memory. |
+| processors.tailSampling.decisionCache | object | `{}` | The number of trace IDs to be kept in an LRU cache, persisting the “keep” decisions for traces that may have already been released from memory. |
 | processors.tailSampling.decisionWait | string | `"15s"` | Wait time since the first span of a trace before making a sampling decision. |
 | processors.tailSampling.enabled | bool | `false` | Apply tail sampling policies to the traces before delivering them to this destination. This will create an additional Alloy instance to handle the tail sampling, and traces sent to this destination will be automatically forwarded, using a load balancer component, to the new sampling Alloy instance. |
 | processors.tailSampling.expectedNewTracesPerSec | int | `0` | The initial slice sizing of the current batch. |
-| processors.tailSampling.numTraces | int | `50000` | The number of traces to be kept in the current batch. |
+| processors.tailSampling.numTraces | int | `0` | The number of traces to be kept in the current batch. |
 | processors.tailSampling.policies | list | `[]` | Tail sampling policies to apply. |
 | processors.tailSampling.receiver | object | `{"otlp":{"grpc":{"maxReceivedMessageSize":"4MB"}}}` | The tail sampling otlp receiver configuration. |
 
