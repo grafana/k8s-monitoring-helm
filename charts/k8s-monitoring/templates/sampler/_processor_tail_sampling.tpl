@@ -6,8 +6,8 @@ otelcol.processor.tail_sampling {{ .name | default "default" | quote }} {
   decision_wait = {{ .decisionWait | quote }}
 {{- if .decisionCache }}
   decision_cache = {
-    sampled_cache_size     = {{ .decisionCache.sampledCacheSize | default 60000 }},
-    non_sampled_cache_size = {{ .decisionCache.nonSampledCacheSize | default 60000 }},
+    sampled_cache_size     = {{ .decisionCache.sampledCacheSize }},
+    non_sampled_cache_size = {{ .decisionCache.nonSampledCacheSize }},
   }
 {{- end }}
 {{- if .numTraces }}
