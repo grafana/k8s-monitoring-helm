@@ -1,5 +1,5 @@
 # yamllint disable rule:document-start rule:line-length rule:trailing-spaces
-suite: Test Java profiling
+suite: Test - Profiling - Java Profiling
 templates:
   - configmap.yaml
 tests:
@@ -17,6 +17,7 @@ tests:
           of: ConfigMap
       - matchSnapshot:
           path: data["module.alloy"]
+
   - it: should be able to filter by label and annotation
     set:
       deployAsConfigMap: true
@@ -29,6 +30,22 @@ tests:
           colors: [blue, green]
         annotationSelectors:
           k8s.grafana.com/profile: "true"
+      pprof:
+        enabled: false
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["module.alloy"]
+
+  - it: should be able to target all pods, without requiring the annotation
+    set:
+      deployAsConfigMap: true
+      ebpf:
+        enabled: false
+      java:
+        enabled: true
+        targetingScheme: all
       pprof:
         enabled: false
     asserts:

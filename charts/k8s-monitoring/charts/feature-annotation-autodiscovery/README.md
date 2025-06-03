@@ -5,7 +5,6 @@
 
 # feature-annotation-autodiscovery
 
-![Version: 1.0.0](https://img.shields.io/badge/Version-1.0.0-informational?style=flat-square) ![AppVersion: 1.0.0](https://img.shields.io/badge/AppVersion-1.0.0-informational?style=flat-square)
 Gathers metrics automatically based on Kubernetes Pod and Service annotations
 
 The annotation-based autodiscovery feature adds scrape targets based on Kubernetes annotations.
@@ -26,11 +25,14 @@ You can use several other annotations to customize the behavior of the scrape co
 
 *   `k8s.grafana.com/job`: The value to use for the `job` label.
 *   `k8s.grafana.com/instance`: The value to use for the `instance` label.
+*   `k8s.grafana.com/metrics.container`: The name of the container within the Pod to scrape for metrics. This is used to target a specific container within a Pod that has multiple containers.
 *   `k8s.grafana.com/metrics.path`: The path to scrape for metrics. Defaults to `/metrics`.
 *   `k8s.grafana.com/metrics.portNumber`: The port on the Pod or Service to scrape for metrics. This is used to target a specific port by its number, rather than all ports.
 *   `k8s.grafana.com/metrics.portName`: The named port on the Pod or Service to scrape for metrics. This is used to target a specific port by its name, rather than all ports.
 *   `k8s.grafana.com/metrics.scheme`: The scheme to use when scraping metrics. Defaults to `http`.
+*   `k8s.grafana.com/metrics.param`: Allows for setting HTTP parameters when calling the scrape endpoint. Use with `k8s.grafana.com/metrics.param_<key>="<value>"`.
 *   `k8s.grafana.com/metrics.scrapeInterval`: The scrape interval to use when scraping metrics. Defaults to `60s`.
+*   `k8s.grafana.com/metrics.scrapeTimeout`: The scrape timeout to use when scraping metrics. Defaults to `10s`.
 
 ## Testing
 

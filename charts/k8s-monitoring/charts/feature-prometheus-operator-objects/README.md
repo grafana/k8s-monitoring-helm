@@ -5,7 +5,6 @@
 
 # feature-prometheus-operator-objects
 
-![Version: 1.0.0](https://img.shields.io/badge/Version-1.0.0-informational?style=flat-square) ![AppVersion: 1.0.0](https://img.shields.io/badge/AppVersion-1.0.0-informational?style=flat-square)
 Gathers metrics using Prometheus Operator Objects
 
 The Prometheus Operator Objects feature enables the discovery, processing, and utilization of certain Prometheus

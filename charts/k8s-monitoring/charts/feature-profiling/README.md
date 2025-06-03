@@ -5,7 +5,6 @@
 
 # feature-profiling
 
-![Version: 1.0.0](https://img.shields.io/badge/Version-1.0.0-informational?style=flat-square) ![AppVersion: 1.0.0](https://img.shields.io/badge/AppVersion-1.0.0-informational?style=flat-square)
 Gathers profiles from eBPF, Java, and pprof sources.
 
 The Profiling feature enables the collection of profiles from the processes running in the cluster.
@@ -56,7 +55,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | ebpf.annotationSelectors | object | `{}` | Select pods to profile based on pod annotations. Example: `k8s.grafana.com/profile: "true"` will select pods with the annotation `k8s.grafana.com/profile="true"`. Example with multiple values: `color: ["blue", "green"]` will select pods with the annotation `color="blue"` or `color="green"`. |
-| ebpf.annotations.enable | string | `"scrape"` | The annotation action for enabling or disabling collecting of profiles with eBPF. Default is `profiles.grafana.com/cpu.ebpf.scrape`. |
+| ebpf.annotations.enable | string | `"enabled"` | The annotation action for enabling or disabling collecting of profiles with eBPF. Default is `profiles.grafana.com/cpu.ebpf.scrape`. |
 | ebpf.demangle | string | `"none"` | C++ demangle mode. Available options are: none, simplified, templates, full |
 | ebpf.enabled | bool | `true` | Gather profiles using eBPF |
 | ebpf.excludeNamespaces | list | `[]` | Which namespaces to exclude looking for pods. |
@@ -70,7 +69,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | java.annotationSelectors | object | `{}` | Select pods to profile based on pod annotations. Example: `color: "green"` will select pods with the annotation `color="green"`. Example with multiple values: `color: ["blue", "green"]` will select pods with the annotation `color="blue"` or `color="green"`. |
-| java.annotations.enable | string | `"scrape"` | The annotation action for enabling or disabling scraping of Java profiles. |
+| java.annotations.enable | string | `"enabled"` | The annotation action for enabling or disabling scraping of Java profiles. |
 | java.enabled | bool | `true` | Gather profiles by scraping Java HTTP endpoints |
 | java.excludeNamespaces | list | `[]` | Which namespaces to exclude looking for pods. |
 | java.extraDiscoveryRules | string | `""` | Rule blocks to be added to the discovery.relabel component for Java profile sources. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.relabel/#rule-block)) |

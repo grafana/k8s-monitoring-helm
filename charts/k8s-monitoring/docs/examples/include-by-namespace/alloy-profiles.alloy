@@ -23,6 +23,11 @@ declare "profiling" {
       action = "drop"
     }
     rule {
+      source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_cpu_ebpf_enabled"]
+      regex         = "true"
+      action        = "keep"
+    }
+    rule {
       source_labels = ["__meta_kubernetes_namespace"]
       target_label = "namespace"
     }
@@ -65,22 +70,26 @@ declare "profiling" {
     }
   }
 
+  discovery.relabel "potential_java_pods" {
+    targets = discovery.kubernetes.java_pods.targets
+    rule {
+      source_labels = ["__meta_kubernetes_pod_phase"]
+      regex         = "Succeeded|Failed|Completed"
+      action        = "drop"
+    }
+    rule {
+      source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_java_enabled"]
+      regex         = "true"
+      action        = "keep"
+    }
+  }
+
   discovery.process "java_pods" {
-    join = discovery.kubernetes.java_pods.targets
+    join = discovery.kubernetes.potential_java_pods.targets
   }
 
   discovery.relabel "java_pods" {
     targets = discovery.process.java_pods.targets
-    rule {
-      source_labels = ["__meta_kubernetes_pod_phase"]
-      regex = "Succeeded|Failed|Completed"
-      action = "drop"
-    }
-    rule {
-      source_labels = ["__meta_kubernetes_pod_name"]
-      regex = "^$"
-      action = "drop"
-    }
     rule {
       source_labels = ["__meta_process_exe"]
       action = "keep"

@@ -23,7 +23,7 @@ should be able to filter by label and annotation:
             action = "drop"
           }
           rule {
-            source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_cpu_ebpf_scrape"]
+            source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_cpu_ebpf_enabled"]
             regex         = "true"
             action        = "keep"
           }
@@ -91,7 +91,7 @@ should be able to filter by namespace and extra discovery rules:
             action = "drop"
           }
           rule {
-            source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_cpu_ebpf_scrape"]
+            source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_cpu_ebpf_enabled"]
             regex         = "true"
             action        = "keep"
           }
@@ -132,6 +132,66 @@ should be able to filter by namespace and extra discovery rules:
           forward_to = argument.profiles_destinations.value
         }
       }
+should be able to target all pods, without requiring the annotation:
+  1: |
+    |-
+      declare "profiling" {
+        argument "profiles_destinations" {
+          comment = "Must be a list of profile destinations where collected profiles should be forwarded to"
+        }
+        // Profiles: eBPF
+        discovery.kubernetes "ebpf_pods" {
+          role = "pod"
+          selectors {
+            role = "pod"
+            field = "spec.nodeName=" + sys.env("HOSTNAME")
+          }
+        }
+
+        discovery.relabel "ebpf_pods" {
+          targets = discovery.kubernetes.ebpf_pods.targets
+          rule {
+            source_labels = ["__meta_kubernetes_pod_phase"]
+            regex = "Succeeded|Failed|Completed"
+            action = "drop"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_cpu_ebpf_enabled"]
+            regex         = "false"
+            action        = "drop"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_namespace"]
+            target_label = "namespace"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_pod_name"]
+            target_label = "pod"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_pod_node_name"]
+            target_label = "node"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_pod_container_name"]
+            target_label = "container"
+          }
+          // provide arbitrary service_name label, otherwise it will be set to {__meta_kubernetes_namespace}/{__meta_kubernetes_pod_container_name}
+          rule {
+            source_labels = ["__meta_kubernetes_namespace", "__meta_kubernetes_pod_container_name"]
+            separator = "@"
+            regex = "(.*)@(.*)"
+            replacement = "ebpf/${1}/${2}"
+            target_label = "service_name"
+          }
+        }
+
+        pyroscope.ebpf "ebpf_pods" {
+          targets = discovery.relabel.ebpf_pods.output
+          demangle = "none"
+          forward_to = argument.profiles_destinations.value
+        }
+      }
 should build the eBPF profiling configuration:
   1: |
     |-
@@ -156,7 +216,7 @@ should build the eBPF profiling configuration:
             action = "drop"
           }
           rule {
-            source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_cpu_ebpf_scrape"]
+            source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_cpu_ebpf_enabled"]
             regex         = "true"
             action        = "keep"
           }
