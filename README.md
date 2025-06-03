@@ -44,6 +44,7 @@ We hold office hours on the 4th Friday of the month. Meeting times and recording
 
 | Date       | Topic                                         | Link                                      |
 |------------|-----------------------------------------------|-------------------------------------------|
+| 2025-05-27 | 2.1 Release                                   | [Recording](https://youtu.be/12_7y9_EdTI) |
 | 2025-04-25 | 2.1 Release update                            | [Recording](https://youtu.be/prFhW_vOR2w) |
 | 2025-02-28 | 2.1 Release update and K8s Monitoring Product | [Recording](https://youtu.be/bWiDdHSWhiI) |
 | 2025-01-24 | 2.0 Release and future                        | [Recording](https://youtu.be/-cNnXO1AGOk) |
