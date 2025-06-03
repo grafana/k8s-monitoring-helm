@@ -15,22 +15,26 @@ should be able to filter by label and annotation:
           }
         }
 
+        discovery.relabel "potential_java_pods" {
+          targets = discovery.kubernetes.java_pods.targets
+          rule {
+            source_labels = ["__meta_kubernetes_pod_phase"]
+            regex         = "Succeeded|Failed|Completed"
+            action        = "drop"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_java_scrape"]
+            regex         = "true"
+            action        = "keep"
+          }
+        }
+
         discovery.process "java_pods" {
-          join = discovery.kubernetes.java_pods.targets
+          join = discovery.kubernetes.potential_java_pods.targets
         }
 
         discovery.relabel "java_pods" {
           targets = discovery.process.java_pods.targets
-          rule {
-            source_labels = ["__meta_kubernetes_pod_phase"]
-            regex = "Succeeded|Failed|Completed"
-            action = "drop"
-          }
-          rule {
-            source_labels = ["__meta_kubernetes_pod_name"]
-            regex = "^$"
-            action = "drop"
-          }
           rule {
             source_labels = ["__meta_process_exe"]
             action = "keep"
@@ -87,22 +91,26 @@ should build the Java profiling configuration:
           }
         }
 
+        discovery.relabel "potential_java_pods" {
+          targets = discovery.kubernetes.java_pods.targets
+          rule {
+            source_labels = ["__meta_kubernetes_pod_phase"]
+            regex         = "Succeeded|Failed|Completed"
+            action        = "drop"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_java_scrape"]
+            regex         = "true"
+            action        = "keep"
+          }
+        }
+
         discovery.process "java_pods" {
-          join = discovery.kubernetes.java_pods.targets
+          join = discovery.kubernetes.potential_java_pods.targets
         }
 
         discovery.relabel "java_pods" {
           targets = discovery.process.java_pods.targets
-          rule {
-            source_labels = ["__meta_kubernetes_pod_phase"]
-            regex = "Succeeded|Failed|Completed"
-            action = "drop"
-          }
-          rule {
-            source_labels = ["__meta_kubernetes_pod_name"]
-            regex = "^$"
-            action = "drop"
-          }
           rule {
             source_labels = ["__meta_process_exe"]
             action = "keep"

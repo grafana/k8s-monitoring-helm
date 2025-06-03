@@ -1,5 +1,6 @@
 {{ define "feature.profiling.ebpf.alloy" }}
 {{- if .Values.ebpf.enabled }}
+{{- $scrapeAnnotation := include "pod_annotation" (printf "%s/cpu.ebpf.%s" $.Values.annotations.prefix $.Values.ebpf.annotations.enable) }}
 {{- $labelSelectors := list }}
 {{- range $k, $v := .Values.ebpf.labelSelectors }}
   {{- if kindIs "slice" $v }}
@@ -32,6 +33,19 @@ discovery.relabel "ebpf_pods" {
     regex = "Succeeded|Failed|Completed"
     action = "drop"
   }
+{{- if eq .Values.ebpf.targetingScheme "annotation" }}
+  rule {
+    source_labels = [{{ $scrapeAnnotation | quote }}]
+    regex         = "true"
+    action        = "keep"
+  }
+{{- else }}
+  rule {
+    source_labels = [{{ $scrapeAnnotation | quote }}]
+    regex         = "false"
+    action        = "drop"
+  }
+{{- end }}
   rule {
     source_labels = ["__meta_kubernetes_namespace"]
     target_label = "namespace"

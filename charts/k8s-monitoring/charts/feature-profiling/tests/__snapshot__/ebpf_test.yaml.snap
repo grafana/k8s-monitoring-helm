@@ -23,6 +23,11 @@ should be able to filter by label and annotation:
             action = "drop"
           }
           rule {
+            source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_cpu_ebpf_scrape"]
+            regex         = "true"
+            action        = "keep"
+          }
+          rule {
             source_labels = ["__meta_kubernetes_namespace"]
             target_label = "namespace"
           }
@@ -86,6 +91,11 @@ should be able to filter by namespace and extra discovery rules:
             action = "drop"
           }
           rule {
+            source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_cpu_ebpf_scrape"]
+            regex         = "true"
+            action        = "keep"
+          }
+          rule {
             source_labels = ["__meta_kubernetes_namespace"]
             target_label = "namespace"
           }
@@ -144,6 +154,11 @@ should build the eBPF profiling configuration:
             source_labels = ["__meta_kubernetes_pod_phase"]
             regex = "Succeeded|Failed|Completed"
             action = "drop"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_cpu_ebpf_scrape"]
+            regex         = "true"
+            action        = "keep"
           }
           rule {
             source_labels = ["__meta_kubernetes_namespace"]

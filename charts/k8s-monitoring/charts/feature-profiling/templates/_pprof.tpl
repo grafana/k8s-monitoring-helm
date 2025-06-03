@@ -75,11 +75,11 @@ discovery.relabel "pprof_pods" {
 {{- $allProfileTypes := keys .Values.pprof.types | sortAlpha }}
 {{ range $currentType := $allProfileTypes }}
 {{- if get $.Values.pprof.types $currentType }}
-  {{- $scrapeAnnotation := include "pod_annotation" (printf "%s/%s.%s" $.Values.pprof.annotations.prefix $currentType $.Values.pprof.annotations.enable) }}
-  {{- $portNameAnnotation := include "pod_annotation" (printf "%s/%s.%s" $.Values.pprof.annotations.prefix $currentType $.Values.pprof.annotations.portName) }}
-  {{- $portNumberAnnotation := include "pod_annotation" (printf "%s/%s.%s" $.Values.pprof.annotations.prefix $currentType $.Values.pprof.annotations.portNumber) }}
-  {{- $schemeAnnotation := include "pod_annotation" (printf "%s/%s.%s" $.Values.pprof.annotations.prefix $currentType $.Values.pprof.annotations.scheme) }}
-  {{- $pathAnnotation := include "pod_annotation" (printf "%s/%s.%s" $.Values.pprof.annotations.prefix $currentType $.Values.pprof.annotations.path) }}
+  {{- $scrapeAnnotation := include "pod_annotation" (printf "%s/%s.%s" $.Values.annotations.prefix $currentType $.Values.pprof.annotations.enable) }}
+  {{- $portNameAnnotation := include "pod_annotation" (printf "%s/%s.%s" $.Values.annotations.prefix $currentType $.Values.pprof.annotations.portName) }}
+  {{- $portNumberAnnotation := include "pod_annotation" (printf "%s/%s.%s" $.Values.annotations.prefix $currentType $.Values.pprof.annotations.portNumber) }}
+  {{- $schemeAnnotation := include "pod_annotation" (printf "%s/%s.%s" $.Values.annotations.prefix $currentType $.Values.pprof.annotations.scheme) }}
+  {{- $pathAnnotation := include "pod_annotation" (printf "%s/%s.%s" $.Values.annotations.prefix $currentType $.Values.pprof.annotations.path) }}
 discovery.relabel "pprof_pods_{{ $currentType }}_default_name" {
   targets = discovery.relabel.pprof_pods.output
   rule {
