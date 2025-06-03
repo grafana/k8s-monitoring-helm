@@ -93,6 +93,45 @@ pprof:
   # @section -- pprof
   enabled: true
 
+  # -- Profile types to gather
+  # @section -- pprof
+  types:
+    memory: true
+    block: true
+    goroutine: true
+    mutex: true
+    cpu: true
+    fgprof: true
+    godeltaprof_memory: false
+    godeltaprof_mutex: false
+    godeltaprof_block: false
+
+  # -- Configure the annotations that will control how the pprof targets are discovered and how profiles are scraped.
+  # All annotations will be `<prefix>/<type>.<action>`, for example, to "enable" scraping of CPU profiles, set the
+  # annotation `profiles.grafana.com/cpu.scrape: "true"` on the pod. To set the path for memory profiles, set the
+  # annotation `profiles.grafana.com/memory.path: "/debug/pprof/mem"` on the pod.
+  # @section -- pprof
+  annotations:
+    # -- The prefix for all pprof annotations.
+    # @section -- pprof
+    prefix: "profiles.grafana.com"
+
+    # -- The annotation action for enabling or disabling scraping of profiles of a given type.
+    # @section -- pprof
+    enable: "scrape"
+    # -- The annotation action for choosing the port number for scraping profiles of a given type.
+    # @section -- pprof
+    portNumber: "port"
+    # -- The annotation action for choosing the port name for scraping profiles of a given type.
+    # @section -- pprof
+    portName: "port_name"
+    # -- The annotation action for choosing the path for scraping profiles of a given type.
+    # @section -- pprof
+    path: "path"
+    # -- The annotation action for choosing the scheme for scraping profiles of a given type.
+    # @section -- pprof
+    scheme: "scheme"
+
   # -- Select pods to profile based on pod labels.
   # Example: `app.kubernetes.io/name: myapp` will select pods with the label `app.kubernetes.io/name=myapp`.
   # Example with multiple values: `app.kubernetes.io/name: [myapp, myapp2]` will select pods with the label
@@ -127,22 +166,9 @@ pprof:
   scrapeInterval: "15s"
 
   # -- Timeout for collecting profiles.
-  # Must be larger then the scrape interval.
+  # Must be larger than the scrape interval.
   # @section -- pprof
   scrapeTimeout: "18s"
-
-  # -- Profile types to gather
-  # @section -- pprof
-  types:
-    memory: true
-    block: true
-    goroutine: true
-    mutex: true
-    cpu: true
-    fgprof: true
-    godeltaprof_memory: false
-    godeltaprof_mutex: false
-    godeltaprof_block: false
 
 # @ignore
 deployAsConfigMap: false

@@ -79,11 +79,18 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | pprof.annotationSelectors | object | `{}` | Select pods to profile based on pod annotations. Example: `k8s.grafana.com/profile: "true"` will select pods with the annotation `k8s.grafana.com/profile="true"`. Example with multiple values: `color: ["blue", "green"]` will select pods with the annotation `color="blue"` or `color="green"`. |
+| pprof.annotations | object | `{"enable":"scrape","path":"path","portName":"port_name","portNumber":"port","prefix":"profiles.grafana.com","scheme":"scheme"}` | Configure the annotations that will control how the pprof targets are discovered and how profiles are scraped. All annotations will be `<prefix>/<type>.<action>`, for example, to "enable" scraping of CPU profiles, set the annotation `profiles.grafana.com/cpu.scrape: "true"` on the pod. To set the path for memory profiles, set the annotation `profiles.grafana.com/memory.path: "/debug/pprof/mem"` on the pod. |
+| pprof.annotations.enable | string | `"scrape"` | The annotation action for enabling or disabling scraping of profiles of a given type. |
+| pprof.annotations.path | string | `"path"` | The annotation action for choosing the path for scraping profiles of a given type. |
+| pprof.annotations.portName | string | `"port_name"` | The annotation action for choosing the port name for scraping profiles of a given type. |
+| pprof.annotations.portNumber | string | `"port"` | The annotation action for choosing the port number for scraping profiles of a given type. |
+| pprof.annotations.prefix | string | `"profiles.grafana.com"` | The prefix for all pprof annotations. |
+| pprof.annotations.scheme | string | `"scheme"` | The annotation action for choosing the scheme for scraping profiles of a given type. |
 | pprof.enabled | bool | `true` | Gather profiles by scraping pprof HTTP endpoints |
 | pprof.excludeNamespaces | list | `[]` | Which namespaces to exclude looking for pods. |
 | pprof.extraDiscoveryRules | string | `""` | Rule blocks to be added to the discovery.relabel component for eBPF profile sources. These relabeling rules are applied pre-scrape against the targets from service discovery. Before the scrape, any remaining target labels that start with `__` (i.e. `__meta_kubernetes*`) are dropped. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.relabel/#rule-block)) |
 | pprof.labelSelectors | object | `{}` | Select pods to profile based on pod labels. Example: `app.kubernetes.io/name: myapp` will select pods with the label `app.kubernetes.io/name=myapp`. Example with multiple values: `app.kubernetes.io/name: [myapp, myapp2]` will select pods with the label `app.kubernetes.io/name=myapp` or `app.kubernetes.io/name=myapp2`. |
 | pprof.namespaces | list | `[]` | Select pods to profile based on their namespaces. |
 | pprof.scrapeInterval | string | `"15s"` | How frequently to collect profiles. |
-| pprof.scrapeTimeout | string | `"18s"` | Timeout for collecting profiles. Must be larger then the scrape interval. |
+| pprof.scrapeTimeout | string | `"18s"` | Timeout for collecting profiles. Must be larger than the scrape interval. |
 | pprof.types | object | `{"block":true,"cpu":true,"fgprof":true,"godeltaprof_block":false,"godeltaprof_memory":false,"godeltaprof_mutex":false,"goroutine":true,"memory":true,"mutex":true}` | Profile types to gather |
