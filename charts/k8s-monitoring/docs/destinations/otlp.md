@@ -116,11 +116,13 @@ This defines the options for defining a destination for OpenTelemetry data that 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | processors.tailSampling.collector | object | `{"alloy":{},"controller":{"replicas":2,"type":"statefulset"}}` | Settings for the Alloy instance that will handle tail sampling. |
-| processors.tailSampling.decisionCache | object | `{}` | The decision cache for the tail sampling. |
+| processors.tailSampling.decisionCache | object | `{"nonSampledCacheSize":0,"sampledCacheSize":0}` | The decision cache for the tail sampling. When you use decision_cache, configure it with a much higher value than num_traces so decisions for trace IDs are kept longer than the span data for the trace. |
+| processors.tailSampling.decisionCache.nonSampledCacheSize | int | `0` | Configures amount of trace IDs to be kept in an LRU cache, persisting the "drop" decisions for traces that may have already been released from memory. By default, the size is 0 and the cache is inactive. |
+| processors.tailSampling.decisionCache.sampledCacheSize | int | `0` | Configures amount of trace IDs to be kept in an LRU cache, persisting the "keep" decisions for traces that may have already been released from memory. By default, the size is 0 and the cache is inactive. |
 | processors.tailSampling.decisionWait | string | `"15s"` | Wait time since the first span of a trace before making a sampling decision. |
 | processors.tailSampling.enabled | bool | `false` | Apply tail sampling policies to the traces before delivering them to this destination. This will create an additional Alloy instance to handle the tail sampling, and traces sent to this destination will be automatically forwarded, using a load balancer component, to the new sampling Alloy instance. |
 | processors.tailSampling.expectedNewTracesPerSec | int | `0` | Expected number of new traces (helps in allocating data structures). |
-| processors.tailSampling.numTraces | int | `0` | Number of traces kept in memory. |
+| processors.tailSampling.numTraces | int | `0` | Determines the buffer size of the trace delete channel which is composed of trace IDs that are being deleted. Default is 0, which means no buffer is used. |
 | processors.tailSampling.policies | list | `[]` | Tail sampling policies to apply. |
 | processors.tailSampling.receiver | object | `{"otlp":{"grpc":{"maxReceivedMessageSize":"4MB"}}}` | The tail sampling otlp receiver configuration. |
 
