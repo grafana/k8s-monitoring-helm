@@ -74,7 +74,7 @@ otelcol.processor.transform {{ include "helper.alloy_name" .name | quote }} {
     ]
   }
 
-{{- if or .processors.transform.metrics.metric .processors.transform.metric.metricFrom }}
+{{- if or .processors.transform.metrics.metric .processors.transform.metrics.metricFrom }}
   metric_statements {
     context = "metric"
     statements = [
