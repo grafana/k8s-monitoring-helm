@@ -5,18 +5,18 @@
 
 # k8s-monitoring
 
-![Version: 2.1.4](https://img.shields.io/badge/Version-2.1.4-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 2.1.4](https://img.shields.io/badge/AppVersion-2.1.4-informational?style=flat-square)
+![Version: 3.0.0](https://img.shields.io/badge/Version-3.0.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 3.0.0](https://img.shields.io/badge/AppVersion-3.0.0-informational?style=flat-square)
 
 Capture all telemetry data from your Kubernetes cluster.
 
 ## Breaking change announcements
 
-### Version 2.1
+### Version 3.0
 
 #### Alloy Operator
 
-v2.1 introduces the use of the [Alloy Operator](https://github.com/grafana/alloy-operator) to manage the creation and
-lifecycle of Alloy instances. When upgrading from v2.0 to v2.1 or later, you may need to install the Alloy CRD.
+v3.0 introduces the use of the [Alloy Operator](https://github.com/grafana/alloy-operator) to manage the creation and
+lifecycle of Alloy instances. When upgrading from v2.0 to v3.0 or later, you may need to install the Alloy CRD.
 
 To do this, run the following command:
 
@@ -26,7 +26,7 @@ kubectl apply -f https://github.com/grafana/alloy-operator/releases/latest/downl
 
 #### Pod Logs
 
-v2.1 also moves the `pod` and `k8s.pod.name` fields from labels to structured metadata in the pod logs feature. If your
+v3.0 also moves the `pod` and `k8s.pod.name` fields from labels to structured metadata in the pod logs feature. If your
 logs destination does not support structured metadata, you may not see these labels on your logs.
 
 ### Version 2.0
