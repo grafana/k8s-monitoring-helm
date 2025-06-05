@@ -220,6 +220,56 @@ retryOnFailure:
 
 # Processors to apply to the data before delivering it to its destination.
 processors:
+  serviceGraphMetrics:
+    # -- Generate service graph metrics from traces. This will deploy an additional Alloy
+    # instance to handle service graph metrics generation. Traces sent to this destination will
+    # be aumatically forwarded, using a load balancer component, to this Alloy instance.
+    # @section -- Service Graph Metrics
+    enabled: false
+
+    # -- The destinations where service graph metrics will be sent. If empty, all metrics-capable destinations will be used.
+    # @section -- Service Graph Metrics
+    destinations: []
+
+    # -- The service graph otlp receiver configuration.
+    # @section -- Service Graph Metrics
+    receiver:
+      otlp:
+        grpc:
+          maxReceivedMessageSize: 4MB
+
+    # -- Configures how often to delete series which haven’t been updated.
+    # @section -- Service Graph Metrics
+    cacheLoop: 1m
+
+    # -- The attribute name used to identify the database name from span attributes.
+    # @section -- Service Graph Metrics
+    databaseNameAttribute: "db.name"
+
+    # A list of dimensions to add with the default dimensions.
+    # @section -- Service Graph Metrics
+    dimensions: []
+
+    # Buckets for latency histogram metrics.
+    # @section -- Service Graph Metrics
+    latencyHistogramBuckets: ["2ms", "4ms", "6ms", "8ms", "10ms", "50ms", "100ms", "200ms", "400ms", "800ms", "1s", "1400ms", "2s", "5s", "10s", "15s"]
+
+    # The interval at which metrics are flushed to downstream components.
+    # @section -- Service Graph Metrics
+    metricsFlushInterval: 60s
+
+    # The time to expire old entries from the store periodically.
+    # @section -- Service Graph Metrics
+    storeExpirationLoop: 2s
+
+    # -- Settings for the Alloy instance that will handle service graph metrics.
+    # @section -- Service Graph Metrics
+    collector:
+      alloy: {}
+      controller:
+        type: statefulset
+        replicas: 2
+
   tailSampling:
     # -- Apply tail sampling policies to the traces before delivering them to this destination. This will create an
     # additional Alloy instance to handle the tail sampling, and traces sent to this destination will be automatically

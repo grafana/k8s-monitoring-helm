@@ -270,12 +270,24 @@ otelcol.processor.filter {{ include "helper.alloy_name" .name | quote }} {
 {{- end }}
 {{- if ne .traces.enabled false }}
 {{- /* If sampling is enabled, override traces target and enable loadbalancing exporter if sampling is enabled */}}
+{{- if or .processors.tailSampling.enabled .processors.serviceGraphMetrics.enabled }}
+    traces = [
 {{- if .processors.tailSampling.enabled }}
-    traces = [otelcol.exporter.loadbalancing.{{ include "helper.alloy_name" .name }}.input]
+      otelcol.exporter.loadbalancing.{{ printf "%s_sampler" (include "helper.alloy_name" .name) }}.input,
+{{- end }}
+{{- if .processors.serviceGraphMetrics.enabled }}
+      otelcol.exporter.loadbalancing.{{ printf "%s_servicegraph" (include "helper.alloy_name" .name) }}.input,
+  {{- /* if tail sampling is enabled, let that pipeline handle writing traces downstream. otherwise, keep traces. */}}
+  {{- if not .processors.tailSampling.enabled }}
+    {{- include "destinations.otlp.alloy.exporter.target" . | nindent 6 }},
+  {{- end }}
+{{- end }}
+    ]
   }
 }
 
-otelcol.exporter.loadbalancing {{ include "helper.alloy_name" .name | quote }} {
+{{- if .processors.tailSampling.enabled }}
+otelcol.exporter.loadbalancing {{ printf "%s_sampler" (include "helper.alloy_name" .name) | quote }} {
   resolver {
     kubernetes {
       {{- $collectorName := include "helper.k8s_name" (printf "%s-sampler" .name) }}
@@ -293,6 +305,25 @@ otelcol.exporter.loadbalancing {{ include "helper.alloy_name" .name | quote }} {
         }
       }
     }
+{{- end }}
+
+{{- if .processors.serviceGraphMetrics.enabled }}
+otelcol.exporter.loadbalancing {{ printf "%s_servicegraph" (include "helper.alloy_name" .name) | quote }} {
+  resolver {
+    kubernetes {
+      service = "{{ include "helper.k8s_name" (printf "%s-%s-servicegraph-alloy" $.Release.Name .name) }}"
+    }
+  }
+  protocol {
+    otlp {
+      client {
+        tls {
+          insecure = true
+        }
+      }
+    }
+{{- end }}
+
 {{- else }}
     traces = [{{ include "destinations.otlp.alloy.exporter.target" . }}]
 {{- end }}
@@ -534,4 +565,8 @@ otelcol.auth.oauth2 {{ include "helper.alloy_name" .name | quote }} {
 
 {{- define "destinations.otlp.isTailSamplingEnabled" }}
 {{- dig "processors" "tailSampling" "enabled" "false" . -}}
+{{- end -}}
+
+{{- define "destinations.otlp.isServiceGraphsEnabled" }}
+{{- dig "processors" "serviceGraphMetrics" "enabled" "false" . -}}
 {{- end -}}
