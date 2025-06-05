@@ -49,7 +49,7 @@ discovery.relabel "potential_java_pods" {
 }
 
 discovery.process "java_pods" {
-  join = discovery.kubernetes.potential_java_pods.targets
+  join = discovery.relabel.potential_java_pods.output
 }
 
 discovery.relabel "java_pods" {
