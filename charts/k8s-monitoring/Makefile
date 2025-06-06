@@ -213,7 +213,7 @@ build: build-features README.md docs/Images.md values.schema.json templates/dest
 
 # Test targets
 .PHONY: test unittest lint-helm lint-configs
-test: unittest lint-helm lint-configs example-checks test-features
+test: unittest lint-helm lint-configs example-checks misc-checks test-features
 
 test-features:
 	set -e && \
