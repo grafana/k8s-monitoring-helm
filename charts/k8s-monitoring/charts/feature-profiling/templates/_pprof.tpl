@@ -67,6 +67,10 @@ discovery.relabel "pprof_pods" {
     source_labels = ["__meta_kubernetes_pod_container_name"]
     target_label  = "container"
   }
+  rule {
+    replacement = "alloy/pyroscope.pprof"
+    target_label = "source"
+  }
 {{- if .Values.pprof.extraDiscoveryRules }}
 {{ .Values.pprof.extraDiscoveryRules | indent 2 }}
 {{- end }}
@@ -75,35 +79,40 @@ discovery.relabel "pprof_pods" {
 {{- $allProfileTypes := keys .Values.pprof.types | sortAlpha }}
 {{ range $currentType := $allProfileTypes }}
 {{- if get $.Values.pprof.types $currentType }}
+  {{- $scrapeAnnotation := include "pod_annotation" (printf "%s/%s.%s" $.Values.annotations.prefix $currentType $.Values.pprof.annotations.enable) }}
+  {{- $portNameAnnotation := include "pod_annotation" (printf "%s/%s.%s" $.Values.annotations.prefix $currentType $.Values.pprof.annotations.portName) }}
+  {{- $portNumberAnnotation := include "pod_annotation" (printf "%s/%s.%s" $.Values.annotations.prefix $currentType $.Values.pprof.annotations.portNumber) }}
+  {{- $schemeAnnotation := include "pod_annotation" (printf "%s/%s.%s" $.Values.annotations.prefix $currentType $.Values.pprof.annotations.scheme) }}
+  {{- $pathAnnotation := include "pod_annotation" (printf "%s/%s.%s" $.Values.annotations.prefix $currentType $.Values.pprof.annotations.path) }}
 discovery.relabel "pprof_pods_{{ $currentType }}_default_name" {
   targets = discovery.relabel.pprof_pods.output
   rule {
-    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_{{ $currentType }}_scrape"]
+    source_labels = [{{ $scrapeAnnotation | quote }}]
     regex         = "true"
     action        = "keep"
   }
   rule {
-    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_{{ $currentType }}_port_name"]
+    source_labels = [{{ $portNameAnnotation | quote }}]
     regex         = ""
     action        = "keep"
   }
 
   rule {
-    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_{{ $currentType }}_scheme"]
+    source_labels = [{{ $schemeAnnotation | quote }}]
     action        = "replace"
     regex         = "(https?)"
     target_label  = "__scheme__"
     replacement   = "$1"
   }
   rule {
-    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_{{ $currentType }}_path"]
+    source_labels = [{{ $pathAnnotation | quote }}]
     action        = "replace"
     regex         = "(.+)"
     target_label  = "__profile_path__"
     replacement   = "$1"
   }
   rule {
-    source_labels = ["__address__", "__meta_kubernetes_pod_annotation_profiles_grafana_com_{{ $currentType }}_port"]
+    source_labels = ["__address__", {{ $portNumberAnnotation | quote }}]
     action        = "replace"
     regex         = "(.+?)(?::\\d+)?;(\\d+)"
     target_label  = "__address__"
@@ -114,37 +123,37 @@ discovery.relabel "pprof_pods_{{ $currentType }}_default_name" {
 discovery.relabel "pprof_pods_{{ $currentType }}_custom_name" {
   targets = discovery.relabel.pprof_pods.output
   rule {
-    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_{{ $currentType }}_scrape"]
+    source_labels = [{{ $scrapeAnnotation | quote }}]
     regex         = "true"
     action        = "keep"
   }
   rule {
-    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_{{ $currentType }}_port_name"]
+    source_labels = [{{ $portNameAnnotation | quote }}]
     regex         = ""
     action        = "drop"
   }
   rule {
     source_labels = ["__meta_kubernetes_pod_container_port_name"]
-    target_label  = "__meta_kubernetes_pod_annotation_profiles_grafana_com_{{ $currentType }}_port_name"
+    target_label  = {{ $portNameAnnotation | quote }}
     action        = "keepequal"
   }
 
   rule {
-    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_{{ $currentType }}_scheme"]
+    source_labels = [{{ $schemeAnnotation | quote }}]
     action        = "replace"
     regex         = "(https?)"
     target_label  = "__scheme__"
     replacement   = "$1"
   }
   rule {
-    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_{{ $currentType }}_path"]
+    source_labels = [{{ $pathAnnotation | quote }}]
     action        = "replace"
     regex         = "(.+)"
     target_label  = "__profile_path__"
     replacement   = "$1"
   }
   rule {
-    source_labels = ["__address__", "__meta_kubernetes_pod_annotation_profiles_grafana_com_{{ $currentType }}_port"]
+    source_labels = ["__address__", {{ $portNumberAnnotation | quote }}]
     action        = "replace"
     regex         = "(.+?)(?::\\d+)?;(\\d+)"
     target_label  = "__address__"

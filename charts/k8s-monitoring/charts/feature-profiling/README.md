@@ -5,7 +5,6 @@
 
 # feature-profiling
 
-![Version: 1.0.0](https://img.shields.io/badge/Version-1.0.0-informational?style=flat-square) ![AppVersion: 1.0.0](https://img.shields.io/badge/AppVersion-1.0.0-informational?style=flat-square)
 Gathers profiles from eBPF, Java, and pprof sources.
 
 The Profiling feature enables the collection of profiles from the processes running in the cluster.
@@ -43,47 +42,57 @@ Be sure perform actual integration testing in a live environment in the main [k8
 
 ## Values
 
+### General settings
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| annotations.prefix | string | `"profiles.grafana.com"` | The prefix for all annotations. |
+| fullnameOverride | string | `""` | Full name override |
+| nameOverride | string | `""` | Name override |
+
 ### eBPF
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| ebpf.annotationSelectors | object | `{}` | Select pods to profile based on pod annotations. Example: `k8s.grafana.com/profile: "true"` will select pods with the annotation `k8s.grafana.com/profile="true"`. Example with multiple values: `color: ["blue", "green"]` will select pods with the annotation `color="blue"` or `color="green"`. |
+| ebpf.annotationSelectors | object | `{}` | Select pods to profile based on pod annotations. Example: `color: "green"` will select pods with the annotation `color="green"`. Example with multiple values: `color: ["blue", "green"]` will select pods with the annotation `color="blue"` or `color="green"`. |
+| ebpf.annotations.enable | string | `"enabled"` | The annotation action for enabling or disabling collecting of profiles with eBPF. Default is `profiles.grafana.com/cpu.ebpf.enabled`. |
 | ebpf.demangle | string | `"none"` | C++ demangle mode. Available options are: none, simplified, templates, full |
 | ebpf.enabled | bool | `true` | Gather profiles using eBPF |
 | ebpf.excludeNamespaces | list | `[]` | Which namespaces to exclude looking for pods. |
 | ebpf.extraDiscoveryRules | string | `""` | Rule blocks to be added to the discovery.relabel component for eBPF profile sources. These relabeling rules are applied pre-scrape against the targets from service discovery. Before the scrape, any remaining target labels that start with `__` (i.e. `__meta_kubernetes*`) are dropped. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.relabel/#rule-block)) |
 | ebpf.labelSelectors | object | `{}` | Select pods to profile based on pod labels. Example: `app.kubernetes.io/name: myapp` will select pods with the label `app.kubernetes.io/name=myapp`. Example with multiple values: `app.kubernetes.io/name: [myapp, myapp2]` will select pods with the label `app.kubernetes.io/name=myapp` or `app.kubernetes.io/name=myapp2`. |
 | ebpf.namespaces | list | `[]` | Select pods to profile based on their namespaces. |
-
-### General settings
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| fullnameOverride | string | `""` | Full name override |
-| nameOverride | string | `""` | Name override |
+| ebpf.targetingScheme | string | `"annotation"` | How to target pods for collecting profiles with eBPF. Options are `all` and `annotation`. If using `all`, all Kubernetes pods will be targeted for collecting profiles, and you can exclude certain pods by setting the `profiles.grafana.com/cpu.ebpf.scrape="false"` annotation on that pod. If using `annotation`, only pods with the `profiles.grafana.com/cpu.ebpf.scrape="true"` annotation will have profiles collected with eBPF. |
 
 ### Java
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| java.annotationSelectors | object | `{}` | Select pods to profile based on pod annotations. Example: `k8s.grafana.com/profile: "true"` will select pods with the annotation `k8s.grafana.com/profile="true"`. Example with multiple values: `color: ["blue", "green"]` will select pods with the annotation `color="blue"` or `color="green"`. |
-| java.enabled | bool | `true` | Gather profiles by scraping java HTTP endpoints |
+| java.annotationSelectors | object | `{}` | Select pods to profile based on pod annotations. Example: `color: "green"` will select pods with the annotation `color="green"`. Example with multiple values: `color: ["blue", "green"]` will select pods with the annotation `color="blue"` or `color="green"`. |
+| java.annotations.enable | string | `"enabled"` | The annotation action for enabling or disabling of Java profile collection. |
+| java.enabled | bool | `true` | Gather profiles by scraping Java HTTP endpoints |
 | java.excludeNamespaces | list | `[]` | Which namespaces to exclude looking for pods. |
 | java.extraDiscoveryRules | string | `""` | Rule blocks to be added to the discovery.relabel component for Java profile sources. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.relabel/#rule-block)) |
 | java.labelSelectors | object | `{}` | Select pods to profile based on pod labels. Example: `app.kubernetes.io/name: myapp` will select pods with the label `app.kubernetes.io/name=myapp`. Example with multiple values: `app.kubernetes.io/name: [myapp, myapp2]` will select pods with the label `app.kubernetes.io/name=myapp` or `app.kubernetes.io/name=myapp2`. |
 | java.namespaces | list | `[]` | Select pods to profile based on their namespaces. |
 | java.profilingConfig | object | `{"alloc":"512k","cpu":true,"interval":"60s","lock":"10ms","sampleRate":100}` | Configuration for the async-profiler |
+| java.targetingScheme | string | `"annotation"` | How to target pods for finding Java profiles. Options are `all` and `annotation`. If using `all`, all Kubernetes pods will be targeted for Java profiles, and you can exclude certain pods by setting the `profiles.grafana.com/java.enabled="false"` annotation on that pod. If using `annotation`, only pods with the `profiles.grafana.com/java.enabled="true"` annotation will collecting Java profiles. |
 
 ### pprof
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| pprof.annotationSelectors | object | `{}` | Select pods to profile based on pod annotations. Example: `k8s.grafana.com/profile: "true"` will select pods with the annotation `k8s.grafana.com/profile="true"`. Example with multiple values: `color: ["blue", "green"]` will select pods with the annotation `color="blue"` or `color="green"`. |
+| pprof.annotationSelectors | object | `{}` | Select pods to profile based on pod annotations. Example: `color: "green"` will select pods with the annotation `color="green"`. Example with multiple values: `color: ["blue", "green"]` will select pods with the annotation `color="blue"` or `color="green"`. |
+| pprof.annotations.enable | string | `"scrape"` | The annotation action for enabling or disabling scraping of profiles of a given type. |
+| pprof.annotations.path | string | `"path"` | The annotation action for choosing the path for scraping profiles of a given type. |
+| pprof.annotations.portName | string | `"port_name"` | The annotation action for choosing the port name for scraping profiles of a given type. |
+| pprof.annotations.portNumber | string | `"port"` | The annotation action for choosing the port number for scraping profiles of a given type. |
+| pprof.annotations.scheme | string | `"scheme"` | The annotation action for choosing the scheme for scraping profiles of a given type. |
 | pprof.enabled | bool | `true` | Gather profiles by scraping pprof HTTP endpoints |
 | pprof.excludeNamespaces | list | `[]` | Which namespaces to exclude looking for pods. |
 | pprof.extraDiscoveryRules | string | `""` | Rule blocks to be added to the discovery.relabel component for eBPF profile sources. These relabeling rules are applied pre-scrape against the targets from service discovery. Before the scrape, any remaining target labels that start with `__` (i.e. `__meta_kubernetes*`) are dropped. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.relabel/#rule-block)) |
 | pprof.labelSelectors | object | `{}` | Select pods to profile based on pod labels. Example: `app.kubernetes.io/name: myapp` will select pods with the label `app.kubernetes.io/name=myapp`. Example with multiple values: `app.kubernetes.io/name: [myapp, myapp2]` will select pods with the label `app.kubernetes.io/name=myapp` or `app.kubernetes.io/name=myapp2`. |
 | pprof.namespaces | list | `[]` | Select pods to profile based on their namespaces. |
 | pprof.scrapeInterval | string | `"15s"` | How frequently to collect profiles. |
-| pprof.scrapeTimeout | string | `"18s"` | Timeout for collecting profiles. Must be larger then the scrape interval. |
+| pprof.scrapeTimeout | string | `"18s"` | Timeout for collecting profiles. Must be larger than the scrape interval. |
 | pprof.types | object | `{"block":true,"cpu":true,"fgprof":true,"godeltaprof_block":false,"godeltaprof_memory":false,"godeltaprof_mutex":false,"goroutine":true,"memory":true,"mutex":true}` | Profile types to gather |

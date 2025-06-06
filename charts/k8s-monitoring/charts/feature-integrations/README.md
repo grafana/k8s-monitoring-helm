@@ -5,7 +5,6 @@
 
 # feature-integrations
 
-![Version: 1.0.0](https://img.shields.io/badge/Version-1.0.0-informational?style=flat-square) ![AppVersion: 1.0.0](https://img.shields.io/badge/AppVersion-1.0.0-informational?style=flat-square)
 Service integrations
 
 The Integrations feature builds in configuration for many common applications and services.

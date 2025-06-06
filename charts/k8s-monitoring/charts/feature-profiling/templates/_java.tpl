@@ -1,5 +1,6 @@
 {{ define "feature.profiling.java.alloy" }}
 {{- if .Values.java.enabled }}
+{{- $scrapeAnnotation := include "pod_annotation" (printf "%s/java.%s" $.Values.annotations.prefix $.Values.java.annotations.enable) }}
 {{- $labelSelectors := list }}
 {{- range $k, $v := .Values.java.labelSelectors }}
   {{- if kindIs "slice" $v }}
@@ -25,22 +26,34 @@ discovery.kubernetes "java_pods" {
 {{- end }}
 }
 
+discovery.relabel "potential_java_pods" {
+  targets = discovery.kubernetes.java_pods.targets
+  rule {
+    source_labels = ["__meta_kubernetes_pod_phase"]
+    regex         = "Succeeded|Failed|Completed"
+    action        = "drop"
+  }
+{{- if eq .Values.java.targetingScheme "annotation" }}
+  rule {
+    source_labels = [{{ $scrapeAnnotation | quote }}]
+    regex         = "true"
+    action        = "keep"
+  }
+{{- else }}
+  rule {
+    source_labels = [{{ $scrapeAnnotation | quote }}]
+    regex         = "false"
+    action        = "drop"
+  }
+{{- end }}
+}
+
 discovery.process "java_pods" {
-  join = discovery.kubernetes.java_pods.targets
+  join = discovery.relabel.potential_java_pods.output
 }
 
 discovery.relabel "java_pods" {
   targets = discovery.process.java_pods.targets
-  rule {
-    source_labels = ["__meta_kubernetes_pod_phase"]
-    regex = "Succeeded|Failed|Completed"
-    action = "drop"
-  }
-  rule {
-    source_labels = ["__meta_kubernetes_pod_name"]
-    regex = "^$"
-    action = "drop"
-  }
   rule {
     source_labels = ["__meta_process_exe"]
     action = "keep"
@@ -79,6 +92,10 @@ discovery.relabel "java_pods" {
   rule {
     source_labels = ["__meta_kubernetes_pod_container_name"]
     target_label = "container"
+  }
+  rule {
+    replacement = "alloy/pyroscope.java"
+    target_label = "source"
   }
 {{- if .Values.java.extraDiscoveryRules }}
 {{ .Values.java.extraDiscoveryRules | indent 2 }}
