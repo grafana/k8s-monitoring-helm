@@ -54,7 +54,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| ebpf.annotationSelectors | object | `{}` | Select pods to profile based on pod annotations. Example: `k8s.grafana.com/profile: "true"` will select pods with the annotation `k8s.grafana.com/profile="true"`. Example with multiple values: `color: ["blue", "green"]` will select pods with the annotation `color="blue"` or `color="green"`. |
+| ebpf.annotationSelectors | object | `{}` | Select pods to profile based on pod annotations.  Example with multiple values: `color: ["blue", "green"]` will select pods with the annotation `color="blue"` or `color="green"`. |
 | ebpf.annotations.enable | string | `"enabled"` | The annotation action for enabling or disabling collecting of profiles with eBPF. Default is `profiles.grafana.com/cpu.ebpf.scrape`. |
 | ebpf.demangle | string | `"none"` | C++ demangle mode. Available options are: none, simplified, templates, full |
 | ebpf.enabled | bool | `true` | Gather profiles using eBPF |
