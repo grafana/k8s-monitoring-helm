@@ -155,11 +155,20 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ap-northeast-2
 
+      - name: Fetch GCP Credentials from Vault
+        if: ${{ steps.check-cluster-config.outputs.cluster-type == 'gke' || steps.check-cluster-config.outputs.cluster-type == 'openshift' }}
+        id: get-secrets
+        uses: grafana/shared-workflows/actions/get-vault-secrets@28361cdb22223e5f1e34358c86c20908e7248760  # v1.1.0
+        env:
+          VAULT_REPO_SECRET_NAME: gcp
+        with:
+          repo_secrets: GCP_SERVICE_ACCOUNT_TOKEN=${{ env.VAULT_REPO_SECRET_NAME }}:service-account-token
+
       - name: Configure GCP Credentials
         if: ${{ steps.check-cluster-config.outputs.cluster-type == 'gke' || steps.check-cluster-config.outputs.cluster-type == 'openshift' }}
         uses: google-github-actions/auth@ba79af03959ebeac9769e648f473a284504d9193  # v2.1.10
         with:
-          credentials_json: '${{ secrets.GCP_SERVICE_ACCOUNT_TOKEN }}'
+          credentials_json: '${{ env.GCP_SERVICE_ACCOUNT_TOKEN }}'
 
       - name: Set up GCP Cloud SDK
         if: ${{ steps.check-cluster-config.outputs.cluster-type == 'gke' || steps.check-cluster-config.outputs.cluster-type == 'openshift' }}
