@@ -88,6 +88,10 @@ discovery.relabel "ebpf_pods" {
     replacement = "ebpf/${1}/${2}"
     target_label = "service_name"
   }
+  rule {
+    replacement = "alloy/pyroscope.ebpf"
+    target_label = "source"
+  }
 {{- if .Values.ebpf.extraDiscoveryRules }}
 {{ .Values.ebpf.extraDiscoveryRules | indent 2 }}
 {{- end }}

@@ -32,8 +32,8 @@ should be able to filter by label and annotation:
             target_label = "namespace"
           }
           rule {
-            source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_profile"]
-            regex = "true"
+            source_labels = ["__meta_kubernetes_pod_annotation_region"]
+            regex = "central"
             action = "keep"
           }
           rule {
@@ -55,6 +55,10 @@ should be able to filter by label and annotation:
             regex = "(.*)@(.*)"
             replacement = "ebpf/${1}/${2}"
             target_label = "service_name"
+          }
+          rule {
+            replacement = "alloy/pyroscope.ebpf"
+            target_label = "source"
           }
         }
 
@@ -118,6 +122,10 @@ should be able to filter by namespace and extra discovery rules:
             regex = "(.*)@(.*)"
             replacement = "ebpf/${1}/${2}"
             target_label = "service_name"
+          }
+          rule {
+            replacement = "alloy/pyroscope.ebpf"
+            target_label = "source"
           }
           rule {
             source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
@@ -184,6 +192,10 @@ should be able to target all pods, without requiring the annotation:
             replacement = "ebpf/${1}/${2}"
             target_label = "service_name"
           }
+          rule {
+            replacement = "alloy/pyroscope.ebpf"
+            target_label = "source"
+          }
         }
 
         pyroscope.ebpf "ebpf_pods" {
@@ -243,6 +255,10 @@ should build the eBPF profiling configuration:
             regex = "(.*)@(.*)"
             replacement = "ebpf/${1}/${2}"
             target_label = "service_name"
+          }
+          rule {
+            replacement = "alloy/pyroscope.ebpf"
+            target_label = "source"
           }
         }
 

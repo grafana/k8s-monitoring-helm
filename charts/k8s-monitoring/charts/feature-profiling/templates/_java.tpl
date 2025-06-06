@@ -93,6 +93,10 @@ discovery.relabel "java_pods" {
     source_labels = ["__meta_kubernetes_pod_container_name"]
     target_label = "container"
   }
+  rule {
+    replacement = "alloy/pyroscope.java"
+    target_label = "source"
+  }
 {{- if .Values.java.extraDiscoveryRules }}
 {{ .Values.java.extraDiscoveryRules | indent 2 }}
 {{- end }}

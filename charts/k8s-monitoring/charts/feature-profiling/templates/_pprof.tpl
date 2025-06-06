@@ -67,6 +67,10 @@ discovery.relabel "pprof_pods" {
     source_labels = ["__meta_kubernetes_pod_container_name"]
     target_label  = "container"
   }
+  rule {
+    replacement = "alloy/pyroscope.pprof"
+    target_label = "source"
+  }
 {{- if .Values.pprof.extraDiscoveryRules }}
 {{ .Values.pprof.extraDiscoveryRules | indent 2 }}
 {{- end }}

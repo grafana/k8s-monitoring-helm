@@ -32,8 +32,8 @@ should be able to filter by label and annotation:
             target_label  = "namespace"
           }
           rule {
-            source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_profile"]
-            regex = "true"
+            source_labels = ["__meta_kubernetes_pod_annotation_region"]
+            regex = "central"
             action = "keep"
           }
           rule {
@@ -43,6 +43,10 @@ should be able to filter by label and annotation:
           rule {
             source_labels = ["__meta_kubernetes_pod_container_name"]
             target_label  = "container"
+          }
+          rule {
+            replacement = "alloy/pyroscope.pprof"
+            target_label = "source"
           }
         }
 
@@ -782,6 +786,10 @@ should build the pprof profiling configuration:
           rule {
             source_labels = ["__meta_kubernetes_pod_container_name"]
             target_label  = "container"
+          }
+          rule {
+            replacement = "alloy/pyroscope.pprof"
+            target_label = "source"
           }
         }
 
