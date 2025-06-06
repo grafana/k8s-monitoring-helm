@@ -61,6 +61,12 @@ jobs:
     concurrency:
       group: ${{ matrix.test || 'no-platform-test' }}
       cancel-in-progress: false
+
+    # These permissions are needed to assume roles from GitHub's OIDC.
+    permissions:
+      contents: read
+      id-token: write
+
     steps:
       - name: Checkout code
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
@@ -157,18 +163,19 @@ jobs:
 
       - name: Fetch GCP Credentials from Vault
         if: ${{ steps.check-cluster-config.outputs.cluster-type == 'gke' || steps.check-cluster-config.outputs.cluster-type == 'openshift' }}
-        id: get-secrets
-        uses: grafana/shared-workflows/actions/get-vault-secrets@28361cdb22223e5f1e34358c86c20908e7248760  # v1.1.0
+        id: get-gcp-service-account-token
+        uses: grafana/shared-workflows/actions/get-vault-secrets@9f37f656e063f0ad0b0bfc38d49894b57d363936  # v1.2.1
         env:
           VAULT_REPO_SECRET_NAME: gcp
         with:
+          export_env: false
           repo_secrets: GCP_SERVICE_ACCOUNT_TOKEN=${{ env.VAULT_REPO_SECRET_NAME }}:service-account-token
 
       - name: Configure GCP Credentials
         if: ${{ steps.check-cluster-config.outputs.cluster-type == 'gke' || steps.check-cluster-config.outputs.cluster-type == 'openshift' }}
         uses: google-github-actions/auth@ba79af03959ebeac9769e648f473a284504d9193  # v2.1.10
         with:
-          credentials_json: '${{ env.GCP_SERVICE_ACCOUNT_TOKEN }}'
+          credentials_json: '${{ fromJSON(steps.get-gcp-service-account-token.outputs.secrets).GCP_SERVICE_ACCOUNT_TOKEN }}'
 
       - name: Set up GCP Cloud SDK
         if: ${{ steps.check-cluster-config.outputs.cluster-type == 'gke' || steps.check-cluster-config.outputs.cluster-type == 'openshift' }}
