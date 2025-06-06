@@ -153,12 +153,24 @@ jobs:
           extract: true
           out-file-path: /usr/local/bin
 
+      - name: Fetch AWS Credentials from Vault
+        if: ${{ steps.check-cluster-config.outputs.cluster-type == 'eks' }}
+        id: get-aws-credentials
+        uses: grafana/shared-workflows/actions/get-vault-secrets@9f37f656e063f0ad0b0bfc38d49894b57d363936  # v1.2.1
+        env:
+          VAULT_REPO_SECRET_NAME: aws
+        with:
+          export_env: false
+          repo_secrets: |
+            AWS_ACCESS_KEY_ID=${{ env.VAULT_REPO_SECRET_NAME }}:access-key-id
+            AWS_SECRET_ACCESS_KEY=${{ env.VAULT_REPO_SECRET_NAME }}:secret-access-key 
+
       - name: Configure AWS Credentials
         if: ${{ steps.check-cluster-config.outputs.cluster-type == 'eks' }}
         uses: aws-actions/configure-aws-credentials@b47578312673ae6fa5b5096b330d9fbac3d116df  # v4.2.1
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-access-key-id: '${{ fromJSON(steps.get-aws-credentials.outputs.secrets).AWS_ACCESS_KEY_ID }}'
+          aws-secret-access-key: '${{ fromJSON(steps.get-aws-credentials.outputs.secrets).AWS_SECRET_ACCESS_KEY }}'
           aws-region: ap-northeast-2
 
       - name: Fetch GCP Credentials from Vault
@@ -183,17 +195,24 @@ jobs:
         with:
           install_components: gke-gcloud-auth-plugin
 
+      - name: Fetch Grafana Cloud Credentials from Vault
+        uses: grafana/shared-workflows/actions/get-vault-secrets@9f37f656e063f0ad0b0bfc38d49894b57d363936  # v1.2.1
+        env:
+          VAULT_REPO_SECRET_NAME: grafana-cloud
+        with:
+          repo_secrets: |
+            GRAFANA_CLOUD_FLEET_MGMT_USER=${{ env.VAULT_REPO_SECRET_NAME }}:fleet-management-username
+            GRAFANA_CLOUD_FLEET_MGMT_TOKEN=${{ env.VAULT_REPO_SECRET_NAME }}:fleet-management-token
+            GRAFANA_CLOUD_METRICS_USERNAME=${{ env.VAULT_REPO_SECRET_NAME }}:metrics-username
+            GRAFANA_CLOUD_LOGS_USERNAME=${{ env.VAULT_REPO_SECRET_NAME }}:logs-username
+            GRAFANA_CLOUD_TRACES_USERNAME=${{ env.VAULT_REPO_SECRET_NAME }}:traces-username
+            GRAFANA_CLOUD_OTLP_USERNAME=${{ env.VAULT_REPO_SECRET_NAME }}:otlp-username
+            GRAFANA_CLOUD_RW_POLICY_TOKEN=${{ env.VAULT_REPO_SECRET_NAME }}:access-policy-token
+
       - name: Run test
         run: ./scripts/run-cluster-test.sh "charts/k8s-monitoring/tests/platform/${TEST}"
         env:
           CREATE_CLUSTER: "true"
           DELETE_CLUSTER: "true"
-          GRAFANA_CLOUD_FLEET_MGMT_USER: ${{ secrets.GRAFANA_CLOUD_FLEET_MGMT_USER }}
-          GRAFANA_CLOUD_FLEET_MGMT_TOKEN: ${{ secrets.GRAFANA_CLOUD_FLEET_MGMT_TOKEN }}
-          GRAFANA_CLOUD_METRICS_USERNAME: ${{ secrets.GRAFANA_CLOUD_METRICS_USERNAME }}
-          GRAFANA_CLOUD_LOGS_USERNAME: ${{ secrets.GRAFANA_CLOUD_LOGS_USERNAME }}
-          GRAFANA_CLOUD_TRACES_USERNAME: ${{ secrets.GRAFANA_CLOUD_TRACES_USERNAME }}
-          GRAFANA_CLOUD_OTLP_USERNAME: ${{ secrets.GRAFANA_CLOUD_OTLP_USERNAME }}
-          GRAFANA_CLOUD_RW_POLICY_TOKEN: ${{ secrets.GRAFANA_CLOUD_RW_POLICY_TOKEN }}
           RANDOM_NUMBER: ${{ steps.random-number.outputs.number }}
           TEST: ${{ matrix.test }}
