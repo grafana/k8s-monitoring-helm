@@ -51,6 +51,10 @@ declare "profiling" {
       replacement = "ebpf/${1}/${2}"
       target_label = "service_name"
     }
+    rule {
+      replacement = "alloy/pyroscope.ebpf"
+      target_label = "source"
+    }
   }
 
   pyroscope.ebpf "ebpf_pods" {
@@ -111,6 +115,10 @@ declare "profiling" {
       source_labels = ["__meta_kubernetes_pod_container_name"]
       target_label = "container"
     }
+    rule {
+      replacement = "alloy/pyroscope.java"
+      target_label = "source"
+    }
   }
 
   pyroscope.java "java_pods" {
@@ -159,6 +167,10 @@ declare "profiling" {
     rule {
       source_labels = ["__meta_kubernetes_pod_container_name"]
       target_label  = "container"
+    }
+    rule {
+      replacement = "alloy/pyroscope.pprof"
+      target_label = "source"
     }
   }
 

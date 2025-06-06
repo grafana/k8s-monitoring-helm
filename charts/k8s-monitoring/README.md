@@ -5,12 +5,7 @@
 
 # k8s-monitoring
 
-<<<<<<< HEAD
 ![Version: 3.0.0](https://img.shields.io/badge/Version-3.0.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 3.0.0](https://img.shields.io/badge/AppVersion-3.0.0-informational?style=flat-square)
-
-=======
-![Version: 2.1.4](https://img.shields.io/badge/Version-2.1.4-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 2.1.4](https://img.shields.io/badge/AppVersion-2.1.4-informational?style=flat-square)
->>>>>>> e2cb29e1 (Add an annotations doc)
 Capture all telemetry data from your Kubernetes cluster.
 
 ## Breaking change announcements
