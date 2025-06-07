@@ -101,6 +101,18 @@ kubectl get nodes
 
 # Build any pre-requisite files
 if [ -f "${TEST_DIRECTORY}/Makefile" ]; then
+  set +e
+  make check
+  RETURN_CODE=$?
+  if [ "${RETURN_CODE}" -eq 1 ]; then
+    echo "Failed to check if the test can run."
+    exit 1
+  elif [ "${RETURN_CODE}" -eq 2 ]; then
+    echo "Skipping test."
+    exit 0
+  fi
+  set -e
+
   make -C "${TEST_DIRECTORY}" clean all
 fi
 
