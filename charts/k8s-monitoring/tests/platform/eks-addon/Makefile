@@ -1,6 +1,12 @@
-all: values.json deployments/test-variables.yaml deployments/grafana-cloud.yaml deployments/grafana-cloud-credentials.yaml
+.PHONY: check
+check: ;
+
+.PHONY: clean
 clean:
 	rm -f deployments/test-variables.yaml deployments/grafana-cloud.yaml deployments/grafana-cloud-credentials.yaml
+
+.PHONY: all
+all: values.json deployments/test-variables.yaml deployments/grafana-cloud.yaml deployments/grafana-cloud-credentials.yaml
 
 values.json: values.yaml
 	yq eval --output-format json '. | del(.cluster.name)' values.yaml > $@
@@ -40,5 +46,6 @@ deployments/grafana-cloud-credentials.yaml:
   		--from-literal=LOKI_PASS="$$GRAFANA_CLOUD_RW_POLICY_TOKEN" \
 		-o yaml --dry-run=client >> $@
 
+.PHONY: run-test
 run-test:
 	../../../../../scripts/run-cluster-test.sh .
