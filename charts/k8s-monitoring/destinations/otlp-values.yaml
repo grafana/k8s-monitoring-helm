@@ -238,6 +238,28 @@ processors:
     # @section -- Tail Sampling
     decisionWait: 15s
 
+    # -- The decision cache for the tail sampling. When you use decision_cache, configure it with a much higher value
+    # than num_traces so decisions for trace IDs are kept longer than the span data for the trace.
+    # @section -- Tail Sampling
+    decisionCache:
+      # -- Configures amount of trace IDs to be kept in an LRU cache, persisting the "keep" decisions for traces that
+      # may have already been released from memory. By default, the size is 0 and the cache is inactive.
+      # @section -- Tail Sampling
+      sampledCacheSize: 0
+      # -- Configures amount of trace IDs to be kept in an LRU cache, persisting the "drop" decisions for traces that
+      # may have already been released from memory. By default, the size is 0 and the cache is inactive.
+      # @section -- Tail Sampling
+      nonSampledCacheSize: 0
+
+    # --  Determines the buffer size of the trace delete channel which is composed of trace IDs that are being deleted.
+    # Default is 0, which means no buffer is used.
+    # @section -- Tail Sampling
+    numTraces: 0
+
+    # -- Expected number of new traces (helps in allocating data structures).
+    # @section -- Tail Sampling
+    expectedNewTracesPerSec: 0
+
     # -- Tail sampling policies to apply.
     # @section -- Tail Sampling
     policies: []
