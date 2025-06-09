@@ -42,14 +42,16 @@ for chart install instructions.
 
 We hold office hours on the 4th Friday of the month. Meeting times and recordings will be posted here:
 
-| Date       | Topic                                         | Link                                      |
-|------------|-----------------------------------------------|-------------------------------------------|
-| 2025-04-25 | 2.1 Release update                            | [Recording](https://youtu.be/prFhW_vOR2w) |
-| 2025-02-28 | 2.1 Release update and K8s Monitoring Product | [Recording](https://youtu.be/bWiDdHSWhiI) |
-| 2025-01-24 | 2.0 Release and future                        | [Recording](https://youtu.be/-cNnXO1AGOk) |
-| 2024-12-19 | 2.0 Status and release date                   | [Recording](https://youtu.be/zkhR_5v1i9g) |
-| 2024-11-22 | 2.0 Status                                    | [Recording](https://youtu.be/rR6yxTEGLZc) |
-| 2024-10-11 | Upcoming 2.0 version                          | [Recording](https://youtu.be/2N6MQN45Gy8) |
+| Date       | Topic                                         | Link                                          |
+|------------|-----------------------------------------------|-----------------------------------------------|
+| 2025-06-27 | 2.1 --> 3.0 Re-Version and 3.1 Release        | [Zoom](https://grafana.zoom.us/j/99595566680) |
+| 2025-05-27 | 2.1 Release                                   | [Recording](https://youtu.be/12_7y9_EdTI)     |
+| 2025-04-25 | 2.1 Release update                            | [Recording](https://youtu.be/prFhW_vOR2w)     |
+| 2025-02-28 | 2.1 Release update and K8s Monitoring Product | [Recording](https://youtu.be/bWiDdHSWhiI)     |
+| 2025-01-24 | 2.0 Release and future                        | [Recording](https://youtu.be/-cNnXO1AGOk)     |
+| 2024-12-19 | 2.0 Status and release date                   | [Recording](https://youtu.be/zkhR_5v1i9g)     |
+| 2024-11-22 | 2.0 Status                                    | [Recording](https://youtu.be/rR6yxTEGLZc)     |
+| 2024-10-11 | Upcoming 2.0 version                          | [Recording](https://youtu.be/2N6MQN45Gy8)     |
 
 ## Contributing
 
