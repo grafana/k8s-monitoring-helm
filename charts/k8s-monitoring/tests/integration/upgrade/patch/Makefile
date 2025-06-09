@@ -1,6 +1,6 @@
 .PHONY: check
 check:
-	if yq eval '.version' ../../../../Chart.yaml | grep -q "[[:digit:]]\+\.[[:digit:]]\.0\+"; then \
+	if yq eval '.version' ../../../../Chart.yaml | grep -q "[[:digit:]]\+\.[[:digit:]]\+\.0"; then \
 		echo "Patch version is 0."; \
 		exit 2; \
 	fi
