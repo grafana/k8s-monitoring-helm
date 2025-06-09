@@ -1,4 +1,7 @@
-all: deployments/passwords.yaml
+.PHONY: check
+check: ;
+
+.PHONY: clean
 clean:
 	rm -f deployments/passwords.yaml
 
@@ -10,3 +13,10 @@ ifdef HAS_HTPASSWD
 else
 	kubectl create secret generic passwords --from-literal=htpasswd='$(shell docker run --platform linux/amd64 --rm xmartlabs/htpasswd basicuser basicpassword)' -o yaml --dry-run=client >> deployments/passwords.yaml
 endif
+
+.PHONY: all
+all: deployments/passwords.yaml
+
+.PHONY: run-test
+run-test:
+	../../../../../../scripts/run-cluster-test.sh .

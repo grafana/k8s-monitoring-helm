@@ -11,8 +11,9 @@ IFS='.' read -r major minor patch <<< "${CURRENT_VERSION}"
 if [ "${patch}" -eq 0 ]; then
   echo "Patch version is 0. This test is not applicable."
   exit 1
+else
+  PREVIOUS_PATCH_RELEASE="${major}.${minor}.$((patch - 1))"
 fi
-PREVIOUS_PATCH_RELEASE="${major}.${minor}.$((patch - 1))"
 
 echo "Installing version ${PREVIOUS_PATCH_RELEASE}..."
 helm upgrade --install k8smon --version "${PREVIOUS_PATCH_RELEASE}" --repo https://grafana.github.io/helm-charts k8s-monitoring -f "${TEST_DIR}/values.yaml" --set "cluster.name=${CLUSTER_NAME}" --set "clusterMetrics.opencost.opencost.exporter.defaultClusterId=${CLUSTER_NAME}" --wait
