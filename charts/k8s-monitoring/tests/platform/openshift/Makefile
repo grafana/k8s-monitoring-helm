@@ -1,7 +1,12 @@
-.PHONY: all clean run-test
-all: deployments/test-variables.yaml deployments/grafana-cloud-credentials.yaml flux-manifest.yaml
+.PHONY: check
+check: ;
+
+.PHONY: clean
 clean:
 	rm -f deployments/test-variables.yaml deployments/grafana-cloud-credentials.yaml flux-manifest.yaml
+
+.PHONY: all
+all: deployments/test-variables.yaml deployments/grafana-cloud-credentials.yaml flux-manifest.yaml
 
 deployments/test-variables.yaml:
 	echo "---" > $@
@@ -29,5 +34,6 @@ flux-manifest.yaml:
 	kustomize build . > $@
 	rm flux-temp.yaml
 
+.PHONY: run-test
 run-test:
 	../../../../../scripts/run-cluster-test.sh .

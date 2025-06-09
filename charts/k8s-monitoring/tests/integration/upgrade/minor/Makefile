@@ -1,3 +1,10 @@
+.PHONY: check
+check:
+	if yq eval '.version' ../../../../Chart.yaml | grep -q "[[:digit:]]\+\.0\.[[:digit:]]\+"; then \
+		echo "Minor version is 0."; \
+		exit 2; \
+	fi
+
 .PHONY: clean
 clean:
 	rm -f collectors.grafana.com_alloy.yaml
