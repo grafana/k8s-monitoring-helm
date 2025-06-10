@@ -78,7 +78,7 @@ build: README.md $(INTEGRATION_DOCS_FILES) Chart.lock values.schema.json templat
 .PHONY: test
 test: build
 	helm lint .
-	ct lint --lint-conf ../../../../.configs/lintconf.yaml --helm-dependency-extra-args=--skip-refresh --charts .
+	ct lint --lint-conf ../../.lintconf.yaml --helm-dependency-extra-args=--skip-refresh --charts .
 ifdef HAS_HELM_UNITTEST
 	helm unittest .
 else

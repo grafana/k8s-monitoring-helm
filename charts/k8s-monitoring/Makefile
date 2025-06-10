@@ -228,7 +228,7 @@ lint-configs: $(EXAMPLE_ALLOY_FILES)
 lint-helm: build
 	helm repo add grafana https://grafana.github.io/helm-charts
 	helm lint .
-	ct lint --config .ct.yaml --lint-conf ../../.configs/lintconf.yaml --check-version-increment=false --charts .
+	ct lint --config .ct.yaml --lint-conf .lintconf.yaml --check-version-increment=false --charts .
 
 unittest: values.schema.json templates/destinations/_destination_types.tpl
 ifdef HAS_HELM_UNITTEST
