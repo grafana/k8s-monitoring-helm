@@ -6,7 +6,7 @@ on:
 
 env:
   CR_CONFIGFILE: "${{ github.workspace }}/.github/configs/cr.yaml"
-  CT_CONFIGFILE: "${{ github.workspace }}/source/charts/k8s-monitoring/.ct.yaml"
+  CT_CONFIGFILE: "${{ github.workspace }}/source/charts/k8s-monitoring-v1/.ct.yaml"
   CR_INDEX_PATH: "${{ github.workspace }}/.cr-index"
   CR_PACKAGE_PATH: "${{ github.workspace }}/.cr-release-packages"
   CR_TOOL_PATH: "${{ github.workspace }}/.cr-tool"
@@ -23,7 +23,7 @@ jobs:
     with:
       charts_dir: charts
       cr_configfile: .github/configs/cr.yaml
-      ct_configfile: charts/k8s-monitoring/.ct.yaml
+      ct_configfile: charts/k8s-monitoring-v1/.ct.yaml
     secrets:
       vault_repo_secret_name: github-app
 
@@ -55,7 +55,7 @@ jobs:
 
       - name: Parse Chart.yaml
         id: parse-chart
-        working-directory: source/charts/k8s-monitoring
+        working-directory: source/charts/k8s-monitoring-v1
         run: |
           name=$(yq ".name" < Chart.yaml)
           version=$(yq ".version" < Chart.yaml)

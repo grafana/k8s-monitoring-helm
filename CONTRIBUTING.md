@@ -274,7 +274,7 @@ that GitHub repository, you can set the App version in the second argument to th
 
 ### Starting the release workflow
 
-The [helm-release-v1.yml](./.github/workflows/helm-release-v1.yml) GitHub workflow handles the details of packaging the
+The [helm-release-v1.yml](.github/workflows/release-v1.yml) GitHub workflow handles the details of packaging the
 v1 Chart, creating the release on this repository, creating a release on
 the [grafana/helm-charts](https://github.com/grafana/helm-charts) repository, and finally updating the Helm chart
 repository.
