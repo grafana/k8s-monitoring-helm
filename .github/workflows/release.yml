@@ -82,25 +82,6 @@ jobs:
             esac
           done <<< "$deps"
 
-      - name: Install CR tool
-        run: |
-          mkdir "${CR_TOOL_PATH}"
-          mkdir "${CR_PACKAGE_PATH}"
-          mkdir "${CR_INDEX_PATH}"
-          crVersion=$(gh release list --repo helm/chart-releaser --exclude-pre-releases --json tagName --jq '.[0].tagName' | sed 's/v//')
-          curl -sSLo cr.tar.gz "https://github.com/helm/chart-releaser/releases/download/v${crVersion}/chart-releaser_${crVersion}_linux_amd64.tar.gz"
-          tar -xzf cr.tar.gz -C "${CR_TOOL_PATH}"
-          rm -f cr.tar.gz
-
-      - name: Create helm package
-        env:
-          CHARTPATH: ${{ steps.parse-chart.outputs.chartpath }}
-        working-directory: source
-        run: |
-          "${CR_TOOL_PATH}/cr" package "${CHARTPATH}" --config "${CR_CONFIGFILE}" --package-path "${CR_PACKAGE_PATH}"
-          echo "Result of chart package:"
-          ls -l "${CR_PACKAGE_PATH}"
-
       - name: Retrieve GitHub App credentials from Vault
         id: get-secrets
         uses: grafana/shared-workflows/actions/get-vault-secrets@28361cdb22223e5f1e34358c86c20908e7248760  # v1.1.0
@@ -125,6 +106,27 @@ jobs:
         env:
           APP_TOKEN: ${{ steps.app-token.outputs.token }}
         run: echo "AUTHTOKEN=${APP_TOKEN}" >> "${GITHUB_ENV}"
+
+      - name: Install CR tool
+        env:
+          GITHUB_TOKEN: ${{ env.AUTHTOKEN }}
+        run: |
+          mkdir "${CR_TOOL_PATH}"
+          mkdir "${CR_PACKAGE_PATH}"
+          mkdir "${CR_INDEX_PATH}"
+          crVersion=$(gh release list --repo helm/chart-releaser --exclude-pre-releases --json tagName --jq '.[0].tagName' | sed 's/v//')
+          curl -sSLo cr.tar.gz "https://github.com/helm/chart-releaser/releases/download/v${crVersion}/chart-releaser_${crVersion}_linux_amd64.tar.gz"
+          tar -xzf cr.tar.gz -C "${CR_TOOL_PATH}"
+          rm -f cr.tar.gz
+
+      - name: Create helm package
+        env:
+          CHARTPATH: ${{ steps.parse-chart.outputs.chartpath }}
+        working-directory: source
+        run: |
+          "${CR_TOOL_PATH}/cr" package "${CHARTPATH}" --config "${CR_CONFIGFILE}" --package-path "${CR_PACKAGE_PATH}"
+          echo "Result of chart package:"
+          ls -l "${CR_PACKAGE_PATH}"
 
       - name: Make github release
         uses: softprops/action-gh-release@da05d552573ad5aba039eaac05058a918a7bf631  # v2.2.2
