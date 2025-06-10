@@ -79,4 +79,10 @@ alloy-logs:
       - key: protected-node
         effect: NoSchedule
         operator: Exists
+
+alloy-operator:
+  tolerations:
+    - key: protected-node
+      effect: NoSchedule
+      operator: Exists
 ```

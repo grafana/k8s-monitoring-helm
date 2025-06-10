@@ -5,7 +5,6 @@
 
 # feature-auto-instrumentation
 
-![Version: 1.0.0](https://img.shields.io/badge/Version-1.0.0-informational?style=flat-square) ![AppVersion: 1.0.0](https://img.shields.io/badge/AppVersion-1.0.0-informational?style=flat-square)
 Gathers telemetry data via automatic instrumentation
 
 The auto-instrumentation feature deploys Grafana Beyla to automatically instrument programs running on this cluster using eBPF.

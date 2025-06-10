@@ -6,10 +6,10 @@ metadata:
   name: k8smon-alloy-operator
   namespace: default
   labels:
-    helm.sh/chart: alloy-operator-0.2.9
+    helm.sh/chart: alloy-operator-0.3.0
     app.kubernetes.io/name: alloy-operator
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.0.3"
+    app.kubernetes.io/version: "1.1.0"
     app.kubernetes.io/managed-by: Helm
 automountServiceAccountToken: true
 ---
@@ -43,6 +43,11 @@ data:
           action = "drop"
         }
         rule {
+          source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_cpu_ebpf_enabled"]
+          regex         = "true"
+          action        = "keep"
+        }
+        rule {
           source_labels = ["__meta_kubernetes_namespace"]
           target_label = "namespace"
         }
@@ -66,6 +71,10 @@ data:
           replacement = "ebpf/${1}/${2}"
           target_label = "service_name"
         }
+        rule {
+          replacement = "alloy/pyroscope.ebpf"
+          target_label = "source"
+        }
       }
     
       pyroscope.ebpf "ebpf_pods" {
@@ -82,22 +91,26 @@ data:
         }
       }
     
+      discovery.relabel "potential_java_pods" {
+        targets = discovery.kubernetes.java_pods.targets
+        rule {
+          source_labels = ["__meta_kubernetes_pod_phase"]
+          regex         = "Succeeded|Failed|Completed"
+          action        = "drop"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_java_enabled"]
+          regex         = "true"
+          action        = "keep"
+        }
+      }
+    
       discovery.process "java_pods" {
-        join = discovery.kubernetes.java_pods.targets
+        join = discovery.relabel.potential_java_pods.output
       }
     
       discovery.relabel "java_pods" {
         targets = discovery.process.java_pods.targets
-        rule {
-          source_labels = ["__meta_kubernetes_pod_phase"]
-          regex = "Succeeded|Failed|Completed"
-          action = "drop"
-        }
-        rule {
-          source_labels = ["__meta_kubernetes_pod_name"]
-          regex = "^$"
-          action = "drop"
-        }
         rule {
           source_labels = ["__meta_process_exe"]
           action = "keep"
@@ -118,6 +131,10 @@ data:
         rule {
           source_labels = ["__meta_kubernetes_pod_container_name"]
           target_label = "container"
+        }
+        rule {
+          replacement = "alloy/pyroscope.java"
+          target_label = "source"
         }
       }
     
@@ -164,6 +181,10 @@ data:
         rule {
           source_labels = ["__meta_kubernetes_pod_container_name"]
           target_label  = "container"
+        }
+        rule {
+          replacement = "alloy/pyroscope.pprof"
+          target_label = "source"
         }
       }
     
@@ -900,10 +921,10 @@ metadata:
   name:
     k8smon-alloy-operator-alloy-editor-role
   labels:
-    helm.sh/chart: alloy-operator-0.2.9
+    helm.sh/chart: alloy-operator-0.3.0
     app.kubernetes.io/name: alloy-operator
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.0.3"
+    app.kubernetes.io/version: "1.1.0"
     app.kubernetes.io/managed-by: Helm
 rules:
   - apiGroups:
@@ -932,10 +953,10 @@ metadata:
   name:
     k8smon-alloy-operator-alloy-viewer-role
   labels:
-    helm.sh/chart: alloy-operator-0.2.9
+    helm.sh/chart: alloy-operator-0.3.0
     app.kubernetes.io/name: alloy-operator
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.0.3"
+    app.kubernetes.io/version: "1.1.0"
     app.kubernetes.io/managed-by: Helm
 rules:
   - apiGroups:
@@ -1072,10 +1093,10 @@ metadata:
   name:
     k8smon-alloy-operator-rolebinding
   labels:
-    helm.sh/chart: alloy-operator-0.2.9
+    helm.sh/chart: alloy-operator-0.3.0
     app.kubernetes.io/name: alloy-operator
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.0.3"
+    app.kubernetes.io/version: "1.1.0"
     app.kubernetes.io/managed-by: Helm
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -1095,10 +1116,10 @@ metadata:
     k8smon-alloy-operator-leader-election-role
   namespace: default
   labels:
-    helm.sh/chart: alloy-operator-0.2.9
+    helm.sh/chart: alloy-operator-0.3.0
     app.kubernetes.io/name: alloy-operator
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.0.3"
+    app.kubernetes.io/version: "1.1.0"
     app.kubernetes.io/managed-by: Helm
 rules:
   - apiGroups:
@@ -1141,10 +1162,10 @@ metadata:
     k8smon-alloy-operator-leader-election-rolebinding
   namespace: default
   labels:
-    helm.sh/chart: alloy-operator-0.2.9
+    helm.sh/chart: alloy-operator-0.3.0
     app.kubernetes.io/name: alloy-operator
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.0.3"
+    app.kubernetes.io/version: "1.1.0"
     app.kubernetes.io/managed-by: Helm
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -1162,10 +1183,10 @@ kind: Service
 metadata:
   name: k8smon-alloy-operator
   labels:
-    helm.sh/chart: alloy-operator-0.2.9
+    helm.sh/chart: alloy-operator-0.3.0
     app.kubernetes.io/name: alloy-operator
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.0.3"
+    app.kubernetes.io/version: "1.1.0"
     app.kubernetes.io/managed-by: Helm
 spec:
   type: ClusterIP
@@ -1188,10 +1209,10 @@ kind: Deployment
 metadata:
   name: k8smon-alloy-operator
   labels:
-    helm.sh/chart: alloy-operator-0.2.9
+    helm.sh/chart: alloy-operator-0.3.0
     app.kubernetes.io/name: alloy-operator
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.0.3"
+    app.kubernetes.io/version: "1.1.0"
     app.kubernetes.io/managed-by: Helm
 spec:
   replicas: 1
@@ -1202,16 +1223,16 @@ spec:
   template:
     metadata:
       labels:
-        helm.sh/chart: alloy-operator-0.2.9
+        helm.sh/chart: alloy-operator-0.3.0
         app.kubernetes.io/name: alloy-operator
         app.kubernetes.io/instance: k8smon
-        app.kubernetes.io/version: "1.0.3"
+        app.kubernetes.io/version: "1.1.0"
         app.kubernetes.io/managed-by: Helm
     spec:
       serviceAccountName: k8smon-alloy-operator
       containers:
         - name: alloy-operator
-          image: "ghcr.io/grafana/alloy-operator:1.0.3"
+          image: "ghcr.io/grafana/alloy-operator:1.1.0"
           imagePullPolicy: IfNotPresent
           args:
             - --leader-elect
@@ -1238,12 +1259,8 @@ spec:
             initialDelaySeconds: 5
             periodSeconds: 10
           resources:
-            limits:
-              cpu: 500m
-              memory: 128Mi
-            requests:
-              cpu: 10m
-              memory: 64Mi
+            limits: {}
+            requests: {}
           securityContext:
             runAsNonRoot: true
       nodeSelector:

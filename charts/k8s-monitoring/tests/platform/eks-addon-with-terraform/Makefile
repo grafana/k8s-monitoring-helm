@@ -1,6 +1,12 @@
-all: deployments/test-variables.yaml deployments/grafana-cloud.yaml deployments/grafana-cloud-credentials.yaml vars.tf
+.PHONY: check
+check: ;
+
+.PHONY: clean
 clean:
 	rm -f deployments/test-variables.yaml deployments/grafana-cloud.yaml deployments/grafana-cloud-credentials.yaml vars.tf
+
+.PHONY: all
+all: deployments/test-variables.yaml deployments/grafana-cloud.yaml deployments/grafana-cloud-credentials.yaml vars.tf
 
 deployments/test-variables.yaml:
 	echo "---" > $@
@@ -57,6 +63,6 @@ vars.tf:
 	echo "  sensitive = true" >> $@
 	echo "}" >> $@
 
-
+.PHONY: run-test
 run-test:
 	../../../../../scripts/run-cluster-test.sh .

@@ -1,8 +1,8 @@
 # Migration guide
 
-## Migrating from version 2.0 to 2.1
+## Migrating from version 2.0 to 3.0
 
-The 2.1 release of the k8s-monitoring Helm chart no longer utilizes the
+The 3.0 release of the k8s-monitoring Helm chart no longer utilizes the
 [Alloy Helm chart](https://github.com/grafana/alloy/tree/main/operations/helm/charts/alloy) as a subchart dependency,
 but instead utilizes the new [Alloy Operator](https://github.com/grafana/alloy-operator) to deploy the Alloy instances.
 This allows for a more flexible and powerful deployment of Alloy, as well as the ability of your chosen features to

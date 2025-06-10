@@ -7,12 +7,33 @@ nameOverride: ""
 # @section -- General settings
 fullnameOverride: ""
 
+annotations:
+  # -- The prefix for all annotations.
+  # @section -- General settings
+  prefix: "profiles.grafana.com"
+
 # Settings for gathering profiles using eBPF
 # @section -- eBPF
 ebpf:
   # -- Gather profiles using eBPF
   # @section -- eBPF
   enabled: true
+
+  # -- How to target pods for collecting profiles with eBPF. Options are `all` and `annotation`. If using `all`, all
+  # Kubernetes pods will be targeted for collecting profiles, and you can exclude certain pods by setting the
+  # `profiles.grafana.com/cpu.ebpf.scrape="false"` annotation on that pod. If using `annotation`, only pods with the
+  # `profiles.grafana.com/cpu.ebpf.scrape="true"` annotation will have profiles collected with eBPF.
+  # @section -- eBPF
+  targetingScheme: annotation
+
+  # Configure the annotations that will control how the targets are discovered and how profiles are collected.
+  # All annotations will be `<prefix>/cpu.ebpf.<action>`, for example, to "enable" collecting profiles using eBPF, set
+  # the annotation `profiles.grafana.com/cpu.ebpf.scrape: "true"` on the pod.
+  annotations:
+    # -- The annotation action for enabling or disabling collecting of profiles with eBPF.
+    # Default is `profiles.grafana.com/cpu.ebpf.enabled`.
+    # @section -- eBPF
+    enable: "enabled"
 
   # -- Select pods to profile based on pod labels.
   # Example: `app.kubernetes.io/name: myapp` will select pods with the label `app.kubernetes.io/name=myapp`.
@@ -22,7 +43,7 @@ ebpf:
   labelSelectors: {}
 
   # -- Select pods to profile based on pod annotations.
-  # Example: `k8s.grafana.com/profile: "true"` will select pods with the annotation `k8s.grafana.com/profile="true"`.
+  # Example: `color: "green"` will select pods with the annotation `color="green"`.
   # Example with multiple values: `color: ["blue", "green"]` will select pods with the annotation `color="blue"` or
   # `color="green"`.
   # @section -- eBPF
@@ -48,9 +69,24 @@ ebpf:
   demangle: none
 
 java:
-  # -- Gather profiles by scraping java HTTP endpoints
+  # -- Gather profiles by scraping Java HTTP endpoints
   # @section -- Java
   enabled: true
+
+  # -- How to target pods for finding Java profiles. Options are `all` and `annotation`. If using `all`, all Kubernetes
+  # pods will be targeted for Java profiles, and you can exclude certain pods by setting the
+  # `profiles.grafana.com/java.enabled="false"` annotation on that pod. If using `annotation`, only pods with the
+  # `profiles.grafana.com/java.enabled="true"` annotation will collecting Java profiles.
+  # @section -- Java
+  targetingScheme: annotation
+
+  # Configure the annotations that will control how the Java targets are discovered and how profiles are collected.
+  # All annotations will be `<prefix>/java.<action>`, for example, to "enable" scraping of Java profiles, set the
+  # annotation `profiles.grafana.com/java.enabled: "true"` on the pod.
+  annotations:
+    # -- The annotation action for enabling or disabling of Java profile collection.
+    # @section -- Java
+    enable: "enabled"
 
   # -- Select pods to profile based on pod labels.
   # Example: `app.kubernetes.io/name: myapp` will select pods with the label `app.kubernetes.io/name=myapp`.
@@ -60,7 +96,7 @@ java:
   labelSelectors: {}
 
   # -- Select pods to profile based on pod annotations.
-  # Example: `k8s.grafana.com/profile: "true"` will select pods with the annotation `k8s.grafana.com/profile="true"`.
+  # Example: `color: "green"` will select pods with the annotation `color="green"`.
   # Example with multiple values: `color: ["blue", "green"]` will select pods with the annotation `color="blue"` or
   # `color="green"`.
   # @section -- Java
@@ -93,6 +129,40 @@ pprof:
   # @section -- pprof
   enabled: true
 
+  # -- Profile types to gather
+  # @section -- pprof
+  types:
+    memory: true
+    block: true
+    goroutine: true
+    mutex: true
+    cpu: true
+    fgprof: true
+    godeltaprof_memory: false
+    godeltaprof_mutex: false
+    godeltaprof_block: false
+
+  # Configure the annotations that will control how the pprof targets are discovered and how profiles are scraped.
+  # All annotations will be `<prefix>/<type>.<action>`, for example, to "enable" scraping of CPU profiles, set the
+  # annotation `profiles.grafana.com/cpu.scrape: "true"` on the pod. To set the path for memory profiles, set the
+  # annotation `profiles.grafana.com/memory.path: "/debug/pprof/mem"` on the pod.
+  annotations:
+    # -- The annotation action for enabling or disabling scraping of profiles of a given type.
+    # @section -- pprof
+    enable: "scrape"
+    # -- The annotation action for choosing the port number for scraping profiles of a given type.
+    # @section -- pprof
+    portNumber: "port"
+    # -- The annotation action for choosing the port name for scraping profiles of a given type.
+    # @section -- pprof
+    portName: "port_name"
+    # -- The annotation action for choosing the path for scraping profiles of a given type.
+    # @section -- pprof
+    path: "path"
+    # -- The annotation action for choosing the scheme for scraping profiles of a given type.
+    # @section -- pprof
+    scheme: "scheme"
+
   # -- Select pods to profile based on pod labels.
   # Example: `app.kubernetes.io/name: myapp` will select pods with the label `app.kubernetes.io/name=myapp`.
   # Example with multiple values: `app.kubernetes.io/name: [myapp, myapp2]` will select pods with the label
@@ -101,7 +171,7 @@ pprof:
   labelSelectors: {}
 
   # -- Select pods to profile based on pod annotations.
-  # Example: `k8s.grafana.com/profile: "true"` will select pods with the annotation `k8s.grafana.com/profile="true"`.
+  # Example: `color: "green"` will select pods with the annotation `color="green"`.
   # Example with multiple values: `color: ["blue", "green"]` will select pods with the annotation `color="blue"` or
   # `color="green"`.
   # @section -- pprof
@@ -127,22 +197,9 @@ pprof:
   scrapeInterval: "15s"
 
   # -- Timeout for collecting profiles.
-  # Must be larger then the scrape interval.
+  # Must be larger than the scrape interval.
   # @section -- pprof
   scrapeTimeout: "18s"
-
-  # -- Profile types to gather
-  # @section -- pprof
-  types:
-    memory: true
-    block: true
-    goroutine: true
-    mutex: true
-    cpu: true
-    fgprof: true
-    godeltaprof_memory: false
-    godeltaprof_mutex: false
-    godeltaprof_block: false
 
 # @ignore
 deployAsConfigMap: false

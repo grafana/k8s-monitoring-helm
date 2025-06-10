@@ -5,7 +5,6 @@
 
 # feature-prometheus-operator-objects
 
-![Version: 1.0.0](https://img.shields.io/badge/Version-1.0.0-informational?style=flat-square) ![AppVersion: 1.0.0](https://img.shields.io/badge/AppVersion-1.0.0-informational?style=flat-square)
 Gathers metrics using Prometheus Operator Objects
 
 The Prometheus Operator Objects feature enables the discovery, processing, and utilization of certain Prometheus
@@ -51,7 +50,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 
 | Repository | Name | Version |
 |------------|------|---------|
-| https://prometheus-community.github.io/helm-charts | crds(prometheus-operator-crds) | 20.0.0 |
+| https://prometheus-community.github.io/helm-charts | crds(prometheus-operator-crds) | 20.0.1 |
 <!-- markdownlint-enable no-bare-urls -->
 ## Values
 

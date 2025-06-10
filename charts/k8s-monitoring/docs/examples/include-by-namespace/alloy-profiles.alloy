@@ -23,6 +23,11 @@ declare "profiling" {
       action = "drop"
     }
     rule {
+      source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_cpu_ebpf_enabled"]
+      regex         = "true"
+      action        = "keep"
+    }
+    rule {
       source_labels = ["__meta_kubernetes_namespace"]
       target_label = "namespace"
     }
@@ -46,6 +51,10 @@ declare "profiling" {
       replacement = "ebpf/${1}/${2}"
       target_label = "service_name"
     }
+    rule {
+      replacement = "alloy/pyroscope.ebpf"
+      target_label = "source"
+    }
   }
 
   pyroscope.ebpf "ebpf_pods" {
@@ -65,22 +74,26 @@ declare "profiling" {
     }
   }
 
+  discovery.relabel "potential_java_pods" {
+    targets = discovery.kubernetes.java_pods.targets
+    rule {
+      source_labels = ["__meta_kubernetes_pod_phase"]
+      regex         = "Succeeded|Failed|Completed"
+      action        = "drop"
+    }
+    rule {
+      source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_java_enabled"]
+      regex         = "true"
+      action        = "keep"
+    }
+  }
+
   discovery.process "java_pods" {
-    join = discovery.kubernetes.java_pods.targets
+    join = discovery.relabel.potential_java_pods.output
   }
 
   discovery.relabel "java_pods" {
     targets = discovery.process.java_pods.targets
-    rule {
-      source_labels = ["__meta_kubernetes_pod_phase"]
-      regex = "Succeeded|Failed|Completed"
-      action = "drop"
-    }
-    rule {
-      source_labels = ["__meta_kubernetes_pod_name"]
-      regex = "^$"
-      action = "drop"
-    }
     rule {
       source_labels = ["__meta_process_exe"]
       action = "keep"
@@ -101,6 +114,10 @@ declare "profiling" {
     rule {
       source_labels = ["__meta_kubernetes_pod_container_name"]
       target_label = "container"
+    }
+    rule {
+      replacement = "alloy/pyroscope.java"
+      target_label = "source"
     }
   }
 
@@ -150,6 +167,10 @@ declare "profiling" {
     rule {
       source_labels = ["__meta_kubernetes_pod_container_name"]
       target_label  = "container"
+    }
+    rule {
+      replacement = "alloy/pyroscope.pprof"
+      target_label = "source"
     }
   }
 

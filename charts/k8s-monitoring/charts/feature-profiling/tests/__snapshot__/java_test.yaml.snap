@@ -15,22 +15,26 @@ should be able to filter by label and annotation:
           }
         }
 
+        discovery.relabel "potential_java_pods" {
+          targets = discovery.kubernetes.java_pods.targets
+          rule {
+            source_labels = ["__meta_kubernetes_pod_phase"]
+            regex         = "Succeeded|Failed|Completed"
+            action        = "drop"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_java_enabled"]
+            regex         = "true"
+            action        = "keep"
+          }
+        }
+
         discovery.process "java_pods" {
-          join = discovery.kubernetes.java_pods.targets
+          join = discovery.relabel.potential_java_pods.output
         }
 
         discovery.relabel "java_pods" {
           targets = discovery.process.java_pods.targets
-          rule {
-            source_labels = ["__meta_kubernetes_pod_phase"]
-            regex = "Succeeded|Failed|Completed"
-            action = "drop"
-          }
-          rule {
-            source_labels = ["__meta_kubernetes_pod_name"]
-            regex = "^$"
-            action = "drop"
-          }
           rule {
             source_labels = ["__meta_process_exe"]
             action = "keep"
@@ -41,8 +45,8 @@ should be able to filter by label and annotation:
             target_label = "namespace"
           }
           rule {
-            source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_profile"]
-            regex = "true"
+            source_labels = ["__meta_kubernetes_pod_annotation_region"]
+            regex = "central"
             action = "keep"
           }
           rule {
@@ -56,6 +60,85 @@ should be able to filter by label and annotation:
           rule {
             source_labels = ["__meta_kubernetes_pod_container_name"]
             target_label = "container"
+          }
+          rule {
+            replacement = "alloy/pyroscope.java"
+            target_label = "source"
+          }
+        }
+
+        pyroscope.java "java_pods" {
+          targets = discovery.relabel.java_pods.output
+          profiling_config {
+            interval = "60s"
+            alloc = "512k"
+            cpu = true
+            sample_rate = 100
+            lock = "10ms"
+          }
+          forward_to = argument.profiles_destinations.value
+        }
+      }
+should be able to target all pods, without requiring the annotation:
+  1: |
+    |-
+      declare "profiling" {
+        argument "profiles_destinations" {
+          comment = "Must be a list of profile destinations where collected profiles should be forwarded to"
+        }
+        // Profiles: Java
+        discovery.kubernetes "java_pods" {
+          role = "pod"
+          selectors {
+            role = "pod"
+            field = "spec.nodeName=" + sys.env("HOSTNAME")
+          }
+        }
+
+        discovery.relabel "potential_java_pods" {
+          targets = discovery.kubernetes.java_pods.targets
+          rule {
+            source_labels = ["__meta_kubernetes_pod_phase"]
+            regex         = "Succeeded|Failed|Completed"
+            action        = "drop"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_java_enabled"]
+            regex         = "false"
+            action        = "drop"
+          }
+        }
+
+        discovery.process "java_pods" {
+          join = discovery.relabel.potential_java_pods.output
+        }
+
+        discovery.relabel "java_pods" {
+          targets = discovery.process.java_pods.targets
+          rule {
+            source_labels = ["__meta_process_exe"]
+            action = "keep"
+            regex = ".*/java$"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_namespace"]
+            target_label = "namespace"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_pod_name"]
+            target_label = "pod"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_pod_node_name"]
+            target_label = "node"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_pod_container_name"]
+            target_label = "container"
+          }
+          rule {
+            replacement = "alloy/pyroscope.java"
+            target_label = "source"
           }
         }
 
@@ -87,22 +170,26 @@ should build the Java profiling configuration:
           }
         }
 
+        discovery.relabel "potential_java_pods" {
+          targets = discovery.kubernetes.java_pods.targets
+          rule {
+            source_labels = ["__meta_kubernetes_pod_phase"]
+            regex         = "Succeeded|Failed|Completed"
+            action        = "drop"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_java_enabled"]
+            regex         = "true"
+            action        = "keep"
+          }
+        }
+
         discovery.process "java_pods" {
-          join = discovery.kubernetes.java_pods.targets
+          join = discovery.relabel.potential_java_pods.output
         }
 
         discovery.relabel "java_pods" {
           targets = discovery.process.java_pods.targets
-          rule {
-            source_labels = ["__meta_kubernetes_pod_phase"]
-            regex = "Succeeded|Failed|Completed"
-            action = "drop"
-          }
-          rule {
-            source_labels = ["__meta_kubernetes_pod_name"]
-            regex = "^$"
-            action = "drop"
-          }
           rule {
             source_labels = ["__meta_process_exe"]
             action = "keep"
@@ -123,6 +210,10 @@ should build the Java profiling configuration:
           rule {
             source_labels = ["__meta_kubernetes_pod_container_name"]
             target_label = "container"
+          }
+          rule {
+            replacement = "alloy/pyroscope.java"
+            target_label = "source"
           }
         }
 
