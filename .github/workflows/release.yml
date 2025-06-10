@@ -5,8 +5,6 @@ on:
   workflow_dispatch:
 
 env:
-  CR_CONFIGFILE: "${{ github.workspace }}/.github/configs/cr.yaml"
-  CT_CONFIGFILE: "${{ github.workspace }}/source/charts/k8s-monitoring/.ct.yaml"
   CR_INDEX_PATH: "${{ github.workspace }}/.cr-index"
   CR_PACKAGE_PATH: "${{ github.workspace }}/.cr-release-packages"
   CR_TOOL_PATH: "${{ github.workspace }}/.cr-tool"
@@ -124,7 +122,7 @@ jobs:
           CHARTPATH: ${{ steps.parse-chart.outputs.chartpath }}
         working-directory: source
         run: |
-          "${CR_TOOL_PATH}/cr" package "${CHARTPATH}" --config "${CR_CONFIGFILE}" --package-path "${CR_PACKAGE_PATH}"
+          "${CR_TOOL_PATH}/cr" package "${CHARTPATH}" --config .github/configs/cr.yaml --package-path "${CR_PACKAGE_PATH}"
           echo "Result of chart package:"
           ls -l "${CR_PACKAGE_PATH}"
 
