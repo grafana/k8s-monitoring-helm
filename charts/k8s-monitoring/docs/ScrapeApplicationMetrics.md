@@ -49,7 +49,7 @@ This chart provides ways to customize how Alloy handles these objects.
 
 ### Controlling discovery
 
-These options in the Helm chart allow for changing how Prometheus Operator objects are discovered:
+To change how Prometheus Operator objects are discovered, use these options in the Helm chart:
 
 -   `prometheusOperatorObjects.serviceMonitors.enabled` - If set to true, Alloy looks for and consumes ServiceMonitors.
 -   `prometheusOperatorObjects.serviceMonitors.namespaces` - Only use ServiceMonitors that exist in these namespaces.
