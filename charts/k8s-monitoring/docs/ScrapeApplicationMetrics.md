@@ -211,7 +211,7 @@ prometheus.scrape "processing_app" {
 }
 ```
 
-Note that we will cover the `forward_to` field in the [Delivery](#delivery) section below.
+Note that the `forward_to` field in the [Delivery](#delivery) is explained in a subsequent section of this document.
 
 This component gives a lot of flexibility to modify how things are scraped, including setting the `job` label, how
 frequently the metrics should be scraped, the path to scrape, and many more. Here is an example with lots of options:
