@@ -17,7 +17,7 @@ This document contains some information about frequently encountered issues and 
 
 Grafana Alloy has a
 [web user interface](https://grafana.com/docs/alloy/latest/tasks/debug/#alloy-ui) that shows every configuration
-component that Alloy instance is using and their statuses. By default, the web UI runs on each Alloy pod on port
+component that the Alloy instance is using and the component status. By default, the web UI runs on each Alloy pod on port
 `12345`. Since that UI is typically not exposed external to the Cluster, you can use port-forwarding to access it.
 
 `kubectl port-forward svc/grafana-k8s-monitoring-alloy 12345:12345`
