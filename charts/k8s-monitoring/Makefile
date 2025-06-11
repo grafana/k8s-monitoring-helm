@@ -14,7 +14,7 @@ ALLOY_OPERATOR_VERSION := $(shell yq '.dependencies[] | select(.name == "alloy-o
 collectors/upstream/alloy-values.yaml: charts/alloy-operator-$(ALLOY_OPERATOR_VERSION).tgz
 	tar xzf $< -C collectors/upstream/ --strip-components=1 alloy-operator/alloy-values.yaml
 
-COLLECTOR_VALUES_FILES = $(shell find collectors -name "*-values.yaml" -depth 1 | sort -u)
+COLLECTOR_VALUES_FILES = $(shell find collectors -maxdepth 1 -name "*-values.yaml" | sort -u)
 COLLECTOR_DOCS_FILES = $(COLLECTOR_VALUES_FILES:collectors/%-values.yaml=./docs/collectors/%.md)
 COLLECTOR_SCHEMA_FILES = $(COLLECTOR_VALUES_FILES:collectors/%-values.yaml=./schema-mods/definitions/%-collector.schema.json)
 
