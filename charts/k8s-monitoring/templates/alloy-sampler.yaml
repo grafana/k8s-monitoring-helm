@@ -22,14 +22,16 @@
     {{- end }}
     {{- $alloyConfig = regexReplaceAll `[ \t]+(\r?\n)` $alloyConfig "\n" }}
 
+    {{- $collectorName := include "helper.k8s_name" (printf "%s-sampler" $destination.name) }}
     {{- $alloySpec := dict "alloy" (dict "configMap" (dict "create" true "content" $alloyConfig)) }}
     {{- $globalValues := include "collector.alloy.values.global" $ | fromYaml }}
-    {{- $alloy := mergeOverwrite $alloySpec $globalValues $destination.processors.tailSampling.collector }}
+    {{- $alloyName := dict "nameOverride" $collectorName}}
+    {{- $alloy := mergeOverwrite $alloySpec $globalValues $alloyName $destination.processors.tailSampling.collector }}
 ---
 apiVersion: collectors.grafana.com/v1alpha1
 kind: Alloy
 metadata:
-  name: {{ include "helper.k8s_name" (printf "%s-%s-sampler" $.Release.Name $destination.name) }}
+  name: {{ include "collector.alloy.fullname" (deepCopy $ | merge (dict "collectorName" $collectorName "collectorValues" $alloy)) }}
   namespace: {{ $.Release.Namespace }}
 spec:
   {{- $alloy | toYaml | nindent 2 }}

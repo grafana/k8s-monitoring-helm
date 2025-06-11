@@ -57,7 +57,7 @@
 {{- end }}
 
 {{- define "collector.alloy.fullname" -}}
-  {{- $collectorValues := (index .Values .collectorName) }}
+  {{- $collectorValues := .collectorValues | default (index .Values .collectorName) }}
   {{- if $collectorValues.fullnameOverride }}
     {{- $collectorValues.fullnameOverride | trunc 63 | trimSuffix "-" }}
   {{- else }}

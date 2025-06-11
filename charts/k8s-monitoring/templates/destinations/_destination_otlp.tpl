@@ -261,7 +261,11 @@ otelcol.processor.filter {{ include "helper.alloy_name" .name | quote }} {
 otelcol.exporter.loadbalancing {{ include "helper.alloy_name" .name | quote }} {
   resolver {
     kubernetes {
-      service = "{{ include "helper.k8s_name" (printf "%s-%s-sampler-alloy" $.Release.Name .name) }}"
+      {{- $collectorName := include "helper.k8s_name" (printf "%s-sampler" .name) }}
+      {{- $globalValues := include "collector.alloy.values.global" $ | fromYaml }}
+      {{- $alloyName := dict "nameOverride" "$collectorName"}}
+      {{- $alloy := mergeOverwrite $globalValues $alloyName .processors.tailSampling.collector }}
+      service = "{{ include "collector.alloy.fullname" (deepCopy $ | merge (dict "collectorName" $collectorName "collectorValues" $alloy)) }}"
     }
   }
   protocol {
