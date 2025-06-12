@@ -1,12 +1,12 @@
 # Collectors
 
-Collectors are Alloy instances deployed as Kubernetes workloads using the Alloy helm chart. Each collector uses a
+Collectors are Alloy instances deployed by Alloy Operator as Kubernetes workloads. Each collector uses a
 workload type appropriate for the telemetry type it collects.
 
-## General Configuration
+## General configuration
 
-Each collector is defined in its own section in the k8s monitoring chart values file. The general format to enable and
-configure a collector looks like this:
+Each collector is defined in its own section in the Kubernetes Monitoring Helm chart values file. Here is an example of the general format to enable and
+configure a collector:
 
 ```yaml
 alloy-<collector name>:
@@ -18,14 +18,13 @@ alloy-<collector name>:
     ...
 ```
 
-This creates a k8s workload as either a DaemonSet, StatefulSet or Deployment, with its own set of pods, running Alloy
+This creates a Kubernetes workload as either a DaemonSet, StatefulSet, or Deployment, with its own set of Pods running Alloy
 containers.
 
-Because collectors are deployed using the Alloy Operator, you are able to use any of the
-standard [Alloy helm chart values](https://raw.githubusercontent.com/grafana/alloy/refs/heads/main/operations/helm/charts/alloy/values.yaml)
-apply. Those values will be used when creating the Alloy instance.
+Because collectors are deployed using the Alloy Operator, you can use any of the
+standard [Alloy helm chart values](https://raw.githubusercontent.com/grafana/alloy/refs/heads/main/operations/helm/charts/alloy/values.yaml). Those values will be used when creating the Alloy instance.
 
-Options specific to the k8s monitoring Helm chart are described in the reference section down below.
+Options specific to the Kubernetes Mnitoring Helm chart are described in the subsequent reference section.
 
 ## Alloy Receiver
 
@@ -37,12 +36,10 @@ This collector creates an Alloy instance deployed as a DaemonSet to receive appl
 the [Application Observability](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-application-observability)
 feature is enabled.
 
-> This collector is not automatically enabled with the feature.
-
 For each
 [receiver](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-application-observability#receivers-jaeger)
-enabled in the feature, you must also configure this collector to expose the corresponding ports on the k8s service
-fronting the pods. For example, to enable a receiver to collect Zipkin traces, you need to add:
+enabled in the feature, configure this collector to expose the corresponding ports on the Kubernetes service that is 
+fronting the Pods. For example, to enable a receiver to collect Zipkin traces, add:
 
 ```yaml
 applicationObservability:
@@ -71,27 +68,32 @@ alloy-receiver:
         protocol: TCP
 ```
 
-### Configuring Client Endpoints
+### Client endpoint configuration
 
-#### Inside the cluster
+You can configure endpoints inside or outside the Cluster.
 
-Applications inside the Kubernetes cluster can simply use
+#### Inside the Cluster
+
+Applications inside the Kubernetes Cluster can use
 the [kubedns](https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#namespaces-of-services) name to
-reference a particular receiver endpoint. Ex:
+reference a particular receiver endpoint. 
+For example:
 
 ```yaml
 endpoint: http://grafana-k8s-monitoring-alloy[.mynamespace.cluster.local]:4318
 ```
 
-#### Outside the cluster
+#### Outside the Cluster
 
-To expose the receiver to applications outside of the cluster (frontend observability for example), you can use
-different approaches depending on your setup. Load balancers are created by whatever controller(s) are installed on your
-cluster. Make sure to check
+To expose the receiver to applications outside the Cluster (for example, for frontend observability), you can use
+different approaches depending on your setup. 
+Load balancers are created by whatever controllers are installed on your
+Cluster. 
+Make sure to check
 the [Alloy chart values](https://raw.githubusercontent.com/grafana/alloy/main/operations/helm/charts/alloy/values.yaml)
 for the full list of options.
 
-Ex: to create a NLB on AWS EKS when using the AWS LB controller:
+For example, to create a NLB on AWS EKS when using the AWS LB controller:
 
 ```yaml
 alloy-receiver:
@@ -112,56 +114,58 @@ alloy-receiver:
 ```
 
 You can also create additional services and ingress objects as needed if the Alloy chart options don't fit your needs.
-Consult your K8s vendor documentation for details.
+Consult your Kubernetes vendor documentation for details.
 
 ### Istio/Service Mesh
 
-Depending on your mesh configuration, you might need to explicitly include the Grafana Monitoring namespace as a member,
-or declare the receiver as a backend of your application for traffic within the cluster.
+Depending on your mesh configuration, you might need to explicitly include the Grafana monitoring namespace as a member,
+or declare the receiver as a backend of your application for traffic within the Cluster.
 
-For traffic from outside the cluster, you most likely will need to set up an ingress gateway into your mesh.
+For traffic from outside the Cluster, you likely need to set up an ingress gateway into your mesh.
 
 In any case, consult your mesh vendor for details.
 
 ## Troubleshooting
 
-### Startup Issues
+Here are some troubleshooting tips related to configuring collectors.
 
-Make sure your receiver pods are up and running:
+### Startup issues
+
+Make sure your receiver Pods are up and running. To do so, use this command to show you a list of Pods and associated states:
 
 `kubectl get pods -n <helm_release_namespace>`
 
-will show you a list of pod and associated states.
-
-While you may have meta monitoring turned on, which would expose the Alloy pod logs in Loki, this is not helpful when
+While you may have meta monitoring turned on (which would expose the Alloy Pod logs in Loki), this is not helpful when
 the alloy-log receiver itself is faulty.
 
-To troubleshoot receiver startup problems, you can inspect the pod
-logs [just like you would any k8s workload](https://kubernetes.io/docs/reference/kubectl/generated/kubectl_logs/):
+To troubleshoot receiver startup problems, you can inspect the Pod
+logs [just like you would any Kubernetes workload](https://kubernetes.io/docs/reference/kubectl/generated/kubectl_logs/) to to watch the alloy-logs receiver Pods:
 
 `kubectl logs -f --tail 100 ds/grafana-k8s-monitoring-alloy-logs`
 
-... to watch the alloy-logs receiver pods.
+### Alloy debugger
 
-### Alloy Debugger
+You can apply [standard Alloy troubleshooting strategies](https://grafana.com/docs/alloy/latest/troubleshoot/) to each
+collector pod, but specifically for Kubernetes.
 
-[Standard Alloy troubleshooting strategies](https://grafana.com/docs/alloy/latest/troubleshoot/) can be applied to each
-collector pod, with a Kubernetes twist.
+1. To access the Alloy UI on a collector Pod, forward the UI port to your local machine:
 
-To access the Alloy UI on a collector pod, you need to forward the UI port to your local machine:
+  `kubectl port-forward grafana-k8s-monitoring-alloy-receiver 12345:12345`
 
-`kubectl port-forward grafana-k8s-monitoring-alloy-receiver 12345:12345`
-
-then open your browser to `http://localhost:12345`
+2. Open your browser to `http://localhost:12345`
 
 ## Scaling
 
-### DaemonSets & Singleton
+Follow these instructions for appropriate scaling.
 
-For collectors deployed as DaemonSets, one pod is deployed per node. You cannot deploy more replicas with this type of
-controller, so you need to scale the individual pods by increasing the resource requests/limits. Refer to
+### DaemonSets and Singleton instances
+
+For collectors deployed as DaemonSets and Singleton instances, one Pod is deployed per Node. 
+You cannot deploy more replicas with this type of
+controller.
+Instead, scale the individual Pods by increasing the resource requests and limits. Refer to
 the [Alloy helm chart sizing guidelines](https://grafana.com/docs/alloy/latest/introduction/estimate-resource-usage/) to
-learn how to best tune those parameters. Ex:
+learn how to best tune those parameters. For example:
 
 ```yaml
 alloy-metrics:
@@ -171,11 +175,9 @@ alloy-metrics:
       limits: {}
 ```
 
-Same for Singleton, this deployment is made to have a single pod.
-
 ### StatefulSets
 
-For StatefulSet collectors, you can set the number of replicas in the `alloy` config section of the collector:
+For StatefulSet collectors, set the number of replicas in the `alloy` config section of the collector:
 
 ```yaml
 alloy-metrics:
@@ -185,20 +187,21 @@ alloy-metrics:
 
 ### Autoscaling
 
-**Use with caution as Autoscalers can cause cluster outtages when not configured properly.**
+**Use with caution as Autoscalers can cause Cluster outtages when not configured properly.**
 
 Alloy doesn't provide autoscaling out of the box, but you can use the
 Kubernetes [HPA](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/)
-and [VPA](https://github.com/kubernetes/autoscaler/tree/master/vertical-pod-autoscaler) autoscalers depending on the
-type of deployment for the collector. Just set the HorizontalPodAutoscaler or VerticalPodAutoscaler target to the
+and [VPA](https://github.com/kubernetes/autoscaler/tree/master/vertical-pod-autoscaler) autoscalers, depending on the
+type of deployment for the collector. 
+Set the target for the HorizontalPodAutoscaler or VerticalPodAutoscaler to the
 collector deployment name.
 
-## Values Reference
+## Values reference
 
 ### Alloy Logs
 
 | Key                                       | Type   | Default       | Description                                                                              |
-|-------------------------------------------|--------|---------------|------------------------------------------------------------------------------------------|
+|-------------------------------------------|--------|---------------|--------------------|
 | alloy-logs.controller.type                | string | `"daemonset"` | The type of controller to use for the Alloy Logs instance.                               |
 | alloy-logs.enabled                        | bool   | `false`       | Deploy the Alloy instance for collecting log data.                                       |
 | alloy-logs.extraConfig                    | string | `""`          | Extra Alloy configuration to be added to the configuration file.                         |
@@ -224,8 +227,8 @@ collector deployment name.
 
 ### Alloy Metrics
 
-| Key                                          | Type   | Default         | Description                                                                              |
-|----------------------------------------------|--------|-----------------|------------------------------------------------------------------------------------------|
+| Key                                          | Type   | Default         | Description              |
+|--------|--------|-----------------|
 | alloy-metrics.controller.replicas            | int    | `1`             | The number of replicas for the Alloy Metrics instance.                                   |
 | alloy-metrics.controller.type                | string | `"statefulset"` | The type of controller to use for the Alloy Metrics instance.                            |
 | alloy-metrics.enabled                        | bool   | `false`         | Deploy the Alloy instance for collecting metrics.                                        |
@@ -253,7 +256,7 @@ collector deployment name.
 ### Alloy Profiles
 
 | Key                                           | Type   | Default       | Description                                                                              |
-|-----------------------------------------------|--------|---------------|------------------------------------------------------------------------------------------|
+|-----------------------------------------------|--------|---------------|-----------------|
 | alloy-profiles.controller.type                | string | `"daemonset"` | The type of controller to use for the Alloy Profiles instance.                           |
 | alloy-profiles.enabled                        | bool   | `false`       | Deploy the Alloy instance for gathering profiles.                                        |
 | alloy-profiles.extraConfig                    | string | `""`          | Extra Alloy configuration to be added to the configuration file.                         |
@@ -279,26 +282,26 @@ collector deployment name.
 
 ### Alloy Receiver
 
-| Key                                           | Type   | Default       | Description                                                                                                                                                                 |
-|-----------------------------------------------|--------|---------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| alloy-receiver.alloy.extraPorts               | list   | `[]`          | The ports to expose for the Alloy receiver.                                                                                                                                 |
-| alloy-receiver.controller.type                | string | `"daemonset"` | The type of controller to use for the Alloy Receiver instance.                                                                                                              |
-| alloy-receiver.enabled                        | bool   | `false`       | Deploy the Alloy instance for opening receivers to collect application data.                                                                                                |
-| alloy-receiver.extraConfig                    | string | `""`          | Extra Alloy configuration to be added to the configuration file.                                                                                                            |
-| alloy-receiver.extraService.enabled           | bool   | `false`       | Create an extra service for the Alloy receiver. This service will mirror the alloy-receiver service, but its name can be customized to match existing application settings. |
-| alloy-receiver.extraService.fullname          | string | `""`          | If set, the full name of the extra service to create. This will result in the format `<fullname>`.                                                                          |
-| alloy-receiver.extraService.name              | string | `"alloy"`     | The name of the extra service to create. This will result in the format `<release-name>-<name>`.                                                                            |
-| alloy-receiver.liveDebugging.enabled          | bool   | `false`       | Enable live debugging for the Alloy instance.                                                                                                                               |
-| alloy-receiver.logging.format                 | string | `"logfmt"`    | Format to use for writing Alloy log lines.                                                                                                                                  |
-| alloy-receiver.logging.level                  | string | `"info"`      | Level at which Alloy log lines should be written.                                                                                                                           |
-| alloy-receiver.remoteConfig.auth.password     | string | `""`          | The password to use for the remote config server.                                                                                                                           |
+| Key                                           | Type   | Default       | Description       |
+|-----------------------------|--------|---------------|---------------------------------------|
+| alloy-receiver.alloy.extraPorts  | list   | `[]`          | The ports to expose for the Alloy receiver.                                                                                                                                 |
+| alloy-receiver.controller.type   | string | `"daemonset"` | The type of controller to use for the Alloy Receiver instance.                                                                                                              |
+| alloy-receiver.enabled  | bool   | `false`       | Deploy the Alloy instance for opening receivers to collect application data.                                                                                                |
+| alloy-receiver.extraConfig  | string | `""`          | Extra Alloy configuration to be added to the configuration file.                                                                                                            |
+| alloy-receiver.extraService.enabled | bool   | `false`       | Create an extra service for the Alloy receiver. This service will mirror the alloy-receiver service, but its name can be customized to match existing application settings. |
+| alloy-receiver.extraService.fullname  | string | `""`          | If set, the full name of the extra service to create. This will result in the format `<fullname>`.                                                                          |
+| alloy-receiver.extraService.name  | string | `"alloy"`     | The name of the extra service to create. This will result in the format `<release-name>-<name>`.                                                                            |
+| alloy-receiver.liveDebugging.enabled | bool   | `false`       | Enable live debugging for the Alloy instance.                                                                                                                               |
+| alloy-receiver.logging.format | string | `"logfmt"`    | Format to use for writing Alloy log lines.                                                                                                                                  |
+| alloy-receiver.logging.level  | string | `"info"`      | Level at which Alloy log lines should be written.                                                                                                                           |
+| alloy-receiver.remoteConfig.auth.password  | string | `""`          | The password to use for the remote config server.                                                                                                                           |
 | alloy-receiver.remoteConfig.auth.passwordFrom | string | `""`          | Raw config for accessing the password.                                                                                                                                      |
 | alloy-receiver.remoteConfig.auth.passwordKey  | string | `"password"`  | The key for storing the password in the secret.                                                                                                                             |
-| alloy-receiver.remoteConfig.auth.type         | string | `"none"`      | The type of authentication to use for the remote config server.                                                                                                             |
+| alloy-receiver.remoteConfig.auth.type | string | `"none"`      | The type of authentication to use for the remote config server.                                                                                                             |
 | alloy-receiver.remoteConfig.auth.username     | string | `""`          | The username to use for the remote config server.                                                                                                                           |
 | alloy-receiver.remoteConfig.auth.usernameFrom | string | `""`          | Raw config for accessing the username.                                                                                                                                      |
 | alloy-receiver.remoteConfig.auth.usernameKey  | string | `"username"`  | The key for storing the username in the secret.                                                                                                                             |
-| alloy-receiver.remoteConfig.enabled           | bool   | `false`       | Enable fetching configuration from a remote config server.                                                                                                                  |
+| alloy-receiver.remoteConfig.enabled | bool   | `false`       | Enable fetching configuration from a remote config server.                                                                                                                  |
 | alloy-receiver.remoteConfig.extraAttributes   | object | `{}`          | Attributes to be added to this collector when requesting configuration.                                                                                                     |
 | alloy-receiver.remoteConfig.pollFrequency     | string | `"5m"`        | The frequency at which to poll the remote config server for updates.                                                                                                        |
 | alloy-receiver.remoteConfig.proxyURL          | string | `""`          | The proxy URL to use of the remote config server.                                                                                                                           |
@@ -312,9 +315,9 @@ collector deployment name.
 
 | Key                                            | Type   | Default        | Description                                                                                                            |
 |------------------------------------------------|--------|----------------|------------------------------------------------------------------------------------------------------------------------|
-| alloy-singleton.controller.replicas            | int    | `1`            | The number of replicas for the Alloy Singleton instance. This should remain a single instance to avoid duplicate data. |
-| alloy-singleton.controller.type                | string | `"deployment"` | The type of controller to use for the Alloy Singleton instance.                                                        |
-| alloy-singleton.enabled                        | bool   | `false`        | Deploy the Alloy instance for data sources required to be deployed on a single replica.                                |
+| alloy-singleton.controller.replicas  | int    | `1`            | The number of replicas for the Alloy Singleton instance. Must remain a single instance to avoid duplicate data. |
+| alloy-singleton.controller.type     | string | `"deployment"` | The type of controller to use for the Alloy Singleton instance.                                                        |
+| alloy-singleton.enabled | bool   | `false`        | Deploy the Alloy instance for data sources required to be deployed on a single replica.                                |
 | alloy-singleton.extraConfig                    | string | `""`           | Extra Alloy configuration to be added to the configuration file.                                                       |
 | alloy-singleton.liveDebugging.enabled          | bool   | `false`        | Enable live debugging for the Alloy instance.                                                                          |
 | alloy-singleton.logging.format                 | string | `"logfmt"`     | Format to use for writing Alloy log lines.                                                                             |
