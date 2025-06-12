@@ -16,7 +16,7 @@ been rearranged to be organized around features rather than data types (such as 
 explain how the settings have changed, feature by feature, and how to migrate your v1 values.yaml file.
 
 In v1, many features were enabled by default. Cluster metrics, pod logs, cluster events, and so on. In v2, all features
-are turned off by default, which leads your values file to better reflect your desired feature set.
+are turned off by default. This means your values file better reflects your desired feature set.
 
 A migration tool is available
 at [https://grafana.github.io/k8s-monitoring-helm-migrator/](https://grafana.github.io/k8s-monitoring-helm-migrator/).
