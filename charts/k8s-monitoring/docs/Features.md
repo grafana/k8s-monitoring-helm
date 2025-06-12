@@ -1,5 +1,6 @@
 # Features
 
+<!-- Features are...???need to define what this means -->
 These are the current features supported in this Helm chart:
 
 -   [Cluster Metrics](#cluster-metrics)
@@ -13,59 +14,52 @@ These are the current features supported in this Helm chart:
 -   [Profiling](#profiling)
 -   [Frontend Observability](#frontend-observability)
 
+
 ## Cluster Metrics
 
-[Documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-cluster-metrics)
-
-Collects metrics about the Kubernetes cluster.
+Collects metrics about the Kubernetes Cluster, including the control plane if configured to do so. 
+Refer to the [documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-cluster-metrics) for more information.
 
 ## Cluster Events
 
-[Documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-cluster-events)
-
-Collects Kubernetes Cluster events.
+Collects Kubernetes Cluster events from the Kubernetes API server.
+Refer to the [documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-cluster-events) for more information.
 
 ## Application Observability
 
-[Documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-application-observability)
-
-Open receivers to collect telemetry data from instrumented applications.
+Open receivers to collect telemetry data from instrumented applications, including tail sampling when configured to do so.
+Refer to [documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-application-observability) for more information.
 
 ## Annotation Autodiscovery
 
-[Documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-annotation-autodiscovery)
-
-Collects metrics from Pods and Services that use a specific annotation.
+Collects metrics from any Pod or Service that uses a specific annotation.
+Refer to [documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-annotation-autodiscovery) for more information.
 
 ## Prometheus Operator Objects
 
-[Documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-prometheus-operator-objects)
-
-Collects metrics from Prometheus Operator objects, like PodMonitors and ServiceMonitors.
+Collects metrics from Prometheus Operator objects, such as PodMonitors and ServiceMonitors.
+Refer to [documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-prometheus-operator-objects) for more information.
 
 ## Node Logs
 
-[Documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-node-logs)
-
 Collects logs from Kubernetes Cluster Nodes.
+Refer to [documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-node-logs) for more information.
 
 ## Pod Logs
 
-[Documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-pod-logs)
-
 Collects logs from Kubernetes Pods.
+Refer to [documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-pod-logs) for more information.
+
 
 ## Service Integrations
 
-[Documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-integrations)
-
 Collects metrics and logs from a variety of popular services and integrations.
+Refer to [documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-integrations) for more information.
 
 ## Profiling
 
-[Documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-profiling)
-
 Collect profiles using Pyroscope.
+Refer to [documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-profiling) for more information.
 
 ## Contributing
 
@@ -76,17 +70,17 @@ To add a new feature, create a new Helm chart in the `charts` directory. The cha
 its name. The following files are required for a feature chart:
 
 -   `templates/_module.alloy.tpl` - This file should contain a template function named
-    `feature.<feature-slug>.module` which should create an [Alloy module](https://grafana.com/docs/alloy/latest/get-started/modules/)
-    that wraps the configuration for your feature. It should expose any of these arguments as appropriate:
-    -   `metrics_destination` - An argument that defines where scrape metrics should be delivered.
-    -   `logs_destination` - An argument that defines where logs should be delivered.
-    -   `traces_destination` - An argument that defines where traces should be delivered.
-    -   `profiles_destination` - An argument that defines where profiles should be delivered.
+    `feature.<feature-slug>.module` Creates an [Alloy module](https://grafana.com/docs/alloy/latest/get-started/modules/)
+    that wraps the configuration for your feature, and exposes any of these arguments as appropriate:
+    -   `metrics_destination` - Defines where scrape metrics should be delivered
+    -   `logs_destination` - Defines where logs should be delivered
+    -   `traces_destination` - Defines where traces should be delivered
+    -   `profiles_destination` - Defines where profiles should be delivered
 
 -   `templates/_notes.alloy.tpl` - This file should contain these template functions:
-    -   `feature.<feature-slug>.notes.deployments` - This function returns a list of workloads that will be
-    deployed to the Kubernetes Cluster by the feature.
-    -   `feature.<feature-slug>.notes.task` - This function returns a 1-line summary of what this feature will do.
-    -   `feature.<feature-slug>.notes.actions` - This function returns any prompts for the user to take additional
-        action after deployment.
-    -   `feature.<feature-slug>.summary` - This function a dictionary of settings, used for self-reporting metrics.
+    -   `feature.<feature-slug>.notes.deployments` - Returns a list of workloads that will be
+    deployed to the Kubernetes Cluster by the feature
+    -   `feature.<feature-slug>.notes.task` - Returns a one-line summary of what this feature will do
+    -   `feature.<feature-slug>.notes.actions` - Returns any prompts for the user to take additional
+        action after deployment
+    -   `feature.<feature-slug>.summary` - Returns a dictionary of settings that is used for self-reporting metrics
