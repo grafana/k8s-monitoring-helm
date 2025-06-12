@@ -1,20 +1,21 @@
 # Migration guide
 
-## Migrating from version 2.0 to 3.0
+## Migrate from version 2.0 to 3.0
 
 The 3.0 release of the k8s-monitoring Helm chart no longer utilizes the
-[Alloy Helm chart](https://github.com/grafana/alloy/tree/main/operations/helm/charts/alloy) as a subchart dependency,
-but instead utilizes the new [Alloy Operator](https://github.com/grafana/alloy-operator) to deploy the Alloy instances.
+[Alloy Helm chart](https://github.com/grafana/alloy/tree/main/operations/helm/charts/alloy) as a subchart dependency.
+Instead the chart uses the new [Alloy Operator](https://github.com/grafana/alloy-operator) to deploy Alloy instances.
 This allows for a more flexible and powerful deployment of Alloy, as well as the ability of your chosen features to
 appropriately configure those Alloy instances.
 
-## Migrating from version 1.x to 2.0
+## Migrate from version 1.x to 2.0
+<!-- question: should this now be titled 1. to 3.0? -->
 
-The 2.0 release of the k8s-monitoring Helm chart includes major changes from the 1.x version. Many of the features have
-been re-arranged to be organized around features, rather than data types (e.g. metrics, logs, etc.). This document will
-explain how the settings have changed, feature-by-feature, and how to migrate your v1 values.yaml file.
+The 2.0 release of the Kubernetes Monitoring Helm chart includes major changes from the 1.x version. Many of the features have
+been rearranged to be organized around features rather than data types (such as metrics, logs, and so on). This document will
+explain how the settings have changed, feature by feature, and how to migrate your v1 values.yaml file.
 
-In v1, many features were enabled by default. Cluster metrics, pod logs, cluster events, etc... In v2, all features
+In v1, many features were enabled by default. Cluster metrics, pod logs, cluster events, and so on. In v2, all features
 are turned off by default, which leads your values file to better reflect your desired feature set.
 
 A migration tool is available
@@ -25,17 +26,17 @@ at [https://grafana.github.io/k8s-monitoring-helm-migrator/](https://grafana.git
 The definition of where data is delivered has changed from `externalServices`, an object of four types, to
 `destinations`, an array of any number of types. Before the `externalServices` object had four types of destinations:
 
--   `prometheus` - Where all metrics are delivered. It could refer to a true Prometheus server, or an OTLP destination
+-   `prometheus` - Where all metrics are delivered. It could refer to a true Prometheus server or an OTLP destination
     that handles metrics.
--   `loki` - Where all logs are delivered. It could refer to a true Loki server, or an OTLP destination that handles logs.
--   `tempo` - Where all traces are delivered. It could refer to a true Tempo server, or an OTLP destination that handles
+-   `loki` - Where all logs are delivered. It could refer to a true Loki server or an OTLP destination that handles logs.
+-   `tempo` - Where all traces are delivered. It could refer to a true Tempo server or an OTLP destination that handles
     traces.
 -   `pyroscope` - Where all profiles are delivered.
 
-So, the service essentially referred to the destination for the data type. In v2, the destination refers to the protocol
+In v1, the service essentially referred to the destination for the data type. In v2, the destination refers to the protocol
 used to deliver the data type.
 
-See [Destinations](destinations/README.md) for more information.
+Refer to [Destinations](destinations/README.md) for more information.
 
 Here's how to map from v1 `externalServices` to v2 `destinations`:
 
@@ -62,7 +63,7 @@ Here's how to map from v1 `externalServices` to v2 `destinations`:
 
 ### Collectors
 
-The Alloy instances has been further split from the original to allow for more flexibility in the configuration and
+The Alloy instances have been further split from the original to allow for more flexibility in the configuration and
 predictability in their resource requirements. Each feature allows for setting the collector, but the defaults have been
 chosen carefully, so you should only need to change these if you have specific requirements.
 
@@ -84,9 +85,9 @@ chosen carefully, so you should only need to change these if you have specific r
 
 Gathering of Cluster Events has been moved into its own feature called `clusterEvents`.
 
-| Feature        | v1.x setting          | v2.0 setting    | Notes |
-|----------------|-----------------------|-----------------|-------|
-| Cluster Events | `logs.cluster_events` | `clusterEvents` |       |
+| Feature        | v1.x setting          | v2.0 setting    |
+|----------------|-----------------------|-----------------|
+| Cluster Events | `logs.cluster_events` | `clusterEvents` |
 
 #### Steps to take
 
@@ -109,7 +110,7 @@ If using cluster events, `logs.cluster_events.enabled`:
 Cluster metrics refers to any metric data source that scrapes metrics about the cluster itself. This includes the
 following data sources:
 
--   Cluster metrics (Kubelet, API Server, etc.)
+-   Cluster metrics (Kubelet, API Server, and so on)
 -   Node metrics (Node Exporter & Windows Exporter)
 -   kube-state-metrics
 -   Energy metrics via Kepler
@@ -223,9 +224,9 @@ If using application observability, `traces.enabled`, `receivers.*.enabled`:
 9.  Move trace filters from `traces.receiver.filters` to `applicationObservability.traces.filters`
 10.  Move trace transforms from `traces.receiver.transforms` to `applicationObservability.traces.transforms`
 
-### Auto-Instrumentation (Grafana Beyla)
+### Zero code instrumentation (Grafana Beyla)
 
-Deployment and handling of the auto instrumentation feature, using Grafana Beyla, has been moved into its own feature
+Deployment and handling of the zero-code instrumentation feature, using Grafana Beyla, has been moved into its own feature
 called `autoInstrumentation`.
 
 | Feature                      | v1.x setting    | v2.0 setting                | Notes |
@@ -250,7 +251,7 @@ If using Beyla, `beyla.enabled`:
 
 ### Pod Logs
 
-Gathering of pods logs has been moved into its own feature called `podLogs`.
+Gathering of Pods logs has been moved into its own feature called `podLogs`.
 
 | Feature  | v1.x setting    | v2.0 setting | Notes |
 |----------|-----------------|--------------|-------|
@@ -258,7 +259,7 @@ Gathering of pods logs has been moved into its own feature called `podLogs`.
 
 #### Steps to take
 
-If using pod logs, `logs.pod_logs.enabled`:
+If using Pod logs `logs.pod_logs.enabled`:
 
 1.  Enable `podLogs` and `alloy-logs` in your values file:
 
@@ -309,9 +310,10 @@ Integrations are a new feature in v2.0 that allow you to enable and configure ad
 includes the Alloy metrics that were previously part of `v1`. Some service integrations that previously needed to be
 defined in the `extraConfig` and `logs.extraConfig` sections can now be used in the integration feature.
 
-If you are using the `metrics.alloy` setting for getting Alloy metrics, or if you are using `extraConfig` to add config
-to get data from any of the new build-in integrations, you should replace your `extraConfig` to the new `integrations`
-feature.
+Replace your `extraConfig` to the new `integrations`feature if either of these are true:
+
+- You are using the `metrics.alloy` setting for getting Alloy metrics.
+- You are using `extraConfig` to add config to get data from any of the new build-in integrations.
 
 #### Built-in integrations
 
@@ -326,7 +328,7 @@ feature.
 
 If using the Alloy integration `metrics.alloy.enabled`, or if using `extraConfig` for cert-manager, etcd, or MySQL:
 
-1.  Create instances of the integration that you want and enable `alloy-metrics` in your values file:
+1.  Create instances of the integration that you want, and enable `alloy-metrics` in your values file:
 
     ```yaml
     integrations:
@@ -344,12 +346,12 @@ If using the Alloy integration `metrics.alloy.enabled`, or if using `extraConfig
 For service integrations that are not available in the built-in integrations feature, you can continue to use them
 in the `extraConfig` sections. See the [Extra Configs](#extra-configs) section below for guidance.
 
-### Extra Configs
+### Extra configs
 
-The variables for adding arbitrary configuration to the Alloy instances has been moved inside the respective Alloy
+The variables for adding arbitrary configuration to the Alloy instances have been moved inside the respective Alloy
 instance. If you are using `extraConfig` to add configuration for scraping metrics from an integration built-in with the
 [integrations](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-integrations)
-feature (e.g. cert-manager, etcd, MySQL), you can move that configuration to the new `integrations` feature.
+feature (such as cert-manager, etcd, or MySQL), you can move that configuration to the new `integrations` feature.
 
 For other uses of `extraConfig`, continue with this section.
 
@@ -368,7 +370,7 @@ For other uses of `extraConfig`, continue with this section.
 3.  Move `logs.cluster_events.extraConfig` to `alloy-singleton.extraConfig`
 4.  Move `logs.extraConfig` to `alloy-logs.extraConfig`
 5.  Move `profiles.extraConfig` to `alloy-profiles.extraConfig`
-6.  Rename destinations for telemetry data to the appropriate destination component:
+6.  Rename destinations for telemetry data to the appropriate destination component. Refer to the following section.
 
 #### Destination names
 
@@ -379,7 +381,7 @@ For other uses of `extraConfig`, continue with this section.
 | Traces    | `otelcol.exporter.otlp.traces_service.input`  | `otelcol.exporter.otlp.<destination_name>.input`      |
 | Profiles  | `pyroscope.write.profiles_service.receiver`   | `pyroscope.write.<destination_name>.receiver`         |
 
-Note that the `<destination_name>` in the component reference is the name of the destination, set to lower-case and
+Note that the `<destination_name>` in the component reference is the name of the destination, set to lowercase and
 with any non-alphanumeric characters replaced with an underscore. For example, if your destination is named
 `Grafana Cloud Metrics`, then the destination name would be `grafana_cloud_metrics`.
 
@@ -388,10 +390,10 @@ with any non-alphanumeric characters replaced with an underscore. For example, i
 The following features have been removed from the 2.0 release:
 <!--alex ignore hooks-->
 
--   **Pre-install hooks**: The pre-install and pre-upgrade hooks that did config validation have been removed. The Alloy
-    pods will now validate the configuration at runtime and log any issues and without these pods, this greatly
+-   **Pre-install hooks**: The pre-install and pre-upgrade hooks that performed config validation have been removed. The Alloy
+    Pods will now validate the configuration at runtime and log any issues and without these Pods. This greatly
     decreases startup time.
 -   **`helm test` functionality**: The `helm test` functionality that ran a config analysis and attempted to query the
-    databases for expected metrics and logs has been removed. This functionality was either not fully developed, or not
+    databases for expected metrics and logs has been removed. This functionality was either not fully developed or not
     useful in production environments. The query testing was mainly for CI/CD testing in development and has been
     replaced by more effective and comprehensive methods.
