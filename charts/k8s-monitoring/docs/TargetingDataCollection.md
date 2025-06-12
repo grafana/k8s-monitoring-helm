@@ -1,4 +1,4 @@
-# Targeting Data Collection
+# Targeted data collection
 
 The Kubernetes Monitoring Helm chart allows you to target specific namespaces or Pods for data collection. There are
 many different methods to control this, and the following sections will explain how to use many of them.
