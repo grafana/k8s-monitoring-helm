@@ -54,6 +54,17 @@ discovery.relabel "filtered_pods" {
     regex = "__meta_kubernetes_pod_annotation_(.+)"
   }
 
+  rule {
+    source_labels = ["__meta_kubernetes_pod_controller_kind", "__meta_kubernetes_pod_controller_name"]
+    regex = "DaemonSet;(.*)"
+    target_label = "k8s_daemonset_name"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_pod_controller_kind", "__meta_kubernetes_pod_controller_name"]
+    regex = "StatefulSet;(.*)"
+    target_label = "k8s_statefulset_name"
+  }
+
   // explicitly set service_name. if not set, loki will automatically try to populate a default.
   // see https://grafana.com/docs/loki/latest/get-started/labels/#default-labels-for-all-users
   //
@@ -67,6 +78,8 @@ discovery.relabel "filtered_pods" {
     source_labels = [
       "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_name",
       "__meta_kubernetes_pod_label_app_kubernetes_io_name",
+      "k8s_daemonset_name",
+      "k8s_statefulset_name",
       "__meta_kubernetes_pod_container_name",
     ]
     separator = ";"
