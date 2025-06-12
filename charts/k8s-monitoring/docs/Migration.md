@@ -26,10 +26,10 @@ at [https://grafana.github.io/k8s-monitoring-helm-migrator/](https://grafana.git
 The definition of where data is delivered has changed from `externalServices`, an object of four types, to
 `destinations`, an array of any number of types. Before the `externalServices` object had four types of destinations:
 
--   `prometheus` - Where all metrics are delivered. It could refer to a true Prometheus server or an OTLP destination
+-   `prometheus` - Where all metrics are delivered. This could refer to a true Prometheus server or an OTLP destination
     that handles metrics.
--   `loki` - Where all logs are delivered. It could refer to a true Loki server or an OTLP destination that handles logs.
--   `tempo` - Where all traces are delivered. It could refer to a true Tempo server or an OTLP destination that handles
+-   `loki` - Where all logs are delivered. This could refer to a true Loki server or an OTLP destination that handles logs.
+-   `tempo` - Where all traces are delivered. This could refer to a true Tempo server or an OTLP destination that handles
     traces.
 -   `pyroscope` - Where all profiles are delivered.
 
