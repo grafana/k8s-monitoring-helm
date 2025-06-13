@@ -15,10 +15,9 @@ These are the current features supported in this Helm chart:
 -   [Profiling](#profiling)
 -   [Frontend Observability](#frontend-observability)
 
-
 ## Cluster Metrics
 
-Collects metrics about the Kubernetes Cluster, including the control plane if configured to do so. 
+Collects metrics about the Kubernetes Cluster, including the control plane if configured to do so.
 Refer to the [documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-cluster-metrics) for more information.
 
 ## Cluster Events
@@ -28,8 +27,9 @@ Refer to the [documentation](https://github.com/grafana/k8s-monitoring-helm/tree
 
 ## Application Observability
 
-Opens receivers to collect telemetry data from instrumented applications, including tail sampling when configured to do so.
-Refer to [documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-application-observability) for more information.
+Opens receivers to collect telemetry data from instrumented applications, including tail sampling when configured to do
+so. Refer
+to [documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-application-observability) for more information.
 
 ## Annotation Autodiscovery
 
@@ -50,7 +50,6 @@ Refer to [documentation](https://github.com/grafana/k8s-monitoring-helm/tree/mai
 
 Collects logs from Kubernetes Pods.
 Refer to [documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-pod-logs) for more information.
-
 
 ## Service Integrations
 

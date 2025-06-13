@@ -10,8 +10,8 @@ appropriately configure those Alloy instances.
 
 ## Migrate from version 1.x to 2.0
 
-The 2.0 release of the Kubernetes Monitoring Helm chart includes major changes from the 1.x version. Many of the features have
-been reorganized around features rather than data types (such as metrics, logs, and so on). This document 
+The 2.0 release of the Kubernetes Monitoring Helm chart includes major changes from the 1.x version. Many of the
+features have been reorganized around features rather than data types (such as metrics, logs, and so on). This document
 explains how the settings have changed feature by feature, and how to migrate your v1 values.yaml file.
 
 In v1, many features were enabled by default. Cluster metrics, pod logs, cluster events, and so on. In v2, all features
@@ -27,13 +27,14 @@ The definition of where data is delivered has changed from `externalServices`, a
 
 -   `prometheus` - Where all metrics are delivered. This could refer to a true Prometheus server or an OTLP destination
     that handles metrics.
--   `loki` - Where all logs are delivered. This could refer to a true Loki server or an OTLP destination that handles logs.
--   `tempo` - Where all traces are delivered. This could refer to a true Tempo server or an OTLP destination that handles
-    traces.
+-   `loki` - Where all logs are delivered. This could refer to a true Loki server or an OTLP destination that handles
+    logs.
+-   `tempo` - Where all traces are delivered. This could refer to a true Tempo server or an OTLP destination that
+    handles traces.
 -   `pyroscope` - Where all profiles are delivered.
 
-In v1, the service essentially referred to the destination for the data type. In v2, the destination refers to the protocol
-used to deliver the data type.
+In v1, the service essentially referred to the destination for the data type. In v2, the destination refers to the
+protocol used to deliver the data type.
 
 Refer to [Destinations](destinations/README.md) for more information.
 
@@ -225,8 +226,8 @@ If using application observability, `traces.enabled`, `receivers.*.enabled`:
 
 ### Zero-code instrumentation with Grafana Beyla
 
-Deployment and handling of the zero-code instrumentation feature (using Grafana Beyla) has been moved into its own feature
-called `autoInstrumentation`.
+Deployment and handling of the zero-code instrumentation feature (using Grafana Beyla) has been moved into its own
+feature called `autoInstrumentation`.
 
 | Feature                      | v1.x setting    | v2.0 setting                | Notes |
 |------------------------------|-----------------|-----------------------------|-------|
@@ -311,8 +312,8 @@ defined in the `extraConfig` and `logs.extraConfig` sections can now be used in 
 
 Replace your `extraConfig` to the new `integrations`feature if either of these are true:
 
-- You are using the `metrics.alloy` setting for getting Alloy metrics.
-- You are using `extraConfig` to add config to get data from any of the new build-in integrations.
+-   You are using the `metrics.alloy` setting for getting Alloy metrics.
+-   You are using `extraConfig` to add config to get data from any of the new build-in integrations.
 
 #### Built-in integrations
 
@@ -389,8 +390,8 @@ with any non-alphanumeric characters replaced with an underscore. For example, i
 The following features have been removed from the 2.0 release:
 <!--alex ignore hooks-->
 
--   **Pre-install hooks**: The pre-install and pre-upgrade hooks that performed config validation have been removed. The Alloy
-    Pods now validate the configuration at runtime and log any issues and without these Pods. This greatly
+-   **Pre-install hooks**: The pre-install and pre-upgrade hooks that performed config validation have been removed. The
+    Alloy Pods now validate the configuration at runtime and log any issues and without these Pods. This greatly
     decreases startup time.
 -   **`helm test` functionality**: The `helm test` functionality that ran a config analysis and attempted to query the
     databases for expected metrics and logs has been removed. This functionality was either not fully developed or not

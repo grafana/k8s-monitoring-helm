@@ -5,9 +5,8 @@ many different methods to control this, and the following sections will explain 
 
 ## Kubernetes Annotations
 
-Often annotations are used for controlling
-service discovery, but you can also use them to configure how data is collected. 
-Several features within this Helm chart can be controlled using Kubernetes annotations. 
+Often annotations are used for controlling service discovery, but you can also use them to configure how data is
+collected. Several features within this Helm chart can be controlled using Kubernetes annotations.
 
 ### Feature: Annotation Autodiscovery
 
@@ -28,8 +27,8 @@ on your Cluster. You can apply these default annotations to a Pod or Service:
 
 ### Feature: Profiling
 
-The [Profiling feature](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-profiling) allows you to collect profiling data from your applications. This feature can collect profiles
-using eBPF, Java, or pprof.
+The [Profiling feature](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-profiling) allows you to collect profiling data from your applications. This feature can collect
+profiles using eBPF, Java, or pprof.
 
 #### eBPF Profiling
 
