@@ -25,7 +25,7 @@ Because collectors are deployed using the Alloy Operator, you can use any of the
 standard [Alloy helm chart values](https://raw.githubusercontent.com/grafana/alloy/refs/heads/main/operations/helm/charts/alloy/values.yaml). 
 These values will be used when creating the Alloy instance.
 
-Options specific to the Kubernetes Mpnitoring Helm chart are described in the following reference section.
+Options specific to the Kubernetes Monitoring Helm chart are described in the following reference section.
 
 ## Alloy Receiver
 
