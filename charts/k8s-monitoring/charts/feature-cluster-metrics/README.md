@@ -164,13 +164,6 @@ Be sure perform actual integration testing in a live environment in the main [k8
 |-----|------|---------|-------------|
 | controlPlane.enabled | bool | `false` | enable all Kubernetes Control Plane metrics sources. This includes api-server, kube-scheduler, kube-controller-manager, and KubeDNS. |
 
-### General settings
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| fullnameOverride | string | `""` | Full name override |
-| nameOverride | string | `""` | Name override |
-
 ### Global Settings
 
 | Key | Type | Default | Description |

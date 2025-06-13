@@ -70,13 +70,6 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | journal.path | string | `"/var/log/journal"` | The path to the journal logs on the worker node. |
 | journal.units | list | `[]` | The list of systemd units to keep scraped logs from, this can be a valid RE2 regex. If empty, all units are scraped. |
 
-### General settings
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| fullnameOverride | string | `""` | Full name override |
-| nameOverride | string | `""` | Name override |
-
 ### Processing settings
 
 | Key | Type | Default | Description |
