@@ -137,7 +137,7 @@ Make sure your receiver Pods are up and running. To do so, use this command to s
 `kubectl get pods -n <helm_release_namespace>`
 
 While you may have meta monitoring turned on (which would expose the Alloy Pod logs in Loki), this is not helpful when
-the alloy-log receiver itself is faulty.
+the alloy-logs receiver itself is faulty.
 
 To troubleshoot receiver startup problems, you can inspect the Pod
 logs [just like you would any Kubernetes workload](https://kubernetes.io/docs/reference/kubectl/generated/kubectl_logs/) to to watch the alloy-logs receiver Pods:
