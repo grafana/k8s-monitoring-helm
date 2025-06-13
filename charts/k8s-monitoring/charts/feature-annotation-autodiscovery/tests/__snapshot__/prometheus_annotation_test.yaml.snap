@@ -107,13 +107,13 @@ creates a module with default discovery, scraping, and processing configurations
           // If the metrics port number annotation has a value, override the target address to use it, regardless whether it is
           // one of the declared ports on that Pod.
           rule {
-            source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_metrics_portNumber", "__meta_kubernetes_pod_ip"]
+            source_labels = ["__meta_kubernetes_pod_annotation_prometheus_io_port", "__meta_kubernetes_pod_ip"]
             regex = "(\\d+);(([A-Fa-f0-9]{1,4}::?){1,7}[A-Fa-f0-9]{1,4})"
             replacement = "[$2]:$1" // IPv6
             target_label = "__address__"
           }
           rule {
-            source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_metrics_portNumber", "__meta_kubernetes_pod_ip"]
+            source_labels = ["__meta_kubernetes_pod_annotation_prometheus_io_port", "__meta_kubernetes_pod_ip"]
             regex = "(\\d+);((([0-9]+?)(\\.|$)){4})" // IPv4, takes priority over IPv6 when both exists
             replacement = "$2:$1"
             target_label = "__address__"
@@ -211,7 +211,7 @@ creates a module with default discovery, scraping, and processing configurations
             target_label = "__tmp_port"
           }
           rule {
-            source_labels = ["__meta_kubernetes_service_annotation_k8s_grafana_com_metrics_portNumber"]
+            source_labels = ["__meta_kubernetes_service_annotation_prometheus_io_port"]
             regex = "(.+)"
             target_label = "__tmp_port"
           }
