@@ -9,7 +9,6 @@ This allows for a more flexible and powerful deployment of Alloy, as well as the
 appropriately configure those Alloy instances.
 
 ## Migrate from version 1.x to 2.0
-<!-- question: should this now be titled 1. to 3.0? -->
 
 The 2.0 release of the Kubernetes Monitoring Helm chart includes major changes from the 1.x version. Many of the features have
 been reorganized around features rather than data types (such as metrics, logs, and so on). This document 
@@ -224,9 +223,9 @@ If using application observability, `traces.enabled`, `receivers.*.enabled`:
 9.  Move trace filters from `traces.receiver.filters` to `applicationObservability.traces.filters`
 10.  Move trace transforms from `traces.receiver.transforms` to `applicationObservability.traces.transforms`
 
-### Zero code instrumentation (Grafana Beyla)
+### Zero-code instrumentation with Grafana Beyla
 
-Deployment and handling of the zero-code instrumentation feature, using Grafana Beyla, has been moved into its own feature
+Deployment and handling of the zero-code instrumentation feature (using Grafana Beyla) has been moved into its own feature
 called `autoInstrumentation`.
 
 | Feature                      | v1.x setting    | v2.0 setting                | Notes |
@@ -249,7 +248,7 @@ If using Beyla, `beyla.enabled`:
 
 2.  Combine `beyla` and `metrics.beyla` and copy to `autoInstrumentation.beyla`
 
-### Pod Logs
+### Pod logs
 
 Gathering of Pods logs has been moved into its own feature called `podLogs`.
 
@@ -274,7 +273,7 @@ If using Pod logs `logs.pod_logs.enabled`:
 3.  Rename any `extraRelabelingRules` to `extraDiscoveryRules`
 4.  Rename any `extraStageBlocks` to `extraLogProcessingStages`
 
-### Prometheus Operator Objects
+### Prometheus Operator objects
 
 Handling for Prometheus Operator objects, such as `ServiceMonitors`, `PodMonitors`, and `Probes` has been moved to the
 `prometheusOperatorObjects` feature. This feature also includes the option to deploy the Prometheus Operator CRDs.
