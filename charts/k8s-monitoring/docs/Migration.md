@@ -82,7 +82,7 @@ chosen carefully, so you should only need to change these if you have specific r
 
 ### Cluster Events
 
-Gathering of Cluster Events has been moved into its own feature called `clusterEvents`.
+Gathering of Cluster events has been moved into its own feature called `clusterEvents`.
 
 | Feature        | v1.x setting          | v2.0 setting    |
 |----------------|-----------------------|-----------------|
@@ -90,7 +90,7 @@ Gathering of Cluster Events has been moved into its own feature called `clusterE
 
 #### Steps to take
 
-If using cluster events, `logs.cluster_events.enabled`:
+If using Cluster events, `logs.cluster_events.enabled`:
 
 1.  Enable `clusterEvents` and `alloy-singleton` in your values file:
 
@@ -134,7 +134,7 @@ These have all been combined into a single feature called `clusterMetrics`.
 
 #### Steps to take
 
-If using cluster metrics, `metrics.enabled`:
+If using Cluster metrics, `metrics.enabled`:
 
 1.  Enable `clusterMetrics` and `alloy-metrics` in your values file:
 
