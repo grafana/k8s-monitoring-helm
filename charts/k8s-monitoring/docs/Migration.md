@@ -51,9 +51,9 @@ Here's how to map from v1 `externalServices` to v2 `destinations`:
 #### Steps to take
 
 1.  Create a destination for each external service you are using.
-2.  Provide a `name` and a `type` for the destination
-3.  Provide the URL for the destination. *NOTE* this is a full data writing/pushing URL, not only the hostname!
-4.  Map the other settings from the original service to the new destination
+2.  Provide a `name` and a `type` for the destination.
+3.  Provide the URL for the destination. *NOTE* this is a full data writing/pushing URL, not only the hostname.
+4.  Map the other settings from the original service to the new destination:
 
 -   `authMode` --> `auth.type`
 -   Auth definitions (e.g. `basicAuth`) --> `auth`
@@ -254,7 +254,7 @@ Gathering of Pods logs has been moved into its own feature called `podLogs`.
 
 | Feature  | v1.x setting    | v2.0 setting | Notes |
 |----------|-----------------|--------------|-------|
-| Pod Logs | `logs.pod_logs` | `podLogs`    |       |
+| Pod logs | `logs.pod_logs` | `podLogs`    |       |
 
 #### Steps to take
 
@@ -352,7 +352,7 @@ instance. If you are using `extraConfig` to add configuration for scraping metri
 [integrations](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-integrations)
 feature (such as cert-manager, etcd, or MySQL), you can move that configuration to the new `integrations` feature.
 
-For other uses of `extraConfig`, continue with this section.
+For other uses of `extraConfig`, refer to the following table:
 
 | extraConfig        | v1.x setting                      | v2.0 setting                  | Notes |
 |--------------------|-----------------------------------|-------------------------------|-------|
@@ -373,6 +373,10 @@ For other uses of `extraConfig`, continue with this section.
 
 #### Destination names
 
+Note that the `<destination_name>` in the component reference is the name of the destination, set to lowercase and
+with any non-alphanumeric characters replaced with an underscore. For example, if your destination is named
+`Grafana Cloud Metrics`, then the destination name would be `grafana_cloud_metrics`.
+
 | Data type | v1.x setting                                  | v2.0 setting                                          |
 |-----------|-----------------------------------------------|-------------------------------------------------------|
 | Metrics   | `prometheus.relabel.metrics_service.receiver` | `prometheus.remote_write.<destination_name>.receiver` |
@@ -380,17 +384,13 @@ For other uses of `extraConfig`, continue with this section.
 | Traces    | `otelcol.exporter.otlp.traces_service.input`  | `otelcol.exporter.otlp.<destination_name>.input`      |
 | Profiles  | `pyroscope.write.profiles_service.receiver`   | `pyroscope.write.<destination_name>.receiver`         |
 
-Note that the `<destination_name>` in the component reference is the name of the destination, set to lowercase and
-with any non-alphanumeric characters replaced with an underscore. For example, if your destination is named
-`Grafana Cloud Metrics`, then the destination name would be `grafana_cloud_metrics`.
-
 ### Dropped features
 
 The following features have been removed from the 2.0 release:
 <!--alex ignore hooks-->
 
 -   **Pre-install hooks**: The pre-install and pre-upgrade hooks that performed config validation have been removed. The Alloy
-    Pods will now validate the configuration at runtime and log any issues and without these Pods. This greatly
+    Pods now validate the configuration at runtime and log any issues and without these Pods. This greatly
     decreases startup time.
 -   **`helm test` functionality**: The `helm test` functionality that ran a config analysis and attempted to query the
     databases for expected metrics and logs has been removed. This functionality was either not fully developed or not
