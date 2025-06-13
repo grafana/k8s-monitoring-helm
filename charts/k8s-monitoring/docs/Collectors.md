@@ -1,6 +1,6 @@
 # Collectors
 
-Collectors are Alloy instances deployed by Alloy Operator as Kubernetes workloads. Each collector uses a
+Collectors are Alloy instances deployed by the Alloy Operator as Kubernetes workloads. Each collector uses a
 workload type appropriate for the telemetry type it collects.
 
 ## General configuration
