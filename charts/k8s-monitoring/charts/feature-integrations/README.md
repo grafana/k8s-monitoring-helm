@@ -90,13 +90,6 @@ Be sure perform actual integration testing in a live environment in the main [k8
 |-----|------|---------|-------------|
 | etcd | object | `{"instances":[]}` | Scrape metrics/logs from etcd |
 
-### General settings
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| fullnameOverride | string | `""` | Full name override |
-| nameOverride | string | `""` | Name override |
-
 ### Global Settings
 
 | Key | Type | Default | Description |

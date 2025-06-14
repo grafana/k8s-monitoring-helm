@@ -54,13 +54,6 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | ebpf.labelSelectors | object | `{}` | Select pods to profile based on pod labels. Example: `app.kubernetes.io/name: myapp` will select pods with the label `app.kubernetes.io/name=myapp`. Example with multiple values: `app.kubernetes.io/name: [myapp, myapp2]` will select pods with the label `app.kubernetes.io/name=myapp` or `app.kubernetes.io/name=myapp2`. |
 | ebpf.namespaces | list | `[]` | Select pods to profile based on their namespaces. |
 
-### General settings
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| fullnameOverride | string | `""` | Full name override |
-| nameOverride | string | `""` | Name override |
-
 ### Java
 
 | Key | Type | Default | Description |

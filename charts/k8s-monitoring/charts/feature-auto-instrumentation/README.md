@@ -63,13 +63,6 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | beyla.scrapeInterval | string | 60s | How frequently to scrape metrics from Beyla. Overrides metrics.scrapeInterval |
 | beyla.service | object | `{"targetPort":9090}` | The port number for the Beyla service. |
 
-### General settings
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| fullnameOverride | string | `""` | Full name override |
-| nameOverride | string | `""` | Name override |
-
 ### Global Settings
 
 | Key | Type | Default | Description |

@@ -82,13 +82,6 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | connectors.spanMetrics.histogram.unit | string | `"ms"` | The histogram unit. |
 | connectors.spanMetrics.namespace | string | `"traces.span.metrics"` | The Metric namespace. |
 
-### General settings
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| fullnameOverride | string | `""` | Full name override |
-| nameOverride | string | `""` | Name override |
-
 ### Processors: Batch
 
 | Key | Type | Default | Description |
