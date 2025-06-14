@@ -102,13 +102,6 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | metricsTuning.excludeMetrics | list | `[]` | Metrics to drop. Can use regular expressions. |
 | metricsTuning.includeMetrics | list | `[]` | Metrics to keep. Can use regular expressions. |
 
-### General settings
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| fullnameOverride | string | `""` | Full name override |
-| nameOverride | string | `""` | Name override |
-
 ### Global Settings
 
 | Key | Type | Default | Description |
