@@ -643,7 +643,7 @@ data:
     
     # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_build_info gauge
-    grafana_kubernetes_monitoring_build_info{version="3.0.0", namespace="default"} 1
+    grafana_kubernetes_monitoring_build_info{version="3.0.1", namespace="default"} 1
     # HELP grafana_kubernetes_monitoring_feature_info A metric to report the enabled features of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_feature_info gauge
     grafana_kubernetes_monitoring_feature_info{feature="applicationObservability", protocols="otlphttp", version="1.0.0"} 1
@@ -1097,7 +1097,7 @@ data:
     otelcol.exporter.loadbalancing "tempo" {
       resolver {
         kubernetes {
-          service = "k8smon-tempo-sampler-alloy"
+          service = "k8smon-tempo-sampler"
         }
       }
       protocol {
@@ -2106,6 +2106,10 @@ spec:
           // https://grafana.com/docs/alloy/latest/reference/components/otelcol.processor.tail_sampling/
   
           decision_wait = "15s"
+          decision_cache = {
+            sampled_cache_size     = 0,
+            non_sampled_cache_size = 0,
+          }
   
           policy {
             name = "always_sample-policy"
@@ -2153,6 +2157,7 @@ spec:
       pullSecrets:
       - name: my-registry-creds
       registry: my.registry.com
+  nameOverride: tempo-sampler
 ---
 # Source: k8s-monitoring/templates/alloy.yaml
 apiVersion: collectors.grafana.com/v1alpha1

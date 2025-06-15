@@ -47,8 +47,6 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | annotations.prefix | string | `"profiles.grafana.com"` | The prefix for all annotations. |
-| fullnameOverride | string | `""` | Full name override |
-| nameOverride | string | `""` | Name override |
 
 ### eBPF
 

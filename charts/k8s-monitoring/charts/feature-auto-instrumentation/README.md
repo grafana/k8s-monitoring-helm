@@ -42,7 +42,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 
 | Repository | Name | Version |
 |------------|------|---------|
-| https://grafana.github.io/helm-charts | beyla | 1.7.3 |
+| https://grafana.github.io/helm-charts | beyla | 1.8.0 |
 <!-- markdownlint-enable list-marker-space -->
 <!-- markdownlint-enable no-bare-urls -->
 <!-- markdownlint-disable no-space-in-emphasis -->
@@ -62,13 +62,6 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | beyla.preset | string | `"application"` | The configuration preset to use. Valid options are "application" or "network". |
 | beyla.scrapeInterval | string | 60s | How frequently to scrape metrics from Beyla. Overrides metrics.scrapeInterval |
 | beyla.service | object | `{"targetPort":9090}` | The port number for the Beyla service. |
-
-### General settings
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| fullnameOverride | string | `""` | Full name override |
-| nameOverride | string | `""` | Name override |
 
 ### Global Settings
 

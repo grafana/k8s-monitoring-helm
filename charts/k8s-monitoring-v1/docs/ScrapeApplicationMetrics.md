@@ -91,7 +91,7 @@ We will go deeper into each phase below.
 
 The discovery phase is about finding the specific pod or service that needs to be scraped for metrics.
 
-This chart automatically creates three components that you can utilize:
+This chart automatically creates four components that you can utilize:
 
 -   `discovery.kubernetes.nodes` - Discovers all nodes in the cluster
 -   `discovery.kubernetes.services` - Discovers all services in the cluster

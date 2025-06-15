@@ -20,10 +20,10 @@ metadata:
   name: k8smon-beyla
   namespace: default
   labels:
-    helm.sh/chart: beyla-1.7.3
+    helm.sh/chart: beyla-1.8.0
     app.kubernetes.io/name: beyla
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "2.0.3"
+    app.kubernetes.io/version: "2.2.3"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: beyla
     app.kubernetes.io/component: rbac
@@ -706,7 +706,7 @@ data:
     
     # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_build_info gauge
-    grafana_kubernetes_monitoring_build_info{version="3.0.0", namespace="default"} 1
+    grafana_kubernetes_monitoring_build_info{version="3.0.1", namespace="default"} 1
     # HELP grafana_kubernetes_monitoring_feature_info A metric to report the enabled features of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_feature_info gauge
     grafana_kubernetes_monitoring_feature_info{feature="applicationObservability", protocols="otlphttp", version="1.0.0"} 1
@@ -949,7 +949,7 @@ data:
     otelcol.exporter.loadbalancing "tempo" {
       resolver {
         kubernetes {
-          service = "k8smon-tempo-sampler-alloy"
+          service = "k8smon-tempo-sampler"
         }
       }
       protocol {
@@ -996,10 +996,10 @@ metadata:
   name: k8smon-beyla
   namespace: default
   labels:
-    helm.sh/chart: beyla-1.7.3
+    helm.sh/chart: beyla-1.8.0
     app.kubernetes.io/name: beyla
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "2.0.3"
+    app.kubernetes.io/version: "2.2.3"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: beyla
     app.kubernetes.io/component: config
@@ -1213,10 +1213,10 @@ kind: ClusterRole
 metadata:
   name: k8smon-beyla
   labels:
-    helm.sh/chart: beyla-1.7.3
+    helm.sh/chart: beyla-1.8.0
     app.kubernetes.io/name: beyla
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "2.0.3"
+    app.kubernetes.io/version: "2.2.3"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: beyla
     app.kubernetes.io/component: rbac
@@ -1412,10 +1412,10 @@ kind: ClusterRoleBinding
 metadata:
   name: k8smon-beyla
   labels:
-    helm.sh/chart: beyla-1.7.3
+    helm.sh/chart: beyla-1.8.0
     app.kubernetes.io/name: beyla
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "2.0.3"
+    app.kubernetes.io/version: "2.2.3"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: beyla
     app.kubernetes.io/component: rbac
@@ -1636,10 +1636,10 @@ metadata:
   name: k8smon-beyla
   namespace: default
   labels:
-    helm.sh/chart: beyla-1.7.3
+    helm.sh/chart: beyla-1.8.0
     app.kubernetes.io/name: beyla
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "2.0.3"
+    app.kubernetes.io/version: "2.2.3"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: beyla
     app.kubernetes.io/component: workload
@@ -1657,10 +1657,10 @@ spec:
         k8s.grafana.com/job: default/beyla
         k8s.grafana.com/logs.job: integrations/beyla
       labels:
-        helm.sh/chart: beyla-1.7.3
+        helm.sh/chart: beyla-1.8.0
         app.kubernetes.io/name: beyla
         app.kubernetes.io/instance: k8smon
-        app.kubernetes.io/version: "2.0.3"
+        app.kubernetes.io/version: "2.2.3"
         app.kubernetes.io/managed-by: Helm
         app.kubernetes.io/part-of: beyla
         app.kubernetes.io/component: workload
@@ -1669,7 +1669,7 @@ spec:
       hostPID: true
       containers:
         - name: beyla
-          image: my.registry.com/grafana/beyla:2.0.3
+          image: my.registry.com/grafana/beyla:2.2.3
           imagePullPolicy: IfNotPresent
           securityContext:
             privileged: true
@@ -2113,6 +2113,10 @@ spec:
           // https://grafana.com/docs/alloy/latest/reference/components/otelcol.processor.tail_sampling/
   
           decision_wait = "15s"
+          decision_cache = {
+            sampled_cache_size     = 0,
+            non_sampled_cache_size = 0,
+          }
   
           policy {
             name = "always_sample-policy"
@@ -2164,6 +2168,7 @@ spec:
     - name: my-registry-creds
     registry: my.registry.com
     repository: grafana/alloy
+  nameOverride: tempo-sampler
 ---
 # Source: k8s-monitoring/templates/alloy.yaml
 apiVersion: collectors.grafana.com/v1alpha1
