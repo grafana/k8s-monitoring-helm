@@ -1,0 +1,81 @@
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: GitRepository
+metadata:
+  name: k8s-monitoring-test
+spec:
+  interval: 1m
+  url: https://github.com/grafana/k8s-monitoring-helm
+  ref:
+    branch: main
+  ignore: |
+    /*
+    !/charts/k8s-monitoring-test
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: k8s-monitoring-test
+spec:
+  interval: 1m
+  chart:
+    spec:
+      chart: charts/k8s-monitoring-test
+      sourceRef:
+        kind: GitRepository
+        name: k8s-monitoring-test
+      interval: 1m
+  dependsOn:
+    - name: loki
+      namespace: loki
+    - name: prometheus
+      namespace: prometheus
+  values:
+    tests:
+      - env:
+          CLUSTER: uninstall-test
+          PROMETHEUS_URL: http://prometheus-server.prometheus.svc:9090/api/v1/query
+          PROMETHEUS_USER: promuser
+          PROMETHEUS_PASS: prometheuspassword
+          LOKI_URL: http://loki.loki.svc:3100/loki/api/v1/query
+          LOKI_TENANTID: 1
+          LOKI_USER: loki
+          LOKI_PASS: lokipassword
+        queries:
+          # Self reporting metrics
+          - query: grafana_kubernetes_monitoring_build_info{cluster="$CLUSTER", chart_version="$version"}
+            type: promql
+          - query: grafana_kubernetes_monitoring_feature_info{cluster="$CLUSTER", chart_version="$version", feature="clusterMetrics"}
+            type: promql
+          - query: grafana_kubernetes_monitoring_feature_info{cluster="$CLUSTER", chart_version="$version", feature="clusterEvents"}
+            type: promql
+          - query: grafana_kubernetes_monitoring_feature_info{cluster="$CLUSTER", chart_version="$version", feature="podLogs", method="volumes"}
+            type: promql
+
+          # Cluster metrics
+          - query: kubernetes_build_info{cluster="$CLUSTER", chart_version="$version", job="integrations/kubernetes/kubelet"}
+            type: promql
+          - query: node_cpu_usage_seconds_total{cluster="$CLUSTER", chart_version="$version", job="integrations/kubernetes/resources"}
+            type: promql
+          - query: machine_memory_bytes{cluster="$CLUSTER", chart_version="$version", job="integrations/kubernetes/cadvisor"}
+            type: promql
+          - query: count(kube_node_info{cluster="$CLUSTER", chart_version="$version", job="integrations/kubernetes/kube-state-metrics"})
+            type: promql
+            expect:
+              value: 1
+          - query: kube_node_labels{cluster="$CLUSTER", chart_version="$version"}
+            type: promql
+          - query: node_exporter_build_info{cluster="$CLUSTER", chart_version="$version", job="integrations/node_exporter"}
+            type: promql
+          - query: kepler_container_joules_total{cluster="$CLUSTER", chart_version="$version", job="integrations/kepler"}
+            type: promql
+          - query: opencost_build_info{cluster="$CLUSTER", chart_version="$version", job="integrations/opencost"}
+            type: promql
+
+          # Cluster events
+          - query: count_over_time({cluster="$CLUSTER", chart_version="$version", job="integrations/kubernetes/eventhandler"}[1h])
+            type: logql
+
+          # Pod logs
+          - query: count_over_time({cluster="$CLUSTER", chart_version="$version", job!="integrations/kubernetes/eventhandler"}[1h])
+            type: logql

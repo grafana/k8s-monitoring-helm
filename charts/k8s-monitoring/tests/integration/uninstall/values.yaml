@@ -1,6 +1,6 @@
 ---
 cluster:
-  name: major-upgrade-test
+  name: uninstall-test-subject
 
 destinations:
   - name: localPrometheus
@@ -10,8 +10,6 @@ destinations:
       type: basic
       username: promuser
       password: prometheuspassword
-    extraLabelsFrom:
-      chart_version: remote.kubernetes.configmap.version.data["version"]
   - name: localLoki
     type: loki
     url: http://loki.loki.svc:3100/loki/api/v1/push
@@ -20,8 +18,6 @@ destinations:
       type: basic
       username: loki
       password: lokipassword
-    extraLabelsFrom:
-      chart_version: remote.kubernetes.configmap.version.data["version"]
 
 clusterMetrics:
   enabled: true
@@ -32,7 +28,7 @@ clusterMetrics:
     metricsSource: localPrometheus
     opencost:
       exporter:
-        defaultClusterId: major-upgrade-test
+        defaultClusterId: uninstall-test-subject
       prometheus:
         existingSecretName: localprometheus-k8smon-k8s-monitoring
         external:
@@ -46,33 +42,9 @@ podLogs:
 
 alloy-metrics:
   enabled: true
-  extraConfig: |-
-    remote.kubernetes.configmap "version" {
-      name = "k8smon-version"
-      namespace = "toolbox"
-    }
 
 alloy-singleton:
   enabled: true
-  extraConfig: |-
-    remote.kubernetes.configmap "version" {
-      name = "k8smon-version"
-      namespace = "toolbox"
-    }
 
 alloy-logs:
   enabled: true
-  extraConfig: |-
-    remote.kubernetes.configmap "version" {
-      name = "k8smon-version"
-      namespace = "toolbox"
-    }
-
-extraObjects:
-  - apiVersion: v1
-    kind: ConfigMap
-    metadata:
-      name: k8smon-version
-      namespace: toolbox
-    data:
-      version: "{{ .Chart.Version }}"
