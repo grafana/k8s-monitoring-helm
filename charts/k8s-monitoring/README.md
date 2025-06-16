@@ -183,7 +183,7 @@ podLogs:
 |  | podLogs(feature-pod-logs) | 1.0.0 |
 |  | profiling(feature-profiling) | 1.0.0 |
 |  | prometheusOperatorObjects(feature-prometheus-operator-objects) | 1.0.0 |
-| https://grafana.github.io/helm-charts | alloy-operator | 0.3.0 |
+| https://grafana.github.io/helm-charts | alloy-operator | 0.3.1 |
 <!-- markdownlint-enable no-bare-urls -->
 
 ## Values

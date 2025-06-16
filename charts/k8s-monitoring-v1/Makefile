@@ -6,6 +6,10 @@ CHART_TEMPLATE_FILES = $(shell find templates -name "*.tpl")
 CHART_YAML_FILES = $(shell find templates -name "*.yaml")
 ALLOW_LISTS := default_allow_lists/kube-state-metrics.yaml
 
+Chart.lock: Chart.yaml
+	helm dependency update .
+	@touch Chart.lock # Ensure the timestamp is updated
+
 .SECONDEXPANSION:
 values.schema.json: values.yaml $$(wildcard schema-mods/*)
 	../../scripts/schema-gen.sh .
