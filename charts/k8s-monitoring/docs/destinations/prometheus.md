@@ -96,6 +96,7 @@ This defines the options for defining a destination for metrics that use the Pro
 |-----|------|---------|-------------|
 | openTelemetryConversion | object | `{"addMetricSuffixes":true}` | Settings for converting OpenTelemetry ecosystem metrics to Prometheus ecosystem metrics. |
 | openTelemetryConversion.addMetricSuffixes | bool | `true` | Whether to add type and unit suffixes to metrics names. |
+| openTelemetryConversion.resourceToTelemetryConversion | bool | `true` | Whether to convert OTel resource attributes to Prometheus labels. |
 
 ### Queue Configuration
 
