@@ -68,7 +68,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 |-----|------|---------|-------------|
 | java.annotationSelectors | object | `{}` | Select pods to profile based on pod annotations. Example: `color: "green"` will select pods with the annotation `color="green"`. Example with multiple values: `color: ["blue", "green"]` will select pods with the annotation `color="blue"` or `color="green"`. |
 | java.annotations.enable | string | `"enabled"` | The annotation action for enabling or disabling of Java profile collection. |
-| java.enabled | bool | `true` | Gather profiles by scraping Java HTTP endpoints |
+| java.enabled | bool | `true` | Gather profiles by attaching async-profiler to the Java runtime. |
 | java.excludeNamespaces | list | `[]` | Which namespaces to exclude looking for pods. |
 | java.extraDiscoveryRules | string | `""` | Rule blocks to be added to the discovery.relabel component for Java profile sources. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.relabel/#rule-block)) |
 | java.labelSelectors | object | `{}` | Select pods to profile based on pod labels. Example: `app.kubernetes.io/name: myapp` will select pods with the label `app.kubernetes.io/name=myapp`. Example with multiple values: `app.kubernetes.io/name: [myapp, myapp2]` will select pods with the label `app.kubernetes.io/name=myapp` or `app.kubernetes.io/name=myapp2`. |

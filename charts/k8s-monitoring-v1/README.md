@@ -830,10 +830,10 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| profiles.java.enabled | bool | `true` | Gather profiles by scraping java HTTP endpoints |
+| profiles.java.enabled | bool | `true` | Gather profiles by attaching async-profiler to the Java runtime. |
 | profiles.java.excludeNamespaces | list | `[]` | Which namespaces to exclude looking for pods. |
 | profiles.java.extraRelabelingRules | string | `""` | Rule blocks to be added to the discovery.relabel component for Java profile sources. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.relabel/#rule-block)) |
-| profiles.java.namespaces | list | `[]` | Which namespaces to look for pods with profiles. |
+| profiles.java.namespaces | list | `[]` | Which namespaces to look for pods to profile. |
 | profiles.java.profilingConfig | object | `{"alloc":"512k","cpu":true,"interval":"60s","lock":"10ms","sampleRate":100}` | Configuration for the async-profiler |
 
 ### Profiles (pprof)
