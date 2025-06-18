@@ -6,14 +6,10 @@ check:
 	fi
 
 .PHONY: clean
-clean:
-	rm -f collectors.grafana.com_alloy.yaml
-
-collectors.grafana.com_alloy.yaml:
-	tar -xzf ../../../../charts/alloy-operator-*.tgz --to-stdout alloy-operator/charts/alloy-crd/crds/collectors.grafana.com_alloy.yaml > $@
+clean: ;
 
 .PHONY: all
-all: collectors.grafana.com_alloy.yaml
+all: ;
 
 .PHONY: run-test
 run-test:

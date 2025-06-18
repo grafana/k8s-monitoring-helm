@@ -1,0 +1,50 @@
+---
+cluster:
+  name: uninstall-test-subject
+
+destinations:
+  - name: localPrometheus
+    type: prometheus
+    url: http://prometheus-server.prometheus.svc:9090/api/v1/write
+    auth:
+      type: basic
+      username: promuser
+      password: prometheuspassword
+  - name: localLoki
+    type: loki
+    url: http://loki.loki.svc:3100/loki/api/v1/push
+    tenantId: "1"
+    auth:
+      type: basic
+      username: loki
+      password: lokipassword
+
+clusterMetrics:
+  enabled: true
+  kepler:
+    enabled: true
+  opencost:
+    enabled: true
+    metricsSource: localPrometheus
+    opencost:
+      exporter:
+        defaultClusterId: uninstall-test-subject
+      prometheus:
+        existingSecretName: localprometheus-k8smon-k8s-monitoring
+        external:
+          url: https://prometheus-server.prometheus.svc:9090/api/v1/query
+
+clusterEvents:
+  enabled: true
+
+podLogs:
+  enabled: true
+
+alloy-metrics:
+  enabled: true
+
+alloy-singleton:
+  enabled: true
+
+alloy-logs:
+  enabled: true

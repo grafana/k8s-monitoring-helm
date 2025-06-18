@@ -33,6 +33,8 @@ kind: Alloy
 metadata:
   name: {{ include "collector.alloy.fullname" (deepCopy $ | merge (dict "collectorName" $collectorName "collectorValues" $alloy)) }}
   namespace: {{ $.Release.Namespace }}
+  annotations:
+    helm.sdk.operatorframework.io/uninstall-wait: "true"
 spec:
   {{- $alloy | toYaml | nindent 2 }}
 {{- end }}

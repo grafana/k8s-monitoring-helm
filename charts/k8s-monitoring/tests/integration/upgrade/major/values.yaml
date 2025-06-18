@@ -1,0 +1,78 @@
+---
+cluster:
+  name: major-upgrade-test
+
+destinations:
+  - name: localPrometheus
+    type: prometheus
+    url: http://prometheus-server.prometheus.svc:9090/api/v1/write
+    auth:
+      type: basic
+      username: promuser
+      password: prometheuspassword
+    extraLabelsFrom:
+      chart_version: remote.kubernetes.configmap.version.data["version"]
+  - name: localLoki
+    type: loki
+    url: http://loki.loki.svc:3100/loki/api/v1/push
+    tenantId: "1"
+    auth:
+      type: basic
+      username: loki
+      password: lokipassword
+    extraLabelsFrom:
+      chart_version: remote.kubernetes.configmap.version.data["version"]
+
+clusterMetrics:
+  enabled: true
+  kepler:
+    enabled: true
+  opencost:
+    enabled: true
+    metricsSource: localPrometheus
+    opencost:
+      exporter:
+        defaultClusterId: major-upgrade-test
+      prometheus:
+        existingSecretName: localprometheus-k8smon-k8s-monitoring
+        external:
+          url: https://prometheus-server.prometheus.svc:9090/api/v1/query
+
+clusterEvents:
+  enabled: true
+
+podLogs:
+  enabled: true
+
+alloy-metrics:
+  enabled: true
+  extraConfig: |-
+    remote.kubernetes.configmap "version" {
+      name = "k8smon-version"
+      namespace = "default"
+    }
+
+alloy-singleton:
+  enabled: true
+  extraConfig: |-
+    remote.kubernetes.configmap "version" {
+      name = "k8smon-version"
+      namespace = "default"
+    }
+
+alloy-logs:
+  enabled: true
+  extraConfig: |-
+    remote.kubernetes.configmap "version" {
+      name = "k8smon-version"
+      namespace = "default"
+    }
+
+extraObjects:
+  - apiVersion: v1
+    kind: ConfigMap
+    metadata:
+      name: k8smon-version
+      namespace: default
+    data:
+      version: "{{ .Chart.Version }}"

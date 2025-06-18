@@ -21,8 +21,5 @@ helm upgrade --install k8smon --version "${PREVIOUS_MINOR_RELEASE}" --repo https
 echo "Testing and waiting for data from the previous version..."
 helm test k8s-monitoring-test --logs
 
-echo "Installing Alloy CRD..."
-kubectl apply -f "${TEST_DIR}/collectors.grafana.com_alloy.yaml"
-
 echo "Upgrading to current version (${CURRENT_VERSION})..."
 helm upgrade k8smon "${TEST_DIR}/../../../../" -f "${TEST_DIR}/values.yaml" --set "cluster.name=${CLUSTER_NAME}" --set "clusterMetrics.opencost.opencost.exporter.defaultClusterId=${CLUSTER_NAME}" --wait
