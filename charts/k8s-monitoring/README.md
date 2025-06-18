@@ -155,6 +155,23 @@ podLogs:
   enabled: true
 ```
 
+## Compatibility
+
+The Kubernetes Monitoring Helm chart is designed to be compatible with all supported Kubernetes Cluster versions. It
+deploys several dependent systems, which may have their own compatibility matrices. See their documentation for more
+details:
+
+| System             | Feature in k8s-monitoring | Link to documentation                                                                          |
+|--------------------|---------------------------|------------------------------------------------------------------------------------------------|
+| Alloy              | all                       | No published compatibility matrix                                                              |
+| Alloy Operator     | all                       | No published compatibility matrix                                                              |
+| Beyla              | `autoInstrumentation`     | No published compatibility matrix                                                              |
+| Kepler             | `clusterMetrics`          | No published compatibility matrix                                                              |
+| kube-state-metrics | `clusterMetrics`          | [Compatibility Matrix](https://github.com/kubernetes/kube-state-metrics#compatibility-matrix)] |
+| Node Exporter      | `clusterMetrics`          | No published compatibility matrix                                                              |
+| OpenCost           | `clusterMetrics`          | No published compatibility matrix                                                              |
+| Windows Exporter   | `clusterMetrics`          | No published compatibility matrix                                                              |
+
 ## Maintainers
 
 | Name | Email | Url |
