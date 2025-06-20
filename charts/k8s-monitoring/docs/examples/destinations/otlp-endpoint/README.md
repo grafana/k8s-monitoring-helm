@@ -28,6 +28,13 @@ destinations:
     metrics: {enabled: true}
     logs: {enabled: true}
     traces: {enabled: true}
+    processors:
+      transform:
+        traces:
+          resource:
+          - set(resource.attributes["quoted"], "quted")
+          resourceFrom:
+          - string.format(`set(attributes["from_env"], %q)`, coalesce(sys.env("MY_ENV"), "undefined"))
 
 clusterMetrics:
   enabled: true
