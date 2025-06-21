@@ -28,6 +28,8 @@ destinations:
     metrics: {enabled: true}
     logs: {enabled: true}
     traces: {enabled: true}
+    retryOnFailure:
+      enabled: false
 
 clusterMetrics:
   enabled: true
