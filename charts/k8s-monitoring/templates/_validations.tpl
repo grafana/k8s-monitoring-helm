@@ -1,6 +1,5 @@
 {{- define "validations" }}
   {{- include "validations.checkForV1" . }}
-  {{- include "validations.platform" . }}
   {{- include "validations.cluster_name" . }}
   {{- include "validations.platform" . }}
 
