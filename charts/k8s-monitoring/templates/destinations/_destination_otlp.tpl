@@ -61,20 +61,24 @@ otelcol.processor.transform {{ include "helper.alloy_name" .name | quote }} {
 {{- range $label := .clusterLabels }}
       `set(attributes[{{ $label | quote }}], {{ $.Values.cluster.name | quote }})`,
 {{- end }}
-{{- if .processors.transform.metrics.resource }}
 {{- range $transform := .processors.transform.metrics.resource }}
 {{ $transform | quote | indent 6 }},
 {{- end }}
+{{- range $transform := .processors.transform.metrics.resourceFrom }}
+{{ $transform | indent 6 }},
 {{- end }}
     ]
   }
 
-{{- if .processors.transform.metrics.metric }}
+{{- if or .processors.transform.metrics.metric .processors.transform.metrics.metricFrom }}
   metric_statements {
     context = "metric"
     statements = [
 {{- range $transform := .processors.transform.metrics.metric }}
 {{ $transform | quote | indent 6 }},
+{{- end }}
+{{- range $transform := .processors.transform.metrics.metricFrom }}
+{{ $transform | indent 6 }},
 {{- end }}
     ]
   }
@@ -92,10 +96,11 @@ otelcol.processor.transform {{ include "helper.alloy_name" .name | quote }} {
       `delete_key(attributes, {{ $datapointAttribute | quote }}) where attributes[{{ $datapointAttribute | quote }}] == resource.attributes[{{ $resourceAttribute | quote }}]`,
   {{- end }}
 {{- end }}
-{{- if .processors.transform.metrics.datapoint }}
 {{- range $transform := .processors.transform.metrics.datapoint }}
 {{ $transform | quote | indent 6 }},
 {{- end }}
+{{- range $transform := .processors.transform.metrics.datapointFrom }}
+{{ $transform | indent 6 }},
 {{- end }}
     ]
   }
@@ -108,10 +113,11 @@ otelcol.processor.transform {{ include "helper.alloy_name" .name | quote }} {
 {{- range $label := .clusterLabels }}
       `set(attributes[{{ $label | quote }}], {{ $.Values.cluster.name | quote }})`,
 {{- end }}
-{{- if .processors.transform.logs.resource }}
 {{- range $transform := .processors.transform.logs.resource }}
 {{ $transform | quote | indent 6 }},
 {{- end }}
+{{- range $transform := .processors.transform.logs.resourceFrom }}
+{{ $transform | indent 6 }},
 {{- end }}
     ]
   }
@@ -127,19 +133,23 @@ otelcol.processor.transform {{ include "helper.alloy_name" .name | quote }} {
       `delete_key(attributes, {{ $logAttribute | quote }}) where attributes[{{ $logAttribute | quote }}] == resource.attributes[{{ $resourceAttribute | quote }}]`,
   {{- end }}
 {{- end }}
-{{- if .processors.transform.logs.log }}
 {{- range $transform := .processors.transform.logs.log }}
 {{ $transform | quote | indent 6 }},
 {{- end }}
+{{- range $transform := .processors.transform.logs.logFrom }}
+{{ $transform | indent 6 }},
 {{- end }}
     ]
   }
-{{- if .processors.transform.logs.scope }}
+{{- if or .processors.transform.logs.scope .processors.transform.logs.scopeFrom }}
   log_statements {
     context = "scope"
     statements = [
 {{- range $transform := .processors.transform.logs.scope }}
 {{ $transform | quote | indent 6 }},
+{{- end }}
+{{- range $transform := .processors.transform.logs.scopeFrom }}
+{{ $transform | indent 6 }},
 {{- end }}
     ]
   }
@@ -153,29 +163,36 @@ otelcol.processor.transform {{ include "helper.alloy_name" .name | quote }} {
 {{- range $label := .clusterLabels }}
       `set(attributes[{{ $label | quote }}], {{ $.Values.cluster.name | quote }})`,
 {{- end }}
-{{- if .processors.transform.traces.resource }}
 {{- range $transform := .processors.transform.traces.resource }}
 {{ $transform | quote | indent 6 }},
 {{- end }}
+{{- range $transform := .processors.transform.traces.resourceFrom }}
+{{ $transform | indent 6 }},
 {{- end }}
     ]
   }
-{{- if .processors.transform.traces.span }}
+{{- if or .processors.transform.traces.span .processors.transform.traces.spanFrom }}
   trace_statements {
     context = "span"
     statements = [
 {{- range $transform := .processors.transform.traces.span }}
 {{ $transform | quote | indent 6 }},
 {{- end }}
+{{- range $transform := .processors.transform.traces.spanFrom }}
+{{ $transform | indent 6 }},
+{{- end }}
     ]
   }
 {{- end }}
-{{- if .processors.transform.traces.spanevent }}
+{{- if or .processors.transform.traces.spanevent .processors.transform.traces.spaneventFrom }}
   trace_statements {
     context = "spanevent"
     statements = [
 {{- range $transform := .processors.transform.traces.spanevent }}
 {{ $transform | quote | indent 6 }},
+{{- end }}
+{{- range $transform := .processors.transform.traces.spaneventFrom }}
+{{ $transform | indent 6 }},
 {{- end }}
     ]
   }
