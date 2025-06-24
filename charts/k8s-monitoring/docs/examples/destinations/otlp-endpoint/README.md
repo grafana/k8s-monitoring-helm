@@ -35,6 +35,8 @@ destinations:
           - set(resource.attributes["quoted"], "quted")
           resourceFrom:
           - string.format(`set(attributes["from_env"], %q)`, coalesce(sys.env("MY_ENV"), "undefined"))
+    retryOnFailure:
+      enabled: false
 
 clusterMetrics:
   enabled: true
