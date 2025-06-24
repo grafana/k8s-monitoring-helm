@@ -120,7 +120,6 @@ otelcol.processor.transform "pod_logs" {
     context = "resource"
     statements = [
       `delete_key(attributes, "k8s.container.restart_count")`,
-      `delete_key(attributes, "log.file.path")`,
 
       `set(attributes["service.name"], attributes["app.kubernetes.io/name"]) where attributes["service.name"] == nil`,
       `set(attributes["service.name"], attributes["k8s.deployment.name"]) where attributes["service.name"] == nil`,
@@ -140,6 +139,13 @@ otelcol.processor.transform "pod_logs" {
 
       `set(attributes["loki.resource.labels"], {{ .Values.labelsToKeep | join "," | quote }})`,   // Used to preserve the labels when converting to Loki
       `keep_matching_keys(attributes, "loki.resource.labels|{{ .Values.labelsToKeep | join "|" }}")`,
+    ]
+  }
+
+  log_statements {
+    context = "log"
+    statements = [
+      `delete_key(attributes, "log.file.path")`,
     ]
   }
 

@@ -1,0 +1,14 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces rule:empty-lines
+suite: Test - Pod Logs - Gather Method - OpenTelemetry Filelog Receiver
+templates:
+  - configmap.yaml
+tests:
+  - it: should render using the filelog receiver
+    set:
+      deployAsConfigMap: true
+      gatherMethod: filelog
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["module.alloy"]

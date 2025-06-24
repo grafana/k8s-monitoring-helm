@@ -121,7 +121,6 @@ data:
           context = "resource"
           statements = [
             `delete_key(attributes, "k8s.container.restart_count")`,
-            `delete_key(attributes, "log.file.path")`,
     
             `set(attributes["service.name"], attributes["app.kubernetes.io/name"]) where attributes["service.name"] == nil`,
             `set(attributes["service.name"], attributes["k8s.deployment.name"]) where attributes["service.name"] == nil`,
@@ -141,6 +140,13 @@ data:
     
             `set(attributes["loki.resource.labels"], "app.kubernetes.io/name,container,instance,job,level,namespace,pod,service.name,service.namespace,deployment.environment,deployment.environment_name,k8s.pod.name,k8s.namespace.name,k8s.deployment.name,k8s.statefulset.name,k8s.daemonset.name,k8s.cronjob.name,k8s.job.name,k8s.node.name,color")`,   // Used to preserve the labels when converting to Loki
             `keep_matching_keys(attributes, "loki.resource.labels|app.kubernetes.io/name|container|instance|job|level|namespace|pod|service.name|service.namespace|deployment.environment|deployment.environment_name|k8s.pod.name|k8s.namespace.name|k8s.deployment.name|k8s.statefulset.name|k8s.daemonset.name|k8s.cronjob.name|k8s.job.name|k8s.node.name|color")`,
+          ]
+        }
+    
+        log_statements {
+          context = "log"
+          statements = [
+            `delete_key(attributes, "log.file.path")`,
           ]
         }
     

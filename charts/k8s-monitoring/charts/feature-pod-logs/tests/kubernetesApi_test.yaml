@@ -1,0 +1,14 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces rule:empty-lines
+suite: Test - Pod Logs - Gather Method - Kubernetes API
+templates:
+  - configmap.yaml
+tests:
+  - it: should render using the kubernetesApi receiver
+    set:
+      deployAsConfigMap: true
+      gatherMethod: kubernetesApi
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["module.alloy"]
