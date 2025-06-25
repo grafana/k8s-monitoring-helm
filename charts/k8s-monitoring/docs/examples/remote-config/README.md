@@ -24,6 +24,7 @@ way to set the environment variables automatically.
 
 ## Values
 
+<!-- textlint-disable terminology -->
 ```yaml
 ---
 cluster:
@@ -87,3 +88,4 @@ alloy-logs:
       - name: GCLOUD_FM_COLLECTOR_ID
         value: k8smon-$(CLUSTER_NAME)-$(NAMESPACE)-alloy-logs-$(NODE_NAME)
 ```
+<!-- textlint-enable terminology -->

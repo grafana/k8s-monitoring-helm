@@ -2,6 +2,7 @@
 
 This defines the options for defining a destination for logs that use the Loki protocol.
 
+<!-- textlint-disable terminology -->
 ## Values
 
 ### Authentication - Bearer Token
@@ -96,6 +97,7 @@ This defines the options for defining a destination for logs that use the Loki p
 | tls.key | string | `""` | The client key for the server (as a string). |
 | tls.keyFile | string | `""` | The client key for the server (as a path to a file). |
 | tls.keyFrom | string | `""` | Raw config for accessing the client key. |
+<!-- textlint-enable terminology -->
 
 ## Examples
 

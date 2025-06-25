@@ -8,6 +8,7 @@ This example shows how to include node labels on all jobs for nodes, pods and en
 
 ## Values
 
+<!-- textlint-disable terminology -->
 ```yaml
 ---
 cluster:
@@ -74,3 +75,4 @@ alloy-metrics:
 alloy-logs:
   enabled: true
 ```
+<!-- textlint-enable terminology -->

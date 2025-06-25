@@ -47,6 +47,7 @@ one is started. This means that there will be a gap in metrics while the new pod
 
 ## Values
 
+<!-- textlint-disable terminology -->
 ```yaml
 ---
 cluster:
@@ -67,3 +68,4 @@ clusterMetrics:
 alloy-metrics:
   enabled: true
 ```
+<!-- textlint-enable terminology -->

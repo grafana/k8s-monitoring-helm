@@ -9,6 +9,7 @@ deliver them to Pyroscope.
 
 ## Values
 
+<!-- textlint-disable terminology -->
 ```yaml
 ---
 cluster:
@@ -25,3 +26,4 @@ profiling:
 alloy-profiles:
   enabled: true
 ```
+<!-- textlint-enable terminology -->

@@ -8,6 +8,7 @@ This example demonstrates how to gather metrics and logs from [MySQL](https://ww
 
 ## Values
 
+<!-- textlint-disable terminology -->
 ```yaml
 ---
 cluster:
@@ -50,3 +51,4 @@ alloy-metrics:
 alloy-logs:
   enabled: true
 ```
+<!-- textlint-enable terminology -->

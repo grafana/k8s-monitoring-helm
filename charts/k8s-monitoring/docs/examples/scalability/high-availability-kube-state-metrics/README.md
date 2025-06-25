@@ -10,6 +10,7 @@ scraping the same metrics from multiple pods.
 
 ## Values
 
+<!-- textlint-disable terminology -->
 ```yaml
 ---
 cluster:
@@ -29,3 +30,4 @@ clusterMetrics:
 alloy-metrics:
   enabled: true
 ```
+<!-- textlint-enable terminology -->

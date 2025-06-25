@@ -8,6 +8,7 @@ This example demonstrates how to use OAuth2 for authentication.
 
 ## Values
 
+<!-- textlint-disable terminology -->
 ```yaml
 ---
 cluster:
@@ -55,3 +56,4 @@ alloy-metrics:
 alloy-singleton:
   enabled: true
 ```
+<!-- textlint-enable terminology -->

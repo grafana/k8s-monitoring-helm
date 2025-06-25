@@ -8,6 +8,7 @@ This example demonstrates how to gather logs from the Pods in your Kubernetes cl
 
 ## Values
 
+<!-- textlint-disable terminology -->
 ```yaml
 ---
 cluster:
@@ -24,3 +25,4 @@ podLogs:
 alloy-logs:
   enabled: true
 ```
+<!-- textlint-enable terminology -->

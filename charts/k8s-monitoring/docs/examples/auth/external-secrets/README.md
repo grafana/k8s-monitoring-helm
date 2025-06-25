@@ -36,6 +36,7 @@ stringData:
 
 ## Values
 
+<!-- textlint-disable terminology -->
 ```yaml
 ---
 cluster:
@@ -108,3 +109,4 @@ alloy-receiver:
         targetPort: 14250
         protocol: TCP
 ```
+<!-- textlint-enable terminology -->

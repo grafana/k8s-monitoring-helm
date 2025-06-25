@@ -21,6 +21,7 @@ For more information, see the [Annotation Autodiscovery feature documentation](h
 
 ## Values
 
+<!-- textlint-disable terminology -->
 ```yaml
 ---
 cluster:
@@ -37,3 +38,4 @@ annotationAutodiscovery:
 alloy-metrics:
   enabled: true
 ```
+<!-- textlint-enable terminology -->

@@ -16,6 +16,7 @@ In this example, Beyla is configured with two discovery rules:
 
 ## Values
 
+<!-- textlint-disable terminology -->
 ```yaml
 ---
 cluster:
@@ -41,3 +42,4 @@ autoInstrumentation:
 alloy-metrics:
   enabled: true
 ```
+<!-- textlint-enable terminology -->

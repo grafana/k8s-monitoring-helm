@@ -19,6 +19,7 @@ This example shows how to disable Node Exporter and gather Pod logs via the Kube
 
 ## Values
 
+<!-- textlint-disable terminology -->
 ```yaml
 ---
 cluster:
@@ -62,3 +63,4 @@ alloy-logs:
     replicas: 2
     type: deployment
 ```
+<!-- textlint-enable terminology -->

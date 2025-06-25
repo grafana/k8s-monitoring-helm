@@ -23,6 +23,7 @@ For more information, see the [AKS documentation](https://learn.microsoft.com/en
 
 ## Values
 
+<!-- textlint-disable terminology -->
 ```yaml
 ---
 cluster:
@@ -61,3 +62,4 @@ alloy-logs:
   controller:
     podAnnotations: {kubernetes.azure.com/set-kube-service-host-fqdn: "true"}
 ```
+<!-- textlint-enable terminology -->

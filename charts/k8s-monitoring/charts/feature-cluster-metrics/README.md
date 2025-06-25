@@ -3,9 +3,7 @@
 (      To make changes, please modify README.md.gotmpl and run `helm-docs`)
 -->
 
-# feature-cluster-metrics
-
-Gathers Kubernetes Cluster metrics
+# Feature: Cluster Metrics
 
 This chart deploys the Cluster Metrics feature of the Kubernetes Observability Helm chart, which uses allow
 lists to limit the metrics needed. An allow list is a set of metric names that will be kept, while any metrics
@@ -91,11 +89,13 @@ tests, use `helm test`.
 
 Be sure perform actual integration testing in a live environment in the main [k8s-monitoring](../..) chart.
 
+<!-- textlint-disable terminology -->
 ## Maintainers
 
 | Name | Email | Url |
 | ---- | ------ | --- |
 | petewall | <pete.wall@grafana.com> |  |
+<!-- textlint-enable terminology -->
 
 <!-- markdownlint-disable no-bare-urls -->
 <!-- markdownlint-disable list-marker-space -->

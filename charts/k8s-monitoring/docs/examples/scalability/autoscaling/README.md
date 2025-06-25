@@ -9,6 +9,7 @@ down based on its CPU and memory utilization.
 
 ## Values
 
+<!-- textlint-disable terminology -->
 ```yaml
 ---
 cluster:
@@ -37,3 +38,4 @@ alloy-metrics:
       targetCPUUtilizationPercentage: 0
       targetMemoryUtilizationPercentage: 80
 ```
+<!-- textlint-enable terminology -->

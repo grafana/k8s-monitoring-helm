@@ -36,6 +36,7 @@ for issues connecting to the Kubernetes API service, or other internal services.
 
 ## Values
 
+<!-- textlint-disable terminology -->
 ```yaml
 ---
 cluster:
@@ -124,3 +125,4 @@ alloy-receiver:
 alloy-profiles:
   enabled: true
 ```
+<!-- textlint-enable terminology -->

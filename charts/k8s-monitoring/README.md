@@ -123,13 +123,16 @@ destinations:
 
 ([Documentation](./docs/Collectors.md))
 
-Collectors are the actual kubernetes workloads running alloy containers (deployments/statefulsets/daemonset) dedicated to certain tasks. Logs, metrics and app observability having different collection requirements leads to the need for multiple instances/clusters.
+Collectors are workloads that are dedicated to gathering metrics, logs, traces, and profiles from the cluster and
+from workloads on the cluster. There are multiple collector instances to optimize around the collection requirements.
 
-The main collectors are:
+The list of collectors are:
 
-*   **alloy-logs** is the logs collector. It is deployed as a daemonset and scrapes workload logs on each node
-*   **alloy-metrics** is a statefulset that scrapes metrics from prometheus sources like cadvisor and kube-state-metrics
-*   **alloy-receiver** is a daemonset to collect metrics sent via HTTP, gRPC, Zipkin, etc
+*   **alloy-metrics** is a StatefulSet that scrapes metrics from sources like cAdvisor, Kubelet, and kube-state-metrics.
+*   **alloy-logs** is the logs collector. It is deployed as a DaemonSet and gathers Pod and Node logs.
+*   **alloy-receiver** is a DaemonSet to collect telemetry data sent via HTTP, gRPC, Zipkin, etc...
+*   **alloy-singleton** is a 1-replica Deployment to collect cluster events.
+*   **alloy-profiles** is a DaemonSet used to instrument and collect profiling data.
 
 To enable a collector, add a new section to your values file. Ex:
 
@@ -176,12 +179,14 @@ details:
 | OpenCost           | `clusterMetrics`          | No published compatibility matrix                                                              |
 | Windows Exporter   | `clusterMetrics`          | No published compatibility matrix                                                              |
 
+<!-- textlint-disable terminology -->
 ## Maintainers
 
 | Name | Email | Url |
 | ---- | ------ | --- |
 | petewall | <pete.wall@grafana.com> |  |
 | rlankfo | <robert.lankford@grafana.com> |  |
+<!-- textlint-enable terminology -->
 
 <!-- markdownlint-disable no-bare-urls -->
 <!-- markdownlint-disable list-marker-space -->

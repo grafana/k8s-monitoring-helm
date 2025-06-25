@@ -17,6 +17,7 @@ Most logs sources include fields for:
 
 ## Values
 
+<!-- textlint-disable terminology -->
 ```yaml
 ---
 cluster:
@@ -139,3 +140,4 @@ alloy-logs:
       - name: COLOR
         value: blue
 ```
+<!-- textlint-enable terminology -->

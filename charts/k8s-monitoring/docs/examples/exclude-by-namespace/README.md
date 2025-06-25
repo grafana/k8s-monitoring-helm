@@ -9,6 +9,7 @@ namespaces.
 
 ## Values
 
+<!-- textlint-disable terminology -->
 ```yaml
 ---
 cluster:
@@ -119,3 +120,4 @@ alloy-receiver:
 alloy-profiles:
   enabled: true
 ```
+<!-- textlint-enable terminology -->

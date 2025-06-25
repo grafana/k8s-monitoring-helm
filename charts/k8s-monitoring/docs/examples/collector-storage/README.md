@@ -10,6 +10,7 @@ a volume to store log file positions, so Alloy remembers where to start reading 
 
 ## Values
 
+<!-- textlint-disable terminology -->
 ```yaml
 ---
 cluster:
@@ -67,3 +68,4 @@ alloy-logs:
             path: /var/alloy-log-storage
             type: DirectoryOrCreate
 ```
+<!-- textlint-enable terminology -->

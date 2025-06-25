@@ -119,12 +119,14 @@ This chart simplifies the deployment of a Kubernetes monitoring infrastructure, 
 
 The Prometheus and Loki services may be hosted on the same cluster, or remotely (e.g. on Grafana Cloud).
 
+<!-- textlint-disable terminology -->
 ## Maintainers
 
 | Name | Email | Url |
 | ---- | ------ | --- |
 | petewall | <pete.wall@grafana.com> |  |
 | skl | <stephen.lang@grafana.com> |  |
+<!-- textlint-enable terminology -->
 
 <!-- markdownlint-disable no-bare-urls -->
 <!-- markdownlint-disable list-marker-space -->

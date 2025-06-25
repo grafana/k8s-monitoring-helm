@@ -8,6 +8,7 @@ This example demonstrates how to use multiple integrations at once.
 
 ## Values
 
+<!-- textlint-disable terminology -->
 ```yaml
 ---
 cluster:
@@ -53,3 +54,4 @@ alloy-logs:
 alloy-metrics:
   enabled: true
 ```
+<!-- textlint-enable terminology -->

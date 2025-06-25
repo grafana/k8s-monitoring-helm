@@ -17,6 +17,7 @@ username, password, and group ID for the MongoDB Atlas database.
 
 ## Values
 
+<!-- textlint-disable terminology -->
 ```yaml
 ---
 cluster:
@@ -58,3 +59,4 @@ alloy-metrics:
       forward_to = [prometheus.remote_write.prometheus.receiver]
     }
 ```
+<!-- textlint-enable terminology -->

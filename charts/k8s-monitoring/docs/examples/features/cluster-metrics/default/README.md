@@ -9,6 +9,7 @@ deliver them to a metrics destination.
 
 ## Values
 
+<!-- textlint-disable terminology -->
 ```yaml
 ---
 cluster:
@@ -36,3 +37,4 @@ clusterMetrics:
 alloy-metrics:
   enabled: true
 ```
+<!-- textlint-enable terminology -->

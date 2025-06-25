@@ -3,9 +3,7 @@
 (      To make changes, please modify README.md.gotmpl and run `helm-docs`)
 -->
 
-# feature-integrations
-
-Service integrations
+# Feature: Integrations
 
 The Integrations feature builds in configuration for many common applications and services.
 
@@ -57,11 +55,13 @@ tests, use `helm test`.
 
 Be sure perform actual integration testing in a live environment in the main [k8s-monitoring](../..) chart.
 
+<!-- textlint-disable terminology -->
 ## Maintainers
 
 | Name | Email | Url |
 | ---- | ------ | --- |
 | petewall | <pete.wall@grafana.com> |  |
+<!-- textlint-enable terminology -->
 <!-- markdownlint-disable no-bare-urls -->
 <!-- markdownlint-disable list-marker-space -->
 ## Source Code
@@ -70,6 +70,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 <!-- markdownlint-enable list-marker-space -->
 <!-- markdownlint-enable no-bare-urls -->
 
+<!-- textlint-disable terminology -->
 ## Values
 
 ### Integration: Alloy
@@ -140,6 +141,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | tempo | object | `{"instances":[]}` | Scrape metrics/logs from Tempo |
+<!-- textlint-enable terminology -->
 
 ## Contributing
 

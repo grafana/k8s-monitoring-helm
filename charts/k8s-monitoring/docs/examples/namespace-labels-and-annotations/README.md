@@ -61,6 +61,7 @@ applicationObservability:
 
 ## Values
 
+<!-- textlint-disable terminology -->
 ```yaml
 ---
 cluster:
@@ -130,3 +131,4 @@ alloy-receiver:
         targetPort: 4318
         protocol: TCP
 ```
+<!-- textlint-enable terminology -->

@@ -9,6 +9,7 @@ including the control plane components, and deliver them to a metrics destinatio
 
 ## Values
 
+<!-- textlint-disable terminology -->
 ```yaml
 ---
 cluster:
@@ -51,3 +52,4 @@ alloy-logs:
 alloy-singleton:
   enabled: true
 ```
+<!-- textlint-enable terminology -->

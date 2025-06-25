@@ -3,9 +3,7 @@
 (      To make changes, please modify README.md.gotmpl and run `helm-docs`)
 -->
 
-# feature-annotation-autodiscovery
-
-Gathers metrics automatically based on Kubernetes Pod and Service annotations
+# Feature: Annotation Autodiscovery
 
 The annotation-based autodiscovery feature adds scrape targets based on Kubernetes annotations.
 
@@ -45,11 +43,13 @@ tests, use `helm test`.
 
 Be sure perform actual integration testing in a live environment in the main [k8s-monitoring](../..) chart.
 
+<!-- textlint-disable terminology -->
 ## Maintainers
 
 | Name | Email | Url |
 | ---- | ------ | --- |
 | petewall | <pete.wall@grafana.com> |  |
+<!-- textlint-enable terminology -->
 <!-- markdownlint-disable no-bare-urls -->
 <!-- markdownlint-disable list-marker-space -->
 ## Source Code
