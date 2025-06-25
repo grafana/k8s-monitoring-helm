@@ -1,0 +1,36 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Destinations - OTLP
+templates:
+  - alloy-config.yaml
+tests:
+  - it: creates the Alloy components for an OTLP destination
+    set:
+      cluster: {name: test-cluster}
+      alloy-singleton: {enabled: true, extraConfig: " ", includeDestinations: ["test"]}
+      selfReporting: {enabled: false}
+      destinations:
+        - name: test
+          type: otlp
+          url: https://otlp.example.com
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["config.alloy"]
+
+  - it: allows you to disable retry on failure
+    set:
+      cluster: {name: test-cluster}
+      alloy-singleton: {enabled: true, extraConfig: " ", includeDestinations: ["test"]}
+      selfReporting: {enabled: false}
+      destinations:
+        - name: test
+          type: otlp
+          url: https://otlp.example.com
+          retryOnFailure:
+            enabled: false
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["config.alloy"]
