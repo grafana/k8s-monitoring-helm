@@ -10,4 +10,4 @@ The following is the list of images potentially used in the 3.0.2 version of the
 | kube-state-metrics | registry.k8s.io/kube-state-metrics/kube-state-metrics:v2.15.0 | Gathers Kubernetes cluster object metrics. Enabled with `clusterMetrics.kube-state-metrics.deploy=true`. |
 | Node Exporter | quay.io/prometheus/node-exporter:v1.9.1 | Gathers Kubernetes cluster node metrics. Enabled with `clusterMetrics.node-exporter.deploy=true`. |
 | OpenCost | ghcr.io/opencost/opencost:1.113.0@sha256:b313d6d320058bbd3841a948fb636182f49b46df2368d91e2ae046ed03c0f83c | Gathers cost metrics for Kubernetes objects. Enabled with `clusterMetrics.opencost.enabled=true`. |
-| Windows Exporter | ghcr.io/prometheus-community/windows-exporter:0.30.7 | Gathers Kubernetes cluster node metrics for Windows nodes. Enabled with `clusterMetrics.windows-exporter.deploy=true`. |
+| Windows Exporter | ghcr.io/prometheus-community/windows-exporter:0.30.8 | Gathers Kubernetes cluster node metrics for Windows nodes. Enabled with `clusterMetrics.windows-exporter.deploy=true`. |
