@@ -20,7 +20,7 @@
     {{- if eq (include "secrets.usesKubernetesSecret" $destination) "true" }}
       {{- $alloyConfig = cat $alloyConfig (include "secret.alloy" (deepCopy $ | merge (dict "object" $destination)) | nindent 0) }}
     {{- end }}
-    {{- $alloyConfig = regexReplaceAll `[ \t]+(\r?\n)` $alloyConfig "\n" }}
+    {{- $alloyConfig = regexReplaceAll `[ \t]+(\r?\n)` $alloyConfig "\n" | trim }}
 
     {{- $collectorName := include "helper.k8s_name" (printf "%s-sampler" $destination.name) }}
     {{- $alloySpec := dict "alloy" (dict "configMap" (dict "create" true "content" $alloyConfig)) }}

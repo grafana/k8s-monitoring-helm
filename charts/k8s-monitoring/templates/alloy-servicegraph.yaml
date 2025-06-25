@@ -46,7 +46,7 @@
     {{- if eq (include "secrets.usesKubernetesSecret" $destination) "true" }}
       {{- $alloyConfig = cat $alloyConfig (include "secret.alloy" (deepCopy $ | merge (dict "object" $destination)) | nindent 0) }}
     {{- end }}
-    {{- $alloyConfig = regexReplaceAll `[ \t]+(\r?\n)` $alloyConfig "\n" }}
+    {{- $alloyConfig = regexReplaceAll `[ \t]+(\r?\n)` $alloyConfig "\n" | trim }}
 
     {{- $alloySpec := dict "alloy" (dict "configMap" (dict "create" true "content" $alloyConfig) "extraEnv" (list (dict "name" "POD_NAME" "valueFrom" (dict "fieldRef" (dict "apiVersion" "v1" "fieldPath" "metadata.name"))))) }}
     {{- $globalValues := include "collector.alloy.values.global" $ | fromYaml }}
