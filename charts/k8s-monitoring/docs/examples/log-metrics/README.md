@@ -11,6 +11,7 @@ stages can be utilized to filter and match on certain log lines and build metric
 
 ## Values
 
+<!-- textlint-disable terminology -->
 ```yaml
 ---
 cluster:
@@ -57,3 +58,4 @@ alloy-metrics:
 alloy-logs:
   enabled: true
 ```
+<!-- textlint-enable terminology -->

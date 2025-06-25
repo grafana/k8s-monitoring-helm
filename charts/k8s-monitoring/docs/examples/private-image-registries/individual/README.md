@@ -12,6 +12,7 @@ If you want to change the image registry for every subchart, you can use the `gl
 
 ## Values
 
+<!-- textlint-disable terminology -->
 ```yaml
 ---
 cluster:
@@ -137,3 +138,4 @@ alloy-receiver:
       registry: my.registry.com
       repository: prometheus-operator/prometheus-config-reloader
 ```
+<!-- textlint-enable terminology -->

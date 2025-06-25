@@ -14,6 +14,7 @@ for delivery, where alloy only supports lowercase and underscores for `<destinat
 
 ## Values
 
+<!-- textlint-disable terminology -->
 ```yaml
 ---
 cluster:
@@ -47,3 +48,4 @@ alloy-metrics:
       forward_to = [prometheus.remote_write.prometheus_kubernetes.receiver]
     }
 ```
+<!-- textlint-enable terminology -->

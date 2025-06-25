@@ -8,6 +8,7 @@ This example shows how to configure a Prometheus destination using the AWS Signa
 
 ## Values
 
+<!-- textlint-disable terminology -->
 ```yaml
 ---
 cluster:
@@ -30,3 +31,4 @@ clusterMetrics:
 alloy-metrics:
   enabled: true
 ```
+<!-- textlint-enable terminology -->

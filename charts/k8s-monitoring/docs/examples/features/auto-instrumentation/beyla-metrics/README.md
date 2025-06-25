@@ -9,6 +9,7 @@ instrument your application for metrics collection.
 
 ## Values
 
+<!-- textlint-disable terminology -->
 ```yaml
 ---
 cluster:
@@ -25,3 +26,4 @@ autoInstrumentation:
 alloy-metrics:
   enabled: true
 ```
+<!-- textlint-enable terminology -->

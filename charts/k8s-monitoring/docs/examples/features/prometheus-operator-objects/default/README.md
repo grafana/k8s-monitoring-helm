@@ -9,6 +9,7 @@ PodMonitors, ServiceMonitors, and Probes in your Kubernetes cluster.
 
 ## Values
 
+<!-- textlint-disable terminology -->
 ```yaml
 ---
 cluster:
@@ -43,3 +44,4 @@ prometheusOperatorObjects:
 alloy-metrics:
   enabled: true
 ```
+<!-- textlint-enable terminology -->

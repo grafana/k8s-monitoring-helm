@@ -6,6 +6,7 @@
 
 ## Values
 
+<!-- textlint-disable terminology -->
 ```yaml
 ---
 cluster:
@@ -243,3 +244,4 @@ alloy-receiver:
         targetPort: 14268
         protocol: TCP
 ```
+<!-- textlint-enable terminology -->

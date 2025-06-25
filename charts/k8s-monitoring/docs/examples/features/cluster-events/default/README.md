@@ -9,6 +9,7 @@ Kubernetes API server and deliver them to a logs destination.
 
 ## Values
 
+<!-- textlint-disable terminology -->
 ```yaml
 ---
 cluster:
@@ -25,3 +26,4 @@ clusterEvents:
 alloy-singleton:
   enabled: true
 ```
+<!-- textlint-enable terminology -->

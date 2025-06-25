@@ -10,6 +10,7 @@ token inside the values file. The Loki destination gets a bearer token from an e
 
 ## Values
 
+<!-- textlint-disable terminology -->
 ```yaml
 ---
 cluster:
@@ -76,3 +77,4 @@ alloy-receiver:
         targetPort: 14268
         protocol: TCP
 ```
+<!-- textlint-enable terminology -->

@@ -8,6 +8,7 @@ This example demonstrates how to gather metrics and logs from [Grafana Mimir](ht
 
 ## Values
 
+<!-- textlint-disable terminology -->
 ```yaml
 ---
 cluster:
@@ -39,3 +40,4 @@ alloy-metrics:
 alloy-logs:
   enabled: true
 ```
+<!-- textlint-enable terminology -->

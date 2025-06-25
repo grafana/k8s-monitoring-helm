@@ -10,6 +10,7 @@ specific taints, or to prevent workloads from running on nodes with specific tai
 
 ## Values
 
+<!-- textlint-disable terminology -->
 ```yaml
 ---
 cluster:
@@ -86,3 +87,4 @@ alloy-operator:
       effect: NoSchedule
       operator: Exists
 ```
+<!-- textlint-enable terminology -->

@@ -18,6 +18,7 @@ storage path, which defaults to `/tmp/alloy`.
 
 ## Values
 
+<!-- textlint-disable terminology -->
 ```yaml
 ---
 cluster:
@@ -81,3 +82,4 @@ alloy-logs:
       seLinuxOptions:
         type: container_logreader_t
 ```
+<!-- textlint-enable terminology -->

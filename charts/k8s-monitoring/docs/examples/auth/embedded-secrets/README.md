@@ -9,6 +9,7 @@ secret data directly into the destination configuration.
 
 ## Values
 
+<!-- textlint-disable terminology -->
 ```yaml
 ---
 cluster:
@@ -77,3 +78,4 @@ alloy-receiver:
         targetPort: 4317
         protocol: TCP
 ```
+<!-- textlint-enable terminology -->

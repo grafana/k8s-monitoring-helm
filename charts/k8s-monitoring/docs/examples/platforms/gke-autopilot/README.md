@@ -15,6 +15,7 @@ the health of the nodes. That's the responsibility of the cloud provider.
 
 ## Values
 
+<!-- textlint-disable terminology -->
 ```yaml
 ---
 cluster:
@@ -48,3 +49,4 @@ alloy-singleton:
 alloy-logs:
   enabled: true
 ```
+<!-- textlint-enable terminology -->

@@ -8,6 +8,7 @@ This example shows how to enable the annotation-based autodiscovery feature usin
 
 ## Values
 
+<!-- textlint-disable terminology -->
 ```yaml
 ---
 cluster:
@@ -29,3 +30,4 @@ annotationAutodiscovery:
 alloy-metrics:
   enabled: true
 ```
+<!-- textlint-enable terminology -->

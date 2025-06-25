@@ -11,6 +11,7 @@ means that you can define a single destination for all of your telemetry data.
 
 ## Values
 
+<!-- textlint-disable terminology -->
 ```yaml
 ---
 cluster:
@@ -48,3 +49,4 @@ alloy-metrics:
 alloy-logs:
   enabled: true
 ```
+<!-- textlint-enable terminology -->

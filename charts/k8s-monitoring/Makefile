@@ -148,22 +148,24 @@ endef
 $(foreach instance,$(ALLOY_INSTANCES),$(eval $(call alloy_files,$(instance))))
 
 %/README.md: %/values.yaml $$(wildcard %/description.txt)
-	echo '<!--' > $@
-	echo '(NOTE: Do not edit README.md directly. It is a generated file!)' >> $@
-	echo '(      To make changes, please modify values.yaml or description.txt and run `make examples`)' >> $@
-	echo '-->' >> $@
+	@echo '<!--' > $@
+	@echo '(NOTE: Do not edit README.md directly. It is a generated file!)' >> $@
+	@echo '(      To make changes, please modify values.yaml or description.txt and run `make examples`)' >> $@
+	@echo '-->' >> $@
 
-	if [ -f $$(dirname $@)/description.txt ]; then \
+	@if [ -f $$(dirname $@)/description.txt ]; then \
 		cat $$(dirname $@)/description.txt >> $@; \
 	else \
 		echo $< | sed -e "s/docs\/examples\//# Example: /" >> $@; \
 	fi
-	echo '' >> $@
-	echo '## Values' >> $@
-	echo '' >> $@
-	echo '```yaml' >> $@
-	cat $< >> $@
-	echo '```' >> $@
+	@echo '' >> $@
+	@echo '## Values' >> $@
+	@echo '' >> $@
+	@echo '<!-- textlint-disable terminology -->' >> $@
+	@echo '```yaml' >> $@
+	@cat $< >> $@
+	@echo '```' >> $@
+	@echo '<!-- textlint-enable terminology -->' >> $@
 
 .PHONY: examples
 examples: $(EXAMPLE_OUTPUT_FILES) $(EXAMPLE_ALLOY_FILES) $(EXAMPLE_README_FILES) $(INTEGRATION_TEST_OUTPUT_FILES) $(PLATFORM_TEST_OUTPUT_FILES)

@@ -9,6 +9,7 @@ This example demonstrates how to gather metrics from
 
 ## Values
 
+<!-- textlint-disable terminology -->
 ```yaml
 ---
 cluster:
@@ -29,3 +30,4 @@ integrations:
 alloy-metrics:
   enabled: true
 ```
+<!-- textlint-enable terminology -->

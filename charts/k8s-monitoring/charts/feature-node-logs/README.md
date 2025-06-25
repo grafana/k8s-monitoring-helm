@@ -3,9 +3,7 @@
 (      To make changes, please modify README.md.gotmpl and run `helm-docs`)
 -->
 
-# feature-node-logs
-
-Kubernetes Observability feature for gathering Cluster Node logs.
+# Feature: Node Logs
 
 The Node Logs feature enables the collection of logs from Kubernetes Cluster Nodes. This is useful for understanding the
 health and performance of the nodes in your cluster. Currently, it gathers logs from the journald service from a
@@ -43,11 +41,13 @@ tests, use `helm test`.
 
 Be sure perform actual integration testing in a live environment in the main [k8s-monitoring](../..) chart.
 
+<!-- textlint-disable terminology -->
 ## Maintainers
 
 | Name | Email | Url |
 | ---- | ------ | --- |
 | petewall | <pete.wall@grafana.com> |  |
+<!-- textlint-enable terminology -->
 <!-- markdownlint-disable no-bare-urls -->
 <!-- markdownlint-disable list-marker-space -->
 ## Source Code
@@ -68,7 +68,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | journal.jobLabel | string | `"integrations/kubernetes/journal"` | The value for the job label for journal logs. |
 | journal.maxAge | string | `"8h"` | The path to the journal logs on the worker node. |
 | journal.path | string | `"/var/log/journal"` | The path to the journal logs on the worker node. |
-| journal.units | list | `[]` | The list of systemd units to keep scraped logs from, this can be a valid RE2 regex. If empty, all units are scraped. |
+| journal.units | list | `[]` | The list of systemd units to keep scraped logs from, this can be a valid RE2 regular expression. If empty, all units are scraped. |
 
 ### Processing settings
 

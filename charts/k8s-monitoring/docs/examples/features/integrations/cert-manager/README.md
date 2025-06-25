@@ -8,6 +8,7 @@ This example demonstrates how to gather metrics from [cert-manager](https://cert
 
 ## Values
 
+<!-- textlint-disable terminology -->
 ```yaml
 ---
 cluster:
@@ -28,3 +29,4 @@ integrations:
 alloy-metrics:
   enabled: true
 ```
+<!-- textlint-enable terminology -->

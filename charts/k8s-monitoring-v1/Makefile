@@ -96,9 +96,6 @@ else
 	docker run --platform linux/amd64 --rm --volume $(shell pwd):/src shellspec/shellspec -c /src/test -s /bin/sh
 endif
 
-Chart.lock: Chart.yaml
-	helm dependency update .
-
 #
 # Example targets
 #

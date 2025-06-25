@@ -154,6 +154,7 @@ helm upgrade --install k8s-monitoring grafana/k8s-monitoring \
 
 ## Values
 
+<!-- textlint-disable terminology -->
 ```yaml
 ---
 cluster:
@@ -193,3 +194,4 @@ alloy-receiver:
         targetPort: 4318
         protocol: TCP
 ```
+<!-- textlint-enable terminology -->

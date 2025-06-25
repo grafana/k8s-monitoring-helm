@@ -21,6 +21,7 @@ In the example values file, here are the various settings and their effect:
 
 ## Values
 
+<!-- textlint-disable terminology -->
 ```yaml
 ---
 cluster:
@@ -66,3 +67,4 @@ clusterMetrics:
 alloy-metrics:
   enabled: true
 ```
+<!-- textlint-enable terminology -->

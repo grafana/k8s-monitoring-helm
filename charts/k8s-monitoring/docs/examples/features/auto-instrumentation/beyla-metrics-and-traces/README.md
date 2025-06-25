@@ -10,6 +10,7 @@ generate traces for your application.
 
 ## Values
 
+<!-- textlint-disable terminology -->
 ```yaml
 ---
 cluster:
@@ -97,3 +98,4 @@ alloy-receiver:
         targetPort: 4317
         protocol: TCP
 ```
+<!-- textlint-enable terminology -->

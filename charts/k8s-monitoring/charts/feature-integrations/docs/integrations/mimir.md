@@ -1,4 +1,6 @@
-# mimir
+# Grafana Mimir Integration
+
+This integration captures the metrics and logs to understand the health and performance of your Grafana Mimir instances.
 
 ## Values
 

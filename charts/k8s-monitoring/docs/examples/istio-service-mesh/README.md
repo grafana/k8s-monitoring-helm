@@ -23,6 +23,7 @@ to `TPROXY` will preserve originating pod's IP and port, allowing the component 
 
 ## Values
 
+<!-- textlint-disable terminology -->
 ```yaml
 ---
 cluster:
@@ -84,3 +85,4 @@ alloy-receiver:
     podAnnotations:
       sidecar.istio.io/interceptionMode: TPROXY
 ```
+<!-- textlint-enable terminology -->

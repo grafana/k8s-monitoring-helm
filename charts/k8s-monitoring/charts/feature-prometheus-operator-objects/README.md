@@ -3,9 +3,7 @@
 (      To make changes, please modify README.md.gotmpl and run `helm-docs`)
 -->
 
-# feature-prometheus-operator-objects
-
-Gathers metrics using Prometheus Operator Objects
+# Feature: Prometheus Operator Objects
 
 The Prometheus Operator Objects feature enables the discovery, processing, and utilization of certain Prometheus
 Operator objects. Currently, this feature supports the following objects:
@@ -34,11 +32,13 @@ tests, use `helm test`.
 
 Be sure perform actual integration testing in a live environment in the main [k8s-monitoring](../..) chart.
 
+<!-- textlint-disable terminology -->
 ## Maintainers
 
 | Name | Email | Url |
 | ---- | ------ | --- |
 | petewall | <pete.wall@grafana.com> |  |
+<!-- textlint-enable terminology -->
 <!-- markdownlint-disable no-bare-urls -->
 <!-- markdownlint-disable list-marker-space -->
 ## Source Code

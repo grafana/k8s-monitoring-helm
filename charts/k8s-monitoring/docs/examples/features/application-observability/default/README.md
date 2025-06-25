@@ -12,6 +12,7 @@ For more information, see the [Application Observability feature documentation](
 
 ## Values
 
+<!-- textlint-disable terminology -->
 ```yaml
 ---
 cluster:
@@ -35,3 +36,4 @@ applicationObservability:
 alloy-receiver:
   enabled: true
 ```
+<!-- textlint-enable terminology -->

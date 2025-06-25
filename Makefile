@@ -89,7 +89,7 @@ lint-terraform: ## Lint terraform files
 
 .PHONY: lint-text
 lint-text: node_modules/.bin/textlint ## Lint text files
-	@./scripts/lint-text.sh
+	node_modules/.bin/textlint --config .textlintrc --ignore-path .textlintignore .
 
 .PHONY: lint-yaml
 lint-yaml: ## Lint yaml files

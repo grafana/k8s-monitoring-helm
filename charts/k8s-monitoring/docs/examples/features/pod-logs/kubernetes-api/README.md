@@ -10,6 +10,7 @@ system.
 
 ## Values
 
+<!-- textlint-disable terminology -->
 ```yaml
 ---
 cluster:
@@ -33,3 +34,4 @@ alloy-logs:
       varlog: false
       dockercontainers: false
 ```
+<!-- textlint-enable terminology -->

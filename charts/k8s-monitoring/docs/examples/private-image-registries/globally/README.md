@@ -15,6 +15,7 @@ If you do not want to use the `global` object, registry and pull secrets can be 
 
 ## Values
 
+<!-- textlint-disable terminology -->
 ```yaml
 ---
 cluster:
@@ -75,3 +76,4 @@ alloy-logs:
 alloy-receiver:
   enabled: true
 ```
+<!-- textlint-enable terminology -->

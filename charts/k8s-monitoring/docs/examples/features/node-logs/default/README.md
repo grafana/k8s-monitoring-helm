@@ -9,6 +9,7 @@ the journald services on the node and requires a HostPath volume mount to `/var/
 
 ## Values
 
+<!-- textlint-disable terminology -->
 ```yaml
 ---
 cluster:
@@ -29,3 +30,4 @@ nodeLogs:
 alloy-logs:
   enabled: true
 ```
+<!-- textlint-enable terminology -->
