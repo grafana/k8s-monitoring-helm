@@ -48,14 +48,17 @@
     {{- end }}
     {{- $alloyConfig = regexReplaceAll `[ \t]+(\r?\n)` $alloyConfig "\n" | trim }}
 
+    {{- $collectorName := include "helper.k8s_name" (printf "%s-servicegraph" $destination.name) }}
     {{- $alloySpec := dict "alloy" (dict "configMap" (dict "create" true "content" $alloyConfig) "extraEnv" (list (dict "name" "POD_NAME" "valueFrom" (dict "fieldRef" (dict "apiVersion" "v1" "fieldPath" "metadata.name"))))) }}
     {{- $globalValues := include "collector.alloy.values.global" $ | fromYaml }}
-    {{- $alloy := mergeOverwrite $alloySpec $globalValues $destination.processors.serviceGraphMetrics.collector }}
+    {{- $globalValues := include "collector.alloy.values.global" $ | fromYaml }}
+    {{- $alloyName := dict "nameOverride" $collectorName}}
+    {{- $alloy := mergeOverwrite $alloySpec $globalValues $alloyName $destination.processors.serviceGraphMetrics.collector }}
 ---
 apiVersion: collectors.grafana.com/v1alpha1
 kind: Alloy
 metadata:
-  name: {{ include "helper.k8s_name" (printf "%s-%s-servicegraph" $.Release.Name $destination.name) }}
+  name: {{ include "collector.alloy.fullname" (deepCopy $ | merge (dict "collectorName" $collectorName "collectorValues" $alloy)) }}
   namespace: {{ $.Release.Namespace }}
 spec:
   {{- $alloy | toYaml | nindent 2 }}

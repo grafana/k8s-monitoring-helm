@@ -311,7 +311,11 @@ otelcol.exporter.loadbalancing {{ printf "%s_sampler" (include "helper.alloy_nam
 otelcol.exporter.loadbalancing {{ printf "%s_servicegraph" (include "helper.alloy_name" .name) | quote }} {
   resolver {
     kubernetes {
-      service = "{{ include "helper.k8s_name" (printf "%s-%s-servicegraph-alloy" $.Release.Name .name) }}"
+      {{- $collectorName := include "helper.k8s_name" (printf "%s-servicegraph" .name) }}
+      {{- $globalValues := include "collector.alloy.values.global" $ | fromYaml }}
+      {{- $alloyName := dict "nameOverride" "$collectorName"}}
+      {{- $alloy := mergeOverwrite $globalValues $alloyName .processors.serviceGraphMetrics.collector }}
+      service = "{{ include "collector.alloy.fullname" (deepCopy $ | merge (dict "collectorName" $collectorName "collectorValues" $alloy)) }}"
     }
   }
   protocol {
