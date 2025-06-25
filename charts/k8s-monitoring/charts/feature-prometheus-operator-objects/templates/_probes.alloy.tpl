@@ -12,7 +12,7 @@ prometheus.operator.probes "probes" {
   {{- if .Values.probes.labelSelectors }}
     match_labels = {
     {{- range $key, $value := .Values.probes.labelSelectors }}
-      {{ $key | quote }} = {{ $value | quote }}
+      {{ $key | quote }} = {{ $value | quote }},
     {{- end }}
     }
   {{- end }}
