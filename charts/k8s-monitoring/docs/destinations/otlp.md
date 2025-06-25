@@ -120,8 +120,12 @@ This defines the options for defining a destination for OpenTelemetry data that 
 | processors.serviceGraphMetrics.collector | object | `{"alloy":{},"controller":{"replicas":2,"type":"statefulset"}}` | Settings for the Alloy instance that will handle service graph metrics. |
 | processors.serviceGraphMetrics.databaseNameAttribute | string | `"db.name"` | The attribute name used to identify the database name from span attributes. |
 | processors.serviceGraphMetrics.destinations | list | `[]` | The destinations where service graph metrics will be sent. If empty, all metrics-capable destinations will be used. |
+| processors.serviceGraphMetrics.dimensions | list | `[]` | A list of dimensions to add with the default dimensions. |
 | processors.serviceGraphMetrics.enabled | bool | `false` | Generate service graph metrics from traces. This will deploy an additional Alloy instance to handle service graph metrics generation. Traces sent to this destination will be aumatically forwarded, using a load balancer component, to this Alloy instance. |
+| processors.serviceGraphMetrics.latencyHistogramBuckets | list | `["2ms","4ms","6ms","8ms","10ms","50ms","100ms","200ms","400ms","800ms","1s","1400ms","2s","5s","10s","15s"]` | Buckets for latency histogram metrics. |
+| processors.serviceGraphMetrics.metricsFlushInterval | string | `"60s"` | The interval at which metrics are flushed to downstream components. |
 | processors.serviceGraphMetrics.receiver | object | `{"otlp":{"grpc":{"maxReceivedMessageSize":"4MB"}}}` | The service graph otlp receiver configuration. |
+| processors.serviceGraphMetrics.storeExpirationLoop | string | `"2s"` | The time to expire old entries from the store periodically. |
 
 ### Tail Sampling
 
@@ -185,28 +189,4 @@ This defines the options for defining a destination for OpenTelemetry data that 
 | tls.key | string | `""` | The client key for the server (as a string). |
 | tls.keyFile | string | `""` | The client key for the server (as a path to a file). |
 | tls.keyFrom | string | `""` | Raw config for accessing the client key. |
-
-### Other Values
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| processors.serviceGraphMetrics.dimensions | list | `[]` |  |
-| processors.serviceGraphMetrics.latencyHistogramBuckets[0] | string | `"2ms"` |  |
-| processors.serviceGraphMetrics.latencyHistogramBuckets[10] | string | `"1s"` |  |
-| processors.serviceGraphMetrics.latencyHistogramBuckets[11] | string | `"1400ms"` |  |
-| processors.serviceGraphMetrics.latencyHistogramBuckets[12] | string | `"2s"` |  |
-| processors.serviceGraphMetrics.latencyHistogramBuckets[13] | string | `"5s"` |  |
-| processors.serviceGraphMetrics.latencyHistogramBuckets[14] | string | `"10s"` |  |
-| processors.serviceGraphMetrics.latencyHistogramBuckets[15] | string | `"15s"` |  |
-| processors.serviceGraphMetrics.latencyHistogramBuckets[1] | string | `"4ms"` |  |
-| processors.serviceGraphMetrics.latencyHistogramBuckets[2] | string | `"6ms"` |  |
-| processors.serviceGraphMetrics.latencyHistogramBuckets[3] | string | `"8ms"` |  |
-| processors.serviceGraphMetrics.latencyHistogramBuckets[4] | string | `"10ms"` |  |
-| processors.serviceGraphMetrics.latencyHistogramBuckets[5] | string | `"50ms"` |  |
-| processors.serviceGraphMetrics.latencyHistogramBuckets[6] | string | `"100ms"` |  |
-| processors.serviceGraphMetrics.latencyHistogramBuckets[7] | string | `"200ms"` |  |
-| processors.serviceGraphMetrics.latencyHistogramBuckets[8] | string | `"400ms"` |  |
-| processors.serviceGraphMetrics.latencyHistogramBuckets[9] | string | `"800ms"` |  |
-| processors.serviceGraphMetrics.metricsFlushInterval | string | `"60s"` |  |
-| processors.serviceGraphMetrics.storeExpirationLoop | string | `"2s"` |  |
 <!-- textlint-enable terminology -->
