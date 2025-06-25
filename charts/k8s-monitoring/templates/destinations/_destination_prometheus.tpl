@@ -141,7 +141,7 @@ prometheus.remote_write {{ include "helper.alloy_name" .name | quote }} {
       batch_send_deadline = {{ .queueConfig.batchSendDeadline | default "5s" | quote }}
       min_backoff = {{ .queueConfig.minBackoff | default "30ms" | quote }}
       max_backoff = {{ .queueConfig.maxBackoff | default "5s" | quote }}
-      retry_on_http_429 = {{ .queueConfig.retryOnHttp429 | default true }}
+      retry_on_http_429 = {{ .queueConfig.retryOnHttp429 }}
       sample_age_limit = {{ .queueConfig.sampleAgeLimit | default "0s" | quote }}
     }
 {{ range $label := .clusterLabels }}

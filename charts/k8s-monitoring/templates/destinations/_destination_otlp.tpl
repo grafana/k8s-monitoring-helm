@@ -435,7 +435,7 @@ otelcol.exporter.otlphttp {{ include "helper.alloy_name" .name | quote }} {
   }
 
   retry_on_failure {
-    enabled = {{ .retryOnFailure.enabled | default true }}
+    enabled = {{ .retryOnFailure.enabled }}
     initial_interval = {{ .retryOnFailure.initialInterval | quote }}
     max_interval = {{ .retryOnFailure.maxInterval | quote }}
     max_elapsed_time = {{ .retryOnFailure.maxElapsedTime | quote }}
