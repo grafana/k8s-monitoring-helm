@@ -36,7 +36,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 <!-- markdownlint-disable list-marker-space -->
 ## Source Code
 
-* <https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-annotation-autodiscovery>
+* <https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-auto-instrumentation>
 
 ## Requirements
 
@@ -52,7 +52,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| beyla.config.data | object | `{"attributes":{"kubernetes":{"enable":true}},"internal_metrics":{"prometheus":{"path":"/internal/metrics"}},"prometheus_export":{"features":["application","network","application_service_graph","application_span,application_host"],"path":"/metrics"}}` | The configuration for Grafana Beyla Some sections will be set automatically, such as the cluster name. Others will be modified depending on the value of beyla.preset. |
+| beyla.config.data | object | `{"attributes":{"kubernetes":{"enable":true}},"internal_metrics":{"prometheus":{"path":"/internal/metrics"}},"prometheus_export":{"features":["application","network","application_service_graph","application_span","application_host"],"path":"/metrics"}}` | The configuration for Grafana Beyla Some sections will be set automatically, such as the cluster name. Others will be modified depending on the value of beyla.preset. |
 | beyla.extraDiscoveryRules | string | `""` | Rule blocks to be added to the discovery.relabel component for Beyla. These relabeling rules are applied pre-scrape against the targets from service discovery. Before the scrape, any remaining target labels that start with __ (i.e. __meta_kubernetes*) are dropped. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery.relabel/#rule-block)) |
 | beyla.extraMetricProcessingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for Beyla. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#rule-block)) These relabeling rules are applied post-scrape against the metrics returned from the scraped target, no __meta* labels are present. |
 | beyla.labelMatchers | object | `{"app.kubernetes.io/name":"beyla"}` | Label matchers used to select the Beyla pods for scraping metrics. |
