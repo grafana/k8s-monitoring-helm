@@ -48,3 +48,13 @@
 {{- end }}
 {{- $ecosystem }}
 {{- end }}
+
+{{/* Inputs: . (Values), destination (string, name of destination) */}}
+{{- define "destination.getDestinationByName" -}}
+{{- range $destination := .Values.destinations }}
+  {{- if eq $destination.name $.destination }}
+    {{- $destination | toYaml | indent 0 }}
+    {{- break }}
+  {{- end }}
+{{- end }}
+{{- end }}

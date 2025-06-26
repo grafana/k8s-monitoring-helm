@@ -1,0 +1,110 @@
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: open-telemetry
+  namespace: default
+spec:
+  interval: 1h
+  url: https://open-telemetry.github.io/opentelemetry-helm-charts
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: otel-demo
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: otel-demo
+  namespace: otel-demo
+spec:
+  interval: 10m
+  timeout: 10m
+  chart:
+    spec:
+      chart: opentelemetry-demo
+      version: 0.37.1
+      sourceRef:
+        kind: HelmRepository
+        name: open-telemetry
+        namespace: default
+      interval: 10m
+  values:
+    default:
+      # List of environment variables applied to all components
+      env:
+        - name: OTEL_SERVICE_NAME
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: "metadata.labels['app.kubernetes.io/component']"
+        - name: OTEL_COLLECTOR_NAME
+          value: 'k8smon-alloy-receiver.default'
+        - name: OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE
+          value: cumulative
+        - name: OTEL_RESOURCE_ATTRIBUTES
+          value: 'service.name=$(OTEL_SERVICE_NAME),service.namespace=opentelemetry-demo,service.version={{ .Chart.AppVersion }},k8s.cluster.name=$(CLUSTER),deployment.environment.name=platform-test'
+
+    opentelemetry-collector:
+      enabled: false
+
+    jaeger:
+      enabled: false
+
+    prometheus:
+      enabled: false
+
+    grafana:
+      enabled: false
+
+    components:
+      checkout:
+        podAnnotations:
+          resource.opentelemetry.io/service.name: checkout
+          resource.opentelemetry.io/service.namespace: opentelemetry-demo
+      email:
+        podAnnotations:
+          resource.opentelemetry.io/service.name: email
+          resource.opentelemetry.io/service.namespace: opentelemetry-demo
+      flagd:
+        sidecarContainers:
+          - name: flagd-ui
+            useDefault:
+              env: true
+            service:
+              port: 4000
+            env:
+              - name: FLAGD_METRICS_EXPORTER
+                value: otel
+              - name: OTEL_EXPORTER_OTLP_ENDPOINT
+                value: http://$(OTEL_COLLECTOR_NAME):4318
+            resources:
+              limits:
+                memory: 120Mi
+            volumeMounts:
+              - name: config-rw
+                mountPath: /app/data
+        podAnnotations:
+          resource.opentelemetry.io/service.name: flagd
+          resource.opentelemetry.io/service.namespace: opentelemetry-demo
+      frontend:
+        podAnnotations:
+          resource.opentelemetry.io/service.name: frontend
+          resource.opentelemetry.io/service.namespace: opentelemetry-demo
+      frontend-proxy:
+        podAnnotations:
+          resource.opentelemetry.io/service.name: frontend-proxy
+          resource.opentelemetry.io/service.namespace: opentelemetry-demo
+      image-provider:
+        podAnnotations:
+          resource.opentelemetry.io/service.name: image-provider
+          resource.opentelemetry.io/service.namespace: opentelemetry-demo
+      product-catalog:
+        podAnnotations:
+          resource.opentelemetry.io/service.name: product-catalog
+          resource.opentelemetry.io/service.namespace: opentelemetry-demo
+      shipping:
+        podAnnotations:
+          resource.opentelemetry.io/service.name: shipping
+          resource.opentelemetry.io/service.namespace: opentelemetry-demo

@@ -1,0 +1,125 @@
+---
+cluster:
+  name: service-graph-metrics-test
+
+destinations:
+  - name: localPrometheus
+    type: prometheus
+    url: http://prometheus-server.prometheus.svc:9090/api/v1/write
+  - name: localLoki
+    type: loki
+    url: http://loki.loki.svc:3100/loki/api/v1/push
+    tenantId: "1"
+    auth:
+      type: basic
+      username: loki
+      password: lokipassword
+  - name: localTempo
+    type: otlp
+    url: tempo.tempo.svc:4317
+    tls:
+      insecure: true
+      insecureSkipVerify: true
+    metrics: {enabled: false}
+    logs: {enabled: false}
+    traces: {enabled: true}
+    processors:
+      serviceGraphMetrics:
+        collector:
+          controller:
+            replicas: 3
+        enabled: true
+        receiver:
+          otlp:
+            grpc:
+              maxReceivedMessageSize: 8MB
+        cacheLoop: 2m
+        databaseNameAttribute: "db.name"
+        dimensions:
+          - cluster
+          - service.name
+          - service.namespace
+          - k8s.deployment.name
+          - k8s.namespace.name
+        metricsFlushInterval: 60s
+        storeExpirationLoop: 5s
+
+applicationObservability:
+  enabled: true
+  traces:
+    transforms:
+      span:
+        - replace_pattern(name, "\\?.*", "")
+        - replace_match(name, "GET /api/products/*", "GET /api/products/{productId}")
+
+  receivers:
+    otlp:
+      grpc:
+        enabled: true
+      http:
+        enabled: true
+
+podLogs:
+  enabled: true
+  gatherMethod: filelog
+  namespaceLabels:
+    color: color
+
+  labelsToKeep:
+    - app.kubernetes.io/name
+    - container
+    - instance
+    - job
+    - level
+    - namespace
+    - pod
+    - service.name
+    - service.namespace
+    - deployment.environment
+    - deployment.environment_name
+    - k8s.pod.name
+    - k8s.namespace.name
+    - k8s.deployment.name
+    - k8s.statefulset.name
+    - k8s.daemonset.name
+    - k8s.cronjob.name
+    - k8s.job.name
+    - k8s.node.name
+    - color
+
+alloy-logs:
+  enabled: true
+  alloy:
+    stabilityLevel: public-preview
+
+alloy-receiver:
+  enabled: true
+  alloy:
+    extraPorts:
+      - name: otlp-http
+        port: 4318
+        targetPort: 4318
+        protocol: TCP
+      - name: otlp-grpc
+        port: 4317
+        targetPort: 4317
+        protocol: TCP
+
+integrations:
+  alloy:
+    instances:
+      - name: alloy-receiver
+        labelSelectors:
+          app.kubernetes.io/instance: k8smon-alloy-receiver
+        metrics:
+          tuning:
+            includeMetrics: [otelcol_loadbalancer_.*]
+      - name: alloy-servicegraph
+        labelSelectors:
+          app.kubernetes.io/instance: k8smon-localtempo-servicegraph
+        metrics:
+          tuning:
+            includeMetrics: [traces_service_graph_request_.*]
+
+alloy-metrics:
+  enabled: true

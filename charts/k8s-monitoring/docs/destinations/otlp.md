@@ -112,6 +112,21 @@ This defines the options for defining a destination for OpenTelemetry data that 
 | processors.memoryLimiter.enabled | bool | `false` | Whether to use a memory limiter. |
 | processors.memoryLimiter.limit | string | `"0MiB"` | Maximum amount of memory targeted to be allocated by the process heap. |
 
+### Service Graph Metrics
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| processors.serviceGraphMetrics.cacheLoop | string | `"1m"` | Configures how often to delete series which haven’t been updated. |
+| processors.serviceGraphMetrics.collector | object | `{"alloy":{},"controller":{"replicas":2,"type":"statefulset"}}` | Settings for the Alloy instance that will handle service graph metrics. |
+| processors.serviceGraphMetrics.databaseNameAttribute | string | `"db.name"` | The attribute name used to identify the database name from span attributes. |
+| processors.serviceGraphMetrics.destinations | list | `[]` | The destinations where service graph metrics will be sent. If empty, all metrics-capable destinations will be used. |
+| processors.serviceGraphMetrics.dimensions | list | `[]` | A list of dimensions to add with the default dimensions. |
+| processors.serviceGraphMetrics.enabled | bool | `false` | Generate service graph metrics from traces. This will deploy an additional Alloy instance to handle service graph metrics generation. Traces sent to this destination will be aumatically forwarded, using a load balancer component, to this Alloy instance. |
+| processors.serviceGraphMetrics.latencyHistogramBuckets | list | `["2ms","4ms","6ms","8ms","10ms","50ms","100ms","200ms","400ms","800ms","1s","1400ms","2s","5s","10s","15s"]` | Buckets for latency histogram metrics. |
+| processors.serviceGraphMetrics.metricsFlushInterval | string | `"60s"` | The interval at which metrics are flushed to downstream components. |
+| processors.serviceGraphMetrics.receiver | object | `{"otlp":{"grpc":{"maxReceivedMessageSize":"4MB"}}}` | The service graph otlp receiver configuration. |
+| processors.serviceGraphMetrics.storeExpirationLoop | string | `"2s"` | The time to expire old entries from the store periodically. |
+
 ### Tail Sampling
 
 | Key | Type | Default | Description |

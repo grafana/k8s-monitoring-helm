@@ -943,11 +943,12 @@ data:
       }
     
       output {
-        traces = [otelcol.exporter.loadbalancing.tempo.input]
+        traces = [
+          otelcol.exporter.loadbalancing.tempo_sampler.input,
+        ]
       }
     }
-    
-    otelcol.exporter.loadbalancing "tempo" {
+    otelcol.exporter.loadbalancing "tempo_sampler" {
       resolver {
         kubernetes {
           service = "k8smon-tempo-sampler"
@@ -2001,8 +2002,7 @@ metadata:
 spec:
   alloy:
     configMap:
-      content: |2-
-  
+      content: |-
         otelcol.receiver.otlp "sampler_receiver" {
           grpc {
             max_recv_msg_size = "4MB"
