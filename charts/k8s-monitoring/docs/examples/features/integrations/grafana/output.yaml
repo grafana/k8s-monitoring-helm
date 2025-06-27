@@ -6,10 +6,10 @@ metadata:
   name: k8smon-alloy-operator
   namespace: default
   labels:
-    helm.sh/chart: alloy-operator-0.3.2
+    helm.sh/chart: alloy-operator-0.3.4
     app.kubernetes.io/name: alloy-operator
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.1.1"
+    app.kubernetes.io/version: "1.1.2"
     app.kubernetes.io/managed-by: Helm
 automountServiceAccountToken: true
 ---
@@ -635,10 +635,10 @@ kind: ClusterRole
 metadata:
   name: k8smon-alloy-operator-alloy-manager
   labels:
-    helm.sh/chart: alloy-operator-0.3.2
+    helm.sh/chart: alloy-operator-0.3.4
     app.kubernetes.io/name: alloy-operator
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.1.1"
+    app.kubernetes.io/version: "1.1.2"
     app.kubernetes.io/managed-by: Helm
 rules:
   - apiGroups:
@@ -674,9 +674,9 @@ rules:
   - apiGroups: ["autoscaling"]
     resources: ["horizontalpodautoscalers"]
     verbs: ["*"]
-  # Rules which allow the management of Ingresses.
+  # Rules which allow the management of Ingresses and NetworkPolicies.
   - apiGroups: ["networking.k8s.io"]
-    resources: ["ingresses"]
+    resources: ["ingresses", "networkpolicies"]
     verbs: ["*"]
   # Rules which allow the management of PodDisruptionBudgets.
   - apiGroups: ["policy"]
@@ -693,10 +693,10 @@ kind: ClusterRoleBinding
 metadata:
   name: k8smon-alloy-operator-alloy-manager
   labels:
-    helm.sh/chart: alloy-operator-0.3.2
+    helm.sh/chart: alloy-operator-0.3.4
     app.kubernetes.io/name: alloy-operator
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.1.1"
+    app.kubernetes.io/version: "1.1.2"
     app.kubernetes.io/managed-by: Helm
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -713,10 +713,10 @@ kind: ClusterRoleBinding
 metadata:
   name: k8smon-alloy-operator
   labels:
-    helm.sh/chart: alloy-operator-0.3.2
+    helm.sh/chart: alloy-operator-0.3.4
     app.kubernetes.io/name: alloy-operator
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.1.1"
+    app.kubernetes.io/version: "1.1.2"
     app.kubernetes.io/managed-by: Helm
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -734,10 +734,10 @@ metadata:
   name: k8smon-alloy-operator-leader-election-role
   namespace: default
   labels:
-    helm.sh/chart: alloy-operator-0.3.2
+    helm.sh/chart: alloy-operator-0.3.4
     app.kubernetes.io/name: alloy-operator
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.1.1"
+    app.kubernetes.io/version: "1.1.2"
     app.kubernetes.io/managed-by: Helm
 rules:
   - apiGroups:
@@ -779,10 +779,10 @@ metadata:
   name: k8smon-alloy-operator-leader-election-rolebinding
   namespace: default
   labels:
-    helm.sh/chart: alloy-operator-0.3.2
+    helm.sh/chart: alloy-operator-0.3.4
     app.kubernetes.io/name: alloy-operator
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.1.1"
+    app.kubernetes.io/version: "1.1.2"
     app.kubernetes.io/managed-by: Helm
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -798,11 +798,12 @@ apiVersion: v1
 kind: Service
 metadata:
   name: k8smon-alloy-operator
+  namespace: default
   labels:
-    helm.sh/chart: alloy-operator-0.3.2
+    helm.sh/chart: alloy-operator-0.3.4
     app.kubernetes.io/name: alloy-operator
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.1.1"
+    app.kubernetes.io/version: "1.1.2"
     app.kubernetes.io/managed-by: Helm
 spec:
   type: ClusterIP
@@ -824,11 +825,12 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: k8smon-alloy-operator
+  namespace: default
   labels:
-    helm.sh/chart: alloy-operator-0.3.2
+    helm.sh/chart: alloy-operator-0.3.4
     app.kubernetes.io/name: alloy-operator
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.1.1"
+    app.kubernetes.io/version: "1.1.2"
     app.kubernetes.io/managed-by: Helm
 spec:
   replicas: 1
@@ -839,16 +841,16 @@ spec:
   template:
     metadata:
       labels:
-        helm.sh/chart: alloy-operator-0.3.2
+        helm.sh/chart: alloy-operator-0.3.4
         app.kubernetes.io/name: alloy-operator
         app.kubernetes.io/instance: k8smon
-        app.kubernetes.io/version: "1.1.1"
+        app.kubernetes.io/version: "1.1.2"
         app.kubernetes.io/managed-by: Helm
     spec:
       serviceAccountName: k8smon-alloy-operator
       containers:
         - name: alloy-operator
-          image: "ghcr.io/grafana/alloy-operator:1.1.1"
+          image: "ghcr.io/grafana/alloy-operator:1.1.2"
           imagePullPolicy: IfNotPresent
           args:
             - --leader-elect
