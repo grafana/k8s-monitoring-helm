@@ -82,10 +82,10 @@ else
 endif
 
 ALLOY_HELM_VERSION = $(shell helm show chart charts/alloy-operator-*.tgz | yq eval '.appVersion')
-ALLOY_IMAGE = $(shell helm template test grafana/alloy --version $(ALLOY_HELM_VERSION) | yq eval 'select(.kind=="DaemonSet" and .metadata.name=="test-alloy") | .spec.template.spec.containers[0].image')
+ALLOY_IMAGE = $(shell helm template test --repo https://grafana.github.io/helm-charts alloy --version $(ALLOY_HELM_VERSION) | yq eval 'select(.kind=="DaemonSet" and .metadata.name=="test-alloy") | .spec.template.spec.containers[0].image')
 ALLOY_OPERATOR_IMAGE = $(shell yq eval 'select(.kind=="Deployment" and .metadata.name=="$(EXAMPLE_RELEASE_NAME)-alloy-operator") | .spec.template.spec.containers[0].image' docs/examples/features/cluster-metrics/default/output.yaml)
 BEYLA_IMAGE = $(shell yq eval 'select(.kind=="DaemonSet" and .metadata.name=="$(EXAMPLE_RELEASE_NAME)-beyla") | .spec.template.spec.containers[0].image' docs/examples/features/auto-instrumentation/beyla-metrics/output.yaml)
-CONFIG_RELOADER_IMAGE = $(shell helm template test grafana/alloy --version $(ALLOY_HELM_VERSION) | yq eval 'select(.kind=="DaemonSet" and .metadata.name=="test-alloy") | .spec.template.spec.containers[1].image')
+CONFIG_RELOADER_IMAGE = $(shell helm template test --repo https://grafana.github.io/helm-charts alloy --version $(ALLOY_HELM_VERSION) | yq eval 'select(.kind=="DaemonSet" and .metadata.name=="test-alloy") | .spec.template.spec.containers[1].image')
 KEPLER_IMAGE = $(shell yq eval 'select(.kind=="DaemonSet" and .metadata.name=="$(EXAMPLE_RELEASE_NAME)-kepler") | .spec.template.spec.containers[0].image' docs/examples/features/cluster-metrics/default/output.yaml)
 KUBE_STATE_METRICS_IMAGE = $(shell yq eval 'select(.kind=="Deployment" and .metadata.name=="$(EXAMPLE_RELEASE_NAME)-kube-state-metrics") | .spec.template.spec.containers[0].image' docs/examples/features/cluster-metrics/default/output.yaml)
 NODE_EXPORTER_IMAGE = $(shell yq eval 'select(.kind=="DaemonSet" and .metadata.name=="$(EXAMPLE_RELEASE_NAME)-node-exporter") | .spec.template.spec.containers[0].image' docs/examples/features/cluster-metrics/default/output.yaml)
