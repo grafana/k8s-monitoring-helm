@@ -139,13 +139,13 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 
 | Repository | Name | Version |
 |------------|------|---------|
-| https://grafana.github.io/helm-charts | alloy | 1.1.1 |
-| https://grafana.github.io/helm-charts | alloy-events(alloy) | 1.1.1 |
-| https://grafana.github.io/helm-charts | alloy-logs(alloy) | 1.1.1 |
-| https://grafana.github.io/helm-charts | alloy-profiles(alloy) | 1.1.1 |
+| https://grafana.github.io/helm-charts | alloy | 1.1.2 |
+| https://grafana.github.io/helm-charts | alloy-events(alloy) | 1.1.2 |
+| https://grafana.github.io/helm-charts | alloy-logs(alloy) | 1.1.2 |
+| https://grafana.github.io/helm-charts | alloy-profiles(alloy) | 1.1.2 |
 | https://grafana.github.io/helm-charts | beyla | 1.8.0 |
 | https://opencost.github.io/opencost-helm-chart | opencost | 1.43.2 |
-| https://prometheus-community.github.io/helm-charts | kube-state-metrics | 6.0.0 |
+| https://prometheus-community.github.io/helm-charts | kube-state-metrics | 6.1.0 |
 | https://prometheus-community.github.io/helm-charts | prometheus-node-exporter | 4.47.0 |
 | https://prometheus-community.github.io/helm-charts | prometheus-operator-crds | 21.0.0 |
 | https://prometheus-community.github.io/helm-charts | prometheus-windows-exporter | 0.10.3 |
