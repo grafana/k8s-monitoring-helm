@@ -51,15 +51,15 @@ spec:
             type: promql
 
           # Annotation Autodiscovery from a Pod Annotation
-          - query: static_metric{cluster="$CLUSTER", job="nginx-static-metrics", scrape_interval="30s", scrape_timeout="15s", namespace="default", color="blue"}
+          - query: static_metric{cluster="$CLUSTER", job="nginx", scrape_interval="30s", scrape_timeout="15s", namespace="default", color="blue"}
             type: promql
           # Gets metrics from both replicas
-          - query: count(static_metric{cluster="$CLUSTER", job="nginx-static-metrics", color="blue"})
+          - query: count(static_metric{cluster="$CLUSTER", job="nginx", color="blue"})
             type: promql
             expect:
               value: 2
           # Label selector did not select the green deployment
-          - query: count(static_metric{cluster="$CLUSTER", job="nginx-static-metrics", color="green"}) or vector(0)
+          - query: count(static_metric{cluster="$CLUSTER", job="nginx", color="green"}) or vector(0)
             type: promql
             expect:
               value: 0
@@ -69,12 +69,12 @@ spec:
             type: logql
 
           # DPM check
-          - query: avg(count_over_time(scrape_samples_scraped{cluster="$CLUSTER", job="nginx-static-metrics"}[1m]))
+          - query: avg(count_over_time(scrape_samples_scraped{cluster="$CLUSTER", job="nginx"}[1m]))
             type: promql
             expect:
               value: 2  # 30s scrape interval for nginx-static-metrics
               operator: ==
-          - query: avg(count_over_time(scrape_samples_scraped{cluster="$CLUSTER", job!="nginx-static-metrics"}[1m]))
+          - query: avg(count_over_time(scrape_samples_scraped{cluster="$CLUSTER", job!="nginx"}[1m]))
             type: promql
             expect:
               value: 1  # 60s scrape interval for everything else
