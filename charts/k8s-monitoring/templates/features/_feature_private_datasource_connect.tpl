@@ -1,19 +1,19 @@
-{{- define "features.privateDatasourceConnect.enabled" }}{{ .Values.privateDatasourceConnect.enabled }}{{- end }}
+{{- define "features.privateDatasourceConnect.enabled" }}{{ if .Values.privateDatasourceConnect }}{{ .Values.privateDatasourceConnect.enabled }}{{ else }}false{{ end }}{{- end }}
 
 {{- define "features.privateDatasourceConnect.collectors" }}
-{{- if .Values.privateDatasourceConnect.enabled -}}
+{{- if and .Values.privateDatasourceConnect .Values.privateDatasourceConnect.enabled -}}
 {{/* PDC doesn't use collectors, it's a standalone agent */}}
 {{- end }}
 {{- end }}
 
 {{- define "features.privateDatasourceConnect.include" }}
-{{- if .Values.privateDatasourceConnect.enabled -}}
+{{- if and .Values.privateDatasourceConnect .Values.privateDatasourceConnect.enabled -}}
 {{/* PDC agent runs as a standalone deployment, no Alloy config needed */}}
 {{- end -}}
 {{- end -}}
 
 {{- define "features.privateDatasourceConnect.destinations" }}
-{{- if .Values.privateDatasourceConnect.enabled -}}
+{{- if and .Values.privateDatasourceConnect .Values.privateDatasourceConnect.enabled -}}
 - "Grafana Cloud"
 {{- end -}}
 {{- end -}}
@@ -25,7 +25,7 @@ false
 {{- define "features.privateDatasourceConnect.collector.values" }}{{- end -}}
 
 {{- define "features.privateDatasourceConnect.validate" }}
-{{- if .Values.privateDatasourceConnect.enabled -}}
+{{- if and .Values.privateDatasourceConnect .Values.privateDatasourceConnect.enabled -}}
 {{- $featureName := "Private Data Source Connect" }}
 {{/* Validate PDC credentials are provided */}}
 {{- $pdcValues := .Values.privateDatasourceConnect }}

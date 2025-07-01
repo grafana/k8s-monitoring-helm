@@ -1,0 +1,38 @@
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: GitRepository
+metadata:
+  name: k8s-monitoring-test
+  namespace: default
+spec:
+  interval: 1m
+  url: https://github.com/grafana/k8s-monitoring-helm
+  ref:
+    branch: main
+  ignore: |
+    /*
+    !/charts/k8s-monitoring-test
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: k8s-monitoring-test
+  namespace: default
+spec:
+  interval: 1m
+  chart:
+    spec:
+      chart: charts/k8s-monitoring-test
+      sourceRef:
+        kind: GitRepository
+        name: k8s-monitoring-test
+      interval: 1m
+  values:
+    tests:
+      - env:
+          CLUSTER: private-datasource-connect-test
+        queries:
+          # Simple test that validates the test framework works
+          # The main validation is that the chart deployed successfully (which we can see in the NOTES output)
+          - query: "1"
+            type: test

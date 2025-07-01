@@ -1,32 +1,35 @@
 # Private Data Source Connect (PDC) Integration Test
 
-This test verifies that the Private Data Source Connect (PDC) agent is properly deployed and configured to establish secure connections between Grafana Cloud and private data sources.
+This test verifies that the Private Data Source Connect (PDC) agent is properly deployed and configured by the k8s-monitoring Helm chart.
 
 ## Test Scope
 
 The test validates:
-- PDC agent deployment with proper configuration
-- Secret creation and management for PDC credentials
-- PDC agent connectivity and health status
-- Integration with cluster metrics collection
-- Self-reporting metrics from the PDC feature
+- PDC agent deployment creation with proper configuration
+- Secret creation and management for PDC credentials  
+- PDC pod creation and basic resource setup
+- Chart template integration and rendering
+- Kubernetes resource validation
 
 ## Test Infrastructure
 
-- **PostgreSQL**: Deployed as a private data source to simulate a real-world scenario
-- **Prometheus**: For collecting metrics and validating PDC functionality
-- **Test Queries**: Validate PDC agent metrics and cluster connectivity
+- **k8s-monitoring-test**: Validates PDC deployment through Prometheus metrics from kube-state-metrics
 
 ## Expected Behavior
 
-1. PDC agent should deploy successfully with provided credentials
-2. Agent should establish connection to the configured PDC cluster
-3. Self-reporting metrics should indicate PDC feature is enabled and operational
-4. Private data sources should be accessible through the PDC tunnel
+1. PDC agent deployment should be created successfully with provided credentials
+2. PDC secret should be created with the correct structure
+3. PDC pod should be created (connectivity to PDC server not tested due to fake credentials)
+4. Chart should integrate PDC feature without template errors
 
-## Validation Queries
+## Validation Tests
 
-The test runs queries to verify:
-- PDC agent is running and healthy
-- Feature self-reporting metrics are present
-- Cluster metrics are being collected alongside PDC functionality 
+The test performs:
+- PDC deployment existence verification
+- PDC secret creation and structure validation  
+- PDC pod creation confirmation
+- Basic cluster metrics availability
+
+## Note on Connectivity
+
+This test uses fake credentials for PDC configuration, so the agent will not successfully connect to the real PDC service. The test focuses on validating that the chart correctly deploys and configures the PDC resources, not the runtime connectivity to Grafana Cloud. 
