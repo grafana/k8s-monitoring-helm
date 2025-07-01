@@ -1,0 +1,47 @@
+---
+# Basic configuration for PDC agent deployment
+# This example demonstrates PDC agent setup with new secret creation
+
+# Required cluster name
+cluster:
+  name: my-cluster-name
+
+# Configure metrics destination
+destinations:
+  - name: grafana-cloud-metrics
+    type: prometheus
+    credentials:
+      url: "https://prometheus-prod-01-eu-west-0.grafana.net/api/prom/push"
+      username: "12345"
+      password: "your-grafana-cloud-api-key"
+
+# Enable required collector
+alloy-metrics:
+  enabled: true
+
+# Enable cluster metrics feature
+clusterMetrics:
+  enabled: true
+
+# Enable PDC agent
+private-datasource-connect:
+  enabled: true
+  # Credentials configuration
+  credentials:
+    # Create a new secret with the provided credentials
+    createSecret: true
+    # Your PDC agent authentication token from Grafana Cloud
+    token: "your-pdc-token"
+    # Your Grafana Cloud instance ID
+    hostedGrafanaId: "your-grafana-cloud-grafana-instance-id"
+    # The PDC cluster name
+    cluster: "your-pdc-cluster-name"
+
+  # Resource configuration with recommended values
+  resources:
+    requests:
+      cpu: 100m
+      memory: 512Mi
+    limits:
+      cpu: 200m
+      memory: 1Gi

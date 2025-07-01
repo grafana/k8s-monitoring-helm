@@ -1,0 +1,76 @@
+{{- if .Values.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "feature-private-datasource-connect.fullname" . }}
+  labels:
+    app.kubernetes.io/name: pdc-agent
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: pdc-agent
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: pdc-agent
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/component: pdc-agent
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: pdc-agent
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/component: pdc-agent
+    spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchLabels:
+                  app.kubernetes.io/name: pdc-agent
+                  app.kubernetes.io/instance: {{ .Release.Name }}
+                  app.kubernetes.io/component: pdc-agent
+              topologyKey: kubernetes.io/hostname
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+      - name: pdc-agent
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        args:
+        - -token
+        - $(GCLOUD_PDC_SIGNING_TOKEN)
+        - -cluster
+        - $(GCLOUD_PDC_CLUSTER)
+        - -gcloud-hosted-grafana-id
+        - $(GCLOUD_HOSTED_GRAFANA_ID)
+        env:
+        - name: GCLOUD_PDC_SIGNING_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: {{ if .Values.credentials.createSecret }}{{ include "feature-private-datasource-connect.fullname" . }}{{ else }}{{ .Values.credentials.existingSecret }}{{ end }}
+              key: token
+        - name: GCLOUD_HOSTED_GRAFANA_ID
+          valueFrom:
+            secretKeyRef:
+              name: {{ if .Values.credentials.createSecret }}{{ include "feature-private-datasource-connect.fullname" . }}{{ else }}{{ .Values.credentials.existingSecret }}{{ end }}
+              key: hosted-grafana-id
+        - name: GCLOUD_PDC_CLUSTER
+          valueFrom:
+            secretKeyRef:
+              name: {{ if .Values.credentials.createSecret }}{{ include "feature-private-datasource-connect.fullname" . }}{{ else }}{{ .Values.credentials.existingSecret }}{{ end }}
+              key: cluster
+        resources:
+          {{- toYaml .Values.resources | nindent 10 }}
+{{- end }}

@@ -207,6 +207,7 @@ details:
 |  | integrations(feature-integrations) | 1.0.0 |
 |  | nodeLogs(feature-node-logs) | 1.0.0 |
 |  | podLogs(feature-pod-logs) | 1.0.0 |
+|  | private-datasource-connect(feature-private-datasource-connect) | 0.1.0 |
 |  | profiling(feature-profiling) | 1.0.0 |
 |  | prometheusOperatorObjects(feature-prometheus-operator-objects) | 1.0.0 |
 | https://grafana.github.io/helm-charts | alloy-operator | 0.3.4 |
