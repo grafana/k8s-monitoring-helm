@@ -1,0 +1,96 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pdc-connectivity-test
+  namespace: default
+data:
+  test-connectivity.sh: |
+    #!/bin/bash
+    set -e
+
+    echo "Testing PDC connectivity..."
+
+    # Test 1: Check if PDC pod is running
+    echo "1. Checking PDC pod status..."
+    kubectl get pods -l app.kubernetes.io/name=private-datasource-connect --field-selector=status.phase=Running
+
+    # Test 2: Check if PDC secret exists
+    echo "2. Checking PDC secret..."
+    kubectl get secret -l app.kubernetes.io/name=private-datasource-connect
+
+    # Test 3: Check PostgreSQL connectivity from PDC namespace
+    echo "3. Testing PostgreSQL connectivity..."
+    kubectl run pdc-postgres-test --rm -i --restart=Never --image=postgres:13 \
+      --env="PGPASSWORD=test-password-123" \
+      --command -- psql -h postgresql.private-datasources.svc.cluster.local -U postgres -d testdb -c "SELECT version();" || true
+
+    # Test 4: Check PDC agent logs for connectivity
+    echo "4. Checking PDC agent logs..."
+    PDC_POD=$(kubectl get pods -l app.kubernetes.io/name=private-datasource-connect -o jsonpath='{.items[0].metadata.name}')
+    if [ ! -z "$PDC_POD" ]; then
+      kubectl logs $PDC_POD --tail=50 | grep -i "connect\|error\|status" || echo "No connectivity logs found"
+    else
+      echo "PDC pod not found"
+    fi
+
+    echo "PDC connectivity test completed!"
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: pdc-connectivity-test
+  namespace: default
+spec:
+  template:
+    spec:
+      serviceAccountName: pdc-test-runner
+      containers:
+        - name: test-runner
+          image: bitnami/kubectl:latest
+          command: ["/bin/bash"]
+          args: ["/scripts/test-connectivity.sh"]
+          volumeMounts:
+            - name: test-script
+              mountPath: /scripts
+      volumes:
+        - name: test-script
+          configMap:
+            name: pdc-connectivity-test
+            defaultMode: 0755
+      restartPolicy: Never
+  backoffLimit: 3
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: pdc-test-runner
+  namespace: default
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: pdc-test-runner
+rules:
+  - apiGroups: [""]
+    resources: ["pods", "secrets", "services"]
+    verbs: ["get", "list", "watch", "create", "delete"]
+  - apiGroups: [""]
+    resources: ["pods/log"]
+    verbs: ["get"]
+  - apiGroups: ["batch"]
+    resources: ["jobs"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: pdc-test-runner
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: pdc-test-runner
+subjects:
+  - kind: ServiceAccount
+    name: pdc-test-runner
+    namespace: default

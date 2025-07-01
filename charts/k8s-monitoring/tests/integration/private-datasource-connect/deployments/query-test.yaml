@@ -1,0 +1,70 @@
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: GitRepository
+metadata:
+  name: k8s-monitoring-test
+spec:
+  interval: 1m
+  url: https://github.com/grafana/k8s-monitoring-helm
+  ref:
+    branch: main
+  ignore: |
+    /*
+    !/charts/k8s-monitoring-test
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: k8s-monitoring-test
+spec:
+  interval: 1m
+  chart:
+    spec:
+      chart: charts/k8s-monitoring-test
+      sourceRef:
+        kind: GitRepository
+        name: k8s-monitoring-test
+      interval: 1m
+  dependsOn:
+    - name: prometheus
+      namespace: prometheus
+  values:
+    tests:
+      - env:
+          CLUSTER: private-datasource-connect-test
+          PROMETHEUS_URL: http://prometheus-server.prometheus.svc:9090/api/v1/query
+        queries:
+          # Self reporting metrics
+          - query: grafana_kubernetes_monitoring_build_info{cluster="$CLUSTER"}
+            type: promql
+
+          # PDC feature self-reporting metrics
+          - query: grafana_kubernetes_monitoring_feature_info{cluster="$CLUSTER", feature="privateDatasourceConnect"}
+            type: promql
+
+          # PDC agent container metrics (if exposed)
+          - query: up{job=~".*private-datasource-connect.*", cluster="$CLUSTER"}
+            type: promql
+
+          # Cluster metrics are still being collected
+          - query: kube_node_info{cluster="$CLUSTER"}
+            type: promql
+
+          # PDC pod is running
+          - query: kube_pod_info{cluster="$CLUSTER", pod=~".*private-datasource-connect.*"}
+            type: promql
+
+          # PDC secret exists and is being used
+          - query: kube_secret_info{cluster="$CLUSTER", secret=~".*private-datasource-connect.*"}
+            type: promql
+
+          # Basic cluster health with PDC enabled
+          - query: grafana_kubernetes_monitoring_config_hash{cluster="$CLUSTER"}
+            type: promql
+
+          # DPM check
+          - query: avg(count_over_time(scrape_samples_scraped{cluster="$CLUSTER"}[1m]))
+            type: promql
+            expect:
+              value: 1
+              operator: ==
