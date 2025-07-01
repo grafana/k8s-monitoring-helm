@@ -18,35 +18,26 @@ check-helm-version:
 		exit 1; \
 	fi
 
+##@ Build
 .PHONY: clean
-clean:
+clean: ## Clean all charts
 	rm -rf node_modules
 	set -e && \
 	for chart in $(CHARTS); do \
 		make -C charts/$$chart $@; \
 	done
 
+##@ Build
 .PHONY: build
-build: check-helm-version
+build: check-helm-version ## Build all charts
 	set -e && \
 	for chart in $(CHARTS); do \
 		make -C charts/$$chart $@; \
 	done
 
-####################################################################
-#                   Installation / Setup                           #
-####################################################################
-.PHONY: setup install-deps
-setup install-deps:
-ifeq ($(UNAME), Darwin)
-	@./scripts/setup.sh
-else
-	echo "Not on MacOS, you'll have to just install things manually for now."
-	exit 1
-endif
-
+##@ Install
 .PHONY: install
-install:
+install: ## Install dependencies
 	yarn install
 
 node_modules/.bin/alex: package.json yarn.lock
@@ -70,46 +61,76 @@ test: build lint ## Run tests for all charts
 lint: lint-alloy lint-shell lint-markdown lint-terraform lint-text lint-yaml lint-alex lint-misspell lint-actionlint lint-zizmor ## Run all linters
 
 .PHONY: lint-alloy
-ALLOY_FILES := $(shell find . -name "*.alloy" ! -path "./data-alloy/*")
+ALLOY_FILES = $(shell find . -name "*.alloy" ! -path "./data-alloy/*")
 lint-alloy: ## Lint Alloy files
 	@./scripts/lint-alloy.sh $(ALLOY_FILES)
 	rm -rf data-alloy  # Clean up temporary Alloy data directory
 
 .PHONY: lint-shell
+SHELL_SCRIPTS = $(shell find . -type f -name "*.sh" -not \( -path "./node_modules/*" -o -path "./data-alloy/*" -o -path "./.git/*" -o -path "./charts/k8s-monitoring-v1/test/spec/*" -o -path "./charts/k8s-monitoring/tests/example-checks/spec/*" -o -path "./charts/k8s-monitoring/tests/misc-checks/spec/*" \))
 lint-shell: ## Lint shell scripts
-	@./scripts/lint-shell.sh
+	@if command -v shellcheck &> /dev/null; then \
+		shellcheck --rcfile .shellcheckrc $(SHELL_SCRIPTS); \
+	else \
+		docker run --rm -v $(shell pwd):/src --workdir /src koalaman/shellcheck:stable --rcfile .shellcheckrc $(SHELL_SCRIPTS); \
+	fi
 
 .PHONY: lint-markdown
 lint-markdown: node_modules/.bin/markdownlint-cli2 ## Lint markdown files
-	@./scripts/lint-markdown.sh
+	@node_modules/.bin/markdownlint-cli2 $(shell find . -name "*.md" ! -path "./node_modules/*" ! -path "./data-alloy/*" ! -path "./charts/**/data-alloy/*")
 
+TERRAFORM_DIRS = $(shell find . -name 'vars.tf' -exec dirname {} \;)
 .PHONY: lint-terraform
 lint-terraform: ## Lint terraform files
-	@./scripts/lint-terraform.sh
+	@for dir in $(TERRAFORM_DIRS); do \
+		if command -v tflint &> /dev/null; then \
+			tflint --chdir "$${dir}"; \
+		else \
+			docker run --rm -v $(shell pwd)/$${dir}:/data ghcr.io/terraform-linters/tflint; \
+		fi; \
+	done
 
 .PHONY: lint-text
 lint-text: node_modules/.bin/textlint ## Lint text files
-	node_modules/.bin/textlint --config .textlintrc --ignore-path .textlintignore .
+	@node_modules/.bin/textlint --config .textlintrc --ignore-path .textlintignore .
 
 .PHONY: lint-yaml
 lint-yaml: ## Lint yaml files
-	@./scripts/lint-yaml.sh
+	@if command -v yamllint &> /dev/null; then \
+		yamllint --strict --config-file .yamllint.yml .; \
+	else \
+		docker run --rm -v $(shell pwd):/data cytopia/yamllint:latest --config-file .yamllint.yml .; \
+	fi
 
 .PHONY: lint-alex
 lint-alex: node_modules/.bin/alex ## Check for insensitive language
-	@./scripts/lint-alex.sh
+	@node_modules/.bin/alex $(shell find . -type f -name "*.md" ! -path "./node_modules/*" ! -path "./data-alloy/*" ! -path "./CODE_OF_CONDUCT.md")
 
 .PHONY: lint-misspell
+ALL_FILES_FOR_SPELLCHECK = $(shell find . -type f -not \( -path "./node_modules/*" -o -path "./data-alloy/*" -o -path "./.git/*" -o -name output.yaml -o -name .textlintrc \) )
 lint-misspell: ## Check for common misspellings
-	@./scripts/lint-misspell.sh
+	@if command -v misspell &> /dev/null; then \
+		misspell --error --locale US $(ALL_FILES_FOR_SPELLCHECK); \
+	else \
+		echo "misspell is required if running lint locally, see: (https://github.com/golangci/misspell) or run: go install github.com/golangci/misspell/cmd/misspell@latest"; \
+		exit 1; \
+	fi
 
 .PHONY: lint-actionlint
 lint-actionlint: ## Lint GitHub Action workflows
-	@./scripts/lint-actionlint.sh
+	@if command -v actionlint &> /dev/null; then \
+		actionlint .github/workflows/*.yml .github/workflows/*.yaml; \
+	else \
+		docker run --rm -v $(shell pwd):/src --workdir /src rhysd/actionlint:latest .github/workflows/*.yml .github/workflows/*.yaml; \
+	fi
 
 .PHONY: lint-zizmor
 lint-zizmor: ## Statically analyze GitHub Action workflows
-	@./scripts/lint-zizmor.sh
+	@if command -v zizmor&> /dev/null; then \
+		zizmor .; \
+	else \
+		docker run --rm -v $(shell pwd):/src --workdir /src ghcr.io/zizmorcore/zizmor:latest .; \
+	fi
 
 
 ##@ General
