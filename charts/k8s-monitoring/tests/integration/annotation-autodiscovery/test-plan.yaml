@@ -1,0 +1,90 @@
+apiVersion: helm-chart-toolbox.grafana.com/v1
+kind: TestPlan
+name: annotation-autodiscovery
+
+subject:
+  releaseName: k8smon
+  path: ../../..
+  valuesFile: values.yaml
+
+cluster:
+  type: kind
+
+dependencies:
+  - preset: fluxcd
+  - file: dependencies/cert-manager.yaml
+  - file: dependencies/nginx-static-metrics.yaml
+  - preset: prometheus
+  - preset: loki
+  - preset: grafana
+    overrides:
+      datasources:
+        datasources.yaml:
+          apiVersion: 1
+          datasources:
+            - name: Prometheus
+              type: prometheus
+              url: http://prometheus-server.prometheus.svc:9090
+              isDefault: true
+            - name: Loki
+              type: loki
+              url: http://loki-gateway.loki.svc:8080
+              basicAuth: true
+              basicAuthUser: loki
+              jsonData:
+                httpHeaderName1: X-Scope-OrgID
+              secureJsonData:
+                basicAuthPassword: lokipassword
+                httpHeaderValue1: "1"
+
+tests:
+  - type: query-test
+    values:
+      tests:
+        - env:
+            CLUSTER: annotation-autodiscovery-test
+            PROMETHEUS_URL: http://prometheus-server.prometheus.svc:9090/api/v1/query
+            LOKI_URL: http://loki.loki.svc:3100/loki/api/v1/query
+            LOKI_TENANTID: 1
+            LOKI_USER: loki
+            LOKI_PASS: lokipassword
+          queries:
+            # Self reporting metrics
+            - query: grafana_kubernetes_monitoring_build_info{cluster="$CLUSTER"}
+              type: promql
+            - query: grafana_kubernetes_monitoring_feature_info{cluster="$CLUSTER", feature="annotationAutodiscovery"}
+              type: promql
+
+            # Annotation Autodiscovery from a Service Annotation
+            - query: certmanager_clock_time_seconds{cluster="$CLUSTER", job="integrations/cert-manager", scrape_interval="60s", scrape_timeout="10s"}
+              type: promql
+
+            # Annotation Autodiscovery from a Pod Annotation
+            - query: static_metric{cluster="$CLUSTER", job="nginx-static-metrics", scrape_interval="30s", scrape_timeout="15s", namespace="default", color="blue"}
+              type: promql
+            # Gets metrics from both replicas
+            - query: count(static_metric{cluster="$CLUSTER", job="nginx-static-metrics", color="blue"})
+              type: promql
+              expect:
+                value: 2
+            # Label selector did not select the green deployment
+            - query: count(static_metric{cluster="$CLUSTER", job="nginx-static-metrics", color="green"}) or vector(0)
+              type: promql
+              expect:
+                value: 0
+
+            # Params are being passed to the scrape request
+            - query: count_over_time({job="default/nginx"} |= `/metrics?color=blue` [1h])
+              type: logql
+
+            # DPM check
+            - query: avg(count_over_time(scrape_samples_scraped{cluster="$CLUSTER", job="nginx-static-metrics"}[1m]))
+              type: promql
+              expect:
+                value: 2  # 30s scrape interval for nginx-static-metrics
+                operator: ==
+            - query: avg(count_over_time(scrape_samples_scraped{cluster="$CLUSTER", job!="nginx-static-metrics"}[1m]))
+              type: promql
+              expect:
+                value: 1  # 60s scrape interval for everything else
+                operator: ==
