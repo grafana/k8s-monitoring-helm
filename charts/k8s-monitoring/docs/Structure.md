@@ -1,8 +1,11 @@
 # Structure
 
-The Kubernetes Monitoring Helm chart contains many software packages, and builds a comprehensive set of configuration
-and secrets for those packages. 
+The Kubernetes Monitoring Helm chart contains many software packages, and builds a comprehensive set of configuration and secrets for those packages. 
 Refer to the [Helm chart documentation](https://grafana.com/docs/grafana-cloud/monitor-infrastructure/kubernetes-monitoring/configuration/helm-chart-config/helm-chart/) to learn more.
+
+## Charts
+
+Features are stored in their own Helm chart in the [charts folder](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts). Each feature chart is not a standalone chart, but is included in the main k8s-monitoring Helm chart as a dependency. The parent chart interacts with the feature chart via template functions. 
 
 ## Examples
 
@@ -13,8 +16,6 @@ The [examples folder](https://github.com/grafana/k8s-monitoring-helm/tree/main/c
 The [destinations folder](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/destinations) contains examples and a values.yaml file for each destination.
 
 ## Contributing
-
-Features are stored in their own Helm chart. Each feature chart is not a standalone chart, but is included in the main k8s-monitoring Helm chart as a dependency. The parent chart interacts with the feature chart via template functions.
 
 To add a new feature, create a new Helm chart in the `charts` directory. The chart should have a `feature-` prefix in
 its name. The following files are required for a feature chart:
@@ -35,5 +36,5 @@ its name. The following files are required for a feature chart:
         action after deployment
     -   `feature.<feature-slug>.summary` - Returns a dictionary of settings that is used for self-reporting metrics
 
-
+Also refer to the [Contributing guide](./CONTRIBUTING.md).
 
