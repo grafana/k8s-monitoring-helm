@@ -12,15 +12,16 @@ To learn more, refer to [Features documentation](https://grafana.com/docs/grafan
 # Collectors
 
 Collectors in the [collectors folder](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/collectors) are Grafana Alloy instances deployed by the Alloy Operator as Kubernetes workloads.
+To view the values and descriptions, refer to [alloy](https://github.com/grafana/k8s-monitoring-helm/blob/main/charts/k8s-monitoring/docs/collectors/alloy.md).
 To learn more, refer to [Collectors reference documentation](https://grafana.com/docs/grafana-cloud/monitor-infrastructure/kubernetes-monitoring/configuration/helm-chart-config/helm-chart/collector-reference/).
 
 ## Examples
 
-The [examples folder](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/docs/examples) contains full examples to guide you in configuring and customizing the Helm chart.
+The [examples folder](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/docs/examples) contains full examples to guide you in configuring and customizing the Helm chart. To learn more, refer to [Customize the Helm chart](https://grafana.com/docs/grafana-cloud/monitor-infrastructure/kubernetes-monitoring/configuration/helm-chart-config/helm-chart/customize-helm-chart/).
 
 ## Destinations
 
-The [destinations folder](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/destinations) contains examples and a values.yaml file for each destination.
+The [destinations folder](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/destinations) contains examples and a values.yaml file for each destination. To learn more about destinations, refer to [Destinations and proxies](https://grafana.com/docs/grafana-cloud/monitor-infrastructure/kubernetes-monitoring/configuration/helm-chart-config/helm-chart/customize-helm-chart/#destinations-and-proxies).
 
 ## Contributing
 
