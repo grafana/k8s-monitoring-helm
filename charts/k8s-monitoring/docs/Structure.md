@@ -25,6 +25,10 @@ The [destinations folder](https://github.com/grafana/k8s-monitoring-helm/tree/ma
 
 ## Contributing
 
+Use the following guidelines to contribute to the Helm chart.
+
+### Features
+
 To add a new feature, create a new Helm chart in the `charts` directory. The chart should have a `feature-` prefix in
 its name. The following files are required for a feature chart:
 
@@ -46,3 +50,13 @@ its name. The following files are required for a feature chart:
 
 Also refer to the [Contributing guide](./CONTRIBUTING.md).
 
+### Documentation
+
+To add a README.md for a feature:
+
+1.  Within the examples directory, create a subfolder for the feature in the [features](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/docs/examples/features) folder.
+2.  Add a description text for the feature.
+3.  Add a values.yaml file.
+4.  Need your help here, Pete.
+
+To add documentation to the [Kubernetes Monitoring Helm chart docs](https://grafana.com/docs/grafana-cloud/monitor-infrastructure/kubernetes-monitoring/configuration/helm-chart-config/helm-chart/), create an issue in this repo if you are not a Grafana employee.
