@@ -7,6 +7,12 @@ Refer to the [Helm chart documentation](https://grafana.com/docs/grafana-cloud/m
 
 Features are stored in their own Helm chart in the [charts folder](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts). Each feature chart is not a standalone chart, but is included in the main k8s-monitoring Helm chart as a dependency. The parent chart interacts with the feature chart via template functions. 
 
+# Collectors
+
+Collectors in the [collectors folder](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/collectors) are Grafana Alloy instances deployed by the Alloy Operator as Kubernetes workloads.
+To learn more, refer to [Collectors reference](https://grafana.com/docs/grafana-cloud/monitor-infrastructure/kubernetes-monitoring/configuration/helm-chart-config/helm-chart/collector-reference/).
+
+
 ## Examples
 
 The [examples folder](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/docs/examples) contains full examples to guide you in configuring and customizing the Helm chart.
