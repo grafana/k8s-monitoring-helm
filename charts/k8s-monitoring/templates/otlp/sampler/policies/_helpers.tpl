@@ -48,7 +48,16 @@ string_attribute {
     {{- if $index }}, {{ end }}{{ $value | quote }}
   {{- end -}}
   ]
-}{{/*TODO additional config params*/}}
+  {{- if hasKey $policy "enabled_regex_matching" }}
+  enabled_regex_matching = {{ $policy.enabled_regex_matching }}
+  {{- end }}
+  {{- if hasKey $policy "cache_max_size" }}
+  cache_max_size = {{ $policy.cache_max_size }}
+  {{- end }}  
+  {{- if hasKey $policy "invert_match" }}
+  invert_match = {{ $policy.invert_match }}
+  {{- end }}
+}
 {{- else if eq $policy.type "trace_state" }}
 trace_state {
   key = {{ $policy.key | quote }}
