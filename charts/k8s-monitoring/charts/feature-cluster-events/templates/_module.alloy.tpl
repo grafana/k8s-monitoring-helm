@@ -156,8 +156,7 @@ declare "cluster_events" {
     {{- /* the stage.structured_metadata block needs to be conditionalized because the support for enabling structured metadata can be disabled */ -}}
     {{- /* through the loki limits_conifg on a per-tenant basis, even if there are no values defined or there are values defined but it is disabled */ -}}
     {{- /* in Loki, the write will fail. */ -}}
-    {{- if gt (len (keys .Values.structuredMetadata)) 0 }}
-    // set the structured metadata values
+    {{- if .Values.structuredMetadata }}
     stage.structured_metadata {
       values = {
         {{- range $key, $value := .Values.structuredMetadata }}
