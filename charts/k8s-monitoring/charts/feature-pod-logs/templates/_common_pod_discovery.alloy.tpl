@@ -65,14 +65,31 @@ discovery.relabel "filtered_pods" {
   rule {
     action = "replace"
     source_labels = [
-      "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_name",
-      "__meta_kubernetes_pod_label_app_kubernetes_io_name",
+      {{ include "pod_annotation" "resource.opentelemetry.io/service.name" | quote }},
+      {{ include "pod_label" "app.kubernetes.io/name" | quote }},
       "__meta_kubernetes_pod_container_name",
     ]
     separator = ";"
     regex = "^(?:;*)?([^;]+).*$"
     replacement = "$1"
     target_label = "service_name"
+  }
+
+  // explicitly set service_namespace.
+  //
+  // choose the first value found from the following ordered list:
+  // - pod.annotation[resource.opentelemetry.io/service.namespace]
+  // - pod.namespace
+  rule {
+    action = "replace"
+    source_labels = [
+      {{ include "pod_annotation" "resource.opentelemetry.io/service.namespace" | quote }},
+      "namespace",
+    ]
+    separator = ";"
+    regex = "^(?:;*)?([^;]+).*$"
+    replacement = "$1"
+    target_label = "service_namespace"
   }
 
   // set resource attributes

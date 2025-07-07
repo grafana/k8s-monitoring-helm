@@ -75,6 +75,23 @@ should allow overriding the default labelsToKeep:
             target_label = "service_name"
           }
 
+          // explicitly set service_namespace.
+          //
+          // choose the first value found from the following ordered list:
+          // - pod.annotation[resource.opentelemetry.io/service.namespace]
+          // - pod.namespace
+          rule {
+            action = "replace"
+            source_labels = [
+              "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_namespace",
+              "namespace",
+            ]
+            separator = ";"
+            regex = "^(?:;*)?([^;]+).*$"
+            replacement = "$1"
+            target_label = "service_namespace"
+          }
+
           // set resource attributes
           rule {
             action = "labelmap"
@@ -248,6 +265,23 @@ should allow setting static labels:
             regex = "^(?:;*)?([^;]+).*$"
             replacement = "$1"
             target_label = "service_name"
+          }
+
+          // explicitly set service_namespace.
+          //
+          // choose the first value found from the following ordered list:
+          // - pod.annotation[resource.opentelemetry.io/service.namespace]
+          // - pod.namespace
+          rule {
+            action = "replace"
+            source_labels = [
+              "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_namespace",
+              "namespace",
+            ]
+            separator = ";"
+            regex = "^(?:;*)?([^;]+).*$"
+            replacement = "$1"
+            target_label = "service_namespace"
           }
 
           // set resource attributes
@@ -432,6 +466,23 @@ should allow setting structured metadata:
             target_label = "service_name"
           }
 
+          // explicitly set service_namespace.
+          //
+          // choose the first value found from the following ordered list:
+          // - pod.annotation[resource.opentelemetry.io/service.namespace]
+          // - pod.namespace
+          rule {
+            action = "replace"
+            source_labels = [
+              "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_namespace",
+              "namespace",
+            ]
+            separator = ";"
+            regex = "^(?:;*)?([^;]+).*$"
+            replacement = "$1"
+            target_label = "service_namespace"
+          }
+
           // set resource attributes
           rule {
             action = "labelmap"
@@ -607,6 +658,23 @@ should allow using the secret filter:
             regex = "^(?:;*)?([^;]+).*$"
             replacement = "$1"
             target_label = "service_name"
+          }
+
+          // explicitly set service_namespace.
+          //
+          // choose the first value found from the following ordered list:
+          // - pod.annotation[resource.opentelemetry.io/service.namespace]
+          // - pod.namespace
+          rule {
+            action = "replace"
+            source_labels = [
+              "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_namespace",
+              "namespace",
+            ]
+            separator = ";"
+            regex = "^(?:;*)?([^;]+).*$"
+            replacement = "$1"
+            target_label = "service_namespace"
           }
 
           // set resource attributes
@@ -973,6 +1041,23 @@ should render the default configuration:
             regex = "^(?:;*)?([^;]+).*$"
             replacement = "$1"
             target_label = "service_name"
+          }
+
+          // explicitly set service_namespace.
+          //
+          // choose the first value found from the following ordered list:
+          // - pod.annotation[resource.opentelemetry.io/service.namespace]
+          // - pod.namespace
+          rule {
+            action = "replace"
+            source_labels = [
+              "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_namespace",
+              "namespace",
+            ]
+            separator = ";"
+            regex = "^(?:;*)?([^;]+).*$"
+            replacement = "$1"
+            target_label = "service_namespace"
           }
 
           // set resource attributes
