@@ -83,6 +83,7 @@ grafana_kubernetes_monitoring_build_info{version="{{ .Chart.Version }}", namespa
 grafana_kubernetes_monitoring_feature_info{{ include "label_list" (merge $featureSummary (dict "feature" $feature)) }} 1
     {{- end }}
   {{- end }}
+# EOF
 {{- end }}
 {{- end }}
 
