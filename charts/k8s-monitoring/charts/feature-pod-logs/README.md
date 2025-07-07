@@ -82,6 +82,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
+| secretFilter.allowlist | list | `[]` | List of regular expressions to allowlist matching secrets. |
 | secretFilter.enabled | bool | `false` | Enable secret filtering. |
 | secretFilter.includeGeneric | bool | `false` | Include the generic API key rule. |
 | secretFilter.partialMask | int | `0` | Show the first N characters of the secret. |

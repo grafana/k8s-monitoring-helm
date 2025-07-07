@@ -87,6 +87,13 @@ loki.process "pod_logs" {
 loki.secretfilter "pod_logs" {
   include_generic = {{ .Values.secretFilter.includeGeneric }}
   partial_mask = {{ .Values.secretFilter.partialMask }}
+{{- if .Values.secretFilter.allowlist }}
+  allowlist = [
+  {{- range $value := .Values.secretFilter.allowlist }}
+    {{ $value | quote }},
+  {{- end }}
+  ]
+{{- end }}
 {{- end }}
   forward_to = argument.logs_destinations.value
 }
