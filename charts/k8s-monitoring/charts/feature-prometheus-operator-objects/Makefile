@@ -33,3 +33,11 @@ ifdef HAS_HELM_UNITTEST
 else
 	docker run --rm --volume $(shell pwd):/apps helmunittest/helm-unittest:3.17.0-0.7.1 .
 endif
+
+.PHONY: update-test-snapshots
+update-test-snapshots:
+ifdef HAS_HELM_UNITTEST
+	helm unittest . --update-snapshot
+else
+	docker run --rm --volume $(shell pwd):/apps helmunittest/helm-unittest:3.17.0-0.7.1 . --update-snapshot
+endif
