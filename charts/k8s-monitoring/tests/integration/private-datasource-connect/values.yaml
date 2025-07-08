@@ -2,38 +2,25 @@
 cluster:
   name: private-datasource-connect-test
 
+# Configure destinations for testing
 destinations:
-  - name: localPrometheus
+  - name: test-metrics
     type: prometheus
-    url: http://prometheus-server.default.svc:9090/api/v1/write
+    url: "http://prometheus-server.prometheus.svc:9090/api/v1/write"
 
-# Enable cluster metrics for basic functionality
+# Enable cluster metrics feature to justify having alloy-metrics enabled
 clusterMetrics:
   enabled: true
 
-# Enable the metrics collector
-alloy-metrics:
-  enabled: true
-  liveDebugging:
-    enabled: true
-
-# Enable Private Data Source Connect feature
+# Enable private datasource connect feature
 privateDatasourceConnect:
   enabled: true
   credentials:
     createSecret: true
-    # Test credentials - these are fake values for integration testing
-    token: "test-pdc-token-12345"
-    hostedGrafanaId: "999999"
-    cluster: "test-cluster"
-  resources:
-    requests:
-      cpu: 50m
-      memory: 256Mi
-    limits:
-      cpu: 100m
-      memory: 512Mi
-  image:
-    repository: grafana/pdc-agent
-    tag: latest
-    pullPolicy: IfNotPresent
+    token: "test-token"
+    hostedGrafanaId: "test-grafana-id"
+    cluster: "private-datasource-connect-test"
+
+# Enable basic monitoring for testing
+alloy-metrics:
+  enabled: true 

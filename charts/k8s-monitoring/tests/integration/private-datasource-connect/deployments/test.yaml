@@ -27,12 +27,18 @@ spec:
         kind: GitRepository
         name: k8s-monitoring-test
       interval: 1m
+  dependsOn:
+    - name: prometheus
+      namespace: prometheus
   values:
     tests:
       - env:
           CLUSTER: private-datasource-connect-test
+          PROMETHEUS_URL: http://prometheus-server.prometheus.svc:9090/api/v1/query
         queries:
-          # Simple test that validates the test framework works
-          # The main validation is that the chart deployed successfully (which we can see in the NOTES output)
+          # Test that cluster metrics are being collected
+          - query: kube_node_info{cluster="$CLUSTER"}
+            type: promql
+          # Simple validation - test framework functionality
           - query: "1"
-            type: test
+            type: promql
