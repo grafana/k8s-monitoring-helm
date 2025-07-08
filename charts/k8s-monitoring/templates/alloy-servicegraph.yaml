@@ -51,7 +51,6 @@
     {{- $collectorName := include "helper.k8s_name" (printf "%s-servicegraph" $destination.name) }}
     {{- $alloySpec := dict "alloy" (dict "configMap" (dict "create" true "content" $alloyConfig) "extraEnv" (list (dict "name" "POD_NAME" "valueFrom" (dict "fieldRef" (dict "apiVersion" "v1" "fieldPath" "metadata.name"))))) }}
     {{- $globalValues := include "collector.alloy.values.global" $ | fromYaml }}
-    {{- $globalValues := include "collector.alloy.values.global" $ | fromYaml }}
     {{- $alloyName := dict "nameOverride" $collectorName}}
     {{- $alloy := mergeOverwrite $alloySpec $globalValues $alloyName $destination.processors.serviceGraphMetrics.collector }}
 ---
