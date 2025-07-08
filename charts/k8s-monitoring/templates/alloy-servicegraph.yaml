@@ -30,6 +30,9 @@
     {{- $alloyConfig = cat $alloyConfig ((include "servicegraph.connector.serviceGraphMetrics.alloy" $serviceGraphConfig) | trim | nindent 0) }}
 
     {{- range $dest := $destinations }} 
+      {{- if eq (include "secrets.usesKubernetesSecret" $dest) "true" }}
+        {{- $alloyConfig = cat $alloyConfig (include "secret.alloy" (deepCopy $ | merge (dict "object" $dest)) | nindent 0) }}
+      {{- end }}
       {{- $alloyConfig = cat $alloyConfig (printf "\n\n// Destination: %s (%s)" $dest.name $dest.type) }}
       {{- if ne $dest.type "prometheus" -}}
         {{- $defaultValues := "destinations/otlp-values.yaml" | $.Files.Get | fromYaml }}
@@ -43,9 +46,6 @@
       {{- end }}
     {{- end }}
 
-    {{- if eq (include "secrets.usesKubernetesSecret" $destination) "true" }}
-      {{- $alloyConfig = cat $alloyConfig (include "secret.alloy" (deepCopy $ | merge (dict "object" $destination)) | nindent 0) }}
-    {{- end }}
     {{- $alloyConfig = regexReplaceAll `[ \t]+(\r?\n)` $alloyConfig "\n" | trim }}
 
     {{- $collectorName := include "helper.k8s_name" (printf "%s-servicegraph" $destination.name) }}
