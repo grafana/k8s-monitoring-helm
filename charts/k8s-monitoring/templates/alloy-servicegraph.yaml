@@ -31,6 +31,9 @@
 
     {{- range $dest := $destinations }} 
       {{- $alloyConfig = cat $alloyConfig (printf "\n\n// Destination: %s (%s)" $dest.name $dest.type) }}
+      {{- if eq (include "secrets.usesKubernetesSecret" $dest) "true" }}
+        {{- $alloyConfig = cat $alloyConfig (include "secret.alloy" (deepCopy $ | merge (dict "object" $dest)) | nindent 0) }}
+      {{- end }}
       {{- if ne $dest.type "prometheus" -}}
         {{- $defaultValues := "destinations/otlp-values.yaml" | $.Files.Get | fromYaml }}
         {{- $dest = mergeOverwrite $defaultValues $dest }}
@@ -43,14 +46,10 @@
       {{- end }}
     {{- end }}
 
-    {{- if eq (include "secrets.usesKubernetesSecret" $destination) "true" }}
-      {{- $alloyConfig = cat $alloyConfig (include "secret.alloy" (deepCopy $ | merge (dict "object" $destination)) | nindent 0) }}
-    {{- end }}
     {{- $alloyConfig = regexReplaceAll `[ \t]+(\r?\n)` $alloyConfig "\n" | trim }}
 
     {{- $collectorName := include "helper.k8s_name" (printf "%s-servicegraph" $destination.name) }}
     {{- $alloySpec := dict "alloy" (dict "configMap" (dict "create" true "content" $alloyConfig) "extraEnv" (list (dict "name" "POD_NAME" "valueFrom" (dict "fieldRef" (dict "apiVersion" "v1" "fieldPath" "metadata.name"))))) }}
-    {{- $globalValues := include "collector.alloy.values.global" $ | fromYaml }}
     {{- $globalValues := include "collector.alloy.values.global" $ | fromYaml }}
     {{- $alloyName := dict "nameOverride" $collectorName}}
     {{- $alloy := mergeOverwrite $alloySpec $globalValues $alloyName $destination.processors.serviceGraphMetrics.collector }}
