@@ -92,6 +92,22 @@ should add the attach_metadata block to the discovery.kubernetes:
             target_label = "service_namespace"
           }
 
+          // explicitly set service_instance_id.
+          //
+          // choose the first value found from the following ordered list:
+          // - pod.annotation[resource.opentelemetry.io/service.instance.id]
+          // - concat([k8s.namespace.name, k8s.pod.name, k8s.container.name], '.')
+          rule {
+            source_labels = ["__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_instance_id"]
+            target_label = "service_instance_id"
+          }
+          rule {
+            source_labels = ["namespace", "pod", "container"]
+            separator = "."
+            regex = "^\\.([^.]+\\.[^.]+\\.[^.]+)$"
+            target_label = "service_instance_id"
+          }
+
           // set resource attributes
           rule {
             action = "labelmap"
@@ -299,6 +315,22 @@ should add the node architecture label rules to the discovery relabel:
             target_label = "service_namespace"
           }
 
+          // explicitly set service_instance_id.
+          //
+          // choose the first value found from the following ordered list:
+          // - pod.annotation[resource.opentelemetry.io/service.instance.id]
+          // - concat([k8s.namespace.name, k8s.pod.name, k8s.container.name], '.')
+          rule {
+            source_labels = ["__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_instance_id"]
+            target_label = "service_instance_id"
+          }
+          rule {
+            source_labels = ["namespace", "pod", "container"]
+            separator = "."
+            regex = "^\\.([^.]+\\.[^.]+\\.[^.]+)$"
+            target_label = "service_instance_id"
+          }
+
           // set resource attributes
           rule {
             action = "labelmap"
@@ -502,6 +534,22 @@ should add the node availability zone label rules to the discovery relabel:
             regex = "^(?:;*)?([^;]+).*$"
             replacement = "$1"
             target_label = "service_namespace"
+          }
+
+          // explicitly set service_instance_id.
+          //
+          // choose the first value found from the following ordered list:
+          // - pod.annotation[resource.opentelemetry.io/service.instance.id]
+          // - concat([k8s.namespace.name, k8s.pod.name, k8s.container.name], '.')
+          rule {
+            source_labels = ["__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_instance_id"]
+            target_label = "service_instance_id"
+          }
+          rule {
+            source_labels = ["namespace", "pod", "container"]
+            separator = "."
+            regex = "^\\.([^.]+\\.[^.]+\\.[^.]+)$"
+            target_label = "service_instance_id"
           }
 
           // set resource attributes
@@ -710,6 +758,22 @@ should add the node instance type label rules to the discovery relabel:
             target_label = "service_namespace"
           }
 
+          // explicitly set service_instance_id.
+          //
+          // choose the first value found from the following ordered list:
+          // - pod.annotation[resource.opentelemetry.io/service.instance.id]
+          // - concat([k8s.namespace.name, k8s.pod.name, k8s.container.name], '.')
+          rule {
+            source_labels = ["__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_instance_id"]
+            target_label = "service_instance_id"
+          }
+          rule {
+            source_labels = ["namespace", "pod", "container"]
+            separator = "."
+            regex = "^\\.([^.]+\\.[^.]+\\.[^.]+)$"
+            target_label = "service_instance_id"
+          }
+
           // set resource attributes
           rule {
             action = "labelmap"
@@ -913,6 +977,22 @@ should add the node os label rules to the discovery relabel:
             regex = "^(?:;*)?([^;]+).*$"
             replacement = "$1"
             target_label = "service_namespace"
+          }
+
+          // explicitly set service_instance_id.
+          //
+          // choose the first value found from the following ordered list:
+          // - pod.annotation[resource.opentelemetry.io/service.instance.id]
+          // - concat([k8s.namespace.name, k8s.pod.name, k8s.container.name], '.')
+          rule {
+            source_labels = ["__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_instance_id"]
+            target_label = "service_instance_id"
+          }
+          rule {
+            source_labels = ["namespace", "pod", "container"]
+            separator = "."
+            regex = "^\\.([^.]+\\.[^.]+\\.[^.]+)$"
+            target_label = "service_instance_id"
           }
 
           // set resource attributes
@@ -1119,6 +1199,22 @@ should add the node pool label rules to the discovery relabel:
             regex = "^(?:;*)?([^;]+).*$"
             replacement = "$1"
             target_label = "service_namespace"
+          }
+
+          // explicitly set service_instance_id.
+          //
+          // choose the first value found from the following ordered list:
+          // - pod.annotation[resource.opentelemetry.io/service.instance.id]
+          // - concat([k8s.namespace.name, k8s.pod.name, k8s.container.name], '.')
+          rule {
+            source_labels = ["__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_instance_id"]
+            target_label = "service_instance_id"
+          }
+          rule {
+            source_labels = ["namespace", "pod", "container"]
+            separator = "."
+            regex = "^\\.([^.]+\\.[^.]+\\.[^.]+)$"
+            target_label = "service_instance_id"
           }
 
           // set resource attributes
@@ -1329,6 +1425,22 @@ should add the node region label rules to the discovery relabel:
             target_label = "service_namespace"
           }
 
+          // explicitly set service_instance_id.
+          //
+          // choose the first value found from the following ordered list:
+          // - pod.annotation[resource.opentelemetry.io/service.instance.id]
+          // - concat([k8s.namespace.name, k8s.pod.name, k8s.container.name], '.')
+          rule {
+            source_labels = ["__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_instance_id"]
+            target_label = "service_instance_id"
+          }
+          rule {
+            source_labels = ["namespace", "pod", "container"]
+            separator = "."
+            regex = "^\\.([^.]+\\.[^.]+\\.[^.]+)$"
+            target_label = "service_instance_id"
+          }
+
           // set resource attributes
           rule {
             action = "labelmap"
@@ -1532,6 +1644,22 @@ should add the node role label rules to the discovery relabel:
             regex = "^(?:;*)?([^;]+).*$"
             replacement = "$1"
             target_label = "service_namespace"
+          }
+
+          // explicitly set service_instance_id.
+          //
+          // choose the first value found from the following ordered list:
+          // - pod.annotation[resource.opentelemetry.io/service.instance.id]
+          // - concat([k8s.namespace.name, k8s.pod.name, k8s.container.name], '.')
+          rule {
+            source_labels = ["__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_instance_id"]
+            target_label = "service_instance_id"
+          }
+          rule {
+            source_labels = ["namespace", "pod", "container"]
+            separator = "."
+            regex = "^\\.([^.]+\\.[^.]+\\.[^.]+)$"
+            target_label = "service_instance_id"
           }
 
           // set resource attributes
