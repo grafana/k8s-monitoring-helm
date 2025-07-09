@@ -88,6 +88,14 @@ spec:
           - query: count_over_time({cluster="$CLUSTER", service_namespace="hello-kubernetes"}[1h])
             type: logql
 
+          # Pod logs service_instance label from resource.opentelemetry.io/service.instance annotation
+          - query: count_over_time({cluster="$CLUSTER", service_instance="hello-kubernetes-1"}[1h])
+            type: logql
+
+          # Pod logs service_instance label from the default method
+          - query: count_over_time({cluster="$CLUSTER", service_instance=~"default\.hello-kubernetes-test-0-.*\.hello-kubernetes"}[1h])
+            type: logql
+
           # Pod logs deployment_environment label from resource.opentelemetry.io/deployment.environment annotation
           - query: count_over_time({cluster="$CLUSTER", deployment_environment="hello-kubernetes"}[1h])
             type: logql
@@ -183,6 +191,7 @@ spec:
       annotations:
         resource.opentelemetry.io/service.name: "hello-kubernetes-annotation"
         resource.opentelemetry.io/service.namespace: "hello-kubernetes"
+        resource.opentelemetry.io/service.instance: "hello-kubernetes-test-1"
         resource.opentelemetry.io/deployment.environment: "hello-kubernetes"
         resource.opentelemetry.io/deployment.environment.name: "hello-kubernetes"
     spec:
