@@ -6,13 +6,13 @@ Deploys the Private Data Source Connect (PDC) agent for secure connectivity to p
 
 ## Maintainers
 
-| Name | Email | URL |
+| Name | Email | Url |
 | ---- | ------ | --- |
 | peterolivo | <peter.olivo@grafana.com> |  |
 
 ## Source Code
 
-*   <https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/feature-private-datasource-connect>
+* <https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/feature-private-datasource-connect>
 
 ## Values
 
