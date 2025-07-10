@@ -58,3 +58,17 @@ tests:
           of: ConfigMap
       - matchSnapshot:
           path: data["module.alloy"]
+  - it: should allow using the secret filter with an allowlist
+    set:
+      deployAsConfigMap: true
+      secretFilter:
+        enabled: true
+        partialMask: 3
+        allowlist:
+          - ".*secret.*"
+          - ".*token.*"
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["module.alloy"]
