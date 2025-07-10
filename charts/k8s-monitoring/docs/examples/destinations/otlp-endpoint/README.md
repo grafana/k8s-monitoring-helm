@@ -33,9 +33,9 @@ destinations:
       transform:
         traces:
           resource:
-          - set(resource.attributes["quoted"], "quted")
+            - set(resource.attributes["quoted"], "quted")
           resourceFrom:
-          - string.format(`set(attributes["from_env"], %q)`, coalesce(sys.env("MY_ENV"), "undefined"))
+            - string.format(`set(attributes["from_env"], %q)`, coalesce(sys.env("MY_ENV"), "undefined"))
 
 clusterMetrics:
   enabled: true
