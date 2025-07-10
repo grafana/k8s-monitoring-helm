@@ -1,3 +1,7 @@
+<!--
+(NOTE: Do not edit README.md directly. It is a generated file!)
+(      To make changes, please modify values.yaml or description.txt and run `make examples`)
+-->
 # Tail Sampling
 
 This example shows how to configure tail sampling for traces using the k8s-monitoring Helm chart. Tail sampling is a technique that allows you to make sampling decisions after all spans in a trace
@@ -72,3 +76,96 @@ The tail sampling configuration allows you to optimize trace storage costs while
                     - ERROR
                     - UNSET
 ```
+
+## Values
+
+<!-- textlint-disable terminology -->
+```yaml
+---
+cluster:
+  name: tail-sampling
+destinations:
+  - name: prometheus
+    type: prometheus
+    url: http://prometheus.prometheus.svc:9090/api/v1/write
+  - name: loki
+    type: loki
+    url: http://loki.loki.svc:3100/api/push
+  - name: tempo
+    type: otlp
+    url: http://tempo.tempo.svc
+    metrics:
+      enabled: false
+    logs:
+      enabled: false
+    traces:
+      enabled: true
+    processors:
+      tailSampling:
+        enabled: true
+        decisionWait: 5s
+        numTraces: 100
+        expectedNewTracesPerSec: 10
+        decisionCache:
+          sampledCacheSize: 1000
+          nonSampledCacheSize: 10000
+        policies:
+          # Keep errors and unset status codes
+          - name: "keep-errors"
+            type: "status_code"
+            status_codes: ["ERROR", "UNSET"]
+          # Sample slow traces
+          - name: "sample-slow-traces"
+            type: "latency"
+            threshold_ms: 5000
+          # Sample 15% of traces
+          - name: "sample-15pct-traces"
+            type: "probabilistic"
+            sampling_percentage: 15
+          # Sample traces with http.status_code between 399 and 599 and status code ERROR or UNSET
+          - name: "and-policy"
+            type: and
+            and:
+              and_sub_policy:
+                - name: "keep-all-error-codes"
+                  type: numeric_attribute
+                  key: http.status_code
+                  min_value: 399
+                  max_value: 599
+                - name: "keep-all-errors"
+                  type: "status_code"
+                  values:
+                    - ERROR
+                    - UNSET
+clusterMetrics:
+  enabled: true
+
+podLogs:
+  enabled: true
+applicationObservability:
+  enabled: true
+  receivers:
+    otlp:
+      http:
+        enabled: true
+        port: 4318
+  connectors:
+    grafanaCloudMetrics:
+      enabled: true
+
+alloy-metrics:
+  enabled: true
+
+alloy-logs:
+  enabled: true
+
+alloy-receiver:
+  enabled: true
+  alloy:
+    extraPorts:
+      - name: otlp-http
+        port: 4318
+        targetPort: 4318
+        protocol: TCP
+```
+<!-- textlint-enable terminology -->
