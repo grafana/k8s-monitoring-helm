@@ -1,0 +1,87 @@
+---
+cluster:
+  name: tail-sampling
+destinations:
+  - name: prometheus
+    type: prometheus
+    url: http://prometheus.prometheus.svc:9090/api/v1/write
+  - name: loki
+    type: loki
+    url: http://loki.loki.svc:3100/api/push
+  - name: tempo
+    type: otlp
+    url: http://tempo.tempo.svc
+    metrics:
+      enabled: false
+    logs:
+      enabled: false
+    traces:
+      enabled: true
+    processors:
+      tailSampling:
+        enabled: true
+        decisionWait: 5s
+        numTraces: 100
+        expectedNewTracesPerSec: 10
+        decisionCache:
+          sampledCacheSize: 1000
+          nonSampledCacheSize: 10000
+        policies:
+          # Keep errors and unset status codes
+          - name: "keep-errors"
+            type: "status_code"
+            status_codes: ["ERROR", "UNSET"]
+          # Sample slow traces
+          - name: "sample-slow-traces"
+            type: "latency"
+            threshold_ms: 5000
+          # Sample 15% of traces
+          - name: "sample-15pct-traces"
+            type: "probabilistic"
+            sampling_percentage: 15
+          # Sample traces with key1 between 1 and 256 and key2 value1 or value2
+          - name: and-policy
+            type: and
+            and:
+              and_sub_policy:
+                - name: test-and-policy-1
+                  type: numeric_attribute
+                  key: key1
+                  min_value: 1
+                  max_value: 256
+                - name: test-and-policy-2
+                  type: string_attribute
+                  key: key2
+                  values:
+                    - value1
+                    - value2
+clusterMetrics:
+  enabled: true
+
+podLogs:
+  enabled: true
+applicationObservability:
+  enabled: true
+  receivers:
+    otlp:
+      http:
+        enabled: true
+        port: 4318
+  connectors:
+    grafanaCloudMetrics:
+      enabled: true
+
+alloy-metrics:
+  enabled: true
+
+alloy-logs:
+  enabled: true
+
+alloy-receiver:
+  enabled: true
+  alloy:
+    extraPorts:
+      - name: otlp-http
+        port: 4318
+        targetPort: 4318
+        protocol: TCP
