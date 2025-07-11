@@ -1,0 +1,65 @@
+should create deployment when PDC agent is enabled:
+  1: |
+    replicas: 1
+    selector:
+      matchLabels:
+        app.kubernetes.io/component: pdc-agent
+        app.kubernetes.io/instance: RELEASE-NAME
+        app.kubernetes.io/name: pdc-agent
+    template:
+      metadata:
+        labels:
+          app.kubernetes.io/component: pdc-agent
+          app.kubernetes.io/instance: RELEASE-NAME
+          app.kubernetes.io/name: pdc-agent
+      spec:
+        affinity:
+          podAntiAffinity:
+            preferredDuringSchedulingIgnoredDuringExecution:
+              - podAffinityTerm:
+                  labelSelector:
+                    matchLabels:
+                      app.kubernetes.io/component: pdc-agent
+                      app.kubernetes.io/instance: RELEASE-NAME
+                      app.kubernetes.io/name: pdc-agent
+                  topologyKey: kubernetes.io/hostname
+                weight: 100
+        containers:
+          - args:
+              - -token
+              - $(GCLOUD_PDC_SIGNING_TOKEN)
+              - -cluster
+              - $(GCLOUD_PDC_CLUSTER)
+              - -gcloud-hosted-grafana-id
+              - $(GCLOUD_HOSTED_GRAFANA_ID)
+            env:
+              - name: GCLOUD_PDC_SIGNING_TOKEN
+                valueFrom:
+                  secretKeyRef:
+                    key: token
+                    name: release-name-feature-private-datasource-connect
+              - name: GCLOUD_HOSTED_GRAFANA_ID
+                valueFrom:
+                  secretKeyRef:
+                    key: hosted-grafana-id
+                    name: release-name-feature-private-datasource-connect
+              - name: GCLOUD_PDC_CLUSTER
+                valueFrom:
+                  secretKeyRef:
+                    key: cluster
+                    name: release-name-feature-private-datasource-connect
+            image: grafana/pdc-agent:latest
+            imagePullPolicy: IfNotPresent
+            name: pdc-agent
+            resources:
+              limits:
+                cpu: 200m
+                memory: 1Gi
+              requests:
+                cpu: 100m
+                memory: 512Mi
+should create secret when PDC agent is enabled and createSecret is true:
+  1: |
+    cluster: dGVzdC1jbHVzdGVy
+    hosted-grafana-id: dGVzdC1ncmFmYW5hLWlk
+    token: dGVzdC10b2tlbg==
