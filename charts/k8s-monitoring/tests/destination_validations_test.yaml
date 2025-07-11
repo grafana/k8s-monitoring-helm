@@ -234,5 +234,31 @@ tests:
                 traces:
                   enabled: true
 
+  - it: accepts valid batchSize and batchWait for Loki destination when explicitly set
+    set:
+      cluster: {name: test-cluster}
+      clusterMetrics: {enabled: true}
+      podLogs: {enabled: true}
+      destinations:
+        - name: loki-with-batch-config
+          type: loki
+          url: http://loki.example.com/loki/api/v1/push
+          batchSize: "2MiB"
+          batchWait: "2s"
+    asserts:
+      - notFailedTemplate: {}
+
+  - it: accepts Loki destination without batchSize and batchWait (optional settings)
+    set:
+      cluster: {name: test-cluster}
+      clusterMetrics: {enabled: true}
+      podLogs: {enabled: true}
+      destinations:
+        - name: loki-without-batch-config
+          type: loki
+          url: http://loki.example.com/loki/api/v1/push
+    asserts:
+      - notFailedTemplate: {}
+
 #  - it: detects if traces are disabled and tail sampling is enabled
 # TODO
