@@ -4,10 +4,10 @@
 -->
 # Timescale databases
 
-To gather metrics from timescale  databases, Alloy uses the `discovery.http` component to ask MongoDB for the correct
-URL for scraping metrics. It will then scrape the metrics from the URL provided by MongoDB.
+To gather metrics from timescale  databases, Alloy uses the `discovery.http` component to ask TimescaleDB for the correct
+URL for scraping metrics. It will then scrape the metrics from the URL provided by TimescaleDB.
 
-Certain settings must be configured in MongoDB Atlas to allow scraping. Refer to the
+Certain settings must be configured in TimescaleDB or TigerData to allow scraping. Refer to the
 [Integrate with Prometheus](https://docs.tigerdata.com/use-timescale/latest/metrics-logging/metrics-to-prometheus/) documentation for full
 details.
 
@@ -52,7 +52,21 @@ alloy-metrics:
       }
 
       forward_to = [prometheus.remote_write.mimir.receiver]
+      // forward_to = [prometheus.relabel.filter_timescale.receiver ( Enable this if you want to keep only fixed labels as exporter is common for all)
     }
+
+    /* Enable this to keep fixed labels 
+    prometheus.relabel "filter_timescale" {
+      rule {
+        action        = "keep"
+        source_labels = ["service_id"]
+        regex         = convert.nonsensitive(remote.kubernetes.secret.timescale_db.data["service_id"])
+      }
+
+      forward_to = [prometheus.remote_write.mimir.receiver]
+    }
+    */
+
 
 ```
 <!-- textlint-enable terminology -->
