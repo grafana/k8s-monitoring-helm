@@ -102,7 +102,7 @@ should allow overriding the default labelsToKeep:
             target_label = "service_instance_id"
           }
           rule {
-            source_labels = ["namespace", "pod", "container"]
+            source_labels = ["service_instance_id", "namespace", "pod", "container"]
             separator = "."
             regex = "^\\.([^.]+\\.[^.]+\\.[^.]+)$"
             target_label = "service_instance_id"
@@ -195,6 +195,7 @@ should allow overriding the default labelsToKeep:
             values = {
               "k8s_pod_name" = "k8s_pod_name",
               "pod" = "pod",
+              "service_instance_id" = "service_instance_id",
             }
           }
 
@@ -310,7 +311,7 @@ should allow setting static labels:
             target_label = "service_instance_id"
           }
           rule {
-            source_labels = ["namespace", "pod", "container"]
+            source_labels = ["service_instance_id", "namespace", "pod", "container"]
             separator = "."
             regex = "^\\.([^.]+\\.[^.]+\\.[^.]+)$"
             target_label = "service_instance_id"
@@ -403,6 +404,7 @@ should allow setting static labels:
             values = {
               "k8s_pod_name" = "k8s_pod_name",
               "pod" = "pod",
+              "service_instance_id" = "service_instance_id",
             }
           }
 
@@ -525,7 +527,7 @@ should allow setting structured metadata:
             target_label = "service_instance_id"
           }
           rule {
-            source_labels = ["namespace", "pod", "container"]
+            source_labels = ["service_instance_id", "namespace", "pod", "container"]
             separator = "."
             regex = "^\\.([^.]+\\.[^.]+\\.[^.]+)$"
             target_label = "service_instance_id"
@@ -620,6 +622,7 @@ should allow setting structured metadata:
               "component" = "component",
               "k8s_pod_name" = "k8s_pod_name",
               "pod" = "pod",
+              "service_instance_id" = "service_instance_id",
             }
           }
 
@@ -735,7 +738,7 @@ should allow using the secret filter:
             target_label = "service_instance_id"
           }
           rule {
-            source_labels = ["namespace", "pod", "container"]
+            source_labels = ["service_instance_id", "namespace", "pod", "container"]
             separator = "."
             regex = "^\\.([^.]+\\.[^.]+\\.[^.]+)$"
             target_label = "service_instance_id"
@@ -828,6 +831,7 @@ should allow using the secret filter:
             values = {
               "k8s_pod_name" = "k8s_pod_name",
               "pod" = "pod",
+              "service_instance_id" = "service_instance_id",
             }
           }
 
@@ -922,6 +926,39 @@ should allow using the secret filter with an allowlist:
             target_label = "service_name"
           }
 
+          // explicitly set service_namespace.
+          //
+          // choose the first value found from the following ordered list:
+          // - pod.annotation[resource.opentelemetry.io/service.namespace]
+          // - pod.namespace
+          rule {
+            action = "replace"
+            source_labels = [
+              "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_namespace",
+              "namespace",
+            ]
+            separator = ";"
+            regex = "^(?:;*)?([^;]+).*$"
+            replacement = "$1"
+            target_label = "service_namespace"
+          }
+
+          // explicitly set service_instance_id.
+          //
+          // choose the first value found from the following ordered list:
+          // - pod.annotation[resource.opentelemetry.io/service.instance.id]
+          // - concat([k8s.namespace.name, k8s.pod.name, k8s.container.name], '.')
+          rule {
+            source_labels = ["__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_instance_id"]
+            target_label = "service_instance_id"
+          }
+          rule {
+            source_labels = ["service_instance_id", "namespace", "pod", "container"]
+            separator = "."
+            regex = "^\\.([^.]+\\.[^.]+\\.[^.]+)$"
+            target_label = "service_instance_id"
+          }
+
           // set resource attributes
           rule {
             action = "labelmap"
@@ -1009,6 +1046,7 @@ should allow using the secret filter with an allowlist:
             values = {
               "k8s_pod_name" = "k8s_pod_name",
               "pod" = "pod",
+              "service_instance_id" = "service_instance_id",
             }
           }
 
@@ -1134,7 +1172,7 @@ should render the default configuration:
             target_label = "service_instance_id"
           }
           rule {
-            source_labels = ["namespace", "pod", "container"]
+            source_labels = ["service_instance_id", "namespace", "pod", "container"]
             separator = "."
             regex = "^\\.([^.]+\\.[^.]+\\.[^.]+)$"
             target_label = "service_instance_id"
@@ -1227,6 +1265,7 @@ should render the default configuration:
             values = {
               "k8s_pod_name" = "k8s_pod_name",
               "pod" = "pod",
+              "service_instance_id" = "service_instance_id",
             }
           }
 
