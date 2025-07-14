@@ -92,3 +92,39 @@ receivers:
 ```
 
 Start with 2000 and adjust as needed.
+
+### Troubleshooting Pod Log and Trace Correlation Issues
+
+**Problem:** You're experiencing issues correlating Kubernetes pod logs with OpenTelemetry traces, metrics, and application logs. This often occurs when the `service.name`, `service.namespace`, and `service.instance.id` metadata do not consistently match across all your telemetry signals.
+
+**Solution:** To ensure proper correlation, we recommend aligning your metadata according to OpenTelemetry specifications, particularly the "[Specify resource attributes using Kubernetes annotations](https://opentelemetry.io/docs/specs/semconv/non-normative/k8s-attributes/)" guide. Follow these steps:
+
+1.  **Define `service.name` and `service.namespace` consistently:** Prioritize these methods in order of preference:
+
+      -   **Kubernetes Pod Annotations:** Use `resource.opentelemetry.io/service.name` and `resource.opentelemetry.io/service.namespace` on your pods.
+      -   **Kubernetes Pod Label & Namespace Name:** Utilize the `app.kubernetes.io/name` pod label and the Kubernetes namespace name.
+      -   **Kubernetes Deployment & Namespace Names:** Infer from your Kubernetes deployment and namespace names.
+      -   For more options, refer to the "[Specify resource attributes using Kubernetes annotations](https://opentelemetry.io/docs/specs/semconv/non-normative/k8s-attributes/)" guide.
+
+2.  **Derive `service.instance.id`:** Infer `service.instance.id` from Kubernetes namespace, pod, and container names using the format: `concat([k8s.namespace.name, k8s.pod.name, k8s.container.name], '.')`. See "OpenTelemetry Operator" recommendation below.
+
+3.  **Inject Resource Attributes into Workloads:** Pass these `service.name`, `service.namespace`, and `service.instance.id` resource attributes to your containerized workloads' OpenTelemetry instrumentation. This is typically done by injecting them as environment variables:
+
+      -   `OTEL_SERVICE_NAME`
+      -   `OTEL_RESOURCE_ATTRIBUTES`
+        (Refer to OpenTelemetry SDK Environment Variables for more details.)
+
+    **Recommended Approach:** Use the [OpenTelemetry Operator](https://github.com/open-telemetry/opentelemetry-operator) for automatic injection. Simply add the `instrumentation.opentelemetry.io/inject-sdk: "true"` pod annotation. The OTel Operator integrates seamlessly with Grafana Kubernetes Monitoring by automatically configuring the exporter endpoint to `http://grafana-k8s-monitoring-alloy-receiver.default.svc.cluster.local:4318` within its `Instrumentation` CRD.
+
+    **Alternative:** Manually specify the `OTEL_*` environment variables directly in your Kubernetes deployment manifests, including deriving `service.instance.id` from Kubernetes metadata (`concat([k8s.namespace.name, k8s.pod.name, k8s.container.name], '.')`).
+
+4.  **Configure Pod Log Collection:** Ensure your Grafana Kubernetes Monitoring Helm Chart is configured to collect pod logs using the `filelog` gather method ([docs](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-pod-logs)).
+    Add the following to your `values.yml`:
+
+    ```yaml
+    podLogs:
+      enabled: true
+      gatherMethod: filelog
+    ```
+
+5.  **Verify Correlation:** After applying these configurations, verify the successful correlation of your pod logs with application traces, metrics, and other logs in Grafana Application Observability, Grafana Explore, or through Grafana Drilldown features.
