@@ -10,7 +10,7 @@ Chart.lock: Chart.yaml
 	@touch Chart.lock # Ensure the timestamp is updated
 
 values.schema.json: values.yaml $$(wildcard schema-mods/*)
-	../../../../scripts/schema-gen.sh .
+	docker run --rm --platform linux/amd64 --volume $(shell pwd):/chart ghcr.io/grafana/helm-chart-toolbox-schema-generator --chart /chart > $@
 
 default-allow-lists/%.yaml: ../../../../allowLists/%.yaml
 	cp $< $@
