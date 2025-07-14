@@ -87,8 +87,8 @@ applicationObservability:
         enabled: true
 
 alloy-operator:
-  # Not possible currently.
-  #  image:
+  image:
+    digest: sha256:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef
 
 alloy-metrics:
   enabled: true

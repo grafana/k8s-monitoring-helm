@@ -7,7 +7,7 @@ set -eo pipefail
 
 CLUSTER_NAME=$(yq eval '.cluster.name' values.yaml)
 CURRENT_VERSION="$(yq eval '.version' ../../../../Chart.yaml)"
-IFS='.' read -r major minor patch <<< "${CURRENT_VERSION}"
+IFS='.' read -r major minor _ <<< "${CURRENT_VERSION}"
 if [ "${minor}" -eq 0 ]; then
   echo "Minor version is 0. This test is not applicable."
   exit 1
