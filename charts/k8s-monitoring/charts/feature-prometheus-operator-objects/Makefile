@@ -1,13 +1,8 @@
-HAS_HELM_DOCS := $(shell command -v helm-docs;)
 HAS_HELM_UNITTEST := $(shell helm plugin list | grep unittest 2> /dev/null)
 
 .SECONDEXPANSION:
 README.md: values.yaml Chart.yaml $$(wildcard README.md.gotmpl)
-ifdef HAS_HELM_DOCS
-	helm-docs
-else
-	docker run --rm --volume "$(shell pwd):/helm-docs" -u $(shell id -u) jnorwood/helm-docs:latest
-endif
+	docker run --rm --platform linux/amd64 --volume $(shell pwd):/chart ghcr.io/grafana/helm-chart-toolbox-doc-generator --chart /chart > $@
 
 Chart.lock: Chart.yaml
 	helm dependency update .

@@ -1,5 +1,4 @@
 SHELL := /bin/bash
-HAS_HELM_DOCS := $(shell command -v helm-docs;)
 HAS_SHELLSPEC := $(shell command -v shellspec;)
 
 CHART_TEMPLATE_FILES = $(shell find templates -name "*.tpl")
@@ -18,11 +17,7 @@ default_allow_lists/%.yaml: ../../allowLists/%.yaml
 	cp $< $@
 
 README.md: README.md.gotmpl values.yaml Chart.yaml
-ifdef HAS_HELM_DOCS
-	helm-docs
-else
-	docker run --rm --volume "$(shell pwd):/helm-docs" -u $(shell id -u) jnorwood/helm-docs:latest
-endif
+	docker run --rm --platform linux/amd64 --volume $(shell pwd):/chart ghcr.io/grafana/helm-chart-toolbox-doc-generator --chart /chart > $@
 
 docs/RBAC.md: docs/examples/default-values/output.yaml docs/examples/openshift-compatible/output.yaml docs/examples/profiles-enabled/output.yaml
 	echo "# RBAC Rules for the Kubernetes Monitoring Helm Chart" > docs/RBAC.md

@@ -1,4 +1,3 @@
-HAS_HELM_DOCS := $(shell command -v helm-docs;)
 HAS_HELM_UNITTEST := $(shell helm plugin list | grep unittest 2> /dev/null)
 HAS_SHELLSPEC := $(shell command -v shellspec;)
 
@@ -72,14 +71,10 @@ Chart.lock: Chart.yaml
 	@touch Chart.lock # Ensure the timestamp is updated
 
 values.schema.json: values.yaml $(COLLECTOR_SCHEMA_FILES) $(DESTINATION_SCHEMA_FILES) $(SCHEMA_MODS_JSON_FILES) $(SCHEMA_MODS_JQ_FILES) schema-mods/destination-list.json
-	../../scripts/schema-gen.sh .
+	docker run --rm --platform linux/amd64 --volume $(shell pwd):/chart ghcr.io/grafana/helm-chart-toolbox-schema-generator --chart /chart > $@
 
 README.md: README.md.gotmpl values.yaml Chart.yaml
-ifdef HAS_HELM_DOCS
-	helm-docs --chart-to-generate .
-else
-	docker run --rm --volume "$(shell pwd):/helm-docs" -u $(shell id -u) jnorwood/helm-docs:latest
-endif
+	docker run --rm --platform linux/amd64 --volume $(shell pwd):/chart ghcr.io/grafana/helm-chart-toolbox-doc-generator --chart /chart > $@
 
 ALLOY_HELM_VERSION = $(shell helm show chart charts/alloy-operator-*.tgz | yq eval '.appVersion')
 ALLOY_IMAGE = $(shell helm template test --repo https://grafana.github.io/helm-charts alloy --version $(ALLOY_HELM_VERSION) | yq eval 'select(.kind=="DaemonSet" and .metadata.name=="test-alloy") | .spec.template.spec.containers[0].image')
