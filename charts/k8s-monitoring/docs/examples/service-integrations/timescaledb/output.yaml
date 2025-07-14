@@ -70,25 +70,24 @@ data:
       name = "timescale-db"
       namespace = "observability"
     }
-
+    
     prometheus.scrape "timescale_db" {
       targets = [
         {"__address__" = convert.nonsensitive(remote.kubernetes.secret.timescale_db.data["url"])},
       ]
-
+    
       job_name        = "integrations/timescale_db"
       scrape_interval = "30s"
       scheme          = "https"
       metrics_path    = "/metrics"
-
+    
       basic_auth {
         username = nonsensitive(remote.kubernetes.secret.timescale_db.data["username"])
         password = remote.kubernetes.secret.timescale_db.data["password"]
       }
-
-      forward_to = [prometheus.remote_write.mimir.receiver]
+    
+      forward_to = [prometheus.remote_write.prometheus.receiver]
     }
-
     // Destination: prometheus (prometheus)
     otelcol.exporter.prometheus "prometheus" {
       add_metric_suffixes = true
@@ -121,13 +120,13 @@ data:
         write_relabel_config {
           source_labels = ["cluster"]
           regex = ""
-          replacement = "mongodb-atlas-integration-cluster"
+          replacement = "timescaledb-integration-cluster"
           target_label = "cluster"
         }
         write_relabel_config {
           source_labels = ["k8s_cluster_name"]
           regex = ""
-          replacement = "mongodb-atlas-integration-cluster"
+          replacement = "timescaledb-integration-cluster"
           target_label = "k8s_cluster_name"
         }
       }

@@ -51,7 +51,7 @@ alloy-metrics:
         password = remote.kubernetes.secret.timescale_db.data["password"]
       }
 
-      forward_to = [prometheus.remote_write.mimir.receiver]
+      forward_to = [prometheus.remote_write.prometheus.receiver]
       // forward_to = [prometheus.relabel.filter_timescale.receiver] ( Enable this if you want to keep only fixed labels as exporter is common for all)
     }
 
@@ -63,7 +63,7 @@ alloy-metrics:
         regex         = convert.nonsensitive(remote.kubernetes.secret.timescale_db.data["service_id"])
       }
 
-      forward_to = [prometheus.remote_write.mimir.receiver]
+      forward_to = [prometheus.remote_write.prometheus.receiver]
     }
     */
 
