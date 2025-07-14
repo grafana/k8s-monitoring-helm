@@ -68,7 +68,7 @@ data:
     
     remote.kubernetes.secret "timescale_db" {
       name = "timescale-db"
-      namespace = "observability"
+      namespace = "monitoring"
     }
     
     prometheus.scrape "timescale_db" {
@@ -86,6 +86,15 @@ data:
         password = remote.kubernetes.secret.timescale_db.data["password"]
       }
     
+      forward_to = [prometheus.relabel.filter_timescale.receiver]
+    }
+    
+    prometheus.relabel "filter_timescale" {
+      rule {
+        action        = "keep"
+        source_labels = ["service_id"]
+        regex         = convert.nonsensitive(remote.kubernetes.secret.timescale_db.data["service_id"])
+      }
       forward_to = [prometheus.remote_write.prometheus.receiver]
     }
     // Destination: prometheus (prometheus)

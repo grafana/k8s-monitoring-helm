@@ -43,14 +43,9 @@ prometheus.relabel "kubernetes_monitoring_telemetry" {
 
 
 
-remote.kubernetes.secret "mongodb_atlas" {
-  name = "mongodb-atlas"
-  namespace = "monitoring"
-}
-
 remote.kubernetes.secret "timescale_db" {
   name = "timescale-db"
-  namespace = "observability"
+  namespace = "monitoring"
 }
 
 prometheus.scrape "timescale_db" {
@@ -68,9 +63,17 @@ prometheus.scrape "timescale_db" {
     password = remote.kubernetes.secret.timescale_db.data["password"]
   }
 
-  forward_to = [prometheus.remote_write.mimir.receiver]
+  forward_to = [prometheus.relabel.filter_timescale.receiver]
 }
 
+prometheus.relabel "filter_timescale" {
+  rule {
+    action        = "keep"
+    source_labels = ["service_id"]
+    regex         = convert.nonsensitive(remote.kubernetes.secret.timescale_db.data["service_id"])
+  }
+  forward_to = [prometheus.remote_write.prometheus.receiver]
+}
 // Destination: prometheus (prometheus)
 otelcol.exporter.prometheus "prometheus" {
   add_metric_suffixes = true
@@ -103,13 +106,13 @@ prometheus.remote_write "prometheus" {
     write_relabel_config {
       source_labels = ["cluster"]
       regex = ""
-      replacement = "mongodb-atlas-integration-cluster"
+      replacement = "timescaledb-integration-cluster"
       target_label = "cluster"
     }
     write_relabel_config {
       source_labels = ["k8s_cluster_name"]
       regex = ""
-      replacement = "mongodb-atlas-integration-cluster"
+      replacement = "timescaledb-integration-cluster"
       target_label = "k8s_cluster_name"
     }
   }
