@@ -102,7 +102,7 @@ discovery.relabel "filtered_pods" {
     target_label = "service_instance_id"
   }
   rule {
-    source_labels = ["namespace", "pod", "container"]
+    source_labels = ["service_instance_id", "namespace", "pod", "container"]
     separator = "."
     regex = "^\\.([^.]+\\.[^.]+\\.[^.]+)$"
     target_label = "service_instance_id"
