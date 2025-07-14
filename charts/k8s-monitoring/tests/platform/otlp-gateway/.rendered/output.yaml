@@ -876,7 +876,7 @@ data:
           target_label = "service_instance_id"
         }
         rule {
-          source_labels = ["namespace", "pod", "container"]
+          source_labels = ["service_instance_id", "namespace", "pod", "container"]
           separator = "."
           regex = "^\\.([^.]+\\.[^.]+\\.[^.]+)$"
           target_label = "service_instance_id"
@@ -964,6 +964,11 @@ data:
             "filename",
             "tmp_container_runtime",
           ]
+        }
+        stage.structured_metadata {
+          values = {
+            "service_instance_id" = "service_instance_id",
+          }
         }
     
         // Only keep the labels that are defined in the `keepLabels` list.
