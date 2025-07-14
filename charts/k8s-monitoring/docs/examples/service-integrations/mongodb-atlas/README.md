@@ -37,7 +37,7 @@ alloy-metrics:
     }
 
     discovery.http "mongodb_atlas" {
-      url = string.format("https://cloud.mongodb.com/prometheus/v1.0/groups/%s/discovery", remote.kubernetes.secret.mongodb_atlas.data["group_id"])
+      url = string.format("https://cloud.mongodb.com/prometheus/v1.0/groups/%s/discovery", convert.nonsensitive(remote.kubernetes.secret.mongodb_atlas.data["group_id"]))
 
       basic_auth {
         username = nonsensitive(remote.kubernetes.secret.mongodb_atlas.data["username"])
