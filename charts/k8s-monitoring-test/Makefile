@@ -9,7 +9,7 @@ Chart.lock: Chart.yaml
 	@touch Chart.lock # Ensure the timestamp is updated
 
 values.schema.json: values.yaml $$(wildcard schema-mods/*)
-	../../scripts/schema-gen.sh .
+	docker run --rm --platform linux/amd64 --volume $(shell pwd):/chart ghcr.io/grafana/helm-chart-toolbox-schema-generator --chart /chart > $@
 
 build-query-test-image: query-test/Dockerfile query-test/query-test.sh
 	docker build --platform linux/amd64 --tag ghcr.io/grafana/query-test:$(shell yq -r '.version' Chart.yaml) query-test
