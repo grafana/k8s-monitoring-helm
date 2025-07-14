@@ -1,11 +1,10 @@
-HAS_HELM_DOCS := $(shell command -v helm-docs;)
 HAS_HELM_UNITTEST := $(shell helm plugin list | grep unittest 2> /dev/null)
 HAS_SHELLSPEC := $(shell command -v shellspec;)
 
 CHART_TEMPLATE_FILES = $(shell find templates -name "*.tpl")
 CHART_YAML_FILES = $(shell find templates -name "*.yaml")
 
-FEATURE_CHARTS = $(shell ls --color=never charts | grep feature-)
+FEATURE_CHARTS = $(shell find charts -type d -depth 1 -name "feature-*")
 
 SCHEMA_MODS_JSON_FILES = $(shell find schema-mods -name "*.json")
 SCHEMA_MODS_JQ_FILES = $(shell find schema-mods -name "*.jq")
@@ -24,16 +23,16 @@ DESTINATION_SCHEMA_FILES = $(DESTINATION_VALUES_FILES:destinations/%-values.yaml
 
 .SECONDEXPANSION:
 docs/collectors/%.md: collectors/%-values.yaml $$(wildcard docs/collectors/.doc_templates/%.gotmpl)
-	docker run --platform linux/amd64 --rm -v $(shell pwd):/src ghcr.io/grafana/helm-docs-and-schema-gen $(shell echo $< | sed 's/collectors\/\([-a-z]*\)-values.yaml/\1/') collector
+	docker run --platform linux/amd64 --rm --volume $(shell pwd):/chart ghcr.io/grafana/helm-chart-toolbox-doc-generator --file /chart/$< --template /chart/docs/collectors/.doc_templates/$(shell basename -s -values.yaml $<).gotmpl > $@
 
 docs/destinations/%.md: destinations/%-values.yaml $$(wildcard docs/destinations/.doc_templates/%.gotmpl)
-	docker run --platform linux/amd64 --rm -v $(shell pwd):/src ghcr.io/grafana/helm-docs-and-schema-gen $(shell echo $< | sed 's/destinations\/\([-a-z]*\)-values.yaml/\1/') destination
+	docker run --platform linux/amd64 --rm --volume $(shell pwd):/chart ghcr.io/grafana/helm-chart-toolbox-doc-generator --file /chart/$< --template /chart/docs/destinations/.doc_templates/$(shell basename -s -values.yaml $<).gotmpl > $@
 
 schema-mods/definitions/%-collector.schema.json: collectors/%-values.yaml
-	docker run --platform linux/amd64 --rm -v $(shell pwd):/src ghcr.io/grafana/helm-docs-and-schema-gen $(shell echo $< | sed 's/collectors\/\([-a-z]*\)-values.yaml/\1/') collector
+	docker run --platform linux/amd64 --rm --volume $(shell pwd):/chart ghcr.io/grafana/helm-chart-toolbox-schema-generator --file /chart/$< > $@
 
 schema-mods/definitions/%-destination.schema.json: destinations/%-values.yaml
-	docker run --platform linux/amd64 --rm -v $(shell pwd):/src ghcr.io/grafana/helm-docs-and-schema-gen $(shell echo $< | sed 's/destinations\/\([-a-z]*\)-values.yaml/\1/') destination
+	docker run --platform linux/amd64 --rm --volume $(shell pwd):/chart ghcr.io/grafana/helm-chart-toolbox-schema-generator --file /chart/$< > $@
 
 NUMBER_OF_DESTINATION_VALUES_FILES := $(words $(DESTINATION_VALUES_FILES))
 schema-mods/destination-list.json: $(DESTINATION_VALUES_FILES)
@@ -55,7 +54,17 @@ schema-mods/destination-list.json: $(DESTINATION_VALUES_FILES)
 	done
 	@echo '        ]' >> $@
 	@echo '      }' >> $@
-	@echo '    }' >> $@
+	@echo '    },' >> $@
+	@count=0; \
+	for file in $(DESTINATION_VALUES_FILES); do \
+		count=$$((count + 1)); \
+		name=$$(echo $${file} | sed 's/destinations\/\([-a-z]*\)-values.yaml/\1/'); \
+		if [ $$count -eq $(NUMBER_OF_DESTINATION_VALUES_FILES) ]; then \
+			echo '    "'$${name}'-destination": {"properties": {"type": {"type": "string", "const": "'$${name}'"}}}' >> $@; \
+		else \
+			echo '    "'$${name}'-destination": {"properties": {"type": {"type": "string", "const": "'$${name}'"}}},' >> $@; \
+		fi; \
+	done
 	@echo '  }' >> $@
 	@echo '}' >> $@
 
@@ -72,14 +81,10 @@ Chart.lock: Chart.yaml
 	@touch Chart.lock # Ensure the timestamp is updated
 
 values.schema.json: values.yaml $(COLLECTOR_SCHEMA_FILES) $(DESTINATION_SCHEMA_FILES) $(SCHEMA_MODS_JSON_FILES) $(SCHEMA_MODS_JQ_FILES) schema-mods/destination-list.json
-	../../scripts/schema-gen.sh .
+	docker run --rm --platform linux/amd64 --volume $(shell pwd):/chart ghcr.io/grafana/helm-chart-toolbox-schema-generator --chart /chart > $@
 
 README.md: README.md.gotmpl values.yaml Chart.yaml
-ifdef HAS_HELM_DOCS
-	helm-docs --chart-to-generate .
-else
-	docker run --rm --volume "$(shell pwd):/helm-docs" -u $(shell id -u) jnorwood/helm-docs:latest
-endif
+	docker run --rm --platform linux/amd64 --volume $(shell pwd):/chart ghcr.io/grafana/helm-chart-toolbox-doc-generator --chart /chart > $@
 
 ALLOY_HELM_VERSION = $(shell helm show chart charts/alloy-operator-*.tgz | yq eval '.appVersion')
 ALLOY_IMAGE = $(shell helm template test --repo https://grafana.github.io/helm-charts alloy --version $(ALLOY_HELM_VERSION) | yq eval 'select(.kind=="DaemonSet" and .metadata.name=="test-alloy") | .spec.template.spec.containers[0].image')
@@ -179,7 +184,6 @@ else
 endif
 
 
-ALLOY_OPERATOR_VERSION=$(shell yq '.dependencies[] | select(.name == "alloy-operator") | .version' Chart.yaml)
 .PHONY: misc-checks
 misc-checks: Chart.yaml
 ifdef HAS_SHELLSPEC
@@ -200,7 +204,7 @@ clean: clean-examples
 	rm -f $(DESTINATION_SCHEMA_FILES) $(DESTINATION_DOCS_FILES)
 	set -e && \
 	for chart in $(FEATURE_CHARTS); do \
-		make -C charts/$$chart clean; \
+		make -C $$chart clean; \
 	done
 
 .PHONY: clean-examples
@@ -210,7 +214,7 @@ clean-examples:
 build-features:
 	set -e && \
 	for chart in $(FEATURE_CHARTS); do \
-		make -C charts/$$chart build; \
+		make -C $$chart build; \
 	done
 
 # Build targets
@@ -224,7 +228,7 @@ test: unittest lint-helm lint-configs example-checks misc-checks test-features
 test-features:
 	set -e && \
 	for chart in $(FEATURE_CHARTS); do \
-		make -C charts/$$chart test; \
+		make -C $$chart test; \
 	done
 
 lint-configs: $(EXAMPLE_ALLOY_FILES)

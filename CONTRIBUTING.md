@@ -15,8 +15,7 @@ The process for making a successful contribution is:
 
 ## Design Idioms
 
-The Kubernetes Monitoring Helm chart has a few design idioms with the goal of making it an easy and pleasant experience
-for users and maintainers. These should guide your contributions:
+The Kubernetes Monitoring Helm chart has a few design idioms. These should guide your contributions:
 
 ### Don't ask about systems, ask about outcomes
 
@@ -86,12 +85,12 @@ quantumObservability:
 
 ### Lots of test automation
 
-We want to make it easy to contribute to this project. We have a lot of test automation to ensure that changes are high
+To simplify contributing to this project, we have a lot of test automation to ensure that changes are high
 quality and robust.
 
-### Just the right amount of magic
+### The right amount of magic
 
-This is a bit hard to qualify, but using this chart should be simple and easy with predictable and intuitive defaults.
+This is a bit hard to qualify, but using this chart should be predictable and intuitive to work with.
 Sometimes, going too far with this can lead to a chart that does things that are unexpected.
 
 No magic:

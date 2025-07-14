@@ -1,0 +1,51 @@
+---
+apiVersion: helm-chart-toolbox.grafana.com/v1
+kind: TestPlan
+name: pod-logs-secret-filter
+
+subject:
+  releaseName: k8smon
+  path: ../../../..
+  valuesFile: values.yaml
+
+cluster:
+  type: kind
+  configFile: kind-cluster-config.yaml
+
+dependencies:
+  - file: dependencies/workloads.yaml
+  - preset: loki
+  - preset: grafana
+    overrides:
+      datasources:
+        datasources.yaml:
+          apiVersion: 1
+          datasources:
+            - name: Loki
+              type: loki
+              url: http://loki.loki.svc:3100
+              jsonData:
+                httpHeaderName1: X-Scope-OrgID
+              secureJsonData:
+                httpHeaderValue1: "1"
+              isDefault: true
+
+tests:
+  - type: query-test
+    values:
+      tests:
+        - env:
+            CLUSTER: pod-logs-feature-test
+            LOKI_URL: http://loki.loki.svc:3100/loki/api/v1/query
+            LOKI_TENANTID: 1
+            LOKI_USER: loki
+            LOKI_PASS: lokipassword
+
+          queries:
+            # Pod logs are coming in
+            - query: count_over_time({cluster="$CLUSTER", job="dev-pod", namespace="development"}[1h])
+              type: logql
+
+            # The secret is being redacted
+            - query: count_over_time({cluster="$CLUSTER", job="dev-pod", namespace="development"}[1h] |= "access_token=<REDACTED-SECRET:grafana-cloud-api-token>")
+              type: logql

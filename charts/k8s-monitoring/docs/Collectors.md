@@ -117,7 +117,7 @@ Consult your Kubernetes vendor documentation for details.
 ### Istio/Service Mesh
 
 Depending on your mesh configuration, you might need to explicitly include the Grafana monitoring namespace as a member,
-or declare the receiver as a backend of your application for traffic within the Cluster.
+or declare the Alloy instance as a backend of your application for traffic within the Cluster.
 
 For traffic from outside the Cluster, you likely need to set up an ingress gateway into your mesh.
 
@@ -129,17 +129,16 @@ Here are some troubleshooting tips related to configuring collectors.
 
 ### Startup issues
 
-Make sure your receiver Pods are up and running. To do so, use this command to show you a list of Pods and associated
-states:
+Make sure your Pods are up and running. To do so, use this command to show you a list of Pods and associated states:
 
 `kubectl get pods -n <helm_release_namespace>`
 
-While you may have meta monitoring turned on (which would expose the Alloy Pod logs in Loki), this is not helpful when
-the alloy-logs receiver itself is faulty.
+While you may have meta-monitoring turned on (which would expose the Alloy Pod logs in Loki), this is not helpful when
+the alloy-logs instance itself is faulty.
 
-To troubleshoot receiver startup problems, you can inspect the Pod
-logs [just like you would any Kubernetes workload](https://kubernetes.io/docs/reference/kubectl/generated/kubectl_logs/)
-to watch the alloy-logs receiver Pods:
+To troubleshoot startup problems, you can inspect the Pod
+logs [like any other Kubernetes workload](https://kubernetes.io/docs/reference/kubectl/generated/kubectl_logs/). To
+watch the alloy-logs instance Pods:
 
 `kubectl logs -f --tail 100 ds/grafana-k8s-monitoring-alloy-logs`
 

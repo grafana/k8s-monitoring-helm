@@ -1,5 +1,6 @@
 # alloy
 
+<!-- textlint-disable terminology -->
 ## Values
 
 ### General
@@ -46,3 +47,4 @@
 | remoteConfig.proxyFromEnvironment | bool | `false` | Use the proxy URL indicated by environment variables. |
 | remoteConfig.proxyURL | string | `""` | The proxy URL to use of the remote config server. |
 | remoteConfig.url | string | `""` | The URL of the remote config server. |
+<!-- textlint-enable terminology -->

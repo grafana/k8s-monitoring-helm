@@ -1,0 +1,118 @@
+---
+apiVersion: helm-chart-toolbox.grafana.com/v1
+kind: TestPlan
+name: test-integrations
+
+subject:
+  releaseName: k8smon
+  path: ../../..
+  valuesFile: values.yaml
+
+cluster:
+  type: kind
+
+dependencies:
+  - file: dependencies/cert-manager.yaml
+  - file: dependencies/credentials.yaml
+  - file: dependencies/mysql.yaml
+  - preset: prometheus
+    overrides:
+      server:
+        extraFlags:
+          - web.enable-otlp-receiver
+          - web.enable-remote-write-receiver
+          - web.config.file=/etc/config/web.yml
+        probeHeaders:
+          - name: "Authorization"
+            value: "Basic cHJvbXVzZXI6cHJvbWV0aGV1c3Bhc3N3b3Jk"
+      serverFiles:
+        web.yml:
+          basic_auth_users:
+            promuser: $2a$12$1UJsAG4QnhjjDzqcSVkZmeDxxjgIFOAmzfuVTybTuhhDnYgfuAbAq  # "prometheuspassword"
+  - file: dependencies/prometheus-workload.yaml
+  - preset: loki
+  - preset: grafana
+    overrides:
+      datasources:
+        datasources.yaml:
+          apiVersion: 1
+          datasources:
+            - name: Prometheus
+              type: prometheus
+              url: http://prometheus-server.prometheus.svc:9090
+              isDefault: true
+              basicAuth: true
+              basicAuthUser: promuser
+              jsonData:
+                tlsSkipVerify: true
+              secureJsonData:
+                basicAuthPassword: prometheuspassword
+
+            - name: Loki
+              type: loki
+              url: http://loki-gateway.loki.svc:8080
+              basicAuth: true
+              basicAuthUser: loki
+              jsonData:
+                httpHeaderName1: X-Scope-OrgID
+              secureJsonData:
+                basicAuthPassword: lokipassword
+                httpHeaderValue1: "1"
+
+
+tests:
+  - type: query-test
+    values:
+      tests:
+        - env:
+            CLUSTER: ci-integrations-cluster
+            PROMETHEUS_URL: http://prometheus-server.prometheus.svc:9090/api/v1/query
+            PROMETHEUS_USER: promuser
+            PROMETHEUS_PASS: prometheuspassword
+            LOKI_URL: http://loki.loki.svc:3100/loki/api/v1/query
+            LOKI_TENANTID: 1
+            LOKI_USER: loki
+            LOKI_PASS: lokipassword
+          queries:
+            # Check for Node label metrics
+            - query: kube_node_labels{cluster="$CLUSTER"}
+              type: promql
+
+            # Check for Kepler metrics
+            - query: kepler_container_joules_total{cluster="$CLUSTER"}
+              type: promql
+
+            # Check for Beyla metrics
+            - query: beyla_internal_build_info{cluster="$CLUSTER"}
+              type: promql
+
+            # Check for CertManager metrics, discovered by service annotations
+            - query: certmanager_clock_time_seconds{cluster="$CLUSTER", job="integrations/cert-manager"}
+              type: promql
+
+            # Check for Prometheus metrics, discovered by https pod annotations
+            - query: prometheus_build_info{job="integrations/prometheus"}
+              type: promql
+
+            # Check for MySQL metrics, discovered by the module loaded above in .extraConfig
+            - query: mysqld_exporter_build_info{cluster="$CLUSTER"}
+              type: promql
+
+            # Check for MySQL logs, discovered by the module loaded above in .logs.extraConfig
+            - query: count_over_time({cluster="$CLUSTER", job="integrations/mysql"}[1h])
+              type: logql
+
+            # Cluster events still work, too
+            - query: count_over_time({cluster="$CLUSTER", job="integrations/kubernetes/eventhandler"}[1h])
+              type: logql
+
+            # Regular pod logs still work, too (checking the Loki pod <namespace>/<pod_name>)
+            - query: count_over_time({cluster="$CLUSTER", job="loki/loki"}[1h])
+              type: logql
+
+            # DPM check
+            - query: avg(count_over_time(scrape_samples_scraped{cluster="$CLUSTER"}[1m]))
+              type: promql
+              expect:
+                value: 1
+                operator: ==
