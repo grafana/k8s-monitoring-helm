@@ -270,23 +270,27 @@ otelcol.processor.filter {{ include "helper.alloy_name" .name | quote }} {
 {{- end }}
 {{- if ne .traces.enabled false }}
 {{- /* If sampling is enabled, override traces target and enable loadbalancing exporter if sampling is enabled */}}
-{{- if or .processors.tailSampling.enabled .processors.serviceGraphMetrics.enabled }}
+{{- if and .processors.tailSampling.enabled .processors.serviceGraphMetrics.enabled }}
     traces = [
-{{- if .processors.tailSampling.enabled }}
       otelcol.exporter.loadbalancing.{{ printf "%s_sampler" (include "helper.alloy_name" .name) }}.input,
-{{- end }}
-{{- if .processors.serviceGraphMetrics.enabled }}
       otelcol.exporter.loadbalancing.{{ printf "%s_servicegraph" (include "helper.alloy_name" .name) }}.input,
-  {{- /* if tail sampling is enabled, let that pipeline handle writing traces downstream. otherwise, keep traces. */}}
-  {{- if not .processors.tailSampling.enabled }}
-    {{- include "destinations.otlp.alloy.exporter.target" . | nindent 6 }},
-  {{- end }}
-{{- end }}
     ]
+{{- else if .processors.tailSampling.enabled }}
+    traces = [otelcol.exporter.loadbalancing.{{ printf "%s_sampler" (include "helper.alloy_name" .name) }}.input]
+{{- else if .processors.serviceGraphMetrics.enabled }}
+    traces = [
+      otelcol.exporter.loadbalancing.{{ printf "%s_servicegraph" (include "helper.alloy_name" .name) }}.input,
+      {{ include "destinations.otlp.alloy.exporter.target" . }},
+    ]
+{{- else }}
+    traces = [{{ include "destinations.otlp.alloy.exporter.target" . }}]
+{{- end }}
+{{- end }}
   }
 }
 
 {{- if .processors.tailSampling.enabled }}
+
 otelcol.exporter.loadbalancing {{ printf "%s_sampler" (include "helper.alloy_name" .name) | quote }} {
   resolver {
     kubernetes {
@@ -305,9 +309,12 @@ otelcol.exporter.loadbalancing {{ printf "%s_sampler" (include "helper.alloy_nam
         }
       }
     }
+  }
+}
 {{- end }}
 
 {{- if .processors.serviceGraphMetrics.enabled }}
+
 otelcol.exporter.loadbalancing {{ printf "%s_servicegraph" (include "helper.alloy_name" .name) | quote }} {
   resolver {
     kubernetes {
@@ -326,14 +333,9 @@ otelcol.exporter.loadbalancing {{ printf "%s_servicegraph" (include "helper.allo
         }
       }
     }
-{{- end }}
-
-{{- else }}
-    traces = [{{ include "destinations.otlp.alloy.exporter.target" . }}]
-{{- end }}
-{{- end }}
   }
 }
+{{- end }}
 
 {{- include "destinations.otlp.alloy.exporter" . }}
 {{- end }}
