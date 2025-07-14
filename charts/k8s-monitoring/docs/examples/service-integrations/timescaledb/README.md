@@ -52,7 +52,7 @@ alloy-metrics:
       }
 
       forward_to = [prometheus.remote_write.mimir.receiver]
-      // forward_to = [prometheus.relabel.filter_timescale.receiver ( Enable this if you want to keep only fixed labels as exporter is common for all)
+      // forward_to = [prometheus.relabel.filter_timescale.receiver] ( Enable this if you want to keep only fixed labels as exporter is common for all)
     }
 
     /* Enable this to keep fixed labels 
