@@ -13,7 +13,7 @@ details.
 
 In this example, we utilize the `extraConfig` section to define the `discovery.http` component to request the scrape
 target, and the `prometheus.scrape` component to scrape the database metrics. It uses a Kubernetes secret to store the
-username, password, and group ID for the TimescaleDB database.
+username, password, url and service ID for the TimescaleDB database.
 
 ## Values
 
