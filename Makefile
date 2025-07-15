@@ -1,5 +1,4 @@
 SHELL := /bin/bash
-UNAME := $(shell uname)
 
 CHARTS = $(shell ls --color=never charts)
 HELM_VERSION = $(shell helm version --short)

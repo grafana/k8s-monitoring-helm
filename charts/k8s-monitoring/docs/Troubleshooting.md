@@ -17,8 +17,8 @@ This document contains some information about frequently encountered issues and 
 
 Grafana Alloy has a
 [web user interface](https://grafana.com/docs/alloy/latest/tasks/debug/#alloy-ui) that shows every configuration
-component that the Alloy instance is using and the component status. By default, the web UI runs on each Alloy pod on port
-`12345`. Since that UI is typically not exposed external to the Cluster, you can use port-forwarding to access it.
+component that the Alloy instance is using and the component status. By default, the web UI runs on each Alloy pod on
+port `12345`. Since that UI is typically not exposed external to the Cluster, you can use port-forwarding to access it.
 
 `kubectl port-forward svc/grafana-k8s-monitoring-alloy 12345:12345`
 
@@ -114,7 +114,7 @@ Start with 2000 and adjust as needed.
       -   `OTEL_RESOURCE_ATTRIBUTES`
         (Refer to OpenTelemetry SDK Environment Variables for more details.)
 
-    **Recommended Approach:** Use the [OpenTelemetry Operator](https://github.com/open-telemetry/opentelemetry-operator) for automatic injection. Simply add the `instrumentation.opentelemetry.io/inject-sdk: "true"` pod annotation. The OTel Operator integrates seamlessly with Grafana Kubernetes Monitoring by automatically configuring the exporter endpoint to `http://grafana-k8s-monitoring-alloy-receiver.default.svc.cluster.local:4318` within its `Instrumentation` CRD.
+    **Recommended Approach:** Use the [OpenTelemetry Operator](https://github.com/open-telemetry/opentelemetry-operator) for automatic injection. Add the `instrumentation.opentelemetry.io/inject-sdk: "true"` Pod annotation. The OTel Operator integrates seamlessly with Grafana Kubernetes Monitoring by automatically configuring the exporter endpoint to `http://grafana-k8s-monitoring-alloy-receiver.default.svc.cluster.local:4318` within its `Instrumentation` CRD.
 
     **Alternative:** Manually specify the `OTEL_*` environment variables directly in your Kubernetes deployment manifests, including deriving `service.instance.id` from Kubernetes metadata (`concat([k8s.namespace.name, k8s.pod.name, k8s.container.name], '.')`).
 
