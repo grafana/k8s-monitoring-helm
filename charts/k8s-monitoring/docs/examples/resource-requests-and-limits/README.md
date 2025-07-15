@@ -2,7 +2,15 @@
 (NOTE: Do not edit README.md directly. It is a generated file!)
 (      To make changes, please modify values.yaml or description.txt and run `make examples`)
 -->
-# Example: resource-requests-and-limits/values.yaml
+# Resource requests and limits
+
+This example demonstrates how to set resource requests and limits for every Kubernetes deployment available from this
+Helm chart. Resource requests ensure that the container has the necessary resources to run, while limits prevent it from
+consuming too many resources. These settings are often not set by default, because the "correct" values depend on the
+size and complexity of the cluster, the number of workloads and their activity, and many more factors.
+
+For Alloy, there are [best practices](https://grafana.com/docs/alloy/latest/introduction/estimate-resource-usage/) for
+setting these values, based on the purpose of that Alloy instance and the amount of data it is expected to handle.
 
 ## Values
 
