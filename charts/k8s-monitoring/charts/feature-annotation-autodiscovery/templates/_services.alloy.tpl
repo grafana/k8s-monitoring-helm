@@ -150,7 +150,7 @@ discovery.relabel "annotation_autodiscovery_services" {
   }
 {{- end }}
 {{- if .Values.extraDiscoveryRules }}
-{{ .Values.extraDiscoveryRules | indent 4 }}
+{{ .Values.extraDiscoveryRules | indent 2 }}
 {{- end }}
 }
 {{- end -}}
