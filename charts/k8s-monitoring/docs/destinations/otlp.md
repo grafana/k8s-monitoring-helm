@@ -47,7 +47,7 @@ This defines the options for defining a destination for OpenTelemetry data that 
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| auth.type | string | `"none"` | The type of authentication to do. Options are "none" (default), "basic", "bearerToken", "oauth2". |
+| auth.type | string | `"none"` | The type of authentication to do. Options are "none" (default), "basic", "bearerToken", "oauth2", "sigv4". |
 
 ### General
 
@@ -133,6 +133,16 @@ This defines the options for defining a destination for OpenTelemetry data that 
 | secret.embed | bool | `false` | If true, skip secret creation and embed the credentials directly into the configuration. |
 | secret.name | string | `""` | The name of the secret to create. |
 | secret.namespace | string | `""` | The namespace for the secret. |
+
+### Authentication - SigV4
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| secret.sigv4.assumeRole.arn | string | `""` | The Amazon Resource Name (ARN) of a role to assume. |
+| secret.sigv4.assumeRole.sessionName | string | `""` | The name of a role session. |
+| secret.sigv4.assumeRole.stsRegion | string | `""` | The AWS region where STS is used to assume the configured role. |
+| secret.sigv4.region | string | `""` | The AWS region for sigv4 authentication. |
+| secret.sigv4.service | string | `""` | The AWS service for sigv4 authentication. |
 
 ### TLS
 

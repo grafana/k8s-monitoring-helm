@@ -72,6 +72,27 @@ otelcol.auth.oauth2 {{ include "helper.alloy_name" .name | quote }} {
   token_url = {{ .auth.oauth2.tokenURL | quote }}
   {{- end }}
 }
+{{- else if eq (include "secrets.authType" .) "sigv4" }}
+otelcol.auth.sigv4 {{ include "helper.alloy_name" .name | quote }} {
+  {{- if .auth.sigv4.region }}
+  region = {{ .auth.sigv4.region | quote }}
+  {{- end }}
+  {{- if .auth.sigv4.service }}
+  service = {{ .auth.sigv4.service | quote }}
+  {{- end }}
+  {{- if (or .auth.sigv4.assumeRole.arn .auth.sigv4.assumeRole.sessionName .auth.sigv4.assumeRole.stsRegion) }}
+  assume_role {
+    {{- if .auth.sigv4.assumeRole.arn }}
+    arn = {{ .auth.sigv4.assumeRole.arn | quote }}
+    {{- end }}
+    {{- if .auth.sigv4.assumeRole.sessionName }}
+    session_name = {{ .auth.sigv4.assumeRole.sessionName | quote }}
+    {{- end }}
+    {{- if .auth.sigv4.assumeRole.stsRegion }}
+    sts_region = {{ .auth.sigv4.assumeRole.stsRegion | quote }}
+    {{- end }}
+  {{- end }}
+}
 {{- end }}
 
 otelcol.processor.attributes {{ include "helper.alloy_name" .name | quote }} {
@@ -381,6 +402,8 @@ otelcol.exporter.otlphttp {{ include "helper.alloy_name" .name | quote }} {
     auth = otelcol.auth.bearer.{{ include "helper.alloy_name" .name }}.handler
 {{- else if eq .auth.type "oauth2" }}
     auth = otelcol.auth.oauth2.{{ include "helper.alloy_name" .name }}.handler
+{{- else if eq .auth.type "sigv4" }}
+    auth = otelcol.auth.sigv4.{{ include "helper.alloy_name" .name }}.handler
 {{- end }}
 {{- if or (eq (include "secrets.usesSecret" (dict "object" . "key" "tenantId")) "true") .extraHeaders .extraHeadersFrom }}
     headers = {
