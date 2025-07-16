@@ -1,0 +1,56 @@
+---
+apiVersion: helm-chart-toolbox.grafana.com/v1
+kind: TestPlan
+name: application-observability
+
+subject:
+  releaseName: k8smon
+  path: ../../..
+  valuesFile: values.yaml
+
+cluster:
+  type: kind
+
+dependencies:
+  - file: dependencies/alloy-instrumented.yaml
+  - file: dependencies/alloy-via-extra-service.yaml
+  - preset: prometheus
+  - preset: tempo
+  - preset: grafana
+    overrides:
+      datasources:
+        datasources.yaml:
+          apiVersion: 1
+          datasources:
+            - name: Prometheus
+              type: prometheus
+              url: http://prometheus-server.prometheus.svc:9090
+              isDefault: true
+            - name: Tempo
+              type: tempo
+              url: http://tempo.tempo.svc:3200
+
+tests:
+  - type: query-test
+    values:
+      tests:
+        - env:
+            CLUSTER: application-observability-test
+            PROMETHEUS_URL: http://prometheus-server.prometheus.svc:9090/api/v1/query
+            TEMPO_URL: http://tempo.tempo.svc:3200/api/search
+          queries:
+            # Self reporting metrics
+            - query: grafana_kubernetes_monitoring_build_info{cluster="$CLUSTER"}
+              type: promql
+            - query: grafana_kubernetes_monitoring_feature_info{cluster="$CLUSTER", feature="applicationObservability"}
+              type: promql
+
+            # Traces
+            - query: "{resource.cluster=\"$CLUSTER\" && resource.k8s.deployment.name=\"alloy-app\"}"
+              type: traceql
+            - query: "{resource.cluster=\"$CLUSTER\" && resource.k8s.deployment.name=\"alloy-via-extra-service\"}"
+              type: traceql
+
+            # Host Info connector
+            - query: traces_host_info{k8s_cluster_name="$CLUSTER", grafana_host_id="application-observability-test-cluster-control-plane"}
+              type: promql

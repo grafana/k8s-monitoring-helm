@@ -1,0 +1,88 @@
+---
+apiVersion: helm-chart-toolbox.grafana.com/v1
+kind: TestPlan
+name: auth
+
+subject:
+  releaseName: k8smon
+  path: ../../..
+  valuesFile: values.yaml
+
+cluster:
+  type: kind
+
+dependencies:
+  - file: dependencies/credentials.yaml
+  - file: dependencies/passwords.yaml
+  - file: dependencies/nginx-auth-gateway.yaml
+  - preset: prometheus
+  - preset: loki
+    overrides:
+      gateway: null
+  - preset: grafana
+    overrides:
+      datasources:
+        datasources.yaml:
+          apiVersion: 1
+          datasources:
+            - name: Prometheus
+              type: prometheus
+              url: http://prometheus-server.prometheus.svc:9090
+              isDefault: true
+
+            - name: Loki
+              type: loki
+              url: http://loki.loki.svc:3100
+              jsonData:
+                httpHeaderName1: X-Scope-OrgID
+              secureJsonData:
+                httpHeaderValue1: "1"
+
+tests:
+  - type: query-test
+    values:
+      tests:
+        - env:
+          CLUSTER: auth-integration-test
+          PROMETHEUS_URL: http://prometheus-server.prometheus.svc:9090/api/v1/query
+          LOKI_URL: http://loki.loki.svc:3100/loki/api/v1/query
+          LOKI_TENANTID: 1
+          queries:
+            - query: kubernetes_build_info{cluster="$CLUSTER", destination="prometheus-noauth"}
+              type: promql
+            - query: kubernetes_build_info{cluster="$CLUSTER", destination="prometheus-basicauth"}
+              type: promql
+            - query: kubernetes_build_info{cluster="$CLUSTER", destination="prometheus-basicauth-external-secret-1"}
+              type: promql
+            - query: kubernetes_build_info{cluster="$CLUSTER", destination="prometheus-basicauth-external-secret-2"}
+              type: promql
+            - query: kubernetes_build_info{cluster="$CLUSTER", destination="prometheus-bearer-token"}
+              type: promql
+            - query: kubernetes_build_info{cluster="$CLUSTER", destination="prometheus-otlp-noauth"}
+              type: promql
+            - query: kubernetes_build_info{cluster="$CLUSTER", destination="prometheus-otlp-basicauth"}
+              type: promql
+            - query: kubernetes_build_info{cluster="$CLUSTER", destination="prometheus-otlp-bearer-token"}
+              type: promql
+
+            - query: count_over_time({cluster="$CLUSTER", destination="loki-noauth", job!="integrations/kubernetes/eventhandler"}[1h])
+              type: logql
+            - query: count_over_time({cluster="$CLUSTER", destination="loki-basicauth", job!="integrations/kubernetes/eventhandler"}[1h])
+              type: logql
+            - query: count_over_time({cluster="$CLUSTER", destination="loki-basicauth-external-secret", job!="integrations/kubernetes/eventhandler"}[1h])
+              type: logql
+            - query: count_over_time({cluster="$CLUSTER", destination="loki-bearer-token", job!="integrations/kubernetes/eventhandler"}[1h])
+              type: logql
+            # - query: count_over_time({cluster="$CLUSTER", destination="loki-otlp-noauth", job!="integrations/kubernetes/eventhandler"}[1h])
+            #   type: logql
+            # - query: count_over_time({cluster="$CLUSTER", destination="loki-otlp-basicauth", job!="integrations/kubernetes/eventhandler"}[1h])
+            #   type: logql
+            # - query: count_over_time({cluster="$CLUSTER", destination="loki-otlp-bearer-token", job!="integrations/kubernetes/eventhandler"}[1h])
+            #   type: logql
+
+            # DPM check
+            - query: avg(count_over_time(scrape_samples_scraped{cluster="$CLUSTER"}[1m]))
+              type: promql
+              expect:
+                value: 1
+                operator: ==
