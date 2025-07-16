@@ -70,7 +70,8 @@ loki.process "pod_logs" {
 {{- end }}
 
 {{- if .Values.labelsToKeep }}
-  {{- $lokiLabels := list }}
+  {{- $alwaysKeepLabels := list "__tenant_id__" }}
+  {{- $lokiLabels := $alwaysKeepLabels }}
   {{- range $label := .Values.labelsToKeep }}
     {{- $lokiLabels = append $lokiLabels (include "escape_label" $label) }}
   {{- end }}
