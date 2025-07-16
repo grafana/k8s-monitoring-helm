@@ -198,6 +198,34 @@ otelcol.processor.transform {{ include "helper.alloy_name" .name | quote }} {
   }
 {{- end }}
 {{- end }}
+{{- if .processors.k8sattributes.enabled }}
+
+  output {
+{{- if ne .metrics.enabled false }}
+    metrics = [otelcol.processor.k8sattributes.{{ include "helper.alloy_name" .name }}.input]
+{{- end }}
+{{- if ne .logs.enabled false }}
+    logs = [otelcol.processor.k8sattributes.{{ include "helper.alloy_name" .name }}.input]
+{{- end }}
+{{- if ne .traces.enabled false }}
+    traces = [otelcol.processor.k8sattributes.{{ include "helper.alloy_name" .name }}.input]
+{{- end }}
+  }
+}
+
+otelcol.processor.k8sattributes {{ include "helper.alloy_name" .name | quote }} {
+{{- range $podAssociation := .processors.k8sattributes.podAssociations }}
+  pod_association {
+    {{- range $resourceAttribute := $podAssociation.resourceAttributes }}
+    source {
+      from = "resource_attribute"
+      name = {{ $resourceAttribute | quote }}
+    }
+    {{- end }}
+  }
+{{- end }}
+
+{{- end }}
 {{- if .processors.filters.enabled }}
 
   output {

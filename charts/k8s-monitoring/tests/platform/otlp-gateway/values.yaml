@@ -17,6 +17,36 @@ destinations:
     metrics: {enabled: true}
     logs: {enabled: true}
     traces: {enabled: true}
+    processors:
+      attributes:
+        actions:
+          - key: k8s.pod.name
+            action: insert
+            fromAttribute: pod
+          - key: k8s.namespace.name
+            action: insert
+            fromAttribute: namespace
+      k8sattributes:
+        enabled: true
+        metadata:
+          - container.name
+          - deployment.environment
+          - k8s.cluster.name
+          - k8s.container.name
+          - k8s.replicaset.name
+          - k8s.namespace.name
+          - k8s.pod.name
+          - k8s.deployment.name
+          - service.name
+          - service.namespace
+          - k8s.statefulset.name
+          - service.instance.id
+          - k8s.daemonset.name
+          - k8s.cronjob.name
+          - k8s.job.name
+          - k8s.node.name
+          - k8s.pod.uid
+          - k8s.pod.start_time
 
 integrations:
   alloy:
@@ -24,6 +54,9 @@ integrations:
       - name: alloy
         labelSelectors:
           app.kubernetes.io/name: ["alloy-metrics"]
+
+clusterMetrics:
+  enabled: true
 
 clusterEvents:
   enabled: true
@@ -50,12 +83,12 @@ podLogs:
     - k8s.node.name
     - k8s.pod.name
     - pod
-  structuredMetadata:
-    k8s.pod.name: null
-    pod: null
+  structuredMetadata: {}
 
 alloy-metrics:
   enabled: true
+  liveDebugging:
+    enabled: true
 
 alloy-singleton:
   enabled: true
