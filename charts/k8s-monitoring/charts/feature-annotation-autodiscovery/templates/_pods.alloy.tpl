@@ -189,7 +189,7 @@ discovery.relabel "annotation_autodiscovery_pods" {
 {{- end }}
 {{- include "feature.annotationAutodiscovery.nodeDiscoveryRules" . | indent 2 }}
 {{- if .Values.extraDiscoveryRules }}
-{{ .Values.extraDiscoveryRules | indent 4 }}
+{{ .Values.extraDiscoveryRules | indent 2 }}
 {{- end }}
 }
 {{- end -}}
