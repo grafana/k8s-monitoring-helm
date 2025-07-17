@@ -1,0 +1,57 @@
+---
+apiVersion: helm-chart-toolbox.grafana.com/v1
+kind: TestPlan
+name: pod-logs-default
+
+subject:
+  releaseName: k8smon
+  path: ../../../..
+  valuesFile: values.yaml
+
+cluster:
+  type: kind
+  configFile: kind-cluster-config.yaml
+
+dependencies:
+  - file: dependencies/workloads.yaml
+  - preset: prometheus
+  - preset: loki
+  - preset: grafana
+    overrides:
+      datasources:
+        datasources.yaml:
+          apiVersion: 1
+          datasources:
+            - name: Prometheus
+              type: prometheus
+              url: http://prometheus-server.prometheus.svc:9090
+              isDefault: true
+
+            - name: Loki
+              type: loki
+              url: http://loki.loki.svc:3100
+              jsonData:
+                httpHeaderName1: X-Scope-OrgID
+              secureJsonData:
+                httpHeaderValue1: "1"
+
+tests:
+  - type: query-test
+    values:
+      tests:
+        - env:
+            CLUSTER: pod-logs-feature-test
+            LOKI_URL: http://loki.loki.svc:3100/loki/api/v1/query
+            LOKI_TENANTID: 1
+            LOKI_USER: loki
+            LOKI_PASS: lokipassword
+
+          queries:
+            # Gets Pod logs based on default job label
+            # Also ensure that we are getting pods from Nodes with taints
+            - query: count_over_time({cluster="$CLUSTER", job="production/busybox", namespace="production"}[1h])
+              type: logql
+
+            # Gets Pod logs based on annotation job label
+            - query: count_over_time({cluster="$CLUSTER", job="dev-pod", namespace="development"}[1h])
+              type: logql
