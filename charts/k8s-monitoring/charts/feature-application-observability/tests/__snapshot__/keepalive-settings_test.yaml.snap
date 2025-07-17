@@ -1,4 +1,4 @@
-creates the pipeline with the spanmetrics connector:
+creates the default pipeline:
   1: |
     |-
       declare "application_observability" {
@@ -22,6 +22,15 @@ creates the pipeline with the spanmetrics connector:
             max_recv_msg_size = "4MiB"
             read_buffer_size = "512KiB"
             write_buffer_size = "32KiB"
+            keepalive {
+              server_parameters {
+                max_connection_age = "1h"
+                max_connection_age_grace = "30s"
+              }
+              enforcement_policy {
+                permit_without_stream = true
+              }
+            }
           }
           debug_metrics {
             disable_high_cardinality_metrics = true
@@ -103,32 +112,7 @@ creates the pipeline with the spanmetrics connector:
           output {
             metrics = [otelcol.processor.batch.default.input]
             logs = [otelcol.processor.batch.default.input]
-            traces = [otelcol.connector.spanmetrics.default.input, otelcol.processor.batch.default.input]
-          }
-        }
-
-        // Span Metrics Connector
-        otelcol.connector.spanmetrics "default" {
-          dimension {
-            name = "http.status_code"
-          }
-          dimension {
-            name = "http.method"
-            default = "GET"
-          }
-          dimensions_cache_size = 1000
-          namespace = "traces.span.metrics"
-
-          histogram {
-            disable = false
-            unit = "ms"
-            explicit {
-              buckets = ["2ms","4ms","6ms","8ms","10ms","50ms","100ms","200ms","400ms","800ms","1s","1400ms","2s","5s","10s","15s"]
-            }
-          }
-
-          output {
-            metrics = [otelcol.processor.batch.default.input]
+            traces = [otelcol.processor.batch.default.input]
           }
         }
 
@@ -137,21 +121,6 @@ creates the pipeline with the spanmetrics connector:
           send_batch_size = 8192
           send_batch_max_size = 0
           timeout = "2s"
-
-          output {
-            metrics = [otelcol.processor.interval.default.input]
-            logs = [otelcol.processor.interval.default.input]
-            traces = [otelcol.processor.interval.default.input]
-          }
-        }
-
-        // Interval Processor
-        otelcol.processor.interval "default" {
-          interval = "60s"
-          passthrough {
-            gauge = false
-            summary = false
-          }
 
           output {
             metrics = argument.metrics_destinations.value
