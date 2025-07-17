@@ -145,11 +145,18 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | receivers.otlp.grpc.enabled | bool | `false` | Accept application data over OTLP gRPC. |
+| receivers.otlp.grpc.enforcementPolicy.minTime | string | `"5m"` | Minimum time clients should wait before sending a keepalive ping. |
+| receivers.otlp.grpc.enforcementPolicy.permitWithoutStream | bool | `false` | Allow clients to send keepalive pings when there are no active streams. |
 | receivers.otlp.grpc.includeMetadata | bool | `false` | Propagate incoming connection metadata to downstream consumers. |
 | receivers.otlp.grpc.maxConcurrentStreams | int | `0` | Limit the number of concurrent streaming gRPC calls. 0 means no limit. |
 | receivers.otlp.grpc.maxReceivedMessageSize | string | `"4MiB"` | Maximum size of messages the gRPC server will accept. |
 | receivers.otlp.grpc.port | int | `4317` | The port to listen on for OTLP gRPC requests. |
 | receivers.otlp.grpc.readBufferSize | string | `"512KiB"` | Size of the read buffer the gRPC server will use for reading from clients. |
+| receivers.otlp.grpc.serverParameters.maxConnectionAge | string | `""` | Maximum age for non-idle connections. Default is infinity. |
+| receivers.otlp.grpc.serverParameters.maxConnectionAgeGrace | string | `""` | Time to wait before forcibly closing connections. Default is infinity. |
+| receivers.otlp.grpc.serverParameters.maxConnectionIdle | string | `""` | Maximum age for idle connections. Default is infinity. |
+| receivers.otlp.grpc.serverParameters.time | string | `"2h"` | How often to ping inactive clients to check for liveness. |
+| receivers.otlp.grpc.serverParameters.timeout | string | `"20s"` | Time to wait before closing inactive clients that don’t respond to liveness checks. |
 | receivers.otlp.grpc.writeBufferSize | string | `"32KiB"` | Size of the write buffer the gRPC server will use for writing to clients. |
 | receivers.otlp.http.enabled | bool | `false` | Accept application data over OTLP HTTP. |
 | receivers.otlp.http.includeMetadata | bool | `false` | Propagate incoming connection metadata to downstream consumers. |

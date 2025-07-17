@@ -31,6 +31,32 @@ receivers:
       # @section -- Receivers: OTLP
       writeBufferSize: 32KiB
 
+      serverParameters:
+        # -- Maximum age for non-idle connections. Default is infinity.
+        # @section -- Receivers: OTLP
+        maxConnectionAge: ""
+        # -- Time to wait before forcibly closing connections. Default is infinity.
+        # @section -- Receivers: OTLP
+        maxConnectionAgeGrace: ""
+        # -- Maximum age for idle connections. Default is infinity.
+        # @section -- Receivers: OTLP
+        maxConnectionIdle: ""
+        # -- How often to ping inactive clients to check for liveness.
+        # @section -- Receivers: OTLP
+        time: "2h"
+        # -- Time to wait before closing inactive clients that don’t respond to liveness checks.
+        # @section -- Receivers: OTLP
+        timeout: "20s"
+
+      enforcementPolicy:
+        # -- Minimum time clients should wait before sending a keepalive ping.
+        # @section -- Receivers: OTLP
+        minTime: "5m"
+
+        # -- Allow clients to send keepalive pings when there are no active streams.
+        # @section -- Receivers: OTLP
+        permitWithoutStream: false
+
     # The OTLP HTTP receiver configuration.
     http:
       # -- Accept application data over OTLP HTTP.
