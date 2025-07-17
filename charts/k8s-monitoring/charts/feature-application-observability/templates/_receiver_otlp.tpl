@@ -10,6 +10,42 @@ otelcol.receiver.otlp "receiver" {
 {{- end }}
     read_buffer_size = {{ .Values.receivers.otlp.grpc.readBufferSize | quote }}
     write_buffer_size = {{ .Values.receivers.otlp.grpc.writeBufferSize | quote }}
+
+    {{- $hasServerParameters := and .Values.receivers.otlp.grpc.keepalive.serverParameters (or .Values.receivers.otlp.grpc.keepalive.serverParameters.maxConnectionAge .Values.receivers.otlp.grpc.keepalive.serverParameters.maxConnectionAgeGrace .Values.receivers.otlp.grpc.keepalive.serverParameters.maxConnectionIdle) }}
+    {{- $hasEnforcementPolicy := and .Values.receivers.otlp.grpc.keepalive.enforcementPolicy (or .Values.receivers.otlp.grpc.keepalive.enforcementPolicy.minTime .Values.receivers.otlp.grpc.keepalive.enforcementPolicy.permitWithoutStream) }}
+    {{- if or $hasServerParameters $hasEnforcementPolicy }}
+    keepalive {
+      {{- if $hasServerParameters }}
+      server_parameters {
+        {{- if .Values.receivers.otlp.grpc.keepalive.serverParameters.maxConnectionAge }}
+        max_connection_age = {{ .Values.receivers.otlp.grpc.keepalive.serverParameters.maxConnectionAge | quote }}
+        {{- end }}
+        {{- if .Values.receivers.otlp.grpc.keepalive.serverParameters.maxConnectionAgeGrace }}
+        max_connection_age_grace = {{ .Values.receivers.otlp.grpc.keepalive.serverParameters.maxConnectionAgeGrace | quote }}
+        {{- end }}
+        {{- if .Values.receivers.otlp.grpc.keepalive.serverParameters.maxConnectionIdle }}
+        max_connection_idle = {{ .Values.receivers.otlp.grpc.keepalive.serverParameters.maxConnectionIdle | quote }}
+        {{- end }}
+        {{- if .Values.receivers.otlp.grpc.keepalive.serverParameters.time }}
+        time = {{ .Values.receivers.otlp.grpc.keepalive.serverParameters.time | quote }}
+        {{- end }}
+        {{- if .Values.receivers.otlp.grpc.keepalive.serverParameters.timeout }}
+        timeout = {{ .Values.receivers.otlp.grpc.keepalive.serverParameters.timeout | quote }}
+        {{- end }}
+      }
+      {{- end }}
+      {{- if $hasEnforcementPolicy }}
+      enforcement_policy {
+        {{- if .Values.receivers.otlp.grpc.keepalive.enforcementPolicy.maxConnectionAge }}
+        min_time = {{ .Values.receivers.otlp.grpc.keepalive.enforcementPolicy.minTime | quote }}
+        {{- end }}
+        {{- if .Values.receivers.otlp.grpc.keepalive.enforcementPolicy.permitWithoutStream }}
+        permit_without_stream = {{ .Values.receivers.otlp.grpc.keepalive.enforcementPolicy.permitWithoutStream }}
+        {{- end }}
+      }
+      {{- end }}
+    }
+    {{- end }}
   }
 {{- end }}
 {{- if .Values.receivers.otlp.http.enabled }}
