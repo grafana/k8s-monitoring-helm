@@ -207,6 +207,7 @@ details:
 |  | integrations(feature-integrations) | 1.0.0 |
 |  | nodeLogs(feature-node-logs) | 1.0.0 |
 |  | podLogs(feature-pod-logs) | 1.0.0 |
+|  | profilesReceiver(feature-profiles-receiver) | 1.0.0 |
 |  | profiling(feature-profiling) | 1.0.0 |
 |  | prometheusOperatorObjects(feature-prometheus-operator-objects) | 1.0.0 |
 | https://grafana.github.io/helm-charts | alloy-operator | 0.3.6 |
@@ -332,6 +333,14 @@ details:
 | podLogs | object | Disabled | Pod logs. Requires a destination that supports logs. To see the valid options, please see the [Pod Logs feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-pod-logs). |
 | podLogs.destinations | list | `[]` | The destinations where logs will be sent. If empty, all logs-capable destinations will be used. |
 | podLogs.enabled | bool | `false` | Enable gathering Kubernetes Pod logs. |
+
+### Features - Profiles Receiver
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| profilesReceiver | object | Disabled | Profiles Receiver enables receiving profiles from applications. Requires a destination that supports profiles. To see the valid options, please see the [Profiles Receiver feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-profiles-receiver). |
+| profilesReceiver.destinations | list | `[]` | The destinations where profiles will be sent. If empty, all profiles-capable destinations will be used. |
+| profilesReceiver.enabled | bool | `false` | Enable gathering profiles from applications. |
 
 ### Features - Profiling
 
