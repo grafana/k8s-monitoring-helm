@@ -1,6 +1,10 @@
 # Features
 
-The Kubernetes Monitoring Helm chart contains multiple features to group common monitoring tasks into  sections within the chart. Any feature contains the Alloy configuration used to discover, gather, process, and deliver the appropriate telemetry data, as well as some additional Kubernetes workloads to supplement Alloy's functionality. Features can be enabled or disabled with the enabled flag, and each contain multiple configuration options described in the feature's documentation.
+The Kubernetes Monitoring Helm chart contains multiple features to group common monitoring tasks into  sections within
+the chart. Any feature contains the Alloy configuration used to discover, gather, process, and deliver the appropriate
+telemetry data, as well as some additional Kubernetes workloads to supplement Alloy's functionality. Features can be
+enabled with the `enabled` flag, and each contain multiple configuration options described in the feature's
+documentation.
 
 These are the current features supported in this Helm chart:
 
