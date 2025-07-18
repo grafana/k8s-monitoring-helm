@@ -65,14 +65,47 @@ discovery.relabel "filtered_pods" {
   rule {
     action = "replace"
     source_labels = [
-      "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_name",
-      "__meta_kubernetes_pod_label_app_kubernetes_io_name",
+      {{ include "pod_annotation" "resource.opentelemetry.io/service.name" | quote }},
+      {{ include "pod_label" "app.kubernetes.io/name" | quote }},
       "__meta_kubernetes_pod_container_name",
     ]
     separator = ";"
     regex = "^(?:;*)?([^;]+).*$"
     replacement = "$1"
     target_label = "service_name"
+  }
+
+  // explicitly set service_namespace.
+  //
+  // choose the first value found from the following ordered list:
+  // - pod.annotation[resource.opentelemetry.io/service.namespace]
+  // - pod.namespace
+  rule {
+    action = "replace"
+    source_labels = [
+      {{ include "pod_annotation" "resource.opentelemetry.io/service.namespace" | quote }},
+      "namespace",
+    ]
+    separator = ";"
+    regex = "^(?:;*)?([^;]+).*$"
+    replacement = "$1"
+    target_label = "service_namespace"
+  }
+
+  // explicitly set service_instance_id.
+  //
+  // choose the first value found from the following ordered list:
+  // - pod.annotation[resource.opentelemetry.io/service.instance.id]
+  // - concat([k8s.namespace.name, k8s.pod.name, k8s.container.name], '.')
+  rule {
+    source_labels = [{{ include "pod_annotation" "resource.opentelemetry.io/service.instance.id" | quote }}]
+    target_label = "service_instance_id"
+  }
+  rule {
+    source_labels = ["service_instance_id", "namespace", "pod", "container"]
+    separator = "."
+    regex = "^\\.([^.]+\\.[^.]+\\.[^.]+)$"
+    target_label = "service_instance_id"
   }
 
   // set resource attributes
