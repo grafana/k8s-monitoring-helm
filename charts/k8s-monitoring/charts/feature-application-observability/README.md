@@ -73,6 +73,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 |-----|------|---------|-------------|
 | connectors.spanMetrics.dimensions | list | `[]` | Define dimensions to be added. Some are set internally by default: [service.name, span.name, span.kind, status.code] Example: - name: "http.status_code" - name: "http.method"   default: "GET" |
 | connectors.spanMetrics.dimensionsCacheSize | int | `1000` | How many dimensions to cache |
+| connectors.spanMetrics.aggregationCardinalityLimit | int | `1000` | How many unique combinations of dimensions that will be tracked for metrics aggregation |
 | connectors.spanMetrics.enabled | bool | `false` | Use a span metrics connector which creates metrics from spans. |
 | connectors.spanMetrics.events.enabled | bool | `false` | Capture events metrics, which track span events. |
 | connectors.spanMetrics.exemplars.enabled | bool | `false` | Attach exemplars to histograms. |
