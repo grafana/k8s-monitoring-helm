@@ -72,6 +72,21 @@ discovery.relabel "annotation_autodiscovery_pods" {
     target_label = "job"
   }
   rule {
+    source_labels = ["job", "{{ include "pod_label" "app.kubernetes.io/name" }}"]
+    regex = ";(.+)"
+    target_label = "job"
+  }
+  rule {
+    source_labels = ["job", "{{ include "pod_label" "app" }}"]
+    regex = ";(.+)"
+    target_label = "job"
+  }
+  rule {
+    source_labels = ["job", "container"]
+    regex = ";(.+)"
+    target_label = "job"
+  }
+  rule {
     source_labels = ["{{ include "pod_annotation" .Values.annotations.instance }}"]
     target_label = "instance"
   }

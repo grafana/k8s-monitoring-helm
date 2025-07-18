@@ -242,3 +242,15 @@ ifdef HAS_HELM_UNITTEST
 else
 	docker run --rm --volume $(shell pwd):/apps helmunittest/helm-unittest:3.17.0-0.7.1 --failfast --with-subchart=false .
 endif
+
+.PHONY: update-test-snapshots
+update-test-snapshots:
+ifdef HAS_HELM_UNITTEST
+	helm unittest --with-subchart=false . --update-snapshot
+else
+	docker run --rm --volume $(shell pwd):/apps helmunittest/helm-unittest:3.17.0-0.7.1 --with-subchart=false . --update-snapshot
+endif
+	set -e && \
+	for chart in $(FEATURE_CHARTS); do \
+		make -C charts/$$chart update-test-snapshots; \
+	done

@@ -57,6 +57,21 @@ discovery.relabel "annotation_autodiscovery_services" {
     target_label = "job"
   }
   rule {
+    source_labels = ["job", "{{ include "service_label" "app.kubernetes.io/name" }}"]
+    regex = ";(.+)"
+    target_label = "job"
+  }
+  rule {
+    source_labels = ["job", "{{ include "service_label" "app" }}"]
+    regex = ";(.+)"
+    target_label = "job"
+  }
+  rule {
+    source_labels = ["job", "service"]
+    regex = ";(.+)"
+    target_label = "job"
+  }
+  rule {
     source_labels = ["{{ include "service_annotation" .Values.annotations.instance }}"]
     target_label = "instance"
   }
