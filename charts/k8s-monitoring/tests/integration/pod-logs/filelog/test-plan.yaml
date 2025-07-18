@@ -1,7 +1,7 @@
 ---
 apiVersion: helm-chart-toolbox.grafana.com/v1
 kind: TestPlan
-name: pod-logs-default
+name: pod-logs-filelog
 
 subject:
   releaseName: k8smon
@@ -10,11 +10,9 @@ subject:
 
 cluster:
   type: kind
-  configFile: kind-cluster-config.yaml
 
 dependencies:
-  - file: dependencies/development-workload.yaml
-  - file: dependencies/production-workload.yaml
+  - file: dependencies/workloads.yaml
   - preset: loki
   - preset: grafana
     overrides:
@@ -36,18 +34,15 @@ tests:
     values:
       tests:
         - env:
-            CLUSTER: pod-logs-feature-test
+            CLUSTER: pod-logs-via-filelog-test
             LOKI_URL: http://loki.loki.svc:3100/loki/api/v1/query
             LOKI_TENANTID: 1
             LOKI_USER: loki
             LOKI_PASS: lokipassword
 
           queries:
-            # Gets Pod logs based on default job label
-            # Also ensure that we are getting pods from Nodes with taints
-            - query: count_over_time({cluster="$CLUSTER", job="production/busybox", namespace="production"}[1h])
+            # Gets Pod logs with namespace labels
+            - query: count_over_time({k8s_cluster_name="$CLUSTER", job="production/prod-pod", k8s_namespace_name="production", color="red"}[1h])
               type: logql
-
-            # Gets Pod logs based on annotation job label
-            - query: count_over_time({cluster="$CLUSTER", job="dev-pod", namespace="development"}[1h])
+            - query: count_over_time({k8s_cluster_name="$CLUSTER", job="development/dev-pod", k8s_namespace_name="development", color="blue"}[1h])
               type: logql
