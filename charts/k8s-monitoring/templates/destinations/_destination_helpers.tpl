@@ -54,7 +54,6 @@
 {{- range $destination := .Values.destinations }}
   {{- if eq $destination.name $.destination }}
     {{- $destination | toYaml | indent 0 }}
-    {{- break }}
   {{- end }}
 {{- end }}
 {{- end }}
