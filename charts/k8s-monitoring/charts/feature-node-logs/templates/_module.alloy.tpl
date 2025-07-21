@@ -165,10 +165,18 @@ declare "node_logs" {
     }
     {{- end }}
 
+{{- if .Values.labelsToKeep }}
+  {{- $alwaysKeepLabels := list "__tenant_id__" }}
+  {{- $lokiLabels := $alwaysKeepLabels }}
+  {{- range $label := .Values.labelsToKeep }}
+    {{- $lokiLabels = append $lokiLabels (include "escape_label" $label) }}
+  {{- end }}
+
     // Only keep the labels that are defined in the `keepLabels` list.
     stage.label_keep {
-      values = {{ .Values.labelsToKeep | toJson }}
+      values = {{ $lokiLabels | toJson }}
     }
+{{- end }}
 
     forward_to = argument.logs_destinations.value
   }
