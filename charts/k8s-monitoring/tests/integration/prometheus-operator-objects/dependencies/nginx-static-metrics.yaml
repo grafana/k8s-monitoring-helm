@@ -38,8 +38,10 @@ spec:
     name: nginx
   dependsOn:
     - name: prometheus-operator-crds
-      namespace: prometheus
+      namespace: prometheus-operator-crds
   values:
+    podLabels:
+      app.kubernetes.io/name: static-metrics
     replicaCount: 1
     service:
       type: ClusterIP
@@ -70,7 +72,7 @@ spec:
               - nginx
           selector:
             matchLabels:
-              app.kubernetes.io/name: nginx
+              app.kubernetes.io/name: static-metrics
               app.kubernetes.io/instance: nginx-static-metrics
           podMetricsEndpoints:
             - portNumber: 8080
