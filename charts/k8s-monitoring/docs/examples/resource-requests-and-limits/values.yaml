@@ -1,0 +1,96 @@
+---
+cluster:
+  name: resources-example-cluster
+
+destinations:
+  - name: prometheus
+    type: prometheus
+    url: http://prometheus.prometheus.svc:9090/api/v1/write
+
+clusterMetrics:
+  enabled: true
+  kube-state-metrics:
+    resources:
+      requests:
+        cpu: 10m
+        memory: 32Mi
+      limits:
+        cpu: 100m
+        memory: 64Mi
+
+  node-exporter:
+    resources:
+      limits:
+        cpu: 200m
+        memory: 50Mi
+      requests:
+        cpu: 100m
+        memory: 30Mi
+
+  windows-exporter:
+    resources:
+      limits:
+        cpu: 200m
+        memory: 50Mi
+    requests:
+        cpu: 100m
+        memory: 30Mi
+
+  opencost:
+    exporter:
+      resources:
+        requests:
+          cpu: 10m      # The default set in the OpenCost Helm chart
+          memory: 55Mi  # The default set in the OpenCost Helm chart
+        limits:
+          cpu: 100m
+          memory: 1Gi  # The default set in the OpenCost Helm chart
+
+  kepler:
+    enabled: true
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 200m
+        memory: 256Mi
+
+autoInstrumentation:
+  enabled: true
+  beyla:
+    resources:
+      limits:
+        cpu: 100m
+        memory: 128Mi
+      requests:
+        cpu: 100m
+        memory: 128Mi
+
+alloy-metrics:
+  enabled: true
+  alloy:
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 200m
+        memory: 256Mi
+  configReloader:
+    resources:
+      requests:
+        cpu: 10m      # The default set in the Alloy Helm chart
+        memory: 50Mi  # The default set in the Alloy Helm chart
+      limits:
+        cpu: 100m
+        memory: 128Mi
+
+alloy-operator:
+  resources:
+    requests:
+      cpu: 10m
+      memory: 64Mi
+    limits:
+      cpu: 500m
+      memory: 128Mi

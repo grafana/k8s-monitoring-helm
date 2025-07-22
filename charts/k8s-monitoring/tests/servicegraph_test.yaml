@@ -1,0 +1,55 @@
+---
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Feature - Servicegraph Metrics
+templates:
+  - alloy-servicegraph.yaml
+tests:
+  - it: uses destination secret
+    set:
+      destinations:
+        - name: prometheus
+          type: prometheus
+          url: http://prometheus-server.prometheus.svc:9090/api/v1/write
+          auth:
+            type: basic
+            usernameKey: promUser
+            passwordKey: promPass
+          secret:
+            create: false
+            name: my-prom-secret
+            namespace: default
+        - name: tempo
+          type: otlp
+          url: tempo.tempo.svc:4317
+          tls:
+            insecure: true
+            insecureSkipVerify: true
+          metrics: {enabled: false}
+          logs: {enabled: false}
+          traces: {enabled: true}
+          processors:
+            serviceGraphMetrics:
+              collector:
+                controller:
+                  replicas: 3
+              enabled: true
+              receiver:
+                otlp:
+                  grpc:
+                    maxReceivedMessageSize: 8MB
+              cacheLoop: 2m
+              databaseNameAttribute: "db.name"
+              dimensions:
+                - cluster
+                - service.name
+                - service.namespace
+                - k8s.deployment.name
+                - k8s.namespace.name
+              metricsFlushInterval: 60s
+              storeExpirationLoop: 5s
+
+    asserts:
+      - isKind:
+          of: Alloy
+      - matchSnapshot:
+          path: spec.alloy.configMap.content

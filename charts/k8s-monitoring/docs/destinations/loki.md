@@ -54,6 +54,8 @@ This defines the options for defining a destination for logs that use the Loki p
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
+| batchSize | string | `""` | Maximum batch size of logs to accumulate before sending. |
+| batchWait | string | `""` | Maximum amount of time to wait before sending a batch. |
 | clusterLabels | list | `["cluster","k8s.cluster.name"]` | Labels to be set with the cluster name as the value. |
 | extraHeaders | object | `{}` | Extra headers to be set when sending data. All values are treated as strings and automatically quoted. |
 | extraHeadersFrom | object | `{}` | Extra headers to be set when sending data through a dynamic reference. All values are treated as raw strings and not quoted. |

@@ -1,0 +1,123 @@
+uses destination secret:
+  1: |
+    |-
+      otelcol.receiver.otlp "service_graph_receiver" {
+        grpc {
+          max_recv_msg_size = "8MB"
+        }
+
+        output {
+          traces = [otelcol.connector.servicegraph.service_graph_metrics.input]
+        }
+      }
+      otelcol.connector.servicegraph "service_graph_metrics" {
+        // https://grafana.com/docs/alloy/latest/reference/components/otelcol/otelcol.connector.servicegraph/
+
+        cache_loop = "2m"
+
+        database_name_attribute = "db.name"
+
+        dimensions = [
+            "cluster",
+            "service.name",
+            "service.namespace",
+            "k8s.deployment.name",
+            "k8s.namespace.name",
+        ]
+
+        latency_histogram_buckets = [
+            "2ms",
+            "4ms",
+            "6ms",
+            "8ms",
+            "10ms",
+            "50ms",
+            "100ms",
+            "200ms",
+            "400ms",
+            "800ms",
+            "1s",
+            "1400ms",
+            "2s",
+            "5s",
+            "10s",
+            "15s",
+        ]
+
+        metrics_flush_interval = "60s"
+
+        store_expiration_loop = "5s"
+
+        output {
+            metrics = [
+              otelcol.exporter.prometheus.prometheus.input,
+            ]
+        }
+      }
+
+      // Destination: prometheus (prometheus)
+
+      remote.kubernetes.secret "prometheus" {
+        name      = "my-prom-secret"
+        namespace = "default"
+      }
+
+      otelcol.exporter.prometheus "prometheus" {
+        add_metric_suffixes = true
+        resource_to_telemetry_conversion = false
+        forward_to = [prometheus.remote_write.prometheus.receiver]
+      }
+
+      prometheus.remote_write "prometheus" {
+        endpoint {
+          url = "http://prometheus-server.prometheus.svc:9090/api/v1/write"
+          headers = {
+            "X-Scope-OrgID" = convert.nonsensitive(remote.kubernetes.secret.prometheus.data["tenantId"]),
+          }
+          basic_auth {
+            username = convert.nonsensitive(remote.kubernetes.secret.prometheus.data["promUser"])
+            password = remote.kubernetes.secret.prometheus.data["promPass"]
+          }
+          tls_config {
+            insecure_skip_verify = false
+            ca_pem = convert.nonsensitive(remote.kubernetes.secret.prometheus.data["ca"])
+            cert_pem = convert.nonsensitive(remote.kubernetes.secret.prometheus.data["cert"])
+            key_pem = remote.kubernetes.secret.prometheus.data["key"]
+          }
+          send_native_histograms = false
+
+          queue_config {
+            capacity = 10000
+            min_shards = 1
+            max_shards = 50
+            max_samples_per_send = 2000
+            batch_send_deadline = "5s"
+            min_backoff = "30ms"
+            max_backoff = "5s"
+            retry_on_http_429 = true
+            sample_age_limit = "0s"
+          }
+
+          write_relabel_config {
+            source_labels = ["cluster"]
+            regex = ""
+            replacement = ""
+            target_label = "cluster"
+          }
+          write_relabel_config {
+            source_labels = ["k8s_cluster_name"]
+            regex = ""
+            replacement = ""
+            target_label = "k8s_cluster_name"
+          }
+        }
+
+        wal {
+          truncate_frequency = "2h"
+          min_keepalive_time = "5m"
+          max_keepalive_time = "8h"
+        }
+        external_labels = {
+          collector_id = env("POD_NAME"),
+        }
+      }

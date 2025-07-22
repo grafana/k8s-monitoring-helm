@@ -1,0 +1,43 @@
+---
+cluster:
+  name: timescaledb-integration-cluster
+
+destinations:
+  - name: prometheus
+    type: prometheus
+    url: http://prometheus.prometheus.svc:9090/api/v1/write
+
+alloy-metrics:
+  enabled: true
+  extraConfig: |-
+    remote.kubernetes.secret "timescale_db" {
+      name = "timescale-db"
+      namespace = "monitoring"
+    }
+
+    prometheus.scrape "timescale_db" {
+      targets = [
+        {"__address__" = convert.nonsensitive(remote.kubernetes.secret.timescale_db.data["url"])},
+      ]
+
+      job_name        = "integrations/timescale_db"
+      scrape_interval = "30s"
+      scheme          = "https"
+      metrics_path    = "/metrics"
+
+      basic_auth {
+        username = nonsensitive(remote.kubernetes.secret.timescale_db.data["username"])
+        password = remote.kubernetes.secret.timescale_db.data["password"]
+      }
+
+      forward_to = [prometheus.relabel.filter_timescale.receiver]
+    }
+
+    prometheus.relabel "filter_timescale" {
+      rule {
+        action        = "keep"
+        source_labels = ["service_id"]
+        regex         = convert.nonsensitive(remote.kubernetes.secret.timescale_db.data["service_id"])
+      }
+      forward_to = [prometheus.remote_write.prometheus.receiver]
+    }

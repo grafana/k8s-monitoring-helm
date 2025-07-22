@@ -75,6 +75,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | connectors.spanMetrics.dimensionsCacheSize | int | `1000` | How many dimensions to cache |
 | connectors.spanMetrics.enabled | bool | `false` | Use a span metrics connector which creates metrics from spans. |
 | connectors.spanMetrics.events.enabled | bool | `false` | Capture events metrics, which track span events. |
+| connectors.spanMetrics.excludeDimensions | list | `[]` | List of dimensions to be excluded from the default set of dimensions. |
 | connectors.spanMetrics.exemplars.enabled | bool | `false` | Attach exemplars to histograms. |
 | connectors.spanMetrics.exemplars.maxPerDataPoint | number | `nil` | Limits the number of exemplars that can be added to a unique dimension set. |
 | connectors.spanMetrics.histogram.enabled | bool | `true` | Capture histogram metrics, derived from spans’ durations. |
@@ -146,6 +147,13 @@ Be sure perform actual integration testing in a live environment in the main [k8
 |-----|------|---------|-------------|
 | receivers.otlp.grpc.enabled | bool | `false` | Accept application data over OTLP gRPC. |
 | receivers.otlp.grpc.includeMetadata | bool | `false` | Propagate incoming connection metadata to downstream consumers. |
+| receivers.otlp.grpc.keepalive.enforcementPolicy.minTime | string | `""` | Minimum time clients should wait before sending a keepalive ping. Default is 5 minutes. |
+| receivers.otlp.grpc.keepalive.enforcementPolicy.permitWithoutStream | bool | `false` | Allow clients to send keepalive pings when there are no active streams. |
+| receivers.otlp.grpc.keepalive.serverParameters.maxConnectionAge | string | `""` | Maximum age for non-idle connections. Default is infinity. |
+| receivers.otlp.grpc.keepalive.serverParameters.maxConnectionAgeGrace | string | `""` | Time to wait before forcibly closing connections. Default is infinity. |
+| receivers.otlp.grpc.keepalive.serverParameters.maxConnectionIdle | string | `""` | Maximum age for idle connections. Default is infinity. |
+| receivers.otlp.grpc.keepalive.serverParameters.time | string | `""` | How often to ping inactive clients to check for liveness. Default is 2 hours. |
+| receivers.otlp.grpc.keepalive.serverParameters.timeout | string | `""` | Time to wait before closing inactive clients that don’t respond to liveness checks. Default is 20 seconds. |
 | receivers.otlp.grpc.maxConcurrentStreams | int | `0` | Limit the number of concurrent streaming gRPC calls. 0 means no limit. |
 | receivers.otlp.grpc.maxReceivedMessageSize | string | `"4MiB"` | Maximum size of messages the gRPC server will accept. |
 | receivers.otlp.grpc.port | int | `4317` | The port to listen on for OTLP gRPC requests. |

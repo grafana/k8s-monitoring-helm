@@ -6,10 +6,10 @@ metadata:
   name: k8smon-alloy-operator
   namespace: default
   labels:
-    helm.sh/chart: alloy-operator-0.3.4
+    helm.sh/chart: alloy-operator-0.3.6
     app.kubernetes.io/name: alloy-operator
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.1.2"
+    app.kubernetes.io/version: "1.2.0"
     app.kubernetes.io/managed-by: Helm
 automountServiceAccountToken: true
 ---
@@ -188,14 +188,14 @@ data:
           source_labels = ["__meta_kubernetes_pod_label_color"]
           target_label = "color"
         }
-          rule {
-            source_labels = ["__scrape_interval__"]
-            target_label = "scrape_interval"
-          }
-          rule {
-            source_labels = ["__scrape_timeout__"]
-            target_label = "scrape_timeout"
-          }
+        rule {
+          source_labels = ["__scrape_interval__"]
+          target_label = "scrape_interval"
+        }
+        rule {
+          source_labels = ["__scrape_timeout__"]
+          target_label = "scrape_timeout"
+        }
       }
     
       discovery.kubernetes "services" {
@@ -302,14 +302,14 @@ data:
           replacement = "10s"
           target_label = "__scrape_timeout__"
         }
-          rule {
-            source_labels = ["__scrape_interval__"]
-            target_label = "scrape_interval"
-          }
-          rule {
-            source_labels = ["__scrape_timeout__"]
-            target_label = "scrape_timeout"
-          }
+        rule {
+          source_labels = ["__scrape_interval__"]
+          target_label = "scrape_interval"
+        }
+        rule {
+          source_labels = ["__scrape_timeout__"]
+          target_label = "scrape_timeout"
+        }
       }
     
       discovery.relabel "annotation_autodiscovery_http" {
@@ -458,11 +458,12 @@ data:
   self-reporting-metric.prom: |
     # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_build_info gauge
-    grafana_kubernetes_monitoring_build_info{version="3.1.0", namespace="default"} 1
+    grafana_kubernetes_monitoring_build_info{version="3.1.5", namespace="default"} 1
     # HELP grafana_kubernetes_monitoring_feature_info A metric to report the enabled features of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_feature_info gauge
     grafana_kubernetes_monitoring_feature_info{feature="annotationAutodiscovery", version="1.0.0"} 1
     grafana_kubernetes_monitoring_feature_info{feature="podLogs", method="volumes", version="1.0.0"} 1
+    # EOF
 ---
 # Source: k8s-monitoring/templates/alloy-config.yaml
 apiVersion: v1
@@ -639,7 +640,7 @@ data:
     
         // Only keep the labels that are defined in the `keepLabels` list.
         stage.label_keep {
-          values = ["app_kubernetes_io_name","container","instance","job","level","namespace","service_name","service_namespace","deployment_environment","deployment_environment_name","k8s_namespace_name","k8s_deployment_name","k8s_statefulset_name","k8s_daemonset_name","k8s_cronjob_name","k8s_job_name","k8s_node_name"]
+          values = ["__tenant_id__","app_kubernetes_io_name","container","instance","job","level","namespace","service_name","service_namespace","deployment_environment","deployment_environment_name","k8s_namespace_name","k8s_deployment_name","k8s_statefulset_name","k8s_daemonset_name","k8s_cronjob_name","k8s_job_name","k8s_node_name"]
         }
     
         forward_to = argument.logs_destinations.value
@@ -691,10 +692,10 @@ kind: ClusterRole
 metadata:
   name: k8smon-alloy-operator-alloy-manager
   labels:
-    helm.sh/chart: alloy-operator-0.3.4
+    helm.sh/chart: alloy-operator-0.3.6
     app.kubernetes.io/name: alloy-operator
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.1.2"
+    app.kubernetes.io/version: "1.2.0"
     app.kubernetes.io/managed-by: Helm
 rules:
   - apiGroups:
@@ -749,10 +750,10 @@ kind: ClusterRoleBinding
 metadata:
   name: k8smon-alloy-operator-alloy-manager
   labels:
-    helm.sh/chart: alloy-operator-0.3.4
+    helm.sh/chart: alloy-operator-0.3.6
     app.kubernetes.io/name: alloy-operator
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.1.2"
+    app.kubernetes.io/version: "1.2.0"
     app.kubernetes.io/managed-by: Helm
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -769,10 +770,10 @@ kind: ClusterRoleBinding
 metadata:
   name: k8smon-alloy-operator
   labels:
-    helm.sh/chart: alloy-operator-0.3.4
+    helm.sh/chart: alloy-operator-0.3.6
     app.kubernetes.io/name: alloy-operator
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.1.2"
+    app.kubernetes.io/version: "1.2.0"
     app.kubernetes.io/managed-by: Helm
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -790,10 +791,10 @@ metadata:
   name: k8smon-alloy-operator-leader-election-role
   namespace: default
   labels:
-    helm.sh/chart: alloy-operator-0.3.4
+    helm.sh/chart: alloy-operator-0.3.6
     app.kubernetes.io/name: alloy-operator
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.1.2"
+    app.kubernetes.io/version: "1.2.0"
     app.kubernetes.io/managed-by: Helm
 rules:
   - apiGroups:
@@ -835,10 +836,10 @@ metadata:
   name: k8smon-alloy-operator-leader-election-rolebinding
   namespace: default
   labels:
-    helm.sh/chart: alloy-operator-0.3.4
+    helm.sh/chart: alloy-operator-0.3.6
     app.kubernetes.io/name: alloy-operator
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.1.2"
+    app.kubernetes.io/version: "1.2.0"
     app.kubernetes.io/managed-by: Helm
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -856,10 +857,10 @@ metadata:
   name: k8smon-alloy-operator
   namespace: default
   labels:
-    helm.sh/chart: alloy-operator-0.3.4
+    helm.sh/chart: alloy-operator-0.3.6
     app.kubernetes.io/name: alloy-operator
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.1.2"
+    app.kubernetes.io/version: "1.2.0"
     app.kubernetes.io/managed-by: Helm
 spec:
   type: ClusterIP
@@ -883,10 +884,10 @@ metadata:
   name: k8smon-alloy-operator
   namespace: default
   labels:
-    helm.sh/chart: alloy-operator-0.3.4
+    helm.sh/chart: alloy-operator-0.3.6
     app.kubernetes.io/name: alloy-operator
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.1.2"
+    app.kubernetes.io/version: "1.2.0"
     app.kubernetes.io/managed-by: Helm
 spec:
   replicas: 1
@@ -897,16 +898,16 @@ spec:
   template:
     metadata:
       labels:
-        helm.sh/chart: alloy-operator-0.3.4
+        helm.sh/chart: alloy-operator-0.3.6
         app.kubernetes.io/name: alloy-operator
         app.kubernetes.io/instance: k8smon
-        app.kubernetes.io/version: "1.1.2"
+        app.kubernetes.io/version: "1.2.0"
         app.kubernetes.io/managed-by: Helm
     spec:
       serviceAccountName: k8smon-alloy-operator
       containers:
         - name: alloy-operator
-          image: "ghcr.io/grafana/alloy-operator:1.1.2"
+          image: "ghcr.io/grafana/alloy-operator:1.2.0"
           imagePullPolicy: IfNotPresent
           args:
             - --leader-elect

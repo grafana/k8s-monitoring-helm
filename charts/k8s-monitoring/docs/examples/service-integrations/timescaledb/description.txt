@@ -1,0 +1,12 @@
+# TimeScale DB
+
+To gather metrics from Timescale databases, Alloy uses the `discovery.http` component to ask TimescaleDB for the correct
+URL for scraping metrics. It will then scrape the metrics from the URL provided by TimescaleDB.
+
+Certain settings must be configured in TimescaleDB Atlas to allow scraping. Refer to the
+[Integrate with Prometheus](https://docs.tigerdata.com/use-timescale/latest/metrics-logging/metrics-to-prometheus/) documentation for full
+details.
+
+In this example, we utilize the `extraConfig` section to define the `discovery.http` component to request the scrape
+target, and the `prometheus.scrape` component to scrape the database metrics. It uses a Kubernetes secret to store the
+username, password, URL and service ID for the TimescaleDB database.

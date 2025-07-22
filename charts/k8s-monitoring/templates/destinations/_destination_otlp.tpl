@@ -270,23 +270,27 @@ otelcol.processor.filter {{ include "helper.alloy_name" .name | quote }} {
 {{- end }}
 {{- if ne .traces.enabled false }}
 {{- /* If sampling is enabled, override traces target and enable loadbalancing exporter if sampling is enabled */}}
-{{- if or .processors.tailSampling.enabled .processors.serviceGraphMetrics.enabled }}
+{{- if and .processors.tailSampling.enabled .processors.serviceGraphMetrics.enabled }}
     traces = [
-{{- if .processors.tailSampling.enabled }}
       otelcol.exporter.loadbalancing.{{ printf "%s_sampler" (include "helper.alloy_name" .name) }}.input,
-{{- end }}
-{{- if .processors.serviceGraphMetrics.enabled }}
       otelcol.exporter.loadbalancing.{{ printf "%s_servicegraph" (include "helper.alloy_name" .name) }}.input,
-  {{- /* if tail sampling is enabled, let that pipeline handle writing traces downstream. otherwise, keep traces. */}}
-  {{- if not .processors.tailSampling.enabled }}
-    {{- include "destinations.otlp.alloy.exporter.target" . | nindent 6 }},
-  {{- end }}
-{{- end }}
     ]
+{{- else if .processors.tailSampling.enabled }}
+    traces = [otelcol.exporter.loadbalancing.{{ printf "%s_sampler" (include "helper.alloy_name" .name) }}.input]
+{{- else if .processors.serviceGraphMetrics.enabled }}
+    traces = [
+      otelcol.exporter.loadbalancing.{{ printf "%s_servicegraph" (include "helper.alloy_name" .name) }}.input,
+      {{ include "destinations.otlp.alloy.exporter.target" . }},
+    ]
+{{- else }}
+    traces = [{{ include "destinations.otlp.alloy.exporter.target" . }}]
+{{- end }}
+{{- end }}
   }
 }
 
 {{- if .processors.tailSampling.enabled }}
+
 otelcol.exporter.loadbalancing {{ printf "%s_sampler" (include "helper.alloy_name" .name) | quote }} {
   resolver {
     kubernetes {
@@ -305,9 +309,12 @@ otelcol.exporter.loadbalancing {{ printf "%s_sampler" (include "helper.alloy_nam
         }
       }
     }
+  }
+}
 {{- end }}
 
 {{- if .processors.serviceGraphMetrics.enabled }}
+
 otelcol.exporter.loadbalancing {{ printf "%s_servicegraph" (include "helper.alloy_name" .name) | quote }} {
   resolver {
     kubernetes {
@@ -326,14 +333,9 @@ otelcol.exporter.loadbalancing {{ printf "%s_servicegraph" (include "helper.allo
         }
       }
     }
-{{- end }}
-
-{{- else }}
-    traces = [{{ include "destinations.otlp.alloy.exporter.target" . }}]
-{{- end }}
-{{- end }}
   }
 }
+{{- end }}
 
 {{- include "destinations.otlp.alloy.exporter" . }}
 {{- end }}
@@ -425,6 +427,8 @@ otelcol.exporter.otlphttp {{ include "helper.alloy_name" .name | quote }} {
     auth = otelcol.auth.bearer.{{ include "helper.alloy_name" .name }}.handler
 {{- else if eq .auth.type "oauth2" }}
     auth = otelcol.auth.oauth2.{{ include "helper.alloy_name" .name }}.handler
+{{- else if eq .auth.type "sigv4" }}
+    auth = otelcol.auth.sigv4.{{ include "helper.alloy_name" .name }}.handler
 {{- end }}
 {{- if or (eq (include "secrets.usesSecret" (dict "object" . "key" "tenantId")) "true") .extraHeaders .extraHeadersFrom }}
     headers = {
@@ -537,6 +541,28 @@ otelcol.auth.oauth2 {{ include "helper.alloy_name" .name | quote }} {
   {{- end }}
   {{- if .auth.oauth2.tokenURL }}
   token_url = {{ .auth.oauth2.tokenURL | quote }}
+  {{- end }}
+}
+{{- else if eq (include "secrets.authType" .) "sigv4" }}
+
+otelcol.auth.sigv4 {{ include "helper.alloy_name" .name | quote }} {
+  {{- if .auth.sigv4.region }}
+  region = {{ .auth.sigv4.region | quote }}
+  {{- end }}
+  {{- if .auth.sigv4.service }}
+  service = {{ .auth.sigv4.service | quote }}
+  {{- end }}
+  {{- if (or .auth.sigv4.assumeRole.arn .auth.sigv4.assumeRole.sessionName .auth.sigv4.assumeRole.stsRegion) }}
+  assume_role {
+    {{- if .auth.sigv4.assumeRole.arn }}
+    arn = {{ .auth.sigv4.assumeRole.arn | quote }}
+    {{- end }}
+    {{- if .auth.sigv4.assumeRole.sessionName }}
+    session_name = {{ .auth.sigv4.assumeRole.sessionName | quote }}
+    {{- end }}
+    {{- if .auth.sigv4.assumeRole.stsRegion }}
+    sts_region = {{ .auth.sigv4.assumeRole.stsRegion | quote }}
+    {{- end }}
   {{- end }}
 }
 {{- end }}
