@@ -75,6 +75,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | connectors.spanMetrics.dimensionsCacheSize | int | `1000` | How many dimensions to cache |
 | connectors.spanMetrics.enabled | bool | `false` | Use a span metrics connector which creates metrics from spans. |
 | connectors.spanMetrics.events.enabled | bool | `false` | Capture events metrics, which track span events. |
+| connectors.spanMetrics.excludeDimensions | list | `[]` | List of dimensions to be excluded from the default set of dimensions. |
 | connectors.spanMetrics.exemplars.enabled | bool | `false` | Attach exemplars to histograms. |
 | connectors.spanMetrics.exemplars.maxPerDataPoint | number | `nil` | Limits the number of exemplars that can be added to a unique dimension set. |
 | connectors.spanMetrics.histogram.enabled | bool | `true` | Capture histogram metrics, derived from spans’ durations. |
