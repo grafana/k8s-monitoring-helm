@@ -33,20 +33,29 @@ data:
           listen_port = "4040"
         }
     
+        forward_to = [pyroscope.relabel.default.receiver]
+      }
+    
+      pyroscope.relabel "default" {
+        rule {
+          target_label = "color"
+          replacement = "blue"
+        }
+    
         forward_to = argument.profiles_destinations.value
       }
     }
     profiles_receiver "feature" {
       profiles_destinations = [
-        pyroscope.write.pyroscope.receiver,
+        pyroscope.write.pyro.receiver,
       ]
     }
     
     
     
     
-    // Destination: pyroscope (pyroscope)
-    pyroscope.write "pyroscope" {
+    // Destination: pyro (pyroscope)
+    pyroscope.write "pyro" {
       endpoint {
         url = "http://pyroscope.pyroscope.svc:4040"
         headers = {
@@ -60,8 +69,8 @@ data:
       }
     
       external_labels = {
-        "cluster" = "profiles-receiver-cluster",
-        "k8s_cluster_name" = "profiles-receiver-cluster",
+        "cluster" = "profiles-receiver-feature-test",
+        "k8s_cluster_name" = "profiles-receiver-feature-test",
       }
     }
 ---
@@ -514,3 +523,39 @@ spec:
     metricRelabelings: []
     relabelings: []
     tlsConfig: {}
+---
+# Source: k8s-monitoring/templates/extra-objects.yaml
+apiVersion: collectors.grafana.com/v1alpha1
+kind: Alloy
+metadata:
+  name: profile-source
+spec:
+  alloy:
+    configMap:
+      content: |
+        discovery.kubernetes "alloy" {
+          role = "pod"
+          selectors {
+            field = "metadata.name=profile-source-alloy-0"
+            role = "pod"
+          }
+        }
+
+        pyroscope.ebpf "alloy" {
+          targets = discovery.kubernetes.alloy.targets
+          forward_to = [pyroscope.write.chart.receiver]
+        }
+
+        pyroscope.write "chart" {
+          endpoint {
+            url = "http://k8smon-alloy-receiver.default.svc:4040"
+          }
+        }
+    securityContext:
+      allowPrivilegeEscalation: true
+      privileged: true
+      runAsGroup: 0
+      runAsUser: 0
+  controller:
+    hostPID: true
+    type: statefulset

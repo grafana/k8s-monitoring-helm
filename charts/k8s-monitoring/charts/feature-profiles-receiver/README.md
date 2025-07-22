@@ -46,7 +46,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| port | int | `8080` | Port number on which the server listens for new connections. |
+| port | int | `4040` | Port number on which the server listens for new connections. |
 
 ### Profile Processing
 

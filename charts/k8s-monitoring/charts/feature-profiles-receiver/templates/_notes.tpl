@@ -1,7 +1,7 @@
 {{- define "feature.profilesReceiver.notes.deployments" }}{{- end }}
 
 {{- define "feature.profilesReceiver.notes.task" }}
-REPLACE_WITH_SHORT_DESCRIPTION
+Open an HTTP receiver for profiles
 {{- end }}
 
 {{- define "feature.profilesReceiver.notes.actions" }}{{- end }}

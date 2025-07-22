@@ -2,9 +2,15 @@ should render the correct configuration:
   1: |
     |-
       declare "profiles_receiver" {
+        argument "profiles_destinations" {
+          comment = "Must be a list of profile destinations where collected profiles should be forwarded to"
+        }
+
         pyroscope.receive_http "default" {
-          listen_address = "0.0.0.0"
-          listen_port = "8080"
+          http {
+            listen_address = "0.0.0.0"
+            listen_port = "4040"
+          }
 
           forward_to = [pyroscope.relabel.default.receiver]
         }
