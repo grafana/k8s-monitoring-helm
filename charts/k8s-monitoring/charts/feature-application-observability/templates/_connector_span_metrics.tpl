@@ -13,6 +13,7 @@ otelcol.connector.spanmetrics "{{ .name | default "default" }}" {
 {{- end }}
   exclude_dimensions = {{ .Values.connectors.spanMetrics.excludeDimensions }}
   dimensions_cache_size = {{ .Values.connectors.spanMetrics.dimensionsCacheSize }}
+  aggregation_cardinality_limit = {{ .Values.connectors.spanMetrics.aggregationCardinalityLimit }}
   namespace = {{ .Values.connectors.spanMetrics.namespace | quote }}
 {{- if .Values.connectors.spanMetrics.events.enabled }}
   events {
