@@ -69,10 +69,12 @@ Be sure perform actual integration testing in a live environment in the main [k8
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
+| connectors.spanMetrics.aggregationCardinalityLimit | int | `1000` | How many unique combinations of dimensions that will be tracked for metrics aggregation |
 | connectors.spanMetrics.dimensions | list | `[]` | Define dimensions to be added. Some are set internally by default: [service.name, span.name, span.kind, status.code] Example: - name: "http.status_code" - name: "http.method"   default: "GET" |
-| connectors.spanMetrics.dimensionsCacheSize | int | `1000` | How many dimensions to cache |
+| connectors.spanMetrics.dimensionsCacheSize | int | `1000` | How many dimensions to cache. DEPRECATED, please use aggregationCardinalityLimit instead. |
 | connectors.spanMetrics.enabled | bool | `false` | Use a span metrics connector which creates metrics from spans. |
 | connectors.spanMetrics.events.enabled | bool | `false` | Capture events metrics, which track span events. |
+| connectors.spanMetrics.excludeDimensions | list | `[]` | List of dimensions to be excluded from the default set of dimensions. |
 | connectors.spanMetrics.exemplars.enabled | bool | `false` | Attach exemplars to histograms. |
 | connectors.spanMetrics.exemplars.maxPerDataPoint | number | `nil` | Limits the number of exemplars that can be added to a unique dimension set. |
 | connectors.spanMetrics.histogram.enabled | bool | `true` | Capture histogram metrics, derived from spans’ durations. |
