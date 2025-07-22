@@ -15,10 +15,16 @@ createKindCluster() {
 
 deleteKindCluster() {
   local clusterName=$1
-  if ! kind delete cluster --name "${clusterName}"; then
-    # Sometimes it just needs a minute and it'll work the second time.
+  for attempt in $(seq 1 30); do
+    if kind delete cluster --name "${clusterName}"; then
+      break
+    elif [ "${attempt}" -eq 30 ]; then
+      echo "Failed to delete cluster ${clusterName} after 30 attempts."
+      exit 1
+    fi
+    # Sometimes it can take a few attempts.`
     # This has to do with something related to Beyla being installed and its eBPF hooks into the node.
-    sleep 60
-    kind delete cluster --name "${clusterName}"
-  fi
+    echo "Attempt ${attempt} to delete cluster ${clusterName} failed. Retrying..."
+    sleep 10
+  done
 }
