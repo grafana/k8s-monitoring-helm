@@ -2,10 +2,10 @@
 (NOTE: Do not edit README.md directly. It is a generated file!)
 (      To make changes, please modify values.yaml or description.txt and run `make examples`)
 -->
-# Profiling
+# Profiles Receiver
 
-This example demonstrates how to enable the Profiling feature to gather profiles from your Kubernetes cluster and
-deliver them to Pyroscope.
+This example demonstrates how to enable the Profiles Receiver feature to receive profiles from applicaations on your
+Kubernetes cluster, process them according to defined rules, and then deliver them to Pyroscope.
 
 ## Values
 

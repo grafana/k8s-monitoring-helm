@@ -1,0 +1,17 @@
+should render the default configuration:
+  1: |
+    |-
+      declare "profiles_receiver" {
+        argument "profiles_destinations" {
+          comment = "Must be a list of profile destinations where collected profiles should be forwarded to"
+        }
+
+        pyroscope.receive_http "default" {
+          http {
+            listen_address = "0.0.0.0"
+            listen_port = "4040"
+          }
+
+          forward_to = argument.profiles_destinations.value
+        }
+      }

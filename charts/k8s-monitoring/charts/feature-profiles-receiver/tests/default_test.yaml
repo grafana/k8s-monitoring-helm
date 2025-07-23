@@ -1,0 +1,13 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Test default values
+templates:
+  - configmap.yaml
+tests:
+  - it: should render the default configuration
+    set:
+      deployAsConfigMap: true
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["module.alloy"]

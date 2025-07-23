@@ -1,0 +1,44 @@
+// Feature: Profiles Receiver
+declare "profiles_receiver" {
+  argument "profiles_destinations" {
+    comment = "Must be a list of profile destinations where collected profiles should be forwarded to"
+  }
+
+  pyroscope.receive_http "default" {
+    http {
+      listen_address = "0.0.0.0"
+      listen_port = "4040"
+    }
+
+    forward_to = argument.profiles_destinations.value
+  }
+}
+profiles_receiver "feature" {
+  profiles_destinations = [
+    pyroscope.write.pyroscope.receiver,
+  ]
+}
+
+
+
+
+// Destination: pyroscope (pyroscope)
+pyroscope.write "pyroscope" {
+  endpoint {
+    url = "http://pyroscope.pyroscope.svc:4040"
+    headers = {
+    }
+    tls_config {
+      insecure_skip_verify = false
+    }
+    min_backoff_period = "500ms"
+    max_backoff_period = "5m"
+    max_backoff_retries = "10"
+  }
+
+  external_labels = {
+    "cluster" = "profiles-receiver-cluster",
+    "k8s_cluster_name" = "profiles-receiver-cluster",
+  }
+}
+

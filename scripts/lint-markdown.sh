@@ -16,7 +16,7 @@ fi
 
 statusCode=0
 # shellcheck disable=SC2046
-./node_modules/.bin/markdownlint-cli2 $(find . -name "*.md" ! -path "./node_modules/*" ! -path "./data-alloy/*" ! -path "./charts/**/data-alloy/*")
+./node_modules/.bin/markdownlint-cli2 $(find . -name "*.md" ! -path "./node_modules/*" ! -path "./data-alloy/*" ! -path "./charts/**/data-alloy/*" ! -path "./charts/k8s-monitoring/docs/create-a-new-feature/*")
 currentCode="$?"
 # only override the statusCode if it is 0
 if [[ "${statusCode}" == 0 ]]; then

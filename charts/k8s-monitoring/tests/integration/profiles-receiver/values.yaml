@@ -1,0 +1,57 @@
+---
+cluster:
+  name: profiles-receiver-feature-test
+
+destinations:
+  - name: pyro
+    type: pyroscope
+    url: http://pyroscope.pyroscope.svc:4040
+
+profilesReceiver:
+  enabled: true
+
+  profileProcessingRules: |
+    rule {
+      target_label = "color"
+      replacement = "blue"
+    }
+
+alloy-receiver:
+  enabled: true
+
+
+extraObjects:
+  - apiVersion: collectors.grafana.com/v1alpha1
+    kind: Alloy
+    metadata:
+      name: profile-source
+    spec:
+      controller:
+        type: statefulset
+        hostPID: true
+      alloy:
+        securityContext:
+          allowPrivilegeEscalation: true
+          privileged: true
+          runAsGroup: 0
+          runAsUser: 0
+        configMap:
+          content: |
+            discovery.kubernetes "alloy" {
+              role = "pod"
+              selectors {
+                field = "metadata.name=profile-source-alloy-0"
+                role = "pod"
+              }
+            }
+  
+            pyroscope.ebpf "alloy" {
+              targets = discovery.kubernetes.alloy.targets
+              forward_to = [pyroscope.write.chart.receiver]
+            }
+  
+            pyroscope.write "chart" {
+              endpoint {
+                url = "http://k8smon-alloy-receiver.default.svc:4040"
+              }
+            }
