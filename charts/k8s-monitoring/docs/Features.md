@@ -13,6 +13,7 @@ These are the current features supported in this Helm chart:
 -   [Pod Logs](#pod-logs)
 -   [Service Integrations](#service-integrations)
 -   [Profiling](#profiling)
+-   [Private Data Source Connect](#private-data-source-connect)
 -   [Frontend Observability](#frontend-observability)
 
 ## Cluster Metrics
@@ -60,6 +61,11 @@ Refer to [documentation](https://github.com/grafana/k8s-monitoring-helm/tree/mai
 
 Collect profiles using Pyroscope.
 Refer to [documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-profiling) for more information.
+
+## Private Data Source Connect
+
+Enables secure connectivity between Grafana Cloud and private data sources deployed in Kubernetes clusters using the PDC agent.
+Refer to [documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-private-datasource-connect) for more information.
 
 ## Contributing
 

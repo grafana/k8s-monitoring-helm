@@ -1,0 +1,44 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Test default values
+templates:
+  - deployment.yaml
+  - secret.yaml
+tests:
+  - it: should not create resources when PDC agent is disabled
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should create deployment when PDC agent is enabled
+    set:
+      enabled: true
+      credentials.createSecret: true
+      credentials.token: "test-token"
+      credentials.hostedGrafanaId: "test-grafana-id"
+      credentials.cluster: "test-cluster"
+    template: deployment.yaml
+    asserts:
+      - isKind:
+          of: Deployment
+      - equal:
+          path: metadata.name
+          value: release-name-feature-private-datasource-connect
+      - matchSnapshot:
+          path: spec
+
+  - it: should create secret when PDC agent is enabled and createSecret is true
+    set:
+      enabled: true
+      credentials.createSecret: true
+      credentials.token: "test-token"
+      credentials.hostedGrafanaId: "test-grafana-id"
+      credentials.cluster: "test-cluster"
+    template: secret.yaml
+    asserts:
+      - isKind:
+          of: Secret
+      - equal:
+          path: metadata.name
+          value: release-name-feature-private-datasource-connect
+      - matchSnapshot:
+          path: data

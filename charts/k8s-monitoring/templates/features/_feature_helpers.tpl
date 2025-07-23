@@ -6,6 +6,7 @@
 - clusterEvents
 - nodeLogs
 - podLogs
+- privateDatasourceConnect
 - profiling
 - prometheusOperatorObjects
 - integrations
