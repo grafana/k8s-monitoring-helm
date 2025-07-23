@@ -1,6 +1,6 @@
 # Images
 
-The following is the list of images potentially used in the 3.1.5 version of the k8s-monitoring Helm chart:
+The following is the list of images potentially used in the 3.2.0 version of the k8s-monitoring Helm chart:
 
 | Image Name | Repository | Feature |
 | ---------- | ---------- | ------- |
