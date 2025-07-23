@@ -35,24 +35,34 @@ schema-mods/definitions/%-destination.schema.json: destinations/%-values.yaml
 	docker run --platform linux/amd64 --rm --volume $(shell pwd):/chart ghcr.io/grafana/helm-chart-toolbox-schema-generator --file /chart/$< > $@
 
 NUMBER_OF_DESTINATION_VALUES_FILES := $(words $(DESTINATION_VALUES_FILES))
-schema-mods/destination-list.json: $(DESTINATION_VALUES_FILES)
+schema-mods/destination.json: $(DESTINATION_VALUES_FILES)
 	@echo '{' > $@
 	@echo '  "definitions": {' >> $@
-	@echo '    "destination-list": {' >> $@
-	@echo '      "type": "array",' >> $@
-	@echo '      "items": {' >> $@
-	@echo '        "anyOf": [' >> $@
-	@echo '          { "$$ref": "#/definitions/invalid-destination"},' >> $@
+	@echo '    "destination": {' >> $@
+	@echo '      "type": "object",' >> $@
+	@echo '      "anyOf": [' >> $@
+	@echo '        { "$$ref": "#/definitions/invalid-destination"},' >> $@
 	@count=0; \
 	for file in $(DESTINATION_VALUES_FILES); do \
 		count=$$((count + 1)); \
 		if [ $$count -eq $(NUMBER_OF_DESTINATION_VALUES_FILES) ]; then \
-			echo '          { "$$ref": "#/definitions/'$$(echo $${file} | sed 's/destinations\/\([-a-z]*\)-values.yaml/\1/')'-destination"}' >> $@; \
+			echo '        { "$$ref": "#/definitions/'$$(echo $${file} | sed 's/destinations\/\([-a-z]*\)-values.yaml/\1/')'-destination"}' >> $@; \
 		else \
-			echo '          { "$$ref": "#/definitions/'$$(echo $${file} | sed 's/destinations\/\([-a-z]*\)-values.yaml/\1/')'-destination"},' >> $@; \
+			echo '        { "$$ref": "#/definitions/'$$(echo $${file} | sed 's/destinations\/\([-a-z]*\)-values.yaml/\1/')'-destination"},' >> $@; \
 		fi; \
 	done
-	@echo '        ]' >> $@
+	@echo '      ]' >> $@
+	@echo '    },' >> $@
+	@echo '    "destination-list": {' >> $@
+	@echo '      "type": "array",' >> $@
+	@echo '      "items": {' >> $@
+	@echo '        "$$ref": "#/definitions/destination"' >> $@
+	@echo '      }' >> $@
+	@echo '    },' >> $@
+	@echo '    "destination-map": {' >> $@
+	@echo '      "type": "object",' >> $@
+	@echo '      "additionalProperties": {' >> $@
+	@echo '        "$$ref": "#/definitions/destination"' >> $@
 	@echo '      }' >> $@
 	@echo '    },' >> $@
 	@count=0; \
@@ -80,8 +90,8 @@ Chart.lock: Chart.yaml
 	helm dependency update .
 	@touch Chart.lock # Ensure the timestamp is updated
 
-values.schema.json: values.yaml $(COLLECTOR_SCHEMA_FILES) $(DESTINATION_SCHEMA_FILES) $(SCHEMA_MODS_JSON_FILES) $(SCHEMA_MODS_JQ_FILES) schema-mods/destination-list.json
-	docker run --rm --platform linux/amd64 --volume $(shell pwd):/chart ghcr.io/grafana/helm-chart-toolbox-schema-generator --chart /chart > $@
+values.schema.json: values.yaml $(COLLECTOR_SCHEMA_FILES) $(DESTINATION_SCHEMA_FILES) $(SCHEMA_MODS_JSON_FILES) $(SCHEMA_MODS_JQ_FILES) schema-mods/destination.json
+	../../scripts/schema-gen.sh .
 
 README.md: README.md.gotmpl values.yaml Chart.yaml
 	docker run --rm --platform linux/amd64 --volume $(shell pwd):/chart ghcr.io/grafana/helm-chart-toolbox-doc-generator --chart /chart > $@
@@ -199,7 +209,7 @@ platform-test-checks: $(PLATFORM_TEST_OUTPUT_FILES)
 
 .PHONY: clean
 clean: clean-examples
-	rm -f README.md docs/Images.md values.schema.json templates/destinations/_destination_types.tpl schema-mods/destination-list.json
+	rm -f README.md docs/Images.md values.schema.json templates/destinations/_destination_types.tpl schema-mods/destination.json
 	rm -f $(COLLECTOR_SCHEMA_FILES) $(COLLECTOR_DOCS_FILES)
 	rm -f $(DESTINATION_SCHEMA_FILES) $(DESTINATION_DOCS_FILES)
 	set -e && \
