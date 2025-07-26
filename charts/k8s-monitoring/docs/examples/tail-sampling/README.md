@@ -134,7 +134,7 @@ destinations:
                   max_value: 599
                 - name: "keep-all-errors"
                   type: "status_code"
-                  values:
+                  status_codes:
                     - ERROR
                     - UNSET
 clusterMetrics:
