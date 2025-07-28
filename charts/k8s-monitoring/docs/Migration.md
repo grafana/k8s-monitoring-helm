@@ -1,12 +1,29 @@
 # Migration guide
 
-## Migrate from version 2.0 to 3.0
+## Migrate from version 1.0 to 3.x
+
+To migrate from version 1.0 to 3.x, you will need to follow the steps for migrating from version 1.x to 2.0, and then
+consider and changes that might benefit you when migrating to 3.x.
+
+## Migrate from version 2.0 to 3.x
 
 The 3.0 release of the k8s-monitoring Helm chart no longer utilizes the
 [Alloy Helm chart](https://github.com/grafana/alloy/tree/main/operations/helm/charts/alloy) as a subchart dependency.
 Instead the chart uses the new [Alloy Operator](https://github.com/grafana/alloy-operator) to deploy Alloy instances.
 This allows for a more flexible and powerful deployment of Alloy, as well as the ability of your chosen features to
 appropriately configure those Alloy instances.
+
+There are no required changes to your values.yaml file, but if you are using any of these options, you may want to
+update your values file:
+
+-   *Private image registries* - The addition of the Alloy Operator brings another image that may need to be referenced
+    from a new location.
+-   *Tail Sampling* - If you were pairing this chart with the Grafana Sampling chart in order to do tail sampling, this
+    functionality has been embedded into the k8s-monitoring Helm chart. Your trace destinations should now be sent to
+    their ultimate destination, and you can utilize the [tailSampling option](./examples/tail-sampling) of the trace
+    destination.
+-   *Service Graph Metrics* - Similar to tail sampling, in version 3.1, the service graph metrics functionality has been
+    embedded into the k8s-monitoring Helm chart.
 
 ## Migrate from version 1.x to 2.0
 
