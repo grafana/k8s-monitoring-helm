@@ -227,6 +227,12 @@ details:
 |-----|------|---------|-------------|
 | alloy-metrics.enabled | bool | `false` | Deploy the Alloy instance for collecting metrics. |
 
+### Alloy Operator
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| alloy-operator.deploy | bool | `true` | Deploy the Alloy Operator. |
+
 ### Collectors - Alloy Profiles
 
 | Key | Type | Default | Description |
@@ -370,5 +376,5 @@ details:
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| alloy-operator.deploy | bool | `true` |  |
+| alloyTemplate | object | `{}` |  |
 | extraObjects | list | `[]` | Deploy additional manifest objects |

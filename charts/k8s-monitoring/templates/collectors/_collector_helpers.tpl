@@ -97,18 +97,36 @@ app.kubernetes.io/instance: {{ include "collector.alloy.fullname" . }}
 
 {{- /* Gets the Alloy values. Input: $, .collectorName (string, collector name), .collectorValues (object) */ -}}
 {{- define "collector.alloy.values" -}}
-{{- $defaultValues := "collectors/alloy-values.yaml" | .Files.Get | fromYaml }}
+{{- /* Values from upstream Alloy */}}
 {{- $upstreamValues := "collectors/upstream/alloy-values.yaml" | .Files.Get | fromYaml }}
-{{- $globalValues := include "collector.alloy.values.global" . | fromYaml }}
+{{- /* The default settings set for all Alloy instances by this chart */}}
+{{- $defaultValues := "collectors/alloy-values.yaml" | .Files.Get | fromYaml }}
+{{- /* Values for the specific named Alloy instance */}}
 {{- $namedDefaultValues := dict }}
 {{- range $fileName, $_ := $.Files.Glob (printf "collectors/named-defaults/%s.yaml" .collectorName) }}
   {{- $namedDefaultValues = ($.Files.Get $fileName | fromYaml) }}
 {{- end }}
+{{- /* Settings in values.yaml for the Alloy template (affects all instances) */}}
+{{- $defaultTemplateValues := $.Values.alloyTemplate }}
+{{- /* Copying the this chart's global values to the Alloy instances global values */}}
+{{- $globalValues := include "collector.alloy.values.global" . | fromYaml }}
+{{- /* Settings in values.yaml for the named instance */}}
 {{- $userValues := $.collectorValues }}
 {{- if not $.collectorValues }}
   {{- $userValues = (index $.Values .collectorName) }}
 {{- end }}
-{{ mergeOverwrite $upstreamValues $defaultValues $namedDefaultValues $globalValues $userValues | toYaml }}
+{{ mergeOverwrite $upstreamValues $defaultValues $namedDefaultValues $globalValues $defaultTemplateValues $userValues | toYaml }}
+{{- end }}
+
+{{- define "collector.alloy.valuesToSpec" }}
+{{- $fieldsToExclude := include "collector.alloy.extraFields" . | fromYamlArray }}
+{{- $cleanValues := dict }}
+{{- range $key, $val := . }}
+  {{- if not (has $key $fieldsToExclude) }}
+    {{- $_ := set $cleanValues $key $val }}
+  {{- end }}
+{{- end }}
+{{ $cleanValues | toYaml }}
 {{- end }}
 
 {{/* Lists the fields that are not a part of Alloy itself, and should be removed before creating an Alloy instance. */}}

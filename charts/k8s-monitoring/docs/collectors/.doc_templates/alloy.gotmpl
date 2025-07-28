@@ -1,0 +1,36 @@
+# Grafana Alloy
+
+Grafana Alloy combines the strengths of the leading collectors into one place. Whether observing applications,
+infrastructure, or both, Grafana Alloy can collect, process, and export telemetry signals to scale and future-proof your
+observability approach.
+
+The Kubernetes Monitoring Helm chart uses the Alloy Operator to deploy Grafana Alloy in your cluster. Each instance is
+defined in its own section in the Kubernetes Monitoring Helm chart values file. Here is an example of the general format
+to enable and configure a collector:
+
+```yaml
+alloy-<collector name>:
+  enabled: true  # Enable deploying this collector
+
+  alloy:  # Settings related to the Alloy instance
+    ...
+  controller:  # Settings related to the Alloy controller
+    ...
+```
+
+This creates a Kubernetes workload as either a DaemonSet, StatefulSet, or Deployment, with its own set of Pods running
+Alloy containers.
+
+## Alloy settings
+
+Settings for each primary Alloy instance come from several potential sources, in order of precedence:
+
+1.   The settings for each Alloy instance in the values.yaml file.
+2.   The settings in the `alloyTemplate` section of the values.yaml file.
+3.   The settings for the named alloy instance in [named defaults](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/collectors/named-defaults).
+4.   The settings common for all Alloy instances deployed by this chart, defined in [alloy-values.yaml](https://github.com/grafana/k8s-monitoring-helm/blob/main/charts/k8s-monitoring/collectors/alloy-values.yaml).
+5.   The default settings defined by the Alloy project, defined in [alloy-values.yaml)[https://github.com/grafana/k8s-monitoring-helm/blob/main/charts/k8s-monitoring/collectors/upstream/alloy-values.yaml).
+
+<!-- textlint-disable terminology -->
+{{ template "chart.valuesSection" . }}
+<!-- textlint-enable terminology -->
