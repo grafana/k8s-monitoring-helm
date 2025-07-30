@@ -48,7 +48,9 @@
 
     {{- /* Build Alloy spec */}}
     {{- $collectorName := include "helper.k8s_name" (printf "%s-servicegraph" $destination.name) }}
-    {{- $collectorValues := merge (dict "nameOverride" $collectorName "alloy" (dict "configMap" (dict "create" true "content" $alloyConfig))) $destination.processors.tailSampling.collector }}
+    {{- $configMapContent := dict "create" true "content" $alloyConfig }}
+    {{- $extraEnvContent := list (dict "name" "POD_NAME" "valueFrom" (dict "fieldRef" (dict "apiVersion" "v1" "fieldPath" "metadata.name"))) }}
+    {{- $collectorValues := merge (dict "nameOverride" $collectorName "alloy" (dict "configMap" $configMapContent "extraEnv" $extraEnvContent)) $destination.processors.tailSampling.collector }}
     {{- $values := (deepCopy $ | merge (dict "collectorName" $collectorName "collectorValues" $collectorValues)) }}
     {{- $alloyValues := include "collector.alloy.values" $values | fromYaml }}
     {{- $alloySpec := include "collector.alloy.valuesToSpec" $alloyValues }}
