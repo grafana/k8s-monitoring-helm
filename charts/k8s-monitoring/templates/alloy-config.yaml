@@ -34,8 +34,8 @@ metadata:
   name: {{ include "collector.alloy.fullname" $values }}
   namespace: {{ $.Release.Namespace }}
 data:
-  config.alloy: |{{- $alloyConfig | trim | nindent 4 }}
+  config.alloy: |{{ $alloyConfig | trim | nindent 4 }}
 {{- if $selfReportingEnabled }}
-  self-reporting-metric.prom: |{{- include "features.selfReporting.metrics" $values | trim | nindent 4 }}
+  self-reporting-metric.prom: |{{ printf "%s\n" (include "features.selfReporting.metrics" $values | trim) | nindent 4 }}
 {{- end }}
 {{- end }}
