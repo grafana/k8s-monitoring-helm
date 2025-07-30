@@ -21,27 +21,6 @@
     {{- fail (join "\n" $msg) }}
   {{- end -}}
 {{- else if eq .Values.gatherMethod "kubernetesApi" }}
-  {{- if or .Collector.alloy.mounts.varlog .Collector.alloy.mounts.dockercontainers }}
-    {{- $msg := list "" }}
-    {{- if and .Collector.alloy.mounts.varlog (not .Collector.alloy.mounts.dockercontainers) }}
-      {{- $msg = append $msg "Pod Logs feature should not mount /var/log when using the \"kubernetesApi\" gather method." }}
-    {{- else if and (not .Collector.alloy.mounts.varlog) .Collector.alloy.mounts.dockercontainers }}
-      {{- $msg = append $msg "Pod Logs feature should not mount /var/lib/docker/containers when using the \"kubernetesApi\" gather method." }}
-    {{- else if and .Collector.alloy.mounts.varlog .Collector.alloy.mounts.dockercontainers }}
-      {{- $msg = append $msg "Pod Logs feature should not mount /var/log or /var/lib/docker/containers when using the \"kubernetesApi\" gather method." }}
-    {{- end -}}
-    {{- $msg = append $msg "Please set:"}}
-    {{- $msg = append $msg (printf "%s:" .CollectorName) }}
-    {{- $msg = append $msg "  alloy:"}}
-    {{- $msg = append $msg "    mounts:"}}
-    {{- if and .Collector.alloy.mounts.varlog }}
-      {{- $msg = append $msg "      varlog: false" }}
-    {{- end -}}
-    {{- if .Collector.alloy.mounts.dockercontainers }}
-      {{- $msg = append $msg "      dockercontainers: false" }}
-    {{- end -}}
-    {{- fail (join "\n" $msg) }}
-  {{- end -}}
   {{- if not (dig "alloy" "clustering" "enabled" false .Collector) }}
     {{- if eq (dig "controller" "type" "daemonset" .Collector) "daemonset" }}
       {{- $msg := list "" "Pod Logs feature requires Alloy DaemonSet to be in clustering mode when using the \"kubernetesApi\" gather method." }}
