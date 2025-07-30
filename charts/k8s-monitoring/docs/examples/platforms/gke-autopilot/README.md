@@ -34,6 +34,9 @@ clusterMetrics:
   node-exporter:
     deploy: false
     enabled: false
+  windows-exporter:
+    deploy: false
+    enabled: false
 
 clusterEvents:
   enabled: true
@@ -41,10 +44,20 @@ clusterEvents:
 podLogs:
   enabled: true
 
+integrations:
+  alloy:
+    instances:
+      - name: alloy
+        labelSelectors:
+          app.kubernetes.io/name: [alloy-metrics, alloy-singleton, alloy-logs]
+
 alloy-metrics:
   enabled: true
 alloy-singleton:
   enabled: true
 alloy-logs:
   enabled: true
+  alloy:
+    mounts:
+      dockercontainers: false
 ```
