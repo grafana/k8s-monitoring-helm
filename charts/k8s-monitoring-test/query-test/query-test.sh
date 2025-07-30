@@ -26,6 +26,10 @@ usage() {
   echo "  PROFILECLI_USERNAME - The username for running Pyroscope queries"
   echo "  PROFILECLI_PASSWORD - The password for running Pyroscope queries"
   echo
+  echo "Optional environment variables:"
+  echo "  If using any PromQL queries:"
+  echo "  PROMETHEUS_TENANTID - The tenant ID for running PromQL queries"
+  echo
   echo "queries.json is the queries file, and should be in the format:"
   echo '{"queries": [<query>]}'
   echo
@@ -98,7 +102,12 @@ function metrics_query {
   fi
 
   echo "Running PromQL query: ${PROMETHEUS_URL}?query=${query}..."
-  result=$(curl -skX POST -u "${PROMETHEUS_USER}:${PROMETHEUS_PASS}" "${PROMETHEUS_URL}" --data-urlencode "query=${query}")
+  if [ -z "${PROMETHEUS_TENANTID}" ]; then
+    additionalRequestOptions=""
+  else
+    additionalRequestOptions="-H X-Scope-OrgID:${PROMETHEUS_TENANTID}"
+  fi
+  result=$(curl -v -kX POST $additionalRequestOptions -u "${PROMETHEUS_USER}:${PROMETHEUS_PASS}" "${PROMETHEUS_URL}" --data-urlencode "query=${query}")
   status=$(echo "${result}" | jq -r .status)
   if [ "${status}" != "success" ]; then
     echo "Query failed!"
