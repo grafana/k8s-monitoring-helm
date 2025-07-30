@@ -255,6 +255,12 @@ details:
 |-----|------|---------|-------------|
 | alloy-singleton.enabled | bool | `false` | Deploy the Alloy instance for data sources required to be deployed on a single replica. |
 
+### Collectors - Alloy Template
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| alloyTemplate | object | `{}` | Settings to apply to all Alloy instances created by this Helm chart. This includes Alloy instances created by enabling Tail Sampling or Service Graph Metrics. |
+
 ### Features - Annotation Autodiscovery
 
 | Key | Type | Default | Description |
@@ -307,6 +313,12 @@ details:
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | destinations | list | `[]` | The list of destinations where telemetry data will be sent. See the [destinations documentation](https://github.com/grafana/k8s-monitoring-helm/blob/main/charts/k8s-monitoring/docs/destinations/README.md) for more information. |
+
+### Extra Objects
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| extraObjects | list | `[]` | Deploy additional manifest objects |
 
 ### Global Settings
 
@@ -371,10 +383,3 @@ details:
 | selfReporting.destinations | list | `[]` | The destinations where self-report metrics will be sent. If empty, all metrics-capable destinations will be used. |
 | selfReporting.enabled | bool | `true` | Enable Self-reporting. |
 | selfReporting.scrapeInterval | string | 60s | How frequently to generate self-report metrics. This does utilize the global scrapeInterval setting. |
-
-### Other Values
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| alloyTemplate | object | `{}` |  |
-| extraObjects | list | `[]` | Deploy additional manifest objects |
