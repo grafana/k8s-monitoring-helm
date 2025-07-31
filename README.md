@@ -44,7 +44,8 @@ We hold office hours on the 4th Friday of the month. Meeting times and recording
 
 | Date       | Topic                                         | Link                                          |
 |------------|-----------------------------------------------|-----------------------------------------------|
-| 2025-07-25 | TBD                                           | [Zoom](https://grafana.zoom.us/j/99595566680) |
+| 2025-08-22 | TBD                                           | [Zoom](https://grafana.zoom.us/j/99595566680) |
+| 2025-07-25 | 3.2 Release                                   | [Recording](https://youtu.be/pEj6pgHev6E)     |
 | 2025-06-27 | 2.1 --> 3.0 Re-Version and 3.1 Release        | [Recording](https://youtu.be/2fUoady4lu0)     |
 | 2025-05-27 | 2.1 Release                                   | [Recording](https://youtu.be/12_7y9_EdTI)     |
 | 2025-04-25 | 2.1 Release update                            | [Recording](https://youtu.be/prFhW_vOR2w)     |
