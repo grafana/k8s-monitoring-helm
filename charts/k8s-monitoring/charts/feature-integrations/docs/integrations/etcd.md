@@ -18,18 +18,6 @@
 | jobLabel | string | `"integrations/etcd"` | The value of the job label for scraped metrics and logs |
 | name | string | `""` | Name for this etcd instance. |
 
-### Logs Settings
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| logs.enabled | bool | `false` | Whether to enable special processing of etcd pod logs. |
-
-### Metrics Settings
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| metrics.enabled | bool | `true` | Whether to enable metrics collection from etcd. |
-
 ### Metric Processing Settings
 
 | Key | Type | Default | Description |

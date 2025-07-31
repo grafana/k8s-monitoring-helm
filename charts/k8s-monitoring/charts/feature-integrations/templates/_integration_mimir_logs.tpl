@@ -1,9 +1,10 @@
 {{/* Inputs: . (Values) */}}
 {{- define "integrations.mimir.type.logs" }}
+{{- $type := "integration.mimir" }}
 {{- $defaultValues := "integrations/mimir-values.yaml" | .Files.Get | fromYaml }}
 {{- $logsEnabled := false }}
 {{- range $instance := .Values.mimir.instances }}
-  {{- with merge (deepCopy $defaultValues) (deepCopy $instance) (dict "type" "integration.mimir") }}
+  {{- with mergeOverwrite (dict "type" $type) $defaultValues $instance }}
     {{- $logsEnabled = or $logsEnabled .logs.enabled }}
   {{- end }}
 {{- end }}

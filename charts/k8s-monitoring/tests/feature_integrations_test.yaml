@@ -1,0 +1,163 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Feature - Integrations
+templates:
+  - alloy-config.yaml
+  - validations.yaml
+tests:
+  - it: requires a metrics destination when a metrics-only integration is enabled
+    set:
+      cluster:
+        name: ci-test-cluster
+      alloy-metrics: {enabled: true}
+      integrations:
+        alloy:
+          instances:
+            - name: alloy
+              labelSelectors:
+                app.kubernetes.io/name: alloy-metrics
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            execution error at (k8s-monitoring/templates/validations.yaml:1:4): 
+            No destinations found that can accept metrics from Service Integrations
+            Please add a destination with metrics support.
+            See https://github.com/grafana/k8s-monitoring-helm/blob/main/charts/k8s-monitoring/docs/destinations/README.md for more details.
+
+  - it: works with a metrics-only integration
+    template: alloy-config.yaml
+    set:
+      cluster:
+        name: ci-test-cluster
+      destinations:
+        - name: prom
+          type: prometheus
+          url: http://prom.prom.svc:9090/api/v1/write
+      alloy-metrics: {enabled: true}
+      integrations:
+        alloy:
+          instances:
+            - name: alloy
+              labelSelectors:
+                app.kubernetes.io/name: alloy-metrics
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["config.alloy"]
+
+  - it: works with multiple metrics-only integrations
+    template: alloy-config.yaml
+    set:
+      cluster:
+        name: ci-test-cluster
+      destinations:
+        - name: prom
+          type: prometheus
+          url: http://prom.prom.svc:9090/api/v1/write
+      alloy-metrics: {enabled: true}
+      integrations:
+        grafana:
+          instances:
+            - name: grafana
+              logs: {enabled: false}
+              labelSelectors:
+                app.kubernetes.io/name: grafana
+        mimir:
+          instances:
+            - name: mimir
+              logs: {enabled: false}
+              labelSelectors:
+                app.kubernetes.io/name: mimir
+        loki:
+          instances:
+            - name: loki
+              logs: {enabled: false}
+              labelSelectors:
+                app.kubernetes.io/name: loki
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["config.alloy"]
+
+
+  - it: requires the podLogs feature when a logs-only integration is enabled
+    set:
+      cluster:
+        name: ci-test-cluster
+      alloy-logs: {enabled: true}
+      integrations:
+        loki:
+          instances:
+            - name: loki
+              metrics: {enabled: false}
+              labelSelectors:
+                app.kubernetes.io/name: loki
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            execution error at (k8s-monitoring/templates/validations.yaml:1:4): 
+            Service integrations that include logs requires enabling the Pod Logs feature.
+            Please set:
+            podLogs:
+              enabled: true
+
+  - it: works when a logs-only integration is enabled
+    set:
+      cluster:
+        name: ci-test-cluster
+      destinations:
+        - name: loki
+          type: loki
+          url: http://loki.loki.svc:3100/loki/api/v1/push
+      podLogs: {enabled: true}
+      alloy-logs: {enabled: true}
+      integrations:
+        loki:
+          instances:
+            - name: loki
+              metrics: {enabled: false}
+              labelSelectors:
+                app.kubernetes.io/name: loki
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["config.alloy"]
+
+  - it: works with multiple logs-only integrations
+    template: alloy-config.yaml
+    set:
+      cluster:
+        name: ci-test-cluster
+      destinations:
+        - name: loki
+          type: loki
+          url: http://loki.loki.svc:3100/loki/api/v1/push
+      podLogs: {enabled: true}
+      alloy-logs: {enabled: true}
+      integrations:
+        grafana:
+          instances:
+            - name: grafana
+              metrics: {enabled: false}
+              labelSelectors:
+                app.kubernetes.io/name: grafana
+        mimir:
+          instances:
+            - name: mimir
+              metrics: {enabled: false}
+              labelSelectors:
+                app.kubernetes.io/name: mimir
+        loki:
+          instances:
+            - name: loki
+              metrics: {enabled: false}
+              labelSelectors:
+                app.kubernetes.io/name: loki
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["config.alloy"]
+

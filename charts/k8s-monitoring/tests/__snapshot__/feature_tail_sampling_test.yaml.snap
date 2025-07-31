@@ -1,0 +1,866 @@
+creates a boolean_attribute policy:
+  1: |
+    |-
+      otelcol.receiver.otlp "sampler_receiver" {
+        grpc {
+          max_recv_msg_size = "4MB"
+        }
+
+        output {
+          traces = [otelcol.processor.tail_sampling.tail_sampler.input]
+        }
+      }
+      otelcol.processor.tail_sampling "tail_sampler" {
+        // https://grafana.com/docs/alloy/latest/reference/components/otelcol.processor.tail_sampling/
+
+        decision_wait = "15s"
+        decision_cache = {
+          sampled_cache_size     = 0,
+          non_sampled_cache_size = 0,
+        }
+
+        policy {
+          name = "boolean_attribute-policy"
+          type = "boolean_attribute"
+          boolean_attribute {
+            key = "key"
+            value = true
+            invert_match = false
+          }
+        }
+
+        output {
+          traces = [otelcol.processor.batch.tempo.input]
+        }
+      }
+
+      // Destination: tempo (otlp)
+      otelcol.processor.batch "tempo" {
+        timeout = "2s"
+        send_batch_size = 8192
+        send_batch_max_size = 0
+
+        output {
+          metrics = [otelcol.exporter.otlp.tempo.input]
+          logs = [otelcol.exporter.otlp.tempo.input]
+          traces = [otelcol.exporter.otlp.tempo.input]
+        }
+      }
+      otelcol.exporter.otlp "tempo" {
+        client {
+          endpoint = "tempo:4317"
+          tls {
+            insecure = false
+            insecure_skip_verify = false
+          }
+        }
+
+        retry_on_failure {
+          enabled = true
+          initial_interval = "5s"
+          max_interval = "30s"
+          max_elapsed_time = "5m"
+        }
+      }
+creates a composite policy:
+  1: |
+    |-
+      otelcol.receiver.otlp "sampler_receiver" {
+        grpc {
+          max_recv_msg_size = "4MB"
+        }
+
+        output {
+          traces = [otelcol.processor.tail_sampling.tail_sampler.input]
+        }
+      }
+      otelcol.processor.tail_sampling "tail_sampler" {
+        // https://grafana.com/docs/alloy/latest/reference/components/otelcol.processor.tail_sampling/
+
+        decision_wait = "15s"
+        decision_cache = {
+          sampled_cache_size     = 0,
+          non_sampled_cache_size = 0,
+        }
+
+        policy {
+          name = "composite-policy-1"
+          type = "composite"
+          composite {
+            max_total_spans_per_second = 1000
+            policy_order = ["test-composite-policy-1", "test-composite-policy-2", "test-composite-policy-3"]
+            composite_sub_policy {
+              name = "test-composite-policy-1"
+              type = "numeric_attribute"
+              numeric_attribute {
+                key = "key1"
+                min_value = 50
+              }
+            }
+            composite_sub_policy {
+              name = "test-composite-policy-2"
+              type = "string_attribute"
+              string_attribute {
+                key = "key2"
+                values = ["value1", "value2"]
+              }
+            }
+            composite_sub_policy {
+              name = "test-composite-policy-3"
+              type = "always_sample"
+            }
+            rate_allocation {
+              policy = "test-composite-policy-1"
+              percent = 50
+            }
+            rate_allocation {
+              policy = "test-composite-policy-2"
+              percent = 25
+            }
+          }
+        }
+
+        output {
+          traces = [otelcol.processor.batch.tempo.input]
+        }
+      }
+
+      // Destination: tempo (otlp)
+      otelcol.processor.batch "tempo" {
+        timeout = "2s"
+        send_batch_size = 8192
+        send_batch_max_size = 0
+
+        output {
+          metrics = [otelcol.exporter.otlp.tempo.input]
+          logs = [otelcol.exporter.otlp.tempo.input]
+          traces = [otelcol.exporter.otlp.tempo.input]
+        }
+      }
+      otelcol.exporter.otlp "tempo" {
+        client {
+          endpoint = "tempo:4317"
+          tls {
+            insecure = false
+            insecure_skip_verify = false
+          }
+        }
+
+        retry_on_failure {
+          enabled = true
+          initial_interval = "5s"
+          max_interval = "30s"
+          max_elapsed_time = "5m"
+        }
+      }
+creates a latency policy:
+  1: |
+    |-
+      otelcol.receiver.otlp "sampler_receiver" {
+        grpc {
+          max_recv_msg_size = "4MB"
+        }
+
+        output {
+          traces = [otelcol.processor.tail_sampling.tail_sampler.input]
+        }
+      }
+      otelcol.processor.tail_sampling "tail_sampler" {
+        // https://grafana.com/docs/alloy/latest/reference/components/otelcol.processor.tail_sampling/
+
+        decision_wait = "15s"
+        decision_cache = {
+          sampled_cache_size     = 0,
+          non_sampled_cache_size = 0,
+        }
+
+        policy {
+          name = "latency-policy"
+          type = "latency"
+          latency {
+            threshold_ms = 5000
+            upper_threshold_ms = 15000
+          }
+        }
+
+        output {
+          traces = [otelcol.processor.batch.tempo.input]
+        }
+      }
+
+      // Destination: tempo (otlp)
+      otelcol.processor.batch "tempo" {
+        timeout = "2s"
+        send_batch_size = 8192
+        send_batch_max_size = 0
+
+        output {
+          metrics = [otelcol.exporter.otlp.tempo.input]
+          logs = [otelcol.exporter.otlp.tempo.input]
+          traces = [otelcol.exporter.otlp.tempo.input]
+        }
+      }
+      otelcol.exporter.otlp "tempo" {
+        client {
+          endpoint = "tempo:4317"
+          tls {
+            insecure = false
+            insecure_skip_verify = false
+          }
+        }
+
+        retry_on_failure {
+          enabled = true
+          initial_interval = "5s"
+          max_interval = "30s"
+          max_elapsed_time = "5m"
+        }
+      }
+creates a numeric_attribute policy:
+  1: |
+    |-
+      otelcol.receiver.otlp "sampler_receiver" {
+        grpc {
+          max_recv_msg_size = "4MB"
+        }
+
+        output {
+          traces = [otelcol.processor.tail_sampling.tail_sampler.input]
+        }
+      }
+      otelcol.processor.tail_sampling "tail_sampler" {
+        // https://grafana.com/docs/alloy/latest/reference/components/otelcol.processor.tail_sampling/
+
+        decision_wait = "15s"
+        decision_cache = {
+          sampled_cache_size     = 0,
+          non_sampled_cache_size = 0,
+        }
+
+        policy {
+          name = "numeric_attribute-policy"
+          type = "numeric_attribute"
+          numeric_attribute {
+            key = "key"
+            min_value = 1
+            max_value = 256
+
+          }
+        }
+
+        output {
+          traces = [otelcol.processor.batch.tempo.input]
+        }
+      }
+
+      // Destination: tempo (otlp)
+      otelcol.processor.batch "tempo" {
+        timeout = "2s"
+        send_batch_size = 8192
+        send_batch_max_size = 0
+
+        output {
+          metrics = [otelcol.exporter.otlp.tempo.input]
+          logs = [otelcol.exporter.otlp.tempo.input]
+          traces = [otelcol.exporter.otlp.tempo.input]
+        }
+      }
+      otelcol.exporter.otlp "tempo" {
+        client {
+          endpoint = "tempo:4317"
+          tls {
+            insecure = false
+            insecure_skip_verify = false
+          }
+        }
+
+        retry_on_failure {
+          enabled = true
+          initial_interval = "5s"
+          max_interval = "30s"
+          max_elapsed_time = "5m"
+        }
+      }
+creates a probabilistic policy:
+  1: |
+    |-
+      otelcol.receiver.otlp "sampler_receiver" {
+        grpc {
+          max_recv_msg_size = "4MB"
+        }
+
+        output {
+          traces = [otelcol.processor.tail_sampling.tail_sampler.input]
+        }
+      }
+      otelcol.processor.tail_sampling "tail_sampler" {
+        // https://grafana.com/docs/alloy/latest/reference/components/otelcol.processor.tail_sampling/
+
+        decision_wait = "15s"
+        decision_cache = {
+          sampled_cache_size     = 0,
+          non_sampled_cache_size = 0,
+        }
+
+        policy {
+          name = "probabilistic-policy"
+          type = "probabilistic"
+          probabilistic {
+            sampling_percentage = 10
+          }
+        }
+
+        output {
+          traces = [otelcol.processor.batch.tempo.input]
+        }
+      }
+
+      // Destination: tempo (otlp)
+      otelcol.processor.batch "tempo" {
+        timeout = "2s"
+        send_batch_size = 8192
+        send_batch_max_size = 0
+
+        output {
+          metrics = [otelcol.exporter.otlp.tempo.input]
+          logs = [otelcol.exporter.otlp.tempo.input]
+          traces = [otelcol.exporter.otlp.tempo.input]
+        }
+      }
+      otelcol.exporter.otlp "tempo" {
+        client {
+          endpoint = "tempo:4317"
+          tls {
+            insecure = false
+            insecure_skip_verify = false
+          }
+        }
+
+        retry_on_failure {
+          enabled = true
+          initial_interval = "5s"
+          max_interval = "30s"
+          max_elapsed_time = "5m"
+        }
+      }
+creates a rate_limiting policy:
+  1: |
+    |-
+      otelcol.receiver.otlp "sampler_receiver" {
+        grpc {
+          max_recv_msg_size = "4MB"
+        }
+
+        output {
+          traces = [otelcol.processor.tail_sampling.tail_sampler.input]
+        }
+      }
+      otelcol.processor.tail_sampling "tail_sampler" {
+        // https://grafana.com/docs/alloy/latest/reference/components/otelcol.processor.tail_sampling/
+
+        decision_wait = "15s"
+        decision_cache = {
+          sampled_cache_size     = 0,
+          non_sampled_cache_size = 0,
+        }
+
+        policy {
+          name = "rate_limiting-policy"
+          type = "rate_limiting"
+          rate_limiting {
+            spans_per_second = 35
+          }
+        }
+
+        output {
+          traces = [otelcol.processor.batch.tempo.input]
+        }
+      }
+
+      // Destination: tempo (otlp)
+      otelcol.processor.batch "tempo" {
+        timeout = "2s"
+        send_batch_size = 8192
+        send_batch_max_size = 0
+
+        output {
+          metrics = [otelcol.exporter.otlp.tempo.input]
+          logs = [otelcol.exporter.otlp.tempo.input]
+          traces = [otelcol.exporter.otlp.tempo.input]
+        }
+      }
+      otelcol.exporter.otlp "tempo" {
+        client {
+          endpoint = "tempo:4317"
+          tls {
+            insecure = false
+            insecure_skip_verify = false
+          }
+        }
+
+        retry_on_failure {
+          enabled = true
+          initial_interval = "5s"
+          max_interval = "30s"
+          max_elapsed_time = "5m"
+        }
+      }
+creates a span_count policy:
+  1: |
+    |-
+      otelcol.receiver.otlp "sampler_receiver" {
+        grpc {
+          max_recv_msg_size = "4MB"
+        }
+
+        output {
+          traces = [otelcol.processor.tail_sampling.tail_sampler.input]
+        }
+      }
+      otelcol.processor.tail_sampling "tail_sampler" {
+        // https://grafana.com/docs/alloy/latest/reference/components/otelcol.processor.tail_sampling/
+
+        decision_wait = "15s"
+        decision_cache = {
+          sampled_cache_size     = 0,
+          non_sampled_cache_size = 0,
+        }
+
+        policy {
+          name = "span_count-policy"
+          type = "span_count"
+          span_count {
+            min_spans = 2
+            max_spans = 20
+
+          }
+        }
+
+        output {
+          traces = [otelcol.processor.batch.tempo.input]
+        }
+      }
+
+      // Destination: tempo (otlp)
+      otelcol.processor.batch "tempo" {
+        timeout = "2s"
+        send_batch_size = 8192
+        send_batch_max_size = 0
+
+        output {
+          metrics = [otelcol.exporter.otlp.tempo.input]
+          logs = [otelcol.exporter.otlp.tempo.input]
+          traces = [otelcol.exporter.otlp.tempo.input]
+        }
+      }
+      otelcol.exporter.otlp "tempo" {
+        client {
+          endpoint = "tempo:4317"
+          tls {
+            insecure = false
+            insecure_skip_verify = false
+          }
+        }
+
+        retry_on_failure {
+          enabled = true
+          initial_interval = "5s"
+          max_interval = "30s"
+          max_elapsed_time = "5m"
+        }
+      }
+creates a status_code policy:
+  1: |
+    |-
+      otelcol.receiver.otlp "sampler_receiver" {
+        grpc {
+          max_recv_msg_size = "4MB"
+        }
+
+        output {
+          traces = [otelcol.processor.tail_sampling.tail_sampler.input]
+        }
+      }
+      otelcol.processor.tail_sampling "tail_sampler" {
+        // https://grafana.com/docs/alloy/latest/reference/components/otelcol.processor.tail_sampling/
+
+        decision_wait = "15s"
+        decision_cache = {
+          sampled_cache_size     = 0,
+          non_sampled_cache_size = 0,
+        }
+
+        policy {
+          name = "status_code-policy"
+          type = "status_code"
+          status_code {
+            status_codes = ["UNSET", "ERROR"]
+          }
+        }
+
+        output {
+          traces = [otelcol.processor.batch.tempo.input]
+        }
+      }
+
+      // Destination: tempo (otlp)
+      otelcol.processor.batch "tempo" {
+        timeout = "2s"
+        send_batch_size = 8192
+        send_batch_max_size = 0
+
+        output {
+          metrics = [otelcol.exporter.otlp.tempo.input]
+          logs = [otelcol.exporter.otlp.tempo.input]
+          traces = [otelcol.exporter.otlp.tempo.input]
+        }
+      }
+      otelcol.exporter.otlp "tempo" {
+        client {
+          endpoint = "tempo:4317"
+          tls {
+            insecure = false
+            insecure_skip_verify = false
+          }
+        }
+
+        retry_on_failure {
+          enabled = true
+          initial_interval = "5s"
+          max_interval = "30s"
+          max_elapsed_time = "5m"
+        }
+      }
+creates a string_attribute policy:
+  1: |
+    |-
+      otelcol.receiver.otlp "sampler_receiver" {
+        grpc {
+          max_recv_msg_size = "4MB"
+        }
+
+        output {
+          traces = [otelcol.processor.tail_sampling.tail_sampler.input]
+        }
+      }
+      otelcol.processor.tail_sampling "tail_sampler" {
+        // https://grafana.com/docs/alloy/latest/reference/components/otelcol.processor.tail_sampling/
+
+        decision_wait = "15s"
+        decision_cache = {
+          sampled_cache_size     = 0,
+          non_sampled_cache_size = 0,
+        }
+
+        policy {
+          name = "string_attribute-policy"
+          type = "string_attribute"
+          string_attribute {
+            key = "key"
+            values = ["value1", "value2"]
+            enabled_regex_matching = true
+            cache_max_size = 10
+            invert_match = true
+          }
+        }
+
+        output {
+          traces = [otelcol.processor.batch.tempo.input]
+        }
+      }
+
+      // Destination: tempo (otlp)
+      otelcol.processor.batch "tempo" {
+        timeout = "2s"
+        send_batch_size = 8192
+        send_batch_max_size = 0
+
+        output {
+          metrics = [otelcol.exporter.otlp.tempo.input]
+          logs = [otelcol.exporter.otlp.tempo.input]
+          traces = [otelcol.exporter.otlp.tempo.input]
+        }
+      }
+      otelcol.exporter.otlp "tempo" {
+        client {
+          endpoint = "tempo:4317"
+          tls {
+            insecure = false
+            insecure_skip_verify = false
+          }
+        }
+
+        retry_on_failure {
+          enabled = true
+          initial_interval = "5s"
+          max_interval = "30s"
+          max_elapsed_time = "5m"
+        }
+      }
+creates a trace_state policy:
+  1: |
+    |-
+      otelcol.receiver.otlp "sampler_receiver" {
+        grpc {
+          max_recv_msg_size = "4MB"
+        }
+
+        output {
+          traces = [otelcol.processor.tail_sampling.tail_sampler.input]
+        }
+      }
+      otelcol.processor.tail_sampling "tail_sampler" {
+        // https://grafana.com/docs/alloy/latest/reference/components/otelcol.processor.tail_sampling/
+
+        decision_wait = "15s"
+        decision_cache = {
+          sampled_cache_size     = 0,
+          non_sampled_cache_size = 0,
+        }
+
+        policy {
+          name = "trace_state-policy"
+          type = "trace_state"
+          trace_state {
+            key = "key"
+            values = ["value1", "value2"]
+          }
+        }
+
+        output {
+          traces = [otelcol.processor.batch.tempo.input]
+        }
+      }
+
+      // Destination: tempo (otlp)
+      otelcol.processor.batch "tempo" {
+        timeout = "2s"
+        send_batch_size = 8192
+        send_batch_max_size = 0
+
+        output {
+          metrics = [otelcol.exporter.otlp.tempo.input]
+          logs = [otelcol.exporter.otlp.tempo.input]
+          traces = [otelcol.exporter.otlp.tempo.input]
+        }
+      }
+      otelcol.exporter.otlp "tempo" {
+        client {
+          endpoint = "tempo:4317"
+          tls {
+            insecure = false
+            insecure_skip_verify = false
+          }
+        }
+
+        retry_on_failure {
+          enabled = true
+          initial_interval = "5s"
+          max_interval = "30s"
+          max_elapsed_time = "5m"
+        }
+      }
+creates an always_sample policy:
+  1: |
+    |-
+      otelcol.receiver.otlp "sampler_receiver" {
+        grpc {
+          max_recv_msg_size = "4MB"
+        }
+
+        output {
+          traces = [otelcol.processor.tail_sampling.tail_sampler.input]
+        }
+      }
+      otelcol.processor.tail_sampling "tail_sampler" {
+        // https://grafana.com/docs/alloy/latest/reference/components/otelcol.processor.tail_sampling/
+
+        decision_wait = "15s"
+        decision_cache = {
+          sampled_cache_size     = 0,
+          non_sampled_cache_size = 0,
+        }
+
+        policy {
+          name = "always_sample-policy"
+          type = "always_sample"
+
+        }
+
+        output {
+          traces = [otelcol.processor.batch.tempo.input]
+        }
+      }
+
+      // Destination: tempo (otlp)
+      otelcol.processor.batch "tempo" {
+        timeout = "2s"
+        send_batch_size = 8192
+        send_batch_max_size = 0
+
+        output {
+          metrics = [otelcol.exporter.otlp.tempo.input]
+          logs = [otelcol.exporter.otlp.tempo.input]
+          traces = [otelcol.exporter.otlp.tempo.input]
+        }
+      }
+      otelcol.exporter.otlp "tempo" {
+        client {
+          endpoint = "tempo:4317"
+          tls {
+            insecure = false
+            insecure_skip_verify = false
+          }
+        }
+
+        retry_on_failure {
+          enabled = true
+          initial_interval = "5s"
+          max_interval = "30s"
+          max_elapsed_time = "5m"
+        }
+      }
+creates an and policy:
+  1: |
+    |-
+      otelcol.receiver.otlp "sampler_receiver" {
+        grpc {
+          max_recv_msg_size = "4MB"
+        }
+
+        output {
+          traces = [otelcol.processor.tail_sampling.tail_sampler.input]
+        }
+      }
+      otelcol.processor.tail_sampling "tail_sampler" {
+        // https://grafana.com/docs/alloy/latest/reference/components/otelcol.processor.tail_sampling/
+
+        decision_wait = "15s"
+        decision_cache = {
+          sampled_cache_size     = 0,
+          non_sampled_cache_size = 0,
+        }
+
+        policy {
+          name = "and-policy"
+          type = "and"
+          and {
+            and_sub_policy {
+              name = "test-and-policy-1"
+              type = "numeric_attribute"
+              numeric_attribute {
+                key = "key1"
+                min_value = 1
+                max_value = 256
+
+              }
+            }
+            and_sub_policy {
+              name = "test-and-policy-2"
+              type = "string_attribute"
+              string_attribute {
+                key = "key2"
+                values = ["value1", "value2"]
+              }
+            }
+          }
+        }
+
+        output {
+          traces = [otelcol.processor.batch.tempo.input]
+        }
+      }
+
+      // Destination: tempo (otlp)
+      otelcol.processor.batch "tempo" {
+        timeout = "2s"
+        send_batch_size = 8192
+        send_batch_max_size = 0
+
+        output {
+          metrics = [otelcol.exporter.otlp.tempo.input]
+          logs = [otelcol.exporter.otlp.tempo.input]
+          traces = [otelcol.exporter.otlp.tempo.input]
+        }
+      }
+      otelcol.exporter.otlp "tempo" {
+        client {
+          endpoint = "tempo:4317"
+          tls {
+            insecure = false
+            insecure_skip_verify = false
+          }
+        }
+
+        retry_on_failure {
+          enabled = true
+          initial_interval = "5s"
+          max_interval = "30s"
+          max_elapsed_time = "5m"
+        }
+      }
+creates an ottl_condition policy:
+  1: |
+    |-
+      otelcol.receiver.otlp "sampler_receiver" {
+        grpc {
+          max_recv_msg_size = "4MB"
+        }
+
+        output {
+          traces = [otelcol.processor.tail_sampling.tail_sampler.input]
+        }
+      }
+      otelcol.processor.tail_sampling "tail_sampler" {
+        // https://grafana.com/docs/alloy/latest/reference/components/otelcol.processor.tail_sampling/
+
+        decision_wait = "15s"
+        decision_cache = {
+          sampled_cache_size     = 0,
+          non_sampled_cache_size = 0,
+        }
+
+        policy {
+          name = "ottl_condition-policy"
+          type = "ottl_condition"
+          ottl_condition {
+            error_mode = "ignore"
+            span = ["attributes[\"attr_key_1\"] == \"test_attr_val_1\"", "attributes[\"attr_key_2\"] == \"test_attr_val_2\""]
+            spanevent = ["name != \"test_span_event_name\"", "attributes[\"event_attr_key\"] != \"event_attr_val\""
+            ]
+          }
+        }
+
+        output {
+          traces = [otelcol.processor.batch.tempo.input]
+        }
+      }
+
+      // Destination: tempo (otlp)
+      otelcol.processor.batch "tempo" {
+        timeout = "2s"
+        send_batch_size = 8192
+        send_batch_max_size = 0
+
+        output {
+          metrics = [otelcol.exporter.otlp.tempo.input]
+          logs = [otelcol.exporter.otlp.tempo.input]
+          traces = [otelcol.exporter.otlp.tempo.input]
+        }
+      }
+      otelcol.exporter.otlp "tempo" {
+        client {
+          endpoint = "tempo:4317"
+          tls {
+            insecure = false
+            insecure_skip_verify = false
+          }
+        }
+
+        retry_on_failure {
+          enabled = true
+          initial_interval = "5s"
+          max_interval = "30s"
+          max_elapsed_time = "5m"
+        }
+      }

@@ -35,7 +35,12 @@ integrations:
       - name: mysql-cluster
         exporter:
           enabled: true
-          dataSourceName: "grafana:REDACTED@(mysql-cluster-router.mysql-cluster:3306)/"
+          dataSource:
+            host: mysql-cluster-router.mysql-cluster
+            port: 3306
+            auth:
+              username: grafana
+              password: REDACTED
           collectors:
             - perf_schema.replication_group_members
         logs:

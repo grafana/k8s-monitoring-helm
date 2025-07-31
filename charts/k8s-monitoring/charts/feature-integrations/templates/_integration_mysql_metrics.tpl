@@ -1,4 +1,12 @@
-{{- define "integrations.mysql.type.metrics" }}true{{- end }}
+{{/* Inputs: . (Values) */}}
+{{- define "integrations.mysql.type.metrics" }}
+{{- $defaultValues := "integrations/mysql-values.yaml" | .Files.Get | fromYaml }}
+{{- $metricsEnabled := false }}
+{{- range $instance := .Values.mysql.instances }}
+  {{- $metricsEnabled = or $metricsEnabled (dig "metrics" "enabled" true $instance) }}
+{{- end }}
+{{- $metricsEnabled -}}
+{{- end }}
 
 {{- define "integrations.mysql.module.metrics" }}
 declare "mysql_integration" {

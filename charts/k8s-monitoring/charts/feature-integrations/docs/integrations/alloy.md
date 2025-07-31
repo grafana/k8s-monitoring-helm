@@ -21,12 +21,6 @@ Alloy instances.
 | jobLabel | string | `"integrations/alloy"` | The value of the job label for scraped metrics and logs |
 | name | string | `""` | Name for this Alloy instance. |
 
-### Metrics Settings
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| metrics.enabled | bool | `true` | Whether to enable metrics collection from Alloy. |
-
 ### Metric Processing Settings
 
 | Key | Type | Default | Description |
