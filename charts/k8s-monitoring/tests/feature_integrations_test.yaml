@@ -24,7 +24,6 @@ tests:
             See https://github.com/grafana/k8s-monitoring-helm/blob/main/charts/k8s-monitoring/docs/destinations/README.md for more details.
 
   - it: works with a metrics-only integration
-    template: alloy-config.yaml
     set:
       cluster:
         name: ci-test-cluster
@@ -39,6 +38,7 @@ tests:
             - name: alloy
               labelSelectors:
                 app.kubernetes.io/name: alloy-metrics
+    template: alloy-config.yaml
     asserts:
       - isKind:
           of: ConfigMap
@@ -46,7 +46,6 @@ tests:
           path: data["config.alloy"]
 
   - it: works with multiple metrics-only integrations
-    template: alloy-config.yaml
     set:
       cluster:
         name: ci-test-cluster
@@ -74,6 +73,7 @@ tests:
               logs: {enabled: false}
               labelSelectors:
                 app.kubernetes.io/name: loki
+    template: alloy-config.yaml
     asserts:
       - isKind:
           of: ConfigMap
@@ -119,6 +119,7 @@ tests:
               metrics: {enabled: false}
               labelSelectors:
                 app.kubernetes.io/name: loki
+    template: alloy-config.yaml
     asserts:
       - isKind:
           of: ConfigMap
@@ -126,7 +127,6 @@ tests:
           path: data["config.alloy"]
 
   - it: works with multiple logs-only integrations
-    template: alloy-config.yaml
     set:
       cluster:
         name: ci-test-cluster
@@ -155,6 +155,7 @@ tests:
               metrics: {enabled: false}
               labelSelectors:
                 app.kubernetes.io/name: loki
+    template: alloy-config.yaml
     asserts:
       - isKind:
           of: ConfigMap
