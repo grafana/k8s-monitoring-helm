@@ -1,9 +1,10 @@
 {{/* Inputs: . (Values) */}}
 {{- define "integrations.loki.type.logs" }}
+{{- $type := "integration.loki" }}
 {{- $defaultValues := "integrations/loki-values.yaml" | .Files.Get | fromYaml }}
 {{- $logsEnabled := false }}
 {{- range $instance := .Values.loki.instances }}
-  {{- with merge (deepCopy $instance) (deepCopy $defaultValues) (dict "type" "integration.loki") }}
+  {{- with mergeOverwrite (dict "type" $type) $defaultValues $instance }}
     {{- $logsEnabled = or $logsEnabled .logs.enabled }}
   {{- end }}
 {{- end }}

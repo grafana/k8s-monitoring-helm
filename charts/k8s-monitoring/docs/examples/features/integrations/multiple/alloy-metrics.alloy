@@ -123,8 +123,19 @@ declare "mysql_integration" {
     comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
   }
 
+
+  remote.kubernetes.secret "mysql_cluster" {
+    name      = "mysql-cluster-k8smon-integrations"
+    namespace = "default"
+  }
+
   prometheus.exporter.mysql "mysql_cluster" {
-    data_source_name  = "grafana:REDACTED@(mysql-cluster-router.mysql-cluster:3306)/"
+    data_source_name = string.format("%s:%s@(%s:%d)/",
+      convert.nonsensitive(remote.kubernetes.secret.mysql_cluster.data["username"]),
+      convert.nonsensitive(remote.kubernetes.secret.mysql_cluster.data["password"]),
+      "mysql-cluster-router.mysql-cluster",
+      3306,
+    )
     enable_collectors = ["perf_schema.replication_group_members"]
   }
   prometheus.scrape "mysql_cluster" {

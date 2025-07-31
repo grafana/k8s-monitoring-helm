@@ -1,4 +1,15 @@
-{{- define "integrations.loki.type.metrics" }}true{{- end }}
+{{/* Inputs: . (Values) */}}
+{{- define "integrations.loki.type.metrics" }}
+{{- $type := "integration.loki" }}
+{{- $defaultValues := "integrations/loki-values.yaml" | .Files.Get | fromYaml }}
+{{- $metricsEnabled := false }}
+{{- range $instance := .Values.loki.instances }}
+  {{- with mergeOverwrite (dict "type" $type) $defaultValues $instance }}
+    {{- $metricsEnabled = or $metricsEnabled .metrics.enabled }}
+  {{- end }}
+{{- end }}
+{{- $metricsEnabled -}}
+{{- end }}
 
 {{/* Returns the allowed metrics */}}
 {{/* Inputs: instance (loki integration instance) Files (Files object) */}}

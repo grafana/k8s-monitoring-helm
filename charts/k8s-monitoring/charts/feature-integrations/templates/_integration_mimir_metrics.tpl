@@ -1,4 +1,15 @@
-{{- define "integrations.mimir.type.metrics" }}true{{- end }}
+{{/* Inputs: . (Values) */}}
+{{- define "integrations.mimir.type.metrics" }}
+{{- $type := "integration.mimir" }}
+{{- $defaultValues := "integrations/mimir-values.yaml" | .Files.Get | fromYaml }}
+{{- $metricsEnabled := false }}
+{{- range $instance := .Values.mimir.instances }}
+  {{- with mergeOverwrite (dict "type" $type) $defaultValues $instance }}
+    {{- $metricsEnabled = or $metricsEnabled .metrics.enabled }}
+  {{- end }}
+{{- end }}
+{{- $metricsEnabled -}}
+{{- end }}
 
 {{/* Returns the allowed metrics */}}
 {{/* Inputs: instance (mimir integration instance) Files (Files object) */}}

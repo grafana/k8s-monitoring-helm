@@ -1,4 +1,15 @@
-{{- define "integrations.tempo.type.metrics" }}true{{- end }}
+{{/* Inputs: . (Values) */}}
+{{- define "integrations.tempo.type.metrics" }}
+{{- $type := "integration.tempo" }}
+{{- $defaultValues := "integrations/tempo-values.yaml" | .Files.Get | fromYaml }}
+{{- $metricsEnabled := false }}
+{{- range $instance := .Values.tempo.instances }}
+  {{- with mergeOverwrite (dict "type" $type) $defaultValues $instance }}
+    {{- $metricsEnabled = or $metricsEnabled .metrics.enabled }}
+  {{- end }}
+{{- end }}
+{{- $metricsEnabled -}}
+{{- end }}
 
 {{/* Returns the allowed metrics */}}
 {{/* Inputs: instance (tempo integration instance) Files (Files object) */}}

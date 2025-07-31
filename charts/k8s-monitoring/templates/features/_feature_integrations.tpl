@@ -5,7 +5,7 @@
 {{- end }}
 
 {{- define "features.integrations.collectors" }}
-{{- $metricIntegrations := include "feature.integrations.configured.metrics" (dict "Values" .Values.integrations) | fromYamlArray }}
+{{- $metricIntegrations := include "feature.integrations.configured.metrics" (dict "Values" .Values.integrations "Files" $.Subcharts.integrations.Files) | fromYamlArray }}
 {{- if (not (empty $metricIntegrations)) }}
 - {{ .Values.integrations.collector }}
 {{- end }}

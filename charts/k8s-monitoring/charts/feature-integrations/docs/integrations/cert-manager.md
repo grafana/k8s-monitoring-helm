@@ -18,13 +18,6 @@
 | jobLabel | string | `"integrations/cert-manager"` | The value of the job label for scraped metrics and logs |
 | name | string | `""` | Name for this cert-manager instance. |
 
-### Scrape Settings
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| metrics.enabled | bool | `true` | Whether to enable metrics collection from cert-manager. |
-| metrics.scrapeInterval | string | `60s` | How frequently to scrape metrics from Windows Exporter. |
-
 ### Metric Processing Settings
 
 | Key | Type | Default | Description |
@@ -33,8 +26,8 @@
 | metrics.tuning.excludeMetrics | list | `[]` | Metrics to drop. Can use regular expressions. |
 | metrics.tuning.includeMetrics | list | `[]` | Metrics to keep. Can use regular expressions. |
 
-### Other Values
+### Scrape Settings
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| logs.enabled | bool | `false` |  |
+| metrics.scrapeInterval | string | `60s` | How frequently to scrape metrics from Windows Exporter. |

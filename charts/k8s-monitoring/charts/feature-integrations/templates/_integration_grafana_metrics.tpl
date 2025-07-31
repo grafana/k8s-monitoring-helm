@@ -1,4 +1,15 @@
-{{- define "integrations.grafana.type.metrics" }}true{{- end }}
+{{/* Inputs: . (Values) */}}
+{{- define "integrations.grafana.type.metrics" }}
+{{- $type := "integration.grafana" }}
+{{- $defaultValues := "integrations/grafana-values.yaml" | .Files.Get | fromYaml }}
+{{- $metricsEnabled := false }}
+{{- range $instance := .Values.grafana.instances }}
+  {{- with mergeOverwrite (dict "type" $type) $defaultValues $instance }}
+    {{- $metricsEnabled = or $metricsEnabled .metrics.enabled }}
+  {{- end }}
+{{- end }}
+{{- $metricsEnabled -}}
+{{- end }}
 
 {{/* Returns the allowed metrics */}}
 {{/* Inputs: instance (grafana integration instance) Files (Files object) */}}

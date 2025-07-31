@@ -1,5 +1,5 @@
 {{- define "collectors.validate.featuresEnabled" }}
-{{- $msg := list "" "The %s collector is enabled, but there are no enabled features that will use it. Please disable the collector by setting:" }}
+{{- $msg := list "" "The %s collector is enabled, but there are no enabled features that will use it." "Please disable the collector by setting:" }}
 {{- $msg = append $msg "%s:" }}
 {{- $msg = append $msg "  enabled: false" }}
 {{- $errorMessage := join "\n" $msg }}

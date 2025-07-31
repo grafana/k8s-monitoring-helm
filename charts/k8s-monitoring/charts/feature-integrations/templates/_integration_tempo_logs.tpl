@@ -1,9 +1,10 @@
 {{/* Inputs: . (Values) */}}
 {{- define "integrations.tempo.type.logs" }}
+{{- $type := "integration.tempo" }}
 {{- $defaultValues := "integrations/tempo-values.yaml" | .Files.Get | fromYaml }}
 {{- $logsEnabled := false }}
 {{- range $instance := .Values.tempo.instances }}
-  {{- with merge (deepCopy $defaultValues) (deepCopy $instance) (dict "type" "integration.tempo") }}
+  {{- with mergeOverwrite (dict "type" $type) $defaultValues $instance }}
     {{- $logsEnabled = or $logsEnabled .logs.enabled }}
   {{- end }}
 {{- end }}

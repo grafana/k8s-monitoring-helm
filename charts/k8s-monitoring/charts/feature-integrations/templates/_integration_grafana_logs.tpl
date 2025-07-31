@@ -1,9 +1,10 @@
 {{/* Inputs: . (Values) */}}
 {{- define "integrations.grafana.type.logs" }}
+{{- $type := "integration.grafana" }}
 {{- $defaultValues := "integrations/grafana-values.yaml" | .Files.Get | fromYaml }}
 {{- $logsEnabled := false }}
 {{- range $instance := .Values.grafana.instances }}
-  {{- with merge (deepCopy $defaultValues) (deepCopy $instance) (dict "type" "integration.grafana") }}
+  {{- with mergeOverwrite (dict "type" $type) $defaultValues $instance }}
     {{- $logsEnabled = or $logsEnabled .logs.enabled }}
   {{- end }}
 {{- end }}
