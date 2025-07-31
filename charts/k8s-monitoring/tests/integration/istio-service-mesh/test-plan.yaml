@@ -1,0 +1,100 @@
+---
+apiVersion: helm-chart-toolbox.grafana.com/v1
+kind: TestPlan
+name: istio-service-mesh
+
+subject:
+  releaseName: k8smon
+  path: ../../..
+  valuesFile: values.yaml
+
+cluster:
+  type: kind
+
+dependencies:
+  - file: dependencies/default-namespace-label.yaml
+  - file: dependencies/istio.yaml
+  - file: dependencies/alloy-instrumented.yaml
+  - preset: prometheus
+  - preset: loki
+  - preset: tempo
+  - preset: grafana
+    overrides:
+      datasources:
+        datasources.yaml:
+          apiVersion: 1
+          datasources:
+            - name: Prometheus
+              type: prometheus
+              url: http://prometheus-server.prometheus.svc:9090
+              isDefault: true
+
+            - name: Loki
+              type: loki
+              url: http://loki-gateway.loki.svc:8080
+              basicAuth: true
+              basicAuthUser: loki
+              jsonData:
+                httpHeaderName1: X-Scope-OrgID
+              secureJsonData:
+                basicAuthPassword: lokipassword
+                httpHeaderValue1: "1"
+
+            - name: Tempo
+              type: tempo
+              url: http://tempo.tempo.svc:3200
+
+tests:
+  - type: query-test
+    values:
+      pod:
+        extraAnnotations:
+          sidecar.istio.io/inject: "false"
+      tests:
+        - env:
+            CLUSTER: istio-service-mesh-test
+            PROMETHEUS_URL: http://prometheus-server.prometheus.svc:9090/api/v1/query
+            LOKI_URL: http://loki.loki.svc:3100/loki/api/v1/query
+            LOKI_TENANTID: 1
+            LOKI_USER: loki
+            LOKI_PASS: lokipassword
+            TEMPO_URL: http://tempo.tempo.svc:3200/api/search
+          queries:
+            # Cluster metrics
+            - query: kubernetes_build_info{cluster="$CLUSTER", job="integrations/kubernetes/kubelet"}
+              type: promql
+            - query: node_cpu_usage_seconds_total{cluster="$CLUSTER", job="integrations/kubernetes/resources"}
+              type: promql
+            - query: machine_memory_bytes{cluster="$CLUSTER", job="integrations/kubernetes/cadvisor"}
+              type: promql
+            - query: count(kube_node_info{cluster="$CLUSTER", job="integrations/kubernetes/kube-state-metrics"})
+              type: promql
+            - query: node_exporter_build_info{cluster="$CLUSTER", job="integrations/node_exporter"}
+              type: promql
+
+            # Istio metrics (sourced by annotations)
+            - query: istio_requests_total{cluster="$CLUSTER"}
+              type: promql
+
+            # Cluster events
+            - query: count_over_time({cluster="$CLUSTER", job="integrations/kubernetes/eventhandler"}[1h])
+              type: logql
+
+            # Pod logs
+            - query: count_over_time({cluster="$CLUSTER", job!="integrations/kubernetes/eventhandler"}[1h])
+              type: logql
+
+            # DPM check (ensures that clustering is working)
+            - query: avg(count_over_time(scrape_samples_scraped{cluster="$CLUSTER"}[1m]))
+              type: promql
+              expect:
+                value: 1
+                operator: ==
+
+            # Alloy Receiver works
+            - query: "{resource.cluster=\"$CLUSTER\" && resource.k8s.deployment.name=\"alloy-app\"}"
+              type: traceql
+
+            # Host Info connector
+            - query: traces_host_info{k8s_cluster_name="$CLUSTER", grafana_host_id="istio-service-mesh-test-cluster-control-plane"}
+              type: promql
