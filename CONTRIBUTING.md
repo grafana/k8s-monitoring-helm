@@ -88,7 +88,7 @@ quantumObservability:
 To simplify contributing to this project, we have a lot of test automation to ensure that changes are high
 quality and robust.
 
-### Just the right amount of magic
+### The right amount of magic
 
 This is a bit hard to qualify, but using this chart should be predictable and intuitive to work with.
 Sometimes, going too far with this can lead to a chart that does things that are unexpected.
