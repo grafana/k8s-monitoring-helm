@@ -46,7 +46,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 <!-- markdownlint-enable list-marker-space -->
 <!-- markdownlint-enable no-bare-urls -->
 
-<!--alex ignore host-hostess-->
+<!--alex disable host-hostess-->
 ## Values
 
 ### Connectors: Grafana Cloud Host Info
@@ -189,3 +189,4 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | traces.enabled | bool | `true` |  |
 | traces.filters | object | `{"span":[],"spanevent":[]}` | Apply a filter to traces received via the OTLP or OTLP HTTP receivers. ([docs](https://grafana.com/docs/alloy/latest/reference/components/otelcol/otelcol.processor.filter/)) |
 | traces.transforms | object | `{"resource":[],"span":[],"spanevent":[]}` | Apply a transformation to traces received via the OTLP or OTLP HTTP receivers. ([docs](https://grafana.com/docs/alloy/latest/reference/components/otelcol/otelcol.processor.transform/)) |
+<!--alex enable host-hostess-->
