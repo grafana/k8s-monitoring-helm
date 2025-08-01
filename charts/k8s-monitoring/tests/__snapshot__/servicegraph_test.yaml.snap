@@ -1,60 +1,6 @@
 uses destination secret:
   1: |
     |-
-      otelcol.receiver.otlp "service_graph_receiver" {
-        grpc {
-          max_recv_msg_size = "8MB"
-        }
-
-        output {
-          traces = [otelcol.connector.servicegraph.service_graph_metrics.input]
-        }
-      }
-      otelcol.connector.servicegraph "service_graph_metrics" {
-        // https://grafana.com/docs/alloy/latest/reference/components/otelcol/otelcol.connector.servicegraph/
-
-        cache_loop = "2m"
-
-        database_name_attribute = "db.name"
-
-        dimensions = [
-            "cluster",
-            "service.name",
-            "service.namespace",
-            "k8s.deployment.name",
-            "k8s.namespace.name",
-        ]
-
-        latency_histogram_buckets = [
-            "2ms",
-            "4ms",
-            "6ms",
-            "8ms",
-            "10ms",
-            "50ms",
-            "100ms",
-            "200ms",
-            "400ms",
-            "800ms",
-            "1s",
-            "1400ms",
-            "2s",
-            "5s",
-            "10s",
-            "15s",
-        ]
-
-        metrics_flush_interval = "60s"
-
-        store_expiration_loop = "5s"
-
-        output {
-            metrics = [
-              otelcol.exporter.prometheus.prometheus.input,
-            ]
-        }
-      }
-
       // Destination: prometheus (prometheus)
 
       remote.kubernetes.secret "prometheus" {
@@ -119,5 +65,58 @@ uses destination secret:
         }
         external_labels = {
           collector_id = env("POD_NAME"),
+        }
+      }
+      otelcol.receiver.otlp "service_graph_receiver" {
+        grpc {
+          max_recv_msg_size = "8MB"
+        }
+
+        output {
+          traces = [otelcol.connector.servicegraph.service_graph_metrics.input]
+        }
+      }
+      otelcol.connector.servicegraph "service_graph_metrics" {
+        // https://grafana.com/docs/alloy/latest/reference/components/otelcol/otelcol.connector.servicegraph/
+
+        cache_loop = "2m"
+
+        database_name_attribute = "db.name"
+
+        dimensions = [
+            "cluster",
+            "service.name",
+            "service.namespace",
+            "k8s.deployment.name",
+            "k8s.namespace.name",
+        ]
+
+        latency_histogram_buckets = [
+            "2ms",
+            "4ms",
+            "6ms",
+            "8ms",
+            "10ms",
+            "50ms",
+            "100ms",
+            "200ms",
+            "400ms",
+            "800ms",
+            "1s",
+            "1400ms",
+            "2s",
+            "5s",
+            "10s",
+            "15s",
+        ]
+
+        metrics_flush_interval = "60s"
+
+        store_expiration_loop = "5s"
+
+        output {
+            metrics = [
+              otelcol.exporter.prometheus.prometheus.input,
+            ]
         }
       }
