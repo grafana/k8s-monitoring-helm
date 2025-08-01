@@ -16,6 +16,15 @@ dependencies:
   - file: dependencies/passwords.yaml
   - file: dependencies/nginx-auth-gateway.yaml
   - preset: prometheus
+    overrides:
+      server:
+        extraFlags:
+          - web.enable-otlp-receiver
+          - web.enable-remote-write-receiver
+        otlp:
+          promote_resource_attributes:
+            - k8s.cluster.name
+            - cluster
   - preset: loki
     overrides:
       gateway: null
