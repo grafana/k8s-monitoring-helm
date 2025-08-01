@@ -69,7 +69,7 @@ lint-alloy: ## Lint Alloy files
 SHELL_SCRIPTS = $(shell find . -type f -name "*.sh" -not \( -path "./node_modules/*" -o -path "./data-alloy/*" -o -path "./.git/*" -o -path "./charts/k8s-monitoring-v1/test/spec/*" -o -path "./charts/k8s-monitoring/tests/example-checks/spec/*" -o -path "./charts/k8s-monitoring/tests/misc-checks/spec/*" \))
 lint-shell: ## Lint shell scripts
 	@if command -v shellcheck &> /dev/null; then \
-		shellcheck --rcfile .shellcheckrc $(SHELL_SCRIPTS); \
+		shellcheck $(SHELL_SCRIPTS); \
 	else \
 		docker run --rm -v $(shell pwd):/src --workdir /src koalaman/shellcheck:stable --rcfile .shellcheckrc $(SHELL_SCRIPTS); \
 	fi
