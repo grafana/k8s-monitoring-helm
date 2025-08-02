@@ -59,7 +59,7 @@ otelcol.processor.transform {{ include "helper.alloy_name" .name | quote }} {
     context = "resource"
     statements = [
 {{- range $label := .clusterLabels }}
-      `set(attributes[{{ $label | quote }}], {{ $.Values.cluster.name | quote }})`,
+      "set(attributes[\"{{ $label }}\"], \"" + {{ include "cluster.getClusterName" $ }} + "\")",
 {{- end }}
 {{- range $transform := .processors.transform.metrics.resource }}
 {{ $transform | quote | indent 6 }},
@@ -88,7 +88,7 @@ otelcol.processor.transform {{ include "helper.alloy_name" .name | quote }} {
     context = "datapoint"
     statements = [
 {{- range $label := .clusterLabels }}
-      `set(attributes[{{ $label | quote }}], {{ $.Values.cluster.name | quote }})`,
+      "set(attributes[\"{{ $label }}\"], \"" + {{ include "cluster.getClusterName" $ }} + "\")",
 {{- end }}
 {{- range $datapointAttribute, $resourceAttribute := .processors.transform.metrics.datapointToResource }}
   {{- if $resourceAttribute }}
@@ -111,7 +111,7 @@ otelcol.processor.transform {{ include "helper.alloy_name" .name | quote }} {
     context = "resource"
     statements = [
 {{- range $label := .clusterLabels }}
-      `set(attributes[{{ $label | quote }}], {{ $.Values.cluster.name | quote }})`,
+      "set(attributes[\"{{ $label }}\"], \"" + {{ include "cluster.getClusterName" $ }} + "\")",
 {{- end }}
 {{- range $transform := .processors.transform.logs.resource }}
 {{ $transform | quote | indent 6 }},
@@ -161,7 +161,7 @@ otelcol.processor.transform {{ include "helper.alloy_name" .name | quote }} {
     context = "resource"
     statements = [
 {{- range $label := .clusterLabels }}
-      `set(attributes[{{ $label | quote }}], {{ $.Values.cluster.name | quote }})`,
+      "set(attributes[\"{{ $label }}\"], \"" + {{ include "cluster.getClusterName" $ }} + "\")",
 {{- end }}
 {{- range $transform := .processors.transform.traces.resource }}
 {{ $transform | quote | indent 6 }},

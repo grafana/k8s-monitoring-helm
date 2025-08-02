@@ -279,6 +279,7 @@ details:
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | cluster.name | string | `""` | The name for this cluster. |
+| cluster.nameFrom | string | `""` | Raw access to the cluster name. Lets you insert raw Alloy references so you can load the cluster name from any number of places, such as loading values from config maps. |
 
 ### Features - Cluster Events
 
