@@ -1,0 +1,61 @@
+---
+apiVersion: helm-chart-toolbox.grafana.com/v1
+kind: TestPlan
+name: tail-sampling
+
+subject:
+  releaseName: k8smon
+  path: ../../..
+  valuesFile: values.yaml
+
+cluster:
+  type: kind
+
+dependencies:
+  - file: dependencies/alloy-instrumented.yaml
+  - preset: prometheus
+  - preset: loki
+  - preset: tempo
+  - preset: grafana
+    overrides:
+      datasources:
+        datasources.yaml:
+          apiVersion: 1
+          datasources:
+            - name: Prometheus
+              type: prometheus
+              uid: prometheus
+              url: http://prometheus-server.prometheus.svc:9090
+              isDefault: true
+            - name: Loki
+              type: loki
+              url: http://loki-gateway.loki.svc:8080
+              basicAuth: true
+              basicAuthUser: loki
+              jsonData:
+                httpHeaderName1: X-Scope-OrgID
+              secureJsonData:
+                basicAuthPassword: lokipassword
+                httpHeaderValue1: "1"
+            - name: Tempo
+              type: tempo
+              url: http://tempo.tempo.svc:3200
+
+tests:
+  - type: query-test
+    values:
+      tests:
+        - env:
+            CLUSTER: tail-sampling-test
+            PROMETHEUS_URL: http://prometheus-server.prometheus.svc:9090/api/v1/query
+            TEMPO_URL: http://tempo.tempo.svc:3200/api/search
+          queries:
+            # check sampler metrics
+            - query: otelcol_processor_tail_sampling_count_traces_sampled_total{policy="otelcol.processor.tail_sampling.tail_sampler.always", cluster="$CLUSTER"}
+              type: promql
+            # query load balancer backends
+            - query: otelcol_loadbalancer_num_backends{component_id="otelcol.exporter.loadbalancing.localtempo_sampler", cluster="$CLUSTER"}
+              type: promql
+              expect:
+                value: 3
+                operator: ==

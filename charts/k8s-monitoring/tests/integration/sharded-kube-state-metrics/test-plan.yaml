@@ -1,0 +1,55 @@
+---
+apiVersion: helm-chart-toolbox.grafana.com/v1
+kind: TestPlan
+name: sharded-kube-state-metrics
+
+subject:
+  releaseName: k8smon
+  path: ../../..
+  valuesFile: values.yaml
+
+cluster:
+  type: kind
+  configFile: kind-cluster-config.yaml
+
+dependencies:
+  - preset: prometheus
+  - preset: grafana
+    overrides:
+      datasources:
+        datasources.yaml:
+          apiVersion: 1
+          datasources:
+            - name: Prometheus
+              type: prometheus
+              url: http://prometheus-server.prometheus.svc:9090
+              isDefault: true
+
+tests:
+  - type: query-test
+    values:
+      tests:
+        - env:
+            CLUSTER: sharded-kube-state-metrics-test
+            PROMETHEUS_URL: http://prometheus-server.prometheus.svc:9090/api/v1/query
+          queries:
+            # Self reporting metrics
+            - query: count(kube_state_metrics_build_info{cluster="$CLUSTER", job="kube-state-metrics-internal"})
+              type: promql
+              expect:
+                value: 5  # Five replicas of kube-state-metrics
+            - query: kube_state_metrics_total_shards{cluster="$CLUSTER", job="kube-state-metrics-internal"}
+              type: promql
+              expect:
+                value: 5  # Five shards for kube-state-metrics
+            - query: count(kube_node_info{cluster="$CLUSTER", job="integrations/kubernetes/kube-state-metrics"})
+              type: promql
+              expect:
+                value: 3  # Three Kubernetes nodes
+
+            # DPM check
+            - query: avg(count_over_time(scrape_samples_scraped{cluster="$CLUSTER"}[1m]))
+              type: promql
+              expect:
+                value: 1
+                operator: ==

@@ -37,7 +37,7 @@ remotecfg {
     "source" = "{{ $.Chart.Name }}",
     "sourceVersion" = "{{ $.Chart.Version }}",
     "release" = "{{ $.Release.Name }}",
-    "cluster" = {{ $.Values.cluster.name | quote }},
+    "cluster" = {{ include "cluster.getClusterName" $ }},
     "namespace" = {{ $.Release.Namespace | quote }},
     "workloadName" = {{ $.collectorName | quote }},
     "workloadType" = {{ $collectorValues.controller.type | quote }},

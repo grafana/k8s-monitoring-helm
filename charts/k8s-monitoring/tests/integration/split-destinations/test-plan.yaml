@@ -1,0 +1,126 @@
+---
+apiVersion: helm-chart-toolbox.grafana.com/v1
+kind: TestPlan
+name: split-destinations
+
+subject:
+  releaseName: k8smon
+  path: ../../..
+  valuesFile: values.yaml
+
+cluster:
+  type: kind
+  configFile: kind-cluster-config.yaml
+
+dependencies:
+  - preset: grafana
+    overrides:
+      datasources:
+        datasources.yaml:
+          apiVersion: 1
+          datasources:
+            - name: All Metrics
+              type: prometheus
+              url: http://all-metrics-prometheus-server.all-dbs.svc:9090
+              isDefault: true
+              basicAuth: true
+              basicAuthUser: promuser
+              jsonData:
+                tlsSkipVerify: true
+              secureJsonData:
+                basicAuthPassword: prometheuspassword
+            - name: Production Metrics
+              type: prometheus
+              url: http://prod-metrics-prometheus-server.prod-dbs.svc:9090
+              basicAuth: true
+              basicAuthUser: promuser
+              jsonData:
+                tlsSkipVerify: true
+              secureJsonData:
+                basicAuthPassword: prometheuspassword
+
+            - name: All Logs
+              type: loki
+              url: http://all-logs-loki-gateway.all-dbs.svc:8080
+              basicAuth: true
+              basicAuthUser: loki
+              jsonData:
+                httpHeaderName1: X-Scope-OrgID
+              secureJsonData:
+                basicAuthPassword: lokipassword
+                httpHeaderValue1: "1"
+            - name: Production Logs
+              type: loki
+              url: http://prod-logs-loki-gateway.prod-dbs.svc:8080
+              basicAuth: true
+              basicAuthUser: loki
+              jsonData:
+                httpHeaderName1: X-Scope-OrgID
+              secureJsonData:
+                basicAuthPassword: lokipassword
+                httpHeaderValue1: "1"
+            - name: All Traces
+              type: tempo
+              url: http://all-traces-tempo.all-dbs.svc:3200
+            - name: Production Traces
+              type: tempo
+              url: http://prod-traces-tempo.prod-dbs.svc:3200
+  - directory: dependencies
+
+tests:
+  - type: query-test
+    values:
+      tests:
+        - env:
+            CLUSTER: split-destinations-cluster
+            PROMETHEUS_URL: http://all-metrics-prometheus-server.all-dbs.svc:9090/api/v1/query
+            PROMETHEUS_USER: promuser
+            PROMETHEUS_PASS: prometheuspassword
+            LOKI_URL: http://all-logs-loki.all-dbs.svc:3100/loki/api/v1/query
+            LOKI_TENANTID: 1
+            LOKI_USER: loki
+            LOKI_PASS: lokipassword
+            TEMPO_URL: http://all-traces-tempo.all-dbs.svc:3200/api/search
+          queries:
+            - query: kube_pod_info{cluster="$CLUSTER", pod="prod-pod", namespace="production"}
+              type: promql
+            - query: kube_pod_info{cluster="$CLUSTER", pod="dev-pod", namespace="development"}
+              type: promql
+            - query: count_over_time({cluster="$CLUSTER", namespace="production"} | pod = "prod-pod"[1h])
+              type: logql
+            - query: count_over_time({cluster="$CLUSTER", namespace="development"} | pod = "dev-pod"[1h])
+              type: logql
+            - query: "{.k8s.cluster.name=\"$CLUSTER\" && resource.k8s.namespace.name=\"prod-dbs\"}"
+              type: traceql
+            - query: "{.k8s.cluster.name=\"$CLUSTER\" && resource.k8s.namespace.name=\"all-dbs\"}"
+              type: traceql
+
+        - env:
+            CLUSTER: split-destinations-cluster
+            PROMETHEUS_URL: http://prod-metrics-prometheus-server.prod-dbs.svc:9090/api/v1/query
+            PROMETHEUS_USER: promuser
+            PROMETHEUS_PASS: prometheuspassword
+            LOKI_URL: http://prod-logs-loki.prod-dbs.svc:3100/loki/api/v1/query
+            LOKI_TENANTID: 1
+            LOKI_USER: loki
+            LOKI_PASS: lokipassword
+            TEMPO_URL: http://prod-traces-tempo.prod-dbs.svc:3200/api/search
+          queries:
+            - query: kube_pod_info{cluster="$CLUSTER", pod="prod-pod", namespace="production"}
+              type: promql
+            - query: count(kube_pod_info{cluster="$CLUSTER", pod="dev-pod", namespace="development"}) or vector(0)
+              type: promql
+              expect:
+                value: 0
+
+            # No way to check if there are zero results for logql queries
+            # - query: count_over_time({cluster="$CLUSTER", pod="dev-pod", namespace="development"}[1h])
+            #   type: logql
+            - query: count_over_time({cluster="$CLUSTER", namespace="production"} | pod = "prod-pod"[1h])
+              type: logql
+
+            # No way to check if there are zero results for traceql queries
+            # - query: "{.k8s.cluster.name=\"$CLUSTER\" && resource.k8s.namespace.name=\"all-dbs\"}"
+            #   type: traceql
+            - query: "{.k8s.cluster.name=\"$CLUSTER\" && resource.k8s.namespace.name=\"prod-dbs\"}"
+              type: traceql

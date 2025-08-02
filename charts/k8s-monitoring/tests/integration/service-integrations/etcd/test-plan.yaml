@@ -1,0 +1,49 @@
+---
+apiVersion: helm-chart-toolbox.grafana.com/v1
+kind: TestPlan
+name: etcd-integration-test
+
+subject:
+  releaseName: k8smon
+  path: ../../../..
+  valuesFile: values.yaml
+
+cluster:
+  type: kind
+  configFile: kind-cluster-config.yaml
+
+dependencies:
+  - preset: prometheus
+  - preset: grafana
+    overrides:
+      datasources:
+        datasources.yaml:
+          apiVersion: 1
+          datasources:
+            - name: Prometheus
+              type: prometheus
+              url: http://prometheus-server.prometheus.svc:9090
+              isDefault: true
+
+tests:
+  - type: query-test
+    values:
+      tests:
+        - env:
+            CLUSTER: etcd-integration-test
+            PROMETHEUS_URL: http://prometheus-server.prometheus.svc:9090/api/v1/query
+
+          queries:
+            # etcd metrics
+            - query: etcd_debugging_mvcc_keys_total{cluster="$CLUSTER"}
+              type: promql
+              expect:
+                value: 0
+                operator: <
+
+            # DPM check
+            - query: avg(count_over_time(scrape_samples_scraped{cluster="$CLUSTER"}[1m]))
+              type: promql
+              expect:
+                value: 1
+                operator: ==

@@ -1,0 +1,67 @@
+---
+apiVersion: helm-chart-toolbox.grafana.com/v1
+kind: TestPlan
+name: auto-instrumentation
+
+subject:
+  releaseName: k8smon
+  path: ../../..
+  valuesFile: values.yaml
+
+cluster:
+  type: kind
+
+dependencies:
+  - preset: prometheus
+  - preset: tempo
+  - preset: grafana
+    overrides:
+      datasources:
+        datasources.yaml:
+          apiVersion: 1
+          datasources:
+            - name: Prometheus
+              type: prometheus
+              url: http://prometheus-server.prometheus.svc:9090
+              isDefault: true
+            - name: Tempo
+              type: tempo
+              url: http://tempo.tempo.svc:3200
+
+tests:
+  - type: kubernetes-objects-test
+    values:
+      checks:
+        - kind: DaemonSet
+          name: k8smon-beyla
+          namespace: default
+  - type: query-test
+    values:
+      tests:
+        - env:
+            CLUSTER: auto-instrumentation-test
+            PROMETHEUS_URL: http://prometheus-server.prometheus.svc:9090/api/v1/query
+            TEMPO_URL: http://tempo.tempo.svc:3200/api/search
+          queries:
+            # Self reporting metrics
+            - query: grafana_kubernetes_monitoring_build_info{cluster="$CLUSTER"}
+              type: promql
+            - query: grafana_kubernetes_monitoring_feature_info{cluster="$CLUSTER", feature="autoInstrumentation"}
+              type: promql
+
+            # Beyla metrics
+            - query: beyla_build_info{cluster="$CLUSTER"}
+              type: promql
+            - query: beyla_internal_build_info{cluster="$CLUSTER"}
+              type: promql
+
+            # Traces from Beyla
+            - query: "{.k8s.cluster.name=\"$CLUSTER\" && resource.otel.library.name=\"github.com/grafana/beyla\"}"
+              type: traceql
+
+            # DPM check
+            - query: avg(count_over_time(scrape_samples_scraped{cluster="$CLUSTER"}[1m]))
+              type: promql
+              expect:
+                value: 1
+                operator: ==

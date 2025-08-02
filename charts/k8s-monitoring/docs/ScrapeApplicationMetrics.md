@@ -276,7 +276,7 @@ names for these components are derived from the destination name and type:
 | `My Metrics Destination` | `prometheus`     | `prometheus.remote_write.my_metrics_destination.receiver` |
 | `otlp-endpoint`          | `otlp`           | `otelcol.receiver.prometheus.otlp_endpoint.receiver`      |
 
-Note that the component name uses lowercase and replaces special characters with underscores (`_`).
+Note that the component name uses lowercase and replaces non-alphanumeric characters with underscores (`_`).
 
 ## Putting it all together
 

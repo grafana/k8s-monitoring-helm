@@ -1,0 +1,64 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: loki-otlp
+  namespace: loki
+spec:
+  interval: 1m
+  chart:
+    spec:
+      chart: alloy
+      sourceRef:
+        kind: HelmRepository
+        name: grafana
+        namespace: flux-system
+      interval:
+  values:
+    # This config is for a stand-alone Grafana Alloy that will receive OTLP logs and translate them before sending to Loki.
+    nameOverride: interface
+
+    alloy:
+      extraPorts:
+        - name: "otlp-grpc"
+          port: 4317
+          targetPort: 4317
+          protocol: "TCP"
+        - name: "otlp-http"
+          port: 4318
+          targetPort: 4318
+          protocol: "TCP"
+
+      configMap:
+        content: |-
+          otelcol.receiver.otlp "default" {
+            http {}
+            grpc {}
+            output {
+              logs = [otelcol.processor.batch.default.input]
+            }
+          }
+          otelcol.processor.batch "default" {
+            output {
+              logs = [otelcol.exporter.loki.default.input]
+            }
+          }
+          otelcol.exporter.loki "default" {
+            forward_to = [loki.write.default.receiver]
+          }
+          remote.kubernetes.secret "loki" {
+            name = "combined"
+            namespace = "default"
+          }
+          loki.write "default" {
+            endpoint {
+              url = "http://loki.loki.svc:3100/loki/api/v1/push"
+              tenant_id = convert.nonsensitive(remote.kubernetes.secret.loki.data["loki-tenantId"])
+              basic_auth {
+                username = convert.nonsensitive(remote.kubernetes.secret.loki.data["loki-username"])
+                password = remote.kubernetes.secret.loki.data["loki-password"]
+              }
+            }
+          }
+    crds:
+      create: false

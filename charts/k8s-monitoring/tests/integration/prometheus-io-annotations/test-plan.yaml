@@ -1,0 +1,57 @@
+---
+apiVersion: helm-chart-toolbox.grafana.com/v1
+kind: TestPlan
+name: prometheus-io-annotations
+
+subject:
+  releaseName: k8smon
+  path: ../../..
+  valuesFile: values.yaml
+
+cluster:
+  type: kind
+
+dependencies:
+  - file: dependencies/cert-manager.yaml
+  - file: dependencies/nginx-static-metrics.yaml
+  - preset: prometheus
+  - preset: grafana
+    overrides:
+      datasources:
+        datasources.yaml:
+          apiVersion: 1
+          datasources:
+            - name: Prometheus
+              type: prometheus
+              url: http://prometheus-server.prometheus.svc:9090
+              isDefault: true
+
+tests:
+  - type: query-test
+    values:
+      tests:
+        - env:
+            CLUSTER: prometheus-io-annotations-test
+            PROMETHEUS_URL: http://prometheus-server.prometheus.svc:9090/api/v1/query
+          queries:
+            # Annotation Autodiscovery from a Service Annotation
+            - query: certmanager_clock_time_seconds{cluster="$CLUSTER"}
+              type: promql
+
+            # Annotation Autodiscovery from a Pod Annotation
+            - query: static_metric{cluster="$CLUSTER"}
+              type: promql
+
+            # The prometheus.io/scrape was successfully removed from Node Exporter
+            - query: count(node_exporter_build_info{cluster="$CLUSTER"})
+              type: promql
+              expect:
+                value: 1
+                operator: ==
+
+            # DPM check
+            - query: avg(count_over_time(scrape_samples_scraped{cluster="$CLUSTER"}[1m]))
+              type: promql
+              expect:
+                value: 1
+                operator: ==
