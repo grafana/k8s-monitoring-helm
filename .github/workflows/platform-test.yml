@@ -199,7 +199,9 @@ jobs:
             GRAFANA_CLOUD_RW_POLICY_TOKEN=${{ env.VAULT_REPO_SECRET_NAME }}:access-policy-token
 
       - name: Run test
-        run: helm-chart-toolbox/tools/helm-test/helm-test "${TEST_DIRECTORY}"
         env:
           TEST_DIRECTORY: "source/charts/k8s-monitoring/tests/platform/${{ matrix.test }}"
           DELETE_CLUSTER: true
+        run: |
+          make clean all
+          helm-chart-toolbox/tools/helm-test/helm-test "${TEST_DIRECTORY}"
