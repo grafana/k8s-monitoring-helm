@@ -31,7 +31,7 @@ jobs:
         env:
           LABELS: ${{ toJson(github.event.pull_request.labels.*.name) }}
         run: |
-          allTests=$(find . -name values.yaml -type f -exec dirname {} \; | sed "s|^\./||" | jq --raw-input --slurp --compact-output 'split("\n") | map(select(. != ""))')
+          allTests=$(find . -name test-plan.yaml -exec dirname {} \; | sed -e "s/^\.\///g" | jq --raw-input --slurp --compact-output 'split("\n") | map(select(. != ""))')
           manualOnlyTests=$(find . -name .manual-only -type f -exec dirname {} \; | sed "s|^\./||" | jq --raw-input --slurp --compact-output 'split("\n") | map(select(. != ""))')
           if [ "${{ github.event_name }}" == "pull_request" ]; then
             # Filter out labels that don't start with "platform-test-" and remove the prefix
@@ -46,8 +46,8 @@ jobs:
           # remove manual only tests
           tests=$(jq --null-input --compact-output --argjson tests "${tests}" --argjson manualOnlyTests "${manualOnlyTests}" '$tests | map(select(. as $test | $manualOnlyTests | index($test) | not))')
 
-          echo "Running tests: ${tests}"
-          echo "tests=${tests}" >> "${GITHUB_OUTPUT}"
+          echo "Tests: ${tests}"
+          echo "tests=$(echo "${tests}" | jq --raw-input --slurp --compact-output 'split("\n") | map(select(. != ""))')" >> "${GITHUB_OUTPUT}"
 
   run-tests:
     name: Platform Test
@@ -71,6 +71,14 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
         with:
+          path: source
+          persist-credentials: 'false'
+
+      - name: Checkout code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+        with:
+          path: helm-chart-toolbox
+          repository: grafana/helm-chart-toolbox
           persist-credentials: 'false'
 
       - name: Set up Helm
@@ -81,31 +89,12 @@ jobs:
       - name: Setup Flux CLI
         uses: fluxcd/flux2/action@6bf37f6a560fd84982d67f853162e4b3c2235edb  # v2.6.4
 
-      - name: Random number
-        id: random-number
-        uses: yakubique/random-number@8f6345e8ff4dfd615302e9d83974dbe7cc28b73a  # v1.1
-        with:
-          min: 100000
-          max: 999999
-
       - name: Check for cluster config
         id: check-cluster-config
+        working-directory: charts/k8s-monitoring/tests/platform
         env:
           TEST: ${{ matrix.test }}
-        run: |
-          if [ -f "charts/k8s-monitoring/tests/platform/${TEST}/aks-cluster-config.yaml" ]; then
-            echo "cluster-type=aks" >> "${GITHUB_OUTPUT}"
-          elif [ -f "charts/k8s-monitoring/tests/platform/${TEST}/eks-cluster-config.yaml" ]; then
-            echo "cluster-type=eks" >> "${GITHUB_OUTPUT}"
-          elif [ -f "charts/k8s-monitoring/tests/platform/${TEST}/gke-cluster-config.yaml" ]; then
-            echo "cluster-type=gke" >> "${GITHUB_OUTPUT}"
-          elif [ -f "charts/k8s-monitoring/tests/platform/${TEST}/gke-autopilot-cluster-config.yaml" ]; then
-            echo "cluster-type=gke" >> "${GITHUB_OUTPUT}"
-          elif [ -f "charts/k8s-monitoring/tests/platform/${TEST}/openshift-cluster-config.yaml" ]; then
-            echo "cluster-type=openshift" >> "${GITHUB_OUTPUT}"
-          else
-            echo "cluster-type=kind" >> "${GITHUB_OUTPUT}"
-          fi
+        run: yq eval '"cluster-type=" + .cluster.type' "${TEST}/test-plan.yaml" > "${GITHUB_OUTPUT}"
 
       - name: Setup Kind CLI
         if: ${{ steps.check-cluster-config.outputs.cluster-type == 'kind' }}
@@ -174,7 +163,7 @@ jobs:
           aws-region: ap-northeast-2
 
       - name: Fetch GCP Credentials from Vault
-        if: ${{ steps.check-cluster-config.outputs.cluster-type == 'gke' || steps.check-cluster-config.outputs.cluster-type == 'openshift' }}
+        if: ${{ steps.check-cluster-config.outputs.cluster-type == 'gke' || steps.check-cluster-config.outputs.cluster-type == 'gke-autopilot' ||steps.check-cluster-config.outputs.cluster-type == 'openshift' }}
         id: get-gcp-service-account-token
         uses: grafana/shared-workflows/actions/get-vault-secrets@9f37f656e063f0ad0b0bfc38d49894b57d363936  # v1.2.1
         env:
@@ -184,13 +173,13 @@ jobs:
           repo_secrets: GCP_SERVICE_ACCOUNT_TOKEN=${{ env.VAULT_REPO_SECRET_NAME }}:service-account-token
 
       - name: Configure GCP Credentials
-        if: ${{ steps.check-cluster-config.outputs.cluster-type == 'gke' || steps.check-cluster-config.outputs.cluster-type == 'openshift' }}
+        if: ${{ steps.check-cluster-config.outputs.cluster-type == 'gke' || steps.check-cluster-config.outputs.cluster-type == 'gke-autopilot' || steps.check-cluster-config.outputs.cluster-type == 'openshift' }}
         uses: google-github-actions/auth@b7593ed2efd1c1617e1b0254da33b86225adb2a5  # v2.1.12
         with:
           credentials_json: '${{ fromJSON(steps.get-gcp-service-account-token.outputs.secrets).GCP_SERVICE_ACCOUNT_TOKEN }}'
 
       - name: Set up GCP Cloud SDK
-        if: ${{ steps.check-cluster-config.outputs.cluster-type == 'gke' || steps.check-cluster-config.outputs.cluster-type == 'openshift' }}
+        if: ${{ steps.check-cluster-config.outputs.cluster-type == 'gke' || steps.check-cluster-config.outputs.cluster-type == 'gke-autopilot' || steps.check-cluster-config.outputs.cluster-type == 'openshift' }}
         uses: google-github-actions/setup-gcloud@6a7c903a70c8625ed6700fa299f5ddb4ca6022e9  # v2.1.5
         with:
           install_components: gke-gcloud-auth-plugin
@@ -210,9 +199,7 @@ jobs:
             GRAFANA_CLOUD_RW_POLICY_TOKEN=${{ env.VAULT_REPO_SECRET_NAME }}:access-policy-token
 
       - name: Run test
-        run: ./scripts/run-cluster-test.sh "charts/k8s-monitoring/tests/platform/${TEST}"
+        run: helm-chart-toolbox/tools/helm-test/helm-test "${TEST_DIRECTORY}"
         env:
-          CREATE_CLUSTER: "true"
-          DELETE_CLUSTER: "true"
-          RANDOM_NUMBER: ${{ steps.random-number.outputs.number }}
-          TEST: ${{ matrix.test }}
+          TEST_DIRECTORY: "source/charts/k8s-monitoring/tests/integration/${{ matrix.test }}"
+          DELETE_CLUSTER: true

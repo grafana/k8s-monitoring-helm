@@ -1,4 +1,5 @@
 ---
+# yamllint disable rule:line-length
 apiVersion: helm-chart-toolbox.grafana.com/v1
 kind: TestPlan
 name: k8s-monitoring
@@ -45,7 +46,7 @@ tests:
               type: promql
             - query: grafana_kubernetes_monitoring_feature_info{cluster="$clusterName", feature="podLogs", method="volumes"}
               type: promql
-            
+
             # Cluster metrics
             - query: kubernetes_build_info{cluster="$clusterName", job="integrations/kubernetes/kubelet"}
               type: promql
@@ -65,52 +66,52 @@ tests:
               type: promql
             - query: opencost_build_info{cluster="$clusterName", job="integrations/opencost"}
               type: promql
-            
+
             # Cluster events
             - query: count_over_time({cluster="$clusterName", job="integrations/kubernetes/eventhandler"}[1h])
               type: logql
-            
+
             # Pod logs
             - query: count_over_time({cluster="$clusterName", job!="integrations/kubernetes/eventhandler"}[1h])
               type: logql
-            
+
             # Pod logs service_name label
             - query: count_over_time({cluster="$clusterName", service_name!=""}[1h])
               type: logql
-            
+
             # Pod logs service_name label from resource.opentelemetry.io/service.name annotation
             - query: count_over_time({cluster="$clusterName", service_name="hello-kubernetes-annotation"}[1h])
               type: logql
-            
+
             # Pod logs service_name label from app.kubernetes.io/name label
             - query: count_over_time({cluster="$clusterName", service_name="hello-kubernetes-label"}[1h])
               type: logql
-            
+
             # Pod logs service_namespace label from resource.opentelemetry.io/service.namespace annotation
             - query: count_over_time({cluster="$clusterName", service_namespace="hello-kubernetes"}[1h])
               type: logql
-            
+
             # Pod logs service_instance_id structured metadata from resource.opentelemetry.io/service.instance annotation
             - query: 'avg(count_over_time({cluster="$clusterName", namespace="default", service_namespace="hello-kubernetes", service_name="hello-kubernetes-annotation"} | service_instance_id = "hello-kubernetes-test-1" [1h]))'
               type: logql
-            
+
             # Pod logs service_instance_id label from the default method
             - query: 'avg(count_over_time({cluster="$clusterName", namespace="default", namespace="default", service_namespace="default", service_name="hello-kubernetes-label"} | service_instance_id =~ "default.hello-kubernetes-test-0-.*.hello-kubernetes" [1h]))'
               type: logql
-            
+
             # Pod logs deployment_environment label from resource.opentelemetry.io/deployment.environment annotation
             - query: count_over_time({cluster="$clusterName", deployment_environment="hello-kubernetes"}[1h])
               type: logql
-            
+
             # Pod logs deployment_environment_name label from resource.opentelemetry.io/deployment.environment.name
             # annotation
             - query: count_over_time({cluster="$clusterName", deployment_environment_name="hello-kubernetes"}[1h])
               type: logql
-            
+
             # Alloy integration
             - query: alloy_build_info{cluster="$clusterName"}
               type: promql
-            
+
             # DPM check
             - query: avg(count_over_time(scrape_samples_scraped{cluster="$clusterName"}[1m]))
               type: promql

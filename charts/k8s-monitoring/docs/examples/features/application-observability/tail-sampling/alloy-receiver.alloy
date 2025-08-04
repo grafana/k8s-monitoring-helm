@@ -197,16 +197,16 @@ otelcol.processor.transform "otlp_gateway" {
   metric_statements {
     context = "resource"
     statements = [
-      "set(attributes[\"cluster\"], \"" + "applications-cluster" + "\")",
-      "set(attributes[\"k8s.cluster.name\"], \"" + "applications-cluster" + "\")",
+      `set(attributes["cluster"], "applications-cluster")`,
+      `set(attributes["k8s.cluster.name"], "applications-cluster")`,
     ]
   }
 
   metric_statements {
     context = "datapoint"
     statements = [
-      "set(attributes[\"cluster\"], \"" + "applications-cluster" + "\")",
-      "set(attributes[\"k8s.cluster.name\"], \"" + "applications-cluster" + "\")",
+      `set(attributes["cluster"], "applications-cluster")`,
+      `set(attributes["k8s.cluster.name"], "applications-cluster")`,
       `set(resource.attributes["deployment.environment"], attributes["deployment_environment"] ) where resource.attributes["deployment.environment"] == nil and attributes["deployment_environment"] != nil`,
       `delete_key(attributes, "deployment_environment") where attributes["deployment_environment"] == resource.attributes["deployment.environment"]`,
       `set(resource.attributes["deployment.environment.name"], attributes["deployment_environment_name"] ) where resource.attributes["deployment.environment.name"] == nil and attributes["deployment_environment_name"] != nil`,
@@ -220,8 +220,8 @@ otelcol.processor.transform "otlp_gateway" {
   log_statements {
     context = "resource"
     statements = [
-      "set(attributes[\"cluster\"], \"" + "applications-cluster" + "\")",
-      "set(attributes[\"k8s.cluster.name\"], \"" + "applications-cluster" + "\")",
+      `set(attributes["cluster"], "applications-cluster")`,
+      `set(attributes["k8s.cluster.name"], "applications-cluster")`,
     ]
   }
 
@@ -305,8 +305,8 @@ otelcol.processor.transform "tail_sampler" {
   trace_statements {
     context = "resource"
     statements = [
-      "set(attributes[\"cluster\"], \"" + "applications-cluster" + "\")",
-      "set(attributes[\"k8s.cluster.name\"], \"" + "applications-cluster" + "\")",
+      `set(attributes["cluster"], "applications-cluster")`,
+      `set(attributes["k8s.cluster.name"], "applications-cluster")`,
     ]
   }
 

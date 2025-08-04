@@ -45,7 +45,7 @@ tests:
               type: promql
             - query: grafana_kubernetes_monitoring_feature_info{cluster="$clusterName", feature="integrations", sources="alloy"}
               type: promql
-            
+
             # Cluster metrics
             - query: kubernetes_build_info{cluster="$clusterName", job="integrations/kubernetes/kubelet"}
               type: promql
@@ -57,7 +57,7 @@ tests:
               type: promql
               expect:
                 value: 2
-            
+
             # Single Linux node
             - query: count(sum by (instance) (node_cpu_seconds_total{cluster="$clusterName", job="integrations/node_exporter"}))
               type: promql
@@ -70,7 +70,7 @@ tests:
               expect:
                 operator: ==
                 value: 1
-            
+
             # Alloy metrics
             - query: alloy_build_info{cluster="$clusterName", app="alloy-metrics"}
               type: promql
@@ -78,19 +78,19 @@ tests:
               type: promql
             - query: alloy_build_info{cluster="$clusterName", app="alloy-logs"}
               type: promql
-            
+
             # Cluster events
             - query: count_over_time({cluster="$clusterName", job="integrations/kubernetes/eventhandler"}[1h])
               type: logql
-            
+
             # Node logs
             - query: count_over_time({cluster="$clusterName", job="integrations/kubernetes/journal"}[1h])
               type: logql
-            
+
             # Pod logs
             - query: count_over_time({cluster="$clusterName", job!~"integrations/kubernetes/eventhandler|integrations/kubernetes/journal"}[1h])
               type: logql
-            
+
             # DPM check
             - query: avg(count_over_time(scrape_samples_scraped{cluster="$clusterName"}[1m]))
               type: promql
