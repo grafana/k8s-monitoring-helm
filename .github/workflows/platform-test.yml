@@ -47,7 +47,7 @@ jobs:
           tests=$(jq --null-input --compact-output --argjson tests "${tests}" --argjson manualOnlyTests "${manualOnlyTests}" '$tests | map(select(. as $test | $manualOnlyTests | index($test) | not))')
 
           echo "Tests: ${tests}"
-          echo "tests=$(echo "${tests}" | jq --raw-input --slurp --compact-output 'split("\n") | map(select(. != ""))')" >> "${GITHUB_OUTPUT}"
+          echo "tests=${tests}" >> "${GITHUB_OUTPUT}"
 
   run-tests:
     name: Platform Test
@@ -91,7 +91,7 @@ jobs:
 
       - name: Check for cluster config
         id: check-cluster-config
-        working-directory: charts/k8s-monitoring/tests/platform
+        working-directory: source/charts/k8s-monitoring/tests/platform
         env:
           TEST: ${{ matrix.test }}
         run: yq eval '"cluster-type=" + .cluster.type' "${TEST}/test-plan.yaml" > "${GITHUB_OUTPUT}"
@@ -201,5 +201,5 @@ jobs:
       - name: Run test
         run: helm-chart-toolbox/tools/helm-test/helm-test "${TEST_DIRECTORY}"
         env:
-          TEST_DIRECTORY: "source/charts/k8s-monitoring/tests/integration/${{ matrix.test }}"
+          TEST_DIRECTORY: "source/charts/k8s-monitoring/tests/platform/${{ matrix.test }}"
           DELETE_CLUSTER: true
