@@ -1,9 +1,9 @@
 .PHONY: clean
 clean:
-	rm -f grafana-cloud-credentials.yaml flux-manifest.yaml
+	rm -f grafana-cloud-credentials.yaml
 
 .PHONY: all
-all: grafana-cloud-credentials.yaml flux-manifest.yaml
+all: grafana-cloud-credentials.yaml
 
 grafana-cloud-credentials.yaml:
 	echo "---" > $@
@@ -23,12 +23,3 @@ grafana-cloud-credentials.yaml:
 		--from-literal=LOKI_USER="$$GRAFANA_CLOUD_LOGS_USERNAME" \
 		--from-literal=LOKI_PASS="$$GRAFANA_CLOUD_RW_POLICY_TOKEN" \
 		-o yaml --dry-run=client >> $@
-
-flux-manifest.yaml:
-	flux install \
-		--components source-controller,helm-controller \
-		--export > flux-temp.yaml
-	echo "---" >> flux-temp.yaml
-	curl https://raw.githubusercontent.com/fluxcd/flux2/main/manifests/openshift/scc.yaml >> flux-temp.yaml
-	kustomize build . > $@
-	rm flux-temp.yaml
