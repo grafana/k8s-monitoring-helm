@@ -84,85 +84,88 @@ discovery.relabel "pprof_pods" {
   {{- $portNumberAnnotation := include "pod_annotation" (printf "%s/%s.%s" $.Values.annotations.prefix $currentType $.Values.pprof.annotations.portNumber) }}
   {{- $schemeAnnotation := include "pod_annotation" (printf "%s/%s.%s" $.Values.annotations.prefix $currentType $.Values.pprof.annotations.scheme) }}
   {{- $pathAnnotation := include "pod_annotation" (printf "%s/%s.%s" $.Values.annotations.prefix $currentType $.Values.pprof.annotations.path) }}
+  {{- $containerAnnotation := include "pod_annotation" (printf "%s/%s.%s" $.Values.annotations.prefix $currentType $.Values.pprof.annotations.container) }}
 discovery.relabel "pprof_pods_{{ $currentType }}_default_name" {
   targets = discovery.relabel.pprof_pods.output
+
+  // Keep only pods with the scrape annotation set
   rule {
     source_labels = [{{ $scrapeAnnotation | quote }}]
     regex         = "true"
     action        = "keep"
   }
+
+  // Rules to choose the right container
   rule {
-    source_labels = [{{ $portNameAnnotation | quote }}]
-    regex         = ""
-    action        = "keep"
+    source_labels = ["container"]
+    target_label = "__tmp_container"
+  }
+  rule {
+    source_labels = ["{{ $containerAnnotation }}"]
+    regex = "(.+)"
+    target_label = "__tmp_container"
+  }
+  rule {
+    source_labels = ["container"]
+    action = "keepequal"
+    target_label = "__tmp_container"
+  }
+  rule {
+    action = "labeldrop"
+    regex = "__tmp_container"
   }
 
+  // Rules to choose the right port by name
+  // The discovery generates a target for each declared container port of the pod.
+  // If the portName annotation has value, keep only the target where the port name matches the one of the annotation.
   rule {
-    source_labels = [{{ $schemeAnnotation | quote }}]
-    action        = "replace"
-    regex         = "(https?)"
-    target_label  = "__scheme__"
-    replacement   = "$1"
+    source_labels = ["__meta_kubernetes_pod_container_port_name"]
+    target_label = "__tmp_port"
   }
   rule {
-    source_labels = [{{ $pathAnnotation | quote }}]
-    action        = "replace"
-    regex         = "(.+)"
-    target_label  = "__profile_path__"
-    replacement   = "$1"
-  }
-  rule {
-    source_labels = ["__address__", {{ $portNumberAnnotation | quote }}]
-    action        = "replace"
-    regex         = "(.+?)(?::\\d+)?;(\\d+)"
-    target_label  = "__address__"
-    replacement   = "$1:$2"
-  }
-}
-
-discovery.relabel "pprof_pods_{{ $currentType }}_custom_name" {
-  targets = discovery.relabel.pprof_pods.output
-  rule {
-    source_labels = [{{ $scrapeAnnotation | quote }}]
-    regex         = "true"
-    action        = "keep"
-  }
-  rule {
-    source_labels = [{{ $portNameAnnotation | quote }}]
-    regex         = ""
-    action        = "drop"
+    source_labels = ["{{ $portNameAnnotation }}"]
+    regex = "(.+)"
+    target_label = "__tmp_port"
   }
   rule {
     source_labels = ["__meta_kubernetes_pod_container_port_name"]
-    target_label  = {{ $portNameAnnotation | quote }}
-    action        = "keepequal"
+    action = "keepequal"
+    target_label = "__tmp_port"
+  }
+  rule {
+    action = "labeldrop"
+    regex = "__tmp_port"
+  }
+
+  // If the portNumber annotation has a value, override the target address to use it, regardless whether it is
+  // one of the declared ports on that Pod.
+  rule {
+    source_labels = ["{{ $portNumberAnnotation }}", "__meta_kubernetes_pod_ip"]
+    regex = "(\\d+);(([A-Fa-f0-9]{1,4}::?){1,7}[A-Fa-f0-9]{1,4})"
+    replacement = "[$2]:$1" // IPv6
+    target_label = "__address__"
+  }
+  rule {
+    source_labels = ["{{ $portNumberAnnotation }}", "__meta_kubernetes_pod_ip"]
+    regex = "(\\d+);((([0-9]+?)(\\.|$)){4})" // IPv4, takes priority over IPv6 when both exists
+    replacement = "$2:$1"
+    target_label = "__address__"
   }
 
   rule {
     source_labels = [{{ $schemeAnnotation | quote }}]
-    action        = "replace"
     regex         = "(https?)"
     target_label  = "__scheme__"
-    replacement   = "$1"
   }
   rule {
     source_labels = [{{ $pathAnnotation | quote }}]
-    action        = "replace"
     regex         = "(.+)"
     target_label  = "__profile_path__"
-    replacement   = "$1"
-  }
-  rule {
-    source_labels = ["__address__", {{ $portNumberAnnotation | quote }}]
-    action        = "replace"
-    regex         = "(.+?)(?::\\d+)?;(\\d+)"
-    target_label  = "__address__"
-    replacement   = "$1:$2"
   }
 }
 
 pyroscope.scrape "pyroscope_scrape_{{ $currentType }}" {
-  targets = array.concat(discovery.relabel.pprof_pods_{{ $currentType }}_default_name.output, discovery.relabel.pprof_pods_{{ $currentType }}_custom_name.output)
+  targets = discovery.relabel.pprof_pods_{{ $currentType }}_default_name.output
 
   bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
   profiling_config {

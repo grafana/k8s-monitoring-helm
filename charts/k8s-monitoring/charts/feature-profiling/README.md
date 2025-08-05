@@ -81,6 +81,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | pprof.annotationSelectors | object | `{}` | Select pods to profile based on pod annotations. Example: `color: "green"` will select pods with the annotation `color="green"`. Example with multiple values: `color: ["blue", "green"]` will select pods with the annotation `color="blue"` or `color="green"`. |
+| pprof.annotations.container | string | `"container"` | The annotation action for choosing the container for scraping profiles of a given type. |
 | pprof.annotations.enable | string | `"scrape"` | The annotation action for enabling or disabling scraping of profiles of a given type. |
 | pprof.annotations.path | string | `"path"` | The annotation action for choosing the path for scraping profiles of a given type. |
 | pprof.annotations.portName | string | `"port_name"` | The annotation action for choosing the port name for scraping profiles of a given type. |
