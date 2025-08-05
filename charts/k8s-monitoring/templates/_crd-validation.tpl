@@ -8,7 +8,7 @@
       {{- $msg = append $msg "alloy-operator:" }}
       {{- $msg = append $msg "  crds:" }}
       {{- $msg = append $msg "    deployAlloyCRD: true" }}
-      {{- $msg = append $msg "" "Or install the Alloy CRD manually:" }}
+      {{- $msg = append $msg "Or install the Alloy CRD manually:" }}
       {{- $msg = append $msg (printf "kubectl apply -f %s" $crdURL) }}
       {{- fail (join "\n" $msg) }}
     {{- end }}
