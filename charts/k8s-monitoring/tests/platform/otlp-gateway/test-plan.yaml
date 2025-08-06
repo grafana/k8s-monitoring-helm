@@ -1,0 +1,56 @@
+---
+apiVersion: helm-chart-toolbox.grafana.com/v1
+kind: TestPlan
+name: otlp-gateway
+
+subject:
+  releaseName: k8smon
+  path: ../../..
+  valuesFile: values.yaml
+  set:
+    - key: "cluster.name"
+      valueFrom: clusterName
+
+cluster:
+  type: kind
+  appendRandomNumber: true
+
+dependencies:
+  - preset: test-parameters
+    namespace: default
+  - preset: test-parameters
+    namespace: toolbox
+  - file: grafana-cloud-credentials.yaml
+
+tests:
+  - type: query-test
+    values:
+      tests:
+        - env:
+            PROMETHEUS_URL: https://prometheus-prod-13-prod-us-east-0.grafana.net/api/prom/api/v1/query
+            LOKI_URL: https://logs-prod-006.grafana.net/loki/api/v1/query
+          envFrom:
+            - secretRef: {name: grafana-cloud-credentials}
+            - configMapRef: {name: test-parameters}
+          queries:
+            # Metrics are being delivered
+            - query: alloy_build_info{k8s_cluster_name="$clusterName"}
+              type: promql
+
+            # Pod Logs are being delivered with the correct labels
+            - query: count_over_time({k8s_cluster_name="$clusterName", service_name!="integrations/kubernetes/eventhandler", k8s_namespace_name="default", k8s_pod_name="k8smon-alloy-metrics-0"}[1h])
+              type: logql
+
+            # Cluster Events are being delivered with the correct labels
+            - query: count_over_time({k8s_cluster_name="$clusterName", service_name="integrations/kubernetes/eventhandler"}[1h])
+              type: logql
+
+            # DPM check
+            - query: avg(count_over_time(scrape_samples_scraped{cluster="$clusterName"}[1m]))
+              type: promql
+              expect:
+                value: 1
+                operator: ==
+
+            - query: avg(count_over_time({k8s_cluster_name="$clusterName", service_name="alloy-logs"} [1m]))
+              type: logql

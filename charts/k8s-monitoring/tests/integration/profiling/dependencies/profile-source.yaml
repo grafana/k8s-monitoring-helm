@@ -1,0 +1,32 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: profile-source
+  namespace: default
+spec:
+  interval: 1m
+  chart:
+    spec:
+      chart: alloy
+      sourceRef:
+        kind: HelmRepository
+        name: grafana
+        namespace: flux-system
+      interval:
+  values:
+    alloy:
+      extraPorts:  # Open an extra port to check for proper scrape targeting
+        - name: "faro"
+          port: 12347
+          targetPort: 12347
+          protocol: "TCP"
+          appProtocol: "h2c"
+    controller:
+      podAnnotations:
+        profiles.grafana.com/memory.scrape: "true"
+        profiles.grafana.com/memory.path: /debug/pprof/heap
+        profiles.grafana.com/memory.port: "12345"
+        profiles.grafana.com/memory.container: alloy
+    crds:
+      create: false

@@ -1,0 +1,126 @@
+---
+apiVersion: helm-chart-toolbox.grafana.com/v1
+kind: TestPlan
+name: test-2
+
+subject:
+  releaseName: k8smon
+  path: ../../..
+  valuesFile: values.yaml
+
+cluster:
+  type: kind
+
+dependencies:
+  - file: dependencies/alloy.yaml
+  - file: dependencies/credentials.yaml
+  - preset: prometheus
+    overrides:
+      server:
+        extraFlags:
+          - web.enable-otlp-receiver
+          - web.enable-remote-write-receiver
+          - web.config.file=/etc/config/web.yml
+        probeHeaders:
+          - name: "Authorization"
+            value: "Basic cHJvbXVzZXI6cHJvbWV0aGV1c3Bhc3N3b3Jk"
+      serverFiles:
+        web.yml:
+          basic_auth_users:
+            promuser: $2a$12$1UJsAG4QnhjjDzqcSVkZmeDxxjgIFOAmzfuVTybTuhhDnYgfuAbAq  # "prometheuspassword"
+  - preset: loki
+  - file: dependencies/loki-otlp.yaml
+  - preset: tempo
+  - preset: grafana
+    overrides:
+      datasources:
+        datasources.yaml:
+          apiVersion: 1
+          datasources:
+            - name: Prometheus
+              type: prometheus
+              url: http://prometheus-server.prometheus.svc:9090
+              isDefault: true
+              basicAuth: true
+              basicAuthUser: promuser
+              jsonData:
+                tlsSkipVerify: true
+              secureJsonData:
+                basicAuthPassword: prometheuspassword
+
+            - name: Loki
+              type: loki
+              url: http://loki-gateway.loki.svc:8080
+              basicAuth: true
+              basicAuthUser: loki
+              jsonData:
+                httpHeaderName1: X-Scope-OrgID
+              secureJsonData:
+                basicAuthPassword: lokipassword
+                httpHeaderValue1: "1"
+
+            - name: Tempo
+              type: tempo
+              url: http://tempo.tempo.svc:3100
+
+
+tests:
+  - type: query-test
+    values:
+      tests:
+        - env:
+            CLUSTER: ci-test-cluster-2
+            PROMETHEUS_URL: http://prometheus-server.prometheus.svc:9090/api/v1/query
+            PROMETHEUS_USER: promuser
+            PROMETHEUS_PASS: prometheuspassword
+            LOKI_URL: http://loki.loki.svc:3100/loki/api/v1/query
+            LOKI_TENANTID: 1
+            LOKI_USER: loki
+            LOKI_PASS: lokipassword
+            TEMPO_URL: http://tempo.tempo.svc:3200/api/search
+          queries:
+            # Check that the external label is properly being set
+            - query: count(kube_pod_info{cluster="$CLUSTER", color="blue"})
+              type: promql
+              expect:
+                value: 1
+                operator: "<="  # There's gotta be at least one pod
+            # check that externalLabelsFrom is working
+            - query: count(alloy_build_info{magic_word="abracadabra"})
+              type: promql
+              expect:
+                value: 1
+                operator: "<="
+
+            # Check for cluster events
+            - query: count_over_time({cluster="$CLUSTER", job="integrations/kubernetes/eventhandler", color="red"}[1h])
+              type: logql
+
+              # Check for pod logs (gathered via API)
+            - query: count_over_time({cluster="$CLUSTER", job!="integrations/kubernetes/eventhandler"}[1h])
+              type: logql
+
+              # Check for pod logs (gathered via PodLogs)
+            - query: count_over_time({cluster="$CLUSTER", job="grafana/test-podlogs-object", source="podlogs_object"}[1h])
+              type: logql
+
+              # Check for traces
+            - query: '{.k8s.cluster.name="$CLUSTER"}'
+              type: traceql
+
+            # These checks for metrics and traces that are being sent directly to this alloy via the receivers
+            - query: alloy_build_info{cluster="from-the-other-alloy"}
+              type: promql
+            - query: '{.k8s.cluster.name="from-the-other-alloy"}'
+              type: traceql
+
+            # DPM check
+            - query: avg(count_over_time(scrape_samples_scraped{cluster=~"$CLUSTER|from-the-other-alloy"}[1m]))
+              type: promql
+              expect:
+                value: 1
+                operator: ==
+
+            # hostinfo connector check
+            - query: traces_host_info
+              type: promql

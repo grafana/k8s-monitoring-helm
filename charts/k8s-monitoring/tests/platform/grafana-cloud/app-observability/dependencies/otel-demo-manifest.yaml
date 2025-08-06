@@ -1,0 +1,101 @@
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: open-telemetry
+  namespace: default
+spec:
+  interval: 1h
+  url: https://open-telemetry.github.io/opentelemetry-helm-charts
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: otel-demo
+  namespace: otel-demo
+spec:
+  interval: 10m
+  timeout: 10m
+  chart:
+    spec:
+      chart: opentelemetry-demo
+      version: 0.33.8
+      sourceRef:
+        kind: HelmRepository
+        name: open-telemetry
+        namespace: default
+      interval: 10m
+  values:
+    default:
+      # List of environment variables applied to all components
+      env:
+        - name: CLUSTER
+          valueFrom:
+            configMapKeyRef:
+              name: test-parameters
+              key: clusterName
+        - name: OTEL_SERVICE_NAME
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: "metadata.labels['app.kubernetes.io/component']"
+        - name: OTEL_COLLECTOR_NAME
+          value: 'k8smon-alloy-receiver.default'
+        - name: OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE
+          value: cumulative
+        - name: OTEL_RESOURCE_ATTRIBUTES
+          value: 'service.name=$(OTEL_SERVICE_NAME),service.namespace=opentelemetry-demo,service.version={{ .Chart.AppVersion }},k8s.cluster.name=$(CLUSTER),deployment.environment.name=platform-test'
+
+    opentelemetry-collector:
+      enabled: false
+
+    jaeger:
+      enabled: false
+
+    prometheus:
+      enabled: false
+
+    grafana:
+      enabled: false
+
+    components:
+      checkoutService:
+        podAnnotations:
+          resource.opentelemetry.io/service.name: checkoutservice
+          resource.opentelemetry.io/service.namespace: opentelemetry-demo
+          resource.opentelemetry.io/deployment.environment.name: platform-test
+      emailService:
+        podAnnotations:
+          resource.opentelemetry.io/service.name: emailservice
+          resource.opentelemetry.io/service.namespace: opentelemetry-demo
+          resource.opentelemetry.io/deployment.environment.name: platform-test
+      flagd:
+        podAnnotations:
+          resource.opentelemetry.io/service.name: flagd
+          resource.opentelemetry.io/service.namespace: opentelemetry-demo
+          resource.opentelemetry.io/deployment.environment.name: platform-test
+      frontend:
+        podAnnotations:
+          resource.opentelemetry.io/service.name: frontend
+          resource.opentelemetry.io/service.namespace: opentelemetry-demo
+          resource.opentelemetry.io/deployment.environment.name: platform-test
+      frontendProxy:
+        podAnnotations:
+          resource.opentelemetry.io/service.name: frontendproxy
+          resource.opentelemetry.io/service.namespace: opentelemetry-demo
+          resource.opentelemetry.io/deployment.environment.name: platform-test
+      imageprovider:
+        podAnnotations:
+          resource.opentelemetry.io/service.name: imageprovider
+          resource.opentelemetry.io/service.namespace: opentelemetry-demo
+          resource.opentelemetry.io/deployment.environment.name: platform-test
+      productCatalogService:
+        podAnnotations:
+          resource.opentelemetry.io/service.name: productcatalogservice
+          resource.opentelemetry.io/service.namespace: opentelemetry-demo
+          resource.opentelemetry.io/deployment.environment.name: platform-test
+      shippingService:
+        podAnnotations:
+          resource.opentelemetry.io/service.name: shippingservice
+          resource.opentelemetry.io/service.namespace: opentelemetry-demo
+          resource.opentelemetry.io/deployment.environment.name: platform-test

@@ -1,11 +1,10 @@
-HAS_HELM_DOCS := $(shell command -v helm-docs;)
 HAS_HELM_UNITTEST := $(shell helm plugin list | grep unittest 2> /dev/null)
 HAS_SHELLSPEC := $(shell command -v shellspec;)
 
 CHART_TEMPLATE_FILES = $(shell find templates -name "*.tpl")
 CHART_YAML_FILES = $(shell find templates -name "*.yaml")
 
-FEATURE_CHARTS = $(shell ls --color=never charts | grep feature-)
+FEATURE_CHARTS = $(shell find charts -type d -depth 1 -name "feature-*")
 
 SCHEMA_MODS_JSON_FILES = $(shell find schema-mods -name "*.json")
 SCHEMA_MODS_JQ_FILES = $(shell find schema-mods -name "*.jq")
@@ -16,10 +15,10 @@ DESTINATION_SCHEMA_FILES = $(DESTINATION_VALUES_FILES:destinations/%-values.yaml
 
 .SECONDEXPANSION:
 docs/destinations/%.md: destinations/%-values.yaml $$(wildcard docs/destinations/.doc_templates/%.gotmpl)
-	docker run --platform linux/amd64 --rm -v $(shell pwd):/src ghcr.io/grafana/helm-docs-and-schema-gen $(shell echo $< | sed 's/destinations\/\([-a-z]*\)-values.yaml/\1/') destination
+	docker run --platform linux/amd64 --rm --volume $(shell pwd):/chart ghcr.io/grafana/helm-chart-toolbox-doc-generator --file /chart/$< --template /chart/docs/destinations/.doc_templates/$(shell basename -s -values.yaml $<).gotmpl > $@
 
 schema-mods/definitions/%-destination.schema.json: destinations/%-values.yaml
-	docker run --platform linux/amd64 --rm -v $(shell pwd):/src ghcr.io/grafana/helm-docs-and-schema-gen $(shell echo $< | sed 's/destinations\/\([-a-z]*\)-values.yaml/\1/') destination
+	docker run --platform linux/amd64 --rm --volume $(shell pwd):/chart ghcr.io/grafana/helm-chart-toolbox-schema-generator --file /chart/$< > $@
 
 NUMBER_OF_DESTINATION_VALUES_FILES := $(words $(DESTINATION_VALUES_FILES))
 schema-mods/destination-list.json: $(DESTINATION_VALUES_FILES)
@@ -41,7 +40,17 @@ schema-mods/destination-list.json: $(DESTINATION_VALUES_FILES)
 	done
 	@echo '        ]' >> $@
 	@echo '      }' >> $@
-	@echo '    }' >> $@
+	@echo '    },' >> $@
+	@count=0; \
+	for file in $(DESTINATION_VALUES_FILES); do \
+		count=$$((count + 1)); \
+		name=$$(echo $${file} | sed 's/destinations\/\([-a-z]*\)-values.yaml/\1/'); \
+		if [ $$count -eq $(NUMBER_OF_DESTINATION_VALUES_FILES) ]; then \
+			echo '    "'$${name}'-destination": {"properties": {"type": {"type": "string", "const": "'$${name}'"}}}' >> $@; \
+		else \
+			echo '    "'$${name}'-destination": {"properties": {"type": {"type": "string", "const": "'$${name}'"}}},' >> $@; \
+		fi; \
+	done
 	@echo '  }' >> $@
 	@echo '}' >> $@
 
@@ -58,14 +67,10 @@ Chart.lock: Chart.yaml
 	@touch Chart.lock # Ensure the timestamp is updated
 
 values.schema.json: values.yaml $(DESTINATION_SCHEMA_FILES) $(SCHEMA_MODS_JSON_FILES) $(SCHEMA_MODS_JQ_FILES) schema-mods/destination-list.json
-	../../scripts/schema-gen.sh .
+	docker run --rm --platform linux/amd64 --volume $(shell pwd):/chart ghcr.io/grafana/helm-chart-toolbox-schema-generator --chart /chart > $@
 
 README.md: README.md.gotmpl values.yaml Chart.yaml
-ifdef HAS_HELM_DOCS
-	helm-docs --chart-to-generate .
-else
-	docker run --rm --volume "$(shell pwd):/helm-docs" -u $(shell id -u) jnorwood/helm-docs:latest
-endif
+	docker run --rm --platform linux/amd64 --volume $(shell pwd):/chart ghcr.io/grafana/helm-chart-toolbox-doc-generator --chart /chart > $@
 
 ALLOY_IMAGE = $(shell yq eval 'select(.kind=="StatefulSet" and .metadata.name=="$(EXAMPLE_RELEASE_NAME)-alloy-metrics") | .spec.template.spec.containers[0].image' docs/examples/features/cluster-metrics/default/output.yaml)
 BEYLA_IMAGE = $(shell yq eval 'select(.kind=="DaemonSet" and .metadata.name=="$(EXAMPLE_RELEASE_NAME)-beyla") | .spec.template.spec.containers[0].image' docs/examples/features/auto-instrumentation/beyla-metrics/output.yaml)
@@ -172,13 +177,13 @@ clean:
 	rm -f $(EXAMPLE_OUTPUT_FILES) $(EXAMPLE_ALLOY_FILES) $(EXAMPLE_README_FILES) $(INTEGRATION_TEST_OUTPUT_FILES) $(PLATFORM_TEST_OUTPUT_FILES)
 	set -e && \
 	for chart in $(FEATURE_CHARTS); do \
-		make -C charts/$$chart clean; \
+		make -C $$chart clean; \
 	done
 
 build-features:
 	set -e && \
 	for chart in $(FEATURE_CHARTS); do \
-		make -C charts/$$chart build; \
+		make -C $$chart build; \
 	done
 
 # Build targets
@@ -192,7 +197,7 @@ test: unittest lint-helm lint-configs example-checks test-features
 test-features:
 	set -e && \
 	for chart in $(FEATURE_CHARTS); do \
-		make -C charts/$$chart test; \
+		make -C $$chart test; \
 	done
 
 lint-configs: $(EXAMPLE_ALLOY_FILES)
