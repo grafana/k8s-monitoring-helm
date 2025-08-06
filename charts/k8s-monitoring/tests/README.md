@@ -42,7 +42,7 @@ Each integration runs the following steps:
 To run these tests, use the `helm-test` tool in the Helm Chart Toolbox on any directory with a test-plan.yaml file.
 
 ```bash
-./scripts/run-cluster-test.sh charts/k8s-monitoring/tests/integration/cluster-monitoring
+helm-test charts/k8s-monitoring/tests/integration/cluster-monitoring
 ```
 
 ## Platform Tests

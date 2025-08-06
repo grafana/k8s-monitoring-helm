@@ -1,6 +1,3 @@
-.PHONY: check
-check: ;
-
 .PHONY: clean
 clean:
 	rm -f deployments/test-variables.yaml deployments/grafana-cloud.yaml deployments/grafana-cloud-credentials.yaml
@@ -45,7 +42,3 @@ deployments/grafana-cloud-credentials.yaml:
 		--from-literal=LOKI_USER="$$GRAFANA_CLOUD_LOGS_USERNAME" \
 		--from-literal=LOKI_PASS="$$GRAFANA_CLOUD_RW_POLICY_TOKEN" \
 		-o yaml --dry-run=client >> $@
-
-.PHONY: run-test
-run-test:
-	../../../../../scripts/run-cluster-test.sh .

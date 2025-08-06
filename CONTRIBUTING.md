@@ -230,19 +230,15 @@ chart and runs helm test as well.
 To run the integration tests for the `k8s-monitoring` chart, use the following commands:
 
 ```bash
-./scripts/run-cluster-test.sh charts/k8s-monitoring/tests/integration/<test dir>
+helm-test charts/k8s-monitoring/tests/integration/<test dir>
 ```
 
 This will create a new Kubernetes cluster using kind, deploy any required dependencies, deploy the `k8s-monitoring` Helm
-chart, and deploy the `k8s-monitoring-test` chart which contains the tests.
+chart, and run the tests.
 
 You can modify the behavior of the test by setting environment variables:
 
--   `DELETE_CLUSTER` - If set to `false`, the cluster will not be deleted after the test completes.
--   `CREATE_CLUSTER` - If set to `false`, the script will not create a new cluster, but will use whatever cluster your
-  kubectl is configured to use.
--   `DEPLOY_GRAFANA` - If set to `false`, the script will not deploy Grafana. Grafana is only deployed to make debugging
-  easier, because it will be pre-configured to connect to the database instances.
+-   `DELETE_CLUSTER` - If set to `true`, the cluster will be deleted after the test completes.
 
 ## Creating new releases
 

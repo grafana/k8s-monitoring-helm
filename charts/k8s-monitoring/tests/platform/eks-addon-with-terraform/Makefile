@@ -1,6 +1,3 @@
-.PHONY: check
-check: ;
-
 .PHONY: clean
 clean:
 	rm -f deployments/test-variables.yaml deployments/grafana-cloud.yaml deployments/grafana-cloud-credentials.yaml vars.tf
@@ -62,7 +59,3 @@ vars.tf:
 	echo "  default   = \"$$AWS_SECRET_ACCESS_KEY\"" >> $@
 	echo "  sensitive = true" >> $@
 	echo "}" >> $@
-
-.PHONY: run-test
-run-test:
-	../../../../../scripts/run-cluster-test.sh .
