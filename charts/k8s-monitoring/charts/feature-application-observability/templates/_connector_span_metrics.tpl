@@ -53,7 +53,7 @@ otelcol.processor.transform "span_metrics_transform" {
    metric_statements {
     context = "datapoint"
     statements = [
-      `set(attributes["collector.id"], "` + env("HOSTNAME") + `")`,
+      `set(attributes["collector.id"], "` + constants.hostname + `")`,
     ]
   }
 
