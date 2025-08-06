@@ -1,0 +1,65 @@
+---
+apiVersion: helm-chart-toolbox.grafana.com/v1
+kind: TestPlan
+name: prometheus-operator-objects
+
+subject:
+  releaseName: k8smon
+  path: ../../..
+  valuesFile: values.yaml
+
+cluster:
+  type: kind
+
+dependencies:
+  - file: dependencies/prometheus-operator-crds.yaml
+  - file: dependencies/cert-manager.yaml
+  - file: dependencies/nginx-static-metrics.yaml
+  - preset: prometheus
+  - preset: grafana
+    overrides:
+      serviceMonitor:
+        enabled: true
+        interval: 60s
+      datasources:
+        datasources.yaml:
+          apiVersion: 1
+          datasources:
+            - name: Prometheus
+              type: prometheus
+              url: http://prometheus-server.prometheus.svc:9090
+              isDefault: true
+
+tests:
+  - type: query-test
+    values:
+      tests:
+        - env:
+            CLUSTER: prom-operator-objects-cluster
+            PROMETHEUS_URL: http://prometheus-server.prometheus.svc:9090/api/v1/query
+          queries:
+            # Features are enabled
+            - query: grafana_kubernetes_monitoring_build_info{cluster="$CLUSTER"}
+              type: promql
+            - query: grafana_kubernetes_monitoring_feature_info{cluster="$CLUSTER", feature="prometheusOperatorObjects", sources="ServiceMonitors,PodMonitors,Probes"}
+              type: promql
+
+            # Grafana Metrics are scraped via the ServiceMonitor
+            - query: grafana_build_info{cluster="$CLUSTER"}
+              type: promql
+
+            # cert-manager metrics are not scraped because of label selectors
+            - query: count(certmanager_clock_time_seconds{cluster="$CLUSTER"}) or vector(0)
+              type: promql
+              expect:
+                value: 0
+
+            # Metrics are being scraped from the nginx-static-metrics PodMonitor
+            - query: static_metric{cluster="$CLUSTER", job="nginx/nginx-static-metrics"}
+              type: promql
+
+            # DPM check
+            - query: avg(count_over_time(scrape_samples_scraped{cluster="$CLUSTER"}[1m]))
+              type: promql
+              expect:
+                value: 1

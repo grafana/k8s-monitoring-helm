@@ -1,0 +1,44 @@
+---
+# yamllint disable rule:line-length
+apiVersion: helm-chart-toolbox.grafana.com/v1
+kind: TestPlan
+name: app-observability
+
+subject:
+  releaseName: k8smon
+  path: ../../../..
+  valuesFile: values.yaml
+  set:
+    - key: "cluster.name"
+      valueFrom: clusterName
+
+cluster:
+  type: kind
+  appendRandomNumber: true
+
+dependencies:
+  - file: dependencies/otel-demo-namespace.yaml
+  - preset: test-parameters
+    namespace: otel-demo
+  - file: dependencies/otel-demo-manifest.yaml
+  - file: grafana-cloud-credentials.yaml
+  - preset: test-parameters
+    namespace: toolbox
+
+tests:
+  - type: query-test
+    values:
+      tests:
+        - env:
+            PROMETHEUS_URL: https://prometheus-prod-13-prod-us-east-0.grafana.net/api/prom/api/v1/query
+            LOKI_URL: https://logs-prod-006.grafana.net/loki/api/v1/query
+          envFrom:
+            - secretRef: {name: grafana-cloud-credentials}
+            - configMapRef: {name: test-parameters}
+          queries:
+            # otel demo services
+            - query: count_over_time(traces_target_info{deployment_environment_name="platform-test", k8s_cluster_name="$clusterName"}[1h])
+              type: promql
+
+            - query: 'avg(count_over_time({k8s_cluster_name="$clusterName", service_namespace="opentelemetry-demo", service_name="checkoutservice"} | deployment_environment_name =~ `platform-test` [1m]))'
+              type: logql

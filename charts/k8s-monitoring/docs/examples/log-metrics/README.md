@@ -6,8 +6,8 @@
 
 This example shows how to generate metrics based on the log data. It utilizes a `stage.metric` processor within the
 [loki.process](https://grafana.com/docs/alloy/latest/reference/components/loki/loki.process/#stagemetrics) component
-to generate metrics captured from the Pod logs. This is a simple metric, but other metrics can be added, or more complex
-stages can be utilized to filter and match on certain log lines and build metrics from them.
+to generate metrics captured from the Pod logs. This is an example metric, but other metrics can be added, or more
+complex stages can be utilized to filter and match on certain log lines and build metrics from them.
 
 ## Values
 

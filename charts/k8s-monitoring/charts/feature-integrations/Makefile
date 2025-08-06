@@ -1,4 +1,3 @@
-HAS_HELM_DOCS := $(shell command -v helm-docs;)
 HAS_HELM_UNITTEST := $(shell helm plugin list | grep unittest 2> /dev/null)
 
 SCHEMA_MODS_JSON_FILES = $(shell find schema-mods -name "*.json")
@@ -57,14 +56,10 @@ templates/_integration_types.tpl: $(INTEGRATION_VALUES_FILES)
 	echo '{{- end -}}' >> $@
 
 values.schema.json: values.yaml $(INTEGRATION_SCHEMA_FILES) $(SCHEMA_MODS_JSON_FILES) $(SCHEMA_MODS_JQ_FILES) schema-mods/integration-list.json
-	../../../../scripts/schema-gen.sh .
+	docker run --rm --platform linux/amd64 --volume $(shell pwd):/chart ghcr.io/grafana/helm-chart-toolbox-schema-generator --chart /chart > $@
 
 README.md: values.yaml Chart.yaml $$(wildcard README.md.gotmpl)
-ifdef HAS_HELM_DOCS
-	helm-docs
-else
-	docker run --rm --volume "$(shell pwd):/helm-docs" -u $(shell id -u) jnorwood/helm-docs:latest
-endif
+	docker run --rm --platform linux/amd64 --volume $(shell pwd):/chart ghcr.io/grafana/helm-chart-toolbox-doc-generator --chart /chart > $@
 
 .PHONY: clean
 clean:

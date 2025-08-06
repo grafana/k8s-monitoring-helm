@@ -1,0 +1,113 @@
+---
+apiVersion: helm-chart-toolbox.grafana.com/v1
+kind: TestPlan
+name: prom-and-loki-to-otlp
+
+subject:
+  releaseName: k8smon
+  path: ../../..
+  valuesFile: values.yaml
+
+cluster:
+  type: kind
+
+dependencies:
+  - preset: prometheus
+    overrides:
+      server:
+        extraFlags:
+          - web.enable-otlp-receiver
+          - web.enable-remote-write-receiver
+        probeHeaders:
+          - name: "Authorization"
+            value: "Basic cHJvbXVzZXI6cHJvbWV0aGV1c3Bhc3N3b3Jk"
+      serverFiles:
+        prometheus.yml:
+          otlp:
+            translation_strategy: UnderscoreEscapingWithSuffixes
+        web.yml:
+          basic_auth_users:
+            promuser: $2a$12$1UJsAG4QnhjjDzqcSVkZmeDxxjgIFOAmzfuVTybTuhhDnYgfuAbAq  # "prometheuspassword"
+  - preset: loki
+  - preset: grafana
+    overrides:
+      datasources:
+        datasources.yaml:
+          apiVersion: 1
+          datasources:
+            - name: Prometheus
+              type: prometheus
+              url: http://prometheus-server.prometheus.svc:9090
+              isDefault: true
+              basicAuth: true
+              basicAuthUser: promuser
+              jsonData:
+                tlsSkipVerify: true
+              secureJsonData:
+                basicAuthPassword: prometheuspassword
+
+            - name: Loki
+              type: loki
+              url: http://loki-gateway.loki.svc:8080
+              basicAuth: true
+              basicAuthUser: loki
+              jsonData:
+                httpHeaderName1: X-Scope-OrgID
+              secureJsonData:
+                basicAuthPassword: lokipassword
+                httpHeaderValue1: "1"
+
+tests:
+  - type: query-test
+    values:
+      tests:
+        - env:
+            CLUSTER: prom-and-loki-to-otlp-test
+            PROMETHEUS_URL: http://prometheus-server.prometheus.svc:9090/api/v1/query
+            PROMETHEUS_USER: promuser
+            PROMETHEUS_PASS: prometheuspassword
+            LOKI_URL: http://loki.loki.svc:3100/loki/api/v1/query
+            LOKI_TENANTID: 1
+            LOKI_USER: loki
+            LOKI_PASS: lokipassword
+          queries:
+            # Self reporting metrics
+            - query: grafana_kubernetes_monitoring_build_info{k8s_cluster_name="$CLUSTER"}
+              type: promql
+            - query: grafana_kubernetes_monitoring_feature_info{k8s_cluster_name="$CLUSTER", feature="clusterMetrics"}
+              type: promql
+            - query: grafana_kubernetes_monitoring_feature_info{k8s_cluster_name="$CLUSTER", feature="clusterEvents"}
+              type: promql
+            - query: grafana_kubernetes_monitoring_feature_info{k8s_cluster_name="$CLUSTER", feature="podLogs", method="volumes"}
+              type: promql
+
+            # Cluster metrics
+            - query: kubernetes_build_info{k8s_cluster_name="$CLUSTER", job="integrations/kubernetes/kubelet"}
+              type: promql
+            - query: node_cpu_usage_seconds_total{k8s_cluster_name="$CLUSTER", job="integrations/kubernetes/resources"}
+              type: promql
+            - query: machine_memory_bytes{k8s_cluster_name="$CLUSTER", job="integrations/kubernetes/cadvisor"}
+              type: promql
+            - query: count(kube_node_info{k8s_cluster_name="$CLUSTER", job="integrations/kubernetes/kube-state-metrics"})
+              type: promql
+              expect:
+                value: 1
+            - query: kube_node_labels{k8s_cluster_name="$CLUSTER"}
+              type: promql
+            - query: node_exporter_build_info{k8s_cluster_name="$CLUSTER", job="integrations/node_exporter"}
+              type: promql
+
+            # Cluster events
+            - query: count_over_time({k8s_cluster_name="$CLUSTER", service_name="integrations/kubernetes/eventhandler"}[1h])
+              type: logql
+
+            # Pod logs
+            - query: count_over_time({k8s_cluster_name="$CLUSTER", service_name!="integrations/kubernetes/eventhandler", k8s_namespace_name="default", k8s_pod_name="k8smon-alloy-metrics-0"}[1h])
+              type: logql
+
+            # DPM check
+            - query: avg(count_over_time(scrape_samples_scraped{k8s_cluster_name="$CLUSTER"}[1m]))
+              type: promql
+              expect:
+                value: 1
+                operator: ==

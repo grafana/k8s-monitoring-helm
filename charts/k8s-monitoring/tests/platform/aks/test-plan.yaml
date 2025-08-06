@@ -1,0 +1,80 @@
+---
+apiVersion: helm-chart-toolbox.grafana.com/v1
+kind: TestPlan
+name: aks
+
+subject:
+  releaseName: k8smon
+  path: ../../..
+  valuesFile: values.yaml
+  set:
+    - key: "cluster.name"
+      valueFrom: clusterName
+
+cluster:
+  type: aks
+  args:
+    - --node-count=1
+    - --tier=free
+    - --enable-managed-identity
+    - --generate-ssh-keys
+  appendRandomNumber: true
+
+dependencies:
+  - preset: test-parameters
+    namespace: toolbox
+  - file: grafana-cloud-credentials.yaml
+
+tests:
+  - type: query-test
+    values:
+      tests:
+        - env:
+            PROMETHEUS_URL: https://prometheus-prod-13-prod-us-east-0.grafana.net/api/prom/api/v1/query
+            LOKI_URL: https://logs-prod-006.grafana.net/loki/api/v1/query
+          envFrom:
+            - secretRef: {name: grafana-cloud-credentials}
+            - configMapRef: {name: test-parameters}
+          queries:
+            # Features
+            - query: grafana_kubernetes_monitoring_build_info{cluster="$clusterName"}
+              type: promql
+            - query: grafana_kubernetes_monitoring_feature_info{cluster="$clusterName", feature="clusterMetrics"}
+              type: promql
+            - query: grafana_kubernetes_monitoring_feature_info{cluster="$clusterName", feature="clusterEvents"}
+              type: promql
+            - query: grafana_kubernetes_monitoring_feature_info{cluster="$clusterName", feature="podLogs", method="volumes"}
+              type: promql
+
+            # Cluster metrics
+            - query: kubernetes_build_info{cluster="$clusterName", job="integrations/kubernetes/kubelet"}
+              type: promql
+            - query: node_cpu_usage_seconds_total{cluster="$clusterName", job="integrations/kubernetes/resources"}
+              type: promql
+            - query: machine_memory_bytes{cluster="$clusterName", job="integrations/kubernetes/cadvisor"}
+              type: promql
+            - query: kube_node_info{cluster="$clusterName", job="integrations/kubernetes/kube-state-metrics"}
+              type: promql
+
+            # Alloy metrics
+            - query: alloy_build_info{cluster="$clusterName", app="alloy-metrics"}
+              type: promql
+            - query: alloy_build_info{cluster="$clusterName", app="alloy-singleton"}
+              type: promql
+            - query: alloy_build_info{cluster="$clusterName", app="alloy-logs"}
+              type: promql
+
+            # Cluster events
+            - query: count_over_time({cluster="$clusterName", job="integrations/kubernetes/eventhandler"}[1h])
+              type: logql
+
+            # Pod logs
+            - query: count_over_time({cluster="$clusterName", job!="integrations/kubernetes/eventhandler"}[1h])
+              type: logql
+
+            # DPM check
+            - query: avg(count_over_time(scrape_samples_scraped{cluster="$clusterName"}[1m]))
+              type: promql
+              expect:
+                value: 1
+                operator: ==

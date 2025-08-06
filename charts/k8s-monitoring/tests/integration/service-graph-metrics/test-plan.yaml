@@ -1,0 +1,77 @@
+---
+apiVersion: helm-chart-toolbox.grafana.com/v1
+kind: TestPlan
+name: service-graph-metrics
+
+subject:
+  releaseName: k8smon
+  path: ../../..
+  valuesFile: values.yaml
+
+cluster:
+  type: kind
+
+dependencies:
+  - file: dependencies/otel-demo-manifest.yaml
+  - preset: prometheus
+  - preset: loki
+  - preset: tempo
+    overrides:
+      tempo:
+        metricsGenerator:
+          enabled: true
+          remoteWriteUrl: http://prometheus-server.prometheus.svc:9090/api/v1/write
+        overrides:
+          defaults:
+            metrics_generator:
+              processors:
+                - local-blocks
+  - preset: grafana
+    overrides:
+      datasources:
+        datasources.yaml:
+          apiVersion: 1
+          datasources:
+            - name: Prometheus
+              type: prometheus
+              uid: prometheus
+              url: http://prometheus-server.prometheus.svc:9090
+              isDefault: true
+            - name: Loki
+              type: loki
+              url: http://loki-gateway.loki.svc:8080
+              basicAuth: true
+              basicAuthUser: loki
+              jsonData:
+                httpHeaderName1: X-Scope-OrgID
+              secureJsonData:
+                basicAuthPassword: lokipassword
+                httpHeaderValue1: "1"
+            - name: Tempo
+              type: tempo
+              url: http://tempo.tempo.svc:3200
+              jsonData:
+                serviceMap:
+                  datasourceUid: prometheus
+                nodeGraph:
+                  enabled: true
+
+tests:
+  - type: query-test
+    values:
+      tests:
+        - env:
+            CLUSTER: service-graph-metrics-test
+            PROMETHEUS_URL: http://prometheus-server.prometheus.svc:9090/api/v1/query
+            TEMPO_URL: http://tempo.tempo.svc:3200/api/search
+          queries:
+            # query load balancer backends
+            - query: otelcol_loadbalancer_num_backends{component_id="otelcol.exporter.loadbalancing.localtempo_servicegraph", cluster="$CLUSTER"}
+              type: promql
+              expect:
+                value: 3
+                operator: ==
+            - query: 'rate(traces_service_graph_request_total{cluster="service-graph-metrics-test", collector_id="k8smon-localtempo-servicegraph-0"}[5m]) > 0'
+              type: promql
+            - query: 'rate(traces_service_graph_request_total{cluster="service-graph-metrics-test", collector_id="k8smon-localtempo-servicegraph-1"}[5m]) > 0'
+              type: promql
