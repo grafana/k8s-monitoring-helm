@@ -42,7 +42,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 
 | Repository | Name | Version |
 |------------|------|---------|
-| https://grafana.github.io/helm-charts | beyla | 1.9.0 |
+| https://grafana.github.io/helm-charts | beyla | 1.9.1 |
 <!-- markdownlint-enable list-marker-space -->
 <!-- markdownlint-enable no-bare-urls -->
 <!-- markdownlint-disable no-space-in-emphasis -->
