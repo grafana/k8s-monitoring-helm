@@ -97,12 +97,8 @@ You can also create additional services and ingress objects as needed if the All
 
 ### Istio/Service Mesh
 
-<<<<<<< HEAD
-Depending on your mesh configuration, you might need to explicitly include the Grafana Monitoring namespace as a member, or declare the receiver as a backend of your application for traffic within the cluster.
-=======
 Depending on your mesh configuration, you might need to explicitly include the Grafana monitoring namespace as a member,
 or declare the Alloy instance as a backend of your application for traffic within the Cluster.
->>>>>>> 88a11dce (Add Helm Chart Toolbox (#1762))
 
 For traffic from outside the cluster, you most likely will need to set up an ingress gateway into your mesh.
 
