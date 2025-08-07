@@ -54,6 +54,10 @@ data:
             }
           }
         }
+        http {
+          endpoint = "0.0.0.0:4318"
+          max_request_body_size = "20MiB"
+        }
         debug_metrics {
           disable_high_cardinality_metrics = true
         }
@@ -505,9 +509,7 @@ data:
       ]
     }
     
-    livedebugging {
-      enabled = true
-    }
+    
     
     
     // Destination: localPrometheus (prometheus)
@@ -613,7 +615,7 @@ data:
     grafana_kubernetes_monitoring_build_info{version="2.0.40", namespace="default"} 1
     # HELP grafana_kubernetes_monitoring_feature_info A metric to report the enabled features of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_feature_info gauge
-    grafana_kubernetes_monitoring_feature_info{feature="applicationObservability", protocols="otlpgrpc", version="1.0.0"} 1
+    grafana_kubernetes_monitoring_feature_info{feature="applicationObservability", protocols="otlpgrpc,otlphttp", version="1.0.0"} 1
     grafana_kubernetes_monitoring_feature_info{feature="integrations", sources="alloy", version="1.0.0"} 1
     # EOF
 ---
@@ -768,6 +770,43 @@ spec:
       port: 4317
       targetPort: 4317
       protocol: TCP
+    - name: otlp-http
+      port: 4318
+      targetPort: 4318
+      protocol: TCP
+---
+# Source: k8s-monitoring/templates/receiver-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: k8smon-extra-receiver
+  labels:
+    helm.sh/chart: alloy-receiver-1.2.1
+    app.kubernetes.io/name: alloy-receiver
+    app.kubernetes.io/instance: k8smon
+    app.kubernetes.io/version: "v1.10.1"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/part-of: alloy
+    app.kubernetes.io/component: networking
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: alloy-receiver
+    app.kubernetes.io/instance: k8smon
+  internalTrafficPolicy: Cluster
+  ports:
+    - name: http-metrics
+      port: 12345
+      targetPort: 12345
+      protocol: "TCP"
+    - name: otlp-grpc
+      port: 4317
+      targetPort: 4317
+      protocol: TCP
+    - name: otlp-http
+      port: 4318
+      targetPort: 4318
+      protocol: TCP
 ---
 # Source: k8s-monitoring/charts/alloy-receiver/templates/controllers/daemonset.yaml
 apiVersion: apps/v1
@@ -821,6 +860,9 @@ spec:
               name: http-metrics
             - containerPort: 4317
               name: otlp-grpc
+              protocol: TCP
+            - containerPort: 4318
+              name: otlp-http
               protocol: TCP
           readinessProbe:
             httpGet:
