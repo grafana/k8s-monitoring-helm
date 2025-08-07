@@ -1,7 +1,6 @@
 ---
 cluster:
   name: application-observability-test
-
 destinations:
   - name: localPrometheus
     type: prometheus
@@ -15,7 +14,6 @@ destinations:
     metrics: {enabled: false}
     logs: {enabled: false}
     traces: {enabled: true}
-
 applicationObservability:
   enabled: true
   receivers:
@@ -29,14 +27,15 @@ applicationObservability:
           enforcementPolicy:
             minTime: 30s
             permitWithoutStream: true
+      http:
+        enabled: true
   connectors:
-    grafanaCloudMetrics:
-      enabled: true
     spanMetrics:
+      enabled: true
+    grafanaCloudMetrics:
       enabled: true
   logs:
     enabled: false
-
 integrations:
   collector: alloy-receiver
   alloy:
@@ -51,11 +50,16 @@ integrations:
 
 alloy-receiver:
   enabled: true
+  extraService:
+    enabled: true
+    name: extra-receiver
   alloy:
     extraPorts:
       - name: otlp-grpc
         port: 4317
         targetPort: 4317
         protocol: TCP
-  liveDebugging:
-    enabled: true
+      - name: otlp-http
+        port: 4318
+        targetPort: 4318
+        protocol: TCP

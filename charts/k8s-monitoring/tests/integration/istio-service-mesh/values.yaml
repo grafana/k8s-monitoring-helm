@@ -18,6 +18,15 @@ destinations:
       type: basic
       username: loki
       password: lokipassword
+  - name: localTempo
+    type: otlp
+    url: tempo.tempo.svc:4317
+    tls:
+      insecure: true
+      insecureSkipVerify: true
+    metrics: {enabled: false}
+    logs: {enabled: false}
+    traces: {enabled: true}
 
 annotationAutodiscovery:
   enabled: true
@@ -35,16 +44,50 @@ clusterEvents:
 podLogs:
   enabled: true
 
+applicationObservability:
+  enabled: true
+  receivers:
+    otlp:
+      grpc:
+        enabled: true
+      http:
+        enabled: true
+  connectors:
+    grafanaCloudMetrics:
+      enabled: true
+  logs:
+    enabled: false
+
 alloy-metrics:
   enabled: true
   alloy:
     clustering:
       portName: tcp
   controller:
-    replicas: 2
+    replicas: 2  # To test that clustering is working
 
 alloy-singleton:
   enabled: true
 
 alloy-logs:
   enabled: true
+
+alloy-receiver:
+  enabled: true
+  liveDebugging:
+    enabled: true
+  alloy:
+    extraPorts:
+      - name: otlp-grpc
+        port: 4317
+        targetPort: 4317
+        protocol: TCP
+      - name: otlp-http
+        port: 4318
+        targetPort: 4318
+        protocol: TCP
+  controller:
+    # Using TPROXY preserves both the source and destination IP addresses and ports, which allows
+    # the k8sattributes processor to look up the pod by IP and enrich the rest of the attributes
+    podAnnotations:
+      sidecar.istio.io/interceptionMode: TPROXY
