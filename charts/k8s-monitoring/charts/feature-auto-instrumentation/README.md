@@ -3,18 +3,16 @@
 (      To make changes, please modify README.md.gotmpl and run `helm-docs`)
 -->
 
-# feature-auto-instrumentation
-
-![Version: 1.0.0](https://img.shields.io/badge/Version-1.0.0-informational?style=flat-square) ![AppVersion: 1.0.0](https://img.shields.io/badge/AppVersion-1.0.0-informational?style=flat-square)
-Gathers telemetry data via automatic instrumentation
+# Feature: Auto-Instrumentation
 
 The auto-instrumentation feature deploys Grafana Beyla to automatically instrument programs running on this cluster using eBPF.
 
 ## Usage
 
+```yaml
 autoInstrumentation:
   enabled: true
-  ... [values](#values)
+```
 
 ## Testing
 
@@ -27,11 +25,13 @@ tests, use `helm test`.
 
 Be sure perform actual integration testing in a live environment in the main [k8s-monitoring](../..) chart.
 
+<!-- textlint-disable terminology -->
 ## Maintainers
 
 | Name | Email | Url |
 | ---- | ------ | --- |
 | petewall | <pete.wall@grafana.com> |  |
+<!-- textlint-enable terminology -->
 <!-- markdownlint-disable no-bare-urls -->
 <!-- markdownlint-disable list-marker-space -->
 ## Source Code

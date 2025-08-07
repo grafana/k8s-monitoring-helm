@@ -3,10 +3,7 @@
 (      To make changes, please modify README.md.gotmpl and run `helm-docs`)
 -->
 
-# feature-node-logs
-
-![Version: 1.0.0](https://img.shields.io/badge/Version-1.0.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.0.0](https://img.shields.io/badge/AppVersion-1.0.0-informational?style=flat-square)
-Kubernetes Observability feature for gathering Cluster Node logs.
+# Feature: Node Logs
 
 The Node Logs feature enables the collection of logs from Kubernetes Cluster Nodes. This is useful for understanding the
 health and performance of the nodes in your cluster. Currently, it gathers logs from the journald service from a
@@ -14,9 +11,10 @@ filterable list of units.
 
 ## Usage
 
+```yaml
 nodeLogs:
   enabled: true
-  ... [values](#values)
+```
 
 ## journald
 
@@ -26,6 +24,7 @@ You can define a list of units to filter logs from. By default, the feature will
 
 ```yaml
 nodeLogs:
+  enabled: true
   journal:
     units:
       - kubelet.service
@@ -43,11 +42,13 @@ tests, use `helm test`.
 
 Be sure perform actual integration testing in a live environment in the main [k8s-monitoring](../..) chart.
 
+<!-- textlint-disable terminology -->
 ## Maintainers
 
 | Name | Email | Url |
 | ---- | ------ | --- |
 | petewall | <pete.wall@grafana.com> |  |
+<!-- textlint-enable terminology -->
 <!-- markdownlint-disable no-bare-urls -->
 <!-- markdownlint-disable list-marker-space -->
 ## Source Code
@@ -56,6 +57,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 <!-- markdownlint-enable list-marker-space -->
 <!-- markdownlint-enable no-bare-urls -->
 
+<!-- textlint-disable terminology -->
 ## Values
 
 ### Journal Logs
@@ -76,3 +78,4 @@ Be sure perform actual integration testing in a live environment in the main [k8
 |-----|------|---------|-------------|
 | labelsToKeep | list | `["instance","job","level","name","unit","service.name","source"]` | The list of labels to keep on the logs, all other pipeline labels will be dropped. |
 | structuredMetadata | object | `{}` | The structured metadata mappings to set. To not set any structured metadata, set this to an empty object (e.g. `{}`) Format: `<key>: <extracted_key>`. Example: structuredMetadata:   detected_level: level |
+<!-- textlint-enable terminology -->

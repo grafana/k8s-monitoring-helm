@@ -23,10 +23,10 @@ metadata:
   name: k8smon-alloy-metrics
   namespace: default
   labels:
-    helm.sh/chart: alloy-metrics-1.2.0
+    helm.sh/chart: alloy-metrics-1.2.1
     app.kubernetes.io/name: alloy-metrics
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "v1.10.0"
+    app.kubernetes.io/version: "v1.10.1"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
     app.kubernetes.io/component: rbac
@@ -61,7 +61,7 @@ metadata:
   name: k8smon-alloy-metrics
   namespace: default
 data:
-  config.alloy: |-
+  config.alloy: |
     remote.kubernetes.secret "alloy_metrics_remote_cfg" {
       name      = "alloy-metrics-remote-cfg-k8smon-k8s-monitoring"
       namespace = "default"
@@ -94,7 +94,7 @@ metadata:
   name: k8smon-alloy-logs
   namespace: default
 data:
-  config.alloy: |-
+  config.alloy: |
     remote.kubernetes.secret "alloy_logs_remote_cfg" {
       name      = "alloy-logs-remote-cfg-k8smon-k8s-monitoring"
       namespace = "default"
@@ -226,10 +226,10 @@ kind: ClusterRole
 metadata:
   name: k8smon-alloy-metrics
   labels:
-    helm.sh/chart: alloy-metrics-1.2.0
+    helm.sh/chart: alloy-metrics-1.2.1
     app.kubernetes.io/name: alloy-metrics
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "v1.10.0"
+    app.kubernetes.io/version: "v1.10.1"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
     app.kubernetes.io/component: rbac
@@ -348,10 +348,10 @@ kind: ClusterRoleBinding
 metadata:
   name: k8smon-alloy-metrics
   labels:
-    helm.sh/chart: alloy-metrics-1.2.0
+    helm.sh/chart: alloy-metrics-1.2.1
     app.kubernetes.io/name: alloy-metrics
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "v1.10.0"
+    app.kubernetes.io/version: "v1.10.1"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
     app.kubernetes.io/component: rbac
@@ -397,10 +397,10 @@ metadata:
   name: k8smon-alloy-metrics-cluster
   namespace: default
   labels:
-    helm.sh/chart: alloy-metrics-1.2.0
+    helm.sh/chart: alloy-metrics-1.2.1
     app.kubernetes.io/name: alloy-metrics
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "v1.10.0"
+    app.kubernetes.io/version: "v1.10.1"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
     app.kubernetes.io/component: networking
@@ -430,10 +430,10 @@ metadata:
   name: k8smon-alloy-metrics
   namespace: default
   labels:
-    helm.sh/chart: alloy-metrics-1.2.0
+    helm.sh/chart: alloy-metrics-1.2.1
     app.kubernetes.io/name: alloy-metrics
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "v1.10.0"
+    app.kubernetes.io/version: "v1.10.1"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
     app.kubernetes.io/component: networking
@@ -595,10 +595,10 @@ metadata:
   name: k8smon-alloy-metrics
   namespace: default
   labels:
-    helm.sh/chart: alloy-metrics-1.2.0
+    helm.sh/chart: alloy-metrics-1.2.1
     app.kubernetes.io/name: alloy-metrics
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "v1.10.0"
+    app.kubernetes.io/version: "v1.10.1"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
 spec:
@@ -622,7 +622,7 @@ spec:
       serviceAccountName: k8smon-alloy-metrics
       containers:
         - name: alloy
-          image: docker.io/grafana/alloy:v1.10.0
+          image: docker.io/grafana/alloy:v1.10.1
           imagePullPolicy: IfNotPresent
           args:
             - run
@@ -663,14 +663,16 @@ spec:
             -
               name: GCLOUD_FM_COLLECTOR_ID
               value: k8smon-$(CLUSTER_NAME)-$(NAMESPACE)-$(POD_NAME)
+          ports:
+            - containerPort: 12345
+              name: http-metrics
           readinessProbe:
-            exec:
-              command:
-                - /bin/sh
-                - -c
-                - curl -f HTTP://localhost:12345/-/ready || exit 1
-            initialDelaySeconds: 
-            timeoutSeconds: 
+            httpGet:
+              path: /-/ready
+              port: 12345
+              scheme: HTTP
+            initialDelaySeconds: 10
+            timeoutSeconds: 1
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:

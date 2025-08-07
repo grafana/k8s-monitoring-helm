@@ -6,7 +6,6 @@
 # k8s-monitoring
 
 ![Version: 1.6.39](https://img.shields.io/badge/Version-1.6.39-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 2.19.0](https://img.shields.io/badge/AppVersion-2.19.0-informational?style=flat-square)
-
 A Helm chart for gathering, scraping, and forwarding Kubernetes telemetry data to a Grafana Stack.
 
 ## Breaking change announcements
@@ -120,12 +119,14 @@ This chart simplifies the deployment of a Kubernetes monitoring infrastructure, 
 
 The Prometheus and Loki services may be hosted on the same cluster, or remotely (e.g. on Grafana Cloud).
 
+<!-- textlint-disable terminology -->
 ## Maintainers
 
 | Name | Email | Url |
 | ---- | ------ | --- |
 | petewall | <pete.wall@grafana.com> |  |
 | skl | <stephen.lang@grafana.com> |  |
+<!-- textlint-enable terminology -->
 
 <!-- markdownlint-disable no-bare-urls -->
 <!-- markdownlint-disable list-marker-space -->

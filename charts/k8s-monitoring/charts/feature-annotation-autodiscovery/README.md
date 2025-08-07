@@ -3,18 +3,16 @@
 (      To make changes, please modify README.md.gotmpl and run `helm-docs`)
 -->
 
-# feature-annotation-autodiscovery
-
-![Version: 1.0.0](https://img.shields.io/badge/Version-1.0.0-informational?style=flat-square) ![AppVersion: 1.0.0](https://img.shields.io/badge/AppVersion-1.0.0-informational?style=flat-square)
-Gathers metrics automatically based on Kubernetes Pod and Service annotations
+# Feature: Annotation Autodiscovery
 
 The annotation-based autodiscovery feature adds scrape targets based on Kubernetes annotations.
 
 ## Usage
 
+```yaml
 annotationAutodiscovery:
   enabled: true
-  ... [values](#values)
+```
 
 ## How it works
 
@@ -42,11 +40,13 @@ tests, use `helm test`.
 
 Be sure perform actual integration testing in a live environment in the main [k8s-monitoring](../..) chart.
 
+<!-- textlint-disable terminology -->
 ## Maintainers
 
 | Name | Email | Url |
 | ---- | ------ | --- |
 | petewall | <pete.wall@grafana.com> |  |
+<!-- textlint-enable terminology -->
 <!-- markdownlint-disable no-bare-urls -->
 <!-- markdownlint-disable list-marker-space -->
 ## Source Code

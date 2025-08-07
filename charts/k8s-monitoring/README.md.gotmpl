@@ -5,18 +5,17 @@
 
 {{ template "chart.header" . }}
 {{ template "chart.deprecationWarning" . }}
-
 {{ template "chart.badgesSection" . }}
-
 {{ template "chart.description" . }}
-
 {{ template "chart.homepageLine" . }}
 
-## Usage
+## Breaking change announcements
 
-### Migrating from v1
+### Version 2.0
 
 v2 introduces some significant changes to the chart configuration values. Refer to the migration [documentation](./docs/Migration.md) for tools and strategies to migrate from v1.
+
+## Usage
 
 ### Setup Grafana chart repository
 
@@ -30,19 +29,24 @@ helm repo update
 There are some required values that will need to be used with this chart. The basic structure of the values file is:
 
 ```yaml
-cluster: {} # Cluster configuration, including the cluster name
+cluster: # Cluster configuration, including the cluster name
+  name: my-cluster
 
-destinations: [] # List of destinations where telemetry data will be sent
+destinations: [...] # List of destinations where telemetry data will be sent
 
 # Features to enable, which determines what data to collect
-clusterMetrics: {}
-clusterEvents: {}
+clusterMetrics:
+  enabled: true
+clusterEvents:
+  enabled: true
 # etc...
 ...
 
 # Telemetry collector definitions
-alloy-metrics: {}
-alloy-singleton: {}
+alloy-metrics:
+  enabled: true
+alloy-singleton:
+  enabled: true
 ```
 
 Here is more detail about the different sections:
@@ -98,13 +102,16 @@ destinations:
 
 ([Documentation](./docs/Collectors.md))
 
-Collectors are the actual kubernetes workloads running alloy containers (deployments/statefulsets/daemonset) dedicated to certain tasks. Logs, metrics and app observability having different collection requirements leads to the need for multiple instances/clusters.
+Collectors are workloads that are dedicated to gathering metrics, logs, traces, and profiles from the cluster and
+from workloads on the cluster. There are multiple collector instances to optimize around the collection requirements.
 
-The main collectors are:
+The list of collectors are:
 
-*   **alloy-logs** is the logs collector. It is deployed as a daemonset and scrapes workload logs on each node
-*   **alloy-metrics** is a statefulset that scrapes metrics from prometheus sources like cadvisor and kube-state-metrics
-*   **alloy-receiver** is a daemonset to collect metrics sent via HTTP, gRPC, Zipkin, etc
+*   **alloy-metrics** is a StatefulSet that scrapes metrics from sources like cAdvisor, Kubelet, and kube-state-metrics.
+*   **alloy-logs** is the logs collector. It is deployed as a DaemonSet and gathers Pod and Node logs.
+*   **alloy-receiver** is a DaemonSet to collect telemetry data sent via HTTP, gRPC, Zipkin, etc...
+*   **alloy-singleton** is a 1-replica Deployment to collect cluster events.
+*   **alloy-profiles** is a DaemonSet used to instrument and collect profiling data.
 
 To enable a collector, add a new section to your values file. Ex:
 
@@ -134,7 +141,26 @@ podLogs:
   enabled: true
 ```
 
+## Compatibility
+
+The Kubernetes Monitoring Helm chart is designed to be compatible with all supported Kubernetes Cluster versions. It
+deploys several dependent systems, which may have their own compatibility matrices. See their documentation for more
+details:
+
+| System             | Feature in k8s-monitoring | Link to documentation                                                                          |
+|--------------------|---------------------------|------------------------------------------------------------------------------------------------|
+| Alloy              | all                       | No published compatibility matrix                                                              |
+| Alloy Operator     | all                       | No published compatibility matrix                                                              |
+| Beyla              | `autoInstrumentation`     | No published compatibility matrix                                                              |
+| Kepler             | `clusterMetrics`          | No published compatibility matrix                                                              |
+| kube-state-metrics | `clusterMetrics`          | [Compatibility Matrix](https://github.com/kubernetes/kube-state-metrics#compatibility-matrix)] |
+| Node Exporter      | `clusterMetrics`          | No published compatibility matrix                                                              |
+| OpenCost           | `clusterMetrics`          | No published compatibility matrix                                                              |
+| Windows Exporter   | `clusterMetrics`          | No published compatibility matrix                                                              |
+
+<!-- textlint-disable terminology -->
 {{ template "chart.maintainersSection" . }}
+<!-- textlint-enable terminology -->
 
 <!-- markdownlint-disable no-bare-urls -->
 <!-- markdownlint-disable list-marker-space -->

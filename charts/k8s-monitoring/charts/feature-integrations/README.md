@@ -3,10 +3,7 @@
 (      To make changes, please modify README.md.gotmpl and run `helm-docs`)
 -->
 
-# feature-integrations
-
-![Version: 1.0.0](https://img.shields.io/badge/Version-1.0.0-informational?style=flat-square) ![AppVersion: 1.0.0](https://img.shields.io/badge/AppVersion-1.0.0-informational?style=flat-square)
-Service integrations
+# Feature: Integrations
 
 The Integrations feature builds in configuration for many common applications and services.
 
@@ -23,12 +20,13 @@ The current integrations that are available from this feature are:
 To enable an integration, create an instance of it with any configuration to aid in service discovery. For example:
 
 ```yaml
-cert-manager:
-  instances:
-    - name: cert-manager
-      namespace: kube-system
-      labelSelectors:
-        app.kubernetes.io/name: cert-manager
+integrations:
+  cert-manager:
+    instances:
+      - name: cert-manager
+        namespace: kube-system
+        labelSelectors:
+          app.kubernetes.io/name: cert-manager
 ```
 
 You can specify multiple instances of the same integration to match multiple instances of that service. For example:
@@ -57,11 +55,13 @@ tests, use `helm test`.
 
 Be sure perform actual integration testing in a live environment in the main [k8s-monitoring](../..) chart.
 
+<!-- textlint-disable terminology -->
 ## Maintainers
 
 | Name | Email | Url |
 | ---- | ------ | --- |
 | petewall | <pete.wall@grafana.com> |  |
+<!-- textlint-enable terminology -->
 <!-- markdownlint-disable no-bare-urls -->
 <!-- markdownlint-disable list-marker-space -->
 ## Source Code
@@ -70,6 +70,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 <!-- markdownlint-enable list-marker-space -->
 <!-- markdownlint-enable no-bare-urls -->
 
+<!-- textlint-disable terminology -->
 ## Values
 
 ### Integration: Alloy
@@ -140,6 +141,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | tempo | object | `{"instances":[]}` | Scrape metrics/logs from Tempo |
+<!-- textlint-enable terminology -->
 
 ## Contributing
 

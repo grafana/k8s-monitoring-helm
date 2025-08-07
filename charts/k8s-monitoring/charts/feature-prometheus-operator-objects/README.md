@@ -3,10 +3,7 @@
 (      To make changes, please modify README.md.gotmpl and run `helm-docs`)
 -->
 
-# feature-prometheus-operator-objects
-
-![Version: 1.0.0](https://img.shields.io/badge/Version-1.0.0-informational?style=flat-square) ![AppVersion: 1.0.0](https://img.shields.io/badge/AppVersion-1.0.0-informational?style=flat-square)
-Gathers metrics using Prometheus Operator Objects
+# Feature: Prometheus Operator Objects
 
 The Prometheus Operator Objects feature enables the discovery, processing, and utilization of certain Prometheus
 Operator objects. Currently, this feature supports the following objects:
@@ -19,9 +16,10 @@ Operator objects. Currently, this feature supports the following objects:
 
 ## Usage
 
+```yaml
 prometheusOperatorObjects:
   enabled: true
-  ... [values](#values)
+```
 
 ## Testing
 
@@ -34,11 +32,13 @@ tests, use `helm test`.
 
 Be sure perform actual integration testing in a live environment in the main [k8s-monitoring](../..) chart.
 
+<!-- textlint-disable terminology -->
 ## Maintainers
 
 | Name | Email | Url |
 | ---- | ------ | --- |
 | petewall | <pete.wall@grafana.com> |  |
+<!-- textlint-enable terminology -->
 <!-- markdownlint-disable no-bare-urls -->
 <!-- markdownlint-disable list-marker-space -->
 ## Source Code

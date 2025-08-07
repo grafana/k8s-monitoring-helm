@@ -63,6 +63,7 @@ lint: lint-alloy lint-shell lint-markdown lint-terraform lint-text lint-yaml lin
 ALLOY_FILES = $(shell find . -name "*.alloy" ! -path "./data-alloy/*")
 lint-alloy: ## Lint Alloy files
 	@./scripts/lint-alloy.sh $(ALLOY_FILES)
+	rm -rf data-alloy  # Clean up temporary Alloy data directory
 
 .PHONY: lint-shell
 SHELL_SCRIPTS = $(shell find . -type f -name "*.sh" -not \( -path "./node_modules/*" -o -path "./data-alloy/*" -o -path "./.git/*" -o -path "./charts/k8s-monitoring-v1/test/spec/*" -o -path "./charts/k8s-monitoring/tests/example-checks/spec/*" -o -path "./charts/k8s-monitoring/tests/misc-checks/spec/*" \))

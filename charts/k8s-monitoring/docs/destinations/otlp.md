@@ -2,6 +2,7 @@
 
 This defines the options for defining a destination for OpenTelemetry data that use the OTLP protocol.
 
+<!-- textlint-disable terminology -->
 ## Values
 
 ### Authentication - Bearer Token
@@ -165,3 +166,4 @@ This defines the options for defining a destination for OpenTelemetry data that 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | retryOnFailure.enabled | bool | `true` |  |
+<!-- textlint-enable terminology -->

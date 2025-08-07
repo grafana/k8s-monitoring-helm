@@ -3,10 +3,7 @@
 (      To make changes, please modify README.md.gotmpl and run `helm-docs`)
 -->
 
-# feature-application-observability
-
-![Version: 1.0.0](https://img.shields.io/badge/Version-1.0.0-informational?style=flat-square) ![AppVersion: 1.0.0](https://img.shields.io/badge/AppVersion-1.0.0-informational?style=flat-square)
-Gathers application data
+# Feature: Application Observability
 
 The Application Observability feature enables the collection of application telemetry data.
 
@@ -16,9 +13,12 @@ Before you enable this feature, you must [enable one or more receivers](https://
 
 ## Usage
 
+```yaml
 applicationObservability:
   enabled: true
-  ... [values](#values)
+  receivers:
+    ...
+```
 
 ## Testing
 
@@ -31,11 +31,13 @@ tests, use `helm test`.
 
 Be sure perform actual integration testing in a live environment in the main [k8s-monitoring](../..) chart.
 
+<!-- textlint-disable terminology -->
 ## Maintainers
 
 | Name | Email | Url |
 | ---- | ------ | --- |
 | petewall | <pete.wall@grafana.com> |  |
+<!-- textlint-enable terminology -->
 <!-- markdownlint-disable no-bare-urls -->
 <!-- markdownlint-disable list-marker-space -->
 ## Source Code
