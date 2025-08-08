@@ -37,7 +37,7 @@ alloy-metrics:
     url: https://remote-config.example.com/alloy
     auth:
       type: basic
-      username: my-remote-cfg-user
+      username: 12345
       password: my-remote-cfg-password
   alloy:
     extraEnv:
