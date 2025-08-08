@@ -968,6 +968,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
+| configValidator.extraArgs | list | `[]` | Extra arguments to pass to Alloy during the config validation. |
 | extraObjects | list | `[]` | Deploy additional manifest objects |
 <!-- markdownlint-enable no-space-in-emphasis -->
 
