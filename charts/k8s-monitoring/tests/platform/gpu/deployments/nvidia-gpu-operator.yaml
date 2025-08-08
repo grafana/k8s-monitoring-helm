@@ -1,0 +1,25 @@
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: nvidia
+  namespace: flux-system
+spec:
+  interval: 1m
+  url: https://helm.ngc.nvidia.com/nvidia
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: nvidia-gpu-operator
+  namespace: kube-system
+spec:
+  interval: 1m
+  chart:
+    spec:
+      chart: gpu-operator
+      sourceRef:
+        kind: HelmRepository
+        name: nvidia
+        namespace: flux-system
+      interval: 1m

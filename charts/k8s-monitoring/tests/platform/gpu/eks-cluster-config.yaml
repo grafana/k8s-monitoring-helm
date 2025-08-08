@@ -1,0 +1,24 @@
+---
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+
+metadata:
+  region: ap-northeast-2
+  tags:
+    source: k8s-monitoring-helm-platform-test
+
+nodeGroups:
+  - name: regular-ng
+    instanceType: m5.large
+    desiredCapacity: 1
+
+  - name: gpu-ng
+    instanceType: g4dn.xlarge
+    desiredCapacity: 1
+    labels:
+      node-type: gpu
+    taints:
+      - key: nvidia.com/gpu
+        value: "true"
+        effect: NoSchedule
+    amiFamily: AmazonLinux2

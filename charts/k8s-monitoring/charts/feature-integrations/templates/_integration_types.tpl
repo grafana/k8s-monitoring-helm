@@ -2,6 +2,7 @@
 {{- define "integrations.types" -}}
 - alloy
 - cert-manager
+- dcgm-exporter
 - etcd
 - grafana
 - loki

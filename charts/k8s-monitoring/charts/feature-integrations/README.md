@@ -85,6 +85,12 @@ Be sure perform actual integration testing in a live environment in the main [k8
 |-----|------|---------|-------------|
 | cert-manager | object | `{"instances":[]}` | Scrape metrics/logs from cert-manager |
 
+### Integration: DCGM Exporter
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| dcgm-exporter | object | `{"instances":[]}` | Scrape metrics/logs from DCGM Exporter |
+
 ### Integration: etcd
 
 | Key | Type | Default | Description |
