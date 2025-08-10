@@ -1,0 +1,67 @@
+---
+cluster:
+  name: pod-labels-and-annotations
+
+destinations:
+  - name: prometheus
+    type: prometheus
+    url: http://prometheus.prometheus.svc:9090/api/v1/write
+  - name: loki
+    type: loki
+    url: http://loki.loki.svc:3100/api/push
+  - name: tempo
+    type: otlp
+    url: http://tempo.tempo.svc
+    metrics: {enabled: false}
+    logs: {enabled: false}
+    traces: {enabled: true}
+
+clusterMetrics:
+  enabled: true
+
+podLogs:
+  enabled: true
+applicationObservability:
+  enabled: true
+  receivers:
+    otlp:
+      http:
+        enabled: true
+        port: 4318
+  connectors:
+    grafanaCloudMetrics:
+      enabled: true
+  processors:
+    k8sattributes:
+      annotations:
+        - from: namespace
+          key: "example.com/product"
+          # This is the name of the label that will be used to store the product as label if available
+          tag_name: "product"
+      labels:
+        - from: namespace
+          key: "example.com/team"
+          # This is the name of the label that will be used to store the team as label if available
+          tag_name: "team"
+  metrics:
+    transforms:
+      datapoint:
+        # This adds the product label to the datapoints and similarly you can add to traces and logs
+        - set(attributes["product"], resource.attributes["product"])
+        # This adds the team label to the datapoints and similarly you can add to traces and logs
+        - set(attributes["team"], resource.attributes["team"])
+
+alloy-metrics:
+  enabled: true
+
+alloy-logs:
+  enabled: true
+
+alloy-receiver:
+  enabled: true
+  alloy:
+    extraPorts:
+      - name: otlp-http
+        port: 4318
+        targetPort: 4318
+        protocol: TCP

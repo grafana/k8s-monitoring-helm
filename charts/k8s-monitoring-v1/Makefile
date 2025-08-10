@@ -5,6 +5,10 @@ CHART_TEMPLATE_FILES = $(shell find templates -name "*.tpl")
 CHART_YAML_FILES = $(shell find templates -name "*.yaml")
 ALLOW_LISTS := default_allow_lists/kube-state-metrics.yaml
 
+Chart.lock: Chart.yaml
+	helm dependency update .
+	@touch Chart.lock # Ensure the timestamp is updated
+
 .SECONDEXPANSION:
 values.schema.json: values.yaml $$(wildcard schema-mods/*)
 	docker run --rm --platform linux/amd64 --volume $(shell pwd):/chart ghcr.io/grafana/helm-chart-toolbox-schema-generator --chart /chart > $@
@@ -87,9 +91,6 @@ else
 	docker run --platform linux/amd64 --rm --volume $(shell pwd):/src shellspec/shellspec -c /src/test -s /bin/sh
 endif
 
-Chart.lock: Chart.yaml
-	helm dependency update .
-
 #
 # Example targets
 #
@@ -106,7 +107,11 @@ alloy_configs = $(shell \
 	DIR="$(shell dirname $(1))/" yq e 'with_entries(select(.key == "alloy*")) | select(.[].enabled == true) | to_entries | env(DIR) + .[].key + ".alloy"' $(1) \
 )
 
-%/output.yaml: %/values.yaml Chart.yaml Chart.lock values.yaml $(CHART_TEMPLATE_FILES) $(CHART_YAML_FILES) $(ALLOW_LISTS)
+%/output.yaml: %/values.yaml Chart.yaml Chart.lock values.yaml values.schema.json $(CHART_TEMPLATE_FILES) $(CHART_YAML_FILES) $(ALLOW_LISTS)
+	helm template $(EXAMPLE_RELEASE_NAME) . -f $< > $@
+
+%/.rendered/output.yaml: %/values.yaml Chart.yaml Chart.lock values.yaml values.schema.json $(CHART_TEMPLATE_FILES) $(CHART_YAML_FILES) $(ALLOW_LISTS)
+	mkdir -p $(dir $@)
 	helm template $(EXAMPLE_RELEASE_NAME) . -f $< > $@
 
 %/metrics.alloy: %/output.yaml
@@ -121,8 +126,11 @@ alloy_configs = $(shell \
 %/profiles.alloy: %/output.yaml
 	yq 'select(.kind=="ConfigMap" and .metadata.name=="$(EXAMPLE_RELEASE_NAME)-alloy-profiles") | .data["config.alloy"]' $< > $@
 
+INTEGRATION_TEST_VALUES_FILES = $(filter-out $(NON_RENDERED_INTEGRATION_TEST_VALUES_FILES),$(shell find tests/integration -name values.yaml))
+INTEGRATION_TEST_OUTPUT_FILES = $(INTEGRATION_TEST_VALUES_FILES:values.yaml=.rendered/output.yaml)
+
 .PHONY: examples
-examples: $(EXAMPLE_OUTPUT_FILES) $(EXAMPLE_ALLOY_FILES)
+examples: $(EXAMPLE_OUTPUT_FILES) $(EXAMPLE_ALLOY_FILES) $(INTEGRATION_TEST_OUTPUT_FILES)
 
 .PHONY: build
 build: Chart.lock README.md examples values.schema.json $(ALLOW_LISTS)
