@@ -215,39 +215,12 @@ details:
 
 ## Values
 
-### Collectors - Alloy Logs
+### Collectors
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| alloy-logs.enabled | bool | `false` | Deploy the Alloy instance for collecting log data. |
-
-### Collectors - Alloy Metrics
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| alloy-metrics.enabled | bool | `false` | Deploy the Alloy instance for collecting metrics. |
-
-### Collectors - Alloy Profiles
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| alloy-profiles.enabled | bool | `false` | Deploy the Alloy instance for gathering profiles. |
-
-### Collectors - Alloy Receiver
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| alloy-receiver.alloy.extraPorts | list | `[]` | The ports to expose for the Alloy receiver. |
-| alloy-receiver.enabled | bool | `false` | Deploy the Alloy instance for opening receivers to collect application data. |
-| alloy-receiver.extraService.enabled | bool | `false` | Create an extra service for the Alloy receiver. This service will mirror the alloy-receiver service, but its name can be customized to match existing application settings. |
-| alloy-receiver.extraService.fullname | string | `""` | If set, the full name of the extra service to create. This will result in the format `<fullname>`. |
-| alloy-receiver.extraService.name | string | `"alloy"` | The name of the extra service to create. This will result in the format `<release-name>-<name>`. |
-
-### Collectors - Alloy Singleton
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| alloy-singleton.enabled | bool | `false` | Deploy the Alloy instance for data sources required to be deployed on a single replica. |
+| alloy-operator | object | `{"deploy":true}` | Alloy Operator is required for deploying Alloy collectors. |
+| collectors | object | `{}` | The list of collectors which will gather telemetry data from the cluster and send it to the destinations. See the [collectors documentation](https://github.com/grafana/k8s-monitoring-helm/blob/main/charts/k8s-monitoring/docs/collectors/README.md) for more information. "global" is a special collector that is used as a template for all collectors. |
 
 ### Features - Annotation Autodiscovery
 
@@ -300,7 +273,7 @@ details:
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| destinations | list | `[]` | The list of destinations where telemetry data will be sent. See the [destinations documentation](https://github.com/grafana/k8s-monitoring-helm/blob/main/charts/k8s-monitoring/docs/destinations/README.md) for more information. |
+| destinations | object | `{}` | The list of destinations where telemetry data will be sent. See the [destinations documentation](https://github.com/grafana/k8s-monitoring-helm/blob/main/charts/k8s-monitoring/docs/destinations/README.md) for more information. |
 
 ### Global Settings
 
@@ -370,5 +343,5 @@ details:
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| alloy-operator.deploy | bool | `true` |  |
 | extraObjects | list | `[]` | Deploy additional manifest objects |
+| telemetryServices | object | `{"kepler":{"deploy":true},"kube-state-metrics":{"deploy":true},"node-exporter":{"deploy":true},"windows-exporter":{"deploy":true}}` | Telemetry services are additional deployments that generate and synthesize telemetry data from the cluster. |
