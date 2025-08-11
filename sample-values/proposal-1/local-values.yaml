@@ -1,0 +1,52 @@
+cluster:
+  name: my-test-cluster
+
+pipelines:
+  clusterMetrics:
+    ...
+
+  podLogs:
+    ...
+
+pipelineSynchronization:
+  enabled: false
+
+destinations:
+  grafanaCloudMetrics:
+    type: promtheus
+
+collectors:
+  alloy-one:
+    type: alloy
+    controller:
+      type: daemonset
+
+  alloy-metrics:
+    type: alloy
+    alloy:
+      clustering:
+        name: alloy-metrics
+        enabled: true
+
+    controller:
+      type: statefulset
+      replicas: 1
+
+
+
+# -- Telemetry services are additional deployments that generate and synthesize telemetry data from the cluster.
+telemetryServices:
+  kubeStateMetrics:
+    deploy: true
+
+  nodeExporter:
+    deploy: true
+
+  windowsExporter:
+    deploy: true
+
+  kepler:
+    deploy: true
+
+  cloudCostExporter:
+    deploy: true
