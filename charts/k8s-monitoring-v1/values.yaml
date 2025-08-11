@@ -1915,12 +1915,33 @@ profiles:
   # @section -- Profiles
   enabled: false
 
+  annotations:
+    # -- The prefix for all profiles annotations.
+    # @section -- Profiles
+    prefix: "profiles.grafana.com"
+
   # Settings for gathering profiles using eBPF
   # @section -- Profiles (eBPF)
   ebpf:
     # -- Gather profiles using eBPF
     # @section -- Profiles (eBPF)
     enabled: true
+
+    # -- How to target pods for collecting profiles with eBPF. Options are `all` and `annotation`. If using `all`, all
+    # Kubernetes pods will be targeted for collecting profiles, and you can exclude certain pods by setting the
+    # `profiles.grafana.com/cpu.ebpf.scrape="false"` annotation on that pod. If using `annotation`, only pods with the
+    # `profiles.grafana.com/cpu.ebpf.scrape="true"` annotation will have profiles collected with eBPF.
+    # @section -- Profiles (eBPF)
+    targetingScheme: all
+
+    # Configure the annotations that will control how the targets are discovered and how profiles are collected.
+    # All annotations will be `<prefix>/cpu.ebpf.<action>`, for example, to "enable" collecting profiles using eBPF, set
+    # the annotation `profiles.grafana.com/cpu.ebpf.scrape: "true"` on the pod.
+    annotations:
+      # -- The annotation action for enabling or disabling collecting of profiles with eBPF.
+      # Default is `profiles.grafana.com/cpu.ebpf.enabled`.
+      # @section -- Profiles (eBPF)
+      enable: "enabled"
 
     # -- Which namespaces to look for pods with profiles.
     # @section -- Profiles (eBPF)
@@ -1945,6 +1966,21 @@ profiles:
     # -- Gather profiles by attaching async-profiler to the Java runtime.
     # @section -- Profiles (java)
     enabled: true
+
+    # -- How to target pods for finding Java profiles. Options are `all` and `annotation`. If using `all`, all Kubernetes
+    # pods will be targeted for Java profiles, and you can exclude certain pods by setting the
+    # `profiles.grafana.com/java.enabled="false"` annotation on that pod. If using `annotation`, only pods with the
+    # `profiles.grafana.com/java.enabled="true"` annotation will collecting Java profiles.
+    # @section -- Profiles (java)
+    targetingScheme: all
+
+    # Configure the annotations that will control how the Java targets are discovered and how profiles are collected.
+    # All annotations will be `<prefix>/java.<action>`, for example, to "enable" scraping of Java profiles, set the
+    # annotation `profiles.grafana.com/java.enabled: "true"` on the pod.
+    annotations:
+      # -- The annotation action for enabling or disabling of Java profile collection.
+      # @section -- Profiles (java)
+      enable: "enabled"
 
     # -- Which namespaces to look for pods to profile.
     # @section -- Profiles (java)
@@ -1973,6 +2009,30 @@ profiles:
     # @section -- Profiles (pprof)
     enabled: true
 
+    # Configure the annotations that will control how the pprof targets are discovered and how profiles are scraped.
+    # All annotations will be `<prefix>/<type>.<action>`, for example, to "enable" scraping of CPU profiles, set the
+    # annotation `profiles.grafana.com/cpu.scrape: "true"` on the pod. To set the path for memory profiles, set the
+    # annotation `profiles.grafana.com/memory.path: "/debug/pprof/mem"` on the pod.
+    annotations:
+      # -- The annotation action for enabling or disabling scraping of profiles of a given type.
+      # @section -- Profiles (pprof)
+      enable: "scrape"
+      # -- The annotation action for choosing the port number for scraping profiles of a given type.
+      # @section -- Profiles (pprof)
+      portNumber: "port"
+      # -- The annotation action for choosing the port name for scraping profiles of a given type.
+      # @section -- Profiles (pprof)
+      portName: "port_name"
+      # -- The annotation action for choosing the path for scraping profiles of a given type.
+      # @section -- Profiles (pprof)
+      path: "path"
+      # -- The annotation action for choosing the scheme for scraping profiles of a given type.
+      # @section -- Profiles (pprof)
+      scheme: "scheme"
+      # -- The annotation action for choosing the container for scraping profiles of a given type.
+      # @section -- Profiles (pprof)
+      container: "container"
+
     # -- Which namespaces to look for pods with profiles.
     # @section -- Profiles (pprof)
     namespaces: []
@@ -1998,11 +2058,20 @@ profiles:
       - mutex
       - fgprof
 
+    # -- How frequently to collect profiles.
+    # @section -- Profiles (pprof)
+    scrapeInterval: "15s"
+
+    # -- Timeout for collecting profiles.
+    # Must be larger than the scrape interval.
+    # @section -- Profiles (pprof)
+    scrapeTimeout: "18s"
+
   # -- Extra configuration that will be added to the Grafana Alloy for Logs configuration file.
   # This value is templated so that you can refer to other values from this file.
   # This cannot be used to modify the generated configuration values, only append new components.
   # See [Adding custom Flow configuration](#adding-custom-flow-configuration) for an example.
-  # @section -- Profiles Global
+  # @section -- Profiles
   extraConfig: ""
 
 # Telemetry data receiver settings

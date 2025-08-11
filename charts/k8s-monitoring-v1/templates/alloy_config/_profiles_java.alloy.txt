@@ -1,7 +1,9 @@
 {{ define "alloy.config.profilesJava" }}
 {{- if .Values.profiles.java.enabled }}
+{{- $scrapeAnnotation := include "pod_annotation" (printf "%s/java.%s" $.Values.profiles.annotations.prefix $.Values.profiles.java.annotations.enable) }}
 // Profiles: Java
 discovery.kubernetes "java_pods" {
+  role = "pod"
   selectors {
     role = "pod"
     field = "spec.nodeName=" + sys.env("HOSTNAME")
@@ -11,25 +13,36 @@ discovery.kubernetes "java_pods" {
     names = {{ .Values.profiles.java.namespaces | toJson }}
   }
 {{- end }}
-  role = "pod"
+}
+
+discovery.relabel "potential_java_pods" {
+  targets = discovery.kubernetes.java_pods.targets
+  rule {
+    source_labels = ["__meta_kubernetes_pod_phase"]
+    regex         = "Succeeded|Failed|Completed"
+    action        = "drop"
+  }
+{{- if eq .Values.profiles.java.targetingScheme "annotation" }}
+  rule {
+    source_labels = [{{ $scrapeAnnotation | quote }}]
+    regex         = "true"
+    action        = "keep"
+  }
+{{- else }}
+  rule {
+    source_labels = [{{ $scrapeAnnotation | quote }}]
+    regex         = "false"
+    action        = "drop"
+  }
+{{- end }}
 }
 
 discovery.process "java_pods" {
-  join = discovery.kubernetes.java_pods.targets
+  join = discovery.relabel.potential_java_pods.output
 }
 
 discovery.relabel "java_pods" {
   targets = discovery.process.java_pods.targets
-  rule {
-    source_labels = ["__meta_kubernetes_pod_phase"]
-    regex = "Succeeded|Failed|Completed"
-    action = "drop"
-  }
-  rule {
-    source_labels = ["__meta_kubernetes_pod_name"]
-    regex = "^$"
-    action = "drop"
-  }
   rule {
     source_labels = ["__meta_process_exe"]
     action = "keep"
@@ -37,7 +50,6 @@ discovery.relabel "java_pods" {
   }
   rule {
     source_labels = ["__meta_kubernetes_namespace"]
-    action = "replace"
     target_label = "namespace"
   }
 {{- if .Values.profiles.java.excludeNamespaces }}
@@ -49,17 +61,14 @@ discovery.relabel "java_pods" {
 {{- end }}
   rule {
     source_labels = ["__meta_kubernetes_pod_name"]
-    action = "replace"
     target_label = "pod"
   }
   rule {
     source_labels = ["__meta_kubernetes_pod_node_name"]
-    action = "replace"
     target_label = "node"
   }
   rule {
     source_labels = ["__meta_kubernetes_pod_container_name"]
-    action = "replace"
     target_label = "container"
   }
 {{- if .Values.profiles.java.extraRelabelingRules }}
