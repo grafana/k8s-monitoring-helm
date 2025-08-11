@@ -44,6 +44,19 @@ otelcol.connector.spanmetrics "{{ .name | default "default" }}" {
 {{- end }}
 
   output {
+    metrics = [otelcol.processor.transform.span_metrics_transform.input]
+  }
+}
+
+otelcol.processor.transform "span_metrics_transform" {
+   metric_statements {
+    context = "datapoint"
+    statements = [
+      `set(attributes["collector.id"], "` + constants.hostname + `")`,
+    ]
+  }
+
+  output {
 {{- if and .metrics .Values.metrics.enabled }}
     metrics = {{ .metrics }}
 {{- end }}
