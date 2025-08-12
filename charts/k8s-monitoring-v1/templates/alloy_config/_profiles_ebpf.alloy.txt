@@ -1,7 +1,9 @@
 {{ define "alloy.config.profilesEbpf" }}
 {{- if .Values.profiles.ebpf.enabled }}
+{{- $scrapeAnnotation := include "pod_annotation" (printf "%s/cpu.ebpf.%s" $.Values.profiles.annotations.prefix $.Values.profiles.ebpf.annotations.enable) }}
 // Profiles: eBPF
 discovery.kubernetes "ebpf_pods" {
+  role = "pod"
   selectors {
     role = "pod"
     field = "spec.nodeName=" + sys.env("HOSTNAME")
@@ -11,18 +13,29 @@ discovery.kubernetes "ebpf_pods" {
     names = {{ .Values.profiles.ebpf.namespaces | toJson }}
   }
 {{- end }}
-  role = "pod"
 }
 
 discovery.relabel "ebpf_pods" {
   targets = discovery.kubernetes.ebpf_pods.targets
   rule {
-    action = "drop"
-    regex = "Succeeded|Failed|Completed"
     source_labels = ["__meta_kubernetes_pod_phase"]
+    regex = "Succeeded|Failed|Completed"
+    action = "drop"
   }
+{{- if eq .Values.profiles.ebpf.targetingScheme "annotation" }}
   rule {
-    action = "replace"
+    source_labels = [{{ $scrapeAnnotation | quote }}]
+    regex         = "true"
+    action        = "keep"
+  }
+{{- else }}
+  rule {
+    source_labels = [{{ $scrapeAnnotation | quote }}]
+    regex         = "false"
+    action        = "drop"
+  }
+{{- end }}
+  rule {
     source_labels = ["__meta_kubernetes_namespace"]
     target_label = "namespace"
   }
@@ -34,27 +47,23 @@ discovery.relabel "ebpf_pods" {
   }
 {{- end }}
   rule {
-    action = "replace"
     source_labels = ["__meta_kubernetes_pod_name"]
     target_label = "pod"
   }
   rule {
-    action = "replace"
     source_labels = ["__meta_kubernetes_pod_node_name"]
     target_label = "node"
   }
   rule {
-    action = "replace"
     source_labels = ["__meta_kubernetes_pod_container_name"]
     target_label = "container"
   }
   // provide arbitrary service_name label, otherwise it will be set to {__meta_kubernetes_namespace}/{__meta_kubernetes_pod_container_name}
   rule {
-    action = "replace"
+    source_labels = ["__meta_kubernetes_namespace", "__meta_kubernetes_pod_container_name"]
+    separator = "@"
     regex = "(.*)@(.*)"
     replacement = "ebpf/${1}/${2}"
-    separator = "@"
-    source_labels = ["__meta_kubernetes_namespace", "__meta_kubernetes_pod_container_name"]
     target_label = "service_name"
   }
 {{- if .Values.profiles.ebpf.extraRelabelingRules }}
@@ -64,9 +73,7 @@ discovery.relabel "ebpf_pods" {
 
 pyroscope.ebpf "ebpf_pods" {
   targets = discovery.relabel.ebpf_pods.output
-
   demangle = {{ .Values.profiles.ebpf.demangle | quote }}
-
   forward_to = [pyroscope.write.profiles_service.receiver]
 }
 {{- end }}

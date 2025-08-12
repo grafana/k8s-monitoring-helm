@@ -806,46 +806,54 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 |-----|------|---------|-------------|
 | opencost.opencost.prometheus.external.url | string | `"https://prom.example.com/api/prom"` | The URL for Prometheus queries. It should match externalServices.prometheus.host + "/api/prom" |
 
+### Profiles
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| profiles.annotations.prefix | string | `"profiles.grafana.com"` | The prefix for all profiles annotations. |
+| profiles.enabled | bool | `false` | Receive and forward profiles. |
+| profiles.extraConfig | string | `""` | Extra configuration that will be added to the Grafana Alloy for Logs configuration file. This value is templated so that you can refer to other values from this file. This cannot be used to modify the generated configuration values, only append new components. See [Adding custom Flow configuration](#adding-custom-flow-configuration) for an example. |
+
 ### Profiles (eBPF)
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
+| profiles.ebpf.annotations.enable | string | `"enabled"` | The annotation action for enabling or disabling collecting of profiles with eBPF. Default is `profiles.grafana.com/cpu.ebpf.enabled`. |
 | profiles.ebpf.demangle | string | `"none"` | C++ demangle mode. Available options are: none, simplified, templates, full |
 | profiles.ebpf.enabled | bool | `true` | Gather profiles using eBPF |
 | profiles.ebpf.excludeNamespaces | list | `[]` | Which namespaces to exclude looking for pods. |
 | profiles.ebpf.extraRelabelingRules | string | `""` | Rule blocks to be added to the discovery.relabel component for eBPF profile sources. These relabeling rules are applied pre-scrape against the targets from service discovery. Before the scrape, any remaining target labels that start with `__` (i.e. `__meta_kubernetes*`) are dropped. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.relabel/#rule-block)) |
 | profiles.ebpf.namespaces | list | `[]` | Which namespaces to look for pods with profiles. |
-
-### Profiles
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| profiles.enabled | bool | `false` | Receive and forward profiles. |
-
-### Profiles Global
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| profiles.extraConfig | string | `""` | Extra configuration that will be added to the Grafana Alloy for Logs configuration file. This value is templated so that you can refer to other values from this file. This cannot be used to modify the generated configuration values, only append new components. See [Adding custom Flow configuration](#adding-custom-flow-configuration) for an example. |
+| profiles.ebpf.targetingScheme | string | `"all"` | How to target pods for collecting profiles with eBPF. Options are `all` and `annotation`. If using `all`, all Kubernetes pods will be targeted for collecting profiles, and you can exclude certain pods by setting the `profiles.grafana.com/cpu.ebpf.scrape="false"` annotation on that pod. If using `annotation`, only pods with the `profiles.grafana.com/cpu.ebpf.scrape="true"` annotation will have profiles collected with eBPF. |
 
 ### Profiles (java)
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
+| profiles.java.annotations.enable | string | `"enabled"` | The annotation action for enabling or disabling of Java profile collection. |
 | profiles.java.enabled | bool | `true` | Gather profiles by attaching async-profiler to the Java runtime. |
 | profiles.java.excludeNamespaces | list | `[]` | Which namespaces to exclude looking for pods. |
 | profiles.java.extraRelabelingRules | string | `""` | Rule blocks to be added to the discovery.relabel component for Java profile sources. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.relabel/#rule-block)) |
 | profiles.java.namespaces | list | `[]` | Which namespaces to look for pods to profile. |
 | profiles.java.profilingConfig | object | `{"alloc":"512k","cpu":true,"interval":"60s","lock":"10ms","sampleRate":100}` | Configuration for the async-profiler |
+| profiles.java.targetingScheme | string | `"all"` | How to target pods for finding Java profiles. Options are `all` and `annotation`. If using `all`, all Kubernetes pods will be targeted for Java profiles, and you can exclude certain pods by setting the `profiles.grafana.com/java.enabled="false"` annotation on that pod. If using `annotation`, only pods with the `profiles.grafana.com/java.enabled="true"` annotation will collecting Java profiles. |
 
 ### Profiles (pprof)
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
+| profiles.pprof.annotations.container | string | `"container"` | The annotation action for choosing the container for scraping profiles of a given type. |
+| profiles.pprof.annotations.enable | string | `"scrape"` | The annotation action for enabling or disabling scraping of profiles of a given type. |
+| profiles.pprof.annotations.path | string | `"path"` | The annotation action for choosing the path for scraping profiles of a given type. |
+| profiles.pprof.annotations.portName | string | `"port_name"` | The annotation action for choosing the port name for scraping profiles of a given type. |
+| profiles.pprof.annotations.portNumber | string | `"port"` | The annotation action for choosing the port number for scraping profiles of a given type. |
+| profiles.pprof.annotations.scheme | string | `"scheme"` | The annotation action for choosing the scheme for scraping profiles of a given type. |
 | profiles.pprof.enabled | bool | `true` | Gather profiles by scraping pprof HTTP endpoints |
 | profiles.pprof.excludeNamespaces | list | `[]` | Which namespaces to exclude looking for pods. |
 | profiles.pprof.extraRelabelingRules | string | `""` | Rule blocks to be added to the discovery.relabel component for eBPF profile sources. These relabeling rules are applied pre-scrape against the targets from service discovery. Before the scrape, any remaining target labels that start with `__` (i.e. `__meta_kubernetes*`) are dropped. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.relabel/#rule-block)) |
 | profiles.pprof.namespaces | list | `[]` | Which namespaces to look for pods with profiles. |
+| profiles.pprof.scrapeInterval | string | `"15s"` | How frequently to collect profiles. |
+| profiles.pprof.scrapeTimeout | string | `"18s"` | Timeout for collecting profiles. Must be larger than the scrape interval. |
 | profiles.pprof.types | list | `["memory","cpu","goroutine","block","mutex","fgprof"]` | Profile types to gather |
 
 ### Deployment: [Prometheus Node Exporter](https://github.com/prometheus-community/helm-charts/tree/main/charts/prometheus-node-exporter)
