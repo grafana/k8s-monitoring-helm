@@ -94,6 +94,12 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | processors.batch.size | int | `8192` | Number of spans, metric data points, or log records after which a batch will be sent regardless of the timeout. This setting acts as a trigger and does not affect the size of the batch. If you need to enforce batch size limit, use `maxSize`. |
 | processors.batch.timeout | string | `"2s"` | How long before sending (Processors) |
 
+### Processors: Filter
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| processors.filter.errorMode | string | `"ignore"` | How to react to errors if they occur while processing a statement. Valid options are "ignore", "silent", and "propagate". |
+
 ### Processors: Interval
 
 | Key | Type | Default | Description |
@@ -131,6 +137,12 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | processors.resourceDetection.system.enabled | bool | `true` | Enable getting resource attributes from the host machine. |
 | processors.resourceDetection.system.hostnameSources | list | `["os"]` | The priority list of sources from which the hostname will be determined. Options: ["dns", "os", "cname", "lookup"]. |
 | processors.resourceDetection.system.resourceAttributes | object | `{}` | The list of resource attributes to add for system resource detection. See the [Alloy documentation](https://grafana.com/docs/alloy/latest/reference/components/otelcol/otelcol.processor.resourcedetection/#system--resource_attributes) for a list of available attributes. |
+
+### Processors: Transform
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| processors.transform.errorMode | string | `"ignore"` | How to react to errors if they occur while processing a statement. Valid options are "ignore", "silent", and "propagate". |
 
 ### Receivers: Jaeger
 
