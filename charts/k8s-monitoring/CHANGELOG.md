@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+*   Add the ability to set error mode for filter and transform processors (@petewall)
+
 ## 3.2.5
 
 *   Bump kube-state-metrics to 6.1.4 (@petewall)
