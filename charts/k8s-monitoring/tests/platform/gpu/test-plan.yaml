@@ -18,6 +18,7 @@ cluster:
 
 dependencies:
   - file: nvidia-gpu-operator.yaml
+  - file: cuda-vectoradd.yaml
   - preset: test-parameters
     namespace: toolbox
   - file: grafana-cloud-credentials.yaml
@@ -30,34 +31,23 @@ tests:
             PROMETHEUS_URL: https://prometheus-prod-13-prod-us-east-0.grafana.net/api/prom/api/v1/query
           envFrom:
             - secretRef: {name: grafana-cloud-credentials}
-            - configMapRef: {name: test-variables}
+            - configMapRef: {name: test-parameters}
           queries:
             # Features
-            - query: grafana_kubernetes_monitoring_build_info{cluster="$CLUSTER"}
+            - query: grafana_kubernetes_monitoring_build_info{cluster="$clusterName"}
               type: promql
-            - query: grafana_kubernetes_monitoring_feature_info{cluster="$CLUSTER", feature="clusterMetrics"}
-              type: promql
-            - query: grafana_kubernetes_monitoring_feature_info{cluster="$CLUSTER", feature="clusterEvents"}
-              type: promql
-            - query: grafana_kubernetes_monitoring_feature_info{cluster="$CLUSTER", feature="podLogs", method="volumes"}
+            - query: grafana_kubernetes_monitoring_feature_info{cluster="$clusterName", feature="integrations", sources="dcgm-exporter"}
               type: promql
 
-            # Cluster metrics
-            - query: kubernetes_build_info{cluster="$CLUSTER", job="integrations/kubernetes/kubelet"}
+            # DCGM metrics
+            - query: DCGM_FI_DEV_GPU_TEMP{cluster="$clusterName", job="integrations/dcgm-exporter", modelName="Tesla T4"}
               type: promql
-            - query: node_cpu_usage_seconds_total{cluster="$CLUSTER", job="integrations/kubernetes/resources"}
-              type: promql
-            - query: machine_memory_bytes{cluster="$CLUSTER", job="integrations/kubernetes/cadvisor"}
-              type: promql
-            - query: kube_node_info{cluster="$CLUSTER", job="integrations/kubernetes/kube-state-metrics"}
-              type: promql
-
-            # Alloy metrics
-            - query: alloy_build_info{cluster="$CLUSTER", app="alloy-metrics"}
-              type: promql
+              expect:
+                value: 0
+                operator: "<"
 
             # DPM check
-            - query: avg(count_over_time(scrape_samples_scraped{cluster="$CLUSTER"}[1m]))
+            - query: avg(count_over_time(scrape_samples_scraped{cluster="$clusterName"}[1m]))
               type: promql
               expect:
                 value: 1
