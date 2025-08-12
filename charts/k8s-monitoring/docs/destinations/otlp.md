@@ -99,6 +99,7 @@ This defines the options for defining a destination for OpenTelemetry data that 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | processors.filters.enabled | bool | `false` | Enable the filter processor. Any rules that evaluate to true will drop the matching telemetry data. |
+| processors.filters.errorMode | string | `"ignore"` | How to react to errors if they occur while processing a statement. Valid options are "ignore", "silent", and "propagate". |
 | processors.filters.logs | object | `{"logRecord":[]}` | Log filters |
 | processors.filters.metrics | object | `{"datapoint":[],"metric":[]}` | Metric filters |
 | processors.filters.traces | object | `{"span":[],"spanevent":[]}` | Trace filters |
@@ -115,6 +116,7 @@ This defines the options for defining a destination for OpenTelemetry data that 
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
+| processors.transform.errorMode | string | `"ignore"` | How to react to errors if they occur while processing a statement. Valid options are "ignore", "silent", and "propagate". |
 | processors.transform.logs.log | list | `[]` | Log transforms |
 | processors.transform.logs.logToResource | object | `{"container":"k8s.container.name","cronjob":"k8s.cronjob.name","daemonset":"k8s.daemonset.name","deployment":"k8s.deployment.name","deployment_environment":"deployment.environment","deployment_environment_name":"deployment.environment.name","job_name":"k8s.job.name","namespace":"k8s.namespace.name","pod":"k8s.pod.name","replicaset":"k8s.replicaset.name","service_name":"service.name","service_namespace":"service.namespace","statefulset":"k8s.statefulset.name"}` | Promote certain log attributes to resource attributes. This is helpful for translating log data from Loki sources to OTLP format. Format: `{ <log attribute name>: <resource attribute name> }`. Will not copy if the resource attribute already exists. |
 | processors.transform.logs.resource | list | `[]` | Log resource transforms |
