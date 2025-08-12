@@ -1,0 +1,74 @@
+suite: Test operator readiness hook functionality
+templates:
+  - templates/hooks/wait-for-operator.yaml
+tests:
+  - it: should create hook when operator is deployed and readiness is enabled
+    set:
+      alloy-operator:
+        deploy: true
+        waitForReadiness: true
+      clusterMetrics:
+        enabled: true
+      destinations:
+        - name: prometheus
+          type: prometheus
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: Job
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-k8s-monitoring-wait-alloy-operator
+      - equal:
+          path: metadata.annotations["helm.sh/hook"]
+          value: pre-install,pre-upgrade
+      - equal:
+          path: metadata.annotations["helm.sh/hook-weight"]
+          value: "5"
+      - equal:
+          path: spec.template.spec.containers[0].name
+          value: wait-for-operator
+      - matchRegex:
+          path: spec.template.spec.containers[0].command[2]
+          pattern: "kubectl wait.*alloy-operator.*--timeout=300s"
+
+  - it: should not create hook when operator is not deployed
+    set:
+      alloy-operator:
+        deploy: false
+        waitForReadiness: true
+      clusterMetrics:
+        enabled: true
+      destinations:
+        - name: prometheus
+          type: prometheus
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should not create hook when readiness wait is disabled
+    set:
+      alloy-operator:
+        deploy: true
+        waitForReadiness: false
+      clusterMetrics:
+        enabled: true
+      destinations:
+        - name: prometheus
+          type: prometheus
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should not create hook when no Alloy features are enabled
+    set:
+      alloy-operator:
+        deploy: true
+        waitForReadiness: true
+      destinations:
+        - name: prometheus
+          type: prometheus
+    asserts:
+      - hasDocuments:
+          count: 0

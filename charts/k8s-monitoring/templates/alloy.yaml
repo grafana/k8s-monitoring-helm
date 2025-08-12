@@ -15,5 +15,9 @@ kind: Alloy
 metadata:
   name: {{ include "collector.alloy.fullname" $values }}
   namespace: {{ $.Release.Namespace }}
+  {{- if and (get $.Values "alloy-operator").deploy (get $.Values "alloy-operator").waitForReadiness }}
+  annotations:
+    "helm.sh/hook-weight": "10"
+  {{- end }}
 spec: {{ $cleanValues | toYaml | nindent 2 }}
 {{- end }}

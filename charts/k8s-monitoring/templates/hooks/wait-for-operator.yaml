@@ -1,0 +1,49 @@
+{{- if and (get .Values "alloy-operator").deploy (get .Values "alloy-operator").waitForReadiness }}
+{{- if or (.Values.clusterMetrics.enabled) (.Values.clusterEvents.enabled) (.Values.nodeLogs.enabled) (.Values.podLogs.enabled) (.Values.profiling.enabled) (.Values.applicationObservability.enabled) (.Values.profilesReceiver.enabled) }}
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "helper.fullname" . }}-wait-alloy-operator
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: {{ include "helper.fullname" . }}
+    helm.sh/chart: {{ include "helper.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Values.managedBy | default .Release.Service }}
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-weight": "5"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  ttlSecondsAfterFinished: 300
+  backoffLimit: 3
+  template:
+    metadata:
+      name: {{ include "helper.fullname" . }}-wait-alloy-operator
+      labels:
+        app.kubernetes.io/name: {{ include "helper.fullname" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: wait-for-operator
+        image: bitnami/kubectl:latest
+        command: 
+        - /bin/bash
+        - -c
+        - |
+          echo "Waiting for Alloy Operator to be ready..."
+          kubectl wait --for=condition=available deployment/{{ include "helper.fullname" . }}-alloy-operator \
+            --namespace={{ .Release.Namespace }} \
+            --timeout=300s
+          
+          # Additional check to ensure operator is fully functional
+          echo "Verifying Alloy Operator pod is running..."
+          kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=alloy-operator \
+            --namespace={{ .Release.Namespace }} \
+            --timeout=120s
+          
+          echo "Alloy Operator is ready!"
+{{- end }}
+{{- end }}
