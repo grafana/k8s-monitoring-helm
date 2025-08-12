@@ -133,7 +133,8 @@ otelcol.processor.attributes {{ include "helper.alloy_name" .name | quote }} {
 }
 
 otelcol.processor.transform {{ include "helper.alloy_name" .name | quote }} {
-  error_mode = "ignore"
+  error_mode = {{ .processors.transform.errorMode | quote }}
+
 {{- if ne .metrics.enabled false }}
   metric_statements {
     context = "resource"
@@ -277,6 +278,8 @@ otelcol.processor.transform {{ include "helper.alloy_name" .name | quote }} {
 }
 
 otelcol.processor.filter {{ include "helper.alloy_name" .name | quote }} {
+  error_mode = {{ .processors.filters.errorMode | quote }}
+
 {{- if and .metrics.enabled (or .processors.filters.metrics.metric .processors.filters.metrics.datapoint) }}
   metrics {
 {{- if .processors.filters.metrics.metric }}

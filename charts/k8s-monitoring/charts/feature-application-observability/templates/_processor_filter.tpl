@@ -14,6 +14,8 @@ false
 {{- define "feature.applicationObservability.processor.filter.alloy.target" }}otelcol.processor.filter.{{ .name | default "default" }}.input{{ end }}
 {{- define "feature.applicationObservability.processor.filter.alloy" }}
 otelcol.processor.filter "{{ .name | default "default" }}" {
+  error_mode = {{ .Values.processors.filter.errorMode | quote }}
+
 {{- if and .Values.metrics.enabled (or .Values.metrics.filters.metric .Values.metrics.filters.datapoint) }}
   metrics {
 {{- if .Values.metrics.filters.metric }}
