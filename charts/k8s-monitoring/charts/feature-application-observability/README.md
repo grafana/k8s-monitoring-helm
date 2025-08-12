@@ -85,6 +85,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | connectors.spanMetrics.histogram.type | string | `"explicit"` | Type of histograms to create. Must be either "explicit" or "exponential". |
 | connectors.spanMetrics.histogram.unit | string | `"ms"` | The histogram unit. |
 | connectors.spanMetrics.namespace | string | `"traces.span.metrics"` | The Metric namespace. |
+| connectors.spanMetrics.skipBeyla | bool | `true` | Skip Beyla traces when `span.metrics.skip` resource attribute is present. |
 
 ### Processors: Batch
 
