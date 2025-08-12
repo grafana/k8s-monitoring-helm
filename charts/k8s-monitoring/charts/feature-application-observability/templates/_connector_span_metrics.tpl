@@ -7,7 +7,7 @@ otelcol.processor.filter "span_metrics_prefilter" {
 {{- if .Values.connectors.spanMetrics.skipBeyla }}
   traces {
     span = [
-      'resource.attributes["span.metrics.skip"] != nil',
+      `resource.attributes["span.metrics.skip"] != nil`,
     ]
   }
 {{- end }}
