@@ -1,0 +1,54 @@
+---
+apiVersion: helm-chart-toolbox.grafana.com/v1
+kind: TestPlan
+name: gpu
+
+subject:
+  releaseName: k8smon
+  path: ../../..
+  valuesFile: values.yaml
+  set:
+    - key: "cluster.name"
+      valueFrom: clusterName
+
+cluster:
+  type: eks
+  configFile: eks-cluster-config.yaml
+  appendRandomNumber: true
+
+dependencies:
+  - file: nvidia-gpu-operator.yaml
+  - file: cuda-vectoradd.yaml
+  - preset: test-parameters
+    namespace: toolbox
+  - file: grafana-cloud-credentials.yaml
+
+tests:
+  - type: query-test
+    values:
+      tests:
+        - env:
+            PROMETHEUS_URL: https://prometheus-prod-13-prod-us-east-0.grafana.net/api/prom/api/v1/query
+          envFrom:
+            - secretRef: {name: grafana-cloud-credentials}
+            - configMapRef: {name: test-parameters}
+          queries:
+            # Features
+            - query: grafana_kubernetes_monitoring_build_info{cluster="$clusterName"}
+              type: promql
+            - query: grafana_kubernetes_monitoring_feature_info{cluster="$clusterName", feature="integrations", sources="dcgm-exporter"}
+              type: promql
+
+            # DCGM metrics
+            - query: DCGM_FI_DEV_GPU_TEMP{cluster="$clusterName", job="integrations/dcgm-exporter", modelName="Tesla T4"}
+              type: promql
+              expect:
+                value: 0
+                operator: "<"
+
+            # DPM check
+            - query: avg(count_over_time(scrape_samples_scraped{cluster="$clusterName"}[1m]))
+              type: promql
+              expect:
+                value: 1
+                operator: ==
