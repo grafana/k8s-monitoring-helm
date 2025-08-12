@@ -2,6 +2,33 @@
 
 ## Unreleased
 
+## 3.2.5
+
+*   Bump kube-state-metrics to 6.1.4 (@petewall)
+*   Allow for destination and remoteconfig usernames to be numbers (@petewall)
+
+## 3.2.4
+
+*   Bump beyla, alloy, alloy operator, ksm, prom-operator crds (@petewall)
+
+## 3.2.3
+
+*   Include collector.id in span metrics transform (@rlankfo)
+*   Update annotation handling for profilng targets. (@petewall)
+*   Bump Windows Exporter to 0.12.1 (@petewall)
+*   crd-validation: 🐛 remove bad double quote in crd validation (@jmapro)
+
+## 3.2.2
+
+*   Bump Alloy Operator to 0.3.7 (@petewall)
+*   Improve how integration logs and metrics are enabled so they can be properly disabled (@petewall)
+
+## 3.2.1
+
+*   Try a new method for ensuring that there is a newline at the end of the prom file (@petewall)
+*   Remove check to prevent deploying if /var/log or /var/lib/docker/containers are set when they may not be needed. (@petewall)
+*   Bump Node Exporter to 4.47.3 (@petewall)
+
 ## 3.2.0
 
 *   Prevent Node Exporter from even generating metrics about ramfs and tmpfs (@petewall)
