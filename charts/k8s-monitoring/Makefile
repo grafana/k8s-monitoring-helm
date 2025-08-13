@@ -91,7 +91,7 @@ Chart.lock: Chart.yaml
 	@touch Chart.lock # Ensure the timestamp is updated
 
 values.schema.json: values.yaml $(COLLECTOR_SCHEMA_FILES) $(DESTINATION_SCHEMA_FILES) $(SCHEMA_MODS_JSON_FILES) $(SCHEMA_MODS_JQ_FILES) schema-mods/destination.json
-	../../scripts/schema-gen.sh .
+	docker run --rm --platform linux/amd64 --volume $(shell pwd):/chart ghcr.io/grafana/helm-chart-toolbox-schema-generator --chart /chart > $@
 
 README.md: README.md.gotmpl values.yaml Chart.yaml
 	docker run --rm --platform linux/amd64 --volume $(shell pwd):/chart ghcr.io/grafana/helm-chart-toolbox-doc-generator --chart /chart > $@
@@ -266,5 +266,5 @@ else
 endif
 	set -e && \
 	for chart in $(FEATURE_CHARTS); do \
-		make -C charts/$$chart update-test-snapshots; \
+		make -C $$chart update-test-snapshots; \
 	done
