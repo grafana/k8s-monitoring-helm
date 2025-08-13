@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 3.2.6
+
 *   Add the ability to set error mode for filter and transform processors (@petewall)
 *   Skip beyla generated traces in span metrics (@rlankfo)
 *   Upgrade beyla helm chart to 1.9.2 in auto-instrumentation feature chart (@rlankfo)
