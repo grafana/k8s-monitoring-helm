@@ -255,12 +255,6 @@ details:
 |-----|------|---------|-------------|
 | alloy-singleton.enabled | bool | `false` | Deploy the Alloy instance for data sources required to be deployed on a single replica. |
 
-### Collectors - Alloy Template
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| alloyTemplate | object | `{}` | Settings to apply to all Alloy instances created by this Helm chart. This includes Alloy instances created by enabling Tail Sampling or Service Graph Metrics. |
-
 ### Features - Annotation Autodiscovery
 
 | Key | Type | Default | Description |
@@ -307,6 +301,12 @@ details:
 | clusterMetrics | object | Disabled | Cluster Monitoring enables observability and monitoring for your Kubernetes Cluster itself. Requires a destination that supports metrics. To see the valid options, please see the [Cluster Monitoring feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-cluster-metrics). |
 | clusterMetrics.destinations | list | `[]` | The destinations where cluster metrics will be sent. If empty, all metrics-capable destinations will be used. |
 | clusterMetrics.enabled | bool | `false` | Enable gathering Kubernetes Cluster metrics. |
+
+### Collectors - Common
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| collectorCommon.alloy | object | `{}` | Settings to apply to all Alloy instances created by this Helm chart. This includes Alloy instances created by enabling Tail Sampling or Service Graph Metrics. |
 
 ### Destinations
 

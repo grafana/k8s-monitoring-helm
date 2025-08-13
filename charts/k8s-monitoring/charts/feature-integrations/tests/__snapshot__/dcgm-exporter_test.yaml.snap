@@ -18,12 +18,12 @@ should create the DCGM Exporter config:
           }
 
           argument "label_selectors" {
-            comment = "The label selectors to use to find matching targets (default: [\"app.kubernetes.io/name=alloy\"])"
+            comment = "The label selectors to use to find matching targets (default: [\"app=nvidia-dcgm-exporter\"])"
             optional = true
           }
 
           argument "port_name" {
-            comment = "The of the port to scrape metrics from (default: http-metrics)"
+            comment = "The of the port to scrape metrics from (default: metrics)"
             optional = true
           }
 
@@ -34,7 +34,7 @@ should create the DCGM Exporter config:
             selectors {
               role = "pod"
               field = string.join(coalesce(argument.field_selectors.value, []), ",")
-              label = string.join(coalesce(argument.label_selectors.value, ["app=dcgm-exporter"]), ",")
+              label = string.join(coalesce(argument.label_selectors.value, ["app=nvidia-dcgm-exporter"]), ",")
             }
 
             namespaces {
@@ -149,7 +149,7 @@ should create the DCGM Exporter config:
           }
 
           argument "job_label" {
-            comment = "The job label to add for all Alloy metrics (default: integrations/alloy)"
+            comment = "The job label to add for all Alloy metrics (default: integrations/dcgm-exporter)"
             optional = true
           }
 
@@ -276,7 +276,7 @@ should create the DCGM Exporter config:
         }
 
         dcgm_exporter_integration_discovery "dcgm_exporter" {
-          port_name = "http-metrics"
+          port_name = "metrics"
           label_selectors = ["app=dcgm-exporter"]
         }
 

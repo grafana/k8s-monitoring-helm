@@ -106,8 +106,8 @@ app.kubernetes.io/instance: {{ include "collector.alloy.fullname" . }}
 {{- range $fileName, $_ := $.Files.Glob (printf "collectors/named-defaults/%s.yaml" .collectorName) }}
   {{- $namedDefaultValues = ($.Files.Get $fileName | fromYaml) }}
 {{- end }}
-{{- /* Settings in values.yaml for the Alloy template (affects all instances) */}}
-{{- $defaultTemplateValues := $.Values.alloyTemplate }}
+{{- /* Settings in values.yaml for all Alloy instances */}}
+{{- $userCommonValues := $.Values.collectorCommon.alloy }}
 {{- /* Copying the this chart's global values to the Alloy instances global values */}}
 {{- $globalValues := include "collector.alloy.values.global" . | fromYaml }}
 {{- /* Settings in values.yaml for the named instance */}}
@@ -115,7 +115,7 @@ app.kubernetes.io/instance: {{ include "collector.alloy.fullname" . }}
 {{- if not $.collectorValues }}
   {{- $userValues = (index $.Values .collectorName) }}
 {{- end }}
-{{ mergeOverwrite $upstreamValues $defaultValues $namedDefaultValues $globalValues $defaultTemplateValues $userValues | toYaml }}
+{{ mergeOverwrite $upstreamValues $defaultValues $namedDefaultValues $globalValues $userCommonValues $userValues | toYaml }}
 {{- end }}
 
 {{- define "collector.alloy.valuesToSpec" }}
