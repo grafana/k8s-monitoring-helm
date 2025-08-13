@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+*   Allow passing destinations as a map (@thandleman-r7)
+*   Allow for modifying alloy settings in one place. (@petewall)
+*   add span attribute support for skip metrics generation (@mbaykara)
+
 ## 3.2.6
 
 *   Add the ability to set error mode for filter and transform processors (@petewall)
