@@ -111,14 +111,14 @@ alloy-receiver:
 
 collectorCommon:
   alloy:
+    image:
+      registry: my.registry.com
+      repository: grafana/alloy
+      pullSecrets:
+        - name: my-registry-creds
+    configReloader:
       image:
         registry: my.registry.com
-        repository: grafana/alloy
-        pullSecrets:
-          - name: my-registry-creds
-      configReloader:
-        image:
-          registry: my.registry.com
-          repository: prometheus-operator/prometheus-config-reloader
+        repository: prometheus-operator/prometheus-config-reloader
 ```
 <!-- textlint-enable terminology -->
