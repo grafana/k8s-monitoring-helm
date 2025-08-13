@@ -2,18 +2,12 @@
 {{- include "crdValidation" $ }}
 {{- $values := (deepCopy $ | merge (dict "collectorName" $collectorName)) }}
 {{- $alloyValues := (include "collector.alloy.values" $values | fromYaml) | merge (dict "nameOverride" $collectorName) }}
-{{- $fieldsToExclude := include "collector.alloy.extraFields" . | fromYamlArray }}
-{{- $cleanValues := dict }}
-{{- range $key, $val := $alloyValues }}
-  {{- if not (has $key $fieldsToExclude) }}
-    {{- $_ := set $cleanValues $key $val }}
-  {{- end }}
-{{- end }}
+{{- $alloySpec := include "collector.alloy.valuesToSpec" $alloyValues }}
 ---
 apiVersion: collectors.grafana.com/v1alpha1
 kind: Alloy
 metadata:
   name: {{ include "collector.alloy.fullname" $values }}
   namespace: {{ $.Release.Namespace }}
-spec: {{ $cleanValues | toYaml | nindent 2 }}
+spec:{{ $alloySpec | trim | nindent 2 }}
 {{- end }}
