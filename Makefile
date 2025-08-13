@@ -103,7 +103,7 @@ lint-yaml: ## Lint yaml files
 
 .PHONY: lint-alex
 lint-alex: node_modules/.bin/alex ## Check for insensitive language
-	@node_modules/.bin/alex $(shell find . -type f -name "*.md" ! -path "./node_modules/*" ! -path "./data-alloy/*" ! -path "./CODE_OF_CONDUCT.md")
+	@node_modules/.bin/alex $(shell find . -type f -name "*.md" ! -path "./node_modules/*" ! -path "./data-alloy/*" ! -path "./CODE_OF_CONDUCT.md" ! -name "CHANGELOG.md")
 
 .PHONY: lint-misspell
 ALL_FILES_FOR_SPELLCHECK = $(shell find . -type f -not \( -path "./node_modules/*" -o -path "./data-alloy/*" -o -path "./.git/*" -o -name output.yaml -o -name .textlintrc \) )

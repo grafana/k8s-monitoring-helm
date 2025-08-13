@@ -1,0 +1,26 @@
+---
+cluster:
+  name: gpu-test
+
+destinations:
+  - name: grafana-cloud-metrics
+    type: prometheus
+    url: https://prometheus-prod-13-prod-us-east-0.grafana.net/api/prom/push
+    auth:
+      type: basic
+      usernameKey: PROMETHEUS_USER
+      passwordKey: PROMETHEUS_PASS
+    secret:
+      create: false
+      name: grafana-cloud-credentials
+      namespace: default
+
+integrations:
+  dcgm-exporter:
+    instances:
+      - name: dcgm-exporter
+        labelSelectors:
+          app: nvidia-dcgm-exporter
+
+alloy-metrics:
+  enabled: true

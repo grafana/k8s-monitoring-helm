@@ -3,7 +3,7 @@
 {{- define "feature.applicationObservability.processor.transform.alloy.target" }}otelcol.processor.transform.{{ .name | default "default" }}.input{{ end }}
 {{- define "feature.applicationObservability.processor.transform.alloy" }}
 otelcol.processor.transform "{{ .name | default "default" }}" {
-  error_mode = "ignore"
+  error_mode = {{ .Values.processors.transform.errorMode | quote }}
 
 {{- if .Values.metrics.enabled }}
 {{- if .Values.metrics.transforms.resource }}

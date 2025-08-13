@@ -19,18 +19,17 @@ This file shows the inclusion and instantiation of the Helm provider.
 
 ```terraform
 terraform {
+  required_version = ">= 1.0"
   required_providers {
     helm = {
       source  = "hashicorp/helm"
-      version = "2.12.1"
+      version = "3.0.2"
     }
   }
 }
 provider "helm" {
-  kubernetes {
-    # Replace this with values that provide connection to your cluster
-    config_path    = "~/.kube/config"
-    config_context = "my-cluster-context"
+  kubernetes = {
+    config_path = "kubeconfig.yaml"
   }
 }
 ```
@@ -42,76 +41,40 @@ This file defines how to deploy the Helm chart as well as how to translate the T
 ```terraform
 resource "helm_release" "grafana-k8s-monitoring" {
   name             = "grafana-k8s-monitoring"
-  repository       = "https://grafana.github.io/helm-charts"
-  chart            = "k8s-monitoring"
+  chart            = "../../../../../k8s-monitoring"
   namespace        = var.namespace
   create_namespace = true
   atomic           = true
 
-  set {
-    name  = "cluster.name"
-    value = var.cluster-name
-  }
+  values = [file("values.yaml")]
 
-  set {
-    name  = "externalServices.prometheus.host"
-    value = var.prometheus-url
-  }
-
-  set {
-    name  = "externalServices.prometheus.basicAuth.username"
-    value = var.prometheus-username
-  }
-
-  set {
-    name  = "externalServices.prometheus.basicAuth.password"
-    value = var.prometheus-password
-  }
-
-  set {
-    name  = "externalServices.loki.host"
-    value = var.loki-url
-  }
-
-  set {
-    name  = "externalServices.loki.basicAuth.username"
-    value = var.loki-username
-  }
-
-  set {
-    name  = "externalServices.loki.basicAuth.password"
-    value = var.loki-password
-  }
-
-  set {
-    name  = "externalServices.tempo.host"
-    value = var.tempo-url
-  }
-
-  set {
-    name  = "externalServices.tempo.basicAuth.username"
-    value = var.tempo-username
-  }
-
-  set {
-    name  = "externalServices.tempo.basicAuth.password"
-    value = var.tempo-password
-  }
-
-  set {
-    name  = "traces.enabled"
-    value = true
-  }
-
-  set {
-    name  = "opencost.opencost.exporter.defaultClusterId"
-    value = var.cluster-name
-  }
-
-  set {
-    name  = "opencost.opencost.prometheus.external.url"
-    value = "${var.prometheus-url}/api/prom"
-  }
+  set = [
+    {
+      name  = "cluster.name"
+      value = var.cluster-name
+    }, {
+      name  = "destinations[0].url"
+      value = var.prometheus-url
+    }, {
+      name  = "destinations[0].auth.username"
+      value = var.prometheus-username
+    }, {
+      name  = "destinations[0].auth.password"
+      value = var.prometheus-password
+    }, {
+      name  = "destinations[1].url"
+      value = var.loki-url
+    }, {
+      name  = "destinations[1].auth.username"
+      value = var.loki-username
+    }, {
+      name  = "destinations[1].auth.password"
+      value = var.loki-password
+    }, {
+      name  = "destinations[1].tenantId"
+      value = var.loki-tenantid
+    }
+  ]
 }
 ```
 
@@ -132,47 +95,37 @@ variable "cluster-name" {
 
 variable "prometheus-url" {
   type    = string
-  default = "https://prometheus.example.com"
+  default = "http://prometheus-server.prometheus.svc:9090/api/v1/write"
 }
 
 variable "prometheus-username" {
-  type    = number
-  default = 12345
+  type    = string
+  default = "promuser"
 }
 
 variable "prometheus-password" {
   type    = string
-  default = "It's a secret to everyone"
+  default = "prometheuspassword"
 }
 
 variable "loki-url" {
   type    = string
-  default = "https://loki.example.com"
+  default = "http://loki.loki.svc:3100/loki/api/v1/push"
 }
 
 variable "loki-username" {
-  type    = number
-  default = 12345
+  type    = string
+  default = "loki"
 }
 
 variable "loki-password" {
   type    = string
-  default = "It's a secret to everyone"
+  default = "lokipassword"
 }
 
-variable "tempo-url" {
+variable "loki-tenantid" {
   type    = string
-  default = "https://tempo.example.com"
-}
-
-variable "tempo-username" {
-  type    = number
-  default = 12345
-}
-
-variable "tempo-password" {
-  type    = string
-  default = "It's a secret to everyone"
+  default = "1"
 }
 ```
 
@@ -185,9 +138,9 @@ $ terraform init
 Initializing the backend...
 
 Initializing provider plugins...
-- Finding hashicorp/helm versions matching "2.12.1"...
-- Installing hashicorp/helm v2.12.1...
-- Installed hashicorp/helm v2.12.1 (signed by HashiCorp)
+- Finding hashicorp/helm versions matching "3.0.2"...
+- Installing hashicorp/helm v3.0.2...
+- Installed hashicorp/helm v3.0.2 (signed by HashiCorp)
 
 Terraform has created a lock file .terraform.lock.hcl to record the provider
 selections it made above. Include this file in your version control repository

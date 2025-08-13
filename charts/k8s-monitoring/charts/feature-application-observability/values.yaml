@@ -162,7 +162,6 @@ processors:
   #     resourceAttributes:
   #       host.name:
   #         enabled: true
-  # @section -- Processors: Resource Detection
   resourceDetection:
     # -- Configures whether existing resource attributes should be overridden or preserved.
     # @section -- Processors: Resource Detection
@@ -233,6 +232,22 @@ processors:
     # -- Maximum amount of memory targeted to be allocated by the process heap.
     # @section -- Processors: Memory Limiter
     limit: 0MiB
+
+  # Filter processor settings.
+  # To set individual filters, use `metrics.filters`, `logs.filters`, or `traces.filters`.
+  filter:
+    # -- How to react to errors if they occur while processing a statement. Valid options are "ignore", "silent", and
+    # "propagate".
+    # @section -- Processors: Filter
+    errorMode: ignore
+
+  # Transform processor settings.
+  # To set individual transforms, use `metrics.transforms`, `logs.transforms`, or `traces.transforms`.
+  transform:
+    # -- How to react to errors if they occur while processing a statement. Valid options are "ignore", "silent", and
+    # "propagate".
+    # @section -- Processors: Transform
+    errorMode: ignore
 
 # Connectors are components that create new telemetry data from existing telemetry data.
 connectors:
@@ -340,6 +355,10 @@ connectors:
         # -- Maximum number of buckets per positive or negative number range.
         # @section -- Connectors: Span Metrics
         maxSize: 160
+
+    # -- Skip Beyla traces when `span.metrics.skip` resource attribute is present.
+    # @section -- Connectors: Span Metrics
+    skipBeyla: true
 
 metrics:
   enabled: true

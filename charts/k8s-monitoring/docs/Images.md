@@ -1,12 +1,12 @@
 # Images
 
-The following is the list of images potentially used in the 3.2.5 version of the k8s-monitoring Helm chart:
+The following is the list of images potentially used in the 3.2.6 version of the k8s-monitoring Helm chart:
 
 | Image Name | Repository | Feature |
 | ---------- | ---------- | ------- |
 | Alloy | docker.io/grafana/alloy:v1.10.1 | Always used. The telemetry data collector. Enabled with `alloy-____.enabled=true`. Deployed via the Alloy Operator. |
 | Alloy Operator | ghcr.io/grafana/alloy-operator:1.2.1 | Always used. Deploys and manages Grafana Alloy collector instances. |
-| Beyla | docker.io/grafana/beyla:2.5.5 | Automatically instruments apps on the cluster, generating metrics and traces. Enabled with `autoInstrumentation.beyla.enabled=true`. |
+| Beyla | docker.io/grafana/beyla:2.5.6 | Automatically instruments apps on the cluster, generating metrics and traces. Enabled with `autoInstrumentation.beyla.enabled=true`. |
 | Config Reloader | quay.io/prometheus-operator/prometheus-config-reloader:v0.81.0 | Alloy sidecar that reloads the Alloy configuration upon changes. Enabled with `alloy-____.configReloader.enabled=true`. Deployed via the Alloy Operator. |
 | Kepler | quay.io/sustainable_computing_io/kepler:release-0.8.0 | Gathers energy metrics for Kubernetes objects. Enabled with `clusterMetrics.kepler.enabled=true`. |
 | kube-state-metrics | registry.k8s.io/kube-state-metrics/kube-state-metrics:v2.16.0 | Gathers Kubernetes cluster object metrics. Enabled with `clusterMetrics.kube-state-metrics.deploy=true`. |
