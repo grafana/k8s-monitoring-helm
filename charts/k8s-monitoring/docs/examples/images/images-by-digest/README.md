@@ -90,20 +90,18 @@ alloy-operator:
   image:
     digest: sha256:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef
 
-alloy-metrics:
-  enabled: true
-  image:
-    digest: sha256:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef
-  configReloader:
+collectorCommon:
+  alloy:
     image:
       digest: sha256:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef
+    configReloader:
+      image:
+        digest: sha256:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef
+
+alloy-metrics:
+  enabled: true
 
 alloy-receiver:
   enabled: true
-  image:
-    digest: sha256:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef
-  configReloader:
-    image:
-      digest: sha256:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef
 ```
 <!-- textlint-enable terminology -->

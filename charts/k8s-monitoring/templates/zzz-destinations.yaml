@@ -1,0 +1,10 @@
+{{- $destinations := .Values.destinations }}
+{{- $destinationMap := $.Values.destinationsMap }}
+
+{{- range $name, $destination := $destinationMap }}
+{{ $destination := mustMergeOverwrite (dict "name" $name) $destination }}
+{{ $destinations = append $destinations $destination }}
+{{- end }}
+
+{{- $_ := set $.Values "destinations" $destinations }}
+---

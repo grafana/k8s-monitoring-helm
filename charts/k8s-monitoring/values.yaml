@@ -35,6 +35,11 @@ global:
 # @section -- Destinations
 destinations: []
 
+# -- A map of destinations where telemetry data will be sent. Keys will be used as the destination name.
+# See the [destinations documentation](https://github.com/grafana/k8s-monitoring-helm/blob/main/charts/k8s-monitoring/docs/destinations/README.md) for more information.
+# @section -- Destinations
+destinationsMap: {}
+
 #
 # Features
 #
@@ -293,14 +298,14 @@ selfReporting:
 #
 
 # An Alloy instance for collecting metrics.
-# To see additional valid options, please see the [Alloy Helm chart documentation](https://github.com/grafana/alloy/tree/main/operations/helm/charts/alloy).
+# To see all valid settings, please see the [Alloy Collector documentation](https://github.com/grafana/k8s-monitoring-helm/blob/main/charts/k8s-monitoring/docs/collectors/alloy.md).
 alloy-metrics:
   # -- Deploy the Alloy instance for collecting metrics.
   # @section -- Collectors - Alloy Metrics
   enabled: false
 
 # An Alloy instance for data sources required to be deployed on a single replica.
-# To see additional valid options, please see the [Alloy Helm chart documentation](https://github.com/grafana/alloy/tree/main/operations/helm/charts/alloy).
+# To see all valid settings, please see the [Alloy Collector documentation](https://github.com/grafana/k8s-monitoring-helm/blob/main/charts/k8s-monitoring/docs/collectors/alloy.md).
 alloy-singleton:
   # -- Deploy the Alloy instance for data sources required to be deployed on a single replica.
   # @section -- Collectors - Alloy Singleton
@@ -308,14 +313,14 @@ alloy-singleton:
 
 
 # An Alloy instance for collecting log data.
-# To see additional valid options, please see the [Alloy Helm chart documentation](https://github.com/grafana/alloy/tree/main/operations/helm/charts/alloy).
+# To see all valid settings, please see the [Alloy Collector documentation](https://github.com/grafana/k8s-monitoring-helm/blob/main/charts/k8s-monitoring/docs/collectors/alloy.md).
 alloy-logs:
   # -- Deploy the Alloy instance for collecting log data.
   # @section -- Collectors - Alloy Logs
   enabled: false
 
 # An Alloy instance for opening receivers to collect application data.
-# To see additional valid options, please see the [Alloy Helm chart documentation](https://github.com/grafana/alloy/tree/main/operations/helm/charts/alloy).
+# To see all valid settings, please see the [Alloy Collector documentation](https://github.com/grafana/k8s-monitoring-helm/blob/main/charts/k8s-monitoring/docs/collectors/alloy.md).
 alloy-receiver:
   # -- Deploy the Alloy instance for opening receivers to collect application data.
   # @section -- Collectors - Alloy Receiver
@@ -339,13 +344,23 @@ alloy-receiver:
     fullname: ""
 
 # An Alloy instance for gathering profiles.
-# To see additional valid options, please see the [Alloy Helm chart documentation](https://github.com/grafana/alloy/tree/main/operations/helm/charts/alloy).
+# To see all valid settings, please see the [Alloy Collector documentation](https://github.com/grafana/k8s-monitoring-helm/blob/main/charts/k8s-monitoring/docs/collectors/alloy.md).
 alloy-profiles:
   # -- Deploy the Alloy instance for gathering profiles.
   # @section -- Collectors - Alloy Profiles
   enabled: false
 
+collectorCommon:
+  # -- Settings to apply to all Alloy instances created by this Helm chart. This includes Alloy instances created by
+  # enabling Tail Sampling or Service Graph Metrics.
+  # @section -- Collectors - Common
+  alloy: {}
+
+# The Alloy Operator is a Kubernetes Operator that manages Alloy instances and their lifecycle.
+# To see all valid settings, please see the [Alloy Operator documentation](https://github.com/grafana/alloy-operator/tree/main/charts/alloy-operator).
 alloy-operator:
+  # -- Deploy the Alloy Operator.
+  # @section -- Alloy Operator
   deploy: true
   # -- Wait for the Alloy Operator to be ready before creating Alloy resources.
   # This prevents timing issues where Alloy custom resources are created before the operator is ready to process them.
@@ -353,6 +368,7 @@ alloy-operator:
   waitForReadiness: true
 
 # -- Deploy additional manifest objects
+# @section -- Extra Objects
 extraObjects: []
 # - apiVersion: external-secrets.io/v1beta1
 #   kind: ExternalSecret

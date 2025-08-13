@@ -39,17 +39,6 @@ destinations:
         policies:
           - name: always_sample-policy
             type: always_sample
-        collector:
-          image:
-            registry: my.registry.com
-            repository: grafana/alloy
-            pullSecrets:
-              - name: my-registry-creds
-          configReloader:
-            image:
-              registry: my.registry.com
-              repository: prometheus-operator/prometheus-config-reloader
-
 
 clusterMetrics:
   enabled: true
@@ -116,26 +105,20 @@ alloy-operator:
 
 alloy-metrics:
   enabled: true
-  image:
-    registry: my.registry.com
-    repository: grafana/alloy
-    pullSecrets:
-      - name: my-registry-creds
-  configReloader:
-    image:
-      registry: my.registry.com
-      repository: prometheus-operator/prometheus-config-reloader
 
 alloy-receiver:
   enabled: true
-  image:
-    registry: my.registry.com
-    repository: grafana/alloy
-    pullSecrets:
-      - name: my-registry-creds
-  configReloader:
+
+collectorCommon:
+  alloy:
     image:
       registry: my.registry.com
-      repository: prometheus-operator/prometheus-config-reloader
+      repository: grafana/alloy
+      pullSecrets:
+        - name: my-registry-creds
+    configReloader:
+      image:
+        registry: my.registry.com
+        repository: prometheus-operator/prometheus-config-reloader
 ```
 <!-- textlint-enable terminology -->
