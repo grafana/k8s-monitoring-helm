@@ -9,8 +9,9 @@ kind: Alloy
 metadata:
   name: {{ include "collector.alloy.fullname" $values }}
   namespace: {{ $.Release.Namespace }}
-  {{- if and (get $.Values "alloy-operator").deploy (get $.Values "alloy-operator").waitForReadiness }}
+  {{- if and (index $.Values "alloy-operator").deploy (index $.Values "alloy-operator").waitForReadiness.enabled }}
   annotations:
+    "helm.sh/hook": post-install,post-upgrade
     "helm.sh/hook-weight": "10"
   {{- end }}
 spec:{{ $alloySpec | trim | nindent 2 }}

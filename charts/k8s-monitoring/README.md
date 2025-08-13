@@ -256,6 +256,8 @@ details:
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | alloy-operator.deploy | bool | `true` | Deploy the Alloy Operator. |
+| alloy-operator.waitForReadiness.enabled | bool | `true` | Wait for the Alloy Operator to be ready before creating Alloy resources. This prevents timing issues where Alloy custom resources are created before the operator is ready to process them. |
+| alloy-operator.waitForReadiness.image | object | `{"digest":"","registry":"ghcr.io","repository":"grafana/helm-chart-toolbox-kubectl","tag":"0.1.0"}` | The image to use for the wait-for-readiness job that ensures the Alloy Operator is ready. |
 
 ### Collectors - Alloy Profiles
 

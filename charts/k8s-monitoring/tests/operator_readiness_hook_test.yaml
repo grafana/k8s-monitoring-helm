@@ -6,38 +6,24 @@ tests:
     set:
       alloy-operator:
         deploy: true
-        waitForReadiness: true
-      clusterMetrics:
+        waitForReadiness:
+          enabled: true
+      alloy-metrics:
         enabled: true
-      destinations:
-        - name: prometheus
-          type: prometheus
+        extraConfig: ""
     asserts:
       - hasDocuments:
-          count: 1
-      - isKind:
-          of: Job
-      - equal:
-          path: metadata.name
-          value: RELEASE-NAME-k8s-monitoring-wait-alloy-operator
-      - equal:
-          path: metadata.annotations["helm.sh/hook"]
-          value: pre-install,pre-upgrade
-      - equal:
-          path: metadata.annotations["helm.sh/hook-weight"]
-          value: "5"
-      - equal:
-          path: spec.template.spec.containers[0].name
-          value: wait-for-operator
-      - matchRegex:
-          path: spec.template.spec.containers[0].command[2]
-          pattern: "kubectl wait.*alloy-operator.*--timeout=300s"
+          count: 4
+      - documentIndex: 0
+        matchSnapshot:
+          path: spec
 
   - it: should not create hook when operator is not deployed
     set:
       alloy-operator:
         deploy: false
-        waitForReadiness: true
+        waitForReadiness:
+          enabled: true
       clusterMetrics:
         enabled: true
       destinations:
@@ -51,21 +37,10 @@ tests:
     set:
       alloy-operator:
         deploy: true
-        waitForReadiness: false
+        waitForReadiness:
+          enabled: false
       clusterMetrics:
         enabled: true
-      destinations:
-        - name: prometheus
-          type: prometheus
-    asserts:
-      - hasDocuments:
-          count: 0
-
-  - it: should not create hook when no Alloy features are enabled
-    set:
-      alloy-operator:
-        deploy: true
-        waitForReadiness: true
       destinations:
         - name: prometheus
           type: prometheus

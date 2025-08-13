@@ -362,10 +362,21 @@ alloy-operator:
   # -- Deploy the Alloy Operator.
   # @section -- Alloy Operator
   deploy: true
-  # -- Wait for the Alloy Operator to be ready before creating Alloy resources.
-  # This prevents timing issues where Alloy custom resources are created before the operator is ready to process them.
-  # @section -- Collectors - Alloy Operator
-  waitForReadiness: true
+
+  # Controls a Helm Hook to delay the creation of Alloy resources until the Alloy Operator is ready.
+  waitForReadiness:
+    # -- Wait for the Alloy Operator to be ready before creating Alloy resources.
+    # This prevents timing issues where Alloy custom resources are created before the operator is ready to process them.
+    # @section -- Alloy Operator
+    enabled: true
+
+    # -- The image to use for the wait-for-readiness job that ensures the Alloy Operator is ready.
+    # @section -- Alloy Operator
+    image:
+      registry: ghcr.io
+      repository: grafana/helm-chart-toolbox-kubectl
+      tag: 0.1.0
+      digest: ""
 
 # -- Deploy additional manifest objects
 # @section -- Extra Objects

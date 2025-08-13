@@ -1,49 +1,103 @@
-{{- if and (get .Values "alloy-operator").deploy (get .Values "alloy-operator").waitForReadiness }}
-{{- if or (.Values.clusterMetrics.enabled) (.Values.clusterEvents.enabled) (.Values.nodeLogs.enabled) (.Values.podLogs.enabled) (.Values.profiling.enabled) (.Values.applicationObservability.enabled) (.Values.profilesReceiver.enabled) }}
+{{- if and (index .Values "alloy-operator").deploy (index .Values "alloy-operator").waitForReadiness.enabled }}
+{{- $jobName := (printf "%s-wait-alloy-operator" (include "helper.fullname" .)) | trunc 63 | trimSuffix "-" }}
 ---
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: {{ include "helper.fullname" . }}-wait-alloy-operator
+  name: {{ $jobName }}
   namespace: {{ .Release.Namespace }}
   labels:
-    app.kubernetes.io/name: {{ include "helper.fullname" . }}
-    helm.sh/chart: {{ include "helper.chart" . }}
+    app.kubernetes.io/name: {{ $jobName }}
     app.kubernetes.io/instance: {{ .Release.Name }}
-    app.kubernetes.io/managed-by: {{ .Values.managedBy | default .Release.Service }}
+    helm.sh/chart: {{ include "helper.chart" . }}
   annotations:
-    "helm.sh/hook": pre-install,pre-upgrade
-    "helm.sh/hook-weight": "5"
+    "helm.sh/hook": post-install,post-upgrade
     "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+    "helm.sh/hook-weight": "5"
 spec:
   ttlSecondsAfterFinished: 300
   backoffLimit: 3
   template:
     metadata:
-      name: {{ include "helper.fullname" . }}-wait-alloy-operator
+      name: {{ $jobName }}
       labels:
         app.kubernetes.io/name: {{ include "helper.fullname" . }}
         app.kubernetes.io/instance: {{ .Release.Name }}
     spec:
       restartPolicy: Never
+      serviceAccountName: {{ $jobName }}
       containers:
-      - name: wait-for-operator
-        image: bitnami/kubectl:latest
-        command: 
-        - /bin/bash
-        - -c
-        - |
-          echo "Waiting for Alloy Operator to be ready..."
-          kubectl wait --for=condition=available deployment/{{ include "helper.fullname" . }}-alloy-operator \
-            --namespace={{ .Release.Namespace }} \
-            --timeout=300s
-          
-          # Additional check to ensure operator is fully functional
-          echo "Verifying Alloy Operator pod is running..."
-          kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=alloy-operator \
-            --namespace={{ .Release.Namespace }} \
-            --timeout=120s
-          
-          echo "Alloy Operator is ready!"
-{{- end }}
+        - name: wait-for-operator
+          {{- with (index .Values "alloy-operator").waitForReadiness.image }}
+            {{- if .digest }}
+          image: "{{ dig "image" "registry" .registry $.Values.global }}/{{ .repository }}@{{ .digest }}"
+            {{- else }}
+          image: "{{ dig "image" "registry" .registry $.Values.global }}/{{ .repository }}:{{ .tag }}"
+            {{- end }}
+          {{- end }}
+          command:
+            - /bin/bash
+            - -ce
+            - |
+              echo "Waiting for Alloy Operator to be ready..."
+              kubectl wait \
+                --timeout=300s \
+                --namespace={{ .Release.Namespace }} \
+                --for=condition=available \
+                deployment/{{ include "alloy-operator.fullname" (index .Subcharts "alloy-operator") }}
+
+              echo "Verifying Alloy Operator pod is running..."
+              kubectl wait \
+                --timeout=120s \
+                --namespace={{ .Release.Namespace }} \
+                --for=condition=ready \
+                pod -l app.kubernetes.io/name=alloy-operator
+
+              sleep 30
+              echo "Alloy Operator is ready!"
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ $jobName }}
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+    "helm.sh/hook-weight": "5"
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ $jobName }}
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+    "helm.sh/hook-weight": "5"
+rules:
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ $jobName }}
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+    "helm.sh/hook-weight": "5"
+subjects:
+  - kind: ServiceAccount
+    name: {{ $jobName }}
+    namespace: {{ .Release.Namespace }}
+roleRef:
+  kind: Role
+  name: {{ $jobName }}
+  apiGroup: rbac.authorization.k8s.io
 {{- end }}
