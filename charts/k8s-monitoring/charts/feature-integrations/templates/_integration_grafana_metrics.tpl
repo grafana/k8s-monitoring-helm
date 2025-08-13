@@ -123,6 +123,16 @@ declare "grafana_integration" {
       optional = true
     }
 
+    argument "scrape_protocols" {
+      comment = "The scrape protocols to use for scraping metrics"
+      optional = true
+    }
+
+    argument "scrape_classic_histograms" {
+      comment = "Whether to scrape classic histograms (default: false)."
+      optional = true
+    }
+
     argument "max_cache_size" {
       comment = "The maximum number of elements to hold in the relabeling cache (default: 100000).  This should be at least 2x-5x your largest scrape target or samples appended rate."
       optional = true
@@ -138,6 +148,8 @@ declare "grafana_integration" {
       forward_to = [prometheus.relabel.grafana.receiver]
       targets = argument.targets.value
       scrape_interval = coalesce(argument.scrape_interval.value, "60s")
+      scrape_protocols = argument.scrape_protocols.value
+      scrape_classic_histograms = argument.scrape_classic_histograms.value
 
       clustering {
         enabled = coalesce(argument.clustering.value, false)
@@ -216,6 +228,8 @@ grafana_integration_scrape  {{ include "helper.alloy_name" .name | quote }} {
   drop_metrics = {{ $metricDenyList | join "|" | quote }}
 {{- end }}
   scrape_interval = {{ .scrapeInterval | default $.Values.global.scrapeInterval | quote }}
+  scrape_protocols = {{ $.Values.global.scrapeProcotols | toJson }}
+  scrape_classic_histograms = {{ $.Values.global.scrapeClassicHistograms }}
   max_cache_size = {{ .metrics.maxCacheSize | default $.Values.global.maxCacheSize | int }}
   forward_to = argument.metrics_destinations.value
 }

@@ -42,6 +42,8 @@ declare "annotation_autodiscovery" {
 {{- if .Values.bearerToken.enabled }}
     bearer_token_file = {{ .Values.bearerToken.token | quote }}
 {{- end }}
+    scrape_protocols = {{ .Values.global.scrapeProcotols | toJson }}
+    scrape_classic_histograms = {{ .Values.global.scrapeClassicHistograms }}
     clustering {
       enabled = true
     }
@@ -64,6 +66,8 @@ declare "annotation_autodiscovery" {
     tls_config {
       insecure_skip_verify = true
     }
+    scrape_protocols = {{ .Values.global.scrapeProcotols | toJson }}
+    scrape_classic_histograms = {{ .Values.global.scrapeClassicHistograms }}
     clustering {
       enabled = true
     }
@@ -135,5 +139,3 @@ declare "annotation_autodiscovery" {
   }
 }
 {{- end -}}
-
-{{- define "feature.annotationAutodiscovery.alloyModules" }}{{- end }}

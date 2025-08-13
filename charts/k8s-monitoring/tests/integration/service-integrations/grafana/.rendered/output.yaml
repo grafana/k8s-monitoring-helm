@@ -150,6 +150,8 @@ data:
         job_name = "integrations/kubernetes/kubelet"
         scheme   = "https"
         scrape_interval = "60s"
+        scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
+        scrape_classic_histograms = false
         bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
     
         tls_config {
@@ -190,6 +192,8 @@ data:
         job_name = "integrations/kubernetes/resources"
         scheme   = "https"
         scrape_interval = "60s"
+        scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
+        scrape_classic_histograms = false
         bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
     
         tls_config {
@@ -230,6 +234,8 @@ data:
         job_name = "integrations/kubernetes/cadvisor"
         scheme = "https"
         scrape_interval = "60s"
+        scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
+        scrape_classic_histograms = false
         bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
     
         tls_config {
@@ -356,6 +362,8 @@ data:
         targets = discovery.relabel.kube_state_metrics.output
         job_name = "integrations/kubernetes/kube-state-metrics"
         scrape_interval = "60s"
+        scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
+        scrape_classic_histograms = false
         scheme = "http"
         bearer_token_file = ""
         tls_config {
@@ -487,6 +495,8 @@ data:
         targets = discovery.relabel.node_exporter.output
         job_name = "integrations/node_exporter"
         scrape_interval = "60s"
+        scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
+        scrape_classic_histograms = false
         scheme = "http"
         bearer_token_file = ""
         tls_config {
@@ -540,6 +550,8 @@ data:
         job_name   = "integrations/windows-exporter"
         targets  = discovery.relabel.windows_exporter.output
         scrape_interval = "60s"
+        scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
+        scrape_classic_histograms = false
         clustering {
           enabled = true
         }
@@ -730,6 +742,16 @@ data:
           optional = true
         }
     
+        argument "scrape_protocols" {
+          comment = "The scrape protocols to use for scraping metrics"
+          optional = true
+        }
+    
+        argument "scrape_classic_histograms" {
+          comment = "Whether to scrape classic histograms (default: false)."
+          optional = true
+        }
+    
         argument "max_cache_size" {
           comment = "The maximum number of elements to hold in the relabeling cache (default: 100000).  This should be at least 2x-5x your largest scrape target or samples appended rate."
           optional = true
@@ -745,6 +767,8 @@ data:
           forward_to = [prometheus.relabel.grafana.receiver]
           targets = argument.targets.value
           scrape_interval = coalesce(argument.scrape_interval.value, "60s")
+          scrape_protocols = argument.scrape_protocols.value
+          scrape_classic_histograms = argument.scrape_classic_histograms.value
     
           clustering {
             enabled = coalesce(argument.clustering.value, false)
@@ -794,6 +818,8 @@ data:
         job_label = "integrations/grafana"
         clustering = true
         scrape_interval = "60s"
+        scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
+        scrape_classic_histograms = false
         max_cache_size = 100000
         forward_to = argument.metrics_destinations.value
       }
