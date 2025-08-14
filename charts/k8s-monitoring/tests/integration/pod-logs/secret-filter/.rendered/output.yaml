@@ -542,12 +542,120 @@ spec:
       nodeSelector:
         kubernetes.io/os: linux
 ---
+# Source: k8s-monitoring/templates/hooks/wait-for-operator.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: k8smon-k8s-monitoring-wait-alloy-operator
+  namespace: default
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+    "helm.sh/hook-weight": "5"
+---
+# Source: k8s-monitoring/templates/hooks/wait-for-operator.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: k8smon-k8s-monitoring-wait-alloy-operator
+  namespace: default
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+    "helm.sh/hook-weight": "5"
+rules:
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list", "watch"]
+---
+# Source: k8s-monitoring/templates/hooks/wait-for-operator.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: k8smon-k8s-monitoring-wait-alloy-operator
+  namespace: default
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+    "helm.sh/hook-weight": "5"
+subjects:
+  - kind: ServiceAccount
+    name: k8smon-k8s-monitoring-wait-alloy-operator
+    namespace: default
+roleRef:
+  kind: Role
+  name: k8smon-k8s-monitoring-wait-alloy-operator
+  apiGroup: rbac.authorization.k8s.io
+---
+# Source: k8s-monitoring/templates/hooks/wait-for-operator.yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: k8smon-k8s-monitoring-wait-alloy-operator
+  namespace: default
+  labels:
+    app.kubernetes.io/name: k8smon-k8s-monitoring-wait-alloy-operator
+    app.kubernetes.io/instance: k8smon
+    helm.sh/chart: k8s-monitoring-3.2.6
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+    "helm.sh/hook-weight": "5"
+spec:
+  ttlSecondsAfterFinished: 300
+  backoffLimit: 3
+  template:
+    metadata:
+      name: k8smon-k8s-monitoring-wait-alloy-operator
+      labels:
+        app.kubernetes.io/name: k8smon-k8s-monitoring
+        app.kubernetes.io/instance: k8smon
+        sidecar.istio.io/inject: "false"
+    spec:
+      restartPolicy: Never
+      serviceAccountName: k8smon-k8s-monitoring-wait-alloy-operator
+      containers:
+        - name: wait-for-operator
+          image: "ghcr.io/grafana/helm-chart-toolbox-kubectl:0.1.0"
+          command:
+            - /bin/bash
+            - -ce
+            - |
+              echo "Waiting for Alloy Operator to be ready..."
+              kubectl wait \
+                --timeout=300s \
+                --namespace=default \
+                --for=condition=available \
+                deployment/k8smon-alloy-operator
+
+              echo "Verifying Alloy Operator pod is running..."
+              kubectl wait \
+                --timeout=120s \
+                --namespace=default \
+                --for=condition=ready \
+                pod -l app.kubernetes.io/name=alloy-operator
+
+              echo "Alloy Operator is ready!"
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+            readOnlyRootFilesystem: true
+            seccompProfile:
+              type: RuntimeDefault
+---
 # Source: k8s-monitoring/templates/alloy.yaml
 apiVersion: collectors.grafana.com/v1alpha1
 kind: Alloy
 metadata:
   name: k8smon-alloy-logs
   namespace: default
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-weight": "10"
 spec:
   alloy:
     clustering:

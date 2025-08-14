@@ -89,6 +89,9 @@ applicationObservability:
 alloy-operator:
   image:
     digest: sha256:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef
+  waitForReadiness:
+    image:
+      digest: sha256:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef
 
 collectorCommon:
   alloy:

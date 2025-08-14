@@ -1,0 +1,50 @@
+---
+suite: Test operator readiness hook functionality
+templates:
+  - templates/hooks/wait-for-operator.yaml
+tests:
+  - it: should create hook when operator is deployed and readiness is enabled
+    set:
+      alloy-operator:
+        deploy: true
+        waitForReadiness:
+          enabled: true
+      alloy-metrics:
+        enabled: true
+        extraConfig: ""
+    asserts:
+      - hasDocuments:
+          count: 4
+      - documentIndex: 0
+        matchSnapshot:
+          path: spec
+
+  - it: should not create hook when operator is not deployed
+    set:
+      alloy-operator:
+        deploy: false
+        waitForReadiness:
+          enabled: true
+      clusterMetrics:
+        enabled: true
+      destinations:
+        - name: prometheus
+          type: prometheus
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should not create hook when readiness wait is disabled
+    set:
+      alloy-operator:
+        deploy: true
+        waitForReadiness:
+          enabled: false
+      clusterMetrics:
+        enabled: true
+      destinations:
+        - name: prometheus
+          type: prometheus
+    asserts:
+      - hasDocuments:
+          count: 0

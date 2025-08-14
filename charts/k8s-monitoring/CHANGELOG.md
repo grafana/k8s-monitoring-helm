@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+*   Fix timing issues where Alloy custom resources could be created before the Alloy Operator is ready to process them
+*   Add pre-install hook to wait for Alloy Operator readiness before creating Alloy resources
+*   Add `alloy-operator.waitForReadiness` configuration option to control the timing behavior
 *   Allow passing destinations as a map (@thandleman-r7)
 *   Allow for modifying alloy settings in one place. (@petewall)
 *   add span attribute support for skip metrics generation (@mbaykara)
