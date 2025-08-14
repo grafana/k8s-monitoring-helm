@@ -45,9 +45,9 @@ spec:
             type: promql
 
           # Cluster events
-          - query: count_over_time({cluster="$CLUSTER", job="integrations/kubernetes/eventhandler", source="eks-addon"}[1h])
+          - query: sum(count_over_time({cluster="$CLUSTER", job="integrations/kubernetes/eventhandler", source="eks-addon"}[1h]))
             type: logql
 
           # Pod logs
-          - query: count_over_time({cluster="$CLUSTER", job!~"integrations/kubernetes/eventhandler|integrations/kubernetes/journal", source="eks-addon"}[1h])
+          - query: sum(count_over_time({cluster="$CLUSTER", job!~"integrations/kubernetes/eventhandler|integrations/kubernetes/journal", source="eks-addon"}[1h]))
             type: logql

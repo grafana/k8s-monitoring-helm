@@ -68,15 +68,15 @@ tests:
               type: promql
 
             # Cluster events
-            - query: count_over_time({cluster="$clusterName", job="integrations/kubernetes/eventhandler"}[1h])
+            - query: sum(count_over_time({cluster="$clusterName", job="integrations/kubernetes/eventhandler"}[1h]))
               type: logql
 
             # Pod logs
             # Logs from the default namespace should be from the Fargate nodes
-            - query: count_over_time({cluster="$clusterName", namespace="default", job!~"integrations/kubernetes/eventhandler|integrations/kubernetes/journal"}[1h])
+            - query: sum(count_over_time({cluster="$clusterName", namespace="default", job!~"integrations/kubernetes/eventhandler|integrations/kubernetes/journal"}[1h]))
               type: logql
             # Logs from the other namespaces should be from traditional nodes
-            - query: count_over_time({cluster="$clusterName", namespace!="default", job!~"integrations/kubernetes/eventhandler|integrations/kubernetes/journal"}[1h])
+            - query: sum(count_over_time({cluster="$clusterName", namespace!="default", job!~"integrations/kubernetes/eventhandler|integrations/kubernetes/journal"}[1h]))
               type: logql
 
             # DPM check

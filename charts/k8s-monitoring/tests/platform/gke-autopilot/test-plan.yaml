@@ -63,11 +63,11 @@ tests:
               type: promql
 
             # Cluster events
-            - query: count_over_time({cluster="$clusterName", job="integrations/kubernetes/eventhandler", namespace="default"}[1h])
+            - query: sum(count_over_time({cluster="$clusterName", job="integrations/kubernetes/eventhandler", namespace="default"}[1h]))
               type: logql
 
             # Pod logs
-            - query: count_over_time({cluster="$clusterName", job!="integrations/kubernetes/eventhandler", namespace="default"}[1h])
+            - query: sum(count_over_time({cluster="$clusterName", job!="integrations/kubernetes/eventhandler", namespace="default"}[1h]))
               type: logql
 
             # DPM check

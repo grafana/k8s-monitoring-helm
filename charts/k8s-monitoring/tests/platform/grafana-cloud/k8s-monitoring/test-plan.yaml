@@ -68,27 +68,27 @@ tests:
               type: promql
 
             # Cluster events
-            - query: count_over_time({cluster="$clusterName", job="integrations/kubernetes/eventhandler"}[1h])
+            - query: sum(count_over_time({cluster="$clusterName", job="integrations/kubernetes/eventhandler"}[1h]))
               type: logql
 
             # Pod logs
-            - query: count_over_time({cluster="$clusterName", job!="integrations/kubernetes/eventhandler"}[1h])
+            - query: sum(count_over_time({cluster="$clusterName", job!="integrations/kubernetes/eventhandler"}[1h]))
               type: logql
 
             # Pod logs service_name label
-            - query: count_over_time({cluster="$clusterName", service_name!=""}[1h])
+            - query: sum(count_over_time({cluster="$clusterName", service_name!=""}[1h]))
               type: logql
 
             # Pod logs service_name label from resource.opentelemetry.io/service.name annotation
-            - query: count_over_time({cluster="$clusterName", service_name="hello-kubernetes-annotation"}[1h])
+            - query: sum(count_over_time({cluster="$clusterName", service_name="hello-kubernetes-annotation"}[1h]))
               type: logql
 
             # Pod logs service_name label from app.kubernetes.io/name label
-            - query: count_over_time({cluster="$clusterName", service_name="hello-kubernetes-label"}[1h])
+            - query: sum(count_over_time({cluster="$clusterName", service_name="hello-kubernetes-label"}[1h]))
               type: logql
 
             # Pod logs service_namespace label from resource.opentelemetry.io/service.namespace annotation
-            - query: count_over_time({cluster="$clusterName", service_namespace="hello-kubernetes"}[1h])
+            - query: sum(count_over_time({cluster="$clusterName", service_namespace="hello-kubernetes"}[1h]))
               type: logql
 
             # Pod logs service_instance_id structured metadata from resource.opentelemetry.io/service.instance annotation
@@ -100,12 +100,12 @@ tests:
               type: logql
 
             # Pod logs deployment_environment label from resource.opentelemetry.io/deployment.environment annotation
-            - query: count_over_time({cluster="$clusterName", deployment_environment="hello-kubernetes"}[1h])
+            - query: sum(count_over_time({cluster="$clusterName", deployment_environment="hello-kubernetes"}[1h]))
               type: logql
 
             # Pod logs deployment_environment_name label from resource.opentelemetry.io/deployment.environment.name
             # annotation
-            - query: count_over_time({cluster="$clusterName", deployment_environment_name="hello-kubernetes"}[1h])
+            - query: sum(count_over_time({cluster="$clusterName", deployment_environment_name="hello-kubernetes"}[1h]))
               type: logql
 
             # Alloy integration
