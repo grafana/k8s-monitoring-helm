@@ -9,6 +9,7 @@
 *   Allow passing destinations as a map (@thandleman-r7)
 *   Allow for modifying alloy settings in one place. (@petewall)
 *   add span attribute support for skip metrics generation (@mbaykara)
+*   Add kube_cronjob.* to kube-state-metrics default allow lest (@sleepyfoodie)
 
 ## 3.2.6
 
