@@ -256,6 +256,8 @@ details:
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | alloy-operator.deploy | bool | `true` | Deploy the Alloy Operator. |
+| alloy-operator.waitForAlloyRemoval.enabled | bool | `true` | Wait for all Alloy instances to be removed before uninstalling the Alloy Operator. This ensures that all Alloy instances are properly cleaned up before the operator is removed. |
+| alloy-operator.waitForAlloyRemoval.image | object | `{"digest":"","registry":"ghcr.io","repository":"grafana/helm-chart-toolbox-kubectl","tag":"0.1.0"}` | The image to use for the wait-for-readiness job that ensures the Alloy Operator is ready. |
 | alloy-operator.waitForReadiness.enabled | bool | `true` | Wait for the Alloy Operator to be ready before creating Alloy resources. This prevents timing issues where Alloy custom resources are created before the operator is ready to process them. |
 | alloy-operator.waitForReadiness.image | object | `{"digest":"","registry":"ghcr.io","repository":"grafana/helm-chart-toolbox-kubectl","tag":"0.1.0"}` | The image to use for the wait-for-readiness job that ensures the Alloy Operator is ready. |
 

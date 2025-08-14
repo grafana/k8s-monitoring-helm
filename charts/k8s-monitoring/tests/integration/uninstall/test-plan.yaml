@@ -1,0 +1,63 @@
+---
+apiVersion: helm-chart-toolbox.grafana.com/v1
+kind: TestPlan
+name: uninstall
+
+subject:
+  releaseName: k8smon
+  path: ../../..
+  chart: k8s-monitoring
+  valuesFile: values.yaml
+
+  uninstall: true
+
+cluster:
+  type: kind
+
+dependencies:
+  - preset: prometheus
+  - preset: loki
+  - preset: grafana
+    overrides:
+      datasources:
+        datasources.yaml:
+          apiVersion: 1
+          datasources:
+            - name: Prometheus
+              type: prometheus
+              url: http://prometheus-server.prometheus.svc:9090
+              isDefault: true
+            - name: Loki
+              type: loki
+              url: http://loki-gateway.loki.svc:8080
+              basicAuth: true
+              basicAuthUser: loki
+              jsonData:
+                httpHeaderName1: X-Scope-OrgID
+              secureJsonData:
+                basicAuthPassword: lokipassword
+                httpHeaderValue1: "1"
+
+tests:
+  - type: kubernetes-objects-test
+    values:
+      checks:
+        - {name: k8smon-alloy-logs, kind: DaemonSet, namespace: default, expect: {count: 0}}
+        - {name: k8smon-alloy-logs, kind: Service, namespace: default, expect: {count: 0}}
+        - {name: k8smon-alloy-metrics, kind: StatefulSet, namespace: default, expect: {count: 0}}
+        - {name: k8smon-alloy-metrics, kind: Service, namespace: default, expect: {count: 0}}
+        - {name: k8smon-alloy-metrics-cluster, kind: Service, namespace: default, expect: {count: 0}}
+        - {name: k8smon-alloy-operator, kind: Deployment, namespace: default, expect: {count: 0}}
+        - {name: k8smon-alloy-operator, kind: Service, namespace: default, expect: {count: 0}}
+        - {name: k8smon-alloy-singleton, kind: Deployment, namespace: default, expect: {count: 0}}
+        - {name: k8smon-alloy-singleton, kind: Service, namespace: default, expect: {count: 0}}
+        - {name: k8smon-kepler, kind: DaemonSet, namespace: default, expect: {count: 0}}
+        - {name: k8smon-kepler, kind: Service, namespace: default, expect: {count: 0}}
+        - {name: k8smon-kube-state-metrics, kind: Deployment, namespace: default, expect: {count: 0}}
+        - {name: k8smon-kube-state-metrics, kind: Service, namespace: default, expect: {count: 0}}
+        - {name: k8smon-node-exporter, kind: DaemonSet, namespace: default, expect: {count: 0}}
+        - {name: k8smon-node-exporter, kind: Service, namespace: default, expect: {count: 0}}
+        - {name: k8smon-opencost, kind: Deployment, namespace: default, expect: {count: 0}}
+        - {name: k8smon-opencost, kind: Service, namespace: default, expect: {count: 0}}
+        - {name: k8smon-windows-exporter, kind: DaemonSet, namespace: default, expect: {count: 0}}
+        - {name: k8smon-windows-exporter, kind: Service, namespace: default, expect: {count: 0}}
