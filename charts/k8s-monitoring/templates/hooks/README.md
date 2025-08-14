@@ -14,7 +14,7 @@ can not be deleted before the Alloy instances are cleaned up, preventing orphane
 
 Steps:
 
-1.   Adds a finalizer to the Alloy Operator Deployment
+1.  Adds a finalizer to the Alloy Operator Deployment
 
 ### Wait for Operator
 
@@ -40,6 +40,6 @@ and then removes the finalizer from the Alloy Operator Deployment. This allows f
 
 Steps:
 
-1.   Deletes all Alloy instances created by this Helm chart
-2.   Waits for all Alloy instances to be deleted
-3.   Adds a finalizer to the Alloy Operator Deployment
+1.  Deletes all Alloy instances created by this Helm chart
+2.  Waits for all Alloy instances to be deleted
+3.  Adds a finalizer to the Alloy Operator Deployment
