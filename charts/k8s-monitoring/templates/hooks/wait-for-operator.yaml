@@ -55,6 +55,13 @@ spec:
                 pod -l app.kubernetes.io/name=alloy-operator
 
               echo "Alloy Operator is ready!"
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+            readOnlyRootFilesystem: true
+            seccompProfile:
+              type: RuntimeDefault
 ---
 apiVersion: v1
 kind: ServiceAccount
