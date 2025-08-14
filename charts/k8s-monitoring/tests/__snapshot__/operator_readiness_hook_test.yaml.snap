@@ -6,6 +6,7 @@ should create hook when operator is deployed and readiness is enabled:
         labels:
           app.kubernetes.io/instance: RELEASE-NAME
           app.kubernetes.io/name: release-name-k8s-monitoring
+          sidecar.istio.io/inject: "false"
         name: release-name-k8s-monitoring-wait-alloy-operator
       spec:
         containers:
@@ -30,6 +31,14 @@ should create hook when operator is deployed and readiness is enabled:
                 echo "Alloy Operator is ready!"
             image: ghcr.io/grafana/helm-chart-toolbox-kubectl:0.1.0
             name: wait-for-operator
+            securityContext:
+              allowPrivilegeEscalation: false
+              capabilities:
+                drop:
+                  - ALL
+              readOnlyRootFilesystem: true
+              seccompProfile:
+                type: RuntimeDefault
         restartPolicy: Never
         serviceAccountName: release-name-k8s-monitoring-wait-alloy-operator
     ttlSecondsAfterFinished: 300
