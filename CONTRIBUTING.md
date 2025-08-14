@@ -8,7 +8,8 @@ The process for making a successful contribution is:
 2.  Build any generated files: `make build`
 3.  Run unit tests: `make test`
 4.  Create your PR!
-5.  Wait for checks to pass
+5.  Add your changes to CHANGELOT.md
+6.  Wait for checks to pass
     -   Lint checks
     -   Unit tests
     -   Integration tests
