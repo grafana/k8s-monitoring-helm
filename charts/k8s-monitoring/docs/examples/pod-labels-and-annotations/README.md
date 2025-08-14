@@ -31,7 +31,7 @@ annotations on the Pod:
 ```yaml
 clusterMetrics:
   kube-state-metrics:
-    metricAnnotationsAllowlist:
+    metricAnnotationsAllowList:
       - pods=[*]
 ```
 
@@ -98,7 +98,7 @@ clusterMetrics:
         - kube_pod_labels
     metricLabelsAllowlist:       # Configures kube-state-metrics to capture Pod labels as kube_pod_labels metrics
       - pods=[*]
-    metricAnnotationsAllowlist:  # Configures kube-state-metrics to capture Pod annotations as kube_pod_annotations metrics
+    metricAnnotationsAllowList:  # Configures kube-state-metrics to capture Pod annotations as kube_pod_annotations metrics
       - pods=[*]
 
 podLogs:
