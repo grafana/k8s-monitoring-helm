@@ -64,10 +64,35 @@ otelcol.connector.spanmetrics "{{ .name | default "default" }}" {
 }
 
 otelcol.processor.transform "span_metrics_transform" {
+{{- if .Values.metrics.transforms.resource }}
+   metric_statements {
+    context = "resource"
+    statements = [
+{{- range $transform := .Values.metrics.transforms.resource }}
+{{ $transform | quote | indent 6 }},
+{{- end }}
+    ]
+  }
+{{- end }}
+{{- if .Values.metrics.transforms.metric }}
+   metric_statements {
+    context = "metric"
+    statements = [
+{{- range $transform := .Values.metrics.transforms.metric }}
+{{ $transform | quote | indent 6 }},
+{{- end }}
+    ]
+  }
+{{- end }}
    metric_statements {
     context = "datapoint"
     statements = [
       `set(attributes["collector.id"], "` + constants.hostname + `")`,
+{{- if .Values.metrics.transforms.datapoint }}
+{{- range $transform := .Values.metrics.transforms.datapoint }}
+{{ $transform | quote | indent 6 }},
+{{- end }}
+{{- end }}
     ]
   }
 
