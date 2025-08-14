@@ -6,17 +6,10 @@ metadata:
   name: k8smon-alloy-operator
   namespace: default
   labels:
-<<<<<<< HEAD
     helm.sh/chart: alloy-operator-0.3.8
     app.kubernetes.io/name: alloy-operator
     app.kubernetes.io/instance: k8smon
     app.kubernetes.io/version: "1.2.1"
-=======
-    helm.sh/chart: alloy-operator-0.3.1
-    app.kubernetes.io/name: alloy-operator
-    app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.1.1"
->>>>>>> 7f392330 (WIP: Adding uninstall and major upgrade tests)
     app.kubernetes.io/managed-by: Helm
 automountServiceAccountToken: true
 ---
@@ -27,11 +20,7 @@ metadata:
   name: k8smon-kepler
   namespace: default
   labels:
-<<<<<<< HEAD
     helm.sh/chart: kepler-0.6.1
-=======
-    helm.sh/chart: kepler-0.6.0
->>>>>>> 7f392330 (WIP: Adding uninstall and major upgrade tests)
     app.kubernetes.io/name: kepler
     app.kubernetes.io/component: exporter
     app.kubernetes.io/version: "release-0.8.0"
@@ -43,21 +32,13 @@ kind: ServiceAccount
 automountServiceAccountToken: true
 metadata:
   labels:    
-<<<<<<< HEAD
     helm.sh/chart: kube-state-metrics-6.1.4
-=======
-    helm.sh/chart: kube-state-metrics-5.37.0
->>>>>>> 7f392330 (WIP: Adding uninstall and major upgrade tests)
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: kube-state-metrics
     app.kubernetes.io/name: kube-state-metrics
     app.kubernetes.io/instance: k8smon
-<<<<<<< HEAD
     app.kubernetes.io/version: "2.16.0"
-=======
-    app.kubernetes.io/version: "2.15.0"
->>>>>>> 7f392330 (WIP: Adding uninstall and major upgrade tests)
     release: k8smon
   name: k8smon-kube-state-metrics
   namespace: default
@@ -69,11 +50,7 @@ metadata:
   name: k8smon-node-exporter
   namespace: default
   labels:
-<<<<<<< HEAD
     helm.sh/chart: node-exporter-4.47.3
-=======
-    helm.sh/chart: node-exporter-4.47.0
->>>>>>> 7f392330 (WIP: Adding uninstall and major upgrade tests)
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: node-exporter
@@ -105,21 +82,13 @@ metadata:
   name: k8smon-windows-exporter
   namespace: default
   labels:
-<<<<<<< HEAD
     helm.sh/chart: windows-exporter-0.12.1
-=======
-    helm.sh/chart: windows-exporter-0.10.2
->>>>>>> 7f392330 (WIP: Adding uninstall and major upgrade tests)
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: windows-exporter
     app.kubernetes.io/name: windows-exporter
     app.kubernetes.io/instance: k8smon
-<<<<<<< HEAD
     app.kubernetes.io/version: "0.31.2"
-=======
-    app.kubernetes.io/version: "0.30.7"
->>>>>>> 7f392330 (WIP: Adding uninstall and major upgrade tests)
     release: k8smon
 ---
 # Source: k8s-monitoring/templates/destination_secret.yaml
@@ -152,36 +121,21 @@ metadata:
   name: k8smon-windows-exporter
   namespace: default
   labels:
-<<<<<<< HEAD
     helm.sh/chart: windows-exporter-0.12.1
-=======
-    helm.sh/chart: windows-exporter-0.10.2
->>>>>>> 7f392330 (WIP: Adding uninstall and major upgrade tests)
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: windows-exporter
     app.kubernetes.io/name: windows-exporter
     app.kubernetes.io/instance: k8smon
-<<<<<<< HEAD
     app.kubernetes.io/version: "0.31.2"
-=======
-    app.kubernetes.io/version: "0.30.7"
->>>>>>> 7f392330 (WIP: Adding uninstall and major upgrade tests)
     release: k8smon
 data:
   config.yml: |
     collectors:
-<<<<<<< HEAD
       enabled: cpu,container,logical_disk,memory,net,os
     collector:
       service:
         include: "containerd|kubelet"
-=======
-      enabled: cpu,cs,container,logical_disk,memory,net,os
-    collector:
-      service:
-        services-where: "Name='containerd' or Name='kubelet'"
->>>>>>> 7f392330 (WIP: Adding uninstall and major upgrade tests)
 ---
 # Source: k8s-monitoring/templates/alloy-config.yaml
 apiVersion: v1
@@ -190,11 +144,7 @@ metadata:
   name: k8smon-alloy-metrics
   namespace: default
 data:
-<<<<<<< HEAD
   config.alloy: |
-=======
-  config.alloy: |-
->>>>>>> 7f392330 (WIP: Adding uninstall and major upgrade tests)
     // Feature: Cluster Metrics
     declare "cluster_metrics" {
       argument "metrics_destinations" {
@@ -726,19 +676,12 @@ data:
     
     remote.kubernetes.configmap "version" {
       name = "k8smon-version"
-<<<<<<< HEAD
       namespace = "toolbox"
-=======
-      namespace = "default"
->>>>>>> 7f392330 (WIP: Adding uninstall and major upgrade tests)
     }
     // Destination: localPrometheus (prometheus)
     otelcol.exporter.prometheus "localprometheus" {
       add_metric_suffixes = true
-<<<<<<< HEAD
       resource_to_telemetry_conversion = false
-=======
->>>>>>> 7f392330 (WIP: Adding uninstall and major upgrade tests)
       forward_to = [prometheus.remote_write.localprometheus.receiver]
     }
     
@@ -771,29 +714,13 @@ data:
         write_relabel_config {
           source_labels = ["cluster"]
           regex = ""
-<<<<<<< HEAD
-<<<<<<< HEAD
           replacement = "major-upgrade-test"
-=======
-          replacement = "minor-upgrade-test"
->>>>>>> 7f392330 (WIP: Adding uninstall and major upgrade tests)
-=======
-          replacement = "major-upgrade-test"
->>>>>>> 26f67cca (Set the helm.sdk.operatorframework.io/uninstall-wait annotation on the Alloy objects)
           target_label = "cluster"
         }
         write_relabel_config {
           source_labels = ["k8s_cluster_name"]
           regex = ""
-<<<<<<< HEAD
-<<<<<<< HEAD
           replacement = "major-upgrade-test"
-=======
-          replacement = "minor-upgrade-test"
->>>>>>> 7f392330 (WIP: Adding uninstall and major upgrade tests)
-=======
-          replacement = "major-upgrade-test"
->>>>>>> 26f67cca (Set the helm.sdk.operatorframework.io/uninstall-wait annotation on the Alloy objects)
           target_label = "k8s_cluster_name"
         }
       }
@@ -820,11 +747,7 @@ metadata:
   name: k8smon-alloy-singleton
   namespace: default
 data:
-<<<<<<< HEAD
   config.alloy: |
-=======
-  config.alloy: |-
->>>>>>> 7f392330 (WIP: Adding uninstall and major upgrade tests)
     // Feature: Cluster Events
     declare "cluster_events" {
       argument "logs_destinations" {
@@ -891,10 +814,6 @@ data:
             }
           }
         }
-<<<<<<< HEAD
-=======
-        // set the structured metadata values
->>>>>>> 7f392330 (WIP: Adding uninstall and major upgrade tests)
         stage.structured_metadata {
           values = {
             "name" = "name",
@@ -965,19 +884,12 @@ data:
     
     remote.kubernetes.configmap "version" {
       name = "k8smon-version"
-<<<<<<< HEAD
       namespace = "toolbox"
-=======
-      namespace = "default"
->>>>>>> 7f392330 (WIP: Adding uninstall and major upgrade tests)
     }
     // Destination: localPrometheus (prometheus)
     otelcol.exporter.prometheus "localprometheus" {
       add_metric_suffixes = true
-<<<<<<< HEAD
       resource_to_telemetry_conversion = false
-=======
->>>>>>> 7f392330 (WIP: Adding uninstall and major upgrade tests)
       forward_to = [prometheus.remote_write.localprometheus.receiver]
     }
     
@@ -1010,29 +922,13 @@ data:
         write_relabel_config {
           source_labels = ["cluster"]
           regex = ""
-<<<<<<< HEAD
-<<<<<<< HEAD
           replacement = "major-upgrade-test"
-=======
-          replacement = "minor-upgrade-test"
->>>>>>> 7f392330 (WIP: Adding uninstall and major upgrade tests)
-=======
-          replacement = "major-upgrade-test"
->>>>>>> 26f67cca (Set the helm.sdk.operatorframework.io/uninstall-wait annotation on the Alloy objects)
           target_label = "cluster"
         }
         write_relabel_config {
           source_labels = ["k8s_cluster_name"]
           regex = ""
-<<<<<<< HEAD
-<<<<<<< HEAD
           replacement = "major-upgrade-test"
-=======
-          replacement = "minor-upgrade-test"
->>>>>>> 7f392330 (WIP: Adding uninstall and major upgrade tests)
-=======
-          replacement = "major-upgrade-test"
->>>>>>> 26f67cca (Set the helm.sdk.operatorframework.io/uninstall-wait annotation on the Alloy objects)
           target_label = "k8s_cluster_name"
         }
       }
@@ -1073,18 +969,8 @@ data:
         max_backoff_retries = "10"
       }
       external_labels = {
-<<<<<<< HEAD
-<<<<<<< HEAD
         "cluster" = "major-upgrade-test",
         "k8s_cluster_name" = "major-upgrade-test",
-=======
-        "cluster" = "minor-upgrade-test",
-        "k8s_cluster_name" = "minor-upgrade-test",
->>>>>>> 7f392330 (WIP: Adding uninstall and major upgrade tests)
-=======
-        "cluster" = "major-upgrade-test",
-        "k8s_cluster_name" = "major-upgrade-test",
->>>>>>> 26f67cca (Set the helm.sdk.operatorframework.io/uninstall-wait annotation on the Alloy objects)
         chart_version = remote.kubernetes.configmap.version.data["version"],
       }
     }
@@ -1093,32 +979,16 @@ data:
       name      = "localloki-k8smon-k8s-monitoring"
       namespace = "default"
     }
-<<<<<<< HEAD
   self-reporting-metric.prom: |
     # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_build_info gauge
     grafana_kubernetes_monitoring_build_info{version="3.2.6", namespace="default"} 1
-=======
-
-  self-reporting-metric.prom: |
-    
-    # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart
-    # TYPE grafana_kubernetes_monitoring_build_info gauge
-<<<<<<< HEAD
-    grafana_kubernetes_monitoring_build_info{version="3.0.1", namespace="default"} 1
->>>>>>> 7f392330 (WIP: Adding uninstall and major upgrade tests)
-=======
-    grafana_kubernetes_monitoring_build_info{version="3.0.2", namespace="default"} 1
->>>>>>> 26f67cca (Set the helm.sdk.operatorframework.io/uninstall-wait annotation on the Alloy objects)
     # HELP grafana_kubernetes_monitoring_feature_info A metric to report the enabled features of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_feature_info gauge
     grafana_kubernetes_monitoring_feature_info{deployments="kube-state-metrics,node-exporter,windows-exporter,kepler", feature="clusterMetrics", sources="kubelet,kubeletResource,cadvisor,kube-state-metrics,node-exporter,windows-exporter,kepler", version="1.0.0"} 1
     grafana_kubernetes_monitoring_feature_info{feature="clusterEvents", version="1.0.0"} 1
     grafana_kubernetes_monitoring_feature_info{feature="podLogs", method="volumes", version="1.0.0"} 1
-<<<<<<< HEAD
     # EOF
-=======
->>>>>>> 7f392330 (WIP: Adding uninstall and major upgrade tests)
 ---
 # Source: k8s-monitoring/templates/alloy-config.yaml
 apiVersion: v1
@@ -1127,11 +997,7 @@ metadata:
   name: k8smon-alloy-logs
   namespace: default
 data:
-<<<<<<< HEAD
   config.alloy: |
-=======
-  config.alloy: |-
->>>>>>> 7f392330 (WIP: Adding uninstall and major upgrade tests)
     // Feature: Pod Logs
     declare "pod_logs" {
       argument "logs_destinations" {
@@ -1207,7 +1073,6 @@ data:
           target_label = "service_name"
         }
     
-<<<<<<< HEAD
         // explicitly set service_namespace.
         //
         // choose the first value found from the following ordered list:
@@ -1241,8 +1106,6 @@ data:
           target_label = "service_instance_id"
         }
     
-=======
->>>>>>> 7f392330 (WIP: Adding uninstall and major upgrade tests)
         // set resource attributes
         rule {
           action = "labelmap"
@@ -1330,20 +1193,13 @@ data:
           values = {
             "k8s_pod_name" = "k8s_pod_name",
             "pod" = "pod",
-<<<<<<< HEAD
             "service_instance_id" = "service_instance_id",
-=======
->>>>>>> 7f392330 (WIP: Adding uninstall and major upgrade tests)
           }
         }
     
         // Only keep the labels that are defined in the `keepLabels` list.
         stage.label_keep {
-<<<<<<< HEAD
           values = ["__tenant_id__","app_kubernetes_io_name","container","instance","job","level","namespace","service_name","service_namespace","deployment_environment","deployment_environment_name","k8s_namespace_name","k8s_deployment_name","k8s_statefulset_name","k8s_daemonset_name","k8s_cronjob_name","k8s_job_name","k8s_node_name"]
-=======
-          values = ["app_kubernetes_io_name","container","instance","job","level","namespace","service_name","service_namespace","deployment_environment","deployment_environment_name","k8s_namespace_name","k8s_deployment_name","k8s_statefulset_name","k8s_daemonset_name","k8s_cronjob_name","k8s_job_name","k8s_node_name"]
->>>>>>> 7f392330 (WIP: Adding uninstall and major upgrade tests)
         }
     
         forward_to = argument.logs_destinations.value
@@ -1359,11 +1215,7 @@ data:
     
     remote.kubernetes.configmap "version" {
       name = "k8smon-version"
-<<<<<<< HEAD
       namespace = "toolbox"
-=======
-      namespace = "default"
->>>>>>> 7f392330 (WIP: Adding uninstall and major upgrade tests)
     }
     // Destination: localLoki (loki)
     otelcol.exporter.loki "localloki" {
@@ -1386,18 +1238,8 @@ data:
         max_backoff_retries = "10"
       }
       external_labels = {
-<<<<<<< HEAD
-<<<<<<< HEAD
         "cluster" = "major-upgrade-test",
         "k8s_cluster_name" = "major-upgrade-test",
-=======
-        "cluster" = "minor-upgrade-test",
-        "k8s_cluster_name" = "minor-upgrade-test",
->>>>>>> 7f392330 (WIP: Adding uninstall and major upgrade tests)
-=======
-        "cluster" = "major-upgrade-test",
-        "k8s_cluster_name" = "major-upgrade-test",
->>>>>>> 26f67cca (Set the helm.sdk.operatorframework.io/uninstall-wait annotation on the Alloy objects)
         chart_version = remote.kubernetes.configmap.version.data["version"],
       }
     }
@@ -1410,8 +1252,6 @@ data:
 # Source: k8s-monitoring/templates/extra-objects.yaml
 apiVersion: v1
 data:
-<<<<<<< HEAD
-<<<<<<< HEAD
   version: '3.2.6'
 kind: ConfigMap
 metadata:
@@ -1428,110 +1268,12 @@ metadata:
     app.kubernetes.io/name: alloy-operator
     app.kubernetes.io/instance: k8smon
     app.kubernetes.io/version: "1.2.1"
-=======
-  version: '3.0.1'
-=======
-  version: '3.0.2'
->>>>>>> 26f67cca (Set the helm.sdk.operatorframework.io/uninstall-wait annotation on the Alloy objects)
-kind: ConfigMap
-metadata:
-  name: k8smon-version
-  namespace: default
----
-# Source: k8s-monitoring/charts/alloy-operator/templates/rbac.yaml
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name:
-    k8smon-alloy-operator-alloy-editor-role
-  labels:
-    helm.sh/chart: alloy-operator-0.3.1
-    app.kubernetes.io/name: alloy-operator
-    app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.1.1"
->>>>>>> 7f392330 (WIP: Adding uninstall and major upgrade tests)
     app.kubernetes.io/managed-by: Helm
 rules:
   - apiGroups:
       - collectors.grafana.com
     resources:
       - alloys
-<<<<<<< HEAD
-=======
-    verbs:
-      - create
-      - delete
-      - get
-      - list
-      - patch
-      - update
-      - watch
-  - apiGroups:
-      - collectors.grafana.com
-    resources:
-      - alloys/status
-    verbs:
-      - get
----
-# Source: k8s-monitoring/charts/alloy-operator/templates/rbac.yaml
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name:
-    k8smon-alloy-operator-alloy-viewer-role
-  labels:
-    helm.sh/chart: alloy-operator-0.3.1
-    app.kubernetes.io/name: alloy-operator
-    app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.1.1"
-    app.kubernetes.io/managed-by: Helm
-rules:
-  - apiGroups:
-      - collectors.grafana.com
-    resources:
-      - alloys
-    verbs:
-      - get
-      - list
-      - watch
-  - apiGroups:
-      - collectors.grafana.com
-    resources:
-      - alloys/status
-    verbs:
-      - get
----
-# Source: k8s-monitoring/charts/alloy-operator/templates/rbac.yaml
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name:
-    k8smon-alloy-operator-role
-rules:
-  - apiGroups:
-      - ""
-    resources:
-      - namespaces
-    verbs:
-      - get
-  - apiGroups:
-      - ""
-    resources:
-      - secrets
-    verbs:
-      - '*'
-  - apiGroups:
-      - ""
-    resources:
-      - events
-    verbs:
-      - create
-  # Rules which allow the management of Alloys.
-  - apiGroups:
-      - collectors.grafana.com
-    resources:
-      - alloys
->>>>>>> 7f392330 (WIP: Adding uninstall and major upgrade tests)
       - alloys/status
       - alloys/finalizers
     verbs:
@@ -1542,7 +1284,6 @@ rules:
       - patch
       - update
       - watch
-<<<<<<< HEAD
 ---
 # Source: k8s-monitoring/charts/alloy-operator/templates/rbac/alloy-objects.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -1574,79 +1315,6 @@ rules:
   - apiGroups: ["rbac.authorization.k8s.io"]
     resources: ["clusterroles", "clusterrolebindings"]
     verbs: ["*"]
-=======
-  # Rules which allow the management of ConfigMaps, ServiceAccounts, and Services.
-  - apiGroups:
-      - ""
-    resources:
-      - configmaps
-      - serviceaccounts
-      - services
-    verbs:
-      - '*'
-  # Rules which allow the management of DaemonSets, Deployments, and StatefulSets.
-  - apiGroups:
-      - apps
-    resources:
-      - daemonsets
-      - deployments
-      - statefulsets
-    verbs:
-      - '*'
-  # Rules which allow the management of Horizontal Pod Autoscalers.
-  - apiGroups:
-      - autoscaling
-    resources:
-      - horizontalpodautoscalers
-    verbs:
-      - '*'
-  # Rules which allow for the management of Prometheus Operator objects.
-  - apiGroups:
-      - monitoring.coreos.com
-    resources:
-      - podmonitors
-      - servicemonitors
-      - probes
-      - scrapeconfigs
-    verbs:
-      - get
-      - list
-      - watch
-  # Rules which allow the management of Ingresses.
-  - apiGroups:
-      - networking.k8s.io
-    resources:
-      - ingresses
-    verbs:
-      - '*'
-  # Rules which allow the management of PodDisruptionBudgets.
-  - apiGroups:
-      - policy
-    resources:
-      - poddisruptionbudgets
-    verbs:
-      - '*'
-  # Rules which allow mimir.rules.kubernetes to work.
-  - apiGroups: ["monitoring.coreos.com"]
-    resources:
-      - prometheusrules
-    verbs:
-      - get
-      - list
-      - watch
-  - nonResourceURLs:
-      - /metrics
-    verbs:
-      - get
-  # Rules which allow the management of ClusterRoles and ClusterRoleBindings.
-  - apiGroups:
-      - rbac.authorization.k8s.io
-    resources:
-      - clusterrolebindings
-      - clusterroles
-    verbs:
-      - '*'
->>>>>>> 7f392330 (WIP: Adding uninstall and major upgrade tests)
 ---
 # Source: k8s-monitoring/charts/clusterMetrics/charts/kepler/templates/rolebinding.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -1670,21 +1338,13 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   labels:    
-<<<<<<< HEAD
     helm.sh/chart: kube-state-metrics-6.1.4
-=======
-    helm.sh/chart: kube-state-metrics-5.37.0
->>>>>>> 7f392330 (WIP: Adding uninstall and major upgrade tests)
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: kube-state-metrics
     app.kubernetes.io/name: kube-state-metrics
     app.kubernetes.io/instance: k8smon
-<<<<<<< HEAD
     app.kubernetes.io/version: "2.16.0"
-=======
-    app.kubernetes.io/version: "2.15.0"
->>>>>>> 7f392330 (WIP: Adding uninstall and major upgrade tests)
     release: k8smon
   name: k8smon-kube-state-metrics
 rules:
@@ -1916,7 +1576,6 @@ rules:
       - list
       - watch
 ---
-<<<<<<< HEAD
 # Source: k8s-monitoring/charts/alloy-operator/templates/rbac/alloy-manager.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -1927,24 +1586,10 @@ metadata:
     app.kubernetes.io/name: alloy-operator
     app.kubernetes.io/instance: k8smon
     app.kubernetes.io/version: "1.2.1"
-=======
-# Source: k8s-monitoring/charts/alloy-operator/templates/rbac.yaml
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name:
-    k8smon-alloy-operator-rolebinding
-  labels:
-    helm.sh/chart: alloy-operator-0.3.1
-    app.kubernetes.io/name: alloy-operator
-    app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.1.1"
->>>>>>> 7f392330 (WIP: Adding uninstall and major upgrade tests)
     app.kubernetes.io/managed-by: Helm
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-<<<<<<< HEAD
   name: k8smon-alloy-operator-alloy-manager
 subjects:
   - kind: ServiceAccount
@@ -1966,10 +1611,6 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
   name: k8smon-alloy-operator
-=======
-  name:
-    k8smon-alloy-operator-role
->>>>>>> 7f392330 (WIP: Adding uninstall and major upgrade tests)
 subjects:
   - kind: ServiceAccount
     name: k8smon-alloy-operator
@@ -1994,21 +1635,13 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   labels:    
-<<<<<<< HEAD
     helm.sh/chart: kube-state-metrics-6.1.4
-=======
-    helm.sh/chart: kube-state-metrics-5.37.0
->>>>>>> 7f392330 (WIP: Adding uninstall and major upgrade tests)
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: kube-state-metrics
     app.kubernetes.io/name: kube-state-metrics
     app.kubernetes.io/instance: k8smon
-<<<<<<< HEAD
     app.kubernetes.io/version: "2.16.0"
-=======
-    app.kubernetes.io/version: "2.15.0"
->>>>>>> 7f392330 (WIP: Adding uninstall and major upgrade tests)
     release: k8smon
   name: k8smon-kube-state-metrics
 roleRef:
@@ -2041,7 +1674,6 @@ subjects:
     name: k8smon-opencost
     namespace: default
 ---
-<<<<<<< HEAD
 # Source: k8s-monitoring/charts/alloy-operator/templates/rbac/leader-election.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
@@ -2053,20 +1685,6 @@ metadata:
     app.kubernetes.io/name: alloy-operator
     app.kubernetes.io/instance: k8smon
     app.kubernetes.io/version: "1.2.1"
-=======
-# Source: k8s-monitoring/charts/alloy-operator/templates/rbac.yaml
-apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
-metadata:
-  name:
-    k8smon-alloy-operator-leader-election-role
-  namespace: default
-  labels:
-    helm.sh/chart: alloy-operator-0.3.1
-    app.kubernetes.io/name: alloy-operator
-    app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.1.1"
->>>>>>> 7f392330 (WIP: Adding uninstall and major upgrade tests)
     app.kubernetes.io/managed-by: Helm
 rules:
   - apiGroups:
@@ -2101,7 +1719,6 @@ rules:
       - create
       - patch
 ---
-<<<<<<< HEAD
 # Source: k8s-monitoring/charts/alloy-operator/templates/rbac/leader-election.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
@@ -2113,30 +1730,11 @@ metadata:
     app.kubernetes.io/name: alloy-operator
     app.kubernetes.io/instance: k8smon
     app.kubernetes.io/version: "1.2.1"
-=======
-# Source: k8s-monitoring/charts/alloy-operator/templates/rbac.yaml
-apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
-metadata:
-  name:
-    k8smon-alloy-operator-leader-election-rolebinding
-  namespace: default
-  labels:
-    helm.sh/chart: alloy-operator-0.3.1
-    app.kubernetes.io/name: alloy-operator
-    app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.1.1"
->>>>>>> 7f392330 (WIP: Adding uninstall and major upgrade tests)
     app.kubernetes.io/managed-by: Helm
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
-<<<<<<< HEAD
   name: k8smon-alloy-operator-leader-election-role
-=======
-  name:
-    k8smon-alloy-operator-leader-election-role
->>>>>>> 7f392330 (WIP: Adding uninstall and major upgrade tests)
 subjects:
   - kind: ServiceAccount
     name: k8smon-alloy-operator
@@ -2147,20 +1745,12 @@ apiVersion: v1
 kind: Service
 metadata:
   name: k8smon-alloy-operator
-<<<<<<< HEAD
   namespace: default
   labels:
     helm.sh/chart: alloy-operator-0.3.8
     app.kubernetes.io/name: alloy-operator
     app.kubernetes.io/instance: k8smon
     app.kubernetes.io/version: "1.2.1"
-=======
-  labels:
-    helm.sh/chart: alloy-operator-0.3.1
-    app.kubernetes.io/name: alloy-operator
-    app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.1.1"
->>>>>>> 7f392330 (WIP: Adding uninstall and major upgrade tests)
     app.kubernetes.io/managed-by: Helm
 spec:
   type: ClusterIP
@@ -2184,11 +1774,7 @@ metadata:
   name: k8smon-kepler
   namespace: default
   labels:
-<<<<<<< HEAD
     helm.sh/chart: kepler-0.6.1
-=======
-    helm.sh/chart: kepler-0.6.0
->>>>>>> 7f392330 (WIP: Adding uninstall and major upgrade tests)
     app.kubernetes.io/name: kepler
     app.kubernetes.io/component: exporter
     app.kubernetes.io/version: "release-0.8.0"
@@ -2211,21 +1797,13 @@ metadata:
   name: k8smon-kube-state-metrics
   namespace: default
   labels:    
-<<<<<<< HEAD
     helm.sh/chart: kube-state-metrics-6.1.4
-=======
-    helm.sh/chart: kube-state-metrics-5.37.0
->>>>>>> 7f392330 (WIP: Adding uninstall and major upgrade tests)
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: kube-state-metrics
     app.kubernetes.io/name: kube-state-metrics
     app.kubernetes.io/instance: k8smon
-<<<<<<< HEAD
     app.kubernetes.io/version: "2.16.0"
-=======
-    app.kubernetes.io/version: "2.15.0"
->>>>>>> 7f392330 (WIP: Adding uninstall and major upgrade tests)
     release: k8smon
   annotations:
 spec:
@@ -2247,11 +1825,7 @@ metadata:
   name: k8smon-node-exporter
   namespace: default
   labels:
-<<<<<<< HEAD
     helm.sh/chart: node-exporter-4.47.3
-=======
-    helm.sh/chart: node-exporter-4.47.0
->>>>>>> 7f392330 (WIP: Adding uninstall and major upgrade tests)
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: node-exporter
@@ -2302,21 +1876,13 @@ metadata:
   name: k8smon-windows-exporter
   namespace: default
   labels:
-<<<<<<< HEAD
     helm.sh/chart: windows-exporter-0.12.1
-=======
-    helm.sh/chart: windows-exporter-0.10.2
->>>>>>> 7f392330 (WIP: Adding uninstall and major upgrade tests)
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: windows-exporter
     app.kubernetes.io/name: windows-exporter
     app.kubernetes.io/instance: k8smon
-<<<<<<< HEAD
     app.kubernetes.io/version: "0.31.2"
-=======
-    app.kubernetes.io/version: "0.30.7"
->>>>>>> 7f392330 (WIP: Adding uninstall and major upgrade tests)
     release: k8smon
 spec:
   type: ClusterIP
@@ -2337,11 +1903,7 @@ metadata:
   name: k8smon-kepler
   namespace: default
   labels:
-<<<<<<< HEAD
     helm.sh/chart: kepler-0.6.1
-=======
-    helm.sh/chart: kepler-0.6.0
->>>>>>> 7f392330 (WIP: Adding uninstall and major upgrade tests)
     app.kubernetes.io/name: kepler
     app.kubernetes.io/component: exporter
     app.kubernetes.io/version: "release-0.8.0"
@@ -2477,11 +2039,7 @@ metadata:
   name: k8smon-node-exporter
   namespace: default
   labels:
-<<<<<<< HEAD
     helm.sh/chart: node-exporter-4.47.3
-=======
-    helm.sh/chart: node-exporter-4.47.0
->>>>>>> 7f392330 (WIP: Adding uninstall and major upgrade tests)
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: node-exporter
@@ -2505,11 +2063,7 @@ spec:
         cluster-autoscaler.kubernetes.io/safe-to-evict: "true"
         k8s.grafana.com/logs.job: integrations/node_exporter
       labels:
-<<<<<<< HEAD
         helm.sh/chart: node-exporter-4.47.3
-=======
-        helm.sh/chart: node-exporter-4.47.0
->>>>>>> 7f392330 (WIP: Adding uninstall and major upgrade tests)
         app.kubernetes.io/managed-by: Helm
         app.kubernetes.io/component: metrics
         app.kubernetes.io/part-of: node-exporter
@@ -2535,10 +2089,7 @@ spec:
             - --path.rootfs=/host/root
             - --path.udev.data=/host/root/run/udev/data
             - --web.listen-address=[$(HOST_IP)]:9100
-<<<<<<< HEAD
             - --collector.filesystem.fs-types-exclude=^(ramfs|tmpfs)$
-=======
->>>>>>> 7f392330 (WIP: Adding uninstall and major upgrade tests)
           securityContext:
             readOnlyRootFilesystem: true
           env:
@@ -2553,11 +2104,7 @@ spec:
             httpGet:
               httpHeaders:
               path: /
-<<<<<<< HEAD
               port: metrics
-=======
-              port: 9100
->>>>>>> 7f392330 (WIP: Adding uninstall and major upgrade tests)
               scheme: HTTP
             initialDelaySeconds: 0
             periodSeconds: 10
@@ -2568,11 +2115,7 @@ spec:
             httpGet:
               httpHeaders:
               path: /
-<<<<<<< HEAD
               port: metrics
-=======
-              port: 9100
->>>>>>> 7f392330 (WIP: Adding uninstall and major upgrade tests)
               scheme: HTTP
             initialDelaySeconds: 0
             periodSeconds: 10
@@ -2624,21 +2167,13 @@ metadata:
   name: k8smon-windows-exporter
   namespace: default
   labels:
-<<<<<<< HEAD
     helm.sh/chart: windows-exporter-0.12.1
-=======
-    helm.sh/chart: windows-exporter-0.10.2
->>>>>>> 7f392330 (WIP: Adding uninstall and major upgrade tests)
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: windows-exporter
     app.kubernetes.io/name: windows-exporter
     app.kubernetes.io/instance: k8smon
-<<<<<<< HEAD
     app.kubernetes.io/version: "0.31.2"
-=======
-    app.kubernetes.io/version: "0.30.7"
->>>>>>> 7f392330 (WIP: Adding uninstall and major upgrade tests)
     release: k8smon
 spec:
   selector:
@@ -2655,21 +2190,13 @@ spec:
         cluster-autoscaler.kubernetes.io/safe-to-evict: "true"
         k8s.grafana.com/logs.job: integrations/windows_exporter
       labels:
-<<<<<<< HEAD
         helm.sh/chart: windows-exporter-0.12.1
-=======
-        helm.sh/chart: windows-exporter-0.10.2
->>>>>>> 7f392330 (WIP: Adding uninstall and major upgrade tests)
         app.kubernetes.io/managed-by: Helm
         app.kubernetes.io/component: metrics
         app.kubernetes.io/part-of: windows-exporter
         app.kubernetes.io/name: windows-exporter
         app.kubernetes.io/instance: k8smon
-<<<<<<< HEAD
         app.kubernetes.io/version: "0.31.2"
-=======
-        app.kubernetes.io/version: "0.30.7"
->>>>>>> 7f392330 (WIP: Adding uninstall and major upgrade tests)
         release: k8smon
     spec:
       automountServiceAccountToken: false
@@ -2679,21 +2206,13 @@ spec:
           runAsUserName: NT AUTHORITY\system
       initContainers:
         - name: configure-firewall
-<<<<<<< HEAD
           image: ghcr.io/prometheus-community/windows-exporter:0.31.2
-=======
-          image: ghcr.io/prometheus-community/windows-exporter:0.30.7
->>>>>>> 7f392330 (WIP: Adding uninstall and major upgrade tests)
           command: [ "powershell" ]
           args: [ "New-NetFirewallRule", "-DisplayName", "'windows-exporter'", "-Direction", "inbound", "-Profile", "Any", "-Action", "Allow", "-LocalPort", "9182", "-Protocol", "TCP" ]
       serviceAccountName: k8smon-windows-exporter
       containers:
         - name: windows-exporter
-<<<<<<< HEAD
           image: ghcr.io/prometheus-community/windows-exporter:0.31.2
-=======
-          image: ghcr.io/prometheus-community/windows-exporter:0.30.7
->>>>>>> 7f392330 (WIP: Adding uninstall and major upgrade tests)
           imagePullPolicy: IfNotPresent
           args:
             - --config.file=%CONTAINER_SANDBOX_MOUNT_POINT%/config.yml
@@ -2747,20 +2266,12 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: k8smon-alloy-operator
-<<<<<<< HEAD
   namespace: default
   labels:
     helm.sh/chart: alloy-operator-0.3.8
     app.kubernetes.io/name: alloy-operator
     app.kubernetes.io/instance: k8smon
     app.kubernetes.io/version: "1.2.1"
-=======
-  labels:
-    helm.sh/chart: alloy-operator-0.3.1
-    app.kubernetes.io/name: alloy-operator
-    app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "1.1.1"
->>>>>>> 7f392330 (WIP: Adding uninstall and major upgrade tests)
     app.kubernetes.io/managed-by: Helm
 spec:
   replicas: 1
@@ -2771,23 +2282,15 @@ spec:
   template:
     metadata:
       labels:
-<<<<<<< HEAD
         helm.sh/chart: alloy-operator-0.3.8
         app.kubernetes.io/name: alloy-operator
         app.kubernetes.io/instance: k8smon
         app.kubernetes.io/version: "1.2.1"
-=======
-        helm.sh/chart: alloy-operator-0.3.1
-        app.kubernetes.io/name: alloy-operator
-        app.kubernetes.io/instance: k8smon
-        app.kubernetes.io/version: "1.1.1"
->>>>>>> 7f392330 (WIP: Adding uninstall and major upgrade tests)
         app.kubernetes.io/managed-by: Helm
     spec:
       serviceAccountName: k8smon-alloy-operator
       containers:
         - name: alloy-operator
-<<<<<<< HEAD
           image: "ghcr.io/grafana/alloy-operator:1.2.1"
           imagePullPolicy: IfNotPresent
           args:
@@ -2796,15 +2299,6 @@ spec:
             - --leader-elect
             - --leader-election-id=k8smon-alloy-operator
 
-=======
-          image: "ghcr.io/grafana/alloy-operator:1.1.1"
-          imagePullPolicy: IfNotPresent
-          args:
-            - --leader-elect
-            - --leader-election-id=k8smon-alloy-operator
-            - --health-probe-bind-address=:8081
-            - --metrics-bind-address=:8082
->>>>>>> 7f392330 (WIP: Adding uninstall and major upgrade tests)
           ports:
             - name: http
               containerPort: 8081
@@ -2839,21 +2333,13 @@ metadata:
   name: k8smon-kube-state-metrics
   namespace: default
   labels:    
-<<<<<<< HEAD
     helm.sh/chart: kube-state-metrics-6.1.4
-=======
-    helm.sh/chart: kube-state-metrics-5.37.0
->>>>>>> 7f392330 (WIP: Adding uninstall and major upgrade tests)
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: kube-state-metrics
     app.kubernetes.io/name: kube-state-metrics
     app.kubernetes.io/instance: k8smon
-<<<<<<< HEAD
     app.kubernetes.io/version: "2.16.0"
-=======
-    app.kubernetes.io/version: "2.15.0"
->>>>>>> 7f392330 (WIP: Adding uninstall and major upgrade tests)
     release: k8smon
 spec:
   selector:
@@ -2867,21 +2353,13 @@ spec:
   template:
     metadata:
       labels:        
-<<<<<<< HEAD
         helm.sh/chart: kube-state-metrics-6.1.4
-=======
-        helm.sh/chart: kube-state-metrics-5.37.0
->>>>>>> 7f392330 (WIP: Adding uninstall and major upgrade tests)
         app.kubernetes.io/managed-by: Helm
         app.kubernetes.io/component: metrics
         app.kubernetes.io/part-of: kube-state-metrics
         app.kubernetes.io/name: kube-state-metrics
         app.kubernetes.io/instance: k8smon
-<<<<<<< HEAD
         app.kubernetes.io/version: "2.16.0"
-=======
-        app.kubernetes.io/version: "2.15.0"
->>>>>>> 7f392330 (WIP: Adding uninstall and major upgrade tests)
         release: k8smon
       annotations:
       
@@ -2905,11 +2383,7 @@ spec:
         - --resources=certificatesigningrequests,configmaps,cronjobs,daemonsets,deployments,endpoints,horizontalpodautoscalers,ingresses,jobs,leases,limitranges,mutatingwebhookconfigurations,namespaces,networkpolicies,nodes,persistentvolumeclaims,persistentvolumes,poddisruptionbudgets,pods,replicasets,replicationcontrollers,resourcequotas,secrets,services,statefulsets,storageclasses,validatingwebhookconfigurations,volumeattachments
         - --metric-labels-allowlist=nodes=[agentpool,alpha.eksctl.io/cluster-name,alpha.eksctl.io/nodegroup-name,beta.kubernetes.io/instance-type,cloud.google.com/gke-nodepool,cluster-name,ec2.amazonaws.com/Name,ec2.amazonaws.com/aws-autoscaling-groupName,ec2.amazonaws.com/aws-autoscaling-group-name,ec2.amazonaws.com/name,eks.amazonaws.com/nodegroup,k8s.io/cloud-provider-aws,karpenter.sh/nodepool,kubernetes.azure.com/cluster,kubernetes.io/arch,kubernetes.io/hostname,kubernetes.io/os,node.kubernetes.io/instance-type,topology.kubernetes.io/region,topology.kubernetes.io/zone]
         imagePullPolicy: IfNotPresent
-<<<<<<< HEAD
         image: registry.k8s.io/kube-state-metrics/kube-state-metrics:v2.16.0
-=======
-        image: registry.k8s.io/kube-state-metrics/kube-state-metrics:v2.15.0
->>>>>>> 7f392330 (WIP: Adding uninstall and major upgrade tests)
         ports:
         - containerPort: 8080
           name: "http"
@@ -3032,15 +2506,7 @@ spec:
             - name: PROMETHEUS_SERVER_ENDPOINT
               value: "https://prometheus-server.prometheus.svc:9090/api/v1/query"
             - name: CLUSTER_ID
-<<<<<<< HEAD
-<<<<<<< HEAD
               value: "major-upgrade-test"
-=======
-              value: "minor-upgrade-test"
->>>>>>> 7f392330 (WIP: Adding uninstall and major upgrade tests)
-=======
-              value: "major-upgrade-test"
->>>>>>> 26f67cca (Set the helm.sdk.operatorframework.io/uninstall-wait annotation on the Alloy objects)
             - name: DB_BASIC_AUTH_USERNAME
               valueFrom:
                 secretKeyRef:
@@ -3075,7 +2541,6 @@ spec:
             - name: PROM_CLUSTER_ID_LABEL
               value: "cluster"
 ---
-<<<<<<< HEAD
 # Source: k8s-monitoring/templates/hooks/wait-for-operator.yaml
 apiVersion: v1
 kind: ServiceAccount
@@ -3181,27 +2646,16 @@ spec:
             seccompProfile:
               type: RuntimeDefault
 ---
-=======
->>>>>>> 7f392330 (WIP: Adding uninstall and major upgrade tests)
 # Source: k8s-monitoring/templates/alloy.yaml
 apiVersion: collectors.grafana.com/v1alpha1
 kind: Alloy
 metadata:
   name: k8smon-alloy-metrics
   namespace: default
-<<<<<<< HEAD
-<<<<<<< HEAD
   annotations:
     "helm.sh/hook": post-install,post-upgrade
     "helm.sh/hook-weight": "10"
 spec:
-=======
-=======
-  annotations:
-    helm.sdk.operatorframework.io/uninstall-wait: "true"
->>>>>>> 26f67cca (Set the helm.sdk.operatorframework.io/uninstall-wait annotation on the Alloy objects)
-spec: 
->>>>>>> 7f392330 (WIP: Adding uninstall and major upgrade tests)
   alloy:
     clustering:
       enabled: true
@@ -3392,19 +2846,10 @@ kind: Alloy
 metadata:
   name: k8smon-alloy-singleton
   namespace: default
-<<<<<<< HEAD
-<<<<<<< HEAD
   annotations:
     "helm.sh/hook": post-install,post-upgrade
     "helm.sh/hook-weight": "10"
 spec:
-=======
-=======
-  annotations:
-    helm.sdk.operatorframework.io/uninstall-wait: "true"
->>>>>>> 26f67cca (Set the helm.sdk.operatorframework.io/uninstall-wait annotation on the Alloy objects)
-spec: 
->>>>>>> 7f392330 (WIP: Adding uninstall and major upgrade tests)
   alloy:
     clustering:
       enabled: false
@@ -3595,19 +3040,10 @@ kind: Alloy
 metadata:
   name: k8smon-alloy-logs
   namespace: default
-<<<<<<< HEAD
-<<<<<<< HEAD
   annotations:
     "helm.sh/hook": post-install,post-upgrade
     "helm.sh/hook-weight": "10"
 spec:
-=======
-=======
-  annotations:
-    helm.sdk.operatorframework.io/uninstall-wait: "true"
->>>>>>> 26f67cca (Set the helm.sdk.operatorframework.io/uninstall-wait annotation on the Alloy objects)
-spec: 
->>>>>>> 7f392330 (WIP: Adding uninstall and major upgrade tests)
   alloy:
     clustering:
       enabled: false
