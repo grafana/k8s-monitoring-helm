@@ -209,7 +209,7 @@ platform-test-checks: $(PLATFORM_TEST_OUTPUT_FILES)
 
 .PHONY: clean
 clean: clean-examples
-	rm -f README.md docs/Images.md values.schema.json templates/destinations/_destination_types.tpl schema-mods/destination.json
+	rm -f README.md values.schema.json templates/destinations/_destination_types.tpl schema-mods/destination.json
 	rm -f $(COLLECTOR_SCHEMA_FILES) $(COLLECTOR_DOCS_FILES)
 	rm -f $(DESTINATION_SCHEMA_FILES) $(DESTINATION_DOCS_FILES)
 	set -e && \
@@ -229,7 +229,7 @@ build-features:
 
 # Build targets
 .PHONY: build
-build: build-features README.md docs/Images.md values.schema.json templates/destinations/_destination_types.tpl $(COLLECTOR_DOCS_FILES) $(DESTINATION_DOCS_FILES) examples integration-test-checks platform-test-checks
+build: build-features README.md values.schema.json templates/destinations/_destination_types.tpl $(COLLECTOR_DOCS_FILES) $(DESTINATION_DOCS_FILES) examples integration-test-checks platform-test-checks
 
 # Test targets
 .PHONY: test unittest lint-helm lint-configs
