@@ -1,5 +1,6 @@
 {{- if and (index .Values "alloy-operator").deploy (index .Values "alloy-operator").waitForReadiness.enabled }}
 {{- $jobName := (printf "%s-wait-alloy-operator" (include "helper.fullname" .)) | trunc 63 | trimSuffix "-" }}
+{{- $jobSettings := (index .Values "alloy-operator").waitForReadiness -}}
 ---
 apiVersion: batch/v1
 kind: Job
@@ -26,10 +27,18 @@ spec:
         sidecar.istio.io/inject: "false"
     spec:
       restartPolicy: Never
+      {{- with $jobSettings.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $jobSettings.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       serviceAccountName: {{ $jobName }}
       containers:
         - name: wait-for-operator
-          {{- with (index .Values "alloy-operator").waitForReadiness.image }}
+          {{- with $jobSettings.image }}
             {{- if .digest }}
           image: "{{ dig "image" "registry" .registry $.Values.global }}/{{ .repository }}@{{ .digest }}"
             {{- else }}
