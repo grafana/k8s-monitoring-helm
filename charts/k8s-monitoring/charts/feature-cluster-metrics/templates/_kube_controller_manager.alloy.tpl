@@ -33,6 +33,8 @@ prometheus.scrape "kube_controller_manager" {
   job_name          = {{ .Values.kubeControllerManager.jobLabel | quote }}
   scheme            = "https"
   scrape_interval   = {{ .Values.kubeControllerManager.scrapeInterval | default .Values.global.scrapeInterval | quote }}
+  scrape_protocols = {{ .Values.global.scrapeProcotols | toJson }}
+  scrape_classic_histograms = {{ .Values.global.scrapeClassicHistograms }}
   bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
   tls_config {
     insecure_skip_verify = true

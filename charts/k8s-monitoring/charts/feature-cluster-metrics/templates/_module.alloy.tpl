@@ -44,5 +44,3 @@ declare "cluster_metrics" {
   {{- include "feature.clusterMetrics.opencost.alloy" . | indent 2 }}
 }
 {{- end -}}
-
-{{- define "feature.clusterMetrics.alloyModules" }}{{- end }}
