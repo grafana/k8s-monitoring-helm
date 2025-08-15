@@ -1,8 +1,8 @@
 SHELL := /bin/bash
 HAS_SHELLSPEC := $(shell command -v shellspec;)
 
-CHART_TEMPLATE_FILES = $(shell find templates -name "*.tpl")
-CHART_YAML_FILES = $(shell find templates -name "*.yaml")
+CHART_TEMPLATE_FILES := $(shell find templates -name "*.tpl")
+CHART_YAML_FILES := $(shell find templates -name "*.yaml")
 ALLOW_LISTS := default_allow_lists/kube-state-metrics.yaml
 
 Chart.lock: Chart.yaml
@@ -94,47 +94,25 @@ endif
 #
 # Example targets
 #
-EXAMPLE_RELEASE_NAME=k8smon
-EXAMPLE_VALUES_FILES = $(shell find docs/examples -name values.yaml)
-EXAMPLE_OUTPUT_FILES = $(EXAMPLE_VALUES_FILES:values.yaml=output.yaml)
-METRICS_CONFIG_FILES = $(subst values.yaml,metrics.alloy,$(EXAMPLE_VALUES_FILES))
-EVENTS_CONFIG_FILES = $(subst values.yaml,events.alloy,$(EXAMPLE_VALUES_FILES))
-LOGS_CONFIG_FILES = $(subst values.yaml,logs.alloy,$(EXAMPLE_VALUES_FILES))
-PROFILES_CONFIG_FILES = $(subst values.yaml,profiles.alloy,$(EXAMPLE_VALUES_FILES))
-EXAMPLE_ALLOY_FILES = $(METRICS_CONFIG_FILES) $(EVENTS_CONFIG_FILES) $(LOGS_CONFIG_FILES) $(PROFILES_CONFIG_FILES)
-
-alloy_configs = $(shell \
-	DIR="$(shell dirname $(1))/" yq e 'with_entries(select(.key == "alloy*")) | select(.[].enabled == true) | to_entries | env(DIR) + .[].key + ".alloy"' $(1) \
-)
-
+EXAMPLE_VALUES_FILES := $(shell find docs/examples -name values.yaml)
+EXAMPLE_OUTPUT_FILES := $(EXAMPLE_VALUES_FILES:values.yaml=output.yaml)
 %/output.yaml: %/values.yaml Chart.yaml Chart.lock values.yaml values.schema.json $(CHART_TEMPLATE_FILES) $(CHART_YAML_FILES) $(ALLOW_LISTS)
-	helm template $(EXAMPLE_RELEASE_NAME) . -f $< > $@
+	../../scripts/generate-example.sh $(shell pwd) $(shell dirname $<)
 
+INTEGRATION_TEST_VALUES_FILES := $(shell find tests/integration -name values.yaml)
+INTEGRATION_TEST_OUTPUT_FILES := $(INTEGRATION_TEST_VALUES_FILES:values.yaml=.rendered/output.yaml)
 %/.rendered/output.yaml: %/values.yaml Chart.yaml Chart.lock values.yaml values.schema.json $(CHART_TEMPLATE_FILES) $(CHART_YAML_FILES) $(ALLOW_LISTS)
-	mkdir -p $(dir $@)
-	helm template $(EXAMPLE_RELEASE_NAME) . -f $< > $@
-
-%/metrics.alloy: %/output.yaml
-	yq 'select(.kind=="ConfigMap" and .metadata.name=="$(EXAMPLE_RELEASE_NAME)-alloy") | .data["config.alloy"]' $< > $@
-
-%/events.alloy: %/output.yaml
-	yq 'select(.kind=="ConfigMap" and .metadata.name=="$(EXAMPLE_RELEASE_NAME)-alloy-events") | .data["config.alloy"]' $< > $@
-
-%/logs.alloy: %/output.yaml
-	yq 'select(.kind=="ConfigMap" and .metadata.name=="$(EXAMPLE_RELEASE_NAME)-alloy-logs") | .data["config.alloy"]' $< > $@
-
-%/profiles.alloy: %/output.yaml
-	yq 'select(.kind=="ConfigMap" and .metadata.name=="$(EXAMPLE_RELEASE_NAME)-alloy-profiles") | .data["config.alloy"]' $< > $@
-
-INTEGRATION_TEST_VALUES_FILES = $(filter-out $(NON_RENDERED_INTEGRATION_TEST_VALUES_FILES),$(shell find tests/integration -name values.yaml))
-INTEGRATION_TEST_OUTPUT_FILES = $(INTEGRATION_TEST_VALUES_FILES:values.yaml=.rendered/output.yaml)
+	../../scripts/generate-example.sh $(shell pwd) $(shell dirname $<) --output-dir .rendered --no-alloy --no-readme
 
 .PHONY: examples
-examples: $(EXAMPLE_OUTPUT_FILES) $(EXAMPLE_ALLOY_FILES) $(INTEGRATION_TEST_OUTPUT_FILES)
+examples: $(EXAMPLE_OUTPUT_FILES) $(INTEGRATION_TEST_OUTPUT_FILES)
 
-.PHONY: build
-build: Chart.lock README.md examples values.schema.json $(ALLOW_LISTS)
+.PHONY: build build-chart build-docs build-examples
+build: build-chart build-docs build-examples
+build-chart: Chart.lock values.schema.json $(ALLOW_LISTS)
+build-docs: README.md
+build-examples: examples
 
 .PHONY: clean
 clean:
-	rm -f README.md values.schema.json $(EXAMPLE_OUTPUT_FILES) $(EXAMPLE_ALLOY_FILES) $(ALLOW_LISTS)
+	rm -f README.md values.schema.json $(EXAMPLE_OUTPUT_FILES) $(ALLOW_LISTS)

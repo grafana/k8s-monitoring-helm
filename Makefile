@@ -29,10 +29,14 @@ clean: ## Clean all charts
 ##@ Build
 .PHONY: build
 build: check-helm-version ## Build all charts
-	set -e && \
-	for chart in $(CHARTS); do \
-		make -C charts/$$chart $@; \
-	done
+	make -C charts/k8s-monitoring -j 8 build-features
+	make -C charts/k8s-monitoring build-chart
+	make -C charts/k8s-monitoring -j 4 build-docs
+	make -C charts/k8s-monitoring -j 8 build-examples
+
+	make -C charts/k8s-monitoring-v1 build-chart
+	make -C charts/k8s-monitoring-v1 -j 4 build-docs
+	make -C charts/k8s-monitoring-v1 -j 8 build-examples
 
 ##@ Install
 .PHONY: install

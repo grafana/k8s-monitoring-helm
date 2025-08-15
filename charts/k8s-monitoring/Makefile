@@ -1,8 +1,8 @@
 HAS_HELM_UNITTEST := $(shell helm plugin list | grep unittest 2> /dev/null)
 HAS_SHELLSPEC := $(shell command -v shellspec;)
 
-CHART_TEMPLATE_FILES = $(shell find templates -name "*.tpl")
-CHART_YAML_FILES = $(shell find templates -name "*.yaml")
+CHART_TEMPLATE_FILES := $(shell find templates -name "*.tpl")
+CHART_YAML_FILES := $(shell find templates -name "*.yaml")
 
 FEATURE_CHARTS = $(shell find charts -type d -depth 1 -name "feature-*")
 
@@ -13,11 +13,11 @@ ALLOY_OPERATOR_VERSION := $(shell yq '.dependencies[] | select(.name == "alloy-o
 collectors/upstream/alloy-values.yaml: charts/alloy-operator-$(ALLOY_OPERATOR_VERSION).tgz
 	tar xzf $< -C collectors/upstream/ --strip-components=1 alloy-operator/alloy-values.yaml
 
-COLLECTOR_VALUES_FILES = $(shell find collectors -maxdepth 1 -name "*-values.yaml" | sort -u)
+COLLECTOR_VALUES_FILES := $(shell find collectors -maxdepth 1 -name "*-values.yaml" | sort -u)
 COLLECTOR_DOCS_FILES = $(COLLECTOR_VALUES_FILES:collectors/%-values.yaml=./docs/collectors/%.md)
 COLLECTOR_SCHEMA_FILES = $(COLLECTOR_VALUES_FILES:collectors/%-values.yaml=./schema-mods/definitions/%-collector.schema.json)
 
-DESTINATION_VALUES_FILES = $(shell find destinations -name "*-values.yaml" | sort -u)
+DESTINATION_VALUES_FILES := $(shell find destinations -name "*-values.yaml" | sort -u)
 DESTINATION_DOCS_FILES = $(DESTINATION_VALUES_FILES:destinations/%-values.yaml=./docs/destinations/%.md)
 DESTINATION_SCHEMA_FILES = $(DESTINATION_VALUES_FILES:destinations/%-values.yaml=./schema-mods/definitions/%-destination.schema.json)
 
@@ -97,88 +97,40 @@ README.md: README.md.gotmpl values.yaml Chart.yaml
 	docker run --rm --platform linux/amd64 --volume $(shell pwd):/chart ghcr.io/grafana/helm-chart-toolbox-doc-generator --chart /chart > $@
 
 # Example targets
-EXAMPLE_RELEASE_NAME=k8smon
-EXAMPLE_VALUES_FILES := $(shell find docs/examples -name values.yaml)
+EXAMPLE_VALUES_FILES = $(shell find docs/examples -name values.yaml)
 EXAMPLE_OUTPUT_FILES := $(EXAMPLE_VALUES_FILES:values.yaml=output.yaml)
-EXAMPLE_ALLOY_FILES = $(foreach file,$(EXAMPLE_VALUES_FILES),$(call alloy_configs, $(file)))
-EXAMPLE_README_FILES := $(EXAMPLE_VALUES_FILES:values.yaml=README.md)
+%/output.yaml: %/values.yaml Chart.yaml Chart.lock values.yaml values.schema.json templates/destinations/_destination_types.tpl $(DESTINATION_VALUES_FILES) $(CHART_TEMPLATE_FILES) $(CHART_YAML_FILES)
+	../../scripts/generate-example.sh $(shell pwd) $(shell dirname $<)
 
 NON_RENDERED_INTEGRATION_TEST_VALUES_FILES = $(shell find tests/integration -name .no-render | sed 's/.no-render/values.yaml/')
 INTEGRATION_TEST_VALUES_FILES = $(filter-out $(NON_RENDERED_INTEGRATION_TEST_VALUES_FILES),$(shell find tests/integration -name values.yaml))
 INTEGRATION_TEST_OUTPUT_FILES = $(INTEGRATION_TEST_VALUES_FILES:values.yaml=.rendered/output.yaml)
-INTEGRATION_TEST_ALLOY_INSTANCE_FILES = $(foreach file,$(INTEGRATION_TEST_OUTPUT_FILES),$(call alloy_instances, $(file)))
 
 NON_RENDERED_PLATFORM_TEST_VALUES_FILES := $(shell find tests/platform -name .no-render | sed 's/.no-render/values.yaml/')
 PLATFORM_TEST_VALUES_FILES := $(filter-out $(NON_RENDERED_PLATFORM_TEST_VALUES_FILES),$(shell find tests/platform -name values.yaml))
 PLATFORM_TEST_OUTPUT_FILES := $(PLATFORM_TEST_VALUES_FILES:values.yaml=.rendered/output.yaml)
 
-alloy_configs = $(shell \
-	DIR="$(shell dirname $(1))/" yq e 'with_entries(select(.key == "alloy-*" and .value.enabled == true)) | to_entries | env(DIR) + .[].key + ".alloy"' $(1) \
-)
-alloy_instances = $(shell \
-	DIR="$(shell dirname $(1))/" yq e 'with_entries(select(.key == "alloy-*" and .value.enabled == true)) | to_entries | env(DIR) + .[].key + ".yaml"' $(1) \
-)
-
-%/output.yaml: %/values.yaml Chart.yaml Chart.lock values.yaml values.schema.json templates/destinations/_destination_types.tpl $(DESTINATION_VALUES_FILES) $(CHART_TEMPLATE_FILES) $(CHART_YAML_FILES)
-	helm template $(EXAMPLE_RELEASE_NAME) . -f $< > $@
-
 %/.rendered/output.yaml: %/values.yaml Chart.yaml Chart.lock values.yaml values.schema.json templates/destinations/_destination_types.tpl $(DESTINATION_VALUES_FILES) $(CHART_TEMPLATE_FILES) $(CHART_YAML_FILES)
-	mkdir -p $(dir $@)
-	helm template $(EXAMPLE_RELEASE_NAME) . -f $< > $@
-
-ALLOY_INSTANCES := logs metrics receiver singleton profiles
-define alloy_files
-%/alloy-$(1).alloy: %/output.yaml
-	yq 'select(.kind=="ConfigMap" and .metadata.name=="$(EXAMPLE_RELEASE_NAME)-alloy-$(1)") | .data["config.alloy"]' $$< > $$@
-%/alloy-$(1).yaml: %/output.yaml
-	yq 'select(.kind=="Alloy" and .metadata.name=="$(EXAMPLE_RELEASE_NAME)-alloy-$(1)") | .' $$< > $$@
-endef
-$(foreach instance,$(ALLOY_INSTANCES),$(eval $(call alloy_files,$(instance))))
-
-%/README.md: %/values.yaml $$(wildcard %/description.txt)
-	@echo '<!--' > $@
-	@echo '(NOTE: Do not edit README.md directly. It is a generated file!)' >> $@
-	@echo '(      To make changes, please modify values.yaml or description.txt and run `make examples`)' >> $@
-	@echo '-->' >> $@
-
-	@if [ -f $$(dirname $@)/description.txt ]; then \
-		cat $$(dirname $@)/description.txt >> $@; \
-	else \
-		echo $< | sed -e "s/docs\/examples\//# Example: /" >> $@; \
-	fi
-	@echo '' >> $@
-	@echo '## Values' >> $@
-	@echo '' >> $@
-	@echo '<!-- textlint-disable terminology -->' >> $@
-	@echo '```yaml' >> $@
-	@cat $< >> $@
-	@echo '```' >> $@
-	@echo '<!-- textlint-enable terminology -->' >> $@
+	../../scripts/generate-example.sh $(shell pwd) $(shell dirname $<) --output-dir .rendered --no-alloy --no-readme
 
 .PHONY: examples
-examples: $(EXAMPLE_OUTPUT_FILES) $(EXAMPLE_ALLOY_FILES) $(EXAMPLE_README_FILES) $(INTEGRATION_TEST_OUTPUT_FILES) $(PLATFORM_TEST_OUTPUT_FILES)
+examples: $(EXAMPLE_OUTPUT_FILES) $(INTEGRATION_TEST_OUTPUT_FILES) $(PLATFORM_TEST_OUTPUT_FILES)
 
 .PHONY: example-checks
-example-checks: $(EXAMPLE_OUTPUT_FILES)
+example-checks: docs/examples/private-image-registries/individual/output.yaml docs/examples/private-image-registries/globally/output.yaml docs/examples/auth/embedded-secrets/output.yaml
 ifdef HAS_SHELLSPEC
 	shellspec -c tests/example-checks
 else
 	docker run --platform linux/amd64 --rm --volume $(shell pwd):/src shellspec/shellspec -c /src/tests/example-checks -s /bin/sh
 endif
 
-
 .PHONY: misc-checks
-misc-checks: Chart.yaml
+misc-checks:
 ifdef HAS_SHELLSPEC
 	ALLOY_OPERATOR_VERSION=$(ALLOY_OPERATOR_VERSION) shellspec -c tests/misc-checks
 else
 	docker run --platform linux/amd64 --rm --env ALLOY_OPERATOR_VERSION=$(ALLOY_OPERATOR_VERSION) --volume $(shell pwd):/src shellspec/shellspec -c /src/tests/misc-checks -s /bin/sh
 endif
-
-.PHONY: integration-test-checks
-integration-test-checks: $(INTEGRATION_TEST_OUTPUT_FILES)
-.PHONY: platform-test-checks
-platform-test-checks: $(PLATFORM_TEST_OUTPUT_FILES)
 
 .PHONY: clean
 clean: clean-examples
@@ -192,7 +144,7 @@ clean: clean-examples
 
 .PHONY: clean-examples
 clean-examples:
-	rm -f $(EXAMPLE_OUTPUT_FILES) $(EXAMPLE_ALLOY_FILES) $(EXAMPLE_README_FILES) $(INTEGRATION_TEST_OUTPUT_FILES) $(PLATFORM_TEST_OUTPUT_FILES)
+	rm -f $(EXAMPLE_OUTPUT_FILES) $(INTEGRATION_TEST_OUTPUT_FILES) $(PLATFORM_TEST_OUTPUT_FILES)
 
 build-features:
 	set -e && \
@@ -201,8 +153,11 @@ build-features:
 	done
 
 # Build targets
-.PHONY: build
-build: build-features README.md values.schema.json templates/destinations/_destination_types.tpl $(COLLECTOR_DOCS_FILES) $(DESTINATION_DOCS_FILES) examples integration-test-checks platform-test-checks
+.PHONY: build build-features build-chart build-docs build-examples
+build: build-features build-chart build-docs build-examples
+build-chart: Chart.lock values.schema.json templates/destinations/_destination_types.tpl
+build-docs: README.md $(COLLECTOR_DOCS_FILES) $(DESTINATION_DOCS_FILES)
+build-examples: examples
 
 # Test targets
 .PHONY: test unittest lint-helm lint-configs
@@ -214,8 +169,8 @@ test-features:
 		make -C $$chart test; \
 	done
 
-lint-configs: $(EXAMPLE_ALLOY_FILES)
-	../../scripts/lint-alloy.sh $(EXAMPLE_ALLOY_FILES)
+lint-configs:
+	../../scripts/lint-alloy.sh $(shell find docs/examples -name "alloy-*.alloy")
 	rm -rf data-alloy  # Clean up the data-alloy directory, which is created by lint-alloy.sh when it runs Alloy.
 
 lint-helm: build
