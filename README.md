@@ -28,15 +28,14 @@
 [Helm](https://helm.sh/) must be installed to use the chart. Please refer to
 Helm's [documentation](https://helm.sh/docs/) to get started.
 
-Once Helm is set up properly, add the repository as follows:
+After Helm is set up properly, add the repository as follows:
 
 ```console
 helm repo add grafana https://grafana.github.io/helm-charts
 ```
 
-See
-the [Chart Documentation](https://github.com/grafana/k8s-monitoring-helm/blob/main/charts/k8s-monitoring/README.md)
-for chart install instructions.
+Refer to the [Chart Documentation](https://grafana.com/docs/grafana-cloud/monitor-infrastructure/kubernetes-monitoring/configuration/helm-chart-config/helm-chart/)
+to learn more, including about chart installation instructions.
 
 ## Office Hours
 

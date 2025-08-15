@@ -2,9 +2,9 @@
 (NOTE: Do not edit README.md directly. It is a generated file!)
 (      To make changes, please modify values.yaml or description.txt and run `make examples`)
 -->
-# Auto-Instrumentation with Discovery Rules
+# Zero-code nstrumentation with Discovery Rules
 
-This example demonstrates how to enable the auto-instrumentation feature, which deploys Grafana Beyla to automatically
+This example demonstrates how to enable the zero-code instrumentation feature, which deploys Grafana Beyla to automatically
 instrument your application for metrics collection. It also shows how to set
 [discovery rules](https://grafana.com/docs/beyla/latest/configure/service-discovery/) to control which services are
 instrumented.
