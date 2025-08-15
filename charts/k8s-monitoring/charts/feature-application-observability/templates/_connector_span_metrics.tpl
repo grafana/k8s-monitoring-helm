@@ -64,21 +64,21 @@ otelcol.connector.spanmetrics "{{ .name | default "default" }}" {
 }
 
 otelcol.processor.transform "span_metrics_transform" {
-{{- if .Values.metrics.transforms.resource }}
+{{- if .Values.connectors.spanMetrics.transforms.resource }}
    metric_statements {
     context = "resource"
     statements = [
-{{- range $transform := .Values.metrics.transforms.resource }}
+{{- range $transform := .Values.connectors.spanMetrics.transforms.resource }}
 {{ $transform | quote | indent 6 }},
 {{- end }}
     ]
   }
 {{- end }}
-{{- if .Values.metrics.transforms.metric }}
+{{- if .Values.connectors.spanMetrics.transforms.metric }}
    metric_statements {
     context = "metric"
     statements = [
-{{- range $transform := .Values.metrics.transforms.metric }}
+{{- range $transform := .Values.connectors.spanMetrics.transforms.metric }}
 {{ $transform | quote | indent 6 }},
 {{- end }}
     ]
@@ -88,8 +88,8 @@ otelcol.processor.transform "span_metrics_transform" {
     context = "datapoint"
     statements = [
       `set(attributes["collector.id"], "` + constants.hostname + `")`,
-{{- if .Values.metrics.transforms.datapoint }}
-{{- range $transform := .Values.metrics.transforms.datapoint }}
+{{- if .Values.connectors.spanMetrics.transforms.datapoint }}
+{{- range $transform := .Values.connectors.spanMetrics.transforms.datapoint }}
 {{ $transform | quote | indent 6 }},
 {{- end }}
 {{- end }}
