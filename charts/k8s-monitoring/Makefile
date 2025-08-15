@@ -96,33 +96,6 @@ values.schema.json: values.yaml $(COLLECTOR_SCHEMA_FILES) $(DESTINATION_SCHEMA_F
 README.md: README.md.gotmpl values.yaml Chart.yaml
 	docker run --rm --platform linux/amd64 --volume $(shell pwd):/chart ghcr.io/grafana/helm-chart-toolbox-doc-generator --chart /chart > $@
 
-#ALLOY_HELM_VERSION = $(shell helm show chart charts/alloy-operator-*.tgz | yq eval '.appVersion')
-#ALLOY_IMAGE = $(shell helm template test --repo https://grafana.github.io/helm-charts alloy --version $(ALLOY_HELM_VERSION) | yq eval 'select(.kind=="DaemonSet" and .metadata.name=="test-alloy") | .spec.template.spec.containers[0].image')
-#ALLOY_OPERATOR_IMAGE = $(shell yq eval 'select(.kind=="Deployment" and .metadata.name=="$(EXAMPLE_RELEASE_NAME)-alloy-operator") | .spec.template.spec.containers[0].image' docs/examples/features/cluster-metrics/default/output.yaml)
-#BEYLA_IMAGE = $(shell yq eval 'select(.kind=="DaemonSet" and .metadata.name=="$(EXAMPLE_RELEASE_NAME)-beyla") | .spec.template.spec.containers[0].image' docs/examples/features/auto-instrumentation/beyla-metrics/output.yaml)
-#CONFIG_RELOADER_IMAGE = $(shell helm template test --repo https://grafana.github.io/helm-charts alloy --version $(ALLOY_HELM_VERSION) | yq eval 'select(.kind=="DaemonSet" and .metadata.name=="test-alloy") | .spec.template.spec.containers[1].image')
-#KEPLER_IMAGE = $(shell yq eval 'select(.kind=="DaemonSet" and .metadata.name=="$(EXAMPLE_RELEASE_NAME)-kepler") | .spec.template.spec.containers[0].image' docs/examples/features/cluster-metrics/default/output.yaml)
-#KUBE_STATE_METRICS_IMAGE = $(shell yq eval 'select(.kind=="Deployment" and .metadata.name=="$(EXAMPLE_RELEASE_NAME)-kube-state-metrics") | .spec.template.spec.containers[0].image' docs/examples/features/cluster-metrics/default/output.yaml)
-#NODE_EXPORTER_IMAGE = $(shell yq eval 'select(.kind=="DaemonSet" and .metadata.name=="$(EXAMPLE_RELEASE_NAME)-node-exporter") | .spec.template.spec.containers[0].image' docs/examples/features/cluster-metrics/default/output.yaml)
-#OPENCOST_EXPORTER_IMAGE = $(shell yq eval 'select(.kind=="Deployment" and .metadata.name=="$(EXAMPLE_RELEASE_NAME)-opencost") | .spec.template.spec.containers[0].image' docs/examples/features/cluster-metrics/default/output.yaml)
-#WINDOWS_EXPORTER_IMAGE = $(shell yq eval 'select(.kind=="DaemonSet" and .metadata.name=="$(EXAMPLE_RELEASE_NAME)-windows-exporter") | .spec.template.spec.containers[0].image' docs/examples/features/cluster-metrics/default/output.yaml)
-#docs/Images.md: Chart.yaml docs/examples/features/cluster-metrics/default/output.yaml docs/examples/features/auto-instrumentation/beyla-metrics/output.yaml
-#	@echo "# Images" > $@
-#	@echo "" >> $@
-#	@echo "The following is the list of images potentially used in the $(shell yq eval '.version' Chart.yaml) version of the $(shell yq eval '.name' Chart.yaml) Helm chart:" >> $@
-#	@echo "" >> $@
-#	@echo "| Image Name | Repository | Feature |" >> $@
-#	@echo "| ---------- | ---------- | ------- |" >> $@
-#	@echo "| Alloy | $(ALLOY_IMAGE) | Always used. The telemetry data collector. Enabled with \`alloy-____.enabled=true\`. Deployed via the Alloy Operator. |" >> $@
-#	@echo "| Alloy Operator | $(ALLOY_OPERATOR_IMAGE) | Always used. Deploys and manages Grafana Alloy collector instances. |" >> $@
-#	@echo "| Beyla | $(BEYLA_IMAGE) | Automatically instruments apps on the cluster, generating metrics and traces. Enabled with \`autoInstrumentation.beyla.enabled=true\`. |" >> $@
-#	@echo "| Config Reloader | $(CONFIG_RELOADER_IMAGE) | Alloy sidecar that reloads the Alloy configuration upon changes. Enabled with \`alloy-____.configReloader.enabled=true\`. Deployed via the Alloy Operator. |" >> $@
-#	@echo "| Kepler | $(KEPLER_IMAGE) | Gathers energy metrics for Kubernetes objects. Enabled with \`clusterMetrics.kepler.enabled=true\`. |" >> $@
-#	@echo "| kube-state-metrics | $(KUBE_STATE_METRICS_IMAGE) | Gathers Kubernetes cluster object metrics. Enabled with \`clusterMetrics.kube-state-metrics.deploy=true\`. |" >> $@
-#	@echo "| Node Exporter | $(NODE_EXPORTER_IMAGE) | Gathers Kubernetes cluster node metrics. Enabled with \`clusterMetrics.node-exporter.deploy=true\`. |" >> $@
-#	@echo "| OpenCost | $(OPENCOST_EXPORTER_IMAGE) | Gathers cost metrics for Kubernetes objects. Enabled with \`clusterMetrics.opencost.enabled=true\`. |" >> $@
-#	@echo "| Windows Exporter | $(WINDOWS_EXPORTER_IMAGE) | Gathers Kubernetes cluster node metrics for Windows nodes. Enabled with \`clusterMetrics.windows-exporter.deploy=true\`. |" >> $@
-
 # Example targets
 EXAMPLE_RELEASE_NAME=k8smon
 EXAMPLE_VALUES_FILES := $(shell find docs/examples -name values.yaml)
