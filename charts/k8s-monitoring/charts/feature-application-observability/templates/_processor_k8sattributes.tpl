@@ -3,6 +3,7 @@
 {{- define "feature.applicationObservability.processor.k8sattributes.alloy.target" }}otelcol.processor.k8sattributes.{{ .name | default "default" }}.input{{ end }}
 {{- define "feature.applicationObservability.processor.k8sattributes.alloy" }}
 otelcol.processor.k8sattributes "{{ .name | default "default" }}" {
+  passthrough = {{ .Values.processors.k8sattributes.passthrough }}
   extract {
 {{- if .Values.processors.k8sattributes.metadata }}
     metadata = {{ .Values.processors.k8sattributes.metadata | toJson }}
