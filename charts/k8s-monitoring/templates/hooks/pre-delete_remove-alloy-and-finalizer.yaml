@@ -1,5 +1,6 @@
 {{- if and (index .Values "alloy-operator").deploy (index .Values "alloy-operator").waitForAlloyRemoval.enabled }}
 {{- $jobName := (printf "%s-remove-alloy-and-finalizer" (include "helper.fullname" .)) | trunc 63 | trimSuffix "-" }}
+{{- $jobSettings := (index .Values "alloy-operator").waitForAlloyRemoval -}}
 
 {{- $alloyNames := list }}
 {{/* Standard Alloy collectors */}}
@@ -51,10 +52,18 @@ spec:
         sidecar.istio.io/inject: "false"
     spec:
       restartPolicy: Never
+      {{- with $jobSettings.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $jobSettings.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       serviceAccountName: {{ $jobName }}
       containers:
         - name: remove-finalizers
-          {{- with (index .Values "alloy-operator").waitForAlloyRemoval.image }}
+          {{- with $jobSettings.image }}
             {{- if .digest }}
           image: "{{ dig "image" "registry" .registry $.Values.global }}/{{ .repository }}@{{ .digest }}"
             {{- else }}

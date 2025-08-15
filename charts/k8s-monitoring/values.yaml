@@ -371,14 +371,13 @@ alloy-operator:
   # @section -- Alloy Operator
   deploy: true
 
-  # Controls a Helm Hook to delay the creation of Alloy resources until the Alloy Operator is ready.
   waitForReadiness:
-    # -- Wait for the Alloy Operator to be ready before creating Alloy resources.
+    # -- Utilize a Helm Hook to wait for the Alloy Operator to be ready before creating Alloy instances.
     # This prevents timing issues where Alloy custom resources are created before the operator is ready to process them.
     # @section -- Alloy Operator
     enabled: true
 
-    # -- The image to use for the wait-for-readiness job that ensures the Alloy Operator is ready.
+    # -- The image to use for the Helm Hook that ensures the Alloy Operator is ready.
     # @section -- Alloy Operator
     image:
       registry: ghcr.io
@@ -386,19 +385,37 @@ alloy-operator:
       tag: 0.1.0
       digest: ""
 
+    # -- Tolerations to apply to the Helm Hook that ensures the Alloy Operator is ready.
+    # @section -- Alloy Operator
+    tolerations: []
+
+    # -- Node selector to use for the Helm Hook that ensures the Alloy Operator is ready.
+    # @section -- Alloy Operator
+    nodeSelector:
+      kubernetes.io/os: linux
+
   waitForAlloyRemoval:
-    # -- Wait for all Alloy instances to be removed before uninstalling the Alloy Operator.
+    # -- Utilize a Helm Hook to wait for all Alloy instances to be removed before uninstalling the Alloy Operator.
     # This ensures that all Alloy instances are properly cleaned up before the operator is removed.
     # @section -- Alloy Operator
     enabled: true
 
-    # -- The image to use for the wait-for-readiness job that ensures the Alloy Operator is ready.
+    # -- The image to use for the Helm Hook that ensures that Alloy instances are removed during uninstall.
     # @section -- Alloy Operator
     image:
       registry: ghcr.io
       repository: grafana/helm-chart-toolbox-kubectl
       tag: 0.1.0
       digest: ""
+
+    # -- Tolerations to apply to the Helm Hook that ensures that Alloy instances are removed during uninstall.
+    # @section -- Alloy Operator
+    tolerations: []
+
+    # -- Node selector to use for the Helm Hook that ensures that Alloy instances are removed during uninstall.
+    # @section -- Alloy Operator
+    nodeSelector:
+      kubernetes.io/os: linux
 
 # -- Deploy additional manifest objects
 # @section -- Extra Objects
