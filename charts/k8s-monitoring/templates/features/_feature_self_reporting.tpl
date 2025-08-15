@@ -88,7 +88,6 @@ grafana_kubernetes_monitoring_feature_info{{ include "label_list" (merge $featur
 {{- end }}
 {{- end }}
 
-{{- define "feature.selfReporting.alloyModules" }}{{ end }}
 {{- define "feature.selfReporting.notes.deployments" }}{{ end }}
 {{- define "feature.selfReporting.notes.task" }}{{ end }}
 {{- define "feature.selfReporting.notes.actions" }}{{ end }}

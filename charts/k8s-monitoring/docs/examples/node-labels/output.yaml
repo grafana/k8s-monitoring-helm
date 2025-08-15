@@ -455,6 +455,8 @@ data:
         targets = discovery.relabel.annotation_autodiscovery_http.output
         honor_labels = true
         bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+        scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
+        scrape_classic_histograms = false
         clustering {
           enabled = true
         }
@@ -469,6 +471,8 @@ data:
         tls_config {
           insecure_skip_verify = true
         }
+        scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
+        scrape_classic_histograms = false
         clustering {
           enabled = true
         }
@@ -565,6 +569,8 @@ data:
         job_name = "integrations/kubernetes/kubelet"
         scheme   = "https"
         scrape_interval = "60s"
+        scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
+        scrape_classic_histograms = false
         bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
     
         tls_config {
@@ -605,6 +611,8 @@ data:
         job_name = "integrations/kubernetes/resources"
         scheme   = "https"
         scrape_interval = "60s"
+        scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
+        scrape_classic_histograms = false
         bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
     
         tls_config {
@@ -645,6 +653,8 @@ data:
         job_name = "integrations/kubernetes/cadvisor"
         scheme = "https"
         scrape_interval = "60s"
+        scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
+        scrape_classic_histograms = false
         bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
     
         tls_config {
@@ -771,6 +781,8 @@ data:
         targets = discovery.relabel.kube_state_metrics.output
         job_name = "integrations/kubernetes/kube-state-metrics"
         scrape_interval = "60s"
+        scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
+        scrape_classic_histograms = false
         scheme = "http"
         bearer_token_file = ""
         tls_config {
@@ -787,7 +799,7 @@ data:
         max_cache_size = 100000
         rule {
           source_labels = ["__name__"]
-          regex = "up|scrape_samples_scraped|kube_configmap_info|kube_configmap_metadata_resource_version|kube_daemonset.*|kube_deployment_metadata_generation|kube_deployment_spec_replicas|kube_deployment_status_condition|kube_deployment_status_observed_generation|kube_deployment_status_replicas_available|kube_deployment_status_replicas_updated|kube_horizontalpodautoscaler_spec_max_replicas|kube_horizontalpodautoscaler_spec_min_replicas|kube_horizontalpodautoscaler_status_current_replicas|kube_horizontalpodautoscaler_status_desired_replicas|kube_job.*|kube_namespace_status_phase|kube_node.*|kube_persistentvolume_status_phase|kube_persistentvolumeclaim_access_mode|kube_persistentvolumeclaim_info|kube_persistentvolumeclaim_labels|kube_persistentvolumeclaim_resource_requests_storage_bytes|kube_persistentvolumeclaim_status_phase|kube_pod_container_info|kube_pod_container_resource_limits|kube_pod_container_resource_requests|kube_pod_container_status_last_terminated_reason|kube_pod_container_status_restarts_total|kube_pod_container_status_waiting_reason|kube_pod_info|kube_pod_owner|kube_pod_spec_volumes_persistentvolumeclaims_info|kube_pod_start_time|kube_pod_status_phase|kube_pod_status_reason|kube_replicaset.*|kube_resourcequota|kube_secret_metadata_resource_version|kube_statefulset.*"
+          regex = "up|scrape_samples_scraped|kube_configmap_info|kube_configmap_metadata_resource_version|kube_cronjob.*|kube_daemonset.*|kube_deployment_metadata_generation|kube_deployment_spec_replicas|kube_deployment_status_condition|kube_deployment_status_observed_generation|kube_deployment_status_replicas_available|kube_deployment_status_replicas_updated|kube_horizontalpodautoscaler_spec_max_replicas|kube_horizontalpodautoscaler_spec_min_replicas|kube_horizontalpodautoscaler_status_current_replicas|kube_horizontalpodautoscaler_status_desired_replicas|kube_job.*|kube_namespace_status_phase|kube_node.*|kube_persistentvolume_status_phase|kube_persistentvolumeclaim_access_mode|kube_persistentvolumeclaim_info|kube_persistentvolumeclaim_labels|kube_persistentvolumeclaim_resource_requests_storage_bytes|kube_persistentvolumeclaim_status_phase|kube_pod_container_info|kube_pod_container_resource_limits|kube_pod_container_resource_requests|kube_pod_container_status_last_terminated_reason|kube_pod_container_status_restarts_total|kube_pod_container_status_waiting_reason|kube_pod_info|kube_pod_owner|kube_pod_spec_volumes_persistentvolumeclaims_info|kube_pod_start_time|kube_pod_status_phase|kube_pod_status_reason|kube_replicaset.*|kube_resourcequota|kube_secret_metadata_resource_version|kube_statefulset.*"
           action = "keep"
         }
         forward_to = argument.metrics_destinations.value
@@ -956,6 +968,8 @@ data:
         targets = discovery.relabel.node_exporter.output
         job_name = "integrations/node_exporter"
         scrape_interval = "60s"
+        scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
+        scrape_classic_histograms = false
         scheme = "http"
         bearer_token_file = ""
         tls_config {
@@ -985,14 +999,15 @@ data:
         forward_to = argument.metrics_destinations.value
       }
     
+      // Windows Exporter
       discovery.kubernetes "windows_exporter_pods" {
         role = "pod"
-        namespaces {
-          names = ["default"]
-        }
         selectors {
           role = "pod"
           label = "app.kubernetes.io/name=windows-exporter,release=k8smon"
+        }
+        namespaces {
+          names = ["default"]
         }
         attach_metadata {
           node = true
@@ -1001,9 +1016,23 @@ data:
     
       discovery.relabel "windows_exporter" {
         targets = discovery.kubernetes.windows_exporter_pods.targets
+    
+        // keep only the specified metrics port name, and pods that are Running and ready
+        rule {
+          source_labels = [
+            "__meta_kubernetes_pod_container_port_name",
+            "__meta_kubernetes_pod_container_init",
+            "__meta_kubernetes_pod_phase",
+            "__meta_kubernetes_pod_ready",
+          ]
+          separator = "@"
+          regex = "metrics@false@Running@true"
+          action = "keep"
+        }
+    
+        // Set the instance label to the node name
         rule {
           source_labels = ["__meta_kubernetes_pod_node_name"]
-          action = "replace"
           target_label = "instance"
         }
     
@@ -1060,9 +1089,11 @@ data:
       }
     
       prometheus.scrape "windows_exporter" {
-        job_name   = "integrations/windows-exporter"
         targets  = discovery.relabel.windows_exporter.output
+        job_name   = "integrations/windows-exporter"
         scrape_interval = "60s"
+        scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
+        scrape_classic_histograms = false
         clustering {
           enabled = true
         }
@@ -1182,7 +1213,7 @@ data:
   self-reporting-metric.prom: |
     # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_build_info gauge
-    grafana_kubernetes_monitoring_build_info{version="3.2.6", namespace="default"} 1
+    grafana_kubernetes_monitoring_build_info{version="3.3.0", namespace="default"} 1
     # HELP grafana_kubernetes_monitoring_feature_info A metric to report the enabled features of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_feature_info gauge
     grafana_kubernetes_monitoring_feature_info{feature="annotationAutodiscovery", version="1.0.0"} 1
@@ -2292,12 +2323,317 @@ spec:
       nodeSelector:
         kubernetes.io/os: linux
 ---
+# Source: k8s-monitoring/templates/hooks/post-install_add-finalizer.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: k8smon-k8s-monitoring-add-finalizer
+  namespace: default
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+    "helm.sh/hook-weight": "5"
+---
+# Source: k8s-monitoring/templates/hooks/post-install_wait-for-operator.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: k8smon-k8s-monitoring-wait-alloy-operator
+  namespace: default
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+    "helm.sh/hook-weight": "5"
+---
+# Source: k8s-monitoring/templates/hooks/pre-delete_remove-alloy-and-finalizer.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: k8smon-k8s-monitoring-remove-alloy-and-finalizer
+  namespace: default
+  annotations:
+    helm.sh/hook: pre-delete
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+---
+# Source: k8s-monitoring/templates/hooks/post-install_add-finalizer.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: k8smon-k8s-monitoring-add-finalizer
+  namespace: default
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+    "helm.sh/hook-weight": "5"
+rules:
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    verbs: ["get", "list", "watch", "patch"]
+---
+# Source: k8s-monitoring/templates/hooks/post-install_wait-for-operator.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: k8smon-k8s-monitoring-wait-alloy-operator
+  namespace: default
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+    "helm.sh/hook-weight": "5"
+rules:
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list", "watch"]
+---
+# Source: k8s-monitoring/templates/hooks/pre-delete_remove-alloy-and-finalizer.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: k8smon-k8s-monitoring-remove-alloy-and-finalizer
+  namespace: default
+  annotations:
+    helm.sh/hook: pre-delete
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+rules:
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    verbs: ["get", "list", "watch", "patch"]
+  - apiGroups: ["collectors.grafana.com"]
+    resources: ["alloys"]
+    verbs: ["get", "list", "watch", "delete"]
+---
+# Source: k8s-monitoring/templates/hooks/post-install_add-finalizer.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: k8smon-k8s-monitoring-add-finalizer
+  namespace: default
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+    "helm.sh/hook-weight": "5"
+subjects:
+  - kind: ServiceAccount
+    name: k8smon-k8s-monitoring-add-finalizer
+    namespace: default
+roleRef:
+  kind: Role
+  name: k8smon-k8s-monitoring-add-finalizer
+  apiGroup: rbac.authorization.k8s.io
+---
+# Source: k8s-monitoring/templates/hooks/post-install_wait-for-operator.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: k8smon-k8s-monitoring-wait-alloy-operator
+  namespace: default
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+    "helm.sh/hook-weight": "5"
+subjects:
+  - kind: ServiceAccount
+    name: k8smon-k8s-monitoring-wait-alloy-operator
+    namespace: default
+roleRef:
+  kind: Role
+  name: k8smon-k8s-monitoring-wait-alloy-operator
+  apiGroup: rbac.authorization.k8s.io
+---
+# Source: k8s-monitoring/templates/hooks/pre-delete_remove-alloy-and-finalizer.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: k8smon-k8s-monitoring-remove-alloy-and-finalizer
+  namespace: default
+  annotations:
+    helm.sh/hook: pre-delete
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+subjects:
+  - kind: ServiceAccount
+    name: k8smon-k8s-monitoring-remove-alloy-and-finalizer
+    namespace: default
+roleRef:
+  kind: Role
+  name: k8smon-k8s-monitoring-remove-alloy-and-finalizer
+  apiGroup: rbac.authorization.k8s.io
+---
+# Source: k8s-monitoring/templates/hooks/post-install_add-finalizer.yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: k8smon-k8s-monitoring-add-finalizer
+  namespace: default
+  labels:
+    app.kubernetes.io/name: k8smon-k8s-monitoring-add-finalizer
+    app.kubernetes.io/instance: k8smon
+    helm.sh/chart: k8s-monitoring-3.3.0
+  annotations:
+    helm.sh/hook: post-install,post-upgrade
+    helm.sh/hook-weight: "15"
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+spec:
+  ttlSecondsAfterFinished: 300
+  backoffLimit: 3
+  template:
+    metadata:
+      name: k8smon-k8s-monitoring-add-finalizer
+      labels:
+        app.kubernetes.io/name: k8smon-k8s-monitoring
+        app.kubernetes.io/instance: k8smon
+        sidecar.istio.io/inject: "false"
+    spec:
+      restartPolicy: Never
+      nodeSelector:
+        kubernetes.io/os: linux
+      serviceAccountName: k8smon-k8s-monitoring-add-finalizer
+      containers:
+        - name: add-finalizers
+          image: "ghcr.io/grafana/helm-chart-toolbox-kubectl:0.1.0"
+          command:
+            - /bin/bash
+            - -ce
+            - |
+              kubectl patch \
+                --namespace=default \
+                --patch='{"metadata":{"finalizers":["k8s.grafana.com/finalizer"]}}' \
+                deployment/k8smon-alloy-operator
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+            readOnlyRootFilesystem: true
+            seccompProfile:
+              type: RuntimeDefault
+---
+# Source: k8s-monitoring/templates/hooks/post-install_wait-for-operator.yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: k8smon-k8s-monitoring-wait-alloy-operator
+  namespace: default
+  labels:
+    app.kubernetes.io/name: k8smon-k8s-monitoring-wait-alloy-operator
+    app.kubernetes.io/instance: k8smon
+    helm.sh/chart: k8s-monitoring-3.3.0
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+    "helm.sh/hook-weight": "5"
+spec:
+  ttlSecondsAfterFinished: 300
+  backoffLimit: 3
+  template:
+    metadata:
+      name: k8smon-k8s-monitoring-wait-alloy-operator
+      labels:
+        app.kubernetes.io/name: k8smon-k8s-monitoring
+        app.kubernetes.io/instance: k8smon
+        sidecar.istio.io/inject: "false"
+    spec:
+      restartPolicy: Never
+      nodeSelector:
+        kubernetes.io/os: linux
+      serviceAccountName: k8smon-k8s-monitoring-wait-alloy-operator
+      containers:
+        - name: wait-for-operator
+          image: "ghcr.io/grafana/helm-chart-toolbox-kubectl:0.1.0"
+          command:
+            - /bin/bash
+            - -ce
+            - |
+              echo "Waiting for Alloy Operator to be ready..."
+              kubectl wait \
+                --timeout=300s \
+                --namespace=default \
+                --for=condition=available \
+                deployment/k8smon-alloy-operator
+
+              echo "Verifying Alloy Operator pod is running..."
+              kubectl wait \
+                --timeout=120s \
+                --namespace=default \
+                --for=condition=ready \
+                pod -l app.kubernetes.io/name=alloy-operator
+
+              echo "Alloy Operator is ready!"
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+            readOnlyRootFilesystem: true
+            seccompProfile:
+              type: RuntimeDefault
+---
+# Source: k8s-monitoring/templates/hooks/pre-delete_remove-alloy-and-finalizer.yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: k8smon-k8s-monitoring-remove-alloy-and-finalizer
+  namespace: default
+  labels:
+    app.kubernetes.io/name: k8smon-k8s-monitoring-remove-alloy-and-finalizer
+    app.kubernetes.io/instance: k8smon
+    helm.sh/chart: k8s-monitoring-3.3.0
+  annotations:
+    helm.sh/hook: pre-delete
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+spec:
+  ttlSecondsAfterFinished: 300
+  backoffLimit: 3
+  template:
+    metadata:
+      name: k8smon-k8s-monitoring-remove-alloy-and-finalizer
+      labels:
+        app.kubernetes.io/name: k8smon-k8s-monitoring
+        app.kubernetes.io/instance: k8smon
+        sidecar.istio.io/inject: "false"
+    spec:
+      restartPolicy: Never
+      nodeSelector:
+        kubernetes.io/os: linux
+      serviceAccountName: k8smon-k8s-monitoring-remove-alloy-and-finalizer
+      containers:
+        - name: remove-finalizers
+          image: "ghcr.io/grafana/helm-chart-toolbox-kubectl:0.1.0"
+          command:
+            - /bin/bash
+            - -ce
+            - |
+              echo "Deleting Alloy instance: alloy/k8smon-alloy-metrics..."
+              kubectl delete alloy/k8smon-alloy-metrics --wait
+              kubectl wait --for=delete alloy/k8smon-alloy-metrics --timeout=60s || echo "Timed out waiting for deletion of alloy/k8smon-alloy-metrics or it may not exist."
+
+              echo "Deleting Alloy instance: alloy/k8smon-alloy-logs..."
+              kubectl delete alloy/k8smon-alloy-logs --wait
+              kubectl wait --for=delete alloy/k8smon-alloy-logs --timeout=60s || echo "Timed out waiting for deletion of alloy/k8smon-alloy-logs or it may not exist."
+
+              kubectl patch \
+                --namespace=default \
+                --type json \
+                --patch='[{"op": "remove", "path": "/metadata/finalizers"}]' \
+                deployment/k8smon-alloy-operator
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+            readOnlyRootFilesystem: true
+            seccompProfile:
+              type: RuntimeDefault
+---
 # Source: k8s-monitoring/templates/alloy.yaml
 apiVersion: collectors.grafana.com/v1alpha1
 kind: Alloy
 metadata:
   name: k8smon-alloy-metrics
   namespace: default
+  annotations:
+    helm.sh/hook: post-install,post-upgrade
+    helm.sh/hook-weight: "10"
+    helm.sdk.operatorframework.io/uninstall-wait: "true"
 spec:
   alloy:
     clustering:
@@ -2489,6 +2825,10 @@ kind: Alloy
 metadata:
   name: k8smon-alloy-logs
   namespace: default
+  annotations:
+    helm.sh/hook: post-install,post-upgrade
+    helm.sh/hook-weight: "10"
+    helm.sdk.operatorframework.io/uninstall-wait: "true"
 spec:
   alloy:
     clustering:

@@ -179,5 +179,3 @@ declare "cluster_events" {
   }
 }
 {{- end -}}
-
-{{- define "feature.clusterEvents.alloyModules" }}{{- end }}

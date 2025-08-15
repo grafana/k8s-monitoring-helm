@@ -5,7 +5,7 @@
 
 # k8s-monitoring
 
-![Version: 3.2.6](https://img.shields.io/badge/Version-3.2.6-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 3.2.6](https://img.shields.io/badge/AppVersion-3.2.6-informational?style=flat-square)
+![Version: 3.3.0](https://img.shields.io/badge/Version-3.3.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 3.3.0](https://img.shields.io/badge/AppVersion-3.3.0-informational?style=flat-square)
 Capture all telemetry data from your Kubernetes cluster.
 
 ## Breaking change announcements
@@ -34,7 +34,7 @@ Version 2.1 was re-versioned to be 3.0. If you are on 2.1, please upgrade to 3.0
 
 ### Version 2.0
 
-v2 introduces some significant changes to the chart configuration values. Refer to the migration [documentation](./docs/Migration.md) for tools and strategies to migrate from v1.
+v2 introduces some significant changes to the chart configuration values. Refer to the migration [documentation](https://grafana.com/docs/grafana-cloud/monitor-infrastructure/kubernetes-monitoring/configuration/helm-chart-config/helm-chart/migrate-helm-chart/) for tools and strategies to migrate from v1.
 
 ## Usage
 
@@ -145,7 +145,7 @@ destinationsMap:
 
 #### Collectors
 
-([Documentation](./docs/Collectors.md))
+([Documentation](https://grafana.com/docs/grafana-cloud/monitor-infrastructure/kubernetes-monitoring/configuration/helm-chart-config/helm-chart/collector-reference/))
 
 Collectors are workloads that are dedicated to gathering metrics, logs, traces, and profiles from the cluster and
 from workloads on the cluster. There are multiple collector instances to optimize around the collection requirements.
@@ -158,7 +158,7 @@ The list of collectors are:
 *   **alloy-singleton** is a 1-replica Deployment to collect cluster events.
 *   **alloy-profiles** is a DaemonSet used to instrument and collect profiling data.
 
-To enable a collector, add a new section to your values file. Ex:
+To enable a collector, add a new section to your values file. Example:
 
 ```YAML
 alloy-{collector_name}:
@@ -169,7 +169,7 @@ alloy-{collector_name}:
 
 #### Features
 
-([Documentation](./docs/Features.md))
+([Documentation](https://grafana.com/docs/grafana-cloud/monitor-infrastructure/kubernetes-monitoring/configuration/helm-chart-config/helm-chart/#features))
 
 This section is where you define which features you want to enable with this chart. Features define what kind of data to collect.
 
@@ -256,6 +256,14 @@ details:
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | alloy-operator.deploy | bool | `true` | Deploy the Alloy Operator. |
+| alloy-operator.waitForAlloyRemoval.enabled | bool | `true` | Utilize a Helm Hook to wait for all Alloy instances to be removed before uninstalling the Alloy Operator. This ensures that all Alloy instances are properly cleaned up before the operator is removed. |
+| alloy-operator.waitForAlloyRemoval.image | object | `{"digest":"","registry":"ghcr.io","repository":"grafana/helm-chart-toolbox-kubectl","tag":"0.1.0"}` | The image to use for the Helm Hook that ensures that Alloy instances are removed during uninstall. |
+| alloy-operator.waitForAlloyRemoval.nodeSelector | object | `{"kubernetes.io/os":"linux"}` | Node selector to use for the Helm Hook that ensures that Alloy instances are removed during uninstall. |
+| alloy-operator.waitForAlloyRemoval.tolerations | list | `[]` | Tolerations to apply to the Helm Hook that ensures that Alloy instances are removed during uninstall. |
+| alloy-operator.waitForReadiness.enabled | bool | `true` | Utilize a Helm Hook to wait for the Alloy Operator to be ready before creating Alloy instances. This prevents timing issues where Alloy custom resources are created before the operator is ready to process them. |
+| alloy-operator.waitForReadiness.image | object | `{"digest":"","registry":"ghcr.io","repository":"grafana/helm-chart-toolbox-kubectl","tag":"0.1.0"}` | The image to use for the Helm Hook that ensures the Alloy Operator is ready. |
+| alloy-operator.waitForReadiness.nodeSelector | object | `{"kubernetes.io/os":"linux"}` | Node selector to use for the Helm Hook that ensures the Alloy Operator is ready. |
+| alloy-operator.waitForReadiness.tolerations | list | `[]` | Tolerations to apply to the Helm Hook that ensures the Alloy Operator is ready. |
 
 ### Collectors - Alloy Profiles
 
@@ -352,7 +360,9 @@ details:
 | global.kubernetesAPIService | string | `""` | The Kubernetes service. Change this if your cluster DNS is configured differently than the default. |
 | global.maxCacheSize | int | `100000` | Sets the max_cache_size for every prometheus.relabel component. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)) This should be at least 2x-5x your largest scrape target or samples appended rate. |
 | global.platform | string | `""` | The specific platform for this cluster. Will enable compatibility for some platforms. Supported options: (empty) or "openshift". |
+| global.scrapeClassicHistograms | bool | `false` | Whether to scrape a classic histogram that’s also exposed as a native histogram. |
 | global.scrapeInterval | string | `"60s"` | How frequently to scrape metrics. |
+| global.scrapeProcotols | list | `["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]` | The protocols to negotiate during a Prometheus metrics scrape, in order of preference. |
 
 ### Features - Service Integrations
 

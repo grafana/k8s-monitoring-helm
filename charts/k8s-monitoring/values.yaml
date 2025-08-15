@@ -21,6 +21,14 @@ global:
   # @section -- Global Settings
   scrapeInterval: 60s
 
+  # -- The protocols to negotiate during a Prometheus metrics scrape, in order of preference.
+  # @section -- Global Settings
+  scrapeProcotols: ["OpenMetricsText1.0.0", "OpenMetricsText0.0.1", "PrometheusText0.0.4"]
+
+  # -- Whether to scrape a classic histogram that’s also exposed as a native histogram.
+  # @section -- Global Settings
+  scrapeClassicHistograms: false
+
   # -- Sets the max_cache_size for every prometheus.relabel component. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments))
   # This should be at least 2x-5x your largest scrape target or samples appended rate.
   # @section -- Global Settings
@@ -362,6 +370,52 @@ alloy-operator:
   # -- Deploy the Alloy Operator.
   # @section -- Alloy Operator
   deploy: true
+
+  waitForReadiness:
+    # -- Utilize a Helm Hook to wait for the Alloy Operator to be ready before creating Alloy instances.
+    # This prevents timing issues where Alloy custom resources are created before the operator is ready to process them.
+    # @section -- Alloy Operator
+    enabled: true
+
+    # -- The image to use for the Helm Hook that ensures the Alloy Operator is ready.
+    # @section -- Alloy Operator
+    image:
+      registry: ghcr.io
+      repository: grafana/helm-chart-toolbox-kubectl
+      tag: 0.1.0
+      digest: ""
+
+    # -- Tolerations to apply to the Helm Hook that ensures the Alloy Operator is ready.
+    # @section -- Alloy Operator
+    tolerations: []
+
+    # -- Node selector to use for the Helm Hook that ensures the Alloy Operator is ready.
+    # @section -- Alloy Operator
+    nodeSelector:
+      kubernetes.io/os: linux
+
+  waitForAlloyRemoval:
+    # -- Utilize a Helm Hook to wait for all Alloy instances to be removed before uninstalling the Alloy Operator.
+    # This ensures that all Alloy instances are properly cleaned up before the operator is removed.
+    # @section -- Alloy Operator
+    enabled: true
+
+    # -- The image to use for the Helm Hook that ensures that Alloy instances are removed during uninstall.
+    # @section -- Alloy Operator
+    image:
+      registry: ghcr.io
+      repository: grafana/helm-chart-toolbox-kubectl
+      tag: 0.1.0
+      digest: ""
+
+    # -- Tolerations to apply to the Helm Hook that ensures that Alloy instances are removed during uninstall.
+    # @section -- Alloy Operator
+    tolerations: []
+
+    # -- Node selector to use for the Helm Hook that ensures that Alloy instances are removed during uninstall.
+    # @section -- Alloy Operator
+    nodeSelector:
+      kubernetes.io/os: linux
 
 # -- Deploy additional manifest objects
 # @section -- Extra Objects

@@ -1,0 +1,136 @@
+{{- if and (index .Values "alloy-operator").deploy (index .Values "alloy-operator").waitForAlloyRemoval.enabled }}
+{{- $jobName := (printf "%s-remove-alloy-and-finalizer" (include "helper.fullname" .)) | trunc 63 | trimSuffix "-" }}
+{{- $jobSettings := (index .Values "alloy-operator").waitForAlloyRemoval -}}
+
+{{- $alloyNames := list }}
+{{/* Standard Alloy collectors */}}
+{{- range $collectorName := (include "collectors.list.enabled" . | fromYamlArray) }}
+  {{- $values := (deepCopy $ | merge (dict "collectorName" $collectorName)) }}
+  {{- $alloyNames = append $alloyNames (include "collector.alloy.fullname" $values) }}
+{{- end }}
+
+{{- range $destination := .Values.destinations }}
+  {{- if eq $destination.type "otlp" }}
+    {{/* Tail sampling Alloy instances */}}
+    {{- if eq (include "destinations.otlp.isTailSamplingEnabled" $destination) "true" }}
+      {{- $collectorName := include "helper.k8s_name" (printf "%s-sampler" $destination.name) }}
+      {{- $collectorValues := merge (dict "nameOverride" $collectorName) ($destination.processors.tailSampling.collector | default dict) }}
+      {{- $values := (deepCopy $ | merge (dict "collectorName" $collectorName "collectorValues" $collectorValues)) }}
+      {{- $alloyNames = append $alloyNames (include "collector.alloy.fullname" $values) }}
+    {{- end }}
+    {{/* Service graph metrics Alloy instances */}}
+    {{- if eq (include "destinations.otlp.isServiceGraphsEnabled" $destination) "true" }}
+      {{- $collectorName := include "helper.k8s_name" (printf "%s-servicegraph" $destination.name) }}
+      {{- $collectorValues := merge (dict "nameOverride" $collectorName) ($destination.processors.serviceGraphMetrics.collector | default dict) }}
+      {{- $values := (deepCopy $ | merge (dict "collectorName" $collectorName "collectorValues" $collectorValues)) }}
+      {{- $alloyNames = append $alloyNames (include "collector.alloy.fullname" $values) }}
+    {{- end }}
+  {{- end }}
+{{- end }}
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ $jobName }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: {{ $jobName }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    helm.sh/chart: {{ include "helper.chart" . }}
+  annotations:
+    helm.sh/hook: pre-delete
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+spec:
+  ttlSecondsAfterFinished: 300
+  backoffLimit: 3
+  template:
+    metadata:
+      name: {{ $jobName }}
+      labels:
+        app.kubernetes.io/name: {{ include "helper.fullname" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        sidecar.istio.io/inject: "false"
+    spec:
+      restartPolicy: Never
+      {{- with $jobSettings.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $jobSettings.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ $jobName }}
+      containers:
+        - name: remove-finalizers
+          {{- with $jobSettings.image }}
+            {{- if .digest }}
+          image: "{{ dig "image" "registry" .registry $.Values.global }}/{{ .repository }}@{{ .digest }}"
+            {{- else }}
+          image: "{{ dig "image" "registry" .registry $.Values.global }}/{{ .repository }}:{{ .tag }}"
+            {{- end }}
+          {{- end }}
+          command:
+            - /bin/bash
+            - -ce
+            - |
+{{- range $alloyName := $alloyNames }}
+              echo "Deleting Alloy instance: alloy/{{ $alloyName }}..."
+              kubectl delete alloy/{{ $alloyName }} --wait
+              kubectl wait --for=delete alloy/{{ $alloyName }} --timeout=60s || echo "Timed out waiting for deletion of alloy/{{ $alloyName }} or it may not exist."
+{{ end }}
+              kubectl patch \
+                --namespace={{ .Release.Namespace }} \
+                --type json \
+                --patch='[{"op": "remove", "path": "/metadata/finalizers"}]' \
+                deployment/{{ include "alloy-operator.fullname" (index .Subcharts "alloy-operator") }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+            readOnlyRootFilesystem: true
+            seccompProfile:
+              type: RuntimeDefault
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ $jobName }}
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    helm.sh/hook: pre-delete
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ $jobName }}
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    helm.sh/hook: pre-delete
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+rules:
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    verbs: ["get", "list", "watch", "patch"]
+  - apiGroups: ["collectors.grafana.com"]
+    resources: ["alloys"]
+    verbs: ["get", "list", "watch", "delete"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ $jobName }}
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    helm.sh/hook: pre-delete
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+subjects:
+  - kind: ServiceAccount
+    name: {{ $jobName }}
+    namespace: {{ .Release.Namespace }}
+roleRef:
+  kind: Role
+  name: {{ $jobName }}
+  apiGroup: rbac.authorization.k8s.io
+{{- end }}

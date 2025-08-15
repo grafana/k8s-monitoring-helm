@@ -24,8 +24,14 @@
   {{- $labelSelectors = append $labelSelectors (printf "release=%s" .Release.Name) }}
 {{- end }}
 
+// Windows Exporter
 discovery.kubernetes "windows_exporter_pods" {
   role = "pod"
+  selectors {
+    role = "pod"
+    label = {{ $labelSelectors | join "," | quote }}
+  }
+
 {{- if (index .Values "windows-exporter").deploy }}
   namespaces {
     names = [{{ .Release.Namespace | quote }}]
@@ -35,18 +41,28 @@ discovery.kubernetes "windows_exporter_pods" {
     names = [{{ (index .Values "windows-exporter").namespace | quote }}]
   }
 {{- end }}
-  selectors {
-    role = "pod"
-    label = {{ $labelSelectors | join "," | quote }}
-  }
 {{- include "feature.clusterMetrics.attachNodeMetadata" . | indent 2 }}
 }
 
 discovery.relabel "windows_exporter" {
   targets = discovery.kubernetes.windows_exporter_pods.targets
+
+  // keep only the specified metrics port name, and pods that are Running and ready
+  rule {
+    source_labels = [
+      "__meta_kubernetes_pod_container_port_name",
+      "__meta_kubernetes_pod_container_init",
+      "__meta_kubernetes_pod_phase",
+      "__meta_kubernetes_pod_ready",
+    ]
+    separator = "@"
+    regex = "{{ (index .Values "windows-exporter").service.portName }}@false@Running@true"
+    action = "keep"
+  }
+
+  // Set the instance label to the node name
   rule {
     source_labels = ["__meta_kubernetes_pod_node_name"]
-    action = "replace"
     target_label = "instance"
   }
 {{- include "feature.clusterMetrics.nodeDiscoveryRules" . | indent 2 }}
@@ -56,9 +72,11 @@ discovery.relabel "windows_exporter" {
 }
 
 prometheus.scrape "windows_exporter" {
-  job_name   = {{ (index .Values "windows-exporter").jobLabel | quote }}
   targets  = discovery.relabel.windows_exporter.output
+  job_name   = {{ (index .Values "windows-exporter").jobLabel | quote }}
   scrape_interval = {{ (index .Values "windows-exporter").scrapeInterval | default .Values.global.scrapeInterval | quote }}
+  scrape_protocols = {{ .Values.global.scrapeProcotols | toJson }}
+  scrape_classic_histograms = {{ .Values.global.scrapeClassicHistograms }}
   clustering {
     enabled = true
   }

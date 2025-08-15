@@ -7,7 +7,7 @@
 {{- end }}
 
 {{- define "collectors.list.enabled" -}}
-{{- range $collector := ((include "collectors.list" .) | fromYamlArray ) }}
+{{- range $collector := (include "collectors.list" . | fromYamlArray) }}
   {{- if (index $.Values $collector).enabled }}
 - {{ $collector }}
   {{- end }}

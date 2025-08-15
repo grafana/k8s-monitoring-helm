@@ -50,7 +50,7 @@
     {{- $collectorName := include "helper.k8s_name" (printf "%s-servicegraph" $destination.name) }}
     {{- $configMapContent := dict "create" true "content" $alloyConfig }}
     {{- $extraEnvContent := list (dict "name" "POD_NAME" "valueFrom" (dict "fieldRef" (dict "apiVersion" "v1" "fieldPath" "metadata.name"))) }}
-    {{- $collectorValues := merge (dict "nameOverride" $collectorName "alloy" (dict "configMap" $configMapContent "extraEnv" $extraEnvContent)) $destination.processors.serviceGraphMetrics.collector }}
+    {{- $collectorValues := merge (dict "nameOverride" $collectorName "alloy" (dict "configMap" $configMapContent "extraEnv" $extraEnvContent)) ($destination.processors.serviceGraphMetrics.collector | default dict) }}
     {{- $values := (deepCopy $ | merge (dict "collectorName" $collectorName "collectorValues" $collectorValues)) }}
     {{- $alloyValues := include "collector.alloy.values" $values | fromYaml }}
     {{- $alloySpec := include "collector.alloy.valuesToSpec" $alloyValues }}
@@ -60,6 +60,12 @@ kind: Alloy
 metadata:
   name: {{ include "collector.alloy.fullname" $values }}
   namespace: {{ $.Release.Namespace }}
+  {{- if and (index $.Values "alloy-operator").deploy (index $.Values "alloy-operator").waitForReadiness.enabled }}
+  annotations:
+    helm.sh/hook: post-install,post-upgrade
+    helm.sh/hook-weight: "10"
+    helm.sdk.operatorframework.io/uninstall-wait: "true"
+  {{- end }}
 spec:{{ $alloySpec | trim | nindent 2 }}
 {{- end }}
 {{- end }}

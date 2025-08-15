@@ -25,7 +25,7 @@
 
     {{- /* Build Alloy spec */}}
     {{- $collectorName := include "helper.k8s_name" (printf "%s-sampler" $destination.name) }}
-    {{- $collectorValues := merge (dict "nameOverride" $collectorName "alloy" (dict "configMap" (dict "create" true "content" $alloyConfig))) $destination.processors.tailSampling.collector }}
+    {{- $collectorValues := merge (dict "nameOverride" $collectorName "alloy" (dict "configMap" (dict "create" true "content" $alloyConfig))) ($destination.processors.tailSampling.collector | default dict) }}
     {{- $values := (deepCopy $ | merge (dict "collectorName" $collectorName "collectorValues" $collectorValues)) }}
     {{- $alloyValues := include "collector.alloy.values" $values | fromYaml }}
     {{- $alloySpec := include "collector.alloy.valuesToSpec" $alloyValues }}
@@ -35,6 +35,12 @@ kind: Alloy
 metadata:
   name: {{ include "collector.alloy.fullname" $values }}
   namespace: {{ $.Release.Namespace }}
+  {{- if and (index $.Values "alloy-operator").deploy (index $.Values "alloy-operator").waitForReadiness.enabled }}
+  annotations:
+    helm.sh/hook: post-install,post-upgrade
+    helm.sh/hook-weight: "10"
+    helm.sdk.operatorframework.io/uninstall-wait: "true"
+  {{- end }}
 spec:{{ $alloySpec | trim | nindent 2 }}
 {{- end }}
 {{- end }}

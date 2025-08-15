@@ -197,6 +197,16 @@ data:
           optional = true
         }
     
+        argument "scrape_protocols" {
+          comment = "The scrape protocols to use for scraping metrics"
+          optional = true
+        }
+    
+        argument "scrape_classic_histograms" {
+          comment = "Whether to scrape classic histograms (default: false)."
+          optional = true
+        }
+    
         argument "max_cache_size" {
           comment = "The maximum number of elements to hold in the relabeling cache (default: 100000).  This should be at least 2x-5x your largest scrape target or samples appended rate."
           optional = true
@@ -212,6 +222,8 @@ data:
           forward_to = [prometheus.relabel.loki.receiver]
           targets = argument.targets.value
           scrape_interval = coalesce(argument.scrape_interval.value, "60s")
+          scrape_protocols = argument.scrape_protocols.value
+          scrape_classic_histograms = argument.scrape_classic_histograms.value
     
           clustering {
             enabled = coalesce(argument.clustering.value, false)
@@ -271,6 +283,8 @@ data:
         clustering = true
         keep_metrics = "up|scrape_samples_scraped|go_gc_cycles_total_gc_cycles_total|go_gc_duration_seconds|go_gc_duration_seconds_count|go_gc_duration_seconds_sum|go_gc_pauses_seconds_bucket|go_goroutines|go_memstats_heap_inuse_bytes|loki_azure_blob_request_duration_seconds_bucket|loki_azure_blob_request_duration_seconds_count|loki_bigtable_request_duration_seconds_bucket|loki_bigtable_request_duration_seconds_count|loki_bloom_blocks_cache_added_total|loki_bloom_blocks_cache_entries|loki_bloom_blocks_cache_evicted_total|loki_bloom_blocks_cache_fetched_total|loki_bloom_blocks_cache_usage_bytes|loki_bloom_chunks_indexed_total|loki_bloom_gateway_block_query_latency_seconds_bucket|loki_bloom_gateway_dequeue_duration_seconds_bucket|loki_bloom_gateway_filtered_chunks_sum|loki_bloom_gateway_filtered_series_sum|loki_bloom_gateway_inflight_tasks|loki_bloom_gateway_process_duration_seconds_bucket|loki_bloom_gateway_process_duration_seconds_count|loki_bloom_gateway_querier_chunks_filtered_total|loki_bloom_gateway_querier_chunks_skipped_total|loki_bloom_gateway_querier_chunks_total|loki_bloom_gateway_querier_series_filtered_total|loki_bloom_gateway_querier_series_skipped_total|loki_bloom_gateway_querier_series_total|loki_bloom_gateway_queue_duration_seconds_bucket|loki_bloom_gateway_queue_duration_seconds_count|loki_bloom_gateway_queue_duration_seconds_sum|loki_bloom_gateway_queue_length|loki_bloom_gateway_requested_chunks_sum|loki_bloom_gateway_requested_series_sum|loki_bloom_gateway_tasks_dequeued_bucket|loki_bloom_gateway_tasks_dequeued_total|loki_bloom_gateway_tasks_processed_total|loki_bloom_inserts_total|loki_bloom_recorder_chunks_total|loki_bloom_recorder_series_total|loki_bloom_size_bucket|loki_bloom_store_blocks_fetched_size_bytes_bucket|loki_bloom_store_blocks_fetched_sum|loki_bloom_store_download_queue_size_sum|loki_bloom_store_metas_fetched_bucket|loki_bloom_store_metas_fetched_size_bytes_bucket|loki_bloom_store_metas_fetched_sum|loki_bloom_tokens_total|loki_bloombuilder_blocks_created_total|loki_bloombuilder_blocks_reused_total|loki_bloombuilder_bytes_per_task_bucket|loki_bloombuilder_chunk_series_size_sum|loki_bloombuilder_metas_created_total|loki_bloombuilder_processing_task|loki_bloombuilder_series_per_task_bucket|loki_bloomplanner_blocks_deleted_total|loki_bloomplanner_connected_builders|loki_bloomplanner_inflight_tasks|loki_bloomplanner_metas_deleted_total|loki_bloomplanner_queue_length|loki_bloomplanner_retention_running|loki_bloomplanner_retention_time_seconds_bucket|loki_bloomplanner_tenant_tasks_completed|loki_bloomplanner_tenant_tasks_planned|loki_boltdb_shipper_compact_tables_operation_duration_seconds|loki_boltdb_shipper_compact_tables_operation_last_successful_run_timestamp_seconds|loki_boltdb_shipper_compact_tables_operation_total|loki_boltdb_shipper_request_duration_seconds_bucket|loki_boltdb_shipper_request_duration_seconds_count|loki_boltdb_shipper_request_duration_seconds_sum|loki_boltdb_shipper_retention_marker_count_total|loki_boltdb_shipper_retention_marker_table_processed_duration_seconds_bucket|loki_boltdb_shipper_retention_marker_table_processed_duration_seconds_count|loki_boltdb_shipper_retention_marker_table_processed_duration_seconds_sum|loki_boltdb_shipper_retention_marker_table_processed_total|loki_boltdb_shipper_retention_sweeper_chunk_deleted_duration_seconds_bucket|loki_boltdb_shipper_retention_sweeper_chunk_deleted_duration_seconds_count|loki_boltdb_shipper_retention_sweeper_chunk_deleted_duration_seconds_sum|loki_boltdb_shipper_retention_sweeper_marker_file_processing_current_time|loki_boltdb_shipper_retention_sweeper_marker_files_current|loki_build_info|loki_chunk_store_deduped_chunks_total|loki_chunk_store_index_entries_per_chunk_count|loki_chunk_store_index_entries_per_chunk_sum|loki_compactor_apply_retention_last_successful_run_timestamp_seconds|loki_compactor_apply_retention_operation_duration_seconds|loki_compactor_apply_retention_operation_total|loki_compactor_delete_requests_processed_total|loki_compactor_delete_requests_received_total|loki_compactor_deleted_lines|loki_compactor_load_pending_requests_attempts_total|loki_compactor_locked_table_successive_compaction_skips|loki_compactor_oldest_pending_delete_request_age_seconds|loki_compactor_pending_delete_requests_count|loki_consul_request_duration_seconds_bucket|loki_discarded_samples_total|loki_distributor_bytes_received_total|loki_distributor_ingester_append_failures_total|loki_distributor_lines_received_total|loki_distributor_structured_metadata_bytes_received_total|loki_dynamo_consumed_capacity_total|loki_dynamo_dropped_requests_total|loki_dynamo_failures_total|loki_dynamo_query_pages_count|loki_dynamo_request_duration_seconds_bucket|loki_dynamo_request_duration_seconds_count|loki_dynamo_throttled_total|loki_embeddedcache_entries|loki_embeddedcache_memory_bytes|loki_gcs_request_duration_seconds_bucket|loki_gcs_request_duration_seconds_count|loki_index_gateway_postfilter_chunks_sum|loki_index_gateway_prefilter_chunks_sum|loki_index_request_duration_seconds_bucket|loki_index_request_duration_seconds_count|loki_index_request_duration_seconds_sum|loki_ingester_chunk_age_seconds_bucket|loki_ingester_chunk_age_seconds_count|loki_ingester_chunk_age_seconds_sum|loki_ingester_chunk_bounds_hours_bucket|loki_ingester_chunk_bounds_hours_count|loki_ingester_chunk_bounds_hours_sum|loki_ingester_chunk_entries_bucket|loki_ingester_chunk_entries_count|loki_ingester_chunk_entries_sum|loki_ingester_chunk_size_bytes_bucket|loki_ingester_chunk_utilization_bucket|loki_ingester_chunk_utilization_count|loki_ingester_chunk_utilization_sum|loki_ingester_chunks_flushed_total|loki_ingester_flush_queue_length|loki_ingester_memory_chunks|loki_ingester_memory_streams|loki_ingester_streams_created_total|loki_memcache_request_duration_seconds_bucket|loki_memcache_request_duration_seconds_count|loki_panic_total|loki_prometheus_rule_group_rules|loki_request_duration_seconds_bucket|loki_request_duration_seconds_count|loki_request_duration_seconds_sum|loki_ruler_wal_appender_ready|loki_ruler_wal_disk_size|loki_ruler_wal_prometheus_remote_storage_highest_timestamp_in_seconds|loki_ruler_wal_prometheus_remote_storage_queue_highest_sent_timestamp_seconds|loki_ruler_wal_prometheus_remote_storage_samples_pending|loki_ruler_wal_prometheus_remote_storage_samples_total|loki_ruler_wal_samples_appended_total|loki_ruler_wal_storage_created_series_total|loki_s3_request_duration_seconds_bucket|loki_s3_request_duration_seconds_count"
         scrape_interval = "60s"
+        scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
+        scrape_classic_histograms = false
         max_cache_size = 100000
         forward_to = argument.metrics_destinations.value
       }
@@ -378,7 +392,7 @@ data:
   self-reporting-metric.prom: |
     # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_build_info gauge
-    grafana_kubernetes_monitoring_build_info{version="3.2.6", namespace="default"} 1
+    grafana_kubernetes_monitoring_build_info{version="3.3.0", namespace="default"} 1
     # HELP grafana_kubernetes_monitoring_feature_info A metric to report the enabled features of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_feature_info gauge
     grafana_kubernetes_monitoring_feature_info{feature="podLogs", method="volumes", version="1.0.0"} 1
@@ -945,12 +959,317 @@ spec:
       nodeSelector:
         kubernetes.io/os: linux
 ---
+# Source: k8s-monitoring/templates/hooks/post-install_add-finalizer.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: k8smon-k8s-monitoring-add-finalizer
+  namespace: default
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+    "helm.sh/hook-weight": "5"
+---
+# Source: k8s-monitoring/templates/hooks/post-install_wait-for-operator.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: k8smon-k8s-monitoring-wait-alloy-operator
+  namespace: default
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+    "helm.sh/hook-weight": "5"
+---
+# Source: k8s-monitoring/templates/hooks/pre-delete_remove-alloy-and-finalizer.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: k8smon-k8s-monitoring-remove-alloy-and-finalizer
+  namespace: default
+  annotations:
+    helm.sh/hook: pre-delete
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+---
+# Source: k8s-monitoring/templates/hooks/post-install_add-finalizer.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: k8smon-k8s-monitoring-add-finalizer
+  namespace: default
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+    "helm.sh/hook-weight": "5"
+rules:
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    verbs: ["get", "list", "watch", "patch"]
+---
+# Source: k8s-monitoring/templates/hooks/post-install_wait-for-operator.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: k8smon-k8s-monitoring-wait-alloy-operator
+  namespace: default
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+    "helm.sh/hook-weight": "5"
+rules:
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list", "watch"]
+---
+# Source: k8s-monitoring/templates/hooks/pre-delete_remove-alloy-and-finalizer.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: k8smon-k8s-monitoring-remove-alloy-and-finalizer
+  namespace: default
+  annotations:
+    helm.sh/hook: pre-delete
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+rules:
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    verbs: ["get", "list", "watch", "patch"]
+  - apiGroups: ["collectors.grafana.com"]
+    resources: ["alloys"]
+    verbs: ["get", "list", "watch", "delete"]
+---
+# Source: k8s-monitoring/templates/hooks/post-install_add-finalizer.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: k8smon-k8s-monitoring-add-finalizer
+  namespace: default
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+    "helm.sh/hook-weight": "5"
+subjects:
+  - kind: ServiceAccount
+    name: k8smon-k8s-monitoring-add-finalizer
+    namespace: default
+roleRef:
+  kind: Role
+  name: k8smon-k8s-monitoring-add-finalizer
+  apiGroup: rbac.authorization.k8s.io
+---
+# Source: k8s-monitoring/templates/hooks/post-install_wait-for-operator.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: k8smon-k8s-monitoring-wait-alloy-operator
+  namespace: default
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+    "helm.sh/hook-weight": "5"
+subjects:
+  - kind: ServiceAccount
+    name: k8smon-k8s-monitoring-wait-alloy-operator
+    namespace: default
+roleRef:
+  kind: Role
+  name: k8smon-k8s-monitoring-wait-alloy-operator
+  apiGroup: rbac.authorization.k8s.io
+---
+# Source: k8s-monitoring/templates/hooks/pre-delete_remove-alloy-and-finalizer.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: k8smon-k8s-monitoring-remove-alloy-and-finalizer
+  namespace: default
+  annotations:
+    helm.sh/hook: pre-delete
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+subjects:
+  - kind: ServiceAccount
+    name: k8smon-k8s-monitoring-remove-alloy-and-finalizer
+    namespace: default
+roleRef:
+  kind: Role
+  name: k8smon-k8s-monitoring-remove-alloy-and-finalizer
+  apiGroup: rbac.authorization.k8s.io
+---
+# Source: k8s-monitoring/templates/hooks/post-install_add-finalizer.yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: k8smon-k8s-monitoring-add-finalizer
+  namespace: default
+  labels:
+    app.kubernetes.io/name: k8smon-k8s-monitoring-add-finalizer
+    app.kubernetes.io/instance: k8smon
+    helm.sh/chart: k8s-monitoring-3.3.0
+  annotations:
+    helm.sh/hook: post-install,post-upgrade
+    helm.sh/hook-weight: "15"
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+spec:
+  ttlSecondsAfterFinished: 300
+  backoffLimit: 3
+  template:
+    metadata:
+      name: k8smon-k8s-monitoring-add-finalizer
+      labels:
+        app.kubernetes.io/name: k8smon-k8s-monitoring
+        app.kubernetes.io/instance: k8smon
+        sidecar.istio.io/inject: "false"
+    spec:
+      restartPolicy: Never
+      nodeSelector:
+        kubernetes.io/os: linux
+      serviceAccountName: k8smon-k8s-monitoring-add-finalizer
+      containers:
+        - name: add-finalizers
+          image: "ghcr.io/grafana/helm-chart-toolbox-kubectl:0.1.0"
+          command:
+            - /bin/bash
+            - -ce
+            - |
+              kubectl patch \
+                --namespace=default \
+                --patch='{"metadata":{"finalizers":["k8s.grafana.com/finalizer"]}}' \
+                deployment/k8smon-alloy-operator
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+            readOnlyRootFilesystem: true
+            seccompProfile:
+              type: RuntimeDefault
+---
+# Source: k8s-monitoring/templates/hooks/post-install_wait-for-operator.yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: k8smon-k8s-monitoring-wait-alloy-operator
+  namespace: default
+  labels:
+    app.kubernetes.io/name: k8smon-k8s-monitoring-wait-alloy-operator
+    app.kubernetes.io/instance: k8smon
+    helm.sh/chart: k8s-monitoring-3.3.0
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+    "helm.sh/hook-weight": "5"
+spec:
+  ttlSecondsAfterFinished: 300
+  backoffLimit: 3
+  template:
+    metadata:
+      name: k8smon-k8s-monitoring-wait-alloy-operator
+      labels:
+        app.kubernetes.io/name: k8smon-k8s-monitoring
+        app.kubernetes.io/instance: k8smon
+        sidecar.istio.io/inject: "false"
+    spec:
+      restartPolicy: Never
+      nodeSelector:
+        kubernetes.io/os: linux
+      serviceAccountName: k8smon-k8s-monitoring-wait-alloy-operator
+      containers:
+        - name: wait-for-operator
+          image: "ghcr.io/grafana/helm-chart-toolbox-kubectl:0.1.0"
+          command:
+            - /bin/bash
+            - -ce
+            - |
+              echo "Waiting for Alloy Operator to be ready..."
+              kubectl wait \
+                --timeout=300s \
+                --namespace=default \
+                --for=condition=available \
+                deployment/k8smon-alloy-operator
+
+              echo "Verifying Alloy Operator pod is running..."
+              kubectl wait \
+                --timeout=120s \
+                --namespace=default \
+                --for=condition=ready \
+                pod -l app.kubernetes.io/name=alloy-operator
+
+              echo "Alloy Operator is ready!"
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+            readOnlyRootFilesystem: true
+            seccompProfile:
+              type: RuntimeDefault
+---
+# Source: k8s-monitoring/templates/hooks/pre-delete_remove-alloy-and-finalizer.yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: k8smon-k8s-monitoring-remove-alloy-and-finalizer
+  namespace: default
+  labels:
+    app.kubernetes.io/name: k8smon-k8s-monitoring-remove-alloy-and-finalizer
+    app.kubernetes.io/instance: k8smon
+    helm.sh/chart: k8s-monitoring-3.3.0
+  annotations:
+    helm.sh/hook: pre-delete
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+spec:
+  ttlSecondsAfterFinished: 300
+  backoffLimit: 3
+  template:
+    metadata:
+      name: k8smon-k8s-monitoring-remove-alloy-and-finalizer
+      labels:
+        app.kubernetes.io/name: k8smon-k8s-monitoring
+        app.kubernetes.io/instance: k8smon
+        sidecar.istio.io/inject: "false"
+    spec:
+      restartPolicy: Never
+      nodeSelector:
+        kubernetes.io/os: linux
+      serviceAccountName: k8smon-k8s-monitoring-remove-alloy-and-finalizer
+      containers:
+        - name: remove-finalizers
+          image: "ghcr.io/grafana/helm-chart-toolbox-kubectl:0.1.0"
+          command:
+            - /bin/bash
+            - -ce
+            - |
+              echo "Deleting Alloy instance: alloy/k8smon-alloy-metrics..."
+              kubectl delete alloy/k8smon-alloy-metrics --wait
+              kubectl wait --for=delete alloy/k8smon-alloy-metrics --timeout=60s || echo "Timed out waiting for deletion of alloy/k8smon-alloy-metrics or it may not exist."
+
+              echo "Deleting Alloy instance: alloy/k8smon-alloy-logs..."
+              kubectl delete alloy/k8smon-alloy-logs --wait
+              kubectl wait --for=delete alloy/k8smon-alloy-logs --timeout=60s || echo "Timed out waiting for deletion of alloy/k8smon-alloy-logs or it may not exist."
+
+              kubectl patch \
+                --namespace=default \
+                --type json \
+                --patch='[{"op": "remove", "path": "/metadata/finalizers"}]' \
+                deployment/k8smon-alloy-operator
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+            readOnlyRootFilesystem: true
+            seccompProfile:
+              type: RuntimeDefault
+---
 # Source: k8s-monitoring/templates/alloy.yaml
 apiVersion: collectors.grafana.com/v1alpha1
 kind: Alloy
 metadata:
   name: k8smon-alloy-metrics
   namespace: default
+  annotations:
+    helm.sh/hook: post-install,post-upgrade
+    helm.sh/hook-weight: "10"
+    helm.sdk.operatorframework.io/uninstall-wait: "true"
 spec:
   alloy:
     clustering:
@@ -1142,6 +1461,10 @@ kind: Alloy
 metadata:
   name: k8smon-alloy-logs
   namespace: default
+  annotations:
+    helm.sh/hook: post-install,post-upgrade
+    helm.sh/hook-weight: "10"
+    helm.sdk.operatorframework.io/uninstall-wait: "true"
 spec:
   alloy:
     clustering:

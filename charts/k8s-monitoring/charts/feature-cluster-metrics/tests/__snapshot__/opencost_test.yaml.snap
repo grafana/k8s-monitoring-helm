@@ -33,6 +33,8 @@ should render the configuration with OpenCost:
           job_name = "integrations/kubernetes/kubelet"
           scheme   = "https"
           scrape_interval = "60s"
+          scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
+          scrape_classic_histograms = false
           bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
 
           tls_config {
@@ -73,6 +75,8 @@ should render the configuration with OpenCost:
           job_name = "integrations/kubernetes/resources"
           scheme   = "https"
           scrape_interval = "60s"
+          scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
+          scrape_classic_histograms = false
           bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
 
           tls_config {
@@ -113,6 +117,8 @@ should render the configuration with OpenCost:
           job_name = "integrations/kubernetes/cadvisor"
           scheme = "https"
           scrape_interval = "60s"
+          scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
+          scrape_classic_histograms = false
           bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
 
           tls_config {
@@ -239,6 +245,8 @@ should render the configuration with OpenCost:
           targets = discovery.relabel.kube_state_metrics.output
           job_name = "integrations/kubernetes/kube-state-metrics"
           scrape_interval = "60s"
+          scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
+          scrape_classic_histograms = false
           scheme = "http"
           bearer_token_file = ""
           tls_config {
@@ -255,7 +263,7 @@ should render the configuration with OpenCost:
           max_cache_size = 100000
           rule {
             source_labels = ["__name__"]
-            regex = "up|scrape_samples_scraped|kube_configmap_info|kube_configmap_metadata_resource_version|kube_daemonset.*|kube_deployment_metadata_generation|kube_deployment_spec_replicas|kube_deployment_status_condition|kube_deployment_status_observed_generation|kube_deployment_status_replicas_available|kube_deployment_status_replicas_updated|kube_horizontalpodautoscaler_spec_max_replicas|kube_horizontalpodautoscaler_spec_min_replicas|kube_horizontalpodautoscaler_status_current_replicas|kube_horizontalpodautoscaler_status_desired_replicas|kube_job.*|kube_namespace_status_phase|kube_node.*|kube_persistentvolume_status_phase|kube_persistentvolumeclaim_access_mode|kube_persistentvolumeclaim_info|kube_persistentvolumeclaim_labels|kube_persistentvolumeclaim_resource_requests_storage_bytes|kube_persistentvolumeclaim_status_phase|kube_pod_container_info|kube_pod_container_resource_limits|kube_pod_container_resource_requests|kube_pod_container_status_last_terminated_reason|kube_pod_container_status_restarts_total|kube_pod_container_status_waiting_reason|kube_pod_info|kube_pod_owner|kube_pod_spec_volumes_persistentvolumeclaims_info|kube_pod_start_time|kube_pod_status_phase|kube_pod_status_reason|kube_replicaset.*|kube_resourcequota|kube_secret_metadata_resource_version|kube_statefulset.*"
+            regex = "up|scrape_samples_scraped|kube_configmap_info|kube_configmap_metadata_resource_version|kube_cronjob.*|kube_daemonset.*|kube_deployment_metadata_generation|kube_deployment_spec_replicas|kube_deployment_status_condition|kube_deployment_status_observed_generation|kube_deployment_status_replicas_available|kube_deployment_status_replicas_updated|kube_horizontalpodautoscaler_spec_max_replicas|kube_horizontalpodautoscaler_spec_min_replicas|kube_horizontalpodautoscaler_status_current_replicas|kube_horizontalpodautoscaler_status_desired_replicas|kube_job.*|kube_namespace_status_phase|kube_node.*|kube_persistentvolume_status_phase|kube_persistentvolumeclaim_access_mode|kube_persistentvolumeclaim_info|kube_persistentvolumeclaim_labels|kube_persistentvolumeclaim_resource_requests_storage_bytes|kube_persistentvolumeclaim_status_phase|kube_pod_container_info|kube_pod_container_resource_limits|kube_pod_container_resource_requests|kube_pod_container_status_last_terminated_reason|kube_pod_container_status_restarts_total|kube_pod_container_status_waiting_reason|kube_pod_info|kube_pod_owner|kube_pod_spec_volumes_persistentvolumeclaims_info|kube_pod_start_time|kube_pod_status_phase|kube_pod_status_reason|kube_replicaset.*|kube_resourcequota|kube_secret_metadata_resource_version|kube_statefulset.*"
             action = "keep"
           }
           forward_to = argument.metrics_destinations.value
@@ -370,6 +378,8 @@ should render the configuration with OpenCost:
           targets = discovery.relabel.node_exporter.output
           job_name = "integrations/node_exporter"
           scrape_interval = "60s"
+          scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
+          scrape_classic_histograms = false
           scheme = "http"
           bearer_token_file = ""
           tls_config {
@@ -399,30 +409,47 @@ should render the configuration with OpenCost:
           forward_to = argument.metrics_destinations.value
         }
 
+        // Windows Exporter
         discovery.kubernetes "windows_exporter_pods" {
           role = "pod"
-          namespaces {
-            names = ["NAMESPACE"]
-          }
           selectors {
             role = "pod"
             label = "app.kubernetes.io/name=windows-exporter,release=RELEASE-NAME"
+          }
+          namespaces {
+            names = ["NAMESPACE"]
           }
         }
 
         discovery.relabel "windows_exporter" {
           targets = discovery.kubernetes.windows_exporter_pods.targets
+
+          // keep only the specified metrics port name, and pods that are Running and ready
+          rule {
+            source_labels = [
+              "__meta_kubernetes_pod_container_port_name",
+              "__meta_kubernetes_pod_container_init",
+              "__meta_kubernetes_pod_phase",
+              "__meta_kubernetes_pod_ready",
+            ]
+            separator = "@"
+            regex = "metrics@false@Running@true"
+            action = "keep"
+          }
+
+          // Set the instance label to the node name
           rule {
             source_labels = ["__meta_kubernetes_pod_node_name"]
-            action = "replace"
             target_label = "instance"
           }
         }
 
         prometheus.scrape "windows_exporter" {
-          job_name   = "integrations/windows-exporter"
           targets  = discovery.relabel.windows_exporter.output
+          job_name   = "integrations/windows-exporter"
           scrape_interval = "60s"
+          scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
+          scrape_classic_histograms = false
           clustering {
             enabled = true
           }
@@ -464,6 +491,8 @@ should render the configuration with OpenCost:
           job_name     = "integrations/opencost"
           honor_labels = true
           scrape_interval = "60s"
+          scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
+          scrape_classic_histograms = false
           clustering {
             enabled = true
           }

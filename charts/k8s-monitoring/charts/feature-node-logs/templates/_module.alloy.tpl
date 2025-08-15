@@ -182,5 +182,3 @@ declare "node_logs" {
   }
 }
 {{- end -}}
-
-{{- define "feature.nodeLogs.alloyModules" }}{{- end }}

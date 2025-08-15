@@ -2,9 +2,14 @@
 
 ## Unreleased
 
+*   Add a pair of hooks to add finalizers and Alloy instance cleanup to prevent orphaned resources (@petewall)
+*   Fix timing issues where Alloy custom resources could be created before the Alloy Operator is ready to process them (@AzgadAGZ)
+*   Add pre-install hook to wait for Alloy Operator readiness before creating Alloy resources (@AzgadAGZ)
+*   Add `alloy-operator.waitForReadiness` configuration option to control the timing behavior (@AzgadAGZ)
 *   Allow passing destinations as a map (@thandleman-r7)
 *   Allow for modifying alloy settings in one place. (@petewall)
 *   add span attribute support for skip metrics generation (@mbaykara)
+*   Add kube_cronjob.* to kube-state-metrics default allow lest (@sleepyfoodie)
 
 ## 3.2.6
 

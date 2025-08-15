@@ -9,5 +9,3 @@ declare "profiling" {
   {{- include "feature.profiling.pprof.alloy" . | indent 2 }}
 }
 {{- end -}}
-
-{{- define "feature.profiling.alloyModules" }}{{- end }}

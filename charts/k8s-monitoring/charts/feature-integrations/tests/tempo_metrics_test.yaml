@@ -45,26 +45,8 @@ tests:
     asserts:
       - isKind:
           of: ConfigMap
-      - matchRegex:
+      - matchSnapshot:
           path: data["metrics.alloy"]
-          # The pattern should look like this, but since the regex is escaped, it will be a bit different
-          # tempo_integration_scrape  "tempo" {
-          #   targets = tempo_integration_discovery.tempo.output
-          #   job_label = "integrations/tempo"
-          #   clustering = true
-          #   scrape_interval = "60s"
-          #   max_cache_size = 100000
-          #   forward_to = argument.metrics_destinations.value
-          # }
-          pattern: |-
-            \s*tempo_integration_scrape  "tempo" {
-            \s*  targets = tempo_integration_discovery.tempo.output
-            \s*  job_label = "integrations/tempo"
-            \s*  clustering = true
-            \s*  scrape_interval = "60s"
-            \s*  max_cache_size = 100000
-            \s*  forward_to = argument.metrics_destinations.value
-            \s*}
 
   - it: should allow you to specific which metrics to include
     set:
