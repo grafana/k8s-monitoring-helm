@@ -46,8 +46,12 @@ discovery.relabel "windows_exporter" {
   targets = discovery.kubernetes.windows_exporter_pods.targets
   rule {
     source_labels = ["__meta_kubernetes_pod_node_name"]
-    action = "replace"
     target_label = "instance"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_pod_container_port_name"]
+    regex = "metrics"
+    action = "keep"
   }
 {{- include "feature.clusterMetrics.nodeDiscoveryRules" . | indent 2 }}
 {{- if (index .Values "windows-exporter").extraDiscoveryRules }}
