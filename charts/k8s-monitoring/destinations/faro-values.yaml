@@ -1,0 +1,309 @@
+---
+# -- The name for this Faro destination.
+# @section -- General
+name: ""
+
+# -- The URL for the Faro destination.
+# @section -- General
+url: ""
+
+# -- Raw config for accessing the URL.
+# @section -- General
+urlFrom: ""
+
+# -- HTTP proxy to send requests through
+# @section -- General
+proxyURL: ""
+
+# -- Extra headers to be set when sending data.
+# All values are treated as strings and automatically quoted.
+# @section -- General
+extraHeaders: {}
+# -- Extra headers to be set when sending data through a dynamic reference.
+# All values are treated as raw strings and not quoted.
+# @section -- General
+extraHeadersFrom: {}
+
+# -- Labels to be set with the cluster name as the value.
+# @section -- General
+clusterLabels: [cluster, k8s.cluster.name]
+
+auth:
+  # -- The type of authentication to do.
+  # Options are "none" (default), "basic", "bearerToken", "oauth2", "sigv4".
+  # @section -- Authentication
+  type: none
+
+  # -- The username for basic authentication.
+  # @section -- Authentication - Basic
+  username: ""
+  # -- The key for storing the username in the secret.
+  # @section -- Authentication - Basic
+  usernameKey: username
+  # -- Raw config for accessing the username.
+  # @section -- Authentication - Basic
+  usernameFrom: ""
+
+  # -- The password for basic authentication.
+  # @section -- Authentication - Basic
+  password: ""
+  # -- The key for storing the password in the secret.
+  # @section -- Authentication - Basic
+  passwordKey: password
+  # -- Raw config for accessing the password.
+  # @section -- Authentication - Basic
+  passwordFrom: ""
+
+  # -- The bearer token for bearer token authentication.
+  # @section -- Authentication - Bearer Token
+  bearerToken: ""
+  # -- The key for storing the bearer token in the secret.
+  # @section -- Authentication - Bearer Token
+  bearerTokenKey: bearerToken
+  # -- Raw config for accessing the bearer token.
+  # @section -- Authentication - Bearer Token
+  bearerTokenFrom: ""
+  # -- Path to a file that containers the bearer token.
+  # @section -- Authentication - Bearer Token
+  bearerTokenFile: ""
+
+  # Authenticate to Prometheus using OAuth2
+  # @section -- Authentication - OAuth2
+  oauth2:
+    # -- OAuth2 client ID
+    # @section -- Authentication - OAuth2
+    clientId: ""
+    # -- The key for the client ID property in the secret
+    # @section -- Authentication - OAuth2
+    clientIdKey: clientId
+    # -- Raw config for accessing the client ID
+    # @section -- Authentication - OAuth2
+    clientIdFrom: ""
+    # -- OAuth2 client secret
+    # @section -- Authentication - OAuth2
+    clientSecret: ""
+    # -- The key for the client secret property in the secret
+    # @section -- Authentication - OAuth2
+    clientSecretKey: clientSecret
+    # -- Raw config for accessing the client secret
+    # @section -- Authentication - OAuth2
+    clientSecretFrom: ""
+    # -- File containing the OAuth2 client secret.
+    # @section -- Authentication - OAuth2
+    clientSecretFile: ""
+    # -- OAuth2 endpoint parameters
+    # @section -- Authentication - OAuth2
+    endpointParams: {}
+    # -- HTTP proxy to send requests through.
+    # @section -- Authentication - OAuth2
+    proxyURL: ""
+    # -- Comma-separated list of IP addresses, CIDR notations, and domain names to exclude from proxying.
+    # @section -- Authentication - OAuth2
+    noProxy: ""
+    # -- Use the proxy URL indicated by environment variables.
+    # @section -- Authentication - OAuth2
+    proxyFromEnvironment: false
+    # -- Specifies headers to send to proxies during CONNECT requests.
+    # @section -- Authentication - OAuth2
+    proxyConnectHeader: {}
+    # -- List of scopes to authenticate with.
+    # @section -- Authentication - OAuth2
+    scopes: []
+    # -- URL to fetch the token from.
+    # @section -- Authentication - OAuth2
+    tokenURL: ""
+
+secret:
+  # -- Whether to create a secret for this Faro destination.
+  # @section -- Secret
+  create: true
+  # -- If true, skip secret creation and embed the credentials directly into the configuration.
+  # @section -- Secret
+  embed: false
+  # -- The name of the secret to create.
+  # @section -- Secret
+  name: ""
+  # -- The namespace for the secret.
+  # @section -- Secret
+  namespace: ""
+
+  # Authentication using AWS Signature Version 4
+  sigv4:
+    # -- The AWS region for sigv4 authentication.
+    # @section -- Authentication - SigV4
+    region: ""
+
+    # -- The AWS service for sigv4 authentication.
+    # @section -- Authentication - SigV4
+    service: ""
+
+    assumeRole:
+      # -- The Amazon Resource Name (ARN) of a role to assume.
+      # @section -- Authentication - SigV4
+      arn: ""
+
+      # -- The name of a role session.
+      # @section -- Authentication - SigV4
+      sessionName: ""
+
+      # -- The AWS region where STS is used to assume the configured role.
+      # @section -- Authentication - SigV4
+      stsRegion: ""
+
+tls:
+  # -- Whether to use TLS for the Faro destination.
+  # @section -- TLS
+  insecure: false
+
+  # -- Disables validation of the server certificate.
+  # @section -- TLS
+  insecureSkipVerify: false
+
+  # -- The CA certificate for the server (as a string).
+  # @section -- TLS
+  ca: ""
+  # -- The CA certificate for the server (as a path to a file).
+  # @section -- TLS
+  caFile: ""
+  # -- Raw config for accessing the server CA certificate.
+  # @section -- TLS
+  caFrom: ""
+
+  # -- The client certificate for the server (as a string).
+  # @section -- TLS
+  cert: ""
+  # -- The client certificate for the server (as a path to a file).
+  # @section -- TLS
+  certFile: ""
+  # -- Raw config for accessing the client certificate.
+  # @section -- TLS
+  certFrom: ""
+
+  # -- The client key for the server (as a string).
+  # @section -- TLS
+  key: ""
+  # -- The client key for the server (as a path to a file).
+  # @section -- TLS
+  keyFile: ""
+  # -- Raw config for accessing the client key.
+  # @section -- TLS
+  keyFrom: ""
+
+retryOnFailure:
+  # -- Should failed requests be retried?
+  # @section -- General
+  enabled: true
+  # -- The initial time to wait before retrying a failed request to the Faro destination.
+  # @section -- General
+  initialInterval: 5s
+  # -- The maximum time to wait before retrying a failed request to the Faro destination.
+  # @section -- General
+  maxInterval: 30s
+  # -- The maximum amount of time to wait before discarding a failed batch.
+  # @section -- General
+  maxElapsedTime: 5m
+
+# Processors to apply to the data before delivering it to its destination.
+processors:
+  attributes:
+    # -- Attribute processor actions
+    # Format: { key: "", value: "", action: "", pattern: "", fromAttribute: "", fromContext: "", convertedType: "" }
+    # Can also use `valueFrom` instead of value to use a raw reference.
+    # @section -- Attributes Processor
+    actions: []
+
+  transform:
+    # -- How to react to errors if they occur while processing a statement. Valid options are "ignore", "silent", and
+    # "propagate".
+    # @section -- Transform Processor
+    errorMode: ignore
+
+    # Log transforms
+    logs:
+      # -- Log resource transforms
+      # @section -- Transform Processor
+      resource: []
+      # -- Raw log resource transforms
+      # @section -- Transform Processor
+      resourceFrom: []
+      # -- Log transforms
+      # @section -- Transform Processor
+      log: []
+      # -- Raw log transforms
+      # @section -- Transform Processor
+      logFrom: []
+
+    # Trace transforms
+    traces:
+      # -- Trace resource transforms
+      # @section -- Transform Processor
+      resource: []
+      # -- Raw trace resource transforms
+      # @section -- Transform Processor
+      resourceFrom: []
+      # -- Trace span transforms
+      # @section -- Transform Processor
+      span: []
+      # -- Raw trace span transforms
+      # @section -- Transform Processor
+      spanFrom: []
+      # -- Trace spanevent transforms
+      # @section -- Transform Processor
+      spanevent: []
+      # -- Raw trace spanevent transforms
+      # @section -- Transform Processor
+      spaneventFrom: []
+
+  filters:
+    # -- Enable the filter processor. Any rules that evaluate to true will drop the matching telemetry data.
+    # @section -- Filter Processor
+    enabled: false
+
+    # -- How to react to errors if they occur while processing a statement. Valid options are "ignore", "silent", and
+    # "propagate".
+    # @section -- Filter Processor
+    errorMode: ignore
+
+    # -- Metric filters
+    # @section -- Filter Processor
+    metrics:
+      metric: []
+      datapoint: []
+
+    # -- Log filters
+    # @section -- Filter Processor
+    logs:
+      logRecord: []
+
+    # -- Trace filters
+    # @section -- Filter Processor
+    traces:
+      span: []
+      spanevent: []
+
+  batch:
+    # -- Whether to use a batch processor.
+    # @section -- Batch Processor
+    enabled: true
+    # -- Number of spans, metric data points, or log records after which a batch will be sent regardless of the timeout.
+    # This setting acts as a trigger and does not affect the size of the batch. If you need to enforce batch size limit,
+    # use `maxSize`.
+    # @section -- Batch Processor
+    size: 8192
+    # -- Maximum number of spans, metric data points, or log records to send in a single batch. This number must be
+    # greater than or equal to the `size` setting. If set to 0, the batch processor will not enforce a maximum size.
+    # @section -- Batch Processor
+    maxSize: 0
+    # -- How long to wait before flushing the batch.
+    # @section -- Batch Processor
+    timeout: 2s
+  memoryLimiter:
+    # -- Whether to use a memory limiter.
+    # @section -- Memory Limiter
+    enabled: false
+    # -- How often to check memory usage.
+    # @section -- Memory Limiter
+    checkInterval: 1s
+    # -- Maximum amount of memory targeted to be allocated by the process heap.
+    # @section -- Memory Limiter
+    limit: 0MiB
