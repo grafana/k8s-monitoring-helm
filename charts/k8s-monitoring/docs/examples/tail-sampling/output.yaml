@@ -2204,7 +2204,7 @@ spec:
       serviceAccountName: k8smon-k8s-monitoring-add-finalizer
       containers:
         - name: add-finalizers
-          image: "ghcr.io/grafana/helm-chart-toolbox-kubectl:0.1.0"
+          image: "ghcr.io/grafana/helm-chart-toolbox-kubectl:0.1.1"
           command:
             - /bin/bash
             - -ce
@@ -2252,7 +2252,7 @@ spec:
       serviceAccountName: k8smon-k8s-monitoring-wait-alloy-operator
       containers:
         - name: wait-for-operator
-          image: "ghcr.io/grafana/helm-chart-toolbox-kubectl:0.1.0"
+          image: "ghcr.io/grafana/helm-chart-toolbox-kubectl:0.1.1"
           command:
             - /bin/bash
             - -ce
@@ -2310,25 +2310,25 @@ spec:
       serviceAccountName: k8smon-k8s-monitoring-remove-alloy-and-finalizer
       containers:
         - name: remove-finalizers
-          image: "ghcr.io/grafana/helm-chart-toolbox-kubectl:0.1.0"
+          image: "ghcr.io/grafana/helm-chart-toolbox-kubectl:0.1.1"
           command:
             - /bin/bash
             - -ce
             - |
               echo "Deleting Alloy instance: alloy/k8smon-alloy-metrics..."
-              kubectl delete alloy/k8smon-alloy-metrics --wait
+              kubectl delete alloy/k8smon-alloy-metrics --ignore-not-found=true --wait
               kubectl wait --for=delete alloy/k8smon-alloy-metrics --timeout=60s || echo "Timed out waiting for deletion of alloy/k8smon-alloy-metrics or it may not exist."
 
               echo "Deleting Alloy instance: alloy/k8smon-alloy-logs..."
-              kubectl delete alloy/k8smon-alloy-logs --wait
+              kubectl delete alloy/k8smon-alloy-logs --ignore-not-found=true --wait
               kubectl wait --for=delete alloy/k8smon-alloy-logs --timeout=60s || echo "Timed out waiting for deletion of alloy/k8smon-alloy-logs or it may not exist."
 
               echo "Deleting Alloy instance: alloy/k8smon-alloy-receiver..."
-              kubectl delete alloy/k8smon-alloy-receiver --wait
+              kubectl delete alloy/k8smon-alloy-receiver --ignore-not-found=true --wait
               kubectl wait --for=delete alloy/k8smon-alloy-receiver --timeout=60s || echo "Timed out waiting for deletion of alloy/k8smon-alloy-receiver or it may not exist."
 
               echo "Deleting Alloy instance: alloy/k8smon-tempo-sampler..."
-              kubectl delete alloy/k8smon-tempo-sampler --wait
+              kubectl delete alloy/k8smon-tempo-sampler --ignore-not-found=true --wait
               kubectl wait --for=delete alloy/k8smon-tempo-sampler --timeout=60s || echo "Timed out waiting for deletion of alloy/k8smon-tempo-sampler or it may not exist."
 
               kubectl patch \

@@ -76,7 +76,7 @@ spec:
             - |
 {{- range $alloyName := $alloyNames }}
               echo "Deleting Alloy instance: alloy/{{ $alloyName }}..."
-              kubectl delete alloy/{{ $alloyName }} --wait
+              kubectl delete alloy/{{ $alloyName }} --ignore-not-found=true --wait
               kubectl wait --for=delete alloy/{{ $alloyName }} --timeout=60s || echo "Timed out waiting for deletion of alloy/{{ $alloyName }} or it may not exist."
 {{ end }}
               kubectl patch \
