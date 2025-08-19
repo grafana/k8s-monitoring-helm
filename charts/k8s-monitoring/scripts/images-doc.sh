@@ -4,6 +4,7 @@ scriptDir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 chartDir="$(dirname "${scriptDir}")"
 
 releaseName="k8smon"
+helmVersion="$(yq eval '.version' "${chartDir}/Chart.yaml")"
 
 # Images pulled directly from the Alloy Helm chart (Alloy Operator's AppVersion is the Alloy version)
 alloyOperatorVersion="$(yq eval '.dependencies[] | select(.name=="alloy-operator") | .version' "${chartDir}/Chart.yaml")"
@@ -24,16 +25,86 @@ nodeExporterImage=$(   yq eval "select(.kind==\"DaemonSet\"  and .metadata.name=
 opencostImage=$(       yq eval "select(.kind==\"Deployment\" and .metadata.name==\"${releaseName}-opencost\")           | .spec.template.spec.containers[0].image" "${clusterMetricsOutputFile}")
 windowsExporterImage=$(yq eval "select(.kind==\"DaemonSet\"  and .metadata.name==\"${releaseName}-windows-exporter\")   | .spec.template.spec.containers[0].image" "${clusterMetricsOutputFile}")
 
-# Output the Markdown table
-echo "| System | Image | Description | Enabled with | Deployed by |"
-echo "|--------|-------|-------------|--------------|-------------|"
-echo "| Alloy | \`${alloyImage}\` | Always used. The telemetry data collector. | \`alloy-____.enabled=true\` | Alloy Operator |"
-echo "| Alloy Operator | \`${alloyOperatorImage}\` | Always used. Deploys and manages Grafana Alloy collector instances. | \`alloy-operator.deploy=true\` | - |"
-echo "| Beyla | \`${beylaImage}\` | Performs zero-code instrumentation of applications on the Cluster, generating metrics and traces. | \`autoInstrumentation.beyla.enabled=true\` | - |"
-echo "| Config Reloader | \`${configReloaderImage}\` | Alloy sidecar that reloads the Alloy configuration upon changes. | \`alloy-____.configReloader.enabled=true\` | Alloy Operator |"
-echo "| Kepler | \`${keplerImage}\` | Gathers energy metrics for Kubernetes objects. | \`clusterMetrics.kepler.enabled=true\` | - |"
-echo "| kube-state-metrics | \`${ksmImage}\` | Gathers Kubernetes Cluster object metrics. | \`clusterMetrics.kube-state-metrics.deploy=true\` | - |"
-echo "| kubectl | \`${kubectlImage}\` | Used by Alloy Operator for Helm hooks. | \`alloy-operator.waitForReadiness.enabled=true\` & \`alloy-operator.waitForReadiness.enabled=true\` | Alloy Operator |"
-echo "| Node Exporter | \`${nodeExporterImage}\` | Gathers Kubernetes Cluster Node metrics. | \`clusterMetrics.node-exporter.deploy=true\` | - |"
-echo "| OpenCost | \`${opencostImage}\` | Gathers cost metrics for Kubernetes objects. | \`clusterMetrics.opencost.enabled=true\` | - |"
-echo "| Windows Exporter | \`${windowsExporterImage}\` | Gathers Kubernetes Cluster Node metrics for Windows nodes. | \`clusterMetrics.windows-exporter.deploy=true\` | - |"
+cat << EOF
+## Images
+
+The following is the list of images used in the ${helmVersion} version of the Kubernetes Monitoring Helm chart.
+
+### Alloy
+
+The telemetry data collector. Deployed by the Alloy Operator.
+
+**Image**: \`${alloyImage}\`
+
+**Deploy**: \`alloy-____.enabled=true\`
+
+### Alloy Operator
+
+Deploys and manages Grafana Alloy collector instances.
+
+**Image**: \`${alloyOperatorImage}\`
+
+**Deploy**: \`alloy-operator.deploy=true\`
+
+### Beyla
+
+Performs zero-code instrumentation of applications on the Cluster, generating metrics and traces.
+
+**Image**: \`${beylaImage}\`
+
+**Deploy**: \`autoInstrumentation.beyla.enabled=true\`
+
+### Config Reloader
+
+Sidecar for Alloy instances that reloads the Alloy configuration upon changes.
+
+**Image**: \`${configReloaderImage}\`
+
+**Deploy**: \`alloy-____.configReloader.enabled=true\`
+
+### Kepler
+
+**Image**: \`${keplerImage}\`
+
+**Deploy**: \`clusterMetrics.kepler.enabled=true\`
+
+### kube-state-metrics
+
+Gathers Kubernetes Cluster object metrics.
+
+**Image**: \`${ksmImage}\`
+
+**Deploy**: \`clusterMetrics.kube-state-metrics.deploy=true\`
+
+### kubectl
+
+Used for Helm hooks for properly sequencing the Alloy Operator deployment and removal.
+
+**Image**: \`${kubectlImage}\`
+
+**Deploy**: \`alloy-operator.waitForReadiness.enabled=true\` and \`alloy-operator.waitForAlloyRemoval.enabled=true\`
+
+### Node Exporter
+
+Gathers Kubernetes Cluster Node metrics for Linux nodes.
+
+**Image**: \`${nodeExporterImage}\`
+
+**Deploy**: \`clusterMetrics.node-exporter.deploy=true\`
+
+### OpenCost
+
+Gathers cost metrics for Kubernetes objects.
+
+**Image**: \`${opencostImage}\`
+
+**Deploy**: \`clusterMetrics.opencost.enabled=true\`
+
+### Windows Exporter
+
+Gathers Kubernetes Cluster Node metrics for Windows nodes.
+
+**Image**: \`${windowsExporterImage}\`
+
+**Deploy**: \`clusterMetrics.windows-exporter.deploy=true\`
+EOF
