@@ -42,7 +42,7 @@ declare "annotation_autodiscovery" {
 {{- if .Values.bearerToken.enabled }}
     bearer_token_file = {{ .Values.bearerToken.token | quote }}
 {{- end }}
-    scrape_protocols = {{ .Values.global.scrapeProcotols | toJson }}
+    scrape_protocols = {{ .Values.global.scrapeProtocols | toJson }}
     scrape_classic_histograms = {{ .Values.global.scrapeClassicHistograms }}
     clustering {
       enabled = true
@@ -66,7 +66,7 @@ declare "annotation_autodiscovery" {
     tls_config {
       insecure_skip_verify = true
     }
-    scrape_protocols = {{ .Values.global.scrapeProcotols | toJson }}
+    scrape_protocols = {{ .Values.global.scrapeProtocols | toJson }}
     scrape_classic_histograms = {{ .Values.global.scrapeClassicHistograms }}
     clustering {
       enabled = true

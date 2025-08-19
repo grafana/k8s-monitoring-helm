@@ -48,7 +48,7 @@ prometheus.scrape "kepler" {
   job_name     = {{ .Values.kepler.jobLabel | quote }}
   honor_labels = true
   scrape_interval = {{ .Values.kepler.scrapeInterval | default .Values.global.scrapeInterval | quote }}
-  scrape_protocols = {{ .Values.global.scrapeProcotols | toJson }}
+  scrape_protocols = {{ .Values.global.scrapeProtocols | toJson }}
   scrape_classic_histograms = {{ .Values.global.scrapeClassicHistograms }}
   clustering {
     enabled = true

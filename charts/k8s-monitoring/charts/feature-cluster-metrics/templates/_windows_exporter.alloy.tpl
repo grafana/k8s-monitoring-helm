@@ -75,7 +75,7 @@ prometheus.scrape "windows_exporter" {
   targets  = discovery.relabel.windows_exporter.output
   job_name   = {{ (index .Values "windows-exporter").jobLabel | quote }}
   scrape_interval = {{ (index .Values "windows-exporter").scrapeInterval | default .Values.global.scrapeInterval | quote }}
-  scrape_protocols = {{ .Values.global.scrapeProcotols | toJson }}
+  scrape_protocols = {{ .Values.global.scrapeProtocols | toJson }}
   scrape_classic_histograms = {{ .Values.global.scrapeClassicHistograms }}
   clustering {
     enabled = true
