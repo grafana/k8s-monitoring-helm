@@ -15,6 +15,16 @@ urlFrom: ""
 # @section -- General
 proxyURL: ""
 
+# -- The tenant ID for the Faro destination.
+# @section -- General
+tenantId: ""
+# -- The key for storing the tenant ID in the secret.
+# @section -- General
+tenantIdKey: "tenantId"
+# -- Raw config for accessing the tenant ID.
+# @section -- General
+tenantIdFrom: ""
+
 # -- Extra headers to be set when sending data.
 # All values are treated as strings and automatically quoted.
 # @section -- General
@@ -203,6 +213,14 @@ retryOnFailure:
   # @section -- General
   maxElapsedTime: 5m
 
+# -- Size of the read buffer the HTTP client uses for reading server responses.
+# @section -- General
+readBufferSize: ""
+
+# -- Size of the write buffer the HTTP client uses for writing requests.
+# @section -- General
+writeBufferSize: ""
+
 # Processors to apply to the data before delivering it to its destination.
 processors:
   attributes:
@@ -218,41 +236,17 @@ processors:
     # @section -- Transform Processor
     errorMode: ignore
 
-    # Log transforms
-    logs:
-      # -- Log resource transforms
-      # @section -- Transform Processor
-      resource: []
-      # -- Raw log resource transforms
-      # @section -- Transform Processor
-      resourceFrom: []
-      # -- Log transforms
-      # @section -- Transform Processor
-      log: []
-      # -- Raw log transforms
-      # @section -- Transform Processor
-      logFrom: []
+    # -- Metric transforms, context is inferred.
+    # @section -- Transform Processor
+    metrics: []
 
-    # Trace transforms
-    traces:
-      # -- Trace resource transforms
-      # @section -- Transform Processor
-      resource: []
-      # -- Raw trace resource transforms
-      # @section -- Transform Processor
-      resourceFrom: []
-      # -- Trace span transforms
-      # @section -- Transform Processor
-      span: []
-      # -- Raw trace span transforms
-      # @section -- Transform Processor
-      spanFrom: []
-      # -- Trace spanevent transforms
-      # @section -- Transform Processor
-      spanevent: []
-      # -- Raw trace spanevent transforms
-      # @section -- Transform Processor
-      spaneventFrom: []
+    # -- Log transforms, context is inferred.
+    # @section -- Transform Processor
+    logs: []
+
+    # -- Trace transforms, context is inferred.
+    # @section -- Transform Processor
+    traces: []
 
   filters:
     # -- Enable the filter processor. Any rules that evaluate to true will drop the matching telemetry data.
