@@ -1,6 +1,10 @@
 {{- if and (index .Values "alloy-operator").deploy (index .Values "alloy-operator").waitForAlloyRemoval.enabled }}
 {{- $jobName := (printf "%s-add-finalizer" (include "helper.fullname" .)) | trunc 63 | trimSuffix "-" }}
 {{- $jobSettings := (index .Values "alloy-operator").waitForAlloyRemoval -}}
+{{- $imagePullSecrets := $jobSettings.image.pullSecrets }}
+{{- if ((index .Values.global "image") | default dict).pullSecrets }}
+  {{- $imagePullSecrets = (index .Values.global "image").pullSecrets }}
+{{- end }}
 ---
 apiVersion: batch/v1
 kind: Job
@@ -36,6 +40,9 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       serviceAccountName: {{ $jobName }}
+      {{- if $imagePullSecrets }}
+      imagePullSecrets:{{ toYaml $imagePullSecrets | nindent 8 }}
+      {{- end }}
       containers:
         - name: add-finalizers
           {{- with $jobSettings.image }}
@@ -45,6 +52,7 @@ spec:
           image: "{{ dig "image" "registry" .registry $.Values.global }}/{{ .repository }}:{{ .tag }}"
             {{- end }}
           {{- end }}
+          imagePullPolicy: {{ $jobSettings.image.pullPolicy }}
           command:
             - /bin/bash
             - -ce
