@@ -35,7 +35,7 @@ schema-mods/definitions/%-destination.schema.json: destinations/%-values.yaml
 	docker run --platform linux/amd64 --rm --volume $(shell pwd):/chart ghcr.io/grafana/helm-chart-toolbox-schema-generator --file /chart/$< > $@
 
 NUMBER_OF_DESTINATION_VALUES_FILES := $(words $(DESTINATION_VALUES_FILES))
-schema-mods/destination.json: $(DESTINATION_VALUES_FILES)
+schema-mods/destination.json: $(DESTINATION_SCHEMA_FILES)
 	@echo '{' > $@
 	@echo '  "definitions": {' >> $@
 	@echo '    "destination": {' >> $@
