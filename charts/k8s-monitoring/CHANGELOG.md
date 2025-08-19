@@ -1,7 +1,17 @@
 # Changelog
 
-## Unreleased
+## 3.3.1
 
+*   Update OpenCost to 2.2 (@petewall)
+*   Add Image pull secrets and pull policy to Helm hooks (@petewall)
+*   Fix "scrapeProcotols" typo (@SeamusGrafana)
+*   Add transform support for spanmetrics (@mbaykara)
+*   Fix hook arm64 compatibility and don't fail if Alloy instance already deleted (@petewall)
+
+## 3.3
+
+*   Add passthrough for k8sattributes processor (@patst)
+*   Improve Windows Exporter discovery rules (@petewall)
 *   Add a pair of hooks to add finalizers and Alloy instance cleanup to prevent orphaned resources (@petewall)
 *   Fix timing issues where Alloy custom resources could be created before the Alloy Operator is ready to process them (@AzgadAGZ)
 *   Add pre-install hook to wait for Alloy Operator readiness before creating Alloy resources (@AzgadAGZ)
