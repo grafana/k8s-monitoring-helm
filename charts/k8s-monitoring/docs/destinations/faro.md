@@ -57,12 +57,17 @@
 | extraHeadersFrom | object | `{}` | Extra headers to be set when sending data through a dynamic reference. All values are treated as raw strings and not quoted. |
 | name | string | `""` | The name for this Faro destination. |
 | proxyURL | string | `""` | HTTP proxy to send requests through |
+| readBufferSize | string | `""` | Size of the read buffer the HTTP client uses for reading server responses. |
 | retryOnFailure.enabled | bool | `true` | Should failed requests be retried? |
 | retryOnFailure.initialInterval | string | `"5s"` | The initial time to wait before retrying a failed request to the Faro destination. |
 | retryOnFailure.maxElapsedTime | string | `"5m"` | The maximum amount of time to wait before discarding a failed batch. |
 | retryOnFailure.maxInterval | string | `"30s"` | The maximum time to wait before retrying a failed request to the Faro destination. |
+| tenantId | string | `""` | The tenant ID for the Faro destination. |
+| tenantIdFrom | string | `""` | Raw config for accessing the tenant ID. |
+| tenantIdKey | string | `"tenantId"` | The key for storing the tenant ID in the secret. |
 | url | string | `""` | The URL for the Faro destination. |
 | urlFrom | string | `""` | Raw config for accessing the URL. |
+| writeBufferSize | string | `""` | Size of the write buffer the HTTP client uses for writing requests. |
 
 ### Attributes Processor
 
@@ -102,16 +107,9 @@
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | processors.transform.errorMode | string | `"ignore"` | How to react to errors if they occur while processing a statement. Valid options are "ignore", "silent", and "propagate". |
-| processors.transform.logs.log | list | `[]` | Log transforms |
-| processors.transform.logs.logFrom | list | `[]` | Raw log transforms |
-| processors.transform.logs.resource | list | `[]` | Log resource transforms |
-| processors.transform.logs.resourceFrom | list | `[]` | Raw log resource transforms |
-| processors.transform.traces.resource | list | `[]` | Trace resource transforms |
-| processors.transform.traces.resourceFrom | list | `[]` | Raw trace resource transforms |
-| processors.transform.traces.span | list | `[]` | Trace span transforms |
-| processors.transform.traces.spanFrom | list | `[]` | Raw trace span transforms |
-| processors.transform.traces.spanevent | list | `[]` | Trace spanevent transforms |
-| processors.transform.traces.spaneventFrom | list | `[]` | Raw trace spanevent transforms |
+| processors.transform.logs | list | `[]` | Log transforms, context is inferred. |
+| processors.transform.metrics | list | `[]` | Metric transforms, context is inferred. |
+| processors.transform.traces | list | `[]` | Trace transforms, context is inferred. |
 
 ### Secret
 
