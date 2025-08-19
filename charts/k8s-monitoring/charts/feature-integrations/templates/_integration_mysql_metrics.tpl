@@ -57,7 +57,7 @@ prometheus.scrape {{ include "helper.alloy_name" .name | quote }} {
   targets    = prometheus.exporter.mysql.{{ include "helper.alloy_name" .name }}.targets
   job_name   = {{ .jobLabel | quote }}
   scrape_interval = {{ .scrapeInterval | default $.Values.global.scrapeInterval | quote }}
-  scrape_protocols = {{ $.Values.global.scrapeProcotols | toJson }}
+  scrape_protocols = {{ $.Values.global.scrapeProtocols | toJson }}
   scrape_classic_histograms = {{ $.Values.global.scrapeClassicHistograms }}
   forward_to = [prometheus.relabel.{{ include "helper.alloy_name" .name }}.receiver]
 }

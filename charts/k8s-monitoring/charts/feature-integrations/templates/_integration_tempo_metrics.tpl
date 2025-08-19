@@ -244,7 +244,7 @@ tempo_integration_scrape  {{ include "helper.alloy_name" .name | quote }} {
   drop_metrics = {{ $metricDenyList | join "|" | quote }}
 {{- end }}
   scrape_interval = {{ .scrapeInterval | default $.Values.global.scrapeInterval | quote }}
-  scrape_protocols = {{ $.Values.global.scrapeProcotols | toJson }}
+  scrape_protocols = {{ $.Values.global.scrapeProtocols | toJson }}
   scrape_classic_histograms = {{ $.Values.global.scrapeClassicHistograms }}
   max_cache_size = {{ .metrics.maxCacheSize | default $.Values.global.maxCacheSize | int }}
   forward_to = argument.metrics_destinations.value
