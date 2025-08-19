@@ -227,7 +227,7 @@ unittest: values.schema.json templates/destinations/_destination_types.tpl
 ifdef HAS_HELM_UNITTEST
 	helm unittest --failfast --with-subchart=false .
 else
-	docker run --rm --volume $(shell pwd):/apps helmunittest/helm-unittest:3.17.0-0.7.1 --failfast --with-subchart=false .
+	docker run --rm --volume $(shell pwd):/apps helmunittest/helm-unittest:3.18.4-1.0.0 --failfast --with-subchart=false .
 endif
 
 .PHONY: update-test-snapshots
@@ -235,7 +235,7 @@ update-test-snapshots:
 ifdef HAS_HELM_UNITTEST
 	helm unittest --with-subchart=false . --update-snapshot
 else
-	docker run --rm --volume $(shell pwd):/apps helmunittest/helm-unittest:3.17.0-0.7.1 --with-subchart=false . --update-snapshot
+	docker run --rm --volume $(shell pwd):/apps helmunittest/helm-unittest:3.18.4-1.0.0 --with-subchart=false . --update-snapshot
 endif
 	set -e && \
 	for chart in $(FEATURE_CHARTS); do \
