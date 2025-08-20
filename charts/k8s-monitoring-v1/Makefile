@@ -3,8 +3,16 @@ HAS_SHELLSPEC := $(shell command -v shellspec;)
 
 CHART_TEMPLATE_FILES = $(shell find templates -name "*.tpl")
 CHART_YAML_FILES = $(shell find templates -name "*.yaml")
-ALLOW_LISTS := default_allow_lists/kube-state-metrics.yaml
-
+ALLOW_LISTS := default_allow_lists/cadvisor.yaml \
+	default_allow_lists/kepler.yaml \
+	default_allow_lists/kube-state-metrics.yaml \
+	default_allow_lists/kubelet.yaml \
+	default_allow_lists/kubelet_resource.yaml \
+	default_allow_lists/node-exporter.yaml \
+	default_allow_lists/node-exporter-integration.yaml \
+	default_allow_lists/opencost.yaml \
+	default_allow_lists/windows-exporter.yaml
+pete: $(ALLOW_LISTS)
 Chart.lock: Chart.yaml
 	helm dependency update .
 	@touch Chart.lock # Ensure the timestamp is updated
