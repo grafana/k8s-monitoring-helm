@@ -30,6 +30,9 @@ prometheus.operator.servicemonitors "service_monitors" {
   }
   scrape {
     default_scrape_interval = {{ .Values.serviceMonitors.scrapeInterval | default .Values.global.scrapeInterval | quote }}
+{{- if .Values.serviceMonitors.scrapeTimeout }}
+    default_scrape_timeout = {{ .Values.serviceMonitors.scrapeTimeout | quote }}
+{{- end }}
   }
 
 {{- with .Values.serviceMonitors.excludeNamespaces }}
