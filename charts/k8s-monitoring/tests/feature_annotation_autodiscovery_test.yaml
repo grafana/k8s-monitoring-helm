@@ -5,6 +5,7 @@ templates:
   - validations.yaml
 tests:
   - it: requires a metrics destination
+    template: validations.yaml
     set:
       cluster:
         name: ci-test-cluster
@@ -13,12 +14,12 @@ tests:
     asserts:
       - failedTemplate:
           errorMessage: |-
-            execution error at (k8s-monitoring/templates/validations.yaml:1:4): 
             No destinations found that can accept metrics from Annotation Autodiscovery
             Please add a destination with metrics support.
             See https://github.com/grafana/k8s-monitoring-helm/blob/main/charts/k8s-monitoring/docs/destinations/README.md for more details.
 
   - it: requires the alloy-metrics collector
+    template: validations.yaml
     set:
       cluster:
         name: ci-test-cluster
@@ -31,7 +32,6 @@ tests:
     asserts:
       - failedTemplate:
           errorMessage: |-
-            execution error at (k8s-monitoring/templates/validations.yaml:1:4): 
             The Annotation Autodiscovery feature requires the use of the alloy-metrics collector.
             
             Please enable it by setting:
@@ -39,7 +39,7 @@ tests:
               enabled: true
 
   - it: requires one of the two types to be enabled
-    template: alloy-config.yaml
+    template: validations.yaml
     set:
       cluster:
         name: ci-test-cluster
@@ -58,7 +58,6 @@ tests:
     asserts:
       - failedTemplate:
           errorMessage: |-
-            execution error at (k8s-monitoring/templates/validations.yaml:1:4): 
             Either Pods or Services must be enabled for this feature to work.
             Please enable one or both. For example:
             annotationAutodiscovery:
