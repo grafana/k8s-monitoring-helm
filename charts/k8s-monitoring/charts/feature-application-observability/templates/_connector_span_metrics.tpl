@@ -88,6 +88,8 @@ otelcol.processor.transform "span_metrics_transform" {
     context = "datapoint"
     statements = [
       `set(attributes["collector.id"], "` + constants.hostname + `")`,
+      `set(attributes["service.instance.id"], resource.attributes["k8s.pod.name"]) where resource.attributes["service.instance.id"] == nil and resource.attributes["k8s.pod.name"] != nil`,
+      `set(attributes["service.instance.id"], resource.attributes["k8s.pod.uid"]) where resource.attributes["service.instance.id"] == nil and resource.attributes["k8s.pod.uid"] != nil`,
 {{- if .Values.connectors.spanMetrics.transforms.datapoint }}
 {{- range $transform := .Values.connectors.spanMetrics.transforms.datapoint }}
 {{ $transform | quote | indent 6 }},
