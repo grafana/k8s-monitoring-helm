@@ -1,5 +1,14 @@
 HAS_HELM_UNITTEST := $(shell helm plugin list | grep unittest 2> /dev/null)
-ALLOW_LISTS := default-allow-lists/kube-state-metrics.yaml
+ALLOW_LISTS := default-allow-lists/cadvisor.yaml \
+	default-allow-lists/kepler.yaml \
+	default-allow-lists/kube-state-metrics.yaml \
+	default-allow-lists/kubelet.yaml \
+	default-allow-lists/kubelet_probes.yaml \
+	default-allow-lists/kubelet_resource.yaml \
+	default-allow-lists/node-exporter.yaml \
+	default-allow-lists/node-exporter-integration.yaml \
+	default-allow-lists/opencost.yaml \
+	default-allow-lists/windows-exporter.yaml
 
 .SECONDEXPANSION:
 README.md: values.yaml Chart.yaml $$(wildcard README.md.gotmpl)
