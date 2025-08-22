@@ -1580,58 +1580,6 @@ spec:
       portName: http
     configMap:
       content: |-
-        // Destination: localPrometheus (prometheus)
-        otelcol.exporter.prometheus "localprometheus" {
-          add_metric_suffixes = true
-          resource_to_telemetry_conversion = false
-          forward_to = [prometheus.remote_write.localprometheus.receiver]
-        }
-  
-        prometheus.remote_write "localprometheus" {
-          endpoint {
-            url = "http://prometheus-server.prometheus.svc:9090/api/v1/write"
-            headers = {
-            }
-            tls_config {
-              insecure_skip_verify = false
-            }
-            send_native_histograms = false
-  
-            queue_config {
-              capacity = 10000
-              min_shards = 1
-              max_shards = 50
-              max_samples_per_send = 2000
-              batch_send_deadline = "5s"
-              min_backoff = "30ms"
-              max_backoff = "5s"
-              retry_on_http_429 = true
-              sample_age_limit = "0s"
-            }
-  
-            write_relabel_config {
-              source_labels = ["cluster"]
-              regex = ""
-              replacement = "service-graph-metrics-test"
-              target_label = "cluster"
-            }
-            write_relabel_config {
-              source_labels = ["k8s_cluster_name"]
-              regex = ""
-              replacement = "service-graph-metrics-test"
-              target_label = "k8s_cluster_name"
-            }
-          }
-  
-          wal {
-            truncate_frequency = "2h"
-            min_keepalive_time = "5m"
-            max_keepalive_time = "8h"
-          }
-          external_labels = {
-            collector_id = env("POD_NAME"),
-          }
-        }
         otelcol.receiver.otlp "service_graph_receiver" {
           grpc {
             max_recv_msg_size = "8MB"
@@ -1683,6 +1631,63 @@ spec:
               metrics = [
                 otelcol.exporter.prometheus.localprometheus.input,
               ]
+          }
+        }
+  
+  
+  
+  
+  
+        // Destination: localPrometheus (prometheus)
+        otelcol.exporter.prometheus "localprometheus" {
+          add_metric_suffixes = true
+          resource_to_telemetry_conversion = false
+          forward_to = [prometheus.remote_write.localprometheus.receiver]
+        }
+  
+        prometheus.remote_write "localprometheus" {
+          endpoint {
+            url = "http://prometheus-server.prometheus.svc:9090/api/v1/write"
+            headers = {
+            }
+            tls_config {
+              insecure_skip_verify = false
+            }
+            send_native_histograms = false
+  
+            queue_config {
+              capacity = 10000
+              min_shards = 1
+              max_shards = 50
+              max_samples_per_send = 2000
+              batch_send_deadline = "5s"
+              min_backoff = "30ms"
+              max_backoff = "5s"
+              retry_on_http_429 = true
+              sample_age_limit = "0s"
+            }
+  
+            write_relabel_config {
+              source_labels = ["cluster"]
+              regex = ""
+              replacement = "service-graph-metrics-test"
+              target_label = "cluster"
+            }
+            write_relabel_config {
+              source_labels = ["k8s_cluster_name"]
+              regex = ""
+              replacement = "service-graph-metrics-test"
+              target_label = "k8s_cluster_name"
+            }
+          }
+  
+          wal {
+            truncate_frequency = "2h"
+            min_keepalive_time = "5m"
+            max_keepalive_time = "8h"
+          }
+          external_labels = {
+            collector_id = env("POD_NAME"),
           }
         }
       create: true
@@ -1820,7 +1825,7 @@ spec:
   crds:
     create: false
   extraObjects: []
-  fullnameOverride: null
+  fullnameOverride: k8smon-localtempo-servicegraph
   global:
     image:
       pullSecrets: []
@@ -1844,7 +1849,7 @@ spec:
     path: /
     pathType: Prefix
     tls: []
-  nameOverride: localtempo-servicegraph
+  nameOverride: null
   namespaceOverride: null
   rbac:
     create: true

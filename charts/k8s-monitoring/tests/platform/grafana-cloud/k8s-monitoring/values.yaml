@@ -3,32 +3,53 @@ cluster:
   name: k8s-monitoring-gc-feature-test
 
 destinations:
-  - name: grafanaCloudMetrics
+  - name: grafana-cloud-metrics
     type: prometheus
     url: https://prometheus-prod-13-prod-us-east-0.grafana.net/api/prom/push
     auth:
       type: basic
-      usernameKey: PROMETHEUS_USER
-      passwordKey: PROMETHEUS_PASS
+      usernameKey: metricsUser
+      passwordKey: grafanaCloudAccessPolicyToken
     secret:
       create: false
       name: grafana-cloud-credentials
-  - name: grafanaCloudLogs
+  - name: grafana-cloud-logs
     type: loki
     url: https://logs-prod-006.grafana.net/loki/api/v1/push
     auth:
       type: basic
-      usernameKey: LOKI_USER
-      passwordKey: LOKI_PASS
+      usernameKey: logsUser
+      passwordKey: grafanaCloudAccessPolicyToken
     secret:
       create: false
       name: grafana-cloud-credentials
+  - name: grafana-cloud-otlp-endpoint
+    type: otlp
+    url: https://otlp-gateway-prod-us-east-0.grafana.net./otlp
+    protocol: http
+    auth:
+      type: basic
+      usernameKey: otlpUser
+      passwordKey: grafanaCloudAccessPolicyToken
+    secret:
+      create: false
+      name: grafana-cloud-credentials
+    metrics: {enabled: true}
+    logs: {enabled: true}
+    traces: {enabled: true}
+    processors:
+      tailSampling:
+        enabled: true
+        policies:
+          - name: sample-15pct-traces
+            type: probabilistic
+            sampling_percentage: 15
 
 clusterMetrics:
   enabled: true
   opencost:
     enabled: true
-    metricsSource: grafanaCloudMetrics
+    metricsSource: grafana-cloud-metrics
     opencost:
       exporter:
         defaultClusterId: k8s-monitoring-gc-feature-test
@@ -36,8 +57,8 @@ clusterMetrics:
         external:
           url: https://prometheus-prod-13-prod-us-east-0.grafana.net/api/prom
         existingSecretName: grafana-cloud-credentials
-        username_key: PROMETHEUS_USER
-        password_key: PROMETHEUS_PASS
+        username_key: metricsUser
+        password_key: grafanaCloudAccessPolicyToken
   kepler:
     enabled: true
 
@@ -45,6 +66,16 @@ clusterEvents:
   enabled: true
 
 podLogs:
+  enabled: true
+
+applicationObservability:
+  enabled: true
+  receivers:
+    otlp:
+      grpc:
+        enabled: true
+
+autoInstrumentation:
   enabled: true
 
 integrations:
@@ -62,3 +93,14 @@ alloy-singleton:
 
 alloy-logs:
   enabled: true
+
+alloy-receiver:
+  enabled: true
+
+collectorCommon:
+  alloy:
+    liveDebugging:
+      enabled: true
+    controller:
+      podAnnotations:
+        source: k8s-monitoring-gc-feature-test
