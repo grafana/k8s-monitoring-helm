@@ -12,12 +12,6 @@ otelcol.processor.interval {{ .name | default "default" | quote }} {
 {{- if and .metrics .Values.metrics.enabled }}
     metrics = {{ .metrics }}
 {{- end }}
-{{- if and .logs .Values.logs.enabled }}
-    logs = {{ .logs }}
-{{- end }}
-{{- if and .traces .Values.traces.enabled }}
-    traces = {{ .traces }}
-{{- end }}
   }
 }
 {{- end }}
