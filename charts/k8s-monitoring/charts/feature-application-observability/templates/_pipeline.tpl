@@ -144,10 +144,10 @@
   description: Batch Processor
   component: processor.batch
   targets:
+    logs: argument.logs_destinations.value
+    traces: argument.traces_destinations.value
 {{- if .Values.processors.interval.enabled }}
     metrics: [{name: default, component: processor.interval}]
-    logs: [{name: default, component: processor.interval}]
-    traces: [{name: default, component: processor.interval}]
 
 - name: default
   description: Interval Processor
@@ -155,7 +155,5 @@
   targets:
 {{- end }}
     metrics: argument.metrics_destinations.value
-    logs: argument.logs_destinations.value
-    traces: argument.traces_destinations.value
 
 {{- end }}
