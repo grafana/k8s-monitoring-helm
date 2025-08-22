@@ -1,0 +1,76 @@
+cluster:
+  name: kube-prometheus-stack-compatible
+
+destinations:
+  - name: prometheus
+    type: prometheus
+    url: ...
+  - name: localLoki
+    type: loki
+    url: http://loki.loki.svc:3100/loki/api/v1/push
+    tenantId: "1"
+    auth:
+      type: basic
+      username: loki
+      password: lokipassword
+
+clusterEvents:
+  enabled: true
+
+clusterMetrics:
+  enabled: true
+
+  apiServer:
+    enabled: true
+    jobLabel: apiserver
+
+  kubelet:
+    jobLabel: kubelet
+    extraMetricProcessingRules: |
+      rule {
+        replacement   = "/metrics"
+        target_label  = "metrics_path"
+      }
+
+  cadvisor:
+    jobLabel: kubelet
+    extraMetricProcessingRules: |
+      rule {
+        replacement   = "/metrics/cadvisor"
+        target_label  = "metrics_path"
+      }
+
+  node-exporter:
+    jobLabel: node-exporter
+    metricsTuning:
+      includeMetrics:
+        - node_uname_info
+        - node_time_seconds
+        - node_disk_io_time_seconds_total
+        - node_disk_io_time_weighted_seconds_total
+        - node_load1
+        - node_vmstat_pgmajfault
+
+  kube-state-metrics:
+    jobLabel: kube-state-metrics
+
+  windows-exporter:
+    deploy: false
+    enabled: false
+
+prometheusOperatorObjects:
+  enabled: true
+  crds:
+    deploy: true
+
+podLogs:
+  enabled: true
+
+alloy-metrics:
+  enabled: true
+
+alloy-logs:
+  enabled: true
+
+alloy-singleton:
+  enabled: true
