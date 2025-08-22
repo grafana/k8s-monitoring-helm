@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+*   Update OpenCost to 2.2.2 and Prom Operator CRDs to 23.0.0 (@petewall)
+
 ## 3.3.1
 
 *   Update OpenCost to 2.2 (@petewall)
