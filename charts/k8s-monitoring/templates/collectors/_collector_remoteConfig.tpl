@@ -8,7 +8,11 @@
     {{- end }}
 remotecfg {
   id = sys.env("GCLOUD_FM_COLLECTOR_ID")
+{{- if .urlFrom }}
+  url = {{ .urlFrom }}
+{{- else }}
   url = {{ .url | quote }}
+{{- end }}
 {{- if .proxyURL }}
   proxy_url = {{ .proxyURL | quote }}
 {{- end }}
