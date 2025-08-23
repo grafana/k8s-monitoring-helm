@@ -88,6 +88,15 @@ tests:
               type: promql
               expect:
                 count: 0
+
+            # Check that OpenCost is working
+            - query: opencost_build_info{cluster="$CLUSTER", job="integrations/kubernetes/opencost"}
+              type: promql
+            - query: container_cpu_allocation{cluster="$CLUSTER", job="integrations/kubernetes/opencost"}
+              type: promql
+            - query: container_memory_allocation_bytes{cluster="$CLUSTER", job="integrations/kubernetes/opencost"}
+              type: promql
+
             # Check for cluster events
             - query: count_over_time({cluster="$CLUSTER", job="integrations/kubernetes/eventhandler"}[1h])
               type: logql
