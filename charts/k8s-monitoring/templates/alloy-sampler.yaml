@@ -2,38 +2,50 @@
 {{- if eq $destination.type "otlp" }}
   {{- $isSamplingEnabled := include "destinations.otlp.isTailSamplingEnabled" $destination }}
   {{- if eq $isSamplingEnabled "true" }}
-
-    {{- /* Build Alloy configuration for Tail Sampling */}}
     {{- $defaultValues := "destinations/otlp-values.yaml" | $.Files.Get | fromYaml }}
     {{- $destination = mergeOverwrite $defaultValues $destination }}
-    {{- $destinationTarget := include "destinations.otlp.alloy.exporter.target" $destination }}
 
+    {{- $maxLength := 51 }}{{/* This limit is from the `controller-revision-hash` pod label value*/}}
+    {{- $collectorName := printf "%s-%s" $.Release.Name (include "helper.k8s_name" (printf "%s-sampler" $destination.name)) | trunc $maxLength | trimSuffix "-" | lower }}
+    {{- $collectorValues := merge (dict "fullnameOverride" $collectorName) ($destination.processors.tailSampling.collector | default dict) }}
+    {{- $values := (deepCopy $ | merge (dict "collectorName" $collectorName "collectorValues" $collectorValues)) }}
+    {{- $alloyValues := include "collector.alloy.values" $values | fromYaml }}
+
+    {{- /* Sampler config components */}}
+    {{- $destinationTarget := include "destinations.otlp.alloy.exporter.target" $destination }}
     {{- $samplerConfig := merge (dict "traces" $destinationTarget "name" "tail_sampler") $destination.processors.tailSampling}}
     {{- $samplerTarget := include "sampler.processor.tailSampling.alloy.target" $samplerConfig }}
+    {{- $samplerConfigComponents := include "sampler.processor.tailSampling.alloy" $samplerConfig}}
 
+    {{- /* Receiver config components */}}
     {{- $receiverConfig := merge (dict "traces" $samplerTarget "name" "sampler_receiver") $destination.processors.tailSampling }}
+    {{- $receiverConfigComponents := include "receiver.otlp.alloy" $receiverConfig }}
 
-    {{- $alloyConfig := "" }}
-    {{- $alloyConfig = cat $alloyConfig ((include "receiver.otlp.alloy" $receiverConfig) | trim | nindent 0) }}
-    {{- $alloyConfig = cat $alloyConfig ((include "sampler.processor.tailSampling.alloy" $samplerConfig) | trim | nindent 0) }}
-    {{- $alloyConfig = cat $alloyConfig (printf "\n\n// Destination: %s (%s)" $destination.name $destination.type) }}
-    {{- $alloyConfig = cat $alloyConfig ((include "destinations.otlp.alloy.exporter" $destination) | trim | nindent 0) }}
+    {{- /* Destination components*/}}
+    {{- $destinationConfigComponents := printf "// Destination: %s (%s)" $destination.name $destination.type }}
+    {{- $destinationConfigComponents = cat $destinationConfigComponents (include "destinations.otlp.alloy.exporter" $destination) | trim }}
     {{- if eq (include "secrets.usesKubernetesSecret" $destination) "true" }}
-      {{- $alloyConfig = cat $alloyConfig (include "secret.alloy" (deepCopy $ | merge (dict "object" $destination)) | nindent 0) }}
+      {{- $destinationConfigComponents = cat $destinationConfigComponents (include "secret.alloy" (deepCopy $ | merge (dict "object" $destination)) | nindent 0) }}
     {{- end }}
+
+    {{- /* Build full Alloy configuration */}}
+    {{- $alloyConfig := "" }}
+    {{- $alloyConfig = cat $alloyConfig ($receiverConfigComponents | trim | nindent 0) }}
+    {{- $alloyConfig = cat $alloyConfig ($samplerConfigComponents | trim | nindent 0) }}
+    {{- $alloyConfig = cat $alloyConfig (include "collectors.logging.alloy" $alloyValues | trim | nindent 0) }}
+    {{- $alloyConfig = cat $alloyConfig (include "collectors.liveDebugging.alloy" $alloyValues | trim | nindent 0) }}
+    {{- $alloyConfig = cat $alloyConfig (include "collectors.remoteConfig.alloy" $values | trim | nindent 0) }}
+    {{- $alloyConfig = cat $alloyConfig (include "collectors.extraConfig.alloy" $values | trim | nindent 0) }}
+    {{- $alloyConfig = cat $alloyConfig ($destinationConfigComponents | trim | nindent 0) }}
     {{- $alloyConfig = regexReplaceAll `[ \t]+(\r?\n)` $alloyConfig "\n" | trim }}
 
     {{- /* Build Alloy spec */}}
-    {{- $collectorName := include "helper.k8s_name" (printf "%s-sampler" $destination.name) }}
-    {{- $collectorValues := merge (dict "nameOverride" $collectorName "alloy" (dict "configMap" (dict "create" true "content" $alloyConfig))) ($destination.processors.tailSampling.collector | default dict) }}
-    {{- $values := (deepCopy $ | merge (dict "collectorName" $collectorName "collectorValues" $collectorValues)) }}
-    {{- $alloyValues := include "collector.alloy.values" $values | fromYaml }}
-    {{- $alloySpec := include "collector.alloy.valuesToSpec" $alloyValues }}
+    {{- $alloySpec := include "collector.alloy.valuesToSpec" (mergeOverwrite $alloyValues (dict "alloy" (dict "configMap" (dict "create" true "content" $alloyConfig)))) }}
 ---
 apiVersion: collectors.grafana.com/v1alpha1
 kind: Alloy
 metadata:
-  name: {{ include "collector.alloy.fullname" $values }}
+  name: {{ $collectorName }}
   namespace: {{ $.Release.Namespace }}
   {{- if and (index $.Values "alloy-operator").deploy (index $.Values "alloy-operator").waitForReadiness.enabled }}
   annotations:

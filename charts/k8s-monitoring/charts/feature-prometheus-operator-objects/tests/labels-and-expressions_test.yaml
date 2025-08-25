@@ -1,0 +1,31 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Feature - Prometheus Operator Objects - Label Selectors and Expressions
+templates:
+  - configmap.yaml
+tests:
+  - it: should generate the correct configuration
+    set:
+      deployAsConfigMap: true
+      podMonitors:
+        labelSelectors:
+          app.kubernetes.io/name: my-app
+      probes:
+        labelExpressions:
+          - key: monitor
+            operator: Exists
+          - key: region
+            operator: In
+            values: ["us-east-1", "us-east-2"]
+          - key: private
+            operator: DoesNotExist
+      serviceMonitors:
+        labelSelectors:
+          app.kubernetes.io/name: my-app
+        labelExpressions:
+          - key: private
+            operator: DoesNotExist
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["module.alloy"]

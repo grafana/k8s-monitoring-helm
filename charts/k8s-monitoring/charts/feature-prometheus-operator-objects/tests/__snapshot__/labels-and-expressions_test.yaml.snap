@@ -1,0 +1,73 @@
+should generate the correct configuration:
+  1: |
+    |-
+      declare "prometheus_operator_objects" {
+        argument "metrics_destinations" {
+          comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
+        }
+
+        // Prometheus Operator PodMonitor objects
+        prometheus.operator.podmonitors "pod_monitors" {
+          selector {
+            match_labels = {
+              "app.kubernetes.io/name" = "my-app",
+            }
+          }
+          clustering {
+            enabled = true
+          }
+          scrape {
+            default_scrape_interval = "60s"
+          }
+          forward_to = argument.metrics_destinations.value
+        }
+
+        // Prometheus Operator Probe objects
+        prometheus.operator.probes "probes" {
+          selector {
+            match_expression {
+              key = "monitor"
+              operator = "Exists"
+
+            }
+            match_expression {
+              key = "region"
+              operator = "In"
+              values = ["us-east-1","us-east-2"]
+            }
+            match_expression {
+              key = "private"
+              operator = "DoesNotExist"
+
+            }
+          }
+          clustering {
+            enabled = true
+          }
+          scrape {
+            default_scrape_interval = "60s"
+          }
+          forward_to = argument.metrics_destinations.value
+        }
+
+        // Prometheus Operator ServiceMonitor objects
+        prometheus.operator.servicemonitors "service_monitors" {
+          selector {
+            match_labels = {
+              "app.kubernetes.io/name" = "my-app",
+            }
+            match_expression {
+              key = "private"
+              operator = "DoesNotExist"
+
+            }
+          }
+          clustering {
+            enabled = true
+          }
+          scrape {
+            default_scrape_interval = "60s"
+          }
+          forward_to = argument.metrics_destinations.value
+        }
+      }

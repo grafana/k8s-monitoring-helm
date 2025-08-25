@@ -1,0 +1,19 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Feature - Prometheus Operator Objects - Scrape Intervals and Timeouts
+templates:
+  - configmap.yaml
+tests:
+  - it: should generate the default configuration
+    set:
+      serviceMonitors:
+        scrapeInterval: 30s
+        scrapeTimeout: 10s
+      podMonitors:
+        scrapeInterval: 10s
+        scrapeTimeout: 5s
+      deployAsConfigMap: true
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["module.alloy"]

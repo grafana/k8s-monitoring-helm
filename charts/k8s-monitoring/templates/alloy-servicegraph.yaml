@@ -2,15 +2,21 @@
 {{- if eq $destination.type "otlp" }}
   {{- $isServiceGraphsEnabled := include "destinations.otlp.isServiceGraphsEnabled" $destination }}
   {{- if eq $isServiceGraphsEnabled "true" }}
-
-    {{- /* Build Alloy configuration for Service Graph Metrics */}}
     {{- $defaultValues := "destinations/otlp-values.yaml" | $.Files.Get | fromYaml }}
     {{- $destination = mergeOverwrite $defaultValues $destination }}
-    {{- $metricsDestinationNames := include "destinations.get" (dict "destinations" $.Values.destinations "type" "metrics" "ecosystem" "otlp" "filter" $destination.processors.serviceGraphMetrics.destinations) | fromYamlArray -}}
 
-    {{- $alloyConfig := "" }}
+    {{- $maxLength := 51 }}{{/* This limit is from the `controller-revision-hash` pod label value*/}}
+    {{- $collectorName := printf "%s-%s" $.Release.Name (include "helper.k8s_name" (printf "%s-servicegraph" $destination.name)) | trunc $maxLength | trimSuffix "-" | lower }}
+    {{- $extraEnvContent := list (dict "name" "POD_NAME" "valueFrom" (dict "fieldRef" (dict "apiVersion" "v1" "fieldPath" "metadata.name"))) }}
+    {{- $collectorValues := merge (dict "fullnameOverride" $collectorName "alloy" (dict "extraEnv" $extraEnvContent)) ($destination.processors.serviceGraphMetrics.collector | default dict) }}
+    {{- $values := (deepCopy $ | merge (dict "collectorName" $collectorName "collectorValues" $collectorValues)) }}
+    {{- $alloyValues := include "collector.alloy.values" $values | fromYaml }}
+
+    {{- /* Destination components*/}}
+    {{- $metricsDestinationNames := include "destinations.get" (dict "destinations" $.Values.destinations "type" "metrics" "ecosystem" "otlp" "filter" $destination.processors.serviceGraphMetrics.destinations) | fromYamlArray -}}
     {{- $destinations := list }}
     {{- $destinationTargets := list }}
+    {{- $destinationConfigComponents := "" }}
     {{- range $metricsDestinationName := $metricsDestinationNames }}
       {{- $dest := include "destination.getDestinationByName" (deepCopy $ | merge (dict "destination" $metricsDestinationName )) | fromYaml }}
       {{- $destinations = append $destinations $dest }}
@@ -21,44 +27,49 @@
         {{- $destinationTarget := include "destinations.prometheus.alloy.otlp.metrics.target" $dest }}
         {{- $destinationTargets = append $destinationTargets (printf "%s" $destinationTarget) }}
       {{- end }}
-
-      {{- $alloyConfig = cat $alloyConfig (printf "\n\n// Destination: %s (%s)" $dest.name $dest.type) }}
+      {{- $destinationConfigComponents = cat $destinationConfigComponents (printf "\n\n// Destination: %s (%s)" $dest.name $dest.type) }}
       {{- if eq (include "secrets.usesKubernetesSecret" $dest) "true" }}
-        {{- $alloyConfig = cat $alloyConfig (include "secret.alloy" (deepCopy $ | merge (dict "object" $dest)) | nindent 0) }}
+        {{- $destinationConfigComponents = cat $destinationConfigComponents (include "secret.alloy" (deepCopy $ | merge (dict "object" $dest)) | nindent 0) }}
       {{- end }}
       {{- if ne $dest.type "prometheus" -}}
         {{- $defaultValues := "destinations/otlp-values.yaml" | $.Files.Get | fromYaml }}
         {{- $dest = mergeOverwrite $defaultValues $dest }}
-        {{- $alloyConfig = cat $alloyConfig ((include "destinations.otlp.alloy.exporter" $dest) | trim | nindent 0) }}
+        {{- $destinationConfigComponents = cat $destinationConfigComponents ((include "destinations.otlp.alloy.exporter" $dest) | trim | nindent 0) }}
       {{- else -}}
         {{- $defaultValues := "destinations/prometheus-values.yaml" | $.Files.Get | fromYaml }}
         {{- $dest = mergeOverwrite $defaultValues $dest }}
         {{- $dest = set $dest "extraLabelsFrom" (dict "collector_id" "env(\"POD_NAME\")") }}
-        {{- $alloyConfig = cat $alloyConfig ((include "destinations.prometheus.alloy" (deepCopy $ | merge (dict "destination" $dest))) | trim | nindent 0) }}
+        {{- $destinationConfigComponents = cat $destinationConfigComponents ((include "destinations.prometheus.alloy" (deepCopy $ | merge (dict "destination" $dest))) | trim | nindent 0) }}
       {{- end }}
     {{- end }}
 
+    {{- /* ServiceGraph Metrics config components */}}
     {{- $serviceGraphConfig := merge (dict "traces" $destination "metrics" $destinationTargets "name" "service_graph_metrics") $destination.processors.serviceGraphMetrics }}
     {{- $serviceGraphTarget := include "servicegraph.connector.serviceGraphMetrics.alloy.target" $serviceGraphConfig }}
-    {{- $receiverConfig := merge (dict "traces" $serviceGraphTarget "name" "service_graph_receiver") $destination.processors.serviceGraphMetrics }}
+    {{- $serviceGraphConfigComponents := (include "servicegraph.connector.serviceGraphMetrics.alloy" $serviceGraphConfig) | trim | nindent 0 }}
 
-    {{- $alloyConfig = cat $alloyConfig ((include "receiver.otlp.alloy" $receiverConfig) | trim | nindent 0) }}
-    {{- $alloyConfig = cat $alloyConfig ((include "servicegraph.connector.serviceGraphMetrics.alloy" $serviceGraphConfig) | trim | nindent 0) }}
+    {{- /* Receiver config components */}}
+    {{- $receiverConfig := merge (dict "traces" $serviceGraphTarget "name" "service_graph_receiver") $destination.processors.serviceGraphMetrics }}
+    {{- $receiverConfigComponents := (include "receiver.otlp.alloy" $receiverConfig) | trim | nindent 0 }}
+
+    {{- /* Build full Alloy configuration */}}
+    {{- $alloyConfig := "" }}
+    {{- $alloyConfig = cat $alloyConfig $receiverConfigComponents }}
+    {{- $alloyConfig = cat $alloyConfig $serviceGraphConfigComponents }}
+    {{- $alloyConfig = cat $alloyConfig (include "collectors.logging.alloy" $alloyValues | trim | nindent 0) }}
+    {{- $alloyConfig = cat $alloyConfig (include "collectors.liveDebugging.alloy" $alloyValues | trim | nindent 0) }}
+    {{- $alloyConfig = cat $alloyConfig (include "collectors.remoteConfig.alloy" $values | trim | nindent 0) }}
+    {{- $alloyConfig = cat $alloyConfig (include "collectors.extraConfig.alloy" $values | trim | nindent 0) }}
+    {{- $alloyConfig = cat $alloyConfig $destinationConfigComponents }}
     {{- $alloyConfig = regexReplaceAll `[ \t]+(\r?\n)` $alloyConfig "\n" | trim }}
 
     {{- /* Build Alloy spec */}}
-    {{- $collectorName := include "helper.k8s_name" (printf "%s-servicegraph" $destination.name) }}
-    {{- $configMapContent := dict "create" true "content" $alloyConfig }}
-    {{- $extraEnvContent := list (dict "name" "POD_NAME" "valueFrom" (dict "fieldRef" (dict "apiVersion" "v1" "fieldPath" "metadata.name"))) }}
-    {{- $collectorValues := merge (dict "nameOverride" $collectorName "alloy" (dict "configMap" $configMapContent "extraEnv" $extraEnvContent)) ($destination.processors.serviceGraphMetrics.collector | default dict) }}
-    {{- $values := (deepCopy $ | merge (dict "collectorName" $collectorName "collectorValues" $collectorValues)) }}
-    {{- $alloyValues := include "collector.alloy.values" $values | fromYaml }}
-    {{- $alloySpec := include "collector.alloy.valuesToSpec" $alloyValues }}
+    {{- $alloySpec := include "collector.alloy.valuesToSpec" (mergeOverwrite $alloyValues (dict "alloy" (dict "configMap" (dict "create" true "content" $alloyConfig)))) }}
 ---
 apiVersion: collectors.grafana.com/v1alpha1
 kind: Alloy
 metadata:
-  name: {{ include "collector.alloy.fullname" $values }}
+  name: {{ $collectorName }}
   namespace: {{ $.Release.Namespace }}
   {{- if and (index $.Values "alloy-operator").deploy (index $.Values "alloy-operator").waitForReadiness.enabled }}
   annotations:
