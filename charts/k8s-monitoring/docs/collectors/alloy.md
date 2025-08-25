@@ -78,4 +78,5 @@ Settings for each primary Alloy instance come from several potential sources, in
 | remoteConfig.proxyFromEnvironment | bool | `false` | Use the proxy URL indicated by environment variables. |
 | remoteConfig.proxyURL | string | `""` | The proxy URL to use of the remote config server. |
 | remoteConfig.url | string | `""` | The URL of the remote config server. |
+| remoteConfig.urlFrom | string | `""` | Raw config for accessing the URL. Lets you insert raw Alloy references so you can load the URL from any number of places, such as loading values from environment variables or config maps. For example: `urlFrom: sys.env("ALLOY_REMOTE_CONFIG_URL")` |
 <!-- textlint-enable terminology -->
