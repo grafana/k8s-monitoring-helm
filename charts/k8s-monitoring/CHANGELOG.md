@@ -5,6 +5,7 @@
 *   Properly truncate tail sampling and service grapher Alloy instanecs (@petewall)
 *   Add the ability to set the default scrape timeout for Prometheus Operator Objects feature (@petewall)
 *   Update OpenCost to 2.2.2 and Prom Operator CRDs to 23.0.0 (@petewall)
+*   Adding sys.env functions to remoteConfig collector (@AzgadAGZ)
 
 ## 3.3.1
 
