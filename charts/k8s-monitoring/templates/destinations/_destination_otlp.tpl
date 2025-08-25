@@ -339,8 +339,7 @@ otelcol.exporter.loadbalancing {{ printf "%s_servicegraph" (include "helper.allo
   }
 }
 {{- end }}
-
-{{- include "destinations.otlp.alloy.exporter" . }}
+{{ include "destinations.otlp.alloy.exporter" . }}
 {{- end }}
 {{- end }}
 
@@ -358,7 +357,6 @@ otelcol.exporter.otlphttp.{{ include "helper.alloy_name" .name }}.input
 
 {{- define "destinations.otlp.alloy.exporter" }}
 {{- if .processors.batch.enabled }}
-
 otelcol.processor.batch {{ include "helper.alloy_name" .name | quote }} {
   timeout = {{ .processors.batch.timeout | quote }}
   send_batch_size = {{ .processors.batch.size | int }}

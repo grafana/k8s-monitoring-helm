@@ -13,6 +13,22 @@ metadata:
     app.kubernetes.io/managed-by: Helm
 automountServiceAccountToken: true
 ---
+# Source: k8s-monitoring/charts/autoInstrumentation/charts/beyla/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: k8smon-beyla
+  namespace: default
+  labels:
+    helm.sh/chart: beyla-1.9.2
+    app.kubernetes.io/name: beyla
+    app.kubernetes.io/instance: k8smon
+    app.kubernetes.io/version: "2.5.6"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/part-of: beyla
+    app.kubernetes.io/component: rbac
+automountServiceAccountToken: true
+---
 # Source: k8s-monitoring/charts/clusterMetrics/charts/kepler/templates/serviceaccount.yaml
 apiVersion: v1
 kind: ServiceAccount
@@ -122,6 +138,63 @@ metadata:
   namespace: default
 data:
   config.alloy: |
+    // Feature: Auto-Instrumentation
+    declare "auto_instrumentation" {
+      argument "metrics_destinations" {
+        comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
+      }
+    
+      discovery.kubernetes "beyla_pods" {
+        role = "pod"
+        namespaces {
+          own_namespace = true
+        }
+        selectors {
+          role = "pod"
+          label = "app.kubernetes.io/name=beyla"
+        }
+      }
+    
+      discovery.relabel "beyla_pods" {
+        targets = discovery.kubernetes.beyla_pods.targets
+        rule {
+          source_labels = ["__meta_kubernetes_pod_node_name"]
+          action = "replace"
+          target_label = "instance"
+        }
+      }
+    
+      prometheus.scrape "beyla_applications" {
+        targets         = discovery.relabel.beyla_pods.output
+        honor_labels    = true
+        scrape_interval = "60s"
+        scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
+        scrape_classic_histograms = false
+        clustering {
+          enabled = true
+        }
+        forward_to = argument.metrics_destinations.value
+      }
+    
+      prometheus.scrape "beyla_internal" {
+        targets         = discovery.relabel.beyla_pods.output
+        metrics_path    = "/internal/metrics"
+        job_name        = "integrations/beyla"
+        honor_labels    = true
+        scrape_interval = "60s"
+        scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
+        scrape_classic_histograms = false
+        clustering {
+          enabled = true
+        }
+        forward_to = argument.metrics_destinations.value
+      }
+    }
+    auto_instrumentation "feature" {
+      metrics_destinations = [
+        prometheus.remote_write.grafana_cloud_metrics.receiver,
+      ]
+    }
     // Feature: Cluster Metrics
     declare "cluster_metrics" {
       argument "metrics_destinations" {
@@ -676,7 +749,7 @@ data:
     }
     cluster_metrics "feature" {
       metrics_destinations = [
-        prometheus.remote_write.grafanacloudmetrics.receiver,
+        prometheus.remote_write.grafana_cloud_metrics.receiver,
       ]
     }
     declare "alloy_integration" {
@@ -984,35 +1057,37 @@ data:
     }
     alloy_integration "integration" {
       metrics_destinations = [
-        prometheus.remote_write.grafanacloudmetrics.receiver,
+        prometheus.remote_write.grafana_cloud_metrics.receiver,
       ]
     }
     
-    
-    
-    
-    // Destination: grafanaCloudMetrics (prometheus)
-    otelcol.exporter.prometheus "grafanacloudmetrics" {
-      add_metric_suffixes = true
-      resource_to_telemetry_conversion = false
-      forward_to = [prometheus.remote_write.grafanacloudmetrics.receiver]
+    livedebugging {
+      enabled = true
     }
     
-    prometheus.remote_write "grafanacloudmetrics" {
+    
+    // Destination: grafana-cloud-metrics (prometheus)
+    otelcol.exporter.prometheus "grafana_cloud_metrics" {
+      add_metric_suffixes = true
+      resource_to_telemetry_conversion = false
+      forward_to = [prometheus.remote_write.grafana_cloud_metrics.receiver]
+    }
+    
+    prometheus.remote_write "grafana_cloud_metrics" {
       endpoint {
         url = "https://prometheus-prod-13-prod-us-east-0.grafana.net/api/prom/push"
         headers = {
-          "X-Scope-OrgID" = convert.nonsensitive(remote.kubernetes.secret.grafanacloudmetrics.data["tenantId"]),
+          "X-Scope-OrgID" = convert.nonsensitive(remote.kubernetes.secret.grafana_cloud_metrics.data["tenantId"]),
         }
         basic_auth {
-          username = convert.nonsensitive(remote.kubernetes.secret.grafanacloudmetrics.data["PROMETHEUS_USER"])
-          password = remote.kubernetes.secret.grafanacloudmetrics.data["PROMETHEUS_PASS"]
+          username = convert.nonsensitive(remote.kubernetes.secret.grafana_cloud_metrics.data["metricsUser"])
+          password = remote.kubernetes.secret.grafana_cloud_metrics.data["grafanaCloudAccessPolicyToken"]
         }
         tls_config {
           insecure_skip_verify = false
-          ca_pem = convert.nonsensitive(remote.kubernetes.secret.grafanacloudmetrics.data["ca"])
-          cert_pem = convert.nonsensitive(remote.kubernetes.secret.grafanacloudmetrics.data["cert"])
-          key_pem = remote.kubernetes.secret.grafanacloudmetrics.data["key"]
+          ca_pem = convert.nonsensitive(remote.kubernetes.secret.grafana_cloud_metrics.data["ca"])
+          cert_pem = convert.nonsensitive(remote.kubernetes.secret.grafana_cloud_metrics.data["cert"])
+          key_pem = remote.kubernetes.secret.grafana_cloud_metrics.data["key"]
         }
         send_native_histograms = false
     
@@ -1049,7 +1124,7 @@ data:
       }
     }
     
-    remote.kubernetes.secret "grafanacloudmetrics" {
+    remote.kubernetes.secret "grafana_cloud_metrics" {
       name      = "grafana-cloud-credentials"
       namespace = "default"
     }
@@ -1148,7 +1223,7 @@ data:
     }
     cluster_events "feature" {
       logs_destinations = [
-        loki.write.grafanacloudlogs.receiver,
+        loki.write.grafana_cloud_logs.receiver,
       ]
     }
     // Self Reporting
@@ -1190,35 +1265,37 @@ data:
         action = "keep"
       }
       forward_to = [
-        prometheus.remote_write.grafanacloudmetrics.receiver,
+        prometheus.remote_write.grafana_cloud_metrics.receiver,
       ]
     }
     
-    
-    
-    
-    // Destination: grafanaCloudMetrics (prometheus)
-    otelcol.exporter.prometheus "grafanacloudmetrics" {
-      add_metric_suffixes = true
-      resource_to_telemetry_conversion = false
-      forward_to = [prometheus.remote_write.grafanacloudmetrics.receiver]
+    livedebugging {
+      enabled = true
     }
     
-    prometheus.remote_write "grafanacloudmetrics" {
+    
+    // Destination: grafana-cloud-metrics (prometheus)
+    otelcol.exporter.prometheus "grafana_cloud_metrics" {
+      add_metric_suffixes = true
+      resource_to_telemetry_conversion = false
+      forward_to = [prometheus.remote_write.grafana_cloud_metrics.receiver]
+    }
+    
+    prometheus.remote_write "grafana_cloud_metrics" {
       endpoint {
         url = "https://prometheus-prod-13-prod-us-east-0.grafana.net/api/prom/push"
         headers = {
-          "X-Scope-OrgID" = convert.nonsensitive(remote.kubernetes.secret.grafanacloudmetrics.data["tenantId"]),
+          "X-Scope-OrgID" = convert.nonsensitive(remote.kubernetes.secret.grafana_cloud_metrics.data["tenantId"]),
         }
         basic_auth {
-          username = convert.nonsensitive(remote.kubernetes.secret.grafanacloudmetrics.data["PROMETHEUS_USER"])
-          password = remote.kubernetes.secret.grafanacloudmetrics.data["PROMETHEUS_PASS"]
+          username = convert.nonsensitive(remote.kubernetes.secret.grafana_cloud_metrics.data["metricsUser"])
+          password = remote.kubernetes.secret.grafana_cloud_metrics.data["grafanaCloudAccessPolicyToken"]
         }
         tls_config {
           insecure_skip_verify = false
-          ca_pem = convert.nonsensitive(remote.kubernetes.secret.grafanacloudmetrics.data["ca"])
-          cert_pem = convert.nonsensitive(remote.kubernetes.secret.grafanacloudmetrics.data["cert"])
-          key_pem = remote.kubernetes.secret.grafanacloudmetrics.data["key"]
+          ca_pem = convert.nonsensitive(remote.kubernetes.secret.grafana_cloud_metrics.data["ca"])
+          cert_pem = convert.nonsensitive(remote.kubernetes.secret.grafana_cloud_metrics.data["cert"])
+          key_pem = remote.kubernetes.secret.grafana_cloud_metrics.data["key"]
         }
         send_native_histograms = false
     
@@ -1255,29 +1332,29 @@ data:
       }
     }
     
-    remote.kubernetes.secret "grafanacloudmetrics" {
+    remote.kubernetes.secret "grafana_cloud_metrics" {
       name      = "grafana-cloud-credentials"
       namespace = "default"
     }
     
-    // Destination: grafanaCloudLogs (loki)
-    otelcol.exporter.loki "grafanacloudlogs" {
-      forward_to = [loki.write.grafanacloudlogs.receiver]
+    // Destination: grafana-cloud-logs (loki)
+    otelcol.exporter.loki "grafana_cloud_logs" {
+      forward_to = [loki.write.grafana_cloud_logs.receiver]
     }
     
-    loki.write "grafanacloudlogs" {
+    loki.write "grafana_cloud_logs" {
       endpoint {
         url = "https://logs-prod-006.grafana.net/loki/api/v1/push"
-        tenant_id = convert.nonsensitive(remote.kubernetes.secret.grafanacloudlogs.data["tenantId"])
+        tenant_id = convert.nonsensitive(remote.kubernetes.secret.grafana_cloud_logs.data["tenantId"])
         basic_auth {
-          username = convert.nonsensitive(remote.kubernetes.secret.grafanacloudlogs.data["LOKI_USER"])
-          password = remote.kubernetes.secret.grafanacloudlogs.data["LOKI_PASS"]
+          username = convert.nonsensitive(remote.kubernetes.secret.grafana_cloud_logs.data["logsUser"])
+          password = remote.kubernetes.secret.grafana_cloud_logs.data["grafanaCloudAccessPolicyToken"]
         }
         tls_config {
           insecure_skip_verify = false
-          ca_pem = convert.nonsensitive(remote.kubernetes.secret.grafanacloudlogs.data["ca"])
-          cert_pem = convert.nonsensitive(remote.kubernetes.secret.grafanacloudlogs.data["cert"])
-          key_pem = remote.kubernetes.secret.grafanacloudlogs.data["key"]
+          ca_pem = convert.nonsensitive(remote.kubernetes.secret.grafana_cloud_logs.data["ca"])
+          cert_pem = convert.nonsensitive(remote.kubernetes.secret.grafana_cloud_logs.data["cert"])
+          key_pem = remote.kubernetes.secret.grafana_cloud_logs.data["key"]
         }
         min_backoff_period = "500ms"
         max_backoff_period = "5m"
@@ -1289,7 +1366,7 @@ data:
       }
     }
     
-    remote.kubernetes.secret "grafanacloudlogs" {
+    remote.kubernetes.secret "grafana_cloud_logs" {
       name      = "grafana-cloud-credentials"
       namespace = "default"
     }
@@ -1299,6 +1376,8 @@ data:
     grafana_kubernetes_monitoring_build_info{version="3.3.1", namespace="default"} 1
     # HELP grafana_kubernetes_monitoring_feature_info A metric to report the enabled features of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_feature_info gauge
+    grafana_kubernetes_monitoring_feature_info{feature="applicationObservability", protocols="otlpgrpc", version="1.0.0"} 1
+    grafana_kubernetes_monitoring_feature_info{feature="autoInstrumentation", version="1.0.0"} 1
     grafana_kubernetes_monitoring_feature_info{deployments="kube-state-metrics,node-exporter,windows-exporter,kepler", feature="clusterMetrics", sources="kubelet,kubeletResource,cadvisor,kube-state-metrics,node-exporter,windows-exporter,kepler", version="1.0.0"} 1
     grafana_kubernetes_monitoring_feature_info{feature="clusterEvents", version="1.0.0"} 1
     grafana_kubernetes_monitoring_feature_info{feature="podLogs", method="volumes", version="1.0.0"} 1
@@ -1522,31 +1601,33 @@ data:
     }
     pod_logs "feature" {
       logs_destinations = [
-        loki.write.grafanacloudlogs.receiver,
+        loki.write.grafana_cloud_logs.receiver,
       ]
     }
     
-    
-    
-    
-    // Destination: grafanaCloudLogs (loki)
-    otelcol.exporter.loki "grafanacloudlogs" {
-      forward_to = [loki.write.grafanacloudlogs.receiver]
+    livedebugging {
+      enabled = true
     }
     
-    loki.write "grafanacloudlogs" {
+    
+    // Destination: grafana-cloud-logs (loki)
+    otelcol.exporter.loki "grafana_cloud_logs" {
+      forward_to = [loki.write.grafana_cloud_logs.receiver]
+    }
+    
+    loki.write "grafana_cloud_logs" {
       endpoint {
         url = "https://logs-prod-006.grafana.net/loki/api/v1/push"
-        tenant_id = convert.nonsensitive(remote.kubernetes.secret.grafanacloudlogs.data["tenantId"])
+        tenant_id = convert.nonsensitive(remote.kubernetes.secret.grafana_cloud_logs.data["tenantId"])
         basic_auth {
-          username = convert.nonsensitive(remote.kubernetes.secret.grafanacloudlogs.data["LOKI_USER"])
-          password = remote.kubernetes.secret.grafanacloudlogs.data["LOKI_PASS"]
+          username = convert.nonsensitive(remote.kubernetes.secret.grafana_cloud_logs.data["logsUser"])
+          password = remote.kubernetes.secret.grafana_cloud_logs.data["grafanaCloudAccessPolicyToken"]
         }
         tls_config {
           insecure_skip_verify = false
-          ca_pem = convert.nonsensitive(remote.kubernetes.secret.grafanacloudlogs.data["ca"])
-          cert_pem = convert.nonsensitive(remote.kubernetes.secret.grafanacloudlogs.data["cert"])
-          key_pem = remote.kubernetes.secret.grafanacloudlogs.data["key"]
+          ca_pem = convert.nonsensitive(remote.kubernetes.secret.grafana_cloud_logs.data["ca"])
+          cert_pem = convert.nonsensitive(remote.kubernetes.secret.grafana_cloud_logs.data["cert"])
+          key_pem = remote.kubernetes.secret.grafana_cloud_logs.data["key"]
         }
         min_backoff_period = "500ms"
         max_backoff_period = "5m"
@@ -1558,10 +1639,367 @@ data:
       }
     }
     
-    remote.kubernetes.secret "grafanacloudlogs" {
+    remote.kubernetes.secret "grafana_cloud_logs" {
       name      = "grafana-cloud-credentials"
       namespace = "default"
     }
+---
+# Source: k8s-monitoring/templates/alloy-config.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: k8smon-alloy-receiver
+  namespace: default
+data:
+  config.alloy: |
+    // Feature: Application Observability
+    declare "application_observability" {
+      argument "metrics_destinations" {
+        comment = "Must be a list of metrics destinations where collected metrics should be forwarded to"
+      }
+    
+      argument "logs_destinations" {
+        comment = "Must be a list of log destinations where collected logs should be forwarded to"
+      }
+    
+      argument "traces_destinations" {
+        comment = "Must be a list of trace destinations where collected trace should be forwarded to"
+      }
+    
+      // OTLP Receiver
+      otelcol.receiver.otlp "receiver" {
+        grpc {
+          endpoint = "0.0.0.0:4317"
+          include_metadata = false
+          max_recv_msg_size = "4MiB"
+          read_buffer_size = "512KiB"
+          write_buffer_size = "32KiB"
+        }
+        debug_metrics {
+          disable_high_cardinality_metrics = true
+        }
+        output {
+          metrics = [otelcol.processor.resourcedetection.default.input]
+          logs = [otelcol.processor.resourcedetection.default.input]
+          traces = [otelcol.processor.resourcedetection.default.input]
+        }
+      }
+    
+      // Resource Detection Processor
+      otelcol.processor.resourcedetection "default" {
+        detectors = ["env","system"]
+        override = true
+    
+        system {
+          hostname_sources = ["os"]
+        }
+    
+        output {
+          metrics = [otelcol.processor.k8sattributes.default.input]
+          logs = [otelcol.processor.k8sattributes.default.input]
+          traces = [otelcol.processor.k8sattributes.default.input]
+        }
+      }
+    
+      // K8s Attributes Processor
+      otelcol.processor.k8sattributes "default" {
+        passthrough = false
+        extract {
+          metadata = ["k8s.namespace.name","k8s.pod.name","k8s.deployment.name","k8s.statefulset.name","k8s.daemonset.name","k8s.cronjob.name","k8s.job.name","k8s.node.name","k8s.pod.uid","k8s.pod.start_time"]
+        }
+        pod_association {
+          source {
+            from = "resource_attribute"
+            name = "k8s.pod.ip"
+          }
+        }
+        pod_association {
+          source {
+            from = "resource_attribute"
+            name = "k8s.pod.uid"
+          }
+        }
+        pod_association {
+          source {
+            from = "connection"
+          }
+        }
+    
+        output {
+          metrics = [otelcol.processor.transform.default.input]
+          logs = [otelcol.processor.transform.default.input]
+          traces = [otelcol.processor.transform.default.input, otelcol.connector.host_info.default.input]
+        }
+      }
+    
+      // Host Info Connector
+      otelcol.connector.host_info "default" {
+        host_identifiers = [ "k8s.node.name" ]
+    
+        output {
+          metrics = [otelcol.processor.batch.default.input]
+        }
+      }
+    
+      // Transform Processor
+      otelcol.processor.transform "default" {
+        error_mode = "ignore"
+        log_statements {
+          context = "resource"
+          statements = [
+            "set(attributes[\"pod\"], attributes[\"k8s.pod.name\"])",
+            "set(attributes[\"namespace\"], attributes[\"k8s.namespace.name\"])",
+            "set(attributes[\"loki.resource.labels\"], \"cluster, namespace, job, pod\")",
+          ]
+        }
+    
+        output {
+          metrics = [otelcol.processor.batch.default.input]
+          logs = [otelcol.processor.batch.default.input]
+          traces = [otelcol.processor.batch.default.input]
+        }
+      }
+    
+      // Batch Processor
+      otelcol.processor.batch "default" {
+        send_batch_size = 8192
+        send_batch_max_size = 0
+        timeout = "2s"
+    
+        output {
+          metrics = argument.metrics_destinations.value
+          logs = argument.logs_destinations.value
+          traces = argument.traces_destinations.value
+        }
+      }
+    }
+    application_observability "feature" {
+      metrics_destinations = [
+        otelcol.processor.attributes.grafana_cloud_otlp_endpoint.input,
+      ]
+      logs_destinations = [
+        otelcol.processor.attributes.grafana_cloud_otlp_endpoint.input,
+      ]
+      traces_destinations = [
+        otelcol.processor.attributes.grafana_cloud_otlp_endpoint.input,
+      ]
+    }
+    
+    livedebugging {
+      enabled = true
+    }
+    
+    
+    // Destination: grafana-cloud-otlp-endpoint (otlp)
+    otelcol.receiver.prometheus "grafana_cloud_otlp_endpoint" {
+      output {
+        metrics = [otelcol.processor.attributes.grafana_cloud_otlp_endpoint.input]
+      }
+    }
+    otelcol.receiver.loki "grafana_cloud_otlp_endpoint" {
+      output {
+        logs = [otelcol.processor.attributes.grafana_cloud_otlp_endpoint.input]
+      }
+    }
+    
+    otelcol.processor.attributes "grafana_cloud_otlp_endpoint" {
+      output {
+        metrics = [otelcol.processor.transform.grafana_cloud_otlp_endpoint.input]
+        logs = [otelcol.processor.transform.grafana_cloud_otlp_endpoint.input]
+        traces = [otelcol.processor.transform.grafana_cloud_otlp_endpoint.input]
+      }
+    }
+    
+    otelcol.processor.transform "grafana_cloud_otlp_endpoint" {
+      error_mode = "ignore"
+      metric_statements {
+        context = "resource"
+        statements = [
+          `set(attributes["cluster"], "k8s-monitoring-gc-feature-test")`,
+          `set(attributes["k8s.cluster.name"], "k8s-monitoring-gc-feature-test")`,
+        ]
+      }
+    
+      metric_statements {
+        context = "datapoint"
+        statements = [
+          `set(attributes["cluster"], "k8s-monitoring-gc-feature-test")`,
+          `set(attributes["k8s.cluster.name"], "k8s-monitoring-gc-feature-test")`,
+          `set(resource.attributes["deployment.environment"], attributes["deployment_environment"] ) where resource.attributes["deployment.environment"] == nil and attributes["deployment_environment"] != nil`,
+          `delete_key(attributes, "deployment_environment") where attributes["deployment_environment"] == resource.attributes["deployment.environment"]`,
+          `set(resource.attributes["deployment.environment.name"], attributes["deployment_environment_name"] ) where resource.attributes["deployment.environment.name"] == nil and attributes["deployment_environment_name"] != nil`,
+          `delete_key(attributes, "deployment_environment_name") where attributes["deployment_environment_name"] == resource.attributes["deployment.environment.name"]`,
+          `set(resource.attributes["service.name"], attributes["service_name"] ) where resource.attributes["service.name"] == nil and attributes["service_name"] != nil`,
+          `delete_key(attributes, "service_name") where attributes["service_name"] == resource.attributes["service.name"]`,
+          `set(resource.attributes["service.namespace"], attributes["service_namespace"] ) where resource.attributes["service.namespace"] == nil and attributes["service_namespace"] != nil`,
+          `delete_key(attributes, "service_namespace") where attributes["service_namespace"] == resource.attributes["service.namespace"]`,
+        ]
+      }
+      log_statements {
+        context = "resource"
+        statements = [
+          `set(attributes["cluster"], "k8s-monitoring-gc-feature-test")`,
+          `set(attributes["k8s.cluster.name"], "k8s-monitoring-gc-feature-test")`,
+        ]
+      }
+    
+      log_statements {
+        context = "log"
+        statements = [
+          `delete_key(attributes, "loki.attribute.labels")`,
+          `delete_key(attributes, "loki.resource.labels")`,
+          `set(resource.attributes["k8s.container.name"], attributes["container"] ) where resource.attributes["k8s.container.name"] == nil and attributes["container"] != nil`,
+          `delete_key(attributes, "container") where attributes["container"] == resource.attributes["k8s.container.name"]`,
+          `set(resource.attributes["k8s.cronjob.name"], attributes["cronjob"] ) where resource.attributes["k8s.cronjob.name"] == nil and attributes["cronjob"] != nil`,
+          `delete_key(attributes, "cronjob") where attributes["cronjob"] == resource.attributes["k8s.cronjob.name"]`,
+          `set(resource.attributes["k8s.daemonset.name"], attributes["daemonset"] ) where resource.attributes["k8s.daemonset.name"] == nil and attributes["daemonset"] != nil`,
+          `delete_key(attributes, "daemonset") where attributes["daemonset"] == resource.attributes["k8s.daemonset.name"]`,
+          `set(resource.attributes["k8s.deployment.name"], attributes["deployment"] ) where resource.attributes["k8s.deployment.name"] == nil and attributes["deployment"] != nil`,
+          `delete_key(attributes, "deployment") where attributes["deployment"] == resource.attributes["k8s.deployment.name"]`,
+          `set(resource.attributes["deployment.environment"], attributes["deployment_environment"] ) where resource.attributes["deployment.environment"] == nil and attributes["deployment_environment"] != nil`,
+          `delete_key(attributes, "deployment_environment") where attributes["deployment_environment"] == resource.attributes["deployment.environment"]`,
+          `set(resource.attributes["deployment.environment.name"], attributes["deployment_environment_name"] ) where resource.attributes["deployment.environment.name"] == nil and attributes["deployment_environment_name"] != nil`,
+          `delete_key(attributes, "deployment_environment_name") where attributes["deployment_environment_name"] == resource.attributes["deployment.environment.name"]`,
+          `set(resource.attributes["k8s.job.name"], attributes["job_name"] ) where resource.attributes["k8s.job.name"] == nil and attributes["job_name"] != nil`,
+          `delete_key(attributes, "job_name") where attributes["job_name"] == resource.attributes["k8s.job.name"]`,
+          `set(resource.attributes["k8s.namespace.name"], attributes["namespace"] ) where resource.attributes["k8s.namespace.name"] == nil and attributes["namespace"] != nil`,
+          `delete_key(attributes, "namespace") where attributes["namespace"] == resource.attributes["k8s.namespace.name"]`,
+          `set(resource.attributes["k8s.pod.name"], attributes["pod"] ) where resource.attributes["k8s.pod.name"] == nil and attributes["pod"] != nil`,
+          `delete_key(attributes, "pod") where attributes["pod"] == resource.attributes["k8s.pod.name"]`,
+          `set(resource.attributes["k8s.replicaset.name"], attributes["replicaset"] ) where resource.attributes["k8s.replicaset.name"] == nil and attributes["replicaset"] != nil`,
+          `delete_key(attributes, "replicaset") where attributes["replicaset"] == resource.attributes["k8s.replicaset.name"]`,
+          `set(resource.attributes["service.name"], attributes["service_name"] ) where resource.attributes["service.name"] == nil and attributes["service_name"] != nil`,
+          `delete_key(attributes, "service_name") where attributes["service_name"] == resource.attributes["service.name"]`,
+          `set(resource.attributes["service.namespace"], attributes["service_namespace"] ) where resource.attributes["service.namespace"] == nil and attributes["service_namespace"] != nil`,
+          `delete_key(attributes, "service_namespace") where attributes["service_namespace"] == resource.attributes["service.namespace"]`,
+          `set(resource.attributes["k8s.statefulset.name"], attributes["statefulset"] ) where resource.attributes["k8s.statefulset.name"] == nil and attributes["statefulset"] != nil`,
+          `delete_key(attributes, "statefulset") where attributes["statefulset"] == resource.attributes["k8s.statefulset.name"]`,
+        ]
+      }
+    
+      trace_statements {
+        context = "resource"
+        statements = [
+          `set(attributes["cluster"], "k8s-monitoring-gc-feature-test")`,
+          `set(attributes["k8s.cluster.name"], "k8s-monitoring-gc-feature-test")`,
+        ]
+      }
+    
+      output {
+        metrics = [otelcol.processor.batch.grafana_cloud_otlp_endpoint.input]
+        logs = [otelcol.processor.batch.grafana_cloud_otlp_endpoint.input]
+        traces = [otelcol.exporter.loadbalancing.grafana_cloud_otlp_endpoint_sampler.input]
+      }
+    }
+    
+    otelcol.exporter.loadbalancing "grafana_cloud_otlp_endpoint_sampler" {
+      resolver {
+        kubernetes {
+          service = "k8smon-grafana-cloud-otlp-endpoint-sampler"
+        }
+      }
+      protocol {
+        otlp {
+          client {
+            tls {
+              insecure = true
+            }
+          }
+        }
+      }
+    }
+    
+    otelcol.processor.batch "grafana_cloud_otlp_endpoint" {
+      timeout = "2s"
+      send_batch_size = 8192
+      send_batch_max_size = 0
+    
+      output {
+        metrics = [otelcol.exporter.otlphttp.grafana_cloud_otlp_endpoint.input]
+        logs = [otelcol.exporter.otlphttp.grafana_cloud_otlp_endpoint.input]
+        traces = [otelcol.exporter.otlphttp.grafana_cloud_otlp_endpoint.input]
+      }
+    }
+    otelcol.exporter.otlphttp "grafana_cloud_otlp_endpoint" {
+      client {
+        endpoint = "https://otlp-gateway-prod-us-east-0.grafana.net./otlp"
+        auth = otelcol.auth.basic.grafana_cloud_otlp_endpoint.handler
+        headers = {
+          "X-Scope-OrgID" = convert.nonsensitive(remote.kubernetes.secret.grafana_cloud_otlp_endpoint.data["tenantId"]),
+        }
+        tls {
+          insecure = false
+          insecure_skip_verify = false
+          ca_pem = convert.nonsensitive(remote.kubernetes.secret.grafana_cloud_otlp_endpoint.data["ca"])
+          cert_pem = convert.nonsensitive(remote.kubernetes.secret.grafana_cloud_otlp_endpoint.data["cert"])
+          key_pem = remote.kubernetes.secret.grafana_cloud_otlp_endpoint.data["key"]
+        }
+      }
+    
+      retry_on_failure {
+        enabled = true
+        initial_interval = "5s"
+        max_interval = "30s"
+        max_elapsed_time = "5m"
+      }
+    }
+    
+    otelcol.auth.basic "grafana_cloud_otlp_endpoint" {
+      username = convert.nonsensitive(remote.kubernetes.secret.grafana_cloud_otlp_endpoint.data["otlpUser"])
+      password = remote.kubernetes.secret.grafana_cloud_otlp_endpoint.data["grafanaCloudAccessPolicyToken"]
+    }
+    
+    remote.kubernetes.secret "grafana_cloud_otlp_endpoint" {
+      name      = "grafana-cloud-credentials"
+      namespace = "default"
+    }
+---
+# Source: k8s-monitoring/templates/beyla-config.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: k8smon-beyla
+  namespace: default
+  labels:
+    helm.sh/chart: beyla-1.9.2
+    app.kubernetes.io/name: beyla
+    app.kubernetes.io/instance: k8smon
+    app.kubernetes.io/version: "2.5.6"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/part-of: beyla
+    app.kubernetes.io/component: config
+data:
+  beyla-config.yml: |-
+    attributes:
+      kubernetes:
+        cluster_name: k8s-monitoring-gc-feature-test
+        enable: true
+    discovery:
+      exclude_services:
+      - exe_path: .*alloy.*|.*otelcol.*|.*beyla.*
+      services:
+      - k8s_namespace: .
+    filter:
+      network:
+        k8s_dst_owner_name:
+          not_match: '{kube*,*jaeger-agent*,*prometheus*,*promtail*,*grafana-agent*}'
+        k8s_src_owner_name:
+          not_match: '{kube*,*jaeger-agent*,*prometheus*,*promtail*,*grafana-agent*}'
+    internal_metrics:
+      prometheus:
+        path: /internal/metrics
+        port: 9090
+    otel_traces_export:
+      endpoint: http://k8smon-alloy-receiver.default.svc.cluster.local:4317
+    prometheus_export:
+      features:
+      - application
+      - network
+      - application_service_graph
+      - application_span
+      - application_host
+      path: /metrics
+      port: 9090
 ---
 # Source: k8s-monitoring/charts/alloy-operator/templates/rbac/alloy-manager.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -1620,6 +2058,27 @@ rules:
   - apiGroups: ["rbac.authorization.k8s.io"]
     resources: ["clusterroles", "clusterrolebindings"]
     verbs: ["*"]
+---
+# Source: k8s-monitoring/charts/autoInstrumentation/charts/beyla/templates/cluster-role.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: k8smon-beyla
+  labels:
+    helm.sh/chart: beyla-1.9.2
+    app.kubernetes.io/name: beyla
+    app.kubernetes.io/instance: k8smon
+    app.kubernetes.io/version: "2.5.6"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/part-of: beyla
+    app.kubernetes.io/component: rbac
+rules:
+  - apiGroups: [ "apps" ]
+    resources: [ "replicasets" ]
+    verbs: [ "list", "watch" ]
+  - apiGroups: [ "" ]
+    resources: [ "pods", "services", "nodes" ]
+    verbs: [ "list", "watch", "get" ]
 ---
 # Source: k8s-monitoring/charts/clusterMetrics/charts/kepler/templates/rolebinding.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -1922,6 +2381,28 @@ subjects:
     name: k8smon-alloy-operator
     namespace: default
 ---
+# Source: k8s-monitoring/charts/autoInstrumentation/charts/beyla/templates/cluster-role-binding.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: k8smon-beyla
+  labels:
+    helm.sh/chart: beyla-1.9.2
+    app.kubernetes.io/name: beyla
+    app.kubernetes.io/instance: k8smon
+    app.kubernetes.io/version: "2.5.6"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/part-of: beyla
+    app.kubernetes.io/component: rbac
+subjects:
+  - kind: ServiceAccount
+    name: k8smon-beyla
+    namespace: default
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: k8smon-beyla
+---
 # Source: k8s-monitoring/charts/clusterMetrics/charts/kepler/templates/rolebinding.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -2201,6 +2682,77 @@ spec:
   selector:
     app.kubernetes.io/name: windows-exporter
     app.kubernetes.io/instance: k8smon
+---
+# Source: k8s-monitoring/charts/autoInstrumentation/charts/beyla/templates/daemon-set.yaml
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: k8smon-beyla
+  namespace: default
+  labels:
+    helm.sh/chart: beyla-1.9.2
+    app.kubernetes.io/name: beyla
+    app.kubernetes.io/instance: k8smon
+    app.kubernetes.io/version: "2.5.6"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/part-of: beyla
+    app.kubernetes.io/component: workload
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: beyla
+      app.kubernetes.io/instance: k8smon
+  updateStrategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      annotations:
+        checksum/config: 01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b
+        k8s.grafana.com/job: default/beyla
+        k8s.grafana.com/logs.job: integrations/beyla
+      labels:
+        helm.sh/chart: beyla-1.9.2
+        app.kubernetes.io/name: beyla
+        app.kubernetes.io/instance: k8smon
+        app.kubernetes.io/version: "2.5.6"
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/part-of: beyla
+        app.kubernetes.io/component: workload
+    spec:
+      serviceAccountName: k8smon-beyla
+      hostPID: true
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      containers:
+        - name: beyla
+          image: docker.io/grafana/beyla:2.5.6
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            privileged: true
+          ports:
+          - name: metrics
+            containerPort: 9090
+            protocol: TCP
+          env:
+            - name: BEYLA_CONFIG_PATH
+              value: "/etc/beyla/config/beyla-config.yml"
+          volumeMounts:
+            - mountPath: /etc/beyla/config
+              name: beyla-config
+            - mountPath: /sys/fs/cgroup
+              name: cgroup
+      nodeSelector:
+        kubernetes.io/os: linux
+      tolerations:
+        - effect: NoSchedule
+          operator: Exists
+      volumes:
+        - name: beyla-config
+          configMap:
+            name: k8smon-beyla
+        - name: cgroup
+          hostPath:
+            path: /sys/fs/cgroup
 ---
 # Source: k8s-monitoring/charts/clusterMetrics/charts/kepler/templates/daemonset.yaml
 apiVersion: apps/v1
@@ -2823,12 +3375,12 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: grafana-cloud-credentials
-                  key: PROMETHEUS_USER
+                  key: metricsUser
             - name: DB_BASIC_AUTH_PW
               valueFrom:
                 secretKeyRef:
                   name: grafana-cloud-credentials
-                  key: PROMETHEUS_PASS
+                  key: grafanaCloudAccessPolicyToken
             - name: DATA_RETENTION_DAILY_RESOLUTION_DAYS
               value: "15"
             - name: CLOUD_COST_ENABLED
@@ -3148,6 +3700,14 @@ spec:
               kubectl delete alloy/k8smon-alloy-logs --ignore-not-found=true --wait
               kubectl wait --for=delete alloy/k8smon-alloy-logs --timeout=60s || echo "Timed out waiting for deletion of alloy/k8smon-alloy-logs or it may not exist."
 
+              echo "Deleting Alloy instance: alloy/k8smon-alloy-receiver..."
+              kubectl delete alloy/k8smon-alloy-receiver --ignore-not-found=true --wait
+              kubectl wait --for=delete alloy/k8smon-alloy-receiver --timeout=60s || echo "Timed out waiting for deletion of alloy/k8smon-alloy-receiver or it may not exist."
+
+              echo "Deleting Alloy instance: alloy/k8smon-grafana-cloud-otlp-endpoint-sampler..."
+              kubectl delete alloy/k8smon-grafana-cloud-otlp-endpoint-sampler --ignore-not-found=true --wait
+              kubectl wait --for=delete alloy/k8smon-grafana-cloud-otlp-endpoint-sampler --timeout=60s || echo "Timed out waiting for deletion of alloy/k8smon-grafana-cloud-otlp-endpoint-sampler or it may not exist."
+
               kubectl patch \
                 --namespace=default \
                 --type json \
@@ -3160,6 +3720,285 @@ spec:
             readOnlyRootFilesystem: true
             seccompProfile:
               type: RuntimeDefault
+---
+# Source: k8s-monitoring/templates/alloy-sampler.yaml
+apiVersion: collectors.grafana.com/v1alpha1
+kind: Alloy
+metadata:
+  name: k8smon-grafana-cloud-otlp-endpoint-sampler
+  namespace: default
+  annotations:
+    helm.sh/hook: post-install,post-upgrade
+    helm.sh/hook-weight: "10"
+    helm.sdk.operatorframework.io/uninstall-wait: "true"
+spec:
+  alloy:
+    clustering:
+      enabled: false
+      name: ""
+      portName: http
+    configMap:
+      content: |-
+        otelcol.receiver.otlp "sampler_receiver" {
+          grpc {
+            max_recv_msg_size = "4MB"
+          }
+  
+          output {
+            traces = [otelcol.processor.tail_sampling.tail_sampler.input]
+          }
+        }
+        otelcol.processor.tail_sampling "tail_sampler" {
+          // https://grafana.com/docs/alloy/latest/reference/components/otelcol.processor.tail_sampling/
+  
+          decision_wait = "15s"
+          decision_cache = {
+            sampled_cache_size     = 0,
+            non_sampled_cache_size = 0,
+          }
+  
+          policy {
+            name = "sample-15pct-traces"
+            type = "probabilistic"
+            probabilistic {
+              sampling_percentage = 15
+            }
+          }
+  
+          output {
+            traces = [otelcol.processor.batch.grafana_cloud_otlp_endpoint.input]
+          }
+        }
+  
+        livedebugging {
+          enabled = true
+        }
+  
+  
+        // Destination: grafana-cloud-otlp-endpoint (otlp)
+        otelcol.processor.batch "grafana_cloud_otlp_endpoint" {
+          timeout = "2s"
+          send_batch_size = 8192
+          send_batch_max_size = 0
+  
+          output {
+            metrics = [otelcol.exporter.otlphttp.grafana_cloud_otlp_endpoint.input]
+            logs = [otelcol.exporter.otlphttp.grafana_cloud_otlp_endpoint.input]
+            traces = [otelcol.exporter.otlphttp.grafana_cloud_otlp_endpoint.input]
+          }
+        }
+        otelcol.exporter.otlphttp "grafana_cloud_otlp_endpoint" {
+          client {
+            endpoint = "https://otlp-gateway-prod-us-east-0.grafana.net./otlp"
+            auth = otelcol.auth.basic.grafana_cloud_otlp_endpoint.handler
+            headers = {
+              "X-Scope-OrgID" = convert.nonsensitive(remote.kubernetes.secret.grafana_cloud_otlp_endpoint.data["tenantId"]),
+            }
+            tls {
+              insecure = false
+              insecure_skip_verify = false
+              ca_pem = convert.nonsensitive(remote.kubernetes.secret.grafana_cloud_otlp_endpoint.data["ca"])
+              cert_pem = convert.nonsensitive(remote.kubernetes.secret.grafana_cloud_otlp_endpoint.data["cert"])
+              key_pem = remote.kubernetes.secret.grafana_cloud_otlp_endpoint.data["key"]
+            }
+          }
+  
+          retry_on_failure {
+            enabled = true
+            initial_interval = "5s"
+            max_interval = "30s"
+            max_elapsed_time = "5m"
+          }
+        }
+  
+        otelcol.auth.basic "grafana_cloud_otlp_endpoint" {
+          username = convert.nonsensitive(remote.kubernetes.secret.grafana_cloud_otlp_endpoint.data["otlpUser"])
+          password = remote.kubernetes.secret.grafana_cloud_otlp_endpoint.data["grafanaCloudAccessPolicyToken"]
+        }
+  
+        remote.kubernetes.secret "grafana_cloud_otlp_endpoint" {
+          name      = "grafana-cloud-credentials"
+          namespace = "default"
+        }
+      create: true
+      key: null
+      name: null
+    enableReporting: true
+    envFrom: []
+    extraArgs: []
+    extraEnv: []
+    extraPorts: []
+    hostAliases: []
+    lifecycle: {}
+    listenAddr: 0.0.0.0
+    listenPort: 12345
+    listenScheme: HTTP
+    livenessProbe: {}
+    mounts:
+      dockercontainers: false
+      extra: []
+      varlog: false
+    resources: {}
+    securityContext:
+      allowPrivilegeEscalation: false
+      capabilities:
+        add:
+        - CHOWN
+        - DAC_OVERRIDE
+        - FOWNER
+        - FSETID
+        - KILL
+        - SETGID
+        - SETUID
+        - SETPCAP
+        - NET_BIND_SERVICE
+        - NET_RAW
+        - SYS_CHROOT
+        - MKNOD
+        - AUDIT_WRITE
+        - SETFCAP
+        drop:
+        - ALL
+      seccompProfile:
+        type: RuntimeDefault
+    stabilityLevel: generally-available
+    storagePath: /tmp/alloy
+    uiPathPrefix: /
+  configReloader:
+    customArgs: []
+    enabled: true
+    image:
+      digest: ""
+      registry: quay.io
+      repository: prometheus-operator/prometheus-config-reloader
+      tag: v0.81.0
+    resources:
+      requests:
+        cpu: 10m
+        memory: 50Mi
+    securityContext: {}
+  controller:
+    affinity: {}
+    autoscaling:
+      enabled: false
+      horizontal:
+        enabled: false
+        maxReplicas: 5
+        minReplicas: 1
+        scaleDown:
+          policies: []
+          selectPolicy: Max
+          stabilizationWindowSeconds: 300
+        scaleUp:
+          policies: []
+          selectPolicy: Max
+          stabilizationWindowSeconds: 0
+        targetCPUUtilizationPercentage: 0
+        targetMemoryUtilizationPercentage: 80
+      maxReplicas: 5
+      minReplicas: 1
+      scaleDown:
+        policies: []
+        selectPolicy: Max
+        stabilizationWindowSeconds: 300
+      scaleUp:
+        policies: []
+        selectPolicy: Max
+        stabilizationWindowSeconds: 0
+      targetCPUUtilizationPercentage: 0
+      targetMemoryUtilizationPercentage: 80
+      vertical:
+        enabled: false
+        recommenders: []
+        resourcePolicy:
+          containerPolicies:
+          - containerName: alloy
+            controlledResources:
+            - cpu
+            - memory
+            controlledValues: RequestsAndLimits
+            maxAllowed: {}
+            minAllowed: {}
+        updatePolicy: null
+    dnsPolicy: ClusterFirst
+    enableStatefulSetAutoDeletePVC: false
+    extraAnnotations: {}
+    extraContainers: []
+    hostNetwork: false
+    hostPID: false
+    initContainers: []
+    nodeSelector:
+      kubernetes.io/os: linux
+    parallelRollout: true
+    podAnnotations:
+      k8s.grafana.com/logs.job: integrations/alloy
+      source: k8s-monitoring-gc-feature-test
+    podDisruptionBudget:
+      enabled: false
+      maxUnavailable: null
+      minAvailable: null
+    podLabels: {}
+    priorityClassName: ""
+    replicas: 2
+    terminationGracePeriodSeconds: null
+    tolerations: []
+    topologySpreadConstraints: []
+    type: statefulset
+    updateStrategy: {}
+    volumeClaimTemplates: []
+    volumes:
+      extra: []
+  crds:
+    create: false
+  extraObjects: []
+  fullnameOverride: k8smon-grafana-cloud-otlp-endpoint-sampler
+  global:
+    image:
+      pullSecrets: []
+      registry: ""
+    podSecurityContext: {}
+  image:
+    digest: null
+    pullPolicy: IfNotPresent
+    pullSecrets: []
+    registry: docker.io
+    repository: grafana/alloy
+    tag: null
+  ingress:
+    annotations: {}
+    enabled: false
+    extraPaths: []
+    faroPort: 12347
+    hosts:
+    - chart-example.local
+    labels: {}
+    path: /
+    pathType: Prefix
+    tls: []
+  nameOverride: null
+  namespaceOverride: null
+  rbac:
+    create: true
+  service:
+    annotations: {}
+    clusterIP: ""
+    enabled: true
+    internalTrafficPolicy: Cluster
+    nodePort: 31128
+    type: ClusterIP
+  serviceAccount:
+    additionalLabels: {}
+    annotations: {}
+    automountServiceAccountToken: true
+    create: true
+    name: null
+  serviceMonitor:
+    additionalLabels: {}
+    enabled: false
+    interval: ""
+    metricRelabelings: []
+    relabelings: []
+    tlsConfig: {}
 ---
 # Source: k8s-monitoring/templates/alloy.yaml
 apiVersion: collectors.grafana.com/v1alpha1
@@ -3291,6 +4130,7 @@ spec:
     parallelRollout: true
     podAnnotations:
       k8s.grafana.com/logs.job: integrations/alloy
+      source: k8s-monitoring-gc-feature-test
     podDisruptionBudget:
       enabled: false
       maxUnavailable: null
@@ -3486,6 +4326,7 @@ spec:
     parallelRollout: true
     podAnnotations:
       k8s.grafana.com/logs.job: integrations/alloy
+      source: k8s-monitoring-gc-feature-test
     podDisruptionBudget:
       enabled: false
       maxUnavailable: null
@@ -3681,6 +4522,7 @@ spec:
     parallelRollout: true
     podAnnotations:
       k8s.grafana.com/logs.job: integrations/alloy
+      source: k8s-monitoring-gc-feature-test
     podDisruptionBudget:
       enabled: false
       maxUnavailable: null
@@ -3725,6 +4567,206 @@ spec:
     pathType: Prefix
     tls: []
   nameOverride: alloy-logs
+  rbac:
+    create: true
+  service:
+    annotations: {}
+    clusterIP: ""
+    enabled: true
+    internalTrafficPolicy: Cluster
+    nodePort: 31128
+    type: ClusterIP
+  serviceAccount:
+    additionalLabels: {}
+    annotations: {}
+    automountServiceAccountToken: true
+    create: true
+    name: null
+  serviceMonitor:
+    additionalLabels: {}
+    enabled: false
+    interval: ""
+    metricRelabelings: []
+    relabelings: []
+    tlsConfig: {}
+---
+# Source: k8s-monitoring/templates/alloy.yaml
+apiVersion: collectors.grafana.com/v1alpha1
+kind: Alloy
+metadata:
+  name: k8smon-alloy-receiver
+  namespace: default
+  annotations:
+    helm.sh/hook: post-install,post-upgrade
+    helm.sh/hook-weight: "10"
+    helm.sdk.operatorframework.io/uninstall-wait: "true"
+spec:
+  alloy:
+    clustering:
+      enabled: false
+      name: ""
+      portName: http
+    configMap:
+      content: ""
+      create: false
+      key: null
+      name: null
+    enableReporting: true
+    envFrom: []
+    extraArgs: []
+    extraEnv: []
+    extraPorts:
+    - name: otlp-grpc
+      port: 4317
+      protocol: TCP
+      targetPort: 4317
+    hostAliases: []
+    lifecycle: {}
+    listenAddr: 0.0.0.0
+    listenPort: 12345
+    listenScheme: HTTP
+    livenessProbe: {}
+    mounts:
+      dockercontainers: false
+      extra: []
+      varlog: false
+    resources: {}
+    securityContext:
+      allowPrivilegeEscalation: false
+      capabilities:
+        add:
+        - CHOWN
+        - DAC_OVERRIDE
+        - FOWNER
+        - FSETID
+        - KILL
+        - SETGID
+        - SETUID
+        - SETPCAP
+        - NET_BIND_SERVICE
+        - NET_RAW
+        - SYS_CHROOT
+        - MKNOD
+        - AUDIT_WRITE
+        - SETFCAP
+        drop:
+        - ALL
+      seccompProfile:
+        type: RuntimeDefault
+    stabilityLevel: generally-available
+    storagePath: /tmp/alloy
+    uiPathPrefix: /
+  configReloader:
+    customArgs: []
+    enabled: true
+    image:
+      digest: ""
+      registry: quay.io
+      repository: prometheus-operator/prometheus-config-reloader
+      tag: v0.81.0
+    resources:
+      requests:
+        cpu: 10m
+        memory: 50Mi
+    securityContext: {}
+  controller:
+    affinity: {}
+    autoscaling:
+      enabled: false
+      horizontal:
+        enabled: false
+        maxReplicas: 5
+        minReplicas: 1
+        scaleDown:
+          policies: []
+          selectPolicy: Max
+          stabilizationWindowSeconds: 300
+        scaleUp:
+          policies: []
+          selectPolicy: Max
+          stabilizationWindowSeconds: 0
+        targetCPUUtilizationPercentage: 0
+        targetMemoryUtilizationPercentage: 80
+      maxReplicas: 5
+      minReplicas: 1
+      scaleDown:
+        policies: []
+        selectPolicy: Max
+        stabilizationWindowSeconds: 300
+      scaleUp:
+        policies: []
+        selectPolicy: Max
+        stabilizationWindowSeconds: 0
+      targetCPUUtilizationPercentage: 0
+      targetMemoryUtilizationPercentage: 80
+      vertical:
+        enabled: false
+        recommenders: []
+        resourcePolicy:
+          containerPolicies:
+          - containerName: alloy
+            controlledResources:
+            - cpu
+            - memory
+            controlledValues: RequestsAndLimits
+            maxAllowed: {}
+            minAllowed: {}
+        updatePolicy: null
+    dnsPolicy: ClusterFirst
+    enableStatefulSetAutoDeletePVC: false
+    extraAnnotations: {}
+    extraContainers: []
+    hostNetwork: false
+    hostPID: false
+    initContainers: []
+    nodeSelector:
+      kubernetes.io/os: linux
+    parallelRollout: true
+    podAnnotations:
+      k8s.grafana.com/logs.job: integrations/alloy
+      source: k8s-monitoring-gc-feature-test
+    podDisruptionBudget:
+      enabled: false
+      maxUnavailable: null
+      minAvailable: null
+    podLabels: {}
+    priorityClassName: ""
+    replicas: 1
+    terminationGracePeriodSeconds: null
+    tolerations: []
+    topologySpreadConstraints: []
+    type: daemonset
+    updateStrategy: {}
+    volumeClaimTemplates: []
+    volumes:
+      extra: []
+  crds:
+    create: false
+  extraObjects: []
+  global:
+    image:
+      pullSecrets: []
+      registry: ""
+    podSecurityContext: {}
+  image:
+    digest: null
+    pullPolicy: IfNotPresent
+    pullSecrets: []
+    registry: docker.io
+    repository: grafana/alloy
+    tag: null
+  ingress:
+    annotations: {}
+    enabled: false
+    extraPaths: []
+    faroPort: 12347
+    hosts:
+    - chart-example.local
+    labels: {}
+    path: /
+    pathType: Prefix
+    tls: []
+  nameOverride: alloy-receiver
   rbac:
     create: true
   service:

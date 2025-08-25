@@ -5,7 +5,8 @@ kind: TestPlan
 name: k8s-monitoring
 
 subject:
-  releaseName: k8smon
+  releaseName: grafana-k8s-monitoring
+  namespace: monitoring
   path: ../../../..
   valuesFile: values.yaml
   set:
@@ -20,8 +21,6 @@ cluster:
 
 dependencies:
   - directory: dependencies
-  - preset: test-parameters
-    namespace: default
   - preset: test-parameters
     namespace: toolbox
   - file: grafana-cloud-credentials.yaml
@@ -45,6 +44,10 @@ tests:
             - query: grafana_kubernetes_monitoring_feature_info{cluster="$clusterName", feature="clusterEvents"}
               type: promql
             - query: grafana_kubernetes_monitoring_feature_info{cluster="$clusterName", feature="podLogs", method="volumes"}
+              type: promql
+            - query: grafana_kubernetes_monitoring_feature_info{cluster="$clusterName", feature="applicationObservability", protocols="otlpgrpc"}
+              type: promql
+            - query: grafana_kubernetes_monitoring_feature_info{cluster="$clusterName", feature="autoInstrumentation"}
               type: promql
 
             # Cluster metrics
