@@ -81,7 +81,8 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | podMonitors.metricsTuning.excludeMetrics | list | `[]` | Metrics to drop. Can use regular expressions. |
 | podMonitors.metricsTuning.includeMetrics | list | `[]` | Metrics to keep. Can use regular expressions. |
 | podMonitors.namespaces | list | `[]` | Which namespaces to look for PodMonitor objects. |
-| podMonitors.scrapeInterval | string | 60s | How frequently to scrape metrics from PodMonitor objects. Only used if the PodMonitor does not specify the scrape interval. Overrides global.scrapeInterval |
+| podMonitors.scrapeInterval | string | 60s | The default interval between scraping targets. Used as the default if the target resource doesn’t provide a scrape interval. Overrides global.scrapeInterval |
+| podMonitors.scrapeTimeout | string | 10s | The default timeout for scrape requests. Used as the default if the target resource doesn’t provide a scrape timeout. |
 
 ### Probes
 
@@ -97,7 +98,8 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | probes.metricsTuning.excludeMetrics | list | `[]` | Metrics to drop. Can use regular expressions. |
 | probes.metricsTuning.includeMetrics | list | `[]` | Metrics to keep. Can use regular expressions. |
 | probes.namespaces | list | `[]` | Which namespaces to look for Probe objects. |
-| probes.scrapeInterval | string | 60s | How frequently to scrape metrics from Probe objects. Only used if the Probe does not specify the scrape interval. Overrides global.scrapeInterval |
+| probes.scrapeInterval | string | 60s | The default interval between scraping targets. Used as the default if the target resource doesn’t provide a scrape interval. Overrides global.scrapeInterval |
+| probes.scrapeTimeout | string | 10s | The default timeout for scrape requests. Used as the default if the target resource doesn’t provide a scrape timeout. |
 
 ### ServiceMonitors
 
@@ -113,4 +115,5 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | serviceMonitors.metricsTuning.excludeMetrics | list | `[]` | Metrics to drop. Can use regular expressions. |
 | serviceMonitors.metricsTuning.includeMetrics | list | `[]` | Metrics to keep. Can use regular expressions. |
 | serviceMonitors.namespaces | list | `[]` | Which namespaces to look for ServiceMonitor objects. |
-| serviceMonitors.scrapeInterval | string | 60s | How frequently to scrape metrics from ServiceMonitor objects. Only used if the ServiceMonitor does not specify the scrape interval. Overrides global.scrapeInterval |
+| serviceMonitors.scrapeInterval | string | 60s | The default interval between scraping targets. Used as the default if the target resource doesn’t provide a scrape interval. Overrides global.scrapeInterval |
+| serviceMonitors.scrapeTimeout | string | 10s | The default timeout for scrape requests. Used as the default if the target resource doesn’t provide a scrape timeout. |
