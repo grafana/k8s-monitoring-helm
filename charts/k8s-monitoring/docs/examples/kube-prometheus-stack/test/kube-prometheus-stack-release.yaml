@@ -1,18 +1,4 @@
 ---
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: monitoring
----
-apiVersion: source.toolkit.fluxcd.io/v1
-kind: HelmRepository
-metadata:
-  name: prometheus-community
-  namespace: flux-system
-spec:
-  interval: 1m
-  url: https://prometheus-community.github.io/helm-charts
----
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
@@ -28,4 +14,30 @@ spec:
         name: prometheus-community
         namespace: flux-system
       interval: 1m
-    values:
+  values:
+    defaultRules:
+      create: true
+    
+    grafana:
+      forceDeployDashboards: false
+      defaultDashboardsEnabled: true
+      sidecar:
+        dashboards:
+          enabled: true
+          label: grafana_dashboard
+          labelValue: "1"
+          # Allow discovery in all namespaces for dashboards
+          searchNamespace: ALL
+    
+    kubernetesServiceMonitors:
+      enabled: false
+    
+    prometheus-node-exporter:
+      prometheus:
+        monitor:
+          enabled: false
+    
+    kube-state-metrics:
+      prometheus:
+        monitor:
+          enabled: false
