@@ -4,6 +4,6 @@ Describe 'Invalid protocol for metrics service'
     The status should be failure
     The error should include 'Error: values don'"'"'t meet the specifications of the schema(s) in the following chart(s):
 k8s-monitoring:
-- externalServices.prometheus.protocol: externalServices.prometheus.protocol must be one of the following: "remote_write", "otlp", "otlphttp"'
+- at '"'"'/externalServices/prometheus/protocol'"'"': value must be one of '"'"'remote_write'"'"', '"'"'otlp'"'"', '"'"'otlphttp'"'"
   End
 End
