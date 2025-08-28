@@ -24,6 +24,32 @@ destinations:
       create: false
       name: grafana-cloud-credentials
 
+integrations:
+  collector: alloy-singleton
+  mysql:
+    instances:
+      - name: test-database
+        exporter:
+          dataSource:
+            host: test-database-mysql.mysql.svc
+            auth:
+              usernameKey: mysql-username
+              passwordKey: mysql-root-password
+        secret:
+          create: false
+          name: test-database-mysql
+          namespace: mysql
+        logs:
+          enabled: true
+          labelSelectors:
+            app.kubernetes.io/instance: test-database
+
+podLogs:
+  enabled: true
+  collector: alloy-singleton
+  namespaces: [mysql]
+  gatherMethod: kubernetesApi
+
 alloy-singleton:
   enabled: true
   alloy:
@@ -33,19 +59,6 @@ alloy-singleton:
     remote.kubernetes.secret "test_database" {
       name      = "test-database-mysql"
       namespace = "mysql"
-    }
-
-    prometheus.exporter.mysql "test_database" {
-      data_source_name = string.format("%s:%s@(%s:%d)/",
-        convert.nonsensitive(remote.kubernetes.secret.test_database.data["mysql-username"]),
-        convert.nonsensitive(remote.kubernetes.secret.test_database.data["mysql-root-password"]),
-        "test-database-mysql.mysql.svc",
-        3306,
-      )
-      enable_collectors = ["perf_schema.eventsstatements", "perf_schema.eventswaits"]
-      perf_schema.eventsstatements {
-        text_limit = 2048
-      }
     }
 
     database_observability.mysql "test_database" {
@@ -59,10 +72,7 @@ alloy-singleton:
     }
     
     prometheus.scrape "test_database" {
-      targets    = concat(
-        prometheus.exporter.mysql.test_database.targets,
-        database_observability.mysql.test_database.targets,
-      )
+      targets    = database_observability.mysql.test_database.targets
       job_name   = "integrations/db-o11y"
       forward_to = [prometheus.remote_write.grafana_cloud_metrics.receiver]
     }
