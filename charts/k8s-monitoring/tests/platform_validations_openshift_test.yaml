@@ -1,0 +1,17 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Validations - Platforms - OpenShift
+templates:
+  - validations.yaml
+tests:
+  - it: asks you to set the platform to OpenShift
+    set:
+      cluster: {name: openshift-cluster}
+    capabilities:
+      apiVersions:
+        - security.openshift.io/v1/SecurityContextConstraints
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            This Kubernetes cluster appears to be OpenShift. Please set the platform to enable compatibility:
+            global:
+              platform: openshift
