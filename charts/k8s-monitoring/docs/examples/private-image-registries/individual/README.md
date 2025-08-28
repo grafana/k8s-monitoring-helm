@@ -102,12 +102,6 @@ alloy-operator:
     repository: grafana/alloy-operator
     pullSecrets:
       - name: my-registry-creds
-  waitForReadiness:
-    image:
-      registry: my.registry.com
-      repository: grafana/grafana/helm-chart-toolbox-kubectl
-      pullSecrets:
-        - name: my-registry-creds
   waitForAlloyRemoval:
     image:
       registry: my.registry.com

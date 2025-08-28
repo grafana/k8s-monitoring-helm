@@ -71,12 +71,8 @@ kind: Alloy
 metadata:
   name: {{ $collectorName }}
   namespace: {{ $.Release.Namespace }}
-  {{- if and (index $.Values "alloy-operator").deploy (index $.Values "alloy-operator").waitForReadiness.enabled }}
   annotations:
-    helm.sh/hook: post-install,post-upgrade
-    helm.sh/hook-weight: "10"
     helm.sdk.operatorframework.io/uninstall-wait: "true"
-  {{- end }}
 spec:{{ $alloySpec | trim | nindent 2 }}
 {{- end }}
 {{- end }}

@@ -260,10 +260,6 @@ details:
 | alloy-operator.waitForAlloyRemoval.image | object | `{"digest":"","pullPolicy":"IfNotPresent","pullSecrets":[],"registry":"ghcr.io","repository":"grafana/helm-chart-toolbox-kubectl","tag":"0.1.1"}` | The image to use for the Helm Hook that ensures that Alloy instances are removed during uninstall. |
 | alloy-operator.waitForAlloyRemoval.nodeSelector | object | `{"kubernetes.io/os":"linux"}` | Node selector to use for the Helm Hook that ensures that Alloy instances are removed during uninstall. |
 | alloy-operator.waitForAlloyRemoval.tolerations | list | `[]` | Tolerations to apply to the Helm Hook that ensures that Alloy instances are removed during uninstall. |
-| alloy-operator.waitForReadiness.enabled | bool | `true` | Utilize a Helm Hook to wait for the Alloy Operator to be ready before creating Alloy instances. This prevents timing issues where Alloy custom resources are created before the operator is ready to process them. |
-| alloy-operator.waitForReadiness.image | object | `{"digest":"","pullPolicy":"IfNotPresent","pullSecrets":[],"registry":"ghcr.io","repository":"grafana/helm-chart-toolbox-kubectl","tag":"0.1.1"}` | The image to use for the Helm Hook that ensures the Alloy Operator is ready. |
-| alloy-operator.waitForReadiness.nodeSelector | object | `{"kubernetes.io/os":"linux"}` | Node selector to use for the Helm Hook that ensures the Alloy Operator is ready. |
-| alloy-operator.waitForReadiness.tolerations | list | `[]` | Tolerations to apply to the Helm Hook that ensures the Alloy Operator is ready. |
 
 ### Collectors - Alloy Profiles
 

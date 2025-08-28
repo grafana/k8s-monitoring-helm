@@ -90,8 +90,13 @@ jobs:
         uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd  # v3.1.2
 
       - name: Run test
-        run: helm-chart-toolbox/tools/helm-test/helm-test "${TEST_DIRECTORY}"
+        run: |
+          if [ -f "${TEST_DIRECTORY}/Makefile" ]; then
+            make -C "${TEST_DIRECTORY}" clean all
+          fi
+          helm-chart-toolbox/tools/helm-test/helm-test "${TEST_DIRECTORY}"
         env:
+          BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
           KUBECONFIG: "source/charts/k8s-monitoring/tests/integration/${{ matrix.test }}/kubeconfig.yaml"
           TEST_DIRECTORY: "source/charts/k8s-monitoring/tests/integration/${{ matrix.test }}"
           DELETE_CLUSTER: true

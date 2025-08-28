@@ -82,7 +82,7 @@ Used for Helm hooks for properly sequencing the Alloy Operator deployment and re
 
 **Image**: \`${kubectlImage}\`
 
-**Deploy**: \`alloy-operator.waitForReadiness.enabled=true\` and \`alloy-operator.waitForAlloyRemoval.enabled=true\`
+**Deploy**: \`alloy-operator.waitForAlloyRemoval.enabled=true\`
 
 ### Node Exporter
 

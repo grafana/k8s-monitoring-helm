@@ -1580,306 +1580,6 @@ spec:
       nodeSelector:
         kubernetes.io/os: linux
 ---
-# Source: k8s-monitoring/templates/hooks/post-install_add-finalizer.yaml
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: k8smon-k8s-monitoring-add-finalizer
-  namespace: default
-  annotations:
-    "helm.sh/hook": post-install,post-upgrade
-    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
-    "helm.sh/hook-weight": "5"
----
-# Source: k8s-monitoring/templates/hooks/post-install_wait-for-operator.yaml
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: k8smon-k8s-monitoring-wait-alloy-operator
-  namespace: default
-  annotations:
-    "helm.sh/hook": post-install,post-upgrade
-    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
-    "helm.sh/hook-weight": "5"
----
-# Source: k8s-monitoring/templates/hooks/pre-delete_remove-alloy-and-finalizer.yaml
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: k8smon-k8s-monitoring-remove-alloy-and-finalizer
-  namespace: default
-  annotations:
-    helm.sh/hook: pre-delete
-    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
----
-# Source: k8s-monitoring/templates/hooks/post-install_add-finalizer.yaml
-apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
-metadata:
-  name: k8smon-k8s-monitoring-add-finalizer
-  namespace: default
-  annotations:
-    "helm.sh/hook": post-install,post-upgrade
-    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
-    "helm.sh/hook-weight": "5"
-rules:
-  - apiGroups: ["apps"]
-    resources: ["deployments"]
-    verbs: ["get", "list", "watch", "patch"]
----
-# Source: k8s-monitoring/templates/hooks/post-install_wait-for-operator.yaml
-apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
-metadata:
-  name: k8smon-k8s-monitoring-wait-alloy-operator
-  namespace: default
-  annotations:
-    "helm.sh/hook": post-install,post-upgrade
-    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
-    "helm.sh/hook-weight": "5"
-rules:
-  - apiGroups: ["apps"]
-    resources: ["deployments"]
-    verbs: ["get", "list", "watch"]
-  - apiGroups: [""]
-    resources: ["pods"]
-    verbs: ["get", "list", "watch"]
----
-# Source: k8s-monitoring/templates/hooks/pre-delete_remove-alloy-and-finalizer.yaml
-apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
-metadata:
-  name: k8smon-k8s-monitoring-remove-alloy-and-finalizer
-  namespace: default
-  annotations:
-    helm.sh/hook: pre-delete
-    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
-rules:
-  - apiGroups: ["apps"]
-    resources: ["deployments"]
-    verbs: ["get", "list", "watch", "patch"]
-  - apiGroups: ["collectors.grafana.com"]
-    resources: ["alloys"]
-    verbs: ["get", "list", "watch", "delete"]
----
-# Source: k8s-monitoring/templates/hooks/post-install_add-finalizer.yaml
-apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
-metadata:
-  name: k8smon-k8s-monitoring-add-finalizer
-  namespace: default
-  annotations:
-    "helm.sh/hook": post-install,post-upgrade
-    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
-    "helm.sh/hook-weight": "5"
-subjects:
-  - kind: ServiceAccount
-    name: k8smon-k8s-monitoring-add-finalizer
-    namespace: default
-roleRef:
-  kind: Role
-  name: k8smon-k8s-monitoring-add-finalizer
-  apiGroup: rbac.authorization.k8s.io
----
-# Source: k8s-monitoring/templates/hooks/post-install_wait-for-operator.yaml
-apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
-metadata:
-  name: k8smon-k8s-monitoring-wait-alloy-operator
-  namespace: default
-  annotations:
-    "helm.sh/hook": post-install,post-upgrade
-    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
-    "helm.sh/hook-weight": "5"
-subjects:
-  - kind: ServiceAccount
-    name: k8smon-k8s-monitoring-wait-alloy-operator
-    namespace: default
-roleRef:
-  kind: Role
-  name: k8smon-k8s-monitoring-wait-alloy-operator
-  apiGroup: rbac.authorization.k8s.io
----
-# Source: k8s-monitoring/templates/hooks/pre-delete_remove-alloy-and-finalizer.yaml
-apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
-metadata:
-  name: k8smon-k8s-monitoring-remove-alloy-and-finalizer
-  namespace: default
-  annotations:
-    helm.sh/hook: pre-delete
-    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
-subjects:
-  - kind: ServiceAccount
-    name: k8smon-k8s-monitoring-remove-alloy-and-finalizer
-    namespace: default
-roleRef:
-  kind: Role
-  name: k8smon-k8s-monitoring-remove-alloy-and-finalizer
-  apiGroup: rbac.authorization.k8s.io
----
-# Source: k8s-monitoring/templates/hooks/post-install_add-finalizer.yaml
-apiVersion: batch/v1
-kind: Job
-metadata:
-  name: k8smon-k8s-monitoring-add-finalizer
-  namespace: default
-  labels:
-    app.kubernetes.io/name: k8smon-k8s-monitoring-add-finalizer
-    app.kubernetes.io/instance: k8smon
-    helm.sh/chart: k8s-monitoring-3.3.2
-  annotations:
-    helm.sh/hook: post-install,post-upgrade
-    helm.sh/hook-weight: "15"
-    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
-spec:
-  ttlSecondsAfterFinished: 300
-  backoffLimit: 3
-  template:
-    metadata:
-      name: k8smon-k8s-monitoring-add-finalizer
-      labels:
-        app.kubernetes.io/name: k8smon-k8s-monitoring
-        app.kubernetes.io/instance: k8smon
-        sidecar.istio.io/inject: "false"
-    spec:
-      restartPolicy: Never
-      nodeSelector:
-        kubernetes.io/os: linux
-      serviceAccountName: k8smon-k8s-monitoring-add-finalizer
-      containers:
-        - name: add-finalizers
-          image: "ghcr.io/grafana/helm-chart-toolbox-kubectl:0.1.1"
-          imagePullPolicy: IfNotPresent
-          command:
-            - /bin/bash
-            - -ce
-            - |
-              kubectl patch \
-                --namespace=default \
-                --patch='{"metadata":{"finalizers":["k8s.grafana.com/finalizer"]}}' \
-                deployment/k8smon-alloy-operator
-          securityContext:
-            allowPrivilegeEscalation: false
-            capabilities:
-              drop: ["ALL"]
-            readOnlyRootFilesystem: true
-            seccompProfile:
-              type: RuntimeDefault
----
-# Source: k8s-monitoring/templates/hooks/post-install_wait-for-operator.yaml
-apiVersion: batch/v1
-kind: Job
-metadata:
-  name: k8smon-k8s-monitoring-wait-alloy-operator
-  namespace: default
-  labels:
-    app.kubernetes.io/name: k8smon-k8s-monitoring-wait-alloy-operator
-    app.kubernetes.io/instance: k8smon
-    helm.sh/chart: k8s-monitoring-3.3.2
-  annotations:
-    "helm.sh/hook": post-install,post-upgrade
-    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
-    "helm.sh/hook-weight": "5"
-spec:
-  ttlSecondsAfterFinished: 300
-  backoffLimit: 3
-  template:
-    metadata:
-      name: k8smon-k8s-monitoring-wait-alloy-operator
-      labels:
-        app.kubernetes.io/name: k8smon-k8s-monitoring
-        app.kubernetes.io/instance: k8smon
-        sidecar.istio.io/inject: "false"
-    spec:
-      restartPolicy: Never
-      nodeSelector:
-        kubernetes.io/os: linux
-      serviceAccountName: k8smon-k8s-monitoring-wait-alloy-operator
-      containers:
-        - name: wait-for-operator
-          image: "ghcr.io/grafana/helm-chart-toolbox-kubectl:0.1.1"
-          imagePullPolicy: IfNotPresent
-          command:
-            - /bin/bash
-            - -ce
-            - |
-              echo "Waiting for Alloy Operator to be ready..."
-              kubectl wait \
-                --timeout=300s \
-                --namespace=default \
-                --for=condition=available \
-                deployment/k8smon-alloy-operator
-
-              echo "Verifying Alloy Operator pod is running..."
-              kubectl wait \
-                --timeout=120s \
-                --namespace=default \
-                --for=condition=ready \
-                pod -l app.kubernetes.io/name=alloy-operator
-
-              echo "Alloy Operator is ready!"
-          securityContext:
-            allowPrivilegeEscalation: false
-            capabilities:
-              drop: ["ALL"]
-            readOnlyRootFilesystem: true
-            seccompProfile:
-              type: RuntimeDefault
----
-# Source: k8s-monitoring/templates/hooks/pre-delete_remove-alloy-and-finalizer.yaml
-apiVersion: batch/v1
-kind: Job
-metadata:
-  name: k8smon-k8s-monitoring-remove-alloy-and-finalizer
-  namespace: default
-  labels:
-    app.kubernetes.io/name: k8smon-k8s-monitoring-remove-alloy-and-finalizer
-    app.kubernetes.io/instance: k8smon
-    helm.sh/chart: k8s-monitoring-3.3.2
-  annotations:
-    helm.sh/hook: pre-delete
-    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
-spec:
-  ttlSecondsAfterFinished: 300
-  backoffLimit: 3
-  template:
-    metadata:
-      name: k8smon-k8s-monitoring-remove-alloy-and-finalizer
-      labels:
-        app.kubernetes.io/name: k8smon-k8s-monitoring
-        app.kubernetes.io/instance: k8smon
-        sidecar.istio.io/inject: "false"
-    spec:
-      restartPolicy: Never
-      nodeSelector:
-        kubernetes.io/os: linux
-      serviceAccountName: k8smon-k8s-monitoring-remove-alloy-and-finalizer
-      containers:
-        - name: remove-finalizers
-          image: "ghcr.io/grafana/helm-chart-toolbox-kubectl:0.1.1"
-          imagePullPolicy: IfNotPresent
-          command:
-            - /bin/bash
-            - -ce
-            - |
-              echo "Deleting Alloy instance: alloy/k8smon-alloy-metrics..."
-              kubectl delete alloy/k8smon-alloy-metrics --ignore-not-found=true --wait
-              kubectl wait --for=delete alloy/k8smon-alloy-metrics --timeout=60s || echo "Timed out waiting for deletion of alloy/k8smon-alloy-metrics or it may not exist."
-
-              kubectl patch \
-                --namespace=default \
-                --type json \
-                --patch='[{"op": "remove", "path": "/metadata/finalizers"}]' \
-                deployment/k8smon-alloy-operator
-          securityContext:
-            allowPrivilegeEscalation: false
-            capabilities:
-              drop: ["ALL"]
-            readOnlyRootFilesystem: true
-            seccompProfile:
-              type: RuntimeDefault
----
 # Source: k8s-monitoring/templates/alloy.yaml
 apiVersion: collectors.grafana.com/v1alpha1
 kind: Alloy
@@ -1887,8 +1587,6 @@ metadata:
   name: k8smon-alloy-metrics
   namespace: default
   annotations:
-    helm.sh/hook: post-install,post-upgrade
-    helm.sh/hook-weight: "10"
     helm.sdk.operatorframework.io/uninstall-wait: "true"
 spec:
   alloy:
@@ -2074,3 +1772,195 @@ spec:
     metricRelabelings: []
     relabelings: []
     tlsConfig: {}
+---
+# Source: k8s-monitoring/templates/hooks/post-install_add-finalizer.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: k8smon-k8s-monitoring-add-finalizer
+  namespace: default
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+    "helm.sh/hook-weight": "5"
+---
+# Source: k8s-monitoring/templates/hooks/pre-delete_remove-alloy-and-finalizer.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: k8smon-k8s-monitoring-remove-alloy-and-finalizer
+  namespace: default
+  annotations:
+    helm.sh/hook: pre-delete
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+---
+# Source: k8s-monitoring/templates/hooks/post-install_add-finalizer.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: k8smon-k8s-monitoring-add-finalizer
+  namespace: default
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+    "helm.sh/hook-weight": "5"
+rules:
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    verbs: ["get", "list", "watch", "patch"]
+---
+# Source: k8s-monitoring/templates/hooks/pre-delete_remove-alloy-and-finalizer.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: k8smon-k8s-monitoring-remove-alloy-and-finalizer
+  namespace: default
+  annotations:
+    helm.sh/hook: pre-delete
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+rules:
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    verbs: ["get", "list", "watch", "patch"]
+  - apiGroups: ["collectors.grafana.com"]
+    resources: ["alloys"]
+    verbs: ["get", "list", "watch", "delete"]
+---
+# Source: k8s-monitoring/templates/hooks/post-install_add-finalizer.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: k8smon-k8s-monitoring-add-finalizer
+  namespace: default
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+    "helm.sh/hook-weight": "5"
+subjects:
+  - kind: ServiceAccount
+    name: k8smon-k8s-monitoring-add-finalizer
+    namespace: default
+roleRef:
+  kind: Role
+  name: k8smon-k8s-monitoring-add-finalizer
+  apiGroup: rbac.authorization.k8s.io
+---
+# Source: k8s-monitoring/templates/hooks/pre-delete_remove-alloy-and-finalizer.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: k8smon-k8s-monitoring-remove-alloy-and-finalizer
+  namespace: default
+  annotations:
+    helm.sh/hook: pre-delete
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+subjects:
+  - kind: ServiceAccount
+    name: k8smon-k8s-monitoring-remove-alloy-and-finalizer
+    namespace: default
+roleRef:
+  kind: Role
+  name: k8smon-k8s-monitoring-remove-alloy-and-finalizer
+  apiGroup: rbac.authorization.k8s.io
+---
+# Source: k8s-monitoring/templates/hooks/post-install_add-finalizer.yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: k8smon-k8s-monitoring-add-finalizer
+  namespace: default
+  labels:
+    app.kubernetes.io/name: k8smon-k8s-monitoring-add-finalizer
+    app.kubernetes.io/instance: k8smon
+    helm.sh/chart: k8s-monitoring-3.3.2
+  annotations:
+    helm.sh/hook: post-install,post-upgrade
+    helm.sh/hook-weight: "15"
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+spec:
+  ttlSecondsAfterFinished: 300
+  backoffLimit: 3
+  template:
+    metadata:
+      name: k8smon-k8s-monitoring-add-finalizer
+      labels:
+        app.kubernetes.io/name: k8smon-k8s-monitoring
+        app.kubernetes.io/instance: k8smon
+        sidecar.istio.io/inject: "false"
+    spec:
+      restartPolicy: Never
+      nodeSelector:
+        kubernetes.io/os: linux
+      serviceAccountName: k8smon-k8s-monitoring-add-finalizer
+      containers:
+        - name: add-finalizers
+          image: "ghcr.io/grafana/helm-chart-toolbox-kubectl:0.1.1"
+          imagePullPolicy: IfNotPresent
+          command:
+            - /bin/bash
+            - -ce
+            - |
+              kubectl patch \
+                --namespace=default \
+                --patch='{"metadata":{"finalizers":["k8s.grafana.com/finalizer"]}}' \
+                deployment/k8smon-alloy-operator
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+            readOnlyRootFilesystem: true
+            seccompProfile:
+              type: RuntimeDefault
+---
+# Source: k8s-monitoring/templates/hooks/pre-delete_remove-alloy-and-finalizer.yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: k8smon-k8s-monitoring-remove-alloy-and-finalizer
+  namespace: default
+  labels:
+    app.kubernetes.io/name: k8smon-k8s-monitoring-remove-alloy-and-finalizer
+    app.kubernetes.io/instance: k8smon
+    helm.sh/chart: k8s-monitoring-3.3.2
+  annotations:
+    helm.sh/hook: pre-delete
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+spec:
+  ttlSecondsAfterFinished: 300
+  backoffLimit: 3
+  template:
+    metadata:
+      name: k8smon-k8s-monitoring-remove-alloy-and-finalizer
+      labels:
+        app.kubernetes.io/name: k8smon-k8s-monitoring
+        app.kubernetes.io/instance: k8smon
+        sidecar.istio.io/inject: "false"
+    spec:
+      restartPolicy: Never
+      nodeSelector:
+        kubernetes.io/os: linux
+      serviceAccountName: k8smon-k8s-monitoring-remove-alloy-and-finalizer
+      containers:
+        - name: remove-finalizers
+          image: "ghcr.io/grafana/helm-chart-toolbox-kubectl:0.1.1"
+          imagePullPolicy: IfNotPresent
+          command:
+            - /bin/bash
+            - -ce
+            - |
+              echo "Deleting Alloy instance: alloy/k8smon-alloy-metrics..."
+              kubectl delete alloy/k8smon-alloy-metrics --ignore-not-found=true --wait
+              kubectl wait --for=delete alloy/k8smon-alloy-metrics --timeout=60s || echo "Timed out waiting for deletion of alloy/k8smon-alloy-metrics or it may not exist."
+
+              kubectl patch \
+                --namespace=default \
+                --type json \
+                --patch='[{"op": "remove", "path": "/metadata/finalizers"}]' \
+                deployment/k8smon-alloy-operator
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+            readOnlyRootFilesystem: true
+            seccompProfile:
+              type: RuntimeDefault
