@@ -12,21 +12,22 @@ spec:
   project: default
   syncPolicy:
     automated:
+      selfHeal: true
       enabled: true
     syncOptions:
       - Retry=true
     retry:
-      limit: 5 # Maximum number of retries
+      limit: 5
       backoff:
-        duration: 5s # Initial retry interval
-        factor: 2 # Multiplication factor for the backoff
-        maxDuration: 1m # Maximum retry interval
+        duration: 5s
+        factor: 2
+        maxDuration: 1m
   destination:
     server: "https://kubernetes.default.svc"
     namespace: default
   source:
-    path: charts/k8s-monitoring
     repoURL: https://github.com/grafana/k8s-monitoring-helm.git
+    path: charts/k8s-monitoring
     targetRevision: "main"
     helm:
       releaseName: k8smon
