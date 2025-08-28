@@ -9,9 +9,7 @@ kind: Alloy
 metadata:
   name: {{ include "collector.alloy.fullname" $values }}
   namespace: {{ $.Release.Namespace }}
-  {{- if and (index $.Values "alloy-operator").deploy (index $.Values "alloy-operator").waitForReadiness.enabled }}
   annotations:
     helm.sdk.operatorframework.io/uninstall-wait: "true"
-  {{- end }}
 spec:{{ $alloySpec | trim | nindent 2 }}
 {{- end }}

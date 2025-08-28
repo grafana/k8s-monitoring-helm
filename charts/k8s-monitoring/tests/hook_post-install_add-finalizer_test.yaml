@@ -1,13 +1,13 @@
 ---
-suite: Test operator readiness hook functionality
+suite: Test finalizer hook functionality
 templates:
-  - templates/hooks/post-install_wait-for-operator.yaml
+  - templates/hooks/post-install_add-finalizer.yaml
 tests:
   - it: should create hook when operator is deployed and readiness is enabled
     set:
       alloy-operator:
         deploy: true
-        waitForReadiness:
+        waitForAlloyRemoval:
           enabled: true
       alloy-metrics:
         enabled: true
@@ -23,7 +23,7 @@ tests:
     set:
       alloy-operator:
         deploy: false
-        waitForReadiness:
+        waitForAlloyRemoval:
           enabled: true
       clusterMetrics:
         enabled: true
@@ -38,7 +38,7 @@ tests:
     set:
       alloy-operator:
         deploy: true
-        waitForReadiness:
+        waitForAlloyRemoval:
           enabled: false
       clusterMetrics:
         enabled: true
