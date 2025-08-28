@@ -10,6 +10,17 @@ operation:
       hook: {}
 spec:
   project: default
+  syncPolicy:
+    automated:
+      enabled: true
+    syncOptions:
+      - Retry=true
+    retry:
+      limit: 5 # Maximum number of retries
+      backoff:
+        duration: 5s # Initial retry interval
+        factor: 2 # Multiplication factor for the backoff
+        maxDuration: 1m # Maximum retry interval
   destination:
     server: "https://kubernetes.default.svc"
     namespace: default
