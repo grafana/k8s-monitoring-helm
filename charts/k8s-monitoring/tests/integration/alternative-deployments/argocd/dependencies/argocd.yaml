@@ -1,9 +1,4 @@
 ---
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: argocd
----
 apiVersion: source.toolkit.fluxcd.io/v1
 kind: HelmRepository
 metadata:
@@ -31,3 +26,13 @@ spec:
   values:
     crds:
       install: true
+    repoServer:
+      volumes:
+        - name: local-repo
+          hostPath:
+            path: /mnt/k8s-monitoring-helm.git
+            type: Directory
+      volumeMounts:
+        - name: local-repo
+          mountPath: /mnt/k8s-monitoring-helm.git
+          readOnly: true
