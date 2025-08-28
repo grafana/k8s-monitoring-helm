@@ -15,18 +15,13 @@ spec:
     namespace: default
   source:
     path: charts/k8s-monitoring
-#    repoURL: 'file:///mnt/k8s-monitoring-helm.git'
-    repoURL: 'https://github.com/grafana/k8s-monitoring-helm.git'
-    targetRevision: fix/argocd-test
-#    chart: k8s-monitoring
-#    repoURL: https://grafana.github.io/helm-charts
-#    targetRevision: "3.2"
+    repoURL: https://github.com/grafana/k8s-monitoring-helm.git
+    targetRevision: main
     helm:
       releaseName: k8smon
       valuesObject:
         cluster:
           name: argocd-deployment-test
-
         destinations:
           - name: localPrometheus
             type: prometheus
@@ -43,7 +38,6 @@ spec:
               type: basic
               username: loki
               password: lokipassword
-
         clusterMetrics:
           enabled: true
           kepler:
@@ -58,18 +52,13 @@ spec:
                 existingSecretName: localprometheus-k8smon-k8s-monitoring
                 external:
                   url: http://prometheus-server.prometheus.svc:9090
-
         clusterEvents:
           enabled: true
-
         podLogs:
           enabled: true
-
         alloy-metrics:
           enabled: true
-
         alloy-singleton:
           enabled: true
-
         alloy-logs:
           enabled: true

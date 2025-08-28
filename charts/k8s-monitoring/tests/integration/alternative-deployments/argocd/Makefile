@@ -1,11 +1,11 @@
-all: kind-cluster-config.yaml
-kind-cluster-config.yaml:
-	echo "---" > kind-cluster-config.yaml
-	echo "apiVersion: kind.x-k8s.io/v1alpha4" >> kind-cluster-config.yaml
-	echo "kind: Cluster" >> kind-cluster-config.yaml
-	echo "nodes:" >> kind-cluster-config.yaml
-	echo "  - role: control-plane" >> kind-cluster-config.yaml
-	echo "    extraMounts:" >> kind-cluster-config.yaml
-	echo "      - hostPath: $(shell realpath "$(shell pwd)/../../../../../..")" >> kind-cluster-config.yaml
-	echo "        containerPath: /mnt/k8s-monitoring-helm.git" >> kind-cluster-config.yaml
-	echo "        readOnly: true" >> kind-cluster-config.yaml
+all: k8s-monitoring-application.yaml
+
+# Declare the target as phony to ensure it always runs
+.PHONY: k8s-monitoring-application.yaml
+k8s-monitoring-application.yaml:
+	@if [ -n "$$BRANCH_NAME" ]; then \
+  		echo "Setting targetRevision to $$BRANCH_NAME"; \
+		yq eval '.spec.source.targetRevision = strenv(BRANCH_NAME)' k8s-monitoring-application.yaml > temp.yaml; \
+		cp temp.yaml k8s-monitoring-application.yaml; \
+		rm temp.yaml; \
+	fi
