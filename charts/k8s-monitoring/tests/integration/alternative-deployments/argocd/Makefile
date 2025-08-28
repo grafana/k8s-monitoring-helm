@@ -1,5 +1,7 @@
+.PHONY: clean
 clean: ;
 
+.PHONY: all
 all: k8s-monitoring-application.yaml
 
 BRANCH_NAME ?= $(shell git rev-parse --abbrev-ref HEAD)
