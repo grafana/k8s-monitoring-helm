@@ -6,7 +6,7 @@ It seems to only work if I load the ArgoCD UI, edit the Application, and then sy
 
 I'd like to ensure that it's reliable and automatable before enabling it by default.
 
-## To run:
+## Running the test
 
 Rename `disabled_test_plan.yaml` to `test_plan.yaml` and run:
 
