@@ -25,9 +25,9 @@ destinations:
 integrations:
   mysql:
     instances:
-      - name: staging-db
+      - name: dev-db
         exporter:
-          dataSourceName: "root:password@database.staging.svc:3306/"
+          dataSourceName: "root:password@database.dev.svc:3306/"
         logs:
           enabled: false
 
