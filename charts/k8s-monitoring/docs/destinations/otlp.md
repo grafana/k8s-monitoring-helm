@@ -171,7 +171,7 @@ This defines the options for defining a destination for OpenTelemetry data that 
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| secret.create | bool | `true` | Whether to create a secret for this Prometheus destination. |
+| secret.create | bool | `true` | Whether to create a secret for this OTLP destination. |
 | secret.embed | bool | `false` | If true, skip secret creation and embed the credentials directly into the configuration. |
 | secret.name | string | `""` | The name of the secret to create. |
 | secret.namespace | string | `""` | The namespace for the secret. |
