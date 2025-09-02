@@ -297,11 +297,9 @@ otelcol.processor.filter {{ include "helper.alloy_name" .name | quote }} {
 otelcol.exporter.loadbalancing {{ printf "%s_sampler" (include "helper.alloy_name" .name) | quote }} {
   resolver {
     kubernetes {
-      {{- $collectorName := include "helper.k8s_name" (printf "%s-sampler" .name) }}
-      {{- $globalValues := include "collector.alloy.values.global" $ | fromYaml }}
-      {{- $alloyName := dict "nameOverride" "$collectorName"}}
-      {{- $alloy := mergeOverwrite $globalValues $alloyName .processors.tailSampling.collector }}
-      service = "{{ include "collector.alloy.fullname" (deepCopy $ | merge (dict "collectorName" $collectorName "collectorValues" $alloy)) }}"
+      {{- $maxLength := 51 }}{{/* This limit is from the `controller-revision-hash` pod label value*/}}
+      {{- $collectorName := printf "%s-%s" $.Release.Name (include "helper.k8s_name" (printf "%s-sampler" .name)) | trunc $maxLength | trimSuffix "-" | lower }}
+      service = "{{ $collectorName }}"
     }
   }
   protocol {
@@ -321,11 +319,9 @@ otelcol.exporter.loadbalancing {{ printf "%s_sampler" (include "helper.alloy_nam
 otelcol.exporter.loadbalancing {{ printf "%s_servicegraph" (include "helper.alloy_name" .name) | quote }} {
   resolver {
     kubernetes {
-      {{- $collectorName := include "helper.k8s_name" (printf "%s-servicegraph" .name) }}
-      {{- $globalValues := include "collector.alloy.values.global" $ | fromYaml }}
-      {{- $alloyName := dict "nameOverride" "$collectorName"}}
-      {{- $alloy := mergeOverwrite $globalValues $alloyName .processors.serviceGraphMetrics.collector }}
-      service = "{{ include "collector.alloy.fullname" (deepCopy $ | merge (dict "collectorName" $collectorName "collectorValues" $alloy)) }}"
+      {{- $maxLength := 51 }}{{/* This limit is from the `controller-revision-hash` pod label value*/}}
+      {{- $collectorName := printf "%s-%s" $.Release.Name (include "helper.k8s_name" (printf "%s-servicegraph" .name)) | trunc $maxLength | trimSuffix "-" | lower }}
+      service = "{{ $collectorName }}"
     }
   }
   protocol {
