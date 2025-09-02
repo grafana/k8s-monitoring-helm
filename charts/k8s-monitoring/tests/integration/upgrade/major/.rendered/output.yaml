@@ -91,6 +91,22 @@ metadata:
     app.kubernetes.io/version: "0.31.3"
     release: k8smon
 ---
+# Source: k8s-monitoring/charts/clusterMetrics/charts/opencost/templates/secret.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: k8smon-opencost
+  namespace: default
+  labels:
+    helm.sh/chart: opencost-2.2.4
+    app.kubernetes.io/name: opencost
+    app.kubernetes.io/instance: k8smon
+    app.kubernetes.io/version: "1.117.2"
+    app.kubernetes.io/part-of: opencost
+    app.kubernetes.io/managed-by: Helm
+data:
+  CLOUD_PROVIDER_API_KEY: "b3AzbmNvNTdvcDNOY281N09QM05jbzU3b3AzbmNvNTdvcDNOY281Nw=="
+---
 # Source: k8s-monitoring/templates/destination_secret.yaml
 apiVersion: v1
 kind: Secret
@@ -2484,7 +2500,7 @@ metadata:
     app.kubernetes.io/part-of: opencost
     app.kubernetes.io/managed-by: Helm
   annotations:
-    checksum/configs: 930260623d85bc2f803e4342c37094e5e1f9ba8b76314664d4abc01dca140c56
+    checksum/configs: 876ac51ba4cb1b082b7c7fb1b53d0a5e1c59422012cce7cb954d0c3e32e2ec10
 spec:
   replicas: 1
   selector:
@@ -2562,6 +2578,11 @@ spec:
               value: "http://prometheus-server.prometheus.svc:9090"
             - name: INSECURE_SKIP_VERIFY
               value: "false"
+            - name: CLOUD_PROVIDER_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: k8smon-opencost
+                  key: CLOUD_PROVIDER_API_KEY
             - name: CLUSTER_ID
               value: "major-upgrade-test"
             - name: DB_BASIC_AUTH_USERNAME
@@ -2593,12 +2614,17 @@ spec:
             - name: EMIT_KSM_V1_METRICS_ONLY
               value: "true"
             # Add any additional provided variables
-            - name: CLOUD_PROVIDER_API_KEY
-              value: "AIzaSyD29bGxmHAVEOBYtgd8sYM2gM2ekfxQX4U"
             - name: CURRENT_CLUSTER_ID_FILTER_ENABLED
               value: "true"
             - name: PROM_CLUSTER_ID_LABEL
               value: "cluster"
+          volumeMounts:
+            - mountPath: /var/configs
+              name: configs
+              readOnly: false
+      volumes:
+        - emptyDir: {}
+          name: configs
 ---
 # Source: k8s-monitoring/templates/alloy.yaml
 apiVersion: collectors.grafana.com/v1alpha1
