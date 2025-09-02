@@ -17,17 +17,15 @@
   {{- if eq $destination.type "otlp" }}
     {{/* Tail sampling Alloy instances */}}
     {{- if eq (include "destinations.otlp.isTailSamplingEnabled" $destination) "true" }}
-      {{- $collectorName := include "helper.k8s_name" (printf "%s-sampler" $destination.name) }}
-      {{- $collectorValues := merge (dict "nameOverride" $collectorName) ($destination.processors.tailSampling.collector | default dict) }}
-      {{- $values := (deepCopy $ | merge (dict "collectorName" $collectorName "collectorValues" $collectorValues)) }}
-      {{- $alloyNames = append $alloyNames (include "collector.alloy.fullname" $values) }}
+      {{- $maxLength := 51 }}{{/* This limit is from the `controller-revision-hash` pod label value*/}}
+      {{- $collectorName := printf "%s-%s" $.Release.Name (include "helper.k8s_name" (printf "%s-sampler" $destination.name)) | trunc $maxLength | trimSuffix "-" | lower }}
+      {{- $alloyNames = append $alloyNames $collectorName }}
     {{- end }}
     {{/* Service graph metrics Alloy instances */}}
     {{- if eq (include "destinations.otlp.isServiceGraphsEnabled" $destination) "true" }}
-      {{- $collectorName := include "helper.k8s_name" (printf "%s-servicegraph" $destination.name) }}
-      {{- $collectorValues := merge (dict "nameOverride" $collectorName) ($destination.processors.serviceGraphMetrics.collector | default dict) }}
-      {{- $values := (deepCopy $ | merge (dict "collectorName" $collectorName "collectorValues" $collectorValues)) }}
-      {{- $alloyNames = append $alloyNames (include "collector.alloy.fullname" $values) }}
+      {{- $maxLength := 51 }}{{/* This limit is from the `controller-revision-hash` pod label value*/}}
+      {{- $collectorName := printf "%s-%s" $.Release.Name (include "helper.k8s_name" (printf "%s-servicegraph" $destination.name)) | trunc $maxLength | trimSuffix "-" | lower }}
+      {{- $alloyNames = append $alloyNames $collectorName }}
     {{- end }}
   {{- end }}
 {{- end }}
