@@ -1,3 +1,16 @@
+{{ define "destinations.otlp.resourceAttributes.removeList" }}
+{{- $destination := .destination }}
+{{- $root := .root }}
+{{- $removeList := list }}
+{{ if $destination.processors.resourceAttributes.useDefaultRemoveList }}
+{{- $removeList = ($root.Files.Get "default-remove-lists/resource-attributes.yaml" | fromYamlArray) -}}
+{{ end }}
+{{ if $destination.processors.resourceAttributes.removeList }}
+{{- $removeList = concat $removeList $destination.processors.resourceAttributes.removeList -}}
+{{ end }}
+{{ $removeList | uniq | toYaml }}
+{{ end }}
+
 {{- define "destinations.otlp.alloy" }}
 {{- with .destination }}
 {{- if eq (include "destinations.otlp.supports_metrics" .) "true" }}
@@ -56,11 +69,15 @@ otelcol.processor.transform {{ include "helper.alloy_name" .name | quote }} {
   error_mode = {{ .processors.transform.errorMode | quote }}
 
 {{- if ne .metrics.enabled false }}
+{{- $resourceAttributesToRemove := include "destinations.otlp.resourceAttributes.removeList" (dict "destination" . "root" $) | fromYamlArray }}
   metric_statements {
     context = "resource"
     statements = [
 {{- range $label := .clusterLabels }}
       `set(attributes[{{ $label | quote }}], {{ $.Values.cluster.name | quote }})`,
+{{- end }}
+{{- range $resourceAttribute := $resourceAttributesToRemove }}
+      `delete_key(attributes, {{ $resourceAttribute | quote }})`,
 {{- end }}
 {{- range $transform := .processors.transform.metrics.resource }}
 {{ $transform | quote | indent 6 }},
@@ -108,11 +125,15 @@ otelcol.processor.transform {{ include "helper.alloy_name" .name | quote }} {
 
 {{- end }}
 {{- if ne .logs.enabled false }}
+{{- $resourceAttributesToRemove := include "destinations.otlp.resourceAttributes.removeList" (dict "destination" . "root" $) | fromYamlArray }}
   log_statements {
     context = "resource"
     statements = [
 {{- range $label := .clusterLabels }}
       `set(attributes[{{ $label | quote }}], {{ $.Values.cluster.name | quote }})`,
+{{- end }}
+{{- range $resourceAttribute := $resourceAttributesToRemove }}
+      `delete_key(attributes, {{ $resourceAttribute | quote }})`,
 {{- end }}
 {{- range $transform := .processors.transform.logs.resource }}
 {{ $transform | quote | indent 6 }},
@@ -157,12 +178,16 @@ otelcol.processor.transform {{ include "helper.alloy_name" .name | quote }} {
 {{- end }}
 {{- end }}
 {{- if ne .traces.enabled false }}
+{{- $resourceAttributesToRemove := include "destinations.otlp.resourceAttributes.removeList" (dict "destination" . "root" $) | fromYamlArray }}
 
   trace_statements {
     context = "resource"
     statements = [
 {{- range $label := .clusterLabels }}
       `set(attributes[{{ $label | quote }}], {{ $.Values.cluster.name | quote }})`,
+{{- end }}
+{{- range $resourceAttribute := $resourceAttributesToRemove }}
+      `delete_key(attributes, {{ $resourceAttribute | quote }})`,
 {{- end }}
 {{- range $transform := .processors.transform.traces.resource }}
 {{ $transform | quote | indent 6 }},

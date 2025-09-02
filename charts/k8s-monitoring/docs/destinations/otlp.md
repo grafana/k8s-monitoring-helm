@@ -113,6 +113,13 @@ This defines the options for defining a destination for OpenTelemetry data that 
 | processors.memoryLimiter.enabled | bool | `false` | Whether to use a memory limiter. |
 | processors.memoryLimiter.limit | string | `"0MiB"` | Maximum amount of memory targeted to be allocated by the process heap. |
 
+### Resource Attributes Processor
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| processors.resourceAttributes.removeList | list | `[]` | List of additional resource attribute names to remove from OTEL signals These attributes will be deleted from the resource context for all signal types (metrics, logs, traces) |
+| processors.resourceAttributes.useDefaultRemoveList | bool | `true` | Whether to use the default remove list for resource attributes |
+
 ### Service Graph Metrics
 
 | Key | Type | Default | Description |
