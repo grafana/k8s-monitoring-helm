@@ -22,7 +22,7 @@
     {{- end }}
 
     {{- if not (has $destination.type $types) }}
-      {{ fail (printf "\nDestination #%d (%s) is using an unknown type (%s).\nPlease set:\ndestinations:\n  - name: %s\n    type: \"[%s]\"" $i $destination.name $destination.type $destination.name (include "english_list_or" $types)) }}
+      {{ fail (printf "\nDestination #%d (%s) is using an unknown type (%s).\nPlease set:\ndestinations:\n  - name: %s\n    type: %s" $i $destination.name $destination.type $destination.name (include "english_list_or" $types)) }}
     {{- end }}
 
     {{/* OTLP destination validations */}}

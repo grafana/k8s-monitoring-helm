@@ -12,6 +12,8 @@ Capture all telemetry data from your Kubernetes cluster.
 
 ### Version 3.4
 
+<!--alex disable hook-->
+<!--alex disable hooks-->
 #### Alloy no longer deployed by hooks
 
 Version 3.3 deployed the Alloy instances during a post-install Helm hook. This cause problems where Alloy instances
@@ -20,7 +22,7 @@ were not handle properly when running upgrades or when using deployment tools li
 When upgrading to v3.4 or later, the Alloy resources will no longer be deployed by Helm hooks, but the upgrade may fail
 with this message:
 
-```
+```text
 Error: UPGRADE FAILED: Unable to continue with update: Alloy "k8smon-alloy-metrics" in namespace "default" exists and cannot be imported into the current release: invalid ownership metadata; label validation error: missing key "app.kubernetes.io/managed-by": must be set to "Helm"; annotation validation error: missing key "meta.helm.sh/release-name": must be set to "k8smon"; annotation validation error: missing key "meta.helm.sh/release-namespace": must be set to "default"
 ```
 

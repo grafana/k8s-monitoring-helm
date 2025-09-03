@@ -1,0 +1,55 @@
+# yamllint disable rule:line-length
+---
+apiVersion: helm-chart-toolbox.grafana.com/v1
+kind: TestPlan
+name: loki-stdout
+
+subject:
+  releaseName: k8smon
+  path: ../../../../..
+  valuesFile: ../values.yaml
+
+cluster:
+  type: kind
+
+dependencies:
+  - file: workload.yaml
+  - preset: loki
+  - preset: grafana
+    overrides:
+      datasources:
+        datasources.yaml:
+          apiVersion: 1
+          datasources:
+            - name: Loki
+              type: loki
+              url: http://loki.loki.svc:3100
+              jsonData:
+                httpHeaderName1: X-Scope-OrgID
+              secureJsonData:
+                httpHeaderValue1: "1"
+              isDefault: true
+
+tests:
+  - type: query-test
+    values:
+      tests:
+        - env:
+            CLUSTER: loki-stdout-destination-test
+            LOKI_URL: http://loki.loki.svc:3100/loki/api/v1/query
+            LOKI_TENANTID: 1
+            LOKI_USER: loki
+            LOKI_PASS: lokipassword
+
+          queries:
+            # Pod logs from default namespace come through
+            - query: sum(count_over_time({cluster="$CLUSTER", namespace="default", app_kubernetes_io_name="alloy-operator"}[1h]))
+              type: logql
+
+            # Pod logs from production namespace come through
+            - query: sum(count_over_time({cluster="$CLUSTER", namespace="production", service_name="busybox"}[1h]))
+              type: logql
+
+            # Pod logs from production namespace are also logged by alloy-logs
+            - query: sum(count_over_time({cluster="loki-stdout-destination-test", namespace="default", service_name="alloy-logs"}[1h] |~ "loki.echo.lokistdout" |~ "entry=\"level=ERROR Something went wrong\"" |~ "namespace=\\\\\"production\\\\\""))
+              type: logql
