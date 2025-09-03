@@ -33,14 +33,20 @@ data:
         username = convert.nonsensitive(remote.kubernetes.secret.alloy_metrics_remote_cfg.data["GRAFANA_CLOUD_FLEET_MGMT_USER"])
         password = remote.kubernetes.secret.alloy_metrics_remote_cfg.data["GRAFANA_CLOUD_FLEET_MGMT_TOKEN"]
       }
+      tls_config {
+        insecure_skip_verify = false
+        ca_pem = convert.nonsensitive(remote.kubernetes.secret.alloy_metrics_remote_cfg.data["ca"])
+        cert_pem = convert.nonsensitive(remote.kubernetes.secret.alloy_metrics_remote_cfg.data["cert"])
+        key_pem = remote.kubernetes.secret.alloy_metrics_remote_cfg.data["key"]
+      }
       poll_frequency = "5m"
       attributes = {
-        "platform" = "kubernetes",
-        "source" = "k8s-monitoring",
-        "sourceVersion" = "3.4.0",
-        "release" = "k8smon",
         "cluster" = "remote-config-test",
         "namespace" = "default",
+        "platform" = "kubernetes",
+        "release" = "k8smon",
+        "source" = "k8s-monitoring",
+        "sourceVersion" = "3.4.0",
         "workloadName" = "alloy-metrics",
         "workloadType" = "statefulset",
       }
@@ -66,14 +72,20 @@ data:
         username = convert.nonsensitive(remote.kubernetes.secret.alloy_logs_remote_cfg.data["GRAFANA_CLOUD_FLEET_MGMT_USER"])
         password = remote.kubernetes.secret.alloy_logs_remote_cfg.data["GRAFANA_CLOUD_FLEET_MGMT_TOKEN"]
       }
+      tls_config {
+        insecure_skip_verify = false
+        ca_pem = convert.nonsensitive(remote.kubernetes.secret.alloy_logs_remote_cfg.data["ca"])
+        cert_pem = convert.nonsensitive(remote.kubernetes.secret.alloy_logs_remote_cfg.data["cert"])
+        key_pem = remote.kubernetes.secret.alloy_logs_remote_cfg.data["key"]
+      }
       poll_frequency = "5m"
       attributes = {
-        "platform" = "kubernetes",
-        "source" = "k8s-monitoring",
-        "sourceVersion" = "3.4.0",
-        "release" = "k8smon",
         "cluster" = "remote-config-test",
         "namespace" = "default",
+        "platform" = "kubernetes",
+        "release" = "k8smon",
+        "source" = "k8s-monitoring",
+        "sourceVersion" = "3.4.0",
         "workloadName" = "alloy-logs",
         "workloadType" = "daemonset",
       }

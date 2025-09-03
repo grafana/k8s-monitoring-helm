@@ -10,14 +10,17 @@ remotecfg {
     username = convert.nonsensitive(remote.kubernetes.secret.alloy_metrics_remote_cfg.data["username"])
     password = remote.kubernetes.secret.alloy_metrics_remote_cfg.data["password"]
   }
+  tls_config {
+    insecure_skip_verify = false
+  }
   poll_frequency = "5m"
   attributes = {
-    "platform" = "kubernetes",
-    "source" = "k8s-monitoring",
-    "sourceVersion" = "3.4.0",
-    "release" = "k8smon",
     "cluster" = "remote-config-example-cluster",
     "namespace" = "default",
+    "platform" = "kubernetes",
+    "release" = "k8smon",
+    "source" = "k8s-monitoring",
+    "sourceVersion" = "3.4.0",
     "workloadName" = "alloy-metrics",
     "workloadType" = "statefulset",
   }

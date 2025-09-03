@@ -5,6 +5,7 @@
 *   Properly truncate tail sampling and service grapher Alloy instances (@petewall)
 *   Remove the "wait for alloy operator" hook (@petewall)
 *   Add default attribute remove list support for otlp dest (@mbaykara)
+*   Add the ability to override attributes and set tls settings for remote config (@petewall)
 
 ## 3.3.2
 
