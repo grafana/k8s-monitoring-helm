@@ -49,17 +49,16 @@ clusterEvents:
 podLogs:
   enabled: true
 
+collectorCommon:
+  alloy:
+    controller:
+      podAnnotations: {kubernetes.azure.com/set-kube-service-host-fqdn: "true"}
+
 alloy-metrics:
   enabled: true
-  controller:
-    podAnnotations: {kubernetes.azure.com/set-kube-service-host-fqdn: "true"}
 alloy-singleton:
   enabled: true
-  controller:
-    podAnnotations: {kubernetes.azure.com/set-kube-service-host-fqdn: "true"}
 alloy-logs:
   enabled: true
-  controller:
-    podAnnotations: {kubernetes.azure.com/set-kube-service-host-fqdn: "true"}
 ```
 <!-- textlint-enable terminology -->
