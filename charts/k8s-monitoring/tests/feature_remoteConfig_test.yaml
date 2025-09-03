@@ -1,0 +1,48 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Feature - Remote Config
+templates:
+  - alloy-config.yaml
+tests:
+  - it: renders the remotecfg component with the right default attributes
+    template: alloy-config.yaml
+    set:
+      cluster:
+        name: ci-test-cluster
+      alloy-metrics:
+        enabled: true
+        remoteConfig:
+          enabled: true
+          url: https://fleet-management-prod-001.grafana.net
+          auth:
+            type: basic
+            username: 123456
+            password: "It's a secret to everyone"
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["config.alloy"]
+
+  - it: allows for overriding the default attributes
+    template: alloy-config.yaml
+    set:
+      cluster:
+        name: ci-test-cluster
+      alloy-metrics:
+        enabled: true
+        remoteConfig:
+          enabled: true
+          url: https://fleet-management-prod-001.grafana.net
+          auth:
+            type: basic
+            username: 123456
+            password: "It's a secret to everyone"
+          extraAttributes:
+            color: blue
+            release: stable  # overrides the default release value
+            sourceVersion: null  # removes the sourceVersion attribute
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["config.alloy"]

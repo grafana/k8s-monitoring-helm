@@ -35,18 +35,41 @@ remotecfg {
     password = {{ include "secrets.read" (dict "object" . "key" "auth.password") }}
   }
 {{- end }}
+{{- if .tls }}
+  tls_config {
+    insecure_skip_verify = {{ .tls.insecureSkipVerify | default false }}
+    {{- if .tls.caFile }}
+    ca_file = {{ .tls.caFile | quote }}
+    {{- else if eq (include "secrets.usesSecret" (dict "object" . "key" "tls.ca")) "true" }}
+    ca_pem = {{ include "secrets.read" (dict "object" . "key" "tls.ca" "nonsensitive" true) }}
+    {{- end }}
+    {{- if .tls.certFile }}
+    cert_file = {{ .tls.certFile | quote }}
+    {{- else if eq (include "secrets.usesSecret" (dict "object" . "key" "tls.cert")) "true" }}
+    cert_pem = {{ include "secrets.read" (dict "object" . "key" "tls.cert" "nonsensitive" true) }}
+    {{- end }}
+    {{- if .tls.keyFile }}
+    key_file = {{ .tls.keyFile | quote }}
+    {{- else if eq (include "secrets.usesSecret" (dict "object" . "key" "tls.key")) "true" }}
+    key_pem = {{ include "secrets.read" (dict "object" . "key" "tls.key") }}
+    {{- end }}
+  }
+{{- end }}
   poll_frequency = {{ .pollFrequency | quote }}
+{{- $attributes := dict "platform" "kubernetes" }}
+{{- $attributes = merge $attributes (dict "source" $.Chart.Name) }}
+{{- $attributes = merge $attributes (dict "sourceVersion" $.Chart.Version) }}
+{{- $attributes = merge $attributes (dict "release" $.Release.Name) }}
+{{- $attributes = merge $attributes (dict "cluster" $.Values.cluster.name) }}
+{{- $attributes = merge $attributes (dict "namespace" $.Release.Namespace) }}
+{{- $attributes = merge $attributes (dict "workloadName" $.collectorName) }}
+{{- $attributes = merge $attributes (dict "workloadType" $collectorValues.controller.type) }}
+{{- $attributes = mergeOverwrite $attributes .extraAttributes }}
   attributes = {
-    "platform" = "kubernetes",
-    "source" = "{{ $.Chart.Name }}",
-    "sourceVersion" = "{{ $.Chart.Version }}",
-    "release" = "{{ $.Release.Name }}",
-    "cluster" = {{ $.Values.cluster.name | quote }},
-    "namespace" = {{ $.Release.Namespace | quote }},
-    "workloadName" = {{ $.collectorName | quote }},
-    "workloadType" = {{ $collectorValues.controller.type | quote }},
-{{- range $key, $value := .extraAttributes }}
+{{- range $key, $value := $attributes }}
+  {{- if $value }}
     {{ $key | quote }} = {{ $value | quote }},
+  {{- end }}
 {{- end }}
   }
 }
@@ -98,4 +121,7 @@ remotecfg {
 {{- define "secrets.list.remoteConfig" -}}
 - auth.username
 - auth.password
+- tls.ca
+- tls.cert
+- tls.key
 {{- end -}}

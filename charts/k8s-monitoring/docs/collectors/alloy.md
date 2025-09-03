@@ -77,6 +77,16 @@ Settings for each primary Alloy instance come from several potential sources, in
 | remoteConfig.proxyConnectHeader | object | `{}` | Specifies headers to send to proxies during CONNECT requests. |
 | remoteConfig.proxyFromEnvironment | bool | `false` | Use the proxy URL indicated by environment variables. |
 | remoteConfig.proxyURL | string | `""` | The proxy URL to use of the remote config server. |
+| remoteConfig.tls.ca | string | `""` | The CA certificate for the server (as a string). |
+| remoteConfig.tls.caFile | string | `""` | The CA certificate for the server (as a path to a file). |
+| remoteConfig.tls.caFrom | string | `""` | Raw config for accessing the server CA certificate. |
+| remoteConfig.tls.cert | string | `""` | The client certificate for the server (as a string). |
+| remoteConfig.tls.certFile | string | `""` | The client certificate for the server (as a path to a file). |
+| remoteConfig.tls.certFrom | string | `""` | Raw config for accessing the client certificate. |
+| remoteConfig.tls.insecureSkipVerify | bool | `false` | Disables validation of the server certificate. |
+| remoteConfig.tls.key | string | `""` | The client key for the server (as a string). |
+| remoteConfig.tls.keyFile | string | `""` | The client key for the server (as a path to a file). |
+| remoteConfig.tls.keyFrom | string | `""` | Raw config for accessing the client key. |
 | remoteConfig.url | string | `""` | The URL of the remote config server. |
 | remoteConfig.urlFrom | string | `""` | Raw config for accessing the URL. Lets you insert raw Alloy references so you can load the URL from any number of places, such as loading values from environment variables or config maps. For example: `urlFrom: sys.env("ALLOY_REMOTE_CONFIG_URL")` |
 <!-- textlint-enable terminology -->
