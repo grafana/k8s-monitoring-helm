@@ -9,7 +9,6 @@ declare "mysql_integration" {
   }
   prometheus.scrape "staging_db" {
     targets    = prometheus.exporter.mysql.staging_db.targets
-    job_name   = "integration/mysql"
     scrape_interval = "60s"
     scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
     scrape_classic_histograms = false
@@ -21,6 +20,10 @@ declare "mysql_integration" {
     rule {
       target_label = "instance"
       replacement = "staging-db"
+    }
+    rule {
+      target_label = "job"
+      replacement = "integration/mysql"
     }
     forward_to = argument.metrics_destinations.value
   }
@@ -42,7 +45,6 @@ declare "mysql_integration" {
   }
   prometheus.scrape "prod_db" {
     targets    = prometheus.exporter.mysql.prod_db.targets
-    job_name   = "integration/mysql"
     scrape_interval = "60s"
     scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
     scrape_classic_histograms = false
@@ -54,6 +56,10 @@ declare "mysql_integration" {
     rule {
       target_label = "instance"
       replacement = "prod-db"
+    }
+    rule {
+      target_label = "job"
+      replacement = "integration/mysql"
     }
     forward_to = argument.metrics_destinations.value
   }

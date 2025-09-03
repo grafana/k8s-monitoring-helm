@@ -55,7 +55,6 @@ prometheus.exporter.mysql {{ include "helper.alloy_name" .name | quote }} {
 {{- $metricDenyList := .metrics.tuning.excludeMetrics }}
 prometheus.scrape {{ include "helper.alloy_name" .name | quote }} {
   targets    = prometheus.exporter.mysql.{{ include "helper.alloy_name" .name }}.targets
-  job_name   = {{ .jobLabel | quote }}
   scrape_interval = {{ .scrapeInterval | default $.Values.global.scrapeInterval | quote }}
   scrape_protocols = {{ $.Values.global.scrapeProtocols | toJson }}
   scrape_classic_histograms = {{ $.Values.global.scrapeClassicHistograms }}
@@ -67,6 +66,10 @@ prometheus.relabel {{ include "helper.alloy_name" .name | quote }} {
   rule {
     target_label = "instance"
     replacement = {{ .name | quote }}
+  }
+  rule {
+    target_label = "job"
+    replacement = {{ .jobLabel | quote }}
   }
 {{- if $metricAllowList }}
   rule {
@@ -81,6 +84,9 @@ prometheus.relabel {{ include "helper.alloy_name" .name | quote }} {
     regex = {{ $metricDenyList | join "|" | quote }}
     action = "drop"
   }
+{{- end }}
+{{- if .extraMetricProcessingRules }}
+{{ .extraMetricProcessingRules | indent 2 }}
 {{- end }}
   forward_to = argument.metrics_destinations.value
 }
