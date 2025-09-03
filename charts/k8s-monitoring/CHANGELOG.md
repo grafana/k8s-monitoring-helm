@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+*   Properly truncate tail sampling and service grapher Alloy instances (@petewall)
+*   Remove the "wait for alloy operator" hook (@petewall)
+*   Add default attribute remove list support for otlp dest (@mbaykara)
+
 ## 3.3.2
 
 *   Properly truncate tail sampling and service grapher Alloy instances (@petewall)
