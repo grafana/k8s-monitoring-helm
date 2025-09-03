@@ -31,7 +31,7 @@ jobs:
 
       - name: List tests
         id: list_tests
-        working-directory: charts/k8s-monitoring/tests/integration
+        working-directory: charts/k8s-monitoring
         env:
           LABELS: ${{ toJson(github.event.pull_request.labels.*.name) }}
         run: |
@@ -43,7 +43,7 @@ jobs:
               exit 0
           fi
 
-          tests=$(find . -name test-plan.yaml -exec dirname {} \; | sed -e "s/^\.\///g")
+          tests=$(find . -name test-plan.yaml -not \( -path "./tests/platform/*" \) -exec dirname {} \; | sed -e "s/^\.\///g")
           echo "Tests: ${tests}"
           echo "tests=$(echo "${tests}" | jq --raw-input --slurp --compact-output 'split("\n") | map(select(. != ""))')" >> "${GITHUB_OUTPUT}"
 
@@ -89,5 +89,7 @@ jobs:
       - name: Run test
         run: helm-chart-toolbox/tools/helm-test/helm-test "${TEST_DIRECTORY}"
         env:
-          TEST_DIRECTORY: "source/charts/k8s-monitoring/tests/integration/${{ matrix.test }}"
+          BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
+          KUBECONFIG: "source/charts/k8s-monitoring/${{ matrix.test }}/kubeconfig.yaml"
+          TEST_DIRECTORY: "source/charts/k8s-monitoring/${{ matrix.test }}"
           DELETE_CLUSTER: true
