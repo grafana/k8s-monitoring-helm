@@ -175,7 +175,6 @@ data:
       }
       prometheus.scrape "mysql_cluster" {
         targets    = prometheus.exporter.mysql.mysql_cluster.targets
-        job_name   = "integration/mysql"
         scrape_interval = "60s"
         scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
         scrape_classic_histograms = false
@@ -187,6 +186,10 @@ data:
         rule {
           target_label = "instance"
           replacement = "mysql-cluster"
+        }
+        rule {
+          target_label = "job"
+          replacement = "integration/mysql"
         }
         rule {
           source_labels = ["__name__"]
