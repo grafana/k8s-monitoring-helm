@@ -1,5 +1,6 @@
 {{- define "validations" }}
-  {{- include "validations.checkForV1" . }}
+  {{- include "validations.checkForV1Values" . }}
+  {{- include "validations.checkForV33Upgrade" . }}
   {{- include "validations.cluster_name" . }}
   {{- include "validations.platform" . }}
 
@@ -24,7 +25,7 @@
 {{- end }}
 
 {{/* Checks if a V1 values file was used */}}
-{{- define "validations.checkForV1" }}
+{{- define "validations.checkForV1Values" }}
 {{- if (index .Values "externalServices") }}
   {{- $msg := list "" "The Helm chart values appears to be from version 1.x of the k8s-monitoring Helm chart." }}
   {{- $msg = append $msg "To continue using version 1.x, add this to your helm command:" }}
@@ -34,6 +35,27 @@
   {{- $msg = append $msg "  https://github.com/grafana/k8s-monitoring-helm/blob/main/charts/k8s-monitoring/docs/Migration.md" }}
   {{- fail (join "\n" $msg) }}
 {{- end }}
+{{- end }}
+
+{{/* Checks if upgrading from v3.3 */}}
+{{- define "validations.checkForV33Upgrade" }}
+  {{- if .Release.IsUpgrade }}
+{{/*    Need some way to detect if --take-ownership is being used*/}}
+    {{- $missingAnnotation := false }}
+    {{- $alloyNames := include "collectors.alloy.get_all_names" $ | fromYamlArray }}
+    {{- range $alloyName := $alloyNames }}
+      {{- $alloyInstance := lookup "collectors.grafana.com/v1alpha1" "Alloy" $.Release.Namespace $alloyName }}
+      {{- if $alloyInstance }}
+        {{- if not (hasKey $alloyInstance.metadata.annotations "meta.helm.sh/release-name") }}
+          {{- $msg := list "" (printf "The Alloy instance %s is missing Helm annotations" $alloyName) }}
+          {{- $msg = append $msg "When upgrading from v3.3, Alloy instances need to be re-adopted by Helm." }}
+          {{- $msg = append $msg "" }}
+          {{- $msg = append $msg "Please re-run helm upgrade with --take-ownership to allow Helm to manage these resources." }}
+          {{- fail (join "\n" $msg) }}
+        {{- end }}
+      {{- end }}
+    {{- end }}
+  {{- end }}
 {{- end }}
 
 {{/* Checks that the cluster name is defined */}}
