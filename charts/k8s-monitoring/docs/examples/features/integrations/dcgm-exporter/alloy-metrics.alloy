@@ -186,9 +186,8 @@ declare "dcgm_exporter_integration" {
     }
 
     prometheus.scrape "dcgm_exporter" {
-      job_name = coalesce(argument.job_label.value, "integrations/alloy")
-      forward_to = [prometheus.relabel.alloy.receiver]
       targets = argument.targets.value
+      job_name = coalesce(argument.job_label.value, "integrations/alloy")
       scrape_interval = coalesce(argument.scrape_interval.value, "60s")
       scrape_protocols = argument.scrape_protocols.value
       scrape_classic_histograms = argument.scrape_classic_histograms.value
@@ -196,6 +195,8 @@ declare "dcgm_exporter_integration" {
       clustering {
         enabled = coalesce(argument.clustering.value, false)
       }
+
+      forward_to = [prometheus.relabel.dcgm_exporter.receiver]
     }
 
     // DCGM Exporter metric relabelings (post-scrape)
