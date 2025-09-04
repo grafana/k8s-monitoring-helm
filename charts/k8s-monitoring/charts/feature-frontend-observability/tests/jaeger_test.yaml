@@ -1,0 +1,57 @@
+---
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces rule:empty-lines
+suite: Test Loki integration
+templates:
+  - configmap.yaml
+tests:
+  - it: should allow you to enable just the jaeger grpc receiver
+    set:
+      deployAsConfigMap: true
+      receivers:
+        jaeger:
+          grpc:
+            enabled: true
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["module.alloy"]
+
+  - it: should allow you to enable just the jaeger thrift binary receiver
+    set:
+      deployAsConfigMap: true
+      receivers:
+        jaeger:
+          thriftBinary:
+            enabled: true
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["module.alloy"]
+
+  - it: should allow you to enable just the jaeger thrift compact receiver
+    set:
+      deployAsConfigMap: true
+      receivers:
+        jaeger:
+          thriftCompact:
+            enabled: true
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["module.alloy"]
+
+  - it: should allow you to enable just the jaeger thrift http receiver
+    set:
+      deployAsConfigMap: true
+      receivers:
+        jaeger:
+          thriftHttp:
+            enabled: true
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["module.alloy"]

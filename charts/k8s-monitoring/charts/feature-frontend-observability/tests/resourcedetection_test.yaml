@@ -1,0 +1,52 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Test with resource detection processor
+templates:
+  - configmap.yaml
+tests:
+  - it: creates the pipeline with the default resource detection processor
+    set:
+      deployAsConfigMap: true
+      receivers:
+        zipkin:
+          enabled: true
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["module.alloy"]
+
+  - it: creates the resource detection processor with Kubernetes node info
+    set:
+      deployAsConfigMap: true
+      processors:
+        resourceDetection:
+          kubernetesNode:
+            enabled: true
+      receivers:
+        zipkin:
+          enabled: true
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["module.alloy"]
+
+  - it: creates the resource detection processor with EKS info
+    set:
+      deployAsConfigMap: true
+      processors:
+        resourceDetection:
+          override: false
+          eks:
+            enabled: true
+            resourceAttributes:
+              k8s.cluster.name:
+                enabled: true
+      receivers:
+        zipkin:
+          enabled: true
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["module.alloy"]

@@ -1,0 +1,20 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Test with interval processor
+templates:
+  - configmap.yaml
+tests:
+  - it: creates the pipeline with the interval processor
+    set:
+      deployAsConfigMap: true
+      processors:
+        memoryLimiter:
+          enabled: true
+          limit: 100MiB
+      receivers:
+        zipkin:
+          enabled: true
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["module.alloy"]
