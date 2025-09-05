@@ -8,6 +8,7 @@
 
 <!-- textlint-disable terminology -->
 ```yaml
+---
 cluster:
   name: fullname-override-test
 

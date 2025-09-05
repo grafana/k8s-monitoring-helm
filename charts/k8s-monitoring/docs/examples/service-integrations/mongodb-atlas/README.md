@@ -59,7 +59,7 @@ alloy-metrics:
 
       forward_to = [prometheus.relabel.mongodb_atlas.receiver]
     }
-    
+
     prometheus.relabel "mongodb_atlas" {
       // Define the metrics "allow list"
       rule {

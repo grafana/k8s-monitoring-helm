@@ -2,12 +2,13 @@
 (NOTE: Do not edit README.md directly. It is a generated file!)
 (      To make changes, please modify values.yaml or description.txt and run `make examples`)
 -->
-# Example: name-overrides/values.yaml
+# Example: name-overrides/name-overrides/values.yaml
 
 ## Values
 
 <!-- textlint-disable terminology -->
 ```yaml
+---
 cluster:
   name: name-override-test
 

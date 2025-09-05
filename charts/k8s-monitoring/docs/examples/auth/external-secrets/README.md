@@ -7,9 +7,11 @@
 This example demonstrates how to use pre-existing secrets to authenticate to external services. This allows for
 credentials to be stored in different secret stores, as long as it resolves to a Kubernetes Secret.
 
+<!--alex disable hostesses-hosts-->
 This also shows how to use secrets to store the destination hosts, rather than embedding directly in the configuration.
 This uses the `urlFrom` field, which allows for inserting raw Alloy configuration. In this case, referencing the secret
 component and appending the paths if necessary.
+<!--alex enable hostesses-hosts-->
 
 ## Secret
 
