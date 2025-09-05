@@ -3,9 +3,9 @@ cluster:
   name: external-secrets-example-cluster
 
 destinations:
-  - name: prometheus
+  - name: metrics-service
     type: prometheus
-    url: http://prometheus.prometheus.svc:9090/api/v1/write
+    urlFrom: convert.nonsensitive(remote.kubernetes.secret.metrics_service.data["prom-host"]) + "/api/v1/write"
     auth:
       type: basic
       usernameKey: prom-username
@@ -15,9 +15,9 @@ destinations:
       name: my-monitoring-secret
       namespace: monitoring
 
-  - name: loki
+  - name: logs-service
     type: loki
-    url: http://loki.loki.svc:3100/loki/api/v1/push
+    urlFrom: convert.nonsensitive(remote.kubernetes.secret.metrics_service.data["loki-host"]) + "/loki/api/v1/push"
     auth:
       type: basic
       usernameKey: loki-username
@@ -29,7 +29,7 @@ destinations:
 
   - name: tempo
     type: otlp
-    url: http://tempo.tempo.svc:4317
+    urlFrom: convert.nonsensitive(remote.kubernetes.secret.metrics_service.data["tempo-host"])
     auth:
       type: bearerToken
       bearerTokenKey: tempoBearerToken

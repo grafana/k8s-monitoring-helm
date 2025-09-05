@@ -11,9 +11,10 @@ Certain settings must be configured in MongoDB Atlas to allow scraping. Refer to
 [Integrate with Prometheus](https://www.mongodb.com/docs/atlas/tutorial/prometheus-integration/) documentation for full
 details.
 
-In this example, we utilize the `extraConfig` section to define the `discovery.http` component to request the scrape
-target, and the `prometheus.scrape` component to scrape the database metrics. It uses a Kubernetes secret to store the
-username, password, and group ID for the MongoDB Atlas database.
+In this example, we utilize the `extraConfig` section of the Alloy Metrics collector to define a `discovery.http`
+component which requests the scrape target, a `prometheus.scrape` component which scrapes the database metrics, and a
+`prometheus.relabel` component which is used to filter the amount of metrics, but can be used for any metric
+processing. It uses a Kubernetes secret to store the username, password, and group ID for the MongoDB Atlas database.
 
 ## Values
 
@@ -54,6 +55,17 @@ alloy-metrics:
       basic_auth {
         username = nonsensitive(remote.kubernetes.secret.mongodb_atlas.data["username"])
         password = remote.kubernetes.secret.mongodb_atlas.data["password"]
+      }
+
+      forward_to = [prometheus.relabel.mongodb_atlas.receiver]
+    }
+    
+    prometheus.relabel "mongodb_atlas" {
+      // Define the metrics "allow list"
+      rule {
+        source_labels = ["__name__"]
+        regex = "up|scrape_samples_scraped|mongodb_.*"
+        action = "keep"
       }
 
       forward_to = [prometheus.remote_write.prometheus.receiver]
