@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+*   Update kube-state-metrics and OpenCost (@petewall)
+
+## 3.4.0
+
 *   Properly truncate tail sampling and service grapher Alloy instances (@petewall)
 *   Remove the "wait for alloy operator" hook (@petewall)
 *   Add default attribute remove list support for otlp dest (@mbaykara)
