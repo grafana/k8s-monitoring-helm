@@ -1,0 +1,70 @@
+---
+repositories:
+  - name: grafana
+    url: https://grafana.github.io/helm-charts
+  - name: prometheus-community
+    url: https://prometheus-community.github.io/helm-charts
+  - name: kepler
+    url: https://sustainable-computing-io.github.io/kepler-helm-chart
+  - name: opencost
+    url: https://opencost.github.io/opencost-helm-chart
+
+helmDefaults:
+  diffArgs:
+    - --disable-validation  # Required because this Helm chart deploys CRDs *and* deploys CRs at the same time.
+    - --api-versions collectors.grafana.com/v1alpha1/Alloy
+
+releases:
+  - name: k8smon
+    namespace: monitoring
+    chart: ../../../..
+    values:
+      - cluster:
+          name: helmfile-test
+
+        destinations:
+          - name: localPrometheus
+            type: prometheus
+            url: http://prometheus-server.prometheus.svc:9090/api/v1/write
+            auth:
+              type: basic
+              username: promuser
+              password: prometheuspassword
+          - name: localLoki
+            type: loki
+            url: http://loki.loki.svc:3100/loki/api/v1/push
+            tenantId: "1"
+            auth:
+              type: basic
+              username: loki
+              password: lokipassword
+
+        clusterMetrics:
+          enabled: true
+          kepler:
+            enabled: true
+          opencost:
+            enabled: true
+            metricsSource: localPrometheus
+            opencost:
+              exporter:
+                defaultClusterId: helmfile-test
+              prometheus:
+                existingSecretName: localprometheus-k8smon-k8s-monitoring
+                external:
+                  url: http://prometheus-server.prometheus.svc:9090
+
+        clusterEvents:
+          enabled: true
+
+        podLogs:
+          enabled: true
+
+        alloy-metrics:
+          enabled: true
+
+        alloy-singleton:
+          enabled: true
+
+        alloy-logs:
+          enabled: true

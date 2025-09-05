@@ -76,17 +76,33 @@ jobs:
       - name: Install Flux CLI
         uses: fluxcd/flux2/action@6bf37f6a560fd84982d67f853162e4b3c2235edb  # v2.6.4
 
+      - name: Check for cluster config
+        id: test-config
+        working-directory: source/charts/k8s-monitoring
+        env:
+          TEST: ${{ matrix.test }}
+        run: |
+          yq eval '"cluster-type=" + .cluster.type // "kind"' "${TEST}/test-plan.yaml" > "${GITHUB_OUTPUT}"
+          yq eval '"subject-type=" + .subject.type // "helm"' "${TEST}/test-plan.yaml" >> "${GITHUB_OUTPUT}"
+
       - name: Install Kind CLI
+        if: ${{ steps.test-config.outputs.cluster-type == 'kind' }}
         uses: helm/kind-action@a1b0e391336a6ee6713a0583f8c6240d70863de3  # v1.12.0
         with:
           install_only: true
 
       - name: Install Minikube CLI
+        if: ${{ steps.test-config.outputs.cluster-type == 'minikube' }}
         uses: medyagh/setup-minikube@e3c7f79eb1e997eabccc536a6cf318a2b0fe19d9  # v0.0.20
         with:
           start: false
 
+      - name: Setup helmfile
+        if: ${{ steps.test-config.outputs.subject-type == 'helmfile' }}
+        uses: mamezou-tech/setup-helmfile@fd46979d2984c886929c416fbdf859b1c5efa0ea  # v2.1.0
+
       - name: Install terraform
+        if: ${{ steps.test-config.outputs.subject-type == 'terraform' }}
         uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd  # v3.1.2
 
       - name: Run test
@@ -97,6 +113,6 @@ jobs:
           helm-chart-toolbox/tools/helm-test/helm-test "${TEST_DIRECTORY}"
         env:
           BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
-          KUBECONFIG: "source/charts/k8s-monitoring/${{ matrix.test }}/kubeconfig.yaml"
+          KUBECONFIG: "${{ github.workspace }}/source/charts/k8s-monitoring/${{ matrix.test }}/kubeconfig.yaml"
           TEST_DIRECTORY: "source/charts/k8s-monitoring/${{ matrix.test }}"
           DELETE_CLUSTER: true
