@@ -17,7 +17,7 @@ destinations:
 
   - name: logs-service
     type: loki
-    urlFrom: convert.nonsensitive(remote.kubernetes.secret.metrics_service.data["loki-host"]) + "/loki/api/v1/push"
+    urlFrom: convert.nonsensitive(remote.kubernetes.secret.logs_service.data["loki-host"]) + "/loki/api/v1/push"
     auth:
       type: basic
       usernameKey: loki-username
@@ -27,9 +27,9 @@ destinations:
       name: my-monitoring-secret
       namespace: monitoring
 
-  - name: tempo
+  - name: traces-service
     type: otlp
-    urlFrom: convert.nonsensitive(remote.kubernetes.secret.metrics_service.data["tempo-host"])
+    urlFrom: convert.nonsensitive(remote.kubernetes.secret.traces_service.data["tempo-host"])
     auth:
       type: bearerToken
       bearerTokenKey: tempoBearerToken
