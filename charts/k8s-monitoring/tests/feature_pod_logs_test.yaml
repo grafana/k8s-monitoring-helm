@@ -5,6 +5,7 @@ templates:
   - validations.yaml
 tests:
   - it: requires a log destination
+    template: validations.yaml
     set:
       cluster:
         name: ci-test-cluster
@@ -13,12 +14,12 @@ tests:
     asserts:
       - failedTemplate:
           errorMessage: |-
-            execution error at (k8s-monitoring/templates/validations.yaml:1:4): 
             No destinations found that can accept logs from Kubernetes Pod logs
             Please add a destination with logs support.
             See https://github.com/grafana/k8s-monitoring-helm/blob/main/charts/k8s-monitoring/docs/destinations/README.md for more details.
 
   - it: requires the alloy-logs collector
+    template: validations.yaml
     set:
       cluster:
         name: ci-test-cluster
@@ -31,7 +32,6 @@ tests:
     asserts:
       - failedTemplate:
           errorMessage: |-
-            execution error at (k8s-monitoring/templates/validations.yaml:1:4): 
             The Kubernetes Pod logs feature requires the use of the alloy-logs collector.
             
             Please enable it by setting:
@@ -58,6 +58,7 @@ tests:
           path: data["config.alloy"]
 
   - it: requires public-preview stability level if filelog gathering is enabled
+    template: validations.yaml
     set:
       cluster:
         name: ci-test-cluster
@@ -73,7 +74,6 @@ tests:
     asserts:
       - failedTemplate:
           errorMessage: |-
-            execution error at (k8s-monitoring/templates/validations.yaml:1:4): 
             Pod Logs feature requires Alloy to use the public-preview stability level when using the "filelog" gather method.
             Please set:
             alloy-logs:
@@ -81,6 +81,7 @@ tests:
                 stabilityLevel: public-preview
 
   - it: requires experimental stability level if secret filtering is enabled
+    template: validations.yaml
     set:
       cluster:
         name: ci-test-cluster
@@ -97,7 +98,6 @@ tests:
     asserts:
       - failedTemplate:
           errorMessage: |-
-            execution error at (k8s-monitoring/templates/validations.yaml:1:4): 
             Pod Logs feature requires Alloy to use the experimental stability level when using the secretFilter.
             Please set:
             alloy-logs:
