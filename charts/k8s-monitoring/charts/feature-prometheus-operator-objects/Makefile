@@ -26,5 +26,5 @@ test: build
 ifdef HAS_HELM_UNITTEST
 	helm unittest .
 else
-	docker run --rm --volume $(shell pwd):/apps helmunittest/helm-unittest:3.17.0-0.7.1 .
+	docker run --rm --volume $(shell pwd):/apps helmunittest/helm-unittest:3.18.4-1.0.0 .
 endif

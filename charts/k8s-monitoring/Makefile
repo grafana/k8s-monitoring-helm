@@ -213,5 +213,5 @@ unittest: values.schema.json templates/destinations/_destination_types.tpl
 ifdef HAS_HELM_UNITTEST
 	helm unittest --failfast --with-subchart=false .
 else
-	docker run --rm --volume $(shell pwd):/apps helmunittest/helm-unittest:3.17.0-0.7.1 --failfast --with-subchart=false .
+	docker run --rm --volume $(shell pwd):/apps helmunittest/helm-unittest:3.18.4-1.0.0 --failfast --with-subchart=false .
 endif
