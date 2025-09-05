@@ -25,7 +25,7 @@ jobs:
       tests: ${{ steps.list_tests.outputs.tests }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8  # v5.0.0
         with:
           persist-credentials: 'false'
 
@@ -58,38 +58,61 @@ jobs:
       fail-fast: false
     steps:
       - name: Checkout code
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8  # v5.0.0
         with:
           path: source
           persist-credentials: 'false'
 
       - name: Checkout code
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8  # v5.0.0
         with:
           path: helm-chart-toolbox
           repository: grafana/helm-chart-toolbox
           persist-credentials: 'false'
 
       - name: Set up Helm
-        uses: azure/setup-helm@b9e51907a09c216f16ebe8536097933489208112  # v4.3.0
+        uses: azure/setup-helm@1a275c3b69536ee54be43f2070a358922e12c8d4  # v4.3.1
 
       - name: Install Flux CLI
         uses: fluxcd/flux2/action@6bf37f6a560fd84982d67f853162e4b3c2235edb  # v2.6.4
 
+      - name: Check for cluster config
+        id: test-config
+        working-directory: source/charts/k8s-monitoring
+        env:
+          TEST: ${{ matrix.test }}
+        run: |
+          yq eval '"cluster-type=" + .cluster.type // "kind"' "${TEST}/test-plan.yaml" > "${GITHUB_OUTPUT}"
+          yq eval '"subject-type=" + .subject.type // "helm"' "${TEST}/test-plan.yaml" >> "${GITHUB_OUTPUT}"
+
       - name: Install Kind CLI
+        if: ${{ steps.test-config.outputs.cluster-type == 'kind' }}
         uses: helm/kind-action@a1b0e391336a6ee6713a0583f8c6240d70863de3  # v1.12.0
         with:
           install_only: true
 
       - name: Install Minikube CLI
+        if: ${{ steps.test-config.outputs.cluster-type == 'minikube' }}
         uses: medyagh/setup-minikube@e3c7f79eb1e997eabccc536a6cf318a2b0fe19d9  # v0.0.20
         with:
           start: false
 
+      - name: Setup helmfile
+        if: ${{ steps.test-config.outputs.subject-type == 'helmfile' }}
+        uses: mamezou-tech/setup-helmfile@fd46979d2984c886929c416fbdf859b1c5efa0ea  # v2.1.0
+
+      - name: Install terraform
+        if: ${{ steps.test-config.outputs.subject-type == 'terraform' }}
+        uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd  # v3.1.2
+
       - name: Run test
-        run: helm-chart-toolbox/tools/helm-test/helm-test "${TEST_DIRECTORY}"
+        run: |
+          if [ -f "${TEST_DIRECTORY}/Makefile" ]; then
+            make -C "${TEST_DIRECTORY}" clean all
+          fi
+          helm-chart-toolbox/tools/helm-test/helm-test "${TEST_DIRECTORY}"
         env:
           BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
-          KUBECONFIG: "source/charts/k8s-monitoring/${{ matrix.test }}/kubeconfig.yaml"
+          KUBECONFIG: "${{ github.workspace }}/source/charts/k8s-monitoring/${{ matrix.test }}/kubeconfig.yaml"
           TEST_DIRECTORY: "source/charts/k8s-monitoring/${{ matrix.test }}"
           DELETE_CLUSTER: true
