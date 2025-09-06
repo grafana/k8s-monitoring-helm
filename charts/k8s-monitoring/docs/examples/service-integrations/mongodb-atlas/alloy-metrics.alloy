@@ -68,6 +68,17 @@ prometheus.scrape "mongodb_atlas" {
     password = remote.kubernetes.secret.mongodb_atlas.data["password"]
   }
 
+  forward_to = [prometheus.relabel.mongodb_atlas.receiver]
+}
+
+prometheus.relabel "mongodb_atlas" {
+  // Define the metrics "allow list"
+  rule {
+    source_labels = ["__name__"]
+    regex = "up|scrape_samples_scraped|mongodb_.*"
+    action = "keep"
+  }
+
   forward_to = [prometheus.remote_write.prometheus.receiver]
 }
 // Destination: prometheus (prometheus)

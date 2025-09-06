@@ -7,6 +7,12 @@
 This example demonstrates how to use pre-existing secrets to authenticate to external services. This allows for
 credentials to be stored in different secret stores, as long as it resolves to a Kubernetes Secret.
 
+<!--alex disable hostesses-hosts-->
+This also shows how to use secrets to store the destination hosts, rather than embedding directly in the configuration.
+This uses the `urlFrom` field, which allows for inserting raw Alloy configuration. In this case, referencing the secret
+component and appending the paths if necessary.
+<!--alex enable hostesses-hosts-->
+
 ## Secret
 
 Given these secrets already exist on the cluster, they can be used to authenticate to the external services.
@@ -20,7 +26,9 @@ metadata:
   namespace: monitoring
 type: Opaque
 stringData:
+  prom-host: http://prometheus.prometheus.svc:9090
   prom-username: "12345"
+  loki-host: http://loki.loki.svc:3100
   loki-username: "67890"
   access-token: "It's a secret to everyone"
 ---
@@ -31,6 +39,7 @@ metadata:
   namespace: tempo
 type: Opaque
 stringData:
+  tempohost: http://tempo.tempo.svc:4317
   tempoBearerToken: "It's a secret to everyone"
 ```
 
@@ -43,9 +52,9 @@ cluster:
   name: external-secrets-example-cluster
 
 destinations:
-  - name: prometheus
+  - name: metrics-service
     type: prometheus
-    url: http://prometheus.prometheus.svc:9090/api/v1/write
+    urlFrom: convert.nonsensitive(remote.kubernetes.secret.metrics_service.data["prom-host"]) + "/api/v1/write"
     auth:
       type: basic
       usernameKey: prom-username
@@ -55,9 +64,9 @@ destinations:
       name: my-monitoring-secret
       namespace: monitoring
 
-  - name: loki
+  - name: logs-service
     type: loki
-    url: http://loki.loki.svc:3100/loki/api/v1/push
+    urlFrom: convert.nonsensitive(remote.kubernetes.secret.logs_service.data["loki-host"]) + "/loki/api/v1/push"
     auth:
       type: basic
       usernameKey: loki-username
@@ -67,9 +76,9 @@ destinations:
       name: my-monitoring-secret
       namespace: monitoring
 
-  - name: tempo
+  - name: traces-service
     type: otlp
-    url: http://tempo.tempo.svc:4317
+    urlFrom: convert.nonsensitive(remote.kubernetes.secret.traces_service.data["tempo-host"])
     auth:
       type: bearerToken
       bearerTokenKey: tempoBearerToken

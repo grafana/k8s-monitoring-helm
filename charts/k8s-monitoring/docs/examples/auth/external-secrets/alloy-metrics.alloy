@@ -39,7 +39,7 @@ declare "prometheus_operator_objects" {
 }
 prometheus_operator_objects "feature" {
   metrics_destinations = [
-    prometheus.remote_write.prometheus.receiver,
+    prometheus.remote_write.metrics_service.receiver,
   ]
 }
 // Self Reporting
@@ -81,35 +81,35 @@ prometheus.relabel "kubernetes_monitoring_telemetry" {
     action = "keep"
   }
   forward_to = [
-    prometheus.remote_write.prometheus.receiver,
+    prometheus.remote_write.metrics_service.receiver,
   ]
 }
 
 
 
 
-// Destination: prometheus (prometheus)
-otelcol.exporter.prometheus "prometheus" {
+// Destination: metrics-service (prometheus)
+otelcol.exporter.prometheus "metrics_service" {
   add_metric_suffixes = true
   resource_to_telemetry_conversion = false
-  forward_to = [prometheus.remote_write.prometheus.receiver]
+  forward_to = [prometheus.remote_write.metrics_service.receiver]
 }
 
-prometheus.remote_write "prometheus" {
+prometheus.remote_write "metrics_service" {
   endpoint {
-    url = "http://prometheus.prometheus.svc:9090/api/v1/write"
+    url = convert.nonsensitive(remote.kubernetes.secret.metrics_service.data["prom-host"]) + "/api/v1/write"
     headers = {
-      "X-Scope-OrgID" = convert.nonsensitive(remote.kubernetes.secret.prometheus.data["tenantId"]),
+      "X-Scope-OrgID" = convert.nonsensitive(remote.kubernetes.secret.metrics_service.data["tenantId"]),
     }
     basic_auth {
-      username = convert.nonsensitive(remote.kubernetes.secret.prometheus.data["prom-username"])
-      password = remote.kubernetes.secret.prometheus.data["access-token"]
+      username = convert.nonsensitive(remote.kubernetes.secret.metrics_service.data["prom-username"])
+      password = remote.kubernetes.secret.metrics_service.data["access-token"]
     }
     tls_config {
       insecure_skip_verify = false
-      ca_pem = convert.nonsensitive(remote.kubernetes.secret.prometheus.data["ca"])
-      cert_pem = convert.nonsensitive(remote.kubernetes.secret.prometheus.data["cert"])
-      key_pem = remote.kubernetes.secret.prometheus.data["key"]
+      ca_pem = convert.nonsensitive(remote.kubernetes.secret.metrics_service.data["ca"])
+      cert_pem = convert.nonsensitive(remote.kubernetes.secret.metrics_service.data["cert"])
+      key_pem = remote.kubernetes.secret.metrics_service.data["key"]
     }
     send_native_histograms = false
 
@@ -146,7 +146,7 @@ prometheus.remote_write "prometheus" {
   }
 }
 
-remote.kubernetes.secret "prometheus" {
+remote.kubernetes.secret "metrics_service" {
   name      = "my-monitoring-secret"
   namespace = "monitoring"
 }

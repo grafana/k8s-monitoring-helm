@@ -118,41 +118,41 @@ declare "application_observability" {
 }
 application_observability "feature" {
   metrics_destinations = [
-    otelcol.exporter.prometheus.prometheus.input,
+    otelcol.exporter.prometheus.metrics_service.input,
   ]
   logs_destinations = [
-    otelcol.exporter.loki.loki.input,
+    otelcol.exporter.loki.logs_service.input,
   ]
   traces_destinations = [
-    otelcol.processor.attributes.tempo.input,
+    otelcol.processor.attributes.traces_service.input,
   ]
 }
 
 
 
 
-// Destination: prometheus (prometheus)
-otelcol.exporter.prometheus "prometheus" {
+// Destination: metrics-service (prometheus)
+otelcol.exporter.prometheus "metrics_service" {
   add_metric_suffixes = true
   resource_to_telemetry_conversion = false
-  forward_to = [prometheus.remote_write.prometheus.receiver]
+  forward_to = [prometheus.remote_write.metrics_service.receiver]
 }
 
-prometheus.remote_write "prometheus" {
+prometheus.remote_write "metrics_service" {
   endpoint {
-    url = "http://prometheus.prometheus.svc:9090/api/v1/write"
+    url = convert.nonsensitive(remote.kubernetes.secret.metrics_service.data["prom-host"]) + "/api/v1/write"
     headers = {
-      "X-Scope-OrgID" = convert.nonsensitive(remote.kubernetes.secret.prometheus.data["tenantId"]),
+      "X-Scope-OrgID" = convert.nonsensitive(remote.kubernetes.secret.metrics_service.data["tenantId"]),
     }
     basic_auth {
-      username = convert.nonsensitive(remote.kubernetes.secret.prometheus.data["prom-username"])
-      password = remote.kubernetes.secret.prometheus.data["access-token"]
+      username = convert.nonsensitive(remote.kubernetes.secret.metrics_service.data["prom-username"])
+      password = remote.kubernetes.secret.metrics_service.data["access-token"]
     }
     tls_config {
       insecure_skip_verify = false
-      ca_pem = convert.nonsensitive(remote.kubernetes.secret.prometheus.data["ca"])
-      cert_pem = convert.nonsensitive(remote.kubernetes.secret.prometheus.data["cert"])
-      key_pem = remote.kubernetes.secret.prometheus.data["key"]
+      ca_pem = convert.nonsensitive(remote.kubernetes.secret.metrics_service.data["ca"])
+      cert_pem = convert.nonsensitive(remote.kubernetes.secret.metrics_service.data["cert"])
+      key_pem = remote.kubernetes.secret.metrics_service.data["key"]
     }
     send_native_histograms = false
 
@@ -189,29 +189,29 @@ prometheus.remote_write "prometheus" {
   }
 }
 
-remote.kubernetes.secret "prometheus" {
+remote.kubernetes.secret "metrics_service" {
   name      = "my-monitoring-secret"
   namespace = "monitoring"
 }
 
-// Destination: loki (loki)
-otelcol.exporter.loki "loki" {
-  forward_to = [loki.write.loki.receiver]
+// Destination: logs-service (loki)
+otelcol.exporter.loki "logs_service" {
+  forward_to = [loki.write.logs_service.receiver]
 }
 
-loki.write "loki" {
+loki.write "logs_service" {
   endpoint {
-    url = "http://loki.loki.svc:3100/loki/api/v1/push"
-    tenant_id = convert.nonsensitive(remote.kubernetes.secret.loki.data["tenantId"])
+    url = convert.nonsensitive(remote.kubernetes.secret.logs_service.data["loki-host"]) + "/loki/api/v1/push"
+    tenant_id = convert.nonsensitive(remote.kubernetes.secret.logs_service.data["tenantId"])
     basic_auth {
-      username = convert.nonsensitive(remote.kubernetes.secret.loki.data["loki-username"])
-      password = remote.kubernetes.secret.loki.data["access-token"]
+      username = convert.nonsensitive(remote.kubernetes.secret.logs_service.data["loki-username"])
+      password = remote.kubernetes.secret.logs_service.data["access-token"]
     }
     tls_config {
       insecure_skip_verify = false
-      ca_pem = convert.nonsensitive(remote.kubernetes.secret.loki.data["ca"])
-      cert_pem = convert.nonsensitive(remote.kubernetes.secret.loki.data["cert"])
-      key_pem = remote.kubernetes.secret.loki.data["key"]
+      ca_pem = convert.nonsensitive(remote.kubernetes.secret.logs_service.data["ca"])
+      cert_pem = convert.nonsensitive(remote.kubernetes.secret.logs_service.data["cert"])
+      key_pem = remote.kubernetes.secret.logs_service.data["key"]
     }
     min_backoff_period = "500ms"
     max_backoff_period = "5m"
@@ -223,20 +223,20 @@ loki.write "loki" {
   }
 }
 
-remote.kubernetes.secret "loki" {
+remote.kubernetes.secret "logs_service" {
   name      = "my-monitoring-secret"
   namespace = "monitoring"
 }
 
-// Destination: tempo (otlp)
+// Destination: traces-service (otlp)
 
-otelcol.processor.attributes "tempo" {
+otelcol.processor.attributes "traces_service" {
   output {
-    traces = [otelcol.processor.transform.tempo.input]
+    traces = [otelcol.processor.transform.traces_service.input]
   }
 }
 
-otelcol.processor.transform "tempo" {
+otelcol.processor.transform "traces_service" {
   error_mode = "ignore"
 
   trace_statements {
@@ -266,32 +266,32 @@ otelcol.processor.transform "tempo" {
   }
 
   output {
-    traces = [otelcol.processor.batch.tempo.input]
+    traces = [otelcol.processor.batch.traces_service.input]
   }
 }
 
-otelcol.processor.batch "tempo" {
+otelcol.processor.batch "traces_service" {
   timeout = "2s"
   send_batch_size = 8192
   send_batch_max_size = 0
 
   output {
-    traces = [otelcol.exporter.otlp.tempo.input]
+    traces = [otelcol.exporter.otlp.traces_service.input]
   }
 }
-otelcol.exporter.otlp "tempo" {
+otelcol.exporter.otlp "traces_service" {
   client {
-    endpoint = "http://tempo.tempo.svc:4317"
-    auth = otelcol.auth.bearer.tempo.handler
+    endpoint = convert.nonsensitive(remote.kubernetes.secret.traces_service.data["tempo-host"])
+    auth = otelcol.auth.bearer.traces_service.handler
     headers = {
-      "X-Scope-OrgID" = convert.nonsensitive(remote.kubernetes.secret.tempo.data["tenantId"]),
+      "X-Scope-OrgID" = convert.nonsensitive(remote.kubernetes.secret.traces_service.data["tenantId"]),
     }
     tls {
       insecure = false
       insecure_skip_verify = false
-      ca_pem = convert.nonsensitive(remote.kubernetes.secret.tempo.data["ca"])
-      cert_pem = convert.nonsensitive(remote.kubernetes.secret.tempo.data["cert"])
-      key_pem = remote.kubernetes.secret.tempo.data["key"]
+      ca_pem = convert.nonsensitive(remote.kubernetes.secret.traces_service.data["ca"])
+      cert_pem = convert.nonsensitive(remote.kubernetes.secret.traces_service.data["cert"])
+      key_pem = remote.kubernetes.secret.traces_service.data["key"]
     }
   }
 
@@ -303,11 +303,11 @@ otelcol.exporter.otlp "tempo" {
   }
 }
 
-otelcol.auth.bearer "tempo" {
-  token = remote.kubernetes.secret.tempo.data["tempoBearerToken"]
+otelcol.auth.bearer "traces_service" {
+  token = remote.kubernetes.secret.traces_service.data["tempoBearerToken"]
 }
 
-remote.kubernetes.secret "tempo" {
+remote.kubernetes.secret "traces_service" {
   name      = "my-tempo-secret"
   namespace = "tempo"
 }
