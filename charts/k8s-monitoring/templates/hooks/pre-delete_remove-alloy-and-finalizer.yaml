@@ -48,10 +48,14 @@ spec:
   template:
     metadata:
       name: {{ $jobName }}
+  {{- with $jobSettings.podAnnotations }}
+      annotations:
+{{ $jobSettings.podAnnotations | toYaml | indent 8 }}
+  {{- end }}
       labels:
         app.kubernetes.io/name: {{ include "helper.fullname" . }}
         app.kubernetes.io/instance: {{ .Release.Name }}
-        sidecar.istio.io/inject: "false"
+{{ $jobSettings.podLabels | toYaml | indent 8 }}
     spec:
       restartPolicy: Never
       {{- with $jobSettings.nodeSelector }}
