@@ -67,6 +67,11 @@ data:
         scrape {
           default_scrape_interval = "60s"
         }
+        rule {
+          source_labels = ["job"]
+          regex = "serviceMonitor/(default)/.*"
+          action = "drop"
+        }
         forward_to = argument.metrics_destinations.value
       }
     }

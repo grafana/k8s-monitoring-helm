@@ -13,6 +13,7 @@ cluster:
 
 dependencies:
   - file: dependencies/prometheus-operator-crds.yaml
+  - file: dependencies/black-box-exporter.yaml
   - file: dependencies/cert-manager.yaml
   - file: dependencies/nginx-static-metrics.yaml
   - preset: prometheus
@@ -29,6 +30,8 @@ dependencies:
               type: prometheus
               url: http://prometheus-server.prometheus.svc:9090
               isDefault: true
+  - file: dependencies/bad-grafana-servicemonitor.yaml
+  - file: dependencies/probe.yaml
 
 tests:
   - type: query-test
@@ -48,6 +51,12 @@ tests:
             - query: grafana_build_info{cluster="$CLUSTER"}
               type: promql
 
+            # ServiceMonitor namespace exclusions
+            - query: count(grafana_build_info{cluster="$CLUSTER", whoami="bad-service-monitor"}) or vector(0)
+              type: promql
+              expect:
+                value: 0
+
             # cert-manager metrics are not scraped because of label selectors
             - query: count(certmanager_clock_time_seconds{cluster="$CLUSTER"}) or vector(0)
               type: promql
@@ -56,6 +65,10 @@ tests:
 
             # Metrics are being scraped from the nginx-static-metrics PodMonitor
             - query: static_metric{cluster="$CLUSTER", job="nginx/nginx-static-metrics"}
+              type: promql
+
+            # Metrics are being scraped from the Grafana Probe
+            - query: probe_duration_seconds{cluster="$CLUSTER", job="probe/grafana/grafana-probe"}
               type: promql
 
             # DPM check

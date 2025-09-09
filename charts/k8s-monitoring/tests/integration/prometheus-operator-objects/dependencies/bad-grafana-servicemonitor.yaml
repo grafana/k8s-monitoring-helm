@@ -1,0 +1,29 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: grafana
+  namespace: default
+  labels:
+    app.kubernetes.io/name: grafana
+    app.kubernetes.io/version: 12.1.1
+spec:
+  endpoints:
+    - honorLabels: true
+      interval: 60s
+      path: /metrics
+      port: service
+      scheme: http
+      scrapeTimeout: 30s
+      metricRelabelings:
+        - action: replace
+          targetLabel: whoami
+          replacement: bad-service-monitor
+  jobLabel: helm.sh/chart  # Use the helm chart as a job label, to make it distinct from the default ServiceMonitor
+  namespaceSelector:
+    matchNames:
+      - grafana
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: grafana
+      app.kubernetes.io/name: grafana

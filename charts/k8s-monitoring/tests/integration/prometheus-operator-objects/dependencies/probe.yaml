@@ -1,0 +1,18 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: Probe
+metadata:
+  name: grafana-probe
+  namespace: grafana
+spec:
+  interval: 30s
+  module: http_2xx
+  prober:
+    path: /probe
+    url: blackbox-exporter-prometheus-blackbox-exporter.blackbox-exporter.svc:9115
+  targets:
+    staticConfig:
+      labels:
+        healthcheck: ping
+      static:
+        - http://grafana.grafana.svc:3000

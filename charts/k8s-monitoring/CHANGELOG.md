@@ -3,6 +3,7 @@
 ## Unreleased
 
 *   Update kube-state-metrics and OpenCost (@petewall)
+*   Fix the `excludeNamespaces` option in the Prometheus Operator Object feature (@petewall)
 
 ## 3.4.0
 

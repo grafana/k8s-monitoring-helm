@@ -37,8 +37,8 @@ prometheus.operator.podmonitors "pod_monitors" {
 
 {{- with .Values.podMonitors.excludeNamespaces }}
   rule {
-    source_labels = ["__meta_kubernetes_namespace"]
-    regex = {{ . | join "|" | quote }}
+    source_labels = ["job"]
+    regex = "podMonitor/({{ . | join "|" }})/.*"
     action = "drop"
   }
 {{- end }}
