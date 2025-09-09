@@ -501,6 +501,17 @@ otelcol.exporter.otlphttp {{ include "helper.alloy_name" .name | quote }} {
     max_interval = {{ .retryOnFailure.maxInterval | quote }}
     max_elapsed_time = {{ .retryOnFailure.maxElapsedTime | quote }}
   }
+
+  sending_queue {
+    enabled = {{ .sendingQueue.enabled }}
+    block_on_overflow = {{ .sendingQueue.blockOnOverflow }}
+    num_consumers = {{ .sendingQueue.numConsumers | int }}
+    queue_size = {{ .sendingQueue.queueSize | int }}
+    sizer = {{ .sendingQueue.sizer | quote }}
+{{- if .sendingQueue.storage }}
+    storage = {{ .sendingQueue.storage | quote }}
+{{- end }}
+  }
 }
 {{- if eq (include "secrets.authType" .) "basic" }}
 

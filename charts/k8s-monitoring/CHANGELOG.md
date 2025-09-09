@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+*   Add the ability to define the sending queue for otlp destinations (@petewall)
+
 ## 3.6.0
 
 *   Add Pod Init container metrics to the kube-state-metrics allow list (@petewall)
