@@ -893,8 +893,8 @@ declare "prometheus_operator_objects" {
       default_scrape_interval = "60s"
     }
     rule {
-      source_labels = ["__meta_kubernetes_namespace"]
-      regex = "kube-system|kube-public|confidential"
+      source_labels = ["job"]
+      regex = "podMonitor/(kube-system|kube-public|confidential)/.*"
       action = "drop"
     }
     forward_to = argument.metrics_destinations.value
@@ -909,8 +909,8 @@ declare "prometheus_operator_objects" {
       default_scrape_interval = "60s"
     }
     rule {
-      source_labels = ["__meta_kubernetes_namespace"]
-      regex = "kube-system|kube-public|confidential"
+      source_labels = ["job"]
+      regex = "probe/(kube-system|kube-public|confidential)/.*"
       action = "drop"
     }
     forward_to = argument.metrics_destinations.value
@@ -925,8 +925,8 @@ declare "prometheus_operator_objects" {
       default_scrape_interval = "60s"
     }
     rule {
-      source_labels = ["__meta_kubernetes_namespace"]
-      regex = "kube-system|kube-public|confidential"
+      source_labels = ["job"]
+      regex = "serviceMonitor/(kube-system|kube-public|confidential)/.*"
       action = "drop"
     }
     forward_to = argument.metrics_destinations.value
