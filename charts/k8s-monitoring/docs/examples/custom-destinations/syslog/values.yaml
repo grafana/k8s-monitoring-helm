@@ -1,0 +1,50 @@
+cluster:
+  name: syslog-custom-destination
+
+destinations:
+  - name: syslog
+    type: custom
+    config: |
+      otelcol.processor.transform "syslog" {
+        error_mode = "ignore"
+      
+        log_statements {
+          context = "log"
+          
+          statements = [
+            `set(attributes["message"], attributes["__syslog_message"])`,
+            `set(attributes["appname"], attributes["__syslog_appname"])`,
+            `set(attributes["hostname"], attributes["__syslog_hostname"])`,
+          ]
+        }
+
+        output {
+          logs = [otelcol.exporter.syslog.syslog.input]
+        }
+      }
+
+      otelcol.exporter.syslog "syslog" {
+        endpoint = "syslog-translator.loki.svc.cluster.local"
+        port     = 1515
+        protocol = "rfc5424"
+        tls {
+          insecure             = true
+          insecure_skip_verify = true
+        }
+      }
+
+    ecosystem: otlp
+    logs:
+      enabled: true
+      target: otelcol.processor.transform.syslog.input
+
+clusterEvents:
+  enabled: true
+  destinations: [syslog]
+
+alloy-singleton:
+  enabled: true
+  alloy:
+    stabilityLevel: public-preview
+  liveDebugging:
+    enabled: true
