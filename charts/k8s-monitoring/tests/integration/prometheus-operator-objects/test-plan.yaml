@@ -65,6 +65,10 @@ tests:
             - query: static_metric{cluster="$CLUSTER", job="nginx/nginx-static-metrics"}
               type: promql
 
+            # Metrics are being scraped from the Grafana Probe
+            - query: probe_duration_seconds{cluster="$CLUSTER", job="probe/grafana/grafana-probe"}
+              type: promql
+
             # DPM check
             - query: avg(count_over_time(scrape_samples_scraped{cluster="$CLUSTER"}[1m]))
               type: promql

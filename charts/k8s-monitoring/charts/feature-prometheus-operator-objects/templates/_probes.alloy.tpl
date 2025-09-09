@@ -37,8 +37,8 @@ prometheus.operator.probes "probes" {
 
 {{- with .Values.probes.excludeNamespaces }}
   rule {
-    source_labels = ["__meta_kubernetes_namespace"]
-    regex = {{ . | join "|" | quote }}
+    source_labels = ["job"]
+    regex = "probe/({{ . | join "|" }})/.*"
     action = "drop"
   }
 {{- end }}

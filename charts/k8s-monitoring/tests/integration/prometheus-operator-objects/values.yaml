@@ -12,14 +12,7 @@ prometheusOperatorObjects:
 
   serviceMonitors:
     enabled: true
-
-    extraDiscoveryRules: |
-      // Temporary test to ensure we're dropping based on namespace
-      rule {
-        source_labels = ["job"]
-        regex = "serviceMonitor/(default|kube-system).*"
-        action = "drop"
-      }
+    excludeNamespaces: [default]
 
     labelSelectors:
       app.kubernetes.io/name: grafana

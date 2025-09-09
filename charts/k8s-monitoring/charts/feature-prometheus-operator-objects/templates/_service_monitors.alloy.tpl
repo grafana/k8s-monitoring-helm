@@ -37,8 +37,8 @@ prometheus.operator.servicemonitors "service_monitors" {
 
 {{- with .Values.serviceMonitors.excludeNamespaces }}
   rule {
-    source_labels = ["__meta_kubernetes_namespace"]
-    regex = {{ . | join "|" | quote }}
+    source_labels = ["job"]
+    regex = "serviceMonitor/({{ . | join "|" }})/.*"
     action = "drop"
   }
 {{- end }}
