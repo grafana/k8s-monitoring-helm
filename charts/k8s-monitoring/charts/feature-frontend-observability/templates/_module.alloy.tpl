@@ -1,17 +1,9 @@
-{{- define "feature.applicationObservability.module" }}
-declare "application_observability" {
-  argument "metrics_destinations" {
-    comment = "Must be a list of metrics destinations where collected metrics should be forwarded to"
-  }
-
-  argument "logs_destinations" {
-    comment = "Must be a list of log destinations where collected logs should be forwarded to"
-  }
-
-  argument "traces_destinations" {
+{{- define "feature.frontendObservability.module" }}
+declare "frontend_observability" {
+  argument "faro_destinations" {
     comment = "Must be a list of trace destinations where collected trace should be forwarded to"
   }
-{{- $pipeline := include "feature.applicationObservability.pipeline" . | fromYamlArray }}
+{{- $pipeline := include "feature.frontendObservability.pipeline" . | fromYamlArray }}
 {{- range $component := $pipeline }}
   {{- $args := (dict "Values" $.Values "name" $component.name) }}
 
@@ -21,16 +13,16 @@ declare "application_observability" {
     {{- else if kindIs "slice" (index $component.targets $dataType) }}
       {{- $targets := list }}
       {{- range $target := (index $component.targets $dataType) }}
-        {{- $targets = append $targets (include (printf "feature.applicationObservability.%s.alloy.target" $target.component) $target) }}
+        {{- $targets = append $targets (include (printf "feature.frontendObservability.%s.alloy.target" $target.component) $target) }}
       {{- end }}
       {{- $args = merge $args (dict $dataType (printf "[%s]" (join ", " $targets))) }}
     {{- end }}
   {{- end }}
 
   // {{ $component.description | trim }}
-  {{- include (printf "feature.applicationObservability.%s.alloy" $component.component) $args | indent 2 }}
+  {{- include (printf "feature.frontendObservability.%s.alloy" $component.component) $args | indent 2 }}
 {{- end }}
 }
 {{- end }}
 
-{{- define "feature.applicationObservability.alloyModules" }}{{- end }}
+{{- define "feature.frontendObservability.alloyModules" }}{{- end }}
