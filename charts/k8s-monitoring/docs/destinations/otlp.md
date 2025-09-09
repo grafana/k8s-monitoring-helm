@@ -194,6 +194,17 @@ This defines the options for defining a destination for OpenTelemetry data that 
 | secret.sigv4.region | string | `""` | The AWS region for sigv4 authentication. |
 | secret.sigv4.service | string | `""` | The AWS service for sigv4 authentication. |
 
+### Storage Queue
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| sendingQueue.blockOnOverflow | bool | `false` | The behavior when the component’s TotalSize limit is reached |
+| sendingQueue.enabled | bool | `true` | Enables a buffer before sending data to the client. |
+| sendingQueue.numConsumers | int | `10` | Number of readers to send batches written to the queue in parallel. |
+| sendingQueue.queueSize | int | `1000` | Maximum number of unwritten batches allowed in the queue at the same time. |
+| sendingQueue.sizer | string | `"requests"` | How the queue and batching is measured. |
+| sendingQueue.storage | string | `""` | Handler from an otelcol.storage component to use to enable a persistent queue mechanism. To use this, create a storage component in extraConfig and reference it here. |
+
 ### TLS
 
 | Key | Type | Default | Description |
