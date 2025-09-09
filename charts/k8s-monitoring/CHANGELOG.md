@@ -1,9 +1,11 @@
 # Changelog
 
-## Unreleased
+## 3.4.1
 
 *   Update kube-state-metrics and OpenCost (@petewall)
 *   Fix the `excludeNamespaces` option in the Prometheus Operator Object feature (@petewall)
+*   Add the ability to set labels and annotations on the hook pod (@petewall)
+*   Update Node Exporter filesystem exclusion list (@petewall)
 
 ## 3.4.0
 
