@@ -86,5 +86,11 @@ alloy-operator:
     - key: protected-node
       effect: NoSchedule
       operator: Exists
+
+  waitForAlloyRemoval:
+    tolerations:
+      - key: protected-node
+        effect: NoSchedule
+        operator: Exists
 ```
 <!-- textlint-enable terminology -->
