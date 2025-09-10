@@ -6,13 +6,14 @@
 
 This custom destination shows how to configure a destination that sends data to Apache Kafka. This example specifically
 only chooses to send Kubernetes Cluster Events as logs, but the
-[Kafka exporter])https://grafana.com/docs/alloy/latest/reference/components/otelcol/otelcol.exporter.kafka) does support
+[Kafka exporter](https://grafana.com/docs/alloy/latest/reference/components/otelcol/otelcol.exporter.kafka) does support
 sending metrics and traces as well.
 
 ## Values
 
 <!-- textlint-disable terminology -->
 ```yaml
+---
 cluster:
   name: kafka-custom-destination
 
@@ -25,7 +26,7 @@ destinations:
           logs = [otelcol.exporter.kafka.kafka.input]
         }
       }
-        
+
       otelcol.exporter.kafka "kafka" {
         logs {
           topic = "cluster_events"

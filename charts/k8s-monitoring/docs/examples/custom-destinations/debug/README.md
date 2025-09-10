@@ -11,6 +11,7 @@ pod logs.
 
 <!-- textlint-disable terminology -->
 ```yaml
+---
 cluster:
   name: debug-custom-destination
 
