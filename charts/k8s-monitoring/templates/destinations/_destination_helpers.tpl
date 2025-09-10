@@ -10,7 +10,6 @@
 
 {{/* Inputs: destinations (array of destination definition), type (string), ecosystem (string), filter (list of destination names) */}}
 {{- define "destinations.get" -}}
-{{- ( toYaml $ ) }}
 {{- $destinations := list }}
 {{- $backupDestinations := list }}
 {{- range $destination := .destinations }}

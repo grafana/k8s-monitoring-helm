@@ -1,5 +1,6 @@
 {{- define "destinations.faro.alloy" }}
 {{- with .destination }}
+
 {{/*
 otelcol.receiver.loki {{ include "helper.alloy_name" .name | quote }} {
   output {
@@ -40,8 +41,9 @@ otelcol.processor.attributes {{ include "helper.alloy_name" .name | quote }} {
 
 otelcol.processor.transform {{ include "helper.alloy_name" .name | quote }} {
   error_mode = {{ .processors.transform.errorMode | quote }}
+  {{/*
   statements {
-    logs = [
+    log = [
 {{- range $label := .clusterLabels }}
       `set(attributes[{{ $label | quote }}], {{ $.Values.cluster.name | quote }})`,
 {{- end }}
@@ -49,7 +51,7 @@ otelcol.processor.transform {{ include "helper.alloy_name" .name | quote }} {
 {{ $transform | quote | indent 6 }},
 {{- end }}
     ]
-    traces = [
+    trace = [
 {{- range $label := .clusterLabels }}
       `set(attributes[{{ $label | quote }}], {{ $.Values.cluster.name | quote }})`,
 {{- end }}
@@ -58,8 +60,9 @@ otelcol.processor.transform {{ include "helper.alloy_name" .name | quote }} {
 {{- end }}
     ]
   }
-{{- end }}
-{{- if .processors.filters.enabled }}
+  */}}
+
+{{ if .processors.filters.enabled }}
 
   output {
     logs = [otelcol.processor.filter.{{ include "helper.alloy_name" .name }}.input]
@@ -284,6 +287,7 @@ otelcol.auth.sigv4 {{ include "helper.alloy_name" .name | quote }} {
     {{- end }}
   {{- end }}
 }
+{{- end }}
 {{- end }}
 {{- end }}
 
