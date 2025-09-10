@@ -42,13 +42,13 @@ clusterMetrics:
 podLogs:
   enabled: true
   nodeLabels:
-    nodepool: true
+    nodePool: true
     region: true
-    availability_zone: true
-    node_role: true
-    os: true
-    architecture: true
-    instance_type: true
+    availabilityZone: true
+    nodeRole: true
+    nodeOS: true
+    nodeArchitecture: true
+    instanceType: true
   structuredMetadata:
     node_pool: nodepool
     region:
