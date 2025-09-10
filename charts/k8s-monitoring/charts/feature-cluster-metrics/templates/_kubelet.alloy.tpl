@@ -39,6 +39,7 @@ prometheus.scrape "kubelet" {
   job_name = {{ .Values.kubelet.jobLabel | quote }}
   scheme   = "https"
   scrape_interval = {{ .Values.kubelet.scrapeInterval | default .Values.global.scrapeInterval | quote }}
+  scrape_timeout = {{ .Values.kubelet.scrapeTimeout | default .Values.global.scrapeTimeout | quote }}
   bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
 
   tls_config {

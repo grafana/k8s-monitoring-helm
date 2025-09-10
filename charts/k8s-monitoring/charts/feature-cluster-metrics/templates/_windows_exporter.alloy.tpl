@@ -44,6 +44,21 @@ discovery.kubernetes "windows_exporter_pods" {
 
 discovery.relabel "windows_exporter" {
   targets = discovery.kubernetes.windows_exporter_pods.targets
+
+  // keep only the specified metrics port name, and pods that are Running and ready
+  rule {
+    source_labels = [
+      "__meta_kubernetes_pod_container_port_name",
+      "__meta_kubernetes_pod_container_init",
+      "__meta_kubernetes_pod_phase",
+      "__meta_kubernetes_pod_ready",
+    ]
+    separator = "@"
+    regex = "{{ (index .Values "windows-exporter").service.portName }}@false@Running@true"
+    action = "keep"
+  }
+
+  // Set the instance label to the node name
   rule {
     source_labels = ["__meta_kubernetes_pod_node_name"]
     action = "replace"
@@ -59,6 +74,7 @@ prometheus.scrape "windows_exporter" {
   job_name   = {{ (index .Values "windows-exporter").jobLabel | quote }}
   targets  = discovery.relabel.windows_exporter.output
   scrape_interval = {{ (index .Values "windows-exporter").scrapeInterval | default .Values.global.scrapeInterval | quote }}
+  scrape_timeout = {{ (index .Values "windows-exporter").scrapeTimeout | default .Values.global.scrapeTimeout | quote }}
   clustering {
     enabled = true
   }

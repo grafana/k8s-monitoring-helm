@@ -44,6 +44,7 @@ prometheus.scrape "cadvisor" {
   job_name = {{ .Values.cadvisor.jobLabel | quote }}
   scheme = "https"
   scrape_interval = {{ .Values.cadvisor.scrapeInterval | default .Values.global.scrapeInterval | quote }}
+  scrape_timeout = {{ .Values.cadvisor.scrapeTimeout | default .Values.global.scrapeTimeout | quote }}
   bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
 
   tls_config {

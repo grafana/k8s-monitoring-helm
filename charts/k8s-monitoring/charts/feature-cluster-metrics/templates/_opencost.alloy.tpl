@@ -48,6 +48,7 @@ prometheus.scrape "opencost" {
   job_name     = {{ .Values.opencost.jobLabel | quote }}
   honor_labels = true
   scrape_interval = {{ .Values.opencost.scrapeInterval | default .Values.global.scrapeInterval | quote }}
+  scrape_timeout = {{ .Values.opencost.scrapeTimeout | default .Values.global.scrapeTimeout | quote }}
   clustering {
     enabled = true
   }

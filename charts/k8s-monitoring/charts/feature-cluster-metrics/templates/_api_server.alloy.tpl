@@ -52,6 +52,7 @@ prometheus.scrape "apiserver" {
   job_name = {{ .Values.apiServer.jobLabel | quote }}
   scheme = "https"
   scrape_interval = {{ .Values.apiServer.scrapeInterval | default .Values.global.scrapeInterval | quote }}
+  scrape_timeout = {{ .Values.apiServer.scrapeTimeout | default .Values.global.scrapeTimeout | quote }}
   bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
 
   tls_config {

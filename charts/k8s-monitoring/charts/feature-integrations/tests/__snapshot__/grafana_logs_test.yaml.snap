@@ -170,6 +170,11 @@ should add the grafana processing stage to the logs config:
             optional = true
           }
 
+          argument "scrape_timeout" {
+            comment = "The timeout for scraping metrics from the targets (default: 10s)"
+            optional = true
+          }
+
           argument "max_cache_size" {
             comment = "The maximum number of elements to hold in the relabeling cache (default: 100000).  This should be at least 2x-5x your largest scrape target or samples appended rate."
             optional = true
@@ -185,6 +190,7 @@ should add the grafana processing stage to the logs config:
             forward_to = [prometheus.relabel.grafana.receiver]
             targets = argument.targets.value
             scrape_interval = coalesce(argument.scrape_interval.value, "60s")
+            scrape_timeout = coalesce(argument.scrape_timeout.value, "10s")
 
             clustering {
               enabled = coalesce(argument.clustering.value, false)
@@ -234,6 +240,7 @@ should add the grafana processing stage to the logs config:
           job_label = "integrations/grafana"
           clustering = true
           scrape_interval = "60s"
+          scrape_timeout = "10s"
           max_cache_size = 100000
           forward_to = argument.metrics_destinations.value
         }

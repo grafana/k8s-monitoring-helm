@@ -44,6 +44,7 @@ This integration captures the metrics and logs to understand the health and perf
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | metrics.scrapeInterval | string | `60s` | How frequently to scrape metrics from Loki. |
+| metrics.scrapeTimeout | string | `10s` | The timeout for scraping metrics from Loki. |
 
 ### General Settings
 

@@ -109,6 +109,7 @@ prometheus.scrape "kube_dns" {
   job_name = {{ .Values.kubeDNS.jobLabel | quote }}
   scheme = "http"
   scrape_interval = {{ .Values.kubeDNS.scrapeInterval | default .Values.global.scrapeInterval | quote }}
+  scrape_timeout = {{ .Values.kubeDNS.scrapeTimeout | default .Values.global.scrapeTimeout | quote }}
   clustering {
     enabled = true
   }

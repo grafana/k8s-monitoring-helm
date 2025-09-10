@@ -130,6 +130,11 @@ declare "mimir_integration" {
       optional = true
     }
 
+    argument "scrape_timeout" {
+      comment = "The timeout for scraping metrics from the targets (default: 10s)"
+      optional = true
+    }
+
     argument "max_cache_size" {
       comment = "The maximum number of elements to hold in the relabeling cache (default: 100000).  This should be at least 2x-5x your largest scrape target or samples appended rate."
       optional = true
@@ -145,6 +150,7 @@ declare "mimir_integration" {
       forward_to = [prometheus.relabel.mimir.receiver]
       targets = argument.targets.value
       scrape_interval = coalesce(argument.scrape_interval.value, "60s")
+      scrape_timeout = coalesce(argument.scrape_timeout.value, "10s")
 
       clustering {
         enabled = coalesce(argument.clustering.value, false)
@@ -232,6 +238,7 @@ mimir_integration_scrape  {{ include "helper.alloy_name" .name | quote }} {
   drop_metrics = {{ $metricDenyList | join "|" | quote }}
 {{- end }}
   scrape_interval = {{ .scrapeInterval | default $.Values.global.scrapeInterval | quote }}
+  scrape_timeout = {{ .scrapeTimeout | default $.Values.global.scrapeTimeout | quote }}
   max_cache_size = {{ .metrics.maxCacheSize | default $.Values.global.maxCacheSize | int }}
   forward_to = argument.metrics_destinations.value
 }

@@ -1,14 +1,14 @@
 ---
 apiVersion: helm-chart-toolbox.grafana.com/v1
 kind: TestPlan
-name: minor-upgrade
+name: patch-upgrade
 
 subject:
   releaseName: k8smon
   repository: https://grafana.github.io/helm-charts
   chart: k8s-monitoring
   valuesFile: values.yaml
-  version: 2.0.39
+  version: previous-patch
 
   upgrade:
     path: ../../../..
@@ -45,8 +45,10 @@ tests:
     values:
       tests:
         - env:
-            CLUSTER: minor-upgrade-test
+            CLUSTER: patch-upgrade-test
             PROMETHEUS_URL: http://prometheus-server.prometheus.svc:9090/api/v1/query
+            PROMETHEUS_USER: promuser
+            PROMETHEUS_PASS: prometheuspassword
             LOKI_URL: http://loki.loki.svc:3100/loki/api/v1/query
             LOKI_TENANTID: 1
             LOKI_USER: loki

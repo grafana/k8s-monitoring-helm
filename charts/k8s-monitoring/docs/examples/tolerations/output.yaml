@@ -227,6 +227,7 @@ data:
         job_name = "integrations/kubernetes/kubelet"
         scheme   = "https"
         scrape_interval = "60s"
+        scrape_timeout = "10s"
         bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
     
         tls_config {
@@ -267,6 +268,7 @@ data:
         job_name = "integrations/kubernetes/resources"
         scheme   = "https"
         scrape_interval = "60s"
+        scrape_timeout = "10s"
         bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
     
         tls_config {
@@ -307,6 +309,7 @@ data:
         job_name = "integrations/kubernetes/cadvisor"
         scheme = "https"
         scrape_interval = "60s"
+        scrape_timeout = "10s"
         bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
     
         tls_config {
@@ -433,6 +436,7 @@ data:
         targets = discovery.relabel.kube_state_metrics.output
         job_name = "integrations/kubernetes/kube-state-metrics"
         scrape_interval = "60s"
+        scrape_timeout = "10s"
         scheme = "http"
         bearer_token_file = ""
         tls_config {
@@ -564,6 +568,7 @@ data:
         targets = discovery.relabel.node_exporter.output
         job_name = "integrations/node_exporter"
         scrape_interval = "60s"
+        scrape_timeout = "10s"
         scheme = "http"
         bearer_token_file = ""
         tls_config {
@@ -606,6 +611,21 @@ data:
     
       discovery.relabel "windows_exporter" {
         targets = discovery.kubernetes.windows_exporter_pods.targets
+    
+        // keep only the specified metrics port name, and pods that are Running and ready
+        rule {
+          source_labels = [
+            "__meta_kubernetes_pod_container_port_name",
+            "__meta_kubernetes_pod_container_init",
+            "__meta_kubernetes_pod_phase",
+            "__meta_kubernetes_pod_ready",
+          ]
+          separator = "@"
+          regex = "metrics@false@Running@true"
+          action = "keep"
+        }
+    
+        // Set the instance label to the node name
         rule {
           source_labels = ["__meta_kubernetes_pod_node_name"]
           action = "replace"
@@ -617,6 +637,7 @@ data:
         job_name   = "integrations/windows-exporter"
         targets  = discovery.relabel.windows_exporter.output
         scrape_interval = "60s"
+        scrape_timeout = "10s"
         clustering {
           enabled = true
         }
@@ -658,6 +679,7 @@ data:
         job_name     = "integrations/kepler"
         honor_labels = true
         scrape_interval = "60s"
+        scrape_timeout = "10s"
         clustering {
           enabled = true
         }

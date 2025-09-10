@@ -57,6 +57,7 @@
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | metrics.scrapeInterval | string | `60s` | How frequently to scrape metrics from MySQL Exporter. |
+| metrics.scrapeTimeout | string | `10s` | The timeout for scraping metrics from MySQL Exporter. |
 
 ### Secret
 

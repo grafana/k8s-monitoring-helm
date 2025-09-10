@@ -56,6 +56,8 @@ prometheus.exporter.mysql {{ include "helper.alloy_name" .name | quote }} {
 prometheus.scrape {{ include "helper.alloy_name" .name | quote }} {
   targets    = prometheus.exporter.mysql.{{ include "helper.alloy_name" .name }}.targets
   job_name   = {{ .jobLabel | quote }}
+  scrape_interval = {{ .scrapeInterval | default $.Values.global.scrapeInterval | quote }}
+  scrape_timeout = {{ .scrapeTimeout | default $.Values.global.scrapeTimeout | quote }}
   forward_to = [prometheus.relabel.{{ include "helper.alloy_name" .name }}.receiver]
 }
 

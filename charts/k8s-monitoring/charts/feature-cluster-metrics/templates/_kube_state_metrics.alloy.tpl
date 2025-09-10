@@ -60,6 +60,7 @@ prometheus.scrape "kube_state_metrics" {
   targets = discovery.relabel.kube_state_metrics.output
   job_name = {{ (index .Values "kube-state-metrics").jobLabel | quote }}
   scrape_interval = {{ (index .Values "kube-state-metrics").scrapeInterval | default .Values.global.scrapeInterval | quote }}
+  scrape_timeout = {{ (index .Values "kube-state-metrics").scrapeTimeout | default .Values.global.scrapeTimeout | quote }}
   scheme = {{ (index .Values "kube-state-metrics").service.scheme | quote }}
   bearer_token_file = {{ (index .Values "kube-state-metrics").bearerTokenFile | quote }}
   tls_config {

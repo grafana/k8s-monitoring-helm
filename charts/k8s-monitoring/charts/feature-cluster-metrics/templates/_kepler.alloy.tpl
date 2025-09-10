@@ -48,6 +48,7 @@ prometheus.scrape "kepler" {
   job_name     = {{ .Values.kepler.jobLabel | quote }}
   honor_labels = true
   scrape_interval = {{ .Values.kepler.scrapeInterval | default .Values.global.scrapeInterval | quote }}
+  scrape_timeout = {{ .Values.kepler.scrapeTimeout | default .Values.global.scrapeTimeout | quote }}
   clustering {
     enabled = true
   }

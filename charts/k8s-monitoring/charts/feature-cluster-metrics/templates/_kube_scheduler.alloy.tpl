@@ -33,6 +33,7 @@ prometheus.scrape "kube_scheduler" {
   job_name          = {{ .Values.kubeScheduler.jobLabel | quote }}
   scheme            = "https"
   scrape_interval   = {{ .Values.kubeScheduler.scrapeInterval | default .Values.global.scrapeInterval | quote }}
+  scrape_timeout = {{ .Values.kubeScheduler.scrapeTimeout | default .Values.global.scrapeTimeout | quote }}
   bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
   tls_config {
     insecure_skip_verify = true

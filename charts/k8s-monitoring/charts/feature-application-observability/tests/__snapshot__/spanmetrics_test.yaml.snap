@@ -102,11 +102,23 @@ creates the pipeline with the spanmetrics connector:
           output {
             metrics = [otelcol.processor.batch.default.input]
             logs = [otelcol.processor.batch.default.input]
-            traces = [otelcol.connector.spanmetrics.default.input, otelcol.processor.batch.default.input]
+            traces = [otelcol.processor.filter.span_metrics_prefilter.input, otelcol.processor.batch.default.input]
           }
         }
 
         // Span Metrics Connector
+        otelcol.processor.filter "span_metrics_prefilter" {
+          error_mode = "silent"
+          traces {
+            span = [
+              `resource.attributes["span.metrics.skip"] != nil`,
+            ]
+          }
+          output {
+            traces = [otelcol.connector.spanmetrics.default.input]
+          }
+        }
+
         otelcol.connector.spanmetrics "default" {
           dimension {
             name = "http.status_code"
@@ -125,6 +137,19 @@ creates the pipeline with the spanmetrics connector:
             explicit {
               buckets = ["2ms","4ms","6ms","8ms","10ms","50ms","100ms","200ms","400ms","800ms","1s","1400ms","2s","5s","10s","15s"]
             }
+          }
+
+          output {
+            metrics = [otelcol.processor.transform.span_metrics_transform.input]
+          }
+        }
+
+        otelcol.processor.transform "span_metrics_transform" {
+           metric_statements {
+            context = "datapoint"
+            statements = [
+              `set(attributes["collector.id"], "` + constants.hostname + `")`,
+            ]
           }
 
           output {

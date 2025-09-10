@@ -364,6 +364,11 @@ data:
           optional = true
         }
     
+        argument "scrape_timeout" {
+          comment = "The timeout for scraping metrics from the targets (default: 10s)"
+          optional = true
+        }
+    
         argument "max_cache_size" {
           comment = "The maximum number of elements to hold in the relabeling cache (default: 100000).  This should be at least 2x-5x your largest scrape target or samples appended rate."
           optional = true
@@ -379,6 +384,7 @@ data:
           forward_to = [prometheus.relabel.alloy.receiver]
           targets = argument.targets.value
           scrape_interval = coalesce(argument.scrape_interval.value, "60s")
+          scrape_timeout = coalesce(argument.scrape_timeout.value, "10s")
     
           clustering {
             enabled = coalesce(argument.clustering.value, false)
@@ -482,6 +488,7 @@ data:
         clustering = true
         keep_metrics = "up|scrape_samples_scraped|alloy_build_info"
         scrape_interval = "60s"
+        scrape_timeout = "10s"
         max_cache_size = 100000
         forward_to = argument.metrics_destinations.value
       }
