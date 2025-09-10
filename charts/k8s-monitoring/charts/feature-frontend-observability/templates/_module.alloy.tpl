@@ -1,13 +1,18 @@
 {{- define "feature.frontendObservability.module" }}
 declare "frontend_observability" {
-  argument "faro_destinations" {
+  argument "logs_destinations" {
+    comment = "Must be a list of log destinations where collected logs should be forwarded to"
+  }
+
+  argument "traces_destinations" {
     comment = "Must be a list of trace destinations where collected trace should be forwarded to"
   }
+
 {{- $pipeline := include "feature.frontendObservability.pipeline" . | fromYamlArray }}
 {{- range $component := $pipeline }}
   {{- $args := (dict "Values" $.Values "name" $component.name) }}
 
-  {{- range $dataType := (list "metrics" "logs" "traces")}}
+  {{- range $dataType := (list "logs" "traces")}}
     {{- if kindIs "string" (index $component.targets $dataType) }}
       {{- $args = merge $args (dict $dataType (index $component.targets $dataType)) }}
     {{- else if kindIs "slice" (index $component.targets $dataType) }}

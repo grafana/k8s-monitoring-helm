@@ -10,10 +10,12 @@
 
 {{/* Inputs: destinations (array of destination definition), type (string), ecosystem (string), filter (list of destination names) */}}
 {{- define "destinations.get" -}}
+{{- ( toYaml $ ) }}
 {{- $destinations := list }}
 {{- $backupDestinations := list }}
 {{- range $destination := .destinations }}
   {{- /* Does this destination support the telemetry data type? */}}
+
   {{- if eq (include (printf "destinations.%s.supports_%s" $destination.type $.type) $destination) "true" }}
     {{- if empty $.filter }}
       {{- /* Is this destination in the ecosystem? */}}
@@ -22,7 +24,6 @@
       {{- else }}
         {{- $backupDestinations = append $backupDestinations $destination.name }}
       {{- end }}
-
     {{- /* Did the data source choose this destination? */}}
     {{- else if has $destination.name $.filter }}
       {{- $destinations = append $destinations $destination.name }}

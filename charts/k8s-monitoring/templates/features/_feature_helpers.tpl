@@ -4,6 +4,7 @@
 - autoInstrumentation
 - clusterMetrics
 - clusterEvents
+- frontendObservability
 - nodeLogs
 - podLogs
 - profilesReceiver

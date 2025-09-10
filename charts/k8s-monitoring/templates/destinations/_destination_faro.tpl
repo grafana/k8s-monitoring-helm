@@ -1,10 +1,12 @@
 {{- define "destinations.faro.alloy" }}
 {{- with .destination }}
+{{/*
 otelcol.receiver.loki {{ include "helper.alloy_name" .name | quote }} {
   output {
     logs = [{{ include "destinations.faro.alloy.otlp.logs.target" . | trim }}]
   }
 }
+*/}}
 
 otelcol.processor.attributes {{ include "helper.alloy_name" .name | quote }} {
 {{- range $action := .processors.attributes.actions }}
@@ -297,11 +299,13 @@ otelcol.auth.sigv4 {{ include "helper.alloy_name" .name | quote }} {
 - tls.key
 {{- end -}}
 
+{{/*
 {{- define "destinations.faro.alloy.faro.logs.target" }}otelcol.receiver.loki.{{ include "helper.alloy_name" .name }}.receiver{{ end }}
 {{- define "destinations.faro.alloy.faro.traces.target" }}otelcol.receiver.loki.{{ include "helper.alloy_name" .name }}.receiver{{ end }}
-{{/*{{- define "destinations.faro.alloy.otlp.target" }}otelcol.processor.attributes.{{ include "helper.alloy_name" .name }}.input{{ end }}*/}}
-{{- define "destinations.faro.alloy.otlp.logs.target" }}{{ include "destinations.faro.alloy.otlp.target" . }}{{- end }}
-{{- define "destinations.faro.alloy.otlp.traces.target" }}{{ include "destinations.faro.alloy.otlp.target" . }}{{- end }}
+*/}}
+{{- define "destinations.faro.alloy.otlp.target" }}otelcol.processor.attributes.{{ include "helper.alloy_name" .name }}.input{{ end }}
+{{- define "destinations.faro.alloy.faro.logs.target" }}{{ include "destinations.faro.alloy.otlp.target" . }}{{- end }}
+{{- define "destinations.faro.alloy.faro.traces.target" }}{{ include "destinations.faro.alloy.otlp.target" . }}{{- end }}
 
 {{- define "destinations.faro.supports_metrics" }}false{{ end -}}
 {{- define "destinations.faro.supports_logs" }}true{{ end -}}
