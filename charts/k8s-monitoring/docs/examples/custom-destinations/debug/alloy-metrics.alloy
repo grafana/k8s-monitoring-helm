@@ -311,7 +311,7 @@ declare "annotation_autodiscovery" {
       enabled = true
     }
 
-    forward_to = argument.metrics_destinations.value
+    forward_to = [prometheus.relabel.annotation_autodiscovery.receiver]
   }
 
   prometheus.scrape "annotation_autodiscovery_https" {
@@ -327,6 +327,20 @@ declare "annotation_autodiscovery" {
       enabled = true
     }
 
+    forward_to = [prometheus.relabel.annotation_autodiscovery.receiver]
+  }
+
+  prometheus.relabel "annotation_autodiscovery" {
+    max_cache_size = 100000
+    rule {
+      source_labels = ["__name__"]
+      regex = "up|scrape_samples_scraped|alloy_build_info"
+      action = "keep"
+    }
+    rule {
+      action = "labeldrop"
+      regex = "temp_source"
+    }
     forward_to = argument.metrics_destinations.value
   }
 }
@@ -393,5 +407,7 @@ otelcol.receiver.loki "debug" {
   }
 }
 
-otelcol.exporter.debug "default" {}
+otelcol.exporter.debug "default" {
+  verbosity = "detailed"
+}
 

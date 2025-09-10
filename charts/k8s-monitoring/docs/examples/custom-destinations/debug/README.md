@@ -18,7 +18,9 @@ destinations:
   - name: debug
     type: custom
     config: |
-      otelcol.exporter.debug "default" {}
+      otelcol.exporter.debug "default" {
+        verbosity = "detailed"
+      }
     ecosystem: otlp
     metrics:
       enabled: true
@@ -33,6 +35,8 @@ destinations:
 annotationAutodiscovery:
   enabled: true
   destinations: [debug]
+  metricsTuning:
+    includeMetrics: [alloy_build_info]
 
 alloy-metrics:
   enabled: true
