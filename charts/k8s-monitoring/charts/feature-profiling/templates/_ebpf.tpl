@@ -80,14 +80,55 @@ discovery.relabel "ebpf_pods" {
     source_labels = ["__meta_kubernetes_pod_container_name"]
     target_label = "container"
   }
-  // provide arbitrary service_name label, otherwise it will be set to {__meta_kubernetes_namespace}/{__meta_kubernetes_pod_container_name}
+
+  // Set service_name by choosing the first value found from the following ordered list:
+  // - pod.annotation[resource.opentelemetry.io/service.name]
+  // - pod.label[app.kubernetes.io/instance]
+  // - pod.label[app.kubernetes.io/name]
+  // - k8s.container.name
   rule {
-    source_labels = ["__meta_kubernetes_namespace", "__meta_kubernetes_pod_container_name"]
-    separator = "@"
-    regex = "(.*)@(.*)"
-    replacement = "ebpf/${1}/${2}"
+    action = "replace"
+    source_labels = [
+      {{ include "pod_annotation" "resource.opentelemetry.io/service.name" | quote }},
+      {{ include "pod_label" "app.kubernetes.io/instance" | quote }},
+      {{ include "pod_label" "app.kubernetes.io/name" | quote }},
+      "container",
+    ]
+    separator = ";"
+    regex = "^(?:;*)?([^;]+).*$"
+    replacement = "$1"
     target_label = "service_name"
   }
+
+  // Set service_namespace by choosing the first value found from the following ordered list:
+  // - pod.annotation[resource.opentelemetry.io/service.namespace]
+  // - pod.namespace
+  rule {
+    action = "replace"
+    source_labels = [
+      {{ include "pod_annotation" "resource.opentelemetry.io/service.namespace" | quote }},
+      "namespace",
+    ]
+    separator = ";"
+    regex = "^(?:;*)?([^;]+).*$"
+    replacement = "$1"
+    target_label = "service_namespace"
+  }
+
+  // Set service_instance_id by choosing the first value found from the following ordered list:
+  // - pod.annotation[resource.opentelemetry.io/service.instance.id]
+  // - concat([k8s.namespace.name, k8s.pod.name, k8s.container.name], '.')
+  rule {
+    source_labels = [{{ include "pod_annotation" "resource.opentelemetry.io/service.instance.id" | quote }}]
+    target_label = "service_instance_id"
+  }
+  rule {
+    source_labels = ["service_instance_id", "namespace", "pod", "container"]
+    separator = "."
+    regex = "^\\.([^.]+\\.[^.]+\\.[^.]+)$"
+    target_label = "service_instance_id"
+  }
+
   rule {
     replacement = "alloy/pyroscope.ebpf"
     target_label = "source"
