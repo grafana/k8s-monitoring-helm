@@ -138,6 +138,7 @@ prometheus.scrape {{ include "helper.alloy_name" .name | quote }} {
   targets = discovery.relabel.{{ include "helper.alloy_name" .name }}.output
   job_name = {{ .jobLabel | quote }}
   scrape_interval = {{ .scrapeInterval | default $.Values.global.scrapeInterval | quote }}
+  scrape_timeout = {{ .scrapeTimeout | default $.Values.global.scrapeTimeout | quote }}
   scrape_protocols = {{ $.Values.global.scrapeProtocols | toJson }}
   scrape_classic_histograms = {{ $.Values.global.scrapeClassicHistograms }}
   clustering {

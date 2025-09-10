@@ -146,6 +146,7 @@ prometheus.scrape "node_exporter" {
   targets = discovery.relabel.node_exporter.output
   job_name = {{ (index .Values "node-exporter").jobLabel | quote }}
   scrape_interval = {{ (index .Values "node-exporter").scrapeInterval | default .Values.global.scrapeInterval | quote }}
+  scrape_timeout = {{ (index .Values "node-exporter").scrapeTimeout | default .Values.global.scrapeTimeout | quote }}
   scrape_protocols = {{ .Values.global.scrapeProtocols | toJson }}
   scrape_classic_histograms = {{ .Values.global.scrapeClassicHistograms }}
   scheme = {{ (index .Values "node-exporter").service.scheme | quote }}
