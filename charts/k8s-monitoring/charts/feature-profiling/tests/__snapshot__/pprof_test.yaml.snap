@@ -44,13 +44,62 @@ should be able to filter by label and annotation:
             source_labels = ["__meta_kubernetes_pod_container_name"]
             target_label  = "container"
           }
+
+          // Set service_name by choosing the first value found from the following ordered list:
+          // - pod.annotation[resource.opentelemetry.io/service.name]
+          // - pod.label[app.kubernetes.io/instance]
+          // - pod.label[app.kubernetes.io/name]
+          // - k8s.container.name
+          rule {
+            action = "replace"
+            source_labels = [
+              "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_name",
+              "__meta_kubernetes_pod_label_app_kubernetes_io_instance",
+              "__meta_kubernetes_pod_label_app_kubernetes_io_name",
+              "container",
+            ]
+            separator = ";"
+            regex = "^(?:;*)?([^;]+).*$"
+            replacement = "$1"
+            target_label = "service_name"
+          }
+
+          // Set service_namespace by choosing the first value found from the following ordered list:
+          // - pod.annotation[resource.opentelemetry.io/service.namespace]
+          // - pod.namespace
+          rule {
+            action = "replace"
+            source_labels = [
+              "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_namespace",
+              "namespace",
+            ]
+            separator = ";"
+            regex = "^(?:;*)?([^;]+).*$"
+            replacement = "$1"
+            target_label = "service_namespace"
+          }
+
+          // Set service_instance_id by choosing the first value found from the following ordered list:
+          // - pod.annotation[resource.opentelemetry.io/service.instance.id]
+          // - concat([k8s.namespace.name, k8s.pod.name, k8s.container.name], '.')
+          rule {
+            source_labels = ["__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_instance_id"]
+            target_label = "service_instance_id"
+          }
+          rule {
+            source_labels = ["service_instance_id", "namespace", "pod", "container"]
+            separator = "."
+            regex = "^\\.([^.]+\\.[^.]+\\.[^.]+)$"
+            target_label = "service_instance_id"
+          }
+
           rule {
             replacement = "alloy/pyroscope.pprof"
             target_label = "source"
           }
         }
 
-        discovery.relabel "pprof_pods_block_default_name" {
+        discovery.relabel "pprof_pods_block" {
           targets = discovery.relabel.pprof_pods.output
 
           // Keep only pods with the scrape annotation set
@@ -130,7 +179,7 @@ should be able to filter by label and annotation:
         }
 
         pyroscope.scrape "pyroscope_scrape_block" {
-          targets = discovery.relabel.pprof_pods_block_default_name.output
+          targets = discovery.relabel.pprof_pods_block.output
 
           bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
           profiling_config {
@@ -168,7 +217,7 @@ should be able to filter by label and annotation:
 
           forward_to = argument.profiles_destinations.value
         }
-        discovery.relabel "pprof_pods_cpu_default_name" {
+        discovery.relabel "pprof_pods_cpu" {
           targets = discovery.relabel.pprof_pods.output
 
           // Keep only pods with the scrape annotation set
@@ -248,7 +297,7 @@ should be able to filter by label and annotation:
         }
 
         pyroscope.scrape "pyroscope_scrape_cpu" {
-          targets = discovery.relabel.pprof_pods_cpu_default_name.output
+          targets = discovery.relabel.pprof_pods_cpu.output
 
           bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
           profiling_config {
@@ -286,7 +335,7 @@ should be able to filter by label and annotation:
 
           forward_to = argument.profiles_destinations.value
         }
-        discovery.relabel "pprof_pods_fgprof_default_name" {
+        discovery.relabel "pprof_pods_fgprof" {
           targets = discovery.relabel.pprof_pods.output
 
           // Keep only pods with the scrape annotation set
@@ -366,7 +415,7 @@ should be able to filter by label and annotation:
         }
 
         pyroscope.scrape "pyroscope_scrape_fgprof" {
-          targets = discovery.relabel.pprof_pods_fgprof_default_name.output
+          targets = discovery.relabel.pprof_pods_fgprof.output
 
           bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
           profiling_config {
@@ -404,7 +453,7 @@ should be able to filter by label and annotation:
 
           forward_to = argument.profiles_destinations.value
         }
-        discovery.relabel "pprof_pods_goroutine_default_name" {
+        discovery.relabel "pprof_pods_goroutine" {
           targets = discovery.relabel.pprof_pods.output
 
           // Keep only pods with the scrape annotation set
@@ -484,7 +533,7 @@ should be able to filter by label and annotation:
         }
 
         pyroscope.scrape "pyroscope_scrape_goroutine" {
-          targets = discovery.relabel.pprof_pods_goroutine_default_name.output
+          targets = discovery.relabel.pprof_pods_goroutine.output
 
           bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
           profiling_config {
@@ -522,7 +571,7 @@ should be able to filter by label and annotation:
 
           forward_to = argument.profiles_destinations.value
         }
-        discovery.relabel "pprof_pods_memory_default_name" {
+        discovery.relabel "pprof_pods_memory" {
           targets = discovery.relabel.pprof_pods.output
 
           // Keep only pods with the scrape annotation set
@@ -602,7 +651,7 @@ should be able to filter by label and annotation:
         }
 
         pyroscope.scrape "pyroscope_scrape_memory" {
-          targets = discovery.relabel.pprof_pods_memory_default_name.output
+          targets = discovery.relabel.pprof_pods_memory.output
 
           bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
           profiling_config {
@@ -640,7 +689,7 @@ should be able to filter by label and annotation:
 
           forward_to = argument.profiles_destinations.value
         }
-        discovery.relabel "pprof_pods_mutex_default_name" {
+        discovery.relabel "pprof_pods_mutex" {
           targets = discovery.relabel.pprof_pods.output
 
           // Keep only pods with the scrape annotation set
@@ -720,7 +769,7 @@ should be able to filter by label and annotation:
         }
 
         pyroscope.scrape "pyroscope_scrape_mutex" {
-          targets = discovery.relabel.pprof_pods_mutex_default_name.output
+          targets = discovery.relabel.pprof_pods_mutex.output
 
           bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
           profiling_config {
@@ -799,13 +848,62 @@ should build the pprof profiling configuration:
             source_labels = ["__meta_kubernetes_pod_container_name"]
             target_label  = "container"
           }
+
+          // Set service_name by choosing the first value found from the following ordered list:
+          // - pod.annotation[resource.opentelemetry.io/service.name]
+          // - pod.label[app.kubernetes.io/instance]
+          // - pod.label[app.kubernetes.io/name]
+          // - k8s.container.name
+          rule {
+            action = "replace"
+            source_labels = [
+              "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_name",
+              "__meta_kubernetes_pod_label_app_kubernetes_io_instance",
+              "__meta_kubernetes_pod_label_app_kubernetes_io_name",
+              "container",
+            ]
+            separator = ";"
+            regex = "^(?:;*)?([^;]+).*$"
+            replacement = "$1"
+            target_label = "service_name"
+          }
+
+          // Set service_namespace by choosing the first value found from the following ordered list:
+          // - pod.annotation[resource.opentelemetry.io/service.namespace]
+          // - pod.namespace
+          rule {
+            action = "replace"
+            source_labels = [
+              "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_namespace",
+              "namespace",
+            ]
+            separator = ";"
+            regex = "^(?:;*)?([^;]+).*$"
+            replacement = "$1"
+            target_label = "service_namespace"
+          }
+
+          // Set service_instance_id by choosing the first value found from the following ordered list:
+          // - pod.annotation[resource.opentelemetry.io/service.instance.id]
+          // - concat([k8s.namespace.name, k8s.pod.name, k8s.container.name], '.')
+          rule {
+            source_labels = ["__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_instance_id"]
+            target_label = "service_instance_id"
+          }
+          rule {
+            source_labels = ["service_instance_id", "namespace", "pod", "container"]
+            separator = "."
+            regex = "^\\.([^.]+\\.[^.]+\\.[^.]+)$"
+            target_label = "service_instance_id"
+          }
+
           rule {
             replacement = "alloy/pyroscope.pprof"
             target_label = "source"
           }
         }
 
-        discovery.relabel "pprof_pods_block_default_name" {
+        discovery.relabel "pprof_pods_block" {
           targets = discovery.relabel.pprof_pods.output
 
           // Keep only pods with the scrape annotation set
@@ -885,7 +983,7 @@ should build the pprof profiling configuration:
         }
 
         pyroscope.scrape "pyroscope_scrape_block" {
-          targets = discovery.relabel.pprof_pods_block_default_name.output
+          targets = discovery.relabel.pprof_pods_block.output
 
           bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
           profiling_config {
@@ -923,7 +1021,7 @@ should build the pprof profiling configuration:
 
           forward_to = argument.profiles_destinations.value
         }
-        discovery.relabel "pprof_pods_cpu_default_name" {
+        discovery.relabel "pprof_pods_cpu" {
           targets = discovery.relabel.pprof_pods.output
 
           // Keep only pods with the scrape annotation set
@@ -1003,7 +1101,7 @@ should build the pprof profiling configuration:
         }
 
         pyroscope.scrape "pyroscope_scrape_cpu" {
-          targets = discovery.relabel.pprof_pods_cpu_default_name.output
+          targets = discovery.relabel.pprof_pods_cpu.output
 
           bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
           profiling_config {
@@ -1041,7 +1139,7 @@ should build the pprof profiling configuration:
 
           forward_to = argument.profiles_destinations.value
         }
-        discovery.relabel "pprof_pods_fgprof_default_name" {
+        discovery.relabel "pprof_pods_fgprof" {
           targets = discovery.relabel.pprof_pods.output
 
           // Keep only pods with the scrape annotation set
@@ -1121,7 +1219,7 @@ should build the pprof profiling configuration:
         }
 
         pyroscope.scrape "pyroscope_scrape_fgprof" {
-          targets = discovery.relabel.pprof_pods_fgprof_default_name.output
+          targets = discovery.relabel.pprof_pods_fgprof.output
 
           bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
           profiling_config {
@@ -1159,7 +1257,7 @@ should build the pprof profiling configuration:
 
           forward_to = argument.profiles_destinations.value
         }
-        discovery.relabel "pprof_pods_goroutine_default_name" {
+        discovery.relabel "pprof_pods_goroutine" {
           targets = discovery.relabel.pprof_pods.output
 
           // Keep only pods with the scrape annotation set
@@ -1239,7 +1337,7 @@ should build the pprof profiling configuration:
         }
 
         pyroscope.scrape "pyroscope_scrape_goroutine" {
-          targets = discovery.relabel.pprof_pods_goroutine_default_name.output
+          targets = discovery.relabel.pprof_pods_goroutine.output
 
           bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
           profiling_config {
@@ -1277,7 +1375,7 @@ should build the pprof profiling configuration:
 
           forward_to = argument.profiles_destinations.value
         }
-        discovery.relabel "pprof_pods_memory_default_name" {
+        discovery.relabel "pprof_pods_memory" {
           targets = discovery.relabel.pprof_pods.output
 
           // Keep only pods with the scrape annotation set
@@ -1357,7 +1455,7 @@ should build the pprof profiling configuration:
         }
 
         pyroscope.scrape "pyroscope_scrape_memory" {
-          targets = discovery.relabel.pprof_pods_memory_default_name.output
+          targets = discovery.relabel.pprof_pods_memory.output
 
           bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
           profiling_config {
@@ -1395,7 +1493,7 @@ should build the pprof profiling configuration:
 
           forward_to = argument.profiles_destinations.value
         }
-        discovery.relabel "pprof_pods_mutex_default_name" {
+        discovery.relabel "pprof_pods_mutex" {
           targets = discovery.relabel.pprof_pods.output
 
           // Keep only pods with the scrape annotation set
@@ -1475,7 +1573,7 @@ should build the pprof profiling configuration:
         }
 
         pyroscope.scrape "pyroscope_scrape_mutex" {
-          targets = discovery.relabel.pprof_pods_mutex_default_name.output
+          targets = discovery.relabel.pprof_pods_mutex.output
 
           bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
           profiling_config {
