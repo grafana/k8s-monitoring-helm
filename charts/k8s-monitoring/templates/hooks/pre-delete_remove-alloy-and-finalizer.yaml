@@ -95,6 +95,8 @@ spec:
                 --patch='[{"op": "remove", "path": "/metadata/finalizers"}]' \
                 deployment/{{ include "alloy-operator.fullname" (index .Subcharts "alloy-operator") }}
           securityContext:
+            runAsNonRoot: true
+            runAsUser: 4242
             allowPrivilegeEscalation: false
             capabilities:
               drop: ["ALL"]

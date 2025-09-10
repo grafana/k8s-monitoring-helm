@@ -66,6 +66,8 @@ spec:
                 --patch='{"metadata":{"finalizers":["k8s.grafana.com/finalizer"]}}' \
                 deployment/{{ include "alloy-operator.fullname" (index .Subcharts "alloy-operator") }}
           securityContext:
+            runAsNonRoot: true
+            runAsUser: 4242
             allowPrivilegeEscalation: false
             capabilities:
               drop: ["ALL"]
