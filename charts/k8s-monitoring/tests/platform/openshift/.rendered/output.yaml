@@ -1918,7 +1918,9 @@ spec:
     livenessProbe: {}
     mounts:
       dockercontainers: false
-      extra: []
+      extra:
+      - mountPath: /var/lib/alloy
+        name: alloy-storage
       varlog: false
     resources: {}
     securityContext:
@@ -1944,7 +1946,7 @@ spec:
       seccompProfile:
         type: RuntimeDefault
     stabilityLevel: generally-available
-    storagePath: /tmp/alloy
+    storagePath: /var/lib/alloy
     uiPathPrefix: /
   configReloader:
     customArgs: []
@@ -2003,7 +2005,7 @@ spec:
             minAllowed: {}
         updatePolicy: null
     dnsPolicy: ClusterFirst
-    enableStatefulSetAutoDeletePVC: false
+    enableStatefulSetAutoDeletePVC: true
     extraAnnotations: {}
     extraContainers: []
     hostNetwork: false
@@ -2026,7 +2028,16 @@ spec:
     topologySpreadConstraints: []
     type: statefulset
     updateStrategy: {}
-    volumeClaimTemplates: []
+    volumeClaimTemplates:
+    - metadata:
+        name: alloy-storage
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+        storageClassName: standard-csi
     volumes:
       extra: []
   crds:
@@ -2518,6 +2529,7 @@ users: []
 volumes:
 - configMap
 - emptyDir
+- persistentVolumeClaim
 - projected
 - secret
 ---
@@ -2570,6 +2582,7 @@ users: []
 volumes:
 - configMap
 - emptyDir
+- persistentVolumeClaim
 - projected
 - secret
 ---
@@ -2623,6 +2636,7 @@ volumes:
 - configMap
 - emptyDir
 - hostPath
+- persistentVolumeClaim
 - projected
 - secret
 ---
