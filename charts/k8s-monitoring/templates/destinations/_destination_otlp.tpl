@@ -585,6 +585,7 @@ otelcol.auth.sigv4 {{ include "helper.alloy_name" .name | quote }} {
     {{- if .auth.sigv4.assumeRole.stsRegion }}
     sts_region = {{ .auth.sigv4.assumeRole.stsRegion | quote }}
     {{- end }}
+  }
   {{- end }}
 }
 {{- end }}
