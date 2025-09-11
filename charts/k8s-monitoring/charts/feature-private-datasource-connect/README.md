@@ -179,7 +179,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 
 | Repository | Name | Version |
 |------------|------|---------|
-|  | pdc-agent | 0.0.1 |
+| https://grafana.github.io/helm-charts | pdc-agent | 0.0.1 |
 <!-- markdownlint-enable no-bare-urls -->
 ## Values
 
