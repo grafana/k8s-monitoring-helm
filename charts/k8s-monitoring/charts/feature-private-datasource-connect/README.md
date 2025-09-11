@@ -48,23 +48,23 @@ privateDatasourceConnect:
 privateDatasourceConnect:
   enabled: true
   destinations: ["prometheus"]  # Custom destination routing
- 
+
   pdc-agent:
     # Required PDC connection settings
     cluster: "prod-us-central-0"
     hostedGrafanaId: "123456"
     tokenSecretName: "pdc-token"
-   
+
     # Optional deployment settings
     replicaCount: 3
     image:
       repository: grafana/pdc-agent
       tag: "v1.2.3"
       pullPolicy: IfNotPresent
-   
+
     metricsPort: 8090
     debug: false
-   
+
     resources:
       requests:
         cpu: 100m
@@ -72,23 +72,23 @@ privateDatasourceConnect:
       limits:
         cpu: 500m
         memory: 512Mi
-   
+
     # Security contexts (using chart defaults)
     podSecurityContext:
       runAsUser: 30000
       runAsGroup: 30000
       fsGroup: 30000
-   
+
     securityContext:
       capabilities:
         drop: [ALL]
       runAsNonRoot: true
       privileged: false
       allowPrivilegeEscalation: false
-   
+
     # Additional arguments for the PDC agent
     extraArgs: []
- 
+
   # Feature-specific metric filtering
   metricsTuning:
     includeMetrics:
@@ -97,14 +97,14 @@ privateDatasourceConnect:
       - "go_.*"
     excludeMetrics:
       - ".*_debug_.*"
- 
+
   # Custom relabeling rules
   extraDiscoveryRules: |
     rule {
       source_labels = ["__meta_kubernetes_pod_annotation_custom_label"]
       target_label = "custom_label"
     }
- 
+
   extraMetricProcessingRules: |
     rule {
       source_labels = ["__name__"]
