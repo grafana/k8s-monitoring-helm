@@ -7,36 +7,81 @@
 
     {{- $maxLength := 51 }}{{/* This limit is from the `controller-revision-hash` pod label value*/}}
     {{- $collectorName := printf "%s-%s" $.Release.Name (include "helper.k8s_name" (printf "%s-sampler" $destination.name)) | trunc $maxLength | trimSuffix "-" | lower }}
-    {{- $collectorValues := merge (dict "fullnameOverride" $collectorName) ($destination.processors.tailSampling.collector | default dict) }}
+    {{- $receiverEnvVars := list }}
+    {{- if and (hasKey $.Values "alloy-receiver") (hasKey (index $.Values "alloy-receiver") "alloy") (hasKey (index (index $.Values "alloy-receiver") "alloy") "extraEnv") }}
+      {{- $receiverEnvVars = (index (index $.Values "alloy-receiver") "alloy").extraEnv }}
+    {{- end }}
+    {{- $receiverRemoteConfig := dict }}
+    {{- if and (hasKey $.Values "alloy-receiver") (hasKey (index $.Values "alloy-receiver") "remoteConfig") }}
+      {{- $receiverRemoteConfig = (index $.Values "alloy-receiver").remoteConfig }}
+    {{- end }}
+    {{- $collectorDefaults := dict "fullnameOverride" $collectorName }}
+    {{- if $receiverEnvVars }}
+      {{- /* Create a modified extraEnv list with unique collector ID for tail sampler */}}
+      {{- $samplerEnvVars := list }}
+      {{- range $env := $receiverEnvVars }}
+        {{- if eq $env.name "GCLOUD_FM_COLLECTOR_ID" }}
+          {{- /* Generate proper collector ID for tail sampler using the actual collector name */}}
+          {{- $samplerCollectorId := printf "%s-%s-%s" $.Values.cluster.name $.Release.Namespace $collectorName }}
+          {{- $uniqueCollectorId := dict "name" "GCLOUD_FM_COLLECTOR_ID" "value" $samplerCollectorId }}
+          {{- $samplerEnvVars = append $samplerEnvVars $uniqueCollectorId }}
+        {{- else }}
+          {{- $samplerEnvVars = append $samplerEnvVars $env }}
+        {{- end }}
+      {{- end }}
+      {{- $_ := set $collectorDefaults "alloy" (dict "extraEnv" $samplerEnvVars) }}
+    {{- end }}
+    {{- if $receiverRemoteConfig.enabled }}
+      {{- $_ := set $collectorDefaults "remoteConfig" $receiverRemoteConfig }}
+    {{- end }}
+    {{- $collectorValues := merge $collectorDefaults ($destination.processors.tailSampling.collector | default dict) }}
     {{- $values := (deepCopy $ | merge (dict "collectorName" $collectorName "collectorValues" $collectorValues)) }}
     {{- $alloyValues := include "collector.alloy.values" $values | fromYaml }}
 
-    {{- /* Sampler config components */}}
-    {{- $destinationTarget := include "destinations.otlp.alloy.exporter.target" $destination }}
-    {{- $samplerConfig := merge (dict "traces" $destinationTarget "name" "tail_sampler") $destination.processors.tailSampling}}
-    {{- $samplerTarget := include "sampler.processor.tailSampling.alloy.target" $samplerConfig }}
-    {{- $samplerConfigComponents := include "sampler.processor.tailSampling.alloy" $samplerConfig}}
-
-    {{- /* Receiver config components */}}
-    {{- $receiverConfig := merge (dict "traces" $samplerTarget "name" "sampler_receiver") $destination.processors.tailSampling }}
-    {{- $receiverConfigComponents := include "receiver.otlp.alloy" $receiverConfig }}
-
-    {{- /* Destination components*/}}
-    {{- $destinationConfigComponents := printf "// Destination: %s (%s)" $destination.name $destination.type }}
-    {{- $destinationConfigComponents = cat $destinationConfigComponents (include "destinations.otlp.alloy.exporter" $destination) | trim }}
-    {{- if eq (include "secrets.usesKubernetesSecret" $destination) "true" }}
-      {{- $destinationConfigComponents = cat $destinationConfigComponents (include "secret.alloy" (deepCopy $ | merge (dict "object" $destination)) | nindent 0) }}
-    {{- end }}
-
-    {{- /* Build full Alloy configuration */}}
+    {{- $hasPolicies := and $destination.processors.tailSampling.policies (gt (len $destination.processors.tailSampling.policies) 0) }}
     {{- $alloyConfig := "" }}
-    {{- $alloyConfig = cat $alloyConfig ($receiverConfigComponents | trim | nindent 0) }}
-    {{- $alloyConfig = cat $alloyConfig ($samplerConfigComponents | trim | nindent 0) }}
-    {{- $alloyConfig = cat $alloyConfig (include "collectors.logging.alloy" $alloyValues | trim | nindent 0) }}
-    {{- $alloyConfig = cat $alloyConfig (include "collectors.liveDebugging.alloy" $alloyValues | trim | nindent 0) }}
-    {{- $alloyConfig = cat $alloyConfig (include "collectors.remoteConfig.alloy" $values | trim | nindent 0) }}
-    {{- $alloyConfig = cat $alloyConfig (include "collectors.extraConfig.alloy" $values | trim | nindent 0) }}
-    {{- $alloyConfig = cat $alloyConfig ($destinationConfigComponents | trim | nindent 0) }}
+    {{- if $hasPolicies }}
+      {{- /* Sampler config components */}}
+      {{- $destinationTarget := include "destinations.otlp.alloy.exporter.target" $destination }}
+      {{- $samplerConfig := merge (dict "traces" $destinationTarget "name" "tail_sampler") $destination.processors.tailSampling}}
+      {{- $samplerTarget := include "sampler.processor.tailSampling.alloy.target" $samplerConfig }}
+      {{- $samplerConfigComponents := include "sampler.processor.tailSampling.alloy" $samplerConfig}}
+
+      {{- /* Receiver config components */}}
+      {{- $receiverConfig := merge (dict "traces" $samplerTarget "name" "sampler_receiver") $destination.processors.tailSampling }}
+      {{- $receiverConfigComponents := include "receiver.otlp.alloy" $receiverConfig }}
+
+      {{- /* Destination components*/}}
+      {{- $destinationConfigComponents := printf "// Destination: %s (%s)" $destination.name $destination.type }}
+      {{- $destinationConfigComponents = cat $destinationConfigComponents (include "destinations.otlp.alloy.exporter" $destination) | trim }}
+      {{- if eq (include "secrets.usesKubernetesSecret" $destination) "true" }}
+        {{- $destinationConfigComponents = cat $destinationConfigComponents (include "secret.alloy" (deepCopy $ | merge (dict "object" $destination)) | nindent 0) }}
+      {{- end }}
+
+      {{- /* Build full Alloy configuration */}}
+      {{- $alloyConfig = cat $alloyConfig ($receiverConfigComponents | trim | nindent 0) }}
+      {{- $alloyConfig = cat $alloyConfig ($samplerConfigComponents | trim | nindent 0) }}
+      {{- $alloyConfig = cat $alloyConfig (include "collectors.logging.alloy" $alloyValues | trim | nindent 0) }}
+      {{- $alloyConfig = cat $alloyConfig (include "collectors.liveDebugging.alloy" $alloyValues | trim | nindent 0) }}
+      {{- $alloyConfig = cat $alloyConfig (include "collectors.remoteConfig.alloy" $values | trim | nindent 0) }}
+      {{- $alloyConfig = cat $alloyConfig (include "collectors.extraConfig.alloy" $values | trim | nindent 0) }}
+      {{- $alloyConfig = cat $alloyConfig ($destinationConfigComponents | trim | nindent 0) }}
+    {{- else }}
+      {{- /* Minimal configuration when no policies are defined - for fleet management */}}
+      {{- $alloyConfig = cat $alloyConfig "// No tail sampling policies defined - minimal configuration for fleet management" }}
+      {{- $alloyConfig = cat $alloyConfig "\nlogging {\n  level  = \"info\"\n  format = \"logfmt\"\n}" }}
+      {{- $remoteConfigObj := dict "name" "alloy-receiver-remote-cfg" }}
+      {{- $secretName := include "secrets.kubernetesSecretName" (deepCopy $ | merge (dict "object" $remoteConfigObj)) }}
+      {{- $secretRefName := "alloy_receiver" }}
+      {{- $remoteConfigUrl := "https://fleet-management-prod-011.grafana.net" }}
+      {{- if $receiverRemoteConfig.url }}
+        {{- $remoteConfigUrl = $receiverRemoteConfig.url }}
+      {{- end }}
+      {{- $alloyConfig = cat $alloyConfig (printf "\n\nremote.kubernetes.secret \"%s_remote_cfg\" {\n  namespace = \"%s\"\n  name = \"%s\"\n}\n\nremotecfg {\n  id = sys.env(\"GCLOUD_FM_COLLECTOR_ID\")\n  url = \"%s\"\n  basic_auth {\n    username = convert.nonsensitive(remote.kubernetes.secret.%s_remote_cfg.data[\"username\"])\n    password = remote.kubernetes.secret.%s_remote_cfg.data[\"password\"]\n  }\n  tls_config {\n    insecure_skip_verify = false\n  }\n  poll_frequency = \"5m\"\n  attributes = {\n    \"cluster\" = \"%s\"," $secretRefName $.Release.Namespace $secretName $remoteConfigUrl $secretRefName $secretRefName $.Values.cluster.name) }}
+      {{- $alloyConfig = cat $alloyConfig (printf "\n    \"namespace\" = \"%s\",\n    \"platform\" = \"kubernetes\",\n    \"release\" = \"%s\",\n    \"source\" = \"%s\",\n    \"sourceVersion\" = \"%s\",\n    \"workloadName\" = \"alloy-sampler\",\n    \"workloadType\" = \"statefulset\",\n  }\n}" $.Release.Namespace $.Release.Name $.Chart.Name $.Chart.Version) }}
+      {{- $alloyConfig = cat $alloyConfig (include "collectors.liveDebugging.alloy" $alloyValues | trim | nindent 0) }}
+      {{- $alloyConfig = cat $alloyConfig (include "collectors.extraConfig.alloy" $values | trim | nindent 0) }}
+    {{- end }}
     {{- $alloyConfig = regexReplaceAll `[ \t]+(\r?\n)` $alloyConfig "\n" | trim }}
 
     {{- /* Build Alloy spec */}}
