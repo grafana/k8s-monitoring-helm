@@ -13,18 +13,19 @@ The PDC Agent creates secure tunnels to connect external data sources (like data
 
 The Private Datasource Connect feature:
 
-- **Deploys the PDC Agent**: Uses the official pdc-agent Helm chart as a dependency
-- **Configures Metrics Collection**: Sets up Alloy to discover and scrape PDC Agent metrics
-- **Provides Security**: Uses proper security contexts and non-root containers
-- **Enables Monitoring**: Routes PDC Agent metrics to your chosen destinations
-- **Validates Configuration**: Ensures required PDC connection settings are provided
+-   **Deploys the PDC Agent**: Uses the official pdc-agent Helm chart as a dependency
+-   **Configures Metrics Collection**: Sets up Alloy to discover and scrape PDC Agent metrics
+-   **Provides Security**: Uses proper security contexts and non-root containers
+-   **Enables Monitoring**: Routes PDC Agent metrics to your chosen destinations
+-   **Validates Configuration**: Ensures required PDC connection settings are provided
 
 ## Required Setup
 
 Before enabling this feature, you must:
 
-1. **Create an Access Policy token** in your Grafana Cloud stack with appropriate permissions
-2. **Create a Kubernetes secret** with the token (recommended for production):
+1.  **Create an Access Policy token** in your Grafana Cloud stack with appropriate permissions
+2.  **Create a Kubernetes secret** with the token (recommended for production):
+
    ```bash
    kubectl create secret generic pdc-token --from-literal=token=YOUR_ACCESS_POLICY_TOKEN
    ```
@@ -132,9 +133,9 @@ privateDatasourceConnect:
 
 The following settings are required when the feature is enabled:
 
-- `pdc-agent.cluster`: The cluster where your Hosted Grafana stack is running
-- `pdc-agent.hostedGrafanaId`: The numeric ID of your Hosted Grafana stack
-- Authentication: Either `pdc-agent.tokenSecretName` OR `pdc-agent.insecureTokenValue`
+-   `pdc-agent.cluster`: The cluster where your Hosted Grafana stack is running
+-   `pdc-agent.hostedGrafanaId`: The numeric ID of your Hosted Grafana stack
+-   Authentication: Either `pdc-agent.tokenSecretName` OR `pdc-agent.insecureTokenValue`
 
 ### PDC Agent Configuration
 
@@ -143,10 +144,11 @@ All configuration under `pdc-agent.*` is passed directly to the PDC Agent Helm c
 ### Metrics Collection
 
 The feature automatically configures Alloy to:
-- Discover PDC Agent pods using Kubernetes service discovery
-- Scrape metrics from the `/metrics` endpoint on port 8090
-- Apply custom relabeling rules if specified
-- Route metrics to configured destinations
+
+-   Discover PDC Agent pods using Kubernetes service discovery
+-   Scrape metrics from the `/metrics` endpoint on port 8090
+-   Apply custom relabeling rules if specified
+-   Route metrics to configured destinations
 
 ## Testing
 
