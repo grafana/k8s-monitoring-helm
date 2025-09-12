@@ -5,6 +5,7 @@
 - clusterMetrics
 - clusterEvents
 - nodeLogs
+- privateDatasourceConnect
 - podLogs
 - profilesReceiver
 - profiling

@@ -1,0 +1,38 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Feature - Private Datasource Connect - Defaults
+templates:
+  - configmap.yaml
+tests:
+  - it: should generate the default configuration
+    set:
+      deployAsConfigMap: true
+      enabled: true
+      pdc-agent:
+        cluster: "test-cluster"
+        hostedGrafanaId: "12345"
+        insecureTokenValue: "test-token"
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["module.alloy"]
+
+  - it: should not create configmap when deployAsConfigMap is false
+    set:
+      deployAsConfigMap: false
+      enabled: true
+      pdc-agent:
+        cluster: "test-cluster"
+        hostedGrafanaId: "12345"
+        insecureTokenValue: "test-token"
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should not create configmap when feature is disabled
+    set:
+      deployAsConfigMap: true
+      enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0

@@ -1,0 +1,15 @@
+{{- if and .Values.deployAsConfigMap .Values.enabled }}
+{{- $alloyConfig := include "feature.privateDatasourceConnect.module" . }}
+{{- $alloyConfig = regexReplaceAll `[ \t]+(\r?\n)` $alloyConfig "\n" }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Chart.Name }}-config
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "feature-private-datasource-connect.labels" . | nindent 4 }}
+data:
+  module.alloy: |-
+    {{- $alloyConfig | trim | nindent 4 }}
+{{- end }}

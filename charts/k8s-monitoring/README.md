@@ -250,6 +250,7 @@ details:
 |  | integrations(feature-integrations) | 1.0.0 |
 |  | nodeLogs(feature-node-logs) | 1.0.0 |
 |  | podLogs(feature-pod-logs) | 1.0.0 |
+|  | privateDatasourceConnect(feature-private-datasource-connect) | 1.0.0 |
 |  | profilesReceiver(feature-profiles-receiver) | 1.0.0 |
 |  | profiling(feature-profiling) | 1.0.0 |
 |  | prometheusOperatorObjects(feature-prometheus-operator-objects) | 1.0.0 |
@@ -403,6 +404,14 @@ details:
 | podLogs | object | Disabled | Pod logs. Requires a destination that supports logs. To see the valid options, please see the [Pod Logs feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-pod-logs). |
 | podLogs.destinations | list | `[]` | The destinations where logs will be sent. If empty, all logs-capable destinations will be used. |
 | podLogs.enabled | bool | `false` | Enable gathering Kubernetes Pod logs. |
+
+### Features - Private Datasource Connect
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| privateDatasourceConnect | object | Disabled | Private Datasource Connect (PDC) Agent. Deploys and configures the PDC Agent for Grafana Cloud observability. Requires a destination that supports metrics. To see the valid options, please see the [PDC Agent feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-pdc-agent). |
+| privateDatasourceConnect.destinations | list | `[]` | The destinations where PDC Agent metrics will be sent. If empty, all metrics-capable destinations will be used. |
+| privateDatasourceConnect.enabled | bool | `false` | Enable the PDC Agent deployment. |
 
 ### Features - Profiles Receiver
 

@@ -1,0 +1,134 @@
+---
+global:
+  # -- How frequently to scrape metrics.
+  # @section -- Global Settings
+  scrapeInterval: 60s
+
+  # -- Sets the max_cache_size for every prometheus.relabel component. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments))
+  # This should be at least 2x-5x your largest scrape target or samples appended rate.
+  # @section -- Global Settings
+  maxCacheSize: 100000
+
+# Feature configuration
+# -- Enable the PDC Agent deployment.
+# @section -- PDC Agent
+enabled: true
+
+# -- Namespace to deploy the PDC Agent in.
+# @section -- PDC Agent
+namespace: ""
+
+# PDC Agent subchart values - passed directly to pdc-agent chart
+pdc-agent:
+  # -- This will set the replicaset count
+  replicaCount: 3
+
+  # -- Container image configuration
+  image:
+    repository: grafana/pdc-agent
+    tag: ""
+    pullPolicy: IfNotPresent
+
+  # -- Secrets for pulling an image from a private repository
+  imagePullSecrets: []
+
+  # -- Override the chart name
+  nameOverride: ""
+  fullnameOverride: ""
+
+  # -- Pod labels
+  podLabels: {}
+
+  # -- Pod security context
+  podSecurityContext:
+    runAsUser: 30000
+    runAsGroup: 30000
+    fsGroup: 30000
+
+  # -- Container security context
+  securityContext:
+    capabilities:
+      drop:
+        - ALL
+    runAsNonRoot: true
+    privileged: false
+    allowPrivilegeEscalation: false
+
+  # -- Resource limits and requests
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+
+  # -- Node selector, tolerations, and affinity
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+  # -- The port where metrics are served from the pdc agent
+  metricsPort: 8090
+
+  # -- Enable debug logging for the agent
+  debug: false
+
+  # PDC Connection Configuration
+  # See https://grafana.com/docs/grafana-cloud/connect-externally-hosted/private-data-source-connect/configure-pdc/#pdc-connection-steps
+
+  # -- The cluster where your Hosted Grafana stack is running
+  cluster: ""
+
+  # -- The numeric ID of your Hosted Grafana stack
+  hostedGrafanaId: ""
+
+  # -- Secret name containing the Access Policy token (expects key 'token')
+  tokenSecretName: ""
+
+  # -- Insecure token value for testing purposes (not recommended for production)
+  insecureTokenValue: ""
+
+  # -- Extra arguments for the pdc-agent
+  extraArgs: []
+
+# Feature-specific configuration (not passed to subchart)
+# -- Rule blocks to be added to the prometheus.scrape component for PDC Agent metrics.
+# These relabeling rules are applied pre-scrape against the targets from service discovery.
+# ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.scrape/#rule-block))
+# @section -- PDC Agent
+extraDiscoveryRules: ""
+
+# -- Rule blocks to be added to the prometheus.relabel component for PDC Agent.
+# These relabeling rules are applied post-scrape against the metrics returned from the scraped target.
+# ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#rule-block))
+# @section -- PDC Agent
+extraMetricProcessingRules: ""
+
+# Adjustments to the scraped metrics to filter the amount of data sent to storage.
+metricsTuning:
+  # -- Metrics to keep. Can use regular expressions.
+  # @section -- PDC Agent
+  includeMetrics: []
+  # -- Metrics to drop. Can use regular expressions.
+  # @section -- PDC Agent
+  excludeMetrics: []
+
+# -- The default interval between scraping targets.
+# Overrides global.scrapeInterval
+# @default -- 60s
+# @section -- PDC Agent
+scrapeInterval: ""
+
+# -- The default timeout for scrape requests.
+# @default -- 10s
+# @section -- PDC Agent
+scrapeTimeout: ""
+
+# -- Sets the max_cache_size for PDC Agent prometheus.relabel component.
+# This should be at least 2x-5x your largest scrape target or samples appended rate.
+# ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments))
+# Overrides global.maxCacheSize
+# @raw
+# @section -- PDC Agent
+maxCacheSize:
+
+# @ignore
+deployAsConfigMap: false
