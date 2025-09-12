@@ -1,0 +1,106 @@
+---
+# -- Only capture logs from pods in these namespaces (`[]` means all namespaces).
+# @section -- Discovery Settings
+namespaces: []
+
+# -- Do not capture logs from any pods in these namespaces.
+# @section -- Discovery Settings
+excludeNamespaces: []
+
+# -- Filter the list of discovered nodes by labels.
+# Example: `nodeSelectors: { 'kubernetes.io/os': 'linux' }`
+nodeSelectors: {}
+
+# -- Filter the list of discovered pods by labels.
+# Example: `labelSelectors: { 'app': 'myapp' }` will only discover pods and services with the label `app=myapp`.
+# Example: `labelSelectors: { 'app': ['myapp', 'myotherapp'] }` will only discover pods and services with the label `app=myapp` or `app=myotherapp`.
+# @section -- Discovery Settings
+labelSelectors: {}
+
+# -- Rules to filter pods for log gathering. Only used for "volumes" or "kubernetesApi" gather methods.
+# @section -- Discovery Settings
+extraDiscoveryRules: ""
+
+# Configures which node labels to attach to the logs
+nodeLabels:
+  # -- Whether or not to attach the nodepool label
+  # @section -- Node Labels
+  nodePool: false
+  # -- Whether or not to add the region label
+  # @section -- Node Labels
+  region: false
+  # -- Whether or not to add the availability\_zone label
+  # @section -- Node Labels
+  availabilityZone: false
+  # -- Whether or not to add the node\_role label
+  # @section -- Node Labels
+  nodeRole: false
+  # -- Whether or not to add the os label
+  # @section -- Node Labels
+  nodeOS: false
+  # -- Whether or not to add the node architecture label
+  # @section -- Node Labels
+  nodeArchitecture: false
+  # -- Whether or not to add the instance\_type label
+  # @section -- Node Labels
+  instanceType: false
+
+# -- Log labels to set with values copied from the Kubernetes Pod labels.
+# Format: `<log_label>: <kubernetes_label>`.
+# @section -- Log Processing
+labels:
+  app_kubernetes_io_name: app.kubernetes.io/name
+
+# -- Log labels to set with static values.
+# @section -- Log Processing
+staticLabels: {}
+
+# -- Log labels to set with static values, not quoted so it can reference config components.
+# @section -- Log Processing
+staticLabelsFrom: {}
+
+# -- Log labels to set with values copied from the Kubernetes Pod annotations.
+# Format: `<log_label>: <kubernetes_annotation>`.
+# @section -- Log Processing
+annotations:
+  job: k8s.grafana.com/logs.job
+
+# Check logs for secrets and mask them.
+secretFilter:
+  # -- Enable secret filtering.
+  # @section -- Secret Filtering
+  enabled: false
+
+  # -- Include the generic API key rule.
+  # @section -- Secret Filtering
+  includeGeneric: false
+
+  # -- Show the first N characters of the secret.
+  # @section -- Secret Filtering
+  partialMask: 0
+
+  # -- List of regular expressions to allowlist matching secrets.
+  # @section -- Secret Filtering
+  allowlist: []
+
+# -- Stage blocks to be added to the loki.process component for pod logs.
+# ([docs](https://grafana.com/docs/alloy/latest/reference/components/loki/loki.process/#blocks))
+# This value is templated so that you can refer to other values from this file.
+# @section -- Log Processing
+extraLogProcessingStages: ""
+
+# -- The structured metadata mappings to set.
+# Format: `<key>: <extracted_key>`.
+# Example:
+# structuredMetadata:
+#   component: component
+#   kind: kind
+#   name: name
+# @section -- Processing settings
+structuredMetadata:
+  k8s.pod.name: k8s.pod.name
+  pod: pod
+  service.instance.id: service.instance.id
+
+# @ignore
+deployAsConfigMap: false
