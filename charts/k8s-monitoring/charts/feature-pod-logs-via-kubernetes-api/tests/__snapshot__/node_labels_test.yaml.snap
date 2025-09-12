@@ -1,9 +1,16 @@
 should add the attach_metadata block to the discovery.kubernetes:
   1: |
     |-
-      declare "pod_logs" {
+      declare "pod_logs_via_kubernetes_api" {
         argument "logs_destinations" {
           comment = "Must be a list of log destinations where collected logs should be forwarded to"
+        }
+
+        discovery.kubernetes "pods" {
+          role = "pod"
+        attach_metadata {
+          node = true
+        }
         }
 
         discovery.relabel "filtered_pods" {
@@ -15,43 +22,23 @@ should add the attach_metadata block to the discovery.kubernetes:
           }
           rule {
             source_labels = ["__meta_kubernetes_pod_name"]
-            action = "replace"
             target_label = "pod"
           }
           rule {
             source_labels = ["__meta_kubernetes_pod_container_name"]
-            action = "replace"
             target_label = "container"
           }
           rule {
             source_labels = ["__meta_kubernetes_namespace", "__meta_kubernetes_pod_container_name"]
             separator = "/"
-            action = "replace"
-            replacement = "$1"
             target_label = "job"
           }
 
           // set the container runtime as a label
           rule {
-            action = "replace"
             source_labels = ["__meta_kubernetes_pod_container_id"]
             regex = "^(\\S+):\\/\\/.+$"
-            replacement = "$1"
             target_label = "tmp_container_runtime"
-          }
-
-          // make all labels on the pod available to the pipeline as labels,
-          // they are omitted before write to loki via stage.label_keep unless explicitly set
-          rule {
-            action = "labelmap"
-            regex = "__meta_kubernetes_pod_label_(.+)"
-          }
-
-          // make all annotations on the pod available to the pipeline as labels,
-          // they are omitted before write to loki via stage.label_keep unless explicitly set
-          rule {
-            action = "labelmap"
-            regex = "__meta_kubernetes_pod_annotation_(.+)"
           }
 
           // explicitly set service_name. if not set, loki will automatically try to populate a default.
@@ -67,7 +54,7 @@ should add the attach_metadata block to the discovery.kubernetes:
             source_labels = [
               "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_name",
               "__meta_kubernetes_pod_label_app_kubernetes_io_name",
-              "__meta_kubernetes_pod_container_name",
+              "container",
             ]
             separator = ";"
             regex = "^(?:;*)?([^;]+).*$"
@@ -137,35 +124,11 @@ should add the attach_metadata block to the discovery.kubernetes:
           }
         }
 
-        discovery.kubernetes "pods" {
-          role = "pod"
-          selectors {
-            role = "pod"
-            field = "spec.nodeName=" + sys.env("HOSTNAME")
-          }
-          attach_metadata {
-            node = true
-          }
-        }
-
-        discovery.relabel "filtered_pods_with_paths" {
+        loki.source.kubernetes "pod_logs" {
           targets = discovery.relabel.filtered_pods.output
-
-          rule {
-            source_labels = ["__meta_kubernetes_pod_uid", "__meta_kubernetes_pod_container_name"]
-            separator = "/"
-            action = "replace"
-            replacement = "/var/log/pods/*$1/*.log"
-            target_label = "__path__"
+          clustering {
+            enabled = true
           }
-        }
-
-        local.file_match "pod_logs" {
-          path_targets = discovery.relabel.filtered_pods_with_paths.output
-        }
-
-        loki.source.file "pod_logs" {
-          targets    = local.file_match.pod_logs.targets
           forward_to = [loki.process.pod_logs.receiver]
         }
 
@@ -214,20 +177,22 @@ should add the attach_metadata block to the discovery.kubernetes:
             }
           }
 
-          // Only keep the labels that are defined in the `keepLabels` list.
-          stage.label_keep {
-            values = ["__tenant_id__","app_kubernetes_io_name","container","instance","job","level","namespace","service_name","service_namespace","deployment_environment","deployment_environment_name","k8s_namespace_name","k8s_deployment_name","k8s_statefulset_name","k8s_daemonset_name","k8s_cronjob_name","k8s_job_name","k8s_node_name"]
-          }
-
           forward_to = argument.logs_destinations.value
         }
       }
 should add the node architecture label rules to the discovery relabel:
   1: |
     |-
-      declare "pod_logs" {
+      declare "pod_logs_via_kubernetes_api" {
         argument "logs_destinations" {
           comment = "Must be a list of log destinations where collected logs should be forwarded to"
+        }
+
+        discovery.kubernetes "pods" {
+          role = "pod"
+        attach_metadata {
+          node = true
+        }
         }
 
         discovery.relabel "filtered_pods" {
@@ -239,43 +204,23 @@ should add the node architecture label rules to the discovery relabel:
           }
           rule {
             source_labels = ["__meta_kubernetes_pod_name"]
-            action = "replace"
             target_label = "pod"
           }
           rule {
             source_labels = ["__meta_kubernetes_pod_container_name"]
-            action = "replace"
             target_label = "container"
           }
           rule {
             source_labels = ["__meta_kubernetes_namespace", "__meta_kubernetes_pod_container_name"]
             separator = "/"
-            action = "replace"
-            replacement = "$1"
             target_label = "job"
           }
 
           // set the container runtime as a label
           rule {
-            action = "replace"
             source_labels = ["__meta_kubernetes_pod_container_id"]
             regex = "^(\\S+):\\/\\/.+$"
-            replacement = "$1"
             target_label = "tmp_container_runtime"
-          }
-
-          // make all labels on the pod available to the pipeline as labels,
-          // they are omitted before write to loki via stage.label_keep unless explicitly set
-          rule {
-            action = "labelmap"
-            regex = "__meta_kubernetes_pod_label_(.+)"
-          }
-
-          // make all annotations on the pod available to the pipeline as labels,
-          // they are omitted before write to loki via stage.label_keep unless explicitly set
-          rule {
-            action = "labelmap"
-            regex = "__meta_kubernetes_pod_annotation_(.+)"
           }
 
           // explicitly set service_name. if not set, loki will automatically try to populate a default.
@@ -291,7 +236,7 @@ should add the node architecture label rules to the discovery relabel:
             source_labels = [
               "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_name",
               "__meta_kubernetes_pod_label_app_kubernetes_io_name",
-              "__meta_kubernetes_pod_container_name",
+              "container",
             ]
             separator = ";"
             regex = "^(?:;*)?([^;]+).*$"
@@ -358,35 +303,11 @@ should add the node architecture label rules to the discovery relabel:
           }
         }
 
-        discovery.kubernetes "pods" {
-          role = "pod"
-          selectors {
-            role = "pod"
-            field = "spec.nodeName=" + sys.env("HOSTNAME")
-          }
-          attach_metadata {
-            node = true
-          }
-        }
-
-        discovery.relabel "filtered_pods_with_paths" {
+        loki.source.kubernetes "pod_logs" {
           targets = discovery.relabel.filtered_pods.output
-
-          rule {
-            source_labels = ["__meta_kubernetes_pod_uid", "__meta_kubernetes_pod_container_name"]
-            separator = "/"
-            action = "replace"
-            replacement = "/var/log/pods/*$1/*.log"
-            target_label = "__path__"
+          clustering {
+            enabled = true
           }
-        }
-
-        local.file_match "pod_logs" {
-          path_targets = discovery.relabel.filtered_pods_with_paths.output
-        }
-
-        loki.source.file "pod_logs" {
-          targets    = local.file_match.pod_logs.targets
           forward_to = [loki.process.pod_logs.receiver]
         }
 
@@ -436,20 +357,22 @@ should add the node architecture label rules to the discovery relabel:
             }
           }
 
-          // Only keep the labels that are defined in the `keepLabels` list.
-          stage.label_keep {
-            values = ["__tenant_id__","app_kubernetes_io_name","container","instance","job","level","namespace","service_name","service_namespace","deployment_environment","deployment_environment_name","k8s_namespace_name","k8s_deployment_name","k8s_statefulset_name","k8s_daemonset_name","k8s_cronjob_name","k8s_job_name","k8s_node_name"]
-          }
-
           forward_to = argument.logs_destinations.value
         }
       }
 should add the node availability zone label rules to the discovery relabel:
   1: |
     |-
-      declare "pod_logs" {
+      declare "pod_logs_via_kubernetes_api" {
         argument "logs_destinations" {
           comment = "Must be a list of log destinations where collected logs should be forwarded to"
+        }
+
+        discovery.kubernetes "pods" {
+          role = "pod"
+        attach_metadata {
+          node = true
+        }
         }
 
         discovery.relabel "filtered_pods" {
@@ -461,43 +384,23 @@ should add the node availability zone label rules to the discovery relabel:
           }
           rule {
             source_labels = ["__meta_kubernetes_pod_name"]
-            action = "replace"
             target_label = "pod"
           }
           rule {
             source_labels = ["__meta_kubernetes_pod_container_name"]
-            action = "replace"
             target_label = "container"
           }
           rule {
             source_labels = ["__meta_kubernetes_namespace", "__meta_kubernetes_pod_container_name"]
             separator = "/"
-            action = "replace"
-            replacement = "$1"
             target_label = "job"
           }
 
           // set the container runtime as a label
           rule {
-            action = "replace"
             source_labels = ["__meta_kubernetes_pod_container_id"]
             regex = "^(\\S+):\\/\\/.+$"
-            replacement = "$1"
             target_label = "tmp_container_runtime"
-          }
-
-          // make all labels on the pod available to the pipeline as labels,
-          // they are omitted before write to loki via stage.label_keep unless explicitly set
-          rule {
-            action = "labelmap"
-            regex = "__meta_kubernetes_pod_label_(.+)"
-          }
-
-          // make all annotations on the pod available to the pipeline as labels,
-          // they are omitted before write to loki via stage.label_keep unless explicitly set
-          rule {
-            action = "labelmap"
-            regex = "__meta_kubernetes_pod_annotation_(.+)"
           }
 
           // explicitly set service_name. if not set, loki will automatically try to populate a default.
@@ -513,7 +416,7 @@ should add the node availability zone label rules to the discovery relabel:
             source_labels = [
               "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_name",
               "__meta_kubernetes_pod_label_app_kubernetes_io_name",
-              "__meta_kubernetes_pod_container_name",
+              "container",
             ]
             separator = ";"
             regex = "^(?:;*)?([^;]+).*$"
@@ -581,35 +484,11 @@ should add the node availability zone label rules to the discovery relabel:
           }
         }
 
-        discovery.kubernetes "pods" {
-          role = "pod"
-          selectors {
-            role = "pod"
-            field = "spec.nodeName=" + sys.env("HOSTNAME")
-          }
-          attach_metadata {
-            node = true
-          }
-        }
-
-        discovery.relabel "filtered_pods_with_paths" {
+        loki.source.kubernetes "pod_logs" {
           targets = discovery.relabel.filtered_pods.output
-
-          rule {
-            source_labels = ["__meta_kubernetes_pod_uid", "__meta_kubernetes_pod_container_name"]
-            separator = "/"
-            action = "replace"
-            replacement = "/var/log/pods/*$1/*.log"
-            target_label = "__path__"
+          clustering {
+            enabled = true
           }
-        }
-
-        local.file_match "pod_logs" {
-          path_targets = discovery.relabel.filtered_pods_with_paths.output
-        }
-
-        loki.source.file "pod_logs" {
-          targets    = local.file_match.pod_logs.targets
           forward_to = [loki.process.pod_logs.receiver]
         }
 
@@ -659,20 +538,22 @@ should add the node availability zone label rules to the discovery relabel:
             }
           }
 
-          // Only keep the labels that are defined in the `keepLabels` list.
-          stage.label_keep {
-            values = ["__tenant_id__","app_kubernetes_io_name","container","instance","job","level","namespace","service_name","service_namespace","deployment_environment","deployment_environment_name","k8s_namespace_name","k8s_deployment_name","k8s_statefulset_name","k8s_daemonset_name","k8s_cronjob_name","k8s_job_name","k8s_node_name"]
-          }
-
           forward_to = argument.logs_destinations.value
         }
       }
 should add the node instance type label rules to the discovery relabel:
   1: |
     |-
-      declare "pod_logs" {
+      declare "pod_logs_via_kubernetes_api" {
         argument "logs_destinations" {
           comment = "Must be a list of log destinations where collected logs should be forwarded to"
+        }
+
+        discovery.kubernetes "pods" {
+          role = "pod"
+        attach_metadata {
+          node = true
+        }
         }
 
         discovery.relabel "filtered_pods" {
@@ -684,43 +565,23 @@ should add the node instance type label rules to the discovery relabel:
           }
           rule {
             source_labels = ["__meta_kubernetes_pod_name"]
-            action = "replace"
             target_label = "pod"
           }
           rule {
             source_labels = ["__meta_kubernetes_pod_container_name"]
-            action = "replace"
             target_label = "container"
           }
           rule {
             source_labels = ["__meta_kubernetes_namespace", "__meta_kubernetes_pod_container_name"]
             separator = "/"
-            action = "replace"
-            replacement = "$1"
             target_label = "job"
           }
 
           // set the container runtime as a label
           rule {
-            action = "replace"
             source_labels = ["__meta_kubernetes_pod_container_id"]
             regex = "^(\\S+):\\/\\/.+$"
-            replacement = "$1"
             target_label = "tmp_container_runtime"
-          }
-
-          // make all labels on the pod available to the pipeline as labels,
-          // they are omitted before write to loki via stage.label_keep unless explicitly set
-          rule {
-            action = "labelmap"
-            regex = "__meta_kubernetes_pod_label_(.+)"
-          }
-
-          // make all annotations on the pod available to the pipeline as labels,
-          // they are omitted before write to loki via stage.label_keep unless explicitly set
-          rule {
-            action = "labelmap"
-            regex = "__meta_kubernetes_pod_annotation_(.+)"
           }
 
           // explicitly set service_name. if not set, loki will automatically try to populate a default.
@@ -736,7 +597,7 @@ should add the node instance type label rules to the discovery relabel:
             source_labels = [
               "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_name",
               "__meta_kubernetes_pod_label_app_kubernetes_io_name",
-              "__meta_kubernetes_pod_container_name",
+              "container",
             ]
             separator = ";"
             regex = "^(?:;*)?([^;]+).*$"
@@ -803,35 +664,11 @@ should add the node instance type label rules to the discovery relabel:
           }
         }
 
-        discovery.kubernetes "pods" {
-          role = "pod"
-          selectors {
-            role = "pod"
-            field = "spec.nodeName=" + sys.env("HOSTNAME")
-          }
-          attach_metadata {
-            node = true
-          }
-        }
-
-        discovery.relabel "filtered_pods_with_paths" {
+        loki.source.kubernetes "pod_logs" {
           targets = discovery.relabel.filtered_pods.output
-
-          rule {
-            source_labels = ["__meta_kubernetes_pod_uid", "__meta_kubernetes_pod_container_name"]
-            separator = "/"
-            action = "replace"
-            replacement = "/var/log/pods/*$1/*.log"
-            target_label = "__path__"
+          clustering {
+            enabled = true
           }
-        }
-
-        local.file_match "pod_logs" {
-          path_targets = discovery.relabel.filtered_pods_with_paths.output
-        }
-
-        loki.source.file "pod_logs" {
-          targets    = local.file_match.pod_logs.targets
           forward_to = [loki.process.pod_logs.receiver]
         }
 
@@ -881,20 +718,22 @@ should add the node instance type label rules to the discovery relabel:
             }
           }
 
-          // Only keep the labels that are defined in the `keepLabels` list.
-          stage.label_keep {
-            values = ["__tenant_id__","app_kubernetes_io_name","container","instance","job","level","namespace","service_name","service_namespace","deployment_environment","deployment_environment_name","k8s_namespace_name","k8s_deployment_name","k8s_statefulset_name","k8s_daemonset_name","k8s_cronjob_name","k8s_job_name","k8s_node_name"]
-          }
-
           forward_to = argument.logs_destinations.value
         }
       }
 should add the node os label rules to the discovery relabel:
   1: |
     |-
-      declare "pod_logs" {
+      declare "pod_logs_via_kubernetes_api" {
         argument "logs_destinations" {
           comment = "Must be a list of log destinations where collected logs should be forwarded to"
+        }
+
+        discovery.kubernetes "pods" {
+          role = "pod"
+        attach_metadata {
+          node = true
+        }
         }
 
         discovery.relabel "filtered_pods" {
@@ -906,43 +745,23 @@ should add the node os label rules to the discovery relabel:
           }
           rule {
             source_labels = ["__meta_kubernetes_pod_name"]
-            action = "replace"
             target_label = "pod"
           }
           rule {
             source_labels = ["__meta_kubernetes_pod_container_name"]
-            action = "replace"
             target_label = "container"
           }
           rule {
             source_labels = ["__meta_kubernetes_namespace", "__meta_kubernetes_pod_container_name"]
             separator = "/"
-            action = "replace"
-            replacement = "$1"
             target_label = "job"
           }
 
           // set the container runtime as a label
           rule {
-            action = "replace"
             source_labels = ["__meta_kubernetes_pod_container_id"]
             regex = "^(\\S+):\\/\\/.+$"
-            replacement = "$1"
             target_label = "tmp_container_runtime"
-          }
-
-          // make all labels on the pod available to the pipeline as labels,
-          // they are omitted before write to loki via stage.label_keep unless explicitly set
-          rule {
-            action = "labelmap"
-            regex = "__meta_kubernetes_pod_label_(.+)"
-          }
-
-          // make all annotations on the pod available to the pipeline as labels,
-          // they are omitted before write to loki via stage.label_keep unless explicitly set
-          rule {
-            action = "labelmap"
-            regex = "__meta_kubernetes_pod_annotation_(.+)"
           }
 
           // explicitly set service_name. if not set, loki will automatically try to populate a default.
@@ -958,7 +777,7 @@ should add the node os label rules to the discovery relabel:
             source_labels = [
               "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_name",
               "__meta_kubernetes_pod_label_app_kubernetes_io_name",
-              "__meta_kubernetes_pod_container_name",
+              "container",
             ]
             separator = ";"
             regex = "^(?:;*)?([^;]+).*$"
@@ -1026,35 +845,11 @@ should add the node os label rules to the discovery relabel:
           }
         }
 
-        discovery.kubernetes "pods" {
-          role = "pod"
-          selectors {
-            role = "pod"
-            field = "spec.nodeName=" + sys.env("HOSTNAME")
-          }
-          attach_metadata {
-            node = true
-          }
-        }
-
-        discovery.relabel "filtered_pods_with_paths" {
+        loki.source.kubernetes "pod_logs" {
           targets = discovery.relabel.filtered_pods.output
-
-          rule {
-            source_labels = ["__meta_kubernetes_pod_uid", "__meta_kubernetes_pod_container_name"]
-            separator = "/"
-            action = "replace"
-            replacement = "/var/log/pods/*$1/*.log"
-            target_label = "__path__"
+          clustering {
+            enabled = true
           }
-        }
-
-        local.file_match "pod_logs" {
-          path_targets = discovery.relabel.filtered_pods_with_paths.output
-        }
-
-        loki.source.file "pod_logs" {
-          targets    = local.file_match.pod_logs.targets
           forward_to = [loki.process.pod_logs.receiver]
         }
 
@@ -1104,20 +899,22 @@ should add the node os label rules to the discovery relabel:
             }
           }
 
-          // Only keep the labels that are defined in the `keepLabels` list.
-          stage.label_keep {
-            values = ["__tenant_id__","app_kubernetes_io_name","container","instance","job","level","namespace","service_name","service_namespace","deployment_environment","deployment_environment_name","k8s_namespace_name","k8s_deployment_name","k8s_statefulset_name","k8s_daemonset_name","k8s_cronjob_name","k8s_job_name","k8s_node_name"]
-          }
-
           forward_to = argument.logs_destinations.value
         }
       }
 should add the node pool label rules to the discovery relabel:
   1: |
     |-
-      declare "pod_logs" {
+      declare "pod_logs_via_kubernetes_api" {
         argument "logs_destinations" {
           comment = "Must be a list of log destinations where collected logs should be forwarded to"
+        }
+
+        discovery.kubernetes "pods" {
+          role = "pod"
+        attach_metadata {
+          node = true
+        }
         }
 
         discovery.relabel "filtered_pods" {
@@ -1129,43 +926,23 @@ should add the node pool label rules to the discovery relabel:
           }
           rule {
             source_labels = ["__meta_kubernetes_pod_name"]
-            action = "replace"
             target_label = "pod"
           }
           rule {
             source_labels = ["__meta_kubernetes_pod_container_name"]
-            action = "replace"
             target_label = "container"
           }
           rule {
             source_labels = ["__meta_kubernetes_namespace", "__meta_kubernetes_pod_container_name"]
             separator = "/"
-            action = "replace"
-            replacement = "$1"
             target_label = "job"
           }
 
           // set the container runtime as a label
           rule {
-            action = "replace"
             source_labels = ["__meta_kubernetes_pod_container_id"]
             regex = "^(\\S+):\\/\\/.+$"
-            replacement = "$1"
             target_label = "tmp_container_runtime"
-          }
-
-          // make all labels on the pod available to the pipeline as labels,
-          // they are omitted before write to loki via stage.label_keep unless explicitly set
-          rule {
-            action = "labelmap"
-            regex = "__meta_kubernetes_pod_label_(.+)"
-          }
-
-          // make all annotations on the pod available to the pipeline as labels,
-          // they are omitted before write to loki via stage.label_keep unless explicitly set
-          rule {
-            action = "labelmap"
-            regex = "__meta_kubernetes_pod_annotation_(.+)"
           }
 
           // explicitly set service_name. if not set, loki will automatically try to populate a default.
@@ -1181,7 +958,7 @@ should add the node pool label rules to the discovery relabel:
             source_labels = [
               "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_name",
               "__meta_kubernetes_pod_label_app_kubernetes_io_name",
-              "__meta_kubernetes_pod_container_name",
+              "container",
             ]
             separator = ";"
             regex = "^(?:;*)?([^;]+).*$"
@@ -1251,35 +1028,11 @@ should add the node pool label rules to the discovery relabel:
           }
         }
 
-        discovery.kubernetes "pods" {
-          role = "pod"
-          selectors {
-            role = "pod"
-            field = "spec.nodeName=" + sys.env("HOSTNAME")
-          }
-          attach_metadata {
-            node = true
-          }
-        }
-
-        discovery.relabel "filtered_pods_with_paths" {
+        loki.source.kubernetes "pod_logs" {
           targets = discovery.relabel.filtered_pods.output
-
-          rule {
-            source_labels = ["__meta_kubernetes_pod_uid", "__meta_kubernetes_pod_container_name"]
-            separator = "/"
-            action = "replace"
-            replacement = "/var/log/pods/*$1/*.log"
-            target_label = "__path__"
+          clustering {
+            enabled = true
           }
-        }
-
-        local.file_match "pod_logs" {
-          path_targets = discovery.relabel.filtered_pods_with_paths.output
-        }
-
-        loki.source.file "pod_logs" {
-          targets    = local.file_match.pod_logs.targets
           forward_to = [loki.process.pod_logs.receiver]
         }
 
@@ -1329,20 +1082,22 @@ should add the node pool label rules to the discovery relabel:
             }
           }
 
-          // Only keep the labels that are defined in the `keepLabels` list.
-          stage.label_keep {
-            values = ["__tenant_id__","app_kubernetes_io_name","container","instance","job","level","namespace","service_name","service_namespace","deployment_environment","deployment_environment_name","k8s_namespace_name","k8s_deployment_name","k8s_statefulset_name","k8s_daemonset_name","k8s_cronjob_name","k8s_job_name","k8s_node_name"]
-          }
-
           forward_to = argument.logs_destinations.value
         }
       }
 should add the node region label rules to the discovery relabel:
   1: |
     |-
-      declare "pod_logs" {
+      declare "pod_logs_via_kubernetes_api" {
         argument "logs_destinations" {
           comment = "Must be a list of log destinations where collected logs should be forwarded to"
+        }
+
+        discovery.kubernetes "pods" {
+          role = "pod"
+        attach_metadata {
+          node = true
+        }
         }
 
         discovery.relabel "filtered_pods" {
@@ -1354,43 +1109,23 @@ should add the node region label rules to the discovery relabel:
           }
           rule {
             source_labels = ["__meta_kubernetes_pod_name"]
-            action = "replace"
             target_label = "pod"
           }
           rule {
             source_labels = ["__meta_kubernetes_pod_container_name"]
-            action = "replace"
             target_label = "container"
           }
           rule {
             source_labels = ["__meta_kubernetes_namespace", "__meta_kubernetes_pod_container_name"]
             separator = "/"
-            action = "replace"
-            replacement = "$1"
             target_label = "job"
           }
 
           // set the container runtime as a label
           rule {
-            action = "replace"
             source_labels = ["__meta_kubernetes_pod_container_id"]
             regex = "^(\\S+):\\/\\/.+$"
-            replacement = "$1"
             target_label = "tmp_container_runtime"
-          }
-
-          // make all labels on the pod available to the pipeline as labels,
-          // they are omitted before write to loki via stage.label_keep unless explicitly set
-          rule {
-            action = "labelmap"
-            regex = "__meta_kubernetes_pod_label_(.+)"
-          }
-
-          // make all annotations on the pod available to the pipeline as labels,
-          // they are omitted before write to loki via stage.label_keep unless explicitly set
-          rule {
-            action = "labelmap"
-            regex = "__meta_kubernetes_pod_annotation_(.+)"
           }
 
           // explicitly set service_name. if not set, loki will automatically try to populate a default.
@@ -1406,7 +1141,7 @@ should add the node region label rules to the discovery relabel:
             source_labels = [
               "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_name",
               "__meta_kubernetes_pod_label_app_kubernetes_io_name",
-              "__meta_kubernetes_pod_container_name",
+              "container",
             ]
             separator = ";"
             regex = "^(?:;*)?([^;]+).*$"
@@ -1473,35 +1208,11 @@ should add the node region label rules to the discovery relabel:
           }
         }
 
-        discovery.kubernetes "pods" {
-          role = "pod"
-          selectors {
-            role = "pod"
-            field = "spec.nodeName=" + sys.env("HOSTNAME")
-          }
-          attach_metadata {
-            node = true
-          }
-        }
-
-        discovery.relabel "filtered_pods_with_paths" {
+        loki.source.kubernetes "pod_logs" {
           targets = discovery.relabel.filtered_pods.output
-
-          rule {
-            source_labels = ["__meta_kubernetes_pod_uid", "__meta_kubernetes_pod_container_name"]
-            separator = "/"
-            action = "replace"
-            replacement = "/var/log/pods/*$1/*.log"
-            target_label = "__path__"
+          clustering {
+            enabled = true
           }
-        }
-
-        local.file_match "pod_logs" {
-          path_targets = discovery.relabel.filtered_pods_with_paths.output
-        }
-
-        loki.source.file "pod_logs" {
-          targets    = local.file_match.pod_logs.targets
           forward_to = [loki.process.pod_logs.receiver]
         }
 
@@ -1551,20 +1262,22 @@ should add the node region label rules to the discovery relabel:
             }
           }
 
-          // Only keep the labels that are defined in the `keepLabels` list.
-          stage.label_keep {
-            values = ["__tenant_id__","app_kubernetes_io_name","container","instance","job","level","namespace","service_name","service_namespace","deployment_environment","deployment_environment_name","k8s_namespace_name","k8s_deployment_name","k8s_statefulset_name","k8s_daemonset_name","k8s_cronjob_name","k8s_job_name","k8s_node_name"]
-          }
-
           forward_to = argument.logs_destinations.value
         }
       }
 should add the node role label rules to the discovery relabel:
   1: |
     |-
-      declare "pod_logs" {
+      declare "pod_logs_via_kubernetes_api" {
         argument "logs_destinations" {
           comment = "Must be a list of log destinations where collected logs should be forwarded to"
+        }
+
+        discovery.kubernetes "pods" {
+          role = "pod"
+        attach_metadata {
+          node = true
+        }
         }
 
         discovery.relabel "filtered_pods" {
@@ -1576,43 +1289,23 @@ should add the node role label rules to the discovery relabel:
           }
           rule {
             source_labels = ["__meta_kubernetes_pod_name"]
-            action = "replace"
             target_label = "pod"
           }
           rule {
             source_labels = ["__meta_kubernetes_pod_container_name"]
-            action = "replace"
             target_label = "container"
           }
           rule {
             source_labels = ["__meta_kubernetes_namespace", "__meta_kubernetes_pod_container_name"]
             separator = "/"
-            action = "replace"
-            replacement = "$1"
             target_label = "job"
           }
 
           // set the container runtime as a label
           rule {
-            action = "replace"
             source_labels = ["__meta_kubernetes_pod_container_id"]
             regex = "^(\\S+):\\/\\/.+$"
-            replacement = "$1"
             target_label = "tmp_container_runtime"
-          }
-
-          // make all labels on the pod available to the pipeline as labels,
-          // they are omitted before write to loki via stage.label_keep unless explicitly set
-          rule {
-            action = "labelmap"
-            regex = "__meta_kubernetes_pod_label_(.+)"
-          }
-
-          // make all annotations on the pod available to the pipeline as labels,
-          // they are omitted before write to loki via stage.label_keep unless explicitly set
-          rule {
-            action = "labelmap"
-            regex = "__meta_kubernetes_pod_annotation_(.+)"
           }
 
           // explicitly set service_name. if not set, loki will automatically try to populate a default.
@@ -1628,7 +1321,7 @@ should add the node role label rules to the discovery relabel:
             source_labels = [
               "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_name",
               "__meta_kubernetes_pod_label_app_kubernetes_io_name",
-              "__meta_kubernetes_pod_container_name",
+              "container",
             ]
             separator = ";"
             regex = "^(?:;*)?([^;]+).*$"
@@ -1697,35 +1390,11 @@ should add the node role label rules to the discovery relabel:
           }
         }
 
-        discovery.kubernetes "pods" {
-          role = "pod"
-          selectors {
-            role = "pod"
-            field = "spec.nodeName=" + sys.env("HOSTNAME")
-          }
-          attach_metadata {
-            node = true
-          }
-        }
-
-        discovery.relabel "filtered_pods_with_paths" {
+        loki.source.kubernetes "pod_logs" {
           targets = discovery.relabel.filtered_pods.output
-
-          rule {
-            source_labels = ["__meta_kubernetes_pod_uid", "__meta_kubernetes_pod_container_name"]
-            separator = "/"
-            action = "replace"
-            replacement = "/var/log/pods/*$1/*.log"
-            target_label = "__path__"
+          clustering {
+            enabled = true
           }
-        }
-
-        local.file_match "pod_logs" {
-          path_targets = discovery.relabel.filtered_pods_with_paths.output
-        }
-
-        loki.source.file "pod_logs" {
-          targets    = local.file_match.pod_logs.targets
           forward_to = [loki.process.pod_logs.receiver]
         }
 
@@ -1773,11 +1442,6 @@ should add the node role label rules to the discovery relabel:
               "pod" = "pod",
               "service_instance_id" = "service_instance_id",
             }
-          }
-
-          // Only keep the labels that are defined in the `keepLabels` list.
-          stage.label_keep {
-            values = ["__tenant_id__","app_kubernetes_io_name","container","instance","job","level","namespace","service_name","service_namespace","deployment_environment","deployment_environment_name","k8s_namespace_name","k8s_deployment_name","k8s_statefulset_name","k8s_daemonset_name","k8s_cronjob_name","k8s_job_name","k8s_node_name"]
           }
 
           forward_to = argument.logs_destinations.value

@@ -11,8 +11,15 @@ declare "pod_logs_via_kubernetes_api" {
       names = {{ .Values.namespaces | toJson }}
     }
 {{- end }}
+{{- if .nodeSelectors }}
+    selectors {
+      role = "pod"
+      label = {{ .nodeSelector | toJson }}
+    }
+{{- end }}
   {{- include "feature.podLogsViaK8sAPI.attachNodeMetadata" . | indent 2 }}
   }
+
   {{- include "feature.podLogsViaK8sAPI.discovery.alloy" . | nindent 2 }}
 
   loki.source.kubernetes "pod_logs" {

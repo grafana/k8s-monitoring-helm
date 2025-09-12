@@ -1,19 +1,57 @@
 ---
 # -- Only capture logs from pods in these namespaces (`[]` means all namespaces).
-# @section -- Pod Discovery
+# @section -- Discovery Settings
 namespaces: []
 
 # -- Do not capture logs from any pods in these namespaces.
-# @section -- Pod Discovery
+# @section -- Discovery Settings
 excludeNamespaces: []
 
+# -- The list of node names to include for log collection. If empty, all nodes are included.
+# @section -- Discovery Settings
+nodes: []
+
+# -- The list of node names to exclude from log collection.
+# @section -- Discovery Settings
+excludeNodes: []
+
+# -- Filter the list of discovered nodes by labels.
+# Example: `nodeSelectors: { 'kubernetes.io/os': 'linux' }`
+nodeSelectors: {}
+
+# -- Filter the list of discovered pods by labels.
+# Example: `labelSelectors: { 'app': 'myapp' }` will only discover pods and services with the label `app=myapp`.
+# Example: `labelSelectors: { 'app': ['myapp', 'myotherapp'] }` will only discover pods and services with the label `app=myapp` or `app=myotherapp`.
+# @section -- Discovery Settings
 labelSelectors: {}
 
-
-
 # -- Rules to filter pods for log gathering. Only used for "volumes" or "kubernetesApi" gather methods.
-# @section -- Pod Discovery
+# @section -- Discovery Settings
 extraDiscoveryRules: ""
+
+# Configures which node labels to attach to the logs
+nodeLabels:
+  # -- Whether or not to attach the nodepool label
+  # @section -- Node Labels
+  nodePool: false
+  # -- Whether or not to add the region label
+  # @section -- Node Labels
+  region: false
+  # -- Whether or not to add the availability\_zone label
+  # @section -- Node Labels
+  availabilityZone: false
+  # -- Whether or not to add the node\_role label
+  # @section -- Node Labels
+  nodeRole: false
+  # -- Whether or not to add the os label
+  # @section -- Node Labels
+  nodeOS: false
+  # -- Whether or not to add the node architecture label
+  # @section -- Node Labels
+  nodeArchitecture: false
+  # -- Whether or not to add the instance\_type label
+  # @section -- Node Labels
+  instanceType: false
 
 # -- Log labels to set with values copied from the Kubernetes Pod labels.
 # Format: `<log_label>: <kubernetes_label>`.

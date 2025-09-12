@@ -15,43 +15,23 @@ discovery.relabel "filtered_pods" {
 {{- end }}
   rule {
     source_labels = ["__meta_kubernetes_pod_name"]
-    action = "replace"
     target_label = "pod"
   }
   rule {
     source_labels = ["__meta_kubernetes_pod_container_name"]
-    action = "replace"
     target_label = "container"
   }
   rule {
     source_labels = ["__meta_kubernetes_namespace", "__meta_kubernetes_pod_container_name"]
     separator = "/"
-    action = "replace"
-    replacement = "$1"
     target_label = "job"
   }
 
   // set the container runtime as a label
   rule {
-    action = "replace"
     source_labels = ["__meta_kubernetes_pod_container_id"]
     regex = "^(\\S+):\\/\\/.+$"
-    replacement = "$1"
     target_label = "tmp_container_runtime"
-  }
-
-  // make all labels on the pod available to the pipeline as labels,
-  // they are omitted before write to loki via stage.label_keep unless explicitly set
-  rule {
-    action = "labelmap"
-    regex = "__meta_kubernetes_pod_label_(.+)"
-  }
-
-  // make all annotations on the pod available to the pipeline as labels,
-  // they are omitted before write to loki via stage.label_keep unless explicitly set
-  rule {
-    action = "labelmap"
-    regex = "__meta_kubernetes_pod_annotation_(.+)"
   }
 
   // explicitly set service_name. if not set, loki will automatically try to populate a default.
@@ -67,7 +47,7 @@ discovery.relabel "filtered_pods" {
     source_labels = [
       {{ include "pod_annotation" "resource.opentelemetry.io/service.name" | quote }},
       {{ include "pod_label" "app.kubernetes.io/name" | quote }},
-      "__meta_kubernetes_pod_container_name",
+      "container",
     ]
     separator = ";"
     regex = "^(?:;*)?([^;]+).*$"

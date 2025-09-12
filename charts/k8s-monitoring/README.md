@@ -405,6 +405,14 @@ details:
 | podLogs.destinations | list | `[]` | The destinations where logs will be sent. If empty, all logs-capable destinations will be used. |
 | podLogs.enabled | bool | `false` | Enable gathering Kubernetes Pod logs. |
 
+### Features - Pod Logs via Kubernetes API
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| podLogsViaKubernetesApi | object | Disabled | Pod logs via Kubernetes API. Requires a destination that supports logs. To see the valid options, please see the [Pod Logs via Kubernetes API feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-pod-logs-via-kubernetes-api). |
+| podLogsViaKubernetesApi.destinations | list | `[]` | The destinations where logs will be sent. If empty, all logs-capable destinations will be used. |
+| podLogsViaKubernetesApi.enabled | bool | `false` | Enable gathering Kubernetes Pod logs. |
+
 ### Features - Profiles Receiver
 
 | Key | Type | Default | Description |

@@ -1,6 +1,6 @@
 {{/* Validates that the Alloy instance is appropriate for the given Pod Logs via Kubernetes API settings */}}
 {{/* Inputs: Values (feature values), Collector (Alloy values), CollectorName (string) */}}
-{{- define "feature.podLogs.collector.validate" -}}
+{{- define "feature.podLogsViaK8sAPI.collector.validate" -}}
 {{- $stabilityLevel := (dig "alloy" "stabilityLevel" "generally-available" .Collector)}}
 {{- if not (dig "alloy" "clustering" "enabled" false .Collector) }}
   {{- if eq (dig "controller" "type" "daemonset" .Collector) "daemonset" }}
