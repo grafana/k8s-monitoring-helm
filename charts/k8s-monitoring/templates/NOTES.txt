@@ -1,6 +1,9 @@
 Grafana {{.Chart.Name}} Helm chart deployed!
 
 This chart will install the following components:
+{{- if (index .Values "alloy-operator").deploy }}
+* Grafana Alloy Operator
+{{- end }}
 {{- range $feature := (include "features.list.enabled" .) | fromYamlArray }}
   {{- include (printf "feature.%s.notes.deployments" $feature) (dict "Values" (index $.Values $feature)) | indent 0 }}
 {{- end }}

@@ -1,0 +1,27 @@
+---
+apiVersion: helm-chart-toolbox.grafana.com/v1
+kind: TestPlan
+name: kafka-custom-destination-test
+
+subject:
+  releaseName: k8smon
+  path: ../../../../..
+  valuesFile: ../values.yaml
+
+cluster:
+  type: kind
+
+dependencies:
+  # Deploying Kafka from these instructions: https://strimzi.io/quickstarts/
+  - url: https://strimzi.io/install/latest?namespace=kafka
+    namespace: kafka
+  - url: https://strimzi.io/examples/latest/kafka/kafka-single-node.yaml
+    namespace: kafka
+
+tests:
+  - type: kubernetes-objects-test
+    values:
+      checks:
+        - kind: Deployment
+          name: k8smon-alloy-singleton
+          namespace: default
