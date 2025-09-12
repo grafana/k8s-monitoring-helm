@@ -1,0 +1,39 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-workload
+  namespace: default
+  labels:
+    app: my-workload
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: my-workload
+  template:
+    metadata:
+      annotations:
+        k8s.grafana.com/logs.job: fargate-workload
+      labels:
+        app: my-workload
+    spec:
+      containers:
+        - name: busybox
+          image: busybox
+          args:
+            - /bin/sh
+            - -c
+            - |
+              echo "level=INFO Starting..."
+              while true; do
+                if [ $RANDOM -gt ${ERROR_THRESHOLD} ]; then
+                  echo "level=ERROR Something went wrong"
+                else
+                  echo "level=INFO Everything is fine"
+                fi
+                sleep 5
+              done
+          env:
+            - name: ERROR_THRESHOLD
+              value: "10000"

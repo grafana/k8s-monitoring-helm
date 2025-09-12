@@ -1,4 +1,4 @@
-{{- define "feature.podLogsViaK8sAPI.discovery.alloy" }}
+{{- define "feature.podLogsViaKubernetesApi.discovery.alloy" }}
 discovery.relabel "filtered_pods" {
   targets = discovery.kubernetes.pods.targets
   rule {
@@ -108,7 +108,7 @@ discovery.relabel "filtered_pods" {
     target_label = {{ $label | quote }}
   }
 {{- end }}
-{{- include "feature.podLogsViaK8sAPI.nodeDiscoveryRules" . | indent 2 }}
+{{- include "feature.podLogsViaKubernetesApi.nodeDiscoveryRules" . | indent 2 }}
 
 {{- if .Values.extraDiscoveryRules }}
 {{ .Values.extraDiscoveryRules | indent 2 }}

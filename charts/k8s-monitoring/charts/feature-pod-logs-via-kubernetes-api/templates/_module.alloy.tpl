@@ -1,4 +1,20 @@
-{{- define "feature.podLogsViaK8sAPI.module" }}
+{{- define "feature.podLogsViaKubernetesApi.module" }}
+{{- $labelSelectors := list }}
+{{- range $k, $v := .Values.labelSelectors }}
+  {{- if kindIs "slice" $v }}
+    {{- $labelSelectors = append $labelSelectors (printf "%s in (%s)" $k (join "," $v)) }}
+  {{- else }}
+    {{- $labelSelectors = append $labelSelectors (printf "%s=%s" $k $v) }}
+  {{- end }}
+{{- end }}
+{{- $nodeSelectors := list }}
+{{- range $k, $v := .Values.nodeSelectors }}
+  {{- if kindIs "slice" $v }}
+    {{- $nodeSelectors = append $nodeSelectors (printf "%s in (%s)" $k (join "," $v)) }}
+  {{- else }}
+    {{- $nodeSelectors = append $nodeSelectors (printf "%s=%s" $k $v) }}
+  {{- end }}
+{{- end }}
 declare "pod_logs_via_kubernetes_api" {
   argument "logs_destinations" {
     comment = "Must be a list of log destinations where collected logs should be forwarded to"
@@ -11,16 +27,22 @@ declare "pod_logs_via_kubernetes_api" {
       names = {{ .Values.namespaces | toJson }}
     }
 {{- end }}
-{{- if .nodeSelectors }}
+{{- if $labelSelectors }}
     selectors {
       role = "pod"
-      label = {{ .nodeSelector | toJson }}
+      label = {{ $labelSelectors | join "," | quote }}
     }
 {{- end }}
-  {{- include "feature.podLogsViaK8sAPI.attachNodeMetadata" . | indent 2 }}
+{{- if $nodeSelectors }}
+    selectors {
+      role = "node"
+      label = {{ $nodeSelectors | join "," | quote }}
+    }
+{{- end }}
+  {{- include "feature.podLogsViaKubernetesApi.attachNodeMetadata" . | indent 4 }}
   }
 
-  {{- include "feature.podLogsViaK8sAPI.discovery.alloy" . | nindent 2 }}
+  {{- include "feature.podLogsViaKubernetesApi.discovery.alloy" . | nindent 2 }}
 
   loki.source.kubernetes "pod_logs" {
     targets = discovery.relabel.filtered_pods.output
@@ -30,6 +52,6 @@ declare "pod_logs_via_kubernetes_api" {
     forward_to = [loki.process.pod_logs.receiver]
   }
 
-  {{- include "feature.podLogsViaK8sAPI.processing.alloy" . | nindent 2 }}
+  {{- include "feature.podLogsViaKubernetesApi.processing.alloy" . | nindent 2 }}
 }
 {{- end -}}

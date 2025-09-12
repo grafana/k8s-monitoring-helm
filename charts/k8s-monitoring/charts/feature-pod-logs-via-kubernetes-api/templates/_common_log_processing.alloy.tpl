@@ -1,4 +1,4 @@
-{{- define "feature.podLogsViaK8sAPI.processing.alloy" }}
+{{- define "feature.podLogsViaKubernetesApi.processing.alloy" }}
 loki.process "pod_logs" {
   stage.match {
     selector = "{tmp_container_runtime=~\"containerd|cri-o\"}"

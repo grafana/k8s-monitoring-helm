@@ -1,11 +1,11 @@
-{{- define "feature.podLogsViaK8sAPI.notes.deployments" }}{{- end }}
+{{- define "feature.podLogsViaKubernetesApi.notes.deployments" }}{{- end }}
 
-{{- define "feature.podLogsViaK8sAPI.notes.task" }}
-Gather logs from Kubernetes Pods via the Kubernetes API.
+{{- define "feature.podLogsViaKubernetesApi.notes.task" }}
+Gather logs from Kubernetes Pods via the Kubernetes API
 {{- end }}
 
-{{- define "feature.podLogsViaK8sAPI.notes.actions" }}{{- end }}
+{{- define "feature.podLogsViaKubernetesApi.notes.actions" }}{{- end }}
 
-{{- define "feature.podLogsViaK8sAPI.summary" -}}
+{{- define "feature.podLogsViaKubernetesApi.summary" -}}
 version: {{ .Chart.Version }}
 {{- end }}

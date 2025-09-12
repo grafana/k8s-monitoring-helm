@@ -1,5 +1,6 @@
-{{- define "feature.podLogsViaK8sAPI.attachNodeMetadata" }}
+{{- define "feature.podLogsViaKubernetesApi.attachNodeMetadata" }}
 {{- $attachMetadata := false -}}
+{{- $attachMetadata = or $attachMetadata (not (empty .Values.nodeSelectors)) -}}
 {{- $attachMetadata = or $attachMetadata .Values.nodeLabels.nodePool -}}
 {{- $attachMetadata = or $attachMetadata .Values.nodeLabels.region -}}
 {{- $attachMetadata = or $attachMetadata .Values.nodeLabels.availabilityZone -}}
@@ -14,7 +15,7 @@ attach_metadata {
 {{- end }}
 {{- end }}
 
-{{- define "feature.podLogsViaK8sAPI.nodeDiscoveryRules" }}
+{{- define "feature.podLogsViaKubernetesApi.nodeDiscoveryRules" }}
 {{- if eq .Values.nodeLabels.nodePool true }}
 
 rule {

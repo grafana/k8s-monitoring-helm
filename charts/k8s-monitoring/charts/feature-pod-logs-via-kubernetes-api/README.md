@@ -59,11 +59,9 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | excludeNamespaces | list | `[]` | Do not capture logs from any pods in these namespaces. |
-| excludeNodes | list | `[]` | The list of node names to exclude from log collection. |
 | extraDiscoveryRules | string | `""` | Rules to filter pods for log gathering. Only used for "volumes" or "kubernetesApi" gather methods. |
 | labelSelectors | object | `{}` | Filter the list of discovered pods by labels. Example: `labelSelectors: { 'app': 'myapp' }` will only discover pods and services with the label `app=myapp`. Example: `labelSelectors: { 'app': ['myapp', 'myotherapp'] }` will only discover pods and services with the label `app=myapp` or `app=myotherapp`. |
 | namespaces | list | `[]` | Only capture logs from pods in these namespaces (`[]` means all namespaces). |
-| nodes | list | `[]` | The list of node names to include for log collection. If empty, all nodes are included. |
 
 ### Node Labels
 
