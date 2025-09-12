@@ -44,6 +44,7 @@ prometheus.scrape "kubelet_probes" {
   job_name = {{ .Values.kubeletProbes.jobLabel | quote }}
   scheme   = "https"
   scrape_interval = {{ .Values.kubeletProbes.scrapeInterval | default .Values.global.scrapeInterval | quote }}
+  scrape_timeout = {{ .Values.kubeletProbes.scrapeTimeout | default .Values.global.scrapeTimeout | quote }}
   scrape_protocols = {{ .Values.global.scrapeProtocols | toJson }}
   scrape_classic_histograms = {{ .Values.global.scrapeClassicHistograms }}
   bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"

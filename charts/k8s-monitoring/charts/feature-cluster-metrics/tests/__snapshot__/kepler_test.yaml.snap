@@ -33,6 +33,7 @@ should render the configuration with Kepler:
           job_name = "integrations/kubernetes/kubelet"
           scheme   = "https"
           scrape_interval = "60s"
+          scrape_timeout = "10s"
           scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
           scrape_classic_histograms = false
           bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
@@ -75,6 +76,7 @@ should render the configuration with Kepler:
           job_name = "integrations/kubernetes/resources"
           scheme   = "https"
           scrape_interval = "60s"
+          scrape_timeout = "10s"
           scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
           scrape_classic_histograms = false
           bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
@@ -117,6 +119,7 @@ should render the configuration with Kepler:
           job_name = "integrations/kubernetes/cadvisor"
           scheme = "https"
           scrape_interval = "60s"
+          scrape_timeout = "10s"
           scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
           scrape_classic_histograms = false
           bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
@@ -138,7 +141,7 @@ should render the configuration with Kepler:
           max_cache_size = 100000
           rule {
             source_labels = ["__name__"]
-            regex = "up|scrape_samples_scraped|container_cpu_cfs_periods_total|container_cpu_cfs_throttled_periods_total|container_cpu_usage_seconds_total|container_fs_reads_bytes_total|container_fs_reads_total|container_fs_writes_bytes_total|container_fs_writes_total|container_memory_cache|container_memory_rss|container_memory_swap|container_memory_working_set_bytes|container_network_receive_bytes_total|container_network_receive_packets_dropped_total|container_network_receive_packets_total|container_network_transmit_bytes_total|container_network_transmit_packets_dropped_total|container_network_transmit_packets_total|machine_memory_bytes"
+            regex = "up|scrape_samples_scraped|container_cpu_cfs_periods_total|container_cpu_cfs_throttled_periods_total|container_cpu_usage_seconds_total|container_fs_reads_bytes_total|container_fs_reads_total|container_fs_writes_bytes_total|container_fs_writes_total|container_memory_cache|container_memory_rss|container_memory_swap|container_memory_usage_bytes|container_memory_working_set_bytes|container_network_receive_bytes_total|container_network_receive_packets_dropped_total|container_network_receive_packets_total|container_network_transmit_bytes_total|container_network_transmit_packets_dropped_total|container_network_transmit_packets_total|machine_memory_bytes"
             action = "keep"
           }
           // Drop empty container labels, addressing https://github.com/google/cadvisor/issues/2688
@@ -245,6 +248,7 @@ should render the configuration with Kepler:
           targets = discovery.relabel.kube_state_metrics.output
           job_name = "integrations/kubernetes/kube-state-metrics"
           scrape_interval = "60s"
+          scrape_timeout = "10s"
           scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
           scrape_classic_histograms = false
           scheme = "http"
@@ -263,7 +267,7 @@ should render the configuration with Kepler:
           max_cache_size = 100000
           rule {
             source_labels = ["__name__"]
-            regex = "up|scrape_samples_scraped|kube_configmap_info|kube_configmap_metadata_resource_version|kube_cronjob.*|kube_daemonset.*|kube_deployment_metadata_generation|kube_deployment_spec_replicas|kube_deployment_status_condition|kube_deployment_status_observed_generation|kube_deployment_status_replicas_available|kube_deployment_status_replicas_updated|kube_horizontalpodautoscaler_spec_max_replicas|kube_horizontalpodautoscaler_spec_min_replicas|kube_horizontalpodautoscaler_status_current_replicas|kube_horizontalpodautoscaler_status_desired_replicas|kube_job.*|kube_namespace_status_phase|kube_node.*|kube_persistentvolume_status_phase|kube_persistentvolumeclaim_access_mode|kube_persistentvolumeclaim_info|kube_persistentvolumeclaim_labels|kube_persistentvolumeclaim_resource_requests_storage_bytes|kube_persistentvolumeclaim_status_phase|kube_pod_container_info|kube_pod_container_resource_limits|kube_pod_container_resource_requests|kube_pod_container_status_last_terminated_reason|kube_pod_container_status_restarts_total|kube_pod_container_status_waiting_reason|kube_pod_info|kube_pod_owner|kube_pod_spec_volumes_persistentvolumeclaims_info|kube_pod_start_time|kube_pod_status_phase|kube_pod_status_reason|kube_replicaset.*|kube_resourcequota|kube_secret_metadata_resource_version|kube_statefulset.*"
+            regex = "up|scrape_samples_scraped|kube_configmap_info|kube_configmap_metadata_resource_version|kube_cronjob.*|kube_daemonset.*|kube_deployment_metadata_generation|kube_deployment_spec_replicas|kube_deployment_status_condition|kube_deployment_status_observed_generation|kube_deployment_status_replicas_available|kube_deployment_status_replicas_updated|kube_horizontalpodautoscaler_spec_max_replicas|kube_horizontalpodautoscaler_spec_min_replicas|kube_horizontalpodautoscaler_status_current_replicas|kube_horizontalpodautoscaler_status_desired_replicas|kube_job.*|kube_namespace_status_phase|kube_node.*|kube_persistentvolume_status_phase|kube_persistentvolumeclaim_access_mode|kube_persistentvolumeclaim_info|kube_persistentvolumeclaim_labels|kube_persistentvolumeclaim_resource_requests_storage_bytes|kube_persistentvolumeclaim_status_phase|kube_pod_completion_time|kube_pod_container_info|kube_pod_container_resource_limits|kube_pod_container_resource_requests|kube_pod_container_status_last_terminated_reason|kube_pod_container_status_last_terminated_timestamp|kube_pod_container_status_restarts_total|kube_pod_container_status_waiting_reason|kube_pod_info|kube_pod_owner|kube_pod_restart_policy|kube_pod_spec_volumes_persistentvolumeclaims_info|kube_pod_start_time|kube_pod_status_phase|kube_pod_status_reason|kube_replicaset.*|kube_resourcequota|kube_secret_metadata_resource_version|kube_statefulset.*"
             action = "keep"
           }
           forward_to = argument.metrics_destinations.value
@@ -378,6 +382,7 @@ should render the configuration with Kepler:
           targets = discovery.relabel.node_exporter.output
           job_name = "integrations/node_exporter"
           scrape_interval = "60s"
+          scrape_timeout = "10s"
           scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
           scrape_classic_histograms = false
           scheme = "http"
@@ -448,6 +453,7 @@ should render the configuration with Kepler:
           targets  = discovery.relabel.windows_exporter.output
           job_name   = "integrations/windows-exporter"
           scrape_interval = "60s"
+          scrape_timeout = "10s"
           scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
           scrape_classic_histograms = false
           clustering {
@@ -491,6 +497,7 @@ should render the configuration with Kepler:
           job_name     = "integrations/kepler"
           honor_labels = true
           scrape_interval = "60s"
+          scrape_timeout = "10s"
           scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
           scrape_classic_histograms = false
           clustering {

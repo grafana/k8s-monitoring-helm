@@ -130,6 +130,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | apiServer.metricsTuning.excludeMetrics | list | `[]` | Metrics to drop. Can use regular expressions. |
 | apiServer.metricsTuning.includeMetrics | list | `[]` | Metrics to keep. Can use regular expressions. An empty list means keep all. |
 | apiServer.scrapeInterval | string | 60s | How frequently to scrape metrics from the API Server Overrides metrics.scrapeInterval |
+| apiServer.scrapeTimeout | string | `10s` | The timeout for scraping API Server metrics. |
 
 ### cAdvisor
 
@@ -151,6 +152,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | cadvisor.metricsTuning.normalizeUnnecessaryLabels | list | `[{"labels":["boot_id","system_uuid"],"metric":"machine_memory_bytes"}]` | Normalize labels to the same value for the given metric and label pairs |
 | cadvisor.metricsTuning.useDefaultAllowList | bool | `true` | Filter the list of metrics from cAdvisor to the minimal set required for Kubernetes Monitoring. |
 | cadvisor.nodeAddressFormat | string | `"direct"` | How to access cAdvisor to get metrics, either "direct" (use node IP) or "proxy" (uses API Server) |
+| cadvisor.scrapeTimeout | string | `10s` | The timeout for scraping cAdvisor metrics. |
 
 ### cadvisor
 
@@ -174,6 +176,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | global.scrapeClassicHistograms | bool | `false` | Whether to scrape a classic histogram that’s also exposed as a native histogram. |
 | global.scrapeInterval | string | `"60s"` | How frequently to scrape metrics. |
 | global.scrapeProtocols | list | `["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]` | The protocols to negotiate during a Prometheus metrics scrape, in order of preference. |
+| global.scrapeTimeout | string | `"10s"` | The timeout for scraping metrics. |
 
 ### Kepler
 
@@ -189,6 +192,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | kepler.metricsTuning.includeMetrics | list | `[]` | Metrics to keep. Can use regular expressions. |
 | kepler.metricsTuning.useDefaultAllowList | bool | `true` | Filter the list of metrics from Kepler to the minimal set required for Kubernetes Monitoring. |
 | kepler.scrapeInterval | string | `60s` | How frequently to scrape metrics from Kepler. Overrides global.scrapeInterval. |
+| kepler.scrapeTimeout | string | `10s` | The timeout for scraping Kepler metrics. |
 
 ### kube-state-metrics
 
@@ -211,6 +215,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | kube-state-metrics.namespaces | list | `[]` | List (or comma-separated string) of namespaces to be enabled for collecting resources. By default, all namespaces are collected. Requires kube-state-metrics to be deployed by this chart. |
 | kube-state-metrics.namespacesDenylist | list | `[]` | List (or comma-separated string) of namespaces to be excluded from collecting resources. If namespaces and namespaces denylist are both set, only namespaces that are excluded in namespaces denylist will be used. Requires kube-state-metrics to be deployed by this chart. |
 | kube-state-metrics.scrapeInterval | string | `60s` | How frequently to scrape kube-state-metrics metrics. |
+| kube-state-metrics.scrapeTimeout | string | `10s` | The timeout for scraping kube-state-metrics metrics. |
 | kube-state-metrics.service.portName | string | `"http"` | The port name used by kube-state-metrics. |
 | kube-state-metrics.service.scheme | string | `"http"` | The scrape scheme used by kube-state-metrics. |
 
@@ -241,6 +246,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | kubeDNS.metricsTuning.excludeMetrics | list | `[]` | Metrics to drop. Can use regular expressions. |
 | kubeDNS.metricsTuning.includeMetrics | list | `[]` | Metrics to keep. Can use regular expressions. An empty list means keep all. |
 | kubeDNS.scrapeInterval | string | 60s | How frequently to scrape metrics from KubeDNS Overrides metrics.scrapeInterval |
+| kubeDNS.scrapeTimeout | string | `10s` | The timeout for scraping KubeDNS metrics. |
 
 ### Kube Proxy
 
@@ -255,6 +261,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | kubeProxy.metricsTuning.includeMetrics | list | `[]` | Metrics to keep. Can use regular expressions. An empty list means keep all. |
 | kubeProxy.port | int | `10249` | Port number used by the Kube Proxy, set in `--metrics-bind-address`. |
 | kubeProxy.scrapeInterval | string | 60s | How frequently to scrape metrics from the Kube Proxy Overrides metrics.scrapeInterval |
+| kubeProxy.scrapeTimeout | string | `10s` | The timeout for scraping Kube Proxy metrics. |
 | kubeProxy.selectorLabel | string | `"k8s-app=kube-proxy"` | Selector label. |
 
 ### Kube Scheduler
@@ -270,6 +277,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | kubeScheduler.metricsTuning.includeMetrics | list | `[]` | Metrics to keep. Can use regular expressions. An empty list means keep all. |
 | kubeScheduler.port | int | `10259` | Port number used by the Kube Scheduler, set by `--secure-port`. |
 | kubeScheduler.scrapeInterval | string | 60s | How frequently to scrape metrics from the Kube Scheduler Overrides metrics.scrapeInterval |
+| kubeScheduler.scrapeTimeout | string | `10s` | The timeout for scraping Kube Scheduler metrics. |
 | kubeScheduler.selectorLabel | string | `"component=kube-scheduler"` | Selector label. |
 
 ### Kubelet
@@ -286,6 +294,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | kubelet.metricsTuning.useDefaultAllowList | bool | `true` | Filter the list of metrics from the Kubelet to the minimal set required for Kubernetes Monitoring. |
 | kubelet.nodeAddressFormat | string | `"direct"` | How to access the Kubelet to get metrics, either "direct" (use node IP) or "proxy" (uses API Server) |
 | kubelet.scrapeInterval | string | `60s` | How frequently to scrape Kubelet metrics. |
+| kubelet.scrapeTimeout | string | `10s` | The timeout for scraping Kubelet metrics. |
 
 ### Kubelet Probes
 
@@ -301,6 +310,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | kubeletProbes.metricsTuning.useDefaultAllowList | bool | `true` | Filter the list of probe metrics from the Kubelet to the minimal set required for Kubernetes Monitoring. |
 | kubeletProbes.nodeAddressFormat | string | `"direct"` | How to access the Kubelet to get probe metrics, either "direct" (use node IP) or "proxy" (uses API Server) |
 | kubeletProbes.scrapeInterval | string | `60s` | How frequently to scrape Kubelet probe metrics. |
+| kubeletProbes.scrapeTimeout | string | `10s` | The timeout for scraping Kubelet probe metrics. |
 
 ### Kubelet Resources
 
@@ -316,6 +326,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | kubeletResource.metricsTuning.useDefaultAllowList | bool | `true` | Filter the list of resource metrics from the Kubelet to the minimal set required for Kubernetes Monitoring. |
 | kubeletResource.nodeAddressFormat | string | `"direct"` | How to access the Kubelet to get resource metrics, either "direct" (use node IP) or "proxy" (uses API Server) |
 | kubeletResource.scrapeInterval | string | `60s` | How frequently to scrape Kubelet resource metrics. |
+| kubeletResource.scrapeTimeout | string | `10s` | The timeout for scraping Kubelet resource metrics. |
 
 ### Node Exporter
 
@@ -336,6 +347,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | node-exporter.metricsTuning.useIntegrationAllowList | bool | `false` | Filter the list of metrics from Node Exporter to the minimal set required for Kubernetes Monitoring as well as the Node Exporter integration. |
 | node-exporter.namespace | string | `""` | Namespace to locate Node Exporter pods. If `deploy` is set to `true`, this will automatically be set to the namespace where this Helm chart is deployed. |
 | node-exporter.scrapeInterval | string | `60s` | How frequently to scrape Node Exporter metrics. |
+| node-exporter.scrapeTimeout | string | `10s` | The timeout for scraping Node Exporter metrics. |
 | node-exporter.service.portName | string | `"metrics"` | The port name used by Node Exporter. |
 | node-exporter.service.scheme | string | `"http"` | The scrape scheme used by Node Exporter. |
 
@@ -370,6 +382,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | opencost.opencost.prometheus.password_key | string | `"password"` | The key for the password property in the secret. |
 | opencost.opencost.prometheus.username_key | string | `"username"` | The key for the username property in the secret. |
 | opencost.scrapeInterval | string | `60s` | How frequently to scrape metrics from Kepler. Overrides global.scrapeInterval. |
+| opencost.scrapeTimeout | string | `10s` | The timeout for scraping OpenCost metrics. |
 
 ### Windows Exporter - Deployment settings
 
@@ -392,5 +405,6 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | windows-exporter.metricsTuning.useDefaultAllowList | bool | `true` | Filter the list of metrics from Windows Exporter to the minimal set required for Kubernetes Monitoring. |
 | windows-exporter.namespace | string | `""` | Namespace to locate Windows Exporter pods. If `deploy` is set to `true`, this will automatically be set to the namespace where this Helm chart is deployed. |
 | windows-exporter.scrapeInterval | string | `60s` | How frequently to scrape metrics from Windows Exporter. |
+| windows-exporter.scrapeTimeout | string | `10s` | The timeout for scraping Windows Exporter metrics. |
 | windows-exporter.service.portName | string | `"metrics"` | The port name used by Windows Exporter. |
 <!-- markdownlint-enable no-space-in-emphasis -->
