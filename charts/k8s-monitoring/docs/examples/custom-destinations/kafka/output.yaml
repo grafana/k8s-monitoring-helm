@@ -686,7 +686,7 @@ metadata:
   labels:
     app.kubernetes.io/name: k8smon-k8s-monitoring-add-finalizer
     app.kubernetes.io/instance: k8smon
-    helm.sh/chart: k8s-monitoring-3.4.0
+    helm.sh/chart: k8s-monitoring-3.4.2
   annotations:
     helm.sh/hook: post-install,post-upgrade
     helm.sh/hook-weight: "15"
@@ -700,6 +700,7 @@ spec:
       labels:
         app.kubernetes.io/name: k8smon-k8s-monitoring
         app.kubernetes.io/instance: k8smon
+        linkerd.io/inject: disabled
         sidecar.istio.io/inject: "false"
     spec:
       restartPolicy: Never
@@ -719,6 +720,8 @@ spec:
                 --patch='{"metadata":{"finalizers":["k8s.grafana.com/finalizer"]}}' \
                 deployment/k8smon-alloy-operator
           securityContext:
+            runAsNonRoot: true
+            runAsUser: 4242
             allowPrivilegeEscalation: false
             capabilities:
               drop: ["ALL"]
@@ -735,7 +738,7 @@ metadata:
   labels:
     app.kubernetes.io/name: k8smon-k8s-monitoring-remove-alloy-and-finalizer
     app.kubernetes.io/instance: k8smon
-    helm.sh/chart: k8s-monitoring-3.4.0
+    helm.sh/chart: k8s-monitoring-3.4.2
   annotations:
     helm.sh/hook: pre-delete
     helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
@@ -748,6 +751,7 @@ spec:
       labels:
         app.kubernetes.io/name: k8smon-k8s-monitoring
         app.kubernetes.io/instance: k8smon
+        linkerd.io/inject: disabled
         sidecar.istio.io/inject: "false"
     spec:
       restartPolicy: Never
@@ -772,6 +776,8 @@ spec:
                 --patch='[{"op": "remove", "path": "/metadata/finalizers"}]' \
                 deployment/k8smon-alloy-operator
           securityContext:
+            runAsNonRoot: true
+            runAsUser: 4242
             allowPrivilegeEscalation: false
             capabilities:
               drop: ["ALL"]

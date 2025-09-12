@@ -4,7 +4,7 @@ HAS_SHELLSPEC := $(shell command -v shellspec;)
 CHART_TEMPLATE_FILES = $(shell find templates -name "*.tpl")
 CHART_YAML_FILES = $(shell find templates -name "*.yaml")
 
-FEATURE_CHARTS = $(shell find charts -type d -depth 1 -name "feature-*")
+FEATURE_CHARTS = $(shell find charts -name Chart.yaml -depth 2 -exec dirname {} \;)
 
 SCHEMA_MODS_JSON_FILES = $(shell find schema-mods -name "*.json")
 SCHEMA_MODS_JQ_FILES = $(shell find schema-mods -name "*.jq")

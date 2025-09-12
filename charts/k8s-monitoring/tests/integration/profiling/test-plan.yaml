@@ -4,6 +4,7 @@ kind: TestPlan
 name: profiling
 
 subject:
+  releaseName: k8smon
   path: ../../..
   valuesFile: values.yaml
 
@@ -31,5 +32,7 @@ tests:
             CLUSTER: profiling-feature-test
             PROFILECLI_URL: http://pyroscope.pyroscope.svc:4040
           queries:
-            - query: '{cluster="$CLUSTER", app_kubernetes_io_name="alloy"}'
+            - query: '{cluster="$CLUSTER", service_name="profile-source", service_namespace="default", app_kubernetes_io_name="alloy"}'
+              type: pyroql
+            - query: '{cluster="$CLUSTER", service_name="pyroscope", service_namespace="pyroscope", app_kubernetes_io_name="pyroscope"}'
               type: pyroql
