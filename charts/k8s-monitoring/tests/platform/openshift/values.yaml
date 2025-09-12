@@ -59,6 +59,24 @@ integrations:
 
 alloy-metrics:
   enabled: true
+  alloy:
+    storagePath: /var/lib/alloy
+    mounts:
+      extra:
+        - name: alloy-storage
+          mountPath: /var/lib/alloy
+
+  controller:
+    enableStatefulSetAutoDeletePVC: true
+    volumeClaimTemplates:
+      - metadata:
+          name: alloy-storage
+        spec:
+          accessModes: ["ReadWriteOnce"]
+          storageClassName: "standard-csi"
+          resources:
+            requests:
+              storage: 1Gi
 
 alloy-singleton:
   enabled: true
