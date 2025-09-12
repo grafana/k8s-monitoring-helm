@@ -1,0 +1,133 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces rule:empty-lines
+suite: Test - Pod Logs - Collector Validation
+templates:
+  - test/collector.yaml
+tests:
+  - it: should fail if using volume-based gathering, but not a daemonset
+    set:
+      gatherMethod: volumes
+      testing: true
+      test:
+        Collector:
+          controller:
+            type: deployment
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            Pod Logs feature requires Alloy to be a DaemonSet when using the "volumes" gather method.
+            Please set:
+            alloy-test:
+              controller:
+                type: daemonset
+
+  - it: should fail if using volume-based gathering, but /var/log is not mounted
+    set:
+      gatherMethod: volumes
+      testing: true
+      test:
+        Collector:
+          alloy:
+            mounts:
+              varlog: false
+          controller:
+            type: daemonset
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            Pod Logs feature requires Alloy to mount /var/log when using the "volumes" gather method.
+            Please set:
+            alloy-test:
+              alloy:
+                mounts:
+                  varlog: true
+
+  - it: should fail if using Kubernetes API-based gathering on a daemonset, but not clustered
+    set:
+      gatherMethod: kubernetesApi
+      testing: true
+      test:
+        Collector:
+          alloy:
+            clustering:
+              enabled: false
+            mounts:
+              varlog: false
+              dockercontainers: false
+          controller:
+            type: daemonset
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            Pod Logs feature requires Alloy DaemonSet to be in clustering mode when using the "kubernetesApi" gather method.
+            Please set:
+            alloy-test:
+              alloy:
+                clustering:
+                  enabled: true
+
+  - it: should fail if using Kubernetes API-based gathering on more than one replica, but not clustered
+    set:
+      gatherMethod: kubernetesApi
+      testing: true
+      test:
+        Collector:
+          alloy:
+            clustering:
+              enabled: false
+            mounts:
+              varlog: false
+              dockercontainers: false
+          controller:
+            type: deployment
+            replicas: 2
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            Pod Logs feature requires Alloy with multiple replicas to be in clustering mode when using the "kubernetesApi" gather method.
+            Please set:
+            alloy-test:
+              alloy:
+                clustering:
+                  enabled: true
+
+  - it: should fail if using filelog-based gathering and not public-preview stability level
+    set:
+      gatherMethod: filelog
+      testing: true
+      test:
+        Collector:
+          alloy:
+            stabilityLevel: stable
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            Pod Logs feature requires Alloy to use the public-preview stability level when using the "filelog" gather method.
+            Please set:
+            alloy-test:
+              alloy:
+                stabilityLevel: public-preview
+
+  - it: should fail if using secretFilter and not public-preview stability level
+    set:
+      gatherMethod: volumes
+      secretFilter:
+        enabled: true
+      testing: true
+      test:
+        Collector:
+          alloy:
+            stabilityLevel: stable
+            clustering:
+              enabled: false
+            mounts:
+              varlog: true
+          controller:
+            type: daemonset
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            Pod Logs feature requires Alloy to use the experimental stability level when using the secretFilter.
+            Please set:
+            alloy-test:
+              alloy:
+                stabilityLevel: experimental
