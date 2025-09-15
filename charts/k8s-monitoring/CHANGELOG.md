@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.5.0
+
+*   Update the labels set for profiling feature (@petewall)
+*   Add Custom type destinations (@petewall)
+*   Add the ability to set scrape timeout everywhere (@petewall)
+
 ## 3.4.1
 
 *   Update kube-state-metrics and OpenCost (@petewall)
