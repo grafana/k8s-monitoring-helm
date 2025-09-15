@@ -1,0 +1,61 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces rule:empty-lines
+suite: Test - Pod Logs via Kubernetes API - Default Values
+templates:
+  - configmap.yaml
+tests:
+  - it: should render the default configuration
+    set:
+      deployAsConfigMap: true
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["module.alloy"]
+  - it: should allow setting structured metadata
+    set:
+      deployAsConfigMap: true
+      structuredMetadata:
+        caller: caller
+        component: component
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["module.alloy"]
+  - it: should allow setting static labels
+    set:
+      deployAsConfigMap: true
+      staticLabels:
+        region: central
+      staticLabelsFrom:
+        color: sys.env("COLOR")
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["module.alloy"]
+  - it: should allow using the secret filter
+    set:
+      deployAsConfigMap: true
+      secretFilter:
+        enabled: true
+        partialMask: 3
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["module.alloy"]
+  - it: should allow using the secret filter with an allowlist
+    set:
+      deployAsConfigMap: true
+      secretFilter:
+        enabled: true
+        partialMask: 3
+        allowlist:
+          - ".*secret.*"
+          - ".*token.*"
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["module.alloy"]

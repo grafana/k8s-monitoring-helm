@@ -1,0 +1,73 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces rule:empty-lines
+suite: Test - Pod Logs via Kubernetes API - Collector Validation
+templates:
+  - test/collector.yaml
+tests:
+  - it: should fail if on a daemonset, but not clustered
+    set:
+      testing: true
+      test:
+        Collector:
+          alloy:
+            clustering:
+              enabled: false
+            mounts:
+              varlog: false
+              dockercontainers: false
+          controller:
+            type: daemonset
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            Pod Logs feature requires Alloy DaemonSet to be in clustering mode when using the "kubernetesApi" gather method.
+            Please set:
+            alloy-test:
+              alloy:
+                clustering:
+                  enabled: true
+
+  - it: should fail if on more than one replica, but not clustered
+    set:
+      testing: true
+      test:
+        Collector:
+          alloy:
+            clustering:
+              enabled: false
+            mounts:
+              varlog: false
+              dockercontainers: false
+          controller:
+            type: deployment
+            replicas: 2
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            Pod Logs feature requires Alloy with multiple replicas to be in clustering mode when using the "kubernetesApi" gather method.
+            Please set:
+            alloy-test:
+              alloy:
+                clustering:
+                  enabled: true
+
+  - it: should fail if using secretFilter and not experimental stability level
+    set:
+      secretFilter:
+        enabled: true
+      testing: true
+      test:
+        Collector:
+          alloy:
+            stabilityLevel: stable
+            clustering:
+              enabled: true
+          controller:
+            type: daemonset
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            Pod Logs feature requires Alloy to use the experimental stability level when using the secretFilter.
+            Please set:
+            alloy-test:
+              alloy:
+                stabilityLevel: experimental

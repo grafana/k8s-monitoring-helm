@@ -3,14 +3,16 @@
 (      To make changes, please modify README.md.gotmpl and run `helm-docs`)
 -->
 
-# Feature: Pod Logs
+# Feature: Pod Logs via Kubernetes API
 
-The Pod Logs feature enables the collection of logs from Kubernetes Pods on the cluster.
+The Pod Logs via Kubernetes API feature enables the collection of logs from Kubernetes Pods on the cluster by streaming
+them from the Kubernetes API Server. This method of log collection is an alternative to reading log files directly from
+the filesystem, and provides flexibility in environments where direct file access may be restricted or not feasible.
 
 ## Usage
 
 ```yaml
-podLogs:
+podLogsViaKubernetesApi:
   enabled: true
 ```
 
@@ -36,7 +38,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 <!-- markdownlint-disable list-marker-space -->
 ## Source Code
 
-* <https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-pod-logs>
+* <https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-pod-logs-via-kubernetes-api>
 <!-- markdownlint-enable list-marker-space -->
 <!-- markdownlint-enable no-bare-urls -->
 
@@ -49,34 +51,29 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | annotations | object | `{"job":"k8s.grafana.com/logs.job"}` | Log labels to set with values copied from the Kubernetes Pod annotations. Format: `<log_label>: <kubernetes_annotation>`. |
 | extraLogProcessingStages | string | `""` | Stage blocks to be added to the loki.process component for pod logs. ([docs](https://grafana.com/docs/alloy/latest/reference/components/loki/loki.process/#blocks)) This value is templated so that you can refer to other values from this file. |
 | labels | object | `{"app_kubernetes_io_name":"app.kubernetes.io/name"}` | Log labels to set with values copied from the Kubernetes Pod labels. Format: `<log_label>: <kubernetes_label>`. |
-| labelsToKeep | list | `["app.kubernetes.io/name","container","instance","job","level","namespace","service.name","service.namespace","deployment.environment","deployment.environment.name","k8s.namespace.name","k8s.deployment.name","k8s.statefulset.name","k8s.daemonset.name","k8s.cronjob.name","k8s.job.name","k8s.node.name"]` | The list of labels to keep on the logs, all other pipeline labels will be dropped. |
-| namespaceAnnotations | object | `{}` | Log labels to set with values copied from the Kubernetes Namespace annotations. Only used for "filelog" gather method. Format: `<log_label>: <kubernetes_namespace_annotation>`. |
-| namespaceLabels | object | `{}` | Log labels to set with values copied from the Kubernetes Namespace labels. Only used for "filelog" gather method. Format: `<log_label>: <kubernetes_namespace_label>`. |
-| nodeAnnotations | object | `{}` | Log labels to set with values copied from the Kubernetes Node annotations. Only used for "filelog" gather method. Format: `<log_label>: <kubernetes_node_annotation>`. |
-| nodeLabels | object | `{}` | Log labels to set with values copied from the Kubernetes Node labels. Only used for "filelog" gather method. Format: `<log_label>: <kubernetes_node_label>`. |
 | staticLabels | object | `{}` | Log labels to set with static values. |
 | staticLabelsFrom | object | `{}` | Log labels to set with static values, not quoted so it can reference config components. |
 
-### Pod Discovery
+### Discovery Settings
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | excludeNamespaces | list | `[]` | Do not capture logs from any pods in these namespaces. |
 | extraDiscoveryRules | string | `""` | Rules to filter pods for log gathering. Only used for "volumes" or "kubernetesApi" gather methods. |
-| gatherMethod | string | `"volumes"` | The method to gather pod logs. Options are "volumes", "filelog" (experimental), "kubernetesApi", "OpenShiftClusterLogForwarder" (experimental). DEPRECATION WARNING: The "kubernetesApi" gather method is deprecated and will be removed in a future release. Please use the podLogsViaKubernetesApi feature instead. |
+| labelSelectors | object | `{}` | Filter the list of discovered pods by labels. Example: `labelSelectors: { 'app': 'myapp' }` will only discover pods and services with the label `app=myapp`. Example: `labelSelectors: { 'app': ['myapp', 'myotherapp'] }` will only discover pods and services with the label `app=myapp` or `app=myotherapp`. |
 | namespaces | list | `[]` | Only capture logs from pods in these namespaces (`[]` means all namespaces). |
 
-### File Log Gathering
+### Node Labels
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| filelogGatherSettings.onlyGatherNewLogLines | bool | `false` | Only gather new log lines since this was deployed. Do not gather historical log lines. |
-
-### Global Settings
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| global.platform | string | `""` | The specific platform for this cluster. Will enable compatibility for some platforms. Supported options: (empty) or "openshift". |
+| nodeLabels.availabilityZone | bool | `false` | Whether or not to add the availability\_zone label |
+| nodeLabels.instanceType | bool | `false` | Whether or not to add the instance\_type label |
+| nodeLabels.nodeArchitecture | bool | `false` | Whether or not to add the node architecture label |
+| nodeLabels.nodeOS | bool | `false` | Whether or not to add the os label |
+| nodeLabels.nodePool | bool | `false` | Whether or not to attach the nodepool label |
+| nodeLabels.nodeRole | bool | `false` | Whether or not to add the node\_role label |
+| nodeLabels.region | bool | `false` | Whether or not to add the region label |
 
 ### Secret Filtering
 
@@ -93,8 +90,8 @@ Be sure perform actual integration testing in a live environment in the main [k8
 |-----|------|---------|-------------|
 | structuredMetadata | object | `{"k8s.pod.name":"k8s.pod.name","pod":"pod","service.instance.id":"service.instance.id"}` | The structured metadata mappings to set. Format: `<key>: <extracted_key>`. Example: structuredMetadata:   component: component   kind: kind   name: name |
 
-### Volume Log Gathering
+### Other Values
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| volumeGatherSettings.onlyGatherNewLogLines | bool | `false` | Only gather new log lines since this was deployed. Do not gather historical log lines. |
+| nodeSelectors | object | `{}` | Filter the list of discovered nodes by labels. Example: `nodeSelectors: { 'kubernetes.io/os': 'linux' }` |

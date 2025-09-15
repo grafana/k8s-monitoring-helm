@@ -30,6 +30,9 @@ do
   if grep "${file}" -e "otelcol.receiver.filelog" >/dev/null; then
     STABILITY_LEVEL=public-preview
   fi
+  if grep "${file}" -e "otelcol.exporter.debug" >/dev/null; then
+    STABILITY_LEVEL=experimental
+  fi
 
   fmt_output=$(alloy fmt "${file}" 2>&1)
   fmtCode="$?"

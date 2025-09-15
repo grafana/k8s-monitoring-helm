@@ -13,6 +13,18 @@ metadata:
     app.kubernetes.io/managed-by: Helm
 automountServiceAccountToken: true
 ---
+# Source: k8s-monitoring/templates/destination_secret.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: "loki-k8smon-k8s-monitoring"
+  namespace: "default"
+type: Opaque
+data:
+  tenantId: "MQ=="
+  username: "bG9raQ=="
+  password: "bG9raXBhc3N3b3Jk"
+---
 # Source: k8s-monitoring/templates/alloy-config.yaml
 apiVersion: v1
 kind: ConfigMap
@@ -21,10 +33,17 @@ metadata:
   namespace: default
 data:
   config.alloy: |
-    // Feature: Pod Logs
-    declare "pod_logs" {
+    // Feature: Pod Logs via Kubernetes API
+    declare "pod_logs_via_kubernetes_api" {
       argument "logs_destinations" {
         comment = "Must be a list of log destinations where collected logs should be forwarded to"
+      }
+    
+      discovery.kubernetes "pods" {
+        role = "pod"
+        namespaces {
+          names = ["production"]
+        }
       }
     
       discovery.relabel "filtered_pods" {
@@ -36,43 +55,23 @@ data:
         }
         rule {
           source_labels = ["__meta_kubernetes_pod_name"]
-          action = "replace"
           target_label = "pod"
         }
         rule {
           source_labels = ["__meta_kubernetes_pod_container_name"]
-          action = "replace"
           target_label = "container"
         }
         rule {
           source_labels = ["__meta_kubernetes_namespace", "__meta_kubernetes_pod_container_name"]
           separator = "/"
-          action = "replace"
-          replacement = "$1"
           target_label = "job"
         }
     
         // set the container runtime as a label
         rule {
-          action = "replace"
           source_labels = ["__meta_kubernetes_pod_container_id"]
           regex = "^(\\S+):\\/\\/.+$"
-          replacement = "$1"
           target_label = "tmp_container_runtime"
-        }
-    
-        // make all labels on the pod available to the pipeline as labels,
-        // they are omitted before write to loki via stage.label_keep unless explicitly set
-        rule {
-          action = "labelmap"
-          regex = "__meta_kubernetes_pod_label_(.+)"
-        }
-    
-        // make all annotations on the pod available to the pipeline as labels,
-        // they are omitted before write to loki via stage.label_keep unless explicitly set
-        rule {
-          action = "labelmap"
-          regex = "__meta_kubernetes_pod_annotation_(.+)"
         }
     
         // explicitly set service_name. if not set, loki will automatically try to populate a default.
@@ -88,7 +87,7 @@ data:
           source_labels = [
             "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_name",
             "__meta_kubernetes_pod_label_app_kubernetes_io_name",
-            "__meta_kubernetes_pod_container_name",
+            "container",
           ]
           separator = ";"
           regex = "^(?:;*)?([^;]+).*$"
@@ -146,10 +145,6 @@ data:
         }
       }
     
-      discovery.kubernetes "pods" {
-        role = "pod"
-      }
-    
       loki.source.kubernetes "pod_logs" {
         targets = discovery.relabel.filtered_pods.output
         clustering {
@@ -203,15 +198,10 @@ data:
           }
         }
     
-        // Only keep the labels that are defined in the `keepLabels` list.
-        stage.label_keep {
-          values = ["__tenant_id__","app_kubernetes_io_name","container","instance","job","level","namespace","service_name","service_namespace","deployment_environment","deployment_environment_name","k8s_namespace_name","k8s_deployment_name","k8s_statefulset_name","k8s_daemonset_name","k8s_cronjob_name","k8s_job_name","k8s_node_name"]
-        }
-    
         forward_to = argument.logs_destinations.value
       }
     }
-    pod_logs "feature" {
+    pod_logs_via_kubernetes_api "feature" {
       logs_destinations = [
         loki.write.loki.receiver,
       ]
@@ -227,7 +217,12 @@ data:
     
     loki.write "loki" {
       endpoint {
-        url = "http://loki.loki.svc:3100/api/push"
+        url = "http://loki.loki.svc:3100/loki/api/v1/push"
+        tenant_id = convert.nonsensitive(remote.kubernetes.secret.loki.data["tenantId"])
+        basic_auth {
+          username = convert.nonsensitive(remote.kubernetes.secret.loki.data["username"])
+          password = remote.kubernetes.secret.loki.data["password"]
+        }
         tls_config {
           insecure_skip_verify = false
         }
@@ -236,9 +231,14 @@ data:
         max_backoff_retries = "10"
       }
       external_labels = {
-        "cluster" = "pod-logs-cluster",
-        "k8s_cluster_name" = "pod-logs-cluster",
+        "cluster" = "pod-logs-via-k8s-api-cluster",
+        "k8s_cluster_name" = "pod-logs-via-k8s-api-cluster",
       }
+    }
+    
+    remote.kubernetes.secret "loki" {
+      name      = "loki-k8smon-k8s-monitoring"
+      namespace = "default"
     }
 ---
 # Source: k8s-monitoring/charts/alloy-operator/templates/rbac/alloy-manager.yaml
@@ -528,9 +528,9 @@ spec:
     listenScheme: HTTP
     livenessProbe: {}
     mounts:
-      dockercontainers: false
+      dockercontainers: true
       extra: []
-      varlog: false
+      varlog: true
     resources: {}
     securityContext:
       allowPrivilegeEscalation: false
