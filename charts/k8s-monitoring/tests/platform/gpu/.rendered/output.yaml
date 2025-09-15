@@ -188,6 +188,11 @@ data:
           optional = true
         }
     
+        argument "scrape_timeout" {
+          comment = "The timeout for scraping metrics from the targets (default: 10s)"
+          optional = true
+        }
+    
         argument "scrape_protocols" {
           comment = "The scrape protocols to use for scraping metrics"
           optional = true
@@ -210,8 +215,9 @@ data:
     
         prometheus.scrape "dcgm_exporter" {
           targets = argument.targets.value
-          job_name = coalesce(argument.job_label.value, "integrations/alloy")
+          job_name = coalesce(argument.job_label.value, "integrations/dcgm-exporter")
           scrape_interval = coalesce(argument.scrape_interval.value, "60s")
+          scrape_timeout = coalesce(argument.scrape_timeout.value, "10s")
           scrape_protocols = argument.scrape_protocols.value
           scrape_classic_histograms = argument.scrape_classic_histograms.value
     
@@ -318,6 +324,7 @@ data:
         job_label = "integrations/dcgm-exporter"
         clustering = true
         scrape_interval = "60s"
+        scrape_timeout = "10s"
         scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
         scrape_classic_histograms = false
         max_cache_size = 100000
@@ -440,7 +447,7 @@ data:
   self-reporting-metric.prom: |
     # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_build_info gauge
-    grafana_kubernetes_monitoring_build_info{version="3.4.2", namespace="default"} 1
+    grafana_kubernetes_monitoring_build_info{version="3.5.0", namespace="default"} 1
     # HELP grafana_kubernetes_monitoring_feature_info A metric to report the enabled features of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_feature_info gauge
     grafana_kubernetes_monitoring_feature_info{feature="integrations", sources="dcgm-exporter", version="1.0.0"} 1
@@ -994,7 +1001,7 @@ metadata:
   labels:
     app.kubernetes.io/name: k8smon-k8s-monitoring-add-finalizer
     app.kubernetes.io/instance: k8smon
-    helm.sh/chart: k8s-monitoring-3.4.2
+    helm.sh/chart: k8s-monitoring-3.5.0
   annotations:
     helm.sh/hook: post-install,post-upgrade
     helm.sh/hook-weight: "15"
@@ -1046,7 +1053,7 @@ metadata:
   labels:
     app.kubernetes.io/name: k8smon-k8s-monitoring-remove-alloy-and-finalizer
     app.kubernetes.io/instance: k8smon
-    helm.sh/chart: k8s-monitoring-3.4.2
+    helm.sh/chart: k8s-monitoring-3.5.0
   annotations:
     helm.sh/hook: pre-delete
     helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded

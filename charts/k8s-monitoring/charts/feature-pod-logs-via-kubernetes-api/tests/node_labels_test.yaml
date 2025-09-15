@@ -1,0 +1,106 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Test - Pod Logs via Kubernetes API - Node Labels
+templates:
+  - configmap.yaml
+tests:
+  - it: should add the attach_metadata block to the discovery.kubernetes
+    set:
+      deployAsConfigMap: true
+      nodeLabels:
+        nodePool: true
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["module.alloy"]
+
+  - it: should add the node pool label rules to the discovery relabel
+    set:
+      deployAsConfigMap: true
+      nodeLabels:
+        nodePool: true
+      structuredMetadata:
+        nodepool: nodepool
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["module.alloy"]
+
+  - it: should add the node region label rules to the discovery relabel
+    set:
+      deployAsConfigMap: true
+      nodeLabels:
+        region: true
+      structuredMetadata:
+        region: region
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["module.alloy"]
+
+  - it: should add the node availability zone label rules to the discovery relabel
+    set:
+      deployAsConfigMap: true
+      nodeLabels:
+        availabilityZone: true
+      structuredMetadata:
+        availability_zone: availability_zone
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["module.alloy"]
+
+  - it: should add the node role label rules to the discovery relabel
+    set:
+      deployAsConfigMap: true
+      nodeLabels:
+        nodeRole: true
+      structuredMetadata:
+        node_role: node_role
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["module.alloy"]
+
+  - it: should add the node os label rules to the discovery relabel
+    set:
+      deployAsConfigMap: true
+      nodeLabels:
+        nodeOS: true
+      structuredMetadata:
+        os: os
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["module.alloy"]
+
+  - it: should add the node architecture label rules to the discovery relabel
+    set:
+      deployAsConfigMap: true
+      nodeLabels:
+        nodeArchitecture: true
+      structuredMetadata:
+        architecture: architecture
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["module.alloy"]
+
+  - it: should add the node instance type label rules to the discovery relabel
+    set:
+      deployAsConfigMap: true
+      nodeLabels:
+        instanceType: true
+      structuredMetadata:
+        instance_type: instance_type
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["module.alloy"]

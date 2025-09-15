@@ -543,6 +543,7 @@ data:
         job_name = "integrations/kubernetes/kubelet"
         scheme   = "https"
         scrape_interval = "60s"
+        scrape_timeout = "10s"
         scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
         scrape_classic_histograms = false
         bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
@@ -585,6 +586,7 @@ data:
         job_name = "integrations/kubernetes/resources"
         scheme   = "https"
         scrape_interval = "60s"
+        scrape_timeout = "10s"
         scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
         scrape_classic_histograms = false
         bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
@@ -627,6 +629,7 @@ data:
         job_name = "integrations/kubernetes/cadvisor"
         scheme = "https"
         scrape_interval = "60s"
+        scrape_timeout = "10s"
         scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
         scrape_classic_histograms = false
         bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
@@ -760,6 +763,7 @@ data:
         targets = discovery.relabel.kube_state_metrics.output
         job_name = "integrations/kubernetes/kube-state-metrics"
         scrape_interval = "60s"
+        scrape_timeout = "10s"
         scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
         scrape_classic_histograms = false
         scheme = "http"
@@ -893,6 +897,7 @@ data:
         targets = discovery.relabel.node_exporter.output
         job_name = "integrations/node_exporter"
         scrape_interval = "60s"
+        scrape_timeout = "10s"
         scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
         scrape_classic_histograms = false
         scheme = "http"
@@ -963,6 +968,7 @@ data:
         targets  = discovery.relabel.windows_exporter.output
         job_name   = "integrations/windows-exporter"
         scrape_interval = "60s"
+        scrape_timeout = "10s"
         scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
         scrape_classic_histograms = false
         clustering {
@@ -1000,6 +1006,7 @@ data:
         }
         scrape {
           default_scrape_interval = "60s"
+          default_scrape_timeout = "10s"
         }
         forward_to = argument.metrics_destinations.value
       }
@@ -1012,6 +1019,7 @@ data:
         }
         scrape {
           default_scrape_interval = "60s"
+          default_scrape_timeout = "10s"
         }
         forward_to = argument.metrics_destinations.value
       }
@@ -1024,6 +1032,7 @@ data:
         }
         scrape {
           default_scrape_interval = "60s"
+          default_scrape_timeout = "10s"
         }
         forward_to = argument.metrics_destinations.value
       }
@@ -1303,7 +1312,7 @@ data:
   self-reporting-metric.prom: |
     # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_build_info gauge
-    grafana_kubernetes_monitoring_build_info{version="3.4.2", namespace="default"} 1
+    grafana_kubernetes_monitoring_build_info{version="3.5.0", namespace="default"} 1
     # HELP grafana_kubernetes_monitoring_feature_info A metric to report the enabled features of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_feature_info gauge
     grafana_kubernetes_monitoring_feature_info{feature="annotationAutodiscovery", version="1.0.0"} 1
@@ -1816,8 +1825,6 @@ data:
           `delete_key(attributes, "process.owner")`,
           `delete_key(attributes, "process.runtime.version")`,
           `delete_key(attributes, "process.runtime.description")`,
-          `delete_key(attributes, "telemetry.sdk.version")`,
-          `delete_key(attributes, "telemetry.sdk.language")`,
           `delete_key(attributes, "host.ip")`,
           `delete_key(attributes, "host.mac")`,
           `delete_key(attributes, "k8s.pod.start_time")`,
@@ -1913,14 +1920,55 @@ data:
           source_labels = ["__meta_kubernetes_pod_container_name"]
           target_label = "container"
         }
-        // provide arbitrary service_name label, otherwise it will be set to {__meta_kubernetes_namespace}/{__meta_kubernetes_pod_container_name}
+    
+        // Set service_name by choosing the first value found from the following ordered list:
+        // - pod.annotation[resource.opentelemetry.io/service.name]
+        // - pod.label[app.kubernetes.io/instance]
+        // - pod.label[app.kubernetes.io/name]
+        // - k8s.container.name
         rule {
-          source_labels = ["__meta_kubernetes_namespace", "__meta_kubernetes_pod_container_name"]
-          separator = "@"
-          regex = "(.*)@(.*)"
-          replacement = "ebpf/${1}/${2}"
+          action = "replace"
+          source_labels = [
+            "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_name",
+            "__meta_kubernetes_pod_label_app_kubernetes_io_instance",
+            "__meta_kubernetes_pod_label_app_kubernetes_io_name",
+            "container",
+          ]
+          separator = ";"
+          regex = "^(?:;*)?([^;]+).*$"
+          replacement = "$1"
           target_label = "service_name"
         }
+    
+        // Set service_namespace by choosing the first value found from the following ordered list:
+        // - pod.annotation[resource.opentelemetry.io/service.namespace]
+        // - pod.namespace
+        rule {
+          action = "replace"
+          source_labels = [
+            "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_namespace",
+            "namespace",
+          ]
+          separator = ";"
+          regex = "^(?:;*)?([^;]+).*$"
+          replacement = "$1"
+          target_label = "service_namespace"
+        }
+    
+        // Set service_instance_id by choosing the first value found from the following ordered list:
+        // - pod.annotation[resource.opentelemetry.io/service.instance.id]
+        // - concat([k8s.namespace.name, k8s.pod.name, k8s.container.name], '.')
+        rule {
+          source_labels = ["__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_instance_id"]
+          target_label = "service_instance_id"
+        }
+        rule {
+          source_labels = ["service_instance_id", "namespace", "pod", "container"]
+          separator = "."
+          regex = "^\\.([^.]+\\.[^.]+\\.[^.]+)$"
+          target_label = "service_instance_id"
+        }
+    
         rule {
           replacement = "alloy/pyroscope.ebpf"
           target_label = "source"
@@ -1985,6 +2033,55 @@ data:
           source_labels = ["__meta_kubernetes_pod_container_name"]
           target_label = "container"
         }
+    
+        // Set service_name by choosing the first value found from the following ordered list:
+        // - pod.annotation[resource.opentelemetry.io/service.name]
+        // - pod.label[app.kubernetes.io/instance]
+        // - pod.label[app.kubernetes.io/name]
+        // - k8s.container.name
+        rule {
+          action = "replace"
+          source_labels = [
+            "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_name",
+            "__meta_kubernetes_pod_label_app_kubernetes_io_instance",
+            "__meta_kubernetes_pod_label_app_kubernetes_io_name",
+            "container",
+          ]
+          separator = ";"
+          regex = "^(?:;*)?([^;]+).*$"
+          replacement = "$1"
+          target_label = "service_name"
+        }
+    
+        // Set service_namespace by choosing the first value found from the following ordered list:
+        // - pod.annotation[resource.opentelemetry.io/service.namespace]
+        // - pod.namespace
+        rule {
+          action = "replace"
+          source_labels = [
+            "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_namespace",
+            "namespace",
+          ]
+          separator = ";"
+          regex = "^(?:;*)?([^;]+).*$"
+          replacement = "$1"
+          target_label = "service_namespace"
+        }
+    
+        // Set service_instance_id by choosing the first value found from the following ordered list:
+        // - pod.annotation[resource.opentelemetry.io/service.instance.id]
+        // - concat([k8s.namespace.name, k8s.pod.name, k8s.container.name], '.')
+        rule {
+          source_labels = ["__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_instance_id"]
+          target_label = "service_instance_id"
+        }
+        rule {
+          source_labels = ["service_instance_id", "namespace", "pod", "container"]
+          separator = "."
+          regex = "^\\.([^.]+\\.[^.]+\\.[^.]+)$"
+          target_label = "service_instance_id"
+        }
+    
         rule {
           replacement = "alloy/pyroscope.java"
           target_label = "source"
@@ -2038,13 +2135,62 @@ data:
           source_labels = ["__meta_kubernetes_pod_container_name"]
           target_label  = "container"
         }
+    
+        // Set service_name by choosing the first value found from the following ordered list:
+        // - pod.annotation[resource.opentelemetry.io/service.name]
+        // - pod.label[app.kubernetes.io/instance]
+        // - pod.label[app.kubernetes.io/name]
+        // - k8s.container.name
+        rule {
+          action = "replace"
+          source_labels = [
+            "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_name",
+            "__meta_kubernetes_pod_label_app_kubernetes_io_instance",
+            "__meta_kubernetes_pod_label_app_kubernetes_io_name",
+            "container",
+          ]
+          separator = ";"
+          regex = "^(?:;*)?([^;]+).*$"
+          replacement = "$1"
+          target_label = "service_name"
+        }
+    
+        // Set service_namespace by choosing the first value found from the following ordered list:
+        // - pod.annotation[resource.opentelemetry.io/service.namespace]
+        // - pod.namespace
+        rule {
+          action = "replace"
+          source_labels = [
+            "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_namespace",
+            "namespace",
+          ]
+          separator = ";"
+          regex = "^(?:;*)?([^;]+).*$"
+          replacement = "$1"
+          target_label = "service_namespace"
+        }
+    
+        // Set service_instance_id by choosing the first value found from the following ordered list:
+        // - pod.annotation[resource.opentelemetry.io/service.instance.id]
+        // - concat([k8s.namespace.name, k8s.pod.name, k8s.container.name], '.')
+        rule {
+          source_labels = ["__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_instance_id"]
+          target_label = "service_instance_id"
+        }
+        rule {
+          source_labels = ["service_instance_id", "namespace", "pod", "container"]
+          separator = "."
+          regex = "^\\.([^.]+\\.[^.]+\\.[^.]+)$"
+          target_label = "service_instance_id"
+        }
+    
         rule {
           replacement = "alloy/pyroscope.pprof"
           target_label = "source"
         }
       }
     
-      discovery.relabel "pprof_pods_block_default_name" {
+      discovery.relabel "pprof_pods_block" {
         targets = discovery.relabel.pprof_pods.output
     
         // Keep only pods with the scrape annotation set
@@ -2124,7 +2270,7 @@ data:
       }
     
       pyroscope.scrape "pyroscope_scrape_block" {
-        targets = discovery.relabel.pprof_pods_block_default_name.output
+        targets = discovery.relabel.pprof_pods_block.output
     
         bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
         profiling_config {
@@ -2162,7 +2308,7 @@ data:
     
         forward_to = argument.profiles_destinations.value
       }
-      discovery.relabel "pprof_pods_cpu_default_name" {
+      discovery.relabel "pprof_pods_cpu" {
         targets = discovery.relabel.pprof_pods.output
     
         // Keep only pods with the scrape annotation set
@@ -2242,7 +2388,7 @@ data:
       }
     
       pyroscope.scrape "pyroscope_scrape_cpu" {
-        targets = discovery.relabel.pprof_pods_cpu_default_name.output
+        targets = discovery.relabel.pprof_pods_cpu.output
     
         bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
         profiling_config {
@@ -2280,7 +2426,7 @@ data:
     
         forward_to = argument.profiles_destinations.value
       }
-      discovery.relabel "pprof_pods_fgprof_default_name" {
+      discovery.relabel "pprof_pods_fgprof" {
         targets = discovery.relabel.pprof_pods.output
     
         // Keep only pods with the scrape annotation set
@@ -2360,7 +2506,7 @@ data:
       }
     
       pyroscope.scrape "pyroscope_scrape_fgprof" {
-        targets = discovery.relabel.pprof_pods_fgprof_default_name.output
+        targets = discovery.relabel.pprof_pods_fgprof.output
     
         bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
         profiling_config {
@@ -2398,7 +2544,7 @@ data:
     
         forward_to = argument.profiles_destinations.value
       }
-      discovery.relabel "pprof_pods_goroutine_default_name" {
+      discovery.relabel "pprof_pods_goroutine" {
         targets = discovery.relabel.pprof_pods.output
     
         // Keep only pods with the scrape annotation set
@@ -2478,7 +2624,7 @@ data:
       }
     
       pyroscope.scrape "pyroscope_scrape_goroutine" {
-        targets = discovery.relabel.pprof_pods_goroutine_default_name.output
+        targets = discovery.relabel.pprof_pods_goroutine.output
     
         bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
         profiling_config {
@@ -2516,7 +2662,7 @@ data:
     
         forward_to = argument.profiles_destinations.value
       }
-      discovery.relabel "pprof_pods_memory_default_name" {
+      discovery.relabel "pprof_pods_memory" {
         targets = discovery.relabel.pprof_pods.output
     
         // Keep only pods with the scrape annotation set
@@ -2596,7 +2742,7 @@ data:
       }
     
       pyroscope.scrape "pyroscope_scrape_memory" {
-        targets = discovery.relabel.pprof_pods_memory_default_name.output
+        targets = discovery.relabel.pprof_pods_memory.output
     
         bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
         profiling_config {
@@ -2634,7 +2780,7 @@ data:
     
         forward_to = argument.profiles_destinations.value
       }
-      discovery.relabel "pprof_pods_mutex_default_name" {
+      discovery.relabel "pprof_pods_mutex" {
         targets = discovery.relabel.pprof_pods.output
     
         // Keep only pods with the scrape annotation set
@@ -2714,7 +2860,7 @@ data:
       }
     
       pyroscope.scrape "pyroscope_scrape_mutex" {
-        targets = discovery.relabel.pprof_pods_mutex_default_name.output
+        targets = discovery.relabel.pprof_pods_mutex.output
     
         bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
         profiling_config {
@@ -4858,7 +5004,7 @@ metadata:
   labels:
     app.kubernetes.io/name: k8smon-k8s-monitoring-add-finalizer
     app.kubernetes.io/instance: k8smon
-    helm.sh/chart: k8s-monitoring-3.4.2
+    helm.sh/chart: k8s-monitoring-3.5.0
   annotations:
     helm.sh/hook: post-install,post-upgrade
     helm.sh/hook-weight: "15"
@@ -4910,7 +5056,7 @@ metadata:
   labels:
     app.kubernetes.io/name: k8smon-k8s-monitoring-remove-alloy-and-finalizer
     app.kubernetes.io/instance: k8smon
-    helm.sh/chart: k8s-monitoring-3.4.2
+    helm.sh/chart: k8s-monitoring-3.5.0
   annotations:
     helm.sh/hook: pre-delete
     helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded

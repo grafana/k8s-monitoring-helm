@@ -110,6 +110,11 @@ declare "dcgm_exporter_integration" {
       optional = true
     }
 
+    argument "scrape_timeout" {
+      comment = "The timeout for scraping metrics from the targets (default: 10s)"
+      optional = true
+    }
+
     argument "scrape_protocols" {
       comment = "The scrape protocols to use for scraping metrics"
       optional = true
@@ -132,8 +137,9 @@ declare "dcgm_exporter_integration" {
 
     prometheus.scrape "dcgm_exporter" {
       targets = argument.targets.value
-      job_name = coalesce(argument.job_label.value, "integrations/alloy")
+      job_name = coalesce(argument.job_label.value, "integrations/dcgm-exporter")
       scrape_interval = coalesce(argument.scrape_interval.value, "60s")
+      scrape_timeout = coalesce(argument.scrape_timeout.value, "10s")
       scrape_protocols = argument.scrape_protocols.value
       scrape_classic_histograms = argument.scrape_classic_histograms.value
 
@@ -272,6 +278,7 @@ dcgm_exporter_integration_scrape  {{ include "helper.alloy_name" .name | quote }
   drop_metrics = {{ $metricDenyList | join "|" | quote }}
 {{- end }}
   scrape_interval = {{ .scrapeInterval | default $.Values.global.scrapeInterval | quote }}
+  scrape_timeout = {{ .scrapeTimeout | default $.Values.global.scrapeTimeout | quote }}
   scrape_protocols = {{ $.Values.global.scrapeProtocols | toJson }}
   scrape_classic_histograms = {{ $.Values.global.scrapeClassicHistograms }}
   max_cache_size = {{ .metrics.maxCacheSize | default $.Values.global.maxCacheSize | int }}

@@ -1,5 +1,14 @@
 # Changelog
 
+## 3.5.0
+
+*   Create a separate feature for Pod Logs via Kubernetes API (@petewall)
+*   Update default resource attributes remove list (@rlankfo)
+*   Span metrics: spans prefilter for internal (@rlankfo)
+*   Update the labels set for profiling feature (@petewall)
+*   Add Custom type destinations (@petewall)
+*   Add the ability to set scrape timeout everywhere (@petewall)
+
 ## 3.4.1
 
 *   Update kube-state-metrics and OpenCost (@petewall)

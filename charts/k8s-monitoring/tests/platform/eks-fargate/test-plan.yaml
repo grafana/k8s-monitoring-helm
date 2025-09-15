@@ -5,6 +5,7 @@ name: eks-fargate
 
 subject:
   releaseName: k8smon
+  namespace: monitoring
   path: ../../..
   valuesFile: values.yaml
   set:
@@ -17,8 +18,10 @@ cluster:
   appendRandomNumber: true
 
 dependencies:
+  - namespace: monitoring
   - preset: test-parameters
     namespace: toolbox
+  - directory: dependencies
   - file: grafana-cloud-credentials.yaml
 
 tests:
@@ -73,7 +76,7 @@ tests:
 
             # Pod logs
             # Logs from the default namespace should be from the Fargate nodes
-            - query: count_over_time({cluster="$clusterName", namespace="default", job!~"integrations/kubernetes/eventhandler|integrations/kubernetes/journal"}[1h])
+            - query: count_over_time({cluster="$clusterName", namespace="default", job!~l"integrations/kubernetes/eventhandler|integrations/kubernetes/journal"}[1h])
               type: logql
             # Logs from the other namespaces should be from traditional nodes
             - query: count_over_time({cluster="$clusterName", namespace!="default", job!~"integrations/kubernetes/eventhandler|integrations/kubernetes/journal"}[1h])

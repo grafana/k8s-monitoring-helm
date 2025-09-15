@@ -13,7 +13,7 @@ destinations:
     secret:
       create: false
       name: grafana-cloud-credentials
-      namespace: default
+      namespace: monitoring
   - name: grafana-cloud-logs
     type: loki
     url: https://logs-prod-006.grafana.net/loki/api/v1/push
@@ -24,7 +24,7 @@ destinations:
     secret:
       create: false
       name: grafana-cloud-credentials
-      namespace: default
+      namespace: monitoring
 
 clusterMetrics:
   enabled: true
@@ -34,7 +34,11 @@ clusterEvents:
 
 podLogs:
   enabled: true
-  gatherMethod: kubernetesApi
+
+podLogsViaKubernetesApi:
+  enabled: true
+  nodeSelectors:
+    eks.amazonaws.com/compute-type: fargate
 
 integrations:
   alloy:
@@ -51,11 +55,10 @@ alloy-logs:
   enabled: true
   alloy:
     clustering:
+      name: alloy-logs
       enabled: true
-    mounts:
-      varlog: false
-      dockercontainers: false
-
   controller:
-    replicas: 2
-    type: deployment
+    nodeSelector:
+      kubernetes.io/os: linux
+      kubernetes.io/arch: amd64
+      alpha.eksctl.io/nodegroup-name: ng-linux  # Ensure we're deploying to the non-fargate nodegroup

@@ -138,6 +138,7 @@ data:
         job_name = "integrations/kubernetes/kubelet"
         scheme   = "https"
         scrape_interval = "60s"
+        scrape_timeout = "10s"
         scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
         scrape_classic_histograms = false
         bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
@@ -180,6 +181,7 @@ data:
         job_name = "integrations/kubernetes/resources"
         scheme   = "https"
         scrape_interval = "60s"
+        scrape_timeout = "10s"
         scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
         scrape_classic_histograms = false
         bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
@@ -222,6 +224,7 @@ data:
         job_name = "integrations/kubernetes/cadvisor"
         scheme = "https"
         scrape_interval = "60s"
+        scrape_timeout = "10s"
         scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
         scrape_classic_histograms = false
         bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
@@ -350,6 +353,7 @@ data:
         targets = discovery.relabel.kube_state_metrics.output
         job_name = "integrations/kubernetes/kube-state-metrics"
         scrape_interval = "60s"
+        scrape_timeout = "10s"
         scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
         scrape_classic_histograms = false
         scheme = "http"
@@ -483,6 +487,7 @@ data:
         targets = discovery.relabel.node_exporter.output
         job_name = "integrations/node_exporter"
         scrape_interval = "60s"
+        scrape_timeout = "10s"
         scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
         scrape_classic_histograms = false
         scheme = "http"
@@ -553,6 +558,7 @@ data:
         targets  = discovery.relabel.windows_exporter.output
         job_name   = "integrations/windows-exporter"
         scrape_interval = "60s"
+        scrape_timeout = "10s"
         scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
         scrape_classic_histograms = false
         clustering {
@@ -657,8 +663,6 @@ data:
           `delete_key(attributes, "process.owner")`,
           `delete_key(attributes, "process.runtime.version")`,
           `delete_key(attributes, "process.runtime.description")`,
-          `delete_key(attributes, "telemetry.sdk.version")`,
-          `delete_key(attributes, "telemetry.sdk.language")`,
           `delete_key(attributes, "host.ip")`,
           `delete_key(attributes, "host.mac")`,
           `delete_key(attributes, "k8s.pod.start_time")`,
@@ -698,8 +702,6 @@ data:
           `delete_key(attributes, "process.owner")`,
           `delete_key(attributes, "process.runtime.version")`,
           `delete_key(attributes, "process.runtime.description")`,
-          `delete_key(attributes, "telemetry.sdk.version")`,
-          `delete_key(attributes, "telemetry.sdk.language")`,
           `delete_key(attributes, "host.ip")`,
           `delete_key(attributes, "host.mac")`,
           `delete_key(attributes, "k8s.pod.start_time")`,
@@ -758,8 +760,6 @@ data:
           `delete_key(attributes, "process.owner")`,
           `delete_key(attributes, "process.runtime.version")`,
           `delete_key(attributes, "process.runtime.description")`,
-          `delete_key(attributes, "telemetry.sdk.version")`,
-          `delete_key(attributes, "telemetry.sdk.language")`,
           `delete_key(attributes, "host.ip")`,
           `delete_key(attributes, "host.mac")`,
           `delete_key(attributes, "k8s.pod.start_time")`,
@@ -821,7 +821,7 @@ data:
   self-reporting-metric.prom: |
     # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_build_info gauge
-    grafana_kubernetes_monitoring_build_info{version="3.4.2", namespace="default"} 1
+    grafana_kubernetes_monitoring_build_info{version="3.5.0", namespace="default"} 1
     # HELP grafana_kubernetes_monitoring_feature_info A metric to report the enabled features of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_feature_info gauge
     grafana_kubernetes_monitoring_feature_info{deployments="kube-state-metrics,node-exporter,windows-exporter", feature="clusterMetrics", sources="kubelet,kubeletResource,cadvisor,kube-state-metrics,node-exporter,windows-exporter", version="1.0.0"} 1
@@ -1087,8 +1087,6 @@ data:
           `delete_key(attributes, "process.owner")`,
           `delete_key(attributes, "process.runtime.version")`,
           `delete_key(attributes, "process.runtime.description")`,
-          `delete_key(attributes, "telemetry.sdk.version")`,
-          `delete_key(attributes, "telemetry.sdk.language")`,
           `delete_key(attributes, "host.ip")`,
           `delete_key(attributes, "host.mac")`,
           `delete_key(attributes, "k8s.pod.start_time")`,
@@ -1128,8 +1126,6 @@ data:
           `delete_key(attributes, "process.owner")`,
           `delete_key(attributes, "process.runtime.version")`,
           `delete_key(attributes, "process.runtime.description")`,
-          `delete_key(attributes, "telemetry.sdk.version")`,
-          `delete_key(attributes, "telemetry.sdk.language")`,
           `delete_key(attributes, "host.ip")`,
           `delete_key(attributes, "host.mac")`,
           `delete_key(attributes, "k8s.pod.start_time")`,
@@ -1188,8 +1184,6 @@ data:
           `delete_key(attributes, "process.owner")`,
           `delete_key(attributes, "process.runtime.version")`,
           `delete_key(attributes, "process.runtime.description")`,
-          `delete_key(attributes, "telemetry.sdk.version")`,
-          `delete_key(attributes, "telemetry.sdk.language")`,
           `delete_key(attributes, "host.ip")`,
           `delete_key(attributes, "host.mac")`,
           `delete_key(attributes, "k8s.pod.start_time")`,
@@ -2577,7 +2571,7 @@ metadata:
   labels:
     app.kubernetes.io/name: k8smon-k8s-monitoring-add-finalizer
     app.kubernetes.io/instance: k8smon
-    helm.sh/chart: k8s-monitoring-3.4.2
+    helm.sh/chart: k8s-monitoring-3.5.0
   annotations:
     helm.sh/hook: post-install,post-upgrade
     helm.sh/hook-weight: "15"
@@ -2629,7 +2623,7 @@ metadata:
   labels:
     app.kubernetes.io/name: k8smon-k8s-monitoring-remove-alloy-and-finalizer
     app.kubernetes.io/instance: k8smon
-    helm.sh/chart: k8s-monitoring-3.4.2
+    helm.sh/chart: k8s-monitoring-3.5.0
   annotations:
     helm.sh/hook: pre-delete
     helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded

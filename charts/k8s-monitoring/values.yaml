@@ -21,6 +21,10 @@ global:
   # @section -- Global Settings
   scrapeInterval: 60s
 
+  # -- The timeout for scraping metrics.
+  # @section -- Global Settings
+  scrapeTimeout: 10s
+
   # -- The protocols to negotiate during a Prometheus metrics scrape, in order of preference.
   # @section -- Global Settings
   scrapeProtocols: ["OpenMetricsText1.0.0", "OpenMetricsText0.0.1", "PrometheusText0.0.4"]
@@ -135,6 +139,27 @@ podLogs:
   collector: alloy-logs
 
   # To see additional options, please see the [Pod Logs feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-pod-logs).
+
+# -- Pod logs via Kubernetes API.
+# Requires a destination that supports logs.
+# To see the valid options, please see the [Pod Logs via Kubernetes API feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-pod-logs-via-kubernetes-api).
+# @default -- Disabled
+# @section -- Features - Pod Logs via Kubernetes API
+podLogsViaKubernetesApi:
+  # -- Enable gathering Kubernetes Pod logs.
+  # @section -- Features - Pod Logs via Kubernetes API
+  enabled: false
+
+  # -- The destinations where logs will be sent. If empty, all logs-capable destinations will be used.
+  # @section -- Features - Pod Logs via Kubernetes API
+  destinations: []
+
+  # -- Which collector to assign this feature to. Do not change this unless you are sure of what you are doing.
+  # @section -- Features - Pod Logs via Kubernetes API
+  # @ignored
+  collector: alloy-logs
+
+  # To see additional options, please see the [Pod Logs via Kubernetes API feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-pod-logs-via-kubernetes-api).
 
 # -- Application Observability.
 # Requires destinations that supports metrics, logs, and traces.

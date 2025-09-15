@@ -1,0 +1,36 @@
+---
+cluster:
+  name: kafka-custom-destination
+
+destinations:
+  - name: kafka
+    type: custom
+    config: |
+      otelcol.processor.batch "kafka" {
+        output {
+          logs = [otelcol.exporter.kafka.kafka.input]
+        }
+      }
+
+      otelcol.exporter.kafka "kafka" {
+        logs {
+          topic = "cluster_events"
+          encoding = "raw"
+        }
+        brokers          = ["my-cluster-kafka-brokers.kafka.svc:9092"]
+        protocol_version = "2.0.0"
+      }
+
+    ecosystem: otlp
+    logs:
+      enabled: true
+      target: otelcol.processor.batch.kafka.input
+
+clusterEvents:
+  enabled: true
+  destinations: [kafka]
+
+alloy-singleton:
+  enabled: true
+  liveDebugging:
+    enabled: true

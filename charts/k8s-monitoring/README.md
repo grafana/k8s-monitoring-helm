@@ -5,7 +5,7 @@
 
 # k8s-monitoring
 
-![Version: 3.4.2](https://img.shields.io/badge/Version-3.4.2-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 3.4.2](https://img.shields.io/badge/AppVersion-3.4.2-informational?style=flat-square)
+![Version: 3.5.0](https://img.shields.io/badge/Version-3.5.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 3.5.0](https://img.shields.io/badge/AppVersion-3.5.0-informational?style=flat-square)
 Capture all telemetry data from your Kubernetes cluster.
 
 ## Breaking change announcements
@@ -250,6 +250,7 @@ details:
 |  | integrations(feature-integrations) | 1.0.0 |
 |  | nodeLogs(feature-node-logs) | 1.0.0 |
 |  | podLogs(feature-pod-logs) | 1.0.0 |
+|  | podLogsViaKubernetesApi(feature-pod-logs-via-kubernetes-api) | 1.0.0 |
 |  | profilesReceiver(feature-profiles-receiver) | 1.0.0 |
 |  | profiling(feature-profiling) | 1.0.0 |
 |  | prometheusOperatorObjects(feature-prometheus-operator-objects) | 1.0.0 |
@@ -380,6 +381,7 @@ details:
 | global.scrapeClassicHistograms | bool | `false` | Whether to scrape a classic histogram that’s also exposed as a native histogram. |
 | global.scrapeInterval | string | `"60s"` | How frequently to scrape metrics. |
 | global.scrapeProtocols | list | `["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]` | The protocols to negotiate during a Prometheus metrics scrape, in order of preference. |
+| global.scrapeTimeout | string | `"10s"` | The timeout for scraping metrics. |
 
 ### Features - Service Integrations
 
@@ -403,6 +405,14 @@ details:
 | podLogs | object | Disabled | Pod logs. Requires a destination that supports logs. To see the valid options, please see the [Pod Logs feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-pod-logs). |
 | podLogs.destinations | list | `[]` | The destinations where logs will be sent. If empty, all logs-capable destinations will be used. |
 | podLogs.enabled | bool | `false` | Enable gathering Kubernetes Pod logs. |
+
+### Features - Pod Logs via Kubernetes API
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| podLogsViaKubernetesApi | object | Disabled | Pod logs via Kubernetes API. Requires a destination that supports logs. To see the valid options, please see the [Pod Logs via Kubernetes API feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-pod-logs-via-kubernetes-api). |
+| podLogsViaKubernetesApi.destinations | list | `[]` | The destinations where logs will be sent. If empty, all logs-capable destinations will be used. |
+| podLogsViaKubernetesApi.enabled | bool | `false` | Enable gathering Kubernetes Pod logs. |
 
 ### Features - Profiles Receiver
 

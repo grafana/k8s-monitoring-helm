@@ -1,13 +1,22 @@
-{{/* Inputs: Values (values) metricsOutput, name */}}
 {{/* https://grafana.com/docs/alloy/latest/reference/components/otelcol/otelcol.connector.spanmetrics/ */}}
+{{/* Inputs: Values (values) metricsOutput, name */}}
 {{- define "feature.applicationObservability.connector.spanmetrics.alloy.target" }}otelcol.processor.filter.span_metrics_prefilter.input{{- end }}
 {{- define "feature.applicationObservability.connector.spanmetrics.alloy" }}
 otelcol.processor.filter "span_metrics_prefilter" {
   error_mode = "silent"
+{{- $spanFilters := list }}
 {{- if .Values.connectors.spanMetrics.skipBeyla }}
+{{- $spanFilters = append $spanFilters "`resource.attributes[\"span.metrics.skip\"] != nil or attributes[\"span.metrics.skip\"] != nil`" }}
+{{- end }}
+{{- if .Values.connectors.spanMetrics.skipInternal }}
+{{- $spanFilters = append $spanFilters "`kind == 1`" }}
+{{- end }}
+{{- if gt (len $spanFilters) 0 }}
   traces {
     span = [
-      `resource.attributes["span.metrics.skip"] != nil or attributes["span.metrics.skip"] != nil`,
+{{- range $spanFilters }}
+{{ . | indent 6 }},
+{{- end }}
     ]
   }
 {{- end }}

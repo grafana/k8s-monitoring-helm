@@ -67,6 +67,55 @@ discovery.relabel "pprof_pods" {
     source_labels = ["__meta_kubernetes_pod_container_name"]
     target_label  = "container"
   }
+
+  // Set service_name by choosing the first value found from the following ordered list:
+  // - pod.annotation[resource.opentelemetry.io/service.name]
+  // - pod.label[app.kubernetes.io/instance]
+  // - pod.label[app.kubernetes.io/name]
+  // - k8s.container.name
+  rule {
+    action = "replace"
+    source_labels = [
+      {{ include "pod_annotation" "resource.opentelemetry.io/service.name" | quote }},
+      {{ include "pod_label" "app.kubernetes.io/instance" | quote }},
+      {{ include "pod_label" "app.kubernetes.io/name" | quote }},
+      "container",
+    ]
+    separator = ";"
+    regex = "^(?:;*)?([^;]+).*$"
+    replacement = "$1"
+    target_label = "service_name"
+  }
+
+  // Set service_namespace by choosing the first value found from the following ordered list:
+  // - pod.annotation[resource.opentelemetry.io/service.namespace]
+  // - pod.namespace
+  rule {
+    action = "replace"
+    source_labels = [
+      {{ include "pod_annotation" "resource.opentelemetry.io/service.namespace" | quote }},
+      "namespace",
+    ]
+    separator = ";"
+    regex = "^(?:;*)?([^;]+).*$"
+    replacement = "$1"
+    target_label = "service_namespace"
+  }
+
+  // Set service_instance_id by choosing the first value found from the following ordered list:
+  // - pod.annotation[resource.opentelemetry.io/service.instance.id]
+  // - concat([k8s.namespace.name, k8s.pod.name, k8s.container.name], '.')
+  rule {
+    source_labels = [{{ include "pod_annotation" "resource.opentelemetry.io/service.instance.id" | quote }}]
+    target_label = "service_instance_id"
+  }
+  rule {
+    source_labels = ["service_instance_id", "namespace", "pod", "container"]
+    separator = "."
+    regex = "^\\.([^.]+\\.[^.]+\\.[^.]+)$"
+    target_label = "service_instance_id"
+  }
+
   rule {
     replacement = "alloy/pyroscope.pprof"
     target_label = "source"
@@ -85,7 +134,7 @@ discovery.relabel "pprof_pods" {
   {{- $schemeAnnotation := include "pod_annotation" (printf "%s/%s.%s" $.Values.annotations.prefix $currentType $.Values.pprof.annotations.scheme) }}
   {{- $pathAnnotation := include "pod_annotation" (printf "%s/%s.%s" $.Values.annotations.prefix $currentType $.Values.pprof.annotations.path) }}
   {{- $containerAnnotation := include "pod_annotation" (printf "%s/%s.%s" $.Values.annotations.prefix $currentType $.Values.pprof.annotations.container) }}
-discovery.relabel "pprof_pods_{{ $currentType }}_default_name" {
+discovery.relabel "pprof_pods_{{ $currentType }}" {
   targets = discovery.relabel.pprof_pods.output
 
   // Keep only pods with the scrape annotation set
@@ -165,7 +214,7 @@ discovery.relabel "pprof_pods_{{ $currentType }}_default_name" {
 }
 
 pyroscope.scrape "pyroscope_scrape_{{ $currentType }}" {
-  targets = discovery.relabel.pprof_pods_{{ $currentType }}_default_name.output
+  targets = discovery.relabel.pprof_pods_{{ $currentType }}.output
 
   bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
   profiling_config {

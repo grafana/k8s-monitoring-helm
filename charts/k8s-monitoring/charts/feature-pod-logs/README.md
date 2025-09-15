@@ -63,7 +63,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 |-----|------|---------|-------------|
 | excludeNamespaces | list | `[]` | Do not capture logs from any pods in these namespaces. |
 | extraDiscoveryRules | string | `""` | Rules to filter pods for log gathering. Only used for "volumes" or "kubernetesApi" gather methods. |
-| gatherMethod | string | `"volumes"` | The method to gather pod logs. Options are "volumes", "filelog" (experimental), "kubernetesApi", "OpenShiftClusterLogForwarder" (experimental). |
+| gatherMethod | string | `"volumes"` | The method to gather pod logs. Options are "volumes", "filelog" (experimental), "kubernetesApi", "OpenShiftClusterLogForwarder" (experimental). DEPRECATION WARNING: The "kubernetesApi" gather method is deprecated and will be removed in a future release. Please use the podLogsViaKubernetesApi feature instead. |
 | namespaces | list | `[]` | Only capture logs from pods in these namespaces (`[]` means all namespaces). |
 
 ### File Log Gathering

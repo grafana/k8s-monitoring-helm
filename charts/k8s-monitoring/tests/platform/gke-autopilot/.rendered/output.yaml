@@ -71,6 +71,7 @@ data:
         job_name = "integrations/kubernetes/kubelet"
         scheme   = "https"
         scrape_interval = "60s"
+        scrape_timeout = "10s"
         scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
         scrape_classic_histograms = false
         bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
@@ -113,6 +114,7 @@ data:
         job_name = "integrations/kubernetes/resources"
         scheme   = "https"
         scrape_interval = "60s"
+        scrape_timeout = "10s"
         scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
         scrape_classic_histograms = false
         bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
@@ -155,6 +157,7 @@ data:
         job_name = "integrations/kubernetes/cadvisor"
         scheme = "https"
         scrape_interval = "60s"
+        scrape_timeout = "10s"
         scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
         scrape_classic_histograms = false
         bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
@@ -283,6 +286,7 @@ data:
         targets = discovery.relabel.kube_state_metrics.output
         job_name = "integrations/kubernetes/kube-state-metrics"
         scrape_interval = "60s"
+        scrape_timeout = "10s"
         scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
         scrape_classic_histograms = false
         scheme = "http"
@@ -479,6 +483,11 @@ data:
           optional = true
         }
     
+        argument "scrape_timeout" {
+          comment = "The timeout for scraping metrics from the targets (default: 10s)"
+          optional = true
+        }
+    
         argument "scrape_protocols" {
           comment = "The scrape protocols to use for scraping metrics"
           optional = true
@@ -504,6 +513,7 @@ data:
           forward_to = [prometheus.relabel.alloy.receiver]
           targets = argument.targets.value
           scrape_interval = coalesce(argument.scrape_interval.value, "60s")
+          scrape_timeout = coalesce(argument.scrape_timeout.value, "10s")
           scrape_protocols = argument.scrape_protocols.value
           scrape_classic_histograms = argument.scrape_classic_histograms.value
     
@@ -609,6 +619,7 @@ data:
         clustering = true
         keep_metrics = "up|scrape_samples_scraped|alloy_build_info|alloy_component_controller_running_components|alloy_component_dependencies_wait_seconds|alloy_component_dependencies_wait_seconds_bucket|alloy_component_evaluation_seconds|alloy_component_evaluation_seconds_bucket|alloy_component_evaluation_seconds_count|alloy_component_evaluation_seconds_sum|alloy_component_evaluation_slow_seconds|alloy_config_hash|alloy_resources_machine_rx_bytes_total|alloy_resources_machine_tx_bytes_total|alloy_resources_process_cpu_seconds_total|alloy_resources_process_resident_memory_bytes|alloy_tcp_connections|alloy_wal_samples_appended_total|alloy_wal_storage_active_series|cluster_node_gossip_health_score|cluster_node_gossip_proto_version|cluster_node_gossip_received_events_total|cluster_node_info|cluster_node_lamport_time|cluster_node_peers|cluster_node_update_observers|cluster_transport_rx_bytes_total|cluster_transport_rx_packet_queue_length|cluster_transport_rx_packets_failed_total|cluster_transport_rx_packets_total|cluster_transport_stream_rx_bytes_total|cluster_transport_stream_rx_packets_failed_total|cluster_transport_stream_rx_packets_total|cluster_transport_stream_tx_bytes_total|cluster_transport_stream_tx_packets_failed_total|cluster_transport_stream_tx_packets_total|cluster_transport_streams|cluster_transport_tx_bytes_total|cluster_transport_tx_packet_queue_length|cluster_transport_tx_packets_failed_total|cluster_transport_tx_packets_total|otelcol_exporter_send_failed_spans_total|otelcol_exporter_sent_spans_total|go_gc_duration_seconds_count|go_goroutines|go_memstats_heap_inuse_bytes|loki_process_dropped_lines_total|loki_write_batch_retries_total|loki_write_dropped_bytes_total|loki_write_dropped_entries_total|loki_write_encoded_bytes_total|loki_write_mutated_bytes_total|loki_write_mutated_entries_total|loki_write_request_duration_seconds_bucket|loki_write_sent_bytes_total|loki_write_sent_entries_total|process_cpu_seconds_total|process_start_time_seconds|otelcol_processor_batch_batch_send_size_bucket|otelcol_processor_batch_metadata_cardinality|otelcol_processor_batch_timeout_trigger_send_total|prometheus_remote_storage_bytes_total|prometheus_remote_storage_enqueue_retries_total|prometheus_remote_storage_highest_timestamp_in_seconds|prometheus_remote_storage_metadata_bytes_total|prometheus_remote_storage_queue_highest_sent_timestamp_seconds|prometheus_remote_storage_samples_dropped_total|prometheus_remote_storage_samples_failed_total|prometheus_remote_storage_samples_pending|prometheus_remote_storage_samples_retried_total|prometheus_remote_storage_samples_total|prometheus_remote_storage_sent_batch_duration_seconds_bucket|prometheus_remote_storage_sent_batch_duration_seconds_count|prometheus_remote_storage_sent_batch_duration_seconds_sum|prometheus_remote_storage_shard_capacity|prometheus_remote_storage_shards|prometheus_remote_storage_shards_desired|prometheus_remote_storage_shards_max|prometheus_remote_storage_shards_min|prometheus_remote_storage_succeeded_samples_total|prometheus_remote_write_wal_samples_appended_total|prometheus_remote_write_wal_storage_active_series|prometheus_sd_discovered_targets|prometheus_target_interval_length_seconds_count|prometheus_target_interval_length_seconds_sum|prometheus_target_scrapes_exceeded_sample_limit_total|prometheus_target_scrapes_sample_duplicate_timestamp_total|prometheus_target_scrapes_sample_out_of_bounds_total|prometheus_target_scrapes_sample_out_of_order_total|prometheus_target_sync_length_seconds_sum|prometheus_wal_watcher_current_segment|otelcol_receiver_accepted_spans_total|otelcol_receiver_refused_spans_total|rpc_server_duration_milliseconds_bucket|scrape_duration_seconds|traces_exporter_send_failed_spans|traces_exporter_send_failed_spans_total|traces_exporter_sent_spans|traces_exporter_sent_spans_total|traces_loadbalancer_backend_outcome|traces_loadbalancer_num_backends|traces_receiver_accepted_spans|traces_receiver_accepted_spans_total|traces_receiver_refused_spans|traces_receiver_refused_spans_total"
         scrape_interval = "60s"
+        scrape_timeout = "10s"
         scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
         scrape_classic_histograms = false
         max_cache_size = 100000
@@ -929,7 +940,7 @@ data:
   self-reporting-metric.prom: |
     # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_build_info gauge
-    grafana_kubernetes_monitoring_build_info{version="3.4.2", namespace="default"} 1
+    grafana_kubernetes_monitoring_build_info{version="3.5.0", namespace="default"} 1
     # HELP grafana_kubernetes_monitoring_feature_info A metric to report the enabled features of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_feature_info gauge
     grafana_kubernetes_monitoring_feature_info{deployments="kube-state-metrics", feature="clusterMetrics", sources="kubelet,kubeletResource,cadvisor,kube-state-metrics", version="1.0.0"} 1
@@ -2433,7 +2444,7 @@ metadata:
   labels:
     app.kubernetes.io/name: k8smon-k8s-monitoring-add-finalizer
     app.kubernetes.io/instance: k8smon
-    helm.sh/chart: k8s-monitoring-3.4.2
+    helm.sh/chart: k8s-monitoring-3.5.0
   annotations:
     helm.sh/hook: post-install,post-upgrade
     helm.sh/hook-weight: "15"
@@ -2485,7 +2496,7 @@ metadata:
   labels:
     app.kubernetes.io/name: k8smon-k8s-monitoring-remove-alloy-and-finalizer
     app.kubernetes.io/instance: k8smon
-    helm.sh/chart: k8s-monitoring-3.4.2
+    helm.sh/chart: k8s-monitoring-3.5.0
   annotations:
     helm.sh/hook: pre-delete
     helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded

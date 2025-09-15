@@ -33,6 +33,7 @@ prometheus.scrape "kube_proxy" {
   job_name          = {{ .Values.kubeProxy.jobLabel | quote }}
   scheme            = "http"
   scrape_interval   = {{ .Values.kubeProxy.scrapeInterval | default .Values.global.scrapeInterval | quote }}
+  scrape_timeout = {{ .Values.kubeProxy.scrapeTimeout | default .Values.global.scrapeTimeout | quote }}
   scrape_protocols = {{ .Values.global.scrapeProtocols | toJson }}
   scrape_classic_histograms = {{ .Values.global.scrapeClassicHistograms }}
   clustering {

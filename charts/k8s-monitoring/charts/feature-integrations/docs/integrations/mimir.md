@@ -29,7 +29,6 @@ This integration captures the metrics and logs to understand the health and perf
 |-----|------|---------|-------------|
 | metrics.enabled | bool | `true` | Whether to enable metrics collection from Mimir. |
 | metrics.portName | string | `"http-metrics"` | Name of the port to scrape metrics from. |
-| metrics.scrapeInterval | string | `60s` | How frequently to scrape metrics from Mimir. |
 
 ### Metric Processing Settings
 
@@ -39,6 +38,13 @@ This integration captures the metrics and logs to understand the health and perf
 | metrics.tuning.excludeMetrics | list | `[]` | Metrics to drop. Can use regular expressions. |
 | metrics.tuning.includeMetrics | list | `[]` | Metrics to keep. Can use regular expressions. |
 | metrics.tuning.useDefaultAllowList | bool | `true` | Filter the list of metrics from Grafana Mimir to the minimal set required for the Grafana Mimir integration. |
+
+### Scrape Settings
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| metrics.scrapeInterval | string | `60s` | How frequently to scrape metrics from Mimir. |
+| metrics.scrapeTimeout | string | `10s` | The timeout for scraping metrics from Minir. |
 
 ### General Settings
 

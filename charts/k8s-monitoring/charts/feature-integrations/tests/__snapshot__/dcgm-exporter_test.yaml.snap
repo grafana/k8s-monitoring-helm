@@ -168,6 +168,11 @@ should create the DCGM Exporter config:
             optional = true
           }
 
+          argument "scrape_timeout" {
+            comment = "The timeout for scraping metrics from the targets (default: 10s)"
+            optional = true
+          }
+
           argument "scrape_protocols" {
             comment = "The scrape protocols to use for scraping metrics"
             optional = true
@@ -189,16 +194,18 @@ should create the DCGM Exporter config:
           }
 
           prometheus.scrape "dcgm_exporter" {
-            job_name = coalesce(argument.job_label.value, "integrations/alloy")
-            forward_to = [prometheus.relabel.alloy.receiver]
             targets = argument.targets.value
+            job_name = coalesce(argument.job_label.value, "integrations/dcgm-exporter")
             scrape_interval = coalesce(argument.scrape_interval.value, "60s")
+            scrape_timeout = coalesce(argument.scrape_timeout.value, "10s")
             scrape_protocols = argument.scrape_protocols.value
             scrape_classic_histograms = argument.scrape_classic_histograms.value
 
             clustering {
               enabled = coalesce(argument.clustering.value, false)
             }
+
+            forward_to = [prometheus.relabel.dcgm_exporter.receiver]
           }
 
           // DCGM Exporter metric relabelings (post-scrape)
@@ -297,6 +304,7 @@ should create the DCGM Exporter config:
           job_label = "integrations/dcgm-exporter"
           clustering = true
           scrape_interval = "60s"
+          scrape_timeout = "10s"
           scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
           scrape_classic_histograms = false
           max_cache_size = 100000
