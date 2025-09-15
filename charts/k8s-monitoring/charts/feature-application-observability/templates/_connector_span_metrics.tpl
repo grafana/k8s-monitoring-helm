@@ -15,7 +15,7 @@ otelcol.processor.filter "span_metrics_prefilter" {
   traces {
     span = [
 {{- range $spanFilters }}
-{{ . | indent 8 }},
+{{ . | indent 6 }},
 {{- end }}
     ]
   }
