@@ -42,7 +42,9 @@ tests:
               type: promql
             - query: grafana_kubernetes_monitoring_feature_info{cluster="$clusterName", feature="clusterEvents"}
               type: promql
-            - query: grafana_kubernetes_monitoring_feature_info{cluster="$clusterName", feature="podLogs", method="kubernetesApi"}
+            - query: grafana_kubernetes_monitoring_feature_info{cluster="$clusterName", feature="podLogs", method="volumes"}
+              type: promql
+            - query: grafana_kubernetes_monitoring_feature_info{cluster="$clusterName", feature="podLogsViaKubernetesApi"}
               type: promql
             - query: grafana_kubernetes_monitoring_feature_info{cluster="$clusterName", feature="integrations", sources="alloy"}
               type: promql
@@ -76,7 +78,7 @@ tests:
 
             # Pod logs
             # Logs from the default namespace should be from the Fargate nodes
-            - query: count_over_time({cluster="$clusterName", namespace="default", job!~l"integrations/kubernetes/eventhandler|integrations/kubernetes/journal"}[1h])
+            - query: count_over_time({cluster="$clusterName", namespace="default", job!~"integrations/kubernetes/eventhandler|integrations/kubernetes/journal"}[1h])
               type: logql
             # Logs from the other namespaces should be from traditional nodes
             - query: count_over_time({cluster="$clusterName", namespace!="default", job!~"integrations/kubernetes/eventhandler|integrations/kubernetes/journal"}[1h])
