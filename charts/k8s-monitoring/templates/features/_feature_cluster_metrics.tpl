@@ -79,7 +79,7 @@ cluster_metrics "feature" {
     {{- range $index, $destinationName := $destinations }}
       {{- if eq $destinationName $.Values.clusterMetrics.opencost.metricsSource }}
         {{- $destinationFound = true }}
-        {{- $destination := index $.Values.destinations $index }}
+        {{- $destination := include "destination.getDestinationByName" (deepCopy $ | merge (dict "destination" $destinationName )) | fromYaml }}
         {{- $openCostMetricsUrl := (printf "<Query URL for destination \"%s\">" $destinationName) }}
         {{- if $destination.url }}
           {{- if regexMatch "/api/prom/push" $destination.url }}
