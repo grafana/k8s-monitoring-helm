@@ -31,6 +31,22 @@ integrations:
         logs:
           enabled: false
 
+      - name: staging-db
+        exporter:
+          dataSource:
+            host: database.staging.svc
+            protocol: tcp
+            port: 3306
+            auth:
+              usernameKey: mysql-username
+              passwordKey: mysql-root-password
+        secret:
+          create: false
+          name: mysql-creds
+          namespace: staging
+        logs:
+          enabled: false
+
       - name: prod-db
         exporter:
           dataSource:

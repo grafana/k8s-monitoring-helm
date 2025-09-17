@@ -7,7 +7,6 @@
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | exporter.collectors | list | `["heartbeat","mysql.user"]` | The list of collectors to enable for the MySQL Exporter ([Documentation](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.exporter.mysql/#supported-collectors)). |
-| exporter.dataSource | object | `{"auth":{"password":"","passwordFrom":"","passwordKey":"password","username":"","usernameFrom":"","usernameKey":"username"},"host":"","port":3306}` | The data source to use for the MySQL Exporter. |
 | exporter.dataSource.auth.password | string | `""` | The password to use for the MySQL connection. |
 | exporter.dataSource.auth.passwordFrom | string | `""` | Raw config for accessing the password. |
 | exporter.dataSource.auth.passwordKey | string | `"password"` | The key for storing the password in the secret. |
@@ -16,6 +15,7 @@
 | exporter.dataSource.auth.usernameKey | string | `"username"` | The key for storing the username in the secret. |
 | exporter.dataSource.host | string | `""` | The MySQL host to connect to. |
 | exporter.dataSource.port | int | `3306` | The MySQL port to connect to. |
+| exporter.dataSource.protocol | string | `""` | The MySQL protocol type. |
 | exporter.dataSourceName | string | `""` | The data source string to use for the MySQL Exporter. |
 
 ### General Settings

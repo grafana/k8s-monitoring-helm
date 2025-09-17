@@ -30,6 +30,43 @@ declare "mysql_integration" {
   }
 
 
+  remote.kubernetes.secret "staging_db" {
+    name      = "mysql-creds"
+    namespace = "staging"
+  }
+
+  prometheus.exporter.mysql "staging_db" {
+    data_source_name = string.format("%s:%s@tcp(%s:%d)/",
+      convert.nonsensitive(remote.kubernetes.secret.staging_db.data["mysql-username"]),
+      convert.nonsensitive(remote.kubernetes.secret.staging_db.data["mysql-root-password"]),
+      "database.staging.svc",
+      3306,
+    )
+    enable_collectors = ["heartbeat","mysql.user"]
+  }
+  prometheus.scrape "staging_db" {
+    targets    = prometheus.exporter.mysql.staging_db.targets
+    scrape_interval = "60s"
+    scrape_timeout = "10s"
+    scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
+    scrape_classic_histograms = false
+    forward_to = [prometheus.relabel.staging_db.receiver]
+  }
+
+  prometheus.relabel "staging_db" {
+    max_cache_size = 100000
+    rule {
+      target_label = "instance"
+      replacement = "staging-db"
+    }
+    rule {
+      target_label = "job"
+      replacement = "integration/mysql"
+    }
+    forward_to = argument.metrics_destinations.value
+  }
+
+
   remote.kubernetes.secret "prod_db" {
     name      = "prod-db-k8smon-integrations"
     namespace = "default"

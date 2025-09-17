@@ -19,9 +19,6 @@ tests:
             logs: {enabled: false}
     asserts:
       - template: configmap.yaml
-        isKind:
-          of: ConfigMap
-      - template: configmap.yaml
         matchSnapshot:
           path: data["metrics.alloy"]
 
@@ -65,9 +62,6 @@ tests:
             logs: {enabled: false}
     asserts:
       - template: configmap.yaml
-        isKind:
-          of: ConfigMap
-      - template: configmap.yaml
         matchSnapshot:
           path: data["metrics.alloy"]
 
@@ -109,12 +103,28 @@ tests:
             logs: {enabled: false}
     asserts:
       - template: configmap.yaml
-        isKind:
-          of: ConfigMap
-      - template: configmap.yaml
         matchSnapshot:
           path: data["metrics.alloy"]
 
       - template: mysql-secret.yaml
         hasDocuments:
           count: 0  # No secret should be created
+
+  - it: allows you to set the network protocol
+    set:
+      deployAsConfigMap: true
+      mysql:
+        instances:
+          - name: test-database
+            exporter:
+              dataSource:
+                host: test-database-mysql.mysql.svc
+                protocol: tcp
+                auth:
+                  username: db-admin
+                  password: db-password
+            logs: {enabled: false}
+    asserts:
+      - template: configmap.yaml
+        matchSnapshot:
+          path: data["metrics.alloy"]
