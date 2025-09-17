@@ -31,21 +31,25 @@ prometheus.exporter.mysql {{ include "helper.alloy_name" .name | quote }} {
 {{- else }}
   {{- if eq (include "secrets.usesSecret" (dict "object" . "key" "exporter.dataSource.auth.username")) "true" }}
     {{- if eq (include "secrets.usesSecret" (dict "object" . "key" "exporter.dataSource.auth.password")) "true" }}
-  data_source_name = string.format("%s:%s@(%s:%d)/",
+  data_source_name = string.format("%s:%s@{{ .exporter.dataSource.protocol }}(%s:%d)/",
     {{ include "secrets.read" (dict "object" . "key" "exporter.dataSource.auth.username" "nonsensitive" true) }},
     {{ include "secrets.read" (dict "object" . "key" "exporter.dataSource.auth.password" "nonsensitive" true) }},
     {{ .exporter.dataSource.host | quote }},
     {{ .exporter.dataSource.port | int }},
   )
     {{- else }}
-  data_source_name = string.format("%s@(%s:%d)/",
+  data_source_name = string.format("%s@{{ .exporter.dataSource.protocol }}(%s:%d)/",
     {{ include "secrets.read" (dict "object" . "key" "exporter.dataSource.auth.username" "nonsensitive" true) }},
     {{ .exporter.dataSource.host | quote }},
     {{ .exporter.dataSource.port | int }},
   )
     {{- end }}
   {{- else }}
+    {{- if .exporter.dataSource.protocol }}
+  data_source_name = string.format("{{ .exporter.dataSource.protocol }}(%s:%d)/", {{ .exporter.dataSource.host | quote }}, {{ .exporter.dataSource.port | int }})
+    {{- else }}
   data_source_name = string.format("%s:%d/", {{ .exporter.dataSource.host | quote }}, {{ .exporter.dataSource.port | int }})
+    {{- end }}
   {{- end }}
 {{- end }}
   enable_collectors = {{ .exporter.collectors | toJson }}
