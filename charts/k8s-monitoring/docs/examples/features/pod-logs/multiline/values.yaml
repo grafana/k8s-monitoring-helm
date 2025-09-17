@@ -1,0 +1,26 @@
+---
+cluster:
+  name: multiline-pod-logs
+
+destinations:
+  - name: loki
+    type: loki
+    url: http://loki.loki.svc:3100/loki/api/v1/push
+    tenantId: 1
+    auth:
+      type: basic
+      username: loki
+      password: lokipassword
+
+podLogs:
+  enabled: true
+  extraLogProcessingStages: |
+    stage.match {
+      selector = "{app_kubernetes_io_name=\"multiline-pod\"}"
+      stage.multiline {
+        firstline = "^level=[A-Z]+"
+      }
+    }
+
+alloy-logs:
+  enabled: true

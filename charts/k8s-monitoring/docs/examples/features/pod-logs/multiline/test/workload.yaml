@@ -1,0 +1,41 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: multiline-pod
+  labels:
+    app.kubernetes.io/name: multiline-pod
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: multiline-pod
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: multiline-pod
+    spec:
+      tolerations:
+        - effect: NoSchedule
+          operator: Exists
+      containers:
+        - name: busybox
+          image: busybox
+          args:
+            - /bin/sh
+            - -c
+            - |
+              echo "level=INFO Starting..."
+              while true; do
+                if [ $RANDOM -gt ${ERROR_THRESHOLD} ]; then
+                  echo "level=ERROR Something went wrong."
+                  echo "really wrong."
+                  echo "very wrong."
+                else
+                  echo "level=INFO Everything is fine."
+                fi
+                sleep 5
+              done
+          env:
+            - name: ERROR_THRESHOLD
+              value: "10000"
