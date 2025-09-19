@@ -60,7 +60,6 @@ discovery.relabel "filtered_pods" {
   // choose the first value found from the following ordered list:
   // - pod.annotation[resource.opentelemetry.io/service.name]
   // - pod.label[app.kubernetes.io/name]
-  // - k8s.pod.name
   // - k8s.container.name
   rule {
     action = "replace"
