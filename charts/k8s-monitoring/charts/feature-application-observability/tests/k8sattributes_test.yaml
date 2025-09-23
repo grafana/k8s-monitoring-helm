@@ -1,0 +1,24 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Test - Application Observability - K8s Attributes
+templates:
+  - configmap.yaml
+tests:
+  - it: can use alternative pod association sources
+    set:
+      deployAsConfigMap: true
+      processors:
+        k8sattributes:
+          podAssociation:
+            - from: resource_attribute
+              name: k8s.pod.uid
+            - from: resource_attribute
+              name: k8s.pod.name
+
+      receivers:
+        zipkin:
+          enabled: true
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["module.alloy"]
