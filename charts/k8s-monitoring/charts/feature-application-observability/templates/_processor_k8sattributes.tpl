@@ -23,23 +23,16 @@ otelcol.processor.k8sattributes "{{ .name | default "default" }}" {
     }
 {{- end }}
   }
+  {{- range .Values.processors.k8sattributes.podAssociation }}
   pod_association {
     source {
-      from = "resource_attribute"
-      name = "k8s.pod.ip"
+      from = "{{ .from }}"
+    {{- if .name }}
+      name = "{{ .name }}"
+    {{- end }}
     }
   }
-  pod_association {
-    source {
-      from = "resource_attribute"
-      name = "k8s.pod.uid"
-    }
-  }
-  pod_association {
-    source {
-      from = "connection"
-    }
-  }
+  {{- end }}
 
   output {
 {{- if and .metrics .Values.metrics.enabled }}

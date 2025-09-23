@@ -120,6 +120,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | processors.k8sattributes.labels | list | `[]` | Kubernetes labels to extract and add to the attributes of the received telemetry data in the form of a list of otelcol.processor.k8sattributes extract > label blocks. See the [Alloy documentation](https://grafana.com/docs/agent/latest/flow/reference/components/otelcol.processor.k8sattributes/#extract-label-block) for details on how to configure label blocks. |
 | processors.k8sattributes.metadata | list | `["k8s.namespace.name","k8s.pod.name","k8s.deployment.name","k8s.statefulset.name","k8s.daemonset.name","k8s.cronjob.name","k8s.job.name","k8s.node.name","k8s.pod.uid","k8s.pod.start_time"]` | Kubernetes metadata to extract and add to the attributes of the received telemetry data. |
 | processors.k8sattributes.passthrough | bool | `false` | Pass through signals as-is, only adding a `k8s.pod.ip` resource attribute. |
+| processors.k8sattributes.podAssociation | list | `[{"from":"resource_attribute","name":"k8s.pod.ip"},{"from":"resource_attribute","name":"k8s.pod.uid"},{"from":"connection"}]` | Defines the rules on how to associate logs/traces/metrics to Pods. |
 
 ### Processors: Memory Limiter
 
