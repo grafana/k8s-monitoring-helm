@@ -38,9 +38,11 @@ Settings for each primary Alloy instance come from several potential sources, in
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
+| annotations | list | `[]` | Annotations to add to the Alloy Custom Resource. These annotations are not added to the workload or Pod. |
 | enabled | bool | `false` | Enable this Alloy instance. |
 | extraConfig | string | `""` | Extra Alloy configuration to be added to the configuration file. |
 | includeDestinations | list | `[]` | Include the configuration components for these destinations. Configuration is already added for destinations used By enabled features on this collector. This is useful when referencing destinations in the extraConfig. |
+| labels | list | `[]` | Labels to add to the Alloy Custom Resource. These labels are not added to the workload or Pod. |
 | liveDebugging.enabled | bool | `false` | Enable live debugging for the Alloy instance. Requires stability level to be set to "experimental". |
 
 ### Logging
