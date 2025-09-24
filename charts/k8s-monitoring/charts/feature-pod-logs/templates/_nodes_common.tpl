@@ -1,5 +1,6 @@
 {{- define "feature.podLogs.attachNodeMetadata" }}
 {{- $attachMetadata := false -}}
+{{- $attachMetadata = or $attachMetadata (not (empty .Values.nodeSelectors)) -}}
 {{- $attachMetadata = or $attachMetadata .Values.nodeLabels.nodePool -}}
 {{- $attachMetadata = or $attachMetadata .Values.nodeLabels.region -}}
 {{- $attachMetadata = or $attachMetadata .Values.nodeLabels.availabilityZone -}}
