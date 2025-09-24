@@ -1,5 +1,15 @@
 # Changelog
 
+## 3.5.2
+
+*   Add the ability to change pod associations (@petewall)
+
+## 3.5.1
+
+*   Bump prometheus-node-exporter from 4.47.3 to 4.48.0 (@petewall)
+*   Add the ability to set the mysql protocol (@petewall)
+*   Fix OpenCost validation when using destinationsMap (@petewall)
+
 ## 3.5.0
 
 *   Create a separate feature for Pod Logs via Kubernetes API (@petewall)
