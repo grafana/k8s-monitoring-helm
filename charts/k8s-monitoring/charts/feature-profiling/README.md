@@ -53,14 +53,14 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | ebpf.annotationSelectors | object | `{}` | Select pods to profile based on pod annotations. Example: `color: "green"` will select pods with the annotation `color="green"`. Example with multiple values: `color: ["blue", "green"]` will select pods with the annotation `color="blue"` or `color="green"`. |
-| ebpf.annotations.enable | string | `"enabled"` | The annotation action for enabling or disabling collecting of profiles with eBPF. Default is `profiles.grafana.com/cpu.ebpf.enabled`. |
+| ebpf.annotations.enable | string | `"profiles.grafana.com/cpu.ebpf.enabled"` | The annotation action for enabling or disabling collecting of profiles with eBPF. Default is `profiles.grafana.com/cpu.ebpf.enabled`. |
 | ebpf.demangle | string | `"none"` | C++ demangle mode. Available options are: none, simplified, templates, full |
 | ebpf.enabled | bool | `true` | Gather profiles using eBPF |
 | ebpf.excludeNamespaces | list | `[]` | Which namespaces to exclude looking for pods. |
 | ebpf.extraDiscoveryRules | string | `""` | Rule blocks to be added to the discovery.relabel component for eBPF profile sources. These relabeling rules are applied pre-scrape against the targets from service discovery. Before the scrape, any remaining target labels that start with `__` (i.e. `__meta_kubernetes*`) are dropped. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.relabel/#rule-block)) |
 | ebpf.labelSelectors | object | `{}` | Select pods to profile based on pod labels. Example: `app.kubernetes.io/name: myapp` will select pods with the label `app.kubernetes.io/name=myapp`. Example with multiple values: `app.kubernetes.io/name: [myapp, myapp2]` will select pods with the label `app.kubernetes.io/name=myapp` or `app.kubernetes.io/name=myapp2`. |
 | ebpf.namespaces | list | `[]` | Select pods to profile based on their namespaces. |
-| ebpf.targetingScheme | string | `"annotation"` | How to target pods for collecting profiles with eBPF. Options are `all` and `annotation`. If using `all`, all Kubernetes pods will be targeted for collecting profiles, and you can exclude certain pods by setting the `profiles.grafana.com/cpu.ebpf.scrape="false"` annotation on that pod. If using `annotation`, only pods with the `profiles.grafana.com/cpu.ebpf.scrape="true"` annotation will have profiles collected with eBPF. |
+| ebpf.targetingScheme | string | `"annotation"` | How to target pods for collecting profiles with eBPF. Options are `all` and `annotation`. If using `all`, all Kubernetes pods will be targeted for collecting profiles, and you can exclude certain pods by setting the `profiles.grafana.com/cpu.ebpf.enabled="false"` annotation on that pod. If using `annotation`, only pods with the `profiles.grafana.com/cpu.ebpf.enabled="true"` annotation will have profiles collected with eBPF. |
 
 ### Java
 
