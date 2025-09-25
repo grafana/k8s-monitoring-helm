@@ -86,14 +86,16 @@ templates/destinations/_destination_types.tpl: $(DESTINATION_VALUES_FILES)
 	done
 	echo '{{- end -}}' >> $@
 
-Chart.lock: Chart.yaml
+##@ Build
+
+Chart.lock: Chart.yaml ## Update Chart dependency lockfile.
 	helm dependency update .
 	@touch Chart.lock # Ensure the timestamp is updated
 
-values.schema.json: values.yaml $(COLLECTOR_SCHEMA_FILES) $(DESTINATION_SCHEMA_FILES) $(SCHEMA_MODS_JSON_FILES) $(SCHEMA_MODS_JQ_FILES) schema-mods/destination.json
+values.schema.json: values.yaml $(COLLECTOR_SCHEMA_FILES) $(DESTINATION_SCHEMA_FILES) $(SCHEMA_MODS_JSON_FILES) $(SCHEMA_MODS_JQ_FILES) schema-mods/destination.json ## Builds the Chart schema file.
 	docker run --rm --platform linux/amd64 --volume $(shell pwd):/chart ghcr.io/grafana/helm-chart-toolbox-schema-generator --chart /chart > $@
 
-README.md: README.md.gotmpl values.yaml Chart.yaml
+README.md: README.md.gotmpl values.yaml Chart.yaml ## Generates the README.md.
 	docker run --rm --platform linux/amd64 --volume $(shell pwd):/chart ghcr.io/grafana/helm-chart-toolbox-doc-generator --chart /chart > $@
 
 # Example targets
@@ -204,26 +206,26 @@ build-features:
 .PHONY: build
 build: build-features README.md values.schema.json templates/destinations/_destination_types.tpl $(COLLECTOR_DOCS_FILES) $(DESTINATION_DOCS_FILES) examples integration-test-checks platform-test-checks
 
-# Test targets
+##@ Test
 .PHONY: test unittest lint-helm lint-configs
-test: unittest lint-helm lint-configs example-checks misc-checks test-features
+test: unittest lint-helm lint-configs example-checks misc-checks test-features	## Run all tests.
 
-test-features:
+test-features:	## Run tests for all feature charts.
 	set -e && \
 	for chart in $(FEATURE_CHARTS); do \
 		make -C $$chart test; \
 	done
 
-lint-configs: $(EXAMPLE_ALLOY_FILES)
+lint-configs: $(EXAMPLE_ALLOY_FILES)  ## Lint generated Alloy configuration files.
 	../../scripts/lint-alloy.sh $(EXAMPLE_ALLOY_FILES)
 	rm -rf data-alloy  # Clean up the data-alloy directory, which is created by lint-alloy.sh when it runs Alloy.
 
-lint-helm: build
+lint-helm: build  ## Lint the Helm chart.
 	helm repo add grafana https://grafana.github.io/helm-charts
 	helm lint .
 	ct lint --config .ct.yaml --lint-conf .lintconf.yaml --check-version-increment=false --charts .
 
-unittest: values.schema.json templates/destinations/_destination_types.tpl
+unittest: values.schema.json templates/destinations/_destination_types.tpl  ## Run Helm unit tests.
 ifdef HAS_HELM_UNITTEST
 	helm unittest --failfast --with-subchart=false .
 else
@@ -231,7 +233,7 @@ else
 endif
 
 .PHONY: update-test-snapshots
-update-test-snapshots:
+update-test-snapshots:  ## Update Helm unit test snapshots.
 ifdef HAS_HELM_UNITTEST
 	helm unittest --with-subchart=false . --update-snapshot
 else
@@ -241,3 +243,7 @@ endif
 	for chart in $(FEATURE_CHARTS); do \
 		make -C $$chart update-test-snapshots; \
 	done
+
+.PHONY: help
+help: ## Display this help.
+	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^[a-zA-Z_0-9-]+:.*?##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
