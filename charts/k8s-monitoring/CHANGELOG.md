@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+*   Make Alloy Profiles deployable on all nodes (@petewall)
+*   Add label selectors for the Pod Logs feature (@petewall)
+*   Add Labels and Annotations to Alloy CR instances (@petewall)
+
 ## 3.5.2
 
 *   Add the ability to change pod associations (@petewall)
