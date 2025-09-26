@@ -49,6 +49,15 @@ metadata:
   namespace: {{ $.Release.Namespace }}
   annotations:
     helm.sdk.operatorframework.io/uninstall-wait: "true"
+  {{- with $alloyValues.annotations }}
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- if $alloyValues.labels }}
+  labels:
+  {{- with $alloyValues.labels }}
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- end }}
 spec:{{ $alloySpec | trim | nindent 2 }}
 {{- end }}
 {{- end }}

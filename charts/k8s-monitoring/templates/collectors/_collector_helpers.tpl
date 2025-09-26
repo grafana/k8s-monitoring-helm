@@ -139,4 +139,6 @@ app.kubernetes.io/instance: {{ include "collector.alloy.fullname" . }}
 - liveDebugging
 - logging
 - remoteConfig
+- annotations
+- labels
 {{- end }}
