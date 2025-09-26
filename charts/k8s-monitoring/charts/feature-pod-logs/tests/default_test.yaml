@@ -72,3 +72,23 @@ tests:
           of: ConfigMap
       - matchSnapshot:
           path: data["module.alloy"]
+  - it: should allow using label selectors
+    set:
+      deployAsConfigMap: true
+      labelSelectors:
+        app: myapp
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["module.alloy"]
+  - it: should allow using label selectors with multiple values
+    set:
+      deployAsConfigMap: true
+      labelSelectors:
+        color: [blue, green]
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["module.alloy"]
