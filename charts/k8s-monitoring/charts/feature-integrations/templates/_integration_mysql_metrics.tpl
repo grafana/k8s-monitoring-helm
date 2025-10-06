@@ -63,6 +63,7 @@ prometheus.scrape {{ include "helper.alloy_name" .name | quote }} {
   scrape_timeout = {{ .scrapeTimeout | default $.Values.global.scrapeTimeout | quote }}
   scrape_protocols = {{ $.Values.global.scrapeProtocols | toJson }}
   scrape_classic_histograms = {{ $.Values.global.scrapeClassicHistograms }}
+  scrape_native_histograms = {{ $.Values.global.scrapeNativeHistograms }}
   forward_to = [prometheus.relabel.{{ include "helper.alloy_name" .name }}.receiver]
 }
 
