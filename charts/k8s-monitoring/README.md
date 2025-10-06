@@ -381,7 +381,6 @@ details:
 | global.scrapeClassicHistograms | bool | `false` | Whether to scrape a classic histogram that’s also exposed as a native histogram. |
 | global.scrapeInterval | string | `"60s"` | How frequently to scrape metrics. |
 | global.scrapeNativeHistograms | bool | `false` | Whether to scrape native histograms. |
-| global.scrapeNativeHistograms | bool | `false` | Whether to scrape native histograms. |
 | global.scrapeProtocols | list | `["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]` | The protocols to negotiate during a Prometheus metrics scrape, in order of preference. |
 | global.scrapeTimeout | string | `"10s"` | The timeout for scraping metrics. |
 
