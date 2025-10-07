@@ -215,8 +215,9 @@ discovery.relabel "pprof_pods_{{ $currentType }}" {
 
 pyroscope.scrape "pyroscope_scrape_{{ $currentType }}" {
   targets = discovery.relabel.pprof_pods_{{ $currentType }}.output
-
-  bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+{{ if $.Values.pprof.bearerTokenFile }}
+  bearer_token_file = {{ $.Values.pprof.bearerTokenFile | quote }}
+{{- end }}
   profiling_config {
     {{- range $type := $allProfileTypes }}
     profile.{{ if eq $type "cpu" }}process_cpu{{ else }}{{ $type }}{{ end }} {
