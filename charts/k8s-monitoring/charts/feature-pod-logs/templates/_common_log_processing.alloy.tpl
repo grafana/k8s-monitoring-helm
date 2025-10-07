@@ -1,7 +1,7 @@
 {{- define "feature.podLogs.processing.alloy" }}
 loki.process "pod_logs" {
   stage.match {
-    selector = "{tmp_container_runtime=~\"containerd|cri-o\"}"
+    selector = "{tmp_container_runtime=~\\\"containerd|cri-o\\\"}"
     // the cri processing stage extracts the following k/v pairs: log, stream, time, flags
     stage.cri {}
 
@@ -15,7 +15,7 @@ loki.process "pod_logs" {
   }
 
   stage.match {
-    selector = "{tmp_container_runtime=\"docker\"}"
+    selector = "{tmp_container_runtime=\\\"docker\\\"}"
     // the docker processing stage extracts the following k/v pairs: log, stream, time
     stage.docker {}
 
