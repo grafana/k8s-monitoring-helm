@@ -87,6 +87,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | pprof.annotations.portName | string | `"port_name"` | The annotation action for choosing the port name for scraping profiles of a given type. |
 | pprof.annotations.portNumber | string | `"port"` | The annotation action for choosing the port number for scraping profiles of a given type. |
 | pprof.annotations.scheme | string | `"scheme"` | The annotation action for choosing the scheme for scraping profiles of a given type. |
+| pprof.bearerTokenFile | string | `"/var/run/secrets/kubernetes.io/serviceaccount/token"` | The bearer token file to use when scraping profiles. |
 | pprof.enabled | bool | `true` | Gather profiles by scraping pprof HTTP endpoints |
 | pprof.excludeNamespaces | list | `[]` | Which namespaces to exclude looking for pods. |
 | pprof.extraDiscoveryRules | string | `""` | Rule blocks to be added to the discovery.relabel component for eBPF profile sources. These relabeling rules are applied pre-scrape against the targets from service discovery. Before the scrape, any remaining target labels that start with `__` (i.e. `__meta_kubernetes*`) are dropped. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.relabel/#rule-block)) |

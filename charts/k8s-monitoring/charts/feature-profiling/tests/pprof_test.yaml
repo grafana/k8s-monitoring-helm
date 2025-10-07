@@ -36,3 +36,18 @@ tests:
           of: ConfigMap
       - matchSnapshot:
           path: data["module.alloy"]
+  - it: allows you to remove the bearer token
+    set:
+      deployAsConfigMap: true
+      ebpf:
+        enabled: false
+      java:
+        enabled: false
+      pprof:
+        enabled: true
+        bearerTokenFile: ""
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["module.alloy"]
