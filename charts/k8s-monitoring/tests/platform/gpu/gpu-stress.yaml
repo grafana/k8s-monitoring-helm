@@ -1,0 +1,132 @@
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: gpu-stress
+spec:
+  schedule: "* * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          volumes:
+            - name: gpu-stress-workdir
+              emptyDir: {}
+          initContainers:
+            - name: build-gpu-stress
+              image: nvidia/cuda:12.3.2-devel-ubuntu22.04
+              command:
+                - /bin/bash
+                - -c
+                - |
+                  set -euo pipefail
+                  cat <<'EOF' >/workspace/gpu_stress.cu
+                  #include <cuda_runtime.h>
+                  #include <chrono>
+                  #include <cmath>
+                  #include <cstdlib>
+                  #include <iostream>
+
+                  #define CUDA_CHECK(call)                                                                 \
+                    do {                                                                                   \
+                      cudaError_t err = (call);                                                            \
+                      if (err != cudaSuccess) {                                                            \
+                        std::cerr << "CUDA error: " << cudaGetErrorString(err) << " (" << err << ")"      \
+                                  << std::endl;                                                            \
+                        return 1;                                                                          \
+                      }                                                                                    \
+                    } while (0)
+
+                  __global__ void stress_kernel(float *a, float *b, float *c, int n) {
+                    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+                    if (idx >= n) {
+                      return;
+                    }
+
+                    float x = a[idx];
+                    float y = b[idx];
+                    float z = c[idx];
+
+                    #pragma unroll 64
+                    for (int i = 0; i < 2048; ++i) {
+                      x = fmaf(x, y, 1.000001f);
+                      y = fmaf(y, z, 0.999999f);
+                      z = fmaf(z, x, 1.000002f);
+                      x = __sinf(x);
+                      y = __cosf(y);
+                      z = x * y + z;
+                    }
+
+                    a[idx] = x;
+                    b[idx] = y;
+                    c[idx] = z;
+                  }
+
+                  int main() {
+                    constexpr int kElements = 1 << 20;
+                    constexpr int kBlockSize = 256;
+                    const int gridSize = (kElements + kBlockSize - 1) / kBlockSize;
+
+                    int duration_seconds = 15;
+                    if (const char *env = std::getenv("STRESS_DURATION")) {
+                      char *endptr = nullptr;
+                      const long parsed = std::strtol(env, &endptr, 10);
+                      if (endptr != env && parsed > 0 && parsed <= 3600) {
+                        duration_seconds = static_cast<int>(parsed);
+                      } else {
+                        std::cerr << "Ignoring invalid STRESS_DURATION=" << env << std::endl;
+                      }
+                    }
+
+                    float *a = nullptr;
+                    float *b = nullptr;
+                    float *c = nullptr;
+
+                    CUDA_CHECK(cudaMallocManaged(&a, kElements * sizeof(float)));
+                    CUDA_CHECK(cudaMallocManaged(&b, kElements * sizeof(float)));
+                    CUDA_CHECK(cudaMallocManaged(&c, kElements * sizeof(float)));
+
+                    for (int i = 0; i < kElements; ++i) {
+                      a[i] = static_cast<float>(i % 1024) / 1024.0f;
+                      b[i] = static_cast<float>((i * 3) % 1024) / 1024.0f;
+                      c[i] = static_cast<float>((i * 7) % 1024) / 1024.0f;
+                    }
+
+                    CUDA_CHECK(cudaDeviceSynchronize());
+
+                    const auto start = std::chrono::steady_clock::now();
+                    const auto deadline = start + std::chrono::seconds(duration_seconds);
+
+                    while (std::chrono::steady_clock::now() < deadline) {
+                      stress_kernel<<<gridSize, kBlockSize>>>(a, b, c, kElements);
+                      CUDA_CHECK(cudaDeviceSynchronize());
+                    }
+
+                    CUDA_CHECK(cudaDeviceSynchronize());
+                    CUDA_CHECK(cudaFree(a));
+                    CUDA_CHECK(cudaFree(b));
+                    CUDA_CHECK(cudaFree(c));
+
+                    CUDA_CHECK(cudaDeviceReset());
+                    return 0;
+                  }
+                  EOF
+
+                  /usr/local/cuda/bin/nvcc -std=c++17 -O3 -arch=sm_60 /workspace/gpu_stress.cu -o /workspace/gpu_stress
+              volumeMounts:
+                - name: gpu-stress-workdir
+                  mountPath: /workspace
+          containers:
+            - name: gpu-stress
+              image: nvidia/cuda:12.3.2-devel-ubuntu22.04
+              env:
+                - name: STRESS_DURATION
+                  value: "15"
+              command: [/workspace/gpu_stress]
+              volumeMounts:
+                - name: gpu-stress-workdir
+                  mountPath: /workspace
+              resources:
+                limits:
+                  nvidia.com/gpu: 1
