@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+## 3.5.3
+
+*   Update Alloy Operator, Beyla, OpenCost, and Prometheus Operator CRDs (@petewall)
 *   Make Alloy Profiles deployable on all nodes (@petewall)
 *   Add label selectors for the Pod Logs feature (@petewall)
 *   Add Labels and Annotations to Alloy CR instances (@petewall)
