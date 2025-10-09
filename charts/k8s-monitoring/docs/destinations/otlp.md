@@ -126,7 +126,8 @@ This defines the options for defining a destination for OpenTelemetry data that 
 |-----|------|---------|-------------|
 | processors.serviceGraphMetrics.cacheLoop | string | `"1m"` | Configures how often to delete series which haven’t been updated. |
 | processors.serviceGraphMetrics.collector | object | `{"alloy":{},"controller":{"replicas":2,"type":"statefulset"}}` | Settings for the Alloy instance that will handle service graph metrics. |
-| processors.serviceGraphMetrics.databaseNameAttribute | string | `"db.name"` | The attribute name used to identify the database name from span attributes. |
+| processors.serviceGraphMetrics.databaseNameAttribute | string | `""` | The attribute name used to identify the database name from span attributes. DEPRECATED: Please use databaseNameAttributes instead. If this is provided, it will override databaseNameAttributes as the only attribute to used. |
+| processors.serviceGraphMetrics.databaseNameAttributes | list | `["db.name"]` | The attribute names used to identify the database name from span attributes. |
 | processors.serviceGraphMetrics.destinations | list | `[]` | The destinations where service graph metrics will be sent. If empty, all metrics-capable destinations will be used. |
 | processors.serviceGraphMetrics.dimensions | list | `[]` | A list of dimensions to add with the default dimensions. |
 | processors.serviceGraphMetrics.enabled | bool | `false` | Generate service graph metrics from traces. This will deploy an additional Alloy instance to handle service graph metrics generation. Traces sent to this destination will be aumatically forwarded, using a load balancer component, to this Alloy instance. |

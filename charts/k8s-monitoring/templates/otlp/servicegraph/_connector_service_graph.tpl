@@ -1,11 +1,16 @@
 {{- define "servicegraph.connector.serviceGraphMetrics.alloy.target" }}otelcol.connector.servicegraph.{{ .name | default "default" }}.input{{ end }}
 {{- define "servicegraph.connector.serviceGraphMetrics.alloy" }}
+{{- $dbNameAttributes := .databaseNameAttributes }}
+{{/* Handle deprecated single database name attribute entry */}}
+{{- if .databaseNameAttribute }}
+  {{- $dbNameAttributes = list .databaseNameAttribute }}
+{{- end }}
 otelcol.connector.servicegraph {{ .name | default "default" | quote }} {
   // https://grafana.com/docs/alloy/latest/reference/components/otelcol/otelcol.connector.servicegraph/
 
   cache_loop = {{ .cacheLoop | quote }}
 
-  database_name_attribute = {{ .databaseNameAttribute | quote }}
+  database_name_attributes = {{ $dbNameAttributes | toJson }}
 
   dimensions = [
     {{- range $dimension := .dimensions }}
