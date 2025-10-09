@@ -72,8 +72,6 @@ declare "dcgm_exporter_integration" {
         regex = coalesce(argument.port_name.value, "metrics") + "@Running@true@false"
         action = "keep"
       }
-
-      {{- include "feature.integrations.commonDiscoveryRules" . | nindent 6 }}
     }
 
     export "output" {

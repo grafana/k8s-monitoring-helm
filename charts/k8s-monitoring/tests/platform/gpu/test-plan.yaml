@@ -18,12 +18,20 @@ cluster:
 
 dependencies:
   - file: nvidia-gpu-operator.yaml
-  - file: cuda-vectoradd.yaml
+  - file: gpu-stress.yaml
   - preset: test-parameters
     namespace: toolbox
   - file: grafana-cloud-credentials.yaml
 
 tests:
+  - type: kubernetes-objects-test
+    values:
+      attempts: 20
+      checks:
+        - kind: Pod
+          namespace: kube-system
+          labels:
+            app: nvidia-dcgm-exporter
   - type: query-test
     values:
       tests:
@@ -45,6 +53,8 @@ tests:
               expect:
                 value: 0
                 operator: "<"
+            - query: DCGM_FI_DEV_GPU_UTIL{cluster="$clusterName", job="integrations/dcgm-exporter", pod!=""}
+              type: promql
 
             # DPM check
             - query: avg(count_over_time(scrape_samples_scraped{cluster="$clusterName"}[1m]))
