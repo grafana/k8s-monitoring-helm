@@ -4,6 +4,8 @@ set -euo pipefail
 SCRIPT_DIR=$(dirname "$(readlink -f "$0")")
 CHART_DIR=$(realpath "${SCRIPT_DIR}/..")
 
+PYROSCOPE_SECRET="op://Kubernetes Monitoring/helmchart Pyroscope"
+
 usage() {
   cat <<'USAGE'
 Usage: generate-profiles.sh [options] <values.yaml> [values.yaml ...]
@@ -46,17 +48,16 @@ HELM_PPROF_MEM_PROFILE="${memProfile}" \
 if [[ "${upload}" == true ]]; then
   chartName="$(yq eval '.name' "${CHART_DIR}/Chart.yaml")"
   chartVersion="$(yq eval '.version' "${CHART_DIR}/Chart.yaml")"
-  pyroscopeSecret="op://Kubernetes Monitoring/helmchart Pyroscope"
   if [[ -z ${PROFILECLI_URL:-} ]]; then
-    PROFILECLI_URL="$(op --account grafana.1password.com read "${pyroscopeSecret}/website")"
+    PROFILECLI_URL="$(op --account grafana.1password.com read "${PYROSCOPE_SECRET}/website")"
     export PROFILECLI_URL
   fi
   if [[ -z ${PROFILECLI_USERNAME:-} ]]; then
-    PROFILECLI_USERNAME="$(op --account grafana.1password.com read "${pyroscopeSecret}/username")"
+    PROFILECLI_USERNAME="$(op --account grafana.1password.com read "${PYROSCOPE_SECRET}/username")"
     export PROFILECLI_USERNAME
   fi
   if [[ -z ${PROFILECLI_PASSWORD:-} ]]; then
-    PROFILECLI_PASSWORD="$(op --account grafana.1password.com read "${pyroscopeSecret}/password")"
+    PROFILECLI_PASSWORD="$(op --account grafana.1password.com read "${PYROSCOPE_SECRET}/password")"
     export PROFILECLI_PASSWORD
   fi
 
