@@ -67,6 +67,7 @@ prometheus.scrape "kube_state_metrics" {
   scrape_timeout = {{ (index .Values "kube-state-metrics").scrapeTimeout | default .Values.global.scrapeTimeout | quote }}
   scrape_protocols = {{ .Values.global.scrapeProtocols | toJson }}
   scrape_classic_histograms = {{ .Values.global.scrapeClassicHistograms }}
+  scrape_native_histograms = {{ .Values.global.scrapeNativeHistograms }}
   scheme = {{ (index .Values "kube-state-metrics").service.scheme | quote }}
   bearer_token_file = {{ (index .Values "kube-state-metrics").bearerTokenFile | quote }}
   tls_config {

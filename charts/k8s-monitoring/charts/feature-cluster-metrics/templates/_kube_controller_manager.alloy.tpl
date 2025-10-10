@@ -36,6 +36,7 @@ prometheus.scrape "kube_controller_manager" {
   scrape_timeout = {{ .Values.kubeControllerManager.scrapeTimeout | default .Values.global.scrapeTimeout | quote }}
   scrape_protocols = {{ .Values.global.scrapeProtocols | toJson }}
   scrape_classic_histograms = {{ .Values.global.scrapeClassicHistograms }}
+  scrape_native_histograms = {{ .Values.global.scrapeNativeHistograms }}
   bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
   tls_config {
     insecure_skip_verify = true
