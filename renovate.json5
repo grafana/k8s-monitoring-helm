@@ -1,0 +1,26 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:base","schedule:daily"],
+  "dependencyDashboard": true,
+  "enabledManagers": ["npm","github-actions","helmv3"],
+  "packageRules": [
+    {
+      "matchManagers": ["helmv3"],
+      "addLabels": ["dependencies","helm"],
+      "postUpgradeTasks": {
+        "commands": ["make clean build"],
+        "fileFilters": ["charts/**"],
+        "executionMode": "branch"
+      }
+    },
+    {
+      "matchManagers": ["github-actions"],
+      "addLabels": ["dependencies","github-actions"]
+    },
+    {
+      "matchManagers": ["npm"],
+      "addLabels": ["dependencies","npm"],
+      "rangeStrategy": "increase"
+    }
+  ]
+}
