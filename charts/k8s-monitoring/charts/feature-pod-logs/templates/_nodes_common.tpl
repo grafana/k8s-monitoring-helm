@@ -8,6 +8,7 @@
 {{- $attachMetadata = or $attachMetadata .Values.nodeLabels.nodeOS -}}
 {{- $attachMetadata = or $attachMetadata .Values.nodeLabels.nodeArchitecture -}}
 {{- $attachMetadata = or $attachMetadata .Values.nodeLabels.instanceType -}}
+{{- $attachMetadata = or $attachMetadata (gt (keys .Values.nodeLabels | len) 0) -}}
 {{- if eq $attachMetadata true }}
 attach_metadata {
   node = true
@@ -98,6 +99,13 @@ rule {
   ]
   regex = "^(?:;*)?([^;]+).*$"
   target_label = "instance_type"
+}
+{{- end }}
+{{- range $attribute, $label := (omit .Values.nodeLabels "nodePool" "region" "availabilityZone" "nodeRole" "nodeOS" "nodeArchitecture" "instanceType")}}
+
+rule {
+  source_labels = [{{ $label | quote }}]
+  target_label = {{ $attribute | quote }}
 }
 {{- end }}
 {{- end }}
