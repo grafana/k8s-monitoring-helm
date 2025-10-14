@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+*   Update Alloy Operator and Prometheus Operator CRDs (@petewall)
+
 ## 3.5.3
 
 *   Update Alloy Operator, Beyla, OpenCost, and Prometheus Operator CRDs (@petewall)
