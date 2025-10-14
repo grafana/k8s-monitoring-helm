@@ -74,12 +74,12 @@ application_observability "feature" {
   {{- end -}}
   {{- if $.Values.applicationObservability.receivers.jaeger.thriftBinary.enabled }}
     {{- if eq (include "collectors.has_extra_port" (deepCopy $ | merge (dict "name" $collector "portNumber" $.Values.applicationObservability.receivers.jaeger.thriftBinary.port))) "false" }}
-      {{- $extraPorts = append $extraPorts (dict "name" "jaeger-binary" "port" $.Values.applicationObservability.receivers.jaeger.thriftBinary.port "targetPort" $.Values.applicationObservability.receivers.jaeger.thriftBinary.port "protocol" "TCP") }}
+      {{- $extraPorts = append $extraPorts (dict "name" "jaeger-binary" "port" $.Values.applicationObservability.receivers.jaeger.thriftBinary.port "targetPort" $.Values.applicationObservability.receivers.jaeger.thriftBinary.port "protocol" "UDP") }}
     {{- end -}}
   {{- end -}}
   {{- if $.Values.applicationObservability.receivers.jaeger.thriftCompact.enabled }}
     {{- if eq (include "collectors.has_extra_port" (deepCopy $ | merge (dict "name" $collector "portNumber" $.Values.applicationObservability.receivers.jaeger.thriftCompact.port))) "false" }}
-      {{- $extraPorts = append $extraPorts (dict "name" "jaeger-compact" "port" $.Values.applicationObservability.receivers.jaeger.thriftCompact.port "targetPort" $.Values.applicationObservability.receivers.jaeger.thriftCompact.port "protocol" "TCP") }}
+      {{- $extraPorts = append $extraPorts (dict "name" "jaeger-compact" "port" $.Values.applicationObservability.receivers.jaeger.thriftCompact.port "targetPort" $.Values.applicationObservability.receivers.jaeger.thriftCompact.port "protocol" "UDP") }}
     {{- end -}}
   {{- end -}}
   {{- if $.Values.applicationObservability.receivers.jaeger.thriftHttp.enabled }}
@@ -127,10 +127,10 @@ application_observability "feature" {
     {{- include "collectors.require_extra_port" (dict "Values" $.Values "name" $collector "feature" $featureName "portNumber" $.Values.applicationObservability.receivers.jaeger.grpc.port "portName" "jaeger-grpc" "portProtocol" "TCP") }}
   {{- end -}}
   {{- if $.Values.applicationObservability.receivers.jaeger.thriftBinary.enabled }}
-    {{- include "collectors.require_extra_port" (dict "Values" $.Values "name" $collector "feature" $featureName "portNumber" $.Values.applicationObservability.receivers.jaeger.thriftBinary.port "portName" "jaeger-binary" "portProtocol" "TCP") }}
+    {{- include "collectors.require_extra_port" (dict "Values" $.Values "name" $collector "feature" $featureName "portNumber" $.Values.applicationObservability.receivers.jaeger.thriftBinary.port "portName" "jaeger-binary" "portProtocol" "UDP") }}
   {{- end -}}
   {{- if $.Values.applicationObservability.receivers.jaeger.thriftCompact.enabled }}
-    {{- include "collectors.require_extra_port" (dict "Values" $.Values "name" $collector "feature" $featureName "portNumber" $.Values.applicationObservability.receivers.jaeger.thriftCompact.port "portName" "jaeger-compact" "portProtocol" "TCP") }}
+    {{- include "collectors.require_extra_port" (dict "Values" $.Values "name" $collector "feature" $featureName "portNumber" $.Values.applicationObservability.receivers.jaeger.thriftCompact.port "portName" "jaeger-compact" "portProtocol" "UDP") }}
   {{- end -}}
   {{- if $.Values.applicationObservability.receivers.jaeger.thriftHttp.enabled }}
     {{- include "collectors.require_extra_port" (dict "Values" $.Values "name" $collector "feature" $featureName "portNumber" $.Values.applicationObservability.receivers.jaeger.thriftHttp.port "portName" "jaeger-http" "portProtocol" "TCP") }}
