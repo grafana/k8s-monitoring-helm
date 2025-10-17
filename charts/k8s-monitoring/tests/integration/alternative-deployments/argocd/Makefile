@@ -13,3 +13,9 @@ k8s-monitoring-application.yaml:
 	@yq eval '.spec.source.targetRevision = "$(BRANCH_NAME)"' k8s-monitoring-application.yaml > temp.yaml
 	@cp temp.yaml k8s-monitoring-application.yaml
 	@rm temp.yaml
+
+values.yaml: k8s-monitoring-application.yaml
+	yq eval '.spec.source.helm.valuesObject' $< > $@
+
+output.yaml: values.yaml
+	helm template k8smon ../../../.. -f $< > $@
