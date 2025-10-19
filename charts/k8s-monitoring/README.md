@@ -329,7 +329,6 @@ details:
 | autoInstrumentation | object | Disabled | Auto-Instrumentation. Requires destinations that supports metrics, logs, and traces. To see the valid options, please see the [Auto-Instrumentation feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-auto-instrumentation). |
 | autoInstrumentation.destinations | list | `[]` | The destinations where application data will be sent. If empty, all capable destinations will be used. |
 | autoInstrumentation.enabled | bool | `false` | Enable automatic instrumentation for applications. |
-| autoInstrumentation.spanMetricsOnly | bool | `true` | Set to true to only collect span metrics from auto instrumentation without collecting full traces. When true, traces will not be collected even if trace destinations are configured. When false, you must enable applicationObservability to collect traces, otherwise deployment will fail. |
 
 ### Cluster
 

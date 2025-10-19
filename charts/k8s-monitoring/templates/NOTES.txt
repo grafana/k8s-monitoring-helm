@@ -34,10 +34,10 @@ It will:
   translation of labels and attributes. For more information, consult:
     https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/docs/destinations#ecosystem-translation
 {{- end }}
-{{- if and .Values.autoInstrumentation.enabled .Values.autoInstrumentation.spanMetricsOnly (not .Values.applicationObservability.enabled) }}
+{{- if and .Values.autoInstrumentation.enabled (not .Values.applicationObservability.enabled) }}
 
-Auto-Instrumentation (Beyla) is currently collecting span metrics only.
-To also collect full distributed traces from auto-instrumented applications, enable Application Observability:
+⚠️  Auto-Instrumentation (Beyla) is collecting span metrics, but traces are not being forwarded.
+To collect full distributed traces from auto-instrumented applications, enable Application Observability:
 
 applicationObservability:
   enabled: true
@@ -46,6 +46,6 @@ applicationObservability:
       grpc:
         enabled: true
 
-Traces will automatically flow to your trace-capable destinations.
+Traces will automatically be sent to your OTLP receivers and forwarded to trace-capable destinations.
 For more info: https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-application-observability
 {{- end }}
