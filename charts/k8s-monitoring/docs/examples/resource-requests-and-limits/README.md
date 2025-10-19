@@ -76,6 +76,7 @@ clusterMetrics:
 
 autoInstrumentation:
   enabled: true
+  spanMetricsOnly: true
   beyla:
     resources:
       limits:

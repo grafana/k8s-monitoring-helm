@@ -26,12 +26,26 @@ It will:
   {{- if $collectorName }}
     {{- $Collector = merge $Collector (dict "ServiceName" (include "collector.alloy.fullname" (merge $ (dict "collectorName" $collectorName)))) }}
   {{- end }}
-  {{ include (printf "feature.%s.notes.actions" $feature) (dict "Values" (index $.Values $feature) "Collector" $Collector) | indent 0 }}
+  {{- include (printf "feature.%s.notes.actions" $feature) (dict "Values" (index $.Values $feature) "Collector" $Collector) | indent 0 }}
 {{- end }}
-
 {{- if $isTranslating }}
 
 * One or more features will have their data translated to a different storage ecosystem. This may result in an imperfect
   translation of labels and attributes. For more information, consult:
     https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/docs/destinations#ecosystem-translation
+{{- end }}
+{{- if and .Values.autoInstrumentation.enabled .Values.autoInstrumentation.spanMetricsOnly (not .Values.applicationObservability.enabled) }}
+
+Auto-Instrumentation (Beyla) is currently collecting span metrics only.
+To also collect full distributed traces from auto-instrumented applications, enable Application Observability:
+
+applicationObservability:
+  enabled: true
+  receivers:
+    otlp:
+      grpc:
+        enabled: true
+
+Traces will automatically flow to your trace-capable destinations.
+For more info: https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-application-observability
 {{- end }}

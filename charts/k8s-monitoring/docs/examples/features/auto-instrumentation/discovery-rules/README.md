@@ -29,6 +29,7 @@ destinations:
 
 autoInstrumentation:
   enabled: true
+  spanMetricsOnly: true
   beyla:
     config:
       data:
