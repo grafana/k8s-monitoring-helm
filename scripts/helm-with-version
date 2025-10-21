@@ -1,17 +1,35 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-if [[ $# -lt 1 ]]; then
-  echo "Usage: $(basename "$0") <helm-version> [helm-args...]" >&2
-  exit 64
+usage() {
+    echo "USAGE: helm-with-version <helm-version> [helm-args...]"
+    echo ""
+    echo "Download (if necessary) and execute the requested Helm client version while"
+    echo "forwarding any additional arguments to the Helm binary. Versions may be"
+    echo "provided with or without a leading \"v\" and are cached in \$HOME/.helm_cli_cache."
+    echo ""
+    echo "Examples:"
+    echo "  helm-with-version 3.14.4 version"
+    echo "  helm-with-version v3.12.0 template k8smon charts/k8s-monitoring -f values.yaml"
+}
+
+if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
+  usage
+  exit 0
 fi
 
-version_input=$1
+if [[ $# -lt 1 ]]; then
+  usage
+  exit 1
+fi
+
+helmVersion=$1
+helmVersion=${helmVersion#v}  # Remove leading 'v' if present
 shift
 
 if ! command -v curl >/dev/null 2>&1; then
-  echo "curl command not found in PATH" >&2
-  exit 127
+  echo "Error: curl command not found in PATH" >&2
+  exit 1
 fi
 
 case "$(uname -s)" in
@@ -19,7 +37,7 @@ case "$(uname -s)" in
   Darwin) os="darwin" ;;
   *)
     echo "Unsupported operating system: $(uname -s)" >&2
-    exit 69
+    exit 1
     ;;
 esac
 
@@ -28,46 +46,42 @@ case "$(uname -m)" in
   arm64 | aarch64) arch="arm64" ;;
   *)
     echo "Unsupported architecture: $(uname -m)" >&2
-    exit 69
+    exit 1
     ;;
 esac
 
-version_no_prefix=${version_input#v}
-version_tag="v${version_no_prefix}"
+cliCacheDir="${HOME}/.helm_cli_cache"
+helm="${cliCacheDir}/${helmVersion}/${os}-${arch}/helm"
 
-cache_root="${HOME}/.helm_cli_cache"
-binary_path="${cache_root}/${version_tag}/${os}-${arch}/helm"
-
-if [[ ! -x "${binary_path}" ]]; then
-  tarball_url="https://get.helm.sh/helm-${version_tag}-${os}-${arch}.tar.gz"
-  temp_dir=$(mktemp -d)
-  cleanup() { rm -rf "${temp_dir}"; }
+if [[ ! -x "${helm}" ]]; then
+  tarballURL="https://get.helm.sh/helm-v${helmVersion}-${os}-${arch}.tar.gz"
+  tempDir=$(mktemp -d)
+  cleanup() { rm -rf "${tempDir}"; }
   trap cleanup EXIT
 
-  mkdir -p "${cache_root}/${version_tag}/${os}-${arch}"
+  mkdir -p "$(dirname "${helm}")"
 
-  curl -fsSL "${tarball_url}" -o "${temp_dir}/helm.tgz" || {
-    echo "Failed to download ${tarball_url}" >&2
-    exit 69
+  curl -fsSL "${tarballURL}" -o "${tempDir}/helm.tgz" || {
+    echo "Failed to download ${tarballURL}" >&2
+    exit 1
   }
 
-  tar -C "${temp_dir}" -xzf "${temp_dir}/helm.tgz" || {
+  tar -C "${tempDir}" -xzf "${tempDir}/helm.tgz" || {
     echo "Failed to extract Helm archive" >&2
-    exit 70
+    exit 1
   }
 
-  extracted_binary="${temp_dir}/${os}-${arch}/helm"
-
-  if [[ ! -f "${extracted_binary}" ]]; then
+  extractedHelm="${tempDir}/${os}-${arch}/helm"
+  if [[ ! -f "${extractedHelm}" ]]; then
     echo "Helm binary not found in extracted archive" >&2
-    exit 70
+    exit 1
   fi
 
-  mv "${extracted_binary}" "${binary_path}"
-  chmod +x "${binary_path}"
+  mv "${extractedHelm}" "${helm}"
+  chmod +x "${helm}"
 
   trap - EXIT
   cleanup
 fi
 
-exec "${binary_path}" "$@"
+exec "${helm}" "$@"
