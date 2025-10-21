@@ -1,0 +1,73 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [[ $# -lt 1 ]]; then
+  echo "Usage: $(basename "$0") <helm-version> [helm-args...]" >&2
+  exit 64
+fi
+
+version_input=$1
+shift
+
+if ! command -v curl >/dev/null 2>&1; then
+  echo "curl command not found in PATH" >&2
+  exit 127
+fi
+
+case "$(uname -s)" in
+  Linux) os="linux" ;;
+  Darwin) os="darwin" ;;
+  *)
+    echo "Unsupported operating system: $(uname -s)" >&2
+    exit 69
+    ;;
+esac
+
+case "$(uname -m)" in
+  x86_64 | amd64) arch="amd64" ;;
+  arm64 | aarch64) arch="arm64" ;;
+  *)
+    echo "Unsupported architecture: $(uname -m)" >&2
+    exit 69
+    ;;
+esac
+
+version_no_prefix=${version_input#v}
+version_tag="v${version_no_prefix}"
+
+cache_root="${HOME}/.helm_cli_cache"
+binary_path="${cache_root}/${version_tag}/${os}-${arch}/helm"
+
+if [[ ! -x "${binary_path}" ]]; then
+  tarball_url="https://get.helm.sh/helm-${version_tag}-${os}-${arch}.tar.gz"
+  temp_dir=$(mktemp -d)
+  cleanup() { rm -rf "${temp_dir}"; }
+  trap cleanup EXIT
+
+  mkdir -p "${cache_root}/${version_tag}/${os}-${arch}"
+
+  curl -fsSL "${tarball_url}" -o "${temp_dir}/helm.tgz" || {
+    echo "Failed to download ${tarball_url}" >&2
+    exit 69
+  }
+
+  tar -C "${temp_dir}" -xzf "${temp_dir}/helm.tgz" || {
+    echo "Failed to extract Helm archive" >&2
+    exit 70
+  }
+
+  extracted_binary="${temp_dir}/${os}-${arch}/helm"
+
+  if [[ ! -f "${extracted_binary}" ]]; then
+    echo "Helm binary not found in extracted archive" >&2
+    exit 70
+  fi
+
+  mv "${extracted_binary}" "${binary_path}"
+  chmod +x "${binary_path}"
+
+  trap - EXIT
+  cleanup
+fi
+
+exec "${binary_path}" "$@"
