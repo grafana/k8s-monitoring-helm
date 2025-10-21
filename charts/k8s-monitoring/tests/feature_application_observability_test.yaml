@@ -1,66 +1,110 @@
 # yamllint disable rule:document-start rule:line-length rule:trailing-spaces rule:commas rule:braces
 suite: Feature - Application Observability
 templates:
-  - features/test/feature_application_observability.yaml
+  - alloy.yaml
+  - validations.yaml
 tests:
-  - it: features.applicationObservability.collector.values works appropriately
+  - it: enables the right ports on Alloy when the receivers are enabled
     set:
-      testing: true
+      cluster: {name: test-cluster}
+      destinations: [{name: otlp, type: otlp, url: "http://otlp.receiver.svc:4317"}]
       applicationObservability:
         enabled: true
         collector: alloy-receiver
         receivers:
           otlp:
-            grpc: {port: 4317}
-            http: {port: 4318}
+            grpc:
+              enabled: true
+            http:
+              enabled: true
       alloy-receiver:
         enabled: true
+    template: alloy.yaml
     asserts:
-      - documentIndex: 0
-        equal:
-          path: "data.grpcEnabled"
-          value: |-
-            alloy-receiver:
-              alloy:
-                extraPorts:
-                - name: otlp-grpc
-                  port: 4317
-                  protocol: TCP
-                  targetPort: 4317
-      - documentIndex: 0
-        equal:
-          path: "data.httpEnabled"
-          value: |-
-            alloy-receiver:
-              alloy:
-                extraPorts:
-                - name: otlp-http
-                  port: 4318
-                  protocol: TCP
-                  targetPort: 4318
-      - documentIndex: 0
-        equal:
-          path: "data.existingPorts"
-          value: |-
-            alloy-receiver:
-              alloy:
-                extraPorts:
-                - name: my-port
-                  port: 9999
-                  protocol: TCP
-                  targetPort: 9999
-                - name: otlp-grpc
-                  port: 4317
-                  protocol: TCP
-                  targetPort: 4317
-      - documentIndex: 0
-        equal:
-          path: "data.alreadyDefined"
-          value: |-
-            alloy-receiver:
-              alloy:
-                extraPorts:
-                - name: otel
-                  port: 4317
-                  protocol: TCP
-                  targetPort: 4317
+      - equal:
+          path: "spec.alloy.extraPorts"
+          value:
+            - name: otlp-grpc
+              port: 4317
+              protocol: TCP
+              targetPort: 4317
+            - name: otlp-http
+              port: 4318
+              protocol: TCP
+              targetPort: 4318
+
+  - it: merges with existing ports on Alloy when the receivers are enabled
+    set:
+      cluster: {name: test-cluster}
+      destinations: [{name: otlp, type: otlp, url: "http://otlp.receiver.svc:4317"}]
+      applicationObservability:
+        enabled: true
+        collector: alloy-receiver
+        receivers:
+          otlp:
+            grpc:
+              enabled: true
+            http:
+              enabled: true
+      alloy-receiver:
+        enabled: true
+        alloy:
+          extraPorts:
+            - name: my-port
+              port: 9999
+              protocol: TCP
+              targetPort: 9999
+            - name: grpc
+              port: 4317
+              protocol: TCP
+              targetPort: 4317
+            - name: http
+              port: 4318
+              protocol: TCP
+              targetPort: 4318
+    template: alloy.yaml
+    asserts:
+      - equal:
+          path: "spec.alloy.extraPorts"
+          value:
+            - name: my-port
+              port: 9999
+              protocol: TCP
+              targetPort: 9999
+            - name: grpc
+              port: 4317
+              protocol: TCP
+              targetPort: 4317
+            - name: http
+              port: 4318
+              protocol: TCP
+              targetPort: 4318
+
+  - it: uses UDP for the jaeger binary and compact ports
+    set:
+      cluster: {name: test-cluster}
+      destinations: [{name: otlp, type: otlp, url: "http://otlp.receiver.svc:4317"}]
+      applicationObservability:
+        enabled: true
+        collector: alloy-receiver
+        receivers:
+          jaeger:
+            thriftBinary:
+              enabled: true
+            thriftCompact:
+              enabled: true
+      alloy-receiver:
+        enabled: true
+    template: alloy.yaml
+    asserts:
+      - equal:
+          path: "spec.alloy.extraPorts"
+          value:
+            - name: jaeger-binary
+              port: 6832
+              protocol: UDP
+              targetPort: 6832
+            - name: jaeger-compact
+              port: 6831
+              protocol: UDP
+              targetPort: 6831

@@ -1,0 +1,66 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces rule:commas rule:braces
+suite: Feature - Application Observability Unit Tests
+templates:
+  - features/test/feature_application_observability.yaml
+tests:
+  - it: features.applicationObservability.collector.values works appropriately
+    set:
+      testing: true
+      applicationObservability:
+        enabled: true
+        collector: alloy-receiver
+        receivers:
+          otlp:
+            grpc: {port: 4317}
+            http: {port: 4318}
+      alloy-receiver:
+        enabled: true
+    asserts:
+      - documentIndex: 0
+        equal:
+          path: "data.grpcEnabled"
+          value: |-
+            alloy-receiver:
+              alloy:
+                extraPorts:
+                - name: otlp-grpc
+                  port: 4317
+                  protocol: TCP
+                  targetPort: 4317
+      - documentIndex: 0
+        equal:
+          path: "data.httpEnabled"
+          value: |-
+            alloy-receiver:
+              alloy:
+                extraPorts:
+                - name: otlp-http
+                  port: 4318
+                  protocol: TCP
+                  targetPort: 4318
+      - documentIndex: 0
+        equal:
+          path: "data.existingPorts"
+          value: |-
+            alloy-receiver:
+              alloy:
+                extraPorts:
+                - name: my-port
+                  port: 9999
+                  protocol: TCP
+                  targetPort: 9999
+                - name: otlp-grpc
+                  port: 4317
+                  protocol: TCP
+                  targetPort: 4317
+      - documentIndex: 0
+        equal:
+          path: "data.alreadyDefined"
+          value: |-
+            alloy-receiver:
+              alloy:
+                extraPorts:
+                - name: otel
+                  port: 4317
+                  protocol: TCP
+                  targetPort: 4317
