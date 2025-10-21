@@ -30,6 +30,8 @@ stringData:
   prom-username: "12345"
   loki-host: http://loki.loki.svc:3100
   loki-username: "67890"
+  fleet-management-host: "112233"
+  fleet-management-user: "112233"
   access-token: "It's a secret to everyone"
 ---
 apiVersion: v1
@@ -105,6 +107,35 @@ podLogs:
 
 alloy-metrics:
   enabled: true
+  remoteConfig:
+    enabled: true
+    urlFrom: convert.nonsensitive(remote.kubernetes.secret.alloy_metrics_remote_cfg.data["fleet-management-host"])
+    auth:
+      type: basic
+      usernameKey: fleet-management-user
+      passwordKey: access-token
+    secret:
+      create: false
+      name: my-monitoring-secret
+  alloy:
+    extraEnv:
+      - name: GCLOUD_RW_API_KEY
+        valueFrom:
+          secretKeyRef:
+            name: my-monitoring-secret
+            key: access-token
+      - name: CLUSTER_NAME
+        value: external-secrets-example-cluster
+      - name: NAMESPACE
+        valueFrom:
+          fieldRef:
+            fieldPath: metadata.namespace
+      - name: NODE_NAME
+        valueFrom:
+          fieldRef:
+            fieldPath: spec.nodeName
+      - name: GCLOUD_FM_COLLECTOR_ID
+        value: k8smon-$(CLUSTER_NAME)-$(NAMESPACE)-alloy-logs-$(NODE_NAME)
 
 alloy-logs:
   enabled: true

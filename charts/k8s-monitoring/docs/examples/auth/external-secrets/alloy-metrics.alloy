@@ -89,7 +89,36 @@ prometheus.relabel "kubernetes_monitoring_telemetry" {
 }
 
 
+remote.kubernetes.secret "alloy_metrics_remote_cfg" {
+  name      = "my-monitoring-secret"
+  namespace = "default"
+}
 
+remotecfg {
+  id = sys.env("GCLOUD_FM_COLLECTOR_ID")
+  url = convert.nonsensitive(remote.kubernetes.secret.alloy_metrics_remote_cfg.data["fleet-management-host"])
+  basic_auth {
+    username = convert.nonsensitive(remote.kubernetes.secret.alloy_metrics_remote_cfg.data["fleet-management-user"])
+    password = remote.kubernetes.secret.alloy_metrics_remote_cfg.data["access-token"]
+  }
+  tls_config {
+    insecure_skip_verify = false
+    ca_pem = convert.nonsensitive(remote.kubernetes.secret.alloy_metrics_remote_cfg.data["ca"])
+    cert_pem = convert.nonsensitive(remote.kubernetes.secret.alloy_metrics_remote_cfg.data["cert"])
+    key_pem = remote.kubernetes.secret.alloy_metrics_remote_cfg.data["key"]
+  }
+  poll_frequency = "5m"
+  attributes = {
+    "cluster" = "external-secrets-example-cluster",
+    "namespace" = "default",
+    "platform" = "kubernetes",
+    "release" = "k8smon",
+    "source" = "k8s-monitoring",
+    "sourceVersion" = "3.5.3",
+    "workloadName" = "alloy-metrics",
+    "workloadType" = "statefulset",
+  }
+}
 
 // Destination: metrics-service (prometheus)
 otelcol.exporter.prometheus "metrics_service" {
