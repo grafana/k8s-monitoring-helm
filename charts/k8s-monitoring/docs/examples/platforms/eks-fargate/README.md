@@ -43,9 +43,8 @@ clusterMetrics:
 clusterEvents:
   enabled: true
 
-podLogs:
+podLogsViaKubernetesApi:
   enabled: true
-  gatherMethod: kubernetesApi
 
 alloy-metrics:
   enabled: true
