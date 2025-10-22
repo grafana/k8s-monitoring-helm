@@ -13,6 +13,48 @@ cluster:
 
 dependencies:
   - preset: prometheus
+    overrides:
+      serverFiles:
+        recording_rules.yml:
+          groups:
+            - name: loki_rules
+              rules:
+                - expr: histogram_quantile(0.99, sum(rate(loki_request_duration_seconds_bucket[1m])) by (le, cluster, job))
+                  record: cluster_job:loki_request_duration_seconds:99quantile
+                - expr: histogram_quantile(0.50, sum(rate(loki_request_duration_seconds_bucket[1m])) by (le, cluster, job))
+                  record: cluster_job:loki_request_duration_seconds:50quantile
+                - expr: sum(rate(loki_request_duration_seconds_sum[1m])) by (cluster, job) / sum(rate(loki_request_duration_seconds_count[1m])) by (cluster, job)
+                  record: cluster_job:loki_request_duration_seconds:avg
+                - expr: sum(rate(loki_request_duration_seconds_bucket[1m])) by (le, cluster, job)
+                  record: cluster_job:loki_request_duration_seconds_bucket:sum_rate
+                - expr: sum(rate(loki_request_duration_seconds_sum[1m])) by (cluster, job)
+                  record: cluster_job:loki_request_duration_seconds_sum:sum_rate
+                - expr: sum(rate(loki_request_duration_seconds_count[1m])) by (cluster, job)
+                  record: cluster_job:loki_request_duration_seconds_count:sum_rate
+                - expr: histogram_quantile(0.99, sum(rate(loki_request_duration_seconds_bucket[1m])) by (le, cluster, job, route))
+                  record: cluster_job_route:loki_request_duration_seconds:99quantile
+                - expr: histogram_quantile(0.50, sum(rate(loki_request_duration_seconds_bucket[1m])) by (le, cluster, job, route))
+                  record: cluster_job_route:loki_request_duration_seconds:50quantile
+                - expr: sum(rate(loki_request_duration_seconds_sum[1m])) by (cluster, job, route) / sum(rate(loki_request_duration_seconds_count[1m])) by (cluster, job, route)
+                  record: cluster_job_route:loki_request_duration_seconds:avg
+                - expr: sum(rate(loki_request_duration_seconds_bucket[1m])) by (le, cluster, job, route)
+                  record: cluster_job_route:loki_request_duration_seconds_bucket:sum_rate
+                - expr: sum(rate(loki_request_duration_seconds_sum[1m])) by (cluster, job, route)
+                  record: cluster_job_route:loki_request_duration_seconds_sum:sum_rate
+                - expr: sum(rate(loki_request_duration_seconds_count[1m])) by (cluster, job, route)
+                  record: cluster_job_route:loki_request_duration_seconds_count:sum_rate
+                - expr: histogram_quantile(0.99, sum(rate(loki_request_duration_seconds_bucket[1m])) by (le, cluster, namespace, job, route))
+                  record: cluster_namespace_job_route:loki_request_duration_seconds:99quantile
+                - expr: histogram_quantile(0.50, sum(rate(loki_request_duration_seconds_bucket[1m])) by (le, cluster, namespace, job, route))
+                  record: cluster_namespace_job_route:loki_request_duration_seconds:50quantile
+                - expr: sum(rate(loki_request_duration_seconds_sum[1m])) by (cluster, namespace, job, route) / sum(rate(loki_request_duration_seconds_count[1m])) by (cluster, namespace, job, route)
+                  record: cluster_namespace_job_route:loki_request_duration_seconds:avg
+                - expr: sum(rate(loki_request_duration_seconds_bucket[1m])) by (le, cluster, namespace, job, route)
+                  record: cluster_namespace_job_route:loki_request_duration_seconds_bucket:sum_rate
+                - expr: sum(rate(loki_request_duration_seconds_sum[1m])) by (cluster, namespace, job, route)
+                  record: cluster_namespace_job_route:loki_request_duration_seconds_sum:sum_rate
+                - expr: sum(rate(loki_request_duration_seconds_count[1m])) by (cluster, namespace, job, route)
+                  record: cluster_namespace_job_route:loki_request_duration_seconds_count:sum_rate
   - preset: loki
   - preset: grafana
     overrides:
@@ -34,7 +76,46 @@ dependencies:
               secureJsonData:
                 basicAuthPassword: lokipassword
                 httpHeaderValue1: "1"
-
+      dashboardProviders:
+        dashboardproviders.yaml:
+          apiVersion: 1
+          providers:
+            - name: 'default'
+              orgId: 1
+              folder: ''
+              type: file
+              disableDeletion: false
+              editable: true
+              options:
+                path: /var/lib/grafana/dashboards/default
+      dashboards:
+        default:
+          loki-bloom-build:
+            url: http://raw.githubusercontent.com/grafana/loki/refs/heads/main/production/loki-mixin-compiled/dashboards/loki-bloom-build.json
+          loki-bloom-gateway:
+            url: https://raw.githubusercontent.com/grafana/loki/refs/heads/main/production/loki-mixin-compiled/dashboards/loki-bloom-gateway.json
+          loki-chunks:
+            url: https://raw.githubusercontent.com/grafana/loki/refs/heads/main/production/loki-mixin-compiled/dashboards/loki-chunks.json
+          loki-deletion:
+            url: https://raw.githubusercontent.com/grafana/loki/refs/heads/main/production/loki-mixin-compiled/dashboards/loki-deletion.json
+          loki-logs:
+            url: https://raw.githubusercontent.com/grafana/loki/refs/heads/main/production/loki-mixin-compiled/dashboards/loki-logs.json
+          loki-mixin-recording-rules:
+            url: https://raw.githubusercontent.com/grafana/loki/refs/heads/main/production/loki-mixin-compiled/dashboards/loki-mixin-recording-rules.json
+          loki-operational:
+            url: https://raw.githubusercontent.com/grafana/loki/refs/heads/main/production/loki-mixin-compiled/dashboards/loki-operational.json
+          loki-reads:
+            url: https://raw.githubusercontent.com/grafana/loki/refs/heads/main/production/loki-mixin-compiled/dashboards/loki-reads.json
+          loki-reads-resources:
+            url: https://raw.githubusercontent.com/grafana/loki/refs/heads/main/production/loki-mixin-compiled/dashboards/loki-reads-resources.json
+          loki-retention:
+            url: https://raw.githubusercontent.com/grafana/loki/refs/heads/main/production/loki-mixin-compiled/dashboards/loki-retention.json
+          loki-thanos-object-storage:
+            url: https://raw.githubusercontent.com/grafana/loki/refs/heads/main/production/loki-mixin-compiled/dashboards/loki-thanos-object-storage.json
+          loki-writes:
+            url: https://raw.githubusercontent.com/grafana/loki/refs/heads/main/production/loki-mixin-compiled/dashboards/loki-writes.json
+          loki-writes-resources:
+            url: https://raw.githubusercontent.com/grafana/loki/refs/heads/main/production/loki-mixin-compiled/dashboards/loki-writes-resources.json
 tests:
   - type: query-test
     values:

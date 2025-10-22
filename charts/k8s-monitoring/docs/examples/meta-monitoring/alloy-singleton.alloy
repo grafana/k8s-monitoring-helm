@@ -1405,6 +1405,11 @@ declare "grafana_integration" {
         action = "keep"
       }
 
+      rule {
+        source_labels = ["__meta_kubernetes_pod_node_name"]
+        target_label = "node"
+      }
+
 
 
       rule {
@@ -1678,6 +1683,11 @@ declare "loki_integration" {
         separator = "@"
         regex = coalesce(argument.port_name.value, "http-metrics") + "@Running@true@false"
         action = "keep"
+      }
+
+      rule {
+        source_labels = ["__meta_kubernetes_pod_node_name"]
+        target_label = "node"
       }
 
       // the loki-mixin expects the job label to be namespace/component
@@ -1970,6 +1980,11 @@ declare "mimir_integration" {
         separator = "@"
         regex = coalesce(argument.port_name.value, "http-metrics") + "@Running@true@false"
         action = "keep"
+      }
+
+      rule {
+        source_labels = ["__meta_kubernetes_pod_node_name"]
+        target_label = "node"
       }
 
       // the mimir-mixin expects the job label to be namespace/component
