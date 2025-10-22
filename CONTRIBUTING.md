@@ -145,6 +145,17 @@ installing them for a better experience:
 -   [Flux CLI](https://fluxcd.io/flux/cmd/) - Used for executing Helm chart integration and platform tests.
 -   [shellspec](https://github.com/shellspec/shellspec) - Used for executing some unit tests.
 
+### Running a specific Helm version
+
+The `scripts/helm-with-version` helper downloads and caches the requested Helm client version to `~/.helm_cli_cache`
+before executing it with the arguments you supply. This is useful for testing against multiple Helm releases without
+managing the binaries manually.
+
+```bash
+scripts/helm-with-version 3.14.4 version
+scripts/helm-with-version v3.12.0 template k8smon charts/k8s-monitoring -f values.yaml
+```
+
 If you are going to be running platform tests, you might want to install the following tools:
 
 -   [gcloud](https://cloud.google.com/sdk/docs/install) - Used for interacting with Google Cloud Platform.
