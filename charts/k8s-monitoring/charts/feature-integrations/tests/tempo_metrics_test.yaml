@@ -361,3 +361,23 @@ tests:
             \s*    regex = "\^\(\?:;\*\)\?\(\[\^;\]\+\)\.\*\$"
             \s*    target_label = "instance_type"
             \s*  \}
+
+  - it: allows you to set the scrape interval and timeout
+    set:
+      deployAsConfigMap: true
+      tempo:
+        instances:
+          - name: tempo
+            labelSelectors:
+              app.kubernetes.io/name: tempo
+            metrics:
+              scrapeInterval: 15s
+              scrapeTimeout: 5s
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data["metrics.alloy"]
+          pattern: |-
+            \s*scrape_interval = "15s"
+            \s*scrape_timeout = "5s"

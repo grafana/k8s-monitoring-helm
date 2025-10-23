@@ -7,6 +7,7 @@
 *   Ensure Jaeger Compact and Jeager Thrift protocols use UDP (@simonswine)
 *   Ensure Service Graph utilizes destination defaults (@petewall)
 *   Update default Service Graph dimensions (@rlankfo)
+*   Properly check for integration scrape intervals and timeouts inside the metrics object (@petewall)
 
 ## 3.5.3
 
