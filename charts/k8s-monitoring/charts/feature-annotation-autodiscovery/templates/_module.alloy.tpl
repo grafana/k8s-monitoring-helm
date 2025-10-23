@@ -44,6 +44,7 @@ declare "annotation_autodiscovery" {
 {{- end }}
     scrape_protocols = {{ .Values.global.scrapeProtocols | toJson }}
     scrape_classic_histograms = {{ .Values.global.scrapeClassicHistograms }}
+    scrape_native_histograms = {{ .Values.global.scrapeNativeHistograms }}
     clustering {
       enabled = true
     }
@@ -68,6 +69,7 @@ declare "annotation_autodiscovery" {
     }
     scrape_protocols = {{ .Values.global.scrapeProtocols | toJson }}
     scrape_classic_histograms = {{ .Values.global.scrapeClassicHistograms }}
+    scrape_native_histograms = {{ .Values.global.scrapeNativeHistograms }}
     clustering {
       enabled = true
     }
