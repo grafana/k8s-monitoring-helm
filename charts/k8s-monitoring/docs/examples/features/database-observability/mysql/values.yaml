@@ -1,0 +1,62 @@
+---
+cluster:
+  name: mysql-integration-cluster
+
+destinations:
+  - name: prometheus
+    type: prometheus
+    url: http://prometheus.prometheus.svc:9090/api/v1/write
+  - name: loki
+    type: loki
+    url: http://loki.loki.svc:3100/api/push
+
+databaseObservability:
+  instances:
+    dev-db:
+      type: mysql
+      dataSource:
+        rawString: "root:password@database.dev.svc:3306/"
+      exporter:
+        enabled: true
+      logs:
+        enabled: false
+
+    staging-db:
+      type: mysql
+      exporter:
+        enabled: true
+      logs:
+        enabled: false
+      dataSource:
+        host: database.staging.svc
+        protocol: tcp
+        port: 3306
+        auth:
+          usernameKey: mysql-username
+          passwordKey: mysql-root-password
+      secret:
+        create: false
+        name: mysql-creds
+        namespace: staging
+
+    prod-db:
+      type: mysql
+      exporter:
+        enabled: true
+      dataSource:
+        host: database.prod.svc
+        auth:
+          username: db-admin
+          password: db-password
+      logs:
+        labelSelectors:
+          app.kubernetes.io/instance: prod-db
+
+podLogs:
+  enabled: true
+
+alloy-metrics:
+  enabled: true
+
+alloy-logs:
+  enabled: true
