@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 3.5.4
+
 *   Update Alloy Operator and Prometheus Operator CRDs (@petewall)
 *   Update Beyla and OpenCost (@petewall)
 *   Ensure Jaeger Compact and Jeager Thrift protocols use UDP (@simonswine)
