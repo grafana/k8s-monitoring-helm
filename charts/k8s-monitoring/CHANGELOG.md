@@ -3,6 +3,10 @@
 ## Unreleased
 
 *   Update Alloy Operator and Prometheus Operator CRDs (@petewall)
+*   Update Beyla and OpenCost (@petewall)
+*   Ensure Jaeger Compact and Jeager Thrift protocols use UDP (@simonswine)
+*   Ensure Service Graph utilizes destination defaults (@petewall)
+*   Update default Service Graph dimensions (@rlankfo)
 
 ## 3.5.3
 
