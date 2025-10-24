@@ -86,6 +86,11 @@ declare "tempo_integration" {
         action = "keep"
       }
 
+      rule {
+        source_labels = ["__meta_kubernetes_pod_node_name"]
+        target_label = "node"
+      }
+
       // the tempo-mixin expects the job label to be namespace/component
       rule {
         source_labels = ["__meta_kubernetes_namespace","__meta_kubernetes_pod_label_app_kubernetes_io_component"]
