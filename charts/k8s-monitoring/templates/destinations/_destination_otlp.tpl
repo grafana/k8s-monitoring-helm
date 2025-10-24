@@ -74,7 +74,7 @@ otelcol.processor.transform {{ include "helper.alloy_name" .name | quote }} {
     context = "resource"
     statements = [
 {{- range $label := .clusterLabels }}
-      `set(attributes[{{ $label | quote }}], {{ $.Values.cluster.name | quote }})`,
+      `set(attributes[{{ $label | quote }}], {{ include "cluster.name" $ }})`,
 {{- end }}
 {{- range $resourceAttribute := $resourceAttributesToRemove }}
       `delete_key(attributes, {{ $resourceAttribute | quote }})`,
@@ -106,7 +106,7 @@ otelcol.processor.transform {{ include "helper.alloy_name" .name | quote }} {
     context = "datapoint"
     statements = [
 {{- range $label := .clusterLabels }}
-      `set(attributes[{{ $label | quote }}], {{ $.Values.cluster.name | quote }})`,
+      `set(attributes[{{ $label | quote }}], {{ include "cluster.name" $ }})`,
 {{- end }}
 {{- range $datapointAttribute, $resourceAttribute := .processors.transform.metrics.datapointToResource }}
   {{- if $resourceAttribute }}
@@ -130,7 +130,7 @@ otelcol.processor.transform {{ include "helper.alloy_name" .name | quote }} {
     context = "resource"
     statements = [
 {{- range $label := .clusterLabels }}
-      `set(attributes[{{ $label | quote }}], {{ $.Values.cluster.name | quote }})`,
+      `set(attributes[{{ $label | quote }}], {{ include "cluster.name" $ }})`,
 {{- end }}
 {{- range $resourceAttribute := $resourceAttributesToRemove }}
       `delete_key(attributes, {{ $resourceAttribute | quote }})`,
@@ -184,7 +184,7 @@ otelcol.processor.transform {{ include "helper.alloy_name" .name | quote }} {
     context = "resource"
     statements = [
 {{- range $label := .clusterLabels }}
-      `set(attributes[{{ $label | quote }}], {{ $.Values.cluster.name | quote }})`,
+      `set(attributes[{{ $label | quote }}], {{ include "cluster.name" $ }})`,
 {{- end }}
 {{- range $resourceAttribute := $resourceAttributesToRemove }}
       `delete_key(attributes, {{ $resourceAttribute | quote }})`,

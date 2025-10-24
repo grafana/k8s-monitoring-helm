@@ -335,6 +335,7 @@ details:
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | cluster.name | string | `""` | The name for this cluster. |
+| cluster.nameFrom | string | `""` | The name for this cluster, treated as raw Alloy config, and useful for loading from things like ConfigMaps or environment variables. |
 
 ### Features - Cluster Events
 

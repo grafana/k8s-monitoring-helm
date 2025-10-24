@@ -60,3 +60,7 @@
 {{- define "escape_label" -}}
 {{ . | replace "-" "_" | replace "." "_" | replace "/" "_" }}
 {{- end }}
+
+{{- define "cluster.name" }}
+{{ .Values.cluster.nameFrom | default (.Values.cluster.name | quote) }}
+{{- end }}

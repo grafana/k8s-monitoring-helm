@@ -38,11 +38,20 @@
 
 {{/* Checks that the cluster name is defined */}}
 {{- define "validations.cluster_name" }}
-{{- if or (not .Values.cluster) (not .Values.cluster.name) }}
+{{- if or (not .Values.cluster) (and (not .Values.cluster.name) (not .Values.cluster.nameFrom)) }}
   {{- $msg := list "" "A Cluster name is required!" }}
   {{- $msg = append $msg "Please set:" }}
   {{- $msg = append $msg "cluster:" }}
   {{- $msg = append $msg "  name: my-cluster-name" }}
+  {{- fail (join "\n" $msg) }}
+{{- end }}
+{{- if and .Values.cluster.name .Values.cluster.nameFrom }}
+  {{- $msg := list "" "Cannot use both .cluster.name and .cluster.nameFrom" }}
+  {{- $msg = append $msg "Please set:" }}
+  {{- $msg = append $msg "cluster:" }}
+  {{- $msg = append $msg "  name: my-cluster-name" }}
+  {{- $msg = append $msg "OR" }}
+  {{- $msg = append $msg "  nameFrom: <Alloy config>" }}
   {{- fail (join "\n" $msg) }}
 {{- end }}
 {{- end }}

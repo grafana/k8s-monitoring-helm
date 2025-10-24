@@ -164,13 +164,15 @@ prometheus.remote_write "prometheus" {
     write_relabel_config {
       source_labels = ["cluster"]
       regex = ""
-      replacement = "global-private-image-registries-example-cluster"
+      replacement =
+"global-private-image-registries-example-cluster"
       target_label = "cluster"
     }
     write_relabel_config {
       source_labels = ["k8s_cluster_name"]
       regex = ""
-      replacement = "global-private-image-registries-example-cluster"
+      replacement =
+"global-private-image-registries-example-cluster"
       target_label = "k8s_cluster_name"
     }
   }
@@ -197,8 +199,10 @@ loki.write "loki" {
     max_backoff_retries = "10"
   }
   external_labels = {
-    "cluster" = "global-private-image-registries-example-cluster",
-    "k8s_cluster_name" = "global-private-image-registries-example-cluster",
+    "cluster" =
+"global-private-image-registries-example-cluster",
+    "k8s_cluster_name" =
+"global-private-image-registries-example-cluster",
   }
 }
 // Destination: tempo (otlp)
@@ -215,8 +219,10 @@ otelcol.processor.transform "tempo" {
   trace_statements {
     context = "resource"
     statements = [
-      `set(attributes["cluster"], "global-private-image-registries-example-cluster")`,
-      `set(attributes["k8s.cluster.name"], "global-private-image-registries-example-cluster")`,
+      `set(attributes["cluster"],
+"global-private-image-registries-example-cluster")`,
+      `set(attributes["k8s.cluster.name"],
+"global-private-image-registries-example-cluster")`,
       `delete_key(attributes, "process.pid")`,
       `delete_key(attributes, "process.parent_pid")`,
       `delete_key(attributes, "process.executable.path")`,

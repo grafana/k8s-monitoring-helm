@@ -109,7 +109,7 @@ pyroscope.write {{ include "helper.alloy_name" .name | quote }} {
 
   external_labels = {
 {{- range $label := .clusterLabels }}
-    {{ include "escape_label" $label | quote }} = {{ $.Values.cluster.name | quote }},
+    {{ include "escape_label" $label | quote }} = {{ include "cluster.name" $ }},
 {{- end }}
   {{- range $key, $value := .extraLabels }}
     {{ $key }} = {{ $value | quote }},

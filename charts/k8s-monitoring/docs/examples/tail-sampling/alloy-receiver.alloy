@@ -164,13 +164,15 @@ prometheus.remote_write "prometheus" {
     write_relabel_config {
       source_labels = ["cluster"]
       regex = ""
-      replacement = "tail-sampling"
+      replacement =
+"tail-sampling"
       target_label = "cluster"
     }
     write_relabel_config {
       source_labels = ["k8s_cluster_name"]
       regex = ""
-      replacement = "tail-sampling"
+      replacement =
+"tail-sampling"
       target_label = "k8s_cluster_name"
     }
   }
@@ -197,8 +199,10 @@ loki.write "loki" {
     max_backoff_retries = "10"
   }
   external_labels = {
-    "cluster" = "tail-sampling",
-    "k8s_cluster_name" = "tail-sampling",
+    "cluster" =
+"tail-sampling",
+    "k8s_cluster_name" =
+"tail-sampling",
   }
 }
 // Destination: tempo (otlp)
@@ -215,8 +219,10 @@ otelcol.processor.transform "tempo" {
   trace_statements {
     context = "resource"
     statements = [
-      `set(attributes["cluster"], "tail-sampling")`,
-      `set(attributes["k8s.cluster.name"], "tail-sampling")`,
+      `set(attributes["cluster"],
+"tail-sampling")`,
+      `set(attributes["k8s.cluster.name"],
+"tail-sampling")`,
       `delete_key(attributes, "process.pid")`,
       `delete_key(attributes, "process.parent_pid")`,
       `delete_key(attributes, "process.executable.path")`,
