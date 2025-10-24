@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+## 3.5.5
+
+*   Set node label for Tempo service integration (@petewall)
 *   Update Beyla chart to 1.9.9 (@petewall)
 
 ## 3.5.4
@@ -12,6 +15,7 @@
 *   Ensure Service Graph utilizes destination defaults (@petewall)
 *   Update default Service Graph dimensions (@rlankfo)
 *   Properly check for integration scrape intervals and timeouts inside the metrics object (@petewall)
+*   Set node label for certain service integrations (@petewall)
 
 ## 3.5.3
 
