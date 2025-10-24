@@ -1,38 +1,30 @@
 {{- define "features.databaseObservability.enabled" }}
-{{- $metricIntegrations := include "feature.databaseObservability.configured.metrics" (dict "Values" .Values.integrations "Files" $.Subcharts.integrations.Files) | fromYamlArray }}
-{{- $logIntegrations := include "feature.databaseObservability.configured.logs" (dict "Values" .Values.integrations "Files" $.Subcharts.integrations.Files) | fromYamlArray }}
-{{- if or $metricIntegrations $logIntegrations }}true{{ else }}false{{ end }}
+{{- $mysqlInstances := .Values.databaseObservability.mysql.instances }}
+{{- if $mysqlInstances }}true{{ else }}false{{ end }}
 {{- end }}
 
 {{- define "features.databaseObservability.collectors" }}
-{{- $metricIntegrations := include "feature.databaseObservability.configured.metrics" (dict "Values" .Values.integrations "Files" $.Subcharts.integrations.Files) | fromYamlArray }}
-{{- if (not (empty $metricIntegrations)) }}
-- {{ .Values.integrations.collector }}
-{{- end }}
+- {{ .Values.databaseObservability.collector }}
 {{- end }}
 
-{{- define "features.databaseObservability.metrics.include" }}
-{{- $values := dict "Chart" $.Subcharts.integrations.Chart "Values" .Values.integrations "Files" $.Subcharts.integrations.Files "Release" $.Release }}
+{{- define "features.databaseObservability.include" }}
+{{- if eq (include "features.databaseObservability.enabled" .) "true" }}
 {{- $destinations := include "features.databaseObservability.destinations" . | fromYamlArray }}
-{{- $integrations := include "feature.databaseObservability.configured.metrics" $values | fromYamlArray }}
-{{- range $integrationType := $integrations }}
-{{- include (printf "integrations.%s.module.metrics" $integrationType) $values | indent 0 }}
-{{ include "helper.alloy_name" $integrationType }}_integration "integration" {
+{{- include "feature.databaseObservability.module" (dict "Values" $.Values.databaseObservability "Files" $.Subcharts.databaseObservability.Files "Release" $.Release) }}
+db_observability "feature" {
   metrics_destinations = [
     {{ include "destinations.alloy.targets" (dict "destinations" $.Values.destinations "names" $destinations "type" "metrics" "ecosystem" "prometheus") | indent 4 | trim }}
+  ]
+  logs_destinations = [
+    {{ include "destinations.alloy.targets" (dict "destinations" $.Values.destinations "names" $destinations "type" "logs" "ecosystem" "loki") | indent 4 | trim }}
   ]
 }
 {{- end }}
 {{- end }}
 
-{{- define "features.databaseObservability.include" }}
-{{- if eq .collectorName .Values.databaseObservability.collector }}
-  {{ include "features.databaseObservability.metrics.include" . | indent 0 }}
-{{- end }}
-{{- end }}
-
 {{- define "features.databaseObservability.destinations" }}
 {{- include "destinations.get" (dict "destinations" $.Values.destinations "type" "metrics" "ecosystem" "prometheus" "filter" $.Values.integrations.destinations) -}}
+{{- include "destinations.get" (dict "destinations" $.Values.destinations "type" "logs" "ecosystem" "loki" "filter" $.Values.integrations.destinations) -}}
 {{- end }}
 
 {{- define "features.databaseObservability.destinations.isTranslating" }}
@@ -48,9 +40,9 @@
 {{- end -}}
 
 {{- define "features.databaseObservability.logs.discoveryRules" }}
-{{- $values := (dict "Values" .Values.integrations "Files" $.Subcharts.integrations.Files) }}
+{{- $values := (dict "Values" .Values.databaseObservability "Files" $.Subcharts.databaseObservability.Files) }}
 {{- $extraDiscoveryRules := list }}
-{{- $logIntegrations := include "feature.integrations.configured.logs" $values | fromYamlArray }}
+{{- $logIntegrations := include "feature.databaseObservability.configured.logs" $values | fromYamlArray }}
 {{- range $integration := $logIntegrations }}
   {{- $extraDiscoveryRules = append $extraDiscoveryRules ((include (printf "integrations.%s.logs.discoveryRules" $integration) $values) | indent 0) }}
 {{- end }}
@@ -58,7 +50,7 @@
 {{- end }}
 
 {{- define "features.databaseObservability.logs.logProcessingStages" }}
-{{- $values := (dict "Values" .Values.integrations "Files" $.Subcharts.integrations.Files) }}
+{{- $values := (dict "Values" .Values.databaseObservability "Files" $.Subcharts.databaseObservability.Files) }}
 {{- $extraLogProcessingStages := "" }}
 {{- $logIntegrations := include "feature.integrations.configured.logs" $values | fromYamlArray }}
 {{- range $integration := $logIntegrations }}
@@ -71,23 +63,26 @@
 
 {{- define "features.databaseObservability.validate" }}
 {{- if eq (include "features.databaseObservability.enabled" .) "true" }}
-{{- $featureName := "Service Integrations" }}
+{{- $featureName := "Database Observability" }}
 
-{{- $metricIntegrations := include "feature.databaseObservability.configured.metrics" (dict "Values" .Values.integrations "Files" $.Subcharts.integrations.Files) | fromYamlArray }}
-{{- if $metricIntegrations }}
-  {{- $metricDestinations := include "features.databaseObservability.destinations" . | fromYamlArray }}
-  {{- include "destinations.validate_destination_list" (dict "destinations" $metricDestinations "type" "metrics" "ecosystem" "prometheus" "feature" $featureName) }}
-{{- end }}
+{{- $metricDestinations := include "features.databaseObservability.destinations" . | fromYamlArray }}
+{{- include "destinations.validate_destination_list" (dict "destinations" $metricDestinations "type" "metrics" "ecosystem" "prometheus" "feature" $featureName) }}
 
 {{- $podLogsEnabled := include "features.podLogs.enabled" $ }}
-{{- $logIntegrations := include "feature.databaseObservability.configured.logs" (dict "Values" .Values.integrations "Files" $.Subcharts.integrations.Files) | fromYamlArray }}
-{{- if and $logIntegrations (ne $podLogsEnabled "true") }}
-  {{- $msg := list "" "Service integrations that include logs requires enabling the Pod Logs feature." }}
-  {{- $msg = append $msg "Please set:" }}
-  {{- $msg = append $msg "podLogs:" }}
-  {{- $msg = append $msg "  enabled: true" }}
-  {{- fail (join "\n" $msg) }}
-{{- end }}
+{{/*{{- $logsEnabled := include "feature.databaseObservability.configured.logs" (dict "Values" .Values.integrations "Files" $.Subcharts.integrations.Files) | fromYamlArray }}*/}}
+{{/*{{- if and $logIntegrations (ne $podLogsEnabled "true") }}*/}}
+{{/*  {{- $msg := list "" "Service integrations that include logs requires enabling the Pod Logs feature." }}*/}}
+{{/*  {{- $msg = append $msg "Please set:" }}*/}}
+{{/*  {{- $msg = append $msg "podLogs:" }}*/}}
+{{/*  {{- $msg = append $msg "  enabled: true" }}*/}}
+{{/*  {{- fail (join "\n" $msg) }}*/}}
+{{/*{{- end }}*/}}
+
+{{- range $collectorName := include "features.databaseObservability.collectors" . | fromYamlArray }}
+  {{- $collectorValues := include "collector.alloy.values" (deepCopy $ | merge (dict "collectorName" $collectorName)) | fromYaml }}
+  {{- include "collectors.require_collector" (dict "Values" $.Values "name" $collectorName "feature" $featureName) }}
+  {{- include "feature.databaseObservability.collector.validate" (dict "Values" $.Values.databaseObservability "Collector" $collectorValues "CollectorName" $collectorName) }}
+{{- end -}}
 
 {{- include "feature.databaseObservability.validate" (dict "Values" $.Values.databaseObservability) }}
 {{- end }}
