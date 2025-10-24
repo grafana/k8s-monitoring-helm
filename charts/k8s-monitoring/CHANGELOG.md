@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+*   Update Beyla chart to 1.9.9 (@petewall)
+
 ## 3.5.4
 
 *   Update Alloy Operator and Prometheus Operator CRDs (@petewall)
