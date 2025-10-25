@@ -15,26 +15,26 @@ Gather application data via {{ include "english_list" $receivers }} {{ $receiver
 
 {{- define "feature.applicationObservability.notes.actions" }}
 Configure your applications to send telemetry data to:
-{{- if .Values.receivers.otlp.grpc.enabled }}
-* http://{{ .Collector.ServiceName }}.{{ .Collector.Namespace }}.svc.cluster.local:{{ .Values.receivers.otlp.grpc.port }} (OTLP gRPC)
+{{- if .Values.applicationObservability.receivers.otlp.grpc.enabled }}
+* http://{{ .Collector.ServiceName }}.{{ .Collector.Namespace }}.svc.cluster.local:{{ .Values.applicationObservability.receivers.otlp.grpc.port }} (OTLP gRPC)
 {{- end }}
-{{- if .Values.receivers.otlp.http.enabled }}
-* http://{{ .Collector.ServiceName }}.{{ .Collector.Namespace }}.svc.cluster.local:{{ .Values.receivers.otlp.http.port }} (OTLP HTTP)
+{{- if .Values.applicationObservability.receivers.otlp.http.enabled }}
+* http://{{ .Collector.ServiceName }}.{{ .Collector.Namespace }}.svc.cluster.local:{{ .Values.applicationObservability.receivers.otlp.http.port }} (OTLP HTTP)
 {{- end }}
-{{- if .Values.receivers.jaeger.grpc.enabled }}
-* http://{{ .Collector.ServiceName }}.{{ .Collector.Namespace }}.svc.cluster.local:{{ .Values.receivers.jaeger.grpc.port }} (Jaeger gRPC)
+{{- if .Values.applicationObservability.receivers.jaeger.grpc.enabled }}
+* http://{{ .Collector.ServiceName }}.{{ .Collector.Namespace }}.svc.cluster.local:{{ .Values.applicationObservability.receivers.jaeger.grpc.port }} (Jaeger gRPC)
 {{- end }}
-{{- if .Values.receivers.jaeger.thriftBinary.enabled }}
-* http://{{ .Collector.ServiceName }}.{{ .Collector.Namespace }}.svc.cluster.local:{{ .Values.receivers.jaeger.thriftBinary.port }} (Jaeger Thrift Binary)
+{{- if .Values.applicationObservability.receivers.jaeger.thriftBinary.enabled }}
+* http://{{ .Collector.ServiceName }}.{{ .Collector.Namespace }}.svc.cluster.local:{{ .Values.applicationObservability.receivers.jaeger.thriftBinary.port }} (Jaeger Thrift Binary)
 {{- end }}
-{{- if .Values.receivers.jaeger.thriftCompact.enabled }}
-* http://{{ .Collector.ServiceName }}.{{ .Collector.Namespace }}.svc.cluster.local:{{ .Values.receivers.jaeger.thriftCompact.port }} (Jaeger Thrift Compact)
+{{- if .Values.applicationObservability.receivers.jaeger.thriftCompact.enabled }}
+* http://{{ .Collector.ServiceName }}.{{ .Collector.Namespace }}.svc.cluster.local:{{ .Values.applicationObservability.receivers.jaeger.thriftCompact.port }} (Jaeger Thrift Compact)
 {{- end }}
-{{- if .Values.receivers.jaeger.thriftHttp.enabled }}
-* http://{{ .Collector.ServiceName }}.{{ .Collector.Namespace }}.svc.cluster.local:{{ .Values.receivers.jaeger.thriftHttp.port }} (Jaeger Thrift HTTP)
+{{- if .Values.applicationObservability.receivers.jaeger.thriftHttp.enabled }}
+* http://{{ .Collector.ServiceName }}.{{ .Collector.Namespace }}.svc.cluster.local:{{ .Values.applicationObservability.receivers.jaeger.thriftHttp.port }} (Jaeger Thrift HTTP)
 {{- end }}
-{{- if .Values.receivers.zipkin.enabled }}
-* http://{{ .Collector.ServiceName }}.{{ .Collector.Namespace }}.svc.cluster.local:{{ .Values.receivers.zipkin.port }} (Zipkin)
+{{- if .Values.applicationObservability.receivers.zipkin.enabled }}
+* http://{{ .Collector.ServiceName }}.{{ .Collector.Namespace }}.svc.cluster.local:{{ .Values.applicationObservability.receivers.zipkin.port }} (Zipkin)
 {{- end }}
 {{- end }}
 

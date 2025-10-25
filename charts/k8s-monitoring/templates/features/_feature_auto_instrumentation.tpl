@@ -19,6 +19,17 @@ auto_instrumentation "feature" {
 {{- end -}}
 {{- end -}}
 
+{{- define "features.autoInstrumentation.validate" }}
+{{- if .Values.autoInstrumentation.enabled -}}
+{{- $featureName := "Auto-Instrumentation" }}
+{{- $destinations := include "features.autoInstrumentation.destinations" . | fromYamlArray }}
+{{- include "destinations.validate_destination_list" (dict "destinations" $destinations "type" "metrics" "ecosystem" "prometheus" "feature" $featureName) }}
+{{- range $collector := include "features.autoInstrumentation.collectors" . | fromYamlArray }}
+  {{- include "collectors.require_collector" (dict "Values" $.Values "name" $collector "feature" $featureName) }}
+{{- end -}}
+{{- end -}}
+{{- end -}}
+
 {{- define "features.autoInstrumentation.destinations" }}
 {{- if .Values.autoInstrumentation.enabled -}}
 {{- include "destinations.get" (dict "destinations" $.Values.destinations "type" "metrics" "ecosystem" "prometheus" "filter" $.Values.autoInstrumentation.destinations) -}}
@@ -38,14 +49,3 @@ auto_instrumentation "feature" {
 {{- end -}}
 
 {{- define "features.autoInstrumentation.collector.values" }}{{- end -}}
-
-{{- define "features.autoInstrumentation.validate" }}
-{{- if .Values.autoInstrumentation.enabled -}}
-{{- $featureName := "Auto-Instrumentation" }}
-{{- $destinations := include "features.autoInstrumentation.destinations" . | fromYamlArray }}
-{{- include "destinations.validate_destination_list" (dict "destinations" $destinations "type" "metrics" "ecosystem" "prometheus" "feature" $featureName) }}
-{{- range $collector := include "features.autoInstrumentation.collectors" . | fromYamlArray }}
-  {{- include "collectors.require_collector" (dict "Values" $.Values "name" $collector "feature" $featureName) }}
-{{- end -}}
-{{- end -}}
-{{- end -}}
