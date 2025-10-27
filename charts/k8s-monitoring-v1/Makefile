@@ -12,6 +12,7 @@ ALLOW_LISTS := default_allow_lists/cadvisor.yaml \
 	default_allow_lists/node-exporter-integration.yaml \
 	default_allow_lists/opencost.yaml \
 	default_allow_lists/windows-exporter.yaml
+
 pete: $(ALLOW_LISTS)
 Chart.lock: Chart.yaml
 	helm dependency update .
@@ -80,11 +81,19 @@ docs/RBAC.md: docs/examples/default-values/output.yaml docs/examples/openshift-c
 	yq 'select(.metadata.name=="k8smon-opencost") | select(.kind=="ClusterRole") | .rules' docs/examples/default-values/output.yaml >> docs/RBAC.md
 	echo '```' >> docs/RBAC.md
 
+CHART_VERSION = $(shell yq -r '.version' Chart.yaml)
+TEST_IMAGE = ghcr.io/grafana/k8s-monitoring-test
+
 build-image: test/Dockerfile test/config-analysis.sh test/query-test.sh
-	docker build --platform linux/amd64 --tag ghcr.io/grafana/k8s-monitoring-test:$(shell yq -r '.version' Chart.yaml) test
+	docker buildx build \
+		--platform linux/amd64,linux/arm64 \
+		--sbom=false --provenance=false \
+		--tag $(TEST_IMAGE):$(CHART_VERSION) \
+		--load \
+		test
 
 push-image:
-	docker push ghcr.io/grafana/k8s-monitoring-test:$(shell yq -r '.version' Chart.yaml)
+	docker push $(TEST_IMAGE):$(CHART_VERSION)
 
 
 #
