@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 3.6.0
+
+*   Update opencost to include an emptydir volume mount for its config path (@petewall)
+
 ## 3.5.6
 
 *   Add the ability to set resources for the Helm hooks (@petewall)
