@@ -65,6 +65,19 @@ tests:
             - query: count_over_time({cluster="$clusterName", job="integrations/kubernetes/eventhandler", namespace="default"}[1h])
               type: logql
 
+            # Beyla metrics
+            - query: beyla_build_info{cluster="$clusterName"}
+              type: promql
+            - query: beyla_internal_build_info{cluster="$clusterName"}
+              type: promql
+            - query: count(beyla_instrumented_processes{cluster="openshift-786558", job="integrations/beyla"})
+              type: promql
+              expect:
+                operator: "<"
+                value: 0
+            - query: http_client_request_body_size_bytes_bucket{cluster="$clusterName", k8s_namespace_name="flux-system"}
+              type: promql
+
             # Pod logs
             - query: count_over_time({cluster="$clusterName", job!="integrations/kubernetes/eventhandler", namespace="default"}[1h])
               type: logql
