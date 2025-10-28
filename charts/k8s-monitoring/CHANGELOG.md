@@ -2,7 +2,10 @@
 
 ## Unreleased
 
+## 3.6.0
+
 *   Add the ability to disable sending traces from Beyla to the Application Observability feature (@marctc & @mbaykara)
+*   Update opencost to include an emptydir volume mount for its config path (@petewall)
 
 ## 3.5.7
 

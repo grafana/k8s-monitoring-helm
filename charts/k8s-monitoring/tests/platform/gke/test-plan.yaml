@@ -10,6 +10,8 @@ subject:
   set:
     - key: "cluster.name"
       valueFrom: clusterName
+    - key: "clusterMetrics.opencost.opencost.exporter.defaultClusterId"
+      valueFrom: clusterName
 
 cluster:
   type: gke
@@ -53,6 +55,12 @@ tests:
             - query: machine_memory_bytes{cluster="$clusterName", job="integrations/kubernetes/cadvisor"}
               type: promql
             - query: kube_node_info{cluster="$clusterName", job="integrations/kubernetes/kube-state-metrics"}
+              type: promql
+            - query: opencost_build_info{cluster="$clusterName", job="integrations/opencost"}
+              type: promql
+            - query: container_cpu_allocation{cluster="$clusterName", job="integrations/opencost"}
+              type: promql
+            - query: container_memory_allocation_bytes{cluster="$clusterName", job="integrations/opencost"}
               type: promql
 
             # Alloy metrics
