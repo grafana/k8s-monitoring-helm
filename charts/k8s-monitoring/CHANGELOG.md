@@ -3,6 +3,7 @@
 ## Unreleased
 
 *   Add the ability to set K8s Attribute Processor filters (@petewall)
+*   Bump Alloy Operator and Node Exporter (@petewall)
 
 ## 3.5.5
 
