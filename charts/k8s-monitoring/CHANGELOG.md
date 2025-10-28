@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+*   Update opencost to include an emptydir volume mount for its config path (@petewall)
+
 ## 3.5.5
 
 *   Set node label for Tempo service integration (@petewall)
