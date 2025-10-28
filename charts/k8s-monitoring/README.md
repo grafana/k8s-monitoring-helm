@@ -254,7 +254,7 @@ details:
 |  | profilesReceiver(feature-profiles-receiver) | 1.0.0 |
 |  | profiling(feature-profiling) | 1.0.0 |
 |  | prometheusOperatorObjects(feature-prometheus-operator-objects) | 1.0.0 |
-| https://grafana.github.io/helm-charts | alloy-operator | 0.3.11 |
+| https://grafana.github.io/helm-charts | alloy-operator | 0.3.12 |
 <!-- markdownlint-enable no-bare-urls -->
 
 ## Values
