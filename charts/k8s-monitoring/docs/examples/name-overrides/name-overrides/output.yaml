@@ -91,6 +91,22 @@ metadata:
     app.kubernetes.io/version: "0.31.3"
     release: k8smon
 ---
+# Source: k8s-monitoring/charts/clusterMetrics/charts/opencost/templates/secret.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: k8smon-cost-metric-source
+  namespace: default
+  labels:
+    helm.sh/chart: opencost-2.3.2
+    app.kubernetes.io/name: cost-metric-source
+    app.kubernetes.io/instance: k8smon
+    app.kubernetes.io/version: "1.117.6"
+    app.kubernetes.io/part-of: cost-metric-source
+    app.kubernetes.io/managed-by: Helm
+data:
+  CLOUD_PROVIDER_API_KEY: "b3AzbmNvNTdvcDNOY281N09QM05jbzU3b3AzbmNvNTdvcDNOY281Nw=="
+---
 # Source: k8s-monitoring/charts/clusterMetrics/charts/windows-exporter/templates/config.yaml
 apiVersion: v1
 kind: ConfigMap
@@ -1979,7 +1995,7 @@ metadata:
     app.kubernetes.io/part-of: cost-metric-source
     app.kubernetes.io/managed-by: Helm
   annotations:
-    checksum/configs: 930260623d85bc2f803e4342c37094e5e1f9ba8b76314664d4abc01dca140c56
+    checksum/configs: 3020f0ae686444b53218994082b34aefe665c39858b87bdaa91287c2c7f985b7
 spec:
   replicas: 1
   selector:
@@ -2057,6 +2073,11 @@ spec:
               value: "http://prometheus.prometheus.svc:9090/api/v1/query"
             - name: INSECURE_SKIP_VERIFY
               value: "false"
+            - name: CLOUD_PROVIDER_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: k8smon-cost-metric-source
+                  key: CLOUD_PROVIDER_API_KEY
             - name: CLUSTER_ID
               value: "name-override-test"
             - name: RESOLUTION_1D_RETENTION
@@ -2078,12 +2099,17 @@ spec:
             - name: EMIT_KSM_V1_METRICS_ONLY
               value: "true"
             # Add any additional provided variables
-            - name: CLOUD_PROVIDER_API_KEY
-              value: "AIzaSyD29bGxmHAVEOBYtgd8sYM2gM2ekfxQX4U"
             - name: CURRENT_CLUSTER_ID_FILTER_ENABLED
               value: "true"
             - name: PROM_CLUSTER_ID_LABEL
               value: "cluster"
+          volumeMounts:
+            - mountPath: /var/configs
+              name: configs
+              readOnly: false
+      volumes:
+        - emptyDir: {}
+          name: configs
 ---
 # Source: k8s-monitoring/templates/alloy.yaml
 apiVersion: collectors.grafana.com/v1alpha1
