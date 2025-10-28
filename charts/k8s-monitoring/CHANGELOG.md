@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+*   Add the ability to set K8s Attribute Processor filters (@petewall)
+
 ## 3.5.5
 
 *   Set node label for Tempo service integration (@petewall)

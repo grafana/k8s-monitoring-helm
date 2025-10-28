@@ -38,6 +38,19 @@ applicationObservability:
         - IsMatch(resource.attributes["k8s.namespace.name"], "^kube-system|kube-public|confidential$")
       traces:
         - IsMatch(resource.attributes["k8s.namespace.name"], "^kube-system|kube-public|confidential$")
+  processors:
+    k8sattributes:
+      filters:
+        byField:
+          - key: metadata.namespace
+            op: not-equals
+            value: kube-system
+          - key: metadata.namespace
+            op: not-equals
+            value: kube-public
+          - key: metadata.namespace
+            op: not-equals
+            value: confidential
 
 autoInstrumentation:
   enabled: true
