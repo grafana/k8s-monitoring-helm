@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+## 3.6.0
+
+*   Update opencost to include an emptydir volume mount for its config path (@petewall)
 *   Add the ability to set K8s Attribute Processor filters (@petewall)
 *   Bump Alloy Operator and Node Exporter (@petewall)
 
