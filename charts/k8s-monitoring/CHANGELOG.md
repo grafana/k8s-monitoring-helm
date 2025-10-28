@@ -4,6 +4,7 @@
 
 ## 3.6.0
 
+*   Add the ability to use ScrapeConfig Prometheus Operator CRDs (@petewall)
 *   Update opencost to include an emptydir volume mount for its config path (@petewall)
 *   Add the ability to set K8s Attribute Processor filters (@petewall)
 *   Bump Alloy Operator and Node Exporter (@petewall)
