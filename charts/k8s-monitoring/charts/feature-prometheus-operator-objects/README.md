@@ -102,6 +102,23 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | probes.scrapeInterval | string | 60s | The default interval between scraping targets. Used as the default if the target resource doesn’t provide a scrape interval. Overrides global.scrapeInterval |
 | probes.scrapeTimeout | string | 10s | The default timeout for scrape requests. Used as the default if the target resource doesn’t provide a scrape timeout. |
 
+### ScrapeConfigs
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| scrapeConfigs.enabled | bool | `false` | Enable discovery of Prometheus Operator ScrapeConfig objects. |
+| scrapeConfigs.excludeNamespaces | list | `[]` | Which namespaces to not look for ScrapeConfig objects. |
+| scrapeConfigs.extraDiscoveryRules | string | `""` | Rule blocks to be added to the prometheus.operator.scrapeconfigs component for ScrapeConfigs. These relabeling rules are applied pre-scrape against the targets from service discovery. The relabelings defined in the PodMonitor object are applied first, then these relabelings are applied. Before the scrape, any remaining target labels that start with `__` (i.e. `__meta_kubernetes*`) are dropped. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.relabel/#rule-block)) |
+| scrapeConfigs.extraMetricProcessingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for ScrapeConfig objects. These relabeling rules are applied post-scrape against the metrics returned from the scraped target, no `__meta*` labels are present. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#rule-block)) |
+| scrapeConfigs.labelExpressions | list | `[]` | Complex label selectors to filter which ScrapeConfig objects to use. Example: `[{key: "app.kubernetes.io/name", operator: "NotIn", values: ["secret-app", "admin-app"]}]` |
+| scrapeConfigs.labelSelectors | object | `{}` | Label selectors to filter which ScrapeConfig objects to use. Example: `app.kubernetes.io/name: my-app` |
+| scrapeConfigs.maxCacheSize | string | `nil` | Sets the max_cache_size for cadvisor prometheus.relabel component. This should be at least 2x-5x your largest scrape target or samples appended rate. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments)) Overrides global.maxCacheSize |
+| scrapeConfigs.metricsTuning.excludeMetrics | list | `[]` | Metrics to drop. Can use regular expressions. |
+| scrapeConfigs.metricsTuning.includeMetrics | list | `[]` | Metrics to keep. Can use regular expressions. |
+| scrapeConfigs.namespaces | list | `[]` | Which namespaces to look for ScrapeConfig objects. |
+| scrapeConfigs.scrapeInterval | string | 60s | The default interval between scraping targets. Used as the default if the target resource doesn’t provide a scrape interval. Overrides global.scrapeInterval |
+| scrapeConfigs.scrapeTimeout | string | 10s | The default timeout for scrape requests. Used as the default if the target resource doesn’t provide a scrape timeout. |
+
 ### ServiceMonitors
 
 | Key | Type | Default | Description |
