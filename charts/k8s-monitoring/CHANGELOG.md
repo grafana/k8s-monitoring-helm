@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+*   Add the ability to set resources for the Helm hooks (@petewall)
 *   Add the ability to set K8s Attribute Processor filters (@petewall)
 *   Bump Alloy Operator and Node Exporter (@petewall)
 

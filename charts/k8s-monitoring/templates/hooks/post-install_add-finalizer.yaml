@@ -65,6 +65,9 @@ spec:
                 --namespace={{ .Release.Namespace }} \
                 --patch='{"metadata":{"finalizers":["k8s.grafana.com/finalizer"]}}' \
                 deployment/{{ include "alloy-operator.fullname" (index .Subcharts "alloy-operator") }}
+          {{- with $jobSettings.resources }}
+          resources:{{ toYaml . | nindent 12 }}
+          {{- end }}
           securityContext:
             runAsNonRoot: true
             runAsUser: 4242
