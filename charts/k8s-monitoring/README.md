@@ -281,6 +281,7 @@ details:
 | alloy-operator.waitForAlloyRemoval.nodeSelector | object | `{"kubernetes.io/os":"linux"}` | Node selector to use for the Helm Hook that ensures that Alloy instances are removed during uninstall. |
 | alloy-operator.waitForAlloyRemoval.podAnnotations | object | `{}` | Annotations to apply to the Pod for the Helm Hook to wait for all Alloy instances to be removed before uninstalling the Alloy Operator |
 | alloy-operator.waitForAlloyRemoval.podLabels | object | `{"linkerd.io/inject":"disabled","sidecar.istio.io/inject":"false"}` | Labels to apply to the Pod for the Helm Hook to wait for all Alloy instances to be removed before uninstalling the Alloy Operator |
+| alloy-operator.waitForAlloyRemoval.resources | object | `{}` | Set the resource field for the Helm Hook that ensures that Alloy instances are removed during uninstall. |
 | alloy-operator.waitForAlloyRemoval.tolerations | list | `[]` | Tolerations to apply to the Helm Hook that ensures that Alloy instances are removed during uninstall. |
 
 ### Collectors - Alloy Profiles

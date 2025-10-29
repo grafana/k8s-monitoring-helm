@@ -1,0 +1,44 @@
+should create hook when operator is deployed and readiness is enabled:
+  1: |
+    backoffLimit: 3
+    template:
+      metadata:
+        labels:
+          app.kubernetes.io/instance: RELEASE-NAME
+          app.kubernetes.io/name: release-name-k8s-monitoring
+          linkerd.io/inject: disabled
+          sidecar.istio.io/inject: "false"
+        name: release-name-k8s-monitoring-remove-alloy-and-finalizer
+      spec:
+        containers:
+          - command:
+              - /bin/bash
+              - -ce
+              - |
+                echo "Deleting Alloy instance: alloy/RELEASE-NAME-alloy-metrics..."
+                kubectl delete alloy/RELEASE-NAME-alloy-metrics --ignore-not-found=true --wait
+                kubectl wait --for=delete alloy/RELEASE-NAME-alloy-metrics --timeout=60s || echo "Timed out waiting for deletion of alloy/RELEASE-NAME-alloy-metrics or it may not exist."
+
+                kubectl patch \
+                  --namespace=NAMESPACE \
+                  --type json \
+                  --patch='[{"op": "remove", "path": "/metadata/finalizers"}]' \
+                  deployment/RELEASE-NAME-alloy-operator
+            image: ghcr.io/grafana/helm-chart-toolbox-kubectl:0.1.1
+            imagePullPolicy: IfNotPresent
+            name: remove-finalizers
+            securityContext:
+              allowPrivilegeEscalation: false
+              capabilities:
+                drop:
+                  - ALL
+              readOnlyRootFilesystem: true
+              runAsNonRoot: true
+              runAsUser: 4242
+              seccompProfile:
+                type: RuntimeDefault
+        nodeSelector:
+          kubernetes.io/os: linux
+        restartPolicy: Never
+        serviceAccountName: release-name-k8s-monitoring-remove-alloy-and-finalizer
+    ttlSecondsAfterFinished: 300

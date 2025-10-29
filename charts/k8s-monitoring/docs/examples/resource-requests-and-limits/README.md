@@ -112,5 +112,13 @@ alloy-operator:
     limits:
       cpu: 500m
       memory: 128Mi
+  waitForAlloyRemoval:
+    resources:
+      requests:
+        cpu: 10m
+        memory: 64Mi
+      limits:
+        cpu: 500m
+        memory: 128Mi
 ```
 <!-- textlint-enable terminology -->
