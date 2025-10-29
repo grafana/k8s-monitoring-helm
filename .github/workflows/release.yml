@@ -48,8 +48,18 @@ jobs:
           git config user.name "$GITHUB_ACTOR"
           git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
 
-      - name: Install Helm
+      - name: Set up Helm
+        id: setup-helm
         uses: azure/setup-helm@1a275c3b69536ee54be43f2070a358922e12c8d4  # v4.3.1
+        continue-on-error: true
+
+      - name: Set up Homebrew
+        if: ${{ steps.setup-helm.outcome == 'failure' }}
+        uses: Homebrew/actions/setup-homebrew@8c478e7f5c2c2df9efba834a3568d4fe35cdb2a3
+
+      - name: Install Helm
+        if: ${{ steps.setup-helm.outcome == 'failure' }}
+        run: brew install helm
 
       - name: Parse Chart.yaml
         id: parse-chart
