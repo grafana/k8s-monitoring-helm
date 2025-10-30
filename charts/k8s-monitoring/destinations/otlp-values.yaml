@@ -243,29 +243,60 @@ retryOnFailure:
 
 sendingQueue:
   # -- Enables a buffer before sending data to the client.
-  # @section -- Storage Queue
+  # @section -- Sending Queue
   enabled: true
 
   # -- The behavior when the component’s TotalSize limit is reached
-  # @section -- Storage Queue
-  blockOnOverflow: false
+  # @default -- false
+  # @section -- Sending Queue
+  blockOnOverflow:
+
+  # -- Determines if incoming requests are blocked until the request is processed or not.
+  # @default -- false
+  # @section -- Sending Queue
+  waitForResult:
 
   # -- Number of readers to send batches written to the queue in parallel.
-  # @section -- Storage Queue
-  numConsumers: 10
+  # @default -- 10
+  # @section -- Sending Queue
+  numConsumers:
 
   # -- Maximum number of unwritten batches allowed in the queue at the same time.
-  # @section -- Storage Queue
-  queueSize: 1000
+  # @default -- 1000
+  # @section -- Sending Queue
+  queueSize:
 
   # -- How the queue and batching is measured.
-  # @section -- Storage Queue
-  sizer: requests
+  # @default -- requests
+  # @section -- Sending Queue
+  sizer: ""
 
   # -- Handler from an otelcol.storage component to use to enable a persistent queue mechanism.
   # To use this, create a storage component in extraConfig and reference it here.
-  # @section -- Storage Queue
+  # @section -- Sending Queue
   storage: ""
+
+  batch:
+    # -- Should a batch mechanism be used with the sending queue?
+    # @section -- Sending Queue - Batch
+    enabled: false
+
+    # -- How the queue and batching is measured. Overrides the sizer set at the sendingQueue level for batching.
+    # Valid options are "bytes" or "items".
+    # @section -- Sending Queue - Batch
+    sizer: ""
+
+    # -- Time after which a batch will be sent regardless of its size. Must be a non-zero value.
+    # @section -- Sending Queue - Batch
+    flushTimeout: ""
+
+    # -- The minimum size of a batch, enables batch splitting.
+    # @section -- Sending Queue - Batch
+    minSize:
+
+    # -- The maximum size of a batch, enables batch splitting.
+    # @section -- Sending Queue - Batch
+    maxSize:
 
 # Processors to apply to the data before delivering it to its destination.
 processors:

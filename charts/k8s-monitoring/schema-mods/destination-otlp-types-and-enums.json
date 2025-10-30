@@ -1,0 +1,48 @@
+{
+  "definitions": {
+    "otlp-destination": {"properties": {
+      "auth": {"properties": {
+        "type": {"enum": ["none", "basic", "bearerToken", "oauth2", "sigv4"]},
+        "username": {"type": ["number", "string"]},
+        "oauth2": {"properties": {"endpointParams": {
+          "type": "object",
+          "additionalProperties": {"type": "array", "items": {"type": "string"}}
+        }}}
+      }},
+      "logs": {"properties": {"enabled": {"type": ["null", "boolean"]}}},
+      "metrics": {"properties": {"enabled": {"type": ["null", "boolean"]}}},
+      "processors": {"properties": {
+        "attributes": {"properties": {
+          "actions": {"type": "array", "items": {
+            "type": "object", "properties": {
+              "key": {"type": "string"},
+              "action": {"type": "string"},
+              "value": {},
+              "pattern": {"type": ["null", "string"]},
+              "fromAttribute": {"type": ["null", "string"]},
+              "fromContext": {"type": ["null", "string"]},
+              "convertedType": {"type": ["null", "string"]}
+            }, "required": ["key", "action"]
+          }}
+        }}
+      }},
+      "sendingQueue": {
+        "properties": {
+          "blockOnOverflow": {"type": ["null", "boolean"]},
+          "numConsumers": {"type": ["null", "integer"]},
+          "queueSize": {"type": ["null", "integer"]},
+          "sizer": {"type": ["null", "string"]},
+          "waitForResult": {"type": ["null", "boolean"]},
+          "batch": { "properties": {
+            "minSize": {"type": ["null", "integer"]},
+            "maxSize": {"type": ["null", "integer"]}
+          }}
+        }
+      },
+      "protocol": {"enum": ["grpc", "http"]},
+      "secret": {"properties": {"create": {"type": ["null", "boolean"]}}},
+      "tenantId": {"type": ["string", "number"]},
+      "traces": {"properties": {"enabled": {"type": ["null", "boolean"]}}}
+    }}
+  }
+}

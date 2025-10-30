@@ -37,6 +37,17 @@ destinations:
           resourceFrom:
             - string.format(`set(attributes["from_env"], %q)`, coalesce(sys.env("MY_ENV"), "undefined"))
 
+    sendingQueue:
+      enabled: true
+      blockOnOverflow: true
+      storage: otelcol.storage.file.otlp_gateway_queue_storage.handler
+      batch:
+        enabled: true
+        flushTimeout: 1s
+        sizer: items
+        minSize: 100
+        maxSize: 1000
+
 clusterMetrics:
   enabled: true
 
@@ -45,8 +56,18 @@ podLogs:
 
 alloy-metrics:
   enabled: true
+  extraConfig: |
+    otelcol.storage.file "otlp_gateway_queue_storage" {
+      create_directory = true
+      directory = "/var/lib/otlp_gateway_queue_storage"
+    }
 
 alloy-logs:
   enabled: true
+  extraConfig: |
+    otelcol.storage.file "otlp_gateway_queue_storage" {
+      create_directory = true
+      directory = "/var/lib/otlp_gateway_queue_storage"
+    }
 ```
 <!-- textlint-enable terminology -->
