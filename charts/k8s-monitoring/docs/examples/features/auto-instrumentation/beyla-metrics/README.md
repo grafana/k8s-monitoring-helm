@@ -22,6 +22,7 @@ destinations:
 
 autoInstrumentation:
   enabled: true
+  spanMetricsOnly: true
 
 alloy-metrics:
   enabled: true

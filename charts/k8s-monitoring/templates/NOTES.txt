@@ -26,9 +26,8 @@ It will:
   {{- if $collectorName }}
     {{- $Collector = merge $Collector (dict "ServiceName" (include "collector.alloy.fullname" (merge $ (dict "collectorName" $collectorName)))) }}
   {{- end }}
-  {{ include (printf "feature.%s.notes.actions" $feature) (dict "Values" (index $.Values $feature) "Collector" $Collector) | indent 0 }}
+  {{- include (printf "feature.%s.notes.actions" $feature) (dict "Values" $.Values "Collector" $Collector) | indent 0 }}
 {{- end }}
-
 {{- if $isTranslating }}
 
 * One or more features will have their data translated to a different storage ecosystem. This may result in an imperfect
