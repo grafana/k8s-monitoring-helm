@@ -13,9 +13,11 @@ cluster:
 
 dependencies:
   - file: dependencies/prometheus-operator-crds.yaml
+    verb: create
   - file: dependencies/black-box-exporter.yaml
   - file: dependencies/cert-manager.yaml
   - file: dependencies/nginx-static-metrics.yaml
+  - file: dependencies/scrapeconfig.yaml
   - preset: prometheus
   - preset: grafana
     overrides:
@@ -69,6 +71,10 @@ tests:
 
             # Metrics are being scraped from the Grafana Probe
             - query: probe_duration_seconds{cluster="$CLUSTER", job="probe/grafana/grafana-probe"}
+              type: promql
+
+            # Metrics are being scraped from the Alloy Operator ScrapeConfig
+            - query: helm_operator_build_info{cluster="$CLUSTER", job="alloy-operator", source="scrapeconfig"}
               type: promql
 
             # DPM check

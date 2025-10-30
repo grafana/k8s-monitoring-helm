@@ -1,0 +1,28 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces rule:empty-lines
+suite: Test - Prometheus Operator Objects - Collector Validation
+templates:
+  - test/collector.yaml
+tests:
+  - it: should fail if using ScrapeConfigs and not experimental stability level
+    set:
+      scrapeConfigs:
+        enabled: true
+      testing: true
+      test:
+        Collector:
+          alloy:
+            stabilityLevel: stable
+            clustering:
+              enabled: false
+            mounts:
+              varlog: true
+          controller:
+            type: daemonset
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            The Prometheus Operator Objects feature requires Alloy to use the experimental stability level when using ScrapeConfigs.
+            Please set:
+            alloy-test:
+              alloy:
+                stabilityLevel: experimental
