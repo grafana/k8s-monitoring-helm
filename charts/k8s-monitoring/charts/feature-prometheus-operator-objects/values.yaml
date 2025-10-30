@@ -155,6 +155,74 @@ probes:
   # @section -- Probes
   maxCacheSize:
 
+# Prometheus Operator ScrapeConfigs
+scrapeConfigs:
+  # -- Enable discovery of Prometheus Operator ScrapeConfig objects.
+  # @section -- ScrapeConfigs
+  enabled: false
+
+  # -- Which namespaces to look for ScrapeConfig objects.
+  # @section -- ScrapeConfigs
+  namespaces: []
+
+  # -- Which namespaces to not look for ScrapeConfig objects.
+  # @section -- ScrapeConfigs
+  excludeNamespaces: []
+
+  # -- Label selectors to filter which ScrapeConfig objects to use.
+  # Example: `app.kubernetes.io/name: my-app`
+  # @section -- ScrapeConfigs
+  labelSelectors: {}
+
+  # -- Complex label selectors to filter which ScrapeConfig objects to use.
+  # Example: `[{key: "app.kubernetes.io/name", operator: "NotIn", values: ["secret-app", "admin-app"]}]`
+  # @section -- ScrapeConfigs
+  labelExpressions: []
+
+  # -- The default interval between scraping targets. Used as the default if the target resource doesn’t provide a
+  # scrape interval.
+  # Overrides global.scrapeInterval
+  # @default -- 60s
+  # @section -- ScrapeConfigs
+  scrapeInterval: ""
+
+  # -- The default timeout for scrape requests. Used as the default if the target resource doesn’t provide a scrape
+  # timeout.
+  # @default -- 10s
+  # @section -- ScrapeConfigs
+  scrapeTimeout: ""
+
+  # -- Rule blocks to be added to the prometheus.operator.scrapeconfigs component for ScrapeConfigs.
+  # These relabeling rules are applied pre-scrape against the targets from service discovery.
+  # The relabelings defined in the PodMonitor object are applied first, then these relabelings are applied.
+  # Before the scrape, any remaining target labels that start with `__` (i.e. `__meta_kubernetes*`) are dropped.
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.relabel/#rule-block))
+  # @section -- ScrapeConfigs
+  extraDiscoveryRules: ""
+
+  # Adjustments to the scraped metrics to filter the amount of data sent to storage.
+  metricsTuning:
+    # -- Metrics to keep. Can use regular expressions.
+    # @section -- ScrapeConfigs
+    includeMetrics: []
+    # -- Metrics to drop. Can use regular expressions.
+    # @section -- ScrapeConfigs
+    excludeMetrics: []
+
+  # -- Rule blocks to be added to the prometheus.relabel component for ScrapeConfig objects.
+  # These relabeling rules are applied post-scrape against the metrics returned from the scraped target, no `__meta*` labels are present.
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#rule-block))
+  # @section -- ScrapeConfigs
+  extraMetricProcessingRules: ""
+
+  # -- Sets the max_cache_size for cadvisor prometheus.relabel component.
+  # This should be at least 2x-5x your largest scrape target or samples appended rate.
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments))
+  # Overrides global.maxCacheSize
+  # @raw
+  # @section -- ScrapeConfigs
+  maxCacheSize:
+
 # Prometheus Operator ServiceMonitors
 serviceMonitors:
   # -- Enable discovery of Prometheus Operator ServiceMonitor objects.
