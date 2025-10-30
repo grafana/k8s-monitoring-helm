@@ -504,12 +504,28 @@ otelcol.exporter.otlphttp {{ include "helper.alloy_name" .name | quote }} {
 
   sending_queue {
     enabled = {{ .sendingQueue.enabled }}
+{{- if .sendingQueue.blockOnOverflow }}
     block_on_overflow = {{ .sendingQueue.blockOnOverflow }}
+{{- end }}
+{{- if .sendingQueue.numConsumers }}
     num_consumers = {{ .sendingQueue.numConsumers | int }}
+{{- end }}
+{{- if .sendingQueue.queueSize }}
     queue_size = {{ .sendingQueue.queueSize | int }}
+{{- end }}
+{{- if and .sendingQueue.sizer (not .sendingQueue.batch.enabled) }}
     sizer = {{ .sendingQueue.sizer | quote }}
+{{- end }}
 {{- if .sendingQueue.storage }}
     storage = {{ .sendingQueue.storage | quote }}
+{{- end }}
+{{- if .sendingQueue.batch.enabled }}
+    batch {
+      sizer = {{ .sendingQueue.batch.sizer | quote }}
+      flush_timeout = {{ .sendingQueue.batch.flushTimeout | quote }}
+      min_size = {{ .sendingQueue.batch.minSize | int }}
+      max_size = {{ .sendingQueue.batch.maxSize | int }}
+    }
 {{- end }}
   }
 }
