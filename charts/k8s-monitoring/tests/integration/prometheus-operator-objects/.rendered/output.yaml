@@ -56,6 +56,18 @@ data:
         forward_to = argument.metrics_destinations.value
       }
     
+      // Prometheus Operator Probe objects
+      prometheus.operator.scrapeconfigs "scrapeConfigs" {
+        clustering {
+          enabled = true
+        }
+        scrape {
+          default_scrape_interval = "60s"
+          default_scrape_timeout = "10s"
+        }
+        forward_to = argument.metrics_destinations.value
+      }
+    
       // Prometheus Operator ServiceMonitor objects
       prometheus.operator.servicemonitors "service_monitors" {
         selector {
@@ -511,7 +523,7 @@ spec:
         - ALL
       seccompProfile:
         type: RuntimeDefault
-    stabilityLevel: generally-available
+    stabilityLevel: experimental
     storagePath: /tmp/alloy
     uiPathPrefix: /
   configReloader:
