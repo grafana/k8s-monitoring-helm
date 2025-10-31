@@ -27,9 +27,6 @@
     {{- $msg = append $msg "          dataSource:" }}
     {{- $msg = append $msg "            host: database.namespace.svc" }}
     {{- $msg = append $msg "            port: 3306" }}
-    {{- $msg = append $msg "            auth:" }}
-    {{- $msg = append $msg "              username: user" }}
-    {{- $msg = append $msg "              password: pass" }}
     {{- fail (join "\n" $msg) }}
   {{- end }}
 {{- end }}

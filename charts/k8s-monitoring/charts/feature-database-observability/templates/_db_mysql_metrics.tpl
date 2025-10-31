@@ -1,3 +1,14 @@
+{{/* Inputs: . (Values) */}}
+{{- define "databaseObservability.mysql.type.metrics" }}
+{{- $defaultValues := "databasess/mysql-values.yaml" | .Files.Get | fromYaml }}
+{{- $metricsEnabled := false }}
+{{- range $instance := .Values.mysql.instances }}
+  {{- $metricsEnabled = or $metricsEnabled (dig "exporter" "enabled" true $instance) }}
+  {{- $metricsEnabled = or $metricsEnabled (dig "queryAnalysis" "enabled" true $instance) }}
+{{- end }}
+{{- $metricsEnabled -}}
+{{- end }}
+
 {{/* Inputs: . (Values), instance (this MySQL instance) */}}
 {{- define "feature.databaseObservability.mysql.datasource" }}
   {{- if .dataSource.rawString }}

@@ -1,28 +1,41 @@
 {{- define "databaseObservability.mysql.validate" }}
   {{- range $instance := $.Values.mysql.instances }}
-    {{- include "integrations.mysql.instance.validate" (deepCopy $ | merge (dict "instance" $instance)) | nindent 2 }}
+    {{- include "databaseObservability.mysql.instance.validate" (deepCopy $ | merge (dict "instance" $instance)) | nindent 2 }}
   {{- end }}
 {{- end }}
 
 {{- define "databaseObservability.mysql.instance.validate" }}
 {{- if .instance.exporter.enabled }}
-  {{- if and (not .instance.exporter.dataSourceName) (not (and .instance.exporter.dataSource.auth.username .instance.exporter.dataSource.auth.password .instance.exporter.dataSource.host)) }}
+  {{- if and (not .instance.dataSource.rawString) (not .instance.dataSource.host) }}
     {{- $msg := list "" "Missing data source details for MySQL exporter." }}
     {{- $msg = append $msg "Please set:" }}
-    {{- $msg = append $msg "integrations:" }}
+    {{- $msg = append $msg "databaseObservability:" }}
     {{- $msg = append $msg "  mysql:" }}
     {{- $msg = append $msg "    instances:" }}
     {{- $msg = append $msg (printf "      - name: %s" .instance.name) }}
-    {{- $msg = append $msg "        exporter:" }}
-    {{- $msg = append $msg "          dataSourceName: \"user:pass@database.namespace.svc:3306\"" }}
+    {{- $msg = append $msg "        dataSource:" }}
+    {{- $msg = append $msg "          rawString: \"user:pass@database.namespace.svc:3306\"" }}
     {{- $msg = append $msg "OR" }}
-    {{- $msg = append $msg "        exporter:" }}
-    {{- $msg = append $msg "          dataSource:" }}
-    {{- $msg = append $msg "            host: database.namespace.svc" }}
-    {{- $msg = append $msg "            port: 3306" }}
-    {{- $msg = append $msg "            auth:" }}
-    {{- $msg = append $msg "              username: user" }}
-    {{- $msg = append $msg "              password: pass" }}
+    {{- $msg = append $msg "        dataSource:" }}
+    {{- $msg = append $msg "          host: database.namespace.svc" }}
+    {{- $msg = append $msg "          port: 3306" }}
+    {{- fail (join "\n" $msg) }}
+  {{- end }}
+{{- end }}
+{{- if .instance.queryAnalysis.enabled }}
+  {{- if and (not .instance.dataSource.rawString) (not .instance.dataSource.host) }}
+    {{- $msg := list "" "Missing data source details for MySQL query analysis." }}
+    {{- $msg = append $msg "Please set:" }}
+    {{- $msg = append $msg "databaseObservability:" }}
+    {{- $msg = append $msg "  mysql:" }}
+    {{- $msg = append $msg "    instances:" }}
+    {{- $msg = append $msg (printf "      - name: %s" .instance.name) }}
+    {{- $msg = append $msg "        dataSource:" }}
+    {{- $msg = append $msg "          rawString: \"user:pass@database.namespace.svc:3306\"" }}
+    {{- $msg = append $msg "OR" }}
+    {{- $msg = append $msg "        dataSource:" }}
+    {{- $msg = append $msg "          host: database.namespace.svc" }}
+    {{- $msg = append $msg "          port: 3306" }}
     {{- fail (join "\n" $msg) }}
   {{- end }}
 {{- end }}
