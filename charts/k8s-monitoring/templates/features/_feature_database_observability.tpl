@@ -40,25 +40,25 @@ db_observability "feature" {
 {{- $isTranslating -}}
 {{- end -}}
 
-{{/*{{- define "features.databaseObservability.logs.discoveryRules" }}*/}}
-{{/*{{- $values := (dict "Values" .Values.databaseObservability "Files" $.Subcharts.databaseObservability.Files) }}*/}}
-{{/*{{- $extraDiscoveryRules := list }}*/}}
-{{/*{{- $logIntegrations := include "feature.databaseObservability.configured.logs" $values | fromYamlArray }}*/}}
-{{/*{{- range $integration := $logIntegrations }}*/}}
-{{/*  {{- $extraDiscoveryRules = append $extraDiscoveryRules ((include (printf "integrations.%s.logs.discoveryRules" $integration) $values) | indent 0) }}*/}}
-{{/*{{- end }}*/}}
-{{/*{{ $extraDiscoveryRules | join "\n" }}*/}}
-{{/*{{- end }}*/}}
+{{- define "features.databaseObservability.logs.discoveryRules" }}
+{{- $values := (dict "Values" .Values.databaseObservability "Files" $.Subcharts.databaseObservability.Files) }}
+{{- $extraDiscoveryRules := list }}
+{{- $logIntegrations := include "feature.databaseObservability.configured.logs" $values | fromYamlArray }}
+{{- range $integration := $logIntegrations }}
+  {{- $extraDiscoveryRules = append $extraDiscoveryRules ((include (printf "databaseObservability.%s.logs.discoveryRules" $integration) $values) | indent 0) }}
+{{- end }}
+{{ $extraDiscoveryRules | join "\n" }}
+{{- end }}
 
-{{/*{{- define "features.databaseObservability.logs.logProcessingStages" }}*/}}
-{{/*{{- $values := (dict "Values" .Values.databaseObservability "Files" $.Subcharts.databaseObservability.Files) }}*/}}
-{{/*{{- $extraLogProcessingStages := "" }}*/}}
-{{/*{{- $logIntegrations := include "feature.integrations.configured.logs" $values | fromYamlArray }}*/}}
-{{/*{{- range $integration := $logIntegrations }}*/}}
-{{/*  {{- $extraLogProcessingStages = cat $extraLogProcessingStages "\n" (include (printf "integrations.%s.logs.processingStage" $integration) $values) | indent 0 }}*/}}
-{{/*{{- end }}*/}}
-{{/*{{ $extraLogProcessingStages }}*/}}
-{{/*{{- end }}*/}}
+{{- define "features.databaseObservability.logs.logProcessingStages" }}
+{{- $values := (dict "Values" .Values.databaseObservability "Files" $.Subcharts.databaseObservability.Files) }}
+{{- $extraLogProcessingStages := "" }}
+{{- $logIntegrations := include "feature.databaseObservability.configured.logs" $values | fromYamlArray }}
+{{- range $integration := $logIntegrations }}
+  {{- $extraLogProcessingStages = cat $extraLogProcessingStages "\n" (include (printf "databaseObservability.%s.logs.processingStage" $integration) $values) | indent 0 }}
+{{- end }}
+{{ $extraLogProcessingStages }}
+{{- end }}
 
 {{- define "features.databaseObservability.collector.values" }}{{- end -}}
 
