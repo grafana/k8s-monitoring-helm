@@ -42,22 +42,18 @@ db_observability "feature" {
 
 {{- define "features.databaseObservability.logs.discoveryRules" }}
 {{- $values := (dict "Values" .Values.databaseObservability "Files" $.Subcharts.databaseObservability.Files) }}
-{{- $extraDiscoveryRules := list }}
 {{- $logIntegrations := include "feature.databaseObservability.configured.logs" $values | fromYamlArray }}
 {{- range $integration := $logIntegrations }}
-  {{- $extraDiscoveryRules = append $extraDiscoveryRules ((include (printf "databaseObservability.%s.logs.discoveryRules" $integration) $values) | indent 0) }}
+  {{- (include (printf "databaseObservability.%s.logs.discoveryRules" $integration) $values) | nindent 0 }}
 {{- end }}
-{{ $extraDiscoveryRules | join "\n" }}
 {{- end }}
 
 {{- define "features.databaseObservability.logs.logProcessingStages" }}
 {{- $values := (dict "Values" .Values.databaseObservability "Files" $.Subcharts.databaseObservability.Files) }}
-{{- $extraLogProcessingStages := "" }}
-{{- $logIntegrations := include "feature.databaseObservability.configured.logs" $values | fromYamlArray }}
-{{- range $integration := $logIntegrations }}
-  {{- $extraLogProcessingStages = cat $extraLogProcessingStages "\n" (include (printf "databaseObservability.%s.logs.processingStage" $integration) $values) | indent 0 }}
+{{- $logEnabledDatabases := include "feature.databaseObservability.configured.logs" $values | fromYamlArray }}
+{{- range $database := $logEnabledDatabases }}
+  {{- include (printf "databaseObservability.%s.logs.processingStage" $database) $values | nindent 0 }}
 {{- end }}
-{{ $extraLogProcessingStages }}
 {{- end }}
 
 {{- define "features.databaseObservability.collector.values" }}{{- end -}}
