@@ -11,27 +11,28 @@
 {{- define "databaseObservability.mysql.logs.discoveryRules" }}
   {{- range $instance := $.Values.mysql.instances }}
     {{- if ne (dig "logs" "enabled" true $instance) false }}
-      {{- $labelList := list }}
-      {{- $valueList := list }}
-      {{- if .logs.namespaces }}
-        {{- $labelList = append $labelList "__meta_kubernetes_namespace" -}}
-        {{- $valueList = append $valueList (printf "(?:%s)" (join "|" .logs.namespaces)) -}}
-      {{- end }}
-      {{- range $k, $v := .logs.labelSelectors }}
-        {{- if kindIs "slice" $v }}
-          {{- $labelList = append $labelList (include "pod_label" $k) -}}
-          {{- $valueList = append $valueList (printf "(?:%s)" (join "|" $v)) -}}
-        {{- else }}
-          {{- $labelList = append $labelList (include "pod_label" $k) -}}
-          {{- $valueList = append $valueList (printf "(?:%s)" $v) -}}
+      {{- with mergeOverwrite ("databases/mysql-values.yaml" | $.Files.Get | fromYaml) $instance }}
+        {{- $labelList := list }}
+        {{- $valueList := list }}
+        {{- if .logs.namespaces }}
+          {{- $labelList = append $labelList "__meta_kubernetes_namespace" -}}
+          {{- $valueList = append $valueList (printf "(?:%s)" (join "|" .logs.namespaces)) -}}
         {{- end }}
-      {{- end }}
+        {{- range $k, $v := .logs.labelSelectors }}
+          {{- if kindIs "slice" $v }}
+            {{- $labelList = append $labelList (include "pod_label" $k) -}}
+            {{- $valueList = append $valueList (printf "(?:%s)" (join "|" $v)) -}}
+          {{- else }}
+            {{- $labelList = append $labelList (include "pod_label" $k) -}}
+            {{- $valueList = append $valueList (printf "(?:%s)" $v) -}}
+          {{- end }}
+        {{- end }}
 // Database Observability: MySQL
 rule {
   source_labels = {{ $labelList | toJson }}
   separator = ";"
   regex = {{ $valueList | join ";" | quote }}
-  target_label = "db-observability-integration"
+  target_label = "db_observability_integration"
   replacement = "mysql"
 }
 rule {
@@ -39,15 +40,16 @@ rule {
   separator = ";"
   regex = {{ $valueList | join ";" | quote }}
   target_label = "instance"
-  replacement = {{ $instance.name | quote }}
+  replacement = {{ .name | quote }}
 }
 rule {
   source_labels = {{ $labelList | toJson }}
   separator = ";"
   regex = {{ $valueList | join ";" | quote }}
   target_label = "job"
-  replacement = {{ $instance.jobLabel | quote }}
+  replacement = {{ .jobLabel | quote }}
 }
+      {{- end }}
     {{- end }}
   {{- end }}
 {{- end }}
@@ -56,7 +58,7 @@ rule {
   {{- if eq (include "databaseObservability.mysql.type.logs" .) "true" }}
 // Database Observability: MySQL
 stage.match {
-  selector = "{db-observability-integration=\"mysql\"}"
+  selector = "{db_observability_integration=\"mysql\"}"
 
   stage.regex {
     expression = `(?P<timestamp>.+) (?P<thread>[\d]+) \[(?P<label>.+?)\]( \[(?P<err_code>.+?)\] \[(?P<subsystem>.+?)\])? (?P<msg>.+)`
@@ -76,7 +78,7 @@ stage.match {
   }
 
   stage.label_drop {
-    values = ["db-observability-integration"]
+    values = ["db_observability_integration"]
   }
 }
   {{- end }}
