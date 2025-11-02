@@ -120,6 +120,7 @@ declare "pod_logs" {
       regex = "(.+)"
       target_label = "app_kubernetes_io_name"
     }
+
   }
 
   discovery.kubernetes "pods" {
@@ -196,6 +197,16 @@ declare "pod_logs" {
       }
     }
     stage.metrics {
+      metric.counter {
+        name        = "log_lines_total"
+        description = "total number of log lines"
+        prefix      = "my_custom_tracking_"
+
+        match_all         = true
+        action            = "inc"
+        max_idle_duration = "24h"
+      }
+    } stage.metrics {
       metric.counter {
         name        = "log_lines_total"
         description = "total number of log lines"

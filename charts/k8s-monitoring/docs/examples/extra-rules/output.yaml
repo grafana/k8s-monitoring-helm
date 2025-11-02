@@ -587,7 +587,6 @@ data:
     
     
     
-    
     // Destination: prometheus (prometheus)
     otelcol.exporter.prometheus "prometheus" {
       add_metric_suffixes = true
@@ -745,6 +744,7 @@ data:
         loki.write.loki.receiver,
       ]
     }
+    
     // Self Reporting
     prometheus.exporter.unix "kubernetes_monitoring_telemetry" {
       set_collectors = ["textfile"]
@@ -1017,6 +1017,10 @@ data:
           source_labels = ["__meta_kubernetes_namespace"]
           regex = "production"
           action = "keep"
+        } rule {
+          source_labels = ["__meta_kubernetes_namespace"]
+          regex = "production"
+          action = "keep"
         }
       }
     
@@ -1101,6 +1105,19 @@ data:
           }
         }
         stage.json {
+          source = "payload"
+          expressions = {
+            sku = "id",
+            count = "",
+          }
+        }
+    
+        stage.labels {
+          values = {
+            sku  = "",
+            count = "",
+          }
+        } stage.json {
           source = "payload"
           expressions = {
             sku = "id",

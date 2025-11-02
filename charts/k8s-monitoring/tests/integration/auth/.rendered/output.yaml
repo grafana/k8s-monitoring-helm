@@ -171,7 +171,6 @@ data:
         otelcol.receiver.prometheus.prometheus_otlp_bearer_token.receiver,
       ]
     }
-    
     // Self Reporting
     prometheus.exporter.unix "kubernetes_monitoring_telemetry" {
       set_collectors = ["textfile"]
@@ -819,102 +818,6 @@ data:
       name      = "prometheus-otlp-bearer-token-k8smon-k8s-monitoring"
       namespace = "default"
     }
-    
-    // Destination: loki-basicauth (loki)
-    otelcol.exporter.loki "loki_basicauth" {
-      forward_to = [loki.write.loki_basicauth.receiver]
-    }
-    
-    loki.write "loki_basicauth" {
-      endpoint {
-        url = "http://nginx-auth-gateway.default.svc/logs/basic/loki/api/v1/push"
-        tenant_id = convert.nonsensitive(remote.kubernetes.secret.loki_basicauth.data["tenantId"])
-        basic_auth {
-          username = convert.nonsensitive(remote.kubernetes.secret.loki_basicauth.data["username"])
-          password = remote.kubernetes.secret.loki_basicauth.data["password"]
-        }
-        tls_config {
-          insecure_skip_verify = false
-        }
-        min_backoff_period = "500ms"
-        max_backoff_period = "5m"
-        max_backoff_retries = "10"
-      }
-      external_labels = {
-        "cluster" = "auth-integration-test",
-        "k8s_cluster_name" = "auth-integration-test",
-        destination = "loki-basicauth",
-      }
-    }
-    
-    remote.kubernetes.secret "loki_basicauth" {
-      name      = "loki-basicauth-k8smon-k8s-monitoring"
-      namespace = "default"
-    }
-    
-    // Destination: loki-basicauth-external-secret (loki)
-    otelcol.exporter.loki "loki_basicauth_external_secret" {
-      forward_to = [loki.write.loki_basicauth_external_secret.receiver]
-    }
-    
-    loki.write "loki_basicauth_external_secret" {
-      endpoint {
-        url = "http://nginx-auth-gateway.default.svc/logs/basic/loki/api/v1/push"
-        tenant_id = convert.nonsensitive(remote.kubernetes.secret.loki_basicauth_external_secret.data["lokiTenantId"])
-        basic_auth {
-          username = convert.nonsensitive(remote.kubernetes.secret.loki_basicauth_external_secret.data["lokiUsername"])
-          password = remote.kubernetes.secret.loki_basicauth_external_secret.data["lokiPassword"]
-        }
-        tls_config {
-          insecure_skip_verify = false
-          ca_pem = convert.nonsensitive(remote.kubernetes.secret.loki_basicauth_external_secret.data["ca"])
-          cert_pem = convert.nonsensitive(remote.kubernetes.secret.loki_basicauth_external_secret.data["cert"])
-          key_pem = remote.kubernetes.secret.loki_basicauth_external_secret.data["key"]
-        }
-        min_backoff_period = "500ms"
-        max_backoff_period = "5m"
-        max_backoff_retries = "10"
-      }
-      external_labels = {
-        "cluster" = "auth-integration-test",
-        "k8s_cluster_name" = "auth-integration-test",
-        destination = "loki-basicauth-external-secret",
-      }
-    }
-    
-    remote.kubernetes.secret "loki_basicauth_external_secret" {
-      name      = "credentials"
-      namespace = "default"
-    }
-    
-    // Destination: loki-bearer-token (loki)
-    otelcol.exporter.loki "loki_bearer_token" {
-      forward_to = [loki.write.loki_bearer_token.receiver]
-    }
-    
-    loki.write "loki_bearer_token" {
-      endpoint {
-        url = "http://nginx-auth-gateway.default.svc/logs/bearer/loki/api/v1/push"
-        tenant_id = convert.nonsensitive(remote.kubernetes.secret.loki_bearer_token.data["tenantId"])
-        bearer_token = remote.kubernetes.secret.loki_bearer_token.data["bearerToken"]
-        tls_config {
-          insecure_skip_verify = false
-        }
-        min_backoff_period = "500ms"
-        max_backoff_period = "5m"
-        max_backoff_retries = "10"
-      }
-      external_labels = {
-        "cluster" = "auth-integration-test",
-        "k8s_cluster_name" = "auth-integration-test",
-        destination = "loki-bearer-token",
-      }
-    }
-    
-    remote.kubernetes.secret "loki_bearer_token" {
-      name      = "loki-bearer-token-k8smon-k8s-monitoring"
-      namespace = "default"
-    }
   self-reporting-metric.prom: |
     # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_build_info gauge
@@ -1055,6 +958,7 @@ data:
           regex = "(.+)"
           target_label = "app_kubernetes_io_name"
         }
+    
       }
     
       discovery.kubernetes "pods" {
@@ -1133,6 +1037,7 @@ data:
             "service_instance_id" = "service_instance_id",
           }
         }
+    
     
         // Only keep the labels that are defined in the `keepLabels` list.
         stage.label_keep {

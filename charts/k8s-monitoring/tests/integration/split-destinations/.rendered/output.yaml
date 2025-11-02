@@ -700,7 +700,6 @@ data:
         prometheus.remote_write.productionmetrics.receiver,
       ]
     }
-    
     // Self Reporting
     prometheus.exporter.unix "kubernetes_monitoring_telemetry" {
       set_collectors = ["textfile"]
@@ -870,45 +869,6 @@ data:
       name      = "productionmetrics-k8smon-k8s-monitoring"
       namespace = "default"
     }
-    
-    // Destination: productionLogs (loki)
-    otelcol.exporter.loki "productionlogs" {
-      forward_to = [loki.process.productionlogs.receiver]
-    }
-    
-    loki.process "productionlogs" {
-      stage.match {
-        selector = "{namespace!=\"production\"}"
-        action   = "drop"
-      }
-      forward_to = [loki.write.productionlogs.receiver]
-    }
-    
-    loki.write "productionlogs" {
-      endpoint {
-        url = "http://prod-logs-loki.prod-dbs.svc:3100/loki/api/v1/push"
-        tenant_id = convert.nonsensitive(remote.kubernetes.secret.productionlogs.data["tenantId"])
-        basic_auth {
-          username = convert.nonsensitive(remote.kubernetes.secret.productionlogs.data["username"])
-          password = remote.kubernetes.secret.productionlogs.data["password"]
-        }
-        tls_config {
-          insecure_skip_verify = false
-        }
-        min_backoff_period = "500ms"
-        max_backoff_period = "5m"
-        max_backoff_retries = "10"
-      }
-      external_labels = {
-        "cluster" = "split-destinations-cluster",
-        "k8s_cluster_name" = "split-destinations-cluster",
-      }
-    }
-    
-    remote.kubernetes.secret "productionlogs" {
-      name      = "productionlogs-k8smon-k8s-monitoring"
-      namespace = "default"
-    }
   self-reporting-metric.prom: |
     # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_build_info gauge
@@ -1051,6 +1011,7 @@ data:
           regex = "(.+)"
           target_label = "app_kubernetes_io_name"
         }
+    
       }
     
       discovery.kubernetes "pods" {
@@ -1126,6 +1087,7 @@ data:
             "service_instance_id" = "service_instance_id",
           }
         }
+    
     
         // Only keep the labels that are defined in the `keepLabels` list.
         stage.label_keep {
