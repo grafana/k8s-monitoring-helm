@@ -10,7 +10,7 @@
 ```yaml
 ---
 cluster:
-  name: mysql-integration-cluster
+  name: db-o11y-mysql-test
 
 destinations:
   - name: prometheus

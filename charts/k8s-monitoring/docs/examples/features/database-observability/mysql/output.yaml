@@ -199,13 +199,13 @@ data:
         write_relabel_config {
           source_labels = ["cluster"]
           regex = ""
-          replacement = "mysql-integration-cluster"
+          replacement = "db-o11y-mysql-test"
           target_label = "cluster"
         }
         write_relabel_config {
           source_labels = ["k8s_cluster_name"]
           regex = ""
-          replacement = "mysql-integration-cluster"
+          replacement = "db-o11y-mysql-test"
           target_label = "k8s_cluster_name"
         }
       }
@@ -237,8 +237,8 @@ data:
         max_backoff_retries = "10"
       }
       external_labels = {
-        "cluster" = "mysql-integration-cluster",
-        "k8s_cluster_name" = "mysql-integration-cluster",
+        "cluster" = "db-o11y-mysql-test",
+        "k8s_cluster_name" = "db-o11y-mysql-test",
       }
     }
     
@@ -386,6 +386,28 @@ data:
           regex = "(.+)"
           target_label = "app_kubernetes_io_name"
         }
+         // Database Observability: MySQL
+        rule {
+          source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_instance"]
+          separator = ";"
+          regex = "(?:test-database)"
+          target_label = "db_observability_integration"
+          replacement = "mysql"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_instance"]
+          separator = ";"
+          regex = "(?:test-database)"
+          target_label = "instance"
+          replacement = "test-db"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_instance"]
+          separator = ";"
+          regex = "(?:test-database)"
+          target_label = "job"
+          replacement = "integration/mysql"
+        }
       }
     
       discovery.kubernetes "pods" {
@@ -461,6 +483,31 @@ data:
             "service_instance_id" = "service_instance_id",
           }
         }
+         // Database Observability: MySQL
+        stage.match {
+          selector = "{db_observability_integration=\"mysql\"}"
+    
+          stage.regex {
+            expression = `(?P<timestamp>.+) (?P<thread>[\d]+) \[(?P<label>.+?)\]( \[(?P<err_code>.+?)\] \[(?P<subsystem>.+?)\])? (?P<msg>.+)`
+          }
+    
+          stage.labels {
+            values = {
+              level = "label",
+              err_code = "err_code",
+              subsystem = "subsystem",
+            }
+          }
+    
+          stage.drop {
+            expression = "^ *$"
+            drop_counter_reason = "drop empty lines"
+          }
+    
+          stage.label_drop {
+            values = ["db_observability_integration"]
+          }
+        }
     
         // Only keep the labels that are defined in the `keepLabels` list.
         stage.label_keep {
@@ -500,8 +547,8 @@ data:
         max_backoff_retries = "10"
       }
       external_labels = {
-        "cluster" = "mysql-integration-cluster",
-        "k8s_cluster_name" = "mysql-integration-cluster",
+        "cluster" = "db-o11y-mysql-test",
+        "k8s_cluster_name" = "db-o11y-mysql-test",
       }
     }
     
