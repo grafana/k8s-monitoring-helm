@@ -1,12 +1,15 @@
+{{/* Determines if this feature is enabled based on the presence of configured database instances. */}}
 {{- define "features.databaseObservability.enabled" }}
 {{- $mysqlInstances := .Values.databaseObservability.mysql.instances }}
-{{- if $mysqlInstances }}true{{ else }}false{{ end }}
+{{- $postgresqlInstances := .Values.databaseObservability.postgresql.instances }}
+{{- if or $mysqlInstances $postgresqlInstances }}true{{ else }}false{{ end }}
 {{- end }}
 
 {{- define "features.databaseObservability.collectors" }}
 - {{ .Values.databaseObservability.collector }}
 {{- end }}
 
+{{/* The main template to include the Database Observability configuration components in the Alloy ConfigMap. */}}
 {{- define "features.databaseObservability.include" }}
 {{- if eq (include "features.databaseObservability.enabled" .) "true" }}
 {{- $destinations := include "features.databaseObservability.destinations" . | fromYamlArray }}
@@ -22,24 +25,27 @@ db_observability "feature" {
 {{- end }}
 {{- end }}
 
+{{/* Returns the list of destinations (metrics and logs) that will be utilized for Database Observability. */}}
 {{- define "features.databaseObservability.destinations" }}
-{{/*TODO: determine if we need metrics *and-or* logs destinations*/}}
+{{/*TODO: determine if we need metrics *and-or* logs destinations. We only need logs if queryAnalysis is used, we only need metrics if the exporter and/or query analaysis. */}}
 {{ include "destinations.get" (dict "destinations" $.Values.destinations "type" "metrics" "ecosystem" "prometheus" "filter" $.Values.databaseObservability.destinations) }}
 {{ include "destinations.get" (dict "destinations" $.Values.destinations "type" "logs" "ecosystem" "loki" "filter" $.Values.databaseObservability.destinations) }}
 {{- end }}
 
+{{/* Determines if any of the configured destinations require translation (i.e., are not Prometheus or Loki). */}}
 {{- define "features.databaseObservability.destinations.isTranslating" }}
 {{- $isTranslating := false -}}
 {{- $destinations := include "features.databaseObservability.destinations" . | fromYamlArray -}}
 {{ range $destination := $destinations -}}
   {{- $destinationEcosystem := include "destination.getEcosystem" (deepCopy $ | merge (dict "destination" $destination)) -}}
-  {{- if ne $destinationEcosystem "prometheus" -}}
+  {{- if and (ne $destinationEcosystem "prometheus") (ne $destinationEcosystem "loki") -}}
     {{- $isTranslating = true -}}
   {{- end -}}
 {{- end -}}
 {{- $isTranslating -}}
 {{- end -}}
 
+{{/* Returns the Alloy rules that will be used in the `podLogs` feature during log discovery for Database Observability. */}}
 {{- define "features.databaseObservability.logs.discoveryRules" }}
 {{- $values := (dict "Values" .Values.databaseObservability "Files" $.Subcharts.databaseObservability.Files) }}
 {{- $logIntegrations := include "feature.databaseObservability.configured.logs" $values | fromYamlArray }}
@@ -48,6 +54,7 @@ db_observability "feature" {
 {{- end }}
 {{- end }}
 
+{{/* Returns the log processing rules that will be used in the `podLogs` feature during log processing for Database Observability. */}}
 {{- define "features.databaseObservability.logs.logProcessingStages" }}
 {{- $values := (dict "Values" .Values.databaseObservability "Files" $.Subcharts.databaseObservability.Files) }}
 {{- $logEnabledDatabases := include "feature.databaseObservability.configured.logs" $values | fromYamlArray }}
@@ -56,24 +63,27 @@ db_observability "feature" {
 {{- end }}
 {{- end }}
 
+{{/* This feature does not add any additional values to the Alloy instances. */}}
 {{- define "features.databaseObservability.collector.values" }}{{- end -}}
 
+{{/* Validations for the Database Observability feature. */}}
 {{- define "features.databaseObservability.validate" }}
 {{- if eq (include "features.databaseObservability.enabled" .) "true" }}
 {{- $featureName := "Database Observability" }}
 
-{{- $metricDestinations := include "features.databaseObservability.destinations" . | fromYamlArray }}
-{{- include "destinations.validate_destination_list" (dict "destinations" $metricDestinations "type" "metrics" "ecosystem" "prometheus" "feature" $featureName) }}
+{{/* TODO: We need to check for both metric and log destinations. Pete will fix */}}
+{{- $destinations := include "features.databaseObservability.destinations" . | fromYamlArray }}
+{{- include "destinations.validate_destination_list" (dict "destinations" $destinations "type" "metrics" "ecosystem" "prometheus" "feature" $featureName) }}
 
 {{- $podLogsEnabled := include "features.podLogs.enabled" $ }}
-{{/*{{- $logsEnabled := include "feature.databaseObservability.configured.logs" (dict "Values" .Values.integrations "Files" $.Subcharts.integrations.Files) | fromYamlArray }}*/}}
-{{/*{{- if and $logIntegrations (ne $podLogsEnabled "true") }}*/}}
-{{/*  {{- $msg := list "" "Service integrations that include logs requires enabling the Pod Logs feature." }}*/}}
-{{/*  {{- $msg = append $msg "Please set:" }}*/}}
-{{/*  {{- $msg = append $msg "podLogs:" }}*/}}
-{{/*  {{- $msg = append $msg "  enabled: true" }}*/}}
-{{/*  {{- fail (join "\n" $msg) }}*/}}
-{{/*{{- end }}*/}}
+{{- $logsEnabled := include "feature.databaseObservability.configured.logs" (dict "Values" .Values.integrations "Files" $.Subcharts.integrations.Files) | fromYamlArray }}
+{{- if and $logsEnabled (ne $podLogsEnabled "true") }}
+  {{- $msg := list "" "Service integrations that include logs requires enabling the Pod Logs feature." }}
+  {{- $msg = append $msg "Please set:" }}
+  {{- $msg = append $msg "podLogs:" }}
+  {{- $msg = append $msg "  enabled: true" }}
+  {{- fail (join "\n" $msg) }}
+{{- end }}
 
 {{- range $collectorName := include "features.databaseObservability.collectors" . | fromYamlArray }}
   {{- $collectorValues := include "collector.alloy.values" (deepCopy $ | merge (dict "collectorName" $collectorName)) | fromYaml }}
