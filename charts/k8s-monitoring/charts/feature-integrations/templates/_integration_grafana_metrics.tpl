@@ -161,6 +161,7 @@ declare "grafana_integration" {
       scrape_timeout = coalesce(argument.scrape_timeout.value, "10s")
       scrape_protocols = argument.scrape_protocols.value
       scrape_classic_histograms = argument.scrape_classic_histograms.value
+      scrape_native_histograms = argument.scrape_native_histograms.value
 
       clustering {
         enabled = coalesce(argument.clustering.value, false)
@@ -242,6 +243,7 @@ grafana_integration_scrape  {{ include "helper.alloy_name" .name | quote }} {
   scrape_timeout = {{ .metrics.scrapeTimeout | default .scrapeTimeout | default $.Values.global.scrapeTimeout | quote }}
   scrape_protocols = {{ $.Values.global.scrapeProtocols | toJson }}
   scrape_classic_histograms = {{ $.Values.global.scrapeClassicHistograms }}
+  scrape_native_histograms = {{ $.Values.global.scrapeNativeHistograms }}
   max_cache_size = {{ .metrics.maxCacheSize | default $.Values.global.maxCacheSize | int }}
   forward_to = argument.metrics_destinations.value
 }
