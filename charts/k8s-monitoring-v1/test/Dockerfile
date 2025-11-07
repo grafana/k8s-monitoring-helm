@@ -1,4 +1,4 @@
-FROM quay.io/curl/curl:latest@sha256:b17b133216781da3255a09e3a5a685f58fb7f7a9a001e7402e6230ec1d65419b AS profilecli-downloader
+FROM quay.io/curl/curl:latest@sha256:f6710cb71617689b9e3522bde531a1a59f3d39e848be4cb450c9f87c5d15c3a5 AS profilecli-downloader
 ARG PROFILECLI_VERSION=1.15.0
 ARG TARGETARCH
 
