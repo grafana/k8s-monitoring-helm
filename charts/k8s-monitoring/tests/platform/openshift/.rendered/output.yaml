@@ -13,6 +13,22 @@ metadata:
     app.kubernetes.io/managed-by: Helm
 automountServiceAccountToken: true
 ---
+# Source: k8s-monitoring/charts/autoInstrumentation/charts/beyla/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: k8smon-beyla
+  namespace: default
+  labels:
+    helm.sh/chart: beyla-1.9.9
+    app.kubernetes.io/name: beyla
+    app.kubernetes.io/instance: k8smon
+    app.kubernetes.io/version: "2.7.5"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/part-of: beyla
+    app.kubernetes.io/component: rbac
+automountServiceAccountToken: true
+---
 # Source: k8s-monitoring/charts/clusterMetrics/charts/windows-exporter/templates/serviceaccount.yaml
 apiVersion: v1
 kind: ServiceAccount
@@ -60,6 +76,63 @@ metadata:
   namespace: default
 data:
   config.alloy: |
+    // Feature: Auto-Instrumentation
+    declare "auto_instrumentation" {
+      argument "metrics_destinations" {
+        comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
+      }
+    
+      discovery.kubernetes "beyla_pods" {
+        role = "pod"
+        namespaces {
+          own_namespace = true
+        }
+        selectors {
+          role = "pod"
+          label = "app.kubernetes.io/name=beyla"
+        }
+      }
+    
+      discovery.relabel "beyla_pods" {
+        targets = discovery.kubernetes.beyla_pods.targets
+        rule {
+          source_labels = ["__meta_kubernetes_pod_node_name"]
+          action = "replace"
+          target_label = "instance"
+        }
+      }
+    
+      prometheus.scrape "beyla_applications" {
+        targets         = discovery.relabel.beyla_pods.output
+        honor_labels    = true
+        scrape_interval = "60s"
+        scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
+        scrape_classic_histograms = false
+        clustering {
+          enabled = true
+        }
+        forward_to = argument.metrics_destinations.value
+      }
+    
+      prometheus.scrape "beyla_internal" {
+        targets         = discovery.relabel.beyla_pods.output
+        metrics_path    = "/internal/metrics"
+        job_name        = "integrations/beyla"
+        honor_labels    = true
+        scrape_interval = "60s"
+        scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
+        scrape_classic_histograms = false
+        clustering {
+          enabled = true
+        }
+        forward_to = argument.metrics_destinations.value
+      }
+    }
+    auto_instrumentation "feature" {
+      metrics_destinations = [
+        prometheus.remote_write.grafanacloudmetrics.receiver,
+      ]
+    }
     // Feature: Cluster Metrics
     declare "cluster_metrics" {
       argument "metrics_destinations" {
@@ -1164,6 +1237,7 @@ data:
     grafana_kubernetes_monitoring_build_info{version="3.5.6", namespace="default", platform="openshift"} 1
     # HELP grafana_kubernetes_monitoring_feature_info A metric to report the enabled features of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_feature_info gauge
+    grafana_kubernetes_monitoring_feature_info{feature="autoInstrumentation", version="1.0.0"} 1
     grafana_kubernetes_monitoring_feature_info{deployments="windows-exporter", feature="clusterMetrics", sources="kubelet,kubeletResource,cadvisor,kube-state-metrics,node-exporter,windows-exporter", version="1.0.0"} 1
     grafana_kubernetes_monitoring_feature_info{feature="clusterEvents", version="1.0.0"} 1
     grafana_kubernetes_monitoring_feature_info{feature="podLogs", method="volumes", version="1.0.0"} 1
@@ -1427,6 +1501,51 @@ data:
       namespace = "default"
     }
 ---
+# Source: k8s-monitoring/templates/beyla-config.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: k8smon-beyla
+  namespace: default
+  labels:
+    helm.sh/chart: beyla-1.9.9
+    app.kubernetes.io/name: beyla
+    app.kubernetes.io/instance: k8smon
+    app.kubernetes.io/version: "2.7.5"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/part-of: beyla
+    app.kubernetes.io/component: config
+data:
+  beyla-config.yml: |-
+    attributes:
+      kubernetes:
+        cluster_name: openshift-test
+        enable: true
+    discovery:
+      exclude_services:
+      - exe_path: .*alloy.*|.*otelcol.*|.*beyla.*
+      services:
+      - k8s_namespace: .
+    filter:
+      network:
+        k8s_dst_owner_name:
+          not_match: '{kube*,*jaeger-agent*,*prometheus*,*promtail*,*grafana-agent*}'
+        k8s_src_owner_name:
+          not_match: '{kube*,*jaeger-agent*,*prometheus*,*promtail*,*grafana-agent*}'
+    internal_metrics:
+      prometheus:
+        path: /internal/metrics
+        port: 9090
+    prometheus_export:
+      features:
+      - application
+      - network
+      - application_service_graph
+      - application_span
+      - application_host
+      path: /metrics
+      port: 9090
+---
 # Source: k8s-monitoring/charts/alloy-operator/templates/rbac/alloy-manager.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -1484,6 +1603,42 @@ rules:
   - apiGroups: ["rbac.authorization.k8s.io"]
     resources: ["clusterroles", "clusterrolebindings", "roles", "rolebindings"]
     verbs: ["*"]
+---
+# Source: k8s-monitoring/charts/autoInstrumentation/charts/beyla/templates/cluster-role.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: k8smon-beyla
+  labels:
+    helm.sh/chart: beyla-1.9.9
+    app.kubernetes.io/name: beyla
+    app.kubernetes.io/instance: k8smon
+    app.kubernetes.io/version: "2.7.5"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/part-of: beyla
+    app.kubernetes.io/component: rbac
+rules:
+  - apiGroups: [ "apps" ]
+    resources: [ "replicasets" ]
+    verbs: [ "list", "watch" ]
+  - apiGroups: [ "" ]
+    resources: [ "pods", "services", "nodes" ]
+    verbs: [ "list", "watch", "get" ]
+---
+# Source: k8s-monitoring/charts/autoInstrumentation/templates/platform_specific/openshift/beyla-scc.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: k8smon-beyla-scc
+rules:
+  - verbs:
+      - use
+    apiGroups:
+      - security.openshift.io
+    resources:
+      - securitycontextconstraints
+    resourceNames:
+      - k8smon-beyla
 ---
 # Source: k8s-monitoring/templates/platform_specific/openshift/alloy-scc.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -1568,6 +1723,42 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: k8smon-alloy-operator
+    namespace: default
+---
+# Source: k8s-monitoring/charts/autoInstrumentation/charts/beyla/templates/cluster-role-binding.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: k8smon-beyla
+  labels:
+    helm.sh/chart: beyla-1.9.9
+    app.kubernetes.io/name: beyla
+    app.kubernetes.io/instance: k8smon
+    app.kubernetes.io/version: "2.7.5"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/part-of: beyla
+    app.kubernetes.io/component: rbac
+subjects:
+  - kind: ServiceAccount
+    name: k8smon-beyla
+    namespace: default
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: k8smon-beyla
+---
+# Source: k8s-monitoring/charts/autoInstrumentation/templates/platform_specific/openshift/beyla-scc.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: k8smon-beyla-scc
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: k8smon-beyla-scc
+subjects:
+  - kind: ServiceAccount
+    name: k8smon-beyla
     namespace: default
 ---
 # Source: k8s-monitoring/templates/platform_specific/openshift/alloy-scc.yaml
@@ -1731,6 +1922,77 @@ spec:
   selector:
     app.kubernetes.io/name: windows-exporter
     app.kubernetes.io/instance: k8smon
+---
+# Source: k8s-monitoring/charts/autoInstrumentation/charts/beyla/templates/daemon-set.yaml
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: k8smon-beyla
+  namespace: default
+  labels:
+    helm.sh/chart: beyla-1.9.9
+    app.kubernetes.io/name: beyla
+    app.kubernetes.io/instance: k8smon
+    app.kubernetes.io/version: "2.7.5"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/part-of: beyla
+    app.kubernetes.io/component: workload
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: beyla
+      app.kubernetes.io/instance: k8smon
+  updateStrategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      annotations:
+        checksum/config: 01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b
+        k8s.grafana.com/job: default/beyla
+        k8s.grafana.com/logs.job: integrations/beyla
+      labels:
+        helm.sh/chart: beyla-1.9.9
+        app.kubernetes.io/name: beyla
+        app.kubernetes.io/instance: k8smon
+        app.kubernetes.io/version: "2.7.5"
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/part-of: beyla
+        app.kubernetes.io/component: workload
+    spec:
+      serviceAccountName: k8smon-beyla
+      hostPID: true
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      containers:
+        - name: beyla
+          image: docker.io/grafana/beyla:2.7.5
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            privileged: true
+          ports:
+          - name: metrics
+            containerPort: 9090
+            protocol: TCP
+          env:
+            - name: BEYLA_CONFIG_PATH
+              value: "/etc/beyla/config/beyla-config.yml"
+          volumeMounts:
+            - mountPath: /etc/beyla/config
+              name: beyla-config
+            - mountPath: /sys/fs/cgroup
+              name: cgroup
+      nodeSelector:
+        kubernetes.io/os: linux
+      tolerations:
+        - effect: NoSchedule
+          operator: Exists
+      volumes:
+        - name: beyla-config
+          configMap:
+            name: k8smon-beyla
+        - name: cgroup
+          hostPath:
+            path: /sys/fs/cgroup
 ---
 # Source: k8s-monitoring/charts/clusterMetrics/charts/windows-exporter/templates/daemonset.yaml
 apiVersion: apps/v1
@@ -2502,6 +2764,44 @@ spec:
     metricRelabelings: []
     relabelings: []
     tlsConfig: {}
+---
+# Source: k8s-monitoring/charts/autoInstrumentation/templates/platform_specific/openshift/beyla-scc.yaml
+apiVersion: security.openshift.io/v1
+kind: SecurityContextConstraints
+metadata:
+  name: k8smon-beyla
+allowHostDirVolumePlugin: true
+allowHostIPC: false
+allowHostNetwork: true
+allowHostPID: true
+allowHostPorts: false
+allowPrivilegeEscalation: true
+allowPrivilegedContainer: true
+allowedCapabilities: []
+defaultAddCapabilities: null
+defaultAllowPrivilegeEscalation: false
+forbiddenSysctls:
+  - '*'
+fsGroup:
+  type: RunAsAny
+groups: []
+priority: null
+readOnlyRootFilesystem: false
+requiredDropCapabilities: null
+runAsUser:
+  type: RunAsAny
+seLinuxContext:
+  type: RunAsAny
+seccompProfiles:
+  - runtime/default
+supplementalGroups:
+  type: RunAsAny
+users:
+  - system:serviceaccount:default:k8smon-beyla
+volumes:
+  - configMap
+  - hostPath
+  - projected
 ---
 # Source: k8s-monitoring/templates/platform_specific/openshift/alloy-scc.yaml
 apiVersion: security.openshift.io/v1
