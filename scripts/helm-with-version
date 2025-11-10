@@ -2,20 +2,33 @@
 set -euo pipefail
 
 usage() {
-    echo "USAGE: helm-with-version <helm-version> [helm-args...]"
+    echo "USAGE: helm-with-version [run|which|export] <helm-version> [helm-args...]"
     echo ""
-    echo "Download (if necessary) and execute the requested Helm client version while"
-    echo "forwarding any additional arguments to the Helm binary. Versions may be"
-    echo "provided with or without a leading \"v\" and are cached in \$HOME/.helm_cli_cache."
+    echo "Download (if necessary) and execute (run), print the binary path (which),"
+    echo "or emit a PATH export statement (export) for the requested Helm client."
+    echo "Versions may be provided with or without a leading \"v\" and are cached"
+    echo "in \$HOME/.helm_cli_cache."
     echo ""
     echo "Examples:"
-    echo "  helm-with-version 3.14.4 version"
-    echo "  helm-with-version v3.12.0 template k8smon charts/k8s-monitoring -f values.yaml"
+    echo "  helm-with-version run 3.14.4 version"
+    echo "  helm-with-version 3.12.0 template k8smon charts/k8s-monitoring -f values.yaml"
+    echo "  helm-with-version which v3.14.4"
+    echo "  eval \"\$(helm-with-version export 3.14.4)\""
 }
 
 if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
   usage
   exit 0
+fi
+
+subcommand="run"
+if [[ $# -ge 1 ]]; then
+  case "$1" in
+    run|which|export)
+      subcommand="$1"
+      shift
+      ;;
+  esac
 fi
 
 if [[ $# -lt 1 ]]; then
@@ -59,8 +72,6 @@ if [[ ! -x "${helm}" ]]; then
   cleanup() { rm -rf "${tempDir}"; }
   trap cleanup EXIT
 
-  mkdir -p "${cliCacheDir}/${helmVersion}/${os}-${arch}"
-
   echo "Downloading ${helmVersion}..." >&2
   curl -fSL "${tarballURL}" -o "${tempDir}/helm.tgz" || {
     echo "Failed to download ${tarballURL}" >&2
@@ -78,6 +89,7 @@ if [[ ! -x "${helm}" ]]; then
     exit 1
   fi
 
+  mkdir -p "$(dirname "${helm}")"
   mv "${extractedHelm}" "${helm}"
   chmod +x "${helm}"
 
@@ -85,4 +97,17 @@ if [[ ! -x "${helm}" ]]; then
   cleanup
 fi
 
-exec "${helm}" "$@"
+case "${subcommand}" in
+  which)
+    echo "${helm}"
+    exit 0
+    ;;
+  export)
+    helmDir=$(dirname "${helm}")
+    echo "export PATH=${helmDir}:\$PATH"
+    exit 0
+    ;;
+  run)
+    exec "${helm}" "$@"
+    ;;
+esac
