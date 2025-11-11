@@ -6,7 +6,7 @@
 
 {{- define "integrations.mysql.instance.validate" }}
 {{- if .instance.exporter.enabled }}
-  {{- if and (not .instance.exporter.dataSourceName) (not (and .instance.exporter.dataSource.auth.username .instance.exporter.dataSource.auth.password .instance.exporter.dataSource.host)) }}
+  {{- if and (not .instance.exporter.dataSourceName) (not .instance.exporter.dataSource.host) }}
     {{- $msg := list "" "Missing data source details for MySQL exporter." }}
     {{- $msg = append $msg "Please set:" }}
     {{- $msg = append $msg "integrations:" }}
@@ -20,9 +20,6 @@
     {{- $msg = append $msg "          dataSource:" }}
     {{- $msg = append $msg "            host: database.namespace.svc" }}
     {{- $msg = append $msg "            port: 3306" }}
-    {{- $msg = append $msg "            auth:" }}
-    {{- $msg = append $msg "              username: user" }}
-    {{- $msg = append $msg "              password: pass" }}
     {{- fail (join "\n" $msg) }}
   {{- end }}
 {{- end }}

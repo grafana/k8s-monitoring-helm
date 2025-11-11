@@ -56,6 +56,7 @@ clusterMetrics:
 
 autoInstrumentation:
   enabled: true
+  spanMetricsOnly: true
   beyla:
     tolerations:
       - key: protected-node

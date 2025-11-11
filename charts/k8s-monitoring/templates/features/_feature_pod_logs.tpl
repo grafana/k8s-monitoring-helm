@@ -8,9 +8,11 @@
 
 {{- define "features.podLogs.include" }}
 {{- if .Values.podLogs.enabled -}}
-{{- $extraDiscoveryRules := cat (include "features.integrations.logs.discoveryRules" .) "\n" .Values.podLogs.extraDiscoveryRules | trim }}
-{{- $extraLogProcessingStages := cat (include "features.integrations.logs.logProcessingStages" .) "\n" .Values.podLogs.extraLogProcessingStages | trim }}
-{{- $values := mergeOverwrite .Values.podLogs (dict "extraDiscoveryRules" $extraDiscoveryRules "extraLogProcessingStages" $extraLogProcessingStages) }}
+{{- $extraDiscoveryRulesFromIntegrations := cat (include "features.integrations.logs.discoveryRules" .) "\n" .Values.podLogs.extraDiscoveryRules | trim }}
+{{- $extraDiscoveryRulesFromDBO11y := cat (include "features.databaseObservability.logs.discoveryRules" .) "\n" .Values.podLogs.extraDiscoveryRules | trim }}
+{{- $extraLogProcessingStagesFromIntegrations := cat (include "features.integrations.logs.logProcessingStages" .) "\n" .Values.podLogs.extraLogProcessingStages | trim }}
+{{- $extraLogProcessingStagesFromDBO11y := cat (include "features.databaseObservability.logs.logProcessingStages" .) "\n" .Values.podLogs.extraLogProcessingStages | trim }}
+{{- $values := mergeOverwrite .Values.podLogs (dict "extraDiscoveryRules" (cat $extraDiscoveryRulesFromIntegrations $extraDiscoveryRulesFromDBO11y) "extraLogProcessingStages" (cat $extraLogProcessingStagesFromIntegrations $extraLogProcessingStagesFromDBO11y)) }}
 {{- $destinations := include "features.podLogs.destinations" . | fromYamlArray }}
 
 // Feature: Pod Logs

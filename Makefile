@@ -9,7 +9,13 @@ HELM_REQUIRED_MINOR_VERSION = 14
 
 .PHONY: check-helm-version
 check-helm-version:
-	@if [ "$(HELM_MAJOR_VERSION)" -lt "$(HELM_REQUIRED_MAJOR_VERSION)" ] || [ "$(HELM_MINOR_VERSION)" -lt "$(HELM_REQUIRED_MINOR_VERSION)" ]; then \
+	@if [ "$(HELM_MAJOR_VERSION)" -lt "$(HELM_REQUIRED_MAJOR_VERSION)" ]; then \
+		echo "This project requires Helm v$(HELM_REQUIRED_MAJOR_VERSION).$(HELM_REQUIRED_MINOR_VERSION)."; \
+		echo "You are currently using version v$(HELM_MAJOR_VERSION).$(HELM_MINOR_VERSION)."; \
+		echo "Please install the latest version of the Helm CLI."; \
+		echo "  https://helm.sh/docs/intro/install/"; \
+		exit 1; \
+	elif [ "$(HELM_MAJOR_VERSION)" -eq "$(HELM_REQUIRED_MAJOR_VERSION)" ] && [ "$(HELM_MINOR_VERSION)" -lt "$(HELM_REQUIRED_MINOR_VERSION)" ]; then \
 		echo "This project requires Helm v$(HELM_REQUIRED_MAJOR_VERSION).$(HELM_REQUIRED_MINOR_VERSION)."; \
 		echo "You are currently using version v$(HELM_MAJOR_VERSION).$(HELM_MINOR_VERSION)."; \
 		echo "Please install the latest version of the Helm CLI."; \
