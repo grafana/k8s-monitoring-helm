@@ -22,21 +22,6 @@ When `spanMetricsOnly: true` is set:
 3. Metrics are scraped by Alloy and sent to Prometheus
 4. **Full trace spans are NOT sent** to the OTLP receiver, even though Application Observability is enabled
 
-## What You Get
-
-With this configuration, you'll receive:
-- `http_server_request_duration_seconds` - Request duration histogram
-- `http_server_active_requests` - Active requests gauge
-- `http_client_request_duration_seconds` - Client request duration
-- Service graph metrics showing service-to-service communication
-- Application-level metrics without needing code changes
-
-## What You Don't Get
-
-- Full distributed traces with span details
-- Trace IDs for correlating requests across services
-- Detailed span attributes and events
-
 ## When to Use This
 
 Choose `spanMetricsOnly: true` when:
