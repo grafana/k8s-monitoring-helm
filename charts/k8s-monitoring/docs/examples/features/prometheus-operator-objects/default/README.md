@@ -5,7 +5,7 @@
 # Prometheus Operator Objects
 
 This example demonstrates how to enable the Prometheus Operator Objects feature to discover and gather metrics from
-PodMonitors, ServiceMonitors, and Probes in your Kubernetes cluster.
+PodMonitors, Probes, ScrapeConfigs, and ServiceMonitors in your Kubernetes cluster.
 
 ## Values
 
