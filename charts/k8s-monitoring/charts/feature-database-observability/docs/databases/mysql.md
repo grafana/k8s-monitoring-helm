@@ -2,7 +2,7 @@
 
 ## Values
 
-### Datasource Connection
+### Data Source Connection
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
@@ -17,11 +17,12 @@
 | dataSource.protocol | string | `""` | The MySQL protocol type. |
 | dataSource.rawString | string | `""` | The data source string to use for the MySQL Exporter. |
 
-### Exporter Settings
+### MySQL Exporter
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | exporter.collectors | object | `{"heartbeat":{"enabled":true},"mysqlUser":{"enabled":true,"privileges":false}}` | The list of collectors to enable for the MySQL Exporter ([Documentation](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.exporter.mysql/#supported-collectors)). |
+| exporter.enabled | bool | `true` | Whether to database statistic metrics. |
 
 ### General Settings
 
@@ -59,6 +60,39 @@
 | metrics.scrapeInterval | string | `60s` | How frequently to scrape metrics from MySQL Exporter. |
 | metrics.scrapeTimeout | string | `10s` | The timeout for scraping metrics from MySQL Exporter. |
 
+### Query Analysis
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| queryAnalysis.allowUpdatePerformanceSchemaSettings | bool | `false` | Whether to allow updates to performance_schema settings in any collector. |
+| queryAnalysis.enabled | bool | `true` | Whether to gather table, schema, and query information from the database. |
+
+### Query Analysis - Collectors
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| queryAnalysis.collectors.explainPlans.collectInterval | string | `"1m"` | How frequently to collect explain plans information from the database. |
+| queryAnalysis.collectors.explainPlans.enabled | bool | `false` | Enable collection of explain plans information. |
+| queryAnalysis.collectors.explainPlans.excludeSchemas | list | `[]` | List of schemas to exclude from explain plan collection. |
+| queryAnalysis.collectors.explainPlans.initialLookback | string | `"24h"` | How far back to look for explain plan queries on the first collection interval. |
+| queryAnalysis.collectors.explainPlans.perCollectRatio | float | `1` | Ratio of explain plan queries to collect per collect interval. |
+| queryAnalysis.collectors.locks.collectInterval | string | `"1m"` | How frequently to collect lock information from the database. |
+| queryAnalysis.collectors.locks.enabled | bool | `false` | Enable collection of lock information. |
+| queryAnalysis.collectors.locks.threshold | string | `"1s"` | Threshold for locks to be considered slow. Locks that exceed this duration are logged. |
+| queryAnalysis.collectors.queryDetails.collectInterval | string | `"1m"` | How frequently to collect query information from the database. |
+| queryAnalysis.collectors.queryDetails.enabled | bool | `true` | Enable collection of query information. |
+| queryAnalysis.collectors.querySamples.autoEnableSetupConsumers | bool | `false` | Whether to enable some specific performance_schema.setup_consumers settings. |
+| queryAnalysis.collectors.querySamples.collectInterval | string | `"1m"` | How frequently to collect query samples from the database. |
+| queryAnalysis.collectors.querySamples.enabled | bool | `true` | Enable collection of query samples. |
+| queryAnalysis.collectors.querySamples.setupConsumersCheckInterval | string | `"1h"` | How frequently to check if setup_consumers are correctly enabled. |
+| queryAnalysis.collectors.schemaDetails.cacheEnabled | bool | `false` | Whether to enable caching of table definitions. |
+| queryAnalysis.collectors.schemaDetails.cacheSize | int | `256` | Table definitions cache size. |
+| queryAnalysis.collectors.schemaDetails.cacheTTL | string | `"10m"` | Table definitions cache TTL. |
+| queryAnalysis.collectors.schemaDetails.collectInterval | string | `"1m"` | How frequently to collect schemas and tables from information_schema. |
+| queryAnalysis.collectors.schemaDetails.enabled | bool | `true` | Enable collection of schemas and tables from information_schema. |
+| queryAnalysis.collectors.setupConsumers.collectInterval | string | `"1m"` | How frequently to collect performance_schema.setup_consumers information from the database. |
+| queryAnalysis.collectors.setupConsumers.enabled | bool | `true` | Enable collection of performance_schema.setup_consumers information. |
+
 ### Secret
 
 | Key | Type | Default | Description |
@@ -72,28 +106,4 @@
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| exporter.enabled | bool | `true` |  |
-| queryAnalysis.allowUpdatePerformanceSchemaSettings | bool | `false` |  |
-| queryAnalysis.collectors.explainPlans.collectInterval | string | `"1m"` |  |
-| queryAnalysis.collectors.explainPlans.enabled | bool | `false` |  |
-| queryAnalysis.collectors.explainPlans.excludeSchemas | list | `[]` |  |
-| queryAnalysis.collectors.explainPlans.initialLookback | string | `"24h"` |  |
-| queryAnalysis.collectors.explainPlans.perCollectRatio | float | `1` |  |
-| queryAnalysis.collectors.locks.collectInterval | string | `"1m"` |  |
-| queryAnalysis.collectors.locks.enabled | bool | `false` |  |
-| queryAnalysis.collectors.locks.threshold | string | `"1s"` |  |
-| queryAnalysis.collectors.queryDetails.collectInterval | string | `"1m"` |  |
-| queryAnalysis.collectors.queryDetails.enabled | bool | `true` |  |
-| queryAnalysis.collectors.querySamples.autoEnableSetupConsumers | bool | `false` |  |
-| queryAnalysis.collectors.querySamples.collectInterval | string | `"1m"` |  |
 | queryAnalysis.collectors.querySamples.disableQueryRedaction | bool | `false` |  |
-| queryAnalysis.collectors.querySamples.enabled | bool | `true` |  |
-| queryAnalysis.collectors.querySamples.setupConsumersCheckInterval | string | `"1h"` |  |
-| queryAnalysis.collectors.schemaDetails.cacheEnabled | bool | `false` |  |
-| queryAnalysis.collectors.schemaDetails.cacheSize | int | `256` |  |
-| queryAnalysis.collectors.schemaDetails.cacheTTL | string | `"10m"` |  |
-| queryAnalysis.collectors.schemaDetails.collectInterval | string | `"1m"` |  |
-| queryAnalysis.collectors.schemaDetails.enabled | bool | `true` |  |
-| queryAnalysis.collectors.setupConsumers.collectInterval | string | `"1m"` |  |
-| queryAnalysis.collectors.setupConsumers.enabled | bool | `true` |  |
-| queryAnalysis.enabled | bool | `true` |  |
