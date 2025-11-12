@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+*   Add the ability to define the sending queue for otlp destinations (@petewall)
+*   Add the ability to customize the sending queue for OTLP destinations (@petewall)
+
 ## 3.5.6
 
 *   Add the ability to set resources for the Helm hooks (@petewall)
