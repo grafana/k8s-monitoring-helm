@@ -18,7 +18,7 @@ discovery.kubernetes "kube_controller_manager" {
 discovery.relabel "kube_controller_manager" {
   targets = discovery.kubernetes.kube_controller_manager.targets
   rule {
-    source_labels = ["__address__"]
+    source_labels = ["__meta_kubernetes_pod_ip"]
     replacement = "$1:{{ .Values.kubeControllerManager.port }}"
     target_label = "__address__"
   }

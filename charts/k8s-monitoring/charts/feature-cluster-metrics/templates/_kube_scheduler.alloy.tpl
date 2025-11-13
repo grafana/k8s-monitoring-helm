@@ -18,7 +18,7 @@ discovery.kubernetes "kube_scheduler" {
 discovery.relabel "kube_scheduler" {
   targets = discovery.kubernetes.kube_scheduler.targets
   rule {
-    source_labels = ["__address__"]
+    source_labels = ["__meta_kubernetes_pod_ip"]
     replacement = "$1:{{ .Values.kubeScheduler.port }}"
     target_label = "__address__"
   }
