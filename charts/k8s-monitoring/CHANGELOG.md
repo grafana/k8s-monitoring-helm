@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+*   Fix port assignment on the etcd integration and several cluster metrics control plane services (@petewall)
+*   Fix MySQL integration (@petewall)
+
 ## 3.5.6
 
 *   Add the ability to set resources for the Helm hooks (@petewall)
