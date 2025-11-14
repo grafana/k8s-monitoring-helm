@@ -71,7 +71,7 @@ discovery.relabel {{ include "helper.alloy_name" .name | quote }} {
 
   // set the metrics port
   rule {
-    source_labels = ["__address__"]
+    source_labels = ["__meta_kubernetes_pod_ip"]
     replacement = "$1:{{ .metrics.port }}"
     target_label = "__address__"
   }

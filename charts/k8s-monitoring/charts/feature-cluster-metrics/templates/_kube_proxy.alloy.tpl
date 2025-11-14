@@ -18,7 +18,7 @@ discovery.kubernetes "kube_proxy" {
 discovery.relabel "kube_proxy" {
   targets = discovery.kubernetes.kube_proxy.targets
   rule {
-    source_labels = ["__address__"]
+    source_labels = ["__meta_kubernetes_pod_ip"]
     replacement = "$1:{{ .Values.kubeProxy.port }}"
     target_label = "__address__"
   }
