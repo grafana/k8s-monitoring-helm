@@ -3216,7 +3216,6 @@ spec:
   selector:
     app.kubernetes.io/name: alloy-events
     app.kubernetes.io/instance: k8smon
-  internalTrafficPolicy: Cluster
   ports:
     - name: http-metrics
       port: 12345
@@ -3242,7 +3241,6 @@ spec:
   selector:
     app.kubernetes.io/name: alloy-logs
     app.kubernetes.io/instance: k8smon
-  internalTrafficPolicy: Cluster
   ports:
     - name: http-metrics
       port: 12345
@@ -3268,7 +3266,6 @@ spec:
   selector:
     app.kubernetes.io/name: alloy-profiles
     app.kubernetes.io/instance: k8smon
-  internalTrafficPolicy: Cluster
   ports:
     - name: http-metrics
       port: 12345
@@ -3359,7 +3356,6 @@ spec:
   selector:
     app.kubernetes.io/name: alloy
     app.kubernetes.io/instance: k8smon
-  internalTrafficPolicy: Cluster
   ports:
     - name: http-metrics
       port: 12345
@@ -3492,7 +3488,6 @@ spec:
   selector:
     app.kubernetes.io/name: alloy
     app.kubernetes.io/instance: k8smon
-  internalTrafficPolicy: Cluster
   ports:
     - name: http-metrics
       port: 12345
@@ -3545,7 +3540,6 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
 spec:
-  minReadySeconds: 10
   selector:
     matchLabels:
       app.kubernetes.io/name: alloy-logs
@@ -3634,7 +3628,6 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: alloy
 spec:
-  minReadySeconds: 10
   selector:
     matchLabels:
       app.kubernetes.io/name: alloy-profiles
@@ -3850,7 +3843,6 @@ metadata:
     app.kubernetes.io/part-of: alloy
 spec:
   replicas: 1
-  minReadySeconds: 10
   selector:
     matchLabels:
       app.kubernetes.io/name: alloy-events
@@ -4108,7 +4100,7 @@ spec:
             - name: PROMETHEUS_SERVER_ENDPOINT
               value: "http://prometheus-server.prometheus.svc.cluster.local:9090"
             - name: INSECURE_SKIP_VERIFY
-              value: "false"
+              value: "true"
             - name: CLUSTER_ID
               value: "default-cluster"
             - name: DB_BASIC_AUTH_USERNAME
@@ -4144,8 +4136,6 @@ spec:
               value: "AIzaSyD29bGxmHAVEOBYtgd8sYM2gM2ekfxQX4U"
             - name: CURRENT_CLUSTER_ID_FILTER_ENABLED
               value: "true"
-            - name: INSECURE_SKIP_VERIFY
-              value: "true"
             - name: PROM_CLUSTER_ID_LABEL
               value: "cluster"
 ---
@@ -4165,7 +4155,6 @@ metadata:
 spec:
   replicas: 2
   podManagementPolicy: Parallel
-  minReadySeconds: 10
   serviceName: k8smon-alloy
   selector:
     matchLabels:

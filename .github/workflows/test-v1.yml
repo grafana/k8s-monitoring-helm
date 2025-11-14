@@ -47,6 +47,8 @@ jobs:
         id: setup-helm
         uses: azure/setup-helm@1a275c3b69536ee54be43f2070a358922e12c8d4  # v4.3.1
         continue-on-error: true
+        with:
+          version: 4.0.0
 
       - name: Set up Homebrew
         if: ${{ steps.setup-helm.outcome == 'failure' }}
@@ -74,8 +76,12 @@ jobs:
           fetch-depth: 0  # Required for `ct lint` to work
           persist-credentials: 'false'
 
-      - name: Install Helm
+      - name: Set up Helm
+        id: setup-helm
         uses: azure/setup-helm@1a275c3b69536ee54be43f2070a358922e12c8d4  # v4.3.1
+        continue-on-error: true
+        with:
+          version: 4.0.0
 
       - name: Set up chart-testing
         uses: helm/chart-testing-action@6ec842c01de15ebb84c8627d2744a0c2f2755c9f  # v2.8.0
@@ -154,7 +160,19 @@ jobs:
           persist-credentials: 'false'
 
       - name: Set up Helm
+        id: setup-helm
         uses: azure/setup-helm@1a275c3b69536ee54be43f2070a358922e12c8d4  # v4.3.1
+        continue-on-error: true
+        with:
+          version: 4.0.0
+
+      - name: Set up Homebrew
+        if: ${{ steps.setup-helm.outcome == 'failure' }}
+        uses: Homebrew/actions/setup-homebrew@6608395265063b0b4534ee5672930fa31cd45f94
+
+      - name: Install Helm
+        if: ${{ steps.setup-helm.outcome == 'failure' }}
+        run: brew install helm
 
       - name: Install Flux CLI
         uses: fluxcd/flux2/action@b6e76ca2534f76dcb8dd94fb057cdfa923c3b641  # v2.7.3
