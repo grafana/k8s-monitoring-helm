@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 3.5.7
+
 *   Add the ability to set `scrape_native_histograms` for Prometheus scrape configs (@SeamusGrafana)
 *   Fix port assignment on the etcd integration and several cluster metrics control plane services (@petewall)
 *   Fix MySQL integration (@petewall)
