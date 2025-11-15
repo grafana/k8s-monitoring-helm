@@ -1,0 +1,34 @@
+# Example: Auto-Instrumentation with Span Metrics Only
+
+This example demonstrates how to use Beyla for automatic instrumentation while collecting only span metrics (RED metrics) without exporting full distributed traces.
+
+## Use Case
+
+This configuration is useful when you want:
+
+*   **Metrics from auto-instrumented applications** (request rate, error rate, duration)
+*   **Service graph metrics** showing relationships between services
+*   **Lower data volume** by avoiding full trace exports
+*   **Cost optimization** when trace storage is expensive
+
+## How It Works
+
+When `spanMetricsOnly: true` is set:
+
+1.  Beyla automatically instruments applications using eBPF
+2.  Beyla generates span metrics (RED metrics) from HTTP/gRPC calls
+3.  Metrics are scraped by Alloy and sent to Prometheus
+4.  **Full trace spans are NOT sent** to the OTLP receiver, even though Application Observability is enabled
+
+## When to Use This
+
+Choose `spanMetricsOnly: true` when:
+
+*   You want observability without trace storage costs
+*   You need RED metrics but not detailed trace analysis
+*   You're instrumenting high-throughput services where full tracing would be too expensive
+*   You already have tracing from other sources and only need Beyla for metrics
+
+## Alternative
+
+If you need full traces from Beyla, set `spanMetricsOnly: false` (the default) or omit the field entirely. See the [beyla-metrics-and-traces example](../beyla-metrics-and-traces/) for that configuration.

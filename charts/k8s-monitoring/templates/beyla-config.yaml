@@ -18,7 +18,7 @@
 
 {{- $grpcReceiverEndpoint := include "features.applicationObservability.receiver.grpc" . | trim }}
 {{- $httpReceiverEndpoint := include "features.applicationObservability.receiver.http" . | trim }}
-{{- if or $grpcReceiverEndpoint $httpReceiverEndpoint }}
+{{- if and (or $grpcReceiverEndpoint $httpReceiverEndpoint) (not .Values.autoInstrumentation.spanMetricsOnly) }}
   {{- $otelTracesExport := dict "endpoint" ($grpcReceiverEndpoint | default $httpReceiverEndpoint) }}
   {{- $overrides = merge $overrides (dict "otel_traces_export" $otelTracesExport) }}
 {{- end }}
