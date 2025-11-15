@@ -89,6 +89,7 @@ declare "cluster_metrics" {
     scrape_timeout = "10s"
     scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
     scrape_classic_histograms = false
+    scrape_native_histograms = false
     bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
 
     tls_config {
@@ -223,6 +224,7 @@ declare "cluster_metrics" {
     scrape_timeout = "10s"
     scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
     scrape_classic_histograms = false
+    scrape_native_histograms = false
     scheme = "http"
     bearer_token_file = ""
     tls_config {
@@ -411,6 +413,7 @@ declare "cluster_metrics" {
     scrape_timeout = "10s"
     scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
     scrape_classic_histograms = false
+    scrape_native_histograms = false
     scheme = "http"
     bearer_token_file = ""
     tls_config {
@@ -1190,6 +1193,11 @@ declare "alloy_integration" {
       optional = true
     }
 
+    argument "scrape_native_histograms" {
+      comment = "Whether to scrape native histograms (default: false)."
+      optional = true
+    }
+
     argument "max_cache_size" {
       comment = "The maximum number of elements to hold in the relabeling cache (default: 100000).  This should be at least 2x-5x your largest scrape target or samples appended rate."
       optional = true
@@ -1208,6 +1216,7 @@ declare "alloy_integration" {
       scrape_timeout = coalesce(argument.scrape_timeout.value, "10s")
       scrape_protocols = argument.scrape_protocols.value
       scrape_classic_histograms = argument.scrape_classic_histograms.value
+      scrape_native_histograms = argument.scrape_native_histograms.value
 
       clustering {
         enabled = coalesce(argument.clustering.value, false)
@@ -1315,6 +1324,7 @@ declare "alloy_integration" {
     scrape_timeout = "10s"
     scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
     scrape_classic_histograms = false
+    scrape_native_histograms = false
     max_cache_size = 100000
     forward_to = argument.metrics_destinations.value
   }
@@ -1334,6 +1344,7 @@ declare "alloy_integration" {
     scrape_timeout = "10s"
     scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
     scrape_classic_histograms = false
+    scrape_native_histograms = false
     max_cache_size = 100000
     forward_to = argument.metrics_destinations.value
   }
@@ -1544,6 +1555,11 @@ declare "grafana_integration" {
       optional = true
     }
 
+    argument "scrape_native_histograms" {
+      comment = "Whether to scrape native histograms (default: false)."
+      optional = true
+    }
+
     argument "max_cache_size" {
       comment = "The maximum number of elements to hold in the relabeling cache (default: 100000).  This should be at least 2x-5x your largest scrape target or samples appended rate."
       optional = true
@@ -1562,6 +1578,7 @@ declare "grafana_integration" {
       scrape_timeout = coalesce(argument.scrape_timeout.value, "10s")
       scrape_protocols = argument.scrape_protocols.value
       scrape_classic_histograms = argument.scrape_classic_histograms.value
+      scrape_native_histograms = argument.scrape_native_histograms.value
 
       clustering {
         enabled = coalesce(argument.clustering.value, false)
@@ -1614,6 +1631,7 @@ declare "grafana_integration" {
     scrape_timeout = "10s"
     scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
     scrape_classic_histograms = false
+    scrape_native_histograms = false
     max_cache_size = 100000
     forward_to = argument.metrics_destinations.value
   }
@@ -1831,6 +1849,11 @@ declare "loki_integration" {
       optional = true
     }
 
+    argument "scrape_native_histograms" {
+      comment = "Whether to scrape native histograms (default: false)."
+      optional = true
+    }
+
     argument "max_cache_size" {
       comment = "The maximum number of elements to hold in the relabeling cache (default: 100000).  This should be at least 2x-5x your largest scrape target or samples appended rate."
       optional = true
@@ -1849,6 +1872,7 @@ declare "loki_integration" {
       scrape_timeout = coalesce(argument.scrape_timeout.value, "10s")
       scrape_protocols = argument.scrape_protocols.value
       scrape_classic_histograms = argument.scrape_classic_histograms.value
+      scrape_native_histograms = argument.scrape_native_histograms.value
 
       clustering {
         enabled = coalesce(argument.clustering.value, false)
@@ -1911,6 +1935,7 @@ declare "loki_integration" {
     scrape_timeout = "10s"
     scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
     scrape_classic_histograms = false
+    scrape_native_histograms = false
     max_cache_size = 100000
     forward_to = argument.metrics_destinations.value
   }
@@ -2126,6 +2151,11 @@ declare "mimir_integration" {
       optional = true
     }
 
+    argument "scrape_native_histograms" {
+      comment = "Whether to scrape native histograms (default: false)."
+      optional = true
+    }
+
     argument "max_cache_size" {
       comment = "The maximum number of elements to hold in the relabeling cache (default: 100000).  This should be at least 2x-5x your largest scrape target or samples appended rate."
       optional = true
@@ -2144,6 +2174,7 @@ declare "mimir_integration" {
       scrape_timeout = coalesce(argument.scrape_timeout.value, "10s")
       scrape_protocols = argument.scrape_protocols.value
       scrape_classic_histograms = argument.scrape_classic_histograms.value
+      scrape_native_histograms = argument.scrape_native_histograms.value
 
       clustering {
         enabled = coalesce(argument.clustering.value, false)
@@ -2206,6 +2237,7 @@ declare "mimir_integration" {
     scrape_timeout = "10s"
     scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
     scrape_classic_histograms = false
+    scrape_native_histograms = false
     max_cache_size = 100000
     forward_to = argument.metrics_destinations.value
   }

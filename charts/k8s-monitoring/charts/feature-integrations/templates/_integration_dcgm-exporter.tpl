@@ -123,6 +123,11 @@ declare "dcgm_exporter_integration" {
       optional = true
     }
 
+    argument "scrape_native_histograms" {
+      comment = "Whether to scrape native histograms (default: false)."
+      optional = true
+    }
+
     argument "max_cache_size" {
       comment = "The maximum number of elements to hold in the relabeling cache (default: 100000).  This should be at least 2x-5x your largest scrape target or samples appended rate."
       optional = true
@@ -140,6 +145,7 @@ declare "dcgm_exporter_integration" {
       scrape_timeout = coalesce(argument.scrape_timeout.value, "10s")
       scrape_protocols = argument.scrape_protocols.value
       scrape_classic_histograms = argument.scrape_classic_histograms.value
+      scrape_native_histograms = argument.scrape_native_histograms.value
 
       clustering {
         enabled = coalesce(argument.clustering.value, false)
@@ -279,6 +285,7 @@ dcgm_exporter_integration_scrape  {{ include "helper.alloy_name" .name | quote }
   scrape_timeout = {{ .metrics.scrapeTimeout | default .scrapeTimeout | default $.Values.global.scrapeTimeout | quote }}
   scrape_protocols = {{ $.Values.global.scrapeProtocols | toJson }}
   scrape_classic_histograms = {{ $.Values.global.scrapeClassicHistograms }}
+  scrape_native_histograms = {{ $.Values.global.scrapeNativeHistograms }}
   max_cache_size = {{ .metrics.maxCacheSize | default $.Values.global.maxCacheSize | int }}
   forward_to = argument.metrics_destinations.value
 }

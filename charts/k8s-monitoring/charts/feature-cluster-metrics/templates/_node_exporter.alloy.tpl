@@ -149,6 +149,7 @@ prometheus.scrape "node_exporter" {
   scrape_timeout = {{ (index .Values "node-exporter").scrapeTimeout | default .Values.global.scrapeTimeout | quote }}
   scrape_protocols = {{ .Values.global.scrapeProtocols | toJson }}
   scrape_classic_histograms = {{ .Values.global.scrapeClassicHistograms }}
+  scrape_native_histograms = {{ .Values.global.scrapeNativeHistograms }}
   scheme = {{ (index .Values "node-exporter").service.scheme | quote }}
   bearer_token_file = {{ (index .Values "node-exporter").bearerTokenFile | quote }}
   tls_config {
