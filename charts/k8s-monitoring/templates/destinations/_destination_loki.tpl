@@ -18,6 +18,10 @@ loki.write {{ include "helper.alloy_name" .name | quote }} {
 {{- else }}
     url = {{ .url | quote }} 
 {{- end }}
+{{- if .timeout }}
+    remote_timeout = {{ .timeout | quote }}
+{{- end }}
+    retry_on_http_429 = {{ .retryOnHttp429 }}
 {{- if .batchSize }}
     batch_size = {{ .batchSize | quote }}
 {{- end }}
