@@ -2,9 +2,7 @@
 {{- $metricIntegrations := include "feature.integrations.configured.metrics" . | fromYamlArray }}
 {{- $metricsConfig := "" }}
 {{- range $integration := $metricIntegrations }}
-  {{- if (index $.Values $integration).instances }}
-    {{- $metricsConfig = cat $metricsConfig (include (printf "integrations.%s.module.metrics" $integration) $) }}
-  {{- end }}
+  {{- $metricsConfig = cat $metricsConfig (include (printf "integrations.%s.module.metrics" $integration) $) }}
 {{- end }}
 {{- $metricsConfig = regexReplaceAll `[ \t]+(\r?\n)` $metricsConfig "\n" }}
 

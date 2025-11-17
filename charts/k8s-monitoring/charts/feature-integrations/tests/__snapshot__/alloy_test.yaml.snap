@@ -299,17 +299,19 @@ can create multiple Alloy configs with a different allowed metrics:
           }
         }
 
+
+
         alloy_integration_discovery "alloy_one" {
           port_name = "http-metrics"
           label_selectors = ["app.kubernetes.io/name=alloy-one"]
         }
 
-        alloy_integration_scrape  "alloy_one" {
+        alloy_integration_scrape "alloy_one" {
           targets = alloy_integration_discovery.alloy_one.output
           job_label = "integrations/alloy"
           clustering = true
           drop_metrics = "alloy_example_metric"
-          scrape_interval = "60s"
+          scrape_interval = "2m"
           scrape_timeout = "10s"
           scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
           scrape_classic_histograms = false
@@ -318,12 +320,13 @@ can create multiple Alloy configs with a different allowed metrics:
           forward_to = argument.metrics_destinations.value
         }
 
+
         alloy_integration_discovery "alloy_two" {
           port_name = "http-metrics"
           label_selectors = ["app.kubernetes.io/name=alloy-two"]
         }
 
-        alloy_integration_scrape  "alloy_two" {
+        alloy_integration_scrape "alloy_two" {
           targets = alloy_integration_discovery.alloy_two.output
           job_label = "integrations/alloy"
           clustering = true
@@ -337,17 +340,18 @@ can create multiple Alloy configs with a different allowed metrics:
           forward_to = argument.metrics_destinations.value
         }
 
+
         alloy_integration_discovery "alloy_three" {
           port_name = "http-metrics"
           label_selectors = ["app.kubernetes.io/name=alloy-three"]
         }
 
-        alloy_integration_scrape  "alloy_three" {
+        alloy_integration_scrape "alloy_three" {
           targets = alloy_integration_discovery.alloy_three.output
           job_label = "integrations/alloy"
           clustering = true
           keep_metrics = "up|scrape_samples_scraped|alloy_example_metric"
-          scrape_interval = "60s"
+          scrape_interval = "30s"
           scrape_timeout = "10s"
           scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
           scrape_classic_histograms = false
@@ -564,7 +568,7 @@ should create the Alloy config:
             scrape_timeout = coalesce(argument.scrape_timeout.value, "10s")
             scrape_protocols = argument.scrape_protocols.value
             scrape_classic_histograms = argument.scrape_classic_histograms.value
-      scrape_native_histograms = argument.scrape_native_histograms.value
+            scrape_native_histograms = argument.scrape_native_histograms.value
 
             clustering {
               enabled = coalesce(argument.clustering.value, false)
@@ -657,12 +661,14 @@ should create the Alloy config:
           }
         }
 
+
+
         alloy_integration_discovery "alloy_metrics" {
           port_name = "http-metrics"
           label_selectors = ["app.kubernetes.io/name=alloy-metrics"]
         }
 
-        alloy_integration_scrape  "alloy_metrics" {
+        alloy_integration_scrape "alloy_metrics" {
           targets = alloy_integration_discovery.alloy_metrics.output
           job_label = "integrations/alloy"
           clustering = true
