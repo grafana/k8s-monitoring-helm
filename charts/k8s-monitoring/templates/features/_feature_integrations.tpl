@@ -89,6 +89,6 @@
   {{- fail (join "\n" $msg) }}
 {{- end }}
 
-{{- include "feature.integrations.validate" (dict "Values" $.Values.integrations) }}
+{{- include "feature.integrations.validate" (dict "Values" .Values.integrations "Files" $.Subcharts.integrations.Files) }}
 {{- end }}
 {{- end }}

@@ -243,7 +243,6 @@ declare "alloy_integration" {
       }
     }
   }
-{{/*  {{- fail (printf "%s" ($.Values.alloy.instances | toYaml)) }}*/}}
   {{- range $instance := $.Values.alloy.instances }}
 {{/*    {{- include "integrations.alloy.include.metrics" (deepCopy $ | merge (dict "instance" $instance)) | nindent 2 }}*/}}
     {{- include "integrations.alloy.include.metrics" (dict "Chart" $.Chart "Files" $.Files "Release" $.Release "Values" $.Values "instance" $instance) | nindent 2 }}
@@ -299,12 +298,17 @@ alloy_integration_scrape {{ include "helper.alloy_name" .name | quote }} {
 {{- end }}
 {{- end }}
 
+{{/* Validates the Alloy integration instances */}}
+{{/* Inputs: . (Integration values) */}}
 {{- define "integrations.alloy.validate" }}
   {{- range $instance := $.Values.alloy.instances }}
-    {{- include "integrations.alloy.instance.validate" (merge $ (dict "instance" $instance)) | nindent 2 }}
+    {{- $defaultValues := fromYaml ($.Files.Get "integrations/alloy-values.yaml") }}
+    {{- include "integrations.alloy.instance.validate" (dict "instance" (mergeOverwrite $defaultValues $instance (dict "type" "integration.alloy"))) | nindent 2 }}
   {{- end }}
 {{- end }}
 
+{{/* Validates a single Alloy integration instance */}}
+{{/* Inputs: instance (Alloy integration instance) */}}
 {{- define "integrations.alloy.instance.validate" }}
   {{- if not .instance.labelSelectors }}
     {{- $msg := list "" "The Alloy integration requires a label selector" }}

@@ -1,6 +1,7 @@
 {{- define "integrations.mimir.validate" }}
   {{- range $instance := $.Values.mimir.instances }}
-    {{- include "integrations.mimir.instance.validate" (merge $ (dict "instance" $instance)) | nindent 2 }}
+    {{- $defaultValues := fromYaml ($.Files.Get "integrations/mimir-values.yaml") }}
+    {{- include "integrations.mimir.instance.validate" (dict "instance" (mergeOverwrite $defaultValues $instance (dict "type" "integration.mimir"))) | nindent 2 }}
   {{- end }}
 {{- end }}
 

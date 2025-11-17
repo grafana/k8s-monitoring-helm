@@ -1,6 +1,7 @@
 {{- define "integrations.tempo.validate" }}
   {{- range $instance := $.Values.tempo.instances }}
-    {{- include "integrations.tempo.instance.validate" (merge $ (dict "instance" $instance)) | nindent 2 }}
+    {{- $defaultValues := fromYaml ($.Files.Get "integrations/tempo-values.yaml") }}
+    {{- include "integrations.tempo.instance.validate" (dict "instance" (mergeOverwrite $defaultValues $instance (dict "type" "integration.tempo"))) | nindent 2 }}
   {{- end }}
 {{- end }}
 

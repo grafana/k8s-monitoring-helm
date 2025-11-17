@@ -1,6 +1,7 @@
 {{- define "integrations.loki.validate" }}
   {{- range $instance := $.Values.loki.instances }}
-    {{- include "integrations.loki.instance.validate" (merge $ (dict "instance" $instance)) | nindent 2 }}
+    {{- $defaultValues := fromYaml ($.Files.Get "integrations/loki-values.yaml") }}
+    {{- include "integrations.loki.instance.validate" (dict "instance" (mergeOverwrite $defaultValues $instance (dict "type" "integration.loki"))) | nindent 2 }}
   {{- end }}
 {{- end }}
 

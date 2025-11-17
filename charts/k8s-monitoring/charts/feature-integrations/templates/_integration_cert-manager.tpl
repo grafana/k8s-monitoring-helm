@@ -179,7 +179,8 @@ prometheus.relabel {{ include "helper.alloy_name" .name | quote }} {
 
 {{- define "integrations.cert-manager.validate" }}
   {{- range $instance := (index $.Values "cert-manager").instances }}
-    {{- include "integrations.cert-manager.instance.validate" (merge $ (dict "instance" $instance)) | nindent 2 }}
+    {{- $defaultValues := fromYaml ($.Files.Get "integrations/cert-manager-values.yaml") }}
+    {{- include "integrations.cert-manager.instance.validate" (dict "instance" (mergeOverwrite $defaultValues $instance (dict "type" "integration.cert-manager"))) | nindent 2 }}
   {{- end }}
 {{- end }}
 
