@@ -319,58 +319,17 @@ data:
         }
       }
     
-    
-      alloy_integration_discovery "alloy_one" {
+      alloy_integration_discovery "alloy_metrics" {
         port_name = "http-metrics"
-        label_selectors = ["app.kubernetes.io/name=alloy-one"]
+        label_selectors = ["app.kubernetes.io/name=alloy-metrics"]
       }
     
-      alloy_integration_scrape "alloy_one" {
-        targets = alloy_integration_discovery.alloy_one.output
-        job_label = "integrations/alloy"
-        clustering = true
-        drop_metrics = "alloy_example_metric"
-        scrape_interval = "2m"
-        scrape_timeout = "10s"
-        scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
-        scrape_classic_histograms = false
-        scrape_native_histograms = false
-        max_cache_size = 100000
-        forward_to = argument.metrics_destinations.value
-      }
-    
-    
-      alloy_integration_discovery "alloy_two" {
-        port_name = "http-metrics"
-        label_selectors = ["app.kubernetes.io/name=alloy-two"]
-      }
-    
-      alloy_integration_scrape "alloy_two" {
-        targets = alloy_integration_discovery.alloy_two.output
+      alloy_integration_scrape "alloy_metrics" {
+        targets = alloy_integration_discovery.alloy_metrics.output
         job_label = "integrations/alloy"
         clustering = true
         keep_metrics = "up|scrape_samples_scraped|alloy_build_info|alloy_component_controller_running_components|alloy_component_dependencies_wait_seconds|alloy_component_dependencies_wait_seconds_bucket|alloy_component_evaluation_seconds|alloy_component_evaluation_seconds_bucket|alloy_component_evaluation_seconds_count|alloy_component_evaluation_seconds_sum|alloy_component_evaluation_slow_seconds|alloy_config_hash|alloy_resources_machine_rx_bytes_total|alloy_resources_machine_tx_bytes_total|alloy_resources_process_cpu_seconds_total|alloy_resources_process_resident_memory_bytes|alloy_tcp_connections|alloy_wal_samples_appended_total|alloy_wal_storage_active_series|cluster_node_gossip_health_score|cluster_node_gossip_proto_version|cluster_node_gossip_received_events_total|cluster_node_info|cluster_node_lamport_time|cluster_node_peers|cluster_node_update_observers|cluster_transport_rx_bytes_total|cluster_transport_rx_packet_queue_length|cluster_transport_rx_packets_failed_total|cluster_transport_rx_packets_total|cluster_transport_stream_rx_bytes_total|cluster_transport_stream_rx_packets_failed_total|cluster_transport_stream_rx_packets_total|cluster_transport_stream_tx_bytes_total|cluster_transport_stream_tx_packets_failed_total|cluster_transport_stream_tx_packets_total|cluster_transport_streams|cluster_transport_tx_bytes_total|cluster_transport_tx_packet_queue_length|cluster_transport_tx_packets_failed_total|cluster_transport_tx_packets_total|otelcol_exporter_send_failed_spans_total|otelcol_exporter_sent_spans_total|go_gc_duration_seconds_count|go_goroutines|go_memstats_heap_inuse_bytes|loki_process_dropped_lines_total|loki_write_batch_retries_total|loki_write_dropped_bytes_total|loki_write_dropped_entries_total|loki_write_encoded_bytes_total|loki_write_mutated_bytes_total|loki_write_mutated_entries_total|loki_write_request_duration_seconds_bucket|loki_write_sent_bytes_total|loki_write_sent_entries_total|process_cpu_seconds_total|process_start_time_seconds|otelcol_processor_batch_batch_send_size_bucket|otelcol_processor_batch_metadata_cardinality|otelcol_processor_batch_timeout_trigger_send_total|prometheus_remote_storage_bytes_total|prometheus_remote_storage_enqueue_retries_total|prometheus_remote_storage_highest_timestamp_in_seconds|prometheus_remote_storage_metadata_bytes_total|prometheus_remote_storage_queue_highest_sent_timestamp_seconds|prometheus_remote_storage_samples_dropped_total|prometheus_remote_storage_samples_failed_total|prometheus_remote_storage_samples_pending|prometheus_remote_storage_samples_retried_total|prometheus_remote_storage_samples_total|prometheus_remote_storage_sent_batch_duration_seconds_bucket|prometheus_remote_storage_sent_batch_duration_seconds_count|prometheus_remote_storage_sent_batch_duration_seconds_sum|prometheus_remote_storage_shard_capacity|prometheus_remote_storage_shards|prometheus_remote_storage_shards_desired|prometheus_remote_storage_shards_max|prometheus_remote_storage_shards_min|prometheus_remote_storage_succeeded_samples_total|prometheus_remote_write_wal_samples_appended_total|prometheus_remote_write_wal_storage_active_series|prometheus_sd_discovered_targets|prometheus_target_interval_length_seconds_count|prometheus_target_interval_length_seconds_sum|prometheus_target_scrapes_exceeded_sample_limit_total|prometheus_target_scrapes_sample_duplicate_timestamp_total|prometheus_target_scrapes_sample_out_of_bounds_total|prometheus_target_scrapes_sample_out_of_order_total|prometheus_target_sync_length_seconds_sum|prometheus_wal_watcher_current_segment|otelcol_receiver_accepted_spans_total|otelcol_receiver_refused_spans_total|rpc_server_duration_milliseconds_bucket|scrape_duration_seconds|traces_exporter_send_failed_spans|traces_exporter_send_failed_spans_total|traces_exporter_sent_spans|traces_exporter_sent_spans_total|traces_loadbalancer_backend_outcome|traces_loadbalancer_num_backends|traces_receiver_accepted_spans|traces_receiver_accepted_spans_total|traces_receiver_refused_spans|traces_receiver_refused_spans_total"
         scrape_interval = "60s"
-        scrape_timeout = "10s"
-        scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
-        scrape_classic_histograms = false
-        scrape_native_histograms = false
-        max_cache_size = 100000
-        forward_to = argument.metrics_destinations.value
-      }
-    
-    
-      alloy_integration_discovery "alloy_three" {
-        port_name = "http-metrics"
-        label_selectors = ["app.kubernetes.io/name=alloy-three"]
-      }
-    
-      alloy_integration_scrape "alloy_three" {
-        targets = alloy_integration_discovery.alloy_three.output
-        job_label = "integrations/alloy"
-        clustering = true
-        keep_metrics = "up|scrape_samples_scraped|alloy_example_metric"
-        scrape_interval = "30s"
         scrape_timeout = "10s"
         scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
         scrape_classic_histograms = false
@@ -384,68 +343,6 @@ data:
         prometheus.remote_write.localprometheus.receiver,
       ]
     }
-    
-    
-    
-    
-    // Destination: localPrometheus (prometheus)
-    otelcol.exporter.prometheus "localprometheus" {
-      add_metric_suffixes = true
-      resource_to_telemetry_conversion = false
-      forward_to = [prometheus.remote_write.localprometheus.receiver]
-    }
-    
-    prometheus.remote_write "localprometheus" {
-      endpoint {
-        url = "http://prometheus-server.prometheus.svc:9090/api/v1/write"
-        headers = {
-        }
-        tls_config {
-          insecure_skip_verify = false
-        }
-        send_native_histograms = false
-    
-        queue_config {
-          capacity = 10000
-          min_shards = 1
-          max_shards = 50
-          max_samples_per_send = 2000
-          batch_send_deadline = "5s"
-          min_backoff = "30ms"
-          max_backoff = "5s"
-          retry_on_http_429 = true
-          sample_age_limit = "0s"
-        }
-    
-        write_relabel_config {
-          source_labels = ["cluster"]
-          regex = ""
-          replacement = "alloy-integration-test"
-          target_label = "cluster"
-        }
-        write_relabel_config {
-          source_labels = ["k8s_cluster_name"]
-          regex = ""
-          replacement = "alloy-integration-test"
-          target_label = "k8s_cluster_name"
-        }
-      }
-    
-      wal {
-        truncate_frequency = "2h"
-        min_keepalive_time = "5m"
-        max_keepalive_time = "8h"
-      }
-    }
----
-# Source: k8s-monitoring/templates/alloy-config.yaml
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: k8smon-alloy-singleton
-  namespace: default
-data:
-  config.alloy: |
     // Self Reporting
     prometheus.exporter.unix "kubernetes_monitoring_telemetry" {
       set_collectors = ["textfile"]
@@ -1010,199 +907,6 @@ spec:
     relabelings: []
     tlsConfig: {}
 ---
-# Source: k8s-monitoring/templates/alloy.yaml
-apiVersion: collectors.grafana.com/v1alpha1
-kind: Alloy
-metadata:
-  name: k8smon-alloy-singleton
-  namespace: default
-  annotations:
-    helm.sdk.operatorframework.io/uninstall-wait: "true"
-spec:
-  alloy:
-    clustering:
-      enabled: false
-      name: ""
-      portName: http
-    configMap:
-      content: ""
-      create: false
-      key: null
-      name: null
-    enableReporting: true
-    envFrom: []
-    extraArgs: []
-    extraEnv: []
-    extraPorts: []
-    hostAliases: []
-    lifecycle: {}
-    listenAddr: 0.0.0.0
-    listenPort: 12345
-    listenScheme: HTTP
-    livenessProbe: {}
-    mounts:
-      dockercontainers: false
-      extra: []
-      varlog: false
-    resources: {}
-    securityContext:
-      allowPrivilegeEscalation: false
-      capabilities:
-        add:
-        - CHOWN
-        - DAC_OVERRIDE
-        - FOWNER
-        - FSETID
-        - KILL
-        - SETGID
-        - SETUID
-        - SETPCAP
-        - NET_BIND_SERVICE
-        - NET_RAW
-        - SYS_CHROOT
-        - MKNOD
-        - AUDIT_WRITE
-        - SETFCAP
-        drop:
-        - ALL
-      seccompProfile:
-        type: RuntimeDefault
-    stabilityLevel: generally-available
-    storagePath: /tmp/alloy
-    uiPathPrefix: /
-  configReloader:
-    customArgs: []
-    enabled: true
-    image:
-      digest: ""
-      registry: quay.io
-      repository: prometheus-operator/prometheus-config-reloader
-      tag: v0.81.0
-    resources:
-      requests:
-        cpu: 10m
-        memory: 50Mi
-    securityContext: {}
-  controller:
-    affinity: {}
-    autoscaling:
-      enabled: false
-      horizontal:
-        enabled: false
-        maxReplicas: 5
-        minReplicas: 1
-        scaleDown:
-          policies: []
-          selectPolicy: Max
-          stabilizationWindowSeconds: 300
-        scaleUp:
-          policies: []
-          selectPolicy: Max
-          stabilizationWindowSeconds: 0
-        targetCPUUtilizationPercentage: 0
-        targetMemoryUtilizationPercentage: 80
-      maxReplicas: 5
-      minReplicas: 1
-      scaleDown:
-        policies: []
-        selectPolicy: Max
-        stabilizationWindowSeconds: 300
-      scaleUp:
-        policies: []
-        selectPolicy: Max
-        stabilizationWindowSeconds: 0
-      targetCPUUtilizationPercentage: 0
-      targetMemoryUtilizationPercentage: 80
-      vertical:
-        enabled: false
-        recommenders: []
-        resourcePolicy:
-          containerPolicies:
-          - containerName: alloy
-            controlledResources:
-            - cpu
-            - memory
-            controlledValues: RequestsAndLimits
-            maxAllowed: {}
-            minAllowed: {}
-        updatePolicy: null
-    dnsPolicy: ClusterFirst
-    enableStatefulSetAutoDeletePVC: false
-    extraAnnotations: {}
-    extraContainers: []
-    hostNetwork: false
-    hostPID: false
-    initContainers: []
-    nodeSelector:
-      kubernetes.io/os: linux
-    parallelRollout: true
-    podAnnotations:
-      k8s.grafana.com/logs.job: integrations/alloy
-    podDisruptionBudget:
-      enabled: false
-      maxUnavailable: null
-      minAvailable: null
-    podLabels: {}
-    priorityClassName: ""
-    replicas: 1
-    terminationGracePeriodSeconds: null
-    tolerations: []
-    topologySpreadConstraints: []
-    type: deployment
-    updateStrategy: {}
-    volumeClaimTemplates: []
-    volumes:
-      extra: []
-  crds:
-    create: false
-  extraObjects: []
-  global:
-    image:
-      pullSecrets: []
-      registry: ""
-    podSecurityContext: {}
-  image:
-    digest: null
-    pullPolicy: IfNotPresent
-    pullSecrets: []
-    registry: docker.io
-    repository: grafana/alloy
-    tag: null
-  ingress:
-    annotations: {}
-    enabled: false
-    extraPaths: []
-    faroPort: 12347
-    hosts:
-    - chart-example.local
-    labels: {}
-    path: /
-    pathType: Prefix
-    tls: []
-  nameOverride: alloy-singleton
-  rbac:
-    create: true
-  service:
-    annotations: {}
-    clusterIP: ""
-    enabled: true
-    internalTrafficPolicy: Cluster
-    nodePort: 31128
-    type: ClusterIP
-  serviceAccount:
-    additionalLabels: {}
-    annotations: {}
-    automountServiceAccountToken: true
-    create: true
-    name: null
-  serviceMonitor:
-    additionalLabels: {}
-    enabled: false
-    interval: ""
-    metricRelabelings: []
-    relabelings: []
-    tlsConfig: {}
----
 # Source: k8s-monitoring/templates/hooks/post-install_add-finalizer.yaml
 apiVersion: v1
 kind: ServiceAccount
@@ -1385,10 +1089,6 @@ spec:
               echo "Deleting Alloy instance: alloy/k8smon-alloy-metrics..."
               kubectl delete alloy/k8smon-alloy-metrics --ignore-not-found=true --wait
               kubectl wait --for=delete alloy/k8smon-alloy-metrics --timeout=60s || echo "Timed out waiting for deletion of alloy/k8smon-alloy-metrics or it may not exist."
-
-              echo "Deleting Alloy instance: alloy/k8smon-alloy-singleton..."
-              kubectl delete alloy/k8smon-alloy-singleton --ignore-not-found=true --wait
-              kubectl wait --for=delete alloy/k8smon-alloy-singleton --timeout=60s || echo "Timed out waiting for deletion of alloy/k8smon-alloy-singleton or it may not exist."
 
               kubectl patch \
                 --namespace=default \

@@ -244,7 +244,6 @@ declare "alloy_integration" {
     }
   }
   {{- range $instance := $.Values.alloy.instances }}
-{{/*    {{- include "integrations.alloy.include.metrics" (deepCopy $ | merge (dict "instance" $instance)) | nindent 2 }}*/}}
     {{- include "integrations.alloy.include.metrics" (dict "Chart" $.Chart "Files" $.Files "Release" $.Release "Values" $.Values "instance" $instance) | nindent 2 }}
   {{- end }}
 }
@@ -255,7 +254,6 @@ declare "alloy_integration" {
 {{- define "integrations.alloy.include.metrics" }}
 {{- $defaultValues := "integrations/alloy-values.yaml" | .Files.Get | fromYaml }}
 {{- with mergeOverwrite $defaultValues .instance }}
-
   {{- $metricAllowList := include "integrations.alloy.allowList" (dict "instance" . "Files" $.Files) | fromYamlArray }}
   {{- $metricDenyList := .metrics.tuning.excludeMetrics }}
   {{- $labelSelectors := list }}
