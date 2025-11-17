@@ -36,6 +36,36 @@ tests:
           path: data["metrics.alloy"]
           pattern: \s+keep_metrics \= "up\|scrape_samples_scraped\|example_metric"
 
+  - it: can create multiple Alloy configs with a different allowed metrics
+    set:
+      deployAsConfigMap: true
+      alloy:
+        instances:
+          - name: alloy-one
+            labelSelectors:
+              app.kubernetes.io/name: alloy-one
+            metrics:
+              scrapeInterval: 2m
+              tuning:
+                useDefaultAllowList: false
+                excludeMetrics: ["alloy_example_metric"]
+          - name: alloy-two
+            labelSelectors:
+              app.kubernetes.io/name: alloy-two
+          - name: alloy-three
+            labelSelectors:
+              app.kubernetes.io/name: alloy-three
+            metrics:
+              scrapeInterval: 30s
+              tuning:
+                useDefaultAllowList: false
+                includeMetrics: ["alloy_example_metric"]
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["metrics.alloy"]
+
   - it: should add the attach_metadata block to the discovery.kubernetes
     set:
       deployAsConfigMap: true

@@ -172,7 +172,8 @@ prometheus.relabel {{ include "helper.alloy_name" .name | quote }} {
 
 {{- define "integrations.etcd.validate" }}
   {{- range $instance := $.Values.etcd.instances }}
-    {{- include "integrations.etcd.instance.validate" (merge $ (dict "instance" $instance)) | nindent 2 }}
+    {{- $defaultValues := fromYaml ($.Files.Get "integrations/etcd-values.yaml") }}
+    {{- include "integrations.etcd.instance.validate" (dict "instance" (mergeOverwrite $defaultValues $instance (dict "type" "integration.etcd"))) | nindent 2 }}
   {{- end }}
 {{- end }}
 

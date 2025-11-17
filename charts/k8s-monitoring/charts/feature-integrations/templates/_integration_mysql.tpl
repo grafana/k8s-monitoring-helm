@@ -1,12 +1,19 @@
 {{- define "integrations.mysql.validate" }}
   {{- range $instance := $.Values.mysql.instances }}
-    {{- include "integrations.mysql.instance.validate" (deepCopy $ | merge (dict "instance" $instance)) | nindent 2 }}
+    {{- $defaultValues := fromYaml ($.Files.Get "integrations/mysql-values.yaml") }}
+    {{- include "integrations.mysql.instance.validate" (dict "instance" (mergeOverwrite $defaultValues $instance (dict "type" "integration.mysql"))) | nindent 2 }}
   {{- end }}
 {{- end }}
 
 {{- define "integrations.mysql.instance.validate" }}
-{{- if .instance.exporter.enabled }}
-  {{- if and (not .instance.exporter.dataSourceName) (not (and .instance.exporter.dataSource.auth.username .instance.exporter.dataSource.auth.password .instance.exporter.dataSource.host)) }}
+{{- if (dig "metrics" "enabled" true .instance) }}
+  {{- $missingExporterDetails := false }}
+  {{- if not .instance.exporter }}
+    {{ $missingExporterDetails = true }}
+  {{- else if and (not .instance.exporter.dataSourceName) (not .instance.exporter.dataSource.host) }}
+    {{ $missingExporterDetails = true }}
+  {{- end }}
+  {{- if $missingExporterDetails }}
     {{- $msg := list "" "Missing data source details for MySQL exporter." }}
     {{- $msg = append $msg "Please set:" }}
     {{- $msg = append $msg "integrations:" }}

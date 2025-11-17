@@ -294,7 +294,8 @@ dcgm_exporter_integration_scrape  {{ include "helper.alloy_name" .name | quote }
 
 {{- define "integrations.dcgm-exporter.validate" }}
   {{- range $instance := (index $.Values "dcgm-exporter").instances }}
-    {{- include "integrations.dcgm-exporter.instance.validate" (merge $ (dict "instance" $instance)) | nindent 2 }}
+    {{- $defaultValues := fromYaml ($.Files.Get "integrations/dcgm-exporter-values.yaml") }}
+    {{- include "integrations.dcgm-exporter.instance.validate" (dict "instance" (mergeOverwrite $defaultValues $instance (dict "type" "integration.dcgm-exporter"))) | nindent 2 }}
   {{- end }}
 {{- end }}
 

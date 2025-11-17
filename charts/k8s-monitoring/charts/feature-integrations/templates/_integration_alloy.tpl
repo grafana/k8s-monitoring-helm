@@ -244,7 +244,7 @@ declare "alloy_integration" {
     }
   }
   {{- range $instance := $.Values.alloy.instances }}
-    {{- include "integrations.alloy.include.metrics" (deepCopy $ | merge (dict "instance" $instance)) | nindent 2 }}
+    {{- include "integrations.alloy.include.metrics" (dict "Chart" $.Chart "Files" $.Files "Release" $.Release "Values" $.Values "instance" $instance) | nindent 2 }}
   {{- end }}
 }
 {{- end }}
@@ -253,38 +253,38 @@ declare "alloy_integration" {
 {{/* Inputs: integration (Alloy integration definition), Values (all values), Files (Files object) */}}
 {{- define "integrations.alloy.include.metrics" }}
 {{- $defaultValues := "integrations/alloy-values.yaml" | .Files.Get | fromYaml }}
-{{- with mergeOverwrite $defaultValues (deepCopy .instance) }}
-{{- $metricAllowList := include "integrations.alloy.allowList" (dict "instance" . "Files" $.Files) | fromYamlArray }}
-{{- $metricDenyList := .metrics.tuning.excludeMetrics }}
-{{- $labelSelectors := list }}
-{{- range $k, $v := .labelSelectors }}
-  {{- if kindIs "slice" $v }}
-    {{- $labelSelectors = append $labelSelectors (printf "%s in (%s)" $k (join "," $v)) }}
-  {{- else }}
-    {{- $labelSelectors = append $labelSelectors (printf "%s=%s" $k $v) }}
+{{- with mergeOverwrite $defaultValues .instance }}
+  {{- $metricAllowList := include "integrations.alloy.allowList" (dict "instance" . "Files" $.Files) | fromYamlArray }}
+  {{- $metricDenyList := .metrics.tuning.excludeMetrics }}
+  {{- $labelSelectors := list }}
+  {{- range $k, $v := .labelSelectors }}
+    {{- if kindIs "slice" $v }}
+      {{- $labelSelectors = append $labelSelectors (printf "%s in (%s)" $k (join "," $v)) }}
+    {{- else }}
+      {{- $labelSelectors = append $labelSelectors (printf "%s=%s" $k $v) }}
+    {{- end }}
   {{- end }}
-{{- end }}
 alloy_integration_discovery {{ include "helper.alloy_name" .name | quote }} {
   port_name = {{ .metrics.portName | quote }}
-{{- if .namespaces }}
+  {{- if .namespaces }}
   namespaces = {{ .namespaces | toJson }}
-{{- end }}
+  {{- end }}
   label_selectors = {{ $labelSelectors | toJson }}
-{{- if .fieldSelectors }}
+  {{- if .fieldSelectors }}
   field_selectors = {{ .fieldSelectors | toJson }}
-{{- end }}
+  {{- end }}
 }
 
-alloy_integration_scrape  {{ include "helper.alloy_name" .name | quote }} {
+alloy_integration_scrape {{ include "helper.alloy_name" .name | quote }} {
   targets = alloy_integration_discovery.{{ include "helper.alloy_name" .name }}.output
   job_label = {{ .jobLabel | quote }}
   clustering = true
-{{- if $metricAllowList }}
+  {{- if $metricAllowList }}
   keep_metrics = {{ $metricAllowList | join "|" | quote }}
-{{- end }}
-{{- if $metricDenyList }}
+  {{- end }}
+  {{- if $metricDenyList }}
   drop_metrics = {{ $metricDenyList | join "|" | quote }}
-{{- end }}
+  {{- end }}
   scrape_interval = {{ .metrics.scrapeInterval | default .scrapeInterval | default $.Values.global.scrapeInterval | quote }}
   scrape_timeout = {{ .metrics.scrapeTimeout | default .scrapeTimeout | default $.Values.global.scrapeTimeout | quote }}
   scrape_protocols = {{ $.Values.global.scrapeProtocols | toJson }}
@@ -293,15 +293,20 @@ alloy_integration_scrape  {{ include "helper.alloy_name" .name | quote }} {
   max_cache_size = {{ .metrics.maxCacheSize | default $.Values.global.maxCacheSize | int }}
   forward_to = argument.metrics_destinations.value
 }
-  {{- end }}
+{{- end }}
 {{- end }}
 
+{{/* Validates the Alloy integration instances */}}
+{{/* Inputs: . (Integration values) */}}
 {{- define "integrations.alloy.validate" }}
   {{- range $instance := $.Values.alloy.instances }}
-    {{- include "integrations.alloy.instance.validate" (merge $ (dict "instance" $instance)) | nindent 2 }}
+    {{- $defaultValues := fromYaml ($.Files.Get "integrations/alloy-values.yaml") }}
+    {{- include "integrations.alloy.instance.validate" (dict "instance" (mergeOverwrite $defaultValues $instance (dict "type" "integration.alloy"))) | nindent 2 }}
   {{- end }}
 {{- end }}
 
+{{/* Validates a single Alloy integration instance */}}
+{{/* Inputs: instance (Alloy integration instance) */}}
 {{- define "integrations.alloy.instance.validate" }}
   {{- if not .instance.labelSelectors }}
     {{- $msg := list "" "The Alloy integration requires a label selector" }}

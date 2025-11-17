@@ -60,6 +60,11 @@ should create the grafana metrics config:
               action = "keep"
             }
 
+            rule {
+              source_labels = ["__meta_kubernetes_pod_node_name"]
+              target_label = "node"
+            }
+
 
 
             rule {
@@ -208,7 +213,7 @@ should create the grafana metrics config:
             scrape_timeout = coalesce(argument.scrape_timeout.value, "10s")
             scrape_protocols = argument.scrape_protocols.value
             scrape_classic_histograms = argument.scrape_classic_histograms.value
-      scrape_native_histograms = argument.scrape_native_histograms.value
+            scrape_native_histograms = argument.scrape_native_histograms.value
 
             clustering {
               enabled = coalesce(argument.clustering.value, false)

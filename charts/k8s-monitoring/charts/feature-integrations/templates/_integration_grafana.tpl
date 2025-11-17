@@ -1,6 +1,7 @@
 {{- define "integrations.grafana.validate" }}
   {{- range $instance := $.Values.grafana.instances }}
-    {{- include "integrations.grafana.instance.validate" (merge $ (dict "instance" $instance)) | nindent 2 }}
+    {{- $defaultValues := fromYaml ($.Files.Get "integrations/grafana-values.yaml") }}
+    {{- include "integrations.grafana.instance.validate" (dict "instance" (mergeOverwrite $defaultValues $instance (dict "type" "integration.grafana"))) | nindent 2 }}
   {{- end }}
 {{- end }}
 
