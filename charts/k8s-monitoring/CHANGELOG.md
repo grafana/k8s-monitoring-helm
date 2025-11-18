@@ -2,8 +2,8 @@
 
 ## Unreleased
 
-*   Add the ability to define the sending queue for otlp destinations (@petewall)
-*   Add the ability to define the remote timeout for loki destinations (@petewall)
+*   Add the ability to define the sending queue for OTLP destinations (@petewall)
+*   Add the ability to define the remote timeout for Loki destinations (@petewall)
 
 ## 3.6.0
 
