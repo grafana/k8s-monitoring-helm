@@ -256,6 +256,7 @@ data:
     loki.write "localloki" {
       endpoint {
         url = "http://loki.loki.svc:3100/loki/api/v1/push"
+        retry_on_http_429 = true
         batch_size = "1MiB"
         batch_wait = "1s"
         tenant_id = convert.nonsensitive(remote.kubernetes.secret.localloki.data["tenantId"])

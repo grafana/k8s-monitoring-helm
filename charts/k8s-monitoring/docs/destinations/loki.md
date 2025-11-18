@@ -70,9 +70,11 @@ This defines the options for defining a destination for logs that use the Loki p
 | proxyConnectHeader | object | `{}` | Specifies headers to send to proxies during CONNECT requests. |
 | proxyFromEnvironment | bool | `false` | Use the proxy URL indicated by environment variables. |
 | proxyURL | string | `""` | HTTP proxy to send requests through. |
+| retryOnHttp429 | bool | `true` | Retry when an HTTP 429 status code is received. |
 | tenantId | string | `""` | The tenant ID for the Loki destination. |
 | tenantIdFrom | string | `""` | Raw config for accessing the tenant ID. |
 | tenantIdKey | string | `"tenantId"` | The key for storing the tenant ID in the secret. |
+| timeout | string | `10s` | Timeout for requests made to the URL. |
 | url | string | `""` | The URL for the Loki destination. |
 | urlFrom | string | `""` | Raw config for accessing the URL. |
 
