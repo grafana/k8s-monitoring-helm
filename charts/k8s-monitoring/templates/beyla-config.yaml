@@ -15,13 +15,6 @@
   {{- $discovery := dict "services" $services "exclude_services" $excludeServices }}
   {{- $overrides = merge $overrides (dict "discovery" $discovery) }}
 {{- end }}
-
-{{- $grpcReceiverEndpoint := include "features.applicationObservability.receiver.grpc" . | trim }}
-{{- $httpReceiverEndpoint := include "features.applicationObservability.receiver.http" . | trim }}
-{{- if or $grpcReceiverEndpoint $httpReceiverEndpoint }}
-  {{- $otelTracesExport := dict "endpoint" ($grpcReceiverEndpoint | default $httpReceiverEndpoint) }}
-  {{- $overrides = merge $overrides (dict "otel_traces_export" $otelTracesExport) }}
-{{- end }}
 ---
 apiVersion: v1
 kind: ConfigMap
