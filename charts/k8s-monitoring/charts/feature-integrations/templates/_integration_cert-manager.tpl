@@ -1,5 +1,6 @@
 {{- define "integrations.cert-manager.type.metrics" }}true{{- end }}
-{{- define "integrations.cert-manager.type.logs" }}false{{- end }}
+{{- define "integrations.cert-manager.type.logRules" }}false{{- end }}
+{{- define "integrations.cert-manager.type.logOutput" }}false{{- end }}
 
 {{/* Loads the cert-manager module and instances */}}
 {{/* Inputs: Values (all values), Files (Files object) */}}

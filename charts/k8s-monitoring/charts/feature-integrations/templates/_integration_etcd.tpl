@@ -1,5 +1,6 @@
 {{- define "integrations.etcd.type.metrics" }}true{{- end }}
-{{- define "integrations.etcd.type.logs" }}false{{- end }}
+{{- define "integrations.etcd.type.logRules" }}false{{- end }}
+{{- define "integrations.etcd.type.logOutput" }}false{{- end }}
 
 {{/* Loads the etcd module and instances */}}
 {{/* Inputs: Values (all values), Files (Files object) */}}

@@ -120,12 +120,11 @@ declare "pod_logs" {
       regex = "(.+)"
       target_label = "app_kubernetes_io_name"
     }
-     // Database Observability: MySQL
     rule {
       source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_instance"]
       separator = ";"
       regex = "(?:test-database)"
-      target_label = "db_observability_integration"
+      target_label = "integration"
       replacement = "mysql"
     }
     rule {
@@ -134,13 +133,6 @@ declare "pod_logs" {
       regex = "(?:test-database)"
       target_label = "instance"
       replacement = "test-db"
-    }
-    rule {
-      source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_instance"]
-      separator = ";"
-      regex = "(?:test-database)"
-      target_label = "job"
-      replacement = "integration/mysql"
     }
   }
 
@@ -217,9 +209,9 @@ declare "pod_logs" {
         "service_instance_id" = "service_instance_id",
       }
     }
-     // Database Observability: MySQL
+    // Integration: MySQL
     stage.match {
-      selector = "{db_observability_integration=\"mysql\"}"
+      selector = "{integration=\"mysql\"}"
 
       stage.regex {
         expression = `(?P<timestamp>.+) (?P<thread>[\d]+) \[(?P<label>.+?)\]( \[(?P<err_code>.+?)\] \[(?P<subsystem>.+?)\])? (?P<msg>.+)`
@@ -238,8 +230,14 @@ declare "pod_logs" {
         drop_counter_reason = "drop empty lines"
       }
 
+      stage.static_labels {
+        values = {
+          job = "integrations/mysql",
+        }
+      }
+
       stage.label_drop {
-        values = ["db_observability_integration"]
+        values = ["integration"]
       }
     }
 
@@ -268,6 +266,7 @@ otelcol.exporter.loki "loki" {
 loki.write "loki" {
   endpoint {
     url = "http://loki.loki.svc:3100/loki/api/v1/push"
+    retry_on_http_429 = true
     tenant_id = convert.nonsensitive(remote.kubernetes.secret.loki.data["tenantId"])
     basic_auth {
       username = convert.nonsensitive(remote.kubernetes.secret.loki.data["username"])

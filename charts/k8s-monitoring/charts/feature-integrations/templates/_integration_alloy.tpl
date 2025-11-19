@@ -1,5 +1,6 @@
 {{- define "integrations.alloy.type.metrics" }}true{{- end }}
-{{- define "integrations.alloy.type.logs" }}false{{- end }}
+{{- define "integrations.alloy.type.logRules" }}false{{- end }}
+{{- define "integrations.alloy.type.logOutput" }}false{{- end }}
 
 {{/* Returns the allowed metrics */}}
 {{/* Inputs: instance (Alloy integration instance) Files (Files object) */}}

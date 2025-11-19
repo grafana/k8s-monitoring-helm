@@ -6,7 +6,8 @@
 {{- end }}
 
 {{- define "integrations.mysql.instance.validate" }}
-{{- if (dig "metrics" "enabled" true .instance) }}
+{{- $metricsEnabled := (dig "metrics" "enabled" true .instance) }}
+{{- if $metricsEnabled }}
   {{- $missingExporterDetails := false }}
   {{- if not .instance.exporter }}
     {{ $missingExporterDetails = true }}
@@ -29,6 +30,10 @@
     {{- $msg = append $msg "            port: 3306" }}
     {{- fail (join "\n" $msg) }}
   {{- end }}
+{{- end }}
+{{- $dbO11yEnabled := (dig "databaseObservability" "enabled" true .instance) }}
+{{- if and $dbO11yEnabled (not $metricsEnabled) }}
+
 {{- end }}
 {{- if and .instance.logs.enabled (not .instance.logs.labelSelectors) }}
   {{- $msg := list "" "The MySQL integration requires a label selector" }}

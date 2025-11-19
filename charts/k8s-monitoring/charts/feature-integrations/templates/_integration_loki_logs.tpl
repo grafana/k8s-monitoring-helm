@@ -1,5 +1,7 @@
+{{- define "integrations.loki.type.logOutput" }}false{{- end }}
+
 {{/* Inputs: . (Values) */}}
-{{- define "integrations.loki.type.logs" }}
+{{- define "integrations.loki.type.logRules" }}
 {{- $type := "integration.loki" }}
 {{- $defaultValues := "integrations/loki-values.yaml" | .Files.Get | fromYaml }}
 {{- $logsEnabled := false }}
@@ -64,7 +66,7 @@ rule {
 {{- end }}
 
 {{- define "integrations.loki.logs.processingStage" }}
-  {{- if eq (include "integrations.loki.type.logs" .) "true" }}
+  {{- if eq (include "integrations.loki.type.logRules" .) "true" }}
     {{- $defaultValues := "integrations/loki-values.yaml" | .Files.Get | fromYaml }}
 // Integration: Loki
     {{- range $instance := $.Values.loki.instances }}

@@ -29,12 +29,18 @@ integrations:
   mysql:
     instances:
       - name: test-database
+        jobLabel: integrations/db-o11y
         exporter:
+          collectors:
+            perfSchemaEventsStatements:
+              enabled: true
           dataSource:
             host: test-database-mysql.mysql.svc
             auth:
               usernameKey: mysql-username
               passwordKey: mysql-root-password
+        databaseObservability:
+          enabled: true
         secret:
           create: false
           name: test-database-mysql

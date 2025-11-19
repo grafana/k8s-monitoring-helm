@@ -1,5 +1,7 @@
+{{- define "integrations.tempo.type.logOutput" }}false{{- end }}
+
 {{/* Inputs: . (Values) */}}
-{{- define "integrations.tempo.type.logs" }}
+{{- define "integrations.tempo.type.logRules" }}
 {{- $type := "integration.tempo" }}
 {{- $defaultValues := "integrations/tempo-values.yaml" | .Files.Get | fromYaml }}
 {{- $logsEnabled := false }}
@@ -64,7 +66,7 @@ rule {
 {{- end }}
 
 {{- define "integrations.tempo.logs.processingStage" }}
-  {{- if eq (include "integrations.tempo.type.logs" .) "true" }}
+  {{- if eq (include "integrations.tempo.type.logRules" .) "true" }}
     {{- $defaultValues := "integrations/tempo-values.yaml" | .Files.Get | fromYaml }}
 // Integration: Tempo
     {{- range $instance := $.Values.tempo.instances }}

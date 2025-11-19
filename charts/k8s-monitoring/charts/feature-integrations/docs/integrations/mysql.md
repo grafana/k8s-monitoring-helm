@@ -2,11 +2,55 @@
 
 ## Values
 
+### Database Observability
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| databaseObservability.allowUpdatePerformanceSchemaSettings | bool | `false` | Whether to allow updates to performance_schema settings in any collector. |
+| databaseObservability.enabled | bool | `false` | Whether to gather table, schema, and query information from the database. Requires exporter to be enabled. |
+
+### Database Observability - Collectors
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| databaseObservability.collectors.explainPlans.collectInterval | string | `"1m"` | How frequently to collect explain plans information from the database. |
+| databaseObservability.collectors.explainPlans.enabled | bool | `false` | Enable collection of explain plans information. |
+| databaseObservability.collectors.explainPlans.excludeSchemas | list | `[]` | List of schemas to exclude from explain plan collection. |
+| databaseObservability.collectors.explainPlans.initialLookback | string | `"24h"` | How far back to look for explain plan queries on the first collection interval. |
+| databaseObservability.collectors.explainPlans.perCollectRatio | float | `1` | Ratio of explain plan queries to collect per collect interval. |
+| databaseObservability.collectors.locks.collectInterval | string | `"1m"` | How frequently to collect lock information from the database. |
+| databaseObservability.collectors.locks.enabled | bool | `false` | Enable collection of lock information. |
+| databaseObservability.collectors.locks.threshold | string | `"1s"` | Threshold for locks to be considered slow. Locks that exceed this duration are logged. |
+| databaseObservability.collectors.queryDetails.collectInterval | string | `"1m"` | How frequently to collect query information from the database. |
+| databaseObservability.collectors.queryDetails.enabled | bool | `true` | Enable collection of query information. |
+| databaseObservability.collectors.querySamples.autoEnableSetupConsumers | bool | `false` | Whether to enable some specific performance_schema.setup_consumers settings. |
+| databaseObservability.collectors.querySamples.collectInterval | string | `"1m"` | How frequently to collect query samples from the database. |
+| databaseObservability.collectors.querySamples.disableQueryRedaction | bool | `false` | Collect unredacted SQL query text including parameters. |
+| databaseObservability.collectors.querySamples.enabled | bool | `true` | Enable collection of query samples. |
+| databaseObservability.collectors.querySamples.setupConsumersCheckInterval | string | `"1h"` | How frequently to check if setup_consumers are correctly enabled. |
+| databaseObservability.collectors.schemaDetails.cacheEnabled | bool | `false` | Whether to enable caching of table definitions. |
+| databaseObservability.collectors.schemaDetails.cacheSize | int | `256` | Table definitions cache size. |
+| databaseObservability.collectors.schemaDetails.cacheTTL | string | `"10m"` | Table definitions cache TTL. |
+| databaseObservability.collectors.schemaDetails.collectInterval | string | `"1m"` | How frequently to collect schemas and tables from information_schema. |
+| databaseObservability.collectors.schemaDetails.enabled | bool | `true` | Enable collection of schemas and tables from information_schema. |
+| databaseObservability.collectors.setupConsumers.collectInterval | string | `"1m"` | How frequently to collect performance_schema.setup_consumers information from the database. |
+| databaseObservability.collectors.setupConsumers.enabled | bool | `true` | Enable collection of performance_schema.setup_consumers information. |
+
+### Exporter Collectors
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| exporter.collectors.heartbeat.database | string | `heartbeat` | Database to collect heartbeat data from. |
+| exporter.collectors.heartbeat.enabled | bool | `true` | Enable heartbeat collector. |
+| exporter.collectors.heartbeat.table | string | `heartbeat` | Table to collect heartbeat data from. |
+| exporter.collectors.mysqlUser.enabled | bool | `true` | Enable mysql.user collector. |
+| exporter.collectors.mysqlUser.privileges | bool | `false` | Enable collecting user privileges from mysql.user. |
+| exporter.collectors.perfSchemaEventsStatements.enabled | bool | `false` | Enable perf_schema.eventsstatements collector. |
+
 ### Exporter Settings
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| exporter.collectors | list | `["heartbeat","mysql.user"]` | The list of collectors to enable for the MySQL Exporter ([Documentation](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.exporter.mysql/#supported-collectors)). |
 | exporter.dataSource.auth.password | string | `""` | The password to use for the MySQL connection. |
 | exporter.dataSource.auth.passwordFrom | string | `""` | Raw config for accessing the password. |
 | exporter.dataSource.auth.passwordKey | string | `"password"` | The key for storing the password in the secret. |

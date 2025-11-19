@@ -1,5 +1,6 @@
 {{- define "integrations.dcgm-exporter.type.metrics" }}true{{- end }}
-{{- define "integrations.dcgm-exporter.type.logs" }}false{{- end }}
+{{- define "integrations.dcgm-exporter.type.logRules" }}false{{- end }}
+{{- define "integrations.dcgm-exporter.type.logOutput" }}false{{- end }}
 
 {{/* Returns the allowed metrics */}}
 {{/* Inputs: instance (DCGM Exporter integration instance) Files (Files object) */}}

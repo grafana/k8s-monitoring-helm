@@ -25,19 +25,23 @@ destinations:
       username: loki
       password: lokipassword
 
-databaseObservability:
+integrations:
   mysql:
     instances:
       - name: test-db
+        jobLabel: integrations/db-o11y
         exporter:
           enabled: true
-        queryAnalysis:
+          collectors:
+            perfSchemaEventsStatements:
+              enabled: true
+          dataSource:
+            host: test-database-mysql.mysql.svc
+            auth:
+              usernameKey: mysql-username
+              passwordKey: mysql-root-password
+        databaseObservability:
           enabled: true
-        dataSource:
-          host: test-database-mysql.mysql.svc
-          auth:
-            usernameKey: mysql-username
-            passwordKey: mysql-root-password
         secret:
           create: false
           name: test-database-mysql

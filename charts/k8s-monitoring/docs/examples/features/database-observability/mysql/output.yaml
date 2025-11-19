@@ -33,94 +33,6 @@ metadata:
   namespace: default
 data:
   config.alloy: |
-    declare "db_observability" {
-      argument "metrics_destinations" {
-        comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
-      }
-      argument "logs_destinations" {
-        comment = "Must be a list of log destinations where collected logs should be forwarded to"
-      }
-    
-      remote.kubernetes.secret "test_db" {
-        name      = "test-database-mysql"
-        namespace = "mysql"
-      }
-    
-      prometheus.exporter.mysql "test_db" {
-        data_source_name = string.format("%s:%s@(%s:%d)/",
-          convert.nonsensitive(remote.kubernetes.secret.test_db.data["mysql-username"]),
-          convert.nonsensitive(remote.kubernetes.secret.test_db.data["mysql-root-password"]),
-          "test-database-mysql.mysql.svc",
-          3306,
-        )
-        enable_collectors = ["heartbeat","mysql.user"]
-      }
-    
-      database_observability.mysql "test_db" {
-        targets = prometheus.exporter.mysql.test_db.targets
-        data_source_name = string.format("%s:%s@(%s:%d)/",
-          convert.nonsensitive(remote.kubernetes.secret.test_db.data["mysql-username"]),
-          convert.nonsensitive(remote.kubernetes.secret.test_db.data["mysql-root-password"]),
-          "test-database-mysql.mysql.svc",
-          3306,
-        )
-        allow_update_performance_schema_settings = false
-        query_details {
-          collect_interval = "1m"
-        }
-        query_samples {
-          collect_interval = "1m"
-          disable_query_redaction = false
-          auto_enable_setup_consumers = false
-          setup_consumers_check_interval = "1h"
-        }
-        schema_details {
-          collect_interval = "1m"
-          cache_enabled = false
-          cache_size = 256
-          cache_ttl = "10m"
-        }
-        setup_consumers {
-          collect_interval = "1m"
-        }
-        enable_collectors = ["query_details","query_samples","schema_details","setup_consumers"]
-    
-        forward_to = argument.logs_destinations.value
-      }
-      prometheus.scrape "test_db" {
-        targets = database_observability.mysql.test_db.targets
-        clustering {
-          enabled = true
-        }
-    
-        scrape_interval = "60s"
-        scrape_timeout = "10s"
-        scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
-        scrape_classic_histograms = false
-        forward_to = [prometheus.relabel.test_db.receiver]
-      }
-    
-      prometheus.relabel "test_db" {
-        max_cache_size = 100000
-        rule {
-          target_label = "instance"
-          replacement = "test-db"
-        }
-        rule {
-          target_label = "job"
-          replacement = "integration/mysql"
-        }
-        forward_to = argument.metrics_destinations.value
-      }
-    }
-    db_observability "feature" {
-      metrics_destinations = [
-        prometheus.remote_write.prometheus.receiver,
-      ]
-      logs_destinations = [
-        loki.write.loki.receiver,
-      ]
-    }
     // Self Reporting
     prometheus.exporter.unix "kubernetes_monitoring_telemetry" {
       set_collectors = ["textfile"]
@@ -216,44 +128,14 @@ data:
         max_keepalive_time = "8h"
       }
     }
-    // Destination: loki (loki)
-    otelcol.exporter.loki "loki" {
-      forward_to = [loki.write.loki.receiver]
-    }
-    
-    loki.write "loki" {
-      endpoint {
-        url = "http://loki.loki.svc:3100/loki/api/v1/push"
-        tenant_id = convert.nonsensitive(remote.kubernetes.secret.loki.data["tenantId"])
-        basic_auth {
-          username = convert.nonsensitive(remote.kubernetes.secret.loki.data["username"])
-          password = remote.kubernetes.secret.loki.data["password"]
-        }
-        tls_config {
-          insecure_skip_verify = false
-        }
-        min_backoff_period = "500ms"
-        max_backoff_period = "5m"
-        max_backoff_retries = "10"
-      }
-      external_labels = {
-        "cluster" = "db-o11y-mysql-test",
-        "k8s_cluster_name" = "db-o11y-mysql-test",
-      }
-    }
-    
-    remote.kubernetes.secret "loki" {
-      name      = "loki-k8smon-k8s-monitoring"
-      namespace = "default"
-    }
   self-reporting-metric.prom: |
     # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_build_info gauge
-    grafana_kubernetes_monitoring_build_info{version="3.5.6", namespace="default"} 1
+    grafana_kubernetes_monitoring_build_info{version="3.5.7", namespace="default"} 1
     # HELP grafana_kubernetes_monitoring_feature_info A metric to report the enabled features of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_feature_info gauge
-    grafana_kubernetes_monitoring_feature_info{feature="databaseObservability", version="1.0.0"} 1
     grafana_kubernetes_monitoring_feature_info{feature="podLogs", method="volumes", version="1.0.0"} 1
+    grafana_kubernetes_monitoring_feature_info{feature="integrations", sources="mysql", version="1.0.0"} 1
     # EOF
 ---
 # Source: k8s-monitoring/templates/alloy-config.yaml
@@ -386,12 +268,11 @@ data:
           regex = "(.+)"
           target_label = "app_kubernetes_io_name"
         }
-         // Database Observability: MySQL
         rule {
           source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_instance"]
           separator = ";"
           regex = "(?:test-database)"
-          target_label = "db_observability_integration"
+          target_label = "integration"
           replacement = "mysql"
         }
         rule {
@@ -400,13 +281,6 @@ data:
           regex = "(?:test-database)"
           target_label = "instance"
           replacement = "test-db"
-        }
-        rule {
-          source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_instance"]
-          separator = ";"
-          regex = "(?:test-database)"
-          target_label = "job"
-          replacement = "integration/mysql"
         }
       }
     
@@ -483,9 +357,9 @@ data:
             "service_instance_id" = "service_instance_id",
           }
         }
-         // Database Observability: MySQL
+        // Integration: MySQL
         stage.match {
-          selector = "{db_observability_integration=\"mysql\"}"
+          selector = "{integration=\"mysql\"}"
     
           stage.regex {
             expression = `(?P<timestamp>.+) (?P<thread>[\d]+) \[(?P<label>.+?)\]( \[(?P<err_code>.+?)\] \[(?P<subsystem>.+?)\])? (?P<msg>.+)`
@@ -504,8 +378,14 @@ data:
             drop_counter_reason = "drop empty lines"
           }
     
+          stage.static_labels {
+            values = {
+              job = "integrations/mysql",
+            }
+          }
+    
           stage.label_drop {
-            values = ["db_observability_integration"]
+            values = ["integration"]
           }
         }
     
@@ -534,6 +414,7 @@ data:
     loki.write "loki" {
       endpoint {
         url = "http://loki.loki.svc:3100/loki/api/v1/push"
+        retry_on_http_429 = true
         tenant_id = convert.nonsensitive(remote.kubernetes.secret.loki.data["tenantId"])
         basic_auth {
           username = convert.nonsensitive(remote.kubernetes.secret.loki.data["username"])
@@ -1311,7 +1192,7 @@ metadata:
   labels:
     app.kubernetes.io/name: k8smon-k8s-monitoring-add-finalizer
     app.kubernetes.io/instance: k8smon
-    helm.sh/chart: k8s-monitoring-3.5.6
+    helm.sh/chart: k8s-monitoring-3.5.7
   annotations:
     helm.sh/hook: post-install,post-upgrade
     helm.sh/hook-weight: "15"
@@ -1363,7 +1244,7 @@ metadata:
   labels:
     app.kubernetes.io/name: k8smon-k8s-monitoring-remove-alloy-and-finalizer
     app.kubernetes.io/instance: k8smon
-    helm.sh/chart: k8s-monitoring-3.5.6
+    helm.sh/chart: k8s-monitoring-3.5.7
   annotations:
     helm.sh/hook: pre-delete
     helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded

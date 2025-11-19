@@ -247,7 +247,6 @@ details:
 |  | autoInstrumentation(feature-auto-instrumentation) | 1.0.0 |
 |  | clusterEvents(feature-cluster-events) | 1.0.0 |
 |  | clusterMetrics(feature-cluster-metrics) | 1.0.0 |
-|  | databaseObservability(feature-database-observability) | 1.0.0 |
 |  | integrations(feature-integrations) | 1.0.0 |
 |  | nodeLogs(feature-node-logs) | 1.0.0 |
 |  | podLogs(feature-pod-logs) | 1.0.0 |
@@ -359,13 +358,6 @@ details:
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | collectorCommon.alloy | object | `{}` | Settings to apply to all Alloy instances created by this Helm chart. This includes Alloy instances created by enabling Tail Sampling or Service Graph Metrics. |
-
-### Features - Database Observability
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| databaseObservability | object | Disabled | Database Observability gathers insights about your databases. Requires a destination that supports metrics and one that supports logs. To see the valid options, please see the [Database Observability feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-database-observability). |
-| databaseObservability.destinations | list | `[]` | The destinations where database observability data will be sent. If empty, all capable destinations will be used. |
 
 ### Destinations
 
