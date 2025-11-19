@@ -33,7 +33,15 @@
 {{- end }}
 {{- $dbO11yEnabled := (dig "databaseObservability" "enabled" true .instance) }}
 {{- if and $dbO11yEnabled (not $metricsEnabled) }}
-
+  {{- $msg := list "" "Enabling Database Observability for MySQL requires exporter metrics." }}
+  {{- $msg = append $msg "Please set:" }}
+  {{- $msg = append $msg "integrations:" }}
+  {{- $msg = append $msg "  mysql:" }}
+  {{- $msg = append $msg "    instances:" }}
+  {{- $msg = append $msg (printf "      - name: %s" .instance.name) }}
+  {{- $msg = append $msg "        metrics:" }}
+  {{- $msg = append $msg "          enabled: true" }}
+  {{- fail (join "\n" $msg) }}
 {{- end }}
 {{- if and .instance.logs.enabled (not .instance.logs.labelSelectors) }}
   {{- $msg := list "" "The MySQL integration requires a label selector" }}
