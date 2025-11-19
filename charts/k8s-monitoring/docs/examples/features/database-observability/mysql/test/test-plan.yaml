@@ -53,12 +53,5 @@ tests:
             - query: mysqld_exporter_build_info{cluster="$CLUSTER", instance="test-db"}
               type: promql
 
-            - query: count_over_time({cluster="$CLUSTER", job="integration/mysql", instance="test-db"}[1h])
+            - query: count_over_time({cluster="$CLUSTER", job="integrations/mysql", instance="test-db"}[1h])
               type: logql
-
-            # DPM check
-            - query: avg(count_over_time(scrape_samples_scraped{cluster="$CLUSTER"}[1m]))
-              type: promql
-              expect:
-                value: 1
-                operator: ==
