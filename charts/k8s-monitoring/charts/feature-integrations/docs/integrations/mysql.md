@@ -36,21 +36,11 @@
 | databaseObservability.collectors.setupConsumers.collectInterval | string | `"1m"` | How frequently to collect performance_schema.setup_consumers information from the database. |
 | databaseObservability.collectors.setupConsumers.enabled | bool | `true` | Enable collection of performance_schema.setup_consumers information. |
 
-### Exporter Collectors
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| exporter.collectors.heartbeat.database | string | `heartbeat` | Database to collect heartbeat data from. |
-| exporter.collectors.heartbeat.enabled | bool | `true` | Enable heartbeat collector. |
-| exporter.collectors.heartbeat.table | string | `heartbeat` | Table to collect heartbeat data from. |
-| exporter.collectors.mysqlUser.enabled | bool | `true` | Enable mysql.user collector. |
-| exporter.collectors.mysqlUser.privileges | bool | `false` | Enable collecting user privileges from mysql.user. |
-| exporter.collectors.perfSchemaEventsStatements.enabled | bool | `false` | Enable perf_schema.eventsstatements collector. |
-
 ### Exporter Settings
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
+| exporter.collectors | object | `{"heartbeat":{"database":"","enabled":true,"table":""},"mysqlUser":{"enabled":true,"privileges":false},"perfSchemaEventsStatements":{"enabled":false}}` | The list of collectors to enable for the MySQL Exporter ([Documentation](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.exporter.mysql/#supported-collectors)). This used to be a list of collector names. This format is still supported, but the new format will allow for customization. collectors: ["heartbeat", "mysql.user"] |
 | exporter.dataSource.auth.password | string | `""` | The password to use for the MySQL connection. |
 | exporter.dataSource.auth.passwordFrom | string | `""` | Raw config for accessing the password. |
 | exporter.dataSource.auth.passwordKey | string | `"password"` | The key for storing the password in the secret. |
@@ -61,6 +51,17 @@
 | exporter.dataSource.port | int | `3306` | The MySQL port to connect to. |
 | exporter.dataSource.protocol | string | `""` | The MySQL protocol type. |
 | exporter.dataSourceName | string | `""` | The data source string to use for the MySQL Exporter. |
+
+### Exporter Collectors
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| exporter.collectors.heartbeat.database | string | `heartbeat` | Database to collect heartbeat data from. |
+| exporter.collectors.heartbeat.enabled | bool | `true` | Enable heartbeat collector. |
+| exporter.collectors.heartbeat.table | string | `heartbeat` | Table to collect heartbeat data from. |
+| exporter.collectors.mysqlUser.enabled | bool | `true` | Enable mysql.user collector. |
+| exporter.collectors.mysqlUser.privileges | bool | `false` | Enable collecting user privileges from mysql.user. |
+| exporter.collectors.perfSchemaEventsStatements.enabled | bool | `false` | Enable perf_schema.eventsstatements collector. |
 
 ### General Settings
 
