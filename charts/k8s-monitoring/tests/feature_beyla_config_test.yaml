@@ -42,11 +42,14 @@ tests:
               path: /metrics
               port: 9090
 
-  - it: does not set otel_traces_export endpoint automatically
+  - it: does not set otel_traces_export endpoint automatically when flag is disabled
     set:
       deployAsConfigMap: true
       cluster: {name: beyla-config-cluster}
-      autoInstrumentation: {enabled: true}
+      autoInstrumentation:
+        enabled: true
+        beyla:
+          deliverTracesToApplicationObservability: false
       applicationObservability:
         enabled: true
         receivers:
@@ -86,6 +89,63 @@ tests:
               prometheus:
                 path: /internal/metrics
                 port: 9090
+            prometheus_export:
+              features:
+              - application
+              - network
+              - application_service_graph
+              - application_span
+              - application_host
+              path: /metrics
+              port: 9090
+
+  - it: sets otel_traces_export endpoint when deliverTracesToApplicationObservability is enabled (default)
+    set:
+      deployAsConfigMap: true
+      cluster: {name: beyla-config-cluster}
+      autoInstrumentation:
+        enabled: true
+      applicationObservability:
+        enabled: true
+        receivers:
+          otlp:
+            grpc:
+              enabled: true
+      alloy-receiver:
+        enabled: true
+        alloy:
+          extraPorts:
+            - name: otlp-grpc
+              port: 4317
+              targetPort: 4317
+              protocol: TCP
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - equal:
+          path: data["beyla-config.yml"]
+          value: |-
+            attributes:
+              kubernetes:
+                cluster_name: beyla-config-cluster
+                enable: true
+            discovery:
+              exclude_services:
+              - exe_path: .*alloy.*|.*otelcol.*|.*beyla.*
+              services:
+              - k8s_namespace: .
+            filter:
+              network:
+                k8s_dst_owner_name:
+                  not_match: '{kube*,*jaeger-agent*,*prometheus*,*promtail*,*grafana-agent*}'
+                k8s_src_owner_name:
+                  not_match: '{kube*,*jaeger-agent*,*prometheus*,*promtail*,*grafana-agent*}'
+            internal_metrics:
+              prometheus:
+                path: /internal/metrics
+                port: 9090
+            otel_traces_export:
+              endpoint: http://RELEASE-NAME-alloy-receiver.NAMESPACE.svc.cluster.local:4317
             prometheus_export:
               features:
               - application

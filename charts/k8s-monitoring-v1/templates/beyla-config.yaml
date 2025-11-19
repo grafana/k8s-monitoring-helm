@@ -7,7 +7,19 @@
 {{- if and (eq .Values.beyla.preset "application") (not .Values.beyla.config.data.discovery) }}
   {{- $preset = dict "discovery" (dict "services" (list (dict "k8s_namespace" ".")))}}
 {{- end }}
-{{- merge .Values.beyla.config.data $clusterName $preset | toYaml }}
+{{- $tracing := dict }}
+{{- if .Values.beyla.deliverTracesToApplicationObservability }}
+  {{- $endpoint := "" }}
+  {{- if .Values.receivers.grpc.enabled }}
+    {{- $endpoint = printf "http://%s-%s.%s.svc.cluster.local:%d" $.Release.Name "alloy" $.Release.Namespace (int .Values.receivers.grpc.port) }}
+  {{- else if .Values.receivers.http.enabled }}
+    {{- $endpoint = printf "http://%s-%s.%s.svc.cluster.local:%d" $.Release.Name "alloy" $.Release.Namespace (int .Values.receivers.http.port) }}
+  {{- end }}
+  {{- if $endpoint }}
+    {{- $tracing = dict "otel_traces_export" (dict "endpoint" $endpoint) }}
+  {{- end }}
+{{- end }}
+{{- merge .Values.beyla.config.data $clusterName $preset $tracing | toYaml }}
 {{- end }}
 
 {{- if .Values.beyla.enabled }}

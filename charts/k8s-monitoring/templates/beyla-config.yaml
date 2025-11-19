@@ -15,6 +15,18 @@
   {{- $discovery := dict "services" $services "exclude_services" $excludeServices }}
   {{- $overrides = merge $overrides (dict "discovery" $discovery) }}
 {{- end }}
+{{- if and .Values.autoInstrumentation.beyla.deliverTracesToApplicationObservability .Values.applicationObservability.enabled }}
+  {{- $endpoint := "" }}
+  {{- if .Values.applicationObservability.receivers.otlp.grpc.enabled }}
+    {{- $endpoint = printf "http://%s-%s.%s.svc.cluster.local:%d" $.Release.Name "alloy-receiver" $.Release.Namespace (int .Values.applicationObservability.receivers.otlp.grpc.port) }}
+  {{- else if .Values.applicationObservability.receivers.otlp.http.enabled }}
+    {{- $endpoint = printf "http://%s-%s.%s.svc.cluster.local:%d" $.Release.Name "alloy-receiver" $.Release.Namespace (int .Values.applicationObservability.receivers.otlp.http.port) }}
+  {{- end }}
+  {{- if $endpoint }}
+    {{- $otelTracesExport := dict "endpoint" $endpoint }}
+    {{- $overrides = merge $overrides (dict "otel_traces_export" $otelTracesExport) }}
+  {{- end }}
+{{- end }}
 ---
 apiVersion: v1
 kind: ConfigMap
