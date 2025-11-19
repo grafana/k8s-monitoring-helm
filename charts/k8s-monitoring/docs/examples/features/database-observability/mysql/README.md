@@ -26,6 +26,7 @@ destinations:
       password: lokipassword
 
 integrations:
+  collector: alloy-singleton
   mysql:
     instances:
       - name: test-db
