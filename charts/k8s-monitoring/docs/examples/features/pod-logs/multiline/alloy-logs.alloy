@@ -227,6 +227,7 @@ otelcol.exporter.loki "loki" {
 loki.write "loki" {
   endpoint {
     url = "http://loki.loki.svc:3100/loki/api/v1/push"
+    retry_on_http_429 = true
     tenant_id = convert.nonsensitive(remote.kubernetes.secret.loki.data["tenantId"])
     basic_auth {
       username = convert.nonsensitive(remote.kubernetes.secret.loki.data["username"])

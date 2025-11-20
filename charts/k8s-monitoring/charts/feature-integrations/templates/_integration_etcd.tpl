@@ -71,7 +71,7 @@ discovery.relabel {{ include "helper.alloy_name" .name | quote }} {
 
   // set the metrics port
   rule {
-    source_labels = ["__address__"]
+    source_labels = ["__meta_kubernetes_pod_ip"]
     replacement = "$1:{{ .metrics.port }}"
     target_label = "__address__"
   }
@@ -141,6 +141,7 @@ prometheus.scrape {{ include "helper.alloy_name" .name | quote }} {
   scrape_timeout = {{ .metrics.scrapeTimeout | default .scrapeTimeout | default $.Values.global.scrapeTimeout | quote }}
   scrape_protocols = {{ $.Values.global.scrapeProtocols | toJson }}
   scrape_classic_histograms = {{ $.Values.global.scrapeClassicHistograms }}
+  scrape_native_histograms = {{ $.Values.global.scrapeNativeHistograms }}
   clustering {
     enabled = true
   }
@@ -171,7 +172,8 @@ prometheus.relabel {{ include "helper.alloy_name" .name | quote }} {
 
 {{- define "integrations.etcd.validate" }}
   {{- range $instance := $.Values.etcd.instances }}
-    {{- include "integrations.etcd.instance.validate" (merge $ (dict "instance" $instance)) | nindent 2 }}
+    {{- $defaultValues := fromYaml ($.Files.Get "integrations/etcd-values.yaml") }}
+    {{- include "integrations.etcd.instance.validate" (dict "instance" (mergeOverwrite $defaultValues $instance (dict "type" "integration.etcd"))) | nindent 2 }}
   {{- end }}
 {{- end }}
 

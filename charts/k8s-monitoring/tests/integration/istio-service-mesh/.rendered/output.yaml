@@ -19,7 +19,7 @@ kind: ServiceAccount
 automountServiceAccountToken: true
 metadata:
   labels:    
-    helm.sh/chart: kube-state-metrics-6.3.0
+    helm.sh/chart: kube-state-metrics-6.4.1
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: kube-state-metrics
@@ -426,6 +426,7 @@ data:
         bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
         scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
         scrape_classic_histograms = false
+        scrape_native_histograms = false
         clustering {
           enabled = true
         }
@@ -442,6 +443,7 @@ data:
         }
         scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
         scrape_classic_histograms = false
+        scrape_native_histograms = false
         clustering {
           enabled = true
         }
@@ -490,6 +492,7 @@ data:
         scrape_timeout = "10s"
         scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
         scrape_classic_histograms = false
+        scrape_native_histograms = false
         bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
     
         tls_config {
@@ -533,6 +536,7 @@ data:
         scrape_timeout = "10s"
         scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
         scrape_classic_histograms = false
+        scrape_native_histograms = false
         bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
     
         tls_config {
@@ -576,6 +580,7 @@ data:
         scrape_timeout = "10s"
         scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
         scrape_classic_histograms = false
+        scrape_native_histograms = false
         bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
     
         tls_config {
@@ -705,6 +710,7 @@ data:
         scrape_timeout = "10s"
         scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
         scrape_classic_histograms = false
+        scrape_native_histograms = false
         scheme = "http"
         bearer_token_file = ""
         tls_config {
@@ -839,6 +845,7 @@ data:
         scrape_timeout = "10s"
         scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
         scrape_classic_histograms = false
+        scrape_native_histograms = false
         scheme = "http"
         bearer_token_file = ""
         tls_config {
@@ -910,6 +917,7 @@ data:
         scrape_timeout = "10s"
         scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
         scrape_classic_histograms = false
+        scrape_native_histograms = false
         clustering {
           enabled = true
         }
@@ -1204,6 +1212,7 @@ data:
     loki.write "localloki" {
       endpoint {
         url = "http://loki.loki.svc:3100/loki/api/v1/push"
+        retry_on_http_429 = true
         tenant_id = convert.nonsensitive(remote.kubernetes.secret.localloki.data["tenantId"])
         basic_auth {
           username = convert.nonsensitive(remote.kubernetes.secret.localloki.data["username"])
@@ -1229,7 +1238,7 @@ data:
   self-reporting-metric.prom: |
     # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_build_info gauge
-    grafana_kubernetes_monitoring_build_info{version="3.5.6", namespace="default"} 1
+    grafana_kubernetes_monitoring_build_info{version="3.5.7", namespace="default"} 1
     # HELP grafana_kubernetes_monitoring_feature_info A metric to report the enabled features of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_feature_info gauge
     grafana_kubernetes_monitoring_feature_info{feature="annotationAutodiscovery", version="1.0.0"} 1
@@ -1470,6 +1479,7 @@ data:
     loki.write "localloki" {
       endpoint {
         url = "http://loki.loki.svc:3100/loki/api/v1/push"
+        retry_on_http_429 = true
         tenant_id = convert.nonsensitive(remote.kubernetes.secret.localloki.data["tenantId"])
         basic_auth {
           username = convert.nonsensitive(remote.kubernetes.secret.localloki.data["username"])
@@ -1698,6 +1708,7 @@ data:
     loki.write "localloki" {
       endpoint {
         url = "http://loki.loki.svc:3100/loki/api/v1/push"
+        retry_on_http_429 = true
         tenant_id = convert.nonsensitive(remote.kubernetes.secret.localloki.data["tenantId"])
         basic_auth {
           username = convert.nonsensitive(remote.kubernetes.secret.localloki.data["username"])
@@ -1850,7 +1861,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   labels:    
-    helm.sh/chart: kube-state-metrics-6.3.0
+    helm.sh/chart: kube-state-metrics-6.4.1
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: kube-state-metrics
@@ -2046,7 +2057,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   labels:    
-    helm.sh/chart: kube-state-metrics-6.3.0
+    helm.sh/chart: kube-state-metrics-6.4.1
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: kube-state-metrics
@@ -2164,7 +2175,7 @@ metadata:
   name: k8smon-kube-state-metrics
   namespace: default
   labels:    
-    helm.sh/chart: kube-state-metrics-6.3.0
+    helm.sh/chart: kube-state-metrics-6.4.1
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: kube-state-metrics
@@ -2552,7 +2563,7 @@ metadata:
   name: k8smon-kube-state-metrics
   namespace: default
   labels:    
-    helm.sh/chart: kube-state-metrics-6.3.0
+    helm.sh/chart: kube-state-metrics-6.4.1
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: kube-state-metrics
@@ -2572,7 +2583,7 @@ spec:
   template:
     metadata:
       labels:        
-        helm.sh/chart: kube-state-metrics-6.3.0
+        helm.sh/chart: kube-state-metrics-6.4.1
         app.kubernetes.io/managed-by: Helm
         app.kubernetes.io/component: metrics
         app.kubernetes.io/part-of: kube-state-metrics
@@ -3521,7 +3532,7 @@ metadata:
   labels:
     app.kubernetes.io/name: k8smon-k8s-monitoring-add-finalizer
     app.kubernetes.io/instance: k8smon
-    helm.sh/chart: k8s-monitoring-3.5.6
+    helm.sh/chart: k8s-monitoring-3.5.7
   annotations:
     helm.sh/hook: post-install,post-upgrade
     helm.sh/hook-weight: "15"
@@ -3573,7 +3584,7 @@ metadata:
   labels:
     app.kubernetes.io/name: k8smon-k8s-monitoring-remove-alloy-and-finalizer
     app.kubernetes.io/instance: k8smon
-    helm.sh/chart: k8s-monitoring-3.5.6
+    helm.sh/chart: k8s-monitoring-3.5.7
   annotations:
     helm.sh/hook: pre-delete
     helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded

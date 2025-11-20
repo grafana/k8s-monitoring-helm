@@ -109,7 +109,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | Repository | Name | Version |
 |------------|------|---------|
 | https://opencost.github.io/opencost-helm-chart | opencost | 2.3.2 |
-| https://prometheus-community.github.io/helm-charts | kube-state-metrics | 6.3.0 |
+| https://prometheus-community.github.io/helm-charts | kube-state-metrics | 6.4.1 |
 | https://prometheus-community.github.io/helm-charts | node-exporter(prometheus-node-exporter) | 4.49.1 |
 | https://prometheus-community.github.io/helm-charts | windows-exporter(prometheus-windows-exporter) | 0.12.2 |
 | https://sustainable-computing-io.github.io/kepler-helm-chart | kepler | 0.6.1 |
@@ -175,6 +175,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | global.platform | string | `""` | The specific platform for this cluster. Will enable compatibility for some platforms. Supported options: (empty) or "openshift". |
 | global.scrapeClassicHistograms | bool | `false` | Whether to scrape a classic histogram that’s also exposed as a native histogram. |
 | global.scrapeInterval | string | `"60s"` | How frequently to scrape metrics. |
+| global.scrapeNativeHistograms | bool | `false` | Whether to scrape native histograms. |
 | global.scrapeProtocols | list | `["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]` | The protocols to negotiate during a Prometheus metrics scrape, in order of preference. |
 | global.scrapeTimeout | string | `"10s"` | The timeout for scraping metrics. |
 

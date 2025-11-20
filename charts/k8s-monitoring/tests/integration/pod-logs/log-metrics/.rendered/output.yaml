@@ -215,6 +215,11 @@ data:
           optional = true
         }
     
+        argument "scrape_native_histograms" {
+          comment = "Whether to scrape native histograms (default: false)."
+          optional = true
+        }
+    
         argument "max_cache_size" {
           comment = "The maximum number of elements to hold in the relabeling cache (default: 100000).  This should be at least 2x-5x your largest scrape target or samples appended rate."
           optional = true
@@ -233,6 +238,7 @@ data:
           scrape_timeout = coalesce(argument.scrape_timeout.value, "10s")
           scrape_protocols = argument.scrape_protocols.value
           scrape_classic_histograms = argument.scrape_classic_histograms.value
+          scrape_native_histograms = argument.scrape_native_histograms.value
     
           clustering {
             enabled = coalesce(argument.clustering.value, false)
@@ -330,7 +336,7 @@ data:
         label_selectors = ["app.kubernetes.io/name in (alloy-metrics,alloy-logs)"]
       }
     
-      alloy_integration_scrape  "alloy" {
+      alloy_integration_scrape "alloy" {
         targets = alloy_integration_discovery.alloy.output
         job_label = "integrations/alloy"
         clustering = true
@@ -339,6 +345,7 @@ data:
         scrape_timeout = "10s"
         scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
         scrape_classic_histograms = false
+        scrape_native_histograms = false
         max_cache_size = 100000
         forward_to = argument.metrics_destinations.value
       }
@@ -446,7 +453,7 @@ data:
   self-reporting-metric.prom: |
     # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_build_info gauge
-    grafana_kubernetes_monitoring_build_info{version="3.5.6", namespace="default"} 1
+    grafana_kubernetes_monitoring_build_info{version="3.5.7", namespace="default"} 1
     # HELP grafana_kubernetes_monitoring_feature_info A metric to report the enabled features of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_feature_info gauge
     grafana_kubernetes_monitoring_feature_info{feature="podLogs", method="volumes", version="1.0.0"} 1
@@ -695,6 +702,7 @@ data:
     loki.write "localloki" {
       endpoint {
         url = "http://loki.loki.svc:3100/loki/api/v1/push"
+        retry_on_http_429 = true
         tenant_id = convert.nonsensitive(remote.kubernetes.secret.localloki.data["tenantId"])
         basic_auth {
           username = convert.nonsensitive(remote.kubernetes.secret.localloki.data["username"])
@@ -1472,7 +1480,7 @@ metadata:
   labels:
     app.kubernetes.io/name: k8smon-k8s-monitoring-add-finalizer
     app.kubernetes.io/instance: k8smon
-    helm.sh/chart: k8s-monitoring-3.5.6
+    helm.sh/chart: k8s-monitoring-3.5.7
   annotations:
     helm.sh/hook: post-install,post-upgrade
     helm.sh/hook-weight: "15"
@@ -1524,7 +1532,7 @@ metadata:
   labels:
     app.kubernetes.io/name: k8smon-k8s-monitoring-remove-alloy-and-finalizer
     app.kubernetes.io/instance: k8smon
-    helm.sh/chart: k8s-monitoring-3.5.6
+    helm.sh/chart: k8s-monitoring-3.5.7
   annotations:
     helm.sh/hook: pre-delete
     helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded

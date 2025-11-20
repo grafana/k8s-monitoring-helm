@@ -25,7 +25,7 @@ jobs:
       changed_charts: ${{ steps.changed_charts.outputs.changed_charts }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8  # v5.0.0
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd  # v5.0.1
         with:
           persist-credentials: 'false'
 
@@ -83,7 +83,7 @@ jobs:
     if: ${{ needs.detect-changed-charts.outputs.changed_charts != 'none' }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8  # v5.0.0
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd  # v5.0.1
         with:
           persist-credentials: 'false'
 
@@ -91,17 +91,19 @@ jobs:
         id: setup-helm
         uses: azure/setup-helm@1a275c3b69536ee54be43f2070a358922e12c8d4  # v4.3.1
         continue-on-error: true
+        with:
+          version: 4.0.0
 
       - name: Set up Homebrew
         if: ${{ steps.setup-helm.outcome == 'failure' }}
-        uses: Homebrew/actions/setup-homebrew@6608395265063b0b4534ee5672930fa31cd45f94
+        uses: Homebrew/actions/setup-homebrew@e58f0b60d43355cab9d13c7ecf58a4fbfced93c2
 
       - name: Install Helm
         if: ${{ steps.setup-helm.outcome == 'failure' }}
         run: brew install helm
 
       - name: Set up chart-testing
-        uses: helm/chart-testing-action@0d28d3144d3a25ea2cc349d6e59901c4ff469b3b  # v2.7.0
+        uses: helm/chart-testing-action@6ec842c01de15ebb84c8627d2744a0c2f2755c9f  # v2.8.0
 
       # Installing Grafana Alloy because we need it to lint the generated alloy config files.
       # https://grafana.com/docs/alloy/latest/get-started/install/linux/
@@ -129,7 +131,7 @@ jobs:
     if: ${{ needs.detect-changed-charts.outputs.changed_charts != 'none' }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8  # v5.0.0
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd  # v5.0.1
         with:
           persist-credentials: 'false'
 
@@ -137,10 +139,12 @@ jobs:
         id: setup-helm
         uses: azure/setup-helm@1a275c3b69536ee54be43f2070a358922e12c8d4  # v4.3.1
         continue-on-error: true
+        with:
+          version: 4.0.0
 
       - name: Set up Homebrew
         if: ${{ steps.setup-helm.outcome == 'failure' }}
-        uses: Homebrew/actions/setup-homebrew@6608395265063b0b4534ee5672930fa31cd45f94
+        uses: Homebrew/actions/setup-homebrew@e58f0b60d43355cab9d13c7ecf58a4fbfced93c2
 
       - name: Install Helm
         if: ${{ steps.setup-helm.outcome == 'failure' }}

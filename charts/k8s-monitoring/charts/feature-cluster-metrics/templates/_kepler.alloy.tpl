@@ -51,6 +51,7 @@ prometheus.scrape "kepler" {
   scrape_timeout = {{ .Values.kepler.scrapeTimeout | default .Values.global.scrapeTimeout | quote }}
   scrape_protocols = {{ .Values.global.scrapeProtocols | toJson }}
   scrape_classic_histograms = {{ .Values.global.scrapeClassicHistograms }}
+  scrape_native_histograms = {{ .Values.global.scrapeNativeHistograms }}
   clustering {
     enabled = true
   }

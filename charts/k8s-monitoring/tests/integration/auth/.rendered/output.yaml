@@ -132,6 +132,7 @@ data:
         scrape_timeout = "10s"
         scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
         scrape_classic_histograms = false
+        scrape_native_histograms = false
         bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
     
         tls_config {
@@ -820,7 +821,7 @@ data:
   self-reporting-metric.prom: |
     # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_build_info gauge
-    grafana_kubernetes_monitoring_build_info{version="3.5.6", namespace="default"} 1
+    grafana_kubernetes_monitoring_build_info{version="3.5.7", namespace="default"} 1
     # HELP grafana_kubernetes_monitoring_feature_info A metric to report the enabled features of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_feature_info gauge
     grafana_kubernetes_monitoring_feature_info{feature="clusterMetrics", sources="kubelet", version="1.0.0"} 1
@@ -1064,6 +1065,7 @@ data:
     loki.write "loki_noauth" {
       endpoint {
         url = "http://loki.loki.svc:3100/loki/api/v1/push"
+        retry_on_http_429 = true
         tenant_id = convert.nonsensitive(remote.kubernetes.secret.loki_noauth.data["tenantId"])
         tls_config {
           insecure_skip_verify = false
@@ -1092,6 +1094,7 @@ data:
     loki.write "loki_basicauth" {
       endpoint {
         url = "http://nginx-auth-gateway.default.svc/logs/basic/loki/api/v1/push"
+        retry_on_http_429 = true
         tenant_id = convert.nonsensitive(remote.kubernetes.secret.loki_basicauth.data["tenantId"])
         basic_auth {
           username = convert.nonsensitive(remote.kubernetes.secret.loki_basicauth.data["username"])
@@ -1124,6 +1127,7 @@ data:
     loki.write "loki_basicauth_external_secret" {
       endpoint {
         url = "http://nginx-auth-gateway.default.svc/logs/basic/loki/api/v1/push"
+        retry_on_http_429 = true
         tenant_id = convert.nonsensitive(remote.kubernetes.secret.loki_basicauth_external_secret.data["lokiTenantId"])
         basic_auth {
           username = convert.nonsensitive(remote.kubernetes.secret.loki_basicauth_external_secret.data["lokiUsername"])
@@ -1159,6 +1163,7 @@ data:
     loki.write "loki_bearer_token" {
       endpoint {
         url = "http://nginx-auth-gateway.default.svc/logs/bearer/loki/api/v1/push"
+        retry_on_http_429 = true
         tenant_id = convert.nonsensitive(remote.kubernetes.secret.loki_bearer_token.data["tenantId"])
         bearer_token = remote.kubernetes.secret.loki_bearer_token.data["bearerToken"]
         tls_config {
@@ -1934,7 +1939,7 @@ metadata:
   labels:
     app.kubernetes.io/name: k8smon-k8s-monitoring-add-finalizer
     app.kubernetes.io/instance: k8smon
-    helm.sh/chart: k8s-monitoring-3.5.6
+    helm.sh/chart: k8s-monitoring-3.5.7
   annotations:
     helm.sh/hook: post-install,post-upgrade
     helm.sh/hook-weight: "15"
@@ -1986,7 +1991,7 @@ metadata:
   labels:
     app.kubernetes.io/name: k8smon-k8s-monitoring-remove-alloy-and-finalizer
     app.kubernetes.io/instance: k8smon
-    helm.sh/chart: k8s-monitoring-3.5.6
+    helm.sh/chart: k8s-monitoring-3.5.7
   annotations:
     helm.sh/hook: pre-delete
     helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded

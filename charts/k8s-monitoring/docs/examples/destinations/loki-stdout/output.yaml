@@ -257,6 +257,7 @@ data:
     loki.write "loki" {
       endpoint {
         url = "http://loki.loki.svc:3100/loki/api/v1/push"
+        retry_on_http_429 = true
         tenant_id = convert.nonsensitive(remote.kubernetes.secret.loki.data["tenantId"])
         basic_auth {
           username = convert.nonsensitive(remote.kubernetes.secret.loki.data["username"])
@@ -858,7 +859,7 @@ metadata:
   labels:
     app.kubernetes.io/name: k8smon-k8s-monitoring-add-finalizer
     app.kubernetes.io/instance: k8smon
-    helm.sh/chart: k8s-monitoring-3.5.6
+    helm.sh/chart: k8s-monitoring-3.5.7
   annotations:
     helm.sh/hook: post-install,post-upgrade
     helm.sh/hook-weight: "15"
@@ -910,7 +911,7 @@ metadata:
   labels:
     app.kubernetes.io/name: k8smon-k8s-monitoring-remove-alloy-and-finalizer
     app.kubernetes.io/instance: k8smon
-    helm.sh/chart: k8s-monitoring-3.5.6
+    helm.sh/chart: k8s-monitoring-3.5.7
   annotations:
     helm.sh/hook: pre-delete
     helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded

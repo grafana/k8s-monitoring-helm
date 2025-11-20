@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## 3.5.7
+
+*   Update kube-state-metrics and prometheus-operator-crds (@petewall)
+*   Add the ability to set `scrape_native_histograms` for Prometheus scrape configs (@SeamusGrafana)
+*   Fix port assignment on the etcd integration and several cluster metrics control plane services (@petewall)
+*   Fix MySQL integration (@petewall)
+
 ## 3.5.6
 
 *   Add the ability to set resources for the Helm hooks (@petewall)

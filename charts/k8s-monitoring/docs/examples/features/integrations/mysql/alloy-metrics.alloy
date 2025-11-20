@@ -7,12 +7,14 @@ declare "mysql_integration" {
     data_source_name  = "root:password@database.staging.svc:3306/"
     enable_collectors = ["heartbeat","mysql.user"]
   }
+
   prometheus.scrape "staging_db" {
     targets    = prometheus.exporter.mysql.staging_db.targets
     scrape_interval = "60s"
     scrape_timeout = "10s"
     scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
     scrape_classic_histograms = false
+    scrape_native_histograms = false
     forward_to = [prometheus.relabel.staging_db.receiver]
   }
 
@@ -44,12 +46,14 @@ declare "mysql_integration" {
     )
     enable_collectors = ["heartbeat","mysql.user"]
   }
+
   prometheus.scrape "staging_db" {
     targets    = prometheus.exporter.mysql.staging_db.targets
     scrape_interval = "60s"
     scrape_timeout = "10s"
     scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
     scrape_classic_histograms = false
+    scrape_native_histograms = false
     forward_to = [prometheus.relabel.staging_db.receiver]
   }
 
@@ -81,12 +85,14 @@ declare "mysql_integration" {
     )
     enable_collectors = ["heartbeat","mysql.user"]
   }
+
   prometheus.scrape "prod_db" {
     targets    = prometheus.exporter.mysql.prod_db.targets
     scrape_interval = "60s"
     scrape_timeout = "10s"
     scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
     scrape_classic_histograms = false
+    scrape_native_histograms = false
     forward_to = [prometheus.relabel.prod_db.receiver]
   }
 

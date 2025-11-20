@@ -21,12 +21,14 @@ allows you to set the network protocol:
           )
           enable_collectors = ["heartbeat","mysql.user"]
         }
+
         prometheus.scrape "test_database" {
           targets    = prometheus.exporter.mysql.test_database.targets
           scrape_interval = "60s"
           scrape_timeout = "10s"
           scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
           scrape_classic_histograms = false
+          scrape_native_histograms = false
           forward_to = [prometheus.relabel.test_database.receiver]
         }
 
@@ -66,12 +68,14 @@ should create the MySQL config:
           )
           enable_collectors = ["heartbeat","mysql.user"]
         }
+
         prometheus.scrape "my_database" {
           targets    = prometheus.exporter.mysql.my_database.targets
           scrape_interval = "60s"
           scrape_timeout = "10s"
           scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
           scrape_classic_histograms = false
+          scrape_native_histograms = false
           forward_to = [prometheus.relabel.my_database.receiver]
         }
 
@@ -111,12 +115,14 @@ works when referencing the MySQL Secret:
           )
           enable_collectors = ["heartbeat","mysql.user"]
         }
+
         prometheus.scrape "test_database" {
           targets    = prometheus.exporter.mysql.test_database.targets
           scrape_interval = "60s"
           scrape_timeout = "10s"
           scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
           scrape_classic_histograms = false
+          scrape_native_histograms = false
           forward_to = [prometheus.relabel.test_database.receiver]
         }
 
@@ -145,12 +151,14 @@ works with multiple MySQL Instances:
           data_source_name = string.format("%s:%d/", "database.test.svc", 3306)
           enable_collectors = ["heartbeat","mysql.user"]
         }
+
         prometheus.scrape "test_db" {
           targets    = prometheus.exporter.mysql.test_db.targets
           scrape_interval = "60s"
           scrape_timeout = "10s"
           scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
           scrape_classic_histograms = false
+          scrape_native_histograms = false
           forward_to = [prometheus.relabel.test_db.receiver]
         }
 
@@ -171,12 +179,14 @@ works with multiple MySQL Instances:
           data_source_name  = "root:password@database.staging.svc:3306/"
           enable_collectors = ["heartbeat","mysql.user"]
         }
+
         prometheus.scrape "staging_db" {
           targets    = prometheus.exporter.mysql.staging_db.targets
           scrape_interval = "60s"
           scrape_timeout = "10s"
           scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
           scrape_classic_histograms = false
+          scrape_native_histograms = false
           forward_to = [prometheus.relabel.staging_db.receiver]
         }
 
@@ -208,12 +218,14 @@ works with multiple MySQL Instances:
           )
           enable_collectors = ["heartbeat","mysql.user"]
         }
+
         prometheus.scrape "prod_db" {
           targets    = prometheus.exporter.mysql.prod_db.targets
           scrape_interval = "60s"
           scrape_timeout = "10s"
           scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
           scrape_classic_histograms = false
+          scrape_native_histograms = false
           forward_to = [prometheus.relabel.prod_db.receiver]
         }
 

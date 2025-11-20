@@ -13,7 +13,7 @@ permissions: {}
 
 jobs:
   release-chart:
-    uses: grafana/helm-charts/.github/workflows/update-helm-repo.yaml@76d7026888fa2820457a4f819195575233414788
+    uses: grafana/helm-charts/.github/workflows/update-helm-repo.yaml@5fbf1be3a698489b1409e24863f7798533fa1fab
     permissions:
       contents: write
       id-token: write
@@ -36,7 +36,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8  # v5.0.0
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd  # v5.0.1
         with:
           fetch-depth: 0
           path: source
@@ -52,10 +52,12 @@ jobs:
         id: setup-helm
         uses: azure/setup-helm@1a275c3b69536ee54be43f2070a358922e12c8d4  # v4.3.1
         continue-on-error: true
+        with:
+          version: 4.0.0
 
       - name: Set up Homebrew
         if: ${{ steps.setup-helm.outcome == 'failure' }}
-        uses: Homebrew/actions/setup-homebrew@6608395265063b0b4534ee5672930fa31cd45f94
+        uses: Homebrew/actions/setup-homebrew@e58f0b60d43355cab9d13c7ecf58a4fbfced93c2
 
       - name: Install Helm
         if: ${{ steps.setup-helm.outcome == 'failure' }}
@@ -137,7 +139,7 @@ jobs:
           ls -l "${CR_PACKAGE_PATH}"
 
       - name: Make github release
-        uses: softprops/action-gh-release@6da8fa9354ddfdc4aeace5fc48d7f679b5214090  # v2.4.1
+        uses: softprops/action-gh-release@5be0e66d93ac7ed76da52eca8bb058f665c3a5fe  # v2.4.2
         with:
           name: ${{ steps.parse-chart.outputs.tagname }}
           repository: grafana/k8s-monitoring-helm

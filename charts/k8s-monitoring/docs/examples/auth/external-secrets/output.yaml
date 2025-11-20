@@ -137,7 +137,7 @@ data:
         "platform" = "kubernetes",
         "release" = "k8smon",
         "source" = "k8s-monitoring",
-        "sourceVersion" = "3.5.6",
+        "sourceVersion" = "3.5.7",
         "workloadName" = "alloy-metrics",
         "workloadType" = "statefulset",
       }
@@ -208,7 +208,7 @@ data:
   self-reporting-metric.prom: |
     # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_build_info gauge
-    grafana_kubernetes_monitoring_build_info{version="3.5.6", namespace="default"} 1
+    grafana_kubernetes_monitoring_build_info{version="3.5.7", namespace="default"} 1
     # HELP grafana_kubernetes_monitoring_feature_info A metric to report the enabled features of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_feature_info gauge
     grafana_kubernetes_monitoring_feature_info{feature="applicationObservability", protocols="jaegergrpc", version="1.0.0"} 1
@@ -447,6 +447,7 @@ data:
     loki.write "logs_service" {
       endpoint {
         url = convert.nonsensitive(remote.kubernetes.secret.logs_service.data["loki-host"]) + "/loki/api/v1/push"
+        retry_on_http_429 = true
         tenant_id = convert.nonsensitive(remote.kubernetes.secret.logs_service.data["tenantId"])
         basic_auth {
           username = convert.nonsensitive(remote.kubernetes.secret.logs_service.data["loki-username"])
@@ -685,6 +686,7 @@ data:
     loki.write "logs_service" {
       endpoint {
         url = convert.nonsensitive(remote.kubernetes.secret.logs_service.data["loki-host"]) + "/loki/api/v1/push"
+        retry_on_http_429 = true
         tenant_id = convert.nonsensitive(remote.kubernetes.secret.logs_service.data["tenantId"])
         basic_auth {
           username = convert.nonsensitive(remote.kubernetes.secret.logs_service.data["loki-username"])
@@ -1764,7 +1766,7 @@ metadata:
   labels:
     app.kubernetes.io/name: k8smon-k8s-monitoring-add-finalizer
     app.kubernetes.io/instance: k8smon
-    helm.sh/chart: k8s-monitoring-3.5.6
+    helm.sh/chart: k8s-monitoring-3.5.7
   annotations:
     helm.sh/hook: post-install,post-upgrade
     helm.sh/hook-weight: "15"
@@ -1816,7 +1818,7 @@ metadata:
   labels:
     app.kubernetes.io/name: k8smon-k8s-monitoring-remove-alloy-and-finalizer
     app.kubernetes.io/instance: k8smon
-    helm.sh/chart: k8s-monitoring-3.5.6
+    helm.sh/chart: k8s-monitoring-3.5.7
   annotations:
     helm.sh/hook: pre-delete
     helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded

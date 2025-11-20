@@ -18,7 +18,7 @@ discovery.kubernetes "kube_scheduler" {
 discovery.relabel "kube_scheduler" {
   targets = discovery.kubernetes.kube_scheduler.targets
   rule {
-    source_labels = ["__address__"]
+    source_labels = ["__meta_kubernetes_pod_ip"]
     replacement = "$1:{{ .Values.kubeScheduler.port }}"
     target_label = "__address__"
   }
@@ -36,6 +36,7 @@ prometheus.scrape "kube_scheduler" {
   scrape_timeout = {{ .Values.kubeScheduler.scrapeTimeout | default .Values.global.scrapeTimeout | quote }}
   scrape_protocols = {{ .Values.global.scrapeProtocols | toJson }}
   scrape_classic_histograms = {{ .Values.global.scrapeClassicHistograms }}
+  scrape_native_histograms = {{ .Values.global.scrapeNativeHistograms }}
   bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
   tls_config {
     insecure_skip_verify = true

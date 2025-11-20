@@ -55,14 +55,13 @@ prometheus.exporter.mysql {{ include "helper.alloy_name" .name | quote }} {
   enable_collectors = {{ .exporter.collectors | toJson }}
 }
 
-{{- $metricAllowList := .metrics.tuning.includeMetrics }}
-{{- $metricDenyList := .metrics.tuning.excludeMetrics }}
 prometheus.scrape {{ include "helper.alloy_name" .name | quote }} {
   targets    = prometheus.exporter.mysql.{{ include "helper.alloy_name" .name }}.targets
   scrape_interval = {{ .metrics.scrapeInterval | default .scrapeInterval | default $.Values.global.scrapeInterval | quote }}
   scrape_timeout = {{ .metrics.scrapeTimeout | default .scrapeTimeout | default $.Values.global.scrapeTimeout | quote }}
   scrape_protocols = {{ $.Values.global.scrapeProtocols | toJson }}
   scrape_classic_histograms = {{ $.Values.global.scrapeClassicHistograms }}
+  scrape_native_histograms = {{ $.Values.global.scrapeNativeHistograms }}
   forward_to = [prometheus.relabel.{{ include "helper.alloy_name" .name }}.receiver]
 }
 
@@ -76,17 +75,17 @@ prometheus.relabel {{ include "helper.alloy_name" .name | quote }} {
     target_label = "job"
     replacement = {{ .jobLabel | quote }}
   }
-{{- if $metricAllowList }}
+{{- if .metrics.tuning.includeMetrics }}
   rule {
     source_labels = ["__name__"]
-    regex = "up|scrape_samples_scraped|{{ $metricAllowList | fromYamlArray | join "|" }}"
+    regex = "up|scrape_samples_scraped|{{ .metrics.tuning.includeMetrics | join "|" }}"
     action = "keep"
   }
 {{- end }}
-{{- if $metricDenyList }}
+{{- if .metrics.tuning.excludeMetrics }}
   rule {
     source_labels = ["__name__"]
-    regex = {{ $metricDenyList | join "|" | quote }}
+    regex = {{ .metrics.tuning.excludeMetrics | join "|" | quote }}
     action = "drop"
   }
 {{- end }}
