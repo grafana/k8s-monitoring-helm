@@ -1,0 +1,84 @@
+---
+cluster:
+  name: database-observability-gc-feature-test
+
+destinations:
+  - name: grafana-cloud-metrics
+    type: prometheus
+    url: https://prometheus-prod-13-prod-us-east-0.grafana.net/api/prom/push
+    auth:
+      type: basic
+      usernameKey: metricsUser
+      passwordKey: grafanaCloudAccessPolicyToken
+    secret:
+      create: false
+      name: grafana-cloud-credentials
+  - name: grafana-cloud-logs
+    type: loki
+    url: https://logs-prod-006.grafana.net/loki/api/v1/push
+    auth:
+      type: basic
+      usernameKey: logsUser
+      passwordKey: grafanaCloudAccessPolicyToken
+    secret:
+      create: false
+      name: grafana-cloud-credentials
+
+integrations:
+  collector: alloy-singleton
+  mysql:
+    instances:
+      - name: test-database
+        jobLabel: integrations/db-o11y
+        exporter:
+          collectors:
+            perfSchemaEventsStatements:
+              enabled: true
+          dataSource:
+            host: test-database-mysql.mysql.svc
+            auth:
+              usernameKey: mysql-username
+              passwordKey: mysql-root-password
+        databaseObservability:
+          enabled: true
+        secret:
+          create: false
+          name: test-database-mysql
+          namespace: mysql
+        logs:
+          enabled: true
+          labelSelectors:
+            app.kubernetes.io/instance: test-database
+
+podLogs:
+  enabled: true
+  collector: alloy-singleton
+  namespaces: [mysql]
+  gatherMethod: kubernetesApi
+
+alloy-singleton:
+  enabled: true
+  alloy:
+    stabilityLevel: experimental
+  includeDestinations: [grafana-cloud-metrics, grafana-cloud-logs]
+  extraConfig: |
+    remote.kubernetes.secret "test_database" {
+      name      = "test-database-mysql"
+      namespace = "mysql"
+    }
+
+    database_observability.mysql "test_database" {
+      data_source_name = string.format("%s:%s@(%s:%d)/",
+        convert.nonsensitive(remote.kubernetes.secret.test_database.data["mysql-username"]),
+        convert.nonsensitive(remote.kubernetes.secret.test_database.data["mysql-root-password"]),
+        "test-database-mysql.mysql.svc",
+        3306,
+      )
+      forward_to = [loki.write.grafana_cloud_logs.receiver]
+    }
+
+    prometheus.scrape "test_database" {
+      targets    = database_observability.mysql.test_database.targets
+      job_name   = "integrations/db-o11y"
+      forward_to = [prometheus.remote_write.grafana_cloud_metrics.receiver]
+    }

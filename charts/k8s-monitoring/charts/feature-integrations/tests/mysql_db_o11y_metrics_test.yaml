@@ -1,0 +1,116 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Test MySQL w/ DB O11y - Metrics
+templates:
+  - configmap.yaml
+  - mysql-secret.yaml
+tests:
+  - it: should create the MySQL config
+    set:
+      deployAsConfigMap: true
+      mysql:
+        instances:
+          - name: my-database
+            exporter:
+              dataSource:
+                host: my-db.mysql.svc
+                auth:
+                  username: db-admin
+                  password: db-password
+            databaseObservability:
+              enabled: true
+            logs: {enabled: false}
+    asserts:
+      - template: configmap.yaml
+        matchSnapshot:
+          path: data["metrics.alloy"]
+
+      - template: mysql-secret.yaml
+        documentIndex: 0
+        containsDocument:
+          apiVersion: v1
+          kind: Secret
+          name: my-database-release-name-feature-integrations
+          namespace: NAMESPACE
+      - template: mysql-secret.yaml
+        equal:
+          path: stringData.username
+          value: db-admin
+      - template: mysql-secret.yaml
+        equal:
+          path: stringData.password
+          value: db-password
+
+  - it: works with multiple MySQL Instances
+    set:
+      deployAsConfigMap: true
+      mysql:
+        instances:
+          - name: test-db
+            exporter:
+              dataSource:
+                host: database.test.svc
+            databaseObservability:
+              enabled: true
+            logs: {enabled: false}
+          - name: staging-db
+            exporter:
+              dataSourceName: "root:password@database.staging.svc:3306/"
+            databaseObservability:
+              enabled: true
+            logs: {enabled: false}
+          - name: prod-db
+            exporter:
+              dataSource:
+                host: database.prod.svc
+                auth:
+                  username: db-admin
+                  password: db-password
+            databaseObservability:
+              enabled: true
+            logs: {enabled: false}
+    asserts:
+      - template: configmap.yaml
+        matchSnapshot:
+          path: data["metrics.alloy"]
+
+      - template: mysql-secret.yaml
+        hasDocuments:
+          count: 1  # Only one secret should be created
+      - template: mysql-secret.yaml
+        documentIndex: 0
+        containsDocument:
+          apiVersion: v1
+          kind: Secret
+          name: prod-db-release-name-feature-integrations
+          namespace: NAMESPACE
+      - template: mysql-secret.yaml
+        equal:
+          path: stringData.username
+          value: db-admin
+      - template: mysql-secret.yaml
+        equal:
+          path: stringData.password
+          value: db-password
+
+  - it: requires metrics
+    set:
+      deployAsConfigMap: true
+      mysql:
+        instances:
+          - name: test-database
+            metrics: {enabled: false}
+            logs: {enabled: false}
+            databaseObservability:
+              enabled: true
+    asserts:
+      - template: configmap.yaml
+        failedTemplate:
+          errorMessage: |-
+            Enabling Database Observability for MySQL requires exporter metrics.
+            Please set:
+            integrations:
+              mysql:
+                instances:
+                  - name: test-database
+                    metrics:
+                      enabled: true

@@ -1,0 +1,104 @@
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: mysql-workload
+  namespace: mysql
+  labels:
+    app.kubernetes.io/name: mysql-workload
+    app.kubernetes.io/instance: test-database
+spec:
+  restartPolicy: Always
+  initContainers:
+    - name: seed-schema
+      image: mysql:8.0
+      env:
+        - name: MYSQL_HOST
+          value: test-database-mysql.mysql.svc
+        - name: MYSQL_DATABASE
+          value: toolbox
+        - name: MYSQL_ROOT_USER
+          valueFrom:
+            secretKeyRef:
+              name: test-database-mysql
+              key: mysql-username
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: test-database-mysql
+              key: mysql-root-password
+      command:
+        - /bin/sh
+        - -c
+        - |
+          set -euo pipefail
+          echo "Waiting for MySQL to accept connections..."
+          until mysqladmin ping -h "${MYSQL_HOST}" -u "${MYSQL_ROOT_USER}" "-p${MYSQL_ROOT_PASSWORD}" --silent; do
+            sleep 5
+          done
+          mysql -h "${MYSQL_HOST}" -u "${MYSQL_ROOT_USER}" "-p${MYSQL_ROOT_PASSWORD}" <<SQL
+          CREATE DATABASE IF NOT EXISTS ${MYSQL_DATABASE};
+          USE ${MYSQL_DATABASE};
+          CREATE TABLE IF NOT EXISTS events (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            message VARCHAR(255)
+          );
+          SQL
+  containers:
+    - name: insert-worker
+      image: mysql:8.0
+      env:
+        - name: MYSQL_HOST
+          value: test-database-mysql.mysql.svc
+        - name: MYSQL_DATABASE
+          value: toolbox
+        - name: MYSQL_USER
+          valueFrom:
+            secretKeyRef:
+              name: test-database-mysql
+              key: mysql-username
+        - name: MYSQL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: test-database-mysql
+              key: mysql-root-password
+      command:
+        - /bin/sh
+        - -c
+        - |
+          set -euo pipefail
+          while true; do
+            mysql -h "${MYSQL_HOST}" -u "${MYSQL_USER}" "-p${MYSQL_PASSWORD}" "${MYSQL_DATABASE}" \
+              -e "INSERT INTO events (message) VALUES (CONCAT('integration-write-', UUID()));"
+            echo "insert-worker: wrote row to ${MYSQL_DATABASE}.events"
+            sleep 10
+          done
+    - name: query-worker
+      image: mysql:8.0
+      env:
+        - name: MYSQL_HOST
+          value: test-database-mysql.mysql.svc
+        - name: MYSQL_DATABASE
+          value: toolbox
+        - name: MYSQL_USER
+          valueFrom:
+            secretKeyRef:
+              name: test-database-mysql
+              key: mysql-username
+        - name: MYSQL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: test-database-mysql
+              key: mysql-root-password
+      command:
+        - /bin/sh
+        - -c
+        - |
+          set -euo pipefail
+          while true; do
+            mysql -h "${MYSQL_HOST}" -u "${MYSQL_USER}" "-p${MYSQL_PASSWORD}" "${MYSQL_DATABASE}" \
+              -e "SELECT COUNT(*) AS records FROM events;"
+            echo "query-worker: queried row count from ${MYSQL_DATABASE}.events"
+            sleep 15
+          done

@@ -9,6 +9,7 @@
 {{- end }}
 
 {{/* Inputs: destinations (array of destination definition), type (string), ecosystem (string), filter (list of destination names) */}}
+{{/* Outputs: array of destination names that match the type, ecosystem, and filter */}}
 {{- define "destinations.get" -}}
 {{- $destinations := list }}
 {{- $backupDestinations := list }}

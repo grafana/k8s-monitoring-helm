@@ -1,12 +1,22 @@
+<!--
+(NOTE: Do not edit README.md directly. It is a generated file!)
+(      To make changes, please modify values.yaml or description.txt and run `make examples`)
+-->
+# Example: features/database-observability/mysql/values.yaml
+
+## Values
+
+<!-- textlint-disable terminology -->
+```yaml
 ---
 cluster:
-  name: mysql-integration-test-cluster
+  name: db-o11y-mysql-test
 
 destinations:
-  - name: localPrometheus
+  - name: prometheus
     type: prometheus
     url: http://prometheus-server.prometheus.svc:9090/api/v1/write
-  - name: localLoki
+  - name: loki
     type: loki
     url: http://loki.loki.svc:3100/loki/api/v1/push
     tenantId: "1"
@@ -16,18 +26,23 @@ destinations:
       password: lokipassword
 
 integrations:
+  collector: alloy-singleton
   mysql:
     instances:
-      - name: test-database
+      - name: test-db
+        jobLabel: integrations/db-o11y
         exporter:
+          enabled: true
+          collectors:
+            perfSchemaEventsStatements:
+              enabled: true
           dataSource:
             host: test-database-mysql.mysql.svc
             auth:
               usernameKey: mysql-username
               passwordKey: mysql-root-password
-          collectors:
-            mysqlUser:
-              privileges: true
+        databaseObservability:
+          enabled: true
         secret:
           create: false
           name: test-database-mysql
@@ -40,8 +55,12 @@ integrations:
 podLogs:
   enabled: true
 
-alloy-metrics:
+alloy-singleton:
   enabled: true
+  alloy:
+    stabilityLevel: experimental
 
 alloy-logs:
   enabled: true
+```
+<!-- textlint-enable terminology -->

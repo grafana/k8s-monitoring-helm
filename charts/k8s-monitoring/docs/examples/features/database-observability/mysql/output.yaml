@@ -17,7 +17,7 @@ automountServiceAccountToken: true
 apiVersion: v1
 kind: Secret
 metadata:
-  name: "localloki-k8smon-k8s-monitoring"
+  name: "loki-k8smon-k8s-monitoring"
   namespace: "default"
 type: Opaque
 data:
@@ -29,7 +29,7 @@ data:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: k8smon-alloy-metrics
+  name: k8smon-alloy-singleton
   namespace: default
 data:
   config.alloy: |
@@ -41,25 +41,54 @@ data:
         comment = "Must be a list of log destinations where collected logs should be forwarded to"
       }
     
-      remote.kubernetes.secret "test_database" {
+      remote.kubernetes.secret "test_db" {
         name      = "test-database-mysql"
         namespace = "mysql"
       }
     
-      prometheus.exporter.mysql "test_database" {
+      prometheus.exporter.mysql "test_db" {
         data_source_name = string.format("%s:%s@(%s:%d)/",
-          convert.nonsensitive(remote.kubernetes.secret.test_database.data["mysql-username"]),
-          convert.nonsensitive(remote.kubernetes.secret.test_database.data["mysql-root-password"]),
+          convert.nonsensitive(remote.kubernetes.secret.test_db.data["mysql-username"]),
+          convert.nonsensitive(remote.kubernetes.secret.test_db.data["mysql-root-password"]),
           "test-database-mysql.mysql.svc",
           3306,
         )
-        mysql.user {
-          privileges = true
-        }
-        enable_collectors = ["heartbeat","mysql.user"]
+        enable_collectors = ["heartbeat","mysql.user","perf_schema.eventsstatements"]
       }
-      prometheus.scrape "test_database" {
-        targets = prometheus.exporter.mysql.test_database.targets
+    
+      database_observability.mysql "test_db" {
+        targets = prometheus.exporter.mysql.test_db.targets
+        data_source_name = string.format("%s:%s@(%s:%d)/",
+          convert.nonsensitive(remote.kubernetes.secret.test_db.data["mysql-username"]),
+          convert.nonsensitive(remote.kubernetes.secret.test_db.data["mysql-root-password"]),
+          "test-database-mysql.mysql.svc",
+          3306,
+        )
+        allow_update_performance_schema_settings = false
+        query_details {
+          collect_interval = "1m"
+        }
+        query_samples {
+          collect_interval = "1m"
+          disable_query_redaction = false
+          auto_enable_setup_consumers = false
+          setup_consumers_check_interval = "1h"
+        }
+        schema_details {
+          collect_interval = "1m"
+          cache_enabled = false
+          cache_size = 256
+          cache_ttl = "10m"
+        }
+        setup_consumers {
+          collect_interval = "1m"
+        }
+        enable_collectors = ["query_details","query_samples","schema_details","setup_consumers"]
+    
+        forward_to = argument.logs_destinations.value
+      }
+      prometheus.scrape "test_db" {
+        targets = database_observability.mysql.test_db.targets
         clustering {
           enabled = true
         }
@@ -69,28 +98,28 @@ data:
         scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
         scrape_classic_histograms = false
         scrape_native_histograms = false
-        forward_to = [prometheus.relabel.test_database.receiver]
+        forward_to = [prometheus.relabel.test_db.receiver]
       }
     
-      prometheus.relabel "test_database" {
+      prometheus.relabel "test_db" {
         max_cache_size = 100000
         rule {
           target_label = "instance"
-          replacement = "test-database"
+          replacement = "test-db"
         }
         rule {
           target_label = "job"
-          replacement = "integration/mysql"
+          replacement = "integrations/db-o11y"
         }
         forward_to = argument.metrics_destinations.value
       }
     }
     mysql_integration "integration" {
       metrics_destinations = [
-        prometheus.remote_write.localprometheus.receiver,
+        prometheus.remote_write.prometheus.receiver,
       ]
       logs_destinations = [
-        loki.write.localloki.receiver,
+        loki.write.loki.receiver,
       ]
     }
     // Self Reporting
@@ -132,21 +161,21 @@ data:
         action = "keep"
       }
       forward_to = [
-        prometheus.remote_write.localprometheus.receiver,
+        prometheus.remote_write.prometheus.receiver,
       ]
     }
     
     
     
     
-    // Destination: localPrometheus (prometheus)
-    otelcol.exporter.prometheus "localprometheus" {
+    // Destination: prometheus (prometheus)
+    otelcol.exporter.prometheus "prometheus" {
       add_metric_suffixes = true
       resource_to_telemetry_conversion = false
-      forward_to = [prometheus.remote_write.localprometheus.receiver]
+      forward_to = [prometheus.remote_write.prometheus.receiver]
     }
     
-    prometheus.remote_write "localprometheus" {
+    prometheus.remote_write "prometheus" {
       endpoint {
         url = "http://prometheus-server.prometheus.svc:9090/api/v1/write"
         headers = {
@@ -171,13 +200,13 @@ data:
         write_relabel_config {
           source_labels = ["cluster"]
           regex = ""
-          replacement = "mysql-integration-test-cluster"
+          replacement = "db-o11y-mysql-test"
           target_label = "cluster"
         }
         write_relabel_config {
           source_labels = ["k8s_cluster_name"]
           regex = ""
-          replacement = "mysql-integration-test-cluster"
+          replacement = "db-o11y-mysql-test"
           target_label = "k8s_cluster_name"
         }
       }
@@ -188,19 +217,19 @@ data:
         max_keepalive_time = "8h"
       }
     }
-    // Destination: localLoki (loki)
-    otelcol.exporter.loki "localloki" {
-      forward_to = [loki.write.localloki.receiver]
+    // Destination: loki (loki)
+    otelcol.exporter.loki "loki" {
+      forward_to = [loki.write.loki.receiver]
     }
     
-    loki.write "localloki" {
+    loki.write "loki" {
       endpoint {
         url = "http://loki.loki.svc:3100/loki/api/v1/push"
         retry_on_http_429 = true
-        tenant_id = convert.nonsensitive(remote.kubernetes.secret.localloki.data["tenantId"])
+        tenant_id = convert.nonsensitive(remote.kubernetes.secret.loki.data["tenantId"])
         basic_auth {
-          username = convert.nonsensitive(remote.kubernetes.secret.localloki.data["username"])
-          password = remote.kubernetes.secret.localloki.data["password"]
+          username = convert.nonsensitive(remote.kubernetes.secret.loki.data["username"])
+          password = remote.kubernetes.secret.loki.data["password"]
         }
         tls_config {
           insecure_skip_verify = false
@@ -210,13 +239,13 @@ data:
         max_backoff_retries = "10"
       }
       external_labels = {
-        "cluster" = "mysql-integration-test-cluster",
-        "k8s_cluster_name" = "mysql-integration-test-cluster",
+        "cluster" = "db-o11y-mysql-test",
+        "k8s_cluster_name" = "db-o11y-mysql-test",
       }
     }
     
-    remote.kubernetes.secret "localloki" {
-      name      = "localloki-k8smon-k8s-monitoring"
+    remote.kubernetes.secret "loki" {
+      name      = "loki-k8smon-k8s-monitoring"
       namespace = "default"
     }
   self-reporting-metric.prom: |
@@ -371,7 +400,7 @@ data:
           separator = ";"
           regex = "(?:test-database)"
           target_label = "instance"
-          replacement = "test-database"
+          replacement = "test-db"
         }
       }
     
@@ -490,26 +519,26 @@ data:
     }
     pod_logs "feature" {
       logs_destinations = [
-        loki.write.localloki.receiver,
+        loki.write.loki.receiver,
       ]
     }
     
     
     
     
-    // Destination: localLoki (loki)
-    otelcol.exporter.loki "localloki" {
-      forward_to = [loki.write.localloki.receiver]
+    // Destination: loki (loki)
+    otelcol.exporter.loki "loki" {
+      forward_to = [loki.write.loki.receiver]
     }
     
-    loki.write "localloki" {
+    loki.write "loki" {
       endpoint {
         url = "http://loki.loki.svc:3100/loki/api/v1/push"
         retry_on_http_429 = true
-        tenant_id = convert.nonsensitive(remote.kubernetes.secret.localloki.data["tenantId"])
+        tenant_id = convert.nonsensitive(remote.kubernetes.secret.loki.data["tenantId"])
         basic_auth {
-          username = convert.nonsensitive(remote.kubernetes.secret.localloki.data["username"])
-          password = remote.kubernetes.secret.localloki.data["password"]
+          username = convert.nonsensitive(remote.kubernetes.secret.loki.data["username"])
+          password = remote.kubernetes.secret.loki.data["password"]
         }
         tls_config {
           insecure_skip_verify = false
@@ -519,13 +548,13 @@ data:
         max_backoff_retries = "10"
       }
       external_labels = {
-        "cluster" = "mysql-integration-test-cluster",
-        "k8s_cluster_name" = "mysql-integration-test-cluster",
+        "cluster" = "db-o11y-mysql-test",
+        "k8s_cluster_name" = "db-o11y-mysql-test",
       }
     }
     
-    remote.kubernetes.secret "localloki" {
-      name      = "localloki-k8smon-k8s-monitoring"
+    remote.kubernetes.secret "loki" {
+      name      = "loki-k8smon-k8s-monitoring"
       namespace = "default"
     }
 ---
@@ -800,15 +829,15 @@ spec:
 apiVersion: collectors.grafana.com/v1alpha1
 kind: Alloy
 metadata:
-  name: k8smon-alloy-metrics
+  name: k8smon-alloy-singleton
   namespace: default
   annotations:
     helm.sdk.operatorframework.io/uninstall-wait: "true"
 spec:
   alloy:
     clustering:
-      enabled: true
-      name: alloy-metrics
+      enabled: false
+      name: ""
       portName: http
     configMap:
       content: ""
@@ -853,7 +882,7 @@ spec:
         - ALL
       seccompProfile:
         type: RuntimeDefault
-    stabilityLevel: generally-available
+    stabilityLevel: experimental
     storagePath: /tmp/alloy
     uiPathPrefix: /
   configReloader:
@@ -934,7 +963,7 @@ spec:
     terminationGracePeriodSeconds: null
     tolerations: []
     topologySpreadConstraints: []
-    type: statefulset
+    type: deployment
     updateStrategy: {}
     volumeClaimTemplates: []
     volumes:
@@ -965,7 +994,7 @@ spec:
     path: /
     pathType: Prefix
     tls: []
-  nameOverride: alloy-metrics
+  nameOverride: alloy-singleton
   rbac:
     create: true
   service:
@@ -1363,9 +1392,9 @@ spec:
             - /bin/bash
             - -ce
             - |
-              echo "Deleting Alloy instance: alloy/k8smon-alloy-metrics..."
-              kubectl delete alloy/k8smon-alloy-metrics --ignore-not-found=true --wait
-              kubectl wait --for=delete alloy/k8smon-alloy-metrics --timeout=60s || echo "Timed out waiting for deletion of alloy/k8smon-alloy-metrics or it may not exist."
+              echo "Deleting Alloy instance: alloy/k8smon-alloy-singleton..."
+              kubectl delete alloy/k8smon-alloy-singleton --ignore-not-found=true --wait
+              kubectl wait --for=delete alloy/k8smon-alloy-singleton --timeout=60s || echo "Timed out waiting for deletion of alloy/k8smon-alloy-singleton or it may not exist."
 
               echo "Deleting Alloy instance: alloy/k8smon-alloy-logs..."
               kubectl delete alloy/k8smon-alloy-logs --ignore-not-found=true --wait

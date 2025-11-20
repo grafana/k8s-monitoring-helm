@@ -1,21 +1,18 @@
 ---
 apiVersion: helm-chart-toolbox.grafana.com/v1
 kind: TestPlan
-name: mysql-integration
+name: db-o11y-mysql-test
 
 subject:
   releaseName: k8smon
-  path: ../../../..
-  valuesFile: values.yaml
+  path: ../../../../../..
+  valuesFile: ../values.yaml
 
 cluster:
   type: kind
 
 dependencies:
-  - preset: test-parameters
-    namespace: toolbox
   - file: mysql.yaml
-  - file: workload.yaml
   - preset: prometheus
   - preset: loki
   - preset: grafana
@@ -43,9 +40,8 @@ tests:
   - type: query-test
     values:
       tests:
-        - envFrom:
-            - configMapRef: {name: test-parameters}
-          env:
+        - env:
+            CLUSTER: db-o11y-mysql-test
             PROMETHEUS_URL: http://prometheus-server.prometheus.svc:9090/api/v1/query
             LOKI_URL: http://loki.loki.svc:3100/loki/api/v1/query
             LOKI_TENANTID: 1
@@ -54,15 +50,8 @@ tests:
 
           queries:
             # MySQL metrics
-            - query: mysqld_exporter_build_info{cluster="$clusterName", instance="test-database"}
+            - query: mysqld_exporter_build_info{cluster="$CLUSTER", instance="test-db"}
               type: promql
 
-            - query: count_over_time({cluster="$clusterName", job="integrations/mysql", instance="test-database"}[1h])
+            - query: count_over_time({cluster="$CLUSTER", job="integrations/mysql", instance="test-db"}[1h])
               type: logql
-
-            # DPM check
-            - query: avg(count_over_time(scrape_samples_scraped{cluster="$clusterName"}[1m]))
-              type: promql
-              expect:
-                value: 1
-                operator: ==

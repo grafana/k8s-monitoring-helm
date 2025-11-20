@@ -1,5 +1,15 @@
 {{/* Inputs: . (Values) */}}
-{{- define "integrations.mysql.type.logs" }}
+{{- define "integrations.mysql.type.logOutput" }}
+{{- $defaultValues := "integrations/mysql-values.yaml" | .Files.Get | fromYaml }}
+{{- $logsEnabled := false }}
+{{- range $instance := .Values.mysql.instances }}
+  {{- $logsEnabled = or $logsEnabled (dig "logs" "enabled" true $instance) }}
+{{- end }}
+{{- $logsEnabled -}}
+{{- end }}
+
+{{/* Inputs: . (Values) */}}
+{{- define "integrations.mysql.type.logRules" }}
 {{- $defaultValues := "integrations/mysql-values.yaml" | .Files.Get | fromYaml }}
 {{- $logsEnabled := false }}
 {{- range $instance := .Values.mysql.instances }}
@@ -45,7 +55,7 @@ rule {
 {{- end }}
 
 {{- define "integrations.mysql.logs.processingStage" }}
-  {{- if eq (include "integrations.mysql.type.logs" .) "true" }}
+  {{- if eq (include "integrations.mysql.type.logRules" .) "true" }}
 // Integration: MySQL
 stage.match {
   selector = "{integration=\"mysql\"}"
