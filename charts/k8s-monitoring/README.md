@@ -330,6 +330,7 @@ details:
 | autoInstrumentation | object | Disabled | Auto-Instrumentation. Requires destinations that supports metrics, logs, and traces. To see the valid options, please see the [Auto-Instrumentation feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-auto-instrumentation). |
 | autoInstrumentation.destinations | list | `[]` | The destinations where application data will be sent. If empty, all capable destinations will be used. |
 | autoInstrumentation.enabled | bool | `false` | Enable automatic instrumentation for applications. |
+| autoInstrumentation.spanMetricsOnly | bool | `false` | Only collect span metrics from Beyla, do not export full traces. When true, this prevents Beyla from sending trace data to OTLP receivers, even if Application Observability is enabled. Beyla will still generate span metrics (RED metrics) from the instrumented applications. |
 
 ### Cluster
 

@@ -19,8 +19,9 @@
   {{- $endpoint := "" }}
   {{- if .Values.applicationObservability.receivers.otlp.grpc.enabled }}
     {{- $endpoint = printf "http://%s-%s.%s.svc.cluster.local:%d" $.Release.Name "alloy-receiver" $.Release.Namespace (int .Values.applicationObservability.receivers.otlp.grpc.port) }}
+    {{- $endpoint := include "features.applicationObservability.receiver.grpc" . | trim }}
   {{- else if .Values.applicationObservability.receivers.otlp.http.enabled }}
-    {{- $endpoint = printf "http://%s-%s.%s.svc.cluster.local:%d" $.Release.Name "alloy-receiver" $.Release.Namespace (int .Values.applicationObservability.receivers.otlp.http.port) }}
+    {{- $endpoint := include "features.applicationObservability.receiver.http" . | trim }}
   {{- end }}
   {{- if $endpoint }}
     {{- $otelTracesExport := dict "endpoint" $endpoint }}

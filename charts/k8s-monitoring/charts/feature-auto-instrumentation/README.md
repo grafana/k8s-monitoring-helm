@@ -74,4 +74,10 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | global.scrapeInterval | string | `"60s"` | How frequently to scrape metrics. |
 | global.scrapeNativeHistograms | bool | `false` | Whether to scrape native histograms. |
 | global.scrapeProtocols | list | `["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]` | The protocols to negotiate during a Prometheus metrics scrape, in order of preference. |
+
+### Auto-Instrumentation
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| spanMetricsOnly | bool | `false` | Only collect span metrics from Beyla, do not export full traces. When true, this prevents Beyla from sending trace data to OTLP receivers, even if Application Observability is enabled. Beyla will still generate span metrics (RED metrics) from the instrumented applications. |
 <!-- markdownlint-enable no-space-in-emphasis -->
