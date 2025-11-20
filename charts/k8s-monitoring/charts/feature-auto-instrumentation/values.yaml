@@ -1,11 +1,5 @@
 # yamllint disable rule:comments-indentation
 ---
-# -- Only collect span metrics from Beyla, do not export full traces. When true, this prevents Beyla from sending
-# trace data to OTLP receivers, even if Application Observability is enabled. Beyla will still generate span metrics
-# (RED metrics) from the instrumented applications.
-# @section -- Auto-Instrumentation
-spanMetricsOnly: false
-
 global:
   # -- The specific platform for this cluster. Will enable compatibility for some platforms. Supported options: (empty) or "openshift".
   # @section -- Global Settings
@@ -39,6 +33,8 @@ beyla:
 
   # -- Whether Beyla should automatically deliver traces to the Application Observability feature.
   # When enabled, traces will be sent to the OTLP receiver if Application Observability is configured.
+  # When disabled, only metrics (RED metrics) from the instrumented applications will be collected from Beyla, and
+  # traces will not be automatically delivered.
   # @section -- Beyla
   deliverTracesToApplicationObservability: true
 

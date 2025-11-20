@@ -15,17 +15,17 @@
   {{- $discovery := dict "services" $services "exclude_services" $excludeServices }}
   {{- $overrides = merge $overrides (dict "discovery" $discovery) }}
 {{- end }}
-{{- if and .Values.autoInstrumentation.beyla.deliverTracesToApplicationObservability .Values.applicationObservability.enabled }}
-  {{- $endpoint := "" }}
-  {{- if .Values.applicationObservability.receivers.otlp.grpc.enabled }}
-    {{- $endpoint = printf "http://%s-%s.%s.svc.cluster.local:%d" $.Release.Name "alloy-receiver" $.Release.Namespace (int .Values.applicationObservability.receivers.otlp.grpc.port) }}
-    {{- $endpoint := include "features.applicationObservability.receiver.grpc" . | trim }}
-  {{- else if .Values.applicationObservability.receivers.otlp.http.enabled }}
-    {{- $endpoint := include "features.applicationObservability.receiver.http" . | trim }}
-  {{- end }}
-  {{- if $endpoint }}
-    {{- $otelTracesExport := dict "endpoint" $endpoint }}
-    {{- $overrides = merge $overrides (dict "otel_traces_export" $otelTracesExport) }}
+{{- if .Values.applicationObservability.enabled }}
+  {{- if .Values.autoInstrumentation.beyla.deliverTracesToApplicationObservability  }}
+    {{- $endpoint := "" }}
+    {{- if .Values.applicationObservability.receivers.otlp.grpc.enabled }}
+      {{- $endpoint = include "features.applicationObservability.receiver.grpc" . | trim }}
+    {{- else if .Values.applicationObservability.receivers.otlp.http.enabled }}
+      {{- $endpoint = include "features.applicationObservability.receiver.http" . | trim }}
+    {{- end }}
+    {{- if $endpoint }}
+      {{- $overrides = merge $overrides (dict "otel_traces_export" (dict "endpoint" $endpoint)) }}
+    {{- end }}
   {{- end }}
 {{- end }}
 ---
