@@ -1,0 +1,48 @@
+---
+cluster:
+  name: span-metrics-only-cluster
+
+destinations:
+  - name: prometheus
+    type: prometheus
+    url: http://prometheus.monitoring.svc:9090/api/v1/write
+  - name: loki
+    type: loki
+    url: http://loki.logging.svc:3100/loki/api/v1/push
+  - name: tempo
+    type: otlp
+    url: http://tempo.tracing.svc:4317
+    tls:
+      insecure: true
+    metrics: {enabled: false}
+    logs: {enabled: false}
+    traces: {enabled: true}
+
+# Enable Application Observability with OTLP receiver
+# This would normally cause Beyla to export full traces
+applicationObservability:
+  enabled: true
+  receivers:
+    otlp:
+      grpc:
+        enabled: true
+
+# Enable Auto-Instrumentation with span metrics only
+# This prevents Beyla from sending traces to the OTLP receiver
+# Beyla will still generate span metrics (RED metrics) and send them to Prometheus
+autoInstrumentation:
+  enabled: true
+  beyla:
+    deliverTracesToApplicationObservability: false  # Only collect span metrics, do not export traces
+
+alloy-metrics:
+  enabled: true
+
+alloy-receiver:
+  enabled: true
+  alloy:
+    extraPorts:
+      - name: otlp-grpc
+        port: 4317
+        targetPort: 4317
+        protocol: TCP

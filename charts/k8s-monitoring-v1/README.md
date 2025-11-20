@@ -193,6 +193,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | beyla.config.data | object | `{"attributes":{"kubernetes":{"enable":true}},"internal_metrics":{"prometheus":{"path":"/internal/metrics","port":9090}},"prometheus_export":{"features":["application","network","application_service_graph","application_span"],"path":"/metrics","port":9090}}` | The Configuration for Beyla |
+| beyla.deliverTracesToApplicationObservability | bool | `true` | Whether Beyla should automatically deliver traces to the Application Observability feature. When enabled, traces will be sent to the OTLP receiver if receivers.grpc or receivers.http is configured. |
 | beyla.enabled | bool | `false` | Should this Helm chart deploy Grafana Beyla to the cluster. |
 
 ### Cluster Settings

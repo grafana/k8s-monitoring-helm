@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+*   Add the ability to disable sending traces from Beyla to the Application Observability feature (@marctc & @mbaykara)
+
 ## 3.5.7
 
 *   Update kube-state-metrics and prometheus-operator-crds (@petewall)
