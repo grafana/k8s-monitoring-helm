@@ -4,6 +4,7 @@
 
 ## 3.6.0
 
+*   Add Database Observability to the MySQL integration (@petewall)
 *   Add the ability to disable sending traces from Beyla to the Application Observability feature (@marctc & @mbaykara)
 *   Add the ability to use ScrapeConfig objects with the Prometheus Operator Objects feature (@petewall)
 *   Update opencost to include an emptydir volume mount for its config path (@petewall)
