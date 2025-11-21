@@ -13,9 +13,16 @@
   {{- if .exporter.dataSourceName }}
 data_source_name = {{ .exporter.dataSourceName | quote }}
   {{- else }}
-    {{- $dataSourceParams := "" }}
+    {{- $dataSourceParamList := list }}
+    {{- if .exporter.dataSource.allowFallbackToPlaintext }}
+      {{- $dataSourceParamList = append $dataSourceParamList (printf "allowFallbackToPlaintext=%t" .exporter.dataSource.allowFallbackToPlaintext) }}
+    {{- end }}
     {{- if .exporter.dataSource.tls }}
-      {{- $dataSourceParams = printf "?tls=%s" .exporter.dataSource.tls }}
+      {{- $dataSourceParamList = append $dataSourceParamList (printf "tls=%s" .exporter.dataSource.tls) }}
+    {{- end }}
+    {{- $dataSourceParams := "" }}
+    {{- if $dataSourceParamList }}
+      {{- $dataSourceParams = printf "?%s" ($dataSourceParamList | join "&") }}
     {{- end }}
     {{- if eq (include "secrets.usesSecret" (dict "object" . "key" "exporter.dataSource.auth.username")) "true" }}
       {{- if eq (include "secrets.usesSecret" (dict "object" . "key" "exporter.dataSource.auth.password")) "true" }}
