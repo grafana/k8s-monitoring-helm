@@ -526,7 +526,10 @@ prometheus.relabel "kubernetes_monitoring_telemetry" {
 
 
 
-
+otelcol.storage.file "otlp_gateway_queue_storage" {
+  create_directory = true
+  directory = "/var/lib/otlp_gateway_queue_storage"
+}
 // Destination: otlp-gateway (otlp)
 otelcol.receiver.prometheus "otlp_gateway" {
   output {
@@ -705,6 +708,18 @@ otelcol.exporter.otlphttp "otlp_gateway" {
     initial_interval = "5s"
     max_interval = "30s"
     max_elapsed_time = "5m"
+  }
+
+  sending_queue {
+    enabled = true
+    block_on_overflow = true
+    storage = "otelcol.storage.file.otlp_gateway_queue_storage.handler"
+    batch {
+      sizer = "items"
+      flush_timeout = "1s"
+      min_size = 100
+      max_size = 1000
+    }
   }
 }
 

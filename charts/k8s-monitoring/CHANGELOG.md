@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+*   Add the ability to define the sending queue for OTLP destinations (@petewall)
+*   Add the ability to define the remote timeout for Loki destinations (@petewall)
+
 ## 3.6.0
 
 *   Add Pod Init container metrics to the kube-state-metrics allow list (@petewall)
