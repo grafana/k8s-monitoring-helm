@@ -41,6 +41,7 @@
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | exporter.collectors | object | `{"heartbeat":{"database":"","enabled":true,"table":""},"mysqlUser":{"enabled":true,"privileges":false},"perfSchemaEventsStatements":{"enabled":false}}` | The list of collectors to enable for the MySQL Exporter ([Documentation](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.exporter.mysql/#supported-collectors)). This used to be a list of collector names. This format is still supported, but the new format will allow for customization. collectors: ["heartbeat", "mysql.user"] |
+| exporter.dataSource.allowFallbackToPlaintext | bool | `false` | The TLS setting to use. Options are none, "true", "false", "skip-verify", "preferred". See the [driver documentation](https://github.com/go-sql-driver/mysql#tls) for details. |
 | exporter.dataSource.auth.password | string | `""` | The password to use for the MySQL connection. |
 | exporter.dataSource.auth.passwordFrom | string | `""` | Raw config for accessing the password. |
 | exporter.dataSource.auth.passwordKey | string | `"password"` | The key for storing the password in the secret. |
@@ -50,6 +51,7 @@
 | exporter.dataSource.host | string | `""` | The MySQL host to connect to. |
 | exporter.dataSource.port | int | `3306` | The MySQL port to connect to. |
 | exporter.dataSource.protocol | string | `""` | The MySQL protocol type. |
+| exporter.dataSource.tls | string | `""` | The TLS setting to use. Options are none, "true", "false", "skip-verify", "preferred". See the [driver documentation](https://github.com/go-sql-driver/mysql#tls) for details. |
 | exporter.dataSourceName | string | `""` | The data source string to use for the MySQL Exporter. |
 
 ### Exporter Collectors
