@@ -50,6 +50,7 @@
 | exporter.dataSource.host | string | `""` | The MySQL host to connect to. |
 | exporter.dataSource.port | int | `3306` | The MySQL port to connect to. |
 | exporter.dataSource.protocol | string | `""` | The MySQL protocol type. |
+| exporter.dataSource.tls | string | `""` | The TLS setting to use. Options are none, "true", "false", "skip-verify", "preferred". See the [driver documentation](https://github.com/go-sql-driver/mysql#tls) for details. |
 | exporter.dataSourceName | string | `""` | The data source string to use for the MySQL Exporter. |
 
 ### Exporter Collectors

@@ -128,3 +128,22 @@ tests:
       - template: configmap.yaml
         matchSnapshot:
           path: data["metrics.alloy"]
+
+  - it: allows you to set the tls
+    set:
+      deployAsConfigMap: true
+      mysql:
+        instances:
+          - name: test-database
+            exporter:
+              dataSource:
+                host: test-database-mysql.mysql.svc
+                tls: preferred
+                auth:
+                  username: db-admin
+                  password: db-password
+            logs: {enabled: false}
+    asserts:
+      - template: configmap.yaml
+        matchSnapshot:
+          path: data["metrics.alloy"]
