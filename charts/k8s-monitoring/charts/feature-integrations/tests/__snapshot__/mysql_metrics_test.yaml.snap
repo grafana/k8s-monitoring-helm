@@ -5,7 +5,9 @@ allows you to set the network protocol:
         argument "metrics_destinations" {
           comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
         }
-
+        argument "logs_destinations" {
+          comment = "Must be a list of log destinations where collected logs should be forwarded to"
+        }
 
         remote.kubernetes.secret "test_database" {
           name      = "test-database-release-name-feature-integrations"
@@ -21,9 +23,12 @@ allows you to set the network protocol:
           )
           enable_collectors = ["heartbeat","mysql.user"]
         }
-
         prometheus.scrape "test_database" {
-          targets    = prometheus.exporter.mysql.test_database.targets
+          targets = prometheus.exporter.mysql.test_database.targets
+          clustering {
+            enabled = true
+          }
+
           scrape_interval = "60s"
           scrape_timeout = "10s"
           scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
@@ -52,7 +57,9 @@ should create the MySQL config:
         argument "metrics_destinations" {
           comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
         }
-
+        argument "logs_destinations" {
+          comment = "Must be a list of log destinations where collected logs should be forwarded to"
+        }
 
         remote.kubernetes.secret "my_database" {
           name      = "my-database-release-name-feature-integrations"
@@ -68,9 +75,12 @@ should create the MySQL config:
           )
           enable_collectors = ["heartbeat","mysql.user"]
         }
-
         prometheus.scrape "my_database" {
-          targets    = prometheus.exporter.mysql.my_database.targets
+          targets = prometheus.exporter.mysql.my_database.targets
+          clustering {
+            enabled = true
+          }
+
           scrape_interval = "60s"
           scrape_timeout = "10s"
           scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
@@ -99,7 +109,9 @@ works when referencing the MySQL Secret:
         argument "metrics_destinations" {
           comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
         }
-
+        argument "logs_destinations" {
+          comment = "Must be a list of log destinations where collected logs should be forwarded to"
+        }
 
         remote.kubernetes.secret "test_database" {
           name      = "test-database-mysql"
@@ -115,9 +127,12 @@ works when referencing the MySQL Secret:
           )
           enable_collectors = ["heartbeat","mysql.user"]
         }
-
         prometheus.scrape "test_database" {
-          targets    = prometheus.exporter.mysql.test_database.targets
+          targets = prometheus.exporter.mysql.test_database.targets
+          clustering {
+            enabled = true
+          }
+
           scrape_interval = "60s"
           scrape_timeout = "10s"
           scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
@@ -146,14 +161,20 @@ works with multiple MySQL Instances:
         argument "metrics_destinations" {
           comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
         }
+        argument "logs_destinations" {
+          comment = "Must be a list of log destinations where collected logs should be forwarded to"
+        }
 
         prometheus.exporter.mysql "test_db" {
           data_source_name = string.format("%s:%d/", "database.test.svc", 3306)
           enable_collectors = ["heartbeat","mysql.user"]
         }
-
         prometheus.scrape "test_db" {
-          targets    = prometheus.exporter.mysql.test_db.targets
+          targets = prometheus.exporter.mysql.test_db.targets
+          clustering {
+            enabled = true
+          }
+
           scrape_interval = "60s"
           scrape_timeout = "10s"
           scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
@@ -176,12 +197,15 @@ works with multiple MySQL Instances:
         }
 
         prometheus.exporter.mysql "staging_db" {
-          data_source_name  = "root:password@database.staging.svc:3306/"
+          data_source_name = "root:password@database.staging.svc:3306/"
           enable_collectors = ["heartbeat","mysql.user"]
         }
-
         prometheus.scrape "staging_db" {
-          targets    = prometheus.exporter.mysql.staging_db.targets
+          targets = prometheus.exporter.mysql.staging_db.targets
+          clustering {
+            enabled = true
+          }
+
           scrape_interval = "60s"
           scrape_timeout = "10s"
           scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
@@ -203,7 +227,6 @@ works with multiple MySQL Instances:
           forward_to = argument.metrics_destinations.value
         }
 
-
         remote.kubernetes.secret "prod_db" {
           name      = "prod-db-release-name-feature-integrations"
           namespace = "NAMESPACE"
@@ -218,9 +241,12 @@ works with multiple MySQL Instances:
           )
           enable_collectors = ["heartbeat","mysql.user"]
         }
-
         prometheus.scrape "prod_db" {
-          targets    = prometheus.exporter.mysql.prod_db.targets
+          targets = prometheus.exporter.mysql.prod_db.targets
+          clustering {
+            enabled = true
+          }
+
           scrape_interval = "60s"
           scrape_timeout = "10s"
           scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]

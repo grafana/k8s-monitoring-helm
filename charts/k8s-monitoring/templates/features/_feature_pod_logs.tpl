@@ -8,9 +8,9 @@
 
 {{- define "features.podLogs.include" }}
 {{- if .Values.podLogs.enabled -}}
-{{- $extraDiscoveryRules := cat (include "features.integrations.logs.discoveryRules" .) "\n" .Values.podLogs.extraDiscoveryRules | trim }}
-{{- $extraLogProcessingStages := cat (include "features.integrations.logs.logProcessingStages" .) "\n" .Values.podLogs.extraLogProcessingStages | trim }}
-{{- $values := mergeOverwrite .Values.podLogs (dict "extraDiscoveryRules" $extraDiscoveryRules "extraLogProcessingStages" $extraLogProcessingStages) }}
+{{- $extraDiscoveryRulesFromIntegrations := cat (include "features.integrations.logs.discoveryRules" .) "\n" .Values.podLogs.extraDiscoveryRules | trim }}
+{{- $extraLogProcessingStagesFromIntegrations := cat (include "features.integrations.logs.logProcessingStages" .) "\n" .Values.podLogs.extraLogProcessingStages | trim }}
+{{- $values := mergeOverwrite .Values.podLogs (dict "extraDiscoveryRules" $extraDiscoveryRulesFromIntegrations "extraLogProcessingStages" $extraLogProcessingStagesFromIntegrations) }}
 {{- $destinations := include "features.podLogs.destinations" . | fromYamlArray }}
 
 // Feature: Pod Logs

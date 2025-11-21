@@ -6,7 +6,8 @@
 {{- end }}
 
 {{- define "integrations.mysql.instance.validate" }}
-{{- if (dig "metrics" "enabled" true .instance) }}
+{{- $metricsEnabled := (dig "metrics" "enabled" true .instance) }}
+{{- if $metricsEnabled }}
   {{- $missingExporterDetails := false }}
   {{- if not .instance.exporter }}
     {{ $missingExporterDetails = true }}
@@ -27,11 +28,20 @@
     {{- $msg = append $msg "          dataSource:" }}
     {{- $msg = append $msg "            host: database.namespace.svc" }}
     {{- $msg = append $msg "            port: 3306" }}
-    {{- $msg = append $msg "            auth:" }}
-    {{- $msg = append $msg "              username: user" }}
-    {{- $msg = append $msg "              password: pass" }}
     {{- fail (join "\n" $msg) }}
   {{- end }}
+{{- end }}
+{{- $dbO11yEnabled := (dig "databaseObservability" "enabled" true .instance) }}
+{{- if and $dbO11yEnabled (not $metricsEnabled) }}
+  {{- $msg := list "" "Enabling Database Observability for MySQL requires exporter metrics." }}
+  {{- $msg = append $msg "Please set:" }}
+  {{- $msg = append $msg "integrations:" }}
+  {{- $msg = append $msg "  mysql:" }}
+  {{- $msg = append $msg "    instances:" }}
+  {{- $msg = append $msg (printf "      - name: %s" .instance.name) }}
+  {{- $msg = append $msg "        metrics:" }}
+  {{- $msg = append $msg "          enabled: true" }}
+  {{- fail (join "\n" $msg) }}
 {{- end }}
 {{- if and .instance.logs.enabled (not .instance.logs.labelSelectors) }}
   {{- $msg := list "" "The MySQL integration requires a label selector" }}

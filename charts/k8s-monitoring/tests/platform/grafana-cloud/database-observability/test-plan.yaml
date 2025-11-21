@@ -1,0 +1,53 @@
+---
+# yamllint disable rule:line-length
+apiVersion: helm-chart-toolbox.grafana.com/v1
+kind: TestPlan
+name: database-observability
+
+subject:
+  releaseName: k8smon
+  path: ../../../..
+  valuesFile: values.yaml
+  set:
+    - key: "cluster.name"
+      valueFrom: clusterName
+
+cluster:
+  type: kind
+  appendRandomNumber: true
+
+dependencies:
+  - file: dependencies/mysql.yaml
+  - file: dependencies/workload.yaml
+  - file: grafana-cloud-credentials.yaml
+  - preset: test-parameters
+    namespace: toolbox
+
+tests:
+  - type: query-test
+    values:
+      tests:
+        - env:
+            PROMETHEUS_URL: https://prometheus-prod-13-prod-us-east-0.grafana.net/api/prom/api/v1/query
+            LOKI_URL: https://logs-prod-006.grafana.net/loki/api/v1/query
+          envFrom:
+            - secretRef: {name: grafana-cloud-credentials}
+            - configMapRef: {name: test-parameters}
+          queries:
+            # Database Observability metrics
+            - query: database_observability_connection_info{cluster="$clusterName", job="integrations/db-o11y", engine="mysql"}
+              type: promql
+            - query: database_observability_setup_consumers_enabled{cluster="$clusterName", job="integrations/db-o11y"}
+              type: promql
+
+            # MySQL metrics
+            - query: mysqld_exporter_build_info{cluster="$clusterName", job="integrations/db-o11y"}
+              type: promql
+            - query: mysql_global_status_commands_total{cluster="$clusterName", job="integrations/db-o11y"}
+              type: promql
+            - query: mysql_perf_schema_events_statements_latency_count{cluster="$clusterName", job="integrations/db-o11y"}
+              type: promql
+
+            # Database Observability logs
+            - query: 'avg(count_over_time({k8s_cluster_name="$clusterName", job="integrations/db-o11y"}[1m]))'
+              type: logql

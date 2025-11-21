@@ -1,5 +1,7 @@
+{{- define "integrations.grafana.type.logOutput" }}false{{- end }}
+
 {{/* Inputs: . (Values) */}}
-{{- define "integrations.grafana.type.logs" }}
+{{- define "integrations.grafana.type.logRules" }}
 {{- $type := "integration.grafana" }}
 {{- $defaultValues := "integrations/grafana-values.yaml" | .Files.Get | fromYaml }}
 {{- $logsEnabled := false }}
@@ -51,7 +53,7 @@ rule {
 {{- end }}
 
 {{- define "integrations.grafana.logs.processingStage" }}
-  {{- if eq (include "integrations.grafana.type.logs" .) "true" }}
+  {{- if eq (include "integrations.grafana.type.logRules" .) "true" }}
     {{- $defaultValues := "integrations/grafana-values.yaml" | .Files.Get | fromYaml }}
 // Integration: Grafana
     {{- range $instance := $.Values.grafana.instances }}

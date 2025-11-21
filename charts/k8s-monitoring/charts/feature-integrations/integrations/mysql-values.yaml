@@ -99,10 +99,132 @@ exporter:
       passwordFrom: ""
 
   # -- The list of collectors to enable for the MySQL Exporter ([Documentation](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.exporter.mysql/#supported-collectors)).
+  # This used to be a list of collector names. This format is still supported, but the new format will allow for
+  # customization.
   # @section -- Exporter Settings
+  # collectors: ["heartbeat", "mysql.user"]
   collectors:
-    - heartbeat
-    - mysql.user
+    heartbeat:
+      # -- Enable heartbeat collector.
+      # @section -- Exporter Collectors
+      enabled: true
+
+      # -- Database to collect heartbeat data from.
+      # @default -- `heartbeat`
+      # @section -- Exporter Collectors
+      database: ""
+
+      # -- Table to collect heartbeat data from.
+      # @default -- `heartbeat`
+      # @section -- Exporter Collectors
+      table: ""
+
+    mysqlUser:
+      # -- Enable mysql.user collector.
+      # @section -- Exporter Collectors
+      enabled: true
+
+      # -- Enable collecting user privileges from mysql.user.
+      # @section -- Exporter Collectors
+      privileges: false
+
+    perfSchemaEventsStatements:
+      # -- Enable perf_schema.eventsstatements collector.
+      # @section -- Exporter Collectors
+      enabled: false
+
+# Capture table, schema, and query information for the Database Observability feature in Grafana Cloud.
+databaseObservability:
+  # -- Whether to gather table, schema, and query information from the database. Requires exporter to be enabled.
+  # @section -- Database Observability
+  enabled: false
+
+  # -- Whether to allow updates to performance_schema settings in any collector.
+  # @section -- Database Observability
+  allowUpdatePerformanceSchemaSettings: false
+
+  collectors:
+    # Collect explain plans information.
+    explainPlans:
+      # -- Enable collection of explain plans information.
+      # @section -- Database Observability - Collectors
+      enabled: false
+      # -- How frequently to collect explain plans information from the database.
+      # @section -- Database Observability - Collectors
+      collectInterval: 1m
+      # -- List of schemas to exclude from explain plan collection.
+      # @section -- Database Observability - Collectors
+      excludeSchemas: []
+      # -- How far back to look for explain plan queries on the first collection interval.
+      # @section -- Database Observability - Collectors
+      initialLookback: 24h
+      # -- Ratio of explain plan queries to collect per collect interval.
+      # @section -- Database Observability - Collectors
+      perCollectRatio: 1.0
+    locks:
+      # -- Enable collection of lock information.
+      # @section -- Database Observability - Collectors
+      enabled: false
+      # -- How frequently to collect lock information from the database.
+      # @section -- Database Observability - Collectors
+      collectInterval: 1m
+      # -- Threshold for locks to be considered slow. Locks that exceed this duration are logged.
+      # @section -- Database Observability - Collectors
+      threshold: 1s
+
+    # Collect queries information.
+    queryDetails:
+      # -- Enable collection of query information.
+      # @section -- Database Observability - Collectors
+      enabled: true
+      # -- How frequently to collect query information from the database.
+      # @section -- Database Observability - Collectors
+      collectInterval: 1m
+
+    # Collect query samples.
+    querySamples:
+      # -- Enable collection of query samples.
+      # @section -- Database Observability - Collectors
+      enabled: true
+      # -- How frequently to collect query samples from the database.
+      # @section -- Database Observability - Collectors
+      collectInterval: 1m
+      # -- Collect unredacted SQL query text including parameters.
+      # @section -- Database Observability - Collectors
+      disableQueryRedaction: false
+      # -- Whether to enable some specific performance_schema.setup_consumers settings.
+      # @section -- Database Observability - Collectors
+      autoEnableSetupConsumers: false
+      # -- How frequently to check if setup_consumers are correctly enabled.
+      # @section -- Database Observability - Collectors
+      setupConsumersCheckInterval: 1h
+
+    # Collect schemas and tables from information_schema.
+    schemaDetails:
+      # -- Enable collection of schemas and tables from information_schema.
+      # @section -- Database Observability - Collectors
+      enabled: true
+      # -- How frequently to collect schemas and tables from information_schema.
+      # @section -- Database Observability - Collectors
+      collectInterval: 1m
+      # -- Whether to enable caching of table definitions.
+      # @section -- Database Observability - Collectors
+      cacheEnabled: false
+      # -- Table definitions cache size.
+      # @section -- Database Observability - Collectors
+      cacheSize: 256
+      # -- Table definitions cache TTL.
+      # @section -- Database Observability - Collectors
+      cacheTTL: 10m
+
+    # Collect enabled performance_schema.setup_consumers.
+    setupConsumers:
+      # -- Enable collection of performance_schema.setup_consumers information.
+      # @section -- Database Observability - Collectors
+      enabled: true
+      # -- How frequently to collect performance_schema.setup_consumers information from the database.
+      # @section -- Database Observability - Collectors
+      collectInterval: 1m
 
 secret:
   # -- (bool) Whether to create a secret to store credentials for this MySQL integration instance.

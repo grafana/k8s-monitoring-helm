@@ -1,5 +1,7 @@
+{{- define "integrations.mimir.type.logOutput" }}false{{- end }}
+
 {{/* Inputs: . (Values) */}}
-{{- define "integrations.mimir.type.logs" }}
+{{- define "integrations.mimir.type.logRules" }}
 {{- $type := "integration.mimir" }}
 {{- $defaultValues := "integrations/mimir-values.yaml" | .Files.Get | fromYaml }}
 {{- $logsEnabled := false }}
@@ -64,7 +66,7 @@ rule {
 {{- end }}
 
 {{- define "integrations.mimir.logs.processingStage" }}
-  {{- if eq (include "integrations.mimir.type.logs" .) "true" }}
+  {{- if eq (include "integrations.mimir.type.logRules" .) "true" }}
     {{- $defaultValues := "integrations/mimir-values.yaml" | .Files.Get | fromYaml }}
 // Integration: Mimir
     {{- range $instance := $.Values.mimir.instances }}
