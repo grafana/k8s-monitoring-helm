@@ -34,7 +34,7 @@ destinations:
         metrics {
           metric = ["name != \"alloy_build_info\""]
         }
-      
+
         output {
           metrics = [otelcol.exporter.debug.debug.input]
           logs    = [otelcol.exporter.debug.debug.input]
