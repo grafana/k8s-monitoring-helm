@@ -16,36 +16,65 @@ cluster:
   name: debug-custom-destination
 
 destinations:
+  - name: prometheus
+    type: prometheus
+    url: http://prometheus-server.prometheus.svc:9090/api/v1/write
+  - name: loki
+    type: loki
+    url: http://loki.loki.svc:3100/loki/api/v1/push
+    tenantId: "1"
+    auth:
+      type: basic
+      username: loki
+      password: lokipassword
   - name: debug
     type: custom
     config: |
-      otelcol.exporter.debug "default" {
+      otelcol.processor.filter "debug" {
+        metrics {
+          metric = ["name != \"alloy_build_info\""]
+        }
+      
+        output {
+          metrics = [otelcol.exporter.debug.debug.input]
+          logs    = [otelcol.exporter.debug.debug.input]
+          traces  = [otelcol.exporter.debug.debug.input]
+        }
+      }
+      otelcol.exporter.debug "debug" {
         verbosity = "detailed"
       }
     ecosystem: otlp
     metrics:
       enabled: true
-      target: otelcol.exporter.debug.default.input
+      target: otelcol.processor.filter.debug.input
     logs:
       enabled: true
-      target: otelcol.exporter.debug.default.input
+      target: otelcol.processor.filter.debug.input
     traces:
       enabled: true
-      target: otelcol.exporter.debug.default.input
+      target: otelcol.processor.filter.debug.input
 
-annotationAutodiscovery:
+podLogs:
   enabled: true
-  destinations: [debug]
-  metricsTuning:
-    includeMetrics: [alloy_build_info]
+  namespaces: [default]
+  labelSelectors:
+    app.kubernetes.io/name: alloy-metrics
+
+integrations:
+  destinations: [prometheus, debug]
+  alloy:
+    instances:
+      - name: alloy
+        labelSelectors:
+          app.kubernetes.io/name: alloy-metrics
 
 alloy-metrics:
   enabled: true
   alloy:
     stabilityLevel: experimental
-  controller:
-    podAnnotations:
-      k8s.grafana.com/scrape: "true"
-      k8s.grafana.com/metrics.container: alloy
+
+alloy-logs:
+  enabled: true
 ```
 <!-- textlint-enable terminology -->
