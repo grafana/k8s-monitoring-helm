@@ -13,16 +13,27 @@
   {{- if .exporter.dataSourceName }}
 data_source_name = {{ .exporter.dataSourceName | quote }}
   {{- else }}
+    {{- $dataSourceParamList := list }}
+    {{- if .exporter.dataSource.allowFallbackToPlaintext }}
+      {{- $dataSourceParamList = append $dataSourceParamList (printf "allowFallbackToPlaintext=%t" .exporter.dataSource.allowFallbackToPlaintext) }}
+    {{- end }}
+    {{- if .exporter.dataSource.tls }}
+      {{- $dataSourceParamList = append $dataSourceParamList (printf "tls=%s" .exporter.dataSource.tls) }}
+    {{- end }}
+    {{- $dataSourceParams := "" }}
+    {{- if $dataSourceParamList }}
+      {{- $dataSourceParams = printf "?%s" ($dataSourceParamList | join "&") }}
+    {{- end }}
     {{- if eq (include "secrets.usesSecret" (dict "object" . "key" "exporter.dataSource.auth.username")) "true" }}
       {{- if eq (include "secrets.usesSecret" (dict "object" . "key" "exporter.dataSource.auth.password")) "true" }}
-data_source_name = string.format("%s:%s@{{ .exporter.dataSource.protocol }}(%s:%d)/",
+data_source_name = string.format("%s:%s@{{ .exporter.dataSource.protocol }}(%s:%d)/{{ $dataSourceParams }}",
   {{ include "secrets.read" (dict "object" . "key" "exporter.dataSource.auth.username" "nonsensitive" true) }},
   {{ include "secrets.read" (dict "object" . "key" "exporter.dataSource.auth.password" "nonsensitive" true) }},
   {{ .exporter.dataSource.host | quote }},
   {{ .exporter.dataSource.port | int }},
 )
       {{- else }}
-data_source_name = string.format("%s@{{ .exporter.dataSource.protocol }}(%s:%d)/",
+data_source_name = string.format("%s@{{ .exporter.dataSource.protocol }}(%s:%d)/{{ $dataSourceParams }}",
   {{ include "secrets.read" (dict "object" . "key" "exporter.dataSource.auth.username" "nonsensitive" true) }},
   {{ .exporter.dataSource.host | quote }},
   {{ .exporter.dataSource.port | int }},
