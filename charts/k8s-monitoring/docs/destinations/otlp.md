@@ -194,6 +194,28 @@ This defines the options for defining a destination for OpenTelemetry data that 
 | secret.sigv4.region | string | `""` | The AWS region for sigv4 authentication. |
 | secret.sigv4.service | string | `""` | The AWS service for sigv4 authentication. |
 
+### Sending Queue - Batch
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| sendingQueue.batch.enabled | bool | `false` | Should a batch mechanism be used with the sending queue? |
+| sendingQueue.batch.flushTimeout | string | `""` | Time after which a batch will be sent regardless of its size. Must be a non-zero value. |
+| sendingQueue.batch.maxSize | string | `nil` | The maximum size of a batch, enables batch splitting. |
+| sendingQueue.batch.minSize | string | `nil` | The minimum size of a batch, enables batch splitting. |
+| sendingQueue.batch.sizer | string | `""` | How the queue and batching is measured. Overrides the sizer set at the sendingQueue level for batching. Valid options are "bytes" or "items". |
+
+### Sending Queue
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| sendingQueue.blockOnOverflow | string | false | The behavior when the component’s TotalSize limit is reached |
+| sendingQueue.enabled | bool | `true` | Enables a buffer before sending data to the client. |
+| sendingQueue.numConsumers | string | 10 | Number of readers to send batches written to the queue in parallel. |
+| sendingQueue.queueSize | string | 1000 | Maximum number of unwritten batches allowed in the queue at the same time. |
+| sendingQueue.sizer | string | requests | How the queue and batching is measured. |
+| sendingQueue.storage | string | `""` | Handler from an otelcol.storage component to use to enable a persistent queue mechanism. To use this, create a storage component in extraConfig and reference it here. |
+| sendingQueue.waitForResult | string | false | Determines if incoming requests are blocked until the request is processed or not. |
+
 ### TLS
 
 | Key | Type | Default | Description |
