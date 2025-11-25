@@ -68,15 +68,9 @@ spec:
           {{- with $jobSettings.resources }}
           resources:{{ toYaml . | nindent 12 }}
           {{- end }}
-          securityContext:
-            runAsNonRoot: true
-            runAsUser: 4242
-            allowPrivilegeEscalation: false
-            capabilities:
-              drop: ["ALL"]
-            readOnlyRootFilesystem: true
-            seccompProfile:
-              type: RuntimeDefault
+          {{- with $jobSettings.securityContext }}
+          securityContext:{{ toYaml . | nindent 12 }}
+          {{- end }}
 ---
 apiVersion: v1
 kind: ServiceAccount

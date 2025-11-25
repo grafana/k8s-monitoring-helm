@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+*   Add the ability to override the security context for the waitForAlloyRemoval Helm Hook (@petewall)
 *   Add the ability to define the sending queue for OTLP destinations (@petewall)
 *   Add the ability to define the remote timeout for Loki destinations (@petewall)
 

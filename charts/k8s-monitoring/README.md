@@ -282,6 +282,7 @@ details:
 | alloy-operator.waitForAlloyRemoval.podAnnotations | object | `{}` | Annotations to apply to the Pod for the Helm Hook to wait for all Alloy instances to be removed before uninstalling the Alloy Operator |
 | alloy-operator.waitForAlloyRemoval.podLabels | object | `{"linkerd.io/inject":"disabled","sidecar.istio.io/inject":"false"}` | Labels to apply to the Pod for the Helm Hook to wait for all Alloy instances to be removed before uninstalling the Alloy Operator |
 | alloy-operator.waitForAlloyRemoval.resources | object | `{}` | Set the resource field for the Helm Hook that ensures that Alloy instances are removed during uninstall. |
+| alloy-operator.waitForAlloyRemoval.securityContext | object | `{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"readOnlyRootFilesystem":true,"runAsNonRoot":true,"runAsUser":4242,"seccompProfile":{"type":"RuntimeDefault"}}` | Default security context to apply to the container. This can also be set to `null` to remove the security context entirely. Also, `runAsUser` can be set to `null` to remove it. |
 | alloy-operator.waitForAlloyRemoval.tolerations | list | `[]` | Tolerations to apply to the Helm Hook that ensures that Alloy instances are removed during uninstall. |
 
 ### Collectors - Alloy Profiles
