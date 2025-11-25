@@ -12,7 +12,7 @@ variables must be set:
     *   For Deployments: `<cluster name>-<namespace>-<pod name>`
     *   For StatefulSets: `<cluster name>-<namespace>-<pod name>`
     *   For DaemonSets: `<cluster name>-<namespace>-<node name>`
-*   `GCLOUD_RW_API_KEY` - The Grafana Cloud Access Policy token that has following scopes:
+*   `GCLOUD_RW_API_KEY` - The Grafana Cloud Access Policy token that has the following scopes:
     *   `fleet-management:read`
     *   `logs:write`
     *   `metrics:write`
