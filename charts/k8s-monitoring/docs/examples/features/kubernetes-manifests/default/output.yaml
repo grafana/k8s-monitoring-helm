@@ -13,436 +13,305 @@ metadata:
     app.kubernetes.io/managed-by: Helm
 automountServiceAccountToken: true
 ---
+# Source: k8s-monitoring/templates/destination_secret.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: "loki-k8smon-k8s-monitoring"
+  namespace: "default"
+type: Opaque
+data:
+  tenantId: "MQ=="
+  username: "bG9raQ=="
+  password: "bG9raXBhc3N3b3Jk"
+---
 # Source: k8s-monitoring/templates/alloy-config.yaml
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: k8smon-alloy-metrics
+  name: k8smon-alloy-singleton
   namespace: default
 data:
   config.alloy: |
-    // Feature: Annotation Autodiscovery
-    declare "annotation_autodiscovery" {
-      argument "metrics_destinations" {
-        comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
+    // Feature: Kubernetes Manifests
+    declare "kubernetes_manifests" {
+      argument "logs_destinations" {
+        comment = "Must be a list of log destinations where collected logs should be forwarded to"
       }
     
-      discovery.kubernetes "pods" {
-        role = "pod"
-      }
+      otelcol.receiver.filelog "pod_manifests" {
+        include = ["/var/kubernetes-manifests/pods/*/*.json"]
+        include_file_path_resolved = true
+        start_at = "beginning"
+        delete_after_read = true
     
-      discovery.relabel "annotation_autodiscovery_pods" {
-        targets = discovery.kubernetes.pods.targets
-        rule {
-          source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_scrape"]
-          regex = "true"
-          action = "keep"
+        output {
+          logs = [otelcol.processor.transform.pod_manifests.input]
         }
-        // Only keep pods that are running, ready, and not init containers.
-        rule {
-          source_labels = [
-            "__meta_kubernetes_pod_phase",
-            "__meta_kubernetes_pod_ready",
-            "__meta_kubernetes_pod_container_init",
+      }
+    
+      otelcol.processor.transform "pod_manifests" {
+        error_mode = "ignore"
+    
+        log_statements {
+          context = "log"
+          statements = [
+            `merge_maps(attributes, ExtractPatterns(log.attributes["log.file.path_resolved"], "^/var/kubernetes-manifests/pods/(?P<namespace>[^/]+)/(?P<pod>[^.]+)\\.json$"), "upsert")`,
+            `set(resource.attributes["k8s.namespace.name"], attributes["namespace"])`,
+            `set(resource.attributes["k8s.pod.name"], attributes["pod"])`,
+            `set(resource.attributes["service.name"], "k8s.grafana.com/manifest-collector")`,
+            `set(resource.attributes["service.namespace"], "default")`,
           ]
-          regex = "Running;true;false"
-          action = "keep"
-        }
-        rule {
-          source_labels = ["__meta_kubernetes_pod_name"]
-          target_label = "pod"
-        }
-        rule {
-          source_labels = ["__meta_kubernetes_pod_container_name"]
-          target_label = "container"
-        }
-        rule {
-          source_labels = ["__meta_kubernetes_namespace"]
-          target_label = "namespace"
-        }
-        rule {
-          source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_job"]
-          target_label = "job"
-        }
-        rule {
-          source_labels = ["job", "__meta_kubernetes_pod_label_app_kubernetes_io_name"]
-          regex = ";(.+)"
-          target_label = "job"
-        }
-        rule {
-          source_labels = ["job", "__meta_kubernetes_pod_label_app"]
-          regex = ";(.+)"
-          target_label = "job"
-        }
-        rule {
-          source_labels = ["job", "container"]
-          regex = ";(.+)"
-          target_label = "job"
-        }
-        rule {
-          source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_instance"]
-          target_label = "instance"
         }
     
-        // Rules to choose the right container
-        rule {
-          source_labels = ["container"]
-          target_label = "__tmp_container"
-        }
-        rule {
-          source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_metrics_container"]
-          regex = "(.+)"
-          target_label = "__tmp_container"
-        }
-        rule {
-          source_labels = ["container"]
-          action = "keepequal"
-          target_label = "__tmp_container"
-        }
-        rule {
-          action = "labeldrop"
-          regex = "__tmp_container"
-        }
-    
-        // Set metrics path
-        rule {
-          source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_metrics_path"]
-          regex = "(.+)"
-          target_label = "__metrics_path__"
-        }
-    
-        // Set metrics scraping URL parameters
-        rule {
-          action = "labelmap"
-          regex = "__meta_kubernetes_pod_annotation_k8s_grafana_com_metrics_param_(.+)"
-          replacement = "__param_$1"
-        }
-    
-        // Choose the pod port
-        // The discovery generates a target for each declared container port of the pod.
-        // If the metricsPortName annotation has value, keep only the target where the port name matches the one of the annotation.
-        rule {
-          source_labels = ["__meta_kubernetes_pod_container_port_name"]
-          target_label = "__tmp_port"
-        }
-        rule {
-          source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_metrics_portName"]
-          regex = "(.+)"
-          target_label = "__tmp_port"
-        }
-        rule {
-          source_labels = ["__meta_kubernetes_pod_container_port_name"]
-          action = "keepequal"
-          target_label = "__tmp_port"
-        }
-        rule {
-          action = "labeldrop"
-          regex = "__tmp_port"
-        }
-    
-        // If the metrics port number annotation has a value, override the target address to use it, regardless whether it is
-        // one of the declared ports on that Pod.
-        rule {
-          source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_metrics_portNumber", "__meta_kubernetes_pod_ip"]
-          regex = "(\\d+);(([A-Fa-f0-9]{1,4}::?){1,7}[A-Fa-f0-9]{1,4})"
-          replacement = "[$2]:$1" // IPv6
-          target_label = "__address__"
-        }
-        rule {
-          source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_metrics_portNumber", "__meta_kubernetes_pod_ip"]
-          regex = "(\\d+);((([0-9]+?)(\\.|$)){4})" // IPv4, takes priority over IPv6 when both exists
-          replacement = "$2:$1"
-          target_label = "__address__"
-        }
-    
-        rule {
-          source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_metrics_scheme"]
-          regex = "(.+)"
-          target_label = "__scheme__"
-        }
-    
-        rule {
-          source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_metrics_scrapeInterval"]
-          regex = "(.+)"
-          target_label = "__scrape_interval__"
-        }
-        rule {
-          source_labels = ["__scrape_interval__"]
-          regex = ""
-          replacement = "60s"
-          target_label = "__scrape_interval__"
-        }
-        rule {
-          source_labels = ["__meta_kubernetes_pod_annotation_k8s_grafana_com_metrics_scrapeTimeout"]
-          regex = "(.+)"
-          target_label = "__scrape_timeout__"
-        }
-        rule {
-          source_labels = ["__scrape_timeout__"]
-          regex = ""
-          replacement = "10s"
-          target_label = "__scrape_timeout__"
+        output {
+          logs = [otelcol.processor.k8sattributes.pod_manifests.input]
         }
       }
     
-      discovery.kubernetes "services" {
-        role = "service"
-      }
-    
-      discovery.relabel "annotation_autodiscovery_services" {
-        targets = discovery.kubernetes.services.targets
-        rule {
-          source_labels = ["__meta_kubernetes_service_annotation_k8s_grafana_com_scrape"]
-          regex = "true"
-          action = "keep"
-        }
-        rule {
-          source_labels = ["__meta_kubernetes_service_name"]
-          target_label = "service"
-        }
-        rule {
-          source_labels = ["__meta_kubernetes_namespace"]
-          target_label = "namespace"
-        }
-        rule {
-          source_labels = ["__meta_kubernetes_service_annotation_k8s_grafana_com_job"]
-          target_label = "job"
-        }
-        rule {
-          source_labels = ["job", "__meta_kubernetes_service_label_app_kubernetes_io_name"]
-          regex = ";(.+)"
-          target_label = "job"
-        }
-        rule {
-          source_labels = ["job", "__meta_kubernetes_service_label_app"]
-          regex = ";(.+)"
-          target_label = "job"
-        }
-        rule {
-          source_labels = ["job", "service"]
-          regex = ";(.+)"
-          target_label = "job"
-        }
-        rule {
-          source_labels = ["__meta_kubernetes_service_annotation_k8s_grafana_com_instance"]
-          target_label = "instance"
+      otelcol.processor.k8sattributes "pod_manifests" {
+        pod_association {
+          source {
+            from = "resource_attribute"
+            name = "k8s.pod.name"
+          }
+          source {
+            from = "resource_attribute"
+            name = "k8s.namespace.name"
+          }
         }
     
-        // Set metrics path
-        rule {
-          source_labels = ["__meta_kubernetes_service_annotation_k8s_grafana_com_metrics_path"]
-          target_label = "__metrics_path__"
+        extract {
+          metadata = [
+            "k8s.cronjob.name",
+            "k8s.daemonset.name",
+            "k8s.deployment.name",
+            "k8s.job.name",
+            "k8s.node.name",
+            "k8s.pod.start_time",
+            "k8s.replicaset.name",
+            "k8s.statefulset.name",
+          ]
         }
     
-        // Set metrics scraping URL parameters
-        rule {
-          action = "labelmap"
-          regex = "__meta_kubernetes_service_annotation_k8s_grafana_com_metrics_param_(.+)"
-          replacement = "__param_$1"
-        }
-    
-        // Choose the service port
-        rule {
-          source_labels = ["__meta_kubernetes_service_port_name"]
-          target_label = "__tmp_port"
-        }
-        rule {
-          source_labels = ["__meta_kubernetes_service_annotation_k8s_grafana_com_metrics_portName"]
-          regex = "(.+)"
-          target_label = "__tmp_port"
-        }
-        rule {
-          source_labels = ["__meta_kubernetes_service_port_name"]
-          action = "keepequal"
-          target_label = "__tmp_port"
-        }
-    
-        rule {
-          source_labels = ["__meta_kubernetes_service_port_number"]
-          target_label = "__tmp_port"
-        }
-        rule {
-          source_labels = ["__meta_kubernetes_service_annotation_k8s_grafana_com_metrics_portNumber"]
-          regex = "(.+)"
-          target_label = "__tmp_port"
-        }
-        rule {
-          source_labels = ["__meta_kubernetes_service_port_number"]
-          action = "keepequal"
-          target_label = "__tmp_port"
-        }
-        rule {
-          action = "labeldrop"
-          regex = "__tmp_port"
-        }
-    
-        rule {
-          source_labels = ["__meta_kubernetes_service_annotation_k8s_grafana_com_metrics_scheme"]
-          regex = "(.+)"
-          target_label = "__scheme__"
-        }
-    
-        rule {
-          source_labels = ["__meta_kubernetes_service_annotation_k8s_grafana_com_metrics_scrapeInterval"]
-          regex = "(.+)"
-          target_label = "__scrape_interval__"
-        }
-        rule {
-          source_labels = ["__scrape_interval__"]
-          regex = ""
-          replacement = "60s"
-          target_label = "__scrape_interval__"
-        }
-        rule {
-          source_labels = ["__meta_kubernetes_service_annotation_k8s_grafana_com_metrics_scrapeTimeout"]
-          regex = "(.+)"
-          target_label = "__scrape_timeout__"
-        }
-        rule {
-          source_labels = ["__scrape_timeout__"]
-          regex = ""
-          replacement = "10s"
-          target_label = "__scrape_timeout__"
+        output {
+          logs = argument.logs_destinations.value
         }
       }
+    }
+    kubernetes_manifests "feature" {
+      logs_destinations = [
+        otelcol.exporter.loki.loki.input,
+      ]
+    }
     
-      discovery.relabel "annotation_autodiscovery_http" {
-        targets = array.concat(discovery.relabel.annotation_autodiscovery_pods.output, discovery.relabel.annotation_autodiscovery_services.output)
-        rule {
-          source_labels = ["__scheme__"]
-          regex = "https"
-          action = "drop"
+    livedebugging {
+      enabled = true
+    }
+    
+    
+    // Destination: loki (loki)
+    otelcol.exporter.loki "loki" {
+      forward_to = [loki.write.loki.receiver]
+    }
+    
+    loki.write "loki" {
+      endpoint {
+        url = "http://loki.loki.svc:3100/loki/api/v1/push"
+        retry_on_http_429 = true
+        tenant_id = convert.nonsensitive(remote.kubernetes.secret.loki.data["tenantId"])
+        basic_auth {
+          username = convert.nonsensitive(remote.kubernetes.secret.loki.data["username"])
+          password = remote.kubernetes.secret.loki.data["password"]
         }
-      }
-    
-      discovery.relabel "annotation_autodiscovery_https" {
-        targets = array.concat(discovery.relabel.annotation_autodiscovery_pods.output, discovery.relabel.annotation_autodiscovery_services.output)
-        rule {
-          source_labels = ["__scheme__"]
-          regex = "https"
-          action = "keep"
-        }
-      }
-    
-      prometheus.scrape "annotation_autodiscovery_http" {
-        targets = discovery.relabel.annotation_autodiscovery_http.output
-        honor_labels = true
-        bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
-        scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
-        scrape_classic_histograms = false
-        scrape_native_histograms = false
-        clustering {
-          enabled = true
-        }
-    
-        forward_to = [prometheus.relabel.annotation_autodiscovery.receiver]
-      }
-    
-      prometheus.scrape "annotation_autodiscovery_https" {
-        targets = discovery.relabel.annotation_autodiscovery_https.output
-        honor_labels = true
-        bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
         tls_config {
-          insecure_skip_verify = true
+          insecure_skip_verify = false
         }
-        scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
-        scrape_classic_histograms = false
-        scrape_native_histograms = false
-        clustering {
-          enabled = true
-        }
-    
-        forward_to = [prometheus.relabel.annotation_autodiscovery.receiver]
+        min_backoff_period = "500ms"
+        max_backoff_period = "5m"
+        max_backoff_retries = "10"
       }
-    
-      prometheus.relabel "annotation_autodiscovery" {
-        max_cache_size = 100000
-        rule {
-          source_labels = ["__name__"]
-          regex = "up|scrape_samples_scraped|alloy_build_info"
-          action = "keep"
-        }
-        rule {
-          action = "labeldrop"
-          regex = "temp_source"
-        }
-        forward_to = argument.metrics_destinations.value
-      }
-    }
-    annotation_autodiscovery "feature" {
-      metrics_destinations = [
-        otelcol.receiver.prometheus.debug.receiver,
-      ]
-    }
-    // Self Reporting
-    prometheus.exporter.unix "kubernetes_monitoring_telemetry" {
-      set_collectors = ["textfile"]
-      textfile {
-        directory = "/etc/alloy"
+      external_labels = {
+        "cluster" = "kubernetes-manifest-cluster",
+        "k8s_cluster_name" = "kubernetes-manifest-cluster",
       }
     }
     
-    discovery.relabel "kubernetes_monitoring_telemetry" {
-      targets = prometheus.exporter.unix.kubernetes_monitoring_telemetry.targets
-      rule {
-        target_label = "instance"
-        action = "replace"
-        replacement = "k8smon"
-      }
-      rule {
-        target_label = "job"
-        action = "replace"
-        replacement = "integrations/kubernetes/kubernetes_monitoring_telemetry"
-      }
+    remote.kubernetes.secret "loki" {
+      name      = "loki-k8smon-k8s-monitoring"
+      namespace = "default"
+    }
+  collect-manifests.sh: |
+    #!/bin/bash
+    set -o pipefail
+    
+    script_name="${0##*/}"
+    if [[ "${script_name}" == "bash" || "${script_name}" == "-bash" ]]; then
+      script_name="script.sh"
+    fi
+    
+    usage() {
+      echo "Usage: ${script_name} [OPTIONS]"
+      echo ""
+      echo "Collects Kubernetes manifests and saves them as files."
+      echo ""
+      echo "Pod manifests are stored at \${MANIFEST_DIR}/pods/<namespace>/<pod>.json"
+      echo ""
+      echo "Requires the MANIFEST_DIR environment variable to be set to the target directory."
+      echo ""
+      echo "Options:"
+      echo "  -n, --namespaces <list>  Comma or space separated list of namespaces to scan."
+      echo "                           When omitted, all namespaces are scanned."
+      echo "  -p, --pod-filters <list> Comma or space separated list of jq selectors to drop"
+      echo "                           from the pod JSON."
+      echo "                           Default: .status"
+      echo "  -h, --help               Show this help message."
     }
     
-    prometheus.scrape "kubernetes_monitoring_telemetry" {
-      job_name   = "integrations/kubernetes/kubernetes_monitoring_telemetry"
-      targets    = discovery.relabel.kubernetes_monitoring_telemetry.output
-      scrape_interval = "60s"
-      clustering {
-        enabled = true
-      }
-      forward_to = [prometheus.relabel.kubernetes_monitoring_telemetry.receiver]
+    namespaces_arg=""
+    pod_filters_arg=""
+    
+    while [[ $# -gt 0 ]]; do
+      case "$1" in
+        -n|--namespaces)
+          if [[ $# -lt 2 ]]; then
+            echo "Error: --namespaces requires an argument." >&2
+            usage
+            exit 1
+          fi
+          namespaces_arg="$2"
+          shift 2
+          ;;
+        -p|--pod-filters)
+          if [[ $# -lt 2 ]]; then
+            echo "Error: --pod-filters requires an argument." >&2
+            usage
+            exit 1
+          fi
+          pod_filters_arg="$2"
+          shift 2
+          ;;
+        -h|--help)
+          usage
+          exit 0
+          ;;
+        *)
+          echo "Unknown option: $1" >&2
+          usage
+          exit 1
+          ;;
+      esac
+    done
+    
+    if [[ -z "${namespaces_arg}" && -n "${NAMESPACES:-}" ]]; then
+      namespaces_arg="${NAMESPACES}"
+    fi
+    
+    if [[ -z "${MANIFEST_DIR:-}" ]]; then
+      echo "MANIFEST_DIR environment variable must be set." >&2
+      exit 1
+    fi
+    
+    mkdir -p "${MANIFEST_DIR}"
+    
+    pod_namespaces=()
+    if [[ -n "${namespaces_arg}" ]]; then
+      sanitized="${namespaces_arg//$'\n'/ }"
+      sanitized="${sanitized//,/ }"
+      read -ra parsed_namespaces <<< "${sanitized}"
+      for ns in "${parsed_namespaces[@]}"; do
+        [[ -n "${ns}" ]] || continue
+        pod_namespaces+=("${ns}")
+      done
+    fi
+    
+    default_pod_filters=(".status")
+    pod_filters=()
+    if [[ -n "${pod_filters_arg}" ]]; then
+      sanitized="${pod_filters_arg//$'\n'/ }"
+      sanitized="${sanitized//,/ }"
+      read -ra parsed_pod_filters <<< "${sanitized}"
+      for filter in "${parsed_pod_filters[@]}"; do
+        [[ -n "${filter}" ]] || continue
+        pod_filters+=("${filter}")
+      done
+    fi
+    
+    if [[ ${#pod_filters[@]} -eq 0 ]]; then
+      pod_filters=("${default_pod_filters[@]}")
+    fi
+    
+    build_jq_filter() {
+      local program="."
+      for filter in "$@"; do
+        [[ -n "${filter}" ]] || continue
+        program+=" | del(${filter})"
+      done
+      printf '%s' "${program}"
     }
     
-    prometheus.relabel "kubernetes_monitoring_telemetry" {
-      rule {
-        source_labels = ["__name__"]
-        regex = "grafana_kubernetes_monitoring_.*"
-        action = "keep"
-      }
-      forward_to = [
-        otelcol.receiver.prometheus.debug.receiver,
-      ]
+    collect_pod_manifest() {
+      local namespace="$1"
+      local pod_name="$2"
+      pod_output_filter="$(build_jq_filter "${pod_filters[@]}")"
+    
+      [[ -n "${namespace}" && -n "${pod_name}" ]] || return 0
+    
+      local namespace_dir="${MANIFEST_DIR}/pods/${namespace}"
+      mkdir -p "${namespace_dir}"
+    
+      local output_file="${namespace_dir}/${pod_name}.json"
+      local tmp_file="${output_file}.tmp"
+    
+      if kubectl get pod --namespace "${namespace}" "${pod_name}" -o json | jq --compact-output "${pod_output_filter}" > "${tmp_file}"; then
+        echo "Storing pod manifest \"${namespace}/${pod_name}\""
+        mv "${tmp_file}" "${output_file}"
+      else
+        echo "Failed to collect manifest for pod ${namespace}/${pod_name}" >&2
+        rm -f "${tmp_file}"
+      fi
     }
     
-    
-    
-    
-    // Destination: debug (custom)
-    otelcol.receiver.prometheus "debug" {
-      output {
-        metrics = [otelcol.exporter.debug.default.input]
-      }
+    collect_all_pod_manifests() {
+      if pod_entries=$(kubectl get pods --all-namespaces -o jsonpath='{range .items[*]}{.metadata.namespace}{" "}{.metadata.name}{"\n"}{end}'); then
+        while IFS= read -r entry; do
+          [[ -n "${entry}" ]] || continue
+          read -r namespace pod_name _ <<< "${entry}"
+          if [[ -z "${namespace}" || -z "${pod_name}" ]]; then
+            continue
+          fi
+          collect_pod_manifest "${namespace}" "${pod_name}"
+        done <<< "${pod_entries}"
+      else
+        echo "Failed to list pods across all namespaces." >&2
+      fi
     }
-    otelcol.receiver.loki "debug" {
-      output {
-        logs = [otelcol.exporter.debug.default.input]
-      }
+    
+    collect_pod_manifests_by_namespace() {
+      for namespace in "${pod_namespaces[@]}"; do
+        [[ -n "${namespace}" ]] || continue
+    
+        if ! pod_names=$(kubectl get pods --namespace "${namespace}" -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}'); then
+          echo "Failed to list pods in namespace ${namespace}" >&2
+          continue
+        fi
+    
+        while IFS= read -r pod_name; do
+          [[ -n "${pod_name}" ]] || continue
+          collect_pod_manifest "${namespace}" "${pod_name}"
+        done <<< "${pod_names}"
+      done
     }
     
-    otelcol.exporter.debug "default" {
-      verbosity = "detailed"
-    }
-  self-reporting-metric.prom: |
-    # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart
-    # TYPE grafana_kubernetes_monitoring_build_info gauge
-    grafana_kubernetes_monitoring_build_info{version="3.6.0", namespace="default"} 1
-    # HELP grafana_kubernetes_monitoring_feature_info A metric to report the enabled features of the Kubernetes Monitoring Helm chart
-    # TYPE grafana_kubernetes_monitoring_feature_info gauge
-    grafana_kubernetes_monitoring_feature_info{feature="annotationAutodiscovery", version="1.0.0"} 1
-    # EOF
+    while true; do
+      if [[ ${#pod_namespaces[@]} -eq 0 ]]; then
+        collect_all_pod_manifests
+      else
+        collect_pod_manifests_by_namespace
+      fi
+    
+      sleep 60
+    done
 ---
 # Source: k8s-monitoring/charts/alloy-operator/templates/rbac/alloy-manager.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -715,15 +584,15 @@ spec:
 apiVersion: collectors.grafana.com/v1alpha1
 kind: Alloy
 metadata:
-  name: k8smon-alloy-metrics
+  name: k8smon-alloy-singleton
   namespace: default
   annotations:
     helm.sdk.operatorframework.io/uninstall-wait: "true"
 spec:
   alloy:
     clustering:
-      enabled: true
-      name: alloy-metrics
+      enabled: false
+      name: ""
       portName: http
     configMap:
       content: ""
@@ -743,7 +612,10 @@ spec:
     livenessProbe: {}
     mounts:
       dockercontainers: false
-      extra: []
+      extra:
+      - mountPath: /var/kubernetes-manifests
+        name: kubernetes-manifests
+        readOnly: false
       varlog: false
     resources: {}
     securityContext:
@@ -768,7 +640,7 @@ spec:
         - ALL
       seccompProfile:
         type: RuntimeDefault
-    stabilityLevel: experimental
+    stabilityLevel: public-preview
     storagePath: /tmp/alloy
     uiPathPrefix: /
   configReloader:
@@ -830,7 +702,24 @@ spec:
     dnsPolicy: ClusterFirst
     enableStatefulSetAutoDeletePVC: false
     extraAnnotations: {}
-    extraContainers: []
+    extraContainers:
+    - command:
+      - /bin/bash
+      - /etc/alloy/collect-manifests.sh
+      - --namespaces
+      - default
+      env:
+      - name: MANIFEST_DIR
+        value: /var/kubernetes-manifests
+      image: ghcr.io/grafana/helm-chart-toolbox-kubectl:0.1.2
+      imagePullPolicy: IfNotPresent
+      name: kubernetes-manifest-collector
+      volumeMounts:
+      - mountPath: /etc/alloy
+        name: config
+      - mountPath: /var/kubernetes-manifests
+        name: kubernetes-manifests
+        readOnly: false
     hostNetwork: false
     hostPID: false
     initContainers: []
@@ -839,8 +728,6 @@ spec:
     parallelRollout: true
     podAnnotations:
       k8s.grafana.com/logs.job: integrations/alloy
-      k8s.grafana.com/metrics.container: alloy
-      k8s.grafana.com/scrape: "true"
     podDisruptionBudget:
       enabled: false
       maxUnavailable: null
@@ -851,11 +738,14 @@ spec:
     terminationGracePeriodSeconds: null
     tolerations: []
     topologySpreadConstraints: []
-    type: statefulset
+    type: deployment
     updateStrategy: {}
     volumeClaimTemplates: []
     volumes:
-      extra: []
+      extra:
+      - emptyDir:
+          medium: Memory
+        name: kubernetes-manifests
   crds:
     create: false
   extraObjects: []
@@ -882,7 +772,7 @@ spec:
     path: /
     pathType: Prefix
     tls: []
-  nameOverride: alloy-metrics
+  nameOverride: alloy-singleton
   rbac:
     create: true
   service:
@@ -1005,7 +895,7 @@ metadata:
   labels:
     app.kubernetes.io/name: k8smon-k8s-monitoring-add-finalizer
     app.kubernetes.io/instance: k8smon
-    helm.sh/chart: k8s-monitoring-3.6.0
+    helm.sh/chart: k8s-monitoring-3.6.1
   annotations:
     helm.sh/hook: post-install,post-upgrade
     helm.sh/hook-weight: "15"
@@ -1058,7 +948,7 @@ metadata:
   labels:
     app.kubernetes.io/name: k8smon-k8s-monitoring-remove-alloy-and-finalizer
     app.kubernetes.io/instance: k8smon
-    helm.sh/chart: k8s-monitoring-3.6.0
+    helm.sh/chart: k8s-monitoring-3.6.1
   annotations:
     helm.sh/hook: pre-delete
     helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
@@ -1086,9 +976,9 @@ spec:
             - /bin/bash
             - -ce
             - |
-              echo "Deleting Alloy instance: alloy/k8smon-alloy-metrics..."
-              kubectl delete alloy/k8smon-alloy-metrics --ignore-not-found=true --wait
-              kubectl wait --for=delete alloy/k8smon-alloy-metrics --timeout=60s || echo "Timed out waiting for deletion of alloy/k8smon-alloy-metrics or it may not exist."
+              echo "Deleting Alloy instance: alloy/k8smon-alloy-singleton..."
+              kubectl delete alloy/k8smon-alloy-singleton --ignore-not-found=true --wait
+              kubectl wait --for=delete alloy/k8smon-alloy-singleton --timeout=60s || echo "Timed out waiting for deletion of alloy/k8smon-alloy-singleton or it may not exist."
 
               kubectl patch \
                 --namespace=default \

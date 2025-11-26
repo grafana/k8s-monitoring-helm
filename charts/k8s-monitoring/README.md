@@ -248,6 +248,7 @@ details:
 |  | clusterEvents(feature-cluster-events) | 1.0.0 |
 |  | clusterMetrics(feature-cluster-metrics) | 1.0.0 |
 |  | integrations(feature-integrations) | 1.0.0 |
+|  | kubernetesManifests(feature-kubernetes-manifests) | 1.0.0 |
 |  | nodeLogs(feature-node-logs) | 1.0.0 |
 |  | podLogs(feature-pod-logs) | 1.0.0 |
 |  | podLogsViaKubernetesApi(feature-pod-logs-via-kubernetes-api) | 1.0.0 |
@@ -393,6 +394,13 @@ details:
 | integrations | object | No integrations enabled | Service Integrations enables gathering telemetry data for common services and applications deployed to Kubernetes. To see the valid options, please see the [Service Integrations documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-integrations). |
 | integrations.destinations | list | `[]` | The destinations where integration metrics will be sent. If empty, all metrics-capable destinations will be used. |
 
+### Features - Kubernetes Manifests
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| kubernetesManifests.destinations | list | `[]` | The destinations where logs will be sent. If empty, all logs-capable destinations will be used. |
+| kubernetesManifests.enabled | bool | `false` | Enable gathering Kubernetes Manifests. |
+
 ### Features - Node Logs
 
 | Key | Type | Default | Description |
@@ -448,3 +456,13 @@ details:
 | selfReporting.destinations | list | `[]` | The destinations where self-report metrics will be sent. If empty, all metrics-capable destinations will be used. |
 | selfReporting.enabled | bool | `true` | Enable Self-reporting. |
 | selfReporting.scrapeInterval | string | 60s | How frequently to generate self-report metrics. This does utilize the global scrapeInterval setting. |
+
+### Other Values
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| kubernetesManifests.image.digest | string | `""` |  |
+| kubernetesManifests.image.pullPolicy | string | `"IfNotPresent"` |  |
+| kubernetesManifests.image.registry | string | `"ghcr.io"` |  |
+| kubernetesManifests.image.repository | string | `"grafana/helm-chart-toolbox-kubectl"` |  |
+| kubernetesManifests.image.tag | string | `"0.1.2"` |  |

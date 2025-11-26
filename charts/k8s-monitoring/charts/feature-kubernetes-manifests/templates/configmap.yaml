@@ -1,0 +1,11 @@
+{{- if .Values.deployAsConfigMap }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Chart.Name }}-test-config
+  namespace: {{ .Release.Namespace }}
+data:
+  module.alloy: |-
+    {{- include "feature.kubernetesManifests.module" . | indent 4 }}
+{{- end }}
