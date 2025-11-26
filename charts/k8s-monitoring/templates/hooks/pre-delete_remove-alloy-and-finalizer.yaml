@@ -1,6 +1,10 @@
 {{- if and (index .Values "alloy-operator").deploy (index .Values "alloy-operator").waitForAlloyRemoval.enabled }}
 {{- $jobName := (printf "%s-remove-alloy-and-finalizer" (include "helper.fullname" .)) | trunc 63 | trimSuffix "-" }}
 {{- $jobSettings := (index .Values "alloy-operator").waitForAlloyRemoval -}}
+{{- if eq $jobSettings.securityContext.runAsUser nil }}
+  {{- /* Fixes an issue where this wouldn't remove, but instead set it to `null` */}}
+  {{- $jobSettings = mergeOverwrite $jobSettings (dict "securityContext" (unset $jobSettings.securityContext "runAsUser")) }}
+{{- end }}
 {{- $imagePullSecrets := $jobSettings.image.pullSecrets }}
 {{- if ((index .Values.global "image") | default dict).pullSecrets }}
   {{- $imagePullSecrets = (index .Values.global "image").pullSecrets }}

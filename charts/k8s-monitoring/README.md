@@ -277,7 +277,7 @@ details:
 |-----|------|---------|-------------|
 | alloy-operator.deploy | bool | `true` | Deploy the Alloy Operator. |
 | alloy-operator.waitForAlloyRemoval.enabled | bool | `true` | Utilize a Helm Hook to wait for all Alloy instances to be removed before uninstalling the Alloy Operator. This ensures that all Alloy instances are properly cleaned up before the operator is removed. |
-| alloy-operator.waitForAlloyRemoval.image | object | `{"digest":"","pullPolicy":"IfNotPresent","pullSecrets":[],"registry":"ghcr.io","repository":"grafana/helm-chart-toolbox-kubectl","tag":"0.1.1"}` | The image to use for the Helm Hook that ensures that Alloy instances are removed during uninstall. |
+| alloy-operator.waitForAlloyRemoval.image | object | `{"digest":"","pullPolicy":"IfNotPresent","pullSecrets":[],"registry":"ghcr.io","repository":"grafana/helm-chart-toolbox-kubectl","tag":"0.1.2"}` | The image to use for the Helm Hook that ensures that Alloy instances are removed during uninstall. |
 | alloy-operator.waitForAlloyRemoval.nodeSelector | object | `{"kubernetes.io/os":"linux"}` | Node selector to use for the Helm Hook that ensures that Alloy instances are removed during uninstall. |
 | alloy-operator.waitForAlloyRemoval.podAnnotations | object | `{}` | Annotations to apply to the Pod for the Helm Hook to wait for all Alloy instances to be removed before uninstalling the Alloy Operator |
 | alloy-operator.waitForAlloyRemoval.podLabels | object | `{"linkerd.io/inject":"disabled","sidecar.istio.io/inject":"false"}` | Labels to apply to the Pod for the Helm Hook to wait for all Alloy instances to be removed before uninstalling the Alloy Operator |
