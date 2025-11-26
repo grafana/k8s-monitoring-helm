@@ -411,7 +411,7 @@ alloy-operator:
     image:
       registry: ghcr.io
       repository: grafana/helm-chart-toolbox-kubectl
-      tag: 0.1.1
+      tag: 0.1.2
       digest: ""
       pullPolicy: IfNotPresent
       pullSecrets: []
@@ -427,6 +427,19 @@ alloy-operator:
     podLabels:
       sidecar.istio.io/inject: "false"
       linkerd.io/inject: disabled
+
+    # -- Default security context to apply to the container. This can also be set to `null` to remove the security
+    # context entirely. Also, `runAsUser` can be set to `null` to remove it.
+    # @section -- Alloy Operator
+    securityContext:
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop: ["ALL"]
+      readOnlyRootFilesystem: true
+      runAsNonRoot: true
+      runAsUser: 4242
+      seccompProfile:
+        type: RuntimeDefault
 
     # -- Set the resource field for the Helm Hook that ensures that Alloy instances are removed during uninstall.
     # @section -- Alloy Operator

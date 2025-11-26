@@ -2288,7 +2288,7 @@ spec:
       serviceAccountName: k8smon-k8s-monitoring-add-finalizer
       containers:
         - name: add-finalizers
-          image: "ghcr.io/grafana/helm-chart-toolbox-kubectl:0.1.1"
+          image: "ghcr.io/grafana/helm-chart-toolbox-kubectl:0.1.2"
           imagePullPolicy: IfNotPresent
           command:
             - /bin/bash
@@ -2299,12 +2299,13 @@ spec:
                 --patch='{"metadata":{"finalizers":["k8s.grafana.com/finalizer"]}}' \
                 deployment/k8smon-alloy-operator
           securityContext:
-            runAsNonRoot: true
-            runAsUser: 4242
             allowPrivilegeEscalation: false
             capabilities:
-              drop: ["ALL"]
+              drop:
+              - ALL
             readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 4242
             seccompProfile:
               type: RuntimeDefault
 ---
@@ -2339,7 +2340,7 @@ spec:
       serviceAccountName: k8smon-k8s-monitoring-remove-alloy-and-finalizer
       containers:
         - name: remove-finalizers
-          image: "ghcr.io/grafana/helm-chart-toolbox-kubectl:0.1.1"
+          image: "ghcr.io/grafana/helm-chart-toolbox-kubectl:0.1.2"
           imagePullPolicy: IfNotPresent
           command:
             - /bin/bash
@@ -2363,11 +2364,12 @@ spec:
                 --patch='[{"op": "remove", "path": "/metadata/finalizers"}]' \
                 deployment/k8smon-alloy-operator
           securityContext:
-            runAsNonRoot: true
-            runAsUser: 4242
             allowPrivilegeEscalation: false
             capabilities:
-              drop: ["ALL"]
+              drop:
+              - ALL
             readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 4242
             seccompProfile:
               type: RuntimeDefault
