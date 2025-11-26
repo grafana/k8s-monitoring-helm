@@ -1,0 +1,40 @@
+---
+global:
+  image:
+    # @section -- Image
+    registry: ""
+
+# -- How frequently to refresh all manifests, regardless of if they have changed. At maximum, this should be set lower
+# Than the retention period for your log storage.
+# @section -- General Settings
+refreshInterval: 1d
+
+# -- Only gather manifests from these namespaces. If empty, gather from all. This affects the manifests gathered, but
+# Also if this chart deploys ClusterRoles and ClusterRoleBindings or Roles and RoleBindings.
+# @section -- General Settings
+namespaces: []
+
+# -- The kinds of manifests to gather.
+# @section -- General Settings
+kinds:
+  pods:
+    gather: false
+  deployments:
+    gather: false
+  statefulsets:
+    gather: false
+  daemonsets:
+    gather: false
+  cronjobs:
+    gather: false
+
+# -- The image to run to get the Kubernetes manifests from this cluster. It must contain
+# `kubectl` and `jq` at a minimum.
+# @section -- Image
+image:
+  registry: ghcr.io
+  repository: grafana/helm-chart-toolbox-kubectl
+  tag: 0.1.3
+  digest: ""
+  pullPolicy: IfNotPresent
+  pullSecrets: []

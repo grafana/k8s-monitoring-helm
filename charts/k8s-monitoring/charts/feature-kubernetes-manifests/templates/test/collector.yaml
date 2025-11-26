@@ -1,0 +1,14 @@
+{{- if eq (((index .Values "testing") | default false) | toString) "true" }}
+{{ include "feature.kubernetesManifests.collector.validate" (dict "Values" .Values "Collector" .Values.test.Collector "CollectorName" "alloy-test" )}}
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: {{ .Chart.Name }}-test-collector
+  namespace: {{ .Release.Namespace }}
+spec:
+  containers:
+    - name: alloy
+      image: grafana/alloy
+{{- include "feature.kubernetesManifests.sidecarContainer" . | indent 4 }}
+{{- end }}
