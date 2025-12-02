@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+*   Fix extra quotes for the sending queue storage in OTLP destinations (@petewall)
 *   Update Alloy Operator to 0.3.14 (@petewall)
 
 ## 3.6.1
