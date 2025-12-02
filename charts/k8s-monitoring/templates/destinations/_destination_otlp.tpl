@@ -517,7 +517,7 @@ otelcol.exporter.otlphttp {{ include "helper.alloy_name" .name | quote }} {
     sizer = {{ .sendingQueue.sizer | quote }}
 {{- end }}
 {{- if .sendingQueue.storage }}
-    storage = {{ .sendingQueue.storage | quote }}
+    storage = {{ .sendingQueue.storage }}
 {{- end }}
 {{- if .sendingQueue.batch.enabled }}
     batch {
