@@ -3,6 +3,7 @@
 ## Unreleased
 
 *   Fix extra quotes for the sending queue storage in OTLP destinations (@petewall)
+*   Fix the inclusion of the destination secret for Service Graph instance (@petewall)
 *   Update Alloy Operator to 0.3.14 (@petewall)
 
 ## 3.6.1
