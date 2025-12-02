@@ -6,6 +6,8 @@ if [[ "${script_name}" == "bash" || "${script_name}" == "-bash" ]]; then
   script_name="script.sh"
 fi
 
+DefaultRefreshInterval=60
+
 usage() {
   echo "Usage: ${script_name} [OPTIONS]"
   echo ""
@@ -19,13 +21,14 @@ usage() {
   echo "  -n, --namespaces <list>  Comma or space separated list of namespaces to scan."
   echo "                           When omitted, all namespaces are scanned."
   echo "  -p, --pod-filters <list> Comma or space separated list of jq selectors to drop"
-  echo "                           from the pod JSON."
-  echo "                           Default: .status"
+  echo "                           from the pod JSON. Default: \".status\""
+  echo "  --refresh-interval <sec> How frequently to refresh manifests. Default: \"${DefaultRefreshInterval}\""
   echo "  -h, --help               Show this help message."
 }
 
-namespaces_arg=""
-pod_filters_arg=""
+podNamespaces=()
+podFilters=(".status")
+refreshInterval="${DefaultRefreshInterval}"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -35,7 +38,15 @@ while [[ $# -gt 0 ]]; do
         usage
         exit 1
       fi
-      namespaces_arg="$2"
+
+      sanitized="${2//$'\n'/ }"
+      sanitized="${sanitized//,/ }"
+      read -ra parsedNamespaces <<< "${sanitized}"
+      for ns in "${parsedNamespaces[@]}"; do
+        [[ -n "${ns}" ]] || continue
+        podNamespaces+=("${ns}")
+      done
+
       shift 2
       ;;
     -p|--pod-filters)
@@ -44,7 +55,25 @@ while [[ $# -gt 0 ]]; do
         usage
         exit 1
       fi
-      pod_filters_arg="$2"
+
+      podFilters=()
+      sanitized="${2//$'\n'/ }"
+      sanitized="${sanitized//,/ }"
+      read -ra parsedPodFilters <<< "${sanitized}"
+      for filter in "${parsedPodFilters[@]}"; do
+        [[ -n "${filter}" ]] || continue
+        podFilters+=("${filter}")
+      done
+
+      shift 2
+      ;;
+    --refresh-interval)
+      if [[ $# -lt 2 ]]; then
+        echo "Error: --pod-refresh requires an argument." >&2
+        usage
+        exit 1
+      fi
+      refreshInterval="$2"
       shift 2
       ;;
     -h|--help)
@@ -70,32 +99,7 @@ fi
 
 mkdir -p "${MANIFEST_DIR}"
 
-pod_namespaces=()
-if [[ -n "${namespaces_arg}" ]]; then
-  sanitized="${namespaces_arg//$'\n'/ }"
-  sanitized="${sanitized//,/ }"
-  read -ra parsed_namespaces <<< "${sanitized}"
-  for ns in "${parsed_namespaces[@]}"; do
-    [[ -n "${ns}" ]] || continue
-    pod_namespaces+=("${ns}")
-  done
-fi
-
-default_pod_filters=(".status")
-pod_filters=()
-if [[ -n "${pod_filters_arg}" ]]; then
-  sanitized="${pod_filters_arg//$'\n'/ }"
-  sanitized="${sanitized//,/ }"
-  read -ra parsed_pod_filters <<< "${sanitized}"
-  for filter in "${parsed_pod_filters[@]}"; do
-    [[ -n "${filter}" ]] || continue
-    pod_filters+=("${filter}")
-  done
-fi
-
-if [[ ${#pod_filters[@]} -eq 0 ]]; then
-  pod_filters=("${default_pod_filters[@]}")
-fi
+watchPids=()
 
 build_jq_filter() {
   local program="."
@@ -108,63 +112,158 @@ build_jq_filter() {
 
 collect_pod_manifest() {
   local namespace="$1"
-  local pod_name="$2"
-  pod_output_filter="$(build_jq_filter "${pod_filters[@]}")"
+  local podName="$2"
 
-  [[ -n "${namespace}" && -n "${pod_name}" ]] || return 0
+  [[ -n "${namespace}" && -n "${podName}" ]] || return 0
 
   local namespace_dir="${MANIFEST_DIR}/pods/${namespace}"
   mkdir -p "${namespace_dir}"
 
-  local output_file="${namespace_dir}/${pod_name}.json"
-  local tmp_file="${output_file}.tmp"
+  local outputFile="${namespace_dir}/${podName}.json"
+  local tmpFile="${outputFile}.tmp"
 
-  if kubectl get pod --namespace "${namespace}" "${pod_name}" -o json | jq --compact-output "${pod_output_filter}" > "${tmp_file}"; then
-    echo "Storing pod manifest \"${namespace}/${pod_name}\""
-    mv "${tmp_file}" "${output_file}"
+  pod_output_filter="$(build_jq_filter "${podFilters[@]}")"
+  if kubectl get pod --namespace "${namespace}" "${podName}" -o json | jq --compact-output "${pod_output_filter}" > "${tmpFile}"; then
+    if [[ ! -f "${outputFile}" ]] || ! cmp -s "${tmpFile}" "${outputFile}"; then
+      echo "Storing pod manifest \"${namespace}/${podName}\""
+      mv "${tmpFile}" "${outputFile}"
+    else
+      echo "No changes to pod manifest \"${namespace}/${podName}\""
+      rm -f "${tmpFile}"
+    fi
   else
-    echo "Failed to collect manifest for pod ${namespace}/${pod_name}" >&2
-    rm -f "${tmp_file}"
+    echo "Failed to collect manifest for pod ${namespace}/${podName}" >&2
+    rm -f "${tmpFile}"
+  fi
+}
+
+remove_pod_manifest() {
+  local namespace="$1"
+  local podName="$2"
+
+  [[ -n "${namespace}" && -n "${podName}" ]] || return
+
+  local outputFile="${MANIFEST_DIR}/pods/${namespace}/${podName}.json"
+  if [[ -f "${outputFile}" ]]; then
+    rm -f "${outputFile}"
+    echo "Removed pod manifest \"${namespace}/${podName}\""
   fi
 }
 
 collect_all_pod_manifests() {
-  if pod_entries=$(kubectl get pods --all-namespaces -o jsonpath='{range .items[*]}{.metadata.namespace}{" "}{.metadata.name}{"\n"}{end}'); then
+  if podEntries=$(kubectl get pods --all-namespaces -o jsonpath='{range .items[*]}{.metadata.namespace}{" "}{.metadata.name}{"\n"}{end}'); then
     while IFS= read -r entry; do
       [[ -n "${entry}" ]] || continue
-      read -r namespace pod_name _ <<< "${entry}"
-      if [[ -z "${namespace}" || -z "${pod_name}" ]]; then
+      read -r namespace podName _ <<< "${entry}"
+      if [[ -z "${namespace}" || -z "${podName}" ]]; then
         continue
       fi
-      collect_pod_manifest "${namespace}" "${pod_name}"
-    done <<< "${pod_entries}"
+      collect_pod_manifest "${namespace}" "${podName}"
+    done <<< "${podEntries}"
   else
     echo "Failed to list pods across all namespaces." >&2
   fi
 }
 
 collect_pod_manifests_by_namespace() {
-  for namespace in "${pod_namespaces[@]}"; do
+  for namespace in "${podNamespaces[@]}"; do
     [[ -n "${namespace}" ]] || continue
 
-    if ! pod_names=$(kubectl get pods --namespace "${namespace}" -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}'); then
+    if ! podNames=$(kubectl get pods --namespace "${namespace}" -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}'); then
       echo "Failed to list pods in namespace ${namespace}" >&2
       continue
     fi
 
-    while IFS= read -r pod_name; do
-      [[ -n "${pod_name}" ]] || continue
-      collect_pod_manifest "${namespace}" "${pod_name}"
-    done <<< "${pod_names}"
+    while IFS= read -r podName; do
+      [[ -n "${podName}" ]] || continue
+      collect_pod_manifest "${namespace}" "${podName}"
+    done <<< "${podNames}"
   done
 }
 
-while true; do
-  if [[ ${#pod_namespaces[@]} -eq 0 ]]; then
+refresh_pod_manifests() {
+  if [[ ${#podNamespaces[@]} -eq 0 ]]; then
     collect_all_pod_manifests
   else
     collect_pod_manifests_by_namespace
   fi
+}
 
-  sleep 60
+handle_pod_watch_event() {
+  local eventType="$1"
+  local namespace="$2"
+  local podName="$3"
+
+  [[ -n "${event_type}" && -n "${namespace}" && -n "${podName}" ]] || return
+
+  echo "Pod event: ${namespace}/${podName}: ${eventType}"
+  case "${eventType}" in
+    ADDED|MODIFIED)
+      collect_pod_manifest "${namespace}" "${podName}"
+      ;;
+    DELETED)
+      remove_pod_manifest "${namespace}" "${podName}"
+      ;;
+    *)
+      ;;
+  esac
+}
+
+watch_pods() {
+  local kubectl_args=("$@")
+  echo "Starting pod watcher: kubectl get pods ${kubectl_args[*]}"
+
+  while true; do
+    if ! kubectl get pods "${kubectl_args[@]}" --watch --output-watch-events -o json \
+      | jq --unbuffered -r 'select(.object.metadata.namespace != null and .object.metadata.name != null and .type != null) | "\(.type) \(.object.metadata.namespace) \(.object.metadata.name)"' \
+      | while read -r eventType namespace podName; do
+          handle_pod_watch_event "${eventType}" "${namespace}" "${podName}"
+        done; then
+      echo "Pod watch ended unexpectedly for args: ${kubectl_args[*]}" >&2
+      sleep 5
+    fi
+  done
+}
+
+start_pod_watches() {
+  if [[ ${#podNamespaces[@]} -eq 0 ]]; then
+    watch_pods "--all-namespaces" &
+    watchPids+=("$!")
+  else
+    for namespace in "${podNamespaces[@]}"; do
+      [[ -n "${namespace}" ]] || continue
+      watch_pods "--namespace" "${namespace}" &
+      watchPids+=("$!")
+    done
+  fi
+}
+
+stop_pod_watches() {
+  if [[ ${#watchPids[@]} -eq 0 ]]; then
+    return
+  fi
+
+  for pid in "${watchPids[@]}"; do
+    [[ -n "${pid}" ]] || continue
+    kill "${pid}" 2>/dev/null || true
+  done
+
+  watchPids=()
+}
+
+trap stop_pod_watches EXIT
+
+start_pod_watches
+
+loop_delay="${POD_LOOP_DELAY:-5}"
+lastFullSync=0
+
+while true; do
+  currentTime=$(date +%s)
+  if (( currentTime - lastFullSync >= refreshInterval )); then
+    refresh_pod_manifests
+    lastFullSync="${currentTime}"
+  fi
+
+  sleep "${loop_delay}"
 done

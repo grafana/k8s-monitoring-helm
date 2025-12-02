@@ -15,6 +15,10 @@
     - --namespaces
     - {{ .Values.namespaces | join "," }}
 {{- end }}
+{{- if .Values.refreshInterval }}
+    - --refresh-interval
+    - {{ .Values.refreshInterval | quote }}
+{{- end }}
   env:
     - name: MANIFEST_DIR
       value: /var/kubernetes-manifests

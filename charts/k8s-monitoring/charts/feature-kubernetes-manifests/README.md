@@ -51,5 +51,10 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | image.registry | string | `"ghcr.io"` |  |
 | image.repository | string | `"grafana/helm-chart-toolbox-kubectl"` |  |
 | image.tag | string | `"0.1.2"` |  |
+| kinds.cronjobs.gather | bool | `true` |  |
+| kinds.daemonsets.gather | bool | `true` |  |
+| kinds.deployments.gather | bool | `true` |  |
+| kinds.pods.gather | bool | `true` |  |
+| kinds.statefulsets.gather | bool | `true` |  |
 | namespaces | list | `[]` |  |
-| pods.gather | bool | `true` |  |
+| refreshInterval | int | `3600` |  |
