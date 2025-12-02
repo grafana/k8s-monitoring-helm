@@ -18,30 +18,30 @@
     {{- $destinationConfigComponents := "" }}
     {{- range $metricsDestinationName := $metricsDestinationNames }}
       {{- $dest := include "destination.getDestinationByName" (deepCopy $ | merge (dict "destination" $metricsDestinationName )) | fromYaml }}
-      {{- if eq $dest.type "prometheus" -}}
-        {{- $defaultValues := "destinations/prometheus-values.yaml" | $.Files.Get | fromYaml }}
-        {{- $destWithDefaults := mergeOverwrite (deepCopy $defaultValues) $dest }}
-        {{- $destinationTarget := include "destinations.prometheus.alloy.otlp.metrics.target" $destWithDefaults }}
-        {{- $destinationTargets = append $destinationTargets (printf "%s" $destinationTarget) }}
-      {{- else }}
-        {{- $defaultValues := "destinations/otlp-values.yaml" | $.Files.Get | fromYaml }}
-        {{- $destWithDefaults := mergeOverwrite (deepCopy $defaultValues) $dest }}
-        {{- $destinationTarget := include "destinations.otlp.alloy.exporter.target" $destWithDefaults }}
-        {{- $destinationTargets = append $destinationTargets (printf "%s" $destinationTarget) }}
-      {{- end }}
       {{- $destinationConfigComponents = cat $destinationConfigComponents (printf "\n\n// Destination: %s (%s)" $dest.name $dest.type) }}
-      {{- if eq (include "secrets.usesKubernetesSecret" $dest) "true" }}
-        {{- $destinationConfigComponents = cat $destinationConfigComponents (include "secret.alloy" (deepCopy $ | merge (dict "object" $dest)) | nindent 0) }}
-      {{- end }}
       {{- if eq $dest.type "prometheus" -}}
         {{- $defaultValues := "destinations/prometheus-values.yaml" | $.Files.Get | fromYaml }}
         {{- $destWithDefaults := mergeOverwrite (deepCopy $defaultValues) $dest }}
         {{- $destWithDefaults = set $destWithDefaults "extraLabelsFrom" (dict "collector_id" "env(\"POD_NAME\")") }}
+
+        {{- $destinationTarget := include "destinations.prometheus.alloy.otlp.metrics.target" $destWithDefaults }}
+        {{- $destinationTargets = append $destinationTargets (printf "%s" $destinationTarget) }}
+
         {{- $destinationConfigComponents = cat $destinationConfigComponents ((include "destinations.prometheus.alloy" (deepCopy $ | merge (dict "destination" $destWithDefaults))) | trim | nindent 0) }}
+        {{- if eq (include "secrets.usesKubernetesSecret" $destWithDefaults) "true" }}
+          {{- $destinationConfigComponents = cat $destinationConfigComponents (include "secret.alloy" (deepCopy $ | merge (dict "object" $destWithDefaults)) | nindent 0) }}
+        {{- end }}
       {{- else -}}
         {{- $defaultValues := "destinations/otlp-values.yaml" | $.Files.Get | fromYaml }}
         {{- $destWithDefaults := mergeOverwrite (deepCopy $defaultValues) $dest }}
+
+        {{- $destinationTarget := include "destinations.otlp.alloy.exporter.target" $destWithDefaults }}
+        {{- $destinationTargets = append $destinationTargets (printf "%s" $destinationTarget) }}
+
         {{- $destinationConfigComponents = cat $destinationConfigComponents ((include "destinations.otlp.alloy.exporter" $destWithDefaults) | trim | nindent 0) }}
+        {{- if eq (include "secrets.usesKubernetesSecret" $destWithDefaults) "true" }}
+          {{- $destinationConfigComponents = cat $destinationConfigComponents (include "secret.alloy" (deepCopy $ | merge (dict "object" $destWithDefaults)) | nindent 0) }}
+        {{- end }}
       {{- end }}
     {{- end }}
 
