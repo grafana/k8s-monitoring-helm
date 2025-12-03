@@ -18,16 +18,16 @@ clean:
 .PHONY: build
 build: README.md Chart.lock values.schema.json
 
-.PHONY: lint-script
-lint-script:
+.PHONY: lint-shell
+lint-shell:
 	@if command -v shellcheck &> /dev/null; then \
-		shellcheck templates/script.sh; \
+		shellcheck collect-manifests.sh; \
 	else \
 		docker run --rm -v $(shell pwd):/src --workdir /src koalaman/shellcheck:stable --rcfile .shellcheckrc templates/script.sh; \
 	fi
 
 .PHONY: lint
-lint: lint-script
+lint: lint-shell
 
 .PHONY: test
 test: build
