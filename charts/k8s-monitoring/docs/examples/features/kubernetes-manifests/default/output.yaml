@@ -99,130 +99,6 @@ data:
           logs = argument.logs_destinations.value
         }
       }
-    
-    
-      otelcol.receiver.filelog "deployment_manifests" {
-        include = ["/var/kubernetes-manifests/deployments/*/*.json"]
-        include_file_path_resolved = true
-        start_at = "beginning"
-        delete_after_read = true
-    
-        output {
-          logs = [otelcol.processor.transform.deployment_manifests.input]
-        }
-      }
-    
-      otelcol.processor.transform "deployment_manifests" {
-        error_mode = "ignore"
-    
-        log_statements {
-          context = "log"
-          statements = [
-            `merge_maps(attributes, ExtractPatterns(log.attributes["log.file.path_resolved"], "^/var/kubernetes-manifests/deployments/(?P<namespace>[^/]+)/(?P<deployment>[^.]+)\\.json$"), "upsert")`,
-            `set(resource.attributes["k8s.namespace.name"], attributes["namespace"])`,
-            `set(resource.attributes["k8s.deployment.name"], attributes["deployment"])`,
-            `set(resource.attributes["service.name"], "k8s.grafana.com/manifest-collector")`,
-            `set(resource.attributes["service.namespace"], "default")`,
-          ]
-        }
-    
-        output {
-          logs = argument.logs_destinations.value
-        }
-      }
-    
-    
-      otelcol.receiver.filelog "statefulset_manifests" {
-        include = ["/var/kubernetes-manifests/statefulsets/*/*.json"]
-        include_file_path_resolved = true
-        start_at = "beginning"
-        delete_after_read = true
-    
-        output {
-          logs = [otelcol.processor.transform.statefulset_manifests.input]
-        }
-      }
-    
-      otelcol.processor.transform "statefulset_manifests" {
-        error_mode = "ignore"
-    
-        log_statements {
-          context = "log"
-          statements = [
-            `merge_maps(attributes, ExtractPatterns(log.attributes["log.file.path_resolved"], "^/var/kubernetes-manifests/statefulsets/(?P<namespace>[^/]+)/(?P<statefulset>[^.]+)\\.json$"), "upsert")`,
-            `set(resource.attributes["k8s.namespace.name"], attributes["namespace"])`,
-            `set(resource.attributes["k8s.statefulset.name"], attributes["statefulset"])`,
-            `set(resource.attributes["service.name"], "k8s.grafana.com/manifest-collector")`,
-            `set(resource.attributes["service.namespace"], "default")`,
-          ]
-        }
-    
-        output {
-          logs = argument.logs_destinations.value
-        }
-      }
-    
-    
-      otelcol.receiver.filelog "daemonset_manifests" {
-        include = ["/var/kubernetes-manifests/daemonsets/*/*.json"]
-        include_file_path_resolved = true
-        start_at = "beginning"
-        delete_after_read = true
-    
-        output {
-          logs = [otelcol.processor.transform.daemonset_manifests.input]
-        }
-      }
-    
-      otelcol.processor.transform "daemonset_manifests" {
-        error_mode = "ignore"
-    
-        log_statements {
-          context = "log"
-          statements = [
-            `merge_maps(attributes, ExtractPatterns(log.attributes["log.file.path_resolved"], "^/var/kubernetes-manifests/daemonsets/(?P<namespace>[^/]+)/(?P<daemonset>[^.]+)\\.json$"), "upsert")`,
-            `set(resource.attributes["k8s.namespace.name"], attributes["namespace"])`,
-            `set(resource.attributes["k8s.daemonset.name"], attributes["daemonset"])`,
-            `set(resource.attributes["service.name"], "k8s.grafana.com/manifest-collector")`,
-            `set(resource.attributes["service.namespace"], "default")`,
-          ]
-        }
-    
-        output {
-          logs = argument.logs_destinations.value
-        }
-      }
-    
-    
-      otelcol.receiver.filelog "cronjob_manifests" {
-        include = ["/var/kubernetes-manifests/cronjobs/*/*.json"]
-        include_file_path_resolved = true
-        start_at = "beginning"
-        delete_after_read = true
-    
-        output {
-          logs = [otelcol.processor.transform.cronjob_manifests.input]
-        }
-      }
-    
-      otelcol.processor.transform "cronjob_manifests" {
-        error_mode = "ignore"
-    
-        log_statements {
-          context = "log"
-          statements = [
-            `merge_maps(attributes, ExtractPatterns(log.attributes["log.file.path_resolved"], "^/var/kubernetes-manifests/cronjobs/(?P<namespace>[^/]+)/(?P<cronjob>[^.]+)\\.json$"), "upsert")`,
-            `set(resource.attributes["k8s.namespace.name"], attributes["namespace"])`,
-            `set(resource.attributes["k8s.cronjob.name"], attributes["cronjob"])`,
-            `set(resource.attributes["service.name"], "k8s.grafana.com/manifest-collector")`,
-            `set(resource.attributes["service.namespace"], "default")`,
-          ]
-        }
-    
-        output {
-          logs = argument.logs_destinations.value
-        }
-      }
     }
     kubernetes_manifests "feature" {
       logs_destinations = [
@@ -275,7 +151,9 @@ data:
       script_name="script.sh"
     fi
     
-    DefaultWatchTimeout=30
+    DefaultWatchTimeout=30s
+    ManifestRequestThrottling=0.1s
+    WatchRestartDelay=5
     
     usage() {
       echo "Usage: ${script_name} [OPTIONS]"
@@ -293,8 +171,8 @@ data:
       echo "                           are scanned."
       echo "  -f, --filters <list>     Comma or space separated list of jq selectors to drop"
       echo "                           from the resource JSON. Default: \".status\""
-      echo "  --watch-timeout <sec>    How long to keep a watch open before restarting."
-      echo "                           Default: ${DefaultWatchTimeout} seconds."
+      echo "  --watch-timeout <time>   How long to keep a watch open before restarting."
+      echo "                           Default: ${DefaultWatchTimeout}s."
       echo "  -h, --help               Show this help message."
     }
     
@@ -352,10 +230,6 @@ data:
             exit 1
           fi
           watchTimeout="$2"
-          if ! [[ "${watchTimeout}" =~ ^[0-9]+$ ]] || (( watchTimeout <= 0 )); then
-            echo "Error: --watch-timeout must be a positive integer (seconds)." >&2
-            exit 1
-          fi
           shift 2
           ;;
         -h|--help)
@@ -374,11 +248,6 @@ data:
       echo "Error: MANIFEST_DIR environment variable must be set." >&2
       exit 1
     fi
-    
-    kubectl get nodes
-    
-    echo "k8s host: ${KUBERNETES_SERVICE_HOST}"
-    echo "k8s port: ${KUBERNETES_SERVICE_PORT_HTTPS}"
     
     mkdir -p "${MANIFEST_DIR}"
     
@@ -464,13 +333,14 @@ data:
       fi
     
       while true; do
-        if ! timeout --foreground "${watchTimeout}s" kubectl get "${kind}" "${kubectlArgs[@]}" --watch --output-watch-events -o json \
+        if ! timeout --foreground "${watchTimeout}" kubectl get "${kind}" "${kubectlArgs[@]}" --watch --output-watch-events -o json \
           | jq --unbuffered -r 'select(.object.metadata.namespace != null and .object.metadata.name != null and .type != null) | "\(.type) \(.object.metadata.namespace) \(.object.metadata.name)"' \
           | while read -r eventType namespace resourceName; do
               handle_watch_event "${eventType}" "${namespace}" "${resourceName}"
+              sleep "${ManifestRequestThrottling}"  # Throttle the requests
             done; then
-          echo "[WARN] ${kind}: Watch ended; restarting in 5 seconds." >&2
-          sleep 5
+          echo "[WARN] ${kind}: Watch ended. Restarting in ${WatchRestartDelay} seconds." >&2
+          sleep "${WatchRestartDelay}"
         fi
       done
     }
@@ -629,14 +499,8 @@ metadata:
 rules:
   - apiGroups:
       - ""
-      - apps
-      - batch
     resources:
       - pods
-      - deployments
-      - statefulsets
-      - daemonsets
-      - cronjobs
     verbs:
       - get
       - list
@@ -913,13 +777,7 @@ spec:
       - |
         set -euo pipefail
         pids=()
-        bash /etc/alloy/collect-manifests.sh --kind pods --namespace "default" --watch-timeout 3600 &
-        pids+=("$!")
-        bash /etc/alloy/collect-manifests.sh --kind deployments --namespace "default" --watch-timeout 3600 &
-        pids+=("$!")
-        bash /etc/alloy/collect-manifests.sh --kind statefulsets --namespace "default" --watch-timeout 3600 &
-        pids+=("$!")
-        bash /etc/alloy/collect-manifests.sh --kind daemonsets --namespace "default" --watch-timeout 3600 &
+        bash /etc/alloy/collect-manifests.sh --kind pods --namespace "default" --watch-timeout "1d" &
         pids+=("$!")
         trap 'for pid in "${pids[@]}"; do kill "${pid}" 2>/dev/null || true; done' EXIT
         wait -n "${pids[@]}"

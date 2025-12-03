@@ -27,8 +27,10 @@ destinations:
 
 kubernetesManifests:
   enabled: true
-
   namespaces: [default]
+  kinds:
+    pods:
+      gather: true
 
 alloy-singleton:
   enabled: true
