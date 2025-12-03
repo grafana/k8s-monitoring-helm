@@ -190,6 +190,7 @@ watch_resources() {
       | jq --unbuffered -r 'select(.object.metadata.namespace != null and .object.metadata.name != null and .type != null) | "\(.type) \(.object.metadata.namespace) \(.object.metadata.name)"' \
       | while read -r eventType namespace resourceName; do
           handle_watch_event "${eventType}" "${namespace}" "${resourceName}"
+          sleep 0.1s  # Throttle the requests
         done; then
       echo "[WARN] ${kind}: Watch ended; restarting in 5 seconds." >&2
       sleep 5
