@@ -456,13 +456,3 @@ details:
 | selfReporting.destinations | list | `[]` | The destinations where self-report metrics will be sent. If empty, all metrics-capable destinations will be used. |
 | selfReporting.enabled | bool | `true` | Enable Self-reporting. |
 | selfReporting.scrapeInterval | string | 60s | How frequently to generate self-report metrics. This does utilize the global scrapeInterval setting. |
-
-### Other Values
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| kubernetesManifests.image.digest | string | `""` |  |
-| kubernetesManifests.image.pullPolicy | string | `"IfNotPresent"` |  |
-| kubernetesManifests.image.registry | string | `"ghcr.io"` |  |
-| kubernetesManifests.image.repository | string | `"grafana/helm-chart-toolbox-kubectl"` |  |
-| kubernetesManifests.image.tag | string | `"0.1.2"` |  |

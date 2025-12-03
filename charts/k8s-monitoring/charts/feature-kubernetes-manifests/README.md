@@ -50,7 +50,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | image.pullSecrets | list | `[]` |  |
 | image.registry | string | `"ghcr.io"` |  |
 | image.repository | string | `"grafana/helm-chart-toolbox-kubectl"` |  |
-| image.tag | string | `"0.1.2"` |  |
+| image.tag | string | `"0.1.3"` |  |
 | kinds.cronjobs.gather | bool | `true` |  |
 | kinds.daemonsets.gather | bool | `true` |  |
 | kinds.deployments.gather | bool | `true` |  |
