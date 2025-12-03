@@ -7,6 +7,8 @@ if [[ "${script_name}" == "bash" || "${script_name}" == "-bash" ]]; then
 fi
 
 DefaultWatchTimeout=30s
+ManifestRequestThrottling=0.1s
+WatchRestartDelay=5
 
 usage() {
   echo "Usage: ${script_name} [OPTIONS]"
@@ -190,10 +192,10 @@ watch_resources() {
       | jq --unbuffered -r 'select(.object.metadata.namespace != null and .object.metadata.name != null and .type != null) | "\(.type) \(.object.metadata.namespace) \(.object.metadata.name)"' \
       | while read -r eventType namespace resourceName; do
           handle_watch_event "${eventType}" "${namespace}" "${resourceName}"
-          sleep 0.1s  # Throttle the requests
+          sleep "${ManifestRequestThrottling}"  # Throttle the requests
         done; then
-      echo "[WARN] ${kind}: Watch ended; restarting in 5 seconds." >&2
-      sleep 5
+      echo "[WARN] ${kind}: Watch ended. Restarting in ${WatchRestartDelay} seconds." >&2
+      sleep "${WatchRestartDelay}"
     fi
   done
 }
