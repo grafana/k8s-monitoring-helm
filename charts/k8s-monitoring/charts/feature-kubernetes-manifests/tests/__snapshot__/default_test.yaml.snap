@@ -137,14 +137,6 @@ should allow filtering by namespace:
       - |
         set -euo pipefail
         pids=()
-        bash /etc/alloy/collect-manifests.sh --kind pod --namespace "default" --watch-timeout "1d" &
-        pids+=("$!")
-        bash /etc/alloy/collect-manifests.sh --kind pod --namespace "production" --watch-timeout "1d" &
-        pids+=("$!")
-        bash /etc/alloy/collect-manifests.sh --kind statefulsets --namespace "default" --watch-timeout "1d" &
-        pids+=("$!")
-        bash /etc/alloy/collect-manifests.sh --kind statefulsets --namespace "production" --watch-timeout "1d" &
-        pids+=("$!")
         bash /etc/alloy/collect-manifests.sh --kind cronjobs --namespace "default" --watch-timeout "1d" &
         pids+=("$!")
         bash /etc/alloy/collect-manifests.sh --kind cronjobs --namespace "production" --watch-timeout "1d" &
@@ -156,6 +148,14 @@ should allow filtering by namespace:
         bash /etc/alloy/collect-manifests.sh --kind deployments --namespace "default" --watch-timeout "1d" &
         pids+=("$!")
         bash /etc/alloy/collect-manifests.sh --kind deployments --namespace "production" --watch-timeout "1d" &
+        pids+=("$!")
+        bash /etc/alloy/collect-manifests.sh --kind pod --namespace "default" --watch-timeout "1d" &
+        pids+=("$!")
+        bash /etc/alloy/collect-manifests.sh --kind pod --namespace "production" --watch-timeout "1d" &
+        pids+=("$!")
+        bash /etc/alloy/collect-manifests.sh --kind statefulsets --namespace "default" --watch-timeout "1d" &
+        pids+=("$!")
+        bash /etc/alloy/collect-manifests.sh --kind statefulsets --namespace "production" --watch-timeout "1d" &
         pids+=("$!")
         trap 'for pid in "${pids[@]}"; do kill "${pid}" 2>/dev/null || true; done' EXIT
         wait -n "${pids[@]}"
@@ -310,8 +310,6 @@ should render the default configuration:
       - |
         set -euo pipefail
         pids=()
-        bash /etc/alloy/collect-manifests.sh --kind statefulsets --watch-timeout "1d" &
-        pids+=("$!")
         bash /etc/alloy/collect-manifests.sh --kind cronjobs --watch-timeout "1d" &
         pids+=("$!")
         bash /etc/alloy/collect-manifests.sh --kind daemonsets --watch-timeout "1d" &
@@ -319,6 +317,8 @@ should render the default configuration:
         bash /etc/alloy/collect-manifests.sh --kind deployments --watch-timeout "1d" &
         pids+=("$!")
         bash /etc/alloy/collect-manifests.sh --kind pod --watch-timeout "1d" &
+        pids+=("$!")
+        bash /etc/alloy/collect-manifests.sh --kind statefulsets --watch-timeout "1d" &
         pids+=("$!")
         trap 'for pid in "${pids[@]}"; do kill "${pid}" 2>/dev/null || true; done' EXIT
         wait -n "${pids[@]}"

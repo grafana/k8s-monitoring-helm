@@ -18,7 +18,7 @@
     - |
       set -euo pipefail
       pids=()
-{{- range $kind := keys .Values.kinds }}
+{{- range $kind := keys .Values.kinds | sortAlpha }}
 {{- if dig $kind "gather" false $.Values.kinds }}
 {{- if not $.Values.namespaces }}
       bash /etc/alloy/collect-manifests.sh --kind {{ $kind }} {{ $globalArgs }} &
