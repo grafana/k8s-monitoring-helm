@@ -26,13 +26,16 @@ lint-shell:
 		docker run --rm -v $(shell pwd):/src --workdir /src koalaman/shellcheck:stable --rcfile .shellcheckrc templates/script.sh; \
 	fi
 
-.PHONY: lint
-lint: lint-shell
-
-.PHONY: test
-test: build
+.PHONY: lint-helm
+lint-helm:
 	helm lint .
 	ct lint --lint-conf ../../.lintconf.yaml --helm-dependency-extra-args=--skip-refresh --charts .
+
+.PHONY: lint
+lint: lint-shell lint-helm
+
+.PHONY: test
+test: build lint
 ifdef HAS_HELM_UNITTEST
 	helm unittest .
 else
