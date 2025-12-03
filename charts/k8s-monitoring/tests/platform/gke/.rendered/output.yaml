@@ -1699,7 +1699,7 @@ data:
       script_name="script.sh"
     fi
     
-    DefaultWatchTimeout=30
+    DefaultWatchTimeout=30s
     
     usage() {
       echo "Usage: ${script_name} [OPTIONS]"
@@ -1717,8 +1717,8 @@ data:
       echo "                           are scanned."
       echo "  -f, --filters <list>     Comma or space separated list of jq selectors to drop"
       echo "                           from the resource JSON. Default: \".status\""
-      echo "  --watch-timeout <sec>    How long to keep a watch open before restarting."
-      echo "                           Default: ${DefaultWatchTimeout} seconds."
+      echo "  --watch-timeout <time>   How long to keep a watch open before restarting."
+      echo "                           Default: ${DefaultWatchTimeout}s."
       echo "  -h, --help               Show this help message."
     }
     
@@ -1776,10 +1776,6 @@ data:
             exit 1
           fi
           watchTimeout="$2"
-          if ! [[ "${watchTimeout}" =~ ^[0-9]+$ ]] || (( watchTimeout <= 0 )); then
-            echo "Error: --watch-timeout must be a positive integer (seconds)." >&2
-            exit 1
-          fi
           shift 2
           ;;
         -h|--help)
@@ -1883,7 +1879,7 @@ data:
       fi
     
       while true; do
-        if ! timeout --foreground "${watchTimeout}s" kubectl get "${kind}" "${kubectlArgs[@]}" --watch --output-watch-events -o json \
+        if ! timeout --foreground "${watchTimeout}" kubectl get "${kind}" "${kubectlArgs[@]}" --watch --output-watch-events -o json \
           | jq --unbuffered -r 'select(.object.metadata.namespace != null and .object.metadata.name != null and .type != null) | "\(.type) \(.object.metadata.namespace) \(.object.metadata.name)"' \
           | while read -r eventType namespace resourceName; do
               handle_watch_event "${eventType}" "${namespace}" "${resourceName}"
@@ -2456,6 +2452,27 @@ rules:
       - list
       - watch
 ---
+# Source: k8s-monitoring/templates/kubernetes-manifest-rules.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: k8smon-alloy-singleton-kubernetes-manifests
+rules:
+  - apiGroups:
+      - ""
+      - apps
+      - batch
+    resources:
+      - pods
+      - deployments
+      - statefulsets
+      - daemonsets
+      - cronjobs
+    verbs:
+      - get
+      - list
+      - watch
+---
 # Source: k8s-monitoring/charts/alloy-operator/templates/rbac/alloy-manager.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -2540,6 +2557,20 @@ subjects:
     name: k8smon-opencost
     namespace: default
 ---
+# Source: k8s-monitoring/templates/kubernetes-manifest-rules.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: k8smon-alloy-singleton-kubernetes-manifests
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: k8smon-alloy-singleton-kubernetes-manifests
+subjects:
+  - kind: ServiceAccount
+    name: k8smon-alloy-singleton
+    namespace: default
+---
 # Source: k8s-monitoring/charts/alloy-operator/templates/rbac/leader-election.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
@@ -2585,28 +2616,6 @@ rules:
       - create
       - patch
 ---
-# Source: k8s-monitoring/templates/kubernetes-manifest-rules.yaml
-apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
-metadata:
-  name: k8smon-alloy-singleton-kubernetes-manifests
-  namespace: default
-rules:
-  - apiGroups:
-      - ""
-      - apps
-      - batch
-    resources:
-      - pods
-      - deployments
-      - statefulsets
-      - daemonsets
-      - cronjobs
-    verbs:
-      - get
-      - list
-      - watch
----
 # Source: k8s-monitoring/charts/alloy-operator/templates/rbac/leader-election.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
@@ -2626,21 +2635,6 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: k8smon-alloy-operator
-    namespace: default
----
-# Source: k8s-monitoring/templates/kubernetes-manifest-rules.yaml
-apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
-metadata:
-  name: k8smon-alloy-singleton-kubernetes-manifests
-  namespace: default
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: Role
-  name: k8smon-alloy-singleton-kubernetes-manifests
-subjects:
-  - kind: ServiceAccount
-    name: k8smon-alloy-singleton
     namespace: default
 ---
 # Source: k8s-monitoring/charts/alloy-operator/templates/service.yaml
@@ -3757,13 +3751,15 @@ spec:
       - |
         set -euo pipefail
         pids=()
-        bash /etc/alloy/collect-manifests.sh --kind pods --namespace "default" --watch-timeout 3600 &
+        bash /etc/alloy/collect-manifests.sh --kind cronjobs --watch-timeout "1d" &
         pids+=("$!")
-        bash /etc/alloy/collect-manifests.sh --kind deployments --namespace "default" --watch-timeout 3600 &
+        bash /etc/alloy/collect-manifests.sh --kind daemonsets --watch-timeout "1d" &
         pids+=("$!")
-        bash /etc/alloy/collect-manifests.sh --kind statefulsets --namespace "default" --watch-timeout 3600 &
+        bash /etc/alloy/collect-manifests.sh --kind deployments --watch-timeout "1d" &
         pids+=("$!")
-        bash /etc/alloy/collect-manifests.sh --kind daemonsets --namespace "default" --watch-timeout 3600 &
+        bash /etc/alloy/collect-manifests.sh --kind pods --watch-timeout "1d" &
+        pids+=("$!")
+        bash /etc/alloy/collect-manifests.sh --kind statefulsets --watch-timeout "1d" &
         pids+=("$!")
         trap 'for pid in "${pids[@]}"; do kill "${pid}" 2>/dev/null || true; done' EXIT
         wait -n "${pids[@]}"

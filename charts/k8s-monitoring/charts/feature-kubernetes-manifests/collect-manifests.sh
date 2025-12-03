@@ -6,7 +6,7 @@ if [[ "${script_name}" == "bash" || "${script_name}" == "-bash" ]]; then
   script_name="script.sh"
 fi
 
-DefaultWatchTimeout=30
+DefaultWatchTimeout=30s
 
 usage() {
   echo "Usage: ${script_name} [OPTIONS]"
@@ -24,8 +24,8 @@ usage() {
   echo "                           are scanned."
   echo "  -f, --filters <list>     Comma or space separated list of jq selectors to drop"
   echo "                           from the resource JSON. Default: \".status\""
-  echo "  --watch-timeout <sec>    How long to keep a watch open before restarting."
-  echo "                           Default: ${DefaultWatchTimeout} seconds."
+  echo "  --watch-timeout <time>   How long to keep a watch open before restarting."
+  echo "                           Default: ${DefaultWatchTimeout}s."
   echo "  -h, --help               Show this help message."
 }
 
@@ -83,10 +83,6 @@ while [[ $# -gt 0 ]]; do
         exit 1
       fi
       watchTimeout="$2"
-      if ! [[ "${watchTimeout}" =~ ^[0-9]+$ ]] || (( watchTimeout <= 0 )); then
-        echo "Error: --watch-timeout must be a positive integer (seconds)." >&2
-        exit 1
-      fi
       shift 2
       ;;
     -h|--help)
@@ -190,7 +186,7 @@ watch_resources() {
   fi
 
   while true; do
-    if ! timeout --foreground "${watchTimeout}s" kubectl get "${kind}" "${kubectlArgs[@]}" --watch --output-watch-events -o json \
+    if ! timeout --foreground "${watchTimeout}" kubectl get "${kind}" "${kubectlArgs[@]}" --watch --output-watch-events -o json \
       | jq --unbuffered -r 'select(.object.metadata.namespace != null and .object.metadata.name != null and .type != null) | "\(.type) \(.object.metadata.namespace) \(.object.metadata.name)"' \
       | while read -r eventType namespace resourceName; do
           handle_watch_event "${eventType}" "${namespace}" "${resourceName}"

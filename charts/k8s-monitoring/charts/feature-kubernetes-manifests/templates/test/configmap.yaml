@@ -1,0 +1,14 @@
+{{- if eq (((index .Values "testing") | default false) | toString) "true" }}
+{{- include "feature.kubernetesManifests.validate" . }}
+{{- $alloyConfig := include "feature.kubernetesManifests.module" . }}
+{{- $alloyConfig = regexReplaceAll `[ \t]+(\r?\n)` $alloyConfig "\n" }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Chart.Name }}-test-config
+  namespace: {{ .Release.Namespace }}
+data:
+  module.alloy: |-
+    {{- $alloyConfig | trim | nindent 4 }}
+{{- end }}

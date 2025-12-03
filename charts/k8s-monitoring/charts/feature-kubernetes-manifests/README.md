@@ -43,18 +43,22 @@ Be sure perform actual integration testing in a live environment in the main [k8
 
 ## Values
 
+### Image
+
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| image.digest | string | `""` |  |
-| image.pullPolicy | string | `"IfNotPresent"` |  |
-| image.pullSecrets | list | `[]` |  |
-| image.registry | string | `"ghcr.io"` |  |
-| image.repository | string | `"grafana/helm-chart-toolbox-kubectl"` |  |
-| image.tag | string | `"0.1.3"` |  |
-| kinds.cronjobs.gather | bool | `true` |  |
-| kinds.daemonsets.gather | bool | `true` |  |
-| kinds.deployments.gather | bool | `true` |  |
-| kinds.pods.gather | bool | `true` |  |
-| kinds.statefulsets.gather | bool | `true` |  |
-| namespaces | list | `[]` |  |
-| refreshInterval | int | `3600` |  |
+| image | object | `{"digest":"","pullPolicy":"IfNotPresent","pullSecrets":[],"registry":"ghcr.io","repository":"grafana/helm-chart-toolbox-kubectl","tag":"0.1.3"}` | The image to run to get the Kubernetes manifests from this cluster. It must contain `kubectl` and `jq` at a minimum. |
+
+### General Settings
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| kinds | object | `{"cronjobs":{"gather":false},"daemonsets":{"gather":false},"deployments":{"gather":false},"pods":{"gather":false},"statefulsets":{"gather":false}}` | The kinds of manifests to gather. |
+| namespaces | list | `[]` | Only gather manifests from these namespaces. If empty, gather from all. This affects the manifests gathered, but Also if this chart deploys ClusterRoles and ClusterRoleBindings or Roles and RoleBindings. |
+| refreshInterval | string | `"1d"` | How frequently to refresh all manifests, regardless of if they have changed. At maximum, this should be set lower Than the retention period for your log storage. |
+
+### Other Values
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| global.image.registry | string | `""` |  |

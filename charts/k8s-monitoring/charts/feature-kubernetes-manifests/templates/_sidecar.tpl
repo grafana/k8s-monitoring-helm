@@ -1,14 +1,14 @@
 {{- define "feature.kubernetesManifests.sidecarContainer" }}
 {{- $globalArgs := "" }}
 {{- if .Values.refreshInterval }}
-  {{- $globalArgs = printf "--watch-timeout %d" (.Values.refreshInterval | int64) }}
+  {{- $globalArgs = printf "--watch-timeout %s" (.Values.refreshInterval | quote) }}
 {{- end }}
 - name: kubernetes-manifest-collector
   {{- with .Values.image }}
     {{- if .digest }}
-  image: "{{ dig "image" "registry" .registry $.Values.global }}/{{ .repository }}@{{ .digest }}"
+  image: "{{ $.Values.global.image.registry | default .registry }}/{{ .repository }}@{{ .digest }}"
     {{- else }}
-  image: "{{ dig "image" "registry" .registry $.Values.global }}/{{ .repository }}:{{ .tag }}"
+  image: "{{ $.Values.global.image.registry | default .registry  }}/{{ .repository }}:{{ .tag }}"
     {{- end }}
   {{- end }}
   imagePullPolicy: {{ .Values.image.pullPolicy }}
