@@ -1,0 +1,44 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Test default values
+templates:
+  - test/configmap.yaml
+  - test/collector.yaml
+tests:
+  - it: should render the default configuration
+    set:
+      kinds:
+        pod: {gather: true}
+        deployments: {gather: true}
+        statefulsets: {gather: true}
+        daemonsets: {gather: true}
+        cronjobs: {gather: true}
+      testing: true
+      test:
+        Collector: {}
+    asserts:
+      - template: test/configmap.yaml
+        matchSnapshot:
+          path: data["module.alloy"]
+      - template: test/collector.yaml
+        matchSnapshot:
+          path: spec.containers[1]
+
+  - it: should allow filtering by namespace
+    set:
+      namespaces: [default, production]
+      kinds:
+        pod: {gather: true}
+        deployments: {gather: true}
+        statefulsets: {gather: true}
+        daemonsets: {gather: true}
+        cronjobs: {gather: true}
+      testing: true
+      test:
+        Collector: {}
+    asserts:
+      - template: test/configmap.yaml
+        matchSnapshot:
+          path: data["module.alloy"]
+      - template: test/collector.yaml
+        matchSnapshot:
+          path: spec.containers[1]

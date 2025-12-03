@@ -1,0 +1,82 @@
+{{- if .Values.kubernetesManifests.enabled }}
+{{- $apiGroups := list }}
+{{- $resources := list }}
+{{- $verbs := list "get" "list" "watch" }}
+{{- if .Values.kubernetesManifests.kinds.pods.gather }}
+  {{- $apiGroups = append $apiGroups "" }}
+  {{- $resources = append $resources "pods" }}
+{{- end }}
+{{- if .Values.kubernetesManifests.kinds.deployments.gather }}
+  {{- $apiGroups = append $apiGroups "apps" }}
+  {{- $resources = append $resources "deployments" }}
+{{- end }}
+{{- if .Values.kubernetesManifests.kinds.statefulsets.gather }}
+  {{- $apiGroups = append $apiGroups "apps" }}
+  {{- $resources = append $resources "statefulsets" }}
+{{- end }}
+{{- if .Values.kubernetesManifests.kinds.daemonsets.gather }}
+  {{- $apiGroups = append $apiGroups "apps" }}
+  {{- $resources = append $resources "daemonsets" }}
+{{- end }}
+{{- if .Values.kubernetesManifests.kinds.cronjobs.gather }}
+  {{- $apiGroups = append $apiGroups "batch" }}
+  {{- $resources = append $resources "cronjobs" }}
+{{- end }}
+
+{{- range $collectorName := include "features.kubernetesManifests.collectors" . | fromYamlArray }}
+  {{- $collectorContext := dict "Values" $.Values "Release" $.Release "collectorName" $collectorName }}
+  {{- $serviceAccount := include "collector.alloy.fullname" $collectorContext }}
+  {{- $rbacName := (printf "%s-kubernetes-manifests" $serviceAccount) | trunc 63 | trimSuffix "-" }}
+  {{- if $.Values.kubernetesManifests.namespaces }}
+    {{- range $namespace := $.Values.kubernetesManifests.namespaces }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ $rbacName }}
+  namespace: {{ $namespace }}
+rules:
+  - apiGroups:{{ $apiGroups | uniq | toYaml | nindent 6 }}
+    resources:{{ $resources | uniq | toYaml | nindent 6 }}
+    verbs:{{ $verbs | uniq | toYaml | nindent 6 }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ $rbacName }}
+  namespace: {{ $namespace }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ $rbacName }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ $serviceAccount }}
+    namespace: {{ $.Release.Namespace }}
+    {{- end }}
+  {{- else }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ $rbacName }}
+rules:
+  - apiGroups:{{ $apiGroups | uniq | toYaml | nindent 6 }}
+    resources:{{ $resources | uniq | toYaml | nindent 6 }}
+    verbs:{{ $verbs | uniq | toYaml | nindent 6 }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ $rbacName }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ $rbacName }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ $serviceAccount }}
+    namespace: {{ $.Release.Namespace }}
+  {{- end }}
+{{- end }}
+{{- end }}
