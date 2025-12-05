@@ -1,0 +1,138 @@
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: postgresql-workload
+  namespace: postgresql
+  labels:
+    app.kubernetes.io/name: postgresql-workload
+    app.kubernetes.io/instance: test-database
+spec:
+  restartPolicy: Always
+  initContainers:
+    - name: seed-schema
+      image: postgres:16
+      env:
+        - name: PGHOST
+          valueFrom:
+            secretKeyRef:
+              name: test-database-pg-db-pguser-test-database-pg-db
+              key: host
+        - name: PGDATABASE
+          valueFrom:
+            secretKeyRef:
+              name: test-database-pg-db-pguser-test-database-pg-db
+              key: dbname
+        - name: PGUSER
+          valueFrom:
+            secretKeyRef:
+              name: test-database-pg-db-pguser-test-database-pg-db
+              key: user
+        - name: PGPASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: test-database-pg-db-pguser-test-database-pg-db
+              key: password
+        - name: PGPORT
+          valueFrom:
+            secretKeyRef:
+              name: test-database-pg-db-pguser-test-database-pg-db
+              key: port
+        - name: PGSSLMODE
+          value: require
+      command:
+        - /bin/sh
+        - -c
+        - |
+          set -euo pipefail
+          echo "Waiting for PostgreSQL to accept connections..."
+          until pg_isready -h "${PGHOST}" -p "${PGPORT}" -d "${PGDATABASE}" -U "${PGUSER}"; do
+            sleep 5
+          done
+          echo "Ensuring schema exists in ${PGDATABASE}..."
+          psql -v ON_ERROR_STOP=1 \
+            -c "DO \$\$ BEGIN IF NOT EXISTS (SELECT 1 FROM information_schema.schemata WHERE schema_name = 'integration') THEN EXECUTE 'CREATE SCHEMA integration AUTHORIZATION CURRENT_USER'; END IF; END \$\$;" \
+            -c "CREATE TABLE IF NOT EXISTS integration.events (id SERIAL PRIMARY KEY, created_at TIMESTAMPTZ DEFAULT NOW(), message TEXT);"
+  containers:
+    - name: insert-worker
+      image: postgres:16
+      env:
+        - name: PGHOST
+          valueFrom:
+            secretKeyRef:
+              name: test-database-pg-db-pguser-test-database-pg-db
+              key: host
+        - name: PGDATABASE
+          valueFrom:
+            secretKeyRef:
+              name: test-database-pg-db-pguser-test-database-pg-db
+              key: dbname
+        - name: PGUSER
+          valueFrom:
+            secretKeyRef:
+              name: test-database-pg-db-pguser-test-database-pg-db
+              key: user
+        - name: PGPASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: test-database-pg-db-pguser-test-database-pg-db
+              key: password
+        - name: PGPORT
+          valueFrom:
+            secretKeyRef:
+              name: test-database-pg-db-pguser-test-database-pg-db
+              key: port
+        - name: PGSSLMODE
+          value: require
+      command:
+        - /bin/sh
+        - -c
+        - |
+          set -euo pipefail
+          while true; do
+            psql -v ON_ERROR_STOP=1 \
+              -c "INSERT INTO integration.events (message) VALUES (CONCAT('integration-write-', md5(random()::text)));"
+            echo "insert-worker: wrote row to ${PGDATABASE}.integration.events"
+            sleep 10
+          done
+    - name: query-worker
+      image: postgres:16
+      env:
+        - name: PGHOST
+          valueFrom:
+            secretKeyRef:
+              name: test-database-pg-db-pguser-test-database-pg-db
+              key: host
+        - name: PGDATABASE
+          valueFrom:
+            secretKeyRef:
+              name: test-database-pg-db-pguser-test-database-pg-db
+              key: dbname
+        - name: PGUSER
+          valueFrom:
+            secretKeyRef:
+              name: test-database-pg-db-pguser-test-database-pg-db
+              key: user
+        - name: PGPASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: test-database-pg-db-pguser-test-database-pg-db
+              key: password
+        - name: PGPORT
+          valueFrom:
+            secretKeyRef:
+              name: test-database-pg-db-pguser-test-database-pg-db
+              key: port
+        - name: PGSSLMODE
+          value: require
+      command:
+        - /bin/sh
+        - -c
+        - |
+          set -euo pipefail
+          while true; do
+            psql -v ON_ERROR_STOP=1 \
+              -c "SELECT COUNT(*) AS records FROM integration.events;"
+            echo "query-worker: queried row count from ${PGDATABASE}.integration.events"
+            sleep 15
+          done
