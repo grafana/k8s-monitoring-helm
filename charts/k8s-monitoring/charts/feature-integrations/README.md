@@ -144,6 +144,12 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | nodeLabels.nodeRole | bool | `false` | Whether or not to add the node\_role label |
 | nodeLabels.region | bool | `false` | Whether or not to add the region label |
 
+### Integration: PostgreSQL
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| postgresql | object | `{"instances":[]}` | Scrape metrics/logs from PostgreSQL |
+
 ### Integration: Tempo
 
 | Key | Type | Default | Description |
