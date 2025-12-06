@@ -123,16 +123,16 @@ declare "pod_logs" {
     rule {
       source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_instance"]
       separator = ";"
-      regex = "(?:prod-db)"
+      regex = "(?:test-database)"
       target_label = "integration"
-      replacement = "mysql"
+      replacement = "postgresql"
     }
     rule {
       source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_instance"]
       separator = ";"
-      regex = "(?:prod-db)"
+      regex = "(?:test-database)"
       target_label = "instance"
-      replacement = "prod-db"
+      replacement = "test-database"
     }
   }
 
@@ -209,30 +209,13 @@ declare "pod_logs" {
         "service_instance_id" = "service_instance_id",
       }
     }
-    // Integration: MySQL
+    // Integration: postgresql
     stage.match {
-      selector = "{integration=\"mysql\"}"
-
-      stage.regex {
-        expression = `(?P<timestamp>.+) (?P<thread>[\d]+) \[(?P<label>.+?)\]( \[(?P<err_code>.+?)\] \[(?P<subsystem>.+?)\])? (?P<msg>.+)`
-      }
-
-      stage.labels {
-        values = {
-          level = "label",
-          err_code = "err_code",
-          subsystem = "subsystem",
-        }
-      }
-
-      stage.drop {
-        expression = "^ *$"
-        drop_counter_reason = "drop empty lines"
-      }
+      selector = "{integration=\"postgresql\"}"
 
       stage.static_labels {
         values = {
-          job = "integrations/mysql",
+          job = "integrations/postgresql",
         }
       }
 
@@ -251,22 +234,27 @@ declare "pod_logs" {
 }
 pod_logs "feature" {
   logs_destinations = [
-    loki.write.loki.receiver,
+    loki.write.localloki.receiver,
   ]
 }
 
 
 
 
-// Destination: loki (loki)
-otelcol.exporter.loki "loki" {
-  forward_to = [loki.write.loki.receiver]
+// Destination: localLoki (loki)
+otelcol.exporter.loki "localloki" {
+  forward_to = [loki.write.localloki.receiver]
 }
 
-loki.write "loki" {
+loki.write "localloki" {
   endpoint {
-    url = "http://loki.loki.svc:3100/api/push"
+    url = "http://loki.loki.svc:3100/loki/api/v1/push"
     retry_on_http_429 = true
+    tenant_id = convert.nonsensitive(remote.kubernetes.secret.localloki.data["tenantId"])
+    basic_auth {
+      username = convert.nonsensitive(remote.kubernetes.secret.localloki.data["username"])
+      password = remote.kubernetes.secret.localloki.data["password"]
+    }
     tls_config {
       insecure_skip_verify = false
     }
@@ -275,8 +263,13 @@ loki.write "loki" {
     max_backoff_retries = "10"
   }
   external_labels = {
-    "cluster" = "mysql-integration-cluster",
-    "k8s_cluster_name" = "mysql-integration-cluster",
+    "cluster" = "postgresql-integration-test-cluster",
+    "k8s_cluster_name" = "postgresql-integration-test-cluster",
   }
+}
+
+remote.kubernetes.secret "localloki" {
+  name      = "localloki-k8smon-k8s-monitoring"
+  namespace = "default"
 }
 
