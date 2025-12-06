@@ -1,4 +1,4 @@
-declare "mysql_integration" {
+declare "postgresql_integration" {
   argument "metrics_destinations" {
     comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
   }
@@ -6,12 +6,24 @@ declare "mysql_integration" {
     comment = "Must be a list of log destinations where collected logs should be forwarded to"
   }
 
-  prometheus.exporter.mysql "dev_db" {
-    data_source_name = "root:password@database.dev.svc:3306/"
-    enable_collectors = ["heartbeat","mysql.user"]
+  remote.kubernetes.secret "test_database" {
+    name      = "test-database-pg-db-pguser-test-database-pg-db"
+    namespace = "postgresql"
   }
-  prometheus.scrape "dev_db" {
-    targets = prometheus.exporter.mysql.dev_db.targets
+
+  prometheus.exporter.postgres "test_database" {
+    data_source_names = [string.format("postgresql://%s:%s@%s:%d/",
+      encoding.url_encode(convert.nonsensitive(remote.kubernetes.secret.test_database.data["user"])),
+      encoding.url_encode(convert.nonsensitive(remote.kubernetes.secret.test_database.data["password"])),
+      "test-database-mysql.mysql.svc",
+      5432,
+    )]
+    enabled_collectors = ["database","locks","replication","replication_slot","stat_bgwriter","stat_database","stat_progress_vacuum","stat_user_tables","statio_user_tables","wal"]
+    disable_default_metrics = false
+    disable_settings_metrics = false
+  }
+  prometheus.scrape "test_database" {
+    targets = prometheus.exporter.postgres.test_database.targets
     clustering {
       enabled = true
     }
@@ -21,110 +33,28 @@ declare "mysql_integration" {
     scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
     scrape_classic_histograms = false
     scrape_native_histograms = false
-    forward_to = [prometheus.relabel.dev_db.receiver]
+    forward_to = [prometheus.relabel.test_database.receiver]
   }
 
-  prometheus.relabel "dev_db" {
+  prometheus.relabel "test_database" {
     max_cache_size = 100000
     rule {
       target_label = "instance"
-      replacement = "dev-db"
+      replacement = "test-database"
     }
     rule {
       target_label = "job"
-      replacement = "integration/mysql"
-    }
-    forward_to = argument.metrics_destinations.value
-  }
-
-  remote.kubernetes.secret "staging_db" {
-    name      = "mysql-creds"
-    namespace = "staging"
-  }
-
-  prometheus.exporter.mysql "staging_db" {
-    data_source_name = string.format("%s:%s@tcp(%s:%d)/",
-      convert.nonsensitive(remote.kubernetes.secret.staging_db.data["mysql-username"]),
-      convert.nonsensitive(remote.kubernetes.secret.staging_db.data["mysql-root-password"]),
-      "database.staging.svc",
-      3306,
-    )
-    enable_collectors = ["heartbeat","mysql.user"]
-  }
-  prometheus.scrape "staging_db" {
-    targets = prometheus.exporter.mysql.staging_db.targets
-    clustering {
-      enabled = true
-    }
-
-    scrape_interval = "60s"
-    scrape_timeout = "10s"
-    scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
-    scrape_classic_histograms = false
-    scrape_native_histograms = false
-    forward_to = [prometheus.relabel.staging_db.receiver]
-  }
-
-  prometheus.relabel "staging_db" {
-    max_cache_size = 100000
-    rule {
-      target_label = "instance"
-      replacement = "staging-db"
-    }
-    rule {
-      target_label = "job"
-      replacement = "integration/mysql"
-    }
-    forward_to = argument.metrics_destinations.value
-  }
-
-  remote.kubernetes.secret "prod_db" {
-    name      = "prod-db-k8smon-integrations"
-    namespace = "default"
-  }
-
-  prometheus.exporter.mysql "prod_db" {
-    data_source_name = string.format("%s:%s@(%s:%d)/",
-      convert.nonsensitive(remote.kubernetes.secret.prod_db.data["username"]),
-      convert.nonsensitive(remote.kubernetes.secret.prod_db.data["password"]),
-      "database.prod.svc",
-      3306,
-    )
-    enable_collectors = ["heartbeat","mysql.user"]
-  }
-  prometheus.scrape "prod_db" {
-    targets = prometheus.exporter.mysql.prod_db.targets
-    clustering {
-      enabled = true
-    }
-
-    scrape_interval = "60s"
-    scrape_timeout = "10s"
-    scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
-    scrape_classic_histograms = false
-    scrape_native_histograms = false
-    forward_to = [prometheus.relabel.prod_db.receiver]
-  }
-
-  prometheus.relabel "prod_db" {
-    max_cache_size = 100000
-    rule {
-      target_label = "instance"
-      replacement = "prod-db"
-    }
-    rule {
-      target_label = "job"
-      replacement = "integration/mysql"
+      replacement = "integration/postgresql"
     }
     forward_to = argument.metrics_destinations.value
   }
 }
-mysql_integration "integration" {
+postgresql_integration "integration" {
   metrics_destinations = [
-    prometheus.remote_write.prometheus.receiver,
+    prometheus.remote_write.localprometheus.receiver,
   ]
   logs_destinations = [
-    loki.write.loki.receiver,
+    loki.write.localloki.receiver,
   ]
 }
 // Self Reporting
@@ -166,23 +96,23 @@ prometheus.relabel "kubernetes_monitoring_telemetry" {
     action = "keep"
   }
   forward_to = [
-    prometheus.remote_write.prometheus.receiver,
+    prometheus.remote_write.localprometheus.receiver,
   ]
 }
 
 
 
 
-// Destination: prometheus (prometheus)
-otelcol.exporter.prometheus "prometheus" {
+// Destination: localPrometheus (prometheus)
+otelcol.exporter.prometheus "localprometheus" {
   add_metric_suffixes = true
   resource_to_telemetry_conversion = false
-  forward_to = [prometheus.remote_write.prometheus.receiver]
+  forward_to = [prometheus.remote_write.localprometheus.receiver]
 }
 
-prometheus.remote_write "prometheus" {
+prometheus.remote_write "localprometheus" {
   endpoint {
-    url = "http://prometheus.prometheus.svc:9090/api/v1/write"
+    url = "http://prometheus-server.prometheus.svc:9090/api/v1/write"
     headers = {
     }
     tls_config {
@@ -205,13 +135,13 @@ prometheus.remote_write "prometheus" {
     write_relabel_config {
       source_labels = ["cluster"]
       regex = ""
-      replacement = "mysql-integration-cluster"
+      replacement = "postgresql-integration-test-cluster"
       target_label = "cluster"
     }
     write_relabel_config {
       source_labels = ["k8s_cluster_name"]
       regex = ""
-      replacement = "mysql-integration-cluster"
+      replacement = "postgresql-integration-test-cluster"
       target_label = "k8s_cluster_name"
     }
   }
@@ -222,15 +152,20 @@ prometheus.remote_write "prometheus" {
     max_keepalive_time = "8h"
   }
 }
-// Destination: loki (loki)
-otelcol.exporter.loki "loki" {
-  forward_to = [loki.write.loki.receiver]
+// Destination: localLoki (loki)
+otelcol.exporter.loki "localloki" {
+  forward_to = [loki.write.localloki.receiver]
 }
 
-loki.write "loki" {
+loki.write "localloki" {
   endpoint {
-    url = "http://loki.loki.svc:3100/api/push"
+    url = "http://loki.loki.svc:3100/loki/api/v1/push"
     retry_on_http_429 = true
+    tenant_id = convert.nonsensitive(remote.kubernetes.secret.localloki.data["tenantId"])
+    basic_auth {
+      username = convert.nonsensitive(remote.kubernetes.secret.localloki.data["username"])
+      password = remote.kubernetes.secret.localloki.data["password"]
+    }
     tls_config {
       insecure_skip_verify = false
     }
@@ -239,8 +174,13 @@ loki.write "loki" {
     max_backoff_retries = "10"
   }
   external_labels = {
-    "cluster" = "mysql-integration-cluster",
-    "k8s_cluster_name" = "mysql-integration-cluster",
+    "cluster" = "postgresql-integration-test-cluster",
+    "k8s_cluster_name" = "postgresql-integration-test-cluster",
   }
+}
+
+remote.kubernetes.secret "localloki" {
+  name      = "localloki-k8smon-k8s-monitoring"
+  namespace = "default"
 }
 

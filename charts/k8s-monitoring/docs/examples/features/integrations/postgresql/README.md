@@ -2,9 +2,9 @@
 (NOTE: Do not edit README.md directly. It is a generated file!)
 (      To make changes, please modify values.yaml or description.txt and run `make examples`)
 -->
-# Integration: MySQL
+# Integration: PostgreSQL
 
-This example demonstrates how to gather metrics and logs from [MySQL](https://www.mysql.com/).
+This example demonstrates how to gather metrics and logs from [PostgreSQL](https://www.postgresql.org/).
 
 ## Values
 
@@ -12,51 +12,39 @@ This example demonstrates how to gather metrics and logs from [MySQL](https://ww
 ```yaml
 ---
 cluster:
-  name: mysql-integration-cluster
+  name: postgresql-integration-test-cluster
 
 destinations:
-  - name: prometheus
+  - name: localPrometheus
     type: prometheus
-    url: http://prometheus.prometheus.svc:9090/api/v1/write
-  - name: loki
+    url: http://prometheus-server.prometheus.svc:9090/api/v1/write
+  - name: localLoki
     type: loki
-    url: http://loki.loki.svc:3100/api/push
+    url: http://loki.loki.svc:3100/loki/api/v1/push
+    tenantId: "1"
+    auth:
+      type: basic
+      username: loki
+      password: lokipassword
 
 integrations:
-  mysql:
+  postgresql:
     instances:
-      - name: dev-db
-        exporter:
-          dataSourceName: "root:password@database.dev.svc:3306/"
-        logs:
-          enabled: false
-
-      - name: staging-db
+      - name: test-database
         exporter:
           dataSource:
-            host: database.staging.svc
-            protocol: tcp
-            port: 3306
+            host: test-database-mysql.mysql.svc
             auth:
-              usernameKey: mysql-username
-              passwordKey: mysql-root-password
+              usernameKey: user
+              passwordKey: password
         secret:
           create: false
-          name: mysql-creds
-          namespace: staging
+          name: test-database-pg-db-pguser-test-database-pg-db
+          namespace: postgresql
         logs:
-          enabled: false
-
-      - name: prod-db
-        exporter:
-          dataSource:
-            host: database.prod.svc
-            auth:
-              username: db-admin
-              password: db-password
-        logs:
+          enabled: true
           labelSelectors:
-            app.kubernetes.io/instance: prod-db
+            app.kubernetes.io/instance: test-database
 
 podLogs:
   enabled: true
