@@ -8,5 +8,6 @@
 - loki
 - mimir
 - mysql
+- postgresql
 - tempo
 {{- end -}}
