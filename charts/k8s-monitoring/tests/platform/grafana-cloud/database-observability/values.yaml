@@ -28,14 +28,14 @@ integrations:
   collector: alloy-singleton
   mysql:
     instances:
-      - name: test-database
+      - name: test-mysql-db
         jobLabel: integrations/db-o11y
         exporter:
           collectors:
             perfSchemaEventsStatements:
               enabled: true
           dataSource:
-            host: test-database-mysql.mysql.svc
+            host: test-mysql-db.mysql.svc
             auth:
               usernameKey: mysql-username
               passwordKey: mysql-root-password
@@ -43,42 +43,50 @@ integrations:
           enabled: true
         secret:
           create: false
-          name: test-database-mysql
+          name: test-mysql-db
           namespace: mysql
         logs:
           enabled: true
           labelSelectors:
-            app.kubernetes.io/instance: test-database
+            app.kubernetes.io/instance: test-mysql-db
+
+  postgresql:
+    instances:
+      - name: test-pg-db
+        jobLabel: integrations/db-o11y
+        exporter:
+          dataSource:
+            host: test-postgresql-db.postgresql.svc
+            database: postgres
+            auth:
+              usernameKey: postgres-username
+              passwordKey: postgres-password
+            sslmode: disable
+          autoDiscovery:
+            enabled: true
+          collectors:
+            statStatements:
+              enabled: true
+        databaseObservability:
+          enabled: true
+        secret:
+          create: false
+          name: test-postgresql-db
+          namespace: postgresql
+        logs:
+          enabled: true
+          labelSelectors:
+            app.kubernetes.io/instance: test-pg-db
 
 podLogs:
   enabled: true
-  collector: alloy-singleton
-  namespaces: [mysql]
-  gatherMethod: kubernetesApi
 
 alloy-singleton:
   enabled: true
+  liveDebugging:
+    enabled: true
   alloy:
     stabilityLevel: experimental
-  includeDestinations: [grafana-cloud-metrics, grafana-cloud-logs]
-  extraConfig: |
-    remote.kubernetes.secret "test_database" {
-      name      = "test-database-mysql"
-      namespace = "mysql"
-    }
 
-    database_observability.mysql "test_database" {
-      data_source_name = string.format("%s:%s@(%s:%d)/",
-        convert.nonsensitive(remote.kubernetes.secret.test_database.data["mysql-username"]),
-        convert.nonsensitive(remote.kubernetes.secret.test_database.data["mysql-root-password"]),
-        "test-database-mysql.mysql.svc",
-        3306,
-      )
-      forward_to = [loki.write.grafana_cloud_logs.receiver]
-    }
-
-    prometheus.scrape "test_database" {
-      targets    = database_observability.mysql.test_database.targets
-      job_name   = "integrations/db-o11y"
-      forward_to = [prometheus.remote_write.grafana_cloud_metrics.receiver]
-    }
+alloy-logs:
+  enabled: true

@@ -10,8 +10,10 @@
 
 {{/* Inputs: . (Values), instance (this PostgreSQL instance) */}}
 {{- define "integrations.postgresql.datasource" }}
-  {{- if .exporter.dataSourceName }}
-data_source_names = [{{ .exporter.dataSourceName | quote }}]
+  {{- if .exporter.dataSourceNameFrom }}
+{{ .exporter.dataSourceNameFrom }}
+  {{- else if .exporter.dataSourceName }}
+{{ .exporter.dataSourceName | quote }}
   {{- else }}
     {{- $dataSourceParamList := list }}
     {{- if .exporter.dataSource.sslmode }}
@@ -23,23 +25,23 @@ data_source_names = [{{ .exporter.dataSourceName | quote }}]
     {{- end }}
     {{- if eq (include "secrets.usesSecret" (dict "object" . "key" "exporter.dataSource.auth.username")) "true" }}
       {{- if eq (include "secrets.usesSecret" (dict "object" . "key" "exporter.dataSource.auth.password")) "true" }}
-data_source_names = [string.format("{{ .exporter.dataSource.protocol }}://%s:%s@%s:%d/{{ $dataSourceParams }}",
+string.format("{{ .exporter.dataSource.protocol }}://%s:%s@%s:%d/{{ .exporter.dataSource.database }}{{ $dataSourceParams }}",
   encoding.url_encode({{ include "secrets.read" (dict "object" . "key" "exporter.dataSource.auth.username" "nonsensitive" true) }}),
   encoding.url_encode({{ include "secrets.read" (dict "object" . "key" "exporter.dataSource.auth.password" "nonsensitive" true) }}),
   {{ .exporter.dataSource.host | quote }},
   {{ .exporter.dataSource.port | int }},
-)]
+)
       {{- else }}
-data_source_names = [string.format("{{ .exporter.dataSource.protocol }}://%s@%s:%d/{{ $dataSourceParams }}",
+string.format("{{ .exporter.dataSource.protocol }}://%s@%s:%d/{{ .exporter.dataSource.database }}{{ $dataSourceParams }}",
   encoding.url_encode({{ include "secrets.read" (dict "object" . "key" "exporter.dataSource.auth.username" "nonsensitive" true) }}),
   {{ .exporter.dataSource.host | quote }},
   {{ .exporter.dataSource.port | int }},
-)]
+)
       {{- end }}
     {{- else if .exporter.dataSource.protocol }}
-data_source_names = [string.format("{{ .exporter.dataSource.protocol }}://%s:%d/", {{ .exporter.dataSource.host | quote }}, {{ .exporter.dataSource.port | int }})]
+string.format("{{ .exporter.dataSource.protocol }}://%s:%d/{{ .exporter.dataSource.database }}", {{ .exporter.dataSource.host | quote }}, {{ .exporter.dataSource.port | int }})
     {{- else }}
-data_source_names = [string.format("%s:%d/", {{ .exporter.dataSource.host | quote }}, {{ .exporter.dataSource.port | int }})]
+string.format("%s:%d/{{ .exporter.dataSource.database }}", {{ .exporter.dataSource.host | quote }}, {{ .exporter.dataSource.port | int }})
     {{- end }}
   {{- end }}
 {{- end }}
@@ -95,7 +97,7 @@ declare "postgresql_integration" {
 {{- end }}
 {{- if .metrics.enabled }}
 prometheus.exporter.postgres {{ include "helper.alloy_name" .name | quote }} {
-  {{- include "integrations.postgresql.datasource" . | indent 2 }}
+  data_source_names = [{{- include "integrations.postgresql.datasource" . | indent 2 | trim }}]
   enabled_collectors = {{ include "integrations.postgresql.collectors" . }}
   {{- if .exporter.autoDiscovery.enabled }}
   autodiscovery {
@@ -127,10 +129,9 @@ prometheus.exporter.postgres {{ include "helper.alloy_name" .name | quote }} {
 {{- end }}
 {{- if .databaseObservability.enabled }}
 
-database_observability.postgresql {{ include "helper.alloy_name" .name | quote }} {
-  targets = prometheus.exporter.postgresql.{{ include "helper.alloy_name" .name }}.targets
-  {{- include "integrations.postgresql.datasource" . | indent 2 }}
-  allow_update_performance_schema_settings = {{ .databaseObservability.allowUpdatePerformanceSchemaSettings }}
+database_observability.postgres {{ include "helper.alloy_name" .name | quote }} {
+  targets = prometheus.exporter.postgres.{{ include "helper.alloy_name" .name }}.targets
+  data_source_name = {{ include "integrations.postgresql.datasource" . | indent 2 | trim }}
 
   {{- $enabledCollectors := list }}
   {{- if .databaseObservability.collectors.explainPlans.enabled }}
@@ -141,17 +142,7 @@ database_observability.postgresql {{ include "helper.alloy_name" .name | quote }
     {{- if .excludeSchemas }}
     exclude_schemas = {{ .excludeSchemas | toJson }}
     {{- end }}
-    initial_lookback = {{ .initialLookback | quote }}
     per_collect_ratio = {{ .perCollectRatio | quote }}
-  }
-    {{- end }}
-  {{- end }}
-  {{- if .databaseObservability.collectors.locks.enabled }}
-    {{- $enabledCollectors = append $enabledCollectors "locks" }}
-    {{- with .databaseObservability.collectors.locks }}
-  locks {
-    collect_interval = {{ .collectInterval | quote }}
-    threshold = {{ .threshold | quote }}
   }
     {{- end }}
   {{- end }}
@@ -169,8 +160,6 @@ database_observability.postgresql {{ include "helper.alloy_name" .name | quote }
   query_samples {
     collect_interval = {{ .collectInterval | quote }}
     disable_query_redaction = {{ .disableQueryRedaction }}
-    auto_enable_setup_consumers = {{ .autoEnableSetupConsumers }}
-    setup_consumers_check_interval = {{ .setupConsumersCheckInterval | quote }}
   }
     {{- end }}
   {{- end }}
@@ -185,14 +174,6 @@ database_observability.postgresql {{ include "helper.alloy_name" .name | quote }
   }
     {{- end }}
   {{- end }}
-  {{- if .databaseObservability.collectors.setupConsumers.enabled }}
-    {{- $enabledCollectors = append $enabledCollectors "setup_consumers" }}
-    {{- with .databaseObservability.collectors.setupConsumers }}
-  setup_consumers {
-    collect_interval = {{ .collectInterval | quote }}
-  }
-    {{- end }}
-  {{- end }}
   enable_collectors = {{ $enabledCollectors | toJson }}
 
   forward_to = argument.logs_destinations.value
@@ -202,7 +183,7 @@ database_observability.postgresql {{ include "helper.alloy_name" .name | quote }
 {{- if .metrics.enabled }}
 prometheus.scrape {{ include "helper.alloy_name" .name | quote }} {
   {{- if .databaseObservability.enabled }}
-  targets = database_observability.postgresql.{{ include "helper.alloy_name" .name }}.targets
+  targets = database_observability.postgres.{{ include "helper.alloy_name" .name }}.targets
   {{- else }}
   targets = prometheus.exporter.postgres.{{ include "helper.alloy_name" .name }}.targets
   {{- end }}

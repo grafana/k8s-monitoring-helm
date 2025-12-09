@@ -53,6 +53,7 @@
 | exporter.dataSource.protocol | string | `""` | The MySQL protocol type. |
 | exporter.dataSource.tls | string | `""` | The TLS setting to use. Options are none, "true", "false", "skip-verify", "preferred". See the [driver documentation](https://github.com/go-sql-driver/mysql#tls) for details. |
 | exporter.dataSourceName | string | `""` | The data source string to use for the MySQL Exporter. |
+| exporter.dataSourceNameFrom | string | `""` | The raw access for the data source string to use for the MySQL Exporter. Use this to get the data source from other Alloy components. |
 
 ### Exporter Collectors
 

@@ -67,6 +67,11 @@ exporter:
   # @section -- Exporter Settings
   dataSourceName: ""
 
+  # -- The raw access for the data source string to use for the PostgreSQL Exporter. Use this to get the data source
+  # from other Alloy components.
+  # @section -- Exporter Settings
+  dataSourceNameFrom: ""
+
   # The data source to use for the PostgreSQL Exporter.
   dataSource:
     # -- The PostgreSQL host to connect to.
@@ -75,6 +80,9 @@ exporter:
     # -- The PostgreSQL port to connect to.
     # @section -- Exporter Settings
     port: 5432
+    # -- The PostgreSQL database to access.
+    # @section -- Exporter Settings
+    database: ""
     # -- The PostgreSQL protocol type.
     # @section -- Exporter Settings
     protocol: "postgresql"
@@ -105,14 +113,28 @@ exporter:
     sslmode: ""
 
   autoDiscovery:
+    # -- Whether to automatically discover other databases.
+    # @section -- Exporter Settings
     enabled: false
+
+    # -- List of databases to filter out, meaning all other databases will be scraped.
+    # @section -- Exporter Settings
     databaseAllowList: []
+
+    # -- Whether to automatically discover other databases.
+    # @section -- Exporter Settings
     databaseDenyList: []
 
+  # -- Path to YAML file containing custom queries to expose as metrics.
+  # @section -- Exporter Settings
   customQueriesConfigPath: ""
 
+  # -- When true, only exposes metrics supplied from `customQueriesConfigPath`.
+  # @section -- Exporter Settings
   disableDefaultMetrics: false
 
+  # -- Disables collection of metrics from pg_settings.
+  # @section -- Exporter Settings
   disableSettingsMetrics: false
 
   # -- The list of collectors to enable for the PostgreSQL Exporter
@@ -123,51 +145,95 @@ exporter:
   # collectors: ["heartbeat", "PostgreSQL.user"]
   collectors:
     buffercacheSummary:
+      # -- Enable the buffercache_summary collector.
+      # @section -- Exporter Collectors
       enabled: false
     database:
+      # -- Enable the database collector.
+      # @section -- Exporter Collectors
       enabled: true
     databaseWraparound:
+      # -- Enable the database_wraparound collector.
+      # @section -- Exporter Collectors
       enabled: false
     locks:
+      # -- Enable the locks collector.
+      # @section -- Exporter Collectors
       enabled: true
     longRunningTransactions:
+      # -- Enable the long_running_transactions collector.
+      # @section -- Exporter Collectors
       enabled: false
     postmaster:
+      # -- Enable the postmaster collector.
+      # @section -- Exporter Collectors
       enabled: false
     processIdle:
+      # -- Enable the process_idle collector.
+      # @section -- Exporter Collectors
       enabled: false
     replication:
+      # -- Enable the replication collector.
+      # @section -- Exporter Collectors
       enabled: true
     replicationSlot:
+      # -- Enable the replication_slot collector.
+      # @section -- Exporter Collectors
       enabled: true
     statActivityAutovacuum:
+      # -- Enable the stat_activity_autovacuum collector.
+      # @section -- Exporter Collectors
       enabled: false
     statBGWriter:
+      # -- Enable the stat_bgwriter collector.
+     # @section -- Exporter Collectors
       enabled: true
     statCheckpointer:
+      # -- Enable the stat_checkpointer collector.
+      # @section -- Exporter Collectors
       enabled: false
     statDatabase:
+      # -- Enable the stat_database collector.
+      # @section -- Exporter Collectors
       enabled: true
     statProgressVacuum:
+      # -- Enable the stat_progress_vacuum collector.
+      # @section -- Exporter Collectors
       enabled: true
     statStatements:
+      # -- Enable the stat_statements collector.
+      # @section -- Exporter Collectors
       enabled: false
       # -- Enable the selection of query ID and SQL statement.
+      # @section -- Exporter Collectors
       includeQuery: false
       # -- Maximum length of the statement query text.
       # @default -- 120
+      # @section -- Exporter Collectors
       queryLength:
     statUserTables:
+      # -- Enable the stat_user_tables collector.
+      # @section -- Exporter Collectors
       enabled: true
     statWALReceiver:
+      # -- Enable the stat_wal_receiver collector.
+      # @section -- Exporter Collectors
       enabled: false
     statioUserIndexes:
+      # -- Enable the statio_user_indexes collector.
+      # @section -- Exporter Collectors
       enabled: false
     statioUserTables:
+      # -- Enable the statio_user_tables collector.
+      # @section -- Exporter Collectors
       enabled: true
     wal:
+      # -- Enable the wal collector.
+      # @section -- Exporter Collectors
       enabled: true
     xlogLocation:
+      # -- Enable the xlog_location collector.
+      # @section -- Exporter Collectors
       enabled: false
 
 # Capture table, schema, and query information for the Database Observability feature in Grafana Cloud.
@@ -176,38 +242,21 @@ databaseObservability:
   # @section -- Database Observability
   enabled: false
 
-  # -- Whether to allow updates to performance_schema settings in any collector.
-  # @section -- Database Observability
-  allowUpdatePerformanceSchemaSettings: false
-
   collectors:
     # Collect explain plans information.
     explainPlans:
       # -- Enable collection of explain plans information.
       # @section -- Database Observability - Collectors
-      enabled: false
+      enabled: true
       # -- How frequently to collect explain plans information from the database.
       # @section -- Database Observability - Collectors
       collectInterval: 1m
       # -- List of schemas to exclude from explain plan collection.
       # @section -- Database Observability - Collectors
       excludeSchemas: []
-      # -- How far back to look for explain plan queries on the first collection interval.
-      # @section -- Database Observability - Collectors
-      initialLookback: 24h
       # -- Ratio of explain plan queries to collect per collect interval.
       # @section -- Database Observability - Collectors
       perCollectRatio: 1.0
-    locks:
-      # -- Enable collection of lock information.
-      # @section -- Database Observability - Collectors
-      enabled: false
-      # -- How frequently to collect lock information from the database.
-      # @section -- Database Observability - Collectors
-      collectInterval: 1m
-      # -- Threshold for locks to be considered slow. Locks that exceed this duration are logged.
-      # @section -- Database Observability - Collectors
-      threshold: 1s
 
     # Collect queries information.
     queryDetails:
@@ -229,12 +278,6 @@ databaseObservability:
       # -- Collect unredacted SQL query text including parameters.
       # @section -- Database Observability - Collectors
       disableQueryRedaction: false
-      # -- Whether to enable some specific performance_schema.setup_consumers settings.
-      # @section -- Database Observability - Collectors
-      autoEnableSetupConsumers: false
-      # -- How frequently to check if setup_consumers are correctly enabled.
-      # @section -- Database Observability - Collectors
-      setupConsumersCheckInterval: 1h
 
     # Collect schemas and tables from information_schema.
     schemaDetails:
@@ -246,22 +289,13 @@ databaseObservability:
       collectInterval: 1m
       # -- Whether to enable caching of table definitions.
       # @section -- Database Observability - Collectors
-      cacheEnabled: false
+      cacheEnabled: true
       # -- Table definitions cache size.
       # @section -- Database Observability - Collectors
       cacheSize: 256
       # -- Table definitions cache TTL.
       # @section -- Database Observability - Collectors
       cacheTTL: 10m
-
-    # Collect enabled performance_schema.setup_consumers.
-    setupConsumers:
-      # -- Enable collection of performance_schema.setup_consumers information.
-      # @section -- Database Observability - Collectors
-      enabled: true
-      # -- How frequently to collect performance_schema.setup_consumers information from the database.
-      # @section -- Database Observability - Collectors
-      collectInterval: 1m
 
 secret:
   # -- (bool) Whether to create a secret to store credentials for this PostgreSQL integration instance.
