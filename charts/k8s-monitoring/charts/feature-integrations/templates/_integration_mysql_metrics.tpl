@@ -10,7 +10,9 @@
 
 {{/* Inputs: . (Values), instance (this MySQL instance) */}}
 {{- define "integrations.mysql.datasource" }}
-  {{- if .exporter.dataSourceName }}
+  {{- if .exporter.dataSourceNameFrom }}
+data_source_name = {{ .exporter.dataSourceNameFrom }}
+  {{- else if .exporter.dataSourceName }}
 data_source_name = {{ .exporter.dataSourceName | quote }}
   {{- else }}
     {{- $dataSourceParamList := list }}

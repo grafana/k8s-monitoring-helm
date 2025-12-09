@@ -13,103 +13,26 @@ metadata:
     app.kubernetes.io/managed-by: Helm
 automountServiceAccountToken: true
 ---
+# Source: k8s-monitoring/templates/destination_secret.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: "localloki-k8smon-k8s-monitoring"
+  namespace: "default"
+type: Opaque
+data:
+  tenantId: "MQ=="
+  username: "bG9raQ=="
+  password: "bG9raXBhc3N3b3Jk"
+---
 # Source: k8s-monitoring/templates/alloy-config.yaml
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: k8smon-alloy-singleton
+  name: k8smon-alloy-metrics
   namespace: default
 data:
   config.alloy: |
-    declare "mysql_integration" {
-      argument "metrics_destinations" {
-        comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
-      }
-      argument "logs_destinations" {
-        comment = "Must be a list of log destinations where collected logs should be forwarded to"
-      }
-    
-      remote.kubernetes.secret "test_mysql_db" {
-        name      = "test-mysql-db"
-        namespace = "mysql"
-      }
-    
-      prometheus.exporter.mysql "test_mysql_db" {
-        data_source_name = string.format("%s:%s@(%s:%d)/",
-          convert.nonsensitive(remote.kubernetes.secret.test_mysql_db.data["mysql-username"]),
-          convert.nonsensitive(remote.kubernetes.secret.test_mysql_db.data["mysql-root-password"]),
-          "test-mysql-db.mysql.svc",
-          3306,
-        )
-        enable_collectors = ["heartbeat","mysql.user","perf_schema.eventsstatements"]
-      }
-    
-      database_observability.mysql "test_mysql_db" {
-        targets = prometheus.exporter.mysql.test_mysql_db.targets
-        data_source_name = string.format("%s:%s@(%s:%d)/",
-          convert.nonsensitive(remote.kubernetes.secret.test_mysql_db.data["mysql-username"]),
-          convert.nonsensitive(remote.kubernetes.secret.test_mysql_db.data["mysql-root-password"]),
-          "test-mysql-db.mysql.svc",
-          3306,
-        )
-        allow_update_performance_schema_settings = false
-        query_details {
-          collect_interval = "1m"
-        }
-        query_samples {
-          collect_interval = "1m"
-          disable_query_redaction = false
-          auto_enable_setup_consumers = false
-          setup_consumers_check_interval = "1h"
-        }
-        schema_details {
-          collect_interval = "1m"
-          cache_enabled = false
-          cache_size = 256
-          cache_ttl = "10m"
-        }
-        setup_consumers {
-          collect_interval = "1m"
-        }
-        enable_collectors = ["query_details","query_samples","schema_details","setup_consumers"]
-    
-        forward_to = argument.logs_destinations.value
-      }
-      prometheus.scrape "test_mysql_db" {
-        targets = database_observability.mysql.test_mysql_db.targets
-        clustering {
-          enabled = true
-        }
-    
-        scrape_interval = "60s"
-        scrape_timeout = "10s"
-        scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
-        scrape_classic_histograms = false
-        scrape_native_histograms = false
-        forward_to = [prometheus.relabel.test_mysql_db.receiver]
-      }
-    
-      prometheus.relabel "test_mysql_db" {
-        max_cache_size = 100000
-        rule {
-          target_label = "instance"
-          replacement = "test-mysql-db"
-        }
-        rule {
-          target_label = "job"
-          replacement = "integrations/db-o11y"
-        }
-        forward_to = argument.metrics_destinations.value
-      }
-    }
-    mysql_integration "integration" {
-      metrics_destinations = [
-        prometheus.remote_write.grafana_cloud_metrics.receiver,
-      ]
-      logs_destinations = [
-        loki.write.grafana_cloud_logs.receiver,
-      ]
-    }
     declare "postgresql_integration" {
       argument "metrics_destinations" {
         comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
@@ -118,57 +41,24 @@ data:
         comment = "Must be a list of log destinations where collected logs should be forwarded to"
       }
     
-      remote.kubernetes.secret "test_pg_db" {
-        name      = "test-postgresql-db"
+      remote.kubernetes.secret "test_database" {
+        name      = "test-database-pg-db-pguser-test-database-pg-db"
         namespace = "postgresql"
       }
     
-      prometheus.exporter.postgres "test_pg_db" {
-        data_source_names = [string.format("postgresql://%s:%s@%s:%d/postgres?sslmode=disable",
-          encoding.url_encode(convert.nonsensitive(remote.kubernetes.secret.test_pg_db.data["postgres-username"])),
-          encoding.url_encode(convert.nonsensitive(remote.kubernetes.secret.test_pg_db.data["postgres-password"])),
-          "test-postgresql-db.postgresql.svc",
+      prometheus.exporter.postgres "test_database" {
+        data_source_names = [string.format("postgresql://%s:%s@%s:%d/",
+          encoding.url_encode(convert.nonsensitive(remote.kubernetes.secret.test_database.data["user"])),
+          encoding.url_encode(convert.nonsensitive(remote.kubernetes.secret.test_database.data["password"])),
+          "test-database-mysql.mysql.svc",
           5432,
         )]
-        enabled_collectors = ["database","locks","replication","replication_slot","stat_bgwriter","stat_database","stat_progress_vacuum","stat_statements","stat_user_tables","statio_user_tables","wal"]
-        autodiscovery {
-          enabled = true
-        }
+        enabled_collectors = ["database","locks","replication","replication_slot","stat_bgwriter","stat_database","stat_progress_vacuum","stat_user_tables","statio_user_tables","wal"]
         disable_default_metrics = false
         disable_settings_metrics = false
       }
-    
-      database_observability.postgres "test_pg_db" {
-        targets = prometheus.exporter.postgres.test_pg_db.targets
-        data_source_name = string.format("postgresql://%s:%s@%s:%d/postgres?sslmode=disable",
-          encoding.url_encode(convert.nonsensitive(remote.kubernetes.secret.test_pg_db.data["postgres-username"])),
-          encoding.url_encode(convert.nonsensitive(remote.kubernetes.secret.test_pg_db.data["postgres-password"])),
-          "test-postgresql-db.postgresql.svc",
-          5432,
-        )
-        explain_plans {
-          collect_interval = "1m"
-          per_collect_ratio = "1"
-        }
-        query_details {
-          collect_interval = "1m"
-        }
-        query_samples {
-          collect_interval = "1m"
-          disable_query_redaction = false
-        }
-        schema_details {
-          collect_interval = "1m"
-          cache_enabled = true
-          cache_size = 256
-          cache_ttl = "10m"
-        }
-        enable_collectors = ["explain_plans","query_details","query_samples","schema_details"]
-    
-        forward_to = argument.logs_destinations.value
-      }
-      prometheus.scrape "test_pg_db" {
-        targets = database_observability.postgres.test_pg_db.targets
+      prometheus.scrape "test_database" {
+        targets = prometheus.exporter.postgres.test_database.targets
         clustering {
           enabled = true
         }
@@ -178,28 +68,28 @@ data:
         scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
         scrape_classic_histograms = false
         scrape_native_histograms = false
-        forward_to = [prometheus.relabel.test_pg_db.receiver]
+        forward_to = [prometheus.relabel.test_database.receiver]
       }
     
-      prometheus.relabel "test_pg_db" {
+      prometheus.relabel "test_database" {
         max_cache_size = 100000
         rule {
           target_label = "instance"
-          replacement = "test-pg-db"
+          replacement = "test-database"
         }
         rule {
           target_label = "job"
-          replacement = "integrations/db-o11y"
+          replacement = "integration/postgresql"
         }
         forward_to = argument.metrics_destinations.value
       }
     }
     postgresql_integration "integration" {
       metrics_destinations = [
-        prometheus.remote_write.grafana_cloud_metrics.receiver,
+        prometheus.remote_write.localprometheus.receiver,
       ]
       logs_destinations = [
-        loki.write.grafana_cloud_logs.receiver,
+        loki.write.localloki.receiver,
       ]
     }
     // Self Reporting
@@ -241,37 +131,27 @@ data:
         action = "keep"
       }
       forward_to = [
-        prometheus.remote_write.grafana_cloud_metrics.receiver,
+        prometheus.remote_write.localprometheus.receiver,
       ]
     }
     
-    livedebugging {
-      enabled = true
-    }
     
     
-    // Destination: grafana-cloud-metrics (prometheus)
-    otelcol.exporter.prometheus "grafana_cloud_metrics" {
+    
+    // Destination: localPrometheus (prometheus)
+    otelcol.exporter.prometheus "localprometheus" {
       add_metric_suffixes = true
       resource_to_telemetry_conversion = false
-      forward_to = [prometheus.remote_write.grafana_cloud_metrics.receiver]
+      forward_to = [prometheus.remote_write.localprometheus.receiver]
     }
     
-    prometheus.remote_write "grafana_cloud_metrics" {
+    prometheus.remote_write "localprometheus" {
       endpoint {
-        url = "https://prometheus-prod-13-prod-us-east-0.grafana.net/api/prom/push"
+        url = "http://prometheus-server.prometheus.svc:9090/api/v1/write"
         headers = {
-          "X-Scope-OrgID" = convert.nonsensitive(remote.kubernetes.secret.grafana_cloud_metrics.data["tenantId"]),
-        }
-        basic_auth {
-          username = convert.nonsensitive(remote.kubernetes.secret.grafana_cloud_metrics.data["metricsUser"])
-          password = remote.kubernetes.secret.grafana_cloud_metrics.data["grafanaCloudAccessPolicyToken"]
         }
         tls_config {
           insecure_skip_verify = false
-          ca_pem = convert.nonsensitive(remote.kubernetes.secret.grafana_cloud_metrics.data["ca"])
-          cert_pem = convert.nonsensitive(remote.kubernetes.secret.grafana_cloud_metrics.data["cert"])
-          key_pem = remote.kubernetes.secret.grafana_cloud_metrics.data["key"]
         }
         send_native_histograms = false
     
@@ -290,13 +170,13 @@ data:
         write_relabel_config {
           source_labels = ["cluster"]
           regex = ""
-          replacement = "database-observability-gc-feature-test"
+          replacement = "postgresql-integration-test-cluster"
           target_label = "cluster"
         }
         write_relabel_config {
           source_labels = ["k8s_cluster_name"]
           regex = ""
-          replacement = "database-observability-gc-feature-test"
+          replacement = "postgresql-integration-test-cluster"
           target_label = "k8s_cluster_name"
         }
       }
@@ -307,44 +187,35 @@ data:
         max_keepalive_time = "8h"
       }
     }
-    
-    remote.kubernetes.secret "grafana_cloud_metrics" {
-      name      = "grafana-cloud-credentials"
-      namespace = "default"
+    // Destination: localLoki (loki)
+    otelcol.exporter.loki "localloki" {
+      forward_to = [loki.write.localloki.receiver]
     }
     
-    // Destination: grafana-cloud-logs (loki)
-    otelcol.exporter.loki "grafana_cloud_logs" {
-      forward_to = [loki.write.grafana_cloud_logs.receiver]
-    }
-    
-    loki.write "grafana_cloud_logs" {
+    loki.write "localloki" {
       endpoint {
-        url = "https://logs-prod-006.grafana.net/loki/api/v1/push"
+        url = "http://loki.loki.svc:3100/loki/api/v1/push"
         retry_on_http_429 = true
-        tenant_id = convert.nonsensitive(remote.kubernetes.secret.grafana_cloud_logs.data["tenantId"])
+        tenant_id = convert.nonsensitive(remote.kubernetes.secret.localloki.data["tenantId"])
         basic_auth {
-          username = convert.nonsensitive(remote.kubernetes.secret.grafana_cloud_logs.data["logsUser"])
-          password = remote.kubernetes.secret.grafana_cloud_logs.data["grafanaCloudAccessPolicyToken"]
+          username = convert.nonsensitive(remote.kubernetes.secret.localloki.data["username"])
+          password = remote.kubernetes.secret.localloki.data["password"]
         }
         tls_config {
           insecure_skip_verify = false
-          ca_pem = convert.nonsensitive(remote.kubernetes.secret.grafana_cloud_logs.data["ca"])
-          cert_pem = convert.nonsensitive(remote.kubernetes.secret.grafana_cloud_logs.data["cert"])
-          key_pem = remote.kubernetes.secret.grafana_cloud_logs.data["key"]
         }
         min_backoff_period = "500ms"
         max_backoff_period = "5m"
         max_backoff_retries = "10"
       }
       external_labels = {
-        "cluster" = "database-observability-gc-feature-test",
-        "k8s_cluster_name" = "database-observability-gc-feature-test",
+        "cluster" = "postgresql-integration-test-cluster",
+        "k8s_cluster_name" = "postgresql-integration-test-cluster",
       }
     }
     
-    remote.kubernetes.secret "grafana_cloud_logs" {
-      name      = "grafana-cloud-credentials"
+    remote.kubernetes.secret "localloki" {
+      name      = "localloki-k8smon-k8s-monitoring"
       namespace = "default"
     }
   self-reporting-metric.prom: |
@@ -354,7 +225,7 @@ data:
     # HELP grafana_kubernetes_monitoring_feature_info A metric to report the enabled features of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_feature_info gauge
     grafana_kubernetes_monitoring_feature_info{feature="podLogs", method="volumes", version="1.0.0"} 1
-    grafana_kubernetes_monitoring_feature_info{feature="integrations", sources="mysql,postgresql", version="1.0.0"} 1
+    grafana_kubernetes_monitoring_feature_info{feature="integrations", sources="postgresql", version="1.0.0"} 1
     # EOF
 ---
 # Source: k8s-monitoring/templates/alloy-config.yaml
@@ -490,31 +361,16 @@ data:
         rule {
           source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_instance"]
           separator = ";"
-          regex = "(?:test-mysql-db)"
-          target_label = "integration"
-          replacement = "mysql"
-        }
-        rule {
-          source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_instance"]
-          separator = ";"
-          regex = "(?:test-mysql-db)"
-          target_label = "instance"
-          replacement = "test-mysql-db"
-        }
-    
-        rule {
-          source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_instance"]
-          separator = ";"
-          regex = "(?:test-pg-db)"
+          regex = "(?:test-database-pg-db)"
           target_label = "integration"
           replacement = "postgresql"
         }
         rule {
           source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_instance"]
           separator = ";"
-          regex = "(?:test-pg-db)"
+          regex = "(?:test-database-pg-db)"
           target_label = "instance"
-          replacement = "test-pg-db"
+          replacement = "test-database"
         }
       }
     
@@ -591,38 +447,6 @@ data:
             "service_instance_id" = "service_instance_id",
           }
         }
-        // Integration: MySQL
-        stage.match {
-          selector = "{integration=\"mysql\"}"
-    
-          stage.regex {
-            expression = `(?P<timestamp>.+) (?P<thread>[\d]+) \[(?P<label>.+?)\]( \[(?P<err_code>.+?)\] \[(?P<subsystem>.+?)\])? (?P<msg>.+)`
-          }
-    
-          stage.labels {
-            values = {
-              level = "label",
-              err_code = "err_code",
-              subsystem = "subsystem",
-            }
-          }
-    
-          stage.drop {
-            expression = "^ *$"
-            drop_counter_reason = "drop empty lines"
-          }
-    
-          stage.static_labels {
-            values = {
-              job = "integrations/mysql",
-            }
-          }
-    
-          stage.label_drop {
-            values = ["integration"]
-          }
-        }
-    
         // Integration: postgresql
         stage.match {
           selector = "{integration=\"postgresql\"}"
@@ -648,45 +472,42 @@ data:
     }
     pod_logs "feature" {
       logs_destinations = [
-        loki.write.grafana_cloud_logs.receiver,
+        loki.write.localloki.receiver,
       ]
     }
     
     
     
     
-    // Destination: grafana-cloud-logs (loki)
-    otelcol.exporter.loki "grafana_cloud_logs" {
-      forward_to = [loki.write.grafana_cloud_logs.receiver]
+    // Destination: localLoki (loki)
+    otelcol.exporter.loki "localloki" {
+      forward_to = [loki.write.localloki.receiver]
     }
     
-    loki.write "grafana_cloud_logs" {
+    loki.write "localloki" {
       endpoint {
-        url = "https://logs-prod-006.grafana.net/loki/api/v1/push"
+        url = "http://loki.loki.svc:3100/loki/api/v1/push"
         retry_on_http_429 = true
-        tenant_id = convert.nonsensitive(remote.kubernetes.secret.grafana_cloud_logs.data["tenantId"])
+        tenant_id = convert.nonsensitive(remote.kubernetes.secret.localloki.data["tenantId"])
         basic_auth {
-          username = convert.nonsensitive(remote.kubernetes.secret.grafana_cloud_logs.data["logsUser"])
-          password = remote.kubernetes.secret.grafana_cloud_logs.data["grafanaCloudAccessPolicyToken"]
+          username = convert.nonsensitive(remote.kubernetes.secret.localloki.data["username"])
+          password = remote.kubernetes.secret.localloki.data["password"]
         }
         tls_config {
           insecure_skip_verify = false
-          ca_pem = convert.nonsensitive(remote.kubernetes.secret.grafana_cloud_logs.data["ca"])
-          cert_pem = convert.nonsensitive(remote.kubernetes.secret.grafana_cloud_logs.data["cert"])
-          key_pem = remote.kubernetes.secret.grafana_cloud_logs.data["key"]
         }
         min_backoff_period = "500ms"
         max_backoff_period = "5m"
         max_backoff_retries = "10"
       }
       external_labels = {
-        "cluster" = "database-observability-gc-feature-test",
-        "k8s_cluster_name" = "database-observability-gc-feature-test",
+        "cluster" = "postgresql-integration-test-cluster",
+        "k8s_cluster_name" = "postgresql-integration-test-cluster",
       }
     }
     
-    remote.kubernetes.secret "grafana_cloud_logs" {
-      name      = "grafana-cloud-credentials"
+    remote.kubernetes.secret "localloki" {
+      name      = "localloki-k8smon-k8s-monitoring"
       namespace = "default"
     }
 ---
@@ -961,15 +782,15 @@ spec:
 apiVersion: collectors.grafana.com/v1alpha1
 kind: Alloy
 metadata:
-  name: k8smon-alloy-singleton
+  name: k8smon-alloy-metrics
   namespace: default
   annotations:
     helm.sdk.operatorframework.io/uninstall-wait: "true"
 spec:
   alloy:
     clustering:
-      enabled: false
-      name: ""
+      enabled: true
+      name: alloy-metrics
       portName: http
     configMap:
       content: ""
@@ -1014,7 +835,7 @@ spec:
         - ALL
       seccompProfile:
         type: RuntimeDefault
-    stabilityLevel: experimental
+    stabilityLevel: generally-available
     storagePath: /tmp/alloy
     uiPathPrefix: /
   configReloader:
@@ -1095,7 +916,7 @@ spec:
     terminationGracePeriodSeconds: null
     tolerations: []
     topologySpreadConstraints: []
-    type: deployment
+    type: statefulset
     updateStrategy: {}
     volumeClaimTemplates: []
     volumes:
@@ -1126,7 +947,7 @@ spec:
     path: /
     pathType: Prefix
     tls: []
-  nameOverride: alloy-singleton
+  nameOverride: alloy-metrics
   rbac:
     create: true
   service:
@@ -1525,9 +1346,9 @@ spec:
             - /bin/bash
             - -ce
             - |
-              echo "Deleting Alloy instance: alloy/k8smon-alloy-singleton..."
-              kubectl delete alloy/k8smon-alloy-singleton --ignore-not-found=true --wait
-              kubectl wait --for=delete alloy/k8smon-alloy-singleton --timeout=60s || echo "Timed out waiting for deletion of alloy/k8smon-alloy-singleton or it may not exist."
+              echo "Deleting Alloy instance: alloy/k8smon-alloy-metrics..."
+              kubectl delete alloy/k8smon-alloy-metrics --ignore-not-found=true --wait
+              kubectl wait --for=delete alloy/k8smon-alloy-metrics --timeout=60s || echo "Timed out waiting for deletion of alloy/k8smon-alloy-metrics or it may not exist."
 
               echo "Deleting Alloy instance: alloy/k8smon-alloy-logs..."
               kubectl delete alloy/k8smon-alloy-logs --ignore-not-found=true --wait

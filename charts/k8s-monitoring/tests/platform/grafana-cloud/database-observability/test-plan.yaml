@@ -18,7 +18,9 @@ cluster:
 
 dependencies:
   - file: dependencies/mysql.yaml
-  - file: dependencies/workload.yaml
+  - file: dependencies/mysql-workload.yaml
+  - file: dependencies/postgresql.yaml
+  - file: dependencies/postgresql-workload.yaml
   - file: grafana-cloud-credentials.yaml
   - preset: test-parameters
     namespace: toolbox
@@ -37,6 +39,8 @@ tests:
             # Database Observability metrics
             - query: database_observability_connection_info{cluster="$clusterName", job="integrations/db-o11y", engine="mysql"}
               type: promql
+            - query: database_observability_connection_info{cluster="$clusterName", job="integrations/db-o11y", engine="postgres"}
+              type: promql
             - query: database_observability_setup_consumers_enabled{cluster="$clusterName", job="integrations/db-o11y"}
               type: promql
 
@@ -48,6 +52,14 @@ tests:
             - query: mysql_perf_schema_events_statements_latency_count{cluster="$clusterName", job="integrations/db-o11y"}
               type: promql
 
+            # PostgreSQL metrics
+            - query: postgres_exporter_build_info{cluster="$clusterName", job="integrations/db-o11y"}
+              type: promql
+            - query: pg_stat_statements_calls_total{cluster="$clusterName", job="integrations/db-o11y"}
+              type: promql
+
             # Database Observability logs
-            - query: 'avg(count_over_time({k8s_cluster_name="$clusterName", job="integrations/db-o11y"}[1m]))'
+            - query: 'avg(count_over_time({cluster="$clusterName", job="integrations/db-o11y", instance="postgresql://test-postgresql-db.postgresql.svc:5432/postgres"}[1m]))'
+              type: logql
+            - query: 'avg(count_over_time({cluster="$clusterName", job="integrations/db-o11y", instance="tcp(test-mysql-db.mysql.svc:3306)/"}[1m]))'
               type: logql
