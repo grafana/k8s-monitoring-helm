@@ -44,7 +44,7 @@ integrations:
         logs:
           enabled: true
           labelSelectors:
-            app.kubernetes.io/instance: test-database
+            app.kubernetes.io/instance: test-database-pg-db
 
 podLogs:
   enabled: true
