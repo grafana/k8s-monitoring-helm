@@ -49,6 +49,9 @@ otelcol.processor.k8sattributes "{{ .name | default "default" }}" {
   }
   {{- end }}
   extract {
+{{- if .Values.processors.k8sattributes.otelAnnotations }}
+    otel_annotations = {{ .Values.processors.k8sattributes.otelAnnotations }}
+{{- end }}
 {{- if .Values.processors.k8sattributes.metadata }}
     metadata = {{ .Values.processors.k8sattributes.metadata | toJson }}
 {{- end }}
