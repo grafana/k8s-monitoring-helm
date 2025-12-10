@@ -29,29 +29,6 @@ otelcol.receiver.loki {{ include "helper.alloy_name" .name | quote }} {
 {{- end }}
 
 otelcol.processor.attributes {{ include "helper.alloy_name" .name | quote }} {
-{{- range $action := .processors.attributes.actions }}
-  action {
-    key = {{ $action.key | quote }}
-    action = {{ $action.action | quote }}
-    {{- if $action.value }}
-    value = {{ $action.value | quote }}
-    {{- else if $action.valueFrom }}
-    value = {{ $action.valueFrom }}
-    {{- end }}
-    {{- if $action.pattern }}
-    pattern = {{ $action.pattern | quote }}
-    {{- end }}
-    {{- if $action.fromAttribute }}
-    from_attribute = {{ $action.fromAttribute | quote }}
-    {{- end }}
-    {{- if $action.fromContext }}
-    from_context = {{ $action.fromContext | quote }}
-    {{- end }}
-    {{- if $action.convertedType }}
-    converted_type = {{ $action.convertedType | quote }}
-    {{- end }}
-  }
-{{- end }}
 {{- if .processors.attributes.include }}
   include {
     match_type = {{ .processors.attributes.include.matchType | quote }}
@@ -73,6 +50,14 @@ otelcol.processor.attributes {{ include "helper.alloy_name" .name | quote }} {
     {{- if .processors.attributes.include.metricNames }}
     metric_names = {{ .processors.attributes.include.metricNames | toJson }}
     {{- end }}
+{{- range $resource := .processors.attributes.include.resources }}
+    resource {
+      key = {{ $resource.key | quote }}
+      {{- if $resource.value }}
+      value = {{ $resource.value | toJson }}
+      {{- end }}
+    }
+{{- end }}
   }
 {{- end }}
 {{- if .processors.attributes.exclude }}
@@ -95,6 +80,37 @@ otelcol.processor.attributes {{ include "helper.alloy_name" .name | quote }} {
     {{- end }}
     {{- if .processors.attributes.exclude.metricNames }}
     metric_names = {{ .processors.attributes.exclude.metricNames | toJson }}
+    {{- end }}
+{{- range $resource := .processors.attributes.exclude.resources }}
+    resource {
+      key = {{ $resource.key | quote }}
+      {{- if $resource.value }}
+      value = {{ $resource.value | toJson }}
+      {{- end }}
+    }
+{{- end }}
+  }
+{{- end }}
+{{- range $action := .processors.attributes.actions }}
+  action {
+    key = {{ $action.key | quote }}
+    action = {{ $action.action | quote }}
+    {{- if $action.value }}
+    value = {{ $action.value | quote }}
+    {{- else if $action.valueFrom }}
+    value = {{ $action.valueFrom }}
+    {{- end }}
+    {{- if $action.pattern }}
+    pattern = {{ $action.pattern | quote }}
+    {{- end }}
+    {{- if $action.fromAttribute }}
+    from_attribute = {{ $action.fromAttribute | quote }}
+    {{- end }}
+    {{- if $action.fromContext }}
+    from_context = {{ $action.fromContext | quote }}
+    {{- end }}
+    {{- if $action.convertedType }}
+    converted_type = {{ $action.convertedType | quote }}
     {{- end }}
   }
 {{- end }}

@@ -25,14 +25,17 @@ destinations:
       password: "pass"
     processors:
       attributes:
-        # Include block: Only process traces from specific services
+        # Include block: Filter by service.name resource attribute (works for all signal types)
         include:
           matchType: "strict"
-          services:
-            - "api-gateway"
-            - "payment-service"
-            - "user-service"
-        # Actions to apply to the filtered services
+          resources:
+            - key: "service.name"
+              value: "api-gateway"
+            - key: "service.name"
+              value: "payment-service"
+            - key: "service.name"
+              value: "user-service"
+        # Actions to apply to the filtered telemetry
         actions:
           # Extract deployment and namespace from http.url
           - key: "http.url"

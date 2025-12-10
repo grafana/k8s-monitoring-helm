@@ -93,6 +93,7 @@ This defines the options for defining a destination for OpenTelemetry data that 
 | processors.attributes.include.logBodies | list | `[]` | Strings matching LogRecord's body field. |
 | processors.attributes.include.logSeverityTexts | list | `[]` | Strings matching LogRecord's severity text. |
 | processors.attributes.include.metricNames | list | `[]` | Strings matching metric names. |
+| processors.attributes.include.resources | list | `[]` | List of resource blocks to match against. Format: { key: "", value: "" }. If value is not specified, any value matches. Works for all signal types. |
 | processors.attributes.exclude | object | `{}` | Exclude block to filter which telemetry data the processor should not operate on. Requires `matchType` and at least one filtering field. |
 | processors.attributes.exclude.matchType | string | Required | Must be set to either "regexp" or "strict" to control interpretation of matching items. |
 | processors.attributes.exclude.services | list | `[]` | Items matching service names. |
@@ -101,6 +102,7 @@ This defines the options for defining a destination for OpenTelemetry data that 
 | processors.attributes.exclude.logBodies | list | `[]` | Strings matching LogRecord's body field. |
 | processors.attributes.exclude.logSeverityTexts | list | `[]` | Strings matching LogRecord's severity text. |
 | processors.attributes.exclude.metricNames | list | `[]` | Strings matching metric names. |
+| processors.attributes.exclude.resources | list | `[]` | List of resource blocks to match against. Format: { key: "", value: "" }. If value is not specified, any value matches. Works for all signal types. |
 
 ### Batch Processor
 
