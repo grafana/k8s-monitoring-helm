@@ -84,6 +84,17 @@ tests:
           of: ConfigMap
       - matchSnapshot:
           path: data["module.alloy"]
+  - it: should allow using the secret filter with an inclusion filter, to split which logs are filtered
+    set:
+      deployAsConfigMap: true
+      secretFilter:
+        enabled: true
+        inclusionSelector: '{app=="payment-processor"}'
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["module.alloy"]
 
   - it: should allow using label selectors
     set:
