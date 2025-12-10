@@ -2,12 +2,16 @@
 (NOTE: Do not edit README.md directly. It is a generated file!)
 (      To make changes, please modify values.yaml or description.txt and run `make examples`)
 -->
-Using include and exclude blocks with the OTLP Attributes Processor to selectively filter and 
-process telemetry data based on service names, span names, log severity, and other criteria.
+# OTLP Attributes Processor Include/Exclude Example
+
+This example demonstrates how to use include and exclude blocks with the OTLP Attributes Processor to selectively
+filter and process telemetry data based on service names, span names, log severity, and other criteria.
+
 ## Values
 
 <!-- textlint-disable terminology -->
 ```yaml
+---
 cluster:
   name: otelcol-attributes-example
 
@@ -42,8 +46,6 @@ destinations:
           - key: "environment"
             action: "insert"
             value: "production"
-
-
 
 # Enable application observability to generate traces for the examples
 applicationObservability:
