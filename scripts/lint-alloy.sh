@@ -1,10 +1,15 @@
 #!/usr/bin/env bash
 
 usage() {
-  echo "USAGE: lint-alloy.sh [--public-preview] output.alloy [output2.alloy...]"
+  echo "USAGE: lint-alloy.sh config.alloy [config2.alloy...]"
   echo ""
   echo "Uses Grafana Alloy to lint the generated configuration"
 }
+
+if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
+  usage
+  exit 0
+fi
 
 # check to see if alloy is installed
 if [[ "$(command -v alloy || true)" = "" ]]; then
