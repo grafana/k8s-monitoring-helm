@@ -52,6 +52,52 @@ otelcol.processor.attributes {{ include "helper.alloy_name" .name | quote }} {
     {{- end }}
   }
 {{- end }}
+{{- if .processors.attributes.include }}
+  include {
+    match_type = {{ .processors.attributes.include.matchType | quote }}
+    {{- if .processors.attributes.include.services }}
+    services = {{ .processors.attributes.include.services | toJson }}
+    {{- end }}
+    {{- if .processors.attributes.include.spanNames }}
+    span_names = {{ .processors.attributes.include.spanNames | toJson }}
+    {{- end }}
+    {{- if .processors.attributes.include.spanKinds }}
+    span_kinds = {{ .processors.attributes.include.spanKinds | toJson }}
+    {{- end }}
+    {{- if .processors.attributes.include.logBodies }}
+    log_bodies = {{ .processors.attributes.include.logBodies | toJson }}
+    {{- end }}
+    {{- if .processors.attributes.include.logSeverityTexts }}
+    log_severity_texts = {{ .processors.attributes.include.logSeverityTexts | toJson }}
+    {{- end }}
+    {{- if .processors.attributes.include.metricNames }}
+    metric_names = {{ .processors.attributes.include.metricNames | toJson }}
+    {{- end }}
+  }
+{{- end }}
+{{- if .processors.attributes.exclude }}
+  exclude {
+    match_type = {{ .processors.attributes.exclude.matchType | quote }}
+    {{- if .processors.attributes.exclude.services }}
+    services = {{ .processors.attributes.exclude.services | toJson }}
+    {{- end }}
+    {{- if .processors.attributes.exclude.spanNames }}
+    span_names = {{ .processors.attributes.exclude.spanNames | toJson }}
+    {{- end }}
+    {{- if .processors.attributes.exclude.spanKinds }}
+    span_kinds = {{ .processors.attributes.exclude.spanKinds | toJson }}
+    {{- end }}
+    {{- if .processors.attributes.exclude.logBodies }}
+    log_bodies = {{ .processors.attributes.exclude.logBodies | toJson }}
+    {{- end }}
+    {{- if .processors.attributes.exclude.logSeverityTexts }}
+    log_severity_texts = {{ .processors.attributes.exclude.logSeverityTexts | toJson }}
+    {{- end }}
+    {{- if .processors.attributes.exclude.metricNames }}
+    metric_names = {{ .processors.attributes.exclude.metricNames | toJson }}
+    {{- end }}
+  }
+{{- end }}
   output {
 {{- if ne .metrics.enabled false }}
     metrics = [otelcol.processor.transform.{{ include "helper.alloy_name" .name }}.input]

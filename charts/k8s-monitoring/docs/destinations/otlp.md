@@ -85,6 +85,22 @@ This defines the options for defining a destination for OpenTelemetry data that 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | processors.attributes.actions | list | `[]` | Attribute processor actions Format: { key: "", value: "", action: "", pattern: "", fromAttribute: "", fromContext: "", convertedType: "" } Can also use `valueFrom` instead of value to use a raw reference. |
+| processors.attributes.include | object | `{}` | Include block to filter which telemetry data the processor operates on. Requires `matchType` and at least one filtering field. |
+| processors.attributes.include.matchType | string | Required | Must be set to either "regexp" or "strict" to control interpretation of matching items. |
+| processors.attributes.include.services | list | `[]` | Items matching service names. |
+| processors.attributes.include.spanNames | list | `[]` | Items matching span names. |
+| processors.attributes.include.spanKinds | list | `[]` | Items matching span kinds. |
+| processors.attributes.include.logBodies | list | `[]` | Strings matching LogRecord's body field. |
+| processors.attributes.include.logSeverityTexts | list | `[]` | Strings matching LogRecord's severity text. |
+| processors.attributes.include.metricNames | list | `[]` | Strings matching metric names. |
+| processors.attributes.exclude | object | `{}` | Exclude block to filter which telemetry data the processor should not operate on. Requires `matchType` and at least one filtering field. |
+| processors.attributes.exclude.matchType | string | Required | Must be set to either "regexp" or "strict" to control interpretation of matching items. |
+| processors.attributes.exclude.services | list | `[]` | Items matching service names. |
+| processors.attributes.exclude.spanNames | list | `[]` | Items matching span names. |
+| processors.attributes.exclude.spanKinds | list | `[]` | Items matching span kinds. |
+| processors.attributes.exclude.logBodies | list | `[]` | Strings matching LogRecord's body field. |
+| processors.attributes.exclude.logSeverityTexts | list | `[]` | Strings matching LogRecord's severity text. |
+| processors.attributes.exclude.metricNames | list | `[]` | Strings matching metric names. |
 
 ### Batch Processor
 
