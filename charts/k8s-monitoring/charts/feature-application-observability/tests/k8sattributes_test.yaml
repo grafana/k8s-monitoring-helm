@@ -22,3 +22,18 @@ tests:
           of: ConfigMap
       - matchSnapshot:
           path: data["module.alloy"]
+
+  - it: can enable the OpenTelemetry recommended annotations
+    set:
+      deployAsConfigMap: true
+      processors:
+        k8sattributes:
+          otelAnnotations: true
+      receivers:
+        zipkin:
+          enabled: true
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["module.alloy"]

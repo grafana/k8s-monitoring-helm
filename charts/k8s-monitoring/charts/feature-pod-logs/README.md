@@ -54,6 +54,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | namespaceLabels | object | `{}` | Log labels to set with values copied from the Kubernetes Namespace labels. Only used for "filelog" gather method. Format: `<log_label>: <kubernetes_namespace_label>`. |
 | nodeAnnotations | object | `{}` | Log labels to set with values copied from the Kubernetes Node annotations. Only used for "filelog" gather method. Format: `<log_label>: <kubernetes_node_annotation>`. |
 | nodeLabels | object | `{}` | Log labels to set with values copied from the Kubernetes Node labels. Only used for "filelog" gather method. Format: `<log_label>: <kubernetes_node_label>`. |
+| otelAnnotations | bool | `false` | Whether to automatically set the recommended OpenTelemetry [resource attributes](https://opentelemetry.io/docs/specs/semconv/non-normative/k8s-attributes/). Only used for "filelog" gather method. |
 | staticLabels | object | `{}` | Log labels to set with static values. |
 | staticLabelsFrom | object | `{}` | Log labels to set with static values, not quoted so it can reference config components. |
 
@@ -84,9 +85,14 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | secretFilter.allowlist | list | `[]` | List of regular expressions to allowlist matching secrets. |
+| secretFilter.enableEntropy | bool | `false` | Enable entropy-based filtering. |
 | secretFilter.enabled | bool | `false` | Enable secret filtering. |
+| secretFilter.gitleaksConfigPath | string | `""` | Path to the custom gitleaks.toml file. |
+| secretFilter.gitleaksConfigPathFrom | string | `""` | Raw path to the custom gitleaks.toml file. Use this to reference an Alloy component |
 | secretFilter.includeGeneric | bool | `false` | Include the generic API key rule. |
+| secretFilter.inclusionSelector | string | `""` | Loki selector to send processed logs to the secret filter. Anything not matching will be excluded. Example: `{app=="payment-processor"}`. If empty, all pod logs will be sent through the secret filter. |
 | secretFilter.partialMask | int | `0` | Show the first N characters of the secret. |
+| secretFilter.redactWith | string | `"<REDACTED-SECRET:$SECRET_NAME>"` | String to use to redact secrets. |
 
 ### Processing settings
 

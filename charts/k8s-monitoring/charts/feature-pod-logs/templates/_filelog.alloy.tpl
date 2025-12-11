@@ -42,6 +42,9 @@ otelcol.processor.k8sattributes "pod_logs" {
   }
 
   extract {
+{{- if .Values.otelAnnotations }}
+    otel_annotations = {{ .Values.otelAnnotations }}
+{{- end }}
     metadata = [
       "k8s.deployment.name",
       "k8s.statefulset.name",

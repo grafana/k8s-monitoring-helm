@@ -4,6 +4,8 @@
 
 *   Check for the presence of kube-state-metrics or Node Exporter ServiceMonitors if clusterMetrics and
     prometheusOperatorObjects features are enabled (@petewall)
+*   Add the ability to set otel_annotations flag for the k8sattributes processor (@petewall)
+*   Add more options to the secretFilter component in the pod logs features (@petewall)
 
 ## 3.6.2
 

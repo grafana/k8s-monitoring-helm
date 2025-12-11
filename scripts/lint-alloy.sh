@@ -1,10 +1,15 @@
 #!/usr/bin/env bash
 
 usage() {
-  echo "USAGE: lint-alloy.sh [--public-preview] output.alloy [output2.alloy...]"
+  echo "USAGE: lint-alloy.sh config.alloy [config2.alloy...]"
   echo ""
   echo "Uses Grafana Alloy to lint the generated configuration"
 }
+
+if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
+  usage
+  exit 0
+fi
 
 # check to see if alloy is installed
 if [[ "$(command -v alloy || true)" = "" ]]; then
@@ -16,6 +21,7 @@ fi
 STABILITY_LEVEL=generally-available
 
 statusCode=0
+failFast=no
 
 # Inject a component that utilizes Kubernetes discovery, so we know that the config will fail in a predictable way.
 k8sDiscovery='discovery.kubernetes "lint_config_component" { role = "nodes" }'
@@ -28,6 +34,9 @@ do
   fi
 
   if grep "${file}" -e "otelcol.receiver.filelog" >/dev/null; then
+    STABILITY_LEVEL=public-preview
+  fi
+  if grep "${file}" -e "otelcol.storage.file" >/dev/null; then
     STABILITY_LEVEL=public-preview
   fi
   if grep "${file}" -e "otelcol.exporter.debug" >/dev/null; then
@@ -74,8 +83,12 @@ do
       done <<< "${run_output}"
     fi
 
-    if [[ "${statusCode}" == 0 ]]; then
+    if [[ "${failFast}" == "yes" ]]; then
+      exit 1
+    elif [[ "${statusCode}" == 0 ]]; then
       statusCode=1
     fi
   fi
 done
+
+exit $statusCode

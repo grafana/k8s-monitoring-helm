@@ -12,3 +12,14 @@ tests:
           of: ConfigMap
       - matchSnapshot:
           path: data["module.alloy"]
+
+  - it: can utilize the otel annotations flag
+    set:
+      deployAsConfigMap: true
+      gatherMethod: filelog
+      otelAnnotations: true
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["module.alloy"]

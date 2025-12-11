@@ -82,10 +82,57 @@ loki.process "pod_logs" {
   }
 {{- end }}
 {{ if .Values.secretFilter.enabled }}
+{{- if .Values.secretFilter.inclusionSelector }}
+  forward_to = [loki.process.secret_filter_prefilter.receiver]
+}
+
+loki.process "secret_filter_prefilter" {
+  stage.static_labels {
+    values = {
+      k8s_monitoring_secret_filter_inclusion = "false",
+    }
+  }
+  stage.match {
+    selector = {{ .Values.secretFilter.inclusionSelector | quote }}
+
+    stage.static_labels {
+      values = {
+        k8s_monitoring_secret_filter_inclusion = "true",
+      }
+    }
+  }
+  forward_to = [
+    loki.process.secret_filter_inclusion.receiver,
+    loki.process.secret_filter_exclusion.receiver,
+  ]
+}
+
+loki.process "secret_filter_exclusion" {
+  stage.match {
+    selector = "{k8s_monitoring_secret_filter_inclusion=\"true\"}"
+    action = "drop"
+  }
+
+  forward_to = argument.logs_destinations.value
+}
+
+loki.process "secret_filter_inclusion" {
+  stage.match {
+    selector = "{k8s_monitoring_secret_filter_inclusion=\"false\"}"
+    action = "drop"
+  }
+
+{{- end }}
   forward_to = [loki.secretfilter.pod_logs.receiver]
 }
 
 loki.secretfilter "pod_logs" {
+{{- if .Values.secretFilter.gitleaksConfigPathFrom }}
+  gitleaks_config = {{ .Values.secretFilter.gitleaksConfigPathFrom }}
+{{- else if .Values.secretFilter.gitleaksConfigPath }}
+  gitleaks_config = {{ .Values.secretFilter.gitleaksConfigPath | quote }}
+{{- end }}
+  enable_entropy = {{ .Values.secretFilter.enableEntropy }}
   include_generic = {{ .Values.secretFilter.includeGeneric }}
   partial_mask = {{ .Values.secretFilter.partialMask }}
 {{- if .Values.secretFilter.allowlist }}
@@ -94,6 +141,9 @@ loki.secretfilter "pod_logs" {
     {{ $value | quote }},
   {{- end }}
   ]
+{{- end }}
+{{- if .Values.secretFilter.redactWith }}
+  redact_with = {{ .Values.secretFilter.redactWith | quote }}
 {{- end }}
 {{- end }}
   forward_to = argument.logs_destinations.value
