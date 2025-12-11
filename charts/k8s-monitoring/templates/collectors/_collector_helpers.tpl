@@ -123,17 +123,7 @@ app.kubernetes.io/instance: {{ include "collector.alloy.fullname" . }}
 {{- $cleanValues := dict }}
 {{- range $key, $val := . }}
   {{- if not (has $key $fieldsToExclude) }}
-    {{- if eq $key "service" }}
-      {{- /* Filter out default internalTrafficPolicy: Cluster from service section to match Alloy Operator behavior */}}
-      {{- /* Users can still set it to "Local" or other values explicitly */}}
-      {{- $cleanService := deepCopy $val }}
-      {{- if and $cleanService.internalTrafficPolicy (eq $cleanService.internalTrafficPolicy "Cluster") }}
-        {{- $_ := unset $cleanService "internalTrafficPolicy" }}
-      {{- end }}
-      {{- $_ := set $cleanValues $key $cleanService }}
-    {{- else }}
-      {{- $_ := set $cleanValues $key $val }}
-    {{- end }}
+    {{- $_ := set $cleanValues $key $val }}
   {{- end }}
 {{- end }}
 {{ $cleanValues | toYaml }}
