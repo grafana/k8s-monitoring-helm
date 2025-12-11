@@ -25,7 +25,7 @@ spec:
   {{- end }}
   selector:
     {{- include "collector.alloy.selectorLabels" (deepCopy $ | merge (dict "collectorName" $collectorName)) | nindent 4 }}
-  {{- if semverCompare ">=1.26-0" .Capabilities.KubeVersion.Version }}
+  {{- if and (semverCompare ">=1.26-0" .Capabilities.KubeVersion.Version) $collectorValues.service.internalTrafficPolicy (ne $collectorValues.service.internalTrafficPolicy "Cluster") }}
   internalTrafficPolicy: {{ $collectorValues.service.internalTrafficPolicy}}
   {{- end }}
   ports:
