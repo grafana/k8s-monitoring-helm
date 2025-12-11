@@ -93,6 +93,15 @@ secretFilter:
   # @section -- Secret Filtering
   enabled: false
 
+  # -- Loki selector to send processed logs to the secret filter. Anything not matching will be excluded.
+  # Example: `{app=="payment-processor"}`. If empty, all pod logs will be sent through the secret filter.
+  # @section -- Secret Filtering
+  inclusionSelector: ""
+
+  # -- Enable entropy-based filtering.
+  # @section -- Secret Filtering
+  enableEntropy: false
+
   # -- Include the generic API key rule.
   # @section -- Secret Filtering
   includeGeneric: false
@@ -101,9 +110,22 @@ secretFilter:
   # @section -- Secret Filtering
   partialMask: 0
 
+  # -- String to use to redact secrets.
+  # @default -- `"<REDACTED-SECRET:$SECRET_NAME>"`
+  # @section -- Secret Filtering
+  redactWith:
+
   # -- List of regular expressions to allowlist matching secrets.
   # @section -- Secret Filtering
   allowlist: []
+
+  # -- Path to the custom gitleaks.toml file.
+  # @section -- Secret Filtering
+  gitleaksConfigPath: ""
+
+  # -- Raw path to the custom gitleaks.toml file. Use this to reference an Alloy component
+  # @section -- Secret Filtering
+  gitleaksConfigPathFrom: ""
 
 # -- Stage blocks to be added to the loki.process component for pod logs.
 # ([docs](https://grafana.com/docs/alloy/latest/reference/components/loki/loki.process/#blocks))
