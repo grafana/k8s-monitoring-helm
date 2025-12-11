@@ -1,5 +1,10 @@
 # Changelog
 
+## 3.7.0
+
+*   Check for the presence of kube-state-metrics or Node Exporter ServiceMonitors if clusterMetrics and
+    prometheusOperatorObjects features are enabled (@petewall)
+
 ## 3.6.2
 
 *   Fix extra quotes for the sending queue storage in OTLP destinations (@petewall)

@@ -40,15 +40,23 @@ cluster_metrics "feature" {
 {{- define "features.clusterMetrics.collector.values" }}{{- end -}}
 
 {{- define "features.clusterMetrics.validate" }}
-{{- if .Values.clusterMetrics.enabled -}}
-{{- $featureName := "Kubernetes Cluster metrics" }}
-{{- $destinations := include "features.clusterMetrics.destinations" . | fromYamlArray }}
-{{- include "destinations.validate_destination_list" (dict "destinations" $destinations "type" "metrics" "ecosystem" "prometheus" "feature" $featureName) }}
-{{- range $collector := include "features.clusterMetrics.collectors" . | fromYamlArray }}
-  {{- include "collectors.require_collector" (dict "Values" $.Values "name" $collector "feature" $featureName) }}
-{{- end -}}
+{{- if .Values.clusterMetrics.enabled }}
+  {{- $featureName := "Kubernetes Cluster metrics" }}
+  {{- $destinations := include "features.clusterMetrics.destinations" . | fromYamlArray }}
+  {{- include "destinations.validate_destination_list" (dict "destinations" $destinations "type" "metrics" "ecosystem" "prometheus" "feature" $featureName) }}
 
+  {{- range $collector := include "features.clusterMetrics.collectors" . | fromYamlArray }}
+    {{- include "collectors.require_collector" (dict "Values" $.Values "name" $collector "feature" $featureName) }}
+  {{- end }}
+
+  {{- include "features.clusterMetrics.validate.opencost" . }}
+  {{- include "feature.clusterMetrics.validate" (dict "Values" $.Values.clusterMetrics) }}
+{{- end }}
+{{- end }}
+
+{{- define "features.clusterMetrics.validate.opencost" }}
 {{- if .Values.clusterMetrics.opencost.enabled}}
+  {{- $destinations := include "features.clusterMetrics.destinations" . | fromYamlArray }}
   {{- if ne .Values.cluster.name .Values.clusterMetrics.opencost.opencost.exporter.defaultClusterId }}
     {{- $msg := list "" "The OpenCost default cluster id should match the cluster name." }}
     {{- $msg = append $msg "Please set:" }}
@@ -73,7 +81,7 @@ cluster_metrics "feature" {
       {{- $msg = append $msg (printf "Where <metrics destination name> is one of %s" (include "english_list_or" $destinations)) }}
       {{- end }}
       {{- fail (join "\n" $msg) }}
-    {{- end -}}
+    {{- end }}
 
     {{- $destinationFound := false }}
     {{- range $index, $destinationName := $destinations }}
@@ -178,7 +186,7 @@ cluster_metrics "feature" {
           {{- fail (join "\n" $msg) }}
         {{- end }}
       {{- end }}
-    {{- end -}}
+    {{- end }}
 
     {{- if eq $destinationFound false }}
       {{- $msg := list "" (printf "The destination \"%s\" is not a Prometheus data source." $.Values.clusterMetrics.opencost.metricsSource) }}
@@ -190,9 +198,7 @@ cluster_metrics "feature" {
       {{- $msg = append $msg "    metricsSource:  <metrics destination name>" }}
       {{- $msg = append $msg (printf "Where <metrics destination name> is one of %s" (include "english_list_or" $destinations)) }}
       {{- fail (join "\n" $msg) }}
-    {{- end -}}
-  {{- end -}}
-{{- end -}}
-{{- include "feature.clusterMetrics.validate" (dict "Values" $.Values.clusterMetrics) }}
+    {{- end }}
+  {{- end }}
 {{- end -}}
 {{- end -}}

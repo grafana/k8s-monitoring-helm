@@ -5,7 +5,8 @@ templates:
 tests:
   - it: asks you to set the platform to OpenShift
     set:
-      cluster: {name: openshift-cluster}
+      cluster:
+        name: openshift-cluster
     capabilities:
       apiVersions:
         - security.openshift.io/v1/SecurityContextConstraints
@@ -15,3 +16,16 @@ tests:
             This Kubernetes cluster appears to be OpenShift. Please set the platform to enable compatibility:
             global:
               platform: openshift
+
+  - it: does not ask when the platform is set
+    set:
+      global:
+        platform: openshift
+      cluster:
+        name: openshift-cluster
+      alloy-metrics: {enabled: true, extraConfig: "// Enabled"}
+    capabilities:
+      apiVersions:
+        - security.openshift.io/v1/SecurityContextConstraints
+    asserts:
+      - notFailedTemplate: {}
