@@ -84,9 +84,14 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | secretFilter.allowlist | list | `[]` | List of regular expressions to allowlist matching secrets. |
+| secretFilter.enableEntropy | bool | `false` | Enable entropy-based filtering. |
 | secretFilter.enabled | bool | `false` | Enable secret filtering. |
+| secretFilter.gitleaksConfigPath | string | `""` | Path to the custom gitleaks.toml file. |
+| secretFilter.gitleaksConfigPathFrom | string | `""` | Raw path to the custom gitleaks.toml file. Use this to reference an Alloy component |
 | secretFilter.includeGeneric | bool | `false` | Include the generic API key rule. |
+| secretFilter.inclusionSelector | string | `""` | Loki selector to send processed logs to the secret filter. Anything not matching will be excluded. Example: `{app=="payment-processor"}`. If empty, all pod logs will be sent through the secret filter. |
 | secretFilter.partialMask | int | `0` | Show the first N characters of the secret. |
+| secretFilter.redactWith | string | `"<REDACTED-SECRET:$SECRET_NAME>"` | String to use to redact secrets. |
 
 ### Processing settings
 
