@@ -5,6 +5,7 @@
 - dcgm-exporter
 - etcd
 - grafana
+- istio
 - loki
 - mimir
 - mysql

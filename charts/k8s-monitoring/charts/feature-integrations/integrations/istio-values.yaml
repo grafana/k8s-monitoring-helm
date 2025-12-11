@@ -1,0 +1,112 @@
+---
+# -- Name for this Istio integration instance.
+# @section -- General Settings
+name: ""
+
+# -- The value of the job label for scraped metrics and logs
+# @section -- General Settings
+jobLabel: integration/istio
+
+sidecarMetrics:
+  # -- Whether to enable metrics collection from Istio sidecar containers.
+  # @section -- Sidecar Metrics Settings
+  enabled: true
+
+  labelSelectors: {}
+
+  # -- The name of the Istio sidecar container.
+  # @section -- Sidecar Metrics Settings
+  sidecarContainerName: "istio-proxy.*"
+
+  # -- How frequently to scrape metrics from Istio sidecar containers.
+  # @default -- `60s`
+  # @section -- Sidecar Metrics Settings
+  scrapeInterval:
+
+  # -- The timeout for scraping metrics from Istio sidecar containers.
+  # @default -- `10s`
+  # @section -- Sidecar Metrics Settings
+  scrapeTimeout: ""
+
+  # -- Sets the max_cache_size for prometheus.relabel component.
+  # This should be at least 2x-5x your largest scrape target or samples appended rate.
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#arguments))
+  # Overrides global.maxCacheSize
+  # @default -- `100000`
+  # @section -- Sidecar Metrics Settings
+  maxCacheSize:
+
+  # Adjustments to the scraped metrics to filter the amount of data sent to storage.
+  tuning:
+    # -- Filter the list of metrics from Grafana Alloy to the minimal set required for the Grafana Alloy integration.
+    # @section -- Metric Processing Settings
+    useDefaultAllowList: true
+    # -- Metrics to keep. Can use regular expressions.
+    # @section -- Sidecar Metrics Settings
+    includeMetrics: []
+    # -- Metrics to drop. Can use regular expressions.
+    # @section -- Sidecar Metrics Settings
+    excludeMetrics: []
+
+  # -- Rule blocks to be added to the prometheus.relabel component for MySQL metrics.
+  # These relabeling rules are applied post-scrape against the metrics returned from the scraped target, no `__meta*` labels are present.
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#rule-block))
+  # @section -- Sidecar Metrics Settings
+  extraMetricProcessingRules: ""
+
+istiodMetrics:
+  # -- Whether to enable metrics collection from Istio .
+  # @section -- Istiod Metrics Settings
+  enabled: true
+
+  serviceName: istiod
+
+  namespace: ""
+
+  # -- How frequently to scrape metrics from MySQL Exporter.
+  # @default -- `60s`
+  # @section -- Istiod Metrics Settings
+  scrapeInterval:
+
+  # -- The timeout for scraping metrics from MySQL Exporter.
+  # @default -- `10s`
+  # @section -- Istiod Metrics Settings
+  scrapeTimeout: ""
+
+  # -- Sets the max_cache_size for prometheus.relabel component.
+  # This should be at least 2x-5x your largest scrape target or samples appended rate.
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#arguments))
+  # Overrides global.maxCacheSize
+  # @default -- `100000`
+  # @section -- Istiod Metrics Settings
+  maxCacheSize:
+
+  # Adjustments to the scraped metrics to filter the amount of data sent to storage.
+  tuning:
+    # -- Metrics to keep. Can use regular expressions.
+    # @section -- Istiod Metrics Settings
+    includeMetrics: []
+    # -- Metrics to drop. Can use regular expressions.
+    # @section -- Istiod Metrics Settings
+    excludeMetrics: []
+
+  # -- Rule blocks to be added to the prometheus.relabel component for MySQL metrics.
+  # These relabeling rules are applied post-scrape against the metrics returned from the scraped target, no `__meta*` labels are present.
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#rule-block))
+  # @section -- Istiod Metrics Settings
+  extraMetricProcessingRules: ""
+
+# Settings for log gathering using the Pod Logs feature
+logs:
+  # -- Whether to enable special processing of Istio pod logs.
+  # @section -- Logs Settings
+  enabled: true
+
+  # -- The namespaces to look for MySQL instances in.
+  # Will automatically look for MySQL instances in all namespaces unless specified here
+  # @section -- Discovery Settings
+  namespaces: []
+
+  # -- Discover MySQL instances based on label selectors. At least one is required.
+  # @section -- Discovery Settings
+  labelSelectors: {}

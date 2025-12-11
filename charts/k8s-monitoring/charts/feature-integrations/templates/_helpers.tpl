@@ -13,6 +13,9 @@
 {{- define "pod_label" -}}
 {{ printf "__meta_kubernetes_pod_label_%s" (include "escape_label" .) }}
 {{- end }}
+{{- define "pod_annotation" -}}
+{{ printf "__meta_kubernetes_pod_annotation_%s" (include "escape_label" .) }}
+{{- end }}
 
 {{- define "english_list" }}
 {{- if eq (len .) 0 }}
