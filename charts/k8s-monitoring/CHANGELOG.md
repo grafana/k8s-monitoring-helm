@@ -1,5 +1,10 @@
 # Changelog
 
+## 3.7.0
+
+*   Add the ability to set otel_annotations flag for the k8sattributes processor (@petewall)
+*   Add more options to the secretFilter component in the pod logs features (@petewall)
+
 ## 3.6.2
 
 *   Fix extra quotes for the sending queue storage in OTLP destinations (@petewall)
