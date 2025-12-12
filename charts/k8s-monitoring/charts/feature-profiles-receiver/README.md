@@ -10,9 +10,13 @@ destination.
 
 ## Usage
 
+```yaml
 profilesReceiver:
   enabled: true
-  ... [values](#values)
+  ...
+```
+
+([values](#values))
 
 ## Testing
 

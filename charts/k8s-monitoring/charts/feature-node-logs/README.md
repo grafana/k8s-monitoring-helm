@@ -11,9 +11,13 @@ filterable list of units.
 
 ## Usage
 
+```yaml
 nodeLogs:
   enabled: true
-  ... [values](#values)
+  ...
+```
+
+([values](#values))
 
 ## journald
 
