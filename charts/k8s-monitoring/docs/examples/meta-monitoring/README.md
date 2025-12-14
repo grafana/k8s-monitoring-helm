@@ -35,8 +35,8 @@ integrations:
     region: true
     availability_zone: true
     node_role: true
-    os: true
-    architecture: true
+    nodeOS: true
+    nodeArchitecture: true
     instance_type: true
 
   alloy:
@@ -111,8 +111,8 @@ clusterMetrics:
     region: true
     availabilityZone: true
     nodeRole: true
-    os: true
-    architecture: true
+    nodeOS: true
+    nodeArchitecture: true
     instanceType: true
 
   kubelet:
@@ -169,8 +169,8 @@ podLogs:
     region: true
     availabilityZone: true
     nodeRole: true
-    os: true
-    architecture: true
+    nodeOS: true
+    nodeArchitecture: true
     instanceType: true
 
   structuredMetadata:

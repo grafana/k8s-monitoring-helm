@@ -53,7 +53,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | namespaceAnnotations | object | `{}` | Log labels to set with values copied from the Kubernetes Namespace annotations. Only used for "filelog" gather method. Format: `<log_label>: <kubernetes_namespace_annotation>`. |
 | namespaceLabels | object | `{}` | Log labels to set with values copied from the Kubernetes Namespace labels. Only used for "filelog" gather method. Format: `<log_label>: <kubernetes_namespace_label>`. |
 | nodeAnnotations | object | `{}` | Log labels to set with values copied from the Kubernetes Node annotations. Only used for "filelog" gather method. Format: `<log_label>: <kubernetes_node_annotation>`. |
-| nodeLabels | object | `{}` | Log labels to set with values copied from the Kubernetes Node labels. Only used for "filelog" gather method. Format: `<log_label>: <kubernetes_node_label>`. |
+| nodeLabels | object | `{}` | Log labels to set with values copied from the Kubernetes Node labels. Format: `<log_label>: <kubernetes_node_label>`. |
 | staticLabels | object | `{}` | Log labels to set with static values. |
 | staticLabelsFrom | object | `{}` | Log labels to set with static values, not quoted so it can reference config components. |
 
