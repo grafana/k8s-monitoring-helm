@@ -41,6 +41,8 @@ alloy:
   # -- Path to where Grafana Alloy stores data (for example, the Write-Ahead Log).
   # By default, data is lost between reboots.
   storagePath: /tmp/alloy
+  # -- Enables Grafana Alloy container's http server port.
+  enableHttpServerPort: true
   # -- Address to listen for traffic on. 0.0.0.0 exposes the UI to other
   # containers.
   listenAddr: 0.0.0.0
@@ -48,6 +50,10 @@ alloy:
   listenPort: 12345
   # -- Scheme is needed for readiness probes. If enabling tls in your configs, set to "HTTPS"
   listenScheme: HTTP
+  # -- Initial delay for readiness probe.
+  initialDelaySeconds: 10
+  # -- Timeout for readiness probe.
+  timeoutSeconds: 1
   # --  Base path where the UI is exposed.
   uiPathPrefix: /
   # -- Enables sending Grafana Labs anonymous usage stats to help improve Grafana
@@ -113,6 +119,57 @@ image:
 rbac:
   # -- Whether to create RBAC resources for Alloy.
   create: true
+  # -- If set, only create Roles and RoleBindings in the given list of namespaces, rather than ClusterRoles and
+  # ClusterRoleBindings. If not using ClusterRoles, bear in mind that Alloy will not be able to discover cluster-scoped
+  # resources such as Nodes.
+  namespaces: []
+  # -- The rules to create for the ClusterRole or Role objects.
+  rules:
+    # -- Rules required for the `discovery.kubernetes` component.
+    - apiGroups: ["", "discovery.k8s.io", "networking.k8s.io"]
+      resources: ["endpoints", "endpointslices", "ingresses", "pods", "services"]
+      verbs: ["get", "list", "watch"]
+    # -- Rules required for the `loki.source.kubernetes` component.
+    - apiGroups: [""]
+      resources: ["pods", "pods/log", "namespaces"]
+      verbs: ["get", "list", "watch"]
+    # -- Rules required for the `loki.source.podlogs` component.
+    - apiGroups: ["monitoring.grafana.com"]
+      resources: ["podlogs"]
+      verbs: ["get", "list", "watch"]
+    # -- Rules required for the `mimir.rules.kubernetes` component.
+    - apiGroups: ["monitoring.coreos.com"]
+      resources: ["prometheusrules"]
+      verbs: ["get", "list", "watch"]
+    # -- Rules required for the `mimir.alerts.kubernetes` component.
+    - apiGroups: ["monitoring.coreos.com"]
+      resources: ["alertmanagerconfigs"]
+      verbs: ["get", "list", "watch"]
+    # -- Rules required for the `prometheus.operator.*` components.
+    - apiGroups: ["monitoring.coreos.com"]
+      resources: ["podmonitors", "servicemonitors", "probes", "scrapeconfigs"]
+      verbs: ["get", "list", "watch"]
+    # -- Rules required for the `loki.source.kubernetes_events` component.
+    - apiGroups: [""]
+      resources: ["events"]
+      verbs: ["get", "list", "watch"]
+    # -- Rules required for the `remote.kubernetes.*` components.
+    - apiGroups: [""]
+      resources: ["configmaps", "secrets"]
+      verbs: ["get", "list", "watch"]
+    # -- Rules required for the `otelcol.processor.k8sattributes` component.
+    - apiGroups: ["apps", "extensions"]
+      resources: ["replicasets"]
+      verbs: ["get", "list", "watch"]
+  # -- The rules to create for the ClusterRole objects.
+  clusterRules:
+    # -- Rules required for the `discovery.kubernetes` component.
+    - apiGroups: [""]
+      resources: ["nodes", "nodes/proxy", "nodes/metrics"]
+      verbs: ["get", "list", "watch"]
+    # -- Rules required for accessing metrics endpoint.
+    - nonResourceURLs: ["/metrics"]
+      verbs: ["get"]
 serviceAccount:
   # -- Whether to create a service account for the Grafana Alloy deployment.
   create: true
@@ -153,11 +210,15 @@ controller:
   type: 'daemonset'
   # -- Number of pods to deploy. Ignored when controller.type is 'daemonset'.
   replicas: 1
+  # -- Extra labels to add to the controller.
+  extraLabels: {}
   # -- Annotations to add to controller.
   extraAnnotations: {}
   # -- Whether to deploy pods in parallel. Only used when controller.type is
   # 'statefulset'.
   parallelRollout: true
+  # -- How many additional seconds to wait before considering a pod ready.
+  minReadySeconds: 10
   # -- Configures Pods to use the host network. When set to true, the ports that will be used must be specified.
   hostNetwork: false
   # -- Configures Pods to use the host PID namespace.
@@ -308,6 +369,19 @@ controller:
   initContainers: []
   # -- Additional containers to run alongside the Alloy container and initContainers.
   extraContainers: []
+networkPolicy:
+  enabled: false
+  flavor: kubernetes
+  policyTypes:
+    - Ingress
+    - Egress
+  # Default allow all traffic because Alloy is so configurable
+  # It is recommended to change this before deploying to production
+  # To disable each policyType, set value to `null`
+  ingress:
+    - {}
+  egress:
+    - {}
 service:
   # -- Creates a Service for the controller's pods.
   enabled: true

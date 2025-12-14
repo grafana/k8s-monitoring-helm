@@ -9,7 +9,7 @@ destinations:
     auth:
       type: basic
       usernameKey: PROMETHEUS_USER
-      passwordKey: PROMETHEUS_PASS
+      passwordKey: ACCESS_POLICY_TOKEN
     secret:
       create: false
       name: grafana-cloud-credentials
@@ -20,7 +20,19 @@ destinations:
     auth:
       type: basic
       usernameKey: LOKI_USER
-      passwordKey: LOKI_PASS
+      passwordKey: ACCESS_POLICY_TOKEN
+    secret:
+      create: false
+      name: grafana-cloud-credentials
+      namespace: default
+  - name: gc-otlp-endpoint
+    type: otlp
+    url: https://otlp-gateway-prod-us-east-0.grafana.net/otlp
+    protocol: http
+    auth:
+      type: basic
+      usernameKey: OTLP_USER
+      passwordKey: ACCESS_POLICY_TOKEN
     secret:
       create: false
       name: grafana-cloud-credentials
@@ -39,13 +51,27 @@ clusterMetrics:
           url: https://prometheus-prod-13-prod-us-east-0.grafana.net/api/prom
         existingSecretName: grafana-cloud-credentials
         username_key: PROMETHEUS_USER
-        password_key: PROMETHEUS_PASS
+        password_key: ACCESS_POLICY_TOKEN
 
 clusterEvents:
   enabled: true
 
 podLogs:
   enabled: true
+
+kubernetesManifests:
+  enabled: true
+  kinds:
+    pods:
+      gather: true
+    deployments:
+      gather: true
+    statefulsets:
+      gather: true
+    daemonsets:
+      gather: true
+    cronjobs:
+      gather: true
 
 integrations:
   alloy:
@@ -58,5 +84,7 @@ alloy-metrics:
   enabled: true
 alloy-singleton:
   enabled: true
+  alloy:
+    stabilityLevel: public-preview
 alloy-logs:
   enabled: true

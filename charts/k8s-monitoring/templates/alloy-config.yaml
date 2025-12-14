@@ -1,10 +1,14 @@
 {{- range $collectorName := include "collectors.list.enabled" . | fromYamlArray }}
 {{- $selfReportingEnabled := false }}
+{{- $kubernetesManifestsEnabled := false }}
 {{- $destinations := (index $.Values $collectorName).includeDestinations | default list }}
 {{- range $feature := include "features.list" $ | fromYamlArray }}
   {{- if has $collectorName (include (printf "features.%s.collectors" $feature) $ | fromYamlArray ) }}
     {{- if eq $feature "selfReporting" }}
       {{- $selfReportingEnabled = true }}
+    {{- end }}
+    {{- if eq $feature "kubernetesManifests" }}
+      {{- $kubernetesManifestsEnabled = true }}
     {{- end }}
     {{- $destinations = concat $destinations ((include (printf "features.%s.destinations" $feature) $) | fromYamlArray) }}
   {{- end }}
@@ -37,5 +41,8 @@ data:
   config.alloy: |{{ $alloyConfig | trim | nindent 4 }}
 {{- if $selfReportingEnabled }}
   self-reporting-metric.prom: |{{ printf "%s\n" (include "features.selfReporting.metrics" $values | trim) | nindent 4 }}
+{{- end }}
+{{- if $kubernetesManifestsEnabled }}
+  collect-manifests.sh: |{{ $.Subcharts.kubernetesManifests.Files.Get "collect-manifests.sh" | trim | nindent 4 }}
 {{- end }}
 {{- end }}

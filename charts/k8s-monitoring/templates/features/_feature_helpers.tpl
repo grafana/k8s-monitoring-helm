@@ -4,6 +4,7 @@
 - autoInstrumentation
 - clusterMetrics
 - clusterEvents
+- kubernetesManifests
 - nodeLogs
 - podLogs
 - podLogsViaKubernetesApi

@@ -1,0 +1,18 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Test - Kubernetes Manifests - Validation
+templates:
+  - test/configmap.yaml
+tests:
+  - it: requires at least one manifest kind
+    set:
+      testing: true
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            At least one manifest kind must be enabled to use Kubernetes Manifest gathering.
+            Please enable one. For example:
+            kubernetesManifests:
+              kinds:
+                pods:
+                  gather: true
+            See https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-kubernetes-manifests for more details.
