@@ -1,0 +1,52 @@
+# PostgreSQL Integration
+
+This integration captures the metrics and logs to collect stats from a PostgreSQL server. This deploys the
+[PostgreSQL Exporter Alloy component](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.exporter.postgres/)
+which connects to the database to generate metrics.
+
+This integration is also compatible with [Grafana Database Observability](https://grafana.com/docs/grafana-cloud/monitor-applications/database-observability/).
+
+## Enabling
+
+To enable this integration, create an instance :
+
+```yaml
+integrations:
+  postgresql:
+    instances:
+      - name: test-database
+        exporter:
+          dataSource:
+            host: test-database-pg-db-primary.postgresql.svc
+            auth:
+              username: pg-admin
+              password: pg-admin-password
+        logs:
+          enabled: true
+          labelSelectors:
+            app.kubernetes.io/instance: test-database-pg-db
+```
+
+To enable with Database Observability, enable the `databaseObservability` flag:
+
+```yaml
+integrations:
+  mysql:
+    instances:
+      - name: test-database
+        jobLabel: integrations/db-o11y
+        databaseObservability:
+          enabled: true
+        exporter:
+          dataSource:
+            host: test-database-pg-db-primary.postgresql.svc
+            auth:
+              username: pg-admin
+              password: pg-admin-password
+        logs:
+          enabled: true
+          labelSelectors:
+            app.kubernetes.io/instance: test-database-pg-db
+```
+
+{{ template "chart.valuesSection" . }}
