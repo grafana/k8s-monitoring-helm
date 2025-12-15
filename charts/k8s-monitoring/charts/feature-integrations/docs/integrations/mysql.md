@@ -1,4 +1,60 @@
-# mysql
+# MySQL Integration
+
+This integration captures the metrics and logs to collect stats from a MySQL server. This deploys the
+[MySQL Exporter Alloy component](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.exporter.mysql/)
+which connects to the database to generate metrics.
+
+This integration is also compatible with [Grafana Database Observability](https://grafana.com/docs/grafana-cloud/monitor-applications/database-observability/).
+
+## Enabling
+
+To enable this integration, create an instance :
+
+```yaml
+integrations:
+  mysql:
+    instances:
+      - name: test-db
+        exporter:
+          dataSource:
+            host: test-db.default.svc
+            protocol: tcp
+            port: 3306
+            auth:
+              username: mysql-admin
+              password: mysql-root-password
+        logs:
+          enabled: true
+          labelSelectors:
+            app: mysql-test-db
+```
+
+To enable with Database Observability, enable the `databaseObservability` flag:
+
+```yaml
+integrations:
+  mysql:
+    instances:
+      - name: test-db
+        jobLabel: integrations/db-o11y
+        databaseObservability:
+          enabled: true
+        exporter:
+          collectors:
+            perfSchemaEventsStatements:
+              enabled: true
+          dataSource:
+            host: test-db.default.svc
+            protocol: tcp
+            port: 3306
+            auth:
+              username: mysql-admin
+              password: mysql-root-password
+        logs:
+          enabled: true
+          labelSelectors:
+            app.kubernetes.io/instance: test-mysql-db
+```
 
 ## Values
 
@@ -53,6 +109,7 @@
 | exporter.dataSource.protocol | string | `""` | The MySQL protocol type. |
 | exporter.dataSource.tls | string | `""` | The TLS setting to use. Options are none, "true", "false", "skip-verify", "preferred". See the [driver documentation](https://github.com/go-sql-driver/mysql#tls) for details. |
 | exporter.dataSourceName | string | `""` | The data source string to use for the MySQL Exporter. |
+| exporter.dataSourceNameFrom | string | `""` | The raw access for the data source string to use for the MySQL Exporter. Use this to get the data source from other Alloy components. |
 
 ### Exporter Collectors
 

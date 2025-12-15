@@ -1,0 +1,313 @@
+---
+# -- Name for this PostgreSQL instance.
+# @section -- General Settings
+name: ""
+
+# -- The value of the job label for scraped metrics and logs
+# @section -- General Settings
+jobLabel: integration/postgresql
+
+# Settings for metrics collection
+metrics:
+  # -- Whether to enable metrics collection from PostgreSQL Exporter.
+  # @section -- Metrics Settings
+  enabled: true
+
+  # -- How frequently to scrape metrics from PostgreSQL Exporter.
+  # @default -- `60s`
+  # @section -- Scrape Settings
+  scrapeInterval:
+
+  # -- The timeout for scraping metrics from PostgreSQL Exporter.
+  # @default -- `10s`
+  # @section -- Scrape Settings
+  scrapeTimeout: ""
+
+  # -- Sets the max_cache_size for prometheus.relabel component.
+  # This should be at least 2x-5x your largest scrape target or samples appended rate.
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/#arguments))
+  # Overrides global.maxCacheSize
+  # @default -- `100000`
+  # @section -- Metric Processing Settings
+  maxCacheSize:
+
+  # Adjustments to the scraped metrics to filter the amount of data sent to storage.
+  tuning:
+    # -- Metrics to keep. Can use regular expressions.
+    # @section -- Metric Processing Settings
+    includeMetrics: []
+    # -- Metrics to drop. Can use regular expressions.
+    # @section -- Metric Processing Settings
+    excludeMetrics: []
+
+  # -- Rule blocks to be added to the prometheus.relabel component for PostgreSQL metrics.
+  # These relabeling rules are applied post-scrape against the metrics returned from the scraped target, no `__meta*` labels are present.
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#rule-block))
+  # @section -- Metric Processing Settings
+  extraMetricProcessingRules: ""
+
+# Settings for log gathering using the Pod Logs feature
+logs:
+  # -- Whether to enable special processing of PostgreSQL pod logs.
+  # @section -- Logs Settings
+  enabled: true
+
+  # -- The namespaces to look for PostgreSQL instances in.
+  # Will automatically look for PostgreSQL instances in all namespaces unless specified here
+  # @section -- Discovery Settings
+  namespaces: []
+
+  # -- Discover PostgreSQL instances based on label selectors. At least one is required.
+  # @section -- Discovery Settings
+  labelSelectors: {}
+
+# Settings for the Alloy embedded PostgreSQL Exporter
+exporter:
+  # -- The data source string to use for the PostgreSQL Exporter.
+  # @section -- Exporter Settings
+  dataSourceName: ""
+
+  # -- The raw access for the data source string to use for the PostgreSQL Exporter. Use this to get the data source
+  # from other Alloy components.
+  # @section -- Exporter Settings
+  dataSourceNameFrom: ""
+
+  # The data source to use for the PostgreSQL Exporter.
+  dataSource:
+    # -- The PostgreSQL host to connect to.
+    # @section -- Exporter Settings
+    host: ""
+    # -- The PostgreSQL port to connect to.
+    # @section -- Exporter Settings
+    port: 5432
+    # -- The PostgreSQL database to access.
+    # @section -- Exporter Settings
+    database: ""
+    # -- The PostgreSQL protocol type.
+    # @section -- Exporter Settings
+    protocol: "postgresql"
+    auth:
+      # -- The username to use for the PostgreSQL connection.
+      # @section -- Exporter Settings
+      username: ""
+      # -- The key for storing the username in the secret.
+      # @section -- Exporter Settings
+      usernameKey: "username"
+      # -- Raw config for accessing the username.
+      # @section -- Exporter Settings
+      usernameFrom: ""
+      # -- The password to use for the PostgreSQL connection.
+      # @section -- Exporter Settings
+      password: ""
+      # -- The key for storing the password in the secret.
+      # @section -- Exporter Settings
+      passwordKey: "password"
+      # -- Raw config for accessing the password.
+      # @section -- Exporter Settings
+      passwordFrom: ""
+
+    # -- The SSL mode setting to use. Options are none, "verify-full", "verify-ca", "require", "prefer", "allow", and
+    # "disable". See the [documentation](https://www.postgresql.org/docs/current/libpq-ssl.html#LIBPQ-SSL-PROTECTION)
+    # for details.
+    # @section -- Exporter Settings
+    sslmode: ""
+
+  autoDiscovery:
+    # -- Whether to automatically discover other databases.
+    # @section -- Exporter Settings
+    enabled: false
+
+    # -- List of databases to filter out, meaning all other databases will be scraped.
+    # @section -- Exporter Settings
+    databaseAllowList: []
+
+    # -- Whether to automatically discover other databases.
+    # @section -- Exporter Settings
+    databaseDenyList: []
+
+  # -- Path to YAML file containing custom queries to expose as metrics.
+  # @section -- Exporter Settings
+  customQueriesConfigPath: ""
+
+  # -- When true, only exposes metrics supplied from `customQueriesConfigPath`.
+  # @section -- Exporter Settings
+  disableDefaultMetrics: false
+
+  # -- Disables collection of metrics from pg_settings.
+  # @section -- Exporter Settings
+  disableSettingsMetrics: false
+
+  # -- The list of collectors to enable for the PostgreSQL Exporter
+  # ([Documentation](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.exporter.PostgreSQL/#supported-collectors)).
+  # This used to be a list of collector names. This format is still supported, but the new format will allow for
+  # customization.
+  # @section -- Exporter Settings
+  # collectors: ["heartbeat", "PostgreSQL.user"]
+  collectors:
+    buffercacheSummary:
+      # -- Enable the buffercache_summary collector.
+      # @section -- Exporter Collectors
+      enabled: false
+    database:
+      # -- Enable the database collector.
+      # @section -- Exporter Collectors
+      enabled: true
+    databaseWraparound:
+      # -- Enable the database_wraparound collector.
+      # @section -- Exporter Collectors
+      enabled: false
+    locks:
+      # -- Enable the locks collector.
+      # @section -- Exporter Collectors
+      enabled: true
+    longRunningTransactions:
+      # -- Enable the long_running_transactions collector.
+      # @section -- Exporter Collectors
+      enabled: false
+    postmaster:
+      # -- Enable the postmaster collector.
+      # @section -- Exporter Collectors
+      enabled: false
+    processIdle:
+      # -- Enable the process_idle collector.
+      # @section -- Exporter Collectors
+      enabled: false
+    replication:
+      # -- Enable the replication collector.
+      # @section -- Exporter Collectors
+      enabled: true
+    replicationSlot:
+      # -- Enable the replication_slot collector.
+      # @section -- Exporter Collectors
+      enabled: true
+    statActivityAutovacuum:
+      # -- Enable the stat_activity_autovacuum collector.
+      # @section -- Exporter Collectors
+      enabled: false
+    statBGWriter:
+      # -- Enable the stat_bgwriter collector.
+      # @section -- Exporter Collectors
+      enabled: true
+    statCheckpointer:
+      # -- Enable the stat_checkpointer collector.
+      # @section -- Exporter Collectors
+      enabled: false
+    statDatabase:
+      # -- Enable the stat_database collector.
+      # @section -- Exporter Collectors
+      enabled: true
+    statProgressVacuum:
+      # -- Enable the stat_progress_vacuum collector.
+      # @section -- Exporter Collectors
+      enabled: true
+    statStatements:
+      # -- Enable the stat_statements collector.
+      # @section -- Exporter Collectors
+      enabled: false
+      # -- Enable the selection of query ID and SQL statement.
+      # @section -- Exporter Collectors
+      includeQuery: false
+      # -- Maximum length of the statement query text.
+      # @default -- 120
+      # @section -- Exporter Collectors
+      queryLength:
+    statUserTables:
+      # -- Enable the stat_user_tables collector.
+      # @section -- Exporter Collectors
+      enabled: true
+    statWALReceiver:
+      # -- Enable the stat_wal_receiver collector.
+      # @section -- Exporter Collectors
+      enabled: false
+    statioUserIndexes:
+      # -- Enable the statio_user_indexes collector.
+      # @section -- Exporter Collectors
+      enabled: false
+    statioUserTables:
+      # -- Enable the statio_user_tables collector.
+      # @section -- Exporter Collectors
+      enabled: true
+    wal:
+      # -- Enable the wal collector.
+      # @section -- Exporter Collectors
+      enabled: true
+    xlogLocation:
+      # -- Enable the xlog_location collector.
+      # @section -- Exporter Collectors
+      enabled: false
+
+# Capture table, schema, and query information for the Database Observability feature in Grafana Cloud.
+databaseObservability:
+  # -- Whether to gather table, schema, and query information from the database. Requires exporter to be enabled.
+  # @section -- Database Observability
+  enabled: false
+
+  collectors:
+    # Collect explain plans information.
+    explainPlans:
+      # -- Enable collection of explain plans information.
+      # @section -- Database Observability - Collectors
+      enabled: true
+      # -- How frequently to collect explain plans information from the database.
+      # @section -- Database Observability - Collectors
+      collectInterval: 1m
+      # -- List of schemas to exclude from explain plan collection.
+      # @section -- Database Observability - Collectors
+      excludeSchemas: []
+      # -- Ratio of explain plan queries to collect per collect interval.
+      # @section -- Database Observability - Collectors
+      perCollectRatio: 1.0
+
+    # Collect queries information.
+    queryDetails:
+      # -- Enable collection of query information.
+      # @section -- Database Observability - Collectors
+      enabled: true
+      # -- How frequently to collect query information from the database.
+      # @section -- Database Observability - Collectors
+      collectInterval: 1m
+
+    # Collect query samples.
+    querySamples:
+      # -- Enable collection of query samples.
+      # @section -- Database Observability - Collectors
+      enabled: true
+      # -- How frequently to collect query samples from the database.
+      # @section -- Database Observability - Collectors
+      collectInterval: 1m
+      # -- Collect unredacted SQL query text including parameters.
+      # @section -- Database Observability - Collectors
+      disableQueryRedaction: false
+
+    # Collect schemas and tables from information_schema.
+    schemaDetails:
+      # -- Enable collection of schemas and tables from information_schema.
+      # @section -- Database Observability - Collectors
+      enabled: true
+      # -- How frequently to collect schemas and tables from information_schema.
+      # @section -- Database Observability - Collectors
+      collectInterval: 1m
+      # -- Whether to enable caching of table definitions.
+      # @section -- Database Observability - Collectors
+      cacheEnabled: true
+      # -- Table definitions cache size.
+      # @section -- Database Observability - Collectors
+      cacheSize: 256
+      # -- Table definitions cache TTL.
+      # @section -- Database Observability - Collectors
+      cacheTTL: 10m
+
+secret:
+  # -- (bool) Whether to create a secret to store credentials for this PostgreSQL integration instance.
+  # @default -- `true`
+  # @section -- Secret
+  create:
+  # -- If true, skip secret creation and embed the credentials directly into the configuration.
+  # @section -- Secret
+  embed: false
+  # -- The name of the secret to create.
+  # @section -- Secret
+  name: ""
+  # -- The namespace for the secret.
+  # @section -- Secret
+  namespace: ""
