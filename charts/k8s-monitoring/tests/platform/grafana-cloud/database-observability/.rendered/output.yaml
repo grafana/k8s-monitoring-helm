@@ -976,12 +976,14 @@ spec:
       create: false
       key: null
       name: null
+    enableHttpServerPort: true
     enableReporting: true
     envFrom: []
     extraArgs: []
     extraEnv: []
     extraPorts: []
     hostAliases: []
+    initialDelaySeconds: 10
     lifecycle: {}
     listenAddr: 0.0.0.0
     listenPort: 12345
@@ -1016,6 +1018,7 @@ spec:
         type: RuntimeDefault
     stabilityLevel: experimental
     storagePath: /tmp/alloy
+    timeoutSeconds: 1
     uiPathPrefix: /
   configReloader:
     customArgs: []
@@ -1077,9 +1080,11 @@ spec:
     enableStatefulSetAutoDeletePVC: false
     extraAnnotations: {}
     extraContainers: []
+    extraLabels: {}
     hostNetwork: false
     hostPID: false
     initContainers: []
+    minReadySeconds: 10
     nodeSelector:
       kubernetes.io/os: linux
     parallelRollout: true
@@ -1127,8 +1132,120 @@ spec:
     pathType: Prefix
     tls: []
   nameOverride: alloy-singleton
+  networkPolicy:
+    egress:
+    - {}
+    enabled: false
+    flavor: kubernetes
+    ingress:
+    - {}
+    policyTypes:
+    - Ingress
+    - Egress
   rbac:
+    clusterRules:
+    - apiGroups:
+      - ""
+      resources:
+      - nodes
+      - nodes/proxy
+      - nodes/metrics
+      verbs:
+      - get
+      - list
+      - watch
+    - nonResourceURLs:
+      - /metrics
+      verbs:
+      - get
     create: true
+    namespaces: []
+    rules:
+    - apiGroups:
+      - ""
+      - discovery.k8s.io
+      - networking.k8s.io
+      resources:
+      - endpoints
+      - endpointslices
+      - ingresses
+      - pods
+      - services
+      verbs:
+      - get
+      - list
+      - watch
+    - apiGroups:
+      - ""
+      resources:
+      - pods
+      - pods/log
+      - namespaces
+      verbs:
+      - get
+      - list
+      - watch
+    - apiGroups:
+      - monitoring.grafana.com
+      resources:
+      - podlogs
+      verbs:
+      - get
+      - list
+      - watch
+    - apiGroups:
+      - monitoring.coreos.com
+      resources:
+      - prometheusrules
+      verbs:
+      - get
+      - list
+      - watch
+    - apiGroups:
+      - monitoring.coreos.com
+      resources:
+      - alertmanagerconfigs
+      verbs:
+      - get
+      - list
+      - watch
+    - apiGroups:
+      - monitoring.coreos.com
+      resources:
+      - podmonitors
+      - servicemonitors
+      - probes
+      - scrapeconfigs
+      verbs:
+      - get
+      - list
+      - watch
+    - apiGroups:
+      - ""
+      resources:
+      - events
+      verbs:
+      - get
+      - list
+      - watch
+    - apiGroups:
+      - ""
+      resources:
+      - configmaps
+      - secrets
+      verbs:
+      - get
+      - list
+      - watch
+    - apiGroups:
+      - apps
+      - extensions
+      resources:
+      - replicasets
+      verbs:
+      - get
+      - list
+      - watch
   service:
     annotations: {}
     clusterIP: ""
@@ -1169,12 +1286,14 @@ spec:
       create: false
       key: null
       name: null
+    enableHttpServerPort: true
     enableReporting: true
     envFrom: []
     extraArgs: []
     extraEnv: []
     extraPorts: []
     hostAliases: []
+    initialDelaySeconds: 10
     lifecycle: {}
     listenAddr: 0.0.0.0
     listenPort: 12345
@@ -1209,6 +1328,7 @@ spec:
         type: RuntimeDefault
     stabilityLevel: generally-available
     storagePath: /tmp/alloy
+    timeoutSeconds: 1
     uiPathPrefix: /
   configReloader:
     customArgs: []
@@ -1270,9 +1390,11 @@ spec:
     enableStatefulSetAutoDeletePVC: false
     extraAnnotations: {}
     extraContainers: []
+    extraLabels: {}
     hostNetwork: false
     hostPID: false
     initContainers: []
+    minReadySeconds: 10
     nodeSelector:
       kubernetes.io/os: linux
     parallelRollout: true
@@ -1322,8 +1444,120 @@ spec:
     pathType: Prefix
     tls: []
   nameOverride: alloy-logs
+  networkPolicy:
+    egress:
+    - {}
+    enabled: false
+    flavor: kubernetes
+    ingress:
+    - {}
+    policyTypes:
+    - Ingress
+    - Egress
   rbac:
+    clusterRules:
+    - apiGroups:
+      - ""
+      resources:
+      - nodes
+      - nodes/proxy
+      - nodes/metrics
+      verbs:
+      - get
+      - list
+      - watch
+    - nonResourceURLs:
+      - /metrics
+      verbs:
+      - get
     create: true
+    namespaces: []
+    rules:
+    - apiGroups:
+      - ""
+      - discovery.k8s.io
+      - networking.k8s.io
+      resources:
+      - endpoints
+      - endpointslices
+      - ingresses
+      - pods
+      - services
+      verbs:
+      - get
+      - list
+      - watch
+    - apiGroups:
+      - ""
+      resources:
+      - pods
+      - pods/log
+      - namespaces
+      verbs:
+      - get
+      - list
+      - watch
+    - apiGroups:
+      - monitoring.grafana.com
+      resources:
+      - podlogs
+      verbs:
+      - get
+      - list
+      - watch
+    - apiGroups:
+      - monitoring.coreos.com
+      resources:
+      - prometheusrules
+      verbs:
+      - get
+      - list
+      - watch
+    - apiGroups:
+      - monitoring.coreos.com
+      resources:
+      - alertmanagerconfigs
+      verbs:
+      - get
+      - list
+      - watch
+    - apiGroups:
+      - monitoring.coreos.com
+      resources:
+      - podmonitors
+      - servicemonitors
+      - probes
+      - scrapeconfigs
+      verbs:
+      - get
+      - list
+      - watch
+    - apiGroups:
+      - ""
+      resources:
+      - events
+      verbs:
+      - get
+      - list
+      - watch
+    - apiGroups:
+      - ""
+      resources:
+      - configmaps
+      - secrets
+      verbs:
+      - get
+      - list
+      - watch
+    - apiGroups:
+      - apps
+      - extensions
+      resources:
+      - replicasets
+      verbs:
+      - get
+      - list
+      - watch
   service:
     annotations: {}
     clusterIP: ""
