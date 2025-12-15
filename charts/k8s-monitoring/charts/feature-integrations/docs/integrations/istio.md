@@ -21,19 +21,6 @@
 | jobLabel | string | `"integration/istio"` | The value of the job label for scraped metrics and logs |
 | name | string | `""` | Name for this Istio integration instance. |
 
-### Logs Settings
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| logs.enabled | bool | `true` | Whether to enable special processing of Istio pod logs. |
-
-### Discovery Settings
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| logs.labelSelectors | object | `{}` | Discover MySQL instances based on label selectors. At least one is required. |
-| logs.namespaces | list | `[]` | The namespaces to look for MySQL instances in. Will automatically look for MySQL instances in all namespaces unless specified here |
-
 ### Sidecar Metrics Settings
 
 | Key | Type | Default | Description |

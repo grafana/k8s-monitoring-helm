@@ -6,6 +6,18 @@ destinations:
   - name: localPrometheus
     type: prometheus
     url: http://prometheus-server.prometheus.svc:9090/api/v1/write
+    auth:
+      type: basic
+      username: promuser
+      password: prometheuspassword
+  - name: localLoki
+    type: loki
+    url: http://loki.loki.svc:3100/loki/api/v1/push
+    tenantId: "1"
+    auth:
+      type: basic
+      username: loki
+      password: lokipassword
   - name: localTempo
     type: otlp
     url: tempo.tempo.svc:4317
@@ -18,6 +30,21 @@ destinations:
 
 clusterMetrics:
   enabled: true
+
+clusterEvents:
+  enabled: true
+
+podLogs:
+  enabled: true
+
+integrations:
+  istio:
+    instances:
+      - name: istio
+        sidecarMetrics:
+          enabled: true
+        istiodMetrics:
+          enabled: true
 
 applicationObservability:
   enabled: true
@@ -33,27 +60,22 @@ applicationObservability:
   logs:
     enabled: false
 
-integrations:
-  istio:
-    instances:
-      - name: istio
-        sidecarMetrics:
-          enabled: true
-        istiodMetrics:
-          enabled: true
-
 alloy-metrics:
   enabled: true
   alloy:
     clustering:
       portName: tcp
   controller:
-    replicas: 2
+    replicas: 2  # To test that clustering is working
+
+alloy-singleton:
+  enabled: true
+
+alloy-logs:
+  enabled: true
 
 alloy-receiver:
   enabled: true
-  liveDebugging:
-    enabled: true
   controller:
     # Using TPROXY preserves both the source and destination IP addresses and ports, which allows
     # the k8sattributes processor to look up the pod by IP and enrich the rest of the attributes

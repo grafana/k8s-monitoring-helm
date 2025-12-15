@@ -116,16 +116,14 @@ application_observability "feature" {
     otelcol.exporter.prometheus.localprometheus.input,
   ]
   logs_destinations = [
-
+    otelcol.exporter.loki.localloki.input,
   ]
   traces_destinations = [
     otelcol.processor.attributes.localtempo.input,
   ]
 }
 
-livedebugging {
-  enabled = true
-}
+
 
 
 // Destination: localPrometheus (prometheus)
@@ -139,6 +137,10 @@ prometheus.remote_write "localprometheus" {
   endpoint {
     url = "http://prometheus-server.prometheus.svc:9090/api/v1/write"
     headers = {
+    }
+    basic_auth {
+      username = convert.nonsensitive(remote.kubernetes.secret.localprometheus.data["username"])
+      password = remote.kubernetes.secret.localprometheus.data["password"]
     }
     tls_config {
       insecure_skip_verify = false
@@ -177,6 +179,44 @@ prometheus.remote_write "localprometheus" {
     max_keepalive_time = "8h"
   }
 }
+
+remote.kubernetes.secret "localprometheus" {
+  name      = "localprometheus-k8smon-k8s-monitoring"
+  namespace = "default"
+}
+
+// Destination: localLoki (loki)
+otelcol.exporter.loki "localloki" {
+  forward_to = [loki.write.localloki.receiver]
+}
+
+loki.write "localloki" {
+  endpoint {
+    url = "http://loki.loki.svc:3100/loki/api/v1/push"
+    retry_on_http_429 = true
+    tenant_id = convert.nonsensitive(remote.kubernetes.secret.localloki.data["tenantId"])
+    basic_auth {
+      username = convert.nonsensitive(remote.kubernetes.secret.localloki.data["username"])
+      password = remote.kubernetes.secret.localloki.data["password"]
+    }
+    tls_config {
+      insecure_skip_verify = false
+    }
+    min_backoff_period = "500ms"
+    max_backoff_period = "5m"
+    max_backoff_retries = "10"
+  }
+  external_labels = {
+    "cluster" = "istio-service-mesh-example",
+    "k8s_cluster_name" = "istio-service-mesh-example",
+  }
+}
+
+remote.kubernetes.secret "localloki" {
+  name      = "localloki-k8smon-k8s-monitoring"
+  namespace = "default"
+}
+
 // Destination: localTempo (otlp)
 
 otelcol.processor.attributes "localtempo" {
