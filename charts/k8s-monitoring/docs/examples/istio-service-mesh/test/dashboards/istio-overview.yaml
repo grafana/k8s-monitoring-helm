@@ -1,0 +1,2713 @@
+apiVersion: dashboard.grafana.app/v2beta1
+kind: Dashboard
+metadata:
+  name: istio-overview
+spec:
+  annotations:
+    - kind: AnnotationQuery
+      spec:
+        builtIn: true
+        enable: true
+        hide: true
+        iconColor: rgba(0, 211, 255, 1)
+        name: Annotations & Alerts
+        query:
+          group: grafana
+          kind: DataQuery
+          spec: {}
+          version: v0
+  cursorSync: 'Off'
+  editable: false
+  elements:
+    panel-1:
+      kind: Panel
+      spec:
+        data:
+          kind: QueryGroup
+          spec:
+            queries:
+              - kind: PanelQuery
+                spec:
+                  hidden: false
+                  query:
+                    datasource:
+                      name: ${datasource}
+                    group: prometheus
+                    kind: DataQuery
+                    spec:
+                      expr: >-
+                        count by(job, cluster)
+                        (istio_build{job=~"$job",cluster=~"$cluster",
+                        component="proxy"})
+                    version: v0
+                  refId: A
+            queryOptions: {}
+            transformations: []
+        description: Number of proxies in the Istio system.
+        id: 1
+        links: []
+        title: Proxies
+        vizConfig:
+          group: stat
+          kind: VizConfig
+          spec:
+            fieldConfig:
+              defaults:
+                color:
+                  mode: thresholds
+                thresholds:
+                  mode: absolute
+                  steps:
+                    - color: super-light-red
+                      value: 0
+                    - color: super-light-green
+                      value: 1
+              overrides: []
+            options:
+              colorMode: value
+              graphMode: none
+              justifyMode: auto
+              orientation: auto
+              percentChangeColorMode: standard
+              reduceOptions:
+                calcs:
+                  - lastNotNull
+                fields: ''
+                values: false
+              showPercentChange: false
+              textMode: auto
+              wideLayout: true
+          version: 12.4.0-19938312174
+    panel-10:
+      kind: Panel
+      spec:
+        data:
+          kind: QueryGroup
+          spec:
+            queries:
+              - kind: PanelQuery
+                spec:
+                  hidden: false
+                  query:
+                    datasource:
+                      name: ${datasource}
+                    group: prometheus
+                    kind: DataQuery
+                    spec:
+                      expr: >-
+                        sum by(job, cluster)
+                        (go_memstats_heap_alloc_bytes{job=~"$job",cluster=~"$cluster",pod=~"$istiod"})
+                      legendFormat: '{{cluster}} - istiod - alloc'
+                    version: v0
+                  refId: A
+              - kind: PanelQuery
+                spec:
+                  hidden: false
+                  query:
+                    datasource:
+                      name: ${datasource}
+                    group: prometheus
+                    kind: DataQuery
+                    spec:
+                      expr: >-
+                        sum by(job, cluster)
+                        (go_memstats_heap_inuse_bytes{job=~"$job",cluster=~"$cluster",pod=~"$istiod"})
+                      legendFormat: '{{cluster}} - istiod - inuse'
+                    version: v0
+                  refId: B
+              - kind: PanelQuery
+                spec:
+                  hidden: false
+                  query:
+                    datasource:
+                      name: ${datasource}
+                    group: prometheus
+                    kind: DataQuery
+                    spec:
+                      expr: >-
+                        sum by(job, cluster)
+                        (go_memstats_heap_sys_bytes{job=~"$job",cluster=~"$cluster",pod=~"$istiod"})
+                      legendFormat: '{{cluster}} - istiod - sys'
+                    version: v0
+                  refId: C
+              - kind: PanelQuery
+                spec:
+                  hidden: false
+                  query:
+                    datasource:
+                      name: ${datasource}
+                    group: prometheus
+                    kind: DataQuery
+                    spec:
+                      expr: >-
+                        sum by(job, cluster)
+                        (istio_agent_go_memstats_heap_alloc_bytes{job=~"$job",cluster=~"$cluster",pod=~"$gateway"})
+                      legendFormat: '{{cluster}} - gateway - alloc'
+                    version: v0
+                  refId: D
+              - kind: PanelQuery
+                spec:
+                  hidden: false
+                  query:
+                    datasource:
+                      name: ${datasource}
+                    group: prometheus
+                    kind: DataQuery
+                    spec:
+                      expr: >-
+                        sum by(job, cluster)
+                        (istio_agent_go_memstats_heap_inuse_bytes{job=~"$job",cluster=~"$cluster",pod=~"$gateway"})
+                      legendFormat: '{{cluster}} - gateway - inuse'
+                    version: v0
+                  refId: E
+              - kind: PanelQuery
+                spec:
+                  hidden: false
+                  query:
+                    datasource:
+                      name: ${datasource}
+                    group: prometheus
+                    kind: DataQuery
+                    spec:
+                      expr: >-
+                        sum by(job, cluster)
+                        (istio_agent_go_memstats_heap_sys_bytes{job=~"$job",cluster=~"$cluster",pod=~"$gateway"})
+                      legendFormat: '{{cluster}} - gateway - sys'
+                    version: v0
+                  refId: F
+              - kind: PanelQuery
+                spec:
+                  hidden: false
+                  query:
+                    datasource:
+                      name: ${datasource}
+                    group: prometheus
+                    kind: DataQuery
+                    spec:
+                      expr: >-
+                        sum by(job, cluster)
+                        (istio_agent_go_memstats_heap_alloc_bytes{job=~"$job",cluster=~"$cluster",pod=~"$proxy"})
+                      legendFormat: '{{cluster}} - proxy - alloc'
+                    version: v0
+                  refId: G
+              - kind: PanelQuery
+                spec:
+                  hidden: false
+                  query:
+                    datasource:
+                      name: ${datasource}
+                    group: prometheus
+                    kind: DataQuery
+                    spec:
+                      expr: >-
+                        sum by(job, cluster)
+                        (istio_agent_go_memstats_heap_inuse_bytes{job=~"$job",cluster=~"$cluster",pod=~"$proxy"})
+                      legendFormat: '{{cluster}} - proxy - inuse'
+                    version: v0
+                  refId: H
+              - kind: PanelQuery
+                spec:
+                  hidden: false
+                  query:
+                    datasource:
+                      name: ${datasource}
+                    group: prometheus
+                    kind: DataQuery
+                    spec:
+                      expr: >-
+                        sum by(job, cluster)
+                        (istio_agent_go_memstats_heap_sys_bytes{job=~"$job",cluster=~"$cluster",pod=~"$proxy"})
+                      legendFormat: '{{cluster}} - proxy - sys'
+                    version: v0
+                  refId: I
+            queryOptions: {}
+            transformations: []
+        description: >-
+          Heap memory information for the various components of the Istio
+          system.
+        id: 10
+        links: []
+        title: Heap memory
+        vizConfig:
+          group: timeseries
+          kind: VizConfig
+          spec:
+            fieldConfig:
+              defaults:
+                color:
+                  mode: palette-classic
+                custom:
+                  axisBorderShow: false
+                  axisCenteredZero: false
+                  axisColorMode: text
+                  axisLabel: ''
+                  axisPlacement: auto
+                  barAlignment: 0
+                  barWidthFactor: 0.6
+                  drawStyle: line
+                  fillOpacity: 30
+                  gradientMode: opacity
+                  hideFrom:
+                    legend: false
+                    tooltip: false
+                    viz: false
+                  insertNulls: false
+                  lineInterpolation: smooth
+                  lineWidth: 2
+                  pointSize: 5
+                  scaleDistribution:
+                    type: linear
+                  showPoints: never
+                  showValues: false
+                  spanNulls: false
+                  stacking:
+                    group: A
+                    mode: none
+                  thresholdsStyle:
+                    mode: 'off'
+                min: 0
+                thresholds:
+                  mode: absolute
+                  steps:
+                    - color: green
+                      value: 0
+                    - color: red
+                      value: 80
+                unit: bytes
+              overrides:
+                - matcher:
+                    id: byRegexp
+                    options: .*(T|t)otal.*
+                  properties:
+                    - id: color
+                      value:
+                        fixedColor: light-orange
+                        mode: fixed
+                    - id: custom.fillOpacity
+                      value: 0
+                    - id: custom.lineStyle
+                      value:
+                        dash:
+                          - 10
+                          - 10
+                        fill: dash
+            options:
+              legend:
+                calcs:
+                  - min
+                  - max
+                  - mean
+                displayMode: table
+                placement: bottom
+                showLegend: true
+              tooltip:
+                hideZeros: false
+                mode: multi
+                sort: desc
+          version: 12.4.0-19938312174
+    panel-11:
+      kind: Panel
+      spec:
+        data:
+          kind: QueryGroup
+          spec:
+            queries:
+              - kind: PanelQuery
+                spec:
+                  hidden: false
+                  query:
+                    datasource:
+                      name: ${datasource}
+                    group: prometheus
+                    kind: DataQuery
+                    spec:
+                      expr: >-
+                        sum by(job, cluster)
+                        (process_virtual_memory_bytes{job=~"$job",cluster=~"$cluster",pod=~"$istiod"})
+                      legendFormat: '{{cluster}} - istiod - virtual'
+                    version: v0
+                  refId: A
+              - kind: PanelQuery
+                spec:
+                  hidden: false
+                  query:
+                    datasource:
+                      name: ${datasource}
+                    group: prometheus
+                    kind: DataQuery
+                    spec:
+                      expr: >-
+                        sum by(job, cluster)
+                        (process_resident_memory_bytes{job=~"$job",cluster=~"$cluster",pod=~"$istiod"})
+                      legendFormat: '{{cluster}} - istiod - resident'
+                    version: v0
+                  refId: B
+              - kind: PanelQuery
+                spec:
+                  hidden: false
+                  query:
+                    datasource:
+                      name: ${datasource}
+                    group: prometheus
+                    kind: DataQuery
+                    spec:
+                      expr: >-
+                        sum by(job, cluster)
+                        (istio_agent_process_virtual_memory_bytes{job=~"$job",cluster=~"$cluster",pod=~"$gateway"})
+                      legendFormat: '{{cluster}} - gateway - virtual'
+                    version: v0
+                  refId: C
+              - kind: PanelQuery
+                spec:
+                  hidden: false
+                  query:
+                    datasource:
+                      name: ${datasource}
+                    group: prometheus
+                    kind: DataQuery
+                    spec:
+                      expr: >-
+                        sum by(job, cluster)
+                        (istio_agent_process_resident_memory_bytes{job=~"$job",cluster=~"$cluster",pod=~"$gateway"})
+                      legendFormat: '{{cluster}} - gateway - resident'
+                    version: v0
+                  refId: D
+              - kind: PanelQuery
+                spec:
+                  hidden: false
+                  query:
+                    datasource:
+                      name: ${datasource}
+                    group: prometheus
+                    kind: DataQuery
+                    spec:
+                      expr: >-
+                        sum by(job, cluster)
+                        (istio_agent_process_virtual_memory_bytes{job=~"$job",cluster=~"$cluster",pod=~"$proxy"})
+                      legendFormat: '{{cluster}} - proxy - virtual'
+                    version: v0
+                  refId: E
+              - kind: PanelQuery
+                spec:
+                  hidden: false
+                  query:
+                    datasource:
+                      name: ${datasource}
+                    group: prometheus
+                    kind: DataQuery
+                    spec:
+                      expr: >-
+                        sum by(job, cluster)
+                        (istio_agent_process_resident_memory_bytes{job=~"$job",cluster=~"$cluster",pod=~"$proxy"})
+                      legendFormat: '{{cluster}} - proxy - resident'
+                    version: v0
+                  refId: F
+            queryOptions: {}
+            transformations: []
+        description: >-
+          Available virtual memory compared to the resident memory for the
+          various components of the Istio system.
+        id: 11
+        links: []
+        title: Virtual & resident memory
+        vizConfig:
+          group: timeseries
+          kind: VizConfig
+          spec:
+            fieldConfig:
+              defaults:
+                color:
+                  mode: palette-classic
+                custom:
+                  axisBorderShow: false
+                  axisCenteredZero: false
+                  axisColorMode: text
+                  axisLabel: ''
+                  axisPlacement: auto
+                  barAlignment: 0
+                  barWidthFactor: 0.6
+                  drawStyle: line
+                  fillOpacity: 30
+                  gradientMode: opacity
+                  hideFrom:
+                    legend: false
+                    tooltip: false
+                    viz: false
+                  insertNulls: false
+                  lineInterpolation: smooth
+                  lineWidth: 2
+                  pointSize: 5
+                  scaleDistribution:
+                    log: 2
+                    type: log
+                  showPoints: never
+                  showValues: false
+                  spanNulls: false
+                  stacking:
+                    group: A
+                    mode: none
+                  thresholdsStyle:
+                    mode: 'off'
+                min: 0
+                thresholds:
+                  mode: absolute
+                  steps:
+                    - color: green
+                      value: 0
+                    - color: red
+                      value: 80
+                unit: bytes
+              overrides:
+                - matcher:
+                    id: byRegexp
+                    options: .*(T|t)otal.*
+                  properties:
+                    - id: color
+                      value:
+                        fixedColor: light-orange
+                        mode: fixed
+                    - id: custom.fillOpacity
+                      value: 0
+                    - id: custom.lineStyle
+                      value:
+                        dash:
+                          - 10
+                          - 10
+                        fill: dash
+            options:
+              legend:
+                calcs: []
+                displayMode: list
+                placement: right
+                showLegend: true
+              tooltip:
+                hideZeros: false
+                mode: multi
+                sort: desc
+          version: 12.4.0-19938312174
+    panel-12:
+      kind: Panel
+      spec:
+        data:
+          kind: QueryGroup
+          spec:
+            queries:
+              - kind: PanelQuery
+                spec:
+                  hidden: false
+                  query:
+                    datasource:
+                      name: ${datasource}
+                    group: prometheus
+                    kind: DataQuery
+                    spec:
+                      expr: >-
+                        sum by(job, cluster)
+                        (rate(istio_requests_total{job=~"$job",cluster=~"$cluster",pod=~"$gateway",
+                        reporter="source"}[$__rate_interval]))
+                      legendFormat: '{{cluster}} - gateway'
+                    version: v0
+                  refId: A
+              - kind: PanelQuery
+                spec:
+                  hidden: false
+                  query:
+                    datasource:
+                      name: ${datasource}
+                    group: prometheus
+                    kind: DataQuery
+                    spec:
+                      expr: >-
+                        sum by(job, cluster)
+                        (rate(istio_requests_total{job=~"$job",cluster=~"$cluster",pod=~"$proxy",
+                        reporter="source"}[$__rate_interval]))
+                      legendFormat: '{{cluster}} - proxy'
+                    version: v0
+                  refId: B
+            queryOptions: {}
+            transformations: []
+        description: HTTP/GRPC request rate for the components of the Istio system.
+        id: 12
+        links: []
+        title: HTTP/GRPC requests
+        vizConfig:
+          group: timeseries
+          kind: VizConfig
+          spec:
+            fieldConfig:
+              defaults:
+                color:
+                  mode: palette-classic
+                custom:
+                  axisBorderShow: false
+                  axisCenteredZero: false
+                  axisColorMode: text
+                  axisLabel: ''
+                  axisPlacement: auto
+                  barAlignment: 0
+                  barWidthFactor: 0.6
+                  drawStyle: line
+                  fillOpacity: 30
+                  gradientMode: opacity
+                  hideFrom:
+                    legend: false
+                    tooltip: false
+                    viz: false
+                  insertNulls: false
+                  lineInterpolation: smooth
+                  lineWidth: 2
+                  pointSize: 5
+                  scaleDistribution:
+                    type: linear
+                  showPoints: never
+                  showValues: false
+                  spanNulls: false
+                  stacking:
+                    group: A
+                    mode: normal
+                  thresholdsStyle:
+                    mode: 'off'
+                thresholds:
+                  mode: absolute
+                  steps:
+                    - color: green
+                      value: 0
+                    - color: red
+                      value: 80
+                unit: reqps
+              overrides: []
+            options:
+              legend:
+                calcs: []
+                displayMode: list
+                placement: right
+                showLegend: true
+              tooltip:
+                hideZeros: false
+                mode: multi
+                sort: desc
+          version: 12.4.0-19938312174
+    panel-13:
+      kind: Panel
+      spec:
+        data:
+          kind: QueryGroup
+          spec:
+            queries:
+              - kind: PanelQuery
+                spec:
+                  hidden: false
+                  query:
+                    datasource:
+                      name: ${datasource}
+                    group: prometheus
+                    kind: DataQuery
+                    spec:
+                      expr: >-
+                        increase(sum by(job, cluster)
+                        (istio_requests_total{job=~"$job",cluster=~"$cluster",pod=~"$gateway",
+                        reporter="source", request_protocol="http",
+                        response_code=~"[123].+"})[$__interval:])
+                      interval: 1m
+                      legendFormat: '{{cluster}} - gateway - ok'
+                    version: v0
+                  refId: A
+              - kind: PanelQuery
+                spec:
+                  hidden: false
+                  query:
+                    datasource:
+                      name: ${datasource}
+                    group: prometheus
+                    kind: DataQuery
+                    spec:
+                      expr: >-
+                        increase(sum by(job, cluster)
+                        (istio_requests_total{job=~"$job",cluster=~"$cluster",pod=~"$gateway",
+                        reporter="source", request_protocol="http",
+                        response_code=~"[45].+"})[$__interval:])
+                      interval: 1m
+                      legendFormat: '{{cluster}} - gateway - error'
+                    version: v0
+                  refId: B
+              - kind: PanelQuery
+                spec:
+                  hidden: false
+                  query:
+                    datasource:
+                      name: ${datasource}
+                    group: prometheus
+                    kind: DataQuery
+                    spec:
+                      expr: >-
+                        increase(sum by(job, cluster)
+                        (istio_requests_total{job=~"$job",cluster=~"$cluster",pod=~"$proxy",
+                        reporter="source", request_protocol="http",
+                        response_code=~"[123].+"})[$__interval:])
+                      interval: 1m
+                      legendFormat: '{{cluster}} - proxy - ok'
+                    version: v0
+                  refId: C
+              - kind: PanelQuery
+                spec:
+                  hidden: false
+                  query:
+                    datasource:
+                      name: ${datasource}
+                    group: prometheus
+                    kind: DataQuery
+                    spec:
+                      expr: >-
+                        increase(sum by(job, cluster)
+                        (istio_requests_total{job=~"$job",cluster=~"$cluster",pod=~"$proxy",
+                        reporter="source", request_protocol="http",
+                        response_code=~"[45].+"})[$__interval:])
+                      interval: 1m
+                      legendFormat: '{{cluster}} - proxy - error'
+                    version: v0
+                  refId: D
+            queryOptions: {}
+            transformations: []
+        description: >-
+          Recent number of successful (1xx, 2xx, 3xx) vs error (4xx, 5xx) HTTP
+          responses received by various components of the Istio system.
+        id: 13
+        links: []
+        title: HTTP response overview
+        vizConfig:
+          group: piechart
+          kind: VizConfig
+          spec:
+            fieldConfig:
+              defaults:
+                color:
+                  mode: palette-classic
+                custom:
+                  hideFrom:
+                    legend: false
+                    tooltip: false
+                    viz: false
+              overrides: []
+            options:
+              legend:
+                displayMode: list
+                placement: right
+                showLegend: true
+              pieType: pie
+              reduceOptions:
+                calcs:
+                  - sum
+                fields: ''
+                values: false
+              sort: desc
+              tooltip:
+                hideZeros: false
+                mode: multi
+                sort: desc
+          version: 12.4.0-19938312174
+    panel-15:
+      kind: Panel
+      spec:
+        data:
+          kind: QueryGroup
+          spec:
+            queries:
+              - kind: PanelQuery
+                spec:
+                  hidden: false
+                  query:
+                    datasource:
+                      name: ${datasource}
+                    group: prometheus
+                    kind: DataQuery
+                    spec:
+                      expr: >-
+                        increase(sum by (job, cluster)
+                        (pilot_xds_pushes{job=~"$job",cluster=~"$cluster",pod=~"$istiod",
+                        type="cds"})[$__interval:])
+                      interval: 1m
+                      legendFormat: '{{cluster}} - CDS'
+                    version: v0
+                  refId: A
+              - kind: PanelQuery
+                spec:
+                  hidden: false
+                  query:
+                    datasource:
+                      name: ${datasource}
+                    group: prometheus
+                    kind: DataQuery
+                    spec:
+                      expr: >-
+                        increase(sum by (job, cluster)
+                        (pilot_xds_pushes{job=~"$job",cluster=~"$cluster",pod=~"$istiod",
+                        type="eds"})[$__interval:])
+                      interval: 1m
+                      legendFormat: '{{cluster}} - EDS'
+                    version: v0
+                  refId: B
+              - kind: PanelQuery
+                spec:
+                  hidden: false
+                  query:
+                    datasource:
+                      name: ${datasource}
+                    group: prometheus
+                    kind: DataQuery
+                    spec:
+                      expr: >-
+                        increase(sum by (job, cluster)
+                        (pilot_xds_pushes{job=~"$job",cluster=~"$cluster",pod=~"$istiod",
+                        type="lds"})[$__interval:])
+                      interval: 1m
+                      legendFormat: '{{cluster}} - LDS'
+                    version: v0
+                  refId: C
+              - kind: PanelQuery
+                spec:
+                  hidden: false
+                  query:
+                    datasource:
+                      name: ${datasource}
+                    group: prometheus
+                    kind: DataQuery
+                    spec:
+                      expr: >-
+                        increase(sum by (job, cluster)
+                        (pilot_xds_pushes{job=~"$job",cluster=~"$cluster",pod=~"$istiod",
+                        type="rds"})[$__interval:])
+                      interval: 1m
+                      legendFormat: '{{cluster}} - RDS'
+                    version: v0
+                  refId: D
+              - kind: PanelQuery
+                spec:
+                  hidden: false
+                  query:
+                    datasource:
+                      name: ${datasource}
+                    group: prometheus
+                    kind: DataQuery
+                    spec:
+                      expr: >-
+                        increase(sum by (job, cluster)
+                        (pilot_xds_pushes{job=~"$job",cluster=~"$cluster",pod=~"$istiod",
+                        type="sds"})[$__interval:])
+                      interval: 1m
+                      legendFormat: '{{cluster}} - SDS'
+                    version: v0
+                  refId: E
+              - kind: PanelQuery
+                spec:
+                  hidden: false
+                  query:
+                    datasource:
+                      name: ${datasource}
+                    group: prometheus
+                    kind: DataQuery
+                    spec:
+                      expr: >-
+                        increase(sum by (job, cluster)
+                        (pilot_xds_pushes{job=~"$job",cluster=~"$cluster",pod=~"$istiod",
+                        type="nds"})[$__interval:])
+                      interval: 1m
+                      legendFormat: '{{cluster}} - NDS'
+                    version: v0
+                  refId: F
+            queryOptions: {}
+            transformations: []
+        description: >-
+          Number of xDS pushes by Istiod over the entire time range for the
+          Istio system.
+        id: 15
+        links: []
+        title: xDS pushes
+        vizConfig:
+          group: bargauge
+          kind: VizConfig
+          spec:
+            fieldConfig:
+              defaults:
+                thresholds:
+                  steps:
+                    - color: super-light-green
+              overrides: []
+            options:
+              orientation: horizontal
+              reduceOptions:
+                calcs:
+                  - sum
+          version: v10.0.0
+    panel-16:
+      kind: Panel
+      spec:
+        data:
+          kind: QueryGroup
+          spec:
+            queries:
+              - kind: PanelQuery
+                spec:
+                  hidden: false
+                  query:
+                    datasource:
+                      name: ${datasource}
+                    group: prometheus
+                    kind: DataQuery
+                    spec:
+                      expr: >-
+                        sum by(le, job, cluster)
+                        (increase(pilot_proxy_convergence_time_bucket{job=~"$job",cluster=~"$cluster",pod=~"$istiod"}[$__range:]))
+                      format: heatmap
+                      instant: true
+                      interval: 1m
+                      legendFormat: '{{cluster}}'
+                    version: v0
+                  refId: A
+            queryOptions: {}
+            transformations: []
+        description: >-
+          The latency of xDS pushes by Istiod over the entire time range for the
+          Istio system.
+        id: 16
+        links: []
+        title: xDS push delay (s)
+        vizConfig:
+          group: histogram
+          kind: VizConfig
+          spec:
+            fieldConfig:
+              defaults:
+                color:
+                  mode: thresholds
+                thresholds:
+                  steps:
+                    - color: super-light-green
+              overrides: []
+            options:
+              legend:
+                placement: right
+                showLegend: true
+          version: v10.0.0
+    panel-17:
+      kind: Panel
+      spec:
+        data:
+          kind: QueryGroup
+          spec:
+            queries:
+              - kind: PanelQuery
+                spec:
+                  hidden: false
+                  query:
+                    datasource:
+                      name: ${datasource}
+                    group: prometheus
+                    kind: DataQuery
+                    spec:
+                      expr: >-
+                        increase(sum by(job, cluster)
+                        (galley_validation_passed{job=~"$job",cluster=~"$cluster",pod=~"$istiod"})[$__interval:])
+                      interval: 1m
+                      legendFormat: '{{cluster}} - passed'
+                    version: v0
+                  refId: A
+              - kind: PanelQuery
+                spec:
+                  hidden: false
+                  query:
+                    datasource:
+                      name: ${datasource}
+                    group: prometheus
+                    kind: DataQuery
+                    spec:
+                      expr: >-
+                        increase(sum by(job, cluster)
+                        (galley_validation_failed{job=~"$job",cluster=~"$cluster",pod=~"$istiod"})[$__interval:])
+                      interval: 1m
+                      legendFormat: '{{cluster}} - failed'
+                    version: v0
+                  refId: B
+            queryOptions: {}
+            transformations: []
+        description: >-
+          Number of galley validations over the entire time range for the Istio
+          system.
+        id: 17
+        links: []
+        title: Galley validations
+        vizConfig:
+          group: bargauge
+          kind: VizConfig
+          spec:
+            fieldConfig:
+              defaults:
+                thresholds:
+                  steps:
+                    - color: super-light-green
+              overrides: []
+            options:
+              orientation: horizontal
+              reduceOptions:
+                calcs:
+                  - sum
+          version: v10.0.0
+    panel-18:
+      kind: Panel
+      spec:
+        data:
+          kind: QueryGroup
+          spec:
+            queries:
+              - kind: PanelQuery
+                spec:
+                  hidden: false
+                  query:
+                    datasource:
+                      name: ${datasource}
+                    group: prometheus
+                    kind: DataQuery
+                    spec:
+                      expr: >-
+                        sum by(job, cluster)
+                        (rate(envoy_cluster_upstream_cx_rx_bytes_total{job=~"$job",cluster=~"$cluster",
+                        cluster_name="xds-grpc"}[$__rate_interval]))
+                      legendFormat: '{{cluster}} - sent'
+                    version: v0
+                  refId: A
+              - kind: PanelQuery
+                spec:
+                  hidden: false
+                  query:
+                    datasource:
+                      name: ${datasource}
+                    group: prometheus
+                    kind: DataQuery
+                    spec:
+                      expr: >-
+                        sum by(job, cluster)
+                        (rate(envoy_cluster_upstream_cx_tx_bytes_total{job=~"$job",cluster=~"$cluster",
+                        cluster_name="xds-grpc"}[$__rate_interval]))
+                      legendFormat: '{{cluster}} - received'
+                    version: v0
+                  refId: B
+            queryOptions: {}
+            transformations: []
+        description: >-
+          The send and receive data rates from all envoy proxies in the Istio
+          system.
+        id: 18
+        links: []
+        title: xDS envoy throughput
+        vizConfig:
+          group: timeseries
+          kind: VizConfig
+          spec:
+            fieldConfig:
+              defaults:
+                custom:
+                  fillOpacity: 30
+                  gradientMode: opacity
+                  lineInterpolation: smooth
+                  lineWidth: 2
+                  showPoints: never
+                unit: Bps
+              overrides: []
+            options:
+              legend:
+                calcs: []
+                displayMode: list
+                placement: right
+                showLegend: true
+              tooltip:
+                mode: multi
+                sort: desc
+          version: v10.0.0
+    panel-19:
+      kind: Panel
+      spec:
+        data:
+          kind: QueryGroup
+          spec:
+            queries:
+              - kind: PanelQuery
+                spec:
+                  hidden: false
+                  query:
+                    datasource:
+                      name: ${datasource}
+                    group: prometheus
+                    kind: DataQuery
+                    spec:
+                      expr: >-
+                        increase(sum by (job, cluster)
+                        (pilot_xds_cds_reject{job=~"$job",cluster=~"$cluster",pod=~"$istiod"})[$__interval:])
+                      interval: 1m
+                      legendFormat: '{{cluster}} - CDS reject'
+                    version: v0
+                  refId: A
+              - kind: PanelQuery
+                spec:
+                  hidden: false
+                  query:
+                    datasource:
+                      name: ${datasource}
+                    group: prometheus
+                    kind: DataQuery
+                    spec:
+                      expr: >-
+                        increase(sum by (job, cluster)
+                        (pilot_xds_eds_reject{job=~"$job",cluster=~"$cluster",pod=~"$istiod"})[$__interval:])
+                      interval: 1m
+                      legendFormat: '{{cluster}} - EDS reject'
+                    version: v0
+                  refId: B
+              - kind: PanelQuery
+                spec:
+                  hidden: false
+                  query:
+                    datasource:
+                      name: ${datasource}
+                    group: prometheus
+                    kind: DataQuery
+                    spec:
+                      expr: >-
+                        increase(sum by (job, cluster)
+                        (pilot_xds_rds_reject{job=~"$job",cluster=~"$cluster",pod=~"$istiod"})[$__interval:])
+                      interval: 1m
+                      legendFormat: '{{cluster}} - RDS reject'
+                    version: v0
+                  refId: C
+              - kind: PanelQuery
+                spec:
+                  hidden: false
+                  query:
+                    datasource:
+                      name: ${datasource}
+                    group: prometheus
+                    kind: DataQuery
+                    spec:
+                      expr: >-
+                        increase(sum by (job, cluster)
+                        (pilot_xds_lds_reject{job=~"$job",cluster=~"$cluster",pod=~"$istiod"})[$__interval:])
+                      interval: 1m
+                      legendFormat: '{{cluster}} - LDS reject'
+                    version: v0
+                  refId: D
+              - kind: PanelQuery
+                spec:
+                  hidden: false
+                  query:
+                    datasource:
+                      name: ${datasource}
+                    group: prometheus
+                    kind: DataQuery
+                    spec:
+                      expr: >-
+                        increase(sum by (job, cluster)
+                        (pilot_xds_write_timeout{job=~"$job",cluster=~"$cluster",pod=~"$istiod"})[$__interval:])
+                      interval: 1m
+                      legendFormat: '{{cluster}} - write timeout'
+                    version: v0
+                  refId: E
+              - kind: PanelQuery
+                spec:
+                  hidden: false
+                  query:
+                    datasource:
+                      name: ${datasource}
+                    group: prometheus
+                    kind: DataQuery
+                    spec:
+                      expr: >-
+                        increase(sum by (job, cluster)
+                        (pilot_total_xds_internal_errors{job=~"$job",cluster=~"$cluster",pod=~"$istiod"})[$__interval:])
+                      interval: 1m
+                      legendFormat: '{{cluster}} - internal'
+                    version: v0
+                  refId: F
+              - kind: PanelQuery
+                spec:
+                  hidden: false
+                  query:
+                    datasource:
+                      name: ${datasource}
+                    group: prometheus
+                    kind: DataQuery
+                    spec:
+                      expr: >-
+                        increase(sum by (job, cluster)
+                        (pilot_total_xds_rejects{job=~"$job",cluster=~"$cluster",pod=~"$istiod"})[$__interval:])
+                      interval: 1m
+                      legendFormat: '{{cluster}} - proxy rejects'
+                    version: v0
+                  refId: G
+              - kind: PanelQuery
+                spec:
+                  hidden: false
+                  query:
+                    datasource:
+                      name: ${datasource}
+                    group: prometheus
+                    kind: DataQuery
+                    spec:
+                      expr: >-
+                        increase(sum by (job, cluster)
+                        (pilot_conflict_inbound_listener{job=~"$job",cluster=~"$cluster",pod=~"$istiod"})[$__interval:])
+                      interval: 1m
+                      legendFormat: '{{cluster}} - in listener conflict'
+                    version: v0
+                  refId: H
+              - kind: PanelQuery
+                spec:
+                  hidden: false
+                  query:
+                    datasource:
+                      name: ${datasource}
+                    group: prometheus
+                    kind: DataQuery
+                    spec:
+                      expr: >-
+                        increase(sum by (job, cluster)
+                        (pilot_conflict_outbound_listener_tcp_over_current_tcp{job=~"$job",cluster=~"$cluster",pod=~"$istiod"})[$__interval:])
+                      interval: 1m
+                      legendFormat: '{{cluster}} - out listener tcp conflict'
+                    version: v0
+                  refId: I
+            queryOptions: {}
+            transformations: []
+        description: The xDS related errors across the Istio system.
+        id: 19
+        links: []
+        title: xDS errors / $__interval
+        vizConfig:
+          group: timeseries
+          kind: VizConfig
+          spec:
+            fieldConfig:
+              defaults:
+                custom:
+                  fillOpacity: 30
+                  gradientMode: opacity
+                  lineInterpolation: smooth
+                  lineWidth: 2
+                  showPoints: never
+              overrides: []
+            options:
+              legend:
+                calcs:
+                  - min
+                  - max
+                  - mean
+                displayMode: table
+                showLegend: true
+              tooltip:
+                mode: multi
+                sort: desc
+          version: v10.0.0
+    panel-2:
+      kind: Panel
+      spec:
+        data:
+          kind: QueryGroup
+          spec:
+            queries:
+              - kind: PanelQuery
+                spec:
+                  hidden: false
+                  query:
+                    datasource:
+                      name: ${datasource}
+                    group: prometheus
+                    kind: DataQuery
+                    spec:
+                      expr: >-
+                        max(pilot_k8s_cfg_events{job=~"$job",cluster=~"$cluster",
+                        type="Gateway", event="add"}) -
+                        (max(pilot_k8s_cfg_events{job=~"$job",cluster=~"$cluster",
+                        type="Gateway", event="delete"}) or max(up * 0))
+                    version: v0
+                  refId: A
+            queryOptions: {}
+            transformations: []
+        description: Number of gateways in the Istio system.
+        id: 2
+        links: []
+        title: Gateways
+        vizConfig:
+          group: stat
+          kind: VizConfig
+          spec:
+            fieldConfig:
+              defaults:
+                color:
+                  mode: thresholds
+                thresholds:
+                  mode: absolute
+                  steps:
+                    - color: text
+                      value: 0
+                    - color: super-light-green
+                      value: 1
+              overrides: []
+            options:
+              colorMode: value
+              graphMode: none
+              justifyMode: auto
+              orientation: auto
+              percentChangeColorMode: standard
+              reduceOptions:
+                calcs:
+                  - lastNotNull
+                fields: ''
+                values: false
+              showPercentChange: false
+              textMode: auto
+              wideLayout: true
+          version: 12.4.0-19938312174
+    panel-20:
+      kind: Panel
+      spec:
+        data:
+          kind: QueryGroup
+          spec:
+            queries:
+              - kind: PanelQuery
+                spec:
+                  hidden: false
+                  query:
+                    datasource:
+                      name: ${datasource}
+                    group: prometheus
+                    kind: DataQuery
+                    spec:
+                      expr: >-
+                        increase(sum by (job, cluster)
+                        (sidecar_injection_success_total{job=~"$job",cluster=~"$cluster",pod=~"$istiod"})[$__interval:])
+                      interval: 1m
+                      legendFormat: '{{cluster}} - success'
+                    version: v0
+                  refId: A
+              - kind: PanelQuery
+                spec:
+                  hidden: false
+                  query:
+                    datasource:
+                      name: ${datasource}
+                    group: prometheus
+                    kind: DataQuery
+                    spec:
+                      expr: >-
+                        increase(sum by (job, cluster)
+                        (sidecar_injection_failure_total{job=~"$job",cluster=~"$cluster",pod=~"$istiod"})[$__interval:])
+                      interval: 1m
+                      legendFormat: '{{cluster}} - failure'
+                    version: v0
+                  refId: B
+            queryOptions: {}
+            transformations: []
+        description: >-
+          Number of sidecar injections over the entire time range for the Istio
+          system.
+        id: 20
+        links: []
+        title: Sidecar injections
+        vizConfig:
+          group: bargauge
+          kind: VizConfig
+          spec:
+            fieldConfig:
+              defaults:
+                thresholds:
+                  steps:
+                    - color: super-light-green
+              overrides: []
+            options:
+              orientation: horizontal
+              reduceOptions:
+                calcs:
+                  - sum
+          version: v10.0.0
+    panel-22:
+      kind: Panel
+      spec:
+        data:
+          kind: QueryGroup
+          spec:
+            queries:
+              - kind: PanelQuery
+                spec:
+                  hidden: false
+                  query:
+                    datasource:
+                      name: ${datasource}
+                    group: prometheus
+                    kind: DataQuery
+                    spec:
+                      expr: >-
+                        sum by(job, cluster, service)
+                        (label_replace(rate(istio_requests_total{job=~"$job",cluster=~"$cluster",
+                        reporter="source"}[$__rate_interval]), "service", "$1",
+                        "source_canonical_service", "(.*)"))
+                      format: table
+                      instant: true
+                    version: v0
+                  refId: A
+              - kind: PanelQuery
+                spec:
+                  hidden: false
+                  query:
+                    datasource:
+                      name: ${datasource}
+                    group: prometheus
+                    kind: DataQuery
+                    spec:
+                      expr: >-
+                        sum by(job, cluster, service)
+                        (label_replace(rate(istio_requests_total{job=~"$job",cluster=~"$cluster",
+                        reporter="destination"}[$__rate_interval]), "service",
+                        "$1", "destination_canonical_service", "(.*)"))
+                      format: table
+                      instant: true
+                    version: v0
+                  refId: B
+              - kind: PanelQuery
+                spec:
+                  hidden: false
+                  query:
+                    datasource:
+                      name: ${datasource}
+                    group: prometheus
+                    kind: DataQuery
+                    spec:
+                      expr: >
+                        sum by(job, cluster, service)
+                        (label_replace(increase(istio_request_duration_milliseconds_sum{job=~"$job",cluster=~"$cluster",
+                        reporter="source"}[$__rate_interval:]), "service", "$1",
+                        "source_canonical_service", "(.*)"))
+
+                        /
+
+                        clamp_min(sum by(job, cluster, service)
+                        (label_replace(increase(istio_request_duration_milliseconds_count{job=~"$job",cluster=~"$cluster",
+                        reporter="source"}[$__rate_interval:]), "service", "$1",
+                        "source_canonical_service", "(.*)")), 1)
+                      format: table
+                      instant: true
+                      interval: 1m
+                    version: v0
+                  refId: C
+              - kind: PanelQuery
+                spec:
+                  hidden: false
+                  query:
+                    datasource:
+                      name: ${datasource}
+                    group: prometheus
+                    kind: DataQuery
+                    spec:
+                      expr: >
+                        sum by(job, cluster, service)
+                        (label_replace(increase(istio_request_duration_milliseconds_sum{job=~"$job",cluster=~"$cluster",
+                        reporter="destination"}[$__rate_interval:]), "service",
+                        "$1", "destination_canonical_service", "(.*)"))
+
+                        /
+
+                        clamp_min(sum by(job, cluster, service)
+                        (label_replace(increase(istio_request_duration_milliseconds_count{job=~"$job",cluster=~"$cluster",
+                        reporter="destination"}[$__rate_interval:]), "service",
+                        "$1", "destination_canonical_service", "(.*)")), 1)
+                      format: table
+                      instant: true
+                      interval: 1m
+                    version: v0
+                  refId: D
+              - kind: PanelQuery
+                spec:
+                  hidden: false
+                  query:
+                    datasource:
+                      name: ${datasource}
+                    group: prometheus
+                    kind: DataQuery
+                    spec:
+                      expr: >
+                        100 * sum by(job, cluster, service)
+                        (label_replace(increase(istio_requests_total{job=~"$job",cluster=~"$cluster",
+                        reporter="source", request_protocol="http",
+                        response_code=~"[123].+"}[$__rate_interval:]),
+                        "service", "$1", "source_canonical_service", "(.*)"))
+
+                        /
+
+                        clamp_min(sum by(job, cluster, service)
+                        (label_replace(increase(istio_requests_total{job=~"$job",cluster=~"$cluster",
+                        reporter="source",
+                        request_protocol="http"}[$__rate_interval:]), "service",
+                        "$1", "source_canonical_service", "(.*)")), 1)
+                      format: table
+                      instant: true
+                      interval: 1m
+                    version: v0
+                  refId: E
+              - kind: PanelQuery
+                spec:
+                  hidden: false
+                  query:
+                    datasource:
+                      name: ${datasource}
+                    group: prometheus
+                    kind: DataQuery
+                    spec:
+                      expr: >
+                        100 * sum by(job, cluster, service)
+                        (label_replace(increase(istio_requests_total{job=~"$job",cluster=~"$cluster",
+                        reporter="destination", request_protocol="http",
+                        response_code=~"[123].+"}[$__rate_interval:]),
+                        "service", "$1", "destination_canonical_service",
+                        "(.*)"))
+
+                        /
+
+                        clamp_min(sum by(job, cluster, service)
+                        (label_replace(increase(istio_requests_total{job=~"$job",cluster=~"$cluster",
+                        reporter="destination",
+                        request_protocol="http"}[$__rate_interval:]), "service",
+                        "$1", "destination_canonical_service", "(.*)")), 1)
+                      format: table
+                      instant: true
+                      interval: 1m
+                    version: v0
+                  refId: F
+              - kind: PanelQuery
+                spec:
+                  hidden: false
+                  query:
+                    datasource:
+                      name: ${datasource}
+                    group: prometheus
+                    kind: DataQuery
+                    spec:
+                      expr: >-
+                        sum by(job, cluster, service)
+                        (label_replace(rate(istio_tcp_received_bytes_total{job=~"$job",cluster=~"$cluster",
+                        reporter="source"}[$__rate_interval]), "service", "$1",
+                        "source_canonical_service", "(.*)"))
+                      format: table
+                      instant: true
+                    version: v0
+                  refId: G
+              - kind: PanelQuery
+                spec:
+                  hidden: false
+                  query:
+                    datasource:
+                      name: ${datasource}
+                    group: prometheus
+                    kind: DataQuery
+                    spec:
+                      expr: >-
+                        sum by(job, cluster, service)
+                        (label_replace(rate(istio_tcp_sent_bytes_total{job=~"$job",cluster=~"$cluster",
+                        reporter="destination"}[$__rate_interval]), "service",
+                        "$1", "destination_canonical_service", "(.*)"))
+                      format: table
+                      instant: true
+                    version: v0
+                  refId: H
+            queryOptions: {}
+            transformations:
+              - kind: merge
+                spec:
+                  id: merge
+                  options: {}
+              - kind: organize
+                spec:
+                  id: organize
+                  options:
+                    excludeByName:
+                      Time: true
+                    includeByName: {}
+                    indexByName:
+                      Time: 0
+                      'Value #A': 4
+                      'Value #B': 7
+                      'Value #C': 5
+                      'Value #D': 8
+                      'Value #E': 6
+                      'Value #F': 9
+                      'Value #G': 10
+                      'Value #H': 11
+                      cluster: 1
+                      job: 2
+                      service: 3
+                    renameByName:
+                      'Value #A': HTTP/GRPC tx
+                      'Value #B': HTTP/GRPC rx
+                      'Value #C': HTTP/GRPC tx delay
+                      'Value #D': HTTP/GRPC rx delay
+                      'Value #E': HTTP tx success
+                      'Value #F': HTTP rx success
+                      'Value #G': TCP tx
+                      'Value #H': TCP rx
+                      cluster: Cluster
+                      job: Job
+                      service: Service
+        description: Service details for the Istio system.
+        id: 22
+        links: []
+        title: Services
+        vizConfig:
+          group: table
+          kind: VizConfig
+          spec:
+            fieldConfig:
+              defaults:
+                noValue: NA
+              overrides:
+                - matcher:
+                    id: byName
+                    options: job
+                  properties:
+                    - id: custom.hidden
+                      value: 'true'
+                - matcher:
+                    id: byName
+                    options: Service
+                  properties:
+                    - id: links
+                      value:
+                        - title: ''
+                          url: >-
+                            d/istio-services-overview?var-datasource=${datasource}&var-job=${__data.fields["Job"]}&var-cluster=${__data.fields["Cluster"]}&var-service=${__value.raw}&${__url_time_range}
+                - matcher:
+                    id: byName
+                    options: HTTP/GRPC tx delay
+                  properties:
+                    - id: custom.width
+                      value: 157
+                    - id: custom.align
+                      value: left
+                    - id: unit
+                      value: ms
+                - matcher:
+                    id: byName
+                    options: HTTP/GRPC rx delay
+                  properties:
+                    - id: custom.width
+                      value: 157
+                    - id: custom.align
+                      value: left
+                    - id: unit
+                      value: ms
+                - matcher:
+                    id: byName
+                    options: HTTP/GRPC tx
+                  properties:
+                    - id: custom.align
+                      value: left
+                    - id: unit
+                      value: reqps
+                - matcher:
+                    id: byName
+                    options: HTTP/GRPC rx
+                  properties:
+                    - id: custom.align
+                      value: left
+                    - id: unit
+                      value: reqps
+                - matcher:
+                    id: byName
+                    options: HTTP tx success
+                  properties:
+                    - id: custom.align
+                      value: left
+                    - id: unit
+                      value: percent
+                - matcher:
+                    id: byName
+                    options: HTTP rx success
+                  properties:
+                    - id: custom.align
+                      value: left
+                    - id: unit
+                      value: percent
+                - matcher:
+                    id: byName
+                    options: TCP tx
+                  properties:
+                    - id: custom.align
+                      value: left
+                    - id: unit
+                      value: Bps
+                - matcher:
+                    id: byName
+                    options: TCP rx
+                  properties:
+                    - id: custom.align
+                      value: left
+                    - id: unit
+                      value: Bps
+            options:
+              footer:
+                options:
+                  footer:
+                    reducer:
+                      - sum
+          version: v10.0.0
+    panel-23:
+      kind: Panel
+      spec:
+        data:
+          kind: QueryGroup
+          spec:
+            queries:
+              - kind: PanelQuery
+                spec:
+                  hidden: false
+                  query:
+                    group: prometheus
+                    kind: DataQuery
+                    spec:
+                      expr: |
+                        sum without(instance, pod) (up{job=~"$job"})
+                    version: v0
+                  refId: A
+            queryOptions: {}
+            transformations: []
+        description: Shows if metrics are being received for the selected time range.
+        id: 23
+        links: []
+        title: Metrics
+        vizConfig:
+          group: stat
+          kind: VizConfig
+          spec:
+            fieldConfig:
+              defaults:
+                color:
+                  fixedColor: text
+                  mode: fixed
+                mappings:
+                  - options:
+                      match: 'null'
+                      result:
+                        color: light-red
+                        index: 0
+                        text: No metrics received - Check configuration
+                    type: special
+                  - options:
+                      from: 0
+                      result:
+                        color: light-red
+                        index: 1
+                        text: Failed to collect metrics
+                      to: 0
+                    type: range
+                  - options:
+                      from: 1
+                      result:
+                        color: light-green
+                        index: 2
+                        text: Receiving metrics
+                      to: 1000000
+                    type: range
+                noValue: No data
+                thresholds:
+                  mode: absolute
+                  steps:
+                    - color: green
+                      value: 0
+                    - color: red
+                      value: 80
+                unit: string
+              overrides: []
+            options:
+              colorMode: background
+              graphMode: none
+              justifyMode: auto
+              orientation: auto
+              percentChangeColorMode: standard
+              reduceOptions:
+                calcs:
+                  - lastNotNull
+                fields: ''
+                values: false
+              showPercentChange: false
+              textMode: auto
+              wideLayout: true
+          version: 12.4.0-19938312174
+    panel-24:
+      kind: Panel
+      spec:
+        data:
+          kind: QueryGroup
+          spec:
+            queries:
+              - kind: PanelQuery
+                spec:
+                  hidden: false
+                  query:
+                    group: prometheus
+                    kind: DataQuery
+                    spec:
+                      expr: |
+                        sum without(instance, pod) (up{job=~"$job"})
+                    version: v0
+                  refId: A
+            queryOptions:
+              timeFrom: now-24h
+            transformations: []
+        description: >-
+          Shows the timestamp of the latest metrics received for this
+          integration in the last 24 hours.
+        id: 24
+        links: []
+        title: Latest metrics received
+        vizConfig:
+          group: stat
+          kind: VizConfig
+          spec:
+            fieldConfig:
+              defaults:
+                color:
+                  fixedColor: text
+                  mode: fixed
+                noValue: No data
+                thresholds:
+                  mode: absolute
+                  steps:
+                    - color: green
+                      value: 0
+                    - color: red
+                      value: 80
+                unit: dateTimeFromNow
+              overrides: []
+            options:
+              colorMode: background
+              graphMode: none
+              justifyMode: auto
+              orientation: auto
+              percentChangeColorMode: standard
+              reduceOptions:
+                calcs:
+                  - lastNotNull
+                fields: Time
+                values: false
+              showPercentChange: false
+              textMode: auto
+              wideLayout: true
+          version: 12.4.0-19938312174
+    panel-25:
+      kind: Panel
+      spec:
+        data:
+          kind: QueryGroup
+          spec:
+            queries:
+              - kind: PanelQuery
+                spec:
+                  hidden: false
+                  query:
+                    group: ''
+                    kind: DataQuery
+                    spec: {}
+                    version: v0
+                  refId: A
+            queryOptions: {}
+            transformations: []
+        description: Shows the installed version of this integration.
+        id: 25
+        links: []
+        title: Integration version
+        vizConfig:
+          group: stat
+          kind: VizConfig
+          spec:
+            fieldConfig:
+              defaults:
+                color:
+                  fixedColor: text
+                  mode: fixed
+                noValue: 1.0.2
+                thresholds:
+                  mode: absolute
+                  steps:
+                    - color: green
+                      value: 0
+                    - color: red
+                      value: 80
+                unit: string
+              overrides: []
+            options:
+              colorMode: value
+              graphMode: area
+              justifyMode: auto
+              orientation: auto
+              percentChangeColorMode: standard
+              reduceOptions:
+                calcs:
+                  - lastNotNull
+                fields: ''
+                values: false
+              showPercentChange: false
+              textMode: auto
+              wideLayout: true
+          version: 12.4.0-19938312174
+    panel-3:
+      kind: Panel
+      spec:
+        data:
+          kind: QueryGroup
+          spec:
+            queries:
+              - kind: PanelQuery
+                spec:
+                  hidden: false
+                  query:
+                    datasource:
+                      name: ${datasource}
+                    group: prometheus
+                    kind: DataQuery
+                    spec:
+                      expr: >-
+                        max(pilot_k8s_cfg_events{job=~"$job",cluster=~"$cluster",
+                        type="VirtualService", event="add"}) -
+                        (max(pilot_k8s_cfg_events{job=~"$job",cluster=~"$cluster",
+                        type="VirtualService", event="delete"}) or (max(up) *
+                        0))
+                    version: v0
+                  refId: A
+            queryOptions: {}
+            transformations: []
+        description: Number of virtual services in the Istio system.
+        id: 3
+        links: []
+        title: Virtual services
+        vizConfig:
+          group: stat
+          kind: VizConfig
+          spec:
+            fieldConfig:
+              defaults:
+                color:
+                  mode: thresholds
+                thresholds:
+                  mode: absolute
+                  steps:
+                    - color: text
+                      value: 0
+                    - color: super-light-green
+                      value: 1
+              overrides: []
+            options:
+              colorMode: value
+              graphMode: none
+              justifyMode: auto
+              orientation: auto
+              percentChangeColorMode: standard
+              reduceOptions:
+                calcs:
+                  - lastNotNull
+                fields: ''
+                values: false
+              showPercentChange: false
+              textMode: auto
+              wideLayout: true
+          version: 12.4.0-19938312174
+    panel-4:
+      kind: Panel
+      spec:
+        data:
+          kind: QueryGroup
+          spec:
+            queries: []
+            queryOptions: {}
+            transformations: []
+        description: ''
+        id: 4
+        links: []
+        title: Istio alerts
+        vizConfig:
+          group: alertlist
+          kind: VizConfig
+          spec:
+            fieldConfig:
+              defaults: {}
+              overrides: []
+            options:
+              alertInstanceLabelFilter: job=~"${job:regex}",cluster=~"${cluster:regex}"
+              alertName: ''
+              dashboardAlerts: false
+              groupBy: []
+              groupMode: default
+              maxItems: 20
+              showInactiveAlerts: false
+              sortOrder: 1
+              stateFilter:
+                error: true
+                firing: true
+                noData: false
+                normal: false
+                pending: true
+                recovering: true
+              viewMode: list
+          version: 12.4.0-19938312174
+    panel-5:
+      kind: Panel
+      spec:
+        data:
+          kind: QueryGroup
+          spec:
+            queries:
+              - kind: PanelQuery
+                spec:
+                  hidden: false
+                  query:
+                    datasource:
+                      name: ${datasource}
+                    group: prometheus
+                    kind: DataQuery
+                    spec:
+                      expr: >-
+                        max(pilot_k8s_cfg_events{job=~"$job",cluster=~"$cluster",
+                        type="DestinationRule", event="add"}) -
+                        (max(pilot_k8s_cfg_events{job=~"$job",cluster=~"$cluster",
+                        type="DestinationRule", event="delete"}) or (max(up) *
+                        0))
+                    version: v0
+                  refId: A
+            queryOptions: {}
+            transformations: []
+        description: Number of destination rules in the Istio system.
+        id: 5
+        links: []
+        title: Destination rules
+        vizConfig:
+          group: stat
+          kind: VizConfig
+          spec:
+            fieldConfig:
+              defaults:
+                color:
+                  mode: thresholds
+                thresholds:
+                  mode: absolute
+                  steps:
+                    - color: super-light-orange
+                      value: 0
+                    - color: super-light-green
+                      value: 1
+              overrides: []
+            options:
+              colorMode: value
+              graphMode: none
+              justifyMode: auto
+              orientation: auto
+              percentChangeColorMode: standard
+              reduceOptions:
+                calcs:
+                  - lastNotNull
+                fields: ''
+                values: false
+              showPercentChange: false
+              textMode: auto
+              wideLayout: true
+          version: 12.4.0-19938312174
+    panel-6:
+      kind: Panel
+      spec:
+        data:
+          kind: QueryGroup
+          spec:
+            queries:
+              - kind: PanelQuery
+                spec:
+                  hidden: false
+                  query:
+                    datasource:
+                      name: ${datasource}
+                    group: prometheus
+                    kind: DataQuery
+                    spec:
+                      expr: >-
+                        max(pilot_k8s_cfg_events{job=~"$job",cluster=~"$cluster",
+                        type="ServiceEntry", event="add"}) -
+                        (max(pilot_k8s_cfg_events{job=~"$job",cluster=~"$cluster",
+                        type="ServiceEntry", event="delete"}) or (max(up) * 0))
+                    version: v0
+                  refId: A
+            queryOptions: {}
+            transformations: []
+        description: Number of service entries in the Istio system.
+        id: 6
+        links: []
+        title: Service entries
+        vizConfig:
+          group: stat
+          kind: VizConfig
+          spec:
+            fieldConfig:
+              defaults:
+                color:
+                  mode: thresholds
+                thresholds:
+                  mode: absolute
+                  steps:
+                    - color: text
+                      value: 0
+                    - color: super-light-green
+                      value: 1
+              overrides: []
+            options:
+              colorMode: value
+              graphMode: none
+              justifyMode: auto
+              orientation: auto
+              percentChangeColorMode: standard
+              reduceOptions:
+                calcs:
+                  - lastNotNull
+                fields: ''
+                values: false
+              showPercentChange: false
+              textMode: auto
+              wideLayout: true
+          version: 12.4.0-19938312174
+    panel-7:
+      kind: Panel
+      spec:
+        data:
+          kind: QueryGroup
+          spec:
+            queries:
+              - kind: PanelQuery
+                spec:
+                  hidden: false
+                  query:
+                    datasource:
+                      name: ${datasource}
+                    group: prometheus
+                    kind: DataQuery
+                    spec:
+                      expr: >-
+                        max(pilot_k8s_cfg_events{job=~"$job",cluster=~"$cluster",
+                        type="WorkloadEntry", event="add"}) -
+                        (max(pilot_k8s_cfg_events{job=~"$job",cluster=~"$cluster",
+                        type="WorkloadEntry", event="delete"}) or (max(up) * 0))
+                    version: v0
+                  refId: A
+            queryOptions: {}
+            transformations: []
+        description: Number of workload entries in the Istio system.
+        id: 7
+        links: []
+        title: Workload entries
+        vizConfig:
+          group: stat
+          kind: VizConfig
+          spec:
+            fieldConfig:
+              defaults:
+                color:
+                  mode: thresholds
+                thresholds:
+                  mode: absolute
+                  steps:
+                    - color: text
+                      value: 0
+                    - color: super-light-green
+                      value: 1
+              overrides: []
+            options:
+              colorMode: value
+              graphMode: none
+              justifyMode: auto
+              orientation: auto
+              percentChangeColorMode: standard
+              reduceOptions:
+                calcs:
+                  - lastNotNull
+                fields: ''
+                values: false
+              showPercentChange: false
+              textMode: auto
+              wideLayout: true
+          version: 12.4.0-19938312174
+    panel-8:
+      kind: Panel
+      spec:
+        data:
+          kind: QueryGroup
+          spec:
+            queries:
+              - kind: PanelQuery
+                spec:
+                  hidden: false
+                  query:
+                    datasource:
+                      name: ${datasource}
+                    group: prometheus
+                    kind: DataQuery
+                    spec:
+                      expr: >-
+                        sum by(job, cluster)
+                        (process_open_fds{job=~"$job",cluster=~"$cluster",pod=~"$istiod"})
+                      legendFormat: '{{cluster}} - istiod'
+                    version: v0
+                  refId: A
+              - kind: PanelQuery
+                spec:
+                  hidden: false
+                  query:
+                    datasource:
+                      name: ${datasource}
+                    group: prometheus
+                    kind: DataQuery
+                    spec:
+                      expr: >-
+                        sum by(job, cluster)
+                        (istio_agent_process_open_fds{job=~"$job",cluster=~"$cluster",pod=~"$gateway"})
+                      legendFormat: '{{cluster}} - gateway'
+                    version: v0
+                  refId: B
+              - kind: PanelQuery
+                spec:
+                  hidden: false
+                  query:
+                    datasource:
+                      name: ${datasource}
+                    group: prometheus
+                    kind: DataQuery
+                    spec:
+                      expr: >-
+                        sum by(job, cluster)
+                        (istio_agent_process_open_fds{job=~"$job",cluster=~"$cluster",pod=~"$proxy"})
+                      legendFormat: '{{cluster}} - proxy'
+                    version: v0
+                  refId: C
+            queryOptions: {}
+            transformations: []
+        description: >-
+          Number of open file descriptors for various components of the Istio
+          system.
+        id: 8
+        links: []
+        title: Open file descriptors
+        vizConfig:
+          group: timeseries
+          kind: VizConfig
+          spec:
+            fieldConfig:
+              defaults:
+                color:
+                  mode: palette-classic
+                custom:
+                  axisBorderShow: false
+                  axisCenteredZero: false
+                  axisColorMode: text
+                  axisLabel: ''
+                  axisPlacement: auto
+                  barAlignment: 0
+                  barWidthFactor: 0.6
+                  drawStyle: line
+                  fillOpacity: 30
+                  gradientMode: opacity
+                  hideFrom:
+                    legend: false
+                    tooltip: false
+                    viz: false
+                  insertNulls: false
+                  lineInterpolation: smooth
+                  lineWidth: 2
+                  pointSize: 5
+                  scaleDistribution:
+                    type: linear
+                  showPoints: never
+                  showValues: false
+                  spanNulls: false
+                  stacking:
+                    group: A
+                    mode: normal
+                  thresholdsStyle:
+                    mode: 'off'
+                thresholds:
+                  mode: absolute
+                  steps:
+                    - color: green
+                      value: 0
+                    - color: red
+                      value: 80
+              overrides: []
+            options:
+              legend:
+                calcs: []
+                displayMode: list
+                placement: right
+                showLegend: true
+              tooltip:
+                hideZeros: false
+                mode: multi
+                sort: desc
+          version: 12.4.0-19938312174
+    panel-9:
+      kind: Panel
+      spec:
+        data:
+          kind: QueryGroup
+          spec:
+            queries:
+              - kind: PanelQuery
+                spec:
+                  hidden: false
+                  query:
+                    datasource:
+                      name: ${datasource}
+                    group: prometheus
+                    kind: DataQuery
+                    spec:
+                      expr: >-
+                        sum by (job, cluster)
+                        (rate(process_cpu_seconds_total{job=~"$job",cluster=~"$cluster",pod=~"$istiod"}[$__rate_interval]))
+                      legendFormat: '{{cluster}} - istiod'
+                    version: v0
+                  refId: A
+              - kind: PanelQuery
+                spec:
+                  hidden: false
+                  query:
+                    datasource:
+                      name: ${datasource}
+                    group: prometheus
+                    kind: DataQuery
+                    spec:
+                      expr: >-
+                        sum by(job, cluster)
+                        (rate(istio_agent_process_cpu_seconds_total{job=~"$job",cluster=~"$cluster",pod=~"$gateway"}[$__rate_interval]))
+                      legendFormat: '{{cluster}} - gateway'
+                    version: v0
+                  refId: B
+              - kind: PanelQuery
+                spec:
+                  hidden: false
+                  query:
+                    datasource:
+                      name: ${datasource}
+                    group: prometheus
+                    kind: DataQuery
+                    spec:
+                      expr: >-
+                        sum by(job, cluster)
+                        (rate(istio_agent_process_cpu_seconds_total{job=~"$job",cluster=~"$cluster",pod=~"$proxy"}[$__rate_interval]))
+                      legendFormat: '{{cluster}} - proxy'
+                    version: v0
+                  refId: C
+            queryOptions: {}
+            transformations: []
+        description: vCPU usage for various components of the Istio system.
+        id: 9
+        links: []
+        title: vCPU usage
+        vizConfig:
+          group: timeseries
+          kind: VizConfig
+          spec:
+            fieldConfig:
+              defaults:
+                color:
+                  mode: palette-classic
+                custom:
+                  axisBorderShow: false
+                  axisCenteredZero: false
+                  axisColorMode: text
+                  axisLabel: ''
+                  axisPlacement: auto
+                  barAlignment: 0
+                  barWidthFactor: 0.6
+                  drawStyle: line
+                  fillOpacity: 30
+                  gradientMode: opacity
+                  hideFrom:
+                    legend: false
+                    tooltip: false
+                    viz: false
+                  insertNulls: false
+                  lineInterpolation: smooth
+                  lineWidth: 2
+                  pointSize: 5
+                  scaleDistribution:
+                    type: linear
+                  showPoints: never
+                  showValues: false
+                  spanNulls: false
+                  stacking:
+                    group: A
+                    mode: normal
+                  thresholdsStyle:
+                    mode: 'off'
+                thresholds:
+                  mode: absolute
+                  steps:
+                    - color: green
+                      value: 0
+                    - color: red
+                      value: 80
+                unit: percentunit
+              overrides: []
+            options:
+              legend:
+                calcs: []
+                displayMode: list
+                placement: right
+                showLegend: true
+              tooltip:
+                hideZeros: false
+                mode: multi
+                sort: desc
+          version: 12.4.0-19938312174
+  layout:
+    kind: GridLayout
+    spec:
+      items:
+        - kind: GridLayoutItem
+          spec:
+            element:
+              kind: ElementReference
+              name: panel-23
+            height: 2
+            width: 8
+            x: 0
+            'y': 0
+        - kind: GridLayoutItem
+          spec:
+            element:
+              kind: ElementReference
+              name: panel-24
+            height: 2
+            width: 8
+            x: 8
+            'y': 0
+        - kind: GridLayoutItem
+          spec:
+            element:
+              kind: ElementReference
+              name: panel-25
+            height: 2
+            width: 8
+            x: 16
+            'y': 0
+        - kind: GridLayoutItem
+          spec:
+            element:
+              kind: ElementReference
+              name: panel-1
+            height: 4
+            width: 4
+            x: 0
+            'y': 2
+        - kind: GridLayoutItem
+          spec:
+            element:
+              kind: ElementReference
+              name: panel-2
+            height: 4
+            width: 4
+            x: 4
+            'y': 2
+        - kind: GridLayoutItem
+          spec:
+            element:
+              kind: ElementReference
+              name: panel-3
+            height: 4
+            width: 4
+            x: 8
+            'y': 2
+        - kind: GridLayoutItem
+          spec:
+            element:
+              kind: ElementReference
+              name: panel-4
+            height: 8
+            width: 12
+            x: 12
+            'y': 2
+        - kind: GridLayoutItem
+          spec:
+            element:
+              kind: ElementReference
+              name: panel-5
+            height: 4
+            width: 4
+            x: 0
+            'y': 6
+        - kind: GridLayoutItem
+          spec:
+            element:
+              kind: ElementReference
+              name: panel-6
+            height: 4
+            width: 4
+            x: 4
+            'y': 6
+        - kind: GridLayoutItem
+          spec:
+            element:
+              kind: ElementReference
+              name: panel-7
+            height: 4
+            width: 4
+            x: 8
+            'y': 6
+        - kind: GridLayoutItem
+          spec:
+            element:
+              kind: ElementReference
+              name: panel-9
+            height: 6
+            width: 12
+            x: 0
+            'y': 10
+        - kind: GridLayoutItem
+          spec:
+            element:
+              kind: ElementReference
+              name: panel-8
+            height: 6
+            width: 12
+            x: 12
+            'y': 10
+        - kind: GridLayoutItem
+          spec:
+            element:
+              kind: ElementReference
+              name: panel-11
+            height: 6
+            width: 12
+            x: 0
+            'y': 16
+        - kind: GridLayoutItem
+          spec:
+            element:
+              kind: ElementReference
+              name: panel-10
+            height: 6
+            width: 12
+            x: 12
+            'y': 16
+        - kind: GridLayoutItem
+          spec:
+            element:
+              kind: ElementReference
+              name: panel-12
+            height: 6
+            width: 16
+            x: 0
+            'y': 22
+        - kind: GridLayoutItem
+          spec:
+            element:
+              kind: ElementReference
+              name: panel-13
+            height: 6
+            width: 8
+            x: 16
+            'y': 22
+  links:
+    - asDropdown: false
+      icon: ''
+      includeVars: false
+      keepTime: true
+      tags: []
+      targetBlank: false
+      title: Istio logs
+      tooltip: ''
+      type: link
+      url: /d/istio-logs
+    - asDropdown: false
+      icon: ''
+      includeVars: false
+      keepTime: true
+      tags: []
+      targetBlank: false
+      title: Istio services overview
+      tooltip: ''
+      type: link
+      url: /d/istio-services-overview
+    - asDropdown: false
+      icon: ''
+      includeVars: false
+      keepTime: true
+      tags: []
+      targetBlank: false
+      title: Istio workloads overview
+      tooltip: ''
+      type: link
+      url: /d/istio-workloads-overview
+  liveNow: false
+  preload: false
+  tags:
+    - istio-integration
+  timeSettings:
+    autoRefresh: 30s
+    autoRefreshIntervals:
+      - 5s
+      - 10s
+      - 30s
+      - 1m
+      - 5m
+      - 15m
+      - 30m
+      - 1h
+      - 2h
+      - 1d
+    fiscalYearStartMonth: 0
+    from: now-30m
+    hideTimepicker: false
+    timezone: default
+    to: now
+  title: Istio overview
+  variables:
+    - kind: DatasourceVariable
+      spec:
+        allowCustomValue: true
+        current:
+          text: ''
+          value: ''
+        hide: dontHide
+        includeAll: false
+        label: Data source
+        multi: false
+        name: datasource
+        options: []
+        pluginId: prometheus
+        refresh: onDashboardLoad
+        regex: (?!grafanacloud-usage|grafanacloud-ml-metrics).+
+        skipUrlSync: false
+    - kind: QueryVariable
+      spec:
+        allValue: .+
+        allowCustomValue: true
+        current:
+          text: ''
+          value: ''
+        hide: dontHide
+        includeAll: true
+        label: Job
+        multi: true
+        name: job
+        options: []
+        query:
+          datasource:
+            name: ${datasource}
+          group: prometheus
+          kind: DataQuery
+          spec:
+            __legacyStringValue: label_values(istiod_uptime_seconds{}, job)
+          version: v0
+        refresh: onTimeRangeChanged
+        regex: ''
+        skipUrlSync: false
+        sort: alphabeticalAsc
+    - kind: QueryVariable
+      spec:
+        allValue: .+
+        allowCustomValue: true
+        current:
+          text: ''
+          value: ''
+        hide: dontHide
+        includeAll: true
+        label: K8s cluster
+        multi: true
+        name: cluster
+        options: []
+        query:
+          datasource:
+            name: ${datasource}
+          group: prometheus
+          kind: DataQuery
+          spec:
+            __legacyStringValue: label_values(istiod_uptime_seconds{job=~"$job"}, cluster)
+          version: v0
+        refresh: onTimeRangeChanged
+        regex: ''
+        skipUrlSync: false
+        sort: alphabeticalAsc
+    - kind: QueryVariable
+      spec:
+        allowCustomValue: true
+        current:
+          text: ''
+          value: ''
+        hide: dontHide
+        includeAll: true
+        label: Istiod
+        multi: true
+        name: istiod
+        options: []
+        query:
+          datasource:
+            name: ${datasource}
+          group: prometheus
+          kind: DataQuery
+          spec:
+            __legacyStringValue: label_values(pilot_info{job=~"$job", cluster=~"$cluster"}, pod)
+          version: v0
+        refresh: onTimeRangeChanged
+        regex: ''
+        skipUrlSync: false
+        sort: alphabeticalAsc
+    - kind: QueryVariable
+      spec:
+        allowCustomValue: true
+        current:
+          text: ''
+          value: ''
+        hide: dontHide
+        includeAll: true
+        label: Gateway
+        multi: true
+        name: gateway
+        options: []
+        query:
+          datasource:
+            name: ${datasource}
+          group: prometheus
+          kind: DataQuery
+          spec:
+            __legacyStringValue: >-
+              label_values(istio_agent_process_cpu_seconds_total{job=~"$job",
+              cluster=~"$cluster", pod=~"istio-egress.*|istio-ingress.*"}, pod)
+          version: v0
+        refresh: onTimeRangeChanged
+        regex: ''
+        skipUrlSync: false
+        sort: alphabeticalAsc
+    - kind: QueryVariable
+      spec:
+        allowCustomValue: true
+        current:
+          text: ''
+          value: ''
+        hide: dontHide
+        includeAll: true
+        label: Proxy
+        multi: true
+        name: proxy
+        options: []
+        query:
+          datasource:
+            name: ${datasource}
+          group: prometheus
+          kind: DataQuery
+          spec:
+            __legacyStringValue: >-
+              label_values(istio_agent_process_cpu_seconds_total{job=~"$job",
+              cluster=~"$cluster", pod!~"istio-egress.*|istio-ingress.*"}, pod)
+          version: v0
+        refresh: onTimeRangeChanged
+        regex: ''
+        skipUrlSync: false
+        sort: alphabeticalAsc
+status: {}
