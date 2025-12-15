@@ -4,7 +4,7 @@ kind: Namespace
 metadata:
   name: mysql
 ---
-apiVersion: source.toolkit.fluxcd.io/v1beta2
+apiVersion: source.toolkit.fluxcd.io/v1
 kind: OCIRepository
 metadata:
   name: mysql
@@ -18,7 +18,7 @@ spec:
 apiVersion: v1
 kind: Secret
 metadata:
-  name: test-database-mysql
+  name: test-mysql-db
   namespace: mysql
 stringData:
   mysql-username: "root"
@@ -29,7 +29,7 @@ stringData:
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
-  name: test-database
+  name: test-mysql-db
   namespace: mysql
 spec:
   interval: 1m
@@ -39,6 +39,6 @@ spec:
     namespace: mysql
   values:
     auth:
-      existingSecret: test-database-mysql
+      existingSecret: test-mysql-db
     image:
       repository: bitnamilegacy/mysql
