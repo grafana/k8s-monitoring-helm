@@ -27,7 +27,7 @@ to `TPROXY` will preserve originating pod's IP and port, allowing the component 
 ```yaml
 ---
 cluster:
-  name: istio-service-mesh-example
+  name: istio-service-mesh-test
 
 destinations:
   - name: localPrometheus
