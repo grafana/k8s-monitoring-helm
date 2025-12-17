@@ -1,0 +1,207 @@
+// Feature: Cluster Events
+declare "cluster_events" {
+  argument "logs_destinations" {
+    comment = "Must be a list of log destinations where collected logs should be forwarded to"
+  }
+
+  loki.source.kubernetes_events "cluster_events" {
+    job_name   = "integrations/kubernetes/eventhandler"
+    log_format = "logfmt"
+    namespaces = ["alpha","bravo","delta"]
+    forward_to = [loki.process.cluster_events.receiver]
+  }
+
+  loki.process "cluster_events" {
+
+    // add a static source label to the logs so they can be differentiated / restricted if necessary
+    stage.static_labels {
+      values = {
+        "source" = "kubernetes-events",
+      }
+    }
+
+    // extract some of the fields from the log line, these could be used as labels, structured metadata, etc.
+    stage.logfmt {
+      mapping = {
+        "component" = "sourcecomponent", // map the sourcecomponent field to component
+        "kind" = "",
+        "level" = "type", // most events don't have a level but they do have a "type" i.e. Normal, Warning, Error, etc.
+        "name" = "",
+        "node" = "sourcehost", // map the sourcehost field to node
+        "reason" = "",
+      }
+    }
+    // set these values as labels, they may or may not be used as index labels in Loki as they can be dropped
+    // prior to being written to Loki, but this makes them available
+    stage.labels {
+      values = {
+        "component" = "",
+        "kind" = "",
+        "level" = "",
+        "name" = "",
+        "node" = "",
+        "reason" = "",
+      }
+    }
+
+    // if kind=Node, set the node label by copying the name field
+    stage.match {
+      selector = "{kind=\"Node\"}"
+
+      stage.labels {
+        values = {
+          "node" = "name",
+        }
+      }
+    }
+
+    // set the level extracted key value as a normalized log level
+    stage.match {
+      selector = "{level=\"Normal\"}"
+
+      stage.static_labels {
+        values = {
+          level = "Info",
+        }
+      }
+    }
+    stage.structured_metadata {
+      values = {
+        "name" = "name",
+      }
+    }
+
+    // Only keep the labels that are defined in the `keepLabels` list.
+    stage.label_keep {
+      values = ["job","level","namespace","node","source","reason"]
+    }
+    stage.labels {
+      values = {
+        "service_name" = "job",
+      }
+    }
+    forward_to = argument.logs_destinations.value
+  }
+}
+cluster_events "feature" {
+  logs_destinations = [
+    loki.write.loki.receiver,
+  ]
+}
+// Self Reporting
+prometheus.exporter.unix "kubernetes_monitoring_telemetry" {
+  set_collectors = ["textfile"]
+  textfile {
+    directory = "/etc/alloy"
+  }
+}
+
+discovery.relabel "kubernetes_monitoring_telemetry" {
+  targets = prometheus.exporter.unix.kubernetes_monitoring_telemetry.targets
+  rule {
+    target_label = "instance"
+    action = "replace"
+    replacement = "k8smon"
+  }
+  rule {
+    target_label = "job"
+    action = "replace"
+    replacement = "integrations/kubernetes/kubernetes_monitoring_telemetry"
+  }
+}
+
+prometheus.scrape "kubernetes_monitoring_telemetry" {
+  job_name   = "integrations/kubernetes/kubernetes_monitoring_telemetry"
+  targets    = discovery.relabel.kubernetes_monitoring_telemetry.output
+  scrape_interval = "60s"
+  clustering {
+    enabled = true
+  }
+  forward_to = [prometheus.relabel.kubernetes_monitoring_telemetry.receiver]
+}
+
+prometheus.relabel "kubernetes_monitoring_telemetry" {
+  rule {
+    source_labels = ["__name__"]
+    regex = "grafana_kubernetes_monitoring_.*"
+    action = "keep"
+  }
+  forward_to = [
+    prometheus.remote_write.prometheus.receiver,
+  ]
+}
+
+
+
+
+// Destination: prometheus (prometheus)
+otelcol.exporter.prometheus "prometheus" {
+  add_metric_suffixes = true
+  resource_to_telemetry_conversion = false
+  forward_to = [prometheus.remote_write.prometheus.receiver]
+}
+
+prometheus.remote_write "prometheus" {
+  endpoint {
+    url = "http://prometheus.prometheus.svc:9090/api/v1/write"
+    headers = {
+    }
+    tls_config {
+      insecure_skip_verify = false
+    }
+    send_native_histograms = false
+
+    queue_config {
+      capacity = 10000
+      min_shards = 1
+      max_shards = 50
+      max_samples_per_send = 2000
+      batch_send_deadline = "5s"
+      min_backoff = "30ms"
+      max_backoff = "5s"
+      retry_on_http_429 = true
+      sample_age_limit = "0s"
+    }
+
+    write_relabel_config {
+      source_labels = ["cluster"]
+      regex = ""
+      replacement = "include-by-namespace-cluster"
+      target_label = "cluster"
+    }
+    write_relabel_config {
+      source_labels = ["k8s_cluster_name"]
+      regex = ""
+      replacement = "include-by-namespace-cluster"
+      target_label = "k8s_cluster_name"
+    }
+  }
+
+  wal {
+    truncate_frequency = "2h"
+    min_keepalive_time = "5m"
+    max_keepalive_time = "8h"
+  }
+}
+// Destination: loki (loki)
+otelcol.exporter.loki "loki" {
+  forward_to = [loki.write.loki.receiver]
+}
+
+loki.write "loki" {
+  endpoint {
+    url = "http://loki.loki.svc:3100/api/push"
+    retry_on_http_429 = true
+    tls_config {
+      insecure_skip_verify = false
+    }
+    min_backoff_period = "500ms"
+    max_backoff_period = "5m"
+    max_backoff_retries = "10"
+  }
+  external_labels = {
+    "cluster" = "include-by-namespace-cluster",
+    "k8s_cluster_name" = "include-by-namespace-cluster",
+  }
+}
+

@@ -1,0 +1,276 @@
+// Feature: Application Observability
+declare "application_observability" {
+  argument "metrics_destinations" {
+    comment = "Must be a list of metrics destinations where collected metrics should be forwarded to"
+  }
+
+  argument "logs_destinations" {
+    comment = "Must be a list of log destinations where collected logs should be forwarded to"
+  }
+
+  argument "traces_destinations" {
+    comment = "Must be a list of trace destinations where collected trace should be forwarded to"
+  }
+
+  // OTLP Receiver
+  otelcol.receiver.otlp "receiver" {
+    grpc {
+      endpoint = "0.0.0.0:4317"
+      include_metadata = false
+      max_recv_msg_size = "4MiB"
+      read_buffer_size = "512KiB"
+      write_buffer_size = "32KiB"
+    }
+    debug_metrics {
+      disable_high_cardinality_metrics = true
+    }
+    output {
+      metrics = [otelcol.processor.resourcedetection.default.input]
+      logs = [otelcol.processor.resourcedetection.default.input]
+      traces = [otelcol.processor.resourcedetection.default.input]
+    }
+  }
+
+  // Resource Detection Processor
+  otelcol.processor.resourcedetection "default" {
+    detectors = ["env","system"]
+    override = true
+
+    system {
+      hostname_sources = ["os"]
+    }
+
+    output {
+      metrics = [otelcol.processor.k8sattributes.default.input]
+      logs = [otelcol.processor.k8sattributes.default.input]
+      traces = [otelcol.processor.k8sattributes.default.input]
+    }
+  }
+
+  // K8s Attributes Processor
+  otelcol.processor.k8sattributes "default" {
+    passthrough = false
+    extract {
+      metadata = ["k8s.namespace.name","k8s.pod.name","k8s.deployment.name","k8s.statefulset.name","k8s.daemonset.name","k8s.cronjob.name","k8s.job.name","k8s.node.name","k8s.pod.uid","k8s.pod.start_time"]
+    }
+    pod_association {
+      source {
+        from = "resource_attribute"
+        name = "k8s.pod.ip"
+      }
+    }
+    pod_association {
+      source {
+        from = "resource_attribute"
+        name = "k8s.pod.uid"
+      }
+    }
+    pod_association {
+      source {
+        from = "connection"
+      }
+    }
+
+    output {
+      metrics = [otelcol.processor.transform.default.input]
+      logs = [otelcol.processor.transform.default.input]
+      traces = [otelcol.processor.transform.default.input, otelcol.connector.host_info.default.input]
+    }
+  }
+
+  // Host Info Connector
+  otelcol.connector.host_info "default" {
+    host_identifiers = [ "k8s.node.name" ]
+
+    output {
+      metrics = [otelcol.processor.batch.default.input]
+    }
+  }
+
+  // Transform Processor
+  otelcol.processor.transform "default" {
+    error_mode = "ignore"
+    log_statements {
+      context = "resource"
+      statements = [
+        "set(attributes[\"pod\"], attributes[\"k8s.pod.name\"])",
+        "set(attributes[\"namespace\"], attributes[\"k8s.namespace.name\"])",
+        "set(attributes[\"loki.resource.labels\"], \"cluster, namespace, job, pod\")",
+      ]
+    }
+
+    output {
+      metrics = [otelcol.processor.batch.default.input]
+      logs = [otelcol.processor.batch.default.input]
+      traces = [otelcol.processor.batch.default.input]
+    }
+  }
+
+  // Batch Processor
+  otelcol.processor.batch "default" {
+    send_batch_size = 8192
+    send_batch_max_size = 0
+    timeout = "2s"
+
+    output {
+      metrics = argument.metrics_destinations.value
+      logs = argument.logs_destinations.value
+      traces = argument.traces_destinations.value
+    }
+  }
+}
+application_observability "feature" {
+  metrics_destinations = [
+    otelcol.exporter.prometheus.prometheus.input,
+  ]
+  logs_destinations = [
+    otelcol.exporter.loki.loki.input,
+  ]
+  traces_destinations = [
+    otelcol.processor.attributes.tempo.input,
+  ]
+}
+
+
+
+
+// Destination: prometheus (prometheus)
+otelcol.exporter.prometheus "prometheus" {
+  add_metric_suffixes = true
+  resource_to_telemetry_conversion = false
+  forward_to = [prometheus.remote_write.prometheus.receiver]
+}
+
+prometheus.remote_write "prometheus" {
+  endpoint {
+    url = "http://prometheus.monitoring.svc:9090/api/v1/write"
+    headers = {
+    }
+    tls_config {
+      insecure_skip_verify = false
+    }
+    send_native_histograms = false
+
+    queue_config {
+      capacity = 10000
+      min_shards = 1
+      max_shards = 50
+      max_samples_per_send = 2000
+      batch_send_deadline = "5s"
+      min_backoff = "30ms"
+      max_backoff = "5s"
+      retry_on_http_429 = true
+      sample_age_limit = "0s"
+    }
+
+    write_relabel_config {
+      source_labels = ["cluster"]
+      regex = ""
+      replacement = "span-metrics-only-cluster"
+      target_label = "cluster"
+    }
+    write_relabel_config {
+      source_labels = ["k8s_cluster_name"]
+      regex = ""
+      replacement = "span-metrics-only-cluster"
+      target_label = "k8s_cluster_name"
+    }
+  }
+
+  wal {
+    truncate_frequency = "2h"
+    min_keepalive_time = "5m"
+    max_keepalive_time = "8h"
+  }
+}
+// Destination: loki (loki)
+otelcol.exporter.loki "loki" {
+  forward_to = [loki.write.loki.receiver]
+}
+
+loki.write "loki" {
+  endpoint {
+    url = "http://loki.logging.svc:3100/loki/api/v1/push"
+    retry_on_http_429 = true
+    tls_config {
+      insecure_skip_verify = false
+    }
+    min_backoff_period = "500ms"
+    max_backoff_period = "5m"
+    max_backoff_retries = "10"
+  }
+  external_labels = {
+    "cluster" = "span-metrics-only-cluster",
+    "k8s_cluster_name" = "span-metrics-only-cluster",
+  }
+}
+// Destination: tempo (otlp)
+
+otelcol.processor.attributes "tempo" {
+  output {
+    traces = [otelcol.processor.transform.tempo.input]
+  }
+}
+
+otelcol.processor.transform "tempo" {
+  error_mode = "ignore"
+
+  trace_statements {
+    context = "resource"
+    statements = [
+      `set(attributes["cluster"], "span-metrics-only-cluster")`,
+      `set(attributes["k8s.cluster.name"], "span-metrics-only-cluster")`,
+      `delete_key(attributes, "process.pid")`,
+      `delete_key(attributes, "process.parent_pid")`,
+      `delete_key(attributes, "process.executable.path")`,
+      `delete_key(attributes, "process.command_line")`,
+      `delete_key(attributes, "process.command_args")`,
+      `delete_key(attributes, "process.owner")`,
+      `delete_key(attributes, "process.runtime.version")`,
+      `delete_key(attributes, "process.runtime.description")`,
+      `delete_key(attributes, "host.ip")`,
+      `delete_key(attributes, "host.mac")`,
+      `delete_key(attributes, "k8s.pod.start_time")`,
+      `delete_key(attributes, "k8s.pod.uid")`,
+      `delete_key(attributes, "container.image.id")`,
+      `delete_key(attributes, "container.image.repo_digests")`,
+      `delete_key(attributes, "os.description")`,
+      `delete_key(attributes, "os.build_id")`,
+    ]
+  }
+
+  output {
+    traces = [otelcol.processor.batch.tempo.input]
+  }
+}
+
+otelcol.processor.batch "tempo" {
+  timeout = "2s"
+  send_batch_size = 8192
+  send_batch_max_size = 0
+
+  output {
+    traces = [otelcol.exporter.otlp.tempo.input]
+  }
+}
+otelcol.exporter.otlp "tempo" {
+  client {
+    endpoint = "http://tempo.tracing.svc:4317"
+    tls {
+      insecure = true
+      insecure_skip_verify = false
+    }
+  }
+
+  retry_on_failure {
+    enabled = true
+    initial_interval = "5s"
+    max_interval = "30s"
+    max_elapsed_time = "5m"
+  }
+
+  sending_queue {
+    enabled = true
+  }
+}
+

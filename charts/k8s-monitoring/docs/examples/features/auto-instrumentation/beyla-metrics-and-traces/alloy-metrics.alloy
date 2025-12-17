@@ -1,0 +1,287 @@
+// Feature: Auto-Instrumentation
+declare "auto_instrumentation" {
+  argument "metrics_destinations" {
+    comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
+  }
+
+  discovery.kubernetes "beyla_pods" {
+    role = "pod"
+    namespaces {
+      own_namespace = true
+    }
+    selectors {
+      role = "pod"
+      label = "app.kubernetes.io/name=beyla"
+    }
+  }
+
+  discovery.relabel "beyla_pods" {
+    targets = discovery.kubernetes.beyla_pods.targets
+    rule {
+      source_labels = ["__meta_kubernetes_pod_node_name"]
+      action = "replace"
+      target_label = "instance"
+    }
+  }
+
+  prometheus.scrape "beyla_applications" {
+    targets         = discovery.relabel.beyla_pods.output
+    honor_labels    = true
+    scrape_interval = "60s"
+    scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
+    scrape_classic_histograms = false
+    scrape_native_histograms = false
+    clustering {
+      enabled = true
+    }
+    forward_to = argument.metrics_destinations.value
+  }
+
+  prometheus.scrape "beyla_internal" {
+    targets         = discovery.relabel.beyla_pods.output
+    metrics_path    = "/internal/metrics"
+    job_name        = "integrations/beyla"
+    honor_labels    = true
+    scrape_interval = "60s"
+    scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
+    scrape_classic_histograms = false
+    scrape_native_histograms = false
+    clustering {
+      enabled = true
+    }
+    forward_to = argument.metrics_destinations.value
+  }
+}
+auto_instrumentation "feature" {
+  metrics_destinations = [
+    otelcol.receiver.prometheus.otlp_gateway.receiver,
+  ]
+}
+// Self Reporting
+prometheus.exporter.unix "kubernetes_monitoring_telemetry" {
+  set_collectors = ["textfile"]
+  textfile {
+    directory = "/etc/alloy"
+  }
+}
+
+discovery.relabel "kubernetes_monitoring_telemetry" {
+  targets = prometheus.exporter.unix.kubernetes_monitoring_telemetry.targets
+  rule {
+    target_label = "instance"
+    action = "replace"
+    replacement = "k8smon"
+  }
+  rule {
+    target_label = "job"
+    action = "replace"
+    replacement = "integrations/kubernetes/kubernetes_monitoring_telemetry"
+  }
+}
+
+prometheus.scrape "kubernetes_monitoring_telemetry" {
+  job_name   = "integrations/kubernetes/kubernetes_monitoring_telemetry"
+  targets    = discovery.relabel.kubernetes_monitoring_telemetry.output
+  scrape_interval = "60s"
+  clustering {
+    enabled = true
+  }
+  forward_to = [prometheus.relabel.kubernetes_monitoring_telemetry.receiver]
+}
+
+prometheus.relabel "kubernetes_monitoring_telemetry" {
+  rule {
+    source_labels = ["__name__"]
+    regex = "grafana_kubernetes_monitoring_.*"
+    action = "keep"
+  }
+  forward_to = [
+    otelcol.receiver.prometheus.otlp_gateway.receiver,
+  ]
+}
+
+
+
+
+// Destination: otlp-gateway (otlp)
+otelcol.receiver.prometheus "otlp_gateway" {
+  output {
+    metrics = [otelcol.processor.attributes.otlp_gateway.input]
+  }
+}
+otelcol.receiver.loki "otlp_gateway" {
+  output {
+    logs = [otelcol.processor.attributes.otlp_gateway.input]
+  }
+}
+
+otelcol.processor.attributes "otlp_gateway" {
+  output {
+    metrics = [otelcol.processor.transform.otlp_gateway.input]
+    logs = [otelcol.processor.transform.otlp_gateway.input]
+    traces = [otelcol.processor.transform.otlp_gateway.input]
+  }
+}
+
+otelcol.processor.transform "otlp_gateway" {
+  error_mode = "ignore"
+  metric_statements {
+    context = "resource"
+    statements = [
+      `set(attributes["cluster"], "auto-instrumentation-with-traces-cluster")`,
+      `set(attributes["k8s.cluster.name"], "auto-instrumentation-with-traces-cluster")`,
+      `delete_key(attributes, "process.pid")`,
+      `delete_key(attributes, "process.parent_pid")`,
+      `delete_key(attributes, "process.executable.path")`,
+      `delete_key(attributes, "process.command_line")`,
+      `delete_key(attributes, "process.command_args")`,
+      `delete_key(attributes, "process.owner")`,
+      `delete_key(attributes, "process.runtime.version")`,
+      `delete_key(attributes, "process.runtime.description")`,
+      `delete_key(attributes, "host.ip")`,
+      `delete_key(attributes, "host.mac")`,
+      `delete_key(attributes, "k8s.pod.start_time")`,
+      `delete_key(attributes, "k8s.pod.uid")`,
+      `delete_key(attributes, "container.image.id")`,
+      `delete_key(attributes, "container.image.repo_digests")`,
+      `delete_key(attributes, "os.description")`,
+      `delete_key(attributes, "os.build_id")`,
+    ]
+  }
+
+  metric_statements {
+    context = "datapoint"
+    statements = [
+      `set(attributes["cluster"], "auto-instrumentation-with-traces-cluster")`,
+      `set(attributes["k8s.cluster.name"], "auto-instrumentation-with-traces-cluster")`,
+      `set(resource.attributes["deployment.environment"], attributes["deployment_environment"] ) where resource.attributes["deployment.environment"] == nil and attributes["deployment_environment"] != nil`,
+      `delete_key(attributes, "deployment_environment") where attributes["deployment_environment"] == resource.attributes["deployment.environment"]`,
+      `set(resource.attributes["deployment.environment.name"], attributes["deployment_environment_name"] ) where resource.attributes["deployment.environment.name"] == nil and attributes["deployment_environment_name"] != nil`,
+      `delete_key(attributes, "deployment_environment_name") where attributes["deployment_environment_name"] == resource.attributes["deployment.environment.name"]`,
+      `set(resource.attributes["service.name"], attributes["service_name"] ) where resource.attributes["service.name"] == nil and attributes["service_name"] != nil`,
+      `delete_key(attributes, "service_name") where attributes["service_name"] == resource.attributes["service.name"]`,
+      `set(resource.attributes["service.namespace"], attributes["service_namespace"] ) where resource.attributes["service.namespace"] == nil and attributes["service_namespace"] != nil`,
+      `delete_key(attributes, "service_namespace") where attributes["service_namespace"] == resource.attributes["service.namespace"]`,
+    ]
+  }
+  log_statements {
+    context = "resource"
+    statements = [
+      `set(attributes["cluster"], "auto-instrumentation-with-traces-cluster")`,
+      `set(attributes["k8s.cluster.name"], "auto-instrumentation-with-traces-cluster")`,
+      `delete_key(attributes, "process.pid")`,
+      `delete_key(attributes, "process.parent_pid")`,
+      `delete_key(attributes, "process.executable.path")`,
+      `delete_key(attributes, "process.command_line")`,
+      `delete_key(attributes, "process.command_args")`,
+      `delete_key(attributes, "process.owner")`,
+      `delete_key(attributes, "process.runtime.version")`,
+      `delete_key(attributes, "process.runtime.description")`,
+      `delete_key(attributes, "host.ip")`,
+      `delete_key(attributes, "host.mac")`,
+      `delete_key(attributes, "k8s.pod.start_time")`,
+      `delete_key(attributes, "k8s.pod.uid")`,
+      `delete_key(attributes, "container.image.id")`,
+      `delete_key(attributes, "container.image.repo_digests")`,
+      `delete_key(attributes, "os.description")`,
+      `delete_key(attributes, "os.build_id")`,
+    ]
+  }
+
+  log_statements {
+    context = "log"
+    statements = [
+      `delete_key(attributes, "loki.attribute.labels")`,
+      `delete_key(attributes, "loki.resource.labels")`,
+      `set(resource.attributes["k8s.container.name"], attributes["container"] ) where resource.attributes["k8s.container.name"] == nil and attributes["container"] != nil`,
+      `delete_key(attributes, "container") where attributes["container"] == resource.attributes["k8s.container.name"]`,
+      `set(resource.attributes["k8s.cronjob.name"], attributes["cronjob"] ) where resource.attributes["k8s.cronjob.name"] == nil and attributes["cronjob"] != nil`,
+      `delete_key(attributes, "cronjob") where attributes["cronjob"] == resource.attributes["k8s.cronjob.name"]`,
+      `set(resource.attributes["k8s.daemonset.name"], attributes["daemonset"] ) where resource.attributes["k8s.daemonset.name"] == nil and attributes["daemonset"] != nil`,
+      `delete_key(attributes, "daemonset") where attributes["daemonset"] == resource.attributes["k8s.daemonset.name"]`,
+      `set(resource.attributes["k8s.deployment.name"], attributes["deployment"] ) where resource.attributes["k8s.deployment.name"] == nil and attributes["deployment"] != nil`,
+      `delete_key(attributes, "deployment") where attributes["deployment"] == resource.attributes["k8s.deployment.name"]`,
+      `set(resource.attributes["deployment.environment"], attributes["deployment_environment"] ) where resource.attributes["deployment.environment"] == nil and attributes["deployment_environment"] != nil`,
+      `delete_key(attributes, "deployment_environment") where attributes["deployment_environment"] == resource.attributes["deployment.environment"]`,
+      `set(resource.attributes["deployment.environment.name"], attributes["deployment_environment_name"] ) where resource.attributes["deployment.environment.name"] == nil and attributes["deployment_environment_name"] != nil`,
+      `delete_key(attributes, "deployment_environment_name") where attributes["deployment_environment_name"] == resource.attributes["deployment.environment.name"]`,
+      `set(resource.attributes["k8s.job.name"], attributes["job_name"] ) where resource.attributes["k8s.job.name"] == nil and attributes["job_name"] != nil`,
+      `delete_key(attributes, "job_name") where attributes["job_name"] == resource.attributes["k8s.job.name"]`,
+      `set(resource.attributes["k8s.namespace.name"], attributes["namespace"] ) where resource.attributes["k8s.namespace.name"] == nil and attributes["namespace"] != nil`,
+      `delete_key(attributes, "namespace") where attributes["namespace"] == resource.attributes["k8s.namespace.name"]`,
+      `set(resource.attributes["k8s.pod.name"], attributes["pod"] ) where resource.attributes["k8s.pod.name"] == nil and attributes["pod"] != nil`,
+      `delete_key(attributes, "pod") where attributes["pod"] == resource.attributes["k8s.pod.name"]`,
+      `set(resource.attributes["k8s.replicaset.name"], attributes["replicaset"] ) where resource.attributes["k8s.replicaset.name"] == nil and attributes["replicaset"] != nil`,
+      `delete_key(attributes, "replicaset") where attributes["replicaset"] == resource.attributes["k8s.replicaset.name"]`,
+      `set(resource.attributes["service.name"], attributes["service_name"] ) where resource.attributes["service.name"] == nil and attributes["service_name"] != nil`,
+      `delete_key(attributes, "service_name") where attributes["service_name"] == resource.attributes["service.name"]`,
+      `set(resource.attributes["service.namespace"], attributes["service_namespace"] ) where resource.attributes["service.namespace"] == nil and attributes["service_namespace"] != nil`,
+      `delete_key(attributes, "service_namespace") where attributes["service_namespace"] == resource.attributes["service.namespace"]`,
+      `set(resource.attributes["k8s.statefulset.name"], attributes["statefulset"] ) where resource.attributes["k8s.statefulset.name"] == nil and attributes["statefulset"] != nil`,
+      `delete_key(attributes, "statefulset") where attributes["statefulset"] == resource.attributes["k8s.statefulset.name"]`,
+    ]
+  }
+
+  trace_statements {
+    context = "resource"
+    statements = [
+      `set(attributes["cluster"], "auto-instrumentation-with-traces-cluster")`,
+      `set(attributes["k8s.cluster.name"], "auto-instrumentation-with-traces-cluster")`,
+      `delete_key(attributes, "process.pid")`,
+      `delete_key(attributes, "process.parent_pid")`,
+      `delete_key(attributes, "process.executable.path")`,
+      `delete_key(attributes, "process.command_line")`,
+      `delete_key(attributes, "process.command_args")`,
+      `delete_key(attributes, "process.owner")`,
+      `delete_key(attributes, "process.runtime.version")`,
+      `delete_key(attributes, "process.runtime.description")`,
+      `delete_key(attributes, "host.ip")`,
+      `delete_key(attributes, "host.mac")`,
+      `delete_key(attributes, "k8s.pod.start_time")`,
+      `delete_key(attributes, "k8s.pod.uid")`,
+      `delete_key(attributes, "container.image.id")`,
+      `delete_key(attributes, "container.image.repo_digests")`,
+      `delete_key(attributes, "os.description")`,
+      `delete_key(attributes, "os.build_id")`,
+    ]
+  }
+
+  output {
+    metrics = [otelcol.processor.batch.otlp_gateway.input]
+    logs = [otelcol.processor.batch.otlp_gateway.input]
+    traces = [otelcol.processor.batch.otlp_gateway.input]
+  }
+}
+
+otelcol.processor.batch "otlp_gateway" {
+  timeout = "2s"
+  send_batch_size = 8192
+  send_batch_max_size = 0
+
+  output {
+    metrics = [otelcol.exporter.otlp.otlp_gateway.input]
+    logs = [otelcol.exporter.otlp.otlp_gateway.input]
+    traces = [otelcol.exporter.otlp.otlp_gateway.input]
+  }
+}
+otelcol.exporter.otlp "otlp_gateway" {
+  client {
+    endpoint = "http://otlp-gateway.example.com"
+    tls {
+      insecure = false
+      insecure_skip_verify = false
+    }
+  }
+
+  retry_on_failure {
+    enabled = true
+    initial_interval = "5s"
+    max_interval = "30s"
+    max_elapsed_time = "5m"
+  }
+
+  sending_queue {
+    enabled = true
+  }
+}
+
