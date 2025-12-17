@@ -30,9 +30,9 @@ otelcol.receiver.loki {{ include "helper.alloy_name" .name | quote }} {
 
 otelcol.processor.attributes {{ include "helper.alloy_name" .name | quote }} {
 {{- if .processors.attributes.include }}
-  {{- $tracesEnabled := ne .traces.enabled false }}
-  {{- $logsEnabled := ne .logs.enabled false }}
-  {{- $metricsEnabled := ne .metrics.enabled false }}
+  {{- $tracesEnabled := and .traces (ne (.traces.enabled | default true) false) }}
+  {{- $logsEnabled := and .logs (ne (.logs.enabled | default true) false) }}
+  {{- $metricsEnabled := and .metrics (ne (.metrics.enabled | default true) false) }}
   {{- $onlyTraces := and $tracesEnabled (not $logsEnabled) (not $metricsEnabled) }}
   {{- $onlyLogs := and $logsEnabled (not $tracesEnabled) (not $metricsEnabled) }}
   {{- $onlyMetrics := and $metricsEnabled (not $tracesEnabled) (not $logsEnabled) }}
@@ -113,9 +113,9 @@ otelcol.processor.attributes {{ include "helper.alloy_name" .name | quote }} {
   }
 {{- end }}
 {{- if .processors.attributes.exclude }}
-  {{- $tracesEnabled := ne .traces.enabled false }}
-  {{- $logsEnabled := ne .logs.enabled false }}
-  {{- $metricsEnabled := ne .metrics.enabled false }}
+  {{- $tracesEnabled := and .traces (ne (.traces.enabled | default true) false) }}
+  {{- $logsEnabled := and .logs (ne (.logs.enabled | default true) false) }}
+  {{- $metricsEnabled := and .metrics (ne (.metrics.enabled | default true) false) }}
   {{- $onlyTraces := and $tracesEnabled (not $logsEnabled) (not $metricsEnabled) }}
   {{- $onlyLogs := and $logsEnabled (not $tracesEnabled) (not $metricsEnabled) }}
   {{- $onlyMetrics := and $metricsEnabled (not $tracesEnabled) (not $logsEnabled) }}

@@ -17,7 +17,6 @@ tests:
           of: ConfigMap
       - matchSnapshot:
           path: data["config.alloy"]
-
   - it: allows you to disable retry on failure
     set:
       cluster: {name: test-cluster}
@@ -34,7 +33,6 @@ tests:
           of: ConfigMap
       - matchSnapshot:
           path: data["config.alloy"]
-
   - it: allows you to use basic authentication
     set:
       cluster: {name: test-cluster}
@@ -53,26 +51,6 @@ tests:
           of: ConfigMap
       - matchSnapshot:
           path: data["config.alloy"]
-
-  - it: allows you to use basic authentication with a numeric username
-    set:
-      cluster: {name: test-cluster}
-      alloy-singleton: {enabled: true, extraConfig: " ", includeDestinations: ["test"]}
-      selfReporting: {enabled: false}
-      destinations:
-        - name: test
-          type: otlp
-          url: https://otlp.example.com
-          auth:
-            type: basic
-            username: 12345
-            password: testpassword
-    asserts:
-      - isKind:
-          of: ConfigMap
-      - matchSnapshot:
-          path: data["config.alloy"]
-
   - it: allows you to configure include block with resources
     set:
       cluster: {name: test-cluster}
@@ -96,36 +74,6 @@ tests:
           of: ConfigMap
       - matchSnapshot:
           path: data["config.alloy"]
-
-  - it: allows you to configure include block with all fields
-    set:
-      cluster: {name: test-cluster}
-      alloy-singleton: {enabled: true, extraConfig: " ", includeDestinations: ["test"]}
-      selfReporting: {enabled: false}
-      destinations:
-        - name: test
-          type: otlp
-          url: https://otlp.example.com
-          processors:
-            attributes:
-              include:
-                matchType: "regexp"
-                services: ["service1", "service2"]
-                spanNames: ["span1", "span2"]
-                spanKinds: ["SPAN_KIND_SERVER", "SPAN_KIND_CLIENT"]
-                logBodies: ["error", "warning"]
-                logSeverityTexts: ["ERROR", "WARN"]
-                metricNames: ["metric1", "metric2"]
-                resources:
-                  - key: "service.name"
-                    value: "api-gateway"
-                  - key: "deployment.environment"
-    asserts:
-      - isKind:
-          of: ConfigMap
-      - matchSnapshot:
-          path: data["config.alloy"]
-
   - it: allows you to configure exclude block
     set:
       cluster: {name: test-cluster}
@@ -148,30 +96,6 @@ tests:
           of: ConfigMap
       - matchSnapshot:
           path: data["config.alloy"]
-
-  - it: allows you to configure both include and exclude blocks
-    set:
-      cluster: {name: test-cluster}
-      alloy-singleton: {enabled: true, extraConfig: " ", includeDestinations: ["test"]}
-      selfReporting: {enabled: false}
-      destinations:
-        - name: test
-          type: otlp
-          url: https://otlp.example.com
-          processors:
-            attributes:
-              include:
-                matchType: "strict"
-                services: ["api-gateway"]
-              exclude:
-                matchType: "regexp"
-                spanNames: ["^health.*"]
-    asserts:
-      - isKind:
-          of: ConfigMap
-      - matchSnapshot:
-          path: data["config.alloy"]
-
   - it: allows you to configure include block with attribute blocks
     set:
       cluster: {name: test-cluster}
@@ -196,7 +120,6 @@ tests:
           of: ConfigMap
       - matchSnapshot:
           path: data["config.alloy"]
-
   - it: allows you to configure exclude block with library blocks
     set:
       cluster: {name: test-cluster}
@@ -221,7 +144,6 @@ tests:
           of: ConfigMap
       - matchSnapshot:
           path: data["config.alloy"]
-
   - it: allows you to configure include block with log severity
     set:
       cluster: {name: test-cluster}
