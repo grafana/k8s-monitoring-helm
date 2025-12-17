@@ -88,6 +88,13 @@ autoInstrumentation:
       repository: grafana/beyla
       pullSecrets:
         - name: my-registry-creds
+    k8sCache:
+      image:
+        registry: my.registry.com
+        repository: grafana/beyla-k8s-cache
+        pullSecrets:
+          - name: my-registry-creds
+
 
 applicationObservability:
   enabled: true
