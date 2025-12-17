@@ -102,7 +102,13 @@ This defines the options for defining a destination for OpenTelemetry data that 
 | processors.attributes."include.spanNames" | list | `[]` | Items matching span names. |
 | processors.attributes.actions | list | `[]` | Attribute processor actions Format: { key: "", value: "", action: "", pattern: "", fromAttribute: "", fromContext: "", convertedType: "" } Can also use `valueFrom` instead of value to use a raw reference. |
 | processors.attributes.exclude | object | `{}` | Exclude block to filter which telemetry data the processor should not operate on. Requires `matchType` and at least one filtering field. |
+| processors.attributes.exclude.attributes | list | `[]` | List of attribute blocks to match against. Format: { key: "", value: "", regexp: { pattern: "" } }. Works for all signal types. |
+| processors.attributes.exclude.libraries | list | `[]` | List of library blocks to match against. Format: { name: "", version: "", nameRegexp: { pattern: "" }, versionRegexp: { pattern: "" } }. |
+| processors.attributes.exclude.logSeverity | object | `{}` | Log severity block to match against. Format: { min: "", matchUndefined: bool }. |
 | processors.attributes.include | object | `{}` | Include block to filter which telemetry data the processor operates on. Requires `matchType` and at least one filtering field. |
+| processors.attributes.include.attributes | list | `[]` | List of attribute blocks to match against. Format: { key: "", value: "", regexp: { pattern: "" } }. Works for all signal types. |
+| processors.attributes.include.libraries | list | `[]` | List of library blocks to match against. Format: { name: "", version: "", nameRegexp: { pattern: "" }, versionRegexp: { pattern: "" } }. |
+| processors.attributes.include.logSeverity | object | `{}` | Log severity block to match against. Format: { min: "", matchUndefined: bool }. |
 
 ### Batch Processor
 
