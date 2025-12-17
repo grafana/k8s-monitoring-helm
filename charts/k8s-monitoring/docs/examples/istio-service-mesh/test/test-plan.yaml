@@ -1,12 +1,13 @@
 ---
+# yamllint disable rule:line-length
 apiVersion: helm-chart-toolbox.grafana.com/v1
 kind: TestPlan
 name: istio-service-mesh
 
 subject:
   releaseName: k8smon
-  path: ../../..
-  valuesFile: values.yaml
+  path: ../../../..
+  valuesFile: ../values.yaml
 
 cluster:
   type: kind
@@ -28,6 +29,8 @@ dependencies:
               type: prometheus
               url: http://prometheus-server.prometheus.svc:9090
               isDefault: true
+              jsonData:
+                timeInterval: 60s
 
             - name: Loki
               type: loki
@@ -43,6 +46,29 @@ dependencies:
             - name: Tempo
               type: tempo
               url: http://tempo.tempo.svc:3200
+
+#      dashboardProviders:
+#        dashboardproviders.yaml:
+#          apiVersion: 1
+#          providers:
+#            - name: 'default'
+#              orgId: 1
+#              folder: ''
+#              type: file
+#              disableDeletion: false
+#              editable: true
+#              options:
+#                path: /var/lib/grafana/dashboards/default
+#      dashboards:
+#        default:
+#          istio-logs:
+#            url: https://raw.githubusercontent.com/grafana/k8s-monitoring-helm/refs/heads/feat/istio-integration/charts/k8s-monitoring/docs/examples/istio-service-mesh/test/dashboards/istio-logs.json
+#          istio-overview:
+#            url: https://raw.githubusercontent.com/grafana/k8s-monitoring-helm/refs/heads/feat/istio-integration/charts/k8s-monitoring/docs/examples/istio-service-mesh/test/dashboards/istio-overview.json
+#          istio-services-overview:
+#            url: https://raw.githubusercontent.com/grafana/k8s-monitoring-helm/refs/heads/feat/istio-integration/charts/k8s-monitoring/docs/examples/istio-service-mesh/test/dashboards/istio-services-overview.json
+#          istio-workloads-overview:
+#            url: https://raw.githubusercontent.com/grafana/k8s-monitoring-helm/refs/heads/feat/istio-integration/charts/k8s-monitoring/docs/examples/istio-service-mesh/test/dashboards/istio-workloads-overview.json
 
 tests:
   - type: query-test

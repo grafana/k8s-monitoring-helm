@@ -2,6 +2,8 @@
 
 ## 3.7.0
 
+*   Update Alloy Operator and Beyla (@petewall)
+*   Add an integration for Istio sidecar and service metrics (@petewall)
 *   Add an integration for PostgreSQL, including support for Database Observability (@petewall)
 *   Add the ability to set otel_annotations flag for the k8sattributes processor (@petewall)
 *   Add more options to the secretFilter component in the pod logs features (@petewall)
