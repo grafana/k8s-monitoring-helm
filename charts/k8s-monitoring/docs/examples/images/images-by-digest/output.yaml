@@ -1517,6 +1517,29 @@ spec:
     app.kubernetes.io/name: alloy-operator
     app.kubernetes.io/instance: k8smon
 ---
+# Source: k8s-monitoring/charts/autoInstrumentation/charts/beyla/templates/cache-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: beyla-k8s-cache
+  namespace: default
+  labels:
+    helm.sh/chart: beyla-1.9.9
+    app.kubernetes.io/name: beyla-k8s-cache
+    app.kubernetes.io/instance: k8smon
+    app.kubernetes.io/version: "2.7.5"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/part-of: beyla
+    app.kubernetes.io/component: networking
+spec:
+  ports:
+    - port: 50055
+      protocol: TCP
+      targetPort: grpc
+      name: grpc
+  selector:
+    app.kubernetes.io/name: beyla-k8s-cache
+---
 # Source: k8s-monitoring/charts/clusterMetrics/charts/kube-state-metrics/templates/service.yaml
 apiVersion: v1
 kind: Service
@@ -1653,6 +1676,8 @@ spec:
           env:
             - name: BEYLA_CONFIG_PATH
               value: "/etc/beyla/config/beyla-config.yml"
+            - name: BEYLA_KUBE_META_CACHE_ADDRESS
+              value: beyla-k8s-cache:50055
           volumeMounts:
             - mountPath: /etc/beyla/config
               name: beyla-config
@@ -1975,6 +2000,55 @@ spec:
             readOnlyRootFilesystem: true
       nodeSelector:
         kubernetes.io/os: linux
+---
+# Source: k8s-monitoring/charts/autoInstrumentation/charts/beyla/templates/cache-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: beyla-k8s-cache
+  namespace: default
+  labels:
+    helm.sh/chart: beyla-1.9.9
+    app.kubernetes.io/name: beyla-k8s-cache
+    app.kubernetes.io/instance: k8smon
+    app.kubernetes.io/version: "2.7.5"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/part-of: beyla
+    app.kubernetes.io/component: workload
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: beyla-k8s-cache
+  template:
+    metadata:
+      labels:
+        helm.sh/chart: beyla-1.9.9
+        app.kubernetes.io/name: beyla-k8s-cache
+        app.kubernetes.io/instance: k8smon
+        app.kubernetes.io/version: "2.7.5"
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/part-of: beyla
+    spec:
+      serviceAccountName: k8smon-beyla
+      containers:
+        - name: beyla-cache
+          image: docker.io/grafana/beyla-k8s-cache:2.7.5
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 50055
+              protocol: TCP
+              name: grpc
+          resources:
+            limits:
+              cpu: "3.0"
+              memory: 2Gi
+            requests:
+              cpu: "0.1"
+              memory: 256Mi
+          env:
+            - name: BEYLA_K8S_CACHE_PORT
+              value: "50055"
 ---
 # Source: k8s-monitoring/charts/clusterMetrics/charts/kube-state-metrics/templates/deployment.yaml
 apiVersion: apps/v1
