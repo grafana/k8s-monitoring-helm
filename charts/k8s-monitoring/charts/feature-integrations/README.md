@@ -114,6 +114,12 @@ Be sure perform actual integration testing in a live environment in the main [k8
 |-----|------|---------|-------------|
 | grafana | object | `{"instances":[]}` | Scrape metrics/logs from Grafana |
 
+### Integration: Istio
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| istio | object | `{"instances":[]}` | Scrape metrics/logs from Istio sidecar and service. |
+
 ### Integration: Loki
 
 | Key | Type | Default | Description |
