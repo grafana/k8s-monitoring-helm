@@ -2,8 +2,14 @@
 (NOTE: Do not edit README.md directly. It is a generated file!)
 (      To make changes, please modify values.yaml or description.txt and run `make examples`)
 -->
-# Example: metric-enrichment/values.yaml
+# Metric Enrichment
 
+This example shows how to use the `prometheus.enrich` component to attach labels to metrics from other sources.
+In this example, we get the list of pods, extract the `color` label that's on the namespace, then combine that with any
+metrics that have both `namespace` and `pod` already set. This is all done in a custom destination, which then forwards
+to the standard prometheus destination
+
+Sending `clusterMetrics` to the custom destination will ensure that the metrics go through the enrichment process first.
 ## Values
 
 <!-- textlint-disable terminology -->
@@ -20,12 +26,14 @@ destinations:
     type: custom
     ecosystem: prometheus
     config: |
+      // Discover pods with namespace labels attached
       discovery.kubernetes "metric_enrichment_pods" {
         role = "pod"
         attach_metadata {
           namespace = true
         }
       }
+      // Create the matching label (<namespace>;<pod>) and the label of interest. Drop *all* other labels
       discovery.relabel "metric_enrichment_pods" {
         targets = discovery.kubernetes.metric_enrichment_pods.targets
         rule {
@@ -37,8 +45,13 @@ destinations:
           source_labels = ["__meta_kubernetes_namespace_label_color"]
           target_label = "color"
         }
+        rule {
+          action = "labelkeep"
+          regex = "temp_namespaced_pod|color" 
+        }
       }
       
+      // Creating the matching label (<namespace>;<pod>) for the incoming metrics
       prometheus.relabel "metric_enrichment" {
         rule {
           source_labels = ["namespace", "pod"]
@@ -48,16 +61,19 @@ destinations:
         forward_to = [prometheus.enrich.metric_enrichment.receiver]
       }
       
+      // Enrich the metrics with the combination of the two groups
       prometheus.enrich "metric_enrichment" {
         targets = discovery.relabel.metric_enrichment_pods.output
         target_match_label = "temp_namespaced_pod"
         metrics_match_label = "temp_namespaced_pod"
         forward_to = [prometheus.relabel.metric_enrichment_final.receiver]
       }
+      
+      // Drop the matching label
       prometheus.relabel "metric_enrichment_final" {
         rule {
           action = "labeldrop"
-          regex = "temp_namespaced_pod|__address__|__meta.*"
+          regex = "temp_namespaced_pod"
         }
         forward_to = [prometheus.remote_write.metric_store.receiver]
       }
