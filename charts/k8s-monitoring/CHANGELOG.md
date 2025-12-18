@@ -2,6 +2,7 @@
 
 ## 3.7.0
 
+*   Deploy beyla-k8s-cache with 1 replica by default in auto-instrumentation feature chart (@skl)
 *   Update Alloy Operator and Beyla (@petewall)
 *   Add an integration for Istio sidecar and service metrics (@petewall)
 *   Add an integration for PostgreSQL, including support for Database Observability (@petewall)
