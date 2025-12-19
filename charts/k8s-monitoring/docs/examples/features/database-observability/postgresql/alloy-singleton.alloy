@@ -1,0 +1,216 @@
+declare "mysql_integration" {
+  argument "metrics_destinations" {
+    comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
+  }
+  argument "logs_destinations" {
+    comment = "Must be a list of log destinations where collected logs should be forwarded to"
+  }
+
+  remote.kubernetes.secret "test_db" {
+    name      = "test-database-mysql"
+    namespace = "mysql"
+  }
+
+  prometheus.exporter.mysql "test_db" {
+    data_source_name = string.format("%s:%s@(%s:%d)/",
+      convert.nonsensitive(remote.kubernetes.secret.test_db.data["mysql-username"]),
+      convert.nonsensitive(remote.kubernetes.secret.test_db.data["mysql-root-password"]),
+      "test-database-mysql.mysql.svc",
+      3306,
+    )
+    enable_collectors = ["heartbeat","mysql.user","perf_schema.eventsstatements"]
+  }
+
+  database_observability.mysql "test_db" {
+    targets = prometheus.exporter.mysql.test_db.targets
+    data_source_name = string.format("%s:%s@(%s:%d)/",
+      convert.nonsensitive(remote.kubernetes.secret.test_db.data["mysql-username"]),
+      convert.nonsensitive(remote.kubernetes.secret.test_db.data["mysql-root-password"]),
+      "test-database-mysql.mysql.svc",
+      3306,
+    )
+    allow_update_performance_schema_settings = false
+    query_details {
+      collect_interval = "1m"
+    }
+    query_samples {
+      collect_interval = "1m"
+      disable_query_redaction = false
+      auto_enable_setup_consumers = false
+      setup_consumers_check_interval = "1h"
+    }
+    schema_details {
+      collect_interval = "1m"
+      cache_enabled = false
+      cache_size = 256
+      cache_ttl = "10m"
+    }
+    setup_consumers {
+      collect_interval = "1m"
+    }
+    enable_collectors = ["query_details","query_samples","schema_details","setup_consumers"]
+
+    forward_to = argument.logs_destinations.value
+  }
+  prometheus.scrape "test_db" {
+    targets = database_observability.mysql.test_db.targets
+    clustering {
+      enabled = true
+    }
+
+    scrape_interval = "60s"
+    scrape_timeout = "10s"
+    scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
+    scrape_classic_histograms = false
+    scrape_native_histograms = false
+    forward_to = [prometheus.relabel.test_db.receiver]
+  }
+
+  prometheus.relabel "test_db" {
+    max_cache_size = 100000
+    rule {
+      target_label = "instance"
+      replacement = "test-db"
+    }
+    rule {
+      target_label = "job"
+      replacement = "integrations/db-o11y"
+    }
+    forward_to = argument.metrics_destinations.value
+  }
+}
+mysql_integration "integration" {
+  metrics_destinations = [
+    prometheus.remote_write.prometheus.receiver,
+  ]
+  logs_destinations = [
+    loki.write.loki.receiver,
+  ]
+}
+// Self Reporting
+prometheus.exporter.unix "kubernetes_monitoring_telemetry" {
+  set_collectors = ["textfile"]
+  textfile {
+    directory = "/etc/alloy"
+  }
+}
+
+discovery.relabel "kubernetes_monitoring_telemetry" {
+  targets = prometheus.exporter.unix.kubernetes_monitoring_telemetry.targets
+  rule {
+    target_label = "instance"
+    action = "replace"
+    replacement = "k8smon"
+  }
+  rule {
+    target_label = "job"
+    action = "replace"
+    replacement = "integrations/kubernetes/kubernetes_monitoring_telemetry"
+  }
+}
+
+prometheus.scrape "kubernetes_monitoring_telemetry" {
+  job_name   = "integrations/kubernetes/kubernetes_monitoring_telemetry"
+  targets    = discovery.relabel.kubernetes_monitoring_telemetry.output
+  scrape_interval = "60s"
+  clustering {
+    enabled = true
+  }
+  forward_to = [prometheus.relabel.kubernetes_monitoring_telemetry.receiver]
+}
+
+prometheus.relabel "kubernetes_monitoring_telemetry" {
+  rule {
+    source_labels = ["__name__"]
+    regex = "grafana_kubernetes_monitoring_.*"
+    action = "keep"
+  }
+  forward_to = [
+    prometheus.remote_write.prometheus.receiver,
+  ]
+}
+
+
+
+
+// Destination: prometheus (prometheus)
+otelcol.exporter.prometheus "prometheus" {
+  add_metric_suffixes = true
+  resource_to_telemetry_conversion = false
+  forward_to = [prometheus.remote_write.prometheus.receiver]
+}
+
+prometheus.remote_write "prometheus" {
+  endpoint {
+    url = "http://prometheus-server.prometheus.svc:9090/api/v1/write"
+    headers = {
+    }
+    tls_config {
+      insecure_skip_verify = false
+    }
+    send_native_histograms = false
+
+    queue_config {
+      capacity = 10000
+      min_shards = 1
+      max_shards = 50
+      max_samples_per_send = 2000
+      batch_send_deadline = "5s"
+      min_backoff = "30ms"
+      max_backoff = "5s"
+      retry_on_http_429 = true
+      sample_age_limit = "0s"
+    }
+
+    write_relabel_config {
+      source_labels = ["cluster"]
+      regex = ""
+      replacement = "db-o11y-mysql-test"
+      target_label = "cluster"
+    }
+    write_relabel_config {
+      source_labels = ["k8s_cluster_name"]
+      regex = ""
+      replacement = "db-o11y-mysql-test"
+      target_label = "k8s_cluster_name"
+    }
+  }
+
+  wal {
+    truncate_frequency = "2h"
+    min_keepalive_time = "5m"
+    max_keepalive_time = "8h"
+  }
+}
+// Destination: loki (loki)
+otelcol.exporter.loki "loki" {
+  forward_to = [loki.write.loki.receiver]
+}
+
+loki.write "loki" {
+  endpoint {
+    url = "http://loki.loki.svc:3100/loki/api/v1/push"
+    retry_on_http_429 = true
+    tenant_id = convert.nonsensitive(remote.kubernetes.secret.loki.data["tenantId"])
+    basic_auth {
+      username = convert.nonsensitive(remote.kubernetes.secret.loki.data["username"])
+      password = remote.kubernetes.secret.loki.data["password"]
+    }
+    tls_config {
+      insecure_skip_verify = false
+    }
+    min_backoff_period = "500ms"
+    max_backoff_period = "5m"
+    max_backoff_retries = "10"
+  }
+  external_labels = {
+    "cluster" = "db-o11y-mysql-test",
+    "k8s_cluster_name" = "db-o11y-mysql-test",
+  }
+}
+
+remote.kubernetes.secret "loki" {
+  name      = "loki-k8smon-k8s-monitoring"
+  namespace = "default"
+}
+
