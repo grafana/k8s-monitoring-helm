@@ -7,9 +7,10 @@
 This example shows how to use the `prometheus.enrich` component to attach labels to metrics from other sources.
 In this example, we get the list of pods, extract the `color` label that's on the namespace, then combine that with any
 metrics that have both `namespace` and `pod` already set. This is all done in a custom destination, which then forwards
-to the standard prometheus destination
+to the standard Prometheus destination
 
 Sending `clusterMetrics` to the custom destination will ensure that the metrics go through the enrichment process first.
+
 ## Values
 
 <!-- textlint-disable terminology -->
@@ -47,10 +48,10 @@ destinations:
         }
         rule {
           action = "labelkeep"
-          regex = "temp_namespaced_pod|color" 
+          regex = "temp_namespaced_pod|color"
         }
       }
-      
+
       // Creating the matching label (<namespace>;<pod>) for the incoming metrics
       prometheus.relabel "metric_enrichment" {
         rule {
@@ -60,7 +61,7 @@ destinations:
         }
         forward_to = [prometheus.enrich.metric_enrichment.receiver]
       }
-      
+
       // Enrich the metrics with the combination of the two groups
       prometheus.enrich "metric_enrichment" {
         targets = discovery.relabel.metric_enrichment_pods.output
@@ -68,7 +69,7 @@ destinations:
         metrics_match_label = "temp_namespaced_pod"
         forward_to = [prometheus.relabel.metric_enrichment_final.receiver]
       }
-      
+
       // Drop the matching label
       prometheus.relabel "metric_enrichment_final" {
         rule {

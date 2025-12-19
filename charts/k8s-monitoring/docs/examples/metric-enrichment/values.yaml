@@ -31,10 +31,10 @@ destinations:
         }
         rule {
           action = "labelkeep"
-          regex = "temp_namespaced_pod|color" 
+          regex = "temp_namespaced_pod|color"
         }
       }
-      
+
       // Creating the matching label (<namespace>;<pod>) for the incoming metrics
       prometheus.relabel "metric_enrichment" {
         rule {
@@ -44,7 +44,7 @@ destinations:
         }
         forward_to = [prometheus.enrich.metric_enrichment.receiver]
       }
-      
+
       // Enrich the metrics with the combination of the two groups
       prometheus.enrich "metric_enrichment" {
         targets = discovery.relabel.metric_enrichment_pods.output
@@ -52,7 +52,7 @@ destinations:
         metrics_match_label = "temp_namespaced_pod"
         forward_to = [prometheus.relabel.metric_enrichment_final.receiver]
       }
-      
+
       // Drop the matching label
       prometheus.relabel "metric_enrichment_final" {
         rule {

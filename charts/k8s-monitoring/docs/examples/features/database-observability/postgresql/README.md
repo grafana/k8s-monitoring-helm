@@ -2,7 +2,7 @@
 (NOTE: Do not edit README.md directly. It is a generated file!)
 (      To make changes, please modify values.yaml or description.txt and run `make examples`)
 -->
-# Example: features/database-observability/mysql/values.yaml
+# Example: features/database-observability/postgresql/values.yaml
 
 ## Values
 
@@ -10,13 +10,13 @@
 ```yaml
 ---
 cluster:
-  name: db-o11y-mysql-test
+  name: db-o11y-postgresql-test-cluster
 
 destinations:
   - name: prometheus
     type: prometheus
     url: http://prometheus-server.prometheus.svc:9090/api/v1/write
-  - name: loki
+  - name: localLoki
     type: loki
     url: http://loki.loki.svc:3100/loki/api/v1/push
     tenantId: "1"
@@ -26,36 +26,32 @@ destinations:
       password: lokipassword
 
 integrations:
-  collector: alloy-singleton
-  mysql:
+  postgresql:
     instances:
-      - name: test-db
+      - name: test-database
         jobLabel: integrations/db-o11y
         exporter:
-          enabled: true
-          collectors:
-            perfSchemaEventsStatements:
-              enabled: true
           dataSource:
-            host: test-database-mysql.mysql.svc
+            host: test-database-pg-db-primary.postgresql.svc
             auth:
-              usernameKey: mysql-username
-              passwordKey: mysql-root-password
+              usernameKey: user
+              passwordKey: password
         databaseObservability:
           enabled: true
         secret:
           create: false
-          name: test-database-mysql
-          namespace: mysql
+          name: test-database-pg-db-pguser-test-database-pg-db
+          namespace: postgresql
         logs:
           enabled: true
           labelSelectors:
-            app.kubernetes.io/instance: test-database
+            app.kubernetes.io/instance: test-database-pg-db
+
 
 podLogs:
   enabled: true
 
-alloy-singleton:
+alloy-metrics:
   enabled: true
   alloy:
     stabilityLevel: experimental
