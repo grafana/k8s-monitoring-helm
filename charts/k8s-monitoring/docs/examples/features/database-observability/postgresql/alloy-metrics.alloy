@@ -12,20 +12,23 @@ declare "postgresql_integration" {
   }
 
   prometheus.exporter.postgres "test_database" {
-    data_source_names = [string.format("postgresql://%s:%s@%s:%d/",
+    data_source_names = [string.format("postgresql://%s:%s@%s:%d/?sslmode=disable",
       encoding.url_encode(convert.nonsensitive(remote.kubernetes.secret.test_database.data["user"])),
       encoding.url_encode(convert.nonsensitive(remote.kubernetes.secret.test_database.data["password"])),
       "test-database-pg-db-primary.postgresql.svc",
       5432,
     )]
-    enabled_collectors = ["database","locks","replication","replication_slot","stat_bgwriter","stat_database","stat_progress_vacuum","stat_user_tables","statio_user_tables","wal"]
+    enabled_collectors = ["database","locks","replication","replication_slot","stat_bgwriter","stat_database","stat_progress_vacuum","stat_statements","stat_user_tables","statio_user_tables","wal"]
+    autodiscovery {
+      enabled = true
+    }
     disable_default_metrics = false
     disable_settings_metrics = false
   }
 
   database_observability.postgres "test_database" {
     targets = prometheus.exporter.postgres.test_database.targets
-    data_source_name = string.format("postgresql://%s:%s@%s:%d/",
+    data_source_name = string.format("postgresql://%s:%s@%s:%d/?sslmode=disable",
       encoding.url_encode(convert.nonsensitive(remote.kubernetes.secret.test_database.data["user"])),
       encoding.url_encode(convert.nonsensitive(remote.kubernetes.secret.test_database.data["password"])),
       "test-database-pg-db-primary.postgresql.svc",

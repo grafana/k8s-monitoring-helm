@@ -36,6 +36,12 @@ integrations:
             auth:
               usernameKey: user
               passwordKey: password
+            sslmode: disable
+          autoDiscovery:
+            enabled: true
+          collectors:
+            statStatements:
+              enabled: true
         databaseObservability:
           enabled: true
         secret:
