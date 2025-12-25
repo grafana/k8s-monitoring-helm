@@ -1,11 +1,11 @@
 {{/* Inputs: . (Values) */}}
 {{- define "integrations.postgresql.type.logOutput" }}
 {{- $defaultValues := "integrations/postgresql-values.yaml" | .Files.Get | fromYaml }}
-{{- $logsEnabled := false }}
+{{- $logOutput := false }}
 {{- range $instance := .Values.postgresql.instances }}
-  {{- $logsEnabled = or $logsEnabled (dig "logs" "enabled" true $instance) }}
+  {{- $logOutput = or $logOutput (dig "databaseObservability" "enabled" false $instance) }}
 {{- end }}
-{{- $logsEnabled -}}
+{{- $logOutput -}}
 {{- end }}
 
 {{/* Inputs: . (Values) */}}

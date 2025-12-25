@@ -1,11 +1,11 @@
 {{/* Inputs: . (Values) */}}
 {{- define "integrations.mysql.type.logOutput" }}
 {{- $defaultValues := "integrations/mysql-values.yaml" | .Files.Get | fromYaml }}
-{{- $logsEnabled := false }}
+{{- $logOutput := false }}
 {{- range $instance := .Values.mysql.instances }}
-  {{- $logsEnabled = or $logsEnabled (dig "logs" "enabled" true $instance) }}
+  {{- $logOutput = or $logOutput (dig "databaseObservability" "enabled" false $instance) }}
 {{- end }}
-{{- $logsEnabled -}}
+{{- $logOutput -}}
 {{- end }}
 
 {{/* Inputs: . (Values) */}}

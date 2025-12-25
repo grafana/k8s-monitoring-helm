@@ -1,0 +1,150 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Test PostgreSQL Integration - Metrics
+templates:
+  - configmap.yaml
+  - postgresql-secret.yaml
+tests:
+  - it: should create the PostgreSQL config
+    set:
+      deployAsConfigMap: true
+      postgresql:
+        instances:
+          - name: my-database
+            exporter:
+              dataSource:
+                host: my-db.postgresql.svc
+                auth:
+                  username: db-admin
+                  password: db-password
+            logs: {enabled: false}
+    asserts:
+      - template: configmap.yaml
+        matchSnapshot:
+          path: data["metrics.alloy"]
+
+      - template: postgresql-secret.yaml
+        documentIndex: 0
+        containsDocument:
+          apiVersion: v1
+          kind: Secret
+          name: my-database-release-name-feature-integrations
+          namespace: NAMESPACE
+      - template: postgresql-secret.yaml
+        equal:
+          path: stringData.username
+          value: db-admin
+      - template: postgresql-secret.yaml
+        equal:
+          path: stringData.password
+          value: db-password
+
+  - it: works with multiple PostgreSQL Instances
+    set:
+      deployAsConfigMap: true
+      postgresql:
+        instances:
+          - name: test-db
+            exporter:
+              dataSource:
+                host: database.test.svc
+            logs: {enabled: false}
+          - name: staging-db
+            exporter:
+              dataSourceName: "root:password@database.staging.svc:3306/"
+            logs: {enabled: false}
+          - name: prod-db
+            exporter:
+              dataSource:
+                host: database.prod.svc
+                auth:
+                  username: db-admin
+                  password: db-password
+            logs: {enabled: false}
+    asserts:
+      - template: configmap.yaml
+        matchSnapshot:
+          path: data["metrics.alloy"]
+
+      - template: postgresql-secret.yaml
+        hasDocuments:
+          count: 1  # Only one secret should be created
+      - template: postgresql-secret.yaml
+        documentIndex: 0
+        containsDocument:
+          apiVersion: v1
+          kind: Secret
+          name: prod-db-release-name-feature-integrations
+          namespace: NAMESPACE
+      - template: postgresql-secret.yaml
+        equal:
+          path: stringData.username
+          value: db-admin
+      - template: postgresql-secret.yaml
+        equal:
+          path: stringData.password
+          value: db-password
+
+  - it: works when referencing the PostgreSQL Secret
+    set:
+      deployAsConfigMap: true
+      postgresql:
+        instances:
+          - name: test-database
+            exporter:
+              dataSource:
+                host: test-database-postgresql.postgresql.svc
+                auth:
+                  usernameFrom: sys.env(MYSQL_ROOT_USER)
+                  passwordKey: postgresql-root-password
+            secret:
+              create: false
+              name: test-database-postgresql
+              namespace: postgresql
+            logs: {enabled: false}
+    asserts:
+      - template: configmap.yaml
+        matchSnapshot:
+          path: data["metrics.alloy"]
+
+      - template: postgresql-secret.yaml
+        hasDocuments:
+          count: 0  # No secret should be created
+
+  - it: allows you to set the network protocol
+    set:
+      deployAsConfigMap: true
+      postgresql:
+        instances:
+          - name: test-database
+            exporter:
+              dataSource:
+                host: test-database-postgresql.postgresql.svc
+                protocol: tcp
+                auth:
+                  username: db-admin
+                  password: db-password
+            logs: {enabled: false}
+    asserts:
+      - template: configmap.yaml
+        matchSnapshot:
+          path: data["metrics.alloy"]
+
+  - it: allows you to set the tls
+    set:
+      deployAsConfigMap: true
+      postgresql:
+        instances:
+          - name: test-database
+            exporter:
+              dataSource:
+                host: test-database-postgresql.postgresql.svc
+                allowFallbackToPlaintext: true
+                tls: preferred
+                auth:
+                  username: db-admin
+                  password: db-password
+            logs: {enabled: false}
+    asserts:
+      - template: configmap.yaml
+        matchSnapshot:
+          path: data["metrics.alloy"]

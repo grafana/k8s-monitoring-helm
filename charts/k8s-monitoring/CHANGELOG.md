@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+*   Fix MySQL and PostgreSQL integrations for missing log destinations and secrets. (@petewall)
+
 ## 3.7.0
 
 *   Deploy beyla-k8s-cache with 1 replica by default in auto-instrumentation feature chart (@skl)
