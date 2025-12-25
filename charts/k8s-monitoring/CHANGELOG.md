@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+*   Update Node Exporter and kube-state-metrics (@petewall)
 *   Fix MySQL and PostgreSQL integrations for missing log destinations and secrets. (@petewall)
 
 ## 3.7.0
