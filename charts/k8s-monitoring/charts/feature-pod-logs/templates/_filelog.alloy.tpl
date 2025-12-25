@@ -124,6 +124,10 @@ otelcol.processor.transform "pod_logs" {
     statements = [
       `delete_key(attributes, "k8s.container.restart_count")`,
 
+      `set(attributes["service.name"], attributes["resource.opentelemetry.io/service.name"]) where attributes["service.name"] == nil`,
+      `set(attributes["service.namespace"], attributes["resource.opentelemetry.io/service.namespace"]) where attributes["service.namespace"] == nil`,
+      `set(attributes["deployment.environment.name"], attributes["resource.opentelemetry.io/deployment.environment.name"]) where attributes["deployment.environment.name"] == nil`,
+
       `set(attributes["service.name"], attributes["app.kubernetes.io/name"]) where attributes["service.name"] == nil`,
       `set(attributes["service.name"], attributes["k8s.deployment.name"]) where attributes["service.name"] == nil`,
       `set(attributes["service.name"], attributes["k8s.replicaset.name"]) where attributes["service.name"] == nil`,
