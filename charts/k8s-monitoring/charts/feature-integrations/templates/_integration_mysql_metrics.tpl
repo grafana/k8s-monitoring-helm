@@ -54,9 +54,11 @@ declare "mysql_integration" {
   argument "metrics_destinations" {
     comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
   }
+  {{- if eq (include "integrations.mysql.type.logOutput" .) "true" }}
   argument "logs_destinations" {
     comment = "Must be a list of log destinations where collected logs should be forwarded to"
   }
+  {{- end }}
   {{- range $instance := $.Values.mysql.instances }}
     {{- include "integrations.mysql.include.metrics" (deepCopy $ | merge (dict "instance" $instance)) | nindent 2 }}
   {{- end }}
