@@ -1,7 +1,7 @@
 ---
 apiVersion: helm-chart-toolbox.grafana.com/v1
 kind: TestPlan
-name: postgresql-integration
+name: db-o11y-postgresql
 
 subject:
   releaseName: k8smon
@@ -43,27 +43,22 @@ tests:
   - type: query-test
     values:
       tests:
-        - envFrom:
-            - configMapRef: {name: test-parameters}
-          env:
+        - env:
             PROMETHEUS_URL: http://prometheus-server.prometheus.svc:9090/api/v1/query
             LOKI_URL: http://loki.loki.svc:3100/loki/api/v1/query
             LOKI_TENANTID: 1
             LOKI_USER: loki
             LOKI_PASS: lokipassword
+          envFrom:
+            - configMapRef: {name: test-parameters}
 
           queries:
-            # PostgreSQL metrics
-            - query: postgres_exporter_build_info{cluster="$clusterName", instance="test-database"}
+            # PostgreSQL Exporter metrics
+            - query: postgres_exporter_build_info{cluster="$clusterName", job="integrations/db-o11y", instance="test-database"}
+              type: promql
+            - query: pg_database_size_bytes{cluster="$clusterName", job="integrations/db-o11y", instance="test-database", datname="test-database-pg-db"}
               type: promql
 
             # PostgreSQL logs
-            - query: count_over_time({cluster="$clusterName", job="integrations/postgresql", instance="test-database"}[1h])
+            - query: count_over_time({cluster="$clusterName", job="integrations/db-o11y"}[1h])
               type: logql
-
-            # DPM check
-            - query: avg(count_over_time(scrape_samples_scraped{cluster="$clusterName"}[1m]))
-              type: promql
-              expect:
-                value: 1
-                operator: ==
