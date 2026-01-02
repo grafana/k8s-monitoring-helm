@@ -29,6 +29,172 @@ otelcol.receiver.loki {{ include "helper.alloy_name" .name | quote }} {
 {{- end }}
 
 otelcol.processor.attributes {{ include "helper.alloy_name" .name | quote }} {
+{{- if .processors.attributes.include }}
+  {{- $tracesEnabled := and .traces (ne (.traces.enabled | default true) false) }}
+  {{- $logsEnabled := and .logs (ne (.logs.enabled | default true) false) }}
+  {{- $metricsEnabled := and .metrics (ne (.metrics.enabled | default true) false) }}
+  {{- $onlyTraces := and $tracesEnabled (not $logsEnabled) (not $metricsEnabled) }}
+  {{- $onlyLogs := and $logsEnabled (not $tracesEnabled) (not $metricsEnabled) }}
+  {{- $onlyMetrics := and $metricsEnabled (not $tracesEnabled) (not $logsEnabled) }}
+  {{- $hasMetrics := $metricsEnabled }}
+  include {
+    match_type = {{ .processors.attributes.include.matchType | quote }}
+    {{- if and .processors.attributes.include.services (not $hasMetrics) }}
+    services = {{ .processors.attributes.include.services | toJson }}
+    {{- end }}
+    {{- if and $onlyTraces .processors.attributes.include.spanNames }}
+    span_names = {{ .processors.attributes.include.spanNames | toJson }}
+    {{- end }}
+    {{- if and $onlyTraces .processors.attributes.include.spanKinds }}
+    span_kinds = {{ .processors.attributes.include.spanKinds | toJson }}
+    {{- end }}
+    {{- if and $onlyLogs .processors.attributes.include.logBodies }}
+    log_bodies = {{ .processors.attributes.include.logBodies | toJson }}
+    {{- end }}
+    {{- if and $onlyLogs .processors.attributes.include.logSeverityTexts }}
+    log_severity_texts = {{ .processors.attributes.include.logSeverityTexts | toJson }}
+    {{- end }}
+    {{- if and $onlyMetrics .processors.attributes.include.metricNames }}
+    metric_names = {{ .processors.attributes.include.metricNames | toJson }}
+    {{- end }}
+{{- range $resource := .processors.attributes.include.resources }}
+    resource {
+      key = {{ $resource.key | quote }}
+      {{- if $resource.value }}
+      value = {{ $resource.value | toJson }}
+      {{- end }}
+    }
+{{- end }}
+{{- range $attribute := .processors.attributes.include.attributes }}
+    {{- if not $hasMetrics }}
+    attribute {
+      key = {{ $attribute.key | quote }}
+      {{- if $attribute.value }}
+      value = {{ $attribute.value | toJson }}
+      {{- end }}
+      {{- if $attribute.regexp }}
+      regexp {
+        pattern = {{ $attribute.regexp.pattern | quote }}
+      }
+      {{- end }}
+    }
+    {{- end }}
+{{- end }}
+{{- range $library := .processors.attributes.include.libraries }}
+    {{- if not $hasMetrics }}
+    library {
+      {{- if $library.name }}
+      name = {{ $library.name | quote }}
+      {{- end }}
+      {{- if $library.version }}
+      version = {{ $library.version | quote }}
+      {{- end }}
+      {{- if $library.nameRegexp }}
+      name_regexp {
+        pattern = {{ $library.nameRegexp.pattern | quote }}
+      }
+      {{- end }}
+      {{- if $library.versionRegexp }}
+      version_regexp {
+        pattern = {{ $library.versionRegexp.pattern | quote }}
+      }
+      {{- end }}
+    }
+    {{- end }}
+{{- end }}
+{{- if and $onlyLogs .processors.attributes.include.logSeverity }}
+    log_severity {
+      {{- if .processors.attributes.include.logSeverity.min }}
+      min = {{ .processors.attributes.include.logSeverity.min | quote }}
+      {{- end }}
+      match_undefined = {{ .processors.attributes.include.logSeverity.matchUndefined | default false }}
+    }
+{{- end }}
+  }
+{{- end }}
+{{- if .processors.attributes.exclude }}
+  {{- $tracesEnabled := and .traces (ne (.traces.enabled | default true) false) }}
+  {{- $logsEnabled := and .logs (ne (.logs.enabled | default true) false) }}
+  {{- $metricsEnabled := and .metrics (ne (.metrics.enabled | default true) false) }}
+  {{- $onlyTraces := and $tracesEnabled (not $logsEnabled) (not $metricsEnabled) }}
+  {{- $onlyLogs := and $logsEnabled (not $tracesEnabled) (not $metricsEnabled) }}
+  {{- $onlyMetrics := and $metricsEnabled (not $tracesEnabled) (not $logsEnabled) }}
+  {{- $hasMetrics := $metricsEnabled }}
+  exclude {
+    match_type = {{ .processors.attributes.exclude.matchType | quote }}
+    {{- if and .processors.attributes.exclude.services (not $hasMetrics) }}
+    services = {{ .processors.attributes.exclude.services | toJson }}
+    {{- end }}
+    {{- if and $onlyTraces .processors.attributes.exclude.spanNames }}
+    span_names = {{ .processors.attributes.exclude.spanNames | toJson }}
+    {{- end }}
+    {{- if and $onlyTraces .processors.attributes.exclude.spanKinds }}
+    span_kinds = {{ .processors.attributes.exclude.spanKinds | toJson }}
+    {{- end }}
+    {{- if and $onlyLogs .processors.attributes.exclude.logBodies }}
+    log_bodies = {{ .processors.attributes.exclude.logBodies | toJson }}
+    {{- end }}
+    {{- if and $onlyLogs .processors.attributes.exclude.logSeverityTexts }}
+    log_severity_texts = {{ .processors.attributes.exclude.logSeverityTexts | toJson }}
+    {{- end }}
+    {{- if and $onlyMetrics .processors.attributes.exclude.metricNames }}
+    metric_names = {{ .processors.attributes.exclude.metricNames | toJson }}
+    {{- end }}
+{{- range $resource := .processors.attributes.exclude.resources }}
+    resource {
+      key = {{ $resource.key | quote }}
+      {{- if $resource.value }}
+      value = {{ $resource.value | toJson }}
+      {{- end }}
+    }
+{{- end }}
+{{- range $attribute := .processors.attributes.exclude.attributes }}
+    {{- if not $hasMetrics }}
+    attribute {
+      key = {{ $attribute.key | quote }}
+      {{- if $attribute.value }}
+      value = {{ $attribute.value | toJson }}
+      {{- end }}
+      {{- if $attribute.regexp }}
+      regexp {
+        pattern = {{ $attribute.regexp.pattern | quote }}
+      }
+      {{- end }}
+    }
+    {{- end }}
+{{- end }}
+{{- range $library := .processors.attributes.exclude.libraries }}
+    {{- if not $hasMetrics }}
+    library {
+      {{- if $library.name }}
+      name = {{ $library.name | quote }}
+      {{- end }}
+      {{- if $library.version }}
+      version = {{ $library.version | quote }}
+      {{- end }}
+      {{- if $library.nameRegexp }}
+      name_regexp {
+        pattern = {{ $library.nameRegexp.pattern | quote }}
+      }
+      {{- end }}
+      {{- if $library.versionRegexp }}
+      version_regexp {
+        pattern = {{ $library.versionRegexp.pattern | quote }}
+      }
+      {{- end }}
+    }
+    {{- end }}
+{{- end }}
+{{- if and $onlyLogs .processors.attributes.exclude.logSeverity }}
+    log_severity {
+      {{- if .processors.attributes.exclude.logSeverity.min }}
+      min = {{ .processors.attributes.exclude.logSeverity.min | quote }}
+      {{- end }}
+      match_undefined = {{ .processors.attributes.exclude.logSeverity.matchUndefined | default false }}
+    }
+{{- end }}
+  }
+{{- end }}
 {{- range $action := .processors.attributes.actions }}
   action {
     key = {{ $action.key | quote }}
