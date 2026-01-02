@@ -42,6 +42,9 @@ do
   if grep "${file}" -e "otelcol.exporter.debug" >/dev/null; then
     STABILITY_LEVEL=experimental
   fi
+  if grep "${file}" -e "prometheus.enrich" >/dev/null; then
+    STABILITY_LEVEL=experimental
+  fi
 
   fmt_output=$(alloy fmt "${file}" 2>&1)
   fmtCode="$?"

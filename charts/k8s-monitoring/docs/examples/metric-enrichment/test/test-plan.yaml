@@ -1,23 +1,21 @@
 ---
 apiVersion: helm-chart-toolbox.grafana.com/v1
 kind: TestPlan
-name: postgresql-integration
+name: metric-enrichment
 
 subject:
   releaseName: k8smon
-  path: ../../../../../..
+  path: ../../../..
   valuesFile: ../values.yaml
 
 cluster:
   type: kind
 
 dependencies:
+  - file: default-namespace-label.yaml
   - preset: test-parameters
     namespace: toolbox
-  - file: postgresql.yaml
-  - file: workload.yaml
   - preset: prometheus
-  - preset: loki
   - preset: grafana
     overrides:
       datasources:
@@ -28,16 +26,6 @@ dependencies:
               type: prometheus
               url: http://prometheus-server.prometheus.svc:9090
               isDefault: true
-            - name: Loki
-              type: loki
-              url: http://loki-gateway.loki.svc:8080
-              basicAuth: true
-              basicAuthUser: loki
-              jsonData:
-                httpHeaderName1: X-Scope-OrgID
-              secureJsonData:
-                basicAuthPassword: lokipassword
-                httpHeaderValue1: "1"
 
 tests:
   - type: query-test
@@ -47,19 +35,18 @@ tests:
             - configMapRef: {name: test-parameters}
           env:
             PROMETHEUS_URL: http://prometheus-server.prometheus.svc:9090/api/v1/query
-            LOKI_URL: http://loki.loki.svc:3100/loki/api/v1/query
-            LOKI_TENANTID: 1
-            LOKI_USER: loki
-            LOKI_PASS: lokipassword
 
           queries:
-            # PostgreSQL metrics
-            - query: postgres_exporter_build_info{cluster="$clusterName", instance="test-database"}
+            # Pod metrics in the default namespace have the color label
+            - query: kube_pod_info{cluster="$clusterName", namespace="default", color="blue"}
+              type: promql
+            # Pod metrics in the other namespaces don't have the color label
+            - query: kube_pod_info{cluster="$clusterName", namespace="kube-system", color=""}
               type: promql
 
-            # PostgreSQL logs
-            - query: count_over_time({cluster="$clusterName", job="integrations/postgresql", instance="test-database"}[1h])
-              type: logql
+            # Non-pod metrics in the default namespace don't have the color label
+            - query: kube_configmap_info{cluster="metric-enrichment-test-cluster", namespace="default", color=""}
+              type: promql
 
             # DPM check
             - query: avg(count_over_time(scrape_samples_scraped{cluster="$clusterName"}[1m]))
