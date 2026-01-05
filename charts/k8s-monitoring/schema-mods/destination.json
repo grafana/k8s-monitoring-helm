@@ -1,0 +1,34 @@
+{
+  "definitions": {
+    "destination": {
+      "type": "object",
+      "anyOf": [
+        { "$ref": "#/definitions/invalid-destination"},
+        { "$ref": "#/definitions/custom-destination"},
+        { "$ref": "#/definitions/loki-stdout-destination"},
+        { "$ref": "#/definitions/loki-destination"},
+        { "$ref": "#/definitions/otlp-destination"},
+        { "$ref": "#/definitions/prometheus-destination"},
+        { "$ref": "#/definitions/pyroscope-destination"}
+      ]
+    },
+    "destination-list": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/destination"
+      }
+    },
+    "destination-map": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/definitions/destination"
+      }
+    },
+    "custom-destination": {"properties": {"type": {"type": "string", "const": "custom"}}},
+    "loki-stdout-destination": {"properties": {"type": {"type": "string", "const": "loki-stdout"}}},
+    "loki-destination": {"properties": {"type": {"type": "string", "const": "loki"}}},
+    "otlp-destination": {"properties": {"type": {"type": "string", "const": "otlp"}}},
+    "prometheus-destination": {"properties": {"type": {"type": "string", "const": "prometheus"}}},
+    "pyroscope-destination": {"properties": {"type": {"type": "string", "const": "pyroscope"}}}
+  }
+}

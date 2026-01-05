@@ -1,0 +1,886 @@
+// Profiles: eBPF
+discovery.kubernetes "ebpf_pods" {
+  role = "pod"
+  selectors {
+    role = "pod"
+    field = "spec.nodeName=" + sys.env("HOSTNAME")
+  }
+}
+
+discovery.relabel "ebpf_pods" {
+  targets = discovery.kubernetes.ebpf_pods.targets
+  rule {
+    source_labels = ["__meta_kubernetes_pod_phase"]
+    regex = "Succeeded|Failed|Completed"
+    action = "drop"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_cpu_ebpf_enabled"]
+    regex         = "false"
+    action        = "drop"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_namespace"]
+    target_label = "namespace"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_pod_name"]
+    target_label = "pod"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_pod_node_name"]
+    target_label = "node"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_pod_container_name"]
+    target_label = "container"
+  }
+  // provide arbitrary service_name label, otherwise it will be set to {__meta_kubernetes_namespace}/{__meta_kubernetes_pod_container_name}
+  rule {
+    source_labels = ["__meta_kubernetes_namespace", "__meta_kubernetes_pod_container_name"]
+    separator = "@"
+    regex = "(.*)@(.*)"
+    replacement = "ebpf/${1}/${2}"
+    target_label = "service_name"
+  }
+}
+
+pyroscope.ebpf "ebpf_pods" {
+  targets = discovery.relabel.ebpf_pods.output
+  demangle = "none"
+  forward_to = [pyroscope.write.profiles_service.receiver]
+}
+// Profiles: Java
+discovery.kubernetes "java_pods" {
+  role = "pod"
+  selectors {
+    role = "pod"
+    field = "spec.nodeName=" + sys.env("HOSTNAME")
+  }
+}
+
+discovery.relabel "potential_java_pods" {
+  targets = discovery.kubernetes.java_pods.targets
+  rule {
+    source_labels = ["__meta_kubernetes_pod_phase"]
+    regex         = "Succeeded|Failed|Completed"
+    action        = "drop"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_java_enabled"]
+    regex         = "false"
+    action        = "drop"
+  }
+}
+
+discovery.process "java_pods" {
+  join = discovery.relabel.potential_java_pods.output
+}
+
+discovery.relabel "java_pods" {
+  targets = discovery.process.java_pods.targets
+  rule {
+    source_labels = ["__meta_process_exe"]
+    action = "keep"
+    regex = ".*/java$"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_namespace"]
+    target_label = "namespace"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_pod_name"]
+    target_label = "pod"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_pod_node_name"]
+    target_label = "node"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_pod_container_name"]
+    target_label = "container"
+  }
+}
+
+pyroscope.java "java_pods" {
+  targets = discovery.relabel.java_pods.output
+  profiling_config {
+    interval = "60s"
+    alloc = "512k"
+    cpu = true
+    sample_rate = 100
+    lock = "10ms"
+  }
+  forward_to = [pyroscope.write.profiles_service.receiver]
+}
+// Profiles: pprof
+discovery.kubernetes "pprof_pods" {
+  role = "pod"
+  selectors {
+    role = "pod"
+    field = "spec.nodeName=" + sys.env("HOSTNAME")
+  }
+}
+
+discovery.relabel "pprof_pods" {
+  targets = discovery.kubernetes.pprof_pods.targets
+  rule {
+    source_labels = ["__meta_kubernetes_pod_phase"]
+    regex         = "Pending|Succeeded|Failed|Completed"
+    action        = "drop"
+  }
+
+  rule {
+    regex  = "__meta_kubernetes_pod_label_(.+)"
+    action = "labelmap"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_namespace"]
+    target_label  = "namespace"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_name"]
+    target_label  = "pod"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_container_name"]
+    target_label  = "container"
+  }
+}
+
+discovery.relabel "pprof_pods_memory" {
+  targets = discovery.relabel.pprof_pods.output
+
+  // Keep only pods with the scrape annotation set
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_memory_scrape"]
+    regex         = "true"
+    action        = "keep"
+  }
+
+  // Rules to choose the right container
+  rule {
+    source_labels = ["container"]
+    target_label = "__tmp_container"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_memory_container"]
+    regex = "(.+)"
+    target_label = "__tmp_container"
+  }
+  rule {
+    source_labels = ["container"]
+    action = "keepequal"
+    target_label = "__tmp_container"
+  }
+  rule {
+    action = "labeldrop"
+    regex = "__tmp_container"
+  }
+
+  // Rules to choose the right port by name
+  // The discovery generates a target for each declared container port of the pod.
+  // If the portName annotation has value, keep only the target where the port name matches the one of the annotation.
+  rule {
+    source_labels = ["__meta_kubernetes_pod_container_port_name"]
+    target_label = "__tmp_port"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_memory_port_name"]
+    regex = "(.+)"
+    target_label = "__tmp_port"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_pod_container_port_name"]
+    action = "keepequal"
+    target_label = "__tmp_port"
+  }
+  rule {
+    action = "labeldrop"
+    regex = "__tmp_port"
+  }
+
+  // If the portNumber annotation has a value, override the target address to use it, regardless whether it is
+  // one of the declared ports on that Pod.
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_memory_port", "__meta_kubernetes_pod_ip"]
+    regex = "(\\d+);(([A-Fa-f0-9]{1,4}::?){1,7}[A-Fa-f0-9]{1,4})"
+    replacement = "[$2]:$1" // IPv6
+    target_label = "__address__"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_memory_port", "__meta_kubernetes_pod_ip"]
+    regex = "(\\d+);((([0-9]+?)(\\.|$)){4})" // IPv4, takes priority over IPv6 when both exists
+    replacement = "$2:$1"
+    target_label = "__address__"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_memory_scheme"]
+    regex         = "(https?)"
+    target_label  = "__scheme__"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_memory_path"]
+    regex         = "(.+)"
+    target_label  = "__profile_path__"
+  }
+}
+
+pyroscope.scrape "pyroscope_scrape_memory" {
+  targets = discovery.relabel.pprof_pods_memory.output
+
+  bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+  profiling_config {
+    profile.memory {
+      enabled = true
+    }
+    profile.block {
+      enabled = false
+    }
+    profile.goroutine {
+      enabled = false
+    }
+    profile.mutex {
+      enabled = false
+    }
+    profile.process_cpu {
+      enabled = false
+    }
+    profile.fgprof {
+      enabled = false
+    }
+    profile.godeltaprof_memory {
+      enabled = false
+    }
+    profile.godeltaprof_mutex {
+      enabled = false
+    }
+    profile.godeltaprof_block {
+      enabled = false
+    }
+  }
+
+  scrape_interval = "15s"
+  scrape_timeout = "18s"
+
+  forward_to = [pyroscope.write.profiles_service.receiver]
+}
+discovery.relabel "pprof_pods_block" {
+  targets = discovery.relabel.pprof_pods.output
+
+  // Keep only pods with the scrape annotation set
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_block_scrape"]
+    regex         = "true"
+    action        = "keep"
+  }
+
+  // Rules to choose the right container
+  rule {
+    source_labels = ["container"]
+    target_label = "__tmp_container"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_block_container"]
+    regex = "(.+)"
+    target_label = "__tmp_container"
+  }
+  rule {
+    source_labels = ["container"]
+    action = "keepequal"
+    target_label = "__tmp_container"
+  }
+  rule {
+    action = "labeldrop"
+    regex = "__tmp_container"
+  }
+
+  // Rules to choose the right port by name
+  // The discovery generates a target for each declared container port of the pod.
+  // If the portName annotation has value, keep only the target where the port name matches the one of the annotation.
+  rule {
+    source_labels = ["__meta_kubernetes_pod_container_port_name"]
+    target_label = "__tmp_port"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_block_port_name"]
+    regex = "(.+)"
+    target_label = "__tmp_port"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_pod_container_port_name"]
+    action = "keepequal"
+    target_label = "__tmp_port"
+  }
+  rule {
+    action = "labeldrop"
+    regex = "__tmp_port"
+  }
+
+  // If the portNumber annotation has a value, override the target address to use it, regardless whether it is
+  // one of the declared ports on that Pod.
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_block_port", "__meta_kubernetes_pod_ip"]
+    regex = "(\\d+);(([A-Fa-f0-9]{1,4}::?){1,7}[A-Fa-f0-9]{1,4})"
+    replacement = "[$2]:$1" // IPv6
+    target_label = "__address__"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_block_port", "__meta_kubernetes_pod_ip"]
+    regex = "(\\d+);((([0-9]+?)(\\.|$)){4})" // IPv4, takes priority over IPv6 when both exists
+    replacement = "$2:$1"
+    target_label = "__address__"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_block_scheme"]
+    regex         = "(https?)"
+    target_label  = "__scheme__"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_block_path"]
+    regex         = "(.+)"
+    target_label  = "__profile_path__"
+  }
+}
+
+pyroscope.scrape "pyroscope_scrape_block" {
+  targets = discovery.relabel.pprof_pods_block.output
+
+  bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+  profiling_config {
+    profile.memory {
+      enabled = false
+    }
+    profile.block {
+      enabled = true
+    }
+    profile.goroutine {
+      enabled = false
+    }
+    profile.mutex {
+      enabled = false
+    }
+    profile.process_cpu {
+      enabled = false
+    }
+    profile.fgprof {
+      enabled = false
+    }
+    profile.godeltaprof_memory {
+      enabled = false
+    }
+    profile.godeltaprof_mutex {
+      enabled = false
+    }
+    profile.godeltaprof_block {
+      enabled = false
+    }
+  }
+
+  scrape_interval = "15s"
+  scrape_timeout = "18s"
+
+  forward_to = [pyroscope.write.profiles_service.receiver]
+}
+discovery.relabel "pprof_pods_goroutine" {
+  targets = discovery.relabel.pprof_pods.output
+
+  // Keep only pods with the scrape annotation set
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_goroutine_scrape"]
+    regex         = "true"
+    action        = "keep"
+  }
+
+  // Rules to choose the right container
+  rule {
+    source_labels = ["container"]
+    target_label = "__tmp_container"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_goroutine_container"]
+    regex = "(.+)"
+    target_label = "__tmp_container"
+  }
+  rule {
+    source_labels = ["container"]
+    action = "keepequal"
+    target_label = "__tmp_container"
+  }
+  rule {
+    action = "labeldrop"
+    regex = "__tmp_container"
+  }
+
+  // Rules to choose the right port by name
+  // The discovery generates a target for each declared container port of the pod.
+  // If the portName annotation has value, keep only the target where the port name matches the one of the annotation.
+  rule {
+    source_labels = ["__meta_kubernetes_pod_container_port_name"]
+    target_label = "__tmp_port"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_goroutine_port_name"]
+    regex = "(.+)"
+    target_label = "__tmp_port"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_pod_container_port_name"]
+    action = "keepequal"
+    target_label = "__tmp_port"
+  }
+  rule {
+    action = "labeldrop"
+    regex = "__tmp_port"
+  }
+
+  // If the portNumber annotation has a value, override the target address to use it, regardless whether it is
+  // one of the declared ports on that Pod.
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_goroutine_port", "__meta_kubernetes_pod_ip"]
+    regex = "(\\d+);(([A-Fa-f0-9]{1,4}::?){1,7}[A-Fa-f0-9]{1,4})"
+    replacement = "[$2]:$1" // IPv6
+    target_label = "__address__"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_goroutine_port", "__meta_kubernetes_pod_ip"]
+    regex = "(\\d+);((([0-9]+?)(\\.|$)){4})" // IPv4, takes priority over IPv6 when both exists
+    replacement = "$2:$1"
+    target_label = "__address__"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_goroutine_scheme"]
+    regex         = "(https?)"
+    target_label  = "__scheme__"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_goroutine_path"]
+    regex         = "(.+)"
+    target_label  = "__profile_path__"
+  }
+}
+
+pyroscope.scrape "pyroscope_scrape_goroutine" {
+  targets = discovery.relabel.pprof_pods_goroutine.output
+
+  bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+  profiling_config {
+    profile.memory {
+      enabled = false
+    }
+    profile.block {
+      enabled = false
+    }
+    profile.goroutine {
+      enabled = true
+    }
+    profile.mutex {
+      enabled = false
+    }
+    profile.process_cpu {
+      enabled = false
+    }
+    profile.fgprof {
+      enabled = false
+    }
+    profile.godeltaprof_memory {
+      enabled = false
+    }
+    profile.godeltaprof_mutex {
+      enabled = false
+    }
+    profile.godeltaprof_block {
+      enabled = false
+    }
+  }
+
+  scrape_interval = "15s"
+  scrape_timeout = "18s"
+
+  forward_to = [pyroscope.write.profiles_service.receiver]
+}
+discovery.relabel "pprof_pods_mutex" {
+  targets = discovery.relabel.pprof_pods.output
+
+  // Keep only pods with the scrape annotation set
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_mutex_scrape"]
+    regex         = "true"
+    action        = "keep"
+  }
+
+  // Rules to choose the right container
+  rule {
+    source_labels = ["container"]
+    target_label = "__tmp_container"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_mutex_container"]
+    regex = "(.+)"
+    target_label = "__tmp_container"
+  }
+  rule {
+    source_labels = ["container"]
+    action = "keepequal"
+    target_label = "__tmp_container"
+  }
+  rule {
+    action = "labeldrop"
+    regex = "__tmp_container"
+  }
+
+  // Rules to choose the right port by name
+  // The discovery generates a target for each declared container port of the pod.
+  // If the portName annotation has value, keep only the target where the port name matches the one of the annotation.
+  rule {
+    source_labels = ["__meta_kubernetes_pod_container_port_name"]
+    target_label = "__tmp_port"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_mutex_port_name"]
+    regex = "(.+)"
+    target_label = "__tmp_port"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_pod_container_port_name"]
+    action = "keepequal"
+    target_label = "__tmp_port"
+  }
+  rule {
+    action = "labeldrop"
+    regex = "__tmp_port"
+  }
+
+  // If the portNumber annotation has a value, override the target address to use it, regardless whether it is
+  // one of the declared ports on that Pod.
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_mutex_port", "__meta_kubernetes_pod_ip"]
+    regex = "(\\d+);(([A-Fa-f0-9]{1,4}::?){1,7}[A-Fa-f0-9]{1,4})"
+    replacement = "[$2]:$1" // IPv6
+    target_label = "__address__"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_mutex_port", "__meta_kubernetes_pod_ip"]
+    regex = "(\\d+);((([0-9]+?)(\\.|$)){4})" // IPv4, takes priority over IPv6 when both exists
+    replacement = "$2:$1"
+    target_label = "__address__"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_mutex_scheme"]
+    regex         = "(https?)"
+    target_label  = "__scheme__"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_mutex_path"]
+    regex         = "(.+)"
+    target_label  = "__profile_path__"
+  }
+}
+
+pyroscope.scrape "pyroscope_scrape_mutex" {
+  targets = discovery.relabel.pprof_pods_mutex.output
+
+  bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+  profiling_config {
+    profile.memory {
+      enabled = false
+    }
+    profile.block {
+      enabled = false
+    }
+    profile.goroutine {
+      enabled = false
+    }
+    profile.mutex {
+      enabled = true
+    }
+    profile.process_cpu {
+      enabled = false
+    }
+    profile.fgprof {
+      enabled = false
+    }
+    profile.godeltaprof_memory {
+      enabled = false
+    }
+    profile.godeltaprof_mutex {
+      enabled = false
+    }
+    profile.godeltaprof_block {
+      enabled = false
+    }
+  }
+
+  scrape_interval = "15s"
+  scrape_timeout = "18s"
+
+  forward_to = [pyroscope.write.profiles_service.receiver]
+}
+discovery.relabel "pprof_pods_cpu" {
+  targets = discovery.relabel.pprof_pods.output
+
+  // Keep only pods with the scrape annotation set
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_cpu_scrape"]
+    regex         = "true"
+    action        = "keep"
+  }
+
+  // Rules to choose the right container
+  rule {
+    source_labels = ["container"]
+    target_label = "__tmp_container"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_cpu_container"]
+    regex = "(.+)"
+    target_label = "__tmp_container"
+  }
+  rule {
+    source_labels = ["container"]
+    action = "keepequal"
+    target_label = "__tmp_container"
+  }
+  rule {
+    action = "labeldrop"
+    regex = "__tmp_container"
+  }
+
+  // Rules to choose the right port by name
+  // The discovery generates a target for each declared container port of the pod.
+  // If the portName annotation has value, keep only the target where the port name matches the one of the annotation.
+  rule {
+    source_labels = ["__meta_kubernetes_pod_container_port_name"]
+    target_label = "__tmp_port"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_cpu_port_name"]
+    regex = "(.+)"
+    target_label = "__tmp_port"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_pod_container_port_name"]
+    action = "keepequal"
+    target_label = "__tmp_port"
+  }
+  rule {
+    action = "labeldrop"
+    regex = "__tmp_port"
+  }
+
+  // If the portNumber annotation has a value, override the target address to use it, regardless whether it is
+  // one of the declared ports on that Pod.
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_cpu_port", "__meta_kubernetes_pod_ip"]
+    regex = "(\\d+);(([A-Fa-f0-9]{1,4}::?){1,7}[A-Fa-f0-9]{1,4})"
+    replacement = "[$2]:$1" // IPv6
+    target_label = "__address__"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_cpu_port", "__meta_kubernetes_pod_ip"]
+    regex = "(\\d+);((([0-9]+?)(\\.|$)){4})" // IPv4, takes priority over IPv6 when both exists
+    replacement = "$2:$1"
+    target_label = "__address__"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_cpu_scheme"]
+    regex         = "(https?)"
+    target_label  = "__scheme__"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_cpu_path"]
+    regex         = "(.+)"
+    target_label  = "__profile_path__"
+  }
+}
+
+pyroscope.scrape "pyroscope_scrape_cpu" {
+  targets = discovery.relabel.pprof_pods_cpu.output
+
+  bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+  profiling_config {
+    profile.memory {
+      enabled = false
+    }
+    profile.block {
+      enabled = false
+    }
+    profile.goroutine {
+      enabled = false
+    }
+    profile.mutex {
+      enabled = false
+    }
+    profile.process_cpu {
+      enabled = true
+    }
+    profile.fgprof {
+      enabled = false
+    }
+    profile.godeltaprof_memory {
+      enabled = false
+    }
+    profile.godeltaprof_mutex {
+      enabled = false
+    }
+    profile.godeltaprof_block {
+      enabled = false
+    }
+  }
+
+  scrape_interval = "15s"
+  scrape_timeout = "18s"
+
+  forward_to = [pyroscope.write.profiles_service.receiver]
+}
+discovery.relabel "pprof_pods_fgprof" {
+  targets = discovery.relabel.pprof_pods.output
+
+  // Keep only pods with the scrape annotation set
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_fgprof_scrape"]
+    regex         = "true"
+    action        = "keep"
+  }
+
+  // Rules to choose the right container
+  rule {
+    source_labels = ["container"]
+    target_label = "__tmp_container"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_fgprof_container"]
+    regex = "(.+)"
+    target_label = "__tmp_container"
+  }
+  rule {
+    source_labels = ["container"]
+    action = "keepequal"
+    target_label = "__tmp_container"
+  }
+  rule {
+    action = "labeldrop"
+    regex = "__tmp_container"
+  }
+
+  // Rules to choose the right port by name
+  // The discovery generates a target for each declared container port of the pod.
+  // If the portName annotation has value, keep only the target where the port name matches the one of the annotation.
+  rule {
+    source_labels = ["__meta_kubernetes_pod_container_port_name"]
+    target_label = "__tmp_port"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_fgprof_port_name"]
+    regex = "(.+)"
+    target_label = "__tmp_port"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_pod_container_port_name"]
+    action = "keepequal"
+    target_label = "__tmp_port"
+  }
+  rule {
+    action = "labeldrop"
+    regex = "__tmp_port"
+  }
+
+  // If the portNumber annotation has a value, override the target address to use it, regardless whether it is
+  // one of the declared ports on that Pod.
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_fgprof_port", "__meta_kubernetes_pod_ip"]
+    regex = "(\\d+);(([A-Fa-f0-9]{1,4}::?){1,7}[A-Fa-f0-9]{1,4})"
+    replacement = "[$2]:$1" // IPv6
+    target_label = "__address__"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_fgprof_port", "__meta_kubernetes_pod_ip"]
+    regex = "(\\d+);((([0-9]+?)(\\.|$)){4})" // IPv4, takes priority over IPv6 when both exists
+    replacement = "$2:$1"
+    target_label = "__address__"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_fgprof_scheme"]
+    regex         = "(https?)"
+    target_label  = "__scheme__"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_pod_annotation_profiles_grafana_com_fgprof_path"]
+    regex         = "(.+)"
+    target_label  = "__profile_path__"
+  }
+}
+
+pyroscope.scrape "pyroscope_scrape_fgprof" {
+  targets = discovery.relabel.pprof_pods_fgprof.output
+
+  bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+  profiling_config {
+    profile.memory {
+      enabled = false
+    }
+    profile.block {
+      enabled = false
+    }
+    profile.goroutine {
+      enabled = false
+    }
+    profile.mutex {
+      enabled = false
+    }
+    profile.process_cpu {
+      enabled = false
+    }
+    profile.fgprof {
+      enabled = true
+    }
+    profile.godeltaprof_memory {
+      enabled = false
+    }
+    profile.godeltaprof_mutex {
+      enabled = false
+    }
+    profile.godeltaprof_block {
+      enabled = false
+    }
+  }
+
+  scrape_interval = "15s"
+  scrape_timeout = "18s"
+
+  forward_to = [pyroscope.write.profiles_service.receiver]
+}
+// Pyroscope
+remote.kubernetes.secret "profiles_service" {
+  name = "pyroscope-k8s-monitoring"
+  namespace = "default"
+}
+pyroscope.write "profiles_service" {
+  endpoint {
+    url = convert.nonsensitive(remote.kubernetes.secret.profiles_service.data["host"])
+    headers = {
+      "X-Scope-OrgID" = convert.nonsensitive(remote.kubernetes.secret.profiles_service.data["tenantId"]),
+    }
+
+    basic_auth {
+      username = convert.nonsensitive(remote.kubernetes.secret.profiles_service.data["username"])
+      password = remote.kubernetes.secret.profiles_service.data["password"]
+    }
+  }
+  external_labels = {
+    cluster = "profiles-enabled-test",
+  }
+}
+
+logging {
+  level  = "info"
+  format = "logfmt"
+}

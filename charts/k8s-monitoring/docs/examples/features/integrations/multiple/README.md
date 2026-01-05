@@ -1,0 +1,62 @@
+<!--
+(NOTE: Do not edit README.md directly. It is a generated file!)
+(      To make changes, please modify values.yaml or description.txt and run `make examples`)
+-->
+# Multiple Integrations
+
+This example demonstrates how to use multiple integrations at once.
+
+## Values
+
+<!-- textlint-disable terminology -->
+```yaml
+---
+cluster:
+  name: multiple-integrations-example
+
+destinations:
+  - name: prometheus
+    type: prometheus
+    url: http://prometheus.prometheus.svc:9090/api/v1/write
+  - name: loki
+    type: loki
+    url: http://loki.loki.svc:3100/api/push
+
+integrations:
+  cert-manager:
+    instances:
+      - name: cert-manager
+        namespace: cert-manager
+        labelSelectors:
+          app.kubernetes.io/name: cert-manager
+
+  mysql:
+    instances:
+      - name: mysql-cluster
+        exporter:
+          enabled: true
+          dataSource:
+            host: mysql-cluster-router.mysql-cluster
+            port: 3306
+            auth:
+              username: grafana
+              password: REDACTED
+          collectors:
+            - perf_schema.replication_group_members
+        logs:
+          enabled: true
+          labelSelectors:
+            app.kubernetes.io/component: mysql
+        metrics:
+          tuning:
+            excludeMetrics: [mysql_exporter_collector_duration_seconds, mysql_exporter_collector_success]
+
+podLogs:
+  enabled: true
+
+alloy-logs:
+  enabled: true
+alloy-metrics:
+  enabled: true
+```
+<!-- textlint-enable terminology -->

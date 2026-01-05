@@ -1,0 +1,59 @@
+// Cluster Events
+loki.source.kubernetes_events "cluster_events" {
+  job_name   = "integrations/kubernetes/eventhandler"
+  log_format = "logfmt"
+  forward_to = [
+    loki.process.cluster_events.receiver,
+  ]
+}
+
+loki.process "cluster_events" {
+  forward_to = [
+    loki.process.logs_service.receiver,
+  ]
+}
+
+// Logs Service
+remote.kubernetes.secret "logs_service" {
+  name = "loki-k8s-monitoring"
+  namespace = "default"
+}
+
+loki.process "logs_service" {
+  stage.static_labels {
+      values = {
+        cluster = "custom-config-test",
+      }
+  }
+  forward_to = [loki.write.logs_service.receiver]
+}
+
+// Loki
+loki.write "logs_service" {
+  endpoint {
+    url = convert.nonsensitive(remote.kubernetes.secret.logs_service.data["host"]) + "/loki/api/v1/push"
+    tenant_id = convert.nonsensitive(remote.kubernetes.secret.logs_service.data["tenantId"])
+
+    basic_auth {
+      username = convert.nonsensitive(remote.kubernetes.secret.logs_service.data["username"])
+      password = remote.kubernetes.secret.logs_service.data["password"]
+    }
+  }
+  external_labels = {
+    region = "southwest",
+    tenant = "widgetco",
+    env = remote.kubernetes.configmap.cluster_info.data["env"],
+    region = remote.kubernetes.configmap.cluster_info.data["region"],
+  }
+}
+
+
+logging {
+  level  = "info"
+  format = "logfmt"
+}
+
+remote.kubernetes.configmap "cluster_info" {
+  name = "cluster_info"
+  namespace = "default"
+}
