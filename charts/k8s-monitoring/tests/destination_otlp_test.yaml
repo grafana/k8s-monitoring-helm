@@ -17,7 +17,6 @@ tests:
           of: ConfigMap
       - matchSnapshot:
           path: data["config.alloy"]
-
   - it: allows you to disable retry on failure
     set:
       cluster: {name: test-cluster}
@@ -34,7 +33,6 @@ tests:
           of: ConfigMap
       - matchSnapshot:
           path: data["config.alloy"]
-
   - it: allows you to use basic authentication
     set:
       cluster: {name: test-cluster}
@@ -53,8 +51,7 @@ tests:
           of: ConfigMap
       - matchSnapshot:
           path: data["config.alloy"]
-
-  - it: allows you to use basic authentication with a numeric username
+  - it: allows you to configure include block with resources
     set:
       cluster: {name: test-cluster}
       alloy-singleton: {enabled: true, extraConfig: " ", includeDestinations: ["test"]}
@@ -63,10 +60,106 @@ tests:
         - name: test
           type: otlp
           url: https://otlp.example.com
-          auth:
-            type: basic
-            username: 12345
-            password: testpassword
+          processors:
+            attributes:
+              include:
+                matchType: "strict"
+                resources:
+                  - key: "service.name"
+                    value: "api-gateway"
+                  - key: "service.name"
+                    value: "payment-service"
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["config.alloy"]
+  - it: allows you to configure exclude block
+    set:
+      cluster: {name: test-cluster}
+      alloy-singleton: {enabled: true, extraConfig: " ", includeDestinations: ["test"]}
+      selfReporting: {enabled: false}
+      destinations:
+        - name: test
+          type: otlp
+          url: https://otlp.example.com
+          processors:
+            attributes:
+              exclude:
+                matchType: "strict"
+                services: ["test-service"]
+                resources:
+                  - key: "k8s.namespace.name"
+                    value: "kube-system"
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["config.alloy"]
+  - it: allows you to configure include block with attribute blocks
+    set:
+      cluster: {name: test-cluster}
+      alloy-singleton: {enabled: true, extraConfig: " ", includeDestinations: ["test"]}
+      selfReporting: {enabled: false}
+      destinations:
+        - name: test
+          type: otlp
+          url: https://otlp.example.com
+          processors:
+            attributes:
+              include:
+                matchType: "regexp"
+                attributes:
+                  - key: "db.statement"
+                    value: "SELECT \\* FROM USERS.*"
+                  - key: "http.method"
+                    regexp:
+                      pattern: "^(GET|POST)$"
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["config.alloy"]
+  - it: allows you to configure exclude block with library blocks
+    set:
+      cluster: {name: test-cluster}
+      alloy-singleton: {enabled: true, extraConfig: " ", includeDestinations: ["test"]}
+      selfReporting: {enabled: false}
+      destinations:
+        - name: test
+          type: otlp
+          url: https://otlp.example.com
+          processors:
+            attributes:
+              exclude:
+                matchType: "strict"
+                libraries:
+                  - name: "opentelemetry-instrumentation-http"
+                    version: "1.0.0"
+                  - name: "opentelemetry-instrumentation-express"
+                    nameRegexp:
+                      pattern: ".*express.*"
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["config.alloy"]
+  - it: allows you to configure include block with log severity
+    set:
+      cluster: {name: test-cluster}
+      alloy-singleton: {enabled: true, extraConfig: " ", includeDestinations: ["test"]}
+      selfReporting: {enabled: false}
+      destinations:
+        - name: test
+          type: otlp
+          url: https://otlp.example.com
+          processors:
+            attributes:
+              include:
+                matchType: "strict"
+                logSeverity:
+                  min: "INFO"
+                  matchUndefined: true
     asserts:
       - isKind:
           of: ConfigMap
