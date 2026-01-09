@@ -6,7 +6,7 @@ ARG TARGETARCH
 RUN curl -fL https://github.com/grafana/pyroscope/releases/download/v${PROFILECLI_VERSION}/profilecli_${PROFILECLI_VERSION}_linux_${TARGETARCH}.tar.gz | tar xvz && \
     chmod +x profilecli
 
-FROM nixery.dev/shell/bc/curl/jq/file@sha256:63303658c01a4a67648d3320cb47b0607ff762c9f039b1fa2c7e3c9dc66274e5 AS base-image-amd64
+FROM nixery.dev/shell/bc/curl/jq/file@sha256:c688f75b13b29635bc1db1c1f33f8d655d53b8db0e1d6e411bcd48361af28d89 AS base-image-amd64
 FROM nixery.dev/arm64/shell/bc/curl/jq/file@sha256:7550dfd3532d8d020af531a11b2c6bf0141830259483a191499dcbec04879e81 AS base-image-arm64
 
 FROM base-image-${TARGETARCH} AS final
