@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  slack-bot:
+    build: .
+    container_name: k8s-monitoring-slack-bot
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      # Mount the repository as read-only
+      - ../:/repo:ro
+      # Persist the vector database index
+      - ./data/.slack-bot-index:/app/.slack-bot-index
+    environment:
+      - REPO_PATH=/repo
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"

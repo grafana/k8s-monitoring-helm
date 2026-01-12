@@ -1,0 +1,24 @@
+[Unit]
+Description=K8s Monitoring Helm Slack Bot
+After=network.target
+
+[Service]
+Type=simple
+User=your-username
+WorkingDirectory=/path/to/k8s-monitoring-helm/slack-bot
+Environment="PATH=/path/to/k8s-monitoring-helm/slack-bot/venv/bin"
+ExecStart=/path/to/k8s-monitoring-helm/slack-bot/venv/bin/python bot.py
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+# Security settings
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/path/to/k8s-monitoring-helm/slack-bot/.slack-bot-index
+
+[Install]
+WantedBy=multi-user.target
