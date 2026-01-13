@@ -7,7 +7,7 @@ RUN curl -fL https://github.com/grafana/pyroscope/releases/download/v${PROFILECL
     chmod +x profilecli
 
 FROM nixery.dev/shell/bc/curl/jq/file@sha256:63303658c01a4a67648d3320cb47b0607ff762c9f039b1fa2c7e3c9dc66274e5 AS base-image-amd64
-FROM nixery.dev/arm64/shell/bc/curl/jq/file@sha256:7550dfd3532d8d020af531a11b2c6bf0141830259483a191499dcbec04879e81 AS base-image-arm64
+FROM nixery.dev/arm64/shell/bc/curl/jq/file@sha256:21ad1bb7c1234f7a8f2bc16597a661d986acc38382998ed23b75f352b8d31eb1 AS base-image-arm64
 
 FROM base-image-${TARGETARCH} AS final
 COPY --from=profilecli-downloader /home/curl_user/profilecli /usr/local/bin/profilecli
