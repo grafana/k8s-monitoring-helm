@@ -135,6 +135,18 @@ database_observability.postgres {{ include "helper.alloy_name" .name | quote }} 
   targets = prometheus.exporter.postgres.{{ include "helper.alloy_name" .name }}.targets
   data_source_name = {{ include "integrations.postgresql.datasource" . | indent 2 | trim }}
 
+  {{- with .databaseObservability.cloudProvider }}
+  {{- with .aws }}
+  {{- if .arn }}
+  cloud_provider {
+    aws {
+      arn = {{ .arn | quote }}
+    }
+  }
+  {{- end }}
+  {{- end }}
+  {{- end }}
+
   {{- $enabledCollectors := list }}
   {{- if .databaseObservability.collectors.explainPlans.enabled }}
     {{- $enabledCollectors = append $enabledCollectors "explain_plans" }}
