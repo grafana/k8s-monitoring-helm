@@ -56,4 +56,34 @@ integrations:
             app.kubernetes.io/instance: test-mysql-db
 ```
 
+To enable with Database Observability and AWS cloud provider, specify the `cloudProvider` field:
+
+```yaml
+integrations:
+  mysql:
+    instances:
+      - name: test-db
+        jobLabel: integrations/db-o11y
+        databaseObservability:
+          enabled: true
+          cloudProvider:
+            aws:
+              arn: "arn:aws:rds:us-east-1:123456789012:db:my-mysql-instance"
+        exporter:
+          collectors:
+            perfSchemaEventsStatements:
+              enabled: true
+          dataSource:
+            host: test-db.default.svc
+            protocol: tcp
+            port: 3306
+            auth:
+              username: mysql-admin
+              password: mysql-root-password
+        logs:
+          enabled: true
+          labelSelectors:
+            app.kubernetes.io/instance: test-mysql-db
+```
+
 {{ template "chart.valuesSection" . }}

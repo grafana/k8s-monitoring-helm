@@ -56,6 +56,36 @@ integrations:
             app.kubernetes.io/instance: test-mysql-db
 ```
 
+To enable with Database Observability and AWS cloud provider, specify the `cloudProvider` field:
+
+```yaml
+integrations:
+  mysql:
+    instances:
+      - name: test-db
+        jobLabel: integrations/db-o11y
+        databaseObservability:
+          enabled: true
+          cloudProvider:
+            aws:
+              arn: "arn:aws:rds:us-east-1:123456789012:db:my-mysql-instance"
+        exporter:
+          collectors:
+            perfSchemaEventsStatements:
+              enabled: true
+          dataSource:
+            host: test-db.default.svc
+            protocol: tcp
+            port: 3306
+            auth:
+              username: mysql-admin
+              password: mysql-root-password
+        logs:
+          enabled: true
+          labelSelectors:
+            app.kubernetes.io/instance: test-mysql-db
+```
+
 ## Values
 
 ### Database Observability
@@ -64,6 +94,12 @@ integrations:
 |-----|------|---------|-------------|
 | databaseObservability.allowUpdatePerformanceSchemaSettings | bool | `false` | Whether to allow updates to performance_schema settings in any collector. |
 | databaseObservability.enabled | bool | `false` | Whether to gather table, schema, and query information from the database. Requires exporter to be enabled. |
+
+### Database Observability - Cloud Provider
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| databaseObservability.cloudProvider.aws.arn | string | `""` | ARN of the AWS RDS instance. |
 
 ### Database Observability - Collectors
 

@@ -114,6 +114,18 @@ database_observability.mysql {{ include "helper.alloy_name" .name | quote }} {
   {{- include "integrations.mysql.datasource" . | indent 2 }}
   allow_update_performance_schema_settings = {{ .databaseObservability.allowUpdatePerformanceSchemaSettings }}
 
+  {{- with .databaseObservability.cloudProvider }}
+  {{- with .aws }}
+  {{- if .arn }}
+  cloud_provider {
+    aws {
+      arn = {{ .arn | quote }}
+    }
+  }
+  {{- end }}
+  {{- end }}
+  {{- end }}
+
   {{- $enabledCollectors := list }}
   {{- if .databaseObservability.collectors.explainPlans.enabled }}
     {{- $enabledCollectors = append $enabledCollectors "explain_plans" }}

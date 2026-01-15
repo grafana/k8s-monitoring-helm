@@ -31,7 +31,7 @@ To enable with Database Observability, enable the `databaseObservability` flag:
 
 ```yaml
 integrations:
-  mysql:
+  postgresql:
     instances:
       - name: test-database
         jobLabel: integrations/db-o11y
@@ -49,7 +49,38 @@ integrations:
             app.kubernetes.io/instance: test-database-pg-db
 ```
 
+To enable with Database Observability and AWS cloud provider, specify the `cloudProvider` field:
+
+```yaml
+integrations:
+  postgresql:
+    instances:
+      - name: test-database
+        jobLabel: integrations/db-o11y
+        databaseObservability:
+          enabled: true
+          cloudProvider:
+            aws:
+              arn: "arn:aws:rds:us-east-1:123456789012:db:my-postgres-instance"
+        exporter:
+          dataSource:
+            host: test-database-pg-db-primary.postgresql.svc
+            auth:
+              username: pg-admin
+              password: pg-admin-password
+        logs:
+          enabled: true
+          labelSelectors:
+            app.kubernetes.io/instance: test-database-pg-db
+```
+
 ## Values
+
+### Database Observability - Cloud Provider
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| databaseObservability.cloudProvider.aws.arn | string | `""` | ARN of the AWS RDS instance. |
 
 ### Database Observability - Collectors
 
