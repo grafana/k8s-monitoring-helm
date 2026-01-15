@@ -3,6 +3,7 @@
 ## Unreleased
 
 *   Update Node Exporter and Alloy Operator (@petewall)
+*   Add cloudProvider configuration support to MySQL and Postgresql databaseObservability (@matthewnolf)
 
 ## 3.7.1
 
