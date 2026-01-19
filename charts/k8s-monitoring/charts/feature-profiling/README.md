@@ -57,6 +57,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | ebpf.demangle | string | `"none"` | C++ demangle mode. Available options are: none, simplified, templates, full |
 | ebpf.enabled | bool | `true` | Gather profiles using eBPF |
 | ebpf.excludeNamespaces | list | `[]` | Which namespaces to exclude looking for pods. |
+| ebpf.sampleRate | int | `97` | Sample rate for eBPF profiling. This controls how frequently samples are collected. |
 | ebpf.extraDiscoveryRules | string | `""` | Rule blocks to be added to the discovery.relabel component for eBPF profile sources. These relabeling rules are applied pre-scrape against the targets from service discovery. Before the scrape, any remaining target labels that start with `__` (i.e. `__meta_kubernetes*`) are dropped. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.relabel/#rule-block)) |
 | ebpf.labelSelectors | object | `{}` | Select pods to profile based on pod labels. Example: `app.kubernetes.io/name: myapp` will select pods with the label `app.kubernetes.io/name=myapp`. Example with multiple values: `app.kubernetes.io/name: [myapp, myapp2]` will select pods with the label `app.kubernetes.io/name=myapp` or `app.kubernetes.io/name=myapp2`. |
 | ebpf.namespaces | list | `[]` | Select pods to profile based on their namespaces. |
