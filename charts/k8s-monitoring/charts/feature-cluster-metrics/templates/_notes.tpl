@@ -20,19 +20,21 @@ Scrape Kubernetes Cluster metrics
 
 {{- define "feature.clusterMetrics.notes.actions" }}
 {{- $serviceMonitorScrapingEnabled := and .Values.prometheusOperatorObjects.enabled (dig "serviceMonitors" "enabled" true .Values.prometheusOperatorObjects)}}
-{{- if $serviceMonitorScrapingEnabled }}
+{{- $checkForKSMServiceMonitors := and (index .Values.clusterMetrics "kube-state-metrics").enabled (index .Values.clusterMetrics "kube-state-metrics").checkForPotentialServiceMonitorConflicts }}
+{{- $checkForNodeExporterServiceMonitors := and (index .Values.clusterMetrics "node-exporter").enabled (index .Values.clusterMetrics "node-exporter").checkForPotentialServiceMonitorConflicts }}
+{{- if and $serviceMonitorScrapingEnabled (or $checkForKSMServiceMonitors $checkForNodeExporterServiceMonitors) }}
   {{- $values := .Values.clusterMetrics }}
   {{- if (.Capabilities.APIVersions.Has "monitoring.coreos.com/v1/ServiceMonitor") }}
     {{- $namespaces := list }}
     {{- range $serviceMonitor := (lookup "monitoring.coreos.com/v1" "ServiceMonitor" "" "").items }}
       {{- if contains "kube-state-metrics" $serviceMonitor.metadata.name }}
-        {{- if (index $values "kube-state-metrics").enabled }}
+        {{- if $checkForKSMServiceMonitors }}
           {{- $namespaces = append $namespaces $serviceMonitor.metadata.namespace }}
 ⚠️ Detected a ServiceMonitor named {{ $serviceMonitor.metadata.name }} in namespace {{ $serviceMonitor.metadata.namespace }}, but this chart has already enabled the Cluster Metrics feature. This might result in duplicated metrics from kube-state-metrics.
         {{- end }}
       {{- end }}
       {{- if contains "node-exporter" $serviceMonitor.metadata.name }}
-        {{- if (index $values "node-exporter").enabled }}
+        {{- if $checkForNodeExporterServiceMonitors }}
           {{- $namespaces = append $namespaces $serviceMonitor.metadata.namespace }}
 ⚠️ Detected a ServiceMonitor named {{ $serviceMonitor.metadata.name }} in namespace {{ $serviceMonitor.metadata.namespace }}, but this chart has already enabled the Cluster Metrics feature. This might result in duplicated metrics from Node Exporter.
         {{- end }}

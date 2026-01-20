@@ -200,6 +200,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | kube-state-metrics.bearerTokenFile | string | `""` | The bearer token file to use when scraping metrics from kube-state-metrics. |
+| kube-state-metrics.checkForPotentialServiceMonitorConflicts | bool | `true` | During install, warn about potential pre-existing ServiceMonitors that may exist and cause metric duplication. |
 | kube-state-metrics.deploy | bool | `true` | Deploy kube-state-metrics. Set to false if your cluster already has kube-state-metrics deployed. |
 | kube-state-metrics.discoveryType | string | `"endpoints"` | How to discover the kube-state-metrics service. Either `endpoints`, `pod`, or `service`. Use `service` if you know there is a single kube-state-metrics replica, or are using HA. Use `endpoints` or `pod` if you have multiple replicas with auto-sharding. |
 | kube-state-metrics.enabled | bool | `true` | Scrape metrics from kube-state-metrics. |
@@ -334,6 +335,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | node-exporter.bearerTokenFile | string | `""` | The bearer token file to use when scraping metrics from Node Exporter. |
+| node-exporter.checkForPotentialServiceMonitorConflicts | bool | `true` | During install, warn about potential pre-existing ServiceMonitors that may exist and cause metric duplication. |
 | node-exporter.deploy | bool | `true` | Deploy Node Exporter. Set to false if your cluster already has Node Exporter deployed. |
 | node-exporter.enabled | bool | `true` | Scrape metrics from Node Exporter. |
 | node-exporter.extraDiscoveryRules | string | `""` | Rule blocks to be added to the discovery.relabel component for Node Exporter. These relabeling rules are applied pre-scrape against the targets from service discovery. Before the scrape, any remaining target labels that start with __ (i.e. __meta_kubernetes*) are dropped. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.relabel/#rule-block)) |
