@@ -19,15 +19,21 @@ Chart.lock: Chart.yaml
 
 .SECONDEXPANSION:
 docs/integrations/%.md: integrations/%-values.yaml $$(wildcard docs/integrations/.doc_templates/%.gotmpl)
-	docker run --platform linux/amd64 --rm -v $(shell pwd):/src ghcr.io/grafana/helm-docs-and-schema-gen $(shell echo $< | sed 's/integrations\/\([-a-z]*\)-values.yaml/\1/') integration
+	docker run --platform linux/amd64 --rm --volume $(shell pwd):/chart ghcr.io/grafana/helm-chart-toolbox-doc-generator --file /chart/$< --template /chart/docs/integrations/.doc_templates/$(shell basename -s -values.yaml $<).gotmpl > $@
 
 schema-mods/definitions/%-integration.schema.json: integrations/%-values.yaml
-	docker run --platform linux/amd64 --rm -v $(shell pwd):/src ghcr.io/grafana/helm-docs-and-schema-gen $(shell echo $< | sed 's/integrations\/\([-a-z]*\)-values.yaml/\1/') integration
+	docker run --platform linux/amd64 --rm --volume $(shell pwd):/chart ghcr.io/grafana/helm-chart-toolbox-schema-generator --file /chart/$< > $@
 
 NUMBER_OF_INTEGRATION_VALUES_FILES := $(words $(INTEGRATION_VALUES_FILES))
 schema-mods/integration-list.json: $(INTEGRATION_VALUES_FILES)
 	@echo '{' > $@
 	@echo '  "definitions": {' >> $@
+	@for file in $(INTEGRATION_VALUES_FILES); do \
+		echo '    "'$$(echo $${file} | sed 's/integrations\/\([-a-z]*\)-values.yaml/\1/')'-integration": {' >> $@; \
+		echo '      "properties": {"type": {"type": "string", "const": "'$$(echo $${file} | sed 's/integrations\/\([-a-z]*\)-values.yaml/\1/')'"}}' >> $@; \
+		echo '    },' >> $@; \
+	done
+
 	@echo '    "integration-list": {' >> $@
 	@echo '      "type": "array",' >> $@
 	@echo '      "items": {' >> $@
