@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+*   Add the ability to skip cluster metrics ServiceMonitor checks (@petewall)
+
+## 3.7.2
+
 *   Update Node Exporter and Alloy Operator (@petewall)
 *   Add cloudProvider configuration support to MySQL and Postgresql databaseObservability (@matthewnolf)
 
