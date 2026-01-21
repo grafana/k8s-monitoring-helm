@@ -141,6 +141,9 @@ discovery.relabel "ebpf_pods" {
 pyroscope.ebpf "ebpf_pods" {
   targets = discovery.relabel.ebpf_pods.output
   demangle = {{ .Values.ebpf.demangle | quote }}
+{{- if .Values.ebpf.sampleRate }}
+  sample_rate = {{ .Values.ebpf.sampleRate }}
+{{- end }}
   forward_to = argument.profiles_destinations.value
 }
 {{- end }}
