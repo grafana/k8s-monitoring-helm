@@ -5,7 +5,7 @@ This example shows how to augment your Kubernetes Monitoring deployment to gathe
 In this example, there are two styles of integrations that are made possible:
 
 -   Automatic discovery via Kubernetes annotations
--   Direct integration via [Alloy modules](https://grafana.com/docs/alloy/latest/concepts/modules/)
+-   Direct integration via [Alloy modules](https://grafana.com/docs/alloy/latest/get-started/modules/)
 
 ## Cert Manager
 

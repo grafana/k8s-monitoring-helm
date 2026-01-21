@@ -6,7 +6,7 @@ with [Grafana Alloy](https://grafana.com/docs/alloy/latest/) and this Helm chart
 The example uses a storage volume of 5Gi per Alloy instance, but this may need to be adjusted based on the number of
 active series the Alloy instances are expected to scrape.
 
-For more information, see [clustering documentation](https://grafana.com/docs/alloy/latest/concepts/clustering/).
+For more information, see [clustering documentation](https://grafana.com/docs/alloy/latest/get-started/clustering/).
 
 ```yaml
 cluster:

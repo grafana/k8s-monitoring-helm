@@ -9,7 +9,7 @@ but need extra consideration because they often have restrictions around DaemonS
 services like Node Exporter from working properly. It also has implications for how Pod logs are gathered, since the
 typical method is to deploy Grafana Alloy as a Daemonset with HostPath volume mounts to gather the log files.
 Consequently, Alloy must be deployed to use the
-[Kubernetes API log gathering](https://grafana.com/docs/alloy/latest/reference/components/loki.source.kubernetes/)
+[Kubernetes API log gathering](https://grafana.com/docs/alloy/latest/reference/components/loki/loki.source.kubernetes/)
 method instead.
 
 Missing Node Exporter metrics is likely fine, because users of these clusters should not need concern themselves with

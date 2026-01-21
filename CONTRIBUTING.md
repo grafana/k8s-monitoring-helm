@@ -131,7 +131,7 @@ This repository heavily makes use of automation and tooling to generate files an
 required to work on this repository:
 
 -   [Helm](https://helm.sh/docs/intro/install/) - Minimum required version is 3.14.
--   [Docker](https://docs.docker.com/get-docker/) - Used for running some tools in containers and required for `kind`.
+-   [Docker](https://docs.docker.com/get-started/get-docker/) - Used for running some tools in containers and required for `kind`.
 -   [chart-testing](https://github.com/helm/chart-testing) - Used for linting Helm charts.
 -   [kind](https://kind.sigs.k8s.io/) - Used for creating local Kubernetes clusters for integration testing.
 -   [Grafana Alloy](https://github.com/grafana/alloy) - Used for linting the generated config files.
@@ -158,11 +158,13 @@ scripts/helm-with-version v3.12.0 template k8smon charts/k8s-monitoring -f value
 
 If you are going to be running platform tests, you might want to install the following tools:
 
--   [gcloud](https://cloud.google.com/sdk/docs/install) - Used for interacting with Google Cloud Platform.
+<!-- textlint-disable no-dead-link -->
+-   [gcloud](https://docs.cloud.google.com/sdk/docs/install-sdk) - Used for interacting with Google Cloud Platform.
 -   [aws-cli & eksctl](https://docs.aws.amazon.com/eks/latest/userguide/setting-up.html) - Used for interacting with Amazon Web Services and creating EKS clusters.
--   [az](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli) - Used for interacting with Azure.
+-   [az](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli) - Used for interacting with Azure.
 -   openshift-install - Used for creating OKD OpenShift clusters.
     -   `gh release download --repo okd-project/okd -p "openshift-install-mac-arm64*"`
+<!-- textlint-enable no-dead-link -->
 
 Each chart has a Makefile with targets to automate much of the process.
 

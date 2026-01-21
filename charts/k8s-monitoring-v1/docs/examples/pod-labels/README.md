@@ -5,7 +5,7 @@ This example shows how to include labels set on the Kubernetes Pod to the metric
 ## Metrics
 
 Labels and annotations on Kubernetes objects are not set as metric labels on metrics
-like [kube_pod_info](https://github.com/kubernetes/kube-state-metrics/blob/main/docs/pod-metrics.md). This is
+like [kube_pod_info](https://github.com/kubernetes/kube-state-metrics/blob/main/docs/metrics/workload/pod-metrics.md). This is
 because it would greatly increase metric cardinality, which can get
 costly. [kube-state-metrics](https://github.com/kubernetes/kube-state-metrics)
 can optionally create additional metrics. For example, the `kube_pod_labels` metric will have labels that match the
@@ -41,7 +41,7 @@ for more information.
 
 Also, the Pod logs gathered and sent to Loki do not have their Pod's Kubernetes labels attached. This is enabled
 with a relabeling rule. In the example below, the `app.kubernetes.io/instance` Kubernetes label (discovered by
-the [discovery.kubernetes component](https://grafana.com/docs/alloy/latest/reference/components/discovery.kubernetes/#pod-role))
+the [discovery.kubernetes component](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.kubernetes/#pod-role))
 is set to the `instance` label on the log message:
 
 ```yaml

@@ -19,7 +19,7 @@ This document contains some information about frequently encountered issues and 
 ### Alloy Web UI
 
 Grafana Alloy has a
-[web user interface](https://grafana.com/docs/alloy/latest/tasks/debug/#alloy-ui) that shows every configuration
+[web user interface](https://grafana.com/docs/alloy/latest/troubleshoot/debug/#alloy-ui) that shows every configuration
 component that Alloy instance is using and their statuses. By default, the web UI runs on each Alloy pod on port
 `12345`. Since that UI is typically not exposed external to the Cluster, you can use port-forwarding to access it.
 
@@ -86,7 +86,7 @@ alloy-logs:
 ### Authentication error: invalid scope requested
 
 To deliver telemetry data to Grafana Cloud, you use
-an [Access Policy Token](https://grafana.com/docs/grafana-cloud/account-management/authentication-and-permissions/access-policies/)
+an [Access Policy Token](https://grafana.com/docs/grafana-cloud/security-and-account-management/authentication-and-permissions/access-policies/)
 with the appropriate scopes. Scopes define an action that can be done to a specific data type. For
 example `metrics:write` permits writing metrics.
 

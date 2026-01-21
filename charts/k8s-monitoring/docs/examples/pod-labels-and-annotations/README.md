@@ -9,7 +9,7 @@ This example shows how to include labels and annotations set on the Kubernetes P
 ## Metrics
 
 Labels and annotations on Kubernetes objects are not set as metric labels on metrics
-like [kube_pod_info](https://github.com/kubernetes/kube-state-metrics/blob/main/docs/pod-metrics.md). This is
+like [kube_pod_info](https://github.com/kubernetes/kube-state-metrics/blob/main/docs/metrics/workload/pod-metrics.md). This is
 because it would greatly increase metric cardinality, which can get costly.
 [kube-state-metrics](https://github.com/kubernetes/kube-state-metrics) can optionally create additional metrics. For
 example, the `kube_pod_labels` metric will have labels that match the Pod's Kubernetes labels. These metrics can then be

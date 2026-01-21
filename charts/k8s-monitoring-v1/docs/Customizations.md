@@ -21,7 +21,7 @@ These fields affect how metric targets are discovered. If Grafana Alloy is not d
 these values.
 
 -   `metrics.<source>.extraRelabelingRules` - These rules are used to populate the rules section of a
-  [discovery.relabel](https://grafana.com/docs/alloy/latest/reference/components/discovery.relabel/) component.
+  [discovery.relabel](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.relabel/) component.
   They filter from all Nodes, services, endpoints, or Pods on the
   Cluster to a specific one that has the metrics.
   Use these rules to target a specific service.
@@ -46,13 +46,13 @@ after they have been scraped, but before being sent to the external metric servi
 might want to do here include setting, modifying, or dropping metric labels.
 
 -   `metrics.<source>.extraMetricRelabelingRules` - Rules that modify metrics and will populate the rules
-  section of a [prometheus.relabel](https://grafana.com/docs/alloy/latest/reference/components/prometheus.relabel/)
+  section of a [prometheus.relabel](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/)
   component. Use these rules to perform arbitrary modifications to metrics or metric labels.
 -   `metrics.extraMetricRelabelingRules` - Same as above, but the rules are applied to metrics from all metric sources.
 -   `metrics.<source>.allowList` - Sets a list of metrics that will be kept, dropping any metrics that don't match.
 -   `extraServices.prometheus.externalLabels` - A key-value set that defines labels and values to be set for all metrics
   being sent. It sets the `external_labels` section of
-  [prometheus.remote_write](https://grafana.com/docs/alloy/latest/reference/components/prometheus.remote_write/#arguments)
+  [prometheus.remote_write](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.remote_write/#arguments)
   component.
 
 ### Customize how metrics are uploaded
@@ -75,7 +75,7 @@ you want logs collected from.
 -   `logs.pod_logs.namespaces` - Only gathers logs from Pods in the given list of namespaces.
 -   `logs.pod_logs.extraRelabelingRules` - Rules that filter from all Pods on the Cluster to the specific set
   that will be used for gathering logs. They're used to populate the rules section of a
-  [discovery.relabel](https://grafana.com/docs/alloy/latest/reference/components/discovery.relabel/) component.
+  [discovery.relabel](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.relabel/) component.
 
 ### Gathering customizations
 
@@ -89,7 +89,7 @@ This field controls how Pod logs are gathered from the Cluster.
 
 -   `logs.pod_logs.extraStageBlocks` - Processing logs is done in stages. This field allows for additional stages to
   be set. Stages set here will be used to populate a
-  [loki.process](https://grafana.com/docs/alloy/latest/reference/components/loki.process/) component.
+  [loki.process](https://grafana.com/docs/alloy/latest/reference/components/loki/loki.process/) component.
 
 ## Events
 

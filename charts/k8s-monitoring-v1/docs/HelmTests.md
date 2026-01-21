@@ -19,7 +19,7 @@ Some queries are built-in, and you can add others in the `test.extraQueries` sec
 
 Note that in order for this to work, the credentials for each data source needs the ability to query data. For example,
 if sending data to Grafana Cloud, some
-[Access Policy Tokens](https://grafana.com/docs/grafana-cloud/account-management/authentication-and-permissions/access-policies/)
+[Access Policy Tokens](https://grafana.com/docs/grafana-cloud/security-and-account-management/authentication-and-permissions/access-policies/)
 do not contain the `<dataType>:read` scope for reading data from the data source. You must either grant that
 
 ### Default queries
