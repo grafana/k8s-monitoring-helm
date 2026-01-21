@@ -13,6 +13,19 @@ metadata:
     app.kubernetes.io/managed-by: Helm
 automountServiceAccountToken: true
 ---
+# Source: k8s-monitoring/charts/clusterMetrics/charts/kepler/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: k8smon-kepler
+  namespace: default
+  labels:
+    helm.sh/chart: kepler-0.6.1
+    app.kubernetes.io/name: kepler
+    app.kubernetes.io/component: exporter
+    app.kubernetes.io/version: "release-0.8.0"
+    app.kubernetes.io/managed-by: Helm
+---
 # Source: k8s-monitoring/charts/clusterMetrics/charts/kube-state-metrics/templates/serviceaccount.yaml
 apiVersion: v1
 kind: ServiceAccount
@@ -577,6 +590,51 @@ data:
         }
         forward_to = argument.metrics_destinations.value
       }
+    
+      discovery.kubernetes "kepler" {
+        role = "pod"
+        namespaces {
+          own_namespace = true
+        }
+        selectors {
+          role = "pod"
+          label = "app.kubernetes.io/name=kepler"
+        }
+      }
+    
+      discovery.relabel "kepler" {
+        targets = discovery.kubernetes.kepler.targets
+        rule {
+          source_labels = ["__meta_kubernetes_pod_node_name"]
+          action = "replace"
+          target_label = "instance"
+        }
+      }
+    
+      prometheus.scrape "kepler" {
+        targets      = discovery.relabel.kepler.output
+        job_name     = "integrations/kepler"
+        honor_labels = true
+        scrape_interval = "60s"
+        scrape_timeout = "10s"
+        scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
+        scrape_classic_histograms = false
+        scrape_native_histograms = false
+        clustering {
+          enabled = true
+        }
+        forward_to = [prometheus.relabel.kepler.receiver]
+      }
+    
+      prometheus.relabel "kepler" {
+        max_cache_size = 100000
+        rule {
+          source_labels = ["__name__"]
+          regex = "up|scrape_samples_scraped|kepler_.*"
+          action = "keep"
+        }
+        forward_to = argument.metrics_destinations.value
+      }
     }
     cluster_metrics "feature" {
       metrics_destinations = [
@@ -685,7 +743,7 @@ data:
     # HELP grafana_kubernetes_monitoring_feature_info A metric to report the enabled features of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_feature_info gauge
     grafana_kubernetes_monitoring_feature_info{feature="applicationObservability", protocols="otlphttp", version="1.0.0"} 1
-    grafana_kubernetes_monitoring_feature_info{deployments="kube-state-metrics,node-exporter,windows-exporter", feature="clusterMetrics", sources="kubelet,kubeletResource,cadvisor,kube-state-metrics,node-exporter,windows-exporter", version="1.0.0"} 1
+    grafana_kubernetes_monitoring_feature_info{deployments="kube-state-metrics,node-exporter,windows-exporter,kepler", feature="clusterMetrics", sources="kubelet,kubeletResource,cadvisor,kube-state-metrics,node-exporter,windows-exporter,kepler", version="1.0.0"} 1
     grafana_kubernetes_monitoring_feature_info{feature="podLogs", method="volumes", version="1.0.0"} 1
     # EOF
 ---
@@ -1291,6 +1349,23 @@ rules:
     resources: ["clusterroles", "clusterrolebindings", "roles", "rolebindings"]
     verbs: ["*"]
 ---
+# Source: k8s-monitoring/charts/clusterMetrics/charts/kepler/templates/rolebinding.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: k8smon-kepler-clusterrole
+rules:
+  - apiGroups: [""]
+    resources:
+      - nodes/metrics # access /metrics/resource
+      - nodes/proxy
+      - nodes/stats
+      - pods
+    verbs:
+      - get
+      - watch
+      - list
+---
 # Source: k8s-monitoring/charts/clusterMetrics/charts/kube-state-metrics/templates/role.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -1487,6 +1562,20 @@ subjects:
     name: k8smon-alloy-operator
     namespace: default
 ---
+# Source: k8s-monitoring/charts/clusterMetrics/charts/kepler/templates/rolebinding.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: k8smon-kepler-clusterrole-binding
+roleRef:
+  kind: ClusterRole
+  name: k8smon-kepler-clusterrole
+  apiGroup: "rbac.authorization.k8s.io"
+subjects:
+  - kind: ServiceAccount
+    name: k8smon-kepler
+    namespace: default
+---
 # Source: k8s-monitoring/charts/clusterMetrics/charts/kube-state-metrics/templates/clusterrolebinding.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -1603,6 +1692,29 @@ spec:
     app.kubernetes.io/name: alloy-operator
     app.kubernetes.io/instance: k8smon
 ---
+# Source: k8s-monitoring/charts/clusterMetrics/charts/kepler/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: k8smon-kepler
+  namespace: default
+  labels:
+    helm.sh/chart: kepler-0.6.1
+    app.kubernetes.io/name: kepler
+    app.kubernetes.io/component: exporter
+    app.kubernetes.io/version: "release-0.8.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 9102
+      targetPort: http
+      protocol: TCP
+  selector:
+    app.kubernetes.io/name: kepler
+    app.kubernetes.io/component: exporter
+---
 # Source: k8s-monitoring/charts/clusterMetrics/charts/kube-state-metrics/templates/service.yaml
 apiVersion: v1
 kind: Service
@@ -1685,6 +1797,144 @@ spec:
   selector:
     app.kubernetes.io/name: windows-exporter
     app.kubernetes.io/instance: k8smon
+---
+# Source: k8s-monitoring/charts/clusterMetrics/charts/kepler/templates/daemonset.yaml
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: k8smon-kepler
+  namespace: default
+  labels:
+    helm.sh/chart: kepler-0.6.1
+    app.kubernetes.io/name: kepler
+    app.kubernetes.io/component: exporter
+    app.kubernetes.io/version: "release-0.8.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: kepler
+      app.kubernetes.io/component: exporter
+  template:
+    metadata:
+      annotations:
+        k8s.grafana.com/logs.job: integrations/kepler
+      labels:
+        app.kubernetes.io/name: kepler
+        app.kubernetes.io/component: exporter
+    spec:
+      hostNetwork: true
+      serviceAccountName: k8smon-kepler
+      imagePullSecrets:
+        - name: my-registry-creds
+      containers:
+      - name: kepler-exporter
+        image: "my.registry.com/sustainable_computing_io/kepler:release-0.8.0"
+        imagePullPolicy: Always
+        securityContext:
+            privileged: true
+        args:
+          - -v=$(KEPLER_LOG_LEVEL)
+        env:
+          - name: NODE_IP
+            valueFrom:
+              fieldRef:
+                fieldPath: status.hostIP
+          - name: NODE_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: spec.nodeName
+          - name: METRIC_PATH
+            value: "/metrics"
+          - name: BIND_ADDRESS
+            value: "0.0.0.0:9102"
+          - name: "CGROUP_METRICS"
+            value: "*"
+          - name: "CPU_ARCH_OVERRIDE"
+            value: ""
+          - name: "ENABLE_EBPF_CGROUPID"
+            value: "true"
+          - name: "ENABLE_GPU"
+            value: "true"
+          - name: "ENABLE_PROCESS_METRICS"
+            value: "false"
+          - name: "ENABLE_QAT"
+            value: "false"
+          - name: "EXPOSE_CGROUP_METRICS"
+            value: "false"
+          - name: "EXPOSE_ESTIMATED_IDLE_POWER_METRICS"
+            value: "true"
+          - name: "EXPOSE_HW_COUNTER_METRICS"
+            value: "true"
+          - name: "EXPOSE_IRQ_COUNTER_METRICS"
+            value: "true"
+          - name: "KEPLER_LOG_LEVEL"
+            value: "1"
+        ports:
+        - containerPort: 9102
+          hostPort: 9102
+          name: http
+        livenessProbe:
+          failureThreshold: 5
+          httpGet:
+            path: /healthz
+            port: http
+            scheme: HTTP
+          initialDelaySeconds: 10
+          periodSeconds: 60
+          successThreshold: 1
+          timeoutSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: http
+            scheme: HTTP
+          initialDelaySeconds: 10
+        startupProbe:
+          httpGet:
+            path: /healthz
+            port: http
+            scheme: HTTP
+          initialDelaySeconds: 1
+        volumeMounts:
+          - name: lib-modules
+            mountPath: /lib/modules
+          - name: tracing
+            mountPath: /sys
+          - name: proc
+            mountPath: /proc
+          - name: config-dir
+            mountPath: /etc/kepler
+      volumes:
+        - name: lib-modules
+          hostPath:
+            path: /lib/modules
+            type: DirectoryOrCreate
+        - name: tracing
+          hostPath:
+            path: /sys
+            type: Directory
+        - name: proc
+          hostPath:
+            path: /proc
+            type: Directory
+        - name: config-dir
+          emptyDir:
+            sizeLimit: 100Ki
+      nodeSelector:
+        kubernetes.io/os: linux
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: eks.amazonaws.com/compute-type
+                operator: NotIn
+                values:
+                - fargate
+      tolerations:
+        - effect: NoSchedule
+          key: node-role.kubernetes.io/control-plane
 ---
 # Source: k8s-monitoring/charts/clusterMetrics/charts/node-exporter/templates/daemonset.yaml
 apiVersion: apps/v1

@@ -27,16 +27,36 @@ destinations:
 # Dependent charts use two methods for global image registry and pull secrets
 # so we need to define it both ways.
 global:
+  # Required for Alloy, Alloy Operator and Beyla
   image:
     registry: my.registry.com
     pullSecrets:
       - name: my-registry-creds
+
+  # Required for kube-state-metrics, Node Exporter and Windows Exporter
   imageRegistry: my.registry.com
   imagePullSecrets:
     - name: my-registry-creds
 
 clusterMetrics:
   enabled: true
+
+  # Kepler does not utilize the global image registry settings
+  kepler:
+    enabled: true
+    image:
+      repository: "my.registry.com/sustainable_computing_io/kepler"
+    imagePullSecrets:
+      - name: my-registry-creds
+
+  # OpenCost does not utilize the global image registry settings
+  opencost:
+    imagePullSecrets:
+      - name: my-registry-creds
+    opencost:
+      exporter:
+        image:
+          registry: my.registry.com
 
 podLogs:
   enabled: true
