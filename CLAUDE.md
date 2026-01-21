@@ -375,7 +375,7 @@ Core tools:
 Optional tools (Docker fallback available):
 
 -   helm-docs (README generation)
--   helm-unittest (unit test execution)
+-   helm-unittest (runs unit tests)
 -   Flux CLI (integration tests)
 -   shellspec (shell-based tests)
 
