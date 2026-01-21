@@ -10,10 +10,11 @@ This skill guides you through creating a new feature subchart for the k8s-monito
 ## Prerequisites
 
 Before starting, understand:
-- What telemetry data this feature collects (metrics, logs, traces, profiles)
-- Which collector(s) it should use (alloy-metrics, alloy-logs, alloy-singleton, alloy-receiver, alloy-profiles)
-- What destination types it needs (prometheus, loki, otlp, pyroscope)
-- Any external dependencies (e.g., kube-state-metrics, node-exporter)
+
+-   What telemetry data this feature collects (metrics, logs, traces, profiles)
+-   Which collector(s) it should use (alloy-metrics, alloy-logs, alloy-singleton, alloy-receiver, alloy-profiles)
+-   What destination types it needs (Prometheus, Loki, otlp, pyroscope)
+-   Any external dependencies (e.g., kube-state-metrics, node-exporter)
 
 ## Steps
 
@@ -37,13 +38,15 @@ version: 1.0.0
 ### 3. Create values.yaml
 
 Include:
-- `enabled: false` (features default to disabled)
-- Feature-specific configuration options
-- Follow the design idiom: ask about outcomes, not systems
+
+-   `enabled: false` (features default to off)
+-   Feature-specific configuration options
+-   Follow the design idiom: ask about outcomes, not systems
 
 ### 4. Create Required Templates
 
-**templates/_module.alloy.tpl** - Core Alloy module:
+**templates/\_module.alloy.tpl** - Core Alloy module:
+
 ```go
 {{- define "feature.<name>.module" }}
 {{- $values := .Values }}
@@ -63,7 +66,8 @@ declare "<feature_name>" {
 {{- end }}
 ```
 
-**templates/_notes.tpl** - Required metadata functions:
+**templates/\_notes.tpl** - Required metadata functions:
+
 ```go
 {{- define "feature.<name>.notes.deployments" }}
 - <list of workloads this feature deploys>
@@ -82,7 +86,8 @@ enabled: {{ .Values.enabled }}
 {{- end }}
 ```
 
-**templates/_validation.tpl** - Input validation:
+**templates/\_validation.tpl** - Input validation:
+
 ```go
 {{- define "feature.<name>.validate" }}
 {{- if .Values.enabled }}
@@ -100,6 +105,7 @@ Create `tests/*.yaml` with helm-unittest test cases.
 ### 6. Update Main Chart
 
 Add dependency in `charts/k8s-monitoring/Chart.yaml`:
+
 ```yaml
 dependencies:
   - name: feature-<name>
@@ -152,27 +158,33 @@ make -C charts/k8s-monitoring test
 ### 9. Create Example
 
 Create example in `charts/k8s-monitoring/docs/examples/features/<name>/`:
-- `values.yaml` - Example configuration
-- `description.txt` - Feature description
+
+-   `values.yaml` - Example configuration
+-   `description.txt` - Feature description
 
 Then run:
+
 ```bash
 make -C charts/k8s-monitoring examples
 ```
 
 ## Design Principles to Follow
 
-1. **Ask about outcomes, not systems** - Use user-friendly naming
-2. **Error messages include suggestions** - Always tell users how to fix issues
-3. **No config language knowledge required** - Provide high-level abstractions
-4. **The right amount of magic** - Balance predictability with convenience
+1.  **Ask about outcomes, not systems** - Use user-friendly naming
+2.  **Error messages include suggestions** - Always tell users how to fix issues
+3.  **No config language knowledge required** - Provide high-level abstractions
+4.  **The right amount of magic** - Balance predictability with convenience
 
 ## Validation Checklist
 
-- [ ] Feature chart has all required templates (_module.alloy.tpl, _notes.tpl, _validation.tpl)
-- [ ] Unit tests pass
-- [ ] Main chart builds successfully with feature included
-- [ ] Example renders without errors
-- [ ] Generated Alloy config is valid (checked by lint-alloy)
-- [ ] Feature follows design idioms from CONTRIBUTING.md
-- [ ] Documentation is clear and includes examples
+<!-- textlint-disable no-todo -->
+
+-   [ ] Feature chart has all required templates (module.alloy.tpl, notes.tpl, validation.tpl)
+-   [ ] Unit tests pass
+-   [ ] Main chart builds successfully with feature included
+-   [ ] Example renders without errors
+-   [ ] Generated Alloy config is valid (checked by lint-alloy)
+-   [ ] Feature follows design idioms from CONTRIBUTING.md
+-   [ ] Documentation is clear and includes examples
+
+<!-- textlint-enable no-todo -->
