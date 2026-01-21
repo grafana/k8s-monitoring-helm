@@ -62,7 +62,7 @@ its name. The following files are required for a feature chart:
         action after deployment
     -   `feature.<feature-slug>.summary` - Returns a dictionary of settings that is used for self-reporting metrics
 
-Also refer to the [Contributing guide](./CONTRIBUTING.md).
+Also refer to the [Contributing guide](../../../CONTRIBUTING.md).
 
 ### Documentation
 

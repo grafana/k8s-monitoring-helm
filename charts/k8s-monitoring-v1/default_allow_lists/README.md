@@ -25,11 +25,11 @@ action on the metric list, including filtering based on label or other actions.
 | Metric Source      | Allow List                                                         | Purpose                   |
 |--------------------|--------------------------------------------------------------------|---------------------------|
 | Alloy              | [alloy.yaml](./alloy.yaml)                                         | Return Alloy version      |
-| Alloy              | [alloy_integration.yaml](/alloy_integration.yaml)                  | Capture Alloy behavior    |
+| Alloy              | [alloy_integration.yaml](./alloy_integration.yaml)                 | Capture Alloy behavior    |
 | cAdvisor           | [cadvisor.yaml](./cadvisor.yaml)                                   | Container metrics         |
 | kube-state-metrics | [kube-state-metrics.yaml](./kube-state-metrics.yaml)               | Cluster objects           |
 | Kubelet            | [kubelet.yaml](./kubelet.yaml)                                     | Cluster metrics           |
-| Node Exporter      | [node_exporter.yaml](./node_exporter.yaml)                         | Basic Node health         |
-| Node Exporter      | [node_exporter_integration.yaml](./node_exporter_integration.yaml) | Detailed Node health      |
+| Node Exporter      | [node-exporter.yaml](./node-exporter.yaml)                         | Basic Node health         |
+| Node Exporter      | [node_exporter_integration.yaml](./node-exporter-integration.yaml) | Detailed Node health      |
 | OpenCost           | [opencost.yaml](./opencost.yaml)                                   | Cluster cost metrics      |
-| Windows Exporter   | [windows_exporter.yaml](./windows_exporter.yaml)                   | Basic Windows Node health |
+| Windows Exporter   | [windows-exporter.yaml](./windows-exporter.yaml)                   | Basic Windows Node health |

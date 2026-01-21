@@ -4,7 +4,7 @@
 -->
 # GKE Autopilot
 
-Kubernetes Clusters with fully managed control planes like [GKE Autopilot](https://cloud.google.com/kubernetes-engine/docs/concepts/autopilot-overview)
+Kubernetes Clusters with fully managed control planes like [GKE Autopilot](https://docs.cloud.google.com/kubernetes-engine/docs/concepts/autopilot-overview)
 need extra consideration because they often have restrictions around DaemonSets and node access. This prevents services
 like Node Exporter from working properly.
 

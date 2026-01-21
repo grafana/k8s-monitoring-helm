@@ -1,7 +1,7 @@
 # Custom Pricing
 
 This example shows how to enable custom pricing for the OpenCost deployment. See the
-OpenCost [documentation](https://www.opencost.io/docs/configuration/on-prem#custom-pricing-using-the-opencost-helm-chart)
+OpenCost [documentation](https://opencost.io/docs/configuration/on-prem/#custom-pricing-using-the-opencost-helm-chart)
 for more information.
 
 ```yaml
