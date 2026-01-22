@@ -1,5 +1,6 @@
 # istio
 
+<!-- textlint-disable terminology -->
 ## Values
 
 ### Istiod Metrics Settings
@@ -47,3 +48,4 @@
 | istiodMetrics.namespace | string | `""` |  |
 | istiodMetrics.serviceName | string | `"istiod"` |  |
 | sidecarMetrics.labelSelectors | object | `{}` |  |
+<!-- textlint-enable terminology -->
