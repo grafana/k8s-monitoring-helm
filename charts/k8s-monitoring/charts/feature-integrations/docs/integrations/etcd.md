@@ -1,5 +1,6 @@
 # etcd
 
+<!-- textlint-disable terminology -->
 ## Values
 
 ### Discovery Settings
@@ -32,3 +33,4 @@
 |-----|------|---------|-------------|
 | metrics.scrapeInterval | string | `60s` | How frequently to scrape metrics from etcd. |
 | metrics.scrapeTimeout | string | `10s` | The timeout for scraping metrics from etcd. |
+<!-- textlint-enable terminology -->

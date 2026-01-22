@@ -1,5 +1,6 @@
 # dcgm-exporter
 
+<!-- textlint-disable terminology -->
 ## Values
 
 ### Discovery Settings
@@ -38,3 +39,4 @@
 |-----|------|---------|-------------|
 | metrics.scrapeInterval | string | `60s` | How frequently to scrape metrics from DCGM Exporter. |
 | metrics.scrapeTimeout | string | `10s` | The timeout for scraping metrics from DCGM Exporter. |
+<!-- textlint-enable terminology -->
