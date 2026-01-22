@@ -99,6 +99,10 @@ lint-terraform: ## Lint terraform files
 lint-text: node_modules/.bin/textlint ## Lint text files
 	@node_modules/.bin/textlint --config .textlintrc --ignore-path .textlintignore .
 
+.PHONY: lint-check-dead-links
+lint-check-dead-links: node_modules/.bin/textlint ## Lint text files and check for dead links
+	@node_modules/.bin/textlint --config .textlintrc-dead-links --ignore-path .textlintignore .
+
 .PHONY: lint-yaml
 lint-yaml: ## Lint yaml files
 	@if command -v yamllint &> /dev/null; then \
