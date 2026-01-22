@@ -42,15 +42,15 @@ data:
       }
     
       remote.kubernetes.secret "test_database" {
-        name      = "test-database-pg-db-pguser-test-database-pg-db"
+        name      = "test-database-postgresql"
         namespace = "postgresql"
       }
     
       prometheus.exporter.postgres "test_database" {
-        data_source_names = [string.format("postgresql://%s:%s@%s:%d/?sslmode=disable",
-          encoding.url_encode(convert.nonsensitive(remote.kubernetes.secret.test_database.data["user"])),
-          encoding.url_encode(convert.nonsensitive(remote.kubernetes.secret.test_database.data["password"])),
-          "test-database-pg-db-primary.postgresql.svc",
+        data_source_names = [string.format("postgresql://%s:%s@%s:%d/postgres?sslmode=disable",
+          encoding.url_encode(convert.nonsensitive(remote.kubernetes.secret.test_database.data["postgres-username"])),
+          encoding.url_encode(convert.nonsensitive(remote.kubernetes.secret.test_database.data["postgres-password"])),
+          "test-database-postgresql.postgresql.svc",
           5432,
         )]
         enabled_collectors = ["database","locks","replication","replication_slot","stat_bgwriter","stat_database","stat_progress_vacuum","stat_statements","stat_user_tables","statio_user_tables","wal"]
@@ -63,10 +63,10 @@ data:
     
       database_observability.postgres "test_database" {
         targets = prometheus.exporter.postgres.test_database.targets
-        data_source_name = string.format("postgresql://%s:%s@%s:%d/?sslmode=disable",
-          encoding.url_encode(convert.nonsensitive(remote.kubernetes.secret.test_database.data["user"])),
-          encoding.url_encode(convert.nonsensitive(remote.kubernetes.secret.test_database.data["password"])),
-          "test-database-pg-db-primary.postgresql.svc",
+        data_source_name = string.format("postgresql://%s:%s@%s:%d/postgres?sslmode=disable",
+          encoding.url_encode(convert.nonsensitive(remote.kubernetes.secret.test_database.data["postgres-username"])),
+          encoding.url_encode(convert.nonsensitive(remote.kubernetes.secret.test_database.data["postgres-password"])),
+          "test-database-postgresql.postgresql.svc",
           5432,
         )
         explain_plans {
@@ -394,14 +394,14 @@ data:
         rule {
           source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_instance"]
           separator = ";"
-          regex = "(?:test-database-pg-db)"
+          regex = "(?:test-database)"
           target_label = "integration"
           replacement = "postgresql"
         }
         rule {
           source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_instance"]
           separator = ";"
-          regex = "(?:test-database-pg-db)"
+          regex = "(?:test-database)"
           target_label = "instance"
           replacement = "test-database"
         }

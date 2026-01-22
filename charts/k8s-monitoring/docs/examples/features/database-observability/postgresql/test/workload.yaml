@@ -11,36 +11,49 @@ metadata:
 spec:
   restartPolicy: Always
   initContainers:
+    - name: enable-stat-statements
+      image: postgres:16
+      env:
+        - name: PGHOST
+          value: test-database-postgresql.postgresql.svc
+        - name: PGDATABASE
+          value: postgres
+        - name: PGUSER
+          value: postgres
+        - name: PGPASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: test-database-postgresql
+              key: postgres-password
+        - name: PGPORT
+          value: "5432"
+      command:
+        - /bin/sh
+        - -c
+        - |
+          set -euo pipefail
+          echo "Waiting for PostgreSQL to accept connections..."
+          until pg_isready -h "${PGHOST}" -p "${PGPORT}" -d "${PGDATABASE}" -U "${PGUSER}"; do
+            sleep 5
+          done
+          echo "Enabling pg_stat_statements extension ${PGDATABASE}..."
+          psql -v ON_ERROR_STOP=1 -c "CREATE EXTENSION IF NOT EXISTS pg_stat_statements;"
     - name: seed-schema
       image: postgres:16
       env:
         - name: PGHOST
-          valueFrom:
-            secretKeyRef:
-              name: test-database-pg-db-pguser-test-database-pg-db
-              key: host
+          value: test-database-postgresql.postgresql.svc
         - name: PGDATABASE
-          valueFrom:
-            secretKeyRef:
-              name: test-database-pg-db-pguser-test-database-pg-db
-              key: dbname
+          value: postgres
         - name: PGUSER
-          valueFrom:
-            secretKeyRef:
-              name: test-database-pg-db-pguser-test-database-pg-db
-              key: user
+          value: postgres
         - name: PGPASSWORD
           valueFrom:
             secretKeyRef:
-              name: test-database-pg-db-pguser-test-database-pg-db
-              key: password
+              name: test-database-postgresql
+              key: postgres-password
         - name: PGPORT
-          valueFrom:
-            secretKeyRef:
-              name: test-database-pg-db-pguser-test-database-pg-db
-              key: port
-        - name: PGSSLMODE
-          value: require
+          value: "5432"
       command:
         - /bin/sh
         - -c
@@ -59,32 +72,18 @@ spec:
       image: postgres:16
       env:
         - name: PGHOST
-          valueFrom:
-            secretKeyRef:
-              name: test-database-pg-db-pguser-test-database-pg-db
-              key: host
+          value: test-database-postgresql.postgresql.svc
         - name: PGDATABASE
-          valueFrom:
-            secretKeyRef:
-              name: test-database-pg-db-pguser-test-database-pg-db
-              key: dbname
+          value: postgres
         - name: PGUSER
-          valueFrom:
-            secretKeyRef:
-              name: test-database-pg-db-pguser-test-database-pg-db
-              key: user
+          value: postgres
         - name: PGPASSWORD
           valueFrom:
             secretKeyRef:
-              name: test-database-pg-db-pguser-test-database-pg-db
-              key: password
+              name: test-database-postgresql
+              key: postgres-password
         - name: PGPORT
-          valueFrom:
-            secretKeyRef:
-              name: test-database-pg-db-pguser-test-database-pg-db
-              key: port
-        - name: PGSSLMODE
-          value: require
+          value: "5432"
       command:
         - /bin/sh
         - -c
@@ -100,32 +99,18 @@ spec:
       image: postgres:16
       env:
         - name: PGHOST
-          valueFrom:
-            secretKeyRef:
-              name: test-database-pg-db-pguser-test-database-pg-db
-              key: host
+          value: test-database-postgresql.postgresql.svc
         - name: PGDATABASE
-          valueFrom:
-            secretKeyRef:
-              name: test-database-pg-db-pguser-test-database-pg-db
-              key: dbname
+          value: postgres
         - name: PGUSER
-          valueFrom:
-            secretKeyRef:
-              name: test-database-pg-db-pguser-test-database-pg-db
-              key: user
+          value: postgres
         - name: PGPASSWORD
           valueFrom:
             secretKeyRef:
-              name: test-database-pg-db-pguser-test-database-pg-db
-              key: password
+              name: test-database-postgresql
+              key: postgres-password
         - name: PGPORT
-          valueFrom:
-            secretKeyRef:
-              name: test-database-pg-db-pguser-test-database-pg-db
-              key: port
-        - name: PGSSLMODE
-          value: require
+          value: "5432"
       command:
         - /bin/sh
         - -c

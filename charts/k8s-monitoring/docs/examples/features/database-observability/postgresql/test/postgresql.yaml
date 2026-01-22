@@ -5,28 +5,26 @@ metadata:
   name: postgresql
 ---
 apiVersion: source.toolkit.fluxcd.io/v1
-kind: HelmRepository
+kind: OCIRepository
 metadata:
-  name: percona
+  name: postgresql
   namespace: postgresql
 spec:
   interval: 1m
-  url: https://percona.github.io/percona-helm-charts/
+  url: oci://registry-1.docker.io/bitnamicharts/postgresql
+  ref:
+    semver: "*"
 ---
-apiVersion: helm.toolkit.fluxcd.io/v2
-kind: HelmRelease
+apiVersion: v1
+kind: Secret
 metadata:
-  name: pg-operator
+  name: test-database-postgresql
   namespace: postgresql
-spec:
-  interval: 1m
-  chart:
-    spec:
-      chart: pg-operator
-      sourceRef:
-        kind: HelmRepository
-        name: percona
-        namespace: postgresql
+stringData:
+  password: "sample-password"
+  postgres-username: "postgres"
+  postgres-password: "sample-root-password"
+  replication-password: "sample-replication-password"
 ---
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
@@ -35,13 +33,13 @@ metadata:
   namespace: postgresql
 spec:
   interval: 1m
-  chart:
-    spec:
-      chart: pg-db
-      sourceRef:
-        kind: HelmRepository
-        name: percona
-        namespace: postgresql
-  dependsOn:
-    - name: pg-operator
-      namespace: postgresql
+  chartRef:
+    kind: OCIRepository
+    name: postgresql
+    namespace: postgresql
+  values:
+    auth:
+      existingSecret: test-database-postgresql
+    image:
+      repository: bitnamilegacy/postgresql
+    postgresqlSharedPreloadLibraries: pgaudit,pg_stat_statements
