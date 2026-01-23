@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+*   Make the loki.process CRI stage maxPartialLines configurable (@ptodev)
+*   Add eBPF sample rate for profiling (@jo030225)
 *   Add the ability to skip cluster metrics ServiceMonitor checks (@petewall)
 
 ## 3.7.2
