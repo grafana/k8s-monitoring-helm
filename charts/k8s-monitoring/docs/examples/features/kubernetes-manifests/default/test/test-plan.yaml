@@ -1,0 +1,51 @@
+---
+# yamllint disable rule:line-length
+apiVersion: helm-chart-toolbox.grafana.com/v1
+kind: TestPlan
+name: kubernetes-manifests
+
+subject:
+  releaseName: k8smon
+  path: ../../../../../../
+  valuesFile: ../values.yaml
+
+cluster:
+  type: kind
+
+dependencies:
+  - preset: test-parameters
+    namespace: toolbox
+  - preset: loki
+  - preset: grafana
+    overrides:
+      datasources:
+        datasources.yaml:
+          apiVersion: 1
+          datasources:
+            - name: Loki
+              type: loki
+              url: http://loki-gateway.loki.svc:8080
+              isDefault: true
+              basicAuth: true
+              basicAuthUser: loki
+              jsonData:
+                httpHeaderName1: X-Scope-OrgID
+              secureJsonData:
+                basicAuthPassword: lokipassword
+                httpHeaderValue1: "1"
+
+tests:
+  - type: query-test
+    values:
+      tests:
+        - env:
+            LOKI_URL: http://loki.loki.svc:3100/loki/api/v1/query
+            LOKI_TENANTID: 1
+            LOKI_USER: loki
+            LOKI_PASS: lokipassword
+          envFrom:
+            - configMapRef: {name: test-parameters}
+          queries:
+            # Pod logs
+            - query: count_over_time({cluster="kubernetes-manifest-cluster", service_name="default/k8s.grafana.com/manifest-collector"}[1h] | json | resources_k8s_deployment_name="k8smon-alloy-operator")
+              type: logql

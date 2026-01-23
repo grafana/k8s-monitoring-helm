@@ -1,0 +1,33 @@
+---
+cluster:
+  name: kubernetes-manifest-cluster
+
+destinations:
+  - name: loki
+    type: loki
+    url: http://loki.loki.svc:3100/loki/api/v1/push
+    tenantId: "1"
+    auth:
+      type: basic
+      username: loki
+      password: lokipassword
+
+kubernetesManifests:
+  enabled: true
+  namespaces: [default]  # Comment out for all namespaces
+  kinds:
+    pods:
+      gather: true
+    deployments:
+      gather: false
+    statefulsets:
+      gather: false
+    daemonsets:
+      gather: false
+    cronjobs:
+      gather: false
+
+alloy-singleton:
+  enabled: true
+  alloy:
+    stabilityLevel: public-preview

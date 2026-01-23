@@ -994,7 +994,7 @@ data:
         }
         basic_auth {
           username = convert.nonsensitive(remote.kubernetes.secret.grafana_cloud_metrics.data["PROMETHEUS_USER"])
-          password = remote.kubernetes.secret.grafana_cloud_metrics.data["PROMETHEUS_PASS"]
+          password = remote.kubernetes.secret.grafana_cloud_metrics.data["ACCESS_POLICY_TOKEN"]
         }
         tls_config {
           insecure_skip_verify = false
@@ -1139,6 +1139,202 @@ data:
         loki.write.grafana_cloud_logs.receiver,
       ]
     }
+    // Feature: Kubernetes Manifests
+    declare "kubernetes_manifests" {
+      argument "logs_destinations" {
+        comment = "Must be a list of log destinations where collected logs should be forwarded to"
+      }
+    
+    
+      otelcol.receiver.filelog "pod_manifests" {
+        include = ["/var/kubernetes-manifests/pods/*/*.json"]
+        include_file_path_resolved = true
+        start_at = "beginning"
+        delete_after_read = true
+    
+        output {
+          logs = [otelcol.processor.transform.pod_manifests.input]
+        }
+      }
+    
+      otelcol.processor.transform "pod_manifests" {
+        error_mode = "ignore"
+    
+        log_statements {
+          context = "log"
+          statements = [
+            `merge_maps(attributes, ExtractPatterns(log.attributes["log.file.path_resolved"], "^/var/kubernetes-manifests/pods/(?P<namespace>[^/]+)/(?P<pod>[^.]+)\\.json$"), "upsert")`,
+            `set(resource.attributes["k8s.namespace.name"], attributes["namespace"])`,
+            `set(resource.attributes["k8s.pod.name"], attributes["pod"])`,
+            `set(resource.attributes["service.name"], "k8s.grafana.com/manifest-collector")`,
+            `set(resource.attributes["service.namespace"], "default")`,
+          ]
+        }
+    
+        output {
+          logs = [otelcol.processor.k8sattributes.pod_manifests.input]
+        }
+      }
+    
+      otelcol.processor.k8sattributes "pod_manifests" {
+        pod_association {
+          source {
+            from = "resource_attribute"
+            name = "k8s.pod.name"
+          }
+          source {
+            from = "resource_attribute"
+            name = "k8s.namespace.name"
+          }
+        }
+    
+        extract {
+          metadata = [
+            "k8s.cronjob.name",
+            "k8s.daemonset.name",
+            "k8s.deployment.name",
+            "k8s.job.name",
+            "k8s.node.name",
+            "k8s.pod.start_time",
+            "k8s.replicaset.name",
+            "k8s.statefulset.name",
+          ]
+        }
+    
+        output {
+          logs = argument.logs_destinations.value
+        }
+      }
+    
+    
+      otelcol.receiver.filelog "deployment_manifests" {
+        include = ["/var/kubernetes-manifests/deployments/*/*.json"]
+        include_file_path_resolved = true
+        start_at = "beginning"
+        delete_after_read = true
+    
+        output {
+          logs = [otelcol.processor.transform.deployment_manifests.input]
+        }
+      }
+    
+      otelcol.processor.transform "deployment_manifests" {
+        error_mode = "ignore"
+    
+        log_statements {
+          context = "log"
+          statements = [
+            `merge_maps(attributes, ExtractPatterns(log.attributes["log.file.path_resolved"], "^/var/kubernetes-manifests/deployments/(?P<namespace>[^/]+)/(?P<deployment>[^.]+)\\.json$"), "upsert")`,
+            `set(resource.attributes["k8s.namespace.name"], attributes["namespace"])`,
+            `set(resource.attributes["k8s.deployment.name"], attributes["deployment"])`,
+            `set(resource.attributes["service.name"], "k8s.grafana.com/manifest-collector")`,
+            `set(resource.attributes["service.namespace"], "default")`,
+          ]
+        }
+    
+        output {
+          logs = argument.logs_destinations.value
+        }
+      }
+    
+    
+      otelcol.receiver.filelog "statefulset_manifests" {
+        include = ["/var/kubernetes-manifests/statefulsets/*/*.json"]
+        include_file_path_resolved = true
+        start_at = "beginning"
+        delete_after_read = true
+    
+        output {
+          logs = [otelcol.processor.transform.statefulset_manifests.input]
+        }
+      }
+    
+      otelcol.processor.transform "statefulset_manifests" {
+        error_mode = "ignore"
+    
+        log_statements {
+          context = "log"
+          statements = [
+            `merge_maps(attributes, ExtractPatterns(log.attributes["log.file.path_resolved"], "^/var/kubernetes-manifests/statefulsets/(?P<namespace>[^/]+)/(?P<statefulset>[^.]+)\\.json$"), "upsert")`,
+            `set(resource.attributes["k8s.namespace.name"], attributes["namespace"])`,
+            `set(resource.attributes["k8s.statefulset.name"], attributes["statefulset"])`,
+            `set(resource.attributes["service.name"], "k8s.grafana.com/manifest-collector")`,
+            `set(resource.attributes["service.namespace"], "default")`,
+          ]
+        }
+    
+        output {
+          logs = argument.logs_destinations.value
+        }
+      }
+    
+    
+      otelcol.receiver.filelog "daemonset_manifests" {
+        include = ["/var/kubernetes-manifests/daemonsets/*/*.json"]
+        include_file_path_resolved = true
+        start_at = "beginning"
+        delete_after_read = true
+    
+        output {
+          logs = [otelcol.processor.transform.daemonset_manifests.input]
+        }
+      }
+    
+      otelcol.processor.transform "daemonset_manifests" {
+        error_mode = "ignore"
+    
+        log_statements {
+          context = "log"
+          statements = [
+            `merge_maps(attributes, ExtractPatterns(log.attributes["log.file.path_resolved"], "^/var/kubernetes-manifests/daemonsets/(?P<namespace>[^/]+)/(?P<daemonset>[^.]+)\\.json$"), "upsert")`,
+            `set(resource.attributes["k8s.namespace.name"], attributes["namespace"])`,
+            `set(resource.attributes["k8s.daemonset.name"], attributes["daemonset"])`,
+            `set(resource.attributes["service.name"], "k8s.grafana.com/manifest-collector")`,
+            `set(resource.attributes["service.namespace"], "default")`,
+          ]
+        }
+    
+        output {
+          logs = argument.logs_destinations.value
+        }
+      }
+    
+    
+      otelcol.receiver.filelog "cronjob_manifests" {
+        include = ["/var/kubernetes-manifests/cronjobs/*/*.json"]
+        include_file_path_resolved = true
+        start_at = "beginning"
+        delete_after_read = true
+    
+        output {
+          logs = [otelcol.processor.transform.cronjob_manifests.input]
+        }
+      }
+    
+      otelcol.processor.transform "cronjob_manifests" {
+        error_mode = "ignore"
+    
+        log_statements {
+          context = "log"
+          statements = [
+            `merge_maps(attributes, ExtractPatterns(log.attributes["log.file.path_resolved"], "^/var/kubernetes-manifests/cronjobs/(?P<namespace>[^/]+)/(?P<cronjob>[^.]+)\\.json$"), "upsert")`,
+            `set(resource.attributes["k8s.namespace.name"], attributes["namespace"])`,
+            `set(resource.attributes["k8s.cronjob.name"], attributes["cronjob"])`,
+            `set(resource.attributes["service.name"], "k8s.grafana.com/manifest-collector")`,
+            `set(resource.attributes["service.namespace"], "default")`,
+          ]
+        }
+    
+        output {
+          logs = argument.logs_destinations.value
+        }
+      }
+    }
+    kubernetes_manifests "feature" {
+      logs_destinations = [
+        otelcol.processor.attributes.gc_otlp_endpoint.input,
+      ]
+    }
     // Self Reporting
     prometheus.exporter.unix "kubernetes_monitoring_telemetry" {
       set_collectors = ["textfile"]
@@ -1200,7 +1396,7 @@ data:
         }
         basic_auth {
           username = convert.nonsensitive(remote.kubernetes.secret.grafana_cloud_metrics.data["PROMETHEUS_USER"])
-          password = remote.kubernetes.secret.grafana_cloud_metrics.data["PROMETHEUS_PASS"]
+          password = remote.kubernetes.secret.grafana_cloud_metrics.data["ACCESS_POLICY_TOKEN"]
         }
         tls_config {
           insecure_skip_verify = false
@@ -1260,7 +1456,7 @@ data:
         tenant_id = convert.nonsensitive(remote.kubernetes.secret.grafana_cloud_logs.data["tenantId"])
         basic_auth {
           username = convert.nonsensitive(remote.kubernetes.secret.grafana_cloud_logs.data["LOKI_USER"])
-          password = remote.kubernetes.secret.grafana_cloud_logs.data["LOKI_PASS"]
+          password = remote.kubernetes.secret.grafana_cloud_logs.data["ACCESS_POLICY_TOKEN"]
         }
         tls_config {
           insecure_skip_verify = false
@@ -1282,6 +1478,205 @@ data:
       name      = "grafana-cloud-credentials"
       namespace = "default"
     }
+    
+    // Destination: gc-otlp-endpoint (otlp)
+    otelcol.receiver.prometheus "gc_otlp_endpoint" {
+      output {
+        metrics = [otelcol.processor.attributes.gc_otlp_endpoint.input]
+      }
+    }
+    otelcol.receiver.loki "gc_otlp_endpoint" {
+      output {
+        logs = [otelcol.processor.attributes.gc_otlp_endpoint.input]
+      }
+    }
+    
+    otelcol.processor.attributes "gc_otlp_endpoint" {
+      output {
+        metrics = [otelcol.processor.transform.gc_otlp_endpoint.input]
+        logs = [otelcol.processor.transform.gc_otlp_endpoint.input]
+        traces = [otelcol.processor.transform.gc_otlp_endpoint.input]
+      }
+    }
+    
+    otelcol.processor.transform "gc_otlp_endpoint" {
+      error_mode = "ignore"
+      metric_statements {
+        context = "resource"
+        statements = [
+          `set(attributes["cluster"], "gke-test")`,
+          `set(attributes["k8s.cluster.name"], "gke-test")`,
+          `delete_key(attributes, "process.pid")`,
+          `delete_key(attributes, "process.parent_pid")`,
+          `delete_key(attributes, "process.executable.path")`,
+          `delete_key(attributes, "process.command_line")`,
+          `delete_key(attributes, "process.command_args")`,
+          `delete_key(attributes, "process.owner")`,
+          `delete_key(attributes, "process.runtime.version")`,
+          `delete_key(attributes, "process.runtime.description")`,
+          `delete_key(attributes, "host.ip")`,
+          `delete_key(attributes, "host.mac")`,
+          `delete_key(attributes, "k8s.pod.start_time")`,
+          `delete_key(attributes, "k8s.pod.uid")`,
+          `delete_key(attributes, "container.image.id")`,
+          `delete_key(attributes, "container.image.repo_digests")`,
+          `delete_key(attributes, "os.description")`,
+          `delete_key(attributes, "os.build_id")`,
+        ]
+      }
+    
+      metric_statements {
+        context = "datapoint"
+        statements = [
+          `set(attributes["cluster"], "gke-test")`,
+          `set(attributes["k8s.cluster.name"], "gke-test")`,
+          `set(resource.attributes["deployment.environment"], attributes["deployment_environment"] ) where resource.attributes["deployment.environment"] == nil and attributes["deployment_environment"] != nil`,
+          `delete_key(attributes, "deployment_environment") where attributes["deployment_environment"] == resource.attributes["deployment.environment"]`,
+          `set(resource.attributes["deployment.environment.name"], attributes["deployment_environment_name"] ) where resource.attributes["deployment.environment.name"] == nil and attributes["deployment_environment_name"] != nil`,
+          `delete_key(attributes, "deployment_environment_name") where attributes["deployment_environment_name"] == resource.attributes["deployment.environment.name"]`,
+          `set(resource.attributes["service.name"], attributes["service_name"] ) where resource.attributes["service.name"] == nil and attributes["service_name"] != nil`,
+          `delete_key(attributes, "service_name") where attributes["service_name"] == resource.attributes["service.name"]`,
+          `set(resource.attributes["service.namespace"], attributes["service_namespace"] ) where resource.attributes["service.namespace"] == nil and attributes["service_namespace"] != nil`,
+          `delete_key(attributes, "service_namespace") where attributes["service_namespace"] == resource.attributes["service.namespace"]`,
+        ]
+      }
+      log_statements {
+        context = "resource"
+        statements = [
+          `set(attributes["cluster"], "gke-test")`,
+          `set(attributes["k8s.cluster.name"], "gke-test")`,
+          `delete_key(attributes, "process.pid")`,
+          `delete_key(attributes, "process.parent_pid")`,
+          `delete_key(attributes, "process.executable.path")`,
+          `delete_key(attributes, "process.command_line")`,
+          `delete_key(attributes, "process.command_args")`,
+          `delete_key(attributes, "process.owner")`,
+          `delete_key(attributes, "process.runtime.version")`,
+          `delete_key(attributes, "process.runtime.description")`,
+          `delete_key(attributes, "host.ip")`,
+          `delete_key(attributes, "host.mac")`,
+          `delete_key(attributes, "k8s.pod.start_time")`,
+          `delete_key(attributes, "k8s.pod.uid")`,
+          `delete_key(attributes, "container.image.id")`,
+          `delete_key(attributes, "container.image.repo_digests")`,
+          `delete_key(attributes, "os.description")`,
+          `delete_key(attributes, "os.build_id")`,
+        ]
+      }
+    
+      log_statements {
+        context = "log"
+        statements = [
+          `delete_key(attributes, "loki.attribute.labels")`,
+          `delete_key(attributes, "loki.resource.labels")`,
+          `set(resource.attributes["k8s.container.name"], attributes["container"] ) where resource.attributes["k8s.container.name"] == nil and attributes["container"] != nil`,
+          `delete_key(attributes, "container") where attributes["container"] == resource.attributes["k8s.container.name"]`,
+          `set(resource.attributes["k8s.cronjob.name"], attributes["cronjob"] ) where resource.attributes["k8s.cronjob.name"] == nil and attributes["cronjob"] != nil`,
+          `delete_key(attributes, "cronjob") where attributes["cronjob"] == resource.attributes["k8s.cronjob.name"]`,
+          `set(resource.attributes["k8s.daemonset.name"], attributes["daemonset"] ) where resource.attributes["k8s.daemonset.name"] == nil and attributes["daemonset"] != nil`,
+          `delete_key(attributes, "daemonset") where attributes["daemonset"] == resource.attributes["k8s.daemonset.name"]`,
+          `set(resource.attributes["k8s.deployment.name"], attributes["deployment"] ) where resource.attributes["k8s.deployment.name"] == nil and attributes["deployment"] != nil`,
+          `delete_key(attributes, "deployment") where attributes["deployment"] == resource.attributes["k8s.deployment.name"]`,
+          `set(resource.attributes["deployment.environment"], attributes["deployment_environment"] ) where resource.attributes["deployment.environment"] == nil and attributes["deployment_environment"] != nil`,
+          `delete_key(attributes, "deployment_environment") where attributes["deployment_environment"] == resource.attributes["deployment.environment"]`,
+          `set(resource.attributes["deployment.environment.name"], attributes["deployment_environment_name"] ) where resource.attributes["deployment.environment.name"] == nil and attributes["deployment_environment_name"] != nil`,
+          `delete_key(attributes, "deployment_environment_name") where attributes["deployment_environment_name"] == resource.attributes["deployment.environment.name"]`,
+          `set(resource.attributes["k8s.job.name"], attributes["job_name"] ) where resource.attributes["k8s.job.name"] == nil and attributes["job_name"] != nil`,
+          `delete_key(attributes, "job_name") where attributes["job_name"] == resource.attributes["k8s.job.name"]`,
+          `set(resource.attributes["k8s.namespace.name"], attributes["namespace"] ) where resource.attributes["k8s.namespace.name"] == nil and attributes["namespace"] != nil`,
+          `delete_key(attributes, "namespace") where attributes["namespace"] == resource.attributes["k8s.namespace.name"]`,
+          `set(resource.attributes["k8s.pod.name"], attributes["pod"] ) where resource.attributes["k8s.pod.name"] == nil and attributes["pod"] != nil`,
+          `delete_key(attributes, "pod") where attributes["pod"] == resource.attributes["k8s.pod.name"]`,
+          `set(resource.attributes["k8s.replicaset.name"], attributes["replicaset"] ) where resource.attributes["k8s.replicaset.name"] == nil and attributes["replicaset"] != nil`,
+          `delete_key(attributes, "replicaset") where attributes["replicaset"] == resource.attributes["k8s.replicaset.name"]`,
+          `set(resource.attributes["service.name"], attributes["service_name"] ) where resource.attributes["service.name"] == nil and attributes["service_name"] != nil`,
+          `delete_key(attributes, "service_name") where attributes["service_name"] == resource.attributes["service.name"]`,
+          `set(resource.attributes["service.namespace"], attributes["service_namespace"] ) where resource.attributes["service.namespace"] == nil and attributes["service_namespace"] != nil`,
+          `delete_key(attributes, "service_namespace") where attributes["service_namespace"] == resource.attributes["service.namespace"]`,
+          `set(resource.attributes["k8s.statefulset.name"], attributes["statefulset"] ) where resource.attributes["k8s.statefulset.name"] == nil and attributes["statefulset"] != nil`,
+          `delete_key(attributes, "statefulset") where attributes["statefulset"] == resource.attributes["k8s.statefulset.name"]`,
+        ]
+      }
+    
+      trace_statements {
+        context = "resource"
+        statements = [
+          `set(attributes["cluster"], "gke-test")`,
+          `set(attributes["k8s.cluster.name"], "gke-test")`,
+          `delete_key(attributes, "process.pid")`,
+          `delete_key(attributes, "process.parent_pid")`,
+          `delete_key(attributes, "process.executable.path")`,
+          `delete_key(attributes, "process.command_line")`,
+          `delete_key(attributes, "process.command_args")`,
+          `delete_key(attributes, "process.owner")`,
+          `delete_key(attributes, "process.runtime.version")`,
+          `delete_key(attributes, "process.runtime.description")`,
+          `delete_key(attributes, "host.ip")`,
+          `delete_key(attributes, "host.mac")`,
+          `delete_key(attributes, "k8s.pod.start_time")`,
+          `delete_key(attributes, "k8s.pod.uid")`,
+          `delete_key(attributes, "container.image.id")`,
+          `delete_key(attributes, "container.image.repo_digests")`,
+          `delete_key(attributes, "os.description")`,
+          `delete_key(attributes, "os.build_id")`,
+        ]
+      }
+    
+      output {
+        metrics = [otelcol.processor.batch.gc_otlp_endpoint.input]
+        logs = [otelcol.processor.batch.gc_otlp_endpoint.input]
+        traces = [otelcol.processor.batch.gc_otlp_endpoint.input]
+      }
+    }
+    
+    otelcol.processor.batch "gc_otlp_endpoint" {
+      timeout = "2s"
+      send_batch_size = 8192
+      send_batch_max_size = 0
+    
+      output {
+        metrics = [otelcol.exporter.otlphttp.gc_otlp_endpoint.input]
+        logs = [otelcol.exporter.otlphttp.gc_otlp_endpoint.input]
+        traces = [otelcol.exporter.otlphttp.gc_otlp_endpoint.input]
+      }
+    }
+    otelcol.exporter.otlphttp "gc_otlp_endpoint" {
+      client {
+        endpoint = "https://otlp-gateway-prod-us-east-0.grafana.net/otlp"
+        auth = otelcol.auth.basic.gc_otlp_endpoint.handler
+        headers = {
+          "X-Scope-OrgID" = convert.nonsensitive(remote.kubernetes.secret.gc_otlp_endpoint.data["tenantId"]),
+        }
+        tls {
+          insecure = false
+          insecure_skip_verify = false
+          ca_pem = convert.nonsensitive(remote.kubernetes.secret.gc_otlp_endpoint.data["ca"])
+          cert_pem = convert.nonsensitive(remote.kubernetes.secret.gc_otlp_endpoint.data["cert"])
+          key_pem = remote.kubernetes.secret.gc_otlp_endpoint.data["key"]
+        }
+      }
+    
+      retry_on_failure {
+        enabled = true
+        initial_interval = "5s"
+        max_interval = "30s"
+        max_elapsed_time = "5m"
+      }
+    
+      sending_queue {
+        enabled = true
+      }
+    }
+    
+    otelcol.auth.basic "gc_otlp_endpoint" {
+      username = convert.nonsensitive(remote.kubernetes.secret.gc_otlp_endpoint.data["OTLP_USER"])
+      password = remote.kubernetes.secret.gc_otlp_endpoint.data["ACCESS_POLICY_TOKEN"]
+    }
+    
+    remote.kubernetes.secret "gc_otlp_endpoint" {
+      name      = "grafana-cloud-credentials"
+      namespace = "default"
+    }
   self-reporting-metric.prom: |
     # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_build_info gauge
@@ -1290,9 +1685,215 @@ data:
     # TYPE grafana_kubernetes_monitoring_feature_info gauge
     grafana_kubernetes_monitoring_feature_info{deployments="kube-state-metrics,node-exporter,windows-exporter", feature="clusterMetrics", sources="kubelet,kubeletResource,cadvisor,kube-state-metrics,node-exporter,windows-exporter", version="1.0.0"} 1
     grafana_kubernetes_monitoring_feature_info{feature="clusterEvents", version="1.0.0"} 1
+    grafana_kubernetes_monitoring_feature_info{feature="kubernetesManifests", version="1.0.0"} 1
     grafana_kubernetes_monitoring_feature_info{feature="podLogs", method="volumes", version="1.0.0"} 1
     grafana_kubernetes_monitoring_feature_info{feature="integrations", sources="alloy", version="1.0.0"} 1
     # EOF
+    
+  collect-manifests.sh: |
+    #!/bin/bash
+    set -o pipefail
+    
+    script_name="${0##*/}"
+    if [[ "${script_name}" == "bash" || "${script_name}" == "-bash" ]]; then
+      script_name="script.sh"
+    fi
+    
+    DefaultWatchTimeout=30s
+    ManifestRequestThrottling=0.1s
+    WatchRestartDelay=5
+    
+    usage() {
+      echo "Usage: ${script_name} [OPTIONS]"
+      echo ""
+      echo "Collects Kubernetes manifests and saves them as files."
+      echo ""
+      echo "Resource manifests are stored at \${MANIFEST_DIR}/<kind>/<namespace>/<name>.json"
+      echo ""
+      echo "Requires the MANIFEST_DIR environment variable to be set to the target directory."
+      echo ""
+      echo "Options:"
+      echo "  -k, --kind <kind>        Kubernetes resource kind passed to \"kubectl get\"."
+      echo "                           Default: pods"
+      echo "  -n, --namespace <name>   Namespace to scan. When omitted, all namespaces"
+      echo "                           are scanned."
+      echo "  -f, --filters <list>     Comma or space separated list of jq selectors to drop"
+      echo "                           from the resource JSON. Default: \".status\""
+      echo "  --watch-timeout <time>   How long to keep a watch open before restarting."
+      echo "                           Default: ${DefaultWatchTimeout}s."
+      echo "  -h, --help               Show this help message."
+    }
+    
+    kind="pods"
+    kindDir="pods"
+    namespace=""
+    filters=(".status")
+    watchTimeout="${DefaultWatchTimeout}"
+    
+    while [[ $# -gt 0 ]]; do
+      case "$1" in
+        -k|--kind)
+          if [[ $# -lt 2 ]]; then
+            echo "Error: --kind requires an argument." >&2
+            usage
+            exit 1
+          fi
+          kind="$2"
+          kindDir="${kind,,}"  # Forces lowercase
+          kindDir="${kindDir//[^a-z0-9._-]/_}"  # Replace special characters with _
+          shift 2
+          ;;
+        -n|--namespace)
+          if [[ $# -lt 2 ]]; then
+            echo "Error: --namespace requires an argument." >&2
+            usage
+            exit 1
+          fi
+          namespace="$2"
+          shift 2
+          ;;
+        -f|--filters)
+          if [[ $# -lt 2 ]]; then
+            echo "Error: --filters requires an argument." >&2
+            usage
+            exit 1
+          fi
+    
+          filters=()
+          sanitized="${2//$'\n'/ }"
+          sanitized="${sanitized//,/ }"
+          read -ra parsedFilters <<< "${sanitized}"
+          for filter in "${parsedFilters[@]}"; do
+            [[ -n "${filter}" ]] || continue
+            filters+=("${filter}")
+          done
+          jqFilters="$(build_jq_filter "${filters[@]}")"
+    
+          shift 2
+          ;;
+        --watch-timeout)
+          if [[ $# -lt 2 ]]; then
+            echo "Error: --watch-timeout requires an argument." >&2
+            usage
+            exit 1
+          fi
+          watchTimeout="$2"
+          shift 2
+          ;;
+        -h|--help)
+          usage
+          exit 0
+          ;;
+        *)
+          echo "Unknown option: $1" >&2
+          usage
+          exit 1
+          ;;
+      esac
+    done
+    
+    if [[ -z "${MANIFEST_DIR:-}" ]]; then
+      echo "Error: MANIFEST_DIR environment variable must be set." >&2
+      exit 1
+    fi
+    
+    mkdir -p "${MANIFEST_DIR}"
+    
+    build_jq_filter() {
+      local program="."
+      for filter in "$@"; do
+        [[ -n "${filter}" ]] || continue
+        program+=" | del(${filter})"
+      done
+      printf '%s' "${program}"
+    }
+    
+    jqFilters="$(build_jq_filter "${filters[@]}")"
+    
+    collect_manifest() {
+      local namespace="$1"
+      local resourceName="$2"
+    
+      [[ -n "${namespace}" && -n "${resourceName}" ]] || return 0
+    
+      local namespaceDir="${MANIFEST_DIR}/${kindDir}/${namespace}"
+      mkdir -p "${namespaceDir}"
+    
+      local outputFile="${namespaceDir}/${resourceName}.json"
+      local tmpFile="${outputFile}.tmp"
+    
+      if kubectl get "${kind}" --namespace "${namespace}" "${resourceName}" -o json \
+        | jq --compact-output "${jqFilters}" > "${tmpFile}"; then
+        if [[ ! -f "${outputFile}" ]] || ! cmp -s "${tmpFile}" "${outputFile}"; then
+          echo "[INFO] ${kind}: Saving manifest for \"${namespace}/${resourceName}\""
+          mv "${tmpFile}" "${outputFile}"
+        else
+          echo "[DEBUG] ${kind}: No changes to manifest for \"${namespace}/${resourceName}\""
+          rm -f "${tmpFile}"
+        fi
+      else
+        echo "[ERROR] ${kind}: Failed to collect manifest for ${kind} ${namespace}/${resourceName}" >&2
+        rm -f "${tmpFile}"
+      fi
+    }
+    
+    remove_manifest() {
+      local namespace="$1"
+      local resourceName="$2"
+    
+      [[ -n "${namespace}" && -n "${resourceName}" ]] || return
+    
+      local outputFile="${MANIFEST_DIR}/${kindDir}/${namespace}/${resourceName}.json"
+      if [[ -f "${outputFile}" ]]; then
+        rm -f "${outputFile}"
+        echo "[INFO] ${kind}: Removed manifest for \"${namespace}/${resourceName}\""
+      fi
+    }
+    
+    handle_watch_event() {
+      local eventType="$1"
+      local namespace="$2"
+      local resourceName="$3"
+    
+      [[ -n "${eventType}" && -n "${namespace}" && -n "${resourceName}" ]] || return
+    
+      echo "[DEBUG] ${kind}: ${eventType} event for ${namespace}/${resourceName}"
+      case "${eventType}" in
+        ADDED|MODIFIED)
+          collect_manifest "${namespace}" "${resourceName}"
+          ;;
+        DELETED)
+          remove_manifest "${namespace}" "${resourceName}"
+          ;;
+        *)
+          ;;
+      esac
+    }
+    
+    watch_resources() {
+      local kubectlArgs=()
+      if [[ -n "${namespace}" ]]; then
+        kubectlArgs=(--namespace "${namespace}")
+        echo "[INFO] ${kind}: Watching namespace ${namespace}"
+      else
+        kubectlArgs=(--all-namespaces)
+        echo "[INFO] ${kind}: Watching all namespaces"
+      fi
+    
+      while true; do
+        if ! timeout --foreground "${watchTimeout}" kubectl get "${kind}" "${kubectlArgs[@]}" --watch --output-watch-events -o json \
+          | jq --unbuffered -r 'select(.object.metadata.namespace != null and .object.metadata.name != null and .type != null) | "\(.type) \(.object.metadata.namespace) \(.object.metadata.name)"' \
+          | while read -r eventType namespace resourceName; do
+              handle_watch_event "${eventType}" "${namespace}" "${resourceName}"
+              sleep "${ManifestRequestThrottling}"  # Throttle the requests
+            done; then
+          echo "[WARN] ${kind}: Watch ended. Restarting in ${WatchRestartDelay} seconds." >&2
+          sleep "${WatchRestartDelay}"
+        fi
+      done
+    }
+    
+    watch_resources
 ---
 # Source: k8s-monitoring/templates/alloy-config.yaml
 apiVersion: v1
@@ -1531,7 +2132,7 @@ data:
         tenant_id = convert.nonsensitive(remote.kubernetes.secret.grafana_cloud_logs.data["tenantId"])
         basic_auth {
           username = convert.nonsensitive(remote.kubernetes.secret.grafana_cloud_logs.data["LOKI_USER"])
-          password = remote.kubernetes.secret.grafana_cloud_logs.data["LOKI_PASS"]
+          password = remote.kubernetes.secret.grafana_cloud_logs.data["ACCESS_POLICY_TOKEN"]
         }
         tls_config {
           insecure_skip_verify = false
@@ -1856,6 +2457,27 @@ rules:
       - list
       - watch
 ---
+# Source: k8s-monitoring/templates/kubernetes-manifest-rules.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: k8smon-alloy-singleton-kubernetes-manifests
+rules:
+  - apiGroups:
+      - ""
+      - apps
+      - batch
+    resources:
+      - pods
+      - deployments
+      - statefulsets
+      - daemonsets
+      - cronjobs
+    verbs:
+      - get
+      - list
+      - watch
+---
 # Source: k8s-monitoring/charts/alloy-operator/templates/rbac/alloy-manager.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -1938,6 +2560,20 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: k8smon-opencost
+    namespace: default
+---
+# Source: k8s-monitoring/templates/kubernetes-manifest-rules.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: k8smon-alloy-singleton-kubernetes-manifests
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: k8smon-alloy-singleton-kubernetes-manifests
+subjects:
+  - kind: ServiceAccount
+    name: k8smon-alloy-singleton
     namespace: default
 ---
 # Source: k8s-monitoring/charts/alloy-operator/templates/rbac/leader-election.yaml
@@ -2641,7 +3277,7 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: grafana-cloud-credentials
-                  key: PROMETHEUS_PASS
+                  key: ACCESS_POLICY_TOKEN
             - name: RESOLUTION_1D_RETENTION
               value: "15"
             - name: RESOLUTION_1H_RETENTION
@@ -3017,7 +3653,10 @@ spec:
     livenessProbe: {}
     mounts:
       dockercontainers: false
-      extra: []
+      extra:
+      - mountPath: /var/kubernetes-manifests
+        name: kubernetes-manifests
+        readOnly: false
       varlog: false
     resources: {}
     securityContext:
@@ -3042,7 +3681,7 @@ spec:
         - ALL
       seccompProfile:
         type: RuntimeDefault
-    stabilityLevel: generally-available
+    stabilityLevel: public-preview
     storagePath: /tmp/alloy
     timeoutSeconds: 1
     uiPathPrefix: /
@@ -3105,7 +3744,37 @@ spec:
     dnsPolicy: ClusterFirst
     enableStatefulSetAutoDeletePVC: false
     extraAnnotations: {}
-    extraContainers: []
+    extraContainers:
+    - command:
+      - /bin/bash
+      - -c
+      - |
+        set -euo pipefail
+        pids=()
+        bash /etc/alloy/collect-manifests.sh --kind cronjobs --watch-timeout "1d" &
+        pids+=("$!")
+        bash /etc/alloy/collect-manifests.sh --kind daemonsets --watch-timeout "1d" &
+        pids+=("$!")
+        bash /etc/alloy/collect-manifests.sh --kind deployments --watch-timeout "1d" &
+        pids+=("$!")
+        bash /etc/alloy/collect-manifests.sh --kind pods --watch-timeout "1d" &
+        pids+=("$!")
+        bash /etc/alloy/collect-manifests.sh --kind statefulsets --watch-timeout "1d" &
+        pids+=("$!")
+        trap 'for pid in "${pids[@]}"; do kill "${pid}" 2>/dev/null || true; done' EXIT
+        wait -n "${pids[@]}"
+      env:
+      - name: MANIFEST_DIR
+        value: /var/kubernetes-manifests
+      image: ghcr.io/grafana/helm-chart-toolbox-kubectl:0.1.3
+      imagePullPolicy: IfNotPresent
+      name: kubernetes-manifest-collector
+      volumeMounts:
+      - mountPath: /etc/alloy
+        name: config
+      - mountPath: /var/kubernetes-manifests
+        name: kubernetes-manifests
+        readOnly: false
     extraLabels: {}
     hostNetwork: false
     hostPID: false
@@ -3130,7 +3799,10 @@ spec:
     updateStrategy: {}
     volumeClaimTemplates: []
     volumes:
-      extra: []
+      extra:
+      - emptyDir:
+          medium: Memory
+        name: kubernetes-manifests
   crds:
     create: false
   extraObjects: []
