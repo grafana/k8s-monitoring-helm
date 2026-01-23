@@ -1,7 +1,8 @@
 # Changelog
 
-## Unreleased
+## 3.7.3
 
+*   Update Node Exporter (@petewall)
 *   Make the loki.process CRI stage maxPartialLines configurable (@ptodev)
 *   Add eBPF sample rate for profiling (@jo030225)
 *   Add the ability to skip cluster metrics ServiceMonitor checks (@petewall)
