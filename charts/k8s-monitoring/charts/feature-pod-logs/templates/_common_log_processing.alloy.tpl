@@ -3,7 +3,11 @@ loki.process "pod_logs" {
   stage.match {
     selector = "{tmp_container_runtime=~\"containerd|cri-o\"}"
     // the cri processing stage extracts the following k/v pairs: log, stream, time, flags
-    stage.cri {}
+    stage.cri {
+{{- if .Values.cri.maxPartialLines }}
+      max_partial_lines = {{ .Values.cri.maxPartialLines }}
+{{- end }}
+    }
 
     // Set the extract flags and stream values as labels
     stage.labels {
