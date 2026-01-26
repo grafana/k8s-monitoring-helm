@@ -133,6 +133,19 @@ tests:
                 url: https://otlp-gateway-test.grafana.net
                 protocol: http
 
+  - it: can skip the Grafana Cloud OTLP endpoint protocol validation
+    set:
+      cluster:
+        name: test-cluster
+      destinations:
+        - name: OTLP Endpoint
+          type: otlp
+          url: https://otlp-gateway-test.grafana.net
+          protocolValidation: false
+      alloy-receiver: {enabled: true, extraConfig: "// simulated feature"}
+    asserts:
+      - notFailedTemplate: {}
+
   - it: detects if you're using Grafana Cloud Traces with the wrong protocol
     set:
       cluster:
@@ -140,7 +153,7 @@ tests:
       destinations:
         - name: Grafana Cloud Traces
           type: otlp
-          url: https://tempo-test.grafana.net
+          url: https://tempo-prod-01-prod-us-east-1.grafana.net
           protocol: http
     asserts:
       - failedTemplate:
@@ -150,8 +163,37 @@ tests:
             destinations:
               - name: Grafana Cloud Traces
                 type: otlp
-                url: https://tempo-test.grafana.net
+                url: https://tempo-prod-01-prod-us-east-1.grafana.net
                 protocol: grpc
+
+  - it: can skip the Grafana Cloud Traces protocol validation
+    set:
+      cluster:
+        name: test-cluster
+      destinations:
+        - name: Grafana Cloud Traces
+          type: otlp
+          url: https://tempo-prod-01-prod-us-east-1.grafana.net
+          protocol: http
+          protocolValidation: false
+          metrics: {enabled: false}
+          logs: {enabled: false}
+      alloy-receiver: {enabled: true, extraConfig: "// simulated feature"}
+    asserts:
+      - notFailedTemplate: {}
+
+  - it: does not warn about the wrong protocol if using the AWS PrivateLink address
+    set:
+      cluster:
+        name: test-cluster
+      destinations:
+        - name: Grafana Cloud Traces
+          type: otlp
+          url: https://tempo-prod-01.us-east-1.vpce.grafana.net
+          protocol: http
+      alloy-receiver: {enabled: true, extraConfig: "// simulated feature"}
+    asserts:
+      - notFailedTemplate: {}
 
   - it: detects if metrics are enabled for Grafana Cloud Traces
     set:
