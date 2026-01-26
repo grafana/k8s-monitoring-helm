@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+*   Add a feature for gathering logs using PodLogs objects (@petewall)
+
 ## 3.7.5
 
 *   Add Configuration to specify the `overrides` Section of the Span Logs Connector Component for the Application Observability Chart (@SeamusGrafana)
