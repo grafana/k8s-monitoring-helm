@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+*   Add a feature for gathering logs using PodLogs objects (@petewall)
+
 ## 3.7.4
 
 *   Improve OTLP destination protocol validation (@petewall)

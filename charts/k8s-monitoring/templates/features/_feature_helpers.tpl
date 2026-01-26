@@ -7,6 +7,7 @@
 - nodeLogs
 - podLogs
 - podLogsViaKubernetesApi
+- podLogsObjects
 - profilesReceiver
 - profiling
 - prometheusOperatorObjects
