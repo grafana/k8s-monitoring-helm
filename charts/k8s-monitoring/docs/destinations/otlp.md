@@ -59,6 +59,7 @@ This defines the options for defining a destination for OpenTelemetry data that 
 | extraHeadersFrom | object | `{}` | Extra headers to be set when sending data through a dynamic reference. All values are treated as raw strings and not quoted. |
 | name | string | `""` | The name for this OTLP destination. |
 | protocol | string | `"grpc"` | The protocol for the OTLP destination. Options are "grpc" (default), "http". |
+| protocolValidation | bool | `true` | Validate that the protocol matches known OTLP destinations, like Grafana Cloud's OTLP Gateway or Tempo endpoints. |
 | proxyURL | string | `""` | HTTP proxy to send requests through, only when using the `http` protocol. |
 | readBufferSize | string | `""` | Size of the read buffer the gRPC client to use for reading server responses. |
 | retryOnFailure.enabled | bool | `true` | Should failed requests be retried? |

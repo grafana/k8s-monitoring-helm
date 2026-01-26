@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+*   Improve OTLP destination protocol validation (@petewall)
 *   Update Prometheus Operator Object CRDs (@petewall)
 *   Fix Indentation Issues for Beyla Relabel (@SeamusGrafana)
 *   Add erofs to node-exporter filesystem exclusions (@tyuchx)
