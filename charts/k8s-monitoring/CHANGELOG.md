@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+*   Fix Indentation Issues for Beyla Relabel (@SeamusGrafana)
+
 ## 3.7.3
 
 *   Update Node Exporter (@petewall)
