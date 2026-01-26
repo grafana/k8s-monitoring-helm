@@ -3,6 +3,7 @@
 ## Unreleased
 
 *   Fix Indentation Issues for Beyla Relabel (@SeamusGrafana)
+*   Add erofs to node-exporter filesystem exclusions (@tyuchx)
 
 ## 3.7.3
 
