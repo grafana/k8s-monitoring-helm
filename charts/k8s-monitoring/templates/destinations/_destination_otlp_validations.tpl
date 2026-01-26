@@ -26,11 +26,11 @@
     {{ fail (join "\n" $msg) }}
   {{- end }}
 
-  {{- /* Check if OTLP destination using Grafana Cloud OTLP gateway has protocol set */}}
   {{- if .Destination.url }}
     {{- $appearsToBeTempo := regexMatch "tempo-[^.]+\\.grafana\\.net" .Destination.url }}
-    {{- $appearsToBeOTLPGateway := regexMatch "otlp-gateway-.+grafana\\.net" .Destination.url }}
+    {{- $appearsToBeOTLPGateway := regexMatch "otlp-gateway-[^.]+\\.grafana\\.net" .Destination.url }}
     {{- if (dig "protocolValidation" true .Destination) }}
+      {{- /* Check if OTLP destination using Grafana Cloud OTLP Gateway uses the right protocol */}}
       {{- if and $appearsToBeOTLPGateway (ne .Destination.protocol "http") }}
         {{- $msg := list "" (printf "Destination #%d (%s) is using Grafana Cloud OTLP gateway but has incorrect protocol '%s'. The gateway requires 'http'." .DestinationIndex .Destination.name (.Destination.protocol | default "grpc (default)")) }}
         {{- $msg = append $msg "Please set:" }}
@@ -42,22 +42,20 @@
         {{ fail (join "\n" $msg) }}
       {{- end }}
 
-      {{- /* Check if OTLP destination using Grafana Cloud Tempo checks */}}
-      {{- if and $appearsToBeTempo }}
-        {{- if and (dig "protocolValidation" true .Destination) (ne (.Destination.protocol | default "grpc") "grpc") }}
-          {{- $msg := list "" (printf "Destination #%d (%s) is using Grafana Cloud Traces but has incorrect protocol '%s'. Grafana Cloud Traces requires 'grpc'." .DestinationIndex .Destination.name (.Destination.protocol | default "grpc (default)")) }}
-          {{- $msg = append $msg "Please set:" }}
-          {{- $msg = append $msg "destinations:" }}
-          {{- $msg = append $msg (printf "  - name: %s" .Destination.name) }}
-          {{- $msg = append $msg "    type: otlp" }}
-          {{- $msg = append $msg (printf "    url: %s" .Destination.url) }}
-          {{- $msg = append $msg "    protocol: grpc" }}
-          {{ fail (join "\n" $msg) }}
-        {{- end }}
+      {{- /* Check if OTLP destination using Grafana Cloud Tempo uses the right protocol */}}
+      {{- if and $appearsToBeTempo (ne (.Destination.protocol | default "grpc") "grpc") }}
+        {{- $msg := list "" (printf "Destination #%d (%s) is using Grafana Cloud Traces but has incorrect protocol '%s'. Grafana Cloud Traces requires 'grpc'." .DestinationIndex .Destination.name (.Destination.protocol | default "grpc (default)")) }}
+        {{- $msg = append $msg "Please set:" }}
+        {{- $msg = append $msg "destinations:" }}
+        {{- $msg = append $msg (printf "  - name: %s" .Destination.name) }}
+        {{- $msg = append $msg "    type: otlp" }}
+        {{- $msg = append $msg (printf "    url: %s" .Destination.url) }}
+        {{- $msg = append $msg "    protocol: grpc" }}
+        {{ fail (join "\n" $msg) }}
       {{- end }}
     {{- end }}
 
-    {{- /* Check if OTLP destination using Grafana Cloud Tempo checks */}}
+    {{- /* Check if OTLP destination using Grafana Cloud Tempo uses the right data types */}}
     {{- if $appearsToBeTempo }}
       {{- if eq (dig "metrics" "enabled" true .Destination) true }}
         {{- $msg := list "" (printf "Destination #%d (%s) is using Grafana Cloud Traces but has metrics enabled. Tempo only supports traces." .DestinationIndex .Destination.name) }}
