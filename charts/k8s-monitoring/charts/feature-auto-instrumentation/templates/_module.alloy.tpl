@@ -67,21 +67,21 @@ declare "auto_instrumentation" {
     forward_to = [prometheus.relabel.beyla.receiver]
   }
 
-prometheus.relabel "beyla" {
-  max_cache_size = {{ .Values.beyla.maxCacheSize | default .Values.global.maxCacheSize | int }}
+  prometheus.relabel "beyla" {
+    max_cache_size = {{ .Values.beyla.maxCacheSize | default .Values.global.maxCacheSize | int }}
 {{- if $metricAllowList }}
-  rule {
-    source_labels = ["__name__"]
-    regex = "up|scrape_samples_scraped|{{ $metricAllowList | join "|" }}"
-    action = "keep"
-  }
+    rule {
+      source_labels = ["__name__"]
+      regex = "up|scrape_samples_scraped|{{ $metricAllowList | join "|" }}"
+      action = "keep"
+    }
 {{- end }}
 {{- if $metricDenyList }}
-  rule {
-    source_labels = ["__name__"]
-    regex = {{ $metricDenyList | join "|" | quote }}
-    action = "drop"
-  }
+    rule {
+      source_labels = ["__name__"]
+      regex = {{ $metricDenyList | join "|" | quote }}
+      action = "drop"
+    }
 {{- end }}
 {{- if .Values.beyla.extraMetricProcessingRules }}
 {{ .Values.beyla.extraMetricProcessingRules | indent 4 }}
