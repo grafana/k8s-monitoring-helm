@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 3.7.4
 
 *   Improve OTLP destination protocol validation (@petewall)
 *   Update Prometheus Operator Object CRDs (@petewall)
