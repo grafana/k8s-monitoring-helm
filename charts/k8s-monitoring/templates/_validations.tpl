@@ -10,6 +10,7 @@
   {{- range $feature := ((include "features.list" .) | fromYamlArray) }}
     {{- $updatedValues = merge $.Values (include (printf "features.%s.collector.values" $feature) $ | fromYaml) }}
   {{- end }}
+  {{- $updatedValues = merge $.Values (include "collectors.remoteConfig.collector.values" (dict "Values" $updatedValues "Files" $.Files "Release" $.Release) | fromYaml) }}
 
   {{- /* Feature Validations */}}
   {{- include "validations.features_enabled" . }}
