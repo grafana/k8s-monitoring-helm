@@ -41,7 +41,7 @@
 {{/* Inputs: Values (all values), name (collector name), envVar (environrment var name) */}}
 {{- define "collectors.has_extra_env" -}}
 {{- $found := "false" -}}
-{{- range (index .Values .name).alloy.extraEnv -}}
+{{- range (dig "alloy" "extraEnv" list (index .Values .name)) -}}
   {{- if eq .name $.envVar }}
     {{- $found = "true" -}}
   {{- end }}
