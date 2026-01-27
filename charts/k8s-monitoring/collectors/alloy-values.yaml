@@ -173,3 +173,14 @@ controller:
 # @ignored
 crds:
   create: false
+
+# @ignored
+rbac:
+  clusterRules:
+    # -- Rules required for the `discovery.kubernetes` component.
+    - apiGroups: [""]
+      resources: ["nodes", "nodes/metrics"]
+      verbs: ["get", "list", "watch"]
+    # -- Rules required for accessing metrics endpoint.
+    - nonResourceURLs: ["/metrics"]
+      verbs: ["get"]
