@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+*   Automatically set required environment variables when enabling remote config (@petewall)
 *   Add a feature for gathering logs using PodLogs objects (@petewall)
 
 ## 3.7.4
