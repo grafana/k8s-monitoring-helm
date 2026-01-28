@@ -1,5 +1,7 @@
 # Changelog
 
+*   Update Alloy Operator to 0.4.1 (@petewall)
+
 ## 3.7.4
 
 *   Improve OTLP destination protocol validation (@petewall)
