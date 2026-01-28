@@ -1,0 +1,56 @@
+---
+apiVersion: helm-chart-toolbox.grafana.com/v1
+kind: TestPlan
+name: pod-labels-and-annotations
+
+subject:
+  releaseName: k8smon
+  path: ../../../..
+  valuesFile: ../values.yaml
+
+cluster:
+  type: kind
+
+dependencies:
+  - file: default-namespace-label.yaml
+  - preset: test-parameters
+    namespace: toolbox
+  - preset: prometheus
+  - preset: grafana
+    overrides:
+      datasources:
+        datasources.yaml:
+          apiVersion: 1
+          datasources:
+            - name: Prometheus
+              type: prometheus
+              url: http://prometheus-server.prometheus.svc:9090
+              isDefault: true
+
+tests:
+  - type: query-test
+    values:
+      tests:
+        - envFrom:
+            - configMapRef: {name: test-parameters}
+          env:
+            PROMETHEUS_URL: http://prometheus-server.prometheus.svc:9090/api/v1/query
+
+          queries:
+            # Pod metrics in the default namespace have the color label
+            - query: kube_pod_info{cluster="$clusterName", namespace="default", color="blue"}
+              type: promql
+            # Pod metrics in the other namespaces don't have the color label
+            - query: kube_pod_info{cluster="$clusterName", namespace="kube-system", color=""}
+              type: promql
+
+            # Non-pod metrics in the default namespace don't have the color label
+            - query: kube_configmap_info{cluster="metric-enrichment-test-cluster", namespace="default", color=""}
+              type: promql
+
+            # DPM check
+            - query: avg(count_over_time(scrape_samples_scraped{cluster="$clusterName"}[1m]))
+              type: promql
+              expect:
+                value: 1
+                operator: ==
