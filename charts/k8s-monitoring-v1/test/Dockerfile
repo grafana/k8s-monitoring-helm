@@ -1,14 +1,7 @@
-FROM quay.io/curl/curl:latest@sha256:28370e9b031edbc4964bbdfef46ba34612b5f2e1c0e0e9010457c4d49ca8e9e4 AS profilecli-downloader
-ARG PROFILECLI_VERSION=1.15.0
-ARG TARGETARCH
-
-# Download profilecli for Pyroscope queries
-RUN curl -fL https://github.com/grafana/pyroscope/releases/download/v${PROFILECLI_VERSION}/profilecli_${PROFILECLI_VERSION}_linux_${TARGETARCH}.tar.gz | tar xvz && \
-    chmod +x profilecli
-
-FROM nixery.dev/shell/bc/curl/jq/file@sha256:63303658c01a4a67648d3320cb47b0607ff762c9f039b1fa2c7e3c9dc66274e5 AS base-image-amd64
-FROM nixery.dev/arm64/shell/bc/curl/jq/file@sha256:7550dfd3532d8d020af531a11b2c6bf0141830259483a191499dcbec04879e81 AS base-image-arm64
+FROM grafana/pyroscope:1.18.0@sha256:e7edae4fd99dbb8695a1e03d7db96ab247630cf83842407908922b2f66aafc6a AS pyroscope
+FROM nixery.dev/shell/bc/curl/jq/file AS base-image-amd64
+FROM nixery.dev/arm64/shell/bc/curl/jq/file AS base-image-arm64
 
 FROM base-image-${TARGETARCH} AS final
-COPY --from=profilecli-downloader /home/curl_user/profilecli /usr/local/bin/profilecli
+COPY --from=pyroscope /usr/bin/profilecli /usr/bin/profilecli
 COPY ["config-analysis.sh", "query-test.sh", "/etc/bin/"]
