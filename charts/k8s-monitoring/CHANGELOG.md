@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+*   Add the ability to set protobufMessage and a shortcut for the remote_write protocol (@petewall)
 *   Add a feature for gathering logs using PodLogs objects (@petewall)
 
 ## 3.7.5
