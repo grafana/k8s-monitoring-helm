@@ -61,6 +61,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 |-----|------|---------|-------------|
 | connectors.spanLogs.enabled | bool | `false` | Use a span logs connector which creates logs from spans. |
 | connectors.spanLogs.labels | list | `[]` | A list of keys that will be logged as labels. |
+| connectors.spanLogs.overrides | object | `{}` | Add overrides for keys in the log body. Example: `overrides: { "service_key": "service.name" }` |
 | connectors.spanLogs.process | bool | `false` | Log one line for every process. |
 | connectors.spanLogs.processAttributes | list | `[]` | Additional process attributes to log. |
 | connectors.spanLogs.roots | bool | `false` | Log one line for every root span of a trace. |

@@ -22,6 +22,14 @@ otelcol.connector.spanlogs "{{ .name | default "default" }}" {
   labels = {{ .Values.connectors.spanLogs.labels | toJson }}
 {{- end }}
 
+{{- if .Values.connectors.spanLogs.overrides }}
+  overrides {
+    {{- range $k, $v := .Values.connectors.spanLogs.overrides }}
+      {{ $k }} = {{ $v | quote }}
+    {{- end }}
+  }
+{{- end }}
+
   output {
 {{- if and .logs .Values.logs.enabled }}
     logs = {{ .logs }}
