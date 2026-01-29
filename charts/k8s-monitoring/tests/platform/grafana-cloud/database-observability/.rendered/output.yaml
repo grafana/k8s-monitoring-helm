@@ -260,6 +260,7 @@ data:
     prometheus.remote_write "grafana_cloud_metrics" {
       endpoint {
         url = "https://prometheus-prod-13-prod-us-east-0.grafana.net/api/prom/push"
+        protobuf_message = "io.prometheus.write.v2.Request"
         headers = {
           "X-Scope-OrgID" = convert.nonsensitive(remote.kubernetes.secret.grafana_cloud_metrics.data["tenantId"]),
         }
