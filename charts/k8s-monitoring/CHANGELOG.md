@@ -2,6 +2,7 @@
 
 ## 3.7.5
 
+*   Add Configuration to specify the `overrides` Section of the Span Logs Connector Component for the Application Observability Chart (@SeamusGrafana)
 *   Update Alloy Operator to 0.4.1 (@petewall)
 
 ## 3.7.4
