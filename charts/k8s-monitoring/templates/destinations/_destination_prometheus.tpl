@@ -15,7 +15,7 @@ prometheus.remote_write {{ include "helper.alloy_name" .name | quote }} {
 {{- end }}
 {{- if .protobufMessage }}
     protobuf_message = {{ .protobufMessage | quote }}
-{{- else if (eq .remoteWriteProtocol 2.0) }}
+{{- else if (eq (.remoteWriteProtocol | int) 2) }}
     protobuf_message = "io.prometheus.write.v2.Request"
 {{- end }}
     headers = {
