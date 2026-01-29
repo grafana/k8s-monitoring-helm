@@ -1,3 +1,5 @@
+# Changelog
+
 ## 3.7.5
 
 *   Update Alloy Operator to 0.4.1 (@petewall)
