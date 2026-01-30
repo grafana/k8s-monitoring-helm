@@ -38,25 +38,6 @@ loki.process "pod_logs" {
     }
   }
 
-  // The default processing stage if tmp_container_runtime is not set or empty.
-  stage.match {
-    selector = "{tmp_container_runtime=""}"
-    // the docker processing stage extracts the following k/v pairs: log, stream, time
-    stage.cri {
-{{- if .Values.cri.maxPartialLines }}
-      max_partial_lines = {{ .Values.cri.maxPartialLines }}
-{{- end }}
-    }
-
-    // Set the extract flags and stream values as labels
-    stage.labels {
-      values = {
-        flags  = "",
-        stream  = "",
-      }
-    }
-  }
-
   // Drop the filename label, since it's not really useful in the context of Kubernetes, where we already have cluster,
   // namespace, pod, and container labels. Drop any structured metadata. Also drop the temporary
   // container runtime label as it is no longer needed.
