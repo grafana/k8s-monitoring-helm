@@ -1,7 +1,14 @@
 {{- define "feature.podLogs.processing.alloy" }}
+{{- $criSelector := "{tmp_container_runtime=~\"containerd|cri-o\"}" }}
+{{- $dockerSelector := "{tmp_container_runtime=\"docker\"}" }}
+{{- if eq .Values.defaultLogFormat "cri" }}
+  {{- $criSelector = "{tmp_container_runtime=~\"containerd|cri-o|\"}" }}
+{{- else if eq .Values.defaultLogFormat "docker" }}
+  {{- $dockerSelector = "{tmp_container_runtime=~\"docker|\"}" }}
+{{- end }}
 loki.process "pod_logs" {
   stage.match {
-    selector = "{tmp_container_runtime=~\"containerd|cri-o\"}"
+    selector = {{ $criSelector | quote }}
     // the cri processing stage extracts the following k/v pairs: log, stream, time, flags
     stage.cri {
 {{- if .Values.cri.maxPartialLines }}
@@ -19,32 +26,13 @@ loki.process "pod_logs" {
   }
 
   stage.match {
-    selector = "{tmp_container_runtime=\"docker\"}"
+    selector = {{ $dockerSelector | quote }}
     // the docker processing stage extracts the following k/v pairs: log, stream, time
     stage.docker {}
 
     // Set the extract stream value as a label
     stage.labels {
       values = {
-        stream  = "",
-      }
-    }
-  }
-
-  // The default processing stage if tmp_container_runtime is not set or empty.
-  stage.match {
-    selector = "{tmp_container_runtime=""}"
-    // the docker processing stage extracts the following k/v pairs: log, stream, time
-    stage.cri {
-{{- if .Values.cri.maxPartialLines }}
-      max_partial_lines = {{ .Values.cri.maxPartialLines }}
-{{- end }}
-    }
-
-    // Set the extract flags and stream values as labels
-    stage.labels {
-      values = {
-        flags  = "",
         stream  = "",
       }
     }

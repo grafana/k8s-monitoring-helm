@@ -117,7 +117,7 @@ declare "pod_logs_via_kubernetes_api" {
 
   loki.process "pod_logs" {
     stage.match {
-      selector = "{tmp_container_runtime=~\"containerd|cri-o\"}"
+      selector = "{tmp_container_runtime=~\"containerd|cri-o|\"}"
       // the cri processing stage extracts the following k/v pairs: log, stream, time, flags
       stage.cri {
         max_partial_lines = 100
@@ -140,6 +140,23 @@ declare "pod_logs_via_kubernetes_api" {
       // Set the extract stream value as a label
       stage.labels {
         values = {
+          stream  = "",
+        }
+      }
+    }
+
+    // The default processing stage if tmp_container_runtime is not set or empty.
+    stage.match {
+      selector = "{tmp_container_runtime=""}"
+      // the docker processing stage extracts the following k/v pairs: log, stream, time
+      stage.cri {
+        max_partial_lines = 100
+      }
+
+      // Set the extract flags and stream values as labels
+      stage.labels {
+        values = {
+          flags  = "",
           stream  = "",
         }
       }
