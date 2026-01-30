@@ -7,13 +7,13 @@ otelcol.connector.spanlogs "{{ .name | default "default" }}" {
   spans = true
 {{- end }}
 {{- if .Values.connectors.spanLogs.spansAttributes }}
-  spans_attributes = {{ .Values.connectors.spanLogs.spansAttributes | toJson }}
+  span_attributes = {{ .Values.connectors.spanLogs.spansAttributes | toJson }}
 {{- end }}
 {{- if .Values.connectors.spanLogs.roots }}
   roots = true
 {{- end }}
 {{- if .Values.connectors.spanLogs.process }}
-  process = true
+  processes = true
 {{- end }}
 {{- if .Values.connectors.spanLogs.processAttributes }}
   process_attributes = {{ .Values.connectors.spanLogs.processAttributes | toJson }}
