@@ -145,6 +145,12 @@ This defines the options for defining a destination for metrics that use the Pro
 | writeAheadLog.maxKeepaliveTime | string | `"8h"` | Maximum time to keep data in the write-ahead log before removing it. |
 | writeAheadLog.minKeepaliveTime | string | `"5m"` | Minimum time to keep data in the write-ahead log before it can be removed. |
 | writeAheadLog.truncateFrequency | string | `"2h"` | How frequently to clean up the write-ahead log. |
+
+### Other Values
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| metricEnrichment.podLabels | list | `[]` |  |
 <!-- textlint-enable terminology -->
 
 ## Examples
