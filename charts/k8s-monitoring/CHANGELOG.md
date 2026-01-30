@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+*   Set CRI as default logs processor if runtime is unset (@aleksanderaleksic)
 *   Add the ability to set protobufMessage and a shortcut for the remote_write protocol (@petewall)
 *   Automatically set required environment variables when enabling remote config (@petewall)
 *   Add a feature for gathering logs using PodLogs objects (@petewall)

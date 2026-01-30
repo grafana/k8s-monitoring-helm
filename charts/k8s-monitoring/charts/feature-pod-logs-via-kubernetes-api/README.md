@@ -50,6 +50,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 |-----|------|---------|-------------|
 | annotations | object | `{"job":"k8s.grafana.com/logs.job"}` | Log labels to set with values copied from the Kubernetes Pod annotations. Format: `<log_label>: <kubernetes_annotation>`. |
 | cri.maxPartialLines | int | `100` | Maximum number of partial lines to hold in memory before forcing a merge. Increase this value if logs are being lost due to partial line limits. |
+| defaultLogFormat | string | `"cri"` | Default parsing format if it cannot be determined from container UID. Options are `null`, `cri`, or `docker`. |
 | extraLogProcessingStages | string | `""` | Stage blocks to be added to the loki.process component for pod logs. ([docs](https://grafana.com/docs/alloy/latest/reference/components/loki/loki.process/#blocks)) This value is templated so that you can refer to other values from this file. |
 | labels | object | `{"app_kubernetes_io_name":"app.kubernetes.io/name"}` | Log labels to set with values copied from the Kubernetes Pod labels. Format: `<log_label>: <kubernetes_label>`. |
 | staticLabels | object | `{}` | Log labels to set with static values. |
