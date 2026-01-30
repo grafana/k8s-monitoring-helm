@@ -78,7 +78,7 @@ cluster:
 destinations:
   - name: prometheus
     type: prometheus
-    url: http://prometheus.prometheus.svc:9090/api/v1/write
+    url: http://prometheus-server.prometheus.svc:9090/api/v1/write
   - name: loki
     type: loki
     url: http://loki.loki.svc:3100/api/push
@@ -91,6 +91,10 @@ destinations:
 
 clusterMetrics:
   enabled: true
+
+  podLabels:
+    - color
+
   kube-state-metrics:
     metricsTuning:
       includeMetrics:
@@ -124,9 +128,15 @@ applicationObservability:
 
 alloy-metrics:
   enabled: true
+  controller:
+    podLabels:
+      color: orange
 
 alloy-logs:
   enabled: true
+  controller:
+    podLabels:
+      color: blue
 
 alloy-receiver:
   enabled: true
@@ -136,5 +146,8 @@ alloy-receiver:
         port: 4317
         targetPort: 4317
         protocol: TCP
+  controller:
+    podLabels:
+      color: yellow
 ```
 <!-- textlint-enable terminology -->
