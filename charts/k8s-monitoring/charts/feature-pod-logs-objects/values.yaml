@@ -1,0 +1,104 @@
+---
+# -- Which namespaces to look for PodLogs objects (`[]` means all namespaces).
+# @section -- Discovery Settings
+namespaces: []
+
+# -- Do not look for PodLogs objects in these namespaces.
+# @section -- Discovery Settings
+excludeNamespaces: []
+
+# -- Filter the list of PodLogs objects by labels.
+# Example: `labelSelectors: { 'app': 'myapp' }` will only discover pods and services with the label `app=myapp`.
+# Example: `labelSelectors: { 'app': ['myapp', 'myotherapp'] }` will only discover pods and services with the label `app=myapp` or `app=myotherapp`.
+# @section -- Discovery Settings
+labelSelectors: {}
+
+# -- Only choose the pods on the same pod as the Alloy instance. Requires the Alloy instance to use DaemonSet and will
+# Automatically set the environment variable NODE_NAME to the Alloy Pod's current cluster node.
+# @section -- Discovery Settings
+nodeFilter: false
+
+# -- Preserve discovered pod metadata labels for use by downstream components. Required for setting these standard labels:
+# `namespace`, `node`, `pod`, `container`.
+# @section -- Discovery Settings
+includePodMetadataLabels: true
+
+# -- Only gather new log lines since this was deployed. Do not gather historical log lines.
+# @section -- Log Processing
+onlyGatherNewLogLines: false
+
+# -- Log labels to set with static values.
+# @section -- Log Processing
+staticLabels: {}
+
+# -- Log labels to set with static values, not quoted so it can reference config components.
+# @section -- Log Processing
+staticLabelsFrom: {}
+
+# Check logs for secrets and mask them.
+secretFilter:
+  # -- Enable secret filtering.
+  # @section -- Secret Filtering
+  enabled: false
+
+  # -- Loki selector to send processed logs to the secret filter. Anything not matching will be excluded.
+  # Example: `{app=="payment-processor"}`. If empty, all pod logs will be sent through the secret filter.
+  # @section -- Secret Filtering
+  inclusionSelector: ""
+
+  # -- Enable entropy-based filtering.
+  # @section -- Secret Filtering
+  enableEntropy: false
+
+  # -- Include the generic API key rule.
+  # @section -- Secret Filtering
+  includeGeneric: false
+
+  # -- Show the first N characters of the secret.
+  # @section -- Secret Filtering
+  partialMask: 0
+
+  # -- String to use to redact secrets.
+  # @default -- `"<REDACTED-SECRET:$SECRET_NAME>"`
+  # @section -- Secret Filtering
+  redactWith:
+
+  # -- List of regular expressions to allowlist matching secrets.
+  # @section -- Secret Filtering
+  allowlist: []
+
+  # -- Path to the custom gitleaks.toml file.
+  # @section -- Secret Filtering
+  gitleaksConfigPath: ""
+
+  # -- Raw path to the custom gitleaks.toml file. Use this to reference an Alloy component
+  # @section -- Secret Filtering
+  gitleaksConfigPathFrom: ""
+
+# -- Rule blocks to be added to the loki.relabel component for pod logs.
+# ([docs](https://grafana.com/docs/alloy/latest/reference/components/loki/loki.relabel/#rule))
+# This value is templated so that you can refer to other values from this file.
+# @section -- Log Processing
+extraLogProcessingRules: ""
+
+# -- Stage blocks to be added to the loki.process component for pod logs.
+# ([docs](https://grafana.com/docs/alloy/latest/reference/components/loki/loki.process/#blocks))
+# This value is templated so that you can refer to other values from this file.
+# @section -- Log Processing
+extraLogProcessingStages: ""
+
+# -- The structured metadata mappings to set.
+# Format: `<key>: <extracted_key>`.
+# Example:
+# structuredMetadata:
+#   component: component
+#   kind: kind
+#   name: name
+# @section -- Processing settings
+structuredMetadata:
+  k8s.pod.name: k8s.pod.name
+  pod: pod
+  service.instance.id: service.instance.id
+
+# @ignore
+deployAsConfigMap: false

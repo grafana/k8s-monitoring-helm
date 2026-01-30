@@ -13,6 +13,11 @@ prometheus.remote_write {{ include "helper.alloy_name" .name | quote }} {
 {{- else }}
     url = {{ .url | quote }} 
 {{- end }}
+{{- if .protobufMessage }}
+    protobuf_message = {{ .protobufMessage | quote }}
+{{- else if (eq (.remoteWriteProtocol | int) 2) }}
+    protobuf_message = "io.prometheus.write.v2.Request"
+{{- end }}
     headers = {
 {{- if ne (include "secrets.authType" .) "sigv4" }}
   {{- if eq (include "secrets.usesSecret" (dict "object" . "key" "tenantId")) "true" }}

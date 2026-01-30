@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+*   Add the ability to set protobufMessage and a shortcut for the remote_write protocol (@petewall)
+*   Automatically set required environment variables when enabling remote config (@petewall)
+*   Add a feature for gathering logs using PodLogs objects (@petewall)
+
 ## 3.7.5
 
 *   Add Configuration to specify the `overrides` Section of the Span Logs Connector Component for the Application Observability Chart (@SeamusGrafana)

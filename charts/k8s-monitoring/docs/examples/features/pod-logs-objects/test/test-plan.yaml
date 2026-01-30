@@ -1,0 +1,48 @@
+---
+apiVersion: helm-chart-toolbox.grafana.com/v1
+kind: TestPlan
+name: pod-logs-objects
+
+subject:
+  releaseName: k8smon
+  path: ../../../../..
+  valuesFile: ../values.yaml
+
+cluster:
+  type: kind
+
+dependencies:
+  - url: https://raw.githubusercontent.com/grafana/alloy/refs/heads/main/operations/helm/charts/alloy/charts/crds/crds/monitoring.grafana.com_podlogs.yaml
+  - directory: dependencies
+  - preset: loki
+  - preset: grafana
+    overrides:
+      datasources:
+        datasources.yaml:
+          apiVersion: 1
+          datasources:
+            - name: Loki
+              type: loki
+              url: http://loki.loki.svc:3100
+              jsonData:
+                httpHeaderName1: X-Scope-OrgID
+              secureJsonData:
+                httpHeaderValue1: "1"
+              isDefault: true
+
+tests:
+  - type: query-test
+    values:
+      tests:
+        - env:
+            CLUSTER: pod-logs-objects-cluster
+            LOKI_URL: http://loki.loki.svc:3100/loki/api/v1/query
+            LOKI_TENANTID: 1
+            LOKI_USER: loki
+            LOKI_PASS: lokipassword
+
+          queries:
+            - query: count_over_time({cluster="$CLUSTER", job="default/development-pods", namespace="development", container="busybox"}[1h])
+              type: logql
+            - query: count_over_time({cluster="$CLUSTER", job="default/production-pods", namespace="production", container="busybox"}[1h])
+              type: logql

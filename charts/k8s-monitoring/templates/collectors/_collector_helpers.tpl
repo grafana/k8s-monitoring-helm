@@ -38,6 +38,17 @@
 {{- $found -}}
 {{- end }}
 
+{{/* Inputs: Values (all values), name (collector name), envVar (environrment var name) */}}
+{{- define "collectors.has_extra_env" -}}
+{{- $found := "false" -}}
+{{- range (dig "alloy" "extraEnv" list (index .Values .name)) -}}
+  {{- if eq .name $.envVar }}
+    {{- $found = "true" -}}
+  {{- end }}
+{{- end }}
+{{- $found -}}
+{{- end }}
+
 {{/* Inputs: Values (all values), name (collector name), feature (feature name), portNumber, portName, portProtocol */}}
 {{- define "collectors.require_extra_port" -}}
 {{- if eq (include "collectors.has_extra_port" .) "false" }}
