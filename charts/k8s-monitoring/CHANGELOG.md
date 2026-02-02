@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+*   Update Prometheus Operator Object CRDs to 26.0.1 (@petewall)
+
 ## 3.7.5
 
 *   Add Configuration to specify the `overrides` Section of the Span Logs Connector Component for the Application Observability Chart (@SeamusGrafana)
