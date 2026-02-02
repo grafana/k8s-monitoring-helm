@@ -101,6 +101,16 @@ This defines the options for defining a destination for logs that use the Loki p
 | tls.key | string | `""` | The client key for the server (as a string). |
 | tls.keyFile | string | `""` | The client key for the server (as a path to a file). |
 | tls.keyFrom | string | `""` | Raw config for accessing the client key. |
+
+### Write-Ahead Log
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| writeAheadLog.drainTimeout | string | `"30s"` | Maximum time the WAL drain procedure can take, before being forcefully stopped. |
+| writeAheadLog.enabled | bool | `false` | Whether to enable the WAL. |
+| writeAheadLog.maxReadFrequency | string | `"1s"` | Maximum backoff time in the backup read mechanism. |
+| writeAheadLog.maxSegmentAge | string | `"1h"` | Maximum time a WAL segment should be allowed to live. Segments older than this setting are eventually deleted. |
+| writeAheadLog.minReadFrequency | string | `"250ms"` | Minimum backoff time in the backup read mechanism. |
 <!-- textlint-enable terminology -->
 
 ## Examples
