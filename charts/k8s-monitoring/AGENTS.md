@@ -158,17 +158,17 @@ destinations:
 
 <!-- BEGIN INTEGRATIONS -->
 
--   `alloy` - Monitor alloy
+-   `alloy` - Monitor Alloy
 -   `cert-manager` - Monitor cert-manager
 -   `dcgm-exporter` - Monitor dcgm-exporter
 -   `etcd` - Monitor etcd
--   `grafana` - Monitor grafana
+-   `grafana` - Monitor Grafana
 -   `istio` - Monitor istio
--   `loki` - Monitor loki
--   `mimir` - Monitor mimir
+-   `loki` - Monitor Loki
+-   `mimir` - Monitor Mimir
 -   `mysql` - Monitor mysql
 -   `postgresql` - Monitor postgresql
--   `tempo` - Monitor tempo
+-   `tempo` - Monitor Tempo
 <!-- END INTEGRATIONS -->
 
 **Enable an integration:**
