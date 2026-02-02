@@ -55,9 +55,29 @@ Always check these files first:
 
 ## Discovery Patterns
 
+All paths in this section are relative to this chart directory (`charts/k8s-monitoring/`).
+From the repository root, prefix paths with `charts/k8s-monitoring/`.
+
 ### Features
 
-**Location:** `charts/feature-*/`
+**Location:** `charts/feature-*/` (relative to this chart directory)
+
+**Feature directory to values.yaml key mapping:**
+
+| Feature Directory | Values Key |
+|-------------------|------------|
+| `feature-annotation-autodiscovery` | `annotationAutodiscovery` |
+| `feature-application-observability` | `applicationObservability` |
+| `feature-auto-instrumentation` | `autoInstrumentation` |
+| `feature-cluster-events` | `clusterEvents` |
+| `feature-cluster-metrics` | `clusterMetrics` |
+| `feature-integrations` | `integrations` |
+| `feature-node-logs` | `nodeLogs` |
+| `feature-pod-logs` | `podLogs` |
+| `feature-pod-logs-via-kubernetes-api` | `podLogsViaKubernetesApi` |
+| `feature-profiling` | `profiling` |
+| `feature-profiles-receiver` | `profilesReceiver` |
+| `feature-prometheus-operator-objects` | `prometheusOperatorObjects` |
 
 Each feature follows a consistent structure:
 
@@ -145,11 +165,41 @@ Collectors are Grafana Alloy instances with specific roles:
 -   `alloy-singleton` - Runs single-replica workloads (events, etc.)
 -   `alloy-profiles` - Collects profiling data
 
+## Examples Directory
+
+The `docs/examples/` folder contains complete, tested configurations for common scenarios.
+Each example includes a `values.yaml`, generated Alloy configuration, and documentation.
+
+| Example | Use Case |
+|---------|----------|
+| `pod-labels-and-annotations/` | Add pod labels/annotations to logs and metrics |
+| `namespace-labels-and-annotations/` | Add namespace labels/annotations to logs |
+| `destinations/otlp-endpoint/` | Send data to Grafana Cloud or OTLP endpoints |
+| `destinations/custom/` | Custom destination configurations |
+| `platforms/azure-aks/` | Azure AKS-specific configuration |
+| `platforms/eks-fargate/` | AWS EKS Fargate configuration |
+| `platforms/gke-autopilot/` | GKE Autopilot configuration |
+| `platforms/openshift/` | OpenShift configuration |
+| `tolerations/` | Run collectors on tainted nodes |
+| `proxies/` | Configure HTTP/HTTPS proxy settings |
+| `extra-configuration/` | Add custom Alloy configuration |
+| `metrics-tuning/` | Include/exclude specific metrics |
+| `scalability/autoscaling/` | Horizontal pod autoscaling |
+| `scalability/sharded-kube-state-metrics/` | Shard kube-state-metrics for large clusters |
+| `include-by-namespace/` | Collect from specific namespaces only |
+| `exclude-by-namespace/` | Exclude specific namespaces |
+| `tail-sampling/` | Configure trace tail sampling |
+
 ## Common Configuration Tasks
 
 ### Enable Grafana Cloud as destination
 
 See `docs/examples/destinations/otlp-endpoint/` for a complete example.
+
+### Add pod labels to logs
+
+See `docs/examples/pod-labels-and-annotations/` for a complete example.
+Key settings: `podLogs.labels`, `podLogs.labelsToKeep`.
 
 ### Add custom scrape targets
 

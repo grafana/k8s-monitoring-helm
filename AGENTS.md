@@ -3,6 +3,18 @@
 This repository contains Helm charts for deploying Kubernetes monitoring to Grafana Cloud
 or self-hosted Grafana stacks.
 
+## For AI Assistants
+
+**Start here:** [charts/k8s-monitoring/AGENTS.md](charts/k8s-monitoring/AGENTS.md)
+
+This is where all configuration patterns and feature documentation lives. The chart-level
+AGENTS.md contains discovery patterns, feature mappings, and examples for common tasks.
+
+Key paths from repository root:
+-   `charts/k8s-monitoring/values.yaml` - Main configuration file
+-   `charts/k8s-monitoring/charts/feature-*/` - Feature subcharts (pod-logs, cluster-metrics, etc.)
+-   `charts/k8s-monitoring/docs/examples/` - Complete example configurations
+
 ## For Chart Users
 
 See [charts/k8s-monitoring/AGENTS.md](charts/k8s-monitoring/AGENTS.md) for help
