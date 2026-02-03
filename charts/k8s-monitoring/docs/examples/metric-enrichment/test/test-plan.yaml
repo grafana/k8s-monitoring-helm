@@ -13,6 +13,7 @@ cluster:
 
 dependencies:
   - file: default-namespace-label.yaml
+  - file: pod.yaml
   - preset: test-parameters
     namespace: toolbox
   - preset: prometheus
@@ -37,15 +38,19 @@ tests:
             PROMETHEUS_URL: http://prometheus-server.prometheus.svc:9090/api/v1/query
 
           queries:
-            # Pod metrics in the default namespace have the color label
-            - query: kube_pod_info{cluster="$clusterName", namespace="default", color="blue"}
+            # Pod metrics in the default namespace have the color and team labels
+            - query: kube_pod_info{cluster="$clusterName", pod="my-pod", namespace="default", color="red", team="ducks"}
               type: promql
-            # Pod metrics in the other namespaces don't have the color label
-            - query: kube_pod_info{cluster="$clusterName", namespace="kube-system", color=""}
+            # Pod metrics in the other namespaces don't have the color or team labels
+            - query: kube_pod_info{cluster="$clusterName", namespace="kube-system", color="", team=""}
               type: promql
 
-            # Non-pod metrics in the default namespace don't have the color label
-            - query: kube_configmap_info{cluster="metric-enrichment-test-cluster", namespace="default", color=""}
+            # Non-pod metrics in the default namespace don't have the color, but do have the team label
+            - query: kube_configmap_info{cluster="$clusterName", configmap="k8smon-alloy-metrics", namespace="default", color="", team="ducks"}
+              type: promql
+
+            # Non-pod metrics in other namespaces don't have the color or team labels
+            - query: kube_configmap_info{cluster="$clusterName", configmap="test-parameters", namespace="toolbox", color="", team=""}
               type: promql
 
             # DPM check

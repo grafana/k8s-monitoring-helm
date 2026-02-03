@@ -6,13 +6,22 @@ otelcol.exporter.prometheus {{ include "helper.alloy_name" .name | quote }} {
   forward_to = [prometheus.remote_write.{{ include "helper.alloy_name" .name }}.receiver]
 }
 
-{{- if .metricEnrichment.podLabels }}
+{{- $hasNamespaceLabelMetricEnrichment := dig "metricEnrichment" "namespaceLabels" dict . }}
+{{- $hasPodLabelMetricEnrichment := dig "metricEnrichment" "podLabels" dict . }}
+{{- $hasMetricEnrichment := or $hasNamespaceLabelMetricEnrichment $hasPodLabelMetricEnrichment }}
+{{- if $hasMetricEnrichment }}
 discovery.kubernetes {{ include "helper.alloy_name" .name | quote }} {
   role = "pod"
+{{- if not $hasNamespaceLabelMetricEnrichment }}
   selectors {
     role = "pod"
     label = {{ .metricEnrichment.podLabels | join "," | quote }}
   }
+{{ else }}
+  attach_metadata {
+    namespace = true
+  }
+{{- end }}
 }
 discovery.relabel {{ include "helper.alloy_name" .name | quote }} {
   targets = discovery.kubernetes.{{ include "helper.alloy_name" .name }}.targets
@@ -21,6 +30,18 @@ discovery.relabel {{ include "helper.alloy_name" .name | quote }} {
     regex = "(.+;.+)"
     target_label = "__meta_kubernetes_namespace_pod"
   }
+{{- range $label := .metricEnrichment.podLabels }}
+  rule {
+    source_labels = [{{ include "pod_label" $label | quote }}]
+    target_label = {{ $label | quote }}
+  }
+{{- end }}
+{{- range $label := .metricEnrichment.namespaceLabels }}
+  rule {
+    source_labels = [{{ include "namespace_label" $label | quote }}]
+    target_label = {{ $label | quote }}
+  }
+{{- end }}
 }
 
 prometheus.relabel {{ include "helper.alloy_name" .name | quote }} {
@@ -29,15 +50,35 @@ prometheus.relabel {{ include "helper.alloy_name" .name | quote }} {
     regex = "(.+;.+)"
     target_label = "__meta_kubernetes_namespace_pod"
   }
-  forward_to = [prometheus.enrich.{{ include "helper.alloy_name" .name }}.receiver]
+{{- if $hasNamespaceLabelMetricEnrichment }}
+  forward_to = [prometheus.enrich.{{ include "helper.alloy_name" .name }}_ns.receiver]
+{{- else if $hasPodLabelMetricEnrichment }}
+  forward_to = [prometheus.enrich.{{ include "helper.alloy_name" .name }}_pod.receiver]
+{{- end }}
 }
 
-prometheus.enrich {{ include "helper.alloy_name" .name | quote }} {
+{{- if $hasNamespaceLabelMetricEnrichment }}
+prometheus.enrich "{{ include "helper.alloy_name" .name }}_ns" {
+  targets = discovery.relabel.{{ include "helper.alloy_name" .name }}.output
+  target_match_label = "__meta_kubernetes_namespace"
+  metrics_match_label = "namespace"
+  labels_to_copy = {{ .metricEnrichment.namespaceLabels | toJson }}
+{{- if $hasPodLabelMetricEnrichment }}
+  forward_to = [prometheus.enrich.{{ include "helper.alloy_name" .name }}_pod.receiver]
+{{- else }}
+  forward_to = [prometheus.remote_write.{{ include "helper.alloy_name" .name }}.receiver]
+{{- end }}
+}
+{{- end }}
+
+{{- if $hasPodLabelMetricEnrichment }}
+prometheus.enrich "{{ include "helper.alloy_name" .name }}_pod" {
   targets = discovery.relabel.{{ include "helper.alloy_name" .name }}.output
   target_match_label = "__meta_kubernetes_namespace_pod"
   labels_to_copy = {{ .metricEnrichment.podLabels | toJson }}
   forward_to = [prometheus.remote_write.{{ include "helper.alloy_name" .name }}.receiver]
 }
+{{- end }}
 
 {{- end }}
 
@@ -237,7 +278,8 @@ prometheus.remote_write {{ include "helper.alloy_name" .name | quote }} {
 {{- end -}}
 
 {{- define "destinations.prometheus.alloy.prometheus.metrics.target" }}
-{{- if (dig "metricEnrichment" "podLabels" dict .) }}
+{{- $hasMetricEnrichment := or (dig "metricEnrichment" "namespaceLabels" dict .) (dig "metricEnrichment" "podLabels" dict .)}}
+{{- if $hasMetricEnrichment }}
 prometheus.relabel.{{ include "helper.alloy_name" .name }}.receiver
 {{- else }}
 prometheus.remote_write.{{ include "helper.alloy_name" .name }}.receiver

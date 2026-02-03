@@ -93,6 +93,13 @@ This defines the options for defining a destination for metrics that use the Pro
 | url | string | `""` | The URL for the Prometheus destination. |
 | urlFrom | string | `""` | Raw config for accessing the URL. Lets you insert raw Alloy references so you can load the URL from any number of places, such as loading values from config maps to HTTP calls. For example: `urlFrom: sys.env("PROMETHEUS_URL")` |
 
+### Metric Enrichment
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| metricEnrichment.namespaceLabels | list | `[]` | Finds kubernetes namespace labels and adds them as labels to matching metrics. Applies to metrics that contain the following labels: `namespace` |
+| metricEnrichment.podLabels | list | `[]` | Finds kubernetes pod labels and adds them as labels to matching pod metrics. Applies to metrics that contain the following labels: `namespace`, `pod` |
+
 ### OpenTelemetry Conversion
 
 | Key | Type | Default | Description |
@@ -145,12 +152,6 @@ This defines the options for defining a destination for metrics that use the Pro
 | writeAheadLog.maxKeepaliveTime | string | `"8h"` | Maximum time to keep data in the write-ahead log before removing it. |
 | writeAheadLog.minKeepaliveTime | string | `"5m"` | Minimum time to keep data in the write-ahead log before it can be removed. |
 | writeAheadLog.truncateFrequency | string | `"2h"` | How frequently to clean up the write-ahead log. |
-
-### Other Values
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| metricEnrichment.podLabels | list | `[]` |  |
 <!-- textlint-enable terminology -->
 
 ## Examples

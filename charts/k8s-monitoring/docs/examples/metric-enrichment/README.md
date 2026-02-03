@@ -25,6 +25,7 @@ destinations:
     url: http://prometheus-server.prometheus.svc:9090/api/v1/write
     metricEnrichment:
       podLabels: [color]
+      namespaceLabels: [team]
 #  - name: metric-enrichment
 #    type: custom
 #    ecosystem: prometheus

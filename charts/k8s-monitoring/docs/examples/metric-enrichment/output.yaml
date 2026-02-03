@@ -631,9 +631,8 @@ data:
     }
     discovery.kubernetes "metric_store" {
       role = "pod"
-      selectors {
-        role = "pod"
-        label = "color"
+      attach_metadata {
+        namespace = true
       }
     }
     discovery.relabel "metric_store" {
@@ -643,6 +642,14 @@ data:
         regex = "(.+;.+)"
         target_label = "__meta_kubernetes_namespace_pod"
       }
+      rule {
+        source_labels = ["__meta_kubernetes_pod_label_color"]
+        target_label = "color"
+      }
+      rule {
+        source_labels = ["__meta_kubernetes_namespace_label_team"]
+        target_label = "team"
+      }
     }
     
     prometheus.relabel "metric_store" {
@@ -651,10 +658,16 @@ data:
         regex = "(.+;.+)"
         target_label = "__meta_kubernetes_namespace_pod"
       }
-      forward_to = [prometheus.enrich.metric_store.receiver]
+      forward_to = [prometheus.enrich.metric_store_ns.receiver]
     }
-    
-    prometheus.enrich "metric_store" {
+    prometheus.enrich "metric_store_ns" {
+      targets = discovery.relabel.metric_store.output
+      target_match_label = "__meta_kubernetes_namespace"
+      metrics_match_label = "namespace"
+      labels_to_copy = ["team"]
+      forward_to = [prometheus.enrich.metric_store_pod.receiver]
+    }
+    prometheus.enrich "metric_store_pod" {
       targets = discovery.relabel.metric_store.output
       target_match_label = "__meta_kubernetes_namespace_pod"
       labels_to_copy = ["color"]
