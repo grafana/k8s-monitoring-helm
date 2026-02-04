@@ -26,64 +26,6 @@ destinations:
     metricEnrichment:
       podLabels: [color]
       namespaceLabels: [team]
-#  - name: metric-enrichment
-#    type: custom
-#    ecosystem: prometheus
-#    config: |
-#      // Discover pods with namespace labels attached
-#      discovery.kubernetes "metric_enrichment_pods" {
-#        role = "pod"
-#        attach_metadata {
-#          namespace = true
-#        }
-#      }
-#      // Create the matching label (<namespace>;<pod>) and the label of interest. Drop *all* other labels
-#      discovery.relabel "metric_enrichment_pods" {
-#        targets = discovery.kubernetes.metric_enrichment_pods.targets
-#        rule {
-#          source_labels = ["__meta_kubernetes_namespace", "__meta_kubernetes_pod_name"]
-#          regex = "(.+;.+)"
-#          target_label = "temp_namespaced_pod"
-#        }
-#        rule {
-#          source_labels = ["__meta_kubernetes_namespace_label_color"]
-#          target_label = "color"
-#        }
-#        rule {
-#          action = "labelkeep"
-#          regex = "temp_namespaced_pod|color"
-#        }
-#      }
-#
-#      // Creating the matching label (<namespace>;<pod>) for the incoming metrics
-#      prometheus.relabel "metric_enrichment" {
-#        rule {
-#          source_labels = ["namespace", "pod"]
-#          regex = "(.+;.+)"
-#          target_label = "temp_namespaced_pod"
-#        }
-#        forward_to = [prometheus.enrich.metric_enrichment.receiver]
-#      }
-#
-#      // Enrich the metrics with the combination of the two groups
-#      prometheus.enrich "metric_enrichment" {
-#        targets = discovery.relabel.metric_enrichment_pods.output
-#        target_match_label = "temp_namespaced_pod"
-#        metrics_match_label = "temp_namespaced_pod"
-#        forward_to = [prometheus.relabel.metric_enrichment_final.receiver]
-#      }
-#
-#      // Drop the matching label
-#      prometheus.relabel "metric_enrichment_final" {
-#        rule {
-#          action = "labeldrop"
-#          regex = "temp_namespaced_pod"
-#        }
-#        forward_to = [prometheus.remote_write.metric_store.receiver]
-#      }
-#    metrics:
-#      enabled: true
-#      target: prometheus.relabel.metric_enrichment.receiver
 
 clusterMetrics:
   enabled: true
