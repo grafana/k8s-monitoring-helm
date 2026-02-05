@@ -475,6 +475,7 @@ The Prometheus and Loki services may be hosted on the same cluster, or remotely 
 | logs.pod_logs.annotation | string | `"k8s.grafana.com/logs.autogather"` | Pod annotation to use for controlling log discovery. |
 | logs.pod_logs.annotations | object | `{"job":"k8s.grafana.com/logs.job"}` | Loki labels to set with values copied from the Kubernetes Pod annotations. Format: `<loki_label>: <kubernetes_annotation>`. |
 | logs.pod_logs.cri.maxPartialLines | int | `100` | Maximum number of partial lines to hold in memory before forcing a merge. Increase this value if logs are being lost due to partial line limits. |
+| logs.pod_logs.defaultLogFormat | string | `"cri"` | Default parsing format if it cannot be determined from container UID. Options are `null`, `cri`, or `docker`. |
 | logs.pod_logs.discovery | string | `"all"` | Controls the behavior of discovering pods for logs. |
 | logs.pod_logs.enabled | bool | `true` | Capture and forward logs from Kubernetes pods |
 | logs.pod_logs.excludeNamespaces | list | `[]` | Do not capture logs from any pods in these namespaces. |
