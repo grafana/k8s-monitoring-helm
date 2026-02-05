@@ -12,10 +12,10 @@ Without these objects, there are some things that will not function:
 
 Anything that requires discovering Nodes is not allowed, which means metrics from these sources will not work:
 
-* Kubelet
-* Kubelet Resources
-* Kubelet Probes
-* cAdvisor
+*   Kubelet
+*   Kubelet Resources
+*   Kubelet Probes
+*   cAdvisor
 
 kube-state-metrics will only be able to generate metrics from the namespaces that are specified. This also means that it
 is unable to generate metrics for cluster-scoped resources. `kube_node_info` for example is not possible without a
@@ -30,6 +30,7 @@ features in this chart can only gather telemetry data from those namespaces.
 
 <!-- textlint-disable terminology -->
 ```yaml
+---
 cluster:
   name: no-cluster-roles
 
