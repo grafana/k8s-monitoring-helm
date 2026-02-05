@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 3.8.0
 
 *   Add the ability to enrich metrics with pod or namespace labels (@petewall)
 *   Set CRI as default logs processor if runtime is unset (@aleksanderaleksic)
