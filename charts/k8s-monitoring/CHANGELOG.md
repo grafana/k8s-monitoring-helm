@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+*   Update Windows Exporter to 0.12.3 (@petewall)
 *   Update Beyla to 1.11.0 (@petewall)
 *   Update Prometheus Operator Object CRDs to 26.0.1 (@petewall)
 
