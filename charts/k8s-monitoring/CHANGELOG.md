@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+*   Add the ability to enrich metrics with pod or namespace labels (@petewall)
 *   Set CRI as default logs processor if runtime is unset (@aleksanderaleksic)
 *   Add the ability to set protobufMessage and a shortcut for the remote_write protocol (@petewall)
 *   Automatically set required environment variables when enabling remote config (@petewall)

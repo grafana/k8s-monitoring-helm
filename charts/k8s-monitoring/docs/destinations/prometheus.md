@@ -93,6 +93,13 @@ This defines the options for defining a destination for metrics that use the Pro
 | url | string | `""` | The URL for the Prometheus destination. |
 | urlFrom | string | `""` | Raw config for accessing the URL. Lets you insert raw Alloy references so you can load the URL from any number of places, such as loading values from config maps to HTTP calls. For example: `urlFrom: sys.env("PROMETHEUS_URL")` |
 
+### Metric Enrichment
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| metricEnrichment.namespaceLabels | list | `[]` | Finds kubernetes namespace labels and adds them as labels to matching metrics. Applies to metrics that contain the following labels: `namespace`. Note that this can greatly increase the resource utilization of Alloy. |
+| metricEnrichment.podLabels | list | `[]` | Finds kubernetes pod labels and adds them as labels to matching pod metrics. Applies to metrics that contain the following labels: `namespace`, `pod`. Note that this can greatly increase the resource utilization of Alloy. |
+
 ### OpenTelemetry Conversion
 
 | Key | Type | Default | Description |
