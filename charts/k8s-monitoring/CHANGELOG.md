@@ -1,7 +1,12 @@
 # Changelog
 
-## Unreleased
+## 3.8.0
 
+*   Add the ability to enrich metrics with pod or namespace labels (@petewall)
+*   Set CRI as default logs processor if runtime is unset (@aleksanderaleksic)
+*   Add the ability to set protobufMessage and a shortcut for the remote_write protocol (@petewall)
+*   Automatically set required environment variables when enabling remote config (@petewall)
+*   Add a feature for gathering logs using PodLogs objects (@petewall)
 *   Update Windows Exporter to 0.12.3 (@petewall)
 *   Update Beyla to 1.11.0 (@petewall)
 *   Update Prometheus Operator Object CRDs to 26.0.1 (@petewall)

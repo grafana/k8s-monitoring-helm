@@ -1,7 +1,14 @@
 {{- define "feature.podLogs.processing.alloy" }}
+{{- $criSelector := "{tmp_container_runtime=~\"containerd|cri-o\"}" }}
+{{- $dockerSelector := "{tmp_container_runtime=\"docker\"}" }}
+{{- if eq .Values.defaultLogFormat "cri" }}
+  {{- $criSelector = "{tmp_container_runtime=~\"containerd|cri-o|\"}" }}
+{{- else if eq .Values.defaultLogFormat "docker" }}
+  {{- $dockerSelector = "{tmp_container_runtime=~\"docker|\"}" }}
+{{- end }}
 loki.process "pod_logs" {
   stage.match {
-    selector = "{tmp_container_runtime=~\"containerd|cri-o\"}"
+    selector = {{ $criSelector | quote }}
     // the cri processing stage extracts the following k/v pairs: log, stream, time, flags
     stage.cri {
 {{- if .Values.cri.maxPartialLines }}
@@ -19,7 +26,7 @@ loki.process "pod_logs" {
   }
 
   stage.match {
-    selector = "{tmp_container_runtime=\"docker\"}"
+    selector = {{ $dockerSelector | quote }}
     // the docker processing stage extracts the following k/v pairs: log, stream, time
     stage.docker {}
 

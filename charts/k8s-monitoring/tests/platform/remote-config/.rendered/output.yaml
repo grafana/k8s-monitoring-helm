@@ -46,7 +46,7 @@ data:
         "platform" = "kubernetes",
         "release" = "k8smon",
         "source" = "k8s-monitoring",
-        "sourceVersion" = "3.7.5",
+        "sourceVersion" = "3.8.0",
         "workloadName" = "alloy-metrics",
         "workloadType" = "statefulset",
       }
@@ -85,7 +85,7 @@ data:
         "platform" = "kubernetes",
         "release" = "k8smon",
         "source" = "k8s-monitoring",
-        "sourceVersion" = "3.7.5",
+        "sourceVersion" = "3.8.0",
         "workloadName" = "alloy-logs",
         "workloadType" = "daemonset",
       }
@@ -353,10 +353,6 @@ spec:
       nodeSelector:
         kubernetes.io/os: linux
 ---
-# Source: k8s-monitoring/templates/remote_config_secret.yaml
-# create: false
-# create: false
----
 # Source: k8s-monitoring/templates/alloy.yaml
 apiVersion: collectors.grafana.com/v1alpha1
 kind: Alloy
@@ -381,16 +377,8 @@ spec:
     envFrom: []
     extraArgs: []
     extraEnv:
-    - name: GCLOUD_RW_API_KEY
-      valueFrom:
-        secretKeyRef:
-          key: GRAFANA_CLOUD_FLEET_MGMT_TOKEN
-          name: grafana-cloud-credentials
     - name: CLUSTER_NAME
-      valueFrom:
-        configMapKeyRef:
-          key: clusterName
-          name: test-parameters
+      value: remote-config-test
     - name: NAMESPACE
       valueFrom:
         fieldRef:
@@ -401,6 +389,11 @@ spec:
           fieldPath: metadata.name
     - name: GCLOUD_FM_COLLECTOR_ID
       value: k8smon-$(CLUSTER_NAME)-$(NAMESPACE)-$(POD_NAME)
+    - name: GCLOUD_RW_API_KEY
+      valueFrom:
+        secretKeyRef:
+          key: GRAFANA_CLOUD_FLEET_MGMT_TOKEN
+          name: grafana-cloud-credentials
     extraPorts: []
     hostAliases: []
     initialDelaySeconds: 10
@@ -725,16 +718,8 @@ spec:
     envFrom: []
     extraArgs: []
     extraEnv:
-    - name: GCLOUD_RW_API_KEY
-      valueFrom:
-        secretKeyRef:
-          key: GRAFANA_CLOUD_FLEET_MGMT_TOKEN
-          name: grafana-cloud-credentials
     - name: CLUSTER_NAME
-      valueFrom:
-        configMapKeyRef:
-          key: clusterName
-          name: test-parameters
+      value: remote-config-test
     - name: NAMESPACE
       valueFrom:
         fieldRef:
@@ -745,6 +730,11 @@ spec:
           fieldPath: spec.nodeName
     - name: GCLOUD_FM_COLLECTOR_ID
       value: k8smon-$(CLUSTER_NAME)-$(NAMESPACE)-alloy-logs-$(NODE_NAME)
+    - name: GCLOUD_RW_API_KEY
+      valueFrom:
+        secretKeyRef:
+          key: GRAFANA_CLOUD_FLEET_MGMT_TOKEN
+          name: grafana-cloud-credentials
     extraPorts: []
     hostAliases: []
     initialDelaySeconds: 10
@@ -1146,7 +1136,7 @@ metadata:
   labels:
     app.kubernetes.io/name: k8smon-k8s-monitoring-add-finalizer
     app.kubernetes.io/instance: k8smon
-    helm.sh/chart: k8s-monitoring-3.7.5
+    helm.sh/chart: k8s-monitoring-3.8.0
   annotations:
     helm.sh/hook: post-install,post-upgrade
     helm.sh/hook-weight: "15"
@@ -1199,7 +1189,7 @@ metadata:
   labels:
     app.kubernetes.io/name: k8smon-k8s-monitoring-remove-alloy-and-finalizer
     app.kubernetes.io/instance: k8smon
-    helm.sh/chart: k8s-monitoring-3.7.5
+    helm.sh/chart: k8s-monitoring-3.8.0
   annotations:
     helm.sh/hook: pre-delete
     helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded

@@ -1,4 +1,7 @@
 {{- if .Values.deployAsConfigMap }}
+{{- include "feature.REPLACE_WITH_featureName.validate" . }}
+{{- $alloyConfig := include "feature.REPLACE_WITH_featureName.module" . }}
+{{- $alloyConfig = regexReplaceAll `[ \t]+(\r?\n)` $alloyConfig "\n" }}
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -7,5 +10,5 @@ metadata:
   namespace: {{ .Release.Namespace }}
 data:
   module.alloy: |-
-    {{- include "feature.REPLACE_WITH_featureName.module" . | indent 4 }}
+    {{- $alloyConfig | trim | nindent 4 }}
 {{- end }}

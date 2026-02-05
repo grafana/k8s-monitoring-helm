@@ -81,15 +81,24 @@ This defines the options for defining a destination for metrics that use the Pro
 | metricProcessingRules | string | `""` | Rule blocks to apply to all metrics. Uses the [write_relabel_config block](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.remote_write/#write_relabel_config-block) of the prometheus.remote_write component. Format: write_relabel_config {   source_labels = ["..."]   action = "..."   ... } |
 | name | string | `""` | The name for this Prometheus destination. |
 | noProxy | string | `""` | Comma-separated list of IP addresses, CIDR notations, and domain names to exclude from proxying. |
+| protobufMessage | string | `""` | The protobuf message format to use for remote write. Must be `prometheus.WriteRequest` or experimental `io.prometheus.write.v2.Request`. |
 | proxyConnectHeader | object | `{}` | Specifies headers to send to proxies during CONNECT requests. |
 | proxyFromEnvironment | bool | `false` | Use the proxy URL indicated by environment variables. |
 | proxyURL | string | `""` | HTTP proxy to send requests through. |
+| remoteWriteProtocol | int | `1` | Shortcut for setting the `protobufMessage`. Valid options are 1 (default) or 2, which sets `protobufMessage` to `io.prometheus.write.v2.Request`. |
 | sendNativeHistograms | bool | `false` | Whether native histograms should be sent. |
 | tenantId | string | `""` | The tenant ID for the Prometheus destination. |
 | tenantIdFrom | string | `""` | Raw config for accessing the tenant ID. |
 | tenantIdKey | string | `"tenantId"` | The key for storing the tenant ID in the secret. |
 | url | string | `""` | The URL for the Prometheus destination. |
 | urlFrom | string | `""` | Raw config for accessing the URL. Lets you insert raw Alloy references so you can load the URL from any number of places, such as loading values from config maps to HTTP calls. For example: `urlFrom: sys.env("PROMETHEUS_URL")` |
+
+### Metric Enrichment
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| metricEnrichment.namespaceLabels | list | `[]` | Finds kubernetes namespace labels and adds them as labels to matching metrics. Applies to metrics that contain the following labels: `namespace`. Note that this can greatly increase the resource utilization of Alloy. |
+| metricEnrichment.podLabels | list | `[]` | Finds kubernetes pod labels and adds them as labels to matching pod metrics. Applies to metrics that contain the following labels: `namespace`, `pod`. Note that this can greatly increase the resource utilization of Alloy. |
 
 ### OpenTelemetry Conversion
 

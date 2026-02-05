@@ -6,12 +6,95 @@ otelcol.exporter.prometheus {{ include "helper.alloy_name" .name | quote }} {
   forward_to = [prometheus.remote_write.{{ include "helper.alloy_name" .name }}.receiver]
 }
 
+{{- $hasNamespaceLabelMetricEnrichment := gt (len (dig "metricEnrichment" "namespaceLabels" list .)) 0 }}
+{{- $hasPodLabelMetricEnrichment := gt (len (dig "metricEnrichment" "podLabels" list .)) 0 }}
+{{- $hasMetricEnrichment := or $hasNamespaceLabelMetricEnrichment $hasPodLabelMetricEnrichment }}
+{{- if $hasMetricEnrichment }}
+discovery.kubernetes {{ include "helper.alloy_name" .name | quote }} {
+  role = "pod"
+{{- if not $hasNamespaceLabelMetricEnrichment }}
+  selectors {
+    role = "pod"
+    label = {{ .metricEnrichment.podLabels | join "," | quote }}
+  }
+{{- else }}
+  attach_metadata {
+    namespace = true
+  }
+{{- end }}
+}
+discovery.relabel {{ include "helper.alloy_name" .name | quote }} {
+  targets = discovery.kubernetes.{{ include "helper.alloy_name" .name }}.targets
+{{- if $hasPodLabelMetricEnrichment }}
+  rule {
+    source_labels = ["__meta_kubernetes_namespace", "__meta_kubernetes_pod_name"]
+    regex = "(.+;.+)"
+    target_label = "__meta_kubernetes_namespace_pod"
+  }
+{{- end }}
+{{- range $label := .metricEnrichment.podLabels }}
+  rule {
+    source_labels = [{{ include "pod_label" $label | quote }}]
+    target_label = {{ $label | quote }}
+  }
+{{- end }}
+{{- range $label := .metricEnrichment.namespaceLabels }}
+  rule {
+    source_labels = [{{ include "namespace_label" $label | quote }}]
+    target_label = {{ $label | quote }}
+  }
+{{- end }}
+}
+
+prometheus.relabel {{ include "helper.alloy_name" .name | quote }} {
+  rule {
+    source_labels = ["namespace", "pod"]
+    regex = "(.+;.+)"
+    target_label = "__meta_kubernetes_namespace_pod"
+  }
+{{- if $hasNamespaceLabelMetricEnrichment }}
+  forward_to = [prometheus.enrich.{{ include "helper.alloy_name" .name }}_ns.receiver]
+{{- else if $hasPodLabelMetricEnrichment }}
+  forward_to = [prometheus.enrich.{{ include "helper.alloy_name" .name }}_pod.receiver]
+{{- end }}
+}
+
+{{- if $hasNamespaceLabelMetricEnrichment }}
+prometheus.enrich "{{ include "helper.alloy_name" .name }}_ns" {
+  targets = discovery.relabel.{{ include "helper.alloy_name" .name }}.output
+  target_match_label = "__meta_kubernetes_namespace"
+  metrics_match_label = "namespace"
+  labels_to_copy = {{ .metricEnrichment.namespaceLabels | toJson }}
+{{- if $hasPodLabelMetricEnrichment }}
+  forward_to = [prometheus.enrich.{{ include "helper.alloy_name" .name }}_pod.receiver]
+{{- else }}
+  forward_to = [prometheus.remote_write.{{ include "helper.alloy_name" .name }}.receiver]
+{{- end }}
+}
+{{- end }}
+
+{{- if $hasPodLabelMetricEnrichment }}
+prometheus.enrich "{{ include "helper.alloy_name" .name }}_pod" {
+  targets = discovery.relabel.{{ include "helper.alloy_name" .name }}.output
+  target_match_label = "__meta_kubernetes_namespace_pod"
+  labels_to_copy = {{ .metricEnrichment.podLabels | toJson }}
+  forward_to = [prometheus.remote_write.{{ include "helper.alloy_name" .name }}.receiver]
+}
+{{- end }}
+
+{{- end }}
+
 prometheus.remote_write {{ include "helper.alloy_name" .name | quote }} {
   endpoint {
 {{- if .urlFrom }} 
     url = {{ .urlFrom }}
 {{- else }}
     url = {{ .url | quote }} 
+{{- end }}
+{{- if .protobufMessage }}
+    protobuf_message = {{ .protobufMessage | quote }}
+{{- else if (eq (.remoteWriteProtocol | int) 2) }}
+    protobuf_message = "io.prometheus.write.v2.Request"
 {{- end }}
     headers = {
 {{- if ne (include "secrets.authType" .) "sigv4" }}
@@ -152,6 +235,12 @@ prometheus.remote_write {{ include "helper.alloy_name" .name | quote }} {
       target_label = {{ include "escape_label" $label | quote }}
     }
 {{- end }}
+{{- if .metricEnrichment.podLabels }}
+    write_relabel_config {
+      regex = "__meta_kubernetes_namespace_pod"
+      action = "labeldrop"
+    }
+{{- end }}
 {{- if .metricProcessingRules }}
 {{ .metricProcessingRules | indent 4 }}
 {{- end }}
@@ -190,7 +279,16 @@ prometheus.remote_write {{ include "helper.alloy_name" .name | quote }} {
 - tls.key
 {{- end -}}
 
-{{- define "destinations.prometheus.alloy.prometheus.metrics.target" }}prometheus.remote_write.{{ include "helper.alloy_name" .name }}.receiver{{ end -}}
+{{- define "destinations.prometheus.alloy.prometheus.metrics.target" }}
+{{- $hasNamespaceLabelMetricEnrichment := gt (len (dig "metricEnrichment" "namespaceLabels" list .)) 0 }}
+{{- $hasPodLabelMetricEnrichment := gt (len (dig "metricEnrichment" "podLabels" list .)) 0 }}
+{{- $hasMetricEnrichment := or $hasNamespaceLabelMetricEnrichment $hasPodLabelMetricEnrichment }}
+{{- if $hasMetricEnrichment }}
+prometheus.relabel.{{ include "helper.alloy_name" .name }}.receiver
+{{- else }}
+prometheus.remote_write.{{ include "helper.alloy_name" .name }}.receiver
+{{ end -}}
+{{ end -}}
 {{- define "destinations.prometheus.alloy.otlp.metrics.target" }}otelcol.exporter.prometheus.{{ include "helper.alloy_name" .name }}.input{{ end -}}
 
 {{- define "destinations.prometheus.supports_metrics" }}true{{ end -}}

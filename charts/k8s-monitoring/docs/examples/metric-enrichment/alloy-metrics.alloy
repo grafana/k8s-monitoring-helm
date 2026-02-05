@@ -478,7 +478,7 @@ declare "cluster_metrics" {
 }
 cluster_metrics "feature" {
   metrics_destinations = [
-    prometheus.relabel.metric_enrichment.receiver,
+    prometheus.relabel.metric_store.receiver,
   ]
 }
 // Self Reporting
@@ -520,8 +520,7 @@ prometheus.relabel "kubernetes_monitoring_telemetry" {
     action = "keep"
   }
   forward_to = [
-    prometheus.remote_write.metric_store.receiver,
-    prometheus.relabel.metric_enrichment.receiver,
+    prometheus.relabel.metric_store.receiver,
   ]
 }
 
@@ -532,6 +531,50 @@ prometheus.relabel "kubernetes_monitoring_telemetry" {
 otelcol.exporter.prometheus "metric_store" {
   add_metric_suffixes = true
   resource_to_telemetry_conversion = false
+  forward_to = [prometheus.remote_write.metric_store.receiver]
+}
+discovery.kubernetes "metric_store" {
+  role = "pod"
+  attach_metadata {
+    namespace = true
+  }
+}
+discovery.relabel "metric_store" {
+  targets = discovery.kubernetes.metric_store.targets
+  rule {
+    source_labels = ["__meta_kubernetes_namespace", "__meta_kubernetes_pod_name"]
+    regex = "(.+;.+)"
+    target_label = "__meta_kubernetes_namespace_pod"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_pod_label_color"]
+    target_label = "color"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_namespace_label_team"]
+    target_label = "team"
+  }
+}
+
+prometheus.relabel "metric_store" {
+  rule {
+    source_labels = ["namespace", "pod"]
+    regex = "(.+;.+)"
+    target_label = "__meta_kubernetes_namespace_pod"
+  }
+  forward_to = [prometheus.enrich.metric_store_ns.receiver]
+}
+prometheus.enrich "metric_store_ns" {
+  targets = discovery.relabel.metric_store.output
+  target_match_label = "__meta_kubernetes_namespace"
+  metrics_match_label = "namespace"
+  labels_to_copy = ["team"]
+  forward_to = [prometheus.enrich.metric_store_pod.receiver]
+}
+prometheus.enrich "metric_store_pod" {
+  targets = discovery.relabel.metric_store.output
+  target_match_label = "__meta_kubernetes_namespace_pod"
+  labels_to_copy = ["color"]
   forward_to = [prometheus.remote_write.metric_store.receiver]
 }
 
@@ -569,6 +612,10 @@ prometheus.remote_write "metric_store" {
       replacement = "metric-enrichment-test-cluster"
       target_label = "k8s_cluster_name"
     }
+    write_relabel_config {
+      regex = "__meta_kubernetes_namespace_pod"
+      action = "labeldrop"
+    }
   }
 
   wal {
@@ -576,61 +623,5 @@ prometheus.remote_write "metric_store" {
     min_keepalive_time = "5m"
     max_keepalive_time = "8h"
   }
-}
-// Destination: metric-enrichment (custom)
-otelcol.exporter.prometheus "metric_enrichment" {
-  forward_to = [prometheus.relabel.metric_enrichment.receiver]
-}
-
-// Discover pods with namespace labels attached
-discovery.kubernetes "metric_enrichment_pods" {
-  role = "pod"
-  attach_metadata {
-    namespace = true
-  }
-}
-// Create the matching label (<namespace>;<pod>) and the label of interest. Drop *all* other labels
-discovery.relabel "metric_enrichment_pods" {
-  targets = discovery.kubernetes.metric_enrichment_pods.targets
-  rule {
-    source_labels = ["__meta_kubernetes_namespace", "__meta_kubernetes_pod_name"]
-    regex = "(.+;.+)"
-    target_label = "temp_namespaced_pod"
-  }
-  rule {
-    source_labels = ["__meta_kubernetes_namespace_label_color"]
-    target_label = "color"
-  }
-  rule {
-    action = "labelkeep"
-    regex = "temp_namespaced_pod|color"
-  }
-}
-
-// Creating the matching label (<namespace>;<pod>) for the incoming metrics
-prometheus.relabel "metric_enrichment" {
-  rule {
-    source_labels = ["namespace", "pod"]
-    regex = "(.+;.+)"
-    target_label = "temp_namespaced_pod"
-  }
-  forward_to = [prometheus.enrich.metric_enrichment.receiver]
-}
-
-// Enrich the metrics with the combination of the two groups
-prometheus.enrich "metric_enrichment" {
-  targets = discovery.relabel.metric_enrichment_pods.output
-  target_match_label = "temp_namespaced_pod"
-  metrics_match_label = "temp_namespaced_pod"
-  forward_to = [prometheus.relabel.metric_enrichment_final.receiver]
-}
-
-// Drop the matching label
-prometheus.relabel "metric_enrichment_final" {
-  rule {
-    action = "labeldrop"
-    regex = "temp_namespaced_pod"
-  }
-  forward_to = [prometheus.remote_write.metric_store.receiver]
 }
 

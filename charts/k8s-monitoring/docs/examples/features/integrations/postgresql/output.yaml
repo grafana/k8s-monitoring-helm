@@ -184,7 +184,7 @@ data:
   self-reporting-metric.prom: |
     # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_build_info gauge
-    grafana_kubernetes_monitoring_build_info{version="3.7.5", namespace="default"} 1
+    grafana_kubernetes_monitoring_build_info{version="3.8.0", namespace="default"} 1
     # HELP grafana_kubernetes_monitoring_feature_info A metric to report the enabled features of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_feature_info gauge
     grafana_kubernetes_monitoring_feature_info{feature="podLogs", method="volumes", version="1.0.0"} 1
@@ -368,7 +368,7 @@ data:
     
       loki.process "pod_logs" {
         stage.match {
-          selector = "{tmp_container_runtime=~\"containerd|cri-o\"}"
+          selector = "{tmp_container_runtime=~\"containerd|cri-o|\"}"
           // the cri processing stage extracts the following k/v pairs: log, stream, time, flags
           stage.cri {
             max_partial_lines = 100
@@ -1487,7 +1487,7 @@ metadata:
   labels:
     app.kubernetes.io/name: k8smon-k8s-monitoring-add-finalizer
     app.kubernetes.io/instance: k8smon
-    helm.sh/chart: k8s-monitoring-3.7.5
+    helm.sh/chart: k8s-monitoring-3.8.0
   annotations:
     helm.sh/hook: post-install,post-upgrade
     helm.sh/hook-weight: "15"
@@ -1540,7 +1540,7 @@ metadata:
   labels:
     app.kubernetes.io/name: k8smon-k8s-monitoring-remove-alloy-and-finalizer
     app.kubernetes.io/instance: k8smon
-    helm.sh/chart: k8s-monitoring-3.7.5
+    helm.sh/chart: k8s-monitoring-3.8.0
   annotations:
     helm.sh/hook: pre-delete
     helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
