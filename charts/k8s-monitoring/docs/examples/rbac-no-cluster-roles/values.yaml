@@ -1,0 +1,59 @@
+cluster:
+  name: no-cluster-roles
+
+destinations:
+  - name: metric-store
+    type: prometheus
+    url: http://prometheus-server.prometheus.svc:9090/api/v1/write
+  - name: loki
+    type: loki
+    url: http://loki.loki.svc:3100/loki/api/v1/push
+    tenantId: 1
+    auth:
+      type: basic
+      username: loki
+      password: lokipassword
+
+clusterMetrics:
+  enabled: true
+  # These features require listing Nodes, which require ClusterRoles, so must be disabled.
+  kubelet:
+    enabled: false
+  kubeletResource:
+    enabled: false
+  kubeletProbes:
+    enabled: false
+  cadvisor:
+    enabled: false
+
+  kube-state-metrics:
+    namespaces: default
+    rbac:
+      useClusterRole: false
+
+clusterEvents:
+  enabled: true
+  namespaces: [default]
+
+podLogs:
+  enabled: true
+  namespaces: [default]
+
+collectorCommon:
+  alloy:
+    rbac:
+      namespaces: [default]
+
+alloy-metrics:
+  enabled: true
+
+alloy-singleton:
+  enabled: true
+
+alloy-logs:
+  enabled: true
+
+alloy-operator:
+  ownNamespaceOnly: true
+  rbac:
+    createClusterRoles: false
