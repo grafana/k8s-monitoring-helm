@@ -478,7 +478,7 @@ declare "cluster_metrics" {
 }
 cluster_metrics "feature" {
   metrics_destinations = [
-    prometheus.remote_write.metric_store.receiver,
+    prometheus.relabel.metric_store.receiver,
   ]
 }
 // Self Reporting
@@ -520,7 +520,7 @@ prometheus.relabel "kubernetes_monitoring_telemetry" {
     action = "keep"
   }
   forward_to = [
-    prometheus.remote_write.metric_store.receiver,
+    prometheus.relabel.metric_store.receiver,
   ]
 }
 
@@ -531,6 +531,58 @@ prometheus.relabel "kubernetes_monitoring_telemetry" {
 otelcol.exporter.prometheus "metric_store" {
   add_metric_suffixes = true
   resource_to_telemetry_conversion = false
+  forward_to = [prometheus.remote_write.metric_store.receiver]
+}
+discovery.kubernetes "metric_store" {
+  role = "pod"
+  attach_metadata {
+    namespace = true
+  }
+}
+discovery.relabel "metric_store" {
+  targets = discovery.kubernetes.metric_store.targets
+  rule {
+    source_labels = ["__meta_kubernetes_namespace", "__meta_kubernetes_pod_name"]
+    regex = "(.+;.+)"
+    target_label = "__meta_kubernetes_namespace_pod"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_pod_label_app_version"]
+    target_label = "app_version"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_pod_label_component"]
+    target_label = "component"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_namespace_label_team_name"]
+    target_label = "team_name"
+  }
+  rule {
+    source_labels = ["__meta_kubernetes_namespace_label_environment"]
+    target_label = "environment"
+  }
+}
+
+prometheus.relabel "metric_store" {
+  rule {
+    source_labels = ["namespace", "pod"]
+    regex = "(.+;.+)"
+    target_label = "__meta_kubernetes_namespace_pod"
+  }
+  forward_to = [prometheus.enrich.metric_store_ns.receiver]
+}
+prometheus.enrich "metric_store_ns" {
+  targets = discovery.relabel.metric_store.output
+  target_match_label = "__meta_kubernetes_namespace"
+  metrics_match_label = "namespace"
+  labels_to_copy = ["team_name","environment"]
+  forward_to = [prometheus.enrich.metric_store_pod.receiver]
+}
+prometheus.enrich "metric_store_pod" {
+  targets = discovery.relabel.metric_store.output
+  target_match_label = "__meta_kubernetes_namespace_pod"
+  labels_to_copy = ["app_version","component"]
   forward_to = [prometheus.remote_write.metric_store.receiver]
 }
 
@@ -567,6 +619,10 @@ prometheus.remote_write "metric_store" {
       regex = ""
       replacement = "metric-enrichment-example"
       target_label = "k8s_cluster_name"
+    }
+    write_relabel_config {
+      regex = "__meta_kubernetes_namespace_pod"
+      action = "labeldrop"
     }
   }
 
