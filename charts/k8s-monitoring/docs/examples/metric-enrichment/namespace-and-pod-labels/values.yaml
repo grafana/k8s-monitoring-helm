@@ -1,0 +1,23 @@
+---
+cluster:
+  name: metric-enrichment-example
+
+destinations:
+  - name: metric-store
+    type: prometheus
+    url: http://prometheus-server.prometheus.svc:9090/api/v1/write
+    metricEnrichment:
+      namespaceLabels:
+        - team_name
+        - environment
+      podLabels:
+        - app_version
+        - component
+
+clusterMetrics:
+  enabled: true
+
+alloy-metrics:
+  enabled: true
+  alloy:
+    stabilityLevel: experimental
