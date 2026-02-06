@@ -13,10 +13,10 @@ loki.process {{ include "helper.alloy_name" .name | quote }} {
 
 loki.write {{ include "helper.alloy_name" .name | quote }} {
   endpoint {
-{{- if .urlFrom }} 
+{{- if .urlFrom }}
     url = {{ .urlFrom }}
 {{- else }}
-    url = {{ .url | quote }} 
+    url = {{ .url | quote }}
 {{- end }}
 {{- if .timeout }}
     remote_timeout = {{ .timeout | quote }}
@@ -146,6 +146,23 @@ loki.write {{ include "helper.alloy_name" .name | quote }} {
   {{- end }}
 {{- end }}
   }
+{{- if .writeAheadLog.enabled }}
+  wal {
+    enabled = true
+{{- if .writeAheadLog.minReadFrequency }}
+    min_read_frequency = {{ .writeAheadLog.minReadFrequency | quote }}
+{{- end }}
+{{- if .writeAheadLog.maxReadFrequency }}
+    max_read_frequency = {{ .writeAheadLog.maxReadFrequency | quote }}
+{{- end }}
+{{- if .writeAheadLog.drainTimeout }}
+    drain_timeout = {{ .writeAheadLog.drainTimeout | quote }}
+{{- end }}
+{{- if .writeAheadLog.maxSegmentAge }}
+    max_segment_age = {{ .writeAheadLog.maxSegmentAge | quote }}
+{{- end }}
+  }
+{{- end }}
 }
 {{- end }}
 {{- end }}
