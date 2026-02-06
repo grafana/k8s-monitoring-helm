@@ -1,0 +1,694 @@
+should render enrichment combined with profile processing rules:
+  1: |
+    |-
+      declare "profiles_receiver" {
+        argument "profiles_destinations" {
+          comment = "Must be a list of profile destinations where collected profiles should be forwarded to"
+        }
+
+        // Profiles: Kubernetes pod discovery for enrichment
+        discovery.kubernetes "pods" {
+          role = "pod"
+        }
+
+        discovery.relabel "pods" {
+          targets = discovery.kubernetes.pods.targets
+          rule {
+            source_labels = ["__meta_kubernetes_pod_phase"]
+            regex = "Succeeded|Failed|Completed"
+            action = "drop"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_namespace"]
+            target_label = "namespace"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_pod_name"]
+            target_label = "pod"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_pod_node_name"]
+            target_label = "node"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_pod_container_name"]
+            target_label = "container"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_pod_ip"]
+            target_label = "pod_ip"
+          }
+
+          // Set service_name by choosing the first value found from the following ordered list:
+          // - pod.annotation[resource.opentelemetry.io/service.name]
+          // - pod.label[app.kubernetes.io/instance]
+          // - pod.label[app.kubernetes.io/name]
+          // - k8s.container.name
+          rule {
+            action = "replace"
+            source_labels = [
+              "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_name",
+              "__meta_kubernetes_pod_label_app_kubernetes_io_instance",
+              "__meta_kubernetes_pod_label_app_kubernetes_io_name",
+              "container",
+            ]
+            separator = ";"
+            regex = "^(?:;*)?([^;]+).*$"
+            replacement = "$1"
+            target_label = "service_name"
+          }
+
+          // Set service_namespace by choosing the first value found from the following ordered list:
+          // - pod.annotation[resource.opentelemetry.io/service.namespace]
+          // - pod.namespace
+          rule {
+            action = "replace"
+            source_labels = [
+              "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_namespace",
+              "namespace",
+            ]
+            separator = ";"
+            regex = "^(?:;*)?([^;]+).*$"
+            replacement = "$1"
+            target_label = "service_namespace"
+          }
+
+          // Set service_instance_id by choosing the first value found from the following ordered list:
+          // - pod.annotation[resource.opentelemetry.io/service.instance.id]
+          // - concat([k8s.namespace.name, k8s.pod.name, k8s.container.name], '.')
+          rule {
+            source_labels = ["__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_instance_id"]
+            target_label = "service_instance_id"
+          }
+          rule {
+            source_labels = ["service_instance_id", "namespace", "pod", "container"]
+            separator = "."
+            regex = "^\\.([^.]+\\.[^.]+\\.[^.]+)$"
+            target_label = "service_instance_id"
+          }
+
+          rule {
+            replacement = "alloy/pyroscope.receive_http"
+            target_label = "source"
+          }
+        }
+
+        pyroscope.receive_http "default" {
+          http {
+            listen_address = "0.0.0.0"
+            listen_port = "4040"
+          }
+          forward_to = [pyroscope.enrich.metadata.receiver]
+        }
+
+        pyroscope.enrich "metadata" {
+          targets = discovery.relabel.pods.output
+          target_match_label = "service_name"
+          forward_to = [pyroscope.relabel.default.receiver]
+        }
+
+        pyroscope.relabel "default" {
+          rule {
+            source_labels = ["env"]
+            target_label = "__tmp_hash"
+            action = "hashmod"
+            modulus = 2
+          }
+          rule {
+            source_labels = ["__tmp_hash"]
+            action       = "drop"
+            regex        = "^1$"
+          }
+
+          forward_to = argument.profiles_destinations.value
+        }
+      }
+should render enrichment with custom match labels:
+  1: |
+    |-
+      declare "profiles_receiver" {
+        argument "profiles_destinations" {
+          comment = "Must be a list of profile destinations where collected profiles should be forwarded to"
+        }
+
+        // Profiles: Kubernetes pod discovery for enrichment
+        discovery.kubernetes "pods" {
+          role = "pod"
+        }
+
+        discovery.relabel "pods" {
+          targets = discovery.kubernetes.pods.targets
+          rule {
+            source_labels = ["__meta_kubernetes_pod_phase"]
+            regex = "Succeeded|Failed|Completed"
+            action = "drop"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_namespace"]
+            target_label = "namespace"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_pod_name"]
+            target_label = "pod"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_pod_node_name"]
+            target_label = "node"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_pod_container_name"]
+            target_label = "container"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_pod_ip"]
+            target_label = "pod_ip"
+          }
+
+          // Set service_name by choosing the first value found from the following ordered list:
+          // - pod.annotation[resource.opentelemetry.io/service.name]
+          // - pod.label[app.kubernetes.io/instance]
+          // - pod.label[app.kubernetes.io/name]
+          // - k8s.container.name
+          rule {
+            action = "replace"
+            source_labels = [
+              "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_name",
+              "__meta_kubernetes_pod_label_app_kubernetes_io_instance",
+              "__meta_kubernetes_pod_label_app_kubernetes_io_name",
+              "container",
+            ]
+            separator = ";"
+            regex = "^(?:;*)?([^;]+).*$"
+            replacement = "$1"
+            target_label = "service_name"
+          }
+
+          // Set service_namespace by choosing the first value found from the following ordered list:
+          // - pod.annotation[resource.opentelemetry.io/service.namespace]
+          // - pod.namespace
+          rule {
+            action = "replace"
+            source_labels = [
+              "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_namespace",
+              "namespace",
+            ]
+            separator = ";"
+            regex = "^(?:;*)?([^;]+).*$"
+            replacement = "$1"
+            target_label = "service_namespace"
+          }
+
+          // Set service_instance_id by choosing the first value found from the following ordered list:
+          // - pod.annotation[resource.opentelemetry.io/service.instance.id]
+          // - concat([k8s.namespace.name, k8s.pod.name, k8s.container.name], '.')
+          rule {
+            source_labels = ["__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_instance_id"]
+            target_label = "service_instance_id"
+          }
+          rule {
+            source_labels = ["service_instance_id", "namespace", "pod", "container"]
+            separator = "."
+            regex = "^\\.([^.]+\\.[^.]+\\.[^.]+)$"
+            target_label = "service_instance_id"
+          }
+
+          rule {
+            replacement = "alloy/pyroscope.receive_http"
+            target_label = "source"
+          }
+        }
+
+        pyroscope.receive_http "default" {
+          http {
+            listen_address = "0.0.0.0"
+            listen_port = "4040"
+          }
+          forward_to = [pyroscope.enrich.metadata.receiver]
+        }
+
+        pyroscope.enrich "metadata" {
+          targets = discovery.relabel.pods.output
+          target_match_label = "pod_ip"
+          profiles_match_label = "service_name"
+          labels_to_copy = ["namespace","pod","node"]
+          forward_to = argument.profiles_destinations.value
+        }
+      }
+should render enrichment with default settings:
+  1: |
+    |-
+      declare "profiles_receiver" {
+        argument "profiles_destinations" {
+          comment = "Must be a list of profile destinations where collected profiles should be forwarded to"
+        }
+
+        // Profiles: Kubernetes pod discovery for enrichment
+        discovery.kubernetes "pods" {
+          role = "pod"
+        }
+
+        discovery.relabel "pods" {
+          targets = discovery.kubernetes.pods.targets
+          rule {
+            source_labels = ["__meta_kubernetes_pod_phase"]
+            regex = "Succeeded|Failed|Completed"
+            action = "drop"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_namespace"]
+            target_label = "namespace"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_pod_name"]
+            target_label = "pod"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_pod_node_name"]
+            target_label = "node"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_pod_container_name"]
+            target_label = "container"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_pod_ip"]
+            target_label = "pod_ip"
+          }
+
+          // Set service_name by choosing the first value found from the following ordered list:
+          // - pod.annotation[resource.opentelemetry.io/service.name]
+          // - pod.label[app.kubernetes.io/instance]
+          // - pod.label[app.kubernetes.io/name]
+          // - k8s.container.name
+          rule {
+            action = "replace"
+            source_labels = [
+              "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_name",
+              "__meta_kubernetes_pod_label_app_kubernetes_io_instance",
+              "__meta_kubernetes_pod_label_app_kubernetes_io_name",
+              "container",
+            ]
+            separator = ";"
+            regex = "^(?:;*)?([^;]+).*$"
+            replacement = "$1"
+            target_label = "service_name"
+          }
+
+          // Set service_namespace by choosing the first value found from the following ordered list:
+          // - pod.annotation[resource.opentelemetry.io/service.namespace]
+          // - pod.namespace
+          rule {
+            action = "replace"
+            source_labels = [
+              "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_namespace",
+              "namespace",
+            ]
+            separator = ";"
+            regex = "^(?:;*)?([^;]+).*$"
+            replacement = "$1"
+            target_label = "service_namespace"
+          }
+
+          // Set service_instance_id by choosing the first value found from the following ordered list:
+          // - pod.annotation[resource.opentelemetry.io/service.instance.id]
+          // - concat([k8s.namespace.name, k8s.pod.name, k8s.container.name], '.')
+          rule {
+            source_labels = ["__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_instance_id"]
+            target_label = "service_instance_id"
+          }
+          rule {
+            source_labels = ["service_instance_id", "namespace", "pod", "container"]
+            separator = "."
+            regex = "^\\.([^.]+\\.[^.]+\\.[^.]+)$"
+            target_label = "service_instance_id"
+          }
+
+          rule {
+            replacement = "alloy/pyroscope.receive_http"
+            target_label = "source"
+          }
+        }
+
+        pyroscope.receive_http "default" {
+          http {
+            listen_address = "0.0.0.0"
+            listen_port = "4040"
+          }
+          forward_to = [pyroscope.enrich.metadata.receiver]
+        }
+
+        pyroscope.enrich "metadata" {
+          targets = discovery.relabel.pods.output
+          target_match_label = "service_name"
+          forward_to = argument.profiles_destinations.value
+        }
+      }
+should render enrichment with extra discovery rules:
+  1: |
+    |-
+      declare "profiles_receiver" {
+        argument "profiles_destinations" {
+          comment = "Must be a list of profile destinations where collected profiles should be forwarded to"
+        }
+
+        // Profiles: Kubernetes pod discovery for enrichment
+        discovery.kubernetes "pods" {
+          role = "pod"
+        }
+
+        discovery.relabel "pods" {
+          targets = discovery.kubernetes.pods.targets
+          rule {
+            source_labels = ["__meta_kubernetes_pod_phase"]
+            regex = "Succeeded|Failed|Completed"
+            action = "drop"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_namespace"]
+            target_label = "namespace"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_pod_name"]
+            target_label = "pod"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_pod_node_name"]
+            target_label = "node"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_pod_container_name"]
+            target_label = "container"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_pod_ip"]
+            target_label = "pod_ip"
+          }
+
+          // Set service_name by choosing the first value found from the following ordered list:
+          // - pod.annotation[resource.opentelemetry.io/service.name]
+          // - pod.label[app.kubernetes.io/instance]
+          // - pod.label[app.kubernetes.io/name]
+          // - k8s.container.name
+          rule {
+            action = "replace"
+            source_labels = [
+              "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_name",
+              "__meta_kubernetes_pod_label_app_kubernetes_io_instance",
+              "__meta_kubernetes_pod_label_app_kubernetes_io_name",
+              "container",
+            ]
+            separator = ";"
+            regex = "^(?:;*)?([^;]+).*$"
+            replacement = "$1"
+            target_label = "service_name"
+          }
+
+          // Set service_namespace by choosing the first value found from the following ordered list:
+          // - pod.annotation[resource.opentelemetry.io/service.namespace]
+          // - pod.namespace
+          rule {
+            action = "replace"
+            source_labels = [
+              "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_namespace",
+              "namespace",
+            ]
+            separator = ";"
+            regex = "^(?:;*)?([^;]+).*$"
+            replacement = "$1"
+            target_label = "service_namespace"
+          }
+
+          // Set service_instance_id by choosing the first value found from the following ordered list:
+          // - pod.annotation[resource.opentelemetry.io/service.instance.id]
+          // - concat([k8s.namespace.name, k8s.pod.name, k8s.container.name], '.')
+          rule {
+            source_labels = ["__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_instance_id"]
+            target_label = "service_instance_id"
+          }
+          rule {
+            source_labels = ["service_instance_id", "namespace", "pod", "container"]
+            separator = "."
+            regex = "^\\.([^.]+\\.[^.]+\\.[^.]+)$"
+            target_label = "service_instance_id"
+          }
+
+          rule {
+            replacement = "alloy/pyroscope.receive_http"
+            target_label = "source"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_pod_label_team"]
+            target_label = "team"
+          }
+
+        }
+
+        pyroscope.receive_http "default" {
+          http {
+            listen_address = "0.0.0.0"
+            listen_port = "4040"
+          }
+          forward_to = [pyroscope.enrich.metadata.receiver]
+        }
+
+        pyroscope.enrich "metadata" {
+          targets = discovery.relabel.pods.output
+          target_match_label = "service_name"
+          forward_to = argument.profiles_destinations.value
+        }
+      }
+should render enrichment with label and annotation selectors:
+  1: |
+    |-
+      declare "profiles_receiver" {
+        argument "profiles_destinations" {
+          comment = "Must be a list of profile destinations where collected profiles should be forwarded to"
+        }
+
+        // Profiles: Kubernetes pod discovery for enrichment
+        discovery.kubernetes "pods" {
+          role = "pod"
+          selectors {
+            role = "pod"
+            label = "app.kubernetes.io/name=myapp"
+          }
+        }
+
+        discovery.relabel "pods" {
+          targets = discovery.kubernetes.pods.targets
+          rule {
+            source_labels = ["__meta_kubernetes_pod_phase"]
+            regex = "Succeeded|Failed|Completed"
+            action = "drop"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_namespace"]
+            target_label = "namespace"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_pod_annotation_color"]
+            regex = "green"
+            action = "keep"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_pod_name"]
+            target_label = "pod"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_pod_node_name"]
+            target_label = "node"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_pod_container_name"]
+            target_label = "container"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_pod_ip"]
+            target_label = "pod_ip"
+          }
+
+          // Set service_name by choosing the first value found from the following ordered list:
+          // - pod.annotation[resource.opentelemetry.io/service.name]
+          // - pod.label[app.kubernetes.io/instance]
+          // - pod.label[app.kubernetes.io/name]
+          // - k8s.container.name
+          rule {
+            action = "replace"
+            source_labels = [
+              "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_name",
+              "__meta_kubernetes_pod_label_app_kubernetes_io_instance",
+              "__meta_kubernetes_pod_label_app_kubernetes_io_name",
+              "container",
+            ]
+            separator = ";"
+            regex = "^(?:;*)?([^;]+).*$"
+            replacement = "$1"
+            target_label = "service_name"
+          }
+
+          // Set service_namespace by choosing the first value found from the following ordered list:
+          // - pod.annotation[resource.opentelemetry.io/service.namespace]
+          // - pod.namespace
+          rule {
+            action = "replace"
+            source_labels = [
+              "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_namespace",
+              "namespace",
+            ]
+            separator = ";"
+            regex = "^(?:;*)?([^;]+).*$"
+            replacement = "$1"
+            target_label = "service_namespace"
+          }
+
+          // Set service_instance_id by choosing the first value found from the following ordered list:
+          // - pod.annotation[resource.opentelemetry.io/service.instance.id]
+          // - concat([k8s.namespace.name, k8s.pod.name, k8s.container.name], '.')
+          rule {
+            source_labels = ["__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_instance_id"]
+            target_label = "service_instance_id"
+          }
+          rule {
+            source_labels = ["service_instance_id", "namespace", "pod", "container"]
+            separator = "."
+            regex = "^\\.([^.]+\\.[^.]+\\.[^.]+)$"
+            target_label = "service_instance_id"
+          }
+
+          rule {
+            replacement = "alloy/pyroscope.receive_http"
+            target_label = "source"
+          }
+        }
+
+        pyroscope.receive_http "default" {
+          http {
+            listen_address = "0.0.0.0"
+            listen_port = "4040"
+          }
+          forward_to = [pyroscope.enrich.metadata.receiver]
+        }
+
+        pyroscope.enrich "metadata" {
+          targets = discovery.relabel.pods.output
+          target_match_label = "service_name"
+          forward_to = argument.profiles_destinations.value
+        }
+      }
+should render enrichment with namespace filtering:
+  1: |
+    |-
+      declare "profiles_receiver" {
+        argument "profiles_destinations" {
+          comment = "Must be a list of profile destinations where collected profiles should be forwarded to"
+        }
+
+        // Profiles: Kubernetes pod discovery for enrichment
+        discovery.kubernetes "pods" {
+          role = "pod"
+          namespaces {
+            names = ["production","staging"]
+          }
+        }
+
+        discovery.relabel "pods" {
+          targets = discovery.kubernetes.pods.targets
+          rule {
+            source_labels = ["__meta_kubernetes_pod_phase"]
+            regex = "Succeeded|Failed|Completed"
+            action = "drop"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_namespace"]
+            target_label = "namespace"
+          }
+          rule {
+            source_labels = ["namespace"]
+            regex = "kube-system|kube-public"
+            action = "drop"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_pod_name"]
+            target_label = "pod"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_pod_node_name"]
+            target_label = "node"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_pod_container_name"]
+            target_label = "container"
+          }
+          rule {
+            source_labels = ["__meta_kubernetes_pod_ip"]
+            target_label = "pod_ip"
+          }
+
+          // Set service_name by choosing the first value found from the following ordered list:
+          // - pod.annotation[resource.opentelemetry.io/service.name]
+          // - pod.label[app.kubernetes.io/instance]
+          // - pod.label[app.kubernetes.io/name]
+          // - k8s.container.name
+          rule {
+            action = "replace"
+            source_labels = [
+              "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_name",
+              "__meta_kubernetes_pod_label_app_kubernetes_io_instance",
+              "__meta_kubernetes_pod_label_app_kubernetes_io_name",
+              "container",
+            ]
+            separator = ";"
+            regex = "^(?:;*)?([^;]+).*$"
+            replacement = "$1"
+            target_label = "service_name"
+          }
+
+          // Set service_namespace by choosing the first value found from the following ordered list:
+          // - pod.annotation[resource.opentelemetry.io/service.namespace]
+          // - pod.namespace
+          rule {
+            action = "replace"
+            source_labels = [
+              "__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_namespace",
+              "namespace",
+            ]
+            separator = ";"
+            regex = "^(?:;*)?([^;]+).*$"
+            replacement = "$1"
+            target_label = "service_namespace"
+          }
+
+          // Set service_instance_id by choosing the first value found from the following ordered list:
+          // - pod.annotation[resource.opentelemetry.io/service.instance.id]
+          // - concat([k8s.namespace.name, k8s.pod.name, k8s.container.name], '.')
+          rule {
+            source_labels = ["__meta_kubernetes_pod_annotation_resource_opentelemetry_io_service_instance_id"]
+            target_label = "service_instance_id"
+          }
+          rule {
+            source_labels = ["service_instance_id", "namespace", "pod", "container"]
+            separator = "."
+            regex = "^\\.([^.]+\\.[^.]+\\.[^.]+)$"
+            target_label = "service_instance_id"
+          }
+
+          rule {
+            replacement = "alloy/pyroscope.receive_http"
+            target_label = "source"
+          }
+        }
+
+        pyroscope.receive_http "default" {
+          http {
+            listen_address = "0.0.0.0"
+            listen_port = "4040"
+          }
+          forward_to = [pyroscope.enrich.metadata.receiver]
+        }
+
+        pyroscope.enrich "metadata" {
+          targets = discovery.relabel.pods.output
+          target_match_label = "service_name"
+          forward_to = argument.profiles_destinations.value
+        }
+      }
