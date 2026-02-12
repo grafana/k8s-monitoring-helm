@@ -1,0 +1,324 @@
+creates enrichment components combined with logProcessingStages:
+  1: |
+    |
+      // Destination: test (loki)
+      otelcol.exporter.loki "test" {
+        forward_to = [loki.process.test.receiver]
+      }
+
+      loki.process "test" {
+        stage.drop {
+          source = "level"
+          value = "debug"
+        }
+
+        forward_to = [loki.relabel.test.receiver]
+      }
+
+      discovery.kubernetes "test" {
+        role = "pod"
+        attach_metadata {
+          namespace = true
+        }
+      }
+      discovery.relabel "test" {
+        targets = discovery.kubernetes.test.targets
+        rule {
+          source_labels = ["__meta_kubernetes_namespace", "__meta_kubernetes_pod_name"]
+          regex = "(.+;.+)"
+          target_label = "__meta_kubernetes_namespace_pod"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_pod_label_app"]
+          target_label = "app"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_namespace_label_team"]
+          target_label = "team"
+        }
+      }
+
+      loki.relabel "test" {
+        rule {
+          source_labels = ["namespace", "pod"]
+          regex = "(.+;.+)"
+          target_label = "__meta_kubernetes_namespace_pod"
+        }
+        forward_to = [loki.enrich.test_ns.receiver]
+      }
+      loki.enrich "test_ns" {
+        targets = discovery.relabel.test.output
+        target_match_label = "__meta_kubernetes_namespace"
+        logs_match_label = "namespace"
+        labels_to_copy = ["team"]
+        forward_to = [loki.enrich.test_pod.receiver]
+      }
+      loki.enrich "test_pod" {
+        targets = discovery.relabel.test.output
+        target_match_label = "__meta_kubernetes_namespace_pod"
+        labels_to_copy = ["app"]
+        forward_to = [loki.relabel.test_cleanup.receiver]
+      }
+
+      loki.relabel "test_cleanup" {
+        rule {
+          regex = "__meta_kubernetes_namespace_pod"
+          action = "labeldrop"
+        }
+        forward_to = [loki.write.test.receiver]
+      }
+
+      loki.write "test" {
+        endpoint {
+          url = "https://loki.example.com"
+          retry_on_http_429 = true
+          tls_config {
+            insecure_skip_verify = false
+          }
+          min_backoff_period = "500ms"
+          max_backoff_period = "5m"
+          max_backoff_retries = "10"
+        }
+        external_labels = {
+          "cluster" = "test-cluster",
+          "k8s_cluster_name" = "test-cluster",
+        }
+      }
+creates enrichment components for both namespace and pod labels:
+  1: |
+    |
+      // Destination: test (loki)
+      otelcol.exporter.loki "test" {
+        forward_to = [loki.relabel.test.receiver]
+      }
+
+      discovery.kubernetes "test" {
+        role = "pod"
+        attach_metadata {
+          namespace = true
+        }
+      }
+      discovery.relabel "test" {
+        targets = discovery.kubernetes.test.targets
+        rule {
+          source_labels = ["__meta_kubernetes_namespace", "__meta_kubernetes_pod_name"]
+          regex = "(.+;.+)"
+          target_label = "__meta_kubernetes_namespace_pod"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_pod_label_app"]
+          target_label = "app"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_namespace_label_team"]
+          target_label = "team"
+        }
+      }
+
+      loki.relabel "test" {
+        rule {
+          source_labels = ["namespace", "pod"]
+          regex = "(.+;.+)"
+          target_label = "__meta_kubernetes_namespace_pod"
+        }
+        forward_to = [loki.enrich.test_ns.receiver]
+      }
+      loki.enrich "test_ns" {
+        targets = discovery.relabel.test.output
+        target_match_label = "__meta_kubernetes_namespace"
+        logs_match_label = "namespace"
+        labels_to_copy = ["team"]
+        forward_to = [loki.enrich.test_pod.receiver]
+      }
+      loki.enrich "test_pod" {
+        targets = discovery.relabel.test.output
+        target_match_label = "__meta_kubernetes_namespace_pod"
+        labels_to_copy = ["app"]
+        forward_to = [loki.relabel.test_cleanup.receiver]
+      }
+
+      loki.relabel "test_cleanup" {
+        rule {
+          regex = "__meta_kubernetes_namespace_pod"
+          action = "labeldrop"
+        }
+        forward_to = [loki.write.test.receiver]
+      }
+
+      loki.write "test" {
+        endpoint {
+          url = "https://loki.example.com"
+          retry_on_http_429 = true
+          tls_config {
+            insecure_skip_verify = false
+          }
+          min_backoff_period = "500ms"
+          max_backoff_period = "5m"
+          max_backoff_retries = "10"
+        }
+        external_labels = {
+          "cluster" = "test-cluster",
+          "k8s_cluster_name" = "test-cluster",
+        }
+      }
+creates enrichment components for namespace labels only:
+  1: |
+    |
+      // Destination: test (loki)
+      otelcol.exporter.loki "test" {
+        forward_to = [loki.relabel.test.receiver]
+      }
+
+      discovery.kubernetes "test" {
+        role = "pod"
+        attach_metadata {
+          namespace = true
+        }
+      }
+      discovery.relabel "test" {
+        targets = discovery.kubernetes.test.targets
+        rule {
+          source_labels = ["__meta_kubernetes_namespace_label_team"]
+          target_label = "team"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_namespace_label_environment"]
+          target_label = "environment"
+        }
+      }
+
+      loki.relabel "test" {
+        rule {
+          source_labels = ["namespace", "pod"]
+          regex = "(.+;.+)"
+          target_label = "__meta_kubernetes_namespace_pod"
+        }
+        forward_to = [loki.enrich.test_ns.receiver]
+      }
+      loki.enrich "test_ns" {
+        targets = discovery.relabel.test.output
+        target_match_label = "__meta_kubernetes_namespace"
+        logs_match_label = "namespace"
+        labels_to_copy = ["team","environment"]
+        forward_to = [loki.relabel.test_cleanup.receiver]
+      }
+
+      loki.relabel "test_cleanup" {
+        rule {
+          regex = "__meta_kubernetes_namespace_pod"
+          action = "labeldrop"
+        }
+        forward_to = [loki.write.test.receiver]
+      }
+
+      loki.write "test" {
+        endpoint {
+          url = "https://loki.example.com"
+          retry_on_http_429 = true
+          tls_config {
+            insecure_skip_verify = false
+          }
+          min_backoff_period = "500ms"
+          max_backoff_period = "5m"
+          max_backoff_retries = "10"
+        }
+        external_labels = {
+          "cluster" = "test-cluster",
+          "k8s_cluster_name" = "test-cluster",
+        }
+      }
+creates enrichment components for pod labels only:
+  1: |
+    |
+      // Destination: test (loki)
+      otelcol.exporter.loki "test" {
+        forward_to = [loki.relabel.test.receiver]
+      }
+
+      discovery.kubernetes "test" {
+        role = "pod"
+        selectors {
+          role = "pod"
+          label = "app,version"
+        }
+      }
+      discovery.relabel "test" {
+        targets = discovery.kubernetes.test.targets
+        rule {
+          source_labels = ["__meta_kubernetes_namespace", "__meta_kubernetes_pod_name"]
+          regex = "(.+;.+)"
+          target_label = "__meta_kubernetes_namespace_pod"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_pod_label_app"]
+          target_label = "app"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_pod_label_version"]
+          target_label = "version"
+        }
+      }
+
+      loki.relabel "test" {
+        rule {
+          source_labels = ["namespace", "pod"]
+          regex = "(.+;.+)"
+          target_label = "__meta_kubernetes_namespace_pod"
+        }
+        forward_to = [loki.enrich.test_pod.receiver]
+      }
+      loki.enrich "test_pod" {
+        targets = discovery.relabel.test.output
+        target_match_label = "__meta_kubernetes_namespace_pod"
+        labels_to_copy = ["app","version"]
+        forward_to = [loki.relabel.test_cleanup.receiver]
+      }
+
+      loki.relabel "test_cleanup" {
+        rule {
+          regex = "__meta_kubernetes_namespace_pod"
+          action = "labeldrop"
+        }
+        forward_to = [loki.write.test.receiver]
+      }
+
+      loki.write "test" {
+        endpoint {
+          url = "https://loki.example.com"
+          retry_on_http_429 = true
+          tls_config {
+            insecure_skip_verify = false
+          }
+          min_backoff_period = "500ms"
+          max_backoff_period = "5m"
+          max_backoff_retries = "10"
+        }
+        external_labels = {
+          "cluster" = "test-cluster",
+          "k8s_cluster_name" = "test-cluster",
+        }
+      }
+creates the Alloy components for a Loki destination:
+  1: |
+    |
+      // Destination: test (loki)
+      otelcol.exporter.loki "test" {
+        forward_to = [loki.write.test.receiver]
+      }
+
+      loki.write "test" {
+        endpoint {
+          url = "https://loki.example.com"
+          retry_on_http_429 = true
+          tls_config {
+            insecure_skip_verify = false
+          }
+          min_backoff_period = "500ms"
+          max_backoff_period = "5m"
+          max_backoff_retries = "10"
+        }
+        external_labels = {
+          "cluster" = "test-cluster",
+          "k8s_cluster_name" = "test-cluster",
+        }
+      }

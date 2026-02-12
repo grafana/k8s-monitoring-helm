@@ -1,5 +1,8 @@
 {{- define "destinations.loki.alloy" }}
 {{- with .destination }}
+{{- $hasNamespaceLabelLogEnrichment := gt (len (dig "logEnrichment" "namespaceLabels" list .)) 0 }}
+{{- $hasPodLabelLogEnrichment := gt (len (dig "logEnrichment" "podLabels" list .)) 0 }}
+{{- $hasLogEnrichment := or $hasNamespaceLabelLogEnrichment $hasPodLabelLogEnrichment }}
 otelcol.exporter.loki {{ include "helper.alloy_name" .name | quote }} {
   forward_to = [{{ include "destinations.loki.alloy.loki.logs.target" . }}]
 }
@@ -7,16 +10,102 @@ otelcol.exporter.loki {{ include "helper.alloy_name" .name | quote }} {
 
 loki.process {{ include "helper.alloy_name" .name | quote }} {
 {{ .logProcessingStages | indent 2 }}
+{{- if $hasLogEnrichment }}
+  forward_to = [loki.relabel.{{ include "helper.alloy_name" .name }}.receiver]
+{{- else }}
+  forward_to = [loki.write.{{ include "helper.alloy_name" .name }}.receiver]
+{{- end }}
+}
+{{- end }}
+{{- if $hasLogEnrichment }}
+
+discovery.kubernetes {{ include "helper.alloy_name" .name | quote }} {
+  role = "pod"
+{{- if not $hasNamespaceLabelLogEnrichment }}
+  selectors {
+    role = "pod"
+    label = {{ .logEnrichment.podLabels | join "," | quote }}
+  }
+{{- else }}
+  attach_metadata {
+    namespace = true
+  }
+{{- end }}
+}
+discovery.relabel {{ include "helper.alloy_name" .name | quote }} {
+  targets = discovery.kubernetes.{{ include "helper.alloy_name" .name }}.targets
+{{- if $hasPodLabelLogEnrichment }}
+  rule {
+    source_labels = ["__meta_kubernetes_namespace", "__meta_kubernetes_pod_name"]
+    regex = "(.+;.+)"
+    target_label = "__meta_kubernetes_namespace_pod"
+  }
+{{- end }}
+{{- range $label := .logEnrichment.podLabels }}
+  rule {
+    source_labels = [{{ include "pod_label" $label | quote }}]
+    target_label = {{ $label | quote }}
+  }
+{{- end }}
+{{- range $label := .logEnrichment.namespaceLabels }}
+  rule {
+    source_labels = [{{ include "namespace_label" $label | quote }}]
+    target_label = {{ $label | quote }}
+  }
+{{- end }}
+}
+
+loki.relabel {{ include "helper.alloy_name" .name | quote }} {
+  rule {
+    source_labels = ["namespace", "pod"]
+    regex = "(.+;.+)"
+    target_label = "__meta_kubernetes_namespace_pod"
+  }
+{{- if $hasNamespaceLabelLogEnrichment }}
+  forward_to = [loki.enrich.{{ include "helper.alloy_name" .name }}_ns.receiver]
+{{- else if $hasPodLabelLogEnrichment }}
+  forward_to = [loki.enrich.{{ include "helper.alloy_name" .name }}_pod.receiver]
+{{- end }}
+}
+
+{{- if $hasNamespaceLabelLogEnrichment }}
+loki.enrich "{{ include "helper.alloy_name" .name }}_ns" {
+  targets = discovery.relabel.{{ include "helper.alloy_name" .name }}.output
+  target_match_label = "__meta_kubernetes_namespace"
+  logs_match_label = "namespace"
+  labels_to_copy = {{ .logEnrichment.namespaceLabels | toJson }}
+{{- if $hasPodLabelLogEnrichment }}
+  forward_to = [loki.enrich.{{ include "helper.alloy_name" .name }}_pod.receiver]
+{{- else }}
+  forward_to = [loki.relabel.{{ include "helper.alloy_name" .name }}_cleanup.receiver]
+{{- end }}
+}
+{{- end }}
+
+{{- if $hasPodLabelLogEnrichment }}
+loki.enrich "{{ include "helper.alloy_name" .name }}_pod" {
+  targets = discovery.relabel.{{ include "helper.alloy_name" .name }}.output
+  target_match_label = "__meta_kubernetes_namespace_pod"
+  labels_to_copy = {{ .logEnrichment.podLabels | toJson }}
+  forward_to = [loki.relabel.{{ include "helper.alloy_name" .name }}_cleanup.receiver]
+}
+{{- end }}
+
+loki.relabel "{{ include "helper.alloy_name" .name }}_cleanup" {
+  rule {
+    regex = "__meta_kubernetes_namespace_pod"
+    action = "labeldrop"
+  }
   forward_to = [loki.write.{{ include "helper.alloy_name" .name }}.receiver]
 }
 {{- end }}
 
 loki.write {{ include "helper.alloy_name" .name | quote }} {
   endpoint {
-{{- if .urlFrom }} 
+{{- if .urlFrom }}
     url = {{ .urlFrom }}
 {{- else }}
-    url = {{ .url | quote }} 
+    url = {{ .url | quote }}
 {{- end }}
 {{- if .timeout }}
     remote_timeout = {{ .timeout | quote }}
@@ -163,8 +252,13 @@ loki.write {{ include "helper.alloy_name" .name | quote }} {
 {{- end -}}
 
 {{- define "destinations.loki.alloy.loki.logs.target" }}
+{{- $hasNamespaceLabelLogEnrichment := gt (len (dig "logEnrichment" "namespaceLabels" list .)) 0 }}
+{{- $hasPodLabelLogEnrichment := gt (len (dig "logEnrichment" "podLabels" list .)) 0 }}
+{{- $hasLogEnrichment := or $hasNamespaceLabelLogEnrichment $hasPodLabelLogEnrichment }}
 {{- if .logProcessingStages -}}
 loki.process.{{ include "helper.alloy_name" .name }}.receiver
+{{- else if $hasLogEnrichment -}}
+loki.relabel.{{ include "helper.alloy_name" .name }}.receiver
 {{- else -}}
 loki.write.{{ include "helper.alloy_name" .name }}.receiver
 {{- end -}}
