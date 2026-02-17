@@ -112,8 +112,10 @@ clusterMetrics:
 
 Local config
 ```yaml
+collectors: {...}
+
 # kubelet, kubeletResources, cadvisor Alloy configuration
-kubeletMetrics:
+clusterMetrics:
   enabled: true
 
 # Node Exporter, Windows Exporter, Kepler Alloy configuration
@@ -131,6 +133,12 @@ telemetryServices:
 
 Remote config (i.e. for Instrumentation Hub)
 ```yaml
+collectorCommon:
+  remoteConfig:
+    enabled: true
+    url: ...
+    auth: {...}
+
 telemetryServices:
   kube-state-metrics:
     deploy: true
