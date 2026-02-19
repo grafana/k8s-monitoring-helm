@@ -1,67 +1,25 @@
-# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
-suite: Test - Cluster Metrics - Feature Validation
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces rule:empty-lines
+suite: Test - Cluster Metrics - Validation
 templates:
   - configmap.yaml
 tests:
-  - it: warns about a disabled, but deployed kube-state-metrics
+  - it: should fail when kube-state-metrics does not specify kube-state-metrics selectors
     set:
-      deployAsConfigMap: true
+      testing:
+        enabled: true
       kube-state-metrics:
-        enabled: false
-        deploy: true
+        enabled: true
     asserts:
       - failedTemplate:
           errorMessage: |-
-            For the Cluster Metrics feature, kube-state-metrics is disabled but it will still be deployed.
-            If you do not want these metrics, disable the deployment by setting:
+            The kube-state-metrics configuration requires a connection to kube-state-metrics
+            Please enable the built-in deployment:
+            telemetryServices:
+              kube-state-metrics:
+                deploy: true
+            Or, set the namespace and label selectors for an existing kube-state-metrics:
             clusterMetrics:
               kube-state-metrics:
-                enabled: false
-                deploy: false
-
-            If you do want these metrics, enable it by setting:
-            clusterMetrics:
-              kube-state-metrics:
-                enabled: true
-
-  - it: warns about a disabled, but deployed Node Exporter
-    set:
-      deployAsConfigMap: true
-      node-exporter:
-        enabled: false
-        deploy: true
-    asserts:
-      - failedTemplate:
-          errorMessage: |-
-            For the Cluster Metrics feature, Node Exporter is disabled but it will still be deployed.
-            If you do not want these metrics, disable the deployment by setting:
-            clusterMetrics:
-              node-exporter:
-                enabled: false
-                deploy: false
-
-            If you do want these metrics, enable it by setting:
-            clusterMetrics:
-              node-exporter:
-                enabled: true
-
-  - it: warns about a disabled, but deployed Windows Exporter
-    set:
-      deployAsConfigMap: true
-      windows-exporter:
-        enabled: false
-        deploy: true
-    asserts:
-      - failedTemplate:
-          errorMessage: |-
-            For the Cluster Metrics feature, Windows Exporter is disabled but it will still be deployed.
-            If you do not want these metrics, disable the deployment by setting:
-            clusterMetrics:
-              windows-exporter:
-                enabled: false
-                deploy: false
-
-            If you do want these metrics, enable it by setting:
-            clusterMetrics:
-              windows-exporter:
-                enabled: true
+                namespace: kube-state-metrics-namespace
+                labelSelectors:
+                  app.kubernetes.io/name: kube-state-metrics

@@ -19,12 +19,36 @@ destinations:
       username: loki
       password: lokipassword
 
-clusterMetrics:
+costMetrics:
   enabled: true
-  kepler:
-    enabled: true
   opencost:
     enabled: true
+
+hostMetrics:
+  enabled: true
+  linuxHosts:
+    enabled: true
+  energyMetrics:
+    enabled: true
+
+clusterMetrics:
+  enabled: true
+
+clusterEvents:
+  enabled: true
+
+podLogs:
+  enabled: true
+
+telemetryServices:
+  node-exporter:
+    deploy: true
+  kepler:
+    deploy: true
+  kube-state-metrics:
+    deploy: true
+  opencost:
+    deploy: true
     metricsSource: localPrometheus
     opencost:
       exporter:
@@ -33,12 +57,6 @@ clusterMetrics:
         existingSecretName: localprometheus-k8smon-k8s-monitoring
         external:
           url: http://prometheus-server.prometheus.svc:9090
-
-clusterEvents:
-  enabled: true
-
-podLogs:
-  enabled: true
 
 alloy-metrics:
   enabled: true

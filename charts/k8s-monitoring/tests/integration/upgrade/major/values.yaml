@@ -25,18 +25,18 @@ destinations:
 
 clusterMetrics:
   enabled: true
-  kepler:
+
+costMetrics:
+  enabled: true
+
+hostMetrics:
+  enabled: true
+  energyMetrics:
     enabled: true
-  opencost:
+  linuxHosts:
     enabled: true
-    metricsSource: localPrometheus
-    opencost:
-      exporter:
-        defaultClusterId: major-upgrade-test
-      prometheus:
-        existingSecretName: localprometheus-k8smon-k8s-monitoring
-        external:
-          url: http://prometheus-server.prometheus.svc:9090
+  windowsHosts:
+    enabled: true
 
 clusterEvents:
   enabled: true
@@ -76,3 +76,23 @@ extraObjects:
       namespace: toolbox
     data:
       version: "{{ .Chart.Version }}"
+
+telemetryServices:
+  kube-state-metrics:
+    deploy: true
+  kepler:
+    deploy: true
+  node-exporter:
+    deploy: true
+  windows-exporter:
+    deploy: true
+  opencost:
+    enabled: true
+    metricsSource: localPrometheus
+    opencost:
+      exporter:
+        defaultClusterId: major-upgrade-test
+      prometheus:
+        existingSecretName: localprometheus-k8smon-k8s-monitoring
+        external:
+          url: http://prometheus-server.prometheus.svc:9090

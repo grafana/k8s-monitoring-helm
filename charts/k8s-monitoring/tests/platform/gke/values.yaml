@@ -28,18 +28,14 @@ destinations:
 
 clusterMetrics:
   enabled: true
-  opencost:
+
+hostMetrics:
+  enabled: true
+  linuxHosts:
     enabled: true
-    metricsSource: grafana-cloud-metrics
-    opencost:
-      exporter:
-        defaultClusterId: gke-test
-      prometheus:
-        external:
-          url: https://prometheus-prod-13-prod-us-east-0.grafana.net/api/prom
-        existingSecretName: grafana-cloud-credentials
-        username_key: PROMETHEUS_USER
-        password_key: PROMETHEUS_PASS
+
+costMetrics:
+  enabled: true
 
 clusterEvents:
   enabled: true
@@ -60,3 +56,21 @@ alloy-singleton:
   enabled: true
 alloy-logs:
   enabled: true
+
+telemetryServices:
+  kube-state-metrics:
+    deploy: true
+  node-exporter:
+    deploy: true
+  opencost:
+    deploy: true
+    metricsSource: grafana-cloud-metrics
+    opencost:
+      exporter:
+        defaultClusterId: gke-test
+      prometheus:
+        external:
+          url: https://prometheus-prod-13-prod-us-east-0.grafana.net/api/prom
+        existingSecretName: grafana-cloud-credentials
+        username_key: PROMETHEUS_USER
+        password_key: PROMETHEUS_PASS

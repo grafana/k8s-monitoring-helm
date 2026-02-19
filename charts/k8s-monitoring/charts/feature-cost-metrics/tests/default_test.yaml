@@ -1,0 +1,17 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Test - Cost Metrics - Default Values
+templates:
+  - configmap.yaml
+tests:
+  - it: should render the default configuration
+    set:
+      testing:
+        enabled: true
+        telemetryServices:
+          opencost:
+            deploy: true
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["module.alloy"]

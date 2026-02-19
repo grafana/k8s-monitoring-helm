@@ -33,30 +33,17 @@ destinations:
 clusterMetrics:
   enabled: true
 
-  kube-state-metrics:
-    image:
-      sha: sha256:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef
+costMetrics:
+  enabled: true
 
-  node-exporter:
-    image:
-      digest: sha256:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef
-
-  windows-exporter:
-    image:
-      digest: sha256:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef
-
-  opencost:
-    imagePullSecrets:
-      - name: my-registry-creds
-    opencost:
-      exporter:
-        image:
-          # Not technically a digest, but a tag with a digest.
-          tag: "1.115.0@sha256:fb6468a1ef45dbd4a9e521122c8d306f882bb33d1657d28d21aeaef79412e9e1"
-
-  kepler:
-    image:
-      digest: sha256:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef
+hostMetrics:
+  enabled: true
+  linuxHosts:
+    enabled: true
+  windowsHosts:
+    enabled: true
+  energyMetrics:
+    enabled: true
 
 autoInstrumentation:
   enabled: true
@@ -91,3 +78,33 @@ alloy-metrics:
 
 alloy-receiver:
   enabled: true
+
+telemetryServices:
+  kube-state-metrics:
+    deploy: true
+    image:
+      sha: sha256:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef
+  node-exporter:
+    deploy: true
+    image:
+      digest: sha256:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef
+  windows-exporter:
+    deploy: true
+    image:
+      digest: sha256:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef
+  kepler:
+    deploy: true
+  opencost:
+    deploy: true
+    metricsSource: prometheus
+    imagePullSecrets:
+      - name: my-registry-creds
+    opencost:
+      exporter:
+        defaultClusterId: images-by-digest-example-cluster
+        image:
+          # Not technically a digest, but a tag with a digest.
+          tag: "1.115.0@sha256:fb6468a1ef45dbd4a9e521122c8d306f882bb33d1657d28d21aeaef79412e9e1"
+      prometheus:
+        external:
+          url: http://prometheus.prometheus.svc:9090/api/v1/query

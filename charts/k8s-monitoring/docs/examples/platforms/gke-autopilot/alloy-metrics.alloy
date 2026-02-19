@@ -18,7 +18,6 @@ declare "cluster_metrics" {
       replacement = "kubernetes"
       target_label = "source"
     }
-
   }
 
   // Kubelet
@@ -220,7 +219,7 @@ declare "cluster_metrics" {
 
     selectors {
       role = "endpoints"
-      label = "app.kubernetes.io/name=kube-state-metrics,release=k8smon"
+      label = "release=k8smon,app.kubernetes.io/name=kube-state-metrics"
     }
     namespaces {
       names = ["default"]
@@ -229,13 +228,6 @@ declare "cluster_metrics" {
 
   discovery.relabel "kube_state_metrics" {
     targets = discovery.kubernetes.kube_state_metrics.targets
-
-    // only keep targets with a matching port name
-    rule {
-      source_labels = ["__meta_kubernetes_pod_container_port_name"]
-      regex = "http"
-      action = "keep"
-    }
 
     rule {
       action = "replace"

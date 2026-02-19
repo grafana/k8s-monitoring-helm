@@ -125,9 +125,9 @@ hostMetrics:
 telemetryServices:
   kube-state-metrics:
     deploy: true
-  nodeExporter:
+  node-exporter:
     deploy: true
-  windowsExporter:
+  windows-exporter:
     deploy: true
 ```
 
@@ -142,8 +142,8 @@ collectorCommon:
 telemetryServices:
   kube-state-metrics:
     deploy: true
-  nodeExporter:
+  node-exporter:
     deploy: true
-  windowsExporter:
+  windows-exporter:
     deploy: true
 ```

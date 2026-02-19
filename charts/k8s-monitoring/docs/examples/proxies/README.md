@@ -90,18 +90,16 @@ destinations:
 
 clusterMetrics:
   enabled: true
-  opencost:
+
+hostMetrics:
+  enabled: true
+  linuxHosts:
     enabled: true
-    metricsSource: prometheus
-    opencost:
-      exporter:
-        defaultClusterId: proxies-example-cluster
-        extraEnv:
-          HTTPS_PROXY: https://myproxy.default.svc:8080
-          NO_PROXY: kubernetes.default.svc
-      prometheus:
-        external:
-          url: http://prometheus.example.com/api/v1/query
+  windowsHosts:
+    enabled: true
+
+costMetrics:
+  enabled: true
 
 clusterEvents:
   enabled: true
@@ -136,5 +134,25 @@ alloy-receiver:
         value: kubernetes.default.svc
 alloy-profiles:
   enabled: true
+
+telemetryServices:
+  kube-state-metrics:
+    deploy: true
+  node-exporter:
+    deploy: true
+  windows-exporter:
+    deploy: true
+  opencost:
+    deploy: true
+    metricsSource: prometheus
+    opencost:
+      exporter:
+        defaultClusterId: proxies-example-cluster
+        extraEnv:
+          HTTPS_PROXY: https://myproxy.default.svc:8080
+          NO_PROXY: kubernetes.default.svc
+      prometheus:
+        external:
+          url: http://prometheus.example.com/api/v1/query
 ```
 <!-- textlint-enable terminology -->

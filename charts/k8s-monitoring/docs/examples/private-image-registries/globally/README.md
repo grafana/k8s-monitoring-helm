@@ -70,22 +70,17 @@ global:
 clusterMetrics:
   enabled: true
 
-  # Kepler does not utilize the global image registry settings
-  kepler:
-    enabled: true
-    image:
-      repository: "my.registry.com/sustainable_computing_io/kepler"
-    imagePullSecrets:
-      - name: my-registry-creds
+costMetrics:
+  enabled: true
 
-  # OpenCost does not utilize the global image registry settings
-  opencost:
-    imagePullSecrets:
-      - name: my-registry-creds
-    opencost:
-      exporter:
-        image:
-          registry: my.registry.com
+hostMetrics:
+  enabled: true
+  energyMetrics:
+    enabled: true
+  linuxHosts:
+    enabled: true
+  windowsHosts:
+    enabled: true
 
 podLogs:
   enabled: true
@@ -105,5 +100,30 @@ alloy-logs:
 
 alloy-receiver:
   enabled: true
+
+telemetryServices:
+  # Kepler does not utilize the global image registry settings
+  kepler:
+    deploy: true
+    image:
+      repository: my.registry.com/sustainable_computing_io/kepler
+    imagePullSecrets:
+      - name: my-registry-creds
+
+  # OpenCost does not utilize the global image registry settings
+  opencost:
+    imagePullSecrets:
+      - name: my-registry-creds
+    opencost:
+      exporter:
+        image:
+          registry: my.registry.com
+
+  kube-state-metrics:
+    deploy: true
+  node-exporter:
+    deploy: true
+  windows-exporter:
+    deploy: true
 ```
 <!-- textlint-enable terminology -->

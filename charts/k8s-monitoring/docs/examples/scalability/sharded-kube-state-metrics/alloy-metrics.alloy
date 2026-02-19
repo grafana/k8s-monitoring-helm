@@ -18,7 +18,6 @@ declare "cluster_metrics" {
       replacement = "kubernetes"
       target_label = "source"
     }
-
   }
 
   // Kubelet
@@ -220,7 +219,7 @@ declare "cluster_metrics" {
 
     selectors {
       role = "endpoints"
-      label = "app.kubernetes.io/name=kube-state-metrics,release=k8smon"
+      label = "release=k8smon,app.kubernetes.io/name=kube-state-metrics"
     }
     namespaces {
       names = ["default"]
@@ -229,13 +228,6 @@ declare "cluster_metrics" {
 
   discovery.relabel "kube_state_metrics" {
     targets = discovery.kubernetes.kube_state_metrics.targets
-
-    // only keep targets with a matching port name
-    rule {
-      source_labels = ["__meta_kubernetes_pod_container_port_name"]
-      regex = "http"
-      action = "keep"
-    }
 
     rule {
       action = "replace"
@@ -274,14 +266,25 @@ declare "cluster_metrics" {
     }
     forward_to = argument.metrics_destinations.value
   }
+}
+cluster_metrics "feature" {
+  metrics_destinations = [
+    prometheus.remote_write.prometheus.receiver,
+  ]
+}
+// Feature: Host Metrics
+declare "host_metrics" {
+  argument "metrics_destinations" {
+    comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
+  }
 
-  // Node Exporter
+  // Linux hosts via Node Exporter
   discovery.kubernetes "node_exporter" {
     role = "pod"
 
     selectors {
       role = "pod"
-      label = "app.kubernetes.io/name=node-exporter,release=k8smon"
+      label = "release=k8smon,app.kubernetes.io/name=node-exporter"
     }
     namespaces {
       names = ["default"]
@@ -294,13 +297,12 @@ declare "cluster_metrics" {
     // keep only the specified metrics port name, and pods that are Running and ready
     rule {
       source_labels = [
-        "__meta_kubernetes_pod_container_port_name",
         "__meta_kubernetes_pod_container_init",
         "__meta_kubernetes_pod_phase",
         "__meta_kubernetes_pod_ready",
       ]
       separator = "@"
-      regex = "metrics@false@Running@true"
+      regex = "false@Running@true"
       action = "keep"
     }
 
@@ -389,7 +391,6 @@ declare "cluster_metrics" {
     scrape_classic_histograms = false
     scrape_native_histograms = false
     scheme = "http"
-    bearer_token_file = ""
     tls_config {
       insecure_skip_verify = true
     }
@@ -417,12 +418,12 @@ declare "cluster_metrics" {
     forward_to = argument.metrics_destinations.value
   }
 
-  // Windows Exporter
+  // Windows hosts via Windows Exporter
   discovery.kubernetes "windows_exporter_pods" {
     role = "pod"
     selectors {
       role = "pod"
-      label = "app.kubernetes.io/name=windows-exporter,release=k8smon"
+      label = "release=k8smon,app.kubernetes.io/name=windows-exporter"
     }
     namespaces {
       names = ["default"]
@@ -435,13 +436,12 @@ declare "cluster_metrics" {
     // keep only the specified metrics port name, and pods that are Running and ready
     rule {
       source_labels = [
-        "__meta_kubernetes_pod_container_port_name",
         "__meta_kubernetes_pod_container_init",
         "__meta_kubernetes_pod_phase",
         "__meta_kubernetes_pod_ready",
       ]
       separator = "@"
-      regex = "metrics@false@Running@true"
+      regex = "false@Running@true"
       action = "keep"
     }
 
@@ -461,7 +461,7 @@ declare "cluster_metrics" {
     scrape_classic_histograms = false
     scrape_native_histograms = false
     clustering {
-      enabled = true
+      enabled = false
     }
     forward_to = [prometheus.relabel.windows_exporter.receiver]
   }
@@ -476,7 +476,7 @@ declare "cluster_metrics" {
     forward_to = argument.metrics_destinations.value
   }
 }
-cluster_metrics "feature" {
+host_metrics "feature" {
   metrics_destinations = [
     prometheus.remote_write.prometheus.receiver,
   ]

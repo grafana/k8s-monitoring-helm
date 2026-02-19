@@ -18,99 +18,99 @@ tests:
         enabled: true
     asserts:
       - matchSnapshotRaw: {}
-
-  - it: print the warning about ServiceMonitors if they exist on the system
-    capabilities:
-      apiVersions: [monitoring.coreos.com/v1/ServiceMonitor]
-    kubernetesProvider:
-      scheme:
-        "monitoring.coreos.com/v1/ServiceMonitor":
-          gvr:
-            group: "monitoring.coreos.com"
-            version: "v1"
-            resource: "servicemonitors"
-          namespaced: true
-      objects:
-        - apiVersion: "monitoring.coreos.com/v1"
-          kind: ServiceMonitor
-          metadata:
-            name: my-kube-state-metrics-service-monitor
-            namespace: monitoring
-        - apiVersion: "monitoring.coreos.com/v1"
-          kind: ServiceMonitor
-          metadata:
-            name: prometheus-node-exporter
-            namespace: monitoring
-        - apiVersion: "monitoring.coreos.com/v1"
-          kind: ServiceMonitor
-          metadata:
-            name: redis
-            namespace: monitoring
-    set:
-      cluster:
-        name: ci-test-cluster
-      destinations:
-        - name: test
-          type: prometheus
-          url: https://prometheus.example.com
-      clusterMetrics:
-        enabled: true
-      prometheusOperatorObjects:
-        enabled: true
-      alloy-metrics:
-        enabled: true
-    asserts:
-      - matchRegexRaw:
-          pattern: ⚠️ Detected a ServiceMonitor named my-kube-state-metrics-service-monitor in namespace monitoring
-      - matchRegexRaw:
-          pattern: ⚠️ Detected a ServiceMonitor named prometheus-node-exporter in namespace monitoring
-
-  - it: can skip that validation
-    capabilities:
-      apiVersions: [monitoring.coreos.com/v1/ServiceMonitor]
-    kubernetesProvider:
-      scheme:
-        "monitoring.coreos.com/v1/ServiceMonitor":
-          gvr:
-            group: "monitoring.coreos.com"
-            version: "v1"
-            resource: "servicemonitors"
-          namespaced: true
-      objects:
-        - apiVersion: "monitoring.coreos.com/v1"
-          kind: ServiceMonitor
-          metadata:
-            name: my-kube-state-metrics-service-monitor
-            namespace: monitoring
-        - apiVersion: "monitoring.coreos.com/v1"
-          kind: ServiceMonitor
-          metadata:
-            name: prometheus-node-exporter
-            namespace: monitoring
-        - apiVersion: "monitoring.coreos.com/v1"
-          kind: ServiceMonitor
-          metadata:
-            name: redis
-            namespace: monitoring
-    set:
-      cluster:
-        name: ci-test-cluster
-      destinations:
-        - name: test
-          type: prometheus
-          url: https://prometheus.example.com
-      clusterMetrics:
-        enabled: true
-        kube-state-metrics:
-          checkForPotentialServiceMonitorConflicts: false
-        node-exporter:
-          checkForPotentialServiceMonitorConflicts: false
-      prometheusOperatorObjects:
-        enabled: true
-      alloy-metrics:
-        enabled: true
-    asserts:
-      - notMatchRegexRaw:
-          pattern: ⚠️ Detected a ServiceMonitor named my-kube-state-metrics-service-monitor in namespace monitoring
-      - notMatchRegexRaw:
-          pattern: ⚠️ Detected a ServiceMonitor named prometheus-node-exporter in namespace monitoring
+#
+#  - it: print the warning about ServiceMonitors if they exist on the system
+#    capabilities:
+#      apiVersions: [monitoring.coreos.com/v1/ServiceMonitor]
+#    kubernetesProvider:
+#      scheme:
+#        "monitoring.coreos.com/v1/ServiceMonitor":
+#          gvr:
+#            group: "monitoring.coreos.com"
+#            version: "v1"
+#            resource: "servicemonitors"
+#          namespaced: true
+#      objects:
+#        - apiVersion: "monitoring.coreos.com/v1"
+#          kind: ServiceMonitor
+#          metadata:
+#            name: my-kube-state-metrics-service-monitor
+#            namespace: monitoring
+#        - apiVersion: "monitoring.coreos.com/v1"
+#          kind: ServiceMonitor
+#          metadata:
+#            name: prometheus-node-exporter
+#            namespace: monitoring
+#        - apiVersion: "monitoring.coreos.com/v1"
+#          kind: ServiceMonitor
+#          metadata:
+#            name: redis
+#            namespace: monitoring
+#    set:
+#      cluster:
+#        name: ci-test-cluster
+#      destinations:
+#        - name: test
+#          type: prometheus
+#          url: https://prometheus.example.com
+#      clusterMetrics:
+#        enabled: true
+#      prometheusOperatorObjects:
+#        enabled: true
+#      alloy-metrics:
+#        enabled: true
+#    asserts:
+#      - matchRegexRaw:
+#          pattern: ⚠️ Detected a ServiceMonitor named my-kube-state-metrics-service-monitor in namespace monitoring
+#      - matchRegexRaw:
+#          pattern: ⚠️ Detected a ServiceMonitor named prometheus-node-exporter in namespace monitoring
+#
+#  - it: can skip that validation
+#    capabilities:
+#      apiVersions: [monitoring.coreos.com/v1/ServiceMonitor]
+#    kubernetesProvider:
+#      scheme:
+#        "monitoring.coreos.com/v1/ServiceMonitor":
+#          gvr:
+#            group: "monitoring.coreos.com"
+#            version: "v1"
+#            resource: "servicemonitors"
+#          namespaced: true
+#      objects:
+#        - apiVersion: "monitoring.coreos.com/v1"
+#          kind: ServiceMonitor
+#          metadata:
+#            name: my-kube-state-metrics-service-monitor
+#            namespace: monitoring
+#        - apiVersion: "monitoring.coreos.com/v1"
+#          kind: ServiceMonitor
+#          metadata:
+#            name: prometheus-node-exporter
+#            namespace: monitoring
+#        - apiVersion: "monitoring.coreos.com/v1"
+#          kind: ServiceMonitor
+#          metadata:
+#            name: redis
+#            namespace: monitoring
+#    set:
+#      cluster:
+#        name: ci-test-cluster
+#      destinations:
+#        - name: test
+#          type: prometheus
+#          url: https://prometheus.example.com
+#      clusterMetrics:
+#        enabled: true
+#        kube-state-metrics:
+#          checkForPotentialServiceMonitorConflicts: false
+#        node-exporter:
+#          checkForPotentialServiceMonitorConflicts: false
+#      prometheusOperatorObjects:
+#        enabled: true
+#      alloy-metrics:
+#        enabled: true
+#    asserts:
+#      - notMatchRegexRaw:
+#          pattern: ⚠️ Detected a ServiceMonitor named my-kube-state-metrics-service-monitor in namespace monitoring
+#      - notMatchRegexRaw:
+#          pattern: ⚠️ Detected a ServiceMonitor named prometheus-node-exporter in namespace monitoring

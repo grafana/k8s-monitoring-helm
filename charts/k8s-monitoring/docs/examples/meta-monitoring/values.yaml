@@ -96,15 +96,6 @@ clusterEvents:
 clusterMetrics:
   enabled: true
   collector: alloy-singleton
-  nodeLabels:
-    nodePool: true
-    region: true
-    availabilityZone: true
-    nodeRole: true
-    os: true
-    architecture: true
-    instanceType: true
-
   kubelet:
     enabled: false
   kubeletResource:
@@ -117,39 +108,18 @@ clusterMetrics:
         source_labels = ["namespace"]
         regex = "collectors|logs|metrics|o11y"
       }
-  apiServer:
-    enabled: false
-  kubeControllerManager:
-    enabled: false
-  kubeDNS:
-    enabled: false
-  kubeProxy:
-    enabled: false
-  kubeScheduler:
-    enabled: false
   kube-state-metrics:
-    enabled: true
-    namespaces: collectors,logs,metrics,o11y
     metricsTuning:
       useDefaultAllowList: false
       includeMetrics: [(.+)]
-  node-exporter:
+
+hostMetrics:
+  enabled: true
+  collector: alloy-singleton
+  linuxHosts:
     enabled: true
-    deploy: true
     metricsTuning:
       useIntegrationAllowList: true
-  windows-exporter:
-    enabled: false
-    deploy: false
-  kepler:
-    enabled: false
-    deploy: false
-  opencost:
-    enabled: false
-    deploy: false
-
-nodeLogs:
-  enabled: false
 
 podLogs:
   enabled: true
@@ -216,15 +186,6 @@ applicationObservability:
 alloy-singleton:
   enabled: true
 
-alloy-metrics:
-  enabled: false
-
-alloy-logs:
-  enabled: false
-
-alloy-profiles:
-  enabled: false
-
 alloy-receiver:
   enabled: true
   alloy:
@@ -233,3 +194,10 @@ alloy-receiver:
         port: 14268
         targetPort: 14268
         protocol: TCP
+
+telemetryServices:
+  kube-state-metrics:
+    deploy: true
+    namespaces: collectors,logs,metrics,o11y
+  node-exporter:
+    deploy: true

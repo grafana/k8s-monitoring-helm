@@ -13,7 +13,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
 automountServiceAccountToken: true
 ---
-# Source: k8s-monitoring/charts/clusterMetrics/charts/kube-state-metrics/templates/serviceaccount.yaml
+# Source: k8s-monitoring/charts/telemetryServices/charts/kube-state-metrics/templates/serviceaccount.yaml
 apiVersion: v1
 kind: ServiceAccount
 automountServiceAccountToken: true
@@ -58,7 +58,6 @@ data:
           replacement = "kubernetes"
           target_label = "source"
         }
-    
       }
     
       // Kubelet
@@ -260,7 +259,7 @@ data:
     
         selectors {
           role = "endpoints"
-          label = "app.kubernetes.io/name=kube-state-metrics,release=k8smon"
+          label = "release=k8smon,app.kubernetes.io/name=kube-state-metrics"
         }
         namespaces {
           names = ["default"]
@@ -269,13 +268,6 @@ data:
     
       discovery.relabel "kube_state_metrics" {
         targets = discovery.kubernetes.kube_state_metrics.targets
-    
-        // only keep targets with a matching port name
-        rule {
-          source_labels = ["__meta_kubernetes_pod_container_port_name"]
-          regex = "http"
-          action = "keep"
-        }
     
         rule {
           action = "replace"
@@ -955,7 +947,7 @@ data:
     grafana_kubernetes_monitoring_build_info{version="3.8.1", namespace="default"} 1
     # HELP grafana_kubernetes_monitoring_feature_info A metric to report the enabled features of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_feature_info gauge
-    grafana_kubernetes_monitoring_feature_info{deployments="kube-state-metrics", feature="clusterMetrics", sources="kubelet,kubeletResource,cadvisor,kube-state-metrics", version="1.0.0"} 1
+    grafana_kubernetes_monitoring_feature_info{feature="clusterMetrics", sources="kubelet,kubeletResource,cadvisor,kube-state-metrics", version="1.0.0"} 1
     grafana_kubernetes_monitoring_feature_info{feature="clusterEvents", version="1.0.0"} 1
     grafana_kubernetes_monitoring_feature_info{feature="podLogs", method="volumes", version="1.0.0"} 1
     grafana_kubernetes_monitoring_feature_info{feature="integrations", sources="alloy", version="1.0.0"} 1
@@ -1279,7 +1271,7 @@ rules:
     resources: ["clusterroles", "clusterrolebindings", "roles", "rolebindings"]
     verbs: ["*"]
 ---
-# Source: k8s-monitoring/charts/clusterMetrics/charts/kube-state-metrics/templates/role.yaml
+# Source: k8s-monitoring/charts/telemetryServices/charts/kube-state-metrics/templates/role.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
@@ -1475,7 +1467,7 @@ subjects:
     name: k8smon-alloy-operator
     namespace: default
 ---
-# Source: k8s-monitoring/charts/clusterMetrics/charts/kube-state-metrics/templates/clusterrolebinding.yaml
+# Source: k8s-monitoring/charts/telemetryServices/charts/kube-state-metrics/templates/clusterrolebinding.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
@@ -1591,7 +1583,7 @@ spec:
     app.kubernetes.io/name: alloy-operator
     app.kubernetes.io/instance: k8smon
 ---
-# Source: k8s-monitoring/charts/clusterMetrics/charts/kube-state-metrics/templates/service.yaml
+# Source: k8s-monitoring/charts/telemetryServices/charts/kube-state-metrics/templates/service.yaml
 apiVersion: v1
 kind: Service
 metadata:
@@ -1690,7 +1682,7 @@ spec:
       nodeSelector:
         kubernetes.io/os: linux
 ---
-# Source: k8s-monitoring/charts/clusterMetrics/charts/kube-state-metrics/templates/deployment.yaml
+# Source: k8s-monitoring/charts/telemetryServices/charts/kube-state-metrics/templates/deployment.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:

@@ -29,7 +29,7 @@ metadata:
     app.kubernetes.io/component: rbac
 automountServiceAccountToken: true
 ---
-# Source: k8s-monitoring/charts/clusterMetrics/charts/kepler/templates/serviceaccount.yaml
+# Source: k8s-monitoring/charts/telemetryServices/charts/kepler/templates/serviceaccount.yaml
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -42,7 +42,7 @@ metadata:
     app.kubernetes.io/version: "release-0.8.0"
     app.kubernetes.io/managed-by: Helm
 ---
-# Source: k8s-monitoring/charts/clusterMetrics/charts/kube-state-metrics/templates/serviceaccount.yaml
+# Source: k8s-monitoring/charts/telemetryServices/charts/kube-state-metrics/templates/serviceaccount.yaml
 apiVersion: v1
 kind: ServiceAccount
 automountServiceAccountToken: true
@@ -59,7 +59,7 @@ metadata:
   name: k8smon-kube-state-metrics
   namespace: default
 ---
-# Source: k8s-monitoring/charts/clusterMetrics/charts/node-exporter/templates/serviceaccount.yaml
+# Source: k8s-monitoring/charts/telemetryServices/charts/node-exporter/templates/serviceaccount.yaml
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -76,7 +76,7 @@ metadata:
     release: k8smon
 automountServiceAccountToken: false
 ---
-# Source: k8s-monitoring/charts/clusterMetrics/charts/opencost/templates/serviceaccount.yaml
+# Source: k8s-monitoring/charts/telemetryServices/charts/opencost/templates/serviceaccount.yaml
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -91,7 +91,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
 automountServiceAccountToken: true
 ---
-# Source: k8s-monitoring/charts/clusterMetrics/charts/windows-exporter/templates/serviceaccount.yaml
+# Source: k8s-monitoring/charts/telemetryServices/charts/windows-exporter/templates/serviceaccount.yaml
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -107,7 +107,7 @@ metadata:
     app.kubernetes.io/version: "0.31.3"
     release: k8smon
 ---
-# Source: k8s-monitoring/charts/clusterMetrics/charts/windows-exporter/templates/config.yaml
+# Source: k8s-monitoring/charts/telemetryServices/charts/windows-exporter/templates/config.yaml
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -217,7 +217,6 @@ data:
           replacement = "kubernetes"
           target_label = "source"
         }
-    
       }
     
       // Kubelet
@@ -419,7 +418,7 @@ data:
     
         selectors {
           role = "endpoints"
-          label = "app.kubernetes.io/name=kube-state-metrics,release=k8smon"
+          label = "release=k8smon,app.kubernetes.io/name=kube-state-metrics"
         }
         namespaces {
           names = ["default"]
@@ -428,13 +427,6 @@ data:
     
       discovery.relabel "kube_state_metrics" {
         targets = discovery.kubernetes.kube_state_metrics.targets
-    
-        // only keep targets with a matching port name
-        rule {
-          source_labels = ["__meta_kubernetes_pod_container_port_name"]
-          regex = "http"
-          action = "keep"
-        }
     
         rule {
           action = "replace"
@@ -473,14 +465,81 @@ data:
         }
         forward_to = argument.metrics_destinations.value
       }
+    }
+    cluster_metrics "feature" {
+      metrics_destinations = [
+        prometheus.remote_write.grafana_cloud_metrics.receiver,
+      ]
+    }
+    // Feature: Cost Metrics
+    declare "cost_metrics" {
+      argument "metrics_destinations" {
+        comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
+      }
     
-      // Node Exporter
+      discovery.kubernetes "opencost" {
+        role = "pod"
+        selectors {
+          role = "pod"
+          label = "app.kubernetes.io/name=opencost"
+        }
+        namespaces {
+          names = ["default"]
+        }
+      }
+    
+      discovery.relabel "opencost" {
+        targets = discovery.kubernetes.opencost.targets
+        rule {
+          source_labels = ["__meta_kubernetes_pod_node_name"]
+          action = "replace"
+          target_label = "instance"
+        }
+      }
+    
+      prometheus.scrape "opencost" {
+        targets      = discovery.relabel.opencost.output
+        job_name     = "integrations/opencost"
+        honor_labels = true
+        scrape_interval = "60s"
+        scrape_timeout = "10s"
+        scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
+        scrape_classic_histograms = false
+        scrape_native_histograms = false
+        clustering {
+          enabled = true
+        }
+        forward_to = [prometheus.relabel.opencost.receiver]
+      }
+    
+      prometheus.relabel "opencost" {
+        max_cache_size = 100000
+        rule {
+          source_labels = ["__name__"]
+          regex = "up|scrape_samples_scraped|container_cpu_allocation|container_gpu_allocation|container_memory_allocation_bytes|deployment_match_labels|kubecost_cluster_info|kubecost_cluster_management_cost|kubecost_cluster_memory_working_set_bytes|kubecost_http_requests_total|kubecost_http_response_size_bytes|kubecost_http_response_time_seconds|kubecost_load_balancer_cost|kubecost_network_internet_egress_cost|kubecost_network_region_egress_cost|kubecost_network_zone_egress_cost|kubecost_node_is_spot|node_cpu_hourly_cost|node_gpu_count|node_gpu_hourly_cost|node_ram_hourly_cost|node_total_hourly_cost|opencost_build_info|pod_pvc_allocation|pv_hourly_cost|service_selector_labels|statefulSet_match_labels"
+          action = "keep"
+        }
+        forward_to = argument.metrics_destinations.value
+      }
+    }
+    cost_metrics "feature" {
+      metrics_destinations = [
+        prometheus.remote_write.grafana_cloud_metrics.receiver,
+      ]
+    }
+    // Feature: Host Metrics
+    declare "host_metrics" {
+      argument "metrics_destinations" {
+        comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
+      }
+    
+      // Linux hosts via Node Exporter
       discovery.kubernetes "node_exporter" {
         role = "pod"
     
         selectors {
           role = "pod"
-          label = "app.kubernetes.io/name=node-exporter,release=k8smon"
+          label = "release=k8smon,app.kubernetes.io/name=node-exporter"
         }
         namespaces {
           names = ["default"]
@@ -493,13 +552,12 @@ data:
         // keep only the specified metrics port name, and pods that are Running and ready
         rule {
           source_labels = [
-            "__meta_kubernetes_pod_container_port_name",
             "__meta_kubernetes_pod_container_init",
             "__meta_kubernetes_pod_phase",
             "__meta_kubernetes_pod_ready",
           ]
           separator = "@"
-          regex = "metrics@false@Running@true"
+          regex = "false@Running@true"
           action = "keep"
         }
     
@@ -588,7 +646,6 @@ data:
         scrape_classic_histograms = false
         scrape_native_histograms = false
         scheme = "http"
-        bearer_token_file = ""
         tls_config {
           insecure_skip_verify = true
         }
@@ -616,12 +673,12 @@ data:
         forward_to = argument.metrics_destinations.value
       }
     
-      // Windows Exporter
+      // Windows hosts via Windows Exporter
       discovery.kubernetes "windows_exporter_pods" {
         role = "pod"
         selectors {
           role = "pod"
-          label = "app.kubernetes.io/name=windows-exporter,release=k8smon"
+          label = "release=k8smon,app.kubernetes.io/name=windows-exporter"
         }
         namespaces {
           names = ["default"]
@@ -634,13 +691,12 @@ data:
         // keep only the specified metrics port name, and pods that are Running and ready
         rule {
           source_labels = [
-            "__meta_kubernetes_pod_container_port_name",
             "__meta_kubernetes_pod_container_init",
             "__meta_kubernetes_pod_phase",
             "__meta_kubernetes_pod_ready",
           ]
           separator = "@"
-          regex = "metrics@false@Running@true"
+          regex = "false@Running@true"
           action = "keep"
         }
     
@@ -660,7 +716,7 @@ data:
         scrape_classic_histograms = false
         scrape_native_histograms = false
         clustering {
-          enabled = true
+          enabled = false
         }
         forward_to = [prometheus.relabel.windows_exporter.receiver]
       }
@@ -675,14 +731,15 @@ data:
         forward_to = argument.metrics_destinations.value
       }
     
+      // Energy metrics via Kepler
       discovery.kubernetes "kepler" {
         role = "pod"
-        namespaces {
-          own_namespace = true
-        }
         selectors {
           role = "pod"
           label = "app.kubernetes.io/name=kepler"
+        }
+        namespaces {
+          names = [""]
         }
       }
     
@@ -719,53 +776,8 @@ data:
         }
         forward_to = argument.metrics_destinations.value
       }
-    
-      discovery.kubernetes "opencost" {
-        role = "pod"
-        namespaces {
-          own_namespace = true
-        }
-        selectors {
-          role = "pod"
-          label = "app.kubernetes.io/name=opencost"
-        }
-      }
-    
-      discovery.relabel "opencost" {
-        targets = discovery.kubernetes.opencost.targets
-        rule {
-          source_labels = ["__meta_kubernetes_pod_node_name"]
-          action = "replace"
-          target_label = "instance"
-        }
-      }
-    
-      prometheus.scrape "opencost" {
-        targets      = discovery.relabel.opencost.output
-        job_name     = "integrations/opencost"
-        honor_labels = true
-        scrape_interval = "60s"
-        scrape_timeout = "10s"
-        scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
-        scrape_classic_histograms = false
-        scrape_native_histograms = false
-        clustering {
-          enabled = true
-        }
-        forward_to = [prometheus.relabel.opencost.receiver]
-      }
-    
-      prometheus.relabel "opencost" {
-        max_cache_size = 100000
-        rule {
-          source_labels = ["__name__"]
-          regex = "up|scrape_samples_scraped|container_cpu_allocation|container_gpu_allocation|container_memory_allocation_bytes|deployment_match_labels|kubecost_cluster_info|kubecost_cluster_management_cost|kubecost_cluster_memory_working_set_bytes|kubecost_http_requests_total|kubecost_http_response_size_bytes|kubecost_http_response_time_seconds|kubecost_load_balancer_cost|kubecost_network_internet_egress_cost|kubecost_network_region_egress_cost|kubecost_network_zone_egress_cost|kubecost_node_is_spot|node_cpu_hourly_cost|node_gpu_count|node_gpu_hourly_cost|node_ram_hourly_cost|node_total_hourly_cost|opencost_build_info|pod_pvc_allocation|pv_hourly_cost|service_selector_labels|statefulSet_match_labels"
-          action = "keep"
-        }
-        forward_to = argument.metrics_destinations.value
-      }
     }
-    cluster_metrics "feature" {
+    host_metrics "feature" {
       metrics_destinations = [
         prometheus.remote_write.grafana_cloud_metrics.receiver,
       ]
@@ -1413,8 +1425,10 @@ data:
     # TYPE grafana_kubernetes_monitoring_feature_info gauge
     grafana_kubernetes_monitoring_feature_info{feature="applicationObservability", protocols="otlpgrpc", version="1.0.0"} 1
     grafana_kubernetes_monitoring_feature_info{feature="autoInstrumentation", version="1.0.0"} 1
-    grafana_kubernetes_monitoring_feature_info{deployments="kube-state-metrics,node-exporter,windows-exporter,kepler", feature="clusterMetrics", sources="kubelet,kubeletResource,cadvisor,kube-state-metrics,node-exporter,windows-exporter,kepler", version="1.0.0"} 1
+    grafana_kubernetes_monitoring_feature_info{feature="clusterMetrics", sources="kubelet,kubeletResource,cadvisor,kube-state-metrics", version="1.0.0"} 1
     grafana_kubernetes_monitoring_feature_info{feature="clusterEvents", version="1.0.0"} 1
+    grafana_kubernetes_monitoring_feature_info{feature="costMetrics", version="1.0.0"} 1
+    grafana_kubernetes_monitoring_feature_info{feature="hostMetrics", sources="linuxHosts,windowsHosts,energyMetrics", version="1.0.0"} 1
     grafana_kubernetes_monitoring_feature_info{feature="podLogs", method="volumes", version="1.0.0"} 1
     grafana_kubernetes_monitoring_feature_info{feature="integrations", sources="alloy", version="1.0.0"} 1
     # EOF
@@ -2175,7 +2189,7 @@ rules:
     resources: [ "pods", "services", "nodes" ]
     verbs: [ "list", "watch", "get" ]
 ---
-# Source: k8s-monitoring/charts/clusterMetrics/charts/kepler/templates/rolebinding.yaml
+# Source: k8s-monitoring/charts/telemetryServices/charts/kepler/templates/rolebinding.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
@@ -2192,7 +2206,7 @@ rules:
       - watch
       - list
 ---
-# Source: k8s-monitoring/charts/clusterMetrics/charts/kube-state-metrics/templates/role.yaml
+# Source: k8s-monitoring/charts/telemetryServices/charts/kube-state-metrics/templates/role.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
@@ -2348,7 +2362,7 @@ rules:
     - volumeattachments
   verbs: ["list", "watch"]
 ---
-# Source: k8s-monitoring/charts/clusterMetrics/charts/opencost/templates/clusterrole.yaml
+# Source: k8s-monitoring/charts/telemetryServices/charts/opencost/templates/clusterrole.yaml
 # Cluster role giving opencost to get, list, watch required resources
 # No write permissions are required
 apiVersion: rbac.authorization.k8s.io/v1
@@ -2497,7 +2511,7 @@ roleRef:
   kind: ClusterRole
   name: k8smon-beyla
 ---
-# Source: k8s-monitoring/charts/clusterMetrics/charts/kepler/templates/rolebinding.yaml
+# Source: k8s-monitoring/charts/telemetryServices/charts/kepler/templates/rolebinding.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
@@ -2511,7 +2525,7 @@ subjects:
     name: k8smon-kepler
     namespace: default
 ---
-# Source: k8s-monitoring/charts/clusterMetrics/charts/kube-state-metrics/templates/clusterrolebinding.yaml
+# Source: k8s-monitoring/charts/telemetryServices/charts/kube-state-metrics/templates/clusterrolebinding.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
@@ -2534,7 +2548,7 @@ subjects:
   name: k8smon-kube-state-metrics
   namespace: default
 ---
-# Source: k8s-monitoring/charts/clusterMetrics/charts/opencost/templates/clusterrolebinding.yaml
+# Source: k8s-monitoring/charts/telemetryServices/charts/opencost/templates/clusterrolebinding.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
@@ -2671,7 +2685,7 @@ spec:
   selector:
     app.kubernetes.io/name: beyla-k8s-cache
 ---
-# Source: k8s-monitoring/charts/clusterMetrics/charts/kepler/templates/service.yaml
+# Source: k8s-monitoring/charts/telemetryServices/charts/kepler/templates/service.yaml
 apiVersion: v1
 kind: Service
 metadata:
@@ -2694,7 +2708,7 @@ spec:
     app.kubernetes.io/name: kepler
     app.kubernetes.io/component: exporter
 ---
-# Source: k8s-monitoring/charts/clusterMetrics/charts/kube-state-metrics/templates/service.yaml
+# Source: k8s-monitoring/charts/telemetryServices/charts/kube-state-metrics/templates/service.yaml
 apiVersion: v1
 kind: Service
 metadata:
@@ -2722,7 +2736,7 @@ spec:
     app.kubernetes.io/name: kube-state-metrics
     app.kubernetes.io/instance: k8smon
 ---
-# Source: k8s-monitoring/charts/clusterMetrics/charts/node-exporter/templates/service.yaml
+# Source: k8s-monitoring/charts/telemetryServices/charts/node-exporter/templates/service.yaml
 apiVersion: v1
 kind: Service
 metadata:
@@ -2738,7 +2752,7 @@ metadata:
     app.kubernetes.io/version: "1.10.2"
     release: k8smon
   annotations:
-    prometheus.io/scrape: "false"
+    prometheus.io/scrape: "true"
 spec:
   type: ClusterIP
   ports:
@@ -2750,7 +2764,7 @@ spec:
     app.kubernetes.io/name: node-exporter
     app.kubernetes.io/instance: k8smon
 ---
-# Source: k8s-monitoring/charts/clusterMetrics/charts/opencost/templates/service.yaml
+# Source: k8s-monitoring/charts/telemetryServices/charts/opencost/templates/service.yaml
 apiVersion: v1
 kind: Service
 metadata:
@@ -2776,7 +2790,7 @@ spec:
       port: 8081
       targetPort: 8081
 ---
-# Source: k8s-monitoring/charts/clusterMetrics/charts/windows-exporter/templates/service.yaml
+# Source: k8s-monitoring/charts/telemetryServices/charts/windows-exporter/templates/service.yaml
 apiVersion: v1
 kind: Service
 metadata:
@@ -2877,7 +2891,7 @@ spec:
           hostPath:
             path: /sys/fs/cgroup
 ---
-# Source: k8s-monitoring/charts/clusterMetrics/charts/kepler/templates/daemonset.yaml
+# Source: k8s-monitoring/charts/telemetryServices/charts/kepler/templates/daemonset.yaml
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
@@ -3013,7 +3027,7 @@ spec:
         - effect: NoSchedule
           key: node-role.kubernetes.io/control-plane
 ---
-# Source: k8s-monitoring/charts/clusterMetrics/charts/node-exporter/templates/daemonset.yaml
+# Source: k8s-monitoring/charts/telemetryServices/charts/node-exporter/templates/daemonset.yaml
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
@@ -3070,7 +3084,7 @@ spec:
             - --path.rootfs=/host/root
             - --path.udev.data=/host/root/run/udev/data
             - --web.listen-address=[$(HOST_IP)]:9100
-            - --collector.filesystem.fs-types-exclude=^(autofs|binfmt_misc|bpf|cgroup2?|configfs|debugfs|devpts|devtmpfs|fusectl|hugetlbfs|iso9660|mqueue|nsfs|overlay|proc|procfs|pstore|ramfs|rpc_pipefs|securityfs|selinuxfs|squashfs|erofs|sysfs|tmpfs|tracefs)$
+            - --collector.filesystem.fs-types-exclude=^(autofs|binfmt_misc|bpf|cgroup2?|configfs|debugfs|devpts|devtmpfs|fusectl|hugetlbfs|iso9660|mqueue|nsfs|overlay|proc|procfs|pstore|rpc_pipefs|securityfs|selinuxfs|squashfs|erofs|sysfs|tracefs|tmpfs|ramfs)$
           securityContext:
             readOnlyRootFilesystem: true
           env:
@@ -3141,7 +3155,7 @@ spec:
           hostPath:
             path: /
 ---
-# Source: k8s-monitoring/charts/clusterMetrics/charts/windows-exporter/templates/daemonset.yaml
+# Source: k8s-monitoring/charts/telemetryServices/charts/windows-exporter/templates/daemonset.yaml
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
@@ -3362,7 +3376,7 @@ spec:
             - name: BEYLA_K8S_CACHE_PORT
               value: "50055"
 ---
-# Source: k8s-monitoring/charts/clusterMetrics/charts/kube-state-metrics/templates/deployment.yaml
+# Source: k8s-monitoring/charts/telemetryServices/charts/kube-state-metrics/templates/deployment.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -3456,7 +3470,7 @@ spec:
       nodeSelector:
         kubernetes.io/os: linux
 ---
-# Source: k8s-monitoring/charts/clusterMetrics/charts/opencost/templates/deployment.yaml
+# Source: k8s-monitoring/charts/telemetryServices/charts/opencost/templates/deployment.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -3600,10 +3614,10 @@ spec:
         - emptyDir: {}
           name: configs
 ---
-# Source: k8s-monitoring/charts/clusterMetrics/charts/opencost/templates/httproute.yaml
+# Source: k8s-monitoring/charts/telemetryServices/charts/opencost/templates/httproute.yaml
 ---
 ---
-# Source: k8s-monitoring/charts/clusterMetrics/charts/opencost/templates/ingress.yaml
+# Source: k8s-monitoring/charts/telemetryServices/charts/opencost/templates/ingress.yaml
 ---
 ---
 # Source: k8s-monitoring/templates/alloy-sampler.yaml

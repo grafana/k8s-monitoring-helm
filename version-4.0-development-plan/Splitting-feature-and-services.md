@@ -29,11 +29,11 @@ in v4, the services are split:
 ```yaml
 hostMetrics:
   enabled: true
-  nodeExporter:
+  linuxHosts:
     enabled: true
 
 telemetryServices:
-  nodeExporter:
+  node-exporter:
     deploy: true
 ```
 
@@ -41,23 +41,23 @@ telemetryServices:
 ```yaml
 hostMetrics:
   enabled: true
-  nodeExporter:
+  linuxHosts:
     enabled: true
     # Without the following, the deployment will fail with:
-    # Please enable telemetryServices.nodeExporter, or specify the namespace and labelSelectors
+    # Please enable telemetryServices.node-exporter, or specify the namespace and labelSelectors
     namespace: ""
     labelSelectors:
       app.kubernetes.io/name: prometheus-node-exporter
 
 telemetryServices:
-  nodeExporter:
+  node-exporter:
     deploy: false  # the default
 ```
 
 ### Option 3: Deployed service with no local config
 ```yaml
 telemetryServices:
-  nodeExporter:
+  node-exporter:
     deploy: true
 ```
 

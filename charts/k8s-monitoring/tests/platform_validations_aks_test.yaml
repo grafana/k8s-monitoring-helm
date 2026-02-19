@@ -8,6 +8,7 @@ tests:
       cluster: {name: aks-cluster}
       destinations: [{name: prom, type: prometheus, url: http://prometheus-server.prometheus.svc:9090}]
       clusterMetrics: {enabled: true}
+      telemetryServices: {kube-state-metrics: {deploy: true}}
       alloy-metrics: {enabled: true}
     kubernetesProvider:
       scheme:
@@ -38,6 +39,7 @@ tests:
       cluster: {name: aks-cluster}
       destinations: [{name: prom, type: prometheus, url: http://prometheus-server.prometheus.svc:9090}]
       clusterMetrics: {enabled: true}
+      telemetryServices: {kube-state-metrics: {deploy: true}}
       alloy-metrics:
         enabled: true
         controller:
@@ -62,7 +64,7 @@ tests:
           errorMessage: |-
             This Kubernetes cluster appears to be Azure AKS.
             To ensure connectivity to the API server, please set:
-            clusterMetrics:
+            telemetryServices:
               kube-state-metrics:
                 podAnnotations:
                   kubernetes.azure.com/set-kube-service-host-fqdn: "true"
@@ -73,7 +75,9 @@ tests:
       destinations: [{name: prom, type: prometheus, url: http://prometheus-server.prometheus.svc:9090}]
       clusterMetrics:
         enabled: true
+      telemetryServices:
         kube-state-metrics:
+          deploy: true
           podAnnotations:
             kubernetes.azure.com/set-kube-service-host-fqdn: "true"
       alloy-metrics:
@@ -104,7 +108,9 @@ tests:
       destinations: [{name: prom, type: prometheus, url: http://prometheus-server.prometheus.svc:9090}]
       clusterMetrics:
         enabled: true
+      telemetryServices:
         kube-state-metrics:
+          deploy: true
           podAnnotations:
             kubernetes.azure.com/set-kube-service-host-fqdn: "true"
       alloy-metrics:

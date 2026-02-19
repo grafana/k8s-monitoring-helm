@@ -1,0 +1,525 @@
+should render the configuration with Kepler:
+  1: |
+    |-
+      declare "cluster_metrics" {
+        argument "metrics_destinations" {
+          comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
+        }
+        discovery.kubernetes "nodes" {
+          role = "node"
+        }
+
+        discovery.relabel "nodes" {
+          targets = discovery.kubernetes.nodes.targets
+          rule {
+            source_labels = ["__meta_kubernetes_node_name"]
+            target_label  = "node"
+          }
+
+          rule {
+            replacement = "kubernetes"
+            target_label = "source"
+          }
+
+        }
+
+        // Kubelet
+        discovery.relabel "kubelet" {
+          targets = discovery.relabel.nodes.output
+        }
+
+        prometheus.scrape "kubelet" {
+          targets  = discovery.relabel.kubelet.output
+          job_name = "integrations/kubernetes/kubelet"
+          scheme   = "https"
+          scrape_interval = "60s"
+          scrape_timeout = "10s"
+          scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
+          scrape_classic_histograms = false
+          scrape_native_histograms = false
+          bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+
+          tls_config {
+            ca_file = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+            insecure_skip_verify = true
+            server_name = "kubernetes"
+          }
+
+          clustering {
+            enabled = true
+          }
+
+          forward_to = [prometheus.relabel.kubelet.receiver]
+        }
+
+        prometheus.relabel "kubelet" {
+          max_cache_size = 100000
+          rule {
+            source_labels = ["__name__"]
+            regex = "up|scrape_samples_scraped|go_goroutines|kubelet_certificate_manager_client_expiration_renew_errors|kubelet_certificate_manager_client_ttl_seconds|kubelet_certificate_manager_server_ttl_seconds|kubelet_cgroup_manager_duration_seconds_bucket|kubelet_cgroup_manager_duration_seconds_count|kubelet_node_config_error|kubelet_node_name|kubelet_pleg_relist_duration_seconds_bucket|kubelet_pleg_relist_duration_seconds_count|kubelet_pleg_relist_interval_seconds_bucket|kubelet_pod_start_duration_seconds_bucket|kubelet_pod_start_duration_seconds_count|kubelet_pod_worker_duration_seconds_bucket|kubelet_pod_worker_duration_seconds_count|kubelet_running_container_count|kubelet_running_containers|kubelet_running_pod_count|kubelet_running_pods|kubelet_runtime_operations_errors_total|kubelet_runtime_operations_total|kubelet_server_expiration_renew_errors|kubelet_volume_stats_available_bytes|kubelet_volume_stats_capacity_bytes|kubelet_volume_stats_inodes|kubelet_volume_stats_inodes_free|kubelet_volume_stats_inodes_used|kubelet_volume_stats_used_bytes|kubernetes_build_info|namespace_workload_pod|process_cpu_seconds_total|process_resident_memory_bytes|rest_client_requests_total|storage_operation_duration_seconds_count|storage_operation_errors_total|volume_manager_total_volumes"
+            action = "keep"
+          }
+
+          forward_to = argument.metrics_destinations.value
+        }
+
+        // Kubelet Resources
+        discovery.relabel "kubelet_resources" {
+          targets = discovery.relabel.nodes.output
+          rule {
+            replacement   = "/metrics/resource"
+            target_label  = "__metrics_path__"
+          }
+        }
+
+        prometheus.scrape "kubelet_resources" {
+          targets = discovery.relabel.kubelet_resources.output
+          job_name = "integrations/kubernetes/resources"
+          scheme   = "https"
+          scrape_interval = "60s"
+          scrape_timeout = "10s"
+          scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
+          scrape_classic_histograms = false
+          scrape_native_histograms = false
+          bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+
+          tls_config {
+            ca_file = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+            insecure_skip_verify = true
+            server_name = "kubernetes"
+          }
+
+          clustering {
+            enabled = true
+          }
+
+          forward_to = [prometheus.relabel.kubelet_resources.receiver]
+        }
+
+        prometheus.relabel "kubelet_resources" {
+          max_cache_size = 100000
+          rule {
+            source_labels = ["__name__"]
+            regex = "up|scrape_samples_scraped|node_cpu_usage_seconds_total|node_memory_working_set_bytes"
+            action = "keep"
+          }
+
+          forward_to = argument.metrics_destinations.value
+        }
+
+        // cAdvisor
+        discovery.relabel "cadvisor" {
+          targets = discovery.relabel.nodes.output
+          rule {
+            replacement   = "/metrics/cadvisor"
+            target_label  = "__metrics_path__"
+          }
+        }
+
+        prometheus.scrape "cadvisor" {
+          targets = discovery.relabel.cadvisor.output
+          job_name = "integrations/kubernetes/cadvisor"
+          scheme = "https"
+          scrape_interval = "60s"
+          scrape_timeout = "10s"
+          scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
+          scrape_classic_histograms = false
+          scrape_native_histograms = false
+          bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+
+          tls_config {
+            ca_file = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+            insecure_skip_verify = true
+            server_name = "kubernetes"
+          }
+
+          clustering {
+            enabled = true
+          }
+
+          forward_to = [prometheus.relabel.cadvisor.receiver]
+        }
+
+        prometheus.relabel "cadvisor" {
+          max_cache_size = 100000
+          rule {
+            source_labels = ["__name__"]
+            regex = "up|scrape_samples_scraped|container_cpu_cfs_periods_total|container_cpu_cfs_throttled_periods_total|container_cpu_usage_seconds_total|container_fs_reads_bytes_total|container_fs_reads_total|container_fs_writes_bytes_total|container_fs_writes_total|container_memory_cache|container_memory_rss|container_memory_swap|container_memory_usage_bytes|container_memory_working_set_bytes|container_network_receive_bytes_total|container_network_receive_packets_dropped_total|container_network_receive_packets_total|container_network_transmit_bytes_total|container_network_transmit_packets_dropped_total|container_network_transmit_packets_total|machine_memory_bytes"
+            action = "keep"
+          }
+          // Drop empty container labels, addressing https://github.com/google/cadvisor/issues/2688
+          rule {
+            source_labels = ["__name__","container"]
+            separator = "@"
+            regex = "(container_cpu_.*|container_fs_.*|container_memory_.*)@"
+            action = "drop"
+          }
+          // Drop empty image labels, addressing https://github.com/google/cadvisor/issues/2688
+          rule {
+            source_labels = ["__name__","image"]
+            separator = "@"
+            regex = "(container_cpu_.*|container_fs_.*|container_memory_.*|container_network_.*)@"
+            action = "drop"
+          }
+          // Normalizing unimportant labels (not deleting to continue satisfying <label>!="" checks)
+          rule {
+            source_labels = ["__name__", "boot_id"]
+            separator = "@"
+            regex = "machine_memory_bytes@.*"
+            target_label = "boot_id"
+            replacement = "NA"
+          }
+          rule {
+            source_labels = ["__name__", "system_uuid"]
+            separator = "@"
+            regex = "machine_memory_bytes@.*"
+            target_label = "system_uuid"
+            replacement = "NA"
+          }
+          // Filter out non-physical devices/interfaces
+          rule {
+            source_labels = ["__name__", "device"]
+            separator = "@"
+            regex = "container_fs_.*@(/dev/)?(mmcblk.p.+|nvme.+|rbd.+|sd.+|vd.+|xvd.+|dasd.+)"
+            target_label = "__keepme"
+            replacement = "1"
+          }
+          rule {
+            source_labels = ["__name__", "__keepme"]
+            separator = "@"
+            regex = "container_fs_.*@"
+            action = "drop"
+          }
+          rule {
+            source_labels = ["__name__"]
+            regex = "container_fs_.*"
+            target_label = "__keepme"
+            replacement = ""
+          }
+          rule {
+            source_labels = ["__name__", "interface"]
+            separator = "@"
+            regex = "container_network_.*@(en[ospx][0-9].*|wlan[0-9].*|eth[0-9].*)"
+            target_label = "__keepme"
+            replacement = "1"
+          }
+          rule {
+            source_labels = ["__name__", "__keepme"]
+            separator = "@"
+            regex = "container_network_.*@"
+            action = "drop"
+          }
+          rule {
+            source_labels = ["__name__"]
+            regex = "container_network_.*"
+            target_label = "__keepme"
+            replacement = ""
+          }
+          forward_to = argument.metrics_destinations.value
+        }
+        discovery.kubernetes "kube_state_metrics" {
+          role = "endpoints"
+
+          selectors {
+            role = "endpoints"
+            label = "app.kubernetes.io/name=kube-state-metrics,release=RELEASE-NAME"
+          }
+          namespaces {
+            names = ["NAMESPACE"]
+          }
+        }
+
+        discovery.relabel "kube_state_metrics" {
+          targets = discovery.kubernetes.kube_state_metrics.targets
+
+          // only keep targets with a matching port name
+          rule {
+            source_labels = ["__meta_kubernetes_pod_container_port_name"]
+            regex = "http"
+            action = "keep"
+          }
+
+          rule {
+            action = "replace"
+            replacement = "kubernetes"
+            target_label = "source"
+          }
+
+        }
+
+        prometheus.scrape "kube_state_metrics" {
+          targets = discovery.relabel.kube_state_metrics.output
+          job_name = "integrations/kubernetes/kube-state-metrics"
+          scrape_interval = "60s"
+          scrape_timeout = "10s"
+          scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
+          scrape_classic_histograms = false
+          scrape_native_histograms = false
+          scheme = "http"
+          bearer_token_file = ""
+          tls_config {
+            insecure_skip_verify = true
+          }
+
+          clustering {
+            enabled = true
+          }
+          forward_to = [prometheus.relabel.kube_state_metrics.receiver]
+        }
+
+        prometheus.relabel "kube_state_metrics" {
+          max_cache_size = 100000
+          rule {
+            source_labels = ["__name__"]
+            regex = "up|scrape_samples_scraped|kube_configmap_info|kube_configmap_metadata_resource_version|kube_cronjob.*|kube_daemonset.*|kube_deployment_metadata_generation|kube_deployment_spec_replicas|kube_deployment_status_condition|kube_deployment_status_observed_generation|kube_deployment_status_replicas_available|kube_deployment_status_replicas_updated|kube_horizontalpodautoscaler_spec_max_replicas|kube_horizontalpodautoscaler_spec_min_replicas|kube_horizontalpodautoscaler_status_current_replicas|kube_horizontalpodautoscaler_status_desired_replicas|kube_job.*|kube_namespace_status_phase|kube_node.*|kube_persistentvolume_status_phase|kube_persistentvolumeclaim_access_mode|kube_persistentvolumeclaim_info|kube_persistentvolumeclaim_labels|kube_persistentvolumeclaim_resource_requests_storage_bytes|kube_persistentvolumeclaim_status_phase|kube_pod_completion_time|kube_pod_container_info|kube_pod_container_resource_limits|kube_pod_container_resource_requests|kube_pod_container_status_last_terminated_reason|kube_pod_container_status_last_terminated_timestamp|kube_pod_container_status_restarts_total|kube_pod_container_status_waiting_reason|kube_pod_info|kube_pod_owner|kube_pod_restart_policy|kube_pod_spec_volumes_persistentvolumeclaims_info|kube_pod_start_time|kube_pod_status_phase|kube_pod_status_reason|kube_replicaset.*|kube_resourcequota|kube_secret_metadata_resource_version|kube_statefulset.*"
+            action = "keep"
+          }
+          forward_to = argument.metrics_destinations.value
+        }
+
+        // Node Exporter
+        discovery.kubernetes "node_exporter" {
+          role = "pod"
+
+          selectors {
+            role = "pod"
+            label = "app.kubernetes.io/name=node-exporter,release=RELEASE-NAME"
+          }
+          namespaces {
+            names = ["NAMESPACE"]
+          }
+        }
+
+        discovery.relabel "node_exporter" {
+          targets = discovery.kubernetes.node_exporter.targets
+
+          // keep only the specified metrics port name, and pods that are Running and ready
+          rule {
+            source_labels = [
+              "__meta_kubernetes_pod_container_port_name",
+              "__meta_kubernetes_pod_container_init",
+              "__meta_kubernetes_pod_phase",
+              "__meta_kubernetes_pod_ready",
+            ]
+            separator = "@"
+            regex = "metrics@false@Running@true"
+            action = "keep"
+          }
+
+          // Set the instance label to the node name
+          rule {
+            source_labels = ["__meta_kubernetes_pod_node_name"]
+            action = "replace"
+            target_label = "instance"
+          }
+
+          // set the namespace label
+          rule {
+            source_labels = ["__meta_kubernetes_namespace"]
+            target_label  = "namespace"
+          }
+
+          // set the pod label
+          rule {
+            source_labels = ["__meta_kubernetes_pod_name"]
+            target_label  = "pod"
+          }
+
+          // set the container label
+          rule {
+            source_labels = ["__meta_kubernetes_pod_container_name"]
+            target_label  = "container"
+          }
+
+          // set a workload label
+          rule {
+            source_labels = [
+              "__meta_kubernetes_pod_controller_kind",
+              "__meta_kubernetes_pod_controller_name",
+            ]
+            separator = "/"
+            target_label  = "workload"
+          }
+          // remove the hash from the ReplicaSet
+          rule {
+            source_labels = ["workload"]
+            regex = "(ReplicaSet/.+)-.+"
+            target_label  = "workload"
+          }
+
+          // set the app name if specified as metadata labels "app:" or "app.kubernetes.io/name:" or "k8s-app:"
+          rule {
+            action = "replace"
+            source_labels = [
+              "__meta_kubernetes_pod_label_app_kubernetes_io_name",
+              "__meta_kubernetes_pod_label_k8s_app",
+              "__meta_kubernetes_pod_label_app",
+            ]
+            separator = ";"
+            regex = "^(?:;*)?([^;]+).*$"
+            replacement = "$1"
+            target_label = "app"
+          }
+
+          // set the component if specified as metadata labels "component:" or "app.kubernetes.io/component:" or "k8s-component:"
+          rule {
+            action = "replace"
+            source_labels = [
+              "__meta_kubernetes_pod_label_app_kubernetes_io_component",
+              "__meta_kubernetes_pod_label_k8s_component",
+              "__meta_kubernetes_pod_label_component",
+            ]
+            regex = "^(?:;*)?([^;]+).*$"
+            replacement = "$1"
+            target_label = "component"
+          }
+
+          // set a source label
+          rule {
+            action = "replace"
+            replacement = "kubernetes"
+            target_label = "source"
+          }
+        }
+
+        prometheus.scrape "node_exporter" {
+          targets = discovery.relabel.node_exporter.output
+          job_name = "integrations/node_exporter"
+          scrape_interval = "60s"
+          scrape_timeout = "10s"
+          scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
+          scrape_classic_histograms = false
+          scrape_native_histograms = false
+          scheme = "http"
+          bearer_token_file = ""
+          tls_config {
+            insecure_skip_verify = true
+          }
+
+          clustering {
+            enabled = true
+          }
+          forward_to = [prometheus.relabel.node_exporter.receiver]
+        }
+
+        prometheus.relabel "node_exporter" {
+          max_cache_size = 100000
+          rule {
+            source_labels = ["__name__"]
+            regex = "up|scrape_samples_scraped|node_cpu.*|node_exporter_build_info|node_filesystem.*|node_memory.*|node_network_receive_bytes_total|node_network_receive_drop_total|node_network_transmit_bytes_total|node_network_transmit_drop_total|process_cpu_seconds_total|process_resident_memory_bytes"
+            action = "keep"
+          }
+          // Drop metrics for certain file systems
+          rule {
+            source_labels = ["__name__", "fstype"]
+            separator = "@"
+            regex = "node_filesystem.*@(ramfs|tmpfs)"
+            action = "drop"
+          }
+          forward_to = argument.metrics_destinations.value
+        }
+
+        // Windows Exporter
+        discovery.kubernetes "windows_exporter_pods" {
+          role = "pod"
+          selectors {
+            role = "pod"
+            label = "app.kubernetes.io/name=windows-exporter,release=RELEASE-NAME"
+          }
+          namespaces {
+            names = ["NAMESPACE"]
+          }
+        }
+
+        discovery.relabel "windows_exporter" {
+          targets = discovery.kubernetes.windows_exporter_pods.targets
+
+          // keep only the specified metrics port name, and pods that are Running and ready
+          rule {
+            source_labels = [
+              "__meta_kubernetes_pod_container_port_name",
+              "__meta_kubernetes_pod_container_init",
+              "__meta_kubernetes_pod_phase",
+              "__meta_kubernetes_pod_ready",
+            ]
+            separator = "@"
+            regex = "metrics@false@Running@true"
+            action = "keep"
+          }
+
+          // Set the instance label to the node name
+          rule {
+            source_labels = ["__meta_kubernetes_pod_node_name"]
+            target_label = "instance"
+          }
+        }
+
+        prometheus.scrape "windows_exporter" {
+          targets  = discovery.relabel.windows_exporter.output
+          job_name   = "integrations/windows-exporter"
+          scrape_interval = "60s"
+          scrape_timeout = "10s"
+          scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
+          scrape_classic_histograms = false
+          scrape_native_histograms = false
+          clustering {
+            enabled = true
+          }
+          forward_to = [prometheus.relabel.windows_exporter.receiver]
+        }
+
+        prometheus.relabel "windows_exporter" {
+          max_cache_size = 100000
+          rule {
+            source_labels = ["__name__"]
+            regex = "up|scrape_samples_scraped|windows_.*|node_cpu_seconds_total|node_filesystem_size_bytes|node_filesystem_avail_bytes|container_cpu_usage_seconds_total"
+            action = "keep"
+          }
+          forward_to = argument.metrics_destinations.value
+        }
+
+        discovery.kubernetes "kepler" {
+          role = "pod"
+          namespaces {
+            own_namespace = true
+          }
+          selectors {
+            role = "pod"
+            label = "app.kubernetes.io/name=kepler"
+          }
+        }
+
+        discovery.relabel "kepler" {
+          targets = discovery.kubernetes.kepler.targets
+          rule {
+            source_labels = ["__meta_kubernetes_pod_node_name"]
+            action = "replace"
+            target_label = "instance"
+          }
+        }
+
+        prometheus.scrape "kepler" {
+          targets      = discovery.relabel.kepler.output
+          job_name     = "integrations/kepler"
+          honor_labels = true
+          scrape_interval = "60s"
+          scrape_timeout = "10s"
+          scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
+          scrape_classic_histograms = false
+          scrape_native_histograms = false
+          clustering {
+            enabled = true
+          }
+          forward_to = [prometheus.relabel.kepler.receiver]
+        }
+
+        prometheus.relabel "kepler" {
+          max_cache_size = 100000
+          rule {
+            source_labels = ["__name__"]
+            regex = "up|scrape_samples_scraped|kepler_.*"
+            action = "keep"
+          }
+          forward_to = argument.metrics_destinations.value
+        }
+      }

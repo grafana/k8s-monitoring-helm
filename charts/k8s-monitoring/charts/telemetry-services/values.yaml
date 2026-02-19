@@ -1,0 +1,200 @@
+---
+global:
+  # -- The specific platform for this cluster. Will enable compatibility for some platforms. Supported options: (empty) or "openshift".
+  # @section -- Global Settings
+  platform: ""
+
+## Node Exporter gathers hardware information about Linux nodes.
+node-exporter:
+  # -- Deploy Node Exporter. Set to false if your cluster already has Node Exporter deployed.
+  # @section -- Node Exporter
+  deploy: true
+
+  # @ignored
+  extraArgs:
+    # Defaults (https://github.com/prometheus/node_exporter/blob/master/collector/filesystem_linux.go#L38) + tmpfs,ramfs
+    - --collector.filesystem.fs-types-exclude=^(autofs|binfmt_misc|bpf|cgroup2?|configfs|debugfs|devpts|devtmpfs|fusectl|hugetlbfs|iso9660|mqueue|nsfs|overlay|proc|procfs|pstore|rpc_pipefs|securityfs|selinuxfs|squashfs|erofs|sysfs|tracefs|tmpfs|ramfs)$
+
+  # @ignored
+  nodeSelector:
+    kubernetes.io/os: linux
+
+  # @ignored
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: eks.amazonaws.com/compute-type
+                operator: NotIn
+                values: [fargate]
+
+  # @ignored - Enable the release label
+  releaseLabel: true
+
+  # @ignored
+  podAnnotations:
+    k8s.grafana.com/logs.job: integrations/node_exporter
+
+# Windows Exporter gathers hardware information about Windows nodes.
+windows-exporter:
+  # -- Deploy Windows Exporter. Set to false if your cluster already has Windows Exporter deployed.
+  # @section -- Windows Exporter - Deployment settings
+  deploy: true
+
+  # -- Windows Exporter configuration
+  # @ignored
+  config: |-
+    collectors:
+      enabled: cpu,container,logical_disk,memory,net,os
+    collector:
+      service:
+        include: "containerd|kubelet"
+
+  # @ignored - Enable the release label
+  releaseLabel: true
+
+  # @ignored - Set annotation to override the job label
+  podAnnotations:
+    k8s.grafana.com/logs.job: integrations/windows_exporter
+
+# kube-state-metrics gathers information about Kubernetes resources.
+kube-state-metrics:
+  # -- Deploy kube-state-metrics. Set to false if your cluster already has kube-state-metrics deployed.
+  # @section -- kube-state-metrics
+  deploy: false
+
+  # -- `kube_<resource>_labels` metrics to generate.
+  # The default is to include a useful set for Node labels.
+  # @section -- kube-state-metrics
+  metricLabelsAllowlist:
+    - nodes=[agentpool,alpha.eksctl.io/cluster-name,alpha.eksctl.io/nodegroup-name,beta.kubernetes.io/instance-type,cloud.google.com/gke-nodepool,cluster-name,ec2.amazonaws.com/Name,ec2.amazonaws.com/aws-autoscaling-groupName,ec2.amazonaws.com/aws-autoscaling-group-name,ec2.amazonaws.com/name,eks.amazonaws.com/nodegroup,k8s.io/cloud-provider-aws,karpenter.sh/nodepool,kubernetes.azure.com/cluster,kubernetes.io/arch,kubernetes.io/hostname,kubernetes.io/os,node.kubernetes.io/instance-type,topology.kubernetes.io/region,topology.kubernetes.io/zone]
+
+  # @ignored
+  nodeSelector:
+    kubernetes.io/os: linux
+
+  # @ignored
+  podAnnotations:
+    k8s.grafana.com/logs.job: integrations/kubernetes/kube-state-metrics
+
+  # @ignored - Enable the release label
+  releaseLabel: true
+
+  # @ignored - Disable autosharding
+  autosharding:
+    enabled: false
+
+  # @ignored - Recreate on update, eliminates the potential for duplicate metrics
+  updateStrategy: Recreate
+
+  # @ignored - Disable prometheus.io/scrape annotation
+  prometheusScrape: false
+
+# Kepler gathers energy metrics for the Kubernetes Cluster and the objects running inside.
+kepler:
+  # -- Deploy Kepler.
+  # @section -- Kepler
+  deploy: false
+
+  # @ignored -- Don't mount /usr/src
+  canMount:
+    usrSrc: false
+  # @ignored -- Include idle power metric estimation.
+  extraEnvVars:
+    EXPOSE_ESTIMATED_IDLE_POWER_METRICS: "true"
+  # @ignored -- Do not deploy Kepler on EKS Fargate nodes
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: eks.amazonaws.com/compute-type
+                operator: NotIn
+                values: [fargate]
+  # @ignored
+  podAnnotations:
+    k8s.grafana.com/logs.job: integrations/kepler
+
+# OpenCost gathers cost metrics for the Kubernetes Cluster and the objects running inside.
+opencost:
+  # -- Deploy OpenCost.
+  # @section -- OpenCost
+  deploy: false
+
+  # -- The name of the metric destination where OpenCost will query for required metrics. Setting this will enable
+  # guided setup for required OpenCost parameters. To skip guided setup, set this to "custom".
+  # @section -- OpenCost
+  metricsSource: ""
+
+  # @ignored -- This skips including these values in README.md
+  extraVolumes:
+    - name: configs
+      emptyDir: {}
+
+  opencost:
+    # @ignored -- This skips including these values in README.md
+    exporter:
+      # -- Default cluster ID to use if cluster is not set in Prometheus metrics. It should match cluster.name.
+      # @section -- OpenCost
+      defaultClusterId: "default-cluster"
+
+      extraEnv:
+        # -- Trial API Key used only with GCP.
+        # See https://www.opencost.io/docs/configuration/gcp-opencost for how to set for your environment
+        # @section -- Deployment: [OpenCost](https://github.com/opencost/opencost-helm-chart)
+        CLOUD_PROVIDER_API_KEY: AIzaSyD29bGxmHAVEOBYtgd8sYM2gM2ekfxQX4U
+        CURRENT_CLUSTER_ID_FILTER_ENABLED: "true"
+        PROM_CLUSTER_ID_LABEL: cluster
+
+      extraVolumeMounts:
+        - mountPath: /var/configs
+          name: configs
+          readOnly: false
+
+    # @ignored -- This skips including these values in README.md
+    carbonCost:
+      enabled: false
+
+    # @ignored -- This skips including these values in README.md
+    cloudCost:
+      enabled: false
+
+    # @ignored -- This skips including these values in README.md
+    metrics:
+      kubeStateMetrics:
+        emitKsmV1Metrics: false
+        emitKsmV1MetricsOnly: true
+
+    prometheus:
+      # -- The name of the secret containing the username and password for the metrics service. This must be in the same namespace as the OpenCost deployment.
+      # @section -- OpenCost
+      existingSecretName: ""
+      # -- The key for the username property in the secret.
+      # @section -- OpenCost
+      username_key: username
+      # -- The key for the password property in the secret.
+      # @section -- OpenCost
+      password_key: password
+      external:
+        # @ignored -- This skips including these values in README.md
+        enabled: true
+        # -- The URL for Prometheus queries. It should match externalServices.prometheus.host + "/api/prom"
+        # @section -- OpenCost
+        url: ""
+      # @ignored -- This skips including these values in README.md
+      internal:
+        enabled: false
+    # @ignored -- This skips including these values in README.md
+    ui:
+      enabled: false
+    # @ignored -- This skips including these values in README.md
+    nodeSelector:
+      kubernetes.io/os: linux
+
+    # @ignored -- This skips including these values in README.md
+    tolerations:
+      - key: kubernetes.io/arch
+        operator: Equal
+        value: arm64
+        effect: NoSchedule

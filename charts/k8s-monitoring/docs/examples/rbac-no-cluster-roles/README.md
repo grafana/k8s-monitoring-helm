@@ -59,10 +59,12 @@ clusterMetrics:
   cadvisor:
     enabled: false
 
-  kube-state-metrics:
-    namespaces: default
-    rbac:
-      useClusterRole: false
+hostMetrics:
+  enabled: true
+  linuxHosts:
+    enabled: true
+  windowsHosts:
+    enabled: true
 
 clusterEvents:
   enabled: true
@@ -90,5 +92,16 @@ alloy-operator:
   ownNamespaceOnly: true
   rbac:
     createClusterRoles: false
+
+telemetryServices:
+  kube-state-metrics:
+    deploy: true
+    namespaces: default
+    rbac:
+      useClusterRole: false
+  node-exporter:
+    deploy: true
+  windows-exporter:
+    deploy: true
 ```
 <!-- textlint-enable terminology -->

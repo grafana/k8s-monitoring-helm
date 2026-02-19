@@ -96,10 +96,13 @@ clusterMetrics:
       includeMetrics:
         - kube_pod_annotations
         - kube_pod_labels
-    metricLabelsAllowlist:       # Configures kube-state-metrics to capture Pod labels as kube_pod_labels metrics
-      - pods=[*]
-    metricAnnotationsAllowList:  # Configures kube-state-metrics to capture Pod annotations as kube_pod_annotations metrics
-      - pods=[*]
+
+hostMetrics:
+  enabled: true
+  linuxHosts:
+    enabled: true
+  windowsHosts:
+    enabled: true
 
 podLogs:
   enabled: true
@@ -136,5 +139,17 @@ alloy-receiver:
         port: 4317
         targetPort: 4317
         protocol: TCP
+
+telemetryServices:
+  kube-state-metrics:
+    deploy: true
+    metricLabelsAllowlist:  # Configures kube-state-metrics to capture Pod labels as kube_pod_labels metrics
+      - pods=[*]
+    metricAnnotationsAllowList:  # Configures kube-state-metrics to capture Pod annotations as kube_pod_annotations metrics
+      - pods=[*]
+  node-exporter:
+    deploy: true
+  windows-exporter:
+    deploy: true
 ```
 <!-- textlint-enable terminology -->

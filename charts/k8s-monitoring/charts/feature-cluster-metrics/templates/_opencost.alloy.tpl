@@ -27,7 +27,6 @@ discovery.kubernetes "opencost" {
     role = "pod"
     label = {{ $labelSelectors | join "," | quote }}
   }
-{{- include "feature.clusterMetrics.attachNodeMetadata" . | indent 2 }}
 }
 
 discovery.relabel "opencost" {
@@ -37,7 +36,6 @@ discovery.relabel "opencost" {
     action = "replace"
     target_label = "instance"
   }
-{{- include "feature.clusterMetrics.nodeDiscoveryRules" . | indent 2 }}
 {{- if .Values.opencost.extraDiscoveryRules }}
 {{ .Values.opencost.extraDiscoveryRules | indent 2 }}
 {{- end }}

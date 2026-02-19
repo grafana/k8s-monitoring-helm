@@ -17,22 +17,29 @@ destinations:
 clusterMetrics:
   enabled: true
   kube-state-metrics:
-    deploy: false
     namespace: openshift-monitoring
+    labelMatchers:
+      app.kubernetes.io/name: kube-state-metrics
     bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
     service:
       scheme: https
-      portName: https-main
-  node-exporter:
-    deploy: false
-    namespace: openshift-monitoring
-    bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
-    service:
-      scheme: https
-      portName: https
 
-  kepler:
+hostMetrics:
+  enabled: true
+  linuxHosts:
     enabled: true
+    namespace: openshift-monitoring
+    labelMatchers:
+      app.kubernetes.io/name: prometheus-node-exporter
+    bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+    scrapeSettings:
+      scheme: https
+  energyMetrics:
+    enabled: true
+
+telemetryServices:
+  kepler:
+    deploy: true
 
 clusterEvents:
   enabled: true

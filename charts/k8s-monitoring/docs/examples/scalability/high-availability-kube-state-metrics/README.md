@@ -25,9 +25,24 @@ clusterMetrics:
   enabled: true
   kube-state-metrics:
     discoveryType: service
-    replicas: 2
+
+hostMetrics:
+  enabled: true
+  linuxHosts:
+    enabled: true
+  windowsHosts:
+    enabled: true
 
 alloy-metrics:
   enabled: true
+
+telemetryServices:
+  kube-state-metrics:
+    deploy: true
+    replicas: 2
+  node-exporter:
+    deploy: true
+  windows-exporter:
+    deploy: true
 ```
 <!-- textlint-enable terminology -->

@@ -36,9 +36,6 @@ destinations:
 
 clusterMetrics:
   enabled: true
-  node-exporter:
-    deploy: false
-    enabled: false
 
 clusterEvents:
   enabled: true
@@ -61,5 +58,9 @@ alloy-logs:
   controller:
     replicas: 2
     type: deployment
+
+telemetryServices:
+  kube-state-metrics:
+    deploy: true
 ```
 <!-- textlint-enable terminology -->
