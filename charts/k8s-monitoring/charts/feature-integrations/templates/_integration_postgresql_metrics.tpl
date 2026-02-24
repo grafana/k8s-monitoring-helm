@@ -115,7 +115,7 @@ prometheus.exporter.postgres {{ include "helper.alloy_name" .name | quote }} {
   {{- if .exporter.collectors.statStatements.enabled }}
     {{- if or .exporter.collectors.statStatements.includeQuery .exporter.collectors.statStatements.queryLength }}
   stat_statements {
-    includeQuery = {{ .exporter.collectors.statStatements.includeQuery }}
+    include_query = {{ .exporter.collectors.statStatements.includeQuery }}
     {{- if .exporter.collectors.statStatements.queryLength }}
     query_length = {{ .exporter.collectors.statStatements.queryLength }}
     {{- end }}
