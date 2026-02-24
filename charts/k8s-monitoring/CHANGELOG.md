@@ -4,6 +4,7 @@
 
 *   Add an option to set the semantic convention version for Application Observability span names (@petewall)
 *   Fix Java profiling so annotation targeting no longer scrapes unannotated pods (@petewall)
+*   Fix PSQL integration includeQuery config camel_case (@Dissonant-Tech)
 
 ## 3.8.0
 
