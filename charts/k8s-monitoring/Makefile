@@ -10,8 +10,10 @@ SCHEMA_MODS_JSON_FILES = $(shell find schema-mods -name "*.json")
 SCHEMA_MODS_JQ_FILES = $(shell find schema-mods -name "*.jq")
 
 ALLOY_OPERATOR_VERSION := $(shell yq '.dependencies[] | select(.name == "alloy-operator") | .version' Chart.yaml)
+charts/alloy-operator-$(ALLOY_OPERATOR_VERSION).tgz: Chart.lock
 collectors/upstream/alloy-values.yaml: charts/alloy-operator-$(ALLOY_OPERATOR_VERSION).tgz
-	tar xzf $< -C collectors/upstream/ --strip-components=1 alloy-operator/alloy-values.yaml
+	@tar xzf $< -C collectors/upstream/ --strip-components=1 alloy-operator/alloy-values.yaml
+	@touch $@
 
 COLLECTOR_VALUES_FILES = $(shell find collectors -maxdepth 1 -name "*-values.yaml" | sort -u)
 COLLECTOR_DOCS_FILES = $(COLLECTOR_VALUES_FILES:collectors/%-values.yaml=./docs/collectors/%.md)
