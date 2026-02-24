@@ -3,6 +3,7 @@
 ## Unreleased
 
 *   Add an option to set the semantic convention version for Application Observability span names (@petewall)
+*   Fix Java profiling so annotation targeting no longer scrapes unannotated pods (@petewall)
 
 ## 3.8.0
 

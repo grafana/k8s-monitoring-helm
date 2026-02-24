@@ -59,6 +59,19 @@ discovery.relabel "java_pods" {
     action = "keep"
     regex = ".*/java$"
   }
+{{- if eq .Values.java.targetingScheme "annotation" }}
+  rule {
+    source_labels = [{{ $scrapeAnnotation | quote }}]
+    regex         = "true"
+    action        = "keep"
+  }
+{{- else }}
+  rule {
+    source_labels = [{{ $scrapeAnnotation | quote }}]
+    regex         = "false"
+    action        = "drop"
+  }
+{{- end }}
   rule {
     source_labels = ["__meta_kubernetes_namespace"]
     target_label = "namespace"
