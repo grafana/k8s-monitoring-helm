@@ -92,6 +92,12 @@ creates the pipeline with the default resource detection processor:
               "set(attributes[\"loki.resource.labels\"], \"cluster, namespace, job, pod\")",
             ]
           }
+          trace_statements {
+            context = "span"
+            statements = [
+             "set_semconv_span_name(\"1.37.0\", \"original_span_name\")",
+            ]
+          }
 
           output {
             metrics = [otelcol.processor.batch.default.input]
@@ -213,6 +219,12 @@ creates the resource detection processor with EKS info:
               "set(attributes[\"loki.resource.labels\"], \"cluster, namespace, job, pod\")",
             ]
           }
+          trace_statements {
+            context = "span"
+            statements = [
+             "set_semconv_span_name(\"1.37.0\", \"original_span_name\")",
+            ]
+          }
 
           output {
             metrics = [otelcol.processor.batch.default.input]
@@ -331,6 +343,12 @@ creates the resource detection processor with Kubernetes node info:
               "set(attributes[\"pod\"], attributes[\"k8s.pod.name\"])",
               "set(attributes[\"namespace\"], attributes[\"k8s.namespace.name\"])",
               "set(attributes[\"loki.resource.labels\"], \"cluster, namespace, job, pod\")",
+            ]
+          }
+          trace_statements {
+            context = "span"
+            statements = [
+             "set_semconv_span_name(\"1.37.0\", \"original_span_name\")",
             ]
           }
 

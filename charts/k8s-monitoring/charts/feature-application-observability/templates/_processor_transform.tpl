@@ -73,12 +73,15 @@ otelcol.processor.transform "{{ .name | default "default" }}" {
     ]
   }
 {{- end }}
-{{- if .Values.traces.transforms.span }}
+{{- if or .Values.traces.transforms.span .Values.traces.setSpanNameSemanticConvention }}
   trace_statements {
     context = "span"
     statements = [
 {{- range $transform := .Values.traces.transforms.span }}
 {{ $transform | quote | indent 6 }},
+{{- end }}
+{{- if .Values.traces.setSpanNameSemanticConvention }}
+     "set_semconv_span_name(\"{{ .Values.traces.setSpanNameSemanticConvention }}\", \"original_span_name\")",
 {{- end }}
     ]
   }

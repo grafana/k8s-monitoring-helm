@@ -90,6 +90,23 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | connectors.spanMetrics.skipInternal | bool | `true` | Skip span if span kind is internal. |
 | connectors.spanMetrics.transforms | object | `{"datapoint":[],"metric":[],"resource":[]}` | Apply transformations to span metrics after they are generated. ([docs](https://grafana.com/docs/alloy/latest/reference/components/otelcol/otelcol.processor.transform/)) |
 
+### Logs
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| logs.enabled | bool | `true` | Enable a logs pipeline for OTLP or OTLP HTTP receivers. |
+| logs.filters | object | `{"log_record":[]}` | Apply a filter to logs received via receivers. ([docs](https://grafana.com/docs/alloy/latest/reference/components/otelcol/otelcol.processor.filter/)) |
+| logs.transforms | object | `{"labels":["cluster","namespace","job","pod"],"log":[],"resource":[]}` | Apply a transformation to logs received via the OTLP or OTLP HTTP receivers. ([docs](https://grafana.com/docs/alloy/latest/reference/components/otelcol/otelcol.processor.transform/)) |
+| logs.transforms.labels | list | `["cluster","namespace","job","pod"]` | The list of labels to set in the log stream. |
+
+### Metrics
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| metrics.enabled | bool | `true` | Enable a metrics pipeline for OTLP or OTLP HTTP receivers. |
+| metrics.filters | object | `{"datapoint":[],"metric":[]}` | Apply a filter to metrics received via the OTLP or OTLP HTTP receivers. ([docs](https://grafana.com/docs/alloy/latest/reference/components/otelcol/otelcol.processor.filter/)) |
+| metrics.transforms | object | `{"datapoint":[],"metric":[],"resource":[]}` | Apply a transformation to metrics received via the OTLP or OTLP HTTP receivers. ([docs](https://grafana.com/docs/alloy/latest/reference/components/otelcol/otelcol.processor.transform/)) |
+
 ### Processors: Batch
 
 | Key | Type | Default | Description |
@@ -197,20 +214,12 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | receivers.zipkin | object | `{"enabled":false,"includeDebugMetrics":false,"port":9411}` | The Zipkin receiver configuration. |
 | receivers.zipkin.includeDebugMetrics | bool | `false` | Whether to include high-cardinality debug metrics. |
 
-### Other Values
+### Traces
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| logs.enabled | bool | `true` |  |
-| logs.filters | object | `{"log_record":[]}` | Apply a filter to logs received via receivers. ([docs](https://grafana.com/docs/alloy/latest/reference/components/otelcol/otelcol.processor.filter/)) |
-| logs.transforms | object | `{"labels":["cluster","namespace","job","pod"],"log":[],"resource":[]}` | Apply a transformation to logs received via the OTLP or OTLP HTTP receivers. ([docs](https://grafana.com/docs/alloy/latest/reference/components/otelcol/otelcol.processor.transform/)) |
-| logs.transforms.labels | list | `["cluster","namespace","job","pod"]` | The list of labels to set in the log stream. |
-| logs.transforms.log | list | `[]` | Log transformation rules. |
-| logs.transforms.resource | list | `[]` | Resource transformation rules. |
-| metrics.enabled | bool | `true` |  |
-| metrics.filters | object | `{"datapoint":[],"metric":[]}` | Apply a filter to metrics received via the OTLP or OTLP HTTP receivers. ([docs](https://grafana.com/docs/alloy/latest/reference/components/otelcol/otelcol.processor.filter/)) |
-| metrics.transforms | object | `{"datapoint":[],"metric":[],"resource":[]}` | Apply a transformation to metrics received via the OTLP or OTLP HTTP receivers. ([docs](https://grafana.com/docs/alloy/latest/reference/components/otelcol/otelcol.processor.transform/)) |
-| traces.enabled | bool | `true` |  |
-| traces.filters | object | `{"span":[],"spanevent":[]}` | Apply a filter to traces received via the OTLP or OTLP HTTP receivers. ([docs](https://grafana.com/docs/alloy/latest/reference/components/otelcol/otelcol.processor.filter/)) |
-| traces.transforms | object | `{"resource":[],"span":[],"spanevent":[]}` | Apply a transformation to traces received via the OTLP or OTLP HTTP receivers. ([docs](https://grafana.com/docs/alloy/latest/reference/components/otelcol/otelcol.processor.transform/)) |
+| traces.enabled | bool | `true` | Enable a traces pipeline. |
+| traces.filters | object | `{"span":[],"spanevent":[]}` | Apply a filter to traces. ([docs](https://grafana.com/docs/alloy/latest/reference/components/otelcol/otelcol.processor.filter/)) |
+| traces.setSpanNameSemanticConvention | string | `"1.37.0"` | Update the names of spans according to the semantic conventions. Set to "" to prevent changing span names. |
+| traces.transforms | object | `{"resource":[],"span":[],"spanevent":[]}` | Apply a transformation to traces. ([docs](https://grafana.com/docs/alloy/latest/reference/components/otelcol/otelcol.processor.transform/)) |
 <!--alex enable host-hostess-->
