@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+*   Add an option to set the semantic convention version for Application Observability span names (@petewall)
+
 ## 3.8.0
 
 *   Add the ability to enrich metrics with pod or namespace labels (@petewall)
