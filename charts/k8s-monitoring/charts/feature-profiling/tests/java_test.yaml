@@ -17,6 +17,9 @@ tests:
           of: ConfigMap
       - matchSnapshot:
           path: data["module.alloy"]
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: 'source_labels = \["__meta_kubernetes_pod_annotation_profiles_grafana_com_java_enabled"\]\s+regex\s+= "true"\s+action\s+= "keep"'
 
   - it: should be able to filter by label and annotation
     set:
@@ -53,3 +56,6 @@ tests:
           of: ConfigMap
       - matchSnapshot:
           path: data["module.alloy"]
+      - matchRegex:
+          path: data["module.alloy"]
+          pattern: 'source_labels = \["__meta_kubernetes_pod_annotation_profiles_grafana_com_java_enabled"\]\s+regex\s+= "false"\s+action\s+= "drop"'
