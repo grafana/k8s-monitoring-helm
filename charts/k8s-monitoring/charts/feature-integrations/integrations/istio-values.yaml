@@ -12,6 +12,8 @@ sidecarMetrics:
   # @section -- Sidecar Metrics Settings
   enabled: true
 
+  # -- Label selectors to be used when choosing pods with the Istio sidecar.
+  # @section -- Sidecar Metrics Settings
   labelSelectors: {}
 
   # -- The name of the Istio sidecar container.
@@ -39,7 +41,7 @@ sidecarMetrics:
   # Adjustments to the scraped metrics to filter the amount of data sent to storage.
   tuning:
     # -- Filter the list of metrics from Grafana Alloy to the minimal set required for the Grafana Alloy integration.
-    # @section -- Metric Processing Settings
+    # @section -- Sidecar Metrics Settings
     useDefaultAllowList: true
     # -- Metrics to keep. Can use regular expressions.
     # @section -- Sidecar Metrics Settings
@@ -55,20 +57,28 @@ sidecarMetrics:
   extraMetricProcessingRules: ""
 
 istiodMetrics:
-  # -- Whether to enable metrics collection from Istio .
+  # -- Whether to enable metrics collection from Istiod.
   # @section -- Istiod Metrics Settings
   enabled: true
 
+  # -- The name of the Istiod Kubernetes service.
+  # @section -- Istiod Metrics Settings
   serviceName: istiod
 
+  # -- The namespace where the Istiod Kubernetes service is deployed.
+  # @section -- Istiod Metrics Settings
   namespace: ""
 
-  # -- How frequently to scrape metrics from MySQL Exporter.
+  # -- Additional Kubernetes label selectors applied to the Istiod service.
+  # @section -- Istiod Metrics Settings
+  labelSelectors: {}
+
+  # -- How frequently to scrape metrics from Istiod.
   # @default -- `60s`
   # @section -- Istiod Metrics Settings
   scrapeInterval:
 
-  # -- The timeout for scraping metrics from MySQL Exporter.
+  # -- The timeout for scraping metrics from Istiod.
   # @default -- `10s`
   # @section -- Istiod Metrics Settings
   scrapeTimeout: ""
@@ -90,7 +100,7 @@ istiodMetrics:
     # @section -- Istiod Metrics Settings
     excludeMetrics: []
 
-  # -- Rule blocks to be added to the prometheus.relabel component for MySQL metrics.
+  # -- Rule blocks to be added to the prometheus.relabel component for Istiod.
   # These relabeling rules are applied post-scrape against the metrics returned from the scraped target, no `__meta*` labels are present.
   # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#rule-block))
   # @section -- Istiod Metrics Settings
