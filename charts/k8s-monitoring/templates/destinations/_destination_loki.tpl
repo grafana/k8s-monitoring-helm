@@ -105,6 +105,26 @@ loki.write {{ include "helper.alloy_name" .name | quote }} {
       {{- if .auth.oauth2.tokenURL }}
       token_url = {{ .auth.oauth2.tokenURL | quote }}
       {{- end }}
+      {{- if .auth.oauth2.tls }}
+      tls_config {
+        insecure_skip_verify = {{ .auth.oauth2.tls.insecureSkipVerify | default false }}
+        {{- if .auth.oauth2.tls.caFile }}
+        ca_file = {{ .auth.oauth2.tls.caFile | quote }}
+        {{- else if eq (include "secrets.usesSecret" (dict "object" . "key" "auth.oauth2.tls.ca")) "true" }}
+        ca_pem = {{ include "secrets.read" (dict "object" . "key" "auth.oauth2.tls.ca" "nonsensitive" true) }}
+        {{- end }}
+        {{- if .auth.oauth2.tls.certFile }}
+        cert_file = {{ .auth.oauth2.tls.certFile | quote }}
+        {{- else if eq (include "secrets.usesSecret" (dict "object" . "key" "auth.oauth2.tls.cert")) "true" }}
+        cert_pem = {{ include "secrets.read" (dict "object" . "key" "auth.oauth2.tls.cert" "nonsensitive" true) }}
+        {{- end }}
+        {{- if .auth.oauth2.tls.keyFile }}
+        key_file = {{ .auth.oauth2.tls.keyFile | quote }}
+        {{- else if eq (include "secrets.usesSecret" (dict "object" . "key" "auth.oauth2.tls.key")) "true" }}
+        key_pem = {{ include "secrets.read" (dict "object" . "key" "auth.oauth2.tls.key") }}
+        {{- end }}
+      }
+      {{- end }}
     }
 {{- end }}
 {{- if .tls }}
@@ -157,6 +177,9 @@ loki.write {{ include "helper.alloy_name" .name | quote }} {
 - auth.bearerToken
 - auth.oauth2.clientId
 - auth.oauth2.clientSecret
+- auth.oauth2.tls.ca
+- auth.oauth2.tls.cert
+- auth.oauth2.tls.key
 - tls.ca
 - tls.cert
 - tls.key

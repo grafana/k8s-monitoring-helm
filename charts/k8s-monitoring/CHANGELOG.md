@@ -3,6 +3,7 @@
 ## Unreleased
 
 *   Find Pod logs for static pods using the config.mirror annotation (@sebastian-de)
+*   Add TLS configuration support for OAuth2 token endpoints across all destinations (@petewall)
 
 ## 3.8.1
 
