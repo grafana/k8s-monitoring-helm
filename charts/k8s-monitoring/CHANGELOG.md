@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+*   Find Pod logs for static pods using the config.mirror annotation (@sebastian-de)
+
 ## 3.8.1
 
 *   Add an option to set the semantic convention version for Application Observability span names (@petewall)
