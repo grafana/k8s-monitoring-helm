@@ -51,13 +51,31 @@ declare "istio_integration" {
   {{- if .sidecarMetrics.enabled }}
     {{- $metricAllowList := include "integrations.istio.sidecar.allowList" (dict "instance" . "Files" $.Files) | fromYamlArray }}
     {{- $metricDenyList := .sidecarMetrics.tuning.excludeMetrics }}
+    {{- $labelSelectors := list }}
+    {{- range $k, $v := .sidecarMetrics.labelSelectors }}
+      {{- if kindIs "slice" $v }}
+        {{- $labelSelectors = append $labelSelectors (printf "%s in (%s)" $k (join "," $v)) }}
+      {{- else }}
+        {{- $labelSelectors = append $labelSelectors (printf "%s=%s" $k $v) }}
+      {{- end }}
+    {{- end }}
 discovery.kubernetes {{ printf "%s_sidecar" (include "helper.alloy_name" .name) | quote }} {
   role = "pod"
-  // TODO: Add label selectors
+{{- if $labelSelectors }}
+  selectors {
+    role = "pod"
+    label = {{ $labelSelectors | join "," | quote }}
+  }
+{{- end }}
 }
 
 discovery.relabel {{ printf "%s_sidecar" (include "helper.alloy_name" .name) | quote }} {
   targets = discovery.kubernetes.{{ printf "%s_sidecar" (include "helper.alloy_name" .name) }}.targets
+  rule {
+    source_labels = ["__meta_kubernetes_pod_controller_kind", "__meta_kubernetes_pod_phase"]
+    regex         = "Job;(Succeeded|Failed)"
+    action        = "drop"
+  }
 
   rule {
     source_labels = ["__meta_kubernetes_pod_container_name"]
@@ -130,13 +148,30 @@ prometheus.relabel {{ printf "%s_sidecar" (include "helper.alloy_name" .name) | 
   {{- if .istiodMetrics.enabled }}
     {{- $metricAllowList := include "integrations.istio.istiod.allowList" (dict "instance" . "Files" $.Files) | fromYamlArray }}
     {{- $metricDenyList := .istiodMetrics.tuning.excludeMetrics }}
+    {{- $istiodLabelSelectors := list }}
+    {{- range $k, $v := .istiodMetrics.labelSelectors }}
+      {{- if kindIs "slice" $v }}
+        {{- $istiodLabelSelectors = append $istiodLabelSelectors (printf "%s in (%s)" $k (join "," $v)) }}
+      {{- else }}
+        {{- $istiodLabelSelectors = append $istiodLabelSelectors (printf "%s=%s" $k $v) }}
+      {{- end }}
+    {{- end }}
 discovery.kubernetes {{ printf "%s_istiod" (include "helper.alloy_name" .name) | quote }} {
   role = "endpoints"
   selectors {
     role = "service"
+{{- if .istiodMetrics.serviceName }}
     field = "metadata.name={{ .istiodMetrics.serviceName }}"
+{{- end }}
+{{- if $istiodLabelSelectors }}
+    label = {{ $istiodLabelSelectors | join "," | quote }}
+{{- end }}
   }
-  // TODO: label selectors and namespace selectors
+{{- if .istiodMetrics.namespace }}
+  namespaces {
+    names = [{{ .istiodMetrics.namespace | quote }}]
+  }
+{{- end }}
 }
 
 discovery.relabel {{ printf "%s_istiod" (include "helper.alloy_name" .name) | quote }} {

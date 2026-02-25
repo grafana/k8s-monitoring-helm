@@ -488,11 +488,15 @@ declare "istio_integration" {
 
   discovery.kubernetes "istio_sidecar" {
     role = "pod"
-    // TODO: Add label selectors
   }
 
   discovery.relabel "istio_sidecar" {
     targets = discovery.kubernetes.istio_sidecar.targets
+    rule {
+      source_labels = ["__meta_kubernetes_pod_controller_kind", "__meta_kubernetes_pod_phase"]
+      regex         = "Job;(Succeeded|Failed)"
+      action        = "drop"
+    }
 
     rule {
       source_labels = ["__meta_kubernetes_pod_container_name"]
@@ -559,7 +563,6 @@ declare "istio_integration" {
       role = "service"
       field = "metadata.name=istiod"
     }
-    // TODO: label selectors and namespace selectors
   }
 
   discovery.relabel "istio_istiod" {
