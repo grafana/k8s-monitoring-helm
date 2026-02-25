@@ -134,6 +134,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
+| linuxHosts.bearerTokenFile | string | `""` | The bearer token file to use when scraping metrics from Node Exporter. |
 | linuxHosts.enabled | bool | `false` | Scrape Linux host metrics. |
 | linuxHosts.extraDiscoveryRules | string | `""` | Rule blocks to be added to the discovery.relabel component for discovering Node Exporter pods. These relabeling rules are applied pre-scrape against the targets from service discovery. Before the scrape, any remaining target labels that start with __ (i.e. __meta_kubernetes*) are dropped. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.relabel/#rule-block)) |
 | linuxHosts.extraMetricProcessingRules | string | `""` | Rule blocks to be added for processing Linux host metrics. These relabeling rules are applied post-scrape against the metrics returned from the scraped target, no `__meta*` labels are present. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#rule-block)) |
@@ -146,15 +147,15 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | linuxHosts.metricsTuning.useDefaultAllowList | bool | `true` | Filter the list of metrics from Node Exporter to the minimal set required for Kubernetes Monitoring. |
 | linuxHosts.metricsTuning.useIntegrationAllowList | bool | `false` | Filter the list of metrics from Node Exporter to the minimal set required for Kubernetes Monitoring as well as the Node Exporter integration. |
 | linuxHosts.namespace | string | `""` | Namespace to locate Node Exporter pods. If deploying from telemetry services, this will automatically be populated. |
-| linuxHosts.scrapeSettings.bearerTokenFile | string | `""` | The bearer token file to use when scraping metrics from Node Exporter. |
-| linuxHosts.scrapeSettings.interval | string | `60s` | How frequently to scrape Linux host metrics. |
-| linuxHosts.scrapeSettings.scheme | string | `"http"` | The scrape scheme for Linux host metrics. |
-| linuxHosts.scrapeSettings.timeout | string | `10s` | The timeout for scraping Linux host metrics. |
+| linuxHosts.scheme | string | `"http"` | The scrape scheme for Linux host metrics. |
+| linuxHosts.scrapeInterval | string | `60s` | How frequently to scrape Linux host metrics. |
+| linuxHosts.scrapeTimeout | string | `10s` | The timeout for scraping Linux host metrics. |
 
 ### Windows Host
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
+| windowsHosts.bearerTokenFile | string | `""` | The bearer token file to use when scraping metrics from Windows Exporter. |
 | windowsHosts.enabled | bool | `false` | Scrape node metrics |
 | windowsHosts.extraDiscoveryRules | string | `""` | Rule blocks to be added to the discovery.relabel component for Windows Exporter. These relabeling rules are applied pre-scrape against the targets from service discovery. Before the scrape, any remaining target labels that start with __ (i.e. __meta_kubernetes*) are dropped. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.relabel/#rule-block)) |
 | windowsHosts.extraMetricProcessingRules | string | `""` | Rule blocks to be added to the prometheus.relabel component for Windows Exporter metrics. These relabeling rules are applied post-scrape against the metrics returned from the scraped target, no `__meta*` labels are present. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#rule-block)) |
@@ -165,8 +166,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | windowsHosts.metricsTuning.includeMetrics | list | `[]` | Metrics to keep. Can use regular expressions. |
 | windowsHosts.metricsTuning.useDefaultAllowList | bool | `true` | Filter the list of metrics from Windows Exporter to the minimal set required for Kubernetes Monitoring. |
 | windowsHosts.namespace | string | `""` | Namespace to locate Windows Exporter pods. If deploying from telemetry services, this will automatically be  # populated. |
-| windowsHosts.scrapeSettings.bearerTokenFile | string | `""` | The bearer token file to use when scraping metrics from Windows Exporter. |
-| windowsHosts.scrapeSettings.interval | string | `60s` | How frequently to scrape Windows host metrics. |
-| windowsHosts.scrapeSettings.scheme | string | `"http"` | The scrape scheme for Windows host metrics. |
-| windowsHosts.scrapeSettings.timeout | string | `10s` | The timeout for scraping Windows host metrics. |
+| windowsHosts.scheme | string | `"http"` | The scrape scheme for Windows host metrics. |
+| windowsHosts.scrapeInterval | string | `60s` | How frequently to scrape Windows host metrics. |
+| windowsHosts.scrapeTimeout | string | `10s` | The timeout for scraping Windows host metrics. |
 <!-- markdownlint-enable no-space-in-emphasis -->

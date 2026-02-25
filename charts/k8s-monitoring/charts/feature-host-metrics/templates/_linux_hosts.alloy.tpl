@@ -144,14 +144,14 @@ discovery.relabel "node_exporter" {
 prometheus.scrape "node_exporter" {
   targets = discovery.relabel.node_exporter.output
   job_name = {{ .Values.linuxHosts.jobLabel | quote }}
-  scrape_interval = {{ .Values.linuxHosts.scrapeSettings.interval | default .Values.global.scrapeInterval | quote }}
-  scrape_timeout = {{ .Values.linuxHosts.scrapeSettings.timeout | default .Values.global.scrapeTimeout | quote }}
+  scrape_interval = {{ .Values.linuxHosts.scrapeInterval | default .Values.global.scrapeInterval | quote }}
+  scrape_timeout = {{ .Values.linuxHosts.scrapeTimeout | default .Values.global.scrapeTimeout | quote }}
   scrape_protocols = {{ .Values.global.scrapeProtocols | toJson }}
   scrape_classic_histograms = {{ .Values.global.scrapeClassicHistograms }}
   scrape_native_histograms = {{ .Values.global.scrapeNativeHistograms }}
-  scheme = {{ .Values.linuxHosts.scrapeSettings.scheme | quote }}
-  {{- if .Values.linuxHosts.scrapeSettings.bearerTokenFile }}
-  bearer_token_file = {{ .Values.linuxHosts.scrapeSettings.bearerTokenFile | quote }}
+  scheme = {{ .Values.linuxHosts.scheme | quote }}
+  {{- if .Values.linuxHosts.bearerTokenFile }}
+  bearer_token_file = {{ .Values.linuxHosts.bearerTokenFile | quote }}
   {{- end }}
   tls_config {
     insecure_skip_verify = true
