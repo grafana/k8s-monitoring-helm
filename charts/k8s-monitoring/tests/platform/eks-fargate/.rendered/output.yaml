@@ -1369,6 +1369,17 @@ data:
           replacement = "/var/log/pods/*$1/*.log"
           target_label = "__path__"
         }
+    
+        // If kubernetes.io/config.mirror is set, this is a static pod, created by the kubelet.
+        // It's logs live on a different path.
+        rule {
+          source_labels = ["__meta_kubernetes_pod_annotation_kubernetes_io_config_mirror", "__meta_kubernetes_pod_container_name"]
+          separator = "/"
+          regex = "(.+/.+)"
+          action = "replace"
+          replacement = "/var/log/pods/*$1/*.log"
+          target_label = "__path__"
+        }
       }
     
       local.file_match "pod_logs" {
