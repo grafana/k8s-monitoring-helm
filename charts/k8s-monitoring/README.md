@@ -477,12 +477,12 @@ details:
 | selfReporting.enabled | bool | `true` | Enable Self-reporting. |
 | selfReporting.scrapeInterval | string | 60s | How frequently to generate self-report metrics. This does utilize the global scrapeInterval setting. |
 
-### Other Values
+### Telemetry Services
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| telemetryServices.kepler.deploy | bool | `false` |  |
-| telemetryServices.kube-state-metrics.deploy | bool | `false` |  |
-| telemetryServices.node-exporter.deploy | bool | `false` |  |
-| telemetryServices.opencost.deploy | bool | `false` |  |
-| telemetryServices.windows-exporter.deploy | bool | `false` |  |
+| telemetryServices.kepler.deploy | bool | `false` | Deploy [Kepler](https://sustainable-computing.io/) to gather energy usage metrics from the Kubernetes Cluster nodes. |
+| telemetryServices.kube-state-metrics.deploy | bool | `false` | Deploy kube-state-metrics to expose Kubernetes object metadata as Prometheus metrics. |
+| telemetryServices.node-exporter.deploy | bool | `false` | Deploy Node Exporter to gather Linux node hardware and OS metrics. |
+| telemetryServices.opencost.deploy | bool | `false` | Deploy OpenCost to calculate and expose Kubernetes cost allocation metrics. |
+| telemetryServices.windows-exporter.deploy | bool | `false` | Deploy Windows Exporter to gather Windows node hardware and OS metrics. |
