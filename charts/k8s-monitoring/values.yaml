@@ -503,3 +503,22 @@ extraObjects: []
 #     dataFrom:
 #     - extract:
 #         key: mysecret
+# - |-
+#   apiVersion: external-secrets.io/v1beta1
+#   kind: ExternalSecret
+#   metadata:
+#     name: prometheus-secret
+#   spec:
+#     refreshInterval: 1h
+#     secretStoreRef:
+#       kind: SecretStore
+#       name: example
+#     target:
+#       template:
+#         data:
+#           prometheus_host: "{{ .Values.externalServices.prometheus.host }}"
+#           username: "{{`{{ .username }}`}}"
+#           password: "{{`{{ .password }}`}}"
+#     dataFrom:
+#     - extract:
+#         key: mysecret
