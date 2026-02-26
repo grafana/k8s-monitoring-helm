@@ -18,7 +18,7 @@
     {{- $labelSelectors = append $labelSelectors (printf "%s=%s" $label $value) }}
   {{- end }}
 {{- else if dig "opencost" "deploy" false (.telemetryServices | default dict) }}
-  {{- $labelSelectors = append $labelSelectors (printf "release=%s" .Release.Name) }}
+  {{- $labelSelectors = append $labelSelectors (printf "app.kubernetes.io/instance=%s" .Release.Name) }}
   {{- $labelSelectors = append $labelSelectors "app.kubernetes.io/name=opencost" }}
 {{- end }}
 

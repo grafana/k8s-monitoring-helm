@@ -337,7 +337,7 @@ data:
         role = "pod"
         selectors {
           role = "pod"
-          label = "release=k8smon,app.kubernetes.io/name=opencost"
+          label = "app.kubernetes.io/instance=k8smon,app.kubernetes.io/name=opencost"
         }
         namespaces {
           names = ["default"]
@@ -1016,9 +1016,6 @@ spec:
     - name: http
       port: 9003
       targetPort: 9003
-    - name: mcp-server
-      port: 8081
-      targetPort: 8081
 ---
 # Source: k8s-monitoring/charts/alloy-operator/templates/deployment.yaml
 apiVersion: apps/v1
@@ -1235,8 +1232,6 @@ spec:
           ports:
             - containerPort: 9003
               name: http
-            - containerPort: 8081
-              name: mcp-server
           resources:
             limits:
               memory: 1Gi
@@ -1306,11 +1301,8 @@ spec:
               value: "true"
             - name: PROM_CLUSTER_ID_LABEL
               value: "cluster"
-            # MCP Server Configuration
             - name: MCP_SERVER_ENABLED
-              value: "true"
-            - name: MCP_HTTP_PORT
-              value: "8081"
+              value: "false"
           volumeMounts:
             - mountPath: /var/configs
               name: configs
