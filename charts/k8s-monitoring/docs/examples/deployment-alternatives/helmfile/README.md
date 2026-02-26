@@ -1,39 +1,34 @@
+# Helmfile
+
+This example shows how to deploy the Kubernetes Monitoring Helm chart using [Helmfile](https://helmfile.readthedocs.io/en/latest/).
+
+## Helmfile
+
+```yaml
 ---
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
-  name: k8s-monitoring-application
-  namespace: argocd
-operation:
-  sync:
-    syncStrategy:
-      hook: {}
-spec:
-  project: default
-  syncPolicy:
-    automated:
-      selfHeal: true
-      enabled: true
-    syncOptions:
-      - Retry=true
-    retry:
-      limit: 5
-      backoff:
-        duration: 5s
-        factor: 2
-        maxDuration: 1m
-  destination:
-    server: "https://kubernetes.default.svc"
-    namespace: default
-  source:
-    repoURL: https://github.com/grafana/k8s-monitoring-helm.git
-    path: charts/k8s-monitoring
-    targetRevision: "main"
-    helm:
-      releaseName: k8smon
-      valuesObject:
-        cluster:
-          name: argocd-deployment-test
+repositories:
+  - name: grafana
+    url: https://grafana.github.io/helm-charts
+  - name: prometheus-community
+    url: https://prometheus-community.github.io/helm-charts
+  - name: kepler
+    url: https://sustainable-computing-io.github.io/kepler-helm-chart
+  - name: opencost
+    url: https://opencost.github.io/opencost-helm-chart
+
+helmDefaults:
+  diffArgs:
+    - --disable-validation  # Required because this Helm chart deploys CRDs *and* deploys CRs at the same time.
+    - --api-versions collectors.grafana.com/v1alpha1/Alloy
+
+releases:
+  - name: k8smon
+    namespace: monitoring
+    chart: ../../../..
+    values:
+      - cluster:
+          name: helmfile-test
+
         destinations:
           - name: localPrometheus
             type: prometheus
@@ -50,10 +45,13 @@ spec:
               type: basic
               username: loki
               password: lokipassword
+
         clusterMetrics:
           enabled: true
+
         costMetics:
           enabled: true
+
         hostMetrics:
           enabled: true
           linuxHosts:
@@ -62,20 +60,21 @@ spec:
             enabled: true
           energyMetrics:
             enabled: true
+
         clusterEvents:
           enabled: true
+
         podLogs:
           enabled: true
+
         alloy-metrics:
           enabled: true
+
         alloy-singleton:
           enabled: true
+
         alloy-logs:
           enabled: true
-        collectorCommon:
-          alloy:
-            annotations:
-              argocd.argoproj.io/sync-wave: "1"
 
         telemetryServices:
           kube-state-metrics:
@@ -96,3 +95,4 @@ spec:
                 existingSecretName: localprometheus-k8smon-k8s-monitoring
                 external:
                   url: http://prometheus-server.prometheus.svc:9090
+```
