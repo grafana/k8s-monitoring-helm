@@ -282,7 +282,10 @@ declare "cost_metrics" {
     role = "pod"
     selectors {
       role = "pod"
-      label = ""
+      label = "release=k8smon,app.kubernetes.io/name=opencost"
+    }
+    namespaces {
+      names = ["default"]
     }
   }
 
@@ -514,7 +517,7 @@ declare "host_metrics" {
     scrape_classic_histograms = false
     scrape_native_histograms = false
     clustering {
-      enabled = false
+      enabled = true
     }
     forward_to = [prometheus.relabel.windows_exporter.receiver]
   }

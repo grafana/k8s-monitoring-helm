@@ -39,37 +39,6 @@ hostMetrics:
   windowsHosts:
     enabled: true
 
-telemetryServices:
-  kepler:
-    deploy: true
-    tolerations:
-      - key: protected-node
-        effect: NoSchedule
-        operator: Exists
-  kube-state-metrics:
-    deploy: true
-    tolerations:
-      - key: protected-node
-        effect: NoSchedule
-        operator: Exists
-  node-exporter:
-    deploy: true
-    tolerations:
-      - key: protected-node
-        effect: NoSchedule
-        operator: Exists
-  windows-exporter:
-    deploy: true
-    tolerations:
-      - key: protected-node
-        effect: NoSchedule
-        operator: Exists
-  opencost:
-    tolerations:
-      - key: protected-node
-        effect: NoSchedule
-        operator: Exists
-
 autoInstrumentation:
   enabled: true
   spanMetricsOnly: true
@@ -109,5 +78,45 @@ alloy-operator:
       - key: protected-node
         effect: NoSchedule
         operator: Exists
+
+
+telemetryServices:
+  kepler:
+    deploy: true
+    tolerations:
+      - key: protected-node
+        effect: NoSchedule
+        operator: Exists
+  kube-state-metrics:
+    deploy: true
+    tolerations:
+      - key: protected-node
+        effect: NoSchedule
+        operator: Exists
+  node-exporter:
+    deploy: true
+    tolerations:
+      - key: protected-node
+        effect: NoSchedule
+        operator: Exists
+  windows-exporter:
+    deploy: true
+    tolerations:
+      - key: protected-node
+        effect: NoSchedule
+        operator: Exists
+  opencost:
+    deploy: true
+    metricsSource: prometheus
+    tolerations:
+      - key: protected-node
+        effect: NoSchedule
+        operator: Exists
+    opencost:
+      exporter:
+        defaultClusterId: tolerations-example-cluster
+      prometheus:
+        external:
+          url: http://prometheus.prometheus.svc:9090/api/v1/query
 ```
 <!-- textlint-enable terminology -->

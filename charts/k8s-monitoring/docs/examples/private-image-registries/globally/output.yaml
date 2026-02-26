@@ -64,6 +64,21 @@ automountServiceAccountToken: false
 imagePullSecrets:  
   - name: my-registry-creds
 ---
+# Source: k8s-monitoring/charts/telemetryServices/charts/opencost/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: k8smon-opencost
+  namespace: default
+  labels:
+    helm.sh/chart: opencost-2.5.9
+    app.kubernetes.io/name: opencost
+    app.kubernetes.io/instance: k8smon
+    app.kubernetes.io/version: "1.119.2"
+    app.kubernetes.io/part-of: opencost
+    app.kubernetes.io/managed-by: Helm
+automountServiceAccountToken: true
+---
 # Source: k8s-monitoring/charts/telemetryServices/charts/windows-exporter/templates/serviceaccount.yaml
 apiVersion: v1
 kind: ServiceAccount
@@ -397,7 +412,10 @@ data:
         role = "pod"
         selectors {
           role = "pod"
-          label = ""
+          label = "release=k8smon,app.kubernetes.io/name=opencost"
+        }
+        namespaces {
+          names = ["default"]
         }
       }
     
@@ -629,7 +647,7 @@ data:
         scrape_classic_histograms = false
         scrape_native_histograms = false
         clustering {
-          enabled = false
+          enabled = true
         }
         forward_to = [prometheus.relabel.windows_exporter.receiver]
       }
@@ -1586,6 +1604,93 @@ rules:
     - volumeattachments
   verbs: ["list", "watch"]
 ---
+# Source: k8s-monitoring/charts/telemetryServices/charts/opencost/templates/clusterrole.yaml
+# Cluster role giving opencost to get, list, watch required resources
+# No write permissions are required
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: k8smon-opencost
+  labels:
+    helm.sh/chart: opencost-2.5.9
+    app.kubernetes.io/name: opencost
+    app.kubernetes.io/instance: k8smon
+    app.kubernetes.io/version: "1.119.2"
+    app.kubernetes.io/part-of: opencost
+    app.kubernetes.io/managed-by: Helm
+rules:
+  - apiGroups: [""]
+    resources:
+      - configmaps
+      - deployments
+      - nodes
+      - pods
+      - services
+      - resourcequotas
+      - replicationcontrollers
+      - limitranges
+      - persistentvolumeclaims
+      - persistentvolumes
+      - namespaces
+      - endpoints
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - extensions
+    resources:
+      - daemonsets
+      - deployments
+      - replicasets
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - apps
+    resources:
+      - statefulsets
+      - deployments
+      - daemonsets
+      - replicasets
+    verbs:
+      - list
+      - watch
+  - apiGroups:
+      - batch
+    resources:
+      - cronjobs
+      - jobs
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - autoscaling
+    resources:
+      - horizontalpodautoscalers
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - policy
+    resources:
+      - poddisruptionbudgets
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - storage.k8s.io
+    resources:
+      - storageclasses
+    verbs:
+      - get
+      - list
+      - watch
+---
 # Source: k8s-monitoring/charts/alloy-operator/templates/rbac/alloy-manager.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -1662,6 +1767,27 @@ subjects:
 - kind: ServiceAccount
   name: k8smon-kube-state-metrics
   namespace: default
+---
+# Source: k8s-monitoring/charts/telemetryServices/charts/opencost/templates/clusterrolebinding.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: k8smon-opencost
+  labels:
+    helm.sh/chart: opencost-2.5.9
+    app.kubernetes.io/name: opencost
+    app.kubernetes.io/instance: k8smon
+    app.kubernetes.io/version: "1.119.2"
+    app.kubernetes.io/part-of: opencost
+    app.kubernetes.io/managed-by: Helm
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: k8smon-opencost
+subjects:
+  - kind: ServiceAccount
+    name: k8smon-opencost
+    namespace: default
 ---
 # Source: k8s-monitoring/charts/alloy-operator/templates/rbac/leader-election.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -1834,6 +1960,32 @@ spec:
   selector:
     app.kubernetes.io/name: node-exporter
     app.kubernetes.io/instance: k8smon
+---
+# Source: k8s-monitoring/charts/telemetryServices/charts/opencost/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: k8smon-opencost
+  namespace: default
+  labels:
+    helm.sh/chart: opencost-2.5.9
+    app.kubernetes.io/name: opencost
+    app.kubernetes.io/instance: k8smon
+    app.kubernetes.io/version: "1.119.2"
+    app.kubernetes.io/part-of: opencost
+    app.kubernetes.io/managed-by: Helm
+spec:
+  selector:
+    app.kubernetes.io/name: opencost
+    app.kubernetes.io/instance: k8smon
+  type: "ClusterIP"
+  ports:
+    - name: http
+      port: 9003
+      targetPort: 9003
+    - name: mcp-server
+      port: 8081
+      targetPort: 8081
 ---
 # Source: k8s-monitoring/charts/telemetryServices/charts/windows-exporter/templates/service.yaml
 apiVersion: v1
@@ -2402,6 +2554,148 @@ spec:
         - name: my-registry-creds
       nodeSelector:
         kubernetes.io/os: linux
+---
+# Source: k8s-monitoring/charts/telemetryServices/charts/opencost/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: k8smon-opencost
+  namespace: default
+  labels:
+    helm.sh/chart: opencost-2.5.9
+    app.kubernetes.io/name: opencost
+    app.kubernetes.io/instance: k8smon
+    app.kubernetes.io/version: "1.119.2"
+    app.kubernetes.io/part-of: opencost
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    checksum/configs: 930260623d85bc2f803e4342c37094e5e1f9ba8b76314664d4abc01dca140c56
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: opencost
+      app.kubernetes.io/instance: k8smon
+  strategy: 
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: opencost
+        app.kubernetes.io/instance: k8smon
+    spec:
+      imagePullSecrets:
+        - name: my-registry-creds
+      serviceAccountName: k8smon-opencost
+      automountServiceAccountToken: true
+      tolerations:
+        - effect: NoSchedule
+          key: kubernetes.io/arch
+          operator: Equal
+          value: arm64
+      nodeSelector:
+        kubernetes.io/os: linux
+      initContainers:
+      containers:
+        - name: k8smon-opencost
+          image: my.registry.com/opencost/opencost:1.119.2@sha256:4b8de6e029b9dc1f7e68bdf1cf02fca7649614c23812e51a63820f113ca97b89
+          imagePullPolicy: IfNotPresent
+          args:
+          ports:
+            - containerPort: 9003
+              name: http
+            - containerPort: 8081
+              name: mcp-server
+          resources:
+            limits:
+              memory: 1Gi
+            requests:
+              cpu: 10m
+              memory: 55Mi
+          startupProbe:
+            httpGet:
+              path: /healthz
+              port: 9003
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            failureThreshold: 30
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 9003
+            initialDelaySeconds: 10
+            periodSeconds: 20
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 9003
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            failureThreshold: 3
+          env:
+            - name: LOG_LEVEL
+              value: info
+            - name: CUSTOM_COST_ENABLED
+              value: "false"
+            - name: INSTALL_NAMESPACE
+              value: default
+            - name: PROMETHEUS_QUERY_RESOLUTION_SECONDS
+              value: "300"
+            - name: API_PORT
+              value: "9003"
+            - name: PROMETHEUS_SERVER_ENDPOINT
+              value: "http://prometheus.prometheus.svc:9090/api/v1/query"
+            - name: INSECURE_SKIP_VERIFY
+              value: "false"
+            - name: CLUSTER_ID
+              value: "global-private-image-registries-example-cluster"
+            - name: RESOLUTION_1D_RETENTION
+              value: "15"
+            - name: RESOLUTION_1H_RETENTION
+              value: "49"
+            - name: CLOUD_COST_ENABLED
+              value: "false"
+            - name: CLOUD_COST_MONTH_TO_DATE_INTERVAL
+              value: "6"
+            - name: CLOUD_COST_REFRESH_RATE_HOURS
+              value: "6"
+            - name: CLOUD_COST_QUERY_WINDOW_DAYS
+              value: "7"
+            - name: CLOUD_COST_RUN_WINDOW_DAYS
+              value: "3"
+            - name: EMIT_KSM_V1_METRICS
+              value: "false"
+            - name: EMIT_KSM_V1_METRICS_ONLY
+              value: "true"
+            # Add any additional provided variables
+            - name: CLOUD_PROVIDER_API_KEY
+              value: "AIzaSyD29bGxmHAVEOBYtgd8sYM2gM2ekfxQX4U"
+            - name: CURRENT_CLUSTER_ID_FILTER_ENABLED
+              value: "true"
+            - name: PROM_CLUSTER_ID_LABEL
+              value: "cluster"
+            # MCP Server Configuration
+            - name: MCP_SERVER_ENABLED
+              value: "true"
+            - name: MCP_HTTP_PORT
+              value: "8081"
+          volumeMounts:
+            - mountPath: /var/configs
+              name: configs
+              readOnly: false
+      volumes:
+        - emptyDir: {}
+          name: configs
+---
+# Source: k8s-monitoring/charts/telemetryServices/charts/opencost/templates/httproute.yaml
+---
+---
+# Source: k8s-monitoring/charts/telemetryServices/charts/opencost/templates/ingress.yaml
+---
 ---
 # Source: k8s-monitoring/templates/alloy-sampler.yaml
 apiVersion: collectors.grafana.com/v1alpha1

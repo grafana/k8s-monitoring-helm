@@ -64,8 +64,8 @@ TODO:
          app.kubernetes.io/name: prometheus-node-exporter
    ```
 
-6. **Remote config deployments:** keep feature blocks disabled, only deploy telemetry services so Fleet Management can push config later. Reuse the example from `Splitting-feature-and-services.md`.
-7. **Validate locally:** run `helm template` or `make examples` to catch validation failures. Copy the exact `fail` messages from `_validation.tpl` into this guide for troubleshooting.
+6. **Remote config deployments:** do not enable feature charts, only deploy telemetry services so Fleet Management can push config later. Reuse the example from `Splitting-feature-and-services.md`.
+7. **Validate locally:** run `helm template` or `make examples` to catch validation issues. Copy the exact `fail` messages from `_validation.tpl` into this guide for troubleshooting.
 
 ## Example Before/After (values excerpt)
 

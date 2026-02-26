@@ -83,10 +83,16 @@ telemetryServices:
 
   # OpenCost does not utilize the global image registry settings
   opencost:
+    deploy: true
+    metricsSource: prometheus
     imagePullSecrets:
       - name: my-registry-creds
     opencost:
+      prometheus:
+        external:
+          url: http://prometheus.prometheus.svc:9090/api/v1/query
       exporter:
+        defaultClusterId: global-private-image-registries-example-cluster
         image:
           registry: my.registry.com
 

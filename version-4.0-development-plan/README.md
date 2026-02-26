@@ -7,7 +7,7 @@ This doc and directory will contain the development plan and some options surrou
 ### `destinations` becomes a map
 
 The `destinations` object becomes a map, instead of a list. This will make setting and modifying this structure simpler
-for users. The v3 option `destinationsMap` basically becomes the default.
+for users. The v3 option `destinationsMap` becomes the default.
 
 Rationale: Not everyone sets the destinations in a single values.yaml file. If you set the destinations list in a values
 file, then want to override with `helm install ... --set ...` or with tools like Terraform or ArgoCD, they don't need to
