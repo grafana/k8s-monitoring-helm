@@ -1,33 +1,4 @@
 {{- if .Values.autoInstrumentation.enabled }}
-{{- $config := .Values.autoInstrumentation.beyla.config.data }}
-{{- $attributes := dict "kubernetes" (dict "enable" true "cluster_name" .Values.cluster.name) }}
-{{- $internalMetrics := dict "prometheus" (dict "port" .Values.autoInstrumentation.beyla.service.targetPort) }}
-{{- $prometheusExport := dict "port" .Values.autoInstrumentation.beyla.service.targetPort }}
-{{- $overrides := dict "attributes" $attributes "internal_metrics" $internalMetrics "prometheus_export" $prometheusExport }}
-
-{{- if and (eq .Values.autoInstrumentation.beyla.preset "network") (not .Values.autoInstrumentation.beyla.config.data.network) }}
-  {{- $network := dict "enable" true }}
-  {{- $overrides = merge $overrides (dict "network" $network) }}
-{{- end }}
-{{- if and (eq .Values.autoInstrumentation.beyla.preset "application") (not .Values.autoInstrumentation.beyla.config.data.discovery) }}
-  {{- $services := list (dict "k8s_namespace" ".") }}
-  {{- $excludeServices := list (dict "exe_path" ".*alloy.*|.*otelcol.*|.*beyla.*") }}
-  {{- $discovery := dict "services" $services "exclude_services" $excludeServices }}
-  {{- $overrides = merge $overrides (dict "discovery" $discovery) }}
-{{- end }}
-{{- if .Values.applicationObservability.enabled }}
-  {{- if .Values.autoInstrumentation.beyla.deliverTracesToApplicationObservability  }}
-    {{- $endpoint := "" }}
-    {{- if .Values.applicationObservability.receivers.otlp.grpc.enabled }}
-      {{- $endpoint = include "features.applicationObservability.receiver.grpc" . | trim }}
-    {{- else if .Values.applicationObservability.receivers.otlp.http.enabled }}
-      {{- $endpoint = include "features.applicationObservability.receiver.http" . | trim }}
-    {{- end }}
-    {{- if $endpoint }}
-      {{- $overrides = merge $overrides (dict "otel_traces_export" (dict "endpoint" $endpoint)) }}
-    {{- end }}
-  {{- end }}
-{{- end }}
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -43,5 +14,5 @@ metadata:
   {{- end }}
 data:
   beyla-config.yml: |-
-    {{- (merge $config $overrides) | toYaml | nindent 4 }}
+    {{- include "k8s-monitoring.beyla.config" . | nindent 4 }}
 {{- end }}
