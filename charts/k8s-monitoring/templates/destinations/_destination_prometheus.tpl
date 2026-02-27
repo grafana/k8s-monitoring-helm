@@ -15,7 +15,7 @@ discovery.kubernetes {{ include "helper.alloy_name" .name | quote }} {
 {{- if not $hasNamespaceLabelMetricEnrichment }}
   selectors {
     role = "pod"
-    label = {{ .metricEnrichment.podLabels | join "," | quote }}
+    label = "{{ range $i, $label := .metricEnrichment.podLabels }}{{ if $i }},{{ end }}{{ include "enrichment_label_name" $label }}{{ end }}"
   }
 {{- else }}
   attach_metadata {
@@ -34,14 +34,14 @@ discovery.relabel {{ include "helper.alloy_name" .name | quote }} {
 {{- end }}
 {{- range $label := .metricEnrichment.podLabels }}
   rule {
-    source_labels = [{{ include "pod_label" $label | quote }}]
-    target_label = {{ $label | quote }}
+    source_labels = [{{ include "pod_label" (include "enrichment_label_name" $label) | quote }}]
+    target_label = {{ include "enrichment_label_as" $label | quote }}
   }
 {{- end }}
 {{- range $label := .metricEnrichment.namespaceLabels }}
   rule {
-    source_labels = [{{ include "namespace_label" $label | quote }}]
-    target_label = {{ $label | quote }}
+    source_labels = [{{ include "namespace_label" (include "enrichment_label_name" $label) | quote }}]
+    target_label = {{ include "enrichment_label_as" $label | quote }}
   }
 {{- end }}
 }
@@ -64,7 +64,7 @@ prometheus.enrich "{{ include "helper.alloy_name" .name }}_ns" {
   targets = discovery.relabel.{{ include "helper.alloy_name" .name }}.output
   target_match_label = "__meta_kubernetes_namespace"
   metrics_match_label = "namespace"
-  labels_to_copy = {{ .metricEnrichment.namespaceLabels | toJson }}
+  labels_to_copy = [{{ range $i, $label := .metricEnrichment.namespaceLabels }}{{ if $i }},{{ end }}{{ include "enrichment_label_as" $label | quote }}{{ end }}]
 {{- if $hasPodLabelMetricEnrichment }}
   forward_to = [prometheus.enrich.{{ include "helper.alloy_name" .name }}_pod.receiver]
 {{- else }}
@@ -77,7 +77,7 @@ prometheus.enrich "{{ include "helper.alloy_name" .name }}_ns" {
 prometheus.enrich "{{ include "helper.alloy_name" .name }}_pod" {
   targets = discovery.relabel.{{ include "helper.alloy_name" .name }}.output
   target_match_label = "__meta_kubernetes_namespace_pod"
-  labels_to_copy = {{ .metricEnrichment.podLabels | toJson }}
+  labels_to_copy = [{{ range $i, $label := .metricEnrichment.podLabels }}{{ if $i }},{{ end }}{{ include "enrichment_label_as" $label | quote }}{{ end }}]
   forward_to = [prometheus.remote_write.{{ include "helper.alloy_name" .name }}.receiver]
 }
 {{- end }}
