@@ -1,0 +1,106 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Test enrichment configuration
+templates:
+  - configmap.yaml
+tests:
+  - it: should render enrichment with default settings
+    set:
+      deployAsConfigMap: true
+      enrich:
+        enabled: true
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["module.alloy"]
+
+  - it: should render enrichment with custom match labels
+    set:
+      deployAsConfigMap: true
+      enrich:
+        enabled: true
+        targetMatchLabel: "pod_ip"
+        profilesMatchLabel: "service_name"
+        labelsToCopy:
+          - namespace
+          - pod
+          - node
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["module.alloy"]
+
+  - it: should render enrichment with namespace filtering
+    set:
+      deployAsConfigMap: true
+      enrich:
+        enabled: true
+        kubernetes:
+          namespaces:
+            - production
+            - staging
+          excludeNamespaces:
+            - kube-system
+            - kube-public
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["module.alloy"]
+
+  - it: should render enrichment with label and annotation selectors
+    set:
+      deployAsConfigMap: true
+      enrich:
+        enabled: true
+        kubernetes:
+          labelSelectors:
+            app.kubernetes.io/name: myapp
+          annotationSelectors:
+            color: green
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["module.alloy"]
+
+  - it: should render enrichment with extra discovery rules
+    set:
+      deployAsConfigMap: true
+      enrich:
+        enabled: true
+        kubernetes:
+          extraDiscoveryRules: |
+            rule {
+              source_labels = ["__meta_kubernetes_pod_label_team"]
+              target_label = "team"
+            }
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["module.alloy"]
+
+  - it: should render enrichment combined with profile processing rules
+    set:
+      deployAsConfigMap: true
+      enrich:
+        enabled: true
+      profileProcessingRules: |
+        rule {
+          source_labels = ["env"]
+          target_label = "__tmp_hash"
+          action = "hashmod"
+          modulus = 2
+        }
+        rule {
+          source_labels = ["__tmp_hash"]
+          action       = "drop"
+          regex        = "^1$"
+        }
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["module.alloy"]

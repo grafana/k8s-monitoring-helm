@@ -4,8 +4,66 @@
 # @section -- Listener Configuration
 port: 4040
 
+# Settings for enriching received profiles with Kubernetes metadata using
+# [pyroscope.enrich](https://grafana.com/docs/alloy/latest/reference/components/pyroscope/pyroscope.enrich/).
+# When enabled, this discovers Kubernetes pods and enriches incoming profiles with metadata
+# labels like namespace, pod, node, container, service_name, service_namespace, and service_instance_id.
+# @section -- Enrichment
+enrich:
+  # -- Enable enrichment of received profiles with Kubernetes metadata.
+  # @section -- Enrichment
+  enabled: false
+
+  # -- The label from discovered targets to match against incoming profiles.
+  # @section -- Enrichment
+  targetMatchLabel: "service_name"
+
+  # -- The label from incoming profiles to match against discovered targets.
+  # If not set, targetMatchLabel is used for both sides.
+  # @section -- Enrichment
+  profilesMatchLabel: ""
+
+  # -- List of labels to copy from discovered targets to profiles.
+  # If empty, all labels from the discovered target are copied.
+  # @section -- Enrichment
+  labelsToCopy: []
+
+  # Settings for the Kubernetes discovery module used to find pods for enrichment.
+  # Uses [discovery.kubernetes](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.kubernetes/)
+  # and [discovery.relabel](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.relabel/) to
+  # discover and relabel Kubernetes pod targets.
+  # @section -- Enrichment (Kubernetes Discovery)
+  kubernetes:
+    # -- Select pods for enrichment based on their namespaces.
+    # @section -- Enrichment (Kubernetes Discovery)
+    namespaces: []
+
+    # -- Which namespaces to exclude from pod discovery.
+    # @section -- Enrichment (Kubernetes Discovery)
+    excludeNamespaces: []
+
+    # -- Select pods for enrichment based on pod labels.
+    # Example: `app.kubernetes.io/name: myapp` will select pods with the label `app.kubernetes.io/name=myapp`.
+    # Example with multiple values: `app.kubernetes.io/name: [myapp, myapp2]` will select pods with the label
+    # `app.kubernetes.io/name=myapp` or `app.kubernetes.io/name=myapp2`.
+    # @section -- Enrichment (Kubernetes Discovery)
+    labelSelectors: {}
+
+    # -- Select pods for enrichment based on pod annotations.
+    # Example: `color: "green"` will select pods with the annotation `color="green"`.
+    # Example with multiple values: `color: ["blue", "green"]` will select pods with the annotation `color="blue"` or
+    # `color="green"`.
+    # @section -- Enrichment (Kubernetes Discovery)
+    annotationSelectors: {}
+
+    # -- Rule blocks to be added to the discovery.relabel component for enrichment pod discovery.
+    # These relabeling rules are applied to discovered targets before they are used for enrichment.
+    # ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.relabel/#rule-block))
+    # @section -- Enrichment (Kubernetes Discovery)
+    extraDiscoveryRules: ""
+
 # -- Rule blocks to be added to the pyroscope.relabel component for received profiles.
-# These relabeling rules are applied to profiles received by this feature.
+# These relabeling rules are applied post-enrichment to profiles received by this feature.
 # ([docs](https://grafana.com/docs/alloy/latest/reference/components/pyroscope/pyroscope.relabel/#rule))
 # @section -- Profile Processing
 profileProcessingRules: ""
