@@ -28,6 +28,13 @@ destinations:
 clusterMetrics:
   enabled: true
 
+hostMetrics:
+  enabled: true
+  linuxHosts:
+    enabled: true
+  windowsHosts:
+    enabled: true
+
 podLogs:
   enabled: true
 
@@ -67,5 +74,13 @@ alloy-logs:
           hostPath:
             path: /var/alloy-log-storage
             type: DirectoryOrCreate
+
+telemetryServices:
+  kube-state-metrics:
+    deploy: true
+  node-exporter:
+    deploy: true
+  windows-exporter:
+    deploy: true
 ```
 <!-- textlint-enable terminology -->

@@ -14,7 +14,6 @@ discovery.kubernetes "apiserver" {
   namespaces {
     names = ["default"]
   }
-{{- include "feature.clusterMetrics.attachNodeMetadata" . | indent 2 }}
 }
 
 discovery.relabel "apiserver" {
@@ -41,7 +40,6 @@ discovery.relabel "apiserver" {
     target_label = "source"
   }
 
-{{- include "feature.clusterMetrics.nodeDiscoveryRules" . | indent 2 }}
 {{- if .Values.apiServer.extraDiscoveryRules }}
   {{ .Values.apiServer.extraDiscoveryRules | indent 2 }}
 {{- end }}

@@ -13,19 +13,19 @@ metadata:
     app.kubernetes.io/managed-by: Helm
 automountServiceAccountToken: true
 ---
-# Source: k8s-monitoring/charts/clusterMetrics/charts/kube-state-metrics/templates/serviceaccount.yaml
+# Source: k8s-monitoring/charts/telemetryServices/charts/kube-state-metrics/templates/serviceaccount.yaml
 apiVersion: v1
 kind: ServiceAccount
 automountServiceAccountToken: true
 metadata:
   labels:    
-    helm.sh/chart: kube-state-metrics-6.4.2
+    helm.sh/chart: kube-state-metrics-7.2.0
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: kube-state-metrics
     app.kubernetes.io/name: kube-state-metrics
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "2.17.0"
+    app.kubernetes.io/version: "2.18.0"
     release: k8smon
   name: k8smon-kube-state-metrics
   namespace: default
@@ -58,7 +58,6 @@ data:
           replacement = "kubernetes"
           target_label = "source"
         }
-    
       }
     
       // Kubelet
@@ -260,7 +259,7 @@ data:
     
         selectors {
           role = "endpoints"
-          label = "app.kubernetes.io/name=kube-state-metrics,release=k8smon"
+          label = "release=k8smon,app.kubernetes.io/name=kube-state-metrics"
         }
         namespaces {
           names = ["default"]
@@ -269,13 +268,6 @@ data:
     
       discovery.relabel "kube_state_metrics" {
         targets = discovery.kubernetes.kube_state_metrics.targets
-    
-        // only keep targets with a matching port name
-        rule {
-          source_labels = ["__meta_kubernetes_pod_container_port_name"]
-          regex = "http"
-          action = "keep"
-        }
     
         rule {
           action = "replace"
@@ -955,7 +947,7 @@ data:
     grafana_kubernetes_monitoring_build_info{version="3.8.3", namespace="default"} 1
     # HELP grafana_kubernetes_monitoring_feature_info A metric to report the enabled features of the Kubernetes Monitoring Helm chart
     # TYPE grafana_kubernetes_monitoring_feature_info gauge
-    grafana_kubernetes_monitoring_feature_info{deployments="kube-state-metrics", feature="clusterMetrics", sources="kubelet,kubeletResource,cadvisor,kube-state-metrics", version="1.0.0"} 1
+    grafana_kubernetes_monitoring_feature_info{feature="clusterMetrics", sources="kubelet,kubeletResource,cadvisor,kube-state-metrics", version="1.0.0"} 1
     grafana_kubernetes_monitoring_feature_info{feature="clusterEvents", version="1.0.0"} 1
     grafana_kubernetes_monitoring_feature_info{feature="podLogs", method="volumes", version="1.0.0"} 1
     grafana_kubernetes_monitoring_feature_info{feature="integrations", sources="alloy", version="1.0.0"} 1
@@ -1290,18 +1282,18 @@ rules:
     resources: ["clusterroles", "clusterrolebindings", "roles", "rolebindings"]
     verbs: ["*"]
 ---
-# Source: k8s-monitoring/charts/clusterMetrics/charts/kube-state-metrics/templates/role.yaml
+# Source: k8s-monitoring/charts/telemetryServices/charts/kube-state-metrics/templates/role.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   labels:    
-    helm.sh/chart: kube-state-metrics-6.4.2
+    helm.sh/chart: kube-state-metrics-7.2.0
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: kube-state-metrics
     app.kubernetes.io/name: kube-state-metrics
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "2.17.0"
+    app.kubernetes.io/version: "2.18.0"
     release: k8smon
   name: k8smon-kube-state-metrics
 rules:
@@ -1331,9 +1323,9 @@ rules:
   - deployments
   verbs: ["list", "watch"]
 
-- apiGroups: [""]
+- apiGroups: ["discovery.k8s.io"]
   resources:
-  - endpoints
+  - endpointslices
   verbs: ["list", "watch"]
 
 - apiGroups: ["autoscaling"]
@@ -1486,18 +1478,18 @@ subjects:
     name: k8smon-alloy-operator
     namespace: default
 ---
-# Source: k8s-monitoring/charts/clusterMetrics/charts/kube-state-metrics/templates/clusterrolebinding.yaml
+# Source: k8s-monitoring/charts/telemetryServices/charts/kube-state-metrics/templates/clusterrolebinding.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   labels:    
-    helm.sh/chart: kube-state-metrics-6.4.2
+    helm.sh/chart: kube-state-metrics-7.2.0
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: kube-state-metrics
     app.kubernetes.io/name: kube-state-metrics
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "2.17.0"
+    app.kubernetes.io/version: "2.18.0"
     release: k8smon
   name: k8smon-kube-state-metrics
 roleRef:
@@ -1602,20 +1594,20 @@ spec:
     app.kubernetes.io/name: alloy-operator
     app.kubernetes.io/instance: k8smon
 ---
-# Source: k8s-monitoring/charts/clusterMetrics/charts/kube-state-metrics/templates/service.yaml
+# Source: k8s-monitoring/charts/telemetryServices/charts/kube-state-metrics/templates/service.yaml
 apiVersion: v1
 kind: Service
 metadata:
   name: k8smon-kube-state-metrics
   namespace: default
   labels:    
-    helm.sh/chart: kube-state-metrics-6.4.2
+    helm.sh/chart: kube-state-metrics-7.2.0
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: kube-state-metrics
     app.kubernetes.io/name: kube-state-metrics
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "2.17.0"
+    app.kubernetes.io/version: "2.18.0"
     release: k8smon
   annotations:
 spec:
@@ -1701,20 +1693,20 @@ spec:
       nodeSelector:
         kubernetes.io/os: linux
 ---
-# Source: k8s-monitoring/charts/clusterMetrics/charts/kube-state-metrics/templates/deployment.yaml
+# Source: k8s-monitoring/charts/telemetryServices/charts/kube-state-metrics/templates/deployment.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: k8smon-kube-state-metrics
   namespace: default
   labels:    
-    helm.sh/chart: kube-state-metrics-6.4.2
+    helm.sh/chart: kube-state-metrics-7.2.0
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: metrics
     app.kubernetes.io/part-of: kube-state-metrics
     app.kubernetes.io/name: kube-state-metrics
     app.kubernetes.io/instance: k8smon
-    app.kubernetes.io/version: "2.17.0"
+    app.kubernetes.io/version: "2.18.0"
     release: k8smon
 spec:
   selector:
@@ -1728,13 +1720,13 @@ spec:
   template:
     metadata:
       labels:        
-        helm.sh/chart: kube-state-metrics-6.4.2
+        helm.sh/chart: kube-state-metrics-7.2.0
         app.kubernetes.io/managed-by: Helm
         app.kubernetes.io/component: metrics
         app.kubernetes.io/part-of: kube-state-metrics
         app.kubernetes.io/name: kube-state-metrics
         app.kubernetes.io/instance: k8smon
-        app.kubernetes.io/version: "2.17.0"
+        app.kubernetes.io/version: "2.18.0"
         release: k8smon
       annotations:
       
@@ -1755,19 +1747,21 @@ spec:
       - name: kube-state-metrics
         args:
         - --port=8080
-        - --resources=certificatesigningrequests,configmaps,cronjobs,daemonsets,deployments,endpoints,horizontalpodautoscalers,ingresses,jobs,leases,limitranges,mutatingwebhookconfigurations,namespaces,networkpolicies,nodes,persistentvolumeclaims,persistentvolumes,poddisruptionbudgets,pods,replicasets,replicationcontrollers,resourcequotas,secrets,services,statefulsets,storageclasses,validatingwebhookconfigurations,volumeattachments
+        - --resources=certificatesigningrequests,configmaps,cronjobs,daemonsets,deployments,endpointslices,horizontalpodautoscalers,ingresses,jobs,leases,limitranges,mutatingwebhookconfigurations,namespaces,networkpolicies,nodes,persistentvolumeclaims,persistentvolumes,poddisruptionbudgets,pods,replicasets,replicationcontrollers,resourcequotas,secrets,services,statefulsets,storageclasses,validatingwebhookconfigurations,volumeattachments
         - --metric-labels-allowlist=nodes=[agentpool,alpha.eksctl.io/cluster-name,alpha.eksctl.io/nodegroup-name,beta.kubernetes.io/instance-type,cloud.google.com/gke-nodepool,cluster-name,ec2.amazonaws.com/Name,ec2.amazonaws.com/aws-autoscaling-groupName,ec2.amazonaws.com/aws-autoscaling-group-name,ec2.amazonaws.com/name,eks.amazonaws.com/nodegroup,k8s.io/cloud-provider-aws,karpenter.sh/nodepool,kubernetes.azure.com/cluster,kubernetes.io/arch,kubernetes.io/hostname,kubernetes.io/os,node.kubernetes.io/instance-type,topology.kubernetes.io/region,topology.kubernetes.io/zone]
         imagePullPolicy: IfNotPresent
-        image: registry.k8s.io/kube-state-metrics/kube-state-metrics:v2.17.0
+        image: registry.k8s.io/kube-state-metrics/kube-state-metrics:v2.18.0
         ports:
         - containerPort: 8080
           name: http
+        - containerPort: 8081
+          name: metrics
         livenessProbe:
           failureThreshold: 3
           httpGet:
             httpHeaders:
             path: /livez
-            port: 8080
+            port: http
             scheme: HTTP
           initialDelaySeconds: 5
           periodSeconds: 10
@@ -1778,7 +1772,7 @@ spec:
           httpGet:
             httpHeaders:
             path: /readyz
-            port: 8081
+            port: metrics
             scheme: HTTP
           initialDelaySeconds: 5
           periodSeconds: 10

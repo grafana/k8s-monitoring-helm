@@ -71,20 +71,16 @@ spec:
               password: lokipassword
         clusterMetrics:
           enabled: true
-          kepler:
+        costMetics:
+          enabled: true
+        hostMetrics:
+          enabled: true
+          linuxHosts:
             enabled: true
-          opencost:
+          windowsHosts:
             enabled: true
-            annotations:
-              argocd.argoproj.io/sync-wave: "1"
-            metricsSource: localPrometheus
-            opencost:
-              exporter:
-                defaultClusterId: argocd-deployment-test
-              prometheus:
-                existingSecretName: localprometheus-k8smon-k8s-monitoring
-                external:
-                  url: http://prometheus-server.prometheus.svc:9090
+          energyMetrics:
+            enabled: true
         clusterEvents:
           enabled: true
         podLogs:
@@ -99,4 +95,24 @@ spec:
           alloy:
             annotations:
               argocd.argoproj.io/sync-wave: "1"
+
+        telemetryServices:
+          kube-state-metrics:
+            deploy: true
+          node-exporter:
+            deploy: true
+          windows-exporter:
+            deploy: true
+          kepler:
+            deploy: true
+          opencost:
+            deploy: true
+            metricsSource: localPrometheus
+            opencost:
+              exporter:
+                defaultClusterId: helmfile-test
+              prometheus:
+                existingSecretName: localprometheus-k8smon-k8s-monitoring
+                external:
+                  url: http://prometheus-server.prometheus.svc:9090
 ```

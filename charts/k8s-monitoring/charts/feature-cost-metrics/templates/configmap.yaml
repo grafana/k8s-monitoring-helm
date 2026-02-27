@@ -1,0 +1,17 @@
+{{- if .Values.testing }}
+{{- if .Values.testing.enabled }}
+{{- $context := dict "Values" .Values "Files" .Files "Release" .Release "telemetryServices" .Values.testing.telemetryServices }}
+{{- include "feature.costMetrics.validate" $context }}
+{{- $alloyConfig := include "feature.costMetrics.module" $context }}
+{{- $alloyConfig = regexReplaceAll `[ \t]+(\r?\n)` $alloyConfig "\n" }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Chart.Name }}-test-config
+  namespace: {{ .Release.Namespace }}
+data:
+  module.alloy: |-
+    {{- $alloyConfig | trim | nindent 4 }}
+{{- end }}
+{{- end }}

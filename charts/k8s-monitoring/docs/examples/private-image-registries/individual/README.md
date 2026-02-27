@@ -43,42 +43,17 @@ destinations:
 clusterMetrics:
   enabled: true
 
-  kube-state-metrics:
-    image:
-      registry: my.registry.com
-      repository: kube-state-metrics/kube-state-metrics
-    imagePullSecrets:
-      - name: my-registry-creds
+costMetrics:
+  enabled: true
 
-  node-exporter:
-    image:
-      registry: my.registry.com
-      repository: prometheus/node-exporter
-    imagePullSecrets:
-      - name: my-registry-creds
-
-  windows-exporter:
-    image:
-      registry: my.registry.com
-      repository: prometheus-community/windows-exporter
-    imagePullSecrets:
-      - name: my-registry-creds
-
-  opencost:
-    imagePullSecrets:
-      - name: my-registry-creds
-    opencost:
-      exporter:
-        image:
-          registry: my.registry.com
-          repository: opencost/opencost
-
-  kepler:
-    image:
-      repository: quay.io/sustainable_computing_io/kepler
-    imagePullSecrets:
-      - name: my-registry-creds
-
+hostMetrics:
+  enabled: true
+  energyMetrics:
+    enabled: true
+  linuxHosts:
+    enabled: true
+  windowsHosts:
+    enabled: true
 
 autoInstrumentation:
   enabled: true
@@ -133,5 +108,52 @@ collectorCommon:
       image:
         registry: my.registry.com
         repository: prometheus-operator/prometheus-config-reloader
+
+telemetryServices:
+  kube-state-metrics:
+    deploy: true
+    image:
+      registry: my.registry.com
+      repository: kube-state-metrics/kube-state-metrics
+    imagePullSecrets:
+      - name: my-registry-creds
+
+  node-exporter:
+    deploy: true
+    image:
+      registry: my.registry.com
+      repository: prometheus/node-exporter
+    imagePullSecrets:
+      - name: my-registry-creds
+
+  windows-exporter:
+    deploy: true
+    image:
+      registry: my.registry.com
+      repository: prometheus-community/windows-exporter
+    imagePullSecrets:
+      - name: my-registry-creds
+
+  opencost:
+    deploy: true
+    metricsSource: prometheus
+    imagePullSecrets:
+      - name: my-registry-creds
+    opencost:
+      exporter:
+        defaultClusterId: private-image-registries-example-cluster
+        image:
+          registry: my.registry.com
+          repository: opencost/opencost
+      prometheus:
+        external:
+          url: http://prometheus.prometheus.svc:9090/api/v1/query
+
+  kepler:
+    deploy: true
+    image:
+      repository: my.registry.com/sustainable_computing_io/kepler
+    imagePullSecrets:
+      - name: my-registry-creds
 ```
 <!-- textlint-enable terminology -->
