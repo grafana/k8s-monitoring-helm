@@ -1,25 +1,31 @@
 {{- define "kubernetes_monitoring.beyla.config" }}
-{{- $clusterName := dict "attributes"  (dict "kubernetes" (dict "cluster_name" .Values.cluster.name)) }}
+{{- $valuesMap := .Values | toYaml | fromYaml -}}
+{{- $beylaMap := $valuesMap -}}
+{{- if hasKey $valuesMap "beyla" }}
+  {{- $beylaMap = (dig "beyla" dict $valuesMap) -}}
+{{- end }}
+{{- $clusterName := dict "attributes" (dict "kubernetes" (dict "cluster_name" (dig "cluster" "name" "" $valuesMap))) }}
+{{- $configData := dig "config" "data" dict $beylaMap -}}
 {{- $preset := dict }}
-{{- if and (eq .Values.beyla.preset "network") (not .Values.beyla.config.data.network) }}
+{{- if and (eq (dig "preset" "" $beylaMap) "network") (not (hasKey $configData "network")) }}
   {{- $preset = dict "network" (dict "enable" true)}}
 {{- end }}
-{{- if and (eq .Values.beyla.preset "application") (not .Values.beyla.config.data.discovery) }}
+{{- if and (eq (dig "preset" "" $beylaMap) "application") (not (hasKey $configData "discovery")) }}
   {{- $preset = dict "discovery" (dict "services" (list (dict "k8s_namespace" ".")))}}
 {{- end }}
 {{- $tracing := dict }}
-{{- if .Values.beyla.deliverTracesToApplicationObservability }}
+{{- if dig "deliverTracesToApplicationObservability" false $beylaMap }}
   {{- $endpoint := "" }}
-  {{- if .Values.receivers.grpc.enabled }}
-    {{- $endpoint = printf "http://%s-%s.%s.svc.cluster.local:%d" $.Release.Name "alloy" $.Release.Namespace (int .Values.receivers.grpc.port) }}
-  {{- else if .Values.receivers.http.enabled }}
-    {{- $endpoint = printf "http://%s-%s.%s.svc.cluster.local:%d" $.Release.Name "alloy" $.Release.Namespace (int .Values.receivers.http.port) }}
+  {{- if dig "receivers" "grpc" "enabled" false $valuesMap }}
+    {{- $endpoint = printf "http://%s-%s.%s.svc.cluster.local:%d" $.Release.Name "alloy" $.Release.Namespace (int (dig "receivers" "grpc" "port" 0 $valuesMap)) }}
+  {{- else if dig "receivers" "http" "enabled" false $valuesMap }}
+    {{- $endpoint = printf "http://%s-%s.%s.svc.cluster.local:%d" $.Release.Name "alloy" $.Release.Namespace (int (dig "receivers" "http" "port" 0 $valuesMap)) }}
   {{- end }}
   {{- if $endpoint }}
     {{- $tracing = dict "otel_traces_export" (dict "endpoint" $endpoint) }}
   {{- end }}
 {{- end }}
-{{- merge .Values.beyla.config.data $clusterName $preset $tracing | toYaml }}
+{{- merge $configData $clusterName $preset $tracing | toYaml }}
 {{- end }}
 
 {{- if .Values.beyla.enabled }}

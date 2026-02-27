@@ -102,6 +102,9 @@ beyla:
     skipConfigMapCheck: true
     # @ignored -- This allows this chart to create the Beyla ConfigMap with required modifications
     create: false
+    # @ignored -- Optional checksum override for external ConfigMap usage.
+    # This uses tpl so parent charts can pass templated checksums.
+    checksum: '{{ include "k8s-monitoring.beyla.config" . | sha256sum }}'
 
     # -- The configuration for Grafana Beyla
     # Some sections will be set automatically, such as the cluster name.
