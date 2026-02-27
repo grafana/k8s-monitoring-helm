@@ -32,12 +32,6 @@ destinations:
 
 clusterMetrics:
   enabled: true
-  node-exporter:
-    deploy: false
-    enabled: false
-  windows-exporter:
-    deploy: false
-    enabled: false
 
 clusterEvents:
   enabled: true
@@ -61,5 +55,9 @@ alloy-logs:
   alloy:
     mounts:
       dockercontainers: false
+
+telemetryServices:
+  kube-state-metrics:
+    deploy: true
 ```
 <!-- textlint-enable terminology -->
