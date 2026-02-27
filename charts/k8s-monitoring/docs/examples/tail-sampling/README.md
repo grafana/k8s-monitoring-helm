@@ -140,6 +140,13 @@ destinations:
 clusterMetrics:
   enabled: true
 
+hostMetrics:
+  enabled: true
+  linuxHosts:
+    enabled: true
+  windowsHosts:
+    enabled: true
+
 podLogs:
   enabled: true
 applicationObservability:
@@ -167,5 +174,13 @@ alloy-receiver:
         port: 4318
         targetPort: 4318
         protocol: TCP
+
+telemetryServices:
+  kube-state-metrics:
+    deploy: true
+  node-exporter:
+    deploy: true
+  windows-exporter:
+    deploy: true
 ```
 <!-- textlint-enable terminology -->

@@ -1,0 +1,242 @@
+---
+global:
+  # -- The Kubernetes service. Change this if your cluster DNS is configured differently than the default.
+  # @section -- Global Settings
+  kubernetesAPIService: ""
+
+  # -- How frequently to scrape metrics.
+  # @section -- Global Settings
+  scrapeInterval: 60s
+
+  # -- The timeout for scraping metrics.
+  # @section -- Global Settings
+  scrapeTimeout: 10s
+
+  # -- The protocols to negotiate during a Prometheus metrics scrape, in order of preference.
+  # @section -- Global Settings
+  scrapeProtocols: ["OpenMetricsText1.0.0", "OpenMetricsText0.0.1", "PrometheusText0.0.4"]
+
+  # -- Whether to scrape a classic histogram that’s also exposed as a native histogram.
+  # @section -- Global Settings
+  scrapeClassicHistograms: false
+
+  # -- Whether to scrape native histograms.
+  # @section -- Global Settings
+  scrapeNativeHistograms: false
+
+  # -- Sets the max_cache_size for every prometheus.relabel component. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments))
+  # This should be at least 2x-5x your largest scrape target or samples appended rate.
+  # @section -- Global Settings
+  maxCacheSize: 100000
+
+# Linux host metrics gathers hardware information about Linux nodes from a Node Exporter instance.
+linuxHosts:
+  # -- Scrape Linux host metrics.
+  # @section -- Linux Host
+  enabled: false
+
+  # -- Labels used to select the Node Exporter pods. If deploying from telemetry services, this will automatically be
+  # populated.
+  # @section -- Linux Host
+  labelMatchers: {}
+
+  # -- Namespace to locate Node Exporter pods. If deploying from telemetry services, this will automatically be
+  # populated.
+  # @section -- Linux Host
+  namespace: ""
+
+  # -- Rule blocks to be added to the discovery.relabel component for discovering Node Exporter pods.
+  # These relabeling rules are applied pre-scrape against the targets from service discovery.
+  # Before the scrape, any remaining target labels that start with __ (i.e. __meta_kubernetes*) are dropped.
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.relabel/#rule-block))
+  # @section -- Linux Host
+  extraDiscoveryRules: ""
+
+  # -- The value for the job label.
+  # @section -- Linux Host
+  jobLabel: "integrations/node_exporter"
+
+  # -- Rule blocks to be added for processing Linux host metrics.
+  # These relabeling rules are applied post-scrape against the metrics returned from the scraped target, no `__meta*` labels are present.
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#rule-block))
+  # @section -- Linux Host
+  extraMetricProcessingRules: ""
+
+  # Adjustments to the scraped metrics to filter the amount of data sent to storage.
+  metricsTuning:
+    # -- Filter the list of metrics from Node Exporter to the minimal set required for Kubernetes Monitoring.
+    # @section -- Linux Host
+    useDefaultAllowList: true
+    # -- Filter the list of metrics from Node Exporter to the minimal set required for Kubernetes Monitoring as well as
+    # the Node Exporter integration.
+    # @section -- Linux Host
+    useIntegrationAllowList: false
+    # -- Metrics to keep. Can use regular expressions.
+    # @section -- Linux Host
+    includeMetrics: []
+    # -- Metrics to drop. Can use regular expressions.
+    # @section -- Linux Host
+    excludeMetrics: []
+    # -- Drop metrics for the given filesystem types
+    # @section -- Linux Host
+    dropMetricsForFilesystem: [ramfs, tmpfs]
+
+  # -- How frequently to scrape Linux host metrics.
+  # @default -- `60s`
+  # @section -- Linux Host
+  scrapeInterval: ""
+
+  # -- The timeout for scraping Linux host metrics.
+  # @default -- `10s`
+  # @section -- Linux Host
+  scrapeTimeout: ""
+
+  # -- The scrape scheme for Linux host metrics.
+  # @section -- Linux Host
+  scheme: http
+
+  # -- The bearer token file to use when scraping metrics from Node Exporter.
+  # @section -- Linux Host
+  bearerTokenFile: ""
+
+  # -- Sets the max_cache_size for the Node Exporter prometheus.relabel component.
+  # This should be at least 2x-5x your largest scrape target or samples appended rate.
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments))
+  # Overrides global.maxCacheSize
+  # @default -- `100000`
+  # @section -- Linux Host
+  maxCacheSize:
+
+# Windows Host metrics gathers hardware information about Windows nodes.
+windowsHosts:
+  # -- Scrape node metrics
+  # @section -- Windows Host
+  enabled: false
+
+  # -- Namespace to locate Windows Exporter pods. If deploying from telemetry services, this will automatically be
+  #  # populated.
+  # @section -- Windows Host
+  namespace: ""
+
+  # -- Labels used to select the Windows Exporter pods. If deploying from telemetry services, this will automatically be
+  #  # populated.
+  # @section -- Windows Host
+  labelMatchers: {}
+
+  # -- Rule blocks to be added to the discovery.relabel component for Windows Exporter.
+  # These relabeling rules are applied pre-scrape against the targets from service discovery.
+  # Before the scrape, any remaining target labels that start with __ (i.e. __meta_kubernetes*) are dropped.
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.relabel/#rule-block))
+  # @section -- Windows Host
+  extraDiscoveryRules: ""
+
+  # -- The value for the job label.
+  # @section -- Windows Host
+  jobLabel: "integrations/windows-exporter"
+
+  # -- Rule blocks to be added to the prometheus.relabel component for Windows Exporter metrics.
+  # These relabeling rules are applied post-scrape against the metrics returned from the scraped target, no `__meta*` labels are present.
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#rule-block))
+  # @section -- Windows Host
+  extraMetricProcessingRules: ""
+
+  # Adjustments to the scraped metrics to filter the amount of data sent to storage.
+  metricsTuning:
+    # -- Filter the list of metrics from Windows Exporter to the minimal set required for Kubernetes Monitoring.
+    # @section -- Windows Host
+    useDefaultAllowList: true
+    # -- Metrics to keep. Can use regular expressions.
+    # @section -- Windows Host
+    includeMetrics: []
+    # -- Metrics to drop. Can use regular expressions.
+    # @section -- Windows Host
+    excludeMetrics: []
+
+  # -- How frequently to scrape Windows host metrics.
+  # @default -- `60s`
+  # @section -- Windows Host
+  scrapeInterval: ""
+
+  # -- The timeout for scraping Windows host metrics.
+  # @default -- `10s`
+  # @section -- Windows Host
+  scrapeTimeout: ""
+
+  # -- The scrape scheme for Windows host metrics.
+  # @section -- Windows Host
+  scheme: http
+
+  # -- The bearer token file to use when scraping metrics from Windows Exporter.
+  # @section -- Windows Host
+  bearerTokenFile: ""
+
+  # -- Sets the max_cache_size for the Windows Exporter prometheus.relabel component.
+  # This should be at least 2x-5x your largest scrape target or samples appended rate.
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments))
+  # Overrides global.maxCacheSize
+  # @default -- `100000`
+  # @section -- Windows Host
+  maxCacheSize:
+
+# Kepler gathers energy metrics for the Kubernetes Cluster and the objects running inside.
+energyMetrics:
+  # -- Deploy and scrape energy metrics.
+  # @section -- Energy Metrics
+  enabled: false
+
+  # -- Namespace to locate Kepler pods. If deploying from telemetry services, this will automatically be populated.
+  # @section -- Energy Metrics
+  namespace: ""
+
+  # -- Label matchers used to select the Kepler pods. If deploying from telemetry services, this will automatically be
+  # populated.
+  # @section -- Energy Metrics
+  labelMatchers: {}
+
+  # -- Rule blocks to be added to the discovery.relabel component for Kepler.
+  # These relabeling rules are applied pre-scrape against the targets from service discovery.
+  # Before the scrape, any remaining target labels that start with __ (i.e. __meta_kubernetes*) are dropped.
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.relabel/#rule-block))
+  # @section -- Energy Metrics
+  extraDiscoveryRules: ""
+
+  # -- The value for the job label.
+  # @section -- Energy Metrics
+  jobLabel: "integrations/kepler"
+
+  # -- Rule blocks to be added to the prometheus.relabel component for Kepler. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#rule-block))
+  # These relabeling rules are applied post-scrape against the metrics returned from the scraped target, no __meta* labels are present.
+  # @section -- Energy Metrics
+  extraMetricProcessingRules: ""
+
+  # Adjustments to the scraped metrics to filter the amount of data sent to storage.
+  # @section -- Energy Metrics
+  metricsTuning:
+    # -- Filter the list of metrics from Kepler to the minimal set required for Kubernetes Monitoring.
+    # @section -- Energy Metrics
+    useDefaultAllowList: true
+    # -- Metrics to keep. Can use regular expressions.
+    # @section -- Energy Metrics
+    includeMetrics: []
+    # -- Metrics to drop. Can use regular expressions.
+    # @section -- Energy Metrics
+    excludeMetrics: []
+
+  # -- How frequently to scrape metrics from Kepler.
+  # Overrides global.scrapeInterval.
+  # @default -- `60s`
+  # @section -- Energy Metrics
+  scrapeInterval: ""
+
+  # -- The timeout for scraping Kepler metrics.
+  # @default -- `10s`
+  # @section -- Energy Metrics
+  scrapeTimeout: ""
+
+  # -- Sets the max_cache_size for the prometheus.relabel component for Kepler.
+  # This should be at least 2x-5x your largest scrape target or samples appended rate.
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments))
+  # Overrides global.maxCacheSize
+  # @default -- `100000`
+  # @section -- Energy Metrics
+  maxCacheSize:
