@@ -21,6 +21,14 @@ flowchart LR
         FN[...]
     end
 
+    subgraph telemetry [Telemetry Services]
+        T1[kube-state-metrics]
+        T2[node-exporter]
+        T3[windows-exporter]
+        T4[kepler]
+        T5[opencost]
+    end
+
     subgraph collectors [Collectors]
         C1[alloy-metrics]
         C2[alloy-logs]
@@ -35,7 +43,9 @@ flowchart LR
         D4[pyroscope]
     end
 
-    features --> collectors --> destinations
+    telemetry --> collectors --> destinations
+    features --> collectors
+    features -. configure .-> telemetry
 ```
 
 Features generate telemetry data, which flows through Collectors (Grafana Alloy instances),
@@ -50,6 +60,7 @@ Always check these files first:
 | `values.yaml` | Main configuration file with all options |
 | `README.md` | Chart overview, quick start, and values reference |
 | `docs/Structure.md` | Architecture explanation |
+| `charts/telemetry-services/README.md` | Deployable telemetry workload reference |
 | `docs/Features.md` | Feature comparison table |
 | `docs/Migration.md` | Upgrading from v1 |
 
@@ -101,10 +112,14 @@ charts/feature-{name}/
 -   `feature-pod-logs-via-kubernetes-api` - Kubernetes Observability feature for gathering Pod logs by streaming them from the Kubernetes API.
 -   `feature-pod-logs` - Kubernetes Observability feature for gathering Pod logs.
 -   `feature-node-logs` - Kubernetes Observability feature for gathering Cluster Node logs.
+-   `feature-host-metrics` - Gathers Kubernetes Host metrics
 -   `feature-auto-instrumentation` - Gathers telemetry data via automatic instrumentation
 -   `feature-cluster-metrics` - Gathers Kubernetes Cluster metrics
 -   `feature-integrations` - Service integrations
+-   `feature-pod-logs-objects` - Kubernetes Observability feature for gathering logs using PodLogs objects.
+-   `feature-cost-metrics` - Gathers Kubernetes Cost metrics
 -   `feature-profiles-receiver` - Kubernetes Observability feature for receiving profiles.
+-   `telemetry-services` - Additional Deployments to generate observability telemetry data
 -   `feature-application-observability` - Gathers application data
 -   `feature-prometheus-operator-objects` - Gathers metrics using Prometheus Operator Objects
 <!-- END FEATURES -->
@@ -158,17 +173,17 @@ destinations:
 
 <!-- BEGIN INTEGRATIONS -->
 
--   `alloy` - Monitor Alloy
+-   `alloy` - Monitor alloy
 -   `cert-manager` - Monitor cert-manager
 -   `dcgm-exporter` - Monitor dcgm-exporter
 -   `etcd` - Monitor etcd
--   `grafana` - Monitor Grafana
+-   `grafana` - Monitor grafana
 -   `istio` - Monitor istio
--   `loki` - Monitor Loki
--   `mimir` - Monitor Mimir
+-   `loki` - Monitor loki
+-   `mimir` - Monitor mimir
 -   `mysql` - Monitor mysql
 -   `postgresql` - Monitor postgresql
--   `tempo` - Monitor Tempo
+-   `tempo` - Monitor tempo
 <!-- END INTEGRATIONS -->
 
 **Enable an integration:**
@@ -196,6 +211,52 @@ Collectors are Grafana Alloy instances with specific roles:
 -   `alloy-receiver` - Receives OTLP data from applications
 -   `alloy-singleton` - Runs single-replica workloads (events, etc.)
 -   `alloy-profiles` - Collects profiling data
+
+### Telemetry Services
+
+**Chart:** `charts/telemetry-services`
+**Values key:** `telemetryServices`
+**Docs:** `charts/telemetry-services/README.md`
+
+Telemetry services are optional workloads (kube-state-metrics, Node Exporter, etc.) that supply data to Alloy
+collectors. Features like `clusterMetrics`, `hostMetrics`, and `costMetrics` will fail validation unless you either
+deploy the paired telemetry service or point to an existing deployment with `namespace` / `labelMatchers` settings.
+
+| Service Key | Workload | Used By |
+|-------------|----------|---------|
+| `kube-state-metrics` | kube-state-metrics | `clusterMetrics.kube-state-metrics.*` |
+| `node-exporter` | Node Exporter | `hostMetrics.linuxHosts.*` |
+| `windows-exporter` | Windows Exporter | `hostMetrics.windowsHosts.*` |
+| `kepler` | Kepler | `hostMetrics.energyMetrics.*` |
+| `opencost` | OpenCost | `costMetrics.opencost.*` |
+
+**Enable a telemetry service:**
+
+```yaml
+telemetryServices:
+  node-exporter:
+    deploy: true
+
+hostMetrics:
+  enabled: true
+  linuxHosts:
+    enabled: true
+```
+
+**Use an existing deployment instead of deploying via Helm:**
+
+```yaml
+telemetryServices:
+  node-exporter:
+    deploy: false
+
+hostMetrics:
+  linuxHosts:
+    enabled: true
+    namespace: monitoring
+    labelMatchers:
+      app.kubernetes.io/name: prometheus-node-exporter
+```
 
 ## Examples Directory
 

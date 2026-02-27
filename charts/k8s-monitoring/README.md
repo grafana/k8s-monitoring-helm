@@ -247,6 +247,8 @@ details:
 |  | autoInstrumentation(feature-auto-instrumentation) | 1.0.0 |
 |  | clusterEvents(feature-cluster-events) | 1.0.0 |
 |  | clusterMetrics(feature-cluster-metrics) | 1.0.0 |
+|  | costMetrics(feature-cost-metrics) | 1.0.0 |
+|  | hostMetrics(feature-host-metrics) | 1.0.0 |
 |  | integrations(feature-integrations) | 1.0.0 |
 |  | nodeLogs(feature-node-logs) | 1.0.0 |
 |  | podLogs(feature-pod-logs) | 1.0.0 |
@@ -255,17 +257,59 @@ details:
 |  | profilesReceiver(feature-profiles-receiver) | 1.0.0 |
 |  | profiling(feature-profiling) | 1.0.0 |
 |  | prometheusOperatorObjects(feature-prometheus-operator-objects) | 1.0.0 |
+|  | telemetryServices(telemetry-services) | 1.0.0 |
 | https://grafana.github.io/helm-charts | alloy-operator | 0.4.2 |
 <!-- markdownlint-enable no-bare-urls -->
 
 ## Values
 
-### Collectors
+### Collectors - Alloy Logs
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| alloy-operator | object | `{"deploy":true}` | Alloy Operator is required for deploying Alloy collectors. |
-| collectors | object | `{}` | The list of collectors which will gather telemetry data from the cluster and send it to the destinations. See the [collectors documentation](https://github.com/grafana/k8s-monitoring-helm/blob/main/charts/k8s-monitoring/docs/collectors/README.md) for more information. "global" is a special collector that is used as a template for all collectors. |
+| alloy-logs.enabled | bool | `false` | Deploy the Alloy instance for collecting log data. |
+
+### Collectors - Alloy Metrics
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| alloy-metrics.enabled | bool | `false` | Deploy the Alloy instance for collecting metrics. |
+
+### Alloy Operator
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| alloy-operator.deploy | bool | `true` | Deploy the Alloy Operator. |
+| alloy-operator.waitForAlloyRemoval.enabled | bool | `true` | Utilize a Helm Hook to wait for all Alloy instances to be removed before uninstalling the Alloy Operator. This ensures that all Alloy instances are properly cleaned up before the operator is removed. |
+| alloy-operator.waitForAlloyRemoval.image | object | `{"digest":"","pullPolicy":"IfNotPresent","pullSecrets":[],"registry":"ghcr.io","repository":"grafana/helm-chart-toolbox-kubectl","tag":"0.1.2"}` | The image to use for the Helm Hook that ensures that Alloy instances are removed during uninstall. |
+| alloy-operator.waitForAlloyRemoval.nodeSelector | object | `{"kubernetes.io/os":"linux"}` | Node selector to use for the Helm Hook that ensures that Alloy instances are removed during uninstall. |
+| alloy-operator.waitForAlloyRemoval.podAnnotations | object | `{}` | Annotations to apply to the Pod for the Helm Hook to wait for all Alloy instances to be removed before uninstalling the Alloy Operator |
+| alloy-operator.waitForAlloyRemoval.podLabels | object | `{"linkerd.io/inject":"disabled","sidecar.istio.io/inject":"false"}` | Labels to apply to the Pod for the Helm Hook to wait for all Alloy instances to be removed before uninstalling the Alloy Operator |
+| alloy-operator.waitForAlloyRemoval.resources | object | `{}` | Set the resource field for the Helm Hook that ensures that Alloy instances are removed during uninstall. |
+| alloy-operator.waitForAlloyRemoval.securityContext | object | `{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"readOnlyRootFilesystem":true,"runAsNonRoot":true,"runAsUser":4242,"seccompProfile":{"type":"RuntimeDefault"}}` | Default security context to apply to the container. This can also be set to `null` to remove the security context entirely. Also, `runAsUser` can be set to `null` to remove it. |
+| alloy-operator.waitForAlloyRemoval.tolerations | list | `[]` | Tolerations to apply to the Helm Hook that ensures that Alloy instances are removed during uninstall. |
+
+### Collectors - Alloy Profiles
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| alloy-profiles.enabled | bool | `false` | Deploy the Alloy instance for gathering profiles. |
+
+### Collectors - Alloy Receiver
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| alloy-receiver.alloy.extraPorts | list | `[]` | The ports to expose for the Alloy receiver. |
+| alloy-receiver.enabled | bool | `false` | Deploy the Alloy instance for opening receivers to collect application data. |
+| alloy-receiver.extraService.enabled | bool | `false` | Create an extra service for the Alloy receiver. This service will mirror the alloy-receiver service, but its name can be customized to match existing application settings. |
+| alloy-receiver.extraService.fullname | string | `""` | If set, the full name of the extra service to create. This will result in the format `<fullname>`. |
+| alloy-receiver.extraService.name | string | `"alloy"` | The name of the extra service to create. This will result in the format `<release-name>-<name>`. |
+
+### Collectors - Alloy Singleton
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| alloy-singleton.enabled | bool | `false` | Deploy the Alloy instance for data sources required to be deployed on a single replica. |
 
 ### Features - Annotation Autodiscovery
 
@@ -314,11 +358,25 @@ details:
 | clusterMetrics.destinations | list | `[]` | The destinations where cluster metrics will be sent. If empty, all metrics-capable destinations will be used. |
 | clusterMetrics.enabled | bool | `false` | Enable gathering Kubernetes Cluster metrics. |
 
+### Collectors - Common
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| collectorCommon.alloy | object | `{}` | Settings to apply to all Alloy instances created by this Helm chart. This includes Alloy instances created by enabling Tail Sampling or Service Graph Metrics. |
+
+### Features - Cost Metrics
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| costMetrics | object | Disabled | Cost Metrics captures cost metrics from the Kubernetes cluster and its workloads. Requires a destination that supports metrics. To see the valid options, please see the [Cost Metrics feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-cost-metrics). |
+| costMetrics.destinations | list | `[]` | The destinations where cluster metrics will be sent. If empty, all metrics-capable destinations will be used. |
+| costMetrics.enabled | bool | `false` | Enable gathering Kubernetes Cost metrics. |
+
 ### Destinations
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| destinations | object | `{}` | The list of destinations where telemetry data will be sent. See the [destinations documentation](https://github.com/grafana/k8s-monitoring-helm/blob/main/charts/k8s-monitoring/docs/destinations/README.md) for more information. |
+| destinations | list | `[]` | The list of destinations where telemetry data will be sent. See the [destinations documentation](https://github.com/grafana/k8s-monitoring-helm/blob/main/charts/k8s-monitoring/docs/destinations/README.md) for more information. |
 | destinationsMap | object | `{}` | A map of destinations where telemetry data will be sent. Keys will be used as the destination name. See the [destinations documentation](https://github.com/grafana/k8s-monitoring-helm/blob/main/charts/k8s-monitoring/docs/destinations/README.md) for more information. |
 
 ### Extra Objects
@@ -339,6 +397,14 @@ details:
 | global.scrapeNativeHistograms | bool | `false` | Whether to scrape native histograms. |
 | global.scrapeProtocols | list | `["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]` | The protocols to negotiate during a Prometheus metrics scrape, in order of preference. |
 | global.scrapeTimeout | string | `"10s"` | The timeout for scraping metrics. |
+
+### Features - Host Metrics
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| hostMetrics | object | Disabled | Host metrics enables observability and monitoring for your Kubernetes Nodes. Requires a destination that supports metrics. To see the valid options, please see the [Host Metrics feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-host-metrics). |
+| hostMetrics.destinations | list | `[]` | The destinations where cluster metrics will be sent. If empty, all metrics-capable destinations will be used. |
+| hostMetrics.enabled | bool | `false` | Enable gathering Kubernetes Host metrics. |
 
 ### Features - Service Integrations
 
@@ -411,21 +477,12 @@ details:
 | selfReporting.enabled | bool | `true` | Enable Self-reporting. |
 | selfReporting.scrapeInterval | string | 60s | How frequently to generate self-report metrics. This does utilize the global scrapeInterval setting. |
 
-### Alloy Operator
+### Telemetry Services
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| telemetryServices.waitForAlloyRemoval.enabled | bool | `true` | Utilize a Helm Hook to wait for all Alloy instances to be removed before uninstalling the Alloy Operator. This ensures that all Alloy instances are properly cleaned up before the operator is removed. |
-| telemetryServices.waitForAlloyRemoval.image | object | `{"digest":"","pullPolicy":"IfNotPresent","pullSecrets":[],"registry":"ghcr.io","repository":"grafana/helm-chart-toolbox-kubectl","tag":"0.1.2"}` | The image to use for the Helm Hook that ensures that Alloy instances are removed during uninstall. |
-| telemetryServices.waitForAlloyRemoval.nodeSelector | object | `{"kubernetes.io/os":"linux"}` | Node selector to use for the Helm Hook that ensures that Alloy instances are removed during uninstall. |
-| telemetryServices.waitForAlloyRemoval.podAnnotations | object | `{}` | Annotations to apply to the Pod for the Helm Hook to wait for all Alloy instances to be removed before uninstalling the Alloy Operator |
-| telemetryServices.waitForAlloyRemoval.podLabels | object | `{"linkerd.io/inject":"disabled","sidecar.istio.io/inject":"false"}` | Labels to apply to the Pod for the Helm Hook to wait for all Alloy instances to be removed before uninstalling the Alloy Operator |
-| telemetryServices.waitForAlloyRemoval.resources | object | `{}` | Set the resource field for the Helm Hook that ensures that Alloy instances are removed during uninstall. |
-| telemetryServices.waitForAlloyRemoval.securityContext | object | `{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"readOnlyRootFilesystem":true,"runAsNonRoot":true,"runAsUser":4242,"seccompProfile":{"type":"RuntimeDefault"}}` | Default security context to apply to the container. This can also be set to `null` to remove the security context entirely. Also, `runAsUser` can be set to `null` to remove it. |
-| telemetryServices.waitForAlloyRemoval.tolerations | list | `[]` | Tolerations to apply to the Helm Hook that ensures that Alloy instances are removed during uninstall. |
-
-### Other Values
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| telemetryServices | object | `{"kepler":{"deploy":true},"kube-state-metrics":{"deploy":true},"node-exporter":{"deploy":true},"waitForAlloyRemoval":{"enabled":true,"image":{"digest":"","pullPolicy":"IfNotPresent","pullSecrets":[],"registry":"ghcr.io","repository":"grafana/helm-chart-toolbox-kubectl","tag":"0.1.2"},"nodeSelector":{"kubernetes.io/os":"linux"},"podAnnotations":{},"podLabels":{"linkerd.io/inject":"disabled","sidecar.istio.io/inject":"false"},"resources":{},"securityContext":{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"readOnlyRootFilesystem":true,"runAsNonRoot":true,"runAsUser":4242,"seccompProfile":{"type":"RuntimeDefault"}},"tolerations":[]},"windows-exporter":{"deploy":true}}` | Telemetry services are additional deployments that generate and synthesize telemetry data from the cluster. |
+| telemetryServices.kepler.deploy | bool | `false` | Deploy [Kepler](https://sustainable-computing.io/) to gather energy usage metrics from the Kubernetes Cluster nodes. |
+| telemetryServices.kube-state-metrics.deploy | bool | `false` | Deploy kube-state-metrics to expose Kubernetes object metadata as Prometheus metrics. |
+| telemetryServices.node-exporter.deploy | bool | `false` | Deploy Node Exporter to gather Linux node hardware and OS metrics. |
+| telemetryServices.opencost.deploy | bool | `false` | Deploy OpenCost to calculate and expose Kubernetes cost allocation metrics. |
+| telemetryServices.windows-exporter.deploy | bool | `false` | Deploy Windows Exporter to gather Windows node hardware and OS metrics. |

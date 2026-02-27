@@ -18,7 +18,6 @@ declare "cluster_metrics" {
       replacement = "kubernetes"
       target_label = "source"
     }
-
   }
 
   // Kubelet
@@ -220,7 +219,7 @@ declare "cluster_metrics" {
 
     selectors {
       role = "endpoints"
-      label = "app.kubernetes.io/name=kube-state-metrics,release=k8smon"
+      label = "release=k8smon,app.kubernetes.io/name=kube-state-metrics"
     }
     namespaces {
       names = ["default"]
@@ -229,13 +228,6 @@ declare "cluster_metrics" {
 
   discovery.relabel "kube_state_metrics" {
     targets = discovery.kubernetes.kube_state_metrics.targets
-
-    // only keep targets with a matching port name
-    rule {
-      source_labels = ["__meta_kubernetes_pod_container_port_name"]
-      regex = "http"
-      action = "keep"
-    }
 
     rule {
       action = "replace"
@@ -274,14 +266,81 @@ declare "cluster_metrics" {
     }
     forward_to = argument.metrics_destinations.value
   }
+}
+cluster_metrics "feature" {
+  metrics_destinations = [
+    prometheus.remote_write.prometheus.receiver,
+  ]
+}
+// Feature: Cost Metrics
+declare "cost_metrics" {
+  argument "metrics_destinations" {
+    comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
+  }
 
-  // Node Exporter
+  discovery.kubernetes "opencost" {
+    role = "pod"
+    selectors {
+      role = "pod"
+      label = "app.kubernetes.io/instance=k8smon,app.kubernetes.io/name=opencost"
+    }
+    namespaces {
+      names = ["default"]
+    }
+  }
+
+  discovery.relabel "opencost" {
+    targets = discovery.kubernetes.opencost.targets
+    rule {
+      source_labels = ["__meta_kubernetes_pod_node_name"]
+      action = "replace"
+      target_label = "instance"
+    }
+  }
+
+  prometheus.scrape "opencost" {
+    targets      = discovery.relabel.opencost.output
+    job_name     = "integrations/opencost"
+    honor_labels = true
+    scrape_interval = "60s"
+    scrape_timeout = "10s"
+    scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
+    scrape_classic_histograms = false
+    scrape_native_histograms = false
+    clustering {
+      enabled = true
+    }
+    forward_to = [prometheus.relabel.opencost.receiver]
+  }
+
+  prometheus.relabel "opencost" {
+    max_cache_size = 100000
+    rule {
+      source_labels = ["__name__"]
+      regex = "up|scrape_samples_scraped|container_cpu_allocation|container_gpu_allocation|container_memory_allocation_bytes|deployment_match_labels|kubecost_cluster_info|kubecost_cluster_management_cost|kubecost_cluster_memory_working_set_bytes|kubecost_http_requests_total|kubecost_http_response_size_bytes|kubecost_http_response_time_seconds|kubecost_load_balancer_cost|kubecost_network_internet_egress_cost|kubecost_network_region_egress_cost|kubecost_network_zone_egress_cost|kubecost_node_is_spot|node_cpu_hourly_cost|node_gpu_count|node_gpu_hourly_cost|node_ram_hourly_cost|node_total_hourly_cost|opencost_build_info|pod_pvc_allocation|pv_hourly_cost|service_selector_labels|statefulSet_match_labels"
+      action = "keep"
+    }
+    forward_to = argument.metrics_destinations.value
+  }
+}
+cost_metrics "feature" {
+  metrics_destinations = [
+    prometheus.remote_write.prometheus.receiver,
+  ]
+}
+// Feature: Host Metrics
+declare "host_metrics" {
+  argument "metrics_destinations" {
+    comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
+  }
+
+  // Linux hosts via Node Exporter
   discovery.kubernetes "node_exporter" {
     role = "pod"
 
     selectors {
       role = "pod"
-      label = "app.kubernetes.io/name=node-exporter,release=k8smon"
+      label = "release=k8smon,app.kubernetes.io/name=node-exporter"
     }
     namespaces {
       names = ["default"]
@@ -294,13 +353,12 @@ declare "cluster_metrics" {
     // keep only the specified metrics port name, and pods that are Running and ready
     rule {
       source_labels = [
-        "__meta_kubernetes_pod_container_port_name",
         "__meta_kubernetes_pod_container_init",
         "__meta_kubernetes_pod_phase",
         "__meta_kubernetes_pod_ready",
       ]
       separator = "@"
-      regex = "metrics@false@Running@true"
+      regex = "false@Running@true"
       action = "keep"
     }
 
@@ -389,7 +447,6 @@ declare "cluster_metrics" {
     scrape_classic_histograms = false
     scrape_native_histograms = false
     scheme = "http"
-    bearer_token_file = ""
     tls_config {
       insecure_skip_verify = true
     }
@@ -417,12 +474,12 @@ declare "cluster_metrics" {
     forward_to = argument.metrics_destinations.value
   }
 
-  // Windows Exporter
+  // Windows hosts via Windows Exporter
   discovery.kubernetes "windows_exporter_pods" {
     role = "pod"
     selectors {
       role = "pod"
-      label = "app.kubernetes.io/name=windows-exporter,release=k8smon"
+      label = "release=k8smon,app.kubernetes.io/name=windows-exporter"
     }
     namespaces {
       names = ["default"]
@@ -435,13 +492,12 @@ declare "cluster_metrics" {
     // keep only the specified metrics port name, and pods that are Running and ready
     rule {
       source_labels = [
-        "__meta_kubernetes_pod_container_port_name",
         "__meta_kubernetes_pod_container_init",
         "__meta_kubernetes_pod_phase",
         "__meta_kubernetes_pod_ready",
       ]
       separator = "@"
-      regex = "metrics@false@Running@true"
+      regex = "false@Running@true"
       action = "keep"
     }
 
@@ -476,14 +532,15 @@ declare "cluster_metrics" {
     forward_to = argument.metrics_destinations.value
   }
 
+  // Energy metrics via Kepler
   discovery.kubernetes "kepler" {
     role = "pod"
-    namespaces {
-      own_namespace = true
-    }
     selectors {
       role = "pod"
       label = "app.kubernetes.io/name=kepler"
+    }
+    namespaces {
+      names = [""]
     }
   }
 
@@ -521,7 +578,7 @@ declare "cluster_metrics" {
     forward_to = argument.metrics_destinations.value
   }
 }
-cluster_metrics "feature" {
+host_metrics "feature" {
   metrics_destinations = [
     prometheus.remote_write.prometheus.receiver,
   ]

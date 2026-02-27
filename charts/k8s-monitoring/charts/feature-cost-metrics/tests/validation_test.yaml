@@ -1,0 +1,23 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces rule:empty-lines
+suite: Test - Cost Metrics - Validation
+templates:
+  - configmap.yaml
+tests:
+  - it: should fail when OpenCost does not specify OpenCost selectors
+    set:
+      testing:
+        enabled: true
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            The OpenCost configuration requires a connection to OpenCost
+            Please enable the built-in deployment:
+            telemetryServices:
+              opencost:
+                deploy: true
+            Or, set the namespace and label selectors for an existing OpenCost:
+            costMetrics:
+              opencost:
+                namespace: opencost-namespace
+                labelSelectors:
+                  app.kubernetes.io/name: opencost

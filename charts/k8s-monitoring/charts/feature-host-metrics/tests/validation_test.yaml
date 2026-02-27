@@ -1,0 +1,79 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces rule:empty-lines
+suite: Test - Host Metrics - Validation
+templates:
+  - configmap.yaml
+tests:
+  - it: should fail when Linux hosts do not specify Node Exporter selectors
+    set:
+      testing:
+        enabled: true
+      linuxHosts:
+        enabled: true
+      windowsHosts:
+        enabled: false
+      energyMetrics:
+        enabled: false
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            The Linux host configuration requires a connection to Node Exporter
+            Please enable the built-in deployment:
+            telemetryServices:
+              node-exporter:
+                deploy: true
+            Or, set the namespace and label selectors for an existing Node Exporter:
+            hostMetrics:
+              linuxHosts:
+                namespace: node-exporter-namespace
+                labelSelectors:
+                  app.kubernetes.io/name: prometheus-node-exporter
+
+  - it: should fail when Windows hosts do not specify Windows Exporter selectors
+    set:
+      testing:
+        enabled: true
+      linuxHosts:
+        enabled: false
+      energyMetrics:
+        enabled: false
+      windowsHosts:
+        enabled: true
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            The Windows host configuration requires a connection to Windows Exporter
+            Please enable the built-in deployment:
+            telemetryServices:
+              windows-exporter:
+                deploy: true
+            Or, set the namespace and label selectors for an existing Windows Exporter:
+            hostMetrics:
+              windowsHosts:
+                namespace: windows-exporter-namespace
+                labelSelectors:
+                  app.kubernetes.io/name: prometheus-windows-exporter
+
+  - it: should fail when host energy metrics do not specify Kepler selectors
+    set:
+      testing:
+        enabled: true
+      linuxHosts:
+        enabled: false
+      windowsHosts:
+        enabled: false
+      energyMetrics:
+        enabled: true
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            The host energy metrics configuration requires a connection to Kepler
+            Please enable the built-in deployment:
+            telemetryServices:
+              kepler:
+                deploy: true
+            Or, set the namespace and label selectors for an existing Kepler:
+            hostMetrics:
+              energyMetrics:
+                namespace: kepler-namespace
+                labelSelectors:
+                  app.kubernetes.io/name: kepler

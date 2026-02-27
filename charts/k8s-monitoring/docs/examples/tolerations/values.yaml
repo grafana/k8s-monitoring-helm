@@ -12,33 +12,18 @@ destinations:
 
 clusterMetrics:
   enabled: true
-  kube-state-metrics:
-    tolerations:
-      - key: protected-node
-        effect: NoSchedule
-        operator: Exists
-  node-exporter:
-    tolerations:
-      - key: protected-node
-        effect: NoSchedule
-        operator: Exists
-  windows-exporter:
-    tolerations:
-      - key: protected-node
-        effect: NoSchedule
-        operator: Exists
-  opencost:
-    tolerations:
-      - key: protected-node
-        effect: NoSchedule
-        operator: Exists
 
-  kepler:
+costMetrics:
+  enabled: true
+
+hostMetrics:
+  enabled: true
+  energyMetrics:
     enabled: true
-    tolerations:
-      - key: protected-node
-        effect: NoSchedule
-        operator: Exists
+  linuxHosts:
+    enabled: true
+  windowsHosts:
+    enabled: true
 
 autoInstrumentation:
   enabled: true
@@ -79,3 +64,43 @@ alloy-operator:
       - key: protected-node
         effect: NoSchedule
         operator: Exists
+
+
+telemetryServices:
+  kepler:
+    deploy: true
+    tolerations:
+      - key: protected-node
+        effect: NoSchedule
+        operator: Exists
+  kube-state-metrics:
+    deploy: true
+    tolerations:
+      - key: protected-node
+        effect: NoSchedule
+        operator: Exists
+  node-exporter:
+    deploy: true
+    tolerations:
+      - key: protected-node
+        effect: NoSchedule
+        operator: Exists
+  windows-exporter:
+    deploy: true
+    tolerations:
+      - key: protected-node
+        effect: NoSchedule
+        operator: Exists
+  opencost:
+    deploy: true
+    metricsSource: prometheus
+    tolerations:
+      - key: protected-node
+        effect: NoSchedule
+        operator: Exists
+    opencost:
+      exporter:
+        defaultClusterId: tolerations-example-cluster
+      prometheus:
+        external:
+          url: http://prometheus.prometheus.svc:9090/api/v1/query

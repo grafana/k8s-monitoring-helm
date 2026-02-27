@@ -94,7 +94,7 @@ podLogs:
   enabled: true
 ```
 
-The Kubernetes Observability Helm chart will forward logs from the feature to the `loki` destination, because it is in
+The Kubernetes Monitoring Helm Chart will forward logs from the feature to the `loki` destination, because it is in
 the same ecosystem. The `otlp` destination will not receive any logs.
 
 ![Example 1](./.images/example1.png)

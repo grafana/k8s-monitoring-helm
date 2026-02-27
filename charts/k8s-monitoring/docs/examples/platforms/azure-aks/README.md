@@ -46,6 +46,12 @@ clusterMetrics:
 clusterEvents:
   enabled: true
 
+hostMetrics:
+  linuxHosts:
+    enabled: true
+  windowsHosts:
+    enabled: true
+
 podLogs:
   enabled: true
 
@@ -60,5 +66,13 @@ alloy-singleton:
   enabled: true
 alloy-logs:
   enabled: true
+
+telemetryServices:
+  kube-state-metrics:
+    deploy: true
+  node-exporter:
+    deploy: true
+  windows-exporter:
+    deploy: true
 ```
 <!-- textlint-enable terminology -->

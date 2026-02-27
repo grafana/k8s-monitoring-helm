@@ -22,6 +22,7 @@
   {{- range $collectorName := ((include "collectors.list.enabled" .) | fromYamlArray) }}
     {{- include "collectors.validate.remoteConfig" (deepCopy $ | merge (dict "collectorName" $collectorName)) }}
   {{- end }}
+  {{- include "telemetryServices.validate" . }}
 {{- end }}
 
 {{/* Checks if a V1 values file was used */}}

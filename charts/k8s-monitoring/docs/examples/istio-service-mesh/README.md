@@ -58,6 +58,13 @@ destinations:
 clusterMetrics:
   enabled: true
 
+hostMetrics:
+  enabled: true
+  linuxHosts:
+    enabled: true
+  windowsHosts:
+    enabled: true
+
 clusterEvents:
   enabled: true
 
@@ -108,5 +115,13 @@ alloy-receiver:
     # the k8sattributes processor to look up the pod by IP and enrich the rest of the attributes
     podAnnotations:
       sidecar.istio.io/interceptionMode: TPROXY
+
+telemetryServices:
+  kube-state-metrics:
+    deploy: true
+  node-exporter:
+    deploy: true
+  windows-exporter:
+    deploy: true
 ```
 <!-- textlint-enable terminology -->

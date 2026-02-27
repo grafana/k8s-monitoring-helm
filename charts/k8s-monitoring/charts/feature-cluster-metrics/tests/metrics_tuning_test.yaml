@@ -5,16 +5,17 @@ templates:
 tests:
   - it: should render with modified metrics tuning settings
     set:
-      deployAsConfigMap: true
+      testing:
+        enabled: true
+        telemetryServices:
+          kube-state-metrics:
+            deploy: true
       cadvisor:
         metricsTuning:
           useDefaultAllowList: false
       kube-state-metrics:
         metricsTuning:
           excludeMetrics: ["kube_replicaset.*"]
-      node-exporter:
-        metricsTuning:
-          useIntegrationAllowList: true
     asserts:
       - isKind:
           of: ConfigMap

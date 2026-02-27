@@ -1,22 +1,20 @@
-{{- define "feature.clusterMetrics.validate.disabledDeployments" }}
-{{- if and (not (index .Values .key).enabled) (index .Values .key).deploy }}
-  {{- $msg := list "" (printf "For the Cluster Metrics feature, %s is disabled but it will still be deployed." .name) }}
-  {{- $msg = append $msg "If you do not want these metrics, disable the deployment by setting:" }}
-  {{- $msg = append $msg "clusterMetrics:" }}
-  {{- $msg = append $msg (printf "  %s:" .key) }}
-  {{- $msg = append $msg "    enabled: false" }}
-  {{- $msg = append $msg "    deploy: false" }}
-  {{- $msg = append $msg "" }}
-  {{- $msg = append $msg "If you do want these metrics, enable it by setting:" }}
-  {{- $msg = append $msg "clusterMetrics:" }}
-  {{- $msg = append $msg (printf "  %s:" .key) }}
-  {{- $msg = append $msg "    enabled: true" }}
-  {{- fail (join "\n" $msg) }}
-{{- end }}
-{{- end }}
-
 {{- define "feature.clusterMetrics.validate" }}
-  {{- include "feature.clusterMetrics.validate.disabledDeployments" (dict "Values" .Values "key" "kube-state-metrics" "name" "kube-state-metrics" )}}
-  {{- include "feature.clusterMetrics.validate.disabledDeployments" (dict "Values" .Values "key" "node-exporter" "name" "Node Exporter" )}}
-  {{- include "feature.clusterMetrics.validate.disabledDeployments" (dict "Values" .Values "key" "windows-exporter" "name" "Windows Exporter" )}}
-{{- end }}
+{{- $ksmSettings := (index .Values "kube-state-metrics") }}
+{{- if $ksmSettings.enabled }}
+  {{- if not (dig "kube-state-metrics" "deploy" false (.telemetryServices | default dict)) }}
+    {{- if not (or $ksmSettings.namespace $ksmSettings.labelMatchers) }}
+      {{- $msg := list "" "The kube-state-metrics configuration requires a connection to kube-state-metrics" }}
+      {{- $msg = append $msg "Please enable the built-in deployment:" }}
+      {{- $msg = append $msg "telemetryServices:" }}
+      {{- $msg = append $msg "  kube-state-metrics:" }}
+      {{- $msg = append $msg "    deploy: true" }}
+      {{- $msg = append $msg "Or, set the namespace and label selectors for an existing kube-state-metrics:" }}
+      {{- $msg = append $msg "clusterMetrics:" }}
+      {{- $msg = append $msg "  kube-state-metrics:" }}
+      {{- $msg = append $msg "    namespace: kube-state-metrics-namespace" }}
+      {{- $msg = append $msg "    labelSelectors:" }}
+      {{- $msg = append $msg "      app.kubernetes.io/name: kube-state-metrics" }}
+      {{- fail (join "\n" $msg) }}
+    {{- end }}
+  {{- end }}
+{{- end }}{{- end }}

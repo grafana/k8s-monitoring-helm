@@ -17,8 +17,9 @@
 {{- range $label, $value := (index .Values "kube-state-metrics").labelMatchers }}
   {{- $labelSelectors = append $labelSelectors (printf "%s=%s" $label $value) }}
 {{- end }}
-{{- if (index .Values "kube-state-metrics").deploy }}
+{{- if dig "kube-state-metrics" "deploy" false (.telemetryServices | default dict) }}
   {{- $labelSelectors = append $labelSelectors (printf "release=%s" .Release.Name) }}
+  {{- $labelSelectors = append $labelSelectors "app.kubernetes.io/name=kube-state-metrics" }}
 {{- end }}
 discovery.kubernetes "kube_state_metrics" {
   role = "{{ (index .Values "kube-state-metrics").discoveryType }}"
@@ -27,7 +28,7 @@ discovery.kubernetes "kube_state_metrics" {
     role = "{{ (index .Values "kube-state-metrics").discoveryType }}"
     label = {{ $labelSelectors | join "," | quote }}
   }
-{{- if (index .Values "kube-state-metrics").deploy }}
+{{- if dig "kube-state-metrics" "deploy" false (.telemetryServices | default dict) }}
   namespaces {
     names = [{{ .Release.Namespace | quote }}]
   }
@@ -40,17 +41,6 @@ discovery.kubernetes "kube_state_metrics" {
 
 discovery.relabel "kube_state_metrics" {
   targets = discovery.kubernetes.kube_state_metrics.targets
-
-  // only keep targets with a matching port name
-  rule {
-{{- if eq (index .Values "kube-state-metrics").discoveryType "service" }}
-    source_labels = ["__meta_kubernetes_service_port_name"]
-{{- else }}
-    source_labels = ["__meta_kubernetes_pod_container_port_name"]
-{{- end }}
-    regex = {{ (index .Values "kube-state-metrics").service.portName | quote }}
-    action = "keep"
-  }
 
   rule {
     action = "replace"

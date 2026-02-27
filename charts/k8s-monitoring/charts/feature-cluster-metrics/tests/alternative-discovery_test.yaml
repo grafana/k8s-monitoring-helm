@@ -3,19 +3,10 @@ suite: Test - Cluster Metrics - Proxy-based Node Address Discovery
 templates:
   - configmap.yaml
 tests:
-  - it: should be able to look for kube-state-metrics via pods, rather than endpoints
-    set:
-      deployAsConfigMap: true
-      kube-state-metrics:
-        discoveryType: pod
-    asserts:
-      - isKind:
-          of: ConfigMap
-      - matchSnapshot:
-          path: data["module.alloy"]
   - it: should be able to find the Kubelet and cAdvisor via the API server proxy
     set:
-      deployAsConfigMap: true
+      testing:
+        enabled: true
       kubelet:
         nodeAddressFormat: proxy
       kubeletResource:
@@ -25,6 +16,8 @@ tests:
         nodeAddressFormat: proxy
       cadvisor:
         nodeAddressFormat: proxy
+      kube-state-metrics:
+        enabled: false
     asserts:
       - isKind:
           of: ConfigMap

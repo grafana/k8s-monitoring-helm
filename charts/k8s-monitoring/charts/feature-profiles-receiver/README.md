@@ -3,7 +3,7 @@
 (      To make changes, please modify README.md.gotmpl and run `helm-docs`)
 -->
 
-# Feature: Profiles Rceiver
+# Feature: Profiles Receiver
 
 This feature provides a receiver for profiles where processing rules can be defined before delivering to the profiles
 destination.

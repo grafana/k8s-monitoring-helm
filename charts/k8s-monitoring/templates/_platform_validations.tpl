@@ -30,11 +30,11 @@
       {{- fail (join "\n" $msg) }}
     {{- end }}
   {{- end }}
-  {{- if and ($.Values.clusterMetrics.enabled) ((index $.Values.clusterMetrics "kube-state-metrics").enabled) }}
-    {{- if ne (dig "podAnnotations" "kubernetes.azure.com/set-kube-service-host-fqdn" "false" (index $.Values.clusterMetrics "kube-state-metrics")) "true" }}
+  {{- if and ($.Values.clusterMetrics.enabled) ((index $.Values.clusterMetrics "kube-state-metrics").enabled) ((index $.Values.telemetryServices "kube-state-metrics").deploy) }}
+    {{- if ne (dig "podAnnotations" "kubernetes.azure.com/set-kube-service-host-fqdn" "false" (index $.Values.telemetryServices "kube-state-metrics")) "true" }}
       {{- $msg := list "" "This Kubernetes cluster appears to be Azure AKS." }}
       {{- $msg = append $msg "To ensure connectivity to the API server, please set:" }}
-      {{- $msg = append $msg "clusterMetrics:" }}
+      {{- $msg = append $msg "telemetryServices:" }}
       {{- $msg = append $msg "  kube-state-metrics:" }}
       {{- $msg = append $msg "    podAnnotations:" }}
       {{- $msg = append $msg "      kubernetes.azure.com/set-kube-service-host-fqdn: \"true\"" }}
