@@ -1,6 +1,8 @@
-{{- if .Values.deployAsConfigMap }}
-{{- include "feature.clusterMetrics.validate" . }}
-{{- $alloyConfig := include "feature.clusterMetrics.module" . }}
+{{- if .Values.testing }}
+{{- if .Values.testing.enabled }}
+{{- $context := dict "Values" .Values "Files" .Files "Release" .Release "telemetryServices" .Values.testing.telemetryServices }}
+{{- include "feature.clusterMetrics.validate" $context }}
+{{- $alloyConfig := include "feature.clusterMetrics.module" $context }}
 {{- $alloyConfig = regexReplaceAll `[ \t]+(\r?\n)` $alloyConfig "\n" }}
 ---
 apiVersion: v1
@@ -11,4 +13,5 @@ metadata:
 data:
   module.alloy: |-
     {{- $alloyConfig | trim | nindent 4 }}
+{{- end }}
 {{- end }}

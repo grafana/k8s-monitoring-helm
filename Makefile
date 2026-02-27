@@ -82,7 +82,7 @@ lint-shell: ## Lint shell scripts
 
 .PHONY: lint-markdown
 lint-markdown: node_modules/.bin/markdownlint-cli2 ## Lint markdown files
-	@node_modules/.bin/markdownlint-cli2 $(shell find . -name "*.md" ! -path "./node_modules/*" ! -path "./data-alloy/*" ! -path "./charts/**/data-alloy/*" ! -path "./charts/k8s-monitoring/docs/create-a-new-feature/*")
+	@node_modules/.bin/markdownlint-cli2 $(shell find . -name "*.md" ! -path "./version-4.0-development-plan/*" ! -path "./node_modules/*" ! -path "./data-alloy/*" ! -path "./charts/**/data-alloy/*" ! -path "./charts/k8s-monitoring/docs/create-a-new-feature/*")
 
 TERRAFORM_DIRS = $(shell find . -name 'vars.tf' -exec dirname {} \;)
 .PHONY: lint-terraform

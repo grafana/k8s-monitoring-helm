@@ -20,15 +20,39 @@ destinations:
 
 clusterMetrics:
   enabled: true
-  node-exporter:
-    fullnameOverride: node-metric-source
+
+costMetrics:
+  enabled: true
+  opencost:
+    labelMatchers:
+      app.kubernetes.io/name: cost-metric-source
+
+hostMetrics:
+  enabled: true
+  linuxHosts:
+    enabled: true
     labelMatchers:
       app.kubernetes.io/name: node-metric-source
-  kepler:
+  energyMetrics:
     enabled: true
+    labelMatchers:
+      app.kubernetes.io/name: energy-metric-source
+
+alloy-metrics:
+  enabled: true
+  fullnameOverride: metric-collector
+
+telemetryServices:
+  kube-state-metrics:
+    deploy: true
+  node-exporter:
+    deploy: true
+    fullnameOverride: node-metric-source
+  kepler:
+    deploy: true
     fullnameOverride: energy-metric-source
   opencost:
-    enabled: true
+    deploy: true
     fullnameOverride: cost-metric-source
     metricsSource: prometheus
     opencost:
@@ -37,9 +61,5 @@ clusterMetrics:
       prometheus:
         external:
           url: http://prometheus.prometheus.svc:9090/api/v1/query
-
-alloy-metrics:
-  enabled: true
-  fullnameOverride: metric-collector
 ```
 <!-- textlint-enable terminology -->

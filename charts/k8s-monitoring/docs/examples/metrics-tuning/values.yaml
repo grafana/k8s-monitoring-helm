@@ -18,11 +18,6 @@ clusterMetrics:
     metricsTuning:
       # No filtering, keep all metrics
       useDefaultAllowList: false
-  node-exporter:
-    metricsTuning:
-      # Will filter to the metrics that will populate the Linux node integration
-      # See https://grafana.com/docs/grafana-cloud/monitor-infrastructure/integrations/integration-reference/integration-linux-node/
-      useIntegrationAllowList: true
   kubelet:
     metricsTuning:
       # Will only keep these two metrics
@@ -39,5 +34,21 @@ clusterMetrics:
         - container_memory_rss
         - container_memory_swap
 
+hostMetrics:
+  enabled: true
+  linuxHosts:
+    enabled: true
+    metricsTuning:
+      # Will filter to the metrics that will populate the Linux node integration
+      # See https://grafana.com/docs/grafana-cloud/monitor-infrastructure/integrations/integration-reference/integration-linux-node/
+      useIntegrationAllowList: true
+
 alloy-metrics:
   enabled: true
+
+
+telemetryServices:
+  kube-state-metrics:
+    deploy: true
+  node-exporter:
+    deploy: true

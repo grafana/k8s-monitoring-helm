@@ -22,19 +22,12 @@ destinations:
 
 clusterMetrics:
   enabled: true
-  kepler:
-    enabled: true
-  opencost:
-    enabled: true
-    metricsSource: prometheus
-    opencost:
-      exporter:
-        defaultClusterId: cluster-metrics-example-cluster
-      prometheus:
-        external:
-          url: http://prometheus.prometheus.svc:9090/api/v1/query
 
 alloy-metrics:
   enabled: true
+
+telemetryServices:
+  kube-state-metrics:
+    deploy: true
 ```
 <!-- textlint-enable terminology -->

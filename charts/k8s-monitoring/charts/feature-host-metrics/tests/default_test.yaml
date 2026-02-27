@@ -1,0 +1,34 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Test - Host Metrics - Default Values
+templates:
+  - configmap.yaml
+tests:
+  - it: should render the default configuration with no configurations
+    set:
+      testing:
+        enabled: true
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["module.alloy"]
+
+  - it: should render the configuration with all configurations
+    set:
+      testing:
+        enabled: true
+        telemetryServices:
+          node-exporter: {deploy: true}
+          windows-exporter: {deploy: true}
+          kepler: {deploy: true}
+      linuxHosts:
+        enabled: true
+      windowsHosts:
+        enabled: true
+      energyMetrics:
+        enabled: true
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["module.alloy"]

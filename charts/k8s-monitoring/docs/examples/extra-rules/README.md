@@ -56,6 +56,13 @@ clusterMetrics:
         action = "keep"
       }
 
+hostMetrics:
+  enabled: true
+  linuxHosts:
+    enabled: true
+  windowsHosts:
+    enabled: true
+
 clusterEvents:
   enabled: true
   namespaces:
@@ -139,5 +146,13 @@ alloy-logs:
         value: northwest
       - name: COLOR
         value: blue
+
+telemetryServices:
+  kube-state-metrics:
+    deploy: true
+  node-exporter:
+    deploy: true
+  windows-exporter:
+    deploy: true
 ```
 <!-- textlint-enable terminology -->

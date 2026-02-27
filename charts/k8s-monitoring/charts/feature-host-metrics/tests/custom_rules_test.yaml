@@ -1,0 +1,23 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Test - Host Metrics - Custom Rules
+templates:
+  - configmap.yaml
+tests:
+  - it: should render the default configuration
+    set:
+      testing:
+        enabled: true
+        telemetryServices: {node-exporter: {deploy: true}}
+      linuxHosts:
+        enabled: true
+        extraDiscoveryRules: |-
+          rule {
+            target_label = "color"
+            replacement = "red"
+          }
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["module.alloy"]
+          
