@@ -23,6 +23,13 @@ destinations:
 clusterMetrics:
   enabled: true
 
+hostMetrics:
+  enabled: true
+  linuxHosts:
+    enabled: true
+  windowsHosts:
+    enabled: true
+
 alloy-metrics:
   enabled: true
   alloy:
@@ -37,5 +44,13 @@ alloy-metrics:
       maxReplicas: 10
       targetCPUUtilizationPercentage: 0
       targetMemoryUtilizationPercentage: 80
+
+telemetryServices:
+  kube-state-metrics:
+    deploy: true
+  node-exporter:
+    deploy: true
+  windows-exporter:
+    deploy: true
 ```
 <!-- textlint-enable terminology -->

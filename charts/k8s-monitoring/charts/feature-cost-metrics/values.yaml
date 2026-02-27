@@ -1,0 +1,99 @@
+---
+global:
+  # -- The specific platform for this cluster. Will enable compatibility for some platforms. Supported options: (empty) or "openshift".
+  # @section -- Global Settings
+  platform: ""
+
+  # -- The Kubernetes service. Change this if your cluster DNS is configured differently than the default.
+  # @section -- Global Settings
+  kubernetesAPIService: ""
+
+  # -- How frequently to scrape metrics.
+  # @section -- Global Settings
+  scrapeInterval: 60s
+
+  # -- The timeout for scraping metrics.
+  # @section -- Global Settings
+  scrapeTimeout: 10s
+
+  # -- The protocols to negotiate during a Prometheus metrics scrape, in order of preference.
+  # @section -- Global Settings
+  scrapeProtocols: ["OpenMetricsText1.0.0", "OpenMetricsText0.0.1", "PrometheusText0.0.4"]
+
+  # -- Whether to scrape a classic histogram that’s also exposed as a native histogram.
+  # @section -- Global Settings
+  scrapeClassicHistograms: false
+
+  # -- Whether to scrape native histograms.
+  # @section -- Global Settings
+  scrapeNativeHistograms: false
+
+  # -- Sets the max_cache_size for every prometheus.relabel component. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments))
+  # This should be at least 2x-5x your largest scrape target or samples appended rate.
+  # @section -- Global Settings
+  maxCacheSize: 100000
+
+# OpenCost gathers cost metrics for the Kubernetes Cluster and the objects running inside.
+opencost:
+  # -- The name of the metric destination where OpenCost will query for required metrics. Setting this will enable
+  # guided setup for required OpenCost parameters. To skip guided setup, set this to "custom".
+  # @section -- OpenCost
+  metricsSource: ""
+
+  # -- Labels used to select the OpenCost pods. If deploying from telemetry services, this will automatically be
+  # populated.
+  # @section -- OpenCost
+  labelMatchers: {}
+
+  # -- Namespace to locate OpenCost pods. If deploying from telemetry services, this will automatically be
+  # populated.
+  # @section -- OpenCost
+  namespace: ""
+
+  # -- Rule blocks to be added to the discovery.relabel component for OpenCost.
+  # These relabeling rules are applied pre-scrape against the targets from service discovery.
+  # Before the scrape, any remaining target labels that start with __ (i.e. __meta_kubernetes*) are dropped.
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.relabel/#rule-block))
+  # @section -- OpenCost
+  extraDiscoveryRules: ""
+
+  # -- The value for the job label.
+  # @section -- OpenCost
+  jobLabel: "integrations/opencost"
+
+  # -- Rule blocks to be added to the prometheus.relabel component for OpenCost. ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#rule-block))
+  # These relabeling rules are applied post-scrape against the metrics returned from the scraped target, no __meta* labels are present.
+  # @section -- OpenCost
+  extraMetricProcessingRules: ""
+
+  # Adjustments to the scraped metrics to filter the amount of data sent to storage.
+  # @section -- OpenCost
+  metricsTuning:
+    # -- Filter the list of metrics from OpenCost to the minimal set required for Kubernetes Monitoring.
+    # @section -- OpenCost
+    useDefaultAllowList: true
+    # -- Metrics to keep. Can use regular expressions.
+    # @section -- OpenCost
+    includeMetrics: []
+    # -- Metrics to drop. Can use regular expressions.
+    # @section -- OpenCost
+    excludeMetrics: []
+
+  # -- How frequently to scrape metrics from Kepler.
+  # Overrides global.scrapeInterval.
+  # @default -- `60s`
+  # @section -- OpenCost
+  scrapeInterval: ""
+
+  # -- The timeout for scraping OpenCost metrics.
+  # @default -- `10s`
+  # @section -- OpenCost
+  scrapeTimeout: ""
+
+  # -- Sets the max_cache_size for the prometheus.relabel component for OpenCost.
+  # This should be at least 2x-5x your largest scrape target or samples appended rate.
+  # ([docs](https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.relabel/#arguments))
+  # Overrides global.maxCacheSize
+  # @default -- `100000`
+  # @section -- OpenCost
+  maxCacheSize:

@@ -32,6 +32,13 @@ clusterMetrics:
   controlPlane:
     enabled: true
 
+hostMetrics:
+  enabled: true
+  linuxHosts:
+    enabled: true
+  windowsHosts:
+    enabled: true
+
 podLogs:
   enabled: true
 
@@ -51,5 +58,13 @@ alloy-logs:
 
 alloy-singleton:
   enabled: true
+
+telemetryServices:
+  kube-state-metrics:
+    deploy: true
+  node-exporter:
+    deploy: true
+  windows-exporter:
+    deploy: true
 ```
 <!-- textlint-enable terminology -->

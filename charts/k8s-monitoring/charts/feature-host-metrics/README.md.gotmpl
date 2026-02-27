@@ -1,0 +1,100 @@
+<!--
+(NOTE: Do not edit README.md directly. It is a generated file!)
+(      To make changes, please modify README.md.gotmpl and run `helm-docs`)
+-->
+
+# Feature: Host Metrics
+
+{{ template "chart.deprecationWarning" . }}
+
+This chart deploys the Host Metrics feature of the Kubernetes Monitoring Helm chart, which uses allow lists to limit the
+metrics needed. An allow list is a set of metric names that will be kept, while any metrics not on the list will be
+dropped. With [metrics tuning](#metrics-tuning--allow-lists), you can further customize which metrics are collected.
+
+## Usage
+
+```yaml
+hostMetrics:
+  enabled: true
+  node-exporter:
+    enabled: true
+```
+
+## How it works
+
+This chart includes the ability to collect metrics from the following:
+
+*   Node Exporter for metrics from Linux hosts
+*   Windows Exporter for metrics from Windows hosts
+*   Kepler for energy metrics
+
+### Metrics sources
+
+The Host Metrics feature of the Kubernetes Monitoring Helm Chart includes the following metric systems and
+their default allow lists:
+
+| Metric source                                                                | Gathers information about | Allow list                                                                                                                                                                                     |
+|------------------------------------------------------------------------------|---------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| [Kepler](https://sustainable-computing.io/)                                  | Kubernetes cluster        | [default-allow-lists/kepler.yaml](./default-allow-lists/kepler.yaml)                                                                                                                           |
+| [Node Exporter](https://github.com/prometheus/node_exporter)                 | Linux Kubernetes nodes    | [default-allow-lists/node-exporter.yaml](./default-allow-lists/node-exporter.yaml), [default-allow-lists/node-exporter-integration.yaml](./default-allow-lists/node-exporter-integration.yaml) |
+| [Windows Exporter](https://github.com/prometheus-community/windows_exporter) | Windows Kubernetes nodes  | [default-allow-lists/windows-exporter.yaml](./default-allow-lists/windows-exporter.yaml)                                                                                                       |
+
+## Metrics tuning and allow lists
+
+For any metric source, you can adjust the amount of metrics being scraped and their labels to limit the number of metrics delivered to your destinations. Many of the metric sources have a default allow list. The allow list for a metric source is designed to return a useful, but minimal set of metrics for typical use cases. Some metrics sources have an integration allow list, which contains even more metrics for diving into the details of the source itself.
+
+To control metrics with allow lists or label filters, use the `metricsTuning` section in the values file.
+
+```yaml
+<metric source>:
+  metricsTuning:
+    useDefaultAllowList: <boolean>      # Use the allow list for this metric source
+    useIntegrationAllowList: <boolean>  # Use the integration allow list for this metric source
+    includeMetrics: [<string>]          # Metrics to be kept
+    excludeMetrics: [<string>]          # Metrics to be dropped
+```
+
+The behavior of the combination of these settings is shown in this table:
+
+| Allow list | includeMetrics   | excludeMetrics           | Result                                                                                                                                  |
+|------------|------------------|--------------------------|-----------------------------------------------------------------------------------------------------------------------------------------|
+| true       | `[]`             | `[]`                     | Use the allow list metric list                                                                                                          |
+| false      | `[]`             | `[]`                     | No filter, keep all metrics                                                                                                             |
+| true       | `[my_metric]`    | `[]`                     | Use the allow list metric list with an additional metric                                                                                |
+| false      | `[my_metric_.*]` | `[]`                     | *Only* keep metrics that start with `my_metric_`                                                                                        |
+| true       | `[]`             | `[my_metric_.*]`         | Use the allow list metric filter, but exclude anything that starts with `my_metric_`                                                    |
+| false      | `[]`             | `[my_metric_.*]`         | Keep all metrics except anything that starts with `my_metric_`                                                                          |
+| true       | `[my_metric_.*]` | `[other_metric_.*]`      | Use the allow list metric filter, and keep anything that starts with `my_metric_`, but remove anything that starts with `other_metric_` |
+| false      | `[my_metric_.*]` | `[my_metric_not_needed]` | *Only* keep metrics that start with `my_metric_`, but remove any that are named `my_metric_not_needed`                                  |
+
+## Relabeling rules
+
+You can also use relabeling rules to take any action on the metrics allow list, such as to filter based on a label.
+To do so, use `extraMetricProcessingRules` section in the values file to add arbitrary relabeling rules. 
+
+## Testing
+
+This chart contains unit tests to verify the generated configuration. The hidden value `deployAsConfigMap` will render
+the generated configuration into a ConfigMap object. While this ConfigMap is not used during regular operation, you can
+use it to show the outcome of a given values file.
+
+The unit tests use this ConfigMap to create an object with the configuration that can be asserted against. To run the
+tests, use `helm test`.
+
+Be sure perform actual integration testing in a live environment in the main [k8s-monitoring](../..) chart.
+
+<!-- textlint-disable terminology -->
+{{ template "chart.maintainersSection" . }}
+<!-- textlint-enable terminology -->
+
+<!-- markdownlint-disable no-bare-urls -->
+<!-- markdownlint-disable list-marker-space -->
+{{ template "chart.sourcesSection" . }}
+<!-- markdownlint-enable list-marker-space -->
+
+{{ template "chart.requirementsSection" . }}
+<!-- markdownlint-enable no-bare-urls -->
+
+<!-- markdownlint-disable no-space-in-emphasis -->
+{{ template "chart.valuesSection" . }}
+<!-- markdownlint-enable no-space-in-emphasis -->
