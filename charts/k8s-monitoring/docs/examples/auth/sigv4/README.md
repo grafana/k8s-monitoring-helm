@@ -41,5 +41,9 @@ clusterMetrics:
 
 alloy-metrics:
   enabled: true
+
+telemetryServices:
+  kube-state-metrics:
+    deploy: true
 ```
 <!-- textlint-enable terminology -->

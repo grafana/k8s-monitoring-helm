@@ -77,8 +77,13 @@ clusterMetrics:
   cadvisor:
     metricsTuning:
       includeNamespaces: [alpha, bravo, delta]
-  kube-state-metrics:
-    namespaces: [alpha, bravo, delta]
+
+hostMetrics:
+  enabled: true
+  linuxHosts:
+    enabled: true
+  windowsHosts:
+    enabled: true
 
 podLogs:
   enabled: true
@@ -122,5 +127,14 @@ alloy-receiver:
 
 alloy-profiles:
   enabled: true
+
+telemetryServices:
+  kube-state-metrics:
+    deploy: true
+    namespaces: [alpha, bravo, delta]
+  node-exporter:
+    deploy: true
+  windows-exporter:
+    deploy: true
 ```
 <!-- textlint-enable terminology -->

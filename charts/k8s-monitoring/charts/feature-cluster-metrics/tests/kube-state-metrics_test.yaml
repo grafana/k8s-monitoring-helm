@@ -5,20 +5,13 @@ templates:
 tests:
   - it: can discover kube-state-metrics via pods
     set:
-      deployAsConfigMap: true
-      kubelet:
-        enabled: false
-      kubeletResource:
-        enabled: false
-      cadvisor:
-        enabled: false
-      node-exporter:
-        deploy: false
-        enabled: false
-      windows-exporter:
-        deploy: false
-        enabled: false
+      testing:
+        enabled: true
+        telemetryServices:
+          kube-state-metrics:
+            deploy: true
       kube-state-metrics:
+        enabled: true
         discoveryType: pod
     asserts:
       - isKind:
@@ -28,19 +21,11 @@ tests:
 
   - it: can discover kube-state-metrics via service
     set:
-      deployAsConfigMap: true
-      kubelet:
-        enabled: false
-      kubeletResource:
-        enabled: false
-      cadvisor:
-        enabled: false
-      node-exporter:
-        deploy: false
-        enabled: false
-      windows-exporter:
-        deploy: false
-        enabled: false
+      testing:
+        enabled: true
+        telemetryServices:
+          kube-state-metrics:
+            deploy: true
       kube-state-metrics:
         discoveryType: service
     asserts:

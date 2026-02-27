@@ -48,19 +48,17 @@ destinations:
 
 clusterMetrics:
   enabled: true
-  opencost:
+
+costMetrics:
+  enabled: true
+
+hostMetrics:
+  enabled: true
+  energyMetrics:
     enabled: true
-    metricsSource: grafana-cloud-metrics
-    opencost:
-      exporter:
-        defaultClusterId: k8s-monitoring-gc-feature-test
-      prometheus:
-        external:
-          url: https://prometheus-prod-13-prod-us-east-0.grafana.net/api/prom
-        existingSecretName: grafana-cloud-credentials
-        username_key: metricsUser
-        password_key: grafanaCloudAccessPolicyToken
-  kepler:
+  linuxHosts:
+    enabled: true
+  windowsHosts:
     enabled: true
 
 clusterEvents:
@@ -109,3 +107,25 @@ collectorCommon:
     controller:
       podAnnotations:
         source: k8s-monitoring-gc-feature-test
+
+telemetryServices:
+  kepler:
+    deploy: true
+  kube-state-metrics:
+    deploy: true
+  node-exporter:
+    deploy: true
+  windows-exporter:
+    deploy: true
+  opencost:
+    deploy: true
+    metricsSource: grafana-cloud-metrics
+    opencost:
+      exporter:
+        defaultClusterId: k8s-monitoring-gc-feature-test
+      prometheus:
+        external:
+          url: https://prometheus-prod-13-prod-us-east-0.grafana.net/api/prom
+        existingSecretName: grafana-cloud-credentials
+        username_key: metricsUser
+        password_key: grafanaCloudAccessPolicyToken

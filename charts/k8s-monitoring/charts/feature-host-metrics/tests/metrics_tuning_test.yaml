@@ -1,0 +1,22 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Test - Host Metrics - Custom Metrics Tuning Settings
+templates:
+  - configmap.yaml
+tests:
+  - it: should render with modified metrics tuning settings
+    set:
+      testing:
+        enabled: true
+        telemetryServices:
+          node-exporter:
+            deploy: true
+      linuxHosts:
+        enabled: true
+        metricsTuning:
+          useIntegrationAllowList: true
+          excludeMetrics: ["skip_these_metrics_.*"]
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["module.alloy"]
