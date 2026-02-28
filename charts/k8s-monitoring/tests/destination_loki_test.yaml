@@ -1,0 +1,102 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Destinations - Loki
+templates:
+  - alloy-config.yaml
+tests:
+  - it: creates the Alloy components for a Loki destination
+    set:
+      cluster: {name: test-cluster}
+      alloy-singleton: {enabled: true, extraConfig: " ", includeDestinations: ["test"]}
+      selfReporting: {enabled: false}
+      destinations:
+        - name: test
+          type: loki
+          url: https://loki.example.com
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["config.alloy"]
+
+  - it: creates enrichment components for namespace labels only
+    set:
+      cluster: {name: test-cluster}
+      alloy-singleton: {enabled: true, extraConfig: " ", includeDestinations: ["test"]}
+      selfReporting: {enabled: false}
+      destinations:
+        - name: test
+          type: loki
+          url: https://loki.example.com
+          logEnrichment:
+            namespaceLabels:
+              - team
+              - environment
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["config.alloy"]
+
+  - it: creates enrichment components for pod labels only
+    set:
+      cluster: {name: test-cluster}
+      alloy-singleton: {enabled: true, extraConfig: " ", includeDestinations: ["test"]}
+      selfReporting: {enabled: false}
+      destinations:
+        - name: test
+          type: loki
+          url: https://loki.example.com
+          logEnrichment:
+            podLabels:
+              - app
+              - version
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["config.alloy"]
+
+  - it: creates enrichment components for both namespace and pod labels
+    set:
+      cluster: {name: test-cluster}
+      alloy-singleton: {enabled: true, extraConfig: " ", includeDestinations: ["test"]}
+      selfReporting: {enabled: false}
+      destinations:
+        - name: test
+          type: loki
+          url: https://loki.example.com
+          logEnrichment:
+            namespaceLabels:
+              - team
+            podLabels:
+              - app
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["config.alloy"]
+
+  - it: creates enrichment components combined with logProcessingStages
+    set:
+      cluster: {name: test-cluster}
+      alloy-singleton: {enabled: true, extraConfig: " ", includeDestinations: ["test"]}
+      selfReporting: {enabled: false}
+      destinations:
+        - name: test
+          type: loki
+          url: https://loki.example.com
+          logProcessingStages: |
+            stage.drop {
+              source = "level"
+              value = "debug"
+            }
+          logEnrichment:
+            namespaceLabels:
+              - team
+            podLabels:
+              - app
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["config.alloy"]

@@ -78,6 +78,13 @@ This defines the options for defining a destination for logs that use the Loki p
 | url | string | `""` | The URL for the Loki destination. |
 | urlFrom | string | `""` | Raw config for accessing the URL. |
 
+### Log Enrichment
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| logEnrichment.namespaceLabels | list | `[]` | Finds kubernetes namespace labels and adds them as labels to matching logs. Applies to logs that contain the following labels: `namespace`. Note that this can greatly increase the resource utilization of Alloy. |
+| logEnrichment.podLabels | list | `[]` | Finds kubernetes pod labels and adds them as labels to matching pod logs. Applies to logs that contain the following labels: `namespace`, `pod`. Note that this can greatly increase the resource utilization of Alloy. |
+
 ### Secret
 
 | Key | Type | Default | Description |
