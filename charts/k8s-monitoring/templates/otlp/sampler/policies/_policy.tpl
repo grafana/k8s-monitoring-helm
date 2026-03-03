@@ -3,12 +3,22 @@
 policy {
   name = {{ $policy.name | quote }}
   type = {{ $policy.type | quote }}
-  {{- if and (ne $policy.type "composite") (ne $policy.type "and") }}
+  {{- if and (ne $policy.type "composite") (ne $policy.type "and") (ne $policy.type "drop") }}
 {{ include "policy.generate" $policy | trim | indent 2 }}
   {{- else if eq $policy.type "and" }}
   and {
   {{- range $sub := $policy.and.and_sub_policy }}
     and_sub_policy {
+      name = {{ $sub.name | quote }}
+      type = {{ $sub.type | quote }}
+{{ include "policy.generate" $sub | trim | indent 6 }}
+    }
+  {{- end }}
+  }
+  {{- else if eq $policy.type "drop" }}
+  drop {
+  {{- range $sub := $policy.drop.drop_sub_policy }}
+    drop_sub_policy {
       name = {{ $sub.name | quote }}
       type = {{ $sub.type | quote }}
 {{ include "policy.generate" $sub | trim | indent 6 }}
