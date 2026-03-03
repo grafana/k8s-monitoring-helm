@@ -24,7 +24,7 @@
 {{- if and (eq (dig "preset" "" $beylaMap) "application") (not (hasKey $config "discovery")) }}
   {{- $services := list (dict "k8s_namespace" ".") -}}
   {{- $excludeServices := list (dict "exe_path" ".*alloy.*|.*otelcol.*|.*beyla.*") -}}
-  {{- $discovery := dict "services" $services "exclude_services" $excludeServices -}}
+  {{- $discovery := dict "instrument" $services "exclude_instrument" $excludeServices -}}
   {{- $overrides = merge $overrides (dict "discovery" $discovery) -}}
 {{- end }}
 {{- if and (dig "applicationObservability" "enabled" false $valuesMap) (dig "deliverTracesToApplicationObservability" false $beylaMap) }}
