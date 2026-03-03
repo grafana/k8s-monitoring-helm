@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+*   Add `drop` policy support for tail sampling (@petewall)
 *   Add global pull policy support for the hooks and collectors (@petewall)
 *   Fix `spanMetrics.excludeDimensions` rendering: list values are now properly quoted as strings instead of unquoted bareword identifiers, which caused Alloy to fail to parse the rendered config. (#2596) (@savannahostrowski)
 
