@@ -142,11 +142,11 @@ application_observability "feature" {
 
 {{- define "features.applicationObservability.receiver.grpc" }}
   {{- if and .Values.applicationObservability.enabled .Values.applicationObservability.receivers.otlp.grpc.enabled }}
-http://{{ include "collector.alloy.fullname" (deepCopy $ | merge (dict "collectorName" .Values.applicationObservability.collector)) }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.applicationObservability.receivers.otlp.grpc.port }}
+http://{{ include "collector.alloy.fullname" (deepCopy $ | merge (dict "collectorName" .Values.applicationObservability.collector)) }}.{{ include "helper.namespace" . }}.svc.cluster.local:{{ .Values.applicationObservability.receivers.otlp.grpc.port }}
   {{- end }}
 {{- end }}
 {{- define "features.applicationObservability.receiver.http" }}
   {{- if and .Values.applicationObservability.enabled .Values.applicationObservability.receivers.otlp.http.enabled }}
-http://{{ include "collector.alloy.fullname" (deepCopy $ | merge (dict "collectorName" .Values.applicationObservability.collector)) }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.applicationObservability.receivers.otlp.http.port }}
+http://{{ include "collector.alloy.fullname" (deepCopy $ | merge (dict "collectorName" .Values.applicationObservability.collector)) }}.{{ include "helper.namespace" . }}.svc.cluster.local:{{ .Values.applicationObservability.receivers.otlp.http.port }}
   {{- end }}
 {{- end }}

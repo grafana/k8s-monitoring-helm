@@ -14,7 +14,7 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: {{ $jobName }}
-  namespace: {{ .Release.Namespace }}
+  namespace: {{ include "helper.namespace" . }}
   labels:
     app.kubernetes.io/name: {{ $jobName }}
     app.kubernetes.io/instance: {{ .Release.Name }}
@@ -66,7 +66,7 @@ spec:
             - -ce
             - |
               kubectl patch \
-                --namespace={{ .Release.Namespace }} \
+                --namespace={{ include "helper.namespace" . }} \
                 --patch='{"metadata":{"finalizers":["k8s.grafana.com/finalizer"]}}' \
                 deployment/{{ include "alloy-operator.fullname" (index .Subcharts "alloy-operator") }}
           {{- with $jobSettings.resources }}
@@ -80,7 +80,7 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: {{ $jobName }}
-  namespace: {{ .Release.Namespace }}
+  namespace: {{ include "helper.namespace" . }}
   annotations:
     "helm.sh/hook": post-install,post-upgrade
     "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
@@ -90,7 +90,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   name: {{ $jobName }}
-  namespace: {{ .Release.Namespace }}
+  namespace: {{ include "helper.namespace" . }}
   annotations:
     "helm.sh/hook": post-install,post-upgrade
     "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
@@ -104,7 +104,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: {{ $jobName }}
-  namespace: {{ .Release.Namespace }}
+  namespace: {{ include "helper.namespace" . }}
   annotations:
     "helm.sh/hook": post-install,post-upgrade
     "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
@@ -112,7 +112,7 @@ metadata:
 subjects:
   - kind: ServiceAccount
     name: {{ $jobName }}
-    namespace: {{ .Release.Namespace }}
+    namespace: {{ include "helper.namespace" . }}
 roleRef:
   kind: Role
   name: {{ $jobName }}

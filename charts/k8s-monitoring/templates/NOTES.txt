@@ -22,7 +22,7 @@ It will:
 
 {{- range $feature := (include "features.list.enabled" .) | fromYamlArray }}
   {{- $collectorName := (index $.Values $feature).collector }}
-  {{- $Collector := dict "Namespace" $.Release.Namespace }}
+  {{- $Collector := dict "Namespace" (include "helper.namespace" $) }}
   {{- if $collectorName }}
     {{- $Collector = merge $Collector (dict "ServiceName" (include "collector.alloy.fullname" (merge (dict "collectorName" $collectorName) $))) }}
   {{- end }}

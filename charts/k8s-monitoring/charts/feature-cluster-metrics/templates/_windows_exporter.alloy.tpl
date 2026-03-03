@@ -34,7 +34,7 @@ discovery.kubernetes "windows_exporter_pods" {
 
 {{- if (index .Values "windows-exporter").deploy }}
   namespaces {
-    names = [{{ .Release.Namespace | quote }}]
+    names = [{{ include "helper.namespace" . | quote }}]
   }
 {{- else if (index .Values "windows-exporter").namespace }}
   namespaces {

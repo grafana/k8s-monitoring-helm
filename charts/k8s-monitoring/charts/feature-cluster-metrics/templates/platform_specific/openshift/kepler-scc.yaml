@@ -31,7 +31,7 @@ seccompProfiles:
 supplementalGroups:
   type: RunAsAny
 users:
-  - system:serviceaccount:{{ .Release.Namespace }}:{{ include "kepler.fullname" .Subcharts.kepler }}
+  - system:serviceaccount:{{ include "helper.namespace" . }}:{{ include "kepler.fullname" .Subcharts.kepler }}
 volumes:
 - configMap
 - hostPath
@@ -62,5 +62,5 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: {{ include "kepler.fullname" .Subcharts.kepler }}
-  namespace: {{ .Release.Namespace }}
+  namespace: {{ include "helper.namespace" . }}
 {{- end -}}

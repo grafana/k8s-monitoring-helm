@@ -10,6 +10,10 @@
 {{- . | lower | replace " " "_" | replace "-" "_" -}}
 {{ end }}
 
+{{- define "helper.namespace" -}}
+{{- .Values.global.namespaceOverride | default .Release.Namespace -}}
+{{- end -}}
+
 {{- define "helper.fullname" -}}
 {{- if .Values.fullnameOverride }}
 {{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" | lower }}
