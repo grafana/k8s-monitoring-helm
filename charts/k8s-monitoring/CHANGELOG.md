@@ -4,6 +4,7 @@
 
 *   Find Pod logs for static pods using the config.mirror annotation (@sebastian-de)
 *   Add label selectors plus a completed Job filter to the Istio integration sidecar scraper and wire namespace/label selectors for Istiod discovery (@petewall)
+*   Fix cAdvisor `includeNamespaces` filter dropping non-namespaced metrics like `machine_*` (@petewall)
 
 ## 3.8.1
 

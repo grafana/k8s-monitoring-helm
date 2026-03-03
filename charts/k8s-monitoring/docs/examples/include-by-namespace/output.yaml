@@ -79,6 +79,18 @@ metadata:
     app.kubernetes.io/version: "0.31.3"
     release: k8smon
 ---
+# Source: k8s-monitoring/templates/destination_secret.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: "loki-k8smon-k8s-monitoring"
+  namespace: "default"
+type: Opaque
+data:
+  tenantId: "MQ=="
+  username: "bG9raQ=="
+  password: "bG9raXBhc3N3b3Jk"
+---
 # Source: k8s-monitoring/charts/clusterMetrics/charts/windows-exporter/templates/config.yaml
 apiVersion: v1
 kind: ConfigMap
@@ -731,7 +743,7 @@ data:
         }
         rule {
           source_labels = ["namespace"]
-          regex = "alpha|bravo|delta"
+          regex = "alpha|bravo|delta|"
           action = "keep"
         }
         forward_to = argument.metrics_destinations.value
@@ -1065,7 +1077,7 @@ data:
     
     prometheus.remote_write "prometheus" {
       endpoint {
-        url = "http://prometheus.prometheus.svc:9090/api/v1/write"
+        url = "http://prometheus-server.prometheus.svc:9090/api/v1/write"
         headers = {
         }
         tls_config {
@@ -1088,13 +1100,13 @@ data:
         write_relabel_config {
           source_labels = ["cluster"]
           regex = ""
-          replacement = "include-by-namespace-cluster"
+          replacement = "include-by-namespace-test"
           target_label = "cluster"
         }
         write_relabel_config {
           source_labels = ["k8s_cluster_name"]
           regex = ""
-          replacement = "include-by-namespace-cluster"
+          replacement = "include-by-namespace-test"
           target_label = "k8s_cluster_name"
         }
       }
@@ -1259,7 +1271,7 @@ data:
     
     prometheus.remote_write "prometheus" {
       endpoint {
-        url = "http://prometheus.prometheus.svc:9090/api/v1/write"
+        url = "http://prometheus-server.prometheus.svc:9090/api/v1/write"
         headers = {
         }
         tls_config {
@@ -1282,13 +1294,13 @@ data:
         write_relabel_config {
           source_labels = ["cluster"]
           regex = ""
-          replacement = "include-by-namespace-cluster"
+          replacement = "include-by-namespace-test"
           target_label = "cluster"
         }
         write_relabel_config {
           source_labels = ["k8s_cluster_name"]
           regex = ""
-          replacement = "include-by-namespace-cluster"
+          replacement = "include-by-namespace-test"
           target_label = "k8s_cluster_name"
         }
       }
@@ -1306,8 +1318,13 @@ data:
     
     loki.write "loki" {
       endpoint {
-        url = "http://loki.loki.svc:3100/api/push"
+        url = "http://loki.loki.svc:3100/loki/api/v1/push"
         retry_on_http_429 = true
+        tenant_id = convert.nonsensitive(remote.kubernetes.secret.loki.data["tenantId"])
+        basic_auth {
+          username = convert.nonsensitive(remote.kubernetes.secret.loki.data["username"])
+          password = remote.kubernetes.secret.loki.data["password"]
+        }
         tls_config {
           insecure_skip_verify = false
         }
@@ -1316,9 +1333,14 @@ data:
         max_backoff_retries = "10"
       }
       external_labels = {
-        "cluster" = "include-by-namespace-cluster",
-        "k8s_cluster_name" = "include-by-namespace-cluster",
+        "cluster" = "include-by-namespace-test",
+        "k8s_cluster_name" = "include-by-namespace-test",
       }
+    }
+    
+    remote.kubernetes.secret "loki" {
+      name      = "loki-k8smon-k8s-monitoring"
+      namespace = "default"
     }
   self-reporting-metric.prom: |
     # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart
@@ -1582,8 +1604,13 @@ data:
     
     loki.write "loki" {
       endpoint {
-        url = "http://loki.loki.svc:3100/api/push"
+        url = "http://loki.loki.svc:3100/loki/api/v1/push"
         retry_on_http_429 = true
+        tenant_id = convert.nonsensitive(remote.kubernetes.secret.loki.data["tenantId"])
+        basic_auth {
+          username = convert.nonsensitive(remote.kubernetes.secret.loki.data["username"])
+          password = remote.kubernetes.secret.loki.data["password"]
+        }
         tls_config {
           insecure_skip_verify = false
         }
@@ -1592,9 +1619,14 @@ data:
         max_backoff_retries = "10"
       }
       external_labels = {
-        "cluster" = "include-by-namespace-cluster",
-        "k8s_cluster_name" = "include-by-namespace-cluster",
+        "cluster" = "include-by-namespace-test",
+        "k8s_cluster_name" = "include-by-namespace-test",
       }
+    }
+    
+    remote.kubernetes.secret "loki" {
+      name      = "loki-k8smon-k8s-monitoring"
+      namespace = "default"
     }
 ---
 # Source: k8s-monitoring/templates/alloy-config.yaml
@@ -1771,7 +1803,7 @@ data:
     
     prometheus.remote_write "prometheus" {
       endpoint {
-        url = "http://prometheus.prometheus.svc:9090/api/v1/write"
+        url = "http://prometheus-server.prometheus.svc:9090/api/v1/write"
         headers = {
         }
         tls_config {
@@ -1794,13 +1826,13 @@ data:
         write_relabel_config {
           source_labels = ["cluster"]
           regex = ""
-          replacement = "include-by-namespace-cluster"
+          replacement = "include-by-namespace-test"
           target_label = "cluster"
         }
         write_relabel_config {
           source_labels = ["k8s_cluster_name"]
           regex = ""
-          replacement = "include-by-namespace-cluster"
+          replacement = "include-by-namespace-test"
           target_label = "k8s_cluster_name"
         }
       }
@@ -1818,8 +1850,13 @@ data:
     
     loki.write "loki" {
       endpoint {
-        url = "http://loki.loki.svc:3100/api/push"
+        url = "http://loki.loki.svc:3100/loki/api/v1/push"
         retry_on_http_429 = true
+        tenant_id = convert.nonsensitive(remote.kubernetes.secret.loki.data["tenantId"])
+        basic_auth {
+          username = convert.nonsensitive(remote.kubernetes.secret.loki.data["username"])
+          password = remote.kubernetes.secret.loki.data["password"]
+        }
         tls_config {
           insecure_skip_verify = false
         }
@@ -1828,10 +1865,16 @@ data:
         max_backoff_retries = "10"
       }
       external_labels = {
-        "cluster" = "include-by-namespace-cluster",
-        "k8s_cluster_name" = "include-by-namespace-cluster",
+        "cluster" = "include-by-namespace-test",
+        "k8s_cluster_name" = "include-by-namespace-test",
       }
     }
+    
+    remote.kubernetes.secret "loki" {
+      name      = "loki-k8smon-k8s-monitoring"
+      namespace = "default"
+    }
+    
     // Destination: tempo (otlp)
     
     otelcol.processor.attributes "tempo" {
@@ -1846,8 +1889,8 @@ data:
       trace_statements {
         context = "resource"
         statements = [
-          `set(attributes["cluster"], "include-by-namespace-cluster")`,
-          `set(attributes["k8s.cluster.name"], "include-by-namespace-cluster")`,
+          `set(attributes["cluster"], "include-by-namespace-test")`,
+          `set(attributes["k8s.cluster.name"], "include-by-namespace-test")`,
           `delete_key(attributes, "process.pid")`,
           `delete_key(attributes, "process.parent_pid")`,
           `delete_key(attributes, "process.executable.path")`,
@@ -2964,8 +3007,8 @@ data:
       }
     
       external_labels = {
-        "cluster" = "include-by-namespace-cluster",
-        "k8s_cluster_name" = "include-by-namespace-cluster",
+        "cluster" = "include-by-namespace-test",
+        "k8s_cluster_name" = "include-by-namespace-test",
       }
     }
 ---
@@ -2987,7 +3030,7 @@ data:
   beyla-config.yml: |-
     attributes:
       kubernetes:
-        cluster_name: include-by-namespace-cluster
+        cluster_name: include-by-namespace-test
         enable: true
     discovery:
       services:
