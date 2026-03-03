@@ -142,7 +142,7 @@ application_observability "feature" {
 {{- if and .Values.applicationObservability.enabled .Values.applicationObservability.receivers.otlp.grpc.enabled }}
   {{- $collectorName := include "collectors.getCollectorForFeature" (dict "Values" $.Values "featureKey" $featureKey) }}
   {{- $values := dict "Values" $.Values "Chart" $.Chart "Release" $.Release "collectorName" $collectorName }}
-http://{{ include "collector.alloy.fullname" $values }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.applicationObservability.receivers.otlp.grpc.port }}
+http://{{ include "collector.alloy.fullname" $values }}.{{ include "helper.namespace" . }}.svc.cluster.local:{{ .Values.applicationObservability.receivers.otlp.grpc.port }}
 {{- end }}
 {{- end }}
 
@@ -151,7 +151,7 @@ http://{{ include "collector.alloy.fullname" $values }}.{{ .Release.Namespace }}
 {{- if and .Values.applicationObservability.enabled .Values.applicationObservability.receivers.otlp.http.enabled }}
   {{- $collectorName := include "collectors.getCollectorForFeature" (dict "Values" $.Values "featureKey" $featureKey) }}
   {{- $values := dict "Values" $.Values "Chart" $.Chart "Release" $.Release "collectorName" $collectorName }}
-http://{{ include "collector.alloy.fullname" $values }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.applicationObservability.receivers.otlp.http.port }}
+http://{{ include "collector.alloy.fullname" $values }}.{{ include "helper.namespace" . }}.svc.cluster.local:{{ .Values.applicationObservability.receivers.otlp.http.port }}
 {{- end }}
 {{- end }}
 
