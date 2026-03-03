@@ -47,12 +47,21 @@ destinations:
 ```
 
 Choose this when another workflow (SealedSecrets, External Secrets Operator, Flux, etc.) is already creating a secret
-and you simply want Alloy to know how to reference the right field in that secret.
+and you want Alloy to know how to reference the right field in that secret.
 
 In the above example, a secret like this is expected:
 
 ```yaml
-FILL IN HERE
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: my-credentials
+  namespace: monitoring
+type: Opaque
+stringData:
+  prom-username: "12345"
+  prom-password: "example-password"
 ```
 
 ### `passwordFrom`
