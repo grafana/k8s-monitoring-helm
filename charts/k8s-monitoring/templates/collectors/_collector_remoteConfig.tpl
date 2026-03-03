@@ -105,7 +105,7 @@ remotecfg {
 {{- $attributes = merge $attributes (dict "sourceVersion" $.Chart.Version) }}
 {{- $attributes = merge $attributes (dict "release" $.Release.Name) }}
 {{- $attributes = merge $attributes (dict "cluster" $.Values.cluster.name) }}
-{{- $attributes = merge $attributes (dict "namespace" $.Release.Namespace) }}
+{{- $attributes = merge $attributes (dict "namespace" (include "helper.namespace" $)) }}
 {{- $attributes = merge $attributes (dict "workloadName" $.collectorName) }}
 {{- $attributes = merge $attributes (dict "workloadType" $collectorValues.controller.type) }}
 {{- $attributes = mergeOverwrite $attributes .extraAttributes }}

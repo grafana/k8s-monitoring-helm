@@ -29,7 +29,7 @@ discovery.kubernetes "kube_state_metrics" {
   }
 {{- if (index .Values "kube-state-metrics").deploy }}
   namespaces {
-    names = [{{ .Release.Namespace | quote }}]
+    names = [{{ include "helper.namespace" . | quote }}]
   }
 {{- else if (index .Values "kube-state-metrics").namespace }}
   namespaces {

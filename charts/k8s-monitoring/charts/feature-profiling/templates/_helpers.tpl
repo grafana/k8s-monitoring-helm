@@ -18,3 +18,7 @@
 {{ printf "__meta_kubernetes_service_label_%s" (include "escape_label_or_annotation" .) }}
 {{- end }}
 
+{{- define "helper.namespace" -}}
+{{- .Values.global.namespaceOverride | default .Release.Namespace -}}
+{{- end -}}
+

@@ -35,7 +35,7 @@ discovery.kubernetes "node_exporter" {
 
 {{- if (index .Values "node-exporter").deploy }}
   namespaces {
-    names = [{{ .Release.Namespace | quote }}]
+    names = [{{ include "helper.namespace" . | quote }}]
   }
 {{- else if (index .Values "node-exporter").namespace }}
   namespaces {

@@ -182,6 +182,6 @@ remote.kubernetes.secret.{{ include "helper.alloy_name" .object.name }}.data[{{ 
 {{- if $secretNamespace -}}
   {{- $secretNamespace -}}
 {{- else -}}
-  {{- .Release.Namespace -}}
+  {{- include "helper.namespace" . -}}
 {{- end }}
 {{- end }}
