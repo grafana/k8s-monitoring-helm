@@ -64,6 +64,10 @@ creates a boolean_attribute policy:
           max_interval = "30s"
           max_elapsed_time = "5m"
         }
+
+        sending_queue {
+          enabled = true
+        }
       }
 creates a composite policy:
   1: |
@@ -158,6 +162,94 @@ creates a composite policy:
           max_interval = "30s"
           max_elapsed_time = "5m"
         }
+
+        sending_queue {
+          enabled = true
+        }
+      }
+creates a drop policy:
+  1: |
+    |-
+      otelcol.receiver.otlp "sampler_receiver" {
+        grpc {
+          max_recv_msg_size = "4MB"
+        }
+
+        output {
+          traces = [otelcol.processor.tail_sampling.tail_sampler.input]
+        }
+      }
+      otelcol.processor.tail_sampling "tail_sampler" {
+        // https://grafana.com/docs/alloy/latest/reference/components/otelcol.processor.tail_sampling/
+
+        decision_wait = "15s"
+        decision_cache = {
+          sampled_cache_size     = 0,
+          non_sampled_cache_size = 0,
+        }
+
+        policy {
+          name = "drop-policy"
+          type = "drop"
+          drop {
+            drop_sub_policy {
+              name = "test-drop-policy-1"
+              type = "string_attribute"
+              string_attribute {
+                key = "url.path"
+                values = ["/health", "/metrics"]
+                enabled_regex_matching = true
+              }
+            }
+            drop_sub_policy {
+              name = "test-drop-policy-2"
+              type = "probabilistic"
+              probabilistic {
+                sampling_percentage = 10
+              }
+            }
+          }
+        }
+
+        output {
+          traces = [otelcol.processor.batch.tempo.input]
+        }
+      }
+
+
+
+
+      // Destination: tempo (otlp)
+      otelcol.processor.batch "tempo" {
+        timeout = "2s"
+        send_batch_size = 8192
+        send_batch_max_size = 0
+
+        output {
+          metrics = [otelcol.exporter.otlp.tempo.input]
+          logs = [otelcol.exporter.otlp.tempo.input]
+          traces = [otelcol.exporter.otlp.tempo.input]
+        }
+      }
+      otelcol.exporter.otlp "tempo" {
+        client {
+          endpoint = "tempo:4317"
+          tls {
+            insecure = false
+            insecure_skip_verify = false
+          }
+        }
+
+        retry_on_failure {
+          enabled = true
+          initial_interval = "5s"
+          max_interval = "30s"
+          max_elapsed_time = "5m"
+        }
+
+        sending_queue {
+          enabled = true
+        }
       }
 creates a latency policy:
   1: |
@@ -223,6 +315,10 @@ creates a latency policy:
           initial_interval = "5s"
           max_interval = "30s"
           max_elapsed_time = "5m"
+        }
+
+        sending_queue {
+          enabled = true
         }
       }
 creates a numeric_attribute policy:
@@ -292,6 +388,10 @@ creates a numeric_attribute policy:
           max_interval = "30s"
           max_elapsed_time = "5m"
         }
+
+        sending_queue {
+          enabled = true
+        }
       }
 creates a probabilistic policy:
   1: |
@@ -357,6 +457,10 @@ creates a probabilistic policy:
           max_interval = "30s"
           max_elapsed_time = "5m"
         }
+
+        sending_queue {
+          enabled = true
+        }
       }
 creates a rate_limiting policy:
   1: |
@@ -421,6 +525,10 @@ creates a rate_limiting policy:
           initial_interval = "5s"
           max_interval = "30s"
           max_elapsed_time = "5m"
+        }
+
+        sending_queue {
+          enabled = true
         }
       }
 creates a span_count policy:
@@ -489,6 +597,10 @@ creates a span_count policy:
           max_interval = "30s"
           max_elapsed_time = "5m"
         }
+
+        sending_queue {
+          enabled = true
+        }
       }
 creates a status_code policy:
   1: |
@@ -553,6 +665,10 @@ creates a status_code policy:
           initial_interval = "5s"
           max_interval = "30s"
           max_elapsed_time = "5m"
+        }
+
+        sending_queue {
+          enabled = true
         }
       }
 creates a string_attribute policy:
@@ -623,6 +739,10 @@ creates a string_attribute policy:
           max_interval = "30s"
           max_elapsed_time = "5m"
         }
+
+        sending_queue {
+          enabled = true
+        }
       }
 creates a trace_state policy:
   1: |
@@ -689,6 +809,10 @@ creates a trace_state policy:
           max_interval = "30s"
           max_elapsed_time = "5m"
         }
+
+        sending_queue {
+          enabled = true
+        }
       }
 creates an always_sample policy:
   1: |
@@ -751,6 +875,10 @@ creates an always_sample policy:
           initial_interval = "5s"
           max_interval = "30s"
           max_elapsed_time = "5m"
+        }
+
+        sending_queue {
+          enabled = true
         }
       }
 creates an and policy:
@@ -834,6 +962,10 @@ creates an and policy:
           max_interval = "30s"
           max_elapsed_time = "5m"
         }
+
+        sending_queue {
+          enabled = true
+        }
       }
 creates an ottl_condition policy:
   1: |
@@ -901,5 +1033,9 @@ creates an ottl_condition policy:
           initial_interval = "5s"
           max_interval = "30s"
           max_elapsed_time = "5m"
+        }
+
+        sending_queue {
+          enabled = true
         }
       }

@@ -246,6 +246,37 @@ tests:
       - matchSnapshot:
           path: spec.alloy.configMap.content
 
+  - it: creates a drop policy
+    set:
+      destinations:
+        - name: tempo
+          type: otlp
+          url: tempo:4317
+          traces: {enabled: true}
+          processors:
+            tailSampling:
+              enabled: true
+              policies:
+                - name: drop-policy
+                  type: drop
+                  drop:
+                    drop_sub_policy:
+                      - name: test-drop-policy-1
+                        type: string_attribute
+                        key: url.path
+                        values:
+                          - /health
+                          - /metrics
+                        enabled_regex_matching: true
+                      - name: test-drop-policy-2
+                        type: probabilistic
+                        sampling_percentage: 10
+    asserts:
+      - isKind:
+          of: Alloy
+      - matchSnapshot:
+          path: spec.alloy.configMap.content
+
   - it: creates an and policy
     set:
       destinations:
