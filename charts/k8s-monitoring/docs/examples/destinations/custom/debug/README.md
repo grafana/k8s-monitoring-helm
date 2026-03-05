@@ -1,0 +1,80 @@
+<!--
+(NOTE: Do not edit README.md directly. It is a generated file!)
+(      To make changes, please modify values.yaml or description.txt and run `make examples`)
+-->
+# Custom Destination: Debug
+
+This custom destination shows how to configure a debug destination that emits debugging information to Alloy's
+pod logs.
+
+## Values
+
+<!-- textlint-disable terminology -->
+```yaml
+---
+cluster:
+  name: debug-custom-destination
+
+destinations:
+  - name: prometheus
+    type: prometheus
+    url: http://prometheus-server.prometheus.svc:9090/api/v1/write
+  - name: loki
+    type: loki
+    url: http://loki.loki.svc:3100/loki/api/v1/push
+    tenantId: "1"
+    auth:
+      type: basic
+      username: loki
+      password: lokipassword
+  - name: debug
+    type: custom
+    config: |
+      otelcol.processor.filter "debug" {
+        metrics {
+          metric = ["name != \"alloy_build_info\""]
+        }
+
+        output {
+          metrics = [otelcol.exporter.debug.debug.input]
+          logs    = [otelcol.exporter.debug.debug.input]
+          traces  = [otelcol.exporter.debug.debug.input]
+        }
+      }
+      otelcol.exporter.debug "debug" {
+        verbosity = "detailed"
+      }
+    ecosystem: otlp
+    metrics:
+      enabled: true
+      target: otelcol.processor.filter.debug.input
+    logs:
+      enabled: true
+      target: otelcol.processor.filter.debug.input
+    traces:
+      enabled: true
+      target: otelcol.processor.filter.debug.input
+
+podLogs:
+  enabled: true
+  namespaces: [default]
+  labelSelectors:
+    app.kubernetes.io/name: alloy-metrics
+
+integrations:
+  destinations: [prometheus, debug]
+  alloy:
+    instances:
+      - name: alloy
+        labelSelectors:
+          app.kubernetes.io/name: alloy-metrics
+
+alloy-metrics:
+  enabled: true
+  alloy:
+    stabilityLevel: experimental
+
+alloy-logs:
+  enabled: true
+```
+<!-- textlint-enable terminology -->
