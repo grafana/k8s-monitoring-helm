@@ -102,6 +102,22 @@ prometheus.exporter.mysql {{ include "helper.alloy_name" .name | quote }} {
     {{- end }}
     {{- if .exporter.collectors.perfSchemaEventsStatements.enabled }}
       {{- $enabledCollectors = append $enabledCollectors "perf_schema.eventsstatements" }}
+      {{- $opts := .exporter.collectors.perfSchemaEventsStatements }}
+      {{- if or $opts.limit $opts.textLimit $opts.timeLimit .databaseObservability.enabled }}
+  perf_schema.eventsstatements {
+        {{- if $opts.limit }}
+    limit = {{ $opts.limit | int }}
+        {{- end }}
+        {{- if not (kindIs "invalid" $opts.textLimit) }}
+    text_limit = {{ $opts.textLimit | int }}
+        {{- else if .databaseObservability.enabled }}
+    text_limit = 0
+        {{- end }}
+        {{- if $opts.timeLimit }}
+    time_limit = {{ $opts.timeLimit | int }}
+        {{- end }}
+  }
+      {{- end }}
     {{- end }}
   {{- end }}
   enable_collectors = {{ $enabledCollectors | toJson }}

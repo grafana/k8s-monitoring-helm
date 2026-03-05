@@ -148,3 +148,27 @@ tests:
       - template: configmap.yaml
         matchSnapshot:
           path: data["metrics.alloy"]
+
+  - it: allows configuring perf_schema.eventsstatements options
+    set:
+      deployAsConfigMap: true
+      mysql:
+        instances:
+          - name: test-database
+            exporter:
+              dataSource:
+                host: test-database-mysql.mysql.svc
+                auth:
+                  username: db-admin
+                  password: db-password
+              collectors:
+                perfSchemaEventsStatements:
+                  enabled: true
+                  limit: 500
+                  textLimit: 0
+                  timeLimit: 43200
+            logs: {enabled: false}
+    asserts:
+      - template: configmap.yaml
+        matchSnapshot:
+          path: data["metrics.alloy"]

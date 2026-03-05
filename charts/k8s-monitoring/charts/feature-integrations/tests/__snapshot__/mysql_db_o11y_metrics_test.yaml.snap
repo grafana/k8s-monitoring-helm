@@ -1,3 +1,90 @@
+defaults text_limit to 0 for perf_schema.eventsstatements when db o11y is enabled:
+  1: |
+    |-
+      declare "mysql_integration" {
+        argument "metrics_destinations" {
+          comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
+        }
+        argument "logs_destinations" {
+          comment = "Must be a list of log destinations where collected logs should be forwarded to"
+        }
+
+        remote.kubernetes.secret "my_database" {
+          name      = "my-database-release-name-feature-integrations"
+          namespace = "NAMESPACE"
+        }
+
+        prometheus.exporter.mysql "my_database" {
+          data_source_name = string.format("%s:%s@(%s:%d)/",
+            convert.nonsensitive(remote.kubernetes.secret.my_database.data["username"]),
+            convert.nonsensitive(remote.kubernetes.secret.my_database.data["password"]),
+            "my-db.mysql.svc",
+            3306,
+          )
+          perf_schema.eventsstatements {
+            text_limit = 0
+          }
+          enable_collectors = ["heartbeat","mysql.user","perf_schema.eventsstatements"]
+        }
+
+        database_observability.mysql "my_database" {
+          targets = prometheus.exporter.mysql.my_database.targets
+          data_source_name = string.format("%s:%s@(%s:%d)/",
+            convert.nonsensitive(remote.kubernetes.secret.my_database.data["username"]),
+            convert.nonsensitive(remote.kubernetes.secret.my_database.data["password"]),
+            "my-db.mysql.svc",
+            3306,
+          )
+          allow_update_performance_schema_settings = false
+          query_details {
+            collect_interval = "1m"
+          }
+          query_samples {
+            collect_interval = "1m"
+            disable_query_redaction = false
+            auto_enable_setup_consumers = false
+            setup_consumers_check_interval = "1h"
+          }
+          schema_details {
+            collect_interval = "1m"
+            cache_enabled = false
+            cache_size = 256
+            cache_ttl = "10m"
+          }
+          setup_consumers {
+            collect_interval = "1m"
+          }
+          enable_collectors = ["query_details","query_samples","schema_details","setup_consumers"]
+
+          forward_to = argument.logs_destinations.value
+        }
+        prometheus.scrape "my_database" {
+          targets = database_observability.mysql.my_database.targets
+          clustering {
+            enabled = true
+          }
+
+          scrape_interval = "60s"
+          scrape_timeout = "10s"
+          scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
+          scrape_classic_histograms = false
+          scrape_native_histograms = false
+          forward_to = [prometheus.relabel.my_database.receiver]
+        }
+
+        prometheus.relabel "my_database" {
+          max_cache_size = 100000
+          rule {
+            target_label = "instance"
+            replacement = "my-database"
+          }
+          rule {
+            target_label = "job"
+            replacement = "integration/mysql"
+          }
+          forward_to = argument.metrics_destinations.value
+        }
+      }
 should create the MySQL config:
   1: |
     |-
