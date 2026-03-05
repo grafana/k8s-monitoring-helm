@@ -44,9 +44,7 @@ pod_logs_objects "feature" {
       {{- $values := dict }}
       {{- range $collectorName := include "features.podLogsObjects.collectors" . | fromYamlArray }}
         {{- $extraEnv := deepCopy (dig "alloy" "extraEnv" list (index $.Values $collectorName)) }}
-        {{- if eq (include "collectors.has_extra_env" (deepCopy $ | merge (dict "name" $collectorName "envVar" "NODE_NAME"))) "false" }}
-          {{- $extraEnv = append $extraEnv (dict "name" "NODE_NAME" "valueFrom" (dict "fieldRef" (dict "fieldPath" "spec.nodeName"))) }}
-        {{- end }}
+        {{- $extraEnv = (include "collectors.set_extra_env" (dict "envList" $extraEnv "name" "NODE_NAME" "valueFrom" (dict "fieldRef" (dict "fieldPath" "spec.nodeName")))) | fromYamlArray }}
         {{- $values = $values | merge (dict $collectorName (dict "alloy" (dict "extraEnv" $extraEnv))) }}
       {{- end }}
       {{- $values | toYaml }}
