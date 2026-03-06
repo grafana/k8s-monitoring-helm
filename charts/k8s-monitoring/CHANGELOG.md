@@ -9,6 +9,7 @@
 *   Update Beyla to 1.13.0 (@petewall)
 *   MySQL: Add perf_schema.eventsstatements collector options (@cristiangreco)
 *   Fix: preserve user extraEnv in service graph collector (@rafix)
+*   Updated Node Exporter, OpenCost, and Alloy Operator (@petewall)
 
 ## 3.8.1
 
