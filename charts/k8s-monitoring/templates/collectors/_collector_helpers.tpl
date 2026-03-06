@@ -49,6 +49,36 @@
 {{- $found -}}
 {{- end }}
 
+{{/* Inputs: envList (existing environment var list), name (environrment var name), value (), overwrite */}}
+{{- define "collectors.set_extra_env" -}}
+{{- $found := false -}}
+{{- $newList := list -}}
+{{- range .envList -}}
+  {{- if eq .name $.name -}}
+    {{- $found = true -}}
+    {{- if $.overwrite -}}
+      {{- if $.value -}}
+        {{- $newList = append $newList (dict "name" $.name "value" $.value) -}}
+      {{- else if $.valueFrom -}}
+        {{- $newList = append $newList (dict "name" $.name "valueFrom" $.valueFrom) -}}
+      {{- end -}}
+    {{- else -}}
+      {{- $newList = append $newList . -}}
+    {{- end -}}
+  {{- else -}}
+    {{- $newList = append $newList . -}}
+  {{- end -}}
+{{- end -}}
+{{- if not $found -}}
+  {{- if $.value -}}
+    {{- $newList = append $newList (dict "name" $.name "value" $.value) -}}
+  {{- else if $.valueFrom -}}
+    {{- $newList = append $newList (dict "name" $.name "valueFrom" $.valueFrom) -}}
+  {{- end -}}
+{{- end -}}
+{{- $newList | toYaml -}}
+{{- end }}
+
 {{/* Inputs: Values (all values), name (collector name), feature (feature name), portNumber, portName, portProtocol */}}
 {{- define "collectors.require_extra_port" -}}
 {{- if eq (include "collectors.has_extra_port" .) "false" }}
