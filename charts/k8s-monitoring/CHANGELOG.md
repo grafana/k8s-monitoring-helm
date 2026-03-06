@@ -3,6 +3,7 @@
 ## Unreleased
 
 *   Find Pod logs for static pods using the config.mirror annotation (@sebastian-de)
+<<<<<<< HEAD
 *   Add label selectors plus a completed Job filter to the Istio integration sidecar scraper and wire namespace/label selectors for Istiod discovery (@petewall)
 *   Fix cAdvisor `includeNamespaces` filter dropping non-namespaced metrics like `machine_*` (@petewall)
 *   Update Beyla auto-instrumentation config to use `instrument`/`exclude_instrument`, replacing the deprecated `services`/`exclude_services` (@petewall)
@@ -10,6 +11,7 @@
 *   MySQL: Add perf_schema.eventsstatements collector options (@cristiangreco)
 *   Fix: preserve user extraEnv in service graph collector (@rafix)
 *   Updated Node Exporter, OpenCost, and Alloy Operator (@petewall)
+*   Add TLS configuration support for OAuth2 token endpoints across all destinations (@petewall)
 
 ## 3.8.1
 
