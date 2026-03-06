@@ -8,6 +8,7 @@
 *   Update Beyla auto-instrumentation config to use `instrument`/`exclude_instrument`, replacing the deprecated `services`/`exclude_services` (@petewall)
 *   Update Beyla to 1.13.0 (@petewall)
 *   MySQL: Add perf_schema.eventsstatements collector options (@cristiangreco)
+*   Updated Node Exporter, OpenCost, and Alloy Operator (@petewall)
 
 ## 3.8.1
 
