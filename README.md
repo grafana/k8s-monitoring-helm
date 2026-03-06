@@ -21,7 +21,6 @@
 |----------|-------------------------------|-----|
 | petewall | <pete.wall@grafana.com>       |     |
 | rlankfo  | <robert.lankford@grafana.com> |     |
-| skl      | <stephen.lang@grafana.com>    |     |
 
 ## Usage
 
