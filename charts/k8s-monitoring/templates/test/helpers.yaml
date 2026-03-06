@@ -8,4 +8,14 @@ data:
   regular: {{ include "helper.kubernetesName" "valid-kubernetes-name" | quote }}
   nameWithSpacesAndCapitals: {{ include "helper.kubernetesName" "This is my name" | quote }}
   nameWithUnderscores: {{ include "helper.kubernetesName" "i_am_a_snake" | quote }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: test-collectors-set-extra-env
+data:
+  insertNew: {{ include "collectors.set_extra_env" (dict "envList" (list (dict "name" "PORT" "value" "8080")) "name" "HOST" "value" "localhost" "overwrite" false) | fromYamlArray | toJson | quote }}
+  overwriteExisting: {{ include "collectors.set_extra_env" (dict "envList" (list (dict "name" "PORT" "value" "8080")) "name" "PORT" "value" "9090" "overwrite" true) | fromYamlArray | toJson | quote }}
+  noOverwriteExisting: {{ include "collectors.set_extra_env" (dict "envList" (list (dict "name" "PORT" "value" "8080")) "name" "PORT" "value" "9090" "overwrite" false) | fromYamlArray | toJson | quote }}
+  insertIntoEmpty: {{ include "collectors.set_extra_env" (dict "envList" (list) "name" "PORT" "value" "8080" "overwrite" false) | fromYamlArray | toJson | quote }}
 {{- end }}
