@@ -224,3 +224,288 @@ creates the Alloy components for an Prometheus destination:
           max_keepalive_time = "8h"
         }
       }
+supports metric enrichment with explicit label renaming:
+  1: |
+    |
+      // Destination: test (prometheus)
+      otelcol.exporter.prometheus "test" {
+        add_metric_suffixes = true
+        resource_to_telemetry_conversion = false
+        forward_to = [prometheus.remote_write.test.receiver]
+      }
+      discovery.kubernetes "test" {
+        role = "pod"
+        attach_metadata {
+          namespace = true
+        }
+      }
+      discovery.relabel "test" {
+        targets = discovery.kubernetes.test.targets
+        rule {
+          source_labels = ["__meta_kubernetes_namespace", "__meta_kubernetes_pod_name"]
+          regex = "(.+;.+)"
+          target_label = "__meta_kubernetes_namespace_pod"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
+          target_label = "app_name"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_namespace_label_team"]
+          target_label = "team"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_namespace_label_field_cattle_io_projectId"]
+          target_label = "project_id"
+        }
+      }
+
+      prometheus.relabel "test" {
+        rule {
+          source_labels = ["namespace", "pod"]
+          regex = "(.+;.+)"
+          target_label = "__meta_kubernetes_namespace_pod"
+        }
+        forward_to = [prometheus.enrich.test_ns.receiver]
+      }
+      prometheus.enrich "test_ns" {
+        targets = discovery.relabel.test.output
+        target_match_label = "__meta_kubernetes_namespace"
+        metrics_match_label = "namespace"
+        labels_to_copy = ["team","project_id"]
+        forward_to = [prometheus.enrich.test_pod.receiver]
+      }
+      prometheus.enrich "test_pod" {
+        targets = discovery.relabel.test.output
+        target_match_label = "__meta_kubernetes_namespace_pod"
+        labels_to_copy = ["app_name"]
+        forward_to = [prometheus.remote_write.test.receiver]
+      }
+
+      prometheus.remote_write "test" {
+        endpoint {
+          url = "https://prometheus.example.com"
+          headers = {
+          }
+          tls_config {
+            insecure_skip_verify = false
+          }
+          send_native_histograms = false
+
+          queue_config {
+            capacity = 10000
+            min_shards = 1
+            max_shards = 50
+            max_samples_per_send = 2000
+            batch_send_deadline = "5s"
+            min_backoff = "30ms"
+            max_backoff = "5s"
+            retry_on_http_429 = true
+            sample_age_limit = "0s"
+          }
+
+          write_relabel_config {
+            source_labels = ["cluster"]
+            regex = ""
+            replacement = "test-cluster"
+            target_label = "cluster"
+          }
+          write_relabel_config {
+            source_labels = ["k8s_cluster_name"]
+            regex = ""
+            replacement = "test-cluster"
+            target_label = "k8s_cluster_name"
+          }
+          write_relabel_config {
+            regex = "__meta_kubernetes_namespace_pod"
+            action = "labeldrop"
+          }
+        }
+
+        wal {
+          truncate_frequency = "2h"
+          min_keepalive_time = "5m"
+          max_keepalive_time = "8h"
+        }
+      }
+supports metric enrichment with labels containing special characters:
+  1: |
+    |
+      // Destination: test (prometheus)
+      otelcol.exporter.prometheus "test" {
+        add_metric_suffixes = true
+        resource_to_telemetry_conversion = false
+        forward_to = [prometheus.remote_write.test.receiver]
+      }
+      discovery.kubernetes "test" {
+        role = "pod"
+        attach_metadata {
+          namespace = true
+        }
+      }
+      discovery.relabel "test" {
+        targets = discovery.kubernetes.test.targets
+        rule {
+          source_labels = ["__meta_kubernetes_namespace_label_field_cattle_io_projectId"]
+          target_label = "field_cattle_io_projectId"
+        }
+      }
+
+      prometheus.relabel "test" {
+        rule {
+          source_labels = ["namespace", "pod"]
+          regex = "(.+;.+)"
+          target_label = "__meta_kubernetes_namespace_pod"
+        }
+        forward_to = [prometheus.enrich.test_ns.receiver]
+      }
+      prometheus.enrich "test_ns" {
+        targets = discovery.relabel.test.output
+        target_match_label = "__meta_kubernetes_namespace"
+        metrics_match_label = "namespace"
+        labels_to_copy = ["field_cattle_io_projectId"]
+        forward_to = [prometheus.remote_write.test.receiver]
+      }
+
+      prometheus.remote_write "test" {
+        endpoint {
+          url = "https://prometheus.example.com"
+          headers = {
+          }
+          tls_config {
+            insecure_skip_verify = false
+          }
+          send_native_histograms = false
+
+          queue_config {
+            capacity = 10000
+            min_shards = 1
+            max_shards = 50
+            max_samples_per_send = 2000
+            batch_send_deadline = "5s"
+            min_backoff = "30ms"
+            max_backoff = "5s"
+            retry_on_http_429 = true
+            sample_age_limit = "0s"
+          }
+
+          write_relabel_config {
+            source_labels = ["cluster"]
+            regex = ""
+            replacement = "test-cluster"
+            target_label = "cluster"
+          }
+          write_relabel_config {
+            source_labels = ["k8s_cluster_name"]
+            regex = ""
+            replacement = "test-cluster"
+            target_label = "k8s_cluster_name"
+          }
+        }
+
+        wal {
+          truncate_frequency = "2h"
+          min_keepalive_time = "5m"
+          max_keepalive_time = "8h"
+        }
+      }
+supports metric enrichment with simple labels:
+  1: |
+    |
+      // Destination: test (prometheus)
+      otelcol.exporter.prometheus "test" {
+        add_metric_suffixes = true
+        resource_to_telemetry_conversion = false
+        forward_to = [prometheus.remote_write.test.receiver]
+      }
+      discovery.kubernetes "test" {
+        role = "pod"
+        attach_metadata {
+          namespace = true
+        }
+      }
+      discovery.relabel "test" {
+        targets = discovery.kubernetes.test.targets
+        rule {
+          source_labels = ["__meta_kubernetes_namespace", "__meta_kubernetes_pod_name"]
+          regex = "(.+;.+)"
+          target_label = "__meta_kubernetes_namespace_pod"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_pod_label_color"]
+          target_label = "color"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_namespace_label_team"]
+          target_label = "team"
+        }
+      }
+
+      prometheus.relabel "test" {
+        rule {
+          source_labels = ["namespace", "pod"]
+          regex = "(.+;.+)"
+          target_label = "__meta_kubernetes_namespace_pod"
+        }
+        forward_to = [prometheus.enrich.test_ns.receiver]
+      }
+      prometheus.enrich "test_ns" {
+        targets = discovery.relabel.test.output
+        target_match_label = "__meta_kubernetes_namespace"
+        metrics_match_label = "namespace"
+        labels_to_copy = ["team"]
+        forward_to = [prometheus.enrich.test_pod.receiver]
+      }
+      prometheus.enrich "test_pod" {
+        targets = discovery.relabel.test.output
+        target_match_label = "__meta_kubernetes_namespace_pod"
+        labels_to_copy = ["color"]
+        forward_to = [prometheus.remote_write.test.receiver]
+      }
+
+      prometheus.remote_write "test" {
+        endpoint {
+          url = "https://prometheus.example.com"
+          headers = {
+          }
+          tls_config {
+            insecure_skip_verify = false
+          }
+          send_native_histograms = false
+
+          queue_config {
+            capacity = 10000
+            min_shards = 1
+            max_shards = 50
+            max_samples_per_send = 2000
+            batch_send_deadline = "5s"
+            min_backoff = "30ms"
+            max_backoff = "5s"
+            retry_on_http_429 = true
+            sample_age_limit = "0s"
+          }
+
+          write_relabel_config {
+            source_labels = ["cluster"]
+            regex = ""
+            replacement = "test-cluster"
+            target_label = "cluster"
+          }
+          write_relabel_config {
+            source_labels = ["k8s_cluster_name"]
+            regex = ""
+            replacement = "test-cluster"
+            target_label = "k8s_cluster_name"
+          }
+          write_relabel_config {
+            regex = "__meta_kubernetes_namespace_pod"
+            action = "labeldrop"
+          }
+        }
+
+        wal {
+          truncate_frequency = "2h"
+          min_keepalive_time = "5m"
+          max_keepalive_time = "8h"
+        }
+      }
