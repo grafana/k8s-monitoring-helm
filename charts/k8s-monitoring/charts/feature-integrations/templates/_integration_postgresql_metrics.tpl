@@ -136,15 +136,29 @@ database_observability.postgres {{ include "helper.alloy_name" .name | quote }} 
   data_source_name = {{ include "integrations.postgresql.datasource" . | indent 2 | trim }}
 
   {{- with .databaseObservability.cloudProvider }}
-  {{- with .aws }}
-  {{- if .arn }}
+  {{- $hasAws := and .aws .aws.arn }}
+  {{- $hasAzure := and .azure .azure.subscriptionId .azure.resourceGroup }}
+  {{- if or $hasAws $hasAzure }}
   cloud_provider {
+    {{- if $hasAws }}
     aws {
-      arn = {{ .arn | quote }}
+      arn = {{ .aws.arn | quote }}
     }
+    {{- end }}
+    {{- if $hasAzure }}
+    azure {
+      subscription_id = {{ .azure.subscriptionId | quote }}
+      resource_group = {{ .azure.resourceGroup | quote }}
+      {{- if .azure.serverName }}
+      server_name = {{ .azure.serverName | quote }}
+      {{- end }}
+    }
+    {{- end }}
   }
   {{- end }}
   {{- end }}
+  {{- if .databaseObservability.excludeDatabases }}
+  exclude_databases = {{ .databaseObservability.excludeDatabases | toJson }}
   {{- end }}
 
   {{- $enabledCollectors := list }}
@@ -174,6 +188,7 @@ database_observability.postgres {{ include "helper.alloy_name" .name | quote }} 
   query_samples {
     collect_interval = {{ .collectInterval | quote }}
     disable_query_redaction = {{ .disableQueryRedaction }}
+    exclude_current_user = {{ .excludeCurrentUser }}
   }
     {{- end }}
   {{- end }}

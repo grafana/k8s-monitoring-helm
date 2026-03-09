@@ -115,6 +115,40 @@ tests:
         matchSnapshot:
           path: data["metrics.alloy"]
 
+  - it: renders new db o11y options (azure, setup_actors, statements_limit, exclude_schemas)
+    set:
+      deployAsConfigMap: true
+      mysql:
+        instances:
+          - name: azure-db
+            exporter:
+              dataSource:
+                host: azure-db.mysql.svc
+                auth:
+                  username: db-admin
+                  password: db-password
+            databaseObservability:
+              enabled: true
+              excludeSchemas: ["employees", "departments"]
+              cloudProvider:
+                azure:
+                  subscriptionId: "sub-123"
+                  resourceGroup: "rg-prod"
+                  serverName: "my-azure-server"
+              collectors:
+                queryDetails:
+                  enabled: true
+                  statementsLimit: 500
+                setupActors:
+                  enabled: true
+                  autoUpdateSetupActors: true
+                  collectInterval: 30m
+            logs: {enabled: false}
+    asserts:
+      - template: configmap.yaml
+        matchSnapshot:
+          path: data["metrics.alloy"]
+
   - it: requires metrics
     set:
       deployAsConfigMap: true

@@ -92,6 +92,38 @@ tests:
           path: stringData.password
           value: db-password
 
+  - it: renders new db o11y options (azure, exclude_databases, exclude_current_user)
+    set:
+      deployAsConfigMap: true
+      postgresql:
+        instances:
+          - name: azure-db
+            exporter:
+              dataSource:
+                host: azure-db.postgresql.svc
+                auth:
+                  username: db-admin
+                  password: db-password
+            databaseObservability:
+              enabled: true
+              excludeDatabases: ["employees", "departments"]
+              cloudProvider:
+                azure:
+                  subscriptionId: "sub-123"
+                  resourceGroup: "rg-prod"
+                  serverName: "my-azure-server"
+              collectors:
+                querySamples:
+                  enabled: true
+                  collectInterval: 1m
+                  disableQueryRedaction: false
+                  excludeCurrentUser: false
+            logs: {enabled: false}
+    asserts:
+      - template: configmap.yaml
+        matchSnapshot:
+          path: data["metrics.alloy"]
+
   - it: requires metrics
     set:
       deployAsConfigMap: true

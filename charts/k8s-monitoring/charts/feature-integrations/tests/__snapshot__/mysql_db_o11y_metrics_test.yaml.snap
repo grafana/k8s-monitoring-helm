@@ -54,7 +54,11 @@ defaults text_limit to 0 for perf_schema.eventsstatements when db o11y is enable
           setup_consumers {
             collect_interval = "1m"
           }
-          enable_collectors = ["query_details","query_samples","schema_details","setup_consumers"]
+          setup_actors {
+            auto_update_setup_actors = false
+            collect_interval = "1h"
+          }
+          enable_collectors = ["query_details","query_samples","schema_details","setup_consumers","setup_actors"]
 
           forward_to = argument.logs_destinations.value
         }
@@ -77,6 +81,103 @@ defaults text_limit to 0 for perf_schema.eventsstatements when db o11y is enable
           rule {
             target_label = "instance"
             replacement = "my-database"
+          }
+          rule {
+            target_label = "job"
+            replacement = "integration/mysql"
+          }
+          forward_to = argument.metrics_destinations.value
+        }
+      }
+renders new db o11y options (azure, setup_actors, statements_limit, exclude_schemas):
+  1: |
+    |-
+      declare "mysql_integration" {
+        argument "metrics_destinations" {
+          comment = "Must be a list of metric destinations where collected metrics should be forwarded to"
+        }
+        argument "logs_destinations" {
+          comment = "Must be a list of log destinations where collected logs should be forwarded to"
+        }
+
+        remote.kubernetes.secret "azure_db" {
+          name      = "azure-db-release-name-feature-integrations"
+          namespace = "NAMESPACE"
+        }
+
+        prometheus.exporter.mysql "azure_db" {
+          data_source_name = string.format("%s:%s@(%s:%d)/",
+            convert.nonsensitive(remote.kubernetes.secret.azure_db.data["username"]),
+            convert.nonsensitive(remote.kubernetes.secret.azure_db.data["password"]),
+            "azure-db.mysql.svc",
+            3306,
+          )
+          enable_collectors = ["heartbeat","mysql.user"]
+        }
+
+        database_observability.mysql "azure_db" {
+          targets = prometheus.exporter.mysql.azure_db.targets
+          data_source_name = string.format("%s:%s@(%s:%d)/",
+            convert.nonsensitive(remote.kubernetes.secret.azure_db.data["username"]),
+            convert.nonsensitive(remote.kubernetes.secret.azure_db.data["password"]),
+            "azure-db.mysql.svc",
+            3306,
+          )
+          allow_update_performance_schema_settings = false
+          exclude_schemas = ["mysql","performance_schema"]
+          cloud_provider {
+            azure {
+              subscription_id = "sub-123"
+              resource_group = "rg-prod"
+              server_name = "my-azure-server"
+            }
+          }
+          query_details {
+            collect_interval = "1m"
+            statements_limit = 500
+          }
+          query_samples {
+            collect_interval = "1m"
+            disable_query_redaction = false
+            auto_enable_setup_consumers = false
+            setup_consumers_check_interval = "1h"
+          }
+          schema_details {
+            collect_interval = "1m"
+            cache_enabled = false
+            cache_size = 256
+            cache_ttl = "10m"
+          }
+          setup_consumers {
+            collect_interval = "1m"
+          }
+          setup_actors {
+            auto_update_setup_actors = true
+            collect_interval = "30m"
+          }
+          enable_collectors = ["query_details","query_samples","schema_details","setup_consumers","setup_actors"]
+
+          forward_to = argument.logs_destinations.value
+        }
+        prometheus.scrape "azure_db" {
+          targets = database_observability.mysql.azure_db.targets
+          clustering {
+            enabled = true
+          }
+
+          scrape_interval = "60s"
+          scrape_timeout = "10s"
+          scrape_protocols = ["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]
+          scrape_classic_histograms = false
+          scrape_native_histograms = false
+          forward_to = [prometheus.relabel.azure_db.receiver]
+        }
+
+        prometheus.relabel "azure_db" {
+          max_cache_size = 100000
+          rule {
+            target_label = "instance"
+            replacement = "azure-db"
           }
           rule {
             target_label = "job"
@@ -138,7 +239,11 @@ should create the MySQL config:
           setup_consumers {
             collect_interval = "1m"
           }
-          enable_collectors = ["query_details","query_samples","schema_details","setup_consumers"]
+          setup_actors {
+            auto_update_setup_actors = false
+            collect_interval = "1h"
+          }
+          enable_collectors = ["query_details","query_samples","schema_details","setup_consumers","setup_actors"]
 
           forward_to = argument.logs_destinations.value
         }
@@ -207,7 +312,11 @@ works with multiple MySQL Instances:
           setup_consumers {
             collect_interval = "1m"
           }
-          enable_collectors = ["query_details","query_samples","schema_details","setup_consumers"]
+          setup_actors {
+            auto_update_setup_actors = false
+            collect_interval = "1h"
+          }
+          enable_collectors = ["query_details","query_samples","schema_details","setup_consumers","setup_actors"]
 
           forward_to = argument.logs_destinations.value
         }
@@ -265,7 +374,11 @@ works with multiple MySQL Instances:
           setup_consumers {
             collect_interval = "1m"
           }
-          enable_collectors = ["query_details","query_samples","schema_details","setup_consumers"]
+          setup_actors {
+            auto_update_setup_actors = false
+            collect_interval = "1h"
+          }
+          enable_collectors = ["query_details","query_samples","schema_details","setup_consumers","setup_actors"]
 
           forward_to = argument.logs_destinations.value
         }
@@ -338,7 +451,11 @@ works with multiple MySQL Instances:
           setup_consumers {
             collect_interval = "1m"
           }
-          enable_collectors = ["query_details","query_samples","schema_details","setup_consumers"]
+          setup_actors {
+            auto_update_setup_actors = false
+            collect_interval = "1h"
+          }
+          enable_collectors = ["query_details","query_samples","schema_details","setup_consumers","setup_actors"]
 
           forward_to = argument.logs_destinations.value
         }

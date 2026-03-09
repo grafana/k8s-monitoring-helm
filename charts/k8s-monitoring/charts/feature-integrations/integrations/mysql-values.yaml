@@ -173,6 +173,10 @@ databaseObservability:
   # @section -- Database Observability
   allowUpdatePerformanceSchemaSettings: false
 
+  # -- A list of schemas to exclude from monitoring.
+  # @section -- Database Observability
+  excludeSchemas: []
+
   # Cloud provider configuration for the database.
   # @section -- Database Observability
   cloudProvider:
@@ -181,19 +185,27 @@ databaseObservability:
       # -- ARN of the AWS RDS instance.
       # @section -- Database Observability - Cloud Provider
       arn: ""
+    # Azure configuration.
+    azure:
+      # -- The Subscription ID for your Azure account.
+      # @section -- Database Observability - Cloud Provider
+      subscriptionId: ""
+      # -- The Resource Group that holds the database resource.
+      # @section -- Database Observability - Cloud Provider
+      resourceGroup: ""
+      # -- The database server name.
+      # @section -- Database Observability - Cloud Provider
+      serverName: ""
 
   collectors:
     # Collect explain plans information.
     explainPlans:
       # -- Enable collection of explain plans information.
       # @section -- Database Observability - Collectors
-      enabled: false
+      enabled: true
       # -- How frequently to collect explain plans information from the database.
       # @section -- Database Observability - Collectors
       collectInterval: 1m
-      # -- List of schemas to exclude from explain plan collection.
-      # @section -- Database Observability - Collectors
-      excludeSchemas: []
       # -- How far back to look for explain plan queries on the first collection interval.
       # @section -- Database Observability - Collectors
       initialLookback: 24h
@@ -219,6 +231,10 @@ databaseObservability:
       # -- How frequently to collect query information from the database.
       # @section -- Database Observability - Collectors
       collectInterval: 1m
+      # -- Max number of recent queries to collect details for.
+      # @default -- `250`
+      # @section -- Database Observability - Collectors
+      statementsLimit:
 
     # Collect query samples.
     querySamples:
@@ -264,6 +280,19 @@ databaseObservability:
       # -- How frequently to collect performance_schema.setup_consumers information from the database.
       # @section -- Database Observability - Collectors
       collectInterval: 1m
+
+    # Check and update performance_schema.setup_actors settings.
+    setupActors:
+      # -- Enable the setup_actors collector.
+      # @section -- Database Observability - Collectors
+      enabled: true
+      # -- Whether to enable updates to performance_schema.setup_actors settings.
+      # Requires allowUpdatePerformanceSchemaSettings to also be enabled.
+      # @section -- Database Observability - Collectors
+      autoUpdateSetupActors: false
+      # -- How frequently to check if setup_actors are configured correctly.
+      # @section -- Database Observability - Collectors
+      collectInterval: 1h
 
 secret:
   # -- (bool) Whether to create a secret to store credentials for this MySQL integration instance.
