@@ -81,6 +81,9 @@ integrations:
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | databaseObservability.cloudProvider.aws.arn | string | `""` | ARN of the AWS RDS instance. |
+| databaseObservability.cloudProvider.azure.resourceGroup | string | `""` | The Resource Group that holds the database resource. |
+| databaseObservability.cloudProvider.azure.serverName | string | `""` | The database server name. |
+| databaseObservability.cloudProvider.azure.subscriptionId | string | `""` | The Subscription ID for your Azure account. |
 
 ### Database Observability - Collectors
 
@@ -95,6 +98,7 @@ integrations:
 | databaseObservability.collectors.querySamples.collectInterval | string | `"1m"` | How frequently to collect query samples from the database. |
 | databaseObservability.collectors.querySamples.disableQueryRedaction | bool | `false` | Collect unredacted SQL query text including parameters. |
 | databaseObservability.collectors.querySamples.enabled | bool | `true` | Enable collection of query samples. |
+| databaseObservability.collectors.querySamples.excludeCurrentUser | bool | `true` | Do not collect query samples for the current database user. |
 | databaseObservability.collectors.schemaDetails.cacheEnabled | bool | `true` | Whether to enable caching of table definitions. |
 | databaseObservability.collectors.schemaDetails.cacheSize | int | `256` | Table definitions cache size. |
 | databaseObservability.collectors.schemaDetails.cacheTTL | string | `"10m"` | Table definitions cache TTL. |
@@ -106,6 +110,7 @@ integrations:
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | databaseObservability.enabled | bool | `false` | Whether to gather table, schema, and query information from the database. Requires exporter to be enabled. |
+| databaseObservability.excludeDatabases | list | `[]` | A list of databases to exclude from monitoring. |
 
 ### Exporter Settings
 
