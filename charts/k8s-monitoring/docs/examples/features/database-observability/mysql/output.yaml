@@ -68,6 +68,11 @@ data:
           3306,
         )
         allow_update_performance_schema_settings = false
+        explain_plans {
+          collect_interval = "1m"
+          initial_lookback = "24h"
+          per_collect_ratio = "1"
+        }
         query_details {
           collect_interval = "1m"
         }
@@ -86,7 +91,11 @@ data:
         setup_consumers {
           collect_interval = "1m"
         }
-        enable_collectors = ["query_details","query_samples","schema_details","setup_consumers"]
+        setup_actors {
+          auto_update_setup_actors = false
+          collect_interval = "1h"
+        }
+        enable_collectors = ["explain_plans","query_details","query_samples","schema_details","setup_consumers","setup_actors"]
     
         forward_to = argument.logs_destinations.value
       }
