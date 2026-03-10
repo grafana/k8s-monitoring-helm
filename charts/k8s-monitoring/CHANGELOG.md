@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 3.8.2
 
 *   Find Pod logs for static pods using the config.mirror annotation (@sebastian-de)
 *   Add label selectors plus a completed Job filter to the Istio integration sidecar scraper and wire namespace/label selectors for Istiod discovery (@petewall)
@@ -11,6 +11,7 @@
 *   Fix: preserve user extraEnv in service graph collector (@rafix)
 *   Updated Node Exporter, OpenCost, and Alloy Operator (@petewall)
 *   Add TLS configuration support for OAuth2 token endpoints across all destinations (@petewall)
+*   Update database_observability setup for Alloy 1.13.x features (@cristiangreco)
 
 ## 3.8.1
 

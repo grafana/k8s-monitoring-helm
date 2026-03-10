@@ -5,7 +5,7 @@
 
 # k8s-monitoring
 
-![Version: 3.8.1](https://img.shields.io/badge/Version-3.8.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 3.8.1](https://img.shields.io/badge/AppVersion-3.8.1-informational?style=flat-square)
+![Version: 3.8.2](https://img.shields.io/badge/Version-3.8.2-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 3.8.2](https://img.shields.io/badge/AppVersion-3.8.2-informational?style=flat-square)
 Capture all telemetry data from your Kubernetes cluster.
 
 ## Breaking change announcements
@@ -57,7 +57,7 @@ v2 introduces some significant changes to the chart configuration values. Refer 
 
 ## Usage
 
-### Setup Grafana chart repository
+### Set up Grafana chart repository
 
 ```shell
 helm repo add grafana https://grafana.github.io/helm-charts
