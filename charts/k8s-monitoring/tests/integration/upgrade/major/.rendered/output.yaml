@@ -1929,9 +1929,6 @@ spec:
     - name: http
       port: 9003
       targetPort: 9003
-    - name: mcp-server
-      port: 8081
-      targetPort: 8081
 ---
 # Source: k8s-monitoring/charts/clusterMetrics/charts/windows-exporter/templates/service.yaml
 apiVersion: v1
@@ -2540,8 +2537,6 @@ spec:
           ports:
             - containerPort: 9003
               name: http
-            - containerPort: 8081
-              name: mcp-server
           resources:
             limits:
               memory: 1Gi
@@ -2621,11 +2616,8 @@ spec:
               value: "true"
             - name: PROM_CLUSTER_ID_LABEL
               value: "cluster"
-            # MCP Server Configuration
             - name: MCP_SERVER_ENABLED
-              value: "true"
-            - name: MCP_HTTP_PORT
-              value: "8081"
+              value: "false"
           volumeMounts:
             - mountPath: /var/configs
               name: configs
