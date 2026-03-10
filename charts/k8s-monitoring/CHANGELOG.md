@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+*   Disable the OpenCost MCP server (@petewall)
+
 ## 3.8.2
 
 *   Find Pod logs for static pods using the config.mirror annotation (@sebastian-de)
