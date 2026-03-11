@@ -3,6 +3,7 @@
 ## Unreleased
 
 *   Disable the OpenCost MCP server (@petewall)
+*   Alloy Operator (@petewall)
 
 ## 3.8.2
 
