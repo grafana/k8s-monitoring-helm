@@ -105,6 +105,7 @@ charts/feature-{name}/
 **Available features** (auto-generated from `charts/feature-*/Chart.yaml`):
 
 <!--alex disable host-hostess-->
+
 <!-- BEGIN FEATURES -->
 
 -   `feature-annotation-autodiscovery` - Gathers metrics automatically based on Kubernetes Pod and Service annotations
@@ -124,6 +125,7 @@ charts/feature-{name}/
 -   `feature-application-observability` - Gathers application data
 -   `feature-prometheus-operator-objects` - Gathers metrics using Prometheus Operator Objects
 <!-- END FEATURES -->
+
 <!--alex enable host-hostess-->
 
 **Enable a feature:**
