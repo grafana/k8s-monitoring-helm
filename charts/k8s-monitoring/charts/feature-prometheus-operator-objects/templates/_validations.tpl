@@ -1,8 +1,15 @@
 {{ define "feature.prometheusOperatorObjects.validate" -}}
-{{ if and (not .Values.podMonitors.enabled) (not .Values.probes.enabled) (not .Values.serviceMonitors.enabled) }}
-  {{- $msg := list "" "At least one of ServiceMonitors, PodMonitors, or Probes must be enabled. For example" }}
+{{ if and (not .Values.podMonitors.enabled) (not .Values.probes.enabled) (not .Values.serviceMonitors.enabled) (not .Values.scrapeConfigs.enabled) }}
+  {{- $msg := list "" "At least one of ServiceMonitors, PodMonitors, Probes, or ScrapeConfigs must be enabled." }}
+  {{- $msg = append $msg "Please enable at least one of the following:" }}
   {{- $msg = append $msg "prometheusOperatorObjects:" }}
   {{- $msg = append $msg "  serviceMonitors:" }}
+  {{- $msg = append $msg "    enabled: true" }}
+  {{- $msg = append $msg "  podMonitors:" }}
+  {{- $msg = append $msg "    enabled: true" }}
+  {{- $msg = append $msg "  probes:" }}
+  {{- $msg = append $msg "    enabled: true" }}
+  {{- $msg = append $msg "  scrapeConfigs:" }}
   {{- $msg = append $msg "    enabled: true" }}
   {{- fail (join "\n" $msg) }}
 {{- end }}

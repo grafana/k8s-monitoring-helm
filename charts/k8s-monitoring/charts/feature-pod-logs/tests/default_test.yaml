@@ -1,11 +1,11 @@
 # yamllint disable rule:document-start rule:line-length rule:trailing-spaces rule:empty-lines
-suite: Test - Pod Logs - Default Values
+suite: Feature - Pod Logs - Default Values
 templates:
-  - configmap.yaml
+  - test/configmap.yaml
 tests:
   - it: should render the default configuration
     set:
-      deployAsConfigMap: true
+      testing: {enabled: true}
     asserts:
       - isKind:
           of: ConfigMap
@@ -13,7 +13,7 @@ tests:
           path: data["module.alloy"]
   - it: should allow overriding the default labelsToKeep
     set:
-      deployAsConfigMap: true
+      testing: {enabled: true}
       labelsToKeep:
         - k8s_container_name
         - k8s_namespace
@@ -26,7 +26,7 @@ tests:
           path: data["module.alloy"]
   - it: should allow setting structured metadata
     set:
-      deployAsConfigMap: true
+      testing: {enabled: true}
       structuredMetadata:
         caller: caller
         component: component
@@ -37,7 +37,7 @@ tests:
           path: data["module.alloy"]
   - it: should allow setting static labels
     set:
-      deployAsConfigMap: true
+      testing: {enabled: true}
       staticLabels:
         region: central
       staticLabelsFrom:
@@ -49,7 +49,7 @@ tests:
           path: data["module.alloy"]
   - it: should allow using the secret filter
     set:
-      deployAsConfigMap: true
+      testing: {enabled: true}
       secretFilter:
         enabled: true
         partialMask: 3
@@ -60,7 +60,7 @@ tests:
           path: data["module.alloy"]
   - it: should allow using the secret filter with an allowlist
     set:
-      deployAsConfigMap: true
+      testing: {enabled: true}
       secretFilter:
         enabled: true
         partialMask: 3
@@ -74,7 +74,7 @@ tests:
           path: data["module.alloy"]
   - it: should allow using the secret filter with a gitleaks config and other settings
     set:
-      deployAsConfigMap: true
+      testing: {enabled: true}
       secretFilter:
         enabled: true
         gitleaksConfigPath: "/var/log/gitleaks.toml"
@@ -86,7 +86,7 @@ tests:
           path: data["module.alloy"]
   - it: should allow using the secret filter with an inclusion filter, to split which logs are filtered
     set:
-      deployAsConfigMap: true
+      testing: {enabled: true}
       secretFilter:
         enabled: true
         inclusionSelector: '{app=="payment-processor"}'
@@ -98,7 +98,7 @@ tests:
 
   - it: should allow using label selectors
     set:
-      deployAsConfigMap: true
+      testing: {enabled: true}
       labelSelectors:
         app: myapp
     asserts:
@@ -108,7 +108,7 @@ tests:
           path: data["module.alloy"]
   - it: should allow using label selectors with multiple values
     set:
-      deployAsConfigMap: true
+      testing: {enabled: true}
       labelSelectors:
         color: [blue, green]
     asserts:

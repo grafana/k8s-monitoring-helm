@@ -1,11 +1,11 @@
 # yamllint disable rule:document-start rule:line-length rule:trailing-spaces
-suite: Test - Profiling - eBPF Profiling
+suite: Feature - Profiling - eBPF Profiling
 templates:
-  - configmap.yaml
+  - test/configmap.yaml
 tests:
   - it: should build the eBPF profiling configuration
     set:
-      deployAsConfigMap: true
+      testing: {enabled: true}
       ebpf:
         enabled: true
       java:
@@ -20,7 +20,7 @@ tests:
 
   - it: should be able to filter by namespace and extra discovery rules
     set:
-      deployAsConfigMap: true
+      testing: {enabled: true}
       ebpf:
         enabled: true
         namespaces: [default]
@@ -42,7 +42,7 @@ tests:
 
   - it: should be able to filter by label and annotation
     set:
-      deployAsConfigMap: true
+      testing: {enabled: true}
       ebpf:
         enabled: true
         labelSelectors:
@@ -62,7 +62,7 @@ tests:
 
   - it: should be able to target all pods, without requiring the annotation
     set:
-      deployAsConfigMap: true
+      testing: {enabled: true}
       ebpf:
         enabled: true
         targetingScheme: all
