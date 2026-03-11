@@ -81,7 +81,7 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | java.extraDiscoveryRules | string | `""` | Rule blocks to be added to the discovery.relabel component for Java profile sources. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.relabel/#rule-block)) |
 | java.labelSelectors | object | `{}` | Select pods to profile based on pod labels. Example: `app.kubernetes.io/name: myapp` will select pods with the label `app.kubernetes.io/name=myapp`. Example with multiple values: `app.kubernetes.io/name: [myapp, myapp2]` will select pods with the label `app.kubernetes.io/name=myapp` or `app.kubernetes.io/name=myapp2`. |
 | java.namespaces | list | `[]` | Select pods to profile based on their namespaces. |
-| java.profilingConfig.alloc | string | `"512k"` | Allocation profiling sampling configuration It’s passed as an `--alloc` argument to async-profiler. |
+| java.profilingConfig.alloc | string | `"512k"` | Allocation profiling sampling configuration. It's passed as an `--alloc` argument to async-profiler. |
 | java.profilingConfig.cpu | bool | `true` | A flag to enable CPU profiling, using `itimer` async-profiler event by default. |
 | java.profilingConfig.event | string | `"itimer"` | Sets the CPU profiling event. Can be one of `itimer`, `cpu` or `wall`. |
 | java.profilingConfig.interval | string | `"60s"` | How frequently to collect profiles from the targets. |
