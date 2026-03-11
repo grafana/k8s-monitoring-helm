@@ -113,11 +113,20 @@ prometheus.exporter.postgres {{ include "helper.alloy_name" .name | quote }} {
   }
   {{- end }}
   {{- if .exporter.collectors.statStatements.enabled }}
-    {{- if or .exporter.collectors.statStatements.includeQuery .exporter.collectors.statStatements.queryLength }}
+    {{- if or .exporter.collectors.statStatements.includeQuery .exporter.collectors.statStatements.queryLength .exporter.collectors.statStatements.limit .exporter.collectors.statStatements.excludeDatabases .exporter.collectors.statStatements.excludeUsers }}
   stat_statements {
     include_query = {{ .exporter.collectors.statStatements.includeQuery }}
     {{- if .exporter.collectors.statStatements.queryLength }}
     query_length = {{ .exporter.collectors.statStatements.queryLength }}
+    {{- end }}
+    {{- if .exporter.collectors.statStatements.limit }}
+    limit = {{ .exporter.collectors.statStatements.limit }}
+    {{- end }}
+    {{- if .exporter.collectors.statStatements.excludeDatabases }}
+    exclude_databases = {{ .exporter.collectors.statStatements.excludeDatabases | toJson }}
+    {{- end }}
+    {{- if .exporter.collectors.statStatements.excludeUsers }}
+    exclude_users = {{ .exporter.collectors.statStatements.excludeUsers | toJson }}
     {{- end }}
   }
     {{- end }}
@@ -159,6 +168,9 @@ database_observability.postgres {{ include "helper.alloy_name" .name | quote }} 
   {{- end }}
   {{- if .databaseObservability.excludeDatabases }}
   exclude_databases = {{ .databaseObservability.excludeDatabases | toJson }}
+  {{- end }}
+  {{- if .databaseObservability.excludeUsers }}
+  exclude_users = {{ .databaseObservability.excludeUsers | toJson }}
   {{- end }}
 
   {{- $enabledCollectors := list }}

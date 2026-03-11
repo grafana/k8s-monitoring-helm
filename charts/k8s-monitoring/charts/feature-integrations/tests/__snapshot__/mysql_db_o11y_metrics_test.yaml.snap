@@ -36,6 +36,11 @@ defaults text_limit to 0 for perf_schema.eventsstatements when db o11y is enable
             3306,
           )
           allow_update_performance_schema_settings = false
+          explain_plans {
+            collect_interval = "1m"
+            initial_lookback = "24h"
+            per_collect_ratio = "1"
+          }
           query_details {
             collect_interval = "1m"
           }
@@ -58,7 +63,7 @@ defaults text_limit to 0 for perf_schema.eventsstatements when db o11y is enable
             auto_update_setup_actors = false
             collect_interval = "1h"
           }
-          enable_collectors = ["query_details","query_samples","schema_details","setup_consumers","setup_actors"]
+          enable_collectors = ["explain_plans","query_details","query_samples","schema_details","setup_consumers","setup_actors"]
 
           forward_to = argument.logs_destinations.value
         }
@@ -124,13 +129,18 @@ renders new db o11y options (azure, setup_actors, statements_limit, exclude_sche
             3306,
           )
           allow_update_performance_schema_settings = false
-          exclude_schemas = ["mysql","performance_schema"]
+          exclude_schemas = ["employees","departments"]
           cloud_provider {
             azure {
               subscription_id = "sub-123"
               resource_group = "rg-prod"
               server_name = "my-azure-server"
             }
+          }
+          explain_plans {
+            collect_interval = "1m"
+            initial_lookback = "24h"
+            per_collect_ratio = "1"
           }
           query_details {
             collect_interval = "1m"
@@ -155,7 +165,7 @@ renders new db o11y options (azure, setup_actors, statements_limit, exclude_sche
             auto_update_setup_actors = true
             collect_interval = "30m"
           }
-          enable_collectors = ["query_details","query_samples","schema_details","setup_consumers","setup_actors"]
+          enable_collectors = ["explain_plans","query_details","query_samples","schema_details","setup_consumers","setup_actors"]
 
           forward_to = argument.logs_destinations.value
         }
@@ -221,6 +231,11 @@ should create the MySQL config:
             3306,
           )
           allow_update_performance_schema_settings = false
+          explain_plans {
+            collect_interval = "1m"
+            initial_lookback = "24h"
+            per_collect_ratio = "1"
+          }
           query_details {
             collect_interval = "1m"
           }
@@ -243,7 +258,7 @@ should create the MySQL config:
             auto_update_setup_actors = false
             collect_interval = "1h"
           }
-          enable_collectors = ["query_details","query_samples","schema_details","setup_consumers","setup_actors"]
+          enable_collectors = ["explain_plans","query_details","query_samples","schema_details","setup_consumers","setup_actors"]
 
           forward_to = argument.logs_destinations.value
         }
@@ -294,6 +309,11 @@ works with multiple MySQL Instances:
           targets = prometheus.exporter.mysql.test_db.targets
           data_source_name = string.format("%s:%d/", "database.test.svc", 3306)
           allow_update_performance_schema_settings = false
+          explain_plans {
+            collect_interval = "1m"
+            initial_lookback = "24h"
+            per_collect_ratio = "1"
+          }
           query_details {
             collect_interval = "1m"
           }
@@ -316,7 +336,7 @@ works with multiple MySQL Instances:
             auto_update_setup_actors = false
             collect_interval = "1h"
           }
-          enable_collectors = ["query_details","query_samples","schema_details","setup_consumers","setup_actors"]
+          enable_collectors = ["explain_plans","query_details","query_samples","schema_details","setup_consumers","setup_actors"]
 
           forward_to = argument.logs_destinations.value
         }
@@ -356,6 +376,11 @@ works with multiple MySQL Instances:
           targets = prometheus.exporter.mysql.staging_db.targets
           data_source_name = "root:password@database.staging.svc:3306/"
           allow_update_performance_schema_settings = false
+          explain_plans {
+            collect_interval = "1m"
+            initial_lookback = "24h"
+            per_collect_ratio = "1"
+          }
           query_details {
             collect_interval = "1m"
           }
@@ -378,7 +403,7 @@ works with multiple MySQL Instances:
             auto_update_setup_actors = false
             collect_interval = "1h"
           }
-          enable_collectors = ["query_details","query_samples","schema_details","setup_consumers","setup_actors"]
+          enable_collectors = ["explain_plans","query_details","query_samples","schema_details","setup_consumers","setup_actors"]
 
           forward_to = argument.logs_destinations.value
         }
@@ -433,6 +458,11 @@ works with multiple MySQL Instances:
             3306,
           )
           allow_update_performance_schema_settings = false
+          explain_plans {
+            collect_interval = "1m"
+            initial_lookback = "24h"
+            per_collect_ratio = "1"
+          }
           query_details {
             collect_interval = "1m"
           }
@@ -455,7 +485,7 @@ works with multiple MySQL Instances:
             auto_update_setup_actors = false
             collect_interval = "1h"
           }
-          enable_collectors = ["query_details","query_samples","schema_details","setup_consumers","setup_actors"]
+          enable_collectors = ["explain_plans","query_details","query_samples","schema_details","setup_consumers","setup_actors"]
 
           forward_to = argument.logs_destinations.value
         }

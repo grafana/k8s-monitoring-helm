@@ -124,6 +124,27 @@ tests:
         matchSnapshot:
           path: data["metrics.alloy"]
 
+  - it: renders new db o11y options (exclude_users)
+    set:
+      deployAsConfigMap: true
+      postgresql:
+        instances:
+          - name: new-opts-db
+            exporter:
+              dataSource:
+                host: new-opts-db.postgresql.svc
+                auth:
+                  username: db-admin
+                  password: db-password
+            databaseObservability:
+              enabled: true
+              excludeUsers: ["monitoring_user"]
+            logs: {enabled: false}
+    asserts:
+      - template: configmap.yaml
+        matchSnapshot:
+          path: data["metrics.alloy"]
+
   - it: requires metrics
     set:
       deployAsConfigMap: true
