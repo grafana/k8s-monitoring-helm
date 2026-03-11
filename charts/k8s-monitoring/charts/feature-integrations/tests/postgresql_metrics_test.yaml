@@ -129,6 +129,32 @@ tests:
         matchSnapshot:
           path: data["metrics.alloy"]
 
+  - it: renders stat_statements with exclude and limit options
+    set:
+      deployAsConfigMap: true
+      postgresql:
+        instances:
+          - name: test-database
+            exporter:
+              dataSource:
+                host: test-database-postgresql.postgresql.svc
+                auth:
+                  username: db-admin
+                  password: db-password
+              collectors:
+                statStatements:
+                  enabled: true
+                  includeQuery: true
+                  queryLength: 200
+                  limit: 50
+                  excludeDatabases: ["template0"]
+                  excludeUsers: ["replication_user"]
+            logs: {enabled: false}
+    asserts:
+      - template: configmap.yaml
+        matchSnapshot:
+          path: data["metrics.alloy"]
+
   - it: allows you to set the tls
     set:
       deployAsConfigMap: true
