@@ -55,13 +55,20 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | ebpf.annotationSelectors | object | `{}` | Select pods to profile based on pod annotations. Example: `color: "green"` will select pods with the annotation `color="green"`. Example with multiple values: `color: ["blue", "green"]` will select pods with the annotation `color="blue"` or `color="green"`. |
 | ebpf.annotations.enable | string | `"profiles.grafana.com/cpu.ebpf.enabled"` | The annotation action for enabling or disabling collecting of profiles with eBPF. |
 | ebpf.demangle | string | `"none"` | C++ demangle mode. Available options are: none, simplified, templates, full |
+| ebpf.dotnetEnabled | bool | `true` | A flag to enable or disable .NET profiling. |
 | ebpf.enabled | bool | `true` | Gather profiles using eBPF |
 | ebpf.excludeNamespaces | list | `[]` | Which namespaces to exclude looking for pods. |
 | ebpf.extraDiscoveryRules | string | `""` | Rule blocks to be added to the discovery.relabel component for eBPF profile sources. These relabeling rules are applied pre-scrape against the targets from service discovery. Before the scrape, any remaining target labels that start with `__` (i.e. `__meta_kubernetes*`) are dropped. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.relabel/#rule-block)) |
+| ebpf.hotspotEnabled | bool | `true` | A flag to enable or disable Hotspot profiling. |
 | ebpf.labelSelectors | object | `{}` | Select pods to profile based on pod labels. Example: `app.kubernetes.io/name: myapp` will select pods with the label `app.kubernetes.io/name=myapp`. Example with multiple values: `app.kubernetes.io/name: [myapp, myapp2]` will select pods with the label `app.kubernetes.io/name=myapp` or `app.kubernetes.io/name=myapp2`. |
 | ebpf.namespaces | list | `[]` | Select pods to profile based on their namespaces. |
+| ebpf.perlEnabled | bool | `true` | A flag to enable or disable Perl profiling. |
+| ebpf.phpEnabled | bool | `true` | A flag to enable or disable PHP profiling. |
+| ebpf.pythonEnabled | bool | `true` | A flag to enable or disable Python profiling. |
+| ebpf.rubyEnabled | bool | `true` | A flag to enable or disable Ruby profiling. |
 | ebpf.sampleRate | int | `19` | Sample rate for eBPF profiling. This controls how frequently samples are collected. |
 | ebpf.targetingScheme | string | `"annotation"` | How to target pods for collecting profiles with eBPF. Options are `all` and `annotation`. If using `all`, all Kubernetes pods will be targeted for collecting profiles, and you can exclude certain pods by setting the `profiles.grafana.com/cpu.ebpf.enabled="false"` annotation on that pod. If using `annotation`, only pods with the `profiles.grafana.com/cpu.ebpf.enabled="true"` annotation will have profiles collected with eBPF. |
+| ebpf.v8Enabled | bool | `true` | A flag to enable or disable V8 profiling. |
 
 ### Java
 
@@ -74,7 +81,12 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | java.extraDiscoveryRules | string | `""` | Rule blocks to be added to the discovery.relabel component for Java profile sources. ([docs](https://grafana.com/docs/alloy/latest/reference/components/discovery/discovery.relabel/#rule-block)) |
 | java.labelSelectors | object | `{}` | Select pods to profile based on pod labels. Example: `app.kubernetes.io/name: myapp` will select pods with the label `app.kubernetes.io/name=myapp`. Example with multiple values: `app.kubernetes.io/name: [myapp, myapp2]` will select pods with the label `app.kubernetes.io/name=myapp` or `app.kubernetes.io/name=myapp2`. |
 | java.namespaces | list | `[]` | Select pods to profile based on their namespaces. |
-| java.profilingConfig | object | `{"alloc":"512k","cpu":true,"interval":"60s","lock":"10ms","sampleRate":100}` | Configuration for the async-profiler |
+| java.profilingConfig.alloc | string | `"512k"` | Allocation profiling sampling configuration. It's passed as an `--alloc` argument to async-profiler. |
+| java.profilingConfig.cpu | bool | `true` | A flag to enable CPU profiling, using `itimer` async-profiler event by default. |
+| java.profilingConfig.event | string | `"itimer"` | Sets the CPU profiling event. Can be one of `itimer`, `cpu` or `wall`. |
+| java.profilingConfig.interval | string | `"60s"` | How frequently to collect profiles from the targets. |
+| java.profilingConfig.lock | string | `"10ms"` | Lock profiling sampling configuration. It’s passed as a `--lock` argument to async-profiler. |
+| java.profilingConfig.sampleRate | int | `100` | CPU profiling sample rate. It’s converted from Hz to interval and passed as an `-i` argument to async-profiler. |
 | java.targetingScheme | string | `"annotation"` | How to target pods for finding Java profiles. Options are `all` and `annotation`. If using `all`, all Kubernetes pods will be targeted for Java profiles, and you can exclude certain pods by setting the `profiles.grafana.com/java.enabled="false"` annotation on that pod. If using `annotation`, only pods with the `profiles.grafana.com/java.enabled="true"` annotation will collecting Java profiles. |
 
 ### pprof
