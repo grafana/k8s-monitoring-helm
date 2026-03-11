@@ -64,6 +64,28 @@ ebpf:
   # @section -- eBPF
   sampleRate: 19
 
+  # -- A flag to enable or disable .NET profiling.
+  # @section -- eBPF
+  dotnetEnabled: true
+  # -- A flag to enable or disable Hotspot profiling.
+  # @section -- eBPF
+  hotspotEnabled: true
+  # -- A flag to enable or disable Perl profiling.
+  # @section -- eBPF
+  perlEnabled: true
+  # -- A flag to enable or disable PHP profiling.
+  # @section -- eBPF
+  phpEnabled: true
+  # -- A flag to enable or disable Python profiling.
+  # @section -- eBPF
+  pythonEnabled: true
+  # -- A flag to enable or disable Ruby profiling.
+  # @section -- eBPF
+  rubyEnabled: true
+  # -- A flag to enable or disable V8 profiling.
+  # @section -- eBPF
+  v8Enabled: true
+
 java:
   # -- Gather profiles by attaching async-profiler to the Java runtime.
   # @section -- Java
@@ -111,14 +133,26 @@ java:
   # @section -- Java
   extraDiscoveryRules: ""
 
-  # -- Configuration for the async-profiler
-  # @section -- Java
+  # Configuration for the async-profiler
   profilingConfig:
+    # -- How frequently to collect profiles from the targets.
+    # @section -- Java
     interval: 60s
-    cpu: true
+    # -- CPU profiling sample rate. It’s converted from Hz to interval and passed as an `-i` argument to async-profiler.
+    # @section -- Java
     sampleRate: 100
+    # -- A flag to enable CPU profiling, using `itimer` async-profiler event by default.
+    # @section -- Java
+    cpu: true
+    # -- Allocation profiling sampling configuration It’s passed as an `--alloc` argument to async-profiler.
+    # @section -- Java
     alloc: 512k
+    # -- Lock profiling sampling configuration. It’s passed as a `--lock` argument to async-profiler.
+    # @section -- Java
     lock: 10ms
+    # -- Sets the CPU profiling event. Can be one of `itimer`, `cpu` or `wall`.
+    # @section -- Java
+    event: itimer
 
 pprof:
   # -- Gather profiles by scraping pprof HTTP endpoints

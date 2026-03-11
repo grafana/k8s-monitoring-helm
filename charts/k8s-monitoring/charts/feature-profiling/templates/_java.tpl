@@ -172,6 +172,7 @@ pyroscope.java "java_pods" {
     cpu = {{ .Values.java.profilingConfig.cpu }}
     sample_rate = {{ .Values.java.profilingConfig.sampleRate }}
     lock = {{ .Values.java.profilingConfig.lock | quote }}
+    event = {{ .Values.java.profilingConfig.event | quote }}
   }
   forward_to = argument.profiles_destinations.value
 }

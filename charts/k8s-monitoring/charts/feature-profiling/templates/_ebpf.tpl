@@ -141,9 +141,14 @@ discovery.relabel "ebpf_pods" {
 pyroscope.ebpf "ebpf_pods" {
   targets = discovery.relabel.ebpf_pods.output
   demangle = {{ .Values.ebpf.demangle | quote }}
-{{- if .Values.ebpf.sampleRate }}
   sample_rate = {{ .Values.ebpf.sampleRate }}
-{{- end }}
+  dotnet_enabled = {{ .Values.ebpf.dotnetEnabled }}
+  hotspot_enabled = {{ .Values.ebpf.hotspotEnabled }}
+  perl_enabled = {{ .Values.ebpf.perlEnabled }}
+  php_enabled = {{ .Values.ebpf.phpEnabled }}
+  python_enabled = {{ .Values.ebpf.pythonEnabled }}
+  ruby_enabled = {{ .Values.ebpf.rubyEnabled }}
+  v8_enabled = {{ .Values.ebpf.v8Enabled }}
   forward_to = argument.profiles_destinations.value
 }
 {{- end }}

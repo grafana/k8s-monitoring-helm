@@ -4,6 +4,7 @@
 
 *   Disable the OpenCost MCP server (@petewall)
 *   Alloy Operator (@petewall)
+*   Add more settings for profiling features (@petewall)
 
 ## 3.8.2
 
