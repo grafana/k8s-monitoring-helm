@@ -4,6 +4,8 @@
 
 *   Disable the OpenCost MCP server (@petewall)
 *   Alloy Operator (@petewall)
+*   PostgreSQL: stat_statements exclude_databases/exclude_users/limit options (@cristiangreco)
+
 
 ## 3.8.2
 
