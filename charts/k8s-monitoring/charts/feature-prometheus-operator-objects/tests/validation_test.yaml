@@ -1,0 +1,20 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Feature - Prometheus Operator Objects - Validation
+templates:
+  - test/configmap.yaml
+tests:
+  - it: should generate the correct configuration
+    set:
+      testing: {enabled: true}
+      crds:
+        enabled: true
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            The Prometheus Operator Objects feature no longer incldues the CRDs.
+            Please remove the `crds` block from your values file, or set `enabled` to false:
+            prometheusOperatorObjects:
+              crds:
+                enabled: true
+            
+            To deploy the CRDs manually, you can deploy its Helm chart directly: https://github.com/prometheus-community/helm-charts/tree/main/charts/prometheus-operator-crds
