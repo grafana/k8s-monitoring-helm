@@ -261,6 +261,7 @@ details:
 | https://grafana.github.io/helm-charts | alloy-operator | 0.5.1 |
 <!-- markdownlint-enable no-bare-urls -->
 
+<!--alex disable host-hostess-->
 ## Values
 
 ### Collectors - Alloy Logs
@@ -486,3 +487,4 @@ details:
 | telemetryServices.node-exporter.deploy | bool | `false` | Deploy Node Exporter to gather Linux node hardware and OS metrics. |
 | telemetryServices.opencost.deploy | bool | `false` | Deploy OpenCost to calculate and expose Kubernetes cost allocation metrics. |
 | telemetryServices.windows-exporter.deploy | bool | `false` | Deploy Windows Exporter to gather Windows node hardware and OS metrics. |
+<!--alex enable host-hostess-->
