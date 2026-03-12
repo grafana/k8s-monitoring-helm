@@ -1,0 +1,46 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Feature - Prometheus Operator Objects - Validation
+templates:
+  - test/configmap.yaml
+tests:
+  - it: should validate that at least one source is enabled
+    set:
+      testing: {enabled: true}
+      podMonitors:
+        enabled: false
+      serviceMonitors:
+        enabled: false
+      probes:
+        enabled: false
+      scrapeConfigs:
+        enabled: false
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            At least one of ServiceMonitors, PodMonitors, Probes, or ScrapeConfigs must be enabled.
+            Please enable at least one of the following:
+            prometheusOperatorObjects:
+              serviceMonitors:
+                enabled: true
+              podMonitors:
+                enabled: true
+              probes:
+                enabled: true
+              scrapeConfigs:
+                enabled: true
+
+  - it: should show that we're no longer deploying the CRDs
+    set:
+      testing: {enabled: true}
+      crds:
+        enabled: true
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            The Prometheus Operator Objects feature no longer incldues the CRDs.
+            Please remove the `crds` block from your values file, or set `enabled` to false:
+            prometheusOperatorObjects:
+              crds:
+                enabled: true
+            
+            To deploy the CRDs manually, you can deploy its Helm chart directly: https://github.com/prometheus-community/helm-charts/tree/main/charts/prometheus-operator-crds

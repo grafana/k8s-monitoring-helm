@@ -1,11 +1,11 @@
 # yamllint disable rule:document-start rule:line-length rule:trailing-spaces
-suite: Test reason filtering
+suite: Feature - Cluster Events - Reason filtering
 templates:
-  - configmap.yaml
+  - test/configmap.yaml
 tests:
   - it: can restrict events to a given list of reasons
     set:
-      deployAsConfigMap: true
+      testing: {enabled: true}
       includeReasons: ["Failed", "BackOff"]
     asserts:
       - isKind:
@@ -15,7 +15,7 @@ tests:
 
   - it: can restrict events from a given list of reasons
     set:
-      deployAsConfigMap: true
+      testing: {enabled: true}
       excludeReasons: ["Pulling"]
     asserts:
       - isKind:

@@ -46,19 +46,8 @@ Be sure perform actual integration testing in a live environment in the main [k8
 * <https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-prometheus-operator-objects>
 <!-- markdownlint-enable list-marker-space -->
 
-## Requirements
-
-| Repository | Name | Version |
-|------------|------|---------|
-| https://prometheus-community.github.io/helm-charts | crds(prometheus-operator-crds) | 27.0.0 |
 <!-- markdownlint-enable no-bare-urls -->
 ## Values
-
-### CRDs
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| crds.deploy | bool | `false` | Deploy the Prometheus Operator CRDs. |
 
 ### Global Settings
 
