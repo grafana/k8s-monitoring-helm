@@ -3,6 +3,7 @@
 ## 3.8.4
 
 *   Update Alloy Operator to 1.5.2 (@petewall)
+*   Update options for secretFilters in Pod logs features to match changes in Alloy (@petewall)
 
 ## 3.8.3
 
