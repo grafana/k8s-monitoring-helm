@@ -1,9 +1,13 @@
 # Changelog
 
+## 3.8.4
+
+*   Update Alloy Operator to 1.5.2 (@petewall)
+
 ## 3.8.3
 
 *   Disable the OpenCost MCP server (@petewall)
-*   Alloy Operator (@petewall)
+*   Update Alloy Operator to 1.5.1 (@petewall)
 *   PostgreSQL: stat_statements exclude_databases/exclude_users/limit options (@cristiangreco)
 *   Add more settings for profiling features (@petewall)
 
