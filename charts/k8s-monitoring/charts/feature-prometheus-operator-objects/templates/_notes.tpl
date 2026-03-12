@@ -1,8 +1,4 @@
-{{- define "feature.prometheusOperatorObjects.notes.deployments" }}
-{{- if .Values.crds.deploy }}
-* Prometheus Operator CRDs (CustomResourceDefinitions)
-{{- end }}
-{{- end }}
+{{- define "feature.prometheusOperatorObjects.notes.deployments" }}{{- end }}
 
 {{- define "feature.prometheusOperatorObjects.notes.task" }}
 {{- $sources := list }}

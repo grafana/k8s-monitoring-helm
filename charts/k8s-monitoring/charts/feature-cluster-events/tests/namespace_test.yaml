@@ -1,11 +1,11 @@
 # yamllint disable rule:document-start rule:line-length rule:trailing-spaces
-suite: Test namespace filtering
+suite: Feature - Cluster Events - Namespaces
 templates:
-  - configmap.yaml
+  - test/configmap.yaml
 tests:
   - it: can restrict events to a given list of namespaces
     set:
-      deployAsConfigMap: true
+      testing: {enabled: true}
       namespaces: ["a", "b"]
     asserts:
       - isKind:
@@ -15,7 +15,7 @@ tests:
 
   - it: can restrict events from a given list of namespaces
     set:
-      deployAsConfigMap: true
+      testing: {enabled: true}
       excludeNamespaces: ["kube-system"]
     asserts:
       - isKind:

@@ -10,7 +10,7 @@ or self-hosted Grafana stacks.
 This is where all configuration patterns and feature documentation lives. The chart-level
 AGENTS.md contains discovery patterns, feature mappings, and examples for common tasks.
 
-Key paths from repository root:
+Key paths from the repository root:
 
 -   `charts/k8s-monitoring/values.yaml` - Main configuration file
 -   `charts/k8s-monitoring/charts/feature-*/` - Feature subcharts (pod-logs, cluster-metrics, etc.)

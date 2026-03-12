@@ -104,25 +104,29 @@ charts/feature-{name}/
 
 **Available features** (auto-generated from `charts/feature-*/Chart.yaml`):
 
+<!--alex disable host-hostess-->
+
 <!-- BEGIN FEATURES -->
 
 -   `feature-annotation-autodiscovery` - Gathers metrics automatically based on Kubernetes Pod and Service annotations
--   `feature-profiling` - Gathers profiles from eBPF, Java, and pprof sources.
--   `feature-cluster-events` - Gathers Kubernetes Events
--   `feature-pod-logs-via-kubernetes-api` - Kubernetes Observability feature for gathering Pod logs by streaming them from the Kubernetes API.
--   `feature-pod-logs` - Kubernetes Observability feature for gathering Pod logs.
--   `feature-node-logs` - Kubernetes Observability feature for gathering Cluster Node logs.
--   `feature-host-metrics` - Gathers Kubernetes Host metrics
--   `feature-auto-instrumentation` - Gathers telemetry data via automatic instrumentation
--   `feature-cluster-metrics` - Gathers Kubernetes Cluster metrics
--   `feature-integrations` - Service integrations
--   `feature-pod-logs-objects` - Kubernetes Observability feature for gathering logs using PodLogs objects.
--   `feature-cost-metrics` - Gathers Kubernetes Cost metrics
--   `feature-profiles-receiver` - Kubernetes Observability feature for receiving profiles.
--   `telemetry-services` - Additional Deployments to generate observability telemetry data
 -   `feature-application-observability` - Gathers application data
+-   `feature-auto-instrumentation` - Gathers telemetry data via automatic instrumentation
+-   `feature-cluster-events` - Gathers Kubernetes Events
+-   `feature-cluster-metrics` - Gathers Kubernetes Cluster metrics
+-   `feature-cost-metrics` - Gathers Kubernetes Cost metrics
+-   `feature-host-metrics` - Gathers Kubernetes Host metrics
+-   `feature-integrations` - Service integrations
+-   `feature-node-logs` - Kubernetes Observability feature for gathering Cluster Node logs.
+-   `feature-pod-logs` - Kubernetes Observability feature for gathering Pod logs.
+-   `feature-pod-logs-objects` - Kubernetes Observability feature for gathering logs using PodLogs objects.
+-   `feature-pod-logs-via-kubernetes-api` - Kubernetes Observability feature for gathering Pod logs by streaming them from the Kubernetes API.
+-   `feature-profiles-receiver` - Kubernetes Observability feature for receiving profiles.
+-   `feature-profiling` - Gathers profiles from eBPF, Java, and pprof sources.
 -   `feature-prometheus-operator-objects` - Gathers metrics using Prometheus Operator Objects
+-   `telemetry-services` - Additional Deployments to generate observability telemetry data
 <!-- END FEATURES -->
+
+<!--alex enable host-hostess-->
 
 **Enable a feature:**
 

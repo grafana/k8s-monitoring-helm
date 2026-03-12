@@ -1,4 +1,5 @@
-{{- if .Values.deployAsConfigMap }}
+{{- if .Values.testing }}
+{{- if .Values.testing.enabled }}
 {{ include "feature.integrations.validate" . }}
 {{- $metricIntegrations := include "feature.integrations.configured.metrics" . | fromYamlArray }}
 {{- $metricsConfig := "" }}
@@ -44,5 +45,6 @@ data:
     loki.process "test" {
       {{- $logsProcessingStages | trim | nindent 6 }}
     }
+{{- end }}
 {{- end }}
 {{- end }}
