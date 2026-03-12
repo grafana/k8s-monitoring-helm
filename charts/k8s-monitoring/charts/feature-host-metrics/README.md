@@ -2,6 +2,7 @@
 (NOTE: Do not edit README.md directly. It is a generated file!)
 (      To make changes, please modify README.md.gotmpl and run `helm-docs`)
 -->
+<!--alex disable host-hostess hostesses-hosts -->
 
 # Feature: Host Metrics
 
@@ -170,3 +171,5 @@ Be sure perform actual integration testing in a live environment in the main [k8
 | windowsHosts.scrapeInterval | string | `60s` | How frequently to scrape Windows host metrics. |
 | windowsHosts.scrapeTimeout | string | `10s` | The timeout for scraping Windows host metrics. |
 <!-- markdownlint-enable no-space-in-emphasis -->
+
+<!--alex enable host-hostess hostesses-hosts-->
