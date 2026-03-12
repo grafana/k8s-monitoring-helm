@@ -1,0 +1,22 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Feature - Annotation Autodiscovery - Validation
+templates:
+  - test/configmap.yaml
+tests:
+  - it: should validate that at least one source is enabled
+    set:
+      testing: {enabled: true}
+      pods:
+        enabled: false
+      services:
+        enabled: false
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            Either Pods or Services must be enabled for this feature to work.
+            Please enable one or both:
+            annotationAutodiscovery:
+              pods:
+                enabled: true
+              services:
+                enabled: true

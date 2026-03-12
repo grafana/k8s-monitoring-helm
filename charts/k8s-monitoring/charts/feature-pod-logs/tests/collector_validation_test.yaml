@@ -1,13 +1,13 @@
 # yamllint disable rule:document-start rule:line-length rule:trailing-spaces rule:empty-lines
-suite: Test - Pod Logs - Collector Validation
+suite: Feature - Pod Logs - Collector validation
 templates:
-  - test/collector.yaml
+  - test/configmap.yaml
 tests:
   - it: should fail if using volume-based gathering, but not a daemonset
     set:
       gatherMethod: volumes
-      testing: true
-      test:
+      testing:
+        enabled: true
         Collector:
           controller:
             type: deployment
@@ -23,8 +23,8 @@ tests:
   - it: should fail if using volume-based gathering, but /var/log is not mounted
     set:
       gatherMethod: volumes
-      testing: true
-      test:
+      testing:
+        enabled: true
         Collector:
           alloy:
             mounts:
@@ -44,8 +44,8 @@ tests:
   - it: should fail if using Kubernetes API-based gathering on a daemonset, but not clustered
     set:
       gatherMethod: kubernetesApi
-      testing: true
-      test:
+      testing:
+        enabled: true
         Collector:
           alloy:
             clustering:
@@ -68,8 +68,8 @@ tests:
   - it: should fail if using Kubernetes API-based gathering on more than one replica, but not clustered
     set:
       gatherMethod: kubernetesApi
-      testing: true
-      test:
+      testing:
+        enabled: true
         Collector:
           alloy:
             clustering:
@@ -93,8 +93,8 @@ tests:
   - it: should fail if using filelog-based gathering and not public-preview stability level
     set:
       gatherMethod: filelog
-      testing: true
-      test:
+      testing:
+        enabled: true
         Collector:
           alloy:
             stabilityLevel: stable
@@ -112,8 +112,8 @@ tests:
       gatherMethod: volumes
       secretFilter:
         enabled: true
-      testing: true
-      test:
+      testing:
+        enabled: true
         Collector:
           alloy:
             stabilityLevel: stable

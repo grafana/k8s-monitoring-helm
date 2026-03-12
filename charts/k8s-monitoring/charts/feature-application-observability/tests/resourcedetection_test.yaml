@@ -1,11 +1,11 @@
 # yamllint disable rule:document-start rule:line-length rule:trailing-spaces
-suite: Test - Application Observability - Resource detection processor
+suite: Feature - Application Observability - Resource detection processor
 templates:
-  - configmap.yaml
+  - test/configmap.yaml
 tests:
   - it: creates the pipeline with the default resource detection processor
     set:
-      deployAsConfigMap: true
+      testing: {enabled: true}
       receivers:
         zipkin:
           enabled: true
@@ -17,7 +17,7 @@ tests:
 
   - it: creates the resource detection processor with Kubernetes node info
     set:
-      deployAsConfigMap: true
+      testing: {enabled: true}
       processors:
         resourceDetection:
           kubernetesNode:
@@ -33,7 +33,7 @@ tests:
 
   - it: creates the resource detection processor with EKS info
     set:
-      deployAsConfigMap: true
+      testing: {enabled: true}
       processors:
         resourceDetection:
           override: false
