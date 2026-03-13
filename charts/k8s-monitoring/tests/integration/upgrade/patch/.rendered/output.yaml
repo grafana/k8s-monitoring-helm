@@ -95,17 +95,6 @@ metadata:
 apiVersion: v1
 kind: Secret
 metadata:
-  name: "localprometheus-k8smon-k8s-monitoring"
-  namespace: "default"
-type: Opaque
-data:
-  username: "cHJvbXVzZXI="
-  password: "cHJvbWV0aGV1c3Bhc3N3b3Jk"
----
-# Source: k8s-monitoring/templates/destination_secret.yaml
-apiVersion: v1
-kind: Secret
-metadata:
   name: "localloki-k8smon-k8s-monitoring"
   namespace: "default"
 type: Opaque
@@ -113,6 +102,17 @@ data:
   tenantId: "MQ=="
   username: "bG9raQ=="
   password: "bG9raXBhc3N3b3Jk"
+---
+# Source: k8s-monitoring/templates/destination_secret.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: "localprometheus-k8smon-k8s-monitoring"
+  namespace: "default"
+type: Opaque
+data:
+  username: "cHJvbXVzZXI="
+  password: "cHJvbWV0aGV1c3Bhc3N3b3Jk"
 ---
 # Source: k8s-monitoring/charts/telemetryServices/charts/windows-exporter/templates/config.yaml
 apiVersion: v1
@@ -945,6 +945,40 @@ data:
       name = "k8smon-version"
       namespace = "toolbox"
     }
+    // Destination: localLoki (loki)
+    otelcol.exporter.loki "localloki" {
+      forward_to = [loki.write.localloki.receiver]
+    }
+    
+    loki.write "localloki" {
+      endpoint {
+        url = "http://loki.loki.svc:3100/loki/api/v1/push"
+        retry_on_http_429 = true
+        tenant_id = convert.nonsensitive(remote.kubernetes.secret.localloki.data["tenantId"])
+        basic_auth {
+          username = convert.nonsensitive(remote.kubernetes.secret.localloki.data["username"])
+          password = remote.kubernetes.secret.localloki.data["password"]
+        }
+        tls_config {
+          insecure_skip_verify = false
+        }
+        min_backoff_period = "500ms"
+        max_backoff_period = "5m"
+        max_backoff_retries = "10"
+      }
+      external_labels = {
+        "cluster" = "patch-upgrade-test",
+        "k8s_cluster_name" = "patch-upgrade-test",
+        chart_version = remote.kubernetes.configmap.version.data["version"],
+      }
+    }
+    
+    remote.kubernetes.secret "localloki" {
+      name      = "localloki-k8smon-k8s-monitoring"
+      namespace = "default"
+    }
+    
+    
     // Destination: localPrometheus (prometheus)
     otelcol.exporter.prometheus "localprometheus" {
       add_metric_suffixes = true
@@ -1004,39 +1038,6 @@ data:
     
     remote.kubernetes.secret "localprometheus" {
       name      = "localprometheus-k8smon-k8s-monitoring"
-      namespace = "default"
-    }
-    
-    // Destination: localLoki (loki)
-    otelcol.exporter.loki "localloki" {
-      forward_to = [loki.write.localloki.receiver]
-    }
-    
-    loki.write "localloki" {
-      endpoint {
-        url = "http://loki.loki.svc:3100/loki/api/v1/push"
-        retry_on_http_429 = true
-        tenant_id = convert.nonsensitive(remote.kubernetes.secret.localloki.data["tenantId"])
-        basic_auth {
-          username = convert.nonsensitive(remote.kubernetes.secret.localloki.data["username"])
-          password = remote.kubernetes.secret.localloki.data["password"]
-        }
-        tls_config {
-          insecure_skip_verify = false
-        }
-        min_backoff_period = "500ms"
-        max_backoff_period = "5m"
-        max_backoff_retries = "10"
-      }
-      external_labels = {
-        "cluster" = "patch-upgrade-test",
-        "k8s_cluster_name" = "patch-upgrade-test",
-        chart_version = remote.kubernetes.configmap.version.data["version"],
-      }
-    }
-    
-    remote.kubernetes.secret "localloki" {
-      name      = "localloki-k8smon-k8s-monitoring"
       namespace = "default"
     }
   self-reporting-metric.prom: |

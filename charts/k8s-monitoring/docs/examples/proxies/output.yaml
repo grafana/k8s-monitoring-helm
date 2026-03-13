@@ -850,6 +850,29 @@ data:
     
     
     
+    // Destination: loki (loki)
+    otelcol.exporter.loki "loki" {
+      forward_to = [loki.write.loki.receiver]
+    }
+    
+    loki.write "loki" {
+      endpoint {
+        url = "http://loki.example.com/loki/api/v1/push"
+        retry_on_http_429 = true
+        proxy_url = "https://myproxy.default.svc:8080"
+        tls_config {
+          insecure_skip_verify = false
+        }
+        min_backoff_period = "500ms"
+        max_backoff_period = "5m"
+        max_backoff_retries = "10"
+      }
+      external_labels = {
+        "cluster" = "proxies-example-cluster",
+        "k8s_cluster_name" = "proxies-example-cluster",
+      }
+    }
+    
     // Destination: prometheus (prometheus)
     otelcol.exporter.prometheus "prometheus" {
       add_metric_suffixes = true
@@ -902,28 +925,6 @@ data:
         truncate_frequency = "2h"
         min_keepalive_time = "5m"
         max_keepalive_time = "8h"
-      }
-    }
-    // Destination: loki (loki)
-    otelcol.exporter.loki "loki" {
-      forward_to = [loki.write.loki.receiver]
-    }
-    
-    loki.write "loki" {
-      endpoint {
-        url = "http://loki.example.com/loki/api/v1/push"
-        retry_on_http_429 = true
-        proxy_url = "https://myproxy.default.svc:8080"
-        tls_config {
-          insecure_skip_verify = false
-        }
-        min_backoff_period = "500ms"
-        max_backoff_period = "5m"
-        max_backoff_retries = "10"
-      }
-      external_labels = {
-        "cluster" = "proxies-example-cluster",
-        "k8s_cluster_name" = "proxies-example-cluster",
       }
     }
   self-reporting-metric.prom: |
@@ -1335,83 +1336,14 @@ data:
         otelcol.processor.attributes.otlpgateway.input,
       ]
       traces_destinations = [
-        otelcol.processor.attributes.tempo.input,
         otelcol.processor.attributes.otlpgateway.input,
+        otelcol.processor.attributes.tempo.input,
       ]
     }
     
     
     
     
-    // Destination: tempo (otlp)
-    
-    otelcol.processor.attributes "tempo" {
-      output {
-        traces = [otelcol.processor.transform.tempo.input]
-      }
-    }
-    
-    otelcol.processor.transform "tempo" {
-      error_mode = "ignore"
-    
-      trace_statements {
-        context = "resource"
-        statements = [
-          `set(attributes["cluster"], "proxies-example-cluster")`,
-          `set(attributes["k8s.cluster.name"], "proxies-example-cluster")`,
-          `delete_key(attributes, "process.pid")`,
-          `delete_key(attributes, "process.parent_pid")`,
-          `delete_key(attributes, "process.executable.path")`,
-          `delete_key(attributes, "process.command_line")`,
-          `delete_key(attributes, "process.command_args")`,
-          `delete_key(attributes, "process.owner")`,
-          `delete_key(attributes, "process.runtime.version")`,
-          `delete_key(attributes, "process.runtime.description")`,
-          `delete_key(attributes, "host.ip")`,
-          `delete_key(attributes, "host.mac")`,
-          `delete_key(attributes, "k8s.pod.start_time")`,
-          `delete_key(attributes, "k8s.pod.uid")`,
-          `delete_key(attributes, "container.image.id")`,
-          `delete_key(attributes, "container.image.repo_digests")`,
-          `delete_key(attributes, "os.description")`,
-          `delete_key(attributes, "os.build_id")`,
-        ]
-      }
-    
-      output {
-        traces = [otelcol.processor.batch.tempo.input]
-      }
-    }
-    
-    otelcol.processor.batch "tempo" {
-      timeout = "2s"
-      send_batch_size = 8192
-      send_batch_max_size = 0
-    
-      output {
-        traces = [otelcol.exporter.otlp.tempo.input]
-      }
-    }
-    otelcol.exporter.otlp "tempo" {
-      client {
-        endpoint = "http://tempo.example.com:4317"
-        tls {
-          insecure = false
-          insecure_skip_verify = false
-        }
-      }
-    
-      retry_on_failure {
-        enabled = true
-        initial_interval = "5s"
-        max_interval = "30s"
-        max_elapsed_time = "5m"
-      }
-    
-      sending_queue {
-        enabled = true
-      }
-    }
     // Destination: otlpgateway (otlp)
     otelcol.receiver.prometheus "otlpgateway" {
       output {
@@ -1423,7 +1355,6 @@ data:
         logs = [otelcol.processor.attributes.otlpgateway.input]
       }
     }
-    
     otelcol.processor.attributes "otlpgateway" {
       output {
         metrics = [otelcol.processor.transform.otlpgateway.input]
@@ -1577,6 +1508,75 @@ data:
       client {
         endpoint = "https://otlpgateway.example.com:4317"
         proxy_url = "https://myproxy.default.svc:8080"
+        tls {
+          insecure = false
+          insecure_skip_verify = false
+        }
+      }
+    
+      retry_on_failure {
+        enabled = true
+        initial_interval = "5s"
+        max_interval = "30s"
+        max_elapsed_time = "5m"
+      }
+    
+      sending_queue {
+        enabled = true
+      }
+    }
+    
+    // Destination: tempo (otlp)
+    otelcol.processor.attributes "tempo" {
+      output {
+        traces = [otelcol.processor.transform.tempo.input]
+      }
+    }
+    
+    otelcol.processor.transform "tempo" {
+      error_mode = "ignore"
+    
+      trace_statements {
+        context = "resource"
+        statements = [
+          `set(attributes["cluster"], "proxies-example-cluster")`,
+          `set(attributes["k8s.cluster.name"], "proxies-example-cluster")`,
+          `delete_key(attributes, "process.pid")`,
+          `delete_key(attributes, "process.parent_pid")`,
+          `delete_key(attributes, "process.executable.path")`,
+          `delete_key(attributes, "process.command_line")`,
+          `delete_key(attributes, "process.command_args")`,
+          `delete_key(attributes, "process.owner")`,
+          `delete_key(attributes, "process.runtime.version")`,
+          `delete_key(attributes, "process.runtime.description")`,
+          `delete_key(attributes, "host.ip")`,
+          `delete_key(attributes, "host.mac")`,
+          `delete_key(attributes, "k8s.pod.start_time")`,
+          `delete_key(attributes, "k8s.pod.uid")`,
+          `delete_key(attributes, "container.image.id")`,
+          `delete_key(attributes, "container.image.repo_digests")`,
+          `delete_key(attributes, "os.description")`,
+          `delete_key(attributes, "os.build_id")`,
+        ]
+      }
+    
+      output {
+        traces = [otelcol.processor.batch.tempo.input]
+      }
+    }
+    
+    otelcol.processor.batch "tempo" {
+      timeout = "2s"
+      send_batch_size = 8192
+      send_batch_max_size = 0
+    
+      output {
+        traces = [otelcol.exporter.otlp.tempo.input]
+      }
+    }
+    otelcol.exporter.otlp "tempo" {
+      client {
+        endpoint = "http://tempo.example.com:4317"
         tls {
           insecure = false
           insecure_skip_verify = false

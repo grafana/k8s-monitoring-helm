@@ -16,10 +16,10 @@ cluster:
   name: debug-custom-destination
 
 destinations:
-  - name: prometheus
+  prometheus:
     type: prometheus
     url: http://prometheus-server.prometheus.svc:9090/api/v1/write
-  - name: loki
+  loki:
     type: loki
     url: http://loki.loki.svc:3100/loki/api/v1/push
     tenantId: "1"
@@ -27,7 +27,7 @@ destinations:
       type: basic
       username: loki
       password: lokipassword
-  - name: debug
+  debug:
     type: custom
     config: |
       otelcol.processor.filter "debug" {

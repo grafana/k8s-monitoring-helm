@@ -109,10 +109,11 @@ create
 {{ include "secrets.getSecretValue" (dict "object" .object "key" .key) | quote }}
 {{- else if eq (include "secrets.usesKubernetesSecret" .object) "true" -}}
 {{- $credKey := include "secrets.getSecretKey" (dict "object" .object "key" .key) -}}
+{{- $objectName := .object.name | default .name }}
 {{- if .nonsensitive -}}
-convert.nonsensitive(remote.kubernetes.secret.{{ include "helper.alloy_name" .object.name }}.data[{{ $credKey | quote }}])
+convert.nonsensitive(remote.kubernetes.secret.{{ include "helper.alloy_name" $objectName }}.data[{{ $credKey | quote }}])
 {{- else -}}
-remote.kubernetes.secret.{{ include "helper.alloy_name" .object.name }}.data[{{ $credKey | quote }}]
+remote.kubernetes.secret.{{ include "helper.alloy_name" $objectName }}.data[{{ $credKey | quote }}]
 {{- end -}}
 {{- end -}}
 {{- end -}}
@@ -167,10 +168,11 @@ remote.kubernetes.secret.{{ include "helper.alloy_name" .object.name }}.data[{{ 
 {{- if $secretName -}}
   {{- $secretName -}}
 {{- else -}}
+  {{- $objectName := .object.name | default .name }}
   {{- if contains .Chart.Name .Release.Name }}
-    {{- printf "%s-%s" (include "helper.kubernetesName" .object.name) .Release.Name | trunc 63 | trimSuffix "-" | lower -}}
+    {{- printf "%s-%s" (include "helper.kubernetesName" $objectName) .Release.Name | trunc 63 | trimSuffix "-" | lower -}}
   {{- else }}
-    {{- printf "%s-%s-%s" (include "helper.kubernetesName" .object.name) .Release.Name .Chart.Name | trunc 63 | trimSuffix "-" | lower -}}
+    {{- printf "%s-%s-%s" (include "helper.kubernetesName" $objectName) .Release.Name .Chart.Name | trunc 63 | trimSuffix "-" | lower -}}
   {{- end }}
 {{- end }}
 {{- end }}

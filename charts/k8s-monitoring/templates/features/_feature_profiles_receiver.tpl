@@ -13,7 +13,7 @@
 {{- include "feature.profilesReceiver.module" (dict "Values" $.Values.profilesReceiver "Files" $.Subcharts.profilesReceiver.Files) }}
 profiles_receiver "feature" {
   profiles_destinations = [
-    {{ include "destinations.alloy.targets" (dict "destinations" $.Values.destinations "names" $destinations "type" "profiles" "ecosystem" "pyroscope") | indent 4 | trim }}
+    {{ include "destinations.alloy.targets" (dict "destinations" $.Values.destinations "destinationNames" $destinations "type" "profiles" "ecosystem" "pyroscope") | indent 4 | trim }}
   ]
 }
 {{- end -}}

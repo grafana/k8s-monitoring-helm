@@ -30,14 +30,14 @@ cluster:
   name: istio-service-mesh-test
 
 destinations:
-  - name: localPrometheus
+  localPrometheus:
     type: prometheus
     url: http://prometheus-server.prometheus.svc:9090/api/v1/write
     auth:
       type: basic
       username: promuser
       password: prometheuspassword
-  - name: localLoki
+  localLoki:
     type: loki
     url: http://loki.loki.svc:3100/loki/api/v1/push
     tenantId: "1"
@@ -45,7 +45,7 @@ destinations:
       type: basic
       username: loki
       password: lokipassword
-  - name: localTempo
+  localTempo:
     type: otlp
     url: tempo.tempo.svc:4317
     tls:

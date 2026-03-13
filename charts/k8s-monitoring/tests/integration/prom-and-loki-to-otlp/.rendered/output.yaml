@@ -51,17 +51,6 @@ automountServiceAccountToken: false
 apiVersion: v1
 kind: Secret
 metadata:
-  name: "prometheus-k8smon-k8s-monitoring"
-  namespace: "default"
-type: Opaque
-data:
-  username: "cHJvbXVzZXI="
-  password: "cHJvbWV0aGV1c3Bhc3N3b3Jk"
----
-# Source: k8s-monitoring/templates/destination_secret.yaml
-apiVersion: v1
-kind: Secret
-metadata:
   name: "loki-k8smon-k8s-monitoring"
   namespace: "default"
 type: Opaque
@@ -69,6 +58,17 @@ data:
   tenantId: "MQ=="
   username: "bG9raQ=="
   password: "bG9raXBhc3N3b3Jk"
+---
+# Source: k8s-monitoring/templates/destination_secret.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: "prometheus-k8smon-k8s-monitoring"
+  namespace: "default"
+type: Opaque
+data:
+  username: "cHJvbXVzZXI="
+  password: "cHJvbWV0aGV1c3Bhc3N3b3Jk"
 ---
 # Source: k8s-monitoring/templates/alloy-config.yaml
 apiVersion: v1
@@ -513,7 +513,6 @@ data:
         metrics = [otelcol.processor.attributes.prometheus.input]
       }
     }
-    
     otelcol.processor.attributes "prometheus" {
       output {
         metrics = [otelcol.processor.transform.prometheus.input]
@@ -749,112 +748,12 @@ data:
     
     
     
-    // Destination: prometheus (otlp)
-    otelcol.receiver.prometheus "prometheus" {
-      output {
-        metrics = [otelcol.processor.attributes.prometheus.input]
-      }
-    }
-    
-    otelcol.processor.attributes "prometheus" {
-      output {
-        metrics = [otelcol.processor.transform.prometheus.input]
-      }
-    }
-    
-    otelcol.processor.transform "prometheus" {
-      error_mode = "ignore"
-      metric_statements {
-        context = "resource"
-        statements = [
-          `set(attributes["k8s.cluster.name"], "prom-and-loki-to-otlp-test")`,
-          `delete_key(attributes, "process.pid")`,
-          `delete_key(attributes, "process.parent_pid")`,
-          `delete_key(attributes, "process.executable.path")`,
-          `delete_key(attributes, "process.command_line")`,
-          `delete_key(attributes, "process.command_args")`,
-          `delete_key(attributes, "process.owner")`,
-          `delete_key(attributes, "process.runtime.version")`,
-          `delete_key(attributes, "process.runtime.description")`,
-          `delete_key(attributes, "host.ip")`,
-          `delete_key(attributes, "host.mac")`,
-          `delete_key(attributes, "k8s.pod.start_time")`,
-          `delete_key(attributes, "k8s.pod.uid")`,
-          `delete_key(attributes, "container.image.id")`,
-          `delete_key(attributes, "container.image.repo_digests")`,
-          `delete_key(attributes, "os.description")`,
-          `delete_key(attributes, "os.build_id")`,
-        ]
-      }
-    
-      metric_statements {
-        context = "datapoint"
-        statements = [
-          `set(attributes["k8s.cluster.name"], "prom-and-loki-to-otlp-test")`,
-          `set(resource.attributes["deployment.environment"], attributes["deployment_environment"] ) where resource.attributes["deployment.environment"] == nil and attributes["deployment_environment"] != nil`,
-          `delete_key(attributes, "deployment_environment") where attributes["deployment_environment"] == resource.attributes["deployment.environment"]`,
-          `set(resource.attributes["deployment.environment.name"], attributes["deployment_environment_name"] ) where resource.attributes["deployment.environment.name"] == nil and attributes["deployment_environment_name"] != nil`,
-          `delete_key(attributes, "deployment_environment_name") where attributes["deployment_environment_name"] == resource.attributes["deployment.environment.name"]`,
-          `set(resource.attributes["service.name"], attributes["service_name"] ) where resource.attributes["service.name"] == nil and attributes["service_name"] != nil`,
-          `delete_key(attributes, "service_name") where attributes["service_name"] == resource.attributes["service.name"]`,
-          `set(resource.attributes["service.namespace"], attributes["service_namespace"] ) where resource.attributes["service.namespace"] == nil and attributes["service_namespace"] != nil`,
-          `delete_key(attributes, "service_namespace") where attributes["service_namespace"] == resource.attributes["service.namespace"]`,
-        ]
-      }
-    
-      output {
-        metrics = [otelcol.processor.batch.prometheus.input]
-      }
-    }
-    
-    otelcol.processor.batch "prometheus" {
-      timeout = "2s"
-      send_batch_size = 8192
-      send_batch_max_size = 0
-    
-      output {
-        metrics = [otelcol.exporter.otlphttp.prometheus.input]
-      }
-    }
-    otelcol.exporter.otlphttp "prometheus" {
-      client {
-        endpoint = "http://prometheus-server.prometheus.svc:9090/api/v1/otlp"
-        auth = otelcol.auth.basic.prometheus.handler
-        tls {
-          insecure = false
-          insecure_skip_verify = true
-        }
-      }
-    
-      retry_on_failure {
-        enabled = true
-        initial_interval = "5s"
-        max_interval = "30s"
-        max_elapsed_time = "5m"
-      }
-    
-      sending_queue {
-        enabled = true
-      }
-    }
-    
-    otelcol.auth.basic "prometheus" {
-      username = convert.nonsensitive(remote.kubernetes.secret.prometheus.data["username"])
-      password = remote.kubernetes.secret.prometheus.data["password"]
-    }
-    
-    remote.kubernetes.secret "prometheus" {
-      name      = "prometheus-k8smon-k8s-monitoring"
-      namespace = "default"
-    }
-    
     // Destination: loki (otlp)
     otelcol.receiver.loki "loki" {
       output {
         logs = [otelcol.processor.attributes.loki.input]
       }
     }
-    
     otelcol.processor.attributes "loki" {
       output {
         logs = [otelcol.processor.transform.loki.input]
@@ -966,6 +865,105 @@ data:
     
     remote.kubernetes.secret "loki" {
       name      = "loki-k8smon-k8s-monitoring"
+      namespace = "default"
+    }
+    
+    
+    // Destination: prometheus (otlp)
+    otelcol.receiver.prometheus "prometheus" {
+      output {
+        metrics = [otelcol.processor.attributes.prometheus.input]
+      }
+    }
+    otelcol.processor.attributes "prometheus" {
+      output {
+        metrics = [otelcol.processor.transform.prometheus.input]
+      }
+    }
+    
+    otelcol.processor.transform "prometheus" {
+      error_mode = "ignore"
+      metric_statements {
+        context = "resource"
+        statements = [
+          `set(attributes["k8s.cluster.name"], "prom-and-loki-to-otlp-test")`,
+          `delete_key(attributes, "process.pid")`,
+          `delete_key(attributes, "process.parent_pid")`,
+          `delete_key(attributes, "process.executable.path")`,
+          `delete_key(attributes, "process.command_line")`,
+          `delete_key(attributes, "process.command_args")`,
+          `delete_key(attributes, "process.owner")`,
+          `delete_key(attributes, "process.runtime.version")`,
+          `delete_key(attributes, "process.runtime.description")`,
+          `delete_key(attributes, "host.ip")`,
+          `delete_key(attributes, "host.mac")`,
+          `delete_key(attributes, "k8s.pod.start_time")`,
+          `delete_key(attributes, "k8s.pod.uid")`,
+          `delete_key(attributes, "container.image.id")`,
+          `delete_key(attributes, "container.image.repo_digests")`,
+          `delete_key(attributes, "os.description")`,
+          `delete_key(attributes, "os.build_id")`,
+        ]
+      }
+    
+      metric_statements {
+        context = "datapoint"
+        statements = [
+          `set(attributes["k8s.cluster.name"], "prom-and-loki-to-otlp-test")`,
+          `set(resource.attributes["deployment.environment"], attributes["deployment_environment"] ) where resource.attributes["deployment.environment"] == nil and attributes["deployment_environment"] != nil`,
+          `delete_key(attributes, "deployment_environment") where attributes["deployment_environment"] == resource.attributes["deployment.environment"]`,
+          `set(resource.attributes["deployment.environment.name"], attributes["deployment_environment_name"] ) where resource.attributes["deployment.environment.name"] == nil and attributes["deployment_environment_name"] != nil`,
+          `delete_key(attributes, "deployment_environment_name") where attributes["deployment_environment_name"] == resource.attributes["deployment.environment.name"]`,
+          `set(resource.attributes["service.name"], attributes["service_name"] ) where resource.attributes["service.name"] == nil and attributes["service_name"] != nil`,
+          `delete_key(attributes, "service_name") where attributes["service_name"] == resource.attributes["service.name"]`,
+          `set(resource.attributes["service.namespace"], attributes["service_namespace"] ) where resource.attributes["service.namespace"] == nil and attributes["service_namespace"] != nil`,
+          `delete_key(attributes, "service_namespace") where attributes["service_namespace"] == resource.attributes["service.namespace"]`,
+        ]
+      }
+    
+      output {
+        metrics = [otelcol.processor.batch.prometheus.input]
+      }
+    }
+    
+    otelcol.processor.batch "prometheus" {
+      timeout = "2s"
+      send_batch_size = 8192
+      send_batch_max_size = 0
+    
+      output {
+        metrics = [otelcol.exporter.otlphttp.prometheus.input]
+      }
+    }
+    otelcol.exporter.otlphttp "prometheus" {
+      client {
+        endpoint = "http://prometheus-server.prometheus.svc:9090/api/v1/otlp"
+        auth = otelcol.auth.basic.prometheus.handler
+        tls {
+          insecure = false
+          insecure_skip_verify = true
+        }
+      }
+    
+      retry_on_failure {
+        enabled = true
+        initial_interval = "5s"
+        max_interval = "30s"
+        max_elapsed_time = "5m"
+      }
+    
+      sending_queue {
+        enabled = true
+      }
+    }
+    
+    otelcol.auth.basic "prometheus" {
+      username = convert.nonsensitive(remote.kubernetes.secret.prometheus.data["username"])
+      password = remote.kubernetes.secret.prometheus.data["password"]
+    }
+    
+    remote.kubernetes.secret "prometheus" {
+      name      = "prometheus-k8smon-k8s-monitoring"
       namespace = "default"
     }
   self-reporting-metric.prom: |
@@ -1222,7 +1220,6 @@ data:
         logs = [otelcol.processor.attributes.loki.input]
       }
     }
-    
     otelcol.processor.attributes "loki" {
       output {
         logs = [otelcol.processor.transform.loki.input]

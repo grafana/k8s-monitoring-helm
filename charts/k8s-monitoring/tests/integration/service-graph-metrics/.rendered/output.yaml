@@ -864,6 +864,39 @@ data:
     
     
     
+    // Destination: localLoki (loki)
+    otelcol.exporter.loki "localloki" {
+      forward_to = [loki.write.localloki.receiver]
+    }
+    
+    loki.write "localloki" {
+      endpoint {
+        url = "http://loki.loki.svc:3100/loki/api/v1/push"
+        retry_on_http_429 = true
+        tenant_id = convert.nonsensitive(remote.kubernetes.secret.localloki.data["tenantId"])
+        basic_auth {
+          username = convert.nonsensitive(remote.kubernetes.secret.localloki.data["username"])
+          password = remote.kubernetes.secret.localloki.data["password"]
+        }
+        tls_config {
+          insecure_skip_verify = false
+        }
+        min_backoff_period = "500ms"
+        max_backoff_period = "5m"
+        max_backoff_retries = "10"
+      }
+      external_labels = {
+        "cluster" = "service-graph-metrics-test",
+        "k8s_cluster_name" = "service-graph-metrics-test",
+      }
+    }
+    
+    remote.kubernetes.secret "localloki" {
+      name      = "localloki-k8smon-k8s-monitoring"
+      namespace = "default"
+    }
+    
+    
     // Destination: localPrometheus (prometheus)
     otelcol.exporter.prometheus "localprometheus" {
       add_metric_suffixes = true
@@ -913,40 +946,8 @@ data:
         max_keepalive_time = "8h"
       }
     }
-    // Destination: localLoki (loki)
-    otelcol.exporter.loki "localloki" {
-      forward_to = [loki.write.localloki.receiver]
-    }
-    
-    loki.write "localloki" {
-      endpoint {
-        url = "http://loki.loki.svc:3100/loki/api/v1/push"
-        retry_on_http_429 = true
-        tenant_id = convert.nonsensitive(remote.kubernetes.secret.localloki.data["tenantId"])
-        basic_auth {
-          username = convert.nonsensitive(remote.kubernetes.secret.localloki.data["username"])
-          password = remote.kubernetes.secret.localloki.data["password"]
-        }
-        tls_config {
-          insecure_skip_verify = false
-        }
-        min_backoff_period = "500ms"
-        max_backoff_period = "5m"
-        max_backoff_retries = "10"
-      }
-      external_labels = {
-        "cluster" = "service-graph-metrics-test",
-        "k8s_cluster_name" = "service-graph-metrics-test",
-      }
-    }
-    
-    remote.kubernetes.secret "localloki" {
-      name      = "localloki-k8smon-k8s-monitoring"
-      namespace = "default"
-    }
     
     // Destination: localTempo (otlp)
-    
     otelcol.processor.attributes "localtempo" {
       output {
         traces = [otelcol.processor.transform.localtempo.input]
@@ -1301,7 +1302,7 @@ spec:
 apiVersion: collectors.grafana.com/v1alpha1
 kind: Alloy
 metadata:
-  name: k8smon-localtempo-servicegraph
+  name: k8smon--servicegraph
   namespace: default
   annotations:
     helm.sdk.operatorframework.io/uninstall-wait: "true"
@@ -1362,7 +1363,7 @@ spec:
   
           output {
               metrics = [
-                otelcol.exporter.prometheus.localprometheus.input,
+                otelcol.exporter.prometheus.localtempo.input,
               ]
           }
         }
@@ -1372,13 +1373,13 @@ spec:
   
   
         // Destination: localPrometheus (prometheus)
-        otelcol.exporter.prometheus "localprometheus" {
+        otelcol.exporter.prometheus "localtempo" {
           add_metric_suffixes = true
           resource_to_telemetry_conversion = false
-          forward_to = [prometheus.remote_write.localprometheus.receiver]
+          forward_to = [prometheus.remote_write.localtempo.receiver]
         }
   
-        prometheus.remote_write "localprometheus" {
+        prometheus.remote_write "localtempo" {
           endpoint {
             url = "http://prometheus-server.prometheus.svc:9090/api/v1/write"
             headers = {
@@ -1562,7 +1563,7 @@ spec:
   crds:
     create: false
   extraObjects: []
-  fullnameOverride: k8smon-localtempo-servicegraph
+  fullnameOverride: k8smon--servicegraph
   global:
     image:
       pullSecrets: []
@@ -2911,9 +2912,9 @@ spec:
               kubectl delete alloy/k8smon-alloy-receiver --ignore-not-found=true --wait
               kubectl wait --for=delete alloy/k8smon-alloy-receiver --timeout=60s || echo "Timed out waiting for deletion of alloy/k8smon-alloy-receiver or it may not exist."
 
-              echo "Deleting Alloy instance: alloy/k8smon-localtempo-servicegraph..."
-              kubectl delete alloy/k8smon-localtempo-servicegraph --ignore-not-found=true --wait
-              kubectl wait --for=delete alloy/k8smon-localtempo-servicegraph --timeout=60s || echo "Timed out waiting for deletion of alloy/k8smon-localtempo-servicegraph or it may not exist."
+              echo "Deleting Alloy instance: alloy/k8smon-%!s(<nil>)-servicegraph..."
+              kubectl delete alloy/k8smon-%!s(<nil>)-servicegraph --ignore-not-found=true --wait
+              kubectl wait --for=delete alloy/k8smon-%!s(<nil>)-servicegraph --timeout=60s || echo "Timed out waiting for deletion of alloy/k8smon-%!s(<nil>)-servicegraph or it may not exist."
 
               kubectl patch \
                 --namespace=default \
