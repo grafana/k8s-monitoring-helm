@@ -4,7 +4,7 @@
 
 {{- define "telemetryServices.validate.opencost" }}
 {{- if .Values.telemetryServices.opencost.deploy }}
-  {{- $destinations := include "features.costMetrics.destinations" . | fromYamlArray }}
+  {{- $featureDestinations := include "features.costMetrics.destinations" . | fromYamlArray }}
   {{- if ne .Values.cluster.name .Values.telemetryServices.opencost.opencost.exporter.defaultClusterId }}
     {{- $msg := list "" "The OpenCost default cluster id should match the cluster name." }}
     {{- $msg = append $msg "Please set:" }}
@@ -22,20 +22,20 @@
       {{- $msg = append $msg "Please set:" }}
       {{- $msg = append $msg "telemetryServices:" }}
       {{- $msg = append $msg "  opencost:" }}
-      {{- if eq (len $destinations) 1 }}
-      {{- $msg = append $msg (printf "    metricsSource: %s" (first $destinations)) }}
+      {{- if eq (len $featureDestinations) 1 }}
+      {{- $msg = append $msg (printf "    metricsSource: %s" (first $featureDestinations)) }}
       {{- else }}
       {{- $msg = append $msg "    metricsSource:  <metrics destination name>" }}
-      {{- $msg = append $msg (printf "Where <metrics destination name> is one of %s" (include "english_list_or" $destinations)) }}
+      {{- $msg = append $msg (printf "Where <metrics destination name> is one of %s" (include "english_list_or" $featureDestinations)) }}
       {{- end }}
       {{- fail (join "\n" $msg) }}
     {{- end }}
 
     {{- $destinationFound := false }}
-    {{- range $index, $destinationName := $destinations }}
+    {{- range $index, $destinationName := $featureDestinations }}
       {{- if eq $destinationName $.Values.telemetryServices.opencost.metricsSource }}
         {{- $destinationFound = true }}
-        {{- $destination := include "destination.getDestinationByName" (deepCopy $ | merge (dict "destination" $destinationName )) | fromYaml }}
+        {{- $destination := get $.Values.destinations $destinationName }}
         {{- $openCostMetricsUrl := (printf "<Query URL for destination \"%s\">" $destinationName) }}
         {{- if $destination.url }}
           {{- if regexMatch "/api/prom/push" $destination.url }}
@@ -87,7 +87,7 @@
               {{- fail (join "\n" $msg) }}
             {{- end }}
           {{- else }}
-            {{- $destinationSecret := include "secrets.kubernetesSecretName" (dict "Values" $.Values "Chart" $.Chart "Release" $.Release "object" $destination) }}
+            {{- $destinationSecret := include "secrets.kubernetesSecretName" (dict "Values" $.Values "Chart" $.Chart "Release" $.Release "object" $destination "name" $destinationName) }}
             {{- if ne $.Values.telemetryServices.opencost.opencost.prometheus.existingSecretName $destinationSecret}}
               {{- $msg := list "" (printf "OpenCost requires the secret for %s to be set." $destinationName) }}
               {{- $msg = append $msg "Please set:" }}
@@ -144,9 +144,9 @@
       {{- $msg = append $msg "telemetryServices:" }}
       {{- $msg = append $msg "  opencost:" }}
       {{- $msg = append $msg "    metricsSource:  <metrics destination name>" }}
-      {{- $msg = append $msg (printf "Where <metrics destination name> is one of %s" (include "english_list_or" $destinations)) }}
+      {{- $msg = append $msg (printf "Where <metrics destination name> is one of %s" (include "english_list_or" $featureDestinations)) }}
       {{- fail (join "\n" $msg) }}
     {{- end }}
   {{- end }}
-{{- end -}}
-{{- end -}}
+{{- end }}
+{{- end }}

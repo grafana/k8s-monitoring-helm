@@ -15,7 +15,7 @@ cluster:
   name: oauth2-auth-example
 
 destinations:
-  - name: otel-endpoint
+  otel-endpoint:
     type: otlp
     url: "grpc.my.otel.endpoint:443"
     auth:

@@ -1262,6 +1262,39 @@ data:
     
     
     
+    // Destination: loki (loki)
+    otelcol.exporter.loki "loki" {
+      forward_to = [loki.write.loki.receiver]
+    }
+    
+    loki.write "loki" {
+      endpoint {
+        url = "http://loki.loki.svc:3100/loki/api/v1/push"
+        retry_on_http_429 = true
+        tenant_id = convert.nonsensitive(remote.kubernetes.secret.loki.data["tenantId"])
+        basic_auth {
+          username = convert.nonsensitive(remote.kubernetes.secret.loki.data["username"])
+          password = remote.kubernetes.secret.loki.data["password"]
+        }
+        tls_config {
+          insecure_skip_verify = false
+        }
+        min_backoff_period = "500ms"
+        max_backoff_period = "5m"
+        max_backoff_retries = "10"
+      }
+      external_labels = {
+        "cluster" = "include-by-namespace-test",
+        "k8s_cluster_name" = "include-by-namespace-test",
+      }
+    }
+    
+    remote.kubernetes.secret "loki" {
+      name      = "loki-k8smon-k8s-monitoring"
+      namespace = "default"
+    }
+    
+    
     // Destination: prometheus (prometheus)
     otelcol.exporter.prometheus "prometheus" {
       add_metric_suffixes = true
@@ -1310,37 +1343,6 @@ data:
         min_keepalive_time = "5m"
         max_keepalive_time = "8h"
       }
-    }
-    // Destination: loki (loki)
-    otelcol.exporter.loki "loki" {
-      forward_to = [loki.write.loki.receiver]
-    }
-    
-    loki.write "loki" {
-      endpoint {
-        url = "http://loki.loki.svc:3100/loki/api/v1/push"
-        retry_on_http_429 = true
-        tenant_id = convert.nonsensitive(remote.kubernetes.secret.loki.data["tenantId"])
-        basic_auth {
-          username = convert.nonsensitive(remote.kubernetes.secret.loki.data["username"])
-          password = remote.kubernetes.secret.loki.data["password"]
-        }
-        tls_config {
-          insecure_skip_verify = false
-        }
-        min_backoff_period = "500ms"
-        max_backoff_period = "5m"
-        max_backoff_retries = "10"
-      }
-      external_labels = {
-        "cluster" = "include-by-namespace-test",
-        "k8s_cluster_name" = "include-by-namespace-test",
-      }
-    }
-    
-    remote.kubernetes.secret "loki" {
-      name      = "loki-k8smon-k8s-monitoring"
-      namespace = "default"
     }
   self-reporting-metric.prom: |
     # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart
@@ -1795,6 +1797,39 @@ data:
     
     
     
+    // Destination: loki (loki)
+    otelcol.exporter.loki "loki" {
+      forward_to = [loki.write.loki.receiver]
+    }
+    
+    loki.write "loki" {
+      endpoint {
+        url = "http://loki.loki.svc:3100/loki/api/v1/push"
+        retry_on_http_429 = true
+        tenant_id = convert.nonsensitive(remote.kubernetes.secret.loki.data["tenantId"])
+        basic_auth {
+          username = convert.nonsensitive(remote.kubernetes.secret.loki.data["username"])
+          password = remote.kubernetes.secret.loki.data["password"]
+        }
+        tls_config {
+          insecure_skip_verify = false
+        }
+        min_backoff_period = "500ms"
+        max_backoff_period = "5m"
+        max_backoff_retries = "10"
+      }
+      external_labels = {
+        "cluster" = "include-by-namespace-test",
+        "k8s_cluster_name" = "include-by-namespace-test",
+      }
+    }
+    
+    remote.kubernetes.secret "loki" {
+      name      = "loki-k8smon-k8s-monitoring"
+      namespace = "default"
+    }
+    
+    
     // Destination: prometheus (prometheus)
     otelcol.exporter.prometheus "prometheus" {
       add_metric_suffixes = true
@@ -1844,40 +1879,8 @@ data:
         max_keepalive_time = "8h"
       }
     }
-    // Destination: loki (loki)
-    otelcol.exporter.loki "loki" {
-      forward_to = [loki.write.loki.receiver]
-    }
-    
-    loki.write "loki" {
-      endpoint {
-        url = "http://loki.loki.svc:3100/loki/api/v1/push"
-        retry_on_http_429 = true
-        tenant_id = convert.nonsensitive(remote.kubernetes.secret.loki.data["tenantId"])
-        basic_auth {
-          username = convert.nonsensitive(remote.kubernetes.secret.loki.data["username"])
-          password = remote.kubernetes.secret.loki.data["password"]
-        }
-        tls_config {
-          insecure_skip_verify = false
-        }
-        min_backoff_period = "500ms"
-        max_backoff_period = "5m"
-        max_backoff_retries = "10"
-      }
-      external_labels = {
-        "cluster" = "include-by-namespace-test",
-        "k8s_cluster_name" = "include-by-namespace-test",
-      }
-    }
-    
-    remote.kubernetes.secret "loki" {
-      name      = "loki-k8smon-k8s-monitoring"
-      namespace = "default"
-    }
     
     // Destination: tempo (otlp)
-    
     otelcol.processor.attributes "tempo" {
       output {
         traces = [otelcol.processor.transform.tempo.input]

@@ -67,28 +67,6 @@ automountServiceAccountToken: false
 apiVersion: v1
 kind: Secret
 metadata:
-  name: "allmetrics-k8smon-k8s-monitoring"
-  namespace: "default"
-type: Opaque
-data:
-  username: "cHJvbXVzZXI="
-  password: "cHJvbWV0aGV1c3Bhc3N3b3Jk"
----
-# Source: k8s-monitoring/templates/destination_secret.yaml
-apiVersion: v1
-kind: Secret
-metadata:
-  name: "productionmetrics-k8smon-k8s-monitoring"
-  namespace: "default"
-type: Opaque
-data:
-  username: "cHJvbXVzZXI="
-  password: "cHJvbWV0aGV1c3Bhc3N3b3Jk"
----
-# Source: k8s-monitoring/templates/destination_secret.yaml
-apiVersion: v1
-kind: Secret
-metadata:
   name: "alllogs-k8smon-k8s-monitoring"
   namespace: "default"
 type: Opaque
@@ -101,6 +79,17 @@ data:
 apiVersion: v1
 kind: Secret
 metadata:
+  name: "allmetrics-k8smon-k8s-monitoring"
+  namespace: "default"
+type: Opaque
+data:
+  username: "cHJvbXVzZXI="
+  password: "cHJvbWV0aGV1c3Bhc3N3b3Jk"
+---
+# Source: k8s-monitoring/templates/destination_secret.yaml
+apiVersion: v1
+kind: Secret
+metadata:
   name: "productionlogs-k8smon-k8s-monitoring"
   namespace: "default"
 type: Opaque
@@ -108,6 +97,17 @@ data:
   tenantId: "MQ=="
   username: "bG9raQ=="
   password: "bG9raXBhc3N3b3Jk"
+---
+# Source: k8s-monitoring/templates/destination_secret.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: "productionmetrics-k8smon-k8s-monitoring"
+  namespace: "default"
+type: Opaque
+data:
+  username: "cHJvbXVzZXI="
+  password: "cHJvbWV0aGV1c3Bhc3N3b3Jk"
 ---
 # Source: k8s-monitoring/templates/alloy-config.yaml
 apiVersion: v1
@@ -710,6 +710,7 @@ data:
       namespace = "default"
     }
     
+    
     // Destination: productionMetrics (prometheus)
     otelcol.exporter.prometheus "productionmetrics" {
       add_metric_suffixes = true
@@ -1055,6 +1056,7 @@ data:
       namespace = "default"
     }
     
+    
     // Destination: productionLogs (loki)
     otelcol.exporter.loki "productionlogs" {
       forward_to = [loki.process.productionlogs.receiver]
@@ -1248,6 +1250,39 @@ data:
     
     
     
+    // Destination: allLogs (loki)
+    otelcol.exporter.loki "alllogs" {
+      forward_to = [loki.write.alllogs.receiver]
+    }
+    
+    loki.write "alllogs" {
+      endpoint {
+        url = "http://all-logs-loki.all-dbs.svc:3100/loki/api/v1/push"
+        retry_on_http_429 = true
+        tenant_id = convert.nonsensitive(remote.kubernetes.secret.alllogs.data["tenantId"])
+        basic_auth {
+          username = convert.nonsensitive(remote.kubernetes.secret.alllogs.data["username"])
+          password = remote.kubernetes.secret.alllogs.data["password"]
+        }
+        tls_config {
+          insecure_skip_verify = false
+        }
+        min_backoff_period = "500ms"
+        max_backoff_period = "5m"
+        max_backoff_retries = "10"
+      }
+      external_labels = {
+        "cluster" = "split-destinations-cluster",
+        "k8s_cluster_name" = "split-destinations-cluster",
+      }
+    }
+    
+    remote.kubernetes.secret "alllogs" {
+      name      = "alllogs-k8smon-k8s-monitoring"
+      namespace = "default"
+    }
+    
+    
     // Destination: allMetrics (prometheus)
     otelcol.exporter.prometheus "allmetrics" {
       add_metric_suffixes = true
@@ -1307,144 +1342,8 @@ data:
       namespace = "default"
     }
     
-    // Destination: productionMetrics (prometheus)
-    otelcol.exporter.prometheus "productionmetrics" {
-      add_metric_suffixes = true
-      resource_to_telemetry_conversion = false
-      forward_to = [prometheus.remote_write.productionmetrics.receiver]
-    }
-    
-    prometheus.remote_write "productionmetrics" {
-      endpoint {
-        url = "http://prod-metrics-prometheus-server.prod-dbs.svc:9090/api/v1/write"
-        headers = {
-        }
-        basic_auth {
-          username = convert.nonsensitive(remote.kubernetes.secret.productionmetrics.data["username"])
-          password = remote.kubernetes.secret.productionmetrics.data["password"]
-        }
-        tls_config {
-          insecure_skip_verify = false
-        }
-        send_native_histograms = false
-    
-        queue_config {
-          capacity = 10000
-          min_shards = 1
-          max_shards = 50
-          max_samples_per_send = 2000
-          batch_send_deadline = "5s"
-          min_backoff = "30ms"
-          max_backoff = "5s"
-          retry_on_http_429 = true
-          sample_age_limit = "0s"
-        }
-    
-        write_relabel_config {
-          source_labels = ["cluster"]
-          regex = ""
-          replacement = "split-destinations-cluster"
-          target_label = "cluster"
-        }
-        write_relabel_config {
-          source_labels = ["k8s_cluster_name"]
-          regex = ""
-          replacement = "split-destinations-cluster"
-          target_label = "k8s_cluster_name"
-        }
-        write_relabel_config {
-          source_labels = ["namespace"]
-          regex = "production"
-          action = "keep"
-        }
-      }
-    
-      wal {
-        truncate_frequency = "2h"
-        min_keepalive_time = "5m"
-        max_keepalive_time = "8h"
-      }
-    }
-    
-    remote.kubernetes.secret "productionmetrics" {
-      name      = "productionmetrics-k8smon-k8s-monitoring"
-      namespace = "default"
-    }
-    
-    // Destination: allLogs (loki)
-    otelcol.exporter.loki "alllogs" {
-      forward_to = [loki.write.alllogs.receiver]
-    }
-    
-    loki.write "alllogs" {
-      endpoint {
-        url = "http://all-logs-loki.all-dbs.svc:3100/loki/api/v1/push"
-        retry_on_http_429 = true
-        tenant_id = convert.nonsensitive(remote.kubernetes.secret.alllogs.data["tenantId"])
-        basic_auth {
-          username = convert.nonsensitive(remote.kubernetes.secret.alllogs.data["username"])
-          password = remote.kubernetes.secret.alllogs.data["password"]
-        }
-        tls_config {
-          insecure_skip_verify = false
-        }
-        min_backoff_period = "500ms"
-        max_backoff_period = "5m"
-        max_backoff_retries = "10"
-      }
-      external_labels = {
-        "cluster" = "split-destinations-cluster",
-        "k8s_cluster_name" = "split-destinations-cluster",
-      }
-    }
-    
-    remote.kubernetes.secret "alllogs" {
-      name      = "alllogs-k8smon-k8s-monitoring"
-      namespace = "default"
-    }
-    
-    // Destination: productionLogs (loki)
-    otelcol.exporter.loki "productionlogs" {
-      forward_to = [loki.process.productionlogs.receiver]
-    }
-    
-    loki.process "productionlogs" {
-      stage.match {
-        selector = "{namespace!=\"production\"}"
-        action   = "drop"
-      }
-      forward_to = [loki.write.productionlogs.receiver]
-    }
-    
-    loki.write "productionlogs" {
-      endpoint {
-        url = "http://prod-logs-loki.prod-dbs.svc:3100/loki/api/v1/push"
-        retry_on_http_429 = true
-        tenant_id = convert.nonsensitive(remote.kubernetes.secret.productionlogs.data["tenantId"])
-        basic_auth {
-          username = convert.nonsensitive(remote.kubernetes.secret.productionlogs.data["username"])
-          password = remote.kubernetes.secret.productionlogs.data["password"]
-        }
-        tls_config {
-          insecure_skip_verify = false
-        }
-        min_backoff_period = "500ms"
-        max_backoff_period = "5m"
-        max_backoff_retries = "10"
-      }
-      external_labels = {
-        "cluster" = "split-destinations-cluster",
-        "k8s_cluster_name" = "split-destinations-cluster",
-      }
-    }
-    
-    remote.kubernetes.secret "productionlogs" {
-      name      = "productionlogs-k8smon-k8s-monitoring"
-      namespace = "default"
-    }
     
     // Destination: allTraces (otlp)
-    
     otelcol.processor.attributes "alltraces" {
       output {
         traces = [otelcol.processor.transform.alltraces.input]
@@ -1512,8 +1411,114 @@ data:
         enabled = true
       }
     }
-    // Destination: productionTraces (otlp)
     
+    // Destination: productionLogs (loki)
+    otelcol.exporter.loki "productionlogs" {
+      forward_to = [loki.process.productionlogs.receiver]
+    }
+    
+    loki.process "productionlogs" {
+      stage.match {
+        selector = "{namespace!=\"production\"}"
+        action   = "drop"
+      }
+      forward_to = [loki.write.productionlogs.receiver]
+    }
+    
+    loki.write "productionlogs" {
+      endpoint {
+        url = "http://prod-logs-loki.prod-dbs.svc:3100/loki/api/v1/push"
+        retry_on_http_429 = true
+        tenant_id = convert.nonsensitive(remote.kubernetes.secret.productionlogs.data["tenantId"])
+        basic_auth {
+          username = convert.nonsensitive(remote.kubernetes.secret.productionlogs.data["username"])
+          password = remote.kubernetes.secret.productionlogs.data["password"]
+        }
+        tls_config {
+          insecure_skip_verify = false
+        }
+        min_backoff_period = "500ms"
+        max_backoff_period = "5m"
+        max_backoff_retries = "10"
+      }
+      external_labels = {
+        "cluster" = "split-destinations-cluster",
+        "k8s_cluster_name" = "split-destinations-cluster",
+      }
+    }
+    
+    remote.kubernetes.secret "productionlogs" {
+      name      = "productionlogs-k8smon-k8s-monitoring"
+      namespace = "default"
+    }
+    
+    
+    // Destination: productionMetrics (prometheus)
+    otelcol.exporter.prometheus "productionmetrics" {
+      add_metric_suffixes = true
+      resource_to_telemetry_conversion = false
+      forward_to = [prometheus.remote_write.productionmetrics.receiver]
+    }
+    
+    prometheus.remote_write "productionmetrics" {
+      endpoint {
+        url = "http://prod-metrics-prometheus-server.prod-dbs.svc:9090/api/v1/write"
+        headers = {
+        }
+        basic_auth {
+          username = convert.nonsensitive(remote.kubernetes.secret.productionmetrics.data["username"])
+          password = remote.kubernetes.secret.productionmetrics.data["password"]
+        }
+        tls_config {
+          insecure_skip_verify = false
+        }
+        send_native_histograms = false
+    
+        queue_config {
+          capacity = 10000
+          min_shards = 1
+          max_shards = 50
+          max_samples_per_send = 2000
+          batch_send_deadline = "5s"
+          min_backoff = "30ms"
+          max_backoff = "5s"
+          retry_on_http_429 = true
+          sample_age_limit = "0s"
+        }
+    
+        write_relabel_config {
+          source_labels = ["cluster"]
+          regex = ""
+          replacement = "split-destinations-cluster"
+          target_label = "cluster"
+        }
+        write_relabel_config {
+          source_labels = ["k8s_cluster_name"]
+          regex = ""
+          replacement = "split-destinations-cluster"
+          target_label = "k8s_cluster_name"
+        }
+        write_relabel_config {
+          source_labels = ["namespace"]
+          regex = "production"
+          action = "keep"
+        }
+      }
+    
+      wal {
+        truncate_frequency = "2h"
+        min_keepalive_time = "5m"
+        max_keepalive_time = "8h"
+      }
+    }
+    
+    remote.kubernetes.secret "productionmetrics" {
+      name      = "productionmetrics-k8smon-k8s-monitoring"
+      namespace = "default"
+    }
+    
+    
+    // Destination: productionTraces (otlp)
     otelcol.processor.attributes "productiontraces" {
       output {
         traces = [otelcol.processor.transform.productiontraces.input]

@@ -85,13 +85,13 @@ The tail sampling configuration allows you to optimize trace storage costs while
 cluster:
   name: tail-sampling
 destinations:
-  - name: prometheus
+  prometheus:
     type: prometheus
     url: http://prometheus.prometheus.svc:9090/api/v1/write
-  - name: loki
+  loki:
     type: loki
     url: http://loki.loki.svc:3100/api/push
-  - name: tempo
+  tempo:
     type: otlp
     url: http://tempo.tempo.svc
     metrics:

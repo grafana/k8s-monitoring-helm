@@ -19,7 +19,7 @@ cluster:
   name: applications-cluster
 
 destinations:
-  - name: otlp-gateway
+  otlp-gateway:
     type: otlp
     url: http://otlp-gateway.example.com
     metrics: {enabled: true}

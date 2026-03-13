@@ -16,10 +16,10 @@ cluster:
   name: cluster-metrics-cluster
 
 destinations:
-  - name: prometheus
+  prometheus:
     type: prometheus
     url: http://prometheus.prometheus.svc:9090/api/v1/write
-  - name: loki
+  loki:
     type: loki
     url: http://loki.loki.svc:3100/api/push
 
