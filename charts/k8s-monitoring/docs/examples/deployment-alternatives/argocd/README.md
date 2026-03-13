@@ -71,11 +71,7 @@ spec:
               password: lokipassword
         clusterMetrics:
           enabled: true
-<<<<<<< HEAD
         costMetrics:
-=======
-        costMetics:
->>>>>>> c496f595 ([4.0] Separate Telemetry services from config features (#2318))
           enabled: true
         hostMetrics:
           enabled: true
@@ -120,10 +116,6 @@ spec:
           alloy:
             annotations:
               argocd.argoproj.io/sync-wave: "1"
-<<<<<<< HEAD
-=======
-
->>>>>>> c496f595 ([4.0] Separate Telemetry services from config features (#2318))
         telemetryServices:
           kube-state-metrics:
             deploy: true
@@ -136,17 +128,11 @@ spec:
           opencost:
             deploy: true
             metricsSource: localPrometheus
-<<<<<<< HEAD
             annotations:
               argocd.argoproj.io/sync-wave: "1"
             opencost:
               exporter:
                 defaultClusterId: argocd-deployment-test
-=======
-            opencost:
-              exporter:
-                defaultClusterId: helmfile-test
->>>>>>> c496f595 ([4.0] Separate Telemetry services from config features (#2318))
               prometheus:
                 existingSecretName: localprometheus-k8smon-k8s-monitoring
                 external:
