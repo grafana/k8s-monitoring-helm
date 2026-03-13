@@ -25,7 +25,7 @@ cluster:
   name: mongodb-atlas-integration-cluster
 
 destinations:
-  - name: prometheus
+  prometheus:
     type: prometheus
     url: http://prometheus.prometheus.svc:9090/api/v1/write
 

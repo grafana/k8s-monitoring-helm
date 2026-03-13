@@ -132,6 +132,39 @@ application_observability "feature" {
 
 
 
+// Destination: localLoki (loki)
+otelcol.exporter.loki "localloki" {
+  forward_to = [loki.write.localloki.receiver]
+}
+
+loki.write "localloki" {
+  endpoint {
+    url = "http://loki.loki.svc:3100/loki/api/v1/push"
+    retry_on_http_429 = true
+    tenant_id = convert.nonsensitive(remote.kubernetes.secret.localloki.data["tenantId"])
+    basic_auth {
+      username = convert.nonsensitive(remote.kubernetes.secret.localloki.data["username"])
+      password = remote.kubernetes.secret.localloki.data["password"]
+    }
+    tls_config {
+      insecure_skip_verify = false
+    }
+    min_backoff_period = "500ms"
+    max_backoff_period = "5m"
+    max_backoff_retries = "10"
+  }
+  external_labels = {
+    "cluster" = "istio-service-mesh-test",
+    "k8s_cluster_name" = "istio-service-mesh-test",
+  }
+}
+
+remote.kubernetes.secret "localloki" {
+  name      = "localloki-k8smon-k8s-monitoring"
+  namespace = "default"
+}
+
+
 // Destination: localPrometheus (prometheus)
 otelcol.exporter.prometheus "localprometheus" {
   add_metric_suffixes = true
@@ -191,40 +224,8 @@ remote.kubernetes.secret "localprometheus" {
   namespace = "default"
 }
 
-// Destination: localLoki (loki)
-otelcol.exporter.loki "localloki" {
-  forward_to = [loki.write.localloki.receiver]
-}
-
-loki.write "localloki" {
-  endpoint {
-    url = "http://loki.loki.svc:3100/loki/api/v1/push"
-    retry_on_http_429 = true
-    tenant_id = convert.nonsensitive(remote.kubernetes.secret.localloki.data["tenantId"])
-    basic_auth {
-      username = convert.nonsensitive(remote.kubernetes.secret.localloki.data["username"])
-      password = remote.kubernetes.secret.localloki.data["password"]
-    }
-    tls_config {
-      insecure_skip_verify = false
-    }
-    min_backoff_period = "500ms"
-    max_backoff_period = "5m"
-    max_backoff_retries = "10"
-  }
-  external_labels = {
-    "cluster" = "istio-service-mesh-test",
-    "k8s_cluster_name" = "istio-service-mesh-test",
-  }
-}
-
-remote.kubernetes.secret "localloki" {
-  name      = "localloki-k8smon-k8s-monitoring"
-  namespace = "default"
-}
 
 // Destination: localTempo (otlp)
-
 otelcol.processor.attributes "localtempo" {
   output {
     traces = [otelcol.processor.transform.localtempo.input]

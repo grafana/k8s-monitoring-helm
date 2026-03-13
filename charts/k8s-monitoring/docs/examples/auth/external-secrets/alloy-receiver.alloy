@@ -137,6 +137,42 @@ application_observability "feature" {
 
 
 
+// Destination: logs-service (loki)
+otelcol.exporter.loki "logs_service" {
+  forward_to = [loki.write.logs_service.receiver]
+}
+
+loki.write "logs_service" {
+  endpoint {
+    url = convert.nonsensitive(remote.kubernetes.secret.logs_service.data["loki-host"]) + "/loki/api/v1/push"
+    retry_on_http_429 = true
+    tenant_id = convert.nonsensitive(remote.kubernetes.secret.logs_service.data["tenantId"])
+    basic_auth {
+      username = convert.nonsensitive(remote.kubernetes.secret.logs_service.data["loki-username"])
+      password = remote.kubernetes.secret.logs_service.data["access-token"]
+    }
+    tls_config {
+      insecure_skip_verify = false
+      ca_pem = convert.nonsensitive(remote.kubernetes.secret.logs_service.data["ca"])
+      cert_pem = convert.nonsensitive(remote.kubernetes.secret.logs_service.data["cert"])
+      key_pem = remote.kubernetes.secret.logs_service.data["key"]
+    }
+    min_backoff_period = "500ms"
+    max_backoff_period = "5m"
+    max_backoff_retries = "10"
+  }
+  external_labels = {
+    "cluster" = "external-secrets-example-cluster",
+    "k8s_cluster_name" = "external-secrets-example-cluster",
+  }
+}
+
+remote.kubernetes.secret "logs_service" {
+  name      = "my-monitoring-secret"
+  namespace = "monitoring"
+}
+
+
 // Destination: metrics-service (prometheus)
 otelcol.exporter.prometheus "metrics_service" {
   add_metric_suffixes = true
@@ -200,43 +236,8 @@ remote.kubernetes.secret "metrics_service" {
   namespace = "monitoring"
 }
 
-// Destination: logs-service (loki)
-otelcol.exporter.loki "logs_service" {
-  forward_to = [loki.write.logs_service.receiver]
-}
-
-loki.write "logs_service" {
-  endpoint {
-    url = convert.nonsensitive(remote.kubernetes.secret.logs_service.data["loki-host"]) + "/loki/api/v1/push"
-    retry_on_http_429 = true
-    tenant_id = convert.nonsensitive(remote.kubernetes.secret.logs_service.data["tenantId"])
-    basic_auth {
-      username = convert.nonsensitive(remote.kubernetes.secret.logs_service.data["loki-username"])
-      password = remote.kubernetes.secret.logs_service.data["access-token"]
-    }
-    tls_config {
-      insecure_skip_verify = false
-      ca_pem = convert.nonsensitive(remote.kubernetes.secret.logs_service.data["ca"])
-      cert_pem = convert.nonsensitive(remote.kubernetes.secret.logs_service.data["cert"])
-      key_pem = remote.kubernetes.secret.logs_service.data["key"]
-    }
-    min_backoff_period = "500ms"
-    max_backoff_period = "5m"
-    max_backoff_retries = "10"
-  }
-  external_labels = {
-    "cluster" = "external-secrets-example-cluster",
-    "k8s_cluster_name" = "external-secrets-example-cluster",
-  }
-}
-
-remote.kubernetes.secret "logs_service" {
-  name      = "my-monitoring-secret"
-  namespace = "monitoring"
-}
 
 // Destination: traces-service (otlp)
-
 otelcol.processor.attributes "traces_service" {
   output {
     traces = [otelcol.processor.transform.traces_service.input]
