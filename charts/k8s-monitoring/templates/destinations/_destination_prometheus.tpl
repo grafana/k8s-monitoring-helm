@@ -305,8 +305,8 @@ prometheus.remote_write {{ include "helper.alloy_name" $.destinationName | quote
 {{- end -}}
 
 {{- define "destinations.prometheus.alloy.prometheus.metrics.target" }}
-{{- $hasNamespaceLabelMetricEnrichment := gt (len (dig "metricEnrichment" "namespaceLabels" list .)) 0 }}
-{{- $hasPodLabelMetricEnrichment := gt (len (dig "metricEnrichment" "podLabels" list .)) 0 }}
+{{- $hasNamespaceLabelMetricEnrichment := gt (len (dig "metricEnrichment" "namespaceLabels" list .destination)) 0 }}
+{{- $hasPodLabelMetricEnrichment := gt (len (dig "metricEnrichment" "podLabels" list .destination)) 0 }}
 {{- $hasMetricEnrichment := or $hasNamespaceLabelMetricEnrichment $hasPodLabelMetricEnrichment }}
 {{- if $hasMetricEnrichment }}
 prometheus.relabel.{{ include "helper.alloy_name" $.destinationName }}.receiver

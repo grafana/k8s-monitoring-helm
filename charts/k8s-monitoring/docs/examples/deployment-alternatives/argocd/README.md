@@ -128,6 +128,8 @@ spec:
           opencost:
             deploy: true
             metricsSource: localPrometheus
+            annotations:
+              argocd.argoproj.io/sync-wave: "1"
             opencost:
               exporter:
                 defaultClusterId: argocd-deployment-test
