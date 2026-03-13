@@ -14,13 +14,13 @@
 {{- include "feature.applicationObservability.module" (dict "Values" $.Values.applicationObservability "Files" $.Subcharts.applicationObservability.Files) }}
 application_observability "feature" {
   metrics_destinations = [
-    {{ include "destinations.alloy.targets" (dict "destinations" $.Values.destinations "names" $destinations "type" "metrics" "ecosystem" "otlp") | indent 4 | trim }}
+    {{ include "destinations.alloy.targets" (dict "destinations" $.Values.destinations "destinationNames" $destinations "type" "metrics" "ecosystem" "otlp") | indent 4 | trim }}
   ]
   logs_destinations = [
-    {{ include "destinations.alloy.targets" (dict "destinations" $.Values.destinations "names" $destinations "type" "logs" "ecosystem" "otlp") | indent 4 | trim }}
+    {{ include "destinations.alloy.targets" (dict "destinations" $.Values.destinations "destinationNames" $destinations "type" "logs" "ecosystem" "otlp") | indent 4 | trim }}
   ]
   traces_destinations = [
-    {{ include "destinations.alloy.targets" (dict "destinations" $.Values.destinations "names" $destinations "type" "traces" "ecosystem" "otlp") | indent 4 | trim }}
+    {{ include "destinations.alloy.targets" (dict "destinations" $.Values.destinations "destinationNames" $destinations "type" "traces" "ecosystem" "otlp") | indent 4 | trim }}
   ]
 }
 {{- end -}}
@@ -31,7 +31,7 @@ application_observability "feature" {
 {{- $metricsDestinations := include "destinations.get" (dict "destinations" $.Values.destinations "type" "metrics" "ecosystem" "otlp" "filter" $.Values.applicationObservability.destinations) | fromYamlArray -}}
 {{- $logDestinations     := include "destinations.get" (dict "destinations" $.Values.destinations "type" "logs"    "ecosystem" "otlp" "filter" $.Values.applicationObservability.destinations) | fromYamlArray -}}
 {{- $traceDestinations   := include "destinations.get" (dict "destinations" $.Values.destinations "type" "traces"  "ecosystem" "otlp" "filter" $.Values.applicationObservability.destinations) | fromYamlArray -}}
-{{- concat $metricsDestinations $logDestinations $traceDestinations | toYaml }}
+{{- (concat $metricsDestinations $logDestinations $traceDestinations) | uniq | sortAlpha | toYaml }}
 {{- end -}}
 {{- end -}}
 

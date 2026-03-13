@@ -13,7 +13,7 @@
 {{- include "feature.clusterEvents.module" (dict "Values" $.Values.clusterEvents "Files" $.Subcharts.clusterEvents.Files) }}
 cluster_events "feature" {
   logs_destinations = [
-    {{ include "destinations.alloy.targets" (dict "destinations" $.Values.destinations "names" $destinations "type" "logs" "ecosystem" "loki") | indent 4 | trim }}
+    {{ include "destinations.alloy.targets" (dict "destinations" $.Values.destinations "destinationNames" $destinations "type" "logs" "ecosystem" "loki") | indent 4 | trim }}
   ]
 }
 {{- end -}}
@@ -42,8 +42,8 @@ cluster_events "feature" {
 {{- define "features.clusterEvents.validate" }}
 {{- if .Values.clusterEvents.enabled -}}
 {{- $featureName := "Kubernetes Cluster events" }}
-{{- $destinations := include "features.clusterEvents.destinations" . | fromYamlArray }}
-{{- include "destinations.validate_destination_list" (dict "destinations" $destinations "type" "logs" "ecosystem" "loki" "feature" $featureName) }}
+{{- $destinationNames := include "features.clusterEvents.destinations" . | fromYamlArray }}
+{{- include "destinations.validate_destination_list" (dict "destinations" $destinationNames "type" "logs" "ecosystem" "loki" "feature" $featureName) }}
 {{- range $collector := include "features.clusterEvents.collectors" . | fromYamlArray }}
   {{- include "collectors.require_collector" (dict "Values" $.Values "name" $collector "feature" $featureName) }}
 {{- end -}}

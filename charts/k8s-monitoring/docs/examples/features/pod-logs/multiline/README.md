@@ -16,7 +16,7 @@ cluster:
   name: multiline-pod-logs
 
 destinations:
-  - name: loki
+  loki:
     type: loki
     url: http://loki.loki.svc:3100/loki/api/v1/push
     tenantId: 1

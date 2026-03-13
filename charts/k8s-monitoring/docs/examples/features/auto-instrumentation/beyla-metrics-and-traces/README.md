@@ -17,7 +17,7 @@ cluster:
   name: auto-instrumentation-with-traces-cluster
 
 destinations:
-  - name: otlp-gateway
+  otlp-gateway:
     type: otlp
     url: http://otlp-gateway.example.com
     metrics: {enabled: true}

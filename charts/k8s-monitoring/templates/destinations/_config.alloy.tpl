@@ -1,28 +1,34 @@
 {{/* Returns an alloy-formatted array of destination targets given the name */}}
-{{/* Inputs: destinations (array of destination definition), names ([]string), type (string) ecosystem (string) */}}
+{{/* Inputs: destinations (map of destinations), destinationNames ([]string), type (string) ecosystem (string) */}}
 {{- define "destinations.alloy.targets" -}}
-{{- range $destination := .destinations }}
-  {{- if (has $destination.name $.names ) }}
-    {{- if eq (include (printf "destinations.%s.supports_%s" $destination.type $.type) $destination) "true" }}
-{{ include (printf "destinations.%s.alloy.%s.%s.target" $destination.type $.ecosystem $.type) $destination | trim }},
+{{- range $destinationName := .destinationNames }}
+  {{- if hasKey $.destinations $destinationName }}
+    {{- $destination := get $.destinations $destinationName }}
+      {{- if eq (include (printf "destinations.%s.supports_%s" $destination.type $.type) $destination) "true" }}
+{{ include (printf "destinations.%s.alloy.%s.%s.target" $destination.type $.ecosystem $.type) (dict "destination" $destination "destinationName" $destinationName) | trim }},
+      {{- end }}
     {{- end }}
+  {{- else }}
+    {{ $msg := list "" (printf "A destination named \"%s\" was referenced but not defined.")}}
   {{- end }}
-{{- end }}
 {{- end }}
 
 {{/* Adds the Alloy components for destinations */}}
-{{/* Inputs: . (root object) */}}
+{{/* Inputs: . (root object) destinationNames (list of destination names) */}}
 {{- define "destinations.alloy.config" }}
-{{- range $destination := .Values.destinations }}
-{{- $defaultValues := (printf "destinations/%s-values.yaml" $destination.type) | $.Files.Get | fromYaml }}
-{{- $destinationWithDefaults := mergeOverwrite $defaultValues $destination }}
-{{- if (has $destination.name $.names ) }}
-// Destination: {{ $destination.name }} ({{ $destination.type }})
-{{- include (printf "destinations.%s.alloy" $destination.type) (deepCopy $ | merge (dict "destination" $destinationWithDefaults)) | indent 0 }}
+{{- range $destinationName := .destinationNames }}
+  {{- if hasKey $.Values.destinations $destinationName }}
+    {{- $destination := get $.Values.destinations $destinationName }}
+    {{- $defaultValues := (printf "destinations/%s-values.yaml" $destination.type) | $.Files.Get | fromYaml }}
+    {{- $destinationWithDefaults := mergeOverwrite $defaultValues $destination }}
+// Destination: {{ $destinationName }} ({{ $destination.type }})
+{{- include (printf "destinations.%s.alloy" $destination.type) (deepCopy $ | merge (dict "destination" $destinationWithDefaults "destinationName" $destinationName)) | indent 0 }}
 
-{{- if eq (include "secrets.usesKubernetesSecret" $destinationWithDefaults) "true" }}
-  {{- include "secret.alloy" (deepCopy $ | merge (dict "object" $destinationWithDefaults)) | nindent 0 }}
-{{- end }}
-{{- end }}
+    {{- if eq (include "secrets.usesKubernetesSecret" $destinationWithDefaults) "true" }}
+      {{- include "secret.alloy" (deepCopy $ | merge (dict "object" $destinationWithDefaults "name" $destinationName)) | nindent 0 }}
+    {{- end }}
+  {{ else }}
+    {{ $msg := list "" (printf "A destination named \"%s\" was referenced but not defined.")}}
+  {{- end }}
 {{- end }}
 {{- end }}

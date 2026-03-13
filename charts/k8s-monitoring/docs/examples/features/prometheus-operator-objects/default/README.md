@@ -16,7 +16,7 @@ cluster:
   name: prometheus-operator-objects-cluster
 
 destinations:
-  - name: prometheus
+  prometheus:
     type: prometheus
     url: http://prometheus.prometheus.svc:9090/api/v1/write
 

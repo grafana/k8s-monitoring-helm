@@ -35,10 +35,10 @@ cluster:
   name: no-cluster-roles
 
 destinations:
-  - name: metric-store
+  metric-store:
     type: prometheus
     url: http://prometheus-server.prometheus.svc:9090/api/v1/write
-  - name: loki
+  loki:
     type: loki
     url: http://loki.loki.svc:3100/loki/api/v1/push
     tenantId: 1

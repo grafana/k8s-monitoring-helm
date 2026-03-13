@@ -13,7 +13,7 @@
 {{- include "feature.costMetrics.module" (dict "Values" $.Values.costMetrics "Files" $.Subcharts.clusterMetrics.Files "Release" $.Release "telemetryServices" $.Values.telemetryServices) }}
 cost_metrics "feature" {
   metrics_destinations = [
-    {{ include "destinations.alloy.targets" (dict "destinations" $.Values.destinations "names" $destinations "type" "metrics" "ecosystem" "prometheus") | indent 4 | trim }}
+    {{ include "destinations.alloy.targets" (dict "destinations" $.Values.destinations "destinationNames" $destinations "type" "metrics" "ecosystem" "prometheus") | indent 4 | trim }}
   ]
 }
 {{- end -}}
