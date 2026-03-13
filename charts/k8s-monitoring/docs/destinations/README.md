@@ -1,7 +1,7 @@
 # Destinations
 
 Destinations are where telemetry data will be delivered. It can be a local service deployed on the same cluster, or a
-remote, SaaS service. The different destination types actually about the protocol that is used to deliver that data.
+remote, SaaS service. The different destination types are actually about the protocol used to deliver that data.
 
 | Type         | Protocol         | Telemetry Data        | Docs                    |
 |--------------|------------------|-----------------------|-------------------------|
@@ -26,7 +26,7 @@ Here is an example of a destinations section:
 
 ```yaml
 destinations:
-  - name: hostedMetrics
+  hostedMetrics:
     type: prometheus
     url: https://prometheus.example.com/api/prom/push
     auth:
@@ -34,11 +34,11 @@ destinations:
       username: "my-username"
       password: "my-password"
 
-  - name: localPrometheus
+  localPrometheus:
     type: prometheus
     url: http://prometheus.monitoring.svc.cluster.local:9090
 
-  - name: hostedLogs
+  hostedLogs:
     type: loki
     url: https://loki.example.com/loki/api/v1/push
     auth:
@@ -47,7 +47,7 @@ destinations:
       password: "my-password"
       tenantIdFrom: env("LOKI_TENANT_ID")
 
-  - name: otlpGateway
+  otlpGateway:
     type: otlp
     url: https://otlp.example.com:4317/v1/traces
     auth:
@@ -82,10 +82,10 @@ logs.
 
 ```yaml
 destinations:
-  - name: a
+  a:
     type: loki
 
-  - name: b
+  b:
     type: otlp
     logs:
       enabled: true
@@ -106,10 +106,10 @@ destinations. Loki logs will go through a translator component to convert them t
 
 ```yaml
 destinations:
-  - name: a
+  a:
     type: loki
 
-  - name: b
+  b:
     type: otlp
     logs:
       enabled: true
@@ -128,7 +128,7 @@ defined.
 
 ```yaml
 destinations:
-  - name: b
+  b:
     type: otlp
     logs:
       enabled: true

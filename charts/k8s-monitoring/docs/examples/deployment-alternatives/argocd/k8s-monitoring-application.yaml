@@ -35,14 +35,14 @@ spec:
         cluster:
           name: argocd-deployment-test
         destinations:
-          - name: localPrometheus
+          localPrometheus:
             type: prometheus
             url: http://prometheus-server.prometheus.svc:9090/api/v1/write
             auth:
               type: basic
               username: promuser
               password: prometheuspassword
-          - name: localLoki
+          localLoki:
             type: loki
             url: http://loki.loki.svc:3100/loki/api/v1/push
             tenantId: "1"
@@ -52,7 +52,7 @@ spec:
               password: lokipassword
         clusterMetrics:
           enabled: true
-        costMetics:
+        costMetrics:
           enabled: true
         hostMetrics:
           enabled: true
@@ -97,7 +97,6 @@ spec:
           alloy:
             annotations:
               argocd.argoproj.io/sync-wave: "1"
-
         telemetryServices:
           kube-state-metrics:
             deploy: true
@@ -110,9 +109,11 @@ spec:
           opencost:
             deploy: true
             metricsSource: localPrometheus
+            annotations:
+              argocd.argoproj.io/sync-wave: "1"
             opencost:
               exporter:
-                defaultClusterId: helmfile-test
+                defaultClusterId: argocd-deployment-test
               prometheus:
                 existingSecretName: localprometheus-k8smon-k8s-monitoring
                 external:

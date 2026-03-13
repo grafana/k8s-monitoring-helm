@@ -17,7 +17,7 @@ cluster:
   name: pod-logs-via-k8s-api-cluster
 
 destinations:
-  - name: loki
+  loki:
     type: loki
     url: http://loki.loki.svc:3100/loki/api/v1/push
     tenantId: "1"
