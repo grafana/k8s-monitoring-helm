@@ -16,20 +16,20 @@ cluster:
   name: exclude-by-namespace-cluster
 
 destinations:
-  - name: prometheus
+  prometheus:
     type: prometheus
     url: http://prometheus.prometheus.svc:9090/api/v1/write
-  - name: loki
+  loki:
     type: loki
     url: http://loki.loki.svc:3100/api/push
-  - name: tempo
+  tempo:
     type: otlp
     protocol: http
     url: http://tempo.tempo.svc:443/otlp
     metrics: {enabled: false}
     logs: {enabled: false}
     traces: {enabled: true}
-  - name: pyroscope
+  pyroscope:
     type: pyroscope
     url: http://pyroscope.pyroscope.svc:4040
 
@@ -87,8 +87,11 @@ clusterMetrics:
   cadvisor:
     metricsTuning:
       excludeNamespaces: [kube-system, kube-public, confidential]
-  kube-state-metrics:
-    namespacesDenylist: [kube-system, kube-public, confidential]
+
+hostMetrics:
+  enabled: true
+  linuxHosts:
+    enabled: true
 
 podLogs:
   enabled: true
@@ -132,5 +135,12 @@ alloy-receiver:
 
 alloy-profiles:
   enabled: true
+
+telemetryServices:
+  kube-state-metrics:
+    deploy: true
+    namespacesDenylist: [kube-system, kube-public, confidential]
+  node-exporter:
+    deploy: true
 ```
 <!-- textlint-enable terminology -->

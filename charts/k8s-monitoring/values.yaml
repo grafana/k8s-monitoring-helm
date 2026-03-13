@@ -46,15 +46,10 @@ global:
 # Destinations
 #
 
-# -- The list of destinations where telemetry data will be sent.
+# -- The destinations where telemetry data will be sent.
 # See the [destinations documentation](https://github.com/grafana/k8s-monitoring-helm/blob/main/charts/k8s-monitoring/docs/destinations/README.md) for more information.
 # @section -- Destinations
-destinations: []
-
-# -- A map of destinations where telemetry data will be sent. Keys will be used as the destination name.
-# See the [destinations documentation](https://github.com/grafana/k8s-monitoring-helm/blob/main/charts/k8s-monitoring/docs/destinations/README.md) for more information.
-# @section -- Destinations
-destinationsMap: {}
+destinations: {}
 
 #
 # Features
@@ -80,6 +75,48 @@ clusterMetrics:
   collector: alloy-metrics
 
   # To see additional options, please see the [Cluster Monitoring feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-cluster-metrics).
+
+# -- Cost Metrics captures cost metrics from the Kubernetes cluster and its workloads.
+# Requires a destination that supports metrics.
+# To see the valid options, please see the [Cost Metrics feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-cost-metrics).
+# @default -- Disabled
+# @section -- Features - Cost Metrics
+costMetrics:
+  # -- Enable gathering Kubernetes Cost metrics.
+  # @section -- Features - Cost Metrics
+  enabled: false
+
+  # -- The destinations where cluster metrics will be sent. If empty, all metrics-capable destinations will be used.
+  # @section -- Features - Cost Metrics
+  destinations: []
+
+  # -- Which collector to assign this feature to. Do not change this unless you are sure of what you are doing.
+  # @section -- Features - Cost Metrics
+  # @ignored
+  collector: alloy-metrics
+
+  # To see additional options, please see the [Cost Metrics feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-cost-metrics).
+
+# -- Host metrics enables observability and monitoring for your Kubernetes Nodes.
+# Requires a destination that supports metrics.
+# To see the valid options, please see the [Host Metrics feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-host-metrics).
+# @default -- Disabled
+# @section -- Features - Host Metrics
+hostMetrics:
+  # -- Enable gathering Kubernetes Host metrics.
+  # @section -- Features - Host Metrics
+  enabled: false
+
+  # -- The destinations where cluster metrics will be sent. If empty, all metrics-capable destinations will be used.
+  # @section -- Features - Host Metrics
+  destinations: []
+
+  # -- Which collector to assign this feature to. Do not change this unless you are sure of what you are doing.
+  # @section -- Features - Host Metrics
+  # @ignored
+  collector: alloy-metrics
+
+  # To see additional options, please see the [Host Metrics feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-host-metrics).
 
 # -- Cluster events.
 # Requires a destination that supports logs.
@@ -376,6 +413,48 @@ alloy-logs:
   # -- Deploy the Alloy instance for collecting log data.
   # @section -- Collectors - Alloy Logs
   enabled: false
+
+#
+# Telemetry Services
+# This is where additional services can be deployed to the Kubernetes cluster to instrument, generate, or gather
+# telemetry data from other workloads on the Kubernetes cluster, or from the cluster itself.
+#
+telemetryServices:
+  # [Kepler](https://sustainable-computing.io/) is a service that can gather energy usage metrics from the Kubernetes
+  # Cluster nodes.
+  kepler:
+    # -- Deploy [Kepler](https://sustainable-computing.io/) to gather energy usage metrics from the Kubernetes Cluster
+    # nodes.
+    # @section -- Telemetry Services
+    deploy: false
+
+  # [kube-state-metrics](https://github.com/kubernetes/kube-state-metrics) exposes Kubernetes object state metrics.
+  kube-state-metrics:
+    # -- Deploy kube-state-metrics to expose Kubernetes object metadata as Prometheus metrics.
+    # @section -- Telemetry Services
+    deploy: false
+
+  # [OpenCost](https://www.opencost.io/) reports Kubernetes resource cost data.
+  opencost:
+    # -- Deploy OpenCost to calculate and expose Kubernetes cost allocation metrics.
+    # @section -- Telemetry Services
+    deploy: false
+
+  # [Node Exporter](https://github.com/prometheus/node_exporter) collects host-level Linux metrics.
+  node-exporter:
+    # -- Deploy Node Exporter to gather Linux node hardware and OS metrics.
+    # @section -- Telemetry Services
+    deploy: false
+
+  # [Windows Exporter](https://github.com/prometheus-community/windows_exporter) collects host-level Windows metrics.
+  windows-exporter:
+    # -- Deploy Windows Exporter to gather Windows node hardware and OS metrics.
+    # @section -- Telemetry Services
+    deploy: false
+
+#
+# Named Collector instances
+#
 
 # An Alloy instance for opening receivers to collect application data.
 # To see all valid settings, please see the [Alloy Collector documentation](https://github.com/grafana/k8s-monitoring-helm/blob/main/charts/k8s-monitoring/docs/collectors/alloy.md).

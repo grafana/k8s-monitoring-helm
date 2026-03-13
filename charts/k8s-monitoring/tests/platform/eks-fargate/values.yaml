@@ -3,7 +3,7 @@ cluster:
   name: eks-fargate-test
 
 destinations:
-  - name: grafana-cloud-metrics
+  grafana-cloud-metrics:
     type: prometheus
     url: https://prometheus-prod-13-prod-us-east-0.grafana.net/api/prom/push
     auth:
@@ -14,7 +14,7 @@ destinations:
       create: false
       name: grafana-cloud-credentials
       namespace: monitoring
-  - name: grafana-cloud-logs
+  grafana-cloud-logs:
     type: loki
     url: https://logs-prod-006.grafana.net/loki/api/v1/push
     auth:
@@ -28,6 +28,11 @@ destinations:
 
 clusterMetrics:
   enabled: true
+
+hostMetrics:
+  enabled: true
+  linuxHosts:
+    enabled: true
 
 clusterEvents:
   enabled: true
@@ -62,3 +67,9 @@ alloy-logs:
       kubernetes.io/os: linux
       kubernetes.io/arch: amd64
       alpha.eksctl.io/nodegroup-name: ng-linux  # Ensure we're deploying to the non-fargate nodegroup
+
+telemetryServices:
+  kube-state-metrics:
+    deploy: true
+  node-exporter:
+    deploy: true

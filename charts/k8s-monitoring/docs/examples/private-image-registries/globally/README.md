@@ -32,15 +32,15 @@ cluster:
   name: global-private-image-registries-example-cluster
 
 destinations:
-  - name: prometheus
+  prometheus:
     type: prometheus
     url: http://prometheus.prometheus.svc:9090/api/v1/write
 
-  - name: loki
+  loki:
     type: loki
     url: http://loki.loki.svc:3100/loki/api/v1/push
 
-  - name: tempo
+  tempo:
     type: otlp
     url: http://tempo.tempo.svc:3200/api/v1/metrics
     metrics: {enabled: false}
@@ -70,22 +70,17 @@ global:
 clusterMetrics:
   enabled: true
 
-  # Kepler does not utilize the global image registry settings
-  kepler:
-    enabled: true
-    image:
-      repository: "my.registry.com/sustainable_computing_io/kepler"
-    imagePullSecrets:
-      - name: my-registry-creds
+costMetrics:
+  enabled: true
 
-  # OpenCost does not utilize the global image registry settings
-  opencost:
-    imagePullSecrets:
-      - name: my-registry-creds
-    opencost:
-      exporter:
-        image:
-          registry: my.registry.com
+hostMetrics:
+  enabled: true
+  energyMetrics:
+    enabled: true
+  linuxHosts:
+    enabled: true
+  windowsHosts:
+    enabled: true
 
 podLogs:
   enabled: true
@@ -105,5 +100,36 @@ alloy-logs:
 
 alloy-receiver:
   enabled: true
+
+telemetryServices:
+  # Kepler does not utilize the global image registry settings
+  kepler:
+    deploy: true
+    image:
+      repository: my.registry.com/sustainable_computing_io/kepler
+    imagePullSecrets:
+      - name: my-registry-creds
+
+  # OpenCost does not utilize the global image registry settings
+  opencost:
+    deploy: true
+    metricsSource: prometheus
+    imagePullSecrets:
+      - name: my-registry-creds
+    opencost:
+      prometheus:
+        external:
+          url: http://prometheus.prometheus.svc:9090/api/v1/query
+      exporter:
+        defaultClusterId: global-private-image-registries-example-cluster
+        image:
+          registry: my.registry.com
+
+  kube-state-metrics:
+    deploy: true
+  node-exporter:
+    deploy: true
+  windows-exporter:
+    deploy: true
 ```
 <!-- textlint-enable terminology -->

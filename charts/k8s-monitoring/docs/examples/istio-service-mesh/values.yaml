@@ -3,14 +3,14 @@ cluster:
   name: istio-service-mesh-test
 
 destinations:
-  - name: localPrometheus
+  localPrometheus:
     type: prometheus
     url: http://prometheus-server.prometheus.svc:9090/api/v1/write
     auth:
       type: basic
       username: promuser
       password: prometheuspassword
-  - name: localLoki
+  localLoki:
     type: loki
     url: http://loki.loki.svc:3100/loki/api/v1/push
     tenantId: "1"
@@ -18,7 +18,7 @@ destinations:
       type: basic
       username: loki
       password: lokipassword
-  - name: localTempo
+  localTempo:
     type: otlp
     url: tempo.tempo.svc:4317
     tls:
@@ -30,6 +30,13 @@ destinations:
 
 clusterMetrics:
   enabled: true
+
+hostMetrics:
+  enabled: true
+  linuxHosts:
+    enabled: true
+  windowsHosts:
+    enabled: true
 
 clusterEvents:
   enabled: true
@@ -81,3 +88,11 @@ alloy-receiver:
     # the k8sattributes processor to look up the pod by IP and enrich the rest of the attributes
     podAnnotations:
       sidecar.istio.io/interceptionMode: TPROXY
+
+telemetryServices:
+  kube-state-metrics:
+    deploy: true
+  node-exporter:
+    deploy: true
+  windows-exporter:
+    deploy: true

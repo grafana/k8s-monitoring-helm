@@ -1,6 +1,8 @@
+{{/* Print a Pyroscope destination Alloy config components */}}
+{{/* Inputs: . (root object),  destination (string, name of destination), destinationName (name of this destination) */}}
 {{- define "destinations.pyroscope.alloy" }}
 {{- with .destination }}
-pyroscope.write {{ include "helper.alloy_name" .name | quote }} {
+pyroscope.write {{ include "helper.alloy_name" $.destinationName | quote }} {
   endpoint {
 {{- if .urlFrom }} 
     url = {{ .urlFrom }}
@@ -8,8 +10,8 @@ pyroscope.write {{ include "helper.alloy_name" .name | quote }} {
     url = {{ .url | quote }} 
 {{- end }}
     headers = {
-{{- if eq (include "secrets.usesSecret" (dict "object" . "key" "tenantId")) "true" }}
-      "X-Scope-OrgID" = {{ include "secrets.read" (dict "object" . "key" "tenantId" "nonsensitive" true) }},
+{{- if eq (include "secrets.usesSecret" (dict "object" . "name" $.destinationName "key" "tenantId")) "true" }}
+      "X-Scope-OrgID" = {{ include "secrets.read" (dict "object" . "name" $.destinationName "key" "tenantId" "nonsensitive" true) }},
 {{- end }}
 {{- range $key, $value := .extraHeaders }}
       {{ $key | quote }} = {{ $value | quote }},
@@ -37,16 +39,16 @@ pyroscope.write {{ include "helper.alloy_name" .name | quote }} {
 
 {{- if eq (include "secrets.authType" .) "basic" }}
     basic_auth {
-      username = {{ include "secrets.read" (dict "object" . "key" "auth.username" "nonsensitive" true) }}
-      password = {{ include "secrets.read" (dict "object" . "key" "auth.password") }}
+      username = {{ include "secrets.read" (dict "object" . "name" $.destinationName "key" "auth.username" "nonsensitive" true) }}
+      password = {{ include "secrets.read" (dict "object" . "name" $.destinationName "key" "auth.password") }}
     }
 {{- else if eq (include "secrets.authType" .) "bearerToken" }}
-    bearer_token = {{ include "secrets.read" (dict "object" . "key" "auth.bearerToken") }}
+    bearer_token = {{ include "secrets.read" (dict "object" . "name" $.destinationName "key" "auth.bearerToken") }}
 {{- else if eq (include "secrets.authType" .) "oauth2" }}
     oauth2 {
-      client_id = {{ include "secrets.read" (dict "object" . "key" "auth.oauth2.clientId" "nonsensitive" true) }}
+      client_id = {{ include "secrets.read" (dict "object" . "name" $.destinationName "key" "auth.oauth2.clientId" "nonsensitive" true) }}
       {{- if eq .auth.oauth2.clientSecretFile "" }}
-      client_secret = {{ include "secrets.read" (dict "object" . "key" "auth.oauth2.clientSecret") }}
+      client_secret = {{ include "secrets.read" (dict "object" . "name" $.destinationName "key" "auth.oauth2.clientSecret") }}
       {{- else }}
       client_secret_file = {{ .auth.oauth2.clientSecretFile | quote }}
       {{- end }}
@@ -84,18 +86,18 @@ pyroscope.write {{ include "helper.alloy_name" .name | quote }} {
         insecure_skip_verify = {{ .auth.oauth2.tls.insecureSkipVerify | default false }}
         {{- if .auth.oauth2.tls.caFile }}
         ca_file = {{ .auth.oauth2.tls.caFile | quote }}
-        {{- else if eq (include "secrets.usesSecret" (dict "object" . "key" "auth.oauth2.tls.ca")) "true" }}
-        ca_pem = {{ include "secrets.read" (dict "object" . "key" "auth.oauth2.tls.ca" "nonsensitive" true) }}
+        {{- else if eq (include "secrets.usesSecret" (dict "object" . "name" $.destinationName "key" "auth.oauth2.tls.ca")) "true" }}
+        ca_pem = {{ include "secrets.read" (dict "object" . "name" $.destinationName "key" "auth.oauth2.tls.ca" "nonsensitive" true) }}
         {{- end }}
         {{- if .auth.oauth2.tls.certFile }}
         cert_file = {{ .auth.oauth2.tls.certFile | quote }}
-        {{- else if eq (include "secrets.usesSecret" (dict "object" . "key" "auth.oauth2.tls.cert")) "true" }}
-        cert_pem = {{ include "secrets.read" (dict "object" . "key" "auth.oauth2.tls.cert" "nonsensitive" true) }}
+        {{- else if eq (include "secrets.usesSecret" (dict "object" . "name" $.destinationName "key" "auth.oauth2.tls.cert")) "true" }}
+        cert_pem = {{ include "secrets.read" (dict "object" . "name" $.destinationName "key" "auth.oauth2.tls.cert" "nonsensitive" true) }}
         {{- end }}
         {{- if .auth.oauth2.tls.keyFile }}
         key_file = {{ .auth.oauth2.tls.keyFile | quote }}
-        {{- else if eq (include "secrets.usesSecret" (dict "object" . "key" "auth.oauth2.tls.key")) "true" }}
-        key_pem = {{ include "secrets.read" (dict "object" . "key" "auth.oauth2.tls.key") }}
+        {{- else if eq (include "secrets.usesSecret" (dict "object" . "name" $.destinationName "key" "auth.oauth2.tls.key")) "true" }}
+        key_pem = {{ include "secrets.read" (dict "object" . "name" $.destinationName "key" "auth.oauth2.tls.key") }}
         {{- end }}
       }
       {{- end }}
@@ -107,18 +109,18 @@ pyroscope.write {{ include "helper.alloy_name" .name | quote }} {
       insecure_skip_verify = {{ .tls.insecureSkipVerify | default false }}
       {{- if .tls.caFile }}
       ca_file = {{ .tls.caFile | quote }}
-      {{- else if eq (include "secrets.usesSecret" (dict "object" . "key" "tls.ca")) "true" }}
-      ca_pem = {{ include "secrets.read" (dict "object" . "key" "tls.ca" "nonsensitive" true) }}
+      {{- else if eq (include "secrets.usesSecret" (dict "object" . "name" $.destinationName "key" "tls.ca")) "true" }}
+      ca_pem = {{ include "secrets.read" (dict "object" . "name" $.destinationName "key" "tls.ca" "nonsensitive" true) }}
       {{- end }}
       {{- if .tls.certFile }}
       cert_file = {{ .tls.certFile | quote }}
-      {{- else if eq (include "secrets.usesSecret" (dict "object" . "key" "tls.cert")) "true" }}
-      cert_pem = {{ include "secrets.read" (dict "object" . "key" "tls.cert" "nonsensitive" true) }}
+      {{- else if eq (include "secrets.usesSecret" (dict "object" . "name" $.destinationName "key" "tls.cert")) "true" }}
+      cert_pem = {{ include "secrets.read" (dict "object" . "name" $.destinationName "key" "tls.cert" "nonsensitive" true) }}
       {{- end }}
       {{- if .tls.keyFile }}
       key_file = {{ .tls.keyFile | quote }}
-      {{- else if eq (include "secrets.usesSecret" (dict "object" . "key" "tls.key")) "true" }}
-      key_pem = {{ include "secrets.read" (dict "object" . "key" "tls.key") }}
+      {{- else if eq (include "secrets.usesSecret" (dict "object" . "name" $.destinationName "key" "tls.key")) "true" }}
+      key_pem = {{ include "secrets.read" (dict "object" . "name" $.destinationName "key" "tls.key") }}
       {{- end }}
     }
 {{- end }}
@@ -157,7 +159,7 @@ pyroscope.write {{ include "helper.alloy_name" .name | quote }} {
 - tls.key
 {{- end -}}
 
-{{- define "destinations.pyroscope.alloy.pyroscope.profiles.target" }}pyroscope.write.{{ include "helper.alloy_name" .name }}.receiver{{ end -}}
+{{- define "destinations.pyroscope.alloy.pyroscope.profiles.target" }}pyroscope.write.{{ include "helper.alloy_name" $.destinationName }}.receiver{{ end -}}
 
 {{- define "destinations.pyroscope.supports_metrics" }}false{{ end -}}
 {{- define "destinations.pyroscope.supports_logs" }}false{{ end -}}

@@ -19,18 +19,17 @@ This file shows the inclusion and instantiation of the Helm provider.
 
 ```terraform
 terraform {
+  required_version = ">= 1.0"
   required_providers {
     helm = {
       source  = "hashicorp/helm"
-      version = "2.17.0"
+      version = "3.0.2"
     }
   }
 }
 provider "helm" {
-  kubernetes {
-    # Replace this with values that provide connection to your cluster
-    config_path    = "~/.kube/config"
-    config_context = "my-cluster-context"
+  kubernetes = {
+    config_path = "kubeconfig.yaml"
   }
 }
 ```
@@ -38,89 +37,50 @@ provider "helm" {
 ### `grafana-k8s-monitoring.tf`
 
 This file defines how to deploy the Helm chart as well as how to translate the Terraform vars into Helm chart values.
-It also embeds a limited version of the Helm chart's values file as a string for chart configuration that does not
-contain credentials.
 
 ```terraform
 resource "helm_release" "grafana-k8s-monitoring" {
   name             = "grafana-k8s-monitoring"
-  repository       = "https://grafana.github.io/helm-charts"
-  chart            = "k8s-monitoring"
+  chart            = "../../../../../k8s-monitoring"
   namespace        = var.namespace
   create_namespace = true
   atomic           = true
-  values = [<<-EOT
-      destinations:
-        - name: metrics-destination
-          type: prometheus
-          auth:
-            type: basic
-        - name: logs-destination
-          type: loki
-          auth:
-            type: basic
 
-      clusterMetrics:
-        enabled: true
-      clusterEvents:
-        enabled: true
-      podLogs:
-        enabled: true
+  values = [file("values.yaml")]
 
-      alloy-metrics:
-        enabled: true
-      alloy-singleton:
-        enabled: true
-      alloy-logs:
-        enabled: true
-      EOT
+  set = [
+    {
+      name  = "cluster.name"
+      value = var.cluster-name
+    }, {
+      name  = "destinations.localPrometheus.url"
+      value = var.prometheus-url
+    }, {
+      name  = "destinations.localPrometheus.auth.username"
+      value = var.prometheus-username
+    }, {
+      name  = "destinations.localPrometheus.auth.password"
+      value = var.prometheus-password
+    }, {
+      name  = "destinations.localLoki.url"
+      value = var.loki-url
+    }, {
+      name  = "destinations.localLoki.auth.username"
+      value = var.loki-username
+    }, {
+      name  = "destinations.localLoki.auth.password"
+      value = var.loki-password
+    }, {
+      name  = "destinations.localLoki.tenantId"
+      value = var.loki-tenantid
+    }
   ]
-
-  set {
-    name  = "cluster.name"
-    value = var.cluster-name
-  }
-
-  set {
-    name  = "destinations[0].url"
-    value = var.prometheus-url
-  }
-
-  set {
-    name  = "destinations[0].auth.username"
-    value = var.prometheus-username
-  }
-
-  set {
-    name  = "destinations[0].auth.password"
-    value = var.prometheus-password
-  }
-
-  set {
-    name  = "destinations[1].url"
-    value = var.loki-url
-  }
-
-  set {
-    name  = "destinations[1].auth.username"
-    value = var.loki-username
-  }
-
-  set {
-    name  = "destinations[1].auth.password"
-    value = var.loki-password
-  }
-
-  set {
-    name  = "destinations[1].tenantId"
-    value = var.loki-tenantid
-  }
 }
 ```
 
 ### `vars.tf`
 
-This file provides the variables and their values that'll be used during deployment.
+This file provides the variables and their values that'll be send to the Helm chart during deployment.
 
 ```terraform
 variable "namespace" {
@@ -135,32 +95,32 @@ variable "cluster-name" {
 
 variable "prometheus-url" {
   type    = string
-  default = "https://prometheus.example.com/api/v1/write"
+  default = "http://prometheus-server.prometheus.svc:9090/api/v1/write"
 }
 
 variable "prometheus-username" {
   type    = string
-  default = "12345"
+  default = "promuser"
 }
 
 variable "prometheus-password" {
   type    = string
-  default = "It's a secret to everyone"
+  default = "prometheuspassword"
 }
 
 variable "loki-url" {
   type    = string
-  default = "https://loki.example.com/loki/api/v1/push"
+  default = "http://loki.loki.svc:3100/loki/api/v1/push"
 }
 
 variable "loki-username" {
   type    = string
-  default = "12345"
+  default = "loki"
 }
 
 variable "loki-password" {
   type    = string
-  default = "It's a secret to everyone"
+  default = "lokipassword"
 }
 
 variable "loki-tenantid" {
@@ -178,9 +138,9 @@ $ terraform init
 Initializing the backend...
 
 Initializing provider plugins...
-- Finding hashicorp/helm versions matching "2.17.0"...
-- Installing hashicorp/helm v2.17.0...
-- Installed hashicorp/helm v2.17.0 (signed by HashiCorp)
+- Finding hashicorp/helm versions matching "3.0.2"...
+- Installing hashicorp/helm v3.0.2...
+- Installed hashicorp/helm v3.0.2 (signed by HashiCorp)
 
 Terraform has created a lock file .terraform.lock.hcl to record the provider
 selections it made above. Include this file in your version control repository

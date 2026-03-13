@@ -30,11 +30,11 @@ cluster:
   name: azure-aks-example-cluster
 
 destinations:
-  - name: prometheus
+  prometheus:
     type: prometheus
     url: http://prometheus.prometheus.svc:9090/api/v1/write
 
-  - name: loki
+  loki:
     type: loki
     url: http://loki.loki.svc:3100/loki/api/v1/push
 
@@ -45,6 +45,12 @@ clusterMetrics:
 
 clusterEvents:
   enabled: true
+
+hostMetrics:
+  linuxHosts:
+    enabled: true
+  windowsHosts:
+    enabled: true
 
 podLogs:
   enabled: true
@@ -60,5 +66,13 @@ alloy-singleton:
   enabled: true
 alloy-logs:
   enabled: true
+
+telemetryServices:
+  kube-state-metrics:
+    deploy: true
+  node-exporter:
+    deploy: true
+  windows-exporter:
+    deploy: true
 ```
 <!-- textlint-enable terminology -->

@@ -15,7 +15,7 @@ cluster:
   name: oauth2-auth-example
 
 destinations:
-  - name: otel-endpoint
+  otel-endpoint:
     type: otlp
     url: "grpc.my.otel.endpoint:443"
     auth:
@@ -33,6 +33,13 @@ destinations:
 
 clusterMetrics:
   enabled: true
+
+hostMetrics:
+  enabled: true
+  linuxHosts:
+    enabled: true
+  windowsHosts:
+    enabled: true
 
 clusterEvents:
   enabled: true
@@ -55,5 +62,13 @@ alloy-metrics:
   enabled: true
 alloy-singleton:
   enabled: true
+
+telemetryServices:
+  kube-state-metrics:
+    deploy: true
+  node-exporter:
+    deploy: true
+  windows-exporter:
+    deploy: true
 ```
 <!-- textlint-enable terminology -->

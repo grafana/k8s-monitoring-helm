@@ -3,14 +3,14 @@ cluster:
   name: uninstall-test
 
 destinations:
-  - name: localPrometheus
+  localPrometheus:
     type: prometheus
     url: http://prometheus-server.prometheus.svc:9090/api/v1/write
     auth:
       type: basic
       username: promuser
       password: prometheuspassword
-  - name: localLoki
+  localLoki:
     type: loki
     url: http://loki.loki.svc:3100/loki/api/v1/push
     tenantId: "1"
@@ -21,18 +21,18 @@ destinations:
 
 clusterMetrics:
   enabled: true
-  kepler:
+
+costMetrics:
+  enabled: true
+
+hostMetrics:
+  enabled: true
+  energyMetrics:
     enabled: true
-  opencost:
+  linuxHosts:
     enabled: true
-    metricsSource: localPrometheus
-    opencost:
-      exporter:
-        defaultClusterId: uninstall-test
-      prometheus:
-        existingSecretName: localprometheus-k8smon-k8s-monitoring
-        external:
-          url: http://prometheus-server.prometheus.svc:9090
+  windowsHosts:
+    enabled: true
 
 clusterEvents:
   enabled: true
@@ -48,3 +48,23 @@ alloy-singleton:
 
 alloy-logs:
   enabled: true
+
+telemetryServices:
+  kube-state-metrics:
+    deploy: true
+  kepler:
+    deploy: true
+  node-exporter:
+    deploy: true
+  windows-exporter:
+    deploy: true
+  opencost:
+    deploy: true
+    metricsSource: localPrometheus
+    opencost:
+      exporter:
+        defaultClusterId: uninstall-test
+      prometheus:
+        existingSecretName: localprometheus-k8smon-k8s-monitoring
+        external:
+          url: http://prometheus-server.prometheus.svc:9090

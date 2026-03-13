@@ -24,7 +24,7 @@ cluster:
   name: extra-rules-example-cluster
 
 destinations:
-  - name: prometheus
+  prometheus:
     type: prometheus
     url: http://prometheus.prometheus.svc:9090/api/v1/write
     extraLabels:
@@ -38,7 +38,7 @@ destinations:
         action = "drop"
       }
 
-  - name: loki
+  loki:
     type: loki
     url: http://loki.loki.svc:3100/loki/api/v1/push
     extraLabels:
@@ -55,6 +55,13 @@ clusterMetrics:
         regex = "production"
         action = "keep"
       }
+
+hostMetrics:
+  enabled: true
+  linuxHosts:
+    enabled: true
+  windowsHosts:
+    enabled: true
 
 clusterEvents:
   enabled: true
@@ -139,5 +146,13 @@ alloy-logs:
         value: northwest
       - name: COLOR
         value: blue
+
+telemetryServices:
+  kube-state-metrics:
+    deploy: true
+  node-exporter:
+    deploy: true
+  windows-exporter:
+    deploy: true
 ```
 <!-- textlint-enable terminology -->

@@ -3,7 +3,7 @@ cluster:
   name: gpu-test
 
 destinations:
-  - name: grafana-cloud-metrics
+  grafana-cloud-metrics:
     type: prometheus
     url: https://prometheus-prod-13-prod-us-east-0.grafana.net./api/prom/push
     auth:
@@ -18,6 +18,11 @@ destinations:
 clusterMetrics:
   enabled: true
 
+hostMetrics:
+  enabled: true
+  linuxHosts:
+    enabled: true
+
 integrations:
   dcgm-exporter:
     instances:
@@ -27,3 +32,9 @@ integrations:
 
 alloy-metrics:
   enabled: true
+
+telemetryServices:
+  kube-state-metrics:
+    deploy: true
+  node-exporter:
+    deploy: true

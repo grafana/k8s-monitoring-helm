@@ -3,7 +3,7 @@ cluster:
   name: prometheus-io-annotations-test
 
 destinations:
-  - name: prometheus
+  prometheus:
     type: prometheus
     url: http://prometheus-server.prometheus.svc:9090/api/v1/write
 
@@ -14,10 +14,16 @@ annotationAutodiscovery:
     metricsPath: prometheus.io/path
     metricsPortNumber: prometheus.io/port
 
-clusterMetrics:
+hostMetrics:
   enabled: true
+  linuxHosts:
+    enabled: true
 
 alloy-metrics:
   enabled: true
   controller:
     replicas: 2
+
+telemetryServices:
+  node-exporter:
+    deploy: true

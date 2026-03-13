@@ -16,12 +16,19 @@ cluster:
   name: autoscaling-example-cluster
 
 destinations:
-  - name: prometheus
+  prometheus:
     type: prometheus
     url: http://prometheus.prometheus.svc:9090/api/v1/write
 
 clusterMetrics:
   enabled: true
+
+hostMetrics:
+  enabled: true
+  linuxHosts:
+    enabled: true
+  windowsHosts:
+    enabled: true
 
 alloy-metrics:
   enabled: true
@@ -37,5 +44,13 @@ alloy-metrics:
       maxReplicas: 10
       targetCPUUtilizationPercentage: 0
       targetMemoryUtilizationPercentage: 80
+
+telemetryServices:
+  kube-state-metrics:
+    deploy: true
+  node-exporter:
+    deploy: true
+  windows-exporter:
+    deploy: true
 ```
 <!-- textlint-enable terminology -->

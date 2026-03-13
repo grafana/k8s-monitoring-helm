@@ -3,16 +3,30 @@ cluster:
   name: sharded-kube-state-metrics
 
 destinations:
-  - name: prometheus
+  prometheus:
     type: prometheus
     url: http://prometheus.prometheus.svc:9090/api/v1/write
 
 clusterMetrics:
   enabled: true
-  kube-state-metrics:
-    autosharding:
-      enabled: true
-    replicas: 5
+
+hostMetrics:
+  enabled: true
+  linuxHosts:
+    enabled: true
+  windowsHosts:
+    enabled: true
 
 alloy-metrics:
   enabled: true
+
+telemetryServices:
+  kube-state-metrics:
+    deploy: true
+    autosharding:
+      enabled: true
+    replicas: 5
+  node-exporter:
+    deploy: true
+  windows-exporter:
+    deploy: true

@@ -22,22 +22,16 @@ cluster:
   name: gke-autopilot-example-cluster
 
 destinations:
-  - name: prometheus
+  prometheus:
     type: prometheus
     url: http://prometheus.prometheus.svc:9090/api/v1/write
 
-  - name: loki
+  loki:
     type: loki
     url: http://loki.loki.svc:3100/loki/api/v1/push
 
 clusterMetrics:
   enabled: true
-  node-exporter:
-    deploy: false
-    enabled: false
-  windows-exporter:
-    deploy: false
-    enabled: false
 
 clusterEvents:
   enabled: true
@@ -61,5 +55,9 @@ alloy-logs:
   alloy:
     mounts:
       dockercontainers: false
+
+telemetryServices:
+  kube-state-metrics:
+    deploy: true
 ```
 <!-- textlint-enable terminology -->

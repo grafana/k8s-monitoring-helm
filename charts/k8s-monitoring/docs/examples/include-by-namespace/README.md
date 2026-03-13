@@ -16,10 +16,10 @@ cluster:
   name: include-by-namespace-test
 
 destinations:
-  - name: prometheus
+  prometheus:
     type: prometheus
     url: http://prometheus-server.prometheus.svc:9090/api/v1/write
-  - name: loki
+  loki:
     type: loki
     url: http://loki.loki.svc:3100/loki/api/v1/push
     tenantId: "1"
@@ -27,14 +27,14 @@ destinations:
       type: basic
       username: loki
       password: lokipassword
-  - name: tempo
+  tempo:
     type: otlp
     protocol: http
     url: http://tempo.tempo.svc:443/otlp
     metrics: {enabled: false}
     logs: {enabled: false}
     traces: {enabled: true}
-  - name: pyroscope
+  pyroscope:
     type: pyroscope
     url: http://pyroscope.pyroscope.svc:4040
 
@@ -77,8 +77,13 @@ clusterMetrics:
   cadvisor:
     metricsTuning:
       includeNamespaces: [alpha, bravo, delta]
-  kube-state-metrics:
-    namespaces: [alpha, bravo, delta]
+
+hostMetrics:
+  enabled: true
+  linuxHosts:
+    enabled: true
+  windowsHosts:
+    enabled: true
 
 podLogs:
   enabled: true
@@ -122,5 +127,14 @@ alloy-receiver:
 
 alloy-profiles:
   enabled: true
+
+telemetryServices:
+  kube-state-metrics:
+    deploy: true
+    namespaces: [alpha, bravo, delta]
+  node-exporter:
+    deploy: true
+  windows-exporter:
+    deploy: true
 ```
 <!-- textlint-enable terminology -->

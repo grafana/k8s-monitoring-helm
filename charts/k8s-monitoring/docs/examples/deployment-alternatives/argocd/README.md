@@ -54,14 +54,14 @@ spec:
         cluster:
           name: argocd-deployment-test
         destinations:
-          - name: localPrometheus
+          localPrometheus:
             type: prometheus
             url: http://prometheus-server.prometheus.svc:9090/api/v1/write
             auth:
               type: basic
               username: promuser
               password: prometheuspassword
-          - name: localLoki
+          localLoki:
             type: loki
             url: http://loki.loki.svc:3100/loki/api/v1/push
             tenantId: "1"
@@ -71,24 +71,41 @@ spec:
               password: lokipassword
         clusterMetrics:
           enabled: true
-          kepler:
+        costMetrics:
+          enabled: true
+        hostMetrics:
+          enabled: true
+          linuxHosts:
             enabled: true
-          opencost:
+          windowsHosts:
             enabled: true
-            annotations:
-              argocd.argoproj.io/sync-wave: "1"
-            metricsSource: localPrometheus
-            opencost:
-              exporter:
-                defaultClusterId: argocd-deployment-test
-              prometheus:
-                existingSecretName: localprometheus-k8smon-k8s-monitoring
-                external:
-                  url: http://prometheus-server.prometheus.svc:9090
+          energyMetrics:
+            enabled: true
         clusterEvents:
           enabled: true
         podLogs:
           enabled: true
+          labelsToKeep:
+            - app.kubernetes.io/name
+            - container
+            - instance
+            - job
+            - level
+            - namespace
+            - service.name
+            - service.namespace
+            - deployment.environment
+            - deployment.environment.name
+            - k8s.namespace.name
+            - k8s.deployment.name
+            - k8s.statefulset.name
+            - k8s.daemonset.name
+            - k8s.cronjob.name
+            - k8s.job.name
+            - k8s.node.name
+            - pod
+          structuredMetadata:
+            pod: ""
         alloy-metrics:
           enabled: true
         alloy-singleton:
@@ -99,4 +116,25 @@ spec:
           alloy:
             annotations:
               argocd.argoproj.io/sync-wave: "1"
+        telemetryServices:
+          kube-state-metrics:
+            deploy: true
+          node-exporter:
+            deploy: true
+          windows-exporter:
+            deploy: true
+          kepler:
+            deploy: true
+          opencost:
+            deploy: true
+            metricsSource: localPrometheus
+            annotations:
+              argocd.argoproj.io/sync-wave: "1"
+            opencost:
+              exporter:
+                defaultClusterId: argocd-deployment-test
+              prometheus:
+                existingSecretName: localprometheus-k8smon-k8s-monitoring
+                external:
+                  url: http://prometheus-server.prometheus.svc:9090
 ```

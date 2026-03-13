@@ -3,71 +3,61 @@ suite: Validations - Destinations
 templates:
   - validations.yaml
 tests:
-  - it: asks you to set the name of a destination
-    set:
-      cluster: {name: test-cluster}
-      clusterMetrics: {enabled: true}
-      destinations:
-        - type: prometheus
-    asserts:
-      - failedTemplate:
-          errorMessage: |-
-            Destination #0 does not have a name.
-            Please set:
-            destinations:
-              - name: my-destination-name
-
   - it: asks you to set a valid name for the destination
     set:
       cluster: {name: test-cluster}
       clusterMetrics: {enabled: true}
+      telemetryServices: {kube-state-metrics: {deploy: true}}
       destinations:
-        - name: prøm3thüs!
+        prøm3thüs!:
           type: prometheus
     asserts:
       - failedTemplate:
           errorMessage: |-
-            Destination #0 (prøm3thüs!) invalid characters in its name.
-            Please only use alphanumeric, underscores, dashes, or spaces.
+            Destination "prøm3thüs!" has invalid characters in its name.
+            Please only use alphanumeric, underscores, or dashes.
 
   - it: requires a destination type
     set:
       cluster: {name: test-cluster}
       clusterMetrics: {enabled: true}
+      telemetryServices: {kube-state-metrics: {deploy: true}}
       destinations:
-        - name: a destination with no type
+        "a-destination-with-no-type": {}
     asserts:
       - failedTemplate:
           errorMessage: |-
-            Destination #0 (a destination with no type) does not have a type.
+            Destination "a-destination-with-no-type" does not have a type.
             Please set:
             destinations:
-              - name: a destination with no type
+              a-destination-with-no-type:
                 type: custom, loki-stdout, loki, otlp, prometheus, or pyroscope
 
   - it: validates the destination type
     set:
       cluster: {name: test-cluster}
       clusterMetrics: {enabled: true}
+      telemetryServices: {kube-state-metrics: {deploy: true}}
       destinations:
-        - name: a destination with an invalid type
+        a-destination-with-an-invalid-type:
           type: invalidType
     asserts:
       - failedTemplate:
           errorMessage: |-
-            Destination #0 (a destination with an invalid type) is using an unknown type (invalidType).
+            Destination "a-destination-with-an-invalid-type" is using an unknown type: invalidType
             Please set:
             destinations:
-              - name: a destination with an invalid type
+              a-destination-with-an-invalid-type:
                 type: custom, loki-stdout, loki, otlp, prometheus, or pyroscope
 
-  - it: allows destination names with alphanumeric, underscores, dashes, and spaces
+  - it: allows destination names with alphanumeric, underscores, and dashes
     set:
       cluster: {name: test-cluster}
       clusterMetrics: {enabled: true}
+      telemetryServices: {kube-state-metrics: {deploy: true}}
       alloy-metrics: {enabled: true}
       destinations:
-        - name: This is my _Prometheus_ destination-1
+        This-is-my_Prometheus_destination-1:
           type: prometheus
     asserts:
       - notFailedTemplate: {}
@@ -77,18 +67,18 @@ tests:
       cluster:
         name: test-cluster
       destinations:
-        - name: my-destination
+        my-destination:
           type: otlp
           url: https://otlp.example.com
           protocol: magic
     asserts:
       - failedTemplate:
           errorMessage: |-
-            Destination #0 (my-destination) has an unsupported protocol: magic.
+            Destination "my-destination" has an unsupported protocol: magic.
             The protocol must be either "grpc" or "http"
             Please set:
             destinations:
-              - name: my-destination
+              my-destination:
                 type: otlp
                 protocol: otlp / http
 
@@ -97,19 +87,19 @@ tests:
       cluster:
         name: test-cluster
       destinations:
-        - name: my-destination
+        my-destination:
           type: otlp
           url: https://otlp.example.com
           proxyURL: https://myproxy.default.svc:8080
     asserts:
       - failedTemplate:
           errorMessage: |-
-            Destination #0 (my-destination) does not support proxyURL.
+            Destination "my-destination" does not support proxyURL.
             When using the gPRC protocol, the proxyURL option is not supported.
             Please remove the proxyURL field and set the appropriate environment variables on the Alloy instances.
             Or, change to use the http protocol:
             destinations:
-              - name: my-destination
+              my-destination:
                 type: otlp
                 protocol: http
             For more information, see https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/docs/examples/proxies
@@ -119,16 +109,16 @@ tests:
       cluster:
         name: test-cluster
       destinations:
-        - name: OTLP Endpoint
+        OTLP-Endpoint:
           type: otlp
           url: https://otlp-gateway-test.grafana.net
     asserts:
       - failedTemplate:
           errorMessage: |-
-            Destination #0 (OTLP Endpoint) is using Grafana Cloud OTLP gateway but has incorrect protocol 'grpc (default)'. The gateway requires 'http'.
+            Destination "OTLP-Endpoint" is using Grafana Cloud OTLP gateway but has incorrect protocol 'grpc (default)'. The gateway requires 'http'.
             Please set:
             destinations:
-              - name: OTLP Endpoint
+              OTLP-Endpoint:
                 type: otlp
                 url: https://otlp-gateway-test.grafana.net
                 protocol: http
@@ -138,7 +128,7 @@ tests:
       cluster:
         name: test-cluster
       destinations:
-        - name: OTLP Endpoint
+        OTLP-Endpoint:
           type: otlp
           url: https://otlp-gateway-test.grafana.net
           protocolValidation: false
@@ -151,17 +141,17 @@ tests:
       cluster:
         name: test-cluster
       destinations:
-        - name: Grafana Cloud Traces
+        Grafana-Cloud-Traces:
           type: otlp
           url: https://tempo-prod-01-prod-us-east-1.grafana.net
           protocol: http
     asserts:
       - failedTemplate:
           errorMessage: |-
-            Destination #0 (Grafana Cloud Traces) is using Grafana Cloud Traces but has incorrect protocol 'http'. Grafana Cloud Traces requires 'grpc'.
+            Destination "Grafana-Cloud-Traces" is using Grafana Cloud Traces but has incorrect protocol 'http'. Grafana Cloud Traces requires 'grpc'.
             Please set:
             destinations:
-              - name: Grafana Cloud Traces
+              Grafana-Cloud-Traces:
                 type: otlp
                 url: https://tempo-prod-01-prod-us-east-1.grafana.net
                 protocol: grpc
@@ -171,7 +161,7 @@ tests:
       cluster:
         name: test-cluster
       destinations:
-        - name: Grafana Cloud Traces
+        Grafana-Cloud-Traces:
           type: otlp
           url: https://tempo-prod-01-prod-us-east-1.grafana.net
           protocol: http
@@ -187,7 +177,7 @@ tests:
       cluster:
         name: test-cluster
       destinations:
-        - name: Grafana Cloud Traces
+        Grafana-Cloud-Traces:
           type: otlp
           url: https://tempo-prod-01.us-east-1.vpce.grafana.net
           protocol: http
@@ -200,7 +190,7 @@ tests:
       cluster:
         name: test-cluster
       destinations:
-        - name: Grafana Cloud Traces
+        Grafana-Cloud-Traces:
           type: otlp
           url: https://tempo-test.grafana.net
           metrics: {enabled: true}
@@ -209,10 +199,10 @@ tests:
     asserts:
       - failedTemplate:
           errorMessage: |-
-            Destination #0 (Grafana Cloud Traces) is using Grafana Cloud Traces but has metrics enabled. Tempo only supports traces.
+            Destination "Grafana-Cloud-Traces" is using Grafana Cloud Traces but has metrics enabled. Tempo only supports traces.
             Please set:
             destinations:
-              - name: Grafana Cloud Traces
+              Grafana-Cloud-Traces:
                 type: otlp
                 url: https://tempo-test.grafana.net
                 metrics:
@@ -223,7 +213,7 @@ tests:
       cluster:
         name: test-cluster
       destinations:
-        - name: Grafana Cloud Traces
+        Grafana-Cloud-Traces:
           type: otlp
           url: https://tempo-test.grafana.net
           metrics: {enabled: false}
@@ -232,10 +222,10 @@ tests:
     asserts:
       - failedTemplate:
           errorMessage: |-
-            Destination #0 (Grafana Cloud Traces) is using Grafana Cloud Traces but has logs enabled. Tempo only supports traces.
+            Destination "Grafana-Cloud-Traces" is using Grafana Cloud Traces but has logs enabled. Tempo only supports traces.
             Please set:
             destinations:
-              - name: Grafana Cloud Traces
+              Grafana-Cloud-Traces:
                 type: otlp
                 url: https://tempo-test.grafana.net
                 logs:
@@ -246,7 +236,7 @@ tests:
       cluster:
         name: test-cluster
       destinations:
-        - name: Grafana Cloud Traces
+        Grafana-Cloud-Traces:
           type: otlp
           url: https://tempo-test.grafana.net
           protocol: grpc
@@ -256,10 +246,10 @@ tests:
     asserts:
       - failedTemplate:
           errorMessage: |-
-            Destination #0 (Grafana Cloud Traces) is using Grafana Cloud Traces but has traces disabled.
+            Destination "Grafana-Cloud-Traces" is using Grafana Cloud Traces but has traces disabled.
             Please set:
             destinations:
-              - name: Grafana Cloud Traces
+              Grafana-Cloud-Traces:
                 type: otlp
                 url: https://tempo-test.grafana.net
                 traces:

@@ -1,74 +1,37 @@
 resource "helm_release" "grafana-k8s-monitoring" {
   name             = "grafana-k8s-monitoring"
-  repository       = "https://grafana.github.io/helm-charts"
-  chart            = "k8s-monitoring"
+  chart            = "../../../../../k8s-monitoring"
   namespace        = var.namespace
   create_namespace = true
   atomic           = true
-    values = [<<-EOT
-      destinations:
-        - name: metrics-destination
-          type: prometheus
-          auth:
-            type: basic
-        - name: logs-destination
-          type: loki
-          auth:
-            type: basic
 
-      clusterMetrics:
-        enabled: true
-      clusterEvents:
-        enabled: true
-      podLogs:
-        enabled: true
+  values = [file("values.yaml")]
 
-      alloy-metrics:
-        enabled: true
-      alloy-singleton:
-        enabled: true
-      alloy-logs:
-        enabled: true
-      EOT
-    ]
-
-    set {
+  set = [
+    {
       name  = "cluster.name"
       value = var.cluster-name
-    }
-
-    set {
-      name  = "destinations[0].url"
+    }, {
+      name  = "destinations.localPrometheus.url"
       value = var.prometheus-url
-    }
-
-    set {
-      name  = "destinations[0].auth.username"
+    }, {
+      name  = "destinations.localPrometheus.auth.username"
       value = var.prometheus-username
-    }
-
-    set {
-      name  = "destinations[0].auth.password"
+    }, {
+      name  = "destinations.localPrometheus.auth.password"
       value = var.prometheus-password
-    }
-
-    set {
-      name  = "destinations[1].url"
+    }, {
+      name  = "destinations.localLoki.url"
       value = var.loki-url
-    }
-
-    set {
-      name  = "destinations[1].auth.username"
+    }, {
+      name  = "destinations.localLoki.auth.username"
       value = var.loki-username
-    }
-
-    set {
-      name  = "destinations[1].auth.password"
+    }, {
+      name  = "destinations.localLoki.auth.password"
       value = var.loki-password
-    }
-
-    set {
-      name  = "destinations[1].tenantId"
+    }, {
+      name  = "destinations.localLoki.tenantId"
       value = var.loki-tenantid
     }
-  }
+  ]
+}

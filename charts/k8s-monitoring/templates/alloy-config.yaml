@@ -1,12 +1,12 @@
 {{- range $collectorName := include "collectors.list.enabled" . | fromYamlArray }}
 {{- $selfReportingEnabled := false }}
-{{- $destinations := (index $.Values $collectorName).includeDestinations | default list }}
+{{- $destinationNames := (index $.Values $collectorName).includeDestinations | default list }}
 {{- range $feature := include "features.list" $ | fromYamlArray }}
   {{- if has $collectorName (include (printf "features.%s.collectors" $feature) $ | fromYamlArray ) }}
     {{- if eq $feature "selfReporting" }}
       {{- $selfReportingEnabled = true }}
     {{- end }}
-    {{- $destinations = concat $destinations ((include (printf "features.%s.destinations" $feature) $) | fromYamlArray) }}
+    {{- $destinationNames = concat $destinationNames ((include (printf "features.%s.destinations" $feature) $) | fromYamlArray) }}
   {{- end }}
 {{- end }}
 
@@ -23,7 +23,7 @@
 {{- $alloyConfig = cat $alloyConfig (include "collectors.liveDebugging.alloy" $collectorValues | trim | nindent 0) }}
 {{- $alloyConfig = cat $alloyConfig (include "collectors.remoteConfig.alloy" $values | trim | nindent 0) }}
 {{- $alloyConfig = cat $alloyConfig (include "collectors.extraConfig.alloy" $values | trim | nindent 0) }}
-{{- $alloyConfig = cat $alloyConfig (include "destinations.alloy.config" (deepCopy $ | merge (dict "names" $destinations)) | trim | nindent 0) }}
+{{- $alloyConfig = cat $alloyConfig (include "destinations.alloy.config" (deepCopy $ | merge (dict "destinationNames" ($destinationNames | uniq | sortAlpha))) | trim | nindent 0) }}
 
 {{/* Remove all trailing whitespace */}}
 {{- $alloyConfig = regexReplaceAll `[ \t]+(\r?\n)` $alloyConfig "\n" }}

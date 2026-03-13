@@ -1,13 +1,15 @@
 # yamllint disable rule:document-start rule:line-length rule:trailing-spaces
-suite: Test - Cluster Metrics - Control Plane Monitoring
+suite: Feature - Cluster Metrics - Control Plane Monitoring
 templates:
-  - configmap.yaml
+  - test/configmap.yaml
 tests:
   - it: should render the configuration with control plane components included
     set:
-      deployAsConfigMap: true
+      testing: {enabled: true}
       controlPlane:
         enabled: true
+      kube-state-metrics:
+        enabled: false
     asserts:
       - isKind:
           of: ConfigMap

@@ -4,7 +4,7 @@ HAS_SHELLSPEC := $(shell command -v shellspec;)
 CHART_TEMPLATE_FILES = $(shell find templates -name "*.tpl")
 CHART_YAML_FILES = $(shell find templates -name "*.yaml")
 
-FEATURE_CHARTS = $(shell find charts -name Chart.yaml -depth 2 -exec dirname {} \;)
+FEATURE_CHARTS = $(shell find charts -name Chart.yaml -mindepth 2 -maxdepth 2 -exec dirname {} \; | sort)
 
 SCHEMA_MODS_JSON_FILES = $(shell find schema-mods -name "*.json")
 SCHEMA_MODS_JQ_FILES = $(shell find schema-mods -name "*.jq")
@@ -22,6 +22,8 @@ COLLECTOR_SCHEMA_FILES = $(COLLECTOR_VALUES_FILES:collectors/%-values.yaml=./sch
 DESTINATION_VALUES_FILES = $(shell find destinations -name "*-values.yaml" | sort -u)
 DESTINATION_DOCS_FILES = $(DESTINATION_VALUES_FILES:destinations/%-values.yaml=./docs/destinations/%.md)
 DESTINATION_SCHEMA_FILES = $(DESTINATION_VALUES_FILES:destinations/%-values.yaml=./schema-mods/definitions/%-destination.schema.json)
+
+INTEGRATION_VALUES_FILES = $(shell find charts/feature-integrations/integrations -name "*-values.yaml" 2>/dev/null | sort -u)
 
 .SECONDEXPANSION:
 docs/collectors/%.md: collectors/%-values.yaml $$(wildcard docs/collectors/.doc_templates/%.gotmpl)
@@ -98,9 +100,58 @@ values.schema.json: values.yaml $(COLLECTOR_SCHEMA_FILES) $(DESTINATION_SCHEMA_F
 README.md: README.md.gotmpl values.yaml Chart.yaml
 	docker run --rm --platform linux/amd64 --volume $(shell pwd):/chart ghcr.io/grafana/helm-chart-toolbox-doc-generator --chart /chart > $@
 
+# AGENTS.md generation - auto-discovers features, destinations, and integrations
+AGENTS.md: AGENTS.md.gotmpl $(FEATURE_CHARTS) $(DESTINATION_VALUES_FILES) $(INTEGRATION_VALUES_FILES)
+	@cp AGENTS.md.gotmpl $@.tmp
+	@# Generate features list
+	@FEATURES_LIST=""; \
+	for chart in $(FEATURE_CHARTS); do \
+		name=$$(basename $$chart); \
+		desc=$$(yq '.description // "No description"' $$chart/Chart.yaml 2>/dev/null || echo "No description"); \
+		FEATURES_LIST="$$FEATURES_LIST\n-   \`$$name\` - $$desc"; \
+	done; \
+	awk -v features="$$FEATURES_LIST" '{ \
+		if (/<!-- BEGIN FEATURES -->/) { print; printf "%s\n", features; skip=1 } \
+		else if (/<!-- END FEATURES -->/) { skip=0; print } \
+		else if (!skip) print \
+	}' $@.tmp > $@.tmp2 && mv $@.tmp2 $@.tmp
+	@# Generate destinations list
+	@DEST_LIST=""; \
+	for file in $(DESTINATION_VALUES_FILES); do \
+		name=$$(basename $$file -values.yaml); \
+		case $$name in \
+			prometheus) desc="Remote write to Prometheus-compatible endpoint";; \
+			loki) desc="Send logs to Loki";; \
+			loki-stdout) desc="Send logs to stdout (debugging)";; \
+			otlp) desc="Send to any OTLP endpoint (Tempo, Grafana Cloud, etc.)";; \
+			pyroscope) desc="Send profiles to Pyroscope";; \
+			custom) desc="Custom destination configuration";; \
+			*) desc="Send data to $$name";; \
+		esac; \
+		DEST_LIST="$$DEST_LIST\n-   \`$$name\` - $$desc"; \
+	done; \
+	awk -v destinations="$$DEST_LIST" '{ \
+		if (/<!-- BEGIN DESTINATIONS -->/) { print; printf "%s\n", destinations; skip=1 } \
+		else if (/<!-- END DESTINATIONS -->/) { skip=0; print } \
+		else if (!skip) print \
+	}' $@.tmp > $@.tmp2 && mv $@.tmp2 $@.tmp
+	@# Generate integrations list
+	@INT_LIST=""; \
+	for file in $(INTEGRATION_VALUES_FILES); do \
+		name=$$(basename $$file -values.yaml); \
+		INT_LIST="$$INT_LIST\n-   \`$$name\` - Monitor $$name"; \
+	done; \
+	awk -v integrations="$$INT_LIST" '{ \
+		if (/<!-- BEGIN INTEGRATIONS -->/) { print; printf "%s\n", integrations; skip=1 } \
+		else if (/<!-- END INTEGRATIONS -->/) { skip=0; print } \
+		else if (!skip) print \
+	}' $@.tmp > $@.tmp2 && mv $@.tmp2 $@.tmp
+	@mv $@.tmp $@
+
 # Example targets
 EXAMPLE_RELEASE_NAME=k8smon
-EXAMPLE_VALUES_FILES := $(shell find docs/examples -name values.yaml)
+NON_RENDERED_EXAMPLE_VALUES_FILES = $(shell find docs/examples -name .no-render | sed 's/.no-render/values.yaml/')
+EXAMPLE_VALUES_FILES := $(filter-out $(NON_RENDERED_EXAMPLE_VALUES_FILES),$(shell find docs/examples -name values.yaml))
 EXAMPLE_OUTPUT_FILES := $(EXAMPLE_VALUES_FILES:values.yaml=output.yaml)
 EXAMPLE_ALLOY_FILES = $(foreach file,$(EXAMPLE_VALUES_FILES),$(call alloy_configs, $(file)))
 EXAMPLE_README_FILES := $(EXAMPLE_VALUES_FILES:values.yaml=README.md)
@@ -184,7 +235,7 @@ platform-test-checks: $(PLATFORM_TEST_OUTPUT_FILES)
 
 .PHONY: clean
 clean: clean-examples
-	rm -f README.md values.schema.json templates/destinations/_destination_types.tpl schema-mods/destination.json
+	rm -f README.md AGENTS.md values.schema.json templates/destinations/_destination_types.tpl schema-mods/destination.json
 	rm -f collectors/upstream/alloy-values.yaml $(COLLECTOR_SCHEMA_FILES) $(COLLECTOR_DOCS_FILES)
 	rm -f $(DESTINATION_SCHEMA_FILES) $(DESTINATION_DOCS_FILES)
 	set -e && \
@@ -204,7 +255,7 @@ build-features:
 
 # Build targets
 .PHONY: build
-build: build-features README.md values.schema.json templates/destinations/_destination_types.tpl collectors/upstream/alloy-values.yaml $(COLLECTOR_DOCS_FILES) $(DESTINATION_DOCS_FILES) examples integration-test-checks platform-test-checks
+build: build-features README.md AGENTS.md values.schema.json templates/destinations/_destination_types.tpl collectors/upstream/alloy-values.yaml $(COLLECTOR_DOCS_FILES) $(DESTINATION_DOCS_FILES) examples integration-test-checks platform-test-checks
 
 # Test targets
 .PHONY: test unittest lint-helm lint-configs

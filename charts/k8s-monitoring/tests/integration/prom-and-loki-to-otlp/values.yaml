@@ -3,7 +3,7 @@ cluster:
   name: prom-and-loki-to-otlp-test
 
 destinations:
-  - name: prometheus
+  prometheus:
     type: otlp
     protocol: http
     url: http://prometheus-server.prometheus.svc:9090/api/v1/otlp
@@ -18,7 +18,7 @@ destinations:
     traces: {enabled: false}
     clusterLabels: [k8s.cluster.name]
 
-  - name: loki
+  loki:
     type: otlp
     protocol: http
     url: http://loki.loki.svc:3100/otlp
@@ -34,6 +34,11 @@ destinations:
 
 clusterMetrics:
   enabled: true
+
+hostMetrics:
+  enabled: true
+  linuxHosts:
+    enabled: true
 
 clusterEvents:
   enabled: true
@@ -74,3 +79,9 @@ alloy-logs:
   enabled: true
   liveDebugging:
     enabled: true
+
+telemetryServices:
+  kube-state-metrics:
+    deploy: true
+  node-exporter:
+    deploy: true

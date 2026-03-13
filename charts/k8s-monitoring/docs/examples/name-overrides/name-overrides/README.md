@@ -14,21 +14,40 @@ cluster:
 
 
 destinations:
-  - name: prometheus
+  prometheus:
     type: prometheus
     url: http://prometheus.prometheus.svc:9090/api/v1/write
 
 clusterMetrics:
   enabled: true
-  node-exporter:
-    nameOverride: node-metric-source
+
+costMetrics:
+  enabled: true
+  opencost:
+    labelMatchers:
+      app.kubernetes.io/name: cost-metric-source
+
+hostMetrics:
+  enabled: true
+  energyMetrics:
+    enabled: true
+    labelMatchers:
+      app.kubernetes.io/name: energy-metric-source
+  linuxHosts:
     labelMatchers:
       app.kubernetes.io/name: node-metric-source
+
+telemetryServices:
+  kube-state-metrics:
+    deploy: true
   kepler:
-    enabled: true
+    deploy: true
     nameOverride: energy-metric-source
+  node-exporter:
+    deploy: true
+    nameOverride: node-metric-source
   opencost:
-    enabled: true
+    deploy: true
     nameOverride: cost-metric-source
     metricsSource: prometheus
     opencost:

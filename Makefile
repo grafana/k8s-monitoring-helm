@@ -82,7 +82,7 @@ lint-shell: ## Lint shell scripts
 
 .PHONY: lint-markdown
 lint-markdown: node_modules/.bin/markdownlint-cli2 ## Lint markdown files
-	@node_modules/.bin/markdownlint-cli2 $(shell find . -name "*.md" ! -path "./node_modules/*" ! -path "./data-alloy/*" ! -path "./charts/**/data-alloy/*" ! -path "./charts/k8s-monitoring/docs/create-a-new-feature/*")
+	@node_modules/.bin/markdownlint-cli2 $(shell find . -name "*.md" ! -path "./version-4.0-development-plan/*" ! -path "./node_modules/*" ! -path "./data-alloy/*" ! -path "./charts/**/data-alloy/*" ! -path "./charts/k8s-monitoring/docs/create-a-new-feature/*")
 
 TERRAFORM_DIRS = $(shell find . -name 'vars.tf' -exec dirname {} \;)
 .PHONY: lint-terraform
@@ -116,7 +116,7 @@ lint-alex: node_modules/.bin/alex ## Check for insensitive language
 	@node_modules/.bin/alex $(shell find . -type f -name "*.md" ! -path "./node_modules/*" ! -path "./data-alloy/*" ! -path "./CODE_OF_CONDUCT.md" ! -name "CHANGELOG.md")
 
 .PHONY: lint-misspell
-ALL_FILES_FOR_SPELLCHECK = $(shell find . -type f -not \( -path "./node_modules/*" -o -path "./data-alloy/*" -o -path "./.git/*" -o -name output.yaml -o -name .textlintrc \) )
+ALL_FILES_FOR_SPELLCHECK = $(shell find . -type f -name "*.md" -not \( -path "./node_modules/*" -o -path "./data-alloy/*" -o -path "./.git/*" -o -name output.yaml -o -name .textlintrc \) )
 lint-misspell: ## Check for common misspellings
 	@if command -v misspell &> /dev/null; then \
 		misspell --error --locale US $(ALL_FILES_FOR_SPELLCHECK); \

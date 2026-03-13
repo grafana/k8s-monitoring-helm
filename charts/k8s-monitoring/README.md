@@ -105,7 +105,7 @@ cluster:
 ([Documentation](./docs/destinations/README.md))
 
 This section defines the destinations for your telemetry data. You can configure multiple destinations for logs,
-metrics, and traces. Here are the supported destination types:
+metrics, traces, and profiles. Here are the supported destination types:
 
 | Type         | Protocol         | Telemetry Data        | Docs                                      |
 |--------------|------------------|-----------------------|-------------------------------------------|
@@ -118,30 +118,6 @@ Here is an example of a destinations section:
 
 ```yaml
 destinations:
-  - name: hostedMetrics
-    type: prometheus
-    url: https://prometheus.example.com/api/prom/push
-    auth:
-      type: basic
-      username: "my-username"
-      password: "my-password"
-  - name: localPrometheus
-    type: prometheus
-    url: http://prometheus.monitoring.svc.cluster.local:9090
-  - name: hostedLogs
-    type: loki
-    url: https://loki.example.com/loki/api/v1/push
-    auth:
-      type: basic
-      username: "my-username"
-      password: "my-password"
-      tenantIdFrom: env("LOKI_TENANT_ID")
-```
-
-Alternatively, you may also define a map of destinations. The key for each destination in the map will be used as the name.
-
-```yaml
-destinationsMap:
   hostedMetrics:
     type: prometheus
     url: https://prometheus.example.com/api/prom/push
@@ -247,6 +223,8 @@ details:
 |  | autoInstrumentation(feature-auto-instrumentation) | 1.0.0 |
 |  | clusterEvents(feature-cluster-events) | 1.0.0 |
 |  | clusterMetrics(feature-cluster-metrics) | 1.0.0 |
+|  | costMetrics(feature-cost-metrics) | 1.0.0 |
+|  | hostMetrics(feature-host-metrics) | 1.0.0 |
 |  | integrations(feature-integrations) | 1.0.0 |
 |  | nodeLogs(feature-node-logs) | 1.0.0 |
 |  | podLogs(feature-pod-logs) | 1.0.0 |
@@ -255,9 +233,11 @@ details:
 |  | profilesReceiver(feature-profiles-receiver) | 1.0.0 |
 |  | profiling(feature-profiling) | 1.0.0 |
 |  | prometheusOperatorObjects(feature-prometheus-operator-objects) | 1.0.0 |
+|  | telemetryServices(telemetry-services) | 1.0.0 |
 | https://grafana.github.io/helm-charts | alloy-operator | 0.5.2 |
 <!-- markdownlint-enable no-bare-urls -->
 
+<!--alex disable host-hostess-->
 ## Values
 
 ### Collectors - Alloy Logs
@@ -361,12 +341,19 @@ details:
 |-----|------|---------|-------------|
 | collectorCommon.alloy | object | `{}` | Settings to apply to all Alloy instances created by this Helm chart. This includes Alloy instances created by enabling Tail Sampling or Service Graph Metrics. |
 
+### Features - Cost Metrics
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| costMetrics | object | Disabled | Cost Metrics captures cost metrics from the Kubernetes cluster and its workloads. Requires a destination that supports metrics. To see the valid options, please see the [Cost Metrics feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-cost-metrics). |
+| costMetrics.destinations | list | `[]` | The destinations where cluster metrics will be sent. If empty, all metrics-capable destinations will be used. |
+| costMetrics.enabled | bool | `false` | Enable gathering Kubernetes Cost metrics. |
+
 ### Destinations
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| destinations | list | `[]` | The list of destinations where telemetry data will be sent. See the [destinations documentation](https://github.com/grafana/k8s-monitoring-helm/blob/main/charts/k8s-monitoring/docs/destinations/README.md) for more information. |
-| destinationsMap | object | `{}` | A map of destinations where telemetry data will be sent. Keys will be used as the destination name. See the [destinations documentation](https://github.com/grafana/k8s-monitoring-helm/blob/main/charts/k8s-monitoring/docs/destinations/README.md) for more information. |
+| destinations | object | `{}` | The destinations where telemetry data will be sent. See the [destinations documentation](https://github.com/grafana/k8s-monitoring-helm/blob/main/charts/k8s-monitoring/docs/destinations/README.md) for more information. |
 
 ### Extra Objects
 
@@ -386,6 +373,14 @@ details:
 | global.scrapeNativeHistograms | bool | `false` | Whether to scrape native histograms. |
 | global.scrapeProtocols | list | `["OpenMetricsText1.0.0","OpenMetricsText0.0.1","PrometheusText0.0.4"]` | The protocols to negotiate during a Prometheus metrics scrape, in order of preference. |
 | global.scrapeTimeout | string | `"10s"` | The timeout for scraping metrics. |
+
+### Features - Host Metrics
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| hostMetrics | object | Disabled | Host metrics enables observability and monitoring for your Kubernetes Nodes. Requires a destination that supports metrics. To see the valid options, please see the [Host Metrics feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-host-metrics). |
+| hostMetrics.destinations | list | `[]` | The destinations where cluster metrics will be sent. If empty, all metrics-capable destinations will be used. |
+| hostMetrics.enabled | bool | `false` | Enable gathering Kubernetes Host metrics. |
 
 ### Features - Service Integrations
 
@@ -457,3 +452,14 @@ details:
 | selfReporting.destinations | list | `[]` | The destinations where self-report metrics will be sent. If empty, all metrics-capable destinations will be used. |
 | selfReporting.enabled | bool | `true` | Enable Self-reporting. |
 | selfReporting.scrapeInterval | string | 60s | How frequently to generate self-report metrics. This does utilize the global scrapeInterval setting. |
+
+### Telemetry Services
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| telemetryServices.kepler.deploy | bool | `false` | Deploy [Kepler](https://sustainable-computing.io/) to gather energy usage metrics from the Kubernetes Cluster nodes. |
+| telemetryServices.kube-state-metrics.deploy | bool | `false` | Deploy kube-state-metrics to expose Kubernetes object metadata as Prometheus metrics. |
+| telemetryServices.node-exporter.deploy | bool | `false` | Deploy Node Exporter to gather Linux node hardware and OS metrics. |
+| telemetryServices.opencost.deploy | bool | `false` | Deploy OpenCost to calculate and expose Kubernetes cost allocation metrics. |
+| telemetryServices.windows-exporter.deploy | bool | `false` | Deploy Windows Exporter to gather Windows node hardware and OS metrics. |
+<!--alex enable host-hostess-->
