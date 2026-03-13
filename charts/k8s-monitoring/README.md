@@ -105,7 +105,7 @@ cluster:
 ([Documentation](./docs/destinations/README.md))
 
 This section defines the destinations for your telemetry data. You can configure multiple destinations for logs,
-metrics, and traces. Here are the supported destination types:
+metrics, traces, and profiles. Here are the supported destination types:
 
 | Type         | Protocol         | Telemetry Data        | Docs                                      |
 |--------------|------------------|-----------------------|-------------------------------------------|
@@ -118,30 +118,6 @@ Here is an example of a destinations section:
 
 ```yaml
 destinations:
-  - name: hostedMetrics
-    type: prometheus
-    url: https://prometheus.example.com/api/prom/push
-    auth:
-      type: basic
-      username: "my-username"
-      password: "my-password"
-  - name: localPrometheus
-    type: prometheus
-    url: http://prometheus.monitoring.svc.cluster.local:9090
-  - name: hostedLogs
-    type: loki
-    url: https://loki.example.com/loki/api/v1/push
-    auth:
-      type: basic
-      username: "my-username"
-      password: "my-password"
-      tenantIdFrom: env("LOKI_TENANT_ID")
-```
-
-Alternatively, you may also define a map of destinations. The key for each destination in the map will be used as the name.
-
-```yaml
-destinationsMap:
   hostedMetrics:
     type: prometheus
     url: https://prometheus.example.com/api/prom/push
@@ -377,8 +353,7 @@ details:
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| destinations | list | `[]` | The list of destinations where telemetry data will be sent. See the [destinations documentation](https://github.com/grafana/k8s-monitoring-helm/blob/main/charts/k8s-monitoring/docs/destinations/README.md) for more information. |
-| destinationsMap | object | `{}` | A map of destinations where telemetry data will be sent. Keys will be used as the destination name. See the [destinations documentation](https://github.com/grafana/k8s-monitoring-helm/blob/main/charts/k8s-monitoring/docs/destinations/README.md) for more information. |
+| destinations | object | `{}` | The destinations where telemetry data will be sent. See the [destinations documentation](https://github.com/grafana/k8s-monitoring-helm/blob/main/charts/k8s-monitoring/docs/destinations/README.md) for more information. |
 
 ### Extra Objects
 

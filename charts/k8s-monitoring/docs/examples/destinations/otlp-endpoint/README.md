@@ -18,7 +18,7 @@ cluster:
   name: otlp-gateway-test
 
 destinations:
-  - name: otlp-gateway
+  otlp-gateway:
     type: otlp
     url: https://otlp-gateway-my-region.grafana.net/otlp
     protocol: http

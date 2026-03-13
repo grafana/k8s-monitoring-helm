@@ -150,7 +150,8 @@ AGENTS.md: AGENTS.md.gotmpl $(FEATURE_CHARTS) $(DESTINATION_VALUES_FILES) $(INTE
 
 # Example targets
 EXAMPLE_RELEASE_NAME=k8smon
-EXAMPLE_VALUES_FILES := $(shell find docs/examples -name values.yaml)
+NON_RENDERED_EXAMPLE_VALUES_FILES = $(shell find docs/examples -name .no-render | sed 's/.no-render/values.yaml/')
+EXAMPLE_VALUES_FILES := $(filter-out $(NON_RENDERED_EXAMPLE_VALUES_FILES),$(shell find docs/examples -name values.yaml))
 EXAMPLE_OUTPUT_FILES := $(EXAMPLE_VALUES_FILES:values.yaml=output.yaml)
 EXAMPLE_ALLOY_FILES = $(foreach file,$(EXAMPLE_VALUES_FILES),$(call alloy_configs, $(file)))
 EXAMPLE_README_FILES := $(EXAMPLE_VALUES_FILES:values.yaml=README.md)

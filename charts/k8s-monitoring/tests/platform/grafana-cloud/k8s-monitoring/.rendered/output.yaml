@@ -1319,6 +1319,42 @@ data:
     }
     
     
+    // Destination: grafana-cloud-logs (loki)
+    otelcol.exporter.loki "grafana_cloud_logs" {
+      forward_to = [loki.write.grafana_cloud_logs.receiver]
+    }
+    
+    loki.write "grafana_cloud_logs" {
+      endpoint {
+        url = "https://logs-prod-006.grafana.net/loki/api/v1/push"
+        retry_on_http_429 = true
+        tenant_id = convert.nonsensitive(remote.kubernetes.secret.grafana_cloud_logs.data["tenantId"])
+        basic_auth {
+          username = convert.nonsensitive(remote.kubernetes.secret.grafana_cloud_logs.data["logsUser"])
+          password = remote.kubernetes.secret.grafana_cloud_logs.data["grafanaCloudAccessPolicyToken"]
+        }
+        tls_config {
+          insecure_skip_verify = false
+          ca_pem = convert.nonsensitive(remote.kubernetes.secret.grafana_cloud_logs.data["ca"])
+          cert_pem = convert.nonsensitive(remote.kubernetes.secret.grafana_cloud_logs.data["cert"])
+          key_pem = remote.kubernetes.secret.grafana_cloud_logs.data["key"]
+        }
+        min_backoff_period = "500ms"
+        max_backoff_period = "5m"
+        max_backoff_retries = "10"
+      }
+      external_labels = {
+        "cluster" = "k8s-monitoring-gc-feature-test",
+        "k8s_cluster_name" = "k8s-monitoring-gc-feature-test",
+      }
+    }
+    
+    remote.kubernetes.secret "grafana_cloud_logs" {
+      name      = "grafana-cloud-credentials"
+      namespace = "default"
+    }
+    
+    
     // Destination: grafana-cloud-metrics (prometheus)
     otelcol.exporter.prometheus "grafana_cloud_metrics" {
       add_metric_suffixes = true
@@ -1379,41 +1415,6 @@ data:
     }
     
     remote.kubernetes.secret "grafana_cloud_metrics" {
-      name      = "grafana-cloud-credentials"
-      namespace = "default"
-    }
-    
-    // Destination: grafana-cloud-logs (loki)
-    otelcol.exporter.loki "grafana_cloud_logs" {
-      forward_to = [loki.write.grafana_cloud_logs.receiver]
-    }
-    
-    loki.write "grafana_cloud_logs" {
-      endpoint {
-        url = "https://logs-prod-006.grafana.net/loki/api/v1/push"
-        retry_on_http_429 = true
-        tenant_id = convert.nonsensitive(remote.kubernetes.secret.grafana_cloud_logs.data["tenantId"])
-        basic_auth {
-          username = convert.nonsensitive(remote.kubernetes.secret.grafana_cloud_logs.data["logsUser"])
-          password = remote.kubernetes.secret.grafana_cloud_logs.data["grafanaCloudAccessPolicyToken"]
-        }
-        tls_config {
-          insecure_skip_verify = false
-          ca_pem = convert.nonsensitive(remote.kubernetes.secret.grafana_cloud_logs.data["ca"])
-          cert_pem = convert.nonsensitive(remote.kubernetes.secret.grafana_cloud_logs.data["cert"])
-          key_pem = remote.kubernetes.secret.grafana_cloud_logs.data["key"]
-        }
-        min_backoff_period = "500ms"
-        max_backoff_period = "5m"
-        max_backoff_retries = "10"
-      }
-      external_labels = {
-        "cluster" = "k8s-monitoring-gc-feature-test",
-        "k8s_cluster_name" = "k8s-monitoring-gc-feature-test",
-      }
-    }
-    
-    remote.kubernetes.secret "grafana_cloud_logs" {
       name      = "grafana-cloud-credentials"
       namespace = "default"
     }
@@ -1869,7 +1870,6 @@ data:
         logs = [otelcol.processor.attributes.grafana_cloud_otlp_endpoint.input]
       }
     }
-    
     otelcol.processor.attributes "grafana_cloud_otlp_endpoint" {
       output {
         metrics = [otelcol.processor.transform.grafana_cloud_otlp_endpoint.input]
@@ -5539,9 +5539,9 @@ spec:
               kubectl delete alloy/k8smon-alloy-receiver --ignore-not-found=true --wait
               kubectl wait --for=delete alloy/k8smon-alloy-receiver --timeout=60s || echo "Timed out waiting for deletion of alloy/k8smon-alloy-receiver or it may not exist."
 
-              echo "Deleting Alloy instance: alloy/k8smon-grafana-cloud-otlp-endpoint-sampler..."
-              kubectl delete alloy/k8smon-grafana-cloud-otlp-endpoint-sampler --ignore-not-found=true --wait
-              kubectl wait --for=delete alloy/k8smon-grafana-cloud-otlp-endpoint-sampler --timeout=60s || echo "Timed out waiting for deletion of alloy/k8smon-grafana-cloud-otlp-endpoint-sampler or it may not exist."
+              echo "Deleting Alloy instance: alloy/k8smon-%!s(<nil>)-sampler..."
+              kubectl delete alloy/k8smon-%!s(<nil>)-sampler --ignore-not-found=true --wait
+              kubectl wait --for=delete alloy/k8smon-%!s(<nil>)-sampler --timeout=60s || echo "Timed out waiting for deletion of alloy/k8smon-%!s(<nil>)-sampler or it may not exist."
 
               kubectl patch \
                 --namespace=default \

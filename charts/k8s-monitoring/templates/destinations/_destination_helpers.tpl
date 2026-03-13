@@ -1,5 +1,5 @@
 {{/* Inputs: destinations (array of destination names), type (string), feature (string) */}}
-{{- define "destinations.validate_destination_list" -}}
+{{- define "destinations.validate_destination_list" }}
 {{- if empty .destinations }}
 {{- $msg := list "" (printf "No destinations found that can accept %s from %s" .type .feature) }}
 {{- $msg = append $msg (printf "Please add a destination with %s support." .type) }}
@@ -8,25 +8,25 @@
 {{- end }}
 {{- end }}
 
-{{/* Inputs: destinations (array of destination definition), type (string), ecosystem (string), filter (list of destination names) */}}
+{{/* Inputs: destinations (map of destinations), type (string), ecosystem (string), filter (list of destination names) */}}
 {{/* Outputs: array of destination names that match the type, ecosystem, and filter */}}
-{{- define "destinations.get" -}}
+{{- define "destinations.get" }}
 {{- $destinations := list }}
 {{- $backupDestinations := list }}
-{{- range $destination := .destinations }}
+{{- range $destinationName, $destination := .destinations }}
   {{- /* Does this destination support the telemetry data type? */}}
   {{- if eq (include (printf "destinations.%s.supports_%s" $destination.type $.type) $destination) "true" }}
     {{- if empty $.filter }}
       {{- /* Is this destination in the ecosystem? */}}
       {{- if eq $.ecosystem (include (printf "destinations.%s.ecosystem" $destination.type) .) }}
-        {{- $destinations = append $destinations $destination.name }}
+        {{- $destinations = append $destinations $destinationName }}
       {{- else }}
-        {{- $backupDestinations = append $backupDestinations $destination.name }}
+        {{- $backupDestinations = append $backupDestinations $destinationName }}
       {{- end }}
 
     {{- /* Did the data source choose this destination? */}}
-    {{- else if has $destination.name $.filter }}
-      {{- $destinations = append $destinations $destination.name }}
+    {{- else if has $destinationName $.filter }}
+      {{- $destinations = append $destinations $destinationName }}
     {{- end }}
   {{- end }}
 {{- end }}
@@ -40,21 +40,9 @@
 {{- end }}
 
 {{/* Inputs: . (Values), destination (string, name of destination) */}}
-{{- define "destination.getEcosystem" -}}
-{{- $ecosystem := "unknown" }}
-{{- range $destination := .Values.destinations }}
-  {{- if eq $destination.name $.destination }}
-    {{- $ecosystem = include (printf "destinations.%s.ecosystem" $destination.type) $destination }}
-  {{- end }}
-{{- end }}
-{{- $ecosystem }}
-{{- end }}
-
-{{/* Inputs: . (Values), destination (string, name of destination) */}}
-{{- define "destination.getDestinationByName" -}}
-{{- range $destination := .Values.destinations }}
-  {{- if eq $destination.name $.destination }}
-    {{- $destination | toYaml | indent 0 }}
-  {{- end }}
-{{- end }}
+{{- define "destination.getEcosystem" }}
+{{- if hasKey .Values.destinations .destination }}
+  {{- $destination := get .Values.destinations .destination }}
+  {{- include (printf "destinations.%s.ecosystem" $destination.type) $destination }}
+{{- else }}unknown{{ end }}
 {{- end }}

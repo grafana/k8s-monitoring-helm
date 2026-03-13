@@ -14,7 +14,7 @@
 {{- include "feature.podLogsViaKubernetesApi.module" (dict "Values" .Values.podLogsViaKubernetesApi "Files" $.Subcharts.podLogsViaKubernetesApi.Files) }}
 pod_logs_via_kubernetes_api "feature" {
   logs_destinations = [
-    {{ include "destinations.alloy.targets" (dict "destinations" $.Values.destinations "names" $destinations "type" "logs" "ecosystem" "loki") | indent 4 | trim }}
+    {{ include "destinations.alloy.targets" (dict "destinations" $.Values.destinations "destinationNames" $destinations "type" "logs" "ecosystem" "loki") | indent 4 | trim }}
   ]
 }
 {{- end -}}

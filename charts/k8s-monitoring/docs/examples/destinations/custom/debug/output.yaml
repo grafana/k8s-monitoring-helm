@@ -352,8 +352,8 @@ data:
     }
     alloy_integration "integration" {
       metrics_destinations = [
-        prometheus.remote_write.prometheus.receiver,
         otelcol.receiver.prometheus.debug.receiver,
+        prometheus.remote_write.prometheus.receiver,
       ]
     }
     // Self Reporting
@@ -401,6 +401,33 @@ data:
     
     
     
+    
+    // Destination: debug (custom)
+    otelcol.receiver.prometheus "debug" {
+      output {
+        metrics = [otelcol.processor.filter.debug.input]
+      }
+    }
+    otelcol.receiver.loki "debug" {
+      output {
+        logs = [otelcol.processor.filter.debug.input]
+      }
+    }
+    
+    otelcol.processor.filter "debug" {
+      metrics {
+        metric = ["name != \"alloy_build_info\""]
+      }
+    
+      output {
+        metrics = [otelcol.exporter.debug.debug.input]
+        logs    = [otelcol.exporter.debug.debug.input]
+        traces  = [otelcol.exporter.debug.debug.input]
+      }
+    }
+    otelcol.exporter.debug "debug" {
+      verbosity = "detailed"
+    }
     
     // Destination: prometheus (prometheus)
     otelcol.exporter.prometheus "prometheus" {
@@ -450,32 +477,6 @@ data:
         min_keepalive_time = "5m"
         max_keepalive_time = "8h"
       }
-    }
-    // Destination: debug (custom)
-    otelcol.receiver.prometheus "debug" {
-      output {
-        metrics = [otelcol.processor.filter.debug.input]
-      }
-    }
-    otelcol.receiver.loki "debug" {
-      output {
-        logs = [otelcol.processor.filter.debug.input]
-      }
-    }
-    
-    otelcol.processor.filter "debug" {
-      metrics {
-        metric = ["name != \"alloy_build_info\""]
-      }
-    
-      output {
-        metrics = [otelcol.exporter.debug.debug.input]
-        logs    = [otelcol.exporter.debug.debug.input]
-        traces  = [otelcol.exporter.debug.debug.input]
-      }
-    }
-    otelcol.exporter.debug "debug" {
-      verbosity = "detailed"
     }
   self-reporting-metric.prom: |
     # HELP grafana_kubernetes_monitoring_build_info A metric to report the version of the Kubernetes Monitoring Helm chart
