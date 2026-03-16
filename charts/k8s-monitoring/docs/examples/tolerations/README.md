@@ -26,12 +26,15 @@ destinations:
 
 clusterMetrics:
   enabled: true
+  collector: alloy-metrics
 
 costMetrics:
   enabled: true
+  collector: alloy-metrics
 
 hostMetrics:
   enabled: true
+  collector: alloy-metrics
   energyMetrics:
     enabled: true
   linuxHosts:
@@ -41,6 +44,7 @@ hostMetrics:
 
 autoInstrumentation:
   enabled: true
+  collector: alloy-metrics
   spanMetricsOnly: true
   beyla:
     tolerations:
@@ -50,22 +54,24 @@ autoInstrumentation:
 
 podLogs:
   enabled: true
+  collector: alloy-logs
 
-alloy-metrics:
-  enabled: true
-  controller:
-    tolerations:
-      - key: protected-node
-        effect: NoSchedule
-        operator: Exists
+collectors:
+  alloy-metrics:
+    presets: [clustered, statefulset]
+    controller:
+      tolerations:
+        - key: protected-node
+          effect: NoSchedule
+          operator: Exists
 
-alloy-logs:
-  enabled: true
-  controller:
-    tolerations:
-      - key: protected-node
-        effect: NoSchedule
-        operator: Exists
+  alloy-logs:
+    presets: [filesystem-log-reader, daemonset]
+    controller:
+      tolerations:
+        - key: protected-node
+          effect: NoSchedule
+          operator: Exists
 
 alloy-operator:
   tolerations:

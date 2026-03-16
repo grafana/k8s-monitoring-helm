@@ -41,16 +41,15 @@ releases:
 
         clusterMetrics:
           enabled: true
+          collector: alloy-metrics
 
-<<<<<<< HEAD
         costMetrics:
-=======
-        costMetics:
->>>>>>> c496f595 ([4.0] Separate Telemetry services from config features (#2318))
           enabled: true
+          collector: alloy-metrics
 
         hostMetrics:
           enabled: true
+          collector: alloy-metrics
           linuxHosts:
             enabled: true
           windowsHosts:
@@ -60,18 +59,19 @@ releases:
 
         clusterEvents:
           enabled: true
+          collector: alloy-singleton
 
         podLogs:
           enabled: true
+          collector: alloy-logs
 
-        alloy-metrics:
-          enabled: true
-
-        alloy-singleton:
-          enabled: true
-
-        alloy-logs:
-          enabled: true
+        collectors:
+          alloy-metrics:
+            presets: [clustered, statefulset]
+          alloy-logs:
+            presets: [filesystem-log-reader, daemonset]
+          alloy-singleton:
+            presets: [singleton]
 
         telemetryServices:
           kube-state-metrics:

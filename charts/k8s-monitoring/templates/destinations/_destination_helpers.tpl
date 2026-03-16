@@ -1,13 +1,3 @@
-{{/* Inputs: destinations (array of destination names), type (string), feature (string) */}}
-{{- define "destinations.validate_destination_list" }}
-{{- if empty .destinations }}
-{{- $msg := list "" (printf "No destinations found that can accept %s from %s" .type .feature) }}
-{{- $msg = append $msg (printf "Please add a destination with %s support." .type) }}
-{{- $msg = append $msg "See https://github.com/grafana/k8s-monitoring-helm/blob/main/charts/k8s-monitoring/docs/destinations/README.md for more details." }}
-{{- fail (join "\n" $msg) }}
-{{- end }}
-{{- end }}
-
 {{/* Inputs: destinations (map of destinations), type (string), ecosystem (string), filter (list of destination names) */}}
 {{/* Outputs: array of destination names that match the type, ecosystem, and filter */}}
 {{- define "destinations.get" }}
@@ -42,7 +32,15 @@
 {{/* Inputs: . (Values), destination (string, name of destination) */}}
 {{- define "destination.getEcosystem" }}
 {{- if hasKey .Values.destinations .destination }}
-  {{- $destination := get .Values.destinations .destination }}
-  {{- include (printf "destinations.%s.ecosystem" $destination.type) $destination }}
+  {{- $destinationValues := get .Values.destinations .destination }}
+  {{- include (printf "destinations.%s.ecosystem" $destinationValues.type) $destinationValues }}
 {{- else }}unknown{{ end }}
+{{- end }}
+
+{{/* Inputs: . (Values), destinationName (string, name of destination) */}}
+{{- define "destination.supportsMetrics" }}
+{{- if hasKey .Values.destinations .destinationName }}
+  {{- $destinationValues := get .Values.destinations .destinationName }}
+  {{- include (printf "destinations.%s.supports_metrics" $destinationValues.type) $destinationValues }}
+{{- else }}false{{ end }}
 {{- end }}

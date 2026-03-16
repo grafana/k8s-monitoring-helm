@@ -9,6 +9,7 @@ destinations:
 
 prometheusOperatorObjects:
   enabled: true
+  collector: alloy-metrics
 
   serviceMonitors:
     enabled: true
@@ -28,11 +29,8 @@ prometheusOperatorObjects:
   scrapeConfigs:
     enabled: true
 
-  # Will be deployed by the prometheus-operator-crds chart
-  crds:
-    deploy: false
-
-alloy-metrics:
-  enabled: true
-  alloy:
-    stabilityLevel: experimental
+collectors:
+  alloy-metrics:
+    presets: [clustered, statefulset]
+    alloy:
+      stabilityLevel: experimental

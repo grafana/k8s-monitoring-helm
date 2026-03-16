@@ -34,11 +34,13 @@ destinations:
 
 annotationAutodiscovery:
   enabled: true
+  collector: alloy-metrics
   metricsTuning:
     excludeMetrics: ["go_*"]
 
 clusterMetrics:
   enabled: true
+  collector: alloy-metrics
   kube-state-metrics:
     metricsTuning:
       # No filtering, keep all metrics
@@ -61,6 +63,7 @@ clusterMetrics:
 
 hostMetrics:
   enabled: true
+  collector: alloy-metrics
   linuxHosts:
     enabled: true
     metricsTuning:
@@ -68,9 +71,9 @@ hostMetrics:
       # See https://grafana.com/docs/grafana-cloud/monitor-infrastructure/integrations/integration-reference/integration-linux-node/
       useIntegrationAllowList: true
 
-alloy-metrics:
-  enabled: true
-
+collectors:
+  alloy-metrics:
+    presets: [clustered, statefulset]
 
 telemetryServices:
   kube-state-metrics:

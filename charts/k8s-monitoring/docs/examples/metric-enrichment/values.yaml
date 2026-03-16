@@ -12,19 +12,22 @@ destinations:
 
 clusterMetrics:
   enabled: true
+  collector: alloy-metrics
 
 hostMetrics:
   enabled: true
+  collector: alloy-metrics
   linuxHosts:
     enabled: true
   windowsHosts:
     enabled: true
 
-alloy-metrics:
-  enabled: true
-  includeDestinations: [metric-store]
-  alloy:
-    stabilityLevel: experimental
+collectors:
+  alloy-metrics:
+    presets: [clustered, statefulset]
+    includeDestinations: [metric-store]
+    alloy:
+      stabilityLevel: experimental
 
 telemetryServices:
   kube-state-metrics:

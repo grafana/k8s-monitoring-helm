@@ -22,9 +22,11 @@ destinations:
 
 autoInstrumentation:
   enabled: true
+  collector: alloy-metrics
   spanMetricsOnly: true
 
-alloy-metrics:
-  enabled: true
+collectors:
+  alloy-metrics:
+    presets: [clustered, statefulset]
 ```
 <!-- textlint-enable terminology -->

@@ -86,16 +86,8 @@ autoInstrumentation:
           unmatched: heuristic
   preset: application
 
-alloy-metrics:
-  enabled: true
-
-alloy-receiver:
-  enabled: true
+collectors:
   alloy:
-    extraPorts:
-      - name: otlp-grpc
-        port: 4317
-        targetPort: 4317
-        protocol: TCP
+    presets: [clustered, statefulset]
 ```
 <!-- textlint-enable terminology -->

@@ -1,11 +1,5 @@
 {{- define "features.profilesReceiver.enabled" }}{{ .Values.profilesReceiver.enabled }}{{- end }}
 
-{{- define "features.profilesReceiver.collectors" }}
-{{- if .Values.profilesReceiver.enabled -}}
-- {{ .Values.profilesReceiver.collector }}
-{{- end }}
-{{- end }}
-
 {{- define "features.profilesReceiver.include" }}
 {{- if .Values.profilesReceiver.enabled -}}
 {{- $destinations := include "features.profilesReceiver.destinations" . | fromYamlArray }}
@@ -39,26 +33,28 @@ profiles_receiver "feature" {
 
 {{- define "features.profilesReceiver.collector.values" }}
 {{- if .Values.profilesReceiver.enabled -}}
-{{- $values := dict }}
-{{- range $collector := include "features.profilesReceiver.collectors" . | fromYamlArray }}
-  {{- $extraPorts := deepCopy (dig "alloy" "extraPorts" list (index $.Values $collector)) }}
-  {{- if eq (include "collectors.has_extra_port" (deepCopy $ | merge (dict "name" $collector "portNumber" $.Values.profilesReceiver.port))) "false" }}
+  {{- $values := dict }}
+  {{- $collectorName := include "collectors.getCollectorForFeature" (dict "Values" $.Values "featureKey" "profilesReceiver") }}
+  {{- $collectorValues := (include "collector.alloy.values" (dict "Values" $.Values "Files" $.Files "collectorName" $collectorName) | fromYaml) }}
+  {{- $extraPorts := deepCopy (dig "alloy" "extraPorts" list $collectorValues) }}
+  {{- if eq (include "collectors.hasExtraPort" (deepCopy $ | merge (dict "collectorName" $collectorName "portNumber" $.Values.profilesReceiver.port))) "false" }}
     {{- $extraPorts = append $extraPorts (dict "name" "profiles" "port" $.Values.profilesReceiver.port "targetPort" $.Values.profilesReceiver.port "protocol" "TCP") }}
   {{- end -}}
-  {{- $values = $values | merge (dict $collector (dict "alloy" (dict "extraPorts" $extraPorts))) }}
-{{- end -}}
+  {{- $values = $values | merge (dict "collectors" (dict $collectorName (dict "alloy" (dict "extraPorts" $extraPorts)))) }}
 {{- $values | toYaml }}
 {{- end -}}
 {{- end -}}
 
+{{- define "features.profilesReceiver.chooseCollector" -}}{{- end -}}
+
 {{- define "features.profilesReceiver.validate" }}
 {{- if .Values.profilesReceiver.enabled -}}
+{{- $featureKey := "profilesReceiver" }}
 {{- $featureName := "Profiles Receiver" }}
 {{- $destinations := include "features.profilesReceiver.destinations" . | fromYamlArray }}
-{{- include "destinations.validate_destination_list" (dict "destinations" $destinations "type" "profiles" "ecosystem" "pyroscope" "feature" $featureName) }}
-{{- range $collector := include "features.profilesReceiver.collectors" . | fromYamlArray }}
-  {{- include "collectors.require_collector" (dict "Values" $.Values "name" $collector "feature" $featureName) }}
-  {{- include "collectors.require_extra_port" (dict "Values" $.Values "name" $collector "feature" $featureName "portNumber" $.Values.profilesReceiver.port "portName" "profiles" "portProtocol" "TCP") }}
-{{- end -}}
+{{- include "destinations.validate.destinationListNotEmpty" (dict "destinations" $destinations "type" "profiles" "ecosystem" "pyroscope" "featureName" $featureName) }}
+{{- $collectorName := include "collectors.getCollectorForFeature" (dict "Values" $.Values "featureKey" $featureKey) }}
+{{- include "collectors.validate.collectorIsAssigned" (dict "Values" $.Values "collectorName" $collectorName "featureKey" $featureKey "featureName" $featureName) }}
+{{- include "collectors.requireExtraPort" (dict "Values" $.Values "collectorName" $collectorName "featureName" $featureName "portNumber" $.Values.profilesReceiver.port "portName" "profiles" "portProtocol" "TCP") }}
 {{- end -}}
 {{- end -}}

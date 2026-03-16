@@ -27,7 +27,8 @@ integrations:
         labelSelectors:
           app.kubernetes.io/name: alloy-metrics
 
-alloy-metrics:
-  enabled: true
+collectors:
+  alloy-metrics:
+    presets: [clustered, statefulset]
 ```
 <!-- textlint-enable terminology -->

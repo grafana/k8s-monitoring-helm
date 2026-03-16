@@ -26,7 +26,8 @@ integrations:
         labelSelectors:
           app.kubernetes.io/component: etcd
 
-alloy-metrics:
-  enabled: true
+collectors:
+  alloy-metrics:
+    presets: [clustered, statefulset]
 ```
 <!-- textlint-enable terminology -->

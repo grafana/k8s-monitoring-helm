@@ -8,7 +8,7 @@
     {{- $maxLength := 51 }}{{/* This limit is from the `controller-revision-hash` pod label value*/}}
     {{- $collectorName := printf "%s-%s" $.Release.Name (include "helper.k8s_name" (printf "%s-sampler" $destinationName)) | trunc $maxLength | trimSuffix "-" | lower }}
     {{- $collectorValues := merge (dict "fullnameOverride" $collectorName) ($destination.processors.tailSampling.collector | default dict) }}
-    {{- $values := (deepCopy $ | merge (dict "collectorName" $collectorName "collectorValues" $collectorValues)) }}
+    {{- $values := (dict "Values" $.Values "Files" $.Files "collectorName" $collectorName "collectorValues" $collectorValues) }}
     {{- $alloyValues := include "collector.alloy.values" $values | fromYaml }}
 
     {{- /* Sampler config components */}}

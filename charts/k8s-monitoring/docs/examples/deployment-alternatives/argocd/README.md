@@ -71,20 +71,29 @@ spec:
               password: lokipassword
         clusterMetrics:
           enabled: true
+          collector: alloy-metrics
+
         costMetrics:
           enabled: true
+          collector: alloy-metrics
+
         hostMetrics:
           enabled: true
+          collector: alloy-metrics
           linuxHosts:
             enabled: true
           windowsHosts:
             enabled: true
           energyMetrics:
             enabled: true
+
         clusterEvents:
           enabled: true
+          collector: alloy-singleton
+
         podLogs:
           enabled: true
+          collector: alloy-logs
           labelsToKeep:
             - app.kubernetes.io/name
             - container
@@ -106,16 +115,20 @@ spec:
             - pod
           structuredMetadata:
             pod: ""
-        alloy-metrics:
-          enabled: true
-        alloy-singleton:
-          enabled: true
-        alloy-logs:
-          enabled: true
+
+        collectors:
+          alloy-metrics:
+            presets: [clustered, statefulset]
+          alloy-logs:
+            presets: [filesystem-log-reader, daemonset]
+          alloy-singleton:
+            presets: [singleton]
+
         collectorCommon:
           alloy:
             annotations:
               argocd.argoproj.io/sync-wave: "1"
+
         telemetryServices:
           kube-state-metrics:
             deploy: true

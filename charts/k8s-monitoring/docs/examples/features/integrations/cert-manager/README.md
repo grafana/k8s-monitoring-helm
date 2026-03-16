@@ -26,7 +26,8 @@ integrations:
         labelSelectors:
           app.kubernetes.io/name: cert-manager
 
-alloy-metrics:
-  enabled: true
+collectors:
+  alloy-metrics:
+    presets: [clustered, statefulset]
 ```
 <!-- textlint-enable terminology -->

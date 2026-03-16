@@ -45,9 +45,10 @@ clusterEvents:
   enabled: true
   destinations: [kafka]
 
-alloy-singleton:
-  enabled: true
-  liveDebugging:
-    enabled: true
+collectors:
+  alloy-singleton:
+    presets: [singleton]
+    liveDebugging:
+      enabled: true
 ```
 <!-- textlint-enable terminology -->

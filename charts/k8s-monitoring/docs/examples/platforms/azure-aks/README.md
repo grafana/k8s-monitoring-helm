@@ -40,13 +40,16 @@ destinations:
 
 clusterMetrics:
   enabled: true
+  collector: alloy-metrics
   kube-state-metrics:
     podAnnotations: {kubernetes.azure.com/set-kube-service-host-fqdn: "true"}
 
 clusterEvents:
   enabled: true
+  collector: alloy-singleton
 
 hostMetrics:
+  collector: alloy-metrics
   linuxHosts:
     enabled: true
   windowsHosts:
@@ -54,18 +57,22 @@ hostMetrics:
 
 podLogs:
   enabled: true
+  collector: alloy-logs
 
 collectorCommon:
   alloy:
     controller:
       podAnnotations: {kubernetes.azure.com/set-kube-service-host-fqdn: "true"}
 
-alloy-metrics:
-  enabled: true
-alloy-singleton:
-  enabled: true
-alloy-logs:
-  enabled: true
+collectors:
+  alloy-metrics:
+    presets: [clustered, statefulset]
+
+  alloy-singleton:
+    presets: [singleton]
+
+  alloy-logs:
+    presets: [filesystem-log-reader, daemonset]
 
 telemetryServices:
   kube-state-metrics:

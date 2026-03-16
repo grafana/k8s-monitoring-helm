@@ -23,18 +23,21 @@ destinations:
 
 clusterMetrics:
   enabled: true
+  collector: alloy-metrics
   kube-state-metrics:
     discoveryType: service
 
 hostMetrics:
   enabled: true
+  collector: alloy-metrics
   linuxHosts:
     enabled: true
   windowsHosts:
     enabled: true
 
-alloy-metrics:
-  enabled: true
+collectors:
+  alloy-metrics:
+    presets: [clustered, statefulset]
 
 telemetryServices:
   kube-state-metrics:
