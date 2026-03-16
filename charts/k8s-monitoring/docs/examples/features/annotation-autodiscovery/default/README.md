@@ -34,8 +34,10 @@ destinations:
 
 annotationAutodiscovery:
   enabled: true
+  collector: alloy-metrics
 
-alloy-metrics:
-  enabled: true
+collectors:
+  alloy-metrics: {}
+
 ```
 <!-- textlint-enable terminology -->

@@ -152,7 +152,7 @@ remote.kubernetes.secret.{{ include "helper.alloy_name" $objectName }}.data[{{ $
 {{- end -}}
 
 {{/* Determines if the object will need to create a Kubernetes secret. NOTE that this object should be before merging with default values */}}
-{{/* Inputs: object (user of the secret, needs name, secret, auth) */}}
+{{/* Inputs: . (user of the secret, needs name, secret, auth) */}}
 {{- define "secrets.shouldCreateKubernetesSecret" -}}
 {{- if eq (include "secrets.usesKubernetesSecret" .) "false" -}}
   false

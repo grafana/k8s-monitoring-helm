@@ -28,9 +28,11 @@ destinations:
 
 clusterMetrics:
   enabled: true
+  collector: alloy-metrics
 
 hostMetrics:
   enabled: true
+  collector: alloy-metrics
   linuxHosts:
     enabled: true
   windowsHosts:
@@ -38,35 +40,40 @@ hostMetrics:
 
 clusterEvents:
   enabled: true
+  collector: alloy-singleton
 
 nodeLogs:
   enabled: true
+  collector: alloy-logs
 
 podLogs:
   enabled: true
+  collector: alloy-logs
 
 podLogsViaKubernetesApi:
   enabled: true
+  collector: alloy-logs
   nodeSelector:
     kubernetes.io/os: windows
 
 integrations:
+  collector: alloy-metrics
   alloy:
     instances:
       - name: alloy
         labelSelectors:
           app.kubernetes.io/name: [alloy-metrics, alloy-singleton, alloy-logs]
 
-alloy-metrics:
-  enabled: true
-alloy-singleton:
-  enabled: true
-alloy-logs:
-  enabled: true
-  alloy:
-    clustering:
-      name: alloy-logs
-      enabled: true
+collectors:
+  alloy-metrics: {}
+
+  alloy-singleton: {}
+
+  alloy-logs:
+    alloy:
+      clustering:
+        name: alloy-logs
+        enabled: true
 
 telemetryServices:
   kube-state-metrics:

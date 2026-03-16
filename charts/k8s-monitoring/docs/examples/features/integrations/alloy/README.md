@@ -21,13 +21,15 @@ destinations:
     url: http://prometheus.prometheus.svc:9090/api/v1/write
 
 integrations:
+  collector: alloy-metrics
   alloy:
     instances:
       - name: alloy
         labelSelectors:
           app.kubernetes.io/name: alloy-metrics
 
-alloy-metrics:
-  enabled: true
+collectors:
+  alloy-metrics: {}
+
 ```
 <!-- textlint-enable terminology -->

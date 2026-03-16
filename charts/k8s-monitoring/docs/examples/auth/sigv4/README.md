@@ -38,9 +38,10 @@ destinations:
 
 clusterMetrics:
   enabled: true
+  collector: alloy-metrics
 
-alloy-metrics:
-  enabled: true
+collectors:
+  alloy-metrics: {}
 
 telemetryServices:
   kube-state-metrics:

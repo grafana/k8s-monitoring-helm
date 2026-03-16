@@ -39,7 +39,6 @@ Settings for each primary Alloy instance come from several potential sources, in
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | annotations | list | `[]` | Annotations to add to the Alloy Custom Resource. These annotations are not added to the workload or Pod. |
-| enabled | bool | `false` | Enable this Alloy instance. |
 | extraConfig | string | `""` | Extra Alloy configuration to be added to the configuration file. |
 | includeDestinations | list | `[]` | Include the configuration components for these destinations. Configuration is already added for destinations used By enabled features on this collector. This is useful when referencing destinations in the extraConfig. |
 | labels | list | `[]` | Labels to add to the Alloy Custom Resource. These labels are not added to the workload or Pod. |
@@ -91,4 +90,10 @@ Settings for each primary Alloy instance come from several potential sources, in
 | remoteConfig.tls.keyFrom | string | `""` | Raw config for accessing the client key. |
 | remoteConfig.url | string | `""` | The URL of the remote config server. |
 | remoteConfig.urlFrom | string | `""` | Raw config for accessing the URL. Lets you insert raw Alloy references so you can load the URL from any number of places, such as loading values from environment variables or config maps. For example: `urlFrom: sys.env("ALLOY_REMOTE_CONFIG_URL")` |
+
+### Other Values
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| preset | string | `""` |  |
 <!-- textlint-enable terminology -->

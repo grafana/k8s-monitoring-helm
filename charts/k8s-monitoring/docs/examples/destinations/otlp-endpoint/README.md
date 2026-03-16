@@ -50,9 +50,11 @@ destinations:
 
 clusterMetrics:
   enabled: true
+  collector: alloy-metrics
 
 hostMetrics:
   enabled: true
+  collector: alloy-metrics
   linuxHosts:
     enabled: true
   windowsHosts:
@@ -60,22 +62,22 @@ hostMetrics:
 
 podLogs:
   enabled: true
+  collector: alloy-logs
 
-alloy-metrics:
-  enabled: true
-  extraConfig: |
-    otelcol.storage.file "otlp_gateway_queue_storage" {
-      create_directory = true
-      directory = "/var/lib/otlp_gateway_queue_storage"
-    }
+collectors:
+  alloy-metrics:
+    extraConfig: |
+      otelcol.storage.file "otlp_gateway_queue_storage" {
+        create_directory = true
+        directory = "/var/lib/otlp_gateway_queue_storage"
+      }
 
-alloy-logs:
-  enabled: true
-  extraConfig: |
-    otelcol.storage.file "otlp_gateway_queue_storage" {
-      create_directory = true
-      directory = "/var/lib/otlp_gateway_queue_storage"
-    }
+  alloy-logs:
+    extraConfig: |
+      otelcol.storage.file "otlp_gateway_queue_storage" {
+        create_directory = true
+        directory = "/var/lib/otlp_gateway_queue_storage"
+      }
 
 telemetryServices:
   kube-state-metrics:

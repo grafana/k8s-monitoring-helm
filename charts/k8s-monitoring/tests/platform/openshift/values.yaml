@@ -29,6 +29,7 @@ destinations:
 
 clusterMetrics:
   enabled: true
+  collector: alloy-metrics
   kube-state-metrics:
     deploy: false
     namespace: openshift-monitoring
@@ -46,47 +47,50 @@ clusterMetrics:
 
 clusterEvents:
   enabled: true
+  collector: alloy-singleton
 
 autoInstrumentation:
   enabled: true
+  collector: alloy-metrics
 
 podLogs:
   enabled: true
+  collector: alloy-logs
 
 integrations:
+  collector: alloy-metrics
   alloy:
     instances:
       - name: alloy
         labelSelectors:
           app.kubernetes.io/name: [alloy-metrics, alloy-singleton, alloy-logs]
 
-alloy-metrics:
-  enabled: true
-  alloy:
-    storagePath: /var/lib/alloy
-    mounts:
-      extra:
-        - name: alloy-storage
-          mountPath: /var/lib/alloy
+collectors:
+  alloy-metrics:
+    alloy:
+      storagePath: /var/lib/alloy
+      mounts:
+        extra:
+          - name: alloy-storage
+            mountPath: /var/lib/alloy
+  
+    controller:
+      enableStatefulSetAutoDeletePVC: true
+      volumeClaimTemplates:
+        - metadata:
+            name: alloy-storage
+          spec:
+            accessModes: ["ReadWriteOnce"]
+            storageClassName: "standard-csi"
+            resources:
+              requests:
+                storage: 1Gi
 
-  controller:
-    enableStatefulSetAutoDeletePVC: true
-    volumeClaimTemplates:
-      - metadata:
-          name: alloy-storage
-        spec:
-          accessModes: ["ReadWriteOnce"]
-          storageClassName: "standard-csi"
-          resources:
-            requests:
-              storage: 1Gi
+  alloy-singleton: {}
 
-alloy-singleton:
-  enabled: true
+  alloy-logs:
+    global:
+      podSecurityContext:
+        seLinuxOptions:
+          type: container_logreader_t
 
-alloy-logs:
-  enabled: true
-  global:
-    podSecurityContext:
-      seLinuxOptions:
-        type: container_logreader_t

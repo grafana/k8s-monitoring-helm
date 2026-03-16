@@ -60,16 +60,18 @@ destinations:
 
 clusterMetrics:
   enabled: true
+  collector: alloy-metrics
 
 hostMetrics:
   enabled: true
+  collector: alloy-metrics
   linuxHosts:
     enabled: true
   windowsHosts:
     enabled: true
 
-alloy-metrics:
-  enabled: true
+collectors:
+  alloy-metrics: {}
 
 telemetryServices:
   kube-state-metrics:

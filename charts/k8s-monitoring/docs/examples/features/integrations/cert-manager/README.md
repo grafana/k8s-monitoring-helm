@@ -20,13 +20,15 @@ destinations:
     url: http://prometheus.prometheus.svc:9090/api/v1/write
 
 integrations:
+  collector: alloy-metrics
   cert-manager:
     instances:
       - name: cert-manager
         labelSelectors:
           app.kubernetes.io/name: cert-manager
 
-alloy-metrics:
-  enabled: true
+collectors:
+  alloy-metrics: {}
+
 ```
 <!-- textlint-enable terminology -->

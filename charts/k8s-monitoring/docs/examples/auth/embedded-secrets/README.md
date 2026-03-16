@@ -52,6 +52,7 @@ destinations:
 
 applicationObservability:
   enabled: true
+  collector: alloy-receiver
   receivers:
     otlp:
       grpc:
@@ -59,23 +60,24 @@ applicationObservability:
 
 prometheusOperatorObjects:
   enabled: true
+  collector: alloy-metrics
 
 podLogs:
   enabled: true
+  collector: alloy-logs
 
-alloy-metrics:
-  enabled: true
+collectors:
+  alloy-metrics: {}
 
-alloy-logs:
-  enabled: true
+  alloy-logs: {}
 
-alloy-receiver:
-  enabled: true
-  alloy:
-    extraPorts:
-      - name: otlp-grpc
-        port: 4317
-        targetPort: 4317
-        protocol: TCP
+  alloy-receiver:
+    alloy:
+      extraPorts:
+        - name: otlp-grpc
+          port: 4317
+          targetPort: 4317
+          protocol: TCP
+
 ```
 <!-- textlint-enable terminology -->

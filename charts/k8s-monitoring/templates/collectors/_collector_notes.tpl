@@ -1,6 +1,6 @@
 {{- define "collectors.notes.deployments" }}
-{{- range $collectorName := include "collectors.list.enabled" . | fromYamlArray }}
-  {{- $collectorValues := include "collector.alloy.values" (deepCopy $ | merge (dict "collectorName" $collectorName)) | fromYaml }}
+{{- range $collectorName := keys .Values.collectors | sortAlpha }}
+  {{- $collectorValues := include "collector.alloy.values" (dict "Values" $.Values "Files" $.Files "collectorName" $collectorName) | fromYaml }}
   {{- $type := $collectorValues.controller.type }}
   {{- $replicas := $collectorValues.controller.replicas | default 1 | int }}
   {{- if ne $type "daemonset" }}

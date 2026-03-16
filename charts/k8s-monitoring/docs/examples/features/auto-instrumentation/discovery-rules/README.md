@@ -29,6 +29,7 @@ destinations:
 
 autoInstrumentation:
   enabled: true
+  collector: alloy-metrics
   spanMetricsOnly: true
   beyla:
     config:
@@ -40,7 +41,8 @@ autoInstrumentation:
             - k8s_pod_labels:
                 instrument: beyla
 
-alloy-metrics:
-  enabled: true
+collectors:
+  alloy-metrics: {}
+
 ```
 <!-- textlint-enable terminology -->

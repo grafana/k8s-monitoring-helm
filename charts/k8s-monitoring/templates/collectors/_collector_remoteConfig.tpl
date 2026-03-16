@@ -1,12 +1,12 @@
 {{- /* Builds the alloy config for remoteConfig. Input: $ */ -}}
 {{- define "collectors.remoteConfig.collector.values" -}}
 {{- $values := dict }}
-{{- range $collectorName := (include "collectors.list" . | fromYamlArray) }}
-  {{- $collectorValues := include "collector.alloy.values" (dict "collectorName" $collectorName "Values" $.Values "Files" $.Files) | fromYaml }}
+{{- range $collectorName := keys .Values.collectors | sortAlpha }}
+  {{- $collectorValues := include "collector.alloy.values" (dict "Values" $.Values "Files" $.Files "collectorName" $collectorName) | fromYaml }}
   {{- $collectorType := $collectorValues.controller.type }}
   {{- if (dig "remoteConfig" "enabled" false $collectorValues) }}
     {{- $extraEnv := deepCopy (dig "alloy" "extraEnv" list $collectorValues) }}
-    {{- if eq (include "collectors.has_extra_env" (deepCopy $ | merge (dict "name" $collectorName "envVar" "GCLOUD_FM_COLLECTOR_ID"))) "false" }}
+    {{- if eq (include "collectors.hasExtraEnv" (deepCopy $ | merge (dict "collectorName" $collectorName "envVarName" "GCLOUD_FM_COLLECTOR_ID"))) "false" }}
       {{- $extraEnv = (include "collectors.set_extra_env" (dict "envList" $extraEnv "name" "CLUSTER_NAME" "value" $.Values.cluster.name)) | fromYamlArray }}
       {{- $extraEnv = (include "collectors.set_extra_env" (dict "envList" $extraEnv "name" "NAMESPACE" "valueFrom" (dict "fieldRef" (dict "fieldPath" "metadata.namespace")))) | fromYamlArray }}
       {{- if eq $collectorType "daemonset" }}
@@ -18,8 +18,8 @@
       {{- end }}
     {{- end }}
 
-    {{- if eq (include "collectors.has_extra_env" (deepCopy $ | merge (dict "name" $collectorName "envVar" "GCLOUD_RW_API_KEY"))) "false" }}
-      {{- $remoteConfigValues := merge ((index $.Values $collectorName).remoteConfig) (dict "type" "remoteConfig") }}
+    {{- if eq (include "collectors.hasExtraEnv" (deepCopy $ | merge (dict "collectorName" $collectorName "envVarName" "GCLOUD_RW_API_KEY"))) "false" }}
+      {{- $remoteConfigValues := merge ((get $.Values.collectors $collectorName).remoteConfig) (dict "type" "remoteConfig") }}
       {{- if eq (include "secrets.usesKubernetesSecret" $remoteConfigValues ) "true" }}
         {{- $secretName := include "secrets.kubernetesSecretName" (deepCopy $ | merge (dict "object" $remoteConfigValues "name" (printf "%s-remote-cfg" $collectorName))) }}
         {{- $secretKey := include "secrets.getSecretKey" (dict "object" $remoteConfigValues "key" "auth.password") }}

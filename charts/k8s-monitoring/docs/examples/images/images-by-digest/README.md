@@ -47,12 +47,15 @@ destinations:
 
 clusterMetrics:
   enabled: true
+  collector: alloy-metrics
 
 costMetrics:
   enabled: true
+  collector: alloy-metrics
 
 hostMetrics:
   enabled: true
+  collector: alloy-metrics
   linuxHosts:
     enabled: true
   windowsHosts:
@@ -62,12 +65,14 @@ hostMetrics:
 
 autoInstrumentation:
   enabled: true
+  collector: alloy-metrics
   beyla:
     image:
       digest: sha256:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef
 
 applicationObservability:
   enabled: true
+  collector: alloy-receiver
   receivers:
     otlp:
       http:
@@ -88,11 +93,10 @@ collectorCommon:
       image:
         digest: sha256:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef
 
-alloy-metrics:
-  enabled: true
+collectors:
+  alloy-metrics: {}
 
-alloy-receiver:
-  enabled: true
+  alloy-receiver: {}
 
 telemetryServices:
   kube-state-metrics:

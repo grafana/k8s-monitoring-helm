@@ -27,12 +27,15 @@ destinations:
 
 clusterMetrics:
   enabled: true
+  collector: alloy-metrics
 
 costMetrics:
   enabled: true
+  collector: alloy-metrics
 
 hostMetrics:
   enabled: true
+  collector: alloy-metrics
   energyMetrics:
     enabled: true
   linuxHosts:
@@ -42,6 +45,7 @@ hostMetrics:
 
 autoInstrumentation:
   enabled: true
+  collector: alloy-metrics
   spanMetricsOnly: true
   beyla:
     resources:
@@ -52,24 +56,24 @@ autoInstrumentation:
         cpu: 100m
         memory: 128Mi
 
-alloy-metrics:
-  enabled: true
-  alloy:
-    resources:
-      requests:
-        cpu: 100m
-        memory: 128Mi
-      limits:
-        cpu: 200m
-        memory: 256Mi
-  configReloader:
-    resources:
-      requests:
-        cpu: 10m      # The default set in the Alloy Helm chart
-        memory: 50Mi  # The default set in the Alloy Helm chart
-      limits:
-        cpu: 100m
-        memory: 128Mi
+collectors:
+  alloy-metrics:
+    alloy:
+      resources:
+        requests:
+          cpu: 100m
+          memory: 128Mi
+        limits:
+          cpu: 200m
+          memory: 256Mi
+    configReloader:
+      resources:
+        requests:
+          cpu: 10m      # The default set in the Alloy Helm chart
+          memory: 50Mi  # The default set in the Alloy Helm chart
+        limits:
+          cpu: 100m
+          memory: 128Mi
 
 alloy-operator:
   resources:

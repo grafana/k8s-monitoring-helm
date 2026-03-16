@@ -1,0 +1,27 @@
+---
+#
+# Log File preset
+# Deploys as a DaemonSet to gather logs from the host file system.
+#
+
+controller:
+  # Deploy as a DaemonSet so that an Alloy is present on every node.
+  type: daemonset
+
+  # Add toleration for `NoSchedule` so it is deployable on tainted nodes.
+  tolerations:
+    - effect: NoSchedule
+      operator: Exists
+
+alloy:
+  # Clustering is disabled because each node will have its own Alloy instance and targets
+  # will be allocated per node.
+  clustering:
+    enabled: false
+
+  mounts:
+    # Mount `/var/log` from the host into the container for log collection.
+    varlog: true
+
+    # Also mount `/var/lib/docker/containers` from the host into the container for log collection.
+    dockercontainers: true

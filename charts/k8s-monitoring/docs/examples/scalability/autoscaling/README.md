@@ -22,28 +22,30 @@ destinations:
 
 clusterMetrics:
   enabled: true
+  collector: alloy-metrics
 
 hostMetrics:
   enabled: true
+  collector: alloy-metrics
   linuxHosts:
     enabled: true
   windowsHosts:
     enabled: true
 
-alloy-metrics:
-  enabled: true
-  alloy:
-    resources:
-      requests:
-        cpu: "1m"
-        memory: "500Mi"
-  controller:
-    autoscaling:
-      enabled: true
-      minReplicas: 2
-      maxReplicas: 10
-      targetCPUUtilizationPercentage: 0
-      targetMemoryUtilizationPercentage: 80
+collectors:
+  alloy-metrics:
+    alloy:
+      resources:
+        requests:
+          cpu: "1m"
+          memory: "500Mi"
+    controller:
+      autoscaling:
+        enabled: true
+        minReplicas: 2
+        maxReplicas: 10
+        targetCPUUtilizationPercentage: 0
+        targetMemoryUtilizationPercentage: 80
 
 telemetryServices:
   kube-state-metrics:

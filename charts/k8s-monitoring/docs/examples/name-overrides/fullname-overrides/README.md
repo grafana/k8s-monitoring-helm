@@ -20,15 +20,18 @@ destinations:
 
 clusterMetrics:
   enabled: true
+  collector: alloy-metrics
 
 costMetrics:
   enabled: true
+  collector: alloy-metrics
   opencost:
     labelMatchers:
       app.kubernetes.io/name: cost-metric-source
 
 hostMetrics:
   enabled: true
+  collector: alloy-metrics
   linuxHosts:
     enabled: true
     labelMatchers:
@@ -38,9 +41,9 @@ hostMetrics:
     labelMatchers:
       app.kubernetes.io/name: energy-metric-source
 
-alloy-metrics:
-  enabled: true
-  fullnameOverride: metric-collector
+collectors:
+  alloy-metrics:
+    fullnameOverride: metric-collector
 
 telemetryServices:
   kube-state-metrics:

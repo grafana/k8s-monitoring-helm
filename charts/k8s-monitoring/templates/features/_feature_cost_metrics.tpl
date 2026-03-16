@@ -1,11 +1,5 @@
 {{- define "features.costMetrics.enabled" }}{{ .Values.costMetrics.enabled }}{{- end }}
 
-{{- define "features.costMetrics.collectors" }}
-{{- if .Values.costMetrics.enabled -}}
-- {{ .Values.costMetrics.collector }}
-{{- end }}
-{{- end }}
-
 {{- define "features.costMetrics.include" }}
 {{- if .Values.costMetrics.enabled -}}
 {{- $destinations := include "features.costMetrics.destinations" . | fromYamlArray }}
@@ -39,15 +33,17 @@ cost_metrics "feature" {
 
 {{- define "features.costMetrics.collector.values" }}{{- end -}}
 
+{{- define "features.costMetrics.chooseCollector" -}}{{- end -}}
+
 {{- define "features.costMetrics.validate" }}
 {{- if .Values.costMetrics.enabled }}
+  {{- $featureKey := "costMetrics" }}
   {{- $featureName := "Kubernetes Cluster metrics" }}
   {{- $destinations := include "features.costMetrics.destinations" . | fromYamlArray }}
-  {{- include "destinations.validate_destination_list" (dict "destinations" $destinations "type" "metrics" "ecosystem" "prometheus" "feature" $featureName) }}
+  {{- include "destinations.validate.destinationListNotEmpty" (dict "destinations" $destinations "type" "metrics" "ecosystem" "prometheus" "featureName" $featureName) }}
 
-  {{- range $collector := include "features.costMetrics.collectors" . | fromYamlArray }}
-    {{- include "collectors.require_collector" (dict "Values" $.Values "name" $collector "feature" $featureName) }}
-  {{- end }}
+  {{- $collectorName := include "collectors.getCollectorForFeature" (dict "Values" $.Values "featureKey" $featureKey) }}
+  {{- include "collectors.validate.collectorIsAssigned" (dict "Values" $.Values "collectorName" $collectorName "featureKey" $featureKey "featureName" $featureName) }}
 
   {{- include "feature.costMetrics.validate" (dict "Values" $.Values.costMetrics "telemetryServices" $.Values.telemetryServices) }}
 {{- end }}

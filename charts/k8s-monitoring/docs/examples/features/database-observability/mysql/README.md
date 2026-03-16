@@ -54,13 +54,14 @@ integrations:
 
 podLogs:
   enabled: true
+  collector: alloy-logs
 
-alloy-singleton:
-  enabled: true
-  alloy:
-    stabilityLevel: experimental
+collectors:
+  alloy-singleton:
+    alloy:
+      stabilityLevel: experimental
 
-alloy-logs:
-  enabled: true
+  alloy-logs: {}
+
 ```
 <!-- textlint-enable terminology -->

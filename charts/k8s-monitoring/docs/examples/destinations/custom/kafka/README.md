@@ -43,11 +43,13 @@ destinations:
 
 clusterEvents:
   enabled: true
+  collector: alloy-singleton
   destinations: [kafka]
 
-alloy-singleton:
-  enabled: true
-  liveDebugging:
-    enabled: true
+collectors:
+  alloy-singleton:
+    liveDebugging:
+      enabled: true
+
 ```
 <!-- textlint-enable terminology -->

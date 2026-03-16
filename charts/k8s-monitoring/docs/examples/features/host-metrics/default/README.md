@@ -22,6 +22,7 @@ destinations:
 
 hostMetrics:
   enabled: true
+  collector: alloy-metrics
   linuxHosts:
     enabled: true
   windowsHosts:
@@ -29,8 +30,8 @@ hostMetrics:
   energyMetrics:
     enabled: true
 
-alloy-metrics:
-  enabled: true
+collectors:
+  alloy-metrics: {}
 
 telemetryServices:
   node-exporter:

@@ -30,9 +30,11 @@ destinations:
 
 clusterMetrics:
   enabled: true
+  collector: alloy-metrics
 
 hostMetrics:
   enabled: true
+  collector: alloy-metrics
   linuxHosts:
     enabled: true
   windowsHosts:
@@ -40,11 +42,14 @@ hostMetrics:
 
 clusterEvents:
   enabled: true
+  collector: alloy-singleton
 
 podLogs:
   enabled: true
+  collector: alloy-logs
 
 integrations:
+  collector: alloy-metrics
   istio:
     instances:
       - name: istio
@@ -55,6 +60,7 @@ integrations:
 
 applicationObservability:
   enabled: true
+  collector: alloy-receiver
   receivers:
     otlp:
       grpc:
@@ -67,27 +73,24 @@ applicationObservability:
   logs:
     enabled: false
 
-alloy-metrics:
-  enabled: true
-  alloy:
-    clustering:
-      portName: tcp
-  controller:
-    replicas: 2  # To test that clustering is working
+collectors:
+  alloy-metrics:
+    alloy:
+      clustering:
+        portName: tcp
+    controller:
+      replicas: 2  # To test that clustering is working
 
-alloy-singleton:
-  enabled: true
+  alloy-singleton: {}
 
-alloy-logs:
-  enabled: true
+  alloy-logs: {}
 
-alloy-receiver:
-  enabled: true
-  controller:
-    # Using TPROXY preserves both the source and destination IP addresses and ports, which allows
-    # the k8sattributes processor to look up the pod by IP and enrich the rest of the attributes
-    podAnnotations:
-      sidecar.istio.io/interceptionMode: TPROXY
+  alloy-receiver:
+    controller:
+      # Using TPROXY preserves both the source and destination IP addresses and ports, which allows
+      # the k8sattributes processor to look up the pod by IP and enrich the rest of the attributes
+      podAnnotations:
+        sidecar.istio.io/interceptionMode: TPROXY
 
 telemetryServices:
   kube-state-metrics:

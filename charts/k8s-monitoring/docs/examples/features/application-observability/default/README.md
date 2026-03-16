@@ -28,12 +28,14 @@ destinations:
 
 applicationObservability:
   enabled: true
+  collector: alloy-receiver
   receivers:
     otlp:
       http:
         enabled: true
 
-alloy-receiver:
-  enabled: true
+collectors:
+  alloy-receiver: {}
+
 ```
 <!-- textlint-enable terminology -->

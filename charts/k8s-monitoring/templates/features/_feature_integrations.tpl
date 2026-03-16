@@ -4,13 +4,6 @@
 {{- if or $metricIntegrations $logRuleIntegrations }}true{{ else }}false{{ end }}
 {{- end }}
 
-{{- define "features.integrations.collectors" }}
-{{- $metricIntegrations := include "feature.integrations.configured.metrics" (dict "Values" .Values.integrations "Files" $.Subcharts.integrations.Files) | fromYamlArray }}
-{{- if (not (empty $metricIntegrations)) }}
-- {{ .Values.integrations.collector }}
-{{- end }}
-{{- end }}
-
 {{- define "features.integrations.metrics.include" }}
 {{- $values := dict "Chart" $.Subcharts.integrations.Chart "Values" .Values.integrations "Files" $.Subcharts.integrations.Files "Release" $.Release }}
 {{- $destinations := include "features.integrations.destinations" . | fromYamlArray }}
@@ -79,6 +72,8 @@
 
 {{- define "features.integrations.collector.values" }}{{ end -}}
 
+{{- define "features.integrations.chooseCollector" -}}{{- end -}}
+
 {{- define "features.integrations.validate" }}
 {{- if eq (include "features.integrations.enabled" .) "true" }}
 {{- $featureName := "Service Integrations" }}
@@ -87,12 +82,12 @@
 {{- $destinations := include "features.integrations.destinations" . | fromYamlArray }}
 {{/*{{- fail (printf "\n%s\n"  ($destinations | toYaml))}}*/}}
 {{- if $metricIntegrations }}
-  {{- include "destinations.validate_destination_list" (dict "destinations" $destinations "type" "metrics" "ecosystem" "prometheus" "feature" $featureName) }}
+  {{- include "destinations.validate.destinationListNotEmpty" (dict "destinations" $destinations "type" "metrics" "ecosystem" "prometheus" "featureName" $featureName) }}
 {{- end }}
 
 {{- $logOutputIntegrations := include "feature.integrations.configured.logOutput" (dict "Values" .Values.integrations "Files" $.Subcharts.integrations.Files) | fromYamlArray }}
 {{- if $logOutputIntegrations }}
-  {{- include "destinations.validate_destination_list" (dict "destinations" $destinations "type" "logs" "ecosystem" "loki" "feature" $featureName) }}
+  {{- include "destinations.validate.destinationListNotEmpty" (dict "destinations" $destinations "type" "logs" "ecosystem" "loki" "featureName" $featureName) }}
 {{- end }}
 
 {{- $podLogsEnabled := include "features.podLogs.enabled" $ }}

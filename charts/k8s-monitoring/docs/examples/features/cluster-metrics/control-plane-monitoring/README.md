@@ -26,14 +26,17 @@ destinations:
 # Features
 clusterEvents:
   enabled: true
+  collector: alloy-singleton
 
 clusterMetrics:
   enabled: true
+  collector: alloy-metrics
   controlPlane:
     enabled: true
 
 hostMetrics:
   enabled: true
+  collector: alloy-metrics
   linuxHosts:
     enabled: true
   windowsHosts:
@@ -41,8 +44,10 @@ hostMetrics:
 
 podLogs:
   enabled: true
+  collector: alloy-logs
 
 integrations:
+  collector: alloy-metrics
   etcd:
     instances:
       - name: k8s-controlplane-etcd
@@ -50,14 +55,12 @@ integrations:
           app.kubernetes.io/component: etcd
 
 # Collectors
-alloy-metrics:
-  enabled: true
+collectors:
+  alloy-metrics: {}
 
-alloy-logs:
-  enabled: true
+  alloy-logs: {}
 
-alloy-singleton:
-  enabled: true
+  alloy-singleton: {}
 
 telemetryServices:
   kube-state-metrics:

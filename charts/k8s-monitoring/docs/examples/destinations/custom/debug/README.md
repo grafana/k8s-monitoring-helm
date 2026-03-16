@@ -57,11 +57,13 @@ destinations:
 
 podLogs:
   enabled: true
+  collector: alloy-logs
   namespaces: [default]
   labelSelectors:
     app.kubernetes.io/name: alloy-metrics
 
 integrations:
+  collector: alloy-metrics
   destinations: [prometheus, debug]
   alloy:
     instances:
@@ -69,12 +71,12 @@ integrations:
         labelSelectors:
           app.kubernetes.io/name: alloy-metrics
 
-alloy-metrics:
-  enabled: true
-  alloy:
-    stabilityLevel: experimental
+collectors:
+  alloy-metrics:
+    alloy:
+      stabilityLevel: experimental
 
-alloy-logs:
-  enabled: true
+  alloy-logs: {}
+
 ```
 <!-- textlint-enable terminology -->

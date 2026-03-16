@@ -3,15 +3,20 @@
 {{ and .Values.selfReporting.enabled (not (empty $metricsDestinations)) }}
 {{- end -}}
 
-{{- define "features.selfReporting.collectors" -}}
+{{- define "features.selfReporting.chooseCollector" }}
 {{- if eq (include "features.selfReporting.enabled" .) "true" }}
-  {{- $collectorsByIncreasingPreference := list "alloy-receiver" "alloy-metrics" "alloy-singleton" }}
   {{- $chosenCollector := "" }}
-  {{- range $collector := $collectorsByIncreasingPreference }}
-    {{- if (index $.Values $collector).enabled }}{{- $chosenCollector = $collector }}{{- end -}}
-  {{- end -}}
-- {{ $chosenCollector }}
-  {{- end -}}
+  {{- if (hasKey .Values.collectors "alloy-singleton") }}
+    {{- $chosenCollector = "alloy-singleton" }}
+  {{- else if (hasKey .Values.collectors "alloy-metrics") }}
+    {{- $chosenCollector = "alloy-metrics" }}
+  {{- else if (hasKey .Values.collectors "alloy-receiver") }}
+    {{- $chosenCollector = "alloy-receiver" }}
+  {{- else }}
+    {{- $chosenCollector = index (keys .Values.collectors) 0 }}
+  {{- end }}
+{{- $chosenCollector -}}
+{{- end }}
 {{- end }}
 
 {{- define "features.selfReporting.destinations" }}

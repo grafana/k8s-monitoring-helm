@@ -21,13 +21,15 @@ destinations:
 
 annotationAutodiscovery:
   enabled: true
+  collector: alloy-metrics
   annotations:
     scrape: prometheus.io/scrape
     metricsPath: prometheus.io/path
     metricsPortNumber: prometheus.io/port
     metricsScheme: prometheus.io/scheme
 
-alloy-metrics:
-  enabled: true
+collectors:
+  alloy-metrics: {}
+
 ```
 <!-- textlint-enable terminology -->

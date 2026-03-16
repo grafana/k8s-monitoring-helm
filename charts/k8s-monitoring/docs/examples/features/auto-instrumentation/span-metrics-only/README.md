@@ -65,6 +65,7 @@ destinations:
 # This would normally cause Beyla to export full traces
 applicationObservability:
   enabled: true
+  collector: alloy-receiver
   receivers:
     otlp:
       grpc:
@@ -75,19 +76,20 @@ applicationObservability:
 # Beyla will still generate span metrics (RED metrics) and send them to Prometheus
 autoInstrumentation:
   enabled: true
+  collector: alloy-metrics
   beyla:
     deliverTracesToApplicationObservability: false  # Only collect span metrics, do not export traces
 
-alloy-metrics:
-  enabled: true
+collectors:
+  alloy-metrics: {}
 
-alloy-receiver:
-  enabled: true
-  alloy:
-    extraPorts:
-      - name: otlp-grpc
-        port: 4317
-        targetPort: 4317
-        protocol: TCP
+  alloy-receiver:
+    alloy:
+      extraPorts:
+        - name: otlp-grpc
+          port: 4317
+          targetPort: 4317
+          protocol: TCP
+
 ```
 <!-- textlint-enable terminology -->

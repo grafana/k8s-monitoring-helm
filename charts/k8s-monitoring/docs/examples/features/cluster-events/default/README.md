@@ -22,8 +22,10 @@ destinations:
 
 clusterEvents:
   enabled: true
+  collector: alloy-singleton
 
-alloy-singleton:
-  enabled: true
+collectors:
+  alloy-singleton: {}
+
 ```
 <!-- textlint-enable terminology -->

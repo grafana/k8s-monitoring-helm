@@ -50,9 +50,11 @@ destinations:
 
 clusterMetrics:
   enabled: true
+  collector: alloy-metrics
 
 hostMetrics:
   enabled: true
+  collector: alloy-metrics
   linuxHosts:
     enabled: true
   windowsHosts:
@@ -60,40 +62,45 @@ hostMetrics:
 
 costMetrics:
   enabled: true
+  collector: alloy-metrics
 
 clusterEvents:
   enabled: true
+  collector: alloy-singleton
 
 applicationObservability:
   enabled: true
+  collector: alloy-receiver
   receivers:
     zipkin:
       enabled: true
 
 podLogs:
   enabled: true
+  collector: alloy-logs
 
 profiling:
   enabled: true
+  collector: alloy-profiles
 
-alloy-metrics:
-  enabled: true
-alloy-singleton:
-  enabled: true
-alloy-logs:
-  enabled: true
-alloy-receiver:
-  enabled: true
-  alloy:
-    # The following are required for the OTLP destination using the gRPC protocol.
-    # They are also used for any destination that sets `proxy_from_environment=true`.
-    extraEnv:
-      - name: HTTPS_PROXY
-        value: https://myproxy.default.svc:8080
-      - name: NO_PROXY
-        value: kubernetes.default.svc
-alloy-profiles:
-  enabled: true
+collectors:
+  alloy-metrics: {}
+
+  alloy-singleton: {}
+
+  alloy-logs: {}
+
+  alloy-receiver:
+    alloy:
+      # The following are required for the OTLP destination using the gRPC protocol.
+      # They are also used for any destination that sets `proxy_from_environment=true`.
+      extraEnv:
+        - name: HTTPS_PROXY
+          value: https://myproxy.default.svc:8080
+        - name: NO_PROXY
+          value: kubernetes.default.svc
+
+  alloy-profiles: {}
 
 telemetryServices:
   kube-state-metrics:

@@ -1,22 +1,24 @@
-{{- range $collectorName := include "collectors.list.enabled" . | fromYamlArray }}
+{{- range $collectorName := keys .Values.collectors | sortAlpha }}
 {{- $selfReportingEnabled := false }}
-{{- $destinationNames := (index $.Values $collectorName).includeDestinations | default list }}
-{{- range $feature := include "features.list" $ | fromYamlArray }}
-  {{- if has $collectorName (include (printf "features.%s.collectors" $feature) $ | fromYamlArray ) }}
-    {{- if eq $feature "selfReporting" }}
+{{- $destinationNames := (get $.Values.collectors $collectorName).includeDestinations | default list }}
+{{- range $featureKey := include "features.list" $ | fromYamlArray }}
+  {{- $featureCollectorName := include "collectors.getCollectorForFeature" (dict "Values" $.Values "featureKey" $featureKey) }}
+  {{- if eq $collectorName $featureCollectorName }}
+    {{- if eq $featureKey "selfReporting" }}
       {{- $selfReportingEnabled = true }}
     {{- end }}
-    {{- $destinationNames = concat $destinationNames ((include (printf "features.%s.destinations" $feature) $) | fromYamlArray) }}
+    {{- $destinationNames = concat $destinationNames ((include (printf "features.%s.destinations" $featureKey) $) | fromYamlArray) }}
   {{- end }}
 {{- end }}
 
 {{/* Save the top level object and add the collector name */}}
-{{- $values := deepCopy $ | merge (dict "collectorName" $collectorName) }}
+{{- $values := dict "Values" $.Values "Chart" $.Chart "Files" $.Files "Release" $.Release "Subcharts" $.Subcharts "collectorName" $collectorName }}
 {{- $collectorValues := include "collector.alloy.values" $values | fromYaml }}
 {{- $alloyConfig := "" }}
-{{- range $feature := include "features.list" . | fromYamlArray }}
-  {{- if has $collectorName (include (printf "features.%s.collectors" $feature) $ | fromYamlArray ) }}
-    {{ $alloyConfig = cat $alloyConfig (include (printf "features.%s.include" $feature) $values | trim | nindent 0) }}
+{{- range $featureKey := include "features.list" . | fromYamlArray }}
+  {{- $featureCollectorName := include "collectors.getCollectorForFeature" (dict "Values" $.Values "featureKey" $featureKey) }}
+  {{- if eq $collectorName $featureCollectorName }}
+    {{ $alloyConfig = cat $alloyConfig (include (printf "features.%s.include" $featureKey) $values | trim | nindent 0) }}
   {{- end }}
 {{- end }}
 {{- $alloyConfig = cat $alloyConfig (include "collectors.logging.alloy" $collectorValues | trim | nindent 0) }}

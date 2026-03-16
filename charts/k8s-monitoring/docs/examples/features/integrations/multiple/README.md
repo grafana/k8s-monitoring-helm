@@ -23,6 +23,7 @@ destinations:
     url: http://loki.loki.svc:3100/api/push
 
 integrations:
+  collector: alloy-metrics
   cert-manager:
     instances:
       - name: cert-manager
@@ -53,10 +54,12 @@ integrations:
 
 podLogs:
   enabled: true
+  collector: alloy-logs
 
-alloy-logs:
-  enabled: true
-alloy-metrics:
-  enabled: true
+collectors:
+  alloy-logs: {}
+
+  alloy-metrics: {}
+
 ```
 <!-- textlint-enable terminology -->

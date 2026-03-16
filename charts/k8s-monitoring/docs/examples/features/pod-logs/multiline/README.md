@@ -27,6 +27,7 @@ destinations:
 
 podLogs:
   enabled: true
+  collector: alloy-logs
   extraLogProcessingStages: |
     stage.match {
       selector = "{app_kubernetes_io_name=\"multiline-pod\"}"
@@ -35,7 +36,8 @@ podLogs:
       }
     }
 
-alloy-logs:
-  enabled: true
+collectors:
+  alloy-logs: {}
+
 ```
 <!-- textlint-enable terminology -->

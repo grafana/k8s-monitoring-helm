@@ -74,6 +74,7 @@ destinations:
 
 autoInstrumentation:
   enabled: true
+  collector: alloy-metrics
   beyla:
     config:
       data:
@@ -84,6 +85,7 @@ autoInstrumentation:
 
 applicationObservability:
   enabled: true
+  collector: alloy-receiver
   receivers:
     otlp:
       grpc:
@@ -91,29 +93,30 @@ applicationObservability:
 
 clusterMetrics:
   enabled: true
+  collector: alloy-metrics
 
 hostMetrics:
   enabled: true
+  collector: alloy-metrics
   linuxHosts:
     enabled: true
 
 podLogs:
   enabled: true
+  collector: alloy-logs
 
-alloy-metrics:
-  enabled: true
+collectors:
+  alloy-metrics: {}
 
-alloy-logs:
-  enabled: true
+  alloy-logs: {}
 
-alloy-receiver:
-  enabled: true
-  alloy:
-    extraPorts:
-      - name: otlp-grpc
-        port: 4317
-        targetPort: 4317
-        protocol: TCP
+  alloy-receiver:
+    alloy:
+      extraPorts:
+        - name: otlp-grpc
+          port: 4317
+          targetPort: 4317
+          protocol: TCP
 
 telemetryServices:
   kube-state-metrics:

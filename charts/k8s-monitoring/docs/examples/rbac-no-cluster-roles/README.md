@@ -49,6 +49,7 @@ destinations:
 
 clusterMetrics:
   enabled: true
+  collector: alloy-metrics
   # These features require listing Nodes, which require ClusterRoles, so must be disabled.
   kubelet:
     enabled: false
@@ -61,6 +62,7 @@ clusterMetrics:
 
 hostMetrics:
   enabled: true
+  collector: alloy-metrics
   linuxHosts:
     enabled: true
   windowsHosts:
@@ -68,10 +70,12 @@ hostMetrics:
 
 clusterEvents:
   enabled: true
+  collector: alloy-singleton
   namespaces: [default]
 
 podLogs:
   enabled: true
+  collector: alloy-logs
   namespaces: [default]
 
 collectorCommon:
@@ -79,14 +83,12 @@ collectorCommon:
     rbac:
       namespaces: [default]
 
-alloy-metrics:
-  enabled: true
+collectors:
+  alloy-metrics: {}
 
-alloy-singleton:
-  enabled: true
+  alloy-singleton: {}
 
-alloy-logs:
-  enabled: true
+  alloy-logs: {}
 
 alloy-operator:
   ownNamespaceOnly: true

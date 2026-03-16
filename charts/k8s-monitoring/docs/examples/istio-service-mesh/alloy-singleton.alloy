@@ -87,48 +87,6 @@ cluster_events "feature" {
     loki.write.localloki.receiver,
   ]
 }
-// Self Reporting
-prometheus.exporter.unix "kubernetes_monitoring_telemetry" {
-  set_collectors = ["textfile"]
-  textfile {
-    directory = "/etc/alloy"
-  }
-}
-
-discovery.relabel "kubernetes_monitoring_telemetry" {
-  targets = prometheus.exporter.unix.kubernetes_monitoring_telemetry.targets
-  rule {
-    target_label = "instance"
-    action = "replace"
-    replacement = "k8smon"
-  }
-  rule {
-    target_label = "job"
-    action = "replace"
-    replacement = "integrations/kubernetes/kubernetes_monitoring_telemetry"
-  }
-}
-
-prometheus.scrape "kubernetes_monitoring_telemetry" {
-  job_name   = "integrations/kubernetes/kubernetes_monitoring_telemetry"
-  targets    = discovery.relabel.kubernetes_monitoring_telemetry.output
-  scrape_interval = "60s"
-  clustering {
-    enabled = true
-  }
-  forward_to = [prometheus.relabel.kubernetes_monitoring_telemetry.receiver]
-}
-
-prometheus.relabel "kubernetes_monitoring_telemetry" {
-  rule {
-    source_labels = ["__name__"]
-    regex = "grafana_kubernetes_monitoring_.*"
-    action = "keep"
-  }
-  forward_to = [
-    prometheus.remote_write.localprometheus.receiver,
-  ]
-}
 
 
 
@@ -162,66 +120,6 @@ loki.write "localloki" {
 
 remote.kubernetes.secret "localloki" {
   name      = "localloki-k8smon-k8s-monitoring"
-  namespace = "default"
-}
-
-
-// Destination: localPrometheus (prometheus)
-otelcol.exporter.prometheus "localprometheus" {
-  add_metric_suffixes = true
-  resource_to_telemetry_conversion = false
-  forward_to = [prometheus.remote_write.localprometheus.receiver]
-}
-
-prometheus.remote_write "localprometheus" {
-  endpoint {
-    url = "http://prometheus-server.prometheus.svc:9090/api/v1/write"
-    headers = {
-    }
-    basic_auth {
-      username = convert.nonsensitive(remote.kubernetes.secret.localprometheus.data["username"])
-      password = remote.kubernetes.secret.localprometheus.data["password"]
-    }
-    tls_config {
-      insecure_skip_verify = false
-    }
-    send_native_histograms = false
-
-    queue_config {
-      capacity = 10000
-      min_shards = 1
-      max_shards = 50
-      max_samples_per_send = 2000
-      batch_send_deadline = "5s"
-      min_backoff = "30ms"
-      max_backoff = "5s"
-      retry_on_http_429 = true
-      sample_age_limit = "0s"
-    }
-
-    write_relabel_config {
-      source_labels = ["cluster"]
-      regex = ""
-      replacement = "istio-service-mesh-test"
-      target_label = "cluster"
-    }
-    write_relabel_config {
-      source_labels = ["k8s_cluster_name"]
-      regex = ""
-      replacement = "istio-service-mesh-test"
-      target_label = "k8s_cluster_name"
-    }
-  }
-
-  wal {
-    truncate_frequency = "2h"
-    min_keepalive_time = "5m"
-    max_keepalive_time = "8h"
-  }
-}
-
-remote.kubernetes.secret "localprometheus" {
-  name      = "localprometheus-k8smon-k8s-monitoring"
   namespace = "default"
 }
 

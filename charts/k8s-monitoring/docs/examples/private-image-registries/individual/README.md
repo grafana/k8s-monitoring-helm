@@ -42,12 +42,15 @@ destinations:
 
 clusterMetrics:
   enabled: true
+  collector: alloy-metrics
 
 costMetrics:
   enabled: true
+  collector: alloy-metrics
 
 hostMetrics:
   enabled: true
+  collector: alloy-metrics
   energyMetrics:
     enabled: true
   linuxHosts:
@@ -57,6 +60,7 @@ hostMetrics:
 
 autoInstrumentation:
   enabled: true
+  collector: alloy-metrics
   beyla:
     image:
       registry: my.registry.com
@@ -73,6 +77,7 @@ autoInstrumentation:
 
 applicationObservability:
   enabled: true
+  collector: alloy-receiver
   receivers:
     otlp:
       http:
@@ -91,11 +96,9 @@ alloy-operator:
       pullSecrets:
         - name: my-registry-creds
 
-alloy-metrics:
-  enabled: true
-
-alloy-receiver:
-  enabled: true
+collectors:
+  alloy-metrics: {}
+  alloy-receiver: {}
 
 collectorCommon:
   alloy:

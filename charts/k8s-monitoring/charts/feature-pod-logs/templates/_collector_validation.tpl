@@ -1,6 +1,6 @@
 {{/* Validates that the Alloy instance is appropriate for the given Pod Logs settings */}}
 {{/* Inputs: Values (Pod Logs values), Collector (Alloy values), CollectorName (string) */}}
-{{- define "feature.podLogs.collector.validate" -}}
+{{- define "feature.podLogs.collector.validate" }}
 {{- $stabilityLevel := (dig "alloy" "stabilityLevel" "generally-available" .Collector)}}
 {{- if eq .Values.gatherMethod "volumes" }}
   {{- if ne (dig "controller" "type" "daemonset" .Collector) "daemonset" }}

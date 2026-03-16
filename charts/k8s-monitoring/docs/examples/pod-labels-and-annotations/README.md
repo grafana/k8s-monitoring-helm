@@ -91,6 +91,7 @@ destinations:
 
 clusterMetrics:
   enabled: true
+  collector: alloy-metrics
   kube-state-metrics:
     metricsTuning:
       includeMetrics:
@@ -99,6 +100,7 @@ clusterMetrics:
 
 hostMetrics:
   enabled: true
+  collector: alloy-metrics
   linuxHosts:
     enabled: true
   windowsHosts:
@@ -106,6 +108,7 @@ hostMetrics:
 
 podLogs:
   enabled: true
+  collector: alloy-logs
   labels:       # Capture the `example.com/name` Pod label as the `name` log label
     name: example.com/name
   annotations:  # Capture the `example.com/environment` Pod annotation as the `environment` log label
@@ -114,6 +117,7 @@ podLogs:
 
 applicationObservability:
   enabled: true
+  collector: alloy-receiver
   processors:
     k8sattributes:
       labels:
@@ -125,20 +129,18 @@ applicationObservability:
       grpc:
         enabled: true
 
-alloy-metrics:
-  enabled: true
+collectors:
+  alloy-metrics: {}
 
-alloy-logs:
-  enabled: true
+  alloy-logs: {}
 
-alloy-receiver:
-  enabled: true
-  alloy:
-    extraPorts:
-      - name: otlp-grpc
-        port: 4317
-        targetPort: 4317
-        protocol: TCP
+  alloy-receiver:
+    alloy:
+      extraPorts:
+        - name: otlp-grpc
+          port: 4317
+          targetPort: 4317
+          protocol: TCP
 
 telemetryServices:
   kube-state-metrics:

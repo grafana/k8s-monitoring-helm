@@ -13,28 +13,31 @@ destinations:
 
 clusterMetrics:
   enabled: true
+  collector: alloy-metrics
 
 clusterEvents:
   enabled: true
+  collector: alloy-singleton
 
 podLogsViaKubernetesApi:
   enabled: true
+  collector: alloy-logs
 
-alloy-metrics:
-  enabled: true
-alloy-singleton:
-  enabled: true
-alloy-logs:
-  enabled: true
-  alloy:
-    clustering:
-      enabled: true
-    mounts:
-      varlog: false
-      dockercontainers: false
-  controller:
-    replicas: 2
-    type: deployment
+collectors:
+  alloy-metrics: {}
+
+  alloy-singleton: {}
+
+  alloy-logs:
+    alloy:
+      clustering:
+        enabled: true
+      mounts:
+        varlog: false
+        dockercontainers: false
+    controller:
+      replicas: 2
+      type: deployment
 
 telemetryServices:
   kube-state-metrics:

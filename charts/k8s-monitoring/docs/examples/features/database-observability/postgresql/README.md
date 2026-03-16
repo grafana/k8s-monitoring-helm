@@ -26,6 +26,7 @@ destinations:
       password: lokipassword
 
 integrations:
+  collector: alloy-metrics
   postgresql:
     instances:
       - name: test-database
@@ -57,13 +58,14 @@ integrations:
 
 podLogs:
   enabled: true
+  collector: alloy-logs
 
-alloy-metrics:
-  enabled: true
-  alloy:
-    stabilityLevel: experimental
+collectors:
+  alloy-metrics:
+    alloy:
+      stabilityLevel: experimental
 
-alloy-logs:
-  enabled: true
+  alloy-logs: {}
+
 ```
 <!-- textlint-enable terminology -->

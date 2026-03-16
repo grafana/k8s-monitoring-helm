@@ -26,6 +26,7 @@ destinations:
 
 autoInstrumentation:
   enabled: true
+  collector: alloy-metrics
   beyla:
     config:
       data:
@@ -36,22 +37,22 @@ autoInstrumentation:
 
 applicationObservability:
   enabled: true
+  collector: alloy-receiver
   receivers:
     otlp:
       grpc:
         enabled: true
 
-alloy-metrics:
-  enabled: true
-  liveDebugging:
-    enabled: true
+collectors:
+  alloy-metrics:
+    liveDebugging:
+      enabled: true
 
+  alloy-receiver:
+    alloy:
+      extraPorts:
+        - name: otlp-grpc
+          port: 4317
+          targetPort: 4317
+          protocol: TCP
 
-alloy-receiver:
-  enabled: true
-  alloy:
-    extraPorts:
-      - name: otlp-grpc
-        port: 4317
-        targetPort: 4317
-        protocol: TCP

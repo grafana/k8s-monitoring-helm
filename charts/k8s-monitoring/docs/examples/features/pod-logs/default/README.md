@@ -21,8 +21,10 @@ destinations:
 
 podLogs:
   enabled: true
+  collector: alloy-logs
 
-alloy-logs:
-  enabled: true
+collectors:
+  alloy-logs: {}
+
 ```
 <!-- textlint-enable terminology -->

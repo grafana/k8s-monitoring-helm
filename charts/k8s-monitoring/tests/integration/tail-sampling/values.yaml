@@ -39,21 +39,25 @@ destinations:
 
 applicationObservability:
   enabled: true
+  collector: alloy-receiver
   receivers:
     otlp:
       grpc:
         enabled: true
 
-alloy-receiver:
-  enabled: true
-  alloy:
-    extraPorts:
-      - name: otlp-grpc
-        port: 4317
-        targetPort: 4317
-        protocol: TCP
+collectors:
+  alloy-receiver:
+    alloy:
+      extraPorts:
+        - name: otlp-grpc
+          port: 4317
+          targetPort: 4317
+          protocol: TCP
+
+  alloy-metrics: {}
 
 integrations:
+  collector: alloy-metrics
   alloy:
     instances:
       - name: alloy-receiver
@@ -69,5 +73,3 @@ integrations:
           tuning:
             includeMetrics: [otelcol_processor_tail_sampling_.*]
 
-alloy-metrics:
-  enabled: true

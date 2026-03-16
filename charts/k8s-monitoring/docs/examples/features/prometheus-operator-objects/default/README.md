@@ -22,6 +22,7 @@ destinations:
 
 prometheusOperatorObjects:
   enabled: true
+  collector: alloy-metrics
 
   podMonitors:
     labelSelectors:
@@ -41,7 +42,8 @@ prometheusOperatorObjects:
           - my-app
           - my-other-app
 
-alloy-metrics:
-  enabled: true
+collectors:
+  alloy-metrics: {}
+
 ```
 <!-- textlint-enable terminology -->

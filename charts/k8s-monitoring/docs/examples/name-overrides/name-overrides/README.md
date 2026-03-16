@@ -20,15 +20,18 @@ destinations:
 
 clusterMetrics:
   enabled: true
+  collector: alloy-metrics
 
 costMetrics:
   enabled: true
+  collector: alloy-metrics
   opencost:
     labelMatchers:
       app.kubernetes.io/name: cost-metric-source
 
 hostMetrics:
   enabled: true
+  collector: alloy-metrics
   energyMetrics:
     enabled: true
     labelMatchers:
@@ -57,8 +60,9 @@ telemetryServices:
         external:
           url: http://prometheus.prometheus.svc:9090/api/v1/query
 
-alloy-metrics:
-  enabled: true
-  nameOverride: metric-collector
+collectors:
+  alloy-metrics:
+    nameOverride: metric-collector
+
 ```
 <!-- textlint-enable terminology -->

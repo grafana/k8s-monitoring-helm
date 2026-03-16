@@ -1,48 +1,19 @@
-{{- define "collectors.list" -}}
-- alloy-metrics
-- alloy-singleton
-- alloy-logs
-- alloy-receiver
-- alloy-profiles
-{{- end }}
-
-{{- define "collectors.list.enabled" -}}
-{{- range $collector := (include "collectors.list" . | fromYamlArray) }}
-  {{- if (index $.Values $collector).enabled }}
-- {{ $collector }}
-  {{- end }}
-{{- end }}
-{{- end }}
-
-{{/* Inputs: Values (all values), name (collector name), feature (feature name) */}}
-{{- define "collectors.require_collector" -}}
-{{- if not (index .Values .name).enabled }}
-  {{- $msg := list "" }}
-  {{- $msg = append $msg (printf "The %s feature requires the use of the %s collector." .feature .name ) }}
-  {{- $msg = append $msg "" }}
-  {{- $msg = append $msg "Please enable it by setting:" }}
-  {{- $msg = append $msg (printf "%s:" .name) }}
-  {{- $msg = append $msg "  enabled: true" }}
-  {{- fail (join "\n" $msg) }}
-{{- end }}
-{{- end }}
-
-{{/* Inputs: Values (all values), name (collector name), portNumber */}}
-{{- define "collectors.has_extra_port" -}}
+{{/* Inputs: Values (all values), collectorName (collector name), portNumber */}}
+{{- define "collectors.hasExtraPort" -}}
 {{- $found := "false" -}}
-{{- range (index .Values .name).alloy.extraPorts -}}
-  {{- if eq (int .targetPort) (int $.portNumber) }}
+{{- range $portEntry := (dig .collectorName "alloy" "extraPorts" (list) .Values.collectors) -}}
+  {{- if eq (int $portEntry.targetPort) (int $.portNumber) }}
     {{- $found = "true" -}}
   {{- end }}
 {{- end }}
 {{- $found -}}
 {{- end }}
 
-{{/* Inputs: Values (all values), name (collector name), envVar (environrment var name) */}}
-{{- define "collectors.has_extra_env" -}}
+{{/* Inputs: Values (all values), collectorName (collector name), envVarName (environrment var name) */}}
+{{- define "collectors.hasExtraEnv" -}}
 {{- $found := "false" -}}
-{{- range (dig "alloy" "extraEnv" list (index .Values .name)) -}}
-  {{- if eq .name $.envVar }}
+{{- range $envVarEntry := dig "alloy" "extraEnv" list (get .Values.collectors .collectorName) -}}
+  {{- if eq $envVarEntry.name $.envVarName }}
     {{- $found = "true" -}}
   {{- end }}
 {{- end }}
@@ -79,26 +50,28 @@
 {{- $newList | toYaml -}}
 {{- end }}
 
-{{/* Inputs: Values (all values), name (collector name), feature (feature name), portNumber, portName, portProtocol */}}
-{{- define "collectors.require_extra_port" -}}
-{{- if eq (include "collectors.has_extra_port" .) "false" }}
+{{/* Inputs: Values (all values), collectorName (collector name), featureName (feature name), portNumber, portName, portProtocol */}}
+{{- define "collectors.requireExtraPort" -}}
+{{- if eq (include "collectors.hasExtraPort" .) "false" }}
   {{- $msg := list "" }}
-  {{- $msg = append $msg (printf "The %s feature requires that port %d to be open on the %s collector." .feature (.portNumber | int) .name ) }}
+  {{- $msg = append $msg (printf "The %s feature requires that port %d to be open on the %s collector." .featureName (.portNumber | int) .collectorName ) }}
   {{- $msg = append $msg "" }}
   {{- $msg = append $msg "Please enable it by setting:" }}
-  {{- $msg = append $msg (printf "%s:" .name) }}
-  {{- $msg = append $msg "  alloy:" }}
-  {{- $msg = append $msg "    extraPorts:" }}
-  {{- $msg = append $msg (printf "      - name: %s" .portName) }}
-  {{- $msg = append $msg (printf "        port: %d" (.portNumber | int)) }}
-  {{- $msg = append $msg (printf "        targetPort: %d" (.portNumber | int)) }}
-  {{- $msg = append $msg (printf "        protocol: %s" .portProtocol) }}
+  {{- $msg = append $msg "collectors:" }}
+  {{- $msg = append $msg (printf "  %s:" .collectorName) }}
+  {{- $msg = append $msg "    alloy:" }}
+  {{- $msg = append $msg "      extraPorts:" }}
+  {{- $msg = append $msg (printf "        - name: %s" .portName) }}
+  {{- $msg = append $msg (printf "          port: %d" (.portNumber | int)) }}
+  {{- $msg = append $msg (printf "          targetPort: %d" (.portNumber | int)) }}
+  {{- $msg = append $msg (printf "          protocol: %s" .portProtocol) }}
   {{- fail (join "\n" $msg) }}
 {{- end }}
 {{- end }}
 
-{{- define "collector.alloy.fullname" -}}
-  {{- $collectorValues := .collectorValues | default (index .Values .collectorName) }}
+{{/* Inputs: Values (all values), collectorName (collector name), collectorValues (collector values, if not inside `.Values.collectors` map) */}}
+{{- define "collector.alloy.fullname" }}
+  {{- $collectorValues := .collectorValues | default (get .Values.collectors .collectorName) }}
   {{- if $collectorValues.fullnameOverride }}
     {{- $collectorValues.fullnameOverride | trunc 63 | trimSuffix "-" }}
   {{- else }}
@@ -111,18 +84,18 @@
   {{- end }}
 {{- end }}
 
-{{- define "collector.alloy.labels" -}}
+{{- define "collector.alloy.labels" }}
 helm.sh/chart: {{ include "helper.chart" . }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
 app.kubernetes.io/part-of: alloy
 {{- end }}
 
-{{- define "collector.alloy.selectorLabels" -}}
+{{- define "collector.alloy.selectorLabels" }}
 app.kubernetes.io/name: {{ .collectorName }}
 app.kubernetes.io/instance: {{ include "collector.alloy.fullname" . }}
 {{- end }}
 
-{{- define "collector.alloy.values.global"}}
+{{- define "collector.alloy.values.global" }}
 {{- $globalValues := dict }}
 {{- if dig "image" "registry" "" .Values.global }}
   {{- $globalValues = mergeOverwrite $globalValues (dict "global" (dict "image" (dict "registry" .Values.global.image.registry))) }}
@@ -137,9 +110,7 @@ app.kubernetes.io/instance: {{ include "collector.alloy.fullname" . }}
 {{- end }}
 
 {{- /* Gets the Alloy values. Input: $, .collectorName (string, collector name), .collectorValues (object) */ -}}
-{{- define "collector.alloy.values" -}}
-{{- /* Values from upstream Alloy */}}
-{{- $upstreamValues := "collectors/upstream/alloy-values.yaml" | .Files.Get | fromYaml }}
+{{- define "collector.alloy.values" }}
 {{- /* The default settings set for all Alloy instances by this chart */}}
 {{- $defaultValues := "collectors/alloy-values.yaml" | .Files.Get | fromYaml }}
 {{- /* Values for the specific named Alloy instance */}}
@@ -154,9 +125,22 @@ app.kubernetes.io/instance: {{ include "collector.alloy.fullname" . }}
 {{- /* Settings in values.yaml for the named instance */}}
 {{- $userValues := $.collectorValues }}
 {{- if not $.collectorValues }}
-  {{- $userValues = (index $.Values .collectorName) }}
+  {{- $userValues = (index $.Values.collectors .collectorName) }}
 {{- end }}
-{{ mergeOverwrite $upstreamValues $defaultValues $namedDefaultValues $globalValues $userCommonValues $userValues | toYaml }}
+{{- $presetValues := dict }}
+{{- if hasKey $userValues "preset" }}
+  {{- range $fileName, $_ := $.Files.Glob (printf "collectors/presets/%s.yaml" (get $userValues "preset")) }}
+    {{- $presetValues = ($.Files.Get $fileName | fromYaml) }}
+  {{- end }}
+{{- end }}
+{{ mergeOverwrite $defaultValues $namedDefaultValues $presetValues $globalValues $userCommonValues $userValues | toYaml }}
+{{- end }}
+
+{{- /* Gets the Alloy values including default upstream values. Input: $, .collectorName (string, collector name), .collectorValues (object) */ -}}
+{{- define "collector.alloy.valuesWithUpstream" }}
+  {{- /* Values from upstream Alloy */}}
+  {{- $upstreamValues := "collectors/upstream/alloy-values.yaml" | .Files.Get | fromYaml }}
+  {{- mergeOverwrite $upstreamValues (include "collector.alloy.values" . | fromYaml) | toYaml }}
 {{- end }}
 
 {{- define "collector.alloy.valuesToSpec" }}
@@ -182,4 +166,18 @@ app.kubernetes.io/instance: {{ include "collector.alloy.fullname" . }}
 - remoteConfig
 - annotations
 - labels
+{{- end }}
+
+{{/* Inputs: Values (root Values), featureKey (string) */}}
+{{ define "collectors.getCollectorForFeature" }}
+{{- $collectorName := dig "collector" "" (get .Values .featureKey) }}
+{{- if not $collectorName }}
+  {{- $collectorName := include (printf "features.%s.chooseCollector" $.featureKey) $ | trim }}
+{{- end }}
+{{- if not $collectorName }}
+  {{- if eq (keys .Values.collectors | len) 1 }}
+    {{- $collectorName = (index (keys .Values.collectors) 0) }}
+  {{- end }}
+{{- end }}
+{{- $collectorName }}
 {{- end }}

@@ -23,6 +23,7 @@ destinations:
     url: http://loki.loki.svc:3100/api/push
 
 integrations:
+  collector: alloy-metrics
   loki:
     instances:
       - name: loki
@@ -33,11 +34,12 @@ integrations:
 
 podLogs:
   enabled: true
+  collector: alloy-logs
 
-alloy-metrics:
-  enabled: true
+collectors:
+  alloy-metrics: {}
 
-alloy-logs:
-  enabled: true
+  alloy-logs: {}
+
 ```
 <!-- textlint-enable terminology -->

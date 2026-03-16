@@ -22,8 +22,10 @@ destinations:
 
 profiling:
   enabled: true
+  collector: alloy-profiles
 
-alloy-profiles:
-  enabled: true
+collectors:
+  alloy-profiles: {}
+
 ```
 <!-- textlint-enable terminology -->

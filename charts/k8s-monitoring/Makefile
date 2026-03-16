@@ -166,10 +166,10 @@ PLATFORM_TEST_VALUES_FILES := $(filter-out $(NON_RENDERED_PLATFORM_TEST_VALUES_F
 PLATFORM_TEST_OUTPUT_FILES := $(PLATFORM_TEST_VALUES_FILES:values.yaml=.rendered/output.yaml)
 
 alloy_configs = $(shell \
-	DIR="$(shell dirname $(1))/" yq e 'with_entries(select(.key == "alloy-*" and .value.enabled == true)) | to_entries | env(DIR) + .[].key + ".alloy"' $(1) \
+	DIR="$(shell dirname $(1))/" yq e '.collectors | keys | .[] | env(DIR) + . + ".alloy"' $(1) \
 )
 alloy_instances = $(shell \
-	DIR="$(shell dirname $(1))/" yq e 'with_entries(select(.key == "alloy-*" and .value.enabled == true)) | to_entries | env(DIR) + .[].key + ".yaml"' $(1) \
+	DIR="$(shell dirname $(1))/" yq e '.collectors | keys | .[] | env(DIR) + . + ".yaml"' $(1) \
 )
 
 %/output.yaml: %/values.yaml Chart.yaml Chart.lock values.yaml values.schema.json templates/destinations/_destination_types.tpl $(DESTINATION_VALUES_FILES) $(CHART_TEMPLATE_FILES) $(CHART_YAML_FILES)
