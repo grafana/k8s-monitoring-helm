@@ -50,6 +50,5 @@ collectors:
   alloy-singleton:
     liveDebugging:
       enabled: true
-
 ```
 <!-- textlint-enable terminology -->

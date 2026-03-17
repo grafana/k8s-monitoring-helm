@@ -43,6 +43,5 @@ autoInstrumentation:
 
 collectors:
   alloy-metrics: {}
-
 ```
 <!-- textlint-enable terminology -->

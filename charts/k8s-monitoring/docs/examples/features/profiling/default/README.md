@@ -26,6 +26,5 @@ profiling:
 
 collectors:
   alloy-profiles: {}
-
 ```
 <!-- textlint-enable terminology -->

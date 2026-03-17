@@ -44,6 +44,5 @@ profilesReceiver:
 
 collectors:
   alloy-receiver: {}
-
 ```
 <!-- textlint-enable terminology -->

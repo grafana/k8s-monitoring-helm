@@ -36,6 +36,5 @@ collectors:
     alloy:
       clustering:
         enabled: true
-
 ```
 <!-- textlint-enable terminology -->

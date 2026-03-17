@@ -35,25 +35,25 @@ collectors:
         name = "timescale-db"
         namespace = "monitoring"
       }
-  
+
       prometheus.scrape "timescale_db" {
         targets = [
           {"__address__" = convert.nonsensitive(remote.kubernetes.secret.timescale_db.data["url"])},
         ]
-  
+
         job_name        = "integrations/timescale_db"
         scrape_interval = "30s"
         scheme          = "https"
         metrics_path    = "/metrics"
-  
+
         basic_auth {
           username = nonsensitive(remote.kubernetes.secret.timescale_db.data["username"])
           password = remote.kubernetes.secret.timescale_db.data["password"]
         }
-  
+
         forward_to = [prometheus.relabel.filter_timescale.receiver]
       }
-  
+
       prometheus.relabel "filter_timescale" {
         rule {
           action        = "keep"
@@ -62,6 +62,5 @@ collectors:
         }
         forward_to = [prometheus.remote_write.prometheus.receiver]
       }
-
 ```
 <!-- textlint-enable terminology -->

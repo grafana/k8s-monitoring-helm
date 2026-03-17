@@ -38,6 +38,5 @@ annotationAutodiscovery:
 
 collectors:
   alloy-metrics: {}
-
 ```
 <!-- textlint-enable terminology -->

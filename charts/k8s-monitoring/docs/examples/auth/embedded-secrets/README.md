@@ -78,6 +78,5 @@ collectors:
           port: 4317
           targetPort: 4317
           protocol: TCP
-
 ```
 <!-- textlint-enable terminology -->

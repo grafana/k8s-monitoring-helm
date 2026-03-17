@@ -30,6 +30,5 @@ integrations:
 
 collectors:
   alloy-metrics: {}
-
 ```
 <!-- textlint-enable terminology -->

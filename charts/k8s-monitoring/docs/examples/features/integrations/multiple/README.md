@@ -60,6 +60,5 @@ collectors:
   alloy-logs: {}
 
   alloy-metrics: {}
-
 ```
 <!-- textlint-enable terminology -->

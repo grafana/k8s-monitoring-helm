@@ -90,6 +90,5 @@ collectors:
       podSecurityContext:
         seLinuxOptions:
           type: container_logreader_t
-
 ```
 <!-- textlint-enable terminology -->

@@ -47,6 +47,5 @@ collectors:
         targets    = discovery.kubernetes.animal_service.targets
         forward_to = [prometheus.remote_write.prometheus_kubernetes.receiver]
       }
-
 ```
 <!-- textlint-enable terminology -->

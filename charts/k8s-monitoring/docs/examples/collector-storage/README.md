@@ -49,7 +49,7 @@ collectors:
         extra:
           - name: alloy-wal
             mountPath: /var/lib/alloy
-  
+
     controller:
       enableStatefulSetAutoDeletePVC: true
       volumeClaimTemplates:

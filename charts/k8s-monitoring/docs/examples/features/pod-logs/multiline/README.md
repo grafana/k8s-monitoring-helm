@@ -38,6 +38,5 @@ podLogs:
 
 collectors:
   alloy-logs: {}
-
 ```
 <!-- textlint-enable terminology -->

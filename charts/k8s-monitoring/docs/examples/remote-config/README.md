@@ -86,6 +86,5 @@ collectors:
               fieldPath: spec.nodeName
         - name: GCLOUD_FM_COLLECTOR_ID
           value: k8smon-$(CLUSTER_NAME)-$(NAMESPACE)-alloy-logs-$(NODE_NAME)
-
 ```
 <!-- textlint-enable terminology -->

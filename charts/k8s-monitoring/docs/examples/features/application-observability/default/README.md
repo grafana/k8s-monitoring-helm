@@ -36,6 +36,5 @@ applicationObservability:
 
 collectors:
   alloy-receiver: {}
-
 ```
 <!-- textlint-enable terminology -->

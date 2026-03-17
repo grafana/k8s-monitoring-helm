@@ -44,6 +44,5 @@ prometheusOperatorObjects:
 
 collectors:
   alloy-metrics: {}
-
 ```
 <!-- textlint-enable terminology -->

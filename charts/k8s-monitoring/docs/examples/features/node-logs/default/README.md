@@ -30,6 +30,5 @@ nodeLogs:
 
 collectors:
   alloy-logs: {}
-
 ```
 <!-- textlint-enable terminology -->

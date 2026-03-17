@@ -66,6 +66,5 @@ collectors:
       stabilityLevel: experimental
 
   alloy-logs: {}
-
 ```
 <!-- textlint-enable terminology -->

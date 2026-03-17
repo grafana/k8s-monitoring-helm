@@ -194,6 +194,5 @@ collectors:
           port: 4318
           targetPort: 4318
           protocol: TCP
-
 ```
 <!-- textlint-enable terminology -->

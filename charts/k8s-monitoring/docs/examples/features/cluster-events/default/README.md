@@ -26,6 +26,5 @@ clusterEvents:
 
 collectors:
   alloy-singleton: {}
-
 ```
 <!-- textlint-enable terminology -->

@@ -63,6 +63,5 @@ telemetryServices:
 collectors:
   alloy-metrics:
     nameOverride: metric-collector
-
 ```
 <!-- textlint-enable terminology -->
