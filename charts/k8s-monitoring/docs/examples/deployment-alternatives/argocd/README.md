@@ -106,12 +106,10 @@ spec:
             - pod
           structuredMetadata:
             pod: ""
-        alloy-metrics:
-          enabled: true
-        alloy-singleton:
-          enabled: true
-        alloy-logs:
-          enabled: true
+        collectors:
+          alloy-metrics: {}
+          alloy-singleton: {}
+          alloy-logs: {}
         collectorCommon:
           alloy:
             annotations:
