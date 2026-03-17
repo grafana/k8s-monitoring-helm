@@ -133,7 +133,15 @@ app.kubernetes.io/instance: {{ include "collector.alloy.fullname" . }}
     {{- $presetValues = ($.Files.Get $fileName | fromYaml) }}
   {{- end }}
 {{- end }}
-{{ mergeOverwrite $defaultValues $namedDefaultValues $presetValues $globalValues $userCommonValues $userValues | toYaml }}
+{{- $clusterNameValues := dict }}
+{{- $clusteringEnabled := or (dig "alloy" "clustering" "enabled" false $namedDefaultValues) (dig "alloy" "clustering" "enabled" false $userValues) (dig "alloy" "clustering" "enabled" false $presetValues) }}
+{{- if $clusteringEnabled }}
+  {{- $clusterNameSet := or (dig "alloy" "clustering" "name" "" $namedDefaultValues) (dig "alloy" "clustering" "name" "" $userValues) }}
+  {{- if not $clusterNameSet }}
+    {{- $clusterNameValues = dict "alloy" (dict "clustering" (dict "name" .collectorName))}}
+  {{- end }}
+{{- end }}
+{{ mergeOverwrite $defaultValues $namedDefaultValues $presetValues $globalValues $userCommonValues $clusterNameValues $userValues | toYaml }}
 {{- end }}
 
 {{- /* Gets the Alloy values including default upstream values. Input: $, .collectorName (string, collector name), .collectorValues (object) */ -}}
