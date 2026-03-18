@@ -89,7 +89,8 @@ autoInstrumentation:
   preset: application
 
 collectors:
-  alloy-metrics: {}
+  alloy-metrics:
+    presets: [clustered, statefulset]
 
   alloy-receiver:
     alloy:

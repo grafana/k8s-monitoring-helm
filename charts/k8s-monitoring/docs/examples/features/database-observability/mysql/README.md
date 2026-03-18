@@ -58,9 +58,11 @@ podLogs:
 
 collectors:
   alloy-singleton:
+    presets: [singleton]
     alloy:
       stabilityLevel: experimental
 
-  alloy-logs: {}
+  alloy-logs:
+    presets: [filesystem-log-reader, daemonset]
 ```
 <!-- textlint-enable terminology -->

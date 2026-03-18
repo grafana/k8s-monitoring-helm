@@ -73,9 +73,11 @@ integrations:
 
 collectors:
   alloy-metrics:
+    presets: [clustered, statefulset]
     alloy:
       stabilityLevel: experimental
 
-  alloy-logs: {}
+  alloy-logs:
+    presets: [filesystem-log-reader, daemonset]
 ```
 <!-- textlint-enable terminology -->

@@ -90,22 +90,14 @@ podLogs:
 
 collectors:
   alloy-logs:
+    presets: [filesystem-log-reader, daemonset]
     alloy:
       stabilityLevel: public-preview
 
-  alloy-receiver:
-    alloy:
-      extraPorts:
-        - name: otlp-http
-          port: 4318
-          targetPort: 4318
-          protocol: TCP
-        - name: otlp-grpc
-          port: 4317
-          targetPort: 4317
-          protocol: TCP
+  alloy-receiver: {}
 
-  alloy-metrics: {}
+  alloy-metrics:
+    presets: [clustered, statefulset]
 
 integrations:
   collector: alloy-metrics

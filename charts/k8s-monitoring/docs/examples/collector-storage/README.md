@@ -43,6 +43,7 @@ podLogs:
 
 collectors:
   alloy-metrics:
+    presets: [clustered, statefulset]
     alloy:
       storagePath: /var/lib/alloy
       mounts:
@@ -63,6 +64,7 @@ collectors:
                 storage: 5Gi
 
   alloy-logs:
+    presets: [filesystem-log-reader, daemonset]
     alloy:
       storagePath: /var/lib/alloy
       mounts:

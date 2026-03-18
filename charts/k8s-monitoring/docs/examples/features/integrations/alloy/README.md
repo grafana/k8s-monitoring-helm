@@ -29,6 +29,7 @@ integrations:
           app.kubernetes.io/name: alloy-metrics
 
 collectors:
-  alloy-metrics: {}
+  alloy-metrics:
+    presets: [clustered, statefulset]
 ```
 <!-- textlint-enable terminology -->

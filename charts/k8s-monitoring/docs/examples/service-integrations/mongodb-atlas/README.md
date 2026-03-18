@@ -31,6 +31,7 @@ destinations:
 
 collectors:
   alloy-metrics:
+    presets: [clustered, statefulset]
     extraConfig: |-
       remote.kubernetes.secret "mongodb_atlas" {
         name = "mongodb-atlas"

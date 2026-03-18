@@ -1,10 +1,19 @@
 {{/* Inputs: Values (root Values), collectorName (string), featureKey (string), featureName (string) */}}
 {{- define "collectors.validate.collectorIsAssigned" }}
+{{- $allCollectors := (keys .Values.collectors | sortAlpha) }}
 {{- if not .collectorName }}
   {{- $msg := list "" (printf "The %s feature requires a collector to be assigned." .featureName) }}
   {{- $msg = append $msg "Please assign one by setting the following:" }}
   {{- $msg = append $msg (printf "%s:" .featureKey) }}
-  {{- $msg = append $msg (printf "  collector: %s" (include "english_list_or" (keys .Values.collectors | sortAlpha))) }}
+  {{- $msg = append $msg (printf "  collector: %s" (include "english_list_or" $allCollectors)) }}
+  {{- $msg = append $msg "See https://github.com/grafana/k8s-monitoring-helm/blob/main/charts/k8s-monitoring/docs/collectors/README.md for more details." }}
+  {{- fail (join "\n" $msg) }}
+{{- end }}
+{{- if not (has .collectorName $allCollectors) }}
+  {{- $msg := list "" (printf "The %s feature wants to use a collector named \"%s\", but that collector does not exist." .featureName .collectorName) }}
+  {{- $msg = append $msg "Please assign one by setting the following:" }}
+  {{- $msg = append $msg (printf "%s:" .featureKey) }}
+  {{- $msg = append $msg (printf "  collector: %s" (include "english_list_or" $allCollectors)) }}
   {{- $msg = append $msg "See https://github.com/grafana/k8s-monitoring-helm/blob/main/charts/k8s-monitoring/docs/collectors/README.md for more details." }}
   {{- fail (join "\n" $msg) }}
 {{- end }}

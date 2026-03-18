@@ -97,7 +97,8 @@ alloy-operator:
         - name: my-registry-creds
 
 collectors:
-  alloy-metrics: {}
+  alloy-metrics:
+    presets: [clustered, statefulset]
   alloy-receiver: {}
 
 collectorCommon:

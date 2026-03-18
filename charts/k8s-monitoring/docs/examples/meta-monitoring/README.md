@@ -195,15 +195,9 @@ applicationObservability:
 
 # Collectors
 collectors:
-  alloy-singleton: {}
-
-  alloy-receiver:
-    alloy:
-      extraPorts:
-        - name: jaeger-http
-          port: 14268
-          targetPort: 14268
-          protocol: TCP
+  alloy-singleton:
+    presets: [singleton]
+  alloy-receiver: {}
 
 telemetryServices:
   kube-state-metrics:

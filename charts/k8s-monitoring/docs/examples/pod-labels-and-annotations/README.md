@@ -130,9 +130,11 @@ applicationObservability:
         enabled: true
 
 collectors:
-  alloy-metrics: {}
+  alloy-metrics:
+    presets: [clustered, statefulset]
 
-  alloy-logs: {}
+  alloy-logs:
+    presets: [filesystem-log-reader, daemonset]
 
   alloy-receiver:
     alloy:

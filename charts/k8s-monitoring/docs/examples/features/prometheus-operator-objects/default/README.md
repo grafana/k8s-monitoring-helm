@@ -43,6 +43,7 @@ prometheusOperatorObjects:
           - my-other-app
 
 collectors:
-  alloy-metrics: {}
+  alloy-metrics:
+    presets: [clustered, statefulset]
 ```
 <!-- textlint-enable terminology -->

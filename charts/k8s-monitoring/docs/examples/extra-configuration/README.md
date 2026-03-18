@@ -29,7 +29,7 @@ selfReporting:
   enabled: false
 
 collectors:
-  alloy-metrics:
+  alloy:
     includeDestinations: [prometheus-kubernetes]
     extraConfig: |
       discovery.kubernetes "animal_service" {

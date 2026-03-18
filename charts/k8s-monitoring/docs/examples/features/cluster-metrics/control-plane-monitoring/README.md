@@ -56,11 +56,14 @@ integrations:
 
 # Collectors
 collectors:
-  alloy-metrics: {}
+  alloy-metrics:
+    presets: [clustered, statefulset]
 
-  alloy-logs: {}
+  alloy-logs:
+    presets: [filesystem-log-reader, daemonset]
 
-  alloy-singleton: {}
+  alloy-singleton:
+    presets: [singleton]
 
 telemetryServices:
   kube-state-metrics:

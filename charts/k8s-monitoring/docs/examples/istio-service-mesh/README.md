@@ -108,9 +108,11 @@ collectors:
     controller:
       replicas: 2  # To test that clustering is working
 
-  alloy-singleton: {}
+  alloy-singleton:
+    presets: [singleton]
 
-  alloy-logs: {}
+  alloy-logs:
+    presets: [filesystem-log-reader, daemonset]
 
   alloy-receiver:
     controller:

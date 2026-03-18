@@ -26,6 +26,7 @@ autoInstrumentation:
   spanMetricsOnly: true
 
 collectors:
-  alloy-metrics: {}
+  alloy-metrics:
+    presets: [clustered, statefulset]
 ```
 <!-- textlint-enable terminology -->

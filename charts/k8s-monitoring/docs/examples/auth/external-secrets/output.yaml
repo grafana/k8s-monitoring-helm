@@ -1039,10 +1039,11 @@ metadata:
     helm.sdk.operatorframework.io/uninstall-wait: "true"
 spec:
   alloy:
-    clustering:
-      enabled: false
     configMap:
       create: false
+    extraEnv:
+    - name: LOKI_BEARER_TOKEN
+      value: sample-bearer-token
     mounts:
       dockercontainers: true
       varlog: true
@@ -1081,7 +1082,6 @@ spec:
   crds:
     create: false
   nameOverride: alloy-logs
-  preset: ""
 ---
 # Source: k8s-monitoring/templates/alloy.yaml
 apiVersion: collectors.grafana.com/v1alpha1
@@ -1099,23 +1099,23 @@ spec:
     configMap:
       create: false
     extraEnv:
-    - name: GCLOUD_RW_API_KEY
-      valueFrom:
-        secretKeyRef:
-          key: access-token
-          name: my-monitoring-secret
     - name: CLUSTER_NAME
       value: external-secrets-example-cluster
     - name: NAMESPACE
       valueFrom:
         fieldRef:
           fieldPath: metadata.namespace
-    - name: NODE_NAME
+    - name: POD_NAME
       valueFrom:
         fieldRef:
-          fieldPath: spec.nodeName
+          fieldPath: metadata.name
     - name: GCLOUD_FM_COLLECTOR_ID
-      value: k8smon-$(CLUSTER_NAME)-$(NAMESPACE)-alloy-logs-$(NODE_NAME)
+      value: k8smon-$(CLUSTER_NAME)-$(NAMESPACE)-$(POD_NAME)
+    - name: GCLOUD_RW_API_KEY
+      valueFrom:
+        secretKeyRef:
+          key: access-token
+          name: my-monitoring-secret
     resources: {}
     securityContext:
       allowPrivilegeEscalation: false
@@ -1149,7 +1149,6 @@ spec:
   crds:
     create: false
   nameOverride: alloy-metrics
-  preset: ""
 ---
 # Source: k8s-monitoring/templates/alloy.yaml
 apiVersion: collectors.grafana.com/v1alpha1
@@ -1199,7 +1198,6 @@ spec:
   crds:
     create: false
   nameOverride: alloy-receiver
-  preset: ""
 ---
 # Source: k8s-monitoring/templates/hooks/post-install_add-finalizer.yaml
 apiVersion: v1

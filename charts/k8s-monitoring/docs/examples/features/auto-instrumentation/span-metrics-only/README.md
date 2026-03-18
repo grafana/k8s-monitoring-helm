@@ -81,7 +81,8 @@ autoInstrumentation:
     deliverTracesToApplicationObservability: false  # Only collect span metrics, do not export traces
 
 collectors:
-  alloy-metrics: {}
+  alloy-metrics:
+    presets: [clustered, statefulset]
 
   alloy-receiver:
     alloy:

@@ -30,6 +30,7 @@ destinations:
 
 collectors:
   alloy-metrics:
+    presets: [clustered, statefulset]
     extraConfig: |-
       remote.kubernetes.secret "timescale_db" {
         name = "timescale-db"

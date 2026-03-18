@@ -379,16 +379,9 @@ metadata:
     helm.sdk.operatorframework.io/uninstall-wait: "true"
 spec:
   alloy:
-    clustering:
-      enabled: false
     configMap:
       create: false
     extraEnv:
-    - name: GCLOUD_RW_API_KEY
-      valueFrom:
-        secretKeyRef:
-          key: password
-          name: alloy-logs-remote-cfg-k8smon-k8s-monitoring
     - name: CLUSTER_NAME
       value: remote-config-example-cluster
     - name: NAMESPACE
@@ -401,6 +394,11 @@ spec:
           fieldPath: spec.nodeName
     - name: GCLOUD_FM_COLLECTOR_ID
       value: k8smon-$(CLUSTER_NAME)-$(NAMESPACE)-alloy-logs-$(NODE_NAME)
+    - name: GCLOUD_RW_API_KEY
+      valueFrom:
+        secretKeyRef:
+          key: password
+          name: alloy-logs-remote-cfg-k8smon-k8s-monitoring
     mounts:
       dockercontainers: true
       varlog: true
@@ -439,7 +437,6 @@ spec:
   crds:
     create: false
   nameOverride: alloy-logs
-  preset: ""
 ---
 # Source: k8s-monitoring/templates/alloy.yaml
 apiVersion: collectors.grafana.com/v1alpha1
@@ -457,11 +454,6 @@ spec:
     configMap:
       create: false
     extraEnv:
-    - name: GCLOUD_RW_API_KEY
-      valueFrom:
-        secretKeyRef:
-          key: password
-          name: alloy-metrics-remote-cfg-k8smon-k8s-monitoring
     - name: CLUSTER_NAME
       value: remote-config-example-cluster
     - name: NAMESPACE
@@ -474,6 +466,11 @@ spec:
           fieldPath: metadata.name
     - name: GCLOUD_FM_COLLECTOR_ID
       value: k8smon-$(CLUSTER_NAME)-$(NAMESPACE)-$(POD_NAME)
+    - name: GCLOUD_RW_API_KEY
+      valueFrom:
+        secretKeyRef:
+          key: password
+          name: alloy-metrics-remote-cfg-k8smon-k8s-monitoring
     resources: {}
     securityContext:
       allowPrivilegeEscalation: false
@@ -507,7 +504,6 @@ spec:
   crds:
     create: false
   nameOverride: alloy-metrics
-  preset: ""
 ---
 # Source: k8s-monitoring/templates/hooks/post-install_add-finalizer.yaml
 apiVersion: v1

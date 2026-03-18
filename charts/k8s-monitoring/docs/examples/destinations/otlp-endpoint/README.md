@@ -66,6 +66,7 @@ podLogs:
 
 collectors:
   alloy-metrics:
+    presets: [clustered, statefulset]
     extraConfig: |
       otelcol.storage.file "otlp_gateway_queue_storage" {
         create_directory = true
@@ -73,6 +74,7 @@ collectors:
       }
 
   alloy-logs:
+    presets: [filesystem-log-reader, daemonset]
     extraConfig: |
       otelcol.storage.file "otlp_gateway_queue_storage" {
         create_directory = true

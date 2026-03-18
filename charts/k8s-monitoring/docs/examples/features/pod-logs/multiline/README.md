@@ -37,6 +37,7 @@ podLogs:
     }
 
 collectors:
-  alloy-logs: {}
+  alloy-logs:
+    presets: [filesystem-log-reader, daemonset]
 ```
 <!-- textlint-enable terminology -->

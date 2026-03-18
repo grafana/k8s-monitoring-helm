@@ -94,7 +94,8 @@ collectorCommon:
         digest: sha256:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef
 
 collectors:
-  alloy-metrics: {}
+  alloy-metrics:
+    presets: [clustered, statefulset]
 
   alloy-receiver: {}
 

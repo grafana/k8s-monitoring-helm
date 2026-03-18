@@ -58,6 +58,7 @@ podLogs:
 
 collectors:
   alloy-metrics:
+    presets: [clustered, statefulset]
     controller:
       tolerations:
         - key: protected-node
@@ -65,6 +66,7 @@ collectors:
           operator: Exists
 
   alloy-logs:
+    presets: [filesystem-log-reader, daemonset]
     controller:
       tolerations:
         - key: protected-node

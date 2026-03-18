@@ -98,8 +98,10 @@ applicationObservability:
         enabled: true
 
 collectors:
-  alloy-metrics: {}
-  alloy-logs: {}
+  alloy-metrics:
+    presets: [clustered, statefulset]
+  alloy-logs:
+    presets: [filesystem-log-reader, daemonset]
   alloy-receiver: {}
 
 telemetryServices:

@@ -179,14 +179,8 @@ alloy_instances = $(shell \
 	mkdir -p $(dir $@)
 	helm template $(EXAMPLE_RELEASE_NAME) . -f $< > $@
 
-ALLOY_INSTANCES := logs metrics receiver singleton profiles
-define alloy_files
-%/alloy-$(1).alloy: %/output.yaml
-	yq 'select(.kind=="ConfigMap" and .metadata.name=="$(EXAMPLE_RELEASE_NAME)-alloy-$(1)") | .data["config.alloy"]' $$< > $$@
-%/alloy-$(1).yaml: %/output.yaml
-	yq 'select(.kind=="Alloy" and .metadata.name=="$(EXAMPLE_RELEASE_NAME)-alloy-$(1)") | .' $$< > $$@
-endef
-$(foreach instance,$(ALLOY_INSTANCES),$(eval $(call alloy_files,$(instance))))
+%.alloy: $$(dir $$@)output.yaml
+	yq 'select(.kind=="ConfigMap" and .metadata.name=="$(EXAMPLE_RELEASE_NAME)-$(notdir $(basename $@))") | .data["config.alloy"]' $< > $@
 
 %/README.md: %/values.yaml $$(wildcard %/description.txt)
 	@echo '<!--' > $@

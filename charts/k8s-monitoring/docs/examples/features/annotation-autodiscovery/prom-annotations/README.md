@@ -29,6 +29,7 @@ annotationAutodiscovery:
     metricsScheme: prometheus.io/scheme
 
 collectors:
-  alloy-metrics: {}
+  alloy-metrics:
+    presets: [clustered, statefulset]
 ```
 <!-- textlint-enable terminology -->

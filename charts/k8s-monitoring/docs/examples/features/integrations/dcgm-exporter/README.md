@@ -29,6 +29,7 @@ integrations:
           app: nvidia-dcgm-exporter
 
 collectors:
-  alloy-metrics: {}
+  alloy-metrics:
+    presets: [clustered, statefulset]
 ```
 <!-- textlint-enable terminology -->

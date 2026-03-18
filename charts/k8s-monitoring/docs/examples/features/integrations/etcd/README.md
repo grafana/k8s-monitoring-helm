@@ -28,6 +28,7 @@ integrations:
           app.kubernetes.io/component: etcd
 
 collectors:
-  alloy-metrics: {}
+  alloy-metrics:
+    presets: [clustered, statefulset]
 ```
 <!-- textlint-enable terminology -->

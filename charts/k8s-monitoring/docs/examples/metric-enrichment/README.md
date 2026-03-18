@@ -41,6 +41,7 @@ hostMetrics:
 
 collectors:
   alloy-metrics:
+    presets: [clustered, statefulset]
     includeDestinations: [metric-store]
     alloy:
       stabilityLevel: experimental

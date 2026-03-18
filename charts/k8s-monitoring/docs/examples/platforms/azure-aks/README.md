@@ -65,11 +65,14 @@ collectorCommon:
       podAnnotations: {kubernetes.azure.com/set-kube-service-host-fqdn: "true"}
 
 collectors:
-  alloy-metrics: {}
+  alloy-metrics:
+    presets: [clustered, statefulset]
 
-  alloy-singleton: {}
+  alloy-singleton:
+    presets: [singleton]
 
-  alloy-logs: {}
+  alloy-logs:
+    presets: [filesystem-log-reader, daemonset]
 
 telemetryServices:
   kube-state-metrics:

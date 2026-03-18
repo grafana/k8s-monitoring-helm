@@ -43,11 +43,11 @@ destinations:
 
 clusterEvents:
   enabled: true
-  collector: alloy-singleton
   destinations: [kafka]
 
 collectors:
   alloy-singleton:
+    presets: [singleton]
     liveDebugging:
       enabled: true
 ```

@@ -1075,8 +1075,6 @@ metadata:
     helm.sdk.operatorframework.io/uninstall-wait: "true"
 spec:
   alloy:
-    clustering:
-      enabled: false
     configMap:
       create: false
     mounts:
@@ -1117,7 +1115,6 @@ spec:
   crds:
     create: false
   nameOverride: alloy-logs
-  preset: ""
 ---
 # Source: k8s-monitoring/templates/alloy.yaml
 apiVersion: collectors.grafana.com/v1alpha1
@@ -1132,14 +1129,14 @@ spec:
     configMap:
       create: false
     extraPorts:
-    - name: otlp-http
-      port: 4318
-      protocol: TCP
-      targetPort: 4318
     - name: otlp-grpc
       port: 4317
       protocol: TCP
       targetPort: 4317
+    - name: otlp-http
+      port: 4318
+      protocol: TCP
+      targetPort: 4318
     resources: {}
     securityContext:
       allowPrivilegeEscalation: false
@@ -1171,7 +1168,6 @@ spec:
   crds:
     create: false
   nameOverride: alloy-receiver
-  preset: ""
 ---
 # Source: k8s-monitoring/templates/hooks/post-install_add-finalizer.yaml
 apiVersion: v1

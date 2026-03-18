@@ -140,7 +140,8 @@ collectors:
         - name: GCLOUD_FM_COLLECTOR_ID
           value: k8smon-$(CLUSTER_NAME)-$(NAMESPACE)-alloy-logs-$(NODE_NAME)
 
-  alloy-logs: {}
+  alloy-logs:
+    presets: [filesystem-log-reader, daemonset]
 
   alloy-receiver:
     alloy:

@@ -81,11 +81,14 @@ integrations:
           app.kubernetes.io/name: [alloy-metrics, alloy-singleton, alloy-logs]
 
 collectors:
-  alloy-metrics: {}
+  alloy-metrics:
+    presets: [clustered, statefulset]
 
-  alloy-singleton: {}
+  alloy-singleton:
+    presets: [singleton]
 
   alloy-logs:
+    presets: [filesystem-log-reader, daemonset]
     global:
       podSecurityContext:
         seLinuxOptions:

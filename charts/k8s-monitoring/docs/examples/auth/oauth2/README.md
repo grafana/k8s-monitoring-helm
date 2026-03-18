@@ -64,11 +64,14 @@ annotationAutodiscovery:
   collector: alloy-metrics
 
 collectors:
-  alloy-logs: {}
+  alloy-logs:
+    presets: [filesystem-log-reader, daemonset]
 
-  alloy-metrics: {}
+  alloy-metrics:
+    presets: [clustered, statefulset]
 
-  alloy-singleton: {}
+  alloy-singleton:
+    presets: [singleton]
 
 telemetryServices:
   kube-state-metrics:

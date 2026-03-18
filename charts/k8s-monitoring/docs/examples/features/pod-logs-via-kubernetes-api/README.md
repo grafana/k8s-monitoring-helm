@@ -28,13 +28,10 @@ destinations:
 
 podLogsViaKubernetesApi:
   enabled: true
-  collector: alloy-logs
   namespaces: [production]
 
 collectors:
   alloy-logs:
-    alloy:
-      clustering:
-        enabled: true
+    presets: [clustered]
 ```
 <!-- textlint-enable terminology -->

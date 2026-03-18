@@ -40,9 +40,12 @@ podLogs:
   collector: alloy-logs
 
 collectors:
-  alloy-metrics: {}
-  alloy-singleton: {}
-  alloy-logs: {}
+  alloy-metrics:
+    presets: [clustered, statefulset]
+  alloy-singleton:
+    presets: [singleton]
+  alloy-logs:
+    presets: [filesystem-log-reader, daemonset]
 
 telemetryServices:
   kube-state-metrics:

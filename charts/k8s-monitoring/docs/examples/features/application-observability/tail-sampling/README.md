@@ -187,12 +187,6 @@ applicationObservability:
         enabled: true
 
 collectors:
-  alloy-receiver:
-    alloy:
-      extraPorts:
-        - name: otlp-http
-          port: 4318
-          targetPort: 4318
-          protocol: TCP
+  alloy-receiver: {}
 ```
 <!-- textlint-enable terminology -->

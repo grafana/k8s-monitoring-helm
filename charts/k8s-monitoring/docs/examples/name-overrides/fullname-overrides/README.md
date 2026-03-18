@@ -43,6 +43,7 @@ hostMetrics:
 
 collectors:
   alloy-metrics:
+    presets: [clustered, statefulset]
     fullnameOverride: metric-collector
 
 telemetryServices:

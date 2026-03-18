@@ -72,7 +72,8 @@ hostMetrics:
       useIntegrationAllowList: true
 
 collectors:
-  alloy-metrics: {}
+  alloy-metrics:
+    presets: [clustered, statefulset]
 
 telemetryServices:
   kube-state-metrics:

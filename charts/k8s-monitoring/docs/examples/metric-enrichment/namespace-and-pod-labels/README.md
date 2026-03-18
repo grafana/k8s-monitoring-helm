@@ -41,11 +41,9 @@ destinations:
 
 clusterMetrics:
   enabled: true
-  collector: alloy-metrics
 
 hostMetrics:
   enabled: true
-  collector: alloy-metrics
   linuxHosts:
     enabled: true
   windowsHosts:
@@ -53,6 +51,7 @@ hostMetrics:
 
 collectors:
   alloy-metrics:
+    presets: [clustered, statefulset]
     alloy:
       stabilityLevel: experimental
 

@@ -28,6 +28,7 @@ integrations:
           app.kubernetes.io/name: cert-manager
 
 collectors:
-  alloy-metrics: {}
+  alloy-metrics:
+    presets: [clustered, statefulset]
 ```
 <!-- textlint-enable terminology -->

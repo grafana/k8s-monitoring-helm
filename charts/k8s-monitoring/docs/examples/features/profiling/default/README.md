@@ -25,6 +25,7 @@ profiling:
   collector: alloy-profiles
 
 collectors:
-  alloy-profiles: {}
+  alloy-profiles:
+    presets: [privileged, daemonset]
 ```
 <!-- textlint-enable terminology -->

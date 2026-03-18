@@ -62,19 +62,16 @@ applicationObservability:
       enabled: true
 
 collectors:
-  alloy-metrics: {}
+  alloy-metrics:
+    presets: [clustered, statefulset]
 
-  alloy-singleton: {}
+  alloy-singleton:
+    presets: [singleton]
 
-  alloy-logs: {}
+  alloy-logs:
+    presets: [filesystem-log-reader, daemonset]
 
   alloy-receiver:
-    alloy:
-      extraPorts:
-        - name: otlp-grpc
-          port: 4317
-          targetPort: 4317
-          protocol: TCP
     extraConfig: |
       remote.http "url_test" {
         url = "https://api.github.com/users/grafana/repos"

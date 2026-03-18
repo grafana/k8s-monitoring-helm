@@ -15,7 +15,7 @@
       {{- $updatedValues = merge $.Values $valuesWithFeatureModification }}
     {{- end }}
   {{- end }}
-  {{- $updatedValues = merge $.Values (include "collectors.remoteConfig.collector.values" (dict "Values" $updatedValues "Files" $.Files "Release" $.Release) | fromYaml) }}
+  {{- $updatedValues = merge $.Values (include "collectors.remoteConfig.collector.values" (dict "Values" $updatedValues "Files" $.Files "Release" $.Release "Chart" $.Chart) | fromYaml) }}
 
   {{- /* Feature Validations */}}
   {{- include "validations.features_enabled" . }}

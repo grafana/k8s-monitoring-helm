@@ -3,8 +3,8 @@
 {{- $values := dict }}
 {{- range $collectorName := keys .Values.collectors | sortAlpha }}
   {{- $collectorValues := include "collector.alloy.values" (dict "Values" $.Values "Files" $.Files "collectorName" $collectorName) | fromYaml }}
-  {{- $collectorType := $collectorValues.controller.type }}
   {{- if (dig "remoteConfig" "enabled" false $collectorValues) }}
+    {{- $collectorType := $collectorValues.controller.type }}
     {{- $extraEnv := deepCopy (dig "alloy" "extraEnv" list $collectorValues) }}
     {{- if eq (include "collectors.hasExtraEnv" (deepCopy $ | merge (dict "collectorName" $collectorName "envVarName" "GCLOUD_FM_COLLECTOR_ID"))) "false" }}
       {{- $extraEnv = (include "collectors.set_extra_env" (dict "envList" $extraEnv "name" "CLUSTER_NAME" "value" $.Values.cluster.name)) | fromYamlArray }}
@@ -21,12 +21,12 @@
     {{- if eq (include "collectors.hasExtraEnv" (deepCopy $ | merge (dict "collectorName" $collectorName "envVarName" "GCLOUD_RW_API_KEY"))) "false" }}
       {{- $remoteConfigValues := merge ((get $.Values.collectors $collectorName).remoteConfig) (dict "type" "remoteConfig") }}
       {{- if eq (include "secrets.usesKubernetesSecret" $remoteConfigValues ) "true" }}
-        {{- $secretName := include "secrets.kubernetesSecretName" (deepCopy $ | merge (dict "object" $remoteConfigValues "name" (printf "%s-remote-cfg" $collectorName))) }}
+        {{- $secretName := include "secrets.kubernetesSecretName" (dict "Values" $.Values "Chart" $.Chart "Release" $.Release "object" $remoteConfigValues "name" (printf "%s-remote-cfg" $collectorName)) }}
         {{- $secretKey := include "secrets.getSecretKey" (dict "object" $remoteConfigValues "key" "auth.password") }}
         {{- $extraEnv = append $extraEnv (dict "name" "GCLOUD_RW_API_KEY" "valueFrom" (dict "secretKeyRef" (dict "name" $secretName "key" $secretKey))) }}
       {{- end }}
     {{- end }}
-    {{- $values = $values | merge (dict $collectorName (dict "alloy" (dict "extraEnv" $extraEnv))) }}
+    {{- $values = $values | merge (dict "collectors" (dict $collectorName (dict "alloy" (dict "extraEnv" $extraEnv)))) }}
   {{- end }}
 {{- end }}
 {{- $values | toYaml }}

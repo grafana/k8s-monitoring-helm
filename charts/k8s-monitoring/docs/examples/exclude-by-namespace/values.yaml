@@ -88,12 +88,12 @@ hostMetrics:
 
 podLogs:
   enabled: true
-  collector: alloy-logs
+  collector: alloy-daemonset
   excludeNamespaces: [kube-system, kube-public, confidential]
 
 profiling:
   enabled: true
-  collector: alloy-profiles
+  collector: alloy-daemonset
   ebpf:
     excludeNamespaces: [kube-system, kube-public, confidential]
   java:
@@ -112,21 +112,13 @@ prometheusOperatorObjects:
     excludeNamespaces: [kube-system, kube-public, confidential]
 
 collectors:
-  alloy-metrics: {}
-
-  alloy-singleton: {}
-
-  alloy-logs: {}
-
-  alloy-receiver:
-    alloy:
-      extraPorts:
-        - name: otlp-grpc
-          port: 4317
-          targetPort: 4317
-          protocol: TCP
-
-  alloy-profiles: {}
+  alloy-metrics:
+    presets: [clustered, statefulset]
+  alloy-daemonset:
+    presets: [privileged, filesystem-log-reader, daemonset]
+  alloy-singleton:
+    presets: [singleton]
+  alloy-receiver: {}
 
 telemetryServices:
   kube-state-metrics:

@@ -34,6 +34,7 @@ hostMetrics:
 
 collectors:
   alloy-metrics:
+    presets: [clustered, statefulset]
     alloy:
       resources:
         requests:

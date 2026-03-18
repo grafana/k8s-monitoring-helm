@@ -31,7 +31,8 @@ hostMetrics:
     enabled: true
 
 collectors:
-  alloy-metrics: {}
+  alloy-metrics:
+    presets: [clustered, statefulset]
 
 telemetryServices:
   node-exporter:

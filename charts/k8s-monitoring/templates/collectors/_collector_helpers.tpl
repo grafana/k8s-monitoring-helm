@@ -72,7 +72,7 @@
 {{/* Inputs: Values (all values), collectorName (collector name), collectorValues (collector values, if not inside `.Values.collectors` map) */}}
 {{- define "collector.alloy.fullname" }}
   {{- $collectorValues := .collectorValues | default (get .Values.collectors .collectorName) }}
-  {{- if $collectorValues.fullnameOverride }}
+  {{- if hasKey $collectorValues "fullnameOverride" }}
     {{- $collectorValues.fullnameOverride | trunc 63 | trimSuffix "-" }}
   {{- else }}
     {{- $name := default .collectorName .Values.nameOverride }}
@@ -128,9 +128,19 @@ app.kubernetes.io/instance: {{ include "collector.alloy.fullname" . }}
   {{- $userValues = (index $.Values.collectors .collectorName) }}
 {{- end }}
 {{- $presetValues := dict }}
-{{- if hasKey $userValues "preset" }}
-  {{- range $fileName, $_ := $.Files.Glob (printf "collectors/presets/%s.yaml" (get $userValues "preset")) }}
-    {{- $presetValues = ($.Files.Get $fileName | fromYaml) }}
+{{- if hasKey $userValues "presets" }}
+  {{- range $preset := $userValues.presets }}
+    {{- $files := $.Files.Glob (printf "collectors/presets/%s.yaml" $preset) }}
+    {{- if eq (len $files) 0 }}
+      {{ $allPresets := include "collectors.getAllPresets" $ | fromYamlArray }}
+      {{- $msg := list "" }}
+      {{- $msg = append $msg (printf "The collector \"%s\" is using an unknown preset: %s" $.collectorName $preset) }}
+      {{- $msg = append $msg (printf "Please use one of the known presets: %s" (include "english_list_or" $allPresets)) }}
+      {{- fail (join "\n" $msg) }}
+    {{- end }}
+    {{- range $fileName, $_ := $files }}
+      {{- $presetValues = merge $presetValues ($.Files.Get $fileName | fromYaml) }}
+    {{- end }}
   {{- end }}
 {{- end }}
 {{- $clusterNameValues := dict }}
@@ -165,15 +175,16 @@ app.kubernetes.io/instance: {{ include "collector.alloy.fullname" . }}
 {{/* Lists the fields that are not a part of Alloy itself, and should be removed before creating an Alloy instance. */}}
 {{/* Inputs: (none) */}}
 {{- define "collector.alloy.extraFields" }}
+- annotations
 - enabled
 - extraConfig
 - extraService
+- labels
 - includeDestinations
 - liveDebugging
 - logging
+- presets
 - remoteConfig
-- annotations
-- labels
 {{- end }}
 
 {{/* Inputs: Values (root Values), featureKey (string) */}}
@@ -188,4 +199,10 @@ app.kubernetes.io/instance: {{ include "collector.alloy.fullname" . }}
   {{- end }}
 {{- end }}
 {{- $collectorName }}
+{{- end }}
+
+{{ define "collectors.getAllPresets" }}
+  {{- range $presetFile, $_ := $.Files.Glob "collectors/presets/*.yaml" }}
+- {{ base $presetFile | trimSuffix (ext $presetFile) | trim }}
+  {{- end }}
 {{- end }}

@@ -26,12 +26,35 @@ way to set the environment variables automatically.
 
 <!-- textlint-disable terminology -->
 ```yaml
+#---
+#cluster:
+#  name: remote-config-example-cluster
+#
+#collectorCommon:
+#  alloy:
+#    remoteConfig:
+#      enabled: true
+#      url: https://remote-config.example.com/alloy
+#      auth:
+#        type: basic
+#        username: 12345
+#        password: my-remote-cfg-password
+#
+#collectors:
+#  alloy-metrics:
+#    presets: [clustered, statefulset]
+#
+#  alloy-logs:
+#    presets: [filesystem-log-reader, daemonset]
+
+
 ---
 cluster:
   name: remote-config-example-cluster
 
 collectors:
   alloy-metrics:
+    presets: [clustered, statefulset]
     remoteConfig:
       enabled: true
       url: https://remote-config.example.com/alloy
@@ -39,27 +62,9 @@ collectors:
         type: basic
         username: 12345
         password: my-remote-cfg-password
-    alloy:
-      extraEnv:
-        - name: GCLOUD_RW_API_KEY
-          valueFrom:
-            secretKeyRef:
-              name: alloy-metrics-remote-cfg-k8smon-k8s-monitoring
-              key: password
-        - name: CLUSTER_NAME
-          value: remote-config-example-cluster
-        - name: NAMESPACE
-          valueFrom:
-            fieldRef:
-              fieldPath: metadata.namespace
-        - name: POD_NAME
-          valueFrom:
-            fieldRef:
-              fieldPath: metadata.name
-        - name: GCLOUD_FM_COLLECTOR_ID
-          value: k8smon-$(CLUSTER_NAME)-$(NAMESPACE)-$(POD_NAME)
 
   alloy-logs:
+    presets: [filesystem-log-reader, daemonset]
     remoteConfig:
       enabled: true
       url: https://remote-config.example.com/alloy
@@ -67,24 +72,5 @@ collectors:
         type: basic
         username: my-remote-cfg-user
         password: my-remote-cfg-password
-    alloy:
-      extraEnv:
-        - name: GCLOUD_RW_API_KEY
-          valueFrom:
-            secretKeyRef:
-              name: alloy-logs-remote-cfg-k8smon-k8s-monitoring
-              key: password
-        - name: CLUSTER_NAME
-          value: remote-config-example-cluster
-        - name: NAMESPACE
-          valueFrom:
-            fieldRef:
-              fieldPath: metadata.namespace
-        - name: NODE_NAME
-          valueFrom:
-            fieldRef:
-              fieldPath: spec.nodeName
-        - name: GCLOUD_FM_COLLECTOR_ID
-          value: k8smon-$(CLUSTER_NAME)-$(NAMESPACE)-alloy-logs-$(NODE_NAME)
 ```
 <!-- textlint-enable terminology -->

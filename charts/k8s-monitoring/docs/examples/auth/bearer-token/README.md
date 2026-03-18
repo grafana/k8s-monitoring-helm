@@ -62,7 +62,8 @@ podLogs:
   collector: alloy-logs
 
 collectors:
-  alloy-metrics: {}
+  alloy-metrics:
+    presets: [clustered, statefulset]
 
   alloy-logs:
     preset: logfile

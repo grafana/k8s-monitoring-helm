@@ -62,6 +62,7 @@ telemetryServices:
 
 collectors:
   alloy-metrics:
+    presets: [clustered, statefulset]
     nameOverride: metric-collector
 ```
 <!-- textlint-enable terminology -->
