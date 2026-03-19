@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+*   Update Beyla, Node Exporter, OpenCost, and Prometheus Operator CRDs (@petewall)
+
 ## 3.8.4
 
 *   Update Alloy Operator to 1.5.2 (@petewall)
