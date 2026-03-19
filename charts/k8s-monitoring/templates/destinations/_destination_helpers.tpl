@@ -32,7 +32,15 @@
 {{/* Inputs: . (Values), destination (string, name of destination) */}}
 {{- define "destination.getEcosystem" }}
 {{- if hasKey .Values.destinations .destination }}
-  {{- $destination := get .Values.destinations .destination }}
-  {{- include (printf "destinations.%s.ecosystem" $destination.type) $destination }}
+  {{- $destinationValues := get .Values.destinations .destination }}
+  {{- include (printf "destinations.%s.ecosystem" $destinationValues.type) $destinationValues }}
 {{- else }}unknown{{ end }}
+{{- end }}
+
+{{/* Inputs: . (Values), destinationName (string, name of destination) */}}
+{{- define "destination.supportsMetrics" }}
+{{- if hasKey .Values.destinations .destinationName }}
+  {{- $destinationValues := get .Values.destinations .destinationName }}
+  {{- include (printf "destinations.%s.supports_metrics" $destinationValues.type) $destinationValues }}
+{{- else }}false{{ end }}
 {{- end }}

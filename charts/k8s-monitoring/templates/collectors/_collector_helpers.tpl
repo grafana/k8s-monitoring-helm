@@ -187,7 +187,7 @@ app.kubernetes.io/instance: {{ include "collector.alloy.fullname" . }}
 - remoteConfig
 {{- end }}
 
-{{/* Inputs: Values (root Values), featureKey (string) */}}
+{{/* Inputs: . (root object), featureKey (string) */}}
 {{ define "collectors.getCollectorForFeature" }}
 {{- $collectorName := dig "collector" "" (get .Values .featureKey) }}
 {{- if not $collectorName }}

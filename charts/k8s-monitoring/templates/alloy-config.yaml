@@ -2,7 +2,7 @@
 {{- $selfReportingEnabled := false }}
 {{- $destinationNames := (get $.Values.collectors $collectorName).includeDestinations | default list }}
 {{- range $featureKey := include "features.list" $ | fromYamlArray }}
-  {{- $featureCollectorName := include "collectors.getCollectorForFeature" (dict "Values" $.Values "featureKey" $featureKey) }}
+  {{- $featureCollectorName := include "collectors.getCollectorForFeature" (dict "Values" $.Values "Files" $.Files "Subcharts" $.Subcharts "featureKey" $featureKey) }}
   {{- if eq $collectorName $featureCollectorName }}
     {{- if eq $featureKey "selfReporting" }}
       {{- $selfReportingEnabled = true }}
@@ -16,7 +16,7 @@
 {{- $collectorValues := include "collector.alloy.values" $values | fromYaml }}
 {{- $alloyConfig := "" }}
 {{- range $featureKey := include "features.list" . | fromYamlArray }}
-  {{- $featureCollectorName := include "collectors.getCollectorForFeature" (dict "Values" $.Values "featureKey" $featureKey) }}
+  {{- $featureCollectorName := include "collectors.getCollectorForFeature" (dict "Values" $.Values "Files" $.Files "Subcharts" $.Subcharts "featureKey" $featureKey) }}
   {{- if eq $collectorName $featureCollectorName }}
     {{ $alloyConfig = cat $alloyConfig (include (printf "features.%s.include" $featureKey) $values | trim | nindent 0) }}
   {{- end }}

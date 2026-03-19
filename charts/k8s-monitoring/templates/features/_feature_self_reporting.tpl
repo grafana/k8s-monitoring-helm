@@ -12,6 +12,18 @@
     {{- end }}
   {{- end }}
   {{- if not $chosenCollector }}
+    {{- range $featureKey := include "features.list" $ | fromYamlArray }}
+      {{- if and (ne $featureKey "selfReporting") (not $chosenCollector) }}
+        {{- $destinationNames := ((include (printf "features.%s.destinations" $featureKey) $) | fromYamlArray) }}
+        {{- range $destinationName := $destinationNames }}
+          {{- if and (eq (include "destination.supportsMetrics" (deepCopy $ | merge (dict "destinationName" $destinationName)) | trim) "true") (not $chosenCollector) }}
+            {{- $chosenCollector = include "collectors.getCollectorForFeature" (dict "Values" $.Values "featureKey" $featureKey) }}
+          {{- end }}
+        {{- end }}
+      {{- end }}
+    {{- end }}
+  {{- end }}
+  {{- if not $chosenCollector }}
     {{- $chosenCollector = index (keys .Values.collectors) 0 }}
   {{- end }}
 {{- $chosenCollector -}}

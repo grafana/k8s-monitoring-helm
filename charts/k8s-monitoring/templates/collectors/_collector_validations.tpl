@@ -22,7 +22,7 @@
 {{- define "collectors.validate.featuresEnabled" }}
 {{- $collectorsUtilized := list }}
 {{- range $featureKey := include "features.list.enabled" . | fromYamlArray }}
-  {{- $assignedCollector := include "collectors.getCollectorForFeature" (dict "Values" $.Values "featureKey" $featureKey) }}
+  {{- $assignedCollector := include "collectors.getCollectorForFeature" (dict "Values" $.Values "Files" $.Files "Subcharts" $.Subcharts "featureKey" $featureKey) }}
   {{- $collectorsUtilized = append $collectorsUtilized $assignedCollector }}
 {{- end }}
 
