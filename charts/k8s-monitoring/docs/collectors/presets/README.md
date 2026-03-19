@@ -2,7 +2,7 @@
 
 Presets are a way to set predefined configurations for Alloy collectors.
 
-## Current presets:
+## Current presets
 
 | Preset | Description |
 |--------|-------------|
