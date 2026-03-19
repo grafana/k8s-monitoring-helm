@@ -26,35 +26,12 @@ way to set the environment variables automatically.
 
 <!-- textlint-disable terminology -->
 ```yaml
-#---
-#cluster:
-#  name: remote-config-example-cluster
-#
-#collectorCommon:
-#  alloy:
-#    remoteConfig:
-#      enabled: true
-#      url: https://remote-config.example.com/alloy
-#      auth:
-#        type: basic
-#        username: 12345
-#        password: my-remote-cfg-password
-#
-#collectors:
-#  alloy-metrics:
-#    presets: [clustered, statefulset]
-#
-#  alloy-logs:
-#    presets: [filesystem-log-reader, daemonset]
-
-
 ---
 cluster:
   name: remote-config-example-cluster
 
-collectors:
-  alloy-metrics:
-    presets: [clustered, statefulset]
+collectorCommon:
+  alloy:
     remoteConfig:
       enabled: true
       url: https://remote-config.example.com/alloy
@@ -63,14 +40,11 @@ collectors:
         username: 12345
         password: my-remote-cfg-password
 
+collectors:
+  alloy-metrics:
+    presets: [clustered, statefulset]
+
   alloy-logs:
     presets: [filesystem-log-reader, daemonset]
-    remoteConfig:
-      enabled: true
-      url: https://remote-config.example.com/alloy
-      auth:
-        type: basic
-        username: my-remote-cfg-user
-        password: my-remote-cfg-password
 ```
 <!-- textlint-enable terminology -->
