@@ -84,6 +84,7 @@ data:
     }
     prometheus.scrape "statsd" {
       targets    = prometheus.exporter.statsd.default.targets
+      job_name   = "integrations/statsd"
       forward_to = [prometheus.remote_write.localprometheus.receiver]
     }
     // Destination: localPrometheus (prometheus)
@@ -427,11 +428,11 @@ spec:
     configMap:
       create: false
     extraPorts:
-    - name: statsd
+    - name: statsd-tcp
       port: 8125
       protocol: TCP
       targetPort: 8125
-    - name: statsd
+    - name: statsd-udp
       port: 8125
       protocol: UDP
       targetPort: 8125

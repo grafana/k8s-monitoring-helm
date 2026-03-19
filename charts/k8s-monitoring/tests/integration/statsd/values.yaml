@@ -16,11 +16,11 @@ collectors:
     presets: [deployment]
     alloy:
       extraPorts:
-        - name: statsd
+        - name: statsd-tcp
           port: 8125
           targetPort: 8125
           protocol: TCP
-        - name: statsd
+        - name: statsd-udp
           port: 8125
           targetPort: 8125
           protocol: UDP
@@ -32,5 +32,6 @@ collectors:
       }
       prometheus.scrape "statsd" {
         targets    = prometheus.exporter.statsd.default.targets
+        job_name   = "integrations/statsd"
         forward_to = [prometheus.remote_write.localprometheus.receiver]
       }
