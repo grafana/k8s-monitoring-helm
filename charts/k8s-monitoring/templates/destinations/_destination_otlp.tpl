@@ -592,7 +592,7 @@ otelcol.auth.oauth2 {{ include "helper.alloy_name" .name | quote }} {
   token_url = {{ .auth.oauth2.tokenURL | quote }}
   {{- end }}
   {{- if .auth.oauth2.tls }}
-  tls_config {
+  tls {
     insecure_skip_verify = {{ .auth.oauth2.tls.insecureSkipVerify | default false }}
     {{- if .auth.oauth2.tls.caFile }}
     ca_file = {{ .auth.oauth2.tls.caFile | quote }}

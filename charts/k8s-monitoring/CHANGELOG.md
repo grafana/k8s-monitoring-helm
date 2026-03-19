@@ -4,6 +4,7 @@
 
 *   Update Alloy Operator to 1.5.2 (@petewall)
 *   Update options for secretFilters in Pod logs features to match changes in Alloy (@petewall)
+*   Fix `tls_config` block name to `tls` in `otelcol.auth.oauth2` for OTLP destinations (@petewall)
 
 ## 3.8.3
 
