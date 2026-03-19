@@ -191,7 +191,7 @@ app.kubernetes.io/instance: {{ include "collector.alloy.fullname" . }}
 {{ define "collectors.getCollectorForFeature" }}
 {{- $collectorName := dig "collector" "" (get .Values .featureKey) }}
 {{- if not $collectorName }}
-  {{- $collectorName := include (printf "features.%s.chooseCollector" $.featureKey) $ | trim }}
+  {{- $collectorName = include (printf "features.%s.chooseCollector" $.featureKey) $ | trim }}
 {{- end }}
 {{- if not $collectorName }}
   {{- if eq (keys .Values.collectors | len) 1 }}

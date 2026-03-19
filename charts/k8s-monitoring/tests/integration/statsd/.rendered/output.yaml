@@ -426,6 +426,15 @@ spec:
   alloy:
     configMap:
       create: false
+    extraPorts:
+    - name: statsd
+      port: 8125
+      protocol: TCP
+      targetPort: 8125
+    - name: statsd
+      port: 8125
+      protocol: UDP
+      targetPort: 8125
     resources: {}
     securityContext:
       allowPrivilegeEscalation: false
@@ -454,6 +463,8 @@ spec:
       kubernetes.io/os: linux
     podAnnotations:
       k8s.grafana.com/logs.job: integrations/alloy
+    replicas: 1
+    type: deployment
   crds:
     create: false
   nameOverride: alloy-receiver

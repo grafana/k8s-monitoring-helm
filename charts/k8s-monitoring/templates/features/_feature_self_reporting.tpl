@@ -6,13 +6,12 @@
 {{- define "features.selfReporting.chooseCollector" }}
 {{- if eq (include "features.selfReporting.enabled" .) "true" }}
   {{- $chosenCollector := "" }}
-  {{- if (hasKey .Values.collectors "alloy-singleton") }}
-    {{- $chosenCollector = "alloy-singleton" }}
-  {{- else if (hasKey .Values.collectors "alloy-metrics") }}
-    {{- $chosenCollector = "alloy-metrics" }}
-  {{- else if (hasKey .Values.collectors "alloy-receiver") }}
-    {{- $chosenCollector = "alloy-receiver" }}
-  {{- else }}
+  {{- range $collectorName, $collectorValues := .Values.collectors }}
+    {{- if and (not $chosenCollector) (has "singleton" $collectorValues.presets) }}
+      {{- $chosenCollector = $collectorName }}
+    {{- end }}
+  {{- end }}
+  {{- if not $chosenCollector }}
     {{- $chosenCollector = index (keys .Values.collectors) 0 }}
   {{- end }}
 {{- $chosenCollector -}}
