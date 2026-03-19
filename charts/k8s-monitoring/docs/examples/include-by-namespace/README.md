@@ -119,22 +119,13 @@ prometheusOperatorObjects:
 collectors:
   alloy-metrics:
     presets: [clustered, statefulset]
-
-  alloy-singleton:
-    presets: [singleton]
-
   alloy-logs:
     presets: [filesystem-log-reader, daemonset]
-
-  alloy-receiver:
-    alloy:
-      extraPorts:
-        - name: otlp-grpc
-          port: 4317
-          targetPort: 4317
-          protocol: TCP
-
-  alloy-profiles: {}
+  alloy-singleton:
+    presets: [singleton]
+  alloy-receiver: {}
+  alloy-profiles:
+    presets: [privileged, daemonset]
 
 telemetryServices:
   kube-state-metrics:

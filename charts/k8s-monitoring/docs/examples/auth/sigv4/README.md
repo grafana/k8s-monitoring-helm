@@ -38,7 +38,6 @@ destinations:
 
 clusterMetrics:
   enabled: true
-  collector: alloy-metrics
 
 collectors:
   alloy-metrics:

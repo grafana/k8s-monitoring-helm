@@ -29,7 +29,6 @@ destinations:
 
 autoInstrumentation:
   enabled: true
-  collector: alloy-metrics
   spanMetricsOnly: true
   beyla:
     config:
@@ -42,7 +41,7 @@ autoInstrumentation:
                 instrument: beyla
 
 collectors:
-  alloy-metrics:
+  alloy:
     presets: [clustered, statefulset]
 ```
 <!-- textlint-enable terminology -->

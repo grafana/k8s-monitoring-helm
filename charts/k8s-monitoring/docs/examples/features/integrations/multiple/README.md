@@ -57,10 +57,9 @@ podLogs:
   collector: alloy-logs
 
 collectors:
-  alloy-logs:
-    presets: [filesystem-log-reader, daemonset]
-
   alloy-metrics:
     presets: [clustered, statefulset]
+  alloy-logs:
+    presets: [filesystem-log-reader, daemonset]
 ```
 <!-- textlint-enable terminology -->

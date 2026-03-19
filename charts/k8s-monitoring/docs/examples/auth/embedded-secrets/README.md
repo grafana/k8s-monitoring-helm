@@ -69,16 +69,8 @@ podLogs:
 collectors:
   alloy-metrics:
     presets: [clustered, statefulset]
-
   alloy-logs:
     presets: [filesystem-log-reader, daemonset]
-
-  alloy-receiver:
-    alloy:
-      extraPorts:
-        - name: otlp-grpc
-          port: 4317
-          targetPort: 4317
-          protocol: TCP
+  alloy-receiver: {}
 ```
 <!-- textlint-enable terminology -->

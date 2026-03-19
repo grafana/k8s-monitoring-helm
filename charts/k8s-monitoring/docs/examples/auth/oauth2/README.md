@@ -64,12 +64,10 @@ annotationAutodiscovery:
   collector: alloy-metrics
 
 collectors:
-  alloy-logs:
-    presets: [filesystem-log-reader, daemonset]
-
   alloy-metrics:
     presets: [clustered, statefulset]
-
+  alloy-logs:
+    presets: [filesystem-log-reader, daemonset]
   alloy-singleton:
     presets: [singleton]
 

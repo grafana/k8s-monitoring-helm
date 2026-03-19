@@ -26,7 +26,6 @@ destinations:
 
 applicationObservability:
   enabled: true
-  collector: alloy-receiver
   receivers:
     otlp:
       grpc:
@@ -34,7 +33,6 @@ applicationObservability:
 
 autoInstrumentation:
   enabled: true
-  collector: alloy-metrics
   beyla:
     config:
       data:
@@ -89,15 +87,7 @@ autoInstrumentation:
   preset: application
 
 collectors:
-  alloy-metrics:
+  alloy:
     presets: [clustered, statefulset]
-
-  alloy-receiver:
-    alloy:
-      extraPorts:
-        - name: otlp-grpc
-          port: 4317
-          targetPort: 4317
-          protocol: TCP
 ```
 <!-- textlint-enable terminology -->

@@ -21,7 +21,6 @@ destinations:
 
 podLogs:
   enabled: true
-  collector: alloy-logs
 
 collectors:
   alloy-logs:

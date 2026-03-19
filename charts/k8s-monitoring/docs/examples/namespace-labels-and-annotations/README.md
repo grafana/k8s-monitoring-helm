@@ -134,17 +134,9 @@ applicationObservability:
 collectors:
   alloy-metrics:
     presets: [clustered, statefulset]
-
   alloy-logs:
     presets: [filesystem-log-reader, daemonset]
-
-  alloy-receiver:
-    alloy:
-      extraPorts:
-        - name: otlp-http
-          port: 4318
-          targetPort: 4318
-          protocol: TCP
+  alloy-receiver: {}
 
 telemetryServices:
   kube-state-metrics:

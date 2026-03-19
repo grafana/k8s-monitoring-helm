@@ -110,6 +110,7 @@ podLogs:
 
 collectors:
   alloy-metrics:
+    presets: [clustered, statefulset]
     remoteConfig:
       enabled: true
       urlFrom: convert.nonsensitive(remote.kubernetes.secret.alloy_metrics_remote_cfg.data["fleet-management-host"])
@@ -120,35 +121,12 @@ collectors:
       secret:
         create: false
         name: my-monitoring-secret
-    alloy:
-      extraEnv:
-        - name: GCLOUD_RW_API_KEY
-          valueFrom:
-            secretKeyRef:
-              name: my-monitoring-secret
-              key: access-token
-        - name: CLUSTER_NAME
-          value: external-secrets-example-cluster
-        - name: NAMESPACE
-          valueFrom:
-            fieldRef:
-              fieldPath: metadata.namespace
-        - name: NODE_NAME
-          valueFrom:
-            fieldRef:
-              fieldPath: spec.nodeName
-        - name: GCLOUD_FM_COLLECTOR_ID
-          value: k8smon-$(CLUSTER_NAME)-$(NAMESPACE)-alloy-logs-$(NODE_NAME)
-
   alloy-logs:
     presets: [filesystem-log-reader, daemonset]
-
-  alloy-receiver:
     alloy:
-      extraPorts:
-        - name: jaeger-grpc
-          port: 14250
-          targetPort: 14250
-          protocol: TCP
+      extraEnv:
+        - name: LOKI_BEARER_TOKEN
+          value: sample-bearer-token
+  alloy-receiver: {}
 ```
 <!-- textlint-enable terminology -->

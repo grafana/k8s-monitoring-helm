@@ -64,22 +64,12 @@ podLogs:
 collectors:
   alloy-metrics:
     presets: [clustered, statefulset]
-
   alloy-logs:
-    preset: logfile
+    presets: [filesystem-log-reader, daemonset]
     alloy:
       extraEnv:
         - name: LOKI_BEARER_TOKEN
           value: sample-bearer-token
-
-  alloy-receiver:
-    controller:
-      type: deployment
-    alloy:
-      extraPorts:
-        - name: jaeger-grpc
-          port: 14268
-          targetPort: 14268
-          protocol: TCP
+  alloy-receiver: {}
 ```
 <!-- textlint-enable terminology -->

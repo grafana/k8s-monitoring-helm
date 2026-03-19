@@ -20,7 +20,6 @@ destinations:
     url: http://prometheus.prometheus.svc:9090/api/v1/write
 
 integrations:
-  collector: alloy-metrics
   cert-manager:
     instances:
       - name: cert-manager

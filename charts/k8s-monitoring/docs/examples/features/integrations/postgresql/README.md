@@ -54,7 +54,6 @@ podLogs:
 collectors:
   alloy-metrics:
     presets: [clustered, statefulset]
-
   alloy-logs:
     presets: [filesystem-log-reader, daemonset]
 ```

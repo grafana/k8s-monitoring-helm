@@ -38,7 +38,6 @@ destinations:
 # Will automatically go to both loki and lokiStdout destinations
 podLogs:
   enabled: true
-  collector: alloy-logs
 
 collectors:
   alloy-logs:

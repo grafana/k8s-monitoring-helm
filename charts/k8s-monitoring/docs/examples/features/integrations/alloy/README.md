@@ -21,7 +21,6 @@ destinations:
     url: http://prometheus.prometheus.svc:9090/api/v1/write
 
 integrations:
-  collector: alloy-metrics
   alloy:
     instances:
       - name: alloy

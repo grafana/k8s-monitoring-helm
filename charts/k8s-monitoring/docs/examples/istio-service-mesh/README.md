@@ -102,18 +102,16 @@ applicationObservability:
 
 collectors:
   alloy-metrics:
+    presets: [clustered, statefulset]
     alloy:
       clustering:
         portName: tcp
     controller:
       replicas: 2  # To test that clustering is working
-
-  alloy-singleton:
-    presets: [singleton]
-
   alloy-logs:
     presets: [filesystem-log-reader, daemonset]
-
+  alloy-singleton:
+    presets: [singleton]
   alloy-receiver:
     controller:
       # Using TPROXY preserves both the source and destination IP addresses and ports, which allows

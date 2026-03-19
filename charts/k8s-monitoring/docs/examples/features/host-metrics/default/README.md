@@ -22,7 +22,6 @@ destinations:
 
 hostMetrics:
   enabled: true
-  collector: alloy-metrics
   linuxHosts:
     enabled: true
   windowsHosts:

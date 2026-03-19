@@ -22,11 +22,9 @@ destinations:
 
 clusterMetrics:
   enabled: true
-  collector: alloy-metrics
 
 costMetrics:
   enabled: true
-  collector: alloy-metrics
 
 collectors:
   alloy-metrics:

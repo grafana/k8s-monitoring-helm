@@ -96,7 +96,6 @@ collectorCommon:
 collectors:
   alloy-metrics:
     presets: [clustered, statefulset]
-
   alloy-receiver: {}
 
 telemetryServices:
