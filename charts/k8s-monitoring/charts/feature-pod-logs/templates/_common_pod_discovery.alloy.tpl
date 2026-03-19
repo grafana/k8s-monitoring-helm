@@ -127,6 +127,14 @@ discovery.relabel "filtered_pods" {
     target_label = {{ $label | quote }}
   }
 {{- end }}
+{{- if .Values.attachNamespaceMetadata }}
+  // make all labels on the namespace available to the pipeline as labels,
+  // they are omitted before write to loki via stage.label_keep unless explicitly set
+  rule {
+    action = "labelmap"
+    regex = "__meta_kubernetes_namespace_label_(.+)"
+  }
+{{- end }}
 {{- include "feature.podLogs.nodeDiscoveryRules" . | indent 2 }}
 
 {{- if .Values.extraDiscoveryRules }}
