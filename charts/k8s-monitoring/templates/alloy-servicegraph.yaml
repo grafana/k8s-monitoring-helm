@@ -6,7 +6,7 @@
     {{- $destination = mergeOverwrite $defaultValues $destination }}
 
     {{- $maxLength := 51 }}{{/* This limit is from the `controller-revision-hash` pod label value*/}}
-    {{- $collectorName := printf "%s-%s" $.Release.Name (include "helper.k8s_name" (printf "%s-servicegraph" $destination.name)) | trunc $maxLength | trimSuffix "-" | lower }}
+    {{- $collectorName := printf "%s-%s" $.Release.Name (include "helper.k8s_name" (printf "%s-servicegraph" $destinationName)) | trunc $maxLength | trimSuffix "-" | lower }}
     {{- $extraEnv := dig "alloy" "extraEnv" list ($destination.processors.serviceGraphMetrics.collector | default dict) }}
     {{- $extraEnv = (include "collectors.set_extra_env" (dict "envList" $extraEnv "name" "POD_NAME" "valueFrom" (dict "fieldRef" (dict "fieldPath" "metadata.name")))) | fromYamlArray }}
     {{- $collectorValues := mergeOverwrite (dict "fullnameOverride" $collectorName) ($destination.processors.serviceGraphMetrics.collector | default dict) (dict "alloy" (dict "extraEnv" $extraEnv)) }}
