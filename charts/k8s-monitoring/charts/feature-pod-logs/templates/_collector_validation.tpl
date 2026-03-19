@@ -7,6 +7,9 @@
     {{- $msg := list "" "Pod Logs feature requires Alloy to be a DaemonSet when using the \"volumes\" gather method." }}
     {{- $msg = append $msg "Please set:"}}
     {{- $msg = append $msg (printf "%s:" .CollectorName) }}
+    {{- $msg = append $msg "  presets: [daemonset]"}}
+    {{- $msg = append $msg "OR"}}
+    {{- $msg = append $msg (printf "%s:" .CollectorName) }}
     {{- $msg = append $msg "  controller:"}}
     {{- $msg = append $msg "    type: daemonset" }}
     {{- fail (join "\n" $msg) }}
@@ -17,6 +20,7 @@
     {{- $msg = append $msg (printf "%s:" .CollectorName) }}
     {{- $msg = append $msg "  presets: [filesystem-log-reader]"}}
     {{- $msg = append $msg "OR"}}
+    {{- $msg = append $msg (printf "%s:" .CollectorName) }}
     {{- $msg = append $msg "  alloy:"}}
     {{- $msg = append $msg "    mounts:"}}
     {{- $msg = append $msg "      varlog: true" }}
@@ -28,6 +32,9 @@
       {{- $msg := list "" "Pod Logs feature requires Alloy DaemonSet to be in clustering mode when using the \"kubernetesApi\" gather method." }}
       {{- $msg = append $msg "Please set:"}}
       {{- $msg = append $msg (printf "%s:" .CollectorName) }}
+      {{- $msg = append $msg "  presets: [clustered]"}}
+      {{- $msg = append $msg "OR"}}
+      {{- $msg = append $msg (printf "%s:" .CollectorName) }}
       {{- $msg = append $msg "  alloy:"}}
       {{- $msg = append $msg "    clustering:"}}
       {{- $msg = append $msg "      enabled: true" }}
@@ -35,6 +42,9 @@
     {{- else if gt ((dig "controller" "replicas" 1 .Collector) | int) 1 }}
       {{- $msg := list "" "Pod Logs feature requires Alloy with multiple replicas to be in clustering mode when using the \"kubernetesApi\" gather method." }}
       {{- $msg = append $msg "Please set:"}}
+      {{- $msg = append $msg (printf "%s:" .CollectorName) }}
+      {{- $msg = append $msg "  presets: [clustered]"}}
+      {{- $msg = append $msg "OR"}}
       {{- $msg = append $msg (printf "%s:" .CollectorName) }}
       {{- $msg = append $msg "  alloy:"}}
       {{- $msg = append $msg "    clustering:"}}
