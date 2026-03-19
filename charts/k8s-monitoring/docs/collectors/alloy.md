@@ -32,6 +32,7 @@ Settings for each primary Alloy instance come from several potential sources, in
 5.  The default settings defined by the Alloy project, defined in [alloy-values.yaml)[https://github.com/grafana/k8s-monitoring-helm/blob/main/charts/k8s-monitoring/collectors/upstream/alloy-values.yaml).
 
 <!-- textlint-disable terminology -->
+<!-- textlint-disable no-bare-urls -->
 ## Values
 
 ### General
@@ -91,4 +92,5 @@ Settings for each primary Alloy instance come from several potential sources, in
 | remoteConfig.tls.keyFrom | string | `""` | Raw config for accessing the client key. |
 | remoteConfig.url | string | `""` | The URL of the remote config server. |
 | remoteConfig.urlFrom | string | `""` | Raw config for accessing the URL. Lets you insert raw Alloy references so you can load the URL from any number of places, such as loading values from environment variables or config maps. For example: `urlFrom: sys.env("ALLOY_REMOTE_CONFIG_URL")` |
+<!-- textlint-enable no-bare-urls -->
 <!-- textlint-enable terminology -->
