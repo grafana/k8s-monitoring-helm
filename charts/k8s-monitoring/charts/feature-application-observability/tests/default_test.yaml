@@ -28,3 +28,20 @@ tests:
           of: ConfigMap
       - matchSnapshot:
           path: data["module.alloy"]
+
+  - it: creates a traces-only pipeline when metrics and logs are disabled
+    set:
+      deployAsConfigMap: true
+      receivers:
+        otlp:
+          grpc:
+            enabled: true
+      metrics:
+        enabled: false
+      logs:
+        enabled: false
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["module.alloy"]

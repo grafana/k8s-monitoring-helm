@@ -2,7 +2,8 @@
 
 ## Unreleased
 
-*   Update Beyla, Node Exporter, OpenCost, and Prometheus Operator CRDs (@petewall)
+*   Update Beyla, Node Exporter, OpenCost, and Prometheus Operator CRDs. (@petewall)
+*   Fix Application Observability failing to start when only traces are enabled and metrics are disabled. (@petewall)
 
 ## 3.8.4
 
