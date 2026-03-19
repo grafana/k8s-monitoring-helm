@@ -99,7 +99,8 @@ alloy-operator:
 collectors:
   alloy-metrics:
     presets: [clustered, statefulset]
-  alloy-receiver: {}
+  alloy-receiver:
+    presets: [deployment]
 
 collectorCommon:
   alloy:

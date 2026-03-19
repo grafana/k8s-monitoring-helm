@@ -70,6 +70,7 @@ collectors:
       extraEnv:
         - name: LOKI_BEARER_TOKEN
           value: sample-bearer-token
-  alloy-receiver: {}
+  alloy-receiver:
+    presets: [deployment]
 ```
 <!-- textlint-enable terminology -->

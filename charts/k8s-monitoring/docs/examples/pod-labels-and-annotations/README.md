@@ -134,7 +134,8 @@ collectors:
     presets: [clustered, statefulset]
   alloy-logs:
     presets: [filesystem-log-reader, daemonset]
-  alloy-receiver: {}
+  alloy-receiver:
+    presets: [deployment]
 
 telemetryServices:
   kube-state-metrics:

@@ -187,6 +187,7 @@ applicationObservability:
         enabled: true
 
 collectors:
-  alloy-receiver: {}
+  alloy-receiver:
+    presets: [deployment]
 ```
 <!-- textlint-enable terminology -->

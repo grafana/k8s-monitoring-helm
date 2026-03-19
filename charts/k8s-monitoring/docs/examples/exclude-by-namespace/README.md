@@ -131,7 +131,8 @@ collectors:
     presets: [privileged, filesystem-log-reader, daemonset]
   alloy-singleton:
     presets: [singleton]
-  alloy-receiver: {}
+  alloy-receiver:
+    presets: [deployment]
 
 telemetryServices:
   kube-state-metrics:

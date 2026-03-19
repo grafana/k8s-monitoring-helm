@@ -197,7 +197,8 @@ applicationObservability:
 collectors:
   alloy-singleton:
     presets: [singleton]
-  alloy-receiver: {}
+  alloy-receiver:
+    presets: [deployment]
 
 telemetryServices:
   kube-state-metrics:
