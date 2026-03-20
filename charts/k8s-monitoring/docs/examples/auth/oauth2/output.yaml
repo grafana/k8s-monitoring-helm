@@ -237,10 +237,18 @@ data:
         otelcol.receiver.loki.otel_endpoint.receiver,
       ]
     }
-    // Feature: Pod Logs
-    declare "pod_logs" {
+    // Feature: Pod Logs (Loki)
+    declare "pod_logs_via_loki" {
       argument "logs_destinations" {
         comment = "Must be a list of log destinations where collected logs should be forwarded to"
+      }
+    
+      discovery.kubernetes "pods" {
+        role = "pod"
+        selectors {
+          role = "pod"
+          field = "spec.nodeName=" + sys.env("HOSTNAME")
+        }
       }
     
       discovery.relabel "filtered_pods" {
@@ -345,19 +353,8 @@ data:
           regex = "(.+)"
           target_label = "app_kubernetes_io_name"
         }
-      }
     
-      discovery.kubernetes "pods" {
-        role = "pod"
-        selectors {
-          role = "pod"
-          field = "spec.nodeName=" + sys.env("HOSTNAME")
-        }
-      }
-    
-      discovery.relabel "filtered_pods_with_paths" {
-        targets = discovery.relabel.filtered_pods.output
-    
+        // Set the pod log path.
         rule {
           source_labels = ["__meta_kubernetes_pod_uid", "__meta_kubernetes_pod_container_name"]
           separator = "/"
@@ -379,7 +376,7 @@ data:
       }
     
       local.file_match "pod_logs" {
-        path_targets = discovery.relabel.filtered_pods_with_paths.output
+        path_targets = discovery.relabel.filtered_pods.output
       }
     
       loki.source.file "pod_logs" {
@@ -437,7 +434,7 @@ data:
         forward_to = argument.logs_destinations.value
       }
     }
-    pod_logs "feature" {
+    pod_logs_via_loki "feature" {
       logs_destinations = [
         otelcol.receiver.loki.otel_endpoint.receiver,
       ]
@@ -2074,7 +2071,7 @@ data:
     grafana_kubernetes_monitoring_feature_info{feature="clusterEvents", version="1.0.0"} 1
     grafana_kubernetes_monitoring_feature_info{feature="hostMetrics", sources="linuxHosts,windowsHosts", version="1.0.0"} 1
     grafana_kubernetes_monitoring_feature_info{feature="nodeLogs", version="1.0.0"} 1
-    grafana_kubernetes_monitoring_feature_info{feature="podLogs", method="volumes", version="1.0.0"} 1
+    grafana_kubernetes_monitoring_feature_info{feature="podLogsViaLoki", version="1.0.0"} 1
     grafana_kubernetes_monitoring_feature_info{feature="prometheusOperatorObjects", sources="ServiceMonitors,PodMonitors,Probes", version="1.0.0"} 1
     # EOF
 ---

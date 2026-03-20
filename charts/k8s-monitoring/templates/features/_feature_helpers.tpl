@@ -7,7 +7,8 @@
 - costMetrics
 - hostMetrics
 - nodeLogs
-- podLogs
+- podLogsViaLoki
+- podLogsViaOpenTelemetry
 - podLogsViaKubernetesApi
 - podLogsObjects
 - profilesReceiver

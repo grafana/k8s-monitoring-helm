@@ -19,7 +19,7 @@ destinations:
     type: loki
     url: http://loki.loki.svc:3100/api/push
 
-podLogs:
+podLogsViaLoki:
   enabled: true
 
 collectors:

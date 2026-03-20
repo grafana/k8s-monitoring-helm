@@ -1,0 +1,88 @@
+# yamllint disable rule:document-start rule:line-length rule:trailing-spaces
+suite: Feature - Pod Logs via OpenTelemetry
+templates:
+  - alloy-config.yaml
+  - validations.yaml
+tests:
+  - it: requires a log destination
+    template: validations.yaml
+    set:
+      cluster:
+        name: ci-test-cluster
+      podLogsViaOpenTelemetry:
+        enabled: true
+      collectors:
+        alloy-logs:
+          presets: [filesystem-log-reader, daemonset]
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            No destinations found that can accept logs from the Kubernetes Pod logs feature.
+            Please add a destination with logs support.
+            See https://github.com/grafana/k8s-monitoring-helm/blob/main/charts/k8s-monitoring/docs/destinations/README.md for more details.
+
+  - it: requires a collector
+    template: validations.yaml
+    set:
+      cluster:
+        name: ci-test-cluster
+      destinations:
+        otlp:
+          type: otlp
+          url: http://otlp.receiver.svc:4317
+      podLogsViaOpenTelemetry:
+        enabled: true
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            At least one collector should be enabled
+            Please enable one by setting:
+            collectors:
+              <collector-name>:
+                <collector-settings>
+            See https://github.com/grafana/k8s-monitoring-helm/blob/main/charts/k8s-monitoring/docs/collectors/README.md for more details.
+
+  - it: requires public-preview stability level
+    template: validations.yaml
+    set:
+      cluster:
+        name: ci-test-cluster
+      destinations:
+        otlp:
+          type: otlp
+          url: http://otlp.receiver.svc:4317
+      podLogsViaOpenTelemetry:
+        enabled: true
+      collectors:
+        alloy-logs:
+          presets: [filesystem-log-reader, daemonset]
+    asserts:
+      - failedTemplate:
+          errorMessage: |-
+            Pod Logs feature requires Alloy to use the public-preview stability level when using the "filelog" gather method.
+            Please set:
+            alloy-logs:
+              alloy:
+                stabilityLevel: public-preview
+
+  - it: renders the config to gather Kubernetes Pod logs
+    template: alloy-config.yaml
+    set:
+      cluster:
+        name: ci-test-cluster
+      destinations:
+        otlp:
+          type: otlp
+          url: http://otlp.receiver.svc:4317
+      podLogsViaOpenTelemetry:
+        enabled: true
+      collectors:
+        alloy-logs:
+          presets: [filesystem-log-reader, daemonset]
+          alloy:
+            stabilityLevel: public-preview
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchSnapshot:
+          path: data["config.alloy"]

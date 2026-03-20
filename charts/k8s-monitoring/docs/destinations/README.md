@@ -90,7 +90,7 @@ destinations:
     logs:
       enabled: true
 
-podLogs:
+podLogsViaLoki:
   enabled: true
 ```
 
@@ -114,7 +114,7 @@ destinations:
     logs:
       enabled: true
 
-podLogs:
+podLogsViaLoki:
   enabled: true
   destinations: [a, b]
 ```
@@ -133,7 +133,7 @@ destinations:
     logs:
       enabled: true
 
-podLogs:
+podLogsViaLoki:
   enabled: true
 ```
 

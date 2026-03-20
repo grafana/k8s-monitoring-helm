@@ -52,7 +52,7 @@ integrations:
           tuning:
             excludeMetrics: [mysql_exporter_collector_duration_seconds, mysql_exporter_collector_success]
 
-podLogs:
+podLogsViaLoki:
   enabled: true
   collector: alloy-logs
 

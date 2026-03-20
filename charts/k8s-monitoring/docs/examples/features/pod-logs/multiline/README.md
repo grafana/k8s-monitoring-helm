@@ -25,7 +25,7 @@ destinations:
       username: loki
       password: lokipassword
 
-podLogs:
+podLogsViaLoki:
   enabled: true
   extraLogProcessingStages: |
     stage.match {

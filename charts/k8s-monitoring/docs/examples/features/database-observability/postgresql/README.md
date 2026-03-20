@@ -56,7 +56,7 @@ integrations:
             app.kubernetes.io/instance: test-database
 
 
-podLogs:
+podLogsViaLoki:
   enabled: true
   collector: alloy-logs
 

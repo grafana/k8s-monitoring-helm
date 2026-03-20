@@ -42,7 +42,7 @@ hostMetrics:
   windowsHosts:
     enabled: true
 
-podLogs:
+podLogsViaLoki:
   enabled: true
   collector: alloy-logs
 

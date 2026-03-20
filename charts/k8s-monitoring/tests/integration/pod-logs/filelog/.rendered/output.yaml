@@ -33,8 +33,8 @@ metadata:
   namespace: default
 data:
   config.alloy: |
-    // Feature: Pod Logs
-    declare "pod_logs" {
+    // Feature: Pod Logs (OpenTelemetry)
+    declare "pod_logs_via_opentelemetry" {
       argument "logs_destinations" {
         comment = "Must be a list of log destinations where collected logs should be forwarded to"
       }
@@ -70,6 +70,7 @@ data:
         }
     
         extract {
+          otel_annotations = false
           metadata = [
             "k8s.deployment.name",
             "k8s.statefulset.name",
@@ -82,11 +83,6 @@ data:
             key_regex = "resource.opentelemetry.io/(.*)"
             tag_name  = "$1"
             from      = "pod"
-          }
-          annotation {
-            tag_name = "job"
-            key      = "k8s.grafana.com/logs.job"
-            from     = "pod"
           }
           label {
             tag_name = "app_kubernetes_io_name"
@@ -127,7 +123,6 @@ data:
             `set(attributes["service.version"], attributes["app.kubernetes.io/version"]) where attributes["service.version"] == nil`,
     
             `set(attributes["service.instance.id"], Concat([attributes["k8s.namespace.name"], attributes["k8s.pod.name"], attributes["k8s.container.name"]], ".")) where attributes["service.instance.id"] == nil`,
-            `set(attributes["loki.resource.labels"], "k8s.namespace.name,k8s.container.name,k8s.pod.name,k8s.deployment.name,k8s.statefulset.name,k8s.daemonset.name,k8s.cronjob.name,k8s.job.name,k8s.node.name,service.name,service.namespace,service.version,service.instance.id,app_kubernetes_io_name,job,color,k8s.pod.name,pod,service.instance.id")`,
           ]
         }
     
@@ -142,64 +137,10 @@ data:
           logs = [otelcol.exporter.loki.pod_logs.input]
         }
       }
-    
-      otelcol.exporter.loki "pod_logs" {
-        forward_to = [loki.process.pod_logs.receiver]
-      }
-    
-      loki.process "pod_logs" {
-        stage.match {
-          selector = "{tmp_container_runtime=~\"containerd|cri-o|\"}"
-          // the cri processing stage extracts the following k/v pairs: log, stream, time, flags
-          stage.cri {
-            max_partial_lines = 100
-          }
-    
-          // Set the extract flags and stream values as labels
-          stage.labels {
-            values = {
-              flags  = "",
-              stream  = "",
-            }
-          }
-        }
-    
-        stage.match {
-          selector = "{tmp_container_runtime=\"docker\"}"
-          // the docker processing stage extracts the following k/v pairs: log, stream, time
-          stage.docker {}
-    
-          // Set the extract stream value as a label
-          stage.labels {
-            values = {
-              stream  = "",
-            }
-          }
-        }
-    
-        // Drop the filename label, since it's not really useful in the context of Kubernetes, where we already have cluster,
-        // namespace, pod, and container labels. Drop any structured metadata. Also drop the temporary
-        // container runtime label as it is no longer needed.
-        stage.label_drop {
-          values = [
-            "filename",
-            "tmp_container_runtime",
-          ]
-        }
-        stage.structured_metadata {
-          values = {
-            "k8s_pod_name" = "k8s_pod_name",
-            "pod" = "pod",
-            "service_instance_id" = "service_instance_id",
-          }
-        }
-    
-        forward_to = argument.logs_destinations.value
-      }
     }
-    pod_logs "feature" {
+    pod_logs_via_opentelemetry "feature" {
       logs_destinations = [
-        loki.write.localloki.receiver,
+        otelcol.exporter.loki.localloki.input,
       ]
     }
     

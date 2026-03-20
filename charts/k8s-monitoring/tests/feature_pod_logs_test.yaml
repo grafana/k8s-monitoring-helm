@@ -9,7 +9,7 @@ tests:
     set:
       cluster:
         name: ci-test-cluster
-      podLogs:
+      podLogsViaLoki:
         enabled: true
       collectors:
         alloy-logs:
@@ -30,7 +30,7 @@ tests:
         loki:
           type: loki
           url: http://loki.loki.svc:3100/api/push
-      podLogs:
+      podLogsViaLoki:
         enabled: true
     asserts:
       - failedTemplate:
@@ -51,7 +51,7 @@ tests:
         loki:
           type: loki
           url: http://loki.loki.svc:3100/api/push
-      podLogs:
+      podLogsViaLoki:
         enabled: true
       collectors:
         alloy-logs:
@@ -62,30 +62,6 @@ tests:
       - matchSnapshot:
           path: data["config.alloy"]
 
-  - it: requires public-preview stability level if filelog gathering is enabled
-    template: validations.yaml
-    set:
-      cluster:
-        name: ci-test-cluster
-      destinations:
-        loki:
-          type: loki
-          url: http://loki.loki.svc:3100/api/push
-      podLogs:
-        enabled: true
-        gatherMethod: filelog
-      collectors:
-        alloy-logs:
-          presets: [filesystem-log-reader, daemonset]
-    asserts:
-      - failedTemplate:
-          errorMessage: |-
-            Pod Logs feature requires Alloy to use the public-preview stability level when using the "filelog" gather method.
-            Please set:
-            alloy-logs:
-              alloy:
-                stabilityLevel: public-preview
-
   - it: requires experimental stability level if secret filtering is enabled
     template: validations.yaml
     set:
@@ -95,7 +71,7 @@ tests:
         loki:
           type: loki
           url: http://loki.loki.svc:3100/api/push
-      podLogs:
+      podLogsViaLoki:
         enabled: true
         secretFilter:
           enabled: true

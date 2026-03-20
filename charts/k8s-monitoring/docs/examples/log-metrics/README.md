@@ -26,7 +26,7 @@ destinations:
     type: loki
     url: http://loki.loki.svc:3100/loki/api/v1/push
 
-podLogs:
+podLogsViaLoki:
   enabled: true
   collector: alloy-logs
 

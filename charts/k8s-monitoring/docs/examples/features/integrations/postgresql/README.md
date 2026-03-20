@@ -47,7 +47,7 @@ integrations:
           labelSelectors:
             app.kubernetes.io/instance: test-database-pg-db
 
-podLogs:
+podLogsViaLoki:
   enabled: true
   collector: alloy-logs
 

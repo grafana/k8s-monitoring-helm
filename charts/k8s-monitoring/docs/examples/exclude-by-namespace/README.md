@@ -99,7 +99,7 @@ hostMetrics:
   linuxHosts:
     enabled: true
 
-podLogs:
+podLogsViaLoki:
   enabled: true
   collector: alloy-daemonset
   excludeNamespaces: [kube-system, kube-public, confidential]

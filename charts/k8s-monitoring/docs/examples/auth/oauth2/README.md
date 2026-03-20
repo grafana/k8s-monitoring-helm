@@ -47,7 +47,7 @@ clusterEvents:
   enabled: true
   collector: alloy-singleton
 
-podLogs:
+podLogsViaLoki:
   enabled: true
   collector: alloy-logs
 
