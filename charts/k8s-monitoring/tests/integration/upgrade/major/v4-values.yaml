@@ -25,12 +25,15 @@ destinations:
 
 clusterMetrics:
   enabled: true
+  collector: alloy-metrics
 
 costMetrics:
   enabled: true
+  collector: alloy-metrics
 
 hostMetrics:
   enabled: true
+  collector: alloy-metrics
   energyMetrics:
     enabled: true
   linuxHosts:
@@ -40,33 +43,36 @@ hostMetrics:
 
 clusterEvents:
   enabled: true
+  collector: alloy-singleton
 
 podLogs:
   enabled: true
+  collector: alloy-logs
 
-alloy-metrics:
-  enabled: true
-  extraConfig: |-
-    remote.kubernetes.configmap "version" {
-      name = "k8smon-version"
-      namespace = "toolbox"
-    }
+collectors:
+  alloy-metrics:
+    presets: [clustered, statefulset]
+    extraConfig: |-
+      remote.kubernetes.configmap "version" {
+        name = "k8smon-version"
+        namespace = "toolbox"
+      }
 
-alloy-singleton:
-  enabled: true
-  extraConfig: |-
-    remote.kubernetes.configmap "version" {
-      name = "k8smon-version"
-      namespace = "toolbox"
-    }
+  alloy-singleton:
+    presets: [singleton]
+    extraConfig: |-
+      remote.kubernetes.configmap "version" {
+        name = "k8smon-version"
+        namespace = "toolbox"
+      }
 
-alloy-logs:
-  enabled: true
-  extraConfig: |-
-    remote.kubernetes.configmap "version" {
-      name = "k8smon-version"
-      namespace = "toolbox"
-    }
+  alloy-logs:
+    presets: [filesystem-log-reader, daemonset]
+    extraConfig: |-
+      remote.kubernetes.configmap "version" {
+        name = "k8smon-version"
+        namespace = "toolbox"
+      }
 
 extraObjects:
   - apiVersion: v1

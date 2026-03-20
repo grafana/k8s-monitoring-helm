@@ -11,14 +11,15 @@ tests:
         name: ci-test-cluster
       clusterEvents:
         enabled: true
+      collectors: {alloy-singleton: {}}
     asserts:
       - failedTemplate:
           errorMessage: |-
-            No destinations found that can accept logs from Kubernetes Cluster events
+            No destinations found that can accept logs from the Kubernetes Cluster events feature.
             Please add a destination with logs support.
             See https://github.com/grafana/k8s-monitoring-helm/blob/main/charts/k8s-monitoring/docs/destinations/README.md for more details.
 
-  - it: requires the alloy-singleton collector
+  - it: requires a collector
     template: validations.yaml
     set:
       cluster:
@@ -32,11 +33,12 @@ tests:
     asserts:
       - failedTemplate:
           errorMessage: |-
-            The Kubernetes Cluster events feature requires the use of the alloy-singleton collector.
-
-            Please enable it by setting:
-            alloy-singleton:
-              enabled: true
+            At least one collector should be enabled
+            Please enable one by setting:
+            collectors:
+              <collector-name>:
+                <collector-settings>
+            See https://github.com/grafana/k8s-monitoring-helm/blob/main/charts/k8s-monitoring/docs/collectors/README.md for more details.
 
   - it: renders the config to gather Kubernetes Cluster Events
     template: alloy-config.yaml
@@ -49,8 +51,7 @@ tests:
           url: http://loki.loki.svc:3100/api/push
       clusterEvents:
         enabled: true
-      alloy-singleton:
-        enabled: true
+      collectors: {alloy-singleton: {}}
     asserts:
       - isKind:
           of: ConfigMap
@@ -72,8 +73,7 @@ tests:
           logs: {enabled: true}
       clusterEvents:
         enabled: true
-      alloy-singleton:
-        enabled: true
+      collectors: {alloy-singleton: {}}
     asserts:
       - isKind:
           of: ConfigMap
@@ -96,8 +96,7 @@ tests:
           logs: {enabled: true}
       clusterEvents:
         enabled: true
-      alloy-singleton:
-        enabled: true
+      collectors: {alloy-singleton: {}}
     asserts:
       - isKind:
           of: ConfigMap
@@ -121,8 +120,7 @@ tests:
       clusterEvents:
         enabled: true
         destinations: [otlp]
-      alloy-singleton:
-        enabled: true
+      collectors: {alloy-singleton: {}}
     asserts:
       - isKind:
           of: ConfigMap
@@ -155,8 +153,7 @@ tests:
       clusterEvents:
         enabled: true
         destinations: [loki, otlp]
-      alloy-singleton:
-        enabled: true
+      collectors: {alloy-singleton: {}}
     asserts:
       - isKind:
           of: ConfigMap

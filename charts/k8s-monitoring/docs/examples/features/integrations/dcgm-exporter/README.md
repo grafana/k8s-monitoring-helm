@@ -27,7 +27,8 @@ integrations:
         labelSelectors:
           app: nvidia-dcgm-exporter
 
-alloy-metrics:
-  enabled: true
+collectors:
+  alloy-metrics:
+    presets: [clustered, statefulset]
 ```
 <!-- textlint-enable terminology -->

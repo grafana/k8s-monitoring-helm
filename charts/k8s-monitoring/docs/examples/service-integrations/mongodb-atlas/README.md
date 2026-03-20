@@ -29,46 +29,47 @@ destinations:
     type: prometheus
     url: http://prometheus.prometheus.svc:9090/api/v1/write
 
-alloy-metrics:
-  enabled: true
-  extraConfig: |-
-    remote.kubernetes.secret "mongodb_atlas" {
-      name = "mongodb-atlas"
-      namespace = "monitoring"
-    }
-
-    discovery.http "mongodb_atlas" {
-      url = string.format("https://cloud.mongodb.com/prometheus/v1.0/groups/%s/discovery", convert.nonsensitive(remote.kubernetes.secret.mongodb_atlas.data["group_id"]))
-
-      basic_auth {
-        username = nonsensitive(remote.kubernetes.secret.mongodb_atlas.data["username"])
-        password = remote.kubernetes.secret.mongodb_atlas.data["password"]
-      }
-    }
-
-    prometheus.scrape "mongodb_atlas" {
-      targets         = discovery.http.mongodb_atlas.targets
-      job_name        = "integrations/mongodb-atlas"
-      scrape_interval = "10s"
-      scheme          = "https"
-
-      basic_auth {
-        username = nonsensitive(remote.kubernetes.secret.mongodb_atlas.data["username"])
-        password = remote.kubernetes.secret.mongodb_atlas.data["password"]
+collectors:
+  alloy-metrics:
+    presets: [clustered, statefulset]
+    extraConfig: |-
+      remote.kubernetes.secret "mongodb_atlas" {
+        name = "mongodb-atlas"
+        namespace = "monitoring"
       }
 
-      forward_to = [prometheus.relabel.mongodb_atlas.receiver]
-    }
+      discovery.http "mongodb_atlas" {
+        url = string.format("https://cloud.mongodb.com/prometheus/v1.0/groups/%s/discovery", convert.nonsensitive(remote.kubernetes.secret.mongodb_atlas.data["group_id"]))
 
-    prometheus.relabel "mongodb_atlas" {
-      // Define the metrics "allow list"
-      rule {
-        source_labels = ["__name__"]
-        regex = "up|scrape_samples_scraped|mongodb_.*"
-        action = "keep"
+        basic_auth {
+          username = nonsensitive(remote.kubernetes.secret.mongodb_atlas.data["username"])
+          password = remote.kubernetes.secret.mongodb_atlas.data["password"]
+        }
       }
 
-      forward_to = [prometheus.remote_write.prometheus.receiver]
-    }
+      prometheus.scrape "mongodb_atlas" {
+        targets         = discovery.http.mongodb_atlas.targets
+        job_name        = "integrations/mongodb-atlas"
+        scrape_interval = "10s"
+        scheme          = "https"
+
+        basic_auth {
+          username = nonsensitive(remote.kubernetes.secret.mongodb_atlas.data["username"])
+          password = remote.kubernetes.secret.mongodb_atlas.data["password"]
+        }
+
+        forward_to = [prometheus.relabel.mongodb_atlas.receiver]
+      }
+
+      prometheus.relabel "mongodb_atlas" {
+        // Define the metrics "allow list"
+        rule {
+          source_labels = ["__name__"]
+          regex = "up|scrape_samples_scraped|mongodb_.*"
+          action = "keep"
+        }
+
+        forward_to = [prometheus.remote_write.prometheus.receiver]
+      }
 ```
 <!-- textlint-enable terminology -->

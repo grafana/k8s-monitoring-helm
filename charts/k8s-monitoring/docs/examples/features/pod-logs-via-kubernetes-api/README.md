@@ -30,10 +30,8 @@ podLogsViaKubernetesApi:
   enabled: true
   namespaces: [production]
 
-alloy-logs:
-  enabled: true
-  alloy:
-    clustering:
-      enabled: true
+collectors:
+  alloy-logs:
+    presets: [clustered]
 ```
 <!-- textlint-enable terminology -->

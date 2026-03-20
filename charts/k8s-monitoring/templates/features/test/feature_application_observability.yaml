@@ -1,6 +1,6 @@
 {{- if eq (((index .Values "testing") | default false) | toString) "true" }}
-{{- $alloyReceiverWithExisingPort := "Values: {alloy-receiver: {alloy: {extraPorts: [{name: my-port, port: 9999, protocol: TCP, targetPort: 9999}]}}}" | fromYaml }}
-{{- $alloyReceiverWithExisingGrpcPort := "Values: {alloy-receiver: {alloy: {extraPorts: [{name: otel, port: 4317, protocol: TCP, targetPort: 4317}]}}}" | fromYaml }}
+{{- $alloyReceiverWithExisingPort := "Values: {collectors: {alloy-receiver: {alloy: {extraPorts: [{name: my-port, port: 9999, protocol: TCP, targetPort: 9999}]}}}}" | fromYaml }}
+{{- $alloyReceiverWithExisingGrpcPort := "Values: {collectors: {alloy-receiver: {alloy: {extraPorts: [{name: otel, port: 4317, protocol: TCP, targetPort: 4317}]}}}}" | fromYaml }}
 {{- $grpcEnabled := deepCopy . | merge (dict "Values" (dict "applicationObservability" (dict "receivers" (dict "otlp" (dict "grpc" (dict "enabled" true)))))) }}
 {{- $httpEnabled := deepCopy . | merge (dict "Values" (dict "applicationObservability" (dict "receivers" (dict "otlp" (dict "http" (dict "enabled" true)))))) }}
 {{- $existingPorts := merge $alloyReceiverWithExisingPort $grpcEnabled  }}

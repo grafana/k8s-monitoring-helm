@@ -6,12 +6,11 @@ tests:
   - it: warns about collectors that are unused
     set:
       cluster: {name: test-cluster}
-      alloy-metrics:
-        enabled: true
-        extraConfig: |-
-          // This is config to make it seem "used"
-      alloy-logs:
-        enabled: true
+      collectors:
+        alloy-metrics:
+          extraConfig: "// Giving this Alloy something to do"
+        alloy-logs:
+          presets: [filesystem-log-reader, daemonset]
     asserts:
       - failedTemplate:
           errorMessage: |-

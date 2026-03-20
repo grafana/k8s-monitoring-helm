@@ -21,6 +21,7 @@ destinations:
     url: http://loki.loki.svc:3100/api/push
 
 integrations:
+  collector: alloy-metrics
   grafana:
     instances:
       - name: grafana
@@ -31,11 +32,12 @@ integrations:
 
 podLogs:
   enabled: true
+  collector: alloy-logs
 
-alloy-metrics:
-  enabled: true
-
-alloy-logs:
-  enabled: true
+collectors:
+  alloy-metrics:
+    presets: [clustered, statefulset]
+  alloy-logs:
+    presets: [filesystem-log-reader, daemonset]
 ```
 <!-- textlint-enable terminology -->

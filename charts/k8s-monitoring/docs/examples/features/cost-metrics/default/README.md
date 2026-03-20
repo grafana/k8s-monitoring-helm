@@ -26,8 +26,9 @@ clusterMetrics:
 costMetrics:
   enabled: true
 
-alloy-metrics:
-  enabled: true
+collectors:
+  alloy-metrics:
+    presets: [clustered, statefulset]
 
 telemetryServices:
   kube-state-metrics:

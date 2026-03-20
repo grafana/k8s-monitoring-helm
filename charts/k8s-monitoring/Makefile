@@ -17,6 +17,8 @@ collectors/upstream/alloy-values.yaml: charts/alloy-operator-$(ALLOY_OPERATOR_VE
 
 COLLECTOR_VALUES_FILES = $(shell find collectors -maxdepth 1 -name "*-values.yaml" | sort -u)
 COLLECTOR_DOCS_FILES = $(COLLECTOR_VALUES_FILES:collectors/%-values.yaml=./docs/collectors/%.md)
+COLLECTOR_PRESET_FILES = $(shell find collectors/presets -maxdepth 1 -name "*.yaml" | sort -u)
+COLLECTOR_PRESET_DOCS_FILES = $(COLLECTOR_PRESET_FILES:collectors/presets/%.yaml=./docs/collectors/presets/%.md)
 COLLECTOR_SCHEMA_FILES = $(COLLECTOR_VALUES_FILES:collectors/%-values.yaml=./schema-mods/definitions/%-collector.schema.json)
 
 DESTINATION_VALUES_FILES = $(shell find destinations -name "*-values.yaml" | sort -u)
@@ -28,6 +30,9 @@ INTEGRATION_VALUES_FILES = $(shell find charts/feature-integrations/integrations
 .SECONDEXPANSION:
 docs/collectors/%.md: collectors/%-values.yaml $$(wildcard docs/collectors/.doc_templates/%.gotmpl)
 	docker run --platform linux/amd64 --rm --volume $(shell pwd):/chart ghcr.io/grafana/helm-chart-toolbox-doc-generator --file /chart/$< --template /chart/docs/collectors/.doc_templates/$(shell basename -s -values.yaml $<).gotmpl > $@
+
+docs/collectors/presets/%.md: collectors/presets/%.yaml $$(wildcard docs/collectors/presets/.doc_templates/%.gotmpl)
+	docker run --platform linux/amd64 --rm --volume $(shell pwd):/chart ghcr.io/grafana/helm-chart-toolbox-doc-generator --file /chart/$< --template /chart/docs/collectors/presets/.doc_templates/$(shell basename -s .yaml $<).gotmpl > $@
 
 docs/destinations/%.md: destinations/%-values.yaml $$(wildcard docs/destinations/.doc_templates/%.gotmpl)
 	docker run --platform linux/amd64 --rm --volume $(shell pwd):/chart ghcr.io/grafana/helm-chart-toolbox-doc-generator --file /chart/$< --template /chart/docs/destinations/.doc_templates/$(shell basename -s -values.yaml $<).gotmpl > $@
@@ -166,10 +171,10 @@ PLATFORM_TEST_VALUES_FILES := $(filter-out $(NON_RENDERED_PLATFORM_TEST_VALUES_F
 PLATFORM_TEST_OUTPUT_FILES := $(PLATFORM_TEST_VALUES_FILES:values.yaml=.rendered/output.yaml)
 
 alloy_configs = $(shell \
-	DIR="$(shell dirname $(1))/" yq e 'with_entries(select(.key == "alloy-*" and .value.enabled == true)) | to_entries | env(DIR) + .[].key + ".alloy"' $(1) \
+	DIR="$(shell dirname $(1))/" yq e '.collectors | keys | .[] | env(DIR) + . + ".alloy"' $(1) \
 )
 alloy_instances = $(shell \
-	DIR="$(shell dirname $(1))/" yq e 'with_entries(select(.key == "alloy-*" and .value.enabled == true)) | to_entries | env(DIR) + .[].key + ".yaml"' $(1) \
+	DIR="$(shell dirname $(1))/" yq e '.collectors | keys | .[] | env(DIR) + . + ".yaml"' $(1) \
 )
 
 %/output.yaml: %/values.yaml Chart.yaml Chart.lock values.yaml values.schema.json templates/destinations/_destination_types.tpl $(DESTINATION_VALUES_FILES) $(CHART_TEMPLATE_FILES) $(CHART_YAML_FILES)
@@ -179,14 +184,8 @@ alloy_instances = $(shell \
 	mkdir -p $(dir $@)
 	helm template $(EXAMPLE_RELEASE_NAME) . -f $< > $@
 
-ALLOY_INSTANCES := logs metrics receiver singleton profiles
-define alloy_files
-%/alloy-$(1).alloy: %/output.yaml
-	yq 'select(.kind=="ConfigMap" and .metadata.name=="$(EXAMPLE_RELEASE_NAME)-alloy-$(1)") | .data["config.alloy"]' $$< > $$@
-%/alloy-$(1).yaml: %/output.yaml
-	yq 'select(.kind=="Alloy" and .metadata.name=="$(EXAMPLE_RELEASE_NAME)-alloy-$(1)") | .' $$< > $$@
-endef
-$(foreach instance,$(ALLOY_INSTANCES),$(eval $(call alloy_files,$(instance))))
+%.alloy: $$(dir $$@)output.yaml
+	yq 'select(.kind=="ConfigMap" and .metadata.name=="$(EXAMPLE_RELEASE_NAME)-$(notdir $(basename $@))") | .data["config.alloy"]' $< > $@
 
 %/README.md: %/values.yaml $$(wildcard %/description.txt)
 	@echo '<!--' > $@
@@ -236,7 +235,7 @@ platform-test-checks: $(PLATFORM_TEST_OUTPUT_FILES)
 .PHONY: clean
 clean: clean-examples
 	rm -f README.md AGENTS.md values.schema.json templates/destinations/_destination_types.tpl schema-mods/destination.json
-	rm -f collectors/upstream/alloy-values.yaml $(COLLECTOR_SCHEMA_FILES) $(COLLECTOR_DOCS_FILES)
+	rm -f collectors/upstream/alloy-values.yaml $(COLLECTOR_SCHEMA_FILES) $(COLLECTOR_DOCS_FILES) $(COLLECTOR_PRESET_DOCS_FILES)
 	rm -f $(DESTINATION_SCHEMA_FILES) $(DESTINATION_DOCS_FILES)
 	set -e && \
 	for chart in $(FEATURE_CHARTS); do \
@@ -255,7 +254,10 @@ build-features:
 
 # Build targets
 .PHONY: build
-build: build-features README.md AGENTS.md values.schema.json templates/destinations/_destination_types.tpl collectors/upstream/alloy-values.yaml $(COLLECTOR_DOCS_FILES) $(DESTINATION_DOCS_FILES) examples integration-test-checks platform-test-checks
+build: build-features values.schema.json templates/destinations/_destination_types.tpl collectors/upstream/alloy-values.yaml build-docs examples integration-test-checks platform-test-checks
+
+.PHONY: build-docs
+build-docs: README.md AGENTS.md $(COLLECTOR_DOCS_FILES) $(COLLECTOR_PRESET_DOCS_FILES) $(DESTINATION_DOCS_FILES)
 
 # Test targets
 .PHONY: test unittest lint-helm lint-configs

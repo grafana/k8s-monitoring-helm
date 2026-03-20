@@ -41,12 +41,15 @@ releases:
 
         clusterMetrics:
           enabled: true
+          collector: alloy-metrics
 
         costMetrics:
           enabled: true
+          collector: alloy-metrics
 
         hostMetrics:
           enabled: true
+          collector: alloy-metrics
           linuxHosts:
             enabled: true
           windowsHosts:
@@ -56,18 +59,19 @@ releases:
 
         clusterEvents:
           enabled: true
+          collector: alloy-singleton
 
         podLogs:
           enabled: true
+          collector: alloy-logs
 
-        alloy-metrics:
-          enabled: true
-
-        alloy-singleton:
-          enabled: true
-
-        alloy-logs:
-          enabled: true
+        collectors:
+          alloy-metrics:
+            presets: [clustered, statefulset]
+          alloy-logs:
+            presets: [filesystem-log-reader, daemonset]
+          alloy-singleton:
+            presets: [singleton]
 
         telemetryServices:
           kube-state-metrics:

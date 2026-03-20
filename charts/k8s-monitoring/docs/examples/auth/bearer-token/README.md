@@ -47,6 +47,7 @@ destinations:
 
 applicationObservability:
   enabled: true
+  collector: alloy-receiver
   receivers:
     jaeger:
       thriftHttp:
@@ -54,27 +55,22 @@ applicationObservability:
 
 prometheusOperatorObjects:
   enabled: true
+  collector: alloy-metrics
 
 podLogs:
   enabled: true
+  collector: alloy-logs
 
-alloy-metrics:
-  enabled: true
-
-alloy-logs:
-  enabled: true
-  alloy:
-    extraEnv:
-      - name: LOKI_BEARER_TOKEN
-        value: sample-bearer-token
-
-alloy-receiver:
-  enabled: true
-  alloy:
-    extraPorts:
-      - name: jaeger-grpc
-        port: 14268
-        targetPort: 14268
-        protocol: TCP
+collectors:
+  alloy-metrics:
+    presets: [clustered, statefulset]
+  alloy-logs:
+    presets: [filesystem-log-reader, daemonset]
+    alloy:
+      extraEnv:
+        - name: LOKI_BEARER_TOKEN
+          value: sample-bearer-token
+  alloy-receiver:
+    presets: [deployment]
 ```
 <!-- textlint-enable terminology -->

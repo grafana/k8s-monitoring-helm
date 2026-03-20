@@ -49,10 +49,11 @@ hostMetrics:
   windowsHosts:
     enabled: true
 
-alloy-metrics:
-  enabled: true
-  alloy:
-    stabilityLevel: experimental
+collectors:
+  alloy-metrics:
+    presets: [clustered, statefulset]
+    alloy:
+      stabilityLevel: experimental
 
 telemetryServices:
   kube-state-metrics:

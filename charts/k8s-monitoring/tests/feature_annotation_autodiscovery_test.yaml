@@ -11,14 +11,15 @@ tests:
         name: ci-test-cluster
       annotationAutodiscovery:
         enabled: true
+      collectors: {alloy: {}}
     asserts:
       - failedTemplate:
           errorMessage: |-
-            No destinations found that can accept metrics from Annotation Autodiscovery
+            No destinations found that can accept metrics from the Annotation Autodiscovery feature.
             Please add a destination with metrics support.
             See https://github.com/grafana/k8s-monitoring-helm/blob/main/charts/k8s-monitoring/docs/destinations/README.md for more details.
 
-  - it: requires the alloy-metrics collector
+  - it: requires a collector
     template: validations.yaml
     set:
       cluster:
@@ -32,11 +33,12 @@ tests:
     asserts:
       - failedTemplate:
           errorMessage: |-
-            The Annotation Autodiscovery feature requires the use of the alloy-metrics collector.
-
-            Please enable it by setting:
-            alloy-metrics:
-              enabled: true
+            At least one collector should be enabled
+            Please enable one by setting:
+            collectors:
+              <collector-name>:
+                <collector-settings>
+            See https://github.com/grafana/k8s-monitoring-helm/blob/main/charts/k8s-monitoring/docs/collectors/README.md for more details.
 
   - it: requires one of the two types to be enabled
     template: validations.yaml
@@ -53,8 +55,7 @@ tests:
           enabled: false
         services:
           enabled: false
-      alloy-metrics:
-        enabled: true
+      collectors: {alloy-metrics: {}}
     asserts:
       - failedTemplate:
           errorMessage: |-

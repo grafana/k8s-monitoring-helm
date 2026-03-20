@@ -240,24 +240,12 @@ details:
 <!--alex disable host-hostess-->
 ## Values
 
-### Collectors - Alloy Logs
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| alloy-logs.enabled | bool | `false` | Deploy the Alloy instance for collecting log data. |
-
-### Collectors - Alloy Metrics
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| alloy-metrics.enabled | bool | `false` | Deploy the Alloy instance for collecting metrics. |
-
 ### Alloy Operator
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | alloy-operator.deploy | bool | `true` | Deploy the Alloy Operator. |
-| alloy-operator.waitForAlloyRemoval.enabled | bool | `true` | Utilize a Helm Hook to wait for all Alloy instances to be removed before uninstalling the Alloy Operator. This ensures that all Alloy instances are properly cleaned up before the operator is removed. |
+| alloy-operator.waitForAlloyRemoval.enabled | bool | `true` | Run Helm hooks to wait for all Alloy instances to be removed before uninstalling the Alloy Operator. This ensures that all Alloy instances are properly cleaned up before the operator is removed. |
 | alloy-operator.waitForAlloyRemoval.image | object | `{"digest":"","pullPolicy":"IfNotPresent","pullSecrets":[],"registry":"ghcr.io","repository":"grafana/helm-chart-toolbox-kubectl","tag":"0.1.2"}` | The image to use for the Helm Hook that ensures that Alloy instances are removed during uninstall. |
 | alloy-operator.waitForAlloyRemoval.nodeSelector | object | `{"kubernetes.io/os":"linux"}` | Node selector to use for the Helm Hook that ensures that Alloy instances are removed during uninstall. |
 | alloy-operator.waitForAlloyRemoval.podAnnotations | object | `{}` | Annotations to apply to the Pod for the Helm Hook to wait for all Alloy instances to be removed before uninstalling the Alloy Operator |
@@ -265,28 +253,6 @@ details:
 | alloy-operator.waitForAlloyRemoval.resources | object | `{}` | Set the resource field for the Helm Hook that ensures that Alloy instances are removed during uninstall. |
 | alloy-operator.waitForAlloyRemoval.securityContext | object | `{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"readOnlyRootFilesystem":true,"runAsNonRoot":true,"runAsUser":4242,"seccompProfile":{"type":"RuntimeDefault"}}` | Default security context to apply to the container. This can also be set to `null` to remove the security context entirely. Also, `runAsUser` can be set to `null` to remove it. |
 | alloy-operator.waitForAlloyRemoval.tolerations | list | `[]` | Tolerations to apply to the Helm Hook that ensures that Alloy instances are removed during uninstall. |
-
-### Collectors - Alloy Profiles
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| alloy-profiles.enabled | bool | `false` | Deploy the Alloy instance for gathering profiles. |
-
-### Collectors - Alloy Receiver
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| alloy-receiver.alloy.extraPorts | list | `[]` | The ports to expose for the Alloy receiver. |
-| alloy-receiver.enabled | bool | `false` | Deploy the Alloy instance for opening receivers to collect application data. |
-| alloy-receiver.extraService.enabled | bool | `false` | Create an extra service for the Alloy receiver. This service will mirror the alloy-receiver service, but its name can be customized to match existing application settings. |
-| alloy-receiver.extraService.fullname | string | `""` | If set, the full name of the extra service to create. This will result in the format `<fullname>`. |
-| alloy-receiver.extraService.name | string | `"alloy"` | The name of the extra service to create. This will result in the format `<release-name>-<name>`. |
-
-### Collectors - Alloy Singleton
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| alloy-singleton.enabled | bool | `false` | Deploy the Alloy instance for data sources required to be deployed on a single replica. |
 
 ### Features - Annotation Autodiscovery
 
@@ -334,12 +300,6 @@ details:
 | clusterMetrics | object | Disabled | Cluster Monitoring enables observability and monitoring for your Kubernetes Cluster itself. Requires a destination that supports metrics. To see the valid options, please see the [Cluster Monitoring feature documentation](https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/charts/feature-cluster-metrics). |
 | clusterMetrics.destinations | list | `[]` | The destinations where cluster metrics will be sent. If empty, all metrics-capable destinations will be used. |
 | clusterMetrics.enabled | bool | `false` | Enable gathering Kubernetes Cluster metrics. |
-
-### Collectors - Common
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| collectorCommon.alloy | object | `{}` | Settings to apply to all Alloy instances created by this Helm chart. This includes Alloy instances created by enabling Tail Sampling or Service Graph Metrics. |
 
 ### Features - Cost Metrics
 
@@ -462,4 +422,11 @@ details:
 | telemetryServices.node-exporter.deploy | bool | `false` | Deploy Node Exporter to gather Linux node hardware and OS metrics. |
 | telemetryServices.opencost.deploy | bool | `false` | Deploy OpenCost to calculate and expose Kubernetes cost allocation metrics. |
 | telemetryServices.windows-exporter.deploy | bool | `false` | Deploy Windows Exporter to gather Windows node hardware and OS metrics. |
+
+### Other Values
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| collectorCommon.alloy | object | `{}` |  |
+| collectors | object | `{}` |  |
 <!--alex enable host-hostess-->

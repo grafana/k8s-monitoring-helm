@@ -17,6 +17,7 @@ destinations:
 
 clusterMetrics:
   enabled: true
+  collector: alloy-metrics
   controlPlane:
     enabled: true
   kubeletProbes:
@@ -26,25 +27,29 @@ clusterMetrics:
 
 hostMetrics:
   enabled: true
+  collector: alloy-metrics
   linuxHosts:
     enabled: true
 
 clusterEvents:
   enabled: true
+  collector: alloy-singleton
 
 podLogs:
   enabled: true
+  collector: alloy-logs
 
-alloy-metrics:
-  enabled: true
-  controller:
-    replicas: 2
+collectors:
+  alloy-metrics:
+    presets: [clustered, statefulset]
+    controller:
+      replicas: 2
 
-alloy-singleton:
-  enabled: true
+  alloy-singleton:
+    presets: [singleton]
 
-alloy-logs:
-  enabled: true
+  alloy-logs:
+    presets: [filesystem-log-reader, daemonset]
 
 telemetryServices:
   kube-state-metrics:

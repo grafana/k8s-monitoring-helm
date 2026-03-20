@@ -19,6 +19,7 @@ destinations:
     traces: {enabled: true}
 
 integrations:
+  collector: alloy-metrics
   alloy:
     instances:
       - name: alloy
@@ -27,9 +28,11 @@ integrations:
 
 clusterEvents:
   enabled: true
+  collector: alloy-singleton
 
 podLogs:
   enabled: true
+  collector: alloy-logs
   labelsToKeep:
     - app.kubernetes.io/name
     - container
@@ -54,11 +57,12 @@ podLogs:
     k8s.pod.name: null
     pod: null
 
-alloy-metrics:
-  enabled: true
+collectors:
+  alloy-metrics:
+    presets: [clustered, statefulset]
 
-alloy-singleton:
-  enabled: true
+  alloy-singleton:
+    presets: [singleton]
 
-alloy-logs:
-  enabled: true
+  alloy-logs:
+    presets: [filesystem-log-reader, daemonset]

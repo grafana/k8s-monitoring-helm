@@ -35,10 +35,12 @@ destinations:
 
 annotationAutodiscovery:
   enabled: true
+  collector: alloy-metrics
   excludeNamespaces: [kube-system, kube-public, confidential]
 
 applicationObservability:
   enabled: true
+  collector: alloy-receiver
   receivers:
     otlp:
       grpc:
@@ -67,6 +69,7 @@ applicationObservability:
 
 autoInstrumentation:
   enabled: true
+  collector: alloy-metrics
   beyla:
     config:
       data:
@@ -80,25 +83,30 @@ autoInstrumentation:
 
 clusterEvents:
   enabled: true
+  collector: alloy-singleton
   excludeNamespaces: [kube-system, kube-public, confidential]
 
 clusterMetrics:
   enabled: true
+  collector: alloy-metrics
   cadvisor:
     metricsTuning:
       excludeNamespaces: [kube-system, kube-public, confidential]
 
 hostMetrics:
   enabled: true
+  collector: alloy-metrics
   linuxHosts:
     enabled: true
 
 podLogs:
   enabled: true
+  collector: alloy-daemonset
   excludeNamespaces: [kube-system, kube-public, confidential]
 
 profiling:
   enabled: true
+  collector: alloy-daemonset
   ebpf:
     excludeNamespaces: [kube-system, kube-public, confidential]
   java:
@@ -108,6 +116,7 @@ profiling:
 
 prometheusOperatorObjects:
   enabled: true
+  collector: alloy-metrics
   probes:
     excludeNamespaces: [kube-system, kube-public, confidential]
   podMonitors:
@@ -115,26 +124,15 @@ prometheusOperatorObjects:
   serviceMonitors:
     excludeNamespaces: [kube-system, kube-public, confidential]
 
-alloy-metrics:
-  enabled: true
-
-alloy-singleton:
-  enabled: true
-
-alloy-logs:
-  enabled: true
-
-alloy-receiver:
-  enabled: true
-  alloy:
-    extraPorts:
-      - name: otlp-grpc
-        port: 4317
-        targetPort: 4317
-        protocol: TCP
-
-alloy-profiles:
-  enabled: true
+collectors:
+  alloy-metrics:
+    presets: [clustered, statefulset]
+  alloy-daemonset:
+    presets: [privileged, filesystem-log-reader, daemonset]
+  alloy-singleton:
+    presets: [singleton]
+  alloy-receiver:
+    presets: [deployment]
 
 telemetryServices:
   kube-state-metrics:

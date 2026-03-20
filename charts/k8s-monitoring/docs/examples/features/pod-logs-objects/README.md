@@ -28,12 +28,10 @@ podLogsObjects:
   enabled: true
   nodeFilter: true
 
-alloy-logs:
-  enabled: true
-  liveDebugging:
-    enabled: true
-  alloy:
-    clustering:
+collectors:
+  alloy-logs:
+    presets: [clustered]
+    liveDebugging:
       enabled: true
 ```
 <!-- textlint-enable terminology -->

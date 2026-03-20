@@ -32,6 +32,7 @@ Settings for each primary Alloy instance come from several potential sources, in
 5.  The default settings defined by the Alloy project, defined in [alloy-values.yaml)[https://github.com/grafana/k8s-monitoring-helm/blob/main/charts/k8s-monitoring/collectors/upstream/alloy-values.yaml).
 
 <!-- textlint-disable terminology -->
+<!-- markdownlint-disable no-bare-urls -->
 ## Values
 
 ### General
@@ -39,11 +40,11 @@ Settings for each primary Alloy instance come from several potential sources, in
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | annotations | list | `[]` | Annotations to add to the Alloy Custom Resource. These annotations are not added to the workload or Pod. |
-| enabled | bool | `false` | Enable this Alloy instance. |
 | extraConfig | string | `""` | Extra Alloy configuration to be added to the configuration file. |
 | includeDestinations | list | `[]` | Include the configuration components for these destinations. Configuration is already added for destinations used By enabled features on this collector. This is useful when referencing destinations in the extraConfig. |
 | labels | list | `[]` | Labels to add to the Alloy Custom Resource. These labels are not added to the workload or Pod. |
 | liveDebugging.enabled | bool | `false` | Enable live debugging for the Alloy instance. Requires stability level to be set to "experimental". |
+| presets | list | `[]` | The list of Alloy configuration presets, which sets common Alloy configurations. Multiple presets can be set, with the latter ones overwriting former ones. See https://github.com/grafana/k8s-monitoring-helm/tree/main/charts/k8s-monitoring/docs/collectors/presets/ for the list of available presets. |
 
 ### Logging
 
@@ -91,4 +92,5 @@ Settings for each primary Alloy instance come from several potential sources, in
 | remoteConfig.tls.keyFrom | string | `""` | Raw config for accessing the client key. |
 | remoteConfig.url | string | `""` | The URL of the remote config server. |
 | remoteConfig.urlFrom | string | `""` | Raw config for accessing the URL. Lets you insert raw Alloy references so you can load the URL from any number of places, such as loading values from environment variables or config maps. For example: `urlFrom: sys.env("ALLOY_REMOTE_CONFIG_URL")` |
+<!-- markdownlint-enable no-bare-urls -->
 <!-- textlint-enable terminology -->

@@ -48,12 +48,15 @@ destinations:
 
 clusterMetrics:
   enabled: true
+  collector: alloy-metrics
 
 costMetrics:
   enabled: true
+  collector: alloy-metrics
 
 hostMetrics:
   enabled: true
+  collector: alloy-metrics
   energyMetrics:
     enabled: true
   linuxHosts:
@@ -63,12 +66,15 @@ hostMetrics:
 
 clusterEvents:
   enabled: true
+  collector: alloy-singleton
 
 podLogs:
   enabled: true
+  collector: alloy-logs
 
 applicationObservability:
   enabled: true
+  collector: alloy-receiver
   receivers:
     otlp:
       grpc:
@@ -76,29 +82,32 @@ applicationObservability:
 
 autoInstrumentation:
   enabled: true
+  collector: alloy-metrics
 
 integrations:
+  collector: alloy-metrics
   alloy:
     instances:
       - name: alloy
         labelSelectors:
           app.kubernetes.io/name: [alloy-metrics, alloy-singleton, alloy-logs]
 
-alloy-metrics:
-  enabled: true
-  alloy:
-    stabilityLevel: experimental  # Required for Prometheus remote_write v2
+collectors:
+  alloy-metrics:
+    presets: [clustered, statefulset]
+    alloy:
+      stabilityLevel: experimental  # Required for Prometheus remote_write v2
 
-alloy-singleton:
-  enabled: true
-  alloy:
-    stabilityLevel: experimental  # Required for Prometheus remote_write v2
+  alloy-singleton:
+    presets: [singleton]
+    alloy:
+      stabilityLevel: experimental  # Required for Prometheus remote_write v2
 
-alloy-logs:
-  enabled: true
+  alloy-logs:
+    presets: [filesystem-log-reader, daemonset]
 
-alloy-receiver:
-  enabled: true
+  alloy-receiver:
+    presets: [deployment]
 
 collectorCommon:
   alloy:
